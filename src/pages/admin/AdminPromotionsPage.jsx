@@ -18,7 +18,10 @@ import useEtatPage from '../../hooks/useEtatPage';
 // usage et leur activation. Liste triable (AdminDataTable), fiche dans le tiroir commun (édition de la
 // valeur / du plafond / de l'expiration, commandes qui ont utilisé le code), activation et suppression
 // confirmées.
-const TYPES = ['client_balance', 'restaurant_trial_months'];
+// Codes de commande (MON-6, codesPromo.js côté serveur) : remise payée par Fairide sur une commande payée en ligne.
+const TYPES = ['client_balance', 'restaurant_trial_months', 'order_percent', 'order_amount', 'order_free_delivery'];
+const TYPES_COMMANDE = ['order_percent', 'order_amount', 'order_free_delivery'];
+const FORM_VIDE = { code: '', type: 'client_balance', value: '', maxUses: '', expiresAt: '', minSubtotal: '', firstOrderOnly: false, perUserLimit: '1', maxDiscount: '' };
 const epuise = (p) => !!(p.maxUses && p.usesCount >= p.maxUses);
 const expire = (p) => !!(p.expiresAt && p.expiresAt < Date.now());
 
@@ -31,7 +34,7 @@ export default function AdminPromotionsPage() {
   const [search, setSearch] = useState('');
   const [filtre, setFiltre] = useEtatPage('filtre', 'all'); // all | active | inactive | exhausted
   const [type, setType] = useState('');
-  const [form, setForm] = useState({ code: '', type: 'client_balance', value: '', maxUses: '', expiresAt: '' });
+  const [form, setForm] = useState(FORM_VIDE);
   const [creation, setCreation] = useState(false);
   const [ouvert, setOuvert] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -62,12 +65,13 @@ export default function AdminPromotionsPage() {
   }, [codes]);
 
   async function creer() {
-    if (!form.code.trim() || !form.value) { toast(tr('adminSettings.toastCodeValue')); return; }
+    if (!form.code.trim() || (form.type !== 'order_free_delivery' && !form.value)) { toast(tr('adminSettings.toastCodeValue')); return; }
     setCreation(true);
     try {
-      const created = await api('/admin/promo-codes', { method: 'POST', token, body: { code: form.code.trim().toUpperCase(), type: form.type, value: Number(form.value), maxUses: form.maxUses ? Number(form.maxUses) : undefined, expiresAt: form.expiresAt || undefined } });
+      const created = await api('/admin/promo-codes', { method: 'POST', token, body: { code: form.code.trim().toUpperCase(), type: form.type, value: form.type === 'order_free_delivery' ? 0 : Number(form.value), maxUses: form.maxUses ? Number(form.maxUses) : undefined, expiresAt: form.expiresAt || undefined,
+        ...(TYPES_COMMANDE.includes(form.type) ? { minSubtotal: form.minSubtotal || undefined, firstOrderOnly: form.firstOrderOnly, perUserLimit: form.perUserLimit || 1, maxDiscount: form.maxDiscount || undefined } : {}) } });
       setCodes((prev) => [created, ...(prev || [])]);
-      setForm({ code: '', type: 'client_balance', value: '', maxUses: '', expiresAt: '' });
+      setForm(FORM_VIDE);
       setOuvert(false);
       toast(tr('adminSettings.toastCodeCreated', { code: created.code }));
     } catch (e) { toast(e.message, 'erreur'); } finally { setCreation(false); }
@@ -99,12 +103,13 @@ export default function AdminPromotionsPage() {
     ]);
   }
 
-  const libelleType = (v) => (v === 'client_balance' ? tr('adminPromos.typeClient') : tr('adminPromos.typeResto'));
+  const libelleType = (v) => ({ client_balance: tr('adminPromos.typeClient'), restaurant_trial_months: tr('adminPromos.typeResto'), order_percent: tr('adminPromos.typeOrderPercent'), order_amount: tr('adminPromos.typeOrderAmount'), order_free_delivery: tr('adminPromos.typeOrderFreeDelivery') }[v] || v);
+  const uniteValeur = (type) => ({ client_balance: '€', order_amount: '€', order_percent: '%' }[type] || tr('adminSettings.months'));
   const etat = (p) => (expire(p) ? <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminPromos.expired')}</span> : epuise(p) ? <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminPromos.exhausted')}</span> : p.active ? <span className="pill gold">{tr('adminPromos.active')}</span> : <span className="pill">{tr('adminSettings.disabled')}</span>);
   const colonnes = [
     { key: 'code', label: tr('adminCommon.code'), get: (p) => <b style={{ fontFamily: 'monospace', fontSize: 14 }}>{p.code}</b>, sortValue: (p) => p.code },
     { key: 'type', label: tr('adminCommon.type'), get: (p) => <span className="pill teal">{libelleType(p.type)}</span>, sortValue: (p) => p.type },
-    { key: 'value', label: tr('adminPromos.value'), get: (p) => (p.type === 'client_balance' ? `${p.value} €` : tr('adminPromos.monthsValue', { n: p.value })), sortValue: (p) => p.value, align: 'right' },
+    { key: 'value', label: tr('adminPromos.value'), get: (p) => (p.type === 'client_balance' || p.type === 'order_amount' ? `${p.value} €` : p.type === 'order_percent' ? `${p.value} %` : p.type === 'order_free_delivery' ? tr('adminPromos.typeOrderFreeDelivery') : tr('adminPromos.monthsValue', { n: p.value })), sortValue: (p) => p.value, align: 'right' },
     { key: 'usesCount', label: tr('adminPromos.uses'), get: (p) => { const part = p.maxUses ? Math.min(100, Math.round((p.usesCount / p.maxUses) * 100)) : null; return <>{p.usesCount}{p.maxUses ? ` / ${p.maxUses}` : ''}{part !== null && <div className="admin-progress"><span style={{ width: `${part}%` }} /></div>}</>; }, sortValue: (p) => p.usesCount, align: 'right', sum: true },
     { key: 'expiresAt', label: tr('adminPromos.expiresAt'), get: (p) => (p.expiresAt ? fmtDate(p.expiresAt) : '-'), sortValue: (p) => p.expiresAt || 9e15 },
     { key: 'createdAt', label: tr('adminPromos.createdOn'), get: (p) => (p.createdAt ? fmtDate(p.createdAt) : '-'), sortValue: (p) => p.createdAt || 0 },
@@ -150,8 +155,8 @@ export default function AdminPromotionsPage() {
           </div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label htmlFor="promo-value">{tr('adminSettings.valueUnit', { unit: form.type === 'client_balance' ? '€' : tr('adminSettings.months') })}</label>
-              <input id="promo-value" type="number" step="1" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} placeholder={form.type === 'client_balance' ? '20' : '2'} />
+              <label htmlFor="promo-value">{tr('adminSettings.valueUnit', { unit: uniteValeur(form.type) })}</label>
+              <input id="promo-value" type="number" step="1" disabled={form.type === 'order_free_delivery'} value={form.type === 'order_free_delivery' ? '' : form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} placeholder={form.type === 'client_balance' ? '20' : '2'} />
             </div>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="promo-max">{tr('adminSettings.maxUses')}</label>
@@ -162,6 +167,27 @@ export default function AdminPromotionsPage() {
               <input id="promo-exp" type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} />
             </div>
           </div>
+          {TYPES_COMMANDE.includes(form.type) && (
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <div className="field" style={{ flex: 1 }}>
+                <label htmlFor="promo-min">{tr('adminPromos.minSubtotal')}</label>
+                <input id="promo-min" type="number" step="0.5" value={form.minSubtotal} onChange={(e) => setForm({ ...form, minSubtotal: e.target.value })} placeholder={tr('adminSettings.phUnlimited')} />
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label htmlFor="promo-maxremise">{tr('adminPromos.maxDiscount')}</label>
+                <input id="promo-maxremise" type="number" step="0.5" value={form.maxDiscount} onChange={(e) => setForm({ ...form, maxDiscount: e.target.value })} placeholder={tr('adminSettings.phUnlimited')} />
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label htmlFor="promo-parclient">{tr('adminPromos.perUserLimit')}</label>
+                <input id="promo-parclient" type="number" step="1" min="1" value={form.perUserLimit} onChange={(e) => setForm({ ...form, perUserLimit: e.target.value })} />
+              </div>
+              <label className="row small" htmlFor="promo-premiere" style={{ gap: 6, alignItems: 'center', flex: '1 1 100%' }}>
+                <input id="promo-premiere" type="checkbox" style={{ width: 'auto' }} checked={form.firstOrderOnly} onChange={(e) => setForm({ ...form, firstOrderOnly: e.target.checked })} />
+                {tr('adminPromos.firstOrderOnly')}
+              </label>
+              <p className="small" style={{ margin: 0, flex: '1 1 100%', opacity: 0.8 }}>{tr('adminPromos.orderCodeHelp')}</p>
+            </div>
+          )}
           <button className="btn-teal" disabled={creation} onClick={creer}>{creation ? '...' : tr('adminSettings.createCode')}</button>
         </div>
       )}

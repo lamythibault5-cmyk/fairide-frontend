@@ -6,6 +6,7 @@ import { useLanguage } from '../../../context/LanguageContext';
 import { SkeletonCards } from '../../../components/Skeleton';
 import { ErrorCard } from '../../../components/admin/AdminListTools';
 import ConfirmDialog from '../../../components/ConfirmDialog';
+import { euros } from '../../../prixPlat';
 
 /* Déclarations annuelles et semestrielles (backlog du 23/09/2026 : A10, B8, D5).
  * Backend : fairide-backend/routes/conformiteP1.js — tout y est calculé à la demande, rien n'est stocké.
@@ -80,7 +81,7 @@ export default function DeclarationsTab() {
                     <tr key={r.id}>
                       <td>{r.name}</td>
                       <td>{r.sales}</td>
-                      <td>{Number(r.consideration).toFixed(2)} €</td>
+                      <td>{euros(Number(r.consideration))}</td>
                       <td className="small">
                         {!r.reportable ? t('conformite.dac7Excluded')
                           : r.missing.length ? <span style={{ color: 'var(--red)' }}>{t('conformite.dac7Missing', { list: r.missing.map((m) => t(`conformite.dac7Field_${m}`)).join(', ') })}</span>
@@ -122,7 +123,7 @@ export default function DeclarationsTab() {
                 <thead><tr><th>{t('conformite.art17ColStatus')}</th><th>{t('conformite.art17ColCouriers')}</th><th>{t('conformite.art17ColDeliveries')}</th><th>{t('conformite.art17ColWeeks')}</th><th>{t('conformite.art17ColSpan')}</th><th>{t('conformite.art17ColIncome')}</th></tr></thead>
                 <tbody>
                   {registre.byStatus.map((s) => (
-                    <tr key={s.status}><td>{s.status}</td><td>{s.activeCouriers}</td><td>{s.deliveries}</td><td>{s.avgActiveWeeks}</td><td>{s.avgActivitySpanDays}</td><td>{s.avgWeeklyGrossIncome.toFixed(2)} €</td></tr>
+                    <tr key={s.status}><td>{s.status}</td><td>{s.activeCouriers}</td><td>{s.deliveries}</td><td>{s.avgActiveWeeks}</td><td>{s.avgActivitySpanDays}</td><td>{euros(s.avgWeeklyGrossIncome)}</td></tr>
                   ))}
                 </tbody>
               </table>

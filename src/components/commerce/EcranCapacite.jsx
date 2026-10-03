@@ -7,9 +7,12 @@ import { useLanguage } from '../../context/LanguageContext';
 import SousEcran from '../SousEcran';
 
 // Mon commerce › Commandes et capacité (fondateur, 2026-10-01) : jusqu'où le commerce livre, et combien de
-// commandes il accepte par jour. Les deux sont « pas de limite » par défaut ; le restaurateur ajuste s'il craint
-// de manquer de nourriture. Le plafond repart de zéro chaque jour (PUT /restaurants/:id/order-limits).
-const RAYON_DEFAUT = 5;
+// commandes il accepte par jour. Le plafond de commandes est « pas de limite » par défaut ; le restaurateur ajuste
+// s'il craint de manquer de nourriture. Il repart de zéro chaque jour (PUT /restaurants/:id/order-limits).
+// La distance, elle, n'est plus jamais illimitée (fondateur, 2026-10-02) : sans réglage, 6 km (le serveur
+// renvoie defaultRadiusKm, voir rayonLivraison.js côté backend) — un commerce qui n'y avait pas touché acceptait
+// une livraison jusqu'à Anvers. Le commerce choisit sinon sa propre distance.
+const RAYON_DEFAUT = 6;
 const PLAFOND_DEFAUT = 30;
 
 export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFermer }) {
@@ -21,6 +24,8 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
   const [rayon, setRayon] = useState(RAYON_DEFAUT);
   const [plafondLibre, setPlafondLibre] = useState(true);
   const [plafond, setPlafond] = useState(PLAFOND_DEFAUT);
+  // Montant minimum de commande (plan de test PAN-3) : vide = aucun minimum.
+  const [minimum, setMinimum] = useState('');
   const [enCours, setEnCours] = useState(false);
 
   useEffect(() => {
@@ -28,8 +33,9 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
     api(`/restaurants/${restoId}/order-limits`, { token }).then((r) => {
       if (annule) return;
       setEtat(r);
-      setRayonLibre(r.deliveryRadiusKm === null); if (r.deliveryRadiusKm !== null) setRayon(r.deliveryRadiusKm);
+      setRayonLibre(r.deliveryRadiusIsDefault !== false); if (r.deliveryRadiusKm != null) setRayon(r.deliveryRadiusKm);
       setPlafondLibre(r.maxOrdersPerDay === null); if (r.maxOrdersPerDay !== null) setPlafond(r.maxOrdersPerDay);
+      setMinimum(r.minOrderAmount ? String(r.minOrderAmount).replace('.', ',') : '');
     }).catch((e) => toast(e.message, 'erreur'));
     return () => { annule = true; };
   }, [restoId, token, toast]);
@@ -37,9 +43,11 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
   async function enregistrer() {
     const n = Number(plafond);
     if (!plafondLibre && (!Number.isInteger(n) || n < 1)) { toast(t('editResto.capacityCapInvalid'), 'erreur'); return; }
+    const min = minimum.trim() === '' ? null : Number(minimum.replace(',', '.'));
+    if (min !== null && (!Number.isFinite(min) || min < 1 || min > 100)) { toast(t('editResto.minOrderInvalid'), 'erreur'); return; }
     setEnCours(true);
     try {
-      await api(`/restaurants/${restoId}/order-limits`, { method: 'PUT', token, body: { deliveryRadiusKm: rayonLibre ? null : rayon, maxOrdersPerDay: plafondLibre ? null : n } });
+      await api(`/restaurants/${restoId}/order-limits`, { method: 'PUT', token, body: { deliveryRadiusKm: rayonLibre ? null : rayon, maxOrdersPerDay: plafondLibre ? null : n, minOrderAmount: min } });
       await loadDashboard?.(restoId);
       toast(t('editResto.capacitySaved'));
       onFermer();
@@ -62,8 +70,8 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
               <span className="titre-groupe" id="capacite-rayon-titre">🛵 {t('editResto.capacityRadiusTitle')}</span>
               <p className="small" style={{ margin: '0 0 8px' }}>{t('editResto.capacityRadiusHelp')}</p>
               <label className="row small" style={{ gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                <input type="checkbox" checked={rayonLibre} onChange={(e) => setRayonLibre(e.target.checked)} />
-                {t('editResto.capacityNoLimit')}
+                <input type="checkbox" checked={rayonLibre} onChange={(e) => { setRayonLibre(e.target.checked); if (e.target.checked) setRayon(etat.defaultRadiusKm || RAYON_DEFAUT); }} />
+                {t('editResto.capacityRadiusDefault', { km: km(etat.defaultRadiusKm || RAYON_DEFAUT) })}
               </label>
               {!rayonLibre && (
                 <>
@@ -92,6 +100,15 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
               </div>
             )}
             <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('editResto.capacityToday', { n: etat.ordersToday })}</p>
+          </div>
+
+          <div className="field">
+            <label htmlFor="capacite-minimum" className="titre-groupe">🧺 {t('editResto.minOrderTitle')}</label>
+            <p className="small" style={{ margin: '0 0 8px' }}>{t('editResto.minOrderHelp')}</p>
+            <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+              <input id="capacite-minimum" inputMode="decimal" value={minimum} onChange={(e) => setMinimum(e.target.value)} placeholder={t('editResto.minOrderNone')} style={{ width: 120 }} />
+              <span className="small">€</span>
+            </div>
           </div>
 
           <p className="small" style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--surface-soft)' }}>

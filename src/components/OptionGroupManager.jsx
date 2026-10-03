@@ -1,6 +1,7 @@
 import { useState, useId } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { MODELES_GROUPES, groupeDepuisModele } from './OptionsEditor';
+import { euros } from '../prixPlat';
 
 function emptyItem() {
   return { name: '', priceDelta: '0' };
@@ -147,7 +148,7 @@ export default function OptionGroupManager({ groups, onCreate, onUpdate, onDelet
               </div>
             </div>
             <div className="small" style={{ marginTop: 4 }}>
-              {g.items.map((i) => `${i.name} (${i.priceDelta > 0 ? '+' : ''}${i.priceDelta.toFixed(2)}€)`).join(', ')}
+              {g.items.map((i) => `${i.name} (${i.priceDelta > 0 ? '+' : ''}${euros(i.priceDelta)})`).join(', ')}
             </div>
           </div>
         )

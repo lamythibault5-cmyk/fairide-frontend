@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { fraisService } from '../fraisService';
 import { FORFAIT_LIVRAISON, tarifLivraison } from '../livraison';
 
@@ -11,8 +11,18 @@ const STORAGE_KEY = 'fairide_cart';
 // Copie du panier mise de côté pendant un paiement en cours — voir stashForPayment() plus bas.
 const PENDING_KEY = 'fairide_cart_pending';
 
-function lineKeyFor(itemId, optionItemIds) {
-  return `${itemId}::${[...(optionItemIds || [])].sort().join(',')}`;
+// La précision du client (« sans oignon », MNU-5) fait partie de la ligne : le même plat avec et sans précision reste
+// deux lignes, sinon la seconde écraserait la consigne de la première.
+function lineKeyFor(itemId, optionItemIds, note) {
+  return `${itemId}::${[...(optionItemIds || [])].sort().join(',')}${note ? `::${note}` : ''}`;
+}
+
+/* Identifiant de la demande de commande (plan de test CMD-19) : envoyé au serveur comme clientRequestId, il change à
+   CHAQUE modification du panier. Un onglet dupliqué copie le sessionStorage, donc le même identifiant : le serveur
+   renvoie alors la commande déjà créée au lieu d'en créer une seconde, et refuse une seconde fois si elle est payée.
+   Aléatoire et non tiré du contenu : le même panier recommandé un autre jour doit donner une nouvelle commande. */
+function nouvelIdDemande() {
+  try { return crypto.randomUUID(); } catch { return `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`; }
 }
 
 // Conservé dans sessionStorage pour survivre à un rafraîchissement de page (F5) sans persister
@@ -20,11 +30,11 @@ function lineKeyFor(itemId, optionItemIds) {
 function loadPersisted() {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return { restaurantId: null, restaurantName: '', lines: {} };
+    if (!raw) return { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande() };
     const parsed = JSON.parse(raw);
-    return { restaurantId: parsed.restaurantId ?? null, restaurantName: parsed.restaurantName ?? '', lines: parsed.lines ?? {} };
+    return { restaurantId: parsed.restaurantId ?? null, restaurantName: parsed.restaurantName ?? '', lines: parsed.lines ?? {}, requestId: parsed.requestId || nouvelIdDemande() };
   } catch {
-    return { restaurantId: null, restaurantName: '', lines: {} };
+    return { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande() };
   }
 }
 
@@ -35,14 +45,32 @@ export function CartProvider({ children }) {
   // name/imageUrl dénormalisés à l'ajout : le panier flottant (persistant sur toutes les pages, voir
   // FloatingCart.jsx) doit pouvoir s'afficher sans avoir sous la main le menu complet du restaurant.
   const [lines, setLines] = useState(() => loadPersisted().lines);
+  const [requestId, setRequestId] = useState(() => loadPersisted().requestId);
+  // Nouvel identifiant quand le CONTENU du panier change — comparé à une empreinte, pas au « premier rendu » : en
+  // développement, StrictMode rejoue les effets au montage, et un garde « premier rendu » laissait passer ce second
+  // passage, si bien que l'onglet dupliqué recevait un nouvel identifiant et pouvait payer une seconde fois.
+  const signature = JSON.stringify([restaurantId, lines]);
+  const derniereSignature = useRef(signature);
+  useEffect(() => {
+    if (derniereSignature.current === signature) return;
+    derniereSignature.current = signature;
+    setRequestId(nouvelIdDemande());
+  }, [signature]);
+  // Déconnexion VOLONTAIRE (AuthContext.logout) : le panier part avec la session — sur un appareil partagé, la
+  // personne suivante ne doit pas le trouver (plan de test PAN-1). Une session EXPIRÉE, elle, garde le panier (USR-6).
+  useEffect(() => {
+    const vider = () => { setLines({}); setRestaurantId(null); setRestaurantName(''); };
+    window.addEventListener('fairide:deconnexion', vider);
+    return () => window.removeEventListener('fairide:deconnexion', vider);
+  }, []);
 
   useEffect(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ restaurantId, restaurantName, lines }));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ restaurantId, restaurantName, lines, requestId }));
     } catch {
       // stockage indisponible (navigation privée stricte, etc.) — le panier reste fonctionnel en mémoire
     }
-  }, [restaurantId, restaurantName, lines]);
+  }, [restaurantId, restaurantName, lines, requestId]);
 
   const count = useMemo(() => Object.values(lines).reduce((a, l) => a + l.qty, 0), [lines]);
 
@@ -76,7 +104,8 @@ export function CartProvider({ children }) {
   // La quantité est bornée ici AUSSI, et pas seulement dans l'interface : c'est ce qui entre en base.
   // Une quantité négative rendait le total négatif, et un total négatif était traité comme « payé »
   // (corrigé côté serveur le 2026-09-17) — le garde-fou vit désormais des deux côtés.
-  function addOne({ restaurantId: newRestaurantId, restaurantName: newRestaurantName, itemId, name, imageUrl, unitPrice, optionItemIds = [], optionsSnapshot = [], force = false, qty = 1 }) {
+  function addOne({ restaurantId: newRestaurantId, restaurantName: newRestaurantName, itemId, name, imageUrl, unitPrice, optionItemIds = [], optionsSnapshot = [], force = false, qty = 1, note = '' }) {
+    const consigne = String(note || '').trim().slice(0, 140);
     const n = Math.min(99, Math.max(1, Math.floor(Number(qty) || 1)));
     if (!force && hasConflict(newRestaurantId)) return 'conflict';
     const switching = restaurantId !== newRestaurantId;
@@ -84,13 +113,30 @@ export function CartProvider({ children }) {
       setRestaurantId(newRestaurantId);
       setRestaurantName(newRestaurantName || '');
     }
-    const key = lineKeyFor(itemId, optionItemIds);
+    const key = lineKeyFor(itemId, optionItemIds, consigne);
     setLines((prev) => {
       const base = switching ? {} : prev;
       const existing = base[key];
-      return { ...base, [key]: { itemId, name, imageUrl, optionItemIds, optionsSnapshot, unitPrice, qty: Math.min(99, (existing?.qty || 0) + n) } };
+      return { ...base, [key]: { itemId, name, imageUrl, optionItemIds, optionsSnapshot, unitPrice, note: consigne || undefined, qty: Math.min(99, (existing?.qty || 0) + n) } };
     });
     return 'ok';
+  }
+
+  // Plusieurs plats d'un coup (« Commander à nouveau », recommander.js). Une seule mise à jour : appeler addOne en boucle
+  // relirait le restaurantId d'avant dans la même closure, et chaque appel viderait le panier du précédent.
+  // Commerce différent : le panier est remplacé (l'appelant a déjà demandé confirmation) ; même commerce : on ajoute.
+  function addMany({ restaurantId: newRestaurantId, restaurantName: newRestaurantName, lignes: nouvelles }) {
+    const switching = restaurantId !== newRestaurantId || count === 0;
+    if (switching) { setRestaurantId(newRestaurantId); setRestaurantName(newRestaurantName || ''); }
+    setLines((prev) => {
+      const next = switching ? {} : { ...prev };
+      for (const l of nouvelles) {
+        const key = lineKeyFor(l.itemId, l.optionItemIds);
+        const n = Math.min(99, Math.max(1, Math.floor(Number(l.qty) || 1)));
+        next[key] = { itemId: l.itemId, name: l.name, imageUrl: l.imageUrl, optionItemIds: l.optionItemIds || [], optionsSnapshot: l.optionsSnapshot || [], unitPrice: l.unitPrice, qty: Math.min(99, (next[key]?.qty || 0) + n) };
+      }
+      return next;
+    });
   }
 
   // Modifie la quantité d'une ligne déjà présente dans le panier (utilisé par le stepper +/- du récap panier).
@@ -227,7 +273,7 @@ export function CartProvider({ children }) {
   const rawTotal = useMemo(() => +Object.values(lines).reduce((a, l) => a + l.unitPrice * l.qty, 0).toFixed(2), [lines]);
 
   return (
-    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, rawTotal, hasConflict, switchRestaurant, addOne, changeLineQty, removeLine, clear, clearLines, stashForPayment, restoreStashed, discardStashed, totals }}>
+    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, requestId, rawTotal, hasConflict, switchRestaurant, addOne, addMany, changeLineQty, removeLine, clear, clearLines, stashForPayment, restoreStashed, discardStashed, totals }}>
       {children}
     </CartContext.Provider>
   );

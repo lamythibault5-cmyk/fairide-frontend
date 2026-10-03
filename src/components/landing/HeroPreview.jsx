@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import { COMMUNES, categoryImage } from '../../menuCategories';
+import { COMMUNES, categoryImage, restaurantTypeLabel } from '../../menuCategories';
 import { getOpenStatus } from '../../openingHours';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -108,7 +108,7 @@ export default function HeroPreview({ restaurants, rangee = false }) {
               <img className="hero-preview-img" {...(rangee ? imgProps(r.coverImageUrl, 300, '(max-width: 640px) 33vw, 300px') : imgProps(r.coverImageUrl, 56))} width="56" height="56" alt="" loading="eager" fetchPriority="high" decoding="async" onError={cacherImageCassee} />
               <div className="hero-preview-body">
                 <b>{r.name}</b>
-                <span className="hero-preview-meta">{r.cuisine} · {r.commune}</span>
+                <span className="hero-preview-meta">{restaurantTypeLabel(r.cuisine, t)} · {r.commune}</span>
               </div>
               <div className="hero-preview-side">
                 {r.reviewCount > 0 && <span className="hero-preview-rating"><StarIcon /> {Number(r.rating).toFixed(1)}</span>}

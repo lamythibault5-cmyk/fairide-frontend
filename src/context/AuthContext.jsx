@@ -252,6 +252,8 @@ export function AuthProvider({ children }) {
     // la revalidation le corrige).
     setRoleMemorise(null);
     try { localStorage.removeItem(ROLE_ACTIF_KEY); } catch { /* sans stockage */ }
+    // Le panier de cet onglet part avec la session (CartContext écoute cet événement — plan de test PAN-1).
+    window.dispatchEvent(new Event('fairide:deconnexion'));
   }
 
   // Quitter le mode « Fairide agit comme… » : l'onglet revient à la session admin (localStorage).

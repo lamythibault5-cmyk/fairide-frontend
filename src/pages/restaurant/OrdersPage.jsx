@@ -1,3 +1,4 @@
+import InterrupteurService from '../../components/commerce/InterrupteurService';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
@@ -18,6 +19,7 @@ import {
   ORDER_STAGES, orderStageKey, orderStagePriority, stageColors as couleursEtapes
 } from '../../orderStatus';
 import { useLanguage } from '../../context/LanguageContext';
+import { euros } from '../../prixPlat';
 
 // Où en est le ticket de la commande sur le terminal Fairide (backend : GET /orders/restaurant/:id → print).
 function EtatImpression({ p, t }) {
@@ -59,6 +61,8 @@ export default function OrdersPage() {
   const [confirmingPickup, setConfirmingPickup] = useState(null);
   // Conformité : commande avec demande d'allergie à confirmer (A1), remise d'alcool à contrôler (B6).
   const [allergieAConfirmer, setAllergieAConfirmer] = useState(null);
+  // Minutes de préparation ajoutées à l'acceptation, par commande (RES-10).
+  const [tempsEnPlus, setTempsEnPlus] = useState({});
   const [ageAVerifier, setAgeAVerifier] = useState(null);
   const stageColors = useMemo(() => couleursEtapes(restoId), [restoId]);
   // Largeur de papier retenue par le restaurateur : sa valeur ne change pas d'une commande à l'autre,
@@ -107,7 +111,6 @@ export default function OrdersPage() {
       setApercu({ orderId: order.id, lines: r.lines, columns: r.columns });
     } catch (e) { toast(e.message, 'erreur'); }
   }
-  const [basculeOuverture, setBasculeOuverture] = useState(false);
 
   // OUVERT / EN PAUSE, EN TÊTE DE LA PAGE DE SERVICE (2026-09-23). La case « Restaurant ouvert » vivait
   // au milieu du formulaire de Mon commerce, sous les horaires, et ne prenait effet qu'au clic sur
@@ -115,18 +118,6 @@ export default function OrdersPage() {
   // Uber Eats (« Mettre en pause les commandes ») : un appui, effet immédiat. Même champ `open` côté
   // serveur — fermé, le commerce refuse les nouvelles commandes (routes/orders.js) et sort de la liste
   // publique ; les commandes déjà reçues continuent normalement.
-  async function basculerOuverture() {
-    setBasculeOuverture(true);
-    try {
-      await api(`/restaurants/${restoId}`, { method: 'PATCH', token, body: { open: !restaurant.open } });
-      await loadDashboard(restoId);
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setBasculeOuverture(false);
-    }
-  }
-
   async function printBluetooth(order, { silencieux = false, copies = 1 } = {}) {
     setPrinting(true);
     try {
@@ -288,7 +279,7 @@ export default function OrdersPage() {
       {o.print && <div style={{ margin: '4px 0' }}><EtatImpression p={o.print} t={t} /></div>}
       {o.paymentMode === 'on_site' && (
         <div className="small" style={{ margin: '4px 0', fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : 'var(--ink)' }}>
-          {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: `${o.total.toFixed(2)}€` })}
+          {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}
         </div>
       )}
       <ProgressBar status={o.status} orderType={o.orderType} />
@@ -305,7 +296,12 @@ export default function OrdersPage() {
       <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
         {o.status === 'nouveau' && (
           <>
-            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept'))}>{t('ordersResto.accept')}</button>
+            {/* Temps de préparation en plus, annoncé à l'acceptation (RES-10) : l'heure estimée du client recule d'autant. */}
+            <select aria-label={t('ordersResto.extraPrepLabel')} value={tempsEnPlus[o.id] || 0} onChange={(e) => setTempsEnPlus((p) => ({ ...p, [o.id]: Number(e.target.value) }))} style={{ width: 'auto', padding: '6px 8px', fontSize: 13 }}>
+              <option value={0}>{t('ordersResto.extraPrepNone')}</option>
+              {[10, 20, 30].map((m) => <option key={m} value={m}>{t('ordersResto.extraPrepMinutes', { n: m })}</option>)}
+            </select>
+            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 }))}>{t('ordersResto.accept')}</button>
             <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
           </>
         )}
@@ -347,6 +343,10 @@ export default function OrdersPage() {
           </button>
         </div>
       )}
+      {/* Le livreur est arrivé et attend (LIV-8) : le commerce le voit, avec depuis quand. */}
+      {o.courierWaitingSince && ['preparation', 'pret'].includes(o.status) && (
+        <p className="small" style={{ marginTop: 8, marginBottom: 0, fontWeight: 700 }}>{t('ordersResto.courierWaiting', { min: Math.max(0, Math.floor((Date.now() - o.courierWaitingSince) / 60000)) })}</p>
+      )}
       {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
         <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>{t('ordersResto.waitingDriver')}</p>
       )}
@@ -359,13 +359,7 @@ export default function OrdersPage() {
       {/* Plus de carte de présentation du terminal ici : quatre paragraphes et une illustration lus à
           chaque service, au-dessus des commandes. Elle reste dans Mon compte › Terminal Fairide. */}
       {restaurant && (
-        <button type="button" className={`service-switch${restaurant.open ? '' : ' off'}`} aria-pressed={!!restaurant.open} disabled={basculeOuverture} onClick={basculerOuverture}>
-          <span className="service-switch-dot" aria-hidden="true" />
-          <span className="service-switch-text">
-            <b>{restaurant.open ? t('ordersResto.openTitle') : t('ordersResto.pausedTitle')}</b>
-            <span>{basculeOuverture ? '…' : restaurant.open ? t('ordersResto.openSub') : t('ordersResto.pausedSub')}</span>
-          </span>
-        </button>
+        <InterrupteurService restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
       )}
       <p className="small service-resume">{t('ordersResto.summary', { current: enCours.length, today: duJour })}
         {terminaux && <> · <Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></>}
@@ -408,17 +402,17 @@ export default function OrdersPage() {
                   {i.qty}× {i.name}{i.discount > 0 ? ' 🏷️' : ''}
                   {i.options?.length > 0 && <span className="small" style={{ display: 'block' }}>{i.options.map((o) => o.name).join(', ')}</span>}
                 </span>
-                <span>{(i.price * i.qty - (i.discount || 0)).toFixed(2)}€</span>
+                <span>{euros((i.price * i.qty - (i.discount || 0)))}</span>
               </div>
             ))}
             <div className="divider" />
             <div className="breakdown">
-              <div className="line"><span>{t('ordersResto.subtotal')}</span><span>{selectedOrder.subtotal.toFixed(2)}€</span></div>
-              {selectedOrder.promoDiscount > 0 && <div className="line"><span>{t('ordersResto.promo', { label: selectedOrder.promoLabel })}</span><span>-{selectedOrder.promoDiscount.toFixed(2)}€</span></div>}
-              {selectedOrder.orderType === 'delivery' && <div className="line"><span>{t('ordersResto.delivery')}</span><span>{selectedOrder.deliveryFee.toFixed(2)}€</span></div>}
-              {selectedOrder.serviceFee > 0 && <div className="line"><span>{t('ordersResto.serviceFee')}</span><span>{(selectedOrder.serviceFee + (selectedOrder.serviceFeeVat || 0)).toFixed(2)}€</span></div>}
-              {selectedOrder.balanceUsed > 0 && <div className="line"><span>{t('ordersResto.balanceUsed')}</span><span>-{selectedOrder.balanceUsed.toFixed(2)}€</span></div>}
-              <div className="line total"><span>{selectedOrder.paymentMode === 'on_site' ? `💶 ${t('ordersResto.toCollectOnSite')}` : t('ordersResto.totalPaid')}</span><span>{selectedOrder.total.toFixed(2)}€</span></div>
+              <div className="line"><span>{t('ordersResto.subtotal')}</span><span>{euros(selectedOrder.subtotal)}</span></div>
+              {selectedOrder.promoDiscount > 0 && <div className="line"><span>{t('ordersResto.promo', { label: selectedOrder.promoLabel })}</span><span>-{euros(selectedOrder.promoDiscount)}</span></div>}
+              {selectedOrder.orderType === 'delivery' && <div className="line"><span>{t('ordersResto.delivery')}</span><span>{euros(selectedOrder.deliveryFee)}</span></div>}
+              {selectedOrder.serviceFee > 0 && <div className="line"><span>{t('ordersResto.serviceFee')}</span><span>{euros((selectedOrder.serviceFee + (selectedOrder.serviceFeeVat || 0)))}</span></div>}
+              {selectedOrder.balanceUsed > 0 && <div className="line"><span>{t('ordersResto.balanceUsed')}</span><span>-{euros(selectedOrder.balanceUsed)}</span></div>}
+              <div className="line total"><span>{selectedOrder.paymentMode === 'on_site' ? `💶 ${t('ordersResto.toCollectOnSite')}` : t('ordersResto.totalPaid')}</span><span>{euros(selectedOrder.total)}</span></div>
             </div>
             <div className="divider" />
             <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? t('ordersResto.takeaway') : t('ordersResto.delivery')}</h4>
@@ -527,7 +521,7 @@ export default function OrdersPage() {
         message={t('conformite.allergyConfirmText', { request: allergieAConfirmer?.allergyRequest || '' })}
         confirmLabel={t('conformite.allergyConfirmAccept')}
         onCancel={() => setAllergieAConfirmer(null)}
-        onConfirm={() => { const o = allergieAConfirmer; setAllergieAConfirmer(null); orderAction(o.id, 'accept', { allergyAck: true }); }} />
+        onConfirm={() => { const o = allergieAConfirmer; setAllergieAConfirmer(null); orderAction(o.id, 'accept', { allergyAck: true, extraMinutes: tempsEnPlus[o.id] || 0 }); }} />
       {/* B6 : pas de remise d'alcool sans pièce d'identité contrôlée. Refus → commande close, tâche admin. */}
       <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
         onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); confirmTakeaway(o, true); }}

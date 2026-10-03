@@ -21,7 +21,9 @@ export function deliveryInstructionLabel(value, t) {
 // "2× Cheeseburger (Extra cheddar, Bacon)"
 export function formatOrderItem(i) {
   const options = i.options?.length ? ` (${i.options.map((o) => o.name).join(', ')})` : '';
-  return `${i.qty}× ${i.name}${options}`;
+  // Instruction du client sur ce plat (MNU-5) : « sans oignon », lue par le commerce comme sur le ticket.
+  const note = i.note ? ` « ${i.note} »` : '';
+  return `${i.qty}× ${i.name}${options}${note}`;
 }
 
 export const STEPS = ['nouveau', 'preparation', 'pret', 'livraison', 'livre'];

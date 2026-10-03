@@ -18,7 +18,16 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
   const { token } = useAuth();
   const toast = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  // Engagements signés : le français fait foi (il est haché avec la signature) ; en anglais et en néerlandais on montre
+  // la traduction envoyée par le serveur, le texte français restant à un clic (plan de test DEV-7).
+  const traduit = (bloc) => (language !== 'fr' && bloc?.translations?.[language]) || null;
+  const noteFoi = (original) => (
+    <details className="small" style={{ margin: '0 0 6px' }}>
+      <summary>{t('conformite.frenchPrevails')}</summary>
+      {Array.isArray(original) ? <ul style={{ margin: '4px 0 0 18px' }}>{original.map((l) => <li key={l} lang="fr">{l}</li>)}</ul> : <p lang="fr" style={{ margin: '4px 0 0' }}>{original}</p>}
+    </details>
+  );
   const id = useId();
   const [d, setD] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -74,8 +83,9 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
                 {m.vatAutoCount > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--ink-soft)' }}>{t('conformite.menuVatAuto')}</p>}
                 <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
                   <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!coches.carte} onChange={(e) => setCoches((c) => ({ ...c, carte: e.target.checked }))} />
-                  <span className="small">{m.text}</span>
+                  <span className="small">{traduit(m) || m.text}</span>
                 </label>
+                {traduit(m) && noteFoi(m.text)}
                 <div className="row" style={{ gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
                   <input aria-label={t('conformite.typedName')} placeholder={t('conformite.typedName')} value={nom} onChange={(e) => setNom(e.target.value)} style={{ maxWidth: 260 }} />
                   <button type="submit" className="btn-teal" disabled={busy || !coches.carte || nom.trim().length < 3}>{t('conformite.menuSignButton', { n: m.itemCount })}</button>
@@ -101,7 +111,8 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
           <p className="small" style={{ margin: 0 }}>✓ {t('conformite.allergenAttested', { date: date(d.allergens.attestation.attestedAt), name: d.allergens.attestation.attestedName })}</p>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); agir(() => api(`/restaurants/${restoId}/allergens/attest`, { method: 'POST', token, body: { typedName: nom.trim(), confirmed: !!coches.allergenes, contactPhone: tel.trim(), referentName: referent.trim() } }), t('conformite.allergenAttestedToast')); }}>
-            <ul className="small" style={{ margin: '0 0 6px 18px' }}>{(d.allergens.attestation.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
+            <ul className="small" style={{ margin: '0 0 6px 18px' }}>{(traduit(d.allergens.attestation) || d.allergens.attestation.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
+            {traduit(d.allergens.attestation) && noteFoi(d.allergens.attestation.text)}
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               <div className="field" style={{ margin: 0 }}>
                 <label htmlFor={`${id}-tel`} className="small">{t('conformite.allergenPhone')}</label>
@@ -131,7 +142,8 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
           <p className="small" style={{ margin: 0 }}>✓ {t('conformite.proDeclared', { date: date(d.professional.declaredAt), name: d.professional.declaredName })}</p>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); agir(() => api(`/restaurants/${restoId}/professional-declaration`, { method: 'POST', token, body: { typedName: nom.trim(), confirmed: !!coches.pro } }), t('conformite.proDeclaredToast')); }}>
-            <ul className="small" style={{ margin: '0 0 6px 18px' }}>{(d.professional.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
+            <ul className="small" style={{ margin: '0 0 6px 18px' }}>{(traduit(d.professional) || d.professional.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
+            {traduit(d.professional) && noteFoi(d.professional.text)}
             <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
               <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!coches.pro} onChange={(e) => setCoches((c) => ({ ...c, pro: e.target.checked }))} />
               <span className="small">{t('conformite.proCheck')}</span>

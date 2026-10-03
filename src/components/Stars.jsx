@@ -16,7 +16,7 @@ export function StarsInput({ value, onChange }) {
   return (
     <span className="stars-input" role="radiogroup">
       {[1, 2, 3, 4, 5].map((i) => (
-        <button key={i} type="button" role="radio" aria-checked={value === i} aria-label={`${i}/5`} onClick={() => onChange(i)} style={{ color: i <= value ? 'var(--gold)' : 'var(--line)' }}>
+        <button key={i} type="button" role="radio" aria-checked={value === i} aria-label={`${i}/5`} onClick={() => onChange(i)} style={{ color: i <= value ? 'var(--iris)' : 'var(--line)' }}>
           ★
         </button>
       ))}

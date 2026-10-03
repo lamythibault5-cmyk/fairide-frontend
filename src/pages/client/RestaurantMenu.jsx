@@ -3,6 +3,7 @@ import { imgProps, cacherImageCassee } from '../../images';
 import urlSure from '../../urlSure';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
+import { euros } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { tarifLivraison } from '../../livraison';
@@ -73,6 +74,8 @@ export default function RestaurantMenu() {
   // Article qu'on essayait d'ajouter quand le panier contenait déjà un autre commerce (voir addToCart) —
   // conservé le temps que l'utilisateur confirme ou annule le remplacement du panier.
   const [conflictItem, setConflictItem] = useState(null);
+  // Un seul avis « commerce fermé, ton panier est gardé » par visite de la fiche.
+  const avertiFerme = useRef(false);
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
@@ -289,9 +292,12 @@ export default function RestaurantMenu() {
       toast(t('restoMenuUi.toastNoOnline'));
       return;
     }
-    if (!getOpenStatus(restaurant.hours, now, restaurant.closures).isOpen) {
-      toast(t('restoMenuUi.toastClosed'));
-      return;
+    // Commerce fermé en ce moment : on laisse composer le panier (une commande programmée reste possible, et la
+    // fiche promet « compose ton panier ») — avant, l'ajout était refusé sous un bandeau qui disait le contraire
+    // (plan de test). Le checkout et le serveur refusent toujours une commande immédiate à un commerce fermé.
+    if (!getOpenStatus(restaurant.hours, now, restaurant.closures).isOpen && !avertiFerme.current) {
+      avertiFerme.current = true;
+      toast(t('restoMenuUi.toastClosedCartKept'));
     }
     if (complet) {
       toast(t('restoMenuUi.toastFullToday'));
@@ -482,6 +488,10 @@ export default function RestaurantMenu() {
             {modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
               <span className="fiche-panneau-cle">{t('restoMenuUi.deliversUpTo', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</span>
             )}
+            {/* Montant minimum choisi par le commerce (PAN-3), annoncé avant de composer le panier. */}
+            {restaurant.minOrderAmount > 0 && (
+              <span className="fiche-panneau-cle">{t('restoMenuUi.minOrder', { amount: euros(restaurant.minOrderAmount) })}</span>
+            )}
           </div>
         )}
 
@@ -605,13 +615,13 @@ export default function RestaurantMenu() {
           item={{ ...pickerItem, ...localizedItem(pickerItem, language) }}
           imageUrl={resolveItemImage(pickerItem, restaurant.sections)}
           onCancel={() => setPickerItem(null)}
-          onConfirm={(optionItemIds, snapshot, unitPrice, qty) => {
+          onConfirm={(optionItemIds, snapshot, unitPrice, qty, note) => {
             // Le nom enregistré est le nom TRADUIT, comme lors d'un ajout direct : l'ancienne
             // fenêtre gardait `pickerItem.name`, donc un panier en néerlandais pouvait afficher des
             // plats en français selon la façon dont on les avait ajoutés.
             // Même image que la fiche et que la carte : sinon le panier affichait le carré gris de
             // repli pour un plat dont on venait de voir la photo en grand.
-            cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: pickerItem.id, name: localizedItem(pickerItem, language).name, imageUrl: resolveItemImage(pickerItem, restaurant.sections), unitPrice, optionItemIds, optionsSnapshot: snapshot, qty });
+            cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: pickerItem.id, name: localizedItem(pickerItem, language).name, imageUrl: resolveItemImage(pickerItem, restaurant.sections), unitPrice, optionItemIds, optionsSnapshot: snapshot, qty, note });
             setPickerItem(null);
           }}
         />

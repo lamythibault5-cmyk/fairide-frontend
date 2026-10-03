@@ -8,6 +8,7 @@ import AdminGlobalSearch from './admin/AdminGlobalSearch';
 import useAdminOverview from '../hooks/useAdminOverview';
 import useAdminRole from '../hooks/useAdminRole';
 import useInbox from '../hooks/useInbox';
+import useNotificationsClient from '../hooks/useNotificationsClient';
 import { ADMIN_HUBS, hubBadge, hubModules, moduleForPath } from '../pages/admin/adminModules';
 
 // Où mène le logo de la barre latérale, et où l'on atterrit après connexion (voir pages/Home.jsx).
@@ -121,6 +122,8 @@ export default function DashboardSidebar() {
   const isAdminAccount = !!user?.isAdmin;
   // Messages de Fairide non lus : pastille sur « Mon compte » (0 pour l'admin, le hook se désactive).
   const { unread: nonLus } = useInbox();
+  // Événements de commande non lus (cloche du client, NOT-9) : pastille sur « Mes commandes ».
+  const { unread: notifCommandes } = useNotificationsClient();
   // Un restaurateur en mode aperçu voit la nav "client" (favoris, commandes, carte...) au lieu de la
   // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
   // correspondantes, toujours réservées aux vrais clients côté API.
@@ -157,6 +160,7 @@ export default function DashboardSidebar() {
             <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} /></span>
             <span>{item.label}</span>
             {item.to === '/account' && nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
+            {item.to === '/orders' && notifCommandes > 0 && <span className="nav-badge tone-warn" aria-label={t('orders.bellUnread', { n: notifCommandes })}>{notifCommandes}</span>}
           </NavLink>
         ))}
       </nav>

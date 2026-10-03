@@ -37,6 +37,8 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
     return init;
   });
   const [qty, setQty] = useState(1);
+  // Précision du client pour ce plat (« sans oignon » — plan de test MNU-5) : imprimée sur le ticket, 140 caractères.
+  const [note, setNote] = useState('');
   const racine = useRef(null);
   const panneau = useRef(null);
   const defile = useRef(null);
@@ -227,6 +229,11 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
         </div>
       </div>
 
+      <div className="field plat-note" style={{ padding: '0 16px' }}>
+        <label htmlFor="plat-note" className="small" style={{ fontWeight: 700 }}>{t('platSheet.noteLabel')}</label>
+        <input id="plat-note" maxLength={140} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('platSheet.notePlaceholder')} />
+      </div>
+
       {/* L'action reste collée en bas : c'est elle qui rend le défilement unique possible. */}
       <div className="plat-pied">
         {/* Pourquoi on ne peut pas ajouter — DANS le pied, au-dessus du bouton. Placée après, elle
@@ -247,7 +254,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
             // Le plat s'envole vers le panier pendant que la fiche redescend : on voit où il est parti.
             vibrer(14);
             envolerVersPanier({ depuis: boutonAjouter.current?.getBoundingClientRect(), image: imageUrl, quantite: qty });
-            fermer(() => onConfirm(optionItemIds, snapshot, prixUnite, qty));
+            fermer(() => onConfirm(optionItemIds, snapshot, prixUnite, qty, note.trim()));
           }}
         >
           {/* Le libellé annonce la quantité ET le prix : on sait ce qu'on ajoute sans remonter. */}

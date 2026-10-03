@@ -8,6 +8,7 @@ import InvoiceArchive from '../../components/InvoiceArchive';
 import CommissionStatements from '../../components/CommissionStatements';
 import InvoicePreferences from '../../components/InvoicePreferences';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { euros } from '../../prixPlat';
 
 function currentMonthValue() {
   const d = new Date();
@@ -203,25 +204,25 @@ export default function InvoicesPage() {
                 {invoice.items.map((o) => (
                   <tr key={o.id} style={{ borderBottom: '1px solid var(--line)' }}>
                     <td style={{ padding: '6px 4px' }}>{new Date(o.createdAt).toLocaleDateString(getLocale())}</td>
-                    <td style={{ padding: '6px 4px' }}>{t('invoicesResto.serviceCommissionOrder', { id: o.id.slice(0, 8) })}{o.typeLabel ? <span className="small"> · {o.typeLabel}</span> : null}</td>
-                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{Number(o.subtotal || 0).toFixed(2)}€</td>
-                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.commission.toFixed(2)}€</td>
-                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{Number(o.commissionVat || 0).toFixed(2)}€ <span className="small">({(invoice.vatRate * 100).toFixed(0)}%)</span></td>
+                    <td style={{ padding: '6px 4px' }}>{t('invoicesResto.serviceCommissionOrder', { id: o.id.slice(0, 8) })}{o.orderType || o.typeLabel ? <span className="small"> · {o.orderType ? t(`orderStatus.orderType.${o.orderType === 'pickup' || o.orderType === 'takeaway' ? 'pickup' : 'delivery'}`) : o.typeLabel}</span> : null}</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{euros(Number(o.subtotal || 0))}</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{euros(o.commission)}</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{euros(Number(o.commissionVat || 0))} <span className="small">({(invoice.vatRate * 100).toFixed(0)}%)</span></td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr style={{ borderTop: '2px solid var(--line)' }}>
                   <td style={{ padding: '8px 4px' }} colSpan={3}>{t('invoicesResto.totalExVat')}</td>
-                  <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{invoice.subtotalHt.toFixed(2)}€</td>
+                  <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{euros(invoice.subtotalHt)}</td>
                 </tr>
                 <tr>
                   <td style={{ padding: '4px' }} colSpan={3}>{t('invoicesResto.vatRate', { rate: (invoice.vatRate * 100).toFixed(0) })}</td>
-                  <td style={{ padding: '4px', textAlign: 'right' }} colSpan={2}>{invoice.vatAmount.toFixed(2)}€</td>
+                  <td style={{ padding: '4px', textAlign: 'right' }} colSpan={2}>{euros(invoice.vatAmount)}</td>
                 </tr>
                 <tr style={{ fontWeight: 700 }}>
                   <td style={{ padding: '8px 4px' }} colSpan={3}>{t('invoicesResto.totalIncVat')}</td>
-                  <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{invoice.totalTtc.toFixed(2)}€</td>
+                  <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{euros(invoice.totalTtc)}</td>
                 </tr>
               </tfoot>
             </table>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiDownload } from '../../api';
 import { getLanguage, getLocale } from '../../context/LanguageContext';
+import { euros } from '../../prixPlat';
 
 // Un compte de test se reconnaît au même motif que le contournement de vérification à l'inscription
 // (voir routes/auth.js, isQaTestAccount) : un alias "+qa" dans l'adresse email (ex: toi+qa1@gmail.com).
@@ -95,7 +96,7 @@ export function filterBySearch(list, search, getFields) {
 }
 
 export function money(n) {
-  return `${Number(n || 0).toFixed(2)}€`;
+  return euros(Number(n || 0));
 }
 
 export function fmtDate(ts) {

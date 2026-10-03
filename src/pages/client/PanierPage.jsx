@@ -74,6 +74,7 @@ export default function PanierPage() {
               {ligne.optionsSnapshot?.length > 0 && (
                 <span className="small">{ligne.optionsSnapshot.map((o) => o.name).join(', ')}</span>
               )}
+              {ligne.note && <span className="small">« {ligne.note} »</span>}
               <span className="panier-ligne-prix">{euros(ligne.unitPrice * ligne.qty)}</span>
             </div>
             <div className="panier-stepper">

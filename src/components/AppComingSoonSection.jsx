@@ -8,9 +8,9 @@ import { useLanguage } from '../context/LanguageContext';
 // restent génériques (texte + icône maison, pas de logo Apple/Google reproduit) plutôt qu'une copie du
 // design des vraies plateformes.
 const STORE_BADGES = [
-  { icon: '🍎', line1: 'Bientôt sur', line2: "l'App Store" },
-  { icon: '▶️', line1: 'Bientôt sur', line2: 'Google Play' },
-  { icon: '📱', line1: 'Bientôt sur', line2: 'AppGallery' }
+  { icon: '🍎', line2: 'App Store' },
+  { icon: '▶️', line2: 'Google Play' },
+  { icon: '📱', line2: 'AppGallery' }
 ];
 
 function PhoneMockup() {
@@ -60,7 +60,7 @@ export default function AppComingSoonSection() {
           {STORE_BADGES.map((b) => (
             <div key={b.line2} className="app-soon-store-badge" title={t('landing.appSoonNotYet')}>
               <span className="app-soon-store-icon">{b.icon}</span>
-              <span className="app-soon-store-text"><small>{b.line1}</small>{b.line2}</span>
+              <span className="app-soon-store-text"><small>{t('landing.appSoonOn')}</small>{b.line2}</span>
             </div>
           ))}
         </div>

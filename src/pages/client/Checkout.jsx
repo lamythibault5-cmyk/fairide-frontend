@@ -17,6 +17,7 @@ import ChoixAdresse from '../../components/ChoixAdresse';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, dateOuverture, paiementEnLigneOuvert, dateOuverturePaiementEnLigne } from '../../launch';
+import CodePromoCheckout from '../../components/client/CodePromoCheckout';
 import CheckoutConformite from '../../components/conformite/CheckoutConformite';
 import { manqueConformite } from '../../conformite';
 
@@ -45,6 +46,10 @@ export default function Checkout() {
   const [addressPostalCode, setAddressPostalCode] = useState(user.addressPostalCode || '');
   const [addressCity, setAddressCity] = useState(user.addressCity || '');
   const [deliveryInstructions, setDeliveryInstructions] = useState('sonner');
+  // De l'alcool ne se dépose pas devant une porte : le livreur contrôle l'âge en main propre (plan de test LEG-9 /
+  // PAN-8, le serveur refuse aussi : DEPOT_ALCOOL_INTERDIT). L'option disparaît, et un choix déjà fait repasse à « Sonner ».
+  const panierAlcool = Object.values(cart.lines).some((l) => restaurant?.menu?.find((m) => m.id === l.itemId)?.isAlcohol);
+  useEffect(() => { if (panierAlcool && deliveryInstructions === 'deposer') setDeliveryInstructions('sonner'); }, [panierAlcool, deliveryInstructions]);
   const [deliveryNote, setDeliveryNote] = useState('');
   const [useBalance, setUseBalance] = useState(true);
   // À emporter chez un commerce qui l'accepte : payer au retrait plutôt qu'en ligne.
@@ -53,6 +58,8 @@ export default function Checkout() {
   // vérifié à la saisie, déduit côté serveur à la création de la commande.
   const [giftCode, setGiftCode] = useState('');
   const [giftCheck, setGiftCheck] = useState(null);
+  // Code promo de commande appliqué (MON-6, CodePromoCheckout) : { code, discount, label } ou null.
+  const [codePromo, setCodePromo] = useState(null);
   const [fulfillmentType, setFulfillmentType] = useState('delivery');
   // Sous-ecran ouvert par-dessus le paiement : 'adresse', 'remise', ou null.
   const [sousEcran, setSousEcran] = useState(null);
@@ -78,6 +85,8 @@ export default function Checkout() {
   useEffect(() => {
     if (commandeTermineeRef.current) return;
     if (!restaurantId || cart.count === 0) {
+      // Arrivé ici sans panier (lien direct, onglet rouvert) : on le dit, au lieu de changer de page sans un mot (PAN-6).
+      toast(t('checkout.toastEmptyCart'));
       navigate('/restaurants');
       return;
     }
@@ -118,6 +127,8 @@ export default function Checkout() {
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
 
+  // Ce qui manque pour atteindre le minimum du commerce (PAN-3), sur la valeur des plats avant remises, comme le serveur.
+  const manqueMinimum = restaurant.minOrderAmount ? Math.max(0, +(restaurant.minOrderAmount - cart.rawTotal).toFixed(2)) : 0;
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder, deliveryMode: restaurant.deliveryMode, ownDeliveryFee: restaurant.ownDeliveryFee });
   // Mode choisi par le commerce : en ligne seulement, sur place seulement, ou au choix du client.
   const modeEmporter = restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online');
@@ -131,7 +142,8 @@ export default function Checkout() {
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
   const paiementBloque = enLigneFerme && modeEmporter === 'online';
   const soldeUtilise = useBalance && !surPlaceChoisi;
-  const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (soldeUtilise ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
+  const apresCodePromo = Math.max(0, +(estimatedTotalBeforeBalance - (codePromo?.discount || 0)).toFixed(2));
+  const estimatedTotal = Math.max(0, apresCodePromo - (soldeUtilise ? Math.min(user.balance || 0, apresCodePromo) : 0));
   const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate) : [];
   const scheduledPreview = scheduleDate && scheduleTime
     ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
@@ -174,7 +186,7 @@ export default function Checkout() {
     }
     // Commande programmée : heure locale.
     const scheduledForISO = scheduleEnabled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null;
-    const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
+    const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds, note: l.note || undefined }));
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
     if (manque) {
       toast(manque);
@@ -201,8 +213,11 @@ export default function Checkout() {
           } : {}),
           useBalance: useBalance && !surPlace,
           giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined,
+          promoCode: codePromo?.code || undefined,
           allergyRequest: conformite.allergyRequest.trim() || undefined, ageDeclaration: conformite.ageDeclaration || undefined,
-          ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {})
+          ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {}),
+          // Même panier = même commande, même depuis un onglet dupliqué (plan de test CMD-19, voir CartContext).
+          clientRequestId: cart.requestId
         }
       });
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
@@ -211,6 +226,10 @@ export default function Checkout() {
     } catch (e) {
       // CGU passées à une nouvelle version entre l'ouverture de la page et le clic : on affiche la case.
       if (e.code === 'CGU_A_ACCEPTER') setConformite((c) => ({ ...c, termsNeeded: true, acceptTerms: false, termsVersion: e.data?.termsVersion || c.termsVersion }));
+      // Ce panier a déjà donné une commande (payée dans un autre onglet) : on ne la repasse pas, on la montre.
+      if (e.code === 'ORDER_ALREADY_PLACED') { commandeTermineeRef.current = true; cart.clear(); toast(e.message); navigate('/orders'); return; }
+      // Pas de téléphone sur le compte : on y envoie le client, le panier l'attend.
+      if (e.code === 'PHONE_REQUIRED') { toast(e.message, 'erreur'); navigate('/account?ouvrir=connexion&retour=/checkout'); return; }
       toast(e.message, 'erreur');
     } finally {
       setPlacing(false);
@@ -440,7 +459,10 @@ export default function Checkout() {
               <span className="co-barre-montant">{euros(estimatedTotal)}</span>
               <span className="co-barre-detail">{t(cart.count > 1 ? 'checkout.barCountPlural' : 'checkout.barCount', { count: cart.count })}</span>
             </span>
-            {serviceOuvert(fulfillmentType, user) && !paiementBloque ? (
+            {serviceOuvert(fulfillmentType, user) && !paiementBloque && manqueMinimum > 0 ? (
+              // Montant minimum du commerce (PAN-3) : le bouton laisse place à ce qui manque, comme le serveur le refuserait.
+              <span className="small co-barre-attente">{t('checkout.minOrderMissing', { min: euros(restaurant.minOrderAmount), missing: euros(manqueMinimum) })}</span>
+            ) : serviceOuvert(fulfillmentType, user) && !paiementBloque ? (
               <button className="btn-gold" disabled={placing} onClick={placeOrder}>
                 {placing ? '...' : t('checkout.validateInfo')}
               </button>
@@ -469,6 +491,7 @@ export default function Checkout() {
                     {line.optionsSnapshot?.length > 0 && (
                       <span className="small" style={{ display: 'block' }}>{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
                     )}
+                    {line.note && <span className="small" style={{ display: 'block' }}>« {line.note} »</span>}
                   </span>
                   <div className="co-qte" role="group" aria-label={item.name}>
                     <button type="button" onClick={() => cart.changeLineQty(lineKey, -1)} aria-label={t('checkout.qtyLess')}>−</button>
@@ -530,6 +553,8 @@ export default function Checkout() {
                 </p>
               )}
             </details>
+            <CodePromoCheckout token={token} toast={toast} subtotal={totals.subtotal} deliveryFee={fulfillmentType === 'delivery' ? Math.max(0, totals.deliveryFee - totals.deliveryDiscount) : 0}
+              payOnSite={surPlaceChoisi} applique={codePromo} onChange={setCodePromo} />
             <CheckoutConformite restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
           </div>
           )}
@@ -608,12 +633,13 @@ export default function Checkout() {
                     libelle={t('checkout.atDelivery')}
                     valeur={deliveryInstructions}
                     onChange={setDeliveryInstructions}
-                    options={DELIVERY_INSTRUCTION_OPTIONS.map((o) => ({
+                    options={DELIVERY_INSTRUCTION_OPTIONS.filter((o) => !(panierAlcool && o.value === 'deposer')).map((o) => ({
                       value: o.value,
                       label: deliveryInstructionLabel(o.value, t),
                       icone: <Icone nom={o.icon} taille={16} />
                     }))}
                   />
+                  {panierAlcool && <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.noDoorDropAlcohol')}</p>}
                 </div>
                 <div className="field">
                   <label htmlFor="checkout-f-6">{t('checkout.driverNote')}</label>
@@ -682,6 +708,7 @@ export default function Checkout() {
                 </>
               )}
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}
+              {pendingOrder.promoCodeDiscount > 0 && <div className="line"><span>{t('checkout.promoCodeRecap', { label: pendingOrder.promoCode })}</span><span>-{euros(pendingOrder.promoCodeDiscount)}</span></div>}
               {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(pendingOrder.balanceUsed)}</span></div>}
               <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{euros(pendingOrder.total)}</span></div>
             </div>
