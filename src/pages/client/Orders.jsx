@@ -8,6 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { preparerNouvelleCommande } from '../../recommander';
 import SignalerProbleme from '../../components/client/SignalerProbleme';
+import SansLivreur from '../../components/client/SansLivreur';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -281,6 +282,8 @@ export default function Orders() {
             <div style={{ margin: '6px 0' }}><DriverBadge name={o.driverName} phone={o.driverPhone} photoUrl={o.driverPhotoUrl} size={40} /></div>
           )}
           <VendeurLivraison order={o} token={token} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
+          <SansLivreur order={o} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
+          {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
           {o.status === 'livraison' && o.restaurantLat && o.deliveryLat && (
             <div style={{ margin: '10px 0' }}>
               <DeliveryTrackingMap

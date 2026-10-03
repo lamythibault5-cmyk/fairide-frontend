@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import LigneCompte from '../../components/LigneCompte';
+import IncidentsCourse from '../../components/livreur/IncidentsCourse';
 import Icone from '../../components/Icone';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -294,6 +295,7 @@ export default function DriverDashboard() {
         <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.pickupCode}</div>
       </div>
       {o.status !== 'pret' && <p className="small">{t('dashDriver.stillPreparing')}</p>}
+      <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
     </div>
   );
 
@@ -391,6 +393,7 @@ export default function DriverDashboard() {
               />
               <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>
             </div>
+            <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
           </div>
         ))}
 

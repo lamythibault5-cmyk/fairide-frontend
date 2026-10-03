@@ -343,6 +343,10 @@ export default function OrdersPage() {
           </button>
         </div>
       )}
+      {/* Le livreur est arrivé et attend (LIV-8) : le commerce le voit, avec depuis quand. */}
+      {o.courierWaitingSince && ['preparation', 'pret'].includes(o.status) && (
+        <p className="small" style={{ marginTop: 8, marginBottom: 0, fontWeight: 700 }}>{t('ordersResto.courierWaiting', { min: Math.max(0, Math.floor((Date.now() - o.courierWaitingSince) / 60000)) })}</p>
+      )}
       {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
         <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>{t('ordersResto.waitingDriver')}</p>
       )}
