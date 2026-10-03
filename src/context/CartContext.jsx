@@ -46,12 +46,16 @@ export function CartProvider({ children }) {
   // FloatingCart.jsx) doit pouvoir s'afficher sans avoir sous la main le menu complet du restaurant.
   const [lines, setLines] = useState(() => loadPersisted().lines);
   const [requestId, setRequestId] = useState(() => loadPersisted().requestId);
-  // Nouvel identifiant à chaque changement du panier — sauf au premier rendu, qui relit celui de l'onglet.
-  const premierRendu = useRef(true);
+  // Nouvel identifiant quand le CONTENU du panier change — comparé à une empreinte, pas au « premier rendu » : en
+  // développement, StrictMode rejoue les effets au montage, et un garde « premier rendu » laissait passer ce second
+  // passage, si bien que l'onglet dupliqué recevait un nouvel identifiant et pouvait payer une seconde fois.
+  const signature = JSON.stringify([restaurantId, lines]);
+  const derniereSignature = useRef(signature);
   useEffect(() => {
-    if (premierRendu.current) { premierRendu.current = false; return; }
+    if (derniereSignature.current === signature) return;
+    derniereSignature.current = signature;
     setRequestId(nouvelIdDemande());
-  }, [restaurantId, lines]);
+  }, [signature]);
   // Déconnexion VOLONTAIRE (AuthContext.logout) : le panier part avec la session — sur un appareil partagé, la
   // personne suivante ne doit pas le trouver (plan de test PAN-1). Une session EXPIRÉE, elle, garde le panier (USR-6).
   useEffect(() => {
