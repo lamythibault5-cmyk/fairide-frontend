@@ -47,7 +47,7 @@ pre-existing warnings across the codebase. Don't read a clean-looking tail as su
 *your* files are absent from the output. There is nothing else to run here, so read your changes
 carefully and, where behaviour matters, check them in the browser with `npm run dev`.
 
-The backend does have tests (`npm test`, 179 of them on 2026-10-02, `node --test`; the `plan-de-test-*` files replay the end-to-end test plan,
+The backend does have tests (`npm test`, 201 of them on 2026-10-03, `node --test`; the `plan-de-test-*` files replay the end-to-end test plan,
 [docs/fairide-tests-e2e-standalone.html](docs/fairide-tests-e2e-standalone.html), against an in-memory database). If your change touches
 anything the backend also reads — page parsing, menu shape — run them there.
 
@@ -175,8 +175,9 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.
 
-Fonts: **Space Grotesk** for the whole interface (400/500/700), `@import` at the top of
-`styles.css`. Fraunces was removed — the personality comes from scale and tracking, not from a
+Fonts: **Space Grotesk** for the whole interface (400/500/700), **served by Fairide** from
+[public/fonts/polices.css](public/fonts/polices.css) since 2026-10-02 — Google Fonts loaded before cookie consent and sent
+visitors' IP addresses to Google. Never re-add `fonts.googleapis.com`. Fraunces was removed — the personality comes from scale and tracking, not from a
 serif/sans pair. Headings are `-0.02em`.
 
 **The logo is the bicycle « 5a »** (two wheels, top tube, seat tube; lime on an iris tile) — back since
@@ -301,6 +302,13 @@ recovers the in-store price as subtotal / (1 + r(1 + v) + h), with r = `commissi
 12.1%, requested by the business and applied by the team — it is the business's money, not Fairide's).
 The customer additionally pays the delivery fee and a **service fee of 10% of the delivery, excl. VAT, VAT added**
 (€3.00 delivery → €0.30 + €0.06 = €0.36). Takeaway paid on site: no commission, no fee.
+**The courier receives the full delivery fee the client paid** (€4.50 up to 2 km, then €0.60/km), bike included —
+`tauxKmLivreur` in `pricing.js` never goes below the client per-km rate (decided 2026-10-02; bikes used to get €0.40/km).
+**Delivery distance: 6 km by default**, or what the business sets (1–30 km) in « Commandes et capacité »
+(`../fairide-backend/rayonLivraison.js`; NULL used to mean « no limit » and accepted Antwerp).
+**Order promo codes** (`order_percent`, `order_amount`, `order_free_delivery`, `../fairide-backend/codesPromo.js`) are
+paid by Fairide like the balance: they lower `orders.total`, never the business's or the courier's share; online
+payment only.
 Subscription: €20/month, first month free, with the « zéro commande = zéro abonnement » guarantee (a month without
 an order is not charged, or refunded — `../fairide-backend/garantieAbonnement.js`, since 2026-10-02).
 
@@ -310,7 +318,7 @@ an order is not charged, or refunded — `../fairide-backend/garantieAbonnement.
 - the ×1.121 is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js --facteur`, or a CSV of
   in-store prices), not at runtime; since 2026-10-01 the business can no longer edit dishes or prices itself
   (`MENU_LOCKED`) — it asks, and the team applies;
-- legal texts: contract `RESTO-2026.15`, T&Cs `CGU-2026-09-25` (they tell customers prices may be higher than
+- legal texts: contract `RESTO-2026.16` (courier contracts `*-2026.6`), T&Cs `CGU-2026-09-25` (they tell customers prices may be higher than
   on site). Never write « le prix du commerce » or « 100 % au restaurant » in customer-facing copy.
 
 ## Three sellers per order (decided 2026-09-23)
@@ -352,6 +360,28 @@ of absent features precisely so nobody re-invents or over-claims them.
 [MenuPage.jsx](src/pages/restaurant/MenuPage.jsx) (929) are the two to stop growing — extract a
 component rather than adding to them. `AdminAccountingPage.jsx` is down to 488 and is no longer a
 concern. `menuCategories.js` (3,978) is a data table, not logic — that one is fine.
+
+## End-to-end test plan fixes (2026-10-02)
+
+The browser run of [docs/fairide-tests-e2e-standalone.html](docs/fairide-tests-e2e-standalone.html) led to these, all
+covered by `../fairide-backend/tests/correctifs-e2e.test.js`:
+
+- **Times always in Brussels time**: [src/fuseauBruxelles.js](src/fuseauBruxelles.js), imported first in `main.jsx`,
+  defaults every `toLocale*String` to Europe/Brussels. Amounts go through `euros()` ([src/prixPlat.js](src/prixPlat.js)),
+  never `` `${x.toFixed(2)}€` ``.
+- **Cart = idempotency key**: the cart carries `requestId` (sent as `clientRequestId`); the same cart in two tabs gives
+  one order, the second gets `ORDER_ALREADY_PLACED`. Explicit logout empties the cart; an expired session keeps it.
+- **Alcohol** is detected by dish name, and a section only counts when it is alcohol-only (« Bières & boissons » no
+  longer makes Coca 18+; migration 011 fixed existing rows). « Déposer devant la porte » is refused with alcohol.
+- **Simulation orders** never enter admin money figures (`sqlCommandeReelle` in every finance/KPI query).
+- **New features**: client data export and « log out everywhere » ([MesDonnees](src/components/MesDonnees.jsx)), order
+  again ([src/recommander.js](src/recommander.js)), report a problem ([SignalerProbleme](src/components/client/SignalerProbleme.jsx)
+  → support ticket), notification bell ([ClocheNotifications](src/components/client/ClocheNotifications.jsx), fed by a DB
+  trigger), promo code at checkout; business pause 15/30/60 min ([InterrupteurService](src/components/commerce/InterrupteurService.jsx)),
+  extra prep time on accept, minimum order, per-dish client note (printed on the ticket); courier incidents
+  ([IncidentsCourse](src/components/livreur/IncidentsCourse.jsx): hand back a job, waiting at the business, client absent)
+  and the client's « no courier after 20 min → cancel, refunded » ([SansLivreur](src/components/client/SansLivreur.jsx)).
+- Commitments signed in « Ma carte » show an EN/NL translation; **the French text stays the one that is hashed and signed**.
 
 ## Known gaps
 
