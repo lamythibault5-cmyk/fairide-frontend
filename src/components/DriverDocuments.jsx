@@ -90,7 +90,7 @@ export default function DriverDocuments() {
   return (
     <div>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('driverDocs.intro')}</p>
-      {idv && idv.status === 'verified' && <p className="small" style={{ margin: '0 0 10px' }}>✅ {t('driverDocs.identityVerified', { provider: idv.provider === 'stripe_identity' ? 'Stripe Identity' : idv.provider === 'itsme' ? 'itsme' : 'Fairide' })}</p>}
+      {idv && idv.status === 'verified' && <p className="small" style={{ margin: '0 0 10px' }}>✅ {t('driverDocs.identityVerified', { provider: idv.provider === 'stripe_identity' ? 'Stripe Identity' : 'Fairide' })}</p>}
       <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
         <b>{t(`courierOnboarding.doc_${kind}`)}</b>
         {identite.length === 0 && (

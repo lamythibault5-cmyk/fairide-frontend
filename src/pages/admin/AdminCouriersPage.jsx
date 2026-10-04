@@ -63,7 +63,7 @@ export default function AdminCouriersPage() {
     { key: 'name', label: tr('adminCommon.name'), get: (r) => <><b>{r.name}</b>{estCompteTest(r) && <TestBadge />}<div className="small">{r.email}</div></>, sortValue: (r) => r.name },
     { key: 'statusType', label: tr('adminCouriers.colStatus'), get: (r) => <>{statut(r.statusType)}{r.statusVerifiedAt ? ' ✅' : ''}</>, sortValue: (r) => r.statusType || '' },
     { key: 'lifecycleStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{lifecycle(r.lifecycleStatus)}</span>, sortValue: (r) => r.lifecycleStatus },
-    { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className={`pill ${r.identity.provider === 'itsme' ? 'listing-on' : ''}`}>✅ {tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? '⏳' : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? (r.identity.provider === 'itsme' ? 2 : 1) : 0) },
+    { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className="pill">✅ {tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? '⏳' : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? 1 : 0) },
     { key: 'situation', label: tr('adminCouriers.colCap'), get: (r) => (pctPlafond(r) != null ? `${pctPlafond(r)} %` : '-'), sortValue: (r) => (pctPlafond(r) ?? -1), align: 'right' },
     { key: 'gross', label: tr('adminCouriers.colGross'), get: (r) => euro(r.grossTotal ?? 0), sortValue: (r) => Number(r.grossTotal || 0), align: 'right' },
     { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '-'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}`, sortValue: (r) => r.zone || '' },
@@ -241,7 +241,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           {c.requestedStatusType && <p className="small" style={{ color: 'var(--gold-deep)' }}>🔄 {tr('adminCouriers.requestedChange', { to: statut(c.requestedStatusType), reason: d.requestedStatusReason || '-' })}</p>}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secIdentity')}</h4>
-          <DrawerRow label={tr('adminCommon.status')} value={identite.status === 'verified' ? `✅ ${tr(`adminCouriers.provider_${identite.provider || 'manual'}`)}${identite.provider === 'itsme' ? ` — ${tr('adminCouriers.itsmeTrusted')}` : ''}` : `${identite.status || '-'}${identite.provider ? ` (${identite.provider})` : ''}`} />
+          <DrawerRow label={tr('adminCommon.status')} value={identite.status === 'verified' ? `✅ ${tr(`adminCouriers.provider_${identite.provider || 'manual'}`)}` : `${identite.status || '-'}${identite.provider ? ` (${identite.provider})` : ''}`} />
           <DrawerRow label={tr('adminCouriers.verifiedName')} value={`${identite.firstName || ''} ${identite.lastName || ''}`.trim() || '-'} />
           <DrawerRow label={tr('adminCouriers.nameMatch')} value={`${tr('adminCouriers.account')} ${identite.nameMatchAccount == null ? '-' : identite.nameMatchAccount ? '✅' : '❌'} · Stripe ${identite.nameMatchStripe == null ? '-' : identite.nameMatchStripe ? '✅' : '❌'}`} />
           {identite.status !== 'verified' && (

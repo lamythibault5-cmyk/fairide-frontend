@@ -15,8 +15,8 @@ import { TarifMinimum, DocumentsVente } from '../../components/conformite/Espace
 import { libelleManque } from '../../conformite';
 
 // Parcours d'inscription du livreur, en étapes : statut (économie collaborative / étudiant-indépendant /
-// indépendant), identité vérifiée (Stripe Identity aujourd'hui, itsme/eID dès le contrat itsme, ou dépôt
-// manuel), infos et documents propres au statut, contrat signé, paiements Stripe, puis envoi à la
+// indépendant), identité vérifiée (Stripe Identity, ou dépôt manuel — itsme a été retiré le 4 oct. 2026 : jamais
+// raccordé, il s'affichait « recommandé, bientôt » sans contrat prévu), infos et documents propres au statut, contrat signé, paiements Stripe, puis envoi à la
 // validation Fairide. Une fois validé, la même page montre les compteurs (plafond P2P, brut / précompte /
 // net de l'année), les notifications, le renouvellement annuel et le changement de statut, libre à tout
 // moment (le dossier repasse alors en vérification).
@@ -271,12 +271,6 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
         </div>
       ) : (
         <div className="courier-providers">
-          <div className={`courier-provider courier-provider-itsme${prov.itsme ? '' : ' soon'}`}>
-            <b>📱 {t('courierOnboarding.provider_itsme')} <span className="pill" style={{ marginLeft: 6 }}>{t('courierOnboarding.itsmeRecommended')}</span></b>
-            <p className="small">{t('courierOnboarding.itsmeLastCheck')}</p>
-            <p className="small">{t('courierOnboarding.itsmeHelp')}</p>
-            {prov.itsme ? <button type="button" className="btn-gold" disabled={busy} onClick={() => demarrer('itsme')}>{t('courierOnboarding.identityStartItsme')}</button> : <span className="small courier-soon">🔒 {t('courierOnboarding.itsmeSoon')}</span>}
-          </div>
           <div className="courier-provider">
             <b>🪪 {t('courierOnboarding.provider_stripe_identity')}</b>
             <p className="small">{t('courierOnboarding.stripeIdentityHelp')}</p>
