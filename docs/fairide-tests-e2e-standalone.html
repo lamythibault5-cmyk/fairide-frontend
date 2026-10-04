@@ -148,6 +148,13 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .faire{margin:8px 0 0;padding-left:22px;font-size:14px;max-width:90ch}
 .faire li{margin:3px 0}
 .fin{margin-top:16px;font-size:14px;background:var(--accent-soft);border-radius:8px;padding:8px 12px;max-width:90ch}
+.claude{margin-top:10px;font-size:14px;background:var(--retest-soft);border:1px solid var(--retest);border-radius:8px;padding:8px 12px;max-width:90ch}
+.glossaire{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:6px;font-size:14px}
+.glossaire summary{cursor:pointer;font-weight:700}
+.glossaire dl{margin:10px 0 0;display:grid;grid-template-columns:max-content 1fr;gap:6px 14px}
+.glossaire dt{font-weight:700}
+.glossaire dd{margin:0;color:var(--muted)}
+@media (max-width:860px){.glossaire dl{grid-template-columns:1fr}.glossaire dd{margin-bottom:6px}}
 details.archive>summary{cursor:pointer;list-style-position:outside}
 details.archive>summary h2{display:inline-flex}
 .foot{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
@@ -700,106 +707,327 @@ const TESTS = [
 {id:"LCH-12",s:"LCH",t:"Coursiers prêts : approuvés, Connect actif, app installée, push OK",r:"coursier",tr:"B",p:1,e:["Checklist par coursier"],a:"Au moins N coursiers actifs par créneau d'ouverture."},
 ];
 
-// ---------- vue « par session » (ajoutée le 3 oct. 2026)
+// ---------- vue « par session » (ajoutée le 3 oct. 2026, réécrite en langage simple le 4 oct.)
 // Les mêmes tests que le catalogue, rangés dans l'ordre où on peut les faire le plus vite : une session = un même
-// matériel, les mêmes personnes et le même endroit. Chaque étape dit quoi faire, puis montre les cartes des tests
-// qu'elle permet de cocher. Un test n'apparaît que dans UNE session ; ceux qui ne sont dans aucune (déjà validés
-// par Claude) sont rangés à la fin dans « Déjà validés ». Les résultats restent enregistrés par identifiant de
-// test : changer de vue ne change rien aux statuts.
+// matériel, les mêmes personnes et le même endroit. Chaque étape dit, clic par clic, quoi faire et ce qu'on doit
+// voir, puis montre les cartes des tests qu'elle permet de cocher. `claude` signale ce que Claude peut faire à ta
+// place. Un test n'apparaît que dans UNE session ; ceux qui ne sont dans aucune (déjà validés par Claude) sont rangés
+// à la fin dans « Déjà validés ». Les résultats restent enregistrés par identifiant de test : changer de vue ne
+// change rien aux statuts.
+const GLOSSAIRE = [
+ ["Railway","Le site web (railway.app) où tourne le « cerveau » de Fairide : le serveur et la base de données. Tu t'y connectes avec ton compte."],
+ ["Vercel","Le site web (vercel.com) qui affiche les pages de fairide.be aux visiteurs."],
+ ["Stripe","Le site web (dashboard.stripe.com) qui encaisse les paiements par carte et paie les commerces et les livreurs."],
+ ["Variable","Un réglage caché, sous la forme NOM = valeur (par exemple VITE_PLAUSIBLE_DOMAIN = fairide.be). On les trouve dans Railway › Variables et dans Vercel › Settings › Environment Variables."],
+ ["Déployer / Redeploy","Mettre le site à jour avec le dernier code. Railway et Vercel le font tout seuls après un « merge » ; le bouton « Redeploy » le refait à la main."],
+ ["Merge (fusionner)","Sur GitHub, accepter les changements d'une branche pour qu'ils partent en ligne. C'est un bouton vert « Merge pull request »."],
+ ["Journaux (logs)","Le texte que le serveur écrit pendant qu'il tourne. Sur Railway : onglet « Deployments », clique la ligne du haut, puis « View logs ». Ctrl+F pour chercher un mot."],
+ ["Webhook","Un message automatique que Stripe envoie à Fairide pour dire « ce paiement est passé ». S'il n'arrive pas, la commande reste bloquée."],
+ ["F12 / Console","Dans Chrome, la touche F12 ouvre un panneau pour développeurs. L'onglet « Console » montre les erreurs en rouge."],
+ ["PWA (l'app)","Le site installé comme une application sur le téléphone. Android (Chrome) : menu ⋮ › « Installer l'application ». iPhone (Safari) : bouton Partager ⬆️ › « Sur l'écran d'accueil »."],
+ ["GC Web","Le navigateur installé sur le terminal Goodcom. C'est le seul endroit d'où l'imprimante à tickets fonctionne."],
+ ["Compte 🧪 test","Avant les dates d'ouverture, seuls les comptes marqués « test » peuvent commander. Admin › Clients › clique le compte › bouton « 🧪 Marquer comme compte test »."],
+ ["Cartes de test Stripe","De faux numéros de carte qui ne marchent qu'en « mode test » (ex. 4242 4242 4242 4242, date future, n'importe quel code). Ils ne débitent rien."],
+];
 const SESSIONS = [
-{id:"S0", nom:"Session 0 · Déployer les correctifs", duree:"20 min", qui:"Toi (tech)", ou:"Ordinateur",
- desc:"Tant que les deux branches ne sont pas en ligne, rien de ce que tu testes en production ne contient les 40 correctifs du 2-3 octobre. Commence par ici.",
- materiel:["Accès GitHub, Railway et Vercel","Un onglet ouvert sur https://fairide-backend-production.up.railway.app/api/health"],
+{id:"S0", nom:"Session 0 · Mettre les correctifs en ligne", duree:"20 min", qui:"Toi", ou:"Ordinateur",
+ desc:"Les 40 corrections faites par Claude ne sont pas encore sur fairide.be. Tant qu'elles n'y sont pas, tester le vrai site ne sert à rien. Fais ceci en premier.",
+ materiel:["Tes identifiants GitHub, Railway et Vercel","20 minutes sans commande en cours (le site peut couper quelques secondes)"],
  etapes:[
-  {titre:"Avant de fusionner : déploiement sans coupure", f:["Railway › service backend › Settings › Healthcheck Path = /api/health, enregistrer","Pendant le déploiement de l'étape suivante, recharger /api/health toutes les 10 s : il ne doit jamais afficher « 502 »"], t:["OPS-12"]},
-  {titre:"Fusionner et déployer", f:["GitHub fairide-backend : Pull request fix/correctifs-e2e-playwright → main, « Merge » (le conflit est déjà résolu)","Attendre que Railway ait redéployé et lire ses journaux : « Migration appliquée » 011 à 016, sans erreur","GitHub fairide-frontend : même chose ; attendre la fin du déploiement Vercel","Ouvrir fairide.be en navigation privée : la page se charge"], t:["ACT-1"]},
-  {titre:"Re-tester les correctifs", f:["Les 40 tests « Corrigé » sont rangés dans les sessions 2 à 5, là où leur matériel est disponible : tu les rejoueras en passant","Cette carte se coche quand le filtre Statut = « Corrigé (à retester) » ne montre plus rien"], t:["ACT-2"]},
+  {titre:"Régler Railway pour que le site ne coupe pas pendant une mise à jour", f:[
+    "Va sur railway.app et connecte-toi.",
+    "Clique sur le projet Fairide, puis sur la case du serveur (celle qui s'appelle fairide-backend, pas celle de la base Postgres).",
+    "Clique sur l'onglet « Settings » (réglages), en haut.",
+    "Descends jusqu'à « Healthcheck Path ». Tape exactement : /api/health — puis clique ailleurs pour enregistrer.",
+    "Ouvre un autre onglet sur : https://fairide-backend-production.up.railway.app/api/health — tu dois voir une ligne de texte qui contient « ok ».",
+    "Pendant toute l'étape suivante, recharge cet onglet (touche F5) toutes les 10 secondes.",
+    "✅ Réussi si tu vois toujours « ok ». ❌ Échoué si tu vois « 502 » ou « Application failed to respond »."], t:["OPS-12"]},
+  {titre:"Fusionner et mettre en ligne", f:[
+    "Ouvre ce lien : https://github.com/lamythibault5-cmyk/fairide-backend/compare/main...fix/correctifs-e2e-playwright?expand=1",
+    "Clique le bouton vert « Create pull request », puis encore « Create pull request » plus bas.",
+    "Attends 10 secondes. Descends et clique « Merge pull request », puis « Confirm merge ».",
+    "Retourne sur Railway, onglet « Deployments » : une nouvelle ligne apparaît. Attends qu'elle devienne verte « Active » (2 à 5 min).",
+    "Clique sur cette ligne, puis « View logs ». Appuie sur Ctrl+F et cherche « Migration ». Tu dois voir 011, 012, 013, 014, 015 et 016, et aucune ligne avec « error ».",
+    "Recommence pour le site avec ce lien : https://github.com/lamythibault5-cmyk/fairide-frontend/compare/main...fix/correctifs-e2e-playwright?expand=1 (mêmes boutons).",
+    "Attends 3 minutes, puis ouvre fairide.be dans une fenêtre privée (Ctrl+Maj+N) : la page s'affiche normalement."],
+   claude:"Si un bouton est gris, si GitHub parle de « conflict », ou si tu vois « error » dans les journaux : arrête-toi et envoie une capture d'écran à Claude.", t:["ACT-1"]},
+  {titre:"Penser à re-tester les corrections", f:[
+    "Les 40 tests marqués « Corrigé » (en orange) sont dans les sessions 2 à 5. Tu les referas en passant, rien de spécial à faire maintenant.",
+    "Coche ce test à la toute fin : quand le filtre « Tous statuts » réglé sur « Corrigé (à retester) » n'affiche plus aucune carte."], t:["ACT-2"]},
  ],
- fin:"Les deux sites tournent sur le nouveau code et /api/health n'a jamais répondu 502."},
+ fin:"fairide.be tourne avec les corrections, et /api/health n'a jamais affiché 502."},
 
-{id:"S1", nom:"Session 1 · Bureau : réglages, comptes et vérifications en ligne", duree:"1 h 30", qui:"Toi (tech), seul", ou:"Ordinateur",
- desc:"Aucune commande, aucun téléphone : uniquement les tableaux de bord (Railway, Stripe, Vercel, DNS) et le navigateur. Ferme 7 tests d'un coup à l'étape Vercel.",
- materiel:["Accès Railway, Stripe, Vercel, gestionnaire DNS (OVH), Google Search Console, Plausible","Chrome (pour Lighthouse et la console F12)"],
+{id:"S1", nom:"Session 1 · Au bureau : réglages des sites et vérifications", duree:"1 h 30", qui:"Toi, seul", ou:"Ordinateur avec Chrome",
+ desc:"Aucune commande, aucun téléphone. Tu passes dans les sites où Fairide est réglé (Railway, Stripe, Vercel) et tu vérifies ou changes des réglages. Les parties vraiment techniques sont marquées 🤖 : Claude peut les faire ou te guider ligne par ligne.",
+ materiel:["Tes identifiants : Railway, Stripe, Vercel, OVH (le nom de domaine), Google","Une feuille pour noter"],
  etapes:[
-  {titre:"Railway : clés et secrets (dans CET ordre)", f:["Variables : noter si STRIPE_SECRET_KEY commence par sk_live_ ou sk_test_ (décide si les commandes de la session 5 sont du vrai argent)","Poser COURIER_DATA_KEY et lancer scripts/rechiffrer-donnees-livreurs.js AVANT de changer JWT_SECRET (sinon les numéros de registre national deviennent illisibles)","Ensuite seulement : remplacer JWT_SECRET (garder l'ancien dans ANCIEN_JWT_SECRET), redéployer","Journaux : chercher POST /api/auth/verify-email suivi d'activité admin inattendue","Settings › Build : commande = npm ci ; région = EU West pour la base et le backend"], t:["PRE-1","AML-2","AML-1","AML-3","AML-4","AML-5","AML-6","AML-16","AML-22"]},
-  {titre:"Sauvegardes, surveillance, purge", f:["Railway › base › Backups : fréquence et durée de conservation ; restaurer la dernière dans une base neuve, y démarrer le backend, chronométrer","Sentry (ou équivalent) : provoquer une erreur, vérifier qu'une alerte arrive par e-mail ; couper le backend 2 min et voir ce que voit un client","Journaux Railway : lignes de la purge horaire (retentionPurge.js), taille des tables les plus grosses"], t:["OPS-5","AML-11","OPS-6","LCH-9","OPS-11","LEG-16","AML-13"]},
-  {titre:"Stripe : tableau de bord", f:["Developers › Webhooks : une seule adresse active pour la prod, /api/payments/webhook, secret identique à STRIPE_WEBHOOK_SECRET, aucun échec récent","Checklist « Activate payments » : Connect, Bancontact activé, domaine Apple Pay vérifié","Comparer le net d'une ancienne commande avec la somme de ses transferts ; regarder le délai de disponibilité des fonds"], t:["PRE-5","LCH-5","MON-10","MON-11","PAY-17"]},
-  {titre:"Vercel : les variables d'environnement (7 tests en une fois)", f:["Choisir un fournisseur de tuiles sous contrat (MapTiler, Stadia…) et créer une clé","Vercel › fairide-frontend › Settings › Environment Variables (Production) : VITE_STOCK_DISH_PHOTOS = off ; VITE_MAP_TILE_URL et VITE_MAP_TILE_ATTRIBUTION ; VITE_PLAUSIBLE_DOMAIN = fairide.be","Ajouter le domaine des tuiles à img-src dans vercel.json (ou demander à Claude)","Deployments › Redeploy, puis ouvrir une carte, une fiche commerce sans photos et plausible.io"], t:["LCH-1","MNU-14","GEO-8","LCH-2","SEO-8","LCH-4"]},
-  {titre:"Domaine et e-mail", f:["Redirections http/www vers https://fairide.be ; écrire à l'adresse support depuis une boîte perso","mail-tester.com avec un vrai e-mail Fairide (inscription d'un compte jetable) ; DMARC à passer en quarantine si le score est bon","Search Console : soumettre https://fairide.be/sitemap.xml"], t:["LCH-8","NOT-2","AML-14"]},
-  {titre:"Accès et dépendances", f:["Lister qui a accès à Railway, Vercel, Stripe, DNS, Resend ; 2FA partout, y compris le compte admin Fairide","npm audit dans les deux dépôts"], t:["SEC-17","SEC-11","SEC-15"]},
-  {titre:"Fournisseurs et environnements : décisions", f:["Lire les règles d'usage de Nominatim, Photon, OSRM ; estimer les appels par jour au lancement ; quotas de Resend et des tuiles","Décider : faut-il un staging (il servira à la session 3) et un mode maintenance ?"], t:["AML-10","PRF-7","OPS-9","OPS-10"]},
-  {titre:"Vérifications dans le navigateur (production, sans compte)", f:["securityheaders.com sur fairide.be et sur l'API","F12 › Console sur l'accueil, une fiche, la carte, le checkout, l'admin : aucune violation CSP","Lighthouse mobile sur accueil, /restaurants, une fiche, le checkout","Après 30 min sans visite : chronométrer le premier chargement de /restaurants","Partager une fiche commerce dans WhatsApp ; ouvrir /nimporte-quoi et /restaurants/999999"], t:["SEC-9","AML-19","PRF-4","PRF-1","SEO-1","SEO-3"]},
+  {titre:"Railway : vérifier les réglages du serveur", f:[
+    "railway.app › projet Fairide › case fairide-backend › onglet « Variables ».",
+    "Trouve STRIPE_SECRET_KEY et clique sur l'œil 👁 pour voir la valeur. Note SEULEMENT le début : « sk_live_ » (vrai argent) ou « sk_test_ » (faux argent). Ne la copie nulle part. → test PRE-1.",
+    "Dans la même liste, vérifie que JWT_SECRET existe et n'est pas vide. Ne la change PAS toi-même (voir l'encadré 🤖). → AML-1 et AML-2.",
+    "Onglet « Settings » : dans la partie « Build », la commande doit contenir « npm ci ». Si c'est vide ou « npm install », note-le. → AML-6.",
+    "Toujours dans « Settings », la région doit être « EU West ». Va aussi voir la case Postgres › Settings : même chose. → AML-16.",
+    "Pièces d'identité des livreurs : va sur fairide.be/admin › Livreurs › ouvre un livreur qui a envoyé sa pièce › clic droit sur le lien du document › « Copier l'adresse du lien ». Ouvre une fenêtre privée (Ctrl+Maj+N) et colle l'adresse. ✅ Réussi si le fichier NE s'ouvre PAS. → AML-4.",
+    "CORS (AML-5) : Claude l'a déjà vérifié, rien à faire. itsme (AML-22) : tant que le contrat itsme n'est pas signé, clique « N/A »."],
+   claude:"Changer JWT_SECRET est délicat : si on le fait dans le mauvais ordre, les numéros de registre national des livreurs deviennent illisibles. Dis à Claude « on change JWT_SECRET » : il te donnera chaque clic. Il peut aussi fouiller les anciens journaux pour AML-3 si tu lui donnes accès à Railway (il t'expliquera comment).", t:["PRE-1","AML-2","AML-1","AML-3","AML-4","AML-5","AML-6","AML-16","AML-22"]},
+  {titre:"Sauvegardes et alerte si le site tombe", f:[
+    "Sauvegardes : Railway › clique la case Postgres › onglet « Backups ». Note : y a-t-il des sauvegardes ? Tous les combien ? Si la liste est vide, active les sauvegardes automatiques (bouton dans cet onglet). → OPS-5.",
+    "Alerte : va sur uptimerobot.com (gratuit) et crée un compte.",
+    "Clique « Add New Monitor ». Type : HTTP(s). URL : https://fairide-backend-production.up.railway.app/api/health. Intervalle : 5 minutes. Coche l'alerte par e-mail à ton adresse. Enregistre.",
+    "Pour vérifier que l'alerte marche : ajoute un 2e moniteur avec l'URL https://fairide-backend-production.up.railway.app/api/nexistepas. Dans les 10 minutes tu dois recevoir un e-mail « down ». Puis supprime ce 2e moniteur. → OPS-6.",
+    "Coche LCH-9 seulement quand OPS-5 et OPS-6 sont « Réussi »."],
+   claude:"Restaurer une sauvegarde dans une base vide (AML-11), lire les lignes de nettoyage automatique dans les journaux (LEG-16, AML-13) et mesurer la taille de la base (OPS-11) : c'est technique. Demande à Claude « fais les tests de sauvegarde et de purge » : il te dira ce dont il a besoin.", t:["OPS-5","AML-11","OPS-6","LCH-9","OPS-11","LEG-16","AML-13"]},
+  {titre:"Stripe : vérifier les paiements", f:[
+    "Va sur dashboard.stripe.com. En haut à droite, le bouton « Mode test » doit être DÉSACTIVÉ (tu regardes la vraie caisse).",
+    "Clique « Développeurs » (en bas à gauche) puis « Webhooks ». Il doit y avoir UNE seule adresse active, qui finit par /api/payments/webhook. Clique dessus : pas de lignes rouges « Échec » récentes. → PRE-5.",
+    "Sur la même page, clique « Révéler » à côté de « Clé secrète de signature » (commence par whsec_). Compare ses 6 derniers caractères avec STRIPE_WEBHOOK_SECRET dans Railway › Variables : ils doivent être identiques.",
+    "Paramètres (roue ⚙️) › Moyens de paiement : Bancontact, Apple Pay et Google Pay doivent être « Activé ». Pour Apple Pay, Stripe demande de vérifier le domaine fairide.be : suis ses instructions. → LCH-5.",
+    "Paiements › clique un ancien paiement réussi. Note « Frais Stripe » et « Net ». Puis va dans Connect › Transferts : les transferts de ce paiement (commerce + livreur) doivent être plus petits que le « Net ». → MON-10.",
+    "Accueil › Solde : regarde « Disponible » et « En attente ». Si presque tout est « En attente », les livreurs ne pourront pas être payés tout de suite : note-le. → MON-11.",
+    "PAY-17 : sur fairide.be/admin › Commandes, vérifie que d'anciennes commandes de test ne s'affichent pas en erreur."], t:["PRE-5","LCH-5","MON-10","MON-11","PAY-17"]},
+  {titre:"Vercel : trois réglages qui ferment 7 tests", f:[
+    "Cartes géographiques : va sur maptiler.com, crée un compte gratuit. Dans « Maps », choisis « Streets », puis copie l'adresse indiquée sous « Raster tiles » (elle contient {z}/{x}/{y} et ta clé).",
+    "Statistiques : va sur plausible.io, crée un compte et ajoute le site « fairide.be » (essai gratuit, puis payant).",
+    "Va sur vercel.com › projet fairide-frontend › « Settings » › « Environment Variables ».",
+    "Clique « Add New ». Key : VITE_STOCK_DISH_PHOTOS — Value : off — coche seulement « Production » — « Save ».",
+    "Pareil : Key VITE_PLAUSIBLE_DOMAIN — Value fairide.be.",
+    "Pareil : Key VITE_MAP_TILE_URL — Value : l'adresse MapTiler copiée plus haut.",
+    "Pareil : Key VITE_MAP_TILE_ATTRIBUTION — Value : © MapTiler © OpenStreetMap contributors",
+    "Dis à Claude « autorise MapTiler dans vercel.json » (petite modification du code, sinon les cartes resteront grises). Attends qu'il te dise que c'est en ligne.",
+    "Vercel › « Deployments » › clique les ⋯ au bout de la ligne du haut › « Redeploy ». Attends 3 minutes.",
+    "Vérifie : une fiche commerce dont les plats n'ont pas de photo n'affiche plus de photos inventées (LCH-1, MNU-14) ; une carte s'affiche avec « MapTiler » en bas à droite (GEO-8, LCH-2) ; sur plausible.io ta visite apparaît (SEO-8, LCH-4)."], t:["LCH-1","MNU-14","GEO-8","LCH-2","SEO-8","LCH-4"]},
+  {titre:"Le nom de domaine et les e-mails", f:[
+    "Tape http://fairide.be dans la barre d'adresse : tu dois arriver sur https://fairide.be. Pareil avec www.fairide.be. → LCH-8.",
+    "Depuis ta boîte mail perso, écris à l'adresse de contact affichée en bas de fairide.be. Note qui la reçoit et en combien de temps.",
+    "Va sur mail-tester.com : le site te donne une adresse e-mail. Crée un compte client sur fairide.be avec CETTE adresse (l'e-mail de bienvenue part chez mail-tester). Retourne sur mail-tester et clique pour voir le score. ✅ 9/10 ou plus. → NOT-2.",
+    "Va sur search.google.com/search-console › choisis fairide.be › menu « Sitemaps » › tape sitemap.xml › « Envoyer ». ✅ Statut « Réussite ». → AML-14."],
+   claude:"Le réglage DMARC (protection contre les faux e-mails au nom de Fairide) se fait chez OVH : demande à Claude, il te dira exactement quoi changer.", t:["LCH-8","NOT-2","AML-14"]},
+  {titre:"Qui a accès à quoi", f:[
+    "Sur ta feuille, fais un tableau : Railway, Vercel, Stripe, OVH, Resend, GitHub. Pour chacun : qui a un compte ? La double authentification (code sur le téléphone) est-elle activée ? → SEC-17.",
+    "Active la double authentification sur ton propre compte partout où elle manque (dans les réglages « Sécurité » de chaque site).",
+    "Connecte-toi à fairide.be/admin : un code sur le téléphone est-il demandé en plus du mot de passe ? Si non, SEC-11 est « Échoué ».",
+    "SEC-15 : Claude l'a déjà fait, rien à faire."], t:["SEC-17","SEC-11","SEC-15"]},
+  {titre:"Des choix à faire (pas de clics)", f:[
+    "Ouvre chaque carte ci-dessous, lis la question, et écris ta décision dans la case « Notes ».",
+    "Si tu ne comprends pas la question, demande à Claude « explique-moi AML-10 en 3 lignes » (ou le numéro concerné)."], t:["AML-10","PRF-7","OPS-9","OPS-10"]},
+  {titre:"Vérifications dans le navigateur", f:[
+    "Va sur securityheaders.com, tape fairide.be, clique « Scan ». ✅ Note A ou B. → SEC-9.",
+    "Ouvre fairide.be dans Chrome, appuie sur F12, clique l'onglet « Console ». Visite l'accueil, une fiche commerce, le paiement. ❌ Échoué si une ligne rouge parle de « Content Security Policy » : fais une capture pour Claude. → AML-19.",
+    "Toujours avec F12, onglet « Lighthouse » : coche « Mobile », clique « Analyze page load ». Note le chiffre « Performance » (✅ 70 ou plus). Fais-le sur l'accueil, /restaurants et une fiche commerce. → PRF-4.",
+    "Le matin, avant toute visite, ouvre fairide.be/restaurants et compte les secondes avant que la liste apparaisse. ✅ Moins de 3. → PRF-1.",
+    "Envoie-toi le lien d'une fiche commerce sur WhatsApp : l'aperçu doit montrer le nom et la photo du commerce. → SEO-1.",
+    "Tape fairide.be/nimporte-quoi puis fairide.be/restaurants/999999 : une page « introuvable » avec un bouton pour revenir. → SEO-3."],
+   claude:"Claude peut faire toute cette étape à ta place : dis-lui « fais l'étape 8 de la session 1 ».", t:["SEC-9","AML-19","PRF-4","PRF-1","SEO-1","SEO-3"]},
  ],
- fin:"Tout ce qui se règle dans un tableau de bord est réglé ; il ne reste que des tests avec des personnes et des téléphones."},
+ fin:"Tous les réglages sont vérifiés. Il ne reste que des tests avec des personnes et des téléphones."},
 
-{id:"S2", nom:"Session 2 · Tour du site sans payer (client, puis admin)", duree:"1 h", qui:"Toi", ou:"Ordinateur + un téléphone",
- desc:"Tout ce qui se vérifie sans payer : liste, fiche, compte, checkout jusqu'au bouton de paiement, et la console admin.",
- materiel:["Un compte client jetable (pour la suppression RGPD) et ton compte client de test","Le compte admin contact@fairide.be"],
+{id:"S2", nom:"Session 2 · Faire le tour du site sans payer", duree:"1 h", qui:"Toi", ou:"Ordinateur + ton téléphone",
+ desc:"Tu te mets à la place d'un client, sans aller jusqu'à payer, puis à la place de l'admin.",
+ materiel:["Une adresse e-mail jetable pour un compte qu'on supprimera (par exemple ton.adresse+jetable@gmail.com)","Ton compte admin (contact@fairide.be)"],
  etapes:[
-  {titre:"En visiteur déconnecté", f:["Accueil : taper 1050, puis 1180, puis 1000 ; une commune sans commerce","Comparer distance/temps de 3 commerces avec Google Maps","Cliquer un commerce dans la liste : connexion demandée, puis retour sur ce commerce","Lire /classement en regardant l'ordre réel de /restaurants","Pied de page : mentions légales, CGV (rétractation des repas), accessibilité, contact support","/signaler : signaler un plat ; vérifier l'arrivée dans Admin › Conformité › Signalements DSA"], t:["CLI-1","GEO-9","GEO-10","CMD-17","ADM-4","LEG-1","LEG-6","LEG-15","OPS-1","ADM-3","PRF-5"]},
-  {titre:"Compte client", f:["Mot de passe oublié : adresse connue, adresse inconnue, réutiliser le lien ; chronométrer l'e-mail","Connexion Google ; puis même adresse qu'un compte mot de passe","Se tromper de mot de passe 25 fois de suite (compte jetable) : blocage temporaire, levé par une réinitialisation","Adresses : « Rue de la Loi 16 », « Wetstraat 16 », « Av. Louise 1 bte 3 » ; Anvers ; enregistrer Maison et Bureau, en supprimer une","Mon compte : téléphone belge (+32 4…, 04…), un numéro FR, des lettres","Mon compte › Mes données et mes sessions : télécharger mes données ; connecté sur 2 appareils, « Me déconnecter de tous les appareils »","Se désabonner des e-mails marketing (les e-mails de commande doivent continuer en session 5)","Taper ' OR 1=1 -- dans la connexion, la recherche de commerces et les recherches de l'admin : aucun effet"], t:["SEC-13","CPT-3","CPT-4","SEC-4","SEC-12","CPT-11","GEO-1","GEO-3","GEO-4","PAN-7","CPT-7","CPT-9","NOT-6"]},
-  {titre:"Fiche commerce et checkout, sans payer", f:["Fiche : bloc vendeur, allergènes, 18+ ; dans une section « Bières & boissons », Coca sans 18+ et bière avec","Ouvrir un plat avec options « choisis jusqu'à N »","Panier avec une bière → checkout : « Déposer devant la porte » ne doit pas être proposé","Récapitulatif : vendeur par ligne, frais de service en un montant, bouton « Commander et payer »","Passer en mode avion 30 s sur le checkout : bandeau hors ligne, puis il disparaît","Basculer EN puis NL sur accueil, liste, fiche, checkout, commandes, et dans « Ma carte » d'un commerce"], t:["CLI-2","ACT-7","LEG-9","MNU-2","PAN-8","CLI-3","DEV-11","DEV-7","AML-21"]},
-  {titre:"Console admin", f:["Admin › Simulation : une boucle complète ; Finance et Tableau de bord ne doivent pas bouger","Suspendre le compte jetable via la fenêtre de décision, vérifier que sa session tombe, le réactiver","Journal d'audit : les actions que tu viens de faire y sont","Lister les comptes 🧪 test et ceux de simulation : aucun visible du public","Inscrire un commerce avec un faux numéro BCE : que voit l'admin avant approbation ?","Supprimer le compte jetable (Mon compte) : e-mail de confirmation reçu"], t:["SIM-12","ADM-5","SEC-10","ADM-7","LCH-7","SEC-16","CPT-6"]},
+  {titre:"Comme un visiteur qui n'est pas connecté", f:[
+    "Ouvre une fenêtre privée (Ctrl+Maj+N) sur fairide.be.",
+    "Dans la barre d'adresse de l'accueil, tape 1050 puis valide. Note l'ordre des commerces. Recommence avec 1180 et 1000. ✅ Les commerces de la commune d'abord, puis les voisines. → CLI-1, GEO-9.",
+    "Pour 3 commerces, compare la distance affichée avec Google Maps. ✅ À peu près pareil. → GEO-10.",
+    "Clique sur un commerce de la liste : on te demande de te connecter. Connecte-toi : tu dois revenir sur CE commerce. → CMD-17.",
+    "Va sur fairide.be/classement et lis le texte. Il doit décrire l'ordre que tu as vu plus haut. → ADM-4.",
+    "En bas de page : ouvre les mentions légales (nom de la société, numéro BCE, TVA), les CGV (une phrase dit qu'on ne peut pas se rétracter pour un repas), la page accessibilité, et cherche comment contacter le support. → LEG-1, LEG-6, LEG-15, OPS-1.",
+    "Va sur fairide.be/signaler, signale un plat. Puis dans fairide.be/admin › Conformité › Signalements DSA, le signalement doit apparaître. → ADM-3.",
+    "PRF-5 : fais défiler la liste et une grande carte (100+ plats) : ✅ ça reste fluide."], t:["CLI-1","GEO-9","GEO-10","CMD-17","ADM-4","LEG-1","LEG-6","LEG-15","OPS-1","ADM-3","PRF-5"]},
+  {titre:"Le compte client", f:[
+    "Crée un compte client avec ton adresse jetable.",
+    "Déconnecte-toi. « Mot de passe oublié » avec ton adresse : chronomètre l'arrivée de l'e-mail. Utilise le lien, puis clique-le une 2e fois : il doit être refusé. Essaie aussi une adresse qui n'existe pas : même message. → CPT-3.",
+    "Si le bouton « Continuer avec Google » existe : connecte-toi avec Google. → CPT-4.",
+    "Tape un mauvais mot de passe 25 fois de suite sur le compte jetable : ✅ le site finit par bloquer un moment. → SEC-4.",
+    "Dans le champ e-mail de connexion, tape :  ' OR 1=1 --  et dans la recherche de commerces aussi. ✅ Rien de bizarre ne se passe. → SEC-13.",
+    "Adresse de livraison : tape « Rue de la Loi 16 », puis « Wetstraat 16 », puis « Av. Louise 1 bte 3 », puis une adresse à Anvers. ✅ Les deux premières donnent la même rue ; « bte 3 » est gardé ; Anvers est refusé. → GEO-1, GEO-3.",
+    "Mon compte : enregistre une adresse « Maison » et une « Bureau », supprime-en une. → GEO-4.",
+    "Mon compte › téléphone : essaie +32 470 12 34 56, puis 0470123456, puis un numéro français, puis des lettres. → PAN-7.",
+    "Mon compte › « Mes données et mes sessions » › « Télécharger mes données » : un fichier se télécharge. → CPT-7.",
+    "Connecte-toi aussi sur ton téléphone. Sur l'ordinateur, clique « Me déconnecter de tous les appareils » : le téléphone doit être déconnecté. → CPT-9.",
+    "Désabonne-toi des e-mails de promotion (lien en bas d'un e-mail ou Mon compte). → NOT-6.",
+    "SEC-12 et CPT-11 : ce sont des décisions ou des vérifications déjà faites par Claude ; lis la carte et décide."], t:["SEC-13","CPT-3","CPT-4","SEC-4","SEC-12","CPT-11","GEO-1","GEO-3","GEO-4","PAN-7","CPT-7","CPT-9","NOT-6"]},
+  {titre:"Une fiche commerce et le panier, sans payer", f:[
+    "Ouvre un commerce. En haut : nom de la société, numéro d'entreprise, TVA. Sur les plats : allergènes, et « 18+ » sur l'alcool. → CLI-2.",
+    "Dans un commerce qui a une section « Bières & boissons » : le Coca ne doit PAS avoir « 18+ », la bière oui. Fais-le pour chaque vrai commerce publié. → ACT-7, LEG-9.",
+    "Ouvre un plat avec des options (« choisis jusqu'à 2 ») : tu ne peux pas en cocher plus. → MNU-2.",
+    "Mets une bière au panier et va au paiement : le choix « Déposer devant la porte » ne doit PAS être proposé. → PAN-8.",
+    "Regarde le récapitulatif : chaque ligne dit qui vend (commerce, livreur, Fairide), les frais de service sont en un seul montant, le bouton dit « Commander et payer ». NE clique PAS dessus. → CLI-3.",
+    "Sur ton téléphone, à la page de paiement : mets le mode avion 30 secondes. ✅ Un bandeau « Pas de connexion internet » apparaît puis disparaît quand tu enlèves le mode avion. → DEV-11.",
+    "Change la langue en English puis Nederlands (en bas de page) sur l'accueil, la liste, une fiche, le panier, Mes commandes. ✅ Plus de phrases en français. → DEV-7, AML-21."], t:["CLI-2","ACT-7","LEG-9","MNU-2","PAN-8","CLI-3","DEV-11","DEV-7","AML-21"]},
+  {titre:"L'espace admin", f:[
+    "fairide.be/admin › Finance : note le chiffre d'affaires. Puis Admin › Simulation : choisis un commerce, lance, et fais une commande complète dans les onglets qui s'ouvrent. Retourne dans Finance : ✅ le chiffre n'a pas bougé. → SIM-12, ADM-5.",
+    "Admin › Clients › ton compte jetable › Suspendre (remplis la fenêtre avec un motif). Sur l'autre navigateur où il est connecté : il doit être déconnecté. Puis réactive-le. → SEC-10.",
+    "Admin › Journal d'audit : la suspension que tu viens de faire y est, avec ton nom et l'heure. → ADM-7.",
+    "Admin › Clients : regarde les comptes avec 🧪. Aucun ne doit être un vrai client. → LCH-7.",
+    "Inscris un faux commerce avec un numéro d'entreprise inventé : dans Admin › Restaurants, est-ce que quelque chose t'avertit avant d'approuver ? → SEC-16.",
+    "Connecté sur le compte jetable : Mon compte › Supprimer mon compte. ✅ Un e-mail de confirmation arrive. → CPT-6."], t:["SIM-12","ADM-5","SEC-10","ADM-7","LCH-7","SEC-16","CPT-6"]},
  ],
- fin:"Le parcours client est vérifié jusqu'au paiement, et l'admin a été parcourue."},
+ fin:"Tout le parcours client jusqu'au paiement est vérifié, et l'admin aussi."},
 
-{id:"S3", nom:"Session 3 · Paiements avec les cartes de test Stripe", duree:"1 h 30", qui:"Toi (tech) + un téléphone", ou:"Environnement de TEST (pas la production en sk_live_)",
- desc:"Les cartes de test Stripe ne marchent qu'avec une clé sk_test_. Deux façons : (A) le plus rapide, donner à Claude des clés de test Stripe : il rejoue cette session sur son banc local avec la CLI Stripe et remplit les résultats ; il ne te restera que Bancontact et Apple/Google Pay sur téléphone. (B) Créer un environnement « staging » dans Railway (Environments › New, base séparée, STRIPE_SECRET_KEY = sk_test_…, webhook de test vers l'adresse de staging) et un aperçu Vercel avec VITE_API_BASE pointant dessus.",
- materiel:["Cartes : 4242 4242 4242 4242 (OK), 4000 0000 0000 0002 (refusée), 4000 0027 6000 3184 (3-D Secure), 4000 0000 0000 0069 (expirée), 4000 0000 0000 9995 (fonds insuffisants), 4000 0000 0000 0259 (litige)","Un compte client marqué 🧪 test (Admin › Clients › fiche › « 🧪 Marquer comme compte test »), sinon le serveur refuse de commander avant les dates d'ouverture","Un commerce et un coursier de test dans le même environnement"],
+{id:"S3", nom:"Session 3 · Les paiements avec de fausses cartes", duree:"1 h 30 (ou 10 min si Claude le fait)", qui:"Claude, puis toi avec ton téléphone", ou:"Un Fairide en « mode test » (pas le vrai site)",
+ desc:"Les fausses cartes de Stripe ne marchent qu'en mode test, donc pas sur le vrai fairide.be. Le plus simple : Claude rejoue toute cette session sur son ordinateur de test. Toi, tu n'as qu'à lui donner les clés de test (étape 1) puis faire Bancontact et Apple/Google Pay sur ton téléphone.",
+ materiel:["Ton accès Stripe"],
  etapes:[
-  {titre:"Cartes et moyens de paiement", f:["Une commande par carte : refusée, 3-D Secure, expirée, fonds insuffisants","Ouvrir le paiement puis fermer l'onglet Stripe sans payer : la commande ne doit jamais arriver au commerce, le panier est encore là","Bancontact (succeed / fail) et Apple Pay / Google Pay depuis le téléphone"], t:["PAY-1","PAY-2","PAY-16","PAY-3","PAY-7","PAY-8"]},
-  {titre:"Webhooks et pannes", f:["Stripe › Events › un paiement › « Resend » : rien ne se produit deux fois","Désactiver l'endpoint webhook, payer, attendre 2 min, réactiver et « Resend »","Envoyer un POST non signé à /api/payments/webhook : 400, et une ligne dans les journaux","Payer pendant que le commerce refuse la commande (à deux, au même moment)","Mettre une clé Stripe invalide 2 min ; une clé Resend invalide 2 min ; redémarrer le backend pendant une commande en livraison"], t:["PAY-5","PAY-9","PAY-10","PAY-4","OPS-4","NOT-8","OPS-3"]},
-  {titre:"Solde, codes promo, bons cadeaux", f:["Admin : créditer 5 € de geste commercial ; payer une commande en partie avec le solde, puis la faire refuser : solde et carte rendus","Admin › Promotions : créer -10 %, -5 €, livraison offerte, première commande ; au checkout « J'ai un code promo » : calcul, réutilisation, deux codes, total jamais sous 0 €","Acheter un bon cadeau de 25 €, en utiliser 10 €"], t:["MON-5","PAY-6","MON-6","MON-7"]},
-  {titre:"Remboursements, litiges, aucun livreur", f:["Admin : rembourser 1 article sur 3, puis 100 % d'une commande livrée","Payer avec 4000 0000 0000 0259 : le litige apparaît dans l'admin","Commande en livraison prête, aucun coursier ne la prend pendant 20 min : le client voit « Aucun livreur… » et annule, remboursé","Stripe test : faire échouer un versement coursier (IBAN de test en échec)"], t:["PAY-11","MON-4","PAY-12","ACT-8","LIV-1","MON-3"]},
-  {titre:"Pourboires", f:["Après livraison : 1 €, 2 €, 5 €, 0,50 €, 100 €","Pourboire avec la carte refusée : message clair, la commande reste livrée"], t:["PAY-14","PAY-15","MON-9"]},
-  {titre:"Coursier et Stripe", f:["Stripe Identity : envoyer une pièce illisible, puis abandonner","Stripe test : passer le compte Connect du coursier en « restricted »","Admin : placer le compteur annuel du coursier près du plafond, puis lui faire livrer"], t:["COU-4","COU-5","CRS-4","MON-12"]},
+  {titre:"Donner les clés de test à Claude", f:[
+    "dashboard.stripe.com › en haut à droite, active « Mode test » (le bandeau devient orange).",
+    "« Développeurs » › « Clés API ». Copie la « Clé publiable » (pk_test_…) et la « Clé secrète » (sk_test_…, bouton « Révéler »).",
+    "Envoie les deux à Claude avec la phrase « fais la session 3 ». Ce sont des clés de TEST : elles ne peuvent pas toucher au vrai argent.",
+    "Claude remplit lui-même les résultats des tests ci-dessous. Toi, tu fais seulement ceux qu'il te renvoie (téléphone)."], t:["PAY-1","PAY-2","PAY-16","PAY-3","PAY-7","PAY-8"]},
+  {titre:"Ce que Claude vérifie : messages de Stripe et pannes", f:[
+    "Stripe envoie deux fois le même message « payé » : rien ne doit se passer deux fois.",
+    "Le message de Stripe arrive avec 2 minutes de retard : la commande se débloque toute seule.",
+    "Un faux message non signé est refusé.",
+    "Le client paie au moment exact où le commerce refuse : il est remboursé.",
+    "Stripe, la messagerie e-mail ou le serveur tombent quelques minutes : pas de commande fantôme."], t:["PAY-5","PAY-9","PAY-10","PAY-4","OPS-4","NOT-8","OPS-3"]},
+  {titre:"Ce que Claude vérifie : solde, codes promo, bons cadeaux", f:[
+    "Un geste commercial de 5 € crédité par l'admin, utilisé au paiement, rendu si le commerce refuse.",
+    "Les codes promo -10 %, -5 €, livraison offerte, première commande : bon calcul, pas réutilisables, jamais sous 0 €.",
+    "Un bon cadeau de 25 € dont on utilise 10 €."], t:["MON-5","PAY-6","MON-6","MON-7"]},
+  {titre:"Ce que Claude vérifie : remboursements, litiges, pas de livreur", f:[
+    "Rembourser 1 article sur 3, puis toute une commande livrée.",
+    "Un client conteste un paiement auprès de sa banque (litige).",
+    "Aucun livreur ne prend la commande pendant 20 minutes : le client annule et est remboursé.",
+    "Le virement vers un livreur échoue."], t:["PAY-11","MON-4","PAY-12","ACT-8","LIV-1","MON-3"]},
+  {titre:"Ce que Claude vérifie : pourboires et livreur", f:[
+    "Pourboires de 0,50 € à 100 €, et un pourboire refusé par la banque.",
+    "Vérification d'identité du livreur refusée ; compte Stripe du livreur bloqué ; livreur qui atteint le plafond annuel."], t:["PAY-14","PAY-15","MON-9","COU-4","COU-5","CRS-4","MON-12"]},
  ],
- fin:"Chaque cas de paiement a été vu une fois, sans un euro réel."},
+ fin:"Claude a rempli les résultats ; tu as fait les tests de téléphone qu'il t'a demandés."},
 
-{id:"S4", nom:"Session 4 · Préparer le commerce de test, le terminal et le coursier", duree:"2 h", qui:"Toi + la personne qui fera le coursier", ou:"Le commerce (terminal Goodcom) + ordinateur + 2 téléphones",
- desc:"La veille de la session 5. Le commerce de test est à toi (ton IBAN, ton Stripe Connect) : l'argent des commandes de la session 5 te revient, moins les frais Stripe. Il sera dépublié à la fin (ADM-10).",
- materiel:["Terminal Goodcom avec GC Web, rouleau de papier de rechange","Deux téléphones : un Android et un iPhone si possible","Quatre boîtes mail lisibles : client, commerce, coursier, admin","Le compte client de la session 5 marqué « 🧪 Marquer comme compte test » dans Admin › Clients"],
+{id:"S4", nom:"Session 4 · Préparer un commerce de test, le terminal et un livreur", duree:"2 h", qui:"Toi + la personne qui jouera le livreur", ou:"Là où se trouve le terminal Goodcom",
+ desc:"À faire la veille de la session 5. Tu crées un faux commerce qui est à toi (avec ton compte bancaire) : l'argent des commandes de la session 5 te revient, moins quelques centimes de frais. On le retirera du site à la fin.",
+ materiel:["Le terminal Goodcom allumé, branché au Wi-Fi, avec un rouleau de papier de rechange","Deux téléphones (un Android et un iPhone si possible)","Quatre adresses e-mail différentes : client, commerce, livreur, admin (ex. ton.adresse+client@gmail.com, +commerce, +livreur)","Ton IBAN et ta carte d'identité (pour Stripe)"],
  etapes:[
-  {titre:"Comptes et matériel", f:["Créer les adresses e-mail, marquer le client 🧪 test, préparer un carnet : n° de commande, heure, anomalie"], t:["PRE-3"]},
-  {titre:"Le commerce", f:["/login › inscription commerce ; /dashboard/edit : adresse, horaires, livraison + à emporter, paiement à emporter « au choix du client »","Menu : un plat avec allergènes, un avec photo, un sans photo, une bière ; une option à 0 € et une à 1,50 €, tenter -1 € ; réordonner et masquer une catégorie","Photos : HEIC d'iPhone de 8 Mo en portrait, PNG, GIF, un PDF renommé .jpg, un SVG","Signer l'attestation carte / allergènes ; déclarer le numéro AFSCA","/dashboard/reviews avant tout avis : aucune étoile","Paiements : terminer Stripe Connect ; souscrire l'abonnement","Admin › Restaurants : approuver et publier ; tester « fermé » puis « ouvert » ; déclarer le 11 novembre fermé"], t:["BIZ-1","BIZ-2","BIZ-3","MNU-3","MNU-7","MNU-8","SEC-7","BIZ-4","LEG-14","RES-15","BIZ-9","BIZ-8","BIZ-6","BIZ-7","HOR-4"]},
-  {titre:"Le terminal (dans cet ordre)", f:["Sur l'ordinateur, AVANT d'associer le Goodcom : « Imprimer un ticket de test » (TRM-8)","Sur le Goodcom, GC Web, /dashboard/terminal : service détecté, « Tester l'imprimante » (accents et €), « Associer cet appareil comme terminal »","Choisir le moment d'impression et les copies, recharger : le réglage est gardé ; « Imprimer un ticket de test »","Retirer le terminal de la liste et le ré-associer"], t:["TER-1","TER-2","TRM-8","TER-3","TER-4","TER-5","TRM-9"]},
-  {titre:"Le coursier", f:["/driver/onboarding : avis, nationalité, consentement biométrique (séparé et retirable), Stripe Identity, Stripe Connect ; quitter au milieu et reprendre","Admin › Livreurs : approuver ; vérifier les quatre conditions une par une","Installer l'app (PWA) sur Android et sur iPhone, accepter les notifications ; fermer l'app","Sur un des deux téléphones : refuser la localisation, voir le message, puis la réautoriser pour la session 5"], t:["COU-1","LEG-4","COU-2","COU-3","DEV-5","DEV-6","GEO-6"]},
+  {titre:"Les comptes", f:[
+    "Crée un compte client sur fairide.be avec l'adresse +client.",
+    "Va sur fairide.be/admin › Clients › clique ce compte › « 🧪 Marquer comme compte test ». Sans ça, il ne pourra pas commander avant l'ouverture.",
+    "Prépare un carnet : à chaque commande de la session 5 tu noteras le numéro, l'heure et ce qui cloche."], t:["PRE-3"]},
+  {titre:"Le commerce de test", f:[
+    "Déconnecte-toi. Sur fairide.be/login, choisis « Je suis un commerce » et inscris-toi avec l'adresse +commerce. ✅ Un e-mail de bienvenue arrive. → BIZ-1.",
+    "Mon commerce : remplis l'adresse, les horaires (ouvert toute la journée de demain), coche livraison ET à emporter, et pour le paiement à emporter choisis « au choix du client ». Recharge la page : tout est gardé. → BIZ-2.",
+    "Menu : crée 4 plats : un avec des allergènes, un avec photo, un sans photo, une bière (case « Alcool »). Ajoute à un plat une option gratuite (0 €) et une à 1,50 € ; essaie une option à -1 € (doit être refusée). Change l'ordre de deux catégories et cache-en une. → BIZ-3, MNU-3, MNU-7.",
+    "Photos : essaie une photo prise avec un iPhone, une image PNG, un GIF, et un PDF renommé en .jpg. ✅ Les vraies images passent, le PDF est refusé. → MNU-8, SEC-7.",
+    "Page menu, encadré conformité : signe l'attestation. Remplis le numéro AFSCA. → BIZ-4, LEG-14.",
+    "Ouvre l'onglet Avis : aucune étoile ne doit s'afficher. → RES-15.",
+    "Onglet Paiements : clique pour configurer les paiements Stripe et suis toutes les étapes (IBAN, carte d'identité). Puis souscris l'abonnement (1er mois gratuit). → BIZ-9, BIZ-8.",
+    "Va sur fairide.be/admin › Restaurants › ton commerce › « Approuver » puis « Publier ». ✅ Il apparaît sur fairide.be/restaurants. → BIZ-6.",
+    "Mets le commerce sur « fermé », vérifie qu'un client ne peut pas commander, remets « ouvert ». → BIZ-7.",
+    "Ajoute une fermeture exceptionnelle le 11 novembre. → HOR-4."], t:["BIZ-1","BIZ-2","BIZ-3","MNU-3","MNU-7","MNU-8","SEC-7","BIZ-4","LEG-14","RES-15","BIZ-9","BIZ-8","BIZ-6","BIZ-7","HOR-4"]},
+  {titre:"Le terminal (dans cet ordre exact)", f:[
+    "D'abord sur l'ORDINATEUR, connecté comme commerce : va sur fairide.be/dashboard/terminal et clique « Imprimer un ticket de test ». ✅ Message « en attente : il sortira dès qu'un terminal sera associé ». → TRM-8.",
+    "Maintenant sur le GOODCOM : ouvre l'application GC Web, va sur fairide.be, connecte-toi avec le compte +commerce, puis va sur fairide.be/dashboard/terminal.",
+    "✅ La page dit « Service d'impression Goodcom détecté ». → TER-1.",
+    "Clique « Tester l'imprimante » : un ticket sort, les accents (é è à ç) et le € sont bien imprimés. → TER-2.",
+    "Clique « Associer cet appareil comme terminal ». ✅ Il apparaît « en ligne » dans la liste. Le ticket de l'étape 1 doit sortir à ce moment-là. → TER-3.",
+    "Choisis « Dès que la commande arrive » et 1 copie. Recharge la page : le choix est gardé. Clique « Imprimer un ticket de test » : un ticket sort. → TER-4, TER-5.",
+    "Retire le terminal de la liste, puis clique à nouveau « Associer cet appareil comme terminal ». ✅ Il n'apparaît qu'une seule fois. → TRM-9."], t:["TER-1","TER-2","TRM-8","TER-3","TER-4","TER-5","TRM-9"]},
+  {titre:"Le livreur", f:[
+    "Sur le téléphone du livreur : fairide.be › inscription livreur avec l'adresse +livreur. Suis toutes les étapes (avis à accepter, nationalité, accord pour la vérification du visage, vérification d'identité Stripe, compte bancaire Stripe). Ferme l'app au milieu, rouvre : tu reprends là où tu étais. → COU-1, LEG-4.",
+    "Sur ton ordinateur : fairide.be/admin › Livreurs › ce livreur › « Approuver ». ✅ Il reçoit un e-mail. → COU-2.",
+    "Lis la carte COU-3 : vérifie que le livreur voit bien les courses une fois approuvé, Stripe actif et pas en pause.",
+    "Installe l'app sur les deux téléphones (Android : menu ⋮ › « Installer l'application » ; iPhone : bouton Partager ⬆️ › « Sur l'écran d'accueil »). Ouvre-la depuis l'icône et accepte les notifications. → DEV-5, DEV-6.",
+    "Sur un des téléphones : quand l'app demande la position, refuse. Note le message. Puis réautorise-la dans les réglages du téléphone (on en a besoin demain). → GEO-6."], t:["COU-1","LEG-4","COU-2","COU-3","DEV-5","DEV-6","GEO-6"]},
  ],
- fin:"Un commerce publié avec terminal associé, un coursier approuvé avec l'app installée, un client 🧪 prêt à commander."},
+ fin:"Ton commerce de test est sur le site avec son terminal, le livreur est approuvé avec l'app installée, et le client 🧪 peut commander."},
 
-{id:"S5", nom:"Session 5 · Journée de commandes réelles (le gros morceau)", duree:"3 h 30 à 4 h", qui:"3 personnes : client, commerce, coursier (+ toi en admin)", ou:"Le commerce de test + 2 téléphones + ordinateur admin",
- desc:"Six tournées de commandes. Chaque tournée a un réglage différent du terminal et un incident provoqué, pour couvrir le plus de cas avec le moins de commandes. Petits montants (5 à 15 €). Si la clé Stripe est sk_live_ (session 1), c'est du vrai argent qui revient au commerce de test, donc à toi.",
- materiel:["Tout ce qui a été préparé en session 4","Un carnet : n° de commande + heure à chaque tournée"],
+{id:"S5", nom:"Session 5 · Une journée de vraies commandes", duree:"3 h 30 à 4 h", qui:"3 personnes : client, commerce, livreur (toi, tu fais aussi l'admin)", ou:"Ton commerce de test + 2 téléphones + ordinateur",
+ desc:"Six séries de commandes. Pour chaque série on change un réglage et on provoque un problème exprès, pour tout voir en un minimum de commandes. Commandes de 5 à 15 €. Si la clé Stripe est « sk_live_ » (session 1), c'est du vrai argent, qui revient à ton commerce de test, donc à toi.",
+ materiel:["Tout ce qui a été préparé en session 4","Le carnet : numéro de commande + heure à chaque commande"],
  etapes:[
-  {titre:"Tournée 1 · Livraison complète, impression « Dès que la commande arrive », 2 copies", f:["Terminal : « Dès que la commande arrive », 2 copies","Client : panier de 15+ lignes (accents, suppléments, « sans oignon » sur un plat, une demande d'allergie) ; payer par carte","Commerce : NE PAS accepter pendant 5 min (e-mail de rappel) ; laisser l'app commerce en arrière-plan sur un téléphone (son) ; accepter depuis deux appareils en même temps ; choisir « +10 min »","Coursier : attendre l'alerte « prête », prendre la course ; bouton itinéraire ; appeler le client depuis l'app","Retrait : taper un faux code, puis le bon","Livraison : verrouiller le téléphone du coursier 3 min (la carte client avertit après 2 min) ; puis saisir le code client","Client : suivre /orders tout du long ; la cloche « Notifications » se remplit"], t:["FLX-1","TRM-1","TRM-4","TRM-12","TRM-13","MNU-5","CLI-4","FLX-2","RES-11","RES-12","FLX-3","RES-10","FLX-4","FLX-5","GEO-7","CRS-13","FLX-6","CRS-12","GEO-5","FLX-7","CLI-5","NOT-4","NOT-9","DEV-1"]},
-  {titre:"Après la tournée 1 : argent, e-mails, factures", f:["Client : avis (essayer 2 000 caractères, un lien, du HTML) + pourboire de 2 € ; attendre : une seule invitation à donner un avis","Ouvrir chaque e-mail reçu sur téléphone et ordinateur, en mode sombre ; même heure partout (e-mail, ticket, dashboard, admin, facture)","/invoices : facture PDF, TVA par taux (plat 6 %, bière 21 %, livraison 21 %)","Admin › Finance et Stripe : le commerce reçoit son prix magasin, le coursier toute la livraison, Fairide la majoration + frais de service","Client : « Commander à nouveau » ; ouvrir le checkout dans 2 onglets et payer dans les deux ; « Signaler un problème » avec photo sur la commande livrée"], t:["CLI-6","USR-8","NOT-7","NOT-3","HOR-6","USR-7","LEG-7","MNU-9","FLX-8","MON-1","USR-9","CMD-19","USR-10"]},
-  {titre:"Tournée 2 · Minimum, refus, rupture, impression « Quand j'accepte la commande »", f:["Commerce : Commandes et capacité › minimum 15 € ; client : panier à 12 € (bloqué, montant manquant), puis le compléter","Commerce : refuser cette commande avec un motif → client remboursé, motif visible","Client : mettre un plat au panier ; le commerce (ou l'admin) le met en rupture ; payer → message qui nomme le plat","Terminal : « Quand j'accepte la commande » ; nouvelle commande : rien ne sort avant d'accepter","Commerce : accepter, puis annuler avec un motif (« plus d'ingrédients »)"], t:["PAN-3","RES-3","CMD-9","TRM-2","RES-14"]},
-  {titre:"Tournée 3 · Incidents coursier, impression « Seulement quand je le demande »", f:["Terminal : « Seulement quand je le demande » ; commande en livraison : rien ne sort, puis 🖨️ « Réimprimer »","Coursier : prendre la course PENDANT la préparation, « J'attends au commerce » (le commerce voit depuis quand)","Coursier : « Rendre la course », puis la reprendre (nouveau ticket « livreur attribué »)","Après le retrait : essayer de passer hors ligne ; éteindre le téléphone 15 min (alerte admin ?)","Rallumer : « Client injoignable », attendre 10 min, clore « non livrée »","Seconde commande : après le retrait, « Je ne peux pas terminer » → l'admin la retrouve par e-mail / téléphone du client et force un statut"], t:["TRM-3","LIV-8","LIV-2","TRM-10","LIV-11","LIV-3","LIV-5","ADM-8","ADM-9"]},
-  {titre:"Tournée 4 · Pause, commande programmée, horaires de nuit", f:["Commerce : toucher l'interrupteur › pause 15 min ; client : le commerce est en pause ; attendre la reprise automatique","Client : commande programmée pour demain midi : le ticket porte la date et l'heure","Facultatif, le soir : horaires 18:00 → 01:00, commander à 00:30"], t:["RES-9","CMD-15","HOR-1"]},
-  {titre:"Tournée 5 · À emporter", f:["À emporter payé par carte : montrer le code au comptoir, le commerce confirme le retrait","À emporter payé sur place : le ticket dit « à payer sur place » ; le commerce tape 6 faux codes (blocage 15 min même pour le bon), puis le bon après 15 min","À emporter avec une bière : le commerce enregistre « pas de pièce d'identité » → annulée, remboursée"], t:["FLX-9","FLX-10","SEC-3","RES-7"]},
-  {titre:"Tournée 6 · Le terminal en panne", f:["Fermer GC Web, passer une commande, rouvrir : le ticket sort","Couper le Wi-Fi du terminal, passer une commande, le remettre","Retirer le rouleau, passer une commande, le remettre","Laisser le terminal 30 min sans le toucher, puis une commande","Même test d'impression dans Chrome sur le Goodcom ; dashboard sur un téléphone et un PC ; bon de livraison depuis un iPhone (AirPrint)"], t:["TRM-5","TER-6","TRM-6","TRM-7","TRM-14","DEV-2","DEV-3","DEV-4"]},
-  {titre:"Fin de journée", f:["Commerce : historique du jour et totaux ; Paiements : date du prochain versement, relevé","Coursier : page revenus (courses, pourboire, cumul vers le plafond) ; noter la batterie consommée sur la journée","Admin : dépublier le commerce de test (les commandes en cours vont au bout, il disparaît de la liste)"], t:["RES-13","MON-2","CRS-14","PRF-6","ADM-10"]},
+  {titre:"Série 1 · Une livraison complète, ticket « Dès que la commande arrive », 2 copies", f:[
+    "COMMERCE (terminal) : fairide.be/dashboard/terminal › « Dès que la commande arrive » et « Nombre de copies » = 2.",
+    "CLIENT : mets au moins 15 plats au panier (ajoute plusieurs fois les mêmes, avec options). Sur un plat, écris « sans oignon » dans « Une précision pour ce plat ? ». Au paiement, ajoute une allergie. Paie par carte.",
+    "COMMERCE : ✅ 2 tickets sortent tout de suite. Lis-les : tout y est (numéro, heure, plats, « sans oignon », allergie en gros, montant). → FLX-1, TRM-1, TRM-4, TRM-12, TRM-13, MNU-5.",
+    "COMMERCE : sur un téléphone, ouvre aussi le tableau de bord commerce puis mets l'app en arrière-plan : ✅ ça sonne ou vibre. → RES-11.",
+    "COMMERCE : n'accepte PAS pendant 5 minutes. ✅ Un e-mail de rappel arrive. → FLX-2.",
+    "COMMERCE : clique « Accepter » en même temps sur l'ordinateur ET le téléphone, en choisissant « +10 min ». ✅ Acceptée une seule fois ; le client voit l'heure reculer de 10 min. → RES-12, FLX-3, RES-10.",
+    "COMMERCE : clique « Prête ». LIVREUR : ✅ notification sur le téléphone en quelques secondes, même app fermée. Il prend la course et voit un code de retrait. → FLX-4, FLX-5, NOT-4.",
+    "LIVREUR : touche le bouton itinéraire (ouvre Google Maps) et le bouton pour appeler le client. → GEO-7, CRS-13.",
+    "Au comptoir : le livreur donne d'abord un FAUX code (refusé), puis le bon. ✅ Statut « en livraison », le client reçoit son code par e-mail. → FLX-6.",
+    "LIVREUR : verrouille son téléphone 3 minutes. CLIENT : sur la carte de suivi, ✅ un avertissement « position pas à jour » apparaît après 2 min. → CRS-12, GEO-5.",
+    "LIVREUR : tape le code du client. ✅ « Livrée ». → FLX-7.",
+    "CLIENT : pendant tout ce temps, Mes commandes se met à jour tout seul, et le bouton « Notifications » se remplit. → CLI-4, CLI-5, NOT-9, DEV-1."], t:["FLX-1","TRM-1","TRM-4","TRM-12","TRM-13","MNU-5","CLI-4","FLX-2","RES-11","RES-12","FLX-3","RES-10","FLX-4","FLX-5","GEO-7","CRS-13","FLX-6","CRS-12","GEO-5","FLX-7","CLI-5","NOT-4","NOT-9","DEV-1"]},
+  {titre:"Juste après la série 1 : avis, e-mails, factures, argent", f:[
+    "CLIENT : laisse un avis très long (colle 2 000 caractères), avec un lien et le texte <b>test</b>. Ajoute un pourboire de 2 €. ✅ L'avis est coupé à 1 000 caractères, le <b> s'affiche tel quel. → CLI-6, USR-8.",
+    "Attends 1 heure : une seule invitation à laisser un avis. → NOT-7.",
+    "Ouvre chaque e-mail reçu sur le téléphone et l'ordinateur. ✅ Les liens marchent, l'heure est la même partout (e-mail, ticket, tableau de bord, admin, facture). → NOT-3, HOR-6.",
+    "CLIENT : Mon compte › Factures : télécharge le PDF. Plats à 6 %, bière à 21 %, livraison à 21 %. → USR-7, LEG-7, MNU-9.",
+    "ADMIN : fairide.be/admin › Finance, et dans Stripe › Paiements : le commerce reçoit son prix magasin, le livreur toute la livraison, Fairide le reste. → FLX-8, MON-1.",
+    "CLIENT : sur la commande livrée, « Commander à nouveau » : le panier se remplit. → USR-9.",
+    "CLIENT : ouvre la page de paiement dans 2 onglets (clic droit sur l'onglet › Dupliquer). Paie dans le 1er, puis dans le 2e. ✅ Le 2e dit « Cette commande a déjà été passée ». → CMD-19.",
+    "CLIENT : sur la commande livrée, « Signaler un problème » avec une photo. ✅ E-mail de confirmation ; l'admin voit le ticket. → USR-10."], t:["CLI-6","USR-8","NOT-7","NOT-3","HOR-6","USR-7","LEG-7","MNU-9","FLX-8","MON-1","USR-9","CMD-19","USR-10"]},
+  {titre:"Série 2 · Commande trop petite, refus, plat épuisé, ticket « Quand j'accepte »", f:[
+    "COMMERCE : Mon commerce › Commandes et capacité › montant minimum 15 €. CLIENT : panier de 12 € : ✅ bouton bloqué, « il manque 3 € ». Complète le panier et paie. → PAN-3.",
+    "COMMERCE : refuse cette commande en écrivant un motif. ✅ Le client voit le motif et est remboursé. → RES-3.",
+    "CLIENT : mets un plat au panier. ADMIN (ou commerce) : passe ce plat en « indisponible ». CLIENT : paie. ✅ Message qui nomme le plat. → CMD-9.",
+    "COMMERCE (terminal) : choisis « Quand j'accepte la commande ». CLIENT : nouvelle commande. ✅ Rien ne sort ; à l'acceptation, le ticket sort. → TRM-2.",
+    "COMMERCE : annule cette commande acceptée, motif « plus d'ingrédients ». ✅ Client remboursé, e-mail reçu. → RES-14."], t:["PAN-3","RES-3","CMD-9","TRM-2","RES-14"]},
+  {titre:"Série 3 · Les problèmes du livreur, ticket « Seulement quand je le demande »", f:[
+    "COMMERCE (terminal) : choisis « Seulement quand je le demande ». CLIENT : commande en livraison. ✅ Rien ne sort ; sur la commande, le bouton 🖨️ « Réimprimer » fait sortir un ticket. → TRM-3.",
+    "LIVREUR : prend la course AVANT qu'elle soit prête, et touche « J'attends au commerce ». ✅ Le commerce voit « Le livreur est là et attend depuis X min ». → LIV-8.",
+    "LIVREUR : « Rendre la course ». Puis il la reprend. ✅ Un nouveau ticket « livreur attribué » peut être imprimé. → LIV-2, TRM-10.",
+    "Après le retrait au comptoir, LIVREUR : essaie de te mettre « hors ligne » (doit être impossible ou avertir). → LIV-11.",
+    "LIVREUR : éteins complètement le téléphone 15 minutes. ADMIN : est-ce que tu vois une alerte ? → LIV-3.",
+    "LIVREUR : rallume, touche « Client injoignable ». Attends 10 minutes, puis clos « non livrée ». ✅ Le client reçoit un e-mail, l'admin une tâche. → LIV-5.",
+    "Nouvelle commande. Après le retrait, LIVREUR : « Je ne peux pas terminer ». ADMIN : retrouve la commande en tapant l'e-mail ou le téléphone du client dans la recherche, puis change son statut à la main. → ADM-8, ADM-9."], t:["TRM-3","LIV-8","LIV-2","TRM-10","LIV-11","LIV-3","LIV-5","ADM-8","ADM-9"]},
+  {titre:"Série 4 · Pause, commande pour plus tard, horaires de nuit", f:[
+    "COMMERCE : touche l'interrupteur ouvert/fermé et choisis « pause 15 min ». CLIENT : ✅ le commerce apparaît en pause. Attends 15 min : ✅ il rouvre tout seul. → RES-9.",
+    "CLIENT : commande pour demain midi (choix de l'heure au paiement). ✅ Le ticket porte la date ET l'heure. → CMD-15.",
+    "Pas obligatoire, un soir : horaires 18:00 → 01:00, commande à 00:30. → HOR-1."], t:["RES-9","CMD-15","HOR-1"]},
+  {titre:"Série 5 · À emporter", f:[
+    "CLIENT : commande à emporter payée par carte. Au comptoir, il montre son code. COMMERCE : « Confirmer le retrait ». → FLX-9.",
+    "CLIENT : commande à emporter « payer sur place ». ✅ Le ticket dit « à payer sur place ». COMMERCE : tape 6 FAUX codes : ✅ bloqué 15 minutes, même avec le bon code. Après 15 min, le bon code marche. → FLX-10, SEC-3.",
+    "CLIENT : commande à emporter avec une bière. COMMERCE : enregistre « pas de pièce d'identité ». ✅ Commande annulée, client remboursé. → RES-7."], t:["FLX-9","FLX-10","SEC-3","RES-7"]},
+  {titre:"Série 6 · Le terminal en panne", f:[
+    "Ferme GC Web sur le terminal. CLIENT : commande. Rouvre GC Web : ✅ le ticket sort. → TRM-5, TER-6.",
+    "Coupe le Wi-Fi du terminal. CLIENT : commande. Remets le Wi-Fi : ✅ le ticket sort. → TRM-6.",
+    "Enlève le rouleau de papier. CLIENT : commande. Remets le papier : ✅ le ticket sort. → TRM-7.",
+    "Ne touche plus le terminal pendant 30 minutes (il se met en veille). CLIENT : commande. ✅ Le ticket sort quand même. → TRM-14.",
+    "Sur le terminal, ouvre fairide.be dans Chrome au lieu de GC Web et refais un ticket de test. → DEV-2.",
+    "Ouvre le tableau de bord commerce sur un téléphone et un ordinateur : les commandes sont là. Sur un iPhone, essaie « Imprimer le bon de livraison ». → DEV-3, DEV-4."], t:["TRM-5","TER-6","TRM-6","TRM-7","TRM-14","DEV-2","DEV-3","DEV-4"]},
+  {titre:"À la fin de la journée", f:[
+    "COMMERCE : Historique : les commandes du jour et les totaux. Onglet Paiements : date du prochain virement. → RES-13, MON-2.",
+    "LIVREUR : page Revenus : chaque course, le pourboire, le total. Note combien de batterie le téléphone a perdu dans la journée. → CRS-14, PRF-6.",
+    "ADMIN : Restaurants › ton commerce de test › « Retirer du site ». ✅ Il disparaît de fairide.be/restaurants. → ADM-10."], t:["RES-13","MON-2","CRS-14","PRF-6","ADM-10"]},
  ],
- fin:"Chaque passage de relais a été vu en vrai, avec chacun des trois réglages d'impression et chaque incident de livraison."},
+ fin:"Chaque étape d'une commande a été vue en vrai, avec les trois réglages du terminal et chaque problème de livraison."},
 
-{id:"S6", nom:"Session 6 · Relecture, contrats et décisions", duree:"Réparti sur la semaine", qui:"Toi (admin / juridique) + l'avocat", ou:"Bureau",
- desc:"Rien à cliquer dans le site : lire, faire relire, décider, prévenir. Plusieurs ont une date limite (P2B : prévenir les commerces avant le 17 octobre).",
- materiel:["Les textes : CGU, CGV commerces, contrat RESTO-2026.16, contrats coursiers 2026.6, politique de confidentialité"],
+{id:"S6", nom:"Session 6 · Lire, faire relire, décider", duree:"Un peu chaque jour de la semaine", qui:"Toi + l'avocat", ou:"Bureau",
+ desc:"Rien à cliquer sur le site. Il faut lire, faire relire, choisir et prévenir les gens. Attention : les commerces doivent être prévenus avant le 17 octobre.",
+ materiel:["Les textes à relire : Claude peut te les exporter en PDF si tu lui demandes"],
  etapes:[
-  {titre:"Contrats et commerces (date limite 17 octobre)", f:["Faire relire RESTO-2026.16 et les contrats coursiers 2026.6, puis prévenir les commerces et relancer les coursiers","Prévenir les commerces de la distance de 6 km par défaut","Vérifier que chaque carte importée est au prix magasin × 1,121 ; essayer la traduction d'une carte"], t:["ACT-3","ACT-4","ACT-6","MNU-10","LCH-3","AML-15"]},
-  {titre:"Décisions à prendre", f:["Règles d'incident (client absent 10 min, aucun livreur 20 min, attente non payée) : garder ou changer (dire à Claude les nouvelles valeurs)","Codes promo au lancement ; messages de connexion (SEC-12) ; promesse d'application mobile sur l'accueil"], t:["ACT-5","ACT-9","ACT-10","AML-12"]},
-  {titre:"Textes légaux et RGPD", f:["Politique de confidentialité : photos de « Signaler un problème », historique des notifications, export des données","Relecture juridique globale ; DPA signés (Stripe, Resend, Cloudinary, Sentry, Vercel, Railway, Anthropic, Twilio)","DSA, P2B, statut des coursiers et plafond de l'année"], t:["ACT-11","AML-8","AML-9","LEG-2","LEG-10","LEG-11","LEG-12"]},
-  {titre:"Procédures et documentation", f:["Inventaire des e-mails transactionnels ; SMS utilisés ou non","Export comptable d'un mois avec le comptable ; fiches d'incident (non livrée, accident, commerce fermé, double débit)","Guide du restaurateur : pause, temps en plus, minimum, distance"], t:["NOT-1","NOT-5","OPS-7","OPS-8","ACT-12"]},
+  {titre:"Contrats et commerces (avant le 17 octobre)", f:[
+    "Demande à Claude « exporte le contrat commerce et les contrats livreurs en PDF » et envoie-les à l'avocat. Ce qui a changé : le livreur reçoit tout le prix de la livraison, et la zone de livraison est de 6 km par défaut.",
+    "Quand l'avocat a dit OK : envoie un e-mail à chaque commerce pour l'informer (Claude peut écrire le texte). Relance les livreurs pour qu'ils signent le nouveau contrat.",
+    "Pour chaque commerce publié : ses prix sont-ils ses prix en magasin × 1,121 ? Si tu as un doute, envoie à Claude les prix du magasin, il corrige.",
+    "AML-15 : demande à Claude de traduire la carte d'UN commerce et relis-la en anglais et néerlandais."], t:["ACT-3","ACT-4","ACT-6","MNU-10","LCH-3","AML-15"]},
+  {titre:"Choisir", f:[
+    "Pour chaque carte ci-dessous, lis la question et écris ton choix dans « Notes », puis dis-le à Claude.",
+    "Exemple ACT-5 : client absent = le livreur attend 10 min. Tu gardes 10 min ou tu veux autre chose ?"], t:["ACT-5","ACT-9","ACT-10","AML-12"]},
+  {titre:"Textes légaux et vie privée", f:[
+    "Envoie à l'avocat la politique de confidentialité, les CGU et les CGV commerçants (Claude les exporte). Questions à lui poser : celles écrites dans les cartes AML-8, LEG-10, LEG-11, LEG-12.",
+    "AML-9 : sur chaque site (Stripe, Resend, Cloudinary, Sentry, Vercel, Railway, Anthropic, Twilio), cherche « DPA » ou « Data Processing Agreement » dans les réglages ou le juridique, accepte-le, enregistre le PDF dans un dossier."], t:["ACT-11","AML-8","AML-9","LEG-2","LEG-10","LEG-11","LEG-12"]},
+  {titre:"Écrire les procédures", f:[
+    "Demande à Claude la liste de tous les e-mails que Fairide envoie (NOT-1), et si des SMS partent (NOT-5).",
+    "Avec ton comptable : Admin › Comptabilité › exporte un mois ; est-ce qu'il peut l'utiliser ? → OPS-7.",
+    "Écris une fiche par problème (commande pas livrée, livreur accidenté, commerce fermé sans prévenir, client payé deux fois) : qui fait quoi. Claude peut faire un premier jet. → OPS-8.",
+    "ACT-12 : demande à Claude « mets à jour le guide du restaurateur »."], t:["NOT-1","NOT-5","OPS-7","OPS-8","ACT-12"]},
  ],
- fin:"Chaque décision est écrite, chaque texte relu, chaque commerce et coursier prévenu."},
+ fin:"Chaque choix est écrit, chaque texte relu, chaque commerce et livreur prévenu."},
 
-{id:"S7", nom:"Session 7 · À date fixe et veille du lancement", duree:"Quelques minutes chacun", qui:"Toi", ou:"Selon le test",
- desc:"Des tests qui ne peuvent se faire qu'à un moment précis.",
- materiel:["Un rappel dans ton agenda pour la nuit du 24 au 25 octobre 2026"],
+{id:"S7", nom:"Session 7 · Des tests à faire à une date précise", duree:"Quelques minutes chacun", qui:"Toi", ou:"Selon le test",
+ desc:"Ces tests ne peuvent se faire qu'à un moment précis. Mets des rappels dans ton agenda.",
+ materiel:["Un rappel dans ton agenda le samedi 24 octobre 2026 au soir"],
  etapes:[
-  {titre:"Nuit du 25 octobre 2026 (passage à l'heure d'hiver)", f:["Avant : une commande programmée pour 02:30 le 25/10 ; le matin : heures affichées, rappels et annulations sans doublon"], t:["HOR-3"]},
-  {titre:"Au prochain déploiement", f:["Ouvrir la PWA installée avant le déploiement, puis après : la nouvelle version est chargée"], t:["DEV-12"]},
-  {titre:"La veille du lancement", f:["Tableau de permanence J1 → J7","Checklist de chaque commerce (terminal, carte signée, horaires, paiement, IBAN) et de chaque coursier (approuvé, Connect, app, push)"], t:["LCH-10","LCH-11","LCH-12"]},
+  {titre:"Nuit du 24 au 25 octobre 2026 (changement d'heure)", f:[
+    "Le samedi 24 au soir : passe une commande programmée pour 02:30 le dimanche 25.",
+    "Le dimanche matin : l'heure de la commande est correcte partout, et les e-mails de rappel ne sont pas arrivés en double."], t:["HOR-3"]},
+  {titre:"La prochaine fois que Claude met une mise à jour en ligne", f:[
+    "Ouvre l'app installée sur ton téléphone avant la mise à jour, puis une heure après : tu dois voir la nouvelle version (demande à Claude ce qui a changé pour le reconnaître)."], t:["DEV-12"]},
+  {titre:"La veille de l'ouverture", f:[
+    "Écris qui répond au téléphone et regarde l'admin chaque jour de la première semaine, à quelles heures.",
+    "Pour chaque commerce : terminal associé, carte signée, horaires, paiement configuré, IBAN. Pour chaque livreur : approuvé, Stripe actif, app installée, notifications reçues."], t:["LCH-10","LCH-11","LCH-12"]},
  ],
  fin:"Tous les tests P1 sont « Réussi » ou « Re-testé OK » : on peut ouvrir."},
 ];
@@ -1121,7 +1349,7 @@ function sessionHTML(s){
   s.etapes.forEach((e,i)=>{
     const ts=e.t.map(id=>byId[id]).filter(visible); if(!ts.length) return;
     const d=e.t.filter(id=>FAIT(status(id))).length;
-    corps+=`<div class="etape"><h3><span class="num">${i+1}</span>${esc(e.titre)} <span class="cnt">${d}/${e.t.length}</span></h3><ol class="faire">${e.f.map(x=>`<li>${esc(x)}</li>`).join("")}</ol><div class="list">${ts.map(cardHTML).join("")}</div></div>`;
+    corps+=`<div class="etape"><h3><span class="num">${i+1}</span>${esc(e.titre)} <span class="cnt">${d}/${e.t.length}</span></h3><ol class="faire">${e.f.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>${e.claude?`<div class="claude">🤖 ${esc(e.claude)}</div>`:""}<div class="list">${ts.map(cardHTML).join("")}</div></div>`;
   });
   if(!corps && filtresActifs()) return "";
   return `<section class="sec" id="s-${s.id}"><h2>${esc(s.nom)} <span class="cnt">${done}/${ids.length}</span></h2>
@@ -1132,7 +1360,8 @@ function sessionHTML(s){
     <div class="fin"><b>Session terminée quand :</b> ${esc(s.fin)}</div></section>`;
 }
 function renderSessions(){
-  let html=SESSIONS.map(sessionHTML).join("");
+  let html=`<details class="glossaire"><summary>📖 Un mot ne te dit rien ? Les mots techniques expliqués</summary><dl>${GLOSSAIRE.map(([m,x])=>`<dt>${esc(m)}</dt><dd>${esc(x)}</dd>`).join("")}</dl></details>`;
+  html+=SESSIONS.map(sessionHTML).join("");
   const ts=HORS_SESSION.filter(visible);
   if(ts.length){ const d=HORS_SESSION.filter(t=>FAIT(status(t.id))).length;
     html+=`<section class="sec" id="s-SZ"><details class="archive" ${archiveOuverte?"open":""}><summary><h2>✓ Déjà validés, rien à refaire <span class="cnt">${d}/${HORS_SESSION.length}</span></h2></summary><p>Vérifiés par Claude les 2 et 3 octobre (banc d'essai ou production en lecture seule). Clique pour les relire.</p><div class="list">${ts.map(cardHTML).join("")}</div></details></section>`; }
