@@ -25,7 +25,6 @@ const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'
 // trois langues.
 const SOUS_TRAITANTS = [
   ['stripe', 'Stripe'],
-  ['itsme', 'itsme (Belgian Mobile ID)'],
   ['resend', 'Resend'],
   ['twilio', 'Twilio'],
   ['google', 'Google'],

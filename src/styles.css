@@ -3492,7 +3492,6 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .courier-soon { color: var(--ink-soft); }
 .courier-providers { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .courier-provider { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 12px; background: #fff; }
-.courier-provider.soon { opacity: 0.7; }
 .courier-ok { background: rgba(31,138,112,0.10); border-radius: var(--radius-chip); padding: 10px 12px; }
 .courier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 12px; }
 .courier-doc { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px dashed var(--line); flex-wrap: wrap; }
