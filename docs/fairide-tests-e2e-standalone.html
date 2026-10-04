@@ -768,7 +768,8 @@ const SESSIONS = [
     "Onglet « Settings » : dans la partie « Build », la commande doit contenir « npm ci ». Si c'est vide ou « npm install », note-le. → AML-6.",
     "Toujours dans « Settings », la région doit être « EU West ». Va aussi voir la case Postgres › Settings : même chose. → AML-16.",
     "Pièces d'identité des livreurs : va sur fairide.be/admin › Livreurs › ouvre un livreur qui a envoyé sa pièce › clic droit sur le lien du document › « Copier l'adresse du lien ». Ouvre une fenêtre privée (Ctrl+Maj+N) et colle l'adresse. ✅ Réussi si le fichier NE s'ouvre PAS. → AML-4.",
-    "Ancienne faille de sécurité : Railway › fairide-backend › onglet « Observability » (ou « Logs »). Choisis la période la plus longue possible et tape verify-email dans la recherche. ✅ Aucune ligne, ou seulement des inscriptions normales. Si tu vois beaucoup de lignes d'un coup, fais une capture pour Claude (il faudrait alors prévenir l'Autorité de protection des données sous 72 h). → AML-3",
+    "Ancienne faille de sécurité (corrigée le 16 septembre) : avant cette date, quelqu'un qui connaissait l'adresse e-mail d'un compte pouvait y entrer sans mot de passe. On vérifie si quelqu'un a fait des actions admin à ta place. Railway › clique la case Postgres › onglet « Data » › bouton pour écrire une requête (« Query » ou « SQL »). Colle : SELECT created_at, admin_email, action, target_type FROM admin_actions WHERE created_at < '2026-09-17' ORDER BY created_at DESC; puis lance-la. Chaque ligne = une action admin (date, qui, quoi). ✅ Tu reconnais toutes les actions (toi ou ton équipe). ❌ Une action que personne n'a faite : capture pour Claude, sans attendre (s'il y a eu intrusion, l'Autorité de protection des données doit être prévenue sous 72 h). → AML-3",
+    "Ce contrôle ne voit pas quelqu'un qui aurait seulement REGARDÉ des données sans rien modifier : c'est pour ça que changer JWT_SECRET (AML-1) reste obligatoire.",
     "CORS (AML-5) : Claude l'a déjà vérifié, rien à faire."],
    claude:"Changer JWT_SECRET est délicat : si on le fait dans le mauvais ordre, les numéros de registre national des livreurs deviennent illisibles. Dis à Claude « on change JWT_SECRET » : il te donnera chaque clic.", t:["PRE-1","AML-2","AML-1","AML-3","AML-4","AML-5","AML-6","AML-16"]},
   {titre:"Sauvegardes et alerte si le site tombe", f:[
@@ -868,7 +869,7 @@ const SESSIONS = [
   {titre:"L'espace admin", f:[
     "fairide.be/admin › Finance : note le chiffre d'affaires. Puis Admin › Simulation : choisis un commerce, lance, et fais une commande complète dans les onglets qui s'ouvrent. Retourne dans Finance : ✅ le chiffre n'a pas bougé. → SIM-12, ADM-5.",
     "Admin › Clients › ton compte jetable › Suspendre (remplis la fenêtre avec un motif). Sur l'autre navigateur où il est connecté : il doit être déconnecté. Puis réactive-le. → SEC-10.",
-    "Admin › Journal d'audit : la suspension que tu viens de faire y est, avec ton nom et l'heure. → ADM-7.",
+    "Admin › Clients › rouvre le compte jetable, descends jusqu'à « Historique des actions » : la suspension et la réactivation y sont, avec ton e-mail et l'heure. Fais pareil sur une commande remboursée (Admin › Commandes). → ADM-7",
     "Admin › Clients : regarde les comptes avec 🧪. Aucun ne doit être un vrai client. → LCH-7.",
     "Inscris un faux commerce avec un numéro d'entreprise inventé : dans Admin › Restaurants, est-ce que quelque chose t'avertit avant d'approuver ? → SEC-16.",
     "Connecté sur le compte jetable : Mon compte › Supprimer mon compte. ✅ Un e-mail de confirmation arrive. → CPT-6."], t:["SIM-12","ADM-5","SEC-10","ADM-7","LCH-7","SEC-16","CPT-6"]},
