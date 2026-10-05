@@ -4276,7 +4276,8 @@ export default {
       deliveryDiscountBy: '🚴 -€{amount} op de leveringskosten, aangeboden door {name}',
       openNow: 'Nu open · {schedule}',
       opensIn: 'Opent binnen {countdown} (om {time})',
-      nextOpening: 'Volgende opening: {day}, {schedule}'
+      nextOpening: 'Volgende opening: {day}, {schedule}',
+      closedForNow: 'deze zaak neemt momenteel geen bestellingen aan'
     },
     search: {
       title: 'Zoeken',

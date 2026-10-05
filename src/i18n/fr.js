@@ -4290,7 +4290,8 @@ export default {
       deliveryDiscountBy: '🚴 -{amount}€ sur les frais de livraison, offert par {name}',
       openNow: 'Ouvert maintenant · {schedule}',
       opensIn: 'Ouvre dans {countdown} (à {time})',
-      nextOpening: 'Prochaine ouverture : {day}, {schedule}'
+      nextOpening: 'Prochaine ouverture : {day}, {schedule}',
+      closedForNow: 'le commerce ne prend pas de commandes pour le moment'
     },
     search: {
       title: 'Recherche',

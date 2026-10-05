@@ -37,6 +37,22 @@ import FicheVendeur from '../../components/conformite/FicheVendeur';
 
 // Clé du jour (openingHours) → clé de traduction du nom du jour (resa.monday…).
 
+/* OUVERT OU FERMÉ, SELON LE COMMERCE ET PAS SEULEMENT SES HORAIRES.
+ *
+ * La fiche recalculait l'état à partir des horaires seuls : un commerce passé « fermé » par son interrupteur, ou en
+ * pause minutée (RES-9), restait affiché « Ouvert » à qui ouvrait sa page par un lien direct — le client remplissait
+ * son panier et n'apprenait qu'au paiement « Ce restaurant est actuellement fermé » (test de bout en bout du 5 oct.
+ * 2026). Même règle que le serveur (routes/orders.js refuse `open = false`, la pause ferme jusqu'à paused_until). */
+function statutOuverture(restaurant, now) {
+  const s = getOpenStatus(restaurant.hours, now, restaurant.closures);
+  if (!s.isOpen) return s;
+  if (restaurant.pausedUntil && restaurant.pausedUntil > now.getTime()) {
+    return { ...s, isOpen: false, opensToday: true, opensAt: new Date(restaurant.pausedUntil) };
+  }
+  if (restaurant.open === false) return { ...s, isOpen: false, opensToday: false, fermeParLeCommerce: true };
+  return s;
+}
+
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
@@ -226,7 +242,7 @@ export default function RestaurantMenu() {
   if (!restaurant) return <SkeletonCards count={3} />;
 
   const isFavorite = favoriteIds.has(id);
-  const openStatus = getOpenStatus(restaurant.hours, now, restaurant.closures);
+  const openStatus = statutOuverture(restaurant, now);
   // Les sections proposées à la navigation rapide suivent la recherche : filtrer la carte sans
   // filtrer sa table des matières laisserait des onglets qui ne mènent nulle part.
 
@@ -295,7 +311,7 @@ export default function RestaurantMenu() {
     // Commerce fermé en ce moment : on laisse composer le panier (une commande programmée reste possible, et la
     // fiche promet « compose ton panier ») — avant, l'ajout était refusé sous un bandeau qui disait le contraire
     // (plan de test). Le checkout et le serveur refusent toujours une commande immédiate à un commerce fermé.
-    if (!getOpenStatus(restaurant.hours, now, restaurant.closures).isOpen && !avertiFerme.current) {
+    if (!statutOuverture(restaurant, now).isOpen && !avertiFerme.current) {
       avertiFerme.current = true;
       toast(t('restoMenuUi.toastClosedCartKept'));
     }
@@ -453,7 +469,9 @@ export default function RestaurantMenu() {
                 ? formatDaySchedule(restaurant.hours, openStatus.todayKey, t)
                 : openStatus.opensToday
                   ? t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now, t), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
-                  : t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}
+                  : openStatus.fermeParLeCommerce
+                    ? t('restoMenuUi.closedForNow')
+                    : t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}
             </span>
           </p>
         )}
