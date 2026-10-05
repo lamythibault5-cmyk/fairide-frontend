@@ -4231,6 +4231,13 @@ export default {
     restoListUi: {
       sponsored: 'Sponsored',
       sponsoredTitle: 'This shop pays for this position in the row.',
+      promoCartThreshold: '-{value} on orders from {min}',
+      promoPercent: '-{value}%',
+      promoAmount: '-{value}',
+      promoFairidePercent: '-{value}% Fairide Advantage',
+      promoFairideAmount: '-{value} Fairide Advantage',
+      promoBogo1: 'Buy 1, get 1 free',
+      promoBogoN: 'Buy {n}, get 1 free',
       deliveryFromPill: '🚴 Delivery from {amount}',
       closedOpensAt: 'Closed · opens at {time}',
       servicePickup: 'Takeaway',
@@ -4269,7 +4276,8 @@ export default {
       deliveryDiscountBy: '🚴 -€{amount} on delivery fees, offered by {name}',
       openNow: 'Open now · {schedule}',
       opensIn: 'Opens in {countdown} (at {time})',
-      nextOpening: 'Next opening: {day}, {schedule}'
+      nextOpening: 'Next opening: {day}, {schedule}',
+      closedForNow: 'this shop isn\'t taking orders right now'
     },
     search: {
       title: 'Search',
@@ -7040,8 +7048,8 @@ export default {
       ranking_sorts: 'You can choose "Best rated" (the average of reviews actually given; a business without reviews comes after those that have some) or "Nearest" (straight-line distance from your address). Filters (cuisine, municipality, organic, vegan, price, takeaway) remove businesses from the list: they don\'t reorder it.',
       ranking_rowsTitle: 'Home page rows',
       ranking_rows: 'Near you: businesses in your municipality. Offers: businesses running a promotion they created themselves. Healthy, organic, vegan: first the businesses with the most dishes they marked as such (or whose name says so). Groceries: supermarkets and food shops. To discover: a random selection among businesses within 10 km where you haven\'t ordered yet. A row with fewer than six businesses is completed with the best rated.',
-      ranking_notPaidTitle: 'What doesn\'t count in the ranking',
-      ranking_notPaid: 'No business pays to be placed higher: that option doesn\'t exist on Fairide. The commission (10% at most) and the subscription are the same for everyone and don\'t influence the display order.',
+      ranking_notPaidTitle: 'Paid positions (“Sponsored”)',
+      ranking_notPaid: 'A business can pay to appear in one of the first places of a row on the businesses page (“Near you”, “Healthy”, “Vegan”…), for a number of weeks. Its card then shows the label “Sponsored” in that row. Fairide approves each request, and a business is only placed this way if it really belongs to the row: paying does not put a business without vegan dishes into “Vegan”. Apart from these labelled positions, no business pays to be placed higher: the commission (10% at most) and the subscription are the same for everyone and don\'t influence the display order.',
       ranking_reviewsTitle: 'Reviews',
       ranking_reviews: 'Only the customer of a delivered or collected order can post a review, once per order: a 1 to 5 rating for the meal (and for the delivery where applicable), with an optional comment. Fairide checks nothing beyond this link to a real order. We don\'t remove a review because it is negative; we remove abusive, defamatory, discriminatory or off-topic reviews. A business only shows stars from its first review.',
       ranking_contestTitle: 'Contesting',

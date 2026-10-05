@@ -2,7 +2,8 @@ import { sectionLabel, resolveItemImage, groupBySubsection } from '../menuCatego
 import { useLanguage } from '../context/LanguageContext';
 import { localizedItem } from '../menuTranslation';
 import { libellesAllergenes } from '../allergenes';
-import { prixRemise, euros } from '../prixPlat';
+import { prixRemise, euros, libellePromo } from '../prixPlat';
+import { imgProps } from '../images';
 
 // TOUTE LA CARTE EST LA CIBLE, plus seulement le « + » de son coin.
 //
@@ -29,7 +30,7 @@ function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
   const indisponible = item.available === false;
   const cliquable = !hideAdd && !indisponible;
   const remise = prixRemise(item);
-  const etiquette = item.activePromo && !item.activePromo.fairide && remise === null ? item.activePromo.label : null;
+  const etiquette = item.activePromo && !item.activePromo.fairide && remise === null ? libellePromo(item.activePromo, t) : null;
   const contenu = (
     <>
       <span className="plat-texte">
@@ -53,7 +54,9 @@ function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
       </span>
       {image ? (
         <span className="plat-visuel">
-          <img loading="lazy" src={image} alt="" className="plat-photo" />
+          {/* imgProps : la vignette fait 112 px (client-ui.css) ; sans lui chaque plat chargeait l'original
+              Cloudinary, 50 à 70 Ko pièce (Lighthouse du 5 oct. 2026 : ~940 Ko de trop sur une carte). */}
+          <img loading="lazy" decoding="async" width="112" height="112" {...imgProps(image, 112)} alt="" className="plat-photo" />
         </span>
       ) : null}
     </>

@@ -238,7 +238,8 @@ export function CartProvider({ children }) {
       }
       if (discount > 0) {
         promoDiscount += discount;
-        discountedItems.push({ name: item.name, label: promo.label, discount });
+        // `promo` voyage avec la ligne : l'affichage recompose le libellé dans la langue du client (libellePromo).
+        discountedItems.push({ name: item.name, label: promo.label, promo, discount });
       }
     });
     let subtotal = +(rawSubtotal - promoDiscount).toFixed(2);
@@ -248,7 +249,7 @@ export function CartProvider({ children }) {
       const cartDiscount = +Math.min(cartPromo.value, subtotal).toFixed(2);
       promoDiscount += cartDiscount;
       subtotal = +(subtotal - cartDiscount).toFixed(2);
-      discountedItems.push({ name: null, label: cartPromo.label, discount: cartDiscount });
+      discountedItems.push({ name: null, label: cartPromo.label, promo: cartPromo, discount: cartDiscount });
     }
     promoDiscount = +promoDiscount.toFixed(2);
     // Estimation avant checkout (frais réels calculés côté serveur à la commande, selon la distance

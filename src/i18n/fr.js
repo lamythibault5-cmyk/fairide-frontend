@@ -4241,6 +4241,13 @@ export default {
     restoListUi: {
       sponsored: 'Sponsorisé',
       sponsoredTitle: 'Ce commerce paie pour cette position dans la rangée.',
+      promoCartThreshold: '-{value} dès {min} de commande',
+      promoPercent: '-{value} %',
+      promoAmount: '-{value}',
+      promoFairidePercent: '-{value} % Avantage Fairide',
+      promoFairideAmount: '-{value} Avantage Fairide',
+      promoBogo1: '1 acheté = 1 offert',
+      promoBogoN: '{n} achetés = 1 offert',
       deliveryFromPill: '🚴 Livraison dès {amount}',
       closedOpensAt: 'Fermé · ouvre à {time}',
       servicePickup: 'À emporter',
@@ -4283,7 +4290,8 @@ export default {
       deliveryDiscountBy: '🚴 -{amount}€ sur les frais de livraison, offert par {name}',
       openNow: 'Ouvert maintenant · {schedule}',
       opensIn: 'Ouvre dans {countdown} (à {time})',
-      nextOpening: 'Prochaine ouverture : {day}, {schedule}'
+      nextOpening: 'Prochaine ouverture : {day}, {schedule}',
+      closedForNow: 'le commerce ne prend pas de commandes pour le moment'
     },
     search: {
       title: 'Recherche',
@@ -7087,8 +7095,8 @@ export default {
       ranking_sorts: 'Vous pouvez choisir « Mieux notés » (la moyenne des avis réellement donnés ; un commerce sans avis passe après ceux qui en ont) ou « Plus proches » (distance à vol d\'oiseau depuis votre adresse). Les filtres (type de cuisine, commune, bio, vegan, prix, à emporter) retirent des commerces de la liste : ils ne la réordonnent pas.',
       ranking_rowsTitle: 'Les rangées de la page d\'accueil',
       ranking_rows: 'Près de chez vous : les commerces de votre commune. Offres : les commerces qui proposent une promotion qu\'ils ont eux-mêmes créée. Healthy, bio, vegan : d\'abord les commerces qui ont le plus de plats marqués ainsi par eux-mêmes (ou dont le nom le dit). Courses : les supermarchés et commerces d\'alimentation. À découvrir : une sélection tirée au hasard parmi les commerces à moins de 10 km où vous n\'avez pas encore commandé. Une rangée de moins de six commerces est complétée par les mieux notés.',
-      ranking_notPaidTitle: 'Ce qui n\'entre pas dans le classement',
-      ranking_notPaid: 'Aucun commerce ne paie pour être mieux placé : cette option n\'existe pas sur Fairide. La commission (10 % au plus) et l\'abonnement sont les mêmes pour tous et n\'influencent pas l\'ordre d\'affichage.',
+      ranking_notPaidTitle: 'Les positions payées (« Sponsorisé »)',
+      ranking_notPaid: 'Un commerce peut payer pour apparaître à l\'une des premières places d\'une rangée de la page des commerces (« Autour de vous », « Healthy », « Vegan »…), pour un nombre de semaines. Sa carte porte alors la mention « Sponsorisé » dans cette rangée. Fairide valide chaque demande, et le commerce n\'est placé ainsi que s\'il appartient vraiment à la rangée : payer ne fait pas entrer un commerce sans plat vegan dans « Vegan ». En dehors de ces positions signalées, aucun commerce ne paie pour être mieux placé : la commission (10 % au plus) et l\'abonnement sont les mêmes pour tous et n\'influencent pas l\'ordre d\'affichage.',
       ranking_reviewsTitle: 'Les avis',
       ranking_reviews: 'Seul le client d\'une commande livrée ou retirée peut publier un avis, une seule fois par commande : une note de 1 à 5 pour le repas (et pour la livraison le cas échéant), avec un commentaire facultatif. Fairide ne vérifie rien d\'autre que ce lien avec une commande réelle. Nous ne retirons pas un avis parce qu\'il est négatif ; nous retirons un avis abusif, diffamatoire, discriminatoire ou hors sujet. Un commerce n\'affiche des étoiles qu\'à partir de son premier avis.',
       ranking_contestTitle: 'Contester',

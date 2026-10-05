@@ -4231,6 +4231,13 @@ export default {
     restoListUi: {
       sponsored: 'Gesponsord',
       sponsoredTitle: 'Deze zaak betaalt voor deze positie in de rij.',
+      promoCartThreshold: '-{value} bij een bestelling vanaf {min}',
+      promoPercent: '-{value}%',
+      promoAmount: '-{value}',
+      promoFairidePercent: '-{value}% Fairide-voordeel',
+      promoFairideAmount: '-{value} Fairide-voordeel',
+      promoBogo1: '1 gekocht = 1 gratis',
+      promoBogoN: '{n} gekocht = 1 gratis',
       deliveryFromPill: '🚴 Levering vanaf {amount}',
       closedOpensAt: 'Gesloten · opent om {time}',
       servicePickup: 'Afhalen',
@@ -4269,7 +4276,8 @@ export default {
       deliveryDiscountBy: '🚴 -€{amount} op de leveringskosten, aangeboden door {name}',
       openNow: 'Nu open · {schedule}',
       opensIn: 'Opent binnen {countdown} (om {time})',
-      nextOpening: 'Volgende opening: {day}, {schedule}'
+      nextOpening: 'Volgende opening: {day}, {schedule}',
+      closedForNow: 'deze zaak neemt momenteel geen bestellingen aan'
     },
     search: {
       title: 'Zoeken',
@@ -7040,8 +7048,8 @@ export default {
       ranking_sorts: 'U kunt kiezen voor „Best beoordeeld” (het gemiddelde van de werkelijk gegeven beoordelingen; een zaak zonder beoordelingen komt na de zaken die er wel hebben) of „Dichtstbij” (afstand in vogelvlucht vanaf uw adres). Filters (keuken, gemeente, bio, vegan, prijs, afhalen) halen zaken uit de lijst: ze veranderen de volgorde niet.',
       ranking_rowsTitle: 'De rijen op de startpagina',
       ranking_rows: 'Bij u in de buurt: de zaken uit uw gemeente. Aanbiedingen: zaken met een promotie die ze zelf hebben aangemaakt. Healthy, bio, vegan: eerst de zaken met de meeste gerechten die ze zelf zo gemarkeerd hebben (of waarvan de naam het zegt). Boodschappen: supermarkten en voedingswinkels. Ontdekken: een willekeurige selectie van zaken binnen 10 km waar u nog niet besteld hebt. Een rij met minder dan zes zaken wordt aangevuld met de best beoordeelde.',
-      ranking_notPaidTitle: 'Wat niet meetelt in de rangschikking',
-      ranking_notPaid: 'Geen enkele zaak betaalt om hoger te staan: die mogelijkheid bestaat niet op Fairide. De commissie (hoogstens 10 %) en het abonnement zijn voor iedereen gelijk en hebben geen invloed op de volgorde.',
+      ranking_notPaidTitle: 'Betaalde posities („Gesponsord”)',
+      ranking_notPaid: 'Een zaak kan betalen om op een van de eerste plaatsen van een rij op de pagina met zaken te verschijnen („In je buurt”, „Healthy”, „Vegan”…), voor een aantal weken. Haar kaart draagt dan het label „Gesponsord” in die rij. Fairide keurt elke aanvraag goed, en een zaak wordt alleen zo geplaatst als ze echt in de rij thuishoort: betalen brengt een zaak zonder veganistische gerechten niet in „Vegan”. Buiten deze aangeduide posities betaalt geen enkele zaak om hoger te staan: de commissie (hoogstens 10 %) en het abonnement zijn voor iedereen gelijk en hebben geen invloed op de volgorde.',
       ranking_reviewsTitle: 'Beoordelingen',
       ranking_reviews: 'Alleen de klant van een geleverde of afgehaalde bestelling kan een beoordeling plaatsen, één keer per bestelling: een score van 1 tot 5 voor de maaltijd (en voor de levering indien van toepassing), met een optionele opmerking. Fairide controleert niets anders dan die band met een echte bestelling. We verwijderen een beoordeling niet omdat ze negatief is; we verwijderen beledigende, lasterlijke, discriminerende of irrelevante beoordelingen. Een zaak toont pas sterren vanaf haar eerste beoordeling.',
       ranking_contestTitle: 'Betwisten',

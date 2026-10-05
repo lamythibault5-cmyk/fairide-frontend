@@ -2151,6 +2151,11 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 @keyframes popIn { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
 
 .page-fade { animation: fadeIn .22s cubic-bezier(.2,.8,.2,1) both; }
+/* Le pied de page démarrait sous le haut de l'écran pendant que la page (carte d'un commerce surtout) se
+   chargeait, puis était repoussé d'un bloc : le plus gros décalage de mise en page mesuré (Lighthouse du
+   5 oct. 2026, CLS 0,37 sur une fiche commerce). Réserver la hauteur de l'écran à <main> le garde en bas
+   dès le premier rendu. */
+main.page-fade { min-height: calc(100dvh - 140px); }
 /* Barre de progression de navigation (components/NavigationFeedback.jsx) : fine, en haut, avance vite
    puis ralentit tant que la page se charge, file jusqu'au bout et s'efface quand elle est affichée. */
 .nav-progress { position: fixed; top: 0; left: 0; height: 3px; z-index: 4000; background: linear-gradient(90deg, var(--teal), var(--gold)); border-radius: 0 3px 3px 0; pointer-events: none; box-shadow: var(--shadow-3); }
