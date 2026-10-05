@@ -50,10 +50,11 @@ export default function IdentityDocsPicker({ kind, setKind, recto, setRecto, ver
         ))}
       </div>
       <div className="doc-slots">
-        <DocSlot id="auth-doc-recto" label={t('authDocs.front')} file={recto} onFile={setRecto} invalid={!!errors.docRecto} />
-        <DocSlot id="auth-doc-verso" label={t('authDocs.back')} file={verso} onFile={setVerso} invalid={!!errors.docVerso} />
+        <DocSlot id="auth-doc-recto" label={t('authDocs.front')} file={recto} onFile={setRecto} invalid={!!errors.docRecto && !recto} />
+        <DocSlot id="auth-doc-verso" label={t('authDocs.back')} file={verso} onFile={setVerso} invalid={!!errors.docVerso && !verso} />
       </div>
-      {(errors.docRecto || errors.docVerso) && <p className="field-error">{errors.docRecto || errors.docVerso}</p>}
+      {/* Le message disparaît dès que la photo manquante est ajoutée (il restait affiché jusqu'au clic sur « Continuer »). */}
+      {((errors.docRecto && !recto) || (errors.docVerso && !verso)) && <p className="field-error">{(errors.docRecto && !recto) ? errors.docRecto : errors.docVerso}</p>}
       <div style={{ marginTop: 12 }}>
         <DocSlot id="auth-doc-student" label={t('authDocs.student')} file={student} onFile={setStudent} optional />
         <p className="small" style={{ margin: '4px 0 0' }}>{t('authDocs.studentHelp')}</p>

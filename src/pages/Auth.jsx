@@ -15,7 +15,7 @@ import PhoneInput from '../components/PhoneInput';
 import EmailDomainChips from '../components/EmailDomainChips';
 import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
-import { RESTAURANT_TYPES, restaurantTypeLabel } from '../menuCategories';
+import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES, COMMUNES_PERIPHERIE } from '../menuCategories';
 import { MAX_CUISINES } from '../components/commerce/EcranCuisines';
 import { cuisineDepuisOsm } from '../osmCuisine';
 import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
@@ -109,6 +109,15 @@ export default function Auth() {
   const [courierStatus, setCourierStatus] = useState('');
   const [vehicleType, setVehicleType] = useState('');
   const [bagOption, setBagOption] = useState(''); // 'own' | 'fairide' — sac de livraison
+  // Livreur (fondateur, 2026-10-05) : travaille-t-il déjà pour d'autres plateformes (lesquelles, plusieurs possibles),
+  // et ses communes de préférence (plusieurs possibles, facultatif).
+  const [autrePlateforme, setAutrePlateforme] = useState(''); // '' | 'yes' | 'no'
+  const [plateformes, setPlateformes] = useState([]);
+  const [plateformeAutre, setPlateformeAutre] = useState('');
+  const [zonesPreferees, setZonesPreferees] = useState([]);
+  const [peripherieOuverte, setPeripherieOuverte] = useState(false);
+  // Mise à jour à partir de la valeur COURANTE : deux appuis rapprochés (avant le rendu suivant) ne s'écrasent pas.
+  const basculer = (liste, setListe, v) => setListe((courante) => (courante.includes(v) ? courante.filter((x) => x !== v) : [...courante, v]));
   const [courierOptions, setCourierOptions] = useState(null);
   useEffect(() => {
     if (role !== 'driver' || courierOptions) return;
@@ -373,6 +382,7 @@ export default function Auth() {
     legalName: [legalName, setLegalName], companyNumber: [companyNumber, setCompanyNumber], vatNumber: [vatNumber, setVatNumber],
     responsibleName: [responsibleName, setResponsibleName], responsibleTouched: [responsibleTouched, setResponsibleTouched],
     courierStatus: [courierStatus, setCourierStatus], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption], docKind: [docKind, setDocKind],
+    autrePlateforme: [autrePlateforme, setAutrePlateforme], plateformes: [plateformes, setPlateformes], plateformeAutre: [plateformeAutre, setPlateformeAutre], zonesPreferees: [zonesPreferees, setZonesPreferees],
     commerceTrouve: [commerceTrouve, setCommerceTrouve], services: [services, setServices],
     cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
     phoneSecondary: [phoneSecondary, setPhoneSecondary], phoneSecondaryOuvert: [phoneSecondaryOuvert, setPhoneSecondaryOuvert],
@@ -523,6 +533,7 @@ export default function Auth() {
         if (!courierStatus) e.courierStatus = t('auth.errCourierStatus');
         if (!vehicleType) e.vehicleType = t('auth.errVehicle');
         if (!bagOption) e.bagOption = t('auth.errBag');
+        if (!autrePlateforme) e.autrePlateforme = t('auth.errPlatforms');
         // Numéro d'entreprise : requis pour l'étudiant-indépendant comme pour l'indépendant (facturation mensuelle).
         if (['student_independent', 'independent'].includes(courierStatus) && !companyNumber.trim()) e.companyNumber = required;
         else if (companyNumber.trim() && !bceValide(companyNumber)) e.companyNumber = t('auth.errCompanyNumber');
@@ -726,7 +737,7 @@ export default function Auth() {
         vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
         business: construireCommerce()
       } : {}),
-      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption } : {}),
+      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {})
     });
     await televerserDocumentsLivreur(data.token);
@@ -817,7 +828,7 @@ export default function Auth() {
             vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
             business: construireCommerce()
           } : {}),
-          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption } : {}),
+          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
           ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
           website: siteWeb
         });
@@ -1182,6 +1193,52 @@ export default function Auth() {
                         ))}
                       </div>
                       {fieldError('bagOption')}
+                    </div>
+                    {/* Autres plateformes : oui / non, puis lesquelles (facultatif, plusieurs choix). */}
+                    <div className="field">
+                      <span className="titre-groupe" id="auth-plateformes-titre">{t('auth.platformsTitle')}</span>
+                      <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.platformsHelp')}</p>
+                      <div className={`role-pick statements-chips${errors.autrePlateforme ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-plateformes-titre">
+                        {['yes', 'no'].map((v) => (
+                          <div key={v} role="radio" aria-checked={autrePlateforme === v} tabIndex={0} className={`chip${autrePlateforme === v ? ' active' : ''}`}
+                            onClick={() => setAutrePlateforme(v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAutrePlateforme(v); } }}>
+                            {t(v === 'yes' ? 'auth.platformsYes' : 'auth.platformsNo')}
+                          </div>
+                        ))}
+                      </div>
+                      {fieldError('autrePlateforme')}
+                      {autrePlateforme === 'yes' && (
+                        <>
+                          <p className="small" id="auth-plateformes-lesquelles" style={{ margin: '10px 0 6px' }}>{t('auth.platformsWhich')}</p>
+                          <div className="role-pick statements-chips" role="group" aria-labelledby="auth-plateformes-lesquelles">
+                            {['uber_eats', 'deliveroo', 'takeaway', 'autre'].map((p) => (
+                              <div key={p} role="checkbox" aria-checked={plateformes.includes(p)} tabIndex={0} className={`chip${plateformes.includes(p) ? ' active' : ''}`}
+                                onClick={() => basculer(plateformes, setPlateformes, p)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); basculer(plateformes, setPlateformes, p); } }}>
+                                {t(`auth.platform_${p}`)}
+                              </div>
+                            ))}
+                          </div>
+                          {plateformes.includes('autre') && (
+                            <input style={{ marginTop: 8 }} value={plateformeAutre} maxLength={120} onChange={(e) => setPlateformeAutre(e.target.value)} placeholder={t('auth.platformOtherPh')} aria-label={t('auth.platformOtherPh')} />
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {/* Communes de préférence : facultatif, plusieurs choix ; la périphérie se déplie. */}
+                    <div className="field">
+                      <span className="titre-groupe" id="auth-zones-titre">{t('auth.zonesTitle')}{zonesPreferees.length > 0 && <span className="small" style={{ fontWeight: 500 }}> · {t('auth.zonesCount', { n: zonesPreferees.length })}</span>}</span>
+                      <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.zonesHelp')}</p>
+                      <div className="role-pick statements-chips" role="group" aria-labelledby="auth-zones-titre">
+                        {[...COMMUNES, ...(peripherieOuverte || zonesPreferees.some((z) => COMMUNES_PERIPHERIE.includes(z)) ? COMMUNES_PERIPHERIE : [])].map((z) => (
+                          <div key={z} role="checkbox" aria-checked={zonesPreferees.includes(z)} tabIndex={0} className={`chip${zonesPreferees.includes(z) ? ' active' : ''}`}
+                            onClick={() => basculer(zonesPreferees, setZonesPreferees, z)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); basculer(zonesPreferees, setZonesPreferees, z); } }}>
+                            {z}
+                          </div>
+                        ))}
+                      </div>
+                      {!peripherieOuverte && !zonesPreferees.some((z) => COMMUNES_PERIPHERIE.includes(z)) && (
+                        <button type="button" className="btn-ghost" style={{ marginTop: 6, padding: '4px 8px', fontSize: 13 }} onClick={() => setPeripherieOuverte(true)}>{t('auth.zonesMore')}</button>
+                      )}
                     </div>
                   </>
                 )}

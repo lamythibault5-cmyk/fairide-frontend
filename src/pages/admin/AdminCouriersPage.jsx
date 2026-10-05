@@ -223,6 +223,11 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           <h4 className="drawer-section-title">{tr('adminCouriers.secStatus')}</h4>
           <DrawerRow label={tr('adminCouriers.colStatus')} value={`${statut(c.statusType)}${c.statusVerifiedAt ? ` · ✅ ${tr('adminCouriers.statusVerifiedAt')} ${fmt(c.statusVerifiedAt)}` : ` · ${tr('adminCouriers.statusNotVerified')}`}`} strong />
           <DrawerRow label={tr('adminCouriers.zoneVehicle')} value={`${c.zone || '-'} · ${c.vehicleType ? tr(`courierOnboarding.vehicle_${c.vehicleType}`) : '-'}${c.licencePlate ? ` · ${c.licencePlate}` : ''}`} />
+          {/* Demandé à l'inscription (2026-10-05) : autres plateformes et communes de préférence. */}
+          <DrawerRow label={tr('adminCouriers.otherPlatforms')} value={c.otherPlatforms?.works === true
+            ? ((c.otherPlatforms.list || []).map((p) => (p === 'autre' && c.otherPlatforms.note ? `${tr('auth.platform_autre')} (${c.otherPlatforms.note})` : tr(`auth.platform_${p}`))).join(', ') || tr('adminCouriers.platformsYesUnnamed'))
+            : c.otherPlatforms?.works === false ? tr('adminCouriers.platformsNone') : tr('adminCouriers.notAnswered')} />
+          <DrawerRow label={tr('adminCouriers.preferredZones')} value={(c.preferredZones || []).length ? c.preferredZones.join(', ') : tr('adminCouriers.notAnswered')} />
           <DrawerRow label="IBAN" value={c.iban || (c.payoutIbanKnown ? '••••' : '-')} />
           <DrawerRow label={tr('adminCouriers.bag')} value={c.bag?.option ? `${tr(`auth.bag_${c.bag.option}`)}${c.bag.option === 'fairide' ? ` · ${tr(`adminCouriers.bagDeposit_${c.bag.depositStatus}`)} (${Number(c.bag.depositAmount || 40).toFixed(0)} €)` : ''}${c.bag.note ? ` · ${c.bag.note}` : ''}` : '-'} />
           {c.bag?.option === 'fairide' && (
