@@ -95,10 +95,14 @@ export default function HeroAdresse() {
   // Le bouton flèche et Entrée sans suggestion surlignée prennent la première. Sans aucune
   // suggestion (champ vide, ou rien trouvé), on ouvre quand même la liste complète : un bouton
   // « Continuer » qui ne fait rien est pire qu'un résultat moins ciblé.
+  // Ce que le commentaire promettait n'était codé que pour le champ VIDE : « 1050 » puis → (ou Entrée avant
+  // l'arrivée des suggestions) ne faisait rien du tout, sans message (test de bout en bout du 5 oct. 2026).
+  // Un code postal bruxellois tapé seul mène désormais à sa commune ; tout autre texte, à la liste complète.
   function valider(e) {
     e.preventDefault();
-    if (suggestions.length) choisir(suggestions[actif >= 0 ? actif : 0]);
-    else if (!q.trim()) navigate('/restaurants');
+    if (suggestions.length) { choisir(suggestions[actif >= 0 ? actif : 0]); return; }
+    const commune = COMMUNE_PAR_CODE[Number(q.trim())];
+    navigate('/restaurants', commune ? { state: { communeProche: commune } } : undefined);
   }
 
   function clavier(e) {
