@@ -40,6 +40,12 @@ export default function MapPage() {
   const [position, setPosition] = useState(null);
   const [sharingLocation, setSharingLocation] = useState(false);
   const hauteurCourse = useHauteurCourse();
+  // À vélo (classique, électrique, cargo) : l'itinéraire et le temps d'arrivée sont ceux d'un cycliste.
+  const [velo, setVelo] = useState(false);
+  useEffect(() => {
+    api('/couriers/me', { token }).then((d) => setVelo(String(d.courier?.vehicleType || '').startsWith('velo'))).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     function load() {
@@ -125,7 +131,7 @@ export default function MapPage() {
             role="driver" hauteur={hauteurCourse}
             legende={position ? t('mapDriver.hereYouAre') : t('mapDriver.whenStarts')}
             etaSansEstimation={t('mapDriver.noRide')}
-            rendreCarte={({ height, onEta }) => <DriverNavigationMap originLat={position?.lat} originLng={position?.lng} height={height} onEta={onEta} />}
+            rendreCarte={({ height, onEta }) => <DriverNavigationMap originLat={position?.lat} originLng={position?.lng} height={height} onEta={onEta} velo={velo} />}
           />
         </div>
       ) : (
@@ -139,7 +145,7 @@ export default function MapPage() {
               originLat={position?.lat} originLng={position?.lng}
               targetLat={target.lat} targetLng={target.lng}
               targetLabel={target.label} targetEmoji={target.emoji} targetColor={target.color}
-              height={height} onEta={onEta}
+              height={height} onEta={onEta} velo={velo}
             />
           );
           return (

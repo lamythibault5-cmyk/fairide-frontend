@@ -27,9 +27,12 @@ function emojiIcon(emoji, bg) {
 }
 
 const ORIGIN_ICON = emojiIcon('🛵', '#14121F');
+const ORIGIN_ICON_VELO = emojiIcon('🚲', '#14121F');
 
 
-export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3B2FB5', onEta, height = 280 }) {
+// `velo` : le livreur roule à vélo — l'itinéraire et le temps d'arrivée sont demandés pour un cycliste (le serveur
+// recalcule la durée à l'allure d'un vélo), sans la majoration « scooter » ci-dessus.
+export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3B2FB5', onEta, height = 280, velo = false }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const containerRef = useRef(null);
@@ -89,7 +92,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
   useEffect(() => {
     if (!mapRef.current || !originLat || !originLng) return undefined;
     if (!originMarkerRef.current) {
-      originMarkerRef.current = L.marker([originLat, originLng], { icon: ORIGIN_ICON }).addTo(mapRef.current).bindPopup(t('navMap.you'));
+      originMarkerRef.current = L.marker([originLat, originLng], { icon: velo ? ORIGIN_ICON_VELO : ORIGIN_ICON }).addTo(mapRef.current).bindPopup(t('navMap.you'));
     } else {
       const marker = originMarkerRef.current;
       const start = marker.getLatLng();
@@ -122,7 +125,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
     if (autoSuiviRef.current) mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
 
     let cancelled = false;
-    itineraireRue(token, originLat, originLng, targetLat, targetLng)
+    itineraireRue(token, originLat, originLng, targetLat, targetLng, { velo })
       .then(({ latLngs, duration, distance }) => {
         if (cancelled || !lineRef.current) return;
         lineRef.current.setLatLngs(latLngs);
@@ -130,7 +133,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
         boundsRef.current = L.latLngBounds(latLngs);
         if (autoSuiviRef.current) mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
         // Jamais moins d'une minute : « 0 min » alors qu'on n'est pas arrivé est un mensonge.
-        const info = { minutes: Math.max(1, Math.round((duration * 1.15) / 60)), km: Math.round(distance / 100) / 10 };
+        const info = { minutes: Math.max(1, Math.round((duration * (velo ? 1 : 1.15)) / 60)), km: Math.round(distance / 100) / 10 };
         setEta(info); onEta?.(info);
       })
       .catch(() => {
@@ -138,7 +141,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originLat, originLng, targetLat, targetLng]);
+  }, [originLat, originLng, targetLat, targetLng, velo]);
 
   function recentrer() {
     autoSuiviRef.current = true; setRecentrable(false);
@@ -163,7 +166,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       )}
       </div>
       <div className="tracking-map-legend">
-        <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> {t('navMap.you')}</span>
+        <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>{velo ? '🚲' : '🛵'}</span> {t('navMap.you')}</span>
         {targetLat && targetLng && <span><span className="tracking-map-legend-icon" style={{ background: targetColor }}>{targetEmoji}</span> {targetLabel || t('navMap.nextStop')}</span>}
       </div>
     </div>
