@@ -274,8 +274,12 @@
   .visuel-vide--bandeau .visuel-vide-initiale { font-size: 96px; }
 }
 
-/* ---------- Pages qui glissent en place : fondu + léger mouvement, comme une application ---------- */
-@keyframes page-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* ---------- Arrivée des pages : un fondu, SANS déplacement ----------
+   Un glissement (transform) avait été ajouté le 03/10 : il a fait disparaître la carte. Un élément animé en transform
+   devient le repère de ses descendants en position fixe — la carte plein écran (.carte-plein-ecran, position: fixed)
+   se dimensionnait alors sur la boîte de la page (hauteur nulle) au lieu de l écran, et Leaflet s initialisait à
+   0 px. Aucune transformation sur .page-fade : elle porte aussi les barres fixes du panier et du paiement. */
+@keyframes page-arrive { from { opacity: 0; } to { opacity: 1; } }
 .page-fade { animation: page-arrive .26s cubic-bezier(.2, .8, .2, 1) both; }
 @media (prefers-reduced-motion: reduce) { .page-fade { animation: none; } }
 
