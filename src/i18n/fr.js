@@ -5342,6 +5342,7 @@ export default {
       readyToPickUp: 'Prête à récupérer',
       preparing: 'En préparation',
       pickupAt: '🏪 Retrait : {address}',
+      directions: 'Itinéraire',
       deliveryAt: '🏁 Livraison : {address}',
       tripEstimate: '🚴 Trajet resto → client : ~{min} min{km}',
       rideFee: 'Course : {fee} €',

@@ -28,6 +28,19 @@ function formatClock(date) {
   return date.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
+// ITINÉRAIRE (GEO-7). L'adresse n'était que du texte : le livreur devait la recopier dans son appli de navigation, à
+// vélo, d'une main (test de bout en bout du 6 oct. 2026). Le lien universel Google Maps ouvre l'appli installée sur
+// Android comme sur iPhone, et le navigateur à défaut. Vers le commerce sur la carte « à récupérer », vers le client
+// seulement une fois la commande en main (l'adresse complète n'est envoyée qu'à ce moment-là).
+function LienItineraire({ adresse, t }) {
+  if (!adresse) return null;
+  return (
+    <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adresse)}`} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+      {t('dashDriver.directions')} ↗
+    </a>
+  );
+}
+
 export default function DriverDashboard() {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -285,7 +298,7 @@ export default function DriverDashboard() {
         <span className={`status-badge status-${o.status}`}>{o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing')}</span>
       </div>
       <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-      {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
+      {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })} <LienItineraire adresse={o.restaurantAddress} t={t} /></div>}
       <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
       {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
       <DeliveryTiming order={o} />
@@ -374,7 +387,7 @@ export default function DriverDashboard() {
             <BandeauAllergie order={o} />
             <BadgeAlcool order={o} />
             {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
-            <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
+            <div className="small">{t('dashDriver.deliveryAt', { address: o.address })} <LienItineraire adresse={o.address} t={t} /></div>
             {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
             {o.deliveryInstructions && (
               <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>

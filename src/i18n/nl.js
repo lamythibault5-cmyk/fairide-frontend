@@ -5326,6 +5326,7 @@ export default {
       readyToPickUp: 'Klaar om op te halen',
       preparing: 'In bereiding',
       pickupAt: '🏪 Afhaling: {address}',
+      directions: 'Route',
       deliveryAt: '🏁 Levering: {address}',
       tripEstimate: '🚴 Traject restaurant → klant: ~{min} min{km}',
       rideFee: 'Rit: €{fee}',
