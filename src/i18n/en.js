@@ -4231,6 +4231,13 @@ export default {
     restoListUi: {
       sponsored: 'Sponsored',
       sponsoredTitle: 'This shop pays for this position in the row.',
+      promoCartThreshold: '-{value} on orders from {min}',
+      promoPercent: '-{value}%',
+      promoAmount: '-{value}',
+      promoFairidePercent: '-{value}% Fairide Advantage',
+      promoFairideAmount: '-{value} Fairide Advantage',
+      promoBogo1: 'Buy 1, get 1 free',
+      promoBogoN: 'Buy {n}, get 1 free',
       deliveryFromPill: '🚴 Delivery from {amount}',
       closedOpensAt: 'Closed · opens at {time}',
       servicePickup: 'Takeaway',

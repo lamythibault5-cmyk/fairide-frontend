@@ -21,6 +21,7 @@ import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, r
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
 import { tarifLivraison, eurosCourts } from '../../livraison';
+import { libellePromo } from '../../prixPlat';
 import EmplacementSponsor from '../../components/EmplacementSponsor';
 import VisuelVide from '../../components/VisuelVide';
 import usePageMeta from '../../hooks/usePageMeta';
@@ -62,10 +63,9 @@ function matchCommune(addressCity) {
 
 // Priorité : la promo panier (toute la commande) si active, sinon la première promo trouvée sur un
 // plat du menu — juste pour donner un aperçu concret de l'offre directement sur la carte du commerce.
-function offerLabelFor(r) {
-  if (r.activeCartPromo?.label) return r.activeCartPromo.label;
-  const itemPromo = (r.menu || []).find((i) => i.activePromo)?.activePromo;
-  return itemPromo?.label || null;
+function offerLabelFor(r, t) {
+  if (r.activeCartPromo) return libellePromo(r.activeCartPromo, t);
+  return libellePromo((r.menu || []).find((i) => i.activePromo)?.activePromo, t);
 }
 
 // Le restaurant peut prendre à sa charge tout ou partie des frais de livraison (voir "🏷️ Frais de
@@ -88,7 +88,7 @@ function deliveryOfferLabelFor(r, t) {
 // livraison). Avant : quatre pastilles empilées (commune, quartier, fermé…) et un grand blanc sous le texte.
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const { user } = useAuth();
-  const offerLabel = offerLabelFor(r);
+  const offerLabel = offerLabelFor(r, t);
   const deliveryOfferLabel = deliveryOfferLabelFor(r, t);
   const etat = r.hours ? getOpenStatus(r.hours, new Date(), r.closures) : null;
   const isClosed = !!etat && !etat.isOpen;

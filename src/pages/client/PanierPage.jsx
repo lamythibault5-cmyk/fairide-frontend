@@ -9,7 +9,7 @@ import EtatVide from '../../components/EtatVide';
 import Icone from '../../components/Icone';
 import EnteteFlux from '../../components/EnteteFlux';
 import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/UpsellPanier';
-import { euros } from '../../prixPlat';
+import { euros, libellePromo } from '../../prixPlat';
 
 // Le panier, sur sa propre page.
 //
@@ -91,7 +91,7 @@ export default function PanierPage() {
 
       {totaux && totaux.discountedItems.map((d, i) => (
         <div className="row panier-remise" key={i}>
-          <span className="small">{d.name || d.label}</span><span className="small">-{euros(d.discount)}</span>
+          <span className="small">{d.name || libellePromo(d.promo, t) || d.label}</span><span className="small">-{euros(d.discount)}</span>
         </div>
       ))}
 

@@ -4231,6 +4231,13 @@ export default {
     restoListUi: {
       sponsored: 'Gesponsord',
       sponsoredTitle: 'Deze zaak betaalt voor deze positie in de rij.',
+      promoCartThreshold: '-{value} bij een bestelling vanaf {min}',
+      promoPercent: '-{value}%',
+      promoAmount: '-{value}',
+      promoFairidePercent: '-{value}% Fairide-voordeel',
+      promoFairideAmount: '-{value} Fairide-voordeel',
+      promoBogo1: '1 gekocht = 1 gratis',
+      promoBogoN: '{n} gekocht = 1 gratis',
       deliveryFromPill: '🚴 Levering vanaf {amount}',
       closedOpensAt: 'Gesloten · opent om {time}',
       servicePickup: 'Afhalen',

@@ -4241,6 +4241,13 @@ export default {
     restoListUi: {
       sponsored: 'Sponsorisé',
       sponsoredTitle: 'Ce commerce paie pour cette position dans la rangée.',
+      promoCartThreshold: '-{value} dès {min} de commande',
+      promoPercent: '-{value} %',
+      promoAmount: '-{value}',
+      promoFairidePercent: '-{value} % Avantage Fairide',
+      promoFairideAmount: '-{value} Avantage Fairide',
+      promoBogo1: '1 acheté = 1 offert',
+      promoBogoN: '{n} achetés = 1 offert',
       deliveryFromPill: '🚴 Livraison dès {amount}',
       closedOpensAt: 'Fermé · ouvre à {time}',
       servicePickup: 'À emporter',

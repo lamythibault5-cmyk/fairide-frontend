@@ -2,7 +2,7 @@ import { sectionLabel, resolveItemImage, groupBySubsection } from '../menuCatego
 import { useLanguage } from '../context/LanguageContext';
 import { localizedItem } from '../menuTranslation';
 import { libellesAllergenes } from '../allergenes';
-import { prixRemise, euros } from '../prixPlat';
+import { prixRemise, euros, libellePromo } from '../prixPlat';
 import { imgProps } from '../images';
 
 // TOUTE LA CARTE EST LA CIBLE, plus seulement le « + » de son coin.
@@ -30,7 +30,7 @@ function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
   const indisponible = item.available === false;
   const cliquable = !hideAdd && !indisponible;
   const remise = prixRemise(item);
-  const etiquette = item.activePromo && !item.activePromo.fairide && remise === null ? item.activePromo.label : null;
+  const etiquette = item.activePromo && !item.activePromo.fairide && remise === null ? libellePromo(item.activePromo, t) : null;
   const contenu = (
     <>
       <span className="plat-texte">

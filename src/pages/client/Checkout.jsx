@@ -2,7 +2,7 @@ import { allerAuPaiement } from '../../natif';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import { euros } from '../../prixPlat';
+import { euros, libellePromo } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
@@ -505,7 +505,7 @@ export default function Checkout() {
             <div className="breakdown">
               <div className="line"><span>{t('common.subtotal')}</span><span>{euros(totals.rawSubtotal)}</span></div>
               {totals.discountedItems.map((d, i) => (
-                <div className="line" key={i}><span><Icone nom="etiquette" taille={14} /> {d.name ? `${d.name} (${d.label})` : d.label}</span><span>-{euros(d.discount)}</span></div>
+                <div className="line" key={i}><span><Icone nom="etiquette" taille={14} /> {d.name ? `${d.name} (${libellePromo(d.promo, t) || d.label})` : (libellePromo(d.promo, t) || d.label)}</span><span>-{euros(d.discount)}</span></div>
               ))}
               {fulfillmentType === 'delivery' && (
                 <>
