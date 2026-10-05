@@ -27,17 +27,21 @@ const COMPACT_BREAKPOINT = 900;
 
 // Constante de temps du fondu de vitesse, en secondes : la rangée ne bascule jamais brutalement entre
 // arrêt et pleine vitesse, ce qui était la principale cause du rendu mécanique.
-const SPEED_RAMP_TAU = 0.5;
+// 1,1 s (au lieu de 0,5) : la rangée prend son élan et le perd lentement, comme un objet qui a du poids
+// (fondateur, 2026-10-05 : « toujours un peu trop mécanique »).
+const SPEED_RAMP_TAU = 1.1;
 
 // Décroissance de l'inertie après un lâcher de doigt. Plus la valeur est basse, plus le glissement
 // s'arrête court ; 2.2 donne une glissade franche sans partir à l'autre bout de la rangée.
-const INERTIA_DECAY = 2.2;
+// 1.7 (au lieu de 2.2) : la glissade se prolonge un peu plus avant de s'éteindre.
+const INERTIA_DECAY = 1.7;
 
 // Au-delà de ce déplacement, le geste est un glissement et non un appui : le clic sur la carte est alors
 // annulé. En dessous, on laisse passer — sans quoi il deviendrait impossible d'ouvrir une fiche.
 const DRAG_SLOP_PX = 8;
 
-const RESUME_AFTER_GESTURE_MS = 700;
+// Après un geste, la rangée attend avant de repartir : 0,7 s la faisait redémarrer sous le doigt à peine levé.
+const RESUME_AFTER_GESTURE_MS = 1800;
 
 // Nombre minimal de cartes sur la piste : en dessous, la moitié de piste serait plus étroite que la
 // fenêtre et le repli laisserait voir un trou. Une rangée de 2 commerces est donc recopiée 4 fois.
@@ -46,7 +50,9 @@ const MIN_CARDS_ON_TRACK = 8;
 // autoplay=false : la rangée ne bouge pas d'elle-même, mais reste une boucle infinie au doigt, à la
 // souris (glisser) et à la molette horizontale — c'est le mode des rangées thématiques ; seule
 // « À découvrir » défile en continu.
-export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, mobileSpeed = 64, className = '', autoplay = true }) {
+// Vitesses par défaut : une allure de promenade (une carte toutes les 5 à 6 secondes). À 70 / 64 px par seconde, une
+// carte entière passait toutes les 2,5 s — un tapis roulant, pas une vitrine.
+export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, mobileSpeed = 28, className = '', autoplay = true }) {
   const viewportRef = useRef(null);
   const trackRef = useRef(null);
   // Unique coordonnée du système : de combien la piste est décalée vers la gauche, en pixels, en pleine
@@ -87,6 +93,18 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, m
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+    // HORS DE L'ÉCRAN, LA RANGÉE S'ARRÊTE. Elle tournait en continu même invisible (batterie), et surtout elle était
+    // déjà lancée à pleine vitesse quand on arrivait dessus. Elle démarre maintenant en douceur au moment où elle
+    // entre dans l'écran (fondu de vitesse ci-dessous), et se pose quand elle en sort.
+    let visible = true;
+    let vue = null;
+    // « visible » reste vrai tant que le navigateur n'a rien dit : si l'observateur ne répond jamais, la rangée défile
+    // comme avant plutôt que de rester figée.
+    if (typeof IntersectionObserver !== 'undefined') {
+      vue = new IntersectionObserver((entrees) => { visible = entrees.some((e) => e.isIntersecting); }, { threshold: 0.15 });
+      vue.observe(viewport);
+    }
+
     // Ramène l'offset dans [0, halfWidth) : les deux copies du contenu étant identiques, ce repli est
     // invisible, et il fonctionne aussi bien vers l'arrière que vers l'avant.
     function wrap(v) {
@@ -107,7 +125,7 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, m
       last = now;
 
       if (!dragRef.current) {
-        const wanted = (pausedRef.current || (canLoop && reduceMotion.matches)) ? 0 : (canLoop ? targetSpeed : 0);
+        const wanted = (pausedRef.current || !visible || (canLoop && reduceMotion.matches)) ? 0 : (canLoop ? targetSpeed : 0);
         autoSpeedRef.current += (wanted - autoSpeedRef.current) * (1 - Math.exp(-dt / SPEED_RAMP_TAU));
         // Inertie du lâcher, en px/s, qui s'éteint exponentiellement et s'ajoute à la vitesse de fond.
         inertiaRef.current *= Math.exp(-dt * INERTIA_DECAY);
@@ -208,6 +226,7 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, m
       cancelAnimationFrame(raf);
       clearResume();
       observer.disconnect();
+      vue?.disconnect();
       compact.removeEventListener('change', onTierChange);
       viewport.removeEventListener('pointerdown', onPointerDown);
       viewport.removeEventListener('pointermove', onPointerMove);

@@ -352,3 +352,70 @@
   .auto-scroll-row .visuel-vide-initiale, .rest-grid-scroll .visuel-vide-initiale { font-size: 54px; }
   .auto-scroll-row .visuel-vide-emoji, .rest-grid-scroll .visuel-vide-emoji { font-size: 20px; right: 8px; bottom: 8px; }
 }
+
+
+/* ============================================================================================
+   FICHE D'UN COMMERCE — plus d'allure (fondateur, 2026-10-05 : « encore plus attractive »).
+   Rien ne change dans ce qui est dit ni dans l'ordre : ce sont les mêmes éléments, mieux habillés.
+   ============================================================================================ */
+/* Bandeau : plus haut, les coins du bas arrondis ; le logo cerclé de lime, la couleur de la marque. */
+.fiche-media > .fiche-logo { outline: 2.5px solid var(--lime); outline-offset: 0; }
+@media (max-width: 640px) {
+  .fiche-media { min-height: 204px; margin-bottom: 30px; }
+  .fiche-media > .fiche-couverture { height: 204px; border-radius: 0 0 24px 24px; }
+  .visuel-vide--bandeau { border-radius: 0 0 24px 24px; }
+  .fiche-media > .fiche-logo { width: 72px; height: 72px; bottom: -24px; }
+}
+.fiche-nom { letter-spacing: -0.02em; }
+/* La ligne de méta devient une rangée de pastilles : « Nouveau » (ou la note) en iris, la commune en gris,
+   « Infos » en bouton à contour. Les points médians n'ont plus lieu d'être. */
+.fiche-meta { gap: 6px; margin: 2px 0 10px; }
+.fiche-meta > span[aria-hidden="true"] { display: none; }
+.fiche-meta > span:not([aria-hidden]):not(.fiche-meta-note) {
+  display: inline-flex; align-items: center; padding: 5px 11px; border-radius: var(--radius-pill);
+  background: var(--surface-soft); color: var(--ink); font-size: 12.5px; font-weight: 600; line-height: 1.2;
+}
+.fiche-meta > span:first-child:not(.fiche-meta-note), .fiche-meta > .fiche-meta-note + span { background: rgba(59, 47, 181, 0.09); color: var(--iris); }
+.fiche-meta > .fiche-infos-lien {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 11px; border-radius: var(--radius-pill);
+  border: 1px solid var(--line); background: #fff; font-size: 12.5px; font-weight: 600; text-decoration: none; line-height: 1.2;
+}
+.fiche-meta > .fiche-infos-lien::after { content: '›'; font-size: 15px; line-height: 1; color: var(--iris); }
+/* Même hauteur que les pastilles voisines ; la zone de toucher, elle, déborde de 8px autour (cible de 44px). */
+.fiche-meta > .fiche-infos-lien { position: relative; min-height: 0 !important; height: 26px; padding-top: 0; padding-bottom: 0; }
+.fiche-meta > .fiche-infos-lien::before { content: ''; position: absolute; inset: -9px -6px; }
+.fiche-meta > .fiche-infos-lien:hover { border-color: var(--iris); color: var(--iris); }
+/* État d'ouverture : une pastille teintée, lisible d'un coup d'œil. */
+.fiche-statut { width: fit-content; max-width: 100%; padding: 7px 13px; border-radius: 14px; background: var(--surface-soft); margin: 0 0 14px; font-size: 13.5px; }
+.fiche-statut.est-ouvert { background: rgba(59, 47, 181, 0.08); }
+.fiche-statut.est-ouvert .fiche-statut-point { animation: fiche-pouls 2.2s ease-in-out infinite; }
+@keyframes fiche-pouls { 0%, 100% { box-shadow: 0 0 0 0 rgba(59, 47, 181, 0.35); } 50% { box-shadow: 0 0 0 5px rgba(59, 47, 181, 0); } }
+@media (prefers-reduced-motion: reduce) { .fiche-statut.est-ouvert .fiche-statut-point { animation: none; } }
+
+/* Sections de la carte : un trait iris devant le titre, le nombre de plats en pastille. */
+.plats-section-titre { position: relative; padding-left: 13px; align-items: center; margin-top: 30px; }
+.plats-section-titre::before { content: ''; position: absolute; left: 0; top: .12em; bottom: .12em; width: 4px; border-radius: 2px; background: var(--iris); }
+.plats-section-compte { background: var(--surface-soft); color: var(--ink-soft); padding: 2px 9px; border-radius: var(--radius-pill); font-size: 12px; }
+
+/* Plats : la photo plus ronde et qui respire sous le doigt, le « + » en iris — le geste principal de la page. */
+.plat-visuel { border-radius: 16px; }
+.plat-visuel .plat-photo { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+.plat-cliquable:hover .plat-photo, .plat-cliquable:active .plat-photo { transform: scale(1.05); }
+.plat-cliquable:active { border-radius: 12px; }
+.plat .plat-prix { font-weight: 800; }
+.plat-ligne > .plat-ajout { background: var(--iris); color: #fff; border-color: var(--iris); box-shadow: 0 3px 10px rgba(59, 47, 181, 0.28); }
+.plat-ligne > .plat-ajout:hover { background: var(--iris-deep); border-color: var(--iris-deep); }
+.plat-ligne > .plat-ajout:active { background: var(--lime); color: var(--ink); border-color: var(--lime); box-shadow: none; }
+.plat-ligne:last-child > .plat { border-bottom-color: transparent; }
+
+/* « À découvrir » en bas de fiche : de vraies vignettes (photo ou visuel de marque), plus grandes. */
+.discover-card { flex-basis: 172px; border-radius: 16px; }
+.discover-card-media { position: relative; display: block; height: 104px; overflow: hidden; background: var(--surface-soft); }
+.discover-card-media > img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; }
+.discover-card-media .visuel-vide-initiale { font-size: 46px; }
+.discover-card-media .visuel-vide-emoji { font-size: 18px; right: 8px; bottom: 8px; }
+.discover-card .info { padding: 9px 11px 11px; }
+.discover-card .info b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.discover-card .info .small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Le titre « Découvrir aussi » respire au-dessus de ses vignettes. */
+.auto-scroll-row.discover-track { margin-top: 12px; }

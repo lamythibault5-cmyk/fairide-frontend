@@ -32,7 +32,7 @@ import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 import { localizedItem } from '../../menuTranslation';
-import { resolveItemImage } from '../../menuCategories';
+import { resolveItemImage, restaurantTypeLabel } from '../../menuCategories';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
 
 // Clé du jour (openingHours) → clé de traduction du nom du jour (resa.monday…).
@@ -709,10 +709,14 @@ function DiscoverSection({ restaurants, t }) {
         className="discover-track"
         renderItem={(r, i, key) => (
           <Link key={key} to={`/restaurants/${r.id}`} className="discover-card">
-            {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 320)} alt={r.name} onError={cacherImageCassee} />}
+            {/* Le visuel de marque sous la photo : un commerce sans photo (ou dont la photo casse) garde une vignette. */}
+            <span className="discover-card-media">
+              <VisuelVide nom={r.name} cuisine={r.cuisine} />
+              {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 320)} alt={r.name} onError={cacherImageCassee} />}
+            </span>
             <div className="info">
               <b>{r.name}</b>
-              <span className="small">{r.commune}</span>
+              <span className="small">{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune].filter(Boolean).join(' · ')}</span>
             </div>
           </Link>
         )}
