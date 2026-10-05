@@ -74,7 +74,7 @@ const CLE_BROUILLON = 'fairide_inscription_brouillon';
 const BROUILLON_MAX_MS = 6 * 3600 * 1000; // au-delà, une inscription interrompue ne se reprend plus
 
 export default function Auth() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   // Page publique et indexée (voir robots.txt) : elle porte son propre titre et sa description.
   usePageMeta({ title: t('seo.loginTitle'), description: t('seo.loginDescription'), path: '/login' });
   // Pot de miel : un champ que personne ne voit ni ne remplit — sauf un robot (le serveur le lit aussi).
@@ -751,14 +751,16 @@ export default function Auth() {
         if (cancelled || !googleBtnRef.current) return;
         googleBtnRef.current.innerHTML = '';
         gsi.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+        // `locale` : sans lui, Google écrit le bouton dans la langue du NAVIGATEUR, pas celle choisie sur le site
+        // (« Inloggen met Google » sur la page française — test du 6 oct. 2026).
         gsi.renderButton(googleBtnRef.current, {
-          theme: 'outline', size: 'large', width: 320, text: mode === 'register' ? 'signup_with' : 'signin_with'
+          theme: 'outline', size: 'large', width: 320, text: mode === 'register' ? 'signup_with' : 'signin_with', locale: language
         });
       })
       .catch(() => { /* bouton Google absent, le reste de la page fonctionne */ });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, stepKey, googleCredential]);
+  }, [mode, stepKey, googleCredential, language]);
 
   async function submit(e) {
     e.preventDefault();
