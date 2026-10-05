@@ -6794,6 +6794,7 @@ export default {
       errCodeRequired: 'Enter the code you received by email.',
       errEmailRequired: 'Enter your email address.',
       newCodeSent: 'New code sent.',
+      errGoogleIncomplete: "Some information is missing to create your account: check the previous steps.",
       googleIncompleteProfile: 'Fill in your phone number and full address before continuing with Google.',
       googleCompleteProfile: 'Complete your profile (phone, address) then click Continue with Google again.',
       sessionExpired: 'Your session has expired. Log in again to continue.',

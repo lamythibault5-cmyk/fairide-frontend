@@ -6794,6 +6794,7 @@ export default {
       errCodeRequired: 'Voer de code in die je per e-mail ontving.',
       errEmailRequired: 'Voer je e-mailadres in.',
       newCodeSent: 'Nieuwe code verstuurd.',
+      errGoogleIncomplete: "Er ontbreekt informatie om je account aan te maken: controleer de vorige stappen.",
       googleIncompleteProfile: 'Vul je telefoonnummer en volledige adres in voordat je verdergaat met Google.',
       googleCompleteProfile: 'Vul je profiel aan (telefoon, adres) en klik daarna opnieuw op Doorgaan met Google.',
       sessionExpired: 'Je sessie is verlopen. Log opnieuw in om verder te gaan.',

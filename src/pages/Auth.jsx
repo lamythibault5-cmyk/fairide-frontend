@@ -740,9 +740,11 @@ export default function Auth() {
       ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {})
     });
+    suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
     await televerserDocumentsLivreur(data.token);
     toast(t('auth.welcome', { name: data.user.name }));
-    await allerApresConnexion(data.user);
+    // Une inscription, même par Google, arrive dans son espace (tableau de bord, dossier livreur) — pas sur l'accueil.
+    await allerApresInscription(data.user);
     return true;
   }
 
@@ -814,6 +816,8 @@ export default function Auth() {
           } catch (err) {
             // Jeton Google expiré (il vit une heure) ou refusé : on repart de la première étape.
             if (/google|token|jeton|expir/i.test(err.message || '') && err.message !== 'INCOMPLETE_PROFILE') { oublierGoogle(); setStep(0); toast(t('auth.googleExpired')); }
+            // Profil refusé par le serveur : on affiche sa raison (« numéro d'entreprise requis »…), pas le code interne.
+            else if (err.message === 'INCOMPLETE_PROFILE') toast(err.data?.detail || t('auth.errGoogleIncomplete'), 'erreur');
             else throw err;
           }
           return;
@@ -857,8 +861,13 @@ export default function Auth() {
       }
     } catch (err) {
       if (err.message === 'EMAIL_NOT_VERIFIED') {
+        // Le code de l'inscription a sans doute expiré (15 minutes) : on en envoie un neuf plutôt que d'ouvrir un
+        // écran qui attend un code que la personne n'a plus. Le canal (SMS ou e-mail) vient de la réponse.
+        let canal = null;
+        try { canal = await resendCode(email.trim()); } catch { /* plafond atteint ou réseau : le bouton « Renvoyer » reste là */ }
+        setPendingChannel(canal?.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(canal?.phoneMasked || '');
         setPendingEmail(email.trim());
-        toast(t('auth.errEmailNotVerified'), 'erreur');
+        toast(t(canal?.channel === 'sms' ? 'auth.errVerificationSentSms' : canal ? 'auth.errVerificationSent' : 'auth.errEmailNotVerified'), canal ? undefined : 'erreur');
       } else if (err.code === 'TOTP_REQUIRED') {
         // Mot de passe bon, second facteur attendu : on ouvre le champ sans rien dire d'alarmant.
         setTotpAttendu(true);
@@ -930,8 +939,10 @@ export default function Auth() {
   async function handleResend() {
     setResending(true);
     try {
-      await resendCode(pendingEmail);
-      toast(t('auth.newCodeSent'));
+      const r = await resendCode(pendingEmail);
+      if (r?.channel) { setPendingChannel(r.channel === 'sms' ? 'sms' : 'email'); if (r.phoneMasked) setPendingPhone(r.phoneMasked); }
+      setCode('');
+      toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : r?.channel === 'email' ? 'auth.errVerificationSent' : 'auth.newCodeSent'));
     } catch (err) {
       toast(err.message, 'erreur');
     } finally {

@@ -6839,6 +6839,7 @@ export default {
       errCodeRequired: 'Entre le code reçu par email.',
       errEmailRequired: 'Entre ton adresse email.',
       newCodeSent: 'Nouveau code envoyé.',
+      errGoogleIncomplete: "Il manque une information pour créer ton compte : vérifie les étapes précédentes.",
       googleIncompleteProfile: "Renseigne ton téléphone et ton adresse complète avant de continuer avec Google.",
       googleCompleteProfile: "Complète ton profil (téléphone, adresse) puis reclique sur Continuer avec Google.",
       sessionExpired: 'Ta session a expiré. Reconnecte-toi pour continuer.',
