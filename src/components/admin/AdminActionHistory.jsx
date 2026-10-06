@@ -7,6 +7,8 @@ const actionLabels = (tr) => ({
   order_driver_reassign: tr('adminHistory.a_driver_reassigned'),
   order_refund: tr('adminHistory.a_refund'),
   restaurant_status_change: tr('adminHistory.a_restaurant_status'),
+  restaurant_closed_until_tomorrow: tr('adminHistory.a_restaurant_closed_tonight'),
+  restaurant_reopened: tr('adminHistory.a_restaurant_reopened'),
   restaurant_edit: tr('adminHistory.a_info_updated'),
   driver_status_change: tr('adminHistory.a_driver_status'),
   client_status_change: tr('adminHistory.a_client_status'),
@@ -31,7 +33,8 @@ const actionLabels = (tr) => ({
 
 function describeDetails(action, details, tr) {
   if (!details) return '';
-  if (action === 'order_status_override') return `→ ${details.status}`;
+  // Motif exigé depuis la décision DEC-3 (6 oct. 2026) ; les forçages plus anciens n'en ont pas.
+  if (action === 'order_status_override') return `→ ${details.status}${details.reason ? ` — « ${details.reason} »` : ''}`;
   if (action === 'order_driver_reassign') return `→ ${details.driverName}`;
   if (action === 'order_refund') return `${euros(Number(details.amount))} (${details.responsibility})`;
   if (action === 'restaurant_status_change' || action === 'driver_status_change' || action === 'client_status_change') return `→ ${details.status}`;

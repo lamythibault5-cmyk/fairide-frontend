@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import ReasonDialog from '../../components/admin/ReasonDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
@@ -170,12 +171,12 @@ export default function AdminOrdersPage() {
 
   // Actions groupées : annulation ou réaffectation d'un livreur, commande par commande (le serveur n'a
   // pas de route « en lot » pour les commandes) — chaque échec est compté, la liste est rechargée.
-  async function runBulk() {
+  async function runBulk(motif) {
     if (!bulk) return;
     setBulkBusy(true);
     try {
       const { ok, erreurs } = bulk.type === 'cancel'
-        ? await runForEach(sel.ids, (id) => api(`/admin/orders/${id}/status`, { method: 'PATCH', token, body: { status: 'annule' } }))
+        ? await runForEach(sel.ids, (id) => api(`/admin/orders/${id}/status`, { method: 'PATCH', token, body: { status: 'annule', reason: motif } }))
         : await runForEach(sel.ids, (id) => api(`/admin/orders/${id}/driver`, { method: 'PATCH', token, body: { driverId: bulk.driver.id } }));
       toast(erreurs.length ? tr('adminCommon.bulkPartial', { ok, failed: erreurs.length, error: erreurs[0] }) : tr('adminCommon.bulkDone', { n: ok }));
       sel.clear(); load();
@@ -295,24 +296,38 @@ export default function AdminOrdersPage() {
       ))}
       <Pager page={page} pageSize={PAGE_SIZE} total={total} onPage={setPage} />
 
-      <ConfirmDialog
+      <ReasonDialog
         open={!!kanbanMove}
         title={tr('adminOrders.confirmChangeStatus')}
         message={kanbanMove ? tr('adminOrders.confirmChangeStatusBody', { from: ORDER_STATUS_LABELS[kanbanMove.order.status] || kanbanMove.order.status, to: ORDER_STATUS_LABELS[kanbanMove.status] || kanbanMove.status }) : ''}
+        label={tr('adminOrders.forceReasonLabel')}
+        placeholder={tr('adminOrders.forceReasonPlaceholder')}
         danger={kanbanMove?.status === 'annule'}
-        onConfirm={async () => {
-          try { await api(`/admin/orders/${kanbanMove.order.id}/status`, { method: 'PATCH', token, body: { status: kanbanMove.status } }); toast(tr('adminOrders.toastStatusChanged')); load(); }
+        onConfirm={async (motif) => {
+          try { await api(`/admin/orders/${kanbanMove.order.id}/status`, { method: 'PATCH', token, body: { status: kanbanMove.status, reason: motif } }); toast(tr('adminOrders.toastStatusChanged')); load(); }
           catch (e) { toast(e.message, 'erreur'); } finally { setKanbanMove(null); }
         }}
         onCancel={() => setKanbanMove(null)}
       />
-      <ConfirmDialog
-        open={!!bulk}
-        title={bulk?.type === 'cancel' ? tr('adminOrders.bulkCancelTitle', { n: sel.count }) : tr('adminOrders.bulkAssignTitle', { n: sel.count })}
-        message={bulk?.type === 'cancel' ? tr('adminOrders.confirmCancelBody') : (bulk ? tr('adminOrders.newDriverMsg', { name: bulk.driver.name }) : '')}
-        danger={bulk?.type === 'cancel'}
+      {/* Annulation groupée : c'est un forçage de statut, le motif est obligatoire (décision DEC-3) ; il vaut pour toute la
+          sélection. La réaffectation d'un livreur garde la simple confirmation. */}
+      <ReasonDialog
+        open={bulk?.type === 'cancel'}
+        title={tr('adminOrders.bulkCancelTitle', { n: sel.count })}
+        message={tr('adminOrders.confirmCancelBody')}
+        label={tr('adminOrders.forceReasonLabel')}
+        placeholder={tr('adminOrders.forceReasonPlaceholder')}
+        danger
         loading={bulkBusy}
         onConfirm={runBulk}
+        onCancel={() => setBulk(null)}
+      />
+      <ConfirmDialog
+        open={!!bulk && bulk.type !== 'cancel'}
+        title={tr('adminOrders.bulkAssignTitle', { n: sel.count })}
+        message={bulk ? tr('adminOrders.newDriverMsg', { name: bulk.driver.name }) : ''}
+        loading={bulkBusy}
+        onConfirm={() => runBulk()}
         onCancel={() => setBulk(null)}
       />
       {selected && (
@@ -362,11 +377,11 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
     api('/admin/drivers?limit=500&sort=name', { token }).then((l) => setDrivers(Array.isArray(l) ? l : [])).catch((e) => toast(e.message, 'erreur'));
   }
 
-  async function runConfirmed() {
+  async function runConfirmed(motif) {
     if (!confirmAction) return;
     setBusy(true);
     try {
-      await confirmAction.run();
+      await confirmAction.run(motif);
       toast(confirmAction.successMessage || tr('adminCommon.doneToast'));
       onChanged();
     } catch (e) {
@@ -382,7 +397,8 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       title: tr('adminOrders.confirmChangeStatus'),
       message: tr('adminOrders.confirmChangeStatusBody', { from: ORDER_STATUS_LABELS[detail.status] || detail.status, to: ORDER_STATUS_LABELS[newStatus] || newStatus }),
       successMessage: tr('adminOrders.toastStatusChanged'),
-      run: () => api(`/admin/orders/${selected.id}/status`, { method: 'PATCH', token, body: { status: newStatus } })
+      needsReason: true,
+      run: (motif) => api(`/admin/orders/${selected.id}/status`, { method: 'PATCH', token, body: { status: newStatus, reason: motif } })
     });
   }
 
@@ -392,7 +408,8 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       message: tr('adminOrders.confirmCancelBody'),
       danger: true,
       successMessage: tr('adminOrders.toastCancelled'),
-      run: () => api(`/admin/orders/${selected.id}/status`, { method: 'PATCH', token, body: { status: 'annule' } })
+      needsReason: true,
+      run: (motif) => api(`/admin/orders/${selected.id}/status`, { method: 'PATCH', token, body: { status: 'annule', reason: motif } })
     });
   }
 
@@ -523,13 +540,25 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
           <AdminActionHistory actions={detail.actions} />
         </>
       )}
+      {/* Forçage de statut : motif obligatoire, gardé dans l'historique de la commande (décision DEC-3). */}
+      <ReasonDialog
+        open={!!confirmAction?.needsReason}
+        title={confirmAction?.title}
+        message={confirmAction?.message}
+        label={tr('adminOrders.forceReasonLabel')}
+        placeholder={tr('adminOrders.forceReasonPlaceholder')}
+        danger={confirmAction?.danger}
+        loading={busy}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirmAction(null)}
+      />
       <ConfirmDialog
-        open={!!confirmAction}
+        open={!!confirmAction && !confirmAction.needsReason}
         title={confirmAction?.title}
         message={confirmAction?.message}
         danger={confirmAction?.danger}
         loading={busy}
-        onConfirm={runConfirmed}
+        onConfirm={() => runConfirmed()}
         onCancel={() => setConfirmAction(null)}
       />
     </RecordDrawer>,
