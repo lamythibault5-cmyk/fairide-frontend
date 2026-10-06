@@ -3472,6 +3472,8 @@ export default {
       takeaway: 'afhalen',
       confirmChangeStatus: 'De status wijzigen?',
       confirmChangeStatusBody: 'Huidige status: {from} → {to}. Deze actie is handmatig en volgt niet de normale flow restaurant/koerier.',
+      forceReasonLabel: "Reden (bewaard in de geschiedenis van de bestelling)",
+      forceReasonPlaceholder: "Bv. tablet van de zaak staat uit, koerier onbereikbaar…",
       toastStatusChanged: 'Status gewijzigd.',
       confirmCancel: 'Deze bestelling annuleren?',
       confirmCancelBody: 'De status wordt "Geannuleerd". Denk eraan apart terug te betalen indien nodig.',

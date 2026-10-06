@@ -31,7 +31,8 @@ const actionLabels = (tr) => ({
 
 function describeDetails(action, details, tr) {
   if (!details) return '';
-  if (action === 'order_status_override') return `→ ${details.status}`;
+  // Motif exigé depuis la décision DEC-3 (6 oct. 2026) ; les forçages plus anciens n'en ont pas.
+  if (action === 'order_status_override') return `→ ${details.status}${details.reason ? ` — « ${details.reason} »` : ''}`;
   if (action === 'order_driver_reassign') return `→ ${details.driverName}`;
   if (action === 'order_refund') return `${euros(Number(details.amount))} (${details.responsibility})`;
   if (action === 'restaurant_status_change' || action === 'driver_status_change' || action === 'client_status_change') return `→ ${details.status}`;

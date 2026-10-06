@@ -3472,6 +3472,8 @@ export default {
       takeaway: 'takeaway',
       confirmChangeStatus: 'Change the status?',
       confirmChangeStatusBody: 'Current status: {from} → {to}. This action is manual and does not follow the normal restaurant/courier flow.',
+      forceReasonLabel: "Reason (kept in the order's history)",
+      forceReasonPlaceholder: "E.g. the business tablet is off, the courier cannot be reached…",
       toastStatusChanged: 'Status changed.',
       confirmCancel: 'Cancel this order?',
       confirmCancelBody: 'The status will become "Cancelled". Remember to refund separately if needed.',

@@ -3472,6 +3472,8 @@ export default {
       takeaway: 'à emporter',
       confirmChangeStatus: 'Changer le statut ?',
       confirmChangeStatusBody: 'Statut actuel : {from} → {to}. Cette action est manuelle et ne suit pas le flux normal resto/livreur.',
+      forceReasonLabel: "Motif (gardé dans l'historique de la commande)",
+      forceReasonPlaceholder: "Ex. : tablette du commerce éteinte, livreur injoignable…",
       toastStatusChanged: 'Statut modifié.',
       confirmCancel: 'Annuler cette commande ?',
       confirmCancelBody: 'Le statut passera à "Annulée". Pense à faire un remboursement séparément si nécessaire.',
