@@ -6679,7 +6679,9 @@ export default {
       zoneIncomplete: 'Name the zone and tick at least one commune.',
       zoneRemove: 'Remove the zone',
       zoneRemoveConfirm: 'Remove zone “{zone}”? Its communes stay in the list, its own prices are deleted.',
-      zoneRemoved: 'Zone removed.'
+      zoneRemoved: 'Zone removed.',
+      communeMismatch: 'Commune changed',
+      communeMismatchHelp: 'The business moved since the request: this placement no longer shows. Stop it, then request it again in the new commune.'
     },
     sponsor: {
       brokenAdmin: 'The logo for “{label}” cannot be found (file deleted at the host?). Upload it again in Admin › Collaborations / sponsoring.',

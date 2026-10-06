@@ -6679,7 +6679,9 @@ export default {
       zoneIncomplete: 'Geef de zone een naam en vink minstens één gemeente aan.',
       zoneRemove: 'Zone verwijderen',
       zoneRemoveConfirm: 'Zone “{zone}” verwijderen? Haar gemeenten blijven in de lijst, haar eigen prijzen verdwijnen.',
-      zoneRemoved: 'Zone verwijderd.'
+      zoneRemoved: 'Zone verwijderd.',
+      communeMismatch: 'Gemeente gewijzigd',
+      communeMismatchHelp: 'De zaak is verhuisd sinds de aanvraag: deze promotie wordt niet meer getoond. Stopzetten en opnieuw aanvragen in de nieuwe gemeente.'
     },
     sponsor: {
       brokenAdmin: 'Het logo voor “{label}” is niet te vinden (bestand verwijderd bij de host?). Laad het opnieuw op in Admin › Samenwerkingen / sponsoring.',

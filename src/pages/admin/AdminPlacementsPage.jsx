@@ -264,7 +264,7 @@ export default function AdminPlacementsPage() {
           {autres.map((b) => (
             <div className="card mea-reservation" key={b.id} style={{ margin: '0 0 8px' }}>
               <div>
-                <b>{b.restaurantName}</b>{!commune && b.commune && <span className="small"> · {b.commune}</span>} <span className={`modif-statut mea-statut--${b.status}`}>{tr(`placements.status_${b.status}`)}</span>
+                <b>{b.restaurantName}</b>{!commune && b.commune && <span className="small"> · {b.commune}</span>} <span className={`modif-statut mea-statut--${b.status}`}>{tr(`placements.status_${b.status}`)}</span>{b.communeMismatch && ['active', 'pending'].includes(b.status) && <span className="modif-statut mea-statut--cancelled" title={tr('adminPlacements.communeMismatchHelp')}>{tr('adminPlacements.communeMismatch')}</span>}
                 <span className="small" style={{ display: 'block' }}>{titre(b.sectionKey, b.sectionLabel)} · {libellePosition(tr, b.slot)} · {jourCourt(b.startsOn)} → {jourCourt(b.endsOn)} · {euros(b.totalHt)} {tr('placements.exVat')}</span>
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>

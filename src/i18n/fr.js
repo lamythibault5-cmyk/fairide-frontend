@@ -6724,7 +6724,9 @@ export default {
       zoneIncomplete: 'Donne un nom à la zone et coche au moins une commune.',
       zoneRemove: 'Retirer la zone',
       zoneRemoveConfirm: 'Retirer la zone « {zone} » ? Ses communes restent dans la liste, ses prix propres disparaissent.',
-      zoneRemoved: 'Zone retirée.'
+      zoneRemoved: 'Zone retirée.',
+      communeMismatch: 'Commune changée',
+      communeMismatchHelp: 'Le commerce a déménagé depuis la demande : cette mise en avant ne s\'affiche plus. À arrêter, puis à redemander dans sa nouvelle commune.'
     },
     sponsor: {
       brokenAdmin: 'Le logo de « {label} » est introuvable (fichier supprimé chez l\'hébergeur ?). Recharge-le dans Admin › Collaborations / sponsoring.',
