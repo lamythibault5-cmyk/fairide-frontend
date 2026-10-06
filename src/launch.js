@@ -47,7 +47,7 @@ export const OUVERTURE_PAIEMENTS = new Date('2026-10-05T00:00:00+02:00');
 export function paiementsOuverts() { return Date.now() >= OUVERTURE_PAIEMENTS.getTime(); }
 export function dateOuverturePaiements(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENTS, locale); }
 
-// Abonnement des commerces (version complète : livraison et paiement en ligne) : activable dès le 6 octobre 2026, avec l'application,
+// Abonnement des commerces (version complète : livraison et paiement en ligne) : activable dès le 6 octobre 2026 (date d'abord liée à la sortie de l'application, qui n'a pas eu lieu),
 // pour être prêt à l'ouverture des commandes le 10. Miroir de FAIRIDE_SUBSCRIPTION_OPEN_AT (routes/restaurants.js).
 export const OUVERTURE_ABONNEMENT = new Date('2026-10-06T00:00:00+02:00');
 export function abonnementOuvert() {
