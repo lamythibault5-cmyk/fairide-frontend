@@ -155,6 +155,9 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .onglets .cnt{font-size:12px;font-weight:700;margin-left:4px;padding:1px 7px;border-radius:999px;background:var(--fail-soft);color:var(--fg)}
 .onglets button.cur .cnt{background:var(--accent-fg);color:var(--accent)}
 .shell.sans-rail{grid-template-columns:1fr}
+.outils-dec{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:6px 0 4px}
+.outils-dec .aide{margin:0;font-size:13px}
+.btn-petit{font-size:12px;padding:2px 8px;margin-left:6px}
 .main.vue-pilotage #banner{display:none!important}
 .pilotage .aide{font-size:14px;color:var(--muted);max-width:100ch;margin:4px 0 8px}
 .claude-liste li{background:var(--surface2)}
@@ -1810,11 +1813,12 @@ function decisionsHTML(){
       <p>${esc(d.quoi)}</p>
       <div class="choix">${d.options.map(o => `<label class="${o.reco?"reco":""}"><input type="radio" name="${d.id}" value="${o.k}" data-dec="${d.id}" ${r.choix===o.k?"checked":""}> <b>${esc(o.t)}</b>${o.reco?' <span class="tag-reco">recommandé par Claude</span>':""}<br><span>${esc(o.d)}</span></label>`).join("")}</div>
       <textarea data-dec-note="${d.id}" rows="1" placeholder="Ta décision en une phrase, ou une précision (facultatif)">${esc(r.note||"")}</textarea>
-      <div class="lies">Tests liés : ${d.tests.map(lienTest).join(" ")}${r.choix?` · décidé par <b>${esc(r.tester||"?")}</b> le ${fmtDate(r.at)}`:""}</div></div>`;
+      <div class="lies">Tests liés : ${d.tests.map(lienTest).join(" ")}${r.choix?` · décidé par <b>${esc(r.tester||"?")}</b> le ${fmtDate(r.at)} <button class="btn btn-petit" data-dec-reset="${d.id}" title="Retire le choix ; la précision écrite reste">Remettre à neutre</button>`:""}</div></div>`;
   };
   const ouvertes = DECISIONS.filter(d => !results[d.id]?.choix), prises = DECISIONS.filter(d => results[d.id]?.choix);
   return `<section class="sec pilotage" id="s-DEC"><h2>⚖️ Décisions <span class="cnt">${decides}/${DECISIONS.length}</span></h2>
-    <p class="aide">Ce que les tests ne peuvent pas trancher : comment Fairide fonctionne au quotidien, ce qui se rembourse, ce qui s'affiche. Pour chaque point, Claude indique son option recommandée. Coche ton choix (indique d'abord ton prénom en haut) : il est enregistré avec les résultats. Puis « Copier le rapport » et colle-le à Claude : il code celles qui demandent du code.</p>
+    <p class="aide">Ce que les tests ne peuvent pas trancher : comment Fairide fonctionne au quotidien, ce qui se rembourse, ce qui s'affiche. Pour chaque point, Claude indique son option recommandée. Coche ton choix (indique d'abord ton prénom en haut) : il est enregistré avec les résultats. Puis « Exporter les décisions » et donne le fichier à Claude : il code celles qui demandent du code. « Remettre à neutre » retire un choix (la précision écrite reste).</p>
+    <div class="outils-dec"><button class="btn" data-dec-export="md">⬇ Exporter les décisions</button><span class="aide">Un fichier texte lisible par tous (associé, avocat, comptable) : chaque décision, ce qui a été choisi, par qui et quand, et la recommandation de Claude pour celles qui restent.</span></div>
     ${ouvertes.map(carte).join("")}
     ${prises.length ? `<h3>✓ Déjà décidées</h3>${prises.map(carte).join("")}` : ""}</section>`;
 }
@@ -1885,6 +1889,38 @@ function setDecision(id,choix){
   cur.history=[...(cur.history||[]),{status:"todo",tester:name,at:cur.at,choix}].slice(-20);
   results[id]=cur; persist(id); renderAll();
 }
+// Remettre une décision à neutre : le choix part, la précision écrite reste (rien de ce qu'on a tapé ne se perd).
+// Le geste date le résultat : un import plus ancien ne ramène pas l'ancien choix (l'import garde le plus récent).
+function resetDecision(id){
+  const name=tester();
+  if(!name){ $("#tester").classList.add("need"); $("#tester").focus(); toast("Indique d'abord ton prénom (en haut)."); return; }
+  const cur=results[id]?{...results[id]}:{status:"todo",history:[]};
+  if(!cur.choix) return;
+  delete cur.choix; cur.tester=name; cur.at=new Date().toISOString();
+  cur.history=[...(cur.history||[]),{status:"todo",tester:name,at:cur.at,choix:null}].slice(-20);
+  results[id]=cur; persist(id); renderAll(); toast(id+" remise à neutre.");
+}
+// Export lisible (Markdown) : décidées d'abord, puis à décider avec la recommandation de Claude.
+function exporterDecisions(){
+  const jour=new Date().toLocaleDateString("fr-BE",{day:"numeric",month:"long",year:"numeric"});
+  const option=(d,k)=>d.options.find(o=>o.k===k);
+  const prises=DECISIONS.filter(d=>results[d.id]?.choix), ouvertes=DECISIONS.filter(d=>!results[d.id]?.choix);
+  const L=[`# Fairide — décisions (${jour})`,"",`${prises.length} décidée(s) sur ${DECISIONS.length}.`,""];
+  if(prises.length){ L.push("## Décidées",""); for(const d of prises){ const r=results[d.id], o=option(d,r.choix);
+    L.push(`### ${d.id} · ${d.titre}`,"",`- **Choix : ${o?o.t:r.choix}**${o&&o.reco?" (option recommandée par Claude)":""}`,`- Ce que ça veut dire : ${o?o.d:""}`);
+    if(r.note) L.push(`- Précision : ${r.note}`);
+    L.push(`- Décidé par ${r.tester||"?"} le ${fmtDate(r.at)} · avec ${d.avec}`,`- Contexte : ${d.quoi}`,`- Tests liés : ${d.tests.join(", ")}`,""); } }
+  if(ouvertes.length){ L.push("## À décider",""); for(const d of ouvertes){ const r=results[d.id]||{};
+    L.push(`### ${d.id} · ${d.titre}`,"",`- À décider avec ${d.avec}.`,`- Contexte : ${d.quoi}`);
+    for(const o of d.options) L.push(`- ${o.reco?"**Option recommandée** — ":"Option — "}${o.t} : ${o.d}`);
+    if(r.note) L.push(`- Précision déjà notée : ${r.note}`);
+    L.push(`- Tests liés : ${d.tests.join(", ")}`,""); } }
+  download("fairide-decisions-"+new Date().toISOString().slice(0,10)+".md",L.join("\n"),"text/markdown;charset=utf-8");
+}
+$("#content").addEventListener("click",e=>{
+  const r=e.target.closest("[data-dec-reset]"); if(r){ e.preventDefault(); resetDecision(r.dataset.decReset); return; }
+  if(e.target.closest("[data-dec-export]")){ e.preventDefault(); exporterDecisions(); }
+});
 $("#onglets").addEventListener("click",e=>{ const b=e.target.closest("[data-onglet]"); if(!b) return; LSset("fairide.onglet",b.dataset.onglet); renderAll(); window.scrollTo({top:0}); });
 $("#content").addEventListener("change",e=>{ const d=e.target.dataset.dec; if(d) setDecision(d,e.target.value) });
 $("#content").addEventListener("toggle",e=>{ const k=e.target.dataset?.mem; if(k) LSset(k,e.target.open?"1":"0") },true);
