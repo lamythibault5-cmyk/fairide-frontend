@@ -1076,7 +1076,10 @@ export default {
       errFront: 'Voeg de foto van de voorkant toe.',
       errBack: 'Voeg de foto van de achterkant toe.',
       privacy: 'Documenten worden veilig bewaard, alleen zichtbaar voor jou en het Fairide-team, nooit gedeeld met klanten of restaurants.',
-      uploadFailed: 'Sommige documenten konden niet verstuurd worden. Je kunt ze toevoegen in Mijn account › Mijn documenten.'
+      uploadFailed: 'Sommige documenten konden niet verstuurd worden. Je kunt ze toevoegen in Mijn account › Mijn documenten.',
+      selfie: 'Selfie (gezicht onbedekt)',
+      selfieHelp: 'Neem hem nu met de frontcamera, zonder zonnebril of pet: Fairide vergelijkt hem met je identiteitsbewijs.',
+      errSelfie: 'Voeg je selfie toe.'
     },
     invoicePrefs: {
       title: 'Ontvangst per e-mail',
@@ -1536,7 +1539,17 @@ export default {
       blockedGoStatus: 'Statuut wijzigen',
       seeEarnings: 'Mijn verdiensten bekijken →',
       statusVerified: 'Statuut gecontroleerd door Fairide op {date}.',
-      statusNotVerified: 'Statuut nog niet gecontroleerd door Fairide: ritten openen zodra het gecontroleerd is.'
+      statusNotVerified: 'Statuut nog niet gecontroleerd door Fairide: ritten openen zodra het gecontroleerd is.',
+      doc_selfie: 'Selfie (gezicht onbedekt)',
+      doc_selfie_help: 'Foto ter plekke genomen met de frontcamera, zonder zonnebril of pet: Fairide vergelijkt ze met je identiteitsbewijs of rijbewijs.',
+      missing_document_selfie: 'Selfie toe te voegen',
+      beforeTitle: 'Voor je begint',
+      beforeValidation: 'Je kunt leveringen aannemen zodra Fairide je dossier heeft goedgekeurd (meestal binnen 2 werkdagen): je krijgt een e-mail.',
+      beforeTwoOrders: 'Je levert alleen voor Fairide: je kunt tot twee leveringen tegelijk aannemen.',
+      beforeOneOrder: 'Je levert ook voor een ander platform: één Fairide-levering tegelijk, tot ze afgerond is. (Aanpasbaar onder “Andere platformen”.)',
+      beforePayment: 'Betaling: de prijs van elke levering zie je voor je ze aanvaardt; je ontvangt de volledige leveringskosten die de klant betaalt, plus de fooien. Je inkomsten worden elke maandag via Stripe op je rekening gestort, voor de leveringen van de voorbije week.',
+      beforeInsurance: 'Fairide-verzekering: een deel van de systeemkosten — 10 % van de leveringskosten — gaat in een fonds dat ongevallen tijdens een levering mee financiert.',
+      beforeLiability: 'Je blijft verantwoordelijk voor ongevallen die je veroorzaakt en overtredingen die je begaat tijdens je dienst (verkeersregels, parkeren, naleving van de regels): het fonds helpt, maar vervangt noch je verzekering noch je verantwoordelijkheid.'
     },
     driverPay: {
       title: 'Mijn verdiensten',

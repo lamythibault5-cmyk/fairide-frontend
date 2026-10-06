@@ -1076,7 +1076,10 @@ export default {
       errFront: 'Add the photo of the front.',
       errBack: 'Add the photo of the back.',
       privacy: 'Documents are stored securely, visible only to you and the Fairide team, never shared with customers or restaurants.',
-      uploadFailed: 'Some documents could not be sent. You can add them in My account › My documents.'
+      uploadFailed: 'Some documents could not be sent. You can add them in My account › My documents.',
+      selfie: 'Selfie (face uncovered)',
+      selfieHelp: 'Take it now with the front camera, no sunglasses or cap: Fairide compares it with your ID.',
+      errSelfie: 'Add your selfie.'
     },
     invoicePrefs: {
       title: 'E-mail delivery',
@@ -1536,7 +1539,17 @@ export default {
       blockedGoStatus: 'Change status',
       seeEarnings: 'See my earnings →',
       statusVerified: 'Status verified by Fairide on {date}.',
-      statusNotVerified: 'Status not yet verified by Fairide: rides open as soon as it is verified.'
+      statusNotVerified: 'Status not yet verified by Fairide: rides open as soon as it is verified.',
+      doc_selfie: 'Selfie (face uncovered)',
+      doc_selfie_help: 'Photo taken on the spot with the front camera, no sunglasses or cap: Fairide compares it with your ID or driving licence.',
+      missing_document_selfie: 'Selfie to add',
+      beforeTitle: 'Before you start',
+      beforeValidation: 'You can take deliveries as soon as Fairide has validated your file (usually within 2 working days): you will be notified by e-mail.',
+      beforeTwoOrders: 'You only deliver for Fairide: you can take up to two deliveries at the same time.',
+      beforeOneOrder: 'You also deliver for another platform: one Fairide delivery at a time, until it is completed. (Editable under “Other platforms”.)',
+      beforePayment: 'Payment: the price of each delivery is shown before you accept it; you receive the full delivery fee paid by the customer, plus tips. Your earnings are paid every Monday to your account via Stripe, for the previous week\'s deliveries.',
+      beforeInsurance: 'Fairide insurance: part of the system fees — 10% of the delivery fees — is set aside in a fund used to help finance accidents that happen during a delivery.',
+      beforeLiability: 'You remain responsible for accidents you cause and offences you commit while on duty (traffic rules, parking, compliance): the fund helps, it replaces neither your insurance nor your responsibility.'
     },
     driverPay: {
       title: 'My earnings',

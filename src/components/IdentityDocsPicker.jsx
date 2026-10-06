@@ -20,7 +20,7 @@ function Apercu({ file }) {
   return <span className="doc-slot-vide" aria-hidden="true">📄</span>;
 }
 
-export function DocSlot({ id, label, file, onFile, invalid, optional = false, accept = 'image/*,application/pdf' }) {
+export function DocSlot({ id, label, file, onFile, invalid, optional = false, accept = 'image/*,application/pdf', capture = 'environment' }) {
   const { t } = useLanguage();
   return (
     <div className={`doc-slot${invalid ? ' input-invalid' : ''}${file ? ' rempli' : ''}`}>
@@ -31,13 +31,13 @@ export function DocSlot({ id, label, file, onFile, invalid, optional = false, ac
           <span className="small">{file ? file.name : t('authDocs.tapToAdd')}</span>
         </span>
       </label>
-      <input id={id} type="file" accept={accept} capture="environment" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) onFile(f); }} />
+      <input id={id} type="file" accept={accept} capture={capture} style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) onFile(f); }} />
       {file && <button type="button" className="btn-ghost doc-slot-retirer" onClick={() => onFile(null)} aria-label={t('authDocs.remove')}>✕</button>}
     </div>
   );
 }
 
-export default function IdentityDocsPicker({ kind, setKind, recto, setRecto, verso, setVerso, student, setStudent, errors = {} }) {
+export default function IdentityDocsPicker({ kind, setKind, recto, setRecto, verso, setVerso, student, setStudent, selfie, setSelfie, errors = {} }) {
   const { t } = useLanguage();
   return (
     <div>
@@ -55,6 +55,12 @@ export default function IdentityDocsPicker({ kind, setKind, recto, setRecto, ver
       </div>
       {/* Le message disparaît dès que la photo manquante est ajoutée (il restait affiché jusqu'au clic sur « Continuer »). */}
       {((errors.docRecto && !recto) || (errors.docVerso && !verso)) && <p className="field-error">{(errors.docRecto && !recto) ? errors.docRecto : errors.docVerso}</p>}
+      {/* Selfie (fondateur, 2026-10-06) : pris sur le moment avec la caméra avant, comparé par l'équipe à la pièce ci-dessus. */}
+      <div style={{ marginTop: 12 }}>
+        <DocSlot id="auth-doc-selfie" label={t('authDocs.selfie')} file={selfie} onFile={setSelfie} invalid={!!errors.docSelfie && !selfie} accept="image/*" capture="user" />
+        <p className="small" style={{ margin: '4px 0 0' }}>{t('authDocs.selfieHelp')}</p>
+        {errors.docSelfie && !selfie && <p className="field-error">{errors.docSelfie}</p>}
+      </div>
       <div style={{ marginTop: 12 }}>
         <DocSlot id="auth-doc-student" label={t('authDocs.student')} file={student} onFile={setStudent} optional />
         <p className="small" style={{ margin: '4px 0 0' }}>{t('authDocs.studentHelp')}</p>

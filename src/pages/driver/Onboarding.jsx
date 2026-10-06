@@ -101,6 +101,7 @@ export default function Onboarding() {
 
       {/* État du dossier */}
       <EtatDossier d={d} t={t} onChangeStatus={allerAuChangement} />
+      <AvantDeCommencer c={c} t={t} />
 
       <Notifications t={t} token={token} />
 
@@ -126,7 +127,7 @@ export default function Onboarding() {
           {courante === 'infos' && <EtapeInfos d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('notices')} />}
           {courante === 'notices' && <EtapeNotices token={token} busy={busy} action={action} onNext={() => { charger(); setEtape('contrat'); }} />}
           {courante === 'contrat' && <EtapeContrat d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('paiement')} />}
-          {courante === 'paiement' && <EtapePaiement d={d} t={t} busy={busy} token={token} user={user} onNext={() => setEtape('envoi')} />}
+          {courante === 'paiement' && <EtapePaiement d={d} t={t} busy={busy} token={token} user={user} action={action} onNext={() => setEtape('envoi')} />}
           {courante === 'envoi' && <EtapeEnvoi d={d} t={t} busy={busy} onSubmit={() => action(() => api('/couriers/me/submit', { method: 'POST', token }), t('courierOnboarding.toastSubmitted')).then(() => refreshUser?.())} onGoTo={setEtape} />}
         </>
       )}
@@ -134,9 +135,8 @@ export default function Onboarding() {
       {(valide || c.lifecycleStatus === 'blocked_threshold' || c.lifecycleStatus === 'pending_review' || c.lifecycleStatus === 'suspended') && (
         <Compteurs d={d} t={t} token={token} action={action} busy={busy} />
       )}
-      {/* Le livreur vend la livraison (décision du 23/09/2026) : son tarif minimum, dès l'inscription ;
+      {/* Le tarif minimum se règle dans l'étape « Paiements » (fondateur, 2026-10-06 : il s'affichait sous chaque étape) ;
           ses documents de vente, une fois qu'il a pu livrer. */}
-      <TarifMinimum key={c.minFeeCents ?? 'aucun'} courier={c} token={token} action={action} busy={busy} />
       {(valide || c.lifecycleStatus === 'suspended' || c.lifecycleStatus === 'blocked_threshold') && <DocumentsVente token={token} />}
       {!enDossier && <ChangementStatut d={d} t={t} token={token} action={action} busy={busy} onChanged={() => { setEtape('statut'); refreshUser?.(); }} />}
       <p className="small" style={{ marginTop: 16, opacity: 0.75 }}>{t('courierOnboarding.legalFooter', { year: legal.year ?? new Date().getFullYear() })} · <Link to="/driver">{t('courierOnboarding.backToDashboard')}</Link></p>
@@ -496,7 +496,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
               </div>
               <div className="courier-doc-actions">
                 {AVEC_ECHEANCE.includes(type) && <input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} title={t('courierOnboarding.docExpiryLabel')} />}
-                <input ref={(el) => { fichiers.current[type] = el; }} type="file" multiple={type !== 'profile_photo'} accept={type === 'profile_photo' ? 'image/*' : 'application/pdf,image/*'} style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
+                <input ref={(el) => { fichiers.current[type] = el; }} type="file" multiple={!['profile_photo', 'selfie'].includes(type)} accept={['profile_photo', 'selfie'].includes(type) ? 'image/*' : 'application/pdf,image/*'} capture={type === 'selfie' ? 'user' : undefined} style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
                 <button type="button" className="btn-outline" disabled={busy} onClick={() => fichiers.current[type]?.click()}>{docsDe(type).length ? t('courierOnboarding.docReplace') : t('courierOnboarding.docUpload')}</button>
               </div>
             </div>
@@ -548,7 +548,7 @@ function EtapeContrat({ d, t, busy, token, action, onNext }) {
   );
 }
 
-function EtapePaiement({ d, t, busy, token, user, onNext }) {
+function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
   const [connecting, setConnecting] = useState(false); const [erreur, setErreur] = useState('');
   const statut = d.user?.stripeConnectStatus || user?.stripeConnectStatus;
   async function connecter() {
@@ -567,6 +567,27 @@ function EtapePaiement({ d, t, busy, token, user, onNext }) {
         </>
       )}
       <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-gold" onClick={onNext}>{t('courierOnboarding.next')}</button></div>
+      {/* Le livreur vend la livraison (décision du 23/09/2026) : son tarif minimum se règle ici, et seulement ici. */}
+      <div style={{ marginTop: 14 }}><TarifMinimum key={d.courier?.minFeeCents ?? 'aucun'} courier={d.courier} token={token} action={action} busy={busy} /></div>
+    </div>
+  );
+}
+
+// AVANT DE COMMENCER (fondateur, 2026-10-06) : ce que le livreur doit savoir — il commence après validation par Fairide ;
+// deux courses à la fois s'il ne livre que pour Fairide, une seule s'il livre aussi pour une autre plateforme ; comment il
+// est payé ; le fonds d'assurance Fairide (10 % des frais de livraison) ; sa responsabilité en cas d'accident ou d'infraction.
+function AvantDeCommencer({ c, t }) {
+  const autre = c?.otherPlatforms?.works === true;
+  return (
+    <div className="card" style={{ marginBottom: 12 }}>
+      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.beforeTitle')}</h3>
+      <ul className="small" style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
+        <li>{t('courierOnboarding.beforeValidation')}</li>
+        <li>{autre ? t('courierOnboarding.beforeOneOrder') : t('courierOnboarding.beforeTwoOrders')}</li>
+        <li>{t('courierOnboarding.beforePayment')}</li>
+        <li>{t('courierOnboarding.beforeInsurance')}</li>
+        <li>{t('courierOnboarding.beforeLiability')}</li>
+      </ul>
     </div>
   );
 }

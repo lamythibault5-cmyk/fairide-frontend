@@ -343,9 +343,10 @@ export default function Auth() {
   const [docRecto, setDocRecto] = useState(null);
   const [docVerso, setDocVerso] = useState(null);
   const [docStudent, setDocStudent] = useState(null);
+  const [docSelfie, setDocSelfie] = useState(null);
   async function televerserDocumentsLivreur(token) {
     if (role !== 'driver' || !token) return;
-    const envois = [[docKind, 'recto', docRecto], [docKind, 'verso', docVerso], ['school_certificate', null, docStudent]].filter((x) => x[2]);
+    const envois = [[docKind, 'recto', docRecto], [docKind, 'verso', docVerso], ['selfie', null, docSelfie], ['school_certificate', null, docStudent]].filter((x) => x[2]);
     let echecs = 0;
     for (const [docType, side, file] of envois) {
       try { await apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType, ...(side ? { side } : {}) } }); } catch { echecs++; }
@@ -553,6 +554,7 @@ export default function Auth() {
     if (key === 'documents') {
       if (!docRecto) e.docRecto = t('authDocs.errFront');
       if (!docVerso) e.docVerso = t('authDocs.errBack');
+      if (!docSelfie) e.docSelfie = t('authDocs.errSelfie');
     }
     // « business » : chercher son commerce est une AIDE de saisie, pas une obligation — qui ne se trouve pas dans
     // l'annuaire continue et remplit la suite à la main. Seul le numéro sur place du restaurant y est demandé.
@@ -1478,7 +1480,7 @@ export default function Auth() {
             )}
 
             {stepKey === 'documents' && (
-              <IdentityDocsPicker kind={docKind} setKind={setDocKind} recto={docRecto} setRecto={setDocRecto} verso={docVerso} setVerso={setDocVerso} student={docStudent} setStudent={setDocStudent} errors={errors} />
+              <IdentityDocsPicker kind={docKind} setKind={setDocKind} recto={docRecto} setRecto={setDocRecto} verso={docVerso} setVerso={setDocVerso} student={docStudent} setStudent={setDocStudent} selfie={docSelfie} setSelfie={setDocSelfie} errors={errors} />
             )}
 
             {stepKey === 'address' && (

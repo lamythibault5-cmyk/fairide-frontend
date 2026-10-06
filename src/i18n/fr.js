@@ -1076,7 +1076,10 @@ export default {
       errFront: 'Ajoute la photo du recto.',
       errBack: 'Ajoute la photo du verso.',
       privacy: 'Documents stockés de façon sécurisée, visibles uniquement par toi et l\'équipe Fairide, jamais partagés avec les clients ni les restaurants.',
-      uploadFailed: 'Certains documents n\'ont pas pu être envoyés. Tu peux les ajouter dans Mon compte › Mes documents.'
+      uploadFailed: 'Certains documents n\'ont pas pu être envoyés. Tu peux les ajouter dans Mon compte › Mes documents.',
+      selfie: 'Selfie (visage découvert)',
+      selfieHelp: 'Prends-le maintenant avec la caméra avant, sans lunettes de soleil ni casquette : Fairide le compare à ta pièce d\'identité.',
+      errSelfie: 'Ajoute ton selfie.'
     },
     invoicePrefs: {
       title: 'Réception par e-mail',
@@ -1536,7 +1539,17 @@ export default {
       blockedGoStatus: 'Changer de statut',
       seeEarnings: 'Voir mes gains →',
       statusVerified: 'Statut vérifié par Fairide le {date}.',
-      statusNotVerified: 'Statut pas encore vérifié par Fairide : les courses s\'ouvrent dès la vérification.'
+      statusNotVerified: 'Statut pas encore vérifié par Fairide : les courses s\'ouvrent dès la vérification.',
+      doc_selfie: 'Selfie (visage découvert)',
+      doc_selfie_help: 'Photo prise sur le moment, caméra avant, sans lunettes de soleil ni casquette : Fairide la compare à ta pièce d\'identité ou à ton permis.',
+      missing_document_selfie: 'Selfie à ajouter',
+      beforeTitle: 'Avant de commencer',
+      beforeValidation: 'Tu pourras prendre des courses dès que Fairide aura validé ton dossier (en général sous 2 jours ouvrés) : tu seras prévenu par e-mail.',
+      beforeTwoOrders: 'Tu ne livres que pour Fairide : tu peux prendre jusqu\'à deux courses en même temps.',
+      beforeOneOrder: 'Tu livres aussi pour une autre plateforme : une seule course Fairide à la fois, le temps de la terminer. (Modifiable dans « Autres plateformes ».)',
+      beforePayment: 'Paiement : le prix de chaque course t\'est affiché avant de l\'accepter ; tu touches l\'intégralité des frais de livraison payés par le client, plus les pourboires. Tes gains sont versés chaque lundi sur ton compte, via Stripe, pour les courses de la semaine écoulée.',
+      beforeInsurance: 'Assurance Fairide : une partie des frais de système — 10 % des frais de livraison — est mise de côté dans un fonds qui sert à financer les accidents survenus pendant une course.',
+      beforeLiability: 'Tu restes responsable des accidents que tu provoques et des infractions que tu commets pendant ton service (code de la route, stationnement, respect des règles) : le fonds vient en aide, il ne remplace ni ton assurance ni ta responsabilité.'
     },
     driverPay: {
       title: 'Mes gains',
