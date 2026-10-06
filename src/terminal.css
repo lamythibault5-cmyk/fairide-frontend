@@ -10,6 +10,7 @@
           mask: linear-gradient(#000 0 0) top / 100% calc(100% - 6px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 12px 6px repeat-x;
 }
 .ticket-papier .tp-ligne { overflow: hidden; }
+.ticket-papier .tp-logo { display: flex; justify-content: center; padding: 4px 0 2px; color: #000; filter: grayscale(1) contrast(1.4); }
 .ticket-papier .tp-center { text-align: center; }
 .ticket-papier .tp-right { text-align: right; }
 .ticket-papier .tp-gras { font-weight: 800; }
