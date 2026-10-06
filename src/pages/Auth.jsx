@@ -731,6 +731,7 @@ export default function Auth() {
   async function inscrireViaGoogle() {
     const data = await loginWithGoogle(googleCredential, role, {
       phone: phone.trim(),
+      referralCode: referralCode.trim() || undefined,
       ...(role === 'restaurant' ? {} : { addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim() }),
       ...(role === 'restaurant' ? {
         legalName: legalName.trim(), companyNumber: companyNumber.trim(),
