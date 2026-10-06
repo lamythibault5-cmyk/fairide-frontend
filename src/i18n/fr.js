@@ -6680,7 +6680,8 @@ export default {
       status_awaiting_payment: 'À payer',
       paidOnline: 'payée en ligne',
       refund_rembourse: 'Aucune commande pendant la période : remboursée.',
-      refund_a_rembourser: 'Aucune commande pendant la période : remboursement en cours.'
+      refund_a_rembourser: 'Aucune commande pendant la période : remboursement en cours.',
+      refund_prorata: 'Arrêtée en cours de période : seuls les jours affichés sont dus, le reste t\'a été remboursé.'
     },
     adminPlacements: {
       addPosition: 'Ajouter une position',
@@ -6756,7 +6757,8 @@ export default {
       settingsSaved: 'Réglages enregistrés.',
       billing_rembourse: 'Remboursée',
       refund_rembourse: 'remboursée (zéro commande)',
-      refund_a_rembourser: 'à rembourser (zéro commande, facturée à la main)'
+      refund_a_rembourser: 'à rembourser (zéro commande, facturée à la main)',
+      refund_prorata: 'prorata remboursé'
     },
     sponsor: {
       brokenAdmin: 'Le logo de « {label} » est introuvable (fichier supprimé chez l\'hébergeur ?). Recharge-le dans Admin › Collaborations / sponsoring.',

@@ -6635,7 +6635,8 @@ export default {
       status_awaiting_payment: 'To pay',
       paidOnline: 'paid online',
       refund_rembourse: 'No order during the period: refunded.',
-      refund_a_rembourser: 'No order during the period: refund in progress.'
+      refund_a_rembourser: 'No order during the period: refund in progress.',
+      refund_prorata: 'Stopped mid-period: only the days shown are due, the rest has been refunded to you.'
     },
     adminPlacements: {
       addPosition: 'Add a position',
@@ -6711,7 +6712,8 @@ export default {
       settingsSaved: 'Settings saved.',
       billing_rembourse: 'Refunded',
       refund_rembourse: 'refunded (zero orders)',
-      refund_a_rembourser: 'to refund (zero orders, billed manually)'
+      refund_a_rembourser: 'to refund (zero orders, billed manually)',
+      refund_prorata: 'pro rata refunded'
     },
     sponsor: {
       brokenAdmin: 'The logo for “{label}” cannot be found (file deleted at the host?). Upload it again in Admin › Collaborations / sponsoring.',

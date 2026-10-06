@@ -137,10 +137,11 @@ export default function MiseEnAvant({ restoId, token, toast }) {
                     {b.refusalReason && <span className="small" style={{ display: 'block' }}>{b.refusalReason}</span>}
                     {b.refundStatus === 'rembourse' && <span className="small" style={{ display: 'block', color: 'var(--iris)' }}>{t('placements.refund_rembourse')}</span>}
                     {b.refundStatus === 'a_rembourser' && <span className="small" style={{ display: 'block', color: 'var(--iris)' }}>{t('placements.refund_a_rembourser')}</span>}
+                    {b.refundStatus === 'prorata' && <span className="small" style={{ display: 'block', color: 'var(--iris)' }}>{t('placements.refund_prorata')}</span>}
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <span className={`modif-statut mea-statut--${b.status}`}>{t(`placements.status_${b.status}`)}</span>
-                    {b.status === 'pending' && <button type="button" className="btn-link small" style={{ display: 'block', marginTop: 4 }} disabled={occupe} onClick={() => retirer(b)}>{t('placements.withdraw')}</button>}
+                    {['pending', 'awaiting_payment'].includes(b.status) && <button type="button" className="btn-link small" style={{ display: 'block', marginTop: 4 }} disabled={occupe} onClick={() => retirer(b)}>{t('placements.withdraw')}</button>}
                     {b.status === 'awaiting_payment' && b.checkoutUrl && <a className="btn-teal small" style={{ display: 'inline-block', marginTop: 6, minHeight: 40, lineHeight: '40px', padding: '0 14px' }} href={b.checkoutUrl}>{t('placements.payNow')} · {resteTexte(b.paymentDueAt)}</a>}
                     {b.status === 'awaiting_payment' && <span className="small" style={{ display: 'block', marginTop: 2, color: 'var(--ink-soft)' }}>{t('placements.payWithin', { minutes: resteMinutes(b.paymentDueAt) })}</span>}
                   </div>

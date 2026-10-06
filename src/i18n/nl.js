@@ -6635,7 +6635,8 @@ export default {
       status_awaiting_payment: 'Te betalen',
       paidOnline: 'online betaald',
       refund_rembourse: 'Geen bestelling tijdens de periode: terugbetaald.',
-      refund_a_rembourser: 'Geen bestelling tijdens de periode: terugbetaling bezig.'
+      refund_a_rembourser: 'Geen bestelling tijdens de periode: terugbetaling bezig.',
+      refund_prorata: 'Gestopt tijdens de periode: alleen de getoonde dagen zijn verschuldigd, de rest werd je terugbetaald.'
     },
     adminPlacements: {
       addPosition: 'Positie toevoegen',
@@ -6711,7 +6712,8 @@ export default {
       settingsSaved: 'Instellingen opgeslagen.',
       billing_rembourse: 'Terugbetaald',
       refund_rembourse: 'terugbetaald (nul bestellingen)',
-      refund_a_rembourser: 'terug te betalen (nul bestellingen, handmatig gefactureerd)'
+      refund_a_rembourser: 'terug te betalen (nul bestellingen, handmatig gefactureerd)',
+      refund_prorata: 'pro rata terugbetaald'
     },
     sponsor: {
       brokenAdmin: 'Het logo voor “{label}” is niet te vinden (bestand verwijderd bij de host?). Laad het opnieuw op in Admin › Samenwerkingen / sponsoring.',
