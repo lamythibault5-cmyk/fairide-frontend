@@ -107,6 +107,11 @@ export default function Auth() {
   const [companyNumber, setCompanyNumber] = useState('');
   // Livreur : statut légal et véhicule choisis dès l'inscription (voir routes/auth.js validerLivreur).
   const [courierStatus, setCourierStatus] = useState('');
+  // Selon le statut (fondateur, 2026-10-06) : école et année académique de l'étudiant-indépendant, déclaration sur l'honneur du
+  // particulier (économie collaborative). Le numéro d'entreprise sert aux deux statuts indépendants.
+  const [schoolName, setSchoolName] = useState('');
+  const [academicYear, setAcademicYear] = useState('');
+  const [p2pHonneur, setP2pHonneur] = useState(false);
   const [vehicleType, setVehicleType] = useState('');
   const [bagOption, setBagOption] = useState(''); // 'own' | 'fairide' — sac de livraison
   // Livreur (fondateur, 2026-10-05) : travaille-t-il déjà pour d'autres plateformes (lesquelles, plusieurs possibles),
@@ -381,7 +386,7 @@ export default function Auth() {
     referralCode: [referralCode, setReferralCode], referralOpen: [referralOpen, setReferralOpen],
     legalName: [legalName, setLegalName], companyNumber: [companyNumber, setCompanyNumber], vatNumber: [vatNumber, setVatNumber],
     responsibleName: [responsibleName, setResponsibleName], responsibleTouched: [responsibleTouched, setResponsibleTouched],
-    courierStatus: [courierStatus, setCourierStatus], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption], docKind: [docKind, setDocKind],
+    courierStatus: [courierStatus, setCourierStatus], schoolName: [schoolName, setSchoolName], academicYear: [academicYear, setAcademicYear], p2pHonneur: [p2pHonneur, setP2pHonneur], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption], docKind: [docKind, setDocKind],
     autrePlateforme: [autrePlateforme, setAutrePlateforme], plateformes: [plateformes, setPlateformes], plateformeAutre: [plateformeAutre, setPlateformeAutre], zonesPreferees: [zonesPreferees, setZonesPreferees],
     commerceTrouve: [commerceTrouve, setCommerceTrouve], services: [services, setServices],
     cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
@@ -537,6 +542,12 @@ export default function Auth() {
         // Numéro d'entreprise : requis pour l'étudiant-indépendant comme pour l'indépendant (facturation mensuelle).
         if (['student_independent', 'independent'].includes(courierStatus) && !companyNumber.trim()) e.companyNumber = required;
         else if (companyNumber.trim() && !bceValide(companyNumber)) e.companyNumber = t('auth.errCompanyNumber');
+        if (courierStatus === 'student_independent') {
+          if (schoolName.trim().length < 2) e.schoolName = required;
+          if (!academicYear.trim()) e.academicYear = required;
+          else if (!/^\d{4}(\s*[-/–]\s*\d{2,4})?$/.test(academicYear.trim())) e.academicYear = t('auth.errAcademicYear');
+        }
+        if (courierStatus === 'p2p' && !p2pHonneur) e.p2pHonneur = t('auth.errP2pHonour');
       }
     }
     if (key === 'documents') {
@@ -738,7 +749,7 @@ export default function Auth() {
         vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
         business: construireCommerce()
       } : {}),
-      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
+      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), p2pHonourDeclared: p2pHonneur, vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {})
     });
     suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
@@ -835,7 +846,7 @@ export default function Auth() {
             vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
             business: construireCommerce()
           } : {}),
-          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
+          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), p2pHonourDeclared: p2pHonneur, vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
           ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
           website: siteWeb
         });
@@ -1153,14 +1164,15 @@ export default function Auth() {
                       <div className={`statut-choix${errors.courierStatus ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-statut-titre">
                         {/* Trois statuts : économie collaborative (verrouillée tant que le serveur ne l'active pas),
                             étudiant-indépendant, indépendant. Libellés dédiés à l'inscription (auth.courierStatus_*). */}
-                        {(courierOptions?.statuses || ['student_independent', 'independent']).filter((st) => ['p2p', 'student_independent', 'independent'].includes(st)).map((st) => {
-                          const ferme = st === 'p2p' && courierOptions && !courierOptions.p2pEnabled;
+                        {['independent', 'student_independent', 'p2p'].map((st) => {
+                          const ferme = st === 'p2p' && !(courierOptions?.p2pEnabled === true);
                           return (
                             <div key={st} role="radio" aria-checked={courierStatus === st} aria-disabled={ferme} tabIndex={ferme ? -1 : 0}
                               className={`statut-carte${courierStatus === st ? ' active' : ''}${ferme ? ' ferme' : ''}`}
                               onClick={() => { if (!ferme) setCourierStatus(st); }} onKeyDown={(e) => { if (!ferme && (e.key === 'Enter' || e.key === ' ')) setCourierStatus(st); }}>
                               <b>{st === 'student_independent' ? '🎓 ' : st === 'p2p' ? '🤝 ' : '🧾 '}{t(`auth.courierStatus_${st}`)}</b>
                               <span className="small">{t(`auth.courierStatus_${st}_desc`)}</span>
+                              <span className="small" style={{ color: 'var(--iris)' }}>{t(`auth.courierStatus_${st}_asks`)}</span>
                               {ferme && <span className="pill" style={{ alignSelf: 'flex-start' }}>{t('auth.courierStatusP2pSoon')}</span>}
                             </div>
                           );
@@ -1168,6 +1180,9 @@ export default function Auth() {
                       </div>
                       {fieldError('courierStatus')}
                     </div>
+                    {courierStatus && (
+                      <p className="small" style={{ margin: '-4px 0 10px', color: 'var(--ink-soft)' }}>{t(`auth.courierStatus_${courierStatus}_next`)}</p>
+                    )}
                     {['student_independent', 'independent'].includes(courierStatus) && (
                       <div className="field">
                         <label htmlFor="auth-f-19">{t('auth.companyNumberDriver')}</label>
@@ -1175,6 +1190,31 @@ export default function Auth() {
                           value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
                         {fieldError('companyNumber')}
                         <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.companyNumberDriverHelp')}</p>
+                      </div>
+                    )}
+                    {courierStatus === 'student_independent' && (
+                      <>
+                        <div className="field">
+                          <label htmlFor="auth-f-ecole">{t('auth.schoolName')}</label>
+                          <input id="auth-f-ecole" className={errors.schoolName ? 'input-invalid' : undefined} value={schoolName} onChange={(e) => setSchoolName(e.target.value)} placeholder={t('auth.schoolNamePlaceholder')} autoComplete="organization" />
+                          {fieldError('schoolName')}
+                        </div>
+                        <div className="field">
+                          <label htmlFor="auth-f-annee">{t('auth.academicYear')}</label>
+                          <input id="auth-f-annee" className={errors.academicYear ? 'input-invalid' : undefined} value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} placeholder="2026-2027" inputMode="numeric" />
+                          {fieldError('academicYear')}
+                          <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.studentCertificateNote')}</p>
+                        </div>
+                      </>
+                    )}
+                    {courierStatus === 'p2p' && (
+                      <div className="field">
+                        <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.p2pExplain')}</p>
+                        <label className={`checkbox-line${errors.p2pHonneur ? ' input-invalid' : ''}`} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={p2pHonneur} onChange={(e) => setP2pHonneur(e.target.checked)} style={{ marginTop: 3 }} />
+                          <span className="small">{t('auth.p2pHonour')}</span>
+                        </label>
+                        {fieldError('p2pHonneur')}
                       </div>
                     )}
                     <div className="field">
