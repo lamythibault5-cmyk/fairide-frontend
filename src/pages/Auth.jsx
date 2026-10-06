@@ -11,6 +11,7 @@ import AddressRecognition from '../components/AddressRecognition';
 import BusinessSearch from '../components/BusinessSearch';
 import { api, apiUpload } from '../api';
 import IdentityDocsPicker from '../components/IdentityDocsPicker';
+import SacLivraison from '../components/SacLivraison';
 import PhoneInput from '../components/PhoneInput';
 import EmailDomainChips from '../components/EmailDomainChips';
 import AddressSearch from '../components/AddressSearch';
@@ -1238,6 +1239,12 @@ export default function Auth() {
                     </div>
                     <div className="field">
                       <span className="titre-groupe" id="auth-sacoche-titre">{t('auth.bagTitle')}</span>
+                      {/* Dessin du type de sac (fondateur, 2026-10-06) : le livreur voit de quoi on parle, et sait qu'il est libre d'en
+                          utiliser n'importe lequel — le sien, celui d'une autre plateforme — ou d'en demander un à Fairide. */}
+                      <div className="sac-dessin">
+                        <SacLivraison size={96} />
+                        <p className="small" style={{ margin: 0 }}>{t('auth.bagDrawing')}</p>
+                      </div>
                       <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.bagHelp')}</p>
                       <div className={`statut-choix${errors.bagOption ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-sacoche-titre">
                         {['own', 'fairide'].map((b) => (

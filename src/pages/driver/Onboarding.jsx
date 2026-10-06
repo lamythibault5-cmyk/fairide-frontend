@@ -1,4 +1,5 @@
 import { ouvrirPdfBlob } from '../../natif';
+import SacLivraison from '../../components/SacLivraison';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
@@ -437,6 +438,10 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
             <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
             <Champ label={t('courierOnboarding.fPlate')}><input aria-label="1-ABC-123" value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
           </>)}
+          <div className="sac-dessin" style={{ gridColumn: '1 / -1' }}>
+            <SacLivraison size={84} />
+            <p className="small" style={{ margin: 0 }}>{t('auth.bagDrawing')}</p>
+          </div>
           <Champ label={t('courierOnboarding.fBag')} help={['none', 'due'].includes(c.bag?.depositStatus || 'none') ? t('courierOnboarding.fBagHelp', { amount: c.bag?.depositAmount || 40 }) : t(`courierOnboarding.bagDeposit_${c.bag.depositStatus}`, { amount: c.bag?.depositAmount || 40 })}>
             <select value={f.bagOption} onChange={set('bagOption')} disabled={!['none', 'due'].includes(c.bag?.depositStatus || 'none')}>
               <option value="">-</option>

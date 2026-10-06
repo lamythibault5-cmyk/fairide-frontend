@@ -4449,4 +4449,6 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .mea-cases { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 6px; }
 .mea-case-commune { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 999px; }
 .mea-case-commune.est-ailleurs { opacity: 0.45; }
+.sac-dessin { display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin: 0 0 10px; border: 1px dashed var(--line); border-radius: 12px; background: #fff; }
+.sac-dessin svg { flex: none; }
 .mea-prix input.est-zone::placeholder { color: var(--brand-iris, #3B2FB5); opacity: 0.7; }

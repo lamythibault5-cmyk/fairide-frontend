@@ -1476,7 +1476,7 @@ export default {
       identityAddFile: 'Add a file',
       identityOtherWay: 'Verify another way (instant)',
       fBag: 'Delivery bag',
-      fBagHelp: 'Your own bag, or a Fairide bag for €{amount} (paid at handover) that Fairide buys back when you stop, if it is in good condition. The request is sent to Fairide.',
+      fBagHelp: 'You are free to use any bag you like (your own or one from another platform), clean and insulated. Otherwise a Fairide bag for €{amount} (paid at handover), bought back by Fairide when you stop if it is in good condition; the request is sent to Fairide.',
       bagDeposit_due: 'Fairide bag requested: Fairide will contact you for the handover, €{amount} to pay that day.',
       bagDeposit_paid: 'Fairide bag handed over, €{amount} paid. It is yours: Fairide buys it back when you leave, if it is still in good condition.',
       bagDeposit_returned: 'Bag taken back in good condition: Fairide buys it back, the €{amount} refund is on its way.',
@@ -6975,10 +6975,10 @@ export default {
       secondEmail: 'Second e-mail address',
       removeSecond: 'Remove',
       bagTitle: 'Your delivery bag',
-      bagHelp: 'An insulated bag is essential for deliveries. You have your own, or you can ask for a Fairide bag.',
+      bagHelp: 'An insulated bag is essential for deliveries. You are free to use any bag you like: your own, or one from another platform (Uber Eats, Deliveroo, Takeaway…), as long as it is clean and insulated. If you have none, you can ask for a Fairide bag.',
       bag_own: 'I have my own bag',
       bag_fairide: 'I would like a Fairide bag',
-      bagOwnHelp: 'Clean and insulated, that is all it takes. Nothing more to do.',
+      bagOwnHelp: 'Yours or one from another platform, clean and insulated: that is all it takes. Nothing more to do.',
       bagFairideHelp: '€{amount} for the bag, paid at handover. Your request is sent to Fairide, who will contact you. When you stop, Fairide buys it back if it is still in good condition.',
       errBag: 'Choose an option for the delivery bag.',
       platformsTitle: 'Do you already work with another platform?',
@@ -7026,7 +7026,8 @@ export default {
       studentCertificateNote: 'Your enrolment certificate (for this year) will be asked at the documents step.',
       errCompanyNumberLength: 'A company number has 10 digits: you typed {n}. It looks like 0123.456.789 (with or without dots; a leading “BE” is fine).',
       errCompanyNumberPrefix: 'A Belgian company number starts with 0 or 1 (e.g. 0123.456.789). Check the first digit.',
-      errCompanyNumberKey: 'These 10 digits are not a valid company number: the last two are a check key that does not match the first eight. There is probably a typo — copy it from an official document (CBE, invoice).'
+      errCompanyNumberKey: 'These 10 digits are not a valid company number: the last two are a check key that does not match the first eight. There is probably a typo — copy it from an official document (CBE, invoice).',
+      bagDrawing: 'The bag we mean: an insulated, square, rigid backpack that keeps dishes hot (or cold) and upright on the way — like the ones delivery platforms use.'
     },
     // Conformité (backlog du 23/09/2026) : panier, fiche vendeur, allergènes, alcool, signalement,
     // livreurs, décisions motivées, registres. Même clé dans les trois langues.

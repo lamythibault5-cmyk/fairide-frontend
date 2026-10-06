@@ -1476,7 +1476,7 @@ export default {
       identityAddFile: 'Bestand toevoegen',
       identityOtherWay: 'Anders verifiëren (onmiddellijk)',
       fBag: 'Bezorgtas',
-      fBagHelp: 'Je eigen tas, of een Fairide-tas voor € {amount} (te betalen bij overhandiging) die Fairide terugkoopt als je stopt, als ze in goede staat is. De aanvraag gaat naar Fairide.',
+      fBagHelp: 'Je mag de tas gebruiken die je wilt (de jouwe of die van een ander platform), proper en isothermisch. Anders een Fairide-tas voor € {amount} (te betalen bij overhandiging), die Fairide terugkoopt als je stopt en ze in goede staat is; de aanvraag gaat naar Fairide.',
       bagDeposit_due: 'Fairide-tas gevraagd: Fairide neemt contact op voor de overhandiging, € {amount} te betalen die dag.',
       bagDeposit_paid: 'Fairide-tas overhandigd, € {amount} betaald. Ze is van jou: Fairide koopt ze terug als je stopt, als ze nog in goede staat is.',
       bagDeposit_returned: 'Tas in goede staat teruggenomen: Fairide koopt ze terug, de € {amount} worden terugbetaald.',
@@ -6975,10 +6975,10 @@ export default {
       secondEmail: 'Tweede e-mailadres',
       removeSecond: 'Verwijderen',
       bagTitle: 'Je bezorgtas',
-      bagHelp: 'Een isothermische tas is onmisbaar om te leveren. Je hebt er zelf een, of je kunt een Fairide-tas vragen.',
+      bagHelp: 'Een isothermische tas is onmisbaar om te leveren. Je mag gebruiken wat je wilt: je eigen tas, of die van een ander platform (Uber Eats, Deliveroo, Takeaway…), zolang ze proper en isothermisch is. Heb je er geen, dan kun je een Fairide-tas vragen.',
       bag_own: 'Ik heb mijn eigen tas',
       bag_fairide: 'Ik vraag een Fairide-tas',
-      bagOwnHelp: 'Proper en isothermisch, meer is niet nodig. Niets extra te doen.',
+      bagOwnHelp: 'De jouwe of die van een ander platform, proper en isothermisch: meer is niet nodig. Niets extra te doen.',
       bagFairideHelp: '€ {amount} voor de tas, te betalen bij overhandiging. Je aanvraag gaat naar Fairide, dat contact opneemt. Als je stopt, koopt Fairide ze terug als ze nog in goede staat is.',
       errBag: 'Kies een optie voor de bezorgtas.',
       platformsTitle: 'Werk je al met een ander platform?',
@@ -7026,7 +7026,8 @@ export default {
       studentCertificateNote: 'Je inschrijvingsattest (van dit jaar) wordt gevraagd bij de stap documenten.',
       errCompanyNumberLength: 'Een ondernemingsnummer telt 10 cijfers: je typte er {n}. Het ziet eruit als 0123.456.789 (met of zonder punten; “BE” ervoor mag).',
       errCompanyNumberPrefix: 'Een Belgisch ondernemingsnummer begint met 0 of 1 (bv. 0123.456.789). Controleer het eerste cijfer.',
-      errCompanyNumberKey: 'Deze 10 cijfers vormen geen geldig ondernemingsnummer: de laatste twee zijn een controlesleutel die niet overeenkomt met de eerste acht. Waarschijnlijk een tikfout — neem het over van een officieel document (KBO, factuur).'
+      errCompanyNumberKey: 'Deze 10 cijfers vormen geen geldig ondernemingsnummer: de laatste twee zijn een controlesleutel die niet overeenkomt met de eerste acht. Waarschijnlijk een tikfout — neem het over van een officieel document (KBO, factuur).',
+      bagDrawing: 'De tas waarover het gaat: een isothermische, vierkante, stevige rugzak die de gerechten warm (of koud) en recht houdt onderweg — zoals die van de bezorgplatformen.'
     },
     // Conformité (backlog du 23/09/2026) : panier, fiche vendeur, allergènes, alcool, signalement,
     // livreurs, décisions motivées, registres. Même clé dans les trois langues.

@@ -1476,7 +1476,7 @@ export default {
       identityAddFile: 'Ajouter un fichier',
       identityOtherWay: 'Vérifier autrement (instantané)',
       fBag: 'Sac de livraison',
-      fBagHelp: 'Ton propre sac, ou un sac Fairide à {amount} € (réglés à la remise) que Fairide te rachète quand tu arrêtes, s\'il est en bon état. La demande est transmise à Fairide.',
+      fBagHelp: 'Tu es libre d\'utiliser le sac que tu veux (le tien ou celui d\'une autre plateforme), propre et isotherme. Sinon, un sac Fairide à {amount} € (réglés à la remise), que Fairide te rachète quand tu arrêtes s\'il est en bon état ; la demande est transmise à Fairide.',
       bagDeposit_due: 'Sac Fairide demandé : Fairide te contacte pour la remise, {amount} € à régler ce jour-là.',
       bagDeposit_paid: 'Sac Fairide remis, {amount} € réglés. Il est à toi : Fairide te le rachète quand tu arrêtes, s\'il est toujours en bon état.',
       bagDeposit_returned: 'Sac repris en bon état : Fairide te le rachète, les {amount} € sont en cours de remboursement.',
@@ -7022,10 +7022,10 @@ export default {
       secondEmail: '2e adresse e-mail',
       removeSecond: 'Retirer',
       bagTitle: 'Ton sac de livraison',
-      bagHelp: 'Un sac isotherme est indispensable pour livrer. Tu as le tien, ou tu peux demander un sac Fairide.',
+      bagHelp: 'Un sac isotherme est indispensable pour livrer. Tu es libre d\'utiliser celui que tu veux : le tien, ou celui d\'une autre plateforme (Uber Eats, Deliveroo, Takeaway…), du moment qu\'il est propre et isotherme. Si tu n\'en as pas, tu peux demander un sac Fairide.',
       bag_own: 'J\'ai mon propre sac',
       bag_fairide: 'Je demande un sac Fairide',
-      bagOwnHelp: 'Propre et isotherme, c\'est tout ce qu\'il faut. Rien à faire de plus.',
+      bagOwnHelp: 'Le tien ou celui d\'une autre plateforme, propre et isotherme : c\'est tout ce qu\'il faut. Rien à faire de plus.',
       bagFairideHelp: '{amount} € le sac, réglés à la remise. Ta demande est transmise à Fairide, qui te contacte. Quand tu arrêtes, Fairide te le rachète s\'il est toujours en bon état.',
       errBag: 'Choisis une option pour le sac de livraison.',
       platformsTitle: 'Travailles-tu déjà avec une autre plateforme ?',
@@ -7073,7 +7073,8 @@ export default {
       studentCertificateNote: 'Ton attestation d\'inscription (de cette année) te sera demandée à l\'étape des documents.',
       errCompanyNumberLength: 'Un numéro d\'entreprise compte 10 chiffres : tu en as tapé {n}. Il ressemble à 0123.456.789 (avec ou sans points, « BE » devant est accepté).',
       errCompanyNumberPrefix: 'Un numéro d\'entreprise belge commence par 0 ou 1 (ex. 0123.456.789). Vérifie le premier chiffre.',
-      errCompanyNumberKey: 'Ces 10 chiffres ne forment pas un numéro d\'entreprise valable : les deux derniers sont une clé de contrôle qui ne correspond pas aux huit premiers. Il y a sans doute une faute de frappe — recopie-le depuis un document officiel (BCE, facture).'
+      errCompanyNumberKey: 'Ces 10 chiffres ne forment pas un numéro d\'entreprise valable : les deux derniers sont une clé de contrôle qui ne correspond pas aux huit premiers. Il y a sans doute une faute de frappe — recopie-le depuis un document officiel (BCE, facture).',
+      bagDrawing: 'Le sac dont on parle : un sac à dos isotherme, carré et rigide, qui garde les plats chauds (ou froids) et droits pendant le trajet — comme ceux des plateformes de livraison.'
     },
     // Conformité (backlog du 23/09/2026) : panier, fiche vendeur, allergènes, alcool, signalement,
     // livreurs, décisions motivées, registres. Même clé dans les trois langues.
