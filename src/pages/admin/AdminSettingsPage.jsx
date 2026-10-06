@@ -22,6 +22,7 @@ const pricingFields = (tr) => [
   { key: 'driverPerKmMotor', label: tr('adminSettings.driverPerKmMotor'), suffix: '€/km', hint: tr('adminSettings.driverPerKmMotorHint') },
   { key: 'driverPerKmBike', label: tr('adminSettings.driverPerKmBike'), suffix: '€/km', hint: tr('adminSettings.driverPerKmBikeHint') },
   { key: 'secondOrderRadiusKm', label: tr('adminSettings.secondOrderRadius'), suffix: 'km', hint: tr('adminSettings.secondOrderRadiusHint') },
+  { key: 'tipFairideRate', label: tr('adminSettings.tipFairideRate'), suffix: '%', isRate: true, hint: tr('adminSettings.tipFairideRateHint') },
   { key: 'vatRateCommission', label: tr('adminSettings.vatCommission'), suffix: '%', isRate: true, hint: tr('adminSettings.vatCommissionHint') },
   { key: 'vatRateServiceFee', label: tr('adminSettings.vatServiceFees'), suffix: '%', isRate: true, hint: tr('adminSettings.vatServiceHint') }
 ];

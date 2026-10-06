@@ -946,7 +946,7 @@ export default {
       usageBlocked: 'Plafond bereikt: nieuwe ritten zijn geblokkeerd. Wijzig je statuut in je koeriersdossier om verder te gaan.',
       payTitle: 'Hoe ik betaald word',
       pay1: 'De klant betaalt online bij het bestellen; het geld wordt geïnd door Stripe, nooit door Fairide.',
-      pay2: 'Bij elke geleverde rit krijg je het koerierstarief van de rit (geen Fairide-commissie erop) en de fooi van de klant, volledig.',
+      pay2: 'Bij elke geleverde rit krijg je het koerierstarief van de rit (geen Fairide-commissie erop) en 90% van de fooi van de klant: Fairide houdt 10% in voor betaal- en systeemkosten, en wat overblijft gaat naar het verzekeringsfonds voor koeriers.',
       pay3: 'Elke maandag gestort op je bankrekening: alle ritten van de vorige week, in één Stripe-overschrijving. Hetzelfde ritme als de restaurants.',
       payWithholdingP2p: 'Deeleconomie: {taux} bedrijfsvoorheffing wordt op elke rit ingehouden en doorgestort aan de FOD Financiën; het ontvangstbewijs van elke rit toont bruto, inhouding en netto.',
       payWithholdingIndependent: 'Zelfstandige: geen inhouding. Elke maand factureer je Fairide op basis van je overzicht (in Mijn facturen): je geeft je inkomsten en btw zelf aan.',
@@ -1547,7 +1547,7 @@ export default {
       beforeValidation: 'Je kunt leveringen aannemen zodra Fairide je dossier heeft goedgekeurd (meestal binnen 2 werkdagen): je krijgt een e-mail.',
       beforeTwoOrders: 'Je levert alleen voor Fairide: je mag een tweede levering aannemen tijdens de eerste, op voorwaarde dat ze wordt opgehaald binnen {radius} km van het adres waar je de eerste levert — geen omweg. Eén levering tegelijk als je ook voor een ander platform levert.',
       beforeOneOrder: 'Je levert ook voor een ander platform: één Fairide-levering tegelijk, tot ze afgerond is. (Aanpasbaar onder “Andere platformen”; koeriers die alleen voor Fairide werken mogen er twee hebben.)',
-      beforePayment: 'Betaling: {base} basis per levering tot {km} km, daarna {bike} per extra kilometer met de fiets (of e-bike) en {motor} per extra kilometer met scooter of auto. De afstand is die tussen de zaak en het leveradres van de bestelling. De prijs zie je voor je aanvaardt, de fooien zijn voor jou, en je inkomsten worden elke maandag via Stripe op je rekening gestort, voor de leveringen van de voorbije week.',
+      beforePayment: 'Betaling: {base} basis per levering tot {km} km, daarna {bike} per extra kilometer met de fiets (of e-bike) en {motor} per extra kilometer met scooter of auto. De afstand is die tussen de zaak en het leveradres van de bestelling. De prijs zie je voor je aanvaardt, 90% van de fooien is voor jou (10% dekt betaal- en systeemkosten, de rest gaat naar het verzekeringsfonds voor koeriers), en je inkomsten worden elke maandag via Stripe op je rekening gestort, voor de leveringen van de voorbije week.',
       beforeInsurance: 'Fairide-verzekering: een deel van de systeemkosten — 10 % van de leveringskosten — gaat in een fonds dat ongevallen tijdens een levering mee financiert.',
       beforeLiability: 'Je blijft verantwoordelijk voor ongevallen die je veroorzaakt en overtredingen die je begaat tijdens je dienst (verkeersregels, parkeren, naleving van de regels): het fonds helpt, maar vervangt noch je verzekering noch je verantwoordelijkheid.'
     },
@@ -1669,7 +1669,7 @@ export default {
     paiementLivreur: {
       howTitle: 'Hoe je betaald wordt',
       step1: 'De klant betaalt de bestelling online bij het bestellen (kaart, Bancontact, Apple Pay, Google Pay). Het geld wordt geïnd door Stripe, nooit door Fairide.',
-      step2: 'Bij elke geleverde rit komt de leveringskost voor 100% jou toe, Fairide neemt er geen commissie op, en de fooien van de klant ook, volledig.',
+      step2: 'Bij elke geleverde rit komt de leveringskost voor 100% jou toe, Fairide neemt er geen commissie op. Van de fooien is 90% voor jou: Fairide houdt 10% in voor betaal- (Stripe) en systeemkosten, en de rest gaat naar het verzekeringsfonds voor koeriers.',
       step3: 'Jouw aandeel wordt automatisch naar je Stripe-account overgemaakt zodra de levering is bevestigd, en elke maandag op je bankrekening gestort (alle ritten van de vorige week), net als bij de restaurants.',
       selfBillingTitle: 'Zelfstandig statuut en selfbilling',
       selfBillingText: 'Je levert als zelfstandige, met je ondernemingsnummer. Elke maand stelt Fairide in jouw plaats de factuur van je ritten op (selfbilling, met de wettelijke vermelding): niets te schrijven, enkel je btw-regime aangeven (vrijstelling of btw-plichtig) en één keer het voorafgaand akkoord aanvaarden.',
@@ -2646,7 +2646,9 @@ export default {
       driverPerKmBike: 'Koeriersaandeel per km · fiets / e-bike',
       driverPerKmBikeHint: "Nooit toegepast onder het klanttarief per km: de koerier ontvangt altijd de volledige leveringskosten (beslissing van 2 oktober 2026). Deze instelling werkt alleen boven het klanttarief; Fairide betaalt dan het verschil.",
       secondOrderRadius: 'Straal tweede levering (koerier)',
-      secondOrderRadiusHint: 'Een koerier die alleen voor Fairide werkt mag een tweede levering aannemen tijdens de eerste als ze binnen deze straal van het eerste leveradres wordt opgehaald.'
+      secondOrderRadiusHint: 'Een koerier die alleen voor Fairide werkt mag een tweede levering aannemen tijdens de eerste als ze binnen deze straal van het eerste leveradres wordt opgehaald.',
+      tipFairideRate: 'Fairide-inhouding op fooien',
+      tipFairideRateHint: 'Deel van elke fooi dat Fairide houdt (Stripe- en systeemkosten; wat overblijft gaat naar het verzekeringsfonds voor koeriers). De rest wordt naar de koerier overgemaakt. Hoogstens 30%.'
     },
     adminTasks: {
       title: 'Taken / Activiteiten',
@@ -6004,7 +6006,7 @@ export default {
       joinClientP2: 'Duidelijke prijzen: het deel van Fairide zit in de getoonde prijs, geen verborgen kosten',
       joinRestaurantP1: 'Afhaal en levering: € 20/maand, eerste maand gratis · 10% alleen op online betaalde bestellingen, 0% ter plaatse',
       joinRestaurantP2: 'Kaart voor jou geïmporteerd, automatische facturen en Peppol',
-      joinDriverP1: '100% van de leveringskosten en fooien voor jou',
+      joinDriverP1: '100% van de leveringskosten en 90% van de fooien voor jou',
       joinDriverP2: 'Student, particulier of zelfstandige: jij kiest je statuut',
       euroExTitle: 'Concreet voorbeeld: een kleine zaak',
       euroExVolumeLabel: 'De bestellingen van de zaak',
@@ -6457,7 +6459,7 @@ export default {
       foodCommentPlaceholder: 'Een opmerking over de maaltijd (optioneel)',
       deliveryRatingLabel: 'Beoordeling voor de levering',
       deliveryCommentPlaceholder: 'Een opmerking over de levering (optioneel)',
-      tipPrompt: '💛 Een fooi voor {name}? (optioneel, 100% voor hen)',
+      tipPrompt: '💛 Een fooi voor {name}? (optioneel · 90% voor hen, 10% dekt de betaalkosten en het verzekeringsfonds voor koeriers)',
       tipNone: 'Geen',
       tipOtherPlaceholder: 'Ander bedrag',
       send: 'Mijn beoordeling versturen',

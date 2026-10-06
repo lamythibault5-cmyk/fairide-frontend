@@ -946,7 +946,7 @@ export default {
       usageBlocked: 'Plafond atteint : les nouvelles courses sont bloquées. Change de statut dans ton dossier livreur pour continuer.',
       payTitle: 'Comment je suis payé',
       pay1: 'Le client paie en ligne à la commande ; l\'argent est encaissé par Stripe, jamais par Fairide.',
-      pay2: 'À chaque course livrée, tu touches le tarif livreur de la course (aucune commission Fairide dessus) et le pourboire du client, intégralement.',
+      pay2: 'À chaque course livrée, tu touches le tarif livreur de la course (aucune commission Fairide dessus) et 90 % du pourboire du client : Fairide en retient 10 % pour les frais de paiement et de système, et ce qui reste alimente le fonds d\'assurance des livreurs.',
       pay3: 'Versement chaque lundi sur ton compte bancaire : toutes les courses de la semaine précédente, en un seul virement Stripe. Même rythme que les restaurants.',
       payWithholdingP2p: 'Économie collaborative : {taux} de précompte sont retenus sur chaque course et reversés au SPF Finances ; le reçu de chaque course montre le brut, la retenue et le net.',
       payWithholdingIndependent: 'Indépendant : aucune retenue. Chaque mois, tu factures Fairide d\'après ton relevé (dans Mes factures) : tu déclares tes revenus et ta TVA toi-même.',
@@ -1547,7 +1547,7 @@ export default {
       beforeValidation: 'Tu pourras prendre des courses dès que Fairide aura validé ton dossier (en général sous 2 jours ouvrés) : tu seras prévenu par e-mail.',
       beforeTwoOrders: 'Tu ne livres que pour Fairide : tu peux prendre une seconde course pendant la première, à condition qu\'elle se retire dans un rayon de {radius} km de l\'adresse où tu livres la première — pour ne pas faire de détour. Une seule course à la fois si tu livres aussi pour une autre plateforme.',
       beforeOneOrder: 'Tu livres aussi pour une autre plateforme : une seule course Fairide à la fois, le temps de la terminer. (Modifiable dans « Autres plateformes » ; les livreurs qui ne travaillent que pour Fairide peuvent en tenir deux.)',
-      beforePayment: 'Paiement : {base} de base par course jusqu\'à {km} km, puis {bike} par kilomètre au-delà à vélo (ou vélo électrique) et {motor} par kilomètre au-delà en scooter ou en voiture. La distance est celle entre le commerce et l\'adresse de livraison de la commande. Le prix t\'est affiché avant d\'accepter, les pourboires sont pour toi, et tes gains sont versés chaque lundi sur ton compte via Stripe, pour les courses de la semaine écoulée.',
+      beforePayment: 'Paiement : {base} de base par course jusqu\'à {km} km, puis {bike} par kilomètre au-delà à vélo (ou vélo électrique) et {motor} par kilomètre au-delà en scooter ou en voiture. La distance est celle entre le commerce et l\'adresse de livraison de la commande. Le prix t\'est affiché avant d\'accepter, 90 % des pourboires sont pour toi (10 % couvrent les frais de paiement et de système, le solde va au fonds d\'assurance des livreurs), et tes gains sont versés chaque lundi sur ton compte via Stripe, pour les courses de la semaine écoulée.',
       beforeInsurance: 'Assurance Fairide : une partie des frais de système — 10 % des frais de livraison — est mise de côté dans un fonds qui sert à financer les accidents survenus pendant une course.',
       beforeLiability: 'Tu restes responsable des accidents que tu provoques et des infractions que tu commets pendant ton service (code de la route, stationnement, respect des règles) : le fonds vient en aide, il ne remplace ni ton assurance ni ta responsabilité.'
     },
@@ -1669,7 +1669,7 @@ export default {
     paiementLivreur: {
       howTitle: 'Comment tu es payé',
       step1: 'Le client paie sa commande en ligne au moment de commander (carte, Bancontact, Apple Pay, Google Pay). L\'argent est encaissé par Stripe, jamais par Fairide.',
-      step2: 'Sur chaque course livrée, les frais de livraison te reviennent à 100 %, Fairide ne prend aucune commission dessus, et les pourboires laissés par le client aussi, intégralement.',
+      step2: 'Sur chaque course livrée, les frais de livraison te reviennent à 100 %, Fairide ne prend aucune commission dessus. Sur les pourboires, 90 % te reviennent : Fairide retient 10 % pour les frais de paiement (Stripe) et de système, et le solde va au fonds d\'assurance des livreurs.',
       step3: 'Ta part est transférée automatiquement sur ton compte Stripe dès la livraison confirmée, puis versée sur ton compte bancaire chaque lundi (toutes les courses de la semaine précédente), comme pour les restaurants.',
       selfBillingTitle: 'Statut d\'indépendant et autofacturation',
       selfBillingText: 'Tu livres en indépendant, avec ton numéro d\'entreprise. Chaque mois, Fairide établit à ta place la facture de tes courses (autofacturation, avec la mention légale) : tu n\'as rien à rédiger, juste à indiquer ton régime TVA (franchise ou assujetti) et à accepter l\'accord préalable, une seule fois.',
@@ -2646,7 +2646,9 @@ export default {
       driverPerKmBike: 'Part livreur par km · vélo / vélo électrique',
       driverPerKmBikeHint: "Jamais appliqué en dessous du tarif client par km : le livreur touche toujours l'intégralité des frais de livraison (décision du 2 octobre 2026). Ce réglage n'agit qu'au-dessus du tarif client, et c'est alors Fairide qui paie la différence.",
       secondOrderRadius: 'Rayon de la seconde course (livreur)',
-      secondOrderRadiusHint: 'Un livreur qui ne travaille que pour Fairide peut prendre une seconde course pendant la première si elle se retire dans ce rayon de l\'adresse de livraison de la première.'
+      secondOrderRadiusHint: 'Un livreur qui ne travaille que pour Fairide peut prendre une seconde course pendant la première si elle se retire dans ce rayon de l\'adresse de livraison de la première.',
+      tipFairideRate: 'Retenue Fairide sur les pourboires',
+      tipFairideRateHint: 'Part du pourboire gardée par Fairide (frais Stripe et frais de système ; ce qui reste alimente le fonds d\'assurance des livreurs). Le reste est viré au livreur. Au plus 30 %.'
     },
     adminTasks: {
       title: 'Tâches / Activités',
@@ -6049,7 +6051,7 @@ export default {
       joinClientP2: 'Des prix clairs : la part de Fairide est comprise dans le prix affiché, sans frais cachés',
       joinRestaurantP1: 'À emporter et livraison : 20 €/mois, premier mois offert · 10 % seulement sur les commandes payées en ligne, 0 % sur place',
       joinRestaurantP2: 'Carte importée pour toi, factures et Peppol automatiques',
-      joinDriverP1: '100 % des frais de livraison et des pourboires pour toi',
+      joinDriverP1: '100 % des frais de livraison et 90 % des pourboires pour toi',
       joinDriverP2: 'Étudiant, particulier ou indépendant : tu choisis ton statut',
       euroExTitle: 'Exemple concret : un petit commerce',
       euroExVolumeLabel: 'Les commandes du commerce',
@@ -6502,7 +6504,7 @@ export default {
       foodCommentPlaceholder: 'Un commentaire sur le repas (optionnel)',
       deliveryRatingLabel: 'Note pour la livraison',
       deliveryCommentPlaceholder: 'Un commentaire sur la livraison (optionnel)',
-      tipPrompt: '💛 Un petit pourboire pour {name} ? (optionnel, 100% pour lui)',
+      tipPrompt: '💛 Un petit pourboire pour {name} ? (optionnel · 90 % pour lui, 10 % couvrent les frais de paiement et le fonds d\'assurance des livreurs)',
       tipNone: 'Aucun',
       tipOtherPlaceholder: 'Autre montant',
       send: 'Envoyer mon avis',

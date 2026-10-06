@@ -946,7 +946,7 @@ export default {
       usageBlocked: 'Ceiling reached: new rides are blocked. Change status in your courier file to continue.',
       payTitle: 'How I get paid',
       pay1: 'The customer pays online when ordering; the money is collected by Stripe, never by Fairide.',
-      pay2: 'For each delivered ride, you get the courier rate of the ride (no Fairide commission on it) and the customer\'s tip, in full.',
+      pay2: 'For each delivered ride, you get the courier rate of the ride (no Fairide commission on it) and 90% of the customer\'s tip: Fairide keeps 10% for payment and system fees, and what is left feeds the courier insurance fund.',
       pay3: 'Paid out every Monday to your bank account: all rides of the previous week, in one Stripe transfer. Same rhythm as restaurants.',
       payWithholdingP2p: 'Sharing economy: {taux} withholding tax is deducted from each ride and paid to the tax authorities; each ride receipt shows gross, deduction and net.',
       payWithholdingIndependent: 'Self-employed: no deduction. Every month you invoice Fairide from your statement (in My invoices): you declare your income and VAT yourself.',
@@ -1547,7 +1547,7 @@ export default {
       beforeValidation: 'You can take deliveries as soon as Fairide has validated your file (usually within 2 working days): you will be notified by e-mail.',
       beforeTwoOrders: 'You only deliver for Fairide: you may take a second delivery during the first one, provided it is picked up within {radius} km of the address where you deliver the first — no detour. One delivery at a time if you also deliver for another platform.',
       beforeOneOrder: 'You also deliver for another platform: one Fairide delivery at a time, until it is completed. (Editable under “Other platforms”; couriers who only work for Fairide may hold two.)',
-      beforePayment: 'Payment: {base} base per delivery up to {km} km, then {bike} per extra kilometre by bike (or e-bike) and {motor} per extra kilometre by scooter or car. The distance is the one between the business and the delivery address of the order. The price is shown before you accept, tips are yours, and your earnings are paid every Monday to your account via Stripe, for the previous week\'s deliveries.',
+      beforePayment: 'Payment: {base} base per delivery up to {km} km, then {bike} per extra kilometre by bike (or e-bike) and {motor} per extra kilometre by scooter or car. The distance is the one between the business and the delivery address of the order. The price is shown before you accept, 90% of tips are yours (10% covers payment and system fees, the remainder goes to the courier insurance fund), and your earnings are paid every Monday to your account via Stripe, for the previous week\'s deliveries.',
       beforeInsurance: 'Fairide insurance: part of the system fees — 10% of the delivery fees — is set aside in a fund used to help finance accidents that happen during a delivery.',
       beforeLiability: 'You remain responsible for accidents you cause and offences you commit while on duty (traffic rules, parking, compliance): the fund helps, it replaces neither your insurance nor your responsibility.'
     },
@@ -1669,7 +1669,7 @@ export default {
     paiementLivreur: {
       howTitle: 'How you get paid',
       step1: 'The customer pays the order online when ordering (card, Bancontact, Apple Pay, Google Pay). The money is collected by Stripe, never by Fairide.',
-      step2: 'On each delivered ride, the delivery fee comes to you at 100%, Fairide takes no commission on it, and the tips left by the customer too, in full.',
+      step2: 'On each delivered ride, the delivery fee comes to you at 100%, Fairide takes no commission on it. On tips, 90% is yours: Fairide keeps 10% for payment (Stripe) and system fees, and the remainder goes to the courier insurance fund.',
       step3: 'Your share is transferred automatically to your Stripe account as soon as the delivery is confirmed, then paid out to your bank account every Monday (all rides of the previous week), same as for restaurants.',
       selfBillingTitle: 'Self-employed status and self-billing',
       selfBillingText: 'You deliver as a self-employed person, with your company number. Each month, Fairide issues the invoice for your rides on your behalf (self-billing, with the legal mention): nothing to write, just indicate your VAT regime (exemption or registered) and accept the prior agreement, once.',
@@ -2646,7 +2646,9 @@ export default {
       driverPerKmBike: 'Courier share per km · bike / e-bike',
       driverPerKmBikeHint: "Never applied below the customer per-km rate: the courier always receives the full delivery fee (decision of 2 October 2026). This setting only has an effect above the customer rate, in which case Fairide pays the difference.",
       secondOrderRadius: 'Second delivery radius (courier)',
-      secondOrderRadiusHint: 'A courier who only works for Fairide may take a second delivery during the first if it is picked up within this radius of the first delivery address.'
+      secondOrderRadiusHint: 'A courier who only works for Fairide may take a second delivery during the first if it is picked up within this radius of the first delivery address.',
+      tipFairideRate: 'Fairide retention on tips',
+      tipFairideRateHint: 'Share of each tip kept by Fairide (Stripe and system fees; what is left feeds the courier insurance fund). The rest is transferred to the courier. At most 30%.'
     },
     adminTasks: {
       title: 'Tasks / Activities',
@@ -6004,7 +6006,7 @@ export default {
       joinClientP2: 'Clear prices: Fairide\'s share is included in the displayed price, no hidden fees',
       joinRestaurantP1: 'Takeaway and delivery: €20/month, first month free · 10% only on orders paid online, 0% on site',
       joinRestaurantP2: 'Menu imported for you, automatic invoices and Peppol',
-      joinDriverP1: '100% of delivery fees and tips for you',
+      joinDriverP1: '100% of delivery fees and 90% of tips for you',
       joinDriverP2: 'Student, private individual or self-employed: you choose your status',
       euroExTitle: 'A concrete example: a small business',
       euroExVolumeLabel: 'The business\'s orders',
@@ -6457,7 +6459,7 @@ export default {
       foodCommentPlaceholder: 'A comment about the meal (optional)',
       deliveryRatingLabel: 'Delivery rating',
       deliveryCommentPlaceholder: 'A comment about the delivery (optional)',
-      tipPrompt: '💛 A small tip for {name}? (optional, 100% for them)',
+      tipPrompt: '💛 A small tip for {name}? (optional · 90% for them, 10% covers payment fees and the courier insurance fund)',
       tipNone: 'None',
       tipOtherPlaceholder: 'Other amount',
       send: 'Send my review',
