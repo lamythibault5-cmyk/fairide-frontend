@@ -7004,7 +7004,10 @@ export default {
       schoolNamePlaceholder: 'E.g. ULB, UCLouvain, EPHEC…',
       academicYear: 'Academic year',
       errAcademicYear: 'Enter a year such as 2026-2027.',
-      studentCertificateNote: 'Your enrolment certificate (for this year) will be asked at the documents step.'
+      studentCertificateNote: 'Your enrolment certificate (for this year) will be asked at the documents step.',
+      errCompanyNumberLength: 'A company number has 10 digits: you typed {n}. It looks like 0123.456.789 (with or without dots; a leading “BE” is fine).',
+      errCompanyNumberPrefix: 'A Belgian company number starts with 0 or 1 (e.g. 0123.456.789). Check the first digit.',
+      errCompanyNumberKey: 'These 10 digits are not a valid company number: the last two are a check key that does not match the first eight. There is probably a typo — copy it from an official document (CBE, invoice).'
     },
     // Conformité (backlog du 23/09/2026) : panier, fiche vendeur, allergènes, alcool, signalement,
     // livreurs, décisions motivées, registres. Même clé dans les trois langues.

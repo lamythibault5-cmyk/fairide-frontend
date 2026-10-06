@@ -7004,7 +7004,10 @@ export default {
       schoolNamePlaceholder: 'Bv. VUB, KU Leuven, EPHEC…',
       academicYear: 'Academiejaar',
       errAcademicYear: 'Geef een jaar op zoals 2026-2027.',
-      studentCertificateNote: 'Je inschrijvingsattest (van dit jaar) wordt gevraagd bij de stap documenten.'
+      studentCertificateNote: 'Je inschrijvingsattest (van dit jaar) wordt gevraagd bij de stap documenten.',
+      errCompanyNumberLength: 'Een ondernemingsnummer telt 10 cijfers: je typte er {n}. Het ziet eruit als 0123.456.789 (met of zonder punten; “BE” ervoor mag).',
+      errCompanyNumberPrefix: 'Een Belgisch ondernemingsnummer begint met 0 of 1 (bv. 0123.456.789). Controleer het eerste cijfer.',
+      errCompanyNumberKey: 'Deze 10 cijfers vormen geen geldig ondernemingsnummer: de laatste twee zijn een controlesleutel die niet overeenkomt met de eerste acht. Waarschijnlijk een tikfout — neem het over van een officieel document (KBO, factuur).'
     },
     // Conformité (backlog du 23/09/2026) : panier, fiche vendeur, allergènes, alcool, signalement,
     // livreurs, décisions motivées, registres. Même clé dans les trois langues.

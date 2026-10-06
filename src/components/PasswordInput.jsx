@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
 // Champ mot de passe avec un œil pour afficher/masquer ce qu'on tape. Utilisé partout où un mot de passe
@@ -33,13 +33,28 @@ function OeilBarre() {
 export default function PasswordInput({ id, value, onChange, onBlur, placeholder, invalid = false, autoComplete = 'new-password' }) {
   const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
+  const champ = useRef(null);
+  const derniereBascule = useRef(0);
+  /* SUR TÉLÉPHONE, L'ŒIL NE MONTRAIT PAS TOUJOURS LE MOT DE PASSE (fondateur, 2026-10-06).
+     Deux causes possibles, toutes deux fermées ici :
+     - un toucher produit parfois DEUX activations (toucher puis clic synthétisé) : la bascule s'annulait aussitôt.
+       Une seconde activation dans les 350 ms est ignorée ;
+     - certains navigateurs (remplissage automatique, gestion des mots de passe) remettent le champ en « password »
+       après que React l'a passé en « text » : le type est réappliqué directement sur l'élément à chaque bascule.
+     Le focus reste sur le champ (preventDefault à l'appui) pour que le clavier ne se ferme pas. */
+  useEffect(() => { if (champ.current) champ.current.type = visible ? 'text' : 'password'; }, [visible]);
+  const basculer = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const maintenant = Date.now();
+    if (maintenant - derniereBascule.current < 350) return;
+    derniereBascule.current = maintenant;
+    setVisible((v) => !v);
+  };
   return (
     <div className="password-input">
-      <input id={id} type={visible ? 'text' : 'password'} value={value} onChange={onChange} onBlur={onBlur} placeholder={placeholder}
+      <input ref={champ} id={id} type={visible ? 'text' : 'password'} value={value} onChange={onChange} onBlur={onBlur} placeholder={placeholder}
         className={invalid ? 'input-invalid' : undefined} autoComplete={autoComplete} />
-      {/* onMouseDown preventDefault : le champ garde le focus (le clavier du téléphone ne se ferme pas, la page
-          ne se décale pas sous le doigt entre l'appui et le relâchement). */}
-      <button type="button" className="password-eye" onMouseDown={(e) => e.preventDefault()} onClick={() => setVisible((v) => !v)} aria-pressed={visible}
+      <button type="button" className="password-eye" onPointerDown={(e) => e.preventDefault()} onMouseDown={(e) => e.preventDefault()} onClick={basculer} aria-pressed={visible}
         aria-label={visible ? t('auth.hidePassword') : t('auth.showPassword')} title={visible ? t('auth.hidePassword') : t('auth.showPassword')}>
         {visible ? <OeilBarre /> : <OeilOuvert />}
       </button>

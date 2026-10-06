@@ -7051,7 +7051,10 @@ export default {
       schoolNamePlaceholder: 'Ex. ULB, UCLouvain, EPHEC…',
       academicYear: 'Année académique',
       errAcademicYear: 'Indique une année comme 2026-2027.',
-      studentCertificateNote: 'Ton attestation d\'inscription (de cette année) te sera demandée à l\'étape des documents.'
+      studentCertificateNote: 'Ton attestation d\'inscription (de cette année) te sera demandée à l\'étape des documents.',
+      errCompanyNumberLength: 'Un numéro d\'entreprise compte 10 chiffres : tu en as tapé {n}. Il ressemble à 0123.456.789 (avec ou sans points, « BE » devant est accepté).',
+      errCompanyNumberPrefix: 'Un numéro d\'entreprise belge commence par 0 ou 1 (ex. 0123.456.789). Vérifie le premier chiffre.',
+      errCompanyNumberKey: 'Ces 10 chiffres ne forment pas un numéro d\'entreprise valable : les deux derniers sont une clé de contrôle qui ne correspond pas aux huit premiers. Il y a sans doute une faute de frappe — recopie-le depuis un document officiel (BCE, facture).'
     },
     // Conformité (backlog du 23/09/2026) : panier, fiche vendeur, allergènes, alcool, signalement,
     // livreurs, décisions motivées, registres. Même clé dans les trois langues.

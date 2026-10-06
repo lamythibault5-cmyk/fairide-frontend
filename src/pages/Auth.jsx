@@ -23,7 +23,7 @@ import OpeningHoursEditor from '../components/OpeningHoursEditor';
 import { attendrePage, espaceApresConnexion, prechargerPage } from '../routePrefetch';
 import usePageMeta from '../hooks/usePageMeta';
 import { suivre } from '../analytics';
-import { bceValide, codePostalValide } from '../validation';
+import { bceValide, raisonBce, codePostalValide } from '../validation';
 
 function roles(t) {
   return [
@@ -541,7 +541,7 @@ export default function Auth() {
         if (!autrePlateforme) e.autrePlateforme = t('auth.errPlatforms');
         // Numéro d'entreprise : requis pour l'étudiant-indépendant comme pour l'indépendant (facturation mensuelle).
         if (['student_independent', 'independent'].includes(courierStatus) && !companyNumber.trim()) e.companyNumber = required;
-        else if (companyNumber.trim() && !bceValide(companyNumber)) e.companyNumber = t('auth.errCompanyNumber');
+        else if (companyNumber.trim() && !bceValide(companyNumber)) { const why = raisonBce(companyNumber); e.companyNumber = why?.raison === 'longueur' ? t('auth.errCompanyNumberLength', { n: why.chiffres }) : why?.raison === 'prefixe' ? t('auth.errCompanyNumberPrefix') : t('auth.errCompanyNumberKey'); }
         if (courierStatus === 'student_independent') {
           if (schoolName.trim().length < 2) e.schoolName = required;
           if (!academicYear.trim()) e.academicYear = required;
