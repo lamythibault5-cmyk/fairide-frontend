@@ -84,6 +84,23 @@ export function BoutonGererCommerce({ id, token, api, toast, tr, className = 'bt
   return <button type="button" className={className} style={style} disabled={busy} onClick={ouvrir} title={tr('adminRestos.manageHelp')}>{busy ? '…' : `🛠️ ${tr('adminRestos.manage')}`}</button>;
 }
 
+// « Fermer jusqu'à demain » (décision DEC-15) : pour un commerce fermé sans prévenir et injoignable. Il reste visible,
+// affiché fermé, ne prend plus de commande et rouvre tout seul le lendemain à 6 h — sans le retirer du site.
+export function BoutonFermerSoir({ detail, token, api, toast, tr, onChanged }) {
+  const [busy, setBusy] = useState(false);
+  const ferme = !!detail.pausedUntil && detail.pausedUntil > Date.now();
+  async function basculer() {
+    setBusy(true);
+    try {
+      await api(`/admin/restaurants/${detail.id}/close-until-tomorrow`, { method: 'PATCH', token, body: ferme ? { reopen: true } : {} });
+      toast(ferme ? tr('adminRestos.reopenedToast') : tr('adminRestos.closedTonightToast'));
+      onChanged?.();
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+  }
+  const heure = ferme ? new Date(detail.pausedUntil).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+  return <button type="button" className="btn-outline" disabled={busy} onClick={basculer} title={tr('adminRestos.closeTonightHelp')}>{busy ? '…' : ferme ? tr('adminRestos.reopenNow', { time: heure }) : tr('adminRestos.closeTonight')}</button>;
+}
+
 export default function AdminRestaurantsPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
@@ -253,7 +270,7 @@ export default function AdminRestaurantsPage() {
 
   const colonnes = [
     { key: 'name', label: tr('adminCommon.name'), get: (r) => <><b>{r.name}</b>{estTest(r) && <TestBadge />}</>, sortValue: (r) => r.name },
-    { key: 'listing', label: tr('adminRestos.listingCol'), get: (r) => (estTest(r) ? <span className="small">{tr('adminRestos.alwaysListed')}</span> : <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>), sortValue: (r) => (estTest(r) ? 2 : r.publicListed ? 1 : 0) },
+    { key: 'listing', label: tr('adminRestos.listingCol'), get: (r) => (estTest(r) ? <span className="small">{r.isDemo ? tr('adminRestos.alwaysListed') : tr('adminRestos.neverListedTest')}</span> : <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>), sortValue: (r) => (estTest(r) ? 2 : r.publicListed ? 1 : 0) },
     { key: 'commune', label: tr('adminCommon.commune'), get: (r) => r.commune },
     { key: 'cuisine', label: tr('adminCommon.cuisine'), get: (r) => r.cuisine },
     { key: 'phone', label: tr('adminCommon.phone'), get: (r) => (r.restaurantPhone || r.ownerPhone ? <a href={`tel:${String(r.restaurantPhone || r.ownerPhone).replace(/[^+\d]/g, '')}`} onClick={(e) => e.stopPropagation()}>{r.restaurantPhone || r.ownerPhone}</a> : '-'), sortValue: (r) => r.restaurantPhone || r.ownerPhone || '' },
@@ -591,7 +608,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           )}
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.registeredOnDate', { date: fmtDate(detail.createdAt) })}</p>
           <p className="small" style={{ margin: '6px 0 2px' }}>
-            {estTest(detail) ? <>🧪 {tr('adminRestos.testLine')}</> : <><span className={`pill ${detail.publicListed ? 'listing-on' : 'listing-off'}`}>{detail.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span> {detail.publicListed ? tr('adminRestos.listedLine') : tr('adminRestos.unlistedLine')}</>}
+            {estTest(detail) ? <>🧪 {detail.isDemo ? tr('adminRestos.testLine') : tr('adminRestos.testOwnerLine')}</> : <><span className={`pill ${detail.publicListed ? 'listing-on' : 'listing-off'}`}>{detail.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span> {detail.publicListed ? tr('adminRestos.listedLine') : tr('adminRestos.unlistedLine')}</>}
           </p>
           {!estTest(detail) && (
             <div className="row" style={{ gap: 8, alignItems: 'center', margin: '4px 0 6px', flexWrap: 'wrap' }}>
@@ -619,6 +636,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             {!detail.isDemo && detail.ownerId && <TestToggleButton userId={detail.ownerId} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={onToggleTest} />}
             {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={onApprove}>{tr('adminCommon.approve')}</button>}
             {!estTest(detail) && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
+            {!detail.isDemo && <BoutonFermerSoir detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}
             {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
             {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}
             <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={onDelete}>{tr('adminRestos.deleteRestaurant')}</button>

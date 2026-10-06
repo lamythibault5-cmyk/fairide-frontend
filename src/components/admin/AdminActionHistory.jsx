@@ -7,6 +7,8 @@ const actionLabels = (tr) => ({
   order_driver_reassign: tr('adminHistory.a_driver_reassigned'),
   order_refund: tr('adminHistory.a_refund'),
   restaurant_status_change: tr('adminHistory.a_restaurant_status'),
+  restaurant_closed_until_tomorrow: tr('adminHistory.a_restaurant_closed_tonight'),
+  restaurant_reopened: tr('adminHistory.a_restaurant_reopened'),
   restaurant_edit: tr('adminHistory.a_info_updated'),
   driver_status_change: tr('adminHistory.a_driver_status'),
   client_status_change: tr('adminHistory.a_client_status'),
