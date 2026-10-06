@@ -6615,7 +6615,8 @@ export default {
       status_ended: 'Ended',
       status_refused: 'Refused',
       status_cancelled: 'Cancelled',
-      labelNote: 'Customers see a “Sponsored” label on your card in that row. You only appear there if your shop belongs to it (for example at least one healthy dish for “Healthy”).'
+      labelNote: 'Customers see a “Sponsored” label on your card in that row. You only appear there if your shop belongs to it (for example at least one healthy dish for “Healthy”).',
+      communeNote: 'It only concerns customers of your commune ({commune}): each commune has its own positions.'
     },
     adminPlacements: {
       addPosition: 'Add a position',
@@ -6643,7 +6644,21 @@ export default {
       billing: 'Billing',
       billing_a_facturer: 'To invoice',
       billing_facture: 'Invoiced',
-      billing_paye: 'Paid'
+      billing_paye: 'Paid',
+      introCommune: 'Sales are set commune by commune: pick a commune, open it, and set its prices (otherwise the default prices apply). Businesses only see the section once their commune is open.',
+      communeLabel: 'Commune',
+      communeDefault: 'Default prices (all communes)',
+      open: 'Open',
+      closed: 'Closed',
+      openAction: 'Open sales in this commune',
+      close: 'Close sales',
+      communeCounts: '{restaurants} business(es), {pending} to review, {active} running',
+      communeHelp: '{commune} page: its opening, prices and requests. An empty box falls back to the default price. Closing sales does not stop placements already accepted.',
+      defaultHelp: 'These prices apply in any commune without its own prices. Pick a commune to open it for sale.',
+      pricesTitleCommune: 'Weekly prices in {commune} (ex. VAT)',
+      pricesHelpCommune: 'A price specific to this commune per row and position; empty box = default price (shown in grey).',
+      communeOpened: 'Sales open in {commune}.',
+      communeClosed: 'Sales closed in {commune}.'
     },
     sponsor: {
       brokenAdmin: 'The logo for “{label}” cannot be found (file deleted at the host?). Upload it again in Admin › Collaborations / sponsoring.',

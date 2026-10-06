@@ -19,10 +19,18 @@ export default function AdminPlacementsPage() {
   const [etat, setEtat] = useState(null);
   const [brouillon, setBrouillon] = useState({}); // « rangée:position » → saisie
   const [occupe, setOccupe] = useState(false);
+  // UNE PAGE PAR COMMUNE (fondateur, 2026-10-06) : '' = les prix par défaut et toutes les demandes ; sinon la commune choisie,
+  // avec son interrupteur d'ouverture et ses prix propres (une case vide = le prix par défaut).
+  const [commune, setCommune] = useState('');
 
   const charger = useCallback(() => {
-    api('/admin/placements', { token }).then((r) => { setEtat(r); setBrouillon({}); }).catch((e) => toast(e.message, 'erreur'));
-  }, [token, toast]);
+    api(`/admin/placements${commune ? `?commune=${encodeURIComponent(commune)}` : ''}`, { token }).then((r) => { setEtat(r); setBrouillon({}); }).catch((e) => toast(e.message, 'erreur'));
+  }, [token, toast, commune]);
+  async function ouvrirCommune(enabled) {
+    setOccupe(true);
+    try { await api(`/admin/placements/communes/${encodeURIComponent(commune)}`, { method: 'PUT', token, body: { enabled } }); toast(tr(enabled ? 'adminPlacements.communeOpened' : 'adminPlacements.communeClosed', { commune })); charger(); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
+  }
   useEffect(() => { charger(); }, [charger]);
 
   const titre = (cle, repli) => titreRangee(tr, { key: cle, label: repli });
@@ -57,11 +65,12 @@ export default function AdminPlacementsPage() {
   async function enregistrerPrix() {
     const prices = Object.entries(brouillon).map(([cle, v]) => {
       const [sectionKey, slot] = cle.split(':');
-      return { sectionKey, slot: Number(slot), weeklyPrice: Number(String(v).replace(',', '.')) };
+      // Dans une commune, vider la case = revenir au prix par défaut.
+      return { sectionKey, slot: Number(slot), weeklyPrice: commune && String(v).trim() === '' ? null : Number(String(v).replace(',', '.')) };
     });
-    if (prices.some((p) => !Number.isFinite(p.weeklyPrice) || p.weeklyPrice < 0)) { toast(tr('adminPlacements.priceInvalid'), 'erreur'); return; }
+    if (prices.some((p) => p.weeklyPrice !== null && (!Number.isFinite(p.weeklyPrice) || p.weeklyPrice < 0))) { toast(tr('adminPlacements.priceInvalid'), 'erreur'); return; }
     setOccupe(true);
-    try { await api('/admin/placements/prices', { method: 'PUT', token, body: { prices } }); toast(tr('adminPlacements.pricesSaved')); charger(); }
+    try { await api('/admin/placements/prices', { method: 'PUT', token, body: { commune: commune || undefined, prices } }); toast(tr('adminPlacements.pricesSaved')); charger(); }
     catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
   async function decider(b, corps) {
@@ -76,13 +85,30 @@ export default function AdminPlacementsPage() {
   return (
     <div>
       <AdminPageHeader module="placements" />
-      <p className="small" style={{ margin: '0 0 16px', maxWidth: 780 }}>{tr('adminPlacements.intro')}</p>
+      <p className="small" style={{ margin: '0 0 16px', maxWidth: 780 }}>{tr('adminPlacements.intro')} {tr('adminPlacements.introCommune')}</p>
       {!etat && <p className="small">…</p>}
       {etat && (
         <>
+          {/* La commune dont on règle la page : ses commerces, ses demandes, son ouverture. */}
+          <div className="card mea-communes" style={{ margin: '0 0 16px' }}>
+            <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <label htmlFor="mea-commune" style={{ fontWeight: 700 }}>{tr('adminPlacements.communeLabel')}</label>
+              <select id="mea-commune" value={commune} disabled={occupe} onChange={(e) => setCommune(e.target.value)}>
+                <option value="">{tr('adminPlacements.communeDefault')}</option>
+                {(etat.communes || []).map((c) => <option key={c.commune} value={c.commune}>{c.commune} — {c.enabled ? tr('adminPlacements.open') : tr('adminPlacements.closed')} · {tr('adminPlacements.communeCounts', { restaurants: c.restaurants, pending: c.pending, active: c.active })}</option>)}
+              </select>
+              {commune && (
+                <>
+                  <span className={`modif-statut mea-statut--${etat.enabled ? 'active' : 'cancelled'}`}>{etat.enabled ? tr('adminPlacements.open') : tr('adminPlacements.closed')}</span>
+                  <button type="button" className={etat.enabled ? 'btn-danger-ghost' : 'btn-teal'} disabled={occupe} onClick={() => ouvrirCommune(!etat.enabled)}>{etat.enabled ? tr('adminPlacements.close') : tr('adminPlacements.openAction')}</button>
+                </>
+              )}
+            </div>
+            <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-soft)' }}>{commune ? tr('adminPlacements.communeHelp', { commune }) : tr('adminPlacements.defaultHelp')}</p>
+          </div>
           <div className="card" style={{ margin: '0 0 16px' }}>
-            <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{tr('adminPlacements.pricesTitle')}</h3>
-            <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-soft)' }}>{tr('adminPlacements.pricesHelp')}</p>
+            <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{commune ? tr('adminPlacements.pricesTitleCommune', { commune }) : tr('adminPlacements.pricesTitle')}</h3>
+            <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-soft)' }}>{commune ? tr('adminPlacements.pricesHelpCommune') : tr('adminPlacements.pricesHelp')}</p>
             <div className="mea-grille mea-grille--admin mea-grille--large">
               <div className="mea-ligne mea-entete" style={colonnes}>
                 <span>{tr('placements.row')}</span>
@@ -96,7 +122,8 @@ export default function AdminPlacementsPage() {
                     const cle = `${s.key}:${p.slot}`;
                     return (
                       <label key={p.slot} className="mea-prix">
-                        <input type="text" inputMode="decimal" value={brouillon[cle] ?? String(p.weeklyPrice).replace('.', ',')}
+                        <input type="text" inputMode="decimal" value={brouillon[cle] ?? (commune && !p.ownPrice ? '' : String(p.weeklyPrice).replace('.', ','))}
+                          placeholder={commune && !p.ownPrice ? String(p.weeklyPrice).replace('.', ',') : undefined}
                           aria-label={`${titreRangee(tr, s)} — ${libellePosition(tr, p.slot)}`}
                           onChange={(e) => setBrouillon((b) => ({ ...b, [cle]: e.target.value }))} />
                         <span>€</span>
@@ -133,7 +160,7 @@ export default function AdminPlacementsPage() {
           {enAttente.map((b) => (
             <div className="card mea-reservation" key={b.id} style={{ margin: '0 0 8px' }}>
               <div>
-                <b>{b.restaurantName}</b>
+                <b>{b.restaurantName}</b>{!commune && b.commune && <span className="small"> · {b.commune}</span>}
                 <span className="small" style={{ display: 'block' }}>{titre(b.sectionKey, b.sectionLabel)} · {libellePosition(tr, b.slot)} · {jourCourt(b.startsOn)} → {jourCourt(b.endsOn)}</span>
                 <span className="small" style={{ display: 'block' }}>{euros(b.totalHt)} {tr('placements.exVat')} ({tr('placements.weeks', { n: b.weeks })} × {euros(b.weeklyPrice)})</span>
               </div>
@@ -149,7 +176,7 @@ export default function AdminPlacementsPage() {
           {autres.map((b) => (
             <div className="card mea-reservation" key={b.id} style={{ margin: '0 0 8px' }}>
               <div>
-                <b>{b.restaurantName}</b> <span className={`modif-statut mea-statut--${b.status}`}>{tr(`placements.status_${b.status}`)}</span>
+                <b>{b.restaurantName}</b>{!commune && b.commune && <span className="small"> · {b.commune}</span>} <span className={`modif-statut mea-statut--${b.status}`}>{tr(`placements.status_${b.status}`)}</span>
                 <span className="small" style={{ display: 'block' }}>{titre(b.sectionKey, b.sectionLabel)} · {libellePosition(tr, b.slot)} · {jourCourt(b.startsOn)} → {jourCourt(b.endsOn)} · {euros(b.totalHt)} {tr('placements.exVat')}</span>
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>

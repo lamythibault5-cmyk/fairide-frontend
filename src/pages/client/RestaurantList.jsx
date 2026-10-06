@@ -244,7 +244,7 @@ export default function RestaurantList() {
   // Les VRAIS commerces déjà inscrits (fondateur, 2026-09-30) : rangée en tête de liste, carte complète seulement ;
   // les démos restent dessous, pour montrer l'étendue de l'offre.
   const [inscrits, setInscrits] = useState([]);
-  const [placements, setPlacements] = useState([]);
+  const [placementsTous, setPlacementsTous] = useState([]);
   // Rangées ouvertes à la vente par l'admin en plus de celles d'origine : une par type de cuisine (« Pizza »…).
   const [rangeesAjoutees, setRangeesAjoutees] = useState([]);
   const toast = useToast();
@@ -253,7 +253,7 @@ export default function RestaurantList() {
     api('/restaurants').then(setRestaurants).catch((e) => toast(e.message, 'erreur')).finally(() => setLoading(false));
     api('/restaurants/landing').then((l) => setInscrits((l || []).filter((r) => r.menuComplete))).catch(() => {});
     // Mises en avant payantes du jour (routes/placements.js) : sans réponse, la liste reste dans son ordre naturel.
-    api('/placements/active').then((r) => { setPlacements(r.placements || []); setRangeesAjoutees(r.sections || []); }).catch(() => {});
+    api('/placements/active').then((r) => { setPlacementsTous(r.placements || []); setRangeesAjoutees(r.sections || []); }).catch(() => {});
     // Page publique (consultable sans compte, voir App.jsx) — ces deux appels ne concernent que les
     // clients connectés, inutile de les tenter (et de récolter un 401 silencieux) pour un visiteur anonyme.
     if (token) {
@@ -299,6 +299,10 @@ export default function RestaurantList() {
     else setCuisine(cuisine === opt.value ? '' : opt.value);
   };
 
+  // Mises en avant PAR COMMUNE (fondateur, 2026-10-06) : un commerce qui paie n'est épinglé que pour les clients de sa commune
+  // (celle du filtre, sinon celle de chez soi). Sans commune connue, rien n'est épinglé.
+  const communeEpingles = commune || homeCommune;
+  const placements = communeEpingles ? placementsTous.filter((p) => !p.commune || p.commune === communeEpingles) : [];
   const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || prix || emporter || tri !== 'recommande');
 
   // Distance a vol d'oiseau depuis l'adresse du compte, quand elle est connue.

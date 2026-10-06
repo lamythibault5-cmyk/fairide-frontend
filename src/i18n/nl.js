@@ -6615,7 +6615,8 @@ export default {
       status_ended: 'Afgelopen',
       status_refused: 'Geweigerd',
       status_cancelled: 'Geannuleerd',
-      labelNote: 'Klanten zien het label “Gesponsord” op je kaart in die rij. Je verschijnt er alleen als je zaak erbij hoort (bijvoorbeeld minstens één healthy gerecht voor “Healthy”).'
+      labelNote: 'Klanten zien het label “Gesponsord” op je kaart in die rij. Je verschijnt er alleen als je zaak erbij hoort (bijvoorbeeld minstens één healthy gerecht voor “Healthy”).',
+      communeNote: 'Dit geldt alleen voor klanten van jouw gemeente ({commune}): elke gemeente heeft haar eigen posities.'
     },
     adminPlacements: {
       addPosition: 'Positie toevoegen',
@@ -6643,7 +6644,21 @@ export default {
       billing: 'Facturatie',
       billing_a_facturer: 'Te factureren',
       billing_facture: 'Gefactureerd',
-      billing_paye: 'Betaald'
+      billing_paye: 'Betaald',
+      introCommune: 'De verkoop wordt per gemeente geregeld: kies een gemeente, open ze en stel haar prijzen in (anders gelden de standaardprijzen). Handelszaken zien de sectie pas als hun gemeente open is.',
+      communeLabel: 'Gemeente',
+      communeDefault: 'Standaardprijzen (alle gemeenten)',
+      open: 'Open',
+      closed: 'Gesloten',
+      openAction: 'Verkoop openen in deze gemeente',
+      close: 'Verkoop sluiten',
+      communeCounts: '{restaurants} zaak/zaken, {pending} te behandelen, {active} lopend',
+      communeHelp: 'Pagina van {commune}: opening, prijzen en aanvragen. Een leeg vak valt terug op de standaardprijs. De verkoop sluiten stopt geen al aanvaarde promoties.',
+      defaultHelp: 'Deze prijzen gelden in elke gemeente zonder eigen prijzen. Kies een gemeente om ze voor verkoop te openen.',
+      pricesTitleCommune: 'Weekprijzen in {commune} (excl. btw)',
+      pricesHelpCommune: 'Een eigen prijs voor deze gemeente per rij en positie; leeg vak = standaardprijs (in het grijs).',
+      communeOpened: 'Verkoop open in {commune}.',
+      communeClosed: 'Verkoop gesloten in {commune}.'
     },
     sponsor: {
       brokenAdmin: 'Het logo voor “{label}” is niet te vinden (bestand verwijderd bij de host?). Laad het opnieuw op in Admin › Samenwerkingen / sponsoring.',

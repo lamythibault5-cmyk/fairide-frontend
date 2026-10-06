@@ -6660,7 +6660,8 @@ export default {
       status_ended: 'Terminée',
       status_refused: 'Refusée',
       status_cancelled: 'Annulée',
-      labelNote: 'Les clients voient la mention « Sponsorisé » sur ta carte dans cette rangée. Tu n\'y apparais que si ton commerce en fait partie (par exemple au moins un plat healthy pour « Healthy »).'
+      labelNote: 'Les clients voient la mention « Sponsorisé » sur ta carte dans cette rangée. Tu n\'y apparais que si ton commerce en fait partie (par exemple au moins un plat healthy pour « Healthy »).',
+      communeNote: 'Elle ne concerne que les clients de ta commune ({commune}) : chaque commune a ses propres positions.'
     },
     adminPlacements: {
       addPosition: 'Ajouter une position',
@@ -6688,7 +6689,21 @@ export default {
       billing: 'Facturation',
       billing_a_facturer: 'À facturer',
       billing_facture: 'Facturée',
-      billing_paye: 'Payée'
+      billing_paye: 'Payée',
+      introCommune: 'La vente se règle commune par commune : choisis une commune, ouvre-la, et règle ses prix (à défaut, les prix par défaut s\'appliquent). Les commerces ne voient la section que si leur commune est ouverte.',
+      communeLabel: 'Commune',
+      communeDefault: 'Prix par défaut (toutes communes)',
+      open: 'Ouverte',
+      closed: 'Fermée',
+      openAction: 'Ouvrir la vente dans cette commune',
+      close: 'Fermer la vente',
+      communeCounts: '{restaurants} commerce(s), {pending} à traiter, {active} en cours',
+      communeHelp: 'Page de {commune} : son ouverture, ses prix et ses demandes. Une case vide reprend le prix par défaut. Fermer la vente n\'arrête pas les mises en avant déjà acceptées.',
+      defaultHelp: 'Ces prix s\'appliquent dans toute commune qui n\'a pas de prix propre. Choisis une commune pour l\'ouvrir à la vente.',
+      pricesTitleCommune: 'Prix par semaine à {commune} (hors TVA)',
+      pricesHelpCommune: 'Un prix propre à cette commune par rangée et par position ; case vide = prix par défaut (affiché en gris).',
+      communeOpened: 'Vente ouverte à {commune}.',
+      communeClosed: 'Vente fermée à {commune}.'
     },
     sponsor: {
       brokenAdmin: 'Le logo de « {label} » est introuvable (fichier supprimé chez l\'hébergeur ?). Recharge-le dans Admin › Collaborations / sponsoring.',

@@ -42,10 +42,12 @@ export default function MiseEnAvant({ restoId, token, toast }) {
     catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
 
+  // Commune pas encore ouverte à la vente par Fairide (ou réponse pas encore là) : la section n'apparaît pas.
+  if (!etat || etat.enabled === false) return null;
   return (
     <div className="card mise-en-avant" id="mise-en-avant">
       <h3 style={{ margin: 0, fontSize: 16 }}>📌 {t('placements.title')}</h3>
-      <p className="small" style={{ margin: '4px 0 12px' }}>{t('placements.intro')}</p>
+      <p className="small" style={{ margin: '4px 0 12px' }}>{t('placements.intro')} {t('placements.communeNote', { commune: etat.commune })}</p>
       {!etat && <p className="small">…</p>}
       {etat && (
         <>
