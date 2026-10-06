@@ -149,6 +149,15 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .faire li{margin:3px 0}
 .fin{margin-top:16px;font-size:14px;background:var(--accent-soft);border-radius:8px;padding:8px 12px;max-width:90ch}
 .claude{margin-top:10px;font-size:14px;background:var(--retest-soft);border:1px solid var(--retest);border-radius:8px;padding:8px 12px;max-width:90ch}
+.onglets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.onglets button{font:inherit;font-size:15px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:9px 14px;cursor:pointer}
+.onglets button.cur{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.onglets .cnt{font-size:12px;font-weight:700;margin-left:4px;padding:1px 7px;border-radius:999px;background:var(--fail-soft);color:var(--fg)}
+.onglets button.cur .cnt{background:var(--accent-fg);color:var(--accent)}
+.shell.sans-rail{grid-template-columns:1fr}
+.main.vue-pilotage #banner{display:none!important}
+.pilotage .aide{font-size:14px;color:var(--muted);max-width:100ch;margin:4px 0 8px}
+.claude-liste li{background:var(--surface2)}
 .pilotage details>summary{cursor:pointer;list-style:none}.pilotage details>summary::-webkit-details-marker{display:none}
 .pilotage details>summary h2{display:inline}.pilotage h3{font-size:15px;margin:18px 0 6px}
 .decision{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--fixed);border-radius:10px;padding:10px 14px;margin-top:12px;max-width:100ch}
@@ -188,7 +197,7 @@ details.archive>summary h2{display:inline-flex}
 
 
 <header class="top">
-  <h1>Fairide · Tests de bout en bout <small>fairide.be — plan de test et suivi des correctifs · catalogue du 2 oct. 2026 · mis à jour le 3 oct. (correctifs)</small></h1>
+  <h1>Fairide · Tests de bout en bout <small>fairide.be — plan de test et suivi des correctifs · catalogue du 2 oct. 2026 · mis à jour le 6 oct. (vérifications sur la production, décisions)</small></h1>
   <div class="progress">
     <div class="bar" id="bar"></div>
     <div class="legend" id="legend"></div>
@@ -201,6 +210,8 @@ details.archive>summary h2{display:inline-flex}
   <nav class="rail" id="rail" aria-label="Sections"></nav>
   <main class="main">
     <div id="banner" class="banner" hidden></div>
+    <div class="onglets" id="onglets" role="tablist" aria-label="Vues"></div>
+    <div id="zonePlan">
     <p class="hint">Chaque test dit <strong>quoi faire</strong> et <strong>ce qui doit se passer</strong>. Cycle : <b>Échoué</b> → quand le code est corrigé, marque <b>Corrigé</b> → refais le test → <b>Re-testé OK</b>. Les sections marquées NOUVEAU n'étaient pas dans le plan initial. P1 = bloquant pour le lancement.</p>
     <p class="hint">Les tests signés <b>Claude (vérif. auto)</b> ont été joués le 2 octobre 2026, sans toi : contre le code réellement déployé (<span class="mono">origin/main</span> des deux dépôts, base en mémoire) ou contre la production en lecture seule. <b>Réussi</b> veut dire que tout le résultat attendu a été constaté ; <b>Échoué</b>, qu'un écart a été constaté ; <b>Corrigé</b>, que l'écart a été corrigé dans le code et revérifié hors production — reste à le constater en ligne ; <b>Re-testé OK</b>, que la correction a été constatée en production. La preuve est dans les notes de chaque test. Ce qui n'a pu être vérifié qu'en partie reste <b>À faire</b>, avec ce qui a déjà été vu en note. Ta propre saisie a toujours la priorité sur la sienne.</p>
     <div class="tools">
@@ -216,6 +227,7 @@ details.archive>summary h2{display:inline-flex}
       <button class="btn" id="btnExpand">Tout déplier</button>
       <button class="btn" id="btnReport">Copier le rapport des bugs</button>
       <button class="btn" id="btnCsv">Exporter CSV</button><button class="btn" id="btnJson">Sauvegarder les résultats (JSON)</button><button class="btn" id="btnImport">Importer des résultats</button><input type="file" id="fileImport" accept="application/json" hidden>
+    </div>
     </div>
     <div id="content"></div>
     <p class="foot">Version autonome : les résultats sont enregistrés dans ce navigateur (localStorage). Pour partager avec l'équipe, utilise « Sauvegarder les résultats (JSON) » et importe le fichier chez un collègue : les résultats sont fusionnés en gardant la saisie la plus récente par test. Pour un bug : note l'appareil, le numéro de commande, ce que tu as vu, et joins une capture dans votre canal d'équipe en citant l'identifiant du test.</p>
@@ -1593,10 +1605,15 @@ function sessionHTML(s){
     ${corps||`<div class="etape"><p>Tout est validé dans cette session.</p></div>`}
     <div class="fin"><b>Session terminée quand :</b> ${esc(s.fin)}</div></section>`;
 }
-// ───────── Pilotage (6 oct. 2026) : décisions à trancher et tâches qui ne peuvent se faire qu'à la main.
+// ───────── Pilotage (6 oct. 2026) : la page s'ouvre sur ce que TOI tu dois faire, puis sur les décisions ; le détail
+// du plan (tout ce que Claude a déjà joué) est dans un troisième onglet. Retour du 6 oct. : « il y a beaucoup de ce que
+// tu as fait dans chaque section, c'est dur de trouver ce que j'ai à faire ».
+//
 // Le choix d'une décision est rangé dans `results` sous un identifiant « DEC-n » : il part avec « Sauvegarder les
-// résultats (JSON) » et l'import comme n'importe quel test, sans nouveau stockage. Une tâche « à la main » n'a pas de
-// case à cocher propre : elle est faite quand tous ses tests sont « Réussi », « Re-testé OK » ou « N/A ».
+// résultats (JSON) » et l'import comme n'importe quel test. Ne jamais renuméroter une décision : un choix déjà fait la
+// perdrait. Une action « à la main » n'a pas de case propre : elle est faite quand tous ses tests sont « Réussi »,
+// « Re-testé OK » ou « N/A ». Règle de construction : tout test encore ouvert figure dans une décision ou une action
+// (vérifié à l'écriture) — sinon il se perdrait dans le détail.
 const DECISIONS = [
  {id:"DEC-1", titre:"La facture que reçoit le client", avec:"le comptable", tests:["LEG-7","MNU-9","HOR-6"],
   quoi:"Aujourd'hui le client reçoit la facture automatique de Stripe. Elle ne montre pas la TVA par taux (6 % repas, 21 % boissons et livraison), elle dit que les plats sont vendus par Fairide (alors que c'est le commerce qui les vend), et elle affiche « due / Pay online » alors que c'est déjà payé.",
@@ -1629,11 +1646,11 @@ const DECISIONS = [
   options:[
    {k:"a", reco:true, t:"Proposer les 19 communes", d:"Plus cohérent avec la liste des commerces, qui couvre toute la région bruxelloise."},
    {k:"b", t:"Garder 3 communes au lancement", d:"Ça a du sens seulement si le lancement est limité à ces 3 communes, côté clients aussi."}]},
- {id:"DEC-7", titre:"Positions « Sponsorisé » et contrat commerce", avec:"l'avocat", tests:["ADM-4","ACT-3"],
-  quoi:"Le contrat RESTO-2026.16 dit « aucun classement payant », mais le site sait afficher des positions « Sponsorisé ». Les deux doivent dire la même chose.",
+ {id:"DEC-7", titre:"Mises en avant payantes et contrat commerce — URGENT", avec:"l'avocat", tests:["ADM-4","ACT-3"],
+  quoi:"Le contrat RESTO-2026.16 dit « aucun classement payant ». Or le site vend maintenant des mises en avant par commune (ajoutées le 6 oct. : zones, prix, paiement sous 10 minutes). Tant que le contrat n'est pas modifié, les deux se contredisent.",
   options:[
-   {k:"a", reco:true, t:"Pas de positions payantes au lancement", d:"On n'en vend pas : le contrat reste vrai tel quel. On pourra en ajouter plus tard, avec une nouvelle version du contrat."},
-   {k:"b", t:"Garder les positions sponsorisées", d:"Il faut une nouvelle version du contrat, relue par l'avocat, envoyée aux commerces au moins 15 jours avant (règlement P2B)."}]},
+   {k:"a", reco:true, t:"Ne pas ouvrir les mises en avant au lancement", d:"Aucune commune ouverte à la vente (Admin › Mises en avant) : le contrat reste vrai tel quel. On les ouvre quand la nouvelle version du contrat est en vigueur."},
+   {k:"b", t:"Les ouvrir tout de suite", d:"Il faut d'abord une nouvelle version du contrat, relue par l'avocat, envoyée aux commerces au moins 15 jours avant (règlement P2B), et la page /classement mise à jour."}]},
  {id:"DEC-8", titre:"Message quand la connexion échoue", avec:"toi", tests:["SEC-12","ACT-10"],
   quoi:"Le site dit « Aucun compte avec cette adresse » ou « Mot de passe incorrect ». Ça aide le client, mais n'importe qui peut ainsi vérifier si une adresse e-mail est inscrite.",
   options:[
@@ -1654,10 +1671,10 @@ const DECISIONS = [
   options:[
    {k:"a", reco:true, t:"MapTiler et Plausible", d:"Tu crées les deux comptes (MapTiler a un plan gratuit au début ; Plausible coûte environ 9 € par mois). Claude pose ensuite les variables sur Vercel et reconstruit le site. La recherche d'adresse (Photon) et le calcul d'itinéraire (OSRM) restent sur les serveurs publics au lancement : le volume est faible, à revoir vers 200 commandes par jour."},
    {k:"b", t:"Tout passer sur un service payant tout de suite", d:"Plus sûr à long terme, mais plus de coûts et plus de travail avant le lancement."}]},
- {id:"DEC-12", titre:"Un environnement de test séparé (« staging »)", avec:"toi", tests:["OPS-9","OPS-3","OPS-4","NOT-8"],
+ {id:"DEC-12", titre:"Un environnement de test séparé (« staging »)", avec:"toi", tests:["OPS-9","OPS-3","OPS-4","NOT-8","PAY-4"],
   quoi:"Tous les tests ont tourné sur la production, avec des comptes test. Quand la production passera aux vraies clés Stripe, il ne sera plus possible d'y payer avec des cartes de test.",
   options:[
-   {k:"a", reco:true, t:"Créer un staging sur Railway", d:"Une copie du serveur, avec sa propre base et Stripe en mode test (environ 5 $ par mois). Claude le monte avec la CLI Railway, puis y fait les tests trop risqués en production : redémarrage en pleine commande, clé Stripe ou e-mail coupée."},
+   {k:"a", reco:true, t:"Créer un staging sur Railway", d:"Une copie du serveur, avec sa propre base et Stripe en mode test (environ 5 $ par mois). Claude le monte avec la CLI Railway, puis y fait les tests trop risqués en production : redémarrage en pleine commande, clé Stripe ou e-mail coupée, paiement et annulation à la même seconde."},
    {k:"b", t:"Continuer en production", d:"Ces tests restent non faits, et après le passage en live, chaque test de paiement coûte de vrais euros."}]},
  {id:"DEC-13", titre:"Règles des incidents de livraison", avec:"toi", tests:["ACT-5"],
   quoi:"Les règles actuelles : client absent, le livreur attend 10 min et il est payé, le remboursement est décidé au cas par cas. Aucun livreur au bout de 20 min, le client peut annuler et il est remboursé par Fairide. Un livreur qui attend au commerce n'est pas payé pour son attente.",
@@ -1669,8 +1686,34 @@ const DECISIONS = [
   options:[
    {k:"a", reco:true, t:"Un code de bienvenue plafonné", d:"Par exemple −3 € dès 15 €, une fois par client, 200 utilisations au plus : le coût est connu d'avance (600 € au maximum)."},
    {k:"b", t:"Pas de code au lancement", d:"Aucun coût. On pourra en créer un plus tard depuis Admin › Promotions."}]},
+ {id:"DEC-15", titre:"Fermer un commerce pour la soirée depuis l'admin", avec:"toi", tests:["OPS-8"],
+  quoi:"Si un commerce ferme sans prévenir et ne répond pas, l'admin ne peut que le « Retirer du site » : il disparaît complètement, et il faut penser à le republier. Seul le commerce peut se mettre « Fermé » ou en pause.",
+  options:[
+   {k:"a", reco:true, t:"Ajouter « Fermer jusqu'à demain » dans l'admin", d:"Le commerce reste visible mais affiché fermé, et rouvre tout seul le lendemain matin. Le geste est noté dans son historique. Claude le code en une heure environ."},
+   {k:"b", t:"Garder « Retirer du site » seulement", d:"Suffisant tant qu'il y a peu de commerces."}]},
+ {id:"DEC-16", titre:"Livreur injoignable en pleine course", avec:"toi", tests:["LIV-3"],
+  quoi:"Si le téléphone d'un livreur s'éteint après qu'il a pris la commande, personne n'est prévenu automatiquement. Le client voit une carte figée, avec un avertissement après 2 minutes.",
+  options:[
+   {k:"a", reco:true, t:"Alerte automatique à l'équipe", d:"Une course en cours sans position du livreur depuis 10 minutes ouvre une tâche « livreur injoignable » dans l'admin. Claude le code. Ce n'est pas une sanction : rien n'est noté contre le livreur."},
+   {k:"b", t:"Rien d'automatique", d:"Le client appelle le support, qui appelle le livreur."}]},
+ {id:"DEC-17", titre:"E-mails juridiques en français seulement", avec:"l'avocat", tests:["NOT-1"],
+  quoi:"Sept e-mails partent en français, quelle que soit la langue du compte : l'exposé des motifs d'une suspension, la réponse à une contestation, l'accusé et la décision d'un signalement, l'e-mail DAC7, les pièces qui expirent et le préavis de contrat. Le point de contact DSA promet le français, le néerlandais et l'anglais.",
+  options:[
+   {k:"a", reco:true, t:"Français qui fait foi + traduction jointe", d:"Le texte français reste celui qui compte juridiquement, comme pour le contrat. Une traduction EN ou NL est ajoutée dessous pour un compte dans ces langues. Claude le code."},
+   {k:"b", t:"Garder le français seulement", d:"Plus simple, mais un livreur anglophone suspendu reçoit une décision qu'il ne comprend pas forcément."}]},
+ {id:"DEC-18", titre:"SMS au client", avec:"toi", tests:["NOT-5"],
+  quoi:"Aucun SMS n'est envoyé aujourd'hui (aucun fournisseur SMS configuré). Le client reçoit le code de remise et les nouvelles de sa commande par e-mail et par notification.",
+  options:[
+   {k:"a", reco:true, t:"Pas de SMS au lancement", d:"E-mail et notifications suffisent. On marque NOT-5 « N/A »."},
+   {k:"b", t:"Activer les SMS", d:"Compte Twilio à ouvrir (environ 0,08 € par SMS en Belgique), puis Claude branche le code de remise et « livreur en approche »."}]},
+ {id:"DEC-19", titre:"Statut « économie collaborative » pour les livreurs", avec:"le comptable", tests:["CRS-4","MON-12","LEG-12"],
+  quoi:"Ce statut (revenus plafonnés par an, sans être indépendant) est fermé dans le code : Fairide attend son agrément du SPF Finances. Au lancement, seuls les indépendants (et étudiants indépendants) peuvent rouler.",
+  options:[
+   {k:"a", reco:true, t:"Lancer sans, l'ouvrir à l'agrément", d:"Rien à changer. Le plafond annuel (CRS-4, MON-12) sera testé le jour où l'agrément arrive."},
+   {k:"b", t:"Accélérer la demande d'agrément", d:"Plus de livreurs possibles (étudiants non indépendants), mais ça dépend du SPF Finances, pas du code."}]},
 ];
 
+// Tes actions, par endroit. Le premier groupe (corrections à retester) est calculé, pas écrit à la main.
 const A_LA_MAIN = [
  {g:"💻 Tes comptes en ligne (environ 1 h, depuis ton ordinateur)", items:[
   {t:"Stripe › Paramètres › Informations sur l'entreprise : FAIRIDE SRL, adresse, TVA BE 1042.169.780. Puis Paramètres › Fuseau horaire : Europe/Brussels.", tests:["HOR-6"]},
@@ -1678,9 +1721,13 @@ const A_LA_MAIN = [
   {t:"Railway › case Postgres › Backups : vérifier qu'il y a des sauvegardes automatiques (sinon les activer), puis en restaurer une dans une base vide.", tests:["OPS-5","AML-11"]},
   {t:"Créer une alerte de panne (UptimeRobot, gratuit) sur fairide.be et sur …railway.app/api/health, qui t'envoie un SMS ou un e-mail.", tests:["OPS-6","LCH-9"]},
   {t:"Signer en ligne les accords de sous-traitance (DPA) : Stripe, Resend, Cloudinary, Sentry, Vercel, Railway, Anthropic, Twilio. Ranger les copies.", tests:["AML-9"]},
+  {t:"Google Search Console : vérifier que fairide.be y est, puis soumettre https://fairide.be/sitemap.xml.", tests:["AML-14"]},
+  {t:"La boîte contact@fairide.be : qui la lit, et à quelle fréquence ? (C'est l'adresse donnée partout pour le support.)", tests:["LCH-8"]},
   {t:"Journaux et pièces privées : voir le détail sur chaque carte.", tests:["AML-3","AML-4","OPS-10"]}]},
  {g:"📱 Avec un vrai téléphone (iPhone et Android si possible)", items:[
-  {t:"Installer l'app (écran d'accueil), recevoir une notification app fermée, ouvrir un lien de notification.", tests:["DEV-5","DEV-6","DEV-12"]},
+  {t:"Installer l'app (écran d'accueil), recevoir une notification app fermée, ouvrir un lien de notification — pour chaque rôle : client, commerce, livreur.", tests:["DEV-5","DEV-6","DEV-12","NOT-4"]},
+  {t:"Côté commerce : une nouvelle commande fait-elle sonner et vibrer le téléphone ?", tests:["RES-11"]},
+  {t:"Côté livreur : verrouiller le téléphone pendant une course, puis l'éteindre 15 min. Que voit le client ? (Voir aussi DEC-16.)", tests:["CRS-12","LIV-3"]},
   {t:"Payer avec Apple Pay ou Google Pay (carte de test Stripe enregistrée dans le portefeuille).", tests:["PAY-8"]},
   {t:"Livrer pendant 2 h avec le téléphone du livreur : batterie et positions GPS.", tests:["PRF-6"]},
   {t:"Se connecter avec Google sur fairide.be.", tests:["CPT-4"]},
@@ -1689,13 +1736,14 @@ const A_LA_MAIN = [
   {t:"Comparer distance et durée de 3 commerces avec Google Maps.", tests:["GEO-10"]},
   {t:"Envoyer une vraie photo iPhone (HEIC, environ 8 Mo) comme photo de plat.", tests:["MNU-8"]}]},
  {g:"🖨️ Avec le vrai terminal Goodcom (chez un commerce ou au bureau)", items:[
-  {t:"Papier, Wi-Fi, mise en veille, Chrome, AirPrint. Tout le reste de l'impression a été vérifié avec le terminal simulé.", tests:["TER-1","TER-2","TER-6","TRM-5","TRM-6","TRM-7","TRM-14","DEV-2","DEV-3","DEV-4"]}]},
+  {t:"Imprimer une vraie commande ; puis papier, Wi-Fi, mise en veille, Chrome, AirPrint. Tout le reste de l'impression a été vérifié avec le terminal simulé.", tests:["DEV-1","TER-1","TER-2","TER-6","TRM-5","TRM-6","TRM-7","TRM-14","DEV-2","DEV-3","DEV-4"]}]},
  {g:"✉️ Lire des e-mails dans contact@fairide.be (adresses contact+claude-…)", items:[
   {t:"Ouvrir les e-mails reçus pendant les tests : arrivée, langue, sujet, lien de désabonnement.", tests:["CPT-3","CPT-6","NOT-2","NOT-3","NOT-6","NOT-7","ADM-3"]}]},
  {g:"💳 Pages Stripe (captcha : c'est toi qui les remplis)", items:[
   {t:"Inscrire un second livreur qui passe par Stripe Identity en mode test : un refus, un compte restreint, un IBAN « échec ».", tests:["COU-4","COU-5","MON-3"]}]},
  {g:"⚖️ Avec l'avocat et le comptable", items:[
   {t:"Relire le contrat commerce, les contrats livreurs, la politique de confidentialité et les CGU (DSA, P2B, statut des livreurs).", tests:["ACT-3","ACT-4","ACT-11","AML-8","LEG-10","LEG-11","LEG-12"]},
+  {t:"Politique de confidentialité : le registre des traitements, et les durées de conservation annoncées (la purge automatique existe, Claude vérifie qu'elle tourne).", tests:["LEG-2","LEG-16","AML-13"]},
   {t:"Valider l'export comptable du mois, et le modèle de facture (voir DEC-1).", tests:["OPS-7"]},
   {t:"Obtenir les prix magasin des commerces et prévenir ceux qui n'avaient rien réglé (distance de livraison de 6 km par défaut).", tests:["MNU-10","LCH-3","ACT-6","AML-15"]}]},
  {g:"📝 À relire (premiers jets écrits par Claude le 6 oct.)", items:[
@@ -1703,39 +1751,72 @@ const A_LA_MAIN = [
   {t:"Remplir le modèle de permanence (docs/permanence-premiere-semaine.md) : noms, téléphones, accès, heures de service.", tests:["LCH-10"]},
   {t:"Relire le nouveau mode d'emploi du restaurateur à l'écran (tableau de bord restaurateur › Mode d'emploi).", tests:["ACT-12"]}]},
  {g:"🚀 Le jour du passage en live", items:[
-  {t:"Mettre les vraies clés Stripe sur Railway, créer le webhook du compte réel (avec les 12 mêmes événements), vérifier les frais et le solde.", tests:["PAY-17","LCH-5","MON-10","MON-11"]},
+  {t:"Mettre les vraies clés Stripe sur Railway (le site tourne encore avec la clé de test), créer le webhook du compte réel (avec les 12 mêmes événements), vérifier les frais et le solde.", tests:["PRE-1","PAY-17","LCH-5","MON-10","MON-11"]},
+  {t:"Dire oui à Claude pour couper les photos de stock sur Vercel : obligatoire avant le premier vrai commerce (afficher une photo de banque d'images comme le plat d'un commerce est une pratique trompeuse).", tests:["LCH-1","MNU-14"]},
+  {t:"Les applications iPhone et Android sont-elles publiées sur les boutiques ? Le site l'annonce.", tests:["AML-12"]},
   {t:"Fusionner les branches, puis refaire les tests « Corrigé ».", tests:["ACT-1","ACT-2"]}]},
  {g:"📅 À une date précise", items:[
   {t:"Nuit du 24 au 25 octobre 2026 (passage à l'heure d'hiver) : vérifier les heures des commandes et des tickets.", tests:["HOR-3"]},
-  {t:"La veille du lancement : checklist de chaque commerce et de chaque livreur.", tests:["LCH-11","LCH-12"]}]},
+  {t:"La veille du lancement : demander à Claude de relancer « prêt au lancement » (aujourd'hui : aucun commerce prêt), puis la checklist de chaque commerce et de chaque livreur.", tests:["LCH-11","LCH-12"]}]},
+];
+
+// Ce que Claude fait ensuite, sans toi : listé pour que tu saches que ce n'est pas à toi.
+const CLAUDE_ENSUITE = [
+ {t:"Vitesse du site : scores mobiles de 35 à 46 sur 100 (objectif 70). Mesurer à nouveau après le déploiement, puis continuer les corrections.", tests:["PRF-4"]},
+ {t:"Liste de 200 commerces et carte de 300 plats : mesurer.", tests:["PRF-5"]},
+ {t:"Catégories de la carte : réordonner et masquer depuis l'éditeur de l'admin.", tests:["MNU-7"]},
 ];
 
 const FAIT_OK = s => ["pass","retest","na"].includes(s);
-function pilotageHTML(){
-  const lien = id => byId[id] ? `<a href="#c-${id}" class="lien-test st-${status(id)}" data-go="${id}" title="${esc(byId[id].t)} — ${ST[status(id)]}">${id}</a>` : "";
+const lienTest = id => byId[id] ? `<a href="#c-${id}" class="lien-test st-${status(id)}" data-go="${id}" title="${esc(byId[id].t)} — ${ST[status(id)]}">${id}</a>` : "";
+function ligneAction(it){
+  const ok = it.tests.every(id => FAIT_OK(status(id)));
+  return `<li class="${ok?"fait":""}"><span class="coche">${ok?"✓":"○"}</span> ${esc(it.t)} <span class="lies">${it.tests.map(lienTest).join(" ")}</span></li>`;
+}
+function compteActions(){
+  const items = A_LA_MAIN.flatMap(g => g.items), restants = items.filter(it => !it.tests.every(id => FAIT_OK(status(id)))).length;
+  return { restants, total: items.length, aRetester: TESTS.filter(t => status(t.id) === "fixed").length };
+}
+function actionsHTML(){
+  const { restants, total, aRetester } = compteActions();
+  const corriges = TESTS.filter(t => status(t.id) === "fixed");
+  const retest = corriges.length ? `<h3>🔁 Corrections à vérifier en ligne <span class="cnt">${corriges.length}</span></h3>
+    <p class="aide">Des bugs trouvés pendant les tests, corrigés et déployés. Claude les refait d'abord lui-même sur la production : il ne restera ici que ce qu'il ne peut pas voir (un écran, un téléphone). Pour chacun : ouvre la carte, refais le test, puis « Re-testé OK » ou « Échoué ».</p>
+    <ul class="main-liste">${corriges.map(t => `<li><span class="coche">○</span> ${esc(t.t)} <span class="lies">${lienTest(t.id)}</span></li>`).join("")}</ul>` : "";
+  return `<section class="sec pilotage" id="s-MAIN"><h2>✋ Mes actions <span class="cnt">${total - restants}/${total}</span></h2>
+    <p class="aide">Tout ce qui reste à faire par toi ou ton associé : avec un vrai téléphone ou un vrai terminal, sur tes comptes, avec l'avocat, à une date précise. Une ligne se coche d'elle-même quand tous ses tests sont « Réussi », « Re-testé OK » ou « N/A ». Clique sur un numéro de test pour voir les étapes détaillées.</p>
+    ${retest}
+    ${A_LA_MAIN.map(g => `<h3>${esc(g.g)}</h3><ul class="main-liste">${g.items.map(ligneAction).join("")}</ul>`).join("")}
+    <h3>🤖 Ce que Claude fait ensuite (rien à faire pour toi)</h3><ul class="main-liste claude-liste">${CLAUDE_ENSUITE.map(ligneAction).join("")}</ul></section>`;
+}
+function decisionsHTML(){
   const decides = DECISIONS.filter(d => results[d.id]?.choix).length;
-  const dec = DECISIONS.map(d => {
+  const carte = d => {
     const r = results[d.id] || {};
     return `<div class="decision ${r.choix?"prise":""}" id="${d.id}"><h3><span class="id">${d.id}</span> ${esc(d.titre)} <span class="avec">avec ${esc(d.avec)}</span></h3>
       <p>${esc(d.quoi)}</p>
       <div class="choix">${d.options.map(o => `<label class="${o.reco?"reco":""}"><input type="radio" name="${d.id}" value="${o.k}" data-dec="${d.id}" ${r.choix===o.k?"checked":""}> <b>${esc(o.t)}</b>${o.reco?' <span class="tag-reco">recommandé par Claude</span>':""}<br><span>${esc(o.d)}</span></label>`).join("")}</div>
       <textarea data-dec-note="${d.id}" rows="1" placeholder="Ta décision en une phrase, ou une précision (facultatif)">${esc(r.note||"")}</textarea>
-      <div class="lies">Tests liés : ${d.tests.map(lien).join(" ")}${r.choix?` · décidé par <b>${esc(r.tester||"?")}</b> le ${fmtDate(r.at)}`:""}</div></div>`;
-  }).join("");
-  let faites = 0, total = 0;
-  const main = A_LA_MAIN.map(g => `<h3>${esc(g.g)}</h3><ul class="main-liste">${g.items.map(it => {
-    const ok = it.tests.every(id => FAIT_OK(status(id))); total++; if (ok) faites++;
-    return `<li class="${ok?"fait":""}"><span class="coche">${ok?"✓":"○"}</span> ${esc(it.t)} <span class="lies">${it.tests.map(lien).join(" ")}</span></li>`;
-  }).join("")}</ul>`).join("");
-  return `<section class="sec pilotage" id="s-DEC"><details ${LS("fairide.pilotage.dec")==="0"?"":"open"} data-mem="fairide.pilotage.dec"><summary><h2>⚖️ Décisions à prendre <span class="cnt">${decides}/${DECISIONS.length}</span></h2></summary>
-    <p>Ce que les tests ne peuvent pas trancher. Pour chaque point, Claude indique son option recommandée et la raison. Coche ton choix (indique d'abord ton prénom en haut) : il est enregistré avec les résultats, et part avec « Sauvegarder les résultats ». Dis ensuite à Claude « applique les décisions » : il code celles qui demandent du code.</p>${dec}</details></section>
-  <section class="sec pilotage" id="s-MAIN"><details ${LS("fairide.pilotage.main")==="0"?"":"open"} data-mem="fairide.pilotage.main"><summary><h2>✋ À faire à la main <span class="cnt">${faites}/${total}</span></h2></summary>
-    <p>Tout ce que Claude n'a pas pu faire : un vrai téléphone ou un vrai terminal, tes comptes, l'avocat, une date précise. Une ligne se coche d'elle-même quand tous ses tests sont « Réussi », « Re-testé OK » ou « N/A ». Clique sur un numéro de test pour ouvrir sa carte.</p>${main}</details></section>`;
+      <div class="lies">Tests liés : ${d.tests.map(lienTest).join(" ")}${r.choix?` · décidé par <b>${esc(r.tester||"?")}</b> le ${fmtDate(r.at)}`:""}</div></div>`;
+  };
+  const ouvertes = DECISIONS.filter(d => !results[d.id]?.choix), prises = DECISIONS.filter(d => results[d.id]?.choix);
+  return `<section class="sec pilotage" id="s-DEC"><h2>⚖️ Décisions <span class="cnt">${decides}/${DECISIONS.length}</span></h2>
+    <p class="aide">Ce que les tests ne peuvent pas trancher : comment Fairide fonctionne au quotidien, ce qui se rembourse, ce qui s'affiche. Pour chaque point, Claude indique son option recommandée. Coche ton choix (indique d'abord ton prénom en haut) : il est enregistré avec les résultats. Puis « Copier le rapport » et colle-le à Claude : il code celles qui demandent du code.</p>
+    ${ouvertes.map(carte).join("")}
+    ${prises.length ? `<h3>✓ Déjà décidées</h3>${prises.map(carte).join("")}` : ""}</section>`;
+}
+const ONGLETS = [["actions","✋ Mes actions"],["decisions","⚖️ Décisions"],["plan","📋 Plan détaillé (fait par Claude)"]];
+function onglet(){ const o = LS("fairide.onglet"); return ONGLETS.some(([k]) => k === o) ? o : "actions"; }
+function renderOnglets(){
+  const { restants, aRetester } = compteActions(), aDecider = DECISIONS.filter(d => !results[d.id]?.choix).length;
+  const n = { actions: restants + aRetester, decisions: aDecider, plan: null };
+  $("#onglets").innerHTML = ONGLETS.map(([k, nom]) => `<button role="tab" aria-selected="${onglet()===k}" data-onglet="${k}" class="${onglet()===k?"cur":""}">${nom}${n[k]!==null?` <span class="cnt">${n[k]}</span>`:""}</button>`).join("");
+  const plan = onglet() === "plan";
+  $("#zonePlan").hidden = !plan; $("#rail").hidden = !plan; document.querySelector(".shell").classList.toggle("sans-rail", !plan); document.querySelector(".main").classList.toggle("vue-pilotage", !plan);
 }
 
 function renderSessions(){
   let html=`<details class="glossaire"><summary>📖 Un mot ne te dit rien ? Les mots techniques expliqués</summary><dl>${GLOSSAIRE.map(([m,x])=>`<dt>${esc(m)}</dt><dd>${esc(x)}</dd>`).join("")}</dl></details>`;
-  html=pilotageHTML()+html;
   html+=SESSIONS.map(sessionHTML).join("");
   const ts=HORS_SESSION.filter(visible);
   if(ts.length){ const d=HORS_SESSION.filter(t=>FAIT(status(t.id))).length;
@@ -1744,6 +1825,8 @@ function renderSessions(){
   renderSummary();
 }
 function renderAll(){
+  renderOnglets();
+  if(onglet()!=="plan"){ $("#content").innerHTML=onglet()==="actions"?actionsHTML():decisionsHTML(); renderSummary(); return; }
   if(vueSession()) return renderSessions();
   const c=$("#content"); let html=""; let shown=0;
   for(const sec of SECTIONS){
@@ -1751,7 +1834,7 @@ function renderAll(){
     const done=TESTS.filter(t=>t.s===sec.id&&["pass","retest","na"].includes(status(t.id))).length, tot=TESTS.filter(t=>t.s===sec.id).length;
     html+=`<section class="sec" id="s-${sec.id}"><h2>${esc(sec.nom)} <span class="cnt">${done}/${tot}</span>${sec.existing?"":'<span class="tag">NOUVEAU</span>'}</h2><p>${esc(sec.desc)}</p><div class="list">${ts.map(cardHTML).join("")}</div></section>`;
   }
-  c.innerHTML=pilotageHTML()+(html||`<div class="empty">Aucun test ne correspond aux filtres.</div>`);
+  c.innerHTML=html||`<div class="empty">Aucun test ne correspond aux filtres.</div>`;
   renderSummary();
 }
 function counts(list){ const k={todo:0,pass:0,fail:0,fixed:0,retest:0,na:0}; for(const t of list) k[status(t.id)]++; return k }
@@ -1789,11 +1872,12 @@ function setDecision(id,choix){
   cur.history=[...(cur.history||[]),{status:"todo",tester:name,at:cur.at,choix}].slice(-20);
   results[id]=cur; persist(id); renderAll();
 }
+$("#onglets").addEventListener("click",e=>{ const b=e.target.closest("[data-onglet]"); if(!b) return; LSset("fairide.onglet",b.dataset.onglet); renderAll(); window.scrollTo({top:0}); });
 $("#content").addEventListener("change",e=>{ const d=e.target.dataset.dec; if(d) setDecision(d,e.target.value) });
 $("#content").addEventListener("toggle",e=>{ const k=e.target.dataset?.mem; if(k) LSset(k,e.target.open?"1":"0") },true);
 $("#content").addEventListener("click",e=>{
   const a=e.target.closest("[data-go]"); if(!a) return; e.preventDefault();
-  const id=a.dataset.go; open.add(id); LSset("fairide.open",JSON.stringify([...open])); renderAll();
+  const id=a.dataset.go; open.add(id); LSset("fairide.open",JSON.stringify([...open])); LSset("fairide.onglet","plan"); renderAll();
   const c=document.getElementById("c-"+id); if(c) c.scrollIntoView({behavior:"smooth",block:"center"}); else toast("Ce test est masqué par les filtres en haut.");
 });
 $("#content").addEventListener("input",e=>{ const d=e.target.dataset.decNote; if(d) setField(d,"note",e.target.value) });
