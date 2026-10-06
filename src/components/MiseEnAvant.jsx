@@ -13,6 +13,21 @@ export default function MiseEnAvant({ restoId, token, toast }) {
   const [choix, setChoix] = useState(null); // { sectionKey, slot }
   const [semaines, setSemaines] = useState(1);
   const [occupe, setOccupe] = useState(false);
+  // MODE AUTOMATIQUE (fondateur, 2026-10-06) : la demande est tranchée sur-le-champ (premier arrivé, premier servi) ; acceptée,
+  // elle se paie en ligne dans les 10 minutes. Date de début : de demain à N jours (jamais le jour même).
+  const [dateDebut, setDateDebut] = useState('');
+  const [decision, setDecision] = useState(null); // { checkoutUrl, paymentDueAt, note }
+  const [maintenant, setMaintenant] = useState(Date.now());
+  const attenteDePaiement = (etat?.bookings || []).some((b) => b.status === 'awaiting_payment') || !!decision;
+  useEffect(() => { if (!attenteDePaiement) return undefined; const m = setInterval(() => setMaintenant(Date.now()), 1000); return () => clearInterval(m); }, [attenteDePaiement]);
+  useEffect(() => { if (etat?.minStartsOn && !dateDebut) setDateDebut(etat.minStartsOn); }, [etat?.minStartsOn, dateDebut]);
+  useEffect(() => {
+    // Retour de la page de paiement Stripe.
+    try { const q = new URLSearchParams(window.location.search).get('placement'); if (q === 'paid') toast(t('placements.paidThanks')); else if (q === 'cancelled') toast(t('placements.payLater')); if (q) window.history.replaceState({}, '', window.location.pathname); } catch { /* sans historique */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const resteMinutes = (iso) => Math.max(0, Math.ceil((new Date(iso).getTime() - maintenant) / 60000));
+  const resteTexte = (iso) => { const s = Math.max(0, Math.round((new Date(iso).getTime() - maintenant) / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
   const charger = useCallback(() => {
     api(`/restaurants/${restoId}/placements`, { token }).then(setEtat).catch((e) => toast(e.message, 'erreur'));
@@ -31,8 +46,10 @@ export default function MiseEnAvant({ restoId, token, toast }) {
   async function demander() {
     setOccupe(true);
     try {
-      await api(`/restaurants/${restoId}/placements`, { method: 'POST', token, body: { sectionKey: choix.sectionKey, slot: choix.slot, weeks: semaines } });
-      toast(t('placements.requested'));
+      const data = await api(`/restaurants/${restoId}/placements`, { method: 'POST', token, body: { sectionKey: choix.sectionKey, slot: choix.slot, weeks: semaines, startsOn: dateDebut || undefined } });
+      if (data.decision === 'accepted' && data.checkoutUrl) { setDecision({ checkoutUrl: data.checkoutUrl, paymentDueAt: data.paymentDueAt, note: data.booking?.decisionNote || '' }); toast(t('placements.autoAccepted', { minutes: data.paymentMinutes || etat?.paymentMinutes || 10 })); }
+      else if (data.decision === 'accepted') toast(t('placements.autoFree'));
+      else toast(t('placements.requested'));
       setChoix(null); setSemaines(1); charger();
     } catch (e) { toast(e.message, 'erreur'); charger(); } finally { setOccupe(false); }
   }
@@ -47,7 +64,18 @@ export default function MiseEnAvant({ restoId, token, toast }) {
   return (
     <div className="card mise-en-avant" id="mise-en-avant">
       <h3 style={{ margin: 0, fontSize: 16 }}>📌 {t('placements.title')}</h3>
-      <p className="small" style={{ margin: '4px 0 12px' }}>{t('placements.intro')} {t('placements.communeNote', { commune: etat.commune })}</p>
+      <p className="small" style={{ margin: '4px 0 6px' }}>{t('placements.intro')} {t('placements.communeNote', { commune: etat.commune })}</p>
+      <p className="small" style={{ margin: '0 0 12px' }}>
+        {etat.auto ? t('placements.autoIntro', { minutes: etat.paymentMinutes || 10, days: etat.maxAdvanceDays || 30 }) : t('placements.manualIntro', { days: etat.maxAdvanceDays || 30 })} {t('placements.refundNote')} {t('placements.randomNote')}
+      </p>
+      {decision && (
+        <div className="mea-demande mea-paiement" role="status">
+          <b>{t('placements.autoAcceptedTitle')}</b>
+          <p className="small" style={{ margin: '4px 0 8px' }}>{decision.note || t('placements.autoAccepted', { minutes: etat.paymentMinutes || 10 })}</p>
+          <a className="btn-teal" style={{ display: 'inline-block', minHeight: 44, lineHeight: '44px', padding: '0 18px' }} href={decision.checkoutUrl}>{t('placements.payNow')} · {resteTexte(decision.paymentDueAt)}</a>
+          <button type="button" className="btn-ghost" style={{ marginLeft: 8 }} onClick={() => setDecision(null)}>{t('placements.payLaterBtn')}</button>
+        </div>
+      )}
       {!etat && <p className="small">…</p>}
       {etat && (
         <>
@@ -83,13 +111,17 @@ export default function MiseEnAvant({ restoId, token, toast }) {
                 <span style={{ minWidth: 96, textAlign: 'center', fontWeight: 700 }}>{t('placements.weeks', { n: semaines })}</span>
                 <button type="button" className="btn-ghost" style={{ minWidth: 44, minHeight: 44 }} aria-label="+" disabled={semaines >= (etat.maxWeeks || 12)} onClick={() => setSemaines((n) => Math.min(etat.maxWeeks || 12, n + 1))}>+</button>
               </div>
+              <label className="small" style={{ display: 'block', margin: '0 0 8px' }}>{t('placements.startsOn')}
+                <input type="date" value={dateDebut} min={etat.minStartsOn} max={etat.maxStartsOn} style={{ display: 'block', marginTop: 4, minHeight: 44 }} onChange={(e) => setDateDebut(e.target.value)} />
+                <span style={{ display: 'block', color: 'var(--ink-soft)', marginTop: 2 }}>{t('placements.startsOnHelp', { min: jourCourt(etat.minStartsOn), max: jourCourt(etat.maxStartsOn) })}</span>
+              </label>
               <p className="small" style={{ margin: '0 0 10px' }}>
                 {t('placements.total', { ht: euros(totalHt), tva: euros(tva), ttc: euros(totalHt + tva) })}
               </p>
               <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 48 }} disabled={occupe} onClick={demander}>
                 {occupe ? '…' : t('placements.request')}
               </button>
-              <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-soft)' }}>{t('placements.confirmNote')}</p>
+              <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-soft)' }}>{etat.auto ? t('placements.autoConfirmNote', { minutes: etat.paymentMinutes || 10 }) : t('placements.confirmNote')}</p>
             </div>
           )}
 
@@ -100,12 +132,17 @@ export default function MiseEnAvant({ restoId, token, toast }) {
                 <div key={b.id} className="mea-reservation">
                   <div>
                     <span className="mea-rangee">{titre(b.sectionKey, b.sectionLabel)} · {libellePosition(t, b.slot)}</span>
-                    <span className="small" style={{ display: 'block' }}>{jourCourt(b.startsOn)} → {jourCourt(b.endsOn)} · {euros(b.totalHt)} {t('placements.exVat')}</span>
+                    <span className="small" style={{ display: 'block' }}>{jourCourt(b.startsOn)} → {jourCourt(b.endsOn)} · {euros(b.totalHt)} {t('placements.exVat')}{b.paidOnline && b.refundStatus !== 'rembourse' ? ` · ${t('placements.paidOnline')}` : ''}</span>
+                    {b.decisionNote && b.status !== 'refused' && <span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{b.decisionNote}</span>}
                     {b.refusalReason && <span className="small" style={{ display: 'block' }}>{b.refusalReason}</span>}
+                    {b.refundStatus === 'rembourse' && <span className="small" style={{ display: 'block', color: 'var(--iris)' }}>{t('placements.refund_rembourse')}</span>}
+                    {b.refundStatus === 'a_rembourser' && <span className="small" style={{ display: 'block', color: 'var(--iris)' }}>{t('placements.refund_a_rembourser')}</span>}
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <span className={`modif-statut mea-statut--${b.status}`}>{t(`placements.status_${b.status}`)}</span>
                     {b.status === 'pending' && <button type="button" className="btn-link small" style={{ display: 'block', marginTop: 4 }} disabled={occupe} onClick={() => retirer(b)}>{t('placements.withdraw')}</button>}
+                    {b.status === 'awaiting_payment' && b.checkoutUrl && <a className="btn-teal small" style={{ display: 'inline-block', marginTop: 6, minHeight: 40, lineHeight: '40px', padding: '0 14px' }} href={b.checkoutUrl}>{t('placements.payNow')} · {resteTexte(b.paymentDueAt)}</a>}
+                    {b.status === 'awaiting_payment' && <span className="small" style={{ display: 'block', marginTop: 2, color: 'var(--ink-soft)' }}>{t('placements.payWithin', { minutes: resteMinutes(b.paymentDueAt) })}</span>}
                   </div>
                 </div>
               ))}

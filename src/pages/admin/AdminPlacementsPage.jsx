@@ -27,6 +27,13 @@ export default function AdminPlacementsPage() {
   const zoneId = commune.startsWith('zone:') ? commune.slice(5) : '';
   const nomPortee = zoneId ? (etat?.zone?.name || '') : commune;
   const [nouvelleCommune, setNouvelleCommune] = useState('');
+  // Mode automatique et délai de demande (fondateur, 2026-10-06) : réglés depuis la vue « Prix par défaut ».
+  const [joursAvance, setJoursAvance] = useState('');
+  async function regler(corps) {
+    setOccupe(true);
+    try { await api('/admin/placements/settings', { method: 'PUT', token, body: corps }); toast(tr('adminPlacements.settingsSaved')); charger(); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
+  }
   const [nouvelleZone, setNouvelleZone] = useState({ ouvert: false, name: '', communes: [] });
   const [communesZone, setCommunesZone] = useState(null); // modification des communes de la zone affichée
 
@@ -128,6 +135,21 @@ export default function AdminPlacementsPage() {
       {!etat && <p className="small">…</p>}
       {etat && (
         <>
+          {/* Mode automatique : premier arrivé, premier servi, paiement en ligne sous 10 minutes ; délai maximal de demande. */}
+          {!commune && (
+            <div className="card" style={{ margin: '0 0 16px' }}>
+              <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{tr('adminPlacements.autoTitle')}</h3>
+              <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-soft)' }}>{tr('adminPlacements.autoHelp', { minutes: etat.paymentMinutes || 10 })}</p>
+              <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span className={`modif-statut mea-statut--${etat.auto ? 'active' : 'pending'}`}>{etat.auto ? tr('adminPlacements.autoOn') : tr('adminPlacements.autoOff')}</span>
+                <button type="button" className={etat.auto ? 'btn-danger-ghost' : 'btn-teal'} disabled={occupe} onClick={() => regler({ auto: !etat.auto })}>{etat.auto ? tr('adminPlacements.autoDisable') : tr('adminPlacements.autoEnable')}</button>
+                <label className="small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>{tr('adminPlacements.advanceDays')}
+                  <input type="number" min={1} max={365} value={joursAvance === '' ? etat.maxAdvanceDays : joursAvance} style={{ width: 80, minHeight: 40 }} onChange={(e) => setJoursAvance(e.target.value)} />
+                  <button type="button" className="btn-outline" disabled={occupe || joursAvance === '' || Number(joursAvance) === etat.maxAdvanceDays} onClick={() => { regler({ maxAdvanceDays: Number(joursAvance) }); setJoursAvance(''); }}>{tr('common.save')}</button>
+                </label>
+              </div>
+            </div>
+          )}
           {/* La commune ou la zone dont on règle la page : ses commerces, ses demandes, son ouverture. */}
           <div className="card mea-communes" style={{ margin: '0 0 16px' }}>
             <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -265,7 +287,7 @@ export default function AdminPlacementsPage() {
             <div className="card mea-reservation" key={b.id} style={{ margin: '0 0 8px' }}>
               <div>
                 <b>{b.restaurantName}</b>{!commune && b.commune && <span className="small"> · {b.commune}</span>} <span className={`modif-statut mea-statut--${b.status}`}>{tr(`placements.status_${b.status}`)}</span>{b.communeMismatch && ['active', 'pending'].includes(b.status) && <span className="modif-statut mea-statut--cancelled" title={tr('adminPlacements.communeMismatchHelp')}>{tr('adminPlacements.communeMismatch')}</span>}
-                <span className="small" style={{ display: 'block' }}>{titre(b.sectionKey, b.sectionLabel)} · {libellePosition(tr, b.slot)} · {jourCourt(b.startsOn)} → {jourCourt(b.endsOn)} · {euros(b.totalHt)} {tr('placements.exVat')}</span>
+                <span className="small" style={{ display: 'block' }}>{titre(b.sectionKey, b.sectionLabel)} · {libellePosition(tr, b.slot)} · {jourCourt(b.startsOn)} → {jourCourt(b.endsOn)} · {euros(b.totalHt)} {tr('placements.exVat')}{b.paidOnline ? ` · ${tr('placements.paidOnline')}` : ''}{b.refundStatus && b.refundStatus !== 'non_du' ? ` · ${tr(`adminPlacements.refund_${b.refundStatus}`)}` : ''}</span>
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 {['active', 'ended'].includes(b.status) && (

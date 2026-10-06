@@ -301,6 +301,15 @@ export default function RestaurantList() {
 
   // Mises en avant PAR COMMUNE (fondateur, 2026-10-06) : un commerce qui paie n'est épinglé que pour les clients de sa commune
   // (celle du filtre, sinon celle de chez soi). Sans commune connue, rien n'est épinglé.
+  // RANGÉE SANS MISE EN AVANT → ORDRE ALÉATOIRE (fondateur, 2026-10-06) : personne n'a payé pour cette rangée dans cette
+  // commune, donc personne n'y est avantagé par l'ordre. Mélange stable le temps de la visite (graine tirée une fois), sinon
+  // chaque rafraîchissement d'état rebattrait les cartes sous les yeux du client. « Autour de vous » garde la distance.
+  const [graine] = useState(() => Math.random().toString(36).slice(2));
+  const melanger = (liste) => {
+    const poids = (id) => { let h = 2166136261; const s = `${graine}:${id}`; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+    return [...liste].sort((a, b) => poids(a.id) - poids(b.id));
+  };
+  const epinglerOuMelanger = (liste, pl, cle, admissibles) => (pl.some((p) => p.sectionKey === cle) || cle === 'nearby' ? epingler(liste, pl, cle, admissibles) : melanger(liste));
   const communeEpingles = commune || homeCommune;
   const placements = communeEpingles ? placementsTous.filter((p) => !p.commune || p.commune === communeEpingles) : [];
   const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || prix || emporter || tri !== 'recommande');
@@ -356,7 +365,7 @@ export default function RestaurantList() {
   const nonGrocery = restaurants.filter((r) => !GROCERY_TYPES.includes(r.cuisine));
   // MISES EN AVANT (fondateur, 2026-10-02) : un commerce qui a payé la 1re, 2e ou 3e position d'une rangée y remonte,
   // marqué « Sponsorisé » — seulement s'il a sa place dans la rangée (voir misesEnAvant.js).
-  const groceryList = completer(epingler(restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine)), placements, 'grocery'));
+  const groceryList = completer(epinglerOuMelanger(restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine)), placements, 'grocery'));
   // AUTOUR DE VOUS, DU PLUS PROCHE AU PLUS LOIN (fondateur, 2026-10-01). Adresse géolocalisée : les commerces triés
   // par distance réelle, la distance affichée sur la carte. Sans position : sa commune d'abord, puis les communes
   // voisines de proche en proche (communeRingDistance). Les commerces sans coordonnées passent après.
@@ -372,18 +381,18 @@ export default function RestaurantList() {
   const livraisonPasCher = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
     .filter(({ tarif }) => !tarif.offerte && tarif.offerteDes == null && tarif.depart > 0 && tarif.depart <= SEUIL_PAS_CHER)
     .sort((a, b) => a.tarif.depart - b.tarif.depart).map(({ r }) => r);
-  const livraisonPasCherEpinglee = epingler(livraisonPasCher, placements, 'cheap_delivery');
+  const livraisonPasCherEpinglee = epinglerOuMelanger(livraisonPasCher, placements, 'cheap_delivery');
   const livraisonOfferte = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
     .filter(({ tarif }) => tarif.offerte || tarif.offerteDes != null)
     .sort((a, b) => (a.tarif.offerte ? 0 : a.tarif.offerteDes) - (b.tarif.offerte ? 0 : b.tarif.offerteDes)).map(({ r }) => r);
-  const livraisonOfferteEpinglee = epingler(livraisonOfferte, placements, 'free_delivery');
+  const livraisonOfferteEpinglee = epinglerOuMelanger(livraisonOfferte, placements, 'free_delivery');
   // Une rangée par type de cuisine ajoutée dans Admin › Mises en avant : les commerces de ce type (principal ou
   // secondaire), les épinglés en tête. Jamais complétée : une rangée « Pizza » ne montre que des pizzerias.
   const rangeesCuisine = rangeesAjoutees.filter((s) => s.kind === 'cuisine' && s.cuisine).map((s) => ({
     ...s,
-    liste: epingler(restaurants.filter((r) => r.cuisine === s.cuisine || (r.extraCuisines || []).includes(s.cuisine)), placements, s.key)
+    liste: epinglerOuMelanger(restaurants.filter((r) => r.cuisine === s.cuisine || (r.extraCuisines || []).includes(s.cuisine)), placements, s.key)
   })).filter((s) => s.liste.length > 0);
-  const offersList = completer(epingler(restaurants.filter((r) => r.hasPromo), placements, 'offers'));
+  const offersList = completer(epinglerOuMelanger(restaurants.filter((r) => r.hasPromo), placements, 'offers'));
   // Un seul plat marqué healthy par le restaurateur suffit à faire entrer le commerce ici (menu_items.healthy,
   // voir la case à cocher dans la fiche d'un plat côté restaurateur). Trié par nombre de plats healthy
   // décroissant plutôt que dans l'ordre du serveur : sans ça, une pizzeria qui propose une salade verte
@@ -397,9 +406,9 @@ export default function RestaurantList() {
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
     .map(({ r }) => r);
-  const bioList = completer(epingler(parMention(platBio), placements, 'bio'));
-  const veganList = completer(epingler(parMention(platVegan), placements, 'vegan'));
-  const healthyList = completer(epingler(nonGrocery
+  const bioList = completer(epinglerOuMelanger(parMention(platBio), placements, 'bio'));
+  const veganList = completer(epinglerOuMelanger(parMention(platVegan), placements, 'vegan'));
+  const healthyList = completer(epinglerOuMelanger(nonGrocery
     .map((r) => ({ r, n: (r.menu || []).filter((m) => m.healthy).length }))
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
@@ -585,7 +594,7 @@ export default function RestaurantList() {
           <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epingler(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay />
+          <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epinglerOuMelanger(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <div className="empty">{t('restaurantList.empty')}</div>
           )}
