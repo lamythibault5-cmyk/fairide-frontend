@@ -5876,6 +5876,22 @@ export default {
       rides: 'Rides',
       earnings: 'Earnings'
     },
+    accessibilite: {
+      pageTitle: "Accessibility · Fairide",
+      pageDescription: "What Fairide does for the accessibility of the site, its known limits, and how to report a difficulty.",
+      title: "Accessibility",
+      aimTitle: "Our aim",
+      aim: "We want everyone to be able to order, deliver or run their business on Fairide, including with a screen reader, a keyboard or an enlarged display. We aim for level AA of the international web accessibility guidelines (WCAG 2.1).",
+      stateTitle: "Where we stand",
+      state: "The site has not yet had a full accessibility audit. We fix difficulties as they are reported to us or as we find them.",
+      limitsTitle: "Known limits",
+      limits: "- Some forms do not yet link every label to its field, which can hinder a screen reader.\n- Maps (delivery tracking, zones) can be hard to use with a keyboard or a screen reader; addresses are always also written out in full.",
+      contactTitle: "A difficulty? Write to us",
+      contact: "If a page or a feature causes you trouble, write to [contact@fairide.be](mailto:contact@fairide.be) and describe what you were trying to do. We will answer and offer you another way to get the information or place your order.",
+      legalTitle: "Legal framework",
+      legal: "The European Accessibility Act (Directive (EU) 2019/882) exempts microenterprises providing services from publishing an accessibility statement. Fairide is one. This page is our commitment nonetheless.",
+      updated: "Last updated: 6 October 2026."
+    },
     footer: {
       tagline: 'Reduced-commission delivery from local restaurants and shops in Brussels.',
       belgian: '🇧🇪 Designed and run from Belgium, by Belgians, for Belgians.',
@@ -5889,6 +5905,7 @@ export default {
       terms: 'Terms',
       bottom: '© Fairide SRL, CBE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, contact@fairide.be',
       cookies: 'Cookies',
+      accessibility: "Accessibility",
       manageCookies: 'Manage my cookies'
     },
     cookies: {

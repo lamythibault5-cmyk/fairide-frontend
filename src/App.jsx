@@ -96,6 +96,8 @@ const Privacy = lazyPage(() => import('./pages/legal/Privacy'));
 const CookiesPolicy = lazyPage(() => import('./pages/legal/Cookies'));
 // Conformité (backlog du 23/09/2026) : classement et avis (C5), signalement DSA (C6).
 const RankingPage = lazyPage(() => import('./pages/legal/RankingPage'));
+// Accessibilité (décision DEC-10, 6 oct. 2026).
+const AccessibilityPage = lazyPage(() => import('./pages/legal/AccessibilityPage'));
 const ReportPage = lazyPage(() => import('./pages/legal/ReportPage'));
 const HelpPage = lazyPage(() => import('./pages/HelpPage'));
 const OurStory = lazyPage(() => import('./pages/OurStory'));
@@ -234,6 +236,7 @@ export default function App() {
         <Route path="/confidentialite" element={<Privacy />} />
         <Route path="/cookies" element={<CookiesPolicy />} />
         <Route path="/classement" element={<RankingPage />} />
+        <Route path="/accessibilite" element={<AccessibilityPage />} />
         <Route path="/signaler" element={<ReportPage />} />
         <Route path="/aide" element={<HelpPage />} />
         <Route path="/notre-histoire" element={<OurStory />} />

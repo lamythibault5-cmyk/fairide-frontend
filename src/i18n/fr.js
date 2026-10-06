@@ -5905,6 +5905,22 @@ export default {
       rides: 'Courses',
       earnings: 'Gains'
     },
+    accessibilite: {
+      pageTitle: "Accessibilité · Fairide",
+      pageDescription: "Ce que Fairide fait pour l'accessibilité du site, ses limites connues, et comment nous signaler une difficulté.",
+      title: "Accessibilité",
+      aimTitle: "Notre objectif",
+      aim: "Nous voulons que chacun puisse commander, livrer ou gérer son commerce sur Fairide, y compris avec un lecteur d'écran, au clavier ou avec un affichage agrandi. Nous visons le niveau AA des règles internationales d'accessibilité du web (WCAG 2.1).",
+      stateTitle: "Où nous en sommes",
+      state: "Le site n'a pas encore fait l'objet d'un audit d'accessibilité complet. Nous corrigeons les difficultés au fur et à mesure qu'elles nous sont signalées ou que nous les découvrons.",
+      limitsTitle: "Limites connues",
+      limits: "- Certains formulaires n'associent pas encore chaque étiquette à son champ, ce qui peut gêner un lecteur d'écran.\n- Les cartes (suivi de livraison, zones) peuvent être difficiles à utiliser au clavier ou avec un lecteur d'écran ; les adresses y sont toujours aussi écrites en toutes lettres.",
+      contactTitle: "Une difficulté ? Écrivez-nous",
+      contact: "Si une page ou une fonction vous pose problème, écrivez à [contact@fairide.be](mailto:contact@fairide.be) en décrivant ce que vous essayiez de faire. Nous vous répondons et vous proposons une autre façon d'obtenir l'information ou de passer votre commande.",
+      legalTitle: "Cadre légal",
+      legal: "L'Acte européen sur l'accessibilité (directive (UE) 2019/882) exempte les microentreprises qui fournissent des services de l'obligation de publier une déclaration d'accessibilité. Fairide en est une. Cette page n'en est pas moins notre engagement.",
+      updated: "Dernière mise à jour : 6 octobre 2026."
+    },
     footer: {
       tagline: 'La livraison de repas et de commerces locaux à commission réduite, à Bruxelles.',
       belgian: '🇧🇪 Conçu et opéré depuis la Belgique, par des Belges, pour des Belges.',
@@ -5918,6 +5934,7 @@ export default {
       terms: 'CGV',
       bottom: '© Fairide SRL, BCE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, contact@fairide.be',
       cookies: 'Cookies',
+      accessibility: "Accessibilité",
       manageCookies: 'Gérer mes cookies'
     },
     cookies: {

@@ -5876,6 +5876,22 @@ export default {
       rides: 'Ritten',
       earnings: 'Verdiensten'
     },
+    accessibilite: {
+      pageTitle: "Toegankelijkheid · Fairide",
+      pageDescription: "Wat Fairide doet voor de toegankelijkheid van de site, de gekende beperkingen, en hoe je een probleem meldt.",
+      title: "Toegankelijkheid",
+      aimTitle: "Ons doel",
+      aim: "We willen dat iedereen op Fairide kan bestellen, leveren of zijn zaak beheren, ook met een schermlezer, het toetsenbord of een vergrote weergave. We mikken op niveau AA van de internationale richtlijnen voor webtoegankelijkheid (WCAG 2.1).",
+      stateTitle: "Waar we staan",
+      state: "De site heeft nog geen volledige toegankelijkheidsaudit gehad. We lossen problemen op naarmate ze gemeld worden of we ze ontdekken.",
+      limitsTitle: "Gekende beperkingen",
+      limits: "- Sommige formulieren koppelen nog niet elk label aan zijn veld, wat een schermlezer kan hinderen.\n- Kaarten (levering volgen, zones) kunnen moeilijk te gebruiken zijn met het toetsenbord of een schermlezer; adressen staan er altijd ook voluit bij.",
+      contactTitle: "Een probleem? Schrijf ons",
+      contact: "Als een pagina of functie je moeilijkheden bezorgt, schrijf naar [contact@fairide.be](mailto:contact@fairide.be) en beschrijf wat je probeerde te doen. We antwoorden en bieden je een andere manier aan om de informatie te krijgen of je bestelling te plaatsen.",
+      legalTitle: "Wettelijk kader",
+      legal: "De Europese toegankelijkheidsakte (richtlijn (EU) 2019/882) stelt micro-ondernemingen die diensten verlenen vrij van het publiceren van een toegankelijkheidsverklaring. Fairide is er een. Deze pagina blijft niettemin ons engagement.",
+      updated: "Laatst bijgewerkt: 6 oktober 2026."
+    },
     footer: {
       tagline: 'Levering van maaltijden en lokale handelszaken tegen verlaagde commissie, in Brussel.',
       belgian: '🇧🇪 Ontworpen en beheerd vanuit België, door Belgen, voor Belgen.',
@@ -5889,6 +5905,7 @@ export default {
       terms: 'Voorwaarden',
       bottom: '© Fairide SRL, KBO 1042.169.780, Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe, contact@fairide.be',
       cookies: 'Cookies',
+      accessibility: "Toegankelijkheid",
       manageCookies: 'Mijn cookies beheren'
     },
     cookies: {

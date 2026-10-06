@@ -132,7 +132,8 @@ const PAGES = [
   // DSA (transparence du classement) : la page doit être lisible par un lien direct et par les moteurs, pas
   // seulement en naviguant dans le site. /signaler n'est pas prérendue (formulaire, rien à indexer) mais
   // figure dans les rewrites de vercel.json.
-  { chemin: '/classement', titre: 'conformite.rankingPageTitle', description: 'conformite.rankingPageDescription' }
+  { chemin: '/classement', titre: 'conformite.rankingPageTitle', description: 'conformite.rankingPageDescription' },
+  { chemin: '/accessibilite', titre: 'accessibilite.pageTitle', description: 'accessibilite.pageDescription' }
 ];
 
 // Remplace une balise si elle existe, l'ajoute avant </head> sinon. Le gabarit d'index.html ne les
