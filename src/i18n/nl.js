@@ -3442,7 +3442,7 @@ export default {
       manageHelp: 'Opent het dashboard van de zaak als de uitbater (fiche, uren, kaart, foto\'s, promoties…) in een nieuw tabblad. Toegang 8 u geldig, genoteerd in de opvolging.',
       manageBlocked: 'De browser blokkeerde het nieuwe tabblad: sta pop-ups toe voor fairide.be en probeer opnieuw.',
       confirmApprove: '{name} goedkeuren?',
-      approveBody: 'De zaak kan bestellingen ontvangen. Controleer eerst de documenten en contactgegevens.',
+      approveBody: "De zaak kan bestellingen ontvangen. Controleer eerst de documenten en contactgegevens, en het ondernemingsnummer op KBO Public Search (kbopub.economie.fgov.be): het nummer moet bestaan en de naam moet overeenkomen — de site controleert alleen of het nummer goed gevormd is, niet of het bestaat.",
       confirmPublish: '{name} publiceren?',
       publishBody: 'De zaak verschijnt meteen in de openbare lijst en op de kaart.',
       confirmUnpublish: '{name} uit de openbare lijst halen?',

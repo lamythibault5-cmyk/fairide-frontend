@@ -3442,7 +3442,7 @@ export default {
       manageHelp: 'Opens the business dashboard as the restaurateur (details, hours, menu, photos, promotions…) in a new tab. Access valid 8 h, logged in the follow-up.',
       manageBlocked: 'The browser blocked the new tab: allow pop-ups for fairide.be and try again.',
       confirmApprove: 'Approve {name}?',
-      approveBody: 'The business will be able to receive orders. Check its documents and contact details first.',
+      approveBody: "The business will be able to receive orders. Check its documents and contact details first, and its company number on BCE Public Search (kbopub.economie.fgov.be): the number must exist and the name must match — the site only checks that the number is well-formed, not that it exists.",
       confirmPublish: 'Publish {name}?',
       publishBody: 'The business will immediately appear in the public list and on the map.',
       confirmUnpublish: 'Remove {name} from the public list?',

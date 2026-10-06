@@ -3442,7 +3442,7 @@ export default {
       manageHelp: 'Ouvre le tableau de bord du commerce comme le restaurateur (fiche, horaires, carte, photos, promotions…), dans un nouvel onglet. Accès valable 8 h, noté dans le suivi.',
       manageBlocked: 'Le navigateur a bloqué l\'ouverture du nouvel onglet : autorise les fenêtres surgissantes pour fairide.be puis réessaie.',
       confirmApprove: 'Approuver {name} ?',
-      approveBody: 'Le commerce pourra recevoir des commandes. Vérifie d\'abord ses documents et ses coordonnées.',
+      approveBody: "Le commerce pourra recevoir des commandes. Vérifie d'abord ses documents et ses coordonnées, et son numéro d'entreprise sur BCE Public Search (kbopub.economie.fgov.be) : le numéro doit exister et le nom correspondre — le site vérifie seulement que le numéro est bien formé, pas qu'il existe.",
       confirmPublish: 'Publier {name} ?',
       publishBody: 'Le commerce apparaîtra immédiatement dans la liste publique et sur la carte.',
       confirmUnpublish: 'Retirer {name} de la liste publique ?',
