@@ -1465,6 +1465,13 @@ const PRESET={
  "LCH-11":["todo","NON FAIT PAR CLAUDE (6 oct. 2026) — checklists de la veille du lancement, sur les vrais commerces et livreurs (session 7)."],
  "LCH-12":["todo","NON FAIT PAR CLAUDE (6 oct. 2026) — checklists de la veille du lancement, sur les vrais commerces et livreurs (session 7)."],
  "LEG-4":["todo","NON FAIT PAR CLAUDE (6 oct. 2026) — le consentement biométrique a été accepté par l'API, pas à l'écran : le voir une fois dans l'onboarding livreur (texte séparé, retirable)."],
+ "ADM-7":["fixed","Claude, 6 oct. 2026 après-midi (branche prep/lancement) : CORRIGÉ : la suspension d'un client, d'un commerce ou d'un livreur apparaît maintenant dans l'historique de sa fiche (« → blocked », avec la mesure et le dossier de décision). Elle n'y figurait jamais : seule la réactivation s'y voyait. Test backend : tests/historique-suspension.test.js. À retester après déploiement : suspendre puis réactiver un compte de test, et lire Admin › Clients › fiche › Suivi."],
+ "NOT-1":["fixed","Claude, 6 oct. 2026 après-midi (branche prep/lancement) : Inventaire fait depuis le code : 59 envois, avec destinataire, déclencheur et langue (fairide-backend/docs/emails.md). CORRIGÉ : « Ton livreur est à ta porte » partait en français pour tous ; il suit maintenant la langue du client. Restent en français, à décider avec l'avocat : l'exposé des motifs (DSA), la réponse à une contestation, l'accusé et la décision d'un signalement, l'e-mail DAC7, les pièces qui expirent et le préavis de contrat. L'arrivée réelle des e-mails reste à voir dans la boîte (NOT-2, NOT-3)."],
+ "OPS-8":["todo","Claude, 6 oct. 2026 après-midi (branche prep/lancement) : Premier jet écrit : fairide-frontend/docs/procedures-incidents.md (commande non livrée, livreur accidenté, commerce fermé sans prévenir, client agressif, double débit, litige), avec les vrais noms de boutons. À relire et à corriger par l'équipe. Manque trouvé en l'écrivant : l'admin ne peut pas fermer un commerce pour la soirée, seulement le « Retirer du site »."],
+ "LCH-10":["todo","Claude, 6 oct. 2026 après-midi (branche prep/lancement) : Modèle prêt : fairide-frontend/docs/permanence-premiere-semaine.md (accès de chacun, tableau des services, début et fin de service, si le site tombe). Les noms, numéros et heures sont à remplir par l'équipe."],
+ "ACT-12":["fixed","Claude, 6 oct. 2026 après-midi (branche prep/lancement) : Mode d'emploi du restaurateur réécrit en trois langues. Il affirmait « pas de notification », « pas de champ allergie », « pas d'annulation automatique » et « tu modifies ton menu toi-même » : tout était devenu faux. Nouvelle section « Pendant le service » : pause, Commandes et capacité, livreur qui attend, contrôle d'âge, client pas venu. À relire à l'écran : Tableau de bord restaurateur › Mode d'emploi."],
+ "LCH-11":["todo","Claude, 6 oct. 2026 après-midi (branche prep/lancement) : Vérification automatique écrite : fairide-backend/scripts/pret-au-lancement.js (lecture seule ; elle reprend les gardes de la commande). Lancée sur la production : AUCUN des 14 vrais commerces ne peut encore vendre. Le plus fréquent : paiements Stripe non activés, abonnement inactif, contrat de partenariat non accepté, attestation allergènes, carte non signée, assurances RC exploitation et incendie, numéro AFSCA, et 11 commerces pas encore approuvés. Rapport complet : Téléchargements › fairide-pret-au-lancement-6oct.txt. À relancer la veille du lancement (demander à Claude)."],
+ "LCH-12":["todo","Claude, 6 oct. 2026 après-midi (branche prep/lancement) : Même vérification, côté livreurs : un seul vrai livreur inscrit (en attente d'approbation, paiements Stripe non activés). Tous les autres sont des comptes de test. Aucun n'a jamais activé les notifications sur un téléphone. À relancer la veille du lancement."],
 };
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -1691,10 +1698,10 @@ const A_LA_MAIN = [
   {t:"Relire le contrat commerce, les contrats livreurs, la politique de confidentialité et les CGU (DSA, P2B, statut des livreurs).", tests:["ACT-3","ACT-4","ACT-11","AML-8","LEG-10","LEG-11","LEG-12"]},
   {t:"Valider l'export comptable du mois, et le modèle de facture (voir DEC-1).", tests:["OPS-7"]},
   {t:"Obtenir les prix magasin des commerces et prévenir ceux qui n'avaient rien réglé (distance de livraison de 6 km par défaut).", tests:["MNU-10","LCH-3","ACT-6","AML-15"]}]},
- {g:"📝 À écrire (Claude peut préparer un premier jet)", items:[
-  {t:"Procédures pour les incidents courants : commande non livrée, livreur accidenté, commerce fermé sans prévenir, double débit.", tests:["OPS-8"]},
-  {t:"Tableau de permanence pour la première semaine : qui est joignable, avec accès à l'admin et à Stripe.", tests:["LCH-10"]},
-  {t:"Guide du restaurateur : décrire les nouveaux outils.", tests:["ACT-12"]}]},
+ {g:"📝 À relire (premiers jets écrits par Claude le 6 oct.)", items:[
+  {t:"Relire les procédures pour les incidents courants (docs/procedures-incidents.md du site) et les corriger après les premiers services.", tests:["OPS-8"]},
+  {t:"Remplir le modèle de permanence (docs/permanence-premiere-semaine.md) : noms, téléphones, accès, heures de service.", tests:["LCH-10"]},
+  {t:"Relire le nouveau mode d'emploi du restaurateur à l'écran (tableau de bord restaurateur › Mode d'emploi).", tests:["ACT-12"]}]},
  {g:"🚀 Le jour du passage en live", items:[
   {t:"Mettre les vraies clés Stripe sur Railway, créer le webhook du compte réel (avec les 12 mêmes événements), vérifier les frais et le solde.", tests:["PAY-17","LCH-5","MON-10","MON-11"]},
   {t:"Fusionner les branches, puis refaire les tests « Corrigé ».", tests:["ACT-1","ACT-2"]}]},

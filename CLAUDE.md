@@ -409,8 +409,12 @@ Real, verified as absent on 2026-09-22 — not speculation.
    imported card is wrong until its prices are corrected. `../fairide-backend/scripts/prix.js` does the correction; the real prices have to come from
    the merchant. The contract deliberately does *not* oblige in-store prices — that would be a parity
    clause, see the header of `../fairide-backend/restaurantContract.js`.
-6. See the numbered TODO in `GuidePage.jsx` for the restaurateur-side feature backlog
-   (prep-time on accept, refusal reason, WhatsApp order tickets, auto-cancel delay).
+6. See the numbered TODO in `GuidePage.jsx` for the restaurateur-side feature backlog. Of the five items, only
+   WhatsApp order tickets is still absent (re-checked 2026-10-06). The guide text itself was rewritten against the
+   code that day — keep it in step when a delay or a button changes.
+7. **The admin cannot close a business for the evening.** Only the business closes or pauses itself
+   (InterrupteurService); the admin's one lever is « Retirer du site » (unpublish). See
+   [docs/procedures-incidents.md](docs/procedures-incidents.md), case 3.
 
 ### Resolved since earlier versions of this file
 

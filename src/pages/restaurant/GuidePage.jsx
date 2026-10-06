@@ -11,7 +11,7 @@ import Rich from '../../components/Rich';
 //
 // TODO fonctionnalités absentes aujourd'hui, mentionnées ici pour ne pas les réinventer ni les décrire
 // comme existantes dans le mode d'emploi. Ordre de priorité proposé :
-//   1. Web Push + son à la réception d'une nouvelle commande
+//   1. (Fait) Web Push + son à la réception d'une nouvelle commande (NewOrderAlertBar, usePushNotifications)
 //   2. (Fait le 2026-10-02) Temps de préparation en plus à l'acceptation (+10/+20/+30 min, OrdersPage → PATCH /accept
 //      { extraMinutes }) ; motif obligatoire au refus (PATCH /orders/:id/refuse exige `reason`).
 //
@@ -23,7 +23,7 @@ import Rich from '../../components/Rich';
 // contrôle d'âge, client pas venu. Si l'un de ces délais change côté backend, ce texte change avec.
 //   3. (Fait) Impression du ticket depuis la fiche commande (escposTicket.js, bluetoothPrinter.js)
 //   4. Envoi du bon de commande par WhatsApp
-//   5. Délai d'acceptation automatique avec annulation si dépassé
+//   5. (Fait) Délai d'acceptation automatique avec annulation si dépassé (acceptation.js côté backend)
 
 // Chaque section : un titre, puis des blocs dans l'ordre — 'p' paragraphe, 'ul' liste, 'faq' couple
 // question/réponse séparé d'un filet. Les clés sont dérivées du numéro de section.
