@@ -13,9 +13,14 @@ import Rich from '../../components/Rich';
 // comme existantes dans le mode d'emploi. Ordre de priorité proposé :
 //   1. Web Push + son à la réception d'une nouvelle commande
 //   2. (Fait le 2026-10-02) Temps de préparation en plus à l'acceptation (+10/+20/+30 min, OrdersPage → PATCH /accept
-//      { extraMinutes }) ; motif obligatoire au refus (PATCH /orders/:id/refuse exige `reason`). Aussi faits ce jour-là,
-//      pas encore décrits dans les sections ci-dessous : pause de 15/30/60 min (InterrupteurService), montant minimum
-//      de commande (Commandes et capacité), distance de livraison de 6 km par défaut.
+//      { extraMinutes }) ; motif obligatoire au refus (PATCH /orders/:id/refuse exige `reason`).
+//
+// Relu contre le code le 2026-10-06 (plan de test ACT-12) : le texte disait encore « pas de notification », « pas de
+// champ allergie », « pas de délai d'annulation » et « tu modifies ton menu toi-même » — quatre choses devenues fausses
+// (alarme + Web Push dans NewOrderAlertBar, demande d'allergie à confirmer, annulation après DELAI_ACCEPTATION_MIN = 15
+// et rappel à 5 min dans acceptation.js côté backend, carte verrouillée MENU_LOCKED depuis le 2026-10-01). Section 11
+// ajoutée : pause et interrupteur (InterrupteurService), Commandes et capacité (EcranCapacite), livreur qui attend,
+// contrôle d'âge, client pas venu. Si l'un de ces délais change côté backend, ce texte change avec.
 //   3. (Fait) Impression du ticket depuis la fiche commande (escposTicket.js, bluetoothPrinter.js)
 //   4. Envoi du bon de commande par WhatsApp
 //   5. Délai d'acceptation automatique avec annulation si dépassé
@@ -29,6 +34,8 @@ const SECTIONS = [
   { n: 4, accent: true, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3']] },
   { n: 5, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3'], ['ul', ['l1', 'l2']]] },
   { n: 6, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3'], ['p', 'p4'], ['p', 'p5']] },
+  // Ajoutée après coup : sa clé reste « s11 » (ne pas renuméroter les clés des trois langues), elle s'affiche en 7e.
+  { n: 11, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3'], ['p', 'p4'], ['p', 'p5']] },
   { n: 7, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3'], ['p', 'p4']] },
   { n: 8, blocs: [['p', 'p1'], ['p', 'p2']] },
   { n: 9, blocs: [['faq', 'q1'], ['faq', 'q2'], ['faq', 'q3'], ['faq', 'q4']] },
@@ -42,9 +49,9 @@ export default function GuidePage() {
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('guide.title')}</h2>
       <p className="small" style={{ margin: '0 0 16px' }}>{t('guide.intro')}</p>
 
-      {SECTIONS.map((s) => (
+      {SECTIONS.map((s, rang) => (
         <section key={s.n} className="card" style={s.accent ? { borderLeft: '3px solid var(--iris)' } : undefined}>
-          <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>{s.n}. {t(`guide.s${s.n}Title`)}</h3>
+          <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>{rang + 1}. {t(`guide.s${s.n}Title`)}</h3>
           {s.blocs.map(([type, cle], i) => {
             const dernier = i === s.blocs.length - 1;
             if (type === 'ul') {
