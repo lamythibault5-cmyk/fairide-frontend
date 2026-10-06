@@ -5331,6 +5331,7 @@ export default {
       readyToPickUp: 'Ready to pick up',
       preparing: 'Being prepared',
       pickupAt: '🏪 Pickup: {address}',
+      directions: 'Directions',
       deliveryAt: '🏁 Delivery: {address}',
       tripEstimate: '🚴 Restaurant → customer: ~{min} min{km}',
       rideFee: 'Ride: €{fee}',
