@@ -313,6 +313,14 @@ export default function RestaurantList() {
     return [...liste].sort((a, b) => poids(a.id) - poids(b.id));
   };
   const epinglerOuMelanger = (liste, pl, cle, admissibles) => (pl.some((p) => p.sectionKey === cle) || cle === 'nearby' ? epingler(liste, pl, cle, admissibles) : melanger(liste));
+  // MANGER LOCAL (fondateur, 2026-10-06) : les rangées thématiques ne montrent que les commerces de la commune du client
+  // (`homeCommune`) ; « Autour de vous » reste du plus proche au plus loin par rapport à son adresse, commune ou pas. Le
+  // client peut ouvrir toutes les communes (bouton sous les filtres) ou chercher ailleurs par les filtres. Une commune sans
+  // commerce retombe sur toutes les communes, avec une phrase qui le dit. Les mises en avant restent par commune.
+  const [toutesCommunes, setToutesCommunes] = useState(false);
+  const dansCommune = homeCommune ? restaurants.filter((r) => r.commune === homeCommune) : [];
+  const local = !!homeCommune && !toutesCommunes && dansCommune.length > 0;
+  const base = local ? dansCommune : restaurants;
   const communeEpingles = commune || homeCommune;
   const placements = communeEpingles ? placementsTous.filter((p) => !p.commune || p.commune === communeEpingles) : [];
   const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || prix || emporter || tri !== 'recommande');
@@ -359,25 +367,26 @@ export default function RestaurantList() {
   const completer = (liste) => {
     if (liste.length === 0 || liste.length >= MIN_PAR_RANGEE) return liste;
     const dejaLa = new Set(liste.map((r) => r.id));
-    const renfort = [...restaurants]
+    const renfort = [...base]
       .filter((r) => !dejaLa.has(r.id))
       .sort((a, b) => (b.reviewCount > 0 ? Number(b.avgRating || b.rating) || 0 : 0) - (a.reviewCount > 0 ? Number(a.avgRating || a.rating) || 0 : 0))
       .slice(0, MIN_PAR_RANGEE - liste.length);
     return [...liste, ...renfort];
   };
-  const nonGrocery = restaurants.filter((r) => !GROCERY_TYPES.includes(r.cuisine));
+  const nonGrocery = base.filter((r) => !GROCERY_TYPES.includes(r.cuisine));
+  const nonGroceryTous = restaurants.filter((r) => !GROCERY_TYPES.includes(r.cuisine)); // « Autour de vous » : toutes les communes
   // MISES EN AVANT (fondateur, 2026-10-02) : un commerce qui a payé la 1re, 2e ou 3e position d'une rangée y remonte,
   // marqué « Sponsorisé » — seulement s'il a sa place dans la rangée (voir misesEnAvant.js).
-  const groceryList = completer(epinglerOuMelanger(restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine)), placements, 'grocery'));
+  const groceryList = completer(epinglerOuMelanger(base.filter((r) => GROCERY_TYPES.includes(r.cuisine)), placements, 'grocery'));
   // AUTOUR DE VOUS, DU PLUS PROCHE AU PLUS LOIN (fondateur, 2026-10-01). Adresse géolocalisée : les commerces triés
   // par distance réelle, la distance affichée sur la carte. Sans position : sa commune d'abord, puis les communes
   // voisines de proche en proche (communeRingDistance). Les commerces sans coordonnées passent après.
   const PROCHES_MAX = 15;
-  const parDistance = nonGrocery.map((r) => ({ ...r, distanceKm: distanceDe(r) })).filter((r) => r.distanceKm != null).sort((a, b) => a.distanceKm - b.distanceKm);
+  const parDistance = nonGroceryTous.map((r) => ({ ...r, distanceKm: distanceDe(r) })).filter((r) => r.distanceKm != null).sort((a, b) => a.distanceKm - b.distanceKm);
   const nearbyList = completer(epingler(parDistance.length
     ? parDistance.slice(0, PROCHES_MAX)
-    : homeCommune ? [...nonGrocery].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)).slice(0, PROCHES_MAX) : [],
-  placements, 'nearby', parDistance.length ? parDistance : nonGrocery));
+    : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)).slice(0, PROCHES_MAX) : [],
+  placements, 'nearby', parDistance.length ? parDistance : nonGroceryTous));
   // LIVRAISON DÈS 3 € et LIVRAISON OFFERTE (fondateur, 2026-10-01) : seulement les commerces concernés, jamais complétées.
   const SEUIL_PAS_CHER = 3;
   const livrables = nonGrocery.filter((r) => r.offersDelivery !== false);
@@ -393,9 +402,9 @@ export default function RestaurantList() {
   // secondaire), les épinglés en tête. Jamais complétée : une rangée « Pizza » ne montre que des pizzerias.
   const rangeesCuisine = rangeesAjoutees.filter((s) => s.kind === 'cuisine' && s.cuisine).map((s) => ({
     ...s,
-    liste: epinglerOuMelanger(restaurants.filter((r) => r.cuisine === s.cuisine || (r.extraCuisines || []).includes(s.cuisine)), placements, s.key)
+    liste: epinglerOuMelanger(base.filter((r) => r.cuisine === s.cuisine || (r.extraCuisines || []).includes(s.cuisine)), placements, s.key)
   })).filter((s) => s.liste.length > 0);
-  const offersList = completer(epinglerOuMelanger(restaurants.filter((r) => r.hasPromo), placements, 'offers'));
+  const offersList = completer(epinglerOuMelanger(base.filter((r) => r.hasPromo), placements, 'offers'));
   // Un seul plat marqué healthy par le restaurateur suffit à faire entrer le commerce ici (menu_items.healthy,
   // voir la case à cocher dans la fiche d'un plat côté restaurateur). Trié par nombre de plats healthy
   // décroissant plutôt que dans l'ordre du serveur : sans ça, une pizzeria qui propose une salade verte
@@ -429,7 +438,7 @@ export default function RestaurantList() {
     ));
     return [...eligible].sort(() => Math.random() - 0.5).slice(0, DISCOVER_MAX);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurants, orderedRestaurantIds, user?.lat, user?.lng]);
+  }, [restaurants, local, orderedRestaurantIds, user?.lat, user?.lng]);
 
   return (
     <div>
@@ -567,6 +576,19 @@ export default function RestaurantList() {
           {list.map((r) => (
             <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={toggleFavorite} t={t} />
           ))}
+        </div>
+      )}
+      {!loading && !hasActiveFilter && homeCommune && (
+        <div className="local-bandeau" role="status">
+          <Icone nom="position" taille={16} />
+          <span>
+            {local ? t('restaurantList.localTitle', { commune: homeCommune }) : dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : t('restaurantList.localAllTitle')}
+          </span>
+          {dansCommune.length > 0 && (
+            <button type="button" className="btn-link" onClick={() => setToutesCommunes((v) => !v)}>
+              {local ? t('restaurantList.localSeeAll') : t('restaurantList.localBack', { commune: homeCommune })}
+            </button>
+          )}
         </div>
       )}
       {!loading && !hasActiveFilter && (
