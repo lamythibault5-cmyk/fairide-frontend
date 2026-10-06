@@ -9,12 +9,10 @@ import { Link } from 'react-router-dom';
 import { oublierSponsors, VisuelSponsorDemo } from '../../components/EmplacementSponsor';
 import { reglerSimulationSponsor, simulationSponsorActive } from '../../sponsorSimulation';
 
-// Où chaque emplacement se voit sur le site (bouton « Voir en place »).
-const OU_VOIR = { accueil: '/', liste: '/restaurants', suivi: '/orders', tableau_commerce: '/dashboard' };
-
-// Admin › Collaborations / sponsoring (fondateur, 2026-10-01) : les emplacements réservés au logo d'un partenaire, un
-// fichier différent pour chacun. Rien n'est visible du public tant que « Visible du public » n'est pas coché ; l'équipe,
-// elle, voit chaque emplacement en place sur le site (EmplacementSponsor.jsx).
+// Admin › Collaborations / sponsoring (fondateur, 2026-10-01 ; version sobre du 2026-10-06) : un petit logo partenaire par
+// rangée de la liste des commerces, à côté du titre. Rien n'est visible du public tant que « Visible du public » n'est pas
+// coché pour la rangée ; l'équipe, elle, voit chaque logo en place sur la liste (EmplacementSponsor.jsx) et peut simuler le
+// rendu public (interrupteur ci-dessous, puis « Voir côté client »).
 export default function AdminSponsorsPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
@@ -68,7 +66,7 @@ export default function AdminSponsorsPage() {
         <p className="small" style={{ margin: '6px 0 0' }}>{tr('sponsors.simHelp')}</p>
         {simulation && (
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-            {(slots || []).map((s) => <Link key={s.key} className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} to={OU_VOIR[s.key] || '/'}>{tr('sponsors.simSee', { label: s.label.split(' — ')[0] })}</Link>)}
+            <Link className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} to="/restaurants">{tr('sponsors.simSeeClient')}</Link>
           </div>
         )}
       </div>
@@ -80,14 +78,14 @@ export default function AdminSponsorsPage() {
             <div key={s.key} className="card sponsor-carte" style={{ margin: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 15 }}>{s.label}</h3>
+                  <h3 style={{ margin: 0, fontSize: 15 }}>{s.section ? tr('sponsors.rowTitle', { section: s.section }) : s.label}</h3>
                   <p className="small" style={{ margin: '2px 0 0', color: 'var(--ink-faint)' }}>{tr('sponsors.format', { format: s.format })}</p>
                 </div>
                 <span className={`pill ${s.visible ? 'teal' : ''}`}>{s.visible ? tr('sponsors.public') : tr('sponsors.adminOnly')}</span>
               </div>
               <div className="sponsor-apercu">
                 {s.imageUrl ? <img src={s.imageUrl} alt={s.name || s.label} />
-                  : simulation ? <VisuelSponsorDemo format={s.key === 'suivi' ? 'carte' : 'banniere'} />
+                  : simulation ? <VisuelSponsorDemo />
                     : <span className="small">{tr('sponsors.empty')}</span>}
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>

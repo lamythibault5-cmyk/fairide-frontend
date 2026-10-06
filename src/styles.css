@@ -4357,6 +4357,19 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .carte-verrou { border-left: 4px solid var(--iris); }
 .hausse-prix-demande { margin: 10px 0 4px; padding: 10px 12px; border-radius: 10px; background: var(--surface-soft); color: var(--ink); border-left: 4px solid var(--iris); }
 
+/* Logo partenaire d'une rangée (EmplacementSponsor.jsx, version sobre du 2026-10-06) : à côté du titre de la rangée. */
+.sponsor-rangee { position: relative; display: inline-flex; align-items: center; gap: 8px; margin-left: 12px; padding: 3px 10px 3px 8px; border-radius: 99px; background: var(--surface-soft); font-weight: 500; font-size: 12px; vertical-align: middle; }
+.sponsor-rangee .sponsor-mention { font-size: 10px; margin: 0; }
+.sponsor-rangee .sponsor-logo { height: 28px; max-width: 140px; width: auto; object-fit: contain; display: block; }
+.sponsor-rangee a { display: inline-flex; align-items: center; }
+.sponsor-rangee--prive { border: 1.5px dashed var(--iris); background: transparent; padding-right: 64px; }
+.sponsor-rangee--prive .sponsor-vide { color: var(--iris); font-size: 12px; }
+.sponsor-rangee--prive .sponsor-prive-badge, .sponsor-rangee--simulation .sponsor-prive-badge { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); font-size: 10px; padding: 1px 6px; }
+.sponsor-rangee--simulation { padding-right: 76px; }
+.sponsor-demo-mini { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.sponsor-demo-mini svg { width: 22px; height: 22px; }
+@media (max-width: 520px) { .sponsor-rangee { margin-left: 8px; padding: 2px 8px 2px 6px; } .sponsor-rangee .sponsor-logo { height: 22px; max-width: 100px; } .sponsor-rangee .sponsor-mention { display: none; } }
+
 /* Emplacements sponsor (EmplacementSponsor.jsx) et Admin › Collaborations / sponsoring. */
 .sponsor-emplacement { position: relative; margin: 18px 0; padding: 10px 12px; border-radius: 14px; background: var(--cream-dim); display: flex; flex-direction: column; gap: 6px; align-items: center; }
 .sponsor-emplacement--prive { border: 2px dashed var(--iris); background: var(--surface-soft); }

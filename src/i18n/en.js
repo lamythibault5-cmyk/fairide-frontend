@@ -6782,6 +6782,8 @@ export default {
       manualPayHelp: 'In manual mode, as soon as you accept a request the business gets an e-mail and has {hours} h to pay online (Stripe, paid to Fairide); it shows once paid, otherwise the spot is released.'
     },
     sponsor: {
+      emptyRow: 'Partner logo for this row (team only): upload it in Admin › Partnerships / sponsoring.',
+      emptyRowShort: 'Partner logo',
       brokenAdmin: 'The logo for “{label}” cannot be found (file deleted at the host?). Upload it again in Admin › Collaborations / sponsoring.',
       demoAlt: 'Demo partner creative',
       demoBrand: 'Maison Exemple',
@@ -6794,10 +6796,12 @@ export default {
       adminOnly: 'Team only'
     },
     sponsors: {
+      rowTitle: 'Row “{section}”',
+      simSeeClient: 'See the customer side (business list)',
       simTitle: 'Simulation: see the slots as if a partner were there',
-      simHelp: 'Each slot is shown as the public would see it: the uploaded logo if there is one, otherwise a demo creative (“Maison Exemple”). Only you see it, in this browser; nothing is published.',
+      simHelp: 'The business list is shown as the public would see it: the uploaded logo next to each row title if there is one, otherwise the demo brand (“Maison Exemple”). Only you see it, in this browser; nothing is published.',
       simSee: 'See: {label}',
-      intro: 'Four spots on the site can host a partner company\'s logo: this kind of partnership helps Fairide grow. For now, nobody sees them but the team: upload a different file for each spot and check the result on the site (logged in as admin). A spot is shown to the public only when you tick "Visible to the public".',
+      intro: 'Each row of the business list (“Near you”, “Healthy”, “Organic”…, and the rows you add in placements) can carry a partner company\'s small logo next to its title: one partner per row, replaceable at any time. For now nobody sees it but the team: upload a logo, check it in place on the list (logged in as admin) or simulate the public rendering below. A row is shown to the public only when you tick “Visible to the public” for it.',
       format: 'Recommended format: {format}',
       public: 'Visible to the public',
       adminOnly: 'Team only',

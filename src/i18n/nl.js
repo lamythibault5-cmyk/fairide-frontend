@@ -6782,6 +6782,8 @@ export default {
       manualPayHelp: 'In handmatige modus krijgt de zaak, zodra je een aanvraag aanvaardt, een e-mail en {hours} u om online te betalen (Stripe, aan Fairide); ze verschijnt na betaling, anders komt de plaats vrij.'
     },
     sponsor: {
+      emptyRow: 'Partnerlogo van deze rij (enkel team): laad het op in Admin › Samenwerkingen / sponsoring.',
+      emptyRowShort: 'Partnerlogo',
       brokenAdmin: 'Het logo voor “{label}” is niet te vinden (bestand verwijderd bij de host?). Laad het opnieuw op in Admin › Samenwerkingen / sponsoring.',
       demoAlt: 'Demovisual van een partner',
       demoBrand: 'Maison Exemple',
@@ -6794,10 +6796,12 @@ export default {
       adminOnly: 'Enkel team'
     },
     sponsors: {
+      rowTitle: 'Rij “{section}”',
+      simSeeClient: 'Bekijk aan klantzijde (lijst van zaken)',
       simTitle: 'Simulatie: bekijk de plaatsen alsof er een partner staat',
-      simHelp: 'Elke plaats wordt getoond zoals het publiek ze zou zien: het geüploade logo als er een is, anders een demovisual (“Maison Exemple”). Alleen jij ziet dit, in deze browser; er wordt niets gepubliceerd.',
+      simHelp: 'De lijst van zaken wordt getoond zoals het publiek ze zou zien: het geüploade logo naast elke rijtitel als er een is, anders het demomerk (“Maison Exemple”). Alleen jij ziet dit, in deze browser; er wordt niets gepubliceerd.',
       simSee: 'Bekijk: {label}',
-      intro: 'Vier plaatsen op de site kunnen het logo van een partnerbedrijf tonen: zo\'n samenwerking helpt Fairide groeien. Voorlopig ziet niemand ze behalve het team: laad per plaats een ander bestand op en bekijk het resultaat op de site (ingelogd als admin). Een plaats wordt pas aan het publiek getoond als je "Zichtbaar voor het publiek" aanvinkt.',
+      intro: 'Elke rij van de lijst van zaken (“In de buurt”, “Healthy”, “Bio”…, en de rijen die je toevoegt bij de uitgelichte plaatsen) kan naast haar titel het kleine logo van een partnerbedrijf dragen: één partner per rij, op elk moment vervangbaar. Voorlopig ziet niemand het behalve het team: laad een logo op, bekijk het op de lijst (ingelogd als admin) of simuleer hieronder de publieke weergave. Een rij wordt pas aan het publiek getoond als je er “Zichtbaar voor het publiek” voor aanvinkt.',
       format: 'Aanbevolen formaat: {format}',
       public: 'Zichtbaar voor het publiek',
       adminOnly: 'Enkel team',

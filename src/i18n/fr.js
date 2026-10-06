@@ -6827,6 +6827,8 @@ export default {
       manualPayHelp: 'En manuel, dès que tu acceptes une demande, le commerce reçoit un e-mail et a {hours} h pour la payer en ligne (Stripe, montant reversé à Fairide) ; elle s\'affiche au paiement, sinon la place est libérée.'
     },
     sponsor: {
+      emptyRow: 'Logo partenaire de cette rangée (vu de l\'équipe seulement) : charge-le dans Admin › Collaborations / sponsoring.',
+      emptyRowShort: 'Logo partenaire',
       brokenAdmin: 'Le logo de « {label} » est introuvable (fichier supprimé chez l\'hébergeur ?). Recharge-le dans Admin › Collaborations / sponsoring.',
       demoAlt: 'Visuel de démonstration d\'un partenaire',
       demoBrand: 'Maison Exemple',
@@ -6839,10 +6841,12 @@ export default {
       adminOnly: 'Équipe seule'
     },
     sponsors: {
+      rowTitle: 'Rangée « {section} »',
+      simSeeClient: 'Voir côté client (liste des commerces)',
       simTitle: 'Simulation : voir les emplacements comme si un partenaire y était',
-      simHelp: 'Chaque emplacement s\'affiche avec le rendu que verrait le public : le logo chargé s\'il y en a un, sinon un visuel de démonstration (« Maison Exemple »). Toi seul le vois, dans ce navigateur ; rien n\'est publié.',
+      simHelp: 'La liste des commerces s\'affiche avec le rendu que verrait le public : le logo chargé à côté de chaque titre de rangée s\'il y en a un, sinon la marque de démonstration (« Maison Exemple »). Toi seul le vois, dans ce navigateur ; rien n\'est publié.',
       simSee: 'Voir : {label}',
-      intro: 'Quatre emplacements du site peuvent accueillir le logo d\'une société partenaire : ce type de collaboration aide Fairide à se développer. Pour l\'instant, personne ne les voit à part l\'équipe : charge un fichier différent pour chaque emplacement et regarde le rendu sur le site (connecté en admin). Un emplacement n\'est montré au public que si tu coches « Visible du public ».',
+      intro: 'Chaque rangée de la liste des commerces (« Autour de vous », « Healthy », « Bio »…, et les rangées que tu ajoutes dans les mises en avant) peut porter le petit logo d\'une société partenaire, à côté de son titre : un partenaire par rangée, remplaçable à tout moment. Pour l\'instant, personne ne le voit à part l\'équipe : charge un logo, regarde-le en place sur la liste (connecté en admin) ou simule le rendu public ci-dessous. Une rangée n\'est montrée au public que si tu coches « Visible du public » pour elle.',
       format: 'Format conseillé : {format}',
       public: 'Visible du public',
       adminOnly: 'Équipe seule',

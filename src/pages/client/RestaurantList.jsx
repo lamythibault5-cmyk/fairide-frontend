@@ -172,12 +172,15 @@ function CarteBientot({ r, t }) {
   );
 }
 
-function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, autoplay = false }) {
+// `cle` : la clé de la rangée (mises en avant / sponsors) — le logo partenaire de la rangée se glisse à côté du titre
+// (EmplacementSponsor : rien pour le public tant que l'admin n'a pas activé la rangée).
+function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, autoplay = false, cle }) {
   if (list.length === 0) return null;
+  const titre = <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}{cle && <EmplacementSponsor cle={cle} />}</h3>;
   if (loop && list.length > 1) {
     return (
       <div className="liste-section">
-        <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}</h3>
+        {titre}
         <AutoScrollRow
           items={list}
           keyFor={(r) => r.id}
@@ -192,7 +195,7 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, au
   }
   return (
     <div className="liste-section">
-      <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}</h3>
+      {titre}
       <div className="rest-grid rest-grid-scroll">
         {list.map((r) => (
           <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
@@ -582,19 +585,18 @@ export default function RestaurantList() {
               </div>
             </div>
           )}
-          <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionFreeDelivery')} icon="scooter" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="scooter" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <EmplacementSponsor cle="liste" />
+          <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="nearby" />
+          <Section title={t('restaurantList.sectionFreeDelivery')} icon="scooter" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="free_delivery" />
+          <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="scooter" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="cheap_delivery" />
+          <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="offers" />
           {rangeesCuisine.map((s) => (
-            <Section key={s.key} title={titreRangee(t, s)} icon="restaurants" list={s.liste} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+            <Section key={s.key} title={titreRangee(t, s)} icon="restaurants" list={s.liste} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle={s.key} />
           ))}
-          <Section title={t('restaurantList.sectionHealthy')} icon="restaurants" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epinglerOuMelanger(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay />
+          <Section title={t('restaurantList.sectionHealthy')} icon="restaurants" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="healthy" />
+          <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="bio" />
+          <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="vegan" />
+          <Section title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="grocery" />
+          <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epinglerOuMelanger(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay cle="discover" />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <div className="empty">{t('restaurantList.empty')}</div>
           )}
