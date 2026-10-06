@@ -3,14 +3,15 @@ import { useLanguage } from '../context/LanguageContext';
 
 // Section "l'appli arrive bientôt" sur la page d'accueil — inspirée des bannières de téléchargement des
 // grandes plateformes (badges de store + mockup téléphone), mais honnête sur ce qui existe vraiment :
-// Fairide n'a pas encore d'appli mobile (lancement prévu le 6 octobre), donc les badges ne sont pas
-// cliquables — aucune fausse redirection vers un store qui n'a rien à proposer. Les badges eux-mêmes
-// restent génériques (texte + icône maison, pas de logo Apple/Google reproduit) plutôt qu'une copie du
-// design des vraies plateformes.
+// Fairide n'a pas encore d'appli mobile, donc les badges ne sont pas cliquables — aucune fausse redirection
+// vers un store qui n'a rien à proposer. Les badges eux-mêmes restent génériques (texte + icône maison, pas
+// de logo Apple/Google reproduit) plutôt qu'une copie du design des vraies plateformes.
+// Plus de date annoncée ni de badge AppGallery (2026-10-06) : le 6 octobre est passé sans application
+// publiée, et la version Huawei n'est pas préparée (notifications par Firebase, absent de ces téléphones).
+// L'application viendra quand le site sera au point — voir docs/application-mobile.md.
 const STORE_BADGES = [
   { icon: '🍎', line2: 'App Store' },
-  { icon: '▶️', line2: 'Google Play' },
-  { icon: '📱', line2: 'AppGallery' }
+  { icon: '▶️', line2: 'Google Play' }
 ];
 
 function PhoneMockup() {

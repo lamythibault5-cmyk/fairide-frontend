@@ -840,7 +840,7 @@ export default function Account() {
               </p>
             )}
 
-            {/* Aucun abonnement à activer avant la sortie de l'application (6 octobre 2026) : le bouton
+            {/* Aucun abonnement à activer avant la date d'ouverture (6 octobre 2026, FAIRIDE_SUBSCRIPTION_OPEN_AT) : le bouton
                 d'abonnement reviendra à ce moment-là (voir aussi le serveur, qui refuse l'activation avant
                 la date d'ouverture). Le premier mois est offert quoi qu'il arrive. */}
             {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && !abonnementOuvert() && (
