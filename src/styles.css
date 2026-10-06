@@ -4445,3 +4445,8 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .mea-outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .mea-outils-rangee { display: inline-flex; gap: 6px; align-items: center; margin-left: auto; flex-wrap: wrap; }
 .mea-outils select { min-height: 40px; }
+.mea-zone-communes { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.mea-cases { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 6px; }
+.mea-case-commune { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 999px; }
+.mea-case-commune.est-ailleurs { opacity: 0.45; }
+.mea-prix input.est-zone::placeholder { color: var(--brand-iris, #3B2FB5); opacity: 0.7; }

@@ -5,7 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { titreRangee, libellePosition, euros, jourCourt } from '../../misesEnAvant';
-import { RESTAURANT_TYPES, restaurantTypeLabel } from '../../menuCategories';
+import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES_SUGGEREES } from '../../menuCategories';
 
 // Admin › Mises en avant (fondateur, 2026-10-02) : le prix de la 1re, 2e et 3e position de chaque rangée de la liste
 // (par semaine, hors TVA), et les demandes des commerçants à accepter ou refuser. Changer un prix ne touche pas les
@@ -21,16 +21,55 @@ export default function AdminPlacementsPage() {
   const [occupe, setOccupe] = useState(false);
   // UNE PAGE PAR COMMUNE (fondateur, 2026-10-06) : '' = les prix par défaut et toutes les demandes ; sinon la commune choisie,
   // avec son interrupteur d'ouverture et ses prix propres (une case vide = le prix par défaut).
+  // ET PAR ZONE (même jour) : une zone = un groupe de communes nommé, avec son ouverture et ses prix ; `commune` vaut alors
+  // 'zone:<id>'. Ordre des prix : commune > zone > défaut. L'admin ajoute des communes et des zones lui-même.
   const [commune, setCommune] = useState('');
+  const zoneId = commune.startsWith('zone:') ? commune.slice(5) : '';
+  const nomPortee = zoneId ? (etat?.zone?.name || '') : commune;
+  const [nouvelleCommune, setNouvelleCommune] = useState('');
+  const [nouvelleZone, setNouvelleZone] = useState({ ouvert: false, name: '', communes: [] });
+  const [communesZone, setCommunesZone] = useState(null); // modification des communes de la zone affichée
 
   const charger = useCallback(() => {
-    api(`/admin/placements${commune ? `?commune=${encodeURIComponent(commune)}` : ''}`, { token }).then((r) => { setEtat(r); setBrouillon({}); }).catch((e) => toast(e.message, 'erreur'));
+    const q = commune.startsWith('zone:') ? `?zone=${encodeURIComponent(commune.slice(5))}` : commune ? `?commune=${encodeURIComponent(commune)}` : '';
+    api(`/admin/placements${q}`, { token }).then((r) => { setEtat(r); setBrouillon({}); setCommunesZone(null); }).catch((e) => toast(e.message, 'erreur'));
   }, [token, toast, commune]);
   async function ouvrirCommune(enabled) {
     setOccupe(true);
-    try { await api(`/admin/placements/communes/${encodeURIComponent(commune)}`, { method: 'PUT', token, body: { enabled } }); toast(tr(enabled ? 'adminPlacements.communeOpened' : 'adminPlacements.communeClosed', { commune })); charger(); }
+    try {
+      if (zoneId) await api(`/admin/placements/zones/${zoneId}`, { method: 'PUT', token, body: { enabled } });
+      else await api(`/admin/placements/communes/${encodeURIComponent(commune)}`, { method: 'PUT', token, body: { enabled } });
+      toast(tr(enabled ? 'adminPlacements.communeOpened' : 'adminPlacements.communeClosed', { commune: nomPortee })); charger();
+    } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
+  }
+  async function ajouterCommune() {
+    const nom = nouvelleCommune.trim(); if (!nom) return;
+    setOccupe(true);
+    try { await api('/admin/placements/communes', { method: 'POST', token, body: { commune: nom } }); toast(tr('adminPlacements.communeAdded', { commune: nom })); setNouvelleCommune(''); setCommune(nom); }
     catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
+  async function ajouterZone() {
+    if (!nouvelleZone.name.trim() || !nouvelleZone.communes.length) { toast(tr('adminPlacements.zoneIncomplete'), 'erreur'); return; }
+    setOccupe(true);
+    try { const r = await api('/admin/placements/zones', { method: 'POST', token, body: { name: nouvelleZone.name.trim(), communes: nouvelleZone.communes } }); toast(tr('adminPlacements.zoneAdded', { zone: r.zone.name })); setNouvelleZone({ ouvert: false, name: '', communes: [] }); setCommune(`zone:${r.zone.id}`); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
+  }
+  async function enregistrerCommunesZone() {
+    if (!communesZone || !communesZone.length) { toast(tr('adminPlacements.zoneIncomplete'), 'erreur'); return; }
+    setOccupe(true);
+    try { await api(`/admin/placements/zones/${zoneId}`, { method: 'PUT', token, body: { communes: communesZone } }); toast(tr('adminPlacements.saved')); charger(); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
+  }
+  async function retirerZone() {
+    if (!window.confirm(tr('adminPlacements.zoneRemoveConfirm', { zone: nomPortee }))) return;
+    setOccupe(true);
+    try { await api(`/admin/placements/zones/${zoneId}`, { method: 'DELETE', token }); toast(tr('adminPlacements.zoneRemoved')); setCommune(''); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
+  }
+  // Communes qu'on peut proposer : les 19 et la périphérie, plus celles déjà connues, sans doublon.
+  const communesConnues = (etat?.communes || []).map((c) => c.commune);
+  const communesProposees = [...new Set([...communesConnues, ...COMMUNES_SUGGEREES])].sort((a, b) => a.localeCompare(b, 'fr'));
+  const basculerCommune = (liste, c) => (liste.includes(c) ? liste.filter((x) => x !== c) : [...liste, c]);
   useEffect(() => { charger(); }, [charger]);
 
   const titre = (cle, repli) => titreRangee(tr, { key: cle, label: repli });
@@ -70,7 +109,7 @@ export default function AdminPlacementsPage() {
     });
     if (prices.some((p) => p.weeklyPrice !== null && (!Number.isFinite(p.weeklyPrice) || p.weeklyPrice < 0))) { toast(tr('adminPlacements.priceInvalid'), 'erreur'); return; }
     setOccupe(true);
-    try { await api('/admin/placements/prices', { method: 'PUT', token, body: { commune: commune || undefined, prices } }); toast(tr('adminPlacements.pricesSaved')); charger(); }
+    try { await api('/admin/placements/prices', { method: 'PUT', token, body: zoneId ? { zone: zoneId, prices } : { commune: commune || undefined, prices } }); toast(tr('adminPlacements.pricesSaved')); charger(); }
     catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
   async function decider(b, corps) {
@@ -89,26 +128,74 @@ export default function AdminPlacementsPage() {
       {!etat && <p className="small">…</p>}
       {etat && (
         <>
-          {/* La commune dont on règle la page : ses commerces, ses demandes, son ouverture. */}
+          {/* La commune ou la zone dont on règle la page : ses commerces, ses demandes, son ouverture. */}
           <div className="card mea-communes" style={{ margin: '0 0 16px' }}>
             <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <label htmlFor="mea-commune" style={{ fontWeight: 700 }}>{tr('adminPlacements.communeLabel')}</label>
+              <label htmlFor="mea-commune" style={{ fontWeight: 700 }}>{tr('adminPlacements.scopeLabel')}</label>
               <select id="mea-commune" value={commune} disabled={occupe} onChange={(e) => setCommune(e.target.value)}>
                 <option value="">{tr('adminPlacements.communeDefault')}</option>
-                {(etat.communes || []).map((c) => <option key={c.commune} value={c.commune}>{c.commune} — {c.enabled ? tr('adminPlacements.open') : tr('adminPlacements.closed')} · {tr('adminPlacements.communeCounts', { restaurants: c.restaurants, pending: c.pending, active: c.active })}</option>)}
+                {(etat.zones || []).length > 0 && (
+                  <optgroup label={tr('adminPlacements.zonesGroup')}>
+                    {etat.zones.map((z) => <option key={z.id} value={`zone:${z.id}`}>{z.name} ({z.communes.length}) — {z.enabled ? tr('adminPlacements.open') : tr('adminPlacements.closed')} · {tr('adminPlacements.communeCounts', { restaurants: z.restaurants, pending: z.pending, active: z.active })}</option>)}
+                  </optgroup>
+                )}
+                <optgroup label={tr('adminPlacements.communesGroup')}>
+                  {(etat.communes || []).map((c) => <option key={c.commune} value={c.commune}>{c.commune}{c.zoneName ? ` · ${c.zoneName}` : ''} — {c.enabled ? tr('adminPlacements.open') : tr('adminPlacements.closed')} · {tr('adminPlacements.communeCounts', { restaurants: c.restaurants, pending: c.pending, active: c.active })}</option>)}
+                </optgroup>
               </select>
               {commune && (
                 <>
                   <span className={`modif-statut mea-statut--${etat.enabled ? 'active' : 'cancelled'}`}>{etat.enabled ? tr('adminPlacements.open') : tr('adminPlacements.closed')}</span>
-                  <button type="button" className={etat.enabled ? 'btn-danger-ghost' : 'btn-teal'} disabled={occupe} onClick={() => ouvrirCommune(!etat.enabled)}>{etat.enabled ? tr('adminPlacements.close') : tr('adminPlacements.openAction')}</button>
+                  {!zoneId && etat.enabled && !etat.ownEnabled && etat.viaZone && <span className="small">{tr('adminPlacements.openViaZone', { zone: etat.viaZone })}</span>}
+                  <button type="button" className={(zoneId ? etat.enabled : etat.ownEnabled) ? 'btn-danger-ghost' : 'btn-teal'} disabled={occupe} onClick={() => ouvrirCommune(!(zoneId ? etat.enabled : etat.ownEnabled))}>{(zoneId ? etat.enabled : etat.ownEnabled) ? tr('adminPlacements.close') : tr('adminPlacements.openAction')}</button>
+                  {zoneId && <button type="button" className="btn-ghost" disabled={occupe} onClick={retirerZone}>{tr('adminPlacements.zoneRemove')}</button>}
                 </>
               )}
             </div>
-            <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-soft)' }}>{commune ? tr('adminPlacements.communeHelp', { commune }) : tr('adminPlacements.defaultHelp')}</p>
+            <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-soft)' }}>{zoneId ? tr('adminPlacements.zoneHelp', { zone: nomPortee }) : commune ? tr('adminPlacements.communeHelp', { commune }) : tr('adminPlacements.defaultHelp')}</p>
+            {/* Les communes de la zone affichée, modifiables. */}
+            {zoneId && etat.zone && (
+              <div className="mea-zone-communes">
+                <b className="small">{tr('adminPlacements.zoneCommunes')}</b>
+                <div className="mea-cases">
+                  {communesProposees.map((c) => {
+                    const liste = communesZone || etat.zone.communes;
+                    const autreZone = (etat.communes || []).find((x) => x.commune === c)?.zoneId;
+                    const ailleurs = autreZone && autreZone !== zoneId;
+                    return <label key={c} className={`mea-case-commune${ailleurs ? ' est-ailleurs' : ''}`}><input type="checkbox" disabled={occupe || ailleurs} checked={liste.includes(c)} onChange={() => setCommunesZone(basculerCommune(liste, c))} /> {c}</label>;
+                  })}
+                </div>
+                {communesZone && <div className="row" style={{ gap: 8, marginTop: 8 }}><button type="button" className="btn-teal" disabled={occupe} onClick={enregistrerCommunesZone}>{tr('adminPlacements.saveZoneCommunes')}</button><button type="button" className="btn-ghost" disabled={occupe} onClick={() => setCommunesZone(null)}>{tr('common.cancel')}</button></div>}
+              </div>
+            )}
+            {/* Ajouter une commune (sans attendre un commerce), ou une zone. */}
+            {!commune && (
+              <div className="mea-outils" style={{ marginTop: 12 }}>
+                <span className="mea-outils-rangee" style={{ marginLeft: 0 }}>
+                  <input list="mea-communes-liste" value={nouvelleCommune} placeholder={tr('adminPlacements.addCommunePlaceholder')} aria-label={tr('adminPlacements.addCommune')} disabled={occupe} onChange={(e) => setNouvelleCommune(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); ajouterCommune(); } }} />
+                  <datalist id="mea-communes-liste">{communesProposees.filter((c) => !communesConnues.includes(c)).map((c) => <option key={c} value={c} />)}</datalist>
+                  <button type="button" className="btn-outline" disabled={occupe || !nouvelleCommune.trim()} onClick={ajouterCommune}>+ {tr('adminPlacements.addCommune')}</button>
+                </span>
+                <button type="button" className="btn-outline" disabled={occupe} onClick={() => setNouvelleZone((z) => ({ ...z, ouvert: !z.ouvert }))}>+ {tr('adminPlacements.addZone')}</button>
+              </div>
+            )}
+            {!commune && nouvelleZone.ouvert && (
+              <div className="mea-zone-communes">
+                <input value={nouvelleZone.name} placeholder={tr('adminPlacements.zoneNamePlaceholder')} aria-label={tr('adminPlacements.zoneName')} disabled={occupe} onChange={(e) => setNouvelleZone((z) => ({ ...z, name: e.target.value }))} style={{ maxWidth: 320 }} />
+                <b className="small" style={{ display: 'block', marginTop: 8 }}>{tr('adminPlacements.zoneCommunes')}</b>
+                <div className="mea-cases">
+                  {communesProposees.map((c) => {
+                    const ailleurs = !!(etat.communes || []).find((x) => x.commune === c)?.zoneId;
+                    return <label key={c} className={`mea-case-commune${ailleurs ? ' est-ailleurs' : ''}`}><input type="checkbox" disabled={occupe || ailleurs} checked={nouvelleZone.communes.includes(c)} onChange={() => setNouvelleZone((z) => ({ ...z, communes: basculerCommune(z.communes, c) }))} /> {c}</label>;
+                  })}
+                </div>
+                <div className="row" style={{ gap: 8, marginTop: 8 }}><button type="button" className="btn-teal" disabled={occupe} onClick={ajouterZone}>{tr('adminPlacements.createZone')}</button><button type="button" className="btn-ghost" disabled={occupe} onClick={() => setNouvelleZone({ ouvert: false, name: '', communes: [] })}>{tr('common.cancel')}</button></div>
+              </div>
+            )}
           </div>
           <div className="card" style={{ margin: '0 0 16px' }}>
-            <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{commune ? tr('adminPlacements.pricesTitleCommune', { commune }) : tr('adminPlacements.pricesTitle')}</h3>
-            <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-soft)' }}>{commune ? tr('adminPlacements.pricesHelpCommune') : tr('adminPlacements.pricesHelp')}</p>
+            <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{commune ? tr('adminPlacements.pricesTitleCommune', { commune: nomPortee }) : tr('adminPlacements.pricesTitle')}</h3>
+            <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-soft)' }}>{zoneId ? tr('adminPlacements.pricesHelpZone') : commune ? tr('adminPlacements.pricesHelpCommune') : tr('adminPlacements.pricesHelp')}</p>
             <div className="mea-grille mea-grille--admin mea-grille--large">
               <div className="mea-ligne mea-entete" style={colonnes}>
                 <span>{tr('placements.row')}</span>
@@ -124,6 +211,7 @@ export default function AdminPlacementsPage() {
                       <label key={p.slot} className="mea-prix">
                         <input type="text" inputMode="decimal" value={brouillon[cle] ?? (commune && !p.ownPrice ? '' : String(p.weeklyPrice).replace('.', ','))}
                           placeholder={commune && !p.ownPrice ? String(p.weeklyPrice).replace('.', ',') : undefined}
+                          title={p.zonePrice ? tr('adminPlacements.fromZone') : undefined} className={p.zonePrice ? 'est-zone' : undefined}
                           aria-label={`${titreRangee(tr, s)} — ${libellePosition(tr, p.slot)}`}
                           onChange={(e) => setBrouillon((b) => ({ ...b, [cle]: e.target.value }))} />
                         <span>€</span>
