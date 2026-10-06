@@ -6657,7 +6657,13 @@ export default {
       paidOnline: 'online betaald',
       refund_rembourse: 'Geen bestelling tijdens de periode: terugbetaald.',
       refund_a_rembourser: 'Geen bestelling tijdens de periode: terugbetaling bezig.',
-      refund_prorata: 'Gestopt tijdens de periode: alleen de getoonde dagen zijn verschuldigd, de rest werd je terugbetaald.'
+      refund_prorata: 'Gestopt tijdens de periode: alleen de getoonde dagen zijn verschuldigd, de rest werd je terugbetaald.',
+      perUnit_day: 'per dag',
+      perUnit_week: 'per week',
+      perUnit_month: 'per maand',
+      periods_day: '{n} dag(en)',
+      periods_week: '{n} week/weken',
+      periods_month: '{n} maand(en)'
     },
     adminPlacements: {
       addPosition: 'Positie toevoegen',
@@ -6669,7 +6675,7 @@ export default {
       rowRemoved: 'Rij verwijderd.',
       removeRow: 'Deze rij verwijderen',
       intro: 'Zaken kunnen betalen om als 1e, 2e of 3e in een rij van de lijst te staan. Stel hier de prijs per positie in en aanvaard of weiger aanvragen. De klant ziet altijd het label “Gesponsord”.',
-      pricesTitle: 'Prijs per week (excl. btw)',
+      pricesTitle: 'Prijs per {unit} (excl. btw)',
       pricesHelp: 'Eén prijs per rij en positie. Bestaande aanvragen behouden de prijs van de dag waarop ze zijn gedaan.',
       savePrices: 'Prijzen opslaan',
       pricesSaved: 'Prijzen opgeslagen.',
@@ -6696,7 +6702,7 @@ export default {
       communeCounts: '{restaurants} zaak/zaken, {pending} te behandelen, {active} lopend',
       communeHelp: 'Pagina van {commune}: opening, prijzen en aanvragen. Een leeg vak valt terug op de standaardprijs. De verkoop sluiten stopt geen al aanvaarde promoties.',
       defaultHelp: 'Deze prijzen gelden in elke gemeente zonder eigen prijzen. Kies een gemeente om ze voor verkoop te openen.',
-      pricesTitleCommune: 'Weekprijzen in {commune} (excl. btw)',
+      pricesTitleCommune: 'Prijs per {unit} in {commune} (excl. btw)',
       pricesHelpCommune: 'Een eigen prijs voor deze gemeente per rij en positie; leeg vak = standaardprijs (in het grijs).',
       communeOpened: 'Verkoop open in {commune}.',
       communeClosed: 'Verkoop gesloten in {commune}.',
@@ -6734,7 +6740,16 @@ export default {
       billing_rembourse: 'Terugbetaald',
       refund_rembourse: 'terugbetaald (nul bestellingen)',
       refund_a_rembourser: 'terug te betalen (nul bestellingen, handmatig gefactureerd)',
-      refund_prorata: 'pro rata terugbetaald'
+      refund_prorata: 'pro rata terugbetaald',
+      unitLabel: 'Prijs per',
+      unit_day: 'dag',
+      unit_week: 'week',
+      unit_month: 'maand (30 dagen)',
+      unitWord_day: 'dag',
+      unitWord_week: 'week',
+      unitWord_month: 'maand',
+      unitHelp: 'De prijzen van het rooster gelden per dag, per week of per maand (30 dagen), naar keuze; een al geplaatste aanvraag behoudt haar eenheid en prijs.',
+      manualPayHelp: 'In handmatige modus krijgt de zaak, zodra je een aanvraag aanvaardt, een e-mail en {hours} u om online te betalen (Stripe, aan Fairide); ze verschijnt na betaling, anders komt de plaats vrij.'
     },
     sponsor: {
       brokenAdmin: 'Het logo voor “{label}” is niet te vinden (bestand verwijderd bij de host?). Laad het opnieuw op in Admin › Samenwerkingen / sponsoring.',

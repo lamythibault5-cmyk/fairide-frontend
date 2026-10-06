@@ -6702,7 +6702,13 @@ export default {
       paidOnline: 'payée en ligne',
       refund_rembourse: 'Aucune commande pendant la période : remboursée.',
       refund_a_rembourser: 'Aucune commande pendant la période : remboursement en cours.',
-      refund_prorata: 'Arrêtée en cours de période : seuls les jours affichés sont dus, le reste t\'a été remboursé.'
+      refund_prorata: 'Arrêtée en cours de période : seuls les jours affichés sont dus, le reste t\'a été remboursé.',
+      perUnit_day: 'par jour',
+      perUnit_week: 'par semaine',
+      perUnit_month: 'par mois',
+      periods_day: '{n} jour(s)',
+      periods_week: '{n} semaine(s)',
+      periods_month: '{n} mois'
     },
     adminPlacements: {
       addPosition: 'Ajouter une position',
@@ -6714,7 +6720,7 @@ export default {
       rowRemoved: 'Rangée retirée.',
       removeRow: 'Retirer cette rangée',
       intro: 'Les commerces peuvent payer pour apparaître en 1re, 2e ou 3e position d\'une rangée de la liste. Tu règles ici le prix de chaque position et tu acceptes ou refuses les demandes. Le client voit toujours la mention « Sponsorisé ».',
-      pricesTitle: 'Prix par semaine (hors TVA)',
+      pricesTitle: 'Prix par {unit} (hors TVA)',
       pricesHelp: 'Un prix par rangée et par position. Les demandes déjà faites gardent le prix du jour où elles ont été posées.',
       savePrices: 'Enregistrer les prix',
       pricesSaved: 'Prix enregistrés.',
@@ -6741,7 +6747,7 @@ export default {
       communeCounts: '{restaurants} commerce(s), {pending} à traiter, {active} en cours',
       communeHelp: 'Page de {commune} : son ouverture, ses prix et ses demandes. Une case vide reprend le prix par défaut. Fermer la vente n\'arrête pas les mises en avant déjà acceptées.',
       defaultHelp: 'Ces prix s\'appliquent dans toute commune qui n\'a pas de prix propre. Choisis une commune pour l\'ouvrir à la vente.',
-      pricesTitleCommune: 'Prix par semaine à {commune} (hors TVA)',
+      pricesTitleCommune: 'Prix par {unit} à {commune} (hors TVA)',
       pricesHelpCommune: 'Un prix propre à cette commune par rangée et par position ; case vide = prix par défaut (affiché en gris).',
       communeOpened: 'Vente ouverte à {commune}.',
       communeClosed: 'Vente fermée à {commune}.',
@@ -6779,7 +6785,16 @@ export default {
       billing_rembourse: 'Remboursée',
       refund_rembourse: 'remboursée (zéro commande)',
       refund_a_rembourser: 'à rembourser (zéro commande, facturée à la main)',
-      refund_prorata: 'prorata remboursé'
+      refund_prorata: 'prorata remboursé',
+      unitLabel: 'Prix par',
+      unit_day: 'jour',
+      unit_week: 'semaine',
+      unit_month: 'mois (30 jours)',
+      unitWord_day: 'jour',
+      unitWord_week: 'semaine',
+      unitWord_month: 'mois',
+      unitHelp: 'Les prix de la grille s\'entendent par jour, par semaine ou par mois (30 jours), au choix ; une demande déjà posée garde son unité et son prix.',
+      manualPayHelp: 'En manuel, dès que tu acceptes une demande, le commerce reçoit un e-mail et a {hours} h pour la payer en ligne (Stripe, montant reversé à Fairide) ; elle s\'affiche au paiement, sinon la place est libérée.'
     },
     sponsor: {
       brokenAdmin: 'Le logo de « {label} » est introuvable (fichier supprimé chez l\'hébergeur ?). Recharge-le dans Admin › Collaborations / sponsoring.',

@@ -139,10 +139,15 @@ export default function AdminPlacementsPage() {
           {!commune && (
             <div className="card" style={{ margin: '0 0 16px' }}>
               <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{tr('adminPlacements.autoTitle')}</h3>
-              <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-soft)' }}>{tr('adminPlacements.autoHelp', { minutes: etat.paymentMinutes || 10 })}</p>
+              <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-soft)' }}>{tr('adminPlacements.autoHelp', { minutes: etat.paymentMinutes || 10 })} {tr('adminPlacements.manualPayHelp', { hours: etat.paymentHoursAfterApproval || 24 })} {tr('adminPlacements.unitHelp')}</p>
               <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className={`modif-statut mea-statut--${etat.auto ? 'active' : 'pending'}`}>{etat.auto ? tr('adminPlacements.autoOn') : tr('adminPlacements.autoOff')}</span>
                 <button type="button" className={etat.auto ? 'btn-danger-ghost' : 'btn-teal'} disabled={occupe} onClick={() => regler({ auto: !etat.auto })}>{etat.auto ? tr('adminPlacements.autoDisable') : tr('adminPlacements.autoEnable')}</button>
+                <label className="small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>{tr('adminPlacements.unitLabel')}
+                  <select value={etat.periodUnit || 'week'} disabled={occupe} onChange={(e) => regler({ periodUnit: e.target.value })}>
+                    {['day', 'week', 'month'].map((u) => <option key={u} value={u}>{tr(`adminPlacements.unit_${u}`)}</option>)}
+                  </select>
+                </label>
                 <label className="small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>{tr('adminPlacements.advanceDays')}
                   <input type="number" min={1} max={365} value={joursAvance === '' ? etat.maxAdvanceDays : joursAvance} style={{ width: 80, minHeight: 40 }} onChange={(e) => setJoursAvance(e.target.value)} />
                   <button type="button" className="btn-outline" disabled={occupe || joursAvance === '' || Number(joursAvance) === etat.maxAdvanceDays} onClick={() => { regler({ maxAdvanceDays: Number(joursAvance) }); setJoursAvance(''); }}>{tr('common.save')}</button>
@@ -216,7 +221,7 @@ export default function AdminPlacementsPage() {
             )}
           </div>
           <div className="card" style={{ margin: '0 0 16px' }}>
-            <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{commune ? tr('adminPlacements.pricesTitleCommune', { commune: nomPortee }) : tr('adminPlacements.pricesTitle')}</h3>
+            <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{commune ? tr('adminPlacements.pricesTitleCommune', { commune: nomPortee, unit: tr(`adminPlacements.unitWord_${etat.periodUnit || 'week'}`) }) : tr('adminPlacements.pricesTitle', { unit: tr(`adminPlacements.unitWord_${etat.periodUnit || 'week'}`) })}</h3>
             <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-soft)' }}>{zoneId ? tr('adminPlacements.pricesHelpZone') : commune ? tr('adminPlacements.pricesHelpCommune') : tr('adminPlacements.pricesHelp')}</p>
             <div className="mea-grille mea-grille--admin mea-grille--large">
               <div className="mea-ligne mea-entete" style={colonnes}>
@@ -272,7 +277,7 @@ export default function AdminPlacementsPage() {
               <div>
                 <b>{b.restaurantName}</b>{!commune && b.commune && <span className="small"> · {b.commune}</span>}
                 <span className="small" style={{ display: 'block' }}>{titre(b.sectionKey, b.sectionLabel)} · {libellePosition(tr, b.slot)} · {jourCourt(b.startsOn)} → {jourCourt(b.endsOn)}</span>
-                <span className="small" style={{ display: 'block' }}>{euros(b.totalHt)} {tr('placements.exVat')} ({tr('placements.weeks', { n: b.weeks })} × {euros(b.weeklyPrice)})</span>
+                <span className="small" style={{ display: 'block' }}>{euros(b.totalHt)} {tr('placements.exVat')} ({tr(`placements.periods_${b.periodUnit || 'week'}`, { n: b.weeks })} × {euros(b.weeklyPrice)})</span>
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
                 <button type="button" className="btn-teal" disabled={occupe} onClick={() => decider(b, { action: 'approve' })}>{tr('adminPlacements.approve')}</button>

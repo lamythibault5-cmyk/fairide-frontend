@@ -6657,7 +6657,13 @@ export default {
       paidOnline: 'paid online',
       refund_rembourse: 'No order during the period: refunded.',
       refund_a_rembourser: 'No order during the period: refund in progress.',
-      refund_prorata: 'Stopped mid-period: only the days shown are due, the rest has been refunded to you.'
+      refund_prorata: 'Stopped mid-period: only the days shown are due, the rest has been refunded to you.',
+      perUnit_day: 'per day',
+      perUnit_week: 'per week',
+      perUnit_month: 'per month',
+      periods_day: '{n} day(s)',
+      periods_week: '{n} week(s)',
+      periods_month: '{n} month(s)'
     },
     adminPlacements: {
       addPosition: 'Add a position',
@@ -6669,7 +6675,7 @@ export default {
       rowRemoved: 'Row removed.',
       removeRow: 'Remove this row',
       intro: 'Shops can pay to appear 1st, 2nd or 3rd in a row of the list. Set the price of each position here and accept or refuse requests. Customers always see the “Sponsored” label.',
-      pricesTitle: 'Price per week (excl. VAT)',
+      pricesTitle: 'Price per {unit} (ex. VAT)',
       pricesHelp: 'One price per row and position. Existing requests keep the price of the day they were made.',
       savePrices: 'Save prices',
       pricesSaved: 'Prices saved.',
@@ -6696,7 +6702,7 @@ export default {
       communeCounts: '{restaurants} business(es), {pending} to review, {active} running',
       communeHelp: '{commune} page: its opening, prices and requests. An empty box falls back to the default price. Closing sales does not stop placements already accepted.',
       defaultHelp: 'These prices apply in any commune without its own prices. Pick a commune to open it for sale.',
-      pricesTitleCommune: 'Weekly prices in {commune} (ex. VAT)',
+      pricesTitleCommune: 'Price per {unit} in {commune} (ex. VAT)',
       pricesHelpCommune: 'A price specific to this commune per row and position; empty box = default price (shown in grey).',
       communeOpened: 'Sales open in {commune}.',
       communeClosed: 'Sales closed in {commune}.',
@@ -6734,7 +6740,16 @@ export default {
       billing_rembourse: 'Refunded',
       refund_rembourse: 'refunded (zero orders)',
       refund_a_rembourser: 'to refund (zero orders, billed manually)',
-      refund_prorata: 'pro rata refunded'
+      refund_prorata: 'pro rata refunded',
+      unitLabel: 'Price per',
+      unit_day: 'day',
+      unit_week: 'week',
+      unit_month: 'month (30 days)',
+      unitWord_day: 'day',
+      unitWord_week: 'week',
+      unitWord_month: 'month',
+      unitHelp: 'Grid prices are per day, per week or per month (30 days), your choice; a request already made keeps its unit and price.',
+      manualPayHelp: 'In manual mode, as soon as you accept a request the business gets an e-mail and has {hours} h to pay online (Stripe, paid to Fairide); it shows once paid, otherwise the spot is released.'
     },
     sponsor: {
       brokenAdmin: 'The logo for “{label}” cannot be found (file deleted at the host?). Upload it again in Admin › Collaborations / sponsoring.',

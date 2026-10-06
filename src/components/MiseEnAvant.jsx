@@ -34,6 +34,9 @@ export default function MiseEnAvant({ restoId, token, toast }) {
   }, [restoId, token, toast]);
   useEffect(() => { charger(); }, [charger]);
 
+  // Unité de facturation réglée par Fairide : jour, semaine ou mois (fondateur, 2026-10-06).
+  const unite = etat?.periodUnit || 'week';
+  const maxPeriodes = etat?.maxPeriods || etat?.maxWeeks || 12;
   const section = choix && etat?.sections.find((s) => s.key === choix.sectionKey);
   const prix = section?.prices.find((p) => p.slot === choix.slot)?.weeklyPrice ?? 0;
   const totalHt = prix * semaines;
@@ -95,7 +98,7 @@ export default function MiseEnAvant({ restoId, token, toast }) {
                       aria-pressed={actif} onClick={() => setChoix(actif ? null : { sectionKey: s.key, slot: p.slot })}>
                       {p.takenUntil
                         ? <span className="mea-prise">{p.takenByMe ? t('placements.yours') : t('placements.takenUntil', { date: jourCourt(p.takenUntil) })}</span>
-                        : <><b>{euros(p.weeklyPrice)}</b><span className="mea-unite">{t('placements.perWeek')}</span></>}
+                        : <><b>{euros(p.weeklyPrice)}</b><span className="mea-unite">{t(`placements.perUnit_${unite}`)}</span></>}
                     </button>
                   );
                 })}
@@ -108,8 +111,8 @@ export default function MiseEnAvant({ restoId, token, toast }) {
               <b>{t('placements.summary', { row: titre(section.key, section.label), pos: libellePosition(t, choix.slot) })}</b>
               <div className="row" style={{ gap: 8, alignItems: 'center', margin: '8px 0', flexWrap: 'wrap' }}>
                 <button type="button" className="btn-ghost" style={{ minWidth: 44, minHeight: 44 }} aria-label="−" disabled={semaines <= 1} onClick={() => setSemaines((n) => Math.max(1, n - 1))}>−</button>
-                <span style={{ minWidth: 96, textAlign: 'center', fontWeight: 700 }}>{t('placements.weeks', { n: semaines })}</span>
-                <button type="button" className="btn-ghost" style={{ minWidth: 44, minHeight: 44 }} aria-label="+" disabled={semaines >= (etat.maxWeeks || 12)} onClick={() => setSemaines((n) => Math.min(etat.maxWeeks || 12, n + 1))}>+</button>
+                <span style={{ minWidth: 96, textAlign: 'center', fontWeight: 700 }}>{t(`placements.periods_${unite}`, { n: semaines })}</span>
+                <button type="button" className="btn-ghost" style={{ minWidth: 44, minHeight: 44 }} aria-label="+" disabled={semaines >= maxPeriodes} onClick={() => setSemaines((n) => Math.min(maxPeriodes, n + 1))}>+</button>
               </div>
               <label className="small" style={{ display: 'block', margin: '0 0 8px' }}>{t('placements.startsOn')}
                 <input type="date" value={dateDebut} min={etat.minStartsOn} max={etat.maxStartsOn} style={{ display: 'block', marginTop: 4, minHeight: 44 }} onChange={(e) => setDateDebut(e.target.value)} />
