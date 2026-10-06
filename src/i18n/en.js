@@ -1545,9 +1545,9 @@ export default {
       missing_document_selfie: 'Selfie to add',
       beforeTitle: 'Before you start',
       beforeValidation: 'You can take deliveries as soon as Fairide has validated your file (usually within 2 working days): you will be notified by e-mail.',
-      beforeTwoOrders: 'You only deliver for Fairide: you can take up to two deliveries at the same time.',
-      beforeOneOrder: 'You also deliver for another platform: one Fairide delivery at a time, until it is completed. (Editable under “Other platforms”.)',
-      beforePayment: 'Payment: the price of each delivery is shown before you accept it; you receive the full delivery fee paid by the customer, plus tips. Your earnings are paid every Monday to your account via Stripe, for the previous week\'s deliveries.',
+      beforeTwoOrders: 'You only deliver for Fairide: you may take a second delivery during the first one, provided it is picked up within {radius} km of the address where you deliver the first — no detour. One delivery at a time if you also deliver for another platform.',
+      beforeOneOrder: 'You also deliver for another platform: one Fairide delivery at a time, until it is completed. (Editable under “Other platforms”; couriers who only work for Fairide may hold two.)',
+      beforePayment: 'Payment: {base} base per delivery up to {km} km, then {bike} per extra kilometre by bike (or e-bike) and {motor} per extra kilometre by scooter or car. The distance is the one between the business and the delivery address of the order. The price is shown before you accept, tips are yours, and your earnings are paid every Monday to your account via Stripe, for the previous week\'s deliveries.',
       beforeInsurance: 'Fairide insurance: part of the system fees — 10% of the delivery fees — is set aside in a fund used to help finance accidents that happen during a delivery.',
       beforeLiability: 'You remain responsible for accidents you cause and offences you commit while on duty (traffic rules, parking, compliance): the fund helps, it replaces neither your insurance nor your responsibility.'
     },
@@ -2643,6 +2643,8 @@ export default {
       driverPerKmMotorHint: 'Capped at €0.70/km. Fixed when the ride is taken. Above the customer rate, Fairide pays the difference.',
       driverPerKmBike: 'Courier share per km · bike / e-bike',
       driverPerKmBikeHint: "Never applied below the customer per-km rate: the courier always receives the full delivery fee (decision of 2 October 2026). This setting only has an effect above the customer rate, in which case Fairide pays the difference.",
+      secondOrderRadius: 'Second delivery radius (courier)',
+      secondOrderRadiusHint: 'A courier who only works for Fairide may take a second delivery during the first if it is picked up within this radius of the first delivery address.'
     },
     adminTasks: {
       title: 'Tasks / Activities',

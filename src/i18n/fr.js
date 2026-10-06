@@ -1545,9 +1545,9 @@ export default {
       missing_document_selfie: 'Selfie à ajouter',
       beforeTitle: 'Avant de commencer',
       beforeValidation: 'Tu pourras prendre des courses dès que Fairide aura validé ton dossier (en général sous 2 jours ouvrés) : tu seras prévenu par e-mail.',
-      beforeTwoOrders: 'Tu ne livres que pour Fairide : tu peux prendre jusqu\'à deux courses en même temps.',
-      beforeOneOrder: 'Tu livres aussi pour une autre plateforme : une seule course Fairide à la fois, le temps de la terminer. (Modifiable dans « Autres plateformes ».)',
-      beforePayment: 'Paiement : le prix de chaque course t\'est affiché avant de l\'accepter ; tu touches l\'intégralité des frais de livraison payés par le client, plus les pourboires. Tes gains sont versés chaque lundi sur ton compte, via Stripe, pour les courses de la semaine écoulée.',
+      beforeTwoOrders: 'Tu ne livres que pour Fairide : tu peux prendre une seconde course pendant la première, à condition qu\'elle se retire dans un rayon de {radius} km de l\'adresse où tu livres la première — pour ne pas faire de détour. Une seule course à la fois si tu livres aussi pour une autre plateforme.',
+      beforeOneOrder: 'Tu livres aussi pour une autre plateforme : une seule course Fairide à la fois, le temps de la terminer. (Modifiable dans « Autres plateformes » ; les livreurs qui ne travaillent que pour Fairide peuvent en tenir deux.)',
+      beforePayment: 'Paiement : {base} de base par course jusqu\'à {km} km, puis {bike} par kilomètre au-delà à vélo (ou vélo électrique) et {motor} par kilomètre au-delà en scooter ou en voiture. La distance est celle entre le commerce et l\'adresse de livraison de la commande. Le prix t\'est affiché avant d\'accepter, les pourboires sont pour toi, et tes gains sont versés chaque lundi sur ton compte via Stripe, pour les courses de la semaine écoulée.',
       beforeInsurance: 'Assurance Fairide : une partie des frais de système — 10 % des frais de livraison — est mise de côté dans un fonds qui sert à financer les accidents survenus pendant une course.',
       beforeLiability: 'Tu restes responsable des accidents que tu provoques et des infractions que tu commets pendant ton service (code de la route, stationnement, respect des règles) : le fonds vient en aide, il ne remplace ni ton assurance ni ta responsabilité.'
     },
@@ -2643,6 +2643,8 @@ export default {
       driverPerKmMotorHint: 'Plafonné à 0,70 €/km. Figé à la prise en charge de la course. Au-dessus du tarif client, Fairide paie la différence.',
       driverPerKmBike: 'Part livreur par km · vélo / vélo électrique',
       driverPerKmBikeHint: "Jamais appliqué en dessous du tarif client par km : le livreur touche toujours l'intégralité des frais de livraison (décision du 2 octobre 2026). Ce réglage n'agit qu'au-dessus du tarif client, et c'est alors Fairide qui paie la différence.",
+      secondOrderRadius: 'Rayon de la seconde course (livreur)',
+      secondOrderRadiusHint: 'Un livreur qui ne travaille que pour Fairide peut prendre une seconde course pendant la première si elle se retire dans ce rayon de l\'adresse de livraison de la première.'
     },
     adminTasks: {
       title: 'Tâches / Activités',

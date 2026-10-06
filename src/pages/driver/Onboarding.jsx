@@ -102,7 +102,7 @@ export default function Onboarding() {
 
       {/* État du dossier */}
       <EtatDossier d={d} t={t} onChangeStatus={allerAuChangement} />
-      <AvantDeCommencer c={c} t={t} />
+      <AvantDeCommencer c={c} t={t} pricing={d.pricing} />
 
       <Notifications t={t} token={token} />
 
@@ -581,15 +581,17 @@ function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
 // AVANT DE COMMENCER (fondateur, 2026-10-06) : ce que le livreur doit savoir — il commence après validation par Fairide ;
 // deux courses à la fois s'il ne livre que pour Fairide, une seule s'il livre aussi pour une autre plateforme ; comment il
 // est payé ; le fonds d'assurance Fairide (10 % des frais de livraison) ; sa responsabilité en cas d'accident ou d'infraction.
-function AvantDeCommencer({ c, t }) {
+function AvantDeCommencer({ c, t, pricing }) {
   const autre = c?.otherPlatforms?.works === true;
+  const eur = (v) => `${Number(v || 0).toFixed(2).replace('.', ',')} €`;
+  const p = { base: eur(pricing?.deliveryBaseFee ?? 4.5), km: Number(pricing?.deliveryBaseKm ?? 2), bike: eur(pricing?.driverPerKmBike ?? 0.6), motor: eur(pricing?.driverPerKmMotor ?? 0.8), radius: Number(pricing?.secondOrderRadiusKm ?? 2) };
   return (
     <div className="card" style={{ marginBottom: 12 }}>
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.beforeTitle')}</h3>
       <ul className="small" style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
         <li>{t('courierOnboarding.beforeValidation')}</li>
-        <li>{autre ? t('courierOnboarding.beforeOneOrder') : t('courierOnboarding.beforeTwoOrders')}</li>
-        <li>{t('courierOnboarding.beforePayment')}</li>
+        <li>{autre ? t('courierOnboarding.beforeOneOrder') : t('courierOnboarding.beforeTwoOrders', { radius: p.radius })}</li>
+        <li>{t('courierOnboarding.beforePayment', p)}</li>
         <li>{t('courierOnboarding.beforeInsurance')}</li>
         <li>{t('courierOnboarding.beforeLiability')}</li>
       </ul>

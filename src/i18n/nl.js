@@ -1545,9 +1545,9 @@ export default {
       missing_document_selfie: 'Selfie toe te voegen',
       beforeTitle: 'Voor je begint',
       beforeValidation: 'Je kunt leveringen aannemen zodra Fairide je dossier heeft goedgekeurd (meestal binnen 2 werkdagen): je krijgt een e-mail.',
-      beforeTwoOrders: 'Je levert alleen voor Fairide: je kunt tot twee leveringen tegelijk aannemen.',
-      beforeOneOrder: 'Je levert ook voor een ander platform: één Fairide-levering tegelijk, tot ze afgerond is. (Aanpasbaar onder “Andere platformen”.)',
-      beforePayment: 'Betaling: de prijs van elke levering zie je voor je ze aanvaardt; je ontvangt de volledige leveringskosten die de klant betaalt, plus de fooien. Je inkomsten worden elke maandag via Stripe op je rekening gestort, voor de leveringen van de voorbije week.',
+      beforeTwoOrders: 'Je levert alleen voor Fairide: je mag een tweede levering aannemen tijdens de eerste, op voorwaarde dat ze wordt opgehaald binnen {radius} km van het adres waar je de eerste levert — geen omweg. Eén levering tegelijk als je ook voor een ander platform levert.',
+      beforeOneOrder: 'Je levert ook voor een ander platform: één Fairide-levering tegelijk, tot ze afgerond is. (Aanpasbaar onder “Andere platformen”; koeriers die alleen voor Fairide werken mogen er twee hebben.)',
+      beforePayment: 'Betaling: {base} basis per levering tot {km} km, daarna {bike} per extra kilometer met de fiets (of e-bike) en {motor} per extra kilometer met scooter of auto. De afstand is die tussen de zaak en het leveradres van de bestelling. De prijs zie je voor je aanvaardt, de fooien zijn voor jou, en je inkomsten worden elke maandag via Stripe op je rekening gestort, voor de leveringen van de voorbije week.',
       beforeInsurance: 'Fairide-verzekering: een deel van de systeemkosten — 10 % van de leveringskosten — gaat in een fonds dat ongevallen tijdens een levering mee financiert.',
       beforeLiability: 'Je blijft verantwoordelijk voor ongevallen die je veroorzaakt en overtredingen die je begaat tijdens je dienst (verkeersregels, parkeren, naleving van de regels): het fonds helpt, maar vervangt noch je verzekering noch je verantwoordelijkheid.'
     },
@@ -2643,6 +2643,8 @@ export default {
       driverPerKmMotorHint: 'Geplafonneerd op € 0,70/km. Vastgelegd bij het opnemen van de rit. Boven het klanttarief betaalt Fairide het verschil.',
       driverPerKmBike: 'Koeriersaandeel per km · fiets / e-bike',
       driverPerKmBikeHint: "Nooit toegepast onder het klanttarief per km: de koerier ontvangt altijd de volledige leveringskosten (beslissing van 2 oktober 2026). Deze instelling werkt alleen boven het klanttarief; Fairide betaalt dan het verschil.",
+      secondOrderRadius: 'Straal tweede levering (koerier)',
+      secondOrderRadiusHint: 'Een koerier die alleen voor Fairide werkt mag een tweede levering aannemen tijdens de eerste als ze binnen deze straal van het eerste leveradres wordt opgehaald.'
     },
     adminTasks: {
       title: 'Taken / Activiteiten',
