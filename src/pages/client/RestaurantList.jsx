@@ -584,7 +584,7 @@ export default function RestaurantList() {
           )}
           <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionFreeDelivery')} icon="scooter" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionDeliveryFrom', { amount: '3 €' })} icon="scooter" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="scooter" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <EmplacementSponsor cle="liste" />
           {rangeesCuisine.map((s) => (

@@ -110,7 +110,7 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
             ))}
             <input aria-label={t('review.tipOtherPlaceholder')}
               type="number"
-              min="0"
+              min="0.5"
               step="0.5"
               placeholder={t('review.tipOtherPlaceholder')}
               value={tipInput}
