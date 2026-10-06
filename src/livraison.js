@@ -5,6 +5,7 @@
 //   - le commerce peut offrir une part fixe (deliveryFeeDiscount : 1,50 € → livraison dès 3 €), la totalité
 //     (freeDelivery), ou la totalité dès un montant de commande (freeDeliveryMinOrder). Ce qu'il offre, il le reçoit
 //     en moins sur son virement, et le livreur touche les frais complets.
+import { getLocale } from './context/LanguageContext';
 export const FORFAIT_LIVRAISON = 4.5;
 
 export function tarifLivraison(r) {
@@ -20,4 +21,10 @@ export function tarifLivraison(r) {
   };
 }
 
-export const eurosCourts = (v) => `${Number(v).toFixed(2).replace('.', ',').replace(/,00$/, '')} €`;
+// Dans le format de la langue affichée (« 3 € », « €3 », « € 3 ») : écrit à la main au format français, il donnait
+// « Delivery from 3 € » à côté de « -€3 » sur la liste anglaise (test de bout en bout du 6 oct. 2026). Sans « ,00 »
+// pour un montant rond, comme eurosCourt dans prixPlat.js.
+export const eurosCourts = (v) => {
+  const n = Number(v) || 0;
+  return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
+};
