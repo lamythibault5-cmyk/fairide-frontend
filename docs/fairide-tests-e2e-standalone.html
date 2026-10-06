@@ -1752,6 +1752,7 @@ const A_LA_MAIN = [
   {t:"Comparer distance et durée de 3 commerces avec Google Maps.", tests:["GEO-10"]},
   {t:"Envoyer une vraie photo iPhone (HEIC, environ 8 Mo) comme photo de plat.", tests:["MNU-8"]}]},
  {g:"🖨️ Avec le vrai terminal Goodcom (chez un commerce ou au bureau)", items:[
+  {t:"Régler chaque Goodcom pour le service : écran jamais en veille (Paramètres › Affichage › Mise en veille › Jamais), page Fairide du terminal ouverte en permanence. Sinon les tickets attendent dans la file et sortent en retard, à la réouverture (limite écrite dans le code : rien ne s'imprime page fermée ou écran verrouillé). Le vérifier : écran laissé 30 min, puis une commande test doit sortir tout de suite.", tests:["TER-6"]},
   {t:"Imprimer une vraie commande ; puis papier, Wi-Fi, mise en veille, Chrome, AirPrint. Tout le reste de l'impression a été vérifié avec le terminal simulé.", tests:["DEV-1","TER-1","TER-2","TER-6","TRM-5","TRM-6","TRM-7","TRM-14","DEV-2","DEV-3","DEV-4"]}]},
  {g:"✉️ Lire des e-mails dans contact@fairide.be (adresses contact+claude-…)", items:[
   {t:"Ouvrir les e-mails reçus pendant les tests : arrivée, langue, sujet, lien de désabonnement.", tests:["CPT-3","CPT-6","NOT-2","NOT-3","NOT-6","NOT-7","ADM-3"]}]},
