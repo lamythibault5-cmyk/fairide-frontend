@@ -149,6 +149,19 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .faire li{margin:3px 0}
 .fin{margin-top:16px;font-size:14px;background:var(--accent-soft);border-radius:8px;padding:8px 12px;max-width:90ch}
 .claude{margin-top:10px;font-size:14px;background:var(--retest-soft);border:1px solid var(--retest);border-radius:8px;padding:8px 12px;max-width:90ch}
+.pilotage details>summary{cursor:pointer;list-style:none}.pilotage details>summary::-webkit-details-marker{display:none}
+.pilotage details>summary h2{display:inline}.pilotage h3{font-size:15px;margin:18px 0 6px}
+.decision{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--fixed);border-radius:10px;padding:10px 14px;margin-top:12px;max-width:100ch}
+.decision.prise{border-left-color:var(--pass)}.decision h3{margin:0 0 4px}.decision h3 .id{font-family:var(--mono);font-size:12px;color:var(--muted);margin-right:4px}
+.decision .avec{font-size:12px;font-weight:500;color:var(--muted);margin-left:6px}.decision p{margin:4px 0 8px;font-size:14px}
+.choix{display:grid;gap:6px}.choix label{display:block;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:14px;cursor:pointer;background:var(--surface2)}
+.choix label.reco{border-color:var(--pass)}.choix label span{color:var(--muted)}.choix label:has(input:checked){background:var(--pass-soft);border-color:var(--pass)}
+.tag-reco{font-size:11px;font-weight:600;color:var(--pass);border:1px solid var(--pass);border-radius:6px;padding:0 5px;margin-left:4px}
+.decision textarea{width:100%;margin-top:8px;border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:6px 10px;font:inherit;font-size:14px;color:var(--fg);box-sizing:border-box}
+.lies{font-size:12px;color:var(--muted);margin-top:6px}.lien-test{font-family:var(--mono);font-size:12px;padding:0 5px;border-radius:5px;text-decoration:none;color:var(--fg);background:var(--todo-soft);white-space:nowrap}
+.lien-test.st-pass,.lien-test.st-retest,.lien-test.st-na{background:var(--pass-soft)}.lien-test.st-fail{background:var(--fail-soft)}.lien-test.st-fixed{background:var(--fixed-soft)}
+.main-liste{list-style:none;padding:0;margin:0;max-width:100ch}.main-liste li{padding:7px 10px;border:1px solid var(--line);border-radius:8px;margin-top:6px;background:var(--surface);font-size:14px}
+.main-liste li.fait{opacity:.6}.main-liste .coche{font-weight:700;color:var(--muted)}.main-liste li.fait .coche{color:var(--pass)}.main-liste .lies{display:block;margin:4px 0 0 18px}
 .glossaire{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:6px;font-size:14px}
 .glossaire summary{cursor:pointer;font-weight:700}
 .glossaire dl{margin:10px 0 0;display:grid;grid-template-columns:max-content 1fr;gap:6px 14px}
@@ -1573,8 +1586,149 @@ function sessionHTML(s){
     ${corps||`<div class="etape"><p>Tout est validé dans cette session.</p></div>`}
     <div class="fin"><b>Session terminée quand :</b> ${esc(s.fin)}</div></section>`;
 }
+// ───────── Pilotage (6 oct. 2026) : décisions à trancher et tâches qui ne peuvent se faire qu'à la main.
+// Le choix d'une décision est rangé dans `results` sous un identifiant « DEC-n » : il part avec « Sauvegarder les
+// résultats (JSON) » et l'import comme n'importe quel test, sans nouveau stockage. Une tâche « à la main » n'a pas de
+// case à cocher propre : elle est faite quand tous ses tests sont « Réussi », « Re-testé OK » ou « N/A ».
+const DECISIONS = [
+ {id:"DEC-1", titre:"La facture que reçoit le client", avec:"le comptable", tests:["LEG-7","MNU-9","HOR-6"],
+  quoi:"Aujourd'hui le client reçoit la facture automatique de Stripe. Elle ne montre pas la TVA par taux (6 % repas, 21 % boissons et livraison), elle dit que les plats sont vendus par Fairide (alors que c'est le commerce qui les vend), et elle affiche « due / Pay online » alors que c'est déjà payé.",
+  options:[
+   {k:"a", reco:true, t:"Fairide fait ses propres reçus", d:"Un PDF par commande, en trois parties : les plats vendus par le commerce (TVA ventilée), la livraison vendue par le livreur, les frais de service vendus par Fairide. Stripe n'envoie plus sa facture. Claude le code en un jour environ, une fois le modèle validé par le comptable."},
+   {k:"b", t:"Garder la facture Stripe", d:"On corrige seulement le nom légal et le fuseau dans Stripe. Rapide, mais la TVA reste non ventilée et les plats restent « vendus par Fairide » : probablement pas conforme."}]},
+ {id:"DEC-2", titre:"Alcool refusé à la remise (pas de pièce d'identité, ou client mineur)", avec:"l'avocat", tests:["RES-7"],
+  quoi:"La commande est annulée, mais personne n'est remboursé automatiquement : une tâche « remboursement à décider » s'ouvre dans l'admin. Les CGV ne disent rien sur ce cas.",
+  options:[
+   {k:"a", reco:true, t:"Rembourser les produits, garder la livraison", d:"Le client récupère le prix des plats et boissons. Le livreur, qui s'est déplacé, est payé. Les frais de livraison et de service ne sont pas remboursés. On l'écrit dans les CGV."},
+   {k:"b", t:"Tout rembourser automatiquement", d:"Plus simple pour le client. Fairide paie alors la course du livreur."},
+   {k:"c", t:"Garder le cas par cas", d:"C'est la situation actuelle : l'équipe décide à chaque fois. Il faut quand même l'écrire dans les CGV."}]},
+ {id:"DEC-3", titre:"Forcer le statut d'une commande depuis l'admin", avec:"toi", tests:["ADM-9"],
+  quoi:"Forcer « livrée » ou « annulée » marche, et l'argent suit (le livreur est payé, ou le client est remboursé). Mais aucun motif n'est demandé et personne n'est prévenu.",
+  options:[
+   {k:"a", reco:true, t:"Motif obligatoire", d:"Une fenêtre demande pourquoi. Le motif est gardé dans l'historique de la commande, et le client reçoit la notification habituelle. Claude le code en une heure environ."},
+   {k:"b", t:"Laisser comme aujourd'hui", d:"On ne saura pas plus tard qui a forcé quoi, ni pourquoi."}]},
+ {id:"DEC-4", titre:"Numéro d'entreprise (BCE) inventé à l'inscription", avec:"toi", tests:["SEC-16"],
+  quoi:"Un numéro de BCE qui n'existe pas, mais dont le chiffre de contrôle est juste, est accepté à l'inscription. Seule la vérification de l'équipe au moment d'approuver l'arrête.",
+  options:[
+   {k:"a", reco:true, t:"Garder la vérification à l'approbation", d:"On écrit dans la procédure d'approbation : « chercher le numéro sur BCE Public Search et comparer le nom ». Aucun commerce n'est en ligne sans approbation, donc c'est suffisant au lancement."},
+   {k:"b", t:"Vérifier automatiquement à l'inscription", d:"Le site interroge un service public (VIES) pendant l'inscription. Ça marche seulement pour les entreprises assujetties à la TVA, et ça demande plus de code."}]},
+ {id:"DEC-5", titre:"Les comptes de test en production", avec:"toi", tests:["LCH-7"],
+  quoi:"Les commandes des comptes marqués 🧪 test comptent dans Finance, le tableau de bord et la comptabilité. Un commerce de test publié apparaît dans la liste publique.",
+  options:[
+   {k:"a", reco:true, t:"Les exclure partout", d:"Un commerce de test n'apparaît jamais au public, et ses commandes ne comptent dans aucun chiffre. On peut continuer à tester en production sans fausser les comptes. Claude le code."},
+   {k:"b", t:"Tout supprimer avant le lancement", d:"On ne teste plus en production ensuite (il faut alors l'environnement de test, DEC-12)."}]},
+ {id:"DEC-6", titre:"Zones proposées aux livreurs", avec:"toi", tests:["COU-1"],
+  quoi:"À l'inscription, un livreur ne peut choisir que parmi 3 communes. Et la zone choisie ne change rien à qui reçoit les courses.",
+  options:[
+   {k:"a", reco:true, t:"Proposer les 19 communes", d:"Plus cohérent avec la liste des commerces, qui couvre toute la région bruxelloise."},
+   {k:"b", t:"Garder 3 communes au lancement", d:"Ça a du sens seulement si le lancement est limité à ces 3 communes, côté clients aussi."}]},
+ {id:"DEC-7", titre:"Positions « Sponsorisé » et contrat commerce", avec:"l'avocat", tests:["ADM-4","ACT-3"],
+  quoi:"Le contrat RESTO-2026.16 dit « aucun classement payant », mais le site sait afficher des positions « Sponsorisé ». Les deux doivent dire la même chose.",
+  options:[
+   {k:"a", reco:true, t:"Pas de positions payantes au lancement", d:"On n'en vend pas : le contrat reste vrai tel quel. On pourra en ajouter plus tard, avec une nouvelle version du contrat."},
+   {k:"b", t:"Garder les positions sponsorisées", d:"Il faut une nouvelle version du contrat, relue par l'avocat, envoyée aux commerces au moins 15 jours avant (règlement P2B)."}]},
+ {id:"DEC-8", titre:"Message quand la connexion échoue", avec:"toi", tests:["SEC-12","ACT-10"],
+  quoi:"Le site dit « Aucun compte avec cette adresse » ou « Mot de passe incorrect ». Ça aide le client, mais n'importe qui peut ainsi vérifier si une adresse e-mail est inscrite.",
+  options:[
+   {k:"a", reco:true, t:"Un seul message", d:"« E-mail ou mot de passe incorrect », dans tous les cas. C'est la pratique habituelle."},
+   {k:"b", t:"Garder les deux messages", d:"Plus clair pour le client, au prix de cette fuite d'information."}]},
+ {id:"DEC-9", titre:"Client suspendu : peut-il encore se connecter ?", avec:"toi", tests:["SEC-10"],
+  quoi:"Un client suspendu peut toujours se connecter, mais il ne peut plus commander.",
+  options:[
+   {k:"a", reco:true, t:"Garder ainsi", d:"Il peut lire la décision et la contester, comme le demande le DSA. Il ne peut plus rien acheter."},
+   {k:"b", t:"Couper aussi la connexion", d:"Il faut alors un autre moyen pour qu'il lise la décision et la conteste (par e-mail)."}]},
+ {id:"DEC-10", titre:"Déclaration d'accessibilité", avec:"l'avocat", tests:["LEG-15"],
+  quoi:"Le site n'a ni page « Accessibilité », ni lien vers une telle page dans le pied de page. La loi européenne exempte les microentreprises : moins de 10 personnes et moins de 2 M€ de chiffre d'affaires.",
+  options:[
+   {k:"a", reco:true, t:"Fairide est exemptée : l'écrire", d:"Marquer LEG-15 « N/A » en indiquant la raison. Une page courte (« nous visons le niveau AA, contactez-nous en cas de problème ») reste une bonne pratique, et Claude peut l'écrire."},
+   {k:"b", t:"Publier une déclaration complète", d:"Il faut d'abord un audit d'accessibilité."}]},
+ {id:"DEC-11", titre:"Fond de carte et statistiques de visite (services payants)", avec:"toi", tests:["GEO-8","LCH-2","SEO-8","LCH-4","AML-10","PRF-7"],
+  quoi:"Les cartes utilisent les serveurs publics d'OpenStreetMap, qui interdisent un usage commercial intensif. Les statistiques de visite (Plausible) sont désactivées : la variable n'est pas posée sur Vercel.",
+  options:[
+   {k:"a", reco:true, t:"MapTiler et Plausible", d:"Tu crées les deux comptes (MapTiler a un plan gratuit au début ; Plausible coûte environ 9 € par mois). Claude pose ensuite les variables sur Vercel et reconstruit le site. La recherche d'adresse (Photon) et le calcul d'itinéraire (OSRM) restent sur les serveurs publics au lancement : le volume est faible, à revoir vers 200 commandes par jour."},
+   {k:"b", t:"Tout passer sur un service payant tout de suite", d:"Plus sûr à long terme, mais plus de coûts et plus de travail avant le lancement."}]},
+ {id:"DEC-12", titre:"Un environnement de test séparé (« staging »)", avec:"toi", tests:["OPS-9","OPS-3","OPS-4","NOT-8"],
+  quoi:"Tous les tests ont tourné sur la production, avec des comptes test. Quand la production passera aux vraies clés Stripe, il ne sera plus possible d'y payer avec des cartes de test.",
+  options:[
+   {k:"a", reco:true, t:"Créer un staging sur Railway", d:"Une copie du serveur, avec sa propre base et Stripe en mode test (environ 5 $ par mois). Claude le monte avec la CLI Railway, puis y fait les tests trop risqués en production : redémarrage en pleine commande, clé Stripe ou e-mail coupée."},
+   {k:"b", t:"Continuer en production", d:"Ces tests restent non faits, et après le passage en live, chaque test de paiement coûte de vrais euros."}]},
+ {id:"DEC-13", titre:"Règles des incidents de livraison", avec:"toi", tests:["ACT-5"],
+  quoi:"Les règles actuelles : client absent, le livreur attend 10 min et il est payé, le remboursement est décidé au cas par cas. Aucun livreur au bout de 20 min, le client peut annuler et il est remboursé par Fairide. Un livreur qui attend au commerce n'est pas payé pour son attente.",
+  options:[
+   {k:"a", reco:true, t:"Les valider telles quelles", d:"Elles sont codées et testées. On pourra les ajuster après les premières semaines."},
+   {k:"b", t:"Changer une valeur", d:"Dis à Claude laquelle (les délais sont dans routes/orders.js)."}]},
+ {id:"DEC-14", titre:"Code promo au lancement", avec:"toi", tests:["ACT-9"],
+  quoi:"Les codes promo marchent (testés). La remise est toujours payée par Fairide, jamais par le commerce ni par le livreur.",
+  options:[
+   {k:"a", reco:true, t:"Un code de bienvenue plafonné", d:"Par exemple −3 € dès 15 €, une fois par client, 200 utilisations au plus : le coût est connu d'avance (600 € au maximum)."},
+   {k:"b", t:"Pas de code au lancement", d:"Aucun coût. On pourra en créer un plus tard depuis Admin › Promotions."}]},
+];
+
+const A_LA_MAIN = [
+ {g:"💻 Tes comptes en ligne (environ 1 h, depuis ton ordinateur)", items:[
+  {t:"Stripe › Paramètres › Informations sur l'entreprise : FAIRIDE SRL, adresse, TVA BE 1042.169.780. Puis Paramètres › Fuseau horaire : Europe/Brussels.", tests:["HOR-6"]},
+  {t:"Activer la double authentification sur Railway, Vercel, Stripe, OVH, GitHub, la boîte contact@fairide.be et le compte admin Fairide.", tests:["SEC-11","SEC-17"]},
+  {t:"Railway › case Postgres › Backups : vérifier qu'il y a des sauvegardes automatiques (sinon les activer), puis en restaurer une dans une base vide.", tests:["OPS-5","AML-11"]},
+  {t:"Créer une alerte de panne (UptimeRobot, gratuit) sur fairide.be et sur …railway.app/api/health, qui t'envoie un SMS ou un e-mail.", tests:["OPS-6","LCH-9"]},
+  {t:"Signer en ligne les accords de sous-traitance (DPA) : Stripe, Resend, Cloudinary, Sentry, Vercel, Railway, Anthropic, Twilio. Ranger les copies.", tests:["AML-9"]},
+  {t:"Journaux et pièces privées : voir le détail sur chaque carte.", tests:["AML-3","AML-4","OPS-10"]}]},
+ {g:"📱 Avec un vrai téléphone (iPhone et Android si possible)", items:[
+  {t:"Installer l'app (écran d'accueil), recevoir une notification app fermée, ouvrir un lien de notification.", tests:["DEV-5","DEV-6","DEV-12"]},
+  {t:"Payer avec Apple Pay ou Google Pay (carte de test Stripe enregistrée dans le portefeuille).", tests:["PAY-8"]},
+  {t:"Livrer pendant 2 h avec le téléphone du livreur : batterie et positions GPS.", tests:["PRF-6"]},
+  {t:"Se connecter avec Google sur fairide.be.", tests:["CPT-4"]},
+  {t:"Voir une fois l'écran de consentement biométrique dans l'inscription livreur (texte séparé, qu'on peut retirer).", tests:["LEG-4"]},
+  {t:"Taper 1180, 1000, puis un code postal sans commerce dans la barre d'adresse de l'accueil.", tests:["GEO-9"]},
+  {t:"Comparer distance et durée de 3 commerces avec Google Maps.", tests:["GEO-10"]},
+  {t:"Envoyer une vraie photo iPhone (HEIC, environ 8 Mo) comme photo de plat.", tests:["MNU-8"]}]},
+ {g:"🖨️ Avec le vrai terminal Goodcom (chez un commerce ou au bureau)", items:[
+  {t:"Papier, Wi-Fi, mise en veille, Chrome, AirPrint. Tout le reste de l'impression a été vérifié avec le terminal simulé.", tests:["TER-1","TER-2","TER-6","TRM-5","TRM-6","TRM-7","TRM-14","DEV-2","DEV-3","DEV-4"]}]},
+ {g:"✉️ Lire des e-mails dans contact@fairide.be (adresses contact+claude-…)", items:[
+  {t:"Ouvrir les e-mails reçus pendant les tests : arrivée, langue, sujet, lien de désabonnement.", tests:["CPT-3","CPT-6","NOT-2","NOT-3","NOT-6","NOT-7","ADM-3"]}]},
+ {g:"💳 Pages Stripe (captcha : c'est toi qui les remplis)", items:[
+  {t:"Inscrire un second livreur qui passe par Stripe Identity en mode test : un refus, un compte restreint, un IBAN « échec ».", tests:["COU-4","COU-5","MON-3"]}]},
+ {g:"⚖️ Avec l'avocat et le comptable", items:[
+  {t:"Relire le contrat commerce, les contrats livreurs, la politique de confidentialité et les CGU (DSA, P2B, statut des livreurs).", tests:["ACT-3","ACT-4","ACT-11","AML-8","LEG-10","LEG-11","LEG-12"]},
+  {t:"Valider l'export comptable du mois, et le modèle de facture (voir DEC-1).", tests:["OPS-7"]},
+  {t:"Obtenir les prix magasin des commerces et prévenir ceux qui n'avaient rien réglé (distance de livraison de 6 km par défaut).", tests:["MNU-10","LCH-3","ACT-6","AML-15"]}]},
+ {g:"📝 À écrire (Claude peut préparer un premier jet)", items:[
+  {t:"Procédures pour les incidents courants : commande non livrée, livreur accidenté, commerce fermé sans prévenir, double débit.", tests:["OPS-8"]},
+  {t:"Tableau de permanence pour la première semaine : qui est joignable, avec accès à l'admin et à Stripe.", tests:["LCH-10"]},
+  {t:"Guide du restaurateur : décrire les nouveaux outils.", tests:["ACT-12"]}]},
+ {g:"🚀 Le jour du passage en live", items:[
+  {t:"Mettre les vraies clés Stripe sur Railway, créer le webhook du compte réel (avec les 12 mêmes événements), vérifier les frais et le solde.", tests:["PAY-17","LCH-5","MON-10","MON-11"]},
+  {t:"Fusionner les branches, puis refaire les tests « Corrigé ».", tests:["ACT-1","ACT-2"]}]},
+ {g:"📅 À une date précise", items:[
+  {t:"Nuit du 24 au 25 octobre 2026 (passage à l'heure d'hiver) : vérifier les heures des commandes et des tickets.", tests:["HOR-3"]},
+  {t:"La veille du lancement : checklist de chaque commerce et de chaque livreur.", tests:["LCH-11","LCH-12"]}]},
+];
+
+const FAIT_OK = s => ["pass","retest","na"].includes(s);
+function pilotageHTML(){
+  const lien = id => byId[id] ? `<a href="#c-${id}" class="lien-test st-${status(id)}" data-go="${id}" title="${esc(byId[id].t)} — ${ST[status(id)]}">${id}</a>` : "";
+  const decides = DECISIONS.filter(d => results[d.id]?.choix).length;
+  const dec = DECISIONS.map(d => {
+    const r = results[d.id] || {};
+    return `<div class="decision ${r.choix?"prise":""}" id="${d.id}"><h3><span class="id">${d.id}</span> ${esc(d.titre)} <span class="avec">avec ${esc(d.avec)}</span></h3>
+      <p>${esc(d.quoi)}</p>
+      <div class="choix">${d.options.map(o => `<label class="${o.reco?"reco":""}"><input type="radio" name="${d.id}" value="${o.k}" data-dec="${d.id}" ${r.choix===o.k?"checked":""}> <b>${esc(o.t)}</b>${o.reco?' <span class="tag-reco">recommandé par Claude</span>':""}<br><span>${esc(o.d)}</span></label>`).join("")}</div>
+      <textarea data-dec-note="${d.id}" rows="1" placeholder="Ta décision en une phrase, ou une précision (facultatif)">${esc(r.note||"")}</textarea>
+      <div class="lies">Tests liés : ${d.tests.map(lien).join(" ")}${r.choix?` · décidé par <b>${esc(r.tester||"?")}</b> le ${fmtDate(r.at)}`:""}</div></div>`;
+  }).join("");
+  let faites = 0, total = 0;
+  const main = A_LA_MAIN.map(g => `<h3>${esc(g.g)}</h3><ul class="main-liste">${g.items.map(it => {
+    const ok = it.tests.every(id => FAIT_OK(status(id))); total++; if (ok) faites++;
+    return `<li class="${ok?"fait":""}"><span class="coche">${ok?"✓":"○"}</span> ${esc(it.t)} <span class="lies">${it.tests.map(lien).join(" ")}</span></li>`;
+  }).join("")}</ul>`).join("");
+  return `<section class="sec pilotage" id="s-DEC"><details ${LS("fairide.pilotage.dec")==="0"?"":"open"} data-mem="fairide.pilotage.dec"><summary><h2>⚖️ Décisions à prendre <span class="cnt">${decides}/${DECISIONS.length}</span></h2></summary>
+    <p>Ce que les tests ne peuvent pas trancher. Pour chaque point, Claude indique son option recommandée et la raison. Coche ton choix (indique d'abord ton prénom en haut) : il est enregistré avec les résultats, et part avec « Sauvegarder les résultats ». Dis ensuite à Claude « applique les décisions » : il code celles qui demandent du code.</p>${dec}</details></section>
+  <section class="sec pilotage" id="s-MAIN"><details ${LS("fairide.pilotage.main")==="0"?"":"open"} data-mem="fairide.pilotage.main"><summary><h2>✋ À faire à la main <span class="cnt">${faites}/${total}</span></h2></summary>
+    <p>Tout ce que Claude n'a pas pu faire : un vrai téléphone ou un vrai terminal, tes comptes, l'avocat, une date précise. Une ligne se coche d'elle-même quand tous ses tests sont « Réussi », « Re-testé OK » ou « N/A ». Clique sur un numéro de test pour ouvrir sa carte.</p>${main}</details></section>`;
+}
+
 function renderSessions(){
   let html=`<details class="glossaire"><summary>📖 Un mot ne te dit rien ? Les mots techniques expliqués</summary><dl>${GLOSSAIRE.map(([m,x])=>`<dt>${esc(m)}</dt><dd>${esc(x)}</dd>`).join("")}</dl></details>`;
+  html=pilotageHTML()+html;
   html+=SESSIONS.map(sessionHTML).join("");
   const ts=HORS_SESSION.filter(visible);
   if(ts.length){ const d=HORS_SESSION.filter(t=>FAIT(status(t.id))).length;
@@ -1590,7 +1744,7 @@ function renderAll(){
     const done=TESTS.filter(t=>t.s===sec.id&&["pass","retest","na"].includes(status(t.id))).length, tot=TESTS.filter(t=>t.s===sec.id).length;
     html+=`<section class="sec" id="s-${sec.id}"><h2>${esc(sec.nom)} <span class="cnt">${done}/${tot}</span>${sec.existing?"":'<span class="tag">NOUVEAU</span>'}</h2><p>${esc(sec.desc)}</p><div class="list">${ts.map(cardHTML).join("")}</div></section>`;
   }
-  c.innerHTML=html||`<div class="empty">Aucun test ne correspond aux filtres.</div>`;
+  c.innerHTML=pilotageHTML()+(html||`<div class="empty">Aucun test ne correspond aux filtres.</div>`);
   renderSummary();
 }
 function counts(list){ const k={todo:0,pass:0,fail:0,fixed:0,retest:0,na:0}; for(const t of list) k[status(t.id)]++; return k }
@@ -1619,6 +1773,23 @@ $("#content").addEventListener("click",e=>{
   const h=e.target.closest(".head"); if(h){ const id=h.dataset.id; open.has(id)?open.delete(id):open.add(id); LSset("fairide.open",JSON.stringify([...open])); document.getElementById("c-"+id).classList.toggle("open"); return; }
   const b=e.target.closest(".acts button"); if(b){ setStatus(b.closest(".card").id.slice(2),b.dataset.st) }
 });
+// Pilotage : choix d'une décision (prénom exigé, comme pour un statut), note libre, lien vers la carte d'un test.
+function setDecision(id,choix){
+  const name=tester();
+  if(!name){ $("#tester").classList.add("need"); $("#tester").focus(); toast("Indique d'abord ton prénom (en haut)."); renderAll(); return; }
+  const cur=results[id]?{...results[id]}:{status:"todo",history:[]};
+  cur.choix=choix; cur.tester=name; cur.at=new Date().toISOString();
+  cur.history=[...(cur.history||[]),{status:"todo",tester:name,at:cur.at,choix}].slice(-20);
+  results[id]=cur; persist(id); renderAll();
+}
+$("#content").addEventListener("change",e=>{ const d=e.target.dataset.dec; if(d) setDecision(d,e.target.value) });
+$("#content").addEventListener("toggle",e=>{ const k=e.target.dataset?.mem; if(k) LSset(k,e.target.open?"1":"0") },true);
+$("#content").addEventListener("click",e=>{
+  const a=e.target.closest("[data-go]"); if(!a) return; e.preventDefault();
+  const id=a.dataset.go; open.add(id); LSset("fairide.open",JSON.stringify([...open])); renderAll();
+  const c=document.getElementById("c-"+id); if(c) c.scrollIntoView({behavior:"smooth",block:"center"}); else toast("Ce test est masqué par les filtres en haut.");
+});
+$("#content").addEventListener("input",e=>{ const d=e.target.dataset.decNote; if(d) setField(d,"note",e.target.value) });
 $("#content").addEventListener("input",e=>{ const f=e.target.dataset.f; if(f) setField(e.target.closest(".card").id.slice(2),f,e.target.value) });
 for(const id of ["q","fRole","fTrack","fPrio","fSt","fNew","fAuto","fManuel"]) $("#"+id).addEventListener("input",renderAll);
 // La vue choisie est retenue dans ce navigateur ; par défaut, les sessions.
@@ -1641,6 +1812,11 @@ $("#btnReport").addEventListener("click",()=>{
     lines.push("");
   }
   if(lines.length<=2) lines.push("Aucun test échoué ou en attente de re-test.");
+  // Les décisions prises partent avec le rapport : c'est ce texte qu'on colle à Claude pour qu'il les applique.
+  const prises=DECISIONS.filter(d=>results[d.id]?.choix);
+  if(prises.length){ lines.push("","## Décisions prises ("+prises.length+"/"+DECISIONS.length+")","");
+    for(const d of prises){ const r=results[d.id], o=d.options.find(x=>x.k===r.choix);
+      lines.push(`- **${d.id}** ${d.titre} → **${o?o.t:r.choix}** · ${r.tester||""} ${r.at?fmtDate(r.at):""}`); if(r.note) lines.push(`  - Précision : ${r.note}`); } }
   const txt=lines.join("\n");
   navigator.clipboard.writeText(txt).then(()=>toast("Rapport copié dans le presse-papiers.")).catch(()=>{ const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select(); toast("Sélectionne et copie le texte."); setTimeout(()=>ta.remove(),8000); });
 });
@@ -1682,7 +1858,7 @@ $("#btnImport").addEventListener("click",()=>$("#fileImport").click());
 $("#fileImport").addEventListener("change",e=>{
   const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
   rd.onload=()=>{ try{ const inc=JSON.parse(rd.result).results||{}; let n=0;
-      for(const [id,r] of Object.entries(inc)){ if(!byId[id]) continue; const cur=results[id];
+      for(const [id,r] of Object.entries(inc)){ if(!byId[id] && !DECISIONS.some(d=>d.id===id)) continue; const cur=results[id];
         if(!cur || (r.at||"")>(cur.at||"") ){ results[id]={...r, notes: r.notes || cur?.notes || ""}; n++ } }
       saveLocal(); renderAll(); toast(n+" test(s) mis à jour depuis le fichier."); }
     catch{ toast("Fichier illisible.") } e.target.value=""; };
