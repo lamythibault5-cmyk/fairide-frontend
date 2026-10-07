@@ -15,8 +15,34 @@ export const TUILES = {
   attribution: import.meta.env.VITE_MAP_TILE_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 };
 
+// FOURNISSEUR DONNÉ PAR LE SERVEUR (décision DEC-11, 7 oct. 2026 : MapTiler). Le réglage de construction ci-dessus est
+// figé dans l'application iOS/Android une fois publiée ; GET /api/geo/tiles, lui, se change sur Railway. Lu une fois par
+// chargement : chaque carte part avec le réglage connu, puis bascule dès que la réponse arrive (sans recréer la carte).
+// Si le serveur ne règle rien, ne répond pas ou tarde plus de 3 s, on garde le réglage de construction.
+// En attendant la réponse, la couche ne demande AUCUNE tuile (image vide en mémoire) : partir sur OpenStreetMap puis
+// basculer envoyait l'adresse IP du visiteur à un serveur qu'on n'utilise pas (vu au test du 7 oct. 2026).
+let reglageServeur = null;
+const reglagePret = Promise.race([
+  api('/geo/tiles').then((r) => (r?.url ? { url: r.url, attribution: r.attribution || TUILES.attribution } : null)).catch(() => null),
+  new Promise((ok) => setTimeout(() => ok(null), 3000))
+]).then((r) => { reglageServeur = r; return r || TUILES; });
+let reglageConnu = false;
+reglagePret.then(() => { reglageConnu = true; });
+const TUILE_VIDE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 export function coucheTuiles(L, options = {}) {
-  return L.tileLayer(TUILES.url, { attribution: TUILES.attribution, maxZoom: 19, ...options });
+  if (reglageConnu) {
+    const r = reglageServeur || TUILES;
+    return L.tileLayer(r.url, { attribution: r.attribution, maxZoom: 19, ...options });
+  }
+  const couche = L.tileLayer(TUILE_VIDE, { maxZoom: 19, ...options });
+  reglagePret.then((r) => {
+    // L'attribution (mention obligatoire du fournisseur) arrive avec le fond.
+    couche.options.attribution = r.attribution;
+    couche._map?.attributionControl?.addAttribution(r.attribution);
+    couche.setUrl(r.url);
+  });
+  return couche;
 }
 
 // Itinéraire routier et durée estimée : { latLngs: [[lat, lng], …], duration (s), distance (m) }.
