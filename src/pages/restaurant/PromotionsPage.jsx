@@ -195,6 +195,13 @@ export default function PromotionsPage() {
       <AvantageFairide restaurant={restaurant} restoId={restoId} token={token} toast={toast} t={t} loadDashboard={loadDashboard} onChanged={loadPromos} />
 
       <h3 style={{ margin: '18px 0 8px', fontSize: 15 }}>{t('promosPage.ownPromosTitle')}</h3>
+      {/* Fondateur, 2026-10-07 : aucune commission supplémentaire sur une promotion — 10 % du total payé par le client, c'est tout
+          (la commission est calculée sur le sous-total net des remises, routes/orders.js). */}
+      <div className="card promo-commission-note" role="note">
+        <b>{t('promosPage.noExtraCommissionTitle')}</b>
+        <p className="small" style={{ margin: '4px 0 0' }}>{t('promosPage.noExtraCommissionText')}</p>
+        <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('promosPage.noExtraCommissionExample')}</p>
+      </div>
       {promos === null && <div className="empty">{t('promosPage.loading')}</div>}
       {promos !== null && promos.filter((p) => !String(p.type).startsWith('all_items')).length === 0 && !formOpen && <div className="empty">{t('promosPage.none')}</div>}
       {promos !== null && promos.filter((p) => !String(p.type).startsWith('all_items')).map((p) => (

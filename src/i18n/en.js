@@ -4581,6 +4581,9 @@ export default {
       fairideSaved: 'Advantage saved. Thank you on behalf of your customers!',
       fairideRemoved: 'Advantage removed.',
       ownPromosTitle: 'Your promotions',
+      noExtraCommissionTitle: '✅ No commission on your promotions',
+      noExtraCommissionText: 'Fairide takes nothing extra on a promotion. Its only commission stays 10% (excl. VAT) of the total the customer actually pays, discounts deducted: a “buy 1 get 1 free” offer, a percentage or a free dish never costs any additional commission.',
+      noExtraCommissionExample: 'Example: two pizzas at €12 with “buy 1 get 1 free” → the customer pays €12, the commission applies to €12, not €24.',
       fairidePricesLink: 'You can also adjust the prices on your menu directly (± X%).'
     },
     menuImport: {

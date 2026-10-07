@@ -4581,6 +4581,9 @@ export default {
       fairideSaved: 'Voordeel opgeslagen. Bedankt namens je klanten!',
       fairideRemoved: 'Voordeel verwijderd.',
       ownPromosTitle: 'Je promoties',
+      noExtraCommissionTitle: '✅ Geen commissie op je promoties',
+      noExtraCommissionText: 'Fairide neemt niets extra op een promotie. De enige commissie blijft 10% (excl. btw) van het totaal dat de klant werkelijk betaalt, kortingen afgetrokken: een “1 + 1 gratis”-actie, een percentage of een gratis gerecht kost nooit extra commissie.',
+      noExtraCommissionExample: 'Voorbeeld: twee pizza\'s van € 12 met “1 + 1 gratis” → de klant betaalt € 12, de commissie geldt op € 12, niet op € 24.',
       fairidePricesLink: 'Je kunt ook rechtstreeks de prijzen van je kaart aanpassen (± X%).'
     },
     menuImport: {

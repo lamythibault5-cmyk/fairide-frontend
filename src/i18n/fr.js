@@ -4595,6 +4595,9 @@ export default {
       fairideSaved: 'Avantage enregistré. Merci pour tes clients !',
       fairideRemoved: 'Avantage retiré.',
       ownPromosTitle: 'Tes promotions',
+      noExtraCommissionTitle: '✅ Aucune commission sur tes promotions',
+      noExtraCommissionText: 'Fairide ne prend rien de plus sur une promotion. Sa seule commission reste 10 % (HTVA) du montant total réellement payé par le client, remises déduites : une offre « 1 + 1 gratuit », un pourcentage ou un plat offert ne coûte jamais de commission supplémentaire.',
+      noExtraCommissionExample: 'Exemple : deux pizzas à 12 € avec « 1 + 1 gratuit » → le client paie 12 €, la commission porte sur 12 €, pas sur 24 €.',
       fairidePricesLink: 'Tu peux aussi ajuster directement les prix de ta carte (± X %).'
     },
     menuImport: {
