@@ -317,10 +317,12 @@ export default function RestaurantList() {
   // (`homeCommune`) ; « Autour de vous » reste du plus proche au plus loin par rapport à son adresse, commune ou pas. Le
   // client peut ouvrir toutes les communes (bouton sous les filtres) ou chercher ailleurs par les filtres. Une commune sans
   // commerce retombe sur toutes les communes, avec une phrase qui le dit. Les mises en avant restent par commune.
-  const [toutesCommunes, setToutesCommunes] = useState(false);
+  // 07/10 (fondateur : « le client ne voit pas tous les restos ») : par défaut TOUTES les communes, la sienne d'abord puis les
+  // voisines de proche en proche ; « Seulement ma commune » restreint les rangées à sa commune.
+  const [seulementCommune, setSeulementCommune] = useState(false);
   const dansCommune = homeCommune ? restaurants.filter((r) => r.commune === homeCommune) : [];
-  const local = !!homeCommune && !toutesCommunes && dansCommune.length > 0;
-  const base = local ? dansCommune : restaurants;
+  const local = !!homeCommune && seulementCommune && dansCommune.length > 0;
+  const base = local ? dansCommune : (homeCommune ? [...restaurants].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : restaurants);
   const communeEpingles = commune || homeCommune;
   const placements = communeEpingles ? placementsTous.filter((p) => !p.commune || p.commune === communeEpingles) : [];
   const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || prix || emporter || tri !== 'recommande');
@@ -582,10 +584,10 @@ export default function RestaurantList() {
         <div className="local-bandeau" role="status">
           <Icone nom="position" taille={16} />
           <span>
-            {local ? t('restaurantList.localTitle', { commune: homeCommune }) : dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : t('restaurantList.localAllTitle')}
+            {local ? t('restaurantList.localTitle', { commune: homeCommune }) : dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : t('restaurantList.localAllTitle', { commune: homeCommune })}
           </span>
           {dansCommune.length > 0 && (
-            <button type="button" className="btn-link" onClick={() => setToutesCommunes((v) => !v)}>
+            <button type="button" className="btn-link" onClick={() => setSeulementCommune((v) => !v)}>
               {local ? t('restaurantList.localSeeAll') : t('restaurantList.localBack', { commune: homeCommune })}
             </button>
           )}
