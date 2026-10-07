@@ -139,7 +139,7 @@ export default function Auth() {
   const [responsibleTouched, setResponsibleTouched] = useState(false);
   // Commerce trouvé sur le web (BusinessSearch) et vérification BCE/TVA (VIES) — voir l'étape « Ton commerce ».
   const [commerceTrouve, setCommerceTrouve] = useState(null);
-  const [verifSociete, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null
+  const [, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null — gardé pour la vérification BCE, lu nulle part encore
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
   // pickupPaymentMode : 'on_site' (0 % de commission) | 'online' | 'both' — l'à emporter relève toujours de la version complète, voir OffreFormules.
   const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: 'on_site' });

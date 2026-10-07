@@ -480,7 +480,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // il faisait défiler vers #menu-concierge, qui n'existe que côté restaurateur — en console, le bouton
   // ne faisait que refermer la carte de démarrage.
 
-  // « Geste prix » sur la carte déjà en ligne : tous les prix ± X % (arrondi au 0,10 €), après confirmation.
+  // « Geste prix » sur la carte déjà en ligne : tous les prix ± X % (arrondi au demi-euro supérieur), après confirmation.
   const [ajustPct, setAjustPct] = useState('');
   const [ajustConfirm, setAjustConfirm] = useState(false);
   const [ajusting, setAjusting] = useState(false);
