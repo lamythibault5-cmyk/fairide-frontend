@@ -157,6 +157,9 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .shell.sans-rail{grid-template-columns:1fr}
 .outils-dec{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:6px 0 4px}
 .outils-dec .aide{margin:0;font-size:13px}
+.chemin{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:8px 14px;margin:8px 0 14px;max-width:100ch}
+.chemin h3{margin:4px 0}.chemin ol{margin:6px 0;padding-left:22px;font-size:14px}.chemin li{margin:5px 0}.chemin li.fait{opacity:.6}
+.chemin .qui{font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-left:4px;white-space:nowrap}
 .btn-petit{font-size:12px;padding:2px 8px;margin-left:6px}
 .main.vue-pilotage #banner{display:none!important}
 .pilotage .aide{font-size:14px;color:var(--muted);max-width:100ch;margin:4px 0 8px}
@@ -200,7 +203,7 @@ details.archive>summary h2{display:inline-flex}
 
 
 <header class="top">
-  <h1>Fairide · Tests de bout en bout <small>fairide.be — plan de test et suivi des correctifs · catalogue du 2 oct. 2026 · mis à jour le 6 oct. (vérifications sur la production, décisions)</small></h1>
+  <h1>Fairide · Tests de bout en bout <small>fairide.be — plan de test et suivi des correctifs · catalogue du 2 oct. 2026 · mis à jour le 7 oct. (décisions appliquées, questions juridiques)</small></h1>
   <div class="progress">
     <div class="bar" id="bar"></div>
     <div class="legend" id="legend"></div>
@@ -1659,12 +1662,12 @@ const DECISIONS = [
   options:[
    {k:"a", reco:true, t:"Fairide fait ses propres reçus", d:"Un PDF par commande, en trois parties : les plats vendus par le commerce (TVA ventilée), la livraison vendue par le livreur, les frais de service vendus par Fairide. Stripe n'envoie plus sa facture. Claude le code en un jour environ, une fois le modèle validé par le comptable."},
    {k:"b", t:"Garder la facture Stripe", d:"On corrige seulement le nom légal et le fuseau dans Stripe. Rapide, mais la TVA reste non ventilée et les plats restent « vendus par Fairide » : probablement pas conforme."}]},
- {id:"DEC-2", titre:"Alcool refusé à la remise (pas de pièce d'identité, ou client mineur)", avec:"l'avocat", tests:["RES-7"],
-  quoi:"La commande est annulée, mais personne n'est remboursé automatiquement : une tâche « remboursement à décider » s'ouvre dans l'admin. Les CGV ne disent rien sur ce cas.",
+ {id:"DEC-2", titre:"Alcool refusé à la remise (pas de pièce d'identité, ou client mineur) — EN ATTENTE DE L'AVOCAT", avec:"l'avocat", tests:["RES-7"],
+  quoi:"La commande est close, le livreur est payé, et une tâche « remboursement à décider » s'ouvre dans l'admin. Le livreur indique déjà s'il s'agit d'un adulte sans pièce ou d'un refus pour âge : le code peut traiter les deux cas différemment. Ce choix ne touche que le serveur : il pourra changer à tout moment, même après la sortie des applications. En attendant l'avocat, on garde le cas par cas.",
   options:[
-   {k:"a", reco:true, t:"Rembourser les produits, garder la livraison", d:"Le client récupère le prix des plats et boissons. Le livreur, qui s'est déplacé, est payé. Les frais de livraison et de service ne sont pas remboursés. On l'écrit dans les CGV."},
-   {k:"b", t:"Tout rembourser automatiquement", d:"Plus simple pour le client. Fairide paie alors la course du livreur."},
-   {k:"c", t:"Garder le cas par cas", d:"C'est la situation actuelle : l'équipe décide à chaque fois. Il faut quand même l'écrire dans les CGV."}]},
+   {k:"a", t:"Ne rien rembourser (la faute est au client)", d:"Le plus simple. À écrire clairement dans les CGV avant la commande (« sans pièce d'identité présentée, la commande n'est pas remboursée ») et à garder proportionné. Risqué pour un MINEUR : une vente d'alcool à un mineur est interdite et son contrat ne l'engage pas — question à poser à l'avocat."},
+   {k:"b", reco:true, t:"Adulte sans pièce : rien ; mineur : alcool remboursé", d:"Le plus sûr juridiquement si l'avocat valide la règle pour les adultes. Claude le code dès la réponse (le livreur choisit déjà le motif)."},
+   {k:"c", t:"Garder le cas par cas", d:"Situation actuelle : l'équipe décide à chaque fois. À écrire quand même dans les CGV."}]},
  {id:"DEC-3", titre:"Forcer le statut d'une commande depuis l'admin", avec:"toi", tests:["ADM-9"],
   quoi:"Forcer « livrée » ou « annulée » marche, et l'argent suit (le livreur est payé, ou le client est remboursé). Mais aucun motif n'est demandé et personne n'est prévenu.",
   options:[
@@ -1706,10 +1709,10 @@ const DECISIONS = [
    {k:"a", reco:true, t:"Fairide est exemptée : l'écrire", d:"Marquer LEG-15 « N/A » en indiquant la raison. Une page courte (« nous visons le niveau AA, contactez-nous en cas de problème ») reste une bonne pratique, et Claude peut l'écrire."},
    {k:"b", t:"Publier une déclaration complète", d:"Il faut d'abord un audit d'accessibilité."}]},
  {id:"DEC-11", titre:"Fond de carte et statistiques de visite (services payants)", avec:"toi", tests:["GEO-8","LCH-2","SEO-8","LCH-4","AML-10","PRF-7"],
-  quoi:"Les cartes utilisent les serveurs publics d'OpenStreetMap, qui interdisent un usage commercial intensif. Les statistiques de visite (Plausible) sont désactivées : la variable n'est pas posée sur Vercel.",
+  quoi:"Choix du 7 oct. : MapTiler. Le code est prêt : le fournisseur est maintenant donné par le serveur (Railway), si bien qu'on pourra en changer plus tard sans publier une nouvelle version des applications. Google Maps a été écarté : il faudrait réécrire les 5 cartes, il envoie l'adresse IP des visiteurs à Google (RGPD), et il coûte plus cher. Le bouton « Itinéraire » des livreurs ouvre déjà Google Maps ou Waze sur leur téléphone.",
   options:[
-   {k:"a", reco:true, t:"MapTiler et Plausible", d:"Tu crées les deux comptes (MapTiler a un plan gratuit au début ; Plausible coûte environ 9 € par mois). Claude pose ensuite les variables sur Vercel et reconstruit le site. La recherche d'adresse (Photon) et le calcul d'itinéraire (OSRM) restent sur les serveurs publics au lancement : le volume est faible, à revoir vers 200 commandes par jour."},
-   {k:"b", t:"Tout passer sur un service payant tout de suite", d:"Plus sûr à long terme, mais plus de coûts et plus de travail avant le lancement."}]},
+   {k:"a", reco:true, t:"MapTiler et Plausible", d:"Tu crées le compte MapTiler (gratuit au début) et tu donnes la clé à Claude, qui la restreint à fairide.be et aux applications et la pose sur Railway. Plausible (~9 €/mois) pour les statistiques de visite sans cookie. La recherche d'adresse reste sur notre serveur : on pourra passer à Google pour les adresses plus tard, sans toucher aux applications."},
+   {k:"b", t:"Google Maps", d:"Réécriture des 5 cartes, consentement RGPD avant d'afficher une carte, coût par chargement au-delà du quota gratuit. Écarté le 7 oct."}]},
  {id:"DEC-12", titre:"Un environnement de test séparé (« staging »)", avec:"toi", tests:["OPS-9","OPS-3","OPS-4","NOT-8","PAY-4"],
   quoi:"Tous les tests ont tourné sur la production, avec des comptes test. Quand la production passera aux vraies clés Stripe, il ne sera plus possible d'y payer avec des cartes de test.",
   options:[
@@ -1763,6 +1766,8 @@ const A_LA_MAIN = [
   {t:"Activer le compte Stripe RÉEL : dashboard.stripe.com › Settings › Business. « Business information », « Public details », « Statement descriptor » (le libellé sur le relevé bancaire du client, par ex. FAIRIDE) et « Account representative » sont « Incomplete », et le téléphone n'est pas vérifié par SMS. Il faut la pièce d'identité du gérant et les données de FAIRIDE SRL (BCE 1042.169.780). Stripe peut prendre quelques jours pour vérifier : sans ça, aucun vrai paiement. Vu le 6 oct. au soir.", tests:["PRE-1","LCH-5"]},
   {t:"Sauvegardes de la base : aujourd'hui il n'y en a AUCUNE automatique (Railway les réserve au plan Pro, ~20 $/mois). Une seule copie existe, faite par Railway il y a un mois. Choisir dans « Décisions » (DEC-20), puis passer au plan Pro dans Railway › Settings › Plan. Claude vérifie ensuite qu'une sauvegarde quotidienne tourne et en restaure une dans une base vide.", tests:["OPS-5","AML-11"]}]},
  {g:"💻 Tes comptes en ligne (environ 1 h, depuis ton ordinateur)", items:[
+  {t:"Créer le compte MapTiler (maptiler.com, gratuit au début) et envoyer la clé à Claude : il la restreint à fairide.be et aux applications, la pose sur Railway, et vérifie les 5 cartes (décision DEC-11).", tests:["GEO-8","LCH-2"]},
+  {t:"Créer le compte Plausible (plausible.io, ~9 €/mois) pour fairide.be : Claude pose la variable sur Vercel et reconstruit le site (statistiques sans cookie).", tests:["SEO-8","LCH-4"]},
   {t:"Stripe › Paramètres › Informations sur l'entreprise : FAIRIDE SRL, adresse, TVA BE 1042.169.780. Puis Paramètres › Fuseau horaire : Europe/Brussels.", tests:["HOR-6"]},
   {t:"Activer la double authentification sur Railway, Vercel, Stripe, OVH, GitHub, la boîte contact@fairide.be et le compte admin Fairide.", tests:["SEC-11","SEC-17"]},
   {t:"Railway › case Postgres › Backups : vérifier qu'il y a des sauvegardes automatiques (sinon les activer), puis en restaurer une dans une base vide.", tests:["OPS-5","AML-11"]},
@@ -1815,6 +1820,19 @@ const CLAUDE_ENSUITE = [
  {t:"Catégories de la carte : réordonner et masquer depuis l'éditeur de l'admin.", tests:["MNU-7"]},
 ];
 
+const CHEMIN = [
+ {t:"Activer le compte Stripe réel (identité du gérant, données de FAIRIDE SRL) — Stripe peut prendre quelques jours.", tests:["PRE-1"], qui:"toi"},
+ {t:"Choisir les sauvegardes de la base (DEC-20) : passer Railway au plan Pro, puis Claude teste une restauration.", tests:["OPS-5","AML-11"], qui:"toi + Claude"},
+ {t:"Fusionner les branches de Claude, puis approuver le déploiement dans Railway (fairide-backend › Deployments).", tests:["ACT-1"], qui:"toi"},
+ {t:"Faire passer les questions juridiques et comptables à l'avocat et au comptable (onglet « Juridique ») — c'est le plus long : à lancer tout de suite.", tests:["ACT-3","AML-8","LEG-7"], qui:"ton associé"},
+ {t:"Créer les comptes MapTiler et Plausible, envoyer les clés à Claude.", tests:["GEO-8","SEO-8"], qui:"toi"},
+ {t:"Faire inscrire et valider les commerces : aucun des 14 n'est prêt (Stripe, abonnement, contrat, carte signée, attestation allergènes, assurances, AFSCA). Claude écrit un message par commerce avec ce qui lui manque.", tests:["LCH-11","LCH-3"], qui:"toi + Claude"},
+ {t:"Faire inscrire et valider les livreurs (un seul vrai inscrit aujourd'hui).", tests:["LCH-12"], qui:"toi"},
+ {t:"Installer les terminaux Goodcom chez les commerces (écran jamais en veille) et faire une commande test par commerce.", tests:["DEV-1","TER-6"], qui:"toi"},
+ {t:"Tests sur de vrais téléphones (notifications app fermée, Apple Pay, batterie, livreur hors ligne).", tests:["DEV-5","PAY-8","PRF-6"], qui:"toi"},
+ {t:"Veille du lancement : Claude relance « prêt au lancement », coupe les photos de stock, nettoie les données de test ; vraies clés Stripe et webhook du compte réel.", tests:["LCH-1","LCH-5","PAY-17"], qui:"toi + Claude"},
+ {t:"Ouverture : à emporter le 1er novembre 2026, livraison et paiement en ligne le 10 novembre (dates réglées dans le serveur).", tests:[], qui:""}
+];
 const FAIT_OK = s => ["pass","retest","na"].includes(s);
 const lienTest = id => byId[id] ? `<a href="#c-${id}" class="lien-test st-${status(id)}" data-go="${id}" title="${esc(byId[id].t)} — ${ST[status(id)]}">${id}</a>` : "";
 function ligneAction(it){
@@ -1831,12 +1849,48 @@ function actionsHTML(){
   const retest = corriges.length ? `<h3>🔁 Corrections à vérifier en ligne <span class="cnt">${corriges.length}</span></h3>
     <p class="aide">Des bugs trouvés pendant les tests, corrigés et déployés. Claude les refait d'abord lui-même sur la production : il ne restera ici que ce qu'il ne peut pas voir (un écran, un téléphone). Pour chacun : ouvre la carte, refais le test, puis « Re-testé OK » ou « Échoué ».</p>
     <ul class="main-liste">${corriges.map(t => `<li><span class="coche">○</span> ${esc(t.t)} <span class="lies">${lienTest(t.id)}</span></li>`).join("")}</ul>` : "";
-  return `<section class="sec pilotage" id="s-MAIN"><h2>✋ Mes actions <span class="cnt">${total - restants}/${total}</span></h2>
+  const chemin = `<div class="chemin"><h3>🗺️ Jusqu'au lancement, dans l'ordre</h3><ol>${CHEMIN.map((c) => { const ok = c.tests.length && c.tests.every((id) => FAIT_OK(status(id))); return `<li class="${ok ? "fait" : ""}">${ok ? "✓ " : ""}${esc(c.t)}${c.qui ? ` <span class="qui">${esc(c.qui)}</span>` : ""} <span class="lies">${c.tests.map(lienTest).join(" ")}</span></li>`; }).join("")}</ol></div>`;
+  return `<section class="sec pilotage" id="s-MAIN"><h2>✋ Mes actions <span class="cnt">${total - restants}/${total}</span></h2>${chemin}
     <p class="aide">Tout ce qui reste à faire par toi ou ton associé : avec un vrai téléphone ou un vrai terminal, sur tes comptes, avec l'avocat, à une date précise. Une ligne se coche d'elle-même quand tous ses tests sont « Réussi », « Re-testé OK » ou « N/A ». Clique sur un numéro de test pour voir les étapes détaillées.</p>
     ${A_LA_MAIN.filter(g => g.g.startsWith("🚨")).map(g => `<h3>${esc(g.g)}</h3><ul class="main-liste">${g.items.map(ligneAction).join("")}</ul>`).join("")}
     ${retest}
     ${A_LA_MAIN.filter(g => !g.g.startsWith("🚨")).map(g => `<h3>${esc(g.g)}</h3><ul class="main-liste">${g.items.map(ligneAction).join("")}</ul>`).join("")}
     <h3>🤖 Ce que Claude fait ensuite (rien à faire pour toi)</h3><ul class="main-liste claude-liste">${CLAUDE_ENSUITE.map(ligneAction).join("")}</ul></section>`;
+}
+// Questions juridiques et comptables, pour l'associé (demande du fondateur, 7 oct. 2026). Une question est « réglée »
+// quand tous ses tests sont « Réussi », « Re-testé OK » ou « N/A ». « quand » dit ce qui bloque le lancement.
+const JURIDIQUE = [
+ {qui:"⚖️ Avocat", items:[
+  {q:"Contrat commerce RESTO-2026.16 : relecture, et nouvelle version avant d'ouvrir les mises en avant payantes.", ctx:"Le contrat dit « aucun classement payant », le site sait vendre des mises en avant par commune (non ouvertes : décision DEC-7). Une modification doit être envoyée aux commerces au moins 15 jours avant (règlement P2B), et la page /classement suivre.", prop:"Relire la version actuelle pour le lancement ; préparer la version avec mises en avant pour plus tard.", quand:"avant le lancement (relecture)", tests:["ACT-3","LEG-11","ADM-4"]},
+  {q:"Contrats livreurs (versions 2026.6) et statut des livreurs.", ctx:"Au lancement : indépendants et étudiants indépendants. Le statut « économie collaborative » attend l'agrément du SPF Finances (DEC-19). Assurance accidents mentionnée dans les CGU livreurs ?", prop:"Relire les contrats ; confirmer qu'on peut lancer avec les seuls indépendants.", quand:"avant le lancement", tests:["ACT-4","LEG-12"]},
+  {q:"Alcool refusé à la remise : peut-on garder le paiement ?", ctx:"Adulte sans pièce d'identité, ou client mineur. Voir la décision DEC-2 (trois options).", prop:"Adulte sans pièce : pas de remboursement, écrit dans les CGV ; mineur : alcool remboursé. À valider.", quand:"avant le lancement (CGV)", tests:["RES-7","LEG-9"]},
+  {q:"Politique de confidentialité et registre des traitements à jour.", ctx:"Nouveaux traitements : photos jointes à « Signaler un problème », historique des notifications, export des données. Nouveaux sous-traitants : MapTiler (cartes), Plausible (statistiques). Durées de conservation annoncées vs purge automatique (elle existe et tourne toutes les heures).", prop:"Mettre à jour la politique (nouvelle version enregistrée dans le serveur, voir CLAUDE.md) et le registre.", quand:"avant le lancement", tests:["ACT-11","LEG-2","LEG-16","AML-13"]},
+  {q:"Accords de sous-traitance (DPA) signés.", ctx:"Stripe, Resend, Cloudinary, Sentry, Vercel, Railway, Anthropic, Twilio — et maintenant MapTiler et Plausible. Transferts hors UE (prestataires américains) : clauses types ?", prop:"Signer en ligne chez chacun, ranger les copies datées.", quand:"avant le lancement", tests:["AML-9"]},
+  {q:"Avis global : DPO, représentant UE, transferts hors UE, P2B, DSA.", ctx:"Point de contact DSA, accusés et décisions motivées en place ; e-mails juridiques en français qui fait foi + traduction (DEC-17).", prop:"Une relecture d'ensemble par l'avocat, avec avis écrit.", quand:"avant le lancement", tests:["AML-8","LEG-10"]},
+  {q:"Exemption de la déclaration d'accessibilité (microentreprise).", ctx:"Page /accessibilite publiée (décision DEC-10), qui invoque l'exemption de la directive (UE) 2019/882.", prop:"Confirmer que Fairide est bien une microentreprise au sens de la directive.", quand:"peut suivre le lancement", tests:["LEG-15"]}]},
+ {qui:"🧮 Comptable", items:[
+  {q:"Modèle du reçu client (décision DEC-1 : Fairide fait ses propres reçus).", ctx:"Trois vendeurs par commande (plats par le commerce, livraison par le livreur, frais de service par Fairide), TVA ventilée (6 % repas, 21 % boissons et livraison). Aujourd'hui c'est la facture Stripe, non conforme.", prop:"Le comptable valide un modèle ; Claude le code (un jour environ).", quand:"avant le lancement", tests:["LEG-7","MNU-9"]},
+  {q:"Export comptable du mois et TVA sur la commission.", ctx:"Commission 10 % HTVA + 21 % de TVA, frais de service, versements, remboursements ; les commandes de test en sont exclues (DEC-5).", prop:"Le comptable importe un mois d'essai et confirme.", quand:"avant le lancement", tests:["OPS-7"]},
+  {q:"Agrément « économie collaborative » au SPF Finances.", ctx:"Ouvrirait le statut livreur sans être indépendant (plafond annuel). Décision DEC-19 : lancer sans.", prop:"Déposer la demande si l'équipe veut ces livreurs plus tard.", quand:"après le lancement", tests:["CRS-4"]}]},
+ {qui:"🏛️ Prestataires et administrations", items:[
+  {q:"Activation du compte Stripe réel (identité du gérant, société).", ctx:"Vu le 6 oct. : informations « Incomplete ». Sans activation, aucun vrai paiement.", prop:"Le gérant remplit dashboard.stripe.com › Settings › Business.", quand:"avant le lancement", tests:["PRE-1"]},
+  {q:"Pièces des commerces : AFSCA, assurances RC exploitation et incendie, autorisation alcool.", ctx:"Aucun des 14 commerces ne les a toutes (rapport « prêt au lancement » du 6 oct.).", prop:"Les réclamer à chaque commerce ; Claude prépare un message par commerce.", quand:"avant le lancement", tests:["LCH-11"]}]}
+];
+function juridiqueHTML(){
+  const ligne = (it) => { const ok = it.tests.every((id) => FAIT_OK(status(id))); return `<div class="decision ${ok ? "prise" : ""}"><h3>${ok ? "✓ " : ""}${esc(it.q)} <span class="avec">${esc(it.quand)}</span></h3><p>${esc(it.ctx)}</p><p><b>Proposition :</b> ${esc(it.prop)}</p><div class="lies">Tests liés : ${it.tests.map(lienTest).join(" ")}</div></div>`; };
+  const ouvertes = JURIDIQUE.flatMap((g) => g.items).filter((it) => !it.tests.every((id) => FAIT_OK(status(id)))).length;
+  return `<section class="sec pilotage" id="s-JUR"><h2>🧑‍⚖️ Juridique et comptable <span class="cnt">${ouvertes} ouverte(s)</span></h2>
+    <p class="aide">Pour l'associé : les questions à faire trancher par l'avocat, le comptable et les prestataires avant le lancement, avec ce que Claude propose. C'est souvent le plus long : à lancer en premier. « Exporter » donne un fichier à envoyer tel quel.</p>
+    <div class="outils-dec"><button class="btn" data-jur-export="md">⬇ Exporter les questions</button></div>
+    ${JURIDIQUE.map((g) => `<h3>${esc(g.qui)}</h3>${g.items.map(ligne).join("")}`).join("")}</section>`;
+}
+function exporterJuridique(){
+  const jour = new Date().toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" });
+  const L = [`# Fairide — questions juridiques et comptables avant le lancement (${jour})`, ""];
+  for (const g of JURIDIQUE) { L.push(`## ${g.qui.replace(/^\S+\s/, "")}`, "");
+    g.items.forEach((it, i) => { const ok = it.tests.every((id) => FAIT_OK(status(id)));
+      L.push(`${i + 1}. **${it.q}**${ok ? " — réglé" : ""}`, `   - Contexte : ${it.ctx}`, `   - Proposition : ${it.prop}`, `   - Échéance : ${it.quand}`, ""); }); }
+  download("fairide-questions-juridiques-" + new Date().toISOString().slice(0, 10) + ".md", L.join("\n"), "text/markdown;charset=utf-8");
 }
 function decisionsHTML(){
   const decides = DECISIONS.filter(d => results[d.id]?.choix).length;
@@ -1855,11 +1909,11 @@ function decisionsHTML(){
     ${ouvertes.map(carte).join("")}
     ${prises.length ? `<h3>✓ Déjà décidées</h3>${prises.map(carte).join("")}` : ""}</section>`;
 }
-const ONGLETS = [["actions","✋ Mes actions"],["decisions","⚖️ Décisions"],["plan","📋 Plan détaillé (fait par Claude)"]];
+const ONGLETS = [["actions","✋ Mes actions"],["decisions","⚖️ Décisions"],["juridique","🧑‍⚖️ Juridique"],["plan","📋 Plan détaillé (fait par Claude)"]];
 function onglet(){ const o = LS("fairide.onglet"); return ONGLETS.some(([k]) => k === o) ? o : "actions"; }
 function renderOnglets(){
   const { restants, aRetester } = compteActions(), aDecider = DECISIONS.filter(d => !results[d.id]?.choix).length;
-  const n = { actions: restants + aRetester, decisions: aDecider, plan: null };
+  const n = { actions: restants + aRetester, decisions: aDecider, juridique: JURIDIQUE.flatMap((g) => g.items).filter((it) => !it.tests.every((id) => FAIT_OK(status(id)))).length, plan: null };
   $("#onglets").innerHTML = ONGLETS.map(([k, nom]) => `<button role="tab" aria-selected="${onglet()===k}" data-onglet="${k}" class="${onglet()===k?"cur":""}">${nom}${n[k]!==null?` <span class="cnt">${n[k]}</span>`:""}</button>`).join("");
   const plan = onglet() === "plan";
   $("#zonePlan").hidden = !plan; $("#rail").hidden = !plan; document.querySelector(".shell").classList.toggle("sans-rail", !plan); document.querySelector(".main").classList.toggle("vue-pilotage", !plan);
@@ -1876,7 +1930,7 @@ function renderSessions(){
 }
 function renderAll(){
   renderOnglets();
-  if(onglet()!=="plan"){ $("#content").innerHTML=onglet()==="actions"?actionsHTML():decisionsHTML(); renderSummary(); return; }
+  if(onglet()!=="plan"){ $("#content").innerHTML=onglet()==="actions"?actionsHTML():onglet()==="juridique"?juridiqueHTML():decisionsHTML(); renderSummary(); return; }
   if(vueSession()) return renderSessions();
   const c=$("#content"); let html=""; let shown=0;
   for(const sec of SECTIONS){
@@ -1953,6 +2007,7 @@ function exporterDecisions(){
 $("#content").addEventListener("click",e=>{
   const r=e.target.closest("[data-dec-reset]"); if(r){ e.preventDefault(); resetDecision(r.dataset.decReset); return; }
   if(e.target.closest("[data-dec-export]")){ e.preventDefault(); exporterDecisions(); }
+  if(e.target.closest("[data-jur-export]")){ e.preventDefault(); exporterJuridique(); }
 });
 $("#onglets").addEventListener("click",e=>{ const b=e.target.closest("[data-onglet]"); if(!b) return; LSset("fairide.onglet",b.dataset.onglet); renderAll(); window.scrollTo({top:0}); });
 $("#content").addEventListener("change",e=>{ const d=e.target.dataset.dec; if(d) setDecision(d,e.target.value) });
