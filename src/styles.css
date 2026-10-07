@@ -4357,6 +4357,10 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .carte-verrou { border-left: 4px solid var(--iris); }
 .hausse-prix-demande { margin: 10px 0 4px; padding: 10px 12px; border-radius: 10px; background: var(--surface-soft); color: var(--ink); border-left: 4px solid var(--iris); }
 
+/* Sales : adresse collée et double évaluation (2026-10-07). */
+.crm-collage textarea { width: 100%; font-size: 13px; }
+.crm-eval-libelle { margin: 8px 0 2px; font-weight: 600; }
+
 /* Manger local (RestaurantList.jsx, 2026-10-06) : bandeau « tes commerces de … » au-dessus des rangées. */
 .local-bandeau { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; padding: 8px 12px; border-radius: 12px; background: var(--surface-soft); font-size: 13px; color: var(--ink-soft, inherit); }
 .local-bandeau .btn-link { margin-left: auto; background: none; border: 0; padding: 0; color: var(--iris); font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: underline; }

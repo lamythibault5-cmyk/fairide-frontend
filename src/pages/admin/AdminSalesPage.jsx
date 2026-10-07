@@ -163,7 +163,7 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
   const duJour = (p) => p.nextActionAt && p.nextActionAt <= finJournee && !['actif', 'refuse'].includes(p.stage);
   // Export CSV de tout ce qui est affiché (tous commerciaux) — Excel l'ouvre tel quel, BOM pour les accents.
   function exporterCsv(lignes) {
-    const col = ['name', 'commune', 'stage', 'agentName', 'rating', 'eventsCount', 'lastEventAt', 'nextActionAt', 'restaurantName', 'signedUpAt'];
+    const col = ['name', 'commune', 'stage', 'agentName', 'rating', 'behaviourRating', 'eventsCount', 'lastEventAt', 'nextActionAt', 'restaurantName', 'signedUpAt'];
     const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const corps = [col.join(';'), ...lignes.map((p) => col.map((c) => cell(c === 'stage' ? tr(`sales.stage_${p[c]}`) : /At$/.test(c) && p[c] ? new Date(p[c]).toLocaleString() : p[c])).join(';'))];
     const blob = new Blob(['\ufeff' + corps.join('\n')], { type: 'text/csv;charset=utf-8' });
@@ -202,6 +202,7 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
     { key: 'stage', label: tr('adminSales.colStage'), get: (p) => <span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span>, sortValue: (p) => STAGES.indexOf(p.stage) },
     { key: 'agentName', label: tr('adminSales.colAgent'), get: (p) => p.agentName, sortValue: (p) => p.agentName },
     { key: 'rating', label: tr('adminSales.colRating'), get: (p) => (p.rating ? '★'.repeat(p.rating) : '-'), sortValue: (p) => p.rating || 0 },
+    { key: 'behaviourRating', label: tr('adminSales.colBehaviour'), get: (p) => (p.behaviourRating ? '★'.repeat(p.behaviourRating) : '-'), sortValue: (p) => p.behaviourRating || 0 },
     { key: 'eventsCount', label: tr('adminSales.colEvents'), get: (p) => p.eventsCount, align: 'right' },
     { key: 'lastEventAt', label: tr('adminSales.colLastActivity'), get: (p) => fmt(p.lastEventAt), sortValue: (p) => p.lastEventAt || 0 },
     { key: 'nextActionAt', label: tr('adminSales.colNextAction'), get: (p) => <span className={p.nextActionAt && p.nextActionAt < Date.now() ? 'crm-retard-texte' : ''}>{fmt(p.nextActionAt)}</span>, sortValue: (p) => p.nextActionAt || 0 },
@@ -367,7 +368,9 @@ function ProspectDrawer({ id, token, tr, fmt, stageLabel, toast, onClose }) {
           <DrawerRow label={tr('sales.fAddress')} value={[p.address, p.commune].filter(Boolean).join(', ') || '-'} />
           <DrawerRow label={tr('sales.fContact')} value={[p.contactName, p.phone, p.email].filter(Boolean).join(' · ') || '-'} />
           <DrawerRow label={tr('sales.fCuisine')} value={p.cuisine || '-'} />
-          <DrawerRow label={tr('sales.feedbackTitle')} value={`${p.rating ? '★'.repeat(p.rating) + ' ' : ''}${p.feedback || '-'}`} />
+          <DrawerRow label={tr('sales.interestTitle')} value={p.rating ? '★'.repeat(p.rating) : '-'} />
+          <DrawerRow label={tr('sales.behaviourTitle')} value={p.behaviourRating ? '★'.repeat(p.behaviourRating) : '-'} />
+          <DrawerRow label={tr('sales.feedbackTitle')} value={p.feedback || '-'} />
           <DrawerRow label={tr('sales.nextActionTitle')} value={fmt(p.nextActionAt)} />
           <DrawerRow label={tr('adminSales.colSignedUp')} value={p.signedUpAt ? new Date(p.signedUpAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) : '-'} />
           <DrawerRow label={tr('adminSales.colLinked')} value={p.restaurantName ? `${p.restaurantName} · ${tr(`sales.restoStatus_${p.restaurantStatus || 'pending'}`)}` : '-'} />

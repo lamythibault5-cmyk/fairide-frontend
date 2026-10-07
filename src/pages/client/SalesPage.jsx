@@ -247,7 +247,8 @@ export default function SalesPage() {
             <div className="small crm-carte-ligne">
               {p.commune && <span>📍 {p.commune}</span>}
               {p.contactName && <span>👤 {p.contactName}</span>}
-              {p.rating && <span>{'★'.repeat(p.rating)}{'☆'.repeat(5 - p.rating)}</span>}
+              {p.rating && <span title={t('sales.interestTitle')}>💡 {'★'.repeat(p.rating)}{'☆'.repeat(5 - p.rating)}</span>}
+              {p.behaviourRating && <span title={t('sales.behaviourTitle')}>🤝 {'★'.repeat(p.behaviourRating)}{'☆'.repeat(5 - p.behaviourRating)}</span>}
             </div>
             <div className="small crm-carte-ligne">
               {p.lastEventAt && <span>{t('sales.lastActivity', { date: fmtDate(p.lastEventAt) })}</span>}
@@ -476,6 +477,20 @@ function ProspectForm({ token, t, toast, onClose, onSaved, ficheWeb = null, nomI
       passerEnManuel();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Adresse collée (fondateur, 2026-10-07) : le commerce n'est pas dans la liste → on colle ce qu'on a trouvé sur internet.
+  const [collage, setCollage] = useState('');
+  const [collageEnCours, setCollageEnCours] = useState(false);
+  async function remplirDepuisCollage() {
+    if (!collage.trim()) return;
+    setCollageEnCours(true);
+    try {
+      const a = await api('/sales/parse-address', { method: 'POST', token, body: { text: collage } });
+      if (!a.found && !a.name && !a.phone) { toast(t('sales.pasteNone'), 'erreur'); return; }
+      setF((s) => ({ ...s, name: s.name || a.name || '', address: a.address || s.address, commune: a.commune || s.commune, phone: s.phone || a.phone || '' }));
+      setRecherche('fermee');
+      toast(t('sales.pasteDone'));
+    } catch (err) { toast(err.message, 'erreur'); } finally { setCollageEnCours(false); }
+  }
   async function prendrePosition() {
     setGeoEnCours(true);
     try { setPosition(await maPosition()); toast(t('sales.positionSet')); } catch { toast(t('sales.positionError'), 'erreur'); } finally { setGeoEnCours(false); }
@@ -507,6 +522,11 @@ function ProspectForm({ token, t, toast, onClose, onSaved, ficheWeb = null, nomI
             <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 13 }} onClick={() => setRecherche('ouverte')}>🔎 {t(recherche === 'remplie' ? 'sales.changeBusiness' : 'sales.searchInstead')}</button>
           </p>
         )}
+        <div className="crm-bloc crm-collage">
+          <b className="crm-bloc-titre">📋 {t('sales.pasteTitle')}</b>
+          <textarea rows={2} value={collage} onChange={(e) => setCollage(e.target.value)} placeholder={t('sales.pastePh')} aria-label={t('sales.pasteTitle')} />
+          <button type="button" className="btn-outline" style={{ fontSize: 13, marginTop: 6 }} disabled={collageEnCours || !collage.trim()} onClick={remplirDepuisCollage}>{collageEnCours ? '…' : t('sales.pasteFill')}</button>
+        </div>
         <div className="field"><label htmlFor="crm-nom">{t('sales.fName')} *</label><input id="crm-nom" value={f.name} onChange={champ('name')} /></div>
         {aDesDoublons ? (
           <div className="crm-doublons" role="status">
@@ -631,9 +651,16 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
             {/* Avis du restaurateur : ce qu'il pense de Fairide, en étoiles et en une phrase. */}
             <div className="crm-bloc">
               <b className="crm-bloc-titre">{t('sales.feedbackTitle')}</b>
-              <div className="crm-etoiles" role="radiogroup" aria-label={t('sales.feedbackTitle')}>
+              {/* Deux évaluations (fondateur, 2026-10-07) : l'intérêt du commerce pour Fairide, et son comportement avec le commercial. */}
+              <p className="small crm-eval-libelle">{t('sales.interestTitle')}</p>
+              <div className="crm-etoiles" role="radiogroup" aria-label={t('sales.interestTitle')}>
                 {[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" role="radio" aria-checked={p.rating === n} className={`crm-etoile${p.rating >= n ? ' pleine' : ''}`} disabled={envoi} onClick={() => patch({ rating: p.rating === n ? null : n })}>★</button>)}
                 <span className="small">{p.rating ? t(`sales.rating_${p.rating}`) : t('sales.ratingNone')}</span>
+              </div>
+              <p className="small crm-eval-libelle">{t('sales.behaviourTitle')}</p>
+              <div className="crm-etoiles" role="radiogroup" aria-label={t('sales.behaviourTitle')}>
+                {[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" role="radio" aria-checked={p.behaviourRating === n} className={`crm-etoile${p.behaviourRating >= n ? ' pleine' : ''}`} disabled={envoi} onClick={() => patch({ behaviourRating: p.behaviourRating === n ? null : n })}>★</button>)}
+                <span className="small">{p.behaviourRating ? t(`sales.behaviour_${p.behaviourRating}`) : t('sales.behaviourNone')}</span>
               </div>
               <textarea rows={2} defaultValue={p.feedback} key={`fb-${p.updatedAt}`} placeholder={t('sales.feedbackPh')} onBlur={(e) => e.target.value !== p.feedback && patch({ feedback: e.target.value })} />
             </div>
