@@ -48,9 +48,18 @@ export default function AdminSettingsPage() {
   const [confirmSave, setConfirmSave] = useState(false);
   const [savingPricing, setSavingPricing] = useState(false);
   const [usersOverview, setUsersOverview] = useState(null);
+  // Commerces de démonstration : retirés / remis d'un clic (fondateur, 2026-10-07).
+  const [demos, setDemos] = useState(null);
+  const [demosOccupe, setDemosOccupe] = useState(false);
+  async function basculerDemos(hidden) {
+    setDemosOccupe(true);
+    try { setDemos(await api('/admin/demo-restaurants', { method: 'PUT', token, body: { hidden } })); toast(tr(hidden ? 'adminSettings.demosHiddenToast' : 'adminSettings.demosShownToast')); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setDemosOccupe(false); }
+  }
   useEffect(() => {
     if (section === 'Tarification' && pricing === null) {
       api('/admin/settings', { token }).then((p) => { setPricing(p); setPricingForm(toDisplayForm(p)); }).catch((e) => toast(e.message, 'erreur'));
+      api('/admin/demo-restaurants', { token }).then(setDemos).catch(() => setDemos({ erreur: true }));
     }
     if (section === 'Utilisateurs' && usersOverview === null) api('/admin/users/overview', { token }).then(setUsersOverview).catch((e) => toast(e.message, 'erreur'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,6 +96,20 @@ export default function AdminSettingsPage() {
           c'est la page que l'équipe ouvre pour ses propres paramètres. */}
       {section === 'Sécurité' && <TwoFactorSetup />}
 
+      {section === 'Tarification' && demos && !demos.erreur && (
+        <div className="card" style={{ marginBottom: 14 }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{tr('adminSettings.demosTitle')}</h3>
+          <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{tr('adminSettings.demosHelp')}</p>
+          <p className="small" style={{ margin: '0 0 10px' }}>
+            <span className={`pill ${demos.hidden ? '' : 'teal'}`}>{demos.hidden ? tr('adminSettings.demosStateHidden') : tr('adminSettings.demosStateShown')}</span>
+            {' '}{tr('adminSettings.demosCounts', { demos: demos.demoCount, real: demos.realListedCount })}
+          </p>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn-outline" disabled={demosOccupe || demos.hidden} onClick={() => basculerDemos(true)}>{tr('adminSettings.demosHide')}</button>
+            <button type="button" className="btn-teal" disabled={demosOccupe || !demos.hidden} onClick={() => basculerDemos(false)}>{tr('adminSettings.demosShow')}</button>
+          </div>
+        </div>
+      )}
       {section === 'Tarification' && (
         !pricingForm ? <SkeletonCards count={1} /> : (
           <div className="card">
