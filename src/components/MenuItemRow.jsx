@@ -13,7 +13,7 @@ import { euros } from '../prixPlat';
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, onCreateOptionGroup, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '', onSaveTranslations, onStock, lectureSeule = false }) {
+export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOptionGroups = [], onSetOptionGroups, onCreateOptionGroup, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '', onSaveTranslations, onStock, lectureSeule = false }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -107,6 +107,12 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
     e.stopPropagation();
     setStockEnCours(true);
     try { await onStock(item.id, !item.outOfStockToday); } catch { /* message déjà affiché */ } finally { setStockEnCours(false); }
+  }
+  // Retrait temporaire (fondateur, 2026-10-07) : hors carte jusqu'à ce que le commerce le remette, pas de retour automatique.
+  async function basculerRetrait(e) {
+    e.stopPropagation();
+    setStockEnCours(true);
+    try { await onWithdraw(item.id, !item.withdrawn); } catch { /* message déjà affiché */ } finally { setStockEnCours(false); }
   }
 
   async function remove() {
@@ -326,7 +332,13 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
       </div>
       <div className="bottom-row">
         <span className="price">{euros(item.price)}</span>
-        {onStock && !reorderMode && !selectMode && (item.available !== false || item.outOfStockToday) && (
+        {onWithdraw && !reorderMode && !selectMode && (item.withdrawn || item.available !== false) && (
+          <button type="button" className={`btn-stock${item.withdrawn ? ' btn-stock-rupture' : ''}`} disabled={stockEnCours} onClick={basculerRetrait}
+            aria-pressed={!!item.withdrawn} title={item.withdrawn ? t('menuItem.withdrawBackHelp') : t('menuItem.withdrawHelp')}>
+            {stockEnCours ? '…' : item.withdrawn ? `↩︎ ${t('menuItem.withdrawBack')}` : `🚫 ${t('menuItem.withdraw')}`}
+          </button>
+        )}
+        {onStock && !reorderMode && !selectMode && !item.withdrawn && (item.available !== false || item.outOfStockToday) && (
           <button type="button" className={`btn-stock${item.outOfStockToday ? ' btn-stock-rupture' : ''}`} disabled={stockEnCours} onClick={basculerStock}
             aria-pressed={!!item.outOfStockToday} title={item.outOfStockToday ? t('menuItem.stockBackHelp') : t('menuItem.stockOutHelp')}>
             {stockEnCours ? '…' : item.outOfStockToday ? `↩︎ ${t('menuItem.stockBack')}` : `⛔ ${t('menuItem.stockOut')}`}
