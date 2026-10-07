@@ -310,19 +310,16 @@ export default function RestaurantList() {
   const [graine] = useState(() => Math.random().toString(36).slice(2));
   const melanger = (liste) => {
     const poids = (id) => { let h = 2166136261; const s = `${graine}:${id}`; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
-    return [...liste].sort((a, b) => poids(a.id) - poids(b.id));
+    return [...liste].sort((a, b) => rang(a) - rang(b) || poids(a.id) - poids(b.id));
   };
   const epinglerOuMelanger = (liste, pl, cle, admissibles) => (pl.some((p) => p.sectionKey === cle) || cle === 'nearby' ? epingler(liste, pl, cle, admissibles) : melanger(liste));
-  // MANGER LOCAL (fondateur, 2026-10-06) : les rangées thématiques ne montrent que les commerces de la commune du client
-  // (`homeCommune`) ; « Autour de vous » reste du plus proche au plus loin par rapport à son adresse, commune ou pas. Le
-  // client peut ouvrir toutes les communes (bouton sous les filtres) ou chercher ailleurs par les filtres. Une commune sans
-  // commerce retombe sur toutes les communes, avec une phrase qui le dit. Les mises en avant restent par commune.
-  // 07/10 (fondateur : « le client ne voit pas tous les restos ») : par défaut TOUTES les communes, la sienne d'abord puis les
-  // voisines de proche en proche ; « Seulement ma commune » restreint les rangées à sa commune.
-  const [seulementCommune, setSeulementCommune] = useState(false);
+  // MANGER LOCAL (fondateur, 2026-10-06, précisé le 07/10) : chaque rangée montre D'ABORD les commerces de la commune du client
+  // (`homeCommune` : adresse du compte, sinon adresse tapée sur l'accueil), PUIS ceux des communes voisines de proche en proche —
+  // jamais une rangée ni une page vide. « Autour de vous » reste du plus proche au plus loin par rapport à son adresse. Les
+  // filtres et la recherche restent libres. Les mises en avant restent par commune.
+  const rang = (r) => (homeCommune ? communeRingDistance(homeCommune, r.commune) : 0);
   const dansCommune = homeCommune ? restaurants.filter((r) => r.commune === homeCommune) : [];
-  const local = !!homeCommune && seulementCommune && dansCommune.length > 0;
-  const base = local ? dansCommune : (homeCommune ? [...restaurants].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : restaurants);
+  const base = homeCommune ? [...restaurants].sort((a, b) => rang(a) - rang(b)) : restaurants;
   const communeEpingles = commune || homeCommune;
   const placements = communeEpingles ? placementsTous.filter((p) => !p.commune || p.commune === communeEpingles) : [];
   const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || prix || emporter || tri !== 'recommande');
@@ -438,9 +435,10 @@ export default function RestaurantList() {
       !orderedRestaurantIds.has(r.id) &&
       (!hasLocation || (r.lat && r.lng && haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) <= DISCOVER_RADIUS_KM))
     ));
-    return [...eligible].sort(() => Math.random() - 0.5).slice(0, DISCOVER_MAX);
+    const des = new Map(eligible.map((r) => [r.id, Math.random()]));
+    return [...eligible].sort((a, b) => rang(a) - rang(b) || des.get(a.id) - des.get(b.id)).slice(0, DISCOVER_MAX);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurants, local, orderedRestaurantIds, user?.lat, user?.lng]);
+  }, [restaurants, homeCommune, orderedRestaurantIds, user?.lat, user?.lng]);
 
   return (
     <div>
@@ -584,13 +582,8 @@ export default function RestaurantList() {
         <div className="local-bandeau" role="status">
           <Icone nom="position" taille={16} />
           <span>
-            {local ? t('restaurantList.localTitle', { commune: homeCommune }) : dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : t('restaurantList.localAllTitle', { commune: homeCommune })}
+            {dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : t('restaurantList.localAllTitle', { commune: homeCommune })}
           </span>
-          {dansCommune.length > 0 && (
-            <button type="button" className="btn-link" onClick={() => setSeulementCommune((v) => !v)}>
-              {local ? t('restaurantList.localSeeAll') : t('restaurantList.localBack', { commune: homeCommune })}
-            </button>
-          )}
         </div>
       )}
       {!loading && !hasActiveFilter && (
