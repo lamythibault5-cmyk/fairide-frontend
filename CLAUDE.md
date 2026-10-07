@@ -311,6 +311,10 @@ paid by Fairide like the balance: they lower `orders.total`, never the business'
 payment only.
 Subscription: €20/month, first month free, with the « zéro commande = zéro abonnement » guarantee (a month without
 an order is not charged, or refunded — `../fairide-backend/garantieAbonnement.js`, since 2026-10-02).
+**Offered by default during the launch (founder, 2026-10-07)**: the only automatic charge is the 10% markup on orders.
+A business sells without any subscription until the team turns billing on for it (Admin › Commerces › « Facturer
+l'abonnement », `restaurants.subscription_billing_enabled`, false by default — see `formules.abonnementOffert`). Its
+account page then shows « offert pendant le lancement » and the Stripe checkout refuses (`SUBSCRIPTION_WAIVED`).
 
 - server: `commissionFairide` and `fraisService` in `../fairide-backend/pricing.js`, called by `routes/orders.js`;
   `service_fee` stores the fee excl. VAT, `service_fee_vat` its VAT — show **their sum** to the customer;

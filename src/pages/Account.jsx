@@ -22,6 +22,7 @@ import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
 import { abonnementOuvert, datePremierPrelevement } from '../launch';
+import AbonnementOffert from '../components/commerce/AbonnementOffert';
 import OffreFormules from '../components/OffreFormules';
 import TerminalFairide from '../components/TerminalFairide';
 import { StarsDisplay } from '../components/Stars';
@@ -802,7 +803,9 @@ export default function Account() {
           {/* Une seule offre depuis le 2026-09-25 (à emporter et livraison, 20 €/mois) : l'abonnement n'est jamais activé
               d'office, c'est le restaurateur qui le fait. */}
           <div id="section-abonnement">
-          <LigneCompte icone="carteBancaire" titre={t('accountUi.subscription')} sous={ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
+          <LigneCompte icone="carteBancaire" titre={t('accountUi.subscription')} sous={restaurant.subscriptionWaived ? t('accountUi.subWaivedShort') : ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
+            {/* Offert pendant le lancement (fondateur, 7 oct. 2026) : pas de garantie ni de bouton de paiement à montrer. */}
+            {restaurant.subscriptionWaived ? <AbonnementOffert /> : (<>
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
               {now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
             </p>
@@ -906,6 +909,7 @@ export default function Account() {
                 </div>
               </div>
             )}
+            </>)}
           </LigneCompte>
           </div>
 

@@ -101,6 +101,30 @@ export function BoutonFermerSoir({ detail, token, api, toast, tr, onChanged }) {
   return <button type="button" className="btn-outline" disabled={busy} onClick={basculer} title={tr('adminRestos.closeTonightHelp')}>{busy ? '…' : ferme ? tr('adminRestos.reopenNow', { time: heure }) : tr('adminRestos.closeTonight')}</button>;
 }
 
+// Abonnement offert ou facturé (fondateur, 7 oct. 2026) : offert à tous pendant le lancement, facturé commerce par commerce
+// quand il commence à profiter de Fairide. Activer la facturation lui demande de souscrire (premier mois offert) ; le geste
+// passe par une confirmation, le retour à « offert » est immédiat.
+export function BoutonFacturationAbonnement({ detail, token, api, toast, tr, onChanged }) {
+  const [busy, setBusy] = useState(false);
+  const [confirmer, setConfirmer] = useState(false);
+  const facture = !!detail.subscriptionBillingEnabled;
+  async function basculer() {
+    setConfirmer(false);
+    setBusy(true);
+    try {
+      await api(`/admin/restaurants/${detail.id}/subscription-billing`, { method: 'PATCH', token, body: { enabled: !facture } });
+      toast(facture ? tr('adminRestos.subBillingOffToast') : tr('adminRestos.subBillingOnToast'));
+      onChanged?.();
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+  }
+  return (
+    <>
+      <button type="button" className="btn-outline" disabled={busy} onClick={() => (facture ? basculer() : setConfirmer(true))} title={tr('adminRestos.subBillingHelp')}>{busy ? '…' : facture ? tr('adminRestos.subBillingOff') : tr('adminRestos.subBillingOn')}</button>
+      <ConfirmDialog open={confirmer} title={tr('adminRestos.subBillingOn')} message={tr('adminRestos.subBillingConfirm', { name: detail.name })} loading={busy} onConfirm={basculer} onCancel={() => setConfirmer(false)} />
+    </>
+  );
+}
+
 export default function AdminRestaurantsPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
@@ -637,6 +661,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={onApprove}>{tr('adminCommon.approve')}</button>}
             {!estTest(detail) && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
             {!detail.isDemo && <BoutonFermerSoir detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}
+            {!detail.isDemo && <BoutonFacturationAbonnement detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}
             {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
             {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}
             <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={onDelete}>{tr('adminRestos.deleteRestaurant')}</button>

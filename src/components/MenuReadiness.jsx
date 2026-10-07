@@ -94,7 +94,7 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
                 vers un écran où il n'y avait rien à faire. Tant que la date n'est pas là, l'étape dit
                 à partir de quand elle s'ouvre et ne prétend plus être une action à faire tout de suite. */}
             {o.plan === 'complete' && (
-              <Etape fait={o.subscriptionActive}>
+              <Etape fait={o.subscriptionActive || o.subscriptionWaived}>
                 {o.subscriptionActive || abonnementOuvert()
                   ? t('menuPage.readyStepSubscription')
                   : t('menuPage.readyStepSubscriptionSoon', { date: dateOuvertureAbonnement(locale) })}
