@@ -5349,7 +5349,8 @@ export default {
       confirmNoShowTitle: 'Le client n\'est pas venu ?',
       confirmNoShowText: 'La commande de {name} sera close comme non récupérée. Pour un paiement sur place, Fairide n\'intervient pas : ni remboursement, ni indemnisation.',
       toastNoShow: 'Commande close : client pas venu.',
-      toCollectOnSite: 'À encaisser sur place'
+      toCollectOnSite: 'À payer sur place',
+      paidOnlineBadge: 'Déjà payé en ligne'
     },
     dashDriver: {
       loadError: 'Impossible de charger tes courses.',

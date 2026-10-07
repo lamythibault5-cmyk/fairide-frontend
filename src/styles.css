@@ -4357,6 +4357,11 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .carte-verrou { border-left: 4px solid var(--iris); }
 .hausse-prix-demande { margin: 10px 0 4px; padding: 10px 12px; border-radius: 10px; background: var(--surface-soft); color: var(--ink); border-left: 4px solid var(--iris); }
 
+/* Commandes du commerce : paiement sur place / en ligne bien distincts (2026-10-07). */
+.paiement-badge { display: inline-block; padding: 3px 9px; border-radius: 8px; }
+.paiement-sur-place { background: #fff1d6; color: #7a4a00; border: 1px solid #f0c36d; }
+.paiement-en-ligne { background: #e5f8e8; color: #1b6b2e; border: 1px solid #9ad7a8; }
+
 /* Promotions du commerce : encadré « aucune commission sur ta promotion » (2026-10-07). */
 .promo-commission-note { margin: 0 0 12px; border-left: 4px solid var(--lime); background: var(--surface-soft); }
 

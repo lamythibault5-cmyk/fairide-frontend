@@ -5333,7 +5333,8 @@ export default {
       confirmNoShowTitle: 'Is de klant niet gekomen?',
       confirmNoShowText: 'De bestelling van {name} wordt afgesloten als niet opgehaald. Bij een betaling ter plaatse komt Fairide niet tussen: geen terugbetaling en geen vergoeding.',
       toastNoShow: 'Bestelling afgesloten: klant niet gekomen.',
-      toCollectOnSite: 'Ter plaatse te innen'
+      toCollectOnSite: 'Ter plaatse te betalen',
+      paidOnlineBadge: 'Al online betaald'
     },
     dashDriver: {
       loadError: 'Je ritten konden niet worden geladen.',

@@ -5333,7 +5333,8 @@ export default {
       confirmNoShowTitle: 'The customer didn’t come?',
       confirmNoShowText: 'The order from {name} will be closed as not collected. For an on-site payment, Fairide does not step in: no refund and no compensation.',
       toastNoShow: 'Order closed: customer didn’t show.',
-      toCollectOnSite: 'To collect on site'
+      toCollectOnSite: 'To pay on site',
+      paidOnlineBadge: 'Already paid online'
     },
     dashDriver: {
       loadError: 'Your deliveries could not be loaded.',

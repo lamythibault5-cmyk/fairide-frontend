@@ -277,10 +277,13 @@ export default function OrdersPage() {
       </div>
       <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
       {o.print && <div style={{ margin: '4px 0' }}><EtatImpression p={o.print} t={t} /></div>}
-      {o.paymentMode === 'on_site' && (
-        <div className="small" style={{ margin: '4px 0', fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : 'var(--ink)' }}>
-          {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}
+      {/* Paiement bien distinct (fondateur, 2026-10-07) : à payer sur place (encadré orange) ou déjà payé en ligne (vert). */}
+      {o.paymentMode === 'on_site' ? (
+        <div className="small paiement-badge paiement-sur-place" style={{ margin: '4px 0', fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
+          {o.pickupNoShow ? t('ordersResto.noShowBadge') : `💶 ${t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}`}
         </div>
+      ) : (
+        <div className="small paiement-badge paiement-en-ligne" style={{ margin: '4px 0', fontWeight: 700 }}>✅ {t('ordersResto.paidOnlineBadge')}</div>
       )}
       <ProgressBar status={o.status} orderType={o.orderType} />
       <DeliveryTiming order={o} />
