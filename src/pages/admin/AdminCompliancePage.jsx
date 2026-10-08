@@ -446,7 +446,6 @@ function ExportsTab() {
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(null); }
   }
 
-  const pct = (n) => `${(Number(n) * 100).toFixed(2).replace('.', ',')} %`;
   const eur = (n) => `${Number(n).toLocaleString('fr-BE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €`;
 
   return (
@@ -485,9 +484,6 @@ function ExportsTab() {
                 <thead>
                   <tr>
                     <th>{tr('adminCommon.year')}</th>
-                    <th>{tr('adminCompliance.thP2pMax')}</th>
-                    <th>{tr('adminCompliance.thP2pWithholding')}</th>
-                    <th>{tr('adminCompliance.thAlertLevels')}</th>
                     <th>{tr('adminCompliance.thStudentIndependent')}</th>
                     <th>{tr('adminCompliance.thParentsCeiling')}</th>
                     <th>{tr('adminCompliance.thAdultMinAge')}</th>
@@ -501,9 +497,6 @@ function ExportsTab() {
                     return (
                       <tr key={t.year}>
                         <td><b>{t.year}</b></td>
-                        <td>{v(t.p2pAnnualCeilingGross, eur)}</td>
-                        <td>{v(t.p2pWithholdingRate, pct)}</td>
-                        <td>{Array.isArray(t.p2pAlertLevels) && t.p2pAlertLevels.length ? t.p2pAlertLevels.map((n) => `${n} %`).join(' · ') : '—'}</td>
                         <td>{v(t.studentIndependentExemption, eur)} / {v(t.studentIndependentCeiling, eur)}</td>
                         <td>{v(t.studentParentsCeiling, eur)}</td>
                         <td>{t.adultMinAge ?? '—'}</td>

@@ -345,7 +345,6 @@ export function ParametersTab() {
           </div>
           <button type="button" className="btn-teal" disabled={!age && date === null} onClick={enregistrer}>{t('conformite.save')}</button>
           <h4 style={{ marginTop: 16 }}>{t('conformite.paramFlags')}</h4>
-          {/* p2p_enabled a son propre écran (Livreurs › Paramètres), avec ses explications : pas ici. */}
           {Object.entries(data.flags).filter(([k]) => k !== 'p2p_enabled').map(([k, v]) => (
             <p key={k} className="small" style={{ margin: '4px 0' }}>
               {k} : <b>{v ? t('conformite.on') : t('conformite.off')}</b>{' '}

@@ -10,7 +10,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateOuverturePaiements } from '../../launch';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import CourierUsageBar, { niveauxAlerte, libelleNiveaux, euroPlafond } from '../../components/CourierUsageBar';
+import { euros } from '../../prixPlat';
 import ouvrirDocument from '../../ouvrirDocument';
 import { EtapeNotices, ConsentementBiometrique } from '../../components/conformite/LivreurConformite';
 import { TarifMinimum, DocumentsVente } from '../../components/conformite/EspaceVendeurLivreur';
@@ -19,7 +19,7 @@ import { libelleManque } from '../../conformite';
 // Parcours d'inscription du livreur, en étapes : statut (économie collaborative / étudiant-indépendant /
 // indépendant), identité vérifiée (Stripe Identity, ou dépôt manuel — itsme a été retiré le 4 oct. 2026 : jamais
 // raccordé, il s'affichait « recommandé, bientôt » sans contrat prévu), infos et documents propres au statut, contrat signé, paiements Stripe, puis envoi à la
-// validation Fairide. Une fois validé, la même page montre les compteurs (plafond P2P, brut / précompte /
+// validation Fairide. Une fois validé, la même page montre les compteurs (brut /
 // net de l'année), les notifications, le renouvellement annuel et le changement de statut, libre à tout
 // moment (le dossier repasse alors en vérification).
 // Rien ici n'impose d'horaire, de quota de courses ni de taux d'acceptation : le livreur choisit ses
@@ -28,20 +28,21 @@ import { libelleManque } from '../../conformite';
 const ETAPES = ['statut', 'identite', 'infos', 'notices', 'contrat', 'paiement', 'envoi'];
 const MANQUES_PAR_ETAPE = {
   statut: ['statut'], identite: ['identite', 'document_identity_card'],
-  infos: ['nationalite', 'titre_sejour', 'carte_professionnelle', 'date_naissance', 'registre_national', 'iban', 'zone', 'vehicule', 'permis_immatriculation', 'ecole', 'caisse', 'attestation_honneur_p2p', 'age_minimum', 'consentements_p2p', 'bce', 'tva', 'tva_numero', 'siege', 'document_school_certificate', 'document_social_insurance_fund', 'document_liability_insurance', 'document_bce_extract', 'document_profile_photo', 'document_driving_licence', 'document_vehicle_registration', 'document_vehicle_insurance'],
+  infos: ['nationalite', 'titre_sejour', 'carte_professionnelle', 'date_naissance', 'registre_national', 'iban', 'zone', 'vehicule', 'permis_immatriculation', 'ecole', 'caisse', 'statut', 'age_minimum', 'bce', 'tva', 'tva_numero', 'siege', 'document_school_certificate', 'document_social_insurance_fund', 'document_liability_insurance', 'document_bce_extract', 'document_profile_photo', 'document_driving_licence', 'document_vehicle_registration', 'document_vehicle_insurance'],
   notices: ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate'],
   contrat: ['contrat'], paiement: [], envoi: ['statut_non_verifie']
 };
 // « statut_non_verifie » n'est pas une action du livreur : c'est Fairide qui vérifie. Il n'empêche
 // donc pas d'envoyer le dossier, il est simplement affiché à titre d'information.
 const MANQUES_INFORMATIFS = ['statut_non_verifie'];
-const STATUTS = ['p2p', 'student_independent', 'independent'];
-const EMOJI_STATUT = { p2p: '🤝', student_independent: '🎓', independent: '🧑‍💼' };
+// Deux statuts (CODE-12, DEC-19 : plus d'économie collaborative, régime fermé aux livreurs de plateformes).
+const STATUTS = ['student_independent', 'independent'];
+const EMOJI_STATUT = { student_independent: '🎓', independent: '🧑‍💼' };
 // Caisses d'assurances sociales agréées en Belgique (noms propres, pas de traduction).
 const CAISSES = ['Liantis', 'Acerta', 'Xerius', 'Partena', 'Securex', 'UCM', 'Group S', 'Caisse nationale auxiliaire'];
 // Attestations d'assurance, permis, titre de séjour : date d'échéance demandée, Fairide rappelle le renouvellement.
 const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance', 'driving_licence', 'residence_permit'];
-const euro = euroPlafond;
+const euro = (n) => euros(Number(n || 0));
 // Taux stocké en fraction (0.107) affiché en pourcentage (« 10,7 ») ; « — » si la configuration ne le donne pas.
 const pctTexte = (x) => (x == null || x === '' ? '—' : `${(Number(x) * 100).toLocaleString(getLocale(), { maximumFractionDigits: 2 })}`);
 const euroOuTiret = (x) => (x == null || x === '' ? '—' : euro(x));
@@ -135,7 +136,7 @@ export default function Onboarding() {
       )}
 
       {(valide || c.lifecycleStatus === 'blocked_threshold' || c.lifecycleStatus === 'pending_review' || c.lifecycleStatus === 'suspended') && (
-        <Compteurs d={d} t={t} token={token} action={action} busy={busy} />
+        <Compteurs d={d} t={t} />
       )}
       {/* Le tarif minimum se règle dans l'étape « Paiements » (fondateur, 2026-10-06 : il s'affichait sous chaque étape) ;
           ses documents de vente, une fois qu'il a pu livrer. */}
@@ -175,16 +176,11 @@ function EtatDossier({ d, t, onChangeStatus }) {
   );
 }
 
-// Les trois cartes de statut, chiffres tirés de la configuration fiscale de l'année (`legal`).
+// Les deux cartes de statut, chiffres tirés de la configuration fiscale de l'année (`legal`).
 function EtapeStatut({ d, t, busy, onChoose }) {
-  const legal = d.legal ?? {}; const p2pOk = !!d.flags?.p2pEnabled;
+  const legal = d.legal ?? {};
   const age = legal.adultMinAge ?? '—';
   const cartes = [
-    { key: 'p2p', soon: !p2pOk,
-      plafond: t('courierOnboarding.cmpP2pCeiling', { amount: euroOuTiret(legal.p2pAnnualCeilingGross), year: legal.year ?? '' }),
-      retenue: t('courierOnboarding.cmpP2pWithholding', { rate: pctTexte(legal.p2pWithholdingRate) }),
-      social: t('courierOnboarding.cmpP2pSocial'), tva: t('courierOnboarding.cmpP2pVat'), demarches: t('courierOnboarding.cmpP2pSteps'),
-      age: t('courierOnboarding.cmpAge', { age }) },
     { key: 'student_independent',
       plafond: t('courierOnboarding.cmpStuCeiling', { ceiling: euroOuTiret(legal.studentIndependentCeiling) }),
       retenue: t('courierOnboarding.cmpStuWithholding'),
@@ -203,7 +199,7 @@ function EtapeStatut({ d, t, busy, onChoose }) {
       <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.chooseStatusHelp')}</p>
       <div className="courier-compare">
         {cartes.map((k) => (
-          <div key={k.key} className={`courier-compare-card${d.courier.statusType === k.key ? ' active' : ''}${k.soon ? ' soon' : ''}`}>
+          <div key={k.key} className={`courier-compare-card${d.courier.statusType === k.key ? ' active' : ''}`}>
             <div className="courier-compare-head"><span style={{ fontSize: 26 }}>{EMOJI_STATUT[k.key]}</span><b>{t(`courierOnboarding.status_${k.key}`)}</b></div>
             <p className="small">{t(`courierOnboarding.status_${k.key}_desc`)}</p>
             <dl className="courier-compare-list">
@@ -214,13 +210,9 @@ function EtapeStatut({ d, t, busy, onChoose }) {
               <dt>{t('courierOnboarding.cmpSteps')}</dt><dd>{k.demarches}</dd>
               <dt>{t('courierOnboarding.cmpAgeLabel')}</dt><dd>{k.age}</dd>
             </dl>
-            {k.soon ? (
-              <div className="small courier-soon">🔒 {t('courierOnboarding.p2pSoon')}</div>
-            ) : (
-              <button type="button" className={d.courier.statusType === k.key ? 'btn-outline' : 'btn-teal'} disabled={busy} onClick={() => onChoose(k.key)}>
-                {d.courier.statusType === k.key ? t('courierOnboarding.chosen') : t('courierOnboarding.choose')}
-              </button>
-            )}
+            <button type="button" className={d.courier.statusType === k.key ? 'btn-outline' : 'btn-teal'} disabled={busy} onClick={() => onChoose(k.key)}>
+              {d.courier.statusType === k.key ? t('courierOnboarding.chosen') : t('courierOnboarding.choose')}
+            </button>
           </div>
         ))}
       </div>
@@ -347,14 +339,11 @@ function ChampCaisse({ f, set, t }) {
 
 function EtapeInfos({ d, t, busy, token, action, onNext }) {
   const toast = useToast();
-  const c = d.courier; const legal = d.legal ?? {}; const th = d.thresholds ?? {};
+  const c = d.courier; const legal = d.legal ?? {};
   const [f, setF] = useState({ birthDate: c.birthDate ?? '', nationalNumber: '', iban: c.iban ?? '', zone: c.zone ?? '', vehicleType: c.vehicleType ?? '', licenceNumber: c.licenceNumber ?? '', licencePlate: c.licencePlate ?? '', bagOption: c.bag?.option || '',
     schoolName: c.student?.school ?? '', academicYear: c.student?.academicYear ?? '',
     socialInsuranceFund: c.socialInsuranceFund ?? c.student?.socialInsuranceFund ?? '',
-    p2pHonourDeclared: !!c.p2pHonourDeclaredAt,
-    p2pNonProfessional: !!c.p2p?.nonProfessionalDeclared, p2pWithholdingConsent: !!c.p2p?.withholdingConsent, p2pTaxConsent: !!c.p2p?.taxDataConsent,
     companyNumber: c.independent?.companyNumber ?? '', vatStatus: c.independent?.vatStatus ?? '', vatNumber: c.independent?.vatNumber ?? '', legalName: c.independent?.legalName ?? '', seatAddress: c.independent?.seatAddress ?? '',
-    incomeExternalDeclared: th.incomeExternalDeclared ?? th.grossIncomeExternalDeclared ?? 0,
     nationalityGroup: c.nationalityGroup ?? '' });
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   const [expiry, setExpiry] = useState('');
@@ -369,8 +358,6 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
     if (!body.nationalNumber) delete body.nationalNumber;
     if (!body.bagOption) delete body.bagOption;
     if (!body.nationalityGroup) delete body.nationalityGroup;
-    // L'attestation sur l'honneur ne s'envoie qu'une fois, cochée : le serveur l'horodate.
-    if (!body.p2pHonourDeclared || c.p2pHonourDeclaredAt) delete body.p2pHonourDeclared;
     for (const k of Object.keys(body)) if (body[k] === null) delete body[k];
     const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body }));
     if (ok) setF((x) => ({ ...x, nationalNumber: '' }));
@@ -395,7 +382,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
   // et continuer ») qui faisaient presque la même chose. Même principe que l'inscription : un sujet par
   // écran, un seul bouton. « Continuer » enregistre l'écran avant de passer au suivant, et un écran sans
   // objet pour le statut (pas de section statut, aucune pièce requise) n'existe simplement pas.
-  const titreStatut = { p2p: `🤝 ${t('courierOnboarding.p2pSection')}`, student_independent: `🎓 ${t('courierOnboarding.stuIndepSection')}`, independent: `🧑‍💼 ${t('courierOnboarding.indepSection')}` }[c.statusType];
+  const titreStatut = { student_independent: `🎓 ${t('courierOnboarding.stuIndepSection')}`, independent: `🧑‍💼 ${t('courierOnboarding.indepSection')}` }[c.statusType];
   const parties = ['perso', 'course', ...(titreStatut ? ['statut'] : []), ...(docsRequis.length ? ['documents'] : [])];
   const cle = parties[Math.min(partie, parties.length - 1)];
   const titres = { perso: t('courierOnboarding.partPersonal'), course: t('courierOnboarding.partRides'), statut: titreStatut, documents: `📎 ${t('courierOnboarding.docsTitle')}` };
@@ -454,16 +441,6 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
 
       </>)}
       {cle === 'statut' && (<>
-        {c.statusType === 'p2p' && (<>
-          <Champ label={t('courierOnboarding.fIncomeExternal')} help={t('courierOnboarding.fIncomeExternalHelp', { amount: euroOuTiret(legal.p2pAnnualCeilingGross) })}><input type="number" min="0" step="0.01" value={f.incomeExternalDeclared} onChange={set('incomeExternalDeclared')} /></Champ>
-          <h5 style={{ margin: '10px 0 4px' }}>{t('courierOnboarding.fHonour')}</h5>
-          <label className="service-option"><input type="checkbox" checked={!!f.p2pHonourDeclared} disabled={!!c.p2pHonourDeclaredAt} onChange={set('p2pHonourDeclared')} /> <span>{t('courierOnboarding.fHonourText')}</span></label>
-          {c.p2pHonourDeclaredAt && <p className="small" style={{ margin: '2px 0 6px', opacity: 0.8 }}>✅ {t('courierOnboarding.honourDeclaredAt', { date: new Date(c.p2pHonourDeclaredAt).toLocaleDateString(getLocale()) })}</p>}
-          <label className="service-option"><input type="checkbox" checked={!!f.p2pNonProfessional} onChange={set('p2pNonProfessional')} /> <span>{t('courierOnboarding.p2pNonPro')}</span></label>
-          <label className="service-option"><input type="checkbox" checked={!!f.p2pWithholdingConsent} onChange={set('p2pWithholdingConsent')} /> <span>{t('courierOnboarding.p2pWithholding', { rate: pctTexte(legal.p2pWithholdingRate) })}</span></label>
-          <label className="service-option"><input type="checkbox" checked={!!f.p2pTaxConsent} onChange={set('p2pTaxConsent')} /> <span>{t('courierOnboarding.p2pTax')}</span></label>
-        </>)}
-
         {c.statusType === 'student_independent' && (<>
           <div className="courier-grid">
             <Champ label={t('courierOnboarding.fSchool')}><input value={f.schoolName} onChange={set('schoolName')} /></Champ>
@@ -626,43 +603,21 @@ function EtapeEnvoi({ d, t, busy, onSubmit, onGoTo }) {
   );
 }
 
-// Compteurs de l'année : pour l'économie collaborative, la jauge du plafond (ce qu'il reste), le brut,
-// le précompte retenu et le net versé, plus le champ « déjà gagné ailleurs » qui compte dans le plafond ;
-// pour les autres statuts, brut et net seulement, avec un rappel du seuil qui les concerne.
-function Compteurs({ d, t, token, action, busy }) {
-  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
-  // quand ce composant est rendu plusieurs fois sur la meme page.
-  const idsA11y = useId();
-  const c = d.courier; const s = d.situation; const legal = d.legal ?? {}; const th = d.thresholds ?? {};
-  const [ext, setExt] = useState(th.incomeExternalDeclared ?? th.grossIncomeExternalDeclared ?? 0);
+// Compteurs de l'année : brut, net et courses, avec un rappel du seuil social qui concerne le statut. (Plus de jauge de
+// plafond ni de précompte : ils n'existaient que pour l'économie collaborative, retirée — CODE-12.)
+function Compteurs({ d, t }) {
+  const c = d.courier; const legal = d.legal ?? {}; const th = d.thresholds ?? {};
   const annee = th.year ?? legal.year ?? new Date().getFullYear();
-  const p2p = c.statusType === 'p2p';
-  const niveaux = niveauxAlerte(legal);
-  const et = getLocale().startsWith('fr') ? 'et' : getLocale().startsWith('nl') ? 'en' : 'and';
   return (
     <div className="card">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📊 {t('courierOnboarding.countersTitle')} {annee}</h3>
-      {p2p && s && s.type === 'income' && <CourierUsageBar situation={s} legal={legal} t={t} year={annee} />}
       <div className="stat-grid" style={{ marginTop: 10, marginBottom: 8 }}>
         <div className="stat-card"><div className="num">{euro(th.grossTotal)}</div><div className="label">{t('courierOnboarding.grossYear')}</div></div>
-        {p2p && <div className="stat-card"><div className="num">{euro(th.withholdingTotal)}</div><div className="label">{t('courierOnboarding.withholdingYear')}</div></div>}
         <div className="stat-card highlight"><div className="num">{euro(th.netTotal ?? (Number(th.grossTotal || 0) - Number(th.withholdingTotal || 0)))}</div><div className="label">{t('courierOnboarding.netYear')}</div></div>
         <div className="stat-card"><div className="num">{th.deliveries ?? 0}</div><div className="label">{t('courierOnboarding.deliveriesYear')}</div></div>
       </div>
       {c.statusType === 'student_independent' && <p className="small" style={{ margin: '0 0 6px' }}>ℹ️ {t('courierOnboarding.thresholdInfoStudentIndependent', { exemption: euroOuTiret(legal.studentIndependentExemption), ceiling: euroOuTiret(legal.studentIndependentCeiling) })}</p>}
       {c.statusType === 'independent' && <p className="small" style={{ margin: '0 0 6px' }}>ℹ️ {t('courierOnboarding.thresholdInfoIndependent', { rate: `${pctTexte(legal.independentSocialRate)} %`, exemption: euroOuTiret(legal.independentComplementaryExemption) })}</p>}
-      {p2p && (
-        <>
-          <div className="row" style={{ gap: 8, alignItems: 'flex-end', marginTop: 6, flexWrap: 'wrap' }}>
-            <div className="field" style={{ margin: 0, flex: '1 1 220px' }}>
-              <label htmlFor={idsA11y + '-fincomeexternal'}>{t('courierOnboarding.fIncomeExternal')}</label>
-              <input id={idsA11y + '-fincomeexternal'} type="number" min="0" step="0.01" value={ext} onChange={(e) => setExt(e.target.value)} />
-            </div>
-            <button type="button" className="btn-outline" disabled={busy} onClick={() => action(() => api('/couriers/me', { method: 'PATCH', token, body: { incomeExternalDeclared: ext } }), t('courierOnboarding.toastSaved'))}>{t('courierOnboarding.save')}</button>
-          </div>
-          <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('courierOnboarding.countersHelp', { levels: libelleNiveaux(niveaux, et) })}</p>
-        </>
-      )}
       <p className="small" style={{ margin: '8px 0 0' }}><Link to="/driver/earnings">{t('courierOnboarding.seeEarnings')}</Link></p>
     </div>
   );
@@ -703,13 +658,13 @@ function Notifications({ t, token }) {
 }
 
 // Changement de statut en libre-service : le dossier repasse en vérification (documents du nouveau
-// statut, nouveau contrat), d'où la confirmation. Le P2P n'est proposé que lorsqu'il est activé.
+// statut, nouveau contrat), d'où la confirmation.
 function ChangementStatut({ d, t, token, action, busy, onChanged }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
   const c = d.courier;
-  const choix = STATUTS.filter((x) => x !== c.statusType && (x !== 'p2p' || d.flags?.p2pEnabled));
+  const choix = STATUTS.filter((x) => x !== c.statusType);
   const [cible, setCible] = useState(choix.includes('independent') ? 'independent' : choix[0] || '');
   const [ouvert, setOuvert] = useState(c.lifecycleStatus === 'blocked_threshold');
   const [confirm, setConfirm] = useState(false);
