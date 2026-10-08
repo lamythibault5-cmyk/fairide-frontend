@@ -4992,6 +4992,15 @@ export default {
       family: "Student: je inkomen kan meetellen voor het groeipakket en om ten laste van je ouders te blijven (ongeveer {ceiling} bruto per jaar). Kijk het na bij je kinderbijslagfonds.",
       disclaimer: "Algemene informatie, cijfers van het lopende jaar; je sociaal verzekeringsfonds en de FOD Financiën zijn bepalend.",
     },
+    exportMensuel: {
+      title: "Maandelijkse boekhoudexport",
+      help: "Eén regel per dag: verkopen van Fairide (excl. btw) en btw, gescheiden van de bedragen voor zaken en koeriers (ritten, fooien), Stripe-kosten, terugbetalingen, kortingen betaald door Fairide. Testbestellingen uitgesloten. De afgesloten maand wordt ook automatisch, één keer, naar het archiefadres gestuurd.",
+      month: "Maand",
+      download: "De CSV downloaden",
+      archiveNow: "De afgesloten maand naar het archief sturen",
+      archived: "Export van {month} naar het archief gestuurd.",
+      alreadyArchived: "De afgesloten maand is al gearchiveerd.",
+    },
     menuPage: {
       lockedTitle: 'Je kaart en je prijzen worden samen met Fairide beheerd',
       lockedText: 'Niets verandert zonder jouw akkoord en het onze: je getoonde prijzen zijn je prijzen ter plaatse (+ het deel van Fairide). Een gerecht uitverkocht? Zet het hieronder op uitverkocht, het komt morgen terug. Een prijs, een gerecht, een foto te veranderen? Laat het ons net hieronder weten, wij doen het. Een prijsverhoging? Vraag ze verderop aan, ze geldt zodra we ze gevalideerd hebben.',

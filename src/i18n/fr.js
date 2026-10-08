@@ -5006,6 +5006,15 @@ export default {
       family: "Étudiant : tes revenus peuvent compter pour les allocations familiales et pour rester personne à charge de tes parents (environ {ceiling} brut par an). Vérifie auprès de ta caisse d'allocations familiales.",
       disclaimer: "Informations générales, chiffres de l'année en cours ; ta caisse d'assurances sociales et le SPF Finances font foi.",
     },
+    exportMensuel: {
+      title: "Export comptable du mois",
+      help: "Une ligne par jour : ventes de Fairide (HTVA) et TVA, séparées des fonds à reverser aux commerces et aux livreurs (courses, pourboires), frais Stripe, remboursements, remises payées par Fairide. Commandes de test exclues. Le mois clos part aussi tout seul, une fois, à l'adresse d'archive.",
+      month: "Mois",
+      download: "Télécharger le CSV",
+      archiveNow: "Envoyer le mois clos à l'archive",
+      archived: "Export de {month} envoyé à l'archive.",
+      alreadyArchived: "Le mois clos est déjà archivé.",
+    },
     menuPage: {
       lockedTitle: 'Ta carte et tes prix sont gérés avec Fairide',
       lockedText: 'Rien ne change sans ton accord ni le nôtre : tes prix affichés sont tes prix sur place (+ la part Fairide). Un plat épuisé ? Mets-le en rupture d\'un geste ci-dessous, il revient demain. Un prix, un plat, une photo à changer ? Écris-le-nous juste en dessous, on s\'en occupe. Une hausse de tes prix ? Demande-la plus bas, elle s\'applique dès qu\'on l\'a validée.',

@@ -4992,6 +4992,15 @@ export default {
       family: "Student: your income may count for family allowances and for remaining a dependant of your parents (about {ceiling} gross a year). Check with your family allowance fund.",
       disclaimer: "General information, current-year figures; your social insurance fund and the FPS Finance are authoritative.",
     },
+    exportMensuel: {
+      title: "Monthly accounting export",
+      help: "One line per day: Fairide sales (excl. VAT) and VAT, separated from funds owed to businesses and couriers (rides, tips), Stripe fees, refunds, discounts paid by Fairide. Test orders excluded. The closed month is also sent automatically, once, to the archive address.",
+      month: "Month",
+      download: "Download the CSV",
+      archiveNow: "Send the closed month to the archive",
+      archived: "Export of {month} sent to the archive.",
+      alreadyArchived: "The closed month is already archived.",
+    },
     menuPage: {
       lockedTitle: 'Your menu and prices are managed with Fairide',
       lockedText: 'Nothing changes without your agreement and ours: your displayed prices are your in-store prices (+ Fairide\'s share). A dish sold out? Mark it out of stock below, it comes back tomorrow. A price, a dish, a photo to change? Tell us just below, we handle it. A price increase? Request it further down, it applies once we have validated it.',
