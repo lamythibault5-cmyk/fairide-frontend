@@ -11,6 +11,7 @@ import { dateOuverturePaiements } from '../../launch';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { euros } from '../../prixPlat';
+import GuideIndependant from '../../components/livreur/GuideIndependant';
 import ouvrirDocument from '../../ouvrirDocument';
 import { EtapeNotices, ConsentementBiometrique } from '../../components/conformite/LivreurConformite';
 import { TarifMinimum, DocumentsVente } from '../../components/conformite/EspaceVendeurLivreur';
@@ -196,6 +197,8 @@ function EtapeStatut({ d, t, busy, onChoose }) {
   ];
   return (
     <div className="card">
+      {/* CODE-16 : comment devenir (étudiant-)indépendant, avant de choisir son statut. */}
+      <GuideIndependant legal={legal} />
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.chooseStatus')}</h3>
       <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.chooseStatusHelp')}</p>
       <div className="courier-compare">

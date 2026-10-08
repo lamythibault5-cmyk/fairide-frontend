@@ -121,6 +121,10 @@ export default function DriverContractTerms() {
         </>
       )}
 
+      {/* Assurance souscrite par Fairide (CODE-15) : références communiquées avant la première course. */}
+      <h4 className="paiement-titre">{t('driverTerms.insuranceTitle')}</h4>
+      <p className="small">{d.insurancePolicy ? d.insurancePolicy : t('driverTerms.insurancePending')}</p>
+
       {/* Paiement */}
       <h4 className="paiement-titre">{t('driverTerms.payTitle')}</h4>
       <ol className="paiement-etapes">
