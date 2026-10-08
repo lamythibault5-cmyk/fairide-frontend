@@ -322,8 +322,29 @@ account page then shows « offert pendant le lancement » and the Stripe checkou
 - the ×1.121 is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js --facteur`, or a CSV of
   in-store prices), not at runtime; since 2026-10-01 the business can no longer edit dishes or prices itself
   (`MENU_LOCKED`) — it asks, and the team applies;
-- legal texts: contract `RESTO-2026.16` (courier contracts `*-2026.6`), T&Cs `CGU-2026-09-25` (they tell customers prices may be higher than
-  on site). Never write « le prix du commerce » or « 100 % au restaurant » in customer-facing copy.
+- legal texts: contract `RESTO-2026.17` (in force 1 Nov 2026; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-08`, privacy
+  `CONF-2026-10-08` (they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
+  restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).
+
+## Corrections of 8 October 2026 (`docs/fairide-a-coder-2026-10-08.md`)
+
+Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What changed, so nobody undoes it:
+
+- **The business is the only seller** (DEC-25/26). Fairide collects on its behalf and issues the customer **receipt**
+  (`recuClient.js`, `GET /orders/:id/receipt`, three seller blocks); Stripe no longer creates invoices for customers. A
+  company that needs an invoice asks the business.
+- **Menus are proposed, then validated** by the business (« C'est bon », `/carte/valider/:token`, single-use hashed link);
+  publishing refuses an unvalidated menu. Every price or VAT change is logged with who asked (`menu_item_history`).
+- **VAT per dish belongs to the business**: proposed from the dish's nature (`tvaPlats.js`, no hard-coded 6 %), editable by
+  the business despite `MENU_LOCKED`; a rate change for everyone gives 7 days to refuse (Admin › Commerces).
+- **Alcohol is closed** until `ALCOHOL_ENABLED=true` on the server. Insurance, the AFSCA document and the alcohol licence are
+  **alerts**, no longer blockers (business number, AFSCA number, contract, validated menu, allergens still block).
+- **Couriers**: two statuses only (P2P removed); they set their minimum per ride and per km and only see offers above it
+  (the customer's delivery fee rises to the cheapest courier's minimum, capped); **no delivery rating**; suspension only for
+  fraud, serious misconduct or legal obligation; random check selfie at shift start (`controleSelfie.js`); grid of the 8
+  criteria of art. 337/3 in Admin › Conformité. Never add a rating, ranking or penalty — that is criterion 6°/7°.
+- **Accounting**: monthly export (`comptaMensuelle.js`) separates Fairide sales from third-party funds and is emailed once to
+  the archive address; subscription invoices are Fairide's own (`FAIRIDE-ABO-…`) and go through Peppol.
 
 ## Three sellers per order (decided 2026-09-23)
 
