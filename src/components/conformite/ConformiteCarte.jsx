@@ -156,8 +156,13 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
         )}
       </section>
 
+      {/* Alcool fermé au lancement (DEC-22, ALCOHOL_ENABLED côté serveur) : les plats sont masqués pour tous, avec ou
+          sans autorisation — on ne réclame donc pas la pièce AGD&A au commerce, on lui dit pourquoi. */}
+      {d.alcohol.alcoholItems > 0 && d.alcohol.salesOpen === false && (
+        <p className="small" style={{ marginTop: 16 }}>{t('conformite.alcoholClosed', { n: d.alcohol.alcoholItems })}</p>
+      )}
       {/* A4 — alcool sans autorisation */}
-      {d.alcohol.alcoholItems > 0 && !d.alcohol.authorized && (
+      {d.alcohol.alcoholItems > 0 && d.alcohol.salesOpen !== false && !d.alcohol.authorized && (
         <p className="small" style={{ marginTop: 16, color: 'var(--red)' }}>{t('conformite.alcoholHidden', { n: d.alcohol.alcoholItems })}</p>
       )}
     </details>

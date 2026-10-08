@@ -7462,6 +7462,7 @@ export default {
       proCheck: 'Ik leg deze verklaring af.',
       proButton: 'De verklaring ondertekenen',
       alcoholHidden: '{n} alcoholhoudend(e) gerecht(en) verborgen voor klanten: stuur uw Vergunning Handelaar Alcohol en Tabak (AAD&A) naar contact@fairide.be.',
+      alcoholClosed: "{n} alcoholhoudend(e) gerecht(en) verborgen voor klanten: Fairide verkoopt geen alcohol tijdens de lancering. Ze komen terug wanneer we de alcoholverkoop heropenen — je hoeft niets te doen.",
       decisionTitle: 'Beslissing over {name}',
       decisionIntro: 'Een schorsing of opzegging is een gemotiveerde beslissing: de persoon krijgt per e-mail de feiten, de betrokken clausule en de rechtsmiddelen, vóór de maatregel ingaat. Hij of zij kan een heronderzoek vragen, uitgevoerd door een ander teamlid binnen 14 dagen.',
       decisionMeasure: 'Maatregel',

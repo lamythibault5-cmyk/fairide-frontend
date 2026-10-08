@@ -7462,6 +7462,7 @@ export default {
       proCheck: 'I make this declaration.',
       proButton: 'Sign the declaration',
       alcoholHidden: '{n} alcoholic dish(es) hidden from customers: send your Alcohol and Tobacco Trader Authorisation (AGD&A) to contact@fairide.be.',
+      alcoholClosed: "{n} alcoholic dish(es) hidden from customers: Fairide does not sell alcohol during the launch. They will come back when we reopen alcohol sales — nothing to do on your side.",
       decisionTitle: 'Decision about {name}',
       decisionIntro: 'A suspension or termination is a reasoned decision: the person receives by email the facts, the clause concerned and their remedies, before the measure takes effect. They can ask for a review, done by another team member within 14 days.',
       decisionMeasure: 'Measure',

@@ -7509,6 +7509,7 @@ export default {
       proCheck: 'Je fais cette déclaration.',
       proButton: 'Signer la déclaration',
       alcoholHidden: '{n} plat(s) alcoolisé(s) masqué(s) aux clients : envoyez votre Autorisation Commerçant Alcool et Tabac (AGD&A) à contact@fairide.be.',
+      alcoholClosed: "{n} plat(s) alcoolisé(s) masqué(s) aux clients : Fairide ne vend pas d'alcool pendant le lancement. Ils reviendront quand nous rouvrirons la vente d'alcool — rien à faire de ton côté.",
       decisionTitle: 'Décision concernant {name}',
       decisionIntro: 'Une suspension ou une résiliation est une décision motivée : la personne reçoit par e-mail les faits, la clause en cause et ses recours, avant que la mesure ne prenne effet. Elle peut demander un réexamen, fait par un autre membre de l\'équipe sous 14 jours.',
       decisionMeasure: 'Mesure',
