@@ -41,7 +41,8 @@ const EMOJI_STATUT = { student_independent: '🎓', independent: '🧑‍💼' }
 // Caisses d'assurances sociales agréées en Belgique (noms propres, pas de traduction).
 const CAISSES = ['Liantis', 'Acerta', 'Xerius', 'Partena', 'Securex', 'UCM', 'Group S', 'Caisse nationale auxiliaire'];
 // Attestations d'assurance, permis, titre de séjour : date d'échéance demandée, Fairide rappelle le renouvellement.
-const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance', 'driving_licence', 'residence_permit'];
+// Carte professionnelle (CODE-14) : sa date d'expiration est exigée — sans carte valide, un livreur hors UE ne prend pas de course.
+const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance', 'driving_licence', 'residence_permit', 'professional_card'];
 const euro = (n) => euros(Number(n || 0));
 // Taux stocké en fraction (0.107) affiché en pourcentage (« 10,7 ») ; « — » si la configuration ne le donne pas.
 const pctTexte = (x) => (x == null || x === '' ? '—' : `${(Number(x) * 100).toLocaleString(getLocale(), { maximumFractionDigits: 2 })}`);
@@ -278,6 +279,14 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
             <input ref={fichier} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={deposer} />
             <button type="button" className="btn-outline" disabled={busy} onClick={async () => { if (id.provider !== 'manual') await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click(); }}>{t('courierOnboarding.manualUpload')}</button>
             {carte.length > 0 && <p className="small" style={{ margin: '6px 0 0' }}>✅ {t('courierOnboarding.manualUploaded', { n: carte.length })}</p>}
+          </div>
+          {/* Contrôle en personne (CODE-14) : pour qui refuse la vérification biométrique — l'équipe fixe un rendez-vous. */}
+          <div className="courier-provider">
+            <b>🤝 {t('courierOnboarding.provider_in_person')}</b>
+            <p className="small">{t('courierOnboarding.inPersonHelp')}</p>
+            {id.provider === 'in_person' && id.status === 'pending'
+              ? <p className="small" style={{ margin: 0 }}>⏳ {t('courierOnboarding.inPersonRequested')}</p>
+              : <button type="button" className="btn-outline" disabled={busy || !prov.in_person} onClick={() => action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'in_person' } }), t('courierOnboarding.inPersonRequested'))}>{t('courierOnboarding.inPersonRequest')}</button>}
           </div>
         </div>
       )}

@@ -8,6 +8,7 @@ import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { ErrorCard, ResultCount } from '../../components/admin/AdminListTools';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import ControlesSelfie from '../../components/admin/ControlesSelfie';
 import DecisionDialog from '../../components/admin/DecisionDialog';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import { useAuth } from '../../context/AuthContext';
@@ -28,7 +29,7 @@ const fmt = (d) => (d ? new Date(d).toLocaleDateString(getLocale()) : '-');
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 // CODE-12 : deux statuts, plus d'onglet « précompte » (il n'existait que pour l'économie collaborative, retirée).
 const STATUTS = ['student_independent', 'independent'];
-const ONGLETS = ['dossiers', 'parametres', 'exports', 'journal'];
+const ONGLETS = ['dossiers', 'controles', 'parametres', 'exports', 'journal'];
 const couleurCycle = (s) => (s === 'approved' ? 'var(--teal-deep)' : ['rejected', 'suspended', 'blocked_threshold'].includes(s) ? 'var(--red)' : 'inherit');
 
 // apiDownload et non un fetch à la main : c'est ce qui branche ces exports (précompte, DAC7) sur le
@@ -85,6 +86,7 @@ export default function AdminCouriersPage() {
   return (
     <div>
       <AdminPageHeader module="couriers" actions={<><ViewTabs onglet={onglet} setOnglet={setOnglet} tr={tr} />{onglet === 'dossiers' && <><ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={MODES(tr)} /><button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></>}</>} />
+      {onglet === 'controles' && <ControlesSelfie token={token} toast={toast} />}
       {onglet === 'parametres' && <Parametres tr={tr} token={token} toast={toast} />}
       {onglet === 'exports' && <Exports tr={tr} token={token} toast={toast} />}
       {onglet === 'journal' && <JournalAudit tr={tr} token={token} />}
