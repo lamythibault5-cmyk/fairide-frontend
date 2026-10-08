@@ -3347,6 +3347,13 @@ export default {
       unlock: 'Ontgrendelen'
     },
     adminRestos: {
+      zoneDeliveryOwn: 'Levert met eigen koeriers: Fairide-levering is niet van toepassing.',
+      zoneDeliveryOffBadge: 'Fairide-levering uit (geen koerier in de zone)',
+      zoneDeliveryOff: 'Fairide-levering uitschakelen (zaak alleen in haar zone)',
+      zoneDeliveryOn: 'Levering weer inschakelen',
+      zoneDeliveryReasonPh: 'Reden (optioneel): bv. enige zaak in de zone, geen koerier',
+      zoneDeliveryOffToast: 'Fairide-levering uitgeschakeld: alleen afhalen blijft open, de zaak is verwittigd.',
+      zoneDeliveryOnToast: 'Fairide-levering weer ingeschakeld, de zaak is verwittigd.',
       managers: 'Verantwoordelijken:',
       managerOwner: 'eigenaar',
       priceMarkup: 'Prijsverhoging van de zaak: +{p} % (voor de zaak, deel van Fairide ongewijzigd)',
@@ -5454,6 +5461,8 @@ export default {
       tapToResume: 'Tik om ritten te ontvangen'
     },
     dashResto: {
+      zoneDeliveryOffTitle: 'Fairide-levering gepauzeerd in jouw zone',
+      zoneDeliveryOffText: 'Voorlopig dekt geen enkele Fairide-koerier jouw zone: levering is gesloten op je pagina, afhalen blijft open. Zodra een koerier je zone dekt, schakelen we ze weer in. Lever je met eigen koeriers, laat het ons weten via Mijn zaak.',
       today: 'Vandaag',
       orders: 'Bestellingen',
       delivered: 'Geleverd',

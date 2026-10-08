@@ -3347,6 +3347,13 @@ export default {
       unlock: 'Unlock'
     },
     adminRestos: {
+      zoneDeliveryOwn: 'Delivers with its own couriers: Fairide delivery does not apply.',
+      zoneDeliveryOffBadge: 'Fairide delivery off (no courier in the area)',
+      zoneDeliveryOff: 'Switch off Fairide delivery (business alone in its area)',
+      zoneDeliveryOn: 'Switch delivery back on',
+      zoneDeliveryReasonPh: 'Reason (optional): e.g. only business in the area, no courier',
+      zoneDeliveryOffToast: 'Fairide delivery switched off: only takeaway stays open, the business has been told.',
+      zoneDeliveryOnToast: 'Fairide delivery switched back on, the business has been told.',
       managers: 'Managers:',
       managerOwner: 'owner',
       priceMarkup: 'Business price increase: +{p} % (kept by the business, Fairide\'s share unchanged)',
@@ -5454,6 +5461,8 @@ export default {
       tapToResume: 'Tap to receive rides'
     },
     dashResto: {
+      zoneDeliveryOffTitle: 'Fairide delivery paused in your area',
+      zoneDeliveryOffText: 'No Fairide courier covers your area for now: delivery is closed on your page, takeaway stays open. As soon as a courier covers your area we switch it back on. If you deliver with your own couriers, tell us from My business.',
       today: 'Today',
       orders: 'Orders',
       delivered: 'Delivered',

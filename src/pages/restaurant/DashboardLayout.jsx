@@ -324,6 +324,11 @@ export default function DashboardLayout() {
           )}
           {/* À emporter payé uniquement sur place : aucun paiement ne transite par Fairide, la rangée n'a rien à demander.
               Même règle que formules.paiementsRequis côté serveur. */}
+          {/* Livraison Fairide coupée par l'équipe : commerce seul dans sa zone, aucun livreur à proximité (2026-10-08). */}
+          {restaurant.fairideDeliveryDisabled && (
+            <LigneCompte accent="warn" icone="scooter" titre={t('dashResto.zoneDeliveryOffTitle')}
+              sous={t('dashResto.zoneDeliveryOffText') + (restaurant.fairideDeliveryDisabledReason ? ` (${restaurant.fairideDeliveryDisabledReason})` : '')} />
+          )}
           {restaurant.stripeConnectStatus !== 'active' && (restaurant.wantsDelivery || (restaurant.wantsPickup && restaurant.pickupPaymentMode !== 'on_site')) && (
             <LigneCompte
               accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"

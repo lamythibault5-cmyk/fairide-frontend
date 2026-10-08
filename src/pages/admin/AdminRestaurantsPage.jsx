@@ -158,6 +158,17 @@ export default function AdminRestaurantsPage() {
       toast(r.landingRank ? tr('adminRestos.landingRankToast', { n: r.landingRank }) : tr('adminRestos.landingRankCleared'));
     } catch (e) { toast(e.message); }
   }
+  // Livraison Fairide indisponible dans la zone (fondateur, 2026-10-08) : commerce seul, pas de livreur à proximité.
+  async function setFairideDelivery(id, disabled, reason) {
+    try {
+      const res = await api(`/admin/restaurants/${id}/fairide-delivery`, { method: 'PATCH', token, body: { disabled, reason } });
+      const maj = { fairideDeliveryDisabled: res.fairideDeliveryDisabled, fairideDeliveryDisabledReason: res.fairideDeliveryDisabledReason };
+      setRestaurants((prev) => (prev || []).map((r) => (r.id === id ? { ...r, ...maj } : r)));
+      if (selected?.id === id) setSelected((prev) => ({ ...prev, ...maj }));
+      if (detail?.id === id) setDetail((prev) => ({ ...prev, ...maj }));
+      toast(disabled ? tr('adminRestos.zoneDeliveryOffToast') : tr('adminRestos.zoneDeliveryOnToast'));
+    } catch (e) { toast(e.message, 'erreur'); }
+  }
   async function setListing(id, publicListed) {
     try {
       await api(`/admin/restaurants/${id}/listing`, { method: 'PATCH', token, body: { publicListed } });
@@ -383,6 +394,7 @@ export default function AdminRestaurantsPage() {
       {selected && (
         <RestaurantDetailModal
           selected={selected} detail={detail} orders={orders}
+          onZoneDelivery={setFairideDelivery}
           onClose={() => setSelected(null)}
           onSuspend={() => askSuspend(detail)}
           onApprove={() => askApprove(detail)}
@@ -504,7 +516,9 @@ function ConformitePanel({ detail, onChanged }) {
   );
 }
 
-function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest, onTerminal, onLandingRank }) {
+function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest, onTerminal, onLandingRank, onZoneDelivery }) {
+  // Motif de coupure de la livraison Fairide (zone sans livreur), saisi dans la modale.
+  const [zoneMotif, setZoneMotif] = useState('');
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -592,6 +606,23 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.sourceFound')}</p>
           )}
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLine', { sub: detail.subscriptionStatus, mode: detail.deliveryMode })}</p>
+          {/* Livraison Fairide dans la zone : coupée pour un commerce seul (pas de livreur) ; sans objet s'il livre lui-même. */}
+          <div className="small zone-livraison" style={{ margin: '6px 0' }}>
+            {detail.deliveryMode === 'own' ? (
+              <span style={{ color: 'var(--ink-faint)' }}>🛵 {tr('adminRestos.zoneDeliveryOwn')}</span>
+            ) : detail.fairideDeliveryDisabled ? (
+              <>
+                <span className="pill" style={{ background: '#fff1d6', color: '#7a4a00' }}>⛔ {tr('adminRestos.zoneDeliveryOffBadge')}</span>
+                {detail.fairideDeliveryDisabledReason && <span style={{ marginLeft: 6 }}>{detail.fairideDeliveryDisabledReason}</span>}
+                <button type="button" className="btn-outline" style={{ marginLeft: 8, padding: '4px 10px', fontSize: 12 }} onClick={() => onZoneDelivery?.(detail.id, false)}>{tr('adminRestos.zoneDeliveryOn')}</button>
+              </>
+            ) : (
+              <div className="row" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                <input style={{ flex: '1 1 220px', fontSize: 12 }} placeholder={tr('adminRestos.zoneDeliveryReasonPh')} value={zoneMotif} onChange={(e) => setZoneMotif(e.target.value)} aria-label={tr('adminRestos.zoneDeliveryReasonPh')} />
+                <button type="button" className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => onZoneDelivery?.(detail.id, true, zoneMotif)}>{tr('adminRestos.zoneDeliveryOff')}</button>
+              </div>
+            )}
+          </div>
           {detail.plan && <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.planLine', { plan: tr('adminRestos.planComplete') })}</p>}
           {detail.terminal && (
             <div className="small" style={{ margin: '2px 0' }}>

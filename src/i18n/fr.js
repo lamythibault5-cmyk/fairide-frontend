@@ -3347,6 +3347,13 @@ export default {
       unlock: 'Déverrouiller'
     },
     adminRestos: {
+      zoneDeliveryOwn: 'Livre avec ses propres livreurs : la livraison Fairide ne le concerne pas.',
+      zoneDeliveryOffBadge: 'Livraison Fairide coupée (zone sans livreur)',
+      zoneDeliveryOff: 'Couper la livraison Fairide (commerce seul dans sa zone)',
+      zoneDeliveryOn: 'Réactiver la livraison',
+      zoneDeliveryReasonPh: 'Motif (facultatif) : ex. seul commerce de la zone, aucun livreur',
+      zoneDeliveryOffToast: 'Livraison Fairide coupée : seul l\'à emporter reste ouvert, le commerce est prévenu.',
+      zoneDeliveryOnToast: 'Livraison Fairide réactivée, le commerce est prévenu.',
       managers: 'Responsables :',
       managerOwner: 'patron',
       priceMarkup: 'Hausse de prix du commerce : +{p} % (pour lui, part Fairide inchangée)',
@@ -5470,6 +5477,8 @@ export default {
       tapToResume: 'Touche pour recevoir des courses'
     },
     dashResto: {
+      zoneDeliveryOffTitle: 'Livraison Fairide suspendue dans ta zone',
+      zoneDeliveryOffText: 'Aucun livreur Fairide ne couvre ta zone pour le moment : la livraison est fermée sur ta fiche, l\'à emporter reste ouvert. Dès qu\'un livreur couvre ta zone, nous la réactivons. Si tu livres avec tes propres livreurs, dis-le-nous depuis Mon commerce.',
       today: 'Aujourd\'hui',
       orders: 'Commandes',
       delivered: 'Livrées',
