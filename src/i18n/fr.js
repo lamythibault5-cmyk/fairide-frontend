@@ -4333,6 +4333,7 @@ export default {
       peppolNote: 'Tu commandes pour une entreprise ? Les factures Stripe ci-dessous suffisent pour un particulier. Pour une facture au nom de ta société transmise via Peppol (facturation électronique B2B), écris-nous à contact@fairide.be avec ton numéro d\'entreprise.'
     },
     restoListUi: {
+      pickupOnlyZone: 'À emporter seulement (livraison indisponible pour le moment)',
       sponsored: 'Sponsorisé',
       sponsoredTitle: 'Ce commerce paie pour cette position dans la rangée.',
       promoCartThreshold: '-{value} dès {min} de commande',
@@ -6205,6 +6206,7 @@ export default {
       reviewsCount: '({count} avis)'
     },
     restaurantMenu: {
+      deliveryUnavailableZone: 'Livraison indisponible pour le moment dans cette zone : seules les commandes à emporter sont possibles chez ce commerce.',
       notFound: 'Ce commerce n\'existe pas ou n\'est plus sur Fairide.',
       loadError: 'La fiche de ce commerce n\'a pas pu être chargée.',
       retry: 'Réessayer',

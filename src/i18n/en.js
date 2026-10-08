@@ -4323,6 +4323,7 @@ export default {
       peppolNote: 'Ordering for a business? The Stripe invoices below are enough for an individual. For an invoice in your company\'s name delivered via Peppol (B2B e-invoicing), write to contact@fairide.be with your company number.'
     },
     restoListUi: {
+      pickupOnlyZone: 'Takeaway only (delivery unavailable for now)',
       sponsored: 'Sponsored',
       sponsoredTitle: 'This shop pays for this position in the row.',
       promoCartThreshold: '-{value} on orders from {min}',
@@ -6160,6 +6161,7 @@ export default {
       reviewsCount: '({count} reviews)'
     },
     restaurantMenu: {
+      deliveryUnavailableZone: 'Delivery unavailable in this area for now: only takeaway orders are possible at this business.',
       notFound: 'This business does not exist, or is no longer on Fairide.',
       loadError: 'This page could not be loaded.',
       retry: 'Try again',

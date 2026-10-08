@@ -4323,6 +4323,7 @@ export default {
       peppolNote: 'Bestel je voor een bedrijf? De Stripe-facturen hieronder volstaan voor een particulier. Voor een factuur op naam van je vennootschap via Peppol (B2B e-facturatie), mail naar contact@fairide.be met je ondernemingsnummer.'
     },
     restoListUi: {
+      pickupOnlyZone: 'Alleen afhalen (levering momenteel niet beschikbaar)',
       sponsored: 'Gesponsord',
       sponsoredTitle: 'Deze zaak betaalt voor deze positie in de rij.',
       promoCartThreshold: '-{value} bij een bestelling vanaf {min}',
@@ -6160,6 +6161,7 @@ export default {
       reviewsCount: '({count} beoordelingen)'
     },
     restaurantMenu: {
+      deliveryUnavailableZone: 'Levering momenteel niet beschikbaar in deze zone: alleen afhaalbestellingen zijn mogelijk bij deze zaak.',
       notFound: 'Deze zaak bestaat niet of staat niet meer op Fairide.',
       loadError: 'Deze pagina kon niet worden geladen.',
       retry: 'Opnieuw proberen',
