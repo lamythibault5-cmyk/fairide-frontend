@@ -1,12 +1,13 @@
 // LE PRIX DE DÉPART DE LA LIVRAISON, calculé au même endroit pour la liste, la fiche, le panier et le paiement
 // (fondateur, 2026-10-01). Miroir du calcul serveur (routes/orders.js) :
-//   - tarif Fairide : forfait de départ (4,50 €), puis la distance, calculée au serveur — d'où le « dès » ;
+//   - tarif Fairide (fondateur, 2026-10-08) : forfait de 5 € pour le 1er km, puis 0,80 €/km dès le 2e, calculé au serveur — d'où
+//     le « dès » ; 10 % de frais de système Fairide sont COMPRIS dedans (le livreur touche 90 %), rien ne s'ajoute au total ;
 //   - commerce qui livre lui-même (deliveryMode 'own') avec ses propres frais : c'est son montant, à 100 % ;
 //   - le commerce peut offrir une part fixe (deliveryFeeDiscount : 1,50 € → livraison dès 3 €), la totalité
 //     (freeDelivery), ou la totalité dès un montant de commande (freeDeliveryMinOrder). Ce qu'il offre, il le reçoit
-//     en moins sur son virement, et le livreur touche les frais complets.
+//     en moins sur son virement, et le livreur touche sa part complète.
 import { getLocale } from './context/LanguageContext';
-export const FORFAIT_LIVRAISON = 4.5;
+export const FORFAIT_LIVRAISON = 5;
 
 export function tarifLivraison(r) {
   const propre = r?.deliveryMode === 'own' && r?.ownDeliveryFee != null;
