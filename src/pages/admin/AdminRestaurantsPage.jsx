@@ -15,6 +15,7 @@ import DecisionDialog from '../../components/admin/DecisionDialog';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
+import ChangementTvaGlobal from '../../components/admin/ChangementTvaGlobal';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
@@ -340,6 +341,7 @@ export default function AdminRestaurantsPage() {
   return (
     <div>
       <AdminPageHeader module="restaurants" actions={<><ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={MODES(tr)} /><button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></>} />
+      <ChangementTvaGlobal token={token} toast={toast} />
       {restaurants && (
         <div className="stat-grid">
           <div className="stat-card highlight"><div className="num">{stats ? stats.total : total}</div><div className="label">{tr('adminRestos.kpiTotal')}</div></div>

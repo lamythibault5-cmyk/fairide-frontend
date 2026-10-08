@@ -23,6 +23,7 @@ import MenuReadiness from '../../components/MenuReadiness';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import HaussePrix from '../../components/HaussePrix';
 import DemandeModifCarte from '../../components/DemandeModifCarte';
+import TvaCarte from '../../components/commerce/TvaCarte';
 
 // `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
 // (console admin : AdminMenuPage) ; `modeAdmin` retire la demande « Fairide s'en occupe », sans objet pour l'équipe.
@@ -619,6 +620,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         </div>
       )}
       {!modeAdmin && restaurant.menu.length > 0 && <DemandeModifCarte restoId={restoId} />}
+      <TvaCarte restoId={restoId} token={token} menu={restaurant.menu} modeAdmin={modeAdmin} toast={toast} onChange={() => loadDashboard(restoId)} />
       <div className="card" id="menu-liste">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('menuPage.yourMenu')}</h3>
