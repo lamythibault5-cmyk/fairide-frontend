@@ -934,7 +934,7 @@ function EquipeCard({ equipe, t, euros }) {
         {equipe.map((x, i) => (
           <li key={`${x.firstName}-${i}`} className={x.me ? 'crm-equipe-moi' : ''}>
             <span className="crm-equipe-rang" aria-hidden="true">{i + 1}</span>
-            <span className="crm-equipe-nom">🧑‍💼 <b>{x.firstName}</b>{x.me ? <span className="small"> · {t('sales.teamMe')}</span> : null}<br /><span className="small">{t('sales.teamLine', { signed: x.signed })}</span></span>
+            <span className="crm-equipe-nom">🧑‍💼 <b>{x.firstName}</b>{x.me ? <span className="small"> · {t('sales.teamMe')}</span> : null}</span>
             <span className="crm-equipe-gain"><b>{x.signed}</b><br /><span className="small">{t('sales.teamSignedShort')}</span>{x.me && typeof x.earned === 'number' ? <><br /><span className="small">{euros(x.earned)}{x.upcoming ? ` + ${euros(x.upcoming)} ${t('sales.teamUpcoming')}` : ''}</span></> : null}</span>
           </li>
         ))}
