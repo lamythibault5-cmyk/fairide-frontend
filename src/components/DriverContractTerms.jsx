@@ -1,7 +1,7 @@
-import { ouvrirPdfBlob } from '../natif';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, API_BASE } from '../api';
+import { ouvrirPdf, telechargerPdf } from '../pdf';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import CourierUsageBar, { niveauxAlerte, libelleNiveaux } from './CourierUsageBar';
@@ -17,13 +17,6 @@ const euro = (n) => (n == null || n === '' ? '—' : `${Math.round(Number(n)).to
 // Montants légaux au centime près (cotisations, dispenses) : arrondir à l'euro les rendrait faux.
 const euroCentimes = (n) => (n == null || n === '' ? '—' : `${Number(n).toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`);
 
-async function ouvrirPdf(url, token, messageErreur) {
-  try {
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) throw new Error(messageErreur);
-    const blob = await res.blob(); await ouvrirPdfBlob(blob);
-  } catch (e) { alert(e.message); }
-}
 
 const EMOJI = { p2p: '🤝 ', student_independent: '🎓 ', independent: '🧾 ' };
 
@@ -94,7 +87,23 @@ export default function DriverContractTerms() {
               <p className="small" style={{ margin: '6px 0 0', overflowWrap: 'anywhere' }}>
                 {t('courierOnboarding.contractHash')} <code>{signe.documentHash.slice(0, 16)}…</code> · {t('driverTerms.signedBy', { name: signe.typedName })}
               </p>
-              <button type="button" className="btn-outline" style={{ marginTop: 8, padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/${signe.id}/pdf`, token, t('courierOnboarding.previewFailed'))}>📄 {t('driverTerms.openContract')}</button>
+              <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/${signe.id}/pdf`, token, t('courierOnboarding.previewFailed'))}>📄 {t('driverTerms.openContract')}</button>
+                <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/${signe.id}/pdf`, token, `contrat-fairide-${signe.contractType}-${signe.version}.pdf`, t('courierOnboarding.previewFailed'))}>⬇️ {t('driverTerms.savePdf')}</button>
+              </div>
+              {/* Tous ses contrats signés (un par statut / version) : chacun s'ouvre et s'enregistre en PDF. */}
+              {(d.contracts || []).filter((k) => k.id !== signe.id).length > 0 && (
+                <div className="small" style={{ marginTop: 8 }}>
+                  <b>{t('driverTerms.otherContracts')}</b>
+                  {(d.contracts || []).filter((k) => k.id !== signe.id).map((k) => (
+                    <div key={k.id} className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 4 }}>
+                      <span>{EMOJI[k.contractType] || ''}{k.version} · {k.signedAt ? new Date(k.signedAt).toLocaleDateString(getLocale()) : ''}</span>
+                      <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/${k.id}/pdf`, token, t('courierOnboarding.previewFailed'))}>📄</button>
+                      <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/${k.id}/pdf`, token, `contrat-fairide-${k.contractType}-${k.version}.pdf`, t('courierOnboarding.previewFailed'))}>⬇️</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="paiement-encart">
@@ -102,6 +111,7 @@ export default function DriverContractTerms() {
               <p className="small" style={{ margin: '4px 0 0' }}>{t(`courierOnboarding.contract_${statut}`)}</p>
               <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                 <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/preview`, token, t('courierOnboarding.previewFailed'))}>📄 {t('courierOnboarding.contractPreview')}</button>
+                <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/preview`, token, 'contrat-fairide.pdf', t('courierOnboarding.previewFailed'))}>⬇️ {t('driverTerms.savePdf')}</button>
                 <Link className="btn-gold" style={{ padding: '6px 12px', fontSize: 13, textDecoration: 'none' }} to="/driver/onboarding">{t('driverTerms.goSign')}</Link>
               </div>
             </div>

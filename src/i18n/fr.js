@@ -881,6 +881,12 @@ export default {
       noPrinter: 'Aucune imprimante Bluetooth connectée : connecte-la depuis la carte « Imprimante à tickets », ou imprime par la boîte d\'impression.'
     },
     restoContract: {
+      savePdf: 'Enregistrer le PDF',
+      rowSubPdf: 'Ouvre ton contrat complet en PDF.',
+      rowSaveTitle: 'Enregistrer mon contrat (PDF)',
+      rowSaveSub: 'Télécharge le PDF complet pour le garder ou l\'imprimer de ton côté.',
+      rowDetailsTitle: 'Détails du contrat',
+      rowDetailsSub: 'Les clauses résumées, la version acceptée et son empreinte.',
       rowTitle: 'Mon contrat avec Fairide',
       rowSub: 'Commission, versements, obligations',
       intro: 'Le contrat de partenariat entre ton commerce et Fairide, version {version}. Il reprend exactement ce que la plateforme applique : ce que Fairide s\'engage à faire, ce que tu t\'engages à faire, et l\'argent. Le texte français fait foi.',
@@ -917,6 +923,8 @@ export default {
       openAll: 'Tout ouvrir'
     },
     driverTerms: {
+      savePdf: 'Enregistrer le PDF',
+      otherContracts: 'Mes autres contrats signés :',
       rowTitle: 'Mon contrat et mes conditions',
       rowSub: 'Statut, contrat, plafonds, paiement',
       statusTitle: 'Mon statut et mon contrat',

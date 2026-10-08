@@ -881,6 +881,12 @@ export default {
       noPrinter: 'Geen Bluetooth-printer verbonden: verbind hem via de kaart “Bonnenprinter”, of print via het afdrukvenster.'
     },
     restoContract: {
+      savePdf: 'PDF opslaan',
+      rowSubPdf: 'Opent je volledige contract als PDF.',
+      rowSaveTitle: 'Mijn contract opslaan (PDF)',
+      rowSaveSub: 'Download de volledige PDF om ze te bewaren of zelf af te drukken.',
+      rowDetailsTitle: 'Details van het contract',
+      rowDetailsSub: 'De samengevatte clausules, de aanvaarde versie en haar vingerafdruk.',
       rowTitle: 'Mijn contract met Fairide',
       rowSub: 'Commissie, uitbetalingen, verplichtingen',
       intro: 'Het partnerschapscontract tussen je zaak en Fairide, versie {version}. Het beschrijft precies wat het platform toepast: waartoe Fairide zich verbindt, waartoe jij je verbindt, en het geld. De Franse tekst is bindend.',
@@ -917,6 +923,8 @@ export default {
       openAll: 'Alles openen'
     },
     driverTerms: {
+      savePdf: 'PDF opslaan',
+      otherContracts: 'Mijn andere ondertekende contracten:',
       rowTitle: 'Mijn contract en mijn voorwaarden',
       rowSub: 'Statuut, contract, plafonds, betaling',
       statusTitle: 'Mijn statuut en mijn contract',

@@ -3,6 +3,7 @@ import SacLivraison from '../../components/SacLivraison';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
+import { telechargerPdf } from '../../pdf';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -539,6 +540,7 @@ function EtapeContrat({ d, t, busy, token, action, onNext }) {
         <>
           {ancien && <p className="small" style={{ margin: '0 0 8px' }}>🆕 {t('driverTerms.newVersion', { version: versionCourante, old: ancien.version })}</p>}
           <button type="button" className="btn-outline" onClick={apercu}>📄 {t('courierOnboarding.contractPreview')}</button>
+          <button type="button" className="btn-outline" onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/preview`, token, 'contrat-fairide.pdf', t('courierOnboarding.previewFailed'))}>⬇️ {t('driverTerms.savePdf')}</button>
           <div className="field" style={{ marginTop: 12 }}>
             <label htmlFor={idsA11y + '-typedname'}>{t('courierOnboarding.typedName')}</label>
             <input id={idsA11y + '-typedname'} value={nom} onChange={(e) => setNom(e.target.value)} />

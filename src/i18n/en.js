@@ -881,6 +881,12 @@ export default {
       noPrinter: 'No Bluetooth printer connected: connect it from the “Ticket printer” card, or print via the print dialog.'
     },
     restoContract: {
+      savePdf: 'Save the PDF',
+      rowSubPdf: 'Opens your full contract as a PDF.',
+      rowSaveTitle: 'Save my contract (PDF)',
+      rowSaveSub: 'Download the full PDF to keep it or print it yourself.',
+      rowDetailsTitle: 'Contract details',
+      rowDetailsSub: 'The summarised clauses, the accepted version and its fingerprint.',
       rowTitle: 'My contract with Fairide',
       rowSub: 'Fairide\'s commitments, your obligations, commission, plans, payouts',
       intro: 'The partnership contract between your business and Fairide, version {version}. It states exactly what the platform applies: what Fairide commits to, what you commit to, and the money. The French text prevails.',
@@ -917,6 +923,8 @@ export default {
       openAll: 'Open all'
     },
     driverTerms: {
+      savePdf: 'Save the PDF',
+      otherContracts: 'My other signed contracts:',
       rowTitle: 'My contract and my terms',
       rowSub: 'Status, contract, ceilings, payment',
       statusTitle: 'My status and my contract',

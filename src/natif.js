@@ -69,6 +69,19 @@ export async function ouvrirPdfBlob(blob, nom = 'fairide.pdf') {
   await Share.share({ title: nom, url: uri });
 }
 
+// Enregistrer un PDF (fondateur, 2026-10-08) : sur le web, un téléchargement nommé ; dans l'application, le fichier est écrit
+// dans les documents puis proposé au partage/enregistrement du téléphone.
+export async function telechargerPdfBlob(blob, nom = 'fairide.pdf') {
+  if (!estNatif()) {
+    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = nom; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000); return;
+  }
+  const [{ Filesystem, Directory }, { Share }] = await Promise.all([import('@capacitor/filesystem'), import('@capacitor/share')]);
+  const base64 = await new Promise((resolve, reject) => { const l = new FileReader(); l.onload = () => resolve(String(l.result).split(',')[1] || ''); l.onerror = () => reject(new Error('Lecture du document impossible.')); l.readAsDataURL(blob); });
+  const { uri } = await Filesystem.writeFile({ path: nom, data: base64, directory: Directory.Documents });
+  await Share.share({ title: nom, url: uri });
+}
+
 // Vibration haptique native. `motif` suit la convention de navigator.vibrate : un nombre (ms) ou un tableau.
 export async function vibrerNatif(motif) {
   const { Haptics, ImpactStyle, NotificationType } = await import('@capacitor/haptics');
