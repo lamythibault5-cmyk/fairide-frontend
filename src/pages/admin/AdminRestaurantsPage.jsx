@@ -16,6 +16,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import ChangementTvaGlobal from '../../components/admin/ChangementTvaGlobal';
+import LienValidationCarte from '../../components/admin/LienValidationCarte';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
@@ -699,6 +700,8 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}
             <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={onDelete}>{tr('adminRestos.deleteRestaurant')}</button>
           </div>
+          {/* CODE-3 : la carte se valide par le commerce, d'un geste, depuis un lien que l'équipe lui envoie. */}
+          {!detail.isDemo && <LienValidationCarte restaurantId={detail.id} phone={detail.restaurantPhone} token={token} toast={toast} />}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminRestos.keyFigures')}</h4>
           <DrawerRow label={tr('adminCommon.paidOrders')} value={detail.orderCount} strong />
