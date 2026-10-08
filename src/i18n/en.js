@@ -4329,12 +4329,12 @@ export default {
       deselectAll: 'Deselect all',
       emptyTitle: 'No invoices',
       none: 'Your invoices show up here after your first paid order.',
-      viewInvoice: 'View the invoice',
-      unavailable: 'Invoice unavailable',
+      viewInvoice: 'View the receipt',
+      unavailable: 'Paid on site: business ticket',
       toastSelectOne: 'Select at least one invoice.',
       downloadFailed: 'Download failed.',
       downloadSelection: 'Download the selection ({n})',
-      peppolNote: 'Ordering for a business? The Stripe invoices below are enough for an individual. For an invoice in your company\'s name delivered via Peppol (B2B e-invoicing), write to contact@fairide.be with your company number.'
+      peppolNote: 'Each receipt shows who sold you what (the business, the courier, Fairide) and each one\'s VAT. Ordering for a company and need an invoice? Ask the business: it sells the food.'
     },
     restoListUi: {
       pickupOnlyZone: 'Takeaway only (delivery unavailable for now)',

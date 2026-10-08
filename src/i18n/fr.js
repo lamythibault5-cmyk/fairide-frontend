@@ -4339,12 +4339,12 @@ export default {
       deselectAll: 'Tout désélectionner',
       emptyTitle: 'Aucune facture',
       none: 'Tes factures apparaissent ici dès ta première commande payée.',
-      viewInvoice: 'Voir la facture',
-      unavailable: 'Facture indisponible',
+      viewInvoice: 'Voir le reçu',
+      unavailable: 'Payée sur place : ticket du commerce',
       toastSelectOne: 'Sélectionne au moins une facture.',
       downloadFailed: 'Échec du téléchargement.',
       downloadSelection: 'Télécharger la sélection ({n})',
-      peppolNote: 'Tu commandes pour une entreprise ? Les factures Stripe ci-dessous suffisent pour un particulier. Pour une facture au nom de ta société transmise via Peppol (facturation électronique B2B), écris-nous à contact@fairide.be avec ton numéro d\'entreprise.'
+      peppolNote: 'Chaque reçu montre qui t\'a vendu quoi (le commerce, le livreur, Fairide) et la TVA de chacun. Tu commandes pour une entreprise et il te faut une facture ? Demande-la au commerce : c\'est lui qui vend les plats.'
     },
     restoListUi: {
       pickupOnlyZone: 'À emporter seulement (livraison indisponible pour le moment)',

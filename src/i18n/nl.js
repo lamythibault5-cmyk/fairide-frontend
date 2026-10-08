@@ -4329,12 +4329,12 @@ export default {
       deselectAll: 'Alles deselecteren',
       emptyTitle: 'Geen facturen',
       none: 'Je facturen verschijnen hier na je eerste betaalde bestelling.',
-      viewInvoice: 'Factuur bekijken',
-      unavailable: 'Factuur niet beschikbaar',
+      viewInvoice: 'Ontvangstbewijs bekijken',
+      unavailable: 'Ter plaatse betaald: ticket van de zaak',
       toastSelectOne: 'Selecteer minstens één factuur.',
       downloadFailed: 'Downloaden mislukt.',
       downloadSelection: 'Selectie downloaden ({n})',
-      peppolNote: 'Bestel je voor een bedrijf? De Stripe-facturen hieronder volstaan voor een particulier. Voor een factuur op naam van je vennootschap via Peppol (B2B e-facturatie), mail naar contact@fairide.be met je ondernemingsnummer.'
+      peppolNote: 'Elk ontvangstbewijs toont wie je wat verkocht (de zaak, de koerier, Fairide) en ieders btw. Bestel je voor een bedrijf en heb je een factuur nodig? Vraag ze aan de zaak: die verkoopt de gerechten.'
     },
     restoListUi: {
       pickupOnlyZone: 'Alleen afhalen (levering momenteel niet beschikbaar)',
