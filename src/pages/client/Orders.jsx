@@ -31,8 +31,6 @@ import { euros } from '../../prixPlat';
 function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
   const [foodRating, setFoodRating] = useState(5);
   const [foodComment, setFoodComment] = useState('');
-  const [deliveryRating, setDeliveryRating] = useState(order.driverName ? 5 : 0);
-  const [deliveryComment, setDeliveryComment] = useState('');
   const [tipChoice, setTipChoice] = useState(0);
   const [tipInput, setTipInput] = useState('');
   const [saving, setSaving] = useState(false);
@@ -45,9 +43,8 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
           await api(`/orders/${order.id}/review`, {
             method: 'POST', token,
             body: {
-              foodRating, foodComment: foodComment.trim(),
-              deliveryRating: order.driverName ? deliveryRating : undefined,
-              deliveryComment: order.driverName ? deliveryComment.trim() : undefined
+              // Plus de note de la livraison (CODE-13, DEC-21) : le livreur est un indépendant, la plateforme ne l'évalue pas.
+              foodRating, foodComment: foodComment.trim()
             }
           });
         } catch (e) {
@@ -85,13 +82,6 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
         {/* 1 000 caractères : la même limite que le serveur (routes/reviews.js LONGUEUR_MAX_AVIS). */}
         <input maxLength={1000} value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder={t('review.foodCommentPlaceholder')} style={{ marginTop: 6 }} />
       </div>}
-      {order.driverName && !pourboireSeul && (
-        <div style={{ marginBottom: 10 }}>
-          <div className="small" style={{ marginBottom: 4 }}>{t('review.deliveryRatingLabel')}</div>
-          <StarsInput value={deliveryRating} onChange={setDeliveryRating} />
-          <input maxLength={1000} value={deliveryComment} onChange={(e) => setDeliveryComment(e.target.value)} placeholder={t('review.deliveryCommentPlaceholder')} style={{ marginTop: 6 }} />
-        </div>
-      )}
       {order.driverName && (
         <div style={{ marginBottom: 12 }}>
           <div className="small" style={{ marginBottom: 4, fontWeight: 600 }}>{t('review.tipPrompt', { name: order.driverName })}</div>

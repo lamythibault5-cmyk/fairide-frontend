@@ -18,10 +18,10 @@ export function TarifMinimum({ courier, token, action, busy }) {
   const { t } = useLanguage();
   const id = useId();
   const [valeur, setValeur] = useState(courier?.minFeeCents != null ? (courier.minFeeCents / 100).toFixed(2) : '');
-  const enregistrer = () => {
-    const brut = String(valeur).replace(',', '.').trim();
-    return action(() => api('/couriers/me', { method: 'PATCH', token, body: { minFeeCents: brut === '' ? null : Math.round(Number(brut) * 100) } }), t('conformite.minFeeSaved'));
-  };
+  // CODE-13 (DEC-21) : le livreur fixe aussi son minimum par kilomètre ; il ne reçoit que les courses qui respectent les deux.
+  const [parKm, setParKm] = useState(courier?.minFeePerKmCents != null ? (courier.minFeePerKmCents / 100).toFixed(2) : '');
+  const centimes = (v) => { const b = String(v).replace(',', '.').trim(); return b === '' ? null : Math.round(Number(b) * 100); };
+  const enregistrer = () => action(() => api('/couriers/me', { method: 'PATCH', token, body: { minFeeCents: centimes(valeur), minFeePerKmCents: centimes(parKm) } }), t('conformite.minFeeSaved'));
   return (
     <div className="card">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('conformite.minFeeTitle')}</h3>
@@ -31,7 +31,11 @@ export function TarifMinimum({ courier, token, action, busy }) {
           <label htmlFor={`${id}-min`}>{t('conformite.minFeeLabel')}</label>
           <input id={`${id}-min`} type="number" min="0" max="100" step="0.10" inputMode="decimal" value={valeur} onChange={(e) => setValeur(e.target.value)} />
         </div>
-        <button type="button" className="btn-outline" disabled={busy || (valeur !== '' && !(Number(String(valeur).replace(',', '.')) >= 0))} onClick={enregistrer}>{t('courierOnboarding.save')}</button>
+        <div className="field" style={{ margin: 0, flex: '0 1 160px' }}>
+          <label htmlFor={`${id}-km`}>{t('conformite.minFeePerKmLabel')}</label>
+          <input id={`${id}-km`} type="number" min="0" max="10" step="0.05" inputMode="decimal" value={parKm} onChange={(e) => setParKm(e.target.value)} />
+        </div>
+        <button type="button" className="btn-outline" disabled={busy || [valeur, parKm].some((v) => v !== '' && !(Number(String(v).replace(',', '.')) >= 0))} onClick={enregistrer}>{t('courierOnboarding.save')}</button>
       </div>
     </div>
   );

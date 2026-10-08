@@ -14,6 +14,7 @@ import { ErrorCard, Pager, ResultCount } from '../../components/admin/AdminListT
 import { fmtDate, fmtDateTime, downloadPdf, useDebouncedValue } from './adminUtils';
 import '../../admin-compliance.css';
 import useEtatPage from '../../hooks/useEtatPage';
+import CriteresSalariatTab from './compliance/CriteresSalariatTab';
 import { ONGLETS_CONFORMITE, DecisionsTab, DsaTab, BreachesTab, ProcessorsTab, ForbiddenTab, ParametersTab } from './compliance/ConformiteP0Tabs';
 import DispatchTab from './compliance/DispatchTab';
 import DeclarationsTab from './compliance/DeclarationsTab';
@@ -67,6 +68,7 @@ export default function AdminCompliancePage() {
       {onglet === 'forbidden' && <ForbiddenTab />}
       {onglet === 'parameters' && <ParametersTab />}
       {onglet === 'dispatch' && <DispatchTab />}
+      {onglet === 'criteres' && <CriteresSalariatTab />}
       {onglet === 'declarations' && <DeclarationsTab />}
       {showCreate && <CreateRequestModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); setRefreshKey((k) => k + 1); }} />}
     </div>

@@ -20,7 +20,7 @@ import { fmtDate, fmtDateTime, downloadPdf } from '../adminUtils';
  *   parameters — âge minimum de l'alcool, date des allergènes par plat (A1, A4) ;
  *   dispatch   — réglages de la livraison, export anonymisé des offres, dossier CRT (./DispatchTab.jsx) ;
  *   declarations — DAC7 des deux populations et registre art. 17 (./DeclarationsTab.jsx). */
-export const ONGLETS_CONFORMITE = ['decisions', 'dsa', 'breaches', 'processors', 'forbidden', 'parameters', 'dispatch', 'declarations'];
+export const ONGLETS_CONFORMITE = ['decisions', 'dsa', 'breaches', 'processors', 'forbidden', 'parameters', 'dispatch', 'criteres', 'declarations'];
 
 function useCharge(chemin, deps = []) {
   const { token } = useAuth();
