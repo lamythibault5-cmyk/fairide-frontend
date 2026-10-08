@@ -789,6 +789,8 @@ export default function Account() {
             {ouvertes.has('terminal') && <p style={{ margin: '10px 0 0' }}><Link to="/dashboard/terminal" className="btn-outline">{t('terminal.openSettings')}</Link></p>}
             </LigneCompte>
           )}
+          {/* Entraînement (2026-10-08) : commandes d'essai pendant 7 jours après la première connexion du terminal. */}
+          <LigneCompte to="/dashboard/simulation" icone="etoile" titre={t('accountUi.simulationRow')} sous={t('accountUi.simulationSub')} />
           <div id="section-contrat" />
           <LigneCompte icone="contrat" titre={t('restoContract.rowTitle')} sous={t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}

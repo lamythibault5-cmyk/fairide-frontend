@@ -2,7 +2,7 @@ import InterrupteurService from '../../components/commerce/InterrupteurService';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
-import { api } from '../../api';
+import { api, apiUpload } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import OrderReceipt from '../../components/OrderReceipt';
@@ -18,7 +18,7 @@ import {
   DeliveryTiming, EcheanceAcceptation, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
   ORDER_STAGES, orderStageKey, orderStagePriority, stageColors as couleursEtapes
 } from '../../orderStatus';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 
 // Où en est le ticket de la commande sur le terminal Fairide (backend : GET /orders/restaurant/:id → print).
@@ -253,6 +253,17 @@ export default function OrdersPage() {
     } catch (e) { toast(e.message, 'erreur'); }
   }
 
+  // Photo de la commande avant la remise (fondateur, 2026-10-08) : numéro de commande et produits dans le cadre.
+  const [photoEnCours, setPhotoEnCours] = useState(null);
+  async function photographier(o, fichier) {
+    if (!fichier) return;
+    setPhotoEnCours(o.id);
+    try {
+      await apiUpload(`/orders/${o.id}/photo`, { file: fichier, token, fieldName: 'photo' });
+      toast(t('ordersResto.photoToast'));
+      await loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
+    } catch (e) { toast(e.message, 'erreur'); } finally { setPhotoEnCours(null); }
+  }
   const carteCommande = (o) => {
     const stageKey = orderStageKey(o);
     const stage = ORDER_STAGES.find((s) => s.key === stageKey);
@@ -270,9 +281,18 @@ export default function OrdersPage() {
         </span>
         <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
           disabled={envoiTicket === o.id} onClick={(e) => { e.stopPropagation(); if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}>🖨️</button>
+        {['nouveau', 'preparation', 'pret'].includes(o.status) && !o.preparedPhoto && (
+          <label className="btn-ghost order-print-btn" title={t('ordersResto.photoHelp')} aria-label={t('ordersResto.photoBtn')} onClick={(e) => e.stopPropagation()}>
+            {photoEnCours === o.id ? '…' : '📷'}
+            <input type="file" accept="image/*" capture="environment" hidden disabled={photoEnCours === o.id} onChange={(e) => { photographier(o, e.target.files?.[0]); e.target.value = ''; }} />
+          </label>
+        )}
+        {o.preparedPhoto && (
+          <a className="btn-ghost order-print-btn" href={o.preparedPhoto.url} target="_blank" rel="noreferrer" title={t('ordersResto.photoDone', { time: new Date(o.preparedPhoto.at).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })} onClick={(e) => e.stopPropagation()}>📷✓</a>
+        )}
       </div>
       <div className="row" style={{ justifyContent: 'space-between' }}>
-        <b>{o.clientName}</b>
+        <b>{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6, background: '#fff1d6', color: '#7a4a00' }}>🧪 {t('ordersResto.trainingBadge')}</span>}</b>
         <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
       </div>
       <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
