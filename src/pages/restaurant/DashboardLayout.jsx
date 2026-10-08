@@ -299,7 +299,7 @@ export default function DashboardLayout() {
       {/* Ce qui bloque encore le commerce, en rangées du même dessin que Mon compte (LigneCompte) : la
           validation par Fairide, les paiements Stripe. Le détail se déplie ; la carte n'existe que s'il
           reste quelque chose à faire — un commerce validé et payé n'a rien à lire ici. */}
-      {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active' || (!restaurant.publicListed && !restaurant.isDemo)) && (
+      {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active' || (!restaurant.publicListed && !restaurant.isDemo) || restaurant.fairideDeliveryDisabled) && (
         <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
           {restaurant.adminStatus === 'blocked' && (
             <LigneCompte accent="danger" icone="interdit" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
