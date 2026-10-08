@@ -924,18 +924,18 @@ function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
 // commerces démarchés (fondateur, 22/09). Pour voir que d'autres bossent et que ça rapporte — et se situer.
 function EquipeCard({ equipe, t, euros }) {
   if (!equipe.length) return null;
-  const total = equipe.reduce((s, x) => s + (x.earned || 0), 0);
+  // Fondateur, 2026-10-08 : classement par inscrits, prénoms seulement ; ni les gains des autres, ni qui a fait quel commerce.
   const inscrits = equipe.reduce((s, x) => s + (x.signed || 0), 0);
   return (
     <div className="card crm-equipe">
       <b>🏆 {t('sales.teamTitle')}</b>
-      <p className="small" style={{ margin: '2px 0 8px' }}>{t('sales.teamIntro', { n: equipe.length, signed: inscrits, total: euros(total) })}</p>
+      <p className="small" style={{ margin: '2px 0 8px' }}>{t('sales.teamIntro', { n: equipe.length, signed: inscrits })}</p>
       <ol className="crm-equipe-liste">
         {equipe.map((x, i) => (
           <li key={`${x.firstName}-${i}`} className={x.me ? 'crm-equipe-moi' : ''}>
             <span className="crm-equipe-rang" aria-hidden="true">{i + 1}</span>
             <span className="crm-equipe-nom">🧑‍💼 <b>{x.firstName}</b>{x.me ? <span className="small"> · {t('sales.teamMe')}</span> : null}<br /><span className="small">{t('sales.teamLine', { signed: x.signed })}</span></span>
-            <span className="crm-equipe-gain"><b>{euros(x.earned)}</b>{x.upcoming ? <><br /><span className="small">+ {euros(x.upcoming)} {t('sales.teamUpcoming')}</span></> : null}</span>
+            <span className="crm-equipe-gain"><b>{x.signed}</b><br /><span className="small">{t('sales.teamSignedShort')}</span>{x.me && typeof x.earned === 'number' ? <><br /><span className="small">{euros(x.earned)}{x.upcoming ? ` + ${euros(x.upcoming)} ${t('sales.teamUpcoming')}` : ''}</span></> : null}</span>
           </li>
         ))}
       </ol>
