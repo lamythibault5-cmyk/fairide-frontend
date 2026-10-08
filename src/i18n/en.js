@@ -2943,6 +2943,8 @@ export default {
       peppolProcess: 'Process the queue now',
       peppolProcessed: 'Queue processed: {sent} sent, {errors} error(s), {skipped} skipped.',
       peppolCounts: 'Invoices: {a} pending · {b} sent · {c} failed',
+      peppolCountsSubscription: "Subscription invoices: {a} pending, {b} sent, {c} in error.",
+      withoutPeppol: "{n} business(es) not reachable on Peppol (PDF invoice by email as a fallback; ask for their Peppol identifier):",
       peppolTest: 'Test send (to Fairide)',
       peppolTestOk: 'Test sent: invoice {num} delivered to {id}. It should appear under "Sent and received" at the provider.',
       bucket0_30: '0 to 30 days',

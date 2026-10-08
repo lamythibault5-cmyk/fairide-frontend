@@ -2943,6 +2943,8 @@ export default {
       peppolProcess: 'Traiter la file maintenant',
       peppolProcessed: 'File traitée : {sent} envoyé(s), {errors} erreur(s), {skipped} ignoré(s).',
       peppolCounts: 'Factures : {a} en attente · {b} transmises · {c} en erreur',
+      peppolCountsSubscription: "Factures d'abonnement : {a} en attente, {b} envoyée(s), {c} en erreur.",
+      withoutPeppol: "{n} commerce(s) sans Peppol joignable (facture en PDF par e-mail en secours ; demander leur identifiant Peppol) :",
       peppolTest: 'Envoi de test (vers Fairide)',
       peppolTestOk: 'Test envoyé : facture {num} transmise à {id}. Elle doit apparaître dans « Envoyés et reçus » chez le prestataire.',
       bucket0_30: '0 à 30 jours',

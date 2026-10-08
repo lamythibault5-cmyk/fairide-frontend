@@ -2943,6 +2943,8 @@ export default {
       peppolProcess: 'Wachtrij nu verwerken',
       peppolProcessed: 'Wachtrij verwerkt: {sent} verzonden, {errors} fout(en), {skipped} overgeslagen.',
       peppolCounts: 'Facturen: {a} in afwachting · {b} verzonden · {c} mislukt',
+      peppolCountsSubscription: "Abonnementsfacturen: {a} in wachtrij, {b} verzonden, {c} in fout.",
+      withoutPeppol: "{n} zaak/zaken niet bereikbaar via Peppol (pdf-factuur per e-mail als reserve; vraag hun Peppol-identificatie):",
       peppolTest: 'Testverzending (naar Fairide)',
       peppolTestOk: 'Test verzonden: factuur {num} bezorgd aan {id}. Ze moet verschijnen onder "Verzonden en ontvangen" bij de provider.',
       bucket0_30: '0 tot 30 dagen',
