@@ -1,6 +1,6 @@
-import { ouvrirPdfBlob } from '../natif';
 import { useEffect, useState } from 'react';
 import { api, API_BASE } from '../api';
+import { ouvrirPdf, telechargerPdf } from '../pdf';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
@@ -9,13 +9,6 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 // blocs (cadre, engagements de Fairide, engagements du commerce, argent), le PDF, et l'acceptation en ligne
 // (nom tapé, horodatée, empreinte). Le texte vient du serveur (restaurantContract.js) : une seule version,
 // en français, qui fait foi et qui reprend les chiffres réellement appliqués par la plateforme.
-async function ouvrirPdf(url, token, messageErreur) {
-  try {
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) throw new Error(messageErreur);
-    const blob = await res.blob(); await ouvrirPdfBlob(blob);
-  } catch (e) { alert(e.message); }
-}
 
 // Ordre de lecture : ce que chacun s'engage à faire, l'argent, puis le cadre et les dispositions
 // générales (données, confidentialité, durée, responsabilité, droit applicable).
@@ -86,13 +79,19 @@ export default function RestaurantContract({ restoId, onAccepte }) {
         <div className="paiement-encart" style={{ marginBottom: 12 }}>
           <b>✅ {t('restoContract.acceptedOn', { date: new Date(d.acceptedAt).toLocaleDateString(getLocale()), name: d.acceptedName })}</b>
           <p className="small" style={{ margin: '4px 0 0', overflowWrap: 'anywhere' }}>{t('restoContract.version', { version: d.acceptedVersion || d.version })}{d.hash ? ` · ${t('restoContract.hash')} ${d.hash.slice(0, 16)}…` : ''}</p>
-          <button type="button" className="btn-outline" style={{ marginTop: 8, padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}>📄 {t('restoContract.openPdf')}</button>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}>📄 {t('restoContract.openPdf')}</button>
+            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}>⬇️ {t('restoContract.savePdf')}</button>
+          </div>
         </div>
       ) : (
         <div className="paiement-encart" style={{ marginBottom: 12 }}>
           <b>✍️ {t('restoContract.toAccept')}</b>
           <p className="small" style={{ margin: '4px 0 8px' }}>{t('restoContract.toAcceptHelp')}</p>
-          <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}>📄 {t('restoContract.readPdf')}</button>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}>📄 {t('restoContract.readPdf')}</button>
+            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}>⬇️ {t('restoContract.savePdf')}</button>
+          </div>
         </div>
       )}
 

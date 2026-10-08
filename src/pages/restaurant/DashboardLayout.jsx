@@ -299,7 +299,7 @@ export default function DashboardLayout() {
       {/* Ce qui bloque encore le commerce, en rangées du même dessin que Mon compte (LigneCompte) : la
           validation par Fairide, les paiements Stripe. Le détail se déplie ; la carte n'existe que s'il
           reste quelque chose à faire — un commerce validé et payé n'a rien à lire ici. */}
-      {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active' || (!restaurant.publicListed && !restaurant.isDemo)) && (
+      {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active' || (!restaurant.publicListed && !restaurant.isDemo) || restaurant.fairideDeliveryDisabled) && (
         <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
           {restaurant.adminStatus === 'blocked' && (
             <LigneCompte accent="danger" icone="interdit" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
@@ -324,6 +324,11 @@ export default function DashboardLayout() {
           )}
           {/* À emporter payé uniquement sur place : aucun paiement ne transite par Fairide, la rangée n'a rien à demander.
               Même règle que formules.paiementsRequis côté serveur. */}
+          {/* Livraison Fairide coupée par l'équipe : commerce seul dans sa zone, aucun livreur à proximité (2026-10-08). */}
+          {restaurant.fairideDeliveryDisabled && (
+            <LigneCompte accent="warn" icone="scooter" titre={t('dashResto.zoneDeliveryOffTitle')}
+              sous={t('dashResto.zoneDeliveryOffText') + (restaurant.fairideDeliveryDisabledReason ? ` (${restaurant.fairideDeliveryDisabledReason})` : '')} />
+          )}
           {restaurant.stripeConnectStatus !== 'active' && (restaurant.wantsDelivery || (restaurant.wantsPickup && restaurant.pickupPaymentMode !== 'on_site')) && (
             <LigneCompte
               accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"

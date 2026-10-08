@@ -126,7 +126,10 @@ export function BalanceSheetTab({ token, toast, period }) {
 // chaque grille est là pour qu'un non-comptable comprenne ce qu'il regarde ; les numéros restent à
 // faire valider par le comptable sur le formulaire en vigueur.
 const GRID_ORDER = ['00', '01', '02', '03', '44', '45', '46', '47', '48', '49', '54', '55', '56', '57', '59', '61', '62', '63', '64', '71', '72', '81', '82', '83', '84', '85', '86', '87', '88'];
-const gridExplanations = (tr) => ({ '00': tr('adminAccounting.grid_00'), '01': tr('adminAccounting.grid_01'), '02': tr('adminAccounting.grid_02'), '03': tr('adminAccounting.grid_03'), '49': tr('adminAccounting.grid_49'), '54': tr('adminAccounting.grid_54'), '59': tr('adminAccounting.grid_59'), '71': tr('adminAccounting.grid_71'), '72': tr('adminAccounting.grid_72'), '81': tr('adminAccounting.grid_81'), '82': tr('adminAccounting.grid_82'), '83': tr('adminAccounting.grid_83') });
+// Le serveur rend chaque grille sous la forme { label, amount } : l'écran lisait l'objet comme un nombre et affichait
+// « NaN € » partout, solde compris (vu à l'audit comptable du 7 oct. 2026). montantGrille accepte les deux formes.
+const montantGrille = (x) => Number(x && typeof x === 'object' ? x.amount : x) || 0;
+const gridExplanations = (tr) => ({ '55': tr('adminAccounting.grid_55'), '56': tr('adminAccounting.grid_56'), '64': tr('adminAccounting.grid_64'), '87': tr('adminAccounting.grid_87'), '88': tr('adminAccounting.grid_88'), '00': tr('adminAccounting.grid_00'), '01': tr('adminAccounting.grid_01'), '02': tr('adminAccounting.grid_02'), '03': tr('adminAccounting.grid_03'), '49': tr('adminAccounting.grid_49'), '54': tr('adminAccounting.grid_54'), '59': tr('adminAccounting.grid_59'), '71': tr('adminAccounting.grid_71'), '72': tr('adminAccounting.grid_72'), '81': tr('adminAccounting.grid_81'), '82': tr('adminAccounting.grid_82'), '83': tr('adminAccounting.grid_83') });
 
 export function VatTab({ token, toast, periodKey }) {
   const { t: tr } = useLanguage();
@@ -142,7 +145,7 @@ export function VatTab({ token, toast, periodKey }) {
   function exportCsv() {
     const g = summary.data?.grids;
     if (!g) { toast(tr('adminCommon.nothingToExport')); return; }
-    const rows = Object.entries(g).map(([code, amount]) => ({ code, amount, label: explain[code] || '' }));
+    const rows = Object.entries(g).map(([code, x]) => ({ code, amount: montantGrille(x), label: explain[code] || '' }));
     downloadCsv(`declaration-tva-grilles-${Date.now()}.csv`, rows, [
       { label: tr('adminAccounting.grid'), get: (r) => r.code }, { label: tr('adminAccounting.label'), get: (r) => r.label }, { label: tr('adminCommon.amount'), get: (r) => r.amount }
     ]);
@@ -162,7 +165,7 @@ export function VatTab({ token, toast, periodKey }) {
         {(d) => {
           const grids = d.grids || {};
           const codes = [...GRID_ORDER.filter((c) => c in grids), ...Object.keys(grids).filter((c) => !GRID_ORDER.includes(c))];
-          const due = Number(grids['71'] || 0); const credit = Number(grids['72'] || 0);
+          const due = montantGrille(grids['71']); const credit = montantGrille(grids['72']);
           return (
             <>
               <div className="card" style={{ borderLeft: `3px solid ${due > 0 ? 'var(--red)' : 'var(--teal-deep)'}` }}>
@@ -177,7 +180,7 @@ export function VatTab({ token, toast, periodKey }) {
                 {codes.map((code) => (
                   <div key={code} className="fin-grid-card">
                     <div className="code">{tr('adminAccounting.box', { code })}</div>
-                    <div className="amount">{money(grids[code])}</div>
+                    <div className="amount">{money(montantGrille(grids[code]))}</div>
                     <div className="explain">{explain[code] || tr('adminAccounting.grid_other')}</div>
                   </div>
                 ))}

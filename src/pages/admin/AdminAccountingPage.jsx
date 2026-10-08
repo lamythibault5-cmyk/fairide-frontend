@@ -16,6 +16,7 @@ import ExpensesTab from './accounting/ExpensesTab';
 import LedgerTab from './accounting/LedgerTab';
 import { IncomeStatementTab, BalanceSheetTab, VatTab } from './accounting/ReportsTabs';
 import { ReconciliationTab, ClosingTab, ChartOfAccountsTab } from './accounting/OtherTabs';
+import ObligationsTab from './accounting/ObligationsTab';
 import '../../admin-finance.css';
 import useEtatPage from '../../hooks/useEtatPage';
 
@@ -24,8 +25,9 @@ import useEtatPage from '../../hooks/useEtatPage';
 // résultat, bilan, TVA) en passant par la saisie (journal, achats) et la clôture. L'onglet courant vit
 // dans l'URL (?tab=) pour que les alertes et les autres applications puissent pointer dessus.
 
-const TABS = ['overview', 'journal', 'expenses', 'ledger', 'income', 'balanceSheet', 'vat', 'reconciliation', 'closing', 'chart'];
-const TAB_KEYS = { overview: 'adminAccounting.tab_overview', journal: 'adminAccounting.tab_journal', expenses: 'adminAccounting.tab_expenses', ledger: 'adminAccounting.tab_ledger', income: 'adminAccounting.tab_income', balanceSheet: 'adminAccounting.tab_balanceSheet', vat: 'adminAccounting.tab_vat', reconciliation: 'adminAccounting.tab_reconciliation', closing: 'adminAccounting.tab_closing', chart: 'adminAccounting.tab_chart' };
+// « obligations » (audit comptable du 7 oct. 2026) : calendrier des échéances et listing annuel des clients assujettis.
+const TABS = ['overview', 'journal', 'expenses', 'ledger', 'income', 'balanceSheet', 'vat', 'obligations', 'reconciliation', 'closing', 'chart'];
+const TAB_KEYS = { overview: 'adminAccounting.tab_overview', journal: 'adminAccounting.tab_journal', expenses: 'adminAccounting.tab_expenses', ledger: 'adminAccounting.tab_ledger', income: 'adminAccounting.tab_income', balanceSheet: 'adminAccounting.tab_balanceSheet', vat: 'adminAccounting.tab_vat', obligations: 'adminAccounting.tab_obligations', reconciliation: 'adminAccounting.tab_reconciliation', closing: 'adminAccounting.tab_closing', chart: 'adminAccounting.tab_chart' };
 const PAGE_SIZE = 50;
 
 export default function AdminAccountingPage() {
@@ -60,6 +62,7 @@ export default function AdminAccountingPage() {
       {tab === 'income' && <IncomeStatementTab {...common} />}
       {tab === 'balanceSheet' && <BalanceSheetTab {...common} />}
       {tab === 'vat' && <VatTab {...common} />}
+      {tab === 'obligations' && <ObligationsTab {...common} />}
       {tab === 'reconciliation' && <ReconciliationTab {...common} />}
       {tab === 'closing' && <ClosingTab {...common} />}
       {tab === 'chart' && <ChartOfAccountsTab {...common} />}

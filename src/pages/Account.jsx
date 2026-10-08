@@ -11,6 +11,8 @@ import PhoneVerification from '../components/PhoneVerification';
 import DriverDocuments from '../components/DriverDocuments';
 import DriverContractTerms from '../components/DriverContractTerms';
 import RestaurantContract from '../components/RestaurantContract';
+import { ouvrirPdf, telechargerPdf } from '../pdf';
+import { API_BASE } from '../api';
 import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -790,10 +792,20 @@ export default function Account() {
             {ouvertes.has('terminal') && <p style={{ margin: '10px 0 0' }}><Link to="/dashboard/terminal" className="btn-outline">{t('terminal.openSettings')}</Link></p>}
             </LigneCompte>
           )}
+          {/* Entraînement (2026-10-08) : commandes d'essai pendant 7 jours après la première connexion du terminal. */}
+          <LigneCompte to="/dashboard/simulation" icone="etoile" titre={t('accountUi.simulationRow')} sous={t('accountUi.simulationSub')} />
           <div id="section-contrat" />
-          <LigneCompte icone="contrat" titre={t('restoContract.rowTitle')} sous={t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
+          {/* Contrat accepté : la rangée ouvre directement le PDF complet (fondateur, 2026-10-08) ; à accepter : le panneau d'acceptation. */}
+          <LigneCompte icone="contrat" titre={t('restoContract.rowTitle')} sous={restaurant.onboarding?.contractAccepted ? t('restoContract.rowSubPdf') : t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')}
+            onClick={() => (restaurant.onboarding?.contractAccepted ? ouvrirPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, t('restoContract.pdfFailed')) : basculer('contrat'))}>
             {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}
           </LigneCompte>
+          <LigneCompte icone="contrat" titre={t('restoContract.rowSaveTitle')} sous={t('restoContract.rowSaveSub')} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))} />
+          {restaurant.onboarding?.contractAccepted && (
+            <LigneCompte icone="contrat" titre={t('restoContract.rowDetailsTitle')} sous={t('restoContract.rowDetailsSub')} ouverte={ouvertes.has('contrat-details')} onClick={() => basculer('contrat-details')}>
+              {ouvertes.has('contrat-details') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}
+            </LigneCompte>
+          )}
           <div id="section-paiement">
             <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
               {retour && <Link to={retour} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10, padding: '6px 10px', fontSize: 13 }}>← {t('accountUi.backToDashboard')}</Link>}

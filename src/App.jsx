@@ -50,6 +50,7 @@ const RestaurantReviewsPage = lazyPage(() => import('./pages/restaurant/ReviewsP
 const RestaurantInvoicesPage = lazyPage(() => import('./pages/restaurant/InvoicesPage'));
 const RestaurantGuidePage = lazyPage(() => import('./pages/restaurant/GuidePage'));
 const RestaurantTerminalPage = lazyPage(() => import('./pages/restaurant/TerminalPage'));
+const RestaurantSimulationPage = lazyPage(() => import('./pages/restaurant/SimulationPage'));
 
 // --- Espace livreur ---
 const DriverDashboard = lazyPage(() => import('./pages/driver/Dashboard'));
@@ -180,6 +181,7 @@ export default function App() {
           <Route path="invoices" element={<RestaurantInvoicesPage />} />
           <Route path="guide" element={<RestaurantGuidePage />} />
           <Route path="terminal" element={<RestaurantTerminalPage />} />
+          <Route path="simulation" element={<RestaurantSimulationPage />} />
           <Route path="tables" element={<Navigate to="/dashboard" replace />} />
           <Route path="reservations" element={<Navigate to="/dashboard/promotions" replace />} />
         </Route>

@@ -572,6 +572,13 @@ export default function RestaurantMenu() {
             </span>
           </div>
         )}
+        {/* Livraison Fairide coupée dans la zone par l'équipe (08/10) : le client sait que seul l'à emporter est possible ici. */}
+        {restaurant.fairideDeliveryDisabled && restaurant.offersPickup && (
+          <div className="ouverture-bandeau fiche-info" role="status">
+            <span className="fiche-info-icone" aria-hidden="true"><Icone nom="scooter" taille={18} /></span>
+            <span>{t('restaurantMenu.deliveryUnavailableZone')}</span>
+          </div>
+        )}
 
       </header>
 

@@ -5,7 +5,6 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
-import { StarsDisplay } from '../../components/Stars';
 import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
 // Chargée à la demande : la carte tire Leaflet (~150 Ko) avec elle, et cette page fait partie des
 // rares gardées en import statique pour le référencement. Sans ce découpage, tout visiteur d'une fiche
@@ -97,7 +96,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
       ? t('restoListUi.closedOpensAt', { time: etat.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
       : t('restoListUi.closed');
   const bande = bandePrix(r);
-  const services = [r.offersPickup && t('restoListUi.servicePickup'), r.offersDelivery && t('restoListUi.serviceDelivery')].filter(Boolean);
+  const services = [r.offersPickup && t('restoListUi.servicePickup'), r.offersDelivery && t('restoListUi.serviceDelivery'), r.fairideDeliveryDisabled && r.offersPickup && t('restoListUi.pickupOnlyZone')].filter(Boolean);
   // VISITEUR NON CONNECTÉ : la liste se parcourt librement (on y arrive depuis la barre d'adresse de
   // l'accueil), mais ouvrir un commerce demande un compte (fondateur, 2026-09-27). Le lien part vers
   // la connexion avec la fiche en `from`, et Auth.jsx y ramène une fois connecté ou inscrit.

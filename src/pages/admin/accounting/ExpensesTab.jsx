@@ -144,15 +144,18 @@ function ExpenseForm({ expense, token, toast, onClose, onSaved }) {
   const [f, setF] = useState({
     expenseDate: expense.expenseDate ? String(expense.expenseDate).slice(0, 10) : todayIso(),
     supplier: expense.supplier || '', description: expense.description || '', category: expense.category || 'other',
-    accountCode: expense.accountCode || '', amountExclVat: expense.amountExclVat ?? '', vatRate: expense.vatRate ?? 21,
+    accountCode: expense.accountCode || '', amountExclVat: expense.amountExclVat ?? '', vatRate: expense.vatRate ?? 21, vatRegime: expense.vatRegime || 'be',
     paymentMethod: expense.paymentMethod || 'bank', attachmentUrl: expense.attachmentUrl || '', notes: expense.notes || ''
   });
   const [busy, setBusy] = useState(false);
   const cats = categoryLabels(tr); const pays = paymentLabels(tr);
 
   const excl = toNumber(f.amountExclVat);
-  const vat = +(excl * toNumber(f.vatRate) / 100).toFixed(2);
-  const incl = +(excl + vat).toFixed(2);
+  // Autoliquidation (fournisseur UE ou hors UE) : la facture est hors TVA, Fairide déclare et déduit la TVA elle-même ;
+  // exonéré : pas de TVA. Le TTC payé au fournisseur vaut alors le HTVA (voir routes/adminAccounting.js, computeAmounts).
+  const autoliq = f.vatRegime === 'eu' || f.vatRegime === 'non_eu';
+  const vat = f.vatRegime === 'exempt' ? 0 : +(excl * toNumber(f.vatRate) / 100).toFixed(2);
+  const incl = autoliq || f.vatRegime === 'exempt' ? excl : +(excl + vat).toFixed(2);
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
   const canSave = f.supplier.trim() && f.expenseDate && (locked || excl > 0) && !busy;
 
@@ -166,7 +169,7 @@ function ExpenseForm({ expense, token, toast, onClose, onSaved }) {
     try {
       const body = locked
         ? { notes: f.notes, attachmentUrl: f.attachmentUrl || null }
-        : { expenseDate: f.expenseDate, supplier: f.supplier.trim(), description: f.description.trim(), category: f.category, accountCode: f.accountCode || undefined, amountExclVat: excl, vatRate: toNumber(f.vatRate), vatAmount: vat, amountInclVat: incl, paymentMethod: f.paymentMethod, attachmentUrl: f.attachmentUrl || null, notes: f.notes };
+        : { expenseDate: f.expenseDate, supplier: f.supplier.trim(), description: f.description.trim(), category: f.category, accountCode: f.accountCode || undefined, amountExclVat: excl, vatRate: toNumber(f.vatRate), vatRegime: f.vatRegime, vatAmount: vat, amountInclVat: incl, paymentMethod: f.paymentMethod, attachmentUrl: f.attachmentUrl || null, notes: f.notes };
       if (isNew) await api('/admin/accounting/expenses', { method: 'POST', token, body });
       else await api(`/admin/accounting/expenses/${expense.id}`, { method: 'PATCH', token, body });
       toast(isNew ? tr('adminAccounting.toastExpenseCreated') : tr('adminAccounting.toastExpenseSaved'));
@@ -195,6 +198,10 @@ function ExpenseForm({ expense, token, toast, onClose, onSaved }) {
         <div className="field"><label htmlFor={idsA11y + '-amountexcl'}>{tr('adminAccounting.amountExcl')}</label><input id={idsA11y + '-amountexcl'} type="number" min="0" step="0.01" inputMode="decimal" value={f.amountExclVat} onChange={set('amountExclVat')} disabled={locked} /></div>
         <div className="field"><label htmlFor={idsA11y + '-vatrate'}>{tr('adminAccounting.vatRate')}</label>
           <select id={idsA11y + '-vatrate'} value={f.vatRate} onChange={set('vatRate')} disabled={locked}>{VAT_RATES.map((r) => <option key={r} value={r}>{r}%</option>)}</select>
+        </div>
+        <div className="field"><label htmlFor={idsA11y + '-vatregime'}>{tr('adminAccounting.vatRegime')}</label>
+          <select id={idsA11y + '-vatregime'} value={f.vatRegime} onChange={set('vatRegime')} disabled={locked}>{['be', 'eu', 'non_eu', 'exempt'].map((r) => <option key={r} value={r}>{tr(`adminAccounting.vatRegime_${r}`)}</option>)}</select>
+          {autoliq && <span className="small" style={{ opacity: 0.75 }}>{tr('adminAccounting.vatRegimeHelp')}</span>}
         </div>
         <div className="field"><label htmlFor={idsA11y + '-paymentmethod'}>{tr('adminAccounting.paymentMethod')}</label>
           <select id={idsA11y + '-paymentmethod'} value={f.paymentMethod} onChange={set('paymentMethod')} disabled={locked}>{PAYMENT_METHODS.map((p) => <option key={p} value={p}>{pays[p]}</option>)}</select>
