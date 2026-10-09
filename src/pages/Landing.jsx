@@ -116,8 +116,8 @@ export default function Landing() {
           <HeroAdresse />
           </div>
         </div>
-        {/* La colonne de droite est à l'exemple des 40 € (2026-09-27). L'aperçu des commerces, qui
-            l'occupait, est descendu en bas de la bannière (.hero-vitrine, plus bas). */}
+        {/* La colonne de droite est à « Pourquoi Fairide ? » (2026-10-09, après l'exemple des 40 € du
+            2026-09-27). L'aperçu des commerces, qui l'occupait, est descendu en bas de la bannière. */}
         <HeroPrix />
         {/* LA SUITE DE LA BANNIÈRE, sortie de l'affiche : sur téléphone, l'exemple des 40 € doit
             arriver juste sous la barre d'adresse, dans le premier écran (fondateur, 2026-09-27). La
