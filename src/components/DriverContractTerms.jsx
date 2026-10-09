@@ -73,6 +73,7 @@ export default function DriverContractTerms() {
               <p className="small" style={{ margin: '6px 0 0', overflowWrap: 'anywhere' }}>
                 {t('courierOnboarding.contractHash')} <code>{signe.documentHash.slice(0, 16)}…</code> · {t('driverTerms.signedBy', { name: signe.typedName })}
               </p>
+              {signe.signatureUrl && <img src={signe.signatureUrl} alt={t('signature.aria')} style={{ display: 'block', maxWidth: 220, maxHeight: 90, marginTop: 8, background: '#fff', border: '1px solid var(--line, #e1d9c4)', borderRadius: 8 }} />}
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                 <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/${signe.id}/pdf`, token, t('courierOnboarding.previewFailed'))}>📄 {t('driverTerms.openContract')}</button>
                 <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/${signe.id}/pdf`, token, `contrat-fairide-${signe.contractType}-${signe.version}.pdf`, t('courierOnboarding.previewFailed'))}>⬇️ {t('driverTerms.savePdf')}</button>

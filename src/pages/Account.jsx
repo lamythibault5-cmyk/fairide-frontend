@@ -660,6 +660,8 @@ export default function Account() {
         <LigneCompte icone="dossier" titre={t('accountUi.myData_rowTitle')} sous={t('accountUi.myData_rowSub')} ouverte={ouvertes.has('donnees')} onClick={() => basculer('donnees')}>
           {ouvertes.has('donnees') && <MesDonnees />}
         </LigneCompte>
+        {/* Mes documents (fondateur, 2026-10-09) : CGU, confidentialité, contrats acceptés et signés, à lire et à enregistrer. */}
+        <LigneCompte to="/documents" icone="contrat" titre={t('mesDocuments.rowTitle')} sous={t('mesDocuments.rowSub')} />
 
         {role === 'driver' && (
           <LigneCompte icone="dossier" titre={t('driverDocs.title')} sous={t('driverDocs.sub')} ouverte={ouvertes.has('documents')} onClick={() => basculer('documents')}>

@@ -1061,6 +1061,43 @@ export default {
     phoneInput: {
       country: 'Phone number country'
     },
+    signature: {
+      help: 'Sign in the box with your finger (or the mouse), as on paper.',
+      aria: 'Handwritten signature',
+      empty: 'No signature yet.',
+      done: 'Signature captured in the box.',
+      clear: 'Clear and start again',
+      required: 'Sign in the box to accept.'
+    },
+    mesDocuments: {
+      rowTitle: 'My documents',
+      rowSub: 'Terms, privacy policy, contracts accepted and signed',
+      title: 'My documents',
+      intro: 'Everything you have accepted or signed with Fairide, to read and save as PDF at any time.',
+      back: 'My account',
+      termsTitle: 'Terms and conditions',
+      privacyTitle: 'Privacy policy',
+      version: 'Version {version} · in force since {date}',
+      termsAcceptedOn: 'Accepted on {date} (version {version}).',
+      termsOutdated: 'You accepted version {version}: a new version is in force, read and accept it.',
+      termsNotAccepted: 'Not accepted yet.',
+      acceptTerms: 'I have read and accept this version',
+      termsAccepted: 'Terms accepted.',
+      read: 'Read',
+      open: 'Open the PDF',
+      save: 'Save the PDF',
+      readAndSign: 'Read and sign',
+      restoContractTitle: 'Partnership contract · {name}',
+      restoOutdated: 'You accepted version {version}: a new version must be read and signed.',
+      restoNotAccepted: 'To read and sign in the signature box.',
+      signedOn: 'Signed on {date} by {name}',
+      contractVersion: 'Current version: {version}',
+      hash: 'fingerprint',
+      previousVersions: 'Previously accepted versions',
+      courierTitle: 'Courier contract',
+      courierNotSigned: 'The contract for your current status is not signed yet.',
+      pdfFailed: 'The PDF could not be opened.'
+    },
     driverDocs: {
       title: 'My documents',
       sub: 'ID, student certificate, other papers',

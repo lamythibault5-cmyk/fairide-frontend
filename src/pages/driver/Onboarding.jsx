@@ -1,5 +1,6 @@
 import { ouvrirPdfBlob } from '../../natif';
 import SacLivraison from '../../components/SacLivraison';
+import SignaturePad from '../../components/SignaturePad';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
@@ -513,6 +514,7 @@ function EtapeContrat({ d, t, busy, token, action, onNext }) {
   const c = d.courier;
   const [nom, setNom] = useState(`${c.identity?.firstName || ''} ${c.identity?.lastName || ''}`.trim() || d.user?.name || '');
   const [accepte, setAccepte] = useState(false);
+  const [signature, setSignature] = useState(null); // PNG dessiné dans le cadre (fondateur, 2026-10-09)
   const versionCourante = d.contractVersions?.[c.statusType];
   const ancien = (d.contracts ?? []).find((k) => k.contractType === c.statusType);
   const signe = ancien && (!versionCourante || ancien.version === versionCourante) ? ancien : null;
@@ -536,7 +538,8 @@ function EtapeContrat({ d, t, busy, token, action, onNext }) {
           </div>
           <label className="service-option"><input type="checkbox" checked={accepte} onChange={(e) => setAccepte(e.target.checked)} /> <span>{t('courierOnboarding.acceptContract')}</span></label>
           <p className="small" style={{ margin: '6px 0 10px', opacity: 0.8 }}>{t('courierOnboarding.signatureHelp')}</p>
-          <button type="button" className="btn-gold" disabled={busy || !accepte || !nom.trim()} onClick={() => action(() => api('/couriers/me/contract/sign', { method: 'POST', token, body: { typedName: nom.trim(), accepted: accepte } }), t('courierOnboarding.toastSigned'))}>{t('courierOnboarding.sign')}</button>
+          <SignaturePad onChange={setSignature} />
+          <button type="button" className="btn-gold" disabled={busy || !accepte || !nom.trim() || !signature} onClick={() => action(() => api('/couriers/me/contract/sign', { method: 'POST', token, body: { typedName: nom.trim(), accepted: accepte, signatureDataUrl: signature } }), t('courierOnboarding.toastSigned'))}>{t('courierOnboarding.sign')}</button>
         </>
       )}
       <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-outline" onClick={onNext}>{t('courierOnboarding.next')}</button></div>

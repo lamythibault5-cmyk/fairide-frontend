@@ -105,6 +105,7 @@ const ValiderCarte = lazyPage(() => import('./pages/ValiderCarte'));
 const HelpPage = lazyPage(() => import('./pages/HelpPage'));
 const OurStory = lazyPage(() => import('./pages/OurStory'));
 const SalesPage = lazyPage(() => import('./pages/client/SalesPage'));
+const DocumentsPage = lazyPage(() => import('./pages/DocumentsPage'));
 const AdminSalesPage = lazyPage(() => import('./pages/admin/AdminSalesPage'));
 const AdminSimulationPage = lazyPage(() => import('./pages/admin/AdminSimulationPage'));
 const AdminSponsorsPage = lazyPage(() => import('./pages/admin/AdminSponsorsPage'));
@@ -196,6 +197,8 @@ export default function App() {
         <Route path="/driver/earnings" element={<ProtectedRoute role="driver"><DriverEarningsPage /></ProtectedRoute>} />
         <Route path="/driver/onboarding" element={<ProtectedRoute role="driver"><DriverOnboarding /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        {/* Mes documents (2026-10-09) : CGU, confidentialité, contrats acceptés et signés — tous les rôles. */}
+        <Route path="/documents" element={<ProtectedRoute><DocumentsPage /></ProtectedRoute>} />
         {/* Mini-jeux : rubrique de Mon compte. L'écran scindé avec la carte du livreur n'y apparaît que pour un client. */}
         {/* Sales : page des commerciaux (accès donné par l'admin ; le serveur refuse les autres). /crm est l'ancien chemin. */}
         <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />

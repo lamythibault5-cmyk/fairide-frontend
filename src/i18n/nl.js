@@ -1061,6 +1061,43 @@ export default {
     phoneInput: {
       country: 'Land van het telefoonnummer'
     },
+    signature: {
+      help: 'Onderteken in het kader met je vinger (of de muis), zoals op papier.',
+      aria: 'Handgeschreven handtekening',
+      empty: 'Nog geen handtekening.',
+      done: 'Handtekening vastgelegd in het kader.',
+      clear: 'Wissen en opnieuw beginnen',
+      required: 'Onderteken in het kader om te aanvaarden.'
+    },
+    mesDocuments: {
+      rowTitle: 'Mijn documenten',
+      rowSub: 'Algemene voorwaarden, privacy, aanvaarde en ondertekende contracten',
+      title: 'Mijn documenten',
+      intro: 'Alles wat je met Fairide aanvaard of ondertekend hebt, altijd te lezen en als pdf op te slaan.',
+      back: 'Mijn account',
+      termsTitle: 'Algemene voorwaarden',
+      privacyTitle: 'Privacybeleid',
+      version: 'Versie {version} · van kracht sinds {date}',
+      termsAcceptedOn: 'Aanvaard op {date} (versie {version}).',
+      termsOutdated: 'Je had versie {version} aanvaard: er is een nieuwe versie van kracht, lees en aanvaard ze.',
+      termsNotAccepted: 'Nog niet aanvaard.',
+      acceptTerms: 'Ik heb deze versie gelezen en aanvaard ze',
+      termsAccepted: 'Algemene voorwaarden aanvaard.',
+      read: 'Lezen',
+      open: 'Pdf openen',
+      save: 'Pdf opslaan',
+      readAndSign: 'Lezen en ondertekenen',
+      restoContractTitle: 'Partnerschapscontract · {name}',
+      restoOutdated: 'Je had versie {version} aanvaard: een nieuwe versie moet gelezen en ondertekend worden.',
+      restoNotAccepted: 'Te lezen en te ondertekenen in het kader.',
+      signedOn: 'Ondertekend op {date} door {name}',
+      contractVersion: 'Huidige versie: {version}',
+      hash: 'vingerafdruk',
+      previousVersions: 'Eerder aanvaarde versies',
+      courierTitle: 'Koerierscontract',
+      courierNotSigned: 'Het contract voor je huidige statuut is nog niet ondertekend.',
+      pdfFailed: 'De pdf kon niet geopend worden.'
+    },
     driverDocs: {
       title: 'Mijn documenten',
       sub: 'Identiteitsbewijs voor- / achterkant, studentenattest, andere stukken',

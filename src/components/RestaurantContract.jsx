@@ -4,6 +4,7 @@ import { ouvrirPdf, telechargerPdf } from '../pdf';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import SignaturePad from './SignaturePad';
 
 // « Mon contrat avec Fairide » dans Mon compte (restaurateur) : le contrat de partenariat, groupé en quatre
 // blocs (cadre, engagements de Fairide, engagements du commerce, argent), le PDF, et l'acceptation en ligne
@@ -27,6 +28,7 @@ export default function RestaurantContract({ restoId, onAccepte }) {
   const toutLu = GROUPES.every((g) => vus.has(g));
   const [nom, setNom] = useState('');
   const [lu, setLu] = useState(false);
+  const [signature, setSignature] = useState(null); // PNG dessiné dans le cadre (fondateur, 2026-10-09)
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { api(`/restaurants/${restoId}/contract`, { token }).then((r) => { setD(r); setNom(r.responsibleName || user?.name || ''); }).catch((e) => setErreur(e.message)); }, [restoId, token]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -35,8 +37,9 @@ export default function RestaurantContract({ restoId, onAccepte }) {
     if (!toutLu) { toast(t('restoContract.openAllHint', { n: GROUPES.filter((g) => !vus.has(g)).length })); return; }
     if (!lu) { toast(t('restoContract.errRead'), 'erreur'); return; }
     if (!nom.trim()) { toast(t('restoContract.errName'), 'erreur'); return; }
+    if (!signature) { toast(t('signature.required'), 'erreur'); return; }
     setBusy(true);
-    try { const r = await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName: nom.trim(), readConfirmed: true } }); setD(r); toast(t('restoContract.accepted')); onAccepte?.(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+    try { const r = await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName: nom.trim(), readConfirmed: true, signatureDataUrl: signature } }); setD(r); toast(t('restoContract.accepted')); onAccepte?.(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   const basculer = (g) => {
     setOuverts((s) => { const n = new Set(s); if (n.has(g)) n.delete(g); else n.add(g); return n; });
@@ -79,6 +82,7 @@ export default function RestaurantContract({ restoId, onAccepte }) {
         <div className="paiement-encart" style={{ marginBottom: 12 }}>
           <b>✅ {t('restoContract.acceptedOn', { date: new Date(d.acceptedAt).toLocaleDateString(getLocale()), name: d.acceptedName })}</b>
           <p className="small" style={{ margin: '4px 0 0', overflowWrap: 'anywhere' }}>{t('restoContract.version', { version: d.acceptedVersion || d.version })}{d.hash ? ` · ${t('restoContract.hash')} ${d.hash.slice(0, 16)}…` : ''}</p>
+          {d.signatureUrl && <img src={d.signatureUrl} alt={t('signature.aria')} style={{ display: 'block', maxWidth: 220, maxHeight: 90, marginTop: 8, background: '#fff', border: '1px solid var(--line, #e1d9c4)', borderRadius: 8 }} />}
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
             <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}>📄 {t('restoContract.openPdf')}</button>
             <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}>⬇️ {t('restoContract.savePdf')}</button>
@@ -123,12 +127,13 @@ export default function RestaurantContract({ restoId, onAccepte }) {
             <input type="checkbox" checked={lu} disabled={!toutLu} onChange={(e) => setLu(e.target.checked)} style={{ marginTop: 3 }} />
             <span className="small">{t('restoContract.readCheck')}</span>
           </label>
+          <div style={{ marginTop: 10 }}><SignaturePad onChange={setSignature} /></div>
           <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <div className="field" style={{ flex: '1 1 200px', margin: 0 }}>
               <label htmlFor="resto-contract-nom">{t('restoContract.typedName')}</label>
               <input id="resto-contract-nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('restoContract.typedNamePh')} />
             </div>
-            <button type="button" className="btn-gold" disabled={busy || !toutLu || !lu} style={{ alignSelf: 'flex-end' }} onClick={accepter}>{busy ? '…' : t('restoContract.acceptBtn')}</button>
+            <button type="button" className="btn-gold" disabled={busy || !toutLu || !lu || !signature} style={{ alignSelf: 'flex-end' }} onClick={accepter}>{busy ? '…' : t('restoContract.acceptBtn')}</button>
           </div>
         </div>
       )}

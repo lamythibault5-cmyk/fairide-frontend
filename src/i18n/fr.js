@@ -1061,6 +1061,43 @@ export default {
     phoneInput: {
       country: 'Pays du numéro de téléphone'
     },
+    signature: {
+      help: 'Signe dans le cadre avec le doigt (ou la souris), comme sur papier.',
+      aria: 'Signature manuscrite',
+      empty: 'Aucune signature pour l\'instant.',
+      done: 'Signature enregistrée dans le cadre.',
+      clear: 'Effacer et recommencer',
+      required: 'Signe dans le cadre pour accepter.'
+    },
+    mesDocuments: {
+      rowTitle: 'Mes documents',
+      rowSub: 'Conditions générales, confidentialité, contrats acceptés et signés',
+      title: 'Mes documents',
+      intro: 'Tout ce que tu as accepté ou signé avec Fairide, à lire et à enregistrer en PDF à tout moment.',
+      back: 'Mon compte',
+      termsTitle: 'Conditions générales (CGU / CGV)',
+      privacyTitle: 'Politique de confidentialité',
+      version: 'Version {version} · en vigueur depuis le {date}',
+      termsAcceptedOn: 'Acceptées le {date} (version {version}).',
+      termsOutdated: 'Tu avais accepté la version {version} : une nouvelle version est en vigueur, lis-la et accepte-la.',
+      termsNotAccepted: 'Pas encore acceptées.',
+      acceptTerms: 'J\'ai lu et j\'accepte cette version',
+      termsAccepted: 'Conditions générales acceptées.',
+      read: 'Lire',
+      open: 'Ouvrir le PDF',
+      save: 'Enregistrer le PDF',
+      readAndSign: 'Lire et signer',
+      restoContractTitle: 'Contrat de partenariat · {name}',
+      restoOutdated: 'Tu avais accepté la version {version} : une nouvelle version est à lire et à signer.',
+      restoNotAccepted: 'À lire et à signer dans le cadre prévu.',
+      signedOn: 'Signé le {date} par {name}',
+      contractVersion: 'Version en vigueur : {version}',
+      hash: 'empreinte',
+      previousVersions: 'Versions précédentes acceptées',
+      courierTitle: 'Contrat de coursier',
+      courierNotSigned: 'Ton contrat pour ton statut actuel n\'est pas encore signé.',
+      pdfFailed: 'Le PDF n\'a pas pu être ouvert.'
+    },
     driverDocs: {
       title: 'Mes documents',
       sub: 'Identité, attestation, autres pièces',
