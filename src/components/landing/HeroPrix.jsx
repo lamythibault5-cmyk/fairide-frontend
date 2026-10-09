@@ -12,7 +12,7 @@ import { useLanguage } from '../../context/LanguageContext';
 //   Fairide garde 10,8 % ; « le resto garde 90 % » arrondit d'à peine un point, alors que le resto
 //   touche en réalité 100 % de son prix en salle — l'arrondi reste dans le sens qui nous dessert.
 //
-// TEXTES DE LA MAQUETTE VOLONTAIREMENT CORRIGÉS (à ne pas remettre) :
+// TEXTES DE LA MAQUETTE VOLONTAIREMENT ÉCARTÉS (à ne pas remettre si la carte retrouve une ligne de texte) :
 // - « Commission prise au restaurant » : faux chez nous, la commission est dans le prix affiché, payée
 //   par le client (CLAUDE.md, « Pricing model ») ;
 // - « Le livreur garde 100 % des frais de livraison » : il touche 90 % de sa grille, les 10 % restants
@@ -71,10 +71,8 @@ export default function HeroPrix() {
         <Case nom={t('landing.priceThem')} taux={TAUX_EUX} classe="hero-prix-eux" t={t} />
         <Case nom="fairide" taux={TAUX_NOUS} classe="hero-prix-nous" wordmark t={t} />
       </div>
-
-      <p className="hero-prix-toi">
-        <b>{t('landing.priceYouTitle')}</b> {t('landing.priceYouText')}
-      </p>
+      {/* La ligne « Et toi ? Tu paies le prix de la carte… » sous les deux cases a été retirée à la
+          demande du fondateur (2026-10-09) : les deux cases suffisent. */}
     </section>
   );
 }
