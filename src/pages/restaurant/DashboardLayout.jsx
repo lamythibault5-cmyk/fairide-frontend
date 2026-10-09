@@ -14,7 +14,7 @@ import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { dateOuverturePaiements } from '../../launch';
+import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
 import BandeauOuverture from '../../components/BandeauOuverture';
 import CarteAValider from '../../components/commerce/CarteAValider';
 import { cuisineDepuisOsm } from '../../osmCuisine';
@@ -334,19 +334,24 @@ export default function DashboardLayout() {
             <LigneCompte accent="warn" icone="scooter" titre={t('dashResto.zoneDeliveryOffTitle')}
               sous={t('dashResto.zoneDeliveryOffText') + (restaurant.fairideDeliveryDisabledReason ? ` (${restaurant.fairideDeliveryDisabledReason})` : '')} />
           )}
-          {restaurant.stripeConnectStatus !== 'active' && (restaurant.wantsDelivery || (restaurant.wantsPickup && restaurant.pickupPaymentMode !== 'on_site')) && (
+          {/* Fondateur, 2026-10-09 : à configurer dès l'inscription, pour tout commerce sans compte Stripe actif. */}
+          {restaurant.stripeConnectStatus !== 'active' && (
             <LigneCompte
               accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"
               titre={restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.paymentInfoTitle') : t('dashResto.paymentsToConfigure')}
               sous={restaurant.stripeConnectStatus === 'restricted'
                 ? t('dashResto.stripeNeedsInfoResto')
-                : t('dashResto.viaStripeResto', { date: dateOuverturePaiements(getLocale()) })}
+                : paiementsOuverts() ? t('dashResto.viaStripeNow') : t('dashResto.viaStripeResto', { date: dateOuverturePaiements(getLocale()) })}
               action={restaurant.stripeConnectStatus === 'restricted' ? (
                 <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
                   {connecting ? '...' : t('dashResto.complete')}
                 </button>
+              ) : paiementsOuverts() ? (
+                <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
+                  {connecting ? '...' : t('dashResto.paymentsConfigureBtn')}
+                </button>
               ) : (
-                // Activation fermée jusqu'à début octobre 2026 : le détail (et Stripe expliqué) est dans Mon compte › Paiement.
+                // Activation pas encore ouverte : le détail (et Stripe expliqué) est dans Mon compte › Paiement.
                 <Link to="/account?ouvrir=paiement&retour=/dashboard" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
               )}
             />

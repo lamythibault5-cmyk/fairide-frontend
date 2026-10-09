@@ -89,6 +89,17 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
   const totaux = payees.reduce((a, o) => ({ total: a.total + Number(o.total || 0), produits: a.produits + Number(o.subtotal || 0), livraison: a.livraison + Number(o.deliveryFee || 0), commission: a.commission + Number(o.commission || 0), net: a.net + net(o) }), { total: 0, produits: 0, livraison: 0, commission: 0, net: 0 });
   const ouvert = paiementsOuverts();
   const stripeActif = restaurant?.stripeConnectStatus === 'active';
+  // Fondateur, 2026-10-09 : configurer ses paiements dès l'inscription — le bouton lance l'inscription Stripe (identité, IBAN) ;
+  // numéros d'entreprise / TVA manquants : on le dit et on reste sur ce panneau, qui les demande juste au-dessus.
+  const { token } = useAuth();
+  const toast = useToast();
+  const [connecting, setConnecting] = useState(false);
+  async function activer() {
+    if (!restaurant?.id) return;
+    setConnecting(true);
+    try { const r = await api(`/restaurants/${restaurant.id}/connect/onboard`, { method: 'POST', token }); window.location.href = r.url; }
+    catch (e) { toast(e.code === 'LEGAL_INFO_REQUIRED' || e.code === 'LEGAL_INFO_INVALID' ? t('paiementResto.legalFirst') : e.message, 'erreur'); setConnecting(false); }
+  }
 
   return (
     <div className="paiement-resto">
@@ -115,8 +126,8 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
           <p className="small" style={{ margin: '4px 0 0' }}>{stripeActif ? t('paiementResto.activationDoneText') : ouvert ? t('paiementResto.activationOpenText') : t('paiementResto.activationClosedText', { date: dateOuverturePaiements(getLocale()) })}</p>
         </div>
         {!stripeActif && (
-          <button type="button" className="btn-gold" disabled title={ouvert ? undefined : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}>
-            {ouvert ? t('paiementResto.activateBtn') : t('paiementResto.activateSoonBtn')}
+          <button type="button" className="btn-gold" disabled={!ouvert || connecting} onClick={activer} title={ouvert ? undefined : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}>
+            {connecting ? '…' : ouvert ? t('paiementResto.activateBtn') : t('paiementResto.activateSoonBtn')}
           </button>
         )}
       </div>
