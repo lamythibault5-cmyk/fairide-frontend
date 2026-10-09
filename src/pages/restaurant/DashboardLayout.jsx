@@ -147,8 +147,10 @@ export default function DashboardLayout() {
       const [ordersData, restoData, reviewsData, driversData] = await Promise.all([
         api(`/orders/restaurant/${id}`, { token }),
         fiche ? api(`/restaurants/${id}`, { token }) : null,
-        annexes ? api(`/restaurants/${id}/reviews`) : null,
-        annexes ? api(`/restaurants/${id}/drivers`, { token }) : null
+        // Annexes (avis, livreurs) : un échec ne doit jamais vider la liste des commandes (banc du 9 oct. 2026 : un 404 sur les
+        // avis laissait « Pas encore de commande » alors que le serveur en renvoyait).
+        annexes ? api(`/restaurants/${id}/reviews`).catch(() => null) : null,
+        annexes ? api(`/restaurants/${id}/drivers`, { token }).catch(() => null) : null
       ]);
       setOrders(ordersData);
       if (restoData) setRestaurant(restoData);
