@@ -1998,6 +1998,8 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   transition: border-color .15s ease, background .15s ease;
 }
 .join-card:hover { border-color: var(--iris); }
+/* Version courte de l'accueil (2026-10-09) : plus de puces, donc plus besoin des 210px de hauteur. */
+.join-grid-compact .join-card { min-height: 0; gap: 18px; padding: 20px 22px; }
 .join-card h3 { font-size: 20px; margin: 0; line-height: 1.15; }
 /* inline-flex, et non plus `block` : ces deux lignes portent maintenant une icône du jeu maison
    devant leur texte (voir Landing.jsx). Un <svg> en flux normal s'assoit sur la ligne de base et
@@ -3096,6 +3098,11 @@ button.account-link-row:last-child { border-bottom: none; }
    Portée limitée à l'accueil public : ailleurs, la carte reste opaque et le gris clair d'origine
    fait partie du dessin. */
 .wrap-fond .join-card .join-eyebrow { color: var(--ink-soft); }
+/* …sauf sur la carte IRIS (« Client ») : la règle ci-dessus a la même spécificité que
+   `.join-card.join-card-iris .join-eyebrow` et vient après, elle repassait donc « CLIENT » en gris
+   foncé sur l'iris, illisible (capture du fondateur, 2026-10-09). Blanc et non lime : le lien de la
+   carte est déjà lime, la spec n'en tolère qu'un. */
+.wrap-fond .join-card.join-card-iris .join-eyebrow { color: rgba(255, 255, 255, .85); }
 
 @media (max-width: 700px) {
   .wrap-fond .join-card,

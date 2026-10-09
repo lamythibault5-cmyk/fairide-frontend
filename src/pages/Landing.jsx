@@ -1,9 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
-import ContactSection from '../components/ContactSection';
-import PartnersMarquee from '../components/PartnersMarquee';
 import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import BelgianMark from '../components/BelgianMark';
@@ -155,46 +152,11 @@ export default function Landing() {
 
       <DiscoverSection restaurants={restaurants} />
 
-      {/* L'argument central de Fairide — la commission plafonnée — n'existait jusqu'ici que sous
-          forme de phrase noyée dans le paragraphe d'accroche. Il devient ici une comparaison
-          visuelle : la piste vaut 1 € de commande, le segment plein vaut ce que la plateforme
-          prélève. On peut la lire sans lire un seul chiffre. */}
-      <Reveal className="euro-block">
-        <span className="pill hero">{t('landing.euroEyebrow')}</span>
-        <h2>{t('landing.euroTitle')}</h2>
-        <div className="euro-rows">
-          <div>
-            <div className="euro-row-top">
-              <span className="euro-name">{t('landing.euroThemName')}</span>
-              <span className="euro-cut">{t('landing.euroThemCut')}</span>
-            </div>
-            <div className="euro-track"><div className="euro-fill euro-fill-them" /></div>
-            <p className="euro-legend">{t('landing.euroThemLegend')}</p>
-          </div>
-          <div>
-            <div className="euro-row-top">
-              <span className="euro-name euro-name-us wordmark">fairide</span>
-              <span className="euro-cut">{t('landing.euroUsCut')}</span>
-            </div>
-            <div className="euro-track"><div className="euro-fill euro-fill-us" /></div>
-            <p className="euro-legend">{t('landing.euroUsLegend')}</p>
-          </div>
-        </div>
-        {/* RETIRÉS D'ICI (demande du fondateur) : le bloc « Exemple concret : un petit commerce »
-            — trois tuiles 2 500 € / 550 à 800 € / 250 € et la ligne « 300 à 550 € de plus dans la
-            caisse du commerçant » — qui se trouvait juste ici, et la section « Comment ça marche »
-            (les trois étapes) qui suivait le bloc euro. L'argument tient maintenant aux deux seules
-            barres ci-dessus.
-
-            Leur CSS (.euro-example, .euro-ex-*, .steps-grid, .step-card, .step-num) et leurs clés
-            (landing.euroEx*, landing.howItWorks, landing.step*) sont TOUJOURS EN PLACE dans
-            styles.css et translations.js : rien d'autre ne les utilise, mais les laisser rend le
-            retour en arrière possible en ne retouchant que ce fichier. Les supprimer pour de bon
-            est un nettoyage à part. */}
-      </Reveal>
-
+      {/* « Rejoindre Fairide » en version COURTE (fondateur, 2026-10-09 : « ça prend beaucoup de place ») :
+          rôle, titre et lien, sans les puces. Les puces (`points`) restent dans joinCards() et dans les
+          traductions, pour un retour en arrière en ne retouchant que ce bloc. */}
       <Reveal as="h2" className="section-title">{t('landing.joinTitle')}</Reveal>
-      <div className="join-grid">
+      <div className="join-grid join-grid-compact">
         {joinCards(t).map((c, i) => (
           <Reveal
             as={Link}
@@ -206,7 +168,6 @@ export default function Landing() {
             <div>
               <span className="join-eyebrow"><Icone nom={c.icon} taille={16} /> {c.eyebrow}</span>
               <h3>{c.title}</h3>
-              <ul className="join-points">{c.points.map((pt) => <li key={pt}>{pt}</li>)}</ul>
             </div>
             <span className="join-link"><Icone nom={c.icon} taille={16} /> {c.link}</span>
           </Reveal>
@@ -215,22 +176,16 @@ export default function Landing() {
 
       <Reveal><AppComingSoonSection /></Reveal>
 
-      <Reveal as="h2" className="section-title">{t('landing.communesTitle')}</Reveal>
-      <Reveal className="commune-pills">
-        {COMMUNES.map((c) => <span key={c} className="pill">{c}</span>)}
-      </Reveal>
-
-      <Reveal as="h2" className="section-title">{t('landing.contactTitle')}</Reveal>
-      <Reveal><ContactSection /></Reveal>
-
-      <Reveal><PartnersMarquee restaurants={vitrineAccueil(reels, publics, 4)} /></Reveal>
-
-      <Reveal className="landing-cta">
-        <h2>{t('landing.ctaTitle')}</h2>
-        <p>{t('landing.ctaText')}</p>
-        {/* Second appel en bas de page : rétrogradé en contour, le lime reste réservé à « Commander » dans la bannière. */}
-        <Link to="/login" className="btn-outline">{t('landing.ctaButton')}</Link>
-      </Reveal>
+      {/* PAGE D'ACCUEIL RACCOURCIE (fondateur, 2026-10-09). Retirés d'ici, dans l'ordre où ils venaient :
+          - « Où va chaque euro » (.euro-block) : la carte « Pourquoi Fairide ? » de la bannière dit déjà
+            30 % contre 10 % ;
+          - « Communes desservies à Bruxelles » : la barre d'adresse répond déjà à « livrez-vous chez moi ? » ;
+          - « Contact » : le formulaire vit sur /aide, joint par le lien « Contact » de l'en-tête (Layout.jsx) ;
+          - « Ils nous font confiance » (PartnersMarquee) : « Déjà sur Fairide », dans la bannière, montre
+            les mêmes commerces ;
+          - « Envie de soutenir le quartier ? » : doublon du bouton d'inscription de l'en-tête.
+          Les composants, leur CSS et leurs clés de traduction restent en place : rien d'autre ne les
+          affiche, mais un retour en arrière ne demande que de les réimporter ici. */}
     </div>
   );
 }

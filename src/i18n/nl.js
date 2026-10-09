@@ -6151,6 +6151,7 @@ export default {
     nav: {
       restaurants: 'Restaurants',
       help: 'Hulp',
+      contact: 'Contact',
       favorites: 'Favorieten',
       search: 'Zoeken',
       orders: 'Mijn bestellingen',

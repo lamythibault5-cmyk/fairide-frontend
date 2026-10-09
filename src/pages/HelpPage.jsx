@@ -97,7 +97,10 @@ export default function HelpPage() {
 
       {/* La clé force le remontage en changeant de sujet : sans elle, passer de « bug » à « avis »
           garderait la trame précédente, puisqu'un état initial ne se relit pas. */}
-      <ContactSection key={ancre || 'general'} messageInitial={sujet ? t(`help.${sujet}Message`) : undefined} />
+      {/* id="contact" : cible du lien « Contact » de l'en-tête (/aide?sujet=contact, voir l'effet plus haut). */}
+      <div id="contact">
+        <ContactSection key={ancre || 'general'} messageInitial={sujet ? t(`help.${sujet}Message`) : undefined} />
+      </div>
     </div>
   );
 }
