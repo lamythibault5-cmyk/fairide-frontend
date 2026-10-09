@@ -1901,7 +1901,9 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   /* « Pourquoi Fairide ? » (2026-10-09) : la carte blanche porte son propre rembourrage, l'écart avec
      la barre d'adresse au-dessus est ramené à 32px. Les cases restent côte à côte : c'est la comparaison. */
   .landing-hero-adresse .hero-prix { margin-top: 32px; padding: 20px 16px 18px; }
-  .hero-prix-titre { font-size: 22px; margin-bottom: 24px; }
+  /* 38px sous le titre : à 24, la pointe de la flèche touchait le cadre de la case Fairide (capture du
+     fondateur, 2026-10-09). La flèche fait 44px de haut et part à mi-hauteur du titre. */
+  .hero-prix-titre { font-size: 22px; margin-bottom: 38px; }
   .hero-prix-fleche { width: 72px; height: 44px; }
   .hero-prix-blocs { column-gap: 10px; }
   .hero-prix-bloc { padding: 12px; }
@@ -1920,7 +1922,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   .hero-adresse-barre { min-height: 52px; }
   .hero-adresse-go { width: 40px; height: 40px; }
   .landing-hero-adresse .hero-prix { margin-top: 28px; }
-  .hero-prix-titre { font-size: 19px; margin-bottom: 20px; }
+  .hero-prix-titre { font-size: 19px; margin-bottom: 34px; }
   .hero-prix-bloc { padding: 10px 12px; }
   .hero-prix-nom { font-size: 12px; }
   .hero-prix-montant { font-size: 34px; }
