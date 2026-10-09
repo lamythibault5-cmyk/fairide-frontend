@@ -6180,6 +6180,7 @@ export default {
     nav: {
       restaurants: 'Restaurants',
       help: 'Aide',
+      contact: 'Contact',
       favorites: 'Favoris',
       search: 'Recherche',
       orders: 'Mes commandes',

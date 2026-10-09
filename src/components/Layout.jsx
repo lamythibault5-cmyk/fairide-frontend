@@ -243,6 +243,11 @@ export default function Layout() {
               <nav className="role-nav header-nav">
                 <NavLink to="/restaurants" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.restaurants')}</NavLink>
                 <NavLink to="/aide" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.help')}</NavLink>
+                {/* « Contact » (fondateur, 2026-10-09) : le formulaire a quitté l'accueil. Il mène au formulaire
+                    de /aide, ancre `contact` (HelpPage.jsx) — et non à une page /contact : vercel.json redirige
+                    déjà /contact vers /aide en 301, que les navigateurs gardent en mémoire. <Link> et non
+                    <NavLink> : sur /aide, « Aide » serait sinon surligné deux fois. */}
+                <Link to="/aide?sujet=contact">{t('nav.contact')}</Link>
               </nav>
             )}
             {user && (
