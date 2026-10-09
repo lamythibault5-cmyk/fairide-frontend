@@ -6271,6 +6271,14 @@ export default {
       priceAria: 'Ce que la plateforme prend sur une commande de 40 euros',
       priceTitle: 'Sur une commande de {montant} euros, la plateforme prend :',
       priceThem: 'Grandes plateformes',
+      /* « Pourquoi Fairide ? » (2026-10-09, HeroPrix.jsx). Voir l'en-tête de ce fichier-là pour les phrases
+         de la maquette qu'on n'a PAS reprises : « pas de frais de service », « le livreur garde 100 % ».
+         `priceAria`, `priceTitle` ci-dessus : plus lus par la bannière, gardés pour un retour en arrière. */
+      priceWhy: 'Pourquoi Fairide ?',
+      priceWhyAria: 'Ce que garde le resto : grandes plateformes contre Fairide',
+      priceKeeps: 'Le resto garde {pct}',
+      priceYouTitle: 'Et toi ?',
+      priceYouText: "Tu paies le prix de la carte, la commission de Fairide est déjà comprise dans le prix affiché. Rien n'est ajouté au paiement, à part la livraison.",
       sub: "L'alternative belge à Uber Eats et Deliveroo. 10 % de commission au lieu de 22 à 32 % : le restaurant garde plus, le livreur touche 90 % des frais de livraison, et l'argent reste ici.",
       /* Les clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on

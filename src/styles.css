@@ -1791,40 +1791,49 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .hero-adresse-liste .hero-adresse-vide { cursor: default; color: var(--ink-soft); font-size: 14px; }
 .hero-adresse-hors-zone { margin: 12px 0 0; font-size: 14px; color: #fff; }
 
-/* L'EXEMPLE DES 40 € (maquette du fondateur, 2026-09-27). Pas de carte blanche autour : les deux
-   blocs se posent directement sur l'iris, comme sur la maquette. Grandes plateformes = bloc iris
-   profond, texte blanc ; Fairide = LE bloc lime de la vue, texte encre (règle 1 de la spec : le lime
-   est un aplat, jamais un texte sur fond clair). Les barres poussent une fois au chargement. */
-.hero-prix { grid-area: preview; margin-top: 56px; color: #fff; }
+/* « POURQUOI FAIRIDE ? » (maquette du fondateur, 2026-10-09 ; remplace l'exemple des 40 €). Une carte
+   BLANCHE sur l'iris — le seul autre fond permis — sans ombre. Dedans, deux cases : grandes
+   plateformes sur le gris de surface (--cream-dim), Fairide en blanc cerné d'iris. La maquette posait
+   la case Fairide sur un vert pâle : c'était un troisième fond (règle 2 de la spec), d'où le filet iris.
+   Le lime n'apparaît qu'en segment plein accolé à l'iris de la barre (règle 1). */
+.hero-prix {
+  grid-area: preview; align-self: start; margin-top: 56px; color: var(--ink);
+  background: #fff; border-radius: 24px; padding: 26px 24px 22px;
+}
 .hero-prix-titre {
-  margin: 0 0 18px; color: #fff; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.12;
+  margin: 0 0 30px; color: var(--ink); font-size: clamp(22px, 2.2vw, 28px); line-height: 1.12;
   font-weight: 700; letter-spacing: -.02em;
 }
-/* Sous-grille : les quatre lignes (nom, montant, taux, barre) s'alignent d'un bloc à l'autre, même
-   quand « Grandes plateformes » passe sur deux lignes et « fairide » tient sur une. */
-.hero-prix-blocs { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, auto); column-gap: 12px; }
-.hero-prix-bloc {
-  display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 6px; align-items: end; min-width: 0;
-  border-radius: var(--radius); padding: 20px 18px 18px;
+.hero-prix-titre-texte { position: relative; display: inline-block; }
+/* La flèche part du bout du titre et descend vers la case de droite (Fairide). */
+.hero-prix-fleche {
+  position: absolute; left: calc(100% + 8px); top: .45em; width: 70px; height: 42px; color: var(--ink-faint);
+  pointer-events: none;
 }
-.hero-prix-nom { align-self: start; }
-.hero-prix-eux { background: var(--iris-deep); border: 1px solid rgba(255,255,255,.14); }
-.hero-prix-nous { background: var(--lime); color: var(--ink); }
-.hero-prix-nom { font-size: 14px; font-weight: 700; line-height: 1.25; }
-.hero-prix-nous .hero-prix-nom.wordmark { font-size: 20px; line-height: 1.05; color: var(--iris-deep); }
+.hero-prix-blocs { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; }
+.hero-prix-bloc { display: flex; flex-direction: column; min-width: 0; border-radius: 16px; padding: 16px 16px 14px; }
+.hero-prix-eux { background: var(--cream-dim); }
+.hero-prix-nous { background: #fff; border: 2px solid var(--iris); }
+.hero-prix-nom { font-size: 14px; font-weight: 500; line-height: 1.25; color: var(--ink-soft); }
+.hero-prix-nous .hero-prix-nom.wordmark { font-size: 17px; font-weight: 700; line-height: 1.05; color: var(--ink); }
 .hero-prix-montant {
-  font-size: clamp(44px, 5vw, 64px); line-height: 1; font-weight: 700; letter-spacing: -.03em;
-  font-variant-numeric: tabular-nums; margin: 6px 0 2px; white-space: nowrap;
+  font-size: clamp(38px, 3.3vw, 54px); line-height: 1; font-weight: 700; letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums; margin: auto 0 12px; padding-top: 8px; white-space: nowrap; color: var(--ink-soft);
 }
-.hero-prix-nous .hero-prix-montant { color: var(--iris-deep); }
-.hero-prix-taux { font-size: 13px; font-weight: 500; opacity: .85; }
-.hero-prix-piste { height: 10px; border-radius: 999px; margin-top: 10px; overflow: hidden; background: rgba(255,255,255,.2); }
-.hero-prix-nous .hero-prix-piste { background: rgba(20,18,31,.14); }
-.hero-prix-barre { height: 100%; width: var(--w); border-radius: 999px; background: #fff; animation: hero-barre 1.1s cubic-bezier(.22,.61,.36,1) .25s both; }
-.hero-prix-nous .hero-prix-barre { background: var(--iris-deep); }
+.hero-prix-nous .hero-prix-montant { color: var(--iris); }
+/* La barre = ce que le client paie pour la nourriture. Segment long : ce que garde le resto ; segment
+   court : la part de la plateforme. Le premier pousse une fois au chargement. */
+.hero-prix-piste { display: flex; gap: 3px; height: 16px; }
+.hero-prix-resto { width: var(--w); border-radius: 999px 4px 4px 999px; background: var(--line); animation: hero-barre 1.1s cubic-bezier(.22,.61,.36,1) .25s both; }
+.hero-prix-part { flex: 1; border-radius: 4px 999px 999px 4px; background: var(--ink-soft); }
+.hero-prix-nous .hero-prix-resto { background: var(--iris); }
+.hero-prix-nous .hero-prix-part { background: var(--lime); }
+.hero-prix-legende { margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+.hero-prix-nous .hero-prix-legende { color: var(--iris); font-weight: 500; }
+.hero-prix-toi { margin: 18px 0 0; font-size: 15px; line-height: 1.45; color: var(--ink); }
 @keyframes hero-barre { from { width: 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .hero-prix-barre { animation: none; }
+  .hero-prix-resto { animation: none; }
   .hero-adresse-go:hover { transform: none; }
 }
 
@@ -1891,17 +1900,18 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   /* Les deux blocs RESTENT côte à côte : c'est la comparaison. Empilés, on ne voit plus l'écart. */
   /* Plus compact que sur ordinateur : l'exemple doit tenir ENTIER dans le premier écran d'un
      téléphone, barres du navigateur comprises (≈ 393 × 660 sur iPhone avec Chrome). */
-  /* 36px au-dessus : la ligne « Sur une commande… » collait à la barre d'adresse. 34px en dessous :
-     le MÊME écart qu'entre les cases et la ligne « Commerce ou livreur ? » qui les suit (fondateur,
-     2026-09-27). Si l'un des deux change, changer l'autre. */
-  .landing-hero-adresse .hero-prix { margin-top: 36px; }
-  .hero-prix-titre { font-size: 20px; margin-bottom: 34px; }
+  /* « Pourquoi Fairide ? » (2026-10-09) : la carte blanche porte son propre rembourrage, l'écart avec
+     la barre d'adresse au-dessus est ramené à 32px. Les cases restent côte à côte : c'est la comparaison. */
+  .landing-hero-adresse .hero-prix { margin-top: 32px; padding: 20px 16px 18px; }
+  .hero-prix-titre { font-size: 22px; margin-bottom: 24px; }
+  .hero-prix-fleche { width: 72px; height: 44px; }
   .hero-prix-blocs { column-gap: 10px; }
-  .hero-prix-bloc { padding: 12px 12px 12px; row-gap: 4px; }
+  .hero-prix-bloc { padding: 12px; }
   .hero-prix-nom { font-size: 13px; }
-  .hero-prix-montant { font-size: 38px; margin: 4px 0 0; }
-  .hero-prix-piste { margin-top: 6px; }
-  .hero-prix-taux { font-size: 12px; }
+  .hero-prix-montant { font-size: 42px; margin-bottom: 10px; }
+  .hero-prix-piste { height: 14px; }
+  .hero-prix-legende { font-size: 12px; }
+  .hero-prix-toi { font-size: 14.5px; }
 }
 /* Téléphone COURT (iPhone SE, 667px) : titre et accroche poussaient la barre à 405px pour un milieu
    à 333. On reprend la place au-dessus — rembourrages et corps de texte — pour la ramener vers le
@@ -1914,10 +1924,10 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   .hero-adresse-barre { min-height: 52px; }
   .hero-adresse-go { width: 40px; height: 40px; }
   .landing-hero-adresse .hero-prix { margin-top: 28px; }
-  .hero-prix-titre { font-size: 17px; margin-bottom: 34px; }
+  .hero-prix-titre { font-size: 19px; margin-bottom: 20px; }
   .hero-prix-bloc { padding: 10px 12px; }
   .hero-prix-nom { font-size: 12px; }
-  .hero-prix-montant { font-size: 32px; }
+  .hero-prix-montant { font-size: 34px; }
 }
 
 /* Ici vivaient les trois chiffres de la bannière (.stats-bar : « 10 % · 19 · 100 % » en lime, sous

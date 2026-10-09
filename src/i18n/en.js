@@ -6230,6 +6230,11 @@ export default {
       priceAria: 'What the platform takes on a 40-euro order',
       priceTitle: 'On a {montant}-euro order, the platform takes:',
       priceThem: 'Big platforms',
+      priceWhy: 'Why Fairide?',
+      priceWhyAria: 'What the restaurant keeps: big platforms versus Fairide',
+      priceKeeps: 'The restaurant keeps {pct}',
+      priceYouTitle: 'And you?',
+      priceYouText: "You pay the menu price, Fairide's commission is already included in the price shown. Nothing is added at checkout, apart from delivery.",
       sub: 'The Belgian alternative to Uber Eats and Deliveroo. 10% commission instead of 22 to 32%: the restaurant keeps more, the courier keeps 90% of the delivery fees, and the money stays here.',
       /* Short forms, phone only — see the fr block for the reasoning. */
       ordersOpenCourt: 'Takeaway from 1 November, delivery from the 10th',
