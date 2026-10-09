@@ -6222,7 +6222,7 @@ export default {
       joinRestaurantP3: 'Nul bestellingen in de maand = nul abonnement: de maand is gratis of wordt terugbetaald',
       title1: 'Betaal je maaltijd,',
       title2: 'niet het platform.',
-      subAdresse: 'Het alternatief van hier voor Uber Eats en Deliveroo. Goedkoper voor jou, eerlijker voor de zaak en de koerier, en je geld blijft hier.',
+      subAdresse: 'Het alternatief voor Uber Eats en Deliveroo. Goedkoper voor jou, eerlijker voor de zaak en de koerier, en je geld blijft in Brussel.',
       addrLabel: 'Leveringsadres',
       addrPlaceholder: 'Je leveringsadres',
       addrGo: 'Bekijk de zaken die hier leveren',
@@ -6233,8 +6233,6 @@ export default {
       priceWhy: 'Waarom Fairide?',
       priceWhyAria: 'Wat de zaak overhoudt: grote platformen tegenover Fairide',
       priceKeeps: 'De zaak houdt {pct}',
-      priceYouTitle: 'En jij?',
-      priceYouText: 'Je betaalt de prijs op de kaart, de commissie van Fairide zit al in de getoonde prijs. Bij het afrekenen komt er niets bij, behalve de levering.',
       sub: 'Het Belgische alternatief voor Uber Eats en Deliveroo. 10% commissie in plaats van 22 tot 32%: de zaak houdt meer over, de koerier krijgt 90 % van de leveringskosten, en het geld blijft hier.',
       /* Korte versies, enkel op gsm — zie het fr-blok voor de reden. */
       ordersOpenCourt: 'Afhalen vanaf 1 november, levering vanaf de 10e',

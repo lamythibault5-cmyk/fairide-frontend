@@ -6261,7 +6261,7 @@ export default {
       /* Bannière à barre d'adresse (2026-09-27, voir HeroAdresse.jsx et HeroPrix.jsx). `subAdresse` est plus
          court que `sub` : les chiffres de la commission sont passés dans le ticket de comparaison à côté.
          `sub` reste en place, lu par le référencement et par un éventuel retour en arrière. */
-      subAdresse: "L'alternative d'ici à Uber Eats et Deliveroo. Moins cher pour toi, plus juste pour le restaurant et le livreur, et ton argent reste ici.",
+      subAdresse: "L'alternative à Uber Eats et Deliveroo. Moins cher pour toi, plus juste pour le restaurant et le livreur, et ton argent reste à Bruxelles.",
       addrLabel: 'Adresse de livraison',
       addrPlaceholder: 'Ton adresse de livraison',
       addrGo: 'Voir les commerces qui livrent ici',
@@ -6277,8 +6277,6 @@ export default {
       priceWhy: 'Pourquoi Fairide ?',
       priceWhyAria: 'Ce que garde le resto : grandes plateformes contre Fairide',
       priceKeeps: 'Le resto garde {pct}',
-      priceYouTitle: 'Et toi ?',
-      priceYouText: "Tu paies le prix de la carte, la commission de Fairide est déjà comprise dans le prix affiché. Rien n'est ajouté au paiement, à part la livraison.",
       sub: "L'alternative belge à Uber Eats et Deliveroo. 10 % de commission au lieu de 22 à 32 % : le restaurant garde plus, le livreur touche 90 % des frais de livraison, et l'argent reste ici.",
       /* Les clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on
