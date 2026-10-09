@@ -5,8 +5,8 @@ import TerminalFairide from './TerminalFairide';
 
 // La promesse Fairide aux commerces, dite avec les mêmes mots partout (inscription, Mon compte) — modèle du fondateur,
 // 2026-09-25 : UNE SEULE OFFRE (fondateur : « Fairide c'est la livraison et le service à emporter seulement ») — à emporter et
-// livraison, 20 € HTVA par mois (premier mois offert) ; tout centralisé sur le TERMINAL FAIRIDE (offert aux 50 premiers, puis
-// caution de 80 €) ; rien n'est prélevé tant que le commerce n'a pas activé lui-même l'abonnement. La réservation de table
+// livraison, 20 € HTVA par mois (premier mois offert) ; tout centralisé sur le TERMINAL FAIRIDE (offert aux premiers inscrits, puis
+// caution pour les suivants) ; rien n'est prélevé tant que le commerce n'a pas activé lui-même l'abonnement. La réservation de table
 // (ancienne version gratuite) a été retirée.
 // L'ambiguïté « quand est-ce que je commence à payer ? » fait hésiter devant un modèle gratuit → payant : la date
 // du premier prélèvement est donc donnée en clair, calculée comme côté serveur (voir launch.js).
