@@ -16,6 +16,7 @@ import useRevalidation from '../../useRevalidation';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateOuverturePaiements } from '../../launch';
 import BandeauOuverture from '../../components/BandeauOuverture';
+import CarteAValider from '../../components/commerce/CarteAValider';
 import { cuisineDepuisOsm } from '../../osmCuisine';
 import { demarrerTerminalNavigateur } from '../../terminalNavigateur';
 
@@ -294,6 +295,8 @@ export default function DashboardLayout() {
       )}
       {/* Les vraies dates d'ouverture des commandes (à emporter, livraison), en tête de l'accueil du commerce. */}
       {restaurant && surAccueil && <BandeauOuverture role="restaurant" />}
+      {/* CODE-3 : carte proposée par Fairide, pas encore validée — sur toutes les pages (le terminal reste sur Commandes). */}
+      {restaurant && !actingAs && <CarteAValider restaurant={restaurant} restoId={restoId} token={token} />}
       {newRestoOpen && surAccueil && <CreationCommerce fondateur={fondateur} onCree={commerceCree} ouvrirDemandeCarte={ouvrirDemandeCarte} />}
 
       {/* Ce qui bloque encore le commerce, en rangées du même dessin que Mon compte (LigneCompte) : la

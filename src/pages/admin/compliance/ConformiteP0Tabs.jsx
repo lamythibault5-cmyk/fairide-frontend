@@ -20,7 +20,7 @@ import { fmtDate, fmtDateTime, downloadPdf } from '../adminUtils';
  *   parameters — âge minimum de l'alcool, date des allergènes par plat (A1, A4) ;
  *   dispatch   — réglages de la livraison, export anonymisé des offres, dossier CRT (./DispatchTab.jsx) ;
  *   declarations — DAC7 des deux populations et registre art. 17 (./DeclarationsTab.jsx). */
-export const ONGLETS_CONFORMITE = ['decisions', 'dsa', 'breaches', 'processors', 'forbidden', 'parameters', 'dispatch', 'declarations'];
+export const ONGLETS_CONFORMITE = ['decisions', 'dsa', 'breaches', 'processors', 'forbidden', 'parameters', 'dispatch', 'criteres', 'declarations'];
 
 function useCharge(chemin, deps = []) {
   const { token } = useAuth();
@@ -320,13 +320,17 @@ export function ParametersTab() {
   const [age, setAge] = useState('');
   const [date, setDate] = useState(null);
   const [bascule, setBascule] = useState(null);
+  // CODE-13/14/15 : références d'assurance des livreurs, taux de selfies de contrôle, plafond de hausse du prix client.
+  const [autres, setAutres] = useState({});
   const lire = (cle) => data?.parameters.find((p) => p.key === cle)?.value ?? '';
   async function enregistrer() {
     try {
-      await api('/admin/compliance/parameters', { method: 'PATCH', token, body: { ...(age ? { alcohol_min_age: Number(age) } : {}), ...(date !== null ? { allergens_per_item_required_from: date } : {}) } });
-      toast(t('conformite.paramsSaved')); setAge(''); setDate(null); charger();
+      await api('/admin/compliance/parameters', { method: 'PATCH', token, body: { ...(age ? { alcohol_min_age: Number(age) } : {}), ...(date !== null ? { allergens_per_item_required_from: date } : {}), ...autres } });
+      toast(t('conformite.paramsSaved')); setAge(''); setDate(null); setAutres({}); charger();
     } catch (e) { toast(e.message, 'erreur'); }
   }
+  const champ = (cle) => (autres[cle] !== undefined ? autres[cle] : lire(cle));
+  const changer = (cle) => (e) => setAutres((x) => ({ ...x, [cle]: e.target.value }));
   return (
     <div className="card" style={{ marginTop: 0 }}>
       {erreur && <ErrorCard message={erreur} onRetry={charger} />}
@@ -343,9 +347,23 @@ export function ParametersTab() {
             <input id={`${id}-date`} type="date" value={date ?? lire('allergens_per_item_required_from')} onChange={(e) => setDate(e.target.value)} />
             <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramAllergensDateHelp')}</p>
           </div>
-          <button type="button" className="btn-teal" disabled={!age && date === null} onClick={enregistrer}>{t('conformite.save')}</button>
+          <div className="field">
+            <label htmlFor={`${id}-assur`}>{t('conformite.paramInsurance')}</label>
+            <textarea id={`${id}-assur`} rows={2} maxLength={500} value={champ('courier_insurance_policy')} onChange={changer('courier_insurance_policy')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramInsuranceHelp')}</p>
+          </div>
+          <div className="field">
+            <label htmlFor={`${id}-selfie`}>{t('conformite.paramSelfieRate')}</label>
+            <input id={`${id}-selfie`} inputMode="decimal" value={champ('selfie_check_rate') || '0.2'} onChange={changer('selfie_check_rate')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramSelfieRateHelp')}</p>
+          </div>
+          <div className="field">
+            <label htmlFor={`${id}-cap`}>{t('conformite.paramFloorCap')}</label>
+            <input id={`${id}-cap`} type="number" min="0" max="2000" value={champ('delivery_courier_floor_cap_cents') || '300'} onChange={changer('delivery_courier_floor_cap_cents')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramFloorCapHelp')}</p>
+          </div>
+          <button type="button" className="btn-teal" disabled={!age && date === null && !Object.keys(autres).length} onClick={enregistrer}>{t('conformite.save')}</button>
           <h4 style={{ marginTop: 16 }}>{t('conformite.paramFlags')}</h4>
-          {/* p2p_enabled a son propre écran (Livreurs › Paramètres), avec ses explications : pas ici. */}
           {Object.entries(data.flags).filter(([k]) => k !== 'p2p_enabled').map(([k, v]) => (
             <p key={k} className="small" style={{ margin: '4px 0' }}>
               {k} : <b>{v ? t('conformite.on') : t('conformite.off')}</b>{' '}

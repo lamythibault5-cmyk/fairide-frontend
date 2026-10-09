@@ -14,6 +14,7 @@ import { ErrorCard, Pager, ResultCount } from '../../components/admin/AdminListT
 import { fmtDate, fmtDateTime, downloadPdf, useDebouncedValue } from './adminUtils';
 import '../../admin-compliance.css';
 import useEtatPage from '../../hooks/useEtatPage';
+import CriteresSalariatTab from './compliance/CriteresSalariatTab';
 import { ONGLETS_CONFORMITE, DecisionsTab, DsaTab, BreachesTab, ProcessorsTab, ForbiddenTab, ParametersTab } from './compliance/ConformiteP0Tabs';
 import DispatchTab from './compliance/DispatchTab';
 import DeclarationsTab from './compliance/DeclarationsTab';
@@ -67,6 +68,7 @@ export default function AdminCompliancePage() {
       {onglet === 'forbidden' && <ForbiddenTab />}
       {onglet === 'parameters' && <ParametersTab />}
       {onglet === 'dispatch' && <DispatchTab />}
+      {onglet === 'criteres' && <CriteresSalariatTab />}
       {onglet === 'declarations' && <DeclarationsTab />}
       {showCreate && <CreateRequestModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); setRefreshKey((k) => k + 1); }} />}
     </div>
@@ -446,7 +448,6 @@ function ExportsTab() {
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(null); }
   }
 
-  const pct = (n) => `${(Number(n) * 100).toFixed(2).replace('.', ',')} %`;
   const eur = (n) => `${Number(n).toLocaleString('fr-BE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €`;
 
   return (
@@ -485,9 +486,6 @@ function ExportsTab() {
                 <thead>
                   <tr>
                     <th>{tr('adminCommon.year')}</th>
-                    <th>{tr('adminCompliance.thP2pMax')}</th>
-                    <th>{tr('adminCompliance.thP2pWithholding')}</th>
-                    <th>{tr('adminCompliance.thAlertLevels')}</th>
                     <th>{tr('adminCompliance.thStudentIndependent')}</th>
                     <th>{tr('adminCompliance.thParentsCeiling')}</th>
                     <th>{tr('adminCompliance.thAdultMinAge')}</th>
@@ -501,9 +499,6 @@ function ExportsTab() {
                     return (
                       <tr key={t.year}>
                         <td><b>{t.year}</b></td>
-                        <td>{v(t.p2pAnnualCeilingGross, eur)}</td>
-                        <td>{v(t.p2pWithholdingRate, pct)}</td>
-                        <td>{Array.isArray(t.p2pAlertLevels) && t.p2pAlertLevels.length ? t.p2pAlertLevels.map((n) => `${n} %`).join(' · ') : '—'}</td>
                         <td>{v(t.studentIndependentExemption, eur)} / {v(t.studentIndependentCeiling, eur)}</td>
                         <td>{v(t.studentParentsCeiling, eur)}</td>
                         <td>{t.adultMinAge ?? '—'}</td>

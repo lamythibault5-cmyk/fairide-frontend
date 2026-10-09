@@ -19,20 +19,23 @@ const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'
 // cloudinary.js, main.jsx pour Sentry. La politique n'en citait que trois (Stripe, Resend, Google) ;
 // cinq recevaient des données personnelles sans être déclarés nulle part. Ajouter un service ici
 // quand on en branche un — et l'EN RETIRER quand on le débranche : Anthropic (Claude) y figurait
-// pour l'import et la traduction des cartes, supprimés le 2026-09-21. Plus rien ne lui est envoyé,
-// donc l'y laisser aurait fait mentir une liste dont tout l'intérêt est d'être exacte.
+// pour l'import et la traduction des cartes, supprimés le 2026-09-21 — et il y est revenu le 2026-10-09 :
+// depuis le 2026-09-22, le module Sales lui envoie les photos de devanture pour lire l'enseigne
+// (backend salesPhoto.js, déjà au registre registreTraitements.js), sans que la politique le dise.
 // Les noms sont des noms propres : ils ne se traduisent pas, seule la description est dans les
 // trois langues.
 const SOUS_TRAITANTS = [
   ['stripe', 'Stripe'],
   ['resend', 'Resend'],
-  ['twilio', 'Twilio'],
   ['google', 'Google'],
   ['nominatim', 'Nominatim (OpenStreetMap)'],
   ['photon', 'Photon (Komoot)'],
   ['osrm', 'OSRM'],
+  ['maptiler', 'MapTiler'],
   ['osmTiles', 'OpenStreetMap'],
+  ['plausible', 'Plausible'],
   ['cloudinary', 'Cloudinary'],
+  ['anthropic', 'Anthropic'],
   ['sentry', 'Sentry'],
   ['vercel', 'Vercel'],
   ['railway', 'Railway'],

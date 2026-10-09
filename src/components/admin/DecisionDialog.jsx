@@ -16,7 +16,8 @@ import { useLanguage } from '../../context/LanguageContext';
  * `livreur` : vrai pour un compte livreur passé en targetType « user » (page Livreurs).
  *
  * onConfirm(payload) reçoit { measure, facts, contractualBasis, legalBasis, reasonCode?, effectiveAt?, noticeException? }. */
-const MOTIFS_LIVREUR = ['fraud_identity', 'food_safety', 'alcohol_to_minor', 'illegal_conduct_reported', 'documents_expired', 'legal_obligation'];
+// CODE-13 (DEC-21) : trois motifs seulement contre un livreur — fraude, faute grave, obligation légale (decisionMotivee.js).
+const MOTIFS_LIVREUR = ['fraud_identity', 'serious_misconduct', 'legal_obligation'];
 
 export default function DecisionDialog({ open, cible, targetType, livreur = false, loading, onConfirm, onCancel }) {
   const { t } = useLanguage();

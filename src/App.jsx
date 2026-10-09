@@ -100,6 +100,8 @@ const RankingPage = lazyPage(() => import('./pages/legal/RankingPage'));
 // Accessibilité (décision DEC-10, 6 oct. 2026).
 const AccessibilityPage = lazyPage(() => import('./pages/legal/AccessibilityPage'));
 const ReportPage = lazyPage(() => import('./pages/legal/ReportPage'));
+// « C'est bon » en un geste (CODE-3) : page publique à jeton, sans compte — le lien est envoyé au commerce.
+const ValiderCarte = lazyPage(() => import('./pages/ValiderCarte'));
 const HelpPage = lazyPage(() => import('./pages/HelpPage'));
 const OurStory = lazyPage(() => import('./pages/OurStory'));
 const SalesPage = lazyPage(() => import('./pages/client/SalesPage'));
@@ -240,6 +242,7 @@ export default function App() {
         <Route path="/classement" element={<RankingPage />} />
         <Route path="/accessibilite" element={<AccessibilityPage />} />
         <Route path="/signaler" element={<ReportPage />} />
+        <Route path="/carte/valider/:token" element={<ValiderCarte />} />
         <Route path="/aide" element={<HelpPage />} />
         <Route path="/notre-histoire" element={<OurStory />} />
 

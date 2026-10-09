@@ -18,6 +18,7 @@ import BandeauOuverture from '../../components/BandeauOuverture';
 import useRevalidation from '../../useRevalidation';
 import useAlerteLivreur from '../../hooks/useAlerteLivreur';
 import AlerteLivreurBar from '../../components/AlerteLivreurBar';
+import SelfieControle from '../../components/livreur/SelfieControle';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
@@ -329,6 +330,9 @@ export default function DriverDashboard() {
           </span>
         </button>
       )}
+
+      {/* Selfie de contrôle au hasard à la prise de service (CODE-14) : sans lui, aucune course n'est proposée. */}
+      {peutRouler && <SelfieControle token={token} onDepose={load} />}
 
       {/* Rangées d'état qui demandent une action ou une vigilance : paiements à configurer, position
           partagée pendant une livraison. Rien d'autre — la carte n'apparaît que s'il y a une rangée. */}

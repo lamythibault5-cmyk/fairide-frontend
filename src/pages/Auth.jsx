@@ -112,7 +112,6 @@ export default function Auth() {
   // particulier (économie collaborative). Le numéro d'entreprise sert aux deux statuts indépendants.
   const [schoolName, setSchoolName] = useState('');
   const [academicYear, setAcademicYear] = useState('');
-  const [p2pHonneur, setP2pHonneur] = useState(false);
   const [vehicleType, setVehicleType] = useState('');
   const [bagOption, setBagOption] = useState(''); // 'own' | 'fairide' — sac de livraison
   // Livreur (fondateur, 2026-10-05) : travaille-t-il déjà pour d'autres plateformes (lesquelles, plusieurs possibles),
@@ -127,8 +126,8 @@ export default function Auth() {
   const [courierOptions, setCourierOptions] = useState(null);
   useEffect(() => {
     if (role !== 'driver' || courierOptions) return;
-    // Hors ligne : les deux statuts toujours ouverts ; l'économie collaborative n'apparaît que si le serveur l'active.
-    api('/couriers/options').then(setCourierOptions).catch(() => setCourierOptions({ statuses: ['student_independent', 'independent'], p2pEnabled: false, vehicles: ['velo', 'velo_electrique', 'scooter', 'voiture'], bikeMaxKm: 4, legal: {} }));
+    // Hors ligne : les deux statuts (plus d'économie collaborative depuis CODE-12 — régime fermé aux livreurs de plateformes).
+    api('/couriers/options').then(setCourierOptions).catch(() => setCourierOptions({ statuses: ['student_independent', 'independent'], vehicles: ['velo', 'velo_electrique', 'scooter', 'voiture'], bikeMaxKm: 4, legal: {} }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
   const [vatNumber, setVatNumber] = useState('');
@@ -388,7 +387,7 @@ export default function Auth() {
     referralCode: [referralCode, setReferralCode], referralOpen: [referralOpen, setReferralOpen],
     legalName: [legalName, setLegalName], companyNumber: [companyNumber, setCompanyNumber], vatNumber: [vatNumber, setVatNumber],
     responsibleName: [responsibleName, setResponsibleName], responsibleTouched: [responsibleTouched, setResponsibleTouched],
-    courierStatus: [courierStatus, setCourierStatus], schoolName: [schoolName, setSchoolName], academicYear: [academicYear, setAcademicYear], p2pHonneur: [p2pHonneur, setP2pHonneur], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption], docKind: [docKind, setDocKind],
+    courierStatus: [courierStatus, setCourierStatus], schoolName: [schoolName, setSchoolName], academicYear: [academicYear, setAcademicYear], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption], docKind: [docKind, setDocKind],
     autrePlateforme: [autrePlateforme, setAutrePlateforme], plateformes: [plateformes, setPlateformes], plateformeAutre: [plateformeAutre, setPlateformeAutre], zonesPreferees: [zonesPreferees, setZonesPreferees],
     commerceTrouve: [commerceTrouve, setCommerceTrouve], services: [services, setServices],
     cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
@@ -549,7 +548,6 @@ export default function Auth() {
           if (!academicYear.trim()) e.academicYear = required;
           else if (!/^\d{4}(\s*[-/–]\s*\d{2,4})?$/.test(academicYear.trim())) e.academicYear = t('auth.errAcademicYear');
         }
-        if (courierStatus === 'p2p' && !p2pHonneur) e.p2pHonneur = t('auth.errP2pHonour');
       }
     }
     if (key === 'documents') {
@@ -752,7 +750,7 @@ export default function Auth() {
         vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
         business: construireCommerce()
       } : {}),
-      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), p2pHonourDeclared: p2pHonneur, vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
+      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {})
     });
     suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
@@ -849,7 +847,7 @@ export default function Auth() {
             vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
             business: construireCommerce()
           } : {}),
-          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), p2pHonourDeclared: p2pHonneur, vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
+          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
           ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
           website: siteWeb
         });
@@ -1165,21 +1163,18 @@ export default function Auth() {
                       <span className="titre-groupe" id="auth-statut-titre">{t('auth.courierStatusTitle')}</span>
                       <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.courierStatusHelp')}</p>
                       <div className={`statut-choix${errors.courierStatus ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-statut-titre">
-                        {/* Trois statuts : économie collaborative (verrouillée tant que le serveur ne l'active pas),
-                            étudiant-indépendant, indépendant. Libellés dédiés à l'inscription (auth.courierStatus_*). */}
-                        {['independent', 'student_independent', 'p2p'].map((st) => {
-                          const ferme = st === 'p2p' && !(courierOptions?.p2pEnabled === true);
-                          return (
-                            <div key={st} role="radio" aria-checked={courierStatus === st} aria-disabled={ferme} tabIndex={ferme ? -1 : 0}
-                              className={`statut-carte${courierStatus === st ? ' active' : ''}${ferme ? ' ferme' : ''}`}
-                              onClick={() => { if (!ferme) setCourierStatus(st); }} onKeyDown={(e) => { if (!ferme && (e.key === 'Enter' || e.key === ' ')) setCourierStatus(st); }}>
-                              <b>{st === 'student_independent' ? '🎓 ' : st === 'p2p' ? '🤝 ' : '🧾 '}{t(`auth.courierStatus_${st}`)}</b>
-                              <span className="small">{t(`auth.courierStatus_${st}_desc`)}</span>
-                              <span className="small" style={{ color: 'var(--iris)' }}>{t(`auth.courierStatus_${st}_asks`)}</span>
-                              {ferme && <span className="pill" style={{ alignSelf: 'flex-start' }}>{t('auth.courierStatusP2pSoon')}</span>}
-                            </div>
-                          );
-                        })}
+                        {/* Deux statuts, avec numéro d'entreprise : indépendant (à titre principal ou complémentaire) et
+                            étudiant-indépendant. Plus d'économie collaborative (CODE-12, DEC-19 : régime fermé aux livreurs de
+                            plateformes depuis le 8 juin 2026). Libellés dédiés à l'inscription (auth.courierStatus_*). */}
+                        {['independent', 'student_independent'].map((st) => (
+                          <div key={st} role="radio" aria-checked={courierStatus === st} tabIndex={0}
+                            className={`statut-carte${courierStatus === st ? ' active' : ''}`}
+                            onClick={() => setCourierStatus(st)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setCourierStatus(st); }}>
+                            <b>{st === 'student_independent' ? '🎓 ' : '🧾 '}{t(`auth.courierStatus_${st}`)}</b>
+                            <span className="small">{t(`auth.courierStatus_${st}_desc`)}</span>
+                            <span className="small" style={{ color: 'var(--iris)' }}>{t(`auth.courierStatus_${st}_asks`)}</span>
+                          </div>
+                        ))}
                       </div>
                       {fieldError('courierStatus')}
                     </div>
@@ -1209,16 +1204,6 @@ export default function Auth() {
                           <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.studentCertificateNote')}</p>
                         </div>
                       </>
-                    )}
-                    {courierStatus === 'p2p' && (
-                      <div className="field">
-                        <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.p2pExplain')}</p>
-                        <label className={`checkbox-line${errors.p2pHonneur ? ' input-invalid' : ''}`} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={p2pHonneur} onChange={(e) => setP2pHonneur(e.target.checked)} style={{ marginTop: 3 }} />
-                          <span className="small">{t('auth.p2pHonour')}</span>
-                        </label>
-                        {fieldError('p2pHonneur')}
-                      </div>
                     )}
                     <div className="field">
                       <span className="titre-groupe" id="auth-vehicule-titre">{t('auth.vehicleTitle')}</span>

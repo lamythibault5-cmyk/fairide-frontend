@@ -8,6 +8,7 @@ import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { ErrorCard, ResultCount } from '../../components/admin/AdminListTools';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import ControlesSelfie from '../../components/admin/ControlesSelfie';
 import DecisionDialog from '../../components/admin/DecisionDialog';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import { useAuth } from '../../context/AuthContext';
@@ -22,16 +23,14 @@ import { euros } from '../../prixPlat';
 
 // Dossiers livreurs (statuts économie collaborative / étudiant-indépendant / indépendant) : file de
 // validation, pièces, identité, gains (brut / précompte / net par année et trimestre), contrats, journal ;
-// configuration fiscale par année, drapeau P2P (journalisé), précompte retenu par mois, exports DAC7 et
-// 281.29, journal d'audit. Aucun montant légal n'est écrit ici : tout vient de /admin/fiscal-config.
+// configuration fiscale par année, export DAC7, journal d'audit (plus de drapeau, précompte ni 281.29 P2P — CODE-12). Aucun montant légal n'est écrit ici : tout vient de /admin/fiscal-config.
 const euro = (n) => euros(Number(n || 0));
 const fmt = (d) => (d ? new Date(d).toLocaleDateString(getLocale()) : '-');
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
-const STATUTS = ['p2p', 'student_independent', 'independent'];
-const ONGLETS = ['dossiers', 'parametres', 'precompte', 'exports', 'journal'];
+// CODE-12 : deux statuts, plus d'onglet « précompte » (il n'existait que pour l'économie collaborative, retirée).
+const STATUTS = ['student_independent', 'independent'];
+const ONGLETS = ['dossiers', 'controles', 'parametres', 'exports', 'journal'];
 const couleurCycle = (s) => (s === 'approved' ? 'var(--teal-deep)' : ['rejected', 'suspended', 'blocked_threshold'].includes(s) ? 'var(--red)' : 'inherit');
-// Le plafond ne concerne que l'économie collaborative : les autres statuts n'en ont pas.
-const pctPlafond = (r) => (r.statusType === 'p2p' && r.situation && r.situation.type === 'income' ? Math.round(Number(r.situation.pct || 0) * 100) : null);
 
 // apiDownload et non un fetch à la main : c'est ce qui branche ces exports (précompte, DAC7) sur le
 // traitement centralisé du 401. Une session expirée renvoie désormais vers la connexion au lieu
@@ -64,7 +63,6 @@ export default function AdminCouriersPage() {
     { key: 'statusType', label: tr('adminCouriers.colStatus'), get: (r) => <>{statut(r.statusType)}{r.statusVerifiedAt ? ' ✅' : ''}</>, sortValue: (r) => r.statusType || '' },
     { key: 'lifecycleStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{lifecycle(r.lifecycleStatus)}</span>, sortValue: (r) => r.lifecycleStatus },
     { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className="pill">✅ {tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? '⏳' : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? 1 : 0) },
-    { key: 'situation', label: tr('adminCouriers.colCap'), get: (r) => (pctPlafond(r) != null ? `${pctPlafond(r)} %` : '-'), sortValue: (r) => (pctPlafond(r) ?? -1), align: 'right' },
     { key: 'gross', label: tr('adminCouriers.colGross'), get: (r) => euro(r.grossTotal ?? 0), sortValue: (r) => Number(r.grossTotal || 0), align: 'right' },
     { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '-'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}`, sortValue: (r) => r.zone || '' },
     { key: 'updatedAt', label: tr('adminCouriers.colUpdated'), get: (r) => fmt(r.updatedAt), sortValue: (r) => r.updatedAt }
@@ -78,8 +76,8 @@ export default function AdminCouriersPage() {
     downloadCsv(`dossiers-livreurs-${Date.now()}.csv`, lignes, [
       { label: tr('adminCommon.name'), get: (r) => r.name }, { label: tr('adminCommon.email'), get: (r) => r.email },
       { label: tr('adminCouriers.colStatus'), get: (r) => r.statusType || '' }, { label: tr('adminCommon.status'), get: (r) => r.lifecycleStatus },
-      { label: tr('adminCouriers.colIdentity'), get: (r) => r.identity?.status || '' }, { label: tr('adminCouriers.colCap'), get: (r) => (pctPlafond(r) ?? '') },
-      { label: tr('adminCouriers.colGross'), get: (r) => Number(r.grossTotal || 0).toFixed(2) }, { label: tr('adminCouriers.colWithholding'), get: (r) => Number(r.withholdingTotal || 0).toFixed(2) },
+      { label: tr('adminCouriers.colIdentity'), get: (r) => r.identity?.status || '' },
+      { label: tr('adminCouriers.colGross'), get: (r) => Number(r.grossTotal || 0).toFixed(2) },
       { label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || ''} ${r.vehicleType || ''}`.trim() },
       { label: tr('adminCouriers.colUpdated'), get: (r) => fmt(r.updatedAt) }
     ]);
@@ -88,8 +86,8 @@ export default function AdminCouriersPage() {
   return (
     <div>
       <AdminPageHeader module="couriers" actions={<><ViewTabs onglet={onglet} setOnglet={setOnglet} tr={tr} />{onglet === 'dossiers' && <><ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={MODES(tr)} /><button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></>}</>} />
+      {onglet === 'controles' && <ControlesSelfie token={token} toast={toast} />}
       {onglet === 'parametres' && <Parametres tr={tr} token={token} toast={toast} />}
-      {onglet === 'precompte' && <Precompte tr={tr} token={token} toast={toast} />}
       {onglet === 'exports' && <Exports tr={tr} token={token} toast={toast} />}
       {onglet === 'journal' && <JournalAudit tr={tr} token={token} />}
       {onglet === 'dossiers' && (
@@ -184,7 +182,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
       } else toast(e.message, 'erreur');
     } finally { setBusy(false); }
   }
-  const c = d?.courier; const s = d?.situation;
+  const c = d?.courier;
   const documents = d?.documents ?? []; const events = d?.events ?? []; const contracts = d?.contracts ?? []; const missing = d?.missing ?? [];
   const gains = d?.earnings ?? { byYear: [], byQuarter: [] };
 
@@ -242,7 +240,6 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           <DrawerRow label={tr('courierOnboarding.fNrn')} value={c.nationalNumberMasked || '-'} />
           {c.statusType === 'student_independent' && <DrawerRow label={tr('adminCouriers.studentIndependent')} value={`${c.student?.school || '-'} · ${c.student?.academicYear || '-'} · ${tr('adminCouriers.caisse')} ${caisse || '-'}`} />}
           {['student_independent', 'independent'].includes(c.statusType) && <DrawerRow label={tr('adminCouriers.company')} value={`${entreprise.legalName || '-'} · BCE ${entreprise.companyNumber || '-'} · ${entreprise.vatStatus === 'assujetti' ? (entreprise.vatNumber || '-') : tr('courierOnboarding.vatFranchiseShort')} ${entreprise.companyVerified ? '✅' : ''}${c.statusType === 'independent' ? ` · ${tr('adminCouriers.caisse')} ${caisse || '-'}` : ''}`} />}
-          {c.statusType === 'p2p' && <DrawerRow label={tr('adminCouriers.consents')} value={`${c.p2pHonourDeclaredAt ? '✅' : '❌'} ${tr('adminCouriers.honour')}${c.p2pHonourDeclaredAt ? ` (${fmt(c.p2pHonourDeclaredAt)})` : ''} · ${c.p2p?.nonProfessionalDeclared ? '✅' : '❌'} ${tr('adminCouriers.nonPro')} · ${c.p2p?.withholdingConsent ? '✅' : '❌'} ${tr('adminCouriers.withholding')} · ${c.p2p?.taxDataConsent ? '✅' : '❌'} ${tr('adminCouriers.taxData')}`} />}
           {c.requestedStatusType && <p className="small" style={{ color: 'var(--gold-deep)' }}>🔄 {tr('adminCouriers.requestedChange', { to: statut(c.requestedStatusType), reason: d.requestedStatusReason || '-' })}</p>}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secIdentity')}</h4>
@@ -282,9 +279,6 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
       {onglet === 'gains' && (
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secEarnings')}</h4>
-          {c.statusType === 'p2p' && s && s.type === 'income' && <DrawerRow label={tr('adminCouriers.colCap')} value={`${euro(s.used)} / ${euro(s.max)} (${Math.round(Number(s.pct || 0) * 100) } %)${s.bloque ? ' 🚫' : ''}`} strong />}
-          {c.statusType === 'p2p' && <DrawerRow label={tr('adminCouriers.declaredExternalIncome')} value={euro(d.thresholds?.incomeExternalDeclared ?? d.thresholds?.grossIncomeExternalDeclared ?? 0)} />}
-          <DrawerRow label={tr('adminCouriers.withholdingTotal')} value={euro(d.thresholds?.withholdingTotal ?? 0)} />
           <DrawerRow label={tr('adminCouriers.statusVerifiedAt')} value={c.statusVerifiedAt ? `✅ ${new Date(c.statusVerifiedAt).toLocaleString(getLocale())}` : tr('adminCouriers.statusNotVerified')} />
           {c.statusDocuments != null && (
             <>
@@ -344,10 +338,9 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   );
 }
 
-// Configuration fiscale par année (/admin/fiscal-config) + drapeau P2P. Les taux sont stockés en fraction
-// (0.107) et saisis en pourcentage (10,7) ; les niveaux d'alerte en texte « 70,90 ».
+// Configuration fiscale par année (/admin/fiscal-config). Les taux sont stockés en fraction (0.205) et saisis en
+// pourcentage (20,5). (Plus de plafond, précompte ni drapeau P2P : économie collaborative retirée, CODE-12.)
 const CHAMPS_FISCAUX = [
-  ['p2pAnnualCeilingGross', '€'], ['p2pWithholdingRate', '%'], ['p2pAlertLevels', 'liste'], ['p2pForfaitRate', '%'],
   ['studentParentsCeiling', '€'], ['franchiseMaxTurnover', '€'],
   ['independentSocialRate', '%'], ['independentComplementaryExemption', '€'], ['independentMinQuarterly', '€'], ['independentStarterQuarterly', '€'],
   ['studentIndependentExemption', '€'], ['studentIndependentCeiling', '€'], ['adultMinAge', 'ans']
@@ -378,10 +371,9 @@ function Parametres({ tr, token, toast }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
-  const [lignes, setLignes] = useState(null); const [flags, setFlags] = useState(null); const [busy, setBusy] = useState(false); const [erreur, setErreur] = useState(null);
+  const [lignes, setLignes] = useState(null); const [busy, setBusy] = useState(false); const [erreur, setErreur] = useState(null);
   const an = new Date().getFullYear(); const [annee, setAnnee] = useState(an); const [f, setF] = useState(null);
-  const [confirmP2p, setConfirmP2p] = useState(false);
-  const charger = () => { setErreur(null); Promise.all([api('/admin/fiscal-config', { token }), api('/admin/flags', { token })]).then(([l, fl]) => { setLignes(Array.isArray(l) ? l : (l?.rows ?? [])); setFlags(fl ?? {}); }).catch((e) => setErreur(e.message)); };
+  const charger = () => { setErreur(null); api('/admin/fiscal-config', { token }).then((l) => setLignes(Array.isArray(l) ? l : (l?.rows ?? []))).catch((e) => setErreur(e.message)); };
   useEffect(() => { charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!lignes) return;
@@ -399,19 +391,10 @@ function Parametres({ tr, token, toast }) {
     const source = lignes.find((x) => Number(x.year) === derniere);
     setAnnee(derniere + 1); setF(versFormulaire(source ?? null)); toast(tr('adminCouriers.toastYearCreated', { year: derniere + 1 }));
   }
-  async function basculerP2p() { setBusy(true); try { setFlags(await api('/admin/flags', { method: 'PATCH', token, body: { p2p_enabled: !flags.p2p_enabled } })); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirmP2p(false); } }
   if (erreur) return <ErrorCard message={erreur} onRetry={charger} />;
-  if (!lignes || !flags) return <SkeletonCards count={2} />;
-  const p2pActif = !!(flags.p2p_enabled ?? flags.p2pEnabled);
+  if (!lignes) return <SkeletonCards count={2} />;
   return (
     <>
-      <div className="card">
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>🤝 {tr('adminCouriers.p2pFlagTitle')}</h3>
-        <p className="small" style={{ margin: '0 0 6px' }}>{tr('adminCouriers.p2pFlagHelp')}</p>
-        <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>📝 {tr('adminCouriers.p2pJournaled')}</p>
-        <button className={p2pActif ? 'btn-danger-ghost' : 'btn-teal'} disabled={busy} onClick={() => setConfirmP2p(true)}>{p2pActif ? tr('adminCouriers.p2pDisable') : tr('adminCouriers.p2pEnable')}</button>
-        <ConfirmDialog open={confirmP2p} title={p2pActif ? tr('adminCouriers.p2pDisable') : tr('adminCouriers.p2pEnable')} message={`${tr('adminCouriers.p2pFlagHelp')} ${tr('adminCouriers.p2pJournaled')}`} danger={p2pActif} loading={busy} onConfirm={basculerP2p} onCancel={() => setConfirmP2p(false)} />
-      </div>
       <div className="card">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>⚖️ {tr('adminCouriers.fiscalTitle')}</h3>
         <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminCouriers.fiscalHelp')}</p>
@@ -438,47 +421,6 @@ function Parametres({ tr, token, toast }) {
 }
 
 // Précompte retenu par mois et par livreur (économie collaborative), avec les exports fiscaux de l'année.
-function Precompte({ tr, token, toast }) {
-  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
-  // quand ce composant est rendu plusieurs fois sur la meme page.
-  const idsA11y = useId();
-  const now = new Date();
-  const [annee, setAnnee] = useState(now.getFullYear()); const [mois, setMois] = useState(now.getMonth() + 1);
-  const [d, setD] = useState(null); const [erreur, setErreur] = useState(null);
-  const charger = () => { setErreur(null); setD(null); api(`/admin/couriers/withholding?year=${annee}&month=${mois}`, { token }).then(setD).catch((e) => setErreur(e.message)); };
-  useEffect(() => { charger(); }, [annee, mois]); // eslint-disable-line react-hooks/exhaustive-deps
-  const go = (path, nom) => telecharger(path, token, nom).catch((e) => toast(e.message, 'erreur'));
-  const parLivreur = d?.byCourier ?? [];
-  const mm = String(mois).padStart(2, '0');
-  return (
-    <div className="card">
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>🧾 {tr('adminCouriers.withholdingTitle')}</h3>
-      <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminCouriers.withholdingHelp')}</p>
-      <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-month'}>{tr('adminCouriers.month')}</label><select id={idsA11y + '-month'} value={mois} onChange={(e) => setMois(Number(e.target.value))}>{Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleDateString(getLocale(), { month: 'long' })}</option>)}</select></div>
-        <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-year'}>{tr('adminCouriers.year')}</label><input id={idsA11y + '-year'} type="number" value={annee} onChange={(e) => setAnnee(Number(e.target.value))} style={{ width: 110 }} /></div>
-        <button className="btn-outline" onClick={() => go(`/admin/couriers/withholding?year=${annee}&month=${mois}&format=csv`, `precompte-${annee}-${mm}.csv`)}>⬇️ {tr('adminCouriers.csvMonth')}</button>
-        <button className="btn-outline" onClick={() => go(`/admin/couriers/export/281-29?year=${annee}`, `fiches-281-29-${annee}.csv`)}>⬇️ {tr('adminCouriers.sheets281', { year: annee })}</button>
-        <button className="btn-outline" onClick={() => go(`/admin/couriers/export/dac7?year=${annee}`, `dac7-${annee}.csv`)}>⬇️ {tr('adminCouriers.dac7Year', { year: annee })}</button>
-      </div>
-      {erreur && <ErrorCard message={erreur} onRetry={charger} />}
-      {!d && !erreur && <SkeletonCards count={1} />}
-      {d && parLivreur.length === 0 && <div className="empty" style={{ marginTop: 10 }}>{tr('adminCouriers.noWithholding')}</div>}
-      {d && parLivreur.length > 0 && (
-        <div className="table-scroll" style={{ marginTop: 10 }}>
-          <table className="admin-table">
-            <thead><tr><th>{tr('adminCouriers.colCourier')}</th><th>{tr('adminCouriers.colLines')}</th><th>{tr('adminCouriers.colGross')}</th><th>{tr('adminCouriers.colWithholding')}</th><th>{tr('adminCouriers.colNet')}</th></tr></thead>
-            <tbody>
-              {parLivreur.map((r) => <tr key={r.courierId}><td><b>{r.name}</b><div className="small">{r.email}</div></td><td>{r.lines ?? 0}</td><td>{euro(r.gross)}</td><td>{euro(r.withholding)}</td><td>{euro(r.net)}</td></tr>)}
-            </tbody>
-            <tfoot><tr><td><b>{tr('adminCouriers.total')}</b></td><td>{d.count ?? parLivreur.reduce((a, r) => a + Number(r.lines || 0), 0)}</td><td>{euro(parLivreur.reduce((a, r) => a + Number(r.gross || 0), 0))}</td><td><b>{euro(d.total ?? parLivreur.reduce((a, r) => a + Number(r.withholding || 0), 0))}</b></td><td>{euro(parLivreur.reduce((a, r) => a + Number(r.net || 0), 0))}</td></tr></tfoot>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function Exports({ tr, token, toast }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
@@ -493,7 +435,6 @@ function Exports({ tr, token, toast }) {
         <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-year-2'}>{tr('adminCouriers.year')}</label><input id={idsA11y + '-year-2'} type="number" value={annee} onChange={(e) => setAnnee(e.target.value)} style={{ width: 110 }} /></div>
         <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-quarter'}>{tr('adminCouriers.quarter')}</label><select id={idsA11y + '-quarter'} value={trim} onChange={(e) => setTrim(e.target.value)}><option value="">{tr('adminCouriers.allQuarters')}</option>{[1, 2, 3, 4].map((q) => <option key={q} value={q}>T{q}</option>)}</select></div>
         <button className="btn-outline" onClick={() => go(`/admin/couriers/export/dac7?year=${annee}${trim ? `&quarter=${trim}` : ''}`, `dac7-${annee}${trim ? `-T${trim}` : ''}.csv`)}>⬇️ DAC7</button>
-        <button className="btn-outline" onClick={() => go(`/admin/couriers/export/281-29?year=${annee}`, `fiches-281-29-${annee}.csv`)}>⬇️ 281.29</button>
       </div>
     </div>
   );

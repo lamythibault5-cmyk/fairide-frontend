@@ -5,7 +5,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import CourierUsageBar, { niveauxAlerte, libelleNiveaux } from '../../components/CourierUsageBar';
 
 // « Mes gains » (livreur) : ce que Fairide a versé sur l'année, brut / précompte / net, par mois et par
 // course (/couriers/me/earnings), avec la jauge du plafond pour l'économie collaborative et un rappel
@@ -43,12 +42,10 @@ export default function EarningsPage() {
   const totaux = gains?.totals ?? {};
   const mois = gains?.byMonth ?? [];
   const lignes = gains?.lines ?? [];
-  const plafond = gains?.ceiling ?? null;
   const locale = getLocale();
-  const et = locale.startsWith('fr') ? 'et' : locale.startsWith('nl') ? 'en' : 'and';
   const nomMois = (m) => new Date(annee, Number(m) - 1, 1).toLocaleDateString(locale, { month: 'long' });
-  const aide = statut === 'p2p' ? t('driverPay.help_p2p', { rate: pctTexte(legal.p2pWithholdingRate) })
-    : statut === 'student_independent' ? t('driverPay.help_student_independent')
+  // CODE-12 : plus de plafond ni de précompte (économie collaborative retirée) — un rappel par statut d'indépendant.
+  const aide = statut === 'student_independent' ? t('driverPay.help_student_independent')
     : statut === 'independent' ? t('driverPay.help_independent', { rate: pctTexte(legal.independentSocialRate) }) : null;
 
   return (
@@ -66,19 +63,9 @@ export default function EarningsPage() {
         <>
           <div className="stat-grid">
             <div className="stat-card"><div className="num">{euro(totaux.gross)}</div><div className="label">{t('driverPay.totalGross')}</div></div>
-            <div className="stat-card"><div className="num">{euro(totaux.withholding)}</div><div className="label">{t('driverPay.totalWithholding')}</div></div>
             <div className="stat-card highlight"><div className="num">{euro(totaux.net)}</div><div className="label">{t('driverPay.totalNet')}</div></div>
             <div className="stat-card"><div className="num">{totaux.deliveries ?? 0}</div><div className="label">{t('driverPay.totalDeliveries')}</div></div>
           </div>
-
-          {plafond && Number(plafond.max) > 0 && (
-            <div className="card">
-              <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>🤝 {t('driverPay.gaugeTitle', { year: annee })}</h3>
-              <CourierUsageBar situation={plafond} legal={{ ...legal, p2pAlertLevels: plafond.alertLevels ?? legal.p2pAlertLevels }} t={t} year={annee}>
-                <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('driverPay.alertLevels', { levels: libelleNiveaux(niveauxAlerte({ p2pAlertLevels: plafond.alertLevels ?? legal.p2pAlertLevels }), et) })}</p>
-              </CourierUsageBar>
-            </div>
-          )}
 
           {aide && <div className="card"><p className="small" style={{ margin: 0 }}>ℹ️ {aide}</p></div>}
 

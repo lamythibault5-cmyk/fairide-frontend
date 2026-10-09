@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api, apiDownload } from '../../api';
+import { api, apiDownload, API_BASE } from '../../api';
+import { ouvrirPdf } from '../../pdf';
+import { euros } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import urlSure from '../../urlSure';
 
-// Liste les commandes payées avec un lien vers leur facture Stripe (générée automatiquement au
-// paiement, voir invoice_creation dans routes/payments.js) — rien à générer/héberger nous-mêmes.
-// Les commandes réglées par solde uniquement (aucun passage par Stripe) n'ont pas de facture Stripe :
-// leur ticket détaillé reste dans l'email de confirmation.
+// Liste les commandes payées en ligne avec leur REÇU FAIRIDE (CODE-1, 8 oct. 2026 — recuClient.js côté serveur) : un bloc
+// par vendeur (commerce, livreur, Fairide), TVA par taux, « Payé », heure de Bruxelles. Il remplace la facture automatique
+// de Stripe, qui présentait Fairide comme vendeur des plats et sans TVA. Une commande payée sur place n'a pas de reçu
+// Fairide : le commerce encaisse et remet son propre ticket.
 function isInPeriod(order, period) {
   const now = new Date();
   const d = new Date(order.createdAt);
@@ -44,7 +45,8 @@ export default function InvoicesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const downloadable = useMemo(() => (orders || []).filter((o) => o.invoiceUrl), [orders]);
+  const aUnRecu = (o) => o.paymentMode !== 'on_site' && !o.isTraining;
+  const downloadable = useMemo(() => (orders || []).filter(aUnRecu), [orders]);
 
   function toggle(id) {
     setSelected((prev) => {
@@ -111,15 +113,15 @@ export default function InvoicesPage() {
         <div className="card facture-liste">
           {orders.map((o) => (
             <div key={o.id} className="facture-ligne">
-              {o.invoiceUrl && (
+              {aUnRecu(o) && (
                 <input type="checkbox" style={{ width: 'auto' }} checked={selected.has(o.id)} onChange={() => toggle(o.id)} aria-label={o.restaurantName} />
               )}
               <div className="facture-ligne-texte">
                 <b>{o.restaurantName}</b>
-                <span className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {o.total.toFixed(2)}€</span>
+                <span className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {euros(o.total)}</span>
               </div>
-              {o.invoiceUrl ? (
-                <a className="btn-ghost" href={urlSure(o.invoiceUrl)} target="_blank" rel="noopener noreferrer">{t('invoicesClient.viewInvoice')}</a>
+              {aUnRecu(o) ? (
+                <button type="button" className="btn-ghost" onClick={() => ouvrirPdf(`${API_BASE}/orders/${o.id}/receipt`, token, t('invoicesClient.downloadFailed'))}>{t('invoicesClient.viewInvoice')}</button>
               ) : (
                 <span className="small" style={{ opacity: 0.6 }}>{t('invoicesClient.unavailable')}</span>
               )}

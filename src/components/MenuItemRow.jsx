@@ -41,6 +41,9 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
     allergens: item.allergens || [], allergensDeclaredNone: !!item.allergensDeclaredNone,
     vatRate: item.vatRate ?? null, isAlcohol: !!item.isAlcohol, minAge: item.minAge ?? null
   });
+  // Historique du plat (CODE-3) : quand l'équipe saisit un changement demandé par téléphone, elle dit à la demande de qui —
+  // le serveur l'écrit dans menu_item_history (« à la demande de … ») ; vide = « saisi par l'équipe ».
+  const [requestedBy, setRequestedBy] = useState('');
   const [saving, setSaving] = useState(false);
   const [groupIds, setGroupIds] = useState(() => new Set((item.optionGroups || []).map((g) => g.id)));
 
@@ -74,7 +77,8 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
   async function save() {
     setSaving(true);
     try {
-      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy, organic, vegan, ...conformite });
+      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy, organic, vegan, ...conformite, ...(requestedBy.trim() ? { requestedBy: requestedBy.trim() } : {}) });
+      setRequestedBy('');
       if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       // Les traductions partent APRÈS le plat lui-même : le serveur recalcule l'empreinte du texte
       // source à l'enregistrement d'une correction, elle doit donc refléter le nom qui vient d'être
@@ -132,6 +136,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
         <div className="field"><label htmlFor={idsA11y + '-name'}>{t('menuItem.name')}</label><input id={idsA11y + '-name'} value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div className="field"><label htmlFor={idsA11y + '-description'}>{t('menuItem.description')}</label><input id={idsA11y + '-description'} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('menuItem.phDescription')} /></div>
         <div className="field"><label htmlFor={idsA11y + '-price'}>{t('menuItem.price')}</label><input id={idsA11y + '-price'} type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-demande'}>{t('menuItem.requestedBy')}</label><input id={idsA11y + '-demande'} value={requestedBy} onChange={(e) => setRequestedBy(e.target.value)} placeholder={t('menuItem.requestedByPlaceholder')} /></div>
 
         {/* Traductions : repliées par défaut, et volontairement placées APRÈS le prix. Le
             restaurateur n'a rien à y faire dans le cas normal — elles se remplissent quand il clique
