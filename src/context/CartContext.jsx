@@ -262,10 +262,11 @@ export function CartProvider({ children }) {
       ? baseLivraison
       : Math.min(Number(deliveryOffer?.deliveryFeeDiscount) || 0, baseLivraison);
     const clientDeliveryFee = +(baseLivraison - deliveryDiscount).toFixed(2);
-    // Frais de service sur la livraison seulement, calculés sur le tarif complet (même règle que routes/orders.js :
-    // ce que le commerce offre de la livraison ne réduit pas la part de Fairide). À emporter : aucun.
+    // Frais de système sur la livraison seulement, calculés sur le tarif complet et COMPRIS dedans (fondateur, 2026-10-08 ;
+    // même règle que routes/orders.js : ce que le commerce offre de la livraison ne réduit pas la part de Fairide). Ligne
+    // d'information : ils ne s'ajoutent pas au total. À emporter : aucun.
     const serviceFee = fraisService(baseLivraison);
-    const total = +(subtotal + clientDeliveryFee + serviceFee).toFixed(2);
+    const total = +(subtotal + clientDeliveryFee).toFixed(2);
     return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: baseLivraison, deliveryDiscount: +deliveryDiscount.toFixed(2), serviceFee, total };
   }
 

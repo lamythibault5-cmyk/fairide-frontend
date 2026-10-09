@@ -57,9 +57,9 @@ export default function RestaurantPreview({ restaurant }) {
   subtotal = +subtotal.toFixed(2);
   // À emporter : pas de frais de livraison, comme dans le vrai checkout (voir Checkout.jsx estimatedTotalBeforeBalance).
   const deliveryFee = fulfillmentType === 'delivery' ? DELIVERY_FEE : 0;
-  // Frais de service : 10 % de la livraison + TVA (src/fraisService.js) — même règle que le checkout.
+  // Frais de système : 10 % de la livraison, compris dedans (src/fraisService.js) — même règle que le checkout.
   const serviceFee = deliveryFee ? fraisService(deliveryFee) : 0;
-  const total = +(subtotal + deliveryFee + serviceFee).toFixed(2);
+  const total = +(subtotal + deliveryFee).toFixed(2);
 
   return (
     <div>

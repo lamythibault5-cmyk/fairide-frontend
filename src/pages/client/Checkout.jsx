@@ -518,7 +518,7 @@ export default function Checkout() {
               {/* TVA comprise, comme le total : la somme des lignes doit tomber sur le total affiché juste en dessous.
                   « dès » seulement en livraison, où la distance réelle peut encore faire monter la base. */}
               {fraisServiceEstimes > 0 && (
-                <div className="line"><span>{t('checkout.serviceFeeLine')}{fulfillmentType === 'delivery' ? ` (${t('checkout.fromPrefix')})` : ''}</span><span>{euros(fraisServiceEstimes)}</span></div>
+                <div className="line"><span className="small">{t('checkout.serviceFeeLine')}</span><span className="small">{euros(fraisServiceEstimes)}</span></div>
               )}
               {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}
               {soldeUtilise && user.balance > 0 && (

@@ -575,7 +575,7 @@ function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
 function AvantDeCommencer({ c, t, pricing }) {
   const autre = c?.otherPlatforms?.works === true;
   const eur = (v) => `${Number(v || 0).toFixed(2).replace('.', ',')} €`;
-  const p = { base: eur(pricing?.deliveryBaseFee ?? 4.5), km: Number(pricing?.deliveryBaseKm ?? 2), bike: eur(pricing?.driverPerKmBike ?? 0.6), motor: eur(pricing?.driverPerKmMotor ?? 0.8), radius: Number(pricing?.secondOrderRadiusKm ?? 2) };
+  const p = { base: eur(pricing?.deliveryBaseFee ?? 5), km: Number(pricing?.deliveryBaseKm ?? 1), bike: eur(pricing?.driverPerKmBike ?? 0.6), motor: eur(pricing?.driverPerKmMotor ?? 0.8), radius: Number(pricing?.secondOrderRadiusKm ?? 2) };
   return (
     <div className="card" style={{ marginBottom: 12 }}>
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.beforeTitle')}</h3>

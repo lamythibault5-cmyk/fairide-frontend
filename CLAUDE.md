@@ -300,10 +300,14 @@ about **10.8% of the displayed price**. `commissionFairide(subtotal, pricing, ha
 recovers the in-store price as subtotal / (1 + r(1 + v) + h), with r = `commissionRate` (0.10, excl. VAT), v =
 `vatRateCommission` (0.21) and h the business's own optional increase (`restaurants.price_markup_percent`, 0 to
 12.1%, requested by the business and applied by the team — it is the business's money, not Fairide's).
-The customer additionally pays the delivery fee and a **service fee of 10% of the delivery, excl. VAT, VAT added**
-(€3.00 delivery → €0.30 + €0.06 = €0.36). Takeaway paid on site: no commission, no fee.
-**The courier receives the full delivery fee the client paid** (€4.50 up to 2 km, then €0.60/km), bike included —
-`tauxKmLivreur` in `pricing.js` never goes below the client per-km rate (decided 2026-10-02; bikes used to get €0.40/km).
+The customer additionally pays the **delivery fee only — nothing is added on top** (model of 2026-10-08 evening):
+€5 excl. VAT for the first km, then €0.80 excl. VAT per started km, 21% VAT added (€6.05 incl. VAT minimum). **10% of it
+is Fairide's system fee, included** (`fraisService`, stored as `service_fee` + `service_fee_vat`); the courier receives
+**90% of their own grid** (bike €0.60/km, motorised €0.80/km), and the bike difference stays with Fairide. A courier's
+minimum (CODE-13) applies to their share: the client fee is raised to minimum / 0.9 when no courier accepts the grid
+(`routes/orders.js`, `troisVendeurs.prixAvecMinimum`). Takeaway paid on site: no commission, no fee.
+**Tips go 100% to the courier** (`tipFairideRate` 0 since 2026-10-09 — founder: « Fairide ne prend pas de part sur les
+pourboires »); courier texts promise it, so the admin setting must not move without them.
 **Delivery distance: 6 km by default**, or what the business sets (1–30 km) in « Commandes et capacité »
 (`../fairide-backend/rayonLivraison.js`; NULL used to mean « no limit » and accepted Antwerp).
 **Order promo codes** (`order_percent`, `order_amount`, `order_free_delivery`, `../fairide-backend/codesPromo.js`) are
@@ -317,12 +321,12 @@ l'abonnement », `restaurants.subscription_billing_enabled`, false by default �
 account page then shows « offert pendant le lancement » and the Stripe checkout refuses (`SUBSCRIPTION_WAIVED`).
 
 - server: `commissionFairide` and `fraisService` in `../fairide-backend/pricing.js`, called by `routes/orders.js`;
-  `service_fee` stores the fee excl. VAT, `service_fee_vat` its VAT — show **their sum** to the customer;
+  `service_fee` stores the system fee excl. VAT, `service_fee_vat` its VAT — both already inside `delivery_fee`;
 - client estimate: [src/fraisService.js](src/fraisService.js);
 - the ×1.121 is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js --facteur`, or a CSV of
   in-store prices), not at runtime; since 2026-10-01 the business can no longer edit dishes or prices itself
   (`MENU_LOCKED`) — it asks, and the team applies;
-- legal texts: contract `RESTO-2026.17` (in force 1 Nov 2026; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-08`, privacy
+- legal texts: contract `RESTO-2026.17` (in force 1 Nov 2026; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-09`, privacy
   `CONF-2026-10-08` (they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
   restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).
 
@@ -349,7 +353,7 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
 ## Three sellers per order (decided 2026-09-23)
 
 The customer buys the food from the business, the **delivery from the independent courier** who accepts
-the job, and the service fee from Fairide. The backend records a seller per line (`order_lines`, see
+the job, and the system fee (inside the delivery fee) from Fairide. The backend records a seller per line (`order_lines`, see
 `../fairide-backend/troisVendeurs.js`). What the front end shows because of it:
 
 - checkout recap labels each line with its seller (`conformite.seller*`);
