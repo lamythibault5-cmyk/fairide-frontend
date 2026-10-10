@@ -1,4 +1,5 @@
 import InterrupteurService from '../../components/commerce/InterrupteurService';
+import RupturesDuJour from '../../components/commerce/RupturesDuJour';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
@@ -381,9 +382,10 @@ export default function OrdersPage() {
     <div className="no-print">
       {/* Plus de carte de présentation du terminal ici : quatre paragraphes et une illustration lus à
           chaque service, au-dessus des commandes. Elle reste dans Mon compte › Terminal Fairide. */}
-      {restaurant && (
+      {restaurant && (<>
         <InterrupteurService restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
-      )}
+        <RupturesDuJour restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
+      </>)}
       <p className="small service-resume">{t('ordersResto.summary', { current: enCours.length, today: duJour })}
         {terminaux && <> · <Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></>}
       </p>

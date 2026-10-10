@@ -5487,6 +5487,18 @@ export default {
       photoText: 'On every order (test or real), the 📷 button in My orders lets you photograph the order BEFORE handing it over: put the ticket with the order number and all the products in the frame. Time, number and product list are stored with the photo: your proof if a customer complains.'
     },
     ordersResto: {
+      stopTodayBtn: 'Stop orders for today',
+      stopTodayHelp: 'Nothing left to prepare today? Customers can no longer order, orders already received carry on. Orders reopen BY THEMSELVES tomorrow at 6 am: nothing to do on your side. You can also reopen earlier with one tap.',
+      stoppedTodayTitle: 'Orders stopped for today',
+      stoppedTodaySub: 'Reopens by itself tomorrow at {time} · tap to reopen now',
+      stockPanelTitle: 'Out of stock today',
+      stockPanelCount: '{n} out of stock',
+      stockPanelHelp: 'Cannot prepare a dish any more? Tap “Out of stock today”: it disappears from the customers’ menu right away and comes back BY ITSELF tomorrow. Nothing to reactivate.',
+      stockOutBtn: 'Out of stock today',
+      stockBackBtn: 'Back on sale',
+      stockOutTodayLine: 'Out of stock today · back tomorrow automatically',
+      stockOutDone: 'Dish out of stock for today: hidden from customers, back by itself tomorrow.',
+      stockBackDone: 'Dish back on sale.',
       trainingBadge: 'Test order',
       photoBtn: 'Photograph the order',
       photoHelp: 'Photo before handover: the ticket with the order number and all the products in the frame.',
@@ -6433,6 +6445,7 @@ export default {
       reviewsCount: '({count} reviews)'
     },
     restaurantMenu: {
+      closedForToday: 'This business is no longer taking orders today. It reopens tomorrow at {time}.',
       deliveryUnavailableZone: 'Delivery unavailable in this area for now: only takeaway orders are possible at this business.',
       notFound: 'This business does not exist, or is no longer on Fairide.',
       loadError: 'This page could not be loaded.',

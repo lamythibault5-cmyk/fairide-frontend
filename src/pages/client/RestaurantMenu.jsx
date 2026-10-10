@@ -47,7 +47,9 @@ function statutOuverture(restaurant, now) {
   const s = getOpenStatus(restaurant.hours, now, restaurant.closures);
   if (!s.isOpen) return s;
   if (restaurant.pausedUntil && restaurant.pausedUntil > now.getTime()) {
-    return { ...s, isOpen: false, opensToday: true, opensAt: new Date(restaurant.pausedUntil) };
+    // Stoppé pour la journée (fondateur, 2026-10-10) : la reprise tombe demain — on le dit tel quel au client.
+    const demain = new Date(restaurant.pausedUntil).toDateString() !== now.toDateString();
+    return { ...s, isOpen: false, opensToday: !demain, opensAt: new Date(restaurant.pausedUntil), fermePourLaJournee: demain };
   }
   if (restaurant.open === false) return { ...s, isOpen: false, opensToday: false, fermeParLeCommerce: true };
   return s;
@@ -469,6 +471,8 @@ export default function RestaurantMenu() {
                 ? formatDaySchedule(restaurant.hours, openStatus.todayKey, t)
                 : openStatus.opensToday
                   ? t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now, t), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
+                  : openStatus.fermePourLaJournee
+                    ? t('restaurantMenu.closedForToday', { time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
                   : openStatus.fermeParLeCommerce
                     ? t('restoMenuUi.closedForNow')
                     : t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}

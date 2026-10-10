@@ -19,16 +19,20 @@ export default function InterrupteurService({ restaurant, restoId, token, toast,
   const enPause = restaurant.pausedUntil && restaurant.pausedUntil > maintenant;
   const ouvert = restaurant.open && !enPause;
   const reprise = enPause ? new Date(restaurant.pausedUntil).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '';
+  // Stoppé pour la journée (fondateur, 2026-10-10) : la reprise tombe un autre jour — rouvre tout seul demain à 6 h.
+  const stoppeJour = enPause && new Date(restaurant.pausedUntil).toDateString() !== new Date(maintenant).toDateString();
 
   async function agir(appel) {
     setEnCours(true);
     try { await appel(); await loadDashboard(restoId); setChoix(false); } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(false); }
   }
   const pause = (minutes) => agir(() => api(`/restaurants/${restoId}/pause`, { method: 'PUT', token, body: { minutes } }));
+  const stopperJour = (closed) => agir(() => api(`/restaurants/${restoId}/close-today`, { method: 'PUT', token, body: { closed } }));
   const ouvrir = (open) => agir(() => api(`/restaurants/${restoId}`, { method: 'PATCH', token, body: { open } }));
 
   function toucher() {
     if (ouvert) setChoix(true);
+    else if (stoppeJour) stopperJour(false);
     else if (enPause) pause(0);
     else ouvrir(true);
   }
@@ -38,8 +42,8 @@ export default function InterrupteurService({ restaurant, restoId, token, toast,
       <button type="button" className={`service-switch${ouvert ? '' : ' off'}`} aria-pressed={!!ouvert} disabled={enCours} onClick={toucher}>
         <span className="service-switch-dot" aria-hidden="true" />
         <span className="service-switch-text">
-          <b>{ouvert ? t('ordersResto.openTitle') : enPause ? t('ordersResto.pauseUntil', { time: reprise }) : t('ordersResto.pausedTitle')}</b>
-          <span>{enCours ? '…' : ouvert ? t('ordersResto.openSub') : enPause ? t('ordersResto.pauseResumeNow') : t('ordersResto.pausedSub')}</span>
+          <b>{ouvert ? t('ordersResto.openTitle') : stoppeJour ? t('ordersResto.stoppedTodayTitle') : enPause ? t('ordersResto.pauseUntil', { time: reprise }) : t('ordersResto.pausedTitle')}</b>
+          <span>{enCours ? '…' : ouvert ? t('ordersResto.openSub') : stoppeJour ? t('ordersResto.stoppedTodaySub', { time: reprise }) : enPause ? t('ordersResto.pauseResumeNow') : t('ordersResto.pausedSub')}</span>
         </span>
       </button>
       {choix && (
@@ -49,6 +53,11 @@ export default function InterrupteurService({ restaurant, restoId, token, toast,
             {DUREES.map((m) => (
               <button key={m} type="button" className="btn-teal" disabled={enCours} style={{ minHeight: 48, flex: '1 1 30%' }} onClick={() => pause(m)}>{t('ordersResto.pauseMinutes', { n: m })}</button>
             ))}
+          </div>
+          {/* Plus rien à préparer aujourd'hui : stoppé jusqu'au lendemain 6 h, rouvre tout seul (fondateur, 2026-10-10). */}
+          <div className="paiement-encart" style={{ marginBottom: 12 }}>
+            <button type="button" className="btn-gold" disabled={enCours} style={{ width: '100%', minHeight: 48 }} onClick={() => stopperJour(true)}>⛔ {t('ordersResto.stopTodayBtn')}</button>
+            <p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.stopTodayHelp')}</p>
           </div>
           <button type="button" className="btn-outline" disabled={enCours} style={{ width: '100%', minHeight: 48 }} onClick={() => ouvrir(false)}>{t('ordersResto.closeUntilReopen')}</button>
         </SousEcran>

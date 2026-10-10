@@ -5503,6 +5503,18 @@ export default {
       photoText: 'Sur chaque commande (essai ou vraie), le bouton 📷 dans Mes commandes te permet de photographier la commande AVANT de la remettre : mets le ticket avec le numéro de commande et tous les produits dans le cadre. L\'heure, le numéro et la liste des produits sont enregistrés avec la photo : c\'est ta preuve si un client se plaint.'
     },
     ordersResto: {
+      stopTodayBtn: 'Stopper les commandes pour aujourd\'hui',
+      stopTodayHelp: 'Plus rien à préparer aujourd\'hui ? Les clients ne peuvent plus commander, les commandes déjà reçues continuent. Les commandes rouvrent TOUTES SEULES demain à 6 h : tu n\'as rien à faire. Tu peux aussi rouvrir plus tôt d\'un simple geste.',
+      stoppedTodayTitle: 'Commandes stoppées pour aujourd\'hui',
+      stoppedTodaySub: 'Rouvre tout seul demain à {time} · touche pour rouvrir maintenant',
+      stockPanelTitle: 'Rupture de stock aujourd\'hui',
+      stockPanelCount: '{n} en rupture',
+      stockPanelHelp: 'Plus de quoi préparer un plat ? Touche « Rupture aujourd\'hui » : il disparaît tout de suite de la carte des clients et revient TOUT SEUL demain. Rien à réactiver.',
+      stockOutBtn: 'Rupture aujourd\'hui',
+      stockBackBtn: 'Remettre en vente',
+      stockOutTodayLine: 'En rupture aujourd\'hui · revient demain automatiquement',
+      stockOutDone: 'Plat en rupture pour aujourd\'hui : masqué aux clients, il revient tout seul demain.',
+      stockBackDone: 'Plat remis en vente.',
       trainingBadge: 'Commande d\'essai',
       photoBtn: 'Photographier la commande',
       photoHelp: 'Photo avant la remise : le ticket avec le numéro de commande et tous les produits dans le cadre.',
@@ -6481,6 +6493,7 @@ export default {
       reviewsCount: '({count} avis)'
     },
     restaurantMenu: {
+      closedForToday: 'Ce commerce ne prend plus de commandes aujourd\'hui. Il rouvre demain à {time}.',
       deliveryUnavailableZone: 'Livraison indisponible pour le moment dans cette zone : seules les commandes à emporter sont possibles chez ce commerce.',
       notFound: 'Ce commerce n\'existe pas ou n\'est plus sur Fairide.',
       loadError: 'La fiche de ce commerce n\'a pas pu être chargée.',

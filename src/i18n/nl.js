@@ -5487,6 +5487,18 @@ export default {
       photoText: 'Bij elke bestelling (test of echt) laat de knop 📷 in Mijn bestellingen je de bestelling fotograferen VÓÓR je ze overhandigt: zet het ticket met het bestelnummer en alle producten in beeld. Tijd, nummer en productlijst worden met de foto bewaard: jouw bewijs als een klant klaagt.'
     },
     ordersResto: {
+      stopTodayBtn: 'Bestellingen stoppen voor vandaag',
+      stopTodayHelp: 'Niets meer te bereiden vandaag? Klanten kunnen niet meer bestellen, al ontvangen bestellingen gaan door. Morgen om 6 u gaan de bestellingen VANZELF weer open: jij hoeft niets te doen. Je kunt ook vroeger heropenen met één tik.',
+      stoppedTodayTitle: 'Bestellingen gestopt voor vandaag',
+      stoppedTodaySub: 'Gaat morgen om {time} vanzelf weer open · tik om nu te heropenen',
+      stockPanelTitle: 'Vandaag uitverkocht',
+      stockPanelCount: '{n} uitverkocht',
+      stockPanelHelp: 'Kun je een gerecht niet meer bereiden? Tik op “Vandaag uitverkocht”: het verdwijnt meteen van de kaart van de klanten en komt morgen VANZELF terug. Niets te heractiveren.',
+      stockOutBtn: 'Vandaag uitverkocht',
+      stockBackBtn: 'Weer te koop',
+      stockOutTodayLine: 'Vandaag uitverkocht · morgen automatisch terug',
+      stockOutDone: 'Gerecht vandaag uitverkocht: verborgen voor klanten, morgen vanzelf terug.',
+      stockBackDone: 'Gerecht weer te koop.',
       trainingBadge: 'Testbestelling',
       photoBtn: 'Bestelling fotograferen',
       photoHelp: 'Foto vóór de overhandiging: het ticket met het bestelnummer en alle producten in beeld.',
@@ -6433,6 +6445,7 @@ export default {
       reviewsCount: '({count} beoordelingen)'
     },
     restaurantMenu: {
+      closedForToday: 'Deze zaak neemt vandaag geen bestellingen meer aan. Ze gaat morgen om {time} weer open.',
       deliveryUnavailableZone: 'Levering momenteel niet beschikbaar in deze zone: alleen afhaalbestellingen zijn mogelijk bij deze zaak.',
       notFound: 'Deze zaak bestaat niet of staat niet meer op Fairide.',
       loadError: 'Deze pagina kon niet worden geladen.',
