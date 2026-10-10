@@ -350,6 +350,14 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   **courier** confirms (`PATCH /orders/:id/picked-up`, accepted from `preparation` too). `/confirm-pickup` still exists.
   « Ma carte et mes engagements » ([ConformiteCarte](src/components/conformite/ConformiteCarte.jsx)) is one checkbox,
   one name, one button that posts each pending signature to its own route — each keeps its own version and hash.
+- **Client absent at the door** (2026-10-10): the courier taps « Je suis à la porte », the client gets an e-mail, a push
+  and a banner ([LivreurALaPorte](src/components/client/LivreurALaPorte.jsx)); closing needs **10 min and 2 calls** made
+  through « Appeler le client » (`PATCH /orders/:id/call-client`, counted). Outcome: client not refunded (T&Cs, article
+  Annulation: « reste due »), business keeps its share, courier paid and keeps the food, no admin task.
+  `ATTENTE_PORTE_MIN` / `APPELS_CLIENT_MIN` in [src/conformite.js](src/conformite.js) mirror the backend constants.
+- **E-mails** go through one branded wrapper (`../fairide-backend/emailEnveloppe.js`); team e-mails carry a subject tag
+  (`[Commerces]`, `[Cartes]`, `[Livreurs]`, `[Messages]`, `[Comptes]`, `[Compta]`, `[Équipe]`) for Outlook rules.
+  Preview them all with `node scripts/apercu-emails.js` in the backend.
 - **Couriers**: two statuses only (P2P removed); they set their minimum per ride and per km and only see offers above it
   (the customer's delivery fee rises to the cheapest courier's minimum, capped); **no delivery rating**; suspension only for
   fraud, serious misconduct or legal obligation; random check selfie at shift start (`controleSelfie.js`); grid of the 8
