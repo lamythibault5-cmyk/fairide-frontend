@@ -19,6 +19,7 @@ import BandeauOuverture from '../../components/BandeauOuverture';
 import CarteAValider from '../../components/commerce/CarteAValider';
 import { cuisineDepuisOsm } from '../../osmCuisine';
 import { demarrerTerminalNavigateur } from '../../terminalNavigateur';
+import { remonterEnHaut } from '../../remonter';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
@@ -242,7 +243,9 @@ export default function DashboardLayout() {
     setNewRestoOpen(false);
     pickResto(r.id);
     navigate('/dashboard', { replace: true });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Pas de défilement « smooth » : il s'interrompait quand le formulaire de création disparaissait et que la page
+    // changeait de hauteur, et le restaurateur restait en bas (simulation du 10 oct. 2026). Voir src/remonter.js.
+    remonterEnHaut();
     toast(r.wantsOwnDriver ? t('dashResto.toastCreatedOwnDriver') : t('dashResto.toastCreated'));
   }
 

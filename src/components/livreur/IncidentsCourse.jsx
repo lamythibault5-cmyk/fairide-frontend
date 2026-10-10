@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 import ConfirmDialog from '../ConfirmDialog';
+import { ATTENTE_PORTE_MIN } from '../../conformite';
 
 // Incidents d'une course, côté livreur (plan de test de bout en bout, 2 octobre 2026) — voir « INCIDENTS DE LIVRAISON »
 // dans routes/orders.js côté serveur :
-//   - avant le retrait : « J'attends au commerce » (LIV-8) et « Rendre la course » (LIV-2, sans aucune conséquence) ;
+//   - avant le retrait : « J'attends au commerce » (LIV-8) et « Annuler la course » (LIV-2, sans aucune conséquence).
+//     Appelé « Rendre la course » jusqu'au 10 oct. 2026 — pas clair pour les livreurs testés. On ne l'interdit pas : la
+//     liberté de refuser et d'organiser son travail compte parmi les critères de l'art. 337/3 (présomption de salariat).
+//     On le rend seulement rare par le texte (« si tu peux encore la faire, garde-la »), jamais par une conséquence ;
 //   - en livraison : « Client injoignable » (LIV-5, commande sans alcool : attente de 10 min puis clôture) et
 //     « Je ne peux pas terminer » (LIV-2 après retrait : l'équipe est alertée et appelle).
 // Rien de ceci n'est lu pour classer ou pénaliser le livreur ; les libellés le disent.
@@ -34,7 +38,7 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
   const avantRetrait = ['preparation', 'pret'].includes(order.status);
   const enLivraison = order.status === 'livraison';
   const attenteMin = order.courierWaitingSince ? Math.max(0, Math.floor((maintenant - order.courierWaitingSince) / 60000)) : null;
-  const finAttenteClient = order.clientAbsentReportedAt ? order.clientAbsentReportedAt + 10 * 60000 : null;
+  const finAttenteClient = order.clientAbsentReportedAt ? order.clientAbsentReportedAt + ATTENTE_PORTE_MIN * 60000 : null;
   const resteClient = finAttenteClient ? Math.max(0, Math.ceil((finAttenteClient - maintenant) / 60000)) : null;
 
   return (

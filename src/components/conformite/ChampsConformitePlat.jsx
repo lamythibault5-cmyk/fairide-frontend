@@ -45,6 +45,9 @@ export default function ChampsConformitePlat({ valeur, onChange }) {
             <option value="">—</option>
             {[6, 12, 21, 0].map((r) => <option key={r} value={r}>{r} %</option>)}
           </select>
+          {/* Le taux arrive déjà rempli (tvaPlats.js côté serveur, d'après la nature du plat) : le commerce n'a rien à
+              décider plat par plat. On le dit, sinon le champ ressemble à une question (simulation du 10 oct. 2026). */}
+          <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)', maxWidth: 280 }}>{t('conformite.dishVatAuto')}</p>
         </div>
         <label className="row" style={{ gap: 6, cursor: 'pointer' }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={!!valeur.isAlcohol} onChange={(e) => maj({ isAlcohol: e.target.checked, minAge: e.target.checked ? (valeur.minAge || 18) : null })} />

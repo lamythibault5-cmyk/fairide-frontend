@@ -8,6 +8,7 @@ import { useCart } from '../../context/CartContext';
 import { preparerNouvelleCommande } from '../../recommander';
 import SignalerProbleme from '../../components/client/SignalerProbleme';
 import SansLivreur from '../../components/client/SansLivreur';
+import LivreurALaPorte from '../../components/client/LivreurALaPorte';
 import ClocheNotifications from '../../components/client/ClocheNotifications';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { api } from '../../api';
@@ -269,6 +270,7 @@ export default function Orders() {
           {o.deliveryInstructions && (
             <div className="small">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
           )}
+          <LivreurALaPorte order={o} />
           {o.driverName && (
             <div style={{ margin: '6px 0' }}><DriverBadge name={o.driverName} phone={o.driverPhone} photoUrl={o.driverPhotoUrl} size={40} /></div>
           )}

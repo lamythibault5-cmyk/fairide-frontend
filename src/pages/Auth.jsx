@@ -1,6 +1,7 @@
 import OffreFormules from '../components/OffreFormules';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import BrandMark from '../components/BrandMark';
+import { remonterEnHaut } from '../remonter';
 import urlSure from '../urlSure';
 import { chargerGoogleSignIn } from '../googleSignIn';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
@@ -318,6 +319,13 @@ export default function Auth() {
      fautif plutôt qu'en toast : à la fin d'un formulaire de 13 champs, un toast "adresse
      requise" n'indique pas lequel des quatre champs d'adresse est vide. */
   const [step, setStep] = useState(0);
+  // Chaque nouvelle étape s'ouvre en haut de l'écran, pas là où l'on a touché « Continuer » (voir src/remonter.js).
+  const etapeAffichee = useRef(step);
+  useEffect(() => {
+    if (etapeAffichee.current === step) return;
+    etapeAffichee.current = step;
+    remonterEnHaut();
+  }, [step]);
   const [errors, setErrors] = useState({});
   // Inscription via Google : le jeton d'identité est gardé jusqu'à la fin du formulaire (c'est lui qui
   // crée le compte), le profil qu'il contient préremplit prénom, nom et e-mail — qu'on ne redemande pas.

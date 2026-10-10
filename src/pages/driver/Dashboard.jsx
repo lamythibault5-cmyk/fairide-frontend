@@ -33,12 +33,25 @@ function formatClock(date) {
 // vélo, d'une main (test de bout en bout du 6 oct. 2026). Le lien universel Google Maps ouvre l'appli installée sur
 // Android comme sur iPhone, et le navigateur à défaut. Vers le commerce sur la carte « à récupérer », vers le client
 // seulement une fois la commande en main (l'adresse complète n'est envoyée qu'à ce moment-là).
-function LienItineraire({ adresse, t }) {
-  if (!adresse) return null;
+//
+// WAZE EN GROS BOUTON (fondateur, simulation du 10 oct. 2026). Les livreurs bruxellois roulent sur Waze ; un petit lien
+// texte se ratait d'un pouce ganté. D'où un bouton iris pleine largeur, le geste évident de la carte, et Google Maps
+// gardé en lien discret pour qui ne l'a pas. Les coordonnées passent avant l'adresse quand le serveur les donne : Waze
+// géocode mal certaines adresses bruxelloises bilingues (« Rue … / …straat »), un point GPS ne se trompe pas.
+function BoutonsItineraire({ adresse, lat, lng, t }) {
+  if (!adresse && (lat == null || lng == null)) return null;
+  const point = lat != null && lng != null ? `${lat},${lng}` : null;
+  const waze = point ? `https://waze.com/ul?ll=${point}&navigate=yes` : `https://waze.com/ul?q=${encodeURIComponent(adresse)}&navigate=yes`;
+  const google = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(point || adresse)}`;
   return (
-    <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adresse)}`} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
-      {t('dashDriver.directions')} ↗
-    </a>
+    <div style={{ margin: '10px 0' }}>
+      <a href={waze} target="_blank" rel="noopener noreferrer" className="btn-teal" style={{ display: 'block', width: '100%', textAlign: 'center', padding: '14px 16px', fontSize: 16, fontWeight: 700, textDecoration: 'none', boxSizing: 'border-box' }}>
+        {t('dashDriver.openWaze')}
+      </a>
+      <div className="small" style={{ textAlign: 'center', marginTop: 6 }}>
+        <a href={google} target="_blank" rel="noopener noreferrer">{t('dashDriver.directions')} (Google Maps) ↗</a>
+      </div>
+    </div>
   );
 }
 
@@ -299,7 +312,7 @@ export default function DriverDashboard() {
         <span className={`status-badge status-${o.status}`}>{o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing')}</span>
       </div>
       <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-      {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })} <LienItineraire adresse={o.restaurantAddress} t={t} /></div>}
+      {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
       <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
       {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
       <DeliveryTiming order={o} />
@@ -309,6 +322,7 @@ export default function DriverDashboard() {
         <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.pickupCode}</div>
       </div>
       {o.status !== 'pret' && <p className="small">{t('dashDriver.stillPreparing')}</p>}
+      <BoutonsItineraire adresse={o.restaurantAddress} lat={o.restaurantLat} lng={o.restaurantLng} t={t} />
       <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
     </div>
   );
@@ -391,7 +405,8 @@ export default function DriverDashboard() {
             <BandeauAllergie order={o} />
             <BadgeAlcool order={o} />
             {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
-            <div className="small">{t('dashDriver.deliveryAt', { address: o.address })} <LienItineraire adresse={o.address} t={t} /></div>
+            <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
+            <BoutonsItineraire adresse={o.address} lat={o.deliveryLat} lng={o.deliveryLng} t={t} />
             {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
             {o.deliveryInstructions && (
               <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
