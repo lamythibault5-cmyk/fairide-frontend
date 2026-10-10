@@ -81,7 +81,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // équipe non technique, et devenus inutiles : les cartes arrivent avec leurs photos et leurs
   // suppléments par l'import backend (fairide-backend/scripts/importer-carte.js). Les deux composants
   // existent encore, sans appelant — à supprimer ou à réintégrer, pas à rebrancher en passant.
-  const autresVisibles = modeAdmin;
 
   // Sélection/réorganisation activée section par section (id de la section concernée, ou null si aucune
   // n'est active) plutôt qu'un mode global sur tout le menu — plus simple à suivre quand le menu a
@@ -533,49 +532,19 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </button>
         )}
       </div>
-      {methodesVisibles && (
+      {/* CÔTÉ COMMERCE SEULEMENT (fondateur, 10 oct. 2026 : « nous on va le faire, eux doivent juste accepter »). En
+          console admin, cette carte répétait mot pour mot les trois boutons du cadre « Démarrez en 1 clic » juste en
+          dessous (plats de départ, 1 clic, carte à la main) : deux fois les mêmes choix l'un sous l'autre. L'équipe garde
+          le cadre du dessous ; le commerce ne voit qu'une demande à Fairide, puis la carte à valider (« C'est bon »). */}
+      {methodesVisibles && !modeAdmin && (
       <div className="card" id="menu-methodes">
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t(modeAdmin ? 'menuPage.methodsTitleAdmin' : 'menuPage.methodsTitle')}</h3>
-        <p className="small" style={{ margin: '0 0 14px' }}>{t(modeAdmin ? 'menuPage.methodsIntroAdmin' : 'menuPage.methodsIntro')}</p>
-        {/* UNE SEULE PROPOSITION D'ABORD, LES AUTRES DERRIÈRE UN LIEN.
-            Les six méthodes s'affichaient ensemble. La plus simple était bien la première et portait
-            sa pastille « Recommandé », mais elle concourait avec cinq autres : au moment précis où
-            l'on veut qu'un restaurateur n'ait RIEN à faire, on lui demandait de comparer six façons
-            de travailler. Celle qui ne lui coûte rien occupe donc seule le premier écran, et les
-            autres attendent derrière « Je préfère faire ma carte moi-même ».
-            Rien n'est retiré : les cinq autres méthodes sont intactes, à un clic. */}
-        {!modeAdmin && (
-          <div className="methode" id="menu-concierge">
-            <div className="methode-tete"><h4>{t('menuPage.method1Title')}</h4><span className="pill gold">{t('menuPage.recommendedFree')}</span></div>
-            <p className="small methode-sous">{t('menuPage.method1Sub')}</p>
-            <MenuConciergeRequest restoId={restoId} urlSuggeree={importUrl} />
-          </div>
-        )}
-
-        {/* En console admin il n'y a pas de méthode « Fairide crée ma carte » — l'équipe EST Fairide : les méthodes
-            d'import sont le sujet de la page. Côté restaurateur, elles n'apparaissent plus. */}
-
-        {autresVisibles && (
-          <div className="methode">
-            <div className="methode-tete"><span className="methode-num">1</span><h4>{t('menuPage.method5Title')}</h4></div>
-            <p className="small methode-sous">{t('menuPage.method5Sub')}</p>
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              {restaurant.menu.length === 0 && <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(false); setStarterPickerOpen(true); setTimeout(() => document.getElementById('menu-demarrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}</button>}
-              <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(true); setTimeout(() => document.getElementById('menu-liste')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.method5Button')}</button>
-            </div>
-          </div>
-        )}
-        {autresVisibles && restaurant.menu.length === 0 && platsUnClic.length > 0 && (
-          <div className="methode methode-un-clic">
-            <div className="methode-tete"><span className="methode-num">2</span><h4>{t('menuPage.oneClickTitle')}</h4><span className="pill teal">{t('menuPage.oneClickFastest')}</span></div>
-            <p className="small methode-sous">{t('menuPage.oneClickSub', { n: platsUnClic.length, cuisine: restaurant.cuisine })}</p>
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" className="btn-outline" disabled={applyingStarter} onClick={demarrerEnUnClic}>{applyingStarter ? '…' : t('menuPage.oneClickButton', { n: platsUnClic.length })}</button>
-              <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(false); setStarterPickerOpen(true); setTimeout(() => document.getElementById('menu-demarrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.oneClickChoose')}</button>
-            </div>
-          </div>
-        )}
-
+        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.methodsTitle')}</h3>
+        <p className="small" style={{ margin: '0 0 14px' }}>{t('menuPage.methodsIntro')}</p>
+        <div className="methode" id="menu-concierge">
+          <div className="methode-tete"><h4>{t('menuPage.method1Title')}</h4><span className="pill gold">{t('menuPage.recommendedFree')}</span></div>
+          <p className="small methode-sous">{t('menuPage.method1Sub')}</p>
+          <MenuConciergeRequest restoId={restoId} urlSuggeree={importUrl} />
+        </div>
       </div>
       )}
 

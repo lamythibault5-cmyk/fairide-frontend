@@ -1,4 +1,5 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { remonterEnHaut } from '../../remonter';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -32,6 +33,13 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
   const { token, user } = useAuth();
   const toast = useToast();
   const [etape, setEtape] = useState(0);
+  // Avancer ET revenir en arrière ouvrent l'étape en haut (le bouton « Retour » ne remontait pas) — src/remonter.js.
+  const etapeAffichee = useRef(etape);
+  useEffect(() => {
+    if (etapeAffichee.current === etape) return;
+    etapeAffichee.current = etape;
+    remonterEnHaut();
+  }, [etape]);
   const [envoi, setEnvoi] = useState(false);
 
   // Commerce déjà désigné à l'inscription : les étapes arrivent préremplies, on ne redemande pas de le chercher.
@@ -131,7 +139,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
     ev.preventDefault();
     const erreur = manque();
     if (erreur) { toast(erreur); return; }
-    if (!derniere) { setEtape(etape + 1); window.scrollTo({ top: 0 }); return; }
+    if (!derniere) { setEtape(etape + 1); return; }
     setEnvoi(true);
     try {
       const r = await api('/restaurants', {

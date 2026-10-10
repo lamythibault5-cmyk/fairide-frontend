@@ -114,9 +114,11 @@ function loadVolume() {
   try { const v = Number(localStorage.getItem(VOLUME_KEY)); return Number.isFinite(v) && v >= 0 && v <= 100 && localStorage.getItem(VOLUME_KEY) !== null ? v : 80; } catch { return 80; }
 }
 function loadRepetitions() {
-  // Par défaut UNE sonnerie par commande qui arrive (fondateur, 2026-10-08) : l'alarme ne doit pas se répéter pendant que le
-  // commerce imprime ou prépare — la sonnerie signale une arrivée, rien d'autre. Le réglage « jusqu'au traitement » reste disponible.
-  try { const v = Number(localStorage.getItem(REPETITIONS_KEY)); return localStorage.getItem(REPETITIONS_KEY) !== null && REPETITIONS.includes(v) ? v : 1; } catch { return 1; }
+  // Par défaut, l'alarme sonne TANT QUE LA COMMANDE N'EST PAS ACCEPTÉE (fondateur, 2026-10-10, après la simulation : une
+  // seule sonnerie se rate dans une cuisine). Ça respecte la règle du 2026-10-08 — ne pas sonner pendant l'impression ou la
+  // préparation : `newOrders` ne compte que les commandes encore « nouveau », et accepter les fait sortir de ce statut. Le
+  // commerce peut toujours choisir 1, 2, 3… sonneries dans ses réglages ; un choix déjà enregistré est respecté.
+  try { const v = Number(localStorage.getItem(REPETITIONS_KEY)); return localStorage.getItem(REPETITIONS_KEY) !== null && REPETITIONS.includes(v) ? v : 0; } catch { return 0; }
 }
 function loadSonnerie() {
   try { const v = localStorage.getItem(SONNERIE_KEY); return SONNERIES.includes(v) ? v : 'carillon'; } catch { return 'carillon'; }
