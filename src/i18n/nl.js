@@ -3407,6 +3407,7 @@ export default {
       unlock: 'Ontgrendelen'
     },
     adminRestos: {
+      phoneHiddenPublic: 'verborgen voor het publiek',
       zoneDeliveryOwn: 'Levert met eigen koeriers: Fairide-levering is niet van toepassing.',
       zoneDeliveryOffBadge: 'Fairide-levering uit (geen koerier in de zone)',
       zoneDeliveryOff: 'Fairide-levering uitschakelen (zaak alleen in haar zone)',
@@ -5262,6 +5263,8 @@ export default {
       stepMoreHelp: 'Optioneel: je kaart vertalen voor Engels- en Nederlandstalige klanten, of een gebaar op je prijzen doen.'
     },
     editResto: {
+      hidePhonePublic: 'Dit nummer verbergen voor het publiek',
+      hidePhoneHelp: 'Verborgen: klanten zien dit nummer niet op je pagina. Het Fairide-team ziet het altijd om je te bereiken. Altijd aanpasbaar.',
       toastCommuneRequired: 'Vul de gemeente van de zaak in (bv. Elsene of Tervuren).',
       ownFeeLabel: 'Je leveringskosten (je levert zelf)',
       ownFeeHelp: 'Jij levert: jij bepaalt je kosten, 100 %. Dit vaste bedrag vervangt het Fairide-tarief (basisbedrag + afstand). Laat leeg om het Fairide-tarief te houden.',
@@ -7179,6 +7182,8 @@ export default {
       removed: 'Logo verwijderd.'
     },
     auth: {
+      hidePhonePublic: 'Dit nummer verbergen voor het publiek (klanten zien het niet; Fairide houdt het om je te bereiken)',
+      personalPhonePrivate: 'Je persoonlijke nummer wordt nooit aan het publiek getoond: alleen het Fairide-team kan het gebruiken.',
       extraCuisinesTitle: 'Je biedt ook aan… (optioneel)',
       extraCuisinesHelp: 'Vink de andere keukens op je kaart aan: klanten vinden je dan ook via die filters. {max} types in totaal, je hoofdtype inbegrepen.',
       stepIdentitySubRestaurant: 'Jij, de eigenaar of verantwoordelijke: Fairide belt je als een bestelling vastloopt.',

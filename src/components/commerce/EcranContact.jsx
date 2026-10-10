@@ -19,6 +19,9 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
   const [tel, setTel] = useState(restaurant.phone || '');
   const [tel2, setTel2] = useState(restaurant.phoneSecondary || '');
   const [tel2Ouvert, setTel2Ouvert] = useState(!!restaurant.phoneSecondary);
+  // Masquer au public (fondateur, 2026-10-10) : réglable à tout moment, numéro par numéro ; l'équipe voit toujours tout.
+  const [telPublic, setTelPublic] = useState(restaurant.phonePublic !== false);
+  const [tel2Public, setTel2Public] = useState(restaurant.phoneSecondaryPublic !== false);
   const [mail, setMail] = useState(restaurant.email || '');
   const [mail2, setMail2] = useState(restaurant.emailSecondary || '');
   const [mail2Ouvert, setMail2Ouvert] = useState(!!restaurant.emailSecondary);
@@ -46,6 +49,7 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
   };
   const enregistrerContact = () => enregistrer({
     phone: tel.trim(), phoneSecondary: tel2Ouvert ? tel2.trim() : '',
+    phonePublic: telPublic, phoneSecondaryPublic: tel2Ouvert ? tel2Public : true,
     email: mail.trim(), emailSecondary: mail2Ouvert ? mail2.trim() : '',
     website: site.trim()
   });
@@ -55,6 +59,11 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
       <div className="field">
         <label htmlFor="commerce-tel">{t('editResto.phoneOnSite')}</label>
         <PhoneInput id="commerce-tel" value={tel} onChange={setTel} autoComplete="off" />
+        <label className="row small" style={{ gap: 8, alignItems: 'center', marginTop: 6, cursor: 'pointer' }}>
+          <input type="checkbox" checked={!telPublic} onChange={(e) => setTelPublic(!e.target.checked)} />
+          <span>{t('editResto.hidePhonePublic')}</span>
+        </label>
+        <p className="small" style={{ margin: '4px 0 0', opacity: 0.75 }}>{t('editResto.hidePhoneHelp')}</p>
       </div>
       {!tel2Ouvert ? (
         <button type="button" className="btn-link-plus" onClick={() => setTel2Ouvert(true)}>＋ {t('editResto.addSecondPhone')}</button>
@@ -65,6 +74,10 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
             <div style={{ flex: 1 }}><PhoneInput id="commerce-tel2" value={tel2} onChange={setTel2} autoComplete="off" /></div>
             <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setTel2(''); setTel2Ouvert(false); }}>{t('editResto.removeSecond')}</button>
           </div>
+          <label className="row small" style={{ gap: 8, alignItems: 'center', marginTop: 6, cursor: 'pointer' }}>
+            <input type="checkbox" checked={!tel2Public} onChange={(e) => setTel2Public(!e.target.checked)} />
+            <span>{t('editResto.hidePhonePublic')}</span>
+          </label>
         </div>
       )}
       <div className="field">

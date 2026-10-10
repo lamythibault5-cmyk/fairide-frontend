@@ -153,6 +153,10 @@ export default function Auth() {
   // retirables ici comme plus tard dans « Mon commerce ».
   const [phoneSecondary, setPhoneSecondary] = useState('');
   const [phoneSecondaryOuvert, setPhoneSecondaryOuvert] = useState(false);
+  // Masquer au public (fondateur, 2026-10-10) : chaque numéro du commerce peut être caché des clients dès l'inscription ;
+  // l'équipe Fairide le voit toujours. Le numéro personnel du titulaire n'est jamais public.
+  const [phonePublic, setPhonePublic] = useState(true);
+  const [phoneSecondaryPublic, setPhoneSecondaryPublic] = useState(true);
   // Restaurateur (fondateur, 2026-09-30) : le numéro SUR PLACE du restaurant (restaurants.phone) est distinct du
   // numéro du compte, qui est celui du patron / responsable ; d'autres responsables s'ajoutent (manager_contacts).
   const [restoPhone, setRestoPhone] = useState('');
@@ -228,6 +232,7 @@ export default function Auth() {
       addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
       commune: addressCity.trim(), neighborhood: '',
       phone: restoPhone.trim() || phone.trim(), phoneSecondary: phoneSecondaryOuvert ? phoneSecondary.trim() : '',
+      phonePublic, phoneSecondaryPublic: phoneSecondaryOuvert ? phoneSecondaryPublic : true,
       // Le titulaire du compte d'abord (patron / responsable), puis les autres responsables saisis.
       managerContacts: [{ name: `${firstName} ${lastName}`.trim(), phone: phone.trim(), role: 'owner' }, ...responsables.filter((r) => r.phone.trim()).map((r) => ({ name: r.name.trim(), phone: r.phone.trim(), role: 'manager' }))],
       email: email.trim(), emailSecondary: emailSecondaryOuvert ? emailSecondary.trim() : '',
@@ -1352,6 +1357,11 @@ export default function Auth() {
                   <span className="titre-groupe" id="auth-contacts-titre">{t('auth.contactsTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.contactsHelp')}</p>
                   <p className="small contact-ligne">📞 <b>{restoPhone.trim() || phone.trim() || '-'}</b> <span style={{ opacity: 0.75 }}>· {restoPhone.trim() ? t('auth.contactsPhoneOnSite') : t('auth.contactsPhoneFromAccount')}</span></p>
+                  <label className="row small" style={{ gap: 8, alignItems: 'center', margin: '2px 0 6px', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={!phonePublic} onChange={(e) => setPhonePublic(!e.target.checked)} />
+                    <span>{t('auth.hidePhonePublic')}</span>
+                  </label>
+                  <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>🔒 {t('auth.personalPhonePrivate')}</p>
                   {!phoneSecondaryOuvert ? (
                     <button type="button" className="btn-link-plus" onClick={() => setPhoneSecondaryOuvert(true)}>＋ {t('auth.addSecondPhone')}</button>
                   ) : (
@@ -1362,6 +1372,10 @@ export default function Auth() {
                         <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setPhoneSecondary(''); setPhoneSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
                       </div>
                       {fieldError('phoneSecondary')}
+                      <label className="row small" style={{ gap: 8, alignItems: 'center', margin: '6px 0 0', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={!phoneSecondaryPublic} onChange={(e) => setPhoneSecondaryPublic(!e.target.checked)} />
+                        <span>{t('auth.hidePhonePublic')}</span>
+                      </label>
                     </div>
                   )}
                   <p className="small contact-ligne" style={{ marginTop: 8 }}>✉️ <b>{email.trim() || t('auth.contactsEmailLater')}</b> <span style={{ opacity: 0.75 }}>· {t('auth.contactsEmailFromAccount')}</span></p>

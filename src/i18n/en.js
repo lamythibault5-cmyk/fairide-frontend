@@ -3407,6 +3407,7 @@ export default {
       unlock: 'Unlock'
     },
     adminRestos: {
+      phoneHiddenPublic: 'hidden from the public',
       zoneDeliveryOwn: 'Delivers with its own couriers: Fairide delivery does not apply.',
       zoneDeliveryOffBadge: 'Fairide delivery off (no courier in the area)',
       zoneDeliveryOff: 'Switch off Fairide delivery (business alone in its area)',
@@ -5262,6 +5263,8 @@ export default {
       stepMoreHelp: 'Optional: translate your menu for English- and Dutch-speaking customers, or make a gesture on your prices.'
     },
     editResto: {
+      hidePhonePublic: 'Hide this number from the public',
+      hidePhoneHelp: 'Hidden: customers do not see this number on your page. The Fairide team always sees it to reach you. Changeable at any time.',
       toastCommuneRequired: 'Enter the municipality of the business (e.g. Ixelles or Tervuren).',
       ownFeeLabel: 'Your delivery fee (you deliver yourself)',
       ownFeeHelp: 'You deliver: you set your fee, 100 %. This fixed amount replaces the Fairide rate (base fee + distance). Leave empty to keep the Fairide rate.',
@@ -7179,6 +7182,8 @@ export default {
       removed: 'Logo removed.'
     },
     auth: {
+      hidePhonePublic: 'Hide this number from the public (customers will not see it; Fairide keeps it to reach you)',
+      personalPhonePrivate: 'Your personal number is never shown to the public: only the Fairide team can use it.',
       extraCuisinesTitle: 'You also serve… (optional)',
       extraCuisinesHelp: 'Tick the other cuisines on your menu: customers will also find you through these filters. {max} types in total, your main type included.',
       stepIdentitySubRestaurant: 'You, the owner or manager: Fairide calls you if an order gets stuck.',

@@ -3407,6 +3407,7 @@ export default {
       unlock: 'Déverrouiller'
     },
     adminRestos: {
+      phoneHiddenPublic: 'masqué au public',
       zoneDeliveryOwn: 'Livre avec ses propres livreurs : la livraison Fairide ne le concerne pas.',
       zoneDeliveryOffBadge: 'Livraison Fairide coupée (zone sans livreur)',
       zoneDeliveryOff: 'Couper la livraison Fairide (commerce seul dans sa zone)',
@@ -5278,6 +5279,8 @@ export default {
       stepMoreHelp: 'Facultatif : traduire ta carte pour les clients anglophones et néerlandophones, ou faire un geste sur tes prix.'
     },
     editResto: {
+      hidePhonePublic: 'Masquer ce numéro au public',
+      hidePhoneHelp: 'Masqué : les clients ne voient pas ce numéro sur ta fiche. L\'équipe Fairide le voit toujours pour te joindre. Modifiable à tout moment.',
       toastCommuneRequired: 'Indique la commune du commerce (par exemple Ixelles ou Tervuren).',
       ownFeeLabel: 'Tes frais de livraison (tu livres toi-même)',
       ownFeeHelp: 'C\'est toi qui livres : tu décides de tes frais, à 100 %. Ce montant fixe remplace le tarif Fairide (forfait + distance). Laisse vide pour garder le tarif Fairide.',
@@ -7227,6 +7230,8 @@ export default {
       removed: 'Logo retiré.'
     },
     auth: {
+      hidePhonePublic: 'Masquer ce numéro au public (les clients ne le verront pas ; Fairide le garde pour te joindre)',
+      personalPhonePrivate: 'Ton numéro personnel n\'est jamais montré au public : seule l\'équipe Fairide peut l\'utiliser.',
       extraCuisinesTitle: 'Tu proposes aussi… (facultatif)',
       extraCuisinesHelp: 'Coche les autres cuisines de ta carte : les clients te trouveront aussi par ces filtres. {max} types au total, ton type principal compris.',
       stepIdentitySubRestaurant: 'Toi, le patron ou le responsable : Fairide t\'appelle si une commande coince.',

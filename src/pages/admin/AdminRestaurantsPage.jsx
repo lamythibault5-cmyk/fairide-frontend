@@ -50,8 +50,8 @@ function ContactCommerce({ r, tr, fiche = false }) {
     <>
       <p className="small" style={style}>📍 {r.fullAddress || '-'}</p>
       <p className="small" style={style}>
-        📞 {r.restaurantPhone ? tel(r.restaurantPhone) : <span style={{ opacity: 0.7 }}>{tr('adminRestos.noRestoPhone')}</span>}
-        {r.restaurantPhoneSecondary && <> · {tel(r.restaurantPhoneSecondary)}</>}
+        📞 {r.restaurantPhone ? tel(r.restaurantPhone) : <span style={{ opacity: 0.7 }}>{tr('adminRestos.noRestoPhone')}</span>}{r.restaurantPhone && r.restaurantPhonePublic === false && <span className="small" style={{ opacity: 0.7 }}> ({tr('adminRestos.phoneHiddenPublic')})</span>}
+        {r.restaurantPhoneSecondary && <> · {tel(r.restaurantPhoneSecondary)}{r.restaurantPhoneSecondaryPublic === false && <span className="small" style={{ opacity: 0.7 }}> ({tr('adminRestos.phoneHiddenPublic')})</span>}</>}
         {r.ownerPhone && r.ownerPhone !== r.restaurantPhone && r.ownerPhone !== r.restaurantPhoneSecondary && <> · {tr('adminRestos.ownerPhoneShort')} {tel(r.ownerPhone)}</>}
       </p>
       {/* Patron(s) / responsable(s) saisis à l'inscription ou dans Mon commerce › Contact (restaurants.manager_contacts). */}
