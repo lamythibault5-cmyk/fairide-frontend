@@ -13,8 +13,10 @@ export function manqueConformite(valeur, restaurant, lignes, _typeCommande, t) {
 }
 
 // Attente du livreur à la porte d'un client injoignable avant de pouvoir clôturer : reprend ATTENTE_CLIENT_ABSENT_MIN
-// de routes/orders.js côté serveur. Les deux doivent bouger ensemble (et les CGU qui citent la durée).
+// de routes/orders.js côté serveur. Les deux doivent bouger ensemble.
 export const ATTENTE_PORTE_MIN = 10;
+// Appels au client exigés pendant cette attente avant de clore (APPELS_CLIENT_MIN de routes/orders.js).
+export const APPELS_CLIENT_MIN = 2;
 
 // Libellé d'un manquement du dossier livreur ajouté par le backlog (les autres restent dans courierOnboarding).
 export const MANQUES_CONFORMITE = ['nationalite', 'titre_sejour', 'carte_professionnelle', 'transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate'];
