@@ -33,6 +33,20 @@ function EtatImpression({ p, t }) {
   return null;
 }
 
+// Code de retrait d'une livraison, en grand, tant que le livreur n'est pas passé. Le commerce n'a rien à taper ni à
+// toucher : il vérifie que le livreur montre le même code, et lui remet la commande. Le serveur n'envoie le code
+// qu'une fois un livreur assigné (routes/orders.js, GET /restaurant/:id).
+function CodeRetrait({ order, t }) {
+  if (order.orderType !== 'delivery' || !order.driverId || !order.pickupCode || !['preparation', 'pret'].includes(order.status)) return null;
+  return (
+    <div style={{ marginTop: 10, border: '1px solid var(--line)', borderRadius: 'var(--radius-chip)', padding: '8px 12px' }}>
+      <div className="small">{t('ordersResto.pickupCodeLabel')}</div>
+      <div style={{ fontWeight: 700, fontSize: 28, letterSpacing: 6, color: 'var(--ink)' }}>{order.pickupCode}</div>
+      <div className="small" style={{ color: 'var(--ink-soft)' }}>{t('ordersResto.pickupCodeHelp')}</div>
+    </div>
+  );
+}
+
 export default function OrdersPage() {
   const { t } = useLanguage();
   const { token } = useAuth();
@@ -189,22 +203,6 @@ export default function OrdersPage() {
     }
   }
 
-  async function confirmPickup(orderId) {
-    const code = (pickupCodeInputs[orderId] || '').trim();
-    if (!code) { toast(t('ordersResto.toastAskDriverCode')); return; }
-    setConfirmingPickup(orderId);
-    try {
-      await api(`/orders/${orderId}/confirm-pickup`, { method: 'PATCH', token, body: { code } });
-      setPickupCodeInputs((prev) => { const next = { ...prev }; delete next[orderId]; return next; });
-      toast(t('ordersResto.toastPickupConfirmed'));
-      loadDashboard(restoId);
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setConfirmingPickup(null);
-    }
-  }
-
   // `ageVerifie` : la pièce d'identité a été contrôlée (commande avec alcool, backlog B6). Sans elle, on
   // ouvre d'abord la vérification — le serveur refuserait de toute façon (AGE_A_VERIFIER).
   async function confirmTakeaway(order, ageVerifie = false) {
@@ -352,21 +350,9 @@ export default function OrdersPage() {
           </button>
         </div>
       )}
-      {o.status === 'pret' && o.orderType === 'delivery' && o.driverId && (
-        <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
-          <input aria-label={t('ordersResto.phDriverCode')}
-            placeholder={t('ordersResto.phDriverCode')}
-            inputMode="numeric" autoComplete="off"
-            onKeyDown={(e) => { if (e.key === 'Enter') confirmPickup(o.id); }}
-            style={{ maxWidth: 140 }}
-            value={pickupCodeInputs[o.id] || ''}
-            onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
-          />
-          <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmPickup(o.id)}>
-            {confirmingPickup === o.id ? '...' : t('ordersResto.confirmPickup')}
-          </button>
-        </div>
-      )}
+      {/* RETRAIT SANS RIEN TAPER (simulation du 10 oct. 2026) : le commerce compare à l'œil le code que le livreur lui
+          montre avec celui-ci ; c'est le livreur qui confirme le retrait de son côté (PATCH /orders/:id/picked-up). */}
+      <CodeRetrait order={o} t={t} />
       {/* Le livreur est arrivé et attend (LIV-8) : le commerce le voit, avec depuis quand. */}
       {o.courierWaitingSince && ['preparation', 'pret'].includes(o.status) && (
         <p className="small" style={{ marginTop: 8, marginBottom: 0, fontWeight: 700 }}>{t('ordersResto.courierWaiting', { min: Math.max(0, Math.floor((Date.now() - o.courierWaitingSince) / 60000)) })}</p>
@@ -462,20 +448,7 @@ export default function OrdersPage() {
                 </button>
               </div>
             )}
-            {selectedOrder.status === 'pret' && selectedOrder.orderType === 'delivery' && selectedOrder.driverId && (
-              <div className="row" style={{ marginTop: 10, gap: 8 }}>
-                <input aria-label={t('ordersResto.phDriverCode')}
-                  placeholder={t('ordersResto.phDriverCode')}
-                  inputMode="numeric" autoComplete="off"
-                  style={{ maxWidth: 140 }}
-                  value={pickupCodeInputs[selectedOrder.id] || ''}
-                  onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
-                />
-                <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmPickup(selectedOrder.id)}>
-                  {confirmingPickup === selectedOrder.id ? '...' : t('ordersResto.confirmPickup')}
-                </button>
-              </div>
-            )}
+            <CodeRetrait order={selectedOrder} t={t} />
             <div className="divider" />
             {/* UN bouton d'impression (2026-09-23). Le terminal Fairide imprime les tickets de lui-même
                 (fondateur, 2026-09-22) ; ici ne reste que le secours : l'imprimante Bluetooth si elle est

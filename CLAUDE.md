@@ -343,6 +343,13 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   the business despite `MENU_LOCKED`; a rate change for everyone gives 7 days to refuse (Admin › Commerces).
 - **Alcohol is closed** until `ALCOHOL_ENABLED=true` on the server. Insurance, the AFSCA document and the alcohol licence are
   **alerts**, no longer blockers (business number, AFSCA number, contract, validated menu, allergens still block).
+  Since 2026-10-10 the AFSCA number blocks **only until the business signs the professional declaration `PRO-2026.2`**,
+  which certifies its AFSCA registration, authorisations and insurance (`declarationsCommerce.js`); the team then
+  checks it on the AFSCA's public Food Hygiene Rating tool by company number (alert `afsca_auto_declare`).
+- **Pickup without a restaurant click** (2026-10-10): the restaurant sees the pickup code and compares it by eye; the
+  **courier** confirms (`PATCH /orders/:id/picked-up`, accepted from `preparation` too). `/confirm-pickup` still exists.
+  « Ma carte et mes engagements » ([ConformiteCarte](src/components/conformite/ConformiteCarte.jsx)) is one checkbox,
+  one name, one button that posts each pending signature to its own route — each keeps its own version and hash.
 - **Couriers**: two statuses only (P2P removed); they set their minimum per ride and per km and only see offers above it
   (the customer's delivery fee rises to the cheapest courier's minimum, capped); **no delivery rating**; suspension only for
   fraud, serious misconduct or legal obligation; random check selfie at shift start (`controleSelfie.js`); grid of the 8
