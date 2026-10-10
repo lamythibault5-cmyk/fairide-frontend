@@ -268,6 +268,22 @@ export default function DriverDashboard() {
     }
   }
 
+  // RETRAIT CONFIRMÉ PAR LE LIVREUR (simulation du 10 oct. 2026) : le commerce n'a plus rien à taper. Il compare à l'œil
+  // le code affiché ici avec le sien, remet la commande, et c'est ce bouton qui la fait passer « en livraison ».
+  const [retraitEnCours, setRetraitEnCours] = useState(null);
+  async function confirmerRetrait(order) {
+    setRetraitEnCours(order.id);
+    try {
+      await api(`/orders/${order.id}/picked-up`, { method: 'PATCH', token });
+      toast(t('dashDriver.toastPickedUp'));
+      load();
+    } catch (e) {
+      toast(e.message, 'erreur');
+    } finally {
+      setRetraitEnCours(null);
+    }
+  }
+
   // Âge non prouvé à la porte : la commande est close, la course t'est payée, l'équipe décide du reste.
   async function refuserRemiseAge(order) {
     try {
@@ -323,6 +339,9 @@ export default function DriverDashboard() {
       </div>
       {o.status !== 'pret' && <p className="small">{t('dashDriver.stillPreparing')}</p>}
       <BoutonsItineraire adresse={o.restaurantAddress} lat={o.restaurantLat} lng={o.restaurantLng} t={t} />
+      <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => confirmerRetrait(o)}>
+        {retraitEnCours === o.id ? '…' : t('dashDriver.pickedUpButton')}
+      </button>
       <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
     </div>
   );

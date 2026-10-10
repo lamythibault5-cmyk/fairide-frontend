@@ -11,8 +11,16 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
  *   A2 — signer la carte (prix, TVA, allergènes, alcool) : sans signature, aucune commande n'est
  *        possible. Toute modification d'un prix, d'une TVA, d'un allergène remet la carte à signer.
  *   A1 — attester la procédure allergènes et donner le numéro que les clients appellent.
- *   A8 — déclarer vendre en tant que professionnel.
- *   A4 — rappeler que les plats alcoolisés restent masqués sans autorisation accises vérifiée. */
+ *   A8 — déclarer vendre en tant que professionnel ; depuis PRO-2026.2, la même déclaration certifie
+ *        l'enregistrement AFSCA, les autorisations et les assurances (plus de numéro ni de pièce exigés).
+ *   A4 — rappeler que les plats alcoolisés restent masqués sans autorisation accises vérifiée.
+ *
+ * UNE CASE, UN NOM, UN BOUTON (fondateur, simulation du 10 oct. 2026). C'étaient trois formulaires l'un sous l'autre,
+ * chacun avec sa case, son champ « nom complet » et son bouton : trois fois la même saisie, et un restaurateur testeur
+ * ne savait plus ce qui restait à faire. Désormais : la liste de ce qui reste à signer, textes visibles, une seule case
+ * « j'atteste l'ensemble », le nom tapé une fois, un bouton. Côté serveur rien ne change — chaque engagement garde sa
+ * route, sa version et son empreinte SHA-256 : le bouton les envoie l'un après l'autre. Signer ensemble des textes
+ * qu'on a sous les yeux reste une signature de chacun d'eux. */
 // `rafraichir` : la fiche du commerce, rechargée après chaque modification de plat — un prix changé
 // remet la carte à signer, le panneau doit le montrer sans recharger la page.
 export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
@@ -32,7 +40,7 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
   const [d, setD] = useState(null);
   const [busy, setBusy] = useState(false);
   const [nom, setNom] = useState('');
-  const [coches, setCoches] = useState({});
+  const [coche, setCoche] = useState(false);
   const [tel, setTel] = useState('');
   const [referent, setReferent] = useState('');
 
@@ -43,31 +51,65 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
   }).catch(() => {});
   useEffect(() => { if (restoId) charger(); }, [restoId, rafraichir]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function agir(fn, ok) {
-    setBusy(true);
-    try { await fn(); toast(ok); await charger(); onChange?.(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
-  }
   if (!d) return null;
   const date = (ms) => new Date(ms).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
   const m = d.menu;
-  const toutSigne = m.signed && d.allergens.attestation.attestedAt && d.professional.declaredAt;
+  const pro = d.professional;
+  const proAJour = !!pro.declaredAt && pro.upToDate !== false;
+
+  // Ce qui reste à signer, dans l'ordre où le serveur l'attend. La carte n'y entre que si elle est signable (des plats,
+  // rien qui manque) : tant que Fairide la prépare, il n'y a rien à signer et on le dit.
+  const aSigner = [];
+  if (!m.signed && m.missing.length === 0 && m.itemCount > 0) aSigner.push('carte');
+  if (!d.allergens.attestation.attestedAt) aSigner.push('allergenes');
+  if (!proAJour) aSigner.push('pro');
+  const toutSigne = m.signed && d.allergens.attestation.attestedAt && proAJour;
+
+  async function toutSigner(e) {
+    e.preventDefault();
+    const typedName = nom.trim();
+    setBusy(true);
+    try {
+      // L'un après l'autre : si l'un échoue (numéro d'allergènes invalide, dénomination manquante…), les précédents
+      // restent signés et le panneau rechargé montre exactement ce qui reste.
+      for (const quoi of aSigner) {
+        if (quoi === 'carte') await api(`/restaurants/${restoId}/menu/sign`, { method: 'POST', token, body: { typedName, confirmed: true } });
+        if (quoi === 'allergenes') await api(`/restaurants/${restoId}/allergens/attest`, { method: 'POST', token, body: { typedName, confirmed: true, contactPhone: tel.trim(), referentName: referent.trim() } });
+        if (quoi === 'pro') await api(`/restaurants/${restoId}/professional-declaration`, { method: 'POST', token, body: { typedName, confirmed: true } });
+      }
+      toast(t('conformite.signAllToast'));
+      setCoche(false);
+      onChange?.();
+    } catch (err) {
+      toast(err.message, 'erreur');
+    } finally {
+      await charger();
+      setBusy(false);
+    }
+  }
+
+  const fait = (texte) => <p className="small" style={{ margin: '2px 0 0' }}>✓ {texte}</p>;
 
   return (
     <details className="card conformite-carte" open={!toutSigne}>
       <summary>
         <b>{t('conformite.menuPanelTitle')}</b>{' '}
-        {toutSigne ? <span className="pill teal">✓ {t('conformite.menuPanelDone')}</span> : <span className="pill" style={{ color: 'var(--red)' }}>{t('conformite.menuPanelTodo')}</span>}
+        {toutSigne ? <span className="pill teal">✓ {t('conformite.menuPanelDone')}</span> : <span className="pill" style={{ color: 'var(--red)' }}>{t('conformite.signAllCount', { n: aSigner.length || 1 })}</span>}
       </summary>
 
-      {/* A2 — signature de la carte */}
-      <section style={{ marginTop: 12 }}>
-        <h4 style={{ margin: '0 0 4px' }}>{t('conformite.menuSignTitle')}</h4>
-        {m.signed ? (
-          <p className="small" style={{ margin: 0 }}>✓ {t('conformite.menuSigned', { date: m.lastSigned?.signedAt ? date(m.lastSigned.signedAt) : '', name: m.lastSigned?.signedName || '' })}</p>
-        ) : (
-          <>
-            <p className="small" style={{ margin: '0 0 6px' }}>{m.lastSigned ? t('conformite.menuChangedSinceSigned') : t('conformite.menuNeverSigned')}</p>
-            {m.missing.length > 0 && (
+      {/* Déjà signé : une ligne chacun, rien d'autre. */}
+      <div style={{ marginTop: 10 }}>
+        {m.signed && fait(t('conformite.menuSigned', { date: m.lastSigned?.signedAt ? date(m.lastSigned.signedAt) : '', name: m.lastSigned?.signedName || '' }))}
+        {d.allergens.attestation.attestedAt && fait(t('conformite.allergenAttested', { date: date(d.allergens.attestation.attestedAt), name: d.allergens.attestation.attestedName }))}
+        {proAJour && fait(t('conformite.proDeclared', { date: date(pro.declaredAt), name: pro.declaredName }))}
+      </div>
+
+      {/* Carte pas encore signable : on dit pourquoi, sans formulaire. */}
+      {!m.signed && !aSigner.includes('carte') && (
+        <div style={{ marginTop: 10 }}>
+          {m.itemCount === 0
+            ? <p className="small" style={{ margin: 0 }}>{t('conformite.menuNotReadyYet')}</p>
+            : (
               <>
                 <p className="small" style={{ margin: '0 0 4px', color: 'var(--red)' }}>{t('conformite.menuMissingCount', { n: m.missing.length })}</p>
                 <ul className="small" style={{ margin: '0 0 6px 18px' }}>
@@ -76,85 +118,74 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
                 </ul>
               </>
             )}
-            {m.missing.length === 0 && m.itemCount > 0 && (
-              <form onSubmit={(e) => { e.preventDefault(); agir(() => api(`/restaurants/${restoId}/menu/sign`, { method: 'POST', token, body: { typedName: nom.trim(), confirmed: !!coches.carte } }), t('conformite.menuSignedToast')); }}>
-                {/* Plus de liste « taux de TVA à indiquer » plat par plat : le serveur pose le taux standard à la
-                    signature (carteSignee.signer). On annonce la règle ici, pour qu'il signe en sachant ce qu'il signe. */}
-                {m.vatAutoCount > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--ink-soft)' }}>{t('conformite.menuVatAuto')}</p>}
-                <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
-                  <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!coches.carte} onChange={(e) => setCoches((c) => ({ ...c, carte: e.target.checked }))} />
-                  <span className="small">{traduit(m) || m.text}</span>
-                </label>
-                {traduit(m) && noteFoi(m.text)}
-                <div className="row" style={{ gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-                  <input aria-label={t('conformite.typedName')} placeholder={t('conformite.typedName')} value={nom} onChange={(e) => setNom(e.target.value)} style={{ maxWidth: 260 }} />
-                  <button type="submit" className="btn-teal" disabled={busy || !coches.carte || nom.trim().length < 3}>{t('conformite.menuSignButton', { n: m.itemCount })}</button>
+        </div>
+      )}
+
+      {aSigner.length > 0 && (
+        <form onSubmit={toutSigner} style={{ marginTop: 12 }}>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t('conformite.signAllIntro')}</p>
+
+          {aSigner.includes('carte') && (
+            <section className="conformite-bloc">
+              <h4 style={{ margin: '0 0 4px' }}>{t('conformite.menuSignTitle')}</h4>
+              <p className="small" style={{ margin: '0 0 4px' }}>{m.lastSigned ? t('conformite.menuChangedSinceSigned') : t('conformite.menuNeverSigned')}</p>
+              {/* Pas de liste « taux de TVA à indiquer » plat par plat : le serveur pose le taux proposé à la signature
+                  (carteSignee.signer). On annonce la règle ici, pour qu'il signe en sachant ce qu'il signe. */}
+              {m.vatAutoCount > 0 && <p className="small" style={{ margin: '0 0 4px', color: 'var(--ink-soft)' }}>{t('conformite.menuVatAuto')}</p>}
+              <p className="small" style={{ margin: 0 }}>{traduit(m) || m.text}</p>
+              {traduit(m) && noteFoi(m.text)}
+            </section>
+          )}
+
+          {aSigner.includes('allergenes') && (
+            <section className="conformite-bloc" style={{ marginTop: 12 }}>
+              <h4 style={{ margin: '0 0 4px' }}>{t('conformite.allergenAttestTitle')}</h4>
+              <ul className="small" style={{ margin: '0 0 6px 18px' }}>{(traduit(d.allergens.attestation) || d.allergens.attestation.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
+              {traduit(d.allergens.attestation) && noteFoi(d.allergens.attestation.text)}
+              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                <div className="field" style={{ margin: 0 }}>
+                  <label htmlFor={`${id}-tel`} className="small">{t('conformite.allergenPhone')}</label>
+                  <input id={`${id}-tel`} value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" />
                 </div>
-              </form>
-            )}
-          </>
-        )}
-        {m.lastSigned && <p className="small" style={{ margin: '6px 0 0' }}><a href={`${API_BASE}/restaurants/${restoId}/menu/versions?download=1`} onClick={async (e) => {
-          e.preventDefault();
-          try {
-            const r = await api(`/restaurants/${restoId}/menu/versions`, { token });
-            const url = URL.createObjectURL(new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' }));
-            const a = document.createElement('a'); a.href = url; a.download = `cartes-signees-${restoId}.json`; a.click(); URL.revokeObjectURL(url);
-          } catch (err) { toast(err.message, 'erreur'); }
-        }}>{t('conformite.menuVersionsExport')}</a></p>}
-      </section>
-
-      {/* A1 — procédure allergènes */}
-      <section style={{ marginTop: 16 }}>
-        <h4 style={{ margin: '0 0 4px' }}>{t('conformite.allergenAttestTitle')}</h4>
-        {d.allergens.attestation.attestedAt ? (
-          <p className="small" style={{ margin: 0 }}>✓ {t('conformite.allergenAttested', { date: date(d.allergens.attestation.attestedAt), name: d.allergens.attestation.attestedName })}</p>
-        ) : (
-          <form onSubmit={(e) => { e.preventDefault(); agir(() => api(`/restaurants/${restoId}/allergens/attest`, { method: 'POST', token, body: { typedName: nom.trim(), confirmed: !!coches.allergenes, contactPhone: tel.trim(), referentName: referent.trim() } }), t('conformite.allergenAttestedToast')); }}>
-            <ul className="small" style={{ margin: '0 0 6px 18px' }}>{(traduit(d.allergens.attestation) || d.allergens.attestation.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
-            {traduit(d.allergens.attestation) && noteFoi(d.allergens.attestation.text)}
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <div className="field" style={{ margin: 0 }}>
-                <label htmlFor={`${id}-tel`} className="small">{t('conformite.allergenPhone')}</label>
-                <input id={`${id}-tel`} value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" />
+                <div className="field" style={{ margin: 0 }}>
+                  <label htmlFor={`${id}-ref`} className="small">{t('conformite.allergenReferent')}</label>
+                  <input id={`${id}-ref`} value={referent} onChange={(e) => setReferent(e.target.value)} />
+                </div>
               </div>
-              <div className="field" style={{ margin: 0 }}>
-                <label htmlFor={`${id}-ref`} className="small">{t('conformite.allergenReferent')}</label>
-                <input id={`${id}-ref`} value={referent} onChange={(e) => setReferent(e.target.value)} />
-              </div>
-            </div>
-            <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', marginTop: 6 }}>
-              <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!coches.allergenes} onChange={(e) => setCoches((c) => ({ ...c, allergenes: e.target.checked }))} />
-              <span className="small">{t('conformite.allergenAttestCheck')}</span>
-            </label>
-            <div className="row" style={{ gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-              <input aria-label={t('conformite.typedName')} placeholder={t('conformite.typedName')} value={nom} onChange={(e) => setNom(e.target.value)} style={{ maxWidth: 260 }} />
-              <button type="submit" className="btn-teal" disabled={busy || !coches.allergenes || nom.trim().length < 3 || !tel.trim()}>{t('conformite.allergenAttestButton')}</button>
-            </div>
-          </form>
-        )}
-      </section>
+            </section>
+          )}
 
-      {/* A8 — vendeur professionnel */}
-      <section style={{ marginTop: 16 }}>
-        <h4 style={{ margin: '0 0 4px' }}>{t('conformite.proTitle')}</h4>
-        {d.professional.declaredAt ? (
-          <p className="small" style={{ margin: 0 }}>✓ {t('conformite.proDeclared', { date: date(d.professional.declaredAt), name: d.professional.declaredName })}</p>
-        ) : (
-          <form onSubmit={(e) => { e.preventDefault(); agir(() => api(`/restaurants/${restoId}/professional-declaration`, { method: 'POST', token, body: { typedName: nom.trim(), confirmed: !!coches.pro } }), t('conformite.proDeclaredToast')); }}>
-            <ul className="small" style={{ margin: '0 0 6px 18px' }}>{(traduit(d.professional) || d.professional.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
-            {traduit(d.professional) && noteFoi(d.professional.text)}
-            <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
-              <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!coches.pro} onChange={(e) => setCoches((c) => ({ ...c, pro: e.target.checked }))} />
-              <span className="small">{t('conformite.proCheck')}</span>
-            </label>
-            <div className="row" style={{ gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-              <input aria-label={t('conformite.typedName')} placeholder={t('conformite.typedName')} value={nom} onChange={(e) => setNom(e.target.value)} style={{ maxWidth: 260 }} />
-              <button type="submit" className="btn-teal" disabled={busy || !coches.pro || nom.trim().length < 3}>{t('conformite.proButton')}</button>
-            </div>
-          </form>
-        )}
-      </section>
+          {aSigner.includes('pro') && (
+            <section className="conformite-bloc" style={{ marginTop: 12 }}>
+              <h4 style={{ margin: '0 0 4px' }}>{t('conformite.proTitle')}</h4>
+              {pro.declaredAt && <p className="small" style={{ margin: '0 0 4px' }}>{t('conformite.proNewVersion')}</p>}
+              <ul className="small" style={{ margin: '0 0 6px 18px' }}>{(traduit(pro) || pro.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
+              {traduit(pro) && noteFoi(pro.text)}
+            </section>
+          )}
+
+          <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', marginTop: 12 }}>
+            <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={coche} onChange={(e) => setCoche(e.target.checked)} />
+            <span className="small" style={{ fontWeight: 600 }}>{t('conformite.signAllCheck')}</span>
+          </label>
+          <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+            <label htmlFor={`${id}-nom`} className="sr-only">{t('conformite.typedName')}</label>
+            <input id={`${id}-nom`} placeholder={t('conformite.typedName')} value={nom} onChange={(e) => setNom(e.target.value)} autoComplete="name" style={{ maxWidth: 260 }} />
+            <button type="submit" className="btn-teal" disabled={busy || !coche || nom.trim().length < 3 || (aSigner.includes('allergenes') && !tel.trim())}>
+              {busy ? '…' : t('conformite.signAllButton', { n: aSigner.length })}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {m.lastSigned && <p className="small" style={{ margin: '10px 0 0' }}><a href={`${API_BASE}/restaurants/${restoId}/menu/versions?download=1`} onClick={async (e) => {
+        e.preventDefault();
+        try {
+          const r = await api(`/restaurants/${restoId}/menu/versions`, { token });
+          const url = URL.createObjectURL(new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' }));
+          const a = document.createElement('a'); a.href = url; a.download = `cartes-signees-${restoId}.json`; a.click(); URL.revokeObjectURL(url);
+        } catch (err) { toast(err.message, 'erreur'); }
+      }}>{t('conformite.menuVersionsExport')}</a></p>}
 
       {/* Alcool fermé au lancement (DEC-22, ALCOHOL_ENABLED côté serveur) : les plats sont masqués pour tous, avec ou
           sans autorisation — on ne réclame donc pas la pièce AGD&A au commerce, on lui dit pourquoi. */}
