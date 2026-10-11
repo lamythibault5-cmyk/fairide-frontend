@@ -5648,6 +5648,17 @@ export default {
       paidOnlineBadge: 'Already paid online'
     },
     dashDriver: {
+      posReqTitre: 'Turn on your location to get deliveries',
+      posReqTexte: 'Without it, the customer can’t follow their order: we can’t give you a delivery. It is only used during a delivery.',
+      posReqBtn: 'Allow location',
+      posReqVerifier: 'I allowed it, check again',
+      posReqRefuse: 'Your phone has blocked location for Fairide. To turn it back on:',
+      posReqIos: 'iPhone: Settings › Fairide › Location › « While Using the App ».',
+      posReqAndroid: 'Android: Settings › Apps › Fairide › Permissions › Location › « Allow only while using the app ».',
+      posReqWeb: 'Browser: tap the padlock left of the address › Location › Allow, then reload the page.',
+      posReqToujours: 'Location is still not allowed.',
+      posReqPartage: 'You turned off location sharing in My account. Turn it back on to get deliveries.',
+      posReqCompte: 'Open My account',
       notifHelp: 'Get notified on this phone as soon as a delivery above your minimum is available.',
       notifOn: 'You get notified of new deliveries on this device.',
       loadError: 'Your deliveries could not be loaded.',
@@ -5870,8 +5881,8 @@ export default {
       myData_logoutAllButton: "Log out of all devices",
       myData_logoutAllConfirm: "All your sessions will be closed, on all your devices. You will need to log in again.",
       myData_loggedOutEverywhere: "You are logged out of all your devices.",
-      guaranteeTitle: 'Small month = no subscription',
-      guaranteeText: 'As long as your orders don\'t exceed €50 in a month (product prices, VAT included, without delivery or tips), that month costs you nothing: during your free month, the next month is free too; during a paid month, your €20 is refunded automatically. Above €50, that month\'s subscription is due; the 10% per order paid online still applies.',
+      guaranteeTitle: 'Sell €50 or less = €0 subscription',
+      guaranteeText: 'In a month where you sell €50 or less on Fairide, you don’t pay that month’s subscription. It’s automatic: nothing is charged, or the €20 is given back. Above €50, the subscription is due. (We count dish prices, VAT included, without delivery or tips.)',
       guaranteeUnder: '{amount} of orders so far in this subscription month ({n} order(s)). If it ends on {date} without exceeding {threshold}, it will cost you nothing.',
       guaranteeOver: '{amount} of orders in this subscription month, above {threshold}: this month\'s subscription is due.',
       guaranteeHistory_free: 'Free month ({amount}): no more than €50 of orders from {from} to {to}.',
@@ -6273,6 +6284,7 @@ export default {
       manageCookies: 'Manage my cookies'
     },
     cookies: {
+      short: 'Technical cookies only — and, if you accept, a tool that helps us fix crashes. No ads.',
       text: 'Fairide uses technical cookies necessary for the site to work (login, cart). Only with your consent, we also enable an error-reporting tool that helps us fix breakages. No advertising tracking.',
       accept: 'Accept',
       refuse: 'Refuse',
@@ -6285,7 +6297,7 @@ export default {
       backHome: 'Back home'
     },
     landing: {
-      joinRestaurantP3: '€50 of orders or less in the month = no subscription: the month is free or refunded',
+      joinRestaurantP3: 'A month where you sell €50 or less: no subscription to pay',
       title1: 'Pay for your meal,',
       title2: 'not the platform.',
       subAdresse: 'The alternative to Uber Eats and Deliveroo. Cheaper for you, fairer for the restaurant and the courier, and your money stays in Brussels.',
@@ -8191,6 +8203,8 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      co3: 'Sell €50 or less = €0 subscription',
+      co3S: 'Quiet month? If you sell €50 or less, you don’t pay that month’s subscription. Automatically.',
       nAccept: 'Your order is accepted',
       nAcceptS: 'Or declined, with the reason.',
       nRoute: 'Your courier is on the way',
@@ -8320,20 +8334,20 @@ export default {
       lv3: '100 % of tips are yours',
       lv3S: 'Fairide takes no share.',
       lvBtn: 'Start delivering',
-      lvPosTitre: 'Get rides near you',
-      lvPosSub: 'Your location is used to offer you nearby rides, and to show the customer where their order is.',
-      lvPos1: 'Only while the app is open',
-      lvPos1S: 'Fairide doesn’t track your location in the background.',
+      lvPosTitre: 'Your location is essential to deliver',
+      lvPosSub: 'It is used for one thing only: showing the customer where their order is, during the delivery.',
+      lvPos1: 'Only during a delivery',
+      lvPos1S: 'From pickup at the business to handover to the customer. Never while waiting for a job, never in the background.',
       lvPos2: 'The customer sees where you are, not your full name',
       lvPos2S: 'First name and initial.',
       lvPosBtn: 'Allow location',
       coChip: 'For businesses',
       coTitre: '10 % excl. VAT, not 30.',
       coSub: 'A Belgian start-up that wants delivery to help the corner shop.',
-      co1: 'You get your in-store price',
-      co1S: 'On every order paid online. Fairide’s commission is added to the displayed price.',
+      co1: 'You choose your prices',
+      co1S: 'Your in-store price: Fairide takes 10 % of it. Or your price + 10 % (12.1 % with VAT): you get the same as at the counter.',
       co2: 'Subscription free during launch',
-      co2S: 'Then €20/month, first month free. A month with €50 of orders or less costs you nothing.',
+      co2S: 'Then €20 a month, and the first month is free.',
       coBtn: 'Sign up my business',
       coNotifTitre: 'Never miss an order',
       coNotifSub: 'A notification for every new order, even with the phone locked.'

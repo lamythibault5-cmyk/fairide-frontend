@@ -203,6 +203,25 @@ export async function demanderPosition() {
   });
 }
 
+/* État de l'autorisation de position, SANS rien demander : 'granted' | 'denied' | 'prompt'. Sert à l'écran qui bloque les
+ * courses d'un livreur tant qu'elle manque (components/livreur/PositionRequise.jsx). 'denied' veut dire que le système ne
+ * reposera plus la question : seule la personne peut la rouvrir dans ses réglages. Un navigateur sans l'API Permissions
+ * répond 'prompt' — la demande réelle (demanderPosition) tranchera. */
+export async function etatPosition() {
+  if (estNatif()) {
+    try {
+      const { Geolocation } = await import('@capacitor/geolocation');
+      const d = await Geolocation.checkPermissions();
+      if (d.location === 'granted' || d.coarseLocation === 'granted') return 'granted';
+      return d.location === 'denied' ? 'denied' : 'prompt';
+    } catch { return 'prompt'; }
+  }
+  try {
+    const p = await navigator.permissions?.query({ name: 'geolocation' });
+    return p?.state || 'prompt';
+  } catch { return 'prompt'; }
+}
+
 /* Connexion Apple / Google DANS L'APPLICATION (feuille native du système).
  *
  * POURQUOI PAS LE BOUTON GOOGLE DU SITE. Google refuse sa connexion dans une WebView (« disallowed_useragent ») :

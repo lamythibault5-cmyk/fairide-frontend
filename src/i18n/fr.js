@@ -5664,6 +5664,17 @@ export default {
       paidOnlineBadge: 'Déjà payé en ligne'
     },
     dashDriver: {
+      posReqTitre: 'Active ta position pour recevoir des courses',
+      posReqTexte: 'Sans elle, le client ne peut pas suivre sa commande : on ne peut pas te confier de course. Elle n’est utilisée que pendant une livraison.',
+      posReqBtn: 'Autoriser la position',
+      posReqVerifier: 'J’ai autorisé, vérifier',
+      posReqRefuse: 'Ton téléphone a bloqué la position pour Fairide. Pour la rétablir :',
+      posReqIos: 'iPhone : Réglages › Fairide › Position › « Lorsque l’app est active ».',
+      posReqAndroid: 'Android : Paramètres › Applications › Fairide › Autorisations › Position › « Autoriser seulement si l’appli est en cours d’utilisation ».',
+      posReqWeb: 'Navigateur : touche le cadenas à gauche de l’adresse › Position › Autoriser, puis recharge la page.',
+      posReqToujours: 'La position n’est toujours pas autorisée.',
+      posReqPartage: 'Tu as coupé le partage de position dans Mon compte. Réactive-le pour recevoir des courses.',
+      posReqCompte: 'Ouvrir Mon compte',
       notifHelp: 'Être prévenu sur ce téléphone dès qu’une course au-dessus de ton minimum est disponible.',
       notifOn: 'Tu es prévenu des nouvelles courses sur cet appareil.',
       loadError: 'Impossible de charger tes courses.',
@@ -5889,8 +5900,8 @@ export default {
       myData_logoutAllButton: "Me déconnecter de tous les appareils",
       myData_logoutAllConfirm: "Toutes tes sessions seront fermées, sur tous tes appareils. Tu devras te reconnecter.",
       myData_loggedOutEverywhere: "Tu es déconnecté de tous tes appareils.",
-      guaranteeTitle: 'Petit mois = pas d\'abonnement',
-      guaranteeText: 'Tant que tes commandes ne dépassent pas 50 € sur un mois (prix des produits, TVA comprise, sans la livraison ni les pourboires), ce mois ne te coûte rien : pendant ton mois offert, le mois suivant est offert aussi ; pendant un mois payé, tes 20 € te sont remboursés automatiquement. Au-delà de 50 €, l\'abonnement de ce mois est dû ; les 10 % par commande payée en ligne restent applicables.',
+      guaranteeTitle: '50 € vendus ou moins = 0 € d’abonnement',
+      guaranteeText: 'Un mois où tu vends 50 € ou moins sur Fairide, tu ne paies pas l’abonnement de ce mois. C’est automatique : rien n’est prélevé, ou les 20 € te sont rendus. Au-delà de 50 €, l’abonnement est dû. (On compte le prix des plats, TVA comprise, sans la livraison ni les pourboires.)',
       guaranteeUnder: '{amount} de commandes pour l\'instant sur ce mois d\'abonnement ({n} commande(s)). S\'il se termine le {date} sans dépasser {threshold}, il ne te coûtera rien.',
       guaranteeOver: '{amount} de commandes sur ce mois d\'abonnement, au-delà de {threshold} : l\'abonnement de ce mois est dû.',
       guaranteeHistory_free: 'Mois offert ({amount}) : pas plus de 50 € de commandes du {from} au {to}.',
@@ -6302,6 +6313,7 @@ export default {
       manageCookies: 'Gérer mes cookies'
     },
     cookies: {
+      short: 'Cookies techniques seulement — et, si tu acceptes, un outil qui nous aide à corriger les pannes. Aucune pub.',
       text: "Fairide utilise des cookies techniques nécessaires au fonctionnement du site (connexion, panier). Avec ton accord uniquement, nous activons aussi un outil de rapport d'erreurs qui nous aide à corriger les pannes. Aucun tracking publicitaire.",
       accept: 'Accepter',
       refuse: 'Refuser',
@@ -6314,7 +6326,7 @@ export default {
       backHome: "Retour à l'accueil"
     },
     landing: {
-      joinRestaurantP3: '50 € de commandes ou moins dans le mois = pas d\'abonnement : le mois est offert ou remboursé',
+      joinRestaurantP3: 'Un mois où tu vends 50 € ou moins : pas d’abonnement à payer',
       /* « Paie ton repas, pas la plateforme » traînait à la fin du sous-titre, derrière trente mots
          qui décrivaient le fonctionnement du service. Elle passe en titre : c'est la seule phrase
          de la page qui dise le positionnement entier en cinq mots, et elle se retient.
@@ -8241,6 +8253,8 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      co3: '50 € vendus ou moins = 0 € d’abonnement',
+      co3S: 'Un mois calme ? Si tu vends 50 € ou moins, tu ne paies pas l’abonnement de ce mois. Automatiquement.',
       nAccept: 'Ta commande est acceptée',
       nAcceptS: 'Ou refusée, avec le motif.',
       nRoute: 'Ton livreur est en route',
@@ -8370,20 +8384,20 @@ export default {
       lv3: '100 % des pourboires pour toi',
       lv3S: 'Fairide n’en prend aucune part.',
       lvBtn: 'Commencer à livrer',
-      lvPosTitre: 'Reçois les courses près de toi',
-      lvPosSub: 'Ta position sert à te proposer des courses proches, et à montrer au client où en est sa livraison.',
-      lvPos1: 'Seulement quand l’app est ouverte',
-      lvPos1S: 'Fairide ne suit pas ta position en arrière-plan.',
+      lvPosTitre: 'La position est indispensable pour livrer',
+      lvPosSub: 'Elle sert à une seule chose : montrer au client où en est sa commande, pendant la livraison.',
+      lvPos1: 'Seulement pendant une livraison',
+      lvPos1S: 'Du retrait chez le commerce à la remise au client. Jamais en attente de course, jamais en arrière-plan.',
       lvPos2: 'Le client voit où tu es, pas ton nom complet',
       lvPos2S: 'Prénom et initiale.',
       lvPosBtn: 'Autoriser la position',
       coChip: 'Pour les commerces',
       coTitre: '10 % HT, pas 30.',
       coSub: 'Une startup belge qui veut que la livraison aide le commerce du coin.',
-      co1: 'Tu reçois ton prix en magasin',
-      co1S: 'Sur chaque commande payée en ligne. La commission de Fairide s’ajoute au prix affiché.',
+      co1: 'Tu choisis tes prix',
+      co1S: 'Ton prix en magasin : Fairide prend 10 % dessus. Ou ton prix + 10 % (12,1 % avec la TVA) : tu touches la même chose qu’au comptoir.',
       co2: 'Abonnement offert pendant le lancement',
-      co2S: 'Ensuite 20 €/mois, premier mois offert. Un mois à 50 € de commandes ou moins ne te coûte rien.',
+      co2S: 'Ensuite 20 € par mois, et le premier mois est offert.',
       coBtn: 'Inscrire mon commerce',
       coNotifTitre: 'Ne rate aucune commande',
       coNotifSub: 'Une notification à chaque nouvelle commande, même téléphone verrouillé.'

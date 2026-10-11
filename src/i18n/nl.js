@@ -5657,6 +5657,17 @@ export default {
       paidOnlineBadge: 'Al online betaald'
     },
     dashDriver: {
+      posReqTitre: 'Zet je locatie aan om ritten te ontvangen',
+      posReqTexte: 'Zonder kan de klant zijn bestelling niet volgen: we kunnen je geen rit toevertrouwen. Ze wordt alleen tijdens een levering gebruikt.',
+      posReqBtn: 'Locatie toestaan',
+      posReqVerifier: 'Ik heb het toegestaan, controleren',
+      posReqRefuse: 'Je telefoon heeft de locatie voor Fairide geblokkeerd. Zo zet je ze terug aan:',
+      posReqIos: 'iPhone: Instellingen › Fairide › Locatie › « Bij gebruik van app ».',
+      posReqAndroid: 'Android: Instellingen › Apps › Fairide › Rechten › Locatie › « Alleen toestaan tijdens gebruik van de app ».',
+      posReqWeb: 'Browser: tik op het slotje links van het adres › Locatie › Toestaan, en herlaad de pagina.',
+      posReqToujours: 'De locatie is nog steeds niet toegestaan.',
+      posReqPartage: 'Je hebt het delen van je locatie uitgezet in Mijn account. Zet het weer aan om ritten te ontvangen.',
+      posReqCompte: 'Mijn account openen',
       notifHelp: 'Op deze telefoon verwittigd worden zodra er een rit boven je minimum beschikbaar is.',
       notifOn: 'Je wordt op dit toestel verwittigd van nieuwe ritten.',
       loadError: 'Je ritten konden niet worden geladen.',
@@ -5879,8 +5890,8 @@ export default {
       myData_logoutAllButton: "Uitloggen op alle apparaten",
       myData_logoutAllConfirm: "Al je sessies worden gesloten, op al je apparaten. Je moet opnieuw inloggen.",
       myData_loggedOutEverywhere: "Je bent uitgelogd op al je apparaten.",
-      guaranteeTitle: 'Kleine maand = geen abonnement',
-      guaranteeText: 'Zolang je bestellingen in een maand niet boven € 50 komen (prijs van de producten, btw inbegrepen, zonder levering of fooien), kost die maand je niets: tijdens je gratis maand is de volgende maand ook gratis; tijdens een betaalde maand wordt je € 20 automatisch terugbetaald. Boven € 50 is het abonnement van die maand verschuldigd; de 10% per online betaalde bestelling blijft van toepassing.',
+      guaranteeTitle: '€ 50 of minder verkocht = € 0 abonnement',
+      guaranteeText: 'Een maand waarin je € 50 of minder verkoopt via Fairide, betaal je het abonnement van die maand niet. Dat gaat automatisch: er wordt niets aangerekend, of je krijgt de € 20 terug. Boven € 50 is het abonnement verschuldigd. (We tellen de prijs van de gerechten, btw inbegrepen, zonder levering of fooien.)',
       guaranteeUnder: '{amount} aan bestellingen tot nu toe in deze abonnementsmaand ({n} bestelling(en)). Eindigt ze op {date} zonder boven {threshold} te komen, dan kost ze je niets.',
       guaranteeOver: '{amount} aan bestellingen in deze abonnementsmaand, boven {threshold}: het abonnement van deze maand is verschuldigd.',
       guaranteeHistory_free: 'Gratis maand ({amount}): niet meer dan € 50 aan bestellingen van {from} tot {to}.',
@@ -6282,6 +6293,7 @@ export default {
       manageCookies: 'Mijn cookies beheren'
     },
     cookies: {
+      short: 'Alleen technische cookies — en, als je akkoord gaat, een hulpmiddel om storingen op te lossen. Geen reclame.',
       text: 'Fairide gebruikt technische cookies die nodig zijn voor de werking van de site (login, winkelmandje). Alleen met jouw toestemming schakelen we ook een tool voor foutrapportage in die ons helpt storingen op te lossen. Geen advertentietracking.',
       accept: 'Accepteren',
       refuse: 'Weigeren',
@@ -6294,7 +6306,7 @@ export default {
       backHome: 'Terug naar de startpagina'
     },
     landing: {
-      joinRestaurantP3: '€ 50 aan bestellingen of minder in de maand = geen abonnement: de maand is gratis of wordt terugbetaald',
+      joinRestaurantP3: 'Een maand waarin je € 50 of minder verkoopt: geen abonnement te betalen',
       title1: 'Betaal je maaltijd,',
       title2: 'niet het platform.',
       subAdresse: 'Het alternatief voor Uber Eats en Deliveroo. Goedkoper voor jou, eerlijker voor de zaak en de koerier, en je geld blijft in Brussel.',
@@ -8200,6 +8212,8 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      co3: '€ 50 of minder verkocht = € 0 abonnement',
+      co3S: 'Rustige maand? Verkoop je € 50 of minder, dan betaal je het abonnement van die maand niet. Automatisch.',
       nAccept: 'Je bestelling is aanvaard',
       nAcceptS: 'Of geweigerd, met de reden.',
       nRoute: 'Je koerier is onderweg',
@@ -8329,20 +8343,20 @@ export default {
       lv3: '100 % van de fooien voor jou',
       lv3S: 'Fairide neemt er niets van.',
       lvBtn: 'Beginnen met bezorgen',
-      lvPosTitre: 'Ontvang ritten in je buurt',
-      lvPosSub: 'Je locatie dient om je ritten in de buurt voor te stellen, en om de klant te tonen waar zijn bestelling is.',
-      lvPos1: 'Alleen als de app open is',
-      lvPos1S: 'Fairide volgt je locatie niet op de achtergrond.',
+      lvPosTitre: 'Je locatie is onmisbaar om te bezorgen',
+      lvPosSub: 'Ze dient voor één ding: de klant tonen waar zijn bestelling is, tijdens de levering.',
+      lvPos1: 'Alleen tijdens een levering',
+      lvPos1S: 'Van het ophalen bij de zaak tot de overhandiging aan de klant. Nooit tijdens het wachten op een rit, nooit op de achtergrond.',
       lvPos2: 'De klant ziet waar je bent, niet je volledige naam',
       lvPos2S: 'Voornaam en initiaal.',
       lvPosBtn: 'Locatie toestaan',
       coChip: 'Voor zaken',
       coTitre: '10 % excl. btw, geen 30.',
       coSub: 'Een Belgische start-up die wil dat bezorging de zaak om de hoek helpt.',
-      co1: 'Je ontvangt je winkelprijs',
-      co1S: 'Op elke online betaalde bestelling. De commissie van Fairide komt bovenop de getoonde prijs.',
+      co1: 'Jij kiest je prijzen',
+      co1S: 'Je winkelprijs: Fairide neemt er 10 % van. Of je prijs + 10 % (12,1 % met btw): je krijgt hetzelfde als aan de toog.',
       co2: 'Abonnement gratis tijdens de lancering',
-      co2S: 'Daarna 20 €/maand, eerste maand gratis. Een maand met € 50 aan bestellingen of minder kost je niets.',
+      co2S: 'Daarna € 20 per maand, en de eerste maand is gratis.',
       coBtn: 'Mijn zaak inschrijven',
       coNotifTitre: 'Mis geen enkele bestelling',
       coNotifSub: 'Een melding bij elke nieuwe bestelling, ook als je telefoon vergrendeld is.'

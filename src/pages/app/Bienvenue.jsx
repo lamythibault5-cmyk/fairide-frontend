@@ -142,7 +142,10 @@ export default function Bienvenue() {
     setEcran(precedent || 'accueil');
   }
   const basculer = (setter) => (v) => setter((l) => (l.includes(v) ? l.filter((x) => x !== v) : [...l, v]));
-  const progression = Math.max(0, parcours.indexOf(ecran)) / (parcours.length - 1);
+  // Tant qu'aucun profil n'est choisi, le parcours ne compte que deux écrans : « Tu es… » aurait affiché une barre
+  // pleine (retour du fondateur, 2026-10-11). On mesure donc sur le parcours le plus long, celui du client.
+  const mesure = role ? parcours : ['accueil', 'profil', ...PARCOURS.client];
+  const progression = Math.max(0, mesure.indexOf(ecran)) / (mesure.length - 1);
 
   async function utiliserPosition(ensuite) {
     setAttente(true);
@@ -225,12 +228,15 @@ export default function Bienvenue() {
       contenu = (
         <EcranPermission icone="position" titre={t('appli.lvPosTitre')} sous={t('appli.lvPosSub')} bouton={t('appli.lvPosBtn')} attente={attente}
           faits={[['horloge', t('appli.lvPos1'), t('appli.lvPos1S')], ['apercu', t('appli.lvPos2'), t('appli.lvPos2S')]]}
-          onOui={() => utiliserPosition(suivant)} onNon={suivant} />
+          // Indispensable pour livrer : pas de « Pas maintenant ». Un refus n'empêche pas de créer le compte (le
+          // tableau de bord bloque ensuite les courses tant qu'elle manque, PositionRequise.jsx) — bloquer l'inscription
+          // elle-même pour une permission serait refusé par Apple (règle 5.1.1).
+          onOui={() => utiliserPosition(suivant)} />
       ); break;
     case 'coPromesses':
       contenu = (
         <EcranPromesses chip={t('appli.coChip')} chipIcone="be" titre={t('appli.coTitre')} sous={t('appli.coSub')} bouton={t('appli.coBtn')} onSuite={suivant}
-          faits={[['euro', t('appli.co1'), t('appli.co1S')], ['cadeau', t('appli.co2'), t('appli.co2S')]]} />
+          faits={[['euro', t('appli.co1'), t('appli.co1S')], ['cadeau', t('appli.co2'), t('appli.co2S')], ['bouclier', t('appli.co3'), t('appli.co3S')]]} />
       ); break;
     default:
       contenu = null;

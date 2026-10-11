@@ -212,6 +212,7 @@ export function EcranEnvies({ envies, onBasculer, onSuite }) {
 
 // Amorçage d'une permission : on explique AVANT la fenêtre du système (un refus est définitif sur iOS), et
 // « Pas maintenant » ne punit jamais.
+// Sans `onNon`, pas de « Pas maintenant » : la permission est indispensable (position du livreur, voir Bienvenue.jsx).
 export function EcranPermission({ icone, titre, sous, faits, bouton, onOui, onNon, libelleNon, attente }) {
   const { t } = useLanguage();
   return (
@@ -222,7 +223,7 @@ export function EcranPermission({ icone, titre, sous, faits, bouton, onOui, onNo
       {faits.map(([ic, ti, so]) => <Fait key={ti} icone={ic} titre={ti} sous={so} />)}
       <div className="bv-grandit" />
       <button type="button" className="bv-btn btn-teal" disabled={attente} onClick={onOui}>{attente ? t('common.loading') : bouton}</button>
-      <button type="button" className="bv-lien" disabled={attente} onClick={onNon}>{libelleNon || t('appli.pasMaintenant')}</button>
+      {onNon && <button type="button" className="bv-lien" disabled={attente} onClick={onNon}>{libelleNon || t('appli.pasMaintenant')}</button>}
     </>
   );
 }
