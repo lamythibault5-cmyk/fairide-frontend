@@ -183,6 +183,14 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  // « Continuer avec Apple » (application iPhone seulement, voir natif.js) : même réponse que Google — session
+  // ouverte, ou INCOMPLETE_PROFILE pour enchaîner sur le formulaire d'inscription.
+  async function loginWithApple(idToken, role, extra) {
+    const data = await api('/auth/apple', { method: 'POST', body: { idToken, role, ...extra } });
+    setSession(data);
+    return data;
+  }
+
   async function updateProfile(patch) {
     // logoutOn401: false — cet endpoint renvoie 401 pour un mot de passe ACTUEL incorrect, pas pour
     // une session invalide (voir api.js). L'erreur doit s'afficher dans le formulaire.
@@ -321,6 +329,7 @@ export function AuthProvider({ children }) {
     forgotPassword,
     resetPassword,
     loginWithGoogle,
+    loginWithApple,
     updateProfile,
     refreshUser,
     requestContactChange,

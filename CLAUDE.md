@@ -33,6 +33,18 @@ no react-leaflet wrapper), `@dnd-kit/*` (drag-and-drop for menu ordering).
 `@capacitor/*` wraps the same `dist/` into the iOS and Android apps (`npm run app:sync`, `app:android`,
 `app:ios`); everything native goes through `src/natif.js` and `src/pushNatif.js` — see
 [docs/application-mobile.md](docs/application-mobile.md) for what is in place and what still needs store accounts.
+`@capacitor/geolocation` and `@capgo/capacitor-social-login` (Apple / Google sheet — the site's Google button is refused
+inside a WebView) are loaded with `import()` from `natif.js` only, so the website never downloads them.
+
+**The app has its own first-launch screens** (2026-10-11, [src/pages/app/Bienvenue.jsx](src/pages/app/Bienvenue.jsx),
+route `/bienvenue`, outside `<Layout>`; designed with the founder on [mockups/app-onboarding.html](mockups/app-onboarding.html)).
+In the app, `/` never shows the marketing landing: first launch → `/bienvenue`, afterwards → `/restaurants` (Home.jsx).
+On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
+is in the `appli` i18n namespace and makes **no claim the code does not back** — never « moins cher » (it depends on the
+business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them
+(client: courier at the door; business: new order; courier: nothing yet, so the courier is never asked).
+**Sign in with Apple** exists for the iPhone app only (App Store rule 4.8): `POST /auth/apple` in the backend shares
+one code path with `/auth/google` (`connexionFederee` in `routes/auth.js`) — fix a rule there, not in a copy.
 
 ```
 npm install       # node_modules is not checked in and may be absent — run this first
@@ -70,11 +82,11 @@ without a `.env.local` your dev server edits live data.
 
 ### Four roles, one SPA
 
-Every route lives in [src/App.jsx](src/App.jsx) (224 lines) — the full route map, read it first when
+Every route lives in [src/App.jsx](src/App.jsx) (265 lines) — the full route map, read it first when
 orienting. Access is gated by `<ProtectedRoute role="...">`.
 
 **Routes are code-split by role.** Only the public entry path (home, login, restaurant list, restaurant
-menu) is statically imported; everything else is `React.lazy` behind `<Suspense>` — 70 lazy imports as
+menu) is statically imported; everything else is `React.lazy` behind `<Suspense>` — 73 lazy imports as
 of today. Keep it that way when adding a route: a static import of a dashboard page pulls it into
 every customer's first load.
 
@@ -134,7 +146,7 @@ thrown to the caller as normal. Don't add per-call 401 checks.
 
 ### Styling
 
-**One file: [src/styles.css](src/styles.css)** (4,610 lines), imported once in `main.jsx`.
+**One file: [src/styles.css](src/styles.css)** (4,635 lines), imported once in `main.jsx`.
 Global class names, no CSS modules, no Tailwind. Inline `style={{}}` is used freely for
 one-off spacing and is an accepted pattern here.
 
@@ -227,7 +239,7 @@ looked like a broken page. The prompt now lives only in the edit form, next to t
 ### Internationalisation
 
 [src/i18n/translations.js](src/i18n/translations.js) holds `fr` / `en` / `nl` tables; default `fr`.
-**203 of the 238 `.jsx` files** call `useLanguage()` — this is now broad coverage, not the partial state
+**249 of the 285 `.jsx` files** call `useLanguage()` — this is now broad coverage, not the partial state
 earlier versions of this file described. Adding a key means adding it to all three locales.
 
 The remaining untranslated surfaces are mostly deep admin screens. Check which kind of component you

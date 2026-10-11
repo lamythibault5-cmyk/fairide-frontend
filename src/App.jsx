@@ -90,6 +90,9 @@ const AdminTeamPage = lazyPage(() => import('./pages/admin/AdminTeamPage'));
 const AdminCompliancePage = lazyPage(() => import('./pages/admin/AdminCompliancePage'));
 const AdminMessagesPage = lazyPage(() => import('./pages/admin/AdminMessagesPage'));
 
+// --- Accueil de l'application iOS / Android (premier lancement, voir pages/app/Bienvenue.jsx) ---
+const Bienvenue = lazyPage(() => import('./pages/app/Bienvenue'));
+
 // --- Pages légales ---
 const LegalNotice = lazyPage(() => import('./pages/legal/LegalNotice'));
 const Terms = lazyPage(() => import('./pages/legal/Terms'));
@@ -137,6 +140,8 @@ export default function App() {
           requête — pas un deuxième vocabulaire visuel à apprendre pour l'utilisateur. */}
       <Suspense fallback={<div className="wrap" style={{ paddingTop: 24 }}><SkeletonCards count={3} /></div>}>
       <Routes>
+      {/* Hors de <Layout> : l'accueil de l'application est plein écran, sans en-tête ni pied de page du site. */}
+      <Route path="/bienvenue" element={<Bienvenue />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Auth />} />

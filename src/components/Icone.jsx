@@ -110,6 +110,19 @@ const TRACES = {
   // coupes suspendues se refermaient en deux taches.
   balance: <><path d="M12 4v17" /><path d="M4 8.5h16" /><path d="m4 8.5-2.2 6h4.4Z" /><path d="m20 8.5-2.2 6h4.4Z" /><path d="M8 21h8" /><circle cx="12" cy="4" r="1.2" /></>,
 
+  // — Accueil de l'application (pages/app/Bienvenue.jsx, 2026-10-11) —
+  // Cinq cuisines pour « Une envie en particulier ? ». Le site n'en avait aucune : les commerces y sont montrés
+  // par leur photo. Dessinées à la grille de 24, trait 1,8, comme le reste — validées sur maquette.
+  pizza: <><path d="M12 21 3.6 6.5a17 17 0 0 1 16.8 0Z" /><path d="M5.3 9.4a13.5 13.5 0 0 1 13.4 0" /><circle cx="10" cy="12" r="1" /><circle cx="14" cy="13.5" r="1" /></>,
+  burger: <><path d="M4 11a8 6.5 0 0 1 16 0Z" /><path d="M3 14.5h18" /><path d="M4.5 17.5h15v.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-.5Z" /></>,
+  frites: <><path d="M6 11h12l-1.6 10H7.6Z" /><path d="M8 11 7 4.5" /><path d="M11 11V3.5" /><path d="M14 11l.8-6.5" /><path d="M17 11l1.3-5" /></>,
+  bol: <><path d="M3 11h18a9 9 0 0 1-18 0Z" /><path d="M9 21h6" /><path d="M8 7.5c1-1.4 3-1.4 4 0s3 1.4 4 0" /></>,
+  tasse: <><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z" /><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17" /><path d="M8 3.5v3" /><path d="M12 3.5v3" /></>,
+  // Flèche de retour, et le oui / non des cartes à glisser (une coche nue : `coche` porte une case autour).
+  retour: <path d="M15 5 8 12l7 7" />,
+  valider: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  croix: <><path d="M6 6l12 12" /><path d="M18 6 6 18" /></>,
+
   // — Console admin —
   // Ajoutées quand la console a quitté ses 27 emojis (voir pages/admin/adminModules.js). Mêmes
   // réglages que le reste du fichier, pour qu'une icône admin posée à côté d'une icône client
