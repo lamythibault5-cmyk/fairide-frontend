@@ -367,9 +367,13 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   the business despite `MENU_LOCKED`; a rate change for everyone gives 7 days to refuse (Admin › Commerces).
 - **Alcohol is closed** until `ALCOHOL_ENABLED=true` on the server. Insurance, the AFSCA document and the alcohol licence are
   **alerts**, no longer blockers (business number, AFSCA number, contract, validated menu, allergens still block).
-  Since 2026-10-10 the AFSCA number blocks **only until the business signs the professional declaration `PRO-2026.2`**,
-  which certifies its AFSCA registration, authorisations and insurance (`declarationsCommerce.js`); the team then
-  checks it on the AFSCA's public Food Hygiene Rating tool by company number (alert `afsca_auto_declare`).
+  Since 2026-10-10 the business no longer has to give its AFSCA number if it signs the professional declaration
+  (now **`PRO-2026.3`**, 2026-10-11: adds the DSA art. 30(e) self-certification that it only sells law-compliant
+  products; `declarationsCommerce.js`). **The team's own check is always required before publication** (lawyer,
+  2026-10-11): Admin › Commerces › Conformité › *Vérification AFSCA* ([VerificationAfsca](src/components/admin/VerificationAfsca.jsx)),
+  four points on the **establishment unit** (linked company, kitchen address, food-preparation activity, « Actif ») plus
+  a screenshot; « Introuvable » blocks with no override; redo yearly and after any move (a task opens). Procedure:
+  `../fairide-backend/docs/verification-afsca.md`.
 - **Pickup without a restaurant click** (2026-10-10): the restaurant sees the pickup code and compares it by eye; the
   **courier** confirms (`PATCH /orders/:id/picked-up`, accepted from `preparation` too). `/confirm-pickup` still exists.
   « Ma carte et mes engagements » ([ConformiteCarte](src/components/conformite/ConformiteCarte.jsx)) is one checkbox,
