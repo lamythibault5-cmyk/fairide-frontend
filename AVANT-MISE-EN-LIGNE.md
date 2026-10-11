@@ -178,8 +178,8 @@ correction rétrograde `exceljs` en 3.4.0, et la faille ne touche pas l'usage qu
   21 % de TVA sur ces 10 %) ; le commerce reçoit exactement son prix en magasin ; le client paie en plus la
   livraison et des frais de service de 10 % de la livraison hors TVA, TVA ajoutée. À emporter payé sur place :
   ni majoration retenue, ni frais. Contrat `RESTO-2026.15`, CGU `CGU-2026-09-25`.
-- **Abonnement** : 20 €/mois, premier mois offert, garantie « zéro commande = zéro abonnement » (un mois sans
-  commande n'est pas facturé, ou est remboursé).
+- **Abonnement** : 20 €/mois, premier mois offert, garantie « petit mois = pas d'abonnement » (un mois à
+  50 € de commandes ou moins n'est pas facturé, ou est remboursé — depuis le 11/10/2026 ; avant : zéro commande).
 - **Mot de passe** : 6 caractères au moins, une majuscule, une minuscule, et refus des mots de passe présents
   dans des fuites connues (décision du 23 septembre ; la règle est la même aux trois endroits).
 - **Purge des données** : la tâche existe et tourne au démarrage puis toutes les heures (`retentionPurge.js`) ;

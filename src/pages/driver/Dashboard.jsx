@@ -19,6 +19,7 @@ import useRevalidation from '../../useRevalidation';
 import useAlerteLivreur from '../../hooks/useAlerteLivreur';
 import AlerteLivreurBar from '../../components/AlerteLivreurBar';
 import SelfieControle from '../../components/livreur/SelfieControle';
+import NotifCourses from '../../components/livreur/NotifCourses';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
@@ -469,6 +470,7 @@ export default function DriverDashboard() {
               {vehicule.rate !== undefined && <> {t('dashDriver.rateRule', { base: dec(vehicule.base || 0), baseKm: vehicule.baseKm, rate: dec(vehicule.rate || 0) })}</>}
             </p>
           )}
+          <NotifCourses />
           {available.length === 0 && <div className="empty">{t('dashDriver.noneAvailable')}</div>}
           {available.map((o) => (
             <div className="card" key={o.id}>

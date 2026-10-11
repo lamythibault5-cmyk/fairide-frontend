@@ -28,9 +28,8 @@ import {
  *     mène au chargement, puis aux commerces qui livrent vraiment chez toi, au-dessus des boutons de compte.
  *   - Le compte est demandé APRÈS avoir vu les commerces (règle 5.1.1 d'Apple), Apple à côté de Google (4.8).
  *   - Les notifications ne sont proposées qu'une fois le compte créé (AmorceNotifications.jsx) : le jeton de
- *     l'appareil s'enregistre sur un compte, il n'y a rien à quoi l'attacher avant. Et au livreur, pas du tout :
- *     le serveur ne lui envoie aucune notification aujourd'hui (pushService.js), on ne demande pas une
- *     permission qui ne servirait à rien.
+ *     l'appareil s'enregistre sur un compte, il n'y a rien à quoi l'attacher avant. Pour les trois profils : le
+ *     livreur est prévenu des courses qu'il verrait (backend notifLivreurs.js, depuis le 2026-10-11).
  *
  * RAYON. « Qui livre chez toi » est calculé ici, avec ce que la liste publique renvoie déjà (position et
  * deliveryRadiusKm de chaque commerce, 6 km par défaut — rayonLivraison.js côté serveur) : aucune route en plus.
@@ -160,7 +159,7 @@ export default function Bienvenue() {
   function memoriser() {
     ecrireBienvenue({
       vu: true, role, envies, commune: communeCp || null, position: position || null,
-      amorceNotifs: role === 'driver' ? 'non' : 'a-faire'
+      amorceNotifs: 'a-faire'
     });
   }
   // Page de connexion : rôle présélectionné. Avec un jeton Apple/Google, Auth.jsx le traite tout de suite (connexion

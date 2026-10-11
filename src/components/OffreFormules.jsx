@@ -38,7 +38,7 @@ export default function OffreFormules({ payant = false, statut = null, finEssai 
         </ol>
         <p className="small" style={{ margin: '6px 0 0' }}>{t('accountUi.offre_noCommitment')}</p>
       </div>
-      {/* Zéro commande sur un mois = zéro abonnement pour ce mois (offert ou remboursé). */}
+      {/* 50 € de commandes ou moins sur un mois = pas d’abonnement pour ce mois (offert ou remboursé). */}
       <GarantieAbonnement />
       {/* Le terminal : ce que c'est (image), comment ça marche, et à quelles conditions (offert aux 50 premiers avant le
           16 octobre, puis caution). */}

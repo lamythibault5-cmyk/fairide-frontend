@@ -14,9 +14,9 @@ import { EcranPermission } from '../pages/app/EcransBienvenue';
  * L'accueil laisse `amorceNotifs: 'a-faire'` dans la mémoire du téléphone (bienvenue.js) ; on le passe à 'fait'
  * quelle que soit la réponse — on ne redemande pas, les réglages du téléphone restent la voie pour changer d'avis.
  *
- * Ce qu'on promet est ce que le serveur envoie vraiment (pushService.js, vérifié le 2026-10-11) : au client, le
- * livreur à la porte ; au commerce, chaque nouvelle commande. Le livreur ne reçoit aujourd'hui aucune notification :
- * l'écran ne lui est pas montré (Bienvenue.jsx écrit 'non' pour lui). */
+ * Ce qu'on promet est ce que le serveur envoie vraiment (vérifié le 2026-10-11) : au client, le livreur à la porte ; au
+ * commerce, chaque nouvelle commande ; au livreur, chaque course qu'il verrait dans sa liste (notifLivreurs.js, ajouté
+ * le même jour à la demande du fondateur). Le livreur retrouve ce réglage sous « Courses disponibles » (NotifCourses.jsx). */
 export default function AmorceNotifications() {
   const { user, token, role } = useAuth();
   const { t } = useLanguage();
@@ -24,7 +24,7 @@ export default function AmorceNotifications() {
   const [ouvert, setOuvert] = useState(() => lireBienvenue().amorceNotifs === 'a-faire');
   const [attente, setAttente] = useState(false);
 
-  if (!ouvert || !user || !estNatif() || user.isAdmin || !['client', 'restaurant'].includes(role)) return null;
+  if (!ouvert || !user || !estNatif() || user.isAdmin || !['client', 'restaurant', 'driver'].includes(role)) return null;
 
   const fermer = () => { ecrireBienvenue({ amorceNotifs: 'fait' }); setOuvert(false); };
   async function activer() {
@@ -36,15 +36,19 @@ export default function AmorceNotifications() {
     fermer();
   }
 
-  const commerce = role === 'restaurant';
+  const textes = {
+    restaurant: { titre: t('appli.coNotifTitre'), sous: t('appli.coNotifSub'), faits: [] },
+    driver: { titre: t('appli.lvNotifTitre'), sous: t('appli.lvNotifSub'), faits: [['euro', t('appli.lvN1'), t('appli.lvN1S')], ['personnes', t('appli.lvN2'), t('appli.lvN2S')]] },
+    client: { titre: t('appli.notifTitre'), sous: t('appli.notifSub'), faits: [['porte', t('appli.n1'), t('appli.n1S')]] }
+  }[role];
   return (
-    <div className="bv bv-par-dessus" role="dialog" aria-modal="true" aria-label={commerce ? t('appli.coNotifTitre') : t('appli.notifTitre')}>
+    <div className="bv bv-par-dessus" role="dialog" aria-modal="true" aria-label={textes.titre}>
       <main className="bv-ecran">
         <EcranPermission
           icone="cloche"
-          titre={commerce ? t('appli.coNotifTitre') : t('appli.notifTitre')}
-          sous={commerce ? t('appli.coNotifSub') : t('appli.notifSub')}
-          faits={commerce ? [] : [['porte', t('appli.n1'), t('appli.n1S')]]}
+          titre={textes.titre}
+          sous={textes.sous}
+          faits={textes.faits}
           bouton={t('appli.notifBtn')} attente={attente} onOui={activer} onNon={fermer}
         />
       </main>

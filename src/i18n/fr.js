@@ -891,7 +891,7 @@ export default {
       rowSub: 'Commission, versements, obligations',
       intro: 'Le contrat de partenariat entre ton commerce et Fairide, version {version}. Il reprend exactement ce que la plateforme applique : ce que Fairide s\'engage à faire, ce que tu t\'engages à faire, et l\'argent. Le texte français fait foi.',
       kCommission: 'Part Fairide, ajoutée à tes prix',
-      kSubscription: 'Abonnement / mois (à emporter, livraison), 1er mois offert, 0 € si aucune commande dans le mois',
+      kSubscription: 'Abonnement / mois (à emporter, livraison), 1er mois offert, 0 € si le mois ne dépasse pas 50 € de commandes',
       kMonday: 'Lundi',
       kPayout: 'Versement bancaire hebdo',
       kDelivery: 'Commission sur livraison et pourboires',
@@ -1744,7 +1744,7 @@ export default {
       step2: 'Sur chaque commande payée en ligne, tu reçois ton prix de salle : tes plats sont affichés sur Fairide 12,1 % plus cher (10 % HTVA pour Fairide + 21 % de TVA sur cette part), et Fairide garde cette différence. Une commande payée sur place, tu l\'encaisses toi-même, en entier : 0 % de commission. Les frais de livraison vont au livreur à 90 % (10 % de frais de système Fairide, compris dedans), les pourboires à 90 % aussi.',
       step3: 'Ta part est transférée automatiquement sur ton compte Stripe à chaque commande payée, puis versée sur ton compte bancaire chaque lundi (tout ce qui a été encaissé la semaine précédente). Une facture de commission mensuelle t\'est envoyée par e-mail et reste disponible dans Factures.',
       subscriptionTitle: 'Rien à activer maintenant',
-      subscriptionText: 'Tu peux créer ton compte et ton restaurant sans rien payer ni activer. L\'abonnement Fairide (20 € HTVA/mois, avec le terminal Fairide) ouvre l\'à emporter (dès le 1er novembre 2026) et la livraison (dès le 10 novembre) ; il s\'active à partir du 6 octobre, et son premier mois offert ne commence à compter qu\'à l\'ouverture du paiement en ligne, le 10 novembre. Une commande payée sur place te revient en entier. Zéro commande sur un mois = zéro abonnement : ce mois est offert ou remboursé.',
+      subscriptionText: 'Tu peux créer ton compte et ton restaurant sans rien payer ni activer. L\'abonnement Fairide (20 € HTVA/mois, avec le terminal Fairide) ouvre l\'à emporter (dès le 1er novembre 2026) et la livraison (dès le 10 novembre) ; il s\'active à partir du 6 octobre, et son premier mois offert ne commence à compter qu\'à l\'ouverture du paiement en ligne, le 10 novembre. Une commande payée sur place te revient en entier. 50 € de commandes ou moins sur un mois = pas d\'abonnement : ce mois est offert ou remboursé.',
       stripeTitle: 'Stripe, c\'est quoi ?',
       stripeWhat: 'Stripe est un prestataire de paiement international, agréé comme établissement de paiement en Europe et certifié au plus haut niveau de sécurité bancaire (PCI-DSS). Des milliers de commerces et de plateformes (Deliveroo, Shopify, Zalando…) l\'utilisent pour encaisser et reverser l\'argent. C\'est chez Stripe, dans un formulaire sécurisé, que tu renseigneras ton identité et ton IBAN.',
       noBankTitle: 'Fairide ne prend aucune information bancaire.',
@@ -2120,7 +2120,7 @@ export default {
       guidePitchText: '« Bonjour, je suis [prénom], de Fairide, la nouvelle app bruxelloise de livraison et de vente à emporter. Une seule règle : 20 € par mois, et 10 % uniquement sur la livraison et le paiement en ligne. Ce que le client paie chez vous, c\'est 100 % pour vous. Sur une commande de 40 € livrée, vous gardez 36 € au lieu de 28 €. Ça vous intéresse que je vous montre en deux minutes ? »',
       guidePitch1: 'Une phrase, un chiffre, une question. Puis tu te tais et tu écoutes.',
       guidePitch2: 'Montre le flyer : la comparaison 28 € / 36 € parle toute seule.',
-      guidePitch3: 'Premier mois offert : il essaie l\'à emporter et la livraison sans rien payer pendant un mois, et ce qui est payé sur place reste à 100 % pour lui. Et s\'il n\'a aucune commande sur un mois, il ne paie pas l\'abonnement de ce mois : offert ou remboursé.',
+      guidePitch3: 'Premier mois offert : il essaie l\'à emporter et la livraison sans rien payer pendant un mois, et ce qui est payé sur place reste à 100 % pour lui. Et si ses commandes ne dépassent pas 50 € sur un mois, il ne paie pas l\'abonnement de ce mois : offert ou remboursé.',
       guidePitch4: 'Terminal offert aux premiers restaurants inscrits, caution pour les suivants : c\'est l\'argument pour signer maintenant.',
       guideTechTitle: 'Les techniques qui marchent',
       guideTech1: 'Pose des questions avant de vendre : « Vous êtes sur Uber Eats ? Ça vous coûte combien par mois ? » Le commerçant se convainc lui-même.',
@@ -2259,7 +2259,7 @@ export default {
       colAmount: 'Montant',
       colStatus: 'Statut',
       colDate: 'Date',
-      comIntro: 'Barème : {signup} quand le commerce s\'inscrit (fiche reliée au compte créé), {first} quand il paie réellement son premier mois (prélevé et conservé : un mois offert ou remboursé faute de commande ne compte pas), {retention} {months} mois plus tard s\'il est toujours abonné. Les primes se créent toutes seules ; marque « payée » une fois le virement fait.',
+      comIntro: 'Barème : {signup} quand le commerce s\'inscrit (fiche reliée au compte créé), {first} quand il paie réellement son premier mois (prélevé et conservé : un mois offert ou remboursé parce qu\'il n\'a pas dépassé 50 € de commandes ne compte pas), {retention} {months} mois plus tard s\'il est toujours abonné. Les primes se créent toutes seules ; marque « payée » une fois le virement fait.',
       comAll: 'Toutes',
       comReconcile: 'Recalculer',
       comShownTotal: '{n} prime(s) affichée(s) · {total}',
@@ -4053,8 +4053,8 @@ export default {
       contact: 'Toute réclamation peut être adressée à contact@fairide.be ; nous répondons sous 5 jours ouvrables. Médiation des consommateurs : Service de Médiation pour le Consommateur, [mediationconsommateur.be](https://mediationconsommateur.be). Données personnelles : voir la [politique de confidentialité](/confidentialite) ; autorité de contrôle : Autorité de protection des données, [autoriteprotectiondonnees.be](https://www.autoriteprotectiondonnees.be).'
     },
     story: {
-      faqQ6: 'Que se passe-t-il si mon commerce ne reçoit aucune commande ?',
-      faqA6: 'Il ne paie pas l\'abonnement. Si le commerce ne reçoit aucune commande pendant son premier mois (offert), le deuxième mois est offert aussi. Ensuite, tout mois sans aucune commande est remboursé automatiquement : les 20 € reviennent sur le moyen de paiement utilisé. Dès qu\'une commande arrive dans le mois, l\'abonnement de ce mois est dû. Les 10 % sur les commandes payées en ligne, eux, ne concernent que les commandes réellement passées.',
+      faqQ6: 'Que se passe-t-il si mon commerce reçoit peu de commandes ?',
+      faqA6: 'Si ses commandes ne dépassent pas 50 € sur un mois (prix des produits, TVA comprise, sans la livraison ni les pourboires), il ne paie pas l\'abonnement de ce mois. Pendant le premier mois (offert), le deuxième est alors offert aussi. Ensuite, un tel mois est remboursé automatiquement : les 20 € reviennent sur le moyen de paiement utilisé. Au-delà de 50 € de commandes dans le mois, l\'abonnement de ce mois est dû. Les 10 % sur les commandes payées en ligne, eux, ne concernent que les commandes réellement passées.',
       /* Le titre de la page et sa description visent les recherches réelles : « alternative Uber
          Eats », « alternative Deliveroo Bruxelles », « livraison commission réduite ». Un titre
          qui ne dit que « Notre histoire » ne peut se placer sur aucune d'elles — personne ne
@@ -4081,7 +4081,7 @@ export default {
       faqQ3: 'Dans quelles communes Fairide livre-t-il ?',
       faqA3: 'Dans les 19 communes de la Région de Bruxelles-Capitale, avec des commerces partenaires quartier par quartier.',
       faqQ4: 'Comment inscrire mon restaurant ou mon commerce sur Fairide ?',
-      faqA4: 'L\'inscription est gratuite et se fait en ligne. Le commerce active ensuite l\'abonnement Fairide, qui ouvre l\'à emporter et la livraison : 20 € HTVA par mois (premier mois offert), sans engagement. Sur les commandes payées en ligne, Fairide garde 10 % ajoutés au prix de salle ; rien sur les commandes payées sur place. Les conditions détaillées sont présentées au moment de l\'inscription du commerce. Et un mois sans aucune commande n\'est pas dû : il est offert ou remboursé au commerce.',
+      faqA4: 'L\'inscription est gratuite et se fait en ligne. Le commerce active ensuite l\'abonnement Fairide, qui ouvre l\'à emporter et la livraison : 20 € HTVA par mois (premier mois offert), sans engagement. Sur les commandes payées en ligne, Fairide garde 10 % ajoutés au prix de salle ; rien sur les commandes payées sur place. Les conditions détaillées sont présentées au moment de l\'inscription du commerce. Et un mois à 50 € de commandes ou moins n\'est pas dû : il est offert ou remboursé au commerce.',
       faqQ5: 'Qu\'est-ce que le terminal Fairide ?',
       faqA5: 'C\'est l\'appareil tout-en-un des commerces Fairide, le même système que les grandes plateformes de livraison : l\'app Fairide y est préinstallée, le commerçant y reçoit ses commandes en direct et imprime ses tickets directement. C\'est le seul outil nécessaire, configuré avec lui à l\'installation. Il est offert aux premiers restaurants inscrits ; pour les suivants, une caution est demandée, rendue quand le commerce quitte Fairide, si le terminal fonctionne toujours.',
       constatTitle: 'Le constat',
@@ -5664,6 +5664,14 @@ export default {
       paidOnlineBadge: 'Déjà payé en ligne'
     },
     dashDriver: {
+      notifHelp: 'Être prévenu sur ce téléphone dès qu’une course au-dessus de ton minimum est disponible.',
+      notifEnable: 'Activer',
+      notifDisable: 'Couper',
+      notifOn: 'Tu es prévenu des nouvelles courses sur cet appareil.',
+      notifOnDone: 'C’est activé : tu seras prévenu des nouvelles courses.',
+      notifOffDone: 'Notifications de courses coupées sur cet appareil.',
+      notifRefused: 'Notifications refusées : autorise-les dans les réglages de ton téléphone (ou de ton navigateur).',
+      notifFailed: 'Impossible d’activer les notifications sur cet appareil.',
       loadError: 'Impossible de charger tes courses.',
       today: 'Aujourd\'hui',
       available: 'Disponibles',
@@ -5773,7 +5781,7 @@ export default {
       chooseRestaurant: '· Choisir un restaurant · ',
       createMine: '+ Créer mon restaurant',
       createIntro: 'Une fois créé, Fairide te propose de générer ton menu et ta photo de couverture automatiquement, tu n\'as que le strict nécessaire à remplir ici.',
-      createNote: 'Rien à payer ni aucune information bancaire à fournir pour créer ton compte et ton restaurant. L\'à emporter et la livraison fonctionnent avec l\'abonnement Fairide : 20 € HTVA/mois, premier mois offert, terminal Fairide inclus, et sur les commandes livrées ou payées en ligne tu reçois ton prix de salle, Fairide gardant les 10 % ajoutés au prix affiché — et c\'est toi qui l\'actives. Zéro commande sur un mois = zéro abonnement : ce mois est offert ou remboursé.',
+      createNote: 'Rien à payer ni aucune information bancaire à fournir pour créer ton compte et ton restaurant. L\'à emporter et la livraison fonctionnent avec l\'abonnement Fairide : 20 € HTVA/mois, premier mois offert, terminal Fairide inclus, et sur les commandes livrées ou payées en ligne tu reçois ton prix de salle, Fairide gardant les 10 % ajoutés au prix affiché — et c\'est toi qui l\'actives. 50 € de commandes ou moins sur un mois = pas d\'abonnement : ce mois est offert ou remboursé.',
       identity: 'Identité',
       businessName: 'Nom du commerce',
       businessType: 'Type de commerce',
@@ -5887,12 +5895,12 @@ export default {
       myData_logoutAllButton: "Me déconnecter de tous les appareils",
       myData_logoutAllConfirm: "Toutes tes sessions seront fermées, sur tous tes appareils. Tu devras te reconnecter.",
       myData_loggedOutEverywhere: "Tu es déconnecté de tous tes appareils.",
-      guaranteeTitle: 'Zéro commande = zéro abonnement',
-      guaranteeText: 'Aucune commande pendant ton mois offert : le mois suivant est offert aussi. Aucune commande pendant un mois payé : tes 20 € te sont remboursés automatiquement. Dès qu\'une commande arrive dans le mois, l\'abonnement de ce mois est dû ; les 10 % par commande payée en ligne restent applicables.',
-      guaranteeNoOrder: 'Aucune commande pour l\'instant sur ce mois d\'abonnement : s\'il se termine ainsi le {date}, il ne te coûtera rien.',
-      guaranteeOrders: '{n} commande(s) sur ce mois d\'abonnement : l\'abonnement de ce mois est dû.',
-      guaranteeHistory_free: 'Mois offert ({amount}) : aucune commande du {from} au {to}.',
-      guaranteeHistory_refund: 'Remboursé ({amount}) : aucune commande du {from} au {to}.',
+      guaranteeTitle: 'Petit mois = pas d\'abonnement',
+      guaranteeText: 'Tant que tes commandes ne dépassent pas 50 € sur un mois (prix des produits, TVA comprise, sans la livraison ni les pourboires), ce mois ne te coûte rien : pendant ton mois offert, le mois suivant est offert aussi ; pendant un mois payé, tes 20 € te sont remboursés automatiquement. Au-delà de 50 €, l\'abonnement de ce mois est dû ; les 10 % par commande payée en ligne restent applicables.',
+      guaranteeUnder: '{amount} de commandes pour l\'instant sur ce mois d\'abonnement ({n} commande(s)). S\'il se termine le {date} sans dépasser {threshold}, il ne te coûtera rien.',
+      guaranteeOver: '{amount} de commandes sur ce mois d\'abonnement, au-delà de {threshold} : l\'abonnement de ce mois est dû.',
+      guaranteeHistory_free: 'Mois offert ({amount}) : pas plus de 50 € de commandes du {from} au {to}.',
+      guaranteeHistory_refund: 'Remboursé ({amount}) : pas plus de 50 € de commandes du {from} au {to}.',
       balanceAvailable: '{amount} € disponibles',
       confirmCode: 'Confirmer',
       pickupPayTitle: 'Paiement des commandes à emporter',
@@ -5908,7 +5916,7 @@ export default {
       subPaused: 'À emporter et livraison sont en pause, sans prélèvement pendant ce temps.',
       subCanceled: 'À emporter et livraison sont fermés.',
       planCompleteTitle: '🛵 Abonnement Fairide — à emporter et livraison',
-      planCompleteText: 'Abonnement de 20 € HTVA par mois (premier mois offert). Sur les commandes livrées ou payées en ligne, tu reçois ton prix de salle : Fairide garde les 10 % HTVA (12,1 % TVA comprise) ajoutés au prix affiché. Une commande à emporter payée sur place te revient en entier. Tout arrive sur le terminal Fairide. Zéro commande sur un mois = zéro abonnement : ce mois est offert ou remboursé.',
+      planCompleteText: 'Abonnement de 20 € HTVA par mois (premier mois offert). Sur les commandes livrées ou payées en ligne, tu reçois ton prix de salle : Fairide garde les 10 % HTVA (12,1 % TVA comprise) ajoutés au prix affiché. Une commande à emporter payée sur place te revient en entier. Tout arrive sur le terminal Fairide. 50 € de commandes ou moins sur un mois = pas d\'abonnement : ce mois est offert ou remboursé.',
       planNeedsSubTitle: '⏳ À emporter et livraison : pas encore activés',
       planNeedsSubText: 'Ton choix est enregistré, rien n\'est prélevé : ces services s\'ouvriront à tes clients dès que tu auras activé l\'abonnement.',
       planSeeSubscription: 'Voir l’abonnement →',
@@ -6053,7 +6061,7 @@ export default {
       subContractBtn: 'Lire et accepter le contrat',
       offre_completeTitle: 'Abonnement Fairide',
       offre_completePrice: '20 € HTVA/mois · tes prix + 10 % HTVA',
-      offre_completeDetail: 'À emporter et livraison. Tes plats sont affichés à ton prix de salle + 12,1 % (10 % HTVA pour Fairide + TVA) : tu reçois ton prix de salle, Fairide garde cette part. Une commande à emporter payée sur place te revient en entier. Premier mois offert. Tout est centralisé sur le terminal Fairide, l\'app reste disponible en parallèle. Zéro commande sur un mois = zéro abonnement : ce mois est offert ou remboursé.',
+      offre_completeDetail: 'À emporter et livraison. Tes plats sont affichés à ton prix de salle + 12,1 % (10 % HTVA pour Fairide + TVA) : tu reçois ton prix de salle, Fairide garde cette part. Une commande à emporter payée sur place te revient en entier. Premier mois offert. Tout est centralisé sur le terminal Fairide, l\'app reste disponible en parallèle. 50 € de commandes ou moins sur un mois = pas d\'abonnement : ce mois est offert ou remboursé.',
       offre_whenTitle: 'Quand est-ce que je commence à payer ?',
       offre_when1: 'Inscription et carte : 0 €, rien à payer avant d\'activer l\'abonnement.',
       offre_when2: 'À emporter ou livraison : c\'est toi qui actives la version complète, quand tu veux (dès le 6 octobre 2026), après avoir lu ton contrat. Rien n\'est prélevé avant.',
@@ -6312,7 +6320,7 @@ export default {
       backHome: "Retour à l'accueil"
     },
     landing: {
-      joinRestaurantP3: 'Zéro commande dans le mois = zéro abonnement : le mois est offert ou remboursé',
+      joinRestaurantP3: '50 € de commandes ou moins dans le mois = pas d\'abonnement : le mois est offert ou remboursé',
       /* « Paie ton repas, pas la plateforme » traînait à la fin du sous-titre, derrière trente mots
          qui décrivaient le fonctionnement du service. Elle passe en titre : c'est la seule phrase
          de la page qui dise le positionnement entier en cinq mots, et elle se retient.
@@ -8237,6 +8245,12 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      lvNotifTitre: 'Ne rate pas une course',
+      lvNotifSub: 'On te prévient dès qu’une course que tu peux prendre est disponible.',
+      lvN1: 'Seulement les courses au-dessus de ton minimum',
+      lvN1S: 'Et dans ton rayon si tu es à vélo.',
+      lvN2: 'Tous les livreurs en même temps',
+      lvN2S: 'Pas de note ni de classement : personne n’est prévenu avant toi.',
       continueApple: 'Continuer avec Apple',
       continueGoogle: 'Continuer avec Google',
       continueEmail: 'Continuer avec mon e-mail',
@@ -8363,7 +8377,7 @@ export default {
       co1: 'Tu reçois ton prix en magasin',
       co1S: 'Sur chaque commande payée en ligne. La commission de Fairide s’ajoute au prix affiché.',
       co2: 'Abonnement offert pendant le lancement',
-      co2S: 'Ensuite 20 €/mois, premier mois offert. Un mois sans commande ne te coûte rien.',
+      co2S: 'Ensuite 20 €/mois, premier mois offert. Un mois à 50 € de commandes ou moins ne te coûte rien.',
       coBtn: 'Inscrire mon commerce',
       coNotifTitre: 'Ne rate aucune commande',
       coNotifSub: 'Une notification à chaque nouvelle commande, même téléphone verrouillé.'

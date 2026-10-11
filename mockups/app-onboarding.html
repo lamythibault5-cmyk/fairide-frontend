@@ -313,7 +313,7 @@ const T = {
     coChip: 'Pour les commerces', coTitre: '10 % HT, pas 30.', coSub: 'Une startup belge qui veut que la livraison aide le commerce du coin.',
     co1: 'Vous recevez votre prix en magasin', co1S: 'Sur chaque commande payée en ligne. La commission de Fairide s’ajoute au prix affiché.',
     co2: 'Abonnement offert pendant le lancement', co2S: 'Ensuite 20 €/mois, premier mois offert.',
-    co3: 'Moins de 50 € de commandes dans le mois = pas d’abonnement', co3S: 'Aujourd’hui la garantie couvre « zéro commande » ; le seuil de 50 € demande un changement du serveur et du contrat.', propose: 'proposé',
+    co3: '50 € de commandes ou moins dans le mois = pas d’abonnement', co3S: 'Prix des produits, TVA comprise, sans livraison ni pourboires. Offert ou remboursé automatiquement.', propose: 'proposé',
     coBtn: 'Inscrire mon commerce',
     coInfTitre: 'Votre commerce', coInfSub: 'Trois choses pour commencer. Le reste viendra après.', coNom: 'Nom du commerce', coCommune: 'Commune',
     coTypes: ['Restaurant', 'Snack', 'Boulangerie', 'Épicerie'],
@@ -384,7 +384,7 @@ const T = {
     coChip: 'Voor zaken', coTitre: '10 % excl. btw, geen 30.', coSub: 'Een Belgische start-up die wil dat bezorging de zaak om de hoek helpt.',
     co1: 'Je ontvangt je winkelprijs', co1S: 'Op elke online betaalde bestelling. De commissie van Fairide komt bovenop de getoonde prijs.',
     co2: 'Abonnement gratis tijdens de lancering', co2S: 'Daarna 20 €/maand, eerste maand gratis.',
-    co3: 'Minder dan 50 € aan bestellingen in de maand = geen abonnement', co3S: 'Vandaag geldt de garantie voor « nul bestellingen »; de drempel van 50 € vraagt een aanpassing van de server en het contract.', propose: 'voorstel',
+    co3: '€ 50 aan bestellingen of minder in de maand = geen abonnement', co3S: 'Prijs van de producten, btw inbegrepen, zonder levering of fooien. Automatisch gratis of terugbetaald.', propose: 'voorstel',
     coBtn: 'Mijn zaak inschrijven',
     coInfTitre: 'Je zaak', coInfSub: 'Drie dingen om te beginnen. De rest komt later.', coNom: 'Naam van de zaak', coCommune: 'Gemeente',
     coTypes: ['Restaurant', 'Snackbar', 'Bakkerij', 'Kruidenier'],
@@ -455,7 +455,7 @@ const T = {
     coChip: 'For businesses', coTitre: '10 % excl. VAT, not 30.', coSub: 'A Belgian start-up that wants delivery to help the corner shop.',
     co1: 'You get your in-store price', co1S: 'On every order paid online. Fairide’s commission is added to the displayed price.',
     co2: 'Subscription free during launch', co2S: 'Then €20/month, first month free.',
-    co3: 'Under €50 of orders in the month = no subscription', co3S: 'Today the guarantee covers « zero orders »; the €50 threshold needs a server and contract change.', propose: 'proposed',
+    co3: '€50 of orders or less in the month = no subscription', co3S: 'Product prices, VAT included, without delivery or tips. Free or refunded automatically.', propose: 'proposed',
     coBtn: 'Sign up my business',
     coInfTitre: 'Your business', coInfSub: 'Three things to start. The rest comes later.', coNom: 'Business name', coCommune: 'Commune',
     coTypes: ['Restaurant', 'Snack bar', 'Bakery', 'Grocery'],
@@ -729,7 +729,7 @@ const ECRANS = {
     <h2 style="font-size:34px;margin-top:16px">${t('coTitre')}</h2>
     <p class="sub">${t('coSub')}</p>
     ${fait('euro', t('co1'), t('co1S'))}${fait('cadeau', t('co2'), t('co2S'))}
-    <div class="card fact">${tuile('bouclier')}<div><b>${t('co3')} <span class="tag-prop">${t('propose')}</span></b><span class="small">${t('co3S')}</span></div></div>
+    <div class="card fact">${tuile('bouclier')}<div><b>${t('co3')}</b><span class="small">${t('co3S')}</span></div></div>
     <div class="grow"></div>
     <button class="btn btn-gold" onclick="suivant()">${t('coBtn')}</button>` }),
 

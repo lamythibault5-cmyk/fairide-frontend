@@ -42,7 +42,8 @@ In the app, `/` never shows the marketing landing: first launch → `/bienvenue`
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace and makes **no claim the code does not back** — never « moins cher » (it depends on the
 business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them
-(client: courier at the door; business: new order; courier: nothing yet, so the courier is never asked).
+(client: courier at the door; business: new order; courier: every job he would see in his list — backend `notifLivreurs.js`,
+same eligibility as `GET /orders/available`, everyone eligible at once, no rating read; toggle in `NotifCourses.jsx`).
 **Sign in with Apple** exists for the iPhone app only (App Store rule 4.8): `POST /auth/apple` in the backend shares
 one code path with `/auth/google` (`connexionFederee` in `routes/auth.js`) — fix a rule there, not in a copy.
 
@@ -325,8 +326,11 @@ pourboires »); courier texts promise it, so the admin setting must not move wit
 **Order promo codes** (`order_percent`, `order_amount`, `order_free_delivery`, `../fairide-backend/codesPromo.js`) are
 paid by Fairide like the balance: they lower `orders.total`, never the business's or the courier's share; online
 payment only.
-Subscription: €20/month, first month free, with the « zéro commande = zéro abonnement » guarantee (a month without
-an order is not charged, or refunded — `../fairide-backend/garantieAbonnement.js`, since 2026-10-02).
+Subscription: €20/month, first month free, with the « petit mois = pas d'abonnement » guarantee: a month whose orders
+do not exceed **€50** of products (VAT incl., no delivery or tips) is not charged, or refunded
+(`../fairide-backend/garantieAbonnement.js`; threshold `SEUIL_GARANTIE_EUROS` in `formules.js`, read by the contract and the
+emails — since 2026-10-11, contract `RESTO-2026.18`; it was « zéro commande » from 2026-10-02). The front texts say « 50 € » in
+full (i18n): change them with the constant. Paid **mises en avant** have their own, separate « zero orders = refunded » rule.
 **Offered by default during the launch (founder, 2026-10-07)**: the only automatic charge is the 10% markup on orders.
 A business sells without any subscription until the team turns billing on for it (Admin › Commerces › « Facturer
 l'abonnement », `restaurants.subscription_billing_enabled`, false by default — see `formules.abonnementOffert`). Its
@@ -338,7 +342,7 @@ account page then shows « offert pendant le lancement » and the Stripe checkou
 - the ×1.121 is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js --facteur`, or a CSV of
   in-store prices), not at runtime; since 2026-10-01 the business can no longer edit dishes or prices itself
   (`MENU_LOCKED`) — it asks, and the team applies;
-- legal texts: contract `RESTO-2026.17` (in force 1 Nov 2026; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-09`, privacy
+- legal texts: contract `RESTO-2026.18` (in force 1 Nov 2026; 2026.18 only widens the subscription guarantee; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-09`, privacy
   `CONF-2026-10-08` (they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
   restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).
 
