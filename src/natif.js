@@ -18,7 +18,9 @@
 //   - barre d'état iris, écran de lancement natif retiré quand la page est vraiment rendue ;
 //   - clavier : classe `clavier-ouvert` sur <html> pour escamoter les barres fixes du bas ;
 //   - vibrations par le moteur haptique natif (gestes.js) ;
-//   - notifications push natives (APNs / FCM) à la place du Web Push, voir pushNatif.js.
+//   - notifications push natives (APNs / FCM) à la place du Web Push, voir pushNatif.js ;
+//   - position de l'appareil (demanderPosition) et connexion Apple / Google native (connexionFournisseur),
+//     pour l'accueil de l'application (pages/app/Bienvenue.jsx) et la page de connexion.
 
 import { Capacitor } from '@capacitor/core';
 
@@ -91,7 +93,7 @@ export async function vibrerNatif(motif) {
 
 // Les routes d'entrée : un Retour Android depuis l'une d'elles réduit l'application (comme l'accueil du
 // téléphone) au lieu de remonter un historique qui n'existe plus.
-const RACINES = new Set(['/', '/restaurants', '/dashboard', '/driver', '/admin', '/orders', '/login']);
+const RACINES = new Set(['/', '/bienvenue', '/restaurants', '/dashboard', '/driver', '/admin', '/orders', '/login']);
 function cheminSansLangue(pathname) {
   return pathname.replace(/^\/(nl|en)(?=\/|$)/, '') || '/';
 }
@@ -121,6 +123,10 @@ export async function demarrerNatif(historique) {
         else dialogue.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
         return;
       }
+      // Écran à étapes sans adresse propre (accueil de l'application, pages/app/Bienvenue.jsx) : son bouton
+      // Retour recule d'une étape — sans lui, le Retour d'Android quittait l'accueil en plein milieu.
+      const retourEtape = document.querySelector('[data-retour-natif]');
+      if (retourEtape) { retourEtape.click(); return; }
       if (RACINES.has(chemin) || window.history.length <= 1) { App.minimizeApp().catch(() => {}); return; }
       historique.back();
     });
@@ -170,6 +176,93 @@ export async function demarrerNatif(historique) {
     Keyboard.addListener('keyboardWillShow', () => html.classList.add('clavier-ouvert'));
     Keyboard.addListener('keyboardWillHide', () => html.classList.remove('clavier-ouvert'));
   } catch { /* greffon Keyboard absent */ }
+}
+
+/* Position de l'appareil, pour l'accueil de l'application (« Trouvez les commerces près de chez vous »,
+ * pages/app/Bienvenue.jsx). Rend { lat, lng } ou null — jamais d'erreur : un refus ou un GPS muet mène au code
+ * postal, pas à un blocage.
+ *
+ * Dans la coque, par le greffon Geolocation plutôt que navigator.geolocation : sur iPhone, la WebView poserait
+ * SA question (« localhost souhaite utiliser votre position ») en plus de celle du système, deux fenêtres pour
+ * une seule demande. L'écran d'amorçage explique AVANT d'appeler ceci : un refus est définitif sur iOS. */
+export async function demanderPosition() {
+  const options = { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 };
+  if (estNatif()) {
+    try {
+      const { Geolocation } = await import('@capacitor/geolocation');
+      let droit = await Geolocation.checkPermissions();
+      if (droit.location === 'prompt' || droit.location === 'prompt-with-rationale') droit = await Geolocation.requestPermissions({ permissions: ['coarseLocation'] });
+      if (droit.location !== 'granted' && droit.coarseLocation !== 'granted') return null;
+      const p = await Geolocation.getCurrentPosition(options);
+      return { lat: p.coords.latitude, lng: p.coords.longitude };
+    } catch { return null; }
+  }
+  if (!('geolocation' in navigator)) return null;
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition((p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }), () => resolve(null), options);
+  });
+}
+
+/* État de l'autorisation de position, SANS rien demander : 'granted' | 'denied' | 'prompt'. Sert à l'écran qui bloque les
+ * courses d'un livreur tant qu'elle manque (components/livreur/PositionRequise.jsx). 'denied' veut dire que le système ne
+ * reposera plus la question : seule la personne peut la rouvrir dans ses réglages. Un navigateur sans l'API Permissions
+ * répond 'prompt' — la demande réelle (demanderPosition) tranchera. */
+export async function etatPosition() {
+  if (estNatif()) {
+    try {
+      const { Geolocation } = await import('@capacitor/geolocation');
+      const d = await Geolocation.checkPermissions();
+      if (d.location === 'granted' || d.coarseLocation === 'granted') return 'granted';
+      return d.location === 'denied' ? 'denied' : 'prompt';
+    } catch { return 'prompt'; }
+  }
+  try {
+    const p = await navigator.permissions?.query({ name: 'geolocation' });
+    return p?.state || 'prompt';
+  } catch { return 'prompt'; }
+}
+
+/* Connexion Apple / Google DANS L'APPLICATION (feuille native du système).
+ *
+ * POURQUOI PAS LE BOUTON GOOGLE DU SITE. Google refuse sa connexion dans une WebView (« disallowed_useragent ») :
+ * le bouton de googleSignIn.js, qui marche sur fairide.be, échoue dans l'application. Le greffon passe par le
+ * compte Google du téléphone (Android) ou la feuille Google/Apple d'iOS et rend le même jeton d'identité que le
+ * site — POST /auth/google le vérifie exactement pareil, à condition que webClientId soit l'identifiant web
+ * (VITE_GOOGLE_CLIENT_ID, celui que le serveur attend comme destinataire).
+ *
+ * APPLE SUR IPHONE SEULEMENT. La règle 4.8 de l'App Store l'impose dès que Google est proposé (décision du
+ * fondateur, 2026-10-11) ; Android garde Google et l'e-mail. Jeton vérifié par POST /auth/apple (backend apple.js).
+ *
+ * Rend { fournisseur, jeton, prenom, nom } ; lève une Error lisible si la personne annule ou si le greffon manque.
+ * Apple ne donne prénom et nom qu'à la toute première autorisation : vides ensuite, le formulaire les redemande. */
+let connexionPrete = null;
+async function preparerConnexion() {
+  if (!connexionPrete) {
+    connexionPrete = (async () => {
+      const { SocialLogin } = await import('@capgo/capacitor-social-login');
+      const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+      await SocialLogin.initialize({
+        google: { webClientId, iOSClientId: import.meta.env.VITE_GOOGLE_IOS_CLIENT_ID || undefined, iOSServerClientId: webClientId, mode: 'online' },
+        ...(plateforme() === 'ios' ? { apple: {} } : {})
+      });
+      return SocialLogin;
+    })().catch((e) => { connexionPrete = null; throw e; });
+  }
+  return connexionPrete;
+}
+
+export function appleDisponible() { return estNatif() && plateforme() === 'ios'; }
+
+export async function connexionFournisseur(fournisseur) {
+  const SocialLogin = await preparerConnexion();
+  const { result } = await SocialLogin.login({
+    provider: fournisseur,
+    options: fournisseur === 'apple' ? { scopes: ['email', 'name'] } : { scopes: ['email', 'profile'] }
+  });
+  const jeton = result?.idToken;
+  if (!jeton) throw new Error('Connexion annulée.');
+  const profil = result.profile || {};
+  return { fournisseur, jeton, prenom: profil.givenName || '', nom: profil.familyName || '' };
 }
 
 // L'écran de lancement natif couvre le démarrage de la WebView ; main.jsx le retire au même moment que

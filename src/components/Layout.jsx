@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
@@ -14,6 +14,12 @@ import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
 import { SkeletonCards } from './Skeleton';
+import { estNatif } from '../natif';
+import { lireBienvenue } from '../bienvenue';
+
+// « Activer les notifications » juste après l'inscription, dans l'application seulement (voir AmorceNotifications.jsx).
+// Chargé à la demande : sur fairide.be la condition est toujours fausse, et le module n'est jamais téléchargé.
+const AmorceNotifications = lazy(() => import('./AmorceNotifications'));
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
@@ -191,6 +197,7 @@ export default function Layout() {
         </div>
         <CookieBanner />
         {seesClientCart && <FloatingCart />}
+        {estNatif() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
       </>
     );
   }

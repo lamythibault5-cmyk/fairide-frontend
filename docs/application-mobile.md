@@ -22,6 +22,11 @@ passe par `src/natif.js` (et `src/pushNatif.js` pour les notifications) — null
 | Notifications | `pushNatif.js` ↔ `POST /api/push/native-token` | jeton APNs/FCM ; le serveur envoie par Firebase (`fcm.js`, variable `FCM_SERVICE_ACCOUNT_JSON`) |
 | CORS API | `server.js` | `capacitor://localhost`, `https://localhost` autorisés |
 | Liens universels | `public/.well-known/`, `AndroidManifest.xml` | voir « Reste à faire » : empreintes à remplir |
+| Accueil de l'application | `pages/app/Bienvenue.jsx` (`/bienvenue`), `Home.jsx` | premier lancement : « Tu es… » (client / livreur / commerce), questions, « Pourquoi Fairide », position ou code postal, commerces qui livrent vraiment chez toi, compte. Ensuite l'app s'ouvre sur la liste, jamais sur la vitrine du site. Maquette : `mockups/app-onboarding.html`. Relire dans un navigateur : `/bienvenue?apercu` |
+| Position | `natif.js` → `demanderPosition` | greffon `@capacitor/geolocation` (une seule question du système, pas celle de la WebView en plus) |
+| Connexion Apple / Google | `natif.js` → `connexionFournisseur`, `BoutonsConnexionNative.jsx` | feuille native (`@capgo/capacitor-social-login`) : le bouton Google du site est refusé dans une WebView. Apple sur iPhone seulement (règle 4.8). Serveur : `POST /auth/apple` (`apple.js`) |
+| Notifications après l'inscription | `AmorceNotifications.jsx` | une fois, pour les trois profils, en listant ce qui arrive vraiment. Ensuite : réglage dans Mes commandes (client), sous « Courses disponibles » (livreur), barre d'alerte (commerce) |
+| Notifications envoyées | backend `pushFile.js` (file `push_queue`, déclencheur migration 029), `notifLivreurs.js` | client : acceptée, refusée, livreur trouvé, en route, livrée, prête à retirer, annulée, à la porte. Commerce : nouvelle commande, en attente d'acceptation, annulée, livreur qui attend. Livreur : nouvelle course qu'il verrait, sa course prête, annulée, retirée par le client. Jamais pour son propre geste |
 
 Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm run app:ios`.
 
@@ -50,6 +55,24 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
    Apple demande un compte de démonstration : utiliser un commerce de simulation (Admin › Simulation).
 7. **Stripe** : rien à changer — le paiement reste sur checkout.stripe.com dans le navigateur intégré, ce
    que les règles d'Apple autorisent pour des biens physiques (repas), contrairement aux achats intégrés.
+8. **« Continuer avec Google » dans l'application** (Google Cloud → Identifiants, même projet que l'ID web
+   `VITE_GOOGLE_CLIENT_ID`) :
+   - **Android** : créer un ID client OAuth de type *Android*, paquet `be.fairide.app`, avec l'empreinte **SHA-1** de la
+     clé de signature (Play Console → Intégrité de l'app ; plus celle de la clé de debug pour les essais). Rien à mettre
+     dans le code : l'app demande un jeton pour l'ID **web**, que le serveur vérifie déjà.
+   - **iOS** : créer un ID client de type *iOS* (bundle `be.fairide.app`), le mettre dans `VITE_GOOGLE_IOS_CLIENT_ID`
+     (Vercel et `.env.local` avant `npm run app:sync`), et ajouter son « iOS URL scheme » (l'ID à l'envers,
+     `com.googleusercontent.apps.…`) dans Xcode → Info → URL Types.
+9. **« Continuer avec Apple »** (iPhone) : dans Xcode → Signing & Capabilities, ajouter *Sign in with Apple*. Côté
+   serveur rien à configurer (le jeton est vérifié avec les clés publiques d'Apple ; `APPLE_CLIENT_IDS` ne sert que si
+   l'identifiant de l'app change). **Relais e-mail** : une personne peut masquer son adresse
+   (`…@privaterelay.appleid.com`) ; nos e-mails n'y arrivent que si le domaine d'envoi est déclaré dans le compte
+   Apple Developer → Services → *Sign in with Apple for Email Communication* (domaine `fairide.be` + l'adresse
+   d'expédition de Resend). **Reste à faire** : à la suppression d'un compte lié à Apple, Apple demande de révoquer
+   le jeton (`appleid.apple.com/auth/revoke`) — il faut pour cela une clé `.p8` *Sign in with Apple*, pas encore créée.
+10. **Position, texte des permissions iOS** : dans `ios/App/App/Info.plist`, `NSLocationWhenInUseUsageDescription`
+    (« Pour te montrer les commerces qui livrent jusqu'à chez toi, et aux livreurs les courses proches. »). Sans elle,
+    iOS refuse la demande et Apple refuse l'application. Android : déjà déclaré dans `AndroidManifest.xml`.
 
 ## Mettre à jour l'application
 

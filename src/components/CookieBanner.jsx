@@ -34,21 +34,26 @@ export default function CookieBanner() {
       role="dialog"
       aria-live="polite"
       aria-label={t('cookies.text')}
+      // Petite carte en bas à gauche plutôt qu'une bande sur toute la largeur (fondateur, 2026-10-11 : « trop large ») :
+      // elle masquait le bas de l'écran, barre d'onglets comprise. Sur téléphone, elle garde 12 px de marge de chaque côté.
       style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--ink)', color: 'var(--cream)',
-        padding: '14px 18px', zIndex: 200, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center'
+        position: 'fixed', bottom: 'calc(12px + env(safe-area-inset-bottom))', left: 12, width: 'min(420px, calc(100vw - 24px))',
+        background: 'var(--ink)', color: 'var(--cream)', borderRadius: 14,
+        padding: '10px 12px', zIndex: 200, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap'
       }}
     >
-      <span className="small" style={{ color: 'var(--cream)', maxWidth: 620 }}>
-        {t('cookies.text')} <Link to="/cookies" style={{ color: 'var(--cream)', textDecoration: 'underline' }}>{t('cookies.more')}</Link>
+      <span style={{ color: 'var(--cream)', fontSize: 12, lineHeight: 1.35, flex: '1 1 180px' }}>
+        {/* Une ligne (fondateur, 2026-10-11) ; le texte complet reste l'aria-label et la politique des cookies. */}
+        {t('cookies.short')} <Link to="/cookies" style={{ color: 'var(--cream)', textDecoration: 'underline' }}>{t('cookies.more')}</Link>
       </span>
-      <div className="row" style={{ gap: 10 }}>
-        <button className="btn-gold" style={{ padding: '8px 18px', fontSize: 13 }} onClick={() => choose('accepted')}>
+      {/* Mêmes dimensions pour les deux choix : refuser doit être aussi simple qu'accepter (voir plus haut). */}
+      <div className="row" style={{ gap: 8 }}>
+        <button className="btn-gold" style={{ padding: '6px 14px', fontSize: 12 }} onClick={() => choose('accepted')}>
           {t('cookies.accept')}
         </button>
         <button
           className="btn-outline"
-          style={{ padding: '8px 18px', fontSize: 13, borderColor: 'var(--cream)', color: 'var(--cream)' }}
+          style={{ padding: '6px 14px', fontSize: 12, borderColor: 'var(--cream)', color: 'var(--cream)' }}
           onClick={() => choose('refused')}
         >
           {t('cookies.refuse')}

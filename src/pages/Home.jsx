@@ -1,10 +1,22 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { estNatif } from '../natif';
+import { lireBienvenue } from '../bienvenue';
 import Landing from './Landing';
 
 export default function Home() {
   const { user, role } = useAuth();
-  if (!user) return <Landing />;
+  if (!user) {
+    // DANS L'APPLICATION, pas de page vitrine : elle est faite pour convaincre un visiteur du site, pas quelqu'un
+    // qui a déjà installé l'app. Premier lancement → l'accueil de l'application ; ensuite → directement la liste
+    // des commerces, rangée autour de la commune donnée à l'accueil (communeProche, comme HeroAdresse sur le site).
+    if (estNatif()) {
+      const b = lireBienvenue();
+      if (!b.vu) return <Navigate to="/bienvenue" replace />;
+      return <Navigate to="/restaurants" replace state={b.commune ? { communeProche: b.commune } : undefined} />;
+    }
+    return <Landing />;
+  }
   if (user.isAdmin) return <Navigate to="/admin" replace />;
   if (role === 'restaurant') return <Navigate to="/dashboard" replace />;
   if (role === 'driver') return <Navigate to="/driver" replace />;

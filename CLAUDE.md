@@ -33,6 +33,27 @@ no react-leaflet wrapper), `@dnd-kit/*` (drag-and-drop for menu ordering).
 `@capacitor/*` wraps the same `dist/` into the iOS and Android apps (`npm run app:sync`, `app:android`,
 `app:ios`); everything native goes through `src/natif.js` and `src/pushNatif.js` — see
 [docs/application-mobile.md](docs/application-mobile.md) for what is in place and what still needs store accounts.
+`@capacitor/geolocation` and `@capgo/capacitor-social-login` (Apple / Google sheet — the site's Google button is refused
+inside a WebView) are loaded with `import()` from `natif.js` only, so the website never downloads them.
+
+**The app has its own first-launch screens** (2026-10-11, [src/pages/app/Bienvenue.jsx](src/pages/app/Bienvenue.jsx),
+route `/bienvenue`, outside `<Layout>`; designed with the founder on [mockups/app-onboarding.html](mockups/app-onboarding.html)).
+In the app, `/` never shows the marketing landing: first launch → `/bienvenue`, afterwards → `/restaurants` (Home.jsx).
+On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
+is in the `appli` i18n namespace and makes **no claim the code does not back** — never « moins cher » (it depends on the
+business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them.
+
+**Push notifications (2026-10-11), what exists:** order-status pushes for all three roles come from a DB trigger
+(backend migration 029 → `push_queue`, sent every 5 s by `pushFile.js`, fr/nl/en): client — accepted, declined, courier
+found, on the way, delivered, ready for pickup, cancelled; business — order cancelled after receipt, courier waiting,
+order still waiting for acceptance; courier — his job ready, cancelled before pickup, withdrawn by the client. Plus, sent
+directly: new order to the business (payment), courier at the door to the client, and **new job to every courier who
+would see it** (`notifLivreurs.js`, same eligibility as `GET /orders/available`, everyone at once, no rating read). Nobody
+is notified of their own action (`oublierPush` in the routes). Toggles: `ReglageNotifications.jsx` (client in Mes
+commandes, courier via `NotifCourses.jsx`), `NewOrderAlertBar` (business), and once after sign-up in the app
+(`AmorceNotifications.jsx`). A new status worth a push goes in the trigger and in `pushFile.js` texts, not in a route.
+**Sign in with Apple** exists for the iPhone app only (App Store rule 4.8): `POST /auth/apple` in the backend shares
+one code path with `/auth/google` (`connexionFederee` in `routes/auth.js`) — fix a rule there, not in a copy.
 
 ```
 npm install       # node_modules is not checked in and may be absent — run this first
@@ -70,11 +91,11 @@ without a `.env.local` your dev server edits live data.
 
 ### Four roles, one SPA
 
-Every route lives in [src/App.jsx](src/App.jsx) (224 lines) — the full route map, read it first when
+Every route lives in [src/App.jsx](src/App.jsx) (265 lines) — the full route map, read it first when
 orienting. Access is gated by `<ProtectedRoute role="...">`.
 
 **Routes are code-split by role.** Only the public entry path (home, login, restaurant list, restaurant
-menu) is statically imported; everything else is `React.lazy` behind `<Suspense>` — 70 lazy imports as
+menu) is statically imported; everything else is `React.lazy` behind `<Suspense>` — 73 lazy imports as
 of today. Keep it that way when adding a route: a static import of a dashboard page pulls it into
 every customer's first load.
 
@@ -134,7 +155,7 @@ thrown to the caller as normal. Don't add per-call 401 checks.
 
 ### Styling
 
-**One file: [src/styles.css](src/styles.css)** (4,610 lines), imported once in `main.jsx`.
+**One file: [src/styles.css](src/styles.css)** (4,635 lines), imported once in `main.jsx`.
 Global class names, no CSS modules, no Tailwind. Inline `style={{}}` is used freely for
 one-off spacing and is an accepted pattern here.
 
@@ -227,7 +248,7 @@ looked like a broken page. The prompt now lives only in the edit form, next to t
 ### Internationalisation
 
 [src/i18n/translations.js](src/i18n/translations.js) holds `fr` / `en` / `nl` tables; default `fr`.
-**203 of the 238 `.jsx` files** call `useLanguage()` — this is now broad coverage, not the partial state
+**249 of the 285 `.jsx` files** call `useLanguage()` — this is now broad coverage, not the partial state
 earlier versions of this file described. Adding a key means adding it to all three locales.
 
 The remaining untranslated surfaces are mostly deep admin screens. Check which kind of component you
@@ -313,8 +334,11 @@ pourboires »); courier texts promise it, so the admin setting must not move wit
 **Order promo codes** (`order_percent`, `order_amount`, `order_free_delivery`, `../fairide-backend/codesPromo.js`) are
 paid by Fairide like the balance: they lower `orders.total`, never the business's or the courier's share; online
 payment only.
-Subscription: €20/month, first month free, with the « zéro commande = zéro abonnement » guarantee (a month without
-an order is not charged, or refunded — `../fairide-backend/garantieAbonnement.js`, since 2026-10-02).
+Subscription: €20/month, first month free, with the « petit mois = pas d'abonnement » guarantee: a month whose orders
+do not exceed **€50** of products (VAT incl., no delivery or tips) is not charged, or refunded
+(`../fairide-backend/garantieAbonnement.js`; threshold `SEUIL_GARANTIE_EUROS` in `formules.js`, read by the contract and the
+emails — since 2026-10-11, contract `RESTO-2026.18`; it was « zéro commande » from 2026-10-02). The front texts say « 50 € » in
+full (i18n): change them with the constant. Paid **mises en avant** have their own, separate « zero orders = refunded » rule.
 **Offered by default during the launch (founder, 2026-10-07)**: the only automatic charge is the 10% markup on orders.
 A business sells without any subscription until the team turns billing on for it (Admin › Commerces › « Facturer
 l'abonnement », `restaurants.subscription_billing_enabled`, false by default — see `formules.abonnementOffert`). Its
@@ -326,7 +350,7 @@ account page then shows « offert pendant le lancement » and the Stripe checkou
 - the ×1.121 is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js --facteur`, or a CSV of
   in-store prices), not at runtime; since 2026-10-01 the business can no longer edit dishes or prices itself
   (`MENU_LOCKED`) — it asks, and the team applies;
-- legal texts: contract `RESTO-2026.17` (in force 1 Nov 2026; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-09`, privacy
+- legal texts: contract `RESTO-2026.18` (in force 1 Nov 2026; 2026.18 only widens the subscription guarantee; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-09`, privacy
   `CONF-2026-10-08` (they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
   restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).
 

@@ -4,6 +4,8 @@ import BrandMark from '../components/BrandMark';
 import { remonterEnHaut } from '../remonter';
 import urlSure from '../urlSure';
 import { chargerGoogleSignIn } from '../googleSignIn';
+import { estNatif, connexionFournisseur } from '../natif';
+import BoutonsConnexionNative from '../components/BoutonsConnexionNative';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -330,6 +332,9 @@ export default function Auth() {
   // Inscription via Google : le jeton d'identité est gardé jusqu'à la fin du formulaire (c'est lui qui
   // crée le compte), le profil qu'il contient préremplit prénom, nom et e-mail — qu'on ne redemande pas.
   const [googleCredential, setGoogleCredential] = useState(null);
+  // Dans l'application iPhone, le jeton gardé peut venir d'Apple au lieu de Google (natif.js) : même parcours,
+  // seule la route du serveur change (/auth/apple au lieu de /auth/google). Tout le reste du formulaire l'ignore.
+  const [fournisseurFed, setFournisseurFed] = useState('google');
   // CGU (backlog C1) : case non pré-cochée, obligatoire pour un compte client, et version affichée —
   // le serveur enregistre la version que la personne a vue, avec l'heure, l'IP et l'empreinte du texte.
   const [accepteCgu, setAccepteCgu] = useState(false);
@@ -340,13 +345,18 @@ export default function Auth() {
   function decoderJwt(cred) {
     try { const b = cred.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(decodeURIComponent(escape(atob(b)))); } catch { return {}; }
   }
-  function retenirGoogle(credential) {
+  // `fed` : { fournisseur, prenom, nom } quand le jeton vient de la feuille native (Apple ne met pas le nom dans
+  // son jeton : il arrive à côté, et seulement à la première autorisation).
+  function retenirGoogle(credential, fed = {}) {
     const pr = decoderJwt(credential);
     setGoogleCredential(credential);
-    setGoogleProfile({ name: pr.name || '', email: pr.email || '' });
+    setFournisseurFed(fed.fournisseur || 'google');
+    const prenom = pr.given_name || fed.prenom || '';
+    const nomFamille = pr.family_name || fed.nom || '';
+    setGoogleProfile({ name: pr.name || [prenom, nomFamille].filter(Boolean).join(' '), email: pr.email || '' });
     if (pr.email) setEmail(pr.email);
-    if (pr.given_name) setFirstName((v) => v || pr.given_name);
-    if (pr.family_name) setLastName((v) => v || pr.family_name);
+    if (prenom) setFirstName((v) => v || prenom);
+    if (nomFamille) setLastName((v) => v || nomFamille);
     setPassword(''); setPasswordConfirm(''); setErrors({});
   }
   function oublierGoogle() { setGoogleCredential(null); setGoogleProfile(null); setEmail(''); }
@@ -439,7 +449,13 @@ export default function Auth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, valeursBrouillon);
 
-  const { login, register, verifyEmail, resendCode, forgotPassword, loginWithGoogle } = useAuth();
+  const { login, register, verifyEmail, resendCode, forgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  // Google ou Apple selon d'où vient le jeton. Apple n'a pas le nom dans son jeton : on envoie celui du formulaire
+  // (prérempli par la feuille Apple à la première autorisation, saisi sinon).
+  function connexionFed(fournisseur, jeton, roleChoisi, extra) {
+    if (fournisseur === 'apple') return loginWithApple(jeton, roleChoisi, { givenName: firstName.trim() || undefined, familyName: lastName.trim() || undefined, ...extra });
+    return loginWithGoogle(jeton, roleChoisi, extra);
+  }
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -718,30 +734,33 @@ export default function Auth() {
   const stateRef = useRef({ mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName });
   useEffect(() => { stateRef.current = { mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName }; });
 
-  async function handleGoogleCredential(response) {
+  async function handleGoogleCredential(response, fed = { fournisseur: 'google' }) {
     const { mode, role } = stateRef.current;
     if (mode === 'register') {
-      retenirGoogle(response.credential);
+      retenirGoogle(response.credential, fed);
       setStep((s) => (s === 0 ? 1 : s));
       return;
     }
     setLoading(true);
     let reussi = false;
     try {
-      const data = await loginWithGoogle(response.credential, role, {});
+      const data = fed.fournisseur === 'apple'
+        ? await loginWithApple(response.credential, role, { givenName: fed.prenom || undefined, familyName: fed.nom || undefined })
+        : await loginWithGoogle(response.credential, role, {});
       reussi = true;
       toast(t('auth.welcome', { name: data.user.name }));
       await allerApresConnexion(data.user);
     } catch (err) {
       if (err.message === 'INCOMPLETE_PROFILE') {
         // Pas encore de compte pour cette adresse Google : on enchaîne sur l'inscription, profil prérempli.
-        retenirGoogle(response.credential);
+        retenirGoogle(response.credential, fed);
         setMode('register');
         toast(t('auth.googleNewAccount'));
       } else if (err.code === 'TOTP_REQUIRED') {
         // Compte Google protégé par un second facteur : on ouvre le champ du code, le formulaire renverra
         // le jeton Google avec lui (voir googleEnAttente2fa).
         setGoogleEnAttente2fa(response.credential);
+        setFournisseurFed(fed.fournisseur || 'google');
         setTotpAttendu(true);
       } else {
         toast(err.message, 'erreur');
@@ -754,7 +773,7 @@ export default function Auth() {
 
   // Création du compte via Google, à la dernière étape, avec tout ce que le formulaire a recueilli.
   async function inscrireViaGoogle() {
-    const data = await loginWithGoogle(googleCredential, role, {
+    const data = await connexionFed(fournisseurFed, googleCredential, role, {
       phone: phone.trim(),
       referralCode: referralCode.trim() || undefined,
       ...(role === 'restaurant' ? {} : { addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim() }),
@@ -783,7 +802,8 @@ export default function Auth() {
    * pas le bouton : le formulaire e-mail/mot de passe juste à côté reste la voie normale, et afficher
    * une erreur pour un moyen de connexion secondaire n'aiderait personne. */
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return;
+    // Dans l'application, pas de bouton Google du site (refusé dans une WebView) : BoutonsConnexionNative le remplace.
+    if (!GOOGLE_CLIENT_ID || estNatif()) return;
     let cancelled = false;
     chargerGoogleSignIn()
       .then((gsi) => {
@@ -800,6 +820,30 @@ export default function Auth() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, stepKey, googleCredential, language]);
+
+  // Application : la feuille native d'Apple ou de Google, puis exactement le chemin du bouton Google du site.
+  // Une annulation par la personne n'est pas une erreur à afficher.
+  async function connexionNative(fournisseur) {
+    let fed;
+    try {
+      fed = await connexionFournisseur(fournisseur);
+    } catch (err) {
+      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) toast(t('appli.nativeLoginFailed'), 'erreur');
+      return;
+    }
+    await handleGoogleCredential({ credential: fed.jeton }, fed);
+  }
+
+  // Arrivée depuis l'accueil de l'application (pages/app/Bienvenue.jsx) avec un jeton Apple ou Google déjà obtenu :
+  // on le traite une fois, comme si le bouton avait été touché ici — pas de second geste à demander.
+  const fedRecu = useRef(false);
+  useEffect(() => {
+    const fed = location.state?.fed;
+    if (!fed?.jeton || fedRecu.current) return;
+    fedRecu.current = true;
+    handleGoogleCredential({ credential: fed.jeton }, fed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function submit(e) {
     e.preventDefault();
@@ -876,7 +920,7 @@ export default function Auth() {
           await allerApresInscription(data.user);
         }
       } else if (googleEnAttente2fa) {
-        const data = await loginWithGoogle(googleEnAttente2fa, role, { totpCode: totpCode.trim() });
+        const data = await connexionFed(fournisseurFed, googleEnAttente2fa, role, { totpCode: totpCode.trim() });
         reussi = true;
         setGoogleEnAttente2fa(null);
         toast(t('auth.welcome', { name: data.user.name }));
@@ -1554,7 +1598,7 @@ export default function Auth() {
             {stepKey === 'account' && googleCredential && (
               <div className="auth-google-lie">
                 <div>
-                  <div style={{ fontWeight: 700 }}>✅ {t('auth.googleLinked')}</div>
+                  <div style={{ fontWeight: 700 }}>✅ {fournisseurFed === 'apple' ? t('appli.appleLinked') : t('auth.googleLinked')}</div>
                   <div className="small">{googleProfile?.name}{googleProfile?.name && googleProfile?.email ? ' · ' : ''}{googleProfile?.email}</div>
                   <div className="small" style={{ marginTop: 4 }}>{t('auth.googleLinkedHelp')}</div>
                 </div>
@@ -1566,7 +1610,7 @@ export default function Auth() {
                 {GOOGLE_CLIENT_ID && (
                   <>
                     <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 10px' }}>
-                      <div ref={googleBtnRef} />
+                      {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : <div ref={googleBtnRef} />}
                     </div>
                     <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
                       <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
@@ -1654,7 +1698,7 @@ export default function Auth() {
             {GOOGLE_CLIENT_ID && (
               <>
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0 10px' }}>
-                  <div ref={googleBtnRef} />
+                  {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : <div ref={googleBtnRef} />}
                 </div>
                 <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
                   <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
