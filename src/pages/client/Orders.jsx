@@ -10,6 +10,7 @@ import SignalerProbleme from '../../components/client/SignalerProbleme';
 import SansLivreur from '../../components/client/SansLivreur';
 import LivreurALaPorte from '../../components/client/LivreurALaPorte';
 import ClocheNotifications from '../../components/client/ClocheNotifications';
+import ReglageNotifications from '../../components/ReglageNotifications';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -221,6 +222,8 @@ export default function Orders() {
     <div>
       <h1 className="page-title">{titre}</h1>
       <ClocheNotifications />
+      {/* Le suivi sur le téléphone, même page fermée : acceptée, en route, à la porte… (ReglageNotifications.jsx). */}
+      <ReglageNotifications textes={{ aide: t('orders.notifHelp'), actif: t('orders.notifOn') }} />
       {enCours.length > 0 && passees.length > 0 && <h2 className="suivi-section">{t('orders.sectionCurrent')}</h2>}
       {[...enCours, ...passees].map((o, rang) => (
         <Fragment key={o.id}>

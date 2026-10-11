@@ -41,9 +41,17 @@ route `/bienvenue`, outside `<Layout>`; designed with the founder on [mockups/ap
 In the app, `/` never shows the marketing landing: first launch → `/bienvenue`, afterwards → `/restaurants` (Home.jsx).
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace and makes **no claim the code does not back** — never « moins cher » (it depends on the
-business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them
-(client: courier at the door; business: new order; courier: every job he would see in his list — backend `notifLivreurs.js`,
-same eligibility as `GET /orders/available`, everyone eligible at once, no rating read; toggle in `NotifCourses.jsx`).
+business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them.
+
+**Push notifications (2026-10-11), what exists:** order-status pushes for all three roles come from a DB trigger
+(backend migration 029 → `push_queue`, sent every 5 s by `pushFile.js`, fr/nl/en): client — accepted, declined, courier
+found, on the way, delivered, ready for pickup, cancelled; business — order cancelled after receipt, courier waiting,
+order still waiting for acceptance; courier — his job ready, cancelled before pickup, withdrawn by the client. Plus, sent
+directly: new order to the business (payment), courier at the door to the client, and **new job to every courier who
+would see it** (`notifLivreurs.js`, same eligibility as `GET /orders/available`, everyone at once, no rating read). Nobody
+is notified of their own action (`oublierPush` in the routes). Toggles: `ReglageNotifications.jsx` (client in Mes
+commandes, courier via `NotifCourses.jsx`), `NewOrderAlertBar` (business), and once after sign-up in the app
+(`AmorceNotifications.jsx`). A new status worth a push goes in the trigger and in `pushFile.js` texts, not in a route.
 **Sign in with Apple** exists for the iPhone app only (App Store rule 4.8): `POST /auth/apple` in the backend shares
 one code path with `/auth/google` (`connexionFederee` in `routes/auth.js`) — fix a rule there, not in a copy.
 

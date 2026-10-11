@@ -14,9 +14,10 @@ import { EcranPermission } from '../pages/app/EcransBienvenue';
  * L'accueil laisse `amorceNotifs: 'a-faire'` dans la mémoire du téléphone (bienvenue.js) ; on le passe à 'fait'
  * quelle que soit la réponse — on ne redemande pas, les réglages du téléphone restent la voie pour changer d'avis.
  *
- * Ce qu'on promet est ce que le serveur envoie vraiment (vérifié le 2026-10-11) : au client, le livreur à la porte ; au
- * commerce, chaque nouvelle commande ; au livreur, chaque course qu'il verrait dans sa liste (notifLivreurs.js, ajouté
- * le même jour à la demande du fondateur). Le livreur retrouve ce réglage sous « Courses disponibles » (NotifCourses.jsx). */
+ * Ce qu'on promet est ce que le serveur envoie vraiment (backend pushFile.js et notifLivreurs.js, 2026-10-11) : au client,
+ * chaque étape de sa commande et le livreur à la porte ; au commerce, nouvelle commande, commande en attente, annulée,
+ * livreur qui attend ; au livreur, les courses qu'il verrait, sa course prête ou annulée. Chacun retrouve ce réglage
+ * ensuite : Mes commandes (client), Courses disponibles (livreur), barre d'alerte des commandes (commerce). */
 export default function AmorceNotifications() {
   const { user, token, role } = useAuth();
   const { t } = useLanguage();
@@ -37,9 +38,9 @@ export default function AmorceNotifications() {
   }
 
   const textes = {
-    restaurant: { titre: t('appli.coNotifTitre'), sous: t('appli.coNotifSub'), faits: [] },
-    driver: { titre: t('appli.lvNotifTitre'), sous: t('appli.lvNotifSub'), faits: [['euro', t('appli.lvN1'), t('appli.lvN1S')], ['personnes', t('appli.lvN2'), t('appli.lvN2S')]] },
-    client: { titre: t('appli.notifTitre'), sous: t('appli.notifSub'), faits: [['porte', t('appli.n1'), t('appli.n1S')]] }
+    restaurant: { titre: t('appli.coNotifTitre'), sous: t('appli.coNotifSub'), faits: [['commandes', t('appli.coN1'), t('appli.coN1S')], ['scooter', t('appli.coN2'), t('appli.coN2S')]] },
+    driver: { titre: t('appli.lvNotifTitre'), sous: t('appli.lvNotifSub'), faits: [['euro', t('appli.lvN1'), t('appli.lvN1S')], ['personnes', t('appli.lvN2'), t('appli.lvN2S')], ['coche', t('appli.lvN3'), t('appli.lvN3S')]] },
+    client: { titre: t('appli.notifTitre'), sous: t('appli.notifSub'), faits: [['coche', t('appli.nAccept'), t('appli.nAcceptS')], ['scooter', t('appli.nRoute'), t('appli.nRouteS')], ['porte', t('appli.n1'), t('appli.n1S')]] }
   }[role];
   return (
     <div className="bv bv-par-dessus" role="dialog" aria-modal="true" aria-label={textes.titre}>

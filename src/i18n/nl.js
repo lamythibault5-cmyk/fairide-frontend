@@ -5658,13 +5658,7 @@ export default {
     },
     dashDriver: {
       notifHelp: 'Op deze telefoon verwittigd worden zodra er een rit boven je minimum beschikbaar is.',
-      notifEnable: 'Inschakelen',
-      notifDisable: 'Uitschakelen',
       notifOn: 'Je wordt op dit toestel verwittigd van nieuwe ritten.',
-      notifOnDone: 'Ingeschakeld: je wordt verwittigd van nieuwe ritten.',
-      notifOffDone: 'Meldingen voor ritten uitgeschakeld op dit toestel.',
-      notifRefused: 'Meldingen geweigerd: sta ze toe in de instellingen van je telefoon (of je browser).',
-      notifFailed: 'Meldingen inschakelen is niet gelukt op dit toestel.',
       loadError: 'Je ritten konden niet worden geladen.',
       today: 'Vandaag',
       available: 'Beschikbaar',
@@ -6771,6 +6765,8 @@ export default {
       emptyText: 'Voeg gerechten toe vanaf de kaart van een zaak, ze verschijnen hier.'
     },
     orders: {
+      notifHelp: 'Op deze telefoon verwittigd worden bij elke stap: bestelling aanvaard, koerier onderweg, aan je deur.',
+      notifOn: 'Je krijgt de opvolging van je bestellingen op dit toestel.',
       sectionCurrent: 'Lopend',
       sectionPast: 'Eerdere bestellingen',
       title: 'Mijn bestellingen',
@@ -8204,6 +8200,16 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      nAccept: 'Je bestelling is aanvaard',
+      nAcceptS: 'Of geweigerd, met de reden.',
+      nRoute: 'Je koerier is onderweg',
+      nRouteS: 'Dan geleverd — of klaar om af te halen.',
+      coN1: 'Elke nieuwe bestelling',
+      coN1S: 'En een herinnering als ze op je aanvaarding wacht.',
+      coN2: 'Bestelling geannuleerd, koerier die wacht',
+      coN2S: 'Om op tijd te stoppen met klaarmaken, of de bestelling mee te geven.',
+      lvN3: 'Je rit klaar of geannuleerd',
+      lvN3S: 'Je weet wanneer je moet vertrekken, en wanneer het niet meer hoeft.',
       lvNotifTitre: 'Mis geen enkele rit',
       lvNotifSub: 'We verwittigen je zodra er een rit beschikbaar is die je kunt nemen.',
       lvN1: 'Alleen ritten boven je minimum',
@@ -8306,7 +8312,7 @@ export default {
       compteLivreurS: 'Daarna: je dossier (statuut, documenten, contract).',
       compteCommerce: 'Maak het account van je zaak aan',
       compteCommerceS: 'Daarna: je gegevens en je menukaart, voorbereid door ons team.',
-      notifTitre: 'Mis je koerier niet',
+      notifTitre: 'Volg je bestelling zonder de app te openen',
       notifSub: 'We verwittigen je alleen als het ertoe doet.',
       n1: 'Als je koerier aan de deur staat',
       n1S: 'Ook als de app gesloten is.',
@@ -8340,5 +8346,14 @@ export default {
       coBtn: 'Mijn zaak inschrijven',
       coNotifTitre: 'Mis geen enkele bestelling',
       coNotifSub: 'Een melding bij elke nieuwe bestelling, ook als je telefoon vergrendeld is.'
+    },
+    // Boutons du réglage « notifications sur cet appareil » (ReglageNotifications.jsx), client et livreur.
+    notifs: {
+      enable: 'Inschakelen',
+      disable: 'Uitschakelen',
+      onDone: 'Ingeschakeld op dit toestel.',
+      offDone: 'Meldingen uitgeschakeld op dit toestel.',
+      refused: 'Meldingen geweigerd: sta ze toe in de instellingen van je telefoon (of je browser).',
+      failed: 'Meldingen inschakelen is niet gelukt op dit toestel.'
     }
 };

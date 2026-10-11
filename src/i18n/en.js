@@ -5649,13 +5649,7 @@ export default {
     },
     dashDriver: {
       notifHelp: 'Get notified on this phone as soon as a delivery above your minimum is available.',
-      notifEnable: 'Turn on',
-      notifDisable: 'Turn off',
       notifOn: 'You get notified of new deliveries on this device.',
-      notifOnDone: 'Done: you will be notified of new deliveries.',
-      notifOffDone: 'Delivery notifications turned off on this device.',
-      notifRefused: 'Notifications declined: allow them in your phone (or browser) settings.',
-      notifFailed: 'Could not turn on notifications on this device.',
       loadError: 'Your deliveries could not be loaded.',
       today: 'Today',
       available: 'Available',
@@ -6762,6 +6756,8 @@ export default {
       emptyText: 'Add dishes from a shop menu and they will show up here.'
     },
     orders: {
+      notifHelp: 'Get every step on this phone: order accepted, courier on the way, at your door.',
+      notifOn: 'You get your order updates on this device.',
       sectionCurrent: 'In progress',
       sectionPast: 'Past orders',
       title: 'My orders',
@@ -8195,6 +8191,16 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      nAccept: 'Your order is accepted',
+      nAcceptS: 'Or declined, with the reason.',
+      nRoute: 'Your courier is on the way',
+      nRouteS: 'Then delivered — or ready for pickup.',
+      coN1: 'Every new order',
+      coN1S: 'And a reminder if it is waiting for you to accept it.',
+      coN2: 'Order cancelled, courier waiting',
+      coN2S: 'To stop preparing in time, or hand the order over.',
+      lvN3: 'Your delivery ready or cancelled',
+      lvN3S: 'You know when to go, and when there is no need.',
       lvNotifTitre: 'Never miss a delivery',
       lvNotifSub: 'We let you know as soon as a delivery you can take is available.',
       lvN1: 'Only deliveries above your minimum',
@@ -8297,7 +8303,7 @@ export default {
       compteLivreurS: 'Next: your file (status, documents, contract).',
       compteCommerce: 'Create your business account',
       compteCommerceS: 'Next: your details and your menu, prepared by our team.',
-      notifTitre: 'Don’t miss your courier',
+      notifTitre: 'Follow your order without opening the app',
       notifSub: 'We only ping you when it matters.',
       n1: 'When your courier is at your door',
       n1S: 'Even if the app is closed.',
@@ -8331,5 +8337,14 @@ export default {
       coBtn: 'Sign up my business',
       coNotifTitre: 'Never miss an order',
       coNotifSub: 'A notification for every new order, even with the phone locked.'
+    },
+    // Boutons du réglage « notifications sur cet appareil » (ReglageNotifications.jsx), client et livreur.
+    notifs: {
+      enable: 'Turn on',
+      disable: 'Turn off',
+      onDone: 'Turned on for this device.',
+      offDone: 'Notifications turned off on this device.',
+      refused: 'Notifications declined: allow them in your phone (or browser) settings.',
+      failed: 'Could not turn on notifications on this device.'
     }
 };

@@ -25,7 +25,8 @@ passe par `src/natif.js` (et `src/pushNatif.js` pour les notifications) — null
 | Accueil de l'application | `pages/app/Bienvenue.jsx` (`/bienvenue`), `Home.jsx` | premier lancement : « Tu es… » (client / livreur / commerce), questions, « Pourquoi Fairide », position ou code postal, commerces qui livrent vraiment chez toi, compte. Ensuite l'app s'ouvre sur la liste, jamais sur la vitrine du site. Maquette : `mockups/app-onboarding.html`. Relire dans un navigateur : `/bienvenue?apercu` |
 | Position | `natif.js` → `demanderPosition` | greffon `@capacitor/geolocation` (une seule question du système, pas celle de la WebView en plus) |
 | Connexion Apple / Google | `natif.js` → `connexionFournisseur`, `BoutonsConnexionNative.jsx` | feuille native (`@capgo/capacitor-social-login`) : le bouton Google du site est refusé dans une WebView. Apple sur iPhone seulement (règle 4.8). Serveur : `POST /auth/apple` (`apple.js`) |
-| Notifications après l'inscription | `AmorceNotifications.jsx` | une fois, pour les trois profils. Livreur : prévenu de chaque course qu'il verrait dans sa liste (backend `notifLivreurs.js`) ; réglage permanent sous « Courses disponibles » (`NotifCourses.jsx`) |
+| Notifications après l'inscription | `AmorceNotifications.jsx` | une fois, pour les trois profils, en listant ce qui arrive vraiment. Ensuite : réglage dans Mes commandes (client), sous « Courses disponibles » (livreur), barre d'alerte (commerce) |
+| Notifications envoyées | backend `pushFile.js` (file `push_queue`, déclencheur migration 029), `notifLivreurs.js` | client : acceptée, refusée, livreur trouvé, en route, livrée, prête à retirer, annulée, à la porte. Commerce : nouvelle commande, en attente d'acceptation, annulée, livreur qui attend. Livreur : nouvelle course qu'il verrait, sa course prête, annulée, retirée par le client. Jamais pour son propre geste |
 
 Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm run app:ios`.
 

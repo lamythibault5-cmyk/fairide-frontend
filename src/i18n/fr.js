@@ -5665,13 +5665,7 @@ export default {
     },
     dashDriver: {
       notifHelp: 'Être prévenu sur ce téléphone dès qu’une course au-dessus de ton minimum est disponible.',
-      notifEnable: 'Activer',
-      notifDisable: 'Couper',
       notifOn: 'Tu es prévenu des nouvelles courses sur cet appareil.',
-      notifOnDone: 'C’est activé : tu seras prévenu des nouvelles courses.',
-      notifOffDone: 'Notifications de courses coupées sur cet appareil.',
-      notifRefused: 'Notifications refusées : autorise-les dans les réglages de ton téléphone (ou de ton navigateur).',
-      notifFailed: 'Impossible d’activer les notifications sur cet appareil.',
       loadError: 'Impossible de charger tes courses.',
       today: 'Aujourd\'hui',
       available: 'Disponibles',
@@ -6810,6 +6804,8 @@ export default {
       emptyText: "Ajoute des plats depuis la carte d'un commerce, ils apparaîtront ici."
     },
     orders: {
+      notifHelp: 'Être prévenu sur ce téléphone de chaque étape : commande acceptée, livreur en route, à ta porte.',
+      notifOn: 'Tu reçois le suivi de tes commandes sur cet appareil.',
       sectionCurrent: 'En cours',
       sectionPast: 'Commandes passées',
       title: 'Mes commandes',
@@ -8245,6 +8241,16 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      nAccept: 'Ta commande est acceptée',
+      nAcceptS: 'Ou refusée, avec le motif.',
+      nRoute: 'Ton livreur est en route',
+      nRouteS: 'Puis livrée — ou prête à retirer, à emporter.',
+      coN1: 'Chaque nouvelle commande',
+      coN1S: 'Et un rappel si elle attend ton acceptation.',
+      coN2: 'Commande annulée, livreur qui attend',
+      coN2S: 'Pour arrêter une préparation à temps, ou sortir la commande.',
+      lvN3: 'Ta course prête ou annulée',
+      lvN3S: 'Tu sais quand partir, et quand ce n’est plus la peine.',
       lvNotifTitre: 'Ne rate pas une course',
       lvNotifSub: 'On te prévient dès qu’une course que tu peux prendre est disponible.',
       lvN1: 'Seulement les courses au-dessus de ton minimum',
@@ -8347,7 +8353,7 @@ export default {
       compteLivreurS: 'Ensuite : ton dossier (statut, documents, contrat).',
       compteCommerce: 'Crée le compte de ton commerce',
       compteCommerceS: 'Ensuite : tes informations et ta carte, préparée par notre équipe.',
-      notifTitre: 'Ne rate pas ton livreur',
+      notifTitre: 'Suis ta commande sans ouvrir l’app',
       notifSub: 'On te prévient seulement quand ça compte.',
       n1: 'Quand ton livreur est à ta porte',
       n1S: 'Même si l’app est fermée.',
@@ -8381,5 +8387,14 @@ export default {
       coBtn: 'Inscrire mon commerce',
       coNotifTitre: 'Ne rate aucune commande',
       coNotifSub: 'Une notification à chaque nouvelle commande, même téléphone verrouillé.'
+    },
+    // Boutons du réglage « notifications sur cet appareil » (ReglageNotifications.jsx), client et livreur.
+    notifs: {
+      enable: 'Activer',
+      disable: 'Couper',
+      onDone: 'C’est activé sur cet appareil.',
+      offDone: 'Notifications coupées sur cet appareil.',
+      refused: 'Notifications refusées : autorise-les dans les réglages de ton téléphone (ou de ton navigateur).',
+      failed: 'Impossible d’activer les notifications sur cet appareil.'
     }
 };
