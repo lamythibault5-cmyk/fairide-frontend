@@ -58,12 +58,10 @@ export function useCommercesReels() {
   return reels;
 }
 
-// La vitrine de l'accueil : les vrais commerces d'abord ; les commerces de démonstration ne complètent que s'il n'y a
-// pas assez de vrais pour remplir (`min`). Dès que les vrais suffisent, plus aucune démo n'apparaît.
-export function vitrineAccueil(reels, publics, min = 3) {
-  if (reels.length >= min) return reels;
-  const demos = publics.filter((r) => r.isDemo !== false || r.reel !== true).filter((r) => !reels.some((x) => x.id === r.id));
-  return [...reels, ...demos];
+// La vitrine de l'accueil (fondateur, 2026-10-11) : les VRAIS commerces seulement, jamais un commerce de démonstration, même
+// quand ils sont peu nombreux — le serveur (GET /restaurants/landing) ne renvoie déjà que les vrais, les plus engageants, 8 au plus.
+export function vitrineAccueil(reels) {
+  return reels.filter((r) => r.isDemo === false && r.reel === true);
 }
 
 // `rangee` (2026-09-27) : les trois commerces CÔTE À CÔTE, photo en haut, en bas de la bannière à barre

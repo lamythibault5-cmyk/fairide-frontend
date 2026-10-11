@@ -6,15 +6,16 @@ import { useLanguage } from '../context/LanguageContext';
 // Défilement horizontal infini des commerces déjà partenaires, en bas de la page d'accueil — un mur
 // de confiance avant l'appel à l'action final. Purement décoratif : ne mène nulle part au clic (pas de
 // lien vers une fiche resto ni vers une interface qui exigerait une connexion), le défilement continue
-// sans interruption quoi que fasse le visiteur. Public (pas besoin d'être connecté), lu directement
-// depuis /restaurants ; se met donc à jour tout seul à mesure que de nouveaux commerces rejoignent Fairide.
+// sans interruption quoi que fasse le visiteur. Public (pas besoin d'être connecté), lu depuis
+// /restaurants/landing (vrais commerces seulement) ; se met à jour tout seul à mesure que de nouveaux commerces rejoignent Fairide.
 export default function PartnersMarquee({ restaurants: fournis = null }) {
   const { t } = useLanguage();
   const [charges, setCharges] = useState([]);
 
   useEffect(() => {
     if (fournis) return; // la page d'accueil fournit déjà sa vitrine (vrais commerces d'abord)
-    api('/restaurants').then((all) => setCharges(all.sort(() => Math.random() - 0.5))).catch(() => {});
+    // Vrais commerces seulement (fondateur, 2026-10-11) : jamais de démonstration sur l'accueil.
+    api('/restaurants/landing').then((all) => setCharges((Array.isArray(all) ? all : []).sort(() => Math.random() - 0.5))).catch(() => {});
   }, [fournis]);
 
   const restaurants = fournis || charges;

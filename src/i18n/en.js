@@ -2800,7 +2800,7 @@ export default {
       driverFinance: '💶 Courier finance',
       totalDeliveryFees: 'Total delivery fees (their rides)',
       fairideShare: 'Fairide share (10%, reference · not deducted)',
-      driverShare: 'Courier share (100% of the delivery rate)',
+      driverShare: 'Courier share (90% of the delivery rate)',
       adjustments: 'Adjustments (refunds charged to them)',
       duePaid: 'Amount due / paid',
       phSearch: 'Search a courier...',

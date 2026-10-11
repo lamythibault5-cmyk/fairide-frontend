@@ -7,7 +7,7 @@ import BelgianMark from '../components/BelgianMark';
 import usePageMeta from '../hooks/usePageMeta';
 import useJsonLd from '../seo/useJsonLd';
 import { organizationJsonLd } from '../seo/jsonLd';
-import HeroPreview, { useCommercesPublics, useCommercesReels, vitrineAccueil } from '../components/landing/HeroPreview';
+import HeroPreview, { useCommercesReels, vitrineAccueil } from '../components/landing/HeroPreview';
 import HeroAdresse from '../components/landing/HeroAdresse';
 import HeroPrix from '../components/landing/HeroPrix';
 import DiscoverSection from '../components/landing/DiscoverSection';
@@ -66,11 +66,10 @@ export default function Landing() {
   const { t } = useLanguage();
   usePageMeta({ description: t('seo.homeDescription'), path: '/' });
   useJsonLd(organizationJsonLd(), 'ld-organization');
-  // Lus une fois pour toute la page : aperçu de la bannière, vitrine « Découvre », et le nombre affiché.
-  const publics = useCommercesPublics();
+  // Lus une fois pour toute la page : aperçu de la bannière, vitrine « Découvre », mur des partenaires.
   const reels = useCommercesReels();
-  // Vrais commerces d'abord (fondateur, 22/09) ; les démos ne complètent que s'ils sont trop peu nombreux.
-  const restaurants = useMemo(() => vitrineAccueil(reels, publics, 3), [reels, publics]);
+  // Vrais commerces seulement (fondateur, 22/09 puis 11/10 : jamais de démo, même s'ils sont peu nombreux).
+  const restaurants = useMemo(() => vitrineAccueil(reels), [reels]);
 
   return (
     <div className="decor-page">
