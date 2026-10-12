@@ -62,6 +62,10 @@ export default function ScrollRestorer() {
     if (!premierChargement && !retour) {
       // Les ancres (#section) gardent leur cible.
       if (location.hash) return undefined;
+      // ?ouvrir=… (Mon compte › Paiement depuis « Configurer mes paiements ») : la page défile elle-même jusqu'à la
+      // section demandée, une fois ses données chargées. Les remontées ci-dessous la ramenaient en haut pendant ~0,8 s,
+      // et le restaurateur atterrissait sur « Mes infos » (test au téléphone, 12 oct. 2026).
+      if (new URLSearchParams(location.search).has('ouvrir')) return undefined;
       remonterEnHaut();
       let annule = false;
       const lacher = () => { annule = true; };

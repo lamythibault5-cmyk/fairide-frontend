@@ -95,6 +95,7 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
   const totaux = payees.reduce((a, o) => ({ total: a.total + Number(o.total || 0), produits: a.produits + Number(o.subtotal || 0), livraison: a.livraison + Number(o.deliveryFee || 0), commission: a.commission + Number(o.commission || 0), net: a.net + net(o) }), { total: 0, produits: 0, livraison: 0, commission: 0, net: 0 });
   const ouvert = paiementsOuverts();
   const stripeActif = restaurant?.stripeConnectStatus === 'active';
+  const legalComplet = !!String(restaurant?.companyNumber || '').replace(/\D/g, '') && !!String(restaurant?.vatNumber || '').trim();
   // Fondateur, 2026-10-09 : configurer ses paiements dès l'inscription — le bouton lance l'inscription Stripe (identité, IBAN) ;
   // numéros d'entreprise / TVA manquants : on le dit et on reste sur ce panneau, qui les demande juste au-dessus.
   const { token } = useAuth();
@@ -109,39 +110,45 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
 
   return (
     <div className="paiement-resto">
-      <h4 className="paiement-titre">{t('paiementResto.howTitle')}</h4>
-      <ol className="paiement-etapes">
-        <li>{t('paiementResto.step1')}</li>
-        <li>{t('paiementResto.step2')}</li>
-        <li>{t('paiementResto.step3')}</li>
-      </ol>
-
-      <div className="paiement-encart">
-        <b>{t('paiementResto.subscriptionTitle')}</b>
-        <p className="small" style={{ margin: '4px 0 0' }}>{t('paiementResto.subscriptionText')}</p>
-      </div>
-
-      <h4 className="paiement-titre">{t('paiementResto.stripeTitle')}</h4>
-      <p className="small" style={{ margin: '0 0 8px' }}>{t('paiementResto.stripeWhat')}</p>
-      <p className="small" style={{ margin: '0 0 12px' }}><b>{t('paiementResto.noBankTitle')}</b> {t('paiementResto.noBankText')}</p>
-
-      {/* UN GESTE JUSQU'À STRIPE (12 oct. 2026) : quand les paiements sont ouverts, « Enregistrer et activer » garde les
-          numéros puis ouvre directement l'inscription Stripe ; avant, il fallait enregistrer, puis trouver le second bouton. */}
+      {/* L'ACTION D'ABORD, LES EXPLICATIONS REPLIÉES (test au téléphone, 12 oct. 2026). Le formulaire arrivait après deux
+          écrans de texte (comment tu es payé, abonnement, Stripe) : le restaurateur venu « configurer ses paiements »
+          devait tout dérouler pour trouver où taper son numéro. Les textes restent, à un geste, sous « Comment tu es payé ? ». */}
+      {/* UN GESTE JUSQU'À STRIPE : quand les paiements sont ouverts, « Enregistrer et activer » garde les numéros puis ouvre
+          directement l'inscription Stripe. */}
       {restaurant?.id && !stripeActif && (
         <CoordonneesLegales restaurant={restaurant} enchainer={ouvert}
           onSaved={(o) => { onRestaurantChange?.(); if (o?.enchainer) activer(); }} />
       )}
-      <div className={`paiement-activation${ouvert ? '' : ' fermee'}`}>
-        <div>
-          <b>{stripeActif ? t('paiementResto.activationDone') : ouvert ? t('paiementResto.activationOpen') : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}</b>
-          <p className="small" style={{ margin: '4px 0 0' }}>{stripeActif ? t('paiementResto.activationDoneText') : ouvert ? t('paiementResto.activationOpenText') : t('paiementResto.activationClosedText', { date: dateOuverturePaiements(getLocale()) })}</p>
+      {/* Numéros pas encore enregistrés et paiements ouverts : le seul bouton est « Enregistrer et activer », juste au-dessus. */}
+      {(stripeActif || legalComplet || !ouvert) && (
+        <div className={`paiement-activation${ouvert ? '' : ' fermee'}`}>
+          <div>
+            <b>{stripeActif ? t('paiementResto.activationDone') : ouvert ? t('paiementResto.activationOpen') : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}</b>
+            <p className="small" style={{ margin: '4px 0 0' }}>{stripeActif ? t('paiementResto.activationDoneText') : ouvert ? t('paiementResto.activationOpenText') : t('paiementResto.activationClosedText', { date: dateOuverturePaiements(getLocale()) })}</p>
+          </div>
+          {!stripeActif && (
+            <button type="button" className="btn-gold" disabled={!ouvert || connecting} onClick={activer} title={ouvert ? undefined : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}>
+              {connecting ? '…' : ouvert ? t('paiementResto.activateBtn') : t('paiementResto.activateSoonBtn')}
+            </button>
+          )}
         </div>
-        {!stripeActif && (
-          <button type="button" className="btn-gold" disabled={!ouvert || connecting} onClick={activer} title={ouvert ? undefined : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}>
-            {connecting ? '…' : ouvert ? t('paiementResto.activateBtn') : t('paiementResto.activateSoonBtn')}
-          </button>
-        )}
-      </div>
+      )}
+
+      <details className="paiement-explications">
+        <summary>{t('paiementResto.howTitle')}</summary>
+        <ol className="paiement-etapes">
+          <li>{t('paiementResto.step1')}</li>
+          <li>{t('paiementResto.step2')}</li>
+          <li>{t('paiementResto.step3')}</li>
+        </ol>
+        <div className="paiement-encart">
+          <b>{t('paiementResto.subscriptionTitle')}</b>
+          <p className="small" style={{ margin: '4px 0 0' }}>{t('paiementResto.subscriptionText')}</p>
+        </div>
+        <h4 className="paiement-titre">{t('paiementResto.stripeTitle')}</h4>
+        <p className="small" style={{ margin: '0 0 8px' }}>{t('paiementResto.stripeWhat')}</p>
+        <p className="small" style={{ margin: 0 }}><b>{t('paiementResto.noBankTitle')}</b> {t('paiementResto.noBankText')}</p>
+      </details>
 
       <h4 className="paiement-titre">{t('paiementResto.receiptsTitle')}</h4>
       <p className="small" style={{ margin: '0 0 8px' }}>{t('paiementResto.receiptsIntro')}</p>

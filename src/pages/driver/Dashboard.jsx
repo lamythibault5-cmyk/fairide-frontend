@@ -96,6 +96,10 @@ export default function DriverDashboard() {
       // Le statut Stripe Connect n'est pas suivi par webhook pour ce type de compte (voir backend) —
       // on le relit activement au retour de l'onboarding avant de rafraîchir l'utilisateur en contexte.
       api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {}).finally(() => refreshUser().catch(() => {}));
+    } else if (user?.stripeConnectStatus === 'pending') {
+      // Même filet que côté commerce (DashboardLayout.jsx) : un compte resté « en attente » est relu à l'ouverture, au cas où
+      // le livreur n'est pas repassé par le lien de retour de Stripe, ou si l'activation est arrivée après.
+      api('/auth/me/connect/refresh', { method: 'POST', token }).then(() => refreshUser().catch(() => {})).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
