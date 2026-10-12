@@ -1,10 +1,8 @@
 import { ouvrirPdfBlob } from '../../natif';
 import SacLivraison from '../../components/SacLivraison';
-import SignaturePad from '../../components/SignaturePad';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
-import { telechargerPdf } from '../../pdf';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -27,12 +25,13 @@ import { libelleManque } from '../../conformite';
 // Rien ici n'impose d'horaire, de quota de courses ni de taux d'acceptation : le livreur choisit ses
 // courses. Aucun montant légal n'est écrit dans ce fichier : tout vient de `legal` (configuration fiscale).
 // « notices » (backlog B4, B8) : notice des systèmes automatisés, politique de géolocalisation, DAC7.
-const ETAPES = ['statut', 'identite', 'infos', 'notices', 'contrat', 'paiement', 'envoi'];
+// « notices » et « contrat » ne font plus qu'une étape, « engagements » : une case pour tout (12 oct. 2026).
+const ETAPES = ['statut', 'identite', 'infos', 'engagements', 'paiement', 'envoi'];
 const MANQUES_PAR_ETAPE = {
   statut: ['statut'], identite: ['identite', 'document_identity_card'],
   infos: ['nationalite', 'titre_sejour', 'carte_professionnelle', 'date_naissance', 'registre_national', 'iban', 'zone', 'vehicule', 'permis_immatriculation', 'ecole', 'caisse', 'statut', 'age_minimum', 'bce', 'tva', 'tva_numero', 'siege', 'document_school_certificate', 'document_social_insurance_fund', 'document_liability_insurance', 'document_bce_extract', 'document_profile_photo', 'document_driving_licence', 'document_vehicle_registration', 'document_vehicle_insurance'],
-  notices: ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate'],
-  contrat: ['contrat'], paiement: [], envoi: ['statut_non_verifie']
+  engagements: ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur', 'contrat'],
+  paiement: [], envoi: ['statut_non_verifie']
 };
 // « statut_non_verifie » n'est pas une action du livreur : c'est Fairide qui vérifie. Il n'empêche
 // donc pas d'envoyer le dossier, il est simplement affiché à titre d'information.
@@ -114,7 +113,7 @@ export default function Onboarding() {
       {/* Livreur déjà validé : les notices (B4, B8) doivent être relues quand leur texte change, sinon le
           serveur refuse la prochaine course (NOTICES_A_ACCEPTER). Les étapes ci-dessous ne s'affichent
           qu'en dossier brouillon : sans ce bloc, un livreur validé n'aurait aucun moyen de les accepter. */}
-      {!enDossier && MANQUES_PAR_ETAPE.notices.some((m) => manques.includes(m)) && (
+      {!enDossier && MANQUES_PAR_ETAPE.engagements.some((m) => m !== 'contrat' && manques.includes(m)) && (
         <EtapeNotices token={token} busy={busy} action={action} onNext={() => charger()} />
       )}
 
@@ -123,16 +122,22 @@ export default function Onboarding() {
           <div className="courier-steps" role="tablist">
             {ETAPES.map((e, i) => (
               <button key={e} type="button" role="tab" aria-selected={courante === e} className={`courier-step${courante === e ? ' active' : ''}${etapeOk(e) ? ' done' : ''}`} onClick={() => setEtape(e)}>
-                <span className="courier-step-num">{etapeOk(e) ? '✓' : i + 1}</span><span>{e === 'notices' ? t('conformite.noticesStep') : t(`courierOnboarding.step_${e}`)}</span>
+                <span className="courier-step-num">{etapeOk(e) ? '✓' : i + 1}</span><span>{e === 'engagements' ? t('conformite.engagementsStep') : t(`courierOnboarding.step_${e}`)}</span>
               </button>
             ))}
           </div>
 
           {courante === 'statut' && <EtapeStatut d={d} t={t} busy={busy} onChoose={(statusType) => action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType } }), t('courierOnboarding.toastStatusSaved')).then((ok) => ok && setEtape('identite'))} />}
           {courante === 'identite' && <EtapeIdentite d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('infos')} />}
-          {courante === 'infos' && <EtapeInfos d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('notices')} />}
-          {courante === 'notices' && <EtapeNotices token={token} busy={busy} action={action} onNext={() => { charger(); setEtape('contrat'); }} />}
-          {courante === 'contrat' && <EtapeContrat d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('paiement')} />}
+          {courante === 'infos' && <EtapeInfos d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('engagements')} />}
+          {courante === 'engagements' && (
+            <EtapeNotices token={token} busy={busy} action={action} onNext={() => { charger(); setEtape('paiement'); }}
+              contrat={{
+                aSigner: manques.includes('contrat'),
+                nom: `${c.identity?.firstName || ''} ${c.identity?.lastName || ''}`.trim() || d.user?.name || '',
+                onApercu: () => ouvrirPdf(`${API_BASE}/couriers/me/contract/preview`, token, t('courierOnboarding.previewFailed'))
+              }} />
+          )}
           {courante === 'paiement' && <EtapePaiement d={d} t={t} busy={busy} token={token} user={user} action={action} onNext={() => setEtape('envoi')} />}
           {courante === 'envoi' && <EtapeEnvoi d={d} t={t} busy={busy} onSubmit={() => action(() => api('/couriers/me/submit', { method: 'POST', token }), t('courierOnboarding.toastSubmitted')).then(() => refreshUser?.())} onGoTo={setEtape} />}
         </>
@@ -503,46 +508,6 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
         {rang > 0 && <button type="button" className="btn-outline" onClick={() => setPartie(rang - 1)}>{t('auth.back')}</button>}
         <button type="button" className="btn-gold" style={{ flex: 1 }} disabled={busy} onClick={continuer}>{busy ? '…' : t('auth.continueStep')}</button>
       </div>
-    </div>
-  );
-}
-
-function EtapeContrat({ d, t, busy, token, action, onNext }) {
-  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
-  // quand ce composant est rendu plusieurs fois sur la meme page.
-  const idsA11y = useId();
-  const c = d.courier;
-  const [nom, setNom] = useState(`${c.identity?.firstName || ''} ${c.identity?.lastName || ''}`.trim() || d.user?.name || '');
-  const [accepte, setAccepte] = useState(false);
-  const [signature, setSignature] = useState(null); // PNG dessiné dans le cadre (fondateur, 2026-10-09)
-  const versionCourante = d.contractVersions?.[c.statusType];
-  const ancien = (d.contracts ?? []).find((k) => k.contractType === c.statusType);
-  const signe = ancien && (!versionCourante || ancien.version === versionCourante) ? ancien : null;
-  const apercu = () => ouvrirPdf(`${API_BASE}/couriers/me/contract/preview`, token, t('courierOnboarding.previewFailed'));
-  return (
-    <div className="card">
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.contractTitle')}</h3>
-      <p className="small" style={{ margin: '0 0 12px' }}>{t(`courierOnboarding.contract_${STATUTS.includes(c.statusType) ? c.statusType : 'independent'}`)}</p>
-      {signe ? (
-        <div className="courier-ok">✅ {t('courierOnboarding.contractSigned', { date: new Date(signe.signedAt).toLocaleString(getLocale()), version: signe.version })}
-          <div className="small" style={{ marginTop: 4, overflowWrap: 'anywhere' }}>{t('courierOnboarding.contractHash')} <code>{signe.documentHash.slice(0, 16)}…</code> · <button type="button" className="btn-ghost" style={{ padding: '0 6px' }} onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/${signe.id}/pdf`, token, t('courierOnboarding.previewFailed'))}>PDF</button></div>
-        </div>
-      ) : (
-        <>
-          {ancien && <p className="small" style={{ margin: '0 0 8px' }}>🆕 {t('driverTerms.newVersion', { version: versionCourante, old: ancien.version })}</p>}
-          <button type="button" className="btn-outline" onClick={apercu}>📄 {t('courierOnboarding.contractPreview')}</button>
-          <button type="button" className="btn-outline" onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/preview`, token, 'contrat-fairide.pdf', t('courierOnboarding.previewFailed'))}>⬇️ {t('driverTerms.savePdf')}</button>
-          <div className="field" style={{ marginTop: 12 }}>
-            <label htmlFor={idsA11y + '-typedname'}>{t('courierOnboarding.typedName')}</label>
-            <input id={idsA11y + '-typedname'} value={nom} onChange={(e) => setNom(e.target.value)} />
-          </div>
-          <label className="service-option"><input type="checkbox" checked={accepte} onChange={(e) => setAccepte(e.target.checked)} /> <span>{t('courierOnboarding.acceptContract')}</span></label>
-          <p className="small" style={{ margin: '6px 0 10px', opacity: 0.8 }}>{t('courierOnboarding.signatureHelp')}</p>
-          <SignaturePad onChange={setSignature} />
-          <button type="button" className="btn-gold" disabled={busy || !accepte || !nom.trim() || !signature} onClick={() => action(() => api('/couriers/me/contract/sign', { method: 'POST', token, body: { typedName: nom.trim(), accepted: accepte, signatureDataUrl: signature } }), t('courierOnboarding.toastSigned'))}>{t('courierOnboarding.sign')}</button>
-        </>
-      )}
-      <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-outline" onClick={onNext}>{t('courierOnboarding.next')}</button></div>
     </div>
   );
 }

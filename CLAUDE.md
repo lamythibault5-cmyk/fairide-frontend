@@ -292,6 +292,14 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   change the sort in RestaurantList.jsx, change that page's text in the same commit.
 - **Stars need reviews.** `restaurants.rating` defaults to 4.5 in the database: never render
   `StarsDisplay` or sort by rating without `reviewCount > 0` — that would show a rating nobody gave.
+- **Signup is checkboxes only** (founder, 2026-10-12). Business: one box at the end of signup signs the partnership
+  contract, the professional declaration and the allergen procedure ([EngagementsInscription](src/components/commerce/EngagementsInscription.jsx),
+  texts from `GET /restaurants/engagements` and `/restaurants/contract-terms`). Courier: one « Mes engagements » step in
+  onboarding (`POST /couriers/me/engagements`) accepts the pre-ride notices, the self-billing mandate, the
+  `declaration_honneur` (replaces every status and vehicle document) and the contract. **No drawn signature anywhere**
+  (typed name + box = simple e-signature, eIDAS art. 25); a drawing sent anyway must be a valid PNG. Still required,
+  because the law targets Fairide itself: courier ID check, non-EEA residence permit + professional card (CPS 175/1),
+  biometric consent as its own box (GDPR art. 9), business number before publication, the menu's « C'est bon ».
 - **Merchant**: card signature, allergen attestation and professional declaration in
   [ConformiteCarte](src/components/conformite/ConformiteCarte.jsx) (menu page); allergens / VAT / alcohol
   per dish in the dish editor; allergy confirmation and ID check at the counter in the orders page.
