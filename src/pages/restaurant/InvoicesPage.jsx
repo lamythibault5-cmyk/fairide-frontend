@@ -10,6 +10,10 @@ import InvoicePreferences from '../../components/InvoicePreferences';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 
+// Facture sans TVA : Fairide est sous le régime de la franchise depuis le 7/9/2026 (lettre du SPF Finances du 12/10/2026).
+// Jugé par facture : une facture émise avec TVA garde ses colonnes.
+const sansTva = (inv) => !(Number(inv?.vatAmount) > 0) && !(Number(inv?.vatRate) > 0);
+
 function currentMonthValue() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -196,8 +200,8 @@ export default function InvoicesPage() {
                   <th style={{ padding: '6px 4px' }}>{t('invoicesResto.date')}</th>
                   <th style={{ padding: '6px 4px' }}>{t('invoicesResto.description')}</th>
                   <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t('statements.colOrderAmount')}</th>
-                  <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t('invoicesResto.priceExVat')}</th>
-                  <th style={{ padding: '6px 4px', textAlign: 'right' }}>TVA</th>
+                  <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t(sansTva(invoice) ? 'invoicesResto.priceNoVat' : 'invoicesResto.priceExVat')}</th>
+                  {!sansTva(invoice) && <th style={{ padding: '6px 4px', textAlign: 'right' }}>TVA</th>}
                 </tr>
               </thead>
               <tbody>
@@ -207,10 +211,18 @@ export default function InvoicesPage() {
                     <td style={{ padding: '6px 4px' }}>{t('invoicesResto.serviceCommissionOrder', { id: o.id.slice(0, 8) })}{o.orderType || o.typeLabel ? <span className="small"> · {o.orderType ? t(`orderStatus.orderType.${o.orderType === 'pickup' || o.orderType === 'takeaway' ? 'pickup' : 'delivery'}`) : o.typeLabel}</span> : null}</td>
                     <td style={{ padding: '6px 4px', textAlign: 'right' }}>{euros(Number(o.subtotal || 0))}</td>
                     <td style={{ padding: '6px 4px', textAlign: 'right' }}>{euros(o.commission)}</td>
-                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{euros(Number(o.commissionVat || 0))} <span className="small">({(invoice.vatRate * 100).toFixed(0)}%)</span></td>
+                    {!sansTva(invoice) && <td style={{ padding: '6px 4px', textAlign: 'right' }}>{euros(Number(o.commissionVat || 0))} <span className="small">({(invoice.vatRate * 100).toFixed(0)}%)</span></td>}
                   </tr>
                 ))}
               </tbody>
+              {sansTva(invoice) ? (
+              <tfoot>
+                <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
+                  <td style={{ padding: '8px 4px' }} colSpan={3}>{t('invoicesResto.totalNoVat')}</td>
+                  <td style={{ padding: '8px 4px', textAlign: 'right' }}>{euros(invoice.totalTtc)}</td>
+                </tr>
+              </tfoot>
+              ) : (
               <tfoot>
                 <tr style={{ borderTop: '2px solid var(--line)' }}>
                   <td style={{ padding: '8px 4px' }} colSpan={3}>{t('invoicesResto.totalExVat')}</td>
@@ -225,6 +237,7 @@ export default function InvoicesPage() {
                   <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{euros(invoice.totalTtc)}</td>
                 </tr>
               </tfoot>
+              )}
             </table>
           )}
 

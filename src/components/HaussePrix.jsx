@@ -28,14 +28,16 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
   }, [restoId, token]);
 
   if (!etat) return null;
-  // fairideRate = commission HTVA + sa TVA (10 % + 21 % de TVA = 12,1 %) ; fairideRateHt = la commission seule.
+  // fairideRate = commission + sa TVA éventuelle ; fairideRateHt = la commission seule. Fairide est sous le régime de la
+  // franchise TVA (lettre du SPF Finances du 12/10/2026) : fairideVat = 0, les deux valent 10 %. Assujettie : 12,1 % et 10 %.
+  const sansTva = !(Number(etat.fairideVat) > 0);
   const r = etat.fairideRate;
   const affiche = EXEMPLE_SUR_PLACE * (1 + r + valeur / 100);
   const recu = EXEMPLE_SUR_PLACE * (1 + valeur / 100);
   const partFairide = EXEMPLE_SUR_PLACE * r;
   const partFairideHt = EXEMPLE_SUR_PLACE * (etat.fairideRateHt ?? r);
   const tauxAffiche = (r * 100).toLocaleString(locale, { maximumFractionDigits: 1 });
-  // Pourcentages à une décimale, dans la langue de l'écran (12,1 / 12.1).
+  // Pourcentages à une décimale, dans la langue de l'écran (12,1 / 12.1 pour la hausse maximale).
   const pct = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
   const change = valeur !== etat.percent;
   const demande = etat.requested !== null && etat.requested !== undefined ? etat.requested : null;
@@ -83,7 +85,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
         <div>{t('menuPage.markupExample', { base: euros(EXEMPLE_SUR_PLACE, locale) })}</div>
         <div>👀 {t('menuPage.markupShown')} <b>{euros(affiche, locale)}</b></div>
         <div>💚 {t('menuPage.markupYouGet')} <b>{euros(recu, locale)}</b>{valeur > 0 && <> ({t('menuPage.markupYouGetExtra', { amount: euros(recu - EXEMPLE_SUR_PLACE, locale) })})</>}</div>
-        <div>🟢 {t('menuPage.markupFairide')} <b>{euros(partFairide, locale)}</b> <span className="small">{t('menuPage.markupFairideDetail', { ht: euros(partFairideHt, locale), tva: euros(partFairide - partFairideHt, locale) })}</span></div>
+        <div>🟢 {t('menuPage.markupFairide')} <b>{euros(partFairide, locale)}</b> {!sansTva && <span className="small">{t('menuPage.markupFairideDetail', { ht: euros(partFairideHt, locale), tva: euros(partFairide - partFairideHt, locale) })}</span>}</div>
       </div>
       {demande !== null && (
         <div className="hausse-prix-demande" role="status">

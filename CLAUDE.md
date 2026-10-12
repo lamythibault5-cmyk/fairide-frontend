@@ -9,7 +9,7 @@ believed.
 ## What this is
 
 Fairide is a food-delivery / local-commerce platform for Brussels, positioned on a
-10% share excl. VAT (vs. 22-32% commission on the big platforms), taken the Uber Eats way: inside the displayed
+10% share, with no VAT on it since Fairide is a VAT franchisé (vs. 22-32% commission on the big platforms), taken the Uber Eats way: inside the displayed
 price, not as a checkout line (see « Pricing model » below). **This repo is the front end
 only.** The backend is a separate service.
 
@@ -68,7 +68,7 @@ pre-existing warnings across the codebase. Don't read a clean-looking tail as su
 *your* files are absent from the output. There is nothing else to run here, so read your changes
 carefully and, where behaviour matters, check them in the browser with `npm run dev`.
 
-The backend does have tests (`npm test`, 201 of them on 2026-10-03, `node --test`; the `plan-de-test-*` files replay the end-to-end test plan,
+The backend does have tests (`npm test`, 332 of them on 2026-10-12 — 4 already failing on `main` that day, unrelated: D8 privacy hash, terminal disconnect, admin and courier simulations — `node --test`; the `plan-de-test-*` files replay the end-to-end test plan,
 [docs/fairide-tests-e2e-standalone.html](docs/fairide-tests-e2e-standalone.html), against an in-memory database). If your change touches
 anything the backend also reads — page parsing, menu shape — run them there.
 
@@ -316,29 +316,40 @@ components live in [src/components/conformite/](src/components/conformite/), sha
 - **Privacy policy text** is versioned like the T&Cs: changing `privacy.*` (or the `SECTIONS` order in
   Privacy.jsx) changes its hash — register a new version in the backend's `cgu.js`
   (`VERSIONS_CONFIDENTIALITE`), or its test fails.
-- **T&Cs text**: changing `terms.*` in the i18n files changes the text clients accept. Bump the date in
+- **T&Cs text**: changing `terms.*` in the i18n files changes the text clients accept. The backend tests hash the
+  front at `../fairide-frontend` — from a worktree that is the main checkout, not yours: check with
+  `node scripts/empreinte-cgu.js <your front path>`. Bump the date in
   `terms.draftWarning` and register the new version and hash in the backend (`scripts/empreinte-cgu.js`,
   `cgu.js`) — the backend test fails until you do.
 
-## Pricing model (2026-09-23 evening, rate made explicitly excl. VAT on 2026-10-01)
+## Pricing model (2026-09-23 evening; Fairide a VAT franchisé since 2026-10-12)
 
-Menus show the **in-store price × 1.121**: Fairide's 10% excl. VAT plus 21% VAT on it (a €10 burger in-store is
-€11.21 on Fairide: €1.00 for Fairide + €0.21 VAT). On an order paid online the business receives **exactly its
-in-store price**; Fairide keeps the markup, i.e. `commission` (excl. VAT) + `commission_vat` = in-store price × 0.121,
-about **10.8% of the displayed price**. `commissionFairide(subtotal, pricing, hausse)` in `../fairide-backend/pricing.js`
-recovers the in-store price as subtotal / (1 + r(1 + v) + h), with r = `commissionRate` (0.10, excl. VAT), v =
-`vatRateCommission` (0.21) and h the business's own optional increase (`restaurants.price_markup_percent`, 0 to
-12.1%, requested by the business and applied by the team — it is the business's money, not Fairide's).
+**Fairide SRL is under the Belgian small-business VAT franchise** (art. 56bis CTVA — SPF Finances letter of 2026-10-12,
+effective 2026-09-07): it charges **no VAT** on anything it sells (commission, system fee, subscription, placements), files
+no periodic VAT return and deducts nothing. Switch: `FAIRIDE_VAT_REGIME` on the backend (`franchise` by default, `assujetti`
+to leave it), read by `fairideCompanyInfo.js`; `getPricing()` then returns `vatRateCommission` / `vatRateServiceFee` = 0 and
+keeps the saved rates under `*Assujetti`. The franchise ends **with the transaction that takes Fairide's yearly turnover over
+€25,000 excl. VAT** — Admin › Comptabilité › Obligations shows the counter (`seuilFranchise.js`, prorated in 2026).
+Invoices carry « Régime particulier de franchise des petites entreprises » and Peppol category `E`; the business's dish VAT
+and the courier's delivery VAT are **not** affected.
+
+Menus show the **in-store price × 1.10** (× 1.121 if Fairide becomes VAT-registered again): a €10 burger in-store is €11.00
+on Fairide, €1.00 for Fairide. On an order paid online the business receives **exactly its in-store price**; Fairide keeps
+the commission (`commission`, `commission_vat` = 0), about **9.1% of the displayed price**. `commissionFairide(subtotal,
+pricing, hausse)` in `../fairide-backend/pricing.js` recovers the in-store price as subtotal / (1 + r(1 + v) + h), with
+r = `commissionRate` (0.10), v = Fairide's VAT (0 under the franchise) and h the business's own optional increase
+(`restaurants.price_markup_percent`, 0 to 12.1%, requested by the business and applied by the team — it is the business's
+money, not Fairide's). Stored menu prices do not follow a regime change: re-run `prix.js` on every card if it happens.
 The customer additionally pays the **delivery fee only — nothing is added on top** (model of 2026-10-08 evening):
 €5 excl. VAT for the first km, then €0.80 excl. VAT per started km, 21% VAT added (€6.05 incl. VAT minimum). **10% of it
 is Fairide's system fee, included** (`fraisService`, stored as `service_fee` + `service_fee_vat`); the courier receives
 **90% of their own grid** (bike €0.60/km, motorised €0.80/km), and the bike difference stays with Fairide. A courier's
 minimum (CODE-13) applies to their share: the client fee is raised to minimum / 0.9 when no courier accepts the grid
 (`routes/orders.js`, `troisVendeurs.prixAvecMinimum`). Takeaway paid on site: no commission, no fee.
-**Tips: 90% to the courier, 10% kept by Fairide** (Stripe, system and courier-insurance costs, no profit —
-`tipFairideRate` 0.10, founder rule confirmed 2026-10-09, backend migration 026; an earlier line here said 100%, which
-was briefly true that day and was reverted). Courier and business texts and contracts say 90%, so the admin setting
-must not move without them.
+**Tips go 100% to the courier** (`tipFairideRate` 0 — founder, 2026-10-13: « tips go 100 percent to driver »; this
+reverses the 90/10 rule of 2026-10-09. Backend migration 026 had put 10% in the database, migration 032 resets it to 0).
+The courier and restaurant contracts, the T&Cs and the courier texts promise it, so the admin setting must not move
+without them.
 **Delivery distance: 6 km by default**, or what the business sets (1–30 km) in « Commandes et capacité »
 (`../fairide-backend/rayonLivraison.js`; NULL used to mean « no limit » and accepted Antwerp).
 **Order promo codes** (`order_percent`, `order_amount`, `order_free_delivery`, `../fairide-backend/codesPromo.js`) are
@@ -355,12 +366,13 @@ l'abonnement », `restaurants.subscription_billing_enabled`, false by default �
 account page then shows « offert pendant le lancement » and the Stripe checkout refuses (`SUBSCRIPTION_WAIVED`).
 
 - server: `commissionFairide` and `fraisService` in `../fairide-backend/pricing.js`, called by `routes/orders.js`;
-  `service_fee` stores the system fee excl. VAT, `service_fee_vat` its VAT — both already inside `delivery_fee`;
+  `service_fee` stores the system fee excl. VAT, `service_fee_vat` its VAT (0 under the franchise) — both already inside
+  `delivery_fee`;
 - client estimate: [src/fraisService.js](src/fraisService.js);
-- the ×1.121 is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js --facteur`, or a CSV of
+- the ×1.10 is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js --facteur`, or a CSV of
   in-store prices), not at runtime; since 2026-10-01 the business can no longer edit dishes or prices itself
   (`MENU_LOCKED`) — it asks, and the team applies;
-- legal texts: contract `RESTO-2026.18` (in force 1 Nov 2026; 2026.18 only widens the subscription guarantee; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-09`, privacy
+- legal texts: contract `RESTO-2026.19` (in force 1 Nov 2026; 2026.18 widens the subscription guarantee, 2026.19 says Fairide charges no VAT; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-13` (says the subscription is 20 € with no VAT and that Fairide's system fee carries none), privacy
   `CONF-2026-10-08` (they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
   restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).
 
@@ -488,7 +500,7 @@ Real, verified as absent on 2026-09-22 — not speculation.
    `<label>` also use `htmlFor`. Follow the `htmlFor`/`id` pattern when you touch a form.
 5. **Imported prices are platform prices.** Cards imported from Uber Eats or Deliveroo carry the
    marked-up prices merchants set there to absorb a 30% commission — measured at **+39% on average**
-   against Snack Bodrum's counter prices. Fairide builds cards at the merchant's **in-store price × 1.121**, so an
+   against Snack Bodrum's counter prices. Fairide builds cards at the merchant's **in-store price × 1.10**, so an
    imported card is wrong until its prices are corrected. `../fairide-backend/scripts/prix.js` does the correction; the real prices have to come from
    the merchant. The contract deliberately does *not* oblige in-store prices — that would be a parity
    clause, see the header of `../fairide-backend/restaurantContract.js`.

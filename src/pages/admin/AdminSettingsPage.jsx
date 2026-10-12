@@ -27,6 +27,9 @@ const pricingFields = (tr) => [
   { key: 'vatRateCommission', label: tr('adminSettings.vatCommission'), suffix: '%', isRate: true, hint: tr('adminSettings.vatCommissionHint') },
   { key: 'vatRateServiceFee', label: tr('adminSettings.vatServiceFees'), suffix: '%', isRate: true, hint: tr('adminSettings.vatServiceHint') }
 ];
+// TVA de Fairide : sous le régime de la franchise (lettre du SPF Finances du 12/10/2026), le serveur la renvoie à 0 et
+// ignore ces deux champs (PATCH /admin/settings) ; ils sont donc retirés du formulaire, avec une note.
+const CLES_TVA_FAIRIDE = ['vatRateCommission', 'vatRateServiceFee'];
 // Clés/suffixes seuls, pour les conversions hors rendu (les libellés y sont inutiles).
 const PRICING_FIELD_DEFS = pricingFields(() => '');
 
@@ -138,7 +141,10 @@ export default function AdminSettingsPage() {
             <p className="small" style={{ margin: '0 0 14px', opacity: 0.75 }}>
               {tr('adminSettings.pricingHelp')}
             </p>
-            {pricingFields(tr).map((f) => (
+            {pricing.fairideVatRegime === 'franchise' && (
+              <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminSettings.vatFranchiseNote', { commission: +(Number(pricing.vatRateCommissionAssujetti) * 100).toFixed(2), service: +(Number(pricing.vatRateServiceFeeAssujetti) * 100).toFixed(2) })}</p>
+            )}
+            {pricingFields(tr).filter((f) => !(pricing.fairideVatRegime === 'franchise' && CLES_TVA_FAIRIDE.includes(f.key))).map((f) => (
               <div className="field" key={f.key}>
                 <label htmlFor={`tarif-${f.key}`}>{f.label} ({f.suffix}){f.hint ? <span className="small" style={{ opacity: 0.6 }}> · {f.hint}</span> : null}</label>
                 <input
