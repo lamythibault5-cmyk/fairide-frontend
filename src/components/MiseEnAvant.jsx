@@ -40,6 +40,8 @@ export default function MiseEnAvant({ restoId, token, toast }) {
   const section = choix && etat?.sections.find((s) => s.key === choix.sectionKey);
   const prix = section?.prices.find((p) => p.slot === choix.slot)?.weeklyPrice ?? 0;
   const totalHt = prix * semaines;
+  // vatRate = TVA de Fairide, 0 sous le régime de la franchise (lettre du SPF Finances du 12/10/2026) : le prix est alors
+  // le total, sans ligne de TVA.
   const tva = totalHt * (etat?.vatRate ?? 0.21);
   const titre = (cle, repli) => titreRangee(t, { key: cle, label: repli, cuisine: etat?.sections.find((s) => s.key === cle)?.cuisine });
   // Autant de colonnes que de positions vendues (3 par défaut, l'admin peut en ajouter) ; au-delà de 3, la grille défile.
@@ -119,7 +121,7 @@ export default function MiseEnAvant({ restoId, token, toast }) {
                 <span style={{ display: 'block', color: 'var(--ink-soft)', marginTop: 2 }}>{t('placements.startsOnHelp', { min: jourCourt(etat.minStartsOn), max: jourCourt(etat.maxStartsOn) })}</span>
               </label>
               <p className="small" style={{ margin: '0 0 10px' }}>
-                {t('placements.total', { ht: euros(totalHt), tva: euros(tva), ttc: euros(totalHt + tva) })}
+                {tva > 0 ? t('placements.total', { ht: euros(totalHt), tva: euros(tva), ttc: euros(totalHt + tva) }) : t('placements.totalNoVat', { ttc: euros(totalHt) })}
               </p>
               <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 48 }} disabled={occupe} onClick={demander}>
                 {occupe ? '…' : t('placements.request')}
@@ -135,7 +137,7 @@ export default function MiseEnAvant({ restoId, token, toast }) {
                 <div key={b.id} className="mea-reservation">
                   <div>
                     <span className="mea-rangee">{titre(b.sectionKey, b.sectionLabel)} · {libellePosition(t, b.slot)}</span>
-                    <span className="small" style={{ display: 'block' }}>{jourCourt(b.startsOn)} → {jourCourt(b.endsOn)} · {euros(b.totalHt)} {t('placements.exVat')}{b.paidOnline && b.refundStatus !== 'rembourse' ? ` · ${t('placements.paidOnline')}` : ''}</span>
+                    <span className="small" style={{ display: 'block' }}>{jourCourt(b.startsOn)} → {jourCourt(b.endsOn)} · {euros(b.totalHt)}{Number(etat.vatRate) > 0 ? ` ${t('placements.exVat')}` : ''}{b.paidOnline && b.refundStatus !== 'rembourse' ? ` · ${t('placements.paidOnline')}` : ''}</span>
                     {b.decisionNote && b.status !== 'refused' && <span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{b.decisionNote}</span>}
                     {b.refusalReason && <span className="small" style={{ display: 'block' }}>{b.refusalReason}</span>}
                     {b.refundStatus === 'rembourse' && <span className="small" style={{ display: 'block', color: 'var(--iris)' }}>{t('placements.refund_rembourse')}</span>}
