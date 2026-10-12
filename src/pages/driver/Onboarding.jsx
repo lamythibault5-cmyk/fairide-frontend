@@ -76,6 +76,12 @@ export default function Onboarding() {
         if (params.get('identity') === 'erreur') { toast(t('courierOnboarding.identityFailed')); params.delete('identity'); setParams(params, { replace: true }); }
         // Retour de Stripe lancé depuis le dossier (EtapePaiement) : on relit le statut du compte de paiement et on
         // reprend à l'envoi du dossier, au lieu de laisser le livreur chercher où il en était.
+        if (params.get('connect') !== 'return' && (r?.user?.stripeConnectStatus || user?.stripeConnectStatus) === 'pending') {
+          // Filet : compte Stripe resté « en attente » (onglet fermé avant le retour, activation un peu après) — relu ici aussi.
+          await api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {});
+          await refreshUser?.().catch(() => {});
+          r = await charger();
+        }
         if (params.get('connect') === 'return') {
           await api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {});
           await refreshUser?.().catch(() => {});
