@@ -29,7 +29,7 @@ import { libelleManque } from '../../conformite';
 const ETAPES = ['statut', 'identite', 'infos', 'engagements', 'paiement', 'envoi'];
 const MANQUES_PAR_ETAPE = {
   statut: ['statut'], identite: ['identite', 'document_identity_card'],
-  infos: ['nationalite', 'titre_sejour', 'carte_professionnelle', 'date_naissance', 'registre_national', 'iban', 'zone', 'vehicule', 'permis_immatriculation', 'ecole', 'caisse', 'statut', 'age_minimum', 'bce', 'tva', 'tva_numero', 'siege', 'document_school_certificate', 'document_social_insurance_fund', 'document_liability_insurance', 'document_bce_extract', 'document_profile_photo', 'document_driving_licence', 'document_vehicle_registration', 'document_vehicle_insurance'],
+  infos: ['nationalite', 'titre_sejour', 'carte_professionnelle', 'date_naissance', 'registre_national', 'zone', 'vehicule', 'permis_immatriculation', 'ecole', 'caisse', 'statut', 'age_minimum', 'bce', 'tva', 'tva_numero', 'siege', 'document_school_certificate', 'document_social_insurance_fund', 'document_liability_insurance', 'document_bce_extract', 'document_profile_photo', 'document_driving_licence', 'document_vehicle_registration', 'document_vehicle_insurance'],
   engagements: ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur', 'contrat'],
   paiement: [], envoi: ['statut_non_verifie']
 };
@@ -74,6 +74,15 @@ export default function Onboarding() {
         if (params.get('identity') === 'retour') { r = await api('/couriers/me/identity/refresh', { method: 'POST', token }); setD(r); params.delete('identity'); setParams(params, { replace: true }); }
         if (params.get('identity') === 'ok') { toast(t('courierOnboarding.identityOk')); params.delete('identity'); setParams(params, { replace: true }); }
         if (params.get('identity') === 'erreur') { toast(t('courierOnboarding.identityFailed')); params.delete('identity'); setParams(params, { replace: true }); }
+        // Retour de Stripe lancé depuis le dossier (EtapePaiement) : on relit le statut du compte de paiement et on
+        // reprend à l'envoi du dossier, au lieu de laisser le livreur chercher où il en était.
+        if (params.get('connect') === 'return') {
+          await api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {});
+          await refreshUser?.().catch(() => {});
+          r = await charger();
+          params.delete('connect'); setParams(params, { replace: true });
+          setEtape('envoi');
+        }
       } catch (e) { toast(e.message, 'erreur'); }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -358,7 +367,7 @@ function ChampCaisse({ f, set, t }) {
 function EtapeInfos({ d, t, busy, token, action, onNext }) {
   const toast = useToast();
   const c = d.courier; const legal = d.legal ?? {};
-  const [f, setF] = useState({ birthDate: c.birthDate ?? '', nationalNumber: '', iban: c.iban ?? '', zone: c.zone ?? '', vehicleType: c.vehicleType ?? '', licenceNumber: c.licenceNumber ?? '', licencePlate: c.licencePlate ?? '', bagOption: c.bag?.option || '',
+  const [f, setF] = useState({ birthDate: c.birthDate ?? '', nationalNumber: '', zone: c.zone ?? '', vehicleType: c.vehicleType ?? '', licenceNumber: c.licenceNumber ?? '', licencePlate: c.licencePlate ?? '', bagOption: c.bag?.option || '',
     schoolName: c.student?.school ?? '', academicYear: c.student?.academicYear ?? '',
     socialInsuranceFund: c.socialInsuranceFund ?? c.student?.socialInsuranceFund ?? '',
     companyNumber: c.independent?.companyNumber ?? '', vatStatus: c.independent?.vatStatus ?? '', vatNumber: c.independent?.vatNumber ?? '', legalName: c.independent?.legalName ?? '', seatAddress: c.independent?.seatAddress ?? '',
@@ -429,7 +438,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
           <Champ label={t('courierOnboarding.fNrn')} help={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('courierOnboarding.nrnHelp')}>
             <input aria-label="85.07.30-033.28" inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
           </Champ>
-          <Champ label={t('courierOnboarding.fIban')}><input aria-label="BE68 5390 0754 7034" value={f.iban} onChange={set('iban')} placeholder="BE68 5390 0754 7034" /></Champ>
+          {/* Plus d'IBAN ici (12 oct. 2026) : il se donne une seule fois, à Stripe, à l'étape « Paiements ». */}
         </div>
       </>)}
       {cle === 'course' && (<>
@@ -517,7 +526,7 @@ function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
   const statut = d.user?.stripeConnectStatus || user?.stripeConnectStatus;
   async function connecter() {
     setConnecting(true); setErreur('');
-    try { const r = await api('/auth/me/connect/onboard', { method: 'POST', token }); window.location.href = r.url; } catch (e) { setErreur(e.message); setConnecting(false); }
+    try { const r = await api('/auth/me/connect/onboard', { method: 'POST', token, body: { retour: 'onboarding' } }); window.location.href = r.url; } catch (e) { setErreur(e.message); setConnecting(false); }
   }
   return (
     <div className="card">
