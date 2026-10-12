@@ -222,7 +222,7 @@ export default function Bienvenue() {
     case 'lvPromesses':
       contenu = (
         <EcranPromesses chip={t('appli.lvChip')} chipIcone="scooter" titre={t('appli.lvTitre')} bouton={t('appli.lvBtn')} onSuite={suivant}
-          faits={[['euro', t('appli.lv1'), t('appli.lv1S')], ['interdit', t('appli.lv2'), t('appli.lv2S')], ['cadeau', t('appli.lv3'), t('appli.lv3S')]]} />
+          faits={[['euro', t('appli.lv1'), t('appli.lv1S')], ['interdit', t('appli.lv2'), t('appli.lv2S')], ['cadeau', t('appli.lv3'), t('appli.lv3S')], ['document', t('appli.lv4'), t('appli.lv4S')]]} />
       ); break;
     case 'lvPosition':
       contenu = (
@@ -236,7 +236,7 @@ export default function Bienvenue() {
     case 'coPromesses':
       contenu = (
         <EcranPromesses chip={t('appli.coChip')} chipIcone="be" titre={t('appli.coTitre')} sous={t('appli.coSub')} bouton={t('appli.coBtn')} onSuite={suivant}
-          faits={[['euro', t('appli.co1'), t('appli.co1S')], ['cadeau', t('appli.co2'), t('appli.co2S')], ['bouclier', t('appli.co3'), t('appli.co3S')]]} />
+          faits={[['euro', t('appli.co1'), t('appli.co1S')], ['cadeau', t('appli.co2'), t('appli.co2S')], ['bouclier', t('appli.co3'), t('appli.co3S')], ['document', t('appli.co4'), t('appli.co4S')]]} />
       ); break;
     default:
       contenu = null;

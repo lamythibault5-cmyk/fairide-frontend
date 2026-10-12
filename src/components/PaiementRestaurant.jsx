@@ -19,7 +19,8 @@ const euro = (n) => `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
 // Numéro d'entreprise et de TVA : plus demandés à l'inscription (décision du fondateur, 2026-09-10), mais
 // indispensables à Stripe et à la facturation. Ils se renseignent ici, une fois, avec vérification au registre
 // (VIES) qui complète l'autre numéro et la raison sociale.
-function CoordonneesLegales({ restaurant, onSaved }) {
+// `enchainer` : les paiements sont ouverts et pas encore activés — le bouton enregistre PUIS ouvre Stripe, d'un geste.
+function CoordonneesLegales({ restaurant, onSaved, enchainer = false }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -49,11 +50,16 @@ function CoordonneesLegales({ restaurant, onSaved }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyNumber, vatNumber]);
   async function enregistrer() {
-    if (!companyNumber.replace(/\D/g, '') || !vatNumber.trim()) { toast(t('paiementResto.legalMissing')); return; }
+    const chiffresBce = companyNumber.replace(/\D/g, '');
+    if (!chiffresBce) { toast(t('paiementResto.legalMissing')); return; }
+    // En Belgique, le numéro de TVA est TOUJOURS « BE » + le numéro d'entreprise (même en franchise) : laissé vide, on
+    // le déduit au lieu de le faire retaper (12 oct. 2026 — un champ de moins avant Stripe).
+    const tva = vatNumber.trim() || `BE${chiffresBce}`;
     setSaving(true);
     try {
-      await api(`/restaurants/${restaurant.id}`, { method: 'PATCH', token, body: { legalName: legalName.trim(), companyNumber: companyNumber.trim(), vatNumber: vatNumber.trim() } });
-      toast(t('paiementResto.legalSaved')); setEdition(false); onSaved?.();
+      await api(`/restaurants/${restaurant.id}`, { method: 'PATCH', token, body: { legalName: legalName.trim(), companyNumber: companyNumber.trim(), vatNumber: tva } });
+      if (!enchainer) toast(t('paiementResto.legalSaved'));
+      setEdition(false); onSaved?.({ enchainer });
     } catch (e) { toast(e.message, 'erreur'); } finally { setSaving(false); }
   }
   return (
@@ -74,7 +80,7 @@ function CoordonneesLegales({ restaurant, onSaved }) {
           </div>
           {verif && verif.valid === true && <p className="small" style={{ margin: '-4px 0 8px' }}>{t('paiementResto.companyVerified', { name: verif.legalName || '' })}</p>}
           {verif && verif.valid === false && <p className="small" style={{ margin: '-4px 0 8px' }}>{t('paiementResto.companyNotFound')}</p>}
-          <button type="button" className="btn-teal" disabled={saving} onClick={enregistrer}>{saving ? '…' : t('paiementResto.legalSave')}</button>
+          <button type="button" className={enchainer ? 'btn-gold' : 'btn-teal'} disabled={saving} onClick={enregistrer}>{saving ? '…' : enchainer ? t('paiementResto.legalSaveAndActivate') : t('paiementResto.legalSave')}</button>
         </>
       )}
     </div>
@@ -119,7 +125,12 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
       <p className="small" style={{ margin: '0 0 8px' }}>{t('paiementResto.stripeWhat')}</p>
       <p className="small" style={{ margin: '0 0 12px' }}><b>{t('paiementResto.noBankTitle')}</b> {t('paiementResto.noBankText')}</p>
 
-      {restaurant?.id && !stripeActif && <CoordonneesLegales restaurant={restaurant} onSaved={onRestaurantChange} />}
+      {/* UN GESTE JUSQU'À STRIPE (12 oct. 2026) : quand les paiements sont ouverts, « Enregistrer et activer » garde les
+          numéros puis ouvre directement l'inscription Stripe ; avant, il fallait enregistrer, puis trouver le second bouton. */}
+      {restaurant?.id && !stripeActif && (
+        <CoordonneesLegales restaurant={restaurant} enchainer={ouvert}
+          onSaved={(o) => { onRestaurantChange?.(); if (o?.enchainer) activer(); }} />
+      )}
       <div className={`paiement-activation${ouvert ? '' : ' fermee'}`}>
         <div>
           <b>{stripeActif ? t('paiementResto.activationDone') : ouvert ? t('paiementResto.activationOpen') : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}</b>

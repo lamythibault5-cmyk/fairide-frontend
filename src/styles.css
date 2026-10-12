@@ -1388,6 +1388,10 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 /* « Retour » et « Continuer » sur une seule rangée, le bouton d'avancement occupant toute la
    place restante : à la première étape il n'y a pas de retour et il prend donc toute la largeur. */
 .auth-step-nav { display: flex; gap: 8px; align-items: center; margin-top: 18px; }
+/* La case unique des engagements (EngagementsInscription.jsx) : un filet, les textes repliés en dessous, rien d'autre. */
+.engagements-inscription { margin: 6px 0 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-chip); }
+.engagements-liens { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 0 28px; }
+.engagements-liens summary { cursor: pointer; color: var(--iris); }
 
 /* Erreur de champ. Le filet rouge seul ne suffit pas — il est invisible pour une partie des
    daltoniens — d'où le message écrit sous le champ, qui dit aussi lequel des quatre champs

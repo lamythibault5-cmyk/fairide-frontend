@@ -292,6 +292,14 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   change the sort in RestaurantList.jsx, change that page's text in the same commit.
 - **Stars need reviews.** `restaurants.rating` defaults to 4.5 in the database: never render
   `StarsDisplay` or sort by rating without `reviewCount > 0` — that would show a rating nobody gave.
+- **Signup is checkboxes only** (founder, 2026-10-12). Business: one box at the end of signup signs the partnership
+  contract, the professional declaration and the allergen procedure ([EngagementsInscription](src/components/commerce/EngagementsInscription.jsx),
+  texts from `GET /restaurants/engagements` and `/restaurants/contract-terms`). Courier: one « Mes engagements » step in
+  onboarding (`POST /couriers/me/engagements`) accepts the pre-ride notices, the self-billing mandate, the
+  `declaration_honneur` (replaces every status and vehicle document) and the contract. **No drawn signature anywhere**
+  (typed name + box = simple e-signature, eIDAS art. 25); a drawing sent anyway must be a valid PNG. Still required,
+  because the law targets Fairide itself: courier ID check, non-EEA residence permit + professional card (CPS 175/1),
+  biometric consent as its own box (GDPR art. 9), business number before publication, the menu's « C'est bon ».
 - **Merchant**: card signature, allergen attestation and professional declaration in
   [ConformiteCarte](src/components/conformite/ConformiteCarte.jsx) (menu page); allergens / VAT / alcohol
   per dish in the dish editor; allergy confirmation and ID check at the counter in the orders page.
@@ -367,9 +375,14 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   the business despite `MENU_LOCKED`; a rate change for everyone gives 7 days to refuse (Admin › Commerces).
 - **Alcohol is closed** until `ALCOHOL_ENABLED=true` on the server. Insurance, the AFSCA document and the alcohol licence are
   **alerts**, no longer blockers (business number, AFSCA number, contract, validated menu, allergens still block).
-  Since 2026-10-10 the AFSCA number blocks **only until the business signs the professional declaration `PRO-2026.2`**,
-  which certifies its AFSCA registration, authorisations and insurance (`declarationsCommerce.js`); the team then
-  checks it on the AFSCA's public Food Hygiene Rating tool by company number (alert `afsca_auto_declare`).
+  Since 2026-10-10 the business no longer has to give its AFSCA number if it signs the professional declaration
+  (now **`PRO-2026.3`**, 2026-10-11: adds the DSA art. 30(e) self-certification that it only sells law-compliant
+  products; `declarationsCommerce.js`). **Signed with one checkbox at signup** (2026-10-12,
+  [EngagementsInscription](src/components/commerce/EngagementsInscription.jsx) → `business.engagements` →
+  `signerEngagementsInscription`), together with the allergen procedure; no AFSCA number or document is asked. The
+  team's AFSCA check (Admin › Commerces › Conformité, [VerificationAfsca](src/components/admin/VerificationAfsca.jsx):
+  four points on the establishment unit + screenshot) is an **optional spot check** — alerts only, never blocks
+  publication, except a « Introuvable » result (no override). Procedure: `../fairide-backend/docs/verification-afsca.md`.
 - **Pickup without a restaurant click** (2026-10-10): the restaurant sees the pickup code and compares it by eye; the
   **courier** confirms (`PATCH /orders/:id/picked-up`, accepted from `preparation` too). `/confirm-pickup` still exists.
   « Ma carte et mes engagements » ([ConformiteCarte](src/components/conformite/ConformiteCarte.jsx)) is one checkbox,

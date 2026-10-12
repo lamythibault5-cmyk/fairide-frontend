@@ -17,6 +17,7 @@ import ReasonDialog from '../../components/admin/ReasonDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import ChangementTvaGlobal from '../../components/admin/ChangementTvaGlobal';
 import LienValidationCarte from '../../components/admin/LienValidationCarte';
+import VerificationAfsca from '../../components/admin/VerificationAfsca';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
@@ -539,6 +540,7 @@ function ConformitePanel({ detail, onChanged }) {
         <button className="btn-outline" onClick={enregistrer} disabled={busy}>{busy ? '...' : tr('adminCommon.save')}</button>
       </div>
       <p className="small" style={{ opacity: 0.7, marginTop: 8, marginBottom: 0 }}>{tr('adminRestos.conformiteReleveHint')}</p>
+      <VerificationAfsca detail={detail} onChanged={onChanged} />
     </div>
   );
 }

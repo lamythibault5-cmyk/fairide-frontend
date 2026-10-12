@@ -4,7 +4,6 @@ import { ouvrirPdf, telechargerPdf } from '../pdf';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
-import SignaturePad from './SignaturePad';
 
 // « Mon contrat avec Fairide » dans Mon compte (restaurateur) : le contrat de partenariat, groupé en quatre
 // blocs (cadre, engagements de Fairide, engagements du commerce, argent), le PDF, et l'acceptation en ligne
@@ -23,29 +22,24 @@ export default function RestaurantContract({ restoId, onAccepte }) {
   const [d, setD] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [ouverts, setOuverts] = useState(() => new Set(['fairide', 'commerce']));
-  // Parties déjà ouvertes au moins une fois : l'acceptation n'est possible qu'après avoir tout parcouru.
-  const [vus, setVus] = useState(() => new Set(['fairide', 'commerce']));
-  const toutLu = GROUPES.every((g) => vus.has(g));
+  // Plus d'obligation d'ouvrir chaque partie avant d'accepter (fondateur, 12 oct. 2026 : « que des cases à cocher ») :
+  // le texte entier reste à un clic et téléchargeable, c'est ce que le droit demande ; le parcours forcé, lui, n'ajoutait
+  // que de la friction. Même chose pour la signature dessinée : nom tapé + case cochée suffisent (eIDAS art. 25).
   const [nom, setNom] = useState('');
   const [lu, setLu] = useState(false);
-  const [signature, setSignature] = useState(null); // PNG dessiné dans le cadre (fondateur, 2026-10-09)
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { api(`/restaurants/${restoId}/contract`, { token }).then((r) => { setD(r); setNom(r.responsibleName || user?.name || ''); }).catch((e) => setErreur(e.message)); }, [restoId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function accepter() {
-    if (!toutLu) { toast(t('restoContract.openAllHint', { n: GROUPES.filter((g) => !vus.has(g)).length })); return; }
     if (!lu) { toast(t('restoContract.errRead'), 'erreur'); return; }
     if (!nom.trim()) { toast(t('restoContract.errName'), 'erreur'); return; }
-    if (!signature) { toast(t('signature.required'), 'erreur'); return; }
     setBusy(true);
-    try { const r = await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName: nom.trim(), readConfirmed: true, signatureDataUrl: signature } }); setD(r); toast(t('restoContract.accepted')); onAccepte?.(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+    try { const r = await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName: nom.trim(), readConfirmed: true } }); setD(r); toast(t('restoContract.accepted')); onAccepte?.(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   const basculer = (g) => {
     setOuverts((s) => { const n = new Set(s); if (n.has(g)) n.delete(g); else n.add(g); return n; });
-    setVus((s) => new Set(s).add(g));
   };
-  const toutOuvrir = () => { setOuverts(new Set(GROUPES)); setVus(new Set(GROUPES)); };
 
   if (erreur) return <p className="small">{erreur}</p>;
   if (!d) return <p className="small">{t('accountUi.loading')}</p>;
@@ -117,23 +111,16 @@ export default function RestaurantContract({ restoId, onAccepte }) {
 
       {(!d.acceptedAt || (d.acceptedVersion && d.acceptedVersion !== d.version)) && (
         <div className="paiement-encart" style={{ marginTop: 12 }}>
-          {!toutLu && (
-            <p className="small" style={{ margin: '0 0 8px' }}>
-              📖 {t('restoContract.openAllHint', { n: GROUPES.filter((g) => !vus.has(g)).length })}{' '}
-              <button type="button" className="btn-link-plus" style={{ margin: 0 }} onClick={toutOuvrir}>{t('restoContract.openAll')}</button>
-            </p>
-          )}
           <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
-            <input type="checkbox" checked={lu} disabled={!toutLu} onChange={(e) => setLu(e.target.checked)} style={{ marginTop: 3 }} />
+            <input type="checkbox" checked={lu} onChange={(e) => setLu(e.target.checked)} style={{ marginTop: 3 }} />
             <span className="small">{t('restoContract.readCheck')}</span>
           </label>
-          <div style={{ marginTop: 10 }}><SignaturePad onChange={setSignature} /></div>
           <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <div className="field" style={{ flex: '1 1 200px', margin: 0 }}>
               <label htmlFor="resto-contract-nom">{t('restoContract.typedName')}</label>
               <input id="resto-contract-nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('restoContract.typedNamePh')} />
             </div>
-            <button type="button" className="btn-gold" disabled={busy || !toutLu || !lu || !signature} style={{ alignSelf: 'flex-end' }} onClick={accepter}>{busy ? '…' : t('restoContract.acceptBtn')}</button>
+            <button type="button" className="btn-gold" disabled={busy || !lu || nom.trim().length < 3} style={{ alignSelf: 'flex-end' }} onClick={accepter}>{busy ? '…' : t('restoContract.acceptBtn')}</button>
           </div>
         </div>
       )}
