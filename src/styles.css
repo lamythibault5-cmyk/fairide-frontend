@@ -385,6 +385,10 @@ a { color: inherit; }
    l'ombre existe (--shadow-1) mais ne se pose que sur une carte qu'on veut vraiment détacher. */
 .card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+/* Une case et son texte restent sur la même ligne (test au téléphone, 12 oct. 2026) : avec le `wrap` ci-dessus, un
+   long libellé passait SOUS la case, qui se retrouvait seule sur sa ligne. */
+label.row { flex-wrap: nowrap; }
+label.row > span { min-width: 0; }
 /* LES PASTILLES SONT DEVENUES DES PILULES. Le commentaire précédent défendait ici l'inverse —
    6px carrés contre 20px de carte — parce que l'ancienne direction faisait du contraste entre
    deux rayons une part de son identité. La nouvelle en fait l'inverse : une seule forme ronde
@@ -4048,7 +4052,9 @@ html.avec-pilule-panier main { padding-bottom: calc(76px + env(safe-area-inset-b
 .terminal-titre { font-size: 15px; }
 .terminal-etapes { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 3px; }
 .terminal-conditions { margin-top: 10px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: #fff; }
-.terminal-cond-offert { border-color: var(--lime); background: var(--surface-soft); }
+/* Iris et non lime : un filet lime sur fond clair est la règle n° 1 de l'identité qu'on ne casse pas (invisible, et
+   l'écran d'inscription a déjà son accent lime, « Créer mon compte »). */
+.terminal-cond-offert { border-color: var(--iris); background: var(--surface-soft); }
 .terminal-cond-caution { background: var(--surface-soft); }
 @media (max-width: 560px) { .terminal-haut { flex-direction: column; align-items: flex-start; } .terminal-illu, .terminal-compact .terminal-illu { width: 100%; max-width: 260px; } }
 /* « Fairide crée ma carte » : trois blocs numérotés, fichiers joints, ce qui se passe ensuite. */

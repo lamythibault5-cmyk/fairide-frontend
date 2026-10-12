@@ -346,9 +346,10 @@ is Fairide's system fee, included** (`fraisService`, stored as `service_fee` + `
 **90% of their own grid** (bike €0.60/km, motorised €0.80/km), and the bike difference stays with Fairide. A courier's
 minimum (CODE-13) applies to their share: the client fee is raised to minimum / 0.9 when no courier accepts the grid
 (`routes/orders.js`, `troisVendeurs.prixAvecMinimum`). Takeaway paid on site: no commission, no fee.
-**Tips go 100% to the courier** (`tipFairideRate` 0 — founder, 2026-10-09 and again 2026-10-13; migration 026 had put 10%
-back in the database, migration 032 resets it to 0). The courier and restaurant contracts, the T&Cs and the courier texts
-promise it, so the admin setting must not move without them.
+**Tips go 100% to the courier** (`tipFairideRate` 0 — founder, 2026-10-13: « tips go 100 percent to driver »; this
+reverses the 90/10 rule of 2026-10-09. Backend migration 026 had put 10% in the database, migration 032 resets it to 0).
+The courier and restaurant contracts, the T&Cs and the courier texts promise it, so the admin setting must not move
+without them.
 **Delivery distance: 6 km by default**, or what the business sets (1–30 km) in « Commandes et capacité »
 (`../fairide-backend/rayonLivraison.js`; NULL used to mean « no limit » and accepted Antwerp).
 **Order promo codes** (`order_percent`, `order_amount`, `order_free_delivery`, `../fairide-backend/codesPromo.js`) are

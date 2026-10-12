@@ -169,8 +169,13 @@ export default function Account() {
     if (!sectionDemandee || dejaDeroule.current) return;
     const cible = document.getElementById(`section-${sectionDemandee}`);
     if (!cible) return; // fiche pas encore chargée : le rendu suivant repassera ici
-    dejaDeroule.current = true;
-    const id = setTimeout(() => cible.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    // Le repère se pose QUAND on défile, pas avant (test au téléphone, 12 oct. 2026) : posé ici, il survivait au
+    // nettoyage de l'effet — la fiche du commerce arrive juste après, l'effet repasse, annule le minuteur… et ne
+    // reprogrammait plus rien. « Configurer mes paiements » laissait le restaurateur en haut de Mon compte.
+    const id = setTimeout(() => {
+      dejaDeroule.current = true;
+      (document.getElementById(`section-${sectionDemandee}`) || cible).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
     return () => clearTimeout(id);
   }, [sectionDemandee, restaurant, role]);
   function basculer(cle) {

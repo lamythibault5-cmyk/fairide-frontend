@@ -63,6 +63,7 @@ export default function DashboardLayout() {
   // Capturé une seule fois au montage, avant que l'effet ci-dessous ne nettoie l'URL — loadDashboard
   // (appelé de façon asynchrone, après coup) ne pourrait plus lire ce paramètre autrement.
   const connectReturnRef = useRef(new URLSearchParams(window.location.search).get('connect'));
+  const statutReluRef = useRef(false); // statut Stripe « en attente » relu une fois par page (voir loadDashboard)
 
   // Plus de carte « Aujourd'hui » dans la colonne de droite (2026-09-23). Elle comptait TOUTES les
   // commandes jamais reçues (le serveur renvoie l'historique complet) sous le titre « Aujourd'hui »,
@@ -124,6 +125,19 @@ export default function DashboardLayout() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId]);
+  // STATUT STRIPE « EN ATTENTE » RELU UNE FOIS PAR PAGE (test réel, 12 oct. 2026). Il n'était relu qu'au retour du lien
+  // Stripe : un restaurateur qui fermait l'onglet au lieu de « Revenir sur Fairide », ou dont le compte s'activait quelques
+  // secondes après, restait « Paiements à configurer » alors que Stripe le disait actif. Un effet sur la fiche (et non dans
+  // loadDashboard : la fiche arrive par pickResto, que loadDashboard ne relit pas) — un appel Stripe, rien de plus.
+  const stripeStatut = restaurant?.stripeConnectStatus;
+  useEffect(() => {
+    if (!restoId || stripeStatut !== 'pending' || statutReluRef.current) return;
+    statutReluRef.current = true;
+    api(`/restaurants/${restoId}/connect/refresh`, { method: 'POST', token })
+      .then((r) => { if (r?.stripeConnectStatus && r.stripeConnectStatus !== 'pending') setRestaurant((x) => (x ? { ...x, stripeConnectStatus: r.stripeConnectStatus } : x)); })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoId, stripeStatut]);
   // Retour sur l'onglet, focus, connexion retrouvée : relecture silencieuse (voir useRevalidation.js).
   useRevalidation(() => { if (restoId) return loadDashboard(restoId); return undefined; }, { actif: !!restoId });
   // Changement d'onglet : on relit les données en arrière-plan (sans squelette — l'ancien état reste
