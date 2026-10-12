@@ -6,7 +6,7 @@ import { api, apiUpload, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { dateOuverturePaiements } from '../../launch';
+import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { euros } from '../../prixPlat';
@@ -105,7 +105,13 @@ export default function Onboarding() {
   if (!d) return <SkeletonCards count={3} />;
   const c = d.courier; const legal = d.legal ?? {};
   const valide = c.lifecycleStatus === 'approved';
-  const etapeOk = (e) => !MANQUES_PAR_ETAPE[e].some((m) => manques.includes(m) && !MANQUES_INFORMATIFS.includes(m));
+  // « Paiements » et « Envoi » n'ont pas de champ obligatoire : sans cette règle, ils s'affichaient cochés (✓) dès le premier
+  // écran, alors que rien n'était fait (test au téléphone, 12 oct. 2026). Payé = compte Stripe actif ; envoyé = dossier soumis.
+  const etapeOk = (e) => {
+    if (e === 'paiement') return (d.user?.stripeConnectStatus || user?.stripeConnectStatus) === 'active';
+    if (e === 'envoi') return !['draft', 'rejected'].includes(c.lifecycleStatus);
+    return !MANQUES_PAR_ETAPE[e].some((m) => manques.includes(m) && !MANQUES_INFORMATIFS.includes(m));
+  };
   const enDossier = c.lifecycleStatus === 'draft' || c.lifecycleStatus === 'rejected';
   const allerAuChangement = () => { document.getElementById('changement-statut')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 
@@ -131,7 +137,7 @@ export default function Onboarding() {
           <div className="courier-steps" role="tablist">
             {ETAPES.map((e, i) => (
               <button key={e} type="button" role="tab" aria-selected={courante === e} className={`courier-step${courante === e ? ' active' : ''}${etapeOk(e) ? ' done' : ''}`} onClick={() => setEtape(e)}>
-                <span className="courier-step-num">{etapeOk(e) ? '✓' : i + 1}</span><span>{e === 'engagements' ? t('conformite.engagementsStep') : t(`courierOnboarding.step_${e}`)}</span>
+                <span className="courier-step-num">{etapeOk(e) ? '✓' : i + 1}</span><span>{(e === 'engagements' ? t('conformite.engagementsStep') : t(`courierOnboarding.step_${e}`)).replace(/^\d+\.\s*/, '')}</span>
               </button>
             ))}
           </div>
@@ -536,7 +542,8 @@ function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
         <>
           <button type="button" className="btn-teal" disabled={connecting || busy} onClick={connecter}>{connecting ? '…' : t('courierOnboarding.paymentStart')}</button>
           {erreur && <p className="small" style={{ margin: '8px 0 0' }}>{erreur}</p>}
-          <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('courierOnboarding.paymentLater', { date: dateOuverturePaiements(getLocale()) })}</p>
+          {/* La date d'ouverture ne se montre qu'AVANT l'ouverture : après, « l'activation ouvre le 5 octobre » se lisait au passé. */}
+          {!paiementsOuverts() && <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('courierOnboarding.paymentLater', { date: dateOuverturePaiements(getLocale()) })}</p>}
         </>
       )}
       <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-gold" onClick={onNext}>{t('courierOnboarding.next')}</button></div>
