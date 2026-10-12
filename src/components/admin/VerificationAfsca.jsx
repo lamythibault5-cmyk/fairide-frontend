@@ -11,9 +11,13 @@ const OUTIL_AFSCA = 'https://fhr.favv-afsca.be/';
 /* RELEVÉ AFSCA EN QUATRE POINTS (avis de l'avocat, 11 oct. 2026). L'AFSCA enregistre l'UNITÉ D'ÉTABLISSEMENT (numéro en
  * 2.), pas la société : chercher par numéro d'entreprise ne suffit pas. Avant ce panneau, l'équipe cochait « vérifié »
  * sans rien dire de ce qu'elle avait vu. Ici elle confirme les quatre points, joint une capture (rangée dans les
- * Documents du commerce, en privé), et le serveur garde l'adresse du moment : un déménagement invalide le relevé et
- * ouvre une tâche (routes/restaurants.js). « Introuvable » est aussi un relevé — il bloque la publication sans
- * dérogation (conformiteCommerce.js, afsca_introuvable). Écran interne : textes en fr/en/nl comme le reste de la fiche. */
+ * Documents du commerce, en privé), et le serveur garde l'adresse du moment : un déménagement le signale et ouvre une
+ * tâche (routes/restaurants.js).
+ *
+ * FACULTATIF DEPUIS LE 12 OCT. 2026 (fondateur : « faire confiance à leur parole »). Le commerce certifie son
+ * enregistrement d'une case à l'inscription ; ce relevé est un CONTRÔLE PAR SONDAGE, il ne bloque jamais la publication
+ * — sauf « Introuvable » : quand l'équipe a cherché et n'a rien trouvé, publier serait vendre en connaissance de cause
+ * (conformiteCommerce.js, afsca_introuvable). Écran interne : textes en fr/en/nl comme le reste de la fiche. */
 const POINTS = ['linkedToCompany', 'addressIsKitchen', 'activityFood', 'statusActive'];
 
 export default function VerificationAfsca({ detail, onChanged }) {

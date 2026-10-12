@@ -369,11 +369,12 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   **alerts**, no longer blockers (business number, AFSCA number, contract, validated menu, allergens still block).
   Since 2026-10-10 the business no longer has to give its AFSCA number if it signs the professional declaration
   (now **`PRO-2026.3`**, 2026-10-11: adds the DSA art. 30(e) self-certification that it only sells law-compliant
-  products; `declarationsCommerce.js`). **The team's own check is always required before publication** (lawyer,
-  2026-10-11): Admin › Commerces › Conformité › *Vérification AFSCA* ([VerificationAfsca](src/components/admin/VerificationAfsca.jsx)),
-  four points on the **establishment unit** (linked company, kitchen address, food-preparation activity, « Actif ») plus
-  a screenshot; « Introuvable » blocks with no override; redo yearly and after any move (a task opens). Procedure:
-  `../fairide-backend/docs/verification-afsca.md`.
+  products; `declarationsCommerce.js`). **Signed with one checkbox at signup** (2026-10-12,
+  [EngagementsInscription](src/components/commerce/EngagementsInscription.jsx) → `business.engagements` →
+  `signerEngagementsInscription`), together with the allergen procedure; no AFSCA number or document is asked. The
+  team's AFSCA check (Admin › Commerces › Conformité, [VerificationAfsca](src/components/admin/VerificationAfsca.jsx):
+  four points on the establishment unit + screenshot) is an **optional spot check** — alerts only, never blocks
+  publication, except a « Introuvable » result (no override). Procedure: `../fairide-backend/docs/verification-afsca.md`.
 - **Pickup without a restaurant click** (2026-10-10): the restaurant sees the pickup code and compares it by eye; the
   **courier** confirms (`PATCH /orders/:id/picked-up`, accepted from `preparation` too). `/confirm-pickup` still exists.
   « Ma carte et mes engagements » ([ConformiteCarte](src/components/conformite/ConformiteCarte.jsx)) is one checkbox,

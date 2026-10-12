@@ -1,6 +1,7 @@
 import OffreFormules from '../components/OffreFormules';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import BrandMark from '../components/BrandMark';
+import EngagementsInscription from '../components/commerce/EngagementsInscription';
 import { remonterEnHaut } from '../remonter';
 import urlSure from '../urlSure';
 import { chargerGoogleSignIn } from '../googleSignIn';
@@ -230,6 +231,7 @@ export default function Auth() {
     const fiche = commerceTrouve || {};
     return {
       name: fiche.name || legalName.trim(), cuisine: cuisineFinale, hours,
+      engagements: accepteEngagements,
       extraCuisines: extraCuisines.filter((c) => c !== cuisineFinale).slice(0, MAX_CUISINES - 1),
       openingHours: fiche.openingHours || '',
       addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
@@ -338,6 +340,8 @@ export default function Auth() {
   // CGU (backlog C1) : case non pré-cochée, obligatoire pour un compte client, et version affichée —
   // le serveur enregistre la version que la personne a vue, avec l'heure, l'IP et l'empreinte du texte.
   const [accepteCgu, setAccepteCgu] = useState(false);
+  // Restaurateur : la case des engagements (déclaration professionnelle + allergènes), signés à la création du commerce.
+  const [accepteEngagements, setAccepteEngagements] = useState(false);
   const [versionCgu, setVersionCgu] = useState('');
   useEffect(() => { api('/auth/terms/current').then((r) => setVersionCgu(r.version)).catch(() => {}); }, []);
   const [googleProfile, setGoogleProfile] = useState(null);
@@ -871,6 +875,11 @@ export default function Auth() {
             setLoading(false);
             return;
           }
+        }
+        if (role === 'restaurant' && !accepteEngagements) {
+          toast(t('auth.engagementsRequired'));
+          setLoading(false);
+          return;
         }
         if (role === 'client' && !accepteCgu) {
           toast(t('conformite.toastTermsRequired'));
@@ -1680,6 +1689,9 @@ export default function Auth() {
                   {t('conformite.termsAcceptPrefix')} <Link to="/cgv" target="_blank" rel="noopener">{t('conformite.termsLink')}</Link>{versionCgu ? ` (${versionCgu})` : ''}.
                 </span>
               </label>
+            )}
+            {isLastStep && role === 'restaurant' && (
+              <EngagementsInscription checked={accepteEngagements} onChange={setAccepteEngagements} />
             )}
             {incomplet && incomplet.step === step && Object.keys(errors).length > 0 && (
               <p className="auth-incomplet" role="alert">⚠️ {t('auth.checkIncomplete', { n: incomplet.n, step: stepCopy?.title || '' })}</p>
