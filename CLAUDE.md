@@ -316,7 +316,9 @@ components live in [src/components/conformite/](src/components/conformite/), sha
 - **Privacy policy text** is versioned like the T&Cs: changing `privacy.*` (or the `SECTIONS` order in
   Privacy.jsx) changes its hash — register a new version in the backend's `cgu.js`
   (`VERSIONS_CONFIDENTIALITE`), or its test fails.
-- **T&Cs text**: changing `terms.*` in the i18n files changes the text clients accept. Bump the date in
+- **T&Cs text**: changing `terms.*` in the i18n files changes the text clients accept. The backend tests hash the
+  front at `../fairide-frontend` — from a worktree that is the main checkout, not yours: check with
+  `node scripts/empreinte-cgu.js <your front path>`. Bump the date in
   `terms.draftWarning` and register the new version and hash in the backend (`scripts/empreinte-cgu.js`,
   `cgu.js`) — the backend test fails until you do.
 
@@ -368,7 +370,7 @@ account page then shows « offert pendant le lancement » and the Stripe checkou
 - the ×1.10 is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js --facteur`, or a CSV of
   in-store prices), not at runtime; since 2026-10-01 the business can no longer edit dishes or prices itself
   (`MENU_LOCKED`) — it asks, and the team applies;
-- legal texts: contract `RESTO-2026.19` (in force 1 Nov 2026; 2026.18 widens the subscription guarantee, 2026.19 says Fairide charges no VAT; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-09` (`terms.fees` still says « 20 € (hors TVA) » — fix it with the next T&Cs version), privacy
+- legal texts: contract `RESTO-2026.19` (in force 1 Nov 2026; 2026.18 widens the subscription guarantee, 2026.19 says Fairide charges no VAT; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-13` (says the subscription is 20 € with no VAT and that Fairide's system fee carries none), privacy
   `CONF-2026-10-08` (they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
   restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).
 
