@@ -1743,8 +1743,8 @@ export default {
       step1: 'Le client paie en ligne au moment de la commande (carte, Bancontact, Apple Pay, Google Pay). L\'argent est encaissé par Stripe, jamais par Fairide.',
       step2: 'Sur chaque commande payée en ligne, tu reçois ton prix de salle : tes plats sont affichés sur Fairide 12,1 % plus cher (10 % HTVA pour Fairide + 21 % de TVA sur cette part), et Fairide garde cette différence. Une commande payée sur place, tu l\'encaisses toi-même, en entier : 0 % de commission. Les frais de livraison vont au livreur à 90 % (10 % de frais de système Fairide, compris dedans), les pourboires à 90 % aussi.',
       step3: 'Ta part est transférée automatiquement sur ton compte Stripe à chaque commande payée, puis versée sur ton compte bancaire chaque lundi (tout ce qui a été encaissé la semaine précédente). Une facture de commission mensuelle t\'est envoyée par e-mail et reste disponible dans Factures.',
-      subscriptionTitle: 'Rien à activer maintenant',
-      subscriptionText: 'Tu peux créer ton compte et ton restaurant sans rien payer ni activer. L\'abonnement Fairide (20 € HTVA/mois, avec le terminal Fairide) ouvre l\'à emporter (dès le 1er novembre 2026) et la livraison (dès le 10 novembre) ; il s\'active à partir du 6 octobre, et son premier mois offert ne commence à compter qu\'à l\'ouverture du paiement en ligne, le 10 novembre. Une commande payée sur place te revient en entier. 50 € de commandes ou moins sur un mois = pas d\'abonnement : ce mois est offert ou remboursé.',
+      subscriptionTitle: 'Abonnement offert pendant le lancement',
+      subscriptionText: 'Pendant le lancement, Fairide ne te facture aucun abonnement : seulement les 10 % HTVA ajoutés aux commandes payées en ligne. Le jour où l\'abonnement (20 € HTVA/mois, terminal compris) s\'appliquera à ton commerce, on te prévient avant. Même alors, 50 € de commandes ou moins sur un mois = ce mois est offert ou remboursé. Une commande payée sur place te revient en entier.',
       stripeTitle: 'Stripe, c\'est quoi ?',
       stripeWhat: 'Stripe est un prestataire de paiement international, agréé comme établissement de paiement en Europe et certifié au plus haut niveau de sécurité bancaire (PCI-DSS). Des milliers de commerces et de plateformes (Deliveroo, Shopify, Zalando…) l\'utilisent pour encaisser et reverser l\'argent. C\'est chez Stripe, dans un formulaire sécurisé, que tu renseigneras ton identité et ton IBAN.',
       noBankTitle: 'Fairide ne prend aucune information bancaire.',
@@ -5930,7 +5930,7 @@ export default {
       pickupPayOnline: 'En ligne uniquement',
       pickupPayOnlineText: 'Le client paie en commandant, via Fairide. La commande est garantie ; tu reçois ton prix de salle, Fairide garde les 10 % HTVA (12,1 % TVA comprise) ajoutés au prix affiché.',
       pickupPayOnSiteOnly: 'Sur place uniquement',
-      pickupPayOnSiteOnlyText: 'Le client paie au retrait, chez toi. Tu encaisses toi-même : Fairide ne prend aucune commission, tout ce que paie le client te revient. Pas besoin d\'activer les paiements en ligne ; l\'à emporter fait partie de la version complète (20 € HTVA/mois).',
+      pickupPayOnSiteOnlyText: 'Le client paie au retrait, chez toi. Tu encaisses toi-même : Fairide ne prend aucune commission, tout ce que paie le client te revient. Pas besoin d\'activer les paiements en ligne.',
       pickupPayBoth: 'Au choix du client',
       pickupPayBothText: 'Le client choisit entre payer en ligne et payer au retrait. Seules les commandes payées en ligne sont commissionnées ; celles payées sur place te reviennent en entier.',
       pickupPayNoShowWarn: 'Si un client qui paie sur place ne vient pas chercher sa commande, Fairide ne prend pas ce cas en charge (ni remboursement, ni indemnisation). Tu peux la signaler « Client pas venu ».',
@@ -7422,7 +7422,7 @@ export default {
       errServices: 'Choisis au moins un service.',
       cuisineLabel: 'Type de cuisine / de commerce',
       cuisinePlaceholder: 'Choisis dans la liste…',
-      cuisineHelp: 'On s\'en sert pour te proposer des plats de départ et pour aider l\'agent IA à lire ta carte. Modifiable à tout moment.',
+      cuisineHelp: 'Il aide Fairide à préparer ta carte et les clients à te trouver. Modifiable à tout moment.',
       /* Question facultative de l'étape « commerce » : elle déclenche la demande « Fairide s'en
          occupe » dès la création du commerce (voir Auth.jsx et DashboardLayout.jsx). */
       menuPlatformTitle: 'Ta carte existe déjà quelque part ?',
