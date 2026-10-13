@@ -11,10 +11,14 @@ import usePageMeta from '../hooks/usePageMeta';
  * telle que Fairide l'a préparée, avec ses prix et ses taux de TVA, et UN gros bouton. Le gérant valide ce qu'il voit —
  * l'empreinte de la carte affichée part avec le clic, et le serveur refuse si la carte a changé entre-temps
  * (lienValidationCarte.js). Le nom du responsable est prérempli : c'est lui qui signe, il peut le corriger.
- * Une seule action lime sur la page (règle 3 de l'identité) : le bouton « C'est bon ». */
+ * Une seule action lime sur la page (règle 3 de l'identité) : le bouton « C'est bon ».
+ *
+ * Carte aux prix MAGASIN vérifiés (prixMagasin.js côté serveur) : un choix avant de valider — garder ses prix, ou ajouter
+ * la commission de Fairide sur toute la carte. La liste montre alors les prix qui seront signés (calculés par le serveur,
+ * priceWithFairideRate), et le choix part avec « C'est bon ». Par défaut : garder — on ne monte pas ses prix sans un geste. */
 export default function ValiderCarte() {
   const { token } = useParams();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const id = useId();
   // Page à jeton : jamais indexée, jamais suivie (le lien est personnel).
   usePageMeta({ title: t('validerCarte.pageTitle'), robots: 'noindex, nofollow' });
@@ -23,6 +27,13 @@ export default function ValiderCarte() {
   const [nom, setNom] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [fait, setFait] = useState(null);
+  const [ajouter, setAjouter] = useState(false);
+  const choixOffert = !!carte?.fairideRateChoice?.offered;
+  const rate = carte?.fairideRateChoice?.rate || 0;
+  // Hausse qui rend au commerce son prix entier après la commission (11,1 % en franchise TVA), calculée par le serveur.
+  const hausse = carte?.fairideRateChoice?.markup || 0;
+  const pctLocal = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
+  const avecCommission = choixOffert && ajouter;
 
   const charger = () => api(`/menu-validation/${encodeURIComponent(token)}`)
     .then((c) => { setCarte(c); setNom((n) => n || c.restaurant.responsibleName || ''); setErreur(''); })
@@ -32,7 +43,7 @@ export default function ValiderCarte() {
   async function valider() {
     setEnvoi(true);
     try {
-      const r = await api(`/menu-validation/${encodeURIComponent(token)}`, { method: 'POST', body: { name: nom, sha256: carte.sha256 } });
+      const r = await api(`/menu-validation/${encodeURIComponent(token)}`, { method: 'POST', body: { name: nom, sha256: carte.sha256, ...(choixOffert ? { addFairideRate: ajouter } : {}) } });
       setFait(r.version);
     } catch (e) {
       setErreur(e.message);
@@ -70,6 +81,26 @@ export default function ValiderCarte() {
       {carte.alreadyValidated && <p className="small" role="note">{t('validerCarte.alreadyValidated')}</p>}
       {erreur && <p className="texte-erreur" role="alert">{erreur}</p>}
 
+      {choixOffert && (
+        <section className="card" style={{ marginBottom: 12 }} aria-labelledby={`${id}-taux`}>
+          <h2 id={`${id}-taux`} style={{ fontSize: 16, margin: '0 0 4px' }}>{t('validerCarte.rateTitle')}</h2>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t('validerCarte.rateIntro')}</p>
+          <div className="row" role="radiogroup" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" role="radio" aria-checked={!ajouter} className={!ajouter ? 'btn-teal' : 'btn-outline'} style={{ flex: '1 1 200px' }} onClick={() => setAjouter(false)}>
+              {t('validerCarte.rateKeep')}
+            </button>
+            <button type="button" role="radio" aria-checked={ajouter} className={ajouter ? 'btn-teal' : 'btn-outline'} style={{ flex: '1 1 200px' }} onClick={() => setAjouter(true)}>
+              {t('validerCarte.rateAdd', { markup: pctLocal(hausse) })}
+            </button>
+          </div>
+          <p className="small" style={{ margin: '10px 0 0' }}>
+            {ajouter
+              ? t('validerCarte.rateAddHelp', { markup: pctLocal(hausse) })
+              : t('validerCarte.rateKeepHelp', { pct: pctLocal(rate * 100) })}
+          </p>
+        </section>
+      )}
+
       {sections.map((s) => (
         <section key={s.nom} className="card" style={{ marginBottom: 12 }}>
           {s.nom && <h2 style={{ fontSize: 16, margin: '0 0 6px' }}>{s.nom}</h2>}
@@ -78,8 +109,9 @@ export default function ValiderCarte() {
               <li key={it.id} style={{ padding: '8px 0', borderTop: k ? '1px solid var(--line)' : 'none' }}>
                 <div className="row" style={{ justifyContent: 'space-between', gap: 12 }}>
                   <b>{it.name}</b>
-                  <b style={{ whiteSpace: 'nowrap' }}>{euros(it.price)}</b>
+                  <b style={{ whiteSpace: 'nowrap' }}>{euros(avecCommission ? it.priceWithFairideRate : it.price)}</b>
                 </div>
+                {avecCommission && <div className="small" style={{ color: 'var(--ink-soft)', textAlign: 'right' }}>{t('validerCarte.rateWas', { price: euros(it.price) })}</div>}
                 {it.desc && <div className="small" style={{ color: 'var(--ink-soft)' }}>{it.desc}</div>}
                 <div className="small" style={{ color: 'var(--ink-soft)' }}>
                   {it.vatRate == null ? t('validerCarte.vatProposed') : t('validerCarte.vat', { rate: it.vatRate })}
