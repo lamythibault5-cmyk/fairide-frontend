@@ -190,6 +190,8 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
    you need "the accent, but on a light surface", the token is `--gold-deep` — which is iris.
 2. **Backgrounds are white or iris. No third background colour**, and no gradients, no blurred
    halos, no drop shadows. Elevation is expressed by a hairline border.
+   *One exception (2026-10-13, asked for):* the bottom tab bar in the **app only** (`html.natif`) is translucent white with
+   a backdrop blur, Revolut-style; on the website it stays solid white (blur costs frames on modest phones).
 3. **One lime accent per view.** If a screen already has a `btn-gold`, its active tab / badge /
    nav item uses white or iris instead.
 

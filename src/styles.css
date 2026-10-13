@@ -2545,7 +2545,9 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   .dashboard-nav--pousse { animation: barre-pousse .16s var(--ressort-ui); }
   .nav-curseur {
     display: block; position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none;
-    background: var(--iris); border-radius: var(--radius-pill); opacity: 0;
+    /* Coins de 20px et non une pilule complète (2026-10-13) : sur un onglet de 70 × 60, la courbe d'une pilule
+       rognait les côtés du libellé, qui touchait le bord bleu. */
+    background: var(--iris); border-radius: 20px; opacity: 0;
     transition: transform .15s var(--ressort-ui), width .12s var(--ressort-ui), height .12s var(--ressort-ui), opacity .15s;
   }
   .dashboard-nav-link {
@@ -2553,7 +2555,9 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     flex: 1 1 0; min-width: 0; height: 60px; padding: 0 2px;
     flex-direction: column; justify-content: center; align-items: center; gap: 3px;
     border-radius: var(--radius-pill); background: transparent; border: 0; box-shadow: none;
-    color: var(--ink-soft); font-size: 11px; font-weight: 500;
+    /* 10px (et non 11) : « Commandes », « Recherche » tenaient trop juste dans la pastille. Un léger interlettrage
+       positif garde un si petit texte lisible (Apple, typographie de l'interface). */
+    color: var(--ink-soft); font-size: 10px; font-weight: 500; letter-spacing: .01em;
     transition: height .14s var(--ressort-ui), color .12s;
   }
   .dashboard-nav-link:hover, .dashboard-nav-link.active { background: transparent; }
@@ -2575,6 +2579,20 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   /* La console admin a une dizaine de pôles : sa pilule défile de côté au lieu d'écraser les onglets. */
   .dashboard-nav.admin { justify-content: flex-start; overflow-x: auto; scrollbar-width: none; contain: layout; }
   .dashboard-nav.admin::-webkit-scrollbar { display: none; }
+  /* TRANSLUCIDE DANS L'APPLICATION, COMME CHEZ REVOLUT (demande du 2026-10-13). Le contenu défile sous la barre,
+     flouté. Exception voulue à la règle 2 de l'identité (pas de flou), limitée à cette barre et à l'application :
+     un flou recalculé à chaque image de défilement coûte cher aux téléphones modestes, et le site doit rester rapide —
+     sur fairide.be la barre reste blanche. Repli plein si le système demande moins de transparence. */
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    html.natif .dashboard-nav {
+      background: rgba(255, 255, 255, .72);
+      -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+      border-color: rgba(220, 216, 208, .7);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    html.natif .dashboard-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
   .dashboard-sidebar--compacte .dashboard-nav-label { opacity: 0; max-height: 0; transform: translateY(4px); }
   /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
      hauteur (66px), plus au contenu principal qui n'est plus le dernier. */
