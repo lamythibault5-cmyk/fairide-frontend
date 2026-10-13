@@ -128,6 +128,32 @@ export function BoutonFacturationAbonnement({ detail, token, api, toast, tr, onC
   );
 }
 
+// Prix relevés en magasin, ou présumés d'une plateforme (prixMagasin.js côté serveur, 13 oct. 2026). Les cartes importées
+// d'Uber Eats portent des prix gonflés pour absorber leur commission ; seules les cartes relevées au comptoir sont marquées.
+// Une carte marquée propose au commerce, sur sa page « C'est bon », de garder ses prix ou d'ajouter la commission de Fairide.
+export function PrixMagasin({ detail, token, api, toast, tr, onChanged }) {
+  const [busy, setBusy] = useState(false);
+  const verifies = !!detail.inStorePricesCheckedAt;
+  async function basculer() {
+    setBusy(true);
+    try {
+      await api(`/admin/restaurants/${detail.id}/in-store-prices`, { method: 'PATCH', token, body: { checked: !verifies } });
+      toast(verifies ? tr('adminRestos.platformPricesLine') : tr('adminRestos.inStorePricesLine', { date: fmtDate(Date.now()) }));
+      onChanged?.();
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+  }
+  const choix = { added: tr('adminRestos.fairideRateAdded'), kept: tr('adminRestos.fairideRateKept') }[detail.fairideRateChoice] || tr('adminRestos.fairideRatePending');
+  return (
+    <div style={{ marginTop: 8 }}>
+      <p className="small" style={{ margin: 0 }}>{verifies ? tr('adminRestos.inStorePricesLine', { date: fmtDate(detail.inStorePricesCheckedAt) }) : tr('adminRestos.platformPricesLine')}</p>
+      {verifies && <p className="small" style={{ margin: '2px 0 0' }}>{choix}</p>}
+      <button type="button" className="btn-outline" style={{ marginTop: 6, padding: '6px 14px', fontSize: 13 }} disabled={busy} onClick={basculer}>
+        {busy ? '…' : verifies ? tr('adminRestos.inStorePricesUnmark') : tr('adminRestos.inStorePricesMark')}
+      </button>
+    </div>
+  );
+}
+
 export default function AdminRestaurantsPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
@@ -393,6 +419,7 @@ export default function AdminRestaurantsPage() {
                 {!estTest(r) && <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>}
                 <span className="pill" style={{ color: biz?.color }}>{biz?.label}</span>
                 {r.conciergeStatus && <span className="pill gold">{r.conciergeStatus === 'en_cours' ? tr('adminRestos.menuInProgressPill') : tr('adminRestos.menuRequestPill')}</span>}
+                {!estTest(r) && <span className="pill" style={{ color: r.inStorePricesCheckedAt ? 'var(--iris)' : 'var(--orange)' }}>{r.inStorePricesCheckedAt ? tr('adminRestos.inStorePricesPill') : tr('adminRestos.platformPricesPill')}</span>}
               </div>
             </div>
             <div className="small">{r.commune} · {r.cuisine} · {Number(r.rating || 0).toFixed(1)}★</div>
@@ -689,6 +716,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
               </p>
             )}
             <Link to={`/admin/restaurants/${detail.id}/menu`} className={detail.conciergeStatus ? 'btn-gold' : 'btn-outline'} style={{ display: 'inline-block', marginTop: 8, padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
+            {!detail.isDemo && <PrixMagasin detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}
           </div>
           <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
             <BoutonGererCommerce id={detail.id} token={token} api={api} toast={toast} tr={tr} className={detail.conciergeStatus ? 'btn-gold' : 'btn-teal'} />
