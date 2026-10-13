@@ -435,7 +435,7 @@ function Exports({ tr, token, toast }) {
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-year-2'}>{tr('adminCouriers.year')}</label><input id={idsA11y + '-year-2'} type="number" value={annee} onChange={(e) => setAnnee(e.target.value)} style={{ width: 110 }} /></div>
         <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-quarter'}>{tr('adminCouriers.quarter')}</label><select id={idsA11y + '-quarter'} value={trim} onChange={(e) => setTrim(e.target.value)}><option value="">{tr('adminCouriers.allQuarters')}</option>{[1, 2, 3, 4].map((q) => <option key={q} value={q}>T{q}</option>)}</select></div>
-        <button className="btn-outline" onClick={() => go(`/admin/couriers/export/dac7?year=${annee}${trim ? `&quarter=${trim}` : ''}`, `dac7-${annee}${trim ? `-T${trim}` : ''}.csv`)}>⬇️ DAC7</button>
+        <button className="btn-outline" onClick={() => go(`/admin/couriers/export/dac7?year=${annee}${trim ? `&quarter=${trim}` : ''}`, `dac7-${annee}${trim ? `-T${trim}` : ''}.csv`)}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}DAC7</button>
       </div>
     </div>
   );

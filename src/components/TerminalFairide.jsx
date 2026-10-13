@@ -101,7 +101,7 @@ export default function TerminalFairide({ terminal = null, compact = false }) {
       {terminal && (terminal.deliveredAt || terminal.returnedAt || terminal.refundedAt) && (
         <p className="small" style={{ margin: '8px 0 0' }}>
           {terminal.deliveredAt && <><Icone nom="sac" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalDelivered', { date: new Date(terminal.deliveredAt).toLocaleDateString(locale) })}<br /></>}
-          {terminal.returnedAt && <>↩️ {t('accountUi.terminalReturned', { date: new Date(terminal.returnedAt).toLocaleDateString(locale) })}<br /></>}
+          {terminal.returnedAt && <><Icone nom="retour" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalReturned', { date: new Date(terminal.returnedAt).toLocaleDateString(locale) })}<br /></>}
           {terminal.refundedAt && <><Icone nom="euro" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalRefunded', { date: new Date(terminal.refundedAt).toLocaleDateString(locale) })}</>}
         </p>
       )}

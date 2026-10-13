@@ -638,8 +638,8 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                     ) : modeAdmin && !reorderSectionId && !selectSectionId && (
                       <>
                         <button type="button" className="btn-teal menu-plus" onClick={() => openAddItemTile(section)} title={t('menuPage.addItemTo', { section: categoryLabel(section.name, t) })} aria-label={t('menuPage.addItemTo', { section: categoryLabel(section.name, t) })}>＋</button>
-                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleSelectSection(section.id)} title={t('menuPage.selectSeveral')}>☑️</button>
-                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleReorderSection(section.id)} title={t('menuPage.reorder')}>↕️</button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleSelectSection(section.id)} title={t('menuPage.selectSeveral')}><Icone nom="coche" taille={16} className="icone-texte" /></button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleReorderSection(section.id)} title={t('menuPage.reorder')}><Icone nom="melanger" taille={16} className="icone-texte" /></button>
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setSectionGalleryFor(section)} title={t('menuPage.sectionPhoto')}><Icone nom="apercu" taille={16} className="icone-texte" /></button>
                         {section.imageUrl && (
                           <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => saveSectionImage(section, '')} title={t('menuPage.removeSectionPhoto')}><Icone nom="apercu" taille={16} className="icone-texte" />✕</button>

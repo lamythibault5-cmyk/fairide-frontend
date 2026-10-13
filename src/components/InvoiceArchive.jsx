@@ -141,7 +141,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
                     <td><span className={pp.pill} title={inv.peppolSentAt ? new Date(inv.peppolSentAt).toLocaleString(getLocale()) : ''}>{pp.texte}</span></td>
                     <td className="num" style={{ whiteSpace: 'nowrap' }}>
                       <button type="button" className="btn-ghost" disabled={busyId === inv.id} onClick={() => download(inv)}>
-                        {busyId === inv.id ? '...' : '⬇️ PDF'}
+                        {busyId === inv.id ? '...' : 'PDF'}
                       </button>
                       {ublPath && (
                         <button type="button" className="btn-ghost" disabled={busyId === inv.id} onClick={() => download(inv, 'ubl')} title={t('invoiceArchive.ublTitle')}>

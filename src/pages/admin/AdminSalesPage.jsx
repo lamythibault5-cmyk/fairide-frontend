@@ -221,7 +221,7 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
         </div>
         <button type="button" className={`chip${retard ? ' active' : ''}`} aria-pressed={retard} onClick={() => setRetard((v) => !v)}><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{tr('adminSales.filterOverdue')}</button>
         <button type="button" className={`chip${aujourdhui ? ' active' : ''}`} aria-pressed={aujourdhui} onClick={() => setAujourdhui((v) => !v)}><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{tr('adminSales.filterToday')}</button>
-        <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} disabled={!lignes.length} onClick={() => exporterCsv(lignes)}>⬇️ {tr('sales.exportCsv')}</button>
+        <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} disabled={!lignes.length} onClick={() => exporterCsv(lignes)}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{tr('sales.exportCsv')}</button>
       </div>
       <div className="card crm-carte-carte">
         <div className="crm-carte-tete">

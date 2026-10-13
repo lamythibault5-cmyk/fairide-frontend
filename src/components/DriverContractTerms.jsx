@@ -78,7 +78,7 @@ export default function DriverContractTerms() {
               {signe.signatureUrl && <img src={signe.signatureUrl} alt={t('signature.aria')} style={{ display: 'block', maxWidth: 220, maxHeight: 90, marginTop: 8, background: '#fff', border: '1px solid var(--line, #e1d9c4)', borderRadius: 8 }} />}
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                 <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/${signe.id}/pdf`, token, t('courierOnboarding.previewFailed'))}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('driverTerms.openContract')}</button>
-                <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/${signe.id}/pdf`, token, `contrat-fairide-${signe.contractType}-${signe.version}.pdf`, t('courierOnboarding.previewFailed'))}>⬇️ {t('driverTerms.savePdf')}</button>
+                <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/${signe.id}/pdf`, token, `contrat-fairide-${signe.contractType}-${signe.version}.pdf`, t('courierOnboarding.previewFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('driverTerms.savePdf')}</button>
               </div>
               {/* Tous ses contrats signés (un par statut / version) : chacun s'ouvre et s'enregistre en PDF. */}
               {(d.contracts || []).filter((k) => k.id !== signe.id).length > 0 && (
@@ -88,7 +88,7 @@ export default function DriverContractTerms() {
                     <div key={k.id} className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 4 }}>
                       <span>{EMOJI[k.contractType] || ''}{k.version} · {k.signedAt ? new Date(k.signedAt).toLocaleDateString(getLocale()) : ''}</span>
                       <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/${k.id}/pdf`, token, t('courierOnboarding.previewFailed'))}><Icone nom="document" taille={16} className="icone-texte" /></button>
-                      <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/${k.id}/pdf`, token, `contrat-fairide-${k.contractType}-${k.version}.pdf`, t('courierOnboarding.previewFailed'))}>⬇️</button>
+                      <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/${k.id}/pdf`, token, `contrat-fairide-${k.contractType}-${k.version}.pdf`, t('courierOnboarding.previewFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" /></button>
                     </div>
                   ))}
                 </div>
@@ -100,7 +100,7 @@ export default function DriverContractTerms() {
               <p className="small" style={{ margin: '4px 0 0' }}>{t(`courierOnboarding.contract_${statut}`)}</p>
               <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                 <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/preview`, token, t('courierOnboarding.previewFailed'))}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.contractPreview')}</button>
-                <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/preview`, token, 'contrat-fairide.pdf', t('courierOnboarding.previewFailed'))}>⬇️ {t('driverTerms.savePdf')}</button>
+                <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/preview`, token, 'contrat-fairide.pdf', t('courierOnboarding.previewFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('driverTerms.savePdf')}</button>
                 <Link className="btn-gold" style={{ padding: '6px 12px', fontSize: 13, textDecoration: 'none' }} to="/driver/onboarding">{t('driverTerms.goSign')}</Link>
               </div>
             </div>

@@ -117,8 +117,8 @@ export default function CommissionStatements() {
                 <div className="small">{t('statements.summaryNote')}</div>
               </div>
               <div className="row" style={{ gap: 6 }}>
-                <button type="button" className="btn-outline" disabled={!!telechargement || !T?.count} onClick={() => exporter('pdf')}>{telechargement === 'pdf' ? '...' : '⬇️ PDF'}</button>
-                <button type="button" className="btn-outline" disabled={!!telechargement || !T?.count} onClick={() => exporter('csv')}>{telechargement === 'csv' ? '...' : '⬇️ CSV (Excel)'}</button>
+                <button type="button" className="btn-outline" disabled={!!telechargement || !T?.count} onClick={() => exporter('pdf')}>{telechargement === 'pdf' ? '...' : 'PDF'}</button>
+                <button type="button" className="btn-outline" disabled={!!telechargement || !T?.count} onClick={() => exporter('csv')}>{telechargement === 'csv' ? '...' : 'CSV (Excel)'}</button>
               </div>
             </div>
             <div className="stat-grid" style={{ marginBottom: 0 }}>

@@ -136,7 +136,7 @@ export default function SalesPage() {
           <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.intro')}</p>
         </div>
         <div className="row" style={{ gap: 8 }}>
-          <button type="button" className="btn-ghost" style={{ fontSize: 13 }} onClick={exporterCsv} disabled={!prospects?.length}>⬇️ {t('sales.exportCsv')}</button>
+          <button type="button" className="btn-ghost" style={{ fontSize: 13 }} onClick={exporterCsv} disabled={!prospects?.length}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('sales.exportCsv')}</button>
           <button type="button" className="btn-gold" onClick={() => setPhoto(true)}><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('sales.photoButton')}</button>
           <button type="button" className="btn-outline" onClick={() => setCreation(true)}>+ {t('sales.addProspect')}</button>
         </div>
@@ -858,7 +858,7 @@ function GuideCard({ t }) {
         </div>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <a className="btn-gold" href={FLYER_URL} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>{t('sales.flyerOpen')}</a>
-          <a className="btn-outline" href={FLYER_URL} download="flyer-fairide.pdf" style={{ textDecoration: 'none' }}>⬇️ {t('sales.flyerDownload')}</a>
+          <a className="btn-outline" href={FLYER_URL} download="flyer-fairide.pdf" style={{ textDecoration: 'none' }}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('sales.flyerDownload')}</a>
         </div>
       </div>
       {ouvert && (

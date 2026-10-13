@@ -80,7 +80,7 @@ export default function RestaurantContract({ restoId, onAccepte }) {
           {d.signatureUrl && <img src={d.signatureUrl} alt={t('signature.aria')} style={{ display: 'block', maxWidth: 220, maxHeight: 90, marginTop: 8, background: '#fff', border: '1px solid var(--line, #e1d9c4)', borderRadius: 8 }} />}
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
             <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('restoContract.openPdf')}</button>
-            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}>⬇️ {t('restoContract.savePdf')}</button>
+            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('restoContract.savePdf')}</button>
           </div>
         </div>
       ) : (
@@ -89,7 +89,7 @@ export default function RestaurantContract({ restoId, onAccepte }) {
           <p className="small" style={{ margin: '4px 0 8px' }}>{t('restoContract.toAcceptHelp')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('restoContract.readPdf')}</button>
-            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}>⬇️ {t('restoContract.savePdf')}</button>
+            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('restoContract.savePdf')}</button>
           </div>
         </div>
       )}

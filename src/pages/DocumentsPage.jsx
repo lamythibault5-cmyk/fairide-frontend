@@ -31,7 +31,7 @@ export default function DocumentsPage() {
   const Boutons = ({ pdfPath, nom }) => (
     <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
       <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}${pdfPath}`, token, t('mesDocuments.pdfFailed'))}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('mesDocuments.open')}</button>
-      <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}${pdfPath}`, token, nom, t('mesDocuments.pdfFailed'))}>⬇️ {t('mesDocuments.save')}</button>
+      <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}${pdfPath}`, token, nom, t('mesDocuments.pdfFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('mesDocuments.save')}</button>
     </div>
   );
 

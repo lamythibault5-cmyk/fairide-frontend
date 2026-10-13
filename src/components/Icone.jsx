@@ -142,6 +142,8 @@ const TRACES = {
   // — Les derniers emojis partis (2026-10-13, « plus aucun emoji enfantin, même dans l'admin ») —
   // Feuille : bio, végétarien, vegan, cuisine saine. Poisson : poisson & fruits de mer.
   feuille: <><path d="M5 19C5 10 11 4.5 20 4c-.4 9-6 15-15 15Z" /><path d="M5 19 13.5 10.5" /></>,
+  // Flèche vers un plateau : télécharger un CSV, un PDF (c'était ⬇️).
+  telecharger: <><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M4 20h16" /></>,
   poisson: <><path d="M3 12c2.8-3.6 6.4-5.5 10.5-5.5 3 0 5.6 2 7.5 5.5-1.9 3.5-4.5 5.5-7.5 5.5C9.4 17.5 5.8 15.6 3 12Z" /><path d="M3 12 1.5 8.5" /><path d="M3 12l-1.5 3.5" /><path d="M16 11h.01" /></>
 };
 
