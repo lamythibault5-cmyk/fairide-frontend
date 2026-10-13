@@ -4747,3 +4747,13 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .glisser-confirmer-pouce svg { transform: scaleX(-1); }
 .glisser-confirmer.est-fait .glisser-confirmer-pouce svg { transform: none; }
 .glisser-confirmer.est-inactif { opacity: .5; }
+
+/* Commande payée (OrderResult.jsx) : écran iris plein. Fond iris, texte blanc, l'icône en filet blanc avec un trait lime
+   (la lime posée sur l'iris) qui arrive avec le ressort de l'interface. CSS seulement : rien de plus à télécharger. */
+.resultat-paye { background: var(--iris); color: #fff; border-radius: var(--radius); margin: 16px; min-height: calc(100dvh - 160px); }
+.resultat-paye .etat-vide-icone { background: transparent; border: 1px solid rgba(255, 255, 255, .4); color: var(--lime); animation: resultat-pop .35s var(--ressort-ui) both; }
+.resultat-paye .etat-vide-titre { font-size: var(--t-display-md); color: #fff; }
+.resultat-paye .small { color: rgba(255, 255, 255, .82); }
+@keyframes resultat-pop { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+/* Le bouton secondaire sur fond iris, quand c'est un lien (<Link>) : même forme qu'un bouton, sinon il hérite d'un simple filet. */
+.resultat-paye a.btn-hero-ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 20px; border-radius: var(--radius-pill); font-weight: 500; font-size: 15px; }

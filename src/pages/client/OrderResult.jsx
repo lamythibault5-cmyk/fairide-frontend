@@ -124,7 +124,10 @@ export default function OrderResult({ success }) {
   }[state];
 
   return (
-    <div className="center-page">
+    /* COMMANDE PAYÉE : LE MOMENT DE L'APPLICATION (plan du 2026-10-13). Un écran iris plein, comme les promesses de
+       l'accueil de l'app — le seul de tout le parcours d'achat. La seule pointe de lime de la vue est l'action
+       « Voir mes commandes » (règle 3 de l'identité). Les autres états (vérification, attente, échec) restent sobres. */
+    <div className={`center-page${state === 'paid' ? ' resultat-paye' : ''}`}>
       <span className="etat-vide-icone" aria-hidden="true"><Icone nom={view.icone} taille={34} /></span>
       <h2 className="etat-vide-titre">{view.title}</h2>
       <p className="small">
@@ -135,10 +138,10 @@ export default function OrderResult({ success }) {
           seconde où le webhook est sur le point d'arriver. */}
       {state !== 'checking' && (
         <div className="row" style={{ gap: 10, justifyContent: 'center' }}>
-          <Link to="/orders" className="btn-teal" style={{ textDecoration: 'none', display: 'inline-block' }}>
+          <Link to="/orders" className={state === 'paid' ? 'btn-gold' : 'btn-teal'} style={{ textDecoration: 'none', display: 'inline-block' }}>
             {t('orderResult.viewOrders')}
           </Link>
-          <Link to="/restaurants" className="btn-outline" style={{ textDecoration: 'none', display: 'inline-block' }}>
+          <Link to="/restaurants" className={state === 'paid' ? 'btn-hero-ghost' : 'btn-outline'} style={{ textDecoration: 'none', display: 'inline-block' }}>
             {t('orderResult.backToRestaurants')}
           </Link>
         </div>
