@@ -31,7 +31,7 @@
 /* Entonnoir */
 .rep-funnel { display: flex; flex-direction: column; gap: 8px; }
 .rep-funnel-step { display: grid; grid-template-columns: 130px 1fr 60px; gap: 8px; align-items: center; font-size: 13px; }
-.rep-funnel-step .num { text-align: right; font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+.rep-funnel-step .num { text-align: right; font-weight: 700; font-family: var(--font-ui); }
 .rep-funnel-bar { height: 22px; border-radius: 4px; background: var(--iris); min-width: 2px; transition: width .25s ease; }
 .rep-funnel-conv { font-size: 11px; color: var(--ink-soft); }
 

@@ -1,4 +1,4 @@
-/* La police Space Grotesk est chargée depuis index.html (lien non bloquant + preconnect) : un @import ici bloquait le premier rendu de ~800 ms sur mobile. */
+/* Les polices (Inter, Inter Tight, Bricolage) sont chargées depuis index.html (lien non bloquant + preconnect) : un @import ici bloquait le premier rendu de ~800 ms sur mobile. */
 
 /* ============================================================================
    Identité « The frame » — deux couleurs de marque, et rien d'autre :
@@ -128,6 +128,13 @@
   --t-display-xxl: 52px; --t-display-xl: 36px; --t-display-lg: 32px;
   --t-display-md: 24px;  --t-display-sm: 20px;
   --t-body-lg: 18px; --t-body-md: 16px; --t-body-sm: 14px; --t-caption: 12px;
+
+  /* POLICES (2026-10-13, sur le modèle de Revolut). Inter pour l'interface : très lisible en petit, chiffres de même
+     largeur pour les prix et les totaux. Inter Tight pour les titres : la même famille, dessinée plus serrée, qui
+     tient le rôle d'Aeonik chez Revolut (payante, écartée). Une famille, deux coupes — pas un couple de polices, ce
+     que la direction avait refermé en retirant Fraunces. Fichiers servis par Fairide : public/fonts/polices.css. */
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-titre: 'Inter Tight', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -151,7 +158,7 @@ body {
   overflow-x: clip;
   background: var(--cream);
   color: var(--ink);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -162,7 +169,7 @@ a, button, .cuisine-chip, .rest-card, .card, input, select, textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Une seule famille sur tout le site, Space Grotesk. La serif Fraunces des titres a disparu :
+/* (Historique, avant Inter le 2026-10-13.) Une seule famille sur tout le site, Space Grotesk. La serif Fraunces des titres a disparu :
    la personnalité ne vient plus du contraste entre deux familles mais du contraste d'ÉCHELLE et
    d'approche — titres très serrés (-0,02em) et compacts (1,1), texte courant aéré. C'est ce
    resserrement négatif sur les grandes tailles qui donne son air à la direction ; sans lui, les
@@ -190,7 +197,7 @@ a, button, .cuisine-chip, .rest-card, .card, input, select, textarea {
    resserré se lit comme une affiche, un titre à approche neutre se lit comme une phrase — et c'est
    une phrase qu'on veut, posée calmement. L'interligne passe de 1,1 à 1,22 pour la même raison :
    1,1 empile les lignes, 1,22 les laisse respirer. */
-h1, h2, h3 { font-weight: 700; letter-spacing: 0; line-height: 1.22; margin: 0; text-wrap: balance; }
+h1, h2, h3 { font-family: var(--font-titre); font-weight: 700; letter-spacing: 0; line-height: 1.22; margin: 0; text-wrap: balance; }
 
 a { color: inherit; }
 
@@ -262,7 +269,7 @@ a { color: inherit; }
    Bricolage Grotesque ne s'applique qu'au nom de la marque — six endroits, tous porteurs de cette
    classe : l'en-tête (.brand-name), l'écran de chargement (#splash .splash-nom, dans index.html),
    le pied de page, la barre latérale des tableaux de bord et les trois cartes d'authentification.
-   Le reste de l'interface — titres, boutons, corps de texte — reste en Space Grotesk. C'est une
+   Le reste de l'interface — titres, boutons, corps de texte — est en Inter (titres en Inter Tight). C'est une
    police de LOGOTYPE, pas une seconde police d'interface : ne pas l'étendre aux titres sous
    prétexte qu'elle a du caractère, ce serait rouvrir exactement le couple de polices que la
    direction avait refermé en retirant Fraunces.
@@ -278,7 +285,7 @@ a { color: inherit; }
 
    La police est déclarée dans le <head> d'index.html et non ici : l'écran de chargement s'affiche
    avant que styles.css n'existe. Voir le commentaire là-bas. */
-.wordmark { font-family: 'Bricolage Grotesque', 'Space Grotesk', sans-serif; font-optical-sizing: auto; }
+.wordmark { font-family: 'Bricolage Grotesque', var(--font-ui); font-optical-sizing: auto; }
 
 .brand-text { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
 .brand .brand-name { display: block; font-weight: 800; font-size: 34px; color: var(--cream); line-height: 1; letter-spacing: -0.04em; }
@@ -1052,7 +1059,7 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .app-soon-phone-notch { width: 70px; height: 18px; background: var(--ink); border-radius: 0 0 12px 12px; margin: 0 auto 6px; position: relative; }
 .app-soon-phone-notch::after { content: ''; position: absolute; inset: 0; margin: auto; width: 34px; height: 5px; border-radius: var(--radius-pill); background: #14121F; top: 6px; }
 .app-soon-phone-screen { background: var(--cream); border-radius: 22px; height: calc(100% - 24px); padding: 14px 12px; overflow: hidden; }
-.app-soon-phone-brand { display: flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: 12px; }
+.app-soon-phone-brand { display: flex; align-items: center; gap: 6px; font-family: var(--font-ui); font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: 12px; }
 .app-soon-phone-search { background: var(--cream-dim); border-radius: var(--radius-chip); padding: 8px 10px; font-size: 10.5px; color: var(--ink-soft); margin-bottom: 10px; }
 .app-soon-phone-chips { display: flex; gap: 6px; margin-bottom: 14px; }
 .app-soon-phone-chips span { width: 26px; height: 26px; border-radius: 50%; background: var(--cream-dim); display: flex; align-items: center; justify-content: center; font-size: 13px; }
@@ -1465,7 +1472,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .admin-table th { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); background: var(--cream-dim); text-align: left; }
 .admin-table tbody tr:last-child td { border-bottom: none; }
 .admin-table tfoot td { border-top: 2px solid var(--line); border-bottom: none; background: var(--cream-dim); }
-.stat-card .num { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; color: var(--ink); }
+.stat-card .num { font-family: var(--font-ui); font-weight: 700; font-size: 22px; color: var(--ink); }
 .stat-card .label { font-size: 11px; color: var(--ink-soft); font-weight: 600; text-transform: uppercase; }
 .stat-card.highlight { background: rgba(59,47,181,0.12); }
 .stat-card.highlight .num { color: var(--teal-deep); }
@@ -2058,7 +2065,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .site-footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 32px 0 20px; }
 .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 24px; margin-bottom: 20px; }
 .footer-col { display: flex; flex-direction: column; gap: 8px; }
-.footer-col h3 { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin: 0 0 2px; }
+.footer-col h3 { font-family: var(--font-ui); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin: 0 0 2px; }
 .footer-col a.small { color: var(--ink-soft); text-decoration: none; }
 .footer-col a.small:hover { color: var(--ink); text-decoration: underline; }
 .footer-bottom { text-align: center; border-top: 1px solid var(--line); padding-top: 16px; }
@@ -2823,7 +2830,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 @media print {
   .receipt-print {
     display: block; width: 100%; max-width: 300px; margin: 0 auto;
-    font-family: 'Space Grotesk', monospace, sans-serif; font-size: 12px; color: #000;
+    font-family: var(--font-ui); font-size: 12px; color: #000;
   }
   .receipt-print h3 { font-size: 15px; margin: 0 0 4px; }
   .receipt-center { text-align: center; margin: 2px 0; }
@@ -3103,7 +3110,7 @@ button.account-link-row:last-child { border-bottom: none; }
 .account-avatar {
   flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
   background: var(--iris); color: #fff; display: flex; align-items: center; justify-content: center;
-  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.02em;
+  font-family: var(--font-ui); font-weight: 700; font-size: 16px; letter-spacing: 0.02em;
 }
 .account-identite-texte { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
 .account-identite-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
