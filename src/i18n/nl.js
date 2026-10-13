@@ -1600,6 +1600,8 @@ export default {
       nextStepCount: 'Nog {n} stap(pen)',
       nextStepTitle: 'Volgende stap: {step}',
       nextStepGo: 'Verder',
+      stepOf: 'Stap {n} van {total}',
+      stepBack: 'Vorige stap',
       beforeValidation: 'Je kunt leveringen aannemen zodra Fairide je dossier heeft goedgekeurd (meestal binnen 2 werkdagen): je krijgt een e-mail.',
       beforeTwoOrders: 'Je levert alleen voor Fairide: je mag een tweede levering aannemen tijdens de eerste, op voorwaarde dat ze wordt opgehaald binnen {radius} km van het adres waar je de eerste levert — geen omweg. Eén levering tegelijk als je ook voor een ander platform levert.',
       beforeOneOrder: 'Je levert ook voor een ander platform: één Fairide-levering tegelijk, tot ze afgerond is. (Aanpasbaar onder “Andere platformen”; koeriers die alleen voor Fairide werken mogen er twee hebben.)',

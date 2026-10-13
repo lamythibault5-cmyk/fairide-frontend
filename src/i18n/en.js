@@ -1600,6 +1600,8 @@ export default {
       nextStepCount: '{n} step(s) left',
       nextStepTitle: 'Next step: {step}',
       nextStepGo: 'Continue',
+      stepOf: 'Step {n} of {total}',
+      stepBack: 'Previous step',
       beforeValidation: 'You can take deliveries as soon as Fairide has validated your file (usually within 2 working days): you will be notified by e-mail.',
       beforeTwoOrders: 'You only deliver for Fairide: you may take a second delivery during the first one, provided it is picked up within {radius} km of the address where you deliver the first — no detour. One delivery at a time if you also deliver for another platform.',
       beforeOneOrder: 'You also deliver for another platform: one Fairide delivery at a time, until it is completed. (Editable under “Other platforms”; couriers who only work for Fairide may hold two.)',

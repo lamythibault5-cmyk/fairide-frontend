@@ -160,13 +160,31 @@ export default function Onboarding() {
 
       {enDossier && (
         <>
-          <div className="courier-steps" role="tablist">
-            {ETAPES.map((e, i) => (
-              <button key={e} type="button" role="tab" aria-selected={courante === e} className={`courier-step${courante === e ? ' active' : ''}${etapeOk(e) ? ' done' : ''}`} onClick={() => setEtape(e)}>
-                <span className="courier-step-num">{etapeOk(e) ? '✓' : i + 1}</span><span>{(e === 'engagements' ? t('conformite.engagementsStep') : t(`courierOnboarding.step_${e}`)).replace(/^\d+\.\s*/, '')}</span>
-              </button>
-            ))}
-          </div>
+          {/* L'EN-TÊTE DE L'ACCUEIL DE L'APP (2026-10-13, plan UX) : retour rond, barre de progression, « Étape n sur 6 ».
+              La rangée de six onglets numérotés se lisait comme un formulaire à remplir dans le désordre ; la barre dit
+              où l'on en est d'un coup d'œil. Chaque segment reste un onglet cliquable (et lu par un lecteur d'écran)
+              pour revenir sur une étape. */}
+          {(() => {
+            const rang = ETAPES.indexOf(courante);
+            const nomEtape = (e) => (e === 'engagements' ? t('conformite.engagementsStep') : t(`courierOnboarding.step_${e}`)).replace(/^\d+\.\s*/, '');
+            return (
+              <>
+                <div className="courier-etape-tete">
+                  <button type="button" className="courier-etape-retour" disabled={rang <= 0} onClick={() => setEtape(ETAPES[rang - 1])} aria-label={t('courierOnboarding.stepBack')} title={t('courierOnboarding.stepBack')}>
+                    <Icone nom="retour" taille={18} />
+                  </button>
+                  <div className="courier-steps" role="tablist">
+                    {ETAPES.map((e) => (
+                      <button key={e} type="button" role="tab" aria-selected={courante === e} className={`courier-step${courante === e ? ' active' : ''}${etapeOk(e) ? ' done' : ''}`} onClick={() => setEtape(e)}>
+                        <span className="sr-only">{nomEtape(e)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="courier-etape-titre"><span>{t('courierOnboarding.stepOf', { n: rang + 1, total: ETAPES.length })}</span> · <b>{nomEtape(courante)}</b></p>
+              </>
+            );
+          })()}
 
           {courante === 'statut' && <EtapeStatut d={d} t={t} busy={busy} onChoose={(statusType) => action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType } }), t('courierOnboarding.toastStatusSaved')).then((ok) => ok && setEtape('identite'))} />}
           {courante === 'identite' && <EtapeIdentite d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('infos')} />}

@@ -1600,6 +1600,8 @@ export default {
       nextStepCount: 'Encore {n} étape(s)',
       nextStepTitle: 'Prochaine étape : {step}',
       nextStepGo: 'Continuer',
+      stepOf: 'Étape {n} sur {total}',
+      stepBack: 'Étape précédente',
       beforeValidation: 'Tu pourras prendre des courses dès que Fairide aura validé ton dossier (en général sous 2 jours ouvrés) : tu seras prévenu par e-mail.',
       beforeTwoOrders: 'Tu ne livres que pour Fairide : tu peux prendre une seconde course pendant la première, à condition qu\'elle se retire dans un rayon de {radius} km de l\'adresse où tu livres la première — pour ne pas faire de détour. Une seule course à la fois si tu livres aussi pour une autre plateforme.',
       beforeOneOrder: 'Tu livres aussi pour une autre plateforme : une seule course Fairide à la fois, le temps de la terminer. (Modifiable dans « Autres plateformes » ; les livreurs qui ne travaillent que pour Fairide peuvent en tenir deux.)',
