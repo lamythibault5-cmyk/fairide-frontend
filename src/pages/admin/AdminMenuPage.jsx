@@ -30,6 +30,9 @@ export default function AdminMenuPage() {
   }, [id]);
 
   useEffect(() => {
+    // Passage direct d'un commerce à l'autre (même route, autre :id) : on vide d'abord, sinon la carte du commerce
+    // précédent restait affichée sous le nom du suivant le temps du chargement — ou pour de bon s'il échouait.
+    setRestaurant(null); setFiche(null); setErreur('');
     charger();
     api(`/admin/restaurants/${id}`, { token }).then((d) => { setFiche(d); setNote(d.concierge?.adminNote || ''); }).catch((e) => toast(e.message, 'erreur'));
   }, [id, token]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -106,7 +109,7 @@ export default function AdminMenuPage() {
           <p className="small" style={{ margin: '4px 0 10px' }}>
             {tr('adminMenu.intro', { name: restaurant.name, n: (restaurant.menu || []).length })}
           </p>
-          <MenuPage modeAdmin contexte={{ restaurant, restoId: id, loadDashboard: charger }} />
+          <MenuPage key={id} modeAdmin contexte={{ restaurant, restoId: id, loadDashboard: charger }} />
         </>
       )}
     </div>

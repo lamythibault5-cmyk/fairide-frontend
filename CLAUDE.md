@@ -283,7 +283,9 @@ keep its prices, or add Fairide's commission to the whole card (× (1 + `commiss
 add-ons too). Choice, prices and signature go in one transaction, once (`fairide_rate_choice`). Structured `*-menu.json`
 imports no longer get name-guessed option groups (`optionsExact`): the file's choices, including « none », are final. A
 choice inside a choice (Habebe's « Formule + soft » → Spa/Pales) is flattened into the parent list (`aplatirChoix`): the
-model has one level of options.
+model has one level of options. The admin list's menu pill comes from the menu itself, not the « Fairide s'en occupe »
+request: 0 dishes → « Carte à importer » (filter of the same name, counted server-side), otherwise the price state.
+The importer closes an open request and its task, without e-mailing the business.
 
 ## Compliance (backlog of 2026-09-23)
 
@@ -418,7 +420,8 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   `ATTENTE_PORTE_MIN` / `APPELS_CLIENT_MIN` in [src/conformite.js](src/conformite.js) mirror the backend constants.
 - **E-mails** go through one branded wrapper (`../fairide-backend/emailEnveloppe.js`); team e-mails carry a subject tag
   (`[Commerces]`, `[Cartes]`, `[Livreurs]`, `[Messages]`, `[Comptes]`, `[Compta]`, `[Équipe]`) for Outlook rules.
-  Preview them all with `node scripts/apercu-emails.js` in the backend.
+  Preview them all with `node scripts/apercu-emails.js` in the backend. **No em dash in any e-mail** (founder, 2026-10-13):
+  texts were rewritten, and `envoyer()` runs `sansTiretsCadratins` on subject and body as a safety net; subjects end « | Fairide ».
 - **Couriers**: two statuses only (P2P removed); they set their minimum per ride and per km and only see offers above it
   (the customer's delivery fee rises to the cheapest courier's minimum, capped); **no delivery rating**; suspension only for
   fraud, serious misconduct or legal obligation; random check selfie at shift start (`controleSelfie.js`); grid of the 8
