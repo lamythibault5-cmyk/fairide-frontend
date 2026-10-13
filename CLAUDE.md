@@ -310,6 +310,11 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   (typed name + box = simple e-signature, eIDAS art. 25); a drawing sent anyway must be a valid PNG. Still required,
   because the law targets Fairide itself: courier ID check, non-EEA residence permit + professional card (CPS 175/1),
   biometric consent as its own box (GDPR art. 9), business number before publication, the menu's « C'est bon ».
+  Signup shape (2026-10-13): no « confirm password »; the business gives its **company number at signup** (legal name and
+  VAT derived; representative = the person signing up, one line), so « Configurer mes paiements » goes straight to Stripe;
+  the services screen ends with one « offert pendant le lancement » note (no formulas box, no terminal). Courier screen 2
+  is status + company number + vehicle only; bag and « another platform? » are in the profile's Infos step, the
+  municipality comes from the address. The courier profile opens on a « Prochaine étape » card.
 - **Merchant**: card signature, allergen attestation and professional declaration in
   [ConformiteCarte](src/components/conformite/ConformiteCarte.jsx) (menu page); allergens / VAT / alcohol
   per dish in the dish editor; allergy confirmation and ID check at the counter in the orders page.
