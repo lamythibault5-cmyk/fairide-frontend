@@ -4,10 +4,10 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 
-// « Tes prix sur Fairide » (fondateur, 2026-09-30) : par défaut, la carte affiche le prix sur place + la part de
-// Fairide (10 %), et le commerce reçoit son prix sur place. La barre ajoute de 0 à 10 % que le commerce GARDE ;
-// la part de Fairide ne bouge pas. Le serveur recalcule toute la carte (PUT /restaurants/:id/price-markup) et
-// retrouve les prix d'avant au retour à 0 %.
+// « Tes prix sur Fairide » — modèle du 13/10/2026 (fondateur). Par défaut, la carte affiche les prix du commerce et Fairide
+// garde 10 % du prix payé. La barre monte les prix de 0 à etat.max (+ 11,1 % en franchise TVA), la hausse qui rend au
+// commerce son prix entier ; jamais plus. Le serveur recalcule toute la carte (PUT /restaurants/:id/price-markup, arrondi au
+// 0,10 € supérieur, prixMagasin.js côté serveur) et retrouve les prix du commerce au retour à 0 %.
 const EXEMPLE_SUR_PLACE = 10;
 const euros = (v, locale) => v.toLocaleString(locale, { style: 'currency', currency: 'EUR' });
 
@@ -32,12 +32,13 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
   // franchise TVA (lettre du SPF Finances du 12/10/2026) : fairideVat = 0, les deux valent 10 %. Assujettie : 12,1 % et 10 %.
   const sansTva = !(Number(etat.fairideVat) > 0);
   const r = etat.fairideRate;
-  const affiche = EXEMPLE_SUR_PLACE * (1 + r + valeur / 100);
-  const recu = EXEMPLE_SUR_PLACE * (1 + valeur / 100);
-  const partFairide = EXEMPLE_SUR_PLACE * r;
-  const partFairideHt = EXEMPLE_SUR_PLACE * (etat.fairideRateHt ?? r);
+  // Même calcul que le serveur : prix du commerce × (1 + hausse), au 0,10 € supérieur ; Fairide garde r du prix payé.
+  const affiche = valeur > 0 ? Math.ceil(EXEMPLE_SUR_PLACE * (1 + valeur / 100) * 10 - 1e-6) / 10 : EXEMPLE_SUR_PLACE;
+  const partFairide = Math.round(affiche * r * 100) / 100;
+  const partFairideHt = Math.round(affiche * (etat.fairideRateHt ?? r) * 100) / 100;
+  const recu = affiche - partFairide;
   const tauxAffiche = (r * 100).toLocaleString(locale, { maximumFractionDigits: 1 });
-  // Pourcentages à une décimale, dans la langue de l'écran (12,1 / 12.1 pour la hausse maximale).
+  // Pourcentages à une décimale, dans la langue de l'écran (11,1 / 11.1 pour la hausse maximale).
   const pct = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
   const change = valeur !== etat.percent;
   const demande = etat.requested !== null && etat.requested !== undefined ? etat.requested : null;
@@ -71,7 +72,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
   return (
     <div className="card hausse-prix" id="menu-hausse-prix">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📈 {t('menuPage.markupTitle')}</h3>
-      <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.markupIntro', { rate: tauxAffiche })}</p>
+      <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.markupIntro', { rate: tauxAffiche, max: pct(etat.max) })}</p>
       <label htmlFor="hausse-prix-barre" className="small" style={{ fontWeight: 700, display: 'block' }}>
         {valeur === 0 ? t('menuPage.markupValueZero') : t('menuPage.markupValue', { p: pct(valeur) })}
       </label>
@@ -84,7 +85,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
       <div className="hausse-prix-exemple small" style={{ margin: '10px 0', padding: 10, borderRadius: 10, background: 'var(--surface-soft)' }}>
         <div>{t('menuPage.markupExample', { base: euros(EXEMPLE_SUR_PLACE, locale) })}</div>
         <div>👀 {t('menuPage.markupShown')} <b>{euros(affiche, locale)}</b></div>
-        <div>💚 {t('menuPage.markupYouGet')} <b>{euros(recu, locale)}</b>{valeur > 0 && <> ({t('menuPage.markupYouGetExtra', { amount: euros(recu - EXEMPLE_SUR_PLACE, locale) })})</>}</div>
+        <div>💚 {t('menuPage.markupYouGet')} <b>{euros(recu, locale)}</b>{recu < EXEMPLE_SUR_PLACE - 0.004 ? <> ({t('menuPage.markupYouGetLess', { amount: euros(EXEMPLE_SUR_PLACE - recu, locale) })})</> : <> ({t('menuPage.markupYouGetFull')})</>}</div>
         <div>🟢 {t('menuPage.markupFairide')} <b>{euros(partFairide, locale)}</b> {!sansTva && <span className="small">{t('menuPage.markupFairideDetail', { ht: euros(partFairideHt, locale), tva: euros(partFairide - partFairideHt, locale) })}</span>}</div>
       </div>
       {demande !== null && (

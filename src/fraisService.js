@@ -1,5 +1,5 @@
 // Frais de système Fairide — modèle du 2026-10-08 (fondateur) :
-//   - la part de Fairide sur les plats est DANS le prix affiché (prix de salle + 10 % ; sans TVA, Fairide étant sous le régime de la franchise), pas une ligne du panier ;
+//   - la part de Fairide sur les plats (10 % du prix payé, modèle du 13/10/2026 ; sans TVA, Fairide étant sous le régime de la franchise) n'est pas une ligne du panier ;
 //   - dans les frais de livraison, 10 % sont des frais de système (connexion, système, assurance des livreurs), COMPRIS dedans :
 //     rien ne s'ajoute au total du client, le livreur touche les 90 % restants de sa grille.
 // Même calcul que pricing.fraisService côté serveur (deliveryFairideRate) ; le montant exact reste toujours celui renvoyé par la
