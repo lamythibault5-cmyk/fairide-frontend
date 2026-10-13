@@ -222,9 +222,11 @@ Fait, vérifié dans un navigateur sur un backend local en mémoire (aucune requ
 - **Fondations** : jeton `--green`, pastilles beiges retirées, `btn-ghost` à 14 px, `btn-primary` retiré, rayons
   documentés tels que le code les définit (16 / 8 / 999 px).
 - **Commande payée** : écran iris plein.
+- **Phase 4, deuxième passe** : une seule taille de petit bouton (`.btn-sm`, 175 tailles en ligne remplacées), texte
+  d'erreur en classe (`.texte-erreur`, 44), `EtatVide` sur les écrans principaux (9), dossier livreur avec l'en-tête de
+  l'accueil de l'app (barre de progression, « Étape n sur 6 »).
 
 Reste :
-- R1 / L1 : le fondateur a déjà raccourci les inscriptions ; la mise en forme « une question par écran » du dossier
-  livreur reste à faire.
-- Phase 4 : styles en ligne (3 109) à ramener en classes, écran par écran ; SalesPage à refaire ; `EtatVide` partout.
+- Phase 4 : il reste 2 929 styles en ligne, surtout des espacements ponctuels — que le CLAUDE.md accepte ; on ne les
+  convertit pas en classes utilitaires (ce serait réinventer un framework CSS). SalesPage reste à refaire.
 - Essai sur de vrais téléphones (gestes) et de la vraie page Stripe (paiement).
