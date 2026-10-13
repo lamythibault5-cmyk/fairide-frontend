@@ -128,6 +128,18 @@ export function BoutonFacturationAbonnement({ detail, token, api, toast, tr, onC
   );
 }
 
+// État de la carte, d'après la carte elle-même (13 oct. 2026). Avant, la pastille venait de la demande « Fairide s'en
+// occupe » : restée « en attente » après un import par script, elle affichait « Carte à intégrer » sur Le Laakam et ses 156
+// plats, exactement comme sur Goodfellas qui n'en a aucun. Désormais : aucun plat → « Carte à importer » (demandée ou non
+// par le commerce) ; des plats → l'état des prix (magasin vérifiés, ou à vérifier).
+function PastilleCarte({ r, tr }) {
+  if (r.menuItemCount === null || r.menuItemCount === undefined) return null;
+  if (r.menuItemCount === 0) {
+    return <span className="pill" style={{ color: 'var(--orange)' }}>{r.conciergeStatus ? tr('adminRestos.menuToImportRequestedPill') : tr('adminRestos.menuToImportPill')}</span>;
+  }
+  return <span className="pill" style={{ color: r.inStorePricesCheckedAt ? 'var(--iris)' : 'var(--orange)' }}>{r.inStorePricesCheckedAt ? tr('adminRestos.inStorePricesPill') : tr('adminRestos.platformPricesPill')}</span>;
+}
+
 // Prix relevés en magasin, ou présumés d'une plateforme (prixMagasin.js côté serveur, 13 oct. 2026). Les cartes importées
 // d'Uber Eats portent des prix gonflés pour absorber leur commission ; seules les cartes relevées au comptoir sont marquées.
 // Une carte marquée propose au commerce, sur sa page « C'est bon », de garder ses prix ou d'ajouter la commission de Fairide.
@@ -182,7 +194,7 @@ export default function AdminRestaurantsPage() {
   const setFiltre = (k) => { const next = Object.fromEntries([...searchParams.entries()]); if (k && k !== 'all') next.status = k; else delete next.status; setSearchParams(next); };
 
   // Recherche, tri et statut admin sont faits par le serveur ; nature et « carte » affinent les lignes chargées.
-  const liste = useServerList('/admin/restaurants', { q, sort: triServeur, pageSize: PAGE_SIZE, extra: { adminStatus: ['pending', 'approved', 'blocked'].includes(filtre) ? filtre : '' } });
+  const liste = useServerList('/admin/restaurants', { q, sort: triServeur, pageSize: PAGE_SIZE, extra: { adminStatus: ['pending', 'approved', 'blocked'].includes(filtre) ? filtre : '', menu: filtre === 'carte' ? 'a_importer' : '' } });
   const { rows: restaurants, setRows: setRestaurants, total, loading, error, reload: load, loadMore } = liste;
   // Compteurs de TOUTE la base (GET /admin/restaurants/stats). Ils étaient calculés sur les lignes
   // chargées, donc sur le sous-ensemble déjà filtré : en filtrant « à valider », « vrais comptes »
@@ -352,8 +364,8 @@ export default function AdminRestaurantsPage() {
     commune: { get: (r) => r.commune || '-' }, cuisine: { get: (r) => r.cuisine || '-' },
     status: { get: (r) => STATUT_ADMIN(tr)[r.adminStatus] || r.adminStatus }, business: { get: (r) => BUSINESS_STATUS_LABELS[r.businessStatus]?.label || r.businessStatus }
   };
-  const visibles = useMemo(() => sortRows((restaurants || []).filter((r) => (filtre !== 'carte' || !!r.conciergeStatus) && natureOkResto(nature, r)), colonnes, sort), [restaurants, filtre, nature, sort]); // eslint-disable-line react-hooks/exhaustive-deps
-  const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), carte: a.carte + (r.conciergeStatus ? 1 : 0), real: a.real + (estTest(r) || estCompteSupprime(r) ? 0 : 1), deleted: a.deleted + (estCompteSupprime(r) ? 1 : 0), unlisted: a.unlisted + (!estTest(r) && !r.publicListed ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, carte: 0, real: 0, deleted: 0, unlisted: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
+  const visibles = useMemo(() => sortRows((restaurants || []).filter((r) => (filtre !== 'carte' || r.menuItemCount === 0) && natureOkResto(nature, r)), colonnes, sort), [restaurants, filtre, nature, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), carte: a.carte + (r.menuItemCount === 0 && !estTest(r) ? 1 : 0), real: a.real + (estTest(r) || estCompteSupprime(r) ? 0 : 1), deleted: a.deleted + (estCompteSupprime(r) ? 1 : 0), unlisted: a.unlisted + (!estTest(r) && !r.publicListed ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, carte: 0, real: 0, deleted: 0, unlisted: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
   // Chiffres affichés en tête et sur les pastilles : ceux du serveur (toute la base) dès qu'ils sont
   // là, sinon ceux des lignes chargées — pour que la page reste lisible même sans la route.
   const chiffres = stats
@@ -361,7 +373,7 @@ export default function AdminRestaurantsPage() {
     : kpi;
   const compteurStatut = (k) => {
     if (!stats) return k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : k === 'carte' && kpi.carte > 0 ? ` (${kpi.carte})` : '';
-    const n = { all: stats.total, pending: stats.pending, carte: stats.menuRequests, approved: stats.approved, blocked: stats.blocked }[k];
+    const n = { all: stats.total, pending: stats.pending, carte: stats.menuToImport ?? stats.menuRequests, approved: stats.approved, blocked: stats.blocked }[k];
     return Number.isFinite(n) ? ` (${n})` : '';
   };
   const tousCharges = restaurants && restaurants.length >= total;
@@ -384,7 +396,7 @@ export default function AdminRestaurantsPage() {
       <div className="admin-control-panel">
         <input aria-label={tr('adminRestos.phSearch')} placeholder={tr('adminRestos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
-          {[['all', tr('adminCommon.allM')], ['pending', tr('adminRestos.filterPending')], ['carte', tr('adminRestos.filterMenuRequest')], ['approved', tr('adminRestos.filterApproved')], ['blocked', tr('adminRestos.filterBlocked')]].map(([k, l]) => (
+          {[['all', tr('adminCommon.allM')], ['pending', tr('adminRestos.filterPending')], ['carte', tr('adminRestos.filterMenuToImport')], ['approved', tr('adminRestos.filterApproved')], ['blocked', tr('adminRestos.filterBlocked')]].map(([k, l]) => (
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{compteurStatut(k)}</div>
           ))}
         </div>
@@ -418,8 +430,7 @@ export default function AdminRestaurantsPage() {
                 {estTest(r) && <TestBadge />}
                 {!estTest(r) && <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>}
                 <span className="pill" style={{ color: biz?.color }}>{biz?.label}</span>
-                {r.conciergeStatus && <span className="pill gold">{r.conciergeStatus === 'en_cours' ? tr('adminRestos.menuInProgressPill') : tr('adminRestos.menuRequestPill')}</span>}
-                {!estTest(r) && <span className="pill" style={{ color: r.inStorePricesCheckedAt ? 'var(--iris)' : 'var(--orange)' }}>{r.inStorePricesCheckedAt ? tr('adminRestos.inStorePricesPill') : tr('adminRestos.platformPricesPill')}</span>}
+                {!estTest(r) && <PastilleCarte r={r} tr={tr} />}
               </div>
             </div>
             <div className="small">{r.commune} · {r.cuisine} · {Number(r.rating || 0).toFixed(1)}★</div>
@@ -434,7 +445,7 @@ export default function AdminRestaurantsPage() {
               {tr('adminRestos.ratesLine', { cancel: pct(r.cancellationRate), accept: pct(r.acceptanceRate), prep: r.avgPrepMinutes !== null ? tr('adminRestos.prepMinutes', { n: r.avgPrepMinutes }) : tr('adminRestos.prepNotMeasured') })}
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
-              <Link to={`/admin/restaurants/${r.id}/menu`} className={r.conciergeStatus ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
+              <Link to={`/admin/restaurants/${r.id}/menu`} className={r.menuItemCount === 0 ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
               {!estTest(r) && <button className={r.publicListed ? 'btn-outline' : 'btn-gold'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askListing(r)}>{r.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
               {r.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askApprove(r)}>{tr('adminCommon.approve')}</button>}
               {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
