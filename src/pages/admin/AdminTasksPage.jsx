@@ -18,6 +18,7 @@ import {
 } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
+import Icone from '../../components/Icone';
 
 const PAGE_SIZE = 25;
 const MODES = (tr) => [{ key: 'list', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }, { key: 'kanban', icon: '▦', label: tr('adminKanban.kanban') }];
@@ -191,7 +192,7 @@ export default function AdminTasksPage() {
             <>
               <b>{t.title}</b>
               <div className="small"><span style={{ color: TASK_PRIORITY_LABELS[t.priority]?.color }}>{TASK_PRIORITY_LABELS[t.priority]?.label}</span>{t.assignedToEmail ? ` · ${t.assignedToEmail}` : ''}</div>
-              {t.dueAt && <div className="small" style={{ color: t.dueState === 'overdue' ? 'var(--red)' : undefined }}>⏰ {fmtDateTime(t.dueAt)}</div>}
+              {t.dueAt && <div className="small" style={{ color: t.dueState === 'overdue' ? 'var(--red)' : undefined }}><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{fmtDateTime(t.dueAt)}</div>}
             </>
           )}
         />

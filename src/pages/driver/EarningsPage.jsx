@@ -67,7 +67,7 @@ export default function EarningsPage() {
             <div className="stat-card"><div className="num">{totaux.deliveries ?? 0}</div><div className="label">{t('driverPay.totalDeliveries')}</div></div>
           </div>
 
-          {aide && <div className="card"><p className="small" style={{ margin: 0 }}>ℹ️ {aide}</p></div>}
+          {aide && <div className="card"><p className="small" style={{ margin: 0 }}>{aide}</p></div>}
 
           {mois.length === 0 && lignes.length === 0 && <div className="empty">{t('driverPay.none')}</div>}
 

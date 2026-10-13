@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import ouvrirDocument from '../ouvrirDocument';
+import Icone from './Icone';
 
 // « Mes documents » dans Mon compte (livreur) : la pièce d'identité recto / verso déposée à l'inscription
 // (voir IdentityDocsPicker.jsx), l'attestation étudiant, et les autres pièces du dossier coursier, avec leur
@@ -55,7 +56,7 @@ export default function DriverDocuments() {
   const face = (side) => identite.find((d) => d.docType === kind && d.side === side) || (side === 'recto' ? identite.find((d) => !d.side) : null);
   const etudiant = docs.filter((d) => d.docType === 'school_certificate');
   const autres = docs.filter((d) => !IDENTITE.includes(d.docType) && d.docType !== 'school_certificate');
-  const etat = (d) => (d.verifiedAt ? { ic: '✅', txt: t('driverDocs.verified'), cls: 'pill teal' } : d.rejectedReason ? { ic: '❌', txt: d.rejectedReason, cls: 'pill' } : { ic: '⏳', txt: t('driverDocs.pending'), cls: 'pill' });
+  const etat = (d) => (d.verifiedAt ? { ic: <Icone nom="valider" taille={14} className="icone-texte" />, txt: t('driverDocs.verified'), cls: 'pill teal' } : d.rejectedReason ? { ic: <Icone nom="croix" taille={14} className="icone-texte" />, txt: d.rejectedReason, cls: 'pill' } : { ic: <Icone nom="horloge" taille={14} className="icone-texte" />, txt: t('driverDocs.pending'), cls: 'pill' });
   const idv = dossier.courier?.identity;
 
   function Face({ side }) {
@@ -69,8 +70,8 @@ export default function DriverDocuments() {
                l'icône document. Le clic passe par ouvrir(), qui va chercher une adresse signée. */
             !d.prive && estImage(d.fileUrl)
               ? <button type="button" className="doc-slot-lien" onClick={() => ouvrir(d)} aria-label={t('courierOnboarding.docView')}><img className="doc-slot-img" src={d.fileUrl} alt="" /></button>
-              : <button type="button" className="doc-slot-vide" onClick={() => ouvrir(d)} aria-label={t('courierOnboarding.docView')}>📄</button>
-          ) : <span className="doc-slot-vide" aria-hidden="true">📷</span>}
+              : <button type="button" className="doc-slot-vide" onClick={() => ouvrir(d)} aria-label={t('courierOnboarding.docView')}><Icone nom="document" taille={16} className="icone-texte" /></button>
+          ) : <span className="doc-slot-vide" aria-hidden="true"><Icone nom="apercu" taille={16} className="icone-texte" /></span>}
           <span className="doc-slot-texte">
             <b>{side === 'recto' ? t('authDocs.front') : t('authDocs.back')}</b>
             {d ? <span className={etat(d).cls} style={{ alignSelf: 'flex-start' }}>{etat(d).ic} {etat(d).txt}</span> : <span className="small">{t('driverDocs.missing')}</span>}
@@ -90,7 +91,7 @@ export default function DriverDocuments() {
   return (
     <div>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('driverDocs.intro')}</p>
-      {idv && idv.status === 'verified' && <p className="small" style={{ margin: '0 0 10px' }}>✅ {t('driverDocs.identityVerified', { provider: idv.provider === 'stripe_identity' ? 'Stripe Identity' : 'Fairide' })}</p>}
+      {idv && idv.status === 'verified' && <p className="small" style={{ margin: '0 0 10px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('driverDocs.identityVerified', { provider: idv.provider === 'stripe_identity' ? 'Stripe Identity' : 'Fairide' })}</p>}
       <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
         <b>{t(`courierOnboarding.doc_${kind}`)}</b>
         {identite.length === 0 && (
@@ -108,7 +109,7 @@ export default function DriverDocuments() {
       <div style={{ marginTop: 14 }}>
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
           <div>
-            <b>🎓 {t('courierOnboarding.doc_school_certificate')}</b> <span className="small">· {t('authDocs.optional')}</span>
+            <b><Icone nom="guide" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.doc_school_certificate')}</b> <span className="small">· {t('authDocs.optional')}</span>
             <p className="small" style={{ margin: '2px 0 0' }}>{t('authDocs.studentHelp')}</p>
           </div>
           <input ref={(el) => { entrees.current.etudiant = el; }} type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => deposer('school_certificate', null, e)} />

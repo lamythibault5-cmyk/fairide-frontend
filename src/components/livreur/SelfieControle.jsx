@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, apiUpload } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
+import Icone from '../Icone';
 
 /* Selfie de contrôle à la prise de service (CODE-14, DEC-23 ; serveur : controleSelfie.js).
  *
@@ -38,7 +39,7 @@ export default function SelfieControle({ token, onDepose }) {
   }
   return (
     <div className="card" role="alert" style={{ marginBottom: 12 }}>
-      <b>📸 {t('selfieControle.title')}</b>
+      <b><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('selfieControle.title')}</b>
       <p className="small" style={{ margin: '6px 0 10px' }}>{t('selfieControle.text')}</p>
       <input ref={fichier} type="file" accept="image/*" capture="user" style={{ display: 'none' }} onChange={envoyer} />
       <button type="button" className="btn-teal" disabled={envoi} onClick={() => fichier.current?.click()}>{envoi ? '…' : t('selfieControle.button')}</button>

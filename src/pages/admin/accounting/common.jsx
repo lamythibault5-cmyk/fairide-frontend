@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { SkeletonCards } from '../../../components/Skeleton';
 import { useLanguage } from '../../../context/LanguageContext';
 import { money } from '../adminUtils';
+import Icone from '../../../components/Icone';
 
 // Briques communes des onglets du groupe Finance : chargement avec état d'erreur et réessai (jamais un
 // squelette qui tourne pour toujours), pagination, liens vers les fiches, petit dialogue avec motif.
@@ -36,7 +37,7 @@ export function ErrorState({ error, onRetry }) {
   const { t: tr } = useLanguage();
   return (
     <div className="fin-error" role="alert">
-      <b>⚠️ {tr('adminAccounting.loadError')}</b>
+      <b><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{tr('adminAccounting.loadError')}</b>
       <p className="small">{error}</p>
       {onRetry && <button type="button" className="btn-outline" onClick={onRetry}>{tr('adminAccounting.retry')}</button>}
     </div>

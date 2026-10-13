@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import SousEcran from '../SousEcran';
+import Icone from '../Icone';
 
 // Interrupteur de service du commerce (Commandes). Il ne savait que « ouvert / fermé » : un commerce débordé fermait et
 // oubliait de rouvrir. Plan de test RES-9 (2 octobre 2026) : toucher l'interrupteur propose une PAUSE de 15, 30 ou
@@ -56,7 +57,7 @@ export default function InterrupteurService({ restaurant, restoId, token, toast,
           </div>
           {/* Plus rien à préparer aujourd'hui : stoppé jusqu'au lendemain 6 h, rouvre tout seul (fondateur, 2026-10-10). */}
           <div className="paiement-encart" style={{ marginBottom: 12 }}>
-            <button type="button" className="btn-gold" disabled={enCours} style={{ width: '100%', minHeight: 48 }} onClick={() => stopperJour(true)}>⛔ {t('ordersResto.stopTodayBtn')}</button>
+            <button type="button" className="btn-gold" disabled={enCours} style={{ width: '100%', minHeight: 48 }} onClick={() => stopperJour(true)}><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{t('ordersResto.stopTodayBtn')}</button>
             <p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.stopTodayHelp')}</p>
           </div>
           <button type="button" className="btn-outline" disabled={enCours} style={{ width: '100%', minHeight: 48 }} onClick={() => ouvrir(false)}>{t('ordersResto.closeUntilReopen')}</button>

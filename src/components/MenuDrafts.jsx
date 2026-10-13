@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import Icone from './Icone';
 
 // Brouillons de carte : un menu préparé à côté (carte d'été, nouvelle formule, changement de saison)
 // pendant que la carte actuelle reste visible des clients. Rien n'est en ligne tant que le restaurateur
@@ -167,7 +168,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
         <ul className="menu-staging-list">
           {brouillons.map((d) => (
             <li key={d.id}>
-              <span className="menu-staging-icon" aria-hidden="true">🗂️</span>
+              <span className="menu-staging-icon" aria-hidden="true"><Icone nom="dossier" taille={16} className="icone-texte" /></span>
               <span className="menu-staging-name">
                 <b>{d.name}</b> <span className="small">· {t('menuPage.draftsCount', { n: d.itemCount })} · {t('menuPage.draftsUpdated', { date: dateCourte(d.updatedAt) })}</span>
                 {d.publishedAt && <span className="pill teal" style={{ marginLeft: 6 }}>{t('menuPage.draftsPublishedOn', { date: dateCourte(d.publishedAt) })}</span>}
@@ -178,7 +179,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
               <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 13 }} disabled={!d.itemCount} onClick={() => setPublication(d)}>
                 {t('menuPage.draftsPublishShort')}
               </button>
-              <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => setSuppression(d)} title={t('menuPage.draftsDelete')} aria-label={t('menuPage.draftsDelete')}>🗑️</button>
+              <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => setSuppression(d)} title={t('menuPage.draftsDelete')} aria-label={t('menuPage.draftsDelete')}><Icone nom="croix" taille={16} className="icone-texte" /></button>
             </li>
           ))}
         </ul>
@@ -214,7 +215,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
                 </div>
                 <input value={l.desc} onChange={(e) => majLigne(l.cle, 'desc', e.target.value)} placeholder={t('menuPage.draftsItemDesc')} />
               </div>
-              <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => retirerLigne(l.cle)} title={t('menuPage.draftsRemoveItem')} aria-label={t('menuPage.draftsRemoveItem')}>🗑️</button>
+              <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => retirerLigne(l.cle)} title={t('menuPage.draftsRemoveItem')} aria-label={t('menuPage.draftsRemoveItem')}><Icone nom="croix" taille={16} className="icone-texte" /></button>
             </div>
           ))}
 

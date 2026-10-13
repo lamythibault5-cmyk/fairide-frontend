@@ -8,17 +8,19 @@ import { escapeHtml } from '../escapeHtml';
 import { StarsDisplay } from './Stars';
 import CertifiedBadge from './CertifiedBadge';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
+import { iconeHtml } from '../iconeHtml';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
 function cuisineEmoji(cuisine) {
-  return RESTAURANT_TYPES.find((t) => t.value === cuisine)?.emoji || '🍽️';
+  return RESTAURANT_TYPES.find((t) => t.value === cuisine)?.icone || 'restaurants'; // un nom d'icône (Icone.jsx)
 }
 
 function pinIcon(cuisine, active) {
   return L.divIcon({
     className: 'map-pin-wrap',
-    html: `<div class="map-pin${active ? ' active' : ''}"><span class="map-pin-emoji">${cuisineEmoji(cuisine)}</span></div>`,
+    html: `<div class="map-pin${active ? ' active' : ''}"><span class="map-pin-emoji">${iconeHtml(cuisineEmoji(cuisine), 16)}</span></div>`,
     iconSize: [34, 34],
     iconAnchor: [17, 32],
     popupAnchor: [0, -30]
@@ -28,7 +30,7 @@ function pinIcon(cuisine, active) {
 function homeIcon() {
   return L.divIcon({
     className: 'map-pin-wrap',
-    html: '<div class="map-pin map-pin-home"><span class="map-pin-emoji">🏠</span></div>',
+    html: '<div class="map-pin map-pin-home"><span class="map-pin-emoji"></span></div>',
     iconSize: [34, 34],
     iconAnchor: [17, 32],
     popupAnchor: [0, -30]
@@ -98,7 +100,7 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
         .addTo(mapRef.current)
         // L'adresse est celle du visiteur lui-même : il ne peut s'attaquer que lui-même. On l'échappe
         // quand même, parce qu'une adresse contenant « & » ou « < » s'affichait déjà de travers.
-        .bindPopup(`<b>🏠 ${escapeHtml(t('map.home'))}</b>${userLocation.address ? '<br/>' + escapeHtml(userLocation.address) : ''}`);
+        .bindPopup(`<b>${escapeHtml(t('map.home'))}</b>${userLocation.address ? '<br/>' + escapeHtml(userLocation.address) : ''}`);
       points.push([userLocation.lat, userLocation.lng]);
     }
 
@@ -138,7 +140,7 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
           <div className="map-detail-body">
             {selected.hasPromo && <span className="promo-badge" style={{ position: 'static', display: 'inline-block', marginBottom: 6 }}>{t('restoMap.promo')}</span>}
             <div className="pill-row">
-              <span className="pill teal">{cuisineEmoji(selected.cuisine)} {restaurantTypeLabel(selected.cuisine, t)}</span>
+              <span className="pill teal"><Icone nom={cuisineEmoji(selected.cuisine)} taille={14} className="icone-texte" /> {restaurantTypeLabel(selected.cuisine, t)}</span>
               <span className="pill gold">{selected.commune}{selected.neighborhood ? ' · ' + selected.neighborhood : ''}</span>
             </div>
             <h3 className="restaurant-header-name-row" style={{ margin: '4px 0' }}>
@@ -150,7 +152,7 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
               <span className="small">{selected.reviewCount > 0 ? t('map.reviewsCount', { count: selected.reviewCount }) : t('restaurantList.newBadge')}</span>
             </div>
             {selected.desc && <p className="small" style={{ margin: '6px 0' }}>{selected.desc}</p>}
-            <p className="small" style={{ margin: '6px 0', color: 'var(--ink-soft)' }}>📍 {selected.address}</p>
+            <p className="small" style={{ margin: '6px 0', color: 'var(--ink-soft)' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{selected.address}</p>
             <div className="row" style={{ gap: 8, marginTop: 10 }}>
               <button className="btn-teal" style={{ flex: 1 }} onClick={() => navigate(`/restaurants/${selected.id}`)}>
                 {t('map.viewRestaurant')}

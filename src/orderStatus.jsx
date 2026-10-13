@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLanguage, getLocale } from './context/LanguageContext';
+import Icone from './components/Icone';
 
 // `icon` porte maintenant un NOM DE TRACÉ (voir components/Icone.jsx) et non plus un emoji : les
 // consignes s'affichent côte à côte dans une rangée de pastilles au paiement, et quatre emoji
@@ -58,14 +59,14 @@ export function statusLabel(status, orderType, t, pourClient = false) {
 // qu'un livreur sera bien disponible avant de lancer la cuisson ; la seconde reste isolée de
 // "enLivraison" (déjà pris en charge, donc déjà réglé) pour la même raison qu'avant.
 export const ORDER_STAGES = [
-  { key: 'nouveau', label: 'Nouvelle · à traiter', icon: '🆕', defaultColor: '#D92D3C' },
-  { key: 'attenteConfirmationLivreur', label: 'En attente de la confirmation d\'un livreur', icon: '📣', defaultColor: '#B0459B' },
-  { key: 'preparation', label: 'En préparation', icon: '👨‍🍳', defaultColor: '#C8F03C' },
-  { key: 'attenteLivreur', label: 'Prête, en attente de l\'arrivée du livreur', icon: '⏳', defaultColor: '#E07A1F' },
-  { key: 'pretClient', label: 'Prête, en attente du client', icon: '⏳', defaultColor: '#E07A1F' },
-  { key: 'enLivraison', label: 'Livreur en route', icon: '🛵', defaultColor: '#2B7FB8' },
-  { key: 'terminee', label: 'Terminée', icon: '✅', defaultColor: '#14121F' },
-  { key: 'annulee', label: 'Refusée / annulée', icon: '🚫', defaultColor: '#8A8A8A' }
+  { key: 'nouveau', label: 'Nouvelle · à traiter', icon: 'cloche', defaultColor: '#D92D3C' },
+  { key: 'attenteConfirmationLivreur', label: 'En attente de la confirmation d\'un livreur', icon: 'megaphone', defaultColor: '#B0459B' },
+  { key: 'preparation', label: 'En préparation', icon: 'restaurants', defaultColor: '#C8F03C' },
+  { key: 'attenteLivreur', label: 'Prête, en attente de l\'arrivée du livreur', icon: 'horloge', defaultColor: '#E07A1F' },
+  { key: 'pretClient', label: 'Prête, en attente du client', icon: 'horloge', defaultColor: '#E07A1F' },
+  { key: 'enLivraison', label: 'Livreur en route', icon: 'scooter', defaultColor: '#2B7FB8' },
+  { key: 'terminee', label: 'Terminée', icon: 'valider', defaultColor: '#14121F' },
+  { key: 'annulee', label: 'Refusée / annulée', icon: 'interdit', defaultColor: '#8A8A8A' }
 ];
 
 export function orderStageKey(order) {
@@ -112,8 +113,8 @@ export function orderTypeColor(order) {
 export function orderTypeLabel(order, t) {
   const base = t
     ? (order.orderType === 'pickup' ? t('orderStatus.orderType.pickup') : t('orderStatus.orderType.delivery'))
-    : (order.orderType === 'pickup' ? '🏠 À emporter' : '🛵 Livraison');
-  if (order.scheduledFor) return `${base} · 🕐 ${formatDateTime(order.scheduledFor)}`;
+    : (order.orderType === 'pickup' ? 'À emporter' : 'Livraison');
+  if (order.scheduledFor) return `${base} · ${formatDateTime(order.scheduledFor)}`;
   return base;
 }
 
@@ -137,7 +138,7 @@ export function EcheanceAcceptation({ order }) {
   const urgent = minutes <= 5;
   return (
     <div className={`small echeance-acceptation${urgent ? ' urgente' : ''}`} role={urgent ? 'alert' : undefined}>
-      ⏳ {minutes > 0
+      <Icone nom="horloge" taille={16} className="icone-texte" />{' '}{minutes > 0
         ? t('orderStatus.acceptBefore', { time: formatTime(order.acceptDeadline), min: minutes })
         : t('orderStatus.acceptNow')}
     </div>

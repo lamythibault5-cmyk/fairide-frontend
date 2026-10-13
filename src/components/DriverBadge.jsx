@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Le livreur qui arrive, tel que le client le voit dans le suivi : sa photo de profil (déposée dans son dossier,
 // copiée sur la commande à la prise en charge — voir orders.driver_photo_url), son prénom et son téléphone.
@@ -20,10 +21,10 @@ export default function DriverBadge({ name, phone, photoUrl, size = 48 }) {
       {photoUrl && !erreur ? (
         <img className="driver-badge-photo" src={vignette(photoUrl, size * 2)} width={size} height={size} alt={t('mapClient.courierPhotoAlt', { name: name || '' })} loading="lazy" onError={() => setErreur(true)} />
       ) : (
-        <span className="driver-badge-photo driver-badge-initiales" style={{ width: size, height: size }} aria-hidden="true">{initiales || '🛵'}</span>
+        <span className="driver-badge-photo driver-badge-initiales" style={{ width: size, height: size }} aria-hidden="true">{initiales || <Icone nom="scooter" taille={16} className="icone-texte" />}</span>
       )}
       <span className="driver-badge-texte">
-        <span className="driver-badge-role">🛵 {t('mapClient.yourCourierLabel')}</span>
+        <span className="driver-badge-role"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('mapClient.yourCourierLabel')}</span>
         <b>{name}</b>
         {phone && <a className="driver-badge-tel" href={`tel:${String(phone).replace(/[^+\d]/g, '')}`}>{phone}</a>}
       </span>

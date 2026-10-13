@@ -9,6 +9,7 @@ import { dansTerminal, infosAppareil, etatImprimante, terminalAssocie, transmett
 import '../../terminal.css';
 import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPrinter';
 import { abonnerTerminalNavigateur, associerTerminalNavigateur, deconnecterTerminalNavigateur } from '../../terminalNavigateur';
+import Icone from '../../components/Icone';
 
 // Ticket de test fabriqué ici, sans passer par le serveur : il vérifie seulement le canal page → service Goodcom →
 // imprimante (installation). Le test « complet », par la file d'impression, reste le bouton plus bas.
@@ -174,7 +175,7 @@ export default function TerminalPage() {
                 <span className={`print-etat ${web.imprimante === 'ok' ? 'ok' : 'attente'}`}>{t('terminal.webActive')}</span>
                 {' '}{t('terminal.printerLabel')} : {t(`terminal.printer_${web.imprimante || 'unknown'}`)}
                 {web.dernierTicket ? ` · ${t('terminal.webLastTicket', { date: quand(web.dernierTicket) })}` : ''}
-                {web.derniereErreur ? ` · ⚠ ${t(`terminal.printer_${web.derniereErreur}`)}` : ''}
+                {web.derniereErreur ? ` · ${t(`terminal.printer_${web.derniereErreur}`)}` : ''}
               </p>
               <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-faint)' }}>{t('terminal.webLimit')}</p>
             </>
@@ -200,7 +201,7 @@ export default function TerminalPage() {
                 <div className="puces">
                   <span className={`print-etat ${x.online ? 'ok' : 'erreur'}`}>{x.online ? t('terminal.online') : t('terminal.offline')}</span>
                   {x.printerStatus && <span className={`print-etat ${x.printerStatus === 'ok' ? 'ok' : 'attente'}`}>{t('terminal.printerLabel')} : {t(`terminal.printer_${x.printerStatus}`)}</span>}
-                  {x.batteryLevel != null && <span className="print-etat attente">{t('terminal.battery', { n: x.batteryLevel })}{x.charging ? ' ⚡' : ''}</span>}
+                  {x.batteryLevel != null && <span className="print-etat attente">{t('terminal.battery', { n: x.batteryLevel })}{x.charging ? <Icone nom="eclair" taille={16} className="icone-texte" /> : ''}</span>}
                 </div>
                 <div className="small" style={{ marginTop: 4, color: 'var(--ink-faint)' }}>
                   {t('terminal.lastSeen', { date: quand(x.lastSeenAt) })}{x.appVersion ? ` · ${t('terminal.appVersion', { v: x.appVersion })}` : ''}

@@ -1,4 +1,5 @@
 import { RESTAURANT_TYPES } from '../menuCategories';
+import Icone from './Icone';
 
 /* VISUEL DE MARQUE quand un commerce n'a pas de photo (ou que sa photo ne charge pas).
    Un bloc gris ressemblait à une image cassée ; ici c'est un aplat Fairide — iris, iris pressé,
@@ -13,13 +14,13 @@ export function paletteDe(nom) {
 }
 
 export default function VisuelVide({ nom, cuisine, className = '', taille = 'carte' }) {
-  const emoji = RESTAURANT_TYPES.find((c) => c.value === cuisine)?.emoji;
+  const emoji = RESTAURANT_TYPES.find((c) => c.value === cuisine)?.icone; // nom d'icône (Icone.jsx)
   const initiale = String(nom || '').trim().charAt(0).toUpperCase();
   return (
     <span className={`visuel-vide visuel-vide--p${paletteDe(nom)} visuel-vide--${taille} ${className}`.trim()} aria-hidden="true">
       <span className="visuel-vide-cercle" />
       {initiale && <span className="visuel-vide-initiale">{initiale}</span>}
-      {emoji && <span className="visuel-vide-emoji">{emoji}</span>}
+      {emoji && <span className="visuel-vide-emoji"><Icone nom={emoji} taille={28} /></span>}
     </span>
   );
 }

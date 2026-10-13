@@ -179,7 +179,7 @@ export default function MapPage() {
               {cuisinesPresentes.map((c) => (
                 <button key={c.value} type="button" className={`cuisine-chip${cuisine === c.value ? ' active' : ''}`}
                   onClick={() => { setCuisine(c.value === cuisine ? '' : c.value); setPanneau(null); }}>
-                  <span className="emoji">{c.emoji}</span>{restaurantTypeLabel(c.value, t)}
+                  <span className="emoji"><Icone nom={c.icone} taille={18} /></span>{restaurantTypeLabel(c.value, t)}
                 </button>
               ))}
             </div>

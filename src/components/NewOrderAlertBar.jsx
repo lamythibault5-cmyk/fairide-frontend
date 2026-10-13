@@ -15,6 +15,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 
 import { SONNERIES, REPETITIONS } from '../hooks/useNewOrderAlert';
+import Icone from './Icone';
 
 export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme }) {
   const { t } = useLanguage();
@@ -75,7 +76,7 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
             à la prochaine commande. Choisir une sonnerie la fait aussi entendre. */}
         {setSonnerie && (
           <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} aria-expanded={reglagesOuverts} onClick={() => setReglagesOuverts((v) => !v)}>
-            ⚙️ {t('alertBar.settings')}
+            <Icone nom="reglages" taille={16} className="icone-texte" />{' '}{t('alertBar.settings')}
           </button>
         )}
         {reglagesOuverts && setSonnerie && (
@@ -91,18 +92,18 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
           </select>
         )}
         {alarmeEnCours && couperAlarme && (
-          <button type="button" className="btn-gold" style={{ padding: '6px 12px', fontSize: 13 }} onClick={couperAlarme}>🔕 {t('alertBar.stopAlarm')}</button>
+          <button type="button" className="btn-gold" style={{ padding: '6px 12px', fontSize: 13 }} onClick={couperAlarme}><Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.stopAlarm')}</button>
         )}
         {reglagesOuverts && setVolume && (
           <label className="alerte-volume" title={t('alertBar.volume')}>
-            <span aria-hidden="true">{volume === 0 ? '🔇' : volume < 50 ? '🔉' : '🔊'}</span>
+            <span aria-hidden="true">{volume === 0 ? <Icone nom="sonCoupe" taille={16} className="icone-texte" /> : volume < 50 ? <Icone nom="son" taille={16} className="icone-texte" /> : <Icone nom="son" taille={16} className="icone-texte" />}</span>
             <input type="range" min="0" max="100" step="5" value={volume} aria-label={t('alertBar.volume')} onChange={(e) => setVolume(e.target.value)} onPointerUp={() => testerAlarme?.()} onKeyUp={(e) => { if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) testerAlarme?.(); }} />
           </label>
         )}
         {reglagesOuverts && testerAlarme && (
           <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }}
             onClick={async () => { if (!(await testerAlarme())) toast(t('alertBar.testFailed'), 'erreur'); }}>
-            🔔 {t('alertBar.testAlarm')}
+            <Icone nom="cloche" taille={16} className="icone-texte" />{' '}{t('alertBar.testAlarm')}
           </button>
         )}
 

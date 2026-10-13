@@ -4,10 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import useInbox, { poserNonLus } from '../hooks/useInbox';
+import { afficherReaction } from '../reactions';
+import Icone from './Icone';
 
 // Rubrique « Messages » de Mon compte (tous rôles) : la liste des conversations avec Fairide, une
 // conversation ouverte (bulles, réponse, réactions) et le formulaire « Nouveau message à Fairide ».
 // Les routes /inbox… ne renvoient que les conversations du compte connecté (voir routes/adminMessages.js).
+// Les réactions restent enregistrées sous leur emoji (valeur côté serveur, déjà en base) ; à l'écran, une icône en traits.
 const REACTIONS = ['👍', '❤️', '✅', '🙏', '😕'];
 const MAX_BODY = 2000;
 
@@ -144,7 +147,7 @@ export default function InboxSection() {
               {courant.messages.map((m) => (
                 <li key={m.id} className={`inbox-bubble ${m.fromRole === 'admin' ? 'from-admin' : 'from-me'}${m.reaction ? ' is-reaction' : ''}`}>
                   <span className="inbox-bubble-author">{m.fromRole === 'admin' ? t('inbox.fairide') : t('inbox.me')}</span>
-                  <span className="inbox-bubble-body">{m.reaction || m.body}</span>
+                  <span className="inbox-bubble-body">{m.reaction ? afficherReaction(m.reaction) : m.body}</span>
                   <time className="inbox-bubble-date" dateTime={new Date(m.createdAt).toISOString()}>{fmtDate(m.createdAt, locale)}</time>
                 </li>
               ))}
@@ -152,7 +155,7 @@ export default function InboxSection() {
             </ol>
             <div className="inbox-reactions" role="group" aria-label={t('inbox.react')}>
               {REACTIONS.map((r) => (
-                <button key={r} type="button" className="inbox-reaction" disabled={envoi} onClick={() => envoyer({ reaction: r })} aria-label={`${t('inbox.react')} ${r}`}>{r}</button>
+                <button key={r} type="button" className="inbox-reaction" disabled={envoi} onClick={() => envoyer({ reaction: r })} aria-label={`${t('inbox.react')} ${r}`}>{afficherReaction(r)}</button>
               ))}
             </div>
             <div className="inbox-reply">
@@ -173,7 +176,7 @@ export default function InboxSection() {
     <div className="inbox-list-wrap">
       <div className="inbox-list-head">
         <p className="small" style={{ margin: 0 }}>{t('inbox.intro')}</p>
-        <button type="button" className="btn-outline" onClick={() => setVue('new')}>✉️ {t('inbox.newToFairide')}</button>
+        <button type="button" className="btn-outline" onClick={() => setVue('new')}><Icone nom="courrier" taille={16} className="icone-texte" />{' '}{t('inbox.newToFairide')}</button>
       </div>
       {erreur && (
         <div className="inbox-error" role="alert">
@@ -184,7 +187,7 @@ export default function InboxSection() {
       {!erreur && threads === null && <div className="skeleton skeleton-card" />}
       {threads && threads.length === 0 && (
         <div className="inbox-empty">
-          <span aria-hidden="true">💬</span>
+          <span aria-hidden="true"><Icone nom="bulle" taille={16} className="icone-texte" /></span>
           <b>{t('inbox.empty')}</b>
           <span className="small">{t('inbox.emptyHint')}</span>
         </div>

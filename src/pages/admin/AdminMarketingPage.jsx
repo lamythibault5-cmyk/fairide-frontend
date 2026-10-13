@@ -89,7 +89,7 @@ export default function AdminMarketingPage() {
       const part = c.recipientsCount ? Math.min(100, Math.round(((c.sentCount + c.failedCount) / c.recipientsCount) * 100)) : 0;
       return <><span>{c.sentCount}</span>{c.failedCount > 0 && <span style={{ color: 'var(--red)' }}> / {c.failedCount}</span>}{c.status === 'sending' && <div className="admin-progress"><span style={{ width: `${part}%` }} /></div>}</>;
     }, sortValue: (c) => c.sentCount || 0, align: 'right' },
-    { key: 'when', label: tr('adminMarketing.colWhen'), get: (c) => (c.status === 'scheduled' && c.scheduledAt ? `⏰ ${fmtDateTime(c.scheduledAt)}` : c.sentAt ? fmtDateTime(c.sentAt) : '-'), sortValue: (c) => new Date(c.sentAt || c.scheduledAt || 0).getTime() || 0 },
+    { key: 'when', label: tr('adminMarketing.colWhen'), get: (c) => (c.status === 'scheduled' && c.scheduledAt ? `${fmtDateTime(c.scheduledAt)}` : c.sentAt ? fmtDateTime(c.sentAt) : '-'), sortValue: (c) => new Date(c.sentAt || c.scheduledAt || 0).getTime() || 0 },
     { key: 'createdAt', label: tr('adminMarketing.colCreated'), get: (c) => fmtDateTime(c.createdAt), sortValue: (c) => new Date(c.createdAt || 0).getTime() || 0 }
   ];
 

@@ -589,7 +589,7 @@ export default function RestaurantMenu() {
       {onlineOrderingDisabled && (
         <div className="fiche-info">
           <span className="fiche-info-icone" aria-hidden="true"><Icone nom="horloge" taille={18} /></span>
-          <span>{t('restoMenuUi.orderingNotOpenInfo').replace(/^🕐\s*/, '')}</span>
+          <span>{t('restoMenuUi.orderingNotOpenInfo')}</span>
         </div>
       )}
 

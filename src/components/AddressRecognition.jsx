@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Reconnaissance de l'adresse d'un commerce pendant qu'on la tape (inscription restaurateur, création
 // du restaurant) : dès que rue, numéro et code postal sont là, le serveur déduit la commune et le
@@ -55,8 +56,8 @@ export default function AddressRecognition({ street, number, postalCode, city, o
   if (discret && (etat === 'loading' || etat === 'done')) return null;
   return (
     <div className={`address-reco${compact ? ' compact' : ''}`} aria-live="polite">
-      {etat === 'loading' && <p className="small" style={{ margin: 0 }}>🔎 {t('addressReco.searching')}</p>}
-      {etat === 'none' && <p className="small" style={{ margin: 0 }}>⚠️ {t('addressReco.notFound')}</p>}
+      {etat === 'loading' && <p className="small" style={{ margin: 0 }}><Icone nom="recherche" taille={16} className="icone-texte" />{' '}{t('addressReco.searching')}</p>}
+      {etat === 'none' && <p className="small" style={{ margin: 0 }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('addressReco.notFound')}</p>}
       {etat === 'error' && <p className="small" style={{ margin: 0 }}>{t('addressReco.error')}</p>}
       {(etat === 'none' || etat === 'error') && (
         <label className="address-reco-confirm">
@@ -64,11 +65,11 @@ export default function AddressRecognition({ street, number, postalCode, city, o
           <span>{t('addressReco.confirmLabel')}</span>
         </label>
       )}
-      {(etat === 'none' || etat === 'error') && confirme && <p className="small" style={{ margin: '4px 0 0' }}>✅ {t('addressReco.confirmedOk')}</p>}
+      {(etat === 'none' || etat === 'error') && confirme && <p className="small" style={{ margin: '4px 0 0' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('addressReco.confirmedOk')}</p>}
       {etat === 'done' && reco && (
         <>
           <p className="small" style={{ margin: 0 }}>
-            📍 <b>{t('addressReco.recognized')}</b>{' '}
+            <Icone nom="position" taille={16} className="icone-texte" />{' '}<b>{t('addressReco.recognized')}</b>{' '}
             {reco.commune ? t('addressReco.communeLine', { commune: reco.commune }) : t('addressReco.communeUnknown')}
             {reco.neighborhood ? ` · ${t('addressReco.neighbourhoodLine', { neighbourhood: reco.neighborhood })}` : ''}
           </p>
@@ -83,7 +84,7 @@ export default function AddressRecognition({ street, number, postalCode, city, o
                   </button>
                 ))}
               </div>
-              {choisi && <p className="small" style={{ margin: '6px 0 0' }}>✅ {t('addressReco.picked', { name: choisi })}</p>}
+              {choisi && <p className="small" style={{ margin: '6px 0 0' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('addressReco.picked', { name: choisi })}</p>}
             </div>
           )}
           {reco.candidates.length === 0 && <p className="small" style={{ margin: '6px 0 0', opacity: 0.7 }}>{t('addressReco.noCandidate')}</p>}

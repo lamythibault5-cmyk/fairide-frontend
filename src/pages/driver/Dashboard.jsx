@@ -438,7 +438,7 @@ export default function DriverDashboard() {
             )}
             <DeliveryTiming order={o} />
             <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: dec(o.driverFee ?? o.deliveryFee) })}</div>
-            {o.clientPhone && <div className="small">📞 <a href={`tel:${o.clientPhone}`}>{o.clientPhone}</a></div>}
+            {o.clientPhone && <div className="small"><Icone nom="telephone" taille={16} className="icone-texte" />{' '}<a href={`tel:${o.clientPhone}`}>{o.clientPhone}</a></div>}
             <div className="row" style={{ marginTop: 8, gap: 8 }}>
               <input aria-label={t('dashDriver.phCustomerCode')}
                 placeholder={t('dashDriver.phCustomerCode')}
@@ -464,7 +464,7 @@ export default function DriverDashboard() {
           <AlerteLivreurBar {...alerte} />
           {sac?.option === 'fairide' && sac.depositStatus !== 'refunded' && (
             <div className="card sac-fairide" style={{ borderLeft: '4px solid var(--iris)' }}>
-              <b>🟢 {t('dashDriver.bagTitle')}</b>
+              <b>{t('dashDriver.bagTitle')}</b>
               <p className="small" style={{ margin: '4px 0 0' }}>{t(`dashDriver.bag_${sac.depositStatus}`, { amount: Number(sac.depositAmount || 40).toFixed(0) })}</p>
             </div>
           )}

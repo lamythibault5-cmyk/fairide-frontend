@@ -289,10 +289,10 @@ export default function RestaurantList() {
   // Bio et Vegan sont dans la même rangée que les types de commerce, en fin de liste : des filtres comme les
   // autres (cumulables entre eux et avec un type), sans mise en avant.
   const cuisineOptions = [
-    { value: '', emoji: '🍽️', label: t('restaurantList.allCuisines') },
-    ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.emoji, label: restaurantTypeLabel(rt.value, t) })),
-    { value: '__bio', emoji: '🌿', label: t('restaurantList.chipBio'), regime: 'bio' },
-    { value: '__vegan', emoji: '🌱', label: t('restaurantList.chipVegan'), regime: 'vegan' }
+    { value: '', emoji: 'restaurants', label: t('restaurantList.allCuisines') },
+    ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.icone, label: restaurantTypeLabel(rt.value, t) })),
+    { value: '__bio', emoji: 'feuille', label: t('restaurantList.chipBio'), regime: 'bio' },
+    { value: '__vegan', emoji: 'feuille', label: t('restaurantList.chipVegan'), regime: 'vegan' }
   ];
   const chipActive = (opt) => (opt.regime === 'bio' ? bio : opt.regime === 'vegan' ? vegan : cuisine === opt.value);
   const surChip = (opt) => {
@@ -498,7 +498,7 @@ export default function RestaurantList() {
               aria-pressed={chipActive(opt)}
               onClick={() => surChip(opt)}
             >
-              <span className="emoji">{opt.emoji}</span>
+              <span className="emoji"><Icone nom={opt.emoji} taille={18} /></span>
               <span>{opt.label}</span>
             </button>
           )}

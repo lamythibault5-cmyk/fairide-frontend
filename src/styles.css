@@ -4653,3 +4653,11 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 /* Carte « Active ta position » qui remplace les courses disponibles tant que la position du livreur manque
    (components/livreur/PositionRequise.jsx) : un filet iris de 2 px pour qu elle se lise comme une étape à faire. */
 .position-requise { border: 2px solid var(--iris); }
+
+/* ICÔNES DANS LE TEXTE (2026-10-13) — elles remplacent les derniers emojis de l'application, admin compris (« plus aucun
+   emoji enfantin »). Un tracé posé au milieu d'une phrase s'aligne sur la ligne de base du texte qui l'entoure et prend sa
+   couleur ; dans un conteneur flex, il ne se laisse pas écraser. */
+.icone-texte { display: inline-block; vertical-align: -0.18em; flex: none; }
+.emoji svg, .visuel-vide-emoji svg, .map-pin-emoji svg, .business-zone-emoji svg, .app-soon-store-icon svg, .crm-hist-ico svg, .lg-marker svg { display: block; }
+.cuisine-chip .emoji, .business-zone-emoji, .app-soon-store-icon, .crm-hist-ico { display: inline-flex; align-items: center; justify-content: center; }
+.map-pin-emoji, .lg-marker > span { display: flex; align-items: center; justify-content: center; }

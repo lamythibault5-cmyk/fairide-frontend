@@ -64,7 +64,9 @@ export function categoryKind(value) {
 // defaultItemImageOrNull) — plus chaleureux qu'un simple texte "Pas de photo", et cohérent avec le
 // style déjà utilisé partout ailleurs dans l'app (RESTAURANT_TYPES, icônes de section...). Mêmes
 // heuristiques que categoryImage() ci-dessus pour les sections personnalisées ("Sauces", "Vins"...).
-const CATEGORY_EMOJI = { entree: '🥗', plat: '🍽️', dessert: '🍰', boisson: '🥤' };
+// Noms d'icônes (Icone.jsx) depuis le 2026-10-13 : c'étaient des emojis.
+const CATEGORY_EMOJI = { entree: 'bol', plat: 'restaurants', dessert: 'tasse', boisson: 'tasse' };
+// Renvoie un NOM D'ICÔNE (Icone.jsx), plus un emoji : <Icone nom={categoryEmoji(c)} />.
 export function categoryEmoji(value) {
   const known = CATEGORY_EMOJI[value];
   if (known) return known;
@@ -238,46 +240,46 @@ export function haversineDistanceKm(lat1, lng1, lat2, lng2) {
 }
 
 export const RESTAURANT_TYPES = [
-  { value: 'Pizza', emoji: '🍕' },
-  { value: 'Burgers', emoji: '🍔' },
-  { value: 'Sushi', emoji: '🍣' },
-  { value: 'Italien', emoji: '🍝' },
-  { value: 'Belge', emoji: '🍟' },
-  { value: 'Asiatique', emoji: '🥡' },
-  { value: 'Healthy', emoji: '🥗' },
-  { value: 'Végétarien', emoji: '🌱' },
-  { value: 'Kebab & Grill', emoji: '🥙' },
-  { value: 'Mexicain', emoji: '🌮' },
-  { value: 'Libanais', emoji: '🧆' },
-  { value: 'Espagnol', emoji: '🥘' },
-  { value: 'Fried Chicken', emoji: '🍗' },
-  { value: 'Coffee Shop', emoji: '☕' },
-  { value: 'Boulangerie', emoji: '🥐' },
-  { value: 'Boucherie', emoji: '🥩' },
-  { value: 'Supermarché', emoji: '🛒' },
-  { value: 'Night Shop', emoji: '🌙' },
-  { value: 'Poke Bowl', emoji: '🥣' },
-  { value: 'Thaïlandais', emoji: '🌶️' },
-  { value: 'Indien', emoji: '🍛' },
-  { value: 'Vietnamien', emoji: '🍜' },
-  { value: 'Chinois', emoji: '🥟' },
-  { value: 'Desserts & Glaces', emoji: '🍨' },
-  { value: 'Petit-déjeuner & Brunch', emoji: '🥞' },
-  { value: 'Sandwichs & Salades', emoji: '🥪' },
-  { value: 'Africain', emoji: '🍲' },
-  { value: 'Poisson & Fruits de mer', emoji: '🐟' },
-  { value: 'Friterie', emoji: '🍟' },
-  { value: 'Coréen', emoji: '🍚' },
-  { value: 'Marocain', emoji: '🕌' },
-  { value: 'Bubble Tea', emoji: '🧋' },
-  { value: 'Ramen', emoji: '🍥' },
+  { value: 'Pizza', icone: 'pizza' },
+  { value: 'Burgers', icone: 'burger' },
+  { value: 'Sushi', icone: 'poisson' },
+  { value: 'Italien', icone: 'bol' },
+  { value: 'Belge', icone: 'frites' },
+  { value: 'Asiatique', icone: 'bol' },
+  { value: 'Healthy', icone: 'feuille' },
+  { value: 'Végétarien', icone: 'feuille' },
+  { value: 'Kebab & Grill', icone: 'restaurants' },
+  { value: 'Mexicain', icone: 'restaurants' },
+  { value: 'Libanais', icone: 'restaurants' },
+  { value: 'Espagnol', icone: 'bol' },
+  { value: 'Fried Chicken', icone: 'burger' },
+  { value: 'Coffee Shop', icone: 'tasse' },
+  { value: 'Boulangerie', icone: 'commerce' },
+  { value: 'Boucherie', icone: 'commerce' },
+  { value: 'Supermarché', icone: 'sac' },
+  { value: 'Night Shop', icone: 'sac' },
+  { value: 'Poke Bowl', icone: 'bol' },
+  { value: 'Thaïlandais', icone: 'bol' },
+  { value: 'Indien', icone: 'bol' },
+  { value: 'Vietnamien', icone: 'bol' },
+  { value: 'Chinois', icone: 'bol' },
+  { value: 'Desserts & Glaces', icone: 'tasse' },
+  { value: 'Petit-déjeuner & Brunch', icone: 'tasse' },
+  { value: 'Sandwichs & Salades', icone: 'restaurants' },
+  { value: 'Africain', icone: 'bol' },
+  { value: 'Poisson & Fruits de mer', icone: 'poisson' },
+  { value: 'Friterie', icone: 'frites' },
+  { value: 'Coréen', icone: 'bol' },
+  { value: 'Marocain', icone: 'bol' },
+  { value: 'Bubble Tea', icone: 'tasse' },
+  { value: 'Ramen', icone: 'bol' },
   // Cuisine saine "vrai restaurant" (plats à l'assiette, service à table) — distincte de Healthy
   // ci-dessus qui reste le format rapide bowls/wraps/smoothies à emporter.
-  { value: 'Cuisine Saine', emoji: '🥦' },
+  { value: 'Cuisine Saine', icone: 'feuille' },
   // Grandes portions à partager, pensées pour toute la famille (4-6 pers.) — distinct des menus
   // individuels des autres types.
-  { value: 'Cuisine Familiale', emoji: '👨‍👩‍👧‍👦' },
-  { value: 'Autre', emoji: '🍽️' }
+  { value: 'Cuisine Familiale', icone: 'personnes' },
+  { value: 'Autre', icone: 'restaurants' }
 ];
 
 export function restaurantTypeLabel(value, t) {

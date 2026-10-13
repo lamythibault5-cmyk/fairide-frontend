@@ -874,7 +874,7 @@ export default function Account() {
             {/* Contrat d'abord : l'abonnement ne s'active qu'une fois la version en vigueur lue et acceptée (serveur : 409 CONTRACT_REQUIRED). */}
             {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && !restaurant.isDemo && restaurant.onboarding && !restaurant.onboarding.contractAccepted && (
               <div className="paiement-encart" style={{ marginBottom: 12 }}>
-                <b>📜 {t('accountUi.subContractTitle')}</b>
+                <b>{t('accountUi.subContractTitle')}</b>
                 <p className="small" style={{ margin: '4px 0 8px' }}>{t('accountUi.subContractText')}</p>
                 <button type="button" className="btn-gold" onClick={() => { setOuvertes((prev) => new Set(prev).add('contrat')); setTimeout(() => document.getElementById('section-contrat')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>{t('accountUi.subContractBtn')}</button>
               </div>
@@ -965,13 +965,13 @@ export default function Account() {
                 </thead>
                 <tbody>
                   {[
-                    { cle: 'delivery', icone: '🚴', nom: t('accountUi.delivery'), valeur: offersDelivery, set: setOffersDelivery,
+                    { cle: 'delivery', icone: 'scooter', nom: t('accountUi.delivery'), valeur: offersDelivery, set: setOffersDelivery,
                       effet: t('accountUi.svcDeliveryDesc') },
-                    { cle: 'pickup', icone: '🥡', nom: t('accountUi.pickup'), valeur: offersPickup, set: setOffersPickup,
+                    { cle: 'pickup', icone: 'sac', nom: t('accountUi.pickup'), valeur: offersPickup, set: setOffersPickup,
                       effet: t('accountUi.svcPickupDesc') }
                   ].map((s) => (
                     <tr key={s.cle} className={s.valeur ? '' : 'service-off'}>
-                      <td><b>{s.icone} {s.nom}</b></td>
+                      <td><b><Icone nom={s.icone} taille={16} className="icone-texte" /> {s.nom}</b></td>
                       <td className="col-actif">
                         {/* Le libellé rend toute la cellule cliquable, et nomme la case pour un lecteur d'écran :
                             une case seule n'annoncerait que « coché », sans dire de quel service il s'agit. */}
@@ -988,7 +988,7 @@ export default function Account() {
             </div>
             {offersPickup && (
               <fieldset className="paiement-encart" style={{ margin: '12px 0', border: 0 }}>
-                <legend style={{ fontWeight: 700, padding: 0, marginBottom: 6 }}>💶 {t('accountUi.pickupPayTitle')}</legend>
+                <legend style={{ fontWeight: 700, padding: 0, marginBottom: 6 }}><Icone nom="euro" taille={16} className="icone-texte" />{' '}{t('accountUi.pickupPayTitle')}</legend>
                 {[
                   { v: 'online', titre: t('accountUi.pickupPayOnline'), texte: t('accountUi.pickupPayOnlineText') },
                   { v: 'on_site', titre: t('accountUi.pickupPayOnSiteOnly'), texte: t('accountUi.pickupPayOnSiteOnlyText') },
@@ -999,7 +999,7 @@ export default function Account() {
                     <span><b>{o.titre}</b><br /><span className="small">{o.texte}</span></span>
                   </label>
                 ))}
-                {pickupPaymentMode !== 'online' && <p className="small" style={{ margin: '4px 0 0' }}>⚠️ {t('accountUi.pickupPayNoShowWarn')}</p>}
+                {pickupPaymentMode !== 'online' && <p className="small" style={{ margin: '4px 0 0' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('accountUi.pickupPayNoShowWarn')}</p>}
               </fieldset>
             )}
             {/* Récapitulatif vivant : le restaurateur voit la conséquence de sa combinaison avant

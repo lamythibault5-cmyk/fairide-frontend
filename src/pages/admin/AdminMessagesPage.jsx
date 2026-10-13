@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
+import { afficherReaction } from '../../reactions';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -181,7 +182,7 @@ function ThreadDrawer({ id, token, tr, toast, onClose, onChanged }) {
             {data.messages.map((m) => (
               <li key={m.id} className={`msg-bubble ${m.fromRole === 'admin' ? 'from-admin' : 'from-user'}${m.reaction ? ' is-reaction' : ''}`}>
                 <span className="msg-bubble-author">{m.fromRole === 'admin' ? `${tr('adminCommon.fairide')}${m.authorEmail ? ` · ${m.authorEmail}` : ''}` : th.userName}</span>
-                <span className="msg-bubble-body">{m.reaction || m.body}</span>
+                <span className="msg-bubble-body">{m.reaction ? afficherReaction(m.reaction) : m.body}</span>
                 <span className="msg-bubble-date">{fmtDateTime(m.createdAt)}</span>
               </li>
             ))}
@@ -393,7 +394,7 @@ function ComposeTab({ token, tr, toast, onSent }) {
                 <ul className="msg-user-results">
                   {userResults.length === 0 && <li><span className="small" style={{ padding: '8px 10px', display: 'block' }}>{tr('adminMessages.noUserFound')}</span></li>}
                   {userResults.map((u) => (
-                    <li key={u.id}><button type="button" onClick={() => ajouterUser(u)}><b>{u.name}</b><span className="small">{u.email} · {roleLabel(tr, u.role)}{u.isTest ? ' · 🧪' : ''}</span></button></li>
+                    <li key={u.id}><button type="button" onClick={() => ajouterUser(u)}><b>{u.name}</b><span className="small">{u.email} · {roleLabel(tr, u.role)}{u.isTest ? ' ·' : ''}</span></button></li>
                   ))}
                 </ul>
               )}

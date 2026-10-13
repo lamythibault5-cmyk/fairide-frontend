@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
+import Icone from '../Icone';
 
 // Demandes de suppression de compte des livreurs et restaurateurs (fondateur, 2026-09-19) : leur code de
 // confirmation n'arrive pas dans leur boîte mais ici, dans le tableau de bord, en plus de l'e-mail à l'équipe.
@@ -36,7 +37,7 @@ export default function DeletionRequestsPanel({ onHandled }) {
   const role = (r) => t(r === 'driver' ? 'adminHome.deletionRoleDriver' : r === 'restaurant' ? 'adminHome.deletionRoleRestaurant' : 'adminHome.deletionRoleOther');
   return (
     <section className="card" id="suppressions" style={{ marginTop: 12 }}>
-      <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🗑️ {t('adminHome.deletionsTitle')}</h3>
+      <h3 style={{ margin: '0 0 4px', fontSize: 15 }}><Icone nom="croix" taille={16} className="icone-texte" />{' '}{t('adminHome.deletionsTitle')}</h3>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('adminHome.deletionsIntro')}</p>
       {enAttente.length === 0 && <p className="small">{t('adminHome.deletionsNone')}</p>}
       {enAttente.map((r) => (

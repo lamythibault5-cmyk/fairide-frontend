@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import SousEcran from '../SousEcran';
+import Icone from '../Icone';
 
 // Mon commerce › Commandes et capacité (fondateur, 2026-10-01) : jusqu'où le commerce livre, et combien de
 // commandes il accepte par jour. Le plafond de commandes est « pas de limite » par défaut ; le restaurateur ajuste
@@ -67,7 +68,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
         <>
           {restaurant.offersDelivery !== false && (
             <div className="field" role="group" aria-labelledby="capacite-rayon-titre">
-              <span className="titre-groupe" id="capacite-rayon-titre">🛵 {t('editResto.capacityRadiusTitle')}</span>
+              <span className="titre-groupe" id="capacite-rayon-titre"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('editResto.capacityRadiusTitle')}</span>
               <p className="small" style={{ margin: '0 0 8px' }}>{t('editResto.capacityRadiusHelp')}</p>
               <label className="row small" style={{ gap: 8, alignItems: 'center', marginBottom: 8 }}>
                 <input type="checkbox" checked={rayonLibre} onChange={(e) => { setRayonLibre(e.target.checked); if (e.target.checked) setRayon(etat.defaultRadiusKm || RAYON_DEFAUT); }} />
@@ -85,7 +86,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
           )}
 
           <div className="field" role="group" aria-labelledby="capacite-plafond-titre">
-            <span className="titre-groupe" id="capacite-plafond-titre">🧾 {t('editResto.capacityCapTitle')}</span>
+            <span className="titre-groupe" id="capacite-plafond-titre"><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('editResto.capacityCapTitle')}</span>
             <p className="small" style={{ margin: '0 0 8px' }}>{t('editResto.capacityCapHelp')}</p>
             <label className="row small" style={{ gap: 8, alignItems: 'center', marginBottom: 8 }}>
               <input type="checkbox" checked={plafondLibre} onChange={(e) => setPlafondLibre(e.target.checked)} />
@@ -103,7 +104,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
           </div>
 
           <div className="field">
-            <label htmlFor="capacite-minimum" className="titre-groupe">🧺 {t('editResto.minOrderTitle')}</label>
+            <label htmlFor="capacite-minimum" className="titre-groupe">{t('editResto.minOrderTitle')}</label>
             <p className="small" style={{ margin: '0 0 8px' }}>{t('editResto.minOrderHelp')}</p>
             <div className="row" style={{ gap: 8, alignItems: 'center' }}>
               <input id="capacite-minimum" inputMode="decimal" value={minimum} onChange={(e) => setMinimum(e.target.value)} placeholder={t('editResto.minOrderNone')} style={{ width: 120 }} />
@@ -112,7 +113,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
           </div>
 
           <p className="small" style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--surface-soft)' }}>
-            🥡 {t('editResto.capacityStockHint')} <Link to="/dashboard/menu" onClick={onFermer}>{t('editResto.capacityStockLink')}</Link>
+            <Icone nom="sac" taille={16} className="icone-texte" />{' '}{t('editResto.capacityStockHint')} <Link to="/dashboard/menu" onClick={onFermer}>{t('editResto.capacityStockLink')}</Link>
           </p>
         </>
       )}

@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import { abonnementOuvert, dateOuvertureAbonnement } from '../launch';
+import Icone from './Icone';
 
 // Remise de carte et mise en ligne.
 //
@@ -18,7 +19,7 @@ function Etape({ fait, children }) {
   // titre de la carte, et débordaient sur trois lignes au téléphone.
   return (
     <li style={{ margin: '6px 0', listStyle: 'none', display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 14, lineHeight: 1.45 }}>
-      <span aria-hidden="true">{fait ? '✅' : '⬜'}</span>
+      <span aria-hidden="true">{fait ? <Icone nom="valider" taille={16} className="icone-texte" /> : null}</span>
       <span style={{ flex: 1, opacity: fait ? 0.7 : 1 }}>{children}</span>
     </li>
   );

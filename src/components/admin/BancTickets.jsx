@@ -105,7 +105,7 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
   const heure = (d) => (d ? new Date(d).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—');
   return (
     <div className="banc-tickets">
-      <h4 style={{ margin: '0 0 4px' }}>🧪 {tr('simulation.benchTitle')}</h4>
+      <h4 style={{ margin: '0 0 4px' }}>{tr('simulation.benchTitle')}</h4>
       <p className="small" style={{ margin: '0 0 10px', maxWidth: 760 }}>{tr('simulation.benchIntro')}</p>
 
       <div className={`banc-terminal${reel ? (reel.online ? ' est-connecte' : ' est-hors-ligne') : ''}`}>

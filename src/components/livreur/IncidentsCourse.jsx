@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 import ConfirmDialog from '../ConfirmDialog';
 import { ATTENTE_PORTE_MIN, APPELS_CLIENT_MIN } from '../../conformite';
+import Icone from '../Icone';
 
 // Incidents d'une course, côté livreur (plan de test de bout en bout, 2 octobre 2026) — voir « INCIDENTS DE LIVRAISON »
 // dans routes/orders.js côté serveur :
@@ -73,7 +74,7 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             {order.clientPhone && (
               <button type="button" className="btn-teal" style={{ padding: '10px 16px', fontSize: 14 }} disabled={enCours} onClick={appelerClient}>
-                📞 {t('dashDriver.incident_callClient')}
+                <Icone nom="telephone" taille={16} className="icone-texte" />{' '}{t('dashDriver.incident_callClient')}
               </button>
             )}
             {peutClore && (

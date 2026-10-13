@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Barre de recherche d'adresse : on tape le début (« avenue georges henri 12 »), le serveur propose des
 // adresses belges (GET /restaurants/lookup/suggest, Photon/OpenStreetMap), on en choisit une et les
@@ -59,7 +60,7 @@ export default function AddressSearch({ onSelect, compact = false }) {
 
   return (
     <div className={`address-search${compact ? ' compact' : ''}`} ref={boite}>
-      <label htmlFor="address-search-input">🔎 {t('addressSearch.label')}</label>
+      <label htmlFor="address-search-input"><Icone nom="recherche" taille={16} className="icone-texte" />{' '}{t('addressSearch.label')}</label>
       <input
         id="address-search-input" value={q} autoComplete="off" role="combobox" aria-expanded={ouvert} aria-controls="address-search-list"
         onChange={(e) => setQ(e.target.value)} onFocus={() => suggestions.length && setOuvert(true)} onKeyDown={clavier}
