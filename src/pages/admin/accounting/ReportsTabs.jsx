@@ -153,13 +153,20 @@ export function VatTab({ token, toast, periodKey }) {
 
   return (
     <>
+      {/* Franchise TVA (lettre du SPF Finances du 12/10/2026) : pas de déclaration périodique — le XML Intervat (VATConsignment)
+          ne sert pas ; seules les grilles 55/56 comptent, pour la déclaration spéciale 629. */}
+      {summary.data?.vatRegime === 'franchise' && (
+        <div className="card" style={{ borderLeft: '3px solid var(--iris)' }}>
+          <p className="small" style={{ margin: 0 }}>{tr('adminAccounting.vatFranchiseBanner')}</p>
+        </div>
+      )}
       <div className="card" style={{ borderLeft: '3px solid var(--gold-deep)' }}>
         <p className="small" style={{ margin: 0 }}>{tr('adminAccounting.vatDisclaimer')}</p>
       </div>
       <div className="fin-toolbar">
         <span className="spacer" />
         <button type="button" className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
-        <button type="button" className="btn-teal" disabled={busy} onClick={downloadXml}>{busy ? '...' : tr('adminAccounting.downloadXml')}</button>
+        {summary.data?.vatRegime !== 'franchise' && <button type="button" className="btn-teal" disabled={busy} onClick={downloadXml}>{busy ? '...' : tr('adminAccounting.downloadXml')}</button>}
       </div>
       <LoadState state={summary} skeleton={2}>
         {(d) => {

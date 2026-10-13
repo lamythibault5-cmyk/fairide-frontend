@@ -71,6 +71,9 @@ export default function CommissionStatements() {
   ];
   const groupes = [['week', t('statements.byWeek')], ['month', t('statements.byMonth')], ['quarter', t('statements.byQuarter')]];
   const T = data?.totals;
+  // Fairide sous le régime de la franchise TVA (lettre du SPF Finances du 12/10/2026) : sa commission ne porte pas de TVA.
+  // Une période sans TVA n'affiche qu'une colonne « Commission (sans TVA) » au lieu de HTVA / TVA 0,00 € / TTC.
+  const sansTva = !(Number(T?.vat) > 0);
 
   return (
     <div>
@@ -121,9 +124,9 @@ export default function CommissionStatements() {
             <div className="stat-grid" style={{ marginBottom: 0 }}>
               <div className="stat-card"><div className="num">{T.count}</div><div className="label">{t('statements.orders')}</div></div>
               <div className="stat-card"><div className="num">{euro(T.sales)}</div><div className="label">{t('statements.sales')}</div></div>
-              <div className="stat-card"><div className="num">{euro(T.commissionHt)}</div><div className="label">{t('statements.commissionExVat')}</div></div>
-              <div className="stat-card"><div className="num">{euro(T.vat)}</div><div className="label">{t('statements.vat')}</div></div>
-              <div className="stat-card highlight"><div className="num">{euro(T.ttc)}</div><div className="label">{t('statements.commissionIncVat')}</div></div>
+              {!sansTva && <div className="stat-card"><div className="num">{euro(T.commissionHt)}</div><div className="label">{t('statements.commissionExVat')}</div></div>}
+              {!sansTva && <div className="stat-card"><div className="num">{euro(T.vat)}</div><div className="label">{t('statements.vat')}</div></div>}
+              <div className="stat-card highlight"><div className="num">{euro(T.ttc)}</div><div className="label">{t(sansTva ? 'statements.commissionNoVat' : 'statements.commissionIncVat')}</div></div>
               <div className="stat-card"><div className="num">{(T.avgRate * 100).toFixed(1)} %</div><div className="label">{t('statements.avgRate')}</div></div>
             </div>
           </div>
@@ -145,9 +148,9 @@ export default function CommissionStatements() {
                     </div>
                   </div>
                   <div className="statements-group-totals">
-                    <div><span className="small">{t('statements.commissionExVat')}</span><b>{euro(g.totals.commissionHt)}</b></div>
-                    <div><span className="small">{t('statements.vat')}</span><b>{euro(g.totals.vat)}</b></div>
-                    <div><span className="small">TTC</span><b>{euro(g.totals.ttc)}</b></div>
+                    {!sansTva && <div><span className="small">{t('statements.commissionExVat')}</span><b>{euro(g.totals.commissionHt)}</b></div>}
+                    {!sansTva && <div><span className="small">{t('statements.vat')}</span><b>{euro(g.totals.vat)}</b></div>}
+                    <div><span className="small">{sansTva ? t('statements.commissionNoVat') : 'TTC'}</span><b>{euro(g.totals.ttc)}</b></div>
                   </div>
                   <span aria-hidden="true" style={{ fontSize: 18, transform: ouvert ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>›</span>
                 </button>
@@ -160,9 +163,9 @@ export default function CommissionStatements() {
                           <th>{t('statements.colOrder')}</th>
                           <th className="num">{t('statements.colOrderAmount')}</th>
                           <th className="num">{t('statements.colRate')}</th>
-                          <th className="num">{t('statements.commissionExVat')}</th>
-                          <th className="num">{t('statements.vat')}</th>
-                          <th className="num">TTC</th>
+                          {!sansTva && <th className="num">{t('statements.commissionExVat')}</th>}
+                          {!sansTva && <th className="num">{t('statements.vat')}</th>}
+                          <th className="num">{sansTva ? t('statements.commissionNoVat') : 'TTC'}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -172,8 +175,8 @@ export default function CommissionStatements() {
                             <td><b>#{String(o.id).slice(0, 8)}</b><div className="small">{o.typeLabel}{o.promoDiscount > 0 ? ` · ${t('statements.discount', { n: euro(o.promoDiscount) })}` : ''}</div></td>
                             <td className="num">{euro(o.subtotal)}</td>
                             <td className="num">{(o.rate * 100).toFixed(1)} %</td>
-                            <td className="num">{euro(o.commission)}</td>
-                            <td className="num">{euro(o.commissionVat)}</td>
+                            {!sansTva && <td className="num">{euro(o.commission)}</td>}
+                            {!sansTva && <td className="num">{euro(o.commissionVat)}</td>}
                             <td className="num"><b>{euro(o.commissionTtc)}</b></td>
                           </tr>
                         ))}

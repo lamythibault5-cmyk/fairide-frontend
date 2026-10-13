@@ -4,6 +4,7 @@ import { useLanguage } from '../../../context/LanguageContext';
 import { money, downloadPdf } from '../adminUtils';
 import { useApiData, LoadState } from './common';
 import ExportMensuel from './ExportMensuel';
+import FranchiseTva from './FranchiseTva';
 
 /* Obligations de la société (audit comptable du 7 oct. 2026) : les prochaines échéances — déclaration TVA, DAC7, listing
  * annuel des clients assujettis, comptes annuels, impôt des sociétés, registre UBO — et le listing annuel prêt à déposer
@@ -28,6 +29,8 @@ export default function ObligationsTab({ token, toast }) {
       <div className="card" style={{ borderLeft: '3px solid var(--gold-deep)' }}>
         <p className="small" style={{ margin: 0 }}>{tr('adminAccounting.obligationsIntro')}</p>
       </div>
+      {/* Franchise TVA (lettre du SPF Finances du 12/10/2026) : où en est le chiffre d'affaires de Fairide face au seuil. */}
+      <FranchiseTva token={token} />
       {/* CODE-8 : l'export du mois pour le logiciel comptable, et son archivage hors de Railway. */}
       <ExportMensuel token={token} toast={toast} />
       <LoadState state={obligations} skeleton={3}>
@@ -42,7 +45,7 @@ export default function ObligationsTab({ token, toast }) {
                 <div style={{ flex: 1 }}>{o.label}<div className="small" style={{ opacity: 0.7 }}>{o.where} · {o.tool}</div></div>
               </div>
             ))}
-            <p className="small" style={{ opacity: 0.7, marginBottom: 0 }}>{tr(d.periodicity === 'monthly' ? 'adminAccounting.obligationsMonthly' : 'adminAccounting.obligationsQuarterly')}</p>
+            <p className="small" style={{ opacity: 0.7, marginBottom: 0 }}>{tr(d.periodicity === 'franchise' ? 'adminAccounting.obligationsFranchise' : d.periodicity === 'monthly' ? 'adminAccounting.obligationsMonthly' : 'adminAccounting.obligationsQuarterly')}</p>
           </div>
         )}
       </LoadState>

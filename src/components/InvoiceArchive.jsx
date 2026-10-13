@@ -129,8 +129,9 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
                     <td className="num">
                       {euros(inv.vatAmount)}
                       {/* En franchise de TVA, un taux à 0 n'est pas une erreur d'affichage mais le régime
-                          du livreur : on le nomme, sinon la ligne paraît incomplète. */}
-                      {inv.vatStatus === 'franchise'
+                          du livreur — ou, sur une facture de Fairide, celui de Fairide elle-même depuis le 7/9/2026
+                          (lettre du SPF Finances du 12/10/2026) : on le nomme, sinon la ligne paraît incomplète. */}
+                      {inv.vatStatus === 'franchise' || (!inv.vatStatus && !(Number(inv.vatAmount) > 0) && !(Number(inv.vatRate) > 0))
                         ? <div className="small">{t('invoiceArchive.vatExempt')}</div>
                         : <div className="small">{(inv.vatRate * 100).toFixed(0)}%</div>}
                     </td>
