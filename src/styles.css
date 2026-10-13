@@ -97,6 +97,17 @@
      historiques qui écrivent var(--shadow) continuent donc de ne rien dessiner, et les trois
      niveaux ci-dessous ne s'appliquent que là où on les pose explicitement. */
   --shadow: none;
+  /* MOUVEMENT. Un ressort amorti au point critique (amortissement 1,0, réponse 0,4 s — les valeurs d'Apple
+     pour « déplacer un objet »), précalculé en courbe `linear()` : x(t) = 1 − (1 + ωt)·e^(−ωt), ω = 2π/0,4,
+     échantillonné tous les 45 ms sur 0,45 s. Même coût qu'un `ease` — c'est une courbe CSS, pas du JavaScript —
+     mais l'arrivée ressemble à un objet qui se pose. Les navigateurs sans `linear()` (Safari < 17.2) gardent
+     la cubic-bezier de la ligne précédente. La courbe donne la FORME ; la durée se choisit à l'usage. Barre du bas :
+     ~0,15 s — à 0,45 puis 0,2 s le fondateur la trouvait encore trop lente (2026-10-13). */
+  --ressort-ui: cubic-bezier(.2, .8, .2, 1);
+  --ressort-ui: linear(0, .158, .413, .626, .773, .868, .925, .958, .977, .987, 1);
+  /* Hauteur des onglets flottants du bas, marge comprise (12 + 5 + 60 + 5 + 2 de filets) : les éléments
+     fixés au-dessus (toast, pilule du panier, fiche de la carte) et le pied de page s'y calent. */
+  --hauteur-onglets: 84px;
   --shadow-1: rgba(0, 0, 0, 0.12) 0 4px 16px 0;  /* carte détachée sur une bande claire */
   --shadow-2: rgba(0, 0, 0, 0.16) 0 4px 16px 0;  /* carte qui porte un formulaire */
   --shadow-3: rgba(0, 0, 0, 0.16) 0 2px 8px 0;   /* pilule flottant sur une photo */
@@ -1484,7 +1495,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    Le tunnel de commande est exclu : il masque les onglets (.dashboard-shell--flux), donc le bas
    de l'écran y est libre et le message peut rester à sa place habituelle. */
 @media (max-width: 900px) {
-  body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+  body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .toast { bottom: calc(var(--hauteur-onglets) + 16px + env(safe-area-inset-bottom)); }
   body:has(.panier-pilule) .toast { bottom: calc(140px + env(safe-area-inset-bottom)); }
 }
 
@@ -2260,7 +2271,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
    (RestaurantsMap.jsx) — mais une remontée de 80px dans un conteneur de 180 la ferait sortir par
    le haut le jour où il le serait. */
 @media (max-width: 900px) {
-  .carte-plein-ecran .map-detail-card { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .carte-plein-ecran .map-detail-card { bottom: calc(var(--hauteur-onglets) + 12px + env(safe-area-inset-bottom)); }
   /* Et plus petite : la fiche mange maintenant 80px de plus en bas, sur un écran qu'on est venu
      voir pour la carte. La photo perd un tiers de sa hauteur et le corps un peu de respiration —
      c'est tout ce qui se retire, le contenu reste entier. */
@@ -2302,6 +2313,11 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   background: var(--purple); color: #fff; border: none; border-radius: var(--radius-chip); padding: 4px 10px; font-size: 11px; cursor: pointer;
 }
 .dashboard-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+/* La pastille qui glisse n'existe que dans la barre du bas (sous 900px) ; la colonne latérale garde son fond
+   sur l'onglet actif. */
+.nav-curseur { display: none; }
+@keyframes onglet-arrive { 0% { transform: scale(.86); } 60% { transform: scale(1.08); } 100% { transform: none; } }
+@keyframes barre-pousse { 0% { transform: none; } 35% { transform: translateX(var(--pousse, 0)) scale(.99); } 100% { transform: none; } }
 .dashboard-nav-link {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius);
   text-decoration: none; color: var(--ink-soft); font-weight: 600; font-size: 14px; transition: background .15s, color .15s;
@@ -2479,25 +2495,62 @@ main.page-fade { min-height: calc(100dvh - 140px); }
      cette largeur, mais le jour où un autre élément fixe s'ajoute à la barre, il restera visible
      pendant que les onglets glissent dessous plutôt que de partir hors écran avec eux. */
   .dashboard-sidebar { overflow-x: visible; }
+  /* UNE BARRE-PILULE, PLUS CINQ RONDS (2026-10-13, la barre de Revolut montrée par le fondateur).
+     Les ronds de 56px séparaient bien les cibles, mais sans libellé il fallait connaître les icônes.
+     La pilule les remet (onglets de 64px de haut, plus confortables que 56), et une seule pastille iris
+     — `.nav-curseur`, posée par useCurseurOnglets.js — glisse vers l'onglet touché au lieu de s'allumer
+     ailleurs d'un coup. Au défilement vers le bas, la barre se réduit aux icônes et se resserre
+     (`.dashboard-sidebar--compacte`) ; en remontant, elle reprend sa taille.
+
+     Identité « The frame » respectée : fond blanc, filet de 1px, aucune ombre ni flou (Revolut floute le
+     fond de sa barre — c'est exactement ce que la règle 2 exclut, et le flou coûte cher aux petits
+     téléphones). Tout ce qui bouge est `transform` / `opacity`, sauf la hauteur des onglets, qui ne
+     recalcule que cette barre fixée (`contain`). */
+  .dashboard-sidebar { transition: padding .14s var(--ressort-ui); }
+  .dashboard-sidebar--compacte { padding: 0 48px; }
   .dashboard-nav {
-    flex-direction: row; gap: 10px; width: auto; flex: 0 1 auto; min-width: 0;
-    justify-content: center; overflow: visible; pointer-events: auto;
+    flex-direction: row; gap: 0; width: 100%; max-width: 460px; flex: 0 1 auto; min-width: 0;
+    justify-content: stretch; overflow: visible; pointer-events: auto;
+    position: relative; padding: 5px;
+    background: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill);
+    contain: layout paint;
+    transition: transform .15s var(--ressort-ui);
   }
-  /* Un rond de 56px : la cible confortable d'un pouce, et la dimension des pastilles d'Uber.
-     Le libellé sort de l'écran mais reste porté par title et aria-label (DashboardSidebar.jsx) :
-     il n'est retiré qu'à l'œil, jamais aux lecteurs d'écran. Cinq icônes se reconnaissent sans
-     légende ; c'est justement pour cela qu'on n'en met que cinq. */
+  /* Au contact : la barre s'enfonce à peine (98 %), comme un objet qu'on presse ; au relâcher, le ressort la
+     ramène. `:active` remonte du lien à la nav, donc tout appui sur un onglet la fait réagir. */
+  .dashboard-nav:active { transform: scale(.98); transition-duration: .1s; }
+  /* Au changement d'onglet : 3px dans le sens de la pastille, puis retour (voir useCurseurOnglets.js). */
+  .dashboard-nav--pousse { animation: barre-pousse .16s var(--ressort-ui); }
+  .nav-curseur {
+    display: block; position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none;
+    background: var(--iris); border-radius: var(--radius-pill); opacity: 0;
+    transition: transform .15s var(--ressort-ui), width .12s var(--ressort-ui), height .12s var(--ressort-ui), opacity .15s;
+  }
   .dashboard-nav-link {
-    flex: 0 0 auto; width: 56px; height: 56px; padding: 0;
-    justify-content: center; align-items: center; gap: 0;
-    border-radius: var(--radius-pill);
-    background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-3);
-    color: var(--ink);
+    position: relative; z-index: 1;
+    flex: 1 1 0; min-width: 0; height: 60px; padding: 0 2px;
+    flex-direction: column; justify-content: center; align-items: center; gap: 3px;
+    border-radius: var(--radius-pill); background: transparent; border: 0; box-shadow: none;
+    color: var(--ink-soft); font-size: 11px; font-weight: 500;
+    transition: height .14s var(--ressort-ui), color .12s;
   }
-  .dashboard-nav-link span:last-child { display: none; }
-  .dashboard-nav-link:hover { background: #fff; }
-  .dashboard-nav-link.active { background: var(--iris); border-color: var(--iris); color: #fff; }
-  .dashboard-nav-icon { width: 24px; height: 24px; }
+  .dashboard-nav-link:hover, .dashboard-nav-link.active { background: transparent; }
+  .dashboard-nav-link.active { color: #fff; }
+  .dashboard-nav-icon { width: 24px; height: 24px; transition: transform .1s ease-out; }
+  /* L'appui se voit tout de suite, au contact et pas au relâcher (Apple, « Designing Fluid Interfaces »). */
+  .dashboard-nav-link:active .dashboard-nav-icon { transform: scale(.86); }
+  /* L'onglet qui devient actif a un petit rebond d'icône, en même temps que la pastille arrive. */
+  .dashboard-nav-link.active .dashboard-nav-icon { animation: onglet-arrive .15s var(--ressort-ui); }
+  .dashboard-nav-label {
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-height: 14px; line-height: 14px;
+    transition: opacity .12s, max-height .14s var(--ressort-ui), transform .14s var(--ressort-ui);
+  }
+  .dashboard-sidebar--compacte .dashboard-nav-link { height: 46px; gap: 0; }
+  /* La console admin a une dizaine de pôles : sa pilule défile de côté au lieu d'écraser les onglets. */
+  .dashboard-nav.admin { justify-content: flex-start; overflow-x: auto; scrollbar-width: none; contain: layout; }
+  .dashboard-nav.admin::-webkit-scrollbar { display: none; }
+  .dashboard-sidebar--compacte .dashboard-nav-label { opacity: 0; max-height: 0; transform: translateY(4px); }
   /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
      hauteur (66px), plus au contenu principal qui n'est plus le dernier. */
   /* Les titres de page et l'en-tête de Mon compte réservaient ici la place de la pastille de
@@ -2509,7 +2562,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
      diamètre). Le dernier bloc de la page doit donc dégager cette hauteur, plus une respiration,
      sinon les liens légaux finissent sous les boutons et deviennent incliquables. Mesuré : sans
      cette marge, le pied dépassait de 68px exactement. */
-  .dashboard-footer-links { margin: 24px 16px 0; padding-bottom: calc(24px + 68px + env(safe-area-inset-bottom)); }
+  .dashboard-footer-links { margin: 24px 16px 0; padding-bottom: calc(24px + var(--hauteur-onglets) + env(safe-area-inset-bottom)); }
   /* PARCOURS DE COMMANDE : les onglets s'effacent (voir estFluxCommande dans Layout.jsx).
      Dès qu'on entre dans un commerce, on ne navigue plus, on fait quelque chose. Les onglets ne
      proposaient plus que de partir, et ils recouvraient le total au moment de payer. La sortie
@@ -3919,7 +3972,7 @@ html.tracking-plein-actif .panier-pilule { display: none !important; }
    paiement par-dessus le menu. Ici : une pilule, un compteur sur l'icone, un total, et un lien. */
 .panier-pilule {
   position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(80px + env(safe-area-inset-bottom)); z-index: 45;
+  bottom: calc(var(--hauteur-onglets) + 12px + env(safe-area-inset-bottom)); z-index: 45;
   display: inline-flex; align-items: center; gap: 10px;
   max-width: calc(100vw - 32px);
   padding: 12px 20px; border-radius: var(--radius-pill);
