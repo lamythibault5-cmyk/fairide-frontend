@@ -3,6 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Réglages Peppol d'un restaurateur ou d'un livreur, affichés au-dessus de son archive de factures :
 // explication de ce qu'est Peppol (et de l'obligation belge), identifiant Peppol (dérivé du numéro
@@ -44,7 +45,7 @@ export default function PeppolSettings({ endpoint }) {
     <div className="card peppol-card">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🧾 {t('peppol.title')}</h3>
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('peppol.title')}</h3>
           <p className="small" style={{ margin: 0 }}>
             {data.providerConfigured
               ? (data.enabled ? t('peppol.stateOn') : t('peppol.stateOff'))
@@ -66,8 +67,8 @@ export default function PeppolSettings({ endpoint }) {
             </label>
             <div className="small" style={{ gridColumn: 'span 2' }}>
               {identifiant
-                ? <>{t('peppol.idInUse', { id: identifiant })} {registered === true && <span className="pill teal">✅ {t('peppol.registered')}</span>}{registered === false && <span className="pill">⚠️ {t('peppol.notRegistered')}</span>}</>
-                : <>⚠️ {t('peppol.noId')}</>}
+                ? <>{t('peppol.idInUse', { id: identifiant })} {registered === true && <span className="pill teal"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('peppol.registered')}</span>}{registered === false && <span className="pill"><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('peppol.notRegistered')}</span>}</>
+                : <><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('peppol.noId')}</>}
             </div>
             {registered === false && <p className="small" style={{ gridColumn: 'span 2', margin: 0 }}>{t('peppol.notRegisteredHelp')}</p>}
           </div>

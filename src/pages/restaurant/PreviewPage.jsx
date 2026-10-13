@@ -2,6 +2,7 @@ import { useOutletContext, useNavigate } from 'react-router-dom';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import RestaurantPreview from '../../components/RestaurantPreview';
 import { useLanguage } from '../../context/LanguageContext';
+import Icone from '../../components/Icone';
 
 export default function PreviewPage() {
   const { t } = useLanguage();
@@ -20,7 +21,7 @@ export default function PreviewPage() {
       <p className="small" style={{ margin: '0 0 14px' }}>{t('previewPage.intro')}</p>
       {restaurant && !restaurant.publicListed && !restaurant.isDemo && (
         <div className="card preview-not-visible" role="status">
-          <b>🙈 {t('previewPage.notVisibleTitle')}</b>
+          <b><Icone nom="masque" taille={16} className="icone-texte" />{' '}{t('previewPage.notVisibleTitle')}</b>
           <p className="small" style={{ margin: '4px 0 0' }}>{t('previewPage.notVisibleText')}</p>
         </div>
       )}

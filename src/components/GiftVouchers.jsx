@@ -65,7 +65,7 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
         </div>
         <div className="bon-liste" style={{ marginTop: 10 }}>
           {liste === null && <p className="small">{t('bons.loading')}</p>}
-          {erreur && <p className="small" style={{ color: 'var(--red)' }}>{erreur}</p>}
+          {erreur && <p className="small texte-erreur">{erreur}</p>}
           {liste && liste.length === 0 && !erreur && (
             <div className="resa-vide"><b>{t('bons.gvEmptyTitle')}</b>{q.trim() || statut !== 'tous' ? t('bons.gvEmptyFiltered') : t('bons.gvEmptyHelp')}</div>
           )}
@@ -239,7 +239,7 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
               <label htmlFor={`gv-note-${bon.id}`}>{t('bons.gvRedeemNote')}</label>
               <input id={`gv-note-${bon.id}`} value={note} maxLength={200} placeholder={t('bons.gvRedeemNotePh')} onChange={(e) => setNote(e.target.value)} />
             </div>
-            <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12 }} onClick={() => setMontant(String(v.remaining))}>{t('bons.gvRedeemAll')}</button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => setMontant(String(v.remaining))}>{t('bons.gvRedeemAll')}</button>
             <button type="button" className="btn-teal" disabled={!Number(montant) || Number(montant) > v.remaining || enCours === 'usage'} onClick={() => setConfirmerUsage(true)}>{enCours === 'usage' ? '…' : t('bons.gvRedeem')}</button>
           </div>
         </div>
@@ -255,7 +255,7 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
       </div>
 
       <div className="row" style={{ gap: 6, marginTop: 10 }}>
-        {actif && <button type="button" className="btn-ghost" style={{ color: 'var(--red)' }} disabled={!!enCours} onClick={() => setAnnulation(true)}>{t('bons.gvCancel')}</button>}
+        {actif && <button type="button" className="btn-ghost texte-erreur" disabled={!!enCours} onClick={() => setAnnulation(true)}>{t('bons.gvCancel')}</button>}
         {v.status === 'cancelled' && <button type="button" className="btn-ghost" disabled={!!enCours} onClick={() => changerStatut('active')}>{t('bons.gvReactivate')}</button>}
       </div>
       <ConfirmDialog open={annulation} danger title={t('bons.gvCancelTitle')} message={t('bons.gvCancelMsg', { code: v.code })} confirmLabel={t('bons.gvCancel')}

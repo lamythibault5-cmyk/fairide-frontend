@@ -66,7 +66,7 @@ export default function AdminSponsorsPage() {
         <p className="small" style={{ margin: '6px 0 0' }}>{tr('sponsors.simHelp')}</p>
         {simulation && (
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-            <Link className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} to="/restaurants">{tr('sponsors.simSeeClient')}</Link>
+            <Link className="btn-outline btn-sm" to="/restaurants">{tr('sponsors.simSeeClient')}</Link>
           </div>
         )}
       </div>
@@ -89,16 +89,16 @@ export default function AdminSponsorsPage() {
                     : <span className="small">{tr('sponsors.empty')}</span>}
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <label className="btn-teal" style={{ padding: '8px 12px', fontSize: 13, cursor: 'pointer' }}>
+                <label className="btn-teal btn-sm" style={{ cursor: 'pointer' }}>
                   {occupe === s.key ? '…' : s.imageUrl ? tr('sponsors.replace') : tr('sponsors.upload')}
                   <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" hidden disabled={occupe === s.key} onChange={(e) => { envoyer(s, e.target.files?.[0]); e.target.value = ''; }} />
                 </label>
-                {s.imageUrl && <button type="button" className="btn-danger-ghost" style={{ padding: '8px 12px', fontSize: 13 }} disabled={occupe === s.key} onClick={() => setARetirer(s)}>{tr('sponsors.remove')}</button>}
+                {s.imageUrl && <button type="button" className="btn-danger-ghost btn-sm" disabled={occupe === s.key} onClick={() => setARetirer(s)}>{tr('sponsors.remove')}</button>}
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
                 <input style={{ flex: '1 1 160px' }} placeholder={tr('sponsors.namePh')} value={b.name || ''} onChange={(e) => setBrouillons((x) => ({ ...x, [s.key]: { ...b, name: e.target.value } }))} aria-label={tr('sponsors.namePh')} />
                 <input style={{ flex: '2 1 220px' }} placeholder="https://" inputMode="url" value={b.linkUrl || ''} onChange={(e) => setBrouillons((x) => ({ ...x, [s.key]: { ...b, linkUrl: e.target.value } }))} aria-label={tr('sponsors.linkPh')} />
-                <button type="button" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13 }} disabled={occupe === s.key || !brouillons[s.key]} onClick={() => regler(s, { name: b.name || '', linkUrl: b.linkUrl || '' })}>{tr('sponsors.saveDetails')}</button>
+                <button type="button" className="btn-outline btn-sm" disabled={occupe === s.key || !brouillons[s.key]} onClick={() => regler(s, { name: b.name || '', linkUrl: b.linkUrl || '' })}>{tr('sponsors.saveDetails')}</button>
               </div>
               <label className="row small" style={{ gap: 8, alignItems: 'center', marginTop: 10, cursor: s.imageUrl ? 'pointer' : 'default' }}>
                 <input type="checkbox" checked={s.visible} disabled={!s.imageUrl || occupe === s.key} onChange={(e) => regler(s, { visible: e.target.checked })} />

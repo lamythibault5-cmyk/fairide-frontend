@@ -25,7 +25,7 @@ export default function CarteAValider({ restaurant, restoId, token }) {
     <div className="agir-bandeau" role="status">
       <span>{t('validerCarte.bannerText')}</span>
       <button type="button" className="btn-teal" onClick={ouvrir} disabled={enCours}>{t('validerCarte.bannerButton')}</button>
-      {erreur && <span className="small" style={{ color: 'var(--red)' }}>{erreur}</span>}
+      {erreur && <span className="small texte-erreur">{erreur}</span>}
     </div>
   );
 }

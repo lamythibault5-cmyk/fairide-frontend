@@ -24,6 +24,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import HaussePrix from '../../components/HaussePrix';
 import DemandeModifCarte from '../../components/DemandeModifCarte';
 import TvaCarte from '../../components/commerce/TvaCarte';
+import Icone from '../../components/Icone';
 
 // `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
 // (console admin : AdminMenuPage) ; `modeAdmin` retire la demande « Fairide s'en occupe », sans objet pour l'équipe.
@@ -527,7 +528,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             par scripts/importer-carte.js côté backend, et le bouton a été retiré à la demande de l'équipe
             (2026-09-25). Sur une carte vide, les méthodes restent affichées d'office (methodesVisibles). */}
         {!carteVide && !modeAdmin && (
-          <button type="button" className="btn-outline" style={{ marginLeft: 'auto', padding: '6px 12px', fontSize: 13 }} onClick={() => setMethodesOuvertes((o) => !o)}>
+          <button type="button" className="btn-outline btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setMethodesOuvertes((o) => !o)}>
             {methodesOuvertes ? t('menuPage.hideMethods') : t('menuPage.askFairideAgain')}
           </button>
         )}
@@ -584,7 +585,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       {/* Le plus court chemin : écrire ce qu'on veut changer, l'équipe Fairide s'en charge (fondateur, 2026-10-01). */}
       {!modeAdmin && restaurant.menu.length > 0 && (
         <div className="card carte-verrou" role="note">
-          <b>🔒 {t('menuPage.lockedTitle')}</b>
+          <b><Icone nom="cadenas" taille={16} className="icone-texte" />{' '}{t('menuPage.lockedTitle')}</b>
           <p className="small" style={{ margin: '4px 0 0' }}>{t('menuPage.lockedText')}</p>
         </div>
       )}
@@ -631,20 +632,20 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                 {editingSectionId !== section.id && (
                   <div className="row" style={{ gap: 4 }}>
                     {reorderSectionId === section.id ? (
-                      <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleReorderSection(section.id)}>{t('menuPage.doneCheck')}</button>
+                      <button type="button" className="btn-teal btn-sm" onClick={() => toggleReorderSection(section.id)}>{t('menuPage.doneCheck')}</button>
                     ) : selectSectionId === section.id ? (
-                      <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleSelectSection(section.id)}>{t('menuPage.doneCheck')}</button>
+                      <button type="button" className="btn-teal btn-sm" onClick={() => toggleSelectSection(section.id)}>{t('menuPage.doneCheck')}</button>
                     ) : modeAdmin && !reorderSectionId && !selectSectionId && (
                       <>
                         <button type="button" className="btn-teal menu-plus" onClick={() => openAddItemTile(section)} title={t('menuPage.addItemTo', { section: categoryLabel(section.name, t) })} aria-label={t('menuPage.addItemTo', { section: categoryLabel(section.name, t) })}>＋</button>
-                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleSelectSection(section.id)} title={t('menuPage.selectSeveral')}>☑️</button>
-                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleReorderSection(section.id)} title={t('menuPage.reorder')}>↕️</button>
-                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setSectionGalleryFor(section)} title={t('menuPage.sectionPhoto')}>🖼️</button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleSelectSection(section.id)} title={t('menuPage.selectSeveral')}><Icone nom="coche" taille={16} className="icone-texte" /></button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleReorderSection(section.id)} title={t('menuPage.reorder')}><Icone nom="melanger" taille={16} className="icone-texte" /></button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setSectionGalleryFor(section)} title={t('menuPage.sectionPhoto')}><Icone nom="apercu" taille={16} className="icone-texte" /></button>
                         {section.imageUrl && (
-                          <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => saveSectionImage(section, '')} title={t('menuPage.removeSectionPhoto')}>🖼️✕</button>
+                          <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => saveSectionImage(section, '')} title={t('menuPage.removeSectionPhoto')}><Icone nom="apercu" taille={16} className="icone-texte" />✕</button>
                         )}
-                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => { setEditingSectionId(section.id); setEditSectionName(section.name); }} title={t('menuPage.renameSection')}>✏️</button>
-                        <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => deleteSection(section)} title={t('menuPage.deleteSection')}>🗑️</button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => { setEditingSectionId(section.id); setEditSectionName(section.name); }} title={t('menuPage.renameSection')}><Icone nom="crayon" taille={16} className="icone-texte" /></button>
+                        <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => deleteSection(section)} title={t('menuPage.deleteSection')}><Icone nom="croix" taille={16} className="icone-texte" /></button>
                       </>
                     )}
                   </div>
@@ -710,7 +711,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                           resolveItemImage({ name: itemName, category: itemCategory, imageUrl: itemImageUrl }, restaurant.sections) ? (
                             <img loading="lazy" src={resolveItemImage({ name: itemName, category: itemCategory, imageUrl: itemImageUrl }, restaurant.sections)} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
                           ) : (
-                            <span className="dish-thumb-empty">{categoryEmoji(itemCategory)}</span>
+                            <span className="dish-thumb-empty"><Icone nom={categoryEmoji(itemCategory)} taille={20} /></span>
                           )
                         )}
                         <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder={t('menuPage.phPhotoUrl')} />
@@ -774,10 +775,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
               {t('menuPage.applyPanelHelp', { section: categoryLabel(sectionApplyPanel.section.name, t) })}
             </p>
             <div className="row" style={{ gap: 8, marginBottom: 10 }}>
-              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setApplySelectedIds(new Set(sectionApplyPanel.items.map((i) => i.id)))}>
+              <button type="button" className="btn-ghost btn-sm" onClick={() => setApplySelectedIds(new Set(sectionApplyPanel.items.map((i) => i.id)))}>
                 {t('menuPage.selectAll')}
               </button>
-              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setApplySelectedIds(new Set())}>
+              <button type="button" className="btn-ghost btn-sm" onClick={() => setApplySelectedIds(new Set())}>
                 {t('menuPage.deselectAll')}
               </button>
             </div>
@@ -873,14 +874,14 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
 
       {restaurant.menu.length > 0 && modeAdmin && (
         <div className="card geste-prix-carte" id="menu-geste-prix">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>💚 {t('menuPage.adjustTitle')}</h3>
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.adjustTitle')}</h3>
           <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.adjustIntro')}</p>
           <div className="row" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             {[-20, -15, -10, -5, 5, 10].map((v) => (
               <button key={v} type="button" className={`chip${Number(ajustPct) === v ? ' active' : ''}`} onClick={() => setAjustPct(String(v))}>{v > 0 ? '+' : ''}{v} %</button>
             ))}
             <input type="number" step="1" min="-50" max="50" value={ajustPct} onChange={(e) => setAjustPct(e.target.value)} placeholder="%" style={{ width: 90 }} aria-label={t('menuPage.adjustCustom')} />
-            <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} disabled={!ajustPct || Number(ajustPct) === 0} onClick={() => setAjustConfirm(true)}>{t('menuPage.adjustButton')}</button>
+            <button type="button" className="btn-teal btn-sm" disabled={!ajustPct || Number(ajustPct) === 0} onClick={() => setAjustConfirm(true)}>{t('menuPage.adjustButton')}</button>
           </div>
           {ajustConfirm && (
             <div className="card" style={{ marginTop: 10, padding: 12, border: '1px solid var(--line)' }}>

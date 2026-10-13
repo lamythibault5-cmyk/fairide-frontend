@@ -44,10 +44,10 @@ export default function VerificationAfsca({ detail, onChanged }) {
 
   const tousLesPoints = POINTS.every((p) => points[p]);
   const etat = detail.afscaCheckResult === 'introuvable'
-    ? <span style={{ color: 'var(--red)' }}>{t('adminRestos.afscaStateNotFound', { by: detail.afscaVerifiedBy || '—' })}</span>
+    ? <span className="texte-erreur">{t('adminRestos.afscaStateNotFound', { by: detail.afscaVerifiedBy || '—' })}</span>
     : detail.afscaVerifiedAt
       ? <span>✓ {t('adminRestos.afscaStateVerified', { date: fmtDate(detail.afscaVerifiedAt), by: detail.afscaVerifiedBy || '—', address: detail.afscaVerifiedAddress || '—' })}</span>
-      : <span style={{ color: 'var(--red)' }}>{t('adminRestos.afscaStateTodo')}</span>;
+      : <span className="texte-erreur">{t('adminRestos.afscaStateTodo')}</span>;
 
   return (
     <div style={{ borderTop: '1px solid var(--line)', marginTop: 12, paddingTop: 10 }}>

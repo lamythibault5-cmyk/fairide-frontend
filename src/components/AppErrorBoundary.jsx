@@ -48,7 +48,7 @@ export default class AppErrorBoundary extends Component {
     const L = textes();
     return (
       <div className="center-page" style={{ padding: '60px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: 40 }}>😕</div>
+        <div style={{ fontSize: 40 }}></div>
         <h2>{L.title}</h2>
         <p className="small" style={{ maxWidth: 420, margin: '0 auto 20px' }}>{L.body}</p>
         <div className="row" style={{ gap: 10, justifyContent: 'center' }}>

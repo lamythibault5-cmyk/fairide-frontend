@@ -20,6 +20,7 @@ import CarteAValider from '../../components/commerce/CarteAValider';
 import { cuisineDepuisOsm } from '../../osmCuisine';
 import { demarrerTerminalNavigateur } from '../../terminalNavigateur';
 import { remonterEnHaut } from '../../remonter';
+import Icone from '../../components/Icone';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
@@ -282,8 +283,8 @@ export default function DashboardLayout() {
     <div>
       {actingAs && (
         <div className="agir-bandeau" role="status">
-          <span>🛠️ {t('dashResto.actingBanner', { name: user?.name || '', admin: actingAdminEmail })}</span>
-          <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={quitterAction}>{t('dashResto.actingQuit')}</button>
+          <span><Icone nom="reglages" taille={16} className="icone-texte" />{' '}{t('dashResto.actingBanner', { name: user?.name || '', admin: actingAdminEmail })}</span>
+          <button type="button" className="btn-outline btn-sm" onClick={quitterAction}>{t('dashResto.actingQuit')}</button>
         </div>
       )}
       {myRestos.length === 1 ? (
@@ -304,7 +305,7 @@ export default function DashboardLayout() {
           )}
           {myRestos.length === 0 && !surAccueil && (
             <div className="empty" style={{ marginTop: 8 }}>
-              <div style={{ fontSize: 30, marginBottom: 6 }}>🔒</div>
+              <div style={{ fontSize: 30, marginBottom: 6 }}><Icone nom="cadenas" taille={16} className="icone-texte" /></div>
               <b>{t('dashResto.waitTitle')}</b>
               <p className="small" style={{ margin: '6px auto 12px', maxWidth: 420 }}>{t('dashResto.waitText')}</p>
               <Link to="/dashboard" className="btn-teal" style={{ display: 'inline-block', padding: '8px 16px', fontSize: 14 }}>{t('dashResto.waitCta')}</Link>
@@ -360,16 +361,16 @@ export default function DashboardLayout() {
                 ? t('dashResto.stripeNeedsInfoResto')
                 : paiementsOuverts() ? t('dashResto.viaStripeNow') : t('dashResto.viaStripeResto', { date: dateOuverturePaiements(getLocale()) })}
               action={restaurant.stripeConnectStatus === 'restricted' ? (
-                <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
+                <button type="button" className="btn-gold btn-sm" disabled={connecting} onClick={connectOnboard}>
                   {connecting ? '...' : t('dashResto.complete')}
                 </button>
               ) : paiementsOuverts() ? (
-                <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
+                <button type="button" className="btn-gold btn-sm" disabled={connecting} onClick={connectOnboard}>
                   {connecting ? '...' : t('dashResto.paymentsConfigureBtn')}
                 </button>
               ) : (
                 // Activation pas encore ouverte : le détail (et Stripe expliqué) est dans Mon compte › Paiement.
-                <Link to="/account?ouvrir=paiement&retour=/dashboard" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
+                <Link to="/account?ouvrir=paiement&retour=/dashboard" className="btn-outline btn-sm" style={{ display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
               )}
             />
           )}

@@ -3,6 +3,7 @@ import { imgProps } from '../images';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 import useDialogue from '../hooks/useDialogue';
+import useFeuilleGlissable from '../hooks/useFeuilleGlissable';
 import { libellesAllergenes } from '../allergenes';
 import { prixRemise, euros } from '../prixPlat';
 import { envolerVersPanier, mouvementReduit, vibrer } from '../gestes';
@@ -55,28 +56,11 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
   }
   const annuler = () => fermer(onCancel);
 
-  // GLISSER VERS LE BAS POUR FERMER (téléphone) : le geste natif d'une feuille. Il ne démarre que si la fiche est
-  // tout en haut — sinon on fait simplement défiler les options. Au-delà de 110px, ou lancé vite, la fiche part ;
-  // en deçà, elle revient en place.
-  const glisse = useRef(null);
-  function debutGlisse(e) {
-    if (window.innerWidth > 900 || (defile.current && defile.current.scrollTop > 0)) return;
-    glisse.current = { y0: e.touches[0].clientY, t0: Date.now(), dy: 0 };
-  }
-  function suiteGlisse(e) {
-    const g = glisse.current; if (!g || !panneau.current) return;
-    g.dy = Math.max(0, e.touches[0].clientY - g.y0);
-    if (g.dy > 0 && defile.current && defile.current.scrollTop <= 0) {
-      panneau.current.style.transition = 'none';
-      panneau.current.style.transform = `translateY(${g.dy}px)`;
-    }
-  }
-  function finGlisse() {
-    const g = glisse.current; glisse.current = null; if (!g || !panneau.current) return;
-    const vitesse = g.dy / Math.max(1, Date.now() - g.t0);
-    panneau.current.style.transition = '';
-    if (g.dy > 110 || (g.dy > 40 && vitesse > 0.6)) { vibrer(8); annuler(); } else panneau.current.style.transform = '';
-  }
+  // GLISSER VERS LE BAS POUR FERMER (téléphone) : le geste natif d'une feuille. Sorti dans useFeuilleGlissable le
+  // 2026-10-13 pour servir aussi aux sous-écrans du paiement ; dans l'application il devient physique (ressort,
+  // élan, résistance), sur le site il reste ce qu'il était. Fermé par le ressort, la feuille est déjà hors de
+  // l'écran : on ferme sans rejouer l'animation de sortie.
+  const glisser = useFeuilleGlissable({ panneau, defile, fermerAnime: annuler, fermerTout: onCancel });
 
   // Échap ferme, le fond de page ne défile plus derrière la feuille — même geste que la vue agrandie
   // du suivi (CarteSuivi.jsx), pour que la fermeture s'apprenne une seule fois. Le hook ajoute
@@ -146,7 +130,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
     <div className={`plat-feuille${ferme ? ' plat-feuille--ferme' : ''}`} role="dialog" aria-modal="true" aria-label={item.name} ref={racine} tabIndex={-1}>
       {/* Le panneau : plein écran sur téléphone, encadré et centré au-dessus de la page sur
           ordinateur (voir styles.css). Sans lui, la fiche s'étalait sur 1400px pour un plat. */}
-      <div className="plat-panneau" ref={panneau} onTouchStart={debutGlisse} onTouchMove={suiteGlisse} onTouchEnd={finGlisse} onTouchCancel={finGlisse}>
+      <div className="plat-panneau" ref={panneau} {...glisser}>
       {/* Poignée : sur téléphone, elle dit qu'on peut tirer la fiche vers le bas pour la fermer. */}
       <span className="plat-poignee" aria-hidden="true" />
       <div className="plat-defile" ref={defile}>

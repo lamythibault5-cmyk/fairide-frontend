@@ -3,6 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // « Tes prix sur Fairide » — modèle du 13/10/2026 (fondateur). Par défaut, la carte affiche les prix du commerce et Fairide
 // garde 10 % du prix payé. La barre monte les prix de 0 à etat.max (+ 11,1 % en franchise TVA), la hausse qui rend au
@@ -71,7 +72,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
 
   return (
     <div className="card hausse-prix" id="menu-hausse-prix">
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📈 {t('menuPage.markupTitle')}</h3>
+      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}><Icone nom="tendance" taille={16} className="icone-texte" />{' '}{t('menuPage.markupTitle')}</h3>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.markupIntro', { rate: tauxAffiche, max: pct(etat.max) })}</p>
       <label htmlFor="hausse-prix-barre" className="small" style={{ fontWeight: 700, display: 'block' }}>
         {valeur === 0 ? t('menuPage.markupValueZero') : t('menuPage.markupValue', { p: pct(valeur) })}
@@ -84,9 +85,9 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
       </div>
       <div className="hausse-prix-exemple small" style={{ margin: '10px 0', padding: 10, borderRadius: 10, background: 'var(--surface-soft)' }}>
         <div>{t('menuPage.markupExample', { base: euros(EXEMPLE_SUR_PLACE, locale) })}</div>
-        <div>👀 {t('menuPage.markupShown')} <b>{euros(affiche, locale)}</b></div>
-        <div>💚 {t('menuPage.markupYouGet')} <b>{euros(recu, locale)}</b>{recu < EXEMPLE_SUR_PLACE - 0.004 ? <> ({t('menuPage.markupYouGetLess', { amount: euros(EXEMPLE_SUR_PLACE - recu, locale) })})</> : <> ({t('menuPage.markupYouGetFull')})</>}</div>
-        <div>🟢 {t('menuPage.markupFairide')} <b>{euros(partFairide, locale)}</b> {!sansTva && <span className="small">{t('menuPage.markupFairideDetail', { ht: euros(partFairideHt, locale), tva: euros(partFairide - partFairideHt, locale) })}</span>}</div>
+        <div><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('menuPage.markupShown')} <b>{euros(affiche, locale)}</b></div>
+        <div>{t('menuPage.markupYouGet')} <b>{euros(recu, locale)}</b>{recu < EXEMPLE_SUR_PLACE - 0.004 ? <> ({t('menuPage.markupYouGetLess', { amount: euros(EXEMPLE_SUR_PLACE - recu, locale) })})</> : <> ({t('menuPage.markupYouGetFull')})</>}</div>
+        <div>{t('menuPage.markupFairide')} <b>{euros(partFairide, locale)}</b> {!sansTva && <span className="small">{t('menuPage.markupFairideDetail', { ht: euros(partFairideHt, locale), tva: euros(partFairide - partFairideHt, locale) })}</span>}</div>
       </div>
       {demande !== null && (
         <div className="hausse-prix-demande" role="status">

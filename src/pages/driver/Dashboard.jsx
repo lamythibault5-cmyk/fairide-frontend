@@ -7,6 +7,8 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import LigneCompte from '../../components/LigneCompte';
 import IncidentsCourse from '../../components/livreur/IncidentsCourse';
+import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
+import { estNatif } from '../../natif';
 import Icone from '../../components/Icone';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -22,6 +24,7 @@ import SelfieControle from '../../components/livreur/SelfieControle';
 import NotifCourses from '../../components/livreur/NotifCourses';
 import PositionRequise from '../../components/livreur/PositionRequise';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
+import EtatVide from '../../components/EtatVide';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
@@ -345,9 +348,12 @@ export default function DriverDashboard() {
       </div>
       {o.status !== 'pret' && <p className="small">{t('dashDriver.stillPreparing')}</p>}
       <BoutonsItineraire adresse={o.restaurantAddress} lat={o.restaurantLat} lng={o.restaurantLng} t={t} />
-      <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => confirmerRetrait(o)}>
-        {retraitEnCours === o.id ? '…' : t('dashDriver.pickedUpButton')}
-      </button>
+      {/* Dans l'application : glisser pour confirmer (un appui dans la poche ne valide rien). Sur le site : le bouton. */}
+      <GlisserPourConfirmer libelle={t('dashDriver.pickedUpButton')} disabled={retraitEnCours === o.id} onConfirmer={() => confirmerRetrait(o)}>
+        <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => confirmerRetrait(o)}>
+          {retraitEnCours === o.id ? '…' : t('dashDriver.pickedUpButton')}
+        </button>
+      </GlisserPourConfirmer>
       <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
     </div>
   );
@@ -385,12 +391,12 @@ export default function DriverDashboard() {
               ? t('dashDriver.stripeNeedsInfo')
               : t('dashDriver.viaStripe', { date: dateOuverturePaiements(getLocale()) })}
             action={user?.stripeConnectStatus === 'restricted' ? (
-              <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
+              <button type="button" className="btn-gold btn-sm" disabled={connecting} onClick={connectOnboard}>
                 {connecting ? '...' : t('dashDriver.complete')}
               </button>
             ) : (
               // Activation fermée jusqu'à début octobre 2026 : l'explication complète (et Stripe) est dans Mon compte › Paiement.
-              <Link to="/account" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
+              <Link to="/account" className="btn-outline btn-sm" style={{ display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
             )}
           />
         )}
@@ -438,7 +444,7 @@ export default function DriverDashboard() {
             )}
             <DeliveryTiming order={o} />
             <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: dec(o.driverFee ?? o.deliveryFee) })}</div>
-            {o.clientPhone && <div className="small">📞 <a href={`tel:${o.clientPhone}`}>{o.clientPhone}</a></div>}
+            {o.clientPhone && <div className="small"><Icone nom="telephone" taille={16} className="icone-texte" />{' '}<a href={`tel:${o.clientPhone}`}>{o.clientPhone}</a></div>}
             <div className="row" style={{ marginTop: 8, gap: 8 }}>
               <input aria-label={t('dashDriver.phCustomerCode')}
                 placeholder={t('dashDriver.phCustomerCode')}
@@ -448,8 +454,10 @@ export default function DriverDashboard() {
                 value={codeInputs[o.id] || ''}
                 onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
               />
-              <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>
+              {!estNatif() && <button className="btn-teal btn-sm" onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
             </div>
+            {/* Application : le code du client tapé, on glisse pour livrer (même raison que pour la récupération). */}
+            {estNatif() && <GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} onConfirmer={() => deliver(o)} />}
             <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
           </div>
         ))}
@@ -464,7 +472,7 @@ export default function DriverDashboard() {
           <AlerteLivreurBar {...alerte} />
           {sac?.option === 'fairide' && sac.depositStatus !== 'refunded' && (
             <div className="card sac-fairide" style={{ borderLeft: '4px solid var(--iris)' }}>
-              <b>🟢 {t('dashDriver.bagTitle')}</b>
+              <b>{t('dashDriver.bagTitle')}</b>
               <p className="small" style={{ margin: '4px 0 0' }}>{t(`dashDriver.bag_${sac.depositStatus}`, { amount: Number(sac.depositAmount || 40).toFixed(0) })}</p>
             </div>
           )}
@@ -478,7 +486,7 @@ export default function DriverDashboard() {
           <NotifCourses />
           {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
           <PositionRequise>
-          {available.length === 0 && <div className="empty">{t('dashDriver.noneAvailable')}</div>}
+          {available.length === 0 && <EtatVide icone="scooter" titre={t('dashDriver.noneAvailable')} />}
           {available.map((o) => (
             <div className="card" key={o.id}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -503,8 +511,8 @@ export default function DriverDashboard() {
                   {o.bonusCents > 0 && <span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</span>}
                 </span>
                 <span className="row" style={{ gap: 6 }}>
-                  <button className="btn-outline" style={{ padding: '8px 12px', fontSize: 13 }} onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
-                  <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
+                  <button className="btn-outline btn-sm" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
+                  <button className="btn-teal btn-sm" onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
                 </span>
               </div>
             </div>

@@ -70,7 +70,7 @@ export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, 
           <div className="field">
             <label htmlFor={ids + '-type'}>{t('editResto.newType')}</label>
             <select id={ids + '-type'} value={type} onChange={(e) => setType(e.target.value)}>
-              {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.emoji} {c.value}</option>)}
+              {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.value}</option>)}
             </select>
           </div>
           {type === 'Autre' && (

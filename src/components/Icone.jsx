@@ -137,7 +137,14 @@ const TRACES = {
   alerte: <><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4.5" /><path d="M12 17.5h.01" /></>,
   tendance: <><path d="m3 17 6-6 4 4 8-8" /><path d="M15 7h6v6" /></>,
   mallette: <><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M3 13h18" /></>,
-  grille: <><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>
+  grille: <><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>,
+
+  // — Les derniers emojis partis (2026-10-13, « plus aucun emoji enfantin, même dans l'admin ») —
+  // Feuille : bio, végétarien, vegan, cuisine saine. Poisson : poisson & fruits de mer.
+  feuille: <><path d="M5 19C5 10 11 4.5 20 4c-.4 9-6 15-15 15Z" /><path d="M5 19 13.5 10.5" /></>,
+  // Flèche vers un plateau : télécharger un CSV, un PDF (c'était ⬇️).
+  telecharger: <><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M4 20h16" /></>,
+  poisson: <><path d="M3 12c2.8-3.6 6.4-5.5 10.5-5.5 3 0 5.6 2 7.5 5.5-1.9 3.5-4.5 5.5-7.5 5.5C9.4 17.5 5.8 15.6 3 12Z" /><path d="M3 12 1.5 8.5" /><path d="M3 12l-1.5 3.5" /><path d="M16 11h.01" /></>
 };
 
 export default function Icone({ nom, taille = 20, className }) {

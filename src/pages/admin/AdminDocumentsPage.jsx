@@ -363,7 +363,7 @@ function DocumentDrawer({ id, onClose, onChanged }) {
       title={d?.title || '…'}
       subtitle={d ? `${DOCUMENT_TYPE_LABELS[d.documentType]} · ${DOCUMENT_TARGET_TYPE_LABELS[d.targetType]} ${d.targetName || ''}` : ''}
       badge={d ? <span className="pill" style={{ color: DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.color }}>{DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.label}</span> : null}
-      actions={d ? <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer" className="btn-outline" style={{ padding: '6px 12px', fontSize: 12, textDecoration: 'none' }}>{tr('adminDocs.viewFile')}</a> : null}
+      actions={d ? <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminDocs.viewFile')}</a> : null}
       onClose={onClose} width={560}
     >
       {erreur && <ErrorCard message={erreur} onRetry={load} />}

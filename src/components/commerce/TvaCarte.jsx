@@ -122,7 +122,7 @@ function HistoriquePrix({ restoId, token }) {
     <details className="card" style={{ marginBottom: 12 }} onToggle={ouvrir}>
       <summary><b>{t('tvaCarte.historyTitle')}</b></summary>
       <p className="small" style={{ margin: '6px 0 10px' }}>{t('tvaCarte.historyHelp')}</p>
-      {erreur && <p className="small" style={{ color: 'var(--red)' }}>{erreur}</p>}
+      {erreur && <p className="small texte-erreur">{erreur}</p>}
       {lignes && !lignes.length && <p className="small">{t('tvaCarte.historyEmpty')}</p>}
       {lignes && lignes.length > 0 && (
         <div style={{ overflowX: 'auto' }}>

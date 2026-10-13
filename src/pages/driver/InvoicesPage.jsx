@@ -6,6 +6,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import InvoiceArchive from '../../components/InvoiceArchive';
 import { euros } from '../../prixPlat';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import EtatVide from '../../components/EtatVide';
 
 function currentMonthValue() {
   const d = new Date();
@@ -73,7 +74,7 @@ export default function InvoicesPage() {
           {user?.email && <div className="small">{user.email}</div>}
         </div>
         <h4 style={{ margin: '0 0 10px' }}>{t('invoicesDriver.paymentsReceived', { month: new Date(`${month}-01`).toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' }) })}</h4>
-        {monthOrders.length === 0 && <div className="empty">{t('invoicesDriver.none')}</div>}
+        {monthOrders.length === 0 && <EtatVide icone="document" titre={t('invoicesDriver.none')} />}
         {monthOrders.length > 0 && (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>

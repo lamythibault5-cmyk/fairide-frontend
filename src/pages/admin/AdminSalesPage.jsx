@@ -12,6 +12,7 @@ import { ErrorCard } from '../../components/admin/AdminListTools';
 import useEtatPage from '../../hooks/useEtatPage';
 import CrmMap, { distanceM } from '../../components/CrmMap';
 import '../../crm.css';
+import Icone from '../../components/Icone';
 
 // Application « Sales » : les commerciaux (des comptes clients auxquels l'admin donne l'accès ici — pas de code à
 // distribuer), tous les commerces démarchés avec leur étape et leur historique, et les rémunérations (primes 20/40/50 €).
@@ -19,8 +20,9 @@ import '../../crm.css';
 // Serveur : routes/adminSales.js.
 const TABS = ['agents', 'prospects', 'commissions', 'doublons'];
 const STAGES = ['a_contacter', 'contacte', 'interesse', 'rdv', 'inscrit', 'carte_en_ligne', 'actif', 'plus_tard', 'refuse'];
-const STAGE_ICONES = { a_contacter: '📋', contacte: '📞', interesse: '💡', rdv: '📅', inscrit: '✍️', carte_en_ligne: '🍽️', actif: '✅', plus_tard: '⏳', refuse: '✖️' };
-const KIND_ICONES = { visite: '🚶', appel: '📞', message: '💬', note: '📝', etape: '🔀' };
+// Noms d'icônes (Icone.jsx), plus des emojis (2026-10-13).
+const STAGE_ICONES = { a_contacter: 'document', contacte: 'telephone', interesse: 'ampoule', rdv: 'horloge', inscrit: 'crayon', carte_en_ligne: 'restaurants', actif: 'valider', plus_tard: 'horloge', refuse: 'croix' };
+const KIND_ICONES = { visite: 'personnes', appel: 'telephone', message: 'bulle', note: 'crayon', etape: 'melanger' };
 
 export default function AdminSalesPage() {
   const { t: tr } = useLanguage();
@@ -34,7 +36,7 @@ export default function AdminSalesPage() {
   const [rafraichir, setRafraichir] = useState(0);
   useEffect(() => { api('/admin/sales/stats', { token }).then(setStats).catch(() => {}); }, [token, rafraichir]);
   const fmt = (ms) => (ms ? new Date(ms).toLocaleString(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-');
-  const stageLabel = (s) => `${STAGE_ICONES[s] || ''} ${tr(`sales.stage_${s}`)}`;
+  const stageLabel = (s) => tr(`sales.stage_${s}`);
   const commun = { token, tr, toast, fmt, stageLabel, onChanged: () => setRafraichir((n) => n + 1) };
 
   return (
@@ -118,7 +120,7 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
     { key: 'lastActivity', label: tr('adminSales.colLastActivity'), get: (a) => fmt(a.lastActivity), sortValue: (a) => a.lastActivity || 0 },
     { key: 'activatedAt', label: tr('adminSales.colActivated'), get: (a) => fmt(a.activatedAt), sortValue: (a) => a.activatedAt },
     { key: 'actions', label: '', get: (a) => (
-      <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); setARetirer(a); }}>{tr('adminSales.removeAccess')}</button>
+      <button type="button" className="btn-danger-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setARetirer(a); }}>{tr('adminSales.removeAccess')}</button>
     ) }
   ];
   return (
@@ -139,7 +141,7 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
                   <span><b>{u.name}</b> <span className="small">{u.email}</span></span>
                   {estAgent(u)
                     ? <span className="pill listing-on">{tr('adminSales.alreadyAgent')}</span>
-                    : <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => donner(u)}>{tr('adminSales.giveAccess')}</button>}
+                    : <button type="button" className="btn-teal btn-sm" onClick={() => donner(u)}>{tr('adminSales.giveAccess')}</button>}
                 </li>
               ))}
             </ul>
@@ -217,9 +219,9 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
           <button type="button" className={`chip${stage === '' ? ' active' : ''}`} onClick={() => setStage('')}>{tr('sales.allStages')}</button>
           {STAGES.map((s) => <button key={s} type="button" className={`chip${stage === s ? ' active' : ''}`} onClick={() => setStage(s)}>{stageLabel(s)}</button>)}
         </div>
-        <button type="button" className={`chip${retard ? ' active' : ''}`} aria-pressed={retard} onClick={() => setRetard((v) => !v)}>⏰ {tr('adminSales.filterOverdue')}</button>
-        <button type="button" className={`chip${aujourdhui ? ' active' : ''}`} aria-pressed={aujourdhui} onClick={() => setAujourdhui((v) => !v)}>📅 {tr('adminSales.filterToday')}</button>
-        <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} disabled={!lignes.length} onClick={() => exporterCsv(lignes)}>⬇️ {tr('sales.exportCsv')}</button>
+        <button type="button" className={`chip${retard ? ' active' : ''}`} aria-pressed={retard} onClick={() => setRetard((v) => !v)}><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{tr('adminSales.filterOverdue')}</button>
+        <button type="button" className={`chip${aujourdhui ? ' active' : ''}`} aria-pressed={aujourdhui} onClick={() => setAujourdhui((v) => !v)}><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{tr('adminSales.filterToday')}</button>
+        <button type="button" className="btn-ghost btn-sm" disabled={!lignes.length} onClick={() => exporterCsv(lignes)}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{tr('sales.exportCsv')}</button>
       </div>
       <div className="card crm-carte-carte">
         <div className="crm-carte-tete">
@@ -227,7 +229,7 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
             <b>{tr('adminSales.mapTitle')}</b>
             <p className="small" style={{ margin: '2px 0 0' }}>{tr('adminSales.mapIntro')}</p>
           </div>
-          <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={basculerCarte}>{carteVisible ? tr('sales.mapHide') : tr('sales.mapShow')}</button>
+          <button type="button" className="btn-ghost btn-sm" onClick={basculerCarte}>{carteVisible ? tr('sales.mapHide') : tr('sales.mapShow')}</button>
         </div>
         {carteVisible && (
           <>
@@ -238,11 +240,11 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
                 <button type="button" className={`chip${!zoneActive ? ' active' : ''}`} onClick={() => setZoneActive(null)}>{tr('sales.zoneAll')}</button>
                 {zones.map((z) => (
                   <button type="button" key={z.key} className={`chip crm-zone-chip${zoneActive === z.key ? ' active' : ''}`} onClick={() => setZoneActive(zoneActive === z.key ? null : z.key)} title={`${z.commune} · ${tr(`sales.zoneTag_${z.tag}`)}`}>
-                    🎯 {z.name}{z.claimedBy ? <span className="crm-zone-qui">{z.claimedBy.firstName}</span> : null}{z.total ? <span className="crm-zone-n">{z.total}</span> : null}
+                    <Icone nom="cible" taille={16} className="icone-texte" />{' '}{z.name}{z.claimedBy ? <span className="crm-zone-qui">{z.claimedBy.firstName}</span> : null}{z.total ? <span className="crm-zone-n">{z.total}</span> : null}
                   </button>
                 ))}
               </div>
-              {zone && <p className="small" style={{ margin: '8px 0 0' }}>🎯 <b>{zone.name}</b> · {zone.commune} · {tr(`sales.zoneTag_${zone.tag}`)} · {zoneTooltip(zone)}</p>}
+              {zone && <p className="small" style={{ margin: '8px 0 0' }}><Icone nom="cible" taille={16} className="icone-texte" />{' '}<b>{zone.name}</b> · {zone.commune} · {tr(`sales.zoneTag_${zone.tag}`)} · {zoneTooltip(zone)}</p>}
               {zone && (
                 <div className="row" style={{ gap: 8, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
                   <label htmlFor="zone-agent" className="small">{tr('adminSales.zoneAssignLabel')}</label>
@@ -283,8 +285,8 @@ function DoublonsTab({ token, tr, fmt, stageLabel }) {
           <div className="crm-liste" style={{ marginTop: 8 }}>
             {g.items.map((p) => (
               <button type="button" key={p.id} className={`card crm-carte crm-etape-${p.stage}`} style={{ marginBottom: 0 }} onClick={() => setOuvert(p.id)}>
-                <div className="crm-carte-tete"><b>🧑‍💼 {p.agentName}</b><span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span></div>
-                <div className="small crm-carte-ligne">{p.commune && <span>📍 {p.commune}</span>}<span>{fmt(p.updatedAt)}</span></div>
+                <div className="crm-carte-tete"><b><Icone nom="compte" taille={16} className="icone-texte" />{' '}{p.agentName}</b><span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span></div>
+                <div className="small crm-carte-ligne">{p.commune && <span><Icone nom="position" taille={16} className="icone-texte" />{' '}{p.commune}</span>}<span>{fmt(p.updatedAt)}</span></div>
               </button>
             ))}
           </div>
@@ -326,10 +328,10 @@ function CommissionsTab({ token, tr, fmt, toast, onChanged, stats }) {
     { key: 'date', label: tr('adminSales.colDate'), get: (c) => <>{fmt(dateDe(c))}{c.note ? <><br /><span className="small">{c.note}</span></> : null}</>, sortValue: (c) => dateDe(c) || 0 },
     { key: 'actions', label: '', get: (c) => (
       <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
-        {c.status === 'earned' && <button type="button" className="btn-teal" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'paid'); }}>{tr('adminSales.comMarkPaid')}</button>}
-        {c.status === 'paid' && <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'earned'); }}>{tr('adminSales.comUnpay')}</button>}
-        {c.status !== 'cancelled' && c.status !== 'paid' && <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'cancelled'); }}>{tr('adminSales.comCancel')}</button>}
-        {c.status === 'cancelled' && <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'earned'); }}>{tr('adminSales.comRestore')}</button>}
+        {c.status === 'earned' && <button type="button" className="btn-teal btn-sm" onClick={(e) => { e.stopPropagation(); changer(c, 'paid'); }}>{tr('adminSales.comMarkPaid')}</button>}
+        {c.status === 'paid' && <button type="button" className="btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); changer(c, 'earned'); }}>{tr('adminSales.comUnpay')}</button>}
+        {c.status !== 'cancelled' && c.status !== 'paid' && <button type="button" className="btn-danger-ghost btn-sm" onClick={(e) => { e.stopPropagation(); changer(c, 'cancelled'); }}>{tr('adminSales.comCancel')}</button>}
+        {c.status === 'cancelled' && <button type="button" className="btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); changer(c, 'earned'); }}>{tr('adminSales.comRestore')}</button>}
       </span>
     ) }
   ];
@@ -342,12 +344,12 @@ function CommissionsTab({ token, tr, fmt, toast, onChanged, stats }) {
           <button type="button" className={`chip${statut === '' ? ' active' : ''}`} onClick={() => setStatut('')}>{tr('adminSales.comAll')}</button>
           {COMMISSION_STATUSES.map((s) => <button key={s} type="button" className={`chip${statut === s ? ' active' : ''}`} onClick={() => setStatut(s)}>{tr(`sales.payStatus_${s}`)}{stats?.commissions?.[s]?.n ? ` · ${stats.commissions[s].n}` : ''}</button>)}
         </div>
-        <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} onClick={rapprocher}>🔄 {tr('adminSales.comReconcile')}</button>
+        <button type="button" className="btn-ghost btn-sm" onClick={rapprocher}><Icone nom="melanger" taille={16} className="icone-texte" />{' '}{tr('adminSales.comReconcile')}</button>
       </div>
       {rows && rows.length > 0 && <p className="small" style={{ margin: '0 0 8px' }}>{tr('adminSales.comShownTotal', { n: rows.length, total: euros(totalAffiche) })}</p>}
       {erreur && <ErrorCard message={erreur} onRetry={charger} />}
       {rows && <AdminDataTable columns={columns} rows={rows} sort={sort} onSort={toggle} onRowClick={(c) => c.prospectId && setOuvert(c.prospectId)} emptyLabel={tr('adminSales.comEmpty')} />}
-      {ouvert && <ProspectDrawer id={ouvert} token={token} tr={tr} fmt={fmt} stageLabel={(s) => `${STAGE_ICONES[s] || ''} ${tr(`sales.stage_${s}`)}`} toast={toast} onClose={() => { setOuvert(null); charger(); }} />}
+      {ouvert && <ProspectDrawer id={ouvert} token={token} tr={tr} fmt={fmt} stageLabel={(s) => tr(`sales.stage_${s}`)} toast={toast} onClose={() => { setOuvert(null); charger(); }} />}
     </div>
   );
 }
@@ -381,13 +383,13 @@ function ProspectDrawer({ id, token, tr, fmt, stageLabel, toast, onClose }) {
               {primes.map((c) => <li key={c.id}><span>{tr(`sales.commission_${c.kind}`)}<br /><span className="small">{fmt(c.paidAt || c.earnedAt || c.dueAt)}</span></span><span className={`crm-prime crm-prime-${c.status}`}>{euros(c.amount)} · {tr(`sales.payStatus_${c.status}`)}</span></li>)}
             </ul>
           )}
-          <p className="small" style={{ margin: '0 0 4px' }}>{tr('adminSales.comAddManual')}{['signup', 'first_month', 'retention'].filter((k) => !primes.some((c) => c.kind === k)).map((k) => <button key={k} type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => ajouterPrime(k)}>+ {tr(`sales.commission_${k}`)}</button>)}</p>
+          <p className="small" style={{ margin: '0 0 4px' }}>{tr('adminSales.comAddManual')}{['signup', 'first_month', 'retention'].filter((k) => !primes.some((c) => c.kind === k)).map((k) => <button key={k} type="button" className="btn-ghost btn-sm" onClick={() => ajouterPrime(k)}>+ {tr(`sales.commission_${k}`)}</button>)}</p>
           <h4 style={{ margin: '14px 0 6px' }}>{tr('sales.historyTitle')}</h4>
           {p.events.length === 0 ? <p className="small">{tr('sales.noEvents')}</p> : (
             <ol className="crm-historique">
               {p.events.map((e) => (
                 <li key={e.id} style={{ gridTemplateColumns: '24px 1fr' }}>
-                  <span className="crm-hist-ico" aria-hidden="true">{KIND_ICONES[e.kind]}</span>
+                  <span className="crm-hist-ico" aria-hidden="true"><Icone nom={KIND_ICONES[e.kind] || 'document'} taille={16} /></span>
                   <div>
                     <div className="small"><b>{tr(`sales.kind_${e.kind}`)}</b>{e.stage ? ` → ${stageLabel(e.stage)}` : ''} · {fmt(e.at)}</div>
                     {e.note && <div className="crm-hist-note">{e.note}</div>}

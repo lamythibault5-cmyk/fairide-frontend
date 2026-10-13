@@ -22,6 +22,7 @@ const statusFilters = (tr) => [{ key: '', label: tr('adminInvoices.all') }, ...O
 
 import { peppolLabels } from '../../components/InvoiceArchive';
 import useEtatPage from '../../hooks/useEtatPage';
+import Icone from '../../components/Icone';
 
 function peppolPill(status, tr) {
   const l = peppolLabels(tr)[status] || peppolLabels(tr).en_attente;
@@ -49,18 +50,18 @@ function PeppolStatusCard({ token, toast, tr }) {
     <div className="card" style={{ marginBottom: 12 }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🧾 {tr('adminInvoices.peppolCardTitle')}</h3>
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}><Icone nom="document" taille={16} className="icone-texte" />{' '}{tr('adminInvoices.peppolCardTitle')}</h3>
           <p className="small" style={{ margin: '0 0 4px' }}>
             {etat.configured ? tr('adminInvoices.peppolConfigured', { provider: etat.provider, id: etat.fairidePeppolId }) : tr('adminInvoices.peppolNotConfigured', { id: etat.fairidePeppolId || '-' })}
           </p>
-          <p className="small" style={{ margin: '0 0 4px' }}>{etat.fairideRegistered ? '✅ ' + tr('adminInvoices.fairideRegistered') : '⚠️ ' + tr('adminInvoices.fairideNotRegistered')}</p>
-          {etat.providerCheck && <p className="small" style={{ margin: '0 0 4px', color: etat.providerCheck.ok ? 'inherit' : 'var(--red)' }}>{etat.providerCheck.ok ? '✅ ' : '❌ '}{etat.providerCheck.message}{etat.keyHint ? ` · clé ${etat.keyHint}` : ''}</p>}
+          <p className="small" style={{ margin: '0 0 4px' }}>{etat.fairideRegistered ? <><Icone nom="valider" taille={14} className="icone-texte" /> {tr('adminInvoices.fairideRegistered')}</> : <><Icone nom="alerte" taille={14} className="icone-texte" /> {tr('adminInvoices.fairideNotRegistered')}</>}</p>
+          {etat.providerCheck && <p className="small" style={{ margin: '0 0 4px', color: etat.providerCheck.ok ? 'inherit' : 'var(--red)' }}>{etat.providerCheck.ok ? <Icone nom="valider" taille={16} className="icone-texte" /> : <Icone nom="croix" taille={16} className="icone-texte" />}{etat.providerCheck.message}{etat.keyHint ? ` · clé ${etat.keyHint}` : ''}</p>}
           <p className="small" style={{ margin: 0 }}>{tr('adminInvoices.peppolCounts', { a: c.en_attente || 0, b: c.envoye || 0, c: c.erreur || 0 })}</p>
           {/* CODE-9 : factures d'abonnement émises par Fairide, même file Peppol. */}
           <p className="small" style={{ margin: '2px 0 0' }}>{tr('adminInvoices.peppolCountsSubscription', { a: etat.counts?.subscription?.en_attente || 0, b: etat.counts?.subscription?.envoye || 0, c: etat.counts?.subscription?.erreur || 0 })}</p>
           {/* CODE-9 : commerces qui ne peuvent pas recevoir par Peppol — ils reçoivent un PDF en secours ; à régulariser. */}
           {etat.restaurantsWithoutPeppol?.length > 0 && (
-            <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>⚠️ {tr('adminInvoices.withoutPeppol', { n: etat.restaurantsWithoutPeppol.length })} {etat.restaurantsWithoutPeppol.map((x) => x.name).join(', ')}</p>
+            <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{tr('adminInvoices.withoutPeppol', { n: etat.restaurantsWithoutPeppol.length })} {etat.restaurantsWithoutPeppol.map((x) => x.name).join(', ')}</p>
           )}
         </div>
         {etat.configured && (
@@ -96,7 +97,7 @@ export default function AdminInvoicesPage() {
       {tab === 'Factures' && restaurantFilter && (
         <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 10 }}>
           <span className="pill teal">{tr('adminInvoices.filteredOnRestaurant')}</span>
-          <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setRestaurantFilter('')}>{tr('adminInvoices.removeFilter')}</button>
+          <button className="btn-ghost btn-sm" onClick={() => setRestaurantFilter('')}>{tr('adminInvoices.removeFilter')}</button>
         </div>
       )}
       {tab === 'Factures' && <InvoicesTab token={token} toast={toast} presetRestaurantId={restaurantFilter} />}
@@ -422,7 +423,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
             <p className="small" style={{ margin: '2px 0' }}>{tr('adminInvoices.namePeriodRange', { name: inv.restaurant.name, start: fmtDate(inv.periodStart), end: fmtDate(inv.periodEnd) })} · <RestaurantLink id={inv.restaurant.id} name={tr('adminInvoices.openRestaurant')} /></p>
             <p className="small" style={{ margin: '2px 0' }}>{tr('adminInvoices.issuedOn', { date: fmtDateTime(inv.issuedAt) })}</p>
             {!inv.fairide.configured && (
-              <p className="small" style={{ color: 'var(--red)' }}>{tr('adminInvoices.legalNotConfigured')}</p>
+              <p className="small texte-erreur">{tr('adminInvoices.legalNotConfigured')}</p>
             )}
             <div className="divider" />
             <h4 style={{ margin: '0 0 6px' }}>{tr('adminInvoices.ordersN', { n: inv.items.length })}</h4>
@@ -458,11 +459,11 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
                   <div key={cn.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
                     <span className="small" style={{ fontFamily: 'monospace' }}>{cn.creditNoteNumber}</span>
                     <div className="row" style={{ gap: 8 }}>
-                      <span className="small" style={{ color: 'var(--red)' }}>-{money(cn.totalTtc)}</span>
+                      <span className="small texte-erreur">-{money(cn.totalTtc)}</span>
                       {peppolPill(cn.peppolStatus, tr)}
-                      <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/pdf`, token, `${cn.creditNoteNumber}.pdf`).catch((e) => toast(e.message, 'erreur'))}>PDF</button>
-                      <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/ubl`, token, `${cn.creditNoteNumber}.xml`).catch((e) => toast(e.message, 'erreur'))}>UBL</button>
-                      <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} disabled={busy} onClick={() => sendPeppol('credit-notes', cn.id)}>Peppol</button>
+                      <button className="btn-ghost btn-sm" onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/pdf`, token, `${cn.creditNoteNumber}.pdf`).catch((e) => toast(e.message, 'erreur'))}>PDF</button>
+                      <button className="btn-ghost btn-sm" onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/ubl`, token, `${cn.creditNoteNumber}.xml`).catch((e) => toast(e.message, 'erreur'))}>UBL</button>
+                      <button className="btn-ghost btn-sm" disabled={busy} onClick={() => sendPeppol('credit-notes', cn.id)}>Peppol</button>
                     </div>
                   </div>
                 ))}
@@ -555,7 +556,7 @@ function DriverStatementsTab({ token, toast }) {
           { key: 'deliveriesCount', label: tr('adminCommon.deliveries'), get: (st) => st.deliveriesCount, align: 'right', sum: true },
           { key: 'totalAmount', label: tr('adminCommon.amount'), get: (st) => <b>{money(st.totalAmount)}</b>, sortValue: (st) => st.totalAmount, align: 'right', sum: true },
           { key: 'issuedAt', label: tr('adminInvoices.colIssued'), get: (st) => fmtDate(st.issuedAt), sortValue: (st) => st.issuedAt },
-          { key: 'actions', label: '', get: (st) => <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); downloadStatementPdf(st); }}>{tr('adminInvoices.pdf')}</button>, align: 'right' }
+          { key: 'actions', label: '', get: (st) => <button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); downloadStatementPdf(st); }}>{tr('adminInvoices.pdf')}</button>, align: 'right' }
         ]} />
       )}
       {data && data.total > PAGE_SIZE && (
@@ -689,7 +690,7 @@ function SelfBillingTab({ token, toast }) {
           { key: 'vatAmount', label: tr('adminCommon.vat'), get: (inv) => (inv.vatStatus === 'assujetti' ? money(inv.vatAmount) : '-'), sortValue: (inv) => inv.vatAmount, align: 'right', sum: true },
           { key: 'totalTtc', label: tr('adminInvoices.colTtc'), get: (inv) => <b>{money(inv.totalTtc)}</b>, sortValue: (inv) => inv.totalTtc, align: 'right', sum: true },
           { key: 'issuedAt', label: tr('adminInvoices.colIssued'), get: (inv) => fmtDate(inv.issuedAt), sortValue: (inv) => inv.issuedAt },
-          { key: 'actions', label: '', get: (inv) => <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); downloadInvoicePdf(inv); }}>{tr('adminInvoices.pdf')}</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); sendEmail(inv); }}>{tr('adminInvoices.send')}</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); downloadInvoiceUbl(inv); }}>UBL</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); sendPeppol(inv); }}>Peppol</button></span>, align: 'right' }
+          { key: 'actions', label: '', get: (inv) => <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}><button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); downloadInvoicePdf(inv); }}>{tr('adminInvoices.pdf')}</button><button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); sendEmail(inv); }}>{tr('adminInvoices.send')}</button><button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); downloadInvoiceUbl(inv); }}>UBL</button><button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); sendPeppol(inv); }}>Peppol</button></span>, align: 'right' }
         ]} />
       )}
       {data && data.total > PAGE_SIZE && (
@@ -797,7 +798,7 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
                 <span className="small">{tr('adminInvoices.confirmAgreement')}</span>
               </label>
             )}
-            <button className="btn-outline" style={{ marginTop: 8, padding: '4px 10px', fontSize: 12 }} disabled={savingStatus || !vatStatus} onClick={saveVatStatus}>
+            <button className="btn-outline btn-sm" style={{ marginTop: 8 }} disabled={savingStatus || !vatStatus} onClick={saveVatStatus}>
               {savingStatus ? '...' : tr('adminInvoices.saveVatRegime')}
             </button>
           </div>

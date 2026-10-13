@@ -87,7 +87,7 @@ export default function AdminPlacementsPage() {
   const dejaLa = new Set((etat?.sections || []).map((s) => s.key));
   const rangeesPossibles = [
     ...Object.keys(etat?.optional || {}).filter((k) => !dejaLa.has(k)).map((k) => ({ valeur: `key:${k}`, libelle: titreRangee(tr, { key: k, label: etat.optional[k] }) })),
-    ...RESTAURANT_TYPES.filter((c) => !dejaLa.has(`cuisine:${c.value}`)).map((c) => ({ valeur: `cuisine:${c.value}`, libelle: `${c.emoji || ''} ${restaurantTypeLabel(c.value, tr) || c.value}`.trim() }))
+    ...RESTAURANT_TYPES.filter((c) => !dejaLa.has(`cuisine:${c.value}`)).map((c) => ({ valeur: `cuisine:${c.value}`, libelle: restaurantTypeLabel(c.value, tr) || c.value }))
   ];
   async function reglerPositions(n) {
     setOccupe(true);

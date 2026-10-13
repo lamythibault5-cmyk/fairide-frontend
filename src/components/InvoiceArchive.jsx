@@ -6,6 +6,7 @@ import { SkeletonCards } from './Skeleton';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import PeppolSettings from './PeppolSettings';
 import { euros } from '../prixPlat';
+import Icone from './Icone';
 
 // Archive des factures émises, partagée par le restaurateur (factures de commission) et le livreur
 // (autofacturations). Les deux affichent la même chose — un historique, les montants HT/TVA/TTC, et le
@@ -140,7 +141,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
                     <td><span className={pp.pill} title={inv.peppolSentAt ? new Date(inv.peppolSentAt).toLocaleString(getLocale()) : ''}>{pp.texte}</span></td>
                     <td className="num" style={{ whiteSpace: 'nowrap' }}>
                       <button type="button" className="btn-ghost" disabled={busyId === inv.id} onClick={() => download(inv)}>
-                        {busyId === inv.id ? '...' : '⬇️ PDF'}
+                        {busyId === inv.id ? '...' : 'PDF'}
                       </button>
                       {ublPath && (
                         <button type="button" className="btn-ghost" disabled={busyId === inv.id} onClick={() => download(inv, 'ubl')} title={t('invoiceArchive.ublTitle')}>
@@ -149,7 +150,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
                       )}
                       {emailPath && inv.status !== 'annulee' && (
                         <button type="button" className="btn-ghost" disabled={mailId === inv.id} onClick={() => envoyerParEmail(inv)} title={inv.emailedAt ? t('invoiceArchive.emailedOn', { date: new Date(inv.emailedAt).toLocaleDateString(getLocale()) }) : t('invoiceArchive.emailTitle')}>
-                          {mailId === inv.id ? '...' : '📧'}
+                          {mailId === inv.id ? '...' : <Icone nom="courrier" taille={16} className="icone-texte" />}
                         </button>
                       )}
                     </td>

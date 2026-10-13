@@ -11,6 +11,7 @@ import AddressSearch from '../AddressSearch';
 import AddressRecognition from '../AddressRecognition';
 import BusinessSearch from '../BusinessSearch';
 import OpeningHoursEditor from '../OpeningHoursEditor';
+import Icone from '../Icone';
 
 // Création du commerce, en étapes — le dernier recours quand la création automatique depuis
 // l'inscription a échoué (voir creerDepuisIndice dans DashboardLayout.jsx).
@@ -191,7 +192,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           <div className="field">
             <label htmlFor={ids + '-type'}>{t('dashResto.businessType')}</label>
             <select id={ids + '-type'} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
-              {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.emoji} {c.value}</option>)}
+              {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.value}</option>)}
             </select>
           </div>
           {cuisine === 'Autre' && (
@@ -227,23 +228,23 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
             onResult={(r) => { if (r.commune && communeAcceptee(r.commune)) setCommune(r.commune); if (r.neighborhood) setNeighborhood((v) => v || r.neighborhood); }}
             onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
           />
-          {fondateur && <p className="small" style={{ margin: '0 0 10px' }}>🛠️ {t('dashResto.founderHint')}</p>}
+          {fondateur && <p className="small" style={{ margin: '0 0 10px' }}><Icone nom="reglages" taille={16} className="icone-texte" />{' '}{t('dashResto.founderHint')}</p>}
         </>
       )}
 
       {cle === 'horaires' && (
         horairesDepuisInscription && !modifierHoraires && hours ? (
           <div className="paiement-encart" style={{ marginBottom: 10 }}>
-            <p className="small" style={{ margin: '0 0 4px' }}>✅ {t('dashResto.hoursFromSignup')}</p>
+            <p className="small" style={{ margin: '0 0 4px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('dashResto.hoursFromSignup')}</p>
             <div className="closed-banner-schedule" style={{ margin: '0 0 6px' }}>{formatFullSchedule(hours, t).map((line) => <span key={line}>{line}</span>)}</div>
-            <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => setModifierHoraires(true)}>✏️ {t('dashResto.editHours')}</button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => setModifierHoraires(true)}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('dashResto.editHours')}</button>
           </div>
         ) : <OpeningHoursEditor value={hours} onChange={setHours} />
       )}
 
       {cle === 'services' && (
         <div className="field services-choice">
-          <label className="service-option"><input type="checkbox" checked={offersDelivery} onChange={(e) => setOffersDelivery(e.target.checked)} /> <span>🛵 {t('auth.serviceDelivery')}</span></label>
+          <label className="service-option"><input type="checkbox" checked={offersDelivery} onChange={(e) => setOffersDelivery(e.target.checked)} /> <span><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('auth.serviceDelivery')}</span></label>
           {offersDelivery && (
             <div className="service-suboptions">
               <label htmlFor={ids + '-qui'}>{t('dashResto.whoDelivers')}</label>
@@ -254,7 +255,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
               {deliveryModePref === 'own' && <p className="small" style={{ margin: '6px 0 0' }}>{t('dashResto.ownDriversHelp')}</p>}
             </div>
           )}
-          <label className="service-option"><input type="checkbox" checked={offersPickup} onChange={(e) => setOffersPickup(e.target.checked)} /> <span>🏠 {t('auth.servicePickup')}</span></label>
+          <label className="service-option"><input type="checkbox" checked={offersPickup} onChange={(e) => setOffersPickup(e.target.checked)} /> <span><Icone nom="maison" taille={16} className="icone-texte" />{' '}{t('auth.servicePickup')}</span></label>
         </div>
       )}
 

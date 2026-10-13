@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
 import { euros } from '../../prixPlat';
+import Icone from '../Icone';
 
 // Admin › Simulation › « Créer une commande et l'imprimer » (fondateur, 2026-10-01). L'admin compose une commande sur la
 // carte du commerce de simulation, elle est enregistrée payée au nom du client de simulation, et son ticket sort tout de
@@ -41,7 +42,7 @@ export default function CommandeTestAdmin({ pret, onCree }) {
   }
 
   if (!ouvert) {
-    return <button type="button" className="btn-gold" disabled={!pret} onClick={() => setOuvert(true)}>🧾 {tr('simulation.orderCreateButton')}</button>;
+    return <button type="button" className="btn-gold" disabled={!pret} onClick={() => setOuvert(true)}><Icone nom="document" taille={16} className="icone-texte" />{' '}{tr('simulation.orderCreateButton')}</button>;
   }
   const sections = carte ? [...new Set(carte.items.map((i) => i.section))] : [];
   return (

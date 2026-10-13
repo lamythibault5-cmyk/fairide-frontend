@@ -23,6 +23,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import KanbanBoard, { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import useEtatPage from '../../hooks/useEtatPage';
 import urlSure from '../../urlSure';
+import Icone from '../../components/Icone';
 
 const PAGE_SIZE = 25;
 const MODES = (tr) => [{ key: 'list', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }, { key: 'kanban', icon: '▦', label: tr('adminKanban.kanban') }];
@@ -143,13 +144,13 @@ export default function AdminSupportPage() {
   const colonnes = [
     selectionColumn(sel, tr('adminCommon.select')),
     { key: 'ticketNumber', label: 'N°', get: (t) => <span style={{ fontFamily: 'monospace' }}>{t.ticketNumber}</span>, sortValue: (t) => t.ticketNumber },
-    { key: 'subject', label: tr('adminCommon.subject'), get: (t) => <><b>{t.subject}</b>{t.escalated ? ' ⚠️' : ''}<div><Tags tags={t.tags} actif={tag} onPick={setTag} /></div></>, sortValue: (t) => t.subject },
+    { key: 'subject', label: tr('adminCommon.subject'), get: (t) => <><b>{t.subject}</b>{t.escalated ? <Icone nom="alerte" taille={16} className="icone-texte" /> : ''}<div><Tags tags={t.tags} actif={tag} onPick={setTag} /></div></>, sortValue: (t) => t.subject },
     { key: 'status', label: tr('adminCommon.status'), get: (t) => <span className="pill" style={{ color: TICKET_STATUS_LABELS[t.status]?.color }}>{TICKET_STATUS_LABELS[t.status]?.label}</span>, sortValue: (t) => TICKET_STATUSES.indexOf(t.status) },
     { key: 'priority', label: tr('adminCommon.priority'), get: (t) => <span style={{ color: TICKET_PRIORITY_LABELS[t.priority]?.color }}>{TICKET_PRIORITY_LABELS[t.priority]?.label}</span>, sortValue: (t) => ({ low: 0, medium: 1, high: 2, urgent: 3 }[t.priority] ?? 0) },
     { key: 'category', label: tr('adminCommon.category'), get: (t) => TICKET_CATEGORY_LABELS[t.category], sortValue: (t) => t.category },
     { key: 'requester', label: tr('adminSupport.requester'), get: (t) => t.requesterName || t.linkedClientName || t.linkedDriverName || t.linkedRestaurantName || '-', sortValue: (t) => t.requesterName || '' },
     { key: 'assignedToEmail', label: tr('adminSupport.assignedTo'), get: (t) => t.assignedToEmail || '-', sortValue: (t) => t.assignedToEmail || '' },
-    { key: 'slaDueAt', label: tr('adminSupport.slaCol'), get: (t) => (t.slaDueAt ? <span style={{ color: slaDepasse(t) ? 'var(--red)' : 'inherit' }}>{fmtDateTime(t.slaDueAt)}{slaDepasse(t) ? ' ⚠️' : ''}</span> : '-'), sortValue: (t) => (t.resolvedAt || ['resolu', 'ferme'].includes(t.status) ? 9e15 : (t.slaDueAt || 9e15 - 1)) },
+    { key: 'slaDueAt', label: tr('adminSupport.slaCol'), get: (t) => (t.slaDueAt ? <span style={{ color: slaDepasse(t) ? 'var(--red)' : 'inherit' }}>{fmtDateTime(t.slaDueAt)}{slaDepasse(t) ? <Icone nom="alerte" taille={16} className="icone-texte" /> : ''}</span> : '-'), sortValue: (t) => (t.resolvedAt || ['resolu', 'ferme'].includes(t.status) ? 9e15 : (t.slaDueAt || 9e15 - 1)) },
     { key: 'updatedAt', label: tr('adminCouriers.colUpdated'), get: (t) => fmtDateTime(t.updatedAt), sortValue: (t) => t.updatedAt }
   ];
 
@@ -249,7 +250,7 @@ export default function AdminSupportPage() {
           renderCard={(t) => (
             <>
               <b>{t.subject}</b>
-              <div className="small">{t.ticketNumber} · <span style={{ color: TICKET_PRIORITY_LABELS[t.priority]?.color }}>{TICKET_PRIORITY_LABELS[t.priority]?.label}</span>{t.escalated ? ' · ⚠️' : ''}{slaDepasse(t) ? ` · ${tr('adminSupport.slaShort')}` : ''}</div>
+              <div className="small">{t.ticketNumber} · <span style={{ color: TICKET_PRIORITY_LABELS[t.priority]?.color }}>{TICKET_PRIORITY_LABELS[t.priority]?.label}</span>{t.escalated ? ' ·' : ''}{slaDepasse(t) ? ` · ${tr('adminSupport.slaShort')}` : ''}</div>
               <div className="small">{t.requesterName || t.linkedClientName || t.linkedDriverName || t.linkedRestaurantName || '-'}</div>
             </>
           )}
@@ -263,8 +264,8 @@ export default function AdminSupportPage() {
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <span className="admin-card-select"><SelectBox sel={sel} id={t.id} label={tr('adminCommon.select')} /><b>{t.subject}</b></span>
             <div className="row" style={{ gap: 6 }}>
-              {slaDepasse(t) && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminSupport.slaShort')}</span>}
-              {t.escalated && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminSupport.escalated')}</span>}
+              {slaDepasse(t) && <span className="pill texte-erreur">{tr('adminSupport.slaShort')}</span>}
+              {t.escalated && <span className="pill texte-erreur">{tr('adminSupport.escalated')}</span>}
               <span className="pill" style={{ color: TICKET_STATUS_LABELS[t.status]?.color }}>{TICKET_STATUS_LABELS[t.status]?.label}</span>
             </div>
           </div>
@@ -507,11 +508,11 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
           {t.attachments.length === 0 && <div className="small" style={{ opacity: 0.6 }}>{tr('adminSupport.noAttachments')}</div>}
           {t.attachments.map((a) => (
             <div key={a.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
-              <a href={urlSure(a.fileUrl)} target="_blank" rel="noreferrer" className="small">📎 {a.filename}</a>
-              <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setConfirm({ title: tr('adminSupport.confirmDeleteAttachment', { name: a.filename }), danger: true, run: () => removeAttachment(a.id) })}>{tr('adminCommon.delete')}</button>
+              <a href={urlSure(a.fileUrl)} target="_blank" rel="noreferrer" className="small"><Icone nom="lien" taille={16} className="icone-texte" />{' '}{a.filename}</a>
+              <button className="btn-ghost btn-sm" onClick={() => setConfirm({ title: tr('adminSupport.confirmDeleteAttachment', { name: a.filename }), danger: true, run: () => removeAttachment(a.id) })}>{tr('adminCommon.delete')}</button>
             </div>
           ))}
-          <label className="btn-outline" style={{ display: 'inline-block', padding: '6px 14px', fontSize: 13, marginTop: 6, cursor: 'pointer' }}>
+          <label className="btn-outline btn-sm" style={{ display: 'inline-block', marginTop: 6, cursor: 'pointer' }}>
             {uploading ? '...' : tr('adminSupport.addAttachment')}
             <input type="file" onChange={uploadAttachment} style={{ display: 'none' }} disabled={uploading} />
           </label>
@@ -557,7 +558,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
                     {cannedReplies.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                   </select>
                 )}
-                <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setShowCannedManager(true)}>{tr('adminSupport.manageCanned')}</button>
+                <button className="btn-ghost btn-sm" onClick={() => setShowCannedManager(true)}>{tr('adminSupport.manageCanned')}</button>
               </div>
               <textarea rows={6} value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder={tr('adminSupport.phReply')} style={{ width: '100%' }} />
               <button className="btn-teal" style={{ marginTop: 6 }} disabled={sending || !replyText.trim()} onClick={sendReply}>{sending ? '...' : tr('adminSupport.sendReply')}</button>
@@ -651,7 +652,7 @@ function CannedRepliesManager({ cannedReplies, onChanged, onClose }) {
               <b className="small">{c.title}</b>
               <div className="small" style={{ opacity: 0.6 }}>{c.body.slice(0, 60)}{c.body.length > 60 ? '...' : ''}</div>
             </div>
-            <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setASupprimer(c)}>{tr('adminCommon.delete')}</button>
+            <button className="btn-ghost btn-sm" onClick={() => setASupprimer(c)}>{tr('adminCommon.delete')}</button>
           </div>
         ))}
         <div className="divider" />

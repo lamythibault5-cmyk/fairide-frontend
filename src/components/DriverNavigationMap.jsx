@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { escapeHtml } from '../escapeHtml';
+import Icone from './Icone';
+import { iconeHtml } from '../iconeHtml';
 
 // Variante de DeliveryTrackingMap orientée navigation pour le livreur lui-même : au lieu de montrer le
 // trajet fixe restaurant → client avec un livreur observé de l'extérieur, celle-ci trace le trajet depuis
@@ -17,17 +19,18 @@ import { escapeHtml } from '../escapeHtml';
 // qui l'affiche même quand la carte est masquée.
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
-function emojiIcon(emoji, bg) {
+// Pastille de couleur avec une icône en traits (Icone.jsx), blanche sur fond foncé, encre sur la lime.
+function emojiIcon(nom, bg) {
   return L.divIcon({
     className: '',
-    html: `<div style="background:${bg};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;">${emoji}</div>`,
+    html: `<div style="color:${bg === '#C8F03C' ? '#14121F' : '#fff'};background:${bg};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;">${iconeHtml(nom, 16)}</div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 16]
   });
 }
 
-const ORIGIN_ICON = emojiIcon('🛵', '#14121F');
-const ORIGIN_ICON_VELO = emojiIcon('🚲', '#14121F');
+const ORIGIN_ICON = emojiIcon('scooter', '#14121F');
+const ORIGIN_ICON_VELO = emojiIcon('scooter', '#14121F');
 
 
 // `velo` : le livreur roule à vélo — l'itinéraire et le temps d'arrivée sont demandés pour un cycliste (le serveur
@@ -166,8 +169,8 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       )}
       </div>
       <div className="tracking-map-legend">
-        <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>{velo ? '🚲' : '🛵'}</span> {t('navMap.you')}</span>
-        {targetLat && targetLng && <span><span className="tracking-map-legend-icon" style={{ background: targetColor }}>{targetEmoji}</span> {targetLabel || t('navMap.nextStop')}</span>}
+        <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>{velo ? <Icone nom="scooter" taille={16} className="icone-texte" /> : <Icone nom="scooter" taille={16} className="icone-texte" />}</span> {t('navMap.you')}</span>
+        {targetLat && targetLng && <span><span className="tracking-map-legend-icon" style={{ background: targetColor, color: targetColor === '#C8F03C' ? '#14121F' : '#fff' }}><Icone nom={targetEmoji} taille={16} className="icone-texte" /></span> {targetLabel || t('navMap.nextStop')}</span>}
       </div>
     </div>
   );

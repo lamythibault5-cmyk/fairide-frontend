@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { escapeHtml } from '../escapeHtml';
+import Icone from './Icone';
+import { iconeHtml } from '../iconeHtml';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
@@ -29,10 +31,11 @@ function distanceM(a, b) {
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
-function emojiIcon(emoji, bg) {
+// Pastille de couleur avec une icône en traits (Icone.jsx), blanche sur fond foncé, encre sur la lime.
+function emojiIcon(nom, bg) {
   return L.divIcon({
     className: '',
-    html: `<div style="background:${bg};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;">${emoji}</div>`,
+    html: `<div style="color:${bg === '#C8F03C' ? '#14121F' : '#fff'};background:${bg};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;">${iconeHtml(nom, 16)}</div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 16]
   });
@@ -45,15 +48,15 @@ const DRIVER_ICON = L.divIcon({
   html: `
     <div style="position:relative;width:32px;height:32px;">
       <div class="tracking-driver-pulse"></div>
-      <div style="position:relative;background:#14121F;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;">🛵</div>
+      <div style="position:relative;background:#14121F;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;"></div>
     </div>
   `,
   iconSize: [32, 32],
   iconAnchor: [16, 16]
 });
 
-const RESTAURANT_ICON = emojiIcon('🏪', '#3B2FB5');
-const DELIVERY_ICON = emojiIcon('🏠', '#C8F03C');
+const RESTAURANT_ICON = emojiIcon('commerce', '#3B2FB5');
+const DELIVERY_ICON = emojiIcon('maison', '#C8F03C');
 
 // Itinéraire routier ET durée estimée, d'un seul appel. `duration` est en secondes, `distance` en mètres.
 
@@ -65,7 +68,7 @@ const DELIVERY_ICON = emojiIcon('🏠', '#C8F03C');
 // `homeLabel`/`homeEmoji`/`homeColor` : le « chez soi » n'est pas le même pour tout le monde — la maison du
 // client, le commerce du restaurateur. `legendeDestination` : ce que la légende appelle l'adresse de
 // livraison (« Toi » pour le client, « Client » pour le restaurateur).
-export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, homeLabel, homeEmoji = '🏠', homeColor = '#C8F03C', legendeDestination, onEta, height = 260 }) {
+export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, homeLabel, homeEmoji = 'maison', homeColor = '#C8F03C', legendeDestination, onEta, height = 260 }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   // Libellés par défaut résolus ici (pas dans la signature) : t n'existe qu'à l'intérieur du composant.
@@ -321,11 +324,11 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
         </div>
       )}
       <div className="tracking-map-legend">
-        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#3B2FB5' }}>🏪</span> {t('trackingMap.restaurant')}</span>}
-        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> {t('trackingMap.courier')}</span>}
+        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#3B2FB5' }}><Icone nom="commerce" taille={16} className="icone-texte" /></span> {t('trackingMap.restaurant')}</span>}
+        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}><Icone nom="scooter" taille={16} className="icone-texte" /></span> {t('trackingMap.courier')}</span>}
         {enLivraison
-          ? <span><span className="tracking-map-legend-icon" style={{ background: '#C8F03C' }}>🏠</span> {legendeDestination}</span>
-          : <span><span className="tracking-map-legend-icon" style={{ background: homeColor }}>{homeEmoji}</span> {homeLabel}</span>}
+          ? <span><span className="tracking-map-legend-icon" style={{ background: '#C8F03C' }}><Icone nom="maison" taille={16} className="icone-texte" /></span> {legendeDestination}</span>
+          : <span><span className="tracking-map-legend-icon" style={{ background: homeColor }}><Icone nom={homeEmoji} taille={16} className="icone-texte" /></span> {homeLabel}</span>}
         {hasTrail && <span><span className="tracking-map-legend-line" style={{ background: '#C8F03C' }} /> {t('trackingMap.routeDone')}</span>}
       </div>
     </div>

@@ -58,7 +58,7 @@ export default function EcranLivreurs({ restaurant, drivers, restoId, loadDashbo
             {d.name} <span className="small">· {d.email}</span>
             {d.adminStatus !== 'approved' && <span className="pill" style={{ marginLeft: 6 }}>{d.adminStatus === 'blocked' ? t('editResto.blocked') : t('editResto.pendingValidation')}</span>}
           </span>
-          <button type="button" className="btn-danger-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={retraitId === d.id} onClick={() => retirer(d.id)}>
+          <button type="button" className="btn-danger-ghost btn-sm" disabled={retraitId === d.id} onClick={() => retirer(d.id)}>
             {retraitId === d.id ? '…' : t('editResto.remove')}
           </button>
         </div>

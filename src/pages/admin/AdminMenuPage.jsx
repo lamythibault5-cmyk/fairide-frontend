@@ -9,6 +9,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import MenuPage from '../restaurant/MenuPage';
 import { BoutonGererCommerce } from './AdminRestaurantsPage';
+import Icone from '../../components/Icone';
 
 // Carte d'un commerce vue par l'admin : exactement l'éditeur du restaurateur (Mes produits), branché sur
 // son restaurant — sections, plats, options, import PDF / photo / site, modèles, traduction. En tête, la
@@ -50,9 +51,9 @@ export default function AdminMenuPage() {
 
   const d = fiche?.concierge;
   const etat = d ? ({
-    en_attente: ['⏳', tr('adminMenu.stPending'), 'pill gold'], en_cours: ['🛠️', tr('adminMenu.stInProgress'), 'pill teal'],
-    terminee: ['✅', tr('adminMenu.stDone'), 'pill teal'], refusee: ['✖', tr('adminMenu.stRefused'), 'pill']
-  }[d.status] || ['⏳', d.status, 'pill']) : null;
+    en_attente: ['horloge', tr('adminMenu.stPending'), 'pill gold'], en_cours: ['reglages', tr('adminMenu.stInProgress'), 'pill teal'],
+    terminee: ['valider', tr('adminMenu.stDone'), 'pill teal'], refusee: ['croix', tr('adminMenu.stRefused'), 'pill']
+  }[d.status] || ['horloge', d.status, 'pill']) : null;
   const ouverte = d && (d.status === 'en_attente' || d.status === 'en_cours');
 
   return (
@@ -69,11 +70,11 @@ export default function AdminMenuPage() {
           envoyé une demande, on la garde : c'est là que sont son lien et ses fichiers. */}
       {d && (
       <div className="card" style={{ borderLeft: '4px solid var(--teal, #1E8A7A)' }}>
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>🤝 {tr('adminMenu.requestTitle')}</h3>
+        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}><Icone nom="contrat" taille={16} className="icone-texte" />{' '}{tr('adminMenu.requestTitle')}</h3>
         {d && (
           <>
             <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span className={etat[2]}>{etat[0]} {etat[1]}</span>
+              <span className={etat[2]}><Icone nom={etat[0]} taille={14} className="icone-texte" /> {etat[1]}</span>
               <span className="small">{tr('adminMenu.requestedOn', { date: new Date(d.createdAt).toLocaleDateString(getLocale()) })}</span>
               {/* `?id=` : la page Tâches ouvre directement cette tâche (voir AdminTasksPage). */}
               {d.taskId && <Link to={`/admin/tasks?id=${d.taskId}`} className="admin-record-link">→ {tr('adminMenu.seeTask')}</Link>}
@@ -102,7 +103,7 @@ export default function AdminMenuPage() {
       </div>
       )}
 
-      {erreur && <div className="card"><p className="small" style={{ margin: 0 }}>⚠️ {erreur}</p></div>}
+      {erreur && <div className="card"><p className="small" style={{ margin: 0 }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{erreur}</p></div>}
       {!restaurant && !erreur && <SkeletonCards count={3} />}
       {restaurant && (
         <>

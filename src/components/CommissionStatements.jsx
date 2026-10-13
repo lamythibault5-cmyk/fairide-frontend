@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { SkeletonCards } from './Skeleton';
 import { euros } from '../prixPlat';
+import EtatVide from './EtatVide';
 
 // Relevés détaillés des commissions (voir statements.js côté serveur) : le restaurateur choisit une
 // période (raccourcis ou dates libres) et une granularité — semaine, mois, trimestre — et voit chaque
@@ -117,8 +118,8 @@ export default function CommissionStatements() {
                 <div className="small">{t('statements.summaryNote')}</div>
               </div>
               <div className="row" style={{ gap: 6 }}>
-                <button type="button" className="btn-outline" disabled={!!telechargement || !T?.count} onClick={() => exporter('pdf')}>{telechargement === 'pdf' ? '...' : '⬇️ PDF'}</button>
-                <button type="button" className="btn-outline" disabled={!!telechargement || !T?.count} onClick={() => exporter('csv')}>{telechargement === 'csv' ? '...' : '⬇️ CSV (Excel)'}</button>
+                <button type="button" className="btn-outline" disabled={!!telechargement || !T?.count} onClick={() => exporter('pdf')}>{telechargement === 'pdf' ? '...' : 'PDF'}</button>
+                <button type="button" className="btn-outline" disabled={!!telechargement || !T?.count} onClick={() => exporter('csv')}>{telechargement === 'csv' ? '...' : 'CSV (Excel)'}</button>
               </div>
             </div>
             <div className="stat-grid" style={{ marginBottom: 0 }}>
@@ -131,7 +132,7 @@ export default function CommissionStatements() {
             </div>
           </div>
 
-          {data.groups.length === 0 && <div className="empty">{t('statements.none')}</div>}
+          {data.groups.length === 0 && <EtatVide icone="document" titre={t('statements.none')} />}
 
           {data.groups.map((g) => {
             const ouvert = ouverts.has(g.key);

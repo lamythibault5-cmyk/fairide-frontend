@@ -4,6 +4,7 @@ import { localizedItem } from '../menuTranslation';
 import { libellesAllergenes } from '../allergenes';
 import { prixRemise, euros, libellePromo } from '../prixPlat';
 import { imgProps } from '../images';
+import Icone from './Icone';
 
 // TOUTE LA CARTE EST LA CIBLE, plus seulement le « + » de son coin.
 //
@@ -36,9 +37,9 @@ function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
       <span className="plat-texte">
         <span className="plat-nom">
           {name}
-          {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}🥗</span>}
-          {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}🌿</span>}
-          {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}🌱</span>}
+          {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
+          {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}</span>}
+          {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}</span>}
           {/* Alcool : l'âge exigé à la remise, annoncé avant l'ajout au panier (backlog C3). */}
           {item.isAlcohol && <span className="plat-age" title={t('conformite.alcoholBadgeTitle', { age: Math.max(18, item.minAge || 18) })}> {Math.max(18, item.minAge || 18)}+</span>}
         </span>

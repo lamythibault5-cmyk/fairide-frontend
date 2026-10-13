@@ -4,18 +4,20 @@ import { coucheTuiles } from '../../../carte';
 import 'leaflet/dist/leaflet.css';
 // L'échappement vivait ici, et c'était le seul des quatre cartes à l'avoir : il est maintenant partagé.
 import { escapeHtml } from '../../../escapeHtml';
+import { iconeHtml } from '../../../iconeHtml';
 
 // Carte Leaflet des livraisons en cours : livreurs (violet, rouge si en retard), restaurants (or) et
 // points de livraison (encre). RestaurantsMap.jsx est trop lié à la fiche restaurant (popup, navigation
 // client) pour être réutilisé ; on garde juste la même recette (divIcon, ResizeObserver, fitBounds).
 // `points` : [{ id, kind: 'driver' | 'restaurant' | 'client', lat, lng, label, sub, late }]
 const BRUSSELS_CENTER = [50.8503, 4.3517];
-const EMOJI = { driver: '🚴', restaurant: '🍽️', client: '🏠' };
+// Noms d'icônes (Icone.jsx), plus des emojis (2026-10-13).
+const EMOJI = { driver: 'scooter', restaurant: 'restaurants', client: 'maison' };
 
 function icone(p) {
   return L.divIcon({
     className: 'lg-marker-wrap',
-    html: `<div class="lg-marker ${p.kind}${p.late ? ' late' : ''}"><span>${EMOJI[p.kind] || '📍'}</span></div>`,
+    html: `<div class="lg-marker ${p.kind}${p.late ? ' late' : ''}"><span>${iconeHtml(EMOJI[p.kind] || 'position', 14)}</span></div>`,
     iconSize: [28, 28],
     iconAnchor: [14, 28],
     popupAnchor: [0, -26]

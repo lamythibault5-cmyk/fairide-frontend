@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 import ConfirmDialog from '../ConfirmDialog';
 import { ATTENTE_PORTE_MIN, APPELS_CLIENT_MIN } from '../../conformite';
+import Icone from '../Icone';
 
 // Incidents d'une course, côté livreur (plan de test de bout en bout, 2 octobre 2026) — voir « INCIDENTS DE LIVRAISON »
 // dans routes/orders.js côté serveur :
@@ -54,11 +55,11 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
   return (
     <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
       {avantRetrait && (attenteMin === null
-        ? <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} disabled={enCours} onClick={() => appeler('waiting')}>{t('dashDriver.incident_waiting')}</button>
+        ? <button type="button" className="btn-outline btn-sm" disabled={enCours} onClick={() => appeler('waiting')}>{t('dashDriver.incident_waiting')}</button>
         : <span className="small">{t('dashDriver.incident_waitingSince', { min: attenteMin })}</span>)}
-      {avantRetrait && <button type="button" className="btn-ghost" style={{ padding: '6px 12px', fontSize: 13 }} disabled={enCours} onClick={() => setConfirmer('rendre')}>{t('dashDriver.incident_release')}</button>}
+      {avantRetrait && <button type="button" className="btn-ghost btn-sm" disabled={enCours} onClick={() => setConfirmer('rendre')}>{t('dashDriver.incident_release')}</button>}
       {enLivraison && !order.containsAlcohol && resteClient === null && (
-        <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} disabled={enCours} onClick={() => appeler('client-absent')}>{t('dashDriver.incident_clientAbsent')}</button>
+        <button type="button" className="btn-outline btn-sm" disabled={enCours} onClick={() => appeler('client-absent')}>{t('dashDriver.incident_clientAbsent')}</button>
       )}
       {/* CLIENT ABSENT (fondateur, 10 oct. 2026) : le client est prévenu (e-mail + bandeau sur son suivi), le livreur
           attend ATTENTE_PORTE_MIN minutes ET l'appelle au moins deux fois. Les appels passent par ce bouton, qui les
@@ -73,16 +74,16 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             {order.clientPhone && (
               <button type="button" className="btn-teal" style={{ padding: '10px 16px', fontSize: 14 }} disabled={enCours} onClick={appelerClient}>
-                📞 {t('dashDriver.incident_callClient')}
+                <Icone nom="telephone" taille={16} className="icone-texte" />{' '}{t('dashDriver.incident_callClient')}
               </button>
             )}
             {peutClore && (
-              <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} disabled={enCours} onClick={() => setConfirmer('absent')}>{t('dashDriver.incident_closeAbsent')}</button>
+              <button type="button" className="btn-outline btn-sm" disabled={enCours} onClick={() => setConfirmer('absent')}>{t('dashDriver.incident_closeAbsent')}</button>
             )}
           </div>
         </div>
       )}
-      {enLivraison && <button type="button" className="btn-ghost" style={{ padding: '6px 12px', fontSize: 13 }} disabled={enCours} onClick={() => setConfirmer('bloque')}>{t('dashDriver.incident_cannotFinish')}</button>}
+      {enLivraison && <button type="button" className="btn-ghost btn-sm" disabled={enCours} onClick={() => setConfirmer('bloque')}>{t('dashDriver.incident_cannotFinish')}</button>}
       <ConfirmDialog
         open={!!confirmer}
         title={confirmer === 'rendre' ? t('dashDriver.incident_releaseTitle') : confirmer === 'absent' ? t('dashDriver.incident_closeAbsentTitle') : t('dashDriver.incident_cannotFinishTitle')}

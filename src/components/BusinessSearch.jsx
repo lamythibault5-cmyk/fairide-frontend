@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Recherche du commerce du restaurateur dans OpenStreetMap, en deux temps : d'abord son code postal — la liste
 // de tous les commerces alimentaires de cette zone s'affiche alors et défile — puis, s'il le veut, quelques
@@ -10,7 +11,8 @@ import { useLanguage } from '../context/LanguageContext';
 // remplir à la main. Si la zone n'est pas disponible, on retombe sur une recherche par nom.
 //
 // Le parent reçoit la fiche complète à chaque modification (onSelect), et null quand on revient à la liste.
-const EMOJI_TYPE = { restaurant: '🍽️', cafe: '☕', fast_food: '🍔', bar: '🍺', pub: '🍺', bakery: '🥐', ice_cream: '🍨', food_court: '🍱', supermarket: '🛒', convenience: '🏪', butcher: '🥩', deli: '🧀', pastry: '🍰', greengrocer: '🥦', chocolate: '🍫', cheese: '🧀', seafood: '🐟', beverages: '🧃', tea: '🍵', coffee: '☕' };
+// Noms d'icônes (Icone.jsx) par type OpenStreetMap — c'étaient des emojis jusqu'au 2026-10-13.
+const EMOJI_TYPE = { restaurant: 'restaurants', cafe: 'tasse', fast_food: 'burger', bar: 'tasse', pub: 'tasse', bakery: 'commerce', ice_cream: 'tasse', food_court: 'restaurants', supermarket: 'sac', convenience: 'commerce', butcher: 'commerce', deli: 'commerce', pastry: 'tasse', greengrocer: 'feuille', chocolate: 'commerce', cheese: 'commerce', seafood: 'poisson', beverages: 'tasse', tea: 'tasse', coffee: 'tasse' };
 const normaliser = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const adresse = (r) => [[r.street, r.number].filter(Boolean).join(' '), [r.postalCode, r.city].filter(Boolean).join(' ')].filter(Boolean).join(', ');
 const FICHE_VIDE = { name: '', cuisine: '', street: '', number: '', postalCode: '', city: '', phone: '', email: '', website: '', openingHours: '' };
@@ -116,7 +118,7 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
 
   return (
     <div className={`business-search${compact ? ' compact' : ''}`}>
-      <label htmlFor="business-search-cp">📍 {t('businessSearch.postalLabel')}</label>
+      <label htmlFor="business-search-cp"><Icone nom="position" taille={16} className="icone-texte" />{' '}{t('businessSearch.postalLabel')}</label>
       <p className="small business-search-help">{t('businessSearch.postalHelp')}</p>
       <div className="business-search-row">
         <input id="business-search-cp" inputMode="numeric" maxLength={4} onKeyDown={bloquerEntree} value={cp} placeholder={t('businessSearch.postalPlaceholder')}
@@ -127,13 +129,13 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
         )}
       </div>
 
-      {chargement && <p className="small" style={{ margin: '6px 0 0' }}>⏳ {t('businessSearch.loadingZone', { cp: cp.trim() })}</p>}
+      {chargement && <p className="small" style={{ margin: '6px 0 0' }}><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('businessSearch.loadingZone', { cp: cp.trim() })}</p>}
 
       {zone && !fiche && (
         <>
           <p className="small business-search-count" style={{ margin: '6px 0 4px' }}>
             {repli
-              ? (zone.pending ? `⏳ ${t('businessSearch.zonePending', { cp: cp.trim() })}` : zone.unavailable ? t('businessSearch.zoneUnavailable') : t('businessSearch.zoneEmpty', { cp: cp.trim() }))
+              ? (zone.pending ? `${t('businessSearch.zonePending', { cp: cp.trim() })}` : zone.unavailable ? t('businessSearch.zoneUnavailable') : t('businessSearch.zoneEmpty', { cp: cp.trim() }))
               : t('businessSearch.zoneCount', { count: zone.results.length, cp: cp.trim(), shown: visibles.length })}
           </p>
           <ul className="business-zone-list" role="listbox" ref={listeRef} aria-label={t('businessSearch.postalLabel')}>
@@ -143,7 +145,7 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
             {visibles.map((r) => (
               <li key={`${r.osmType}-${r.osmId}`} role="option" aria-selected={false}>
                 <button type="button" onClick={() => choisir(r)}>
-                  <span className="business-zone-emoji" aria-hidden="true">{EMOJI_TYPE[r.type] || '🏪'}</span>
+                  <span className="business-zone-emoji" aria-hidden="true"><Icone nom={EMOJI_TYPE[r.type] || 'commerce'} taille={16} className="icone-texte" /></span>
                   <span className="business-zone-text">
                     <b>{r.name}</b>
                     {/* Déjà sur Fairide : on le laisse dans la liste (le masquer ferait croire qu'il
@@ -155,11 +157,11 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
                 </button>
               </li>
             ))}
-            {surInternet.length > 0 && <li className="business-zone-groupe" aria-hidden="true">🌐 {t('businessSearch.foundOnWeb')}</li>}
+            {surInternet.length > 0 && <li className="business-zone-groupe" aria-hidden="true"><Icone nom="globe" taille={16} className="icone-texte" />{' '}{t('businessSearch.foundOnWeb')}</li>}
             {surInternet.map((r) => (
               <li key={`web-${r.osmType}-${r.osmId}`} role="option" aria-selected={false}>
                 <button type="button" onClick={() => choisir(r)}>
-                  <span className="business-zone-emoji" aria-hidden="true">{EMOJI_TYPE[r.type] || '🏪'}</span>
+                  <span className="business-zone-emoji" aria-hidden="true"><Icone nom={EMOJI_TYPE[r.type] || 'commerce'} taille={16} className="icone-texte" /></span>
                   <span className="business-zone-text">
                     <b>{r.name}</b>
                     <span className="small">{adresse(r) || t('businessSearch.noAddress')}</span>
@@ -176,8 +178,8 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
       {fiche && (
         <div className="business-found business-fiche" role="region" aria-label={t('businessSearch.ficheTitle')}>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
-            <b>{origine === 'web' ? `✅ ${t('businessSearch.found', { name: fiche.name })}` : `✍️ ${t('businessSearch.manualTitle')}`}</b>
-            <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={revoirListe}>← {t('businessSearch.backToList')}</button>
+            <b>{origine === 'web' ? `${t('businessSearch.found', { name: fiche.name })}` : `${t('businessSearch.manualTitle')}`}</b>
+            <button type="button" className="btn-ghost btn-sm" onClick={revoirListe}>← {t('businessSearch.backToList')}</button>
           </div>
           {fiche.dejaInscrit && (
             <p className="small" style={{ margin: '4px 0 8px', background: 'var(--cream-dim)', borderLeft: '3px solid var(--gold, #C9A227)', padding: '8px 10px', borderRadius: 6 }}>
@@ -189,12 +191,12 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
             <p className="small" style={{ margin: 0 }}>{t('businessSearch.compactHint')}</p>
           ) : origine === 'web' && !corriger ? (
             <div className="business-fiche-relecture">
-              <p className="small" style={{ margin: '0 0 2px' }}>📍 {adresseFiche || '-'}</p>
-              <p className="small" style={{ margin: '0 0 2px' }}>🌐 {fiche.website ? fiche.website : <i>{t('businessSearch.noWebsite')}</i>}</p>
-              <p className="small" style={{ margin: '0 0 2px' }}>🕒 {fiche.openingHours ? fiche.openingHours : <i>{t('businessSearch.noHours')}</i>}</p>
-              {fiche.cuisine && <p className="small" style={{ margin: '0 0 2px' }}>🍽️ {fiche.cuisine}</p>}
+              <p className="small" style={{ margin: '0 0 2px' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{adresseFiche || '-'}</p>
+              <p className="small" style={{ margin: '0 0 2px' }}><Icone nom="globe" taille={16} className="icone-texte" />{' '}{fiche.website ? fiche.website : <i>{t('businessSearch.noWebsite')}</i>}</p>
+              <p className="small" style={{ margin: '0 0 2px' }}>{fiche.openingHours ? fiche.openingHours : <i>{t('businessSearch.noHours')}</i>}</p>
+              {fiche.cuisine && <p className="small" style={{ margin: '0 0 2px' }}><Icone nom="restaurants" taille={16} className="icone-texte" />{' '}{fiche.cuisine}</p>}
               <p className="small" style={{ margin: '6px 0 0', opacity: 0.8 }}>{t('businessSearch.contactLater')}</p>
-              <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12, marginTop: 4 }} onClick={() => setCorriger(true)}>✏️ {t('businessSearch.correct')}</button>
+              <button type="button" className="btn-ghost btn-sm" style={{ marginTop: 4 }} onClick={() => setCorriger(true)}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('businessSearch.correct')}</button>
             </div>
           ) : (
             <div className="business-fiche-grid">

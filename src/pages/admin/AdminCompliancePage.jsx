@@ -33,7 +33,7 @@ const TABS = ['requests', 'contracts', 'registre', 'dossier', 'exports', 'retent
 const TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'];
 const STATUSES = ['received', 'in_progress', 'done', 'rejected'];
 const CHANNELS = ['email', 'form', 'phone', 'other'];
-const STATUS_COLORS = { received: 'var(--gold-deep)', in_progress: 'var(--teal)', done: '#2e7d32', rejected: 'var(--red)' };
+const STATUS_COLORS = { received: 'var(--gold-deep)', in_progress: 'var(--teal)', done: 'var(--green)', rejected: 'var(--red)' };
 
 function StatusPill({ status, tr }) {
   return <span className="compliance-status" style={{ color: STATUS_COLORS[status] || 'inherit' }}>{tr(`adminCompliance.status_${status}`)}</span>;
@@ -367,7 +367,7 @@ function ContractsTab() {
     { key: 'kind', label: tr('adminCommon.type'), get: (o) => (o.kind === 'courier' ? `${tr('adminCommon.driver')} · ${tr(`adminCompliance.courier_${o.subtype}`)}` : tr('adminCommon.restaurant')), sortValue: (o) => `${o.kind} ${o.subtype || ''}` },
     { key: 'name', label: tr('adminCommon.name'), get: (o) => <b>{o.name}</b>, sortValue: (o) => o.name },
     { key: 'email', label: tr('adminCommon.email'), get: (o) => o.email },
-    { key: 'version', label: tr('adminCompliance.colSigned'), get: (o) => (o.version ? <span style={{ color: 'var(--gold-deep)' }}>{o.version}</span> : <span style={{ color: 'var(--red)' }}>{tr('adminCompliance.unsigned')}</span>), sortValue: (o) => o.version || '' },
+    { key: 'version', label: tr('adminCompliance.colSigned'), get: (o) => (o.version ? <span style={{ color: 'var(--gold-deep)' }}>{o.version}</span> : <span className="texte-erreur">{tr('adminCompliance.unsigned')}</span>), sortValue: (o) => o.version || '' },
     { key: 'expected', label: tr('adminCompliance.colExpected'), get: (o) => o.expected }
   ];
 
@@ -628,7 +628,7 @@ function RegistreTab() {
                       <td className="small">{s.role}</td>
                       <td className="small">{s.zone}{s.mecanisme ? ` — ${s.mecanisme}` : ''}</td>
                       <td>{s.dpa
-                        ? <span style={{ color: '#2e7d32' }}>{tr('adminCompliance.dpaSigned')}</span>
+                        ? <span style={{ color: 'var(--green)' }}>{tr('adminCompliance.dpaSigned')}</span>
                         : <span style={{ color: 'var(--gold-deep)' }}>{tr('adminCompliance.dpaTodo')}</span>}</td>
                     </tr>
                   ))}
@@ -690,7 +690,7 @@ function DossierTab() {
         <div className="card" style={{ marginTop: 0 }}>
           <h3 style={{ marginTop: 0 }}>
             {tr('adminCompliance.dossierTitle')}{' '}
-            <span style={{ color: data.pret ? '#2e7d32' : 'var(--gold-deep)' }}>{data.completes}/{data.total}{data.completudePct != null ? ` · ${data.completudePct} %` : ''}</span>
+            <span style={{ color: data.pret ? 'var(--green)' : 'var(--gold-deep)' }}>{data.completes}/{data.total}{data.completudePct != null ? ` · ${data.completudePct} %` : ''}</span>
           </h3>
           {data.note && <p className="small" style={{ opacity: 0.8, marginTop: 0 }}>{data.note}</p>}
           <div className="table-scroll">
@@ -711,8 +711,8 @@ function DossierTab() {
                     </th>
                     <td className="small">{SOURCE_LABELS[p.source] || p.source}</td>
                     <td>
-                      {p.present && <span style={{ color: '#2e7d32' }}>✓ {p.deposeLe ? fmtDate(p.deposeLe) : ''}</span>}
-                      {!p.present && p.perime && <span style={{ color: 'var(--red)' }}>{tr('adminCompliance.dosExpired')}</span>}
+                      {p.present && <span style={{ color: 'var(--green)' }}>✓ {p.deposeLe ? fmtDate(p.deposeLe) : ''}</span>}
+                      {!p.present && p.perime && <span className="texte-erreur">{tr('adminCompliance.dosExpired')}</span>}
                       {!p.present && !p.perime && (
                         <span style={{ color: p.obligatoire ? 'var(--red)' : 'var(--ink-faint)' }}>{tr('adminCompliance.dosMissing')}</span>
                       )}

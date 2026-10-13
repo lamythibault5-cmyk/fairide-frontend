@@ -26,6 +26,7 @@ import { estCompteTest, estCompteSupprime, TestBadge, TestToggleButton, money, f
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import urlSure from '../../urlSure';
+import Icone from '../../components/Icone';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const PAGE_SIZE = 100;
@@ -49,22 +50,22 @@ function ContactCommerce({ r, tr, fiche = false }) {
   const style = { margin: '2px 0' };
   return (
     <>
-      <p className="small" style={style}>📍 {r.fullAddress || '-'}</p>
+      <p className="small" style={style}><Icone nom="position" taille={16} className="icone-texte" />{' '}{r.fullAddress || '-'}</p>
       <p className="small" style={style}>
-        📞 {r.restaurantPhone ? tel(r.restaurantPhone) : <span style={{ opacity: 0.7 }}>{tr('adminRestos.noRestoPhone')}</span>}{r.restaurantPhone && r.restaurantPhonePublic === false && <span className="small" style={{ opacity: 0.7 }}> ({tr('adminRestos.phoneHiddenPublic')})</span>}
+        <Icone nom="telephone" taille={16} className="icone-texte" />{' '}{r.restaurantPhone ? tel(r.restaurantPhone) : <span style={{ opacity: 0.7 }}>{tr('adminRestos.noRestoPhone')}</span>}{r.restaurantPhone && r.restaurantPhonePublic === false && <span className="small" style={{ opacity: 0.7 }}> ({tr('adminRestos.phoneHiddenPublic')})</span>}
         {r.restaurantPhoneSecondary && <> · {tel(r.restaurantPhoneSecondary)}{r.restaurantPhoneSecondaryPublic === false && <span className="small" style={{ opacity: 0.7 }}> ({tr('adminRestos.phoneHiddenPublic')})</span>}</>}
         {r.ownerPhone && r.ownerPhone !== r.restaurantPhone && r.ownerPhone !== r.restaurantPhoneSecondary && <> · {tr('adminRestos.ownerPhoneShort')} {tel(r.ownerPhone)}</>}
       </p>
       {/* Patron(s) / responsable(s) saisis à l'inscription ou dans Mon commerce › Contact (restaurants.manager_contacts). */}
       {(r.managerContacts || []).length > 0 && (
         <p className="small" style={style}>
-          👤 {tr('adminRestos.managers')} {r.managerContacts.map((m, i) => <span key={m.phone}>{i > 0 && ' · '}{m.name || '-'}{m.role === 'owner' ? ` (${tr('adminRestos.managerOwner')})` : ''} {tel(m.phone)}</span>)}
+          <Icone nom="compte" taille={16} className="icone-texte" />{' '}{tr('adminRestos.managers')} {r.managerContacts.map((m, i) => <span key={m.phone}>{i > 0 && ' · '}{m.name || '-'}{m.role === 'owner' ? ` (${tr('adminRestos.managerOwner')})` : ''} {tel(m.phone)}</span>)}
         </p>
       )}
-      {fiche && r.priceMarkupPercent > 0 && <p className="small" style={style}>📈 {tr('adminRestos.priceMarkup', { p: r.priceMarkupPercent })}</p>}
+      {fiche && r.priceMarkupPercent > 0 && <p className="small" style={style}><Icone nom="tendance" taille={16} className="icone-texte" />{' '}{tr('adminRestos.priceMarkup', { p: r.priceMarkupPercent })}</p>}
       {fiche && (r.restaurantEmail || r.restaurantEmailSecondary) && (
         <p className="small" style={style}>
-          ✉️ {[r.restaurantEmail, r.restaurantEmailSecondary].filter(Boolean).map((e, i) => <span key={e}>{i > 0 && ' · '}<a href={`mailto:${e}`} onClick={stop}>{e}</a></span>)}
+          <Icone nom="courrier" taille={16} className="icone-texte" />{' '}{[r.restaurantEmail, r.restaurantEmailSecondary].filter(Boolean).map((e, i) => <span key={e}>{i > 0 && ' · '}<a href={`mailto:${e}`} onClick={stop}>{e}</a></span>)}
         </p>
       )}
     </>
@@ -84,7 +85,7 @@ export function BoutonGererCommerce({ id, token, api, toast, tr, className = 'bt
       if (!w) toast(tr('adminRestos.manageBlocked'));
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
-  return <button type="button" className={className} style={style} disabled={busy} onClick={ouvrir} title={tr('adminRestos.manageHelp')}>{busy ? '…' : `🛠️ ${tr('adminRestos.manage')}`}</button>;
+  return <button type="button" className={className} style={style} disabled={busy} onClick={ouvrir} title={tr('adminRestos.manageHelp')}>{busy ? '…' : `${tr('adminRestos.manage')}`}</button>;
 }
 
 // « Fermer jusqu'à demain » (décision DEC-15) : pour un commerce fermé sans prévenir et injoignable. Il reste visible,
@@ -412,7 +413,7 @@ export default function AdminRestaurantsPage() {
         )}
         <ResultCount n={visibles.length} total={total} />
       </div>
-      {restaurants && nature !== 'test' && <p className="small" style={{ margin: '-4px 0 12px' }}>ℹ️ {tr('adminRestos.listingHint')}</p>}
+      {restaurants && nature !== 'test' && <p className="small" style={{ margin: '-4px 0 12px' }}>{tr('adminRestos.listingHint')}</p>}
       {error && <ErrorCard message={error} onRetry={load} />}
       {!restaurants && !error && <SkeletonCards count={3} />}
       {restaurants && visibles.length === 0 && !error && <div className="empty">{tr('adminCommon.noResults')}</div>}
@@ -436,7 +437,7 @@ export default function AdminRestaurantsPage() {
             <div className="small">{r.commune} · {r.cuisine} · {Number(r.rating || 0).toFixed(1)}★</div>
             <ContactCommerce r={r} tr={tr} />
             <div className="small">{tr('adminRestos.ownerLine', { name: r.responsibleName || '-', phone: r.ownerEmail ? ` · ${r.ownerEmail}` : '' })}</div>
-            {r.menuItemCount !== null && r.menuItemCount !== undefined && <div className="small">🍽️ {tr('adminRestos.menuLine', { n: r.menuItemCount })}</div>}
+            {r.menuItemCount !== null && r.menuItemCount !== undefined && <div className="small"><Icone nom="restaurants" taille={16} className="icone-texte" />{' '}{tr('adminRestos.menuLine', { n: r.menuItemCount })}</div>}
             {(r.companyNumber || r.vatNumber) && <div className="small">{tr('adminRestos.companyNumber')} {r.companyNumber || '-'} · TVA {r.vatNumber || '-'}</div>}
             <div className="small">
               {tr('adminRestos.statsLine', { n: r.orderCount, revenue: money(r.revenue), commission: money(r.commissionGenerated), basket: money(r.avgBasket) })}
@@ -447,10 +448,10 @@ export default function AdminRestaurantsPage() {
             <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
               <Link to={`/admin/restaurants/${r.id}/menu`} className={r.menuItemCount === 0 ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
               {!estTest(r) && <button className={r.publicListed ? 'btn-outline' : 'btn-gold'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askListing(r)}>{r.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
-              {r.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askApprove(r)}>{tr('adminCommon.approve')}</button>}
-              {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
-              {r.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(r)}>{tr('adminCommon.reactivate')}</button>}
-              <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 'auto' }} onClick={() => askDelete(r)}>{tr('adminRestos.deleteRestaurant')}</button>
+              {r.adminStatus !== 'approved' && <button className="btn-teal btn-sm" onClick={() => askApprove(r)}>{tr('adminCommon.approve')}</button>}
+              {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost btn-sm" onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
+              {r.adminStatus === 'blocked' && <button className="btn-teal btn-sm" onClick={() => askReactivate(r)}>{tr('adminCommon.reactivate')}</button>}
+              <button className="btn-danger-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => askDelete(r)}>{tr('adminRestos.deleteRestaurant')}</button>
             </div>
           </div>
         );
@@ -645,7 +646,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
       title={selected.name}
       subtitle={detail ? `${detail.commune}${detail.neighborhood ? ` (${detail.neighborhood})` : ''} · ${detail.cuisine} · ${Number(detail.rating || 0).toFixed(1)}★` : ''}
       badge={biz ? <span className="pill" style={{ color: biz.color }}>{biz.label}</span> : null}
-      actions={<a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="btn-outline" style={{ padding: '6px 12px', fontSize: 12, textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
+      actions={<a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
       tabs={[
         { key: 'apercu', label: tr('adminCommon.tabOverview') },
         { key: 'commandes', label: tr('adminCommon.tabOrders'), count: orders ? orders.length : null },
@@ -676,24 +677,24 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           {/* Livraison Fairide dans la zone : coupée pour un commerce seul (pas de livreur) ; sans objet s'il livre lui-même. */}
           <div className="small zone-livraison" style={{ margin: '6px 0' }}>
             {detail.deliveryMode === 'own' ? (
-              <span style={{ color: 'var(--ink-faint)' }}>🛵 {tr('adminRestos.zoneDeliveryOwn')}</span>
+              <span style={{ color: 'var(--ink-faint)' }}><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{tr('adminRestos.zoneDeliveryOwn')}</span>
             ) : detail.fairideDeliveryDisabled ? (
               <>
-                <span className="pill" style={{ background: '#fff1d6', color: '#7a4a00' }}>⛔ {tr('adminRestos.zoneDeliveryOffBadge')}</span>
+                <span className="pill"><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{tr('adminRestos.zoneDeliveryOffBadge')}</span>
                 {detail.fairideDeliveryDisabledReason && <span style={{ marginLeft: 6 }}>{detail.fairideDeliveryDisabledReason}</span>}
-                <button type="button" className="btn-outline" style={{ marginLeft: 8, padding: '4px 10px', fontSize: 12 }} onClick={() => onZoneDelivery?.(detail.id, false)}>{tr('adminRestos.zoneDeliveryOn')}</button>
+                <button type="button" className="btn-outline btn-sm" style={{ marginLeft: 8 }} onClick={() => onZoneDelivery?.(detail.id, false)}>{tr('adminRestos.zoneDeliveryOn')}</button>
               </>
             ) : (
               <div className="row" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                 <input style={{ flex: '1 1 220px', fontSize: 12 }} placeholder={tr('adminRestos.zoneDeliveryReasonPh')} value={zoneMotif} onChange={(e) => setZoneMotif(e.target.value)} aria-label={tr('adminRestos.zoneDeliveryReasonPh')} />
-                <button type="button" className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => onZoneDelivery?.(detail.id, true, zoneMotif)}>{tr('adminRestos.zoneDeliveryOff')}</button>
+                <button type="button" className="btn-outline btn-sm" onClick={() => onZoneDelivery?.(detail.id, true, zoneMotif)}>{tr('adminRestos.zoneDeliveryOff')}</button>
               </div>
             )}
           </div>
           {detail.plan && <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.planLine', { plan: tr('adminRestos.planComplete') })}</p>}
           {detail.terminal && (
             <div className="small" style={{ margin: '2px 0' }}>
-              <p style={{ margin: 0 }}>🖥️ {tr('adminRestos.terminalLine', { status: tr(`adminRestos.terminalStatus_${detail.terminal.status}`), amount: Number(detail.terminal.depositAmount || 80).toFixed(0), rank: detail.terminal.signupRank ? tr('adminRestos.terminalRank', { n: detail.terminal.signupRank }) : '' })}{detail.terminal.note ? ` · ${detail.terminal.note}` : ''}</p>
+              <p style={{ margin: 0 }}>{tr('adminRestos.terminalLine', { status: tr(`adminRestos.terminalStatus_${detail.terminal.status}`), amount: Number(detail.terminal.depositAmount || 80).toFixed(0), rank: detail.terminal.signupRank ? tr('adminRestos.terminalRank', { n: detail.terminal.signupRank }) : '' })}{detail.terminal.note ? ` · ${detail.terminal.note}` : ''}</p>
               <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
                 {['none', 'rendu', 'rembourse', 'conserve'].includes(detail.terminal.status) && detail.terminal.eligibleOffert && <button className="btn-outline" onClick={() => onTerminal('offert', 'terminalOffer')}>{tr('adminRestos.terminalOffer')}</button>}
                 {['none', 'rendu', 'rembourse', 'conserve'].includes(detail.terminal.status) && !detail.terminal.eligibleOffert && <button className="btn-outline" onClick={() => onTerminal('caution_due', 'terminalDue')}>{tr('adminRestos.terminalDue')}</button>}
@@ -706,11 +707,11 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           )}
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.registeredOnDate', { date: fmtDate(detail.createdAt) })}</p>
           <p className="small" style={{ margin: '6px 0 2px' }}>
-            {estTest(detail) ? <>🧪 {detail.isDemo ? tr('adminRestos.testLine') : tr('adminRestos.testOwnerLine')}</> : <><span className={`pill ${detail.publicListed ? 'listing-on' : 'listing-off'}`}>{detail.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span> {detail.publicListed ? tr('adminRestos.listedLine') : tr('adminRestos.unlistedLine')}</>}
+            {estTest(detail) ? <>{detail.isDemo ? tr('adminRestos.testLine') : tr('adminRestos.testOwnerLine')}</> : <><span className={`pill ${detail.publicListed ? 'listing-on' : 'listing-off'}`}>{detail.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span> {detail.publicListed ? tr('adminRestos.listedLine') : tr('adminRestos.unlistedLine')}</>}
           </p>
           {!estTest(detail) && (
             <div className="row" style={{ gap: 8, alignItems: 'center', margin: '4px 0 6px', flexWrap: 'wrap' }}>
-              <label htmlFor="landing-rank" className="small"><b>🏠 {tr('adminRestos.landingRankLabel')}</b></label>
+              <label htmlFor="landing-rank" className="small"><b><Icone nom="maison" taille={16} className="icone-texte" />{' '}{tr('adminRestos.landingRankLabel')}</b></label>
               <select id="landing-rank" value={detail.landingRank ?? ''} onChange={(e) => onLandingRank(detail.id, e.target.value)} style={{ maxWidth: 220 }}>
                 <option value="">{tr('adminRestos.landingRankNone')}</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n}>{tr('adminRestos.landingRankN', { n })}</option>)}
@@ -719,11 +720,11 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             </div>
           )}
           <div className="drawer-section" style={{ margin: '10px 0', padding: '10px 12px', background: 'var(--surface-soft)', borderRadius: 10 }}>
-            <p className="small" style={{ margin: 0 }}><b>🍽️ {tr('adminRestos.menuTitle')}</b> · {detail.menuItemCount !== null && detail.menuItemCount !== undefined ? tr('adminRestos.menuLine', { n: detail.menuItemCount }) : ''}</p>
+            <p className="small" style={{ margin: 0 }}><b><Icone nom="restaurants" taille={16} className="icone-texte" />{' '}{tr('adminRestos.menuTitle')}</b> · {detail.menuItemCount !== null && detail.menuItemCount !== undefined ? tr('adminRestos.menuLine', { n: detail.menuItemCount }) : ''}</p>
             {detail.concierge && (
               <p className="small" style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>
-                🤝 {tr('adminRestos.conciergeLine', { platform: detail.concierge.platformLabel, date: fmtDate(detail.concierge.createdAt), status: { en_attente: tr('adminMenu.stPending'), en_cours: tr('adminMenu.stInProgress'), terminee: tr('adminMenu.stDone'), refusee: tr('adminMenu.stRefused') }[detail.concierge.status] || detail.concierge.status })}
-                {detail.concierge.notes ? `\n💬 ${tr('adminRestos.conciergeNotes', { notes: detail.concierge.notes })}` : ''}
+                <Icone nom="contrat" taille={16} className="icone-texte" />{' '}{tr('adminRestos.conciergeLine', { platform: detail.concierge.platformLabel, date: fmtDate(detail.concierge.createdAt), status: { en_attente: tr('adminMenu.stPending'), en_cours: tr('adminMenu.stInProgress'), terminee: tr('adminMenu.stDone'), refusee: tr('adminMenu.stRefused') }[detail.concierge.status] || detail.concierge.status })}
+                {detail.concierge.notes ? `\n${tr('adminRestos.conciergeNotes', { notes: detail.concierge.notes })}` : ''}
               </p>
             )}
             <Link to={`/admin/restaurants/${detail.id}/menu`} className={detail.conciergeStatus ? 'btn-gold' : 'btn-outline'} style={{ display: 'inline-block', marginTop: 8, padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
@@ -834,13 +835,13 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
         <>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminCommon.documents')}</h4>
-            <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
+            <button className="btn-outline btn-sm" onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
           </div>
           {!documents && <div className="small">{tr('adminCommon.loading')}</div>}
           {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
           {documents && documents.map((doc) => (
             <div key={doc.id} className="drawer-row">
-              <a href={urlSure(doc.fileUrl)} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
+              <a href={urlSure(doc.fileUrl)} target="_blank" rel="noreferrer" className="small"><Icone nom="lien" taille={16} className="icone-texte" />{' '}{doc.title}</a>
               <span className="small">
                 {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
                 {DOCUMENT_TYPE_LABELS[doc.documentType]}

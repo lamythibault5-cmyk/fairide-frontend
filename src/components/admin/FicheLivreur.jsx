@@ -22,7 +22,7 @@ export default function FicheLivreur({ dossier, tr, onOpen }) {
     <div className="fiche-livreur">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminDrivers.ficheTitle')}</h4>
-        <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={onOpen}>{tr('adminDrivers.openFullFile')}</button>
+        <button type="button" className="btn-outline btn-sm" onClick={onOpen}>{tr('adminDrivers.openFullFile')}</button>
       </div>
       <DrawerRow label={tr('adminDrivers.rowFile')} value={tr(`courierOnboarding.lifecycle_${c.lifecycleStatus}`)} strong />
       <DrawerRow

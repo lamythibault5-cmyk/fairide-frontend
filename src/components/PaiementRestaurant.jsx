@@ -68,7 +68,7 @@ function CoordonneesLegales({ restaurant, onSaved, enchainer = false }) {
       {!edition ? (
         <p className="small" style={{ margin: '4px 0 0' }}>
           {t('paiementResto.legalDone', { legal: restaurant.legalName || '-', n: restaurant.companyNumber || '-', vat: restaurant.vatNumber || '-' })}
-          {' '}<button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setEdition(true)}>{t('paiementResto.legalEdit')}</button>
+          {' '}<button type="button" className="btn-ghost btn-sm" onClick={() => setEdition(true)}>{t('paiementResto.legalEdit')}</button>
         </p>
       ) : (
         <>

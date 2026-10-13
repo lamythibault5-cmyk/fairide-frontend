@@ -172,8 +172,8 @@ function RuleCard({ rule, onChanged, onShowLog }) {
           <p className="small" style={{ margin: '2px 0 0', opacity: 0.75 }}>{meta.description}</p>
         </div>
         <div className="admin-rule-actions">
-          <button className="btn-outline" style={{ padding: '4px 12px', fontSize: 12 }} disabled={busy} onClick={() => setConfirm('test')}>{tr('adminAutomations.testRule')}</button>
-          <button className="btn-ghost" style={{ padding: '4px 12px', fontSize: 12 }} onClick={onShowLog}>{tr('adminAutomations.showLog')}</button>
+          <button className="btn-outline btn-sm" disabled={busy} onClick={() => setConfirm('test')}>{tr('adminAutomations.testRule')}</button>
+          <button className="btn-ghost btn-sm" onClick={onShowLog}>{tr('adminAutomations.showLog')}</button>
           <button className={rule.enabled ? 'btn-danger-ghost' : 'btn-teal'} style={{ padding: '4px 12px', fontSize: 12, flexShrink: 0 }} disabled={busy} onClick={() => setConfirm('toggle')}>
             {rule.enabled ? tr('adminCommon.disable') : tr('adminCommon.enable')}
           </button>
@@ -187,7 +187,7 @@ function RuleCard({ rule, onChanged, onShowLog }) {
               <input id={`auto-${pf.key}`} type="number" step={pf.step || '1'} value={params[pf.key] ?? ''} onChange={(e) => setParams({ ...params, [pf.key]: Number(e.target.value) })} />
             </div>
           ))}
-          <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} disabled={!dirty || saving} onClick={saveParams}>{saving ? '...' : tr('adminCommon.save')}</button>
+          <button className="btn-outline btn-sm" disabled={!dirty || saving} onClick={saveParams}>{saving ? '...' : tr('adminCommon.save')}</button>
         </div>
       )}
       <p className="small" style={{ margin: '8px 0 0', opacity: 0.6 }}>

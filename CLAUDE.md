@@ -179,8 +179,8 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
 | `--line` | `#DCD8D0` | 1px hairlines — the only separator, there are no shadows |
 | `--chip` | `#1E1A17` | Dark badge background, white text |
 | `--cream` / `--cream-dim` | `#FFFFFF` / `#F4F2ED` | Page background / surface tint |
-| `--red` `--blue` `--orange` `--purple` | | Status colours only, never brand |
-| `--radius` / `--radius-chip` | `20px` / `6px` | Cards / chips and controls |
+| `--red` `--blue` `--orange` `--purple` `--green` | | Status colours only, never brand (`--green` since 2026-10-13: « validé », « signé ») |
+| `--radius` / `--radius-field` / `--radius-pill` | `16px` / `8px` / `999px` | Cards / fields and small containers (`--radius-chip` is an alias of `--radius-field`) / everything clickable. Re-checked against styles.css on 2026-10-13 — this row said 20px / 6px, which the code no longer used |
 | `--shadow` | `none` | Kept as a token so old call sites resolve to nothing |
 
 **Three rules that are not negotiable, all inherited from the spec:**
@@ -225,6 +225,22 @@ Confirmation modals use [ConfirmDialog](src/components/ConfirmDialog.jsx) — ne
 which is suppressed in installed PWAs and webviews. The five `window.confirm` hits you'll find in
 `src/` are all inside comments explaining this; there are no live calls. `window.prompt` has the
 same problem and the same replacement, [ReasonDialog](src/components/admin/ReasonDialog.jsx).
+
+**No emojis anywhere, admin included (founder, 2026-10-13).** Icons are the line drawings of
+[Icone.jsx](src/components/Icone.jsx) (`<Icone nom="…" taille={16} className="icone-texte" />` inside text); a data table
+holds icon *names*, not emoji (`RESTAURANT_TYPES[].icone`, `ORDER_STAGES[].icon`). Leaflet markers take HTML: use
+[iconeHtml](src/iconeHtml.jsx). Strings that can only be text (CSV, `<option>`, `title`) get no icon at all, or a
+monochrome glyph (✓ ✗). Message reactions are still *stored* as emoji (server values) and *shown* as icons
+([reactions.jsx](src/reactions.jsx)).
+
+**Gestures are app-only (since 2026-10-13).** Physical motion — springs with velocity hand-off, momentum projection,
+rubber-banding ([src/ressort.js](src/ressort.js)) — runs only when `estNatif()`, loaded with `import()`, so the website
+downloads nothing extra (founder: the site must not get slower). What uses it: sheets pulled down to close
+([useFeuilleGlissable](src/hooks/useFeuilleGlissable.js), FichePlat and SousEcran — on the site they keep the plain
+threshold + CSS transition), edge swipe back on iPhone ([RetourParGlissement](src/components/RetourParGlissement.jsx);
+Android has it in the system), and swipe-to-confirm for the courier's « récupérée » / « livrée »
+([GlisserPourConfirmer](src/components/livreur/GlisserPourConfirmer.jsx); the site keeps the buttons). An animation with
+`fill-mode: both` overrides inline transforms — the sheet's entry animation is `backwards` for that reason.
 
 Note the two heavily-commented rules near the top of the file — `overflow-x: clip` on
 `html`/`body` and `-webkit-tap-highlight-color: transparent`. Both encode a bug that was

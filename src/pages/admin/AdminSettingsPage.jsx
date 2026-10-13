@@ -9,6 +9,7 @@ import { estCompteTest, TestBadge, fmtDate } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import TwoFactorSetup from '../../components/TwoFactorSetup';
+import Icone from '../../components/Icone';
 
 const SECTIONS = ['Tarification', 'Utilisateurs', 'Sécurité'];
 const sectionLabels = (tr) => ({ "Tarification": tr('adminSettings.section_pricing'), "Utilisateurs": tr('adminSettings.section_users'), "Sécurité": tr('adminSettings.section_security'), "Avis": tr('adminSettings.section_reviews'), "Codes promo": tr('adminSettings.section_promos') });
@@ -205,7 +206,7 @@ function UsersSubsection({ title, subtitle, groups, departed, emptyText }) {
 
 function statusPill(status, tr) {
   if (status === 'approved') return <span className="pill teal">{tr('adminSettings.validated')}</span>;
-  if (status === 'blocked') return <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminSettings.blocked')}</span>;
+  if (status === 'blocked') return <span className="pill texte-erreur">{tr('adminSettings.blocked')}</span>;
   return <span className="pill">{tr('adminSettings.pendingBadge')}</span>;
 }
 
@@ -242,11 +243,11 @@ function UserTypeGroup({ type, items, departed }) {
                   <>
                     <b>{it.name}</b> <span className="small">{it.email}</span>
                     {estCompteTest(it) && <TestBadge />}
-                    {it.phone && <div className="small">📞 {it.phone}</div>}
+                    {it.phone && <div className="small"><Icone nom="telephone" taille={16} className="icone-texte" />{' '}{it.phone}</div>}
                     <div className="row" style={{ gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                       {type === 'driver' && statusPill(it.adminStatus, tr)}
                       {type === 'restaurant' && (
-                        it.restaurantName ? <>🏪 {it.restaurantName} {statusPill(it.restaurantAdminStatus, tr)}</> : <span className="small" style={{ opacity: 0.6 }}>{tr('adminSettings.noRestaurantYet')}</span>
+                        it.restaurantName ? <><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{it.restaurantName} {statusPill(it.restaurantAdminStatus, tr)}</> : <span className="small" style={{ opacity: 0.6 }}>{tr('adminSettings.noRestaurantYet')}</span>
                       )}
                     </div>
                   </>

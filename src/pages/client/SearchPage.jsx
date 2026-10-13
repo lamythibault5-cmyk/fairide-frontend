@@ -178,7 +178,7 @@ export default function SearchPage() {
             <div className="recherche-pastilles">
               {RESTAURANT_TYPES.slice(0, 14).map((c) => (
                 <Link key={c.value} to="/restaurants" state={{ cuisine: c.value }} className="pill recherche-pastille">
-                  <span aria-hidden="true">{c.emoji}</span> {c.value}
+                  <Icone nom={c.icone} taille={16} className="icone-texte" /> {c.value}
                 </Link>
               ))}
               <button type="button" className={`pill recherche-pastille${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('search.filterBio')}</button>
@@ -231,7 +231,7 @@ export default function SearchPage() {
           </Groupe>
           <Groupe titre={t('search.cuisineTypes')} quand={resultats.cuisines.length}>
             {resultats.cuisines.map((c) => (
-              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={<span style={{ fontSize: 18 }}>{c.emoji}</span>} titre={c.value} sous={t('search.seeTypeBusinesses')} />
+              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={<Icone nom={c.icone} taille={20} />} titre={c.value} sous={t('search.seeTypeBusinesses')} />
             ))}
           </Groupe>
           <Groupe titre={t('search.municipalities')} quand={resultats.communes.length}>

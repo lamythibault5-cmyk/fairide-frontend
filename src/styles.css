@@ -63,6 +63,9 @@
   --blue: #2B7FB8;
   --orange: #E07A1F;
   --purple: #B0459B;
+  /* Vert d'état (« validé », « signé », « complet ») — 2026-10-13 : il était écrit en dur (#2e7d32) dans six écrans. Couleur
+     d'état seulement, comme les quatre au-dessus : jamais une couleur de marque. */
+  --green: #2E7D32;
   --heart: #FF3B5C;
 
   /* Formes — LA PILULE EST LA FORME SIGNATURE (DESIGN.md § Shapes).
@@ -623,14 +626,24 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .btn-lg { min-height: 56px; font-size: 18px; padding: 16px 24px; }
 
 .btn-primary { background: var(--ink); color: var(--cream); }
-.btn-gold { background: var(--lime); color: var(--ink); border: 1px solid #A9CE2A; }
+/* Bordure de la couleur du fond : elle garde la hauteur des autres boutons à bordure, sans ajouter une teinte hors palette
+   (c'était #A9CE2A, une lime assombrie). */
+.btn-gold { background: var(--lime); color: var(--ink); border: 1px solid var(--lime); }
 .btn-teal { background: var(--iris); color: #fff; }
 .btn-teal:hover:not(:disabled) { background: var(--iris-deep); }
 .btn-danger { background: var(--red); color: #fff; }
 .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--ink); }
-.btn-ghost { background: transparent; color: var(--ink-soft); padding: 6px 10px; font-size: 12px; }
-.btn-danger-ghost { background: transparent; color: var(--red); padding: 6px 10px; font-size: 12px; text-decoration: underline; }
+/* 14px et non plus 12 (2026-10-13) : 315 actions de l'application sont des btn-ghost, et à 12px elles se lisaient mal. */
+.btn-ghost { background: transparent; color: var(--ink-soft); padding: 6px 10px; font-size: 14px; }
+.btn-danger-ghost { background: transparent; color: var(--red); padding: 6px 10px; font-size: 14px; text-decoration: underline; }
 .btn-block { width: 100%; }
+/* PETIT BOUTON (2026-10-13). 175 boutons étaient rapetissés en ligne, en une douzaine de tailles (4px 10px / 12px,
+   6px 12px / 13px, 6px 14px / 13px, 8px 14px / 13px…). Une seule taille maintenant, pour qu'une rangée d'actions ait
+   un rythme. La hauteur minimale de 44px des boutons pleins et à contour reste : c'est la cible du pouce. */
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-ghost.btn-sm, .btn-danger-ghost.btn-sm { padding: 4px 8px; }
+/* Texte d'erreur posé dans un paragraphe (44 endroits l'écrivaient en ligne). */
+.texte-erreur { color: var(--red); }
 
 /* .btn-subtle — la pilule grise des actions de troisième rang (« En savoir plus », « Modifier »),
    reprise de DESIGN.md, à poser surface par surface au fil de la reprise. Elle remplace
@@ -2323,6 +2336,8 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 /* La pastille qui glisse n'existe que dans la barre du bas (sous 900px) ; la colonne latérale garde son fond
    sur l'onglet actif. */
 .nav-curseur { display: none; }
+/* Libellé court (« Commandes » pour « Mes commandes ») : seulement dans la barre du bas, voir plus bas. */
+.libelle-court { display: none; }
 @keyframes onglet-arrive { 0% { transform: scale(.86); } 60% { transform: scale(1.08); } 100% { transform: none; } }
 @keyframes barre-pousse { 0% { transform: none; } 35% { transform: translateX(var(--pousse, 0)) scale(.99); } 100% { transform: none; } }
 .dashboard-nav-link {
@@ -2488,7 +2503,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     position: fixed; left: 0; right: 0; top: auto; height: auto; width: 100%;
     bottom: calc(12px + env(safe-area-inset-bottom));
     flex-direction: row; align-items: center; justify-content: center; gap: 10px;
-    padding: 0 12px;
+    padding: 0 8px; /* 8 et non 12 : quatre pixels de plus pour les libellés de la barre-pilule */
     background: transparent; border-right: none; border-top: none;
     box-shadow: none; z-index: 50; pointer-events: none;
     overflow: visible;
@@ -2518,7 +2533,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   .dashboard-nav {
     flex-direction: row; gap: 0; width: 100%; max-width: 460px; flex: 0 1 auto; min-width: 0;
     justify-content: stretch; overflow: visible; pointer-events: auto;
-    position: relative; padding: 5px;
+    position: relative; padding: 4px;
     background: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill);
     contain: layout paint;
     transition: transform .15s var(--ressort-ui);
@@ -2553,6 +2568,9 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     max-height: 14px; line-height: 14px;
     transition: opacity .12s, max-height .14s var(--ressort-ui), transform .14s var(--ressort-ui);
   }
+  .libelle-court { display: inline; }
+  /* Quand un libellé court existe, le long n'est plus le dernier enfant : il cède la place. */
+  .dashboard-nav-label > .libelle-long:not(:last-child) { display: none; }
   .dashboard-sidebar--compacte .dashboard-nav-link { height: 46px; gap: 0; }
   /* La console admin a une dizaine de pôles : sa pilule défile de côté au lieu d'écraser les onglets. */
   .dashboard-nav.admin { justify-content: flex-start; overflow-x: auto; scrollbar-width: none; contain: layout; }
@@ -3564,16 +3582,23 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .courier-state.ok { border-left-color: var(--teal-deep); }
 .courier-state.warn { border-left-color: var(--gold-deep); }
 .courier-state.danger { border-left-color: var(--red); }
-.courier-steps { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
+/* En-tête du dossier livreur (2026-10-13) : celui de l'accueil de l'app (.bv-haut) — retour rond, barre de progression en
+   segments (un par étape, chacun cliquable : cible de 28px, trait de 4px), puis « Étape n sur 6 · Nom ». */
+.courier-etape-tete { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; }
+.courier-etape-retour { width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); display: grid; place-items: center; flex: none; }
+.courier-etape-retour:disabled { opacity: .35; }
+.courier-steps { display: flex; gap: 4px; flex: 1; margin: 0; }
+.courier-etape-titre { margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
+.courier-etape-titre b { color: var(--ink); }
 /* La carte « Prochaine étape » du dossier livreur et le « Avant de commencer » replié (12 oct. 2026). */
 .prochaine-etape { display: flex; flex-direction: column; gap: 6px; border-color: var(--iris); }
 .prochaine-etape b { font-size: 17px; }
 .prochaine-etape .btn-gold { align-self: flex-start; margin-top: 4px; }
 .avant-de-commencer summary { cursor: pointer; font-weight: 700; }
-.courier-step { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: var(--radius-chip); border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; cursor: pointer; }
-.courier-step.active { border-color: var(--iris); background: rgba(59,47,181,0.08); font-weight: 700; }
-.courier-step.done .courier-step-num { background: var(--teal-deep); color: #fff; }
-.courier-step-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--cream-dim); font-size: 12px; font-weight: 700; }
+.courier-step { flex: 1; position: relative; height: 28px; min-height: 0; padding: 0; border: 0; background: none; cursor: pointer; }
+.courier-step::before { content: ""; position: absolute; left: 0; right: 0; top: 12px; height: 4px; border-radius: 2px; background: var(--line); transition: background .15s; }
+.courier-step.done::before, .courier-step.active::before { background: var(--iris); }
+.courier-step.active::before { top: 11px; height: 6px; }
 .courier-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
 .courier-compare-card { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 12px; display: flex; flex-direction: column; gap: 6px; background: #fff; }
 .courier-compare-card.active { border-color: var(--iris); box-shadow: var(--ring); }
@@ -4367,7 +4392,9 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 @keyframes plat-apparait { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
 @keyframes plat-disparait { from { opacity: 1; } to { opacity: 0; transform: translateY(10px) scale(.98); } }
 @keyframes fond-apparait { from { background-color: rgba(20, 18, 31, 0); } }
-.plat-panneau { animation: plat-monte .32s cubic-bezier(.2, .9, .25, 1) both; transition: transform .25s cubic-bezier(.2, .9, .25, 1); will-change: transform; }
+/* `backwards` et non `both` (2026-10-13) : une animation qui garde son état final l'emporte sur le style posé en ligne, donc
+   la feuille ne suivait plus le doigt quand on la tirait vers le bas (useFeuilleGlissable). L'état final vaut le repos : rien à garder. */
+.plat-panneau { animation: plat-monte .32s cubic-bezier(.2, .9, .25, 1) backwards; transition: transform .25s cubic-bezier(.2, .9, .25, 1); will-change: transform; }
 .plat-feuille--ferme .plat-panneau { animation: plat-descend .23s cubic-bezier(.4, 0, 1, 1) both; }
 .plat-defile { overscroll-behavior: contain; }
 .plat-poignee { display: none; }
@@ -4585,6 +4612,9 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-ecran { min-height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column;
   padding: calc(18px + env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom)); animation: bv-entre .28s ease; }
 @keyframes bv-entre { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+/* En reculant, l'écran revient par la gauche : même chemin à l'aller et au retour. */
+.bv-ecran--retour { animation-name: bv-revient; }
+@keyframes bv-revient { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .bv-ecran { animation: none; } }
 .bv-grandit { flex: 1; min-height: 12px; }
 .bv-centre { text-align: center; }
@@ -4713,3 +4743,31 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 /* Carte « Active ta position » qui remplace les courses disponibles tant que la position du livreur manque
    (components/livreur/PositionRequise.jsx) : un filet iris de 2 px pour qu elle se lise comme une étape à faire. */
 .position-requise { border: 2px solid var(--iris); }
+
+/* ICÔNES DANS LE TEXTE (2026-10-13) — elles remplacent les derniers emojis de l'application, admin compris (« plus aucun
+   emoji enfantin »). Un tracé posé au milieu d'une phrase s'aligne sur la ligne de base du texte qui l'entoure et prend sa
+   couleur ; dans un conteneur flex, il ne se laisse pas écraser. */
+.icone-texte { display: inline-block; vertical-align: -0.18em; flex: none; }
+.emoji svg, .visuel-vide-emoji svg, .map-pin-emoji svg, .business-zone-emoji svg, .app-soon-store-icon svg, .crm-hist-ico svg, .lg-marker svg { display: block; }
+.cuisine-chip .emoji, .business-zone-emoji, .app-soon-store-icon, .crm-hist-ico { display: inline-flex; align-items: center; justify-content: center; }
+.map-pin-emoji, .lg-marker > span { display: flex; align-items: center; justify-content: center; }
+
+/* GLISSER POUR CONFIRMER (livreur, application seulement — components/livreur/GlisserPourConfirmer.jsx). Une piste iris,
+   un pouce lime (la lime posée sur l'iris, règle 1 de l'identité) ; le texte s'efface à mesure que le pouce avance
+   (--avance, de 0 à 1, posé par le composant). Pas d'ombre : le pouce se détache par sa couleur. */
+.glisser-confirmer { position: relative; height: 60px; border-radius: var(--radius-pill); background: var(--iris); color: #fff; padding: 4px; display: flex; align-items: center; margin-top: 10px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.glisser-confirmer-texte { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding-left: 52px; font-weight: 700; font-size: 15px; opacity: calc(1 - var(--avance, 0) * 1.4); pointer-events: none; }
+.glisser-confirmer-pouce { position: relative; z-index: 1; width: 52px; height: 52px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center; touch-action: none; cursor: grab; }
+.glisser-confirmer-pouce svg { transform: scaleX(-1); }
+.glisser-confirmer.est-fait .glisser-confirmer-pouce svg { transform: none; }
+.glisser-confirmer.est-inactif { opacity: .5; }
+
+/* Commande payée (OrderResult.jsx) : écran iris plein. Fond iris, texte blanc, l'icône en filet blanc avec un trait lime
+   (la lime posée sur l'iris) qui arrive avec le ressort de l'interface. CSS seulement : rien de plus à télécharger. */
+.resultat-paye { background: var(--iris); color: #fff; border-radius: var(--radius); margin: 16px; min-height: calc(100dvh - 160px); }
+.resultat-paye .etat-vide-icone { background: transparent; border: 1px solid rgba(255, 255, 255, .4); color: var(--lime); animation: resultat-pop .35s var(--ressort-ui) both; }
+.resultat-paye .etat-vide-titre { font-size: var(--t-display-md); color: #fff; }
+.resultat-paye .small { color: rgba(255, 255, 255, .82); }
+@keyframes resultat-pop { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+/* Le bouton secondaire sur fond iris, quand c'est un lien (<Link>) : même forme qu'un bouton, sinon il hérite d'un simple filet. */
+.resultat-paye a.btn-hero-ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 20px; border-radius: var(--radius-pill); font-weight: 500; font-size: 15px; }

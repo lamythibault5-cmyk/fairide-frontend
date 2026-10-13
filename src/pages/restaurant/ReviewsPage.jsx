@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { StarsDisplay } from '../../components/Stars';
 import { useLanguage } from '../../context/LanguageContext';
+import EtatVide from '../../components/EtatVide';
 
 // La réponse du restaurateur est publique (visible aux clients sur la fiche resto, voir
 // RestaurantMenu.jsx) — pensée pour se justifier publiquement en cas d'avis contestable, pas comme
@@ -46,7 +47,7 @@ export default function ReviewsPage() {
         {restaurant.reviewCount > 0 && <StarsDisplay value={restaurant.rating} />}
         <span className="small">{restaurant.reviewCount > 0 ? t('reviewsResto.ratingWithCount', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('reviewsResto.noReviewsYet')}</span>
       </div>
-      {(!reviews || reviews.reviews.length === 0) && <div className="empty">{t('reviewsResto.none')}</div>}
+      {(!reviews || reviews.reviews.length === 0) && <EtatVide icone="etoile" titre={t('reviewsResto.none')} />}
       {reviews && reviews.reviews.length > 0 && (
         <div className="card">
           {reviews.reviews.map((r) => (
@@ -63,11 +64,11 @@ export default function ReviewsPage() {
                 <div style={{ marginTop: 8, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
                   <div className="small" style={{ fontWeight: 700 }}>{t('reviewsResto.yourReply')}</div>
                   <p className="small" style={{ margin: '2px 0 0' }}>{r.restaurantReply}</p>
-                  <button type="button" className="btn-ghost" style={{ marginTop: 4, fontSize: 12, padding: '2px 8px' }} onClick={() => startReply(r)}>{t('reviewsResto.edit')}</button>
+                  <button type="button" className="btn-ghost btn-sm" style={{ marginTop: 4 }} onClick={() => startReply(r)}>{t('reviewsResto.edit')}</button>
                 </div>
               )}
               {!r.restaurantReply && editingId !== r.id && (
-                <button type="button" className="btn-ghost" style={{ marginTop: 6, fontSize: 12, padding: '2px 8px' }} onClick={() => startReply(r)}>{t('reviewsResto.reply')}</button>
+                <button type="button" className="btn-ghost btn-sm" style={{ marginTop: 6 }} onClick={() => startReply(r)}>{t('reviewsResto.reply')}</button>
               )}
               {editingId === r.id && (
                 <div style={{ marginTop: 8 }}>

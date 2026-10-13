@@ -41,7 +41,7 @@ export default function CreateTaskButton({ targetType, targetId, label }) {
 
   return (
     <>
-      <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setOpen(true)}>{tr('adminTasks.createTaskBtn')}</button>
+      <button className="btn-outline btn-sm" onClick={() => setOpen(true)}>{tr('adminTasks.createTaskBtn')}</button>
       {open && createPortal(
         <div className="modal-overlay" onClick={() => setOpen(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>

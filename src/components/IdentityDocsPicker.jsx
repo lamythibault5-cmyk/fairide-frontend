@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Choix des photos de la pièce d'identité à l'inscription d'un livreur (voir Auth.jsx, étape « documents ») :
 // carte d'identité OU permis de conduire, recto et verso obligatoires, attestation étudiant en option. Les
@@ -15,9 +16,9 @@ function Apercu({ file }) {
     const u = URL.createObjectURL(file); setUrl(u);
     return () => URL.revokeObjectURL(u);
   }, [file]);
-  if (!file) return <span className="doc-slot-vide" aria-hidden="true">📷</span>;
+  if (!file) return <span className="doc-slot-vide" aria-hidden="true"><Icone nom="apercu" taille={16} className="icone-texte" /></span>;
   if (url) return <img className="doc-slot-img" src={url} alt="" />;
-  return <span className="doc-slot-vide" aria-hidden="true">📄</span>;
+  return <span className="doc-slot-vide" aria-hidden="true"><Icone nom="document" taille={16} className="icone-texte" /></span>;
 }
 
 export function DocSlot({ id, label, file, onFile, invalid, optional = false, accept = 'image/*,application/pdf', capture = 'environment' }) {
@@ -45,7 +46,7 @@ export default function IdentityDocsPicker({ kind, setKind, recto, setRecto, ver
       <div className="role-pick" style={{ marginBottom: 10 }}>
         {KINDS.map((k) => (
           <div key={k} role="radio" aria-checked={kind === k} tabIndex={0} className={`chip${kind === k ? ' active' : ''}`} onClick={() => setKind(k)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setKind(k); }}>
-            {k === 'identity_card' ? '🪪 ' : k === 'residence_permit' ? '🛂 ' : '🚗 '}{t(`courierOnboarding.doc_${k}`)}
+            {k === 'identity_card' ? <Icone nom="document" taille={16} className="icone-texte" /> : k === 'residence_permit' ? <Icone nom="document" taille={16} className="icone-texte" /> : <Icone nom="scooter" taille={16} className="icone-texte" />}{t(`courierOnboarding.doc_${k}`)}
           </div>
         ))}
       </div>

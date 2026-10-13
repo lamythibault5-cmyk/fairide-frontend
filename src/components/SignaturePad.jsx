@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Cadre de signature (fondateur, 2026-10-09) : on signe avec le doigt ou la souris, le trait part en PNG au serveur,
 // qui l'archive avec le contrat et l'imprime dans le PDF. onChange(dataUrl | null) à chaque trait et à l'effacement.
@@ -41,7 +42,7 @@ export default function SignaturePad({ onChange, hauteur = 160 }) {
 
   return (
     <div className="signature-pad">
-      <p className="small" style={{ margin: '0 0 6px' }}>✍️ {t('signature.help')}</p>
+      <p className="small" style={{ margin: '0 0 6px' }}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('signature.help')}</p>
       <canvas
         ref={canvasRef}
         role="img" aria-label={t('signature.aria')}
@@ -51,7 +52,7 @@ export default function SignaturePad({ onChange, hauteur = 160 }) {
       />
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginTop: 6, gap: 8, flexWrap: 'wrap' }}>
         <span className="small" style={{ opacity: 0.75 }}>{vide ? t('signature.empty') : t('signature.done')}</span>
-        <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 13 }} onClick={effacer}>{t('signature.clear')}</button>
+        <button type="button" className="btn-ghost btn-sm" onClick={effacer}>{t('signature.clear')}</button>
       </div>
     </div>
   );

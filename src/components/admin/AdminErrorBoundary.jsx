@@ -2,6 +2,7 @@ import { Component } from 'react';
 import { signalerErreur } from '../../sentry';
 import { useLanguage } from '../../context/LanguageContext';
 import { rechargerSiNouveauCode } from '../../lazyPage';
+import Icone from '../Icone';
 
 // Limite d'erreur de l'ERP admin : une page qui plante (fiche à laquelle il manque un champ, réponse
 // inattendue du serveur…) affiche une carte d'erreur avec « Recharger » au lieu de démonter toute la
@@ -16,7 +17,7 @@ function CarteErreur({ error, onReset }) {
   const { t: tr } = useLanguage();
   return (
     <div className="admin-error-card" role="alert">
-      <span className="admin-error-icon" aria-hidden="true">⚠️</span>
+      <span className="admin-error-icon" aria-hidden="true"><Icone nom="alerte" taille={16} className="icone-texte" /></span>
       <div className="admin-error-body">
         <h3>{tr('adminCommon.pageCrashTitle')}</h3>
         <p className="small">{tr('adminCommon.pageCrashBody')}</p>

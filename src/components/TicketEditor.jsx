@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Éditeur de ticket : à partir d'une commande (pour corriger ou compléter avant impression) ou de zéro
 // (commande passée par téléphone, table sur place, ticket de cuisine libre). On modifie le nom, le type,
@@ -79,7 +80,7 @@ export default function TicketEditor({ initial, btName, printing, onPrintBluetoo
               <button type="button" className="btn-ghost" onClick={() => retirer(i)} aria-label={t('ticketEditor.remove')}>✕</button>
             </div>
           ))}
-          <button type="button" className="btn-outline" style={{ marginTop: 6, padding: '6px 12px', fontSize: 13 }} onClick={ajouter}>+ {t('ticketEditor.addLine')}</button>
+          <button type="button" className="btn-outline btn-sm" style={{ marginTop: 6 }} onClick={ajouter}>+ {t('ticketEditor.addLine')}</button>
         </div>
 
         <div className="field" style={{ marginTop: 10 }}>
@@ -104,7 +105,7 @@ export default function TicketEditor({ initial, btName, printing, onPrintBluetoo
             </>
           )}
           <button type="button" className="btn-outline" disabled={!apercu.items.length} onClick={() => onPrintBrowser(apercu)}>{t('ordersResto.printDeliveryNote')}</button>
-          {imprimes > 0 && <span className="small" style={{ marginLeft: 'auto' }}>✅ {t('ticketEditor.printedCount', { n: imprimes })}</span>}
+          {imprimes > 0 && <span className="small" style={{ marginLeft: 'auto' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('ticketEditor.printedCount', { n: imprimes })}</span>}
         </div>
         {!btName && <p className="small" style={{ margin: '8px 0 0' }}>{t('ticketEditor.noPrinter')}</p>}
       </div>

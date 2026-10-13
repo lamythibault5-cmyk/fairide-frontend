@@ -21,15 +21,17 @@ import {
 } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
+import Icone from '../../components/Icone';
+import EtatVide from '../../components/EtatVide';
 
 // Où en est le ticket de la commande sur le terminal Fairide (backend : GET /orders/restaurant/:id → print).
 function EtatImpression({ p, t }) {
   if (!p) return null;
   const raison = p.lastError ? t(`terminal.printer_${p.lastError}`, {}) : '';
   const raisonLisible = raison && !raison.startsWith('terminal.') ? raison : t('terminal.printer_unknown');
-  if (p.failed > 0 && !p.pending) return <span className="print-etat erreur">⚠ {t('ordersResto.printFailedState', { reason: raisonLisible })}</span>;
-  if (p.pending > 0) return <span className={`print-etat ${p.lastError ? 'erreur' : 'attente'}`}>{p.lastError ? `⚠ ${t('ordersResto.printWaitingReason', { reason: raisonLisible })}` : `⏳ ${t('ordersResto.printWaiting')}`}</span>;
-  if (p.printed > 0) return <span className="print-etat ok">🖨 {p.printed > 1 ? t('ordersResto.printedN', { n: p.printed }) : t('ordersResto.printedOnce')}</span>;
+  if (p.failed > 0 && !p.pending) return <span className="print-etat erreur"><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('ordersResto.printFailedState', { reason: raisonLisible })}</span>;
+  if (p.pending > 0) return <span className={`print-etat ${p.lastError ? 'erreur' : 'attente'}`}>{p.lastError ? `${t('ordersResto.printWaitingReason', { reason: raisonLisible })}` : `${t('ordersResto.printWaiting')}`}</span>;
+  if (p.printed > 0) return <span className="print-etat ok"><Icone nom="imprimante" taille={16} className="icone-texte" />{' '}{p.printed > 1 ? t('ordersResto.printedN', { n: p.printed }) : t('ordersResto.printedOnce')}</span>;
   return null;
 }
 
@@ -276,22 +278,22 @@ export default function OrdersPage() {
     >
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: `${stageColor}22`, color: stageColor }}>
-          {stage.icon} {t(`orderStatus.stage_${stage.key}`)}
+          <Icone nom={stage.icon} taille={16} className="icone-texte" /> {t(`orderStatus.stage_${stage.key}`)}
         </span>
         <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
-          disabled={envoiTicket === o.id} onClick={(e) => { e.stopPropagation(); if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}>🖨️</button>
+          disabled={envoiTicket === o.id} onClick={(e) => { e.stopPropagation(); if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}><Icone nom="imprimante" taille={16} className="icone-texte" /></button>
         {['nouveau', 'preparation', 'pret'].includes(o.status) && !o.preparedPhoto && (
           <label className="btn-ghost order-print-btn" title={t('ordersResto.photoHelp')} aria-label={t('ordersResto.photoBtn')} onClick={(e) => e.stopPropagation()}>
-            {photoEnCours === o.id ? '…' : '📷'}
+            {photoEnCours === o.id ? '…' : <Icone nom="apercu" taille={16} className="icone-texte" />}
             <input type="file" accept="image/*" capture="environment" hidden disabled={photoEnCours === o.id} onChange={(e) => { photographier(o, e.target.files?.[0]); e.target.value = ''; }} />
           </label>
         )}
         {o.preparedPhoto && (
-          <a className="btn-ghost order-print-btn" href={o.preparedPhoto.url} target="_blank" rel="noreferrer" title={t('ordersResto.photoDone', { time: new Date(o.preparedPhoto.at).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })} onClick={(e) => e.stopPropagation()}>📷✓</a>
+          <a className="btn-ghost order-print-btn" href={o.preparedPhoto.url} target="_blank" rel="noreferrer" title={t('ordersResto.photoDone', { time: new Date(o.preparedPhoto.at).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })} onClick={(e) => e.stopPropagation()}><Icone nom="apercu" taille={16} className="icone-texte" />✓</a>
         )}
       </div>
       <div className="row" style={{ justifyContent: 'space-between' }}>
-        <b>{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6, background: '#fff1d6', color: '#7a4a00' }}>🧪 {t('ordersResto.trainingBadge')}</span>}</b>
+        <b>{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6 }}>{t('ordersResto.trainingBadge')}</span>}</b>
         <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
       </div>
       <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
@@ -299,10 +301,10 @@ export default function OrdersPage() {
       {/* Paiement bien distinct (fondateur, 2026-10-07) : à payer sur place (encadré orange) ou déjà payé en ligne (vert). */}
       {o.paymentMode === 'on_site' ? (
         <div className="small paiement-badge paiement-sur-place" style={{ margin: '4px 0', fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
-          {o.pickupNoShow ? t('ordersResto.noShowBadge') : `💶 ${t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}`}
+          {o.pickupNoShow ? t('ordersResto.noShowBadge') : `${t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}`}
         </div>
       ) : (
-        <div className="small paiement-badge paiement-en-ligne" style={{ margin: '4px 0', fontWeight: 700 }}>✅ {t('ordersResto.paidOnlineBadge')}</div>
+        <div className="small paiement-badge paiement-en-ligne" style={{ margin: '4px 0', fontWeight: 700 }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('ordersResto.paidOnlineBadge')}</div>
       )}
       <ProgressBar status={o.status} orderType={o.orderType} />
       <DeliveryTiming order={o} />
@@ -310,8 +312,8 @@ export default function OrdersPage() {
       <BandeauAllergie order={o} />
       <BadgeAlcool order={o} />
       <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-      {o.orderType === 'delivery' && <div className="small">📍 {o.address}</div>}
-      {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
+      {o.orderType === 'delivery' && <div className="small"><Icone nom="position" taille={16} className="icone-texte" />{' '}{o.address}</div>}
+      {o.clientPhone && <div className="small"><Icone nom="telephone" taille={16} className="icone-texte" />{' '}{o.clientPhone}</div>}
       {o.orderType === 'delivery' && o.driverName && ['preparation', 'pret'].includes(o.status) && (
         <div className="small" style={{ fontWeight: 600 }}>{t('ordersResto.driverAssigned', { name: o.driverName })}</div>
       )}
@@ -323,15 +325,15 @@ export default function OrdersPage() {
               <option value={0}>{t('ordersResto.extraPrepNone')}</option>
               {[10, 20, 30].map((m) => <option key={m} value={m}>{t('ordersResto.extraPrepMinutes', { n: m })}</option>)}
             </select>
-            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 }))}>{t('ordersResto.accept')}</button>
-            <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
+            <button className="btn-teal btn-sm" disabled={actionEnCours === o.id} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 }))}>{t('ordersResto.accept')}</button>
+            <button className="btn-outline btn-sm" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
           </>
         )}
         {o.status === 'preparation' && (
-          <button className="btn-gold" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+          <button className="btn-gold btn-sm" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
         )}
         {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
-          <button className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, color: 'var(--red)' }} onClick={() => setPasVenu(o)}>🚫 {t('ordersResto.customerNoShow')}</button>
+          <button className="btn-ghost btn-sm" style={{ color: 'var(--red)' }} onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{t('ordersResto.customerNoShow')}</button>
         )}
       </div>
       {o.status === 'pret' && o.orderType === 'pickup' && (
@@ -345,7 +347,7 @@ export default function OrdersPage() {
             value={pickupCodeInputs[o.id] || ''}
             onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
           />
-          <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
+          <button className="btn-teal btn-sm" disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
             {confirmingPickup === o.id ? '...' : t('ordersResto.validateOrder')}
           </button>
         </div>
@@ -376,7 +378,7 @@ export default function OrdersPage() {
         {terminaux && <> · <Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></>}
       </p>
 
-      {enCours.length === 0 && <div className="empty">{orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')}</div>}
+      {enCours.length === 0 && <EtatVide icone="commandes" titre={orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} />}
       {enCours.map(carteCommande)}
       {closes.length > 0 && (
         <details className="service-historique">
@@ -399,7 +401,7 @@ export default function OrdersPage() {
               const col = stageColors[sk];
               return (
                 <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, marginBottom: 8, background: `${col}22`, color: col }}>
-                  {stg.icon} {t(`orderStatus.stage_${stg.key}`)}
+                  <Icone nom={stg.icon} taille={16} className="icone-texte" /> {t(`orderStatus.stage_${stg.key}`)}
                 </span>
               );
             })()}
@@ -410,7 +412,7 @@ export default function OrdersPage() {
             {selectedOrder.items.map((i) => (
               <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', alignItems: 'flex-start' }}>
                 <span>
-                  {i.qty}× {i.name}{i.discount > 0 ? ' 🏷️' : ''}
+                  {i.qty}× {i.name}{i.discount > 0 ? <Icone nom="etiquette" taille={16} className="icone-texte" /> : ''}
                   {i.options?.length > 0 && <span className="small" style={{ display: 'block' }}>{i.options.map((o) => o.name).join(', ')}</span>}
                 </span>
                 <span>{euros((i.price * i.qty - (i.discount || 0)))}</span>
@@ -423,17 +425,17 @@ export default function OrdersPage() {
               {selectedOrder.orderType === 'delivery' && <div className="line"><span>{t('ordersResto.delivery')}</span><span>{euros(selectedOrder.deliveryFee)}</span></div>}
               {selectedOrder.serviceFee > 0 && <div className="line"><span>{t('ordersResto.serviceFee')}</span><span>{euros((selectedOrder.serviceFee + (selectedOrder.serviceFeeVat || 0)))}</span></div>}
               {selectedOrder.balanceUsed > 0 && <div className="line"><span>{t('ordersResto.balanceUsed')}</span><span>-{euros(selectedOrder.balanceUsed)}</span></div>}
-              <div className="line total"><span>{selectedOrder.paymentMode === 'on_site' ? `💶 ${t('ordersResto.toCollectOnSite')}` : t('ordersResto.totalPaid')}</span><span>{euros(selectedOrder.total)}</span></div>
+              <div className="line total"><span>{selectedOrder.paymentMode === 'on_site' ? `${t('ordersResto.toCollectOnSite')}` : t('ordersResto.totalPaid')}</span><span>{euros(selectedOrder.total)}</span></div>
             </div>
             <div className="divider" />
             <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? t('ordersResto.takeaway') : t('ordersResto.delivery')}</h4>
-            {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}>📍 {selectedOrder.address}</p>}
+            {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{selectedOrder.address}</p>}
             {selectedOrder.orderType === 'pickup' && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.pickupInfo')}</p>}
-            {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}>📞 {selectedOrder.clientPhone}</p>}
+            {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}><Icone nom="telephone" taille={16} className="icone-texte" />{' '}{selectedOrder.clientPhone}</p>}
             <BandeauAllergie order={selectedOrder} />
             <BadgeAlcool order={selectedOrder} />
-            {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>🔑 {deliveryInstructionLabel(selectedOrder.deliveryInstructions, t)}</p>}
-            {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>📝 {selectedOrder.deliveryNote}</p>}
+            {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}><Icone nom="cle" taille={16} className="icone-texte" />{' '}{deliveryInstructionLabel(selectedOrder.deliveryInstructions, t)}</p>}
+            {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}><Icone nom="document" taille={16} className="icone-texte" />{' '}{selectedOrder.deliveryNote}</p>}
             {selectedOrder.orderType === 'delivery' && selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.driverLine', { name: selectedOrder.driverName, phone: selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : '' })}</p>}
             {selectedOrder.status === 'pret' && selectedOrder.orderType === 'pickup' && (
               <div className="row" style={{ marginTop: 10, gap: 8 }}>
@@ -443,7 +445,7 @@ export default function OrdersPage() {
                   value={pickupCodeInputs[selectedOrder.id] || ''}
                   onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
                 />
-                <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder)}>
+                <button className="btn-teal btn-sm" disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder)}>
                   {confirmingPickup === selectedOrder.id ? '...' : t('ordersResto.validateOrder')}
                 </button>
               </div>
@@ -474,7 +476,7 @@ export default function OrdersPage() {
             ) : (
               <>
                 {impressions[selectedOrder.id] > 0 && (
-                  <p className="small" style={{ margin: '0 0 8px' }}>✅ {t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })}</p>
+                  <p className="small" style={{ margin: '0 0 8px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })}</p>
                 )}
                 <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                   <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />

@@ -4,6 +4,7 @@ import { api, apiUpload } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Galerie personnelle du restaurant : upload depuis la pellicule/galerie du téléphone ou le disque de
 // l'ordi/tablette (comportement natif de <input type="file" accept="image/*">, rien à coder de plus
@@ -163,7 +164,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
                   onClick={() => handleDelete(img.id)}
                   title={t('gallery.removeFromGallery')}
                 >
-                  {deletingId === img.id ? '...' : '🗑️'}
+                  {deletingId === img.id ? '...' : <Icone nom="croix" taille={16} className="icone-texte" />}
                 </button>
               </div>
             ))}

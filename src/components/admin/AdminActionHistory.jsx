@@ -43,7 +43,7 @@ function describeDetails(action, details, tr) {
   if (action === 'crm_stage_change') return `→ ${details.stage}${details.lossReason ? ` (${details.lossReason})` : ''}`;
   if (action === 'crm_prospect_converted') return `→ ${details.restaurantName}`;
   if (action === 'ticket_status_change') return `→ ${details.status}`;
-  if (action === 'ticket_escalated') return details.escalated ? `⚠️ ${details.reason || ''}` : tr('adminHistory.deescalated');
+  if (action === 'ticket_escalated') return details.escalated ? `${details.reason || ''}` : tr('adminHistory.deescalated');
   if (action === 'ticket_replied') return `"${details.text}"`;
   if (action === 'task_status_change') return `→ ${details.status}`;
   if (action === 'task_created' || action === 'task_deleted') return details.title ? `"${details.title}"` : '';

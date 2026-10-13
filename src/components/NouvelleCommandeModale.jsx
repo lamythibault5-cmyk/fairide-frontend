@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext';
 import Modale from './Modale';
 import { formatOrderItem, orderTypeLabel } from '../orderStatus';
 import { euros } from '../prixPlat';
+import Icone from './Icone';
 
 // LA COMMANDE QUI VIENT D'ARRIVER, SOUS LES YEUX (fondateur, 2026-10-01). Jusqu'ici, une nouvelle commande ne faisait que
 // sonner et compter dans la barre : il fallait aller la chercher dans la liste. Cette fenêtre s'ouvre d'elle-même avec
@@ -52,7 +53,7 @@ export default function NouvelleCommandeModale({ orders, ready, restoId }) {
   }
 
   return (
-    <Modale titre={`🔔 ${t('newOrder.title')}`} onFermer={fermer}>
+    <Modale titre={`${t('newOrder.title')}`} onFermer={fermer}>
       <div className="nouvelle-commande">
         <p className="nouvelle-commande-tete">
           <b>{o.orderNumber ? `#${String(o.orderNumber).padStart(3, '0')}` : ''}</b> {orderTypeLabel(o, t)}
@@ -61,7 +62,7 @@ export default function NouvelleCommandeModale({ orders, ready, restoId }) {
         <ul className="nouvelle-commande-plats">
           {(o.items || []).map((i, k) => <li key={k}>{formatOrderItem(i)}</li>)}
         </ul>
-        {o.deliveryNote && <p className="small nouvelle-commande-note">📝 {o.deliveryNote}</p>}
+        {o.deliveryNote && <p className="small nouvelle-commande-note"><Icone nom="document" taille={16} className="icone-texte" />{' '}{o.deliveryNote}</p>}
         <p className="nouvelle-commande-total">{t('newOrder.total')} <b>{euros(o.total)}</b></p>
         {terminal && (
           <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 10 }}>
@@ -71,7 +72,7 @@ export default function NouvelleCommandeModale({ orders, ready, restoId }) {
               <b aria-live="polite">{exemplaires}</b>
               <button type="button" className="btn-ghost" disabled={exemplaires >= 5} onClick={() => setExemplaires((v) => Math.min(5, v + 1))} aria-label="+">+</button>
             </span>
-            <button type="button" className="btn-outline" disabled={envoi} onClick={reimprimer}>🖨️ {envoi ? t('ordersResto.printing') : t('newOrder.reprint')}</button>
+            <button type="button" className="btn-outline" disabled={envoi} onClick={reimprimer}><Icone nom="imprimante" taille={16} className="icone-texte" />{' '}{envoi ? t('ordersResto.printing') : t('newOrder.reprint')}</button>
           </div>
         )}
         <div className="row" style={{ gap: 8, marginTop: 14, flexWrap: 'wrap' }}>

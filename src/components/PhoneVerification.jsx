@@ -3,6 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import Icone from './Icone';
 
 // Vérification du numéro de téléphone du compte, depuis « Mon compte » — jamais bloquante : elle peut se
 // faire plus tard, la ligne le rappelle simplement tant qu'elle n'est pas faite. Le code arrive par SMS
@@ -18,7 +19,7 @@ export default function PhoneVerification() {
 
   if (!user?.phone) return null;
   if (user.phoneVerified) {
-    return <p className="small" style={{ margin: '4px 0 0', color: 'var(--ok, #2e7d32)' }}>✅ {t('accountUi.phoneVerified')}</p>;
+    return <p className="small" style={{ margin: '4px 0 0', color: 'var(--green)' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('accountUi.phoneVerified')}</p>;
   }
 
   async function demander() {
@@ -46,8 +47,8 @@ export default function PhoneVerification() {
     <div className="phone-verif" style={{ marginTop: 6 }}>
       {etape === 'repos' ? (
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span className="small" style={{ flex: '1 1 200px' }}>⚠️ {t('accountUi.phoneNotVerified')}</span>
-          <button type="button" className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} disabled={occupe} onClick={demander}>
+          <span className="small" style={{ flex: '1 1 200px' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('accountUi.phoneNotVerified')}</span>
+          <button type="button" className="btn-outline btn-sm" disabled={occupe} onClick={demander}>
             {occupe ? '...' : t('accountUi.verifyPhone')}
           </button>
         </div>

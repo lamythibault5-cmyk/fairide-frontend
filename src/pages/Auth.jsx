@@ -5,6 +5,7 @@ import { remonterEnHaut } from '../remonter';
 import urlSure from '../urlSure';
 import { chargerGoogleSignIn } from '../googleSignIn';
 import { estNatif, connexionFournisseur } from '../natif';
+import { lireBienvenue } from '../bienvenue';
 import BoutonsConnexionNative from '../components/BoutonsConnexionNative';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -26,6 +27,7 @@ import { attendrePage, espaceApresConnexion, prechargerPage } from '../routePref
 import usePageMeta from '../hooks/usePageMeta';
 import { suivre } from '../analytics';
 import { bceValide, raisonBce, codePostalValide } from '../validation';
+import Icone from '../components/Icone';
 
 function roles(t) {
   return [
@@ -335,6 +337,15 @@ export default function Auth() {
      fautif plutôt qu'en toast : à la fin d'un formulaire de 13 champs, un toast "adresse
      requise" n'indique pas lequel des quatre champs d'adresse est vide. */
   const [step, setStep] = useState(0);
+  // Client qui arrive de l'accueil de l'application : le code postal tapé là-bas (écran « Ton code postal ») préremplit
+  // l'adresse, au lieu d'être redemandé deux écrans plus loin. Seulement des champs vides — un brouillon restauré ou une
+  // fiche Google gardent la main. L'étape reste : le serveur exige l'adresse complète d'un client (routes/auth.js).
+  useEffect(() => {
+    if (mode !== 'register' || role !== 'client') return;
+    const b = lireBienvenue();
+    if (b.codePostal) setAddressPostalCode((v) => v || b.codePostal);
+    if (b.commune) setAddressCity((v) => v || b.commune);
+  }, [mode, role]);
   // Chaque nouvelle étape s'ouvre en haut de l'écran, pas là où l'on a touché « Continuer » (voir src/remonter.js).
   const etapeAffichee = useRef(step);
   useEffect(() => {
@@ -1189,7 +1200,7 @@ export default function Auth() {
                 {googleCredential && !nomModifiable && firstName.trim() && lastName.trim() ? (
                   <div className="auth-google-lie" style={{ marginBottom: 12 }}>
                     <div>
-                      <div style={{ fontWeight: 700 }}>👤 {firstName} {lastName}</div>
+                      <div style={{ fontWeight: 700 }}><Icone nom="compte" taille={16} className="icone-texte" />{' '}{firstName} {lastName}</div>
                       <div className="small">{email} · {t('auth.fromGoogle')}</div>
                     </div>
                     <button type="button" className="btn-ghost" onClick={() => setNomModifiable(true)}>{t('auth.edit')}</button>
@@ -1226,7 +1237,7 @@ export default function Auth() {
                         <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                           <input style={{ flex: 1 }} aria-label={t('auth.managerName')} placeholder={t('auth.managerNamePh')} value={r.name}
                             onChange={(e) => setResponsables((l) => l.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
-                          <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))}>{t('auth.removeSecond')}</button>
+                          <button type="button" className="btn-ghost btn-sm" onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))}>{t('auth.removeSecond')}</button>
                         </div>
                         <div style={{ marginTop: 6 }}><PhoneInput id={`auth-f-resp-${i}`} value={r.phone} onChange={(v) => setResponsables((l) => l.map((x, j) => (j === i ? { ...x, phone: v } : x)))} invalid={!!errors[`resp${i}`]} /></div>
                         {fieldError(`resp${i}`)}
@@ -1250,7 +1261,7 @@ export default function Auth() {
                           <div key={st} role="radio" aria-checked={courierStatus === st} tabIndex={0}
                             className={`statut-carte${courierStatus === st ? ' active' : ''}`}
                             onClick={() => setCourierStatus(st)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setCourierStatus(st); }}>
-                            <b>{st === 'student_independent' ? '🎓 ' : '🧾 '}{t(`auth.courierStatus_${st}`)}</b>
+                            <b>{st === 'student_independent' ? <Icone nom="guide" taille={16} className="icone-texte" /> : <Icone nom="document" taille={16} className="icone-texte" />}{t(`auth.courierStatus_${st}`)}</b>
                             <span className="small">{t(`auth.courierStatus_${st}_desc`)}</span>
                             <span className="small" style={{ color: 'var(--iris)' }}>{t(`auth.courierStatus_${st}_asks`)}</span>
                           </div>
@@ -1291,7 +1302,7 @@ export default function Auth() {
                         {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
                           <div key={v} role="radio" aria-checked={vehicleType === v} tabIndex={0} className={`chip${vehicleType === v ? ' active' : ''}`}
                             onClick={() => setVehicleType(v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setVehicleType(v); }}>
-                            {v === 'velo' ? '🚲 ' : v === 'velo_electrique' ? '⚡🚲 ' : v === 'scooter' ? '🛵 ' : '🚗 '}{t(`courierOnboarding.vehicle_${v}`)}
+                            {v === 'velo' ? <Icone nom="scooter" taille={16} className="icone-texte" /> : v === 'velo_electrique' ? null : v === 'scooter' ? <Icone nom="scooter" taille={16} className="icone-texte" /> : <Icone nom="scooter" taille={16} className="icone-texte" />}{t(`courierOnboarding.vehicle_${v}`)}
                           </div>
                         ))}
                       </div>
@@ -1312,7 +1323,7 @@ export default function Auth() {
 
             {stepKey === 'business' && (
               <>
-                <p className="small infos-resto-note" style={{ margin: '0 0 10px', padding: '8px 10px', borderRadius: 8, background: 'var(--cream-dim)', borderLeft: '3px solid var(--iris)' }}>🏪 {t('auth.businessInfoNote')}</p>
+                <p className="small infos-resto-note" style={{ margin: '0 0 10px', padding: '8px 10px', borderRadius: 8, background: 'var(--cream-dim)', borderLeft: '3px solid var(--iris)' }}><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{t('auth.businessInfoNote')}</p>
                 <div className="field">
                   <label htmlFor="auth-f-nom-commerce">{t('auth.businessNameLabel')}</label>
                   <input id="auth-f-nom-commerce" className={errors.nomCommerce ? 'input-invalid' : undefined} value={nomCommerce}
@@ -1341,12 +1352,12 @@ export default function Auth() {
                   <label htmlFor="auth-f-cuisine">{t('auth.cuisineLabel')}</label>
                   <select id="auth-f-cuisine" className={errors.cuisine ? 'input-invalid' : undefined} value={cuisine} onChange={(e) => { setCuisine(e.target.value); setTypeDepuisSite(false); }}>
                     <option value="">{t('auth.cuisinePlaceholder')}</option>
-                    {RESTAURANT_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{rt.emoji ? `${rt.emoji} ` : ''}{rt.value}</option>)}
+                    {RESTAURANT_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{rt.value}</option>)}
                   </select>
                   {cuisine === 'Autre' && (
                     <input style={{ marginTop: 6 }} value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} aria-label={t('dashResto.specifyType')} />
                   )}
-                  <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{typeDepuisSite && cuisine ? `✅ ${t('auth.cuisineFromSite')}` : t('auth.cuisineHelp')}</p>
+                  <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{typeDepuisSite && cuisine ? `${t('auth.cuisineFromSite')}` : t('auth.cuisineHelp')}</p>
                   {fieldError('cuisine')}
                 </div>
                 {cuisine && cuisine !== 'Autre' && (
@@ -1360,7 +1371,7 @@ export default function Auth() {
                         return (
                           <button key={rt.value} type="button" className={`cuisine-chip${actif ? ' active' : ''}`} aria-pressed={actif} disabled={!actif && plein}
                             onClick={() => setExtraCuisines((l) => (l.includes(rt.value) ? l.filter((x) => x !== rt.value) : [...l, rt.value]))}>
-                            <span className="emoji">{rt.emoji}</span><span>{restaurantTypeLabel(rt.value, t)}</span>
+                            <span className="emoji"><Icone nom={rt.icone} taille={18} /></span><span>{restaurantTypeLabel(rt.value, t)}</span>
                           </button>
                         );
                       })}
@@ -1373,12 +1384,12 @@ export default function Auth() {
                 <div className="field contacts-commerce" role="group" aria-labelledby="auth-contacts-titre">
                   <span className="titre-groupe" id="auth-contacts-titre">{t('auth.contactsTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.contactsHelp')}</p>
-                  <p className="small contact-ligne">📞 <b>{restoPhone.trim() || phone.trim() || '-'}</b> <span style={{ opacity: 0.75 }}>· {restoPhone.trim() ? t('auth.contactsPhoneOnSite') : t('auth.contactsPhoneFromAccount')}</span></p>
+                  <p className="small contact-ligne"><Icone nom="telephone" taille={16} className="icone-texte" />{' '}<b>{restoPhone.trim() || phone.trim() || '-'}</b> <span style={{ opacity: 0.75 }}>· {restoPhone.trim() ? t('auth.contactsPhoneOnSite') : t('auth.contactsPhoneFromAccount')}</span></p>
                   <label className="row small" style={{ gap: 8, alignItems: 'center', margin: '2px 0 6px', cursor: 'pointer' }}>
                     <input type="checkbox" checked={!phonePublic} onChange={(e) => setPhonePublic(!e.target.checked)} />
                     <span>{t('auth.hidePhonePublic')}</span>
                   </label>
-                  <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>🔒 {t('auth.personalPhonePrivate')}</p>
+                  <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}><Icone nom="cadenas" taille={16} className="icone-texte" />{' '}{t('auth.personalPhonePrivate')}</p>
                   {!phoneSecondaryOuvert ? (
                     <button type="button" className="btn-link-plus" onClick={() => setPhoneSecondaryOuvert(true)}>＋ {t('auth.addSecondPhone')}</button>
                   ) : (
@@ -1386,7 +1397,7 @@ export default function Auth() {
                       <label htmlFor="auth-f-tel2" className="small">{t('auth.secondPhone')}</label>
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                         <div style={{ flex: 1 }}><PhoneInput id="auth-f-tel2" value={phoneSecondary} onChange={setPhoneSecondary} invalid={!!errors.phoneSecondary} /></div>
-                        <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setPhoneSecondary(''); setPhoneSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
+                        <button type="button" className="btn-ghost btn-sm" onClick={() => { setPhoneSecondary(''); setPhoneSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
                       </div>
                       {fieldError('phoneSecondary')}
                       <label className="row small" style={{ gap: 8, alignItems: 'center', margin: '6px 0 0', cursor: 'pointer' }}>
@@ -1395,7 +1406,7 @@ export default function Auth() {
                       </label>
                     </div>
                   )}
-                  <p className="small contact-ligne" style={{ marginTop: 8 }}>✉️ <b>{email.trim() || t('auth.contactsEmailLater')}</b> <span style={{ opacity: 0.75 }}>· {t('auth.contactsEmailFromAccount')}</span></p>
+                  <p className="small contact-ligne" style={{ marginTop: 8 }}><Icone nom="courrier" taille={16} className="icone-texte" />{' '}<b>{email.trim() || t('auth.contactsEmailLater')}</b> <span style={{ opacity: 0.75 }}>· {t('auth.contactsEmailFromAccount')}</span></p>
                   {!emailSecondaryOuvert ? (
                     <button type="button" className="btn-link-plus" onClick={() => setEmailSecondaryOuvert(true)}>＋ {t('auth.addSecondEmail')}</button>
                   ) : (
@@ -1403,7 +1414,7 @@ export default function Auth() {
                       <label htmlFor="auth-f-mail2" className="small">{t('auth.secondEmail')}</label>
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                         <input id="auth-f-mail2" type="email" inputMode="email" style={{ flex: 1 }} className={errors.emailSecondary ? 'input-invalid' : undefined} value={emailSecondary} onChange={(e) => setEmailSecondary(e.target.value)} placeholder={t('auth.phEmail')} />
-                        <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setEmailSecondary(''); setEmailSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
+                        <button type="button" className="btn-ghost btn-sm" onClick={() => { setEmailSecondary(''); setEmailSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
                       </div>
                       <EmailDomainChips value={emailSecondary} onChange={setEmailSecondary} inputId="auth-f-mail2" />
                       {fieldError('emailSecondary')}
@@ -1452,7 +1463,7 @@ export default function Auth() {
                 <div className="field" role="group" aria-labelledby="auth-horaires-titre">
                   <span className="titre-groupe" id="auth-horaires-titre">{t('auth.hoursTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>
-                    {hoursDepuisWeb ? `✅ ${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : horairesSiteEtat === 'trouveWeb' ? 'auth.hoursFromSearch' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `⏳ ${t('auth.hoursReadingSite')}` : horairesSiteEtat === 'recherche' ? `⏳ ${t('auth.hoursSearching')}` : t('auth.hoursHelp')}
+                    {hoursDepuisWeb ? `${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : horairesSiteEtat === 'trouveWeb' ? 'auth.hoursFromSearch' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `${t('auth.hoursReadingSite')}` : horairesSiteEtat === 'recherche' ? `${t('auth.hoursSearching')}` : t('auth.hoursHelp')}
                     {(horairesSiteEtat === 'trouve' || horairesSiteEtat === 'trouveWeb') && horairesSiteSource && (
                       <>{' '}<a href={urlSure(horairesSiteSource)} target="_blank" rel="noreferrer">{t('auth.hoursSiteSource')}</a></>
                     )}
@@ -1468,12 +1479,12 @@ export default function Auth() {
                 </div>
                 {(hoursDepuisWeb || typeDepuisSite || siteTrouve) && (
                   <div className={`field verif-prefill${errors.infosVerifiees ? ' verif-prefill--erreur' : ''}`}>
-                    <b>🔎 {t('auth.verifyPrefillTitle')}</b>
+                    <b><Icone nom="recherche" taille={16} className="icone-texte" />{' '}{t('auth.verifyPrefillTitle')}</b>
                     <p className="small" style={{ margin: '4px 0 6px' }}>{t('auth.verifyPrefillIntro')}</p>
                     <ul className="small" style={{ margin: '0 0 8px', paddingLeft: 18 }}>
-                      {siteTrouve && <li>🌐 {t('auth.verifyPrefillWebsite')} <a href={urlSure(siteTrouve)} target="_blank" rel="noreferrer">{siteTrouve}</a></li>}
-                      {hoursDepuisWeb && <li>🕒 {t('auth.verifyPrefillHours')}</li>}
-                      {typeDepuisSite && cuisine && <li>🍽️ {t('auth.verifyPrefillType', { type: cuisine })}</li>}
+                      {siteTrouve && <li><Icone nom="globe" taille={16} className="icone-texte" />{' '}{t('auth.verifyPrefillWebsite')} <a href={urlSure(siteTrouve)} target="_blank" rel="noreferrer">{siteTrouve}</a></li>}
+                      {hoursDepuisWeb && <li>{t('auth.verifyPrefillHours')}</li>}
+                      {typeDepuisSite && cuisine && <li><Icone nom="restaurants" taille={16} className="icone-texte" />{' '}{t('auth.verifyPrefillType', { type: cuisine })}</li>}
                     </ul>
                     <label className="verif-prefill-case">
                       <input type="checkbox" checked={infosVerifiees} onChange={(e) => setInfosVerifiees(e.target.checked)} />
@@ -1493,14 +1504,14 @@ export default function Auth() {
                 <div className="field services-choice" role="group" aria-labelledby="auth-services-titre">
                   <span className="titre-groupe" id="auth-services-titre">{t('auth.servicesTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.servicesHelp')}</p>
-                  <label className="service-option"><input type="checkbox" checked={services.delivery} onChange={(e) => setServices((s) => ({ ...s, delivery: e.target.checked }))} /> <span>🛵 {t('auth.serviceDelivery')}</span></label>
+                  <label className="service-option"><input type="checkbox" checked={services.delivery} onChange={(e) => setServices((s) => ({ ...s, delivery: e.target.checked }))} /> <span><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('auth.serviceDelivery')}</span></label>
                   {services.delivery && (
                     <div className="service-suboptions">
                       <label className="service-option"><input type="radio" name="deliveryMode" checked={services.deliveryMode === 'fairide'} onChange={() => setServices((s) => ({ ...s, deliveryMode: 'fairide' }))} /> <span>{t('auth.serviceDeliveryFairide')}</span></label>
                       <label className="service-option"><input type="radio" name="deliveryMode" checked={services.deliveryMode === 'own'} onChange={() => setServices((s) => ({ ...s, deliveryMode: 'own' }))} /> <span>{t('auth.serviceDeliveryOwn')}</span></label>
                     </div>
                   )}
-                  <label className="service-option"><input type="checkbox" checked={services.pickup} onChange={(e) => setServices((s) => ({ ...s, pickup: e.target.checked }))} /> <span>🏠 {t('auth.servicePickup')}</span></label>
+                  <label className="service-option"><input type="checkbox" checked={services.pickup} onChange={(e) => setServices((s) => ({ ...s, pickup: e.target.checked }))} /> <span><Icone nom="maison" taille={16} className="icone-texte" />{' '}{t('auth.servicePickup')}</span></label>
                   {services.pickup && (
                     // Comment l'à emporter est payé décide de la commission : sur place = 0 %, en ligne ou au choix = 10 % sur les
                     // commandes payées en ligne. L'à emporter lui-même relève toujours de la version complète (2026-09-23).
@@ -1581,7 +1592,7 @@ export default function Auth() {
             {stepKey === 'account' && googleCredential && (
               <div className="auth-google-lie">
                 <div>
-                  <div style={{ fontWeight: 700 }}>✅ {fournisseurFed === 'apple' ? t('appli.appleLinked') : t('auth.googleLinked')}</div>
+                  <div style={{ fontWeight: 700 }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{fournisseurFed === 'apple' ? t('appli.appleLinked') : t('auth.googleLinked')}</div>
                   <div className="small">{googleProfile?.name}{googleProfile?.name && googleProfile?.email ? ' · ' : ''}{googleProfile?.email}</div>
                   <div className="small" style={{ marginTop: 4 }}>{t('auth.googleLinkedHelp')}</div>
                 </div>
@@ -1664,7 +1675,7 @@ export default function Auth() {
               <EngagementsInscription checked={accepteEngagements} onChange={setAccepteEngagements} />
             )}
             {incomplet && incomplet.step === step && Object.keys(errors).length > 0 && (
-              <p className="auth-incomplet" role="alert">⚠️ {t('auth.checkIncomplete', { n: incomplet.n, step: stepCopy?.title || '' })}</p>
+              <p className="auth-incomplet" role="alert"><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('auth.checkIncomplete', { n: incomplet.n, step: stepCopy?.title || '' })}</p>
             )}
             <div className="auth-step-nav">
               {step > 0 && (

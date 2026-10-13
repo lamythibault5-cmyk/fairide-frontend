@@ -79,7 +79,7 @@ export default function ValiderCarte() {
       <h1 style={{ marginBottom: 4 }}>{carte.restaurant.name}</h1>
       <p style={{ marginTop: 0 }}>{t('validerCarte.intro')}</p>
       {carte.alreadyValidated && <p className="small" role="note">{t('validerCarte.alreadyValidated')}</p>}
-      {erreur && <p role="alert" style={{ color: 'var(--red)' }}>{erreur}</p>}
+      {erreur && <p className="texte-erreur" role="alert">{erreur}</p>}
 
       {choixOffert && (
         <section className="card" style={{ marginBottom: 12 }} aria-labelledby={`${id}-taux`}>

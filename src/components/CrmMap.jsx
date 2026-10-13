@@ -4,6 +4,7 @@ import { coucheTuiles } from '../carte';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage } from '../context/LanguageContext';
 import { escapeHtml } from '../escapeHtml';
+import { iconeHtml } from '../iconeHtml';
 
 // Carte du CRM commerçants (pages/client/CrmPage.jsx) : mes commerces démarchés (pin coloré par étape), ceux des
 // autres commerciaux (petit point gris : on ne frappe pas deux fois à la même porte) et les zones proposées
@@ -17,7 +18,7 @@ const COULEURS = { a_contacter: '#8A8A8A', contacte: '#3B7DD8', interesse: '#3B7
 function pinProspect(p, icone, actif) {
   return L.divIcon({
     className: 'map-pin-wrap',
-    html: `<div class="map-pin crm-pin${actif ? ' active' : ''}" style="background:${COULEURS[p.stage] || '#8A8A8A'}"><span class="map-pin-emoji">${icone || '📍'}</span></div>`,
+    html: `<div class="map-pin crm-pin${actif ? ' active' : ''}" style="background:${COULEURS[p.stage] || '#8A8A8A'}"><span class="map-pin-emoji">${iconeHtml(icone || 'position', 15)}</span></div>`,
     iconSize: [34, 34], iconAnchor: [17, 32], popupAnchor: [0, -30]
   });
 }
@@ -72,7 +73,7 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
     for (const p of prospects) {
       if (p.lat === null || p.lat === undefined || p.lng === null || p.lng === undefined) continue;
       const m = L.marker([p.lat, p.lng], { icon: pinProspect(p, stageIcones[p.stage], ouvert === p.id), zIndexOffset: ouvert === p.id ? 1000 : 0 });
-      m.bindTooltip(`<b>${escapeHtml(p.name)}</b>${p.commune ? `<br>${escapeHtml(p.commune)}` : ''}${p.agentName ? `<br>🧑‍💼 ${escapeHtml(p.agentName)}` : ''}`, { direction: 'top', offset: [0, -30] });
+      m.bindTooltip(`<b>${escapeHtml(p.name)}</b>${p.commune ? `<br>${escapeHtml(p.commune)}` : ''}${p.agentName ? `<br>${escapeHtml(p.agentName)}` : ''}`, { direction: 'top', offset: [0, -30] });
       m.on('click', () => rappels.current.onOpen?.(p.id));
       couche.addLayer(m); points.push([p.lat, p.lng]);
     }
@@ -106,7 +107,7 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
         <span><i className="crm-leg-pin" style={{ background: '#3B7DD8' }} /> {legende?.mine || t('sales.mapLegendMine')}</span>
         {(legende ? legende.others : true) && <span><i className="crm-leg-pin crm-leg-autre" /> {legende?.others || t('sales.mapLegendOthers')}</span>}
         <span><i className="crm-leg-zone" /> {t('sales.mapLegendZones')}</span>
-        <button type="button" className="btn-ghost" style={{ padding: '2px 6px', fontSize: 12 }} onClick={() => recadrer.current?.()}>{t('sales.mapRecenter')}</button>
+        <button type="button" className="btn-ghost btn-sm" onClick={() => recadrer.current?.()}>{t('sales.mapRecenter')}</button>
       </div>
     </div>
   );

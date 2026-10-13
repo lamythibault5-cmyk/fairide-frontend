@@ -38,7 +38,7 @@ export default function CreateTicketButton({ linkType, linkId, label }) {
 
   return (
     <>
-      <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setOpen(true)}>{tr('adminSupport.createTicketBtn')}</button>
+      <button className="btn-outline btn-sm" onClick={() => setOpen(true)}>{tr('adminSupport.createTicketBtn')}</button>
       {open && createPortal(
         <div className="modal-overlay" onClick={() => setOpen(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
