@@ -5024,7 +5024,7 @@ export default {
       rateKeep: "Keep my prices",
       rateKeepHelp: "Customers pay your in-store price. Fairide's commission is taken from it: you receive about {pct}% less.",
       rateAdd: "Add Fairide's {rate}%",
-      rateAddHelp: "All prices go up by {rate}% (rounded up to the next €0.50, you keep the rounding): you receive your full in-store price.",
+      rateAddHelp: "All prices go up by {rate}% (rounded up to the next €0.10, you keep the rounding): you receive your full in-store price.",
       rateWas: "instead of {price}",
       doneTitle: "Thank you, your menu is validated",
       doneText: "The menu of {name} is validated. You can close this page.",

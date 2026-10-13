@@ -5033,7 +5033,7 @@ export default {
       rateKeep: "Mijn prijzen behouden",
       rateKeepHelp: "De klant betaalt je winkelprijs. De commissie van Fairide wordt daarvan afgetrokken: je ontvangt ongeveer {pct}% minder.",
       rateAdd: "De {rate}% van Fairide toevoegen",
-      rateAddHelp: "Alle prijzen stijgen met {rate}% (afgerond naar de volgende € 0,50, de afronding is voor jou): je ontvangt je volledige winkelprijs.",
+      rateAddHelp: "Alle prijzen stijgen met {rate}% (afgerond naar de volgende € 0,10, de afronding is voor jou): je ontvangt je volledige winkelprijs.",
       rateWas: "in plaats van {price}",
       doneTitle: "Bedankt, je kaart is gevalideerd",
       doneText: "De kaart van {name} is gevalideerd. Je kunt deze pagina sluiten.",

@@ -5038,7 +5038,7 @@ export default {
       rateKeep: "Garder mes prix",
       rateKeepHelp: "Le client paie ton prix magasin. La commission de Fairide est prise dessus : tu reçois environ {pct} % de moins.",
       rateAdd: "Ajouter les {rate} % de Fairide",
-      rateAddHelp: "Tous les prix montent de {rate} % (arrondis au 0,50 € supérieur, l'arrondi est pour toi) : tu reçois ton prix magasin en entier.",
+      rateAddHelp: "Tous les prix montent de {rate} % (arrondis au 0,10 € supérieur, l'arrondi est pour toi) : tu reçois ton prix magasin en entier.",
       rateWas: "au lieu de {price}",
       doneTitle: "Merci, ta carte est validée",
       doneText: "La carte de {name} est validée. Tu peux fermer cette page.",

@@ -279,9 +279,11 @@ Approve and Publish in the admin console. Don't describe an import as "live".
 (printed menu, chalkboard), not on a platform — set by `importer-carte.js --prix-magasin` or the admin drawer toggle
 (`PATCH /admin/restaurants/:id/in-store-prices`); the admin list shows « Prix magasin ✓ » / « Prix à vérifier ». Only a
 marked card offers the business, on the « C'est bon » page ([ValiderCarte.jsx](src/pages/ValiderCarte.jsx)), one choice:
-keep its prices, or add Fairide's commission to the whole card (× (1 + `commissionDansLePrix`), rounded up to €0.50, paid
+keep its prices, or add Fairide's commission to the whole card (× (1 + `commissionDansLePrix`), rounded up to €0.10, paid
 add-ons too). Choice, prices and signature go in one transaction, once (`fairide_rate_choice`). Structured `*-menu.json`
-imports no longer get name-guessed option groups (`optionsExact`): the file's choices, including « none », are final.
+imports no longer get name-guessed option groups (`optionsExact`): the file's choices, including « none », are final. A
+choice inside a choice (Habebe's « Formule + soft » → Spa/Pales) is flattened into the parent list (`aplatirChoix`): the
+model has one level of options.
 
 ## Compliance (backlog of 2026-09-23)
 
