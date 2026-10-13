@@ -80,7 +80,7 @@ export default function DriverDocuments() {
         </div>
         <input ref={(el) => { entrees.current[cle] = el; }} type="file" accept="image/*,application/pdf" capture="environment" style={{ display: 'none' }} onChange={(e) => deposer(kind, side, e)} />
         {(!d || !d.verifiedAt) && (
-          <button type="button" className="btn-outline" style={{ padding: '6px 10px', fontSize: 12 }} disabled={busy} onClick={() => entrees.current[cle]?.click()}>
+          <button type="button" className="btn-outline btn-sm" disabled={busy} onClick={() => entrees.current[cle]?.click()}>
             {d ? t('courierOnboarding.docReplace') : t('courierOnboarding.docUpload')}
           </button>
         )}
@@ -95,7 +95,7 @@ export default function DriverDocuments() {
       <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
         <b>{t(`courierOnboarding.doc_${kind}`)}</b>
         {identite.length === 0 && (
-          <span className="small">· {t('driverDocs.chooseKind')} {IDENTITE.map((k) => <button key={k} type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} onClick={() => { entrees.current[`${k}-recto`]?.click(); }}>{t(`courierOnboarding.doc_${k}`)}</button>)}</span>
+          <span className="small">· {t('driverDocs.chooseKind')} {IDENTITE.map((k) => <button key={k} type="button" className="btn-ghost btn-sm" onClick={() => { entrees.current[`${k}-recto`]?.click(); }}>{t(`courierOnboarding.doc_${k}`)}</button>)}</span>
         )}
       </div>
       <div className="doc-slots">
@@ -113,12 +113,12 @@ export default function DriverDocuments() {
             <p className="small" style={{ margin: '2px 0 0' }}>{t('authDocs.studentHelp')}</p>
           </div>
           <input ref={(el) => { entrees.current.etudiant = el; }} type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => deposer('school_certificate', null, e)} />
-          <button type="button" className="btn-outline" style={{ padding: '6px 10px', fontSize: 12 }} disabled={busy} onClick={() => entrees.current.etudiant?.click()}>{etudiant.length ? t('courierOnboarding.docReplace') : t('courierOnboarding.docUpload')}</button>
+          <button type="button" className="btn-outline btn-sm" disabled={busy} onClick={() => entrees.current.etudiant?.click()}>{etudiant.length ? t('courierOnboarding.docReplace') : t('courierOnboarding.docUpload')}</button>
         </div>
         {etudiant.map((d) => (
           <div key={d.id} className="small" style={{ marginTop: 4 }}>
             {etat(d).ic} <button type="button" className="lien-bouton" onClick={() => ouvrir(d)}>{t('courierOnboarding.docView')}</button> · {new Date(d.createdAt).toLocaleDateString(getLocale())}
-            {!d.verifiedAt && <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} disabled={busy} onClick={() => supprimer(d.id)}>{t('courierOnboarding.docDelete')}</button>}
+            {!d.verifiedAt && <button type="button" className="btn-ghost btn-sm" disabled={busy} onClick={() => supprimer(d.id)}>{t('courierOnboarding.docDelete')}</button>}
           </div>
         ))}
       </div>

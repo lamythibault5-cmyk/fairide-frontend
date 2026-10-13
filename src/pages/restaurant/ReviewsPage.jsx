@@ -63,11 +63,11 @@ export default function ReviewsPage() {
                 <div style={{ marginTop: 8, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
                   <div className="small" style={{ fontWeight: 700 }}>{t('reviewsResto.yourReply')}</div>
                   <p className="small" style={{ margin: '2px 0 0' }}>{r.restaurantReply}</p>
-                  <button type="button" className="btn-ghost" style={{ marginTop: 4, fontSize: 12, padding: '2px 8px' }} onClick={() => startReply(r)}>{t('reviewsResto.edit')}</button>
+                  <button type="button" className="btn-ghost btn-sm" style={{ marginTop: 4 }} onClick={() => startReply(r)}>{t('reviewsResto.edit')}</button>
                 </div>
               )}
               {!r.restaurantReply && editingId !== r.id && (
-                <button type="button" className="btn-ghost" style={{ marginTop: 6, fontSize: 12, padding: '2px 8px' }} onClick={() => startReply(r)}>{t('reviewsResto.reply')}</button>
+                <button type="button" className="btn-ghost btn-sm" style={{ marginTop: 6 }} onClick={() => startReply(r)}>{t('reviewsResto.reply')}</button>
               )}
               {editingId === r.id && (
                 <div style={{ marginTop: 8 }}>

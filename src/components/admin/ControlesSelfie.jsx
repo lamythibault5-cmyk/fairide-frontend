@@ -63,7 +63,7 @@ export default function ControlesSelfie({ token, toast }) {
                 <figcaption className="small">{t(`controlesSelfie.ref_${r.docType}`)}</figcaption>
               </figure>
             ))}
-            {c.references.length === 0 && <p className="small" style={{ color: 'var(--red)' }}>{t('controlesSelfie.noReference')}</p>}
+            {c.references.length === 0 && <p className="small texte-erreur">{t('controlesSelfie.noReference')}</p>}
           </div>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <button type="button" className="btn-teal" disabled={enCours === c.id} onClick={() => decider(c, 'match')}>{t('controlesSelfie.match')}</button>

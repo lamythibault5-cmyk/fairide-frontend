@@ -173,10 +173,10 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
                 <b>{d.name}</b> <span className="small">· {t('menuPage.draftsCount', { n: d.itemCount })} · {t('menuPage.draftsUpdated', { date: dateCourte(d.updatedAt) })}</span>
                 {d.publishedAt && <span className="pill teal" style={{ marginLeft: 6 }}>{t('menuPage.draftsPublishedOn', { date: dateCourte(d.publishedAt) })}</span>}
               </span>
-              <button type="button" className="btn-outline" style={{ padding: '4px 10px', fontSize: 13 }} onClick={() => (ouvert?.id === d.id ? setOuvert(null) : ouvrir(d.id))}>
+              <button type="button" className="btn-outline btn-sm" onClick={() => (ouvert?.id === d.id ? setOuvert(null) : ouvrir(d.id))}>
                 {ouvert?.id === d.id ? t('menuPage.draftsClose') : t('menuPage.draftsOpen')}
               </button>
-              <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 13 }} disabled={!d.itemCount} onClick={() => setPublication(d)}>
+              <button type="button" className="btn-teal btn-sm" disabled={!d.itemCount} onClick={() => setPublication(d)}>
                 {t('menuPage.draftsPublishShort')}
               </button>
               <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => setSuppression(d)} title={t('menuPage.draftsDelete')} aria-label={t('menuPage.draftsDelete')}><Icone nom="croix" taille={16} className="icone-texte" /></button>

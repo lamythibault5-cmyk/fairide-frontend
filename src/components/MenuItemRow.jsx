@@ -260,7 +260,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
               </label>
             ))}
             {onCreateOptionGroup && !creatingGroup && (
-              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 13, marginTop: 4 }} onClick={() => setCreatingGroup(true)}>{t('menuOptions.newGroupForDish')}</button>
+              <button type="button" className="btn-ghost btn-sm" style={{ marginTop: 4 }} onClick={() => setCreatingGroup(true)}>{t('menuOptions.newGroupForDish')}</button>
             )}
             {creatingGroup && <OptionGroupForm saving={savingGroup} onSave={createGroupHere} onCancel={() => setCreatingGroup(false)} />}
           </div>

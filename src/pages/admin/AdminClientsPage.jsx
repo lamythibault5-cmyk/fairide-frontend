@@ -159,7 +159,7 @@ export default function AdminClientsPage() {
     { key: 'purchaseFrequency', label: tr('adminCommon.frequency'), get: (c) => c.purchaseFrequency, align: 'right' },
     { key: 'lastOrderAt', label: tr('adminCommon.lastOrder'), get: (c) => (c.lastOrderAt ? fmtDate(c.lastOrderAt) : '-'), sortValue: (c) => c.lastOrderAt || 0 },
     { key: 'balance', label: tr('adminCommon.balanceCol'), get: (c) => money(c.balance), sortValue: (c) => c.balance, align: 'right', sum: true },
-    { key: 'adminStatus', label: tr('adminCommon.status'), get: (c) => (c.adminStatus === 'blocked' ? <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.suspended')}</span> : <span className="pill teal">{tr('adminClients.activeBadge')}</span>), sortValue: (c) => c.adminStatus },
+    { key: 'adminStatus', label: tr('adminCommon.status'), get: (c) => (c.adminStatus === 'blocked' ? <span className="pill texte-erreur">{tr('adminClients.suspended')}</span> : <span className="pill teal">{tr('adminClients.activeBadge')}</span>), sortValue: (c) => c.adminStatus },
     { key: 'createdAt', label: tr('adminCommon.registeredOn'), get: (c) => fmtDate(c.createdAt), sortValue: (c) => c.createdAt }
   ];
   const groupes = {
@@ -231,8 +231,8 @@ export default function AdminClientsPage() {
             <b>{c.name}</b>
             <div className="row" style={{ gap: 6 }}>
               {estCompteSupprime(c) ? <DeletedBadge /> : estCompteTest(c) && <TestBadge />}
-              {c.adminStatus === 'blocked' && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.suspended')}</span>}
-              {c.refundCount > 0 && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.refundsCount', { n: c.refundCount })}</span>}
+              {c.adminStatus === 'blocked' && <span className="pill texte-erreur">{tr('adminClients.suspended')}</span>}
+              {c.refundCount > 0 && <span className="pill texte-erreur">{tr('adminClients.refundsCount', { n: c.refundCount })}</span>}
               {c.balance > 0 && <span className="pill teal">{tr('adminClients.balancePill', { balance: money(c.balance) })}</span>}
             </div>
           </div>
@@ -246,9 +246,9 @@ export default function AdminClientsPage() {
           </div>
           <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
             {boutonsSolde(c, true)}
-            {c.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(c)}>{tr('adminCommon.suspend')}</button>}
-            {c.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(c)}>{tr('adminCommon.reactivate')}</button>}
-            <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 'auto' }} onClick={() => askDelete(c)}>{tr('adminClients.deleteAccount')}</button>
+            {c.adminStatus !== 'blocked' && <button className="btn-danger-ghost btn-sm" onClick={() => askSuspend(c)}>{tr('adminCommon.suspend')}</button>}
+            {c.adminStatus === 'blocked' && <button className="btn-teal btn-sm" onClick={() => askReactivate(c)}>{tr('adminCommon.reactivate')}</button>}
+            <button className="btn-danger-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => askDelete(c)}>{tr('adminClients.deleteAccount')}</button>
           </div>
         </div>
       ))}
@@ -258,7 +258,7 @@ export default function AdminClientsPage() {
         <RecordDrawer
           title={selected.name}
           subtitle={detail ? `${detail.email}${detail.phone ? ` · ${detail.phone}` : ''}` : ''}
-          badge={selected.adminStatus === 'blocked' ? <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.suspended')}</span> : <span className="pill teal">{tr('adminClients.activeBadge')}</span>}
+          badge={selected.adminStatus === 'blocked' ? <span className="pill texte-erreur">{tr('adminClients.suspended')}</span> : <span className="pill teal">{tr('adminClients.activeBadge')}</span>}
           tabs={[
             { key: 'apercu', label: tr('adminCommon.tabOverview') },
             { key: 'commandes', label: tr('adminCommon.tabOrders'), count: detail?.orders ? detail.orders.length : null },
@@ -290,7 +290,7 @@ export default function AdminClientsPage() {
               {(detail.refunds || []).length > 0 && (
                 <>
                   <div className="divider" />
-                  <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCommon.refunds')}</h4>
+                  <h4 className="drawer-section-title texte-erreur">{tr('adminCommon.refunds')}</h4>
                   {detail.refunds.map((r) => <DrawerRow key={r.id} label={`${r.restaurantName}, ${r.reason || r.responsibility}`} value={money(r.amount)} />)}
                 </>
               )}

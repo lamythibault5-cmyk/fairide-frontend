@@ -80,7 +80,7 @@ export default function TicketEditor({ initial, btName, printing, onPrintBluetoo
               <button type="button" className="btn-ghost" onClick={() => retirer(i)} aria-label={t('ticketEditor.remove')}>✕</button>
             </div>
           ))}
-          <button type="button" className="btn-outline" style={{ marginTop: 6, padding: '6px 12px', fontSize: 13 }} onClick={ajouter}>+ {t('ticketEditor.addLine')}</button>
+          <button type="button" className="btn-outline btn-sm" style={{ marginTop: 6 }} onClick={ajouter}>+ {t('ticketEditor.addLine')}</button>
         </div>
 
         <div className="field" style={{ marginTop: 10 }}>

@@ -255,7 +255,7 @@ export function ProcessorsTab() {
                   <th scope="row">{p.name}<div className="small" style={{ fontWeight: 400 }}>{p.purpose}</div>
                     <span className="small" style={{ color: p.dpaOk ? 'var(--green)' : 'var(--red)' }}>{p.dpaOk ? t('conformite.procDpaOk') : t('conformite.procDpaMissing')}</span>
                   </th>
-                  <td className="small">{t(`conformite.transfer_${p.transferMechanism}`)}<div>{p.zone}</div>{p.tiaNeeded && <div style={{ color: 'var(--red)' }}>{t('conformite.procTiaNeeded')}</div>}</td>
+                  <td className="small">{t(`conformite.transfer_${p.transferMechanism}`)}<div>{p.zone}</div>{p.tiaNeeded && <div className="texte-erreur">{t('conformite.procTiaNeeded')}</div>}</td>
                   <td><input aria-label={t('conformite.procDpaVersion')} value={val(p, 'dpaVersion')} onChange={(e) => poser(p, 'dpaVersion', e.target.value)} style={{ maxWidth: 120 }} /></td>
                   <td><input aria-label={t('conformite.procDpaSigned')} type="date" value={String(val(p, 'dpaSignedAt')).slice(0, 10)} onChange={(e) => poser(p, 'dpaSignedAt', e.target.value)} /></td>
                   <td><input aria-label={t('conformite.procTia')} value={val(p, 'tiaRef')} onChange={(e) => poser(p, 'tiaRef', e.target.value)} style={{ maxWidth: 140 }} /></td>
@@ -367,7 +367,7 @@ export function ParametersTab() {
           {Object.entries(data.flags).filter(([k]) => k !== 'p2p_enabled').map(([k, v]) => (
             <p key={k} className="small" style={{ margin: '4px 0' }}>
               {k} : <b>{v ? t('conformite.on') : t('conformite.off')}</b>{' '}
-              <button type="button" className="btn-ghost" style={{ padding: '0 8px', fontSize: 12 }} onClick={() => setBascule(k)}>{t('conformite.paramFlagToggle')}</button>
+              <button type="button" className="btn-ghost btn-sm" onClick={() => setBascule(k)}>{t('conformite.paramFlagToggle')}</button>
             </p>
           ))}
           <p className="small" style={{ color: 'var(--ink-soft)' }}>{t('conformite.paramFlagsHelp')}</p>

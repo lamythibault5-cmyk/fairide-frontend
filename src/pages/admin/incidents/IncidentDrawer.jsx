@@ -132,7 +132,7 @@ function OverviewTab({ detail, tr, onDeleted, onClose, token, toast }) {
       {detail.status === 'open' && !detail.refundId && (
         <div className="inc-form-actions">
           <span className="spacer" />
-          <button type="button" className="btn-ghost" style={{ color: 'var(--red)' }} onClick={() => setConfirmDelete(true)}>{tr('adminIncidents.deleteIncident')}</button>
+          <button type="button" className="btn-ghost texte-erreur" onClick={() => setConfirmDelete(true)}>{tr('adminIncidents.deleteIncident')}</button>
         </div>
       )}
       <ConfirmDialog open={confirmDelete} title={tr('adminIncidents.deleteIncident')} message={tr('adminIncidents.deleteConfirm')} confirmLabel={tr('adminCommon.delete')} danger loading={busy} onConfirm={supprimer} onCancel={() => setConfirmDelete(false)} />
@@ -222,7 +222,7 @@ function HandlingTab({ detail, tr, token, toast, onSaved }) {
         {ouvert ? (
           <>
             <button type="button" className="btn-outline" disabled={busy} onClick={() => setDialog('resolved')}>{tr('adminIncidents.markResolved')}</button>
-            <button type="button" className="btn-ghost" style={{ color: 'var(--red)' }} disabled={busy} onClick={() => setDialog('rejected')}>{tr('adminIncidents.markRejected')}</button>
+            <button type="button" className="btn-ghost texte-erreur" disabled={busy} onClick={() => setDialog('rejected')}>{tr('adminIncidents.markRejected')}</button>
           </>
         ) : (
           <button type="button" className="btn-outline" disabled={busy} onClick={() => patch({ status: 'investigating' }, tr('adminIncidents.toastReopened'))}>{tr('adminIncidents.reopen')}</button>

@@ -637,6 +637,13 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .btn-ghost { background: transparent; color: var(--ink-soft); padding: 6px 10px; font-size: 14px; }
 .btn-danger-ghost { background: transparent; color: var(--red); padding: 6px 10px; font-size: 14px; text-decoration: underline; }
 .btn-block { width: 100%; }
+/* PETIT BOUTON (2026-10-13). 175 boutons étaient rapetissés en ligne, en une douzaine de tailles (4px 10px / 12px,
+   6px 12px / 13px, 6px 14px / 13px, 8px 14px / 13px…). Une seule taille maintenant, pour qu'une rangée d'actions ait
+   un rythme. La hauteur minimale de 44px des boutons pleins et à contour reste : c'est la cible du pouce. */
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-ghost.btn-sm, .btn-danger-ghost.btn-sm { padding: 4px 8px; }
+/* Texte d'erreur posé dans un paragraphe (44 endroits l'écrivaient en ligne). */
+.texte-erreur { color: var(--red); }
 
 /* .btn-subtle — la pilule grise des actions de troisième rang (« En savoir plus », « Modifier »),
    reprise de DESIGN.md, à poser surface par surface au fil de la reprise. Elle remplace

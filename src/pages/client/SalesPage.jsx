@@ -172,7 +172,7 @@ export default function SalesPage() {
             <b>{t('sales.mapTitle')}</b>
             <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.mapIntro')}</p>
           </div>
-          <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={basculerCarte}>{carteVisible ? t('sales.mapHide') : t('sales.mapShow')}</button>
+          <button type="button" className="btn-ghost btn-sm" onClick={basculerCarte}>{carteVisible ? t('sales.mapHide') : t('sales.mapShow')}</button>
         </div>
         {carteVisible && (
           <>
@@ -673,7 +673,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
               {p.signedUpAt && <p className="small" style={{ margin: '0 0 6px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}<b>{t('sales.signedUpOn', { date: new Date(p.signedUpAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) })}</b></p>}
               {!p.restaurantId && <p className="small" style={{ margin: '0 0 6px' }}><Icone nom="euro" taille={16} className="icone-texte" />{' '}{t('sales.linkHint')}</p>}
               {p.restaurantId ? (
-                <p className="small" style={{ margin: 0 }}><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{p.restaurantName} · {t(`sales.restoStatus_${p.restaurantStatus || 'pending'}`)} <button type="button" className="btn-ghost" style={{ padding: '2px 6px', fontSize: 12 }} onClick={() => patch({ restaurantId: null })}>{t('sales.unlink')}</button></p>
+                <p className="small" style={{ margin: 0 }}><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{p.restaurantName} · {t(`sales.restoStatus_${p.restaurantStatus || 'pending'}`)} <button type="button" className="btn-ghost btn-sm" onClick={() => patch({ restaurantId: null })}>{t('sales.unlink')}</button></p>
               ) : (
                 <div>
                   <input type="search" value={lien.q} onChange={(e) => chercherResto(e.target.value)} placeholder={t('sales.linkPlaceholder')} />
@@ -828,7 +828,7 @@ function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen, onRegi
           {web.map((r) => (
             <div key={`w${r.osmType || ''}${r.osmId || r.name}`} className="crm-deja-ligne">
               <span><b>{r.name}</b><span className="small">{adresseWeb(r) || '—'}{r.dejaInscrit ? ` · ${t('sales.webAlreadyOnFairide')}` : ''}</span></span>
-              <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => onRegister?.({ web: r })}>{t('sales.webRegister')}</button>
+              <button type="button" className="btn-teal btn-sm" onClick={() => onRegister?.({ web: r })}>{t('sales.webRegister')}</button>
             </div>
           ))}
           <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => onRegister?.({ nom: q.trim() })}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('sales.webManual')}</button>
@@ -849,7 +849,7 @@ function GuideCard({ t }) {
           <b>{t('sales.guideTitle')}</b>
           <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.guideIntro')}</p>
         </div>
-        <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={basculer}>{ouvert ? t('sales.guideHide') : t('sales.guideShow')}</button>
+        <button type="button" className="btn-ghost btn-sm" onClick={basculer}>{ouvert ? t('sales.guideHide') : t('sales.guideShow')}</button>
       </div>
       <div className="crm-flyer">
         <div>
@@ -914,7 +914,7 @@ function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
       <b className="crm-bloc-titre">{t('sales.zoneMineGroup')} · {mine.length}</b>
       {mine.length === 0 ? <p className="small" style={{ margin: '4px 0 12px' }}>{t('sales.zoneMineEmpty')}</p> : <ul className="crm-zone-liste">{mine.map((z) => ligne(z, <button type="button" className="btn-ghost" style={{ fontSize: 13 }} disabled={busy} onClick={() => onRelease(z.key)}>{t('sales.zoneLeave')}</button>))}</ul>}
       <b className="crm-bloc-titre"><Icone nom="position" taille={16} className="icone-texte" />{' '}{t('sales.zoneTodoGroup')} · {todo.length}</b>
-      {todo.length === 0 ? <p className="small" style={{ margin: '4px 0 12px' }}>{t('sales.zoneTodoEmpty')}</p> : <ul className="crm-zone-liste">{todo.map((z) => ligne(z, <button type="button" className="btn-teal" style={{ fontSize: 13, padding: '6px 12px' }} disabled={busy} onClick={() => onClaim(z.key)}>{t('sales.zoneTake')}</button>))}</ul>}
+      {todo.length === 0 ? <p className="small" style={{ margin: '4px 0 12px' }}>{t('sales.zoneTodoEmpty')}</p> : <ul className="crm-zone-liste">{todo.map((z) => ligne(z, <button type="button" className="btn-teal btn-sm" disabled={busy} onClick={() => onClaim(z.key)}>{t('sales.zoneTake')}</button>))}</ul>}
       <b className="crm-bloc-titre"><Icone nom="compte" taille={16} className="icone-texte" />{' '}{t('sales.zoneTakenGroup')} · {taken.length}</b>
       {taken.length === 0 ? <p className="small" style={{ margin: '4px 0 0' }}>{t('sales.zoneTakenEmpty')}</p> : <ul className="crm-zone-liste">{taken.map((z) => ligne(z, null))}</ul>}
     </div>
@@ -965,7 +965,7 @@ function RemunerationCard({ etat, primes, t, euros, fmtDate }) {
           <b><Icone nom="euro" taille={16} className="icone-texte" />{' '}{t('sales.payTitle')}</b>
           <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.payIntro')}</p>
         </div>
-        <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={() => setOuvert((v) => !v)}>{ouvert ? t('sales.payHide') : t('sales.payShow')}</button>
+        <button type="button" className="btn-ghost btn-sm" onClick={() => setOuvert((v) => !v)}>{ouvert ? t('sales.payHide') : t('sales.payShow')}</button>
       </div>
       <div className="crm-bareme">
         <div><b>{euros(rules.signup)}</b><span className="small">{t('sales.ruleSignup')}</span></div>

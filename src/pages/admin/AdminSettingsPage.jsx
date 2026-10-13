@@ -206,7 +206,7 @@ function UsersSubsection({ title, subtitle, groups, departed, emptyText }) {
 
 function statusPill(status, tr) {
   if (status === 'approved') return <span className="pill teal">{tr('adminSettings.validated')}</span>;
-  if (status === 'blocked') return <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminSettings.blocked')}</span>;
+  if (status === 'blocked') return <span className="pill texte-erreur">{tr('adminSettings.blocked')}</span>;
   return <span className="pill">{tr('adminSettings.pendingBadge')}</span>;
 }
 

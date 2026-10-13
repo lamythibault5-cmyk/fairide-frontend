@@ -71,7 +71,7 @@ function GroupeForm({ groupe, onChange, onRemove, t }) {
             <button type="button" className="btn-ghost" style={{ padding: '2px 8px' }} onClick={() => onChange({ ...groupe, choices: groupe.choices.filter((_, k) => k !== i) })} aria-label={t('menuOptions.removeChoice')}>✕</button>
           </div>
         ))}
-        <button type="button" className="btn-ghost" style={{ justifySelf: 'start', padding: '4px 10px', fontSize: 13 }} onClick={() => onChange({ ...groupe, choices: [...groupe.choices, { name: '', priceDelta: 0 }] })}>{t('menuOptions.addChoice')}</button>
+        <button type="button" className="btn-ghost btn-sm" style={{ justifySelf: 'start' }} onClick={() => onChange({ ...groupe, choices: [...groupe.choices, { name: '', priceDelta: 0 }] })}>{t('menuOptions.addChoice')}</button>
       </div>
     </div>
   );
@@ -101,7 +101,7 @@ export default function OptionsEditor({ options = [], onChange, compact = true }
       <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <span className="small" style={{ fontWeight: 700 }}>{t('menuOptions.title')}</span>
         {groupes.length === 0 && <span className="small" style={{ opacity: 0.75 }}>{t('menuOptions.summaryNone')}</span>}
-        <button type="button" className="btn-ghost" style={{ padding: '2px 10px', fontSize: 12, marginLeft: 'auto' }} onClick={() => setOuvert((o) => !o)}>
+        <button type="button" className="btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setOuvert((o) => !o)}>
           {ouvert ? t('menuOptions.close') : t('menuOptions.edit')}
         </button>
       </div>
@@ -123,7 +123,7 @@ export default function OptionsEditor({ options = [], onChange, compact = true }
             {MODELES_GROUPES.map((m) => (
               <button key={m.cle} type="button" className="chip" onClick={() => ajouter(groupeDepuisModele(m, t))}>{t(`menuOptions.tpl_${m.cle}`)}</button>
             ))}
-            <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 13 }} onClick={() => ajouter({ name: '', type: 'single', required: true, maxSelections: null, choices: [{ name: '', priceDelta: 0 }] })}>{t('menuOptions.addGroup')}</button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => ajouter({ name: '', type: 'single', required: true, maxSelections: null, choices: [{ name: '', priceDelta: 0 }] })}>{t('menuOptions.addGroup')}</button>
           </div>
         </div>
       )}

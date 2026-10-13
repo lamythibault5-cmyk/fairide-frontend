@@ -155,7 +155,7 @@ export default function PlatformPhotosImport({ restoId, token, items = [], secti
             {fichier && (
               <span className="small">
                 <Icone nom="document" taille={16} className="icone-texte" />{' '}<b>{fichier.name}</b> ({tailleLisible(fichier.size)})
-                <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12, marginLeft: 6 }} onClick={() => setFichier(null)} aria-label={t('platformPhotos.removeFile')}>✕</button>
+                <button type="button" className="btn-ghost btn-sm" style={{ marginLeft: 6 }} onClick={() => setFichier(null)} aria-label={t('platformPhotos.removeFile')}>✕</button>
               </span>
             )}
           </div>

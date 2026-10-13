@@ -410,10 +410,10 @@ export default function AdminRestaurantsPage() {
             <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
               <Link to={`/admin/restaurants/${r.id}/menu`} className={r.conciergeStatus ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
               {!estTest(r) && <button className={r.publicListed ? 'btn-outline' : 'btn-gold'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askListing(r)}>{r.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
-              {r.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askApprove(r)}>{tr('adminCommon.approve')}</button>}
-              {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
-              {r.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(r)}>{tr('adminCommon.reactivate')}</button>}
-              <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 'auto' }} onClick={() => askDelete(r)}>{tr('adminRestos.deleteRestaurant')}</button>
+              {r.adminStatus !== 'approved' && <button className="btn-teal btn-sm" onClick={() => askApprove(r)}>{tr('adminCommon.approve')}</button>}
+              {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost btn-sm" onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
+              {r.adminStatus === 'blocked' && <button className="btn-teal btn-sm" onClick={() => askReactivate(r)}>{tr('adminCommon.reactivate')}</button>}
+              <button className="btn-danger-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => askDelete(r)}>{tr('adminRestos.deleteRestaurant')}</button>
             </div>
           </div>
         );
@@ -608,7 +608,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
       title={selected.name}
       subtitle={detail ? `${detail.commune}${detail.neighborhood ? ` (${detail.neighborhood})` : ''} · ${detail.cuisine} · ${Number(detail.rating || 0).toFixed(1)}★` : ''}
       badge={biz ? <span className="pill" style={{ color: biz.color }}>{biz.label}</span> : null}
-      actions={<a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="btn-outline" style={{ padding: '6px 12px', fontSize: 12, textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
+      actions={<a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
       tabs={[
         { key: 'apercu', label: tr('adminCommon.tabOverview') },
         { key: 'commandes', label: tr('adminCommon.tabOrders'), count: orders ? orders.length : null },
@@ -644,12 +644,12 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
               <>
                 <span className="pill"><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{tr('adminRestos.zoneDeliveryOffBadge')}</span>
                 {detail.fairideDeliveryDisabledReason && <span style={{ marginLeft: 6 }}>{detail.fairideDeliveryDisabledReason}</span>}
-                <button type="button" className="btn-outline" style={{ marginLeft: 8, padding: '4px 10px', fontSize: 12 }} onClick={() => onZoneDelivery?.(detail.id, false)}>{tr('adminRestos.zoneDeliveryOn')}</button>
+                <button type="button" className="btn-outline btn-sm" style={{ marginLeft: 8 }} onClick={() => onZoneDelivery?.(detail.id, false)}>{tr('adminRestos.zoneDeliveryOn')}</button>
               </>
             ) : (
               <div className="row" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                 <input style={{ flex: '1 1 220px', fontSize: 12 }} placeholder={tr('adminRestos.zoneDeliveryReasonPh')} value={zoneMotif} onChange={(e) => setZoneMotif(e.target.value)} aria-label={tr('adminRestos.zoneDeliveryReasonPh')} />
-                <button type="button" className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => onZoneDelivery?.(detail.id, true, zoneMotif)}>{tr('adminRestos.zoneDeliveryOff')}</button>
+                <button type="button" className="btn-outline btn-sm" onClick={() => onZoneDelivery?.(detail.id, true, zoneMotif)}>{tr('adminRestos.zoneDeliveryOff')}</button>
               </div>
             )}
           </div>
@@ -796,7 +796,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
         <>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminCommon.documents')}</h4>
-            <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
+            <button className="btn-outline btn-sm" onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
           </div>
           {!documents && <div className="small">{tr('adminCommon.loading')}</div>}
           {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}

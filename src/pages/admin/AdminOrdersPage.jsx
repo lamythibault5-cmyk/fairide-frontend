@@ -288,7 +288,7 @@ export default function AdminOrdersPage() {
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6, flexWrap: 'wrap', gap: 4 }}>
             <span className="small">
               {tr('adminOrders.moneyLine', { paid: o.paid ? tr('adminCommon.paidBadge') : tr('adminCommon.unpaidBadge'), commission: money(o.commission), share: money(o.deliveryFairideShare), revenue: money(o.fairideTotalRevenue) })}
-              {o.hasRefund && <span style={{ color: 'var(--red)' }}> {tr('adminOrders.refundedSuffix')}</span>}
+              {o.hasRefund && <span className="texte-erreur"> {tr('adminOrders.refundedSuffix')}</span>}
             </span>
             <b>{money(o.total)}</b>
           </div>
@@ -479,7 +479,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
           {(detail.refunds || []).length > 0 && (
             <>
               <div className="divider" />
-              <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCommon.refunds')}</h4>
+              <h4 className="drawer-section-title texte-erreur">{tr('adminCommon.refunds')}</h4>
               {detail.refunds.map((r) => <DrawerRow key={r.id} label={r.reason || r.responsibility} value={money(r.amount)} />)}
             </>
           )}

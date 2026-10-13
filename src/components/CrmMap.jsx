@@ -107,7 +107,7 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
         <span><i className="crm-leg-pin" style={{ background: '#3B7DD8' }} /> {legende?.mine || t('sales.mapLegendMine')}</span>
         {(legende ? legende.others : true) && <span><i className="crm-leg-pin crm-leg-autre" /> {legende?.others || t('sales.mapLegendOthers')}</span>}
         <span><i className="crm-leg-zone" /> {t('sales.mapLegendZones')}</span>
-        <button type="button" className="btn-ghost" style={{ padding: '2px 6px', fontSize: 12 }} onClick={() => recadrer.current?.()}>{t('sales.mapRecenter')}</button>
+        <button type="button" className="btn-ghost btn-sm" onClick={() => recadrer.current?.()}>{t('sales.mapRecenter')}</button>
       </div>
     </div>
   );

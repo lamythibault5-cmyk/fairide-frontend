@@ -367,7 +367,7 @@ function ContractsTab() {
     { key: 'kind', label: tr('adminCommon.type'), get: (o) => (o.kind === 'courier' ? `${tr('adminCommon.driver')} · ${tr(`adminCompliance.courier_${o.subtype}`)}` : tr('adminCommon.restaurant')), sortValue: (o) => `${o.kind} ${o.subtype || ''}` },
     { key: 'name', label: tr('adminCommon.name'), get: (o) => <b>{o.name}</b>, sortValue: (o) => o.name },
     { key: 'email', label: tr('adminCommon.email'), get: (o) => o.email },
-    { key: 'version', label: tr('adminCompliance.colSigned'), get: (o) => (o.version ? <span style={{ color: 'var(--gold-deep)' }}>{o.version}</span> : <span style={{ color: 'var(--red)' }}>{tr('adminCompliance.unsigned')}</span>), sortValue: (o) => o.version || '' },
+    { key: 'version', label: tr('adminCompliance.colSigned'), get: (o) => (o.version ? <span style={{ color: 'var(--gold-deep)' }}>{o.version}</span> : <span className="texte-erreur">{tr('adminCompliance.unsigned')}</span>), sortValue: (o) => o.version || '' },
     { key: 'expected', label: tr('adminCompliance.colExpected'), get: (o) => o.expected }
   ];
 
@@ -712,7 +712,7 @@ function DossierTab() {
                     <td className="small">{SOURCE_LABELS[p.source] || p.source}</td>
                     <td>
                       {p.present && <span style={{ color: 'var(--green)' }}>✓ {p.deposeLe ? fmtDate(p.deposeLe) : ''}</span>}
-                      {!p.present && p.perime && <span style={{ color: 'var(--red)' }}>{tr('adminCompliance.dosExpired')}</span>}
+                      {!p.present && p.perime && <span className="texte-erreur">{tr('adminCompliance.dosExpired')}</span>}
                       {!p.present && !p.perime && (
                         <span style={{ color: p.obligatoire ? 'var(--red)' : 'var(--ink-faint)' }}>{tr('adminCompliance.dosMissing')}</span>
                       )}

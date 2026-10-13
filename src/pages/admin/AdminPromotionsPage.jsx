@@ -105,7 +105,7 @@ export default function AdminPromotionsPage() {
 
   const libelleType = (v) => ({ client_balance: tr('adminPromos.typeClient'), restaurant_trial_months: tr('adminPromos.typeResto'), order_percent: tr('adminPromos.typeOrderPercent'), order_amount: tr('adminPromos.typeOrderAmount'), order_free_delivery: tr('adminPromos.typeOrderFreeDelivery') }[v] || v);
   const uniteValeur = (type) => ({ client_balance: '€', order_amount: '€', order_percent: '%' }[type] || tr('adminSettings.months'));
-  const etat = (p) => (expire(p) ? <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminPromos.expired')}</span> : epuise(p) ? <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminPromos.exhausted')}</span> : p.active ? <span className="pill gold">{tr('adminPromos.active')}</span> : <span className="pill">{tr('adminSettings.disabled')}</span>);
+  const etat = (p) => (expire(p) ? <span className="pill texte-erreur">{tr('adminPromos.expired')}</span> : epuise(p) ? <span className="pill texte-erreur">{tr('adminPromos.exhausted')}</span> : p.active ? <span className="pill gold">{tr('adminPromos.active')}</span> : <span className="pill">{tr('adminSettings.disabled')}</span>);
   const colonnes = [
     { key: 'code', label: tr('adminCommon.code'), get: (p) => <b style={{ fontFamily: 'monospace', fontSize: 14 }}>{p.code}</b>, sortValue: (p) => p.code },
     { key: 'type', label: tr('adminCommon.type'), get: (p) => <span className="pill teal">{libelleType(p.type)}</span>, sortValue: (p) => p.type },
@@ -117,7 +117,7 @@ export default function AdminPromotionsPage() {
     { key: 'actions', label: tr('adminCommon.actions'), get: (p) => (
       <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>
         <button className={p.active ? 'btn-danger-ghost' : 'btn-outline'} style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => askToggle(p)}>{p.active ? tr('adminCommon.disable') : tr('adminPromos.enable')}</button>
-        <button className="btn-danger-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => askDelete(p)}>{tr('adminCommon.delete')}</button>
+        <button className="btn-danger-ghost btn-sm" onClick={() => askDelete(p)}>{tr('adminCommon.delete')}</button>
       </span>
     ), sortValue: () => 0, align: 'right' }
   ];
@@ -257,7 +257,7 @@ function PromoDrawer({ p, onClose, onPatch, onToggle, onDelete, libelleType, eta
       title={p.code} subtitle={libelleType(p.type)} badge={etat(p)}
       tabs={[{ key: 'infos', label: tr('adminCommon.tabOverview') }, { key: 'commandes', label: tr('adminCommon.tabOrders'), count: orders ? orders.length : (p.usesCount ?? null) }]}
       tab={onglet} onTab={setOnglet} onClose={onClose} width={560}
-      actions={<><button className={p.active ? 'btn-danger-ghost' : 'btn-outline'} style={{ padding: '6px 10px', fontSize: 12 }} onClick={onToggle}>{p.active ? tr('adminCommon.disable') : tr('adminPromos.enable')}</button><button className="btn-danger-ghost" style={{ padding: '6px 10px', fontSize: 12 }} onClick={onDelete}>{tr('adminCommon.delete')}</button></>}
+      actions={<><button className={p.active ? 'btn-danger-ghost' : 'btn-outline'} style={{ padding: '6px 10px', fontSize: 12 }} onClick={onToggle}>{p.active ? tr('adminCommon.disable') : tr('adminPromos.enable')}</button><button className="btn-danger-ghost btn-sm" onClick={onDelete}>{tr('adminCommon.delete')}</button></>}
     >
       {onglet === 'infos' && (
         <>

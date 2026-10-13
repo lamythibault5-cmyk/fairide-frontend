@@ -64,7 +64,7 @@ export function ReconciliationTab({ token, toast, periodKey }) {
               <div className="stat-grid">
                 <div className="stat-card"><div className="num">{data.counts.rapproche}</div><div className="label">{tr('adminCommon.reconciled')}</div></div>
                 <div className="stat-card"><div className="num" style={{ color: 'var(--gold-deep)' }}>{data.counts.non_rapproche}</div><div className="label">{tr('adminCommon.notReconciled')}</div></div>
-                <div className="stat-card"><div className="num" style={{ color: 'var(--red)' }}>{data.counts.problematique}</div><div className="label">{tr('adminCommon.problematic')}</div></div>
+                <div className="stat-card"><div className="num texte-erreur">{data.counts.problematique}</div><div className="label">{tr('adminCommon.problematic')}</div></div>
               </div>
               <div className="fin-toolbar">
                 <div className="role-pick">

@@ -48,12 +48,12 @@ export default function CookieBanner() {
       </span>
       {/* Mêmes dimensions pour les deux choix : refuser doit être aussi simple qu'accepter (voir plus haut). */}
       <div className="row" style={{ gap: 8 }}>
-        <button className="btn-gold" style={{ padding: '6px 14px', fontSize: 12 }} onClick={() => choose('accepted')}>
+        <button className="btn-gold btn-sm" onClick={() => choose('accepted')}>
           {t('cookies.accept')}
         </button>
         <button
-          className="btn-outline"
-          style={{ padding: '6px 14px', fontSize: 12, borderColor: 'var(--cream)', color: 'var(--cream)' }}
+          className="btn-outline btn-sm"
+          style={{ borderColor: 'var(--cream)', color: 'var(--cream)' }}
           onClick={() => choose('refused')}
         >
           {t('cookies.refuse')}

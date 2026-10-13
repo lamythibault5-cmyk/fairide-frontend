@@ -215,7 +215,7 @@ function EtatDossier({ d, t, onChangeStatus }) {
           {c.lifecycleStatus === 'blocked_threshold' && (
             <>
               <p className="small" style={{ margin: '6px 0 0' }}>{t('courierOnboarding.blockedExplain', { year: legal.year ?? new Date().getFullYear() })}</p>
-              <button type="button" className="btn-gold" style={{ marginTop: 8, padding: '6px 12px', fontSize: 13 }} onClick={onChangeStatus}><Icone nom="melanger" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.blockedGoStatus')}</button>
+              <button type="button" className="btn-gold btn-sm" style={{ marginTop: 8 }} onClick={onChangeStatus}><Icone nom="melanger" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.blockedGoStatus')}</button>
             </>
           )}
         </div>
@@ -305,8 +305,8 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
         <div className="courier-ok"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityReceived', { n: carte.length })}
           <p className="small" style={{ margin: '6px 0 0' }}>{t('courierOnboarding.identityReceivedHelp')}</p>
           <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-            <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => { fichier.current?.click(); }}><Icone nom="lien" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityAddFile')}</button>
-            <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => setAutreMoyen(true)}>{t('courierOnboarding.identityOtherWay')}</button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => { fichier.current?.click(); }}><Icone nom="lien" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityAddFile')}</button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => setAutreMoyen(true)}>{t('courierOnboarding.identityOtherWay')}</button>
           </div>
           <input ref={fichier} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={deposer} />
         </div>
@@ -321,7 +321,7 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
             <p className="small">{t('courierOnboarding.stripeIdentityHelp')}</p>
             <button type="button" className="btn-teal" disabled={busy || !prov.stripe_identity} onClick={() => demarrer('stripe_identity')}>{id.status === 'pending' && id.provider === 'stripe_identity' ? t('courierOnboarding.identityResume') : t('courierOnboarding.identityStart')}</button>
             {id.status === 'processing' && <p className="small"><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityProcessing')}</p>}
-            {id.status === 'failed' && <p className="small" style={{ color: 'var(--red)' }}>{t('courierOnboarding.identityFailed')}</p>}
+            {id.status === 'failed' && <p className="small texte-erreur">{t('courierOnboarding.identityFailed')}</p>}
           </div>
           <div className="courier-provider">
             <b><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.provider_manual')}</b>
@@ -542,8 +542,8 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
                   <div key={x.id} className="small" style={{ marginTop: 4 }}>
                     {x.verifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : x.rejectedReason ? <Icone nom="croix" taille={16} className="icone-texte" /> : <Icone nom="horloge" taille={16} className="icone-texte" />} <button type="button" className="lien-bouton" onClick={() => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/couriers/me/documents/${x.id}/lien`, token, toast, messageErreur: t('courierOnboarding.docUnavailable') })}>{t('courierOnboarding.docView')}</button>
                     {x.expiresAt && ` · ${t('courierOnboarding.docExpires', { date: new Date(x.expiresAt).toLocaleDateString(getLocale()) })}`}
-                    {x.rejectedReason && <span style={{ color: 'var(--red)' }}> · {x.rejectedReason}</span>}
-                    {!x.verifiedAt && <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} onClick={() => action(() => api(`/couriers/me/documents/${x.id}`, { method: 'DELETE', token }))}>{t('courierOnboarding.docDelete')}</button>}
+                    {x.rejectedReason && <span className="texte-erreur"> · {x.rejectedReason}</span>}
+                    {!x.verifiedAt && <button type="button" className="btn-ghost btn-sm" onClick={() => action(() => api(`/couriers/me/documents/${x.id}`, { method: 'DELETE', token }))}>{t('courierOnboarding.docDelete')}</button>}
                   </div>
                 ))}
               </div>
@@ -678,12 +678,12 @@ function Notifications({ t, token }) {
     <div className="card courier-state warn">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <b><Icone nom="cloche" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.notificationsTitle')} ({liste.length})</b>
-        <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => lire(null)}>{t('courierOnboarding.markAllRead')}</button>
+        <button type="button" className="btn-ghost btn-sm" onClick={() => lire(null)}>{t('courierOnboarding.markAllRead')}</button>
       </div>
       {liste.map((n) => (
         <div key={n.id} className="row small" style={{ justifyContent: 'space-between', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
           <span>{n.createdAt ? `${new Date(n.createdAt).toLocaleDateString(getLocale())} · ` : ''}{texte(n)}</span>
-          <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} onClick={() => lire([n.id])}>{t('courierOnboarding.markRead')}</button>
+          <button type="button" className="btn-ghost btn-sm" onClick={() => lire([n.id])}>{t('courierOnboarding.markRead')}</button>
         </div>
       ))}
     </div>

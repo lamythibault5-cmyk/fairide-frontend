@@ -237,7 +237,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           <div className="paiement-encart" style={{ marginBottom: 10 }}>
             <p className="small" style={{ margin: '0 0 4px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('dashResto.hoursFromSignup')}</p>
             <div className="closed-banner-schedule" style={{ margin: '0 0 6px' }}>{formatFullSchedule(hours, t).map((line) => <span key={line}>{line}</span>)}</div>
-            <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => setModifierHoraires(true)}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('dashResto.editHours')}</button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => setModifierHoraires(true)}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('dashResto.editHours')}</button>
           </div>
         ) : <OpeningHoursEditor value={hours} onChange={setHours} />
       )}

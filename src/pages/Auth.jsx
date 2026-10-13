@@ -1233,7 +1233,7 @@ export default function Auth() {
                         <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                           <input style={{ flex: 1 }} aria-label={t('auth.managerName')} placeholder={t('auth.managerNamePh')} value={r.name}
                             onChange={(e) => setResponsables((l) => l.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
-                          <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))}>{t('auth.removeSecond')}</button>
+                          <button type="button" className="btn-ghost btn-sm" onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))}>{t('auth.removeSecond')}</button>
                         </div>
                         <div style={{ marginTop: 6 }}><PhoneInput id={`auth-f-resp-${i}`} value={r.phone} onChange={(v) => setResponsables((l) => l.map((x, j) => (j === i ? { ...x, phone: v } : x)))} invalid={!!errors[`resp${i}`]} /></div>
                         {fieldError(`resp${i}`)}
@@ -1388,7 +1388,7 @@ export default function Auth() {
                       <label htmlFor="auth-f-tel2" className="small">{t('auth.secondPhone')}</label>
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                         <div style={{ flex: 1 }}><PhoneInput id="auth-f-tel2" value={phoneSecondary} onChange={setPhoneSecondary} invalid={!!errors.phoneSecondary} /></div>
-                        <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setPhoneSecondary(''); setPhoneSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
+                        <button type="button" className="btn-ghost btn-sm" onClick={() => { setPhoneSecondary(''); setPhoneSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
                       </div>
                       {fieldError('phoneSecondary')}
                       <label className="row small" style={{ gap: 8, alignItems: 'center', margin: '6px 0 0', cursor: 'pointer' }}>
@@ -1405,7 +1405,7 @@ export default function Auth() {
                       <label htmlFor="auth-f-mail2" className="small">{t('auth.secondEmail')}</label>
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                         <input id="auth-f-mail2" type="email" inputMode="email" style={{ flex: 1 }} className={errors.emailSecondary ? 'input-invalid' : undefined} value={emailSecondary} onChange={(e) => setEmailSecondary(e.target.value)} placeholder={t('auth.phEmail')} />
-                        <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setEmailSecondary(''); setEmailSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
+                        <button type="button" className="btn-ghost btn-sm" onClick={() => { setEmailSecondary(''); setEmailSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
                       </div>
                       <EmailDomainChips value={emailSecondary} onChange={setEmailSecondary} inputId="auth-f-mail2" />
                       {fieldError('emailSecondary')}

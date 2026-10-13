@@ -45,7 +45,7 @@ export default function ResetPassword() {
         <div className="card">
           <h2 style={{ marginTop: 0 }}>{t('resetPassword.title')}</h2>
           {!token && (
-            <p className="small" style={{ color: 'var(--red)' }}>{t('resetPassword.invalidLink')}</p>
+            <p className="small texte-erreur">{t('resetPassword.invalidLink')}</p>
           )}
           {token && done && (
             <>

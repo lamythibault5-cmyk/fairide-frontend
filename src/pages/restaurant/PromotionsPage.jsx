@@ -66,7 +66,7 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
           {avantage ? (
             <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <span className="pill teal"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{avantage.mode === 'amount' ? t('promosPage.fairideItemsActiveAmount', { v: eur(avantage.value) }) : t('promosPage.fairideItemsActivePercent', { v: avantage.value })}</span>
-              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={busy === 'produits'} onClick={() => reglerProduits(null, null)}>{t('promosPage.fairideRemove')}</button>
+              <button type="button" className="btn-ghost btn-sm" disabled={busy === 'produits'} onClick={() => reglerProduits(null, null)}>{t('promosPage.fairideRemove')}</button>
             </div>
           ) : (
             <>
@@ -76,7 +76,7 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
               </div>
               <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
                 {(modeProduit === 'amount' ? MONTANTS_PRODUIT : POURCENTS_PRODUIT).map((v) => (
-                  <button key={v} type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} disabled={busy === 'produits'} onClick={() => reglerProduits(modeProduit, v)}>
+                  <button key={v} type="button" className="btn-outline btn-sm" disabled={busy === 'produits'} onClick={() => reglerProduits(modeProduit, v)}>
                     −{modeProduit === 'amount' ? eur(v) : `${v} %`}
                   </button>
                 ))}
@@ -90,12 +90,12 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
           {livraisonActive ? (
             <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <span className="pill teal"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{minimumOffert != null ? `${t('promosPage.fairideDeliveryFree')} · ${t('editResto.offerFromMin', { amount: minimumOffert })}` : livraisonOfferte ? t('promosPage.fairideDeliveryFree') : t('promosPage.fairideDeliveryActive', { v: eur(remiseLivraison) })}</span>
-              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={busy === 'livraison'} onClick={() => reglerLivraison(0)}>{t('promosPage.fairideRemove')}</button>
+              <button type="button" className="btn-ghost btn-sm" disabled={busy === 'livraison'} onClick={() => reglerLivraison(0)}>{t('promosPage.fairideRemove')}</button>
             </div>
           ) : (
             <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
               {MONTANTS_LIVRAISON.map((v) => (
-                <button key={v} type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} disabled={busy === 'livraison'} onClick={() => reglerLivraison(v)}>−{eur(v)}</button>
+                <button key={v} type="button" className="btn-outline btn-sm" disabled={busy === 'livraison'} onClick={() => reglerLivraison(v)}>−{eur(v)}</button>
               ))}
             </div>
           )}
@@ -213,10 +213,10 @@ export default function PromotionsPage() {
               <div className="small" style={{ marginTop: 6 }}>{p.itemName || t('promosPage.wholeOrder')}{!p.active ? t('promosPage.inactiveSuffix') : ''}</div>
             </div>
             <div className="row" style={{ gap: 6 }}>
-              <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={togglingId === p.id} onClick={() => toggleActive(p)}>
+              <button className="btn-ghost btn-sm" disabled={togglingId === p.id} onClick={() => toggleActive(p)}>
                 {togglingId === p.id ? '...' : p.active ? t('promosPage.disable') : t('promosPage.enable')}
               </button>
-              <button className="btn-danger-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={deletingId === p.id} onClick={() => deletePromo(p)}>
+              <button className="btn-danger-ghost btn-sm" disabled={deletingId === p.id} onClick={() => deletePromo(p)}>
                 {deletingId === p.id ? '...' : t('promosPage.deletePromo')}
               </button>
             </div>

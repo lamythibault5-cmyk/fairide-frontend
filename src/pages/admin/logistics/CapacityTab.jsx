@@ -32,13 +32,13 @@ export default function CapacityTab() {
     { key: 'hour', label: tr('adminLogistics.colHour'), get: (h) => tr('adminLogistics.hourFmt', { h: String(h.hour).padStart(2, '0') }), sortValue: (h) => h.hour },
     { key: 'orders', label: tr('adminCommon.orders'), align: 'right', get: (h) => h.orders, sum: true },
     { key: 'driversActive', label: tr('adminLogistics.legendDrivers'), align: 'right', get: (h) => h.driversActive },
-    { key: 'ratio', label: tr('adminLogistics.colRatio'), align: 'right', get: (h) => (h.ratio === null ? <span style={{ color: 'var(--red)' }}>∞</span> : h.ratio.toFixed(1)), sortValue: (h) => (h.ratio === null ? 999 : h.ratio) }
+    { key: 'ratio', label: tr('adminLogistics.colRatio'), align: 'right', get: (h) => (h.ratio === null ? <span className="texte-erreur">∞</span> : h.ratio.toFixed(1)), sortValue: (h) => (h.ratio === null ? 999 : h.ratio) }
   ];
   const colonnesCommunes = [
     { key: 'commune', label: tr('adminCommon.commune'), get: (c) => <b>{c.commune}</b>, sortValue: (c) => c.commune },
     { key: 'orders', label: tr('adminCommon.orders'), align: 'right', get: (c) => c.orders, sum: true },
     { key: 'driversActive', label: tr('adminLogistics.legendDrivers'), align: 'right', get: (c) => c.driversActive },
-    { key: 'ratio', label: tr('adminLogistics.colRatio'), align: 'right', get: (c) => (c.driversActive ? (c.orders / c.driversActive).toFixed(1) : <span style={{ color: 'var(--red)' }}>∞</span>), sortValue: (c) => (c.driversActive ? c.orders / c.driversActive : 999) }
+    { key: 'ratio', label: tr('adminLogistics.colRatio'), align: 'right', get: (c) => (c.driversActive ? (c.orders / c.driversActive).toFixed(1) : <span className="texte-erreur">∞</span>), sortValue: (c) => (c.driversActive ? c.orders / c.driversActive : 999) }
   ];
 
   return (

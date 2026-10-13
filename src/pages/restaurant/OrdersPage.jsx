@@ -324,15 +324,15 @@ export default function OrdersPage() {
               <option value={0}>{t('ordersResto.extraPrepNone')}</option>
               {[10, 20, 30].map((m) => <option key={m} value={m}>{t('ordersResto.extraPrepMinutes', { n: m })}</option>)}
             </select>
-            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 }))}>{t('ordersResto.accept')}</button>
-            <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
+            <button className="btn-teal btn-sm" disabled={actionEnCours === o.id} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 }))}>{t('ordersResto.accept')}</button>
+            <button className="btn-outline btn-sm" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
           </>
         )}
         {o.status === 'preparation' && (
-          <button className="btn-gold" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+          <button className="btn-gold btn-sm" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
         )}
         {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
-          <button className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, color: 'var(--red)' }} onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{t('ordersResto.customerNoShow')}</button>
+          <button className="btn-ghost btn-sm" style={{ color: 'var(--red)' }} onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{t('ordersResto.customerNoShow')}</button>
         )}
       </div>
       {o.status === 'pret' && o.orderType === 'pickup' && (
@@ -346,7 +346,7 @@ export default function OrdersPage() {
             value={pickupCodeInputs[o.id] || ''}
             onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
           />
-          <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
+          <button className="btn-teal btn-sm" disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
             {confirmingPickup === o.id ? '...' : t('ordersResto.validateOrder')}
           </button>
         </div>
@@ -444,7 +444,7 @@ export default function OrdersPage() {
                   value={pickupCodeInputs[selectedOrder.id] || ''}
                   onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
                 />
-                <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder)}>
+                <button className="btn-teal btn-sm" disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder)}>
                   {confirmingPickup === selectedOrder.id ? '...' : t('ordersResto.validateOrder')}
                 </button>
               </div>

@@ -94,7 +94,7 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
     <details className="card conformite-carte" open={!toutSigne}>
       <summary>
         <b>{t('conformite.menuPanelTitle')}</b>{' '}
-        {toutSigne ? <span className="pill teal">✓ {t('conformite.menuPanelDone')}</span> : <span className="pill" style={{ color: 'var(--red)' }}>{t('conformite.signAllCount', { n: aSigner.length || 1 })}</span>}
+        {toutSigne ? <span className="pill teal">✓ {t('conformite.menuPanelDone')}</span> : <span className="pill texte-erreur">{t('conformite.signAllCount', { n: aSigner.length || 1 })}</span>}
       </summary>
 
       {/* Déjà signé : une ligne chacun, rien d'autre. */}

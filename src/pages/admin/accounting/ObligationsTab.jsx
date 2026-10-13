@@ -65,7 +65,7 @@ export default function ObligationsTab({ token, toast }) {
               <p className="small" style={{ marginBottom: 4 }}>{tr('adminAccounting.listingClients', { n: l.clients.length, ht: money(l.totals.turnover), tva: money(l.totals.vatAmount), date: new Date(l.deadline).toLocaleDateString() })}</p>
               {l.clients.map((c) => <div key={c.restaurantId} className="small">{c.name} · {c.vatNumber} · {money(c.turnover)} · {tr('adminCommon.vat')} {money(c.vatAmount)}</div>)}
               {l.missingVatNumber.length > 0 && (
-                <p className="small" style={{ color: 'var(--red)' }}>{tr('adminAccounting.listingMissingVat', { names: l.missingVatNumber.map((c) => c.name).join(', ') })}</p>
+                <p className="small texte-erreur">{tr('adminAccounting.listingMissingVat', { names: l.missingVatNumber.map((c) => c.name).join(', ') })}</p>
               )}
             </>
           )}

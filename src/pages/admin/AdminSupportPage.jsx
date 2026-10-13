@@ -264,8 +264,8 @@ export default function AdminSupportPage() {
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <span className="admin-card-select"><SelectBox sel={sel} id={t.id} label={tr('adminCommon.select')} /><b>{t.subject}</b></span>
             <div className="row" style={{ gap: 6 }}>
-              {slaDepasse(t) && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminSupport.slaShort')}</span>}
-              {t.escalated && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminSupport.escalated')}</span>}
+              {slaDepasse(t) && <span className="pill texte-erreur">{tr('adminSupport.slaShort')}</span>}
+              {t.escalated && <span className="pill texte-erreur">{tr('adminSupport.escalated')}</span>}
               <span className="pill" style={{ color: TICKET_STATUS_LABELS[t.status]?.color }}>{TICKET_STATUS_LABELS[t.status]?.label}</span>
             </div>
           </div>
@@ -509,10 +509,10 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
           {t.attachments.map((a) => (
             <div key={a.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
               <a href={urlSure(a.fileUrl)} target="_blank" rel="noreferrer" className="small"><Icone nom="lien" taille={16} className="icone-texte" />{' '}{a.filename}</a>
-              <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setConfirm({ title: tr('adminSupport.confirmDeleteAttachment', { name: a.filename }), danger: true, run: () => removeAttachment(a.id) })}>{tr('adminCommon.delete')}</button>
+              <button className="btn-ghost btn-sm" onClick={() => setConfirm({ title: tr('adminSupport.confirmDeleteAttachment', { name: a.filename }), danger: true, run: () => removeAttachment(a.id) })}>{tr('adminCommon.delete')}</button>
             </div>
           ))}
-          <label className="btn-outline" style={{ display: 'inline-block', padding: '6px 14px', fontSize: 13, marginTop: 6, cursor: 'pointer' }}>
+          <label className="btn-outline btn-sm" style={{ display: 'inline-block', marginTop: 6, cursor: 'pointer' }}>
             {uploading ? '...' : tr('adminSupport.addAttachment')}
             <input type="file" onChange={uploadAttachment} style={{ display: 'none' }} disabled={uploading} />
           </label>
@@ -558,7 +558,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
                     {cannedReplies.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                   </select>
                 )}
-                <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setShowCannedManager(true)}>{tr('adminSupport.manageCanned')}</button>
+                <button className="btn-ghost btn-sm" onClick={() => setShowCannedManager(true)}>{tr('adminSupport.manageCanned')}</button>
               </div>
               <textarea rows={6} value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder={tr('adminSupport.phReply')} style={{ width: '100%' }} />
               <button className="btn-teal" style={{ marginTop: 6 }} disabled={sending || !replyText.trim()} onClick={sendReply}>{sending ? '...' : tr('adminSupport.sendReply')}</button>
@@ -652,7 +652,7 @@ function CannedRepliesManager({ cannedReplies, onChanged, onClose }) {
               <b className="small">{c.title}</b>
               <div className="small" style={{ opacity: 0.6 }}>{c.body.slice(0, 60)}{c.body.length > 60 ? '...' : ''}</div>
             </div>
-            <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setASupprimer(c)}>{tr('adminCommon.delete')}</button>
+            <button className="btn-ghost btn-sm" onClick={() => setASupprimer(c)}>{tr('adminCommon.delete')}</button>
           </div>
         ))}
         <div className="divider" />

@@ -253,7 +253,7 @@ function ReconciliationTab({ token, toast, periodQuery }) {
               </div>
               <span className="spacer" />
               <button type="button" className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
-              <Link to="/admin/accounting?tab=reconciliation" className="btn-outline" style={{ textDecoration: 'none', padding: '8px 14px', fontSize: 13 }}>{tr('adminPayments.openAccountingReconciliation')}</Link>
+              <Link to="/admin/accounting?tab=reconciliation" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminPayments.openAccountingReconciliation')}</Link>
             </div>
             {rows.length === 0 && <div className="empty">{tr('adminCommon.nothingForFilter')}</div>}
             {rows.map((r) => (

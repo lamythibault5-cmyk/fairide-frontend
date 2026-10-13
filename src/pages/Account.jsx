@@ -815,7 +815,7 @@ export default function Account() {
           )}
           <div id="section-paiement">
             <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
-              {retour && <Link to={retour} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10, padding: '6px 10px', fontSize: 13 }}>← {t('accountUi.backToDashboard')}</Link>}
+              {retour && <Link to={retour} className="btn-ghost btn-sm" style={{ display: 'inline-block', marginBottom: 10 }}>← {t('accountUi.backToDashboard')}</Link>}
               <PaiementRestaurant restaurant={restaurant} orders={commandesResto} onRestaurantChange={rechargerRestaurant} />
             </LigneCompte>
           </div>
@@ -1122,7 +1122,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
           <div className="small" style={{ opacity: 0.7 }}>{label}</div>
           <div>{currentValue || '-'}</div>
         </div>
-        <button type="button" className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setEditing(true)}>{t('accountUi.change')}</button>
+        <button type="button" className="btn-outline btn-sm" onClick={() => setEditing(true)}>{t('accountUi.change')}</button>
       </div>
     );
   }

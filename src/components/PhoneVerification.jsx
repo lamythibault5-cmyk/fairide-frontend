@@ -48,7 +48,7 @@ export default function PhoneVerification() {
       {etape === 'repos' ? (
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <span className="small" style={{ flex: '1 1 200px' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('accountUi.phoneNotVerified')}</span>
-          <button type="button" className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} disabled={occupe} onClick={demander}>
+          <button type="button" className="btn-outline btn-sm" disabled={occupe} onClick={demander}>
             {occupe ? '...' : t('accountUi.verifyPhone')}
           </button>
         </div>

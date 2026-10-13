@@ -235,7 +235,7 @@ function MembresTab({ membres, erreur, recharger, monRole, isOwner, moi, token, 
                       ? <button type="button" className="btn-ghost" onClick={() => setConfirm({ kind: 'deactivate', membre: m })}>{tr('adminCommon.disable')}</button>
                       : <button type="button" className="btn-ghost" onClick={() => setConfirm({ kind: 'reactivate', membre: m })}>{tr('adminCommon.reactivate')}</button>)}
                     {a.resend && <button type="button" className="btn-ghost" onClick={() => renvoyer(m)}>{tr('adminTeam.resend')}</button>}
-                    {a.remove && <button type="button" className="btn-ghost" style={{ color: 'var(--red)' }} onClick={() => setConfirm({ kind: 'remove', membre: m })}>{tr('adminTeam.remove')}</button>}
+                    {a.remove && <button type="button" className="btn-ghost texte-erreur" onClick={() => setConfirm({ kind: 'remove', membre: m })}>{tr('adminTeam.remove')}</button>}
                   </div>
                 )}
               </article>

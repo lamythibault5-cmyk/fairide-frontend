@@ -84,7 +84,7 @@ export default function DeclarationsTab() {
                       <td>{euros(Number(r.consideration))}</td>
                       <td className="small">
                         {!r.reportable ? t('conformite.dac7Excluded')
-                          : r.missing.length ? <span style={{ color: 'var(--red)' }}>{t('conformite.dac7Missing', { list: r.missing.map((m) => t(`conformite.dac7Field_${m}`)).join(', ') })}</span>
+                          : r.missing.length ? <span className="texte-erreur">{t('conformite.dac7Missing', { list: r.missing.map((m) => t(`conformite.dac7Field_${m}`)).join(', ') })}</span>
                           : t('conformite.dac7Complete')}
                       </td>
                     </tr>

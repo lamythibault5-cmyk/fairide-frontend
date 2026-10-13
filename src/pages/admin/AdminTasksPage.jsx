@@ -206,7 +206,7 @@ export default function AdminTasksPage() {
             <div className="row" style={{ gap: 8, alignItems: 'center' }}>
               <SelectBox sel={sel} id={t.id} label={tr('adminCommon.select')} />
               {t.status !== 'fait' && t.status !== 'annulee' && (
-                <button className="btn-outline" style={{ padding: '2px 8px', fontSize: 11 }} onClick={(e) => quickComplete(t, e)}>{tr('adminTasks.done')}</button>
+                <button className="btn-outline btn-sm" onClick={(e) => quickComplete(t, e)}>{tr('adminTasks.done')}</button>
               )}
               <b>{t.title}</b>
             </div>

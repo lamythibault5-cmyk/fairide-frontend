@@ -105,7 +105,7 @@ export function ConsentementBiometrique({ consent, token, onAccepte, onManuel, o
         <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={coche} onChange={(e) => setCoche(e.target.checked)} />
         <span className="small">{t('conformite.biometricConsentCheck')}</span>
       </label>
-      {erreur && <p className="small" style={{ color: 'var(--red)' }}>{erreur}</p>}
+      {erreur && <p className="small texte-erreur">{erreur}</p>}
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-outline" disabled={envoi} onClick={onManuel}>{t('conformite.biometricChooseManual')}</button>
         <button type="button" className="btn-teal" disabled={envoi || !coche} onClick={accepter}>{envoi ? '…' : t('conformite.biometricAccept')}</button>

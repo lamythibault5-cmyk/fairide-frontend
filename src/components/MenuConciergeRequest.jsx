@@ -156,7 +156,7 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
             {fichiers.map((f) => (
               <li key={`${f.name}-${f.size}`}>
                 <span>{/^image\//.test(f.type) ? <Icone nom="apercu" taille={16} className="icone-texte" /> : <Icone nom="document" taille={16} className="icone-texte" />} {f.name} <span className="small">· {(f.size / 1024 / 1024).toFixed(1)} Mo</span></span>
-                <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setFichiers((l) => l.filter((x) => x !== f))} aria-label={t('menuConcierge.filesRemove')}>✕</button>
+                <button type="button" className="btn-ghost btn-sm" onClick={() => setFichiers((l) => l.filter((x) => x !== f))} aria-label={t('menuConcierge.filesRemove')}>✕</button>
               </li>
             ))}
           </ul>

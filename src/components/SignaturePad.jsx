@@ -52,7 +52,7 @@ export default function SignaturePad({ onChange, hauteur = 160 }) {
       />
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginTop: 6, gap: 8, flexWrap: 'wrap' }}>
         <span className="small" style={{ opacity: 0.75 }}>{vide ? t('signature.empty') : t('signature.done')}</span>
-        <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 13 }} onClick={effacer}>{t('signature.clear')}</button>
+        <button type="button" className="btn-ghost btn-sm" onClick={effacer}>{t('signature.clear')}</button>
       </div>
     </div>
   );

@@ -217,10 +217,10 @@ export function ProchaineEtape({ order }) {
 export function ProgressBar({ status, orderType }) {
   const { t } = useLanguage();
   if (status === 'refuse') {
-    return <p className="small" style={{ color: 'var(--red)' }}>{t('orderStatus.progress.refused')}</p>;
+    return <p className="small texte-erreur">{t('orderStatus.progress.refused')}</p>;
   }
   if (status === 'annule') {
-    return <p className="small" style={{ color: 'var(--red)' }}>{t('orderStatus.progress.cancelled')}</p>;
+    return <p className="small texte-erreur">{t('orderStatus.progress.cancelled')}</p>;
   }
   const isDelivery = orderType === 'delivery';
   const steps = isDelivery ? STEPS : PICKUP_STEPS;

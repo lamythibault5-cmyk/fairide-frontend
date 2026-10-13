@@ -79,7 +79,7 @@ export default function MesCasquettes() {
             action={r === role ? (
               <span className="pill teal">{t('casquettes.active')}</span>
             ) : (
-              <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => basculer(r)}>
+              <button type="button" className="btn-outline btn-sm" onClick={() => basculer(r)}>
                 {t('casquettes.basculer')}
               </button>
             )}
@@ -92,7 +92,7 @@ export default function MesCasquettes() {
             titre={t(`casquettes.prendre_${r}`)}
             sous={t(`casquettes.prendreSous_${r}`)}
             action={(
-              <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }}
+              <button type="button" className="btn-teal btn-sm"
                 disabled={!!occupe} onClick={() => setConfirmation(r)}>
                 {occupe === r ? '…' : t('casquettes.activer')}
               </button>

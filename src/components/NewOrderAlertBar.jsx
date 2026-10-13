@@ -64,8 +64,8 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
       <div className="row alerte-actions" style={{ gap: 8 }}>
         <button
           type="button"
-          className="btn-outline"
-          style={{ padding: '6px 12px', fontSize: 13 }}
+          className="btn-outline btn-sm"
+         
           aria-pressed={soundEnabled}
           onClick={() => setSoundEnabled(!soundEnabled)}
         >
@@ -75,7 +75,7 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
         {/* Sonnerie au choix (3) et test de l'alarme (fondateur, 2026-10-01) : on entend tout de suite ce qui sonnera
             à la prochaine commande. Choisir une sonnerie la fait aussi entendre. */}
         {setSonnerie && (
-          <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} aria-expanded={reglagesOuverts} onClick={() => setReglagesOuverts((v) => !v)}>
+          <button type="button" className="btn-ghost btn-sm" aria-expanded={reglagesOuverts} onClick={() => setReglagesOuverts((v) => !v)}>
             <Icone nom="reglages" taille={16} className="icone-texte" />{' '}{t('alertBar.settings')}
           </button>
         )}
@@ -92,7 +92,7 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
           </select>
         )}
         {alarmeEnCours && couperAlarme && (
-          <button type="button" className="btn-gold" style={{ padding: '6px 12px', fontSize: 13 }} onClick={couperAlarme}><Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.stopAlarm')}</button>
+          <button type="button" className="btn-gold btn-sm" onClick={couperAlarme}><Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.stopAlarm')}</button>
         )}
         {reglagesOuverts && setVolume && (
           <label className="alerte-volume" title={t('alertBar.volume')}>
@@ -101,7 +101,7 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
           </label>
         )}
         {reglagesOuverts && testerAlarme && (
-          <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }}
+          <button type="button" className="btn-outline btn-sm"
             onClick={async () => { if (!(await testerAlarme())) toast(t('alertBar.testFailed'), 'erreur'); }}>
             <Icone nom="cloche" taille={16} className="icone-texte" />{' '}{t('alertBar.testAlarm')}
           </button>
@@ -131,12 +131,12 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
             même permission au navigateur : côte à côte, ils donnaient deux boutons presque
             identiques, dont l'un couvrait moins que l'autre sans que rien ne le dise. */}
         {permission === 'default' && !(push?.supporte && push?.disponible) && (
-          <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={requestPermission}>
+          <button type="button" className="btn-outline btn-sm" onClick={requestPermission}>
             {t('alertBar.enableNotifications')}
           </button>
         )}
         {permission === 'denied' && (
-          <span className="small" style={{ color: 'var(--red)' }}>
+          <span className="small texte-erreur">
             {t('alertBar.blocked')}
           </span>
         )}

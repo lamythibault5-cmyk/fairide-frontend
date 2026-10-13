@@ -61,7 +61,7 @@ export default function ChoixCommerceSimule({ etat, onChange }) {
           <li key={r.id}>
             {r.coverImageUrl ? <img src={r.coverImageUrl} alt="" loading="lazy" /> : <span className="simu-sources-vide" aria-hidden="true"><Icone nom="restaurants" taille={16} className="icone-texte" /></span>}
             <span className="simu-sources-texte"><b>{r.name}</b><span className="small">{[r.cuisine, r.commune, tr('simulation.chooseItems', { n: r.items })].filter(Boolean).join(' · ')}</span></span>
-            <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} disabled={enCours} onClick={() => setACopier(r)}>{tr('simulation.chooseButton')}</button>
+            <button type="button" className="btn-teal btn-sm" disabled={enCours} onClick={() => setACopier(r)}>{tr('simulation.chooseButton')}</button>
           </li>
         ))}
         {!resultats.length && <li className="small" style={{ color: 'var(--ink-faint)' }}>{tr('simulation.chooseNone')}</li>}

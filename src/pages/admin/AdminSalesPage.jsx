@@ -120,7 +120,7 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
     { key: 'lastActivity', label: tr('adminSales.colLastActivity'), get: (a) => fmt(a.lastActivity), sortValue: (a) => a.lastActivity || 0 },
     { key: 'activatedAt', label: tr('adminSales.colActivated'), get: (a) => fmt(a.activatedAt), sortValue: (a) => a.activatedAt },
     { key: 'actions', label: '', get: (a) => (
-      <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); setARetirer(a); }}>{tr('adminSales.removeAccess')}</button>
+      <button type="button" className="btn-danger-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setARetirer(a); }}>{tr('adminSales.removeAccess')}</button>
     ) }
   ];
   return (
@@ -141,7 +141,7 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
                   <span><b>{u.name}</b> <span className="small">{u.email}</span></span>
                   {estAgent(u)
                     ? <span className="pill listing-on">{tr('adminSales.alreadyAgent')}</span>
-                    : <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => donner(u)}>{tr('adminSales.giveAccess')}</button>}
+                    : <button type="button" className="btn-teal btn-sm" onClick={() => donner(u)}>{tr('adminSales.giveAccess')}</button>}
                 </li>
               ))}
             </ul>
@@ -221,7 +221,7 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
         </div>
         <button type="button" className={`chip${retard ? ' active' : ''}`} aria-pressed={retard} onClick={() => setRetard((v) => !v)}><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{tr('adminSales.filterOverdue')}</button>
         <button type="button" className={`chip${aujourdhui ? ' active' : ''}`} aria-pressed={aujourdhui} onClick={() => setAujourdhui((v) => !v)}><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{tr('adminSales.filterToday')}</button>
-        <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} disabled={!lignes.length} onClick={() => exporterCsv(lignes)}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{tr('sales.exportCsv')}</button>
+        <button type="button" className="btn-ghost btn-sm" disabled={!lignes.length} onClick={() => exporterCsv(lignes)}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{tr('sales.exportCsv')}</button>
       </div>
       <div className="card crm-carte-carte">
         <div className="crm-carte-tete">
@@ -229,7 +229,7 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
             <b>{tr('adminSales.mapTitle')}</b>
             <p className="small" style={{ margin: '2px 0 0' }}>{tr('adminSales.mapIntro')}</p>
           </div>
-          <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={basculerCarte}>{carteVisible ? tr('sales.mapHide') : tr('sales.mapShow')}</button>
+          <button type="button" className="btn-ghost btn-sm" onClick={basculerCarte}>{carteVisible ? tr('sales.mapHide') : tr('sales.mapShow')}</button>
         </div>
         {carteVisible && (
           <>
@@ -328,10 +328,10 @@ function CommissionsTab({ token, tr, fmt, toast, onChanged, stats }) {
     { key: 'date', label: tr('adminSales.colDate'), get: (c) => <>{fmt(dateDe(c))}{c.note ? <><br /><span className="small">{c.note}</span></> : null}</>, sortValue: (c) => dateDe(c) || 0 },
     { key: 'actions', label: '', get: (c) => (
       <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
-        {c.status === 'earned' && <button type="button" className="btn-teal" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'paid'); }}>{tr('adminSales.comMarkPaid')}</button>}
-        {c.status === 'paid' && <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'earned'); }}>{tr('adminSales.comUnpay')}</button>}
-        {c.status !== 'cancelled' && c.status !== 'paid' && <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'cancelled'); }}>{tr('adminSales.comCancel')}</button>}
-        {c.status === 'cancelled' && <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'earned'); }}>{tr('adminSales.comRestore')}</button>}
+        {c.status === 'earned' && <button type="button" className="btn-teal btn-sm" onClick={(e) => { e.stopPropagation(); changer(c, 'paid'); }}>{tr('adminSales.comMarkPaid')}</button>}
+        {c.status === 'paid' && <button type="button" className="btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); changer(c, 'earned'); }}>{tr('adminSales.comUnpay')}</button>}
+        {c.status !== 'cancelled' && c.status !== 'paid' && <button type="button" className="btn-danger-ghost btn-sm" onClick={(e) => { e.stopPropagation(); changer(c, 'cancelled'); }}>{tr('adminSales.comCancel')}</button>}
+        {c.status === 'cancelled' && <button type="button" className="btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); changer(c, 'earned'); }}>{tr('adminSales.comRestore')}</button>}
       </span>
     ) }
   ];
@@ -344,7 +344,7 @@ function CommissionsTab({ token, tr, fmt, toast, onChanged, stats }) {
           <button type="button" className={`chip${statut === '' ? ' active' : ''}`} onClick={() => setStatut('')}>{tr('adminSales.comAll')}</button>
           {COMMISSION_STATUSES.map((s) => <button key={s} type="button" className={`chip${statut === s ? ' active' : ''}`} onClick={() => setStatut(s)}>{tr(`sales.payStatus_${s}`)}{stats?.commissions?.[s]?.n ? ` · ${stats.commissions[s].n}` : ''}</button>)}
         </div>
-        <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} onClick={rapprocher}><Icone nom="melanger" taille={16} className="icone-texte" />{' '}{tr('adminSales.comReconcile')}</button>
+        <button type="button" className="btn-ghost btn-sm" onClick={rapprocher}><Icone nom="melanger" taille={16} className="icone-texte" />{' '}{tr('adminSales.comReconcile')}</button>
       </div>
       {rows && rows.length > 0 && <p className="small" style={{ margin: '0 0 8px' }}>{tr('adminSales.comShownTotal', { n: rows.length, total: euros(totalAffiche) })}</p>}
       {erreur && <ErrorCard message={erreur} onRetry={charger} />}
@@ -383,7 +383,7 @@ function ProspectDrawer({ id, token, tr, fmt, stageLabel, toast, onClose }) {
               {primes.map((c) => <li key={c.id}><span>{tr(`sales.commission_${c.kind}`)}<br /><span className="small">{fmt(c.paidAt || c.earnedAt || c.dueAt)}</span></span><span className={`crm-prime crm-prime-${c.status}`}>{euros(c.amount)} · {tr(`sales.payStatus_${c.status}`)}</span></li>)}
             </ul>
           )}
-          <p className="small" style={{ margin: '0 0 4px' }}>{tr('adminSales.comAddManual')}{['signup', 'first_month', 'retention'].filter((k) => !primes.some((c) => c.kind === k)).map((k) => <button key={k} type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => ajouterPrime(k)}>+ {tr(`sales.commission_${k}`)}</button>)}</p>
+          <p className="small" style={{ margin: '0 0 4px' }}>{tr('adminSales.comAddManual')}{['signup', 'first_month', 'retention'].filter((k) => !primes.some((c) => c.kind === k)).map((k) => <button key={k} type="button" className="btn-ghost btn-sm" onClick={() => ajouterPrime(k)}>+ {tr(`sales.commission_${k}`)}</button>)}</p>
           <h4 style={{ margin: '14px 0 6px' }}>{tr('sales.historyTitle')}</h4>
           {p.events.length === 0 ? <p className="small">{tr('sales.noEvents')}</p> : (
             <ol className="crm-historique">

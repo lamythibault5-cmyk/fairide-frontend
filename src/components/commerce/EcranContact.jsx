@@ -72,7 +72,7 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
           <label htmlFor="commerce-tel2">{t('editResto.secondPhone')}</label>
           <div className="row" style={{ gap: 8, alignItems: 'center' }}>
             <div style={{ flex: 1 }}><PhoneInput id="commerce-tel2" value={tel2} onChange={setTel2} autoComplete="off" /></div>
-            <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setTel2(''); setTel2Ouvert(false); }}>{t('editResto.removeSecond')}</button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => { setTel2(''); setTel2Ouvert(false); }}>{t('editResto.removeSecond')}</button>
           </div>
           <label className="row small" style={{ gap: 8, alignItems: 'center', marginTop: 6, cursor: 'pointer' }}>
             <input type="checkbox" checked={!tel2Public} onChange={(e) => setTel2Public(!e.target.checked)} />
@@ -91,7 +91,7 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
           <label htmlFor="commerce-mail2">{t('editResto.secondEmail')}</label>
           <div className="row" style={{ gap: 8, alignItems: 'center' }}>
             <input id="commerce-mail2" type="email" inputMode="email" style={{ flex: 1 }} value={mail2} onChange={(e) => setMail2(e.target.value)} placeholder="commandes@mon-commerce.be" />
-            <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setMail2(''); setMail2Ouvert(false); }}>{t('editResto.removeSecond')}</button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => { setMail2(''); setMail2Ouvert(false); }}>{t('editResto.removeSecond')}</button>
           </div>
         </div>
       )}
@@ -104,7 +104,7 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
               <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                 <input style={{ flex: 1 }} aria-label={t('auth.managerName')} placeholder={t('auth.managerNamePh')} value={r.name} onChange={(e) => majResponsable(i, 'name', e.target.value)} />
                 {r.role === 'owner' && <span className="pill">{t('editResto.managerOwner')}</span>}
-                <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))}>{t('editResto.removeSecond')}</button>
+                <button type="button" className="btn-ghost btn-sm" onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))}>{t('editResto.removeSecond')}</button>
               </div>
               <div style={{ marginTop: 6 }}><PhoneInput id={`commerce-resp-${i}`} value={r.phone} onChange={(v) => majResponsable(i, 'phone', v)} autoComplete="off" /></div>
             </div>

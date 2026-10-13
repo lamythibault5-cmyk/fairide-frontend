@@ -390,12 +390,12 @@ export default function DriverDashboard() {
               ? t('dashDriver.stripeNeedsInfo')
               : t('dashDriver.viaStripe', { date: dateOuverturePaiements(getLocale()) })}
             action={user?.stripeConnectStatus === 'restricted' ? (
-              <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
+              <button type="button" className="btn-gold btn-sm" disabled={connecting} onClick={connectOnboard}>
                 {connecting ? '...' : t('dashDriver.complete')}
               </button>
             ) : (
               // Activation fermée jusqu'à début octobre 2026 : l'explication complète (et Stripe) est dans Mon compte › Paiement.
-              <Link to="/account" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
+              <Link to="/account" className="btn-outline btn-sm" style={{ display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
             )}
           />
         )}
@@ -453,7 +453,7 @@ export default function DriverDashboard() {
                 value={codeInputs[o.id] || ''}
                 onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
               />
-              {!estNatif() && <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
+              {!estNatif() && <button className="btn-teal btn-sm" onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
             </div>
             {/* Application : le code du client tapé, on glisse pour livrer (même raison que pour la récupération). */}
             {estNatif() && <GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} onConfirmer={() => deliver(o)} />}
@@ -510,8 +510,8 @@ export default function DriverDashboard() {
                   {o.bonusCents > 0 && <span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</span>}
                 </span>
                 <span className="row" style={{ gap: 6 }}>
-                  <button className="btn-outline" style={{ padding: '8px 12px', fontSize: 13 }} onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
-                  <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
+                  <button className="btn-outline btn-sm" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
+                  <button className="btn-teal btn-sm" onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
                 </span>
               </div>
             </div>

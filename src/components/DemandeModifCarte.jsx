@@ -59,7 +59,7 @@ export default function DemandeModifCarte({ restoId }) {
         </div>
       )}
       <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 10 }}>
-        <label className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <label className="btn-ghost btn-sm" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <Icone nom="apercu" taille={16} className="icone-texte" />{' '}{fichiers.length ? t('menuPage.modifFiles', { n: fichiers.length }) : t('menuPage.modifAttach')}
           <input ref={champFichier} type="file" accept="image/*,application/pdf" multiple hidden onChange={(e) => setFichiers([...(e.target.files || [])].slice(0, 5))} />
         </label>

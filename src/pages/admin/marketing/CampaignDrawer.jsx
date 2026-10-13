@@ -109,7 +109,7 @@ export default function CampaignDrawer({ id, onClose, onChanged, onEdit }) {
       badge={c ? <StatusPill status={c.status} tr={tr} /> : null}
       tabs={[{ key: 'apercu', label: tr('adminCommon.tabOverview') }, { key: 'destinataires', label: tr('adminMarketing.tabRecipients'), count: c ? faits : null }, { key: 'actions', label: tr('adminCommon.tabActions') }]}
       tab={onglet} onTab={setOnglet} onClose={onClose} width={640}
-      actions={c && PEUT_MODIFIER(c.status) ? <button type="button" className="btn-outline" style={{ padding: '6px 10px', fontSize: 12 }} onClick={() => onEdit?.(c)}>{tr('adminCommon.edit')}</button> : null}
+      actions={c && PEUT_MODIFIER(c.status) ? <button type="button" className="btn-outline btn-sm" onClick={() => onEdit?.(c)}>{tr('adminCommon.edit')}</button> : null}
     >
       {erreur && <ErrorCard message={erreur} onRetry={charger} />}
       {!c && !erreur && <div className="small">{tr('adminCommon.loading')}</div>}
@@ -149,7 +149,7 @@ export default function CampaignDrawer({ id, onClose, onChanged, onEdit }) {
         <>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
             <span className="small mk-muted">{sends.length >= 100 ? tr('adminMarketing.sendsLimit') : `${sends.length} / ${total}`}</span>
-            <button type="button" className="btn-outline" style={{ padding: '6px 10px', fontSize: 12 }} onClick={exporterEnvois}>{tr('adminMarketing.exportSends')}</button>
+            <button type="button" className="btn-outline btn-sm" onClick={exporterEnvois}>{tr('adminMarketing.exportSends')}</button>
           </div>
           {sends.length === 0 && <div className="empty">{tr('adminMarketing.noSends')}</div>}
           {sends.length > 0 && (
@@ -159,7 +159,7 @@ export default function CampaignDrawer({ id, onClose, onChanged, onEdit }) {
                 <tbody>
                   {sends.map((s) => (
                     <tr key={s.id}>
-                      <td><b>{s.name || '-'}</b><div className="small mk-muted">{s.email}</div>{s.error && <div className="small" style={{ color: 'var(--red)' }}>{s.error}</div>}</td>
+                      <td><b>{s.name || '-'}</b><div className="small mk-muted">{s.email}</div>{s.error && <div className="small texte-erreur">{s.error}</div>}</td>
                       <td><SendStatePill status={s.status} tr={tr} /></td>
                       <td className="small">{fmtDateTime(s.sentAt)}</td>
                     </tr>

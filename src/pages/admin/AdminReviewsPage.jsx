@@ -106,7 +106,7 @@ export default function AdminReviewsPage() {
     { key: 'foodRating', label: tr('adminReviews.foodRating'), get: (r) => <Etoiles n={r.foodRating} />, sortValue: (r) => r.foodRating, align: 'right' },
     { key: 'deliveryRating', label: tr('adminReviews.deliveryRating'), get: (r) => <Etoiles n={r.deliveryRating} />, sortValue: (r) => r.deliveryRating || 0, align: 'right' },
     { key: 'comments', label: tr('adminReviews.filterComments'), get: (r) => <span className="small" style={{ whiteSpace: 'normal' }}>{[r.foodComment, r.deliveryComment].filter(Boolean).join(' · ') || '-'}</span>, sortValue: (r) => (r.foodComment || r.deliveryComment ? 1 : 0) },
-    { key: 'links', label: tr('adminCommon.actions'), get: (r) => <span className="row" style={{ gap: 6 }}><LiensAvis r={r} tr={tr} /><button className="btn-danger-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); setASupprimer(r); }}>{tr('adminCommon.delete')}</button></span>, sortValue: () => 0 }
+    { key: 'links', label: tr('adminCommon.actions'), get: (r) => <span className="row" style={{ gap: 6 }}><LiensAvis r={r} tr={tr} /><button className="btn-danger-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setASupprimer(r); }}>{tr('adminCommon.delete')}</button></span>, sortValue: () => 0 }
   ];
 
   return (
@@ -145,7 +145,7 @@ export default function AdminReviewsPage() {
               <div className="small" style={{ opacity: 0.6 }}>{fmtDateTime(r.createdAt)}</div>
               <LiensAvis r={r} tr={tr} />
             </div>
-            <button className="btn-danger-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setASupprimer(r)}>{tr('adminCommon.delete')}</button>
+            <button className="btn-danger-ghost btn-sm" onClick={() => setASupprimer(r)}>{tr('adminCommon.delete')}</button>
           </div>
           <div className="admin-review-lines">
             <div><span className="small">{tr('adminReviews.foodRating')}</span> <Etoiles n={r.foodRating} /> {r.foodComment && <span className="admin-review-comment">“{r.foodComment}”</span>}</div>

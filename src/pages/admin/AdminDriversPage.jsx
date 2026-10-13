@@ -275,10 +275,10 @@ export default function AdminDriversPage() {
               {d.avgDeliveryMinutes !== null ? tr('adminDrivers.avgMinutes', { n: d.avgDeliveryMinutes }) : tr('adminDrivers.notMeasuredYet')}{tr('adminDrivers.acceptanceNotMeasurable')}
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
-              {d.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askApprove(d)}>{tr('adminCommon.approve')}</button>}
-              {d.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(d)}>{tr('adminCommon.suspend')}</button>}
-              {d.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(d)}>{tr('adminCommon.reactivate')}</button>}
-              <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 'auto' }} onClick={() => askDelete(d)}>{tr('adminDrivers.deleteAccount')}</button>
+              {d.adminStatus !== 'approved' && <button className="btn-teal btn-sm" onClick={() => askApprove(d)}>{tr('adminCommon.approve')}</button>}
+              {d.adminStatus !== 'blocked' && <button className="btn-danger-ghost btn-sm" onClick={() => askSuspend(d)}>{tr('adminCommon.suspend')}</button>}
+              {d.adminStatus === 'blocked' && <button className="btn-teal btn-sm" onClick={() => askReactivate(d)}>{tr('adminCommon.reactivate')}</button>}
+              <button className="btn-danger-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => askDelete(d)}>{tr('adminDrivers.deleteAccount')}</button>
             </div>
           </div>
         );
@@ -354,7 +354,7 @@ export default function AdminDriversPage() {
             <>
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminCommon.documents')}</h4>
-                <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
+                <button className="btn-outline btn-sm" onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
               </div>
               {!documents && <div className="small">{tr('adminCommon.loading')}</div>}
               {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}

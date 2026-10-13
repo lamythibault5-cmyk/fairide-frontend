@@ -528,7 +528,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             par scripts/importer-carte.js côté backend, et le bouton a été retiré à la demande de l'équipe
             (2026-09-25). Sur une carte vide, les méthodes restent affichées d'office (methodesVisibles). */}
         {!carteVide && !modeAdmin && (
-          <button type="button" className="btn-outline" style={{ marginLeft: 'auto', padding: '6px 12px', fontSize: 13 }} onClick={() => setMethodesOuvertes((o) => !o)}>
+          <button type="button" className="btn-outline btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setMethodesOuvertes((o) => !o)}>
             {methodesOuvertes ? t('menuPage.hideMethods') : t('menuPage.askFairideAgain')}
           </button>
         )}
@@ -632,9 +632,9 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                 {editingSectionId !== section.id && (
                   <div className="row" style={{ gap: 4 }}>
                     {reorderSectionId === section.id ? (
-                      <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleReorderSection(section.id)}>{t('menuPage.doneCheck')}</button>
+                      <button type="button" className="btn-teal btn-sm" onClick={() => toggleReorderSection(section.id)}>{t('menuPage.doneCheck')}</button>
                     ) : selectSectionId === section.id ? (
-                      <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleSelectSection(section.id)}>{t('menuPage.doneCheck')}</button>
+                      <button type="button" className="btn-teal btn-sm" onClick={() => toggleSelectSection(section.id)}>{t('menuPage.doneCheck')}</button>
                     ) : modeAdmin && !reorderSectionId && !selectSectionId && (
                       <>
                         <button type="button" className="btn-teal menu-plus" onClick={() => openAddItemTile(section)} title={t('menuPage.addItemTo', { section: categoryLabel(section.name, t) })} aria-label={t('menuPage.addItemTo', { section: categoryLabel(section.name, t) })}>＋</button>
@@ -775,10 +775,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
               {t('menuPage.applyPanelHelp', { section: categoryLabel(sectionApplyPanel.section.name, t) })}
             </p>
             <div className="row" style={{ gap: 8, marginBottom: 10 }}>
-              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setApplySelectedIds(new Set(sectionApplyPanel.items.map((i) => i.id)))}>
+              <button type="button" className="btn-ghost btn-sm" onClick={() => setApplySelectedIds(new Set(sectionApplyPanel.items.map((i) => i.id)))}>
                 {t('menuPage.selectAll')}
               </button>
-              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setApplySelectedIds(new Set())}>
+              <button type="button" className="btn-ghost btn-sm" onClick={() => setApplySelectedIds(new Set())}>
                 {t('menuPage.deselectAll')}
               </button>
             </div>
@@ -881,7 +881,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
               <button key={v} type="button" className={`chip${Number(ajustPct) === v ? ' active' : ''}`} onClick={() => setAjustPct(String(v))}>{v > 0 ? '+' : ''}{v} %</button>
             ))}
             <input type="number" step="1" min="-50" max="50" value={ajustPct} onChange={(e) => setAjustPct(e.target.value)} placeholder="%" style={{ width: 90 }} aria-label={t('menuPage.adjustCustom')} />
-            <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} disabled={!ajustPct || Number(ajustPct) === 0} onClick={() => setAjustConfirm(true)}>{t('menuPage.adjustButton')}</button>
+            <button type="button" className="btn-teal btn-sm" disabled={!ajustPct || Number(ajustPct) === 0} onClick={() => setAjustConfirm(true)}>{t('menuPage.adjustButton')}</button>
           </div>
           {ajustConfirm && (
             <div className="card" style={{ marginTop: 10, padding: 12, border: '1px solid var(--line)' }}>
