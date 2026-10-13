@@ -163,7 +163,7 @@ export default function SimulationBar() {
           {t('simulation.bar_note')}
         </button>
         <button type="button" className={`simu-action${panneau === 'imprimante' ? ' est-actif' : ''}`} onClick={() => setPanneau(panneau === 'imprimante' ? null : 'imprimante')} title={t('simulation.bar_printer')}>
-          🖨{nonLus > 0 && <span className="simu-compteur">{nonLus}</span>}
+          <Icone nom="imprimante" taille={16} className="icone-texte" />{nonLus > 0 && <span className="simu-compteur">{nonLus}</span>}
         </button>
         <button type="button" className="simu-action simu-quitter" onClick={quitterSimulation}>{t('simulation.bar_quit')}</button>
       </div>

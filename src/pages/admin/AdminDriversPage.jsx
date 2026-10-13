@@ -24,6 +24,7 @@ import useEtatPage from '../../hooks/useEtatPage';
 import urlSure from '../../urlSure';
 import FicheLivreur from '../../components/admin/FicheLivreur';
 import { DossierDrawer } from './AdminCouriersPage';
+import Icone from '../../components/Icone';
 
 const activityLabels = (tr) => ({
   disponible: { label: tr('adminDrivers.available'), color: 'var(--teal-deep)' },
@@ -64,8 +65,7 @@ export default function AdminDriversPage() {
   const TYPES_LIVREUR = ['student_independent', 'independent'];
   const typeDe = (d) => d.courier?.statusType || 'none';
   const libelleType = (k) => (k === 'none' ? tr('adminDrivers.statusNotChosen') : tr(`courierOnboarding.status_${k}`));
-  const emojiType = (k) => ({ student: '🎓', p2p: '🤝', independent: '💼' }[k] || '❔');
-  const [activite, setActivite] = useEtatPage('activite', '');
+    const [activite, setActivite] = useEtatPage('activite', '');
   const [groupBy, setGroupBy] = useEtatPage('groupBy', '');
   // Plus de liste « trier par » (allègement de la console, 23/09/2026) : des plus récents aux plus anciens ; en vue
   // tableau, les en-têtes de colonne trient.
@@ -183,7 +183,7 @@ export default function AdminDriversPage() {
   const groupes = {
     status: { get: (d) => STATUT_ADMIN(tr)[d.adminStatus] || d.adminStatus }, activity: { get: (d) => activityLabels(tr)[d.activityStatus]?.label || d.activityStatus },
     vat: { get: (d) => VAT_LABELS(tr)[d.vatStatus] || tr('adminDrivers.vatUnknown') },
-    courierType: { get: (d) => `${emojiType(typeDe(d))} ${libelleType(typeDe(d))}` }
+    courierType: { get: (d) => libelleType(typeDe(d)) }
   };
   // Vue fiches : découpe en sections quand un regroupement est choisi (l'ordre des types est fixe : étudiants, P2P, indépendants, non choisi).
   function sectionsCartes(liste, groupe) {
@@ -223,7 +223,7 @@ export default function AdminDriversPage() {
           {['all', ...TYPES_LIVREUR, 'none'].map((k) => {
             const n = k === 'all' ? (drivers || []).length : (drivers || []).filter((d) => typeDe(d) === k).length;
             if (k === 'none' && n === 0) return null;
-            return <div key={k} className={`chip${typeLivreur === k ? ' active' : ''}`} onClick={() => setTypeLivreur(k)}>{k === 'all' ? tr('adminDrivers.allTypes') : `${emojiType(k)} ${libelleType(k)}`}{drivers ? ` (${n})` : ''}</div>;
+            return <div key={k} className={`chip${typeLivreur === k ? ' active' : ''}`} onClick={() => setTypeLivreur(k)}>{k === 'all' ? tr('adminDrivers.allTypes') : libelleType(k)}{drivers ? ` (${n})` : ''}</div>;
           })}
         </div>
         <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} deletedCount={kpi.deleted} labels={{ all: tr('adminCommon.allM'), real: tr('adminCommon.filterRealAccounts'), test: tr('adminCommon.filterTestAccounts'), deleted: tr('adminCommon.filterDeletedAccounts') }} />
@@ -266,7 +266,7 @@ export default function AdminDriversPage() {
             </div>
             <div className="small">{d.email}{d.phone ? ` · ${d.phone}` : ''}{d.linkedRestaurantName ? tr('adminDrivers.linkedToSuffix', { name: d.linkedRestaurantName }) : ''}</div>
             <ProfilLine u={d} tr={tr} />
-            <div className="small">🛵 {courierLine(d, tr)}</div>
+            <div className="small"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{courierLine(d, tr)}</div>
             <div className="small">
               {tr('adminDrivers.statsLine', { n: d.deliveriesCount, revenue: money(d.revenue), cancel: pct(d.cancellationRate) })}
               {d.reviewCount > 0 ? tr('adminDrivers.ratingSuffix', { rating: Number(d.avgRating).toFixed(1), n: d.reviewCount }) : tr('adminDrivers.noReviewsSuffix')}
@@ -304,12 +304,12 @@ export default function AdminDriversPage() {
           {detail && onglet === 'apercu' && (
             <>
               <ProfilLine u={detail} tr={tr} />
-              {!dossier && <p className="small" style={{ margin: '2px 0' }}>🛵 {courierLine(detail, tr)}</p>}
+              {!dossier && <p className="small" style={{ margin: '2px 0' }}><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{courierLine(detail, tr)}</p>}
               {dossier && <FicheLivreur dossier={dossier} tr={tr} onOpen={() => setDossierOuvert(true)} />}
               <div className="divider" />
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.registeredStripe', { date: fmtDate(detail.createdAt), status: detail.stripeConnectStatus || '-' })}</p>
               {(detail.payoutIban || detail.payoutAccountHolder) && (
-                <p className="small" style={{ margin: '2px 0' }}>💳 {detail.payoutAccountHolder || tr('adminDrivers.holderMissing')}, {detail.payoutIban || tr('adminDrivers.ibanMissing')}</p>
+                <p className="small" style={{ margin: '2px 0' }}><Icone nom="carteBancaire" taille={16} className="icone-texte" />{' '}{detail.payoutAccountHolder || tr('adminDrivers.holderMissing')}, {detail.payoutIban || tr('adminDrivers.ibanMissing')}</p>
               )}
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.vat')} : {VAT_LABELS(tr)[detail.vatStatus] || tr('adminDrivers.vatUnknown')}{detail.vatNumber ? ` · ${detail.vatNumber}` : ''}</p>
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.companyNumber')} : {detail.companyNumber || '-'}</p>
@@ -360,7 +360,7 @@ export default function AdminDriversPage() {
               {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
               {documents && documents.map((doc) => (
                 <div key={doc.id} className="drawer-row">
-                  <a href={urlSure(doc.fileUrl)} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
+                  <a href={urlSure(doc.fileUrl)} target="_blank" rel="noreferrer" className="small"><Icone nom="lien" taille={16} className="icone-texte" />{' '}{doc.title}</a>
                   <span className="small">
                     {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
                     {DOCUMENT_TYPE_LABELS[doc.documentType]}

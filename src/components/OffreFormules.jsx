@@ -2,6 +2,7 @@ import GarantieAbonnement from './GarantieAbonnement';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { datePremierPrelevement } from '../launch';
 import TerminalFairide from './TerminalFairide';
+import Icone from './Icone';
 
 // La promesse Fairide aux commerces, dite avec les mêmes mots partout (inscription, Mon compte) — modèle du fondateur,
 // 2026-09-25 : UNE SEULE OFFRE (fondateur : « Fairide c'est la livraison et le service à emporter seulement ») — à emporter et
@@ -22,7 +23,7 @@ export default function OffreFormules({ payant = false, statut = null, finEssai 
     <div className="offre-formules">
       <div className="offre-colonnes">
         <div className="offre-col offre-col-choisie">
-          <b>🛵 {t('accountUi.offre_completeTitle')}</b>
+          <b><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('accountUi.offre_completeTitle')}</b>
           <span className="offre-prix">{t('accountUi.offre_completePrice')}</span>
           <span className="small">{t('accountUi.offre_completeDetail')}</span>
         </div>
@@ -45,7 +46,7 @@ export default function OffreFormules({ payant = false, statut = null, finEssai 
       {/* Pas pendant l'inscription (12 oct. 2026) : l'écran des services devait se lire d'un coup d'œil, et le terminal
           s'explique mieux une fois le commerce créé — il reste dans Mon compte (« Mon terminal Fairide »). */}
       {!inscription && <div className="offre-terminal"><TerminalFairide compact /></div>}
-      {inscription && payant && <p className="small offre-note">✅ {t('accountUi.offre_signupComplete')}</p>}
+      {inscription && payant && <p className="small offre-note"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('accountUi.offre_signupComplete')}</p>}
       {onActiver && payant && !essai && !actif && (
         <button type="button" className="btn-gold" style={{ marginTop: 10 }} onClick={onActiver}>{t('accountUi.offre_activateBtn')}</button>
       )}

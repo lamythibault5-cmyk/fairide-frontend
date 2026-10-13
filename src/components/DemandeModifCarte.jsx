@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { vibrer } from '../gestes';
+import Icone from './Icone';
 
 // « UNE MODIFICATION ? DIS-LE-NOUS » (fondateur, 2026-10-01). Modifier sa carte soi-même reste possible plus bas,
 // mais un restaurateur en plein service n'a pas le temps de chercher le bon plat et le bon champ : il écrit ce qu'il
@@ -44,7 +45,7 @@ export default function DemandeModifCarte({ restoId }) {
   const quand = (d) => new Date(d).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   return (
     <div className="card modif-carte" id="menu-demande-modif">
-      <h3 style={{ margin: '0 0 4px', fontSize: 16 }}>✏️ {t('menuPage.modifTitle')}</h3>
+      <h3 style={{ margin: '0 0 4px', fontSize: 16 }}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('menuPage.modifTitle')}</h3>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.modifIntro')}</p>
       <label htmlFor="modif-carte-texte" className="sr-only">{t('menuPage.modifTitle')}</label>
       <textarea id="modif-carte-texte" rows={3} value={message} maxLength={2000} onChange={(e) => setMessage(e.target.value)}
@@ -59,7 +60,7 @@ export default function DemandeModifCarte({ restoId }) {
       )}
       <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 10 }}>
         <label className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          📷 {fichiers.length ? t('menuPage.modifFiles', { n: fichiers.length }) : t('menuPage.modifAttach')}
+          <Icone nom="apercu" taille={16} className="icone-texte" />{' '}{fichiers.length ? t('menuPage.modifFiles', { n: fichiers.length }) : t('menuPage.modifAttach')}
           <input ref={champFichier} type="file" accept="image/*,application/pdf" multiple hidden onChange={(e) => setFichiers([...(e.target.files || [])].slice(0, 5))} />
         </label>
         <button type="button" className="btn-teal" style={{ flex: '1 1 160px', minHeight: 44 }} disabled={enCours} onClick={envoyer}>

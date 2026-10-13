@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import DecisionDialog from './DecisionDialog';
+import Icone from '../Icone';
 
 /* Admin › Livreurs › Contrôles (CODE-14, DEC-23 ; serveur : controleSelfie.js).
  *
@@ -43,7 +44,7 @@ export default function ControlesSelfie({ token, toast }) {
   return (
     <div className="card">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-        <h3 style={{ margin: 0, fontSize: 15 }}>📸 {t('controlesSelfie.title')}</h3>
+        <h3 style={{ margin: 0, fontSize: 15 }}><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('controlesSelfie.title')}</h3>
         <button type="button" className="btn-ghost" onClick={charger}>{t('controlesSelfie.reload')}</button>
       </div>
       <p className="small" style={{ margin: '6px 0 12px' }}>{t('controlesSelfie.help')}</p>

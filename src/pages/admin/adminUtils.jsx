@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { apiDownload } from '../../api';
 import { getLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
+import Icone from '../../components/Icone';
 
 // Un compte de test se reconnaît au même motif que le contournement de vérification à l'inscription
 // (voir routes/auth.js, isQaTestAccount) : un alias "+qa" dans l'adresse email (ex: toi+qa1@gmail.com).
@@ -65,10 +66,10 @@ export function natureOk(nature, u) {
   return estCompteTest(obj) && !estCompteSupprime(obj);
 }
 export function DeletedBadge() {
-  return <span className="pill" style={{ opacity: 0.7 }} title={{ fr: 'Compte supprimé par son titulaire (anonymisé)', en: 'Account deleted by its owner (anonymised)', nl: 'Account verwijderd door de eigenaar (geanonimiseerd)' }[getLanguage()]}>🗑️</span>;
+  return <span className="pill" style={{ opacity: 0.7 }} title={{ fr: 'Compte supprimé par son titulaire (anonymisé)', en: 'Account deleted by its owner (anonymised)', nl: 'Account verwijderd door de eigenaar (geanonimiseerd)' }[getLanguage()]}><Icone nom="croix" taille={16} className="icone-texte" /></span>;
 }
 
-const DRAPEAU_LANGUE = { fr: '🇫🇷 FR', en: '🇬🇧 EN', nl: '🇳🇱 NL' };
+const DRAPEAU_LANGUE = { fr: 'FR', en: 'EN', nl: 'NL' };
 // Ligne « profil » d'un utilisateur pour l'admin : commune, langue de l'appli, e-mail / téléphone vérifiés,
 // connexion Google. Jamais la rue, la date de naissance, un code ou un mot de passe.
 export function ProfilLine({ u, tr }) {

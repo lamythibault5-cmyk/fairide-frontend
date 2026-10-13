@@ -1,4 +1,5 @@
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Le terminal Fairide, expliqué clairement (fondateur, 2026-09-21) : une image de ce que c'est, comment ça marche en
 // quatre étapes, et les conditions — offert aux premiers restaurants inscrits (réglage interne : formules.TERMINAL),
@@ -37,16 +38,16 @@ function Illustration({ t }) {
       <text x="123" y="77.5" fontSize="8" fontWeight="800" fill="#fff" fontFamily="'Bricolage Grotesque', system-ui, sans-serif">Fairide</text>
       <text x="208" y="77.5" fontSize="7" fill="#fff" textAnchor="end" fontFamily="system-ui, sans-serif">11:23</text>
       <rect x="111" y="88" width="98" height="40" rx="6" fill="#fff" stroke="#E6E2D6" />
-      <text x="116" y="99" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif">🛵 {t('accountUi.terminalScreenOrder')}</text>
+      <text x="116" y="99" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalScreenOrder')}</text>
       <text x="116" y="109" fontSize="6.5" fill="#666" fontFamily="system-ui, sans-serif">2 × Dürüm poulet</text>
       <text x="116" y="117" fontSize="6.5" fill="#666" fontFamily="system-ui, sans-serif">1 × Frites · 24,50 €</text>
       <rect x="160" y="105" width="44" height="16" rx="8" fill="#C6F06B" />
       <text x="182" y="116" fontSize="7" fontWeight="700" fill="#1F1F24" textAnchor="middle" fontFamily="system-ui, sans-serif">{t('accountUi.terminalScreenAccept')}</text>
       <rect x="111" y="133" width="98" height="20" rx="6" fill="#fff" stroke="#E6E2D6" />
-      <text x="116" y="146" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif">🛵 {t('accountUi.terminalScreenBooking')}</text>
+      <text x="116" y="146" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalScreenBooking')}</text>
       <text x="204" y="146" fontSize="6.5" fill="#666" textAnchor="end" fontFamily="system-ui, sans-serif">18 min</text>
       <rect x="111" y="158" width="98" height="20" rx="6" fill="#fff" stroke="#E6E2D6" />
-      <text x="116" y="171" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif">🥡 {t('accountUi.terminalScreenPickup')}</text>
+      <text x="116" y="171" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif"><Icone nom="sac" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalScreenPickup')}</text>
       <text x="204" y="171" fontSize="6.5" fill="#666" textAnchor="end" fontFamily="system-ui, sans-serif">12 min</text>
       {/* signal sonore */}
       <path d="M236 96 q10 12 0 24" fill="none" stroke="#F5B800" strokeWidth="2.5" strokeLinecap="round" />
@@ -81,7 +82,7 @@ export default function TerminalFairide({ terminal = null, compact = false }) {
       <div className="terminal-haut">
         <Illustration t={t} />
         <div>
-          <b className="terminal-titre">🖥️ {t('accountUi.offre_terminalTitle')}</b>
+          <b className="terminal-titre">{t('accountUi.offre_terminalTitle')}</b>
           <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.terminalWhat')}</p>
           <p className="small" style={{ margin: '4px 0 0' }}><b>{t('accountUi.terminalSameAs')}</b></p>
         </div>
@@ -99,9 +100,9 @@ export default function TerminalFairide({ terminal = null, compact = false }) {
       </div>
       {terminal && (terminal.deliveredAt || terminal.returnedAt || terminal.refundedAt) && (
         <p className="small" style={{ margin: '8px 0 0' }}>
-          {terminal.deliveredAt && <>📦 {t('accountUi.terminalDelivered', { date: new Date(terminal.deliveredAt).toLocaleDateString(locale) })}<br /></>}
-          {terminal.returnedAt && <>↩️ {t('accountUi.terminalReturned', { date: new Date(terminal.returnedAt).toLocaleDateString(locale) })}<br /></>}
-          {terminal.refundedAt && <>💶 {t('accountUi.terminalRefunded', { date: new Date(terminal.refundedAt).toLocaleDateString(locale) })}</>}
+          {terminal.deliveredAt && <><Icone nom="sac" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalDelivered', { date: new Date(terminal.deliveredAt).toLocaleDateString(locale) })}<br /></>}
+          {terminal.returnedAt && <><Icone nom="retour" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalReturned', { date: new Date(terminal.returnedAt).toLocaleDateString(locale) })}<br /></>}
+          {terminal.refundedAt && <><Icone nom="euro" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalRefunded', { date: new Date(terminal.refundedAt).toLocaleDateString(locale) })}</>}
         </p>
       )}
       {!compact && <p className="small" style={{ margin: '8px 0 0' }}>{t('accountUi.terminalHow')}</p>}

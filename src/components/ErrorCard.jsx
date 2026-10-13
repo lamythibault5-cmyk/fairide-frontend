@@ -1,4 +1,5 @@
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // L'ÉCHEC DE CHARGEMENT D'UNE LISTE : ce qui n'a pas marché, et de quoi le refaire.
 //
@@ -19,7 +20,7 @@ export default function ErrorCard({ message, onRetry, titre }) {
   const { t: tr } = useLanguage();
   return (
     <div className="error-card" role="alert">
-      <span className="error-card-icone" aria-hidden="true">⚠️</span>
+      <span className="error-card-icone" aria-hidden="true"><Icone nom="alerte" taille={16} className="icone-texte" /></span>
       <div className="error-card-corps">
         <h3>{titre || tr('adminCommon.loadError')}</h3>
         {message && <p className="small">{message}</p>}

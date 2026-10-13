@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 import Modale from '../Modale';
+import Icone from '../Icone';
 
 /* Informations et consentements du livreur (backlog de conformité du 23/09/2026).
  *
@@ -59,7 +60,7 @@ export function EtapeNotices({ token, busy, action, onNext, contrat = null }) {
           ))}
           {contratASigner && (
             <p className="small" style={{ margin: '6px 0' }}>
-              <button type="button" className="lien-bouton" onClick={contrat.onApercu}>📄 {t('conformite.engagementsReadContract')}</button>
+              <button type="button" className="lien-bouton" onClick={contrat.onApercu}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('conformite.engagementsReadContract')}</button>
             </p>
           )}
           <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', marginTop: 10 }}>

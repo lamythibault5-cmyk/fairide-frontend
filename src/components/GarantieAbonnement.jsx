@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // GARANTIE « PETIT MOIS = PAS D'ABONNEMENT » (fondateur, 2026-10-11 ; « zéro commande » avant, 2026-10-02). Un mois dont
 // les commandes ne dépassent pas 50 € de produits n'est pas dû : offert s'il suit le mois d'essai, remboursé sinon
@@ -21,7 +22,7 @@ export default function GarantieAbonnement({ restoId, token, abonne = false }) {
   const euros = (v) => `${Number(v).toFixed(2).replace('.', ',').replace(/,00$/, '')} €`;
   return (
     <div className="garantie-abonnement">
-      <b>🛡️ {t('accountUi.guaranteeTitle')}</b>
+      <b><Icone nom="bouclier" taille={16} className="icone-texte" />{' '}{t('accountUi.guaranteeTitle')}</b>
       <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.guaranteeText')}</p>
       {etat?.salesThisPeriod != null && (
         <p className="small garantie-etat">

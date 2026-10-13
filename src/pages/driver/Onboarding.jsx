@@ -15,6 +15,7 @@ import ouvrirDocument from '../../ouvrirDocument';
 import { EtapeNotices, ConsentementBiometrique } from '../../components/conformite/LivreurConformite';
 import { TarifMinimum, DocumentsVente } from '../../components/conformite/EspaceVendeurLivreur';
 import { libelleManque } from '../../conformite';
+import Icone from '../../components/Icone';
 
 // Parcours d'inscription du livreur, en étapes : statut (économie collaborative / étudiant-indépendant /
 // indépendant), identité vérifiée (Stripe Identity, ou dépôt manuel — itsme a été retiré le 4 oct. 2026 : jamais
@@ -38,7 +39,7 @@ const MANQUES_PAR_ETAPE = {
 const MANQUES_INFORMATIFS = ['statut_non_verifie'];
 // Deux statuts (CODE-12, DEC-19 : plus d'économie collaborative, régime fermé aux livreurs de plateformes).
 const STATUTS = ['student_independent', 'independent'];
-const EMOJI_STATUT = { student_independent: '🎓', independent: '🧑‍💼' };
+const EMOJI_STATUT = { student_independent: 'guide', independent: 'mallette' }; // noms d'icônes (Icone.jsx)
 // Caisses d'assurances sociales agréées en Belgique (noms propres, pas de traduction).
 const CAISSES = ['Liantis', 'Acerta', 'Xerius', 'Partena', 'Securex', 'UCM', 'Group S', 'Caisse nationale auxiliaire'];
 // Attestations d'assurance, permis, titre de séjour : date d'échéance demandée, Fairide rappelle le renouvellement.
@@ -207,14 +208,14 @@ function EtatDossier({ d, t, onChangeStatus }) {
           {c.statusType && <span className="pill teal" style={{ marginLeft: 8 }}>{t(`courierOnboarding.status_${c.statusType}`)}</span>}
           <p className="small" style={{ margin: '4px 0 0' }}>{t(`courierOnboarding.lifecycle_${c.lifecycleStatus}_help`)}</p>
           {c.lifecycleStatus === 'rejected' && c.reviewReason && <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('courierOnboarding.rejectedReason', { reason: c.reviewReason })}</p>}
-          {c.needsRenewal && <p className="small" style={{ margin: '6px 0 0', color: 'var(--gold-deep)' }}>⚠️ {t('courierOnboarding.renewalNeeded')}</p>}
+          {c.needsRenewal && <p className="small" style={{ margin: '6px 0 0', color: 'var(--gold-deep)' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.renewalNeeded')}</p>}
           {c.lifecycleStatus === 'approved' && (
-            <p className="small" style={{ margin: '6px 0 0', opacity: 0.85 }}>{c.statusVerifiedAt ? `✅ ${t('courierOnboarding.statusVerified', { date: new Date(c.statusVerifiedAt).toLocaleDateString(getLocale()) })}` : `⏳ ${t('courierOnboarding.statusNotVerified')}`}</p>
+            <p className="small" style={{ margin: '6px 0 0', opacity: 0.85 }}>{c.statusVerifiedAt ? `${t('courierOnboarding.statusVerified', { date: new Date(c.statusVerifiedAt).toLocaleDateString(getLocale()) })}` : `${t('courierOnboarding.statusNotVerified')}`}</p>
           )}
           {c.lifecycleStatus === 'blocked_threshold' && (
             <>
               <p className="small" style={{ margin: '6px 0 0' }}>{t('courierOnboarding.blockedExplain', { year: legal.year ?? new Date().getFullYear() })}</p>
-              <button type="button" className="btn-gold" style={{ marginTop: 8, padding: '6px 12px', fontSize: 13 }} onClick={onChangeStatus}>🔄 {t('courierOnboarding.blockedGoStatus')}</button>
+              <button type="button" className="btn-gold" style={{ marginTop: 8, padding: '6px 12px', fontSize: 13 }} onClick={onChangeStatus}><Icone nom="melanger" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.blockedGoStatus')}</button>
             </>
           )}
         </div>
@@ -250,7 +251,7 @@ function EtapeStatut({ d, t, busy, onChoose }) {
       <div className="courier-compare">
         {cartes.map((k) => (
           <div key={k.key} className={`courier-compare-card${d.courier.statusType === k.key ? ' active' : ''}`}>
-            <div className="courier-compare-head"><span style={{ fontSize: 26 }}>{EMOJI_STATUT[k.key]}</span><b>{t(`courierOnboarding.status_${k.key}`)}</b></div>
+            <div className="courier-compare-head"><Icone nom={EMOJI_STATUT[k.key]} taille={26} /><b>{t(`courierOnboarding.status_${k.key}`)}</b></div>
             <p className="small">{t(`courierOnboarding.status_${k.key}_desc`)}</p>
             <dl className="courier-compare-list">
               <dt>{t('courierOnboarding.cmpCeiling')}</dt><dd>{k.plafond}</dd>
@@ -301,40 +302,40 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.identityTitle')}</h3>
       <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.identityHelp')}</p>
       {recue ? (
-        <div className="courier-ok">✅ {t('courierOnboarding.identityReceived', { n: carte.length })}
+        <div className="courier-ok"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityReceived', { n: carte.length })}
           <p className="small" style={{ margin: '6px 0 0' }}>{t('courierOnboarding.identityReceivedHelp')}</p>
           <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-            <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => { fichier.current?.click(); }}>📎 {t('courierOnboarding.identityAddFile')}</button>
+            <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => { fichier.current?.click(); }}><Icone nom="lien" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityAddFile')}</button>
             <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => setAutreMoyen(true)}>{t('courierOnboarding.identityOtherWay')}</button>
           </div>
           <input ref={fichier} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={deposer} />
         </div>
       ) : id.status === 'verified' ? (
-        <div className="courier-ok">✅ {t('courierOnboarding.identityVerified', { name: `${id.firstName || ''} ${id.lastName || ''}`.trim(), provider: t(`courierOnboarding.provider_${id.provider}`) })}
-          {id.nameMatchAccount === false && <p className="small" style={{ color: 'var(--red)', margin: '6px 0 0' }}>⚠️ {t('courierOnboarding.nameMismatch')}</p>}
+        <div className="courier-ok"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityVerified', { name: `${id.firstName || ''} ${id.lastName || ''}`.trim(), provider: t(`courierOnboarding.provider_${id.provider}`) })}
+          {id.nameMatchAccount === false && <p className="small" style={{ color: 'var(--red)', margin: '6px 0 0' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.nameMismatch')}</p>}
         </div>
       ) : (
         <div className="courier-providers">
           <div className="courier-provider">
-            <b>🪪 {t('courierOnboarding.provider_stripe_identity')}</b>
+            <b><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.provider_stripe_identity')}</b>
             <p className="small">{t('courierOnboarding.stripeIdentityHelp')}</p>
             <button type="button" className="btn-teal" disabled={busy || !prov.stripe_identity} onClick={() => demarrer('stripe_identity')}>{id.status === 'pending' && id.provider === 'stripe_identity' ? t('courierOnboarding.identityResume') : t('courierOnboarding.identityStart')}</button>
-            {id.status === 'processing' && <p className="small">⏳ {t('courierOnboarding.identityProcessing')}</p>}
+            {id.status === 'processing' && <p className="small"><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityProcessing')}</p>}
             {id.status === 'failed' && <p className="small" style={{ color: 'var(--red)' }}>{t('courierOnboarding.identityFailed')}</p>}
           </div>
           <div className="courier-provider">
-            <b>📄 {t('courierOnboarding.provider_manual')}</b>
+            <b><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.provider_manual')}</b>
             <p className="small">{t('courierOnboarding.manualHelp')}</p>
             <input ref={fichier} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={deposer} />
             <button type="button" className="btn-outline" disabled={busy} onClick={async () => { if (id.provider !== 'manual') await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click(); }}>{t('courierOnboarding.manualUpload')}</button>
-            {carte.length > 0 && <p className="small" style={{ margin: '6px 0 0' }}>✅ {t('courierOnboarding.manualUploaded', { n: carte.length })}</p>}
+            {carte.length > 0 && <p className="small" style={{ margin: '6px 0 0' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.manualUploaded', { n: carte.length })}</p>}
           </div>
           {/* Contrôle en personne (CODE-14) : pour qui refuse la vérification biométrique — l'équipe fixe un rendez-vous. */}
           <div className="courier-provider">
-            <b>🤝 {t('courierOnboarding.provider_in_person')}</b>
+            <b><Icone nom="contrat" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.provider_in_person')}</b>
             <p className="small">{t('courierOnboarding.inPersonHelp')}</p>
             {id.provider === 'in_person' && id.status === 'pending'
-              ? <p className="small" style={{ margin: 0 }}>⏳ {t('courierOnboarding.inPersonRequested')}</p>
+              ? <p className="small" style={{ margin: 0 }}><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.inPersonRequested')}</p>
               : <button type="button" className="btn-outline" disabled={busy || !prov.in_person} onClick={() => action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'in_person' } }), t('courierOnboarding.inPersonRequested'))}>{t('courierOnboarding.inPersonRequest')}</button>}
           </div>
         </div>
@@ -373,7 +374,7 @@ function Champ({ label, children, help }) {
 function ChampsEntreprise({ c, f, set, t, legal }) {
   return (
     <>
-      <Champ label={t('courierOnboarding.fBce')} help={c.independent?.companyVerified ? `✅ ${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input aria-label="0123.456.789" value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
+      <Champ label={t('courierOnboarding.fBce')} help={c.independent?.companyVerified ? `${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input aria-label="0123.456.789" value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
       <Champ label={t('courierOnboarding.fVatStatus')}>
         <select value={f.vatStatus} onChange={set('vatStatus')}><option value="">-</option><option value="franchise">{t('courierOnboarding.vatFranchise', { max: euroOuTiret(legal.franchiseMaxTurnover) })}</option><option value="assujetti">{t('courierOnboarding.vatNormal')}</option></select>
       </Champ>
@@ -443,10 +444,10 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
   // et continuer ») qui faisaient presque la même chose. Même principe que l'inscription : un sujet par
   // écran, un seul bouton. « Continuer » enregistre l'écran avant de passer au suivant, et un écran sans
   // objet pour le statut (pas de section statut, aucune pièce requise) n'existe simplement pas.
-  const titreStatut = { student_independent: `🎓 ${t('courierOnboarding.stuIndepSection')}`, independent: `🧑‍💼 ${t('courierOnboarding.indepSection')}` }[c.statusType];
+  const titreStatut = { student_independent: `${t('courierOnboarding.stuIndepSection')}`, independent: `${t('courierOnboarding.indepSection')}` }[c.statusType];
   const parties = ['perso', 'course', ...(titreStatut ? ['statut'] : []), ...(docsRequis.length ? ['documents'] : [])];
   const cle = parties[Math.min(partie, parties.length - 1)];
-  const titres = { perso: t('courierOnboarding.partPersonal'), course: t('courierOnboarding.partRides'), statut: titreStatut, documents: `📎 ${t('courierOnboarding.docsTitle')}` };
+  const titres = { perso: t('courierOnboarding.partPersonal'), course: t('courierOnboarding.partRides'), statut: titreStatut, documents: `${t('courierOnboarding.docsTitle')}` };
   const rang = parties.indexOf(cle);
   async function continuer() {
     // Les pièces se déposent une à une, à l'envoi du fichier : l'écran des documents n'a rien à enregistrer.
@@ -517,7 +518,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
             <ChampCaisse f={f} set={set} t={t} />
             <ChampsEntreprise c={c} f={f} set={set} t={t} legal={legal} />
           </div>
-          {legal.studentParentsCeiling != null && <p className="small" style={{ margin: '6px 0 0', opacity: 0.85 }}>ℹ️ {t('courierOnboarding.studentParentsInfo', { amount: euro(legal.studentParentsCeiling) })}</p>}
+          {legal.studentParentsCeiling != null && <p className="small" style={{ margin: '6px 0 0', opacity: 0.85 }}>{t('courierOnboarding.studentParentsInfo', { amount: euro(legal.studentParentsCeiling) })}</p>}
         </>)}
 
         {c.statusType === 'independent' && (<>
@@ -539,7 +540,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
                 <p className="small" style={{ margin: '2px 0 0' }}>{t(`courierOnboarding.doc_${type}_help`)}</p>
                 {docsDe(type).map((x) => (
                   <div key={x.id} className="small" style={{ marginTop: 4 }}>
-                    {x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <button type="button" className="lien-bouton" onClick={() => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/couriers/me/documents/${x.id}/lien`, token, toast, messageErreur: t('courierOnboarding.docUnavailable') })}>{t('courierOnboarding.docView')}</button>
+                    {x.verifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : x.rejectedReason ? <Icone nom="croix" taille={16} className="icone-texte" /> : <Icone nom="horloge" taille={16} className="icone-texte" />} <button type="button" className="lien-bouton" onClick={() => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/couriers/me/documents/${x.id}/lien`, token, toast, messageErreur: t('courierOnboarding.docUnavailable') })}>{t('courierOnboarding.docView')}</button>
                     {x.expiresAt && ` · ${t('courierOnboarding.docExpires', { date: new Date(x.expiresAt).toLocaleDateString(getLocale()) })}`}
                     {x.rejectedReason && <span style={{ color: 'var(--red)' }}> · {x.rejectedReason}</span>}
                     {!x.verifiedAt && <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} onClick={() => action(() => api(`/couriers/me/documents/${x.id}`, { method: 'DELETE', token }))}>{t('courierOnboarding.docDelete')}</button>}
@@ -574,7 +575,7 @@ function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
     <div className="card">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.paymentTitle')}</h3>
       <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.paymentHelp')}</p>
-      {statut === 'active' ? <div className="courier-ok">✅ {t('courierOnboarding.paymentActive')}</div> : (
+      {statut === 'active' ? <div className="courier-ok"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.paymentActive')}</div> : (
         <>
           <button type="button" className="btn-teal" disabled={connecting || busy} onClick={connecter}>{connecting ? '…' : t('courierOnboarding.paymentStart')}</button>
           {erreur && <p className="small" style={{ margin: '8px 0 0' }}>{erreur}</p>}
@@ -630,7 +631,7 @@ function EtapeEnvoi({ d, t, busy, onSubmit, onGoTo }) {
           </ul>
         </>
       )}
-      {infos.map((m) => <p key={m} className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>ℹ️ {t(`courierOnboarding.missing_${m}`)}</p>)}
+      {infos.map((m) => <p key={m} className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t(`courierOnboarding.missing_${m}`)}</p>)}
     </div>
   );
 }
@@ -642,14 +643,14 @@ function Compteurs({ d, t }) {
   const annee = th.year ?? legal.year ?? new Date().getFullYear();
   return (
     <div className="card">
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📊 {t('courierOnboarding.countersTitle')} {annee}</h3>
+      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}><Icone nom="stats" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.countersTitle')} {annee}</h3>
       <div className="stat-grid" style={{ marginTop: 10, marginBottom: 8 }}>
         <div className="stat-card"><div className="num">{euro(th.grossTotal)}</div><div className="label">{t('courierOnboarding.grossYear')}</div></div>
         <div className="stat-card highlight"><div className="num">{euro(th.netTotal ?? (Number(th.grossTotal || 0) - Number(th.withholdingTotal || 0)))}</div><div className="label">{t('courierOnboarding.netYear')}</div></div>
         <div className="stat-card"><div className="num">{th.deliveries ?? 0}</div><div className="label">{t('courierOnboarding.deliveriesYear')}</div></div>
       </div>
-      {c.statusType === 'student_independent' && <p className="small" style={{ margin: '0 0 6px' }}>ℹ️ {t('courierOnboarding.thresholdInfoStudentIndependent', { exemption: euroOuTiret(legal.studentIndependentExemption), ceiling: euroOuTiret(legal.studentIndependentCeiling) })}</p>}
-      {c.statusType === 'independent' && <p className="small" style={{ margin: '0 0 6px' }}>ℹ️ {t('courierOnboarding.thresholdInfoIndependent', { rate: `${pctTexte(legal.independentSocialRate)} %`, exemption: euroOuTiret(legal.independentComplementaryExemption) })}</p>}
+      {c.statusType === 'student_independent' && <p className="small" style={{ margin: '0 0 6px' }}>{t('courierOnboarding.thresholdInfoStudentIndependent', { exemption: euroOuTiret(legal.studentIndependentExemption), ceiling: euroOuTiret(legal.studentIndependentCeiling) })}</p>}
+      {c.statusType === 'independent' && <p className="small" style={{ margin: '0 0 6px' }}>{t('courierOnboarding.thresholdInfoIndependent', { rate: `${pctTexte(legal.independentSocialRate)} %`, exemption: euroOuTiret(legal.independentComplementaryExemption) })}</p>}
       <p className="small" style={{ margin: '8px 0 0' }}><Link to="/driver/earnings">{t('courierOnboarding.seeEarnings')}</Link></p>
     </div>
   );
@@ -676,7 +677,7 @@ function Notifications({ t, token }) {
   return (
     <div className="card courier-state warn">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <b>🔔 {t('courierOnboarding.notificationsTitle')} ({liste.length})</b>
+        <b><Icone nom="cloche" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.notificationsTitle')} ({liste.length})</b>
         <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => lire(null)}>{t('courierOnboarding.markAllRead')}</button>
       </div>
       {liste.map((n) => (
@@ -708,7 +709,7 @@ function ChangementStatut({ d, t, token, action, busy, onChanged }) {
   return (
     <div className="card" id="changement-statut">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ margin: 0, fontSize: 15 }}>🔄 {t('courierOnboarding.changeStatusTitle')}</h3>
+        <h3 style={{ margin: 0, fontSize: 15 }}><Icone nom="melanger" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.changeStatusTitle')}</h3>
         <button type="button" className="btn-ghost" onClick={() => setOuvert((v) => !v)}>{ouvert ? t('courierOnboarding.hide') : t('courierOnboarding.open')}</button>
       </div>
       {ouvert && (
@@ -717,7 +718,7 @@ function ChangementStatut({ d, t, token, action, busy, onChanged }) {
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div className="field" style={{ margin: 0 }}>
               <label htmlFor={idsA11y + '-newstatus'}>{t('courierOnboarding.newStatus')}</label>
-              <select id={idsA11y + '-newstatus'} value={cible} onChange={(e) => setCible(e.target.value)}>{choix.map((x) => <option key={x} value={x}>{EMOJI_STATUT[x]} {t(`courierOnboarding.status_${x}`)}</option>)}</select>
+              <select id={idsA11y + '-newstatus'} value={cible} onChange={(e) => setCible(e.target.value)}>{choix.map((x) => <option key={x} value={x}>{t(`courierOnboarding.status_${x}`)}</option>)}</select>
             </div>
             <button type="button" className="btn-outline" disabled={busy || !cible} onClick={() => setConfirm(true)}>{t('courierOnboarding.changeStatusBtn')}</button>
           </div>

@@ -9,6 +9,7 @@ import { OptionGroupForm } from './OptionGroupManager';
 import GalleryPickerModal from './GalleryPickerModal';
 import { galleryForSection } from '../menuCategories';
 import { euros } from '../prixPlat';
+import Icone from './Icone';
 
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
@@ -202,7 +203,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
             {resolveItemImage({ name, category, imageUrl }, sections) ? (
               <img loading="lazy" src={resolveItemImage({ name, category, imageUrl }, sections)} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
             ) : (
-              <span className="dish-thumb-empty">{categoryEmoji(category)}</span>
+              <span className="dish-thumb-empty"><Icone nom={categoryEmoji(category)} taille={20} /></span>
             )}
             <input id={idsA11y + '-imageoptional'} style={{ flex: 1 }} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder={t('menuItem.phPhotoUrl')} />
           </div>
@@ -269,7 +270,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
 
         {item.activePromo && (
           <div className="row" style={{ gap: 8, marginBottom: 12 }}>
-            <span className="pill teal">🏷️ {item.activePromo.label}</span>
+            <span className="pill teal"><Icone nom="etiquette" taille={16} className="icone-texte" />{' '}{item.activePromo.label}</span>
             <span className="small">{t('menuItem.promoHint')}</span>
           </div>
         )}
@@ -277,7 +278,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <button className="btn-teal" disabled={saving} onClick={save}>{saving ? '...' : t('menuItem.save')}</button>
           <button className="btn-ghost" disabled={togglingAvailable} onClick={toggleAvailable}>
-            {togglingAvailable ? '...' : item.available === false ? `✅ ${t('menuItem.makeAvailable')}` : `🚫 ${t('menuItem.markUnavailable')}`}
+            {togglingAvailable ? '...' : item.available === false ? `${t('menuItem.makeAvailable')}` : `${t('menuItem.markUnavailable')}`}
           </button>
           <button className="btn-danger-ghost" disabled={deleting} onClick={remove}>{deleting ? '...' : t('menuItem.delete')}</button>
           <button className="btn-ghost" onClick={() => setEditing(false)}>{t('menuItem.close')}</button>
@@ -322,15 +323,15 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
           {selected ? '✓' : ''}
         </span>
       )}
-      {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
+      {item.activePromo && <span className="promo-badge"><Icone nom="etiquette" taille={16} className="icone-texte" />{' '}{item.activePromo.label}</span>}
       {image && (
         <img loading="lazy" decoding="async" {...imgProps(image, 320, '(max-width: 640px) 50vw, 320px')} alt={item.name} className="dish-thumb-lg" />
       )}
       <div className="name">
         {item.name}
-        {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}🥗</span>}
-        {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}🌿</span>}
-        {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}🌱</span>}
+        {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
+        {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}</span>}
+        {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}</span>}
       </div>
       <div className="small desc">
         {item.outOfStockToday ? t('menuItem.stockOutToday') : item.available === false ? t('menuItem.unavailable') : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}
@@ -340,16 +341,16 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
         {onWithdraw && !reorderMode && !selectMode && (item.withdrawn || item.available !== false) && (
           <button type="button" className={`btn-stock${item.withdrawn ? ' btn-stock-rupture' : ''}`} disabled={stockEnCours} onClick={basculerRetrait}
             aria-pressed={!!item.withdrawn} title={item.withdrawn ? t('menuItem.withdrawBackHelp') : t('menuItem.withdrawHelp')}>
-            {stockEnCours ? '…' : item.withdrawn ? `↩︎ ${t('menuItem.withdrawBack')}` : `🚫 ${t('menuItem.withdraw')}`}
+            {stockEnCours ? '…' : item.withdrawn ? `↩︎ ${t('menuItem.withdrawBack')}` : `${t('menuItem.withdraw')}`}
           </button>
         )}
         {onStock && !reorderMode && !selectMode && !item.withdrawn && (item.available !== false || item.outOfStockToday) && (
           <button type="button" className={`btn-stock${item.outOfStockToday ? ' btn-stock-rupture' : ''}`} disabled={stockEnCours} onClick={basculerStock}
             aria-pressed={!!item.outOfStockToday} title={item.outOfStockToday ? t('menuItem.stockBackHelp') : t('menuItem.stockOutHelp')}>
-            {stockEnCours ? '…' : item.outOfStockToday ? `↩︎ ${t('menuItem.stockBack')}` : `⛔ ${t('menuItem.stockOut')}`}
+            {stockEnCours ? '…' : item.outOfStockToday ? `↩︎ ${t('menuItem.stockBack')}` : `${t('menuItem.stockOut')}`}
           </button>
         )}
-        {!reorderMode && !lectureSeule && <span className="btn-ghost" style={{ padding: '6px 12px' }}>✏️</span>}
+        {!reorderMode && !lectureSeule && <span className="btn-ghost" style={{ padding: '6px 12px' }}><Icone nom="crayon" taille={16} className="icone-texte" /></span>}
       </div>
     </div>
   );

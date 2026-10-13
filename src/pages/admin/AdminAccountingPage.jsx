@@ -304,7 +304,7 @@ function JournalTab({ token, toast, dateFrom, dateTo, searchParams, go }) {
               <div className="fin-table-wrap">
                 <AdminDataTable rows={rows} columns={columns} sort={sort} onSort={toggle} showTotals format={{ debit: money, credit: money }}
                   onRowClick={(r) => setOpenGroup(r._group)}
-                  groupBy={{ get: (r) => `${r.reference} · ${fmtDate(r.date)} ${r._group?.balanced ? '✅' : '⚠️'}` }}
+                  groupBy={{ get: (r) => `${r.reference} · ${fmtDate(r.date)} ${r._group?.balanced ? '✓' : '✗'}` }}
                   emptyLabel={tr('adminAccounting.noEntries')} />
               </div>
             )}

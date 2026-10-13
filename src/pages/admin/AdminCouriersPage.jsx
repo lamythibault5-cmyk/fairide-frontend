@@ -20,6 +20,7 @@ import useEtatPage from '../../hooks/useEtatPage';
 import urlSure from '../../urlSure';
 import ouvrirDocument from '../../ouvrirDocument';
 import { euros } from '../../prixPlat';
+import Icone from '../../components/Icone';
 
 // Dossiers livreurs (statuts économie collaborative / étudiant-indépendant / indépendant) : file de
 // validation, pièces, identité, gains (brut / précompte / net par année et trimestre), contrats, journal ;
@@ -60,9 +61,9 @@ export default function AdminCouriersPage() {
   const statut = (s) => (s && STATUTS.includes(s) ? tr(`courierOnboarding.status_${s}`) : s || '-');
   const colonnes = [
     { key: 'name', label: tr('adminCommon.name'), get: (r) => <><b>{r.name}</b>{estCompteTest(r) && <TestBadge />}<div className="small">{r.email}</div></>, sortValue: (r) => r.name },
-    { key: 'statusType', label: tr('adminCouriers.colStatus'), get: (r) => <>{statut(r.statusType)}{r.statusVerifiedAt ? ' ✅' : ''}</>, sortValue: (r) => r.statusType || '' },
+    { key: 'statusType', label: tr('adminCouriers.colStatus'), get: (r) => <>{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''}</>, sortValue: (r) => r.statusType || '' },
     { key: 'lifecycleStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{lifecycle(r.lifecycleStatus)}</span>, sortValue: (r) => r.lifecycleStatus },
-    { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className="pill">✅ {tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? '⏳' : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? 1 : 0) },
+    { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className="pill"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? <Icone nom="horloge" taille={16} className="icone-texte" /> : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? 1 : 0) },
     { key: 'gross', label: tr('adminCouriers.colGross'), get: (r) => euro(r.grossTotal ?? 0), sortValue: (r) => Number(r.grossTotal || 0), align: 'right' },
     { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '-'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}`, sortValue: (r) => r.zone || '' },
     { key: 'updatedAt', label: tr('adminCouriers.colUpdated'), get: (r) => fmt(r.updatedAt), sortValue: (r) => r.updatedAt }
@@ -131,8 +132,8 @@ export default function AdminCouriersPage() {
                 </div>
               </div>
               <div className="small">{r.email}</div>
-              <div className="small">🪪 {statut(r.statusType)}{r.statusVerifiedAt ? ' ✅' : ''} · {r.identity?.status === 'verified' ? `✅ ${tr('adminCouriers.colIdentity')}` : r.identity?.status === 'pending' ? `⏳ ${tr('adminCouriers.colIdentity')}` : `· ${tr('adminCouriers.colIdentity')}`}{pctPlafond(r) != null ? ` · ${tr('adminCouriers.colCap')} ${pctPlafond(r)} %` : ''} · {tr('adminCouriers.colGross')} {euro(r.grossTotal ?? 0)}</div>
-              <div className="small">🛵 {r.zone || '-'} · {r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}</div>
+              <div className="small"><Icone nom="document" taille={16} className="icone-texte" />{' '}{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''} · {r.identity?.status === 'verified' ? `${tr('adminCouriers.colIdentity')}` : r.identity?.status === 'pending' ? `${tr('adminCouriers.colIdentity')}` : `· ${tr('adminCouriers.colIdentity')}`}{pctPlafond(r) != null ? ` · ${tr('adminCouriers.colCap')} ${pctPlafond(r)} %` : ''} · {tr('adminCouriers.colGross')} {euro(r.grossTotal ?? 0)}</div>
+              <div className="small"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{r.zone || '-'} · {r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}</div>
               <div className="small" style={{ opacity: 0.6 }}>{tr('adminCouriers.colUpdated')} {fmt(r.updatedAt)}</div>
             </div>
           ))}
@@ -219,7 +220,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
       {onglet === 'dossier' && (
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secStatus')}</h4>
-          <DrawerRow label={tr('adminCouriers.colStatus')} value={`${statut(c.statusType)}${c.statusVerifiedAt ? ` · ✅ ${tr('adminCouriers.statusVerifiedAt')} ${fmt(c.statusVerifiedAt)}` : ` · ${tr('adminCouriers.statusNotVerified')}`}`} strong />
+          <DrawerRow label={tr('adminCouriers.colStatus')} value={`${statut(c.statusType)}${c.statusVerifiedAt ? ` · ${tr('adminCouriers.statusVerifiedAt')} ${fmt(c.statusVerifiedAt)}` : ` · ${tr('adminCouriers.statusNotVerified')}`}`} strong />
           <DrawerRow label={tr('adminCouriers.zoneVehicle')} value={`${c.zone || '-'} · ${c.vehicleType ? tr(`courierOnboarding.vehicle_${c.vehicleType}`) : '-'}${c.licencePlate ? ` · ${c.licencePlate}` : ''}`} />
           {/* Demandé à l'inscription (2026-10-05) : autres plateformes et communes de préférence. */}
           <DrawerRow label={tr('adminCouriers.otherPlatforms')} value={c.otherPlatforms?.works === true
@@ -239,13 +240,13 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           <DrawerRow label={tr('courierOnboarding.fBirthDate')} value={c.birthDate || '-'} />
           <DrawerRow label={tr('courierOnboarding.fNrn')} value={c.nationalNumberMasked || '-'} />
           {c.statusType === 'student_independent' && <DrawerRow label={tr('adminCouriers.studentIndependent')} value={`${c.student?.school || '-'} · ${c.student?.academicYear || '-'} · ${tr('adminCouriers.caisse')} ${caisse || '-'}`} />}
-          {['student_independent', 'independent'].includes(c.statusType) && <DrawerRow label={tr('adminCouriers.company')} value={`${entreprise.legalName || '-'} · BCE ${entreprise.companyNumber || '-'} · ${entreprise.vatStatus === 'assujetti' ? (entreprise.vatNumber || '-') : tr('courierOnboarding.vatFranchiseShort')} ${entreprise.companyVerified ? '✅' : ''}${c.statusType === 'independent' ? ` · ${tr('adminCouriers.caisse')} ${caisse || '-'}` : ''}`} />}
-          {c.requestedStatusType && <p className="small" style={{ color: 'var(--gold-deep)' }}>🔄 {tr('adminCouriers.requestedChange', { to: statut(c.requestedStatusType), reason: d.requestedStatusReason || '-' })}</p>}
+          {['student_independent', 'independent'].includes(c.statusType) && <DrawerRow label={tr('adminCouriers.company')} value={`${entreprise.legalName || '-'} · BCE ${entreprise.companyNumber || '-'} · ${entreprise.vatStatus === 'assujetti' ? (entreprise.vatNumber || '-') : tr('courierOnboarding.vatFranchiseShort')} ${entreprise.companyVerified ? ' ✓' : ''}${c.statusType === 'independent' ? ` · ${tr('adminCouriers.caisse')} ${caisse || '-'}` : ''}`} />}
+          {c.requestedStatusType && <p className="small" style={{ color: 'var(--gold-deep)' }}><Icone nom="melanger" taille={16} className="icone-texte" />{' '}{tr('adminCouriers.requestedChange', { to: statut(c.requestedStatusType), reason: d.requestedStatusReason || '-' })}</p>}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secIdentity')}</h4>
-          <DrawerRow label={tr('adminCommon.status')} value={identite.status === 'verified' ? `✅ ${tr(`adminCouriers.provider_${identite.provider || 'manual'}`)}` : `${identite.status || '-'}${identite.provider ? ` (${identite.provider})` : ''}`} />
+          <DrawerRow label={tr('adminCommon.status')} value={identite.status === 'verified' ? `${tr(`adminCouriers.provider_${identite.provider || 'manual'}`)}` : `${identite.status || '-'}${identite.provider ? ` (${identite.provider})` : ''}`} />
           <DrawerRow label={tr('adminCouriers.verifiedName')} value={`${identite.firstName || ''} ${identite.lastName || ''}`.trim() || '-'} />
-          <DrawerRow label={tr('adminCouriers.nameMatch')} value={`${tr('adminCouriers.account')} ${identite.nameMatchAccount == null ? '-' : identite.nameMatchAccount ? '✅' : '❌'} · Stripe ${identite.nameMatchStripe == null ? '-' : identite.nameMatchStripe ? '✅' : '❌'}`} />
+          <DrawerRow label={tr('adminCouriers.nameMatch')} value={`${tr('adminCouriers.account')} ${identite.nameMatchAccount == null ? '-' : identite.nameMatchAccount ? '✓' : '✗'} · Stripe ${identite.nameMatchStripe == null ? '-' : identite.nameMatchStripe ? '✓' : '✗'}`} />
           {identite.status !== 'verified' && (
             <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
               <button className="btn-outline" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markIdentityOk'), message: tr('adminCouriers.identityOkBody'), run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: true, firstName: d.user?.name?.split(' ')[0], lastName: d.user?.name?.split(' ').slice(1).join(' ') } }), tr('adminCouriers.toastIdentityOk')) })}>{tr('adminCouriers.markIdentityOk')}</button>
@@ -255,7 +256,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           {['student_independent', 'independent'].includes(c.statusType) && !entreprise.companyVerified && <button className="btn-outline" style={{ marginTop: 6 }} disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markCompanyOk'), run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { companyVerified: true } }), tr('adminCouriers.toastCompanyOk')) })}>{tr('adminCouriers.markCompanyOk')}</button>}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secContracts', { n: contracts.length })}</h4>
-          {contracts.map((k) => <div key={k.id} className="small">✍️ {statut(k.contractType)} {k.version}, {new Date(k.signedAt).toLocaleString(getLocale())}, {k.typedName}, <code>{(k.documentHash || '').slice(0, 12)}…</code>{k.pdfUrl && <>-<a href={urlSure(k.pdfUrl)} target="_blank" rel="noreferrer">PDF</a></>}</div>)}
+          {contracts.map((k) => <div key={k.id} className="small"><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{statut(k.contractType)} {k.version}, {new Date(k.signedAt).toLocaleString(getLocale())}, {k.typedName}, <code>{(k.documentHash || '').slice(0, 12)}…</code>{k.pdfUrl && <>-<a href={urlSure(k.pdfUrl)} target="_blank" rel="noreferrer">PDF</a></>}</div>)}
           {contracts.length === 0 && <p className="small">-</p>}
         </>
       )}
@@ -265,7 +266,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           {documents.length === 0 && <p className="small">-</p>}
           {documents.map((x) => (
             <div key={x.id} className="row" style={{ justifyContent: 'space-between', gap: 8, padding: '3px 0', flexWrap: 'wrap' }}>
-              <span className="small">{x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <button type="button" className="lien-bouton" onClick={() => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/admin/couriers/${id}/documents/${x.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') })}>{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</button>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` · ${x.rejectedReason}` : ''}</span>
+              <span className="small">{x.verifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : x.rejectedReason ? <Icone nom="croix" taille={16} className="icone-texte" /> : <Icone nom="horloge" taille={16} className="icone-texte" />} <button type="button" className="lien-bouton" onClick={() => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/admin/couriers/${id}/documents/${x.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') })}>{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</button>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` · ${x.rejectedReason}` : ''}</span>
               {!x.verifiedAt && (
                 <span className="row" style={{ gap: 4 }}>
                   <button className="btn-outline" style={{ padding: '2px 10px', fontSize: 12 }} disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.acceptDoc', { doc: tr(`courierOnboarding.doc_${x.docType}`) }), run: () => agir(() => api(`/admin/couriers/${id}/documents/${x.id}`, { method: 'PATCH', token, body: { verified: true } })) })}>✓ {tr('adminCouriers.accept')}</button>
@@ -279,12 +280,12 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
       {onglet === 'gains' && (
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secEarnings')}</h4>
-          <DrawerRow label={tr('adminCouriers.statusVerifiedAt')} value={c.statusVerifiedAt ? `✅ ${new Date(c.statusVerifiedAt).toLocaleString(getLocale())}` : tr('adminCouriers.statusNotVerified')} />
+          <DrawerRow label={tr('adminCouriers.statusVerifiedAt')} value={c.statusVerifiedAt ? `${new Date(c.statusVerifiedAt).toLocaleString(getLocale())}` : tr('adminCouriers.statusNotVerified')} />
           {c.statusDocuments != null && (
             <>
               <p className="small" style={{ margin: '6px 0 2px' }}><b>{tr('adminCouriers.statusDocuments')}</b></p>
               {(Array.isArray(c.statusDocuments) ? c.statusDocuments : Object.entries(c.statusDocuments).map(([k, v]) => ({ type: k, ...((v && typeof v === 'object') ? v : { value: v }) }))).map((x, i) => (
-                <div key={i} className="small" style={{ opacity: 0.85 }}>{x.type || x.docType || '-'}{x.verifiedAt ? ' ✅' : ''}{x.value != null && typeof x.value !== 'object' ? ` : ${String(x.value)}` : ''}</div>
+                <div key={i} className="small" style={{ opacity: 0.85 }}>{x.type || x.docType || '-'}{x.verifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''}{x.value != null && typeof x.value !== 'object' ? ` : ${String(x.value)}` : ''}</div>
               ))}
             </>
           )}
@@ -396,11 +397,11 @@ function Parametres({ tr, token, toast }) {
   return (
     <>
       <div className="card">
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>⚖️ {tr('adminCouriers.fiscalTitle')}</h3>
+        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}><Icone nom="balance" taille={16} className="icone-texte" />{' '}{tr('adminCouriers.fiscalTitle')}</h3>
         <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminCouriers.fiscalHelp')}</p>
         <div className="row" style={{ gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div className="field" style={{ maxWidth: 160, margin: 0 }}><label htmlFor={idsA11y + '-year'}>{tr('adminCouriers.year')}</label><input id={idsA11y + '-year'} type="number" value={annee} onChange={(e) => setAnnee(Number(e.target.value))} /></div>
-          <button className="btn-outline" disabled={busy} onClick={preparerSuivante}>➕ {tr('adminCouriers.createNextYear', { year: derniere + 1, from: derniere })}</button>
+          <button className="btn-outline" disabled={busy} onClick={preparerSuivante}>{tr('adminCouriers.createNextYear', { year: derniere + 1, from: derniere })}</button>
         </div>
         {f && (
           <div className="courier-grid" style={{ marginTop: 10 }}>
@@ -412,7 +413,7 @@ function Parametres({ tr, token, toast }) {
             ))}
           </div>
         )}
-        <button className="btn-teal" disabled={busy || !f} onClick={sauver}>{tr('adminCouriers.saveYear', { year: annee })}{existe ? '' : ' ✨'}</button>
+        <button className="btn-teal" disabled={busy || !f} onClick={sauver}>{tr('adminCouriers.saveYear', { year: annee })}{existe ? '' : <Icone nom="etoile" taille={16} className="icone-texte" />}</button>
         <p className="small" style={{ margin: '10px 0 0' }}>{tr('adminCouriers.yearsConfigured')} {lignes.map((l) => l.year).sort().join(', ') || '-'}</p>
         {existe && lignes.find((x) => Number(x.year) === Number(annee))?.updatedAt && <p className="small" style={{ margin: '4px 0 0', opacity: 0.7 }}>{tr('adminCouriers.colUpdated')} {new Date(lignes.find((x) => Number(x.year) === Number(annee)).updatedAt).toLocaleString(getLocale())}</p>}
       </div>
@@ -429,12 +430,12 @@ function Exports({ tr, token, toast }) {
   const go = (path, nom) => telecharger(path, token, nom).catch((e) => toast(e.message, 'erreur'));
   return (
     <div className="card">
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📤 {tr('adminCouriers.exportsTitle')}</h3>
+      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{tr('adminCouriers.exportsTitle')}</h3>
       <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminCouriers.exportsHelp')}</p>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-year-2'}>{tr('adminCouriers.year')}</label><input id={idsA11y + '-year-2'} type="number" value={annee} onChange={(e) => setAnnee(e.target.value)} style={{ width: 110 }} /></div>
         <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-quarter'}>{tr('adminCouriers.quarter')}</label><select id={idsA11y + '-quarter'} value={trim} onChange={(e) => setTrim(e.target.value)}><option value="">{tr('adminCouriers.allQuarters')}</option>{[1, 2, 3, 4].map((q) => <option key={q} value={q}>T{q}</option>)}</select></div>
-        <button className="btn-outline" onClick={() => go(`/admin/couriers/export/dac7?year=${annee}${trim ? `&quarter=${trim}` : ''}`, `dac7-${annee}${trim ? `-T${trim}` : ''}.csv`)}>⬇️ DAC7</button>
+        <button className="btn-outline" onClick={() => go(`/admin/couriers/export/dac7?year=${annee}${trim ? `&quarter=${trim}` : ''}`, `dac7-${annee}${trim ? `-T${trim}` : ''}.csv`)}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}DAC7</button>
       </div>
     </div>
   );
@@ -448,7 +449,7 @@ function JournalAudit({ tr, token }) {
   const court = (v) => (v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v));
   return (
     <div className="card">
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📝 {tr('adminCouriers.auditTitle')}</h3>
+      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}><Icone nom="document" taille={16} className="icone-texte" />{' '}{tr('adminCouriers.auditTitle')}</h3>
       <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminCouriers.auditHelp')}</p>
       {erreur && <ErrorCard message={erreur} onRetry={charger} />}
       {!lignes && !erreur && <SkeletonCards count={1} />}

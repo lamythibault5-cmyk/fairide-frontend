@@ -19,6 +19,7 @@ import { ErrorCard, Pager, ResultCount, SelectBox, SelectionBar, runForEach, sel
 import { money, fmtDateTime, downloadCsv, useDebouncedValue, ORDER_STATUS_LABELS, ORDER_STATUSES, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
+import Icone from '../../components/Icone';
 
 const filters = (tr) => [
   { key: '', label: tr('adminCommon.allF') },
@@ -191,7 +192,7 @@ export default function AdminOrdersPage() {
     { key: 'driverName', label: tr('adminCommon.driver'), get: (o) => o.driverName || '-' },
     { key: 'orderType', label: tr('adminCommon.type'), get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType },
     { key: 'status', label: tr('adminCommon.status'), get: (o) => <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>, sortValue: (o) => o.status },
-    { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? '✅' : '⏳'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
+    { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? '✓' : '…'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
     { key: 'total', label: tr('adminCommon.total'), get: (o) => money(o.total), sortValue: (o) => o.total, align: 'right', sum: true },
     { key: 'fairideTotalRevenue', label: tr('adminOrders.colFairide'), get: (o) => money(o.fairideTotalRevenue), sortValue: (o) => o.fairideTotalRevenue, align: 'right', sum: true }
   ];
@@ -260,7 +261,7 @@ export default function AdminOrdersPage() {
           renderCard={(o) => (
             <>
               <b>{o.restaurantName}</b>
-              <div className="small">{o.clientName}{o.driverName ? ` · 🛵 ${o.driverName}` : ''}</div>
+              <div className="small">{o.clientName}{o.driverName ? ` · ${o.driverName}` : ''}</div>
               <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">{fmtDateTime(o.createdAt)}</span><b style={{ display: 'inline' }}>{money(o.total)}</b></div>
             </>
           )}
@@ -459,7 +460,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
             <Link to={`/admin/orders?restaurantId=${detail.restaurantId || selected.restaurantId || ''}`} className="admin-record-link">→ {tr('adminOrders.linkRestaurantOrders')}</Link>
           </div>
           {detail.driverName && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.driverLine', { name: detail.driverName, phone: detail.driverPhone ? ` · ${detail.driverPhone}` : '' })}</p>}
-          {detail.address && <p className="small" style={{ margin: '2px 0' }}>📍 {detail.address}{detail.commune ? `, ${detail.commune}` : ''}</p>}
+          {detail.address && <p className="small" style={{ margin: '2px 0' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{detail.address}{detail.commune ? `, ${detail.commune}` : ''}</p>}
           <p className="small" style={{ margin: '2px 0' }}>{TYPE_LABELS(tr)[detail.orderType] || detail.orderType} · {fmtDateTime(detail.createdAt)}</p>
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminOrders.items')}</h4>

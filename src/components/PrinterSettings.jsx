@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import * as btPrinter from '../bluetoothPrinter';
 import { COLUMNS_58MM, COLUMNS_80MM } from '../escposTicket';
+import Icone from './Icone';
 
 // « Imprimante à tickets » en tête de la page Commandes : l'état de la connexion, le bouton pour
 // appairer l'imprimante thermique (Bluetooth BLE, depuis Chrome / Edge), un ticket de test, la largeur
@@ -32,8 +33,8 @@ export default function PrinterSettings({ btName, onConnect, onDisconnect, onTes
   return (
     <div className="card printer-card">
       <button type="button" className="printer-head" onClick={() => setOuvert((o) => !o)} aria-expanded={ouvert}>
-        <span className="printer-head-titre">🖨️ {t('ordersResto.printerTitle')}</span>
-        <span className={`pill${btName ? ' teal' : ''}`}>{btName ? `🔗 ${btName}` : supporte ? t('ordersResto.printerStatusNone') : t('ordersResto.printerStatusUnsupported')}</span>
+        <span className="printer-head-titre"><Icone nom="imprimante" taille={16} className="icone-texte" />{' '}{t('ordersResto.printerTitle')}</span>
+        <span className={`pill${btName ? ' teal' : ''}`}>{btName ? `${btName}` : supporte ? t('ordersResto.printerStatusNone') : t('ordersResto.printerStatusUnsupported')}</span>
         {autoPrint && btName && <span className="pill gold">{t('ordersResto.autoPrintOn')}</span>}
         <span aria-hidden="true" style={{ marginLeft: 'auto', transform: ouvert ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>›</span>
       </button>
@@ -54,7 +55,7 @@ export default function PrinterSettings({ btName, onConnect, onDisconnect, onTes
                 <button type="button" className={paperColumns === COLUMNS_80MM ? 'btn-teal' : 'btn-outline'} style={{ padding: '5px 11px', fontSize: 12 }} onClick={() => onPaper(COLUMNS_80MM)}>80 mm</button>
               </div>
               <div className="row" style={{ gap: 8, marginTop: 10 }}>
-                <button type="button" className="btn-outline" onClick={onNewTicket}>✏️ {t('ordersResto.newTicket')}</button>
+                <button type="button" className="btn-outline" onClick={onNewTicket}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('ordersResto.newTicket')}</button>
                 <span className="small">{t('ordersResto.newTicketHelp')}</span>
               </div>
               <label className="row" style={{ gap: 10, alignItems: 'flex-start', cursor: 'pointer', marginTop: 12 }}>
@@ -66,15 +67,15 @@ export default function PrinterSettings({ btName, onConnect, onDisconnect, onTes
             <>
               <p className="small" style={{ margin: 0 }}>{raison || t('ordersResto.printNoBtHelp')}</p>
               <div className="row" style={{ gap: 8, marginTop: 10 }}>
-                <button type="button" className="btn-outline" onClick={onNewTicket}>✏️ {t('ordersResto.newTicket')}</button>
+                <button type="button" className="btn-outline" onClick={onNewTicket}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('ordersResto.newTicket')}</button>
                 <span className="small">{t('ordersResto.newTicketHelp')}</span>
               </div>
             </>
           )}
           <div className="printer-compat small printer-app-guide">
-            <b>📱 {t('ordersResto.appStepsTitle')}</b>
+            <b><Icone nom="mobile" taille={16} className="icone-texte" />{' '}{t('ordersResto.appStepsTitle')}</b>
             <p style={{ margin: '4px 0 0' }}>{t('ordersResto.appNativeSoon')}</p>
-            <p style={{ margin: '4px 0 6px' }}>{appareil.installee ? `✅ ${t('ordersResto.appInstalled')}` : t(`ordersResto.appInstallHint_${appareil.type}`)}</p>
+            <p style={{ margin: '4px 0 6px' }}>{appareil.installee ? `${t('ordersResto.appInstalled')}` : t(`ordersResto.appInstallHint_${appareil.type}`)}</p>
             <ol style={{ margin: '0 0 10px 18px', padding: 0 }}>{etapes.map((e, i) => <li key={i} style={{ margin: '2px 0' }}>{e}</li>)}</ol>
           </div>
           <div className="printer-compat small">

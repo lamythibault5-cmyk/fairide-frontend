@@ -19,6 +19,7 @@ import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { fmtDate, fmtDateTime, downloadCsv, useDebouncedValue, pct, CRM_STAGES, CRM_STAGE_LABELS, CRM_PRIORITY_LABELS, TASK_STATUS_LABELS } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
+import Icone from '../../components/Icone';
 
 const PAGE_SIZE = 100;
 const periodTypes = (tr) => [{ key: 'month', label: tr('adminCommon.month') }, { key: 'quarter', label: tr('adminCommon.quarter') }, { key: 'year', label: tr('adminCommon.year') }];
@@ -208,7 +209,7 @@ export default function AdminCrmPage() {
                 <span className="small" style={{ color: CRM_PRIORITY_LABELS[p.priority]?.color }}>{CRM_PRIORITY_LABELS[p.priority]?.label}</span>
               </div>
               <div className="small">{[p.commune, p.cuisine].filter(Boolean).join(' · ')}</div>
-              {p.ownerEmail && <div className="small" style={{ opacity: 0.7 }}>👤 {p.ownerEmail}</div>}
+              {p.ownerEmail && <div className="small" style={{ opacity: 0.7 }}><Icone nom="compte" taille={16} className="icone-texte" />{' '}{p.ownerEmail}</div>}
               {p.nextFollowUpAt && (
                 <div className="small" style={{ color: relanceEnRetard(p) ? 'var(--red)' : 'inherit' }}>
                   {tr('adminCrm.followUpOn', { date: fmtDate(p.nextFollowUpAt) })}

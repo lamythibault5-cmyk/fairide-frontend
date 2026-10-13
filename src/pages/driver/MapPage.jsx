@@ -138,8 +138,8 @@ export default function MapPage() {
         active.map((o) => {
           const pickedUp = o.status === 'livraison';
           const target = pickedUp
-            ? { lat: o.deliveryLat, lng: o.deliveryLng, label: o.address, emoji: '🏠', color: '#C8F03C' }
-            : { lat: o.restaurantLat, lng: o.restaurantLng, label: o.restaurantName, emoji: '🏪', color: '#3B2FB5' };
+            ? { lat: o.deliveryLat, lng: o.deliveryLng, label: o.address, emoji: 'maison', color: '#C8F03C' }
+            : { lat: o.restaurantLat, lng: o.restaurantLng, label: o.restaurantName, emoji: 'commerce', color: '#3B2FB5' };
           const carte = ({ height, onEta }) => (
             <DriverNavigationMap
               originLat={position?.lat} originLng={position?.lng}
@@ -152,7 +152,7 @@ export default function MapPage() {
             <div className="card" key={o.id} style={{ marginBottom: 16 }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{pickedUp ? t('mapDriver.toCustomer') : t('mapDriver.toRestaurant')}</b>
-                <span className="small">{pickedUp ? `📍 ${o.address}` : `🏪 ${o.restaurantName}`}</span>
+                <span className="small">{pickedUp ? `${o.address}` : `${o.restaurantName}`}</span>
               </div>
               {!target.lat || !target.lng ? (
                 <div className="empty" style={{ margin: '10px 0' }}>{t('mapDriver.addressNotLocated')}</div>

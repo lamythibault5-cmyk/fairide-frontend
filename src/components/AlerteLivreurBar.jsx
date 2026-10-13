@@ -1,4 +1,5 @@
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Barre d'alertes du livreur, en tête de ses courses : ce qui l'attend, le son, les notifications — et ce que
 // l'alerte garantit vraiment (onglet ouvert ; sinon e-mail). Voir useAlerteLivreur.js.
@@ -19,7 +20,7 @@ export default function AlerteLivreurBar({ sonActif, setSonActif, permission, de
         </button>
         {permission === 'default' && (
           <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} onClick={demanderPermission}>
-            🔔 {t('driverAlert.enableNotifications')}
+            <Icone nom="cloche" taille={16} className="icone-texte" />{' '}{t('driverAlert.enableNotifications')}
           </button>
         )}
         {permission === 'denied' && <span className="small" style={{ color: 'var(--red)' }}>{t('driverAlert.blocked')}</span>}

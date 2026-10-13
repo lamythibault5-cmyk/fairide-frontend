@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import Icone from '../../components/Icone';
 
 // ENTRAÎNEMENT (fondateur, 2026-10-08) : pendant 7 jours après la première connexion de son terminal, le commerce se fait envoyer
 // des commandes d'essai pour voir comment une commande arrive — notification, tickets (deux pour une livraison : sac et
@@ -53,7 +54,7 @@ export default function SimulationPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>🧪 {t('simResto.title')}</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('simResto.title')}</h2>
       <p className="small" style={{ margin: '0 0 14px', maxWidth: 760 }}>{t('simResto.intro')}</p>
 
       {!etat && <p className="small">…</p>}
@@ -68,13 +69,13 @@ export default function SimulationPage() {
           <div className="card">
             <p className="small" style={{ margin: '0 0 10px' }}>
               <span className="pill teal">{t('simResto.daysLeft', { n: etat.daysLeft })}</span>
-              {' '}{etat.terminalOnline ? `🟢 ${t('simResto.terminalOnline')}` : `⚪ ${t('simResto.terminalOffline')}`}
+              {' '}{etat.terminalOnline ? `${t('simResto.terminalOnline')}` : `${t('simResto.terminalOffline')}`}
             </p>
             <p className="small" style={{ margin: '0 0 10px' }}>{t('simResto.howTo')}</p>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" className="btn-teal" disabled={!!occupe} onClick={() => commandeEssai('delivery')}>{occupe === 'delivery' ? '…' : `🛵 ${t('simResto.sendDelivery')}`}</button>
-              <button type="button" className="btn-outline" disabled={!!occupe} onClick={() => commandeEssai('pickup', 'online')}>{occupe === 'pickuponline' ? '…' : `🥡 ${t('simResto.sendPickupOnline')}`}</button>
-              <button type="button" className="btn-outline" disabled={!!occupe} onClick={() => commandeEssai('pickup', 'on_site')}>{occupe === 'pickupon_site' ? '…' : `💶 ${t('simResto.sendPickupOnSite')}`}</button>
+              <button type="button" className="btn-teal" disabled={!!occupe} onClick={() => commandeEssai('delivery')}>{occupe === 'delivery' ? '…' : `${t('simResto.sendDelivery')}`}</button>
+              <button type="button" className="btn-outline" disabled={!!occupe} onClick={() => commandeEssai('pickup', 'online')}>{occupe === 'pickuponline' ? '…' : `${t('simResto.sendPickupOnline')}`}</button>
+              <button type="button" className="btn-outline" disabled={!!occupe} onClick={() => commandeEssai('pickup', 'on_site')}>{occupe === 'pickupon_site' ? '…' : `${t('simResto.sendPickupOnSite')}`}</button>
             </div>
           </div>
 
@@ -87,13 +88,13 @@ export default function SimulationPage() {
                 <span className="pill">{t(`simResto.st_${o.status}`)}</span>
               </div>
               <p className="small" style={{ margin: '6px 0 8px' }}>
-                {o.driverName ? `🛵 ${t('simResto.driverAssigned', { name: o.driverName })}` : o.orderType === 'delivery' ? t('simResto.driverPending') : t('simResto.pickupNote')}
-                {o.preparedPhotoAt ? ` · 📷 ${t('simResto.photoTaken', { time: quand(o.preparedPhotoAt) })}` : ''}
+                {o.driverName ? `${t('simResto.driverAssigned', { name: o.driverName })}` : o.orderType === 'delivery' ? t('simResto.driverPending') : t('simResto.pickupNote')}
+                {o.preparedPhotoAt ? ` · ${t('simResto.photoTaken', { time: quand(o.preparedPhotoAt) })}` : ''}
               </p>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <button type="button" className="btn-outline" disabled={!!occupe} onClick={() => reimprimer(o, o.orderType === 'delivery' ? 2 : 1)}>{occupe === `print-${o.id}` ? '…' : `🖨️ ${o.orderType === 'delivery' ? t('simResto.printTwo') : t('simResto.printOne')}`}</button>
+                <button type="button" className="btn-outline" disabled={!!occupe} onClick={() => reimprimer(o, o.orderType === 'delivery' ? 2 : 1)}>{occupe === `print-${o.id}` ? '…' : `${o.orderType === 'delivery' ? t('simResto.printTwo') : t('simResto.printOne')}`}</button>
                 {o.orderType === 'delivery' && !o.driverName && (
-                  <button type="button" className="btn-teal" disabled={!!occupe} onClick={() => livreur(o)}>{occupe === `driver-${o.id}` ? '…' : `🛵 ${t('simResto.simulateDriver')}`}</button>
+                  <button type="button" className="btn-teal" disabled={!!occupe} onClick={() => livreur(o)}>{occupe === `driver-${o.id}` ? '…' : `${t('simResto.simulateDriver')}`}</button>
                 )}
                 <Link className="btn-ghost" to="/dashboard/orders">{t('simResto.openOrders')}</Link>
               </div>
@@ -103,7 +104,7 @@ export default function SimulationPage() {
             <button type="button" className="btn-ghost" disabled={!!occupe} onClick={terminer}>{occupe === 'finish' ? '…' : t('simResto.finish')}</button>
           )}
           <div className="card" style={{ marginTop: 16 }}>
-            <b>📷 {t('simResto.photoTitle')}</b>
+            <b><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('simResto.photoTitle')}</b>
             <p className="small" style={{ margin: '6px 0 0' }}>{t('simResto.photoText')}</p>
           </div>
         </>

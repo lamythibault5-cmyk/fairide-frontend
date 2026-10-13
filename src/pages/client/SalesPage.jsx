@@ -10,6 +10,7 @@ import CrmMap, { distanceM } from '../../components/CrmMap';
 import '../../crm.css';
 import BusinessSearch from '../../components/BusinessSearch';
 import { communeDepuisCodePostal } from '../../menuCategories';
+import Icone from '../../components/Icone';
 
 // Page « Sales » des commerciaux : la personne à qui l'admin a donné l'accès (Admin › Sales) enregistre ici les
 // commerces qu'elle démarche, et où ils en sont — étape, visites, appels, notes datées, avis du restaurateur,
@@ -20,8 +21,9 @@ import { communeDepuisCodePostal } from '../../menuCategories';
 
 const STAGES = ['a_contacter', 'contacte', 'interesse', 'rdv', 'inscrit', 'carte_en_ligne', 'actif', 'plus_tard', 'refuse'];
 const KINDS = ['visite', 'appel', 'message', 'note'];
-const STAGE_ICONES = { a_contacter: '📋', contacte: '📞', interesse: '💡', rdv: '📅', inscrit: '✍️', carte_en_ligne: '🍽️', actif: '✅', plus_tard: '⏳', refuse: '✖️' };
-const KIND_ICONES = { visite: '🚶', appel: '📞', message: '💬', note: '📝', etape: '🔀' };
+// Noms d'icônes (Icone.jsx), plus des emojis (2026-10-13).
+const STAGE_ICONES = { a_contacter: 'document', contacte: 'telephone', interesse: 'ampoule', rdv: 'horloge', inscrit: 'crayon', carte_en_ligne: 'restaurants', actif: 'valider', plus_tard: 'horloge', refuse: 'croix' };
+const KIND_ICONES = { visite: 'personnes', appel: 'telephone', message: 'bulle', note: 'crayon', etape: 'melanger' };
 
 const vide = { name: '', address: '', commune: '', phone: '', contactName: '', email: '', cuisine: '', stage: 'contacte', notes: '', firstNote: '' };
 // Position du téléphone (bouton « je suis devant le commerce »). Promesse → { lat, lng } ou erreur.
@@ -115,7 +117,7 @@ export default function SalesPage() {
   const fmtDate = (ms) => new Date(ms).toLocaleString(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   const fmtJour = (ms) => new Date(ms).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
   const euros = (n) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
-  const stageLabel = (s) => `${STAGE_ICONES[s] || ''} ${t(`sales.stage_${s}`)}`;
+  const stageLabel = (s) => t(`sales.stage_${s}`);
 
   if (etat && !etat.agent) {
     return (
@@ -134,8 +136,8 @@ export default function SalesPage() {
           <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.intro')}</p>
         </div>
         <div className="row" style={{ gap: 8 }}>
-          <button type="button" className="btn-ghost" style={{ fontSize: 13 }} onClick={exporterCsv} disabled={!prospects?.length}>⬇️ {t('sales.exportCsv')}</button>
-          <button type="button" className="btn-gold" onClick={() => setPhoto(true)}>📷 {t('sales.photoButton')}</button>
+          <button type="button" className="btn-ghost" style={{ fontSize: 13 }} onClick={exporterCsv} disabled={!prospects?.length}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('sales.exportCsv')}</button>
+          <button type="button" className="btn-gold" onClick={() => setPhoto(true)}><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('sales.photoButton')}</button>
           <button type="button" className="btn-outline" onClick={() => setCreation(true)}>+ {t('sales.addProspect')}</button>
         </div>
       </div>
@@ -147,7 +149,7 @@ export default function SalesPage() {
       {/* Aujourd'hui : ce qui presse, tout en haut — en retard d'abord, puis ce qui est prévu ce jour. */}
       {aFaire.length > 0 && (
         <div className="card crm-aujourdhui">
-          <b>⏰ {t('sales.todayTitle', { n: aFaire.length })}</b>
+          <b><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('sales.todayTitle', { n: aFaire.length })}</b>
           <ul className="crm-aujourdhui-liste">
             {aFaire.slice(0, 6).map((p) => (
               <li key={p.id}>
@@ -183,11 +185,11 @@ export default function SalesPage() {
                 <button type="button" className={`chip${zoneActive === null ? ' active' : ''}`} onClick={() => setZoneActive(null)}>{t('sales.zoneAll')}</button>
                 {zones.map((z) => (
                   <button type="button" key={z.key} className={`chip crm-zone-chip${zoneActive === z.key ? ' active' : ''}`} onClick={() => setZoneActive(zoneActive === z.key ? null : z.key)} title={`${z.commune} · ${t(`sales.zoneTag_${z.tag}`)}`}>
-                    🎯 {z.name}{z.status !== 'todo' ? <span className={`crm-zone-qui${z.claimedByMe ? ' crm-zone-moi' : ''}`}>{z.claimedByMe ? t('sales.teamMe') : t('sales.zoneTakenShort')}</span> : null}{z.mine ? <span className="crm-zone-n">{z.mine}</span> : null}{z.others ? <span className="crm-zone-n crm-zone-n-autres">{z.others}</span> : null}
+                    <Icone nom="cible" taille={16} className="icone-texte" />{' '}{z.name}{z.status !== 'todo' ? <span className={`crm-zone-qui${z.claimedByMe ? ' crm-zone-moi' : ''}`}>{z.claimedByMe ? t('sales.teamMe') : t('sales.zoneTakenShort')}</span> : null}{z.mine ? <span className="crm-zone-n">{z.mine}</span> : null}{z.others ? <span className="crm-zone-n crm-zone-n-autres">{z.others}</span> : null}
                   </button>
                 ))}
               </div>
-              {zone && <p className="small" style={{ margin: '8px 0 0' }}>🎯 <b>{zone.name}</b> · {zone.commune} · {t(`sales.zoneTag_${zone.tag}`)} · {t('sales.zoneMine', { n: zone.mine })} · {t('sales.zoneOthers', { n: zone.others })}</p>}
+              {zone && <p className="small" style={{ margin: '8px 0 0' }}><Icone nom="cible" taille={16} className="icone-texte" />{' '}<b>{zone.name}</b> · {zone.commune} · {t(`sales.zoneTag_${zone.tag}`)} · {t('sales.zoneMine', { n: zone.mine })} · {t('sales.zoneOthers', { n: zone.others })}</p>}
             </div>
           </>
         )}
@@ -245,16 +247,16 @@ export default function SalesPage() {
               <span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span>
             </div>
             <div className="small crm-carte-ligne">
-              {p.commune && <span>📍 {p.commune}</span>}
-              {p.contactName && <span>👤 {p.contactName}</span>}
-              {p.rating && <span title={t('sales.interestTitle')}>💡 {'★'.repeat(p.rating)}{'☆'.repeat(5 - p.rating)}</span>}
-              {p.behaviourRating && <span title={t('sales.behaviourTitle')}>🤝 {'★'.repeat(p.behaviourRating)}{'☆'.repeat(5 - p.behaviourRating)}</span>}
+              {p.commune && <span><Icone nom="position" taille={16} className="icone-texte" />{' '}{p.commune}</span>}
+              {p.contactName && <span><Icone nom="compte" taille={16} className="icone-texte" />{' '}{p.contactName}</span>}
+              {p.rating && <span title={t('sales.interestTitle')}><Icone nom="ampoule" taille={16} className="icone-texte" />{' '}{'★'.repeat(p.rating)}{'☆'.repeat(5 - p.rating)}</span>}
+              {p.behaviourRating && <span title={t('sales.behaviourTitle')}><Icone nom="contrat" taille={16} className="icone-texte" />{' '}{'★'.repeat(p.behaviourRating)}{'☆'.repeat(5 - p.behaviourRating)}</span>}
             </div>
             <div className="small crm-carte-ligne">
               {p.lastEventAt && <span>{t('sales.lastActivity', { date: fmtDate(p.lastEventAt) })}</span>}
-              {p.nextActionAt && <span className={p.nextActionAt < Date.now() && !['actif', 'refuse'].includes(p.stage) ? 'crm-retard-texte' : ''}>⏰ {t('sales.nextAction', { date: fmtDate(p.nextActionAt) })}</span>}
-              {p.restaurantName && <span>🏪 {t('sales.linkedTo', { name: p.restaurantName })}</span>}
-              {p.signedUpAt && <span>✅ {t('sales.signedUpOn', { date: fmtJour(p.signedUpAt) })}</span>}
+              {p.nextActionAt && <span className={p.nextActionAt < Date.now() && !['actif', 'refuse'].includes(p.stage) ? 'crm-retard-texte' : ''}><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('sales.nextAction', { date: fmtDate(p.nextActionAt) })}</span>}
+              {p.restaurantName && <span><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{t('sales.linkedTo', { name: p.restaurantName })}</span>}
+              {p.signedUpAt && <span><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('sales.signedUpOn', { date: fmtJour(p.signedUpAt) })}</span>}
             </div>
           </button>
         ))}
@@ -322,7 +324,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
   return createPortal(
     <div className="modal-overlay drawer-overlay" role="dialog" aria-modal="true" aria-label={t('sales.photoTitle')} onClick={onClose}>
       <form className="modal-box drawer-box crm-form" onClick={(e) => e.stopPropagation()} onSubmit={valider} noValidate>
-        <h3 className="modal-titre">📷 {t('sales.photoTitle')}</h3>
+        <h3 className="modal-titre"><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('sales.photoTitle')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>{t('sales.photoIntro')}</p>
         <input ref={inputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => { const x = e.target.files?.[0]; if (x) analyser(x, 'camera'); e.target.value = ''; }} />
         {/* Sans « capture » : le téléphone ouvre la pellicule (photos prises plus tôt, reçues…). */}
@@ -330,8 +332,8 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
         {etape === 'choisir' && (
           <div className="crm-photo-choix">
             <div className="row" style={{ gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button type="button" className="btn-gold" onClick={() => inputRef.current?.click()}>📷 {t('sales.photoTake')}</button>
-              <button type="button" className="btn-outline" onClick={() => pelliculeRef.current?.click()}>🖼️ {t('sales.photoGallery')}</button>
+              <button type="button" className="btn-gold" onClick={() => inputRef.current?.click()}><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('sales.photoTake')}</button>
+              <button type="button" className="btn-outline" onClick={() => pelliculeRef.current?.click()}><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('sales.photoGallery')}</button>
             </div>
             <p className="small" style={{ margin: '8px 0 0' }}>{t('sales.photoHint')}</p>
             <p className="small" style={{ margin: '4px 0 0' }}>{t('sales.photoGalleryHint')}</p>
@@ -340,7 +342,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
         {etape === 'analyse' && (
           <div className="crm-photo-analyse">
             {apercu && <img src={apercu} alt="" className="crm-photo-apercu" />}
-            <p className="small">⏳ {t('sales.photoAnalysing')}</p>
+            <p className="small"><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('sales.photoAnalysing')}</p>
           </div>
         )}
         {etape === 'verifier' && reco && (
@@ -348,19 +350,19 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
             <div className="crm-photo-entete">
               {apercu && <img src={apercu} alt="" className="crm-photo-apercu" />}
               <div className="small">
-                {reco.sign?.name && <p style={{ margin: '0 0 4px' }}>🪧 <b>{t('sales.photoSign', { name: reco.sign.name })}</b>{reco.sign.notes ? <span> · {reco.sign.notes}</span> : null}</p>}
-                <p style={{ margin: 0 }}>📍 {reco.position ? (reco.position.source === 'photo' ? t('sales.photoPosPhoto') : t('sales.photoPosDevice')) : t('sales.photoPosNone')}</p>
-                {zone && <p style={{ margin: '4px 0 0' }}>🎯 {t('sales.photoZone', { zone: zone.name, commune: zone.commune })}{zoneEtat?.status === 'taken' ? ` · ${t('sales.zoneTakenOther')}` : zoneEtat?.status === 'mine' ? ` · ${t('sales.zoneMineGroup')}` : ''}</p>}
-                {(reco.address || reco.commune) && <p style={{ margin: '4px 0 0' }}>🏠 {[reco.address, reco.postalCode, reco.commune].filter(Boolean).join(', ')}</p>}
+                {reco.sign?.name && <p style={{ margin: '0 0 4px' }}><b>{t('sales.photoSign', { name: reco.sign.name })}</b>{reco.sign.notes ? <span> · {reco.sign.notes}</span> : null}</p>}
+                <p style={{ margin: 0 }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{reco.position ? (reco.position.source === 'photo' ? t('sales.photoPosPhoto') : t('sales.photoPosDevice')) : t('sales.photoPosNone')}</p>
+                {zone && <p style={{ margin: '4px 0 0' }}><Icone nom="cible" taille={16} className="icone-texte" />{' '}{t('sales.photoZone', { zone: zone.name, commune: zone.commune })}{zoneEtat?.status === 'taken' ? ` · ${t('sales.zoneTakenOther')}` : zoneEtat?.status === 'mine' ? ` · ${t('sales.zoneMineGroup')}` : ''}</p>}
+                {(reco.address || reco.commune) && <p style={{ margin: '4px 0 0' }}><Icone nom="maison" taille={16} className="icone-texte" />{' '}{[reco.address, reco.postalCode, reco.commune].filter(Boolean).join(', ')}</p>}
                 <span className="row" style={{ gap: 12 }}>
                   <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => inputRef.current?.click()}>{t('sales.photoRetake')}</button>
-                  <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => pelliculeRef.current?.click()}>🖼️ {t('sales.photoGallery')}</button>
+                  <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => pelliculeRef.current?.click()}><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('sales.photoGallery')}</button>
                 </span>
               </div>
             </div>
             {reco.already?.length > 0 && (
               <div className="crm-doublons" role="status">
-                {reco.already.map((d) => <p key={d.id}>⚠️ {d.mine ? t('sales.photoAlreadyMine', { name: d.name, stage: t(`sales.stage_${d.stage}`) }) : t('sales.photoAlreadyOther', { name: d.name })}</p>)}
+                {reco.already.map((d) => <p key={d.id}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{d.mine ? t('sales.photoAlreadyMine', { name: d.name, stage: t(`sales.stage_${d.stage}`) }) : t('sales.photoAlreadyOther', { name: d.name })}</p>)}
               </div>
             )}
             <div className="crm-bloc">
@@ -369,7 +371,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
               <div className="crm-photo-candidats" role="radiogroup" aria-label={t('sales.photoWhich')}>
                 {reco.candidates.map((c, i) => (
                   <button type="button" key={i} role="radio" aria-checked={choix === i} className={`crm-photo-candidat${choix === i ? ' actif' : ''}`} onClick={() => choisir(i)}>
-                    <b>{c.name}{c.source === 'sign' || c.source === 'osm+sign' ? <span className="crm-zone-qui" style={{ marginLeft: 6 }}>🪧 {t(c.source === 'sign' ? 'sales.photoFromSign' : 'sales.photoFromBoth')}</span> : null}</b><span className="small">{[c.cuisine, c.type, c.distanceM !== null && c.distanceM !== undefined ? t('sales.photoDistance', { m: c.distanceM }) : null].filter(Boolean).join(' · ')}</span>
+                    <b>{c.name}{c.source === 'sign' || c.source === 'osm+sign' ? <span className="crm-zone-qui" style={{ marginLeft: 6 }}>{t(c.source === 'sign' ? 'sales.photoFromSign' : 'sales.photoFromBoth')}</span> : null}</b><span className="small">{[c.cuisine, c.type, c.distanceM !== null && c.distanceM !== undefined ? t('sales.photoDistance', { m: c.distanceM }) : null].filter(Boolean).join(' · ')}</span>
                   </button>
                 ))}
                 <button type="button" role="radio" aria-checked={choix === 'autre'} className={`crm-photo-candidat${choix === 'autre' ? ' actif' : ''}`} onClick={() => choisir('autre')}><b>{t('sales.photoOther')}</b></button>
@@ -386,7 +388,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
                 <div className="field" style={{ flex: 1 }}><label htmlFor="ph-tel">{t('sales.fPhone')}</label><input id="ph-tel" type="tel" value={f.phone} onChange={champ('phone')} /></div>
                 <div className="field" style={{ flex: 1 }}><label htmlFor="ph-cuisine">{t('sales.fCuisine')}</label><input id="ph-cuisine" value={f.cuisine} onChange={champ('cuisine')} /></div>
                 <div className="field" style={{ flex: 1 }}><label htmlFor="ph-etape">{t('sales.fStage')}</label>
-                  <select id="ph-etape" value={f.stage} onChange={champ('stage')}>{STAGES.map((s) => <option key={s} value={s}>{STAGE_ICONES[s]} {t(`sales.stage_${s}`)}</option>)}</select>
+                  <select id="ph-etape" value={f.stage} onChange={champ('stage')}>{STAGES.map((s) => <option key={s} value={s}>{t(`sales.stage_${s}`)}</option>)}</select>
                 </div>
               </div>
               <div className="field"><label htmlFor="ph-note">{t('sales.fFirstNote')}</label><textarea id="ph-note" rows={2} value={f.firstNote} onChange={champ('firstNote')} placeholder={t('sales.fFirstNotePh')} /></div>
@@ -510,29 +512,29 @@ function ProspectForm({ token, t, toast, onClose, onSaved, ficheWeb = null, nomI
         <p className="small" style={{ margin: '0 0 12px' }}>{t('sales.formHint')}</p>
         {recherche === 'ouverte' ? (
           <div className="crm-bloc">
-            <b className="crm-bloc-titre">🔎 {t('sales.findByPostal')}</b>
+            <b className="crm-bloc-titre"><Icone nom="recherche" taille={16} className="icone-texte" />{' '}{t('sales.findByPostal')}</b>
             <p className="small" style={{ margin: '0 0 8px' }}>{t('sales.findByPostalHint')}</p>
             {/* Toujours visible, au-dessus de la liste (qui peut compter des centaines de commerces). */}
-            <button type="button" className="btn-outline crm-manuel-btn" style={{ fontSize: 13, marginBottom: 10 }} onClick={passerEnManuel}>✍️ {t('sales.manualEntry')}</button>
-            <BusinessSearch compact libelleManuel={`✍️ ${t('sales.manualEntry')}`} initialPostalCode={cpRecherche} onPostalCode={setCpRecherche} onSelect={(fiche) => { if (fiche && (fiche.source !== 'manuel' || !fiche.name)) appliquerFiche(fiche); }} />
+            <button type="button" className="btn-outline crm-manuel-btn" style={{ fontSize: 13, marginBottom: 10 }} onClick={passerEnManuel}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('sales.manualEntry')}</button>
+            <BusinessSearch compact libelleManuel={`${t('sales.manualEntry')}`} initialPostalCode={cpRecherche} onPostalCode={setCpRecherche} onSelect={(fiche) => { if (fiche && (fiche.source !== 'manuel' || !fiche.name)) appliquerFiche(fiche); }} />
           </div>
         ) : (
           <p className="small crm-rempli" style={{ margin: '0 0 10px' }}>
-            {recherche === 'remplie' ? `✅ ${t('sales.filledFromList')} ` : `✍️ ${t('sales.manualMode')} `}
-            <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 13 }} onClick={() => setRecherche('ouverte')}>🔎 {t(recherche === 'remplie' ? 'sales.changeBusiness' : 'sales.searchInstead')}</button>
+            {recherche === 'remplie' ? `${t('sales.filledFromList')} ` : `${t('sales.manualMode')} `}
+            <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 13 }} onClick={() => setRecherche('ouverte')}><Icone nom="recherche" taille={16} className="icone-texte" />{' '}{t(recherche === 'remplie' ? 'sales.changeBusiness' : 'sales.searchInstead')}</button>
           </p>
         )}
         <div className="crm-bloc crm-collage">
-          <b className="crm-bloc-titre">📋 {t('sales.pasteTitle')}</b>
+          <b className="crm-bloc-titre"><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('sales.pasteTitle')}</b>
           <textarea rows={2} value={collage} onChange={(e) => setCollage(e.target.value)} placeholder={t('sales.pastePh')} aria-label={t('sales.pasteTitle')} />
           <button type="button" className="btn-outline" style={{ fontSize: 13, marginTop: 6 }} disabled={collageEnCours || !collage.trim()} onClick={remplirDepuisCollage}>{collageEnCours ? '…' : t('sales.pasteFill')}</button>
         </div>
         <div className="field"><label htmlFor="crm-nom">{t('sales.fName')} *</label><input id="crm-nom" value={f.name} onChange={champ('name')} /></div>
         {aDesDoublons ? (
           <div className="crm-doublons" role="status">
-            {doublons.mine.map((d) => <p key={`m${d.id}`}>⚠️ {t('sales.dupMine', { name: d.name, stage: t(`sales.stage_${d.stage}`) })}</p>)}
-            {doublons.others.map((d) => <p key={`o${d.id}`}>🧑‍💼 {t('sales.dupOthers', { name: d.name, stage: t(`sales.stage_${d.stage}`) })}</p>)}
-            {doublons.restaurants.map((d) => <p key={`r${d.id}`}>🏪 {t('sales.dupRestaurant', { name: d.name, commune: d.commune || '' })}</p>)}
+            {doublons.mine.map((d) => <p key={`m${d.id}`}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('sales.dupMine', { name: d.name, stage: t(`sales.stage_${d.stage}`) })}</p>)}
+            {doublons.others.map((d) => <p key={`o${d.id}`}><Icone nom="compte" taille={16} className="icone-texte" />{' '}{t('sales.dupOthers', { name: d.name, stage: t(`sales.stage_${d.stage}`) })}</p>)}
+            {doublons.restaurants.map((d) => <p key={`r${d.id}`}><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{t('sales.dupRestaurant', { name: d.name, commune: d.commune || '' })}</p>)}
           </div>
         ) : null}
         <div className="row" style={{ gap: 8 }}>
@@ -548,12 +550,12 @@ function ProspectForm({ token, t, toast, onClose, onSaved, ficheWeb = null, nomI
           <div className="field" style={{ flex: 1 }}><label htmlFor="crm-cuisine">{t('sales.fCuisine')}</label><input id="crm-cuisine" value={f.cuisine} onChange={champ('cuisine')} /></div>
         </div>
         <div className="field"><label htmlFor="crm-etape">{t('sales.fStage')}</label>
-          <select id="crm-etape" value={f.stage} onChange={champ('stage')}>{STAGES.map((s) => <option key={s} value={s}>{STAGE_ICONES[s]} {t(`sales.stage_${s}`)}</option>)}</select>
+          <select id="crm-etape" value={f.stage} onChange={champ('stage')}>{STAGES.map((s) => <option key={s} value={s}>{t(`sales.stage_${s}`)}</option>)}</select>
         </div>
         <div className="field"><label htmlFor="crm-note1">{t('sales.fFirstNote')}</label><textarea id="crm-note1" rows={3} value={f.firstNote} onChange={champ('firstNote')} placeholder={t('sales.fFirstNotePh')} /></div>
         {/* Position : devant le commerce, un appui suffit ; sinon l'adresse est géocodée par le serveur. */}
         <div className="crm-position">
-          <button type="button" className="btn-outline" style={{ fontSize: 13 }} disabled={geoEnCours} onClick={prendrePosition}>{geoEnCours ? '…' : `📍 ${t('sales.useMyPosition')}`}</button>
+          <button type="button" className="btn-outline" style={{ fontSize: 13 }} disabled={geoEnCours} onClick={prendrePosition}>{geoEnCours ? '…' : `${t('sales.useMyPosition')}`}</button>
           <span className="small">{position ? t('sales.positionOk') : t('sales.positionHint')}</span>
         </div>
         <div className="modal-pied crm-pied">
@@ -630,15 +632,15 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
               <div>
                 <b className="crm-bloc-titre">{t('sales.contactTitle')}</b>
                 <p className="small" style={{ margin: 0 }}>
-                  {p.contactName && <>👤 {p.contactName}<br /></>}
-                  {p.phone && <>📞 <a href={`tel:${p.phone}`}>{p.phone}</a><br /></>}
-                  {p.email && <>✉️ <a href={`mailto:${p.email}`}>{p.email}</a><br /></>}
-                  {(p.address || p.lat !== null) && <>🧭 <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.lat !== null && p.lat !== undefined ? `${p.lat},${p.lng}` : `${p.address} ${p.commune || ''} Bruxelles`)}`} target="_blank" rel="noopener noreferrer">{t('sales.route')}</a></>}
+                  {p.contactName && <><Icone nom="compte" taille={16} className="icone-texte" />{' '}{p.contactName}<br /></>}
+                  {p.phone && <><Icone nom="telephone" taille={16} className="icone-texte" />{' '}<a href={`tel:${p.phone}`}>{p.phone}</a><br /></>}
+                  {p.email && <><Icone nom="courrier" taille={16} className="icone-texte" />{' '}<a href={`mailto:${p.email}`}>{p.email}</a><br /></>}
+                  {(p.address || p.lat !== null) && <><Icone nom="boussole" taille={16} className="icone-texte" />{' '}<a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.lat !== null && p.lat !== undefined ? `${p.lat},${p.lng}` : `${p.address} ${p.commune || ''} Bruxelles`)}`} target="_blank" rel="noopener noreferrer">{t('sales.route')}</a></>}
                   {!p.contactName && !p.phone && !p.email && <i>{t('sales.noContact')}</i>}
                 </p>
-                <button type="button" className="btn-ghost" style={{ padding: '4px 0', fontSize: 13 }} onClick={() => setEdition({ name: p.name, address: p.address, commune: p.commune, phone: p.phone, contactName: p.contactName, email: p.email, cuisine: p.cuisine, notes: p.notes })}>✏️ {t('sales.editInfo')}</button>
+                <button type="button" className="btn-ghost" style={{ padding: '4px 0', fontSize: 13 }} onClick={() => setEdition({ name: p.name, address: p.address, commune: p.commune, phone: p.phone, contactName: p.contactName, email: p.email, cuisine: p.cuisine, notes: p.notes })}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('sales.editInfo')}</button>
                 <br />
-                <button type="button" className="btn-ghost" style={{ padding: '4px 0', fontSize: 13 }} disabled={envoi} onClick={poserPosition}>📍 {p.lat !== null && p.lat !== undefined ? t('sales.positionFix') : t('sales.useMyPosition')}</button>
+                <button type="button" className="btn-ghost" style={{ padding: '4px 0', fontSize: 13 }} disabled={envoi} onClick={poserPosition}><Icone nom="position" taille={16} className="icone-texte" />{' '}{p.lat !== null && p.lat !== undefined ? t('sales.positionFix') : t('sales.useMyPosition')}</button>
                 <span className="small"> · {p.lat !== null && p.lat !== undefined ? t('sales.positionOnMap') : t('sales.positionMissing')}</span>
               </div>
               <div>
@@ -668,16 +670,16 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
             {/* Lier au commerce inscrit sur Fairide, pour voir s'il est validé et en ligne. */}
             <div className="crm-bloc">
               <b className="crm-bloc-titre">{t('sales.linkTitle')}</b>
-              {p.signedUpAt && <p className="small" style={{ margin: '0 0 6px' }}>✅ <b>{t('sales.signedUpOn', { date: new Date(p.signedUpAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) })}</b></p>}
-              {!p.restaurantId && <p className="small" style={{ margin: '0 0 6px' }}>💶 {t('sales.linkHint')}</p>}
+              {p.signedUpAt && <p className="small" style={{ margin: '0 0 6px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}<b>{t('sales.signedUpOn', { date: new Date(p.signedUpAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) })}</b></p>}
+              {!p.restaurantId && <p className="small" style={{ margin: '0 0 6px' }}><Icone nom="euro" taille={16} className="icone-texte" />{' '}{t('sales.linkHint')}</p>}
               {p.restaurantId ? (
-                <p className="small" style={{ margin: 0 }}>🏪 {p.restaurantName} · {t(`sales.restoStatus_${p.restaurantStatus || 'pending'}`)} <button type="button" className="btn-ghost" style={{ padding: '2px 6px', fontSize: 12 }} onClick={() => patch({ restaurantId: null })}>{t('sales.unlink')}</button></p>
+                <p className="small" style={{ margin: 0 }}><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{p.restaurantName} · {t(`sales.restoStatus_${p.restaurantStatus || 'pending'}`)} <button type="button" className="btn-ghost" style={{ padding: '2px 6px', fontSize: 12 }} onClick={() => patch({ restaurantId: null })}>{t('sales.unlink')}</button></p>
               ) : (
                 <div>
                   <input type="search" value={lien.q} onChange={(e) => chercherResto(e.target.value)} placeholder={t('sales.linkPlaceholder')} />
                   {lien.resultats.length > 0 && (
                     <div className="crm-resultats">
-                      {lien.resultats.map((r) => <button key={r.id} type="button" className="btn-ghost" onClick={() => { patch({ restaurantId: r.id }, t('sales.toastLinked')); setLien({ q: '', resultats: [] }); }}>🏪 {r.name} · {r.commune} · {t(`sales.restoStatus_${r.adminStatus}`)}</button>)}
+                      {lien.resultats.map((r) => <button key={r.id} type="button" className="btn-ghost" onClick={() => { patch({ restaurantId: r.id }, t('sales.toastLinked')); setLien({ q: '', resultats: [] }); }}><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{r.name} · {r.commune} · {t(`sales.restoStatus_${r.adminStatus}`)}</button>)}
                     </div>
                   )}
                 </div>
@@ -689,13 +691,13 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
               <b className="crm-bloc-titre">{t('sales.historyTitle')}</b>
               <form className="crm-ajout" onSubmit={ajouterEvenement}>
                 <div className="role-pick" role="group" aria-label={t('sales.eventKind')}>
-                  {KINDS.map((k) => <button key={k} type="button" className={`chip${ev.kind === k ? ' active' : ''}`} onClick={() => setEv((s) => ({ ...s, kind: k }))}>{KIND_ICONES[k]} {t(`sales.kind_${k}`)}</button>)}
+                  {KINDS.map((k) => <button key={k} type="button" className={`chip${ev.kind === k ? ' active' : ''}`} onClick={() => setEv((s) => ({ ...s, kind: k }))}><Icone nom={KIND_ICONES[k]} taille={14} className="icone-texte" /> {t(`sales.kind_${k}`)}</button>)}
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <input type="datetime-local" value={ev.at} onChange={(e) => setEv((s) => ({ ...s, at: e.target.value }))} required style={{ flex: 1 }} />
                   <select value={ev.stage} onChange={(e) => setEv((s) => ({ ...s, stage: e.target.value }))} style={{ flex: 1 }} aria-label={t('sales.eventStage')}>
                     <option value="">{t('sales.eventStageKeep')}</option>
-                    {STAGES.map((s) => <option key={s} value={s}>{STAGE_ICONES[s]} {t(`sales.stage_${s}`)}</option>)}
+                    {STAGES.map((s) => <option key={s} value={s}>{t(`sales.stage_${s}`)}</option>)}
                   </select>
                 </div>
                 <textarea rows={2} value={ev.note} onChange={(e) => setEv((s) => ({ ...s, note: e.target.value }))} placeholder={t('sales.eventNotePh')} />
@@ -705,7 +707,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
                 <ol className="crm-historique">
                   {evenements.map((e) => (
                     <li key={e.id}>
-                      <span className="crm-hist-ico" aria-hidden="true">{KIND_ICONES[e.kind]}</span>
+                      <span className="crm-hist-ico" aria-hidden="true"><Icone nom={KIND_ICONES[e.kind] || 'document'} taille={16} /></span>
                       <div>
                         <div className="small"><b>{t(`sales.kind_${e.kind}`)}</b>{e.stage ? ` → ${stageLabel(e.stage)}` : ''} · {fmt(e.at)}</div>
                         {e.note && <div className="crm-hist-note">{e.note}</div>}
@@ -790,10 +792,10 @@ function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen, onRegi
   const adresseWeb = (r) => [[r.street, r.number].filter(Boolean).join(' '), [r.postalCode, r.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') || r.address || '';
   return (
     <div className="card crm-deja">
-      <label htmlFor="crm-deja-q" className="crm-deja-titre">🔎 {t('sales.alreadyTitle')}</label>
+      <label htmlFor="crm-deja-q" className="crm-deja-titre"><Icone nom="recherche" taille={16} className="icone-texte" />{' '}{t('sales.alreadyTitle')}</label>
       <input id="crm-deja-q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('sales.alreadyPh')} autoComplete="off" />
       {enCours && <p className="small" style={{ margin: '8px 0 0' }}>{t('sales.alreadySearching')}</p>}
-      {!enCours && rien && <p className="small crm-deja-libre">✅ {t('sales.alreadyNone', { q: q.trim() })}</p>}
+      {!enCours && rien && <p className="small crm-deja-libre"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('sales.alreadyNone', { q: q.trim() })}</p>}
       {!enCours && res && !rien && (
         <div className="crm-deja-resultats">
           {res.mine.length > 0 && <p className="crm-deja-groupe">{t('sales.alreadyMine')}</p>}
@@ -821,7 +823,7 @@ function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen, onRegi
       )}
       {q.trim().length >= 3 && web && (
         <div className="crm-deja-resultats">
-          <p className="crm-deja-groupe">🌐 {t('sales.webTitle')}</p>
+          <p className="crm-deja-groupe"><Icone nom="globe" taille={16} className="icone-texte" />{' '}{t('sales.webTitle')}</p>
           {web.length === 0 && <p className="small" style={{ margin: '4px 0' }}>{t('sales.webNone')}</p>}
           {web.map((r) => (
             <div key={`w${r.osmType || ''}${r.osmId || r.name}`} className="crm-deja-ligne">
@@ -829,7 +831,7 @@ function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen, onRegi
               <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => onRegister?.({ web: r })}>{t('sales.webRegister')}</button>
             </div>
           ))}
-          <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => onRegister?.({ nom: q.trim() })}>✍️ {t('sales.webManual')}</button>
+          <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => onRegister?.({ nom: q.trim() })}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('sales.webManual')}</button>
         </div>
       )}
     </div>
@@ -844,46 +846,46 @@ function GuideCard({ t }) {
     <div className="card crm-guide">
       <div className="crm-carte-tete">
         <div>
-          <b>🗣️ {t('sales.guideTitle')}</b>
+          <b>{t('sales.guideTitle')}</b>
           <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.guideIntro')}</p>
         </div>
         <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={basculer}>{ouvert ? t('sales.guideHide') : t('sales.guideShow')}</button>
       </div>
       <div className="crm-flyer">
         <div>
-          <b>📄 {t('sales.flyerTitle')}</b>
+          <b><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('sales.flyerTitle')}</b>
           <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.flyerText')}</p>
         </div>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <a className="btn-gold" href={FLYER_URL} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>{t('sales.flyerOpen')}</a>
-          <a className="btn-outline" href={FLYER_URL} download="flyer-fairide.pdf" style={{ textDecoration: 'none' }}>⬇️ {t('sales.flyerDownload')}</a>
+          <a className="btn-outline" href={FLYER_URL} download="flyer-fairide.pdf" style={{ textDecoration: 'none' }}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('sales.flyerDownload')}</a>
         </div>
       </div>
       {ouvert && (
         <div className="crm-guide-corps">
           <div className="crm-guide-bloc crm-guide-regle">
-            <b>⭐ {t('sales.guideRepTitle')}</b>
+            <b><Icone nom="etoile" taille={16} className="icone-texte" />{' '}{t('sales.guideRepTitle')}</b>
             <p className="small" style={{ margin: '4px 0 0' }}>{t('sales.guideRepText')}</p>
           </div>
           <div className="crm-guide-bloc">
-            <b>🎒 {t('sales.guideBeforeTitle')}</b>
+            <b>{t('sales.guideBeforeTitle')}</b>
             <ul className="small">{liste('guideBefore', 4)}</ul>
           </div>
           <div className="crm-guide-bloc">
-            <b>⏱️ {t('sales.guidePitchTitle')}</b>
+            <b><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('sales.guidePitchTitle')}</b>
             <p className="small crm-guide-pitch">{t('sales.guidePitchText')}</p>
             <ul className="small">{liste('guidePitch', 4)}</ul>
           </div>
           <div className="crm-guide-bloc">
-            <b>🤝 {t('sales.guideTechTitle')}</b>
+            <b><Icone nom="contrat" taille={16} className="icone-texte" />{' '}{t('sales.guideTechTitle')}</b>
             <ul className="small">{liste('guideTech', 6)}</ul>
           </div>
           <div className="crm-guide-bloc crm-guide-non">
-            <b>🙂 {t('sales.guideNoTitle')}</b>
+            <b>{t('sales.guideNoTitle')}</b>
             <ul className="small">{liste('guideNo', 5)}</ul>
           </div>
           <div className="crm-guide-bloc">
-            <b>✅ {t('sales.guideYesTitle')}</b>
+            <b><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('sales.guideYesTitle')}</b>
             <ul className="small">{liste('guideYes', 4)}</ul>
           </div>
         </div>
@@ -901,19 +903,19 @@ function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
   const taken = zones.filter((z) => z.status === 'taken');
   const ligne = (z, action) => (
     <li key={z.key} className={`crm-zone-ligne crm-zone-${z.status}`}>
-      <button type="button" className="crm-zone-nom" onClick={() => onFocus(z.key)}>🎯 <b>{z.name}</b><span className="small"> · {z.commune} · {t(`sales.zoneTag_${z.tag}`)}</span></button>
-      <span className="small crm-zone-info">{t('sales.zoneCanvassed', { n: z.mine + z.others })}{z.status === 'taken' ? ` · 🧑‍💼 ${t('sales.zoneTakenOther')}` : ''}</span>
+      <button type="button" className="crm-zone-nom" onClick={() => onFocus(z.key)}><Icone nom="cible" taille={16} className="icone-texte" />{' '}<b>{z.name}</b><span className="small"> · {z.commune} · {t(`sales.zoneTag_${z.tag}`)}</span></button>
+      <span className="small crm-zone-info">{t('sales.zoneCanvassed', { n: z.mine + z.others })}{z.status === 'taken' ? ` · ${t('sales.zoneTakenOther')}` : ''}</span>
       {action}
     </li>
   );
   return (
     <div className="crm-zones-vue">
       <p className="small" style={{ margin: '0 0 10px' }}>{t('sales.zonesViewIntro')}</p>
-      <b className="crm-bloc-titre">🙋 {t('sales.zoneMineGroup')} · {mine.length}</b>
+      <b className="crm-bloc-titre">{t('sales.zoneMineGroup')} · {mine.length}</b>
       {mine.length === 0 ? <p className="small" style={{ margin: '4px 0 12px' }}>{t('sales.zoneMineEmpty')}</p> : <ul className="crm-zone-liste">{mine.map((z) => ligne(z, <button type="button" className="btn-ghost" style={{ fontSize: 13 }} disabled={busy} onClick={() => onRelease(z.key)}>{t('sales.zoneLeave')}</button>))}</ul>}
-      <b className="crm-bloc-titre">📍 {t('sales.zoneTodoGroup')} · {todo.length}</b>
+      <b className="crm-bloc-titre"><Icone nom="position" taille={16} className="icone-texte" />{' '}{t('sales.zoneTodoGroup')} · {todo.length}</b>
       {todo.length === 0 ? <p className="small" style={{ margin: '4px 0 12px' }}>{t('sales.zoneTodoEmpty')}</p> : <ul className="crm-zone-liste">{todo.map((z) => ligne(z, <button type="button" className="btn-teal" style={{ fontSize: 13, padding: '6px 12px' }} disabled={busy} onClick={() => onClaim(z.key)}>{t('sales.zoneTake')}</button>))}</ul>}
-      <b className="crm-bloc-titre">🧑‍💼 {t('sales.zoneTakenGroup')} · {taken.length}</b>
+      <b className="crm-bloc-titre"><Icone nom="compte" taille={16} className="icone-texte" />{' '}{t('sales.zoneTakenGroup')} · {taken.length}</b>
       {taken.length === 0 ? <p className="small" style={{ margin: '4px 0 0' }}>{t('sales.zoneTakenEmpty')}</p> : <ul className="crm-zone-liste">{taken.map((z) => ligne(z, null))}</ul>}
     </div>
   );
@@ -928,13 +930,13 @@ function EquipeCard({ equipe, t, euros }) {
   const inscrits = equipe.reduce((s, x) => s + (x.signed || 0), 0);
   return (
     <div className="card crm-equipe">
-      <b>🏆 {t('sales.teamTitle')}</b>
+      <b><Icone nom="etoile" taille={16} className="icone-texte" />{' '}{t('sales.teamTitle')}</b>
       <p className="small" style={{ margin: '2px 0 8px' }}>{t('sales.teamIntro', { n: equipe.length, signed: inscrits })}</p>
       <ol className="crm-equipe-liste">
         {equipe.map((x, i) => (
           <li key={`${x.firstName}-${i}`} className={x.me ? 'crm-equipe-moi' : ''}>
             <span className="crm-equipe-rang" aria-hidden="true">{i + 1}</span>
-            <span className="crm-equipe-nom">🧑‍💼 <b>{x.firstName}</b>{x.me ? <span className="small"> · {t('sales.teamMe')}</span> : null}</span>
+            <span className="crm-equipe-nom"><Icone nom="compte" taille={16} className="icone-texte" />{' '}<b>{x.firstName}</b>{x.me ? <span className="small"> · {t('sales.teamMe')}</span> : null}</span>
             <span className="crm-equipe-gain"><b>{x.signed}</b><br /><span className="small">{t('sales.teamSignedShort')}</span>{x.me && typeof x.earned === 'number' ? <><br /><span className="small">{euros(x.earned)}{x.upcoming ? ` + ${euros(x.upcoming)} ${t('sales.teamUpcoming')}` : ''}</span></> : null}</span>
           </li>
         ))}
@@ -960,7 +962,7 @@ function RemunerationCard({ etat, primes, t, euros, fmtDate }) {
     <div className="card crm-remu">
       <div className="crm-carte-tete">
         <div>
-          <b>💶 {t('sales.payTitle')}</b>
+          <b><Icone nom="euro" taille={16} className="icone-texte" />{' '}{t('sales.payTitle')}</b>
           <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.payIntro')}</p>
         </div>
         <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={() => setOuvert((v) => !v)}>{ouvert ? t('sales.payHide') : t('sales.payShow')}</button>

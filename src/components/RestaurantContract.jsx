@@ -4,6 +4,7 @@ import { ouvrirPdf, telechargerPdf } from '../pdf';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // « Mon contrat avec Fairide » dans Mon compte (restaurateur) : le contrat de partenariat, groupé en quatre
 // blocs (cadre, engagements de Fairide, engagements du commerce, argent), le PDF, et l'acceptation en ligne
@@ -59,7 +60,7 @@ export default function RestaurantContract({ restoId, onAccepte }) {
 
       {d.acceptedAt && d.acceptedVersion && d.acceptedVersion !== d.version && (
         <div className="paiement-encart" style={{ marginBottom: 12, borderLeft: '4px solid var(--gold, #d9a441)' }}>
-          <b>🆕 {t('restoContract.newVersion', { version: d.version })}</b>
+          <b><Icone nom="etoile" taille={16} className="icone-texte" />{' '}{t('restoContract.newVersion', { version: d.version })}</b>
           <p className="small" style={{ margin: '4px 0 0' }}>{t('restoContract.newVersionHelp', { old: d.acceptedVersion, date: new Date(d.acceptedAt).toLocaleDateString(getLocale()) })}</p>
           {/* Ce qui change, en clair (texte français du contrat, celui qui fait foi) : exigé par la clause « Modification du contrat ». */}
           {Array.isArray(d.changes) && d.changes.length > 0 && (
@@ -74,21 +75,21 @@ export default function RestaurantContract({ restoId, onAccepte }) {
       )}
       {d.acceptedAt && (!d.acceptedVersion || d.acceptedVersion === d.version) ? (
         <div className="paiement-encart" style={{ marginBottom: 12 }}>
-          <b>✅ {t('restoContract.acceptedOn', { date: new Date(d.acceptedAt).toLocaleDateString(getLocale()), name: d.acceptedName })}</b>
+          <b><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('restoContract.acceptedOn', { date: new Date(d.acceptedAt).toLocaleDateString(getLocale()), name: d.acceptedName })}</b>
           <p className="small" style={{ margin: '4px 0 0', overflowWrap: 'anywhere' }}>{t('restoContract.version', { version: d.acceptedVersion || d.version })}{d.hash ? ` · ${t('restoContract.hash')} ${d.hash.slice(0, 16)}…` : ''}</p>
           {d.signatureUrl && <img src={d.signatureUrl} alt={t('signature.aria')} style={{ display: 'block', maxWidth: 220, maxHeight: 90, marginTop: 8, background: '#fff', border: '1px solid var(--line, #e1d9c4)', borderRadius: 8 }} />}
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}>📄 {t('restoContract.openPdf')}</button>
-            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}>⬇️ {t('restoContract.savePdf')}</button>
+            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('restoContract.openPdf')}</button>
+            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('restoContract.savePdf')}</button>
           </div>
         </div>
       ) : (
         <div className="paiement-encart" style={{ marginBottom: 12 }}>
-          <b>✍️ {t('restoContract.toAccept')}</b>
+          <b><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('restoContract.toAccept')}</b>
           <p className="small" style={{ margin: '4px 0 8px' }}>{t('restoContract.toAcceptHelp')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}>📄 {t('restoContract.readPdf')}</button>
-            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}>⬇️ {t('restoContract.savePdf')}</button>
+            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('restoContract.readPdf')}</button>
+            <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('restoContract.savePdf')}</button>
           </div>
         </div>
       )}

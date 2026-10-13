@@ -1,5 +1,6 @@
 import BrandMark from './BrandMark';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Section "l'appli arrive bientôt" sur la page d'accueil — inspirée des bannières de téléchargement des
 // grandes plateformes (badges de store + mockup téléphone), mais honnête sur ce qui existe vraiment :
@@ -10,8 +11,8 @@ import { useLanguage } from '../context/LanguageContext';
 // publiée, et la version Huawei n'est pas préparée (notifications par Firebase, absent de ces téléphones).
 // L'application viendra quand le site sera au point — voir docs/application-mobile.md.
 const STORE_BADGES = [
-  { icon: '🍎', line2: 'App Store' },
-  { icon: '▶️', line2: 'Google Play' }
+  { icon: 'mobile', line2: 'App Store' },
+  { icon: 'mobile', line2: 'Google Play' }
 ];
 
 function PhoneMockup() {
@@ -60,7 +61,7 @@ export default function AppComingSoonSection() {
         <div className="app-soon-badges">
           {STORE_BADGES.map((b) => (
             <div key={b.line2} className="app-soon-store-badge" title={t('landing.appSoonNotYet')}>
-              <span className="app-soon-store-icon">{b.icon}</span>
+              <span className="app-soon-store-icon"><Icone nom={b.icon} taille={20} /></span>
               <span className="app-soon-store-text"><small>{t('landing.appSoonOn')}</small>{b.line2}</span>
             </div>
           ))}

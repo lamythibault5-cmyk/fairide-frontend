@@ -2,6 +2,7 @@ import { useState, useId } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { MODELES_GROUPES, groupeDepuisModele } from './OptionsEditor';
 import { euros } from '../prixPlat';
+import Icone from './Icone';
 
 function emptyItem() {
   return { name: '', priceDelta: '0' };
@@ -143,7 +144,7 @@ export default function OptionGroupManager({ groups, onCreate, onUpdate, onDelet
                 <span className="small">({g.type === 'single' ? t('optionGroups.singleShort') : g.maxSelections ? t('optionGroups.maxShort', { n: g.maxSelections }) : t('optionGroups.multipleShort')}{g.required ? t('optionGroups.requiredShort') : ''})</span>
               </span>
               <div className="row" style={{ gap: 6 }}>
-                <button className="btn-ghost" onClick={() => setEditingId(g.id)}>✏️</button>
+                <button className="btn-ghost" onClick={() => setEditingId(g.id)}><Icone nom="crayon" taille={16} className="icone-texte" /></button>
                 <button className="btn-danger-ghost" onClick={() => onDelete(g.id)}>{t('optionGroups.delete')}</button>
               </div>
             </div>

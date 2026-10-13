@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { api, apiUpload } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import Icone from './Icone';
 
 // Photos de plats reprises depuis Uber Eats, Deliveroo ou Takeaway.
 //
@@ -153,7 +154,7 @@ export default function PlatformPhotosImport({ restoId, token, items = [], secti
             <button type="button" className={fichier ? 'btn-outline' : 'btn-teal'} disabled={analysant} onClick={() => entree.current?.click()}>{t('platformPhotos.chooseFile')}</button>
             {fichier && (
               <span className="small">
-                📄 <b>{fichier.name}</b> ({tailleLisible(fichier.size)})
+                <Icone nom="document" taille={16} className="icone-texte" />{' '}<b>{fichier.name}</b> ({tailleLisible(fichier.size)})
                 <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12, marginLeft: 6 }} onClick={() => setFichier(null)} aria-label={t('platformPhotos.removeFile')}>✕</button>
               </span>
             )}
@@ -174,7 +175,7 @@ export default function PlatformPhotosImport({ restoId, token, items = [], secti
       {resultat && (
         <div>
           <p style={{ margin: '0 0 8px', fontWeight: 700 }}>
-            ✅ {t('platformPhotos.found', { n: resultat.products.length, platform: nomPlateforme ? t('platformPhotos.onPlatform', { platform: nomPlateforme }) : '' })}
+            <Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('platformPhotos.found', { n: resultat.products.length, platform: nomPlateforme ? t('platformPhotos.onPlatform', { platform: nomPlateforme }) : '' })}
             {' · '}{t('platformPhotos.matched', { n: resultat.matches.length })}
           </p>
           {resultat.matches.length === 0 && <p className="small" style={{ margin: '0 0 8px' }}>{t('platformPhotos.noneMatched')}</p>}
@@ -216,7 +217,7 @@ export default function PlatformPhotosImport({ restoId, token, items = [], secti
               <div style={{ display: 'grid', gap: 6 }}>
                 {resultat.unmatched.map((u) => (
                   <div key={String(u.key)} className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                    {u.choix ? <img loading="lazy" src={u.choix} alt="" className="dish-thumb" /> : <span className="dish-thumb-empty">🍽️</span>}
+                    {u.choix ? <img loading="lazy" src={u.choix} alt="" className="dish-thumb" /> : <span className="dish-thumb-empty"><Icone nom="restaurants" taille={16} className="icone-texte" /></span>}
                     <span style={{ flex: '1 1 160px' }}><b>{u.itemName}</b></span>
                     <select value={u.choix} onChange={(e) => choisir(u.key, e.target.value)} style={{ flex: '1 1 200px', maxWidth: 320 }} aria-label={u.itemName}>
                       <option value="">{t('platformPhotos.noPhoto')}</option>

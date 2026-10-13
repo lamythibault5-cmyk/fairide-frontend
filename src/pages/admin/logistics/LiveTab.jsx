@@ -6,6 +6,7 @@ import { useLanguage } from '../../../context/LanguageContext';
 import { ORDER_STATUS_LABELS } from '../adminUtils';
 import { useApiData, LoadState, KpiCard, Freshness, useAutoRefresh, fmtTime, minutesDepuis } from './common';
 import LiveMap from './LiveMap';
+import Icone from '../../../components/Icone';
 
 // Onglet En direct : livraisons en cours (nouveau → livraison) sur une carte (livreurs, restaurants,
 // points de livraison) et en liste, retards en évidence. Rafraîchi toutes les 20 s.
@@ -92,7 +93,7 @@ export default function LiveTab() {
                           {o.estimatedDeliveryAt && <span>· {tr('adminLogistics.etaAt', { time: fmtTime(o.estimatedDeliveryAt) })}</span>}
                         </div>
                         <div className="meta">
-                          <span>🚴 {o.driverName || <span className="lg-muted">{tr('adminCommon.noDriver')}</span>}</span>
+                          <span><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{o.driverName || <span className="lg-muted">{tr('adminCommon.noDriver')}</span>}</span>
                           {pos !== null && <span className="lg-muted">· {tr('adminLogistics.positionAgo', { n: pos })}</span>}
                         </div>
                         <Link to={`/admin/orders?q=${encodeURIComponent(o.id)}`} className="admin-record-link">#{o.id.slice(0, 8)} → {tr('adminLogistics.viewOrder')}</Link>

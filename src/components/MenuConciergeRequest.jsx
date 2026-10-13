@@ -3,6 +3,7 @@ import { api, apiUpload } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // « Fairide crée ma carte » — LA seule façon de créer sa carte côté restaurateur (fondateur, 2026-09-21) : il dit sur
 // quoi se baser (son site, Uber Eats, Deliveroo, Takeaway, autre), peut nous envoyer une photo ou un PDF de sa carte,
@@ -13,7 +14,7 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 // Une seule demande ouverte à la fois ; l'état (reçue → en cours → terminée) suit la tâche côté admin (module Tâches).
 const PLATEFORMES = ['website', 'uber_eats', 'deliveroo', 'takeaway', 'other'];
 const LIBELLES = { uber_eats: 'Uber Eats', deliveroo: 'Deliveroo', takeaway: 'Takeaway.com', website: null, other: null };
-const ICONES = { website: '🌐', uber_eats: '🟢', deliveroo: '🩵', takeaway: '🟠', other: '📄' };
+const ICONES = { website: 'globe', uber_eats: 'lien', deliveroo: 'lien', takeaway: 'lien', other: 'document' };
 const MAX_FICHIERS = 10;
 const ACCEPT = 'image/*,application/pdf,.pdf,.jpg,.jpeg,.png,.webp,.heic';
 
@@ -84,20 +85,20 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
   );
 
   if (demande && demande.status !== 'refusee') {
-    const etat = { en_attente: ['⏳', t('menuConcierge.stPending'), 'pill'], en_cours: ['🛠️', t('menuConcierge.stInProgress'), 'pill teal'], terminee: ['✅', t('menuConcierge.stDone'), 'pill teal'] }[demande.status] || ['⏳', demande.status, 'pill'];
+    const etat = { en_attente: ['horloge', t('menuConcierge.stPending'), 'pill'], en_cours: ['reglages', t('menuConcierge.stInProgress'), 'pill teal'], terminee: ['valider', t('menuConcierge.stDone'), 'pill teal'] }[demande.status] || ['horloge', demande.status, 'pill'];
     return (
       <div className="menu-concierge-etat">
         <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span className={etat[2]}>{etat[0]} {etat[1]}</span>
+          <span className={etat[2]}><Icone nom={etat[0]} taille={14} className="icone-texte" /> {etat[1]}</span>
           <span className="small">{t('menuConcierge.requestedOn', { date: new Date(demande.createdAt).toLocaleDateString(getLocale()), platform: libelle(demande.platform) })}</span>
         </div>
-        {demande.url && <p className="small" style={{ margin: '6px 0 0', overflowWrap: 'anywhere' }}>🔗 {demande.url}</p>}
+        {demande.url && <p className="small" style={{ margin: '6px 0 0', overflowWrap: 'anywhere' }}><Icone nom="lien" taille={16} className="icone-texte" />{' '}{demande.url}</p>}
         {demande.attachments?.length > 0 && (
-          <p className="small" style={{ margin: '6px 0 0' }}>📎 <b>{t('menuConcierge.yourFiles')}</b> : {demande.attachments.map((a, i) => <span key={a.url}>{i > 0 ? ' · ' : ''}<a href={a.url} target="_blank" rel="noreferrer">{a.name || `${i + 1}`}</a></span>)}</p>
+          <p className="small" style={{ margin: '6px 0 0' }}><Icone nom="lien" taille={16} className="icone-texte" />{' '}<b>{t('menuConcierge.yourFiles')}</b> : {demande.attachments.map((a, i) => <span key={a.url}>{i > 0 ? ' · ' : ''}<a href={a.url} target="_blank" rel="noreferrer">{a.name || `${i + 1}`}</a></span>)}</p>
         )}
-        <p className="small" style={{ margin: '6px 0 0' }}>📸 {demande.platform !== 'other' ? t('menuConcierge.photosLineSource', { source: libelle(demande.platform) }) : demande.wantsPhotos ? t('menuConcierge.photosLineYes') : t('menuConcierge.photosLineNo')}</p>
-        {demande.notes && !editNote && <p className="small" style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>📝 <b>{t('menuConcierge.yourNotes')}</b> : {demande.notes}</p>}
-        {demande.adminNote && <p className="small" style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>💬 <b>{t('menuConcierge.fairideNote')}</b> : {demande.adminNote}</p>}
+        <p className="small" style={{ margin: '6px 0 0' }}><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{demande.platform !== 'other' ? t('menuConcierge.photosLineSource', { source: libelle(demande.platform) }) : demande.wantsPhotos ? t('menuConcierge.photosLineYes') : t('menuConcierge.photosLineNo')}</p>
+        {demande.notes && !editNote && <p className="small" style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap' }}><Icone nom="document" taille={16} className="icone-texte" />{' '}<b>{t('menuConcierge.yourNotes')}</b> : {demande.notes}</p>}
+        {demande.adminNote && <p className="small" style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap' }}><Icone nom="bulle" taille={16} className="icone-texte" />{' '}<b>{t('menuConcierge.fairideNote')}</b> : {demande.adminNote}</p>}
         {editNote && (
           <div className="field" style={{ marginTop: 8 }}>
             <label htmlFor="concierge-notes-edit">{t('menuConcierge.notesLabel')}</label>
@@ -113,7 +114,7 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
         </p>
         {demande.status !== 'terminee' && ensuite}
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
-          {(demande.status === 'en_attente' || demande.status === 'en_cours') && !editNote && <button type="button" className="btn-outline" disabled={busy} onClick={() => { setNoteEdit(demande.notes || ''); setEditNote(true); }}>✏️ {t('menuConcierge.addNote')}</button>}
+          {(demande.status === 'en_attente' || demande.status === 'en_cours') && !editNote && <button type="button" className="btn-outline" disabled={busy} onClick={() => { setNoteEdit(demande.notes || ''); setEditNote(true); }}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('menuConcierge.addNote')}</button>}
           {demande.status === 'en_attente' && <button type="button" className="btn-ghost" disabled={busy} onClick={annuler}>{t('menuConcierge.cancel')}</button>}
           {demande.status === 'terminee' && <button type="button" className="btn-ghost" disabled={busy} onClick={() => setDemande(null)}>{t('menuConcierge.newRequest')}</button>}
         </div>
@@ -131,7 +132,7 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
         <p className="small" style={{ margin: '2px 0 8px' }}>{t('menuConcierge.sourceHelp')}</p>
         <div className="role-pick concierge-sources" role="radiogroup" aria-label={t('menuConcierge.sourceTitle')}>
           {PLATEFORMES.map((p) => (
-            <button key={p} type="button" role="radio" aria-checked={platform === p} className={`chip${platform === p ? ' active' : ''}`} onClick={() => setPlatform(p)}>{ICONES[p]} {libelle(p)}</button>
+            <button key={p} type="button" role="radio" aria-checked={platform === p} className={`chip${platform === p ? ' active' : ''}`} onClick={() => setPlatform(p)}><Icone nom={ICONES[p]} taille={16} className="icone-texte" /> {libelle(p)}</button>
           ))}
         </div>
         <div className="field" style={{ marginTop: 8 }}>
@@ -147,14 +148,14 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
         <p className="small" style={{ margin: '2px 0 8px' }}>{t('menuConcierge.filesHelp')}</p>
         <input ref={inputRef} type="file" accept={ACCEPT} multiple style={{ display: 'none' }} onChange={(e) => { ajouterFichiers(e.target.files); e.target.value = ''; }} />
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button type="button" className="btn-outline" disabled={busy || fichiers.length >= MAX_FICHIERS} onClick={() => inputRef.current?.click()}>📎 {t('menuConcierge.filesButton')}</button>
+          <button type="button" className="btn-outline" disabled={busy || fichiers.length >= MAX_FICHIERS} onClick={() => inputRef.current?.click()}><Icone nom="lien" taille={16} className="icone-texte" />{' '}{t('menuConcierge.filesButton')}</button>
           {fichiers.length > 0 && <span className="small">{t('menuConcierge.filesCount', { n: fichiers.length })}</span>}
         </div>
         {fichiers.length > 0 && (
           <ul className="concierge-fichiers">
             {fichiers.map((f) => (
               <li key={`${f.name}-${f.size}`}>
-                <span>{/^image\//.test(f.type) ? '🖼️' : '📄'} {f.name} <span className="small">· {(f.size / 1024 / 1024).toFixed(1)} Mo</span></span>
+                <span>{/^image\//.test(f.type) ? <Icone nom="apercu" taille={16} className="icone-texte" /> : <Icone nom="document" taille={16} className="icone-texte" />} {f.name} <span className="small">· {(f.size / 1024 / 1024).toFixed(1)} Mo</span></span>
                 <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setFichiers((l) => l.filter((x) => x !== f))} aria-label={t('menuConcierge.filesRemove')}>✕</button>
               </li>
             ))}
@@ -166,12 +167,12 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
       <div className="concierge-bloc">
         <b>3. {t('menuConcierge.photosTitle')}</b>
         {sourceEnLigne ? (
-          <p className="small concierge-photos-source" style={{ margin: '6px 0 0' }}>📸 {t('menuConcierge.photosSameSource', { source: libelle(platform) })}<br /><span style={{ opacity: .85 }}>{t('menuConcierge.photosSameSourceHelp')}</span></p>
+          <p className="small concierge-photos-source" style={{ margin: '6px 0 0' }}><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('menuConcierge.photosSameSource', { source: libelle(platform) })}<br /><span style={{ opacity: .85 }}>{t('menuConcierge.photosSameSourceHelp')}</span></p>
         ) : (
           <>
             <p className="small" style={{ margin: '2px 0 8px' }}>{t('menuConcierge.photosNoSourceHelp')}</p>
             <div className="role-pick" role="radiogroup" aria-label={t('menuConcierge.photosTitle')}>
-              <button type="button" role="radio" aria-checked={wantsPhotos} className={`chip${wantsPhotos ? ' active' : ''}`} onClick={() => setWantsPhotos(true)}>📸 {t('menuConcierge.photosYes')}</button>
+              <button type="button" role="radio" aria-checked={wantsPhotos} className={`chip${wantsPhotos ? ' active' : ''}`} onClick={() => setWantsPhotos(true)}><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('menuConcierge.photosYes')}</button>
               <button type="button" role="radio" aria-checked={!wantsPhotos} className={`chip${!wantsPhotos ? ' active' : ''}`} onClick={() => setWantsPhotos(false)}>{t('menuConcierge.photosNo')}</button>
             </div>
           </>
@@ -190,7 +191,7 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
         <b>{t('menuConcierge.nextTitle')}</b>
         {ensuite}
       </div>
-      <p className="small" style={{ margin: '8px 0 0', opacity: 0.85 }}>🔐 {t('menuConcierge.accessNote')}</p>
+      <p className="small" style={{ margin: '8px 0 0', opacity: 0.85 }}><Icone nom="cadenas" taille={16} className="icone-texte" />{' '}{t('menuConcierge.accessNote')}</p>
     </div>
   );
 }

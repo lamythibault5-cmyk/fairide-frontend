@@ -68,7 +68,7 @@ export default function MiseEnAvant({ restoId, token, toast }) {
   if (!etat || etat.enabled === false) return null;
   return (
     <div className="card mise-en-avant" id="mise-en-avant">
-      <h3 style={{ margin: 0, fontSize: 16 }}>📌 {t('placements.title')}</h3>
+      <h3 style={{ margin: 0, fontSize: 16 }}>{t('placements.title')}</h3>
       <p className="small" style={{ margin: '4px 0 6px' }}>{t('placements.intro')} {t('placements.communeNote', { commune: etat.commune })}</p>
       <p className="small" style={{ margin: '0 0 12px' }}>
         {etat.auto ? t('placements.autoIntro', { minutes: etat.paymentMinutes || 10, days: etat.maxAdvanceDays || 30 }) : t('placements.manualIntro', { days: etat.maxAdvanceDays || 30 })} {t('placements.refundNote')} {t('placements.randomNote')}

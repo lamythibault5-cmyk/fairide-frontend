@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
+import Icone from '../Icone';
 
 // « Rupture de stock aujourd'hui » depuis le tableau de bord des commandes (fondateur, 2026-10-10) : un bouton à côté de
 // chaque plat. En rupture, le plat est masqué aux clients tout de suite et revient TOUT SEUL le lendemain (serveur :
@@ -24,7 +25,7 @@ export default function RupturesDuJour({ restaurant, restoId, token, toast, load
   return (
     <div className="card" style={{ marginTop: 12 }}>
       <button type="button" className="row" style={{ width: '100%', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 0, padding: 0, cursor: 'pointer', textAlign: 'left' }} onClick={() => setOuvert((v) => !v)} aria-expanded={ouvert}>
-        <span><b>🥡 {t('ordersResto.stockPanelTitle')}</b>{enRupture > 0 && <span className="pill" style={{ marginLeft: 8 }}>{t('ordersResto.stockPanelCount', { n: enRupture })}</span>}</span>
+        <span><b><Icone nom="sac" taille={16} className="icone-texte" />{' '}{t('ordersResto.stockPanelTitle')}</b>{enRupture > 0 && <span className="pill" style={{ marginLeft: 8 }}>{t('ordersResto.stockPanelCount', { n: enRupture })}</span>}</span>
         <span aria-hidden="true" style={{ transform: ouvert ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>›</span>
       </button>
       <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('ordersResto.stockPanelHelp')}</p>

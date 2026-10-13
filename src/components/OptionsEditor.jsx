@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // Choix du client sur un plat (comme sur Uber Eats / Deliveroo) : un menu à composer (pain, viande, crudités,
 // sauce, boisson, dessert), un « au choix », des suppléments payants. Forme manipulée, la même que celle
@@ -60,7 +61,7 @@ function GroupeForm({ groupe, onChange, onRemove, t }) {
             <input type="number" min="1" step="1" style={{ width: 70 }} value={groupe.maxSelections || ''} onChange={(e) => set('maxSelections', parseInt(e.target.value, 10) || null)} placeholder={t('menuOptions.unlimited')} aria-label={t('menuOptions.max')} />
           </label>
         )}
-        <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', marginLeft: 'auto' }} onClick={onRemove} title={t('menuOptions.removeGroup')}>🗑️</button>
+        <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', marginLeft: 'auto' }} onClick={onRemove} title={t('menuOptions.removeGroup')}><Icone nom="croix" taille={16} className="icone-texte" /></button>
       </div>
       <div style={{ marginTop: 8, display: 'grid', gap: 4 }}>
         {groupe.choices.map((c, i) => (
@@ -98,7 +99,7 @@ export default function OptionsEditor({ options = [], onChange, compact = true }
   return (
     <div className="options-editor">
       <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span className="small" style={{ fontWeight: 700 }}>🧩 {t('menuOptions.title')}</span>
+        <span className="small" style={{ fontWeight: 700 }}>{t('menuOptions.title')}</span>
         {groupes.length === 0 && <span className="small" style={{ opacity: 0.75 }}>{t('menuOptions.summaryNone')}</span>}
         <button type="button" className="btn-ghost" style={{ padding: '2px 10px', fontSize: 12, marginLeft: 'auto' }} onClick={() => setOuvert((o) => !o)}>
           {ouvert ? t('menuOptions.close') : t('menuOptions.edit')}

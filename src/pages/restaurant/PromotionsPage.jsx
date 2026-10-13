@@ -6,6 +6,7 @@ import MiseEnAvant from '../../components/MiseEnAvant';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
+import Icone from '../../components/Icone';
 
 const TYPES = [
   { value: 'percent', label: 'typePercent' },
@@ -51,7 +52,7 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
   return (
     <div className="card avantage-fairide">
       <div className="avantage-tete">
-        <span className="avantage-icone">💚</span>
+        <span className="avantage-icone"></span>
         <div>
           <h3 style={{ margin: 0, fontSize: 16 }}>{t('promosPage.fairideTitle')}</h3>
           <p className="small" style={{ margin: '4px 0 0' }}>{t('promosPage.fairideIntro')}</p>
@@ -60,11 +61,11 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
       <p className="small avantage-note">{t('promosPage.fairideOptional')} <Link to="/dashboard/menu#menu-geste-prix">{t('promosPage.fairidePricesLink')}</Link></p>
       <div className="avantage-options">
         <div className={`avantage-option ${avantage ? 'est-actif' : ''}`}>
-          <b>🍽️ {t('promosPage.fairideItemsTitle')}</b>
+          <b><Icone nom="restaurants" taille={16} className="icone-texte" />{' '}{t('promosPage.fairideItemsTitle')}</b>
           <p className="small" style={{ margin: '4px 0 8px' }}>{t('promosPage.fairideItemsHelp')}</p>
           {avantage ? (
             <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span className="pill teal">✅ {avantage.mode === 'amount' ? t('promosPage.fairideItemsActiveAmount', { v: eur(avantage.value) }) : t('promosPage.fairideItemsActivePercent', { v: avantage.value })}</span>
+              <span className="pill teal"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{avantage.mode === 'amount' ? t('promosPage.fairideItemsActiveAmount', { v: eur(avantage.value) }) : t('promosPage.fairideItemsActivePercent', { v: avantage.value })}</span>
               <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={busy === 'produits'} onClick={() => reglerProduits(null, null)}>{t('promosPage.fairideRemove')}</button>
             </div>
           ) : (
@@ -84,11 +85,11 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
           )}
         </div>
         <div className={`avantage-option ${livraisonActive ? 'est-actif' : ''}`}>
-          <b>🛵 {t('promosPage.fairideDeliveryTitle')}</b>
+          <b><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('promosPage.fairideDeliveryTitle')}</b>
           <p className="small" style={{ margin: '4px 0 8px' }}>{t('promosPage.fairideDeliveryHelp')}</p>
           {livraisonActive ? (
             <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span className="pill teal">✅ {minimumOffert != null ? `${t('promosPage.fairideDeliveryFree')} · ${t('editResto.offerFromMin', { amount: minimumOffert })}` : livraisonOfferte ? t('promosPage.fairideDeliveryFree') : t('promosPage.fairideDeliveryActive', { v: eur(remiseLivraison) })}</span>
+              <span className="pill teal"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{minimumOffert != null ? `${t('promosPage.fairideDeliveryFree')} · ${t('editResto.offerFromMin', { amount: minimumOffert })}` : livraisonOfferte ? t('promosPage.fairideDeliveryFree') : t('promosPage.fairideDeliveryActive', { v: eur(remiseLivraison) })}</span>
               <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={busy === 'livraison'} onClick={() => reglerLivraison(0)}>{t('promosPage.fairideRemove')}</button>
             </div>
           ) : (
@@ -208,7 +209,7 @@ export default function PromotionsPage() {
         <div className="card" key={p.id} style={{ opacity: p.active ? 1 : 0.55 }}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <div>
-              <span className="pill teal">🏷️ {p.label}</span>
+              <span className="pill teal"><Icone nom="etiquette" taille={16} className="icone-texte" />{' '}{p.label}</span>
               <div className="small" style={{ marginTop: 6 }}>{p.itemName || t('promosPage.wholeOrder')}{!p.active ? t('promosPage.inactiveSuffix') : ''}</div>
             </div>
             <div className="row" style={{ gap: 6 }}>

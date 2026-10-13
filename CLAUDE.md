@@ -226,6 +226,13 @@ which is suppressed in installed PWAs and webviews. The five `window.confirm` hi
 `src/` are all inside comments explaining this; there are no live calls. `window.prompt` has the
 same problem and the same replacement, [ReasonDialog](src/components/admin/ReasonDialog.jsx).
 
+**No emojis anywhere, admin included (founder, 2026-10-13).** Icons are the line drawings of
+[Icone.jsx](src/components/Icone.jsx) (`<Icone nom="…" taille={16} className="icone-texte" />` inside text); a data table
+holds icon *names*, not emoji (`RESTAURANT_TYPES[].icone`, `ORDER_STAGES[].icon`). Leaflet markers take HTML: use
+[iconeHtml](src/iconeHtml.jsx). Strings that can only be text (CSV, `<option>`, `title`) get no icon at all, or a
+monochrome glyph (✓ ✗). Message reactions are still *stored* as emoji (server values) and *shown* as icons
+([reactions.jsx](src/reactions.jsx)).
+
 Note the two heavily-commented rules near the top of the file — `overflow-x: clip` on
 `html`/`body` and `-webkit-tap-highlight-color: transparent`. Both encode a bug that was
 already fixed once (`clip` rather than `hidden`, because `hidden` silently breaks

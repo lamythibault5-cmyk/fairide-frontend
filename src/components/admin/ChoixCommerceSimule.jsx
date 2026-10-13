@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
 import ConfirmDialog from '../ConfirmDialog';
+import Icone from '../Icone';
 
 // Admin › Simulation › « Quel commerce simuler ? » (fondateur, 2026-10-01). Le commerce de simulation peut prendre la carte
 // et l'apparence d'un VRAI commerce (Al Taglio…) pour suivre sa commande de bout en bout — client, paiement simulé, ticket,
@@ -49,7 +50,7 @@ export default function ChoixCommerceSimule({ etat, onChange }) {
   const copie = !!etat?.restaurant?.sourceId;
   return (
     <div className="card simu-choix" style={{ margin: '0 0 16px' }}>
-      <h3 style={{ marginTop: 0 }}>🏪 {tr('simulation.chooseTitle')}</h3>
+      <h3 style={{ marginTop: 0 }}><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{tr('simulation.chooseTitle')}</h3>
       <p className="small" style={{ margin: '0 0 10px' }}>
         {tr('simulation.chooseCurrent')} <b>{etat?.restaurant?.name || '…'}</b>
         {copie ? ` · ${tr('simulation.chooseCopy')}` : ` · ${tr('simulation.chooseFictional')}`}
@@ -58,7 +59,7 @@ export default function ChoixCommerceSimule({ etat, onChange }) {
       <ul className="simu-sources">
         {resultats.map((r) => (
           <li key={r.id}>
-            {r.coverImageUrl ? <img src={r.coverImageUrl} alt="" loading="lazy" /> : <span className="simu-sources-vide" aria-hidden="true">🍽️</span>}
+            {r.coverImageUrl ? <img src={r.coverImageUrl} alt="" loading="lazy" /> : <span className="simu-sources-vide" aria-hidden="true"><Icone nom="restaurants" taille={16} className="icone-texte" /></span>}
             <span className="simu-sources-texte"><b>{r.name}</b><span className="small">{[r.cuisine, r.commune, tr('simulation.chooseItems', { n: r.items })].filter(Boolean).join(' · ')}</span></span>
             <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} disabled={enCours} onClick={() => setACopier(r)}>{tr('simulation.chooseButton')}</button>
           </li>

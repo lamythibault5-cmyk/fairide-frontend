@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { RESTAURANT_TYPES, restaurantTypeLabel } from '../../menuCategories';
 import SousEcran from '../SousEcran';
+import Icone from '../Icone';
 
 // Mon commerce › Autres types de cuisine (fondateur, 2026-09-30) : jusqu'à 7 types au total — le type principal
 // (qui décide de la carte modèle, voir EcranTypeCommerce) et 6 autres. Ceux-ci ne touchent pas à la carte : ils
@@ -47,7 +48,7 @@ export default function EcranCuisines({ restaurant, restoId, loadDashboard, onFe
           const actif = choix.includes(c.value);
           return (
             <button key={c.value} type="button" className={`cuisine-chip${actif ? ' active' : ''}`} aria-pressed={actif} disabled={!actif && plein} onClick={() => basculer(c.value)}>
-              <span className="emoji">{c.emoji}</span><span>{restaurantTypeLabel(c.value, t)}</span>
+              <span className="emoji"><Icone nom={c.icone} taille={18} /></span><span>{restaurantTypeLabel(c.value, t)}</span>
             </button>
           );
         })}
