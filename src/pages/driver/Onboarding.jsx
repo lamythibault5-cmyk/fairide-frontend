@@ -127,7 +127,26 @@ export default function Onboarding() {
 
       {/* État du dossier */}
       <EtatDossier d={d} t={t} onChangeStatus={allerAuChangement} />
-      <AvantDeCommencer c={c} t={t} pricing={d.pricing} />
+      {/* GUIDÉ, PAS UN FORMULAIRE À ONGLETS (12 oct. 2026). Le dossier s'ouvrait sur un long texte et six onglets : le
+          livreur ne savait pas par où commencer. En tête, désormais, une seule carte : l'étape à faire, combien il en reste,
+          un bouton. Les onglets restent pour revenir en arrière ; « Avant de commencer » est replié juste en dessous. */}
+      {enDossier && (() => {
+        const restantes = ETAPES.filter((e) => !etapeOk(e));
+        const prochaine = restantes[0];
+        if (!prochaine) return null;
+        const nom = (prochaine === 'engagements' ? t('conformite.engagementsStep') : t(`courierOnboarding.step_${prochaine}`)).replace(/^\d+\.\s*/, '');
+        return (
+          <div className="card prochaine-etape">
+            <span className="small">{t('courierOnboarding.nextStepCount', { n: restantes.length })}</span>
+            <b>{t('courierOnboarding.nextStepTitle', { step: nom })}</b>
+            {courante !== prochaine && <button type="button" className="btn-gold" onClick={() => setEtape(prochaine)}>{t('courierOnboarding.nextStepGo')}</button>}
+          </div>
+        );
+      })()}
+      <details className="card avant-de-commencer">
+        <summary>{t('courierOnboarding.beforeTitle')}</summary>
+        <AvantDeCommencer c={c} t={t} pricing={d.pricing} replie />
+      </details>
 
       <Notifications t={t} token={token} />
 
@@ -379,7 +398,8 @@ function ChampCaisse({ f, set, t }) {
 function EtapeInfos({ d, t, busy, token, action, onNext }) {
   const toast = useToast();
   const c = d.courier; const legal = d.legal ?? {};
-  const [f, setF] = useState({ birthDate: c.birthDate ?? '', nationalNumber: '', zone: c.zone ?? '', vehicleType: c.vehicleType ?? '', licenceNumber: c.licenceNumber ?? '', licencePlate: c.licencePlate ?? '', bagOption: c.bag?.option || '',
+  const [f, setF] = useState({ birthDate: c.birthDate ?? '', nationalNumber: '', zone: c.zone || c.preferredZones?.[0] || '',
+    worksOtherPlatforms: c.otherPlatforms?.works === true ? 'yes' : c.otherPlatforms?.works === false ? 'no' : '', vehicleType: c.vehicleType ?? '', licenceNumber: c.licenceNumber ?? '', licencePlate: c.licencePlate ?? '', bagOption: c.bag?.option || '',
     schoolName: c.student?.school ?? '', academicYear: c.student?.academicYear ?? '',
     socialInsuranceFund: c.socialInsuranceFund ?? c.student?.socialInsuranceFund ?? '',
     companyNumber: c.independent?.companyNumber ?? '', vatStatus: c.independent?.vatStatus ?? '', vatNumber: c.independent?.vatNumber ?? '', legalName: c.independent?.legalName ?? '', seatAddress: c.independent?.seatAddress ?? '',
@@ -396,6 +416,8 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
     const body = { ...f };
     if (!body.nationalNumber) delete body.nationalNumber;
     if (!body.bagOption) delete body.bagOption;
+    // Oui / non en texte dans le formulaire, booléen pour le serveur ; vide = pas encore répondu, rien n'est envoyé.
+    if (body.worksOtherPlatforms === 'yes' || body.worksOtherPlatforms === 'no') body.worksOtherPlatforms = body.worksOtherPlatforms === 'yes'; else delete body.worksOtherPlatforms;
     if (!body.nationalityGroup) delete body.nationalityGroup;
     for (const k of Object.keys(body)) if (body[k] === null) delete body[k];
     const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body }));
@@ -465,6 +487,14 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
             <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
             <Champ label={t('courierOnboarding.fPlate')}><input aria-label="1-ABC-123" value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
           </>)}
+          {/* Venu de l'inscription (12 oct. 2026) : décide d'une ou deux courses à la fois (routes/orders.js). */}
+          <Champ label={t('auth.platformsTitle')} help={t('auth.platformsHelp')}>
+            <select value={f.worksOtherPlatforms} onChange={set('worksOtherPlatforms')}>
+              <option value="">-</option>
+              <option value="no">{t('auth.platformsNo')}</option>
+              <option value="yes">{t('auth.platformsYes')}</option>
+            </select>
+          </Champ>
           <div className="sac-dessin" style={{ gridColumn: '1 / -1' }}>
             <SacLivraison size={84} />
             <p className="small" style={{ margin: 0 }}>{t('auth.bagDrawing')}</p>
@@ -562,13 +592,13 @@ function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
 // AVANT DE COMMENCER (fondateur, 2026-10-06) : ce que le livreur doit savoir — il commence après validation par Fairide ;
 // deux courses à la fois s'il ne livre que pour Fairide, une seule s'il livre aussi pour une autre plateforme ; comment il
 // est payé ; le fonds d'assurance Fairide (10 % des frais de livraison) ; sa responsabilité en cas d'accident ou d'infraction.
-function AvantDeCommencer({ c, t, pricing }) {
+function AvantDeCommencer({ c, t, pricing, replie = false }) {
   const autre = c?.otherPlatforms?.works === true;
   const eur = (v) => `${Number(v || 0).toFixed(2).replace('.', ',')} €`;
   const p = { base: eur(pricing?.deliveryBaseFee ?? 5), km: Number(pricing?.deliveryBaseKm ?? 1), bike: eur(pricing?.driverPerKmBike ?? 0.6), motor: eur(pricing?.driverPerKmMotor ?? 0.8), radius: Number(pricing?.secondOrderRadiusKm ?? 2) };
   return (
-    <div className="card" style={{ marginBottom: 12 }}>
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.beforeTitle')}</h3>
+    <div className={replie ? undefined : 'card'} style={{ marginBottom: replie ? 0 : 12, marginTop: replie ? 8 : 0 }}>
+      {!replie && <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.beforeTitle')}</h3>}
       <ul className="small" style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
         <li>{t('courierOnboarding.beforeValidation')}</li>
         <li>{autre ? t('courierOnboarding.beforeOneOrder') : t('courierOnboarding.beforeTwoOrders', { radius: p.radius })}</li>

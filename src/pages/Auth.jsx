@@ -1,4 +1,3 @@
-import OffreFormules from '../components/OffreFormules';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import BrandMark from '../components/BrandMark';
 import EngagementsInscription from '../components/commerce/EngagementsInscription';
@@ -15,12 +14,11 @@ import AddressRecognition from '../components/AddressRecognition';
 import BusinessSearch from '../components/BusinessSearch';
 import { api, apiUpload } from '../api';
 import IdentityDocsPicker from '../components/IdentityDocsPicker';
-import SacLivraison from '../components/SacLivraison';
 import PhoneInput from '../components/PhoneInput';
 import EmailDomainChips from '../components/EmailDomainChips';
 import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
-import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES, COMMUNES_PERIPHERIE } from '../menuCategories';
+import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES } from '../menuCategories';
 import { MAX_CUISINES } from '../components/commerce/EcranCuisines';
 import { cuisineDepuisOsm } from '../osmCuisine';
 import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
@@ -124,9 +122,6 @@ export default function Auth() {
   const [plateformes, setPlateformes] = useState([]);
   const [plateformeAutre, setPlateformeAutre] = useState('');
   const [zonesPreferees, setZonesPreferees] = useState([]);
-  const [peripherieOuverte, setPeripherieOuverte] = useState(false);
-  // Mise à jour à partir de la valeur COURANTE : deux appuis rapprochés (avant le rendu suivant) ne s'écrasent pas.
-  const basculer = (liste, setListe, v) => setListe((courante) => (courante.includes(v) ? courante.filter((x) => x !== v) : [...courante, v]));
   const [courierOptions, setCourierOptions] = useState(null);
   useEffect(() => {
     if (role !== 'driver' || courierOptions) return;
@@ -140,6 +135,7 @@ export default function Auth() {
   // qui crée le compte, sans reposer une question dont on connaît déjà la réponse dans la majorité des cas.
   const [responsibleName, setResponsibleName] = useState('');
   const [responsibleTouched, setResponsibleTouched] = useState(false);
+  const [responsableOuvert, setResponsableOuvert] = useState(false);
   // Commerce trouvé sur le web (BusinessSearch) et vérification BCE/TVA (VIES) — voir l'étape « Ton commerce ».
   const [commerceTrouve, setCommerceTrouve] = useState(null);
   const [, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null — gardé pour la vérification BCE, lu nulle part encore
@@ -227,6 +223,20 @@ export default function Auth() {
 
   // Tout ce que l'inscription sait du commerce : le serveur le crée dès que le compte est ouvert
   // (POST /auth/register → creerRestaurant), sans second formulaire dans le tableau de bord.
+  // En Belgique, le numéro de TVA est « BE » + le numéro d'entreprise : déduit s'il n'a été ni trouvé ni tapé.
+  function tvaInscription() {
+    if (vatNumber.trim()) return vatNumber.trim();
+    const chiffres = companyNumber.replace(/\D/g, '');
+    return role === 'restaurant' && chiffres.length === 10 ? `BE${chiffres}` : '';
+  }
+
+  // Commune du livreur prise de son adresse, quand elle est l'une des 19 (sinon rien : il la choisit dans son dossier).
+  function communeDeLAdresse() {
+    const ville = addressCity.trim().toLowerCase();
+    const trouvee = COMMUNES.find((c) => c.toLowerCase() === ville);
+    return trouvee ? [trouvee] : [];
+  }
+
   function construireCommerce() {
     const fiche = commerceTrouve || {};
     return {
@@ -305,7 +315,6 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   // Le mot de passe est demandé deux fois à l'inscription (fondateur, 2026-09-17) : une faute de frappe dans un
   // champ masqué enfermait la personne dehors dès sa première connexion.
-  const [passwordConfirm, setPasswordConfirm] = useState('');
   // « Créer mon compte » avec une étape incomplète : on y ramène la personne ET on lui dit pourquoi, au-dessus du
   // bouton — sinon elle se retrouvait sur une étape précédente sans explication. { step, n } ; effacé dès qu'on
   // change d'étape.
@@ -361,7 +370,7 @@ export default function Auth() {
     if (pr.email) setEmail(pr.email);
     if (prenom) setFirstName((v) => v || prenom);
     if (nomFamille) setLastName((v) => v || nomFamille);
-    setPassword(''); setPasswordConfirm(''); setErrors({});
+    setPassword(''); setErrors({});
   }
   function oublierGoogle() { setGoogleCredential(null); setGoogleProfile(null); setEmail(''); }
   // Pièce d'identité du livreur (recto / verso) et attestation étudiant, gardées dans le navigateur jusqu'à la
@@ -571,8 +580,7 @@ export default function Auth() {
       if (role === 'driver') {
         if (!courierStatus) e.courierStatus = t('auth.errCourierStatus');
         if (!vehicleType) e.vehicleType = t('auth.errVehicle');
-        if (!bagOption) e.bagOption = t('auth.errBag');
-        if (!autrePlateforme) e.autrePlateforme = t('auth.errPlatforms');
+        // Sac, autres plateformes, communes : plus demandés ici (12 oct. 2026), voir l'écran 2 plus bas.
         // Numéro d'entreprise : requis pour l'étudiant-indépendant comme pour l'indépendant (facturation mensuelle).
         if (['student_independent', 'independent'].includes(courierStatus) && !companyNumber.trim()) e.companyNumber = required;
         else if (companyNumber.trim() && !bceValide(companyNumber)) { const why = raisonBce(companyNumber); e.companyNumber = why?.raison === 'longueur' ? t('auth.errCompanyNumberLength', { n: why.chiffres }) : why?.raison === 'prefixe' ? t('auth.errCompanyNumberPrefix') : t('auth.errCompanyNumberKey'); }
@@ -596,8 +604,12 @@ export default function Auth() {
     }
     if (key === 'details') {
       if (!cuisine) e.cuisine = t('auth.errCuisine');
+      // NUMÉRO D'ENTREPRISE À L'INSCRIPTION (12 oct. 2026). Il était demandé plus tard, à « Configurer mes paiements » :
+      // un écran et un enregistrement de plus au moment où l'on veut juste activer Stripe. Tapé ici, la BCE remplit la
+      // dénomination et la TVA (effet plus haut), et les paiements ne demandent plus qu'un geste.
+      if (!companyNumber.trim()) e.companyNumber = required;
+      else if (!bceValide(companyNumber)) { const why = raisonBce(companyNumber); e.companyNumber = why?.raison === 'longueur' ? t('auth.errCompanyNumberLength', { n: why.chiffres }) : why?.raison === 'prefixe' ? t('auth.errCompanyNumberPrefix') : t('auth.errCompanyNumberKey'); }
       if (!legalName.trim()) e.legalName = required;
-      // Numéro d'entreprise et de TVA : demandés plus tard (Mon compte › Paiement), pas à l'inscription.
       if (!responsibleName.trim()) e.responsibleName = required;
       if (phoneSecondaryOuvert && phoneSecondary.trim() && phoneSecondary.trim().replace(/\D/g, '').length < 8) e.phoneSecondary = t('auth.errPhoneInvalid');
       if (emailSecondaryOuvert && emailSecondary.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailSecondary.trim())) e.emailSecondary = t('auth.errEmailSecondary');
@@ -628,8 +640,6 @@ export default function Auth() {
       else if (password.length < 6 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
         e.password = t('auth.errPasswordStrength');
       }
-      if (!passwordConfirm) e.passwordConfirm = required;
-      else if (passwordConfirm !== password) e.passwordConfirm = t('auth.errPasswordMismatch');
     }
     return e;
   }
@@ -783,10 +793,10 @@ export default function Auth() {
       ...(role === 'restaurant' ? {} : { addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim() }),
       ...(role === 'restaurant' ? {
         legalName: legalName.trim(), companyNumber: companyNumber.trim(),
-        vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
+        vatNumber: tvaInscription(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
         business: construireCommerce()
       } : {}),
-      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
+      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees.length ? zonesPreferees : communeDeLAdresse() } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {})
     });
     suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
@@ -910,10 +920,10 @@ export default function Auth() {
           ...(role === 'restaurant' ? {} : { addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim() }),
           ...(role === 'restaurant' ? {
             legalName: legalName.trim(), companyNumber: companyNumber.trim(),
-            vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
+            vatNumber: tvaInscription(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
             business: construireCommerce()
           } : {}),
-          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees } : {}),
+          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees.length ? zonesPreferees : communeDeLAdresse() } : {}),
           ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
           website: siteWeb
         });
@@ -964,7 +974,7 @@ export default function Auth() {
       } else if (err.field === 'password' || err.code === 'PASSWORD_BREACHED' || err.code === 'PASSWORD_WEAK') {
         // Tout ce qui a été saisi reste en place (commerce, horaires, services…) : seul le mot de passe est à refaire.
         const message = t(err.code === 'PASSWORD_BREACHED' ? 'auth.errPasswordBreached' : 'auth.errPasswordStrength');
-        setPassword(''); setPasswordConfirm(''); verifMdp.current = { valeur: null, promesse: null };
+        setPassword(''); verifMdp.current = { valeur: null, promesse: null };
         setErrors({ password: message });
         const i = steps.indexOf('account');
         if (i >= 0) setStep(i);
@@ -1288,72 +1298,9 @@ export default function Auth() {
                         </p>
                       )}
                     </div>
-                    <div className="field">
-                      <span className="titre-groupe" id="auth-sacoche-titre">{t('auth.bagTitle')}</span>
-                      {/* Dessin du type de sac (fondateur, 2026-10-06) : le livreur voit de quoi on parle, et sait qu'il est libre d'en
-                          utiliser n'importe lequel — le sien, celui d'une autre plateforme — ou d'en demander un à Fairide. */}
-                      <div className="sac-dessin">
-                        <SacLivraison size={96} />
-                        <p className="small" style={{ margin: 0 }}>{t('auth.bagDrawing')}</p>
-                      </div>
-                      <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.bagHelp')}</p>
-                      <div className={`statut-choix${errors.bagOption ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-sacoche-titre">
-                        {['own', 'fairide'].map((b) => (
-                          <div key={b} role="radio" aria-checked={bagOption === b} tabIndex={0} className={`statut-carte${bagOption === b ? ' active' : ''}`}
-                            onClick={() => setBagOption(b)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setBagOption(b); }}>
-                            <b>{b === 'own' ? '🎒 ' : '🟢 '}{t(`auth.bag_${b}`)}</b>
-                            <span className="small">{b === 'own' ? t('auth.bagOwnHelp') : t('auth.bagFairideHelp', { amount: courierOptions?.bagDeposit || 40 })}</span>
-                          </div>
-                        ))}
-                      </div>
-                      {fieldError('bagOption')}
-                    </div>
-                    {/* Autres plateformes : oui / non, puis lesquelles (facultatif, plusieurs choix). */}
-                    <div className="field">
-                      <span className="titre-groupe" id="auth-plateformes-titre">{t('auth.platformsTitle')}</span>
-                      <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.platformsHelp')}</p>
-                      <div className={`role-pick statements-chips${errors.autrePlateforme ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-plateformes-titre">
-                        {['yes', 'no'].map((v) => (
-                          <div key={v} role="radio" aria-checked={autrePlateforme === v} tabIndex={0} className={`chip${autrePlateforme === v ? ' active' : ''}`}
-                            onClick={() => setAutrePlateforme(v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAutrePlateforme(v); } }}>
-                            {t(v === 'yes' ? 'auth.platformsYes' : 'auth.platformsNo')}
-                          </div>
-                        ))}
-                      </div>
-                      {fieldError('autrePlateforme')}
-                      {autrePlateforme === 'yes' && (
-                        <>
-                          <p className="small" id="auth-plateformes-lesquelles" style={{ margin: '10px 0 6px' }}>{t('auth.platformsWhich')}</p>
-                          <div className="role-pick statements-chips" role="group" aria-labelledby="auth-plateformes-lesquelles">
-                            {['uber_eats', 'deliveroo', 'takeaway', 'autre'].map((p) => (
-                              <div key={p} role="checkbox" aria-checked={plateformes.includes(p)} tabIndex={0} className={`chip${plateformes.includes(p) ? ' active' : ''}`}
-                                onClick={() => basculer(plateformes, setPlateformes, p)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); basculer(plateformes, setPlateformes, p); } }}>
-                                {t(`auth.platform_${p}`)}
-                              </div>
-                            ))}
-                          </div>
-                          {plateformes.includes('autre') && (
-                            <input style={{ marginTop: 8 }} value={plateformeAutre} maxLength={120} onChange={(e) => setPlateformeAutre(e.target.value)} placeholder={t('auth.platformOtherPh')} aria-label={t('auth.platformOtherPh')} />
-                          )}
-                        </>
-                      )}
-                    </div>
-                    {/* Communes de préférence : facultatif, plusieurs choix ; la périphérie se déplie. */}
-                    <div className="field">
-                      <span className="titre-groupe" id="auth-zones-titre">{t('auth.zonesTitle')}{zonesPreferees.length > 0 && <span className="small" style={{ fontWeight: 500 }}> · {t('auth.zonesCount', { n: zonesPreferees.length })}</span>}</span>
-                      <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.zonesHelp')}</p>
-                      <div className="role-pick statements-chips" role="group" aria-labelledby="auth-zones-titre">
-                        {[...COMMUNES, ...(peripherieOuverte || zonesPreferees.some((z) => COMMUNES_PERIPHERIE.includes(z)) ? COMMUNES_PERIPHERIE : [])].map((z) => (
-                          <div key={z} role="checkbox" aria-checked={zonesPreferees.includes(z)} tabIndex={0} className={`chip${zonesPreferees.includes(z) ? ' active' : ''}`}
-                            onClick={() => basculer(zonesPreferees, setZonesPreferees, z)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); basculer(zonesPreferees, setZonesPreferees, z); } }}>
-                            {z}
-                          </div>
-                        ))}
-                      </div>
-                      {!peripherieOuverte && !zonesPreferees.some((z) => COMMUNES_PERIPHERIE.includes(z)) && (
-                        <button type="button" className="btn-ghost" style={{ marginTop: 6, padding: '4px 8px', fontSize: 13 }} onClick={() => setPeripherieOuverte(true)}>{t('auth.zonesMore')}</button>
-                      )}
-                    </div>
+                    {/* ÉCRAN 2 ALLÉGÉ (12 oct. 2026). Il portait aussi le sac, « une autre plateforme ? » et 19 communes à cocher :
+                        l'écran le plus lourd des deux inscriptions. Le sac et les autres plateformes se règlent dans le dossier
+                        (étape « Infos »), la commune vient de l'adresse (écran suivant) — modifiable ensuite. */}
                   </>
                 )}
               </>
@@ -1455,21 +1402,36 @@ export default function Auth() {
                   )}
                 </div>
                 <div className="field">
+                  <label htmlFor="auth-f-bce">{t('auth.companyNumberResto')}</label>
+                  <input id="auth-f-bce" inputMode="numeric" className={errors.companyNumber ? 'input-invalid' : undefined}
+                    value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+                  {fieldError('companyNumber')}
+                  <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('auth.companyNumberRestoHelp')}</p>
+                </div>
+                <div className="field">
                   <label htmlFor="auth-f-12">{t('auth.legalName')}</label>
                   <input id="auth-f-12" className={errors.legalName ? 'input-invalid' : undefined}
                     value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder={t('auth.phLegalName')} />
                   {fieldError('legalName')}
                 </div>
-                <p className="small" style={{ margin: '-4px 0 12px', opacity: 0.8 }}>{t('auth.legalLaterHint')}</p>
-                <div className="field">
-                  <label htmlFor="auth-f-15">{t('auth.responsibleName')}</label>
-                  <input id="auth-f-15" className={errors.responsibleName ? 'input-invalid' : undefined}
-                    value={responsibleName}
-                    onChange={(e) => { setResponsibleName(e.target.value); setResponsibleTouched(true); }}
-                    placeholder={t('auth.responsibleNamePlaceholder')}
-                  />
-                  {fieldError('responsibleName')}
-                </div>
+                {/* Le responsable légal : par défaut la personne qui s'inscrit (prénom + nom de l'écran 2) — une ligne, et un
+                    lien pour la changer, au lieu d'un champ à remplir à chaque fois. */}
+                {responsableOuvert || errors.responsibleName ? (
+                  <div className="field">
+                    <label htmlFor="auth-f-15">{t('auth.responsibleName')}</label>
+                    <input id="auth-f-15" className={errors.responsibleName ? 'input-invalid' : undefined}
+                      value={responsibleName}
+                      onChange={(e) => { setResponsibleName(e.target.value); setResponsibleTouched(true); }}
+                      placeholder={t('auth.responsibleNamePlaceholder')}
+                    />
+                    {fieldError('responsibleName')}
+                  </div>
+                ) : (
+                  <p className="small" style={{ margin: '0 0 12px' }}>
+                    {t('auth.responsibleIs', { name: responsibleName || '-' })}{' '}
+                    <button type="button" className="btn-link-plus" style={{ margin: 0 }} onClick={() => setResponsableOuvert(true)}>{t('auth.responsibleChange')}</button>
+                  </p>
+                )}
               </>
             )}
 
@@ -1535,12 +1497,15 @@ export default function Auth() {
                     // commandes payées en ligne. L'à emporter lui-même relève toujours de la version complète (2026-09-23).
                     <div className="service-suboptions" role="group" aria-label={t('accountUi.pickupPayTitle')}>
                       {[['on_site', 'pickupPayOnSiteOnly'], ['online', 'pickupPayOnline'], ['both', 'pickupPayBoth']].map(([v, cle]) => (
-                        <label key={v} className="service-option"><input type="radio" name="pickupPaymentMode" checked={services.pickupPaymentMode === v} onChange={() => setServices((s) => ({ ...s, pickupPaymentMode: v }))} /> <span>{t(`accountUi.${cle}`)}<span className="small" style={{ display: 'block' }}>{t(`accountUi.${cle}Text`)}</span></span></label>
+                        <label key={v} className="service-option"><input type="radio" name="pickupPaymentMode" checked={services.pickupPaymentMode === v} onChange={() => setServices((s) => ({ ...s, pickupPaymentMode: v }))} /> <span>{t(`accountUi.${cle}`)}{services.pickupPaymentMode === v && <span className="small" style={{ display: 'block' }}>{t(`accountUi.${cle}Text`)}</span>}</span></label>
                       ))}
                     </div>
                   )}
-                  {/* Gratuit → payant dit en clair dès l'inscription, avec la date du premier prélèvement (voir OffreFormules). */}
-                  <OffreFormules payant={services.delivery || services.pickup} inscription />
+                  {/* PENDANT LE LANCEMENT, RIEN À PAYER (12 oct. 2026, test au téléphone). Le grand encadré des formules (prix,
+                      « quand est-ce que je commence à payer », premier prélèvement daté) contredisait l'abonnement offert
+                      pendant le lancement (formules.abonnementOffert) et faisait de cet écran le plus long de l'inscription.
+                      Une phrase suffit ; le détail reste dans Mon compte › Abonnement, où il suit l'état réel du commerce. */}
+                  {(services.delivery || services.pickup) && <p className="small offre-lancement">{t('dashResto.createNote')}</p>}
                   {fieldError('services')}
                 </div>
               </>
@@ -1656,12 +1621,8 @@ export default function Auth() {
                   {/* Le texte d'exemple a disparu du champ : le libellé « Mot de passe » est juste
                       au-dessus, et Uber ne double jamais une étiquette par un texte d'exemple. */}
                 </div>
-                <div className="field">
-                  <label htmlFor="auth-f-pwd2">{t('auth.confirmPassword')}</label>
-                  <PasswordInput id="auth-f-pwd2" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
-                    invalid={!!errors.passwordConfirm} autoComplete="new-password" />
-                  {fieldError('passwordConfirm')}
-                </div>
+                {/* Plus de « Confirme ton mot de passe » (12 oct. 2026) : l'œil du champ montre ce qu'on tape, c'est ce qui
+                    évite la faute de frappe — un second champ ne faisait que doubler la saisie. */}
               </>
             )}
             {/* Pot de miel (voir siteWeb) : hors écran, hors tabulation, hors lecteur d'écran. */}

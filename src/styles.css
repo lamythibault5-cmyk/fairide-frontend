@@ -3505,6 +3505,11 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .courier-state.warn { border-left-color: var(--gold-deep); }
 .courier-state.danger { border-left-color: var(--red); }
 .courier-steps { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
+/* La carte « Prochaine étape » du dossier livreur et le « Avant de commencer » replié (12 oct. 2026). */
+.prochaine-etape { display: flex; flex-direction: column; gap: 6px; border-color: var(--iris); }
+.prochaine-etape b { font-size: 17px; }
+.prochaine-etape .btn-gold { align-self: flex-start; margin-top: 4px; }
+.avant-de-commencer summary { cursor: pointer; font-weight: 700; }
 .courier-step { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: var(--radius-chip); border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; cursor: pointer; }
 .courier-step.active { border-color: var(--iris); background: rgba(59,47,181,0.08); font-weight: 700; }
 .courier-step.done .courier-step-num { background: var(--teal-deep); color: #fff; }
@@ -4489,7 +4494,8 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .sponsor-apercu .sponsor-demo-bouton { margin-left: 0; }
 
 /* Garantie « zéro commande = zéro abonnement » (GarantieAbonnement.jsx). */
-.garantie-abonnement { margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface-soft); border-left: 4px solid var(--lime); }
+.garantie-abonnement { margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface-soft); border-left: 4px solid var(--iris); } /* iris : un filet lime sur fond clair est la règle n° 1 qu'on ne casse pas */
+.offre-lancement { margin: 10px 0 0; padding: 10px 12px; border-radius: var(--radius-chip); border: 1px solid var(--line); }
 .garantie-etat { margin: 8px 0 0; font-weight: 600; }
 .garantie-historique { margin: 8px 0 0; padding-left: 18px; }
 .offre-formules .garantie-abonnement { margin: 12px 0 0; }
