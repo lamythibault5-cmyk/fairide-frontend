@@ -190,8 +190,8 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
    you need "the accent, but on a light surface", the token is `--gold-deep` — which is iris.
 2. **Backgrounds are white or iris. No third background colour**, and no gradients, no blurred
    halos, no drop shadows. Elevation is expressed by a hairline border.
-   *One exception (2026-10-13, asked for):* the bottom tab bar is translucent white with a backdrop blur, Revolut-style
-   (site and app; solid white when the system asks for reduced transparency).
+   *One exception (2026-10-13, asked for):* in the **app only** (`html.natif`), the bottom tab bar is translucent white
+   with a backdrop blur, Revolut-style. On the website it stays solid white (tried, then reverted on request).
 3. **One lime accent per view.** If a screen already has a `btn-gold`, its active tab / badge /
    nav item uses white or iris instead.
 
@@ -216,7 +216,8 @@ The one exception is the word `fairide` itself, which is set in **Bricolage Grot
 optical sizing on) via the `.wordmark` class — lowercase, `-0.03em`. It is a *logotype* face, loaded
 from a `<link>` in [index.html](index.html) rather than the `@import`, because the splash screen
 paints before `styles.css` exists. Seven call sites carry the class; `.wordmark` sets the family and
-nothing else. **Don't extend it to headings** — that would re-open the two-font pairing the design
+nothing else. Inside a heading, the *word* « Fairide » alone is shown as the wordmark through
+[AvecMarque](src/components/AvecMarque.jsx) (2026-10-13). **Don't extend it to whole headings** — that would re-open the two-font pairing the design
 direction closed when it dropped Fraunces.
 
 Buttons: `.btn-gold` (lime) is **the** decisive action of a screen — pay, confirm, sign in.

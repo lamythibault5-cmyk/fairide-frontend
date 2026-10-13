@@ -29,6 +29,7 @@ import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 import EtatVide from '../../components/EtatVide';
+import AvecMarque from '../../components/AvecMarque';
 
 // Bandes de prix, calculees sur le prix MEDIAN des plats de la carte : aucune colonne « niveau de
 // prix » n'existe en base, et un euro affiche au juge serait faux pour la moitie des commerces.
@@ -603,7 +604,7 @@ export default function RestaurantList() {
         <>
           {inscrits.length > 0 && (
             <div className="liste-section">
-              <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} />{inscrits.length === 1 ? t('restaurantList.sectionRegisteredOne') : t('restaurantList.sectionRegistered', { n: inscrits.length })}</h3>
+              <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><AvecMarque>{inscrits.length === 1 ? t('restaurantList.sectionRegisteredOne') : t('restaurantList.sectionRegistered', { n: inscrits.length })}</AvecMarque></h3>
               <div className="rest-grid rest-grid-scroll">
                 {inscrits.map((x) => {
                   // Publié : la carte complète de la liste (horaires, offres, favori) ; sinon, une carte « bientôt ».

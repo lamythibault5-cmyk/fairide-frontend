@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import BrandMark from './BrandMark';
 import { resetConsent } from '../consent';
+import AvecMarque from './AvecMarque';
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -33,7 +34,7 @@ export default function Footer() {
           <Link to="/aide" className="small">{t('nav.help')}</Link>
         </div>
         <div className="footer-col">
-          <h3>{t('footer.legalHeading')}</h3>
+          <h3><AvecMarque>{t('footer.legalHeading')}</AvecMarque></h3>
           <Link to="/mentions-legales" className="small">{t('footer.legalNotice')}</Link>
           <Link to="/confidentialite" className="small">{t('footer.privacy')}</Link>
           <Link to="/cgv" className="small">{t('footer.terms')}</Link>

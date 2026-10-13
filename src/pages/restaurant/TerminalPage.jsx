@@ -10,6 +10,7 @@ import '../../terminal.css';
 import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPrinter';
 import { abonnerTerminalNavigateur, associerTerminalNavigateur, deconnecterTerminalNavigateur } from '../../terminalNavigateur';
 import Icone from '../../components/Icone';
+import AvecMarque from '../../components/AvecMarque';
 
 // Ticket de test fabriqué ici, sans passer par le serveur : il vérifie seulement le canal page → service Goodcom →
 // imprimante (installation). Le test « complet », par la file d'impression, reste le bouton plus bas.
@@ -134,7 +135,7 @@ export default function TerminalPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('terminal.title')}</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}><AvecMarque>{t('terminal.title')}</AvecMarque></h2>
       <p className="small" style={{ marginTop: 0, maxWidth: 680 }}>{t('terminal.intro')}</p>
 
       {ici.terminal && (
