@@ -2316,6 +2316,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
    sur l'onglet actif. */
 .nav-curseur { display: none; }
 @keyframes onglet-arrive { 0% { transform: scale(.86); } 60% { transform: scale(1.08); } 100% { transform: none; } }
+@keyframes barre-pousse { 0% { transform: none; } 35% { transform: translateX(var(--pousse, 0)) scale(.99); } 100% { transform: none; } }
 .dashboard-nav-link {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius);
   text-decoration: none; color: var(--ink-soft); font-weight: 600; font-size: 14px; transition: background .15s, color .15s;
@@ -2512,7 +2513,13 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     position: relative; padding: 5px;
     background: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill);
     contain: layout paint;
+    transition: transform .45s var(--ressort-ui);
   }
+  /* Au contact : la barre s'enfonce à peine (98 %), comme un objet qu'on presse ; au relâcher, le ressort la
+     ramène. `:active` remonte du lien à la nav, donc tout appui sur un onglet la fait réagir. */
+  .dashboard-nav:active { transform: scale(.98); transition-duration: .1s; }
+  /* Au changement d'onglet : 3px dans le sens de la pastille, puis retour (voir useCurseurOnglets.js). */
+  .dashboard-nav--pousse { animation: barre-pousse .5s var(--ressort-ui); }
   .nav-curseur {
     display: block; position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none;
     background: var(--iris); border-radius: var(--radius-pill); opacity: 0;
