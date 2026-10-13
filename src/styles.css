@@ -108,9 +108,9 @@
      ~0,15 s — à 0,45 puis 0,2 s le fondateur la trouvait encore trop lente (2026-10-13). */
   --ressort-ui: cubic-bezier(.2, .8, .2, 1);
   --ressort-ui: linear(0, .158, .413, .626, .773, .868, .925, .958, .977, .987, 1);
-  /* Hauteur des onglets flottants du bas, marge comprise (12 + 5 + 60 + 5 + 2 de filets) : les éléments
+  /* Hauteur des onglets flottants du bas, marge comprise (12 + 6 + 60 + 6 + 2 de filets) : les éléments
      fixés au-dessus (toast, pilule du panier, fiche de la carte) et le pied de page s'y calent. */
-  --hauteur-onglets: 84px;
+  --hauteur-onglets: 86px;
   --shadow-1: rgba(0, 0, 0, 0.12) 0 4px 16px 0;  /* carte détachée sur une bande claire */
   --shadow-2: rgba(0, 0, 0, 0.16) 0 4px 16px 0;  /* carte qui porte un formulaire */
   --shadow-3: rgba(0, 0, 0, 0.16) 0 2px 8px 0;   /* pilule flottant sur une photo */
@@ -2533,9 +2533,13 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   .dashboard-nav {
     flex-direction: row; gap: 0; width: 100%; max-width: 460px; flex: 0 1 auto; min-width: 0;
     justify-content: stretch; overflow: visible; pointer-events: auto;
-    position: relative; padding: 4px;
+    /* Retrait de 6px : la pastille (60px de haut, rayon 30) et la barre (74px, rayon 37) ont alors le même centre de
+       courbure aux deux bouts — elles sont concentriques, et « Compte » au bout de la barre épouse son arrondi au
+       lieu de buter dessus (retour du fondateur, capture du 2026-10-13). Pas de `contain: paint` : il rognait la
+       pastille au bord de la barre. */
+    position: relative; padding: 6px;
     background: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill);
-    contain: layout paint;
+    contain: layout;
     transition: transform .15s var(--ressort-ui);
   }
   /* Au contact : la barre s'enfonce à peine (98 %), comme un objet qu'on presse ; au relâcher, le ressort la
@@ -2545,15 +2549,15 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   .dashboard-nav--pousse { animation: barre-pousse .16s var(--ressort-ui); }
   .nav-curseur {
     display: block; position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none;
-    /* Coins de 20px et non une pilule complète (2026-10-13) : sur un onglet de 70 × 60, la courbe d'une pilule
-       rognait les côtés du libellé, qui touchait le bord bleu. */
-    background: var(--iris); border-radius: 20px; opacity: 0;
+    /* Pilule entière, comme chez Revolut : des coins carrés dépasseraient de l'arrondi de la barre aux deux bouts.
+       Le libellé tient dedans parce qu'il est à 10px et remonté contre l'icône (gap 2px). */
+    background: var(--iris); border-radius: var(--radius-pill); opacity: 0;
     transition: transform .15s var(--ressort-ui), width .12s var(--ressort-ui), height .12s var(--ressort-ui), opacity .15s;
   }
   .dashboard-nav-link {
     position: relative; z-index: 1;
     flex: 1 1 0; min-width: 0; height: 60px; padding: 0 2px;
-    flex-direction: column; justify-content: center; align-items: center; gap: 3px;
+    flex-direction: column; justify-content: center; align-items: center; gap: 2px;
     border-radius: var(--radius-pill); background: transparent; border: 0; box-shadow: none;
     /* 10px (et non 11) : « Commandes », « Recherche » tenaient trop juste dans la pastille. Un léger interlettrage
        positif garde un si petit texte lisible (Apple, typographie de l'interface). */
@@ -2579,19 +2583,20 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   /* La console admin a une dizaine de pôles : sa pilule défile de côté au lieu d'écraser les onglets. */
   .dashboard-nav.admin { justify-content: flex-start; overflow-x: auto; scrollbar-width: none; contain: layout; }
   .dashboard-nav.admin::-webkit-scrollbar { display: none; }
-  /* TRANSLUCIDE DANS L'APPLICATION, COMME CHEZ REVOLUT (demande du 2026-10-13). Le contenu défile sous la barre,
-     flouté. Exception voulue à la règle 2 de l'identité (pas de flou), limitée à cette barre et à l'application :
-     un flou recalculé à chaque image de défilement coûte cher aux téléphones modestes, et le site doit rester rapide —
-     sur fairide.be la barre reste blanche. Repli plein si le système demande moins de transparence. */
+  /* TRANSLUCIDE, COMME CHEZ REVOLUT (demande du 2026-10-13, d'abord dans l'application seulement, puis aussi sur le
+     site : c'est là que le fondateur la regardait). Le contenu défile sous la barre, flouté. Exception voulue à la
+     règle 2 de l'identité (pas de flou), limitée à cette barre. Coût : un flou sur une bande de 74px, ce que Safari
+     fait déjà pour ses propres barres ; si un Android modeste saccade, c'est ce bloc qu'il faut limiter à html.natif.
+     Repli plein si le système demande moins de transparence. */
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    html.natif .dashboard-nav {
+    .dashboard-nav {
       background: rgba(255, 255, 255, .72);
       -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
       border-color: rgba(220, 216, 208, .7);
     }
   }
   @media (prefers-reduced-transparency: reduce) {
-    html.natif .dashboard-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .dashboard-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
   .dashboard-sidebar--compacte .dashboard-nav-label { opacity: 0; max-height: 0; transform: translateY(4px); }
   /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
