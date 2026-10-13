@@ -70,8 +70,9 @@ export default function Checkout() {
   const [placing, setPlacing] = useState(false);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [paying, setPaying] = useState(false);
-  const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  // Total affiché au moment du clic, pour dire au client de combien il a bougé quand la carte de confirmation s'affiche.
+  const [totalAnnonce, setTotalAnnonce] = useState(null);
   // Allergie, âge, CGU (backlog de conformité C1, C3, A1) — voir components/conformite/CheckoutConformite.jsx.
   const [conformite, setConformite] = useState({ allergyRequest: '', ageDeclaration: false, acceptTerms: false, termsNeeded: false, termsVersion: '' });
   const pendingOrderRef = useRef(null);
@@ -166,8 +167,10 @@ export default function Checkout() {
    * qu'on veut changer. Sur un paiement où presque tout est déjà connu — l'adresse vient du compte,
    * la remise a un défaut — c'est la bonne forme.
    *
-   * RIEN DE LA LOGIQUE N'A BOUGÉ : ni placeOrder, ni confirmAndPay, ni la validation. C'est le
-   * chemin de l'argent ; refaire la présentation ne doit pas être l'occasion d'en réécrire le fond.
+   * RIEN DE LA LOGIQUE N'A BOUGÉ lors de ce passage en rangées : ni placeOrder, ni confirmAndPay, ni la
+   * validation. C'est le chemin de l'argent ; refaire la présentation ne doit pas être l'occasion d'en
+   * réécrire le fond. (Le 2026-10-13, un changement de logique distinct et assumé : placeOrder enchaîne sur
+   * le paiement quand le total n'a pas bougé — voir le commentaire dans placeOrder.)
    *
    * `sousEcran` vaut 'adresse', 'remise' ou null. Voir components/SousEcran.jsx. */
   const adresseIncomplete = !addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim();
@@ -221,7 +224,25 @@ export default function Checkout() {
         }
       });
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
-      setDeliveryConfirmed(false);
+      /* UN SEUL BOUTON QUAND RIEN N'A BOUGÉ (2026-10-13).
+       * Avant : « Valider mes informations », puis une carte « Confirme ta commande » avec une case à cocher, puis
+       * « Commander et payer » — deux appuis et une case pour une commande dont le client venait de tout voir.
+       * La carte existait pour une vraie raison (voir plus haut : les frais de livraison exacts ne sont connus
+       * qu'ici), mais dans la plupart des cas le serveur confirme au centime le total affiché.
+       *
+       * Donc : même total et même mode de paiement que ce que le bouton annonçait → on part directement au
+       * paiement. Sinon → la carte, qui dit ce qui a changé. Le bouton de la barre porte désormais « Commander et
+       * payer » (CDE VI.46 §2) et le récapitulatif nomme le vendeur de chaque ligne, comme la carte le faisait.
+       *
+       * La case « Je confirme que mes informations de livraison sont correctes » est partie : aucune loi ne
+       * l'exige, le serveur ne la vérifiait pas, et l'adresse et la remise sont déjà visibles en rangées juste
+       * au-dessus du bouton (CDE XII.7 : corriger ses erreurs de saisie avant de commander). */
+      const memeMode = (order.paymentMode === 'on_site') === surPlace;
+      if (memeMode && Math.abs(Number(order.total) - estimatedTotal) < 0.005) {
+        await confirmAndPay(order);
+        return;
+      }
+      setTotalAnnonce(estimatedTotal);
       setPendingOrder(order);
     } catch (e) {
       // CGU passées à une nouvelle version entre l'ouverture de la page et le clic : on affiche la case.
@@ -236,19 +257,21 @@ export default function Checkout() {
     }
   }
 
-  async function confirmAndPay() {
+  // `order` : la commande à payer — passée directement par placeOrder quand le total n'a pas bougé (pas de carte de
+  // confirmation), sinon celle de la carte.
+  async function confirmAndPay(order = pendingOrder) {
     setPaying(true);
     try {
       // Paiement sur place : rien à encaisser en ligne, la commande part au commerce.
-      if (pendingOrder.paymentMode === 'on_site') {
-        await api(`/orders/${pendingOrder.id}/confirm-on-site`, { method: 'POST', token });
+      if (order.paymentMode === 'on_site') {
+        await api(`/orders/${order.id}/confirm-on-site`, { method: 'POST', token });
         commandeTermineeRef.current = true;
         cart.clear();
         toast(t('checkout.toastOnSiteConfirmed'));
         navigate('/orders');
         return;
       }
-      const pay = await api(`/payments/checkout/${pendingOrder.id}`, { method: 'POST', token });
+      const pay = await api(`/payments/checkout/${order.id}`, { method: 'POST', token });
       if (pay.simulated) {
         // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
         commandeTermineeRef.current = true;
@@ -268,6 +291,10 @@ export default function Checkout() {
     } catch (e) {
       toast(e.message, 'erreur');
       setPaying(false);
+      // Échec sur le chemin direct : la commande existe déjà côté serveur, non payée. On montre la carte, qui permet
+      // de réessayer ou d'annuler (un nouveau clic sur la barre renverrait d'ailleurs cette même commande, voir
+      // commandeExistante dans le backend).
+      setPendingOrder(order);
     }
   }
 
@@ -463,8 +490,10 @@ export default function Checkout() {
               // Montant minimum du commerce (PAN-3) : le bouton laisse place à ce qui manque, comme le serveur le refuserait.
               <span className="small co-barre-attente">{t('checkout.minOrderMissing', { min: euros(restaurant.minOrderAmount), missing: euros(manqueMinimum) })}</span>
             ) : serviceOuvert(fulfillmentType, user) && !paiementBloque ? (
-              <button className="btn-gold" disabled={placing} onClick={placeOrder}>
-                {placing ? '...' : t('checkout.validateInfo')}
+              <button className="btn-gold" disabled={placing || paying} onClick={placeOrder}>
+                {placing || paying ? '...'
+                  : surPlaceChoisi ? t('checkout.confirmOnSite')
+                  : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}
               </button>
             ) : (
               <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {paiementBloque
@@ -503,13 +532,15 @@ export default function Checkout() {
             })}
             <div className="divider" />
             <div className="breakdown">
-              <div className="line"><span>{t('common.subtotal')}</span><span>{euros(totals.rawSubtotal)}</span></div>
+              {/* Le vendeur de chaque ligne (trois vendeurs, C2) : ce récapitulatif est maintenant le dernier que le client
+                  voit avant de payer quand le total ne bouge pas — il doit donc dire à qui il achète, comme la carte. */}
+              <div className="line"><span>{t('common.subtotal')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerFood', { name: restaurant.name })}</span></span><span>{euros(totals.rawSubtotal)}</span></div>
               {totals.discountedItems.map((d, i) => (
                 <div className="line" key={i}><span><Icone nom="etiquette" taille={14} /> {d.name ? `${d.name} (${libellePromo(d.promo, t) || d.label})` : (libellePromo(d.promo, t) || d.label)}</span><span>-{euros(d.discount)}</span></div>
               ))}
               {fulfillmentType === 'delivery' && (
                 <>
-                  <div className="line"><span>{t('checkout.deliveryFeeLine')} ({t('checkout.fromPrefix')})</span><span>{euros(totals.deliveryFee)}</span></div>
+                  <div className="line"><span>{t('checkout.deliveryFeeLine')} ({t('checkout.fromPrefix')})<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerDelivery')}</span></span><span>{euros(totals.deliveryFee)}</span></div>
                   {totals.deliveryDiscount > 0 && (
                     <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(totals.deliveryDiscount)}</span></div>
                   )}
@@ -518,7 +549,7 @@ export default function Checkout() {
               {/* TVA comprise, comme le total : la somme des lignes doit tomber sur le total affiché juste en dessous.
                   « dès » seulement en livraison, où la distance réelle peut encore faire monter la base. */}
               {fraisServiceEstimes > 0 && (
-                <div className="line"><span className="small">{t('checkout.serviceFeeLine')}</span><span className="small">{euros(fraisServiceEstimes)}</span></div>
+                <div className="line"><span className="small">{t('checkout.serviceFeeLine')}<span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span className="small">{euros(fraisServiceEstimes)}</span></div>
               )}
               {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}
               {soldeUtilise && user.balance > 0 && (
@@ -651,23 +682,16 @@ export default function Checkout() {
       {pendingOrder && (
         <div className="card" ref={pendingOrderRef}>
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('checkout.confirmOrderTitle')}</h3>
+          {/* La carte n'apparaît plus que quand le total du serveur diffère de celui du bouton (ou quand le paiement a
+              échoué) : on commence donc par dire pourquoi elle est là. */}
+          {totalAnnonce != null && Math.abs(Number(pendingOrder.total) - totalAnnonce) >= 0.005 && (
+            <p className="small" style={{ margin: '0 0 10px', fontWeight: 600 }}>{t('checkout.totalChanged', { before: euros(totalAnnonce), after: euros(pendingOrder.total) })}</p>
+          )}
           {pendingOrder.orderType === 'delivery' && !pendingOrder.scheduledFor && (
             <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.deliveryFeeNote')}</p>
           )}
 
           <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '12px 14px', margin: '0 0 14px' }}>
-            <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '0 0 8px' }}>
-              <input
-                type="checkbox"
-                checked={deliveryConfirmed}
-                onChange={(e) => setDeliveryConfirmed(e.target.checked)}
-                style={{ marginTop: 2 }}
-              />
-              <span className="small" style={{ fontWeight: 600 }}>
-                {pendingOrder.orderType === 'delivery' && t('checkout.confirmDeliveryInfo')}
-                {pendingOrder.orderType === 'pickup' && t('checkout.confirmPickupSelf')}
-              </span>
-            </label>
             {pendingOrder.orderType === 'delivery' && (
               <>
                 <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.addressLabel')}</b> {pendingOrder.address}</p>
@@ -720,11 +744,8 @@ export default function Checkout() {
           {pendingOrder.containsAlcohol && (
             <p className="small" style={{ margin: '0 0 8px' }}>{t('conformite.ageRecap', { age: pendingOrder.minAge || 18 })}</p>
           )}
-          {!deliveryConfirmed && (
-            <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>{t('checkout.confirmCheckboxWarning')}</p>
-          )}
           <div className="row" style={{ gap: 8, marginTop: 4 }}>
-            <button className="btn-gold" disabled={paying || cancelling || !deliveryConfirmed} onClick={confirmAndPay}>
+            <button className="btn-gold" disabled={paying || cancelling} onClick={() => confirmAndPay()}>
               {paying ? '...'
                 : pendingOrder.paymentMode === 'on_site' ? t('checkout.confirmOnSite')
                 : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}
