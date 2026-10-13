@@ -224,6 +224,15 @@ which is suppressed in installed PWAs and webviews. The five `window.confirm` hi
 `src/` are all inside comments explaining this; there are no live calls. `window.prompt` has the
 same problem and the same replacement, [ReasonDialog](src/components/admin/ReasonDialog.jsx).
 
+**Gestures are app-only (since 2026-10-13).** Physical motion — springs with velocity hand-off, momentum projection,
+rubber-banding ([src/ressort.js](src/ressort.js)) — runs only when `estNatif()`, loaded with `import()`, so the website
+downloads nothing extra (founder: the site must not get slower). What uses it: sheets pulled down to close
+([useFeuilleGlissable](src/hooks/useFeuilleGlissable.js), FichePlat and SousEcran — on the site they keep the plain
+threshold + CSS transition), edge swipe back on iPhone ([RetourParGlissement](src/components/RetourParGlissement.jsx);
+Android has it in the system), and swipe-to-confirm for the courier's « récupérée » / « livrée »
+([GlisserPourConfirmer](src/components/livreur/GlisserPourConfirmer.jsx); the site keeps the buttons). An animation with
+`fill-mode: both` overrides inline transforms — the sheet's entry animation is `backwards` for that reason.
+
 Note the two heavily-commented rules near the top of the file — `overflow-x: clip` on
 `html`/`body` and `-webkit-tap-highlight-color: transparent`. Both encode a bug that was
 already fixed once (`clip` rather than `hidden`, because `hidden` silently breaks

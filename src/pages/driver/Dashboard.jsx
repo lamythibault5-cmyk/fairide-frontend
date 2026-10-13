@@ -7,6 +7,8 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import LigneCompte from '../../components/LigneCompte';
 import IncidentsCourse from '../../components/livreur/IncidentsCourse';
+import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
+import { estNatif } from '../../natif';
 import Icone from '../../components/Icone';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -345,9 +347,12 @@ export default function DriverDashboard() {
       </div>
       {o.status !== 'pret' && <p className="small">{t('dashDriver.stillPreparing')}</p>}
       <BoutonsItineraire adresse={o.restaurantAddress} lat={o.restaurantLat} lng={o.restaurantLng} t={t} />
-      <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => confirmerRetrait(o)}>
-        {retraitEnCours === o.id ? '…' : t('dashDriver.pickedUpButton')}
-      </button>
+      {/* Dans l'application : glisser pour confirmer (un appui dans la poche ne valide rien). Sur le site : le bouton. */}
+      <GlisserPourConfirmer libelle={t('dashDriver.pickedUpButton')} disabled={retraitEnCours === o.id} onConfirmer={() => confirmerRetrait(o)}>
+        <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => confirmerRetrait(o)}>
+          {retraitEnCours === o.id ? '…' : t('dashDriver.pickedUpButton')}
+        </button>
+      </GlisserPourConfirmer>
       <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
     </div>
   );
@@ -448,8 +453,10 @@ export default function DriverDashboard() {
                 value={codeInputs[o.id] || ''}
                 onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
               />
-              <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>
+              {!estNatif() && <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
             </div>
+            {/* Application : le code du client tapé, on glisse pour livrer (même raison que pour la récupération). */}
+            {estNatif() && <GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} onConfirmer={() => deliver(o)} />}
             <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
           </div>
         ))}

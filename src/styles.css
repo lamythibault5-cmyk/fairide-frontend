@@ -4307,7 +4307,9 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 @keyframes plat-apparait { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
 @keyframes plat-disparait { from { opacity: 1; } to { opacity: 0; transform: translateY(10px) scale(.98); } }
 @keyframes fond-apparait { from { background-color: rgba(20, 18, 31, 0); } }
-.plat-panneau { animation: plat-monte .32s cubic-bezier(.2, .9, .25, 1) both; transition: transform .25s cubic-bezier(.2, .9, .25, 1); will-change: transform; }
+/* `backwards` et non `both` (2026-10-13) : une animation qui garde son état final l'emporte sur le style posé en ligne, donc
+   la feuille ne suivait plus le doigt quand on la tirait vers le bas (useFeuilleGlissable). L'état final vaut le repos : rien à garder. */
+.plat-panneau { animation: plat-monte .32s cubic-bezier(.2, .9, .25, 1) backwards; transition: transform .25s cubic-bezier(.2, .9, .25, 1); will-change: transform; }
 .plat-feuille--ferme .plat-panneau { animation: plat-descend .23s cubic-bezier(.4, 0, 1, 1) both; }
 .plat-defile { overscroll-behavior: contain; }
 .plat-poignee { display: none; }
@@ -4525,6 +4527,9 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-ecran { min-height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column;
   padding: calc(18px + env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom)); animation: bv-entre .28s ease; }
 @keyframes bv-entre { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+/* En reculant, l'écran revient par la gauche : même chemin à l'aller et au retour. */
+.bv-ecran--retour { animation-name: bv-revient; }
+@keyframes bv-revient { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .bv-ecran { animation: none; } }
 .bv-grandit { flex: 1; min-height: 12px; }
 .bv-centre { text-align: center; }
@@ -4653,3 +4658,13 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 /* Carte « Active ta position » qui remplace les courses disponibles tant que la position du livreur manque
    (components/livreur/PositionRequise.jsx) : un filet iris de 2 px pour qu elle se lise comme une étape à faire. */
 .position-requise { border: 2px solid var(--iris); }
+
+/* GLISSER POUR CONFIRMER (livreur, application seulement — components/livreur/GlisserPourConfirmer.jsx). Une piste iris,
+   un pouce lime (la lime posée sur l'iris, règle 1 de l'identité) ; le texte s'efface à mesure que le pouce avance
+   (--avance, de 0 à 1, posé par le composant). Pas d'ombre : le pouce se détache par sa couleur. */
+.glisser-confirmer { position: relative; height: 60px; border-radius: var(--radius-pill); background: var(--iris); color: #fff; padding: 4px; display: flex; align-items: center; margin-top: 10px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.glisser-confirmer-texte { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding-left: 52px; font-weight: 700; font-size: 15px; opacity: calc(1 - var(--avance, 0) * 1.4); pointer-events: none; }
+.glisser-confirmer-pouce { position: relative; z-index: 1; width: 52px; height: 52px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center; touch-action: none; cursor: grab; }
+.glisser-confirmer-pouce svg { transform: scaleX(-1); }
+.glisser-confirmer.est-fait .glisser-confirmer-pouce svg { transform: none; }
+.glisser-confirmer.est-inactif { opacity: .5; }
