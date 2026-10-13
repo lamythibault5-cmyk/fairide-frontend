@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -8,6 +9,8 @@ import AdminGlobalSearch from './admin/AdminGlobalSearch';
 import useAdminOverview from '../hooks/useAdminOverview';
 import useAdminRole from '../hooks/useAdminRole';
 import useInbox from '../hooks/useInbox';
+import { useCurseurOnglets } from '../hooks/useCurseurOnglets';
+import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import useNotificationsClient from '../hooks/useNotificationsClient';
 import { ADMIN_HUBS, hubBadge, hubModules, moduleForPath } from '../pages/admin/adminModules';
 
@@ -31,21 +34,21 @@ function navItemsForRole(role, t, user) {
       { to: '/restaurants', icon: 'restaurants', label: t('nav.restaurants') },
       { to: '/map', icon: 'carte', label: t('nav.map') },
       { to: '/recherche', icon: 'recherche', label: t('nav.search') },
-      { to: '/orders', icon: 'commandes', label: t('nav.orders') },
-      { to: '/account', icon: 'compte', label: t('nav.account') }
+      { to: '/orders', icon: 'commandes', label: t('nav.orders'), court: t('nav.court.orders') },
+      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
     ];
   }
   if (role === 'restaurant') {
     return [
       // Mon commerce = les infos du restaurant lui-même (création, puis modification) ; Ma carte = ce qu'il vend.
-      { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness') },
-      { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu') },
-      { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders') },
+      { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness'), court: t('nav.court.myBusiness') },
+      { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu'), court: t('nav.court.myMenu') },
+      { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders'), court: t('nav.court.orders') },
       // Promotions, Factures et Mode d'emploi sont partis dans Mon compte : ce sont des rubriques
       // qu'on ouvre de temps en temps, pas au service. « Aperçu client » et « Carte » les y ont
       // rejoints, pour la même raison et une de plus : à sept onglets, la barre du bas d'un
       // téléphone donnait des cibles de 38px, sous le minimum de 44px. Cinq, pas plus.
-      { to: '/account', icon: 'compte', label: t('nav.account') }
+      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
     ];
   }
   if (role === 'driver') {
@@ -58,13 +61,13 @@ function navItemsForRole(role, t, user) {
     // termine une fois ; ensuite il se rouvre depuis Mon compte.
     return [
       { to: '/driver', end: true, icon: 'commandes', label: t('nav.rides') },
-      ...(user?.adminStatus === 'approved' ? [] : [{ to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile') }]),
+      ...(user?.adminStatus === 'approved' ? [] : [{ to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile'), court: t('nav.court.courierFile') }]),
       { to: '/driver/map', icon: 'carte', label: t('nav.map') },
       { to: '/driver/earnings', icon: 'euro', label: t('nav.earnings') },
-      { to: '/account', icon: 'compte', label: t('nav.account') }
+      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
     ];
   }
-  return [{ to: '/account', icon: 'compte', label: t('nav.account') }];
+  return [{ to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }];
 }
 
 // ERP interne : les applications du registre (pages/admin/adminModules.js), groupées par famille comme
@@ -81,11 +84,14 @@ function AdminNav({ t }) {
   const { pathname } = useLocation();
   const poleCourant = moduleForPath(pathname)?.hub;
   const classe = (actif) => `dashboard-nav-link${actif ? ' active' : ''}`;
+  const navRef = useRef(null);
+  useCurseurOnglets(navRef, pathname);
   return (
-    <nav className="dashboard-nav admin">
+    <nav className="dashboard-nav admin" ref={navRef}>
+      <span className="nav-curseur" aria-hidden="true" />
       <NavLink to="/admin" end title={t('adminHubs.today')} aria-label={t('adminHubs.today')} className={({ isActive }) => classe(isActive)}>
         <span className="dashboard-nav-icon"><Icone nom="maison" taille={20} /></span>
-        <span>{t('adminHubs.today')}</span>
+        <span className="dashboard-nav-label">{t('adminHubs.today')}</span>
       </NavLink>
       {ADMIN_HUBS.map((hub) => {
         const mods = hubModules(hub, role);
@@ -96,14 +102,14 @@ function AdminNav({ t }) {
         return (
           <Link key={hub.key} to={mods[0].path} title={label} aria-label={label} aria-current={actif ? 'page' : undefined} className={classe(actif)}>
             <span className="dashboard-nav-icon"><Icone nom={hub.icon} taille={20} /></span>
-            <span>{label}</span>
+            <span className="dashboard-nav-label">{label}</span>
             {badge && <span className={`nav-badge tone-${badge.tone}`}>{badge.count}</span>}
           </Link>
         );
       })}
       <NavLink to="/account" title={t('nav.account')} aria-label={t('nav.account')} className={({ isActive }) => classe(isActive)}>
         <span className="dashboard-nav-icon"><Icone nom="compte" taille={20} /></span>
-        <span>{t('nav.account')}</span>
+        <span className="dashboard-nav-label">{t('nav.account')}</span>
       </NavLink>
     </nav>
   );
@@ -114,6 +120,14 @@ export default function DashboardSidebar() {
   const { t } = useLanguage();
   const { previewMode, exitPreview } = usePreviewMode();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const navRef = useRef(null);
+  useCurseurOnglets(navRef, `${pathname}|${user?.isAdmin ? 'admin' : ''}`);
+  /* LA BARRE DU BAS SE RÉDUIT AU DÉFILEMENT (sous 900px, voir styles.css) : on descend pour lire, les
+   * libellés s'effacent et la barre se resserre autour des icônes ; on remonte — le geste de quelqu'un qui
+   * cherche où aller — elle reprend sa taille. Même hook et même règle que l'en-tête du site, pour que les
+   * deux bougent ensemble. Au-dessus de 900px la classe ne change rien : la barre latérale ne recouvre rien. */
+  const compacte = useEnteteDefilement({ seuil: 120 });
   // Le compte admin (fairide.entreprise@gmail.com, voir middleware/auth.js isAdminEmail) sert
   // exclusivement à l'ERP interne : peu importe le rôle "métier" sous-jacent du compte ou la page visitée,
   // la sidebar ne montre jamais la nav client/restaurateur/livreur pour ce compte — seulement les 7
@@ -138,7 +152,7 @@ export default function DashboardSidebar() {
   }
 
   return (
-    <aside className="dashboard-sidebar">
+    <aside className={`dashboard-sidebar${compacte ? ' dashboard-sidebar--compacte' : ''}`}>
       <Link className="dashboard-sidebar-brand" to={brandHome}>
         <BrandMark size={30} />
         <span className="wordmark">fairide</span>
@@ -150,15 +164,17 @@ export default function DashboardSidebar() {
         </div>
       )}
       {isAdminAccount && <AdminGlobalSearch />}
-      {/* title et aria-label portent le libellé en toutes lettres : sous 520px la barre du bas
-          n'affiche plus que les icônes (voir styles.css), et une icône seule ne dit rien à un
-          lecteur d'écran ni au survol. */}
+      {/* title et aria-label portent le libellé en toutes lettres : dans la barre compacte du bas
+          (au défilement) il n'y a plus que les icônes, et une icône seule ne dit rien à un lecteur
+          d'écran ni au survol. */}
       {isAdminAccount ? <AdminNav t={t} /> : (
-      <nav className="dashboard-nav">
+      <nav className="dashboard-nav" ref={navRef}>
+        <span className="nav-curseur" aria-hidden="true" />
         {items.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
             <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} /></span>
-            <span>{item.label}</span>
+            {/* Deux libellés : le complet pour la colonne latérale, le court pour la barre du bas (styles.css choisit). */}
+            <span className="dashboard-nav-label"><span className="libelle-long">{item.label}</span>{item.court && <span className="libelle-court">{item.court}</span>}</span>
             {item.to === '/account' && nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
             {item.to === '/orders' && notifCommandes > 0 && <span className="nav-badge tone-warn" aria-label={t('orders.bellUnread', { n: notifCommandes })}>{notifCommandes}</span>}
           </NavLink>

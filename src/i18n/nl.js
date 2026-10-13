@@ -6296,6 +6296,8 @@ export default {
       leave: 'Verlaten',
       myMenu: 'Mijn menu',
       courierFile: 'Mijn koeriersdossier',
+      // Libellés de la barre d'onglets du bas (téléphone) : 70px par onglet, « Mes commandes » n'y tenait pas.
+      court: { orders: 'Bestellingen', account: 'Account', courierFile: 'Dossier', myBusiness: 'Zaak', myMenu: 'Menu' },
       rides: 'Ritten',
       earnings: 'Verdiensten'
     },
