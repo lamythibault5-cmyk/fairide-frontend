@@ -2483,7 +2483,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     position: fixed; left: 0; right: 0; top: auto; height: auto; width: 100%;
     bottom: calc(12px + env(safe-area-inset-bottom));
     flex-direction: row; align-items: center; justify-content: center; gap: 10px;
-    padding: 0 12px;
+    padding: 0 8px; /* 8 et non 12 : quatre pixels de plus pour les libellés de la barre-pilule */
     background: transparent; border-right: none; border-top: none;
     box-shadow: none; z-index: 50; pointer-events: none;
     overflow: visible;
@@ -2513,7 +2513,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   .dashboard-nav {
     flex-direction: row; gap: 0; width: 100%; max-width: 460px; flex: 0 1 auto; min-width: 0;
     justify-content: stretch; overflow: visible; pointer-events: auto;
-    position: relative; padding: 5px;
+    position: relative; padding: 4px;
     background: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill);
     contain: layout paint;
     transition: transform .15s var(--ressort-ui);
