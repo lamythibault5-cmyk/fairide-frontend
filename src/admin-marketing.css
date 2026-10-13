@@ -39,7 +39,7 @@
 
 /* ---- Compteur d'audience et échantillon ---- */
 .mk-audience-box { background: var(--cream-dim); border-radius: var(--radius-chip); padding: 12px 14px; margin-top: 12px; }
-.mk-audience-count { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; color: var(--ink); }
+.mk-audience-count { font-family: var(--font-ui); font-weight: 700; font-size: 22px; color: var(--ink); }
 .mk-sample { list-style: none; margin: 6px 0 0; padding: 0; max-height: 190px; overflow: auto; font-size: 12px; }
 .mk-sample li { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
 .mk-sample li:last-child { border-bottom: none; }

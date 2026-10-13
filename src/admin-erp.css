@@ -28,7 +28,7 @@
 .admin-today-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 16px; }
 .admin-today-tile { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
 .admin-today-tile .label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); font-weight: 600; }
-.admin-today-tile .num { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; margin: 2px 0; }
+.admin-today-tile .num { font-family: var(--font-ui); font-weight: 700; font-size: 22px; margin: 2px 0; }
 .admin-today-tile .delta { font-size: 12px; font-weight: 600; }
 .admin-today-tile .delta.up { color: var(--teal-deep); }
 .admin-today-tile .delta.down { color: var(--red); }

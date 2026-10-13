@@ -31,8 +31,8 @@
 <style>
 /* Polices de Fairide, servies localement : d'abord le chemin du serveur Vite, puis le chemin relatif
    pour une ouverture en file://. Jamais fonts.googleapis.com (voir public/fonts/polices.css). */
-@font-face { font-family: 'Space Grotesk'; font-weight: 400 700; font-display: swap;
-  src: url('/fonts/space-grotesk-latin.woff2') format('woff2'), url('../public/fonts/space-grotesk-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2'), url('../public/fonts/inter-latin.woff2') format('woff2'); }
 @font-face { font-family: 'Bricolage Grotesque'; font-weight: 700 800; font-display: swap;
   src: url('/fonts/bricolage-grotesque-latin.woff2') format('woff2'), url('../public/fonts/bricolage-grotesque-latin.woff2') format('woff2'); }
 
@@ -43,7 +43,7 @@
   --radius: 20px; --radius-chip: 6px;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; background: var(--cream); color: var(--ink); font-family: 'Space Grotesk', system-ui, sans-serif; }
+html, body { margin: 0; background: var(--cream); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; }
 body { min-height: 100vh; display: flex; align-items: center; justify-content: center; gap: 40px; padding: 24px 16px; }
 svg.ic { flex: none; display: block; }
 
@@ -76,7 +76,7 @@ svg.ic { flex: none; display: block; }
 /* Sélecteur de langue : sur l'accueil et dans l'en-tête des écrans suivants. */
 .langs { display: flex; gap: 2px; border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
 .iris .langs { border-color: rgba(255,255,255,.35); }
-.langs button { border: 0; background: none; color: inherit; font: 500 12px 'Space Grotesk', sans-serif; padding: 5px 9px; border-radius: 999px; cursor: pointer; opacity: .7; }
+.langs button { border: 0; background: none; color: inherit; font: 500 12px 'Inter', sans-serif; padding: 5px 9px; border-radius: 999px; cursor: pointer; opacity: .7; }
 .langs button.on { background: var(--iris); color: #fff; opacity: 1; }
 .iris .langs button.on { background: #fff; color: var(--iris); }
 
@@ -84,15 +84,15 @@ h2 { font-size: 30px; line-height: 1.08; letter-spacing: -0.02em; margin: 6px 0 
 .sub { font-size: 15px; line-height: 1.45; color: var(--ink-soft); margin: 0 0 20px; }
 .iris .sub { color: rgba(255,255,255,.78); }
 .grow { flex: 1; }
-.wordmark { font-family: 'Bricolage Grotesque', 'Space Grotesk', sans-serif; font-weight: 800; letter-spacing: -0.03em; }
+.wordmark { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.03em; }
 
-.btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 0; border-radius: 999px; padding: 17px; font: 700 16px 'Space Grotesk', sans-serif; cursor: pointer; margin-top: 10px; }
+.btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 0; border-radius: 999px; padding: 17px; font: 700 16px 'Inter', sans-serif; cursor: pointer; margin-top: 10px; }
 .btn-gold { background: var(--lime); color: var(--ink); }
 .btn-teal { background: var(--iris); color: #fff; }
 .btn-teal:disabled { background: var(--line); color: var(--ink-faint); cursor: default; }
 .btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--line); }
 .btn-black { background: #000; color: #fff; }
-.link { display: block; width: 100%; background: none; border: 0; font: 500 15px 'Space Grotesk', sans-serif; color: var(--ink-soft); padding: 14px; cursor: pointer; }
+.link { display: block; width: 100%; background: none; border: 0; font: 500 15px 'Inter', sans-serif; color: var(--ink-soft); padding: 14px; cursor: pointer; }
 .iris .link { color: rgba(255,255,255,.85); }
 
 /* Pastille d'icône : la tuile de l'identité (iris, trait blanc) — même rôle que les tuiles de la page
@@ -101,7 +101,7 @@ h2 { font-size: 30px; line-height: 1.08; letter-spacing: -0.02em; margin: 6px 0 
 .iris .tuile { background: transparent; border: 1px solid rgba(255,255,255,.4); }
 .tuile.grande { width: 72px; height: 72px; border-radius: 22px; margin: 26px 0 14px; }
 
-.opt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 16px; padding: 13px 14px; margin-bottom: 10px; font: 500 15px 'Space Grotesk', sans-serif; cursor: pointer; transition: background .15s, color .15s; }
+.opt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 16px; padding: 13px 14px; margin-bottom: 10px; font: 500 15px 'Inter', sans-serif; cursor: pointer; transition: background .15s, color .15s; }
 .opt .tuile { width: 36px; height: 36px; border-radius: 10px; background: transparent; color: var(--iris); border: 1px solid var(--line); }
 .opt .tick { margin-left: auto; width: 22px; height: 22px; border-radius: var(--radius-chip); border: 1px solid var(--line); flex: none; display: grid; place-items: center; }
 .opt.on { background: var(--iris); color: #fff; border-color: var(--iris); }
@@ -157,7 +157,7 @@ h2 { font-size: 30px; line-height: 1.08; letter-spacing: -0.02em; margin: 6px 0 
 .biz b { display: block; font-size: 15px; }
 .biz span { font-size: 13px; color: var(--ink-soft); }
 
-.input { width: 100%; font: 500 22px 'Space Grotesk', sans-serif; letter-spacing: .1em; padding: 16px; border: 1px solid var(--line); border-radius: 16px; text-align: center; }
+.input { width: 100%; font: 500 22px 'Inter', sans-serif; letter-spacing: .1em; padding: 16px; border: 1px solid var(--line); border-radius: 16px; text-align: center; }
 .input:focus { outline: 2px solid var(--iris); border-color: var(--iris); }
 
 .cercle { width: 190px; height: 190px; display: block; margin: 0 auto 22px; overflow: visible; }
