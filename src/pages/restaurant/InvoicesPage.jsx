@@ -10,6 +10,7 @@ import InvoicePreferences from '../../components/InvoicePreferences';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 import EtatVide from '../../components/EtatVide';
+import AvecMarque from '../../components/AvecMarque';
 
 // Facture sans TVA : Fairide est sous le régime de la franchise depuis le 7/9/2026 (lettre du SPF Finances du 12/10/2026).
 // Jugé par facture : une facture émise avec TVA garde ses colonnes.
@@ -103,7 +104,7 @@ export default function InvoicesPage() {
 
       {onglet === 'abonnement' && (
         <div className="card no-print">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('invoicesResto.subscription')}</h3>
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}><AvecMarque>{t('invoicesResto.subscription')}</AvecMarque></h3>
           <p className="small" style={{ margin: '0 0 12px' }}>
             {t('invoicesResto.subscriptionHelp')}
           </p>

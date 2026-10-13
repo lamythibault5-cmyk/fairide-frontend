@@ -941,6 +941,9 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .grille-allergenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 4px 12px; }
 .champs-conformite-plat { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px 12px; }
 .conformite-carte summary, .notice-livreur summary { cursor: pointer; }
+/* « Ma carte et mes engagements » : le contour iris de 2px qui attirait l'œil sur l'ancien bloc « Démarrez en 1 clic »
+   (retiré le 2026-10-13), posé là où il compte — sur ce que le commerce doit signer. */
+.conformite-carte { border: 2px solid var(--iris); }
 .notice-livreur { border-top: 1px solid var(--line); padding: 10px 0; }
 .notice-texte { max-height: 320px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 8px 10px; }
 .conformite-ligne { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); }
@@ -1461,7 +1464,9 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 /* Version de main : le carrousel de cuisines est passé au composant générique .auto-scroll-row.
    Seul le rayon des puces vient de la refonte visuelle — 6px pour toutes les puces du site. */
 .cuisine-scroll { padding: 2px 2px 12px; margin-bottom: 10px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
-.auto-scroll-row.cuisine-track { padding-bottom: 0; }
+/* 2px en haut et en bas, pas 0 : la rangée défile de côté, donc elle rogne ce qui dépasse, et à un zoom Windows de
+   125 % (grands portables HP) l'arrondi des pixels coupait le filet du bas des pastilles (retour du 2026-10-13). */
+.auto-scroll-row.cuisine-track { padding-top: 2px; padding-bottom: 3px; }
 .auto-scroll-row.cuisine-track .auto-scroll-track { gap: 8px; }
 /* Filtre de cuisine : l'emoji passe À CÔTÉ du libellé, plus au-dessus. Empilés, la puce était
    aussi haute que large, et l'arrondi de 999px la transformait en cercle qui rognait le mot au
@@ -1850,14 +1855,19 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   pointer-events: none;
 }
 .hero-prix-blocs { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; }
-.hero-prix-bloc { display: flex; flex-direction: column; min-width: 0; border-radius: 16px; padding: 16px 16px 14px; }
+/* container-type : la taille du pourcentage se règle sur la largeur de SA case (cqi), plus sur celle de la fenêtre.
+   En 3,3vw, un grand écran (1920px) donnait 54px dans une case de 140px : « 10 % » touchait le bord. */
+.hero-prix-bloc { display: flex; flex-direction: column; min-width: 0; border-radius: 16px; padding: 16px 16px 14px; container-type: inline-size; }
 .hero-prix-eux { background: var(--cream-dim); }
 .hero-prix-nous { background: #fff; border: 2px solid var(--iris); }
 .hero-prix-nom { font-size: 14px; font-weight: 500; line-height: 1.25; color: var(--ink-soft); }
 .hero-prix-nous .hero-prix-nom.wordmark { font-size: 17px; font-weight: 700; line-height: 1.05; color: var(--ink); }
 .hero-prix-montant {
-  font-size: clamp(38px, 3.3vw, 54px); line-height: 1; font-weight: 700; letter-spacing: -.03em;
-  font-variant-numeric: tabular-nums; margin: auto 0 12px; padding-top: 8px; white-space: nowrap; color: var(--ink-soft);
+  /* Police des titres et chiffres proportionnels (2026-10-13) : en Inter à chasse fixe, « 30 % » paraissait espacé et
+     d'une autre famille que le titre « Pourquoi Fairide ? » juste au-dessus. 42cqi = 42 % de la largeur intérieure de la case : « 30 % » y tient avec de l'air. */
+  font-family: var(--font-titre);
+  font-size: clamp(38px, 3.3vw, 54px); font-size: clamp(28px, 42cqi, 54px); line-height: 1; font-weight: 700; letter-spacing: -.02em;
+  margin: auto 0 12px; padding-top: 8px; white-space: nowrap; color: var(--ink-soft);
 }
 .hero-prix-nous .hero-prix-montant { color: var(--iris); }
 /* La barre = ce que le client paie pour la nourriture. Segment long : ce que garde le resto ; segment
@@ -1947,7 +1957,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   .hero-prix-blocs { column-gap: 10px; }
   .hero-prix-bloc { padding: 12px; }
   .hero-prix-nom { font-size: 13px; }
-  .hero-prix-montant { font-size: 42px; margin-bottom: 10px; }
+  .hero-prix-montant { font-size: min(42px, 42cqi); margin-bottom: 10px; }
   .hero-prix-piste { height: 14px; }
   .hero-prix-legende { font-size: 12px; }}
 /* Téléphone COURT (iPhone SE, 667px) : titre et accroche poussaient la barre à 405px pour un milieu
@@ -1964,7 +1974,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   .hero-prix-titre { font-size: 19px; margin-bottom: 34px; }
   .hero-prix-bloc { padding: 10px 12px; }
   .hero-prix-nom { font-size: 12px; }
-  .hero-prix-montant { font-size: 34px; }
+  .hero-prix-montant { font-size: min(34px, 42cqi); }
 }
 
 /* Ici vivaient les trois chiffres de la bannière (.stats-bar : « 10 % · 19 · 100 % » en lime, sous
@@ -2583,20 +2593,20 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   /* La console admin a une dizaine de pôles : sa pilule défile de côté au lieu d'écraser les onglets. */
   .dashboard-nav.admin { justify-content: flex-start; overflow-x: auto; scrollbar-width: none; contain: layout; }
   .dashboard-nav.admin::-webkit-scrollbar { display: none; }
-  /* TRANSLUCIDE, COMME CHEZ REVOLUT (demande du 2026-10-13, d'abord dans l'application seulement, puis aussi sur le
-     site : c'est là que le fondateur la regardait). Le contenu défile sous la barre, flouté. Exception voulue à la
+  /* TRANSLUCIDE, COMME CHEZ REVOLUT (demande du 2026-10-13), DANS L'APPLICATION SEULEMENT : essayée aussi sur le site
+     le même jour, puis remise en blanc plein sur le site à la demande du fondateur. Le contenu défile sous la barre, flouté. Exception voulue à la
      règle 2 de l'identité (pas de flou), limitée à cette barre. Coût : un flou sur une bande de 74px, ce que Safari
      fait déjà pour ses propres barres ; si un Android modeste saccade, c'est ce bloc qu'il faut limiter à html.natif.
      Repli plein si le système demande moins de transparence. */
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .dashboard-nav {
+    html.natif .dashboard-nav {
       background: rgba(255, 255, 255, .72);
       -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
       border-color: rgba(220, 216, 208, .7);
     }
   }
   @media (prefers-reduced-transparency: reduce) {
-    .dashboard-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    html.natif .dashboard-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
   .dashboard-sidebar--compacte .dashboard-nav-label { opacity: 0; max-height: 0; transform: translateY(4px); }
   /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
@@ -4794,3 +4804,6 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 @keyframes resultat-pop { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
 /* Le bouton secondaire sur fond iris, quand c'est un lien (<Link>) : même forme qu'un bouton, sinon il hérite d'un simple filet. */
 .resultat-paye a.btn-hero-ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 20px; border-radius: var(--radius-pill); font-weight: 500; font-size: 15px; }
+
+/* Le nom dans un titre (components/AvecMarque.jsx) : le mot-logo, à la graisse du logo, sans changer la taille du titre. */
+.mot-marque { font-weight: 800; letter-spacing: -0.03em; }

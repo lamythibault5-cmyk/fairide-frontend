@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
+import AvecMarque from './AvecMarque';
 
 // « Tes prix sur Fairide » — modèle du 13/10/2026 (fondateur). Par défaut, la carte affiche les prix du commerce et Fairide
 // garde 10 % du prix payé. La barre monte les prix de 0 à etat.max (+ 11,1 % en franchise TVA), la hausse qui rend au
@@ -72,7 +73,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
 
   return (
     <div className="card hausse-prix" id="menu-hausse-prix">
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}><Icone nom="tendance" taille={16} className="icone-texte" />{' '}{t('menuPage.markupTitle')}</h3>
+      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}><Icone nom="tendance" taille={16} className="icone-texte" />{' '}<AvecMarque>{t('menuPage.markupTitle')}</AvecMarque></h3>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.markupIntro', { rate: tauxAffiche, max: pct(etat.max) })}</p>
       <label htmlFor="hausse-prix-barre" className="small" style={{ fontWeight: 700, display: 'block' }}>
         {valeur === 0 ? t('menuPage.markupValueZero') : t('menuPage.markupValue', { p: pct(valeur) })}

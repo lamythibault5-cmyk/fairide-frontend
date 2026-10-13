@@ -9,7 +9,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
   categoryEmoji, categoryImage, categoryLabel, getStarterTemplate,
-  fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, resolveItemImage,
+  CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, resolveItemImage,
   groupBySubsection
 } from '../../menuCategories';
 import MenuItemRow from '../../components/MenuItemRow';
@@ -53,8 +53,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const [templateOpen, setTemplateOpen] = useState(false);
   const [addingTemplate, setAddingTemplate] = useState(false);
   const [startChoiceMade, setStartChoiceMade] = useState(false);
-  const [starterPickerOpen, setStarterPickerOpen] = useState(false);
-  const [applyingStarter, setApplyingStarter] = useState(false);
   const [addingClassicDrinks, setAddingClassicDrinks] = useState(false);
   const [addingClassicDesserts, setAddingClassicDesserts] = useState(false);
   const [addItemGalleryOpen, setAddItemGalleryOpen] = useState(false);
@@ -449,26 +447,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
-  // « Démarrer en 1 clic » : ajoute d'un coup la sélection rapide de plats typiques de la cuisine du commerce
-  // (prix indicatifs) ; tout se corrige ensuite dans « Ton menu », plus bas.
-  const platsUnClic = quickTemplateItems(restaurant.cuisine);
-  function demarrerEnUnClic() { applyStarterItems(platsUnClic); }
-
-  async function applyStarterItems(items) {
-    if (!items.length) { toast(t('menuPage.toastPickOne')); return; }
-    setApplyingStarter(true);
-    try {
-      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
-      setStartChoiceMade(true);
-      setStarterPickerOpen(false);
-      loadDashboard(restoId);
-      toast(t('menuPage.toastDishesAddedEdit', { n: items.length }));
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setApplyingStarter(false);
-    }
-  }
 
   // LE COPIER-COLLER GUIDÉ ET LES DEUX IMPORTS PAR IA ONT ÉTÉ RETIRÉS (2026-09-21).
   // Ils visaient les pages Uber Eats / Deliveroo / Takeaway. Mesuré depuis : Uber Eats et Takeaway
@@ -549,31 +527,9 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       </div>
       )}
 
-      {modeAdmin && restaurant.menu.length === 0 && !startChoiceMade && (
-        <div className="card" id="menu-demarrage" style={{ border: '2px solid var(--teal)' }}>
-          <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('menuPage.quickStartTitle')}</h3>
-          <p className="small" style={{ margin: '0 0 12px' }}>
-            {t('menuPage.quickStart1')} <b>{restaurant.cuisine}</b>{t('menuPage.quickStart2')}
-          </p>
-          {!starterPickerOpen ? (
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
-                {t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}
-              </button>
-              <button className="btn-ghost" onClick={() => setStartChoiceMade(true)}>{t('menuPage.createMyself')}</button>
-              {platsUnClic.length > 0 && <button className="btn-outline" disabled={applyingStarter} onClick={demarrerEnUnClic}>{applyingStarter ? '…' : t('menuPage.oneClickButton', { n: platsUnClic.length })}</button>}
-            </div>
-          ) : (
-            <TemplatePicker
-              template={getStarterTemplate(restaurant.cuisine)}
-              quickItems={quickTemplateItems(restaurant.cuisine)}
-              submitting={applyingStarter}
-              onSubmit={applyStarterItems}
-              onCancel={() => setStarterPickerOpen(false)}
-            />
-          )}
-        </div>
-      )}
+      {/* Le bloc « Démarrez en 1 clic » (plats de départ par type de commerce) est parti le 2026-10-13 : depuis que l'équipe
+          prépare chaque carte à partir des prix en magasin et que le commerce la valide (« C'est bon »), ces suggestions
+          génériques ne servaient plus (retour du fondateur : « inutile »). */}
 
       <div className="menu-etape" id="menu-modifier">
         <span className="menu-etape-num">2</span>

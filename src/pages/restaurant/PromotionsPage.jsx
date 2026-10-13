@@ -8,6 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
 import EtatVide from '../../components/EtatVide';
+import AvecMarque from '../../components/AvecMarque';
 
 const TYPES = [
   { value: 'percent', label: 'typePercent' },
@@ -55,7 +56,7 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
       <div className="avantage-tete">
         <span className="avantage-icone"></span>
         <div>
-          <h3 style={{ margin: 0, fontSize: 16 }}>{t('promosPage.fairideTitle')}</h3>
+          <h3 style={{ margin: 0, fontSize: 16 }}><AvecMarque>{t('promosPage.fairideTitle')}</AvecMarque></h3>
           <p className="small" style={{ margin: '4px 0 0' }}>{t('promosPage.fairideIntro')}</p>
         </div>
       </div>

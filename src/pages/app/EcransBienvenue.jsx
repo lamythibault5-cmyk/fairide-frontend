@@ -4,6 +4,7 @@ import BrandMark from '../../components/BrandMark';
 import Icone from '../../components/Icone';
 import BoutonsConnexionNative from '../../components/BoutonsConnexionNative';
 import { restaurantTypeLabel } from '../../menuCategories';
+import AvecMarque from '../../components/AvecMarque';
 
 /* Les écrans de l'accueil de l'application — l'enchaînement, la mémoire et la recherche des commerces vivent dans
  * Bienvenue.jsx. Ces composants ne font qu'afficher et remonter des gestes.
@@ -93,7 +94,7 @@ export function EcranProfil({ role, onChoix, onSuite }) {
   const { t } = useLanguage();
   return (
     <>
-      <h1 className="bv-titre">{t('appli.profilTitre')}</h1>
+      <h1 className="bv-titre"><AvecMarque>{t('appli.profilTitre')}</AvecMarque></h1>
       <p className="bv-sous">{t('appli.profilSub')}</p>
       {PROFILS.map(([v, icone, k]) => <Option key={v} on={role === v} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)} onClick={() => onChoix(v)} />)}
       <div className="bv-grandit" />
@@ -176,7 +177,7 @@ export function EcranPourquoi({ freins, onSuite }) {
   const barre = (f, k) => (freins.includes(f) ? t(`appli.${k}`) : null);
   return (
     <>
-      <h1 className="bv-titre">{t('appli.pqTitre')}</h1>
+      <h1 className="bv-titre"><AvecMarque>{t('appli.pqTitre')}</AvecMarque></h1>
       <p className="bv-sous">{t('appli.pqSub')}</p>
       <Fait vedette icone="euro" titre={t('appli.pq1')} sous={t('appli.pq1S')} barre={barre('gonfle', 'fGonfle')}>
         {/* Barres à l'échelle : 32 % = toute la largeur, la partie claire marque la fourchette 22-32 %. */}

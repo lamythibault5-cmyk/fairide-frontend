@@ -4,6 +4,7 @@ import { faqJsonLd, breadcrumbJsonLd } from '../seo/jsonLd';
 import RetourCompte from '../components/RetourCompte';
 import Rich from '../components/Rich';
 import { useLanguage } from '../context/LanguageContext';
+import AvecMarque from '../components/AvecMarque';
 
 // Notre histoire, sortie de la page Compte, où elle occupait une carte de cinquante lignes que
 // personne n'avait demandé à lire. Elle s'intercalait entre les coordonnées de connexion et les
@@ -49,7 +50,7 @@ export default function OurStory() {
       <RetourCompte />
       {/* h1 et non h2 : c'est le titre de la page, et la page n'en avait aucun. Le rendu ne change
           pas, .section-title porte déjà sa taille. */}
-      <h1 className="section-title" style={{ marginTop: 0 }}>{t('story.h1')}</h1>
+      <h1 className="section-title" style={{ marginTop: 0 }}><AvecMarque>{t('story.h1')}</AvecMarque></h1>
       <div className="card">
         <p className="small" style={{ margin: '0 0 14px', opacity: 0.75 }}>{t('story.intro')}</p>
         {BLOCS.map(([cle, type, n], i) => {

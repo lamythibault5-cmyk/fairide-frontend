@@ -1,4 +1,5 @@
 import { useLanguage } from '../../context/LanguageContext';
+import AvecMarque from '../AvecMarque';
 
 // « POURQUOI FAIRIDE ? » DANS LA BANNIÈRE — maquette du fondateur (2026-10-09), qui remplace l'exemple
 // des 40 € du 2026-09-27 : deux cases côte à côte, ce que garde le resto chez les grandes plateformes
@@ -41,7 +42,7 @@ function FlecheDessinee() {
 
 function Case({ nom, taux, classe, wordmark, t }) {
   // Espace insécable : « 90 » et « % » se retrouvaient sur deux lignes dans la case étroite du téléphone.
-  const pct = (x) => `${Math.round(x * 100)} %`;
+  const pct = (x) => `${Math.round(x * 100)}\u202F%`; // espace FINE insécable (typographie française : moins large)
   const resto = 1 - taux;
   return (
     <div className={`hero-prix-bloc ${classe}`}>
@@ -63,7 +64,7 @@ export default function HeroPrix() {
     <section className="hero-prix" aria-label={t('landing.priceWhyAria')}>
       <h2 className="hero-prix-titre">
         {/* Le <span> porte la flèche : elle part du BOUT du texte, quelle que soit la langue. */}
-        <span className="hero-prix-titre-texte">{t('landing.priceWhy')}<FlecheDessinee /></span>
+        <span className="hero-prix-titre-texte"><AvecMarque>{t('landing.priceWhy')}</AvecMarque><FlecheDessinee /></span>
       </h2>
 
       <div className="hero-prix-blocs">

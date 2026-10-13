@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { euros } from '../prixPlat';
 import usePageMeta from '../hooks/usePageMeta';
+import AvecMarque from '../components/AvecMarque';
 
 /* « C'est bon » en un geste (CODE-3, 8 octobre 2026, DEC-25) — /carte/valider/:token.
  *
@@ -83,7 +84,7 @@ export default function ValiderCarte() {
 
       {choixOffert && (
         <section className="card" style={{ marginBottom: 12 }} aria-labelledby={`${id}-taux`}>
-          <h2 id={`${id}-taux`} style={{ fontSize: 16, margin: '0 0 4px' }}>{t('validerCarte.rateTitle')}</h2>
+          <h2 id={`${id}-taux`} style={{ fontSize: 16, margin: '0 0 4px' }}><AvecMarque>{t('validerCarte.rateTitle')}</AvecMarque></h2>
           <p className="small" style={{ margin: '0 0 10px' }}>{t('validerCarte.rateIntro')}</p>
           <div className="row" role="radiogroup" style={{ gap: 8, flexWrap: 'wrap' }}>
             <button type="button" role="radio" aria-checked={!ajouter} className={!ajouter ? 'btn-teal' : 'btn-outline'} style={{ flex: '1 1 200px' }} onClick={() => setAjouter(false)}>

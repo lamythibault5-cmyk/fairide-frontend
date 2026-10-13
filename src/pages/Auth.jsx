@@ -28,6 +28,7 @@ import usePageMeta from '../hooks/usePageMeta';
 import { suivre } from '../analytics';
 import { bceValide, raisonBce, codePostalValide } from '../validation';
 import Icone from '../components/Icone';
+import AvecMarque from '../components/AvecMarque';
 
 function roles(t) {
   return [
@@ -1151,7 +1152,7 @@ export default function Auth() {
       {audience && mode !== 'register' && (
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
           <h2 style={{ margin: 0, fontSize: 22 }}>
-            {role === 'client' ? t('auth.clientHeading') : t('auth.partnerHeading')}
+            <AvecMarque>{role === 'client' ? t('auth.clientHeading') : t('auth.partnerHeading')}</AvecMarque>
           </h2>
         </div>
       )}

@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import { abonnementOuvert, dateOuvertureAbonnement } from '../launch';
 import Icone from './Icone';
+import AvecMarque from './AvecMarque';
 
 // Remise de carte et mise en ligne.
 //
@@ -55,7 +56,7 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
     <>
       {aConfirmer && (
         <div className="card" id="menu-a-confirmer" style={{ border: '2px solid var(--gold, #C9A227)' }}>
-          <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('menuPage.handoverTitle')}</h3>
+          <h3 style={{ margin: '0 0 6px', fontSize: 16 }}><AvecMarque>{t('menuPage.handoverTitle')}</AvecMarque></h3>
           <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.handoverIntro')}</p>
           <p className="small" style={{ margin: '0 0 12px', background: 'var(--cream-dim)', padding: '10px 12px', borderRadius: 8 }}>
             {t('menuPage.handoverNotVisible')}

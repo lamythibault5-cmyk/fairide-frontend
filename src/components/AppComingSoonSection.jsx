@@ -1,6 +1,7 @@
 import BrandMark from './BrandMark';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
+import AvecMarque from './AvecMarque';
 
 // Section "l'appli arrive bientôt" sur la page d'accueil — inspirée des bannières de téléchargement des
 // grandes plateformes (badges de store + mockup téléphone), mais honnête sur ce qui existe vraiment :
@@ -56,7 +57,7 @@ export default function AppComingSoonSection() {
     <div className="app-soon">
       <div className="app-soon-text">
         <span className="pill hero app-soon-badge">{t('landing.appSoonBadge')}</span>
-        <h2 className="app-soon-title">{t('landing.appSoonTitle')}</h2>
+        <h2 className="app-soon-title"><AvecMarque>{t('landing.appSoonTitle')}</AvecMarque></h2>
         <p className="app-soon-sub">{t('landing.appSoonSub')}</p>
         <div className="app-soon-badges">
           {STORE_BADGES.map((b) => (
