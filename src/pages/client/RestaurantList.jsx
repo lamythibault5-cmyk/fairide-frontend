@@ -16,6 +16,8 @@ import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { epingler, titreRangee } from '../../misesEnAvant';
+import { lireBienvenue } from '../../bienvenue';
+import { repondAuxEnvies } from '../../envies';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
@@ -385,6 +387,17 @@ export default function RestaurantList() {
     ? parDistance.slice(0, PROCHES_MAX)
     : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)).slice(0, PROCHES_MAX) : [],
   placements, 'nearby', parDistance.length ? parDistance : nonGroceryTous));
+  /* VOS ENVIES (2026-10-13). L'accueil de l'application demande « Une envie en particulier ? » et range ses résultats
+   * avec ; la liste les oubliait ensuite. Une rangée de plus, juste sous « Autour de vous », avec les commerces qui y
+   * répondent, dans le même ordre de proximité — les autres rangées ne bougent pas. Les envies vivent dans le téléphone
+   * (bienvenue.js, jamais envoyées) : sur le site, où l'accueil de l'app ne passe pas, la rangée n'existe pas.
+   * Jamais complétée : une rangée « Vos envies » remplie de commerces qui n'y répondent pas mentirait.
+   * /classement (RankingPage, conformite.ranking_rows) la décrit. */
+  const envies = Array.isArray(lireBienvenue().envies) ? lireBienvenue().envies : [];
+  const enviesList = envies.length
+    ? (parDistance.length ? parDistance : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous)
+      .filter((r) => repondAuxEnvies(r, envies)).slice(0, PROCHES_MAX)
+    : [];
   // LIVRAISON DÈS 3 € et LIVRAISON OFFERTE (fondateur, 2026-10-01) : seulement les commerces concernés, jamais complétées.
   const SEUIL_PAS_CHER = 3;
   const livrables = nonGrocery.filter((r) => r.offersDelivery !== false);
@@ -602,6 +615,7 @@ export default function RestaurantList() {
             </div>
           )}
           <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="nearby" />
+          <Section title={t('restaurantList.sectionCravings')} icon="favoris" list={enviesList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionFreeDelivery')} icon="scooter" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="free_delivery" />
           <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="scooter" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="cheap_delivery" />
           <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="offers" />

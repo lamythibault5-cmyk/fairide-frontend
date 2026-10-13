@@ -5,6 +5,7 @@ import { remonterEnHaut } from '../remonter';
 import urlSure from '../urlSure';
 import { chargerGoogleSignIn } from '../googleSignIn';
 import { estNatif, connexionFournisseur } from '../natif';
+import { lireBienvenue } from '../bienvenue';
 import BoutonsConnexionNative from '../components/BoutonsConnexionNative';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -332,6 +333,15 @@ export default function Auth() {
      fautif plutôt qu'en toast : à la fin d'un formulaire de 13 champs, un toast "adresse
      requise" n'indique pas lequel des quatre champs d'adresse est vide. */
   const [step, setStep] = useState(0);
+  // Client qui arrive de l'accueil de l'application : le code postal tapé là-bas (écran « Ton code postal ») préremplit
+  // l'adresse, au lieu d'être redemandé deux écrans plus loin. Seulement des champs vides — un brouillon restauré ou une
+  // fiche Google gardent la main. L'étape reste : le serveur exige l'adresse complète d'un client (routes/auth.js).
+  useEffect(() => {
+    if (mode !== 'register' || role !== 'client') return;
+    const b = lireBienvenue();
+    if (b.codePostal) setAddressPostalCode((v) => v || b.codePostal);
+    if (b.commune) setAddressCity((v) => v || b.commune);
+  }, [mode, role]);
   // Chaque nouvelle étape s'ouvre en haut de l'écran, pas là où l'on a touché « Continuer » (voir src/remonter.js).
   const etapeAffichee = useRef(step);
   useEffect(() => {
