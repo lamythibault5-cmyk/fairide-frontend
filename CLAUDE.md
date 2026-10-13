@@ -179,8 +179,8 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
 | `--line` | `#DCD8D0` | 1px hairlines — the only separator, there are no shadows |
 | `--chip` | `#1E1A17` | Dark badge background, white text |
 | `--cream` / `--cream-dim` | `#FFFFFF` / `#F4F2ED` | Page background / surface tint |
-| `--red` `--blue` `--orange` `--purple` | | Status colours only, never brand |
-| `--radius` / `--radius-chip` | `20px` / `6px` | Cards / chips and controls |
+| `--red` `--blue` `--orange` `--purple` `--green` | | Status colours only, never brand (`--green` since 2026-10-13: « validé », « signé ») |
+| `--radius` / `--radius-field` / `--radius-pill` | `16px` / `8px` / `999px` | Cards / fields and small containers (`--radius-chip` is an alias of `--radius-field`) / everything clickable. Re-checked against styles.css on 2026-10-13 — this row said 20px / 6px, which the code no longer used |
 | `--shadow` | `none` | Kept as a token so old call sites resolve to nothing |
 
 **Three rules that are not negotiable, all inherited from the spec:**

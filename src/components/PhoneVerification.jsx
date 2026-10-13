@@ -19,7 +19,7 @@ export default function PhoneVerification() {
 
   if (!user?.phone) return null;
   if (user.phoneVerified) {
-    return <p className="small" style={{ margin: '4px 0 0', color: 'var(--ok, #2e7d32)' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('accountUi.phoneVerified')}</p>;
+    return <p className="small" style={{ margin: '4px 0 0', color: 'var(--green)' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('accountUi.phoneVerified')}</p>;
   }
 
   async function demander() {

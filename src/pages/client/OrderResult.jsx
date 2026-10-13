@@ -135,7 +135,7 @@ export default function OrderResult({ success }) {
           seconde où le webhook est sur le point d'arriver. */}
       {state !== 'checking' && (
         <div className="row" style={{ gap: 10, justifyContent: 'center' }}>
-          <Link to="/orders" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-block' }}>
+          <Link to="/orders" className="btn-teal" style={{ textDecoration: 'none', display: 'inline-block' }}>
             {t('orderResult.viewOrders')}
           </Link>
           <Link to="/restaurants" className="btn-outline" style={{ textDecoration: 'none', display: 'inline-block' }}>

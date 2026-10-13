@@ -642,7 +642,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
               <span style={{ color: 'var(--ink-faint)' }}><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{tr('adminRestos.zoneDeliveryOwn')}</span>
             ) : detail.fairideDeliveryDisabled ? (
               <>
-                <span className="pill" style={{ background: '#fff1d6', color: '#7a4a00' }}><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{tr('adminRestos.zoneDeliveryOffBadge')}</span>
+                <span className="pill"><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{tr('adminRestos.zoneDeliveryOffBadge')}</span>
                 {detail.fairideDeliveryDisabledReason && <span style={{ marginLeft: 6 }}>{detail.fairideDeliveryDisabledReason}</span>}
                 <button type="button" className="btn-outline" style={{ marginLeft: 8, padding: '4px 10px', fontSize: 12 }} onClick={() => onZoneDelivery?.(detail.id, false)}>{tr('adminRestos.zoneDeliveryOn')}</button>
               </>

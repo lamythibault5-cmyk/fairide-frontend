@@ -511,7 +511,7 @@ export default function DriverDashboard() {
                 </span>
                 <span className="row" style={{ gap: 6 }}>
                   <button className="btn-outline" style={{ padding: '8px 12px', fontSize: 13 }} onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
-                  <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
+                  <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
                 </span>
               </div>
             </div>

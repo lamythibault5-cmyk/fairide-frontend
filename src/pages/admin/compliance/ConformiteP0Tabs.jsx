@@ -253,7 +253,7 @@ export function ProcessorsTab() {
               {data.map((p) => (
                 <tr key={p.name}>
                   <th scope="row">{p.name}<div className="small" style={{ fontWeight: 400 }}>{p.purpose}</div>
-                    <span className="small" style={{ color: p.dpaOk ? '#2e7d32' : 'var(--red)' }}>{p.dpaOk ? t('conformite.procDpaOk') : t('conformite.procDpaMissing')}</span>
+                    <span className="small" style={{ color: p.dpaOk ? 'var(--green)' : 'var(--red)' }}>{p.dpaOk ? t('conformite.procDpaOk') : t('conformite.procDpaMissing')}</span>
                   </th>
                   <td className="small">{t(`conformite.transfer_${p.transferMechanism}`)}<div>{p.zone}</div>{p.tiaNeeded && <div style={{ color: 'var(--red)' }}>{t('conformite.procTiaNeeded')}</div>}</td>
                   <td><input aria-label={t('conformite.procDpaVersion')} value={val(p, 'dpaVersion')} onChange={(e) => poser(p, 'dpaVersion', e.target.value)} style={{ maxWidth: 120 }} /></td>

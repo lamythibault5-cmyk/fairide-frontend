@@ -292,7 +292,7 @@ export default function OrdersPage() {
         )}
       </div>
       <div className="row" style={{ justifyContent: 'space-between' }}>
-        <b>{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6, background: '#fff1d6', color: '#7a4a00' }}>{t('ordersResto.trainingBadge')}</span>}</b>
+        <b>{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6 }}>{t('ordersResto.trainingBadge')}</span>}</b>
         <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
       </div>
       <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>

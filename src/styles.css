@@ -63,6 +63,9 @@
   --blue: #2B7FB8;
   --orange: #E07A1F;
   --purple: #B0459B;
+  /* Vert d'état (« validé », « signé », « complet ») — 2026-10-13 : il était écrit en dur (#2e7d32) dans six écrans. Couleur
+     d'état seulement, comme les quatre au-dessus : jamais une couleur de marque. */
+  --green: #2E7D32;
   --heart: #FF3B5C;
 
   /* Formes — LA PILULE EST LA FORME SIGNATURE (DESIGN.md § Shapes).
@@ -623,13 +626,16 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .btn-lg { min-height: 56px; font-size: 18px; padding: 16px 24px; }
 
 .btn-primary { background: var(--ink); color: var(--cream); }
-.btn-gold { background: var(--lime); color: var(--ink); border: 1px solid #A9CE2A; }
+/* Bordure de la couleur du fond : elle garde la hauteur des autres boutons à bordure, sans ajouter une teinte hors palette
+   (c'était #A9CE2A, une lime assombrie). */
+.btn-gold { background: var(--lime); color: var(--ink); border: 1px solid var(--lime); }
 .btn-teal { background: var(--iris); color: #fff; }
 .btn-teal:hover:not(:disabled) { background: var(--iris-deep); }
 .btn-danger { background: var(--red); color: #fff; }
 .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--ink); }
-.btn-ghost { background: transparent; color: var(--ink-soft); padding: 6px 10px; font-size: 12px; }
-.btn-danger-ghost { background: transparent; color: var(--red); padding: 6px 10px; font-size: 12px; text-decoration: underline; }
+/* 14px et non plus 12 (2026-10-13) : 315 actions de l'application sont des btn-ghost, et à 12px elles se lisaient mal. */
+.btn-ghost { background: transparent; color: var(--ink-soft); padding: 6px 10px; font-size: 14px; }
+.btn-danger-ghost { background: transparent; color: var(--red); padding: 6px 10px; font-size: 14px; text-decoration: underline; }
 .btn-block { width: 100%; }
 
 /* .btn-subtle — la pilule grise des actions de troisième rang (« En savoir plus », « Modifier »),
