@@ -82,6 +82,9 @@ export default function Bienvenue() {
 
   const [ecran, setEcran] = useState('accueil');
   const [historique, setHistorique] = useState([]);
+  // Sens du dernier passage d'écran : en reculant, l'écran revient par la gauche, d'où il était parti (cohérence
+  // spatiale, plan du 2026-10-13). Avant, tout arrivait par la droite, retour compris.
+  const [recule, setRecule] = useState(false);
   const [role, setRole] = useState(null);
   const [buts, setButs] = useState([]);
   const [freins, setFreins] = useState([]);
@@ -122,6 +125,7 @@ export default function Bienvenue() {
 
   function aller(suivant, { sansHistorique = false } = {}) {
     if (!sansHistorique) setHistorique((h) => [...h, ecran]);
+    setRecule(false);
     setEcran(suivant);
     window.scrollTo(0, 0);
   }
@@ -131,6 +135,7 @@ export default function Bienvenue() {
     let precedent = h.pop();
     while (precedent === 'recherche') precedent = h.pop(); // il repartirait tout seul vers l'avant
     setHistorique(h);
+    setRecule(true);
     setEcran(precedent || 'accueil');
   }
   const basculer = (setter) => (v) => setter((l) => (l.includes(v) ? l.filter((x) => x !== v) : [...l, v]));
@@ -237,7 +242,7 @@ export default function Bienvenue() {
 
   return (
     <div className={`bv${fondIris ? ' bv-iris' : ''}`}>
-      <main className="bv-ecran" key={ecran}>
+      <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={ecran}>
         {!sansHaut && <Haut onRetour={retour} progression={progression} onPasser={passerQuestions} />}
         {contenu}
       </main>

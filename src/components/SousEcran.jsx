@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 import useDialogue from '../hooks/useDialogue';
+import useFeuilleGlissable from '../hooks/useFeuilleGlissable';
 
 // Un sous-écran du paiement : l'adresse, les options de remise.
 //
@@ -33,17 +34,21 @@ export default function SousEcran({ titre, onFermer, children, pied = null }) {
    * focus au bouton d'ouverture. Ce sous-écran contient des champs de saisie : c'est précisément
    * celui où un effet mal découpé se verrait le plus vite. */
   useDialogue(racine, onFermer);
+  // Même geste que la fiche d'un plat : tirer vers le bas ferme (physique dans l'application, voir le hook).
+  const panneau = useRef(null);
+  const defile = useRef(null);
+  const glisser = useFeuilleGlissable({ panneau, defile, fermerAnime: onFermer });
 
   return createPortal(
     <div className="plat-feuille" role="dialog" aria-modal="true" aria-label={titre} ref={racine} tabIndex={-1}>
-      <div className="plat-panneau">
+      <div className="plat-panneau" ref={panneau} {...glisser}>
         <div className="sous-ecran-tete">
           <button type="button" className="flux-bouton" onClick={onFermer} aria-label={t('common.close')} title={t('common.close')}>
             <span aria-hidden="true">‹</span>
           </button>
           <span className="flux-titre">{titre}</span>
         </div>
-        <div className="plat-defile">
+        <div className="plat-defile" ref={defile}>
           <div className="plat-corps">{children}</div>
         </div>
         {/* Le pied n'existe que si l'appelant en donne un : certains sous-écrans se referment d'eux-

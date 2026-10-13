@@ -14,12 +14,16 @@ import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
 import { SkeletonCards } from './Skeleton';
-import { estNatif } from '../natif';
+import { estNatif, plateforme } from '../natif';
 import { lireBienvenue } from '../bienvenue';
 
 // « Activer les notifications » juste après l'inscription, dans l'application seulement (voir AmorceNotifications.jsx).
 // Chargé à la demande : sur fairide.be la condition est toujours fausse, et le module n'est jamais téléchargé.
 const AmorceNotifications = lazy(() => import('./AmorceNotifications'));
+// Retour par glissement depuis le bord gauche, application iPhone seulement (Android l'a dans le système). Même
+// chargement à la demande : le site ne télécharge ni ce module ni le ressort qu'il utilise.
+const RetourParGlissement = lazy(() => import('./RetourParGlissement'));
+const retourParGlissement = estNatif() && plateforme() === 'ios';
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
@@ -198,6 +202,7 @@ export default function Layout() {
         <CookieBanner />
         {seesClientCart && <FloatingCart />}
         {estNatif() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
+        {retourParGlissement && <Suspense fallback={null}><RetourParGlissement /></Suspense>}
       </>
     );
   }
@@ -318,6 +323,7 @@ export default function Layout() {
       </div>
       <CookieBanner />
       {seesClientCart && <FloatingCart />}
+      {retourParGlissement && <Suspense fallback={null}><RetourParGlissement /></Suspense>}
       {/* Pas de filigrane ici : cette branche affiche déjà la bannière .hero, avec le vélo ET le
           mot « fairide » à vingt pixels de l'endroit où le filigrane se serait posé. Il n'y
           apportait rien, et sa présence obligeait .hero-inner à réserver 88 à 108px de largeur
