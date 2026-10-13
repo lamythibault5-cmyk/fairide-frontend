@@ -18,7 +18,7 @@ import usePageMeta from '../hooks/usePageMeta';
  * priceWithFairideRate), et le choix part avec « C'est bon ». Par défaut : garder — on ne monte pas ses prix sans un geste. */
 export default function ValiderCarte() {
   const { token } = useParams();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const id = useId();
   // Page à jeton : jamais indexée, jamais suivie (le lien est personnel).
   usePageMeta({ title: t('validerCarte.pageTitle'), robots: 'noindex, nofollow' });
@@ -30,6 +30,9 @@ export default function ValiderCarte() {
   const [ajouter, setAjouter] = useState(false);
   const choixOffert = !!carte?.fairideRateChoice?.offered;
   const rate = carte?.fairideRateChoice?.rate || 0;
+  // Hausse qui rend au commerce son prix entier après la commission (11,1 % en franchise TVA), calculée par le serveur.
+  const hausse = carte?.fairideRateChoice?.markup || 0;
+  const pctLocal = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
   const avecCommission = choixOffert && ajouter;
 
   const charger = () => api(`/menu-validation/${encodeURIComponent(token)}`)
@@ -87,13 +90,13 @@ export default function ValiderCarte() {
               {t('validerCarte.rateKeep')}
             </button>
             <button type="button" role="radio" aria-checked={ajouter} className={ajouter ? 'btn-teal' : 'btn-outline'} style={{ flex: '1 1 200px' }} onClick={() => setAjouter(true)}>
-              {t('validerCarte.rateAdd', { rate: Math.round(rate * 100) })}
+              {t('validerCarte.rateAdd', { markup: pctLocal(hausse) })}
             </button>
           </div>
           <p className="small" style={{ margin: '10px 0 0' }}>
             {ajouter
-              ? t('validerCarte.rateAddHelp', { rate: Math.round(rate * 100) })
-              : t('validerCarte.rateKeepHelp', { pct: Math.round((rate / (1 + rate)) * 100) })}
+              ? t('validerCarte.rateAddHelp', { markup: pctLocal(hausse) })
+              : t('validerCarte.rateKeepHelp', { pct: pctLocal(rate * 100) })}
           </p>
         </section>
       )}
