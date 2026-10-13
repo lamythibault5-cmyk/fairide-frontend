@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import EtatVide from '../../components/EtatVide';
 
 // « Mes gains » (livreur) : ce que Fairide a versé sur l'année, brut / précompte / net, par mois et par
 // course (/couriers/me/earnings), avec la jauge du plafond pour l'économie collaborative et un rappel
@@ -69,7 +70,7 @@ export default function EarningsPage() {
 
           {aide && <div className="card"><p className="small" style={{ margin: 0 }}>{aide}</p></div>}
 
-          {mois.length === 0 && lignes.length === 0 && <div className="empty">{t('driverPay.none')}</div>}
+          {mois.length === 0 && lignes.length === 0 && <EtatVide icone="euro" titre={t('driverPay.none')} />}
 
           {mois.length > 0 && (
             <div className="card">

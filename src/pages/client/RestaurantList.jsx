@@ -28,6 +28,7 @@ import VisuelVide from '../../components/VisuelVide';
 import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
+import EtatVide from '../../components/EtatVide';
 
 // Bandes de prix, calculees sur le prix MEDIAN des plats de la carte : aucune colonne « niveau de
 // prix » n'existe en base, et un euro affiche au juge serait faux pour la moitie des commerces.
@@ -628,15 +629,15 @@ export default function RestaurantList() {
           <Section title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="grocery" />
           <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epinglerOuMelanger(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay cle="discover" />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
-            <div className="empty">{t('restaurantList.empty')}</div>
+            <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
           )}
         </>
       )}
       {!loading && hasActiveFilter && list.length === 0 && (
-        <div className="empty">{t('restaurantList.empty')}</div>
+        <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
       )}
       {!loading && restaurants.length === 0 && (
-        <div className="empty">{t('restaurantList.empty')}</div>
+        <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
       )}
     </div>
   );

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { StarsDisplay } from '../../components/Stars';
 import { useLanguage } from '../../context/LanguageContext';
+import EtatVide from '../../components/EtatVide';
 
 // La réponse du restaurateur est publique (visible aux clients sur la fiche resto, voir
 // RestaurantMenu.jsx) — pensée pour se justifier publiquement en cas d'avis contestable, pas comme
@@ -46,7 +47,7 @@ export default function ReviewsPage() {
         {restaurant.reviewCount > 0 && <StarsDisplay value={restaurant.rating} />}
         <span className="small">{restaurant.reviewCount > 0 ? t('reviewsResto.ratingWithCount', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('reviewsResto.noReviewsYet')}</span>
       </div>
-      {(!reviews || reviews.reviews.length === 0) && <div className="empty">{t('reviewsResto.none')}</div>}
+      {(!reviews || reviews.reviews.length === 0) && <EtatVide icone="etoile" titre={t('reviewsResto.none')} />}
       {reviews && reviews.reviews.length > 0 && (
         <div className="card">
           {reviews.reviews.map((r) => (

@@ -9,6 +9,7 @@ import CommissionStatements from '../../components/CommissionStatements';
 import InvoicePreferences from '../../components/InvoicePreferences';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
+import EtatVide from '../../components/EtatVide';
 
 // Facture sans TVA : Fairide est sous le régime de la franchise depuis le 7/9/2026 (lettre du SPF Finances du 12/10/2026).
 // Jugé par facture : une facture émise avec TVA garde ses colonnes.
@@ -192,7 +193,7 @@ export default function InvoicesPage() {
           </div>
 
           <h4 style={{ margin: '0 0 10px' }}>{t('invoicesResto.serviceCommission', { period: periodLabel })}</h4>
-          {(!invoice.items || invoice.items.length === 0) && <div className="empty">{t('invoicesResto.noPaidOrders')}</div>}
+          {(!invoice.items || invoice.items.length === 0) && <EtatVide icone="document" titre={t('invoicesResto.noPaidOrders')} />}
           {invoice.items?.length > 0 && (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>

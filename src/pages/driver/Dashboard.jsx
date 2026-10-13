@@ -24,6 +24,7 @@ import SelfieControle from '../../components/livreur/SelfieControle';
 import NotifCourses from '../../components/livreur/NotifCourses';
 import PositionRequise from '../../components/livreur/PositionRequise';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
+import EtatVide from '../../components/EtatVide';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
@@ -485,7 +486,7 @@ export default function DriverDashboard() {
           <NotifCourses />
           {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
           <PositionRequise>
-          {available.length === 0 && <div className="empty">{t('dashDriver.noneAvailable')}</div>}
+          {available.length === 0 && <EtatVide icone="scooter" titre={t('dashDriver.noneAvailable')} />}
           {available.map((o) => (
             <div className="card" key={o.id}>
               <div className="row" style={{ justifyContent: 'space-between' }}>

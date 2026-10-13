@@ -22,6 +22,7 @@ import {
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 import Icone from '../../components/Icone';
+import EtatVide from '../../components/EtatVide';
 
 // Où en est le ticket de la commande sur le terminal Fairide (backend : GET /orders/restaurant/:id → print).
 function EtatImpression({ p, t }) {
@@ -377,7 +378,7 @@ export default function OrdersPage() {
         {terminaux && <> · <Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></>}
       </p>
 
-      {enCours.length === 0 && <div className="empty">{orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')}</div>}
+      {enCours.length === 0 && <EtatVide icone="commandes" titre={orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} />}
       {enCours.map(carteCommande)}
       {closes.length > 0 && (
         <details className="service-historique">

@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
+import EtatVide from '../../components/EtatVide';
 
 const TYPES = [
   { value: 'percent', label: 'typePercent' },
@@ -204,7 +205,7 @@ export default function PromotionsPage() {
         <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('promosPage.noExtraCommissionExample')}</p>
       </div>
       {promos === null && <div className="empty">{t('promosPage.loading')}</div>}
-      {promos !== null && promos.filter((p) => !String(p.type).startsWith('all_items')).length === 0 && !formOpen && <div className="empty">{t('promosPage.none')}</div>}
+      {promos !== null && promos.filter((p) => !String(p.type).startsWith('all_items')).length === 0 && !formOpen && <EtatVide icone="etiquette" titre={t('promosPage.none')} />}
       {promos !== null && promos.filter((p) => !String(p.type).startsWith('all_items')).map((p) => (
         <div className="card" key={p.id} style={{ opacity: p.active ? 1 : 0.55 }}>
           <div className="row" style={{ justifyContent: 'space-between' }}>

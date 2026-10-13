@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { SkeletonCards } from './Skeleton';
 import { euros } from '../prixPlat';
+import EtatVide from './EtatVide';
 
 // Relevés détaillés des commissions (voir statements.js côté serveur) : le restaurateur choisit une
 // période (raccourcis ou dates libres) et une granularité — semaine, mois, trimestre — et voit chaque
@@ -131,7 +132,7 @@ export default function CommissionStatements() {
             </div>
           </div>
 
-          {data.groups.length === 0 && <div className="empty">{t('statements.none')}</div>}
+          {data.groups.length === 0 && <EtatVide icone="document" titre={t('statements.none')} />}
 
           {data.groups.map((g) => {
             const ouvert = ouverts.has(g.key);
