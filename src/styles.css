@@ -102,7 +102,7 @@
      échantillonné tous les 45 ms sur 0,45 s. Même coût qu'un `ease` — c'est une courbe CSS, pas du JavaScript —
      mais l'arrivée ressemble à un objet qui se pose. Les navigateurs sans `linear()` (Safari < 17.2) gardent
      la cubic-bezier de la ligne précédente. La courbe donne la FORME ; la durée se choisit à l'usage. Barre du bas :
-     ~0,2 s — à 0,45 s le fondateur la trouvait trop lente (2026-10-13). */
+     ~0,15 s — à 0,45 puis 0,2 s le fondateur la trouvait encore trop lente (2026-10-13). */
   --ressort-ui: cubic-bezier(.2, .8, .2, 1);
   --ressort-ui: linear(0, .158, .413, .626, .773, .868, .925, .958, .977, .987, 1);
   /* Hauteur des onglets flottants du bas, marge comprise (12 + 5 + 60 + 5 + 2 de filets) : les éléments
@@ -2506,7 +2506,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
      fond de sa barre — c'est exactement ce que la règle 2 exclut, et le flou coûte cher aux petits
      téléphones). Tout ce qui bouge est `transform` / `opacity`, sauf la hauteur des onglets, qui ne
      recalcule que cette barre fixée (`contain`). */
-  .dashboard-sidebar { transition: padding .2s var(--ressort-ui); }
+  .dashboard-sidebar { transition: padding .14s var(--ressort-ui); }
   .dashboard-sidebar--compacte { padding: 0 48px; }
   .dashboard-nav {
     flex-direction: row; gap: 0; width: 100%; max-width: 460px; flex: 0 1 auto; min-width: 0;
@@ -2514,17 +2514,17 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     position: relative; padding: 5px;
     background: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill);
     contain: layout paint;
-    transition: transform .22s var(--ressort-ui);
+    transition: transform .15s var(--ressort-ui);
   }
   /* Au contact : la barre s'enfonce à peine (98 %), comme un objet qu'on presse ; au relâcher, le ressort la
      ramène. `:active` remonte du lien à la nav, donc tout appui sur un onglet la fait réagir. */
   .dashboard-nav:active { transform: scale(.98); transition-duration: .1s; }
   /* Au changement d'onglet : 3px dans le sens de la pastille, puis retour (voir useCurseurOnglets.js). */
-  .dashboard-nav--pousse { animation: barre-pousse .24s var(--ressort-ui); }
+  .dashboard-nav--pousse { animation: barre-pousse .16s var(--ressort-ui); }
   .nav-curseur {
     display: block; position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none;
     background: var(--iris); border-radius: var(--radius-pill); opacity: 0;
-    transition: transform .22s var(--ressort-ui), width .18s var(--ressort-ui), height .18s var(--ressort-ui), opacity .15s;
+    transition: transform .15s var(--ressort-ui), width .12s var(--ressort-ui), height .12s var(--ressort-ui), opacity .15s;
   }
   .dashboard-nav-link {
     position: relative; z-index: 1;
@@ -2532,7 +2532,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     flex-direction: column; justify-content: center; align-items: center; gap: 3px;
     border-radius: var(--radius-pill); background: transparent; border: 0; box-shadow: none;
     color: var(--ink-soft); font-size: 11px; font-weight: 500;
-    transition: height .2s var(--ressort-ui), color .12s;
+    transition: height .14s var(--ressort-ui), color .12s;
   }
   .dashboard-nav-link:hover, .dashboard-nav-link.active { background: transparent; }
   .dashboard-nav-link.active { color: #fff; }
@@ -2540,11 +2540,11 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   /* L'appui se voit tout de suite, au contact et pas au relâcher (Apple, « Designing Fluid Interfaces »). */
   .dashboard-nav-link:active .dashboard-nav-icon { transform: scale(.86); }
   /* L'onglet qui devient actif a un petit rebond d'icône, en même temps que la pastille arrive. */
-  .dashboard-nav-link.active .dashboard-nav-icon { animation: onglet-arrive .22s var(--ressort-ui); }
+  .dashboard-nav-link.active .dashboard-nav-icon { animation: onglet-arrive .15s var(--ressort-ui); }
   .dashboard-nav-label {
     max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     max-height: 14px; line-height: 14px;
-    transition: opacity .12s, max-height .2s var(--ressort-ui), transform .2s var(--ressort-ui);
+    transition: opacity .12s, max-height .14s var(--ressort-ui), transform .14s var(--ressort-ui);
   }
   .dashboard-sidebar--compacte .dashboard-nav-link { height: 46px; gap: 0; }
   /* La console admin a une dizaine de pôles : sa pilule défile de côté au lieu d'écraser les onglets. */
