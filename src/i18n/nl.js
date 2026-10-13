@@ -6683,6 +6683,8 @@ export default {
       confirmAndPaySimulated: 'Bestellen en betalen (fictief)',
       barCount: '{count} artikel · geschat totaal',
       barCountPlural: '{count} artikelen · geschat totaal',
+      barCountExact: '{count} artikel · exact totaal',
+      barCountExactPlural: '{count} artikelen · exact totaal',
       addMore: '+ Gerecht toevoegen',
       qtyLess: 'Eén minder',
       qtyMore: 'Eén meer',

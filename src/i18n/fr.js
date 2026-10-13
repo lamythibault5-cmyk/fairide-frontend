@@ -6722,6 +6722,8 @@ export default {
       confirmAndPaySimulated: 'Commander et payer (fictif)',
       barCount: '{count} article · total estimé',
       barCountPlural: '{count} articles · total estimé',
+      barCountExact: '{count} article · total exact',
+      barCountExactPlural: '{count} articles · total exact',
       addMore: '+ Ajouter un plat',
       qtyLess: 'Retirer un',
       qtyMore: 'Ajouter un',

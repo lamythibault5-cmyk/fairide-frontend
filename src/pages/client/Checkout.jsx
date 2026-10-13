@@ -73,6 +73,8 @@ export default function Checkout() {
   const [cancelling, setCancelling] = useState(false);
   // Total affiché au moment du clic, pour dire au client de combien il a bougé quand la carte de confirmation s'affiche.
   const [totalAnnonce, setTotalAnnonce] = useState(null);
+  // Dernier devis du serveur : { cle (le corps de commande qui l'a produit), order } — voir l'effet « DEVIS » plus bas.
+  const [devis, setDevis] = useState(null);
   // Allergie, âge, CGU (backlog de conformité C1, C3, A1) — voir components/conformite/CheckoutConformite.jsx.
   const [conformite, setConformite] = useState({ allergyRequest: '', ageDeclaration: false, acceptTerms: false, termsNeeded: false, termsVersion: '' });
   const pendingOrderRef = useRef(null);
@@ -121,6 +123,30 @@ export default function Checkout() {
       pendingOrderRef.current.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
   }, [pendingOrder]);
+
+  /* DEVIS : LE TOTAL EXACT AVANT LE CLIC (2026-10-13, backend POST /orders/devis).
+   * Le serveur rejoue le calcul complet de la commande (distance réelle, minimum du livreur, bon cadeau, code promo,
+   * solde) sans rien enregistrer. Le bouton annonce alors le vrai total, et « Commander et payer » part directement au
+   * paiement — y compris avec un bon cadeau, qui faisait jusqu'ici réapparaître la carte de confirmation.
+   * Redemandé 450 ms après le dernier changement (adresse tapée, quantité, code) ; une réponse qui ne correspond plus
+   * au panier affiché est ignorée (voir devisValide). En cas d'erreur (CGU à accepter, âge à déclarer, serveur ancien
+   * sans la route), on garde l'estimation : le devis n'est jamais une condition pour commander.
+   * L'effet est placé avant les retours anticipés (règle des hooks) ; il ne lit les valeurs calculées plus bas qu'une
+   * fois le commerce chargé, donc après un rendu complet. */
+  useEffect(() => {
+    if (!restaurant || pendingOrder || placing || paying) return undefined;
+    const corps = corpsCommande();
+    if (!corps) return undefined;
+    const cle = JSON.stringify(corps);
+    if (devis?.cle === cle) return undefined;
+    let actif = true;
+    const id = setTimeout(() => {
+      api('/orders/devis', { method: 'POST', token, body: corps })
+        .then((o) => { if (actif) setDevis({ cle, order: o }); })
+        .catch(() => { if (actif) setDevis(null); });
+    }, 450);
+    return () => { actif = false; clearTimeout(id); };
+  });
 
   // L'etape « dessert/boisson » a quitte le paiement : elle est maintenant sur la page Panier, avant
   // d'y entrer. On arrive donc directement sur la confirmation des informations de commande.
@@ -178,6 +204,36 @@ export default function Checkout() {
     ? ''
     : `${addressStreet.trim()} ${addressNumber.trim()}, ${addressPostalCode.trim()} ${addressCity.trim()}`;
 
+  // Le corps d'une commande, partagé par le devis et la vraie commande : un devis calculé sur autre chose que ce qui
+  // sera envoyé ne servirait à rien. null tant qu'il manque de quoi calculer (adresse, heure programmée, minimum).
+  function corpsCommande() {
+    if (!cart.count || manqueMinimum > 0 || paiementBloque || !serviceOuvert(fulfillmentType, user)) return null;
+    if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) return null;
+    if (scheduleEnabled && (!scheduleDate || !scheduleTime)) return null;
+    const surPlace = surPlaceChoisi;
+    return {
+      restaurantId, items: Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds, note: l.note || undefined })),
+      orderType: fulfillmentType,
+      paymentChoice: surPlace ? 'on_site' : undefined,
+      // Commande programmée : heure locale.
+      scheduledFor: scheduleEnabled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null,
+      ...(fulfillmentType === 'delivery' ? {
+        addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
+        addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
+        deliveryInstructions, deliveryNote: deliveryNote.trim()
+      } : {}),
+      useBalance: useBalance && !surPlace,
+      giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined,
+      promoCode: codePromo?.code || undefined,
+      allergyRequest: conformite.allergyRequest.trim() || undefined, ageDeclaration: conformite.ageDeclaration || undefined,
+      ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {})
+    };
+  }
+  // Le devis ne vaut que s'il a été calculé sur le panier affiché ; sinon on retombe sur l'estimation du navigateur.
+  const corpsActuel = corpsCommande();
+  const devisValide = corpsActuel && devis && devis.cle === JSON.stringify(corpsActuel) ? devis.order : null;
+  const montantAnnonce = devisValide ? Number(devisValide.total) : estimatedTotal;
+
   async function placeOrder() {
     if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
       toast(t('checkout.toastAddressRequired'));
@@ -187,9 +243,6 @@ export default function Checkout() {
       toast(t('checkout.toastScheduledDateTimeRequired'));
       return;
     }
-    // Commande programmée : heure locale.
-    const scheduledForISO = scheduleEnabled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null;
-    const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds, note: l.note || undefined }));
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
     if (manque) {
       toast(manque);
@@ -205,23 +258,8 @@ export default function Checkout() {
       const surPlace = surPlaceChoisi;
       const order = await api('/orders', {
         method: 'POST', token,
-        body: {
-          restaurantId, items, orderType: fulfillmentType,
-          paymentChoice: surPlace ? 'on_site' : undefined,
-          scheduledFor: scheduledForISO,
-          ...(fulfillmentType === 'delivery' ? {
-            addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
-            addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
-            deliveryInstructions, deliveryNote: deliveryNote.trim()
-          } : {}),
-          useBalance: useBalance && !surPlace,
-          giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined,
-          promoCode: codePromo?.code || undefined,
-          allergyRequest: conformite.allergyRequest.trim() || undefined, ageDeclaration: conformite.ageDeclaration || undefined,
-          ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {}),
-          // Même panier = même commande, même depuis un onglet dupliqué (plan de test CMD-19, voir CartContext).
-          clientRequestId: cart.requestId
-        }
+        // Même panier = même commande, même depuis un onglet dupliqué (plan de test CMD-19, voir CartContext).
+        body: { ...corpsCommande(), clientRequestId: cart.requestId }
       });
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
       /* UN SEUL BOUTON QUAND RIEN N'A BOUGÉ (2026-10-13).
@@ -238,11 +276,12 @@ export default function Checkout() {
        * l'exige, le serveur ne la vérifiait pas, et l'adresse et la remise sont déjà visibles en rangées juste
        * au-dessus du bouton (CDE XII.7 : corriger ses erreurs de saisie avant de commander). */
       const memeMode = (order.paymentMode === 'on_site') === surPlace;
-      if (memeMode && Math.abs(Number(order.total) - estimatedTotal) < 0.005) {
+      // Comparé au montant que le bouton annonçait : le devis du serveur quand il est là (il tombe juste), sinon l'estimation.
+      if (memeMode && Math.abs(Number(order.total) - montantAnnonce) < 0.005) {
         await confirmAndPay(order);
         return;
       }
-      setTotalAnnonce(estimatedTotal);
+      setTotalAnnonce(montantAnnonce);
       setPendingOrder(order);
     } catch (e) {
       // CGU passées à une nouvelle version entre l'ouverture de la page et le clic : on affiche la case.
@@ -483,8 +522,8 @@ export default function Checkout() {
           <aside className="checkout-recap">
           <div className="cart-bar co-barre">
             <span className="co-barre-total">
-              <span className="co-barre-montant">{euros(estimatedTotal)}</span>
-              <span className="co-barre-detail">{t(cart.count > 1 ? 'checkout.barCountPlural' : 'checkout.barCount', { count: cart.count })}</span>
+              <span className="co-barre-montant">{euros(montantAnnonce)}</span>
+              <span className="co-barre-detail">{t(`checkout.barCount${devisValide ? 'Exact' : ''}${cart.count > 1 ? 'Plural' : ''}`, { count: cart.count })}</span>
             </span>
             {serviceOuvert(fulfillmentType, user) && !paiementBloque && manqueMinimum > 0 ? (
               // Montant minimum du commerce (PAN-3) : le bouton laisse place à ce qui manque, comme le serveur le refuserait.
@@ -540,7 +579,7 @@ export default function Checkout() {
               ))}
               {fulfillmentType === 'delivery' && (
                 <>
-                  <div className="line"><span>{t('checkout.deliveryFeeLine')} ({t('checkout.fromPrefix')})<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerDelivery')}</span></span><span>{euros(totals.deliveryFee)}</span></div>
+                  <div className="line"><span>{t('checkout.deliveryFeeLine')}{devisValide ? '' : ` (${t('checkout.fromPrefix')})`}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerDelivery')}</span></span><span>{euros(devisValide ? devisValide.deliveryFee : totals.deliveryFee)}</span></div>
                   {totals.deliveryDiscount > 0 && (
                     <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(totals.deliveryDiscount)}</span></div>
                   )}
@@ -549,13 +588,15 @@ export default function Checkout() {
               {/* TVA comprise, comme le total : la somme des lignes doit tomber sur le total affiché juste en dessous.
                   « dès » seulement en livraison, où la distance réelle peut encore faire monter la base. */}
               {fraisServiceEstimes > 0 && (
-                <div className="line"><span className="small">{t('checkout.serviceFeeLine')}<span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span className="small">{euros(fraisServiceEstimes)}</span></div>
+                <div className="line"><span className="small">{t('checkout.serviceFeeLine')}<span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span className="small">{euros(devisValide ? Number(devisValide.serviceFee || 0) + Number(devisValide.serviceFeeVat || 0) : fraisServiceEstimes)}</span></div>
               )}
               {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}
               {soldeUtilise && user.balance > 0 && (
                 <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(Math.min(user.balance, estimatedTotalBeforeBalance))}</span></div>
               )}
-              <div className="line total"><span>{t('checkout.estimatedTotal')}</span><span>{euros(estimatedTotal)}</span></div>
+              {/* Avec le devis du serveur, les remises qu'il a appliquées (bon cadeau, code promo) sont listées : la somme des lignes doit tomber sur le total. */}
+              {devisValide?.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: devisValide.giftVoucherCode })}</span><span>-{euros(devisValide.giftVoucherDiscount)}</span></div>}
+              <div className="line total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span>{euros(montantAnnonce)}</span></div>
             </div>
             {user.balance > 0 && (
               <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
