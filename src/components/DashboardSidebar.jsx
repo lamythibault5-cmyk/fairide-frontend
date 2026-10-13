@@ -34,21 +34,21 @@ function navItemsForRole(role, t, user) {
       { to: '/restaurants', icon: 'restaurants', label: t('nav.restaurants') },
       { to: '/map', icon: 'carte', label: t('nav.map') },
       { to: '/recherche', icon: 'recherche', label: t('nav.search') },
-      { to: '/orders', icon: 'commandes', label: t('nav.orders') },
-      { to: '/account', icon: 'compte', label: t('nav.account') }
+      { to: '/orders', icon: 'commandes', label: t('nav.orders'), court: t('nav.court.orders') },
+      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
     ];
   }
   if (role === 'restaurant') {
     return [
       // Mon commerce = les infos du restaurant lui-même (création, puis modification) ; Ma carte = ce qu'il vend.
-      { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness') },
-      { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu') },
-      { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders') },
+      { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness'), court: t('nav.court.myBusiness') },
+      { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu'), court: t('nav.court.myMenu') },
+      { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders'), court: t('nav.court.orders') },
       // Promotions, Factures et Mode d'emploi sont partis dans Mon compte : ce sont des rubriques
       // qu'on ouvre de temps en temps, pas au service. « Aperçu client » et « Carte » les y ont
       // rejoints, pour la même raison et une de plus : à sept onglets, la barre du bas d'un
       // téléphone donnait des cibles de 38px, sous le minimum de 44px. Cinq, pas plus.
-      { to: '/account', icon: 'compte', label: t('nav.account') }
+      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
     ];
   }
   if (role === 'driver') {
@@ -61,13 +61,13 @@ function navItemsForRole(role, t, user) {
     // termine une fois ; ensuite il se rouvre depuis Mon compte.
     return [
       { to: '/driver', end: true, icon: 'commandes', label: t('nav.rides') },
-      ...(user?.adminStatus === 'approved' ? [] : [{ to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile') }]),
+      ...(user?.adminStatus === 'approved' ? [] : [{ to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile'), court: t('nav.court.courierFile') }]),
       { to: '/driver/map', icon: 'carte', label: t('nav.map') },
       { to: '/driver/earnings', icon: 'euro', label: t('nav.earnings') },
-      { to: '/account', icon: 'compte', label: t('nav.account') }
+      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
     ];
   }
-  return [{ to: '/account', icon: 'compte', label: t('nav.account') }];
+  return [{ to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }];
 }
 
 // ERP interne : les applications du registre (pages/admin/adminModules.js), groupées par famille comme
@@ -173,7 +173,8 @@ export default function DashboardSidebar() {
         {items.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
             <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} /></span>
-            <span className="dashboard-nav-label">{item.label}</span>
+            {/* Deux libellés : le complet pour la colonne latérale, le court pour la barre du bas (styles.css choisit). */}
+            <span className="dashboard-nav-label"><span className="libelle-long">{item.label}</span>{item.court && <span className="libelle-court">{item.court}</span>}</span>
             {item.to === '/account' && nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
             {item.to === '/orders' && notifCommandes > 0 && <span className="nav-badge tone-warn" aria-label={t('orders.bellUnread', { n: notifCommandes })}>{notifCommandes}</span>}
           </NavLink>

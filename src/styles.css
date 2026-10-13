@@ -2316,6 +2316,8 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 /* La pastille qui glisse n'existe que dans la barre du bas (sous 900px) ; la colonne latérale garde son fond
    sur l'onglet actif. */
 .nav-curseur { display: none; }
+/* Libellé court (« Commandes » pour « Mes commandes ») : seulement dans la barre du bas, voir plus bas. */
+.libelle-court { display: none; }
 @keyframes onglet-arrive { 0% { transform: scale(.86); } 60% { transform: scale(1.08); } 100% { transform: none; } }
 @keyframes barre-pousse { 0% { transform: none; } 35% { transform: translateX(var(--pousse, 0)) scale(.99); } 100% { transform: none; } }
 .dashboard-nav-link {
@@ -2546,6 +2548,9 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     max-height: 14px; line-height: 14px;
     transition: opacity .12s, max-height .14s var(--ressort-ui), transform .14s var(--ressort-ui);
   }
+  .libelle-court { display: inline; }
+  /* Quand un libellé court existe, le long n'est plus le dernier enfant : il cède la place. */
+  .dashboard-nav-label > .libelle-long:not(:last-child) { display: none; }
   .dashboard-sidebar--compacte .dashboard-nav-link { height: 46px; gap: 0; }
   /* La console admin a une dizaine de pôles : sa pilule défile de côté au lieu d'écraser les onglets. */
   .dashboard-nav.admin { justify-content: flex-start; overflow-x: auto; scrollbar-width: none; contain: layout; }
