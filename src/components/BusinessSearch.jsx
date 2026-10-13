@@ -204,7 +204,8 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
               <label className="business-fiche-field"><span>{t('businessSearch.fPostal')}</span><input value={fiche.postalCode} inputMode="numeric" maxLength={4} onChange={modifier('postalCode')} /></label>
               <label className="business-fiche-field span2"><span>{t('businessSearch.fCity')}</span><input value={fiche.city} onChange={modifier('city')} /></label>
               <label className="business-fiche-field span2"><span>{t('businessSearch.fWebsite')}</span><input value={fiche.website} onChange={modifier('website')} placeholder="https://" /></label>
-              <label className="business-fiche-field span2"><span>{t('businessSearch.fHours')}</span><input value={fiche.openingHours} onChange={modifier('openingHours')} placeholder={t('businessSearch.fHoursPh')} /></label>
+              {/* Plus de champ « Horaires (texte libre) » (fondateur, 2026-10-13) : les horaires ne se demandent qu'une fois,
+                  à l'étape « Horaires » (un créneau par jour). Ceux trouvés sur le web restent affichés en relecture. */}
               <label className="business-fiche-field span2"><span>{t('businessSearch.fCuisine')}</span><input value={fiche.cuisine} onChange={modifier('cuisine')} placeholder={t('businessSearch.fCuisinePh')} /></label>
             </div>
           )}

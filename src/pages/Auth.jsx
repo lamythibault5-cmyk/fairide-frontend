@@ -11,7 +11,6 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import AddressRecognition from '../components/AddressRecognition';
-import BusinessSearch from '../components/BusinessSearch';
 import { api, apiUpload } from '../api';
 import IdentityDocsPicker from '../components/IdentityDocsPicker';
 import PhoneInput from '../components/PhoneInput';
@@ -137,6 +136,10 @@ export default function Auth() {
   const [responsibleTouched, setResponsibleTouched] = useState(false);
   const [responsableOuvert, setResponsableOuvert] = useState(false);
   // Commerce trouvé sur le web (BusinessSearch) et vérification BCE/TVA (VIES) — voir l'étape « Ton commerce ».
+  // Nom du commerce, saisi à la main (fondateur, 2026-10-13 : le raccourci « trouver mon commerce par code postal » est retiré,
+  // il ne donnait pas de résultat fiable). L'adresse est demandée à l'étape « Adresse », les horaires une seule fois à l'étape
+  // « Horaires », le type à l'étape « Ton commerce en détail » : plus aucun préremplissage venu du web.
+  const [nomCommerce, setNomCommerce] = useState('');
   const [commerceTrouve, setCommerceTrouve] = useState(null);
   const [, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null — gardé pour la vérification BCE, lu nulle part encore
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
@@ -240,7 +243,7 @@ export default function Auth() {
   function construireCommerce() {
     const fiche = commerceTrouve || {};
     return {
-      name: fiche.name || legalName.trim(), cuisine: cuisineFinale, hours,
+      name: nomCommerce.trim() || fiche.name || legalName.trim(), cuisine: cuisineFinale, hours,
       engagements: accepteEngagements,
       extraCuisines: extraCuisines.filter((c) => c !== cuisineFinale).slice(0, MAX_CUISINES - 1),
       openingHours: fiche.openingHours || '',
@@ -425,7 +428,7 @@ export default function Auth() {
     responsibleName: [responsibleName, setResponsibleName], responsibleTouched: [responsibleTouched, setResponsibleTouched],
     courierStatus: [courierStatus, setCourierStatus], schoolName: [schoolName, setSchoolName], academicYear: [academicYear, setAcademicYear], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption], docKind: [docKind, setDocKind],
     autrePlateforme: [autrePlateforme, setAutrePlateforme], plateformes: [plateformes, setPlateformes], plateformeAutre: [plateformeAutre, setPlateformeAutre], zonesPreferees: [zonesPreferees, setZonesPreferees],
-    commerceTrouve: [commerceTrouve, setCommerceTrouve], services: [services, setServices],
+    commerceTrouve: [commerceTrouve, setCommerceTrouve], nomCommerce: [nomCommerce, setNomCommerce], services: [services, setServices],
     cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
     phoneSecondary: [phoneSecondary, setPhoneSecondary], phoneSecondaryOuvert: [phoneSecondaryOuvert, setPhoneSecondaryOuvert],
     restoPhone: [restoPhone, setRestoPhone], responsables: [responsables, setResponsables], extraCuisines: [extraCuisines, setExtraCuisines],
@@ -596,9 +599,10 @@ export default function Auth() {
       if (!docVerso) e.docVerso = t('authDocs.errBack');
       if (!docSelfie) e.docSelfie = t('authDocs.errSelfie');
     }
-    // « business » : chercher son commerce est une AIDE de saisie, pas une obligation — qui ne se trouve pas dans
-    // l'annuaire continue et remplit la suite à la main. Seul le numéro sur place du restaurant y est demandé.
+    // « business » (fondateur, 2026-10-13) : le nom du commerce et son numéro sur place, saisis à la main — plus de recherche
+    // par code postal, qui ne trouvait pas les commerces.
     if (key === 'business' && role === 'restaurant') {
+      if (!nomCommerce.trim()) e.nomCommerce = required;
       if (!restoPhone.trim()) e.restoPhone = required;
       else if (restoPhone.trim().replace(/\D/g, '').length < 8) e.restoPhone = t('auth.errPhoneInvalid');
     }
@@ -1309,8 +1313,13 @@ export default function Auth() {
             {stepKey === 'business' && (
               <>
                 <p className="small infos-resto-note" style={{ margin: '0 0 10px', padding: '8px 10px', borderRadius: 8, background: 'var(--cream-dim)', borderLeft: '3px solid var(--iris)' }}>🏪 {t('auth.businessInfoNote')}</p>
-                <BusinessSearch onSelect={(f) => { if (!f) { setSiteTrouve(''); setInfosVerifiees(false); } appliquerCommerce(f); }} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} siteTrouve={siteTrouve} initialFiche={commerceTrouve} />
-                {adresseDepuisFiche && <p className="small" style={{ margin: '-6px 0 12px', color: 'var(--iris)' }}>✅ {t('auth.addressFromFiche')}</p>}
+                <div className="field">
+                  <label htmlFor="auth-f-nom-commerce">{t('auth.businessNameLabel')}</label>
+                  <input id="auth-f-nom-commerce" className={errors.nomCommerce ? 'input-invalid' : undefined} value={nomCommerce}
+                    onChange={(e) => setNomCommerce(e.target.value)} placeholder={t('auth.businessNamePh')} autoComplete="organization" />
+                  <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('auth.businessNameHelp')}</p>
+                  {fieldError('nomCommerce')}
+                </div>
                 <div className="field">
                   <label htmlFor="auth-f-tel-resto">{t('auth.restoPhoneLabel')}</label>
                   <PhoneInput id="auth-f-tel-resto" value={restoPhone} onChange={setRestoPhone} invalid={!!errors.restoPhone} />
