@@ -7,6 +7,7 @@ import { api } from '../../api';
 import { estNatif, demanderPosition, connexionFournisseur } from '../../natif';
 import { communeDepuisCodePostal, communeRingDistance, haversineDistanceKm } from '../../menuCategories';
 import { ecrireBienvenue } from '../../bienvenue';
+import { repondAuxEnvies } from '../../envies';
 import {
   Haut, EcranAccueil, EcranProfil, EcranChoix, EcranCartes, EcranPourquoi, EcranEnvies, EcranPermission, EcranCodePostal,
   EcranRecherche, EcranCompte, EcranPromesses
@@ -39,17 +40,8 @@ import {
 const BUTS = [['prix', 'euro', 'bPrix', true], ['juste', 'balance', 'bJuste', true], ['local', 'commerce', 'bLocal', true], ['decouvrir', 'boussole', 'bDecouvrir', true]];
 // Trois freins, tous sur le prix (retour du fondateur : c'est la seule vraie douleur).
 const FREINS = [['gonfle', 'tendance', 'fGonfle'], ['frais', 'ticket', 'fFrais'], ['resto', 'restaurants', 'fResto']];
-// Quelles cuisines répondent à quelle envie. Un commerce peut répondre à plusieurs. La table RESTAURANT_TYPES ne suffit
-// pas : la liste publique porte aussi des cuisines saisies librement (« Ramen », « Marocain », « Cuisine Saine »,
-// « Bubble Tea »… relevées en production le 2026-10-11) — on les range ici pour qu'elles comptent.
-const CUISINES_PAR_ENVIE = {
-  snack: ['Kebab & Grill', 'Friterie', 'Belge', 'Fried Chicken', 'Sandwichs & Salades'],
-  pizza: ['Pizza', 'Italien'],
-  burger: ['Burgers'],
-  monde: ['Asiatique', 'Sushi', 'Ramen', 'Mexicain', 'Libanais', 'Marocain', 'Espagnol', 'Thaïlandais', 'Indien', 'Vietnamien', 'Chinois', 'Africain', 'Coréen'],
-  healthy: ['Healthy', 'Cuisine Saine', 'Végétarien', 'Poke Bowl', 'Sandwichs & Salades'],
-  sucre: ['Coffee Shop', 'Boulangerie', 'Bubble Tea', 'Desserts & Glaces', 'Petit-déjeuner & Brunch']
-};
+// Quelles cuisines répondent à quelle envie : la table vit dans src/envies.js depuis le 2026-10-13, partagée avec la
+// rangée « Vos envies » de la liste des commerces (cuisines saisies librement relevées en production le 2026-10-11).
 const PARCOURS = {
   client: ['buts', 'freins', 'cartes', 'pourquoi', 'envies', 'position', 'codePostal', 'recherche', 'compte'],
   driver: ['lvPromesses', 'lvPosition', 'compte'],
@@ -59,7 +51,7 @@ const DUREE_RECHERCHE_MS = 1800; // le chargement que le fondateur aime : assez 
 
 // Commerces qui livrent à cette position (ou, sans position, rangés par proximité de commune), envies d'abord.
 function trierCommerces(liste, { position, commune, envies }) {
-  const repond = (r) => envies.some((e) => (CUISINES_PAR_ENVIE[e] || []).some((c) => (r.cuisines || [r.cuisine]).includes(c)));
+  const repond = (r) => repondAuxEnvies(r, envies);
   let items = liste.map((r) => ({
     r,
     km: position && r.lat !== null && r.lng !== null ? haversineDistanceKm(position.lat, position.lng, r.lat, r.lng) : null,
@@ -161,7 +153,8 @@ export default function Bienvenue() {
   // On quitte l'accueil pour la page de connexion : on retient ce qui sert après (Home.jsx, AmorceNotifications.jsx).
   function memoriser() {
     ecrireBienvenue({
-      vu: true, role, envies, commune: communeCp || null, position: position || null,
+      // codePostal : repris par l'inscription (Auth.jsx) pour ne pas redemander ce qui vient d'être tapé.
+      vu: true, role, envies, commune: communeCp || null, codePostal: communeCp ? cp : null, position: position || null,
       amorceNotifs: 'a-faire'
     });
   }
