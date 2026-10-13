@@ -196,10 +196,12 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.
 
-Fonts: **Space Grotesk** for the whole interface (400/500/700), **served by Fairide** from
-[public/fonts/polices.css](public/fonts/polices.css) since 2026-10-02 — Google Fonts loaded before cookie consent and sent
-visitors' IP addresses to Google. Never re-add `fonts.googleapis.com`. Fraunces was removed — the personality comes from scale and tracking, not from a
-serif/sans pair. Headings are `-0.02em`.
+Fonts (since 2026-10-13, founder's choice on the Revolut model): **Inter** for the interface (`--font-ui`, 400–700) and
+**Inter Tight** for `h1`–`h3` (`--font-titre`, 500–700) — one family, two cuts, not a font pairing. Both are **served by
+Fairide** from [public/fonts/polices.css](public/fonts/polices.css) (since 2026-10-02 — Google Fonts loaded before cookie
+consent and sent visitors' IP addresses to Google). Never re-add `fonts.googleapis.com`. Use the two tokens, never a
+family name, at call sites. Aeonik Pro (Revolut's display face) was considered and set aside: it is a paid licence.
+Headings keep `letter-spacing: 0` (Inter Tight is already tight); the `-0.02em` some older call sites carry is legacy.
 
 **The logo is the bicycle « 5a »** (two wheels, top tube, seat tube; lime on an iris tile) — back since
 2026-09-27 after nine days as the « Swept plume » bowl. Geometry lives in [BrandMark.jsx](src/components/BrandMark.jsx)
