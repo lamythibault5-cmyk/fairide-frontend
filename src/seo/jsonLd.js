@@ -42,7 +42,7 @@ export function organizationJsonLd() {
     url: SITE_URL,
     logo: LOGO_URL,
     image: OG_IMAGE_URL,
-    description: "Livraison de repas à Bruxelles, l'alternative à Uber Eats : moins cher pour le client, 10 % de commission pour les restaurants au lieu de 22 à 32 %, et des livreurs mieux payés.",
+    description: "Livraison de repas à Bruxelles, l'alternative à Uber Eats : 10 % de commission au plus pour les restaurants, là où les grandes plateformes annoncent 22 à 32 %, et 90 % de la livraison pour les livreurs.",
     areaServed: { '@type': 'City', name: 'Bruxelles', addressCountry: 'BE' },
     contactPoint: {
       '@type': 'ContactPoint',

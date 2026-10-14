@@ -228,7 +228,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
             : c.otherPlatforms?.works === false ? tr('adminCouriers.platformsNone') : tr('adminCouriers.notAnswered')} />
           <DrawerRow label={tr('adminCouriers.preferredZones')} value={(c.preferredZones || []).length ? c.preferredZones.join(', ') : tr('adminCouriers.notAnswered')} />
           <DrawerRow label="IBAN" value={c.iban || (c.payoutIbanKnown ? '••••' : '-')} />
-          <DrawerRow label={tr('adminCouriers.bag')} value={c.bag?.option ? `${tr(`auth.bag_${c.bag.option}`)}${c.bag.option === 'fairide' ? ` · ${tr(`adminCouriers.bagDeposit_${c.bag.depositStatus}`)} (${Number(c.bag.depositAmount || 40).toFixed(0)} €)` : ''}${c.bag.note ? ` · ${c.bag.note}` : ''}` : '-'} />
+          <DrawerRow label={tr('adminCouriers.bag')} value={c.bag?.option ? `${tr(`auth.bag_${c.bag.option}`)}${c.bag.option === 'fairide' ? ` · ${tr(`adminCouriers.bagDeposit_${c.bag.depositStatus}`, { amount: Number(c.bag.depositAmount || 40).toFixed(0) })} (${Number(c.bag.depositAmount || 40).toFixed(0)} €)` : ''}${c.bag.note ? ` · ${c.bag.note}` : ''}` : '-'} />
           {c.bag?.option === 'fairide' && (
             <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
               {c.bag.depositStatus === 'due' && <button className="btn-outline" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.bagMarkPaid'), message: tr('adminCouriers.bagMarkPaidBody', { amount: Number(c.bag.depositAmount || 40).toFixed(0) }), run: () => agir(() => api(`/admin/couriers/${c.id}/bag`, { method: 'PATCH', token, body: { depositStatus: 'paid' } }), tr('adminCommon.toastStatusUpdated')) })}>{tr('adminCouriers.bagMarkPaid')}</button>}

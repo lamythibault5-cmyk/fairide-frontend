@@ -18,6 +18,7 @@ import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
 import MesDonnees from '../components/MesDonnees';
+import NouvellesFairide from '../components/NouvellesFairide';
 import MesCasquettes from '../components/MesCasquettes';
 import InboxSection from '../components/InboxSection';
 import useInbox from '../hooks/useInbox';
@@ -27,7 +28,6 @@ import { abonnementOuvert, datePremierPrelevement } from '../launch';
 import AbonnementOffert from '../components/commerce/AbonnementOffert';
 import OffreFormules from '../components/OffreFormules';
 import TerminalFairide from '../components/TerminalFairide';
-import { StarsDisplay } from '../components/Stars';
 import { euros } from '../prixPlat';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
@@ -98,7 +98,6 @@ export default function Account() {
   const DELETION_REASONS = deletionReasons(t);
   const GENDERS = genders(t);
   const [driverDeliveries, setDriverDeliveries] = useState(null);
-  const [driverReviews, setDriverReviews] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
   // Reçus de la sous-section Paiement : toutes les commandes du restaurant, filtrées sur « payées » à l'affichage.
@@ -187,13 +186,10 @@ export default function Account() {
 
   useEffect(() => {
     if (role !== 'driver') return;
-    Promise.all([
-      api('/orders/mine/deliveries', { token }),
-      api('/reviews/driver/mine', { token })
-    ]).then(([deliveries, reviews]) => {
-      setDriverDeliveries(deliveries);
-      setDriverReviews(reviews);
-    }).catch((e) => toast(e.message, 'erreur'));
+    // Plus d'appel à /reviews/driver/mine : le livreur n'est pas noté (contrat livreur, présomption de salariat).
+    api('/orders/mine/deliveries', { token })
+      .then(setDriverDeliveries)
+      .catch((e) => toast(e.message, 'erreur'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
 
@@ -470,7 +466,7 @@ export default function Account() {
        { to: '/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }]
     : role === 'driver'
       ? [{ to: '/driver', icone: 'commandes', libelle: t('nav.orders') },
-         { to: '/driver/reviews', icone: 'etoile', libelle: t('accountUi.myReviews') },
+         { to: '/driver/earnings', icone: 'euro', libelle: t('nav.earnings') },
          { to: '/driver/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }]
       : [{ to: '/dashboard/orders', icone: 'commandes', libelle: t('nav.orders') },
          { to: '/dashboard/preview', icone: 'apercu', libelle: t('nav.customerPreview') },
@@ -662,6 +658,7 @@ export default function Account() {
           <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
           <LanguageSwitcher />
         </LigneCompte>
+        <NouvellesFairide ouverte={ouvertes.has('nouvelles')} onClick={() => basculer('nouvelles')} />
         <LigneCompte icone="dossier" titre={t('accountUi.myData_rowTitle')} sous={t('accountUi.myData_rowSub')} ouverte={ouvertes.has('donnees')} onClick={() => basculer('donnees')}>
           {ouvertes.has('donnees') && <MesDonnees />}
         </LigneCompte>
@@ -1026,7 +1023,7 @@ export default function Account() {
       {role === 'driver' && (
         <div className="card account-groupe" aria-label={t('accountUi.myRides')}>
           <LigneCompte icone="stats" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
-            <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} t={t} />
+            <DriverActivity deliveries={driverDeliveries} t={t} />
           </LigneCompte>
           <LigneCompte icone="contrat" titre={t('driverTerms.rowTitle')} sous={t('driverTerms.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <DriverContractTerms />}
@@ -1158,22 +1155,20 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
 }
 
 // Résumé compact de l'activité du livreur, dans sa rangée dépliable de la page Mon compte — les détails
-// (avis, historique de livraisons, pourboires) vivent chacun sur leur propre page dédiée.
-function DriverActivity({ deliveries, reviews, t }) {
+// (historique de livraisons, pourboires) vivent chacun sur leur propre page dédiée. Pas d'étoiles : le
+// livreur n'est pas noté (contrat livreur, présomption de salariat).
+function DriverActivity({ deliveries, t }) {
   if (!deliveries) return <p className="small">{t('accountUi.loading')}</p>;
 
   const delivered = deliveries.filter((o) => o.status === 'livre');
-  const totalDeliveryFees = delivered.reduce((a, o) => a + o.deliveryFee, 0);
+  // Part du livreur (driverFee, 90 %), pas le prix payé par le client (deliveryFee, frais de système de Fairide compris).
+  const totalDeliveryFees = delivered.reduce((a, o) => a + Number(o.driverFee ?? o.deliveryFee ?? 0), 0);
   const totalTips = delivered.filter((o) => o.tipPaid && o.tipAmount > 0).reduce((a, o) => a + o.tipAmount, 0);
 
   return (
     <div className="stat-grid" style={{ marginTop: 0 }}>
       <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">{t('account.deliveriesDone')}</div></div>
       <div className="stat-card highlight"><div className="num">{euros((totalDeliveryFees + totalTips))}</div><div className="label">{t('account.estimatedEarnings')}</div></div>
-      <div className="stat-card">
-        <div className="num" style={{ fontSize: 18 }}><StarsDisplay value={reviews?.avg || 0} size={18} /></div>
-        <div className="label">{reviews?.count > 0 ? t('restaurantMenu.ratingReviews', { rating: reviews.avg.toFixed(1), count: reviews.count }) : t('account.noReviewsYet')}</div>
-      </div>
     </div>
   );
 }

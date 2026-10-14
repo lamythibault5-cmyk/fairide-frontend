@@ -18,7 +18,7 @@ import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
-import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
+import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, money, fmtDate, downloadCsv, useDebouncedValue, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import urlSure from '../../urlSure';
@@ -70,7 +70,8 @@ export default function AdminDriversPage() {
   // Plus de liste « trier par » (allègement de la console, 23/09/2026) : des plus récents aux plus anciens ; en vue
   // tableau, les en-têtes de colonne trient.
   const triServeur = 'created_desc';
-  const { sort, toggle } = useTableSort('deliveriesCount');
+  // Tri par nom par défaut, pas par nombre de livraisons : pas de palmarès des livreurs à l'ouverture.
+  const { sort, toggle } = useTableSort('name', 'asc');
   const [documents, setDocuments] = useState(null);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
   const [onglet, setOnglet] = useState('apercu');
@@ -158,9 +159,7 @@ export default function AdminDriversPage() {
       { label: tr('adminCommon.status'), get: (d) => d.adminStatus },
       { label: tr('adminDrivers.activity'), get: (d) => d.activityStatus },
       { label: tr('adminCommon.deliveries'), get: (d) => d.deliveriesCount },
-      { label: tr('adminCommon.revenue'), get: (d) => d.revenue },
-      { label: tr('adminCommon.cancellationRate'), get: (d) => d.cancellationRate },
-      { label: tr('adminCommon.avgTime'), get: (d) => d.avgDeliveryMinutes }
+      { label: tr('adminCommon.revenue'), get: (d) => d.revenue }
     ]);
   }
 
@@ -175,9 +174,8 @@ export default function AdminDriversPage() {
     { key: 'vatStatus', label: tr('adminCommon.vat'), get: (d) => VAT_LABELS(tr)[d.vatStatus] || '-', sortValue: (d) => d.vatStatus || '' },
     { key: 'deliveriesCount', label: tr('adminCommon.deliveries'), get: (d) => d.deliveriesCount, align: 'right', sum: true },
     { key: 'revenue', label: tr('adminCommon.revenue'), get: (d) => money(d.revenue), sortValue: (d) => d.revenue, align: 'right', sum: true },
-    { key: 'cancellationRate', label: tr('adminCommon.cancellationRate'), get: (d) => pct(d.cancellationRate), sortValue: (d) => d.cancellationRate, align: 'right' },
-    { key: 'avgDeliveryMinutes', label: tr('adminCommon.avgTime'), get: (d) => (d.avgDeliveryMinutes !== null ? `${d.avgDeliveryMinutes} min` : '-'), sortValue: (d) => d.avgDeliveryMinutes, align: 'right' },
-    { key: 'avgRating', label: tr('adminCommon.rating'), get: (d) => (d.reviewCount > 0 ? `${Number(d.avgRating).toFixed(1)}★ (${d.reviewCount})` : '-'), sortValue: (d) => (d.reviewCount > 0 ? d.avgRating : null), align: 'right' },
+    // Ni note, ni taux d'annulation, ni temps moyen : le contrat livreur promet qu'il n'est ni évalué ni classé
+    // (présomption de salariat, loi du 3/10/2022). Le serveur ne les renvoie plus.
     { key: 'createdAt', label: tr('adminCommon.registeredOn'), get: (d) => fmtDate(d.createdAt), sortValue: (d) => d.createdAt }
   ];
   const groupes = {
@@ -268,11 +266,7 @@ export default function AdminDriversPage() {
             <ProfilLine u={d} tr={tr} />
             <div className="small"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{courierLine(d, tr)}</div>
             <div className="small">
-              {tr('adminDrivers.statsLine', { n: d.deliveriesCount, revenue: money(d.revenue), cancel: pct(d.cancellationRate) })}
-              {d.reviewCount > 0 ? tr('adminDrivers.ratingSuffix', { rating: Number(d.avgRating).toFixed(1), n: d.reviewCount }) : tr('adminDrivers.noReviewsSuffix')}
-            </div>
-            <div className="small" style={{ opacity: 0.6 }}>
-              {d.avgDeliveryMinutes !== null ? tr('adminDrivers.avgMinutes', { n: d.avgDeliveryMinutes }) : tr('adminDrivers.notMeasuredYet')}{tr('adminDrivers.acceptanceNotMeasurable')}
+              {tr('adminDrivers.statsLine', { n: d.deliveriesCount, revenue: money(d.revenue) })}
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
               {d.adminStatus !== 'approved' && <button className="btn-teal btn-sm" onClick={() => askApprove(d)}>{tr('adminCommon.approve')}</button>}
@@ -324,8 +318,6 @@ export default function AdminDriversPage() {
               <div className="divider" />
               <h4 className="drawer-section-title">{tr('adminRestos.keyFigures')}</h4>
               <DrawerRow label={tr('adminDrivers.completedDeliveries')} value={detail.deliveriesCount} strong />
-              <DrawerRow label={tr('adminCommon.cancellationRate')} value={pct(detail.cancellationRate)} strong />
-              <DrawerRow label={tr('adminDrivers.avgDeliveryTime')} value={detail.avgDeliveryMinutes !== null ? tr('adminDrivers.avgMinutes', { n: detail.avgDeliveryMinutes }) : tr('adminDrivers.notMeasuredYet')} strong />
               <div className="divider" />
               <h4 className="drawer-section-title">{tr('adminDrivers.driverFinance')}</h4>
               <DrawerRow label={tr('adminDrivers.totalDeliveryFees')} value={money(detail.deliveryFeesTotal)} />

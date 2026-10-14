@@ -1,7 +1,7 @@
 {
   "name": "Fairide — Livraison de repas à Bruxelles",
   "short_name": "Fairide",
-  "description": "Livraison de repas à Bruxelles, l'alternative à Uber Eats : moins cher pour toi, plus juste pour les restaurants et les livreurs.",
+  "description": "Livraison de repas à Bruxelles, l'alternative à Uber Eats : 10 % de commission au plus pour les restaurants, 90 % de la livraison pour les livreurs.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

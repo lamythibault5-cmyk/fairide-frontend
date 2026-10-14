@@ -6,7 +6,7 @@ import urlSure from '../urlSure';
 import { chargerGoogleSignIn } from '../googleSignIn';
 import { estNatif, connexionFournisseur } from '../natif';
 import { lireBienvenue } from '../bienvenue';
-import BoutonsConnexionNative from '../components/BoutonsConnexionNative';
+import BoutonsConnexionNative, { LogoGoogle } from '../components/BoutonsConnexionNative';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -366,6 +366,9 @@ export default function Auth() {
   const [accepteCgu, setAccepteCgu] = useState(false);
   // Restaurateur : la case des engagements (déclaration professionnelle + allergènes), signés à la création du commerce.
   const [accepteEngagements, setAccepteEngagements] = useState(false);
+  // E-mails marketing en opt-out : la loi belge exige de pouvoir refuser dès la collecte de l'adresse (AR 4 avril 2003,
+  // art. 1). Case NON cochée par défaut ; cochée, le compte est créé désinscrit (routes/auth.js, enregistrerRefusNouvelles).
+  const [refusNouvelles, setRefusNouvelles] = useState(false);
   const [versionCgu, setVersionCgu] = useState('');
   useEffect(() => { api('/auth/terms/current').then((r) => setVersionCgu(r.version)).catch(() => {}); }, []);
   const [googleProfile, setGoogleProfile] = useState(null);
@@ -761,6 +764,9 @@ export default function Auth() {
   }
 
   const googleBtnRef = useRef(null);
+  // Le script Google ne part qu'au clic sur « Continuer avec Google » (politique des cookies : « seulement si vous cliquez
+  // dessus », fondateur 2026-10-14) ; le bouton officiel de Google, qui seul peut ouvrir sa fenêtre, prend alors sa place.
+  const [googleDemande, setGoogleDemande] = useState(false);
   const stateRef = useRef({ mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName });
   useEffect(() => { stateRef.current = { mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName }; });
 
@@ -813,7 +819,8 @@ export default function Auth() {
         business: construireCommerce()
       } : {}),
       ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees.length ? zonesPreferees : communeDeLAdresse() } : {}),
-      ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {})
+      ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
+      ...(refusNouvelles ? { marketingOptOut: true } : {})
     });
     suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
     await televerserDocumentsLivreur(data.token);
@@ -833,7 +840,7 @@ export default function Auth() {
    * une erreur pour un moyen de connexion secondaire n'aiderait personne. */
   useEffect(() => {
     // Dans l'application, pas de bouton Google du site (refusé dans une WebView) : BoutonsConnexionNative le remplace.
-    if (!GOOGLE_CLIENT_ID || estNatif()) return;
+    if (!GOOGLE_CLIENT_ID || estNatif() || !googleDemande) return;
     let cancelled = false;
     chargerGoogleSignIn()
       .then((gsi) => {
@@ -849,7 +856,7 @@ export default function Auth() {
       .catch(() => { /* bouton Google absent, le reste de la page fonctionne */ });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, stepKey, googleCredential, language]);
+  }, [mode, stepKey, googleCredential, language, googleDemande]);
 
   // Application : la feuille native d'Apple ou de Google, puis exactement le chemin du bouton Google du site.
   // Une annulation par la personne n'est pas une erreur à afficher.
@@ -941,6 +948,7 @@ export default function Auth() {
           } : {}),
           ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees.length ? zonesPreferees : communeDeLAdresse() } : {}),
           ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
+          ...(refusNouvelles ? { marketingOptOut: true } : {}),
           website: siteWeb
         });
         // Statistiques (sans donnée personnelle) : une inscription par type de compte.
@@ -1605,7 +1613,7 @@ export default function Auth() {
                 {GOOGLE_CLIENT_ID && (
                   <>
                     <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 10px' }}>
-                      {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : <div ref={googleBtnRef} />}
+                      {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={() => setGoogleDemande(true)}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
                     </div>
                     <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
                       <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
@@ -1675,6 +1683,13 @@ export default function Auth() {
             {isLastStep && role === 'restaurant' && (
               <EngagementsInscription checked={accepteEngagements} onChange={setAccepteEngagements} />
             )}
+            {/* Refus des nouvelles de Fairide (voir refusNouvelles) : discret, sous les cases obligatoires, tous rôles. */}
+            {isLastStep && (
+              <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '0 0 12px', opacity: 0.8 }}>
+                <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={refusNouvelles} onChange={(e) => setRefusNouvelles(e.target.checked)} />
+                <span className="small">{t('nouvelles.signupOptOut')}</span>
+              </label>
+            )}
             {incomplet && incomplet.step === step && Object.keys(errors).length > 0 && (
               <p className="auth-incomplet" role="alert"><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('auth.checkIncomplete', { n: incomplet.n, step: stepCopy?.title || '' })}</p>
             )}
@@ -1692,7 +1707,7 @@ export default function Auth() {
             {GOOGLE_CLIENT_ID && (
               <>
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0 10px' }}>
-                  {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : <div ref={googleBtnRef} />}
+                  {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={() => setGoogleDemande(true)}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
                 </div>
                 <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
                   <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />

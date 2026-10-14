@@ -45,13 +45,13 @@ export default function InvoicesPage() {
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('invoicesDriver.title')}</h2>
 
-      {/* Les vraies pièces comptables du livreur : Fairide émet ces autofacturations en son nom, il n'a
-          rien à rédiger mais doit pouvoir les récupérer. Le récap mensuel plus bas reste un outil de
-          suivi personnel, calculé à la volée, et n'a aucune valeur de facture. */}
+      {/* Relevés mensuels des ventes encaissées pour son compte (fondateur, 2026-10-14 : plus des autofacturations,
+          art. 53 §2 C.TVA) : pièce de son journal des recettes (AR n°1 art. 14), pas une facture — ni UBL ni Peppol.
+          Le récap mensuel plus bas reste un outil de suivi personnel, calculé à la volée. */}
       <InvoiceArchive
         endpoint="/invoices/driver"
         pdfPath={(inv) => `/invoices/driver/${inv.id}/pdf`}
-        ublPath={(inv) => `/invoices/driver/${inv.id}/ubl`}
+        peppol={false}
         titre={t('invoicesDriver.selfBilling')}
         description={t('invoicesDriver.selfBillingDesc')}
         colonneMontant="Total"

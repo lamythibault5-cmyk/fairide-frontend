@@ -46,7 +46,6 @@ export default function FleetTab() {
       { label: tr('adminCommon.commune'), get: (d) => d.commune },
       { label: tr('adminLogistics.colToday'), get: (d) => d.deliveriesToday },
       { label: tr('adminLogistics.col30d'), get: (d) => d.deliveries30d },
-      { label: tr('adminCommon.rating'), get: (d) => d.rating ?? '' },
       { label: tr('adminLogistics.colCurrentOrder'), get: (d) => d.currentOrderId || '' }
     ]);
   }
@@ -59,7 +58,7 @@ export default function FleetTab() {
     { key: 'commune', label: tr('adminCommon.commune'), get: (d) => d.commune || <span className="lg-muted">-</span>, sortValue: (d) => d.commune || '' },
     { key: 'deliveriesToday', label: tr('adminLogistics.colToday'), align: 'right', get: (d) => d.deliveriesToday, sum: true },
     { key: 'deliveries30d', label: tr('adminLogistics.col30d'), align: 'right', get: (d) => d.deliveries30d, sum: true },
-    { key: 'rating', label: tr('adminCommon.rating'), align: 'right', get: (d) => (d.rating === null ? <span className="lg-muted">-</span> : `★ ${d.rating.toFixed(1)}`), sortValue: (d) => d.rating ?? -1 },
+    // Pas de colonne « note » : le livreur n'est ni noté ni classé (contrat livreur, présomption de salariat).
     {
       key: 'currentOrderId', label: tr('adminLogistics.colCurrentOrder'), sortValue: (d) => (d.currentOrderId ? 1 : 0),
       get: (d) => (d.currentOrderId

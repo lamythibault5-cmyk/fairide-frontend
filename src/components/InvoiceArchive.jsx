@@ -8,8 +8,9 @@ import PeppolSettings from './PeppolSettings';
 import { euros } from '../prixPlat';
 import Icone from './Icone';
 
-// Archive des factures émises, partagée par le restaurateur (factures de commission) et le livreur
-// (autofacturations). Les deux affichent la même chose — un historique, les montants HT/TVA/TTC, et le
+// Archive des documents émis, partagée par le restaurateur (factures de commission) et le livreur
+// (relevés mensuels des ventes encaissées pour son compte, fondateur 2026-10-14 : pas des factures, hors Peppol → `peppol`
+// à false). Les deux affichent la même chose — un historique, les montants HT/TVA/TTC, et le
 // PDF — seuls l'endpoint et le vocabulaire changent, d'où un composant unique plutôt que deux tableaux
 // jumeaux qui divergeraient à la première correction.
 
@@ -36,10 +37,11 @@ export const peppolLabels = (t) => ({
   erreur: { texte: t('peppol.stError'), pill: 'pill' },
   sans_identifiant: { texte: t('peppol.stNoId'), pill: 'pill' },
   non_enregistre: { texte: t('peppol.stNotRegistered'), pill: 'pill' },
-  desactive: { texte: t('peppol.stDisabled'), pill: 'pill' }
+  desactive: { texte: t('peppol.stDisabled'), pill: 'pill' },
+  non_applicable: { texte: t('peppol.stNotApplicable'), pill: 'pill' }
 });
 
-export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, titre, description, colonneMontant }) {
+export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, titre, description, colonneMontant, peppol = true }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -86,7 +88,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
 
   return (
     <>
-    <PeppolSettings endpoint="/invoices/peppol/settings" />
+    {peppol && <PeppolSettings endpoint="/invoices/peppol/settings" />}
     <div className="card">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{titre}</h3>
       <p className="small" style={{ margin: '0 0 14px' }}>{description}</p>
@@ -109,7 +111,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
                 <th className="num">TVA</th>
                 <th className="num">{colonneMontant}</th>
                 <th>{t('invoiceArchive.status')}</th>
-                <th>{t('invoiceArchive.peppol')}</th>
+                {peppol && <th>{t('invoiceArchive.peppol')}</th>}
                 <th aria-label={t('invoiceArchive.download')} />
               </tr>
             </thead>
@@ -138,7 +140,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
                     </td>
                     <td className="num"><b>{euros(inv.totalTtc)}</b></td>
                     <td><span className={st.pill}>{st.texte}</span></td>
-                    <td><span className={pp.pill} title={inv.peppolSentAt ? new Date(inv.peppolSentAt).toLocaleString(getLocale()) : ''}>{pp.texte}</span></td>
+                    {peppol && <td><span className={pp.pill} title={inv.peppolSentAt ? new Date(inv.peppolSentAt).toLocaleString(getLocale()) : ''}>{pp.texte}</span></td>}
                     <td className="num" style={{ whiteSpace: 'nowrap' }}>
                       <button type="button" className="btn-ghost" disabled={busyId === inv.id} onClick={() => download(inv)}>
                         {busyId === inv.id ? '...' : 'PDF'}

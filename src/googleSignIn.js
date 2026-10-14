@@ -15,7 +15,8 @@
  *
  * Le vrai défaut n'était pas « ce script existe », c'était « il part partout, tout le temps, sans que
  * personne ne l'ait demandé ». On le charge donc uniquement depuis la page de connexion (Auth.jsx),
- * au moment de dessiner le bouton. Effet de bord appréciable : une requête tierce en moins sur le
+ * et seulement quand le visiteur clique sur « Continuer avec Google » (fondateur, 2026-10-14 : la politique des
+ * cookies le promet) — le bouton officiel de Google remplace alors le nôtre. Effet de bord appréciable : une requête tierce en moins sur le
  * premier rendu de toutes les autres pages.
  *
  * Le domaine est déjà autorisé par `script-src` et `connect-src` dans la CSP (vercel.json) : rien à

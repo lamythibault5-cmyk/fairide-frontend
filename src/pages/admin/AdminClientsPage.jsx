@@ -88,7 +88,7 @@ export default function AdminClientsPage() {
     const r = await api(`/admin/clients/${c.id}`, { method: 'DELETE', token });
     setClients((prev) => (prev || []).filter((x) => x.id !== c.id));
     if (selected?.id === c.id) { setSelected(null); setDetail(null); }
-    toast(tr('adminClients.toastDeleted', { n: r.deletedOrders || 0 }));
+    toast(tr('adminClients.toastDeleted', { n: r.keptOrders || 0 }));
   }
   function askDelete(c) {
     setConfirmAction({ title: tr('adminClients.confirmDelete', { name: c.name }), message: tr('adminClients.deleteBody', { email: c.email }), danger: true, run: () => deleteClient(c).catch((e) => toast(e.message, 'erreur')) });

@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { paiementsOuverts, dateOuverturePaiements } from '../launch';
 
-// Sous-section « Paiement » de Mon compte (livreur) : comment il est payé (frais de livraison à 100 % et
-// pourboires, sans commission), l'autofacturation mensuelle liée à son statut d'indépendant, ce qu'est
+// Sous-section « Paiement » de Mon compte (livreur) : comment il est payé (sa part de la course, 90 % de sa grille,
+// et les pourboires en entier), le relevé mensuel des ventes encaissées pour son compte (plus d'autofacturation, 14/10/2026), ce qu'est
 // Stripe, l'activation des paiements (fermée jusqu'à début octobre 2026) et le reçu de chaque course
 // livrée. Même promesse que côté restaurateur : Fairide ne collecte aucune donnée bancaire.
 
@@ -14,7 +14,10 @@ export default function PaiementLivreur({ user, deliveries }) {
   const locale = getLocale();
   const livrees = (deliveries || []).filter((o) => o.status === 'livre').sort((a, b) => b.createdAt - a.createdAt);
   const pourboire = (o) => (o.tipPaid && o.tipAmount > 0 ? Number(o.tipAmount) : 0);
-  const totaux = livrees.reduce((a, o) => ({ courses: a.courses + Number(o.deliveryFee || 0), pourboires: a.pourboires + pourboire(o) }), { courses: 0, pourboires: 0 });
+  // Part du livreur (driverFee, figée à la prise : 90 % de sa grille), pas deliveryFee : c'est le prix payé par le CLIENT,
+  // frais de système de Fairide compris (1 km : 5,00 € affichés pour 4,50 € versés).
+  const part = (o) => Number(o.driverFee ?? o.deliveryFee ?? 0);
+  const totaux = livrees.reduce((a, o) => ({ courses: a.courses + part(o), pourboires: a.pourboires + pourboire(o) }), { courses: 0, pourboires: 0 });
   const ouvert = paiementsOuverts();
   const stripeActif = user?.stripeConnectStatus === 'active';
 
@@ -69,10 +72,9 @@ export default function PaiementLivreur({ user, deliveries }) {
                 <tr key={o.id}>
                   <td>{new Date(o.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</td>
                   <td>{o.restaurantName} → {o.commune || o.address}</td>
-                  <td>{euro(o.deliveryFee)}</td>
+                  <td>{euro(part(o))}</td>
                   <td>{pourboire(o) > 0 ? euro(pourboire(o)) : '-'}</td>
-                  {/* Net réellement versé quand le serveur joint le décompte (précompte de l'économie collaborative). */}
-                  <td><b>{euro(o.driverEarning?.net != null ? o.driverEarning.net : Number(o.deliveryFee || 0) + pourboire(o))}</b>{o.driverEarning?.withholding > 0 && <span className="small" style={{ opacity: 0.7 }}> (−{euro(o.driverEarning.withholding)})</span>}</td>
+                  <td><b>{euro(part(o) + pourboire(o))}</b></td>
                 </tr>
               ))}
             </tbody>

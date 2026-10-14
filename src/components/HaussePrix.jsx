@@ -9,7 +9,7 @@ import AvecMarque from './AvecMarque';
 // « Tes prix sur Fairide » — modèle du 13/10/2026 (fondateur). Par défaut, la carte affiche les prix du commerce et Fairide
 // garde 10 % du prix payé. La barre monte les prix de 0 à etat.max (+ 11,1 % en franchise TVA), la hausse qui rend au
 // commerce son prix entier ; jamais plus. Le serveur recalcule toute la carte (PUT /restaurants/:id/price-markup, arrondi au
-// 0,10 € supérieur, prixMagasin.js côté serveur) et retrouve les prix du commerce au retour à 0 %.
+// 0,10 € inférieur pour ne jamais dépasser le plafond, prixMagasin.js côté serveur) et retrouve les prix du commerce au retour à 0 %.
 const EXEMPLE_SUR_PLACE = 10;
 const euros = (v, locale) => v.toLocaleString(locale, { style: 'currency', currency: 'EUR' });
 
@@ -34,8 +34,8 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
   // franchise TVA (lettre du SPF Finances du 12/10/2026) : fairideVat = 0, les deux valent 10 %. Assujettie : 12,1 % et 10 %.
   const sansTva = !(Number(etat.fairideVat) > 0);
   const r = etat.fairideRate;
-  // Même calcul que le serveur : prix du commerce × (1 + hausse), au 0,10 € supérieur ; Fairide garde r du prix payé.
-  const affiche = valeur > 0 ? Math.ceil(EXEMPLE_SUR_PLACE * (1 + valeur / 100) * 10 - 1e-6) / 10 : EXEMPLE_SUR_PLACE;
+  // Même calcul que le serveur : prix du commerce × (1 + hausse), au 0,10 € inférieur ; Fairide garde r du prix payé.
+  const affiche = valeur > 0 ? Math.floor(EXEMPLE_SUR_PLACE * (1 + valeur / 100) * 10 + 1e-6) / 10 : EXEMPLE_SUR_PLACE;
   const partFairide = Math.round(affiche * r * 100) / 100;
   const partFairideHt = Math.round(affiche * (etat.fairideRateHt ?? r) * 100) / 100;
   const recu = affiche - partFairide;

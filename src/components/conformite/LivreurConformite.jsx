@@ -11,7 +11,7 @@ import Modale from '../Modale';
  *        fairide-backend/consentementsLivreur.js). Tant qu'elles ne sont pas acceptées dans leur
  *        version courante, le serveur refuse la prise de course (NOTICES_A_ACCEPTER).
  *   B8 — information DAC7, dans la même étape.
- *   G2 — mandat d'autofacturation (décision du 23/09/2026) : le livreur vend la livraison, Fairide émet
+ *   G2 — mandat d'encaissement et de facturation par un tiers (décision du 23/09/2026 ; ex-autofacturation, 14/10/2026) : le livreur vend la livraison, Fairide émet
  *        ses documents de vente en son nom. Il doit figurer ici : le serveur l'exige avant la première
  *        course (consentementsLivreur.AVANT_PREMIERE_COURSE), l'omettre bloquerait le livreur sans
  *        qu'il puisse voir ce qu'on lui demande.
@@ -20,7 +20,7 @@ import Modale from '../Modale';
 const AVANT_COURSE = ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur'];
 
 /* UNE CASE POUR TOUT (fondateur, 12 oct. 2026 : « que des cases à cocher, simple et minimaliste »). Les informations
- * à lire avant la première course, le mandat d'autofacturation, la déclaration sur l'honneur (qui remplace les pièces
+ * à lire avant la première course, le mandat d'encaissement, la déclaration sur l'honneur (qui remplace les pièces
  * de statut et de véhicule) et — pendant l'inscription — le contrat du statut : tous les textes restent lisibles, repliés,
  * puis UNE case, le nom prérempli, UN bouton (POST /couriers/me/engagements). Côté serveur, chaque texte garde sa
  * propre acceptation (version, empreinte, IP). Le consentement biométrique reste à part (RGPD art. 9).

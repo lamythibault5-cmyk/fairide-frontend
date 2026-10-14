@@ -649,17 +649,7 @@ function SelfBillingTab({ token, toast }) {
       toast(e.message, 'erreur');
     }
   }
-  async function downloadInvoiceUbl(inv) {
-    try { await downloadPdf(`/admin/self-billing-invoices/${inv.id}/ubl`, token, `${inv.invoiceNumber}.xml`); } catch (e) { toast(e.message, 'erreur'); }
-  }
-  async function sendPeppol(inv) {
-    try {
-      const r = await api(`/admin/self-billing-invoices/${inv.id}/peppol`, { method: 'POST', token });
-      toast(tr('adminInvoices.peppolResult', { status: (peppolLabels(tr)[r.status] || {}).texte || r.status }));
-      load();
-    } catch (e) { toast(e.message, 'erreur'); }
-  }
-
+  // Relevé des ventes du livreur (fondateur, 2026-10-14) : pas une facture (art. 53 §2 C.TVA) — ni UBL ni Peppol ici.
   async function sendEmail(inv) {
     try {
       await api(`/admin/self-billing-invoices/${inv.id}/send`, { method: 'POST', token });
@@ -685,12 +675,11 @@ function SelfBillingTab({ token, toast }) {
           { key: 'driverName', label: tr('adminCommon.driver'), get: (inv) => inv.driverName },
           { key: 'periodStart', label: tr('adminInvoices.colPeriod'), get: (inv) => fmtDate(inv.periodStart), sortValue: (inv) => inv.periodStart },
           { key: 'vatStatus', label: tr('adminCommon.vat'), get: (inv) => <span className="pill">{vatStatusLabels(tr)[inv.vatStatus] || inv.vatStatus}</span>, sortValue: (inv) => inv.vatStatus },
-          { key: 'peppolStatus', label: 'Peppol', get: (inv) => peppolPill(inv.peppolStatus, tr), sortValue: (inv) => inv.peppolStatus },
           { key: 'subtotalHt', label: tr('adminInvoices.colHt'), get: (inv) => money(inv.subtotalHt), sortValue: (inv) => inv.subtotalHt, align: 'right', sum: true },
           { key: 'vatAmount', label: tr('adminCommon.vat'), get: (inv) => (inv.vatStatus === 'assujetti' ? money(inv.vatAmount) : '-'), sortValue: (inv) => inv.vatAmount, align: 'right', sum: true },
           { key: 'totalTtc', label: tr('adminInvoices.colTtc'), get: (inv) => <b>{money(inv.totalTtc)}</b>, sortValue: (inv) => inv.totalTtc, align: 'right', sum: true },
           { key: 'issuedAt', label: tr('adminInvoices.colIssued'), get: (inv) => fmtDate(inv.issuedAt), sortValue: (inv) => inv.issuedAt },
-          { key: 'actions', label: '', get: (inv) => <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}><button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); downloadInvoicePdf(inv); }}>{tr('adminInvoices.pdf')}</button><button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); sendEmail(inv); }}>{tr('adminInvoices.send')}</button><button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); downloadInvoiceUbl(inv); }}>UBL</button><button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); sendPeppol(inv); }}>Peppol</button></span>, align: 'right' }
+          { key: 'actions', label: '', get: (inv) => <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}><button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); downloadInvoicePdf(inv); }}>{tr('adminInvoices.pdf')}</button><button className="btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); sendEmail(inv); }}>{tr('adminInvoices.send')}</button></span>, align: 'right' }
         ]} />
       )}
       {data && data.total > PAGE_SIZE && (

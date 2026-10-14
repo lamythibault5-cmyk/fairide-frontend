@@ -163,7 +163,7 @@ export default function Checkout() {
   // imposé ; s'il n'accepte que le paiement en ligne, la commande attend l'ouverture.
   const enLigneFerme = fulfillmentType === 'pickup' && !paiementEnLigneOuvert(user);
   const surPlaceChoisi = fulfillmentType === 'pickup' && (modeEmporter === 'on_site' || (modeEmporter === 'both' && (paiementSurPlace || enLigneFerme)));
-  // Frais de service (10 % de la livraison + TVA, voir src/fraisService.js) : en livraison seulement. La part de Fairide
+  // Frais de système (10 % de la livraison, compris dedans, voir src/fraisService.js) : en livraison seulement. La part de Fairide
   // sur les plats est déjà dans les prix affichés.
   const fraisServiceEstimes = fulfillmentType === 'delivery' ? totals.serviceFee : 0;
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
