@@ -11,7 +11,7 @@ import CopieDac7 from './CopieDac7';
  * minimum). Saisi en euros, envoyé en centimes : le serveur compare des centimes.
  *
  * DocumentsVente (G2) — un document par livraison, émis par Fairide en son nom au titre du mandat
- * d'autofacturation, numéroté dans une série qui lui est propre. Enregistré via apiDownload (jeton,
+ * d'encaissement et de facturation par un tiers (ex-autofacturation, 14/10/2026), numéroté dans une série qui lui est propre. Enregistré via apiDownload (jeton,
  * 401 centralisé) plutôt qu'ouvert dans un onglet : window.open après un await est bloqué par Safari.
  * En bas de la même carte : la copie DAC7 annuelle (B8), ce que Fairide a déclaré sur ses revenus. */
 export function TarifMinimum({ courier, token, action, busy }) {

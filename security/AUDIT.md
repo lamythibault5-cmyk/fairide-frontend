@@ -35,7 +35,7 @@ sont tous des constantes ou des listes blanches.
 | 5 | Secrets côté navigateur | ✅ CONFORME | ✅ conforme |
 | 6 | SSRF | 🔴 CRITIQUE | ✅ corrigé |
 | 7 | CSRF | ✅ SANS OBJET | ✅ sans objet (1 point ouvert) |
-| 8 | En-têtes de sécurité | 🟠 ÉLEVÉ | ✅ corrigé (CSP en observation) |
+| 8 | En-têtes de sécurité | 🟠 ÉLEVÉ | ✅ corrigé (CSP bloquante depuis, voir `vercel.json`) |
 | 9 | CORS | ✅ CONFORME | ✅ conforme |
 | 10 | Limitation de débit | 🟡 PARTIEL | ✅ corrigé |
 | 11 | Injection SQL | ✅ CONFORME | ✅ conforme |
@@ -342,7 +342,7 @@ PDF passent par pdfkit qui n'a pas de couche HTML.
   plus monnayable était le **code de bon cadeau**, un titre au porteur déductible d'une commande.
   Venaient ensuite les codes de confirmation à six chiffres (qui gardent le changement d'adresse de la
   faille n° 3) et les codes de remise en main propre. Tous passent à `crypto.randomInt`.
-- **OUVERT 🟡** : la règle est de **5 caractères** sur une plateforme qui détient des moyens de
+- **CORRIGÉ depuis (vérifié le 14/10/2026)** : 6 caractères, une majuscule et une minuscule, refus des mots de passe divulgués (`motDePasse.js`), même règle sur tous les écrans et en FR/EN/NL. Constat d'origine — **OUVERT 🟡** : la règle est de **5 caractères** sur une plateforme qui détient des moyens de
   paiement et des pièces d'identité — et elle est incohérente d'un écran à l'autre. Décision du
   propriétaire, déjà §16 d'`AVANT-MISE-EN-LIGNE.md`.
 - **OUVERT 🟢** : `reset_token` et `verification_code` sont stockés **en clair**. Les stocker hachés
@@ -372,7 +372,7 @@ ou une décision. Le détail est dans le **§17 d'`AVANT-MISE-EN-LIGNE.md`**.
 | 🟠 | **Changer `JWT_SECRET`** une fois le correctif déployé — seul moyen de révoquer les jetons éventuellement émis. Déconnecte tout le monde |
 | 🟠 | **Documents d'identité** : livraison signée chez Cloudinary + migration des URL existantes |
 | 🟠 | **`COURIER_DATA_KEY`** : poser une vraie clé, avec un script de re-chiffrement — sinon les numéros de registre national existants deviennent illisibles |
-| 🟡 | Passer la CSP de `Report-Only` à bloquant après vérification en console |
+| ✅ | Passer la CSP de `Report-Only` à bloquant après vérification en console — fait (`vercel.json`, vérifié le 14/10/2026) |
 | 🟡 | Octets magiques sur les téléversements en `resource_type: 'auto'` |
 | 🟡 | Règle de mot de passe (décision) · agenda iCal (défaut « détails », rotation) |
 | 🟢 | Hacher les jetons au repos · `CORS_ORIGINS` sans localhost en production · vérifier que Railway construit avec `npm ci` |

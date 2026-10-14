@@ -21,8 +21,8 @@ const pricingFields = (tr) => [
   { key: 'deliveryBaseKm', label: tr('adminSettings.baseDistance'), suffix: 'km' },
   { key: 'deliveryExtraPerKm', label: tr('adminSettings.perKmExtra'), suffix: '€/km', hint: tr('adminSettings.perKmExtraHint') },
   { key: 'vatRateDeliveryShare', label: tr('adminSettings.vatDelivery'), suffix: '%', isRate: true, hint: tr('adminSettings.vatDeliveryHint') },
-  { key: 'driverPerKmMotor', label: tr('adminSettings.driverPerKmMotor'), suffix: '€/km', hint: tr('adminSettings.driverPerKmMotorHint') },
-  { key: 'driverPerKmBike', label: tr('adminSettings.driverPerKmBike'), suffix: '€/km', hint: tr('adminSettings.driverPerKmBikeHint') },
+  // Plus de tarif livreur par véhicule (fondateur, 2026-10-14) : le livreur a le tarif au km du client, donc 90 % de la
+  // livraison à vélo comme motorisé (pricing.tauxKmLivreur). driverPerKmMotor / driverPerKmBike ne sont plus lus.
   { key: 'secondOrderRadiusKm', label: tr('adminSettings.secondOrderRadius'), suffix: 'km', hint: tr('adminSettings.secondOrderRadiusHint') },
   { key: 'tipFairideRate', label: tr('adminSettings.tipFairideRate'), suffix: '%', isRate: true, hint: tr('adminSettings.tipFairideRateHint') },
   { key: 'vatRateCommission', label: tr('adminSettings.vatCommission'), suffix: '%', isRate: true, hint: tr('adminSettings.vatCommissionHint') },
@@ -38,20 +38,20 @@ const userTypeLabels = (tr) => ({ client: tr('adminSettings.clients'), restauran
 const USER_TYPE_ORDER = ['client', 'restaurant', 'driver'];
 
 // Exemple chiffré, recalculé à chaque frappe (mêmes formules que pricing.js côté serveur : kilomètre entamé dès le 2e, tarifs
-// hors TVA + TVA livraison, 10 % de frais de système compris, livreur = 90 % de sa grille TVA comprise).
+// prix finaux TVA comprise, sans « + TVA » (fondateur, 2026-10-14), 10 % de frais de système compris = le reste après la part
+// du livreur arrondie, livreur = 90 % de ce que paie le client, quel que soit son véhicule).
 function ExempleTarifs({ form, tr }) {
   const n = (k) => Number(form[k]) || 0;
-  const tva = 1 + n('vatRateDeliveryShare') / 100;
   const kmEntames = (d) => Math.max(0, Math.ceil(d - n('deliveryBaseKm') - 1e-9));
-  const client = (d) => +((n('deliveryBaseFee') + kmEntames(d) * n('deliveryExtraPerKm')) * tva).toFixed(2);
-  const livreur = (d, velo) => +(((n('deliveryBaseFee') + kmEntames(d) * (velo ? n('driverPerKmBike') : n('driverPerKmMotor'))) * tva) * (1 - n('deliveryFairideRate') / 100)).toFixed(2);
+  const client = (d) => +(n('deliveryBaseFee') + kmEntames(d) * n('deliveryExtraPerKm')).toFixed(2);
+  const livreur = (d) => +(client(d) * (1 - n('deliveryFairideRate') / 100)).toFixed(2);
   const eur = (v) => `${v.toFixed(2).replace('.', ',')} €`;
-  const lignes = [1, 2.5, 4].map((d) => ({ d, c: client(d), s: +(client(d) * n('deliveryFairideRate') / 100).toFixed(2), v: livreur(d, true), m: livreur(d, false) }));
+  const lignes = [1, 2.5, 4].map((d) => ({ d, c: client(d), s: +(client(d) - livreur(d)).toFixed(2), v: livreur(d) }));
   return (
     <div className="small" style={{ margin: '4px 0 14px', padding: '10px 12px', borderRadius: 10, background: 'var(--cream, #f7f5ef)' }}>
       <b>{tr('adminSettings.exampleTitle')}</b>
       <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
-        {lignes.map((l) => <li key={l.d}>{tr('adminSettings.exampleLine', { km: String(l.d).replace('.', ','), client: eur(l.c), system: eur(l.s), bike: eur(l.v), motor: eur(l.m) })}</li>)}
+        {lignes.map((l) => <li key={l.d}>{tr('adminSettings.exampleLine', { km: String(l.d).replace('.', ','), client: eur(l.c), system: eur(l.s), courier: eur(l.v) })}</li>)}
       </ul>
     </div>
   );

@@ -13,12 +13,13 @@ import { fmtDateTime, filterBySearch, downloadCsv } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 
-// Application Avis : modération des avis clients (plats et livraison), avec recherche, filtre par note,
-// notes moyennes, et suppression d'un avis abusif. Pagination côté serveur (limit/offset + X-Total-Count) ;
-// les filtres par note et la recherche affinent la page affichée.
+// Application Avis : modération des avis clients sur les commerces, avec recherche, filtre par note,
+// note moyenne, et suppression d'un avis abusif. Pagination côté serveur (limit/offset + X-Total-Count) ;
+// les filtres par note et la recherche affinent la page affichée. Aucune note de livraison : le livreur n'est
+// pas noté (contrat livreur, présomption de salariat), le serveur ne la renvoie plus.
 const PAGE_SIZE = 50;
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
-const estBas = (r) => r.foodRating <= 2 || (r.deliveryRating && r.deliveryRating <= 2);
+const estBas = (r) => r.foodRating <= 2;
 
 function Etoiles({ n }) {
   if (!n) return <span className="small">-</span>;
@@ -62,10 +63,10 @@ export default function AdminReviewsPage() {
   useEffect(() => { load(); }, [token, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtres = useMemo(() => {
-    let l = filterBySearch(reviews || [], search, (r) => [r.clientName, r.restaurantName, r.foodComment, r.deliveryComment]);
+    let l = filterBySearch(reviews || [], search, (r) => [r.clientName, r.restaurantName, r.foodComment]);
     if (filtre === 'low') l = l.filter(estBas);
     if (filtre === 'high') l = l.filter((r) => r.foodRating >= 4);
-    if (filtre === 'comments') l = l.filter((r) => (r.foodComment && r.foodComment.trim()) || (r.deliveryComment && r.deliveryComment.trim()));
+    if (filtre === 'comments') l = l.filter((r) => r.foodComment && r.foodComment.trim());
     return l;
   }, [reviews, search, filtre]);
 
@@ -74,7 +75,6 @@ export default function AdminReviewsPage() {
     const moy = (arr) => (arr.length ? (arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1) : '-');
     return {
       food: moy(l.map((r) => r.foodRating).filter(Boolean)),
-      delivery: moy(l.map((r) => r.deliveryRating).filter(Boolean)),
       low: l.filter(estBas).length
     };
   }, [reviews]);
@@ -94,8 +94,7 @@ export default function AdminReviewsPage() {
     if (!filtres.length) { toast(tr('adminCommon.nothingToExport')); return; }
     downloadCsv(`avis-${Date.now()}.csv`, filtres, [
       { label: tr('adminCommon.date'), get: (r) => fmtDateTime(r.createdAt) }, { label: tr('adminCommon.client'), get: (r) => r.clientName }, { label: tr('adminCommon.restaurant'), get: (r) => r.restaurantName },
-      { label: tr('adminReviews.foodRating'), get: (r) => r.foodRating }, { label: tr('adminReviews.foodComment'), get: (r) => r.foodComment || '' },
-      { label: tr('adminReviews.deliveryRating'), get: (r) => r.deliveryRating || '' }, { label: tr('adminReviews.deliveryComment'), get: (r) => r.deliveryComment || '' }
+      { label: tr('adminReviews.foodRating'), get: (r) => r.foodRating }, { label: tr('adminReviews.foodComment'), get: (r) => r.foodComment || '' }
     ]);
   }
 
@@ -104,8 +103,7 @@ export default function AdminReviewsPage() {
     { key: 'clientName', label: tr('adminCommon.client'), get: (r) => <b>{r.clientName}</b>, sortValue: (r) => r.clientName },
     { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (r) => r.restaurantName },
     { key: 'foodRating', label: tr('adminReviews.foodRating'), get: (r) => <Etoiles n={r.foodRating} />, sortValue: (r) => r.foodRating, align: 'right' },
-    { key: 'deliveryRating', label: tr('adminReviews.deliveryRating'), get: (r) => <Etoiles n={r.deliveryRating} />, sortValue: (r) => r.deliveryRating || 0, align: 'right' },
-    { key: 'comments', label: tr('adminReviews.filterComments'), get: (r) => <span className="small" style={{ whiteSpace: 'normal' }}>{[r.foodComment, r.deliveryComment].filter(Boolean).join(' · ') || '-'}</span>, sortValue: (r) => (r.foodComment || r.deliveryComment ? 1 : 0) },
+    { key: 'comments', label: tr('adminReviews.filterComments'), get: (r) => <span className="small" style={{ whiteSpace: 'normal' }}>{r.foodComment || '-'}</span>, sortValue: (r) => (r.foodComment ? 1 : 0) },
     { key: 'links', label: tr('adminCommon.actions'), get: (r) => <span className="row" style={{ gap: 6 }}><LiensAvis r={r} tr={tr} /><button className="btn-danger-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setASupprimer(r); }}>{tr('adminCommon.delete')}</button></span>, sortValue: () => 0 }
   ];
 
@@ -115,7 +113,6 @@ export default function AdminReviewsPage() {
 
       <div className="stat-grid">
         <div className="stat-card highlight"><div className="num">{stats.food}</div><div className="label">{tr('adminReviews.statFood')}</div></div>
-        <div className="stat-card"><div className="num">{stats.delivery}</div><div className="label">{tr('adminReviews.statDelivery')}</div></div>
         <div className="stat-card"><div className="num">{total}</div><div className="label">{tr('adminReviews.statTotal')}</div></div>
         <div className="stat-card"><div className="num" style={{ color: stats.low > 0 ? 'var(--red)' : undefined }}>{stats.low}</div><div className="label">{tr('adminReviews.statLow')}</div></div>
       </div>
@@ -149,7 +146,6 @@ export default function AdminReviewsPage() {
           </div>
           <div className="admin-review-lines">
             <div><span className="small">{tr('adminReviews.foodRating')}</span> <Etoiles n={r.foodRating} /> {r.foodComment && <span className="admin-review-comment">“{r.foodComment}”</span>}</div>
-            {r.deliveryRating && <div><span className="small">{tr('adminReviews.deliveryRating')}</span> <Etoiles n={r.deliveryRating} /> {r.deliveryComment && <span className="admin-review-comment">“{r.deliveryComment}”</span>}</div>}
           </div>
         </div>
       ))}

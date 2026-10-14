@@ -7,7 +7,9 @@
 // Fichier à part plutôt que dans CartContext.jsx : un module de composants qui exporte aussi des fonctions casse le
 // rechargement à chaud de Vite (règle only-export-components de l'oxlint).
 export const SERVICE_FEE_RATE = 0.10;
-// Rend le montant TVA comprise, déjà contenu dans les frais de livraison (ligne d'information « dont … »).
+// Rend le montant déjà contenu dans les frais de livraison (ligne d'information « dont … » ; sans TVA, Fairide étant en
+// franchise). Le reste après la part du livreur arrondie, comme le serveur : 5,00 € → 0,50 € (le livreur a 4,50 €), 5,80 € →
+// 0,58 € ; 6,05 € → 0,60 € (le livreur a 5,45 €), pas 0,61 €.
 export function fraisService(livraison) {
-  return +(Number(livraison) * SERVICE_FEE_RATE).toFixed(2);
+  return +(Number(livraison) - +(Number(livraison) * (1 - SERVICE_FEE_RATE)).toFixed(2)).toFixed(2);
 }

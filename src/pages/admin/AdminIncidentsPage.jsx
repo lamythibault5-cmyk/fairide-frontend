@@ -210,7 +210,6 @@ export default function AdminIncidentsPage() {
         <PartnersTab
           queryString={queryString}
           onPickRestaurant={(r) => { setPartner({ key: 'restaurantId', id: r.id, name: r.name }); setTab('list'); }}
-          onPickDriver={(d) => { setPartner({ key: 'driverId', id: d.id, name: d.name }); setTab('list'); }}
         />
       )}
 

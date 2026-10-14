@@ -8,7 +8,7 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 
 // « Mon contrat et mes conditions » dans Mon compte (livreur) : le statut choisi et le contrat signé (ou à
 // signer), les conditions qui s'appliquent à ce statut avec les chiffres légaux de l'année et où en est le
-// la façon dont il est payé (frais de livraison à 100 %, pourboires, versement chaque lundi), et un comparatif
+// la façon dont il est payé (90 % des frais de livraison, pourboires en entier, versement chaque lundi), et un comparatif
 // des deux statuts (étudiant-indépendant, indépendant — l'économie collaborative est retirée, CODE-12). Tout vient de /couriers/me : aucun montant ni taux n'est écrit ici,
 // et une valeur absente de la configuration s'affiche « — ».
 const pct = (x) => (x == null || x === '' ? '—' : `${(Number(x) * 100).toFixed(2).replace(/\.?0+$/, '')} %`);
@@ -133,7 +133,7 @@ export default function DriverContractTerms() {
       <ol className="paiement-etapes">
         <li>{t('driverTerms.pay1')}</li>
         <li>{t('driverTerms.pay2')}</li>
-        <li>{t('driverTerms.payRates', { base: eur2(P.deliveryBaseFee), km: Number(P.deliveryBaseKm || 0), motor: eur2(P.driverPerKmMotor), bike: eur2(P.driverPerKmBike), diff: eur2((P.driverPerKmMotor || 0) - (P.driverPerKmBike || 0)) })}</li>
+        <li>{t('driverTerms.payRates', { base: eur2(P.deliveryBaseFee), km: Number(P.deliveryBaseKm || 0), perKm: eur2(P.driverPerKmMotor) })}</li>
         <li><b>{t('driverTerms.pay3')}</b></li>
         {retenue && <li>{retenue}</li>}
         <li>{t('driverTerms.pay4')}</li>

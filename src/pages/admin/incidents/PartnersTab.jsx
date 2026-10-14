@@ -8,9 +8,10 @@ import { ErrorCard, RecordLink } from '../../../components/admin/AdminListTools'
 import { SkeletonCards } from '../../../components/Skeleton';
 import { money, pct, downloadCsv } from '../adminUtils';
 
-// Onglet « Partenaires » : restaurants et livreurs classés par nombre d'incidents sur la période, avec le
-// montant remboursé et le taux (incidents / commandes de la période). Clic sur une ligne → filtre la
-// liste des incidents sur ce partenaire.
+// Onglet « Partenaires » : restaurants classés par nombre d'incidents sur la période, avec le montant
+// remboursé et le taux (incidents / commandes de la période). Clic sur une ligne → filtre la liste des
+// incidents sur ce partenaire. Pas de classement des livreurs : le contrat livreur l'exclut (présomption
+// de salariat) ; leurs incidents se suivent un par un dans la liste.
 function TablePartenaires({ titre, rows, type, onPick, tr, csvName }) {
   const { t } = useLanguage();
   const toast = useToast();
@@ -42,7 +43,7 @@ function TablePartenaires({ titre, rows, type, onPick, tr, csvName }) {
   );
 }
 
-export default function PartnersTab({ queryString, onPickRestaurant, onPickDriver }) {
+export default function PartnersTab({ queryString, onPickRestaurant }) {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const [data, setData] = useState(null);
@@ -61,7 +62,6 @@ export default function PartnersTab({ queryString, onPickRestaurant, onPickDrive
       <p className="small" style={{ margin: '0 0 12px', opacity: 0.75 }}>{tr('adminIncidents.partnersHelp')}</p>
       <div className="inc-partners-grid">
         <TablePartenaires titre={tr('adminCommon.restaurants')} rows={data.restaurants || []} type="restaurant" onPick={(r) => onPickRestaurant(r)} tr={tr} csvName={`incidents-restaurants-${Date.now()}.csv`} />
-        <TablePartenaires titre={tr('adminCommon.drivers')} rows={data.drivers || []} type="driver" onPick={(r) => onPickDriver(r)} tr={tr} csvName={`incidents-livreurs-${Date.now()}.csv`} />
       </div>
     </>
   );

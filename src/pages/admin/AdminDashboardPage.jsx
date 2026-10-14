@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
 
   if (!data && erreur) return <div>{entete}<ErrorCard message={erreur} onRetry={() => load(true)} /></div>;
   if (!data) return <div>{entete}<SkeletonCards count={3} /></div>;
-  const { kpi, realtime, alerts, dailySeries, topRestaurants, topDrivers } = data;
+  const { kpi, realtime, alerts, dailySeries, topRestaurants } = data;
 
   return (
     <div>
@@ -164,16 +164,8 @@ export default function AdminDashboardPage() {
             </button>
           ))}
         </div>
-        <div className="card" style={{ flex: '1 1 300px' }}>
-          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{tr('adminDash.topDrivers')}</h3>
-          {topDrivers.length === 0 && <div className="empty">{tr('adminDash.noData')}</div>}
-          {topDrivers.map((d) => (
-            <button type="button" key={d.id} className="admin-top-row" onClick={() => ouvrirFiche('/admin/drivers', d.name)} title={tr('adminDash.openRecord')}>
-              <span className="small">{d.name} <span style={{ opacity: 0.6 }}>({d.deliveryCount})</span></span>
-              <b className="small">{money(d.revenue)} ›</b>
-            </button>
-          ))}
-        </div>
+        {/* Plus de « top livreurs » : un palmarès des livreurs est un classement, exclu par le contrat livreur
+            (présomption de salariat, loi du 3/10/2022). */}
       </div>
 
       <h3 style={{ margin: '20px 0 10px', fontSize: 15 }}>{tr('adminDash.realtime')}</h3>

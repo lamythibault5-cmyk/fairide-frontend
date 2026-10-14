@@ -4,9 +4,10 @@ import { money, pct } from '../adminUtils';
 import { LoadState, RestaurantLink, DriverLink } from '../accounting/common';
 import { useReport, SectionCard } from './common';
 
-// Onglet Partenaires : performance des restaurants et des livreurs sur la période, tables triables,
-// liens vers les fiches (presetSearch, comme la page Commandes). Le bouton CSV de l'en-tête exporte
-// les restaurants ; les livreurs ont leur propre bouton.
+// Onglet Partenaires : performance des restaurants sur la période, tables triables, liens vers les fiches
+// (presetSearch, comme la page Commandes). Le bouton CSV de l'en-tête exporte les restaurants ; les livreurs
+// ont leur propre bouton. Pour les livreurs, seulement livraisons et gains (paiement, DAC7) : ni ponctualité, ni
+// note, ni classement, promis par le contrat livreur (présomption de salariat, loi du 3/10/2022).
 const note = (v) => (v === null || v === undefined ? '-' : `${v.toFixed(1)} ★`);
 const tauxOuTiret = (v) => (v === null || v === undefined ? '-' : pct(v));
 
@@ -14,7 +15,7 @@ export default function PartnersTab({ token, query, onExport }) {
   const { t: tr } = useLanguage();
   const state = useReport('partners', token, query);
   const triRestos = useTableSort('gmv');
-  const triLivreurs = useTableSort('deliveries');
+  const triLivreurs = useTableSort('name', 'asc');
 
   const colRestos = [
     { key: 'name', label: tr('adminCommon.restaurant'), get: (r) => <RestaurantLink id={r.id} name={r.name} />, sortValue: (r) => r.name },
@@ -31,9 +32,6 @@ export default function PartnersTab({ token, query, onExport }) {
   const colLivreurs = [
     { key: 'name', label: tr('adminCommon.driver'), get: (r) => <DriverLink id={r.id} name={r.name} />, sortValue: (r) => r.name },
     { key: 'deliveries', label: tr('adminCommon.deliveries'), get: (r) => r.deliveries, align: 'right', sum: true },
-    { key: 'onTimeRate', label: tr('adminReports.onTime'), get: (r) => tauxOuTiret(r.onTimeRate), sortValue: (r) => r.onTimeRate ?? -1, align: 'right' },
-    { key: 'rating', label: tr('adminCommon.rating'), get: (r) => note(r.rating), sortValue: (r) => r.rating ?? -1, align: 'right' },
-    { key: 'avgDistanceKm', label: tr('adminReports.avgDistance'), get: (r) => (r.avgDistanceKm === null ? '-' : r.avgDistanceKm.toFixed(1)), sortValue: (r) => r.avgDistanceKm ?? -1, align: 'right' },
     { key: 'earnings', label: tr('adminReports.earnings'), get: (r) => money(r.earnings), sortValue: (r) => r.earnings, align: 'right', sum: true }
   ];
   const fmt = { gmv: money, refunds: money, earnings: money };

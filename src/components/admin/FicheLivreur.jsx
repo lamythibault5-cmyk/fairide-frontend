@@ -15,7 +15,7 @@ export default function FicheLivreur({ dossier, tr, onOpen }) {
   const contrat = (dossier.contracts || [])[0];
   const manques = dossier.missing || [];
   const sac = c.bag?.option
-    ? `${tr(`auth.bag_${c.bag.option}`)}${c.bag.option === 'fairide' ? ` · ${tr(`adminCouriers.bagDeposit_${c.bag.depositStatus}`)} (${Number(c.bag.depositAmount || 40).toFixed(0)} €)` : ''}`
+    ? `${tr(`auth.bag_${c.bag.option}`)}${c.bag.option === 'fairide' ? ` · ${tr(`adminCouriers.bagDeposit_${c.bag.depositStatus}`, { amount: Number(c.bag.depositAmount || 40).toFixed(0) })} (${Number(c.bag.depositAmount || 40).toFixed(0)} €)` : ''}`
     : tr('adminDrivers.notAnswered');
 
   return (
