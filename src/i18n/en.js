@@ -6571,6 +6571,9 @@ export default {
       feePickup: 'Free',
       feePickupLabel: 'Pickup in store',
       searchDish: 'Search a dish',
+      searchSubmit: 'See results',
+      searchCountOne: '1 dish found',
+      searchCount: '{n} dishes found',
       noDishMatch: 'No dish matches "{q}".',
       clearSearch: 'Clear search'
     },

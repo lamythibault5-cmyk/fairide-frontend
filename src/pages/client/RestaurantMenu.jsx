@@ -362,7 +362,7 @@ export default function RestaurantMenu() {
   }
 
   return (
-    <div>
+    <div className="fiche-page">
       {/* LE BANDEAU D'ABORD, LES SECTIONS DESSOUS. C'était l'inverse : la barre des sections était
           rendue en premier et collée à `top: 0`, la croix venait après et ne collait à rien. En
           descendant dans la carte, on gardait donc la table des matières et on perdait la sortie —
@@ -382,22 +382,34 @@ export default function RestaurantMenu() {
         titreEstompe={grandTitreVisible || rechercheOuverte}
         actions={restaurant.menu.length > 8 ? (
           rechercheOuverte ? (
-            <form className="recherche-champ fiche-recherche" role="search" onSubmit={(e) => e.preventDefault()}>
+            /* VALIDER LA RECHERCHE (retour du fondateur, 2026-10-14) : rien ne confirmait l'action — la touche Entrée ne
+               faisait rien et le rond gris restait vide. « Voir les résultats » (ou Entrée) ferme le clavier et amène à la
+               première section trouvée ; le nombre de plats s'affiche sous la barre des sections (fiche-recherche-resultat). */
+            <form className="recherche-champ fiche-recherche" role="search" onSubmit={(e) => {
+              e.preventDefault();
+              champRechercheRef.current?.blur();
+              document.querySelector('[id^="menu-cat-"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}>
               <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={18} /></span>
               <input
                 ref={champRechercheRef}
-                type="search" value={requete} onChange={(e) => setRequete(e.target.value)}
+                type="search" enterKeyHint="search" value={requete} onChange={(e) => setRequete(e.target.value)}
                 placeholder={t('restaurantMenu.searchDish')} aria-label={t('restaurantMenu.searchDish')}
               />
               {/* Fermer VIDE la recherche : replier le champ en gardant un filtre actif laisserait
-                  une carte amputée sans rien à l'écran pour dire pourquoi. */}
+                  une carte amputée sans rien à l'écran pour dire pourquoi. Une croix, plus le rond « interdit ». */}
               <button
                 type="button" className="recherche-effacer"
                 onClick={() => { setRequete(''); setRechercheOuverte(false); }}
-                aria-label={t('restaurantMenu.clearSearch')}
+                aria-label={t('restaurantMenu.clearSearch')} title={t('restaurantMenu.clearSearch')}
               >
-                <Icone nom="interdit" taille={16} />
+                <Icone nom="croix" taille={16} />
               </button>
+              {requete.trim() && (
+                <button type="submit" className="recherche-valider" aria-label={t('restaurantMenu.searchSubmit')} title={t('restaurantMenu.searchSubmit')}>
+                  <Icone nom="valider" taille={18} />
+                </button>
+              )}
             </form>
           ) : (
             <button
@@ -411,6 +423,13 @@ export default function RestaurantMenu() {
         ) : null}
       />
       <CategoryQuickNav categories={sectionsFiltrees} />
+      {/* Le résultat d'une recherche, dit en clair (et annoncé aux lecteurs d'écran) : la carte filtrée seule ne disait
+          pas que le tri avait eu lieu. Zéro résultat : le message « aucun plat » plus bas suffit. */}
+      {q && menuFiltre.length > 0 && (
+        <p className="fiche-recherche-resultat" role="status">
+          {menuFiltre.length === 1 ? t('restaurantMenu.searchCountOne') : t('restaurantMenu.searchCount', { n: menuFiltre.length })}
+        </p>
+      )}
 
       {/* L'EN-TÊTE SORT DE LA CARTE.
           Tout ce bloc vivait dans un <div className="card"> : un rectangle blanc cerné d'un filet,
