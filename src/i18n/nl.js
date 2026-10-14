@@ -4473,7 +4473,7 @@ export default {
       supermarket: 'Supermarkt',
       freeFrom: 'Gratis levering vanaf {min}',
       heading: 'Restaurants en zaken in Brussel',
-      pageTitle: 'Restaurants en zaken in Brussel · Fairide',
+      pageTitle: 'Restaurants aan huis geleverd in Brussel · Fairide',
       freeDeliveryPill: 'Gratis levering',
       deliveryDiscountPill: '-€{amount} levering'
     },
@@ -6279,9 +6279,9 @@ export default {
       close: 'Sluiten'
     },
     seo: {
-      defaultTitle: 'fairide.be · Bezorging en lokale zaken in Brussel',
-      homeDescription: 'Restaurants en zaken in Brussel: laat leveren of bestel om af te halen met Fairide, het Belgische alternatief. 10% commissie in plaats van 22 tot 32%.',
-      listDescription: 'Alle restaurants, supermarkten, bakkerijen en nachtwinkels van Brussel op fairide.be: fietsbezorging en afhalen in de 19 gemeenten.',
+      defaultTitle: 'Eten bestellen in Brussel · Het alternatief voor Uber Eats | Fairide',
+      homeDescription: 'Je favoriete Brusselse restaurants aan huis, zoals Uber Eats maar goedkoper. 10% commissie in plaats van 22 tot 32%: restaurant en koerier verdienen meer.',
+      listDescription: 'Eten bestellen in Brussel: restaurants, bakkers, supermarkten en nachtwinkels, met de fiets geleverd of om af te halen. Goedkoper dan Uber Eats.',
       restaurantTitle: "{name}, {cuisine} in {commune} · Fairide",
       restaurantDescription: "Bestel bij {name} in {commune} en laat het met de fiets leveren. Op Fairide houdt de zaak 90 % van je bestelling.",
       loginTitle: 'Inloggen en registreren · fairide.be Brussel',

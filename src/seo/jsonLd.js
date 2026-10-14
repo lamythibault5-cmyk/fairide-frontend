@@ -42,7 +42,7 @@ export function organizationJsonLd() {
     url: SITE_URL,
     logo: LOGO_URL,
     image: OG_IMAGE_URL,
-    description: "Plateforme de livraison bruxelloise à commission plafonnée à 10 %, pour les restaurants et commerces locaux.",
+    description: "Livraison de repas à Bruxelles, l'alternative à Uber Eats : moins cher pour le client, 10 % de commission pour les restaurants au lieu de 22 à 32 %, et des livreurs mieux payés.",
     areaServed: { '@type': 'City', name: 'Bruxelles', addressCountry: 'BE' },
     contactPoint: {
       '@type': 'ContactPoint',
