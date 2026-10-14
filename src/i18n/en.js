@@ -4464,7 +4464,7 @@ export default {
       supermarket: 'Supermarket',
       freeFrom: 'Free delivery from {min}',
       heading: 'Restaurants and businesses in Brussels',
-      pageTitle: 'Restaurants and businesses in Brussels · Fairide',
+      pageTitle: 'Restaurant delivery in Brussels · Fairide',
       freeDeliveryPill: 'Free delivery',
       deliveryDiscountPill: '-€{amount} delivery'
     },
@@ -6270,9 +6270,9 @@ export default {
       close: 'Close'
     },
     seo: {
-      defaultTitle: 'fairide.be · Delivery and local shops in Brussels',
-      homeDescription: 'Restaurants and shops in Brussels: get delivery or order takeaway with Fairide, the Belgian alternative. 10% commission instead of 22 to 32%.',
-      listDescription: 'Every restaurant, supermarket, bakery and night shop in Brussels on fairide.be: bike delivery and takeaway across the 19 communes.',
+      defaultTitle: 'Food delivery in Brussels · The Uber Eats alternative | Fairide',
+      homeDescription: 'Your favourite Brussels restaurants delivered, like Uber Eats but cheaper. 10% commission instead of 22 to 32%: restaurants and couriers earn more.',
+      listDescription: 'Food delivery in Brussels: restaurants, bakeries, supermarkets and night shops, delivered by bike or for takeaway. Cheaper than Uber Eats, and fairer.',
       restaurantTitle: "{name}, {cuisine} in {commune} · Fairide",
       restaurantDescription: "Order from {name} in {commune} and have it delivered by bike. On Fairide the shop keeps 90% of your order.",
       loginTitle: 'Sign in and sign up · fairide.be Brussels',

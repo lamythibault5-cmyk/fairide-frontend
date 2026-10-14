@@ -4475,7 +4475,7 @@ export default {
       supermarket: 'Supermarché',
       freeFrom: 'Livraison offerte dès {min}',
       heading: 'Restaurants et commerces à Bruxelles',
-      pageTitle: 'Restaurants et commerces à Bruxelles · Fairide',
+      pageTitle: 'Restaurants en livraison à Bruxelles · Fairide',
       freeDeliveryPill: 'Livraison offerte',
       deliveryDiscountPill: '-{amount}€ livraison'
     },
@@ -6293,15 +6293,18 @@ export default {
          usePageMeta sans `title`). Il vivait en double dans usePageMeta.js et dans index.html ;
          il est ici pour que le pré-rendu, qui produit les trois langues, lise la même chaîne que
          l'application. */
-      defaultTitle: 'fairide.be · Livraison et commerces locaux à Bruxelles',
-      /* Aligné sur l'accroche de la page (landing.title1/2 et landing.sub) : la description disait
-         encore « les commerces de ton quartier » quand le titre dit « Paie ton repas, pas la
-         plateforme ». Les mots que l'on cherche (restaurants, commerces, Bruxelles, commande,
-         emporte, livre) restent en tête ; le positionnement suit. Uber Eats et Deliveroo ne sont
-         pas nommés dans une balise meta — voir le commentaire dans index.html. ~145 caractères,
-         au-delà de ~155 Google tronque. */
-      homeDescription: 'Restaurants et commerces de Bruxelles : fais-toi livrer ou commande à emporter avec Fairide, l\'alternative belge. 10 % de commission au lieu de 22 à 32 %.',
-      listDescription: 'Tous les restaurants, supermarchés, boulangeries et night shops de Bruxelles sur fairide.be : livraison à vélo et à emporter dans les 19 communes.',
+      /* RÉSULTAT GOOGLE = « C'EST UBER EATS, EN MOINS CHER » (fondateur, 2026-10-14). Le titre ouvre
+         sur la requête que tapent les gens (« livraison de repas Bruxelles », celle sur laquelle Uber
+         Eats et Deliveroo se positionnent) et nomme Uber Eats tout de suite : qui lit le résultat doit
+         comprendre le service sans cliquer. Au-delà de ~60 caractères Google coupe la fin, donc
+         « | Fairide » — le nom du site s'affiche de toute façon au-dessus du titre.
+         La description dit le gagnant-gagnant-gagnant : moins cher pour le client (même promesse
+         que landing.subAdresse), le resto et le livreur gagnent plus. Chiffres repris de la page
+         (22 à 32 %), vérifiables : c'est ce qui rend la comparaison licite (publicité comparative,
+         CDE art. VI.17). Sous ~155 caractères. */
+      defaultTitle: "Livraison de repas à Bruxelles · L'alternative à Uber Eats | Fairide",
+      homeDescription: 'Tes restos de Bruxelles livrés, comme sur Uber Eats mais moins cher. 10 % de commission au lieu de 22 à 32 % : le resto et le livreur gagnent plus.',
+      listDescription: "Livraison de repas à Bruxelles : restaurants, boulangeries, supermarchés et night shops livrés à vélo ou à emporter. Moins cher qu'Uber Eats, plus juste.",
       restaurantTitle: "{name}, {cuisine} à {commune} · Fairide",
       restaurantDescription: "Commande chez {name} à {commune} et fais-toi livrer à vélo. Sur Fairide, le commerce garde 90 % de ta commande.",
       loginTitle: 'Connexion et inscription · fairide.be Bruxelles',
