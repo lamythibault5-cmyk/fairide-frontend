@@ -24,7 +24,8 @@ name: App Android de test
 on:
   workflow_dispatch:
   push:
-    branches: [main, feat/app-test-android]
+    # Option A (fondateur, 2026-10-15) : le staging suit main ; chaque fusion donne une nouvelle « Fairide Test ».
+    branches: [main]
 
 concurrency:
   group: app-android-test-${{ github.ref }}

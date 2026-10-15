@@ -1,0 +1,33 @@
+# Le site de STAGING (staging.fairide.be) suit main — option A du fondateur (2026-10-15), tant qu'il n'y a pas de vrais
+# clients : chaque fusion dans main part en production ET sur le staging.
+#
+# POURQUOI UNE BRANCHE `staging` RECOPIÉE. Sur Vercel, main est construite comme PRODUCTION, avec les variables de
+# production (l'API de production). Le staging a besoin du même code construit avec d'autres variables (l'API de staging,
+# dates d'ouverture passées) : Vercel les donne aux aperçus de la branche `staging`, et le domaine staging.fairide.be
+# suit cette branche. Ce workflow ne fait que recopier main dessus après chaque push.
+#
+# Passer à l'option B plus tard (tester AVANT la production) : supprimer ce workflow et fusionner d'abord dans `staging`,
+# puis `staging` dans main.
+name: Staging = main
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: staging-miroir
+  cancel-in-progress: true
+
+jobs:
+  miroir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: main → staging
+        run: git push --force origin HEAD:refs/heads/staging
