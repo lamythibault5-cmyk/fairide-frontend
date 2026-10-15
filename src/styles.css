@@ -4770,7 +4770,8 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-tampon.non { left: 20px; background: var(--chip); }
 .bv-votes { display: flex; justify-content: center; gap: 28px; }
 
-.bv-saisie { width: 100%; font-size: 22px; font-weight: 500; letter-spacing: .1em; padding: 16px; border: 1px solid var(--line); border-radius: 16px; text-align: center; }
+.bv-saisie { width: 100%; font-size: 22px; font-weight: 500; letter-spacing: .1em; padding: 16px; border: 1px solid var(--line); border-radius: 16px; text-align: center; background: #fff; }
+.bv-saisie.input-invalid { border-color: var(--red); }
 .bv-saisie:focus { outline: 2px solid var(--iris); border-color: var(--iris); }
 
 /* Le cercle de livraison : toi au centre (lime sur iris), un point par commerce qui livre chez toi. */
@@ -4795,8 +4796,60 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 
 .bv-commerce { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 16px; padding: 10px; margin-bottom: 8px; background: #fff; }
 .bv-commerce img, .bv-commerce .bv-tuile { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; flex: none; }
-.bv-commerce b { display: block; font-size: 15px; }
-.bv-commerce span { font-size: 13px; color: var(--ink-soft); }
+.bv-commerce > div > b { display: block; font-size: 15px; }
+/* > div > : la tuile d'icône est elle aussi un <span> — sans cela elle prenait le gris du texte. */
+.bv-commerce > div > span { font-size: 13px; color: var(--ink-soft); }
+/* Écran du compte : les commerces trouvés tiennent dans UNE carte, en lignes serrées séparées d'un filet (2026-10-15) —
+   quatre cartes pleines poussaient les boutons du compte sous le pli. */
+.bv-trouves { padding: 4px 12px; }
+.bv-trouves .bv-commerce { border: 0; border-radius: 0; padding: 8px 0; margin: 0; background: none; }
+.bv-trouves .bv-commerce + .bv-commerce, .bv-trouves .bv-petit { border-top: 1px solid var(--line); }
+.bv-trouves .bv-commerce img, .bv-trouves .bv-commerce .bv-tuile { width: 40px; height: 40px; border-radius: 10px; }
+.bv-trouves .bv-commerce > div { min-width: 0; }
+.bv-trouves .bv-commerce > div > b, .bv-trouves .bv-commerce > div > span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bv-trouves .bv-petit { padding: 8px 0 6px; }
+
+/* L'INSCRIPTION DANS L'ACCUEIL (pages/app/InscriptionAppli.jsx, 2026-10-15). Une question par écran, le bouton en bas
+   comme partout dans l'accueil. Les champs passent à 16px : en dessous, Safari iOS zoome à la mise au point. Fond blanc
+   et filet, comme les options de l'accueil — pas l'aplat gris des formulaires du site. */
+.bv-form { display: flex; flex-direction: column; flex: 1; }
+.bv-titre-form { font-size: 28px; }
+.bv-champ { margin-bottom: 14px; }
+.bv-champ > label { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+.bv-champ input, .bv-champ select, .bv-creneau input { font-size: 16px; padding: 15px 16px; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
+.bv-champ .input-invalid, .bv-creneau .input-invalid { border-color: var(--red); }
+.bv-champ .password-input input { padding-right: 48px; }
+.bv-champ .phone-input { border-radius: 14px; }
+.bv-champ .phone-input .phone-input-indicatif { padding: 0 12px; font-size: 15px; }
+.bv-champ .address-search { margin-bottom: 0; }
+.bv-champ .email-chips { margin-top: 8px; }
+.bv-form > .field-error { margin: -6px 0 12px; }
+.bv-aide { font-size: 13px; line-height: 1.4; color: var(--ink-faint); margin: 6px 0 0; }
+.bv-rangee { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.bv-rangee-inverse { grid-template-columns: 1fr 2fr; }
+.bv-rangee > .bv-champ { min-width: 0; }
+.bv-etiquette { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); margin: 4px 0 8px; }
+.bv-ajout { align-self: flex-start; background: none; border: 0; padding: 8px 0; color: var(--iris); font-size: 14px; font-weight: 600; }
+.bv-ajout-texte { display: inline; padding: 0; }
+.bv-lien.bv-lien-serre { padding: 0 0 12px; text-align: left; color: var(--iris); font-weight: 600; }
+
+/* Horaires : sept pastilles de jour, puis les heures d'ouverture qui valent pour les jours choisis. */
+.bv-jours { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 18px; }
+.bv-jours button { height: 44px; padding: 0; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 14px; font-weight: 600; }
+.bv-jours button.on { background: var(--iris); border-color: var(--iris); color: #fff; }
+.bv-creneau { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bv-creneau input { flex: 1; min-width: 0; width: auto; text-align: center; padding: 14px 10px; }
+
+/* Choix en pastilles sous une option (mode de livraison, paiement de l'à emporter). */
+.bv-segments { display: flex; gap: 6px; margin: -2px 0 12px; }
+.bv-segments button { flex: 1; min-width: 0; padding: 10px 6px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 13px; font-weight: 600; }
+.bv-segments button.on { background: var(--iris); border-color: var(--iris); color: #fff; }
+
+/* Cases à cocher du dernier écran (conditions, nouvelles de Fairide). */
+.bv-case-ligne { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 12px; font-size: 14px; font-weight: 400; line-height: 1.45; cursor: pointer; }
+.bv-case-ligne input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--iris); }
+.bv-case-discrete { font-size: 13px; color: var(--ink-soft); }
+.bv-form .engagements-inscription input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--iris); }
 
 /* Boutons « Continuer avec Apple / Google » de l'application (BoutonsConnexionNative.jsx) — aussi sur /login. */
 .connexion-native { display: flex; flex-direction: column; gap: 10px; width: 100%; }

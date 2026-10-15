@@ -40,7 +40,10 @@ inside a WebView) are loaded with `import()` from `natif.js` only, so the websit
 route `/bienvenue`, outside `<Layout>`; designed with the founder on [mockups/app-onboarding.html](mockups/app-onboarding.html)).
 In the app, `/` never shows the marketing landing: first launch → `/bienvenue`, afterwards → `/restaurants` (Home.jsx).
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
-is in the `appli` i18n namespace and makes **no claim the code does not back** — never « moins cher » (it depends on the
+is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](src/pages/app/InscriptionAppli.jsx)):
+« Continuer avec mon e-mail », and Apple / Google for an account that does not exist yet, no longer go to `/login` — one question
+per screen, no scrolling at 375×667, same data and routes as Auth.jsx (change a field rule in both, and in the backend). Only
+« J'ai déjà un compte » still opens `/login`. The onboarding copy makes **no claim the code does not back** — never « moins cher » (it depends on the
 business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them.
 
 **Push notifications (2026-10-11), what exists:** order-status pushes for all three roles come from a DB trigger

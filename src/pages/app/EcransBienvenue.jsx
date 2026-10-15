@@ -35,7 +35,7 @@ function Tuile({ nom, grande = false }) {
   return <span className={`bv-tuile${grande ? ' grande' : ''}`}><Icone nom={nom} taille={grande ? 34 : 20} /></span>;
 }
 
-function Fait({ icone, titre, sous, barre, vedette, children }) {
+export function Fait({ icone, titre, sous, barre, vedette, children }) {
   return (
     <div className={`bv-carte bv-fait${vedette ? ' vedette' : ''}`}>
       <Tuile nom={icone} />
@@ -64,10 +64,11 @@ export function Haut({ onRetour, progression, onPasser }) {
   );
 }
 
-function Option({ on, icone, titre, sous, multi, onClick }) {
+// Sans icône (véhicules de l'inscription, InscriptionAppli.jsx) : le texte seul.
+export function Option({ on, icone, titre, sous, multi, onClick }) {
   return (
     <button type="button" className={`bv-option${on ? ' on' : ''}`} aria-pressed={on} onClick={onClick}>
-      <Tuile nom={icone} />
+      {icone && <Tuile nom={icone} />}
       <span>{titre}{sous && <small>{sous}</small>}</span>
       {multi && <span className="bv-case">{on && <Icone nom="valider" taille={14} />}</span>}
     </button>
@@ -286,8 +287,12 @@ export function EcranRecherche({ commune, points, envies }) {
 const km = (d, locale) => `${d.toLocaleString(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} km`;
 
 /* Le compte, partagé par les trois profils. Pour un client, les commerces trouvés sont AU-DESSUS des boutons : il voit
- * ce qu'il gagne avant qu'on lui demande quoi que ce soit (règle 5.1.1 d'Apple). */
-export function EcranCompte({ role, resultats, avecPosition, commune, points, onFournisseur, onEmail, onConnexion, attente }) {
+ * ce qu'il gagne avant qu'on lui demande quoi que ce soit (règle 5.1.1 d'Apple).
+ *
+ * UN SEUL ÉCRAN, SANS DÉFILER (fondateur, 2026-10-15). Il empilait le petit cercle, quatre cartes de commerce, la note
+ * sur le rayon et jusqu'à trois boutons : au téléphone, « Continuer avec mon e-mail » était sous le pli. Le cercle a déjà
+ * été montré au chargement juste avant ; ici, trois commerces en lignes serrées, dans une seule carte, et le compte. */
+export function EcranCompte({ role, resultats, avecPosition, commune, onFournisseur, onEmail, onConnexion, attente }) {
   const { t, locale } = useLanguage();
   let haut;
   if (role === 'client') {
@@ -295,18 +300,20 @@ export function EcranCompte({ role, resultats, avecPosition, commune, points, on
     const titre = !avecPosition && commune ? t('appli.trouvesCommune', { c: commune }) : n === 1 ? t('appli.trouvesUn') : t('appli.trouves', { n });
     haut = (
       <>
-        {avecPosition && n > 0 && <Cercle points={points} petit />}
         <h1 className="bv-titre">{n || !avecPosition ? titre : t('appli.aucun')}</h1>
         {!n && avecPosition && <p className="bv-sous">{t('appli.aucunSub')}</p>}
-        {resultats.slice(0, 4).map(({ r, km: d }) => (
-          <div key={r.id} className="bv-commerce">
-            {r.logoImageUrl ? <img src={r.logoImageUrl} alt="" loading="lazy" /> : <Tuile nom="restaurants" />}
-            <div><b>{r.name}</b><span>{restaurantTypeLabel(r.cuisine, t)}{d !== null ? ` · ${km(d, locale)}` : r.commune ? ` · ${r.commune}` : ''}</span></div>
+        {n > 0 && (
+          <div className="bv-carte bv-trouves">
+            {resultats.slice(0, 3).map(({ r, km: d }) => (
+              <div key={r.id} className="bv-commerce">
+                {r.logoImageUrl ? <img src={r.logoImageUrl} alt="" loading="lazy" /> : <Tuile nom="restaurants" />}
+                <div><b>{r.name}</b><span>{restaurantTypeLabel(r.cuisine, t)}{d !== null ? ` · ${km(d, locale)}` : r.commune ? ` · ${r.commune}` : ''}</span></div>
+              </div>
+            ))}
+            {n > 3 && <p className="bv-petit">{t('appli.etAutres', { n: n - 3 })}</p>}
           </div>
-        ))}
-        {n > 4 && <p className="bv-petit">{t('appli.etAutres', { n: n - 4 })}</p>}
-        {avecPosition && <p className="bv-petit" style={{ margin: '4px 0 12px' }}>{t('appli.rayonNote')}</p>}
-        <p className="bv-sous" style={{ marginBottom: 6 }}>{t('appli.trouvesSub')}</p>
+        )}
+        <p className="bv-sous" style={{ marginBottom: 0 }}>{t('appli.trouvesSub')}</p>
       </>
     );
   } else {
@@ -319,7 +326,8 @@ export function EcranCompte({ role, resultats, avecPosition, commune, points, on
       <div className="bv-grandit" />
       {/* Feuille Apple/Google native : dans la vraie application seulement ; sur l'écran d'accueil, l'e-mail (et Google sur la page de connexion). */}
       {estNatif() && <BoutonsConnexionNative onChoix={onFournisseur} disabled={attente} />}
-      <button type="button" className="bv-btn btn-outline" disabled={attente} onClick={onEmail}><Icone nom="courrier" /> {t('appli.continueEmail')}</button>
+      {/* Seul bouton hors de l'application (site ajouté à l'écran d'accueil, aperçu) : il prend l'aplat iris, pas le filet. */}
+      <button type="button" className={`bv-btn ${estNatif() ? 'btn-outline' : 'btn-teal'}`} disabled={attente} onClick={onEmail}><Icone nom="courrier" /> {t('appli.continueEmail')}</button>
       <button type="button" className="bv-lien" onClick={onConnexion}>{t('appli.dejaCompte')}</button>
     </>
   );
