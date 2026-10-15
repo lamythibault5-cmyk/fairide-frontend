@@ -240,6 +240,62 @@ export async function demanderPosition() {
   });
 }
 
+/* Position PRÉCISE ET FRAÎCHE, pour l'alerte d'urgence du livreur (components/livreur/BoutonUrgence.jsx) : haute
+ * précision, 30 s de cache au plus, 8 s pour répondre — l'équipe doit pouvoir le retrouver, pas seulement sa commune.
+ * Rend { lat, lng, precision } ou null, jamais d'erreur : l'alerte part quand même, sans position. */
+export async function positionPrecise() {
+  const options = { enableHighAccuracy: true, timeout: 8000, maximumAge: 30 * 1000 };
+  const rendre = (p) => ({ lat: p.coords.latitude, lng: p.coords.longitude, precision: p.coords.accuracy });
+  if (estNatif()) {
+    try {
+      const { Geolocation } = await import('@capacitor/geolocation');
+      let droit = await Geolocation.checkPermissions();
+      if (droit.location === 'prompt' || droit.location === 'prompt-with-rationale') droit = await Geolocation.requestPermissions({ permissions: ['location'] });
+      if (droit.location !== 'granted' && droit.coarseLocation !== 'granted') return null;
+      return rendre(await Geolocation.getCurrentPosition(options));
+    } catch { return null; }
+  }
+  if (!('geolocation' in navigator)) return null;
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition((p) => resolve(rendre(p)), () => resolve(null), options);
+  });
+}
+
+/* SUIVI DE POSITION DU LIVREUR, TÉLÉPHONE VERROUILLÉ COMPRIS (comparaison avec Uber Eats, 15 oct. 2026).
+ *
+ * Sur le web, watchPosition s'arrête quand le téléphone se verrouille : le client voyait une carte figée dès que le
+ * livreur rangeait son téléphone (CLAUDE.md, « Known gaps » 1). Dans l'application, pendant une course EN LIVRAISON
+ * seulement (`arrierePlan`), le greffon @capacitor-community/background-geolocation prend le relais : un service au
+ * premier plan, avec sa notification permanente (« course en cours ») — Android l'exige, et le livreur voit ainsi
+ * qu'il est suivi et jusqu'à quand. Le reste du temps, et sur le site, le watchPosition d'avant.
+ *
+ * Le greffon n'a pas de code JavaScript : il s'appelle par registerPlugin, et n'existe donc que dans la coque — le site ne
+ * télécharge rien de plus. Greffon absent (ancienne version de l'appli) : retour au watchPosition, sans erreur.
+ * Rend une fonction d'arrêt. `onPosition({ latitude, longitude })`, `onErreur()` une fois en cas de refus. */
+export async function suivrePositionCourse({ arrierePlan = false, titre, message, onPosition, onErreur }) {
+  if (arrierePlan && estNatif()) {
+    try {
+      const { registerPlugin } = await import('@capacitor/core');
+      const BackgroundGeolocation = registerPlugin('BackgroundGeolocation');
+      const id = await BackgroundGeolocation.addWatcher(
+        { backgroundTitle: titre, backgroundMessage: message, requestPermissions: true, stale: false, distanceFilter: 10 },
+        (position, erreur) => {
+          if (erreur) { onErreur?.(erreur); return; }
+          if (position) onPosition({ latitude: position.latitude, longitude: position.longitude });
+        }
+      );
+      return () => { BackgroundGeolocation.removeWatcher({ id }).catch(() => {}); };
+    } catch { /* greffon absent : suivi au premier plan ci-dessous */ }
+  }
+  if (!('geolocation' in navigator)) { onErreur?.(); return () => {}; }
+  const watchId = navigator.geolocation.watchPosition(
+    (pos) => onPosition({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+    (e) => onErreur?.(e),
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
+  );
+  return () => navigator.geolocation.clearWatch(watchId);
+}
+
 /* État de l'autorisation de position, SANS rien demander : 'granted' | 'denied' | 'prompt'. Sert à l'écran qui bloque les
  * courses d'un livreur tant qu'elle manque (components/livreur/PositionRequise.jsx). 'denied' veut dire que le système ne
  * reposera plus la question : seule la personne peut la rouvrir dans ses réglages. Un navigateur sans l'API Permissions

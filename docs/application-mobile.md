@@ -24,6 +24,8 @@ passe par `src/natif.js` (et `src/pushNatif.js` pour les notifications) — null
 | Liens universels | `public/.well-known/`, `AndroidManifest.xml` | voir « Reste à faire » : empreintes à remplir |
 | Accueil de l'application | `pages/app/Bienvenue.jsx` (`/bienvenue`), `Home.jsx` | premier lancement : « Tu es… » (client / livreur / commerce), questions, « Pourquoi Fairide », position ou code postal, commerces qui livrent vraiment chez toi, compte. Ensuite l'app s'ouvre sur la liste, jamais sur la vitrine du site. Maquette : `mockups/app-onboarding.html`. Relire dans un navigateur : `/bienvenue?apercu` |
 | Position | `natif.js` → `demanderPosition` | greffon `@capacitor/geolocation` (une seule question du système, pas celle de la WebView en plus) |
+| Position du livreur téléphone verrouillé | `natif.js` → `suivrePositionCourse` (driver/Dashboard.jsx, driver/MapPage.jsx) | greffon `@capacitor-community/background-geolocation` 1.2.26, **seulement pendant une course en livraison** : service au premier plan avec la notification « Fairide : livraison en cours ». Hors course, et sur le site : `watchPosition`. Le manifeste du greffon déclare lui-même `FOREGROUND_SERVICE_LOCATION` (Android 14). À essayer sur un vrai téléphone, écran verrouillé, avant la mise en ligne |
+| Urgence du livreur | `BoutonUrgence.jsx` → `POST /api/couriers/me/sos` | « Appeler le 112 » (le téléphone compose), puis « Prévenir l'équipe » : tâche haute priorité + e-mail [Livreurs], position précise lue au moment de l'appui (`positionPrecise`) |
 | Connexion Apple / Google | `natif.js` → `connexionFournisseur`, `BoutonsConnexionNative.jsx` | feuille native (`@capgo/capacitor-social-login`) : le bouton Google du site est refusé dans une WebView. Apple sur iPhone seulement (règle 4.8). Serveur : `POST /auth/apple` (`apple.js`) |
 | Notifications après l'inscription | `AmorceNotifications.jsx` | une fois, pour les trois profils, en listant ce qui arrive vraiment. Ensuite : réglage dans Mes commandes (client), sous « Courses disponibles » (livreur), barre d'alerte (commerce) |
 | Notifications envoyées | backend `pushFile.js` (file `push_queue`, déclencheur migration 029), `notifLivreurs.js` | client : acceptée, refusée, livreur trouvé, en route, livrée, prête à retirer, annulée, à la porte. Commerce : nouvelle commande, en attente d'acceptation, annulée, livreur qui attend. Livreur : nouvelle course qu'il verrait, sa course prête, annulée, retirée par le client. Jamais pour son propre geste |
@@ -73,6 +75,15 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
 10. **Position, texte des permissions iOS** : dans `ios/App/App/Info.plist`, `NSLocationWhenInUseUsageDescription`
     (« Pour te montrer les commerces qui livrent jusqu'à chez toi, et aux livreurs les courses proches. »). Sans elle,
     iOS refuse la demande et Apple refuse l'application. Android : déjà déclaré dans `AndroidManifest.xml`.
+11. **Position du livreur en arrière-plan** (15 oct. 2026, voir le tableau plus haut) :
+    - **iOS** : dans `Info.plist`, ajouter `NSLocationAlwaysAndWhenInUseUsageDescription` (« Pendant une livraison, ta
+      position reste partagée avec le client même écran verrouillé, jusqu'à la remise. ») et, dans Xcode → Signing &
+      Capabilities → *Background Modes*, cocher *Location updates* (`UIBackgroundModes` = `location`). Apple demande
+      pourquoi à la revue : le suivi de la livraison par le client.
+    - **Google Play** : Play Console → Contenu de l'application → *Types de services de premier plan* : déclarer
+      « location », avec une courte vidéo de la notification pendant une course. L'application ne demande PAS la position
+      « en arrière-plan » (`ACCESS_BACKGROUND_LOCATION`) : le service au premier plan suffit, ce qui évite le formulaire
+      le plus lourd de Google.
 
 ## Mettre à jour l'application
 

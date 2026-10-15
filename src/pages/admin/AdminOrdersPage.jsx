@@ -469,7 +469,10 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
           <div className="divider" />
           <DrawerRow label={tr('adminOrders.foodSubtotal')} value={money(detail.subtotal)} />
           <DrawerRow label={tr('adminOrders.delivery')} value={money(detail.deliveryFee)} />
-          {detail.tipAmount > 0 && <DrawerRow label={tr('adminOrders.tip')} value={money(detail.tipAmount)} />}
+          {detail.tipAmount > 0 && <DrawerRow label={detail.tipAtCheckout > 0 ? tr('adminOrders.tipAtCheckout') : tr('adminOrders.tip')} value={money(detail.tipAmount)} />}
+          {/* Pourboire payé avec la commande puis rendu (commande non livrée, backend pourboireCommande.js). */}
+          {detail.tipRefundedAt && <DrawerRow label={tr('adminOrders.tipRefunded')} value={money(detail.tipAtCheckout)} />}
+          {detail.deliveredPhotoUrl && <DrawerRow label={tr('adminOrders.doorDropPhoto')} value={<a href={detail.deliveredPhotoUrl} target="_blank" rel="noopener noreferrer">{tr('adminOrders.doorDropPhotoOpen')}</a>} />}
           <DrawerRow label={tr('adminOrders.totalPaid')} value={money(detail.total)} strong />
           <DrawerRow label={tr('adminOrders.restoCommission')} value={money(detail.commission)} />
           <DrawerRow label={tr('adminOrders.deliveryShare')} value={money(detail.deliveryFairideShare)} />

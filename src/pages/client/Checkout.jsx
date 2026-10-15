@@ -67,6 +67,10 @@ export default function Checkout() {
   const [giftCheck, setGiftCheck] = useState(null);
   // Code promo de commande appliqué (MON-6, CodePromoCheckout) : { code, discount, label } ou null.
   const [codePromo, setCodePromo] = useState(null);
+  // Pourboire choisi au paiement (backend pourboireCommande.js) : '0', '1', '2', '3' ou 'autre' (montant libre). Aucun
+  // par défaut : un pourboire présélectionné serait payé par des clients qui ne l'ont pas choisi.
+  const [pourboire, setPourboire] = useState('0');
+  const [pourboireAutre, setPourboireAutre] = useState('');
   const [fulfillmentType, setFulfillmentType] = useState('delivery');
   // Sous-ecran ouvert par-dessus le paiement : 'adresse', 'remise', ou null.
   const [sousEcran, setSousEcran] = useState(null);
@@ -248,6 +252,16 @@ export default function Checkout() {
   const corpsActuel = corpsCommande();
   const devisValide = corpsActuel && devis && devis.cle === JSON.stringify(corpsActuel) ? devis.order : null;
   const montantAnnonce = devisValide ? Number(devisValide.total) : estimatedTotal;
+  /* LE POURBOIRE S'AJOUTE À CE QUI EST DÉBITÉ, PAS AU TOTAL DE LA COMMANDE. Le serveur ne le met pas dans orders.total
+   * (commission, remboursements, reçu restent ceux de la commande) : il l'ajoute comme une ligne de plus sur la page
+   * Stripe. montantAnnonce reste donc le total de la commande — c'est lui que placeOrder compare au total du serveur —,
+   * et l'écran affiche montantAnnonce + pourboire. Seulement en livraison payée en ligne, et pas sur une commande que
+   * le solde couvre en entier : elle n'ouvre aucune page de paiement. */
+  const offrePourboire = fulfillmentType === 'delivery' && !surPlaceChoisi && montantAnnonce > 0;
+  const pourboireChoisi = !offrePourboire ? 0
+    : pourboire === 'autre' ? Math.max(0, +(Number(String(pourboireAutre).replace(',', '.')) || 0).toFixed(2))
+    : Number(pourboire);
+  const montantDebite = +(montantAnnonce + pourboireChoisi).toFixed(2);
   // Refus du serveur sur le panier affiché : commerce fermé ou en pause, adresse introuvable ou trop loin, commerce pas
   // encore actif… Sauf ce que le client règle sur cette page même (CGU, âge, téléphone, dépôt devant la porte avec de
   // l'alcool) : ces cases sont sous ses yeux, les annoncer avant qu'il ait pu les cocher serait du bruit. Ni les erreurs
@@ -264,6 +278,11 @@ export default function Checkout() {
     }
     if (scheduleEnabled && (!scheduleDate || !scheduleTime)) {
       toast(t('checkout.toastScheduledDateTimeRequired'), 'erreur');
+      return;
+    }
+    // Stripe n'encaisse rien sous 0,50 € : refusé ici plutôt qu'après la création de la commande.
+    if (pourboireChoisi > 0 && pourboireChoisi < 0.5) {
+      toast(t('checkout.tipTooSmall'), 'erreur');
       return;
     }
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
@@ -334,7 +353,9 @@ export default function Checkout() {
         navigate('/orders');
         return;
       }
-      const pay = await api(`/payments/checkout/${order.id}`, { method: 'POST', token });
+      // Le pourboire choisi part avec la demande de paiement (0 = aucun) ; sans objet hors livraison ou à total nul.
+      const tip = order.orderType === 'delivery' && Number(order.total) > 0 ? pourboireChoisi : 0;
+      const pay = await api(`/payments/checkout/${order.id}`, { method: 'POST', token, body: { tip } });
       if (pay.simulated) {
         // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
         commandeTermineeRef.current = true;
@@ -510,7 +531,8 @@ export default function Checkout() {
                 possibles sont posées côte à côte et l'une est visiblement retenue.
                 Il n'y a pas de troisième carte « Prioritaire » : Fairide n'a pas d'option de
                 livraison payante plus rapide, et on n'invente pas une fonctionnalité pour faire
-                joli — il n'existe même aucun champ de délai de préparation, ni ici ni au serveur. */}
+                joli. (Le temps de préparation du commerce existe depuis le 15/10/2026, backend migration 041,
+                mais il ne sert qu'à l'heure estimée de la commande, pas à une livraison plus rapide.) */}
             {(
               <div className="field">
                 <span className="titre-groupe co-etape" id="checkout-quand-label">{t('checkout.whenLabel')}</span>
@@ -573,7 +595,7 @@ export default function Checkout() {
                 elle s'afficherait ailleurs que près du bouton. */}
             {refusDevis && <p className="co-refus" role="alert"><Icone nom="alerte" taille={16} className="icone-texte" /> {refusDevis}</p>}
             <span className="co-barre-total">
-              <span className="co-barre-montant">{euros(montantAnnonce)}</span>
+              <span className="co-barre-montant">{euros(montantDebite)}</span>
               <span className="co-barre-detail">{t(`checkout.barCount${devisValide ? 'Exact' : ''}${cart.count > 1 ? 'Plural' : ''}`, { count: cart.count })}</span>
             </span>
             {serviceOuvert(fulfillmentType, user) && !paiementBloque && manqueMinimum > 0 ? (
@@ -647,8 +669,31 @@ export default function Checkout() {
               )}
               {/* Avec le devis du serveur, les remises qu'il a appliquées (bon cadeau, code promo) sont listées : la somme des lignes doit tomber sur le total. */}
               {devisValide?.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: devisValide.giftVoucherCode })}</span><span>-{euros(devisValide.giftVoucherDiscount)}</span></div>}
-              <div className="line total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span>{euros(montantAnnonce)}</span></div>
+              {pourboireChoisi > 0 && <div className="line"><span>{t('checkout.tipLine')}</span><span>{euros(pourboireChoisi)}</span></div>}
+              <div className="line total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span>{euros(montantDebite)}</span></div>
             </div>
+            {offrePourboire && (
+              <div className="field" style={{ marginTop: 12 }}>
+                <span className="field-intitule">{t('checkout.tipTitle')}</span>
+                <ChoixPastilles
+                  libelle={t('checkout.tipTitle')}
+                  valeur={pourboire}
+                  onChange={setPourboire}
+                  options={[
+                    { value: '0', label: t('review.tipNone') },
+                    { value: '1', label: euros(1) },
+                    { value: '2', label: euros(2) },
+                    { value: '3', label: euros(3) },
+                    { value: 'autre', label: t('checkout.tipOther') }
+                  ]}
+                />
+                {pourboire === 'autre' && (
+                  <input aria-label={t('checkout.tipOtherPh')} type="number" inputMode="decimal" min="0.5" step="0.5" placeholder={t('checkout.tipOtherPh')}
+                    value={pourboireAutre} onChange={(e) => setPourboireAutre(e.target.value)} style={{ marginTop: 6, maxWidth: 160 }} />
+                )}
+                <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('checkout.tipSub')}</p>
+              </div>
+            )}
             {user.balance > 0 && (
               <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={useBalance} onChange={(e) => setUseBalance(e.target.checked)} />
@@ -870,7 +915,16 @@ export default function Checkout() {
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}
               {pendingOrder.promoCodeDiscount > 0 && <div className="line"><span>{t('checkout.promoCodeRecap', { label: pendingOrder.promoCode })}</span><span>-{euros(pendingOrder.promoCodeDiscount)}</span></div>}
               {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(pendingOrder.balanceUsed)}</span></div>}
-              <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{euros(pendingOrder.total)}</span></div>
+              {(() => {
+                // Même règle que confirmAndPay : le pourboire n'est débité qu'en livraison, sur un total non nul.
+                const tipCarte = pendingOrder.orderType === 'delivery' && Number(pendingOrder.total) > 0 ? pourboireChoisi : 0;
+                return (
+                  <>
+                    {tipCarte > 0 && <div className="line"><span>{t('checkout.tipLine')}</span><span>{euros(tipCarte)}</span></div>}
+                    <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{euros(Number(pendingOrder.total) + tipCarte)}</span></div>
+                  </>
+                );
+              })()}
             </div>
           )}
 

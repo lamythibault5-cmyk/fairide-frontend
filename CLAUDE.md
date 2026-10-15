@@ -462,7 +462,7 @@ account page then shows « offert pendant le lancement » and the Stripe checkou
   no ×1.10 any more. Since 2026-10-01 the business can no longer edit dishes or prices itself
   (`MENU_LOCKED`) — it asks, and the team applies;
 - legal texts: contract `RESTO-2026.19` (in force 1 Nov 2026; 2026.18 widens the subscription guarantee, 2026.19 says Fairide charges no VAT and, revised before publication on 2026-10-13, the own-prices model; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-13-b` (commission = 10 % of the price paid; says the subscription is 20 € with no VAT and that Fairide's system fee carries none), privacy
-  `CONF-2026-10-08` (they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
+  `CONF-2026-10-15` (door-drop photo 30 days, courier position with the screen locked, courier SOS; they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
   restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).
 
 ## Corrections of 8 October 2026 (`docs/fairide-a-coder-2026-10-08.md`)
@@ -579,13 +579,14 @@ covered by `../fairide-backend/tests/correctifs-e2e.test.js`:
 
 Real, verified as absent on 2026-09-22 — not speculation.
 
-1. **No background geolocation.** Driver tracking uses `watchPosition`
-   ([driver/Dashboard.jsx](src/pages/driver/Dashboard.jsx),
-   [driver/MapPage.jsx](src/pages/driver/MapPage.jsx)), which survives a backgrounded tab far better
-   than the old `setInterval` but still stops when the phone locks. There is no web fix — it needs a
-   native plugin: the Capacitor shell exists since 2026-10-01 but has no background-location plugin yet. The customer-facing map shows a staleness warning after two minutes so
-   a frozen map is at least legible
-   ([DeliveryTrackingMap](src/components/DeliveryTrackingMap.jsx)).
+1. **Background geolocation exists in the app only** (2026-10-15). Driver tracking goes through `suivrePositionCourse`
+   ([natif.js](src/natif.js)), used by [driver/Dashboard.jsx](src/pages/driver/Dashboard.jsx) and
+   [driver/MapPage.jsx](src/pages/driver/MapPage.jsx): in the native app, while an order is « livraison », the
+   `@capacitor-community/background-geolocation` plugin runs a foreground service (notification « Fairide : livraison en
+   cours ») that keeps sending when the phone locks; otherwise, and on the website, `watchPosition`, which stops when the
+   phone locks — there is no web fix. Not yet tried on a real phone; iOS needs the Info.plist / Background Modes steps in
+   [docs/application-mobile.md](docs/application-mobile.md). The customer-facing map still shows a staleness warning after
+   two minutes so a frozen map is at least legible ([DeliveryTrackingMap](src/components/DeliveryTrackingMap.jsx)).
 2. **No SSR.** `npm run build` runs a prerender ([scripts/prerender.mjs](scripts/prerender.mjs)) that writes
    static HTML for the public pages (three languages) and the restaurant pages, and a `dist/sitemap.xml`
    (138 addresses on 2026-09-23). Pages added after the build list are not prerendered.

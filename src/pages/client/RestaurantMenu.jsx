@@ -519,8 +519,9 @@ export default function RestaurantMenu() {
 
         {/* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
             forfaitaire côté client : le montant exact dépend de la distance et se calcule au
-            serveur, exactement comme l'annonce déjà le paiement. Aucun délai d'arrivée n'y figure —
-            aucun champ de temps de préparation n'existe, ni ici ni au serveur. */}
+            serveur, exactement comme l'annonce déjà le paiement. Aucun délai d'arrivée n'y figure : le
+            commerce règle son temps de préparation (backend migration 041), mais le trajet dépend de
+            l'adresse, inconnue ici — l'heure estimée n'existe qu'une fois la commande passée. */}
         {!onlineOrderingDisabled && (
           <div className="fiche-panneau">
             <b>{modeActif === 'pickup'
