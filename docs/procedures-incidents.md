@@ -94,3 +94,35 @@ historique. Un remboursement Stripe est réel et ne s'annule pas.
 2. Réponds dans **Stripe › Litiges** avant l'échéance : ticket de commande, code de remise saisi par le livreur,
    échanges avec le client.
 3. Décide ensuite qui supporte la perte. Le commerce et le livreur ont déjà été payés.
+
+## 7. Fairide dépasse le seuil de la franchise TVA
+
+**Ce que tu vois.** Admin › Comptabilité › Obligations : le compteur « Franchise » (seuilFranchise.js) passe à 70 %, puis
+90 %. Un e-mail `[Compta]` part à l'équipe à 70 %, 90 % et 100 %, une fois chacun (`alerterSeuil`, passage quotidien). À 100 %, **le régime a pris fin avec l'opération qui a fait dépasser
+25 000 €** (pas au 31 décembre). Préparé le 2026-10-15 (plan-franchise-tva-2026-10-15.md, phase 4), jamais encore joué.
+
+**Avant 100 % — dès l'alerte à 90 %, pas après.**
+1. Prévenir le comptable : déclaration de changement de régime au bureau de gestion, première déclaration périodique.
+2. **Décider ce que devient la commission**, parce que l'interrupteur seul la change. Avec `FAIRIDE_VAT_REGIME=assujetti`,
+   `getPricing()` reprend les taux enregistrés (`vatRateCommission` 21 %) et Fairide prend **10 % HTVA + 21 % = 12,1 %** du
+   prix payé : le commerce passe de 90 % à 87,9 % de ses ventes, sans l'avoir accepté. Deux choix :
+   - **garder 10 % TVA comprise** pour le commerce : poser `commission_rate` à **0,0826** (0,10 / 1,21) dans Admin ›
+     Paramètres *en même temps* que l'interrupteur ; rien ne change pour lui, Fairide encaisse un peu moins ;
+   - **passer à 10 % HTVA** (12,1 % TVA comprise) : c'est un changement de prix pour le commerce → nouvelle version du
+     contrat `RESTO-2026.x` (restaurantContract.js), préavis du contrat, et textes fr/en/nl.
+   La hausse maximale du commerce suit toute seule (`hausseMaxPourcent`) : 11,1 % avec le premier choix, 13,7 % avec le
+   second.
+3. Abonnement (20 €) et mises en avant : décider s'ils deviennent 20 € HTVA (+ TVA) ou 20 € TVA comprise. Textes et CGU.
+
+**Le jour du dépassement.**
+1. Si premier choix : Admin › Paramètres › taux de commission à **0,0826** d'abord. Puis Railway › service
+   `fairide-backend` › Variables : `FAIRIDE_VAT_REGIME=assujetti` ; le redéploiement suit tout seul. Aucune commande passée
+   n'est recalculée : chaque ligne garde la TVA de son jour.
+2. Vérifier sur une commande de test (commerce « ZZ Test ») : reçu client avec TVA sur les frais de système, facture de
+   commission avec TVA et catégorie Peppol `S`, **sans** la mention de franchise.
+3. Admin › Comptabilité › TVA : les grilles de la déclaration périodique réapparaissent ; les dépenses redeviennent
+   déductibles à partir de cette date (pas avant).
+4. Mettre à jour la section « Pricing model » de CLAUDE.md (les deux dépôts) et `docs/comptabilite.md` (backend).
+
+**Revenir en arrière** n'est pas un geste technique : une fois assujettie, Fairide ne retrouve la franchise que sur
+décision de l'administration. Ne jamais remettre `franchise` pour « annuler » une erreur.
