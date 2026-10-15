@@ -11,6 +11,7 @@ import EnteteFlux from '../../components/EnteteFlux';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/UpsellPanier';
 import { euros, libellePromo } from '../../prixPlat';
+import BandeauGroupe from '../../components/client/BandeauGroupe';
 
 // Le panier, sur sa propre page.
 //
@@ -65,6 +66,8 @@ export default function PanierPage() {
         />
       )}
       <h1 className="page-title" style={{ margin: '0 0 16px' }}>{t('panier.title')}</h1>
+      {/* Commande groupée en cours : ce panier est une part à envoyer au groupe, pas à payer soi-même. */}
+      <BandeauGroupe restaurantId={cart.restaurantId} />
 
       <div className="card panier-lignes">
         {Object.entries(cart.lines).map(([cle, ligne]) => (

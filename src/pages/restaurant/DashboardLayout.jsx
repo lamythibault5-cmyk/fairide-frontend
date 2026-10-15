@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { definirModeEquipe } from '../../modeEquipe';
 import { api } from '../../api';
 import { allerAuPaiement } from '../../natif';
 import { useAuth } from '../../context/AuthContext';
@@ -76,6 +77,8 @@ export default function DashboardLayout() {
   // Terminal « navigateur » (Goodcom sans coque Android) : si CET appareil est associé au commerce, il imprime les
   // tickets de la file d'impression tant que le tableau de bord est ouvert (voir terminalNavigateur.js).
   useEffect(() => { demarrerTerminalNavigateur(); }, []);
+  // Membre de l'équipe (staffRole) : partagé avec la barre de navigation et Mon compte (modeEquipe.js).
+  useEffect(() => { definirModeEquipe(myRestos?.find((r) => r.id === restoId)?.staffRole === 'service'); }, [myRestos, restoId]);
   useEffect(() => {
     api('/restaurants/mine/dashboard', { token }).then((list) => {
       setMyRestos(list);
@@ -282,6 +285,11 @@ export default function DashboardLayout() {
 
   if (!myRestos) return <SkeletonCards count={2} />;
 
+  // MEMBRE DE L'ÉQUIPE (backend equipeCommerce.js) : le commerce ouvert n'est pas le sien, il y fait le service. Il ne
+  // voit que les commandes — les autres écrans appellent des routes du propriétaire, que le serveur lui refuse.
+  const membreEquipe = myRestos.find((r) => r.id === restoId)?.staffRole === 'service';
+  if (membreEquipe && restoId && chemin !== '/dashboard/orders') return <Navigate to="/dashboard/orders" replace />;
+
   return (
     <div>
       {actingAs && (
@@ -342,7 +350,7 @@ export default function DashboardLayout() {
           (CarteAValider) et la liste de MenuReadiness. Complète sur Mon commerce, une rangée « Prochaine étape » ailleurs
           — y compris sur le terminal. En « agir pour », l'équipe voit la liste sans aucun bouton : elle ne signe ni ne
           valide rien à la place du commerce. */}
-      {restaurant && (
+      {restaurant && !membreEquipe && (
         <MiseEnLigne restaurant={restaurant} restoId={restoId} token={token} onConnect={connectOnboard} connecting={connecting}
           onChange={() => loadDashboard(restoId)} compact={!surAccueil} lectureSeule={!!actingAs} />
       )}

@@ -14,6 +14,7 @@ import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import useNotificationsClient from '../hooks/useNotificationsClient';
 import { ADMIN_HUBS, hubBadge, hubModules, moduleForPath } from '../pages/admin/adminModules';
 import { experienceApp } from '../natif';
+import { useModeEquipe } from '../modeEquipe';
 
 const NATIF = experienceApp();
 
@@ -25,7 +26,14 @@ const HOME_PATH_BY_ROLE = { client: '/restaurants', restaurant: '/dashboard', dr
 
 // Items de nav par rôle : mêmes cibles que l'ancien .role-nav de Layout.jsx, juste redisposées
 // verticalement avec une icône — pas de nouvelle page/route inventée ici.
-function navItemsForRole(role, t, user) {
+function navItemsForRole(role, t, user, membreEquipe = false) {
+  // Membre de l'équipe d'un commerce (modeEquipe.js) : le service seulement, ses commandes et son compte.
+  if (role === 'restaurant' && membreEquipe) {
+    return [
+      { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders'), court: t('nav.court.orders') },
+      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
+    ];
+  }
   if (role === 'client') {
     return [
       // CINQ onglets, plus six. Sur un téléphone, la barre du bas n'a de place que pour cinq cibles
@@ -122,6 +130,7 @@ export default function DashboardSidebar() {
   const { user, role, logout } = useAuth();
   const { t } = useLanguage();
   const { previewMode, exitPreview } = usePreviewMode();
+  const membreEquipe = useModeEquipe();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const navRef = useRef(null);
@@ -148,7 +157,7 @@ export default function DashboardSidebar() {
   // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
   // correspondantes, toujours réservées aux vrais clients côté API.
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
-  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user);
+  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe);
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
   const brandHome = isAdminAccount ? '/admin' : (HOME_PATH_BY_ROLE[effectiveRole] || '/');
 
