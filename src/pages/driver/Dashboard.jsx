@@ -8,7 +8,7 @@ import ErrorCard from '../../components/ErrorCard';
 import LigneCompte from '../../components/LigneCompte';
 import IncidentsCourse from '../../components/livreur/IncidentsCourse';
 import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
-import { estNatif } from '../../natif';
+import { experienceApp } from '../../natif';
 import Icone from '../../components/Icone';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -466,10 +466,10 @@ export default function DriverDashboard() {
                 onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
               />
               {/* Taille normale (audit du 15/10/2026) : c'est le geste qui clôt la course, fait d'une main, souvent dehors. */}
-              {!estNatif() && <button className="btn-teal" onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
+              {!experienceApp() && <button className="btn-teal" onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
             </div>
             {/* Application : le code du client tapé, on glisse pour livrer (même raison que pour la récupération). */}
-            {estNatif() && <GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} onConfirmer={() => deliver(o)} />}
+            {experienceApp() && <GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} onConfirmer={() => deliver(o)} />}
             <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
           </div>
         ))}

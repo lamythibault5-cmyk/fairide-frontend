@@ -7,7 +7,8 @@ android {
         applicationId "be.fairide.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        // Numéro de version donné par la CI (numéro du build) : chaque application de test remplace la précédente.
+        versionCode((System.getenv('VERSION_CODE') ?: '1') as Integer)
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -16,7 +17,28 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Clé de l'APPLICATION DE TEST (be.fairide.app.test), jamais celle du Play Store : la CI la reçoit d'un secret GitHub
+    // (ANDROID_TEST_KEYSTORE_BASE64, voir .github/workflows/app-android-test.yml). Sans elle, la clé de débogage de la
+    // machine : l'application s'installe, mais chaque nouvelle version demande de désinstaller la précédente.
+    signingConfigs {
+        test {
+            def ks = System.getenv('ANDROID_TEST_KEYSTORE')
+            if (ks && file(ks).exists()) {
+                storeFile file(ks)
+                storePassword System.getenv('ANDROID_TEST_KEYSTORE_PASSWORD')
+                keyAlias(System.getenv('ANDROID_TEST_KEY_ALIAS') ?: 'fairide-test')
+                keyPassword System.getenv('ANDROID_TEST_KEYSTORE_PASSWORD')
+            }
+        }
+    }
     buildTypes {
+        // Application de test (« Fairide Test », reliée au serveur de staging) : identifiant à part pour cohabiter, sur le
+        // même téléphone, avec l'application des magasins. Nom : src/debug/res/values/strings.xml.
+        debug {
+            applicationIdSuffix '.test'
+            versionNameSuffix '-test'
+            if (System.getenv('ANDROID_TEST_KEYSTORE')) signingConfig signingConfigs.test
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

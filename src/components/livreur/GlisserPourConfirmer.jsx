@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Icone from '../Icone';
-import { estNatif } from '../../natif';
+import { experienceApp } from '../../natif';
 import { mouvementReduit, vibrer } from '../../gestes';
 
 /* GLISSER POUR CONFIRMER — « commande récupérée », « commande livrée », côté livreur, dans l'application seulement.
@@ -15,7 +15,7 @@ import { mouvementReduit, vibrer } from '../../gestes';
  * du doigt (src/ressort.js, chargé seulement dans l'application). Rien qui note ou classe le livreur : ce n'est
  * qu'une autre façon d'appuyer. */
 export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = false, children }) {
-  const natif = estNatif();
+  const natif = experienceApp();
   const piste = useRef(null);
   const pouce = useRef(null);
   const geste = useRef(null);

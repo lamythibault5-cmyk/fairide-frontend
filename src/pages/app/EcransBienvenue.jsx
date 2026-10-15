@@ -3,6 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import BrandMark from '../../components/BrandMark';
 import Icone from '../../components/Icone';
 import BoutonsConnexionNative from '../../components/BoutonsConnexionNative';
+import { estNatif } from '../../natif';
 import { restaurantTypeLabel } from '../../menuCategories';
 import AvecMarque from '../../components/AvecMarque';
 
@@ -316,7 +317,8 @@ export function EcranCompte({ role, resultats, avecPosition, commune, points, on
     <>
       {haut}
       <div className="bv-grandit" />
-      <BoutonsConnexionNative onChoix={onFournisseur} disabled={attente} />
+      {/* Feuille Apple/Google native : dans la vraie application seulement ; sur l'écran d'accueil, l'e-mail (et Google sur la page de connexion). */}
+      {estNatif() && <BoutonsConnexionNative onChoix={onFournisseur} disabled={attente} />}
       <button type="button" className="bv-btn btn-outline" disabled={attente} onClick={onEmail}><Icone nom="courrier" /> {t('appli.continueEmail')}</button>
       <button type="button" className="bv-lien" onClick={onConnexion}>{t('appli.dejaCompte')}</button>
     </>
