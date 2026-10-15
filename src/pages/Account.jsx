@@ -30,6 +30,7 @@ import OffreFormules from '../components/OffreFormules';
 import TerminalFairide from '../components/TerminalFairide';
 import { euros } from '../prixPlat';
 import { defilement } from '../gestes';
+import { resetConsent } from '../consent';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -1060,6 +1061,9 @@ export default function Account() {
         <Link to="/confidentialite">{t('accountUi.privacy')}</Link>
         <Link to="/cgv">CGV</Link>
         <Link to="/mentions-legales">{t('accountUi.legalNotice')}</Link>
+        <Link to="/cookies">{t('footer.cookies')}</Link>
+        {/* Seul endroit de l'application pour revoir son choix : le pied de page du site, qui le portait, n'y est pas. */}
+        <button type="button" className="account-legal-bouton" onClick={resetConsent}>{t('footer.manageCookies')}</button>
         <span className="account-build">Build {__BUILD_ID__}</span>
       </p>
     </div>

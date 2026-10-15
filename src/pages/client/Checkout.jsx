@@ -1,4 +1,10 @@
-import { allerAuPaiement } from '../../natif';
+import { allerAuPaiement, experienceApp } from '../../natif';
+
+/* DANS L'APPLICATION (2026-10-15), rien d'obligatoire n'attend en bas de la page : les codes (promo, bon cadeau) et la
+ * demande d'allergie sont des rangées qui ouvrent une feuille, comme l'adresse et la remise ; l'âge et les CGU, quand il
+ * faut les cocher, viennent dans une feuille « Avant de commander » ouverte par le bouton de paiement, qui porte le
+ * « Commander et payer » final (CDE VI.46 §2). Le site garde la page telle quelle. */
+const APPLI = experienceApp();
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
@@ -261,6 +267,7 @@ export default function Checkout() {
       return;
     }
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
+    if (manque && APPLI) { setSousEcran('avantCommande'); return; }
     if (manque) {
       toast(manque);
       // Sur téléphone, la case à cocher est tout en bas, loin du bouton : on y amène le client au lieu de le laisser chercher.
@@ -367,6 +374,30 @@ export default function Checkout() {
       setCancelling(false);
     }
   }
+
+  // Le bon cadeau : son champ et sa réponse, repliés sous le récapitulatif sur le site, dans la feuille « Codes » dans l'app.
+  const champBonCadeau = (
+    <>
+      <div className="row" style={{ gap: 8, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+        {/* Un seul aria-label : il y en avait deux sur ce champ, et c'est le second qui
+            l'emportait en silence — le champ s'annoncait donc « Bon cadeau », le nom de la
+            section repliable juste au-dessus, au lieu de dire quoi y saisir. */}
+        <input aria-label={t('checkout.giftVoucherPh')} value={giftCode} placeholder={t('checkout.giftVoucherPh')} maxLength={20} style={{ flex: '1 1 160px', textTransform: 'uppercase' }}
+          onChange={(e) => { setGiftCode(e.target.value.toUpperCase()); setGiftCheck(null); }} />
+        <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={giftCode.trim().length < 6 || giftCheck === 'loading'}
+          onClick={async () => {
+            setGiftCheck('loading');
+            try { setGiftCheck(await api(`/restaurants/${restaurantId}/gift-vouchers/check?code=${encodeURIComponent(giftCode.trim())}`, { token })); }
+            catch (e) { setGiftCheck(null); toast(e.message, 'erreur'); }
+          }}>{giftCheck === 'loading' ? '…' : t('checkout.giftVoucherCheck')}</button>
+      </div>
+      {giftCheck && giftCheck !== 'loading' && (
+        <p className="small" style={{ margin: '6px 0 0', color: giftCheck.valid ? 'var(--teal-deep)' : 'var(--red)' }}>
+          {giftCheck.valid ? t('checkout.giftVoucherOk', { amount: Number(giftCheck.remaining).toFixed(2) }) : t(`checkout.giftVoucherKo_${giftCheck.reason || 'introuvable'}`)}
+        </p>
+      )}
+    </>
+  );
 
   return (
     <div className="checkout-page">
@@ -624,30 +655,38 @@ export default function Checkout() {
                 <span className="small">{t('checkout.useBalance', { amount: Number(user.balance).toFixed(2) })}</span>
               </label>
             )}
+            {APPLI ? (
+              <>
+                <button type="button" className="checkout-rangee" style={{ marginTop: 10 }} onClick={() => setSousEcran('codes')}>
+                  <Icone nom="cadeau" taille={20} />
+                  <span className="checkout-rangee-texte">
+                    <span className="checkout-rangee-titre">{t('appli.coCodesTitre')}</span>
+                    <span className="checkout-rangee-sous">{[codePromo?.code, giftCheck?.valid ? giftCode : null].filter(Boolean).join(' · ') || t('appli.coCodesSous')}</span>
+                  </span>
+                  <span className="checkout-rangee-chevron" aria-hidden="true">›</span>
+                </button>
+                <button type="button" className="checkout-rangee" onClick={() => setSousEcran('allergie')}>
+                  <Icone nom="alerte" taille={20} />
+                  <span className="checkout-rangee-texte">
+                    <span className="checkout-rangee-titre">{t('conformite.allergyToggle')}</span>
+                    <span className="checkout-rangee-sous">{conformite.allergyRequest?.trim() || t('appli.coAllergieSous')}</span>
+                  </span>
+                  <span className="checkout-rangee-chevron" aria-hidden="true">›</span>
+                </button>
+                {/* Seule instance qui lit la version des CGU : les feuilles ne font qu'afficher. */}
+                <CheckoutConformite partie="infos" restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
+              </>
+            ) : (
+            <>
             <details style={{ marginTop: 10 }} open={!!giftCode}>
               <summary className="small" style={{ cursor: 'pointer' }}><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherSummary')}</summary>
-              <div className="row" style={{ gap: 8, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                {/* Un seul aria-label : il y en avait deux sur ce champ, et c'est le second qui
-                    l'emportait en silence — le champ s'annoncait donc « Bon cadeau », le nom de la
-                    section repliable juste au-dessus, au lieu de dire quoi y saisir. */}
-                <input aria-label={t('checkout.giftVoucherPh')} value={giftCode} placeholder={t('checkout.giftVoucherPh')} maxLength={20} style={{ flex: '1 1 160px', textTransform: 'uppercase' }}
-                  onChange={(e) => { setGiftCode(e.target.value.toUpperCase()); setGiftCheck(null); }} />
-                <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={giftCode.trim().length < 6 || giftCheck === 'loading'}
-                  onClick={async () => {
-                    setGiftCheck('loading');
-                    try { setGiftCheck(await api(`/restaurants/${restaurantId}/gift-vouchers/check?code=${encodeURIComponent(giftCode.trim())}`, { token })); }
-                    catch (e) { setGiftCheck(null); toast(e.message, 'erreur'); }
-                  }}>{giftCheck === 'loading' ? '…' : t('checkout.giftVoucherCheck')}</button>
-              </div>
-              {giftCheck && giftCheck !== 'loading' && (
-                <p className="small" style={{ margin: '6px 0 0', color: giftCheck.valid ? 'var(--teal-deep)' : 'var(--red)' }}>
-                  {giftCheck.valid ? t('checkout.giftVoucherOk', { amount: Number(giftCheck.remaining).toFixed(2) }) : t(`checkout.giftVoucherKo_${giftCheck.reason || 'introuvable'}`)}
-                </p>
-              )}
+              {champBonCadeau}
             </details>
             <CodePromoCheckout token={token} toast={toast} subtotal={totals.subtotal} deliveryFee={fulfillmentType === 'delivery' ? Math.max(0, totals.deliveryFee - totals.deliveryDiscount) : 0}
               payOnSite={surPlaceChoisi} applique={codePromo} onChange={setCodePromo} />
             <CheckoutConformite restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
+            </>
+            )}
           </div>
           )}
           </aside>
@@ -740,6 +779,39 @@ export default function Checkout() {
                   <label htmlFor="checkout-f-6">{t('checkout.driverNote')}</label>
                   <input id="checkout-f-6" value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder={t('checkout.driverNotePlaceholder')} />
                 </div>
+        </SousEcran>
+      )}
+
+      {/* Application : les codes, l'allergie, et ce qu'il reste à cocher avant de payer (voir APPLI en tête de fichier). */}
+      {sousEcran === 'codes' && (
+        <SousEcran titre={t('appli.coCodesTitre')} onFermer={() => setSousEcran(null)} pied={
+          <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} onClick={() => setSousEcran(null)}>{t('appli.coValider')}</button>
+        }>
+          <span className="field-intitule"><Icone nom="cadeau" taille={16} className="icone-texte" /> {t('checkout.giftVoucherSummary')}</span>
+          {champBonCadeau}
+          <div style={{ marginTop: 18 }}>
+            <CodePromoCheckout token={token} toast={toast} subtotal={totals.subtotal} deliveryFee={fulfillmentType === 'delivery' ? Math.max(0, totals.deliveryFee - totals.deliveryDiscount) : 0}
+              payOnSite={surPlaceChoisi} applique={codePromo} onChange={setCodePromo} />
+          </div>
+        </SousEcran>
+      )}
+      {sousEcran === 'allergie' && (
+        <SousEcran titre={t('conformite.allergyToggle')} onFermer={() => setSousEcran(null)} pied={
+          <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} onClick={() => setSousEcran(null)}>{t('appli.coValider')}</button>
+        }>
+          <CheckoutConformite partie="allergie" charger={false} restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
+        </SousEcran>
+      )}
+      {sousEcran === 'avantCommande' && (
+        <SousEcran titre={t('appli.coAvantTitre')} onFermer={() => setSousEcran(null)} pied={
+          <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} disabled={placing || paying} onClick={() => {
+            const reste = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
+            if (reste) { toast(reste); return; }
+            setSousEcran(null); placeOrder();
+          }}>{surPlaceChoisi ? t('checkout.confirmOnSite') : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}</button>
+        }>
+          <p className="small" style={{ margin: '0 0 12px' }}>{t('appli.coAvantSous')}</p>
+          <CheckoutConformite partie="cases" charger={false} restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
         </SousEcran>
       )}
 

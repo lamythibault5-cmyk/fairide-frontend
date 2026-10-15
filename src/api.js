@@ -1,3 +1,4 @@
+import { estNatif, ouvrirPdfBlob } from './natif';
 import { getLanguage, traduire } from './context/LanguageContext';
 
 export const API_BASE = import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
@@ -126,6 +127,9 @@ export async function apiDownload(path, { token, filename, method = 'GET', body,
   }
   const blob = await res.blob();
   if (rendreBlob) return blob;
+  // Application native : un <a download> ne fait rien dans la WebView (iPhone). Le fichier part dans la feuille de partage
+  // du téléphone (Enregistrer dans Fichiers, Envoyer…), comme les PDF (natif.js) — relevés, ZIP de factures, export JSON.
+  if (estNatif()) { await ouvrirPdfBlob(blob, filename); return; }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

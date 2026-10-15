@@ -5,6 +5,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
 import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
 import LigneCompte from '../LigneCompte';
+import { experienceApp } from '../../natif';
 
 /* « AVANT D'ÊTRE EN LIGNE » : UNE SEULE LISTE, UN SEUL PROCHAIN BOUTON (audit UX du 15/10/2026).
  *
@@ -76,7 +77,7 @@ export default function MiseEnLigne({ restaurant, restoId, token, onConnect, con
     ? { cle: 'carte', fait: true, icone: 'carte', titre: t('miseEnLigne.menuDone', { n: nbPlats }) }
     : demandeCarte
       ? { cle: 'carte', attente: true, icone: 'horloge', titre: t('miseEnLigne.menuPreparing'), sous: t('miseEnLigne.menuPreparingSub') }
-      : { cle: 'carte', icone: 'carte', titre: t('miseEnLigne.menuSend'), sous: t('miseEnLigne.menuSendSub'), action: { libelle: t('miseEnLigne.menuSendBtn'), to: '/dashboard/menu' } });
+      : { cle: 'carte', icone: 'carte', titre: t('miseEnLigne.menuSend'), sous: t('miseEnLigne.menuSendSub'), action: { libelle: t('miseEnLigne.menuSendBtn'), to: experienceApp() ? '/dashboard/menu?envoyer=1' : '/dashboard/menu' } });
   // Un commerce vitrine ne vend pas : rien à signer (même règle que l'ancien bandeau CarteAValider).
   if (!restaurant.vitrine && nbPlats > 0) {
     const carteValidee = restaurant.menuSigned && !o.menuPending;

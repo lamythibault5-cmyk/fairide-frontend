@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import { useLanguage } from '../context/LanguageContext';
@@ -9,6 +9,8 @@ import useInbox from '../hooks/useInbox';
 import BrandMark from './BrandMark';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
+import ConsentementAppli from './ConsentementAppli';
+import Icone from './Icone';
 import CuisineBackdrop from './CuisineBackdrop';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
@@ -24,6 +26,15 @@ const AmorceNotifications = lazy(() => import('./AmorceNotifications'));
 // chargement à la demande : le site ne télécharge ni ce module ni le ressort qu'il utilise.
 const RetourParGlissement = lazy(() => import('./RetourParGlissement'));
 const retourParGlissement = estNatif() && plateforme() === 'ios';
+/* L'APPLICATION N'A PAS LE CADRE DU SITE (2026-10-15). Dans l'app (experienceApp : la coque native ou le site ajouté à
+ * l'écran d'accueil), aucune page ne montre l'en-tête du site (Restaurants · Aide · Contact · Connexion · Inscription),
+ * son pied de page, la rangée des liens légaux ni la carte des cookies : c'était le site qui reprenait la main au milieu
+ * de l'app. Connecté, toutes les pages — aide, pages légales, « C'est bon » compris — restent dans la coquille à
+ * onglets, avec un « Retour » ; les liens légaux vivent au bas de Mon compte. Déconnecté, une barre d'app (la marque ou
+ * Retour, et « Se connecter »). Le consentement devient un écran de l'app (ConsentementAppli). */
+const APPLI = experienceApp();
+// Pages qui portent déjà leur « ← Mon compte » (RetourCompte.jsx) : pas de second Retour au-dessus.
+const AVEC_RETOUR_COMPTE = ['/aide', '/notre-histoire'];
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
@@ -79,7 +90,10 @@ export default function Layout() {
   const enteteCache = useEnteteDefilement();
   const { t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const toast = useToast();
+  // Retour d'une page de l'app : la page précédente s'il y en a une dans cette session, sinon l'accueil.
+  const retourAppli = () => (location.key !== 'default' ? navigate(-1) : navigate('/'));
   // Messages de Fairide : pastille sur « Mon compte », toast quand un nouveau message arrive pendant
   // que l'app est ouverte (une fois par hausse du compteur, jamais au premier chargement), et préfixe
   // « (n) » dans le titre de l'onglet tant qu'il reste du non lu.
@@ -118,6 +132,8 @@ export default function Layout() {
     let remonte = false;
     const vide = () => {
       const el = zone.current; if (!el || document.visibilityState !== 'visible') return false;
+      // Un écran plein de l'app (dossier livreur, envoi de carte : EcranPlein, rendu dans <body>) laisse la zone vide exprès.
+      if (document.querySelector('.bv')) return false;
       if (el.querySelector('.skeleton, canvas, iframe, img, video, input, table')) return false;
       return (el.innerText || '').trim().length === 0 && el.getBoundingClientRect().height < 40;
     };
@@ -163,7 +179,7 @@ export default function Layout() {
   // démonter là-bas casserait la mise en page pour rien. On ne retire donc PAS <DashboardSidebar />
   // du rendu — cela coûterait en prime un remontage complet à chaque entrée dans le parcours.
   const dansLeFlux = estFluxCommande(location.pathname);
-  if (user && isDashboardPath(location.pathname)) {
+  if (user && (isDashboardPath(location.pathname) || APPLI)) {
     return (
       <>
         <div className={`dashboard-shell${rightSlot ? ' has-right' : ''}${dansLeFlux ? ' dashboard-shell--flux' : ''}`}>
@@ -179,6 +195,10 @@ export default function Layout() {
             {estSousSectionCompte(location.pathname) && (
               <Link to="/account" state={{ restaurerDefilement: true }} className="dashboard-retour">{t('nav.backToAccount')}</Link>
             )}
+            {/* App : une page hors des espaces (aide, pages légales, « C'est bon ») n'a pas d'onglet à elle — d'où un Retour. */}
+            {APPLI && !isDashboardPath(location.pathname) && !AVEC_RETOUR_COMPTE.includes(location.pathname) && (
+              <button type="button" className="dashboard-retour" data-retour-natif onClick={retourAppli}>← {t('appli.retour')}</button>
+            )}
             <div className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
               <Suspense fallback={attentePage}>
                 <Outlet context={{ setRightSlot }} />
@@ -192,16 +212,47 @@ export default function Layout() {
               livreur, on lisait donc « Mentions légales · CGV · Confidentialité » puis, en dessous,
               la carte « Aujourd'hui » avec ses compteurs — du contenu après le pied de page.
               Il est maintenant une zone de la grille à lui, toujours la dernière. */}
-          <div className="dashboard-footer-links">
+          {!APPLI && <div className="dashboard-footer-links">
             <Link to="/mentions-legales">{t('footer.legalNotice')}</Link>
             <Link to="/cgv">{t('footer.terms')}</Link>
             <Link to="/confidentialite">{t('footer.privacy')}</Link>
             <Link to="/cookies">{t('footer.cookies')}</Link>
-          </div>
+          </div>}
         </div>
-        <CookieBanner />
+        {APPLI ? <ConsentementAppli /> : <CookieBanner />}
         {seesClientCart && <FloatingCart />}
         {experienceApp() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
+        {retourParGlissement && <Suspense fallback={null}><RetourParGlissement /></Suspense>}
+      </>
+    );
+  }
+
+  // Application, sans compte : la barre d'app, le contenu, rien du site autour.
+  // La connexion de l'app (ConnexionAppli) est un écran plein, comme l'accueil : rendue seule. Dans .wrap, l'animation de
+  // la page en faisait le repère de son `position: fixed`, et la barre d'app passait par-dessus son en-tête.
+  if (APPLI && location.pathname === '/login') {
+    return <><Suspense fallback={null}><Outlet /></Suspense><ConsentementAppli /></>;
+  }
+  if (APPLI) {
+    const accueilListe = location.pathname === '/restaurants' || location.key === 'default';
+    return (
+      <>
+        <div className="appli-barre">
+          {accueilListe ? (
+            <Link to="/" className="appli-marque" aria-label="Fairide"><BrandMark size={30} /><span className="wordmark">fairide</span></Link>
+          ) : (
+            <button type="button" className="bv-rond" data-retour-natif onClick={retourAppli} aria-label={t('appli.retour')}><Icone nom="retour" taille={18} /></button>
+          )}
+          <Link to="/login" className="appli-connexion">{t('nav.login')}</Link>
+        </div>
+        <div className="wrap appli-wrap">
+          <main className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
+            <Suspense fallback={attentePage}>
+              <Outlet />
+            </Suspense>
+          </main>
+        </div>
+        <ConsentementAppli />
         {retourParGlissement && <Suspense fallback={null}><RetourParGlissement /></Suspense>}
       </>
     );

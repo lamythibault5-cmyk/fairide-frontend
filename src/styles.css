@@ -3142,6 +3142,13 @@ button.account-link-row:last-child { border-bottom: none; }
 .account-link-row.ouverte .account-link-chevron--pliable { transform: rotate(90deg); }
 .account-pliable.ouverte > .account-link-row { background: var(--cream-dim); }
 .account-panneau { padding: 14px 15px 16px; }
+/* Application : le contenu d'une rangée de Mon compte ouvert dans une feuille (LigneCompte.jsx). La feuille a ses marges ;
+   un tableau large (reçus, relevés) défile sur le côté dans la feuille au lieu d'élargir l'écran. */
+.account-panneau--feuille { padding: 0 0 16px; }
+.account-panneau--feuille table { display: block; max-width: 100%; overflow-x: auto; }
+/* Application : un tableau large (gains, factures, relevés) défile sur le côté dans sa page, au lieu d'élargir tout l'écran
+   (html.appli, posé par garderLesLiensDansLApp dans natif.js). */
+html.appli .dashboard-main table { display: block; max-width: 100%; overflow-x: auto; }
 .account-panneau .field:last-of-type { margin-bottom: 12px; }
 .account-panneau > form > .btn-teal, .account-panneau > form > .btn-outline, .account-panneau > .btn-teal { margin-top: 2px; }
 /* Sur téléphone, les paires prénom/nom, genre/date, etc. passent l'une sous l'autre. */
@@ -3217,6 +3224,7 @@ button.account-link-row:last-child { border-bottom: none; }
 }
 .account-legal a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
 .account-legal a:hover { color: var(--iris); }
+.account-legal-bouton { background: none; border: 0; border-radius: 0; padding: 0; font: inherit; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
 .account-build { flex-basis: 100%; text-align: center; color: var(--ink-faint); font-size: 11.5px; }
 
 /* Les trois descriptions de la frise « Comment ça marche » sont le SEUL texte de la page posé à
@@ -3299,6 +3307,8 @@ button.account-link-row:last-child { border-bottom: none; }
    recouvrir tout. */
 .dashboard-retour { display: inline-block; font-size: 14px; font-weight: 600; color: var(--iris); text-decoration: none; margin: 0 0 10px; padding: 6px 0; }
 .dashboard-retour:hover { text-decoration: underline; }
+/* App : le même « Retour », en bouton (Layout.jsx, pages hors des espaces) — sans la pilule des boutons. */
+button.dashboard-retour { background: none; border: 0; border-radius: 0; font-family: inherit; cursor: pointer; }
 
 /* Les cartes Leaflet et leurs pastilles forment chacune leur propre contexte d'empilement : leurs
    contrôles (z 800-1000) et le temps d'arrivée (z 1100) ne passent plus au-dessus du reste de la page
@@ -4673,6 +4683,8 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv { position: fixed; inset: 0; z-index: 60; background: var(--cream); color: var(--ink); overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .bv.bv-iris { background: var(--iris); color: #fff; }
 .bv-par-dessus { z-index: 200; }
+/* Parcours en écran plein lancé depuis une page (EcranPlein.jsx) : au-dessus de la coquille, sous l'amorce des notifications. */
+.bv-plein { z-index: 150; }
 .bv-ecran { min-height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column;
   padding: calc(18px + env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom)); animation: bv-entre .28s ease; }
 @keyframes bv-entre { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
@@ -4818,6 +4830,26 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-champ > label { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
 .bv-champ input, .bv-champ select, .bv-creneau input { font-size: 16px; padding: 15px 16px; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
 .bv-champ .input-invalid, .bv-creneau .input-invalid { border-color: var(--red); }
+.bv-champ textarea { font-size: 16px; padding: 14px 16px; background: #fff; border: 1px solid var(--line); border-radius: 14px; resize: vertical; }
+.bv-option:disabled { opacity: .5; }
+/* Fichier choisi (photo ou PDF de la carte, EnvoiCarteAppli.jsx) : une ligne, le nom coupé, la croix pour le retirer. */
+.bv-fichier { display: flex; align-items: center; gap: 10px; padding: 6px 0 6px 4px; font-size: 14px; }
+.bv-fichier > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bv-fichier .bv-rond { width: 32px; height: 32px; }
+.bv-rangee.bv-rangee-moitie { grid-template-columns: 1fr 1fr; }
+/* Dossier livreur de l'app (DossierAppli.jsx) : les textes à accepter, repliés dans une carte — chacun s'ouvre sur place et
+   défile dans sa propre boîte, pour que la case et le bouton restent à l'écran. */
+.bv-textes { padding: 4px 14px; }
+.bv-textes details { border-bottom: 1px solid var(--line); }
+.bv-textes details:last-of-type { border-bottom: 0; }
+.bv-textes summary { padding: 12px 0; font-size: 14px; font-weight: 600; cursor: pointer; }
+.bv-texte-legal { white-space: pre-wrap; font-size: 13px; line-height: 1.45; color: var(--ink-soft); max-height: 220px; overflow-y: auto; margin: 0 0 12px; }
+.bv-textes .bv-ajout { padding: 10px 0; }
+/* Ce qui manque avant l'envoi : une ligne par manque, qui ramène à son écran. */
+.bv-manques { padding: 0 14px; }
+.bv-manques button { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 13px 0; background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; color: var(--ink); font-size: 15px; text-align: left; }
+.bv-manques button:last-child { border-bottom: 0; }
+.bv-chevron { transform: scaleX(-1); color: var(--ink-faint); flex: none; }
 .bv-champ .password-input input { padding-right: 48px; }
 .bv-champ .phone-input { border-radius: 14px; }
 .bv-champ .phone-input .phone-input-indicatif { padding: 0 12px; font-size: 15px; }
@@ -4848,8 +4880,22 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 /* Cases à cocher du dernier écran (conditions, nouvelles de Fairide). */
 .bv-case-ligne { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 12px; font-size: 14px; font-weight: 400; line-height: 1.45; cursor: pointer; }
 .bv-case-ligne input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--iris); }
-.bv-case-discrete { font-size: 13px; color: var(--ink-soft); }
+.bv-case-discrete { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; }
+/* Écrans de formulaire : un peu plus serrés que les écrans de l'accueil — le dernier écran du livreur porte deux avis et
+   trois choix facultatifs, et doit tenir sans défiler (375×667). */
+.bv-form .bv-sous { margin-bottom: 16px; }
+.bv-form .bv-carte.bv-fait { padding: 12px 14px; }
+.bv-form > .bv-ajout { padding: 6px 0; }
 .bv-form .engagements-inscription input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--iris); }
+
+/* BARRE D'APP SANS COMPTE (Layout.jsx, 2026-10-15) : remplace l'en-tête du site dans l'application — la marque ou
+   Retour à gauche, « Se connecter » à droite. Blanche, un filet dessous, pas de pied de page sous le contenu. */
+.appli-barre { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px; background: #fff; border-bottom: 1px solid var(--line); }
+.appli-marque { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); text-decoration: none; }
+.appli-marque .wordmark { font-size: 22px; }
+.appli-connexion { padding: 9px 16px; border-radius: var(--radius-pill); background: var(--iris); color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
+.appli-wrap { padding-top: 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 
 /* Boutons « Continuer avec Apple / Google » de l'application (BoutonsConnexionNative.jsx) — aussi sur /login. */
 .connexion-native { display: flex; flex-direction: column; gap: 10px; width: 100%; }

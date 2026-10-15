@@ -1,3 +1,4 @@
+import { experienceApp } from '../natif';
 // Barre d'état de l'alerte "nouvelle commande", affichée en haut du tableau de bord restaurateur.
 //
 // Deux rôles distincts :
@@ -42,7 +43,8 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
     ? t('alertBar.pushOnHelp')
     : permission === 'granted'
       ? t('alertBar.soundOnHelp')
-      : t('alertBar.keepTabOpen');
+      // Dans l'app il n'y a pas d'onglet : « garde cet onglet ouvert » ne voulait rien dire (audit du 15/10/2026).
+      : experienceApp() ? t('appli.alerteGarderOuverte') : t('alertBar.keepTabOpen');
 
   return (
     <div

@@ -8,8 +8,15 @@ const ARTICLES = ['identity', 'object', 'services', 'account', 'orders', 'prices
 export default function Terms() {
   const { t } = useLanguage();
   usePageMeta({ title: t('terms.pageTitle'), description: t('seo.termsDescription'), path: '/cgv' });
+  return <div className="card"><TexteCgv /></div>;
+}
+
+// Le texte seul : la page /cgv, et la feuille qui l'ouvre dans l'application sans quitter l'écran en cours (CgvEnFeuille.jsx).
+// L'ordre des articles reste la liste ARTICLES ci-dessus, relue par le backend pour l'empreinte des CGU : n'y toucher qu'avec lui.
+export function TexteCgv() {
+  const { t } = useLanguage();
   return (
-    <div className="card">
+    <>
       <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
         {t('terms.draftWarning')}
       </div>
@@ -20,6 +27,6 @@ export default function Terms() {
           <p className="small"><Rich text={t(`terms.${a}`)} /></p>
         </div>
       ))}
-    </div>
+    </>
   );
 }

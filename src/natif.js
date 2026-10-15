@@ -56,6 +56,32 @@ export async function ouvrirLienExterne(url) {
   await Browser.open({ url, presentationStyle: 'popover' });
 }
 
+/* LES LIENS « NOUVEL ONGLET » RESTENT DANS L'APPLICATION (2026-10-15).
+ *
+ * Dans l'app il n'y a pas d'onglets : un lien target="_blank" ouvrait le navigateur du téléphone — et, quand il menait à
+ * une page de Fairide, c'était le SITE qui s'ouvrait au milieu de l'app. Un seul écouteur, pour tous les liens :
+ *   - une page de Fairide → la même page DANS l'app (le routeur, sans recharger) ;
+ *   - un autre site (document Cloudinary, site d'un commerce, sites publics) → le navigateur intégré (appli native) ;
+ *   - cartes et itinéraires (Google Maps, Waze, Apple Plans), tel:, mailto: → inchangés : le téléphone ouvre la bonne app.
+ * Un fichier servi par le site (un .pdf, un .png) n'est pas une page : il suit la règle des autres sites. */
+export function garderLesLiensDansLApp(historique) {
+  if (!experienceApp()) return;
+  // Marque l'app (native OU écran d'accueil) pour la CSS : html.natif ne couvre que la coque native.
+  document.documentElement.classList.add('appli');
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target?.closest?.('a[href]');
+    if (!a || a.target !== '_blank') return;
+    let url;
+    try { url = new URL(a.getAttribute('href'), window.location.href); } catch { return; }
+    if (!/^https?:$/.test(url.protocol)) return;
+    if (/(^|\.)(waze\.com|maps\.apple\.com)$/.test(url.hostname) || (/(^|\.)google\.[a-z.]+$/.test(url.hostname) && url.pathname.startsWith('/maps'))) return;
+    const pageInterne = (url.origin === window.location.origin || url.origin === ORIGINE_SITE) && !/\.[a-z0-9]{2,5}$/i.test(url.pathname);
+    if (pageInterne) { e.preventDefault(); historique.push(`${url.pathname}${url.search}${url.hash}`); return; }
+    if (estNatif()) { e.preventDefault(); ouvrirLienExterne(url.href); }
+  }, true);
+}
+
 // Page de paiement Stripe (commande, pourboire, abonnement). `retour` : où aller dans l'application quand
 // le navigateur intégré se ferme sans que le lien universel ait pris le relais (paiement abandonné, ou
 // association de domaine pas encore vérifiée par le téléphone).

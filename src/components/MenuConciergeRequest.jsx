@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api, apiUpload } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import Icone from './Icone';
+import EnvoiCarteAppli from './commerce/EnvoiCarteAppli';
+import { experienceApp } from '../natif';
 
 // « Fairide crée ma carte » — LA seule façon de créer sa carte côté restaurateur (fondateur, 2026-09-21) : il dit sur
 // quoi se baser (son site, Uber Eats, Deliveroo, Takeaway, autre), peut nous envoyer une photo ou un PDF de sa carte,
@@ -32,6 +35,11 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
   const [editNote, setEditNote] = useState(false);
   const [noteEdit, setNoteEdit] = useState('');
   const inputRef = useRef(null);
+  // Application : la demande se fait dans des écrans de l'accueil (EnvoiCarteAppli.jsx) ; ?envoyer=1 (le bouton « Envoyer ma
+  // carte » de la liste « Avant d'être en ligne ») les ouvre directement.
+  const [params, setParams] = useSearchParams();
+  const [envoiOuvert, setEnvoiOuvert] = useState(() => experienceApp() && params.get('envoyer') === '1');
+  const fermerEnvoi = () => { setEnvoiOuvert(false); if (params.has('envoyer')) { params.delete('envoyer'); setParams(params, { replace: true }); } };
 
   useEffect(() => { api(`/restaurants/${restoId}/menu/concierge`, { token }).then((r) => setDemande(r.request || null)).catch(() => setDemande(null)); }, [restoId, token]);
 
@@ -118,6 +126,16 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
           {demande.status === 'en_attente' && <button type="button" className="btn-ghost" disabled={busy} onClick={annuler}>{t('menuConcierge.cancel')}</button>}
           {demande.status === 'terminee' && <button type="button" className="btn-ghost" disabled={busy} onClick={() => setDemande(null)}>{t('menuConcierge.newRequest')}</button>}
         </div>
+      </div>
+    );
+  }
+
+  if (experienceApp()) {
+    return (
+      <div className="menu-concierge-form">
+        <p className="small" style={{ margin: '0 0 12px' }}>{t('menuConcierge.delay')}</p>
+        <button type="button" className="btn-gold" onClick={() => setEnvoiOuvert(true)}>{t('appli.carteEnvoyer')}</button>
+        {envoiOuvert && <EnvoiCarteAppli restoId={restoId} urlSuggeree={urlSuggeree} onFermer={fermerEnvoi} onEnvoyee={(r) => { if (r) setDemande(r); fermerEnvoi(); }} />}
       </div>
     );
   }

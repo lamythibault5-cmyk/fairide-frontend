@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
+import { allerAuPaiement, experienceApp } from '../../natif';
 import { useAuth } from '../../context/AuthContext';
 import CopieDac7 from '../../components/conformite/CopieDac7';
 import { useToast } from '../../context/ToastContext';
@@ -59,7 +60,10 @@ export default function InvoicesPage() {
     setOpeningPortal(true);
     try {
       const r = await api(`/restaurants/${restoId}/subscription/portal`, { method: 'POST', token });
-      window.location.href = r.url;
+      // Dans l'app, Stripe s'ouvre dans le navigateur intégré et l'on revient ici en le fermant (allerAuPaiement, natif.js) ;
+      // sur le site, rien ne change : la page part vers Stripe.
+      await allerAuPaiement(r.url, { retour: '/dashboard/invoices' });
+      setOpeningPortal(false);
     } catch (e) {
       toast(e.message, 'erreur');
       setOpeningPortal(false);
@@ -139,7 +143,8 @@ export default function InvoicesPage() {
         </p>
         <div className="row" style={{ gap: 8, alignItems: 'center' }}>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 180 }} />
-          {invoice?.items?.length > 0 && <button className="btn-teal" onClick={() => window.print()}>{t('invoicesResto.print')}</button>}
+          {/* Imprimer n'existe pas dans l'application (WebView) : le bouton n'y faisait rien. */}
+          {invoice?.items?.length > 0 && !experienceApp() && <button className="btn-teal" onClick={() => window.print()}>{t('invoicesResto.print')}</button>}
         </div>
       </div>
 

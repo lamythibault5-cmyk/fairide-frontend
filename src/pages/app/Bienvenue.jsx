@@ -83,12 +83,16 @@ export default function Bienvenue() {
   const location = useLocation();
   const apercu = new URLSearchParams(location.search).has('apercu');
 
-  const [ecran, setEcran] = useState('accueil');
+  // Depuis la connexion de l'app (« Créer un compte », ConnexionAppli.jsx) : droit au choix du profil, présélectionné
+  // quand un lien d'inscription le donnait ; `from` ramène là où l'on voulait aller (un commerce touché sans compte).
+  const depart = location.state?.depart === 'profil' ? 'profil' : 'accueil';
+  const depuis = location.state?.from || null;
+  const [ecran, setEcran] = useState(depart);
   const [historique, setHistorique] = useState([]);
   // Sens du dernier passage d'écran : en reculant, l'écran revient par la gauche, d'où il était parti (cohérence
   // spatiale, plan du 2026-10-13). Avant, tout arrivait par la droite, retour compris.
   const [recule, setRecule] = useState(false);
-  const [role, setRole] = useState(null);
+  const [role, setRole] = useState(() => (['client', 'driver', 'restaurant'].includes(location.state?.role) ? location.state.role : null));
   const [buts, setButs] = useState([]);
   const [freins, setFreins] = useState([]);
   const [envies, setEnvies] = useState([]);
@@ -254,7 +258,7 @@ export default function Bienvenue() {
   }
 
   // L'inscription a ses propres écrans (en-tête, progression, animation) : elle rend tout le plein écran.
-  if (ecran === 'inscription') return <InscriptionAppli role={role} fed={fed} onQuitter={retour} onConnexion={dejaInscrit} />;
+  if (ecran === 'inscription') return <InscriptionAppli role={role} fed={fed} depuis={depuis} onQuitter={retour} onConnexion={dejaInscrit} />;
 
   return (
     <div className={`bv${fondIris ? ' bv-iris' : ''}`}>

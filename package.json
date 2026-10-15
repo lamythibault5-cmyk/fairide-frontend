@@ -12,7 +12,8 @@
     "app:sync": "npm run build && npx cap sync",
     "app:android": "npm run app:sync && npx cap open android",
     "app:ios": "npm run app:sync && npx cap open ios",
-    "app:assets": "node scripts/app-assets.mjs && npx @capacitor/assets generate --android --iconBackgroundColor \"#3B2FB5\" --iconBackgroundColorDark \"#3B2FB5\" --splashBackgroundColor \"#3B2FB5\" --splashBackgroundColorDark \"#3B2FB5\""
+    "app:assets": "node scripts/app-assets.mjs && npx @capacitor/assets generate --android --iconBackgroundColor \"#3B2FB5\" --iconBackgroundColorDark \"#3B2FB5\" --splashBackgroundColor \"#3B2FB5\" --splashBackgroundColorDark \"#3B2FB5\"",
+    "check:app": "node scripts/verifier-appli.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.6.9",
@@ -45,6 +46,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "oxlint": "^1.75.0",
+    "playwright-core": "^1.48.2",
     "vite": "^8.2.0"
   }
 }

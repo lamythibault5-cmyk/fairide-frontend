@@ -26,7 +26,7 @@ import './styles.css';
 import './client-ui.css';
 import { rechargerSiNouveauCode } from './lazyPage';
 import { demarrerAnalytics } from './analytics';
-import { estNatif, demarrerNatif, retirerEcranLancementNatif } from './natif';
+import { estNatif, demarrerNatif, retirerEcranLancementNatif, garderLesLiensDansLApp } from './natif';
 import { ecouterNotificationsNatives } from './pushNatif';
 
 // POLICES : on rallume la feuille laissée en `media="print"` par index.html (voir le commentaire
@@ -122,6 +122,7 @@ setTimeout(retirerEcranChargement, 0);
 
 // Coque iOS / Android : bouton Retour, liens universels, barre d'état, clavier (voir natif.js).
 demarrerNatif(historiqueLangue);
+garderLesLiensDansLApp(historiqueLangue);
 if (estNatif()) ecouterNotificationsNatives(historiqueLangue);
 
 createRoot(document.getElementById('root')).render(

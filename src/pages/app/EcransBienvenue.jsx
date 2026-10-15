@@ -50,16 +50,21 @@ export function Fait({ icone, titre, sous, barre, vedette, children }) {
 }
 
 // En-tête des écrans : retour, progression, langue. L'accueil et le chargement n'en ont pas.
-export function Haut({ onRetour, progression, onPasser }) {
+// `onFermer` : une croix à droite pour quitter un parcours lancé depuis l'app (dossier livreur, DossierAppli.jsx).
+export function Haut({ onRetour, progression, onPasser, onFermer }) {
   const { t } = useLanguage();
   return (
     <div className="bv-haut">
       {/* data-retour-natif : le bouton Retour d'Android le déclenche (natif.js). */}
       <button type="button" className="bv-rond" data-retour-natif onClick={onRetour} aria-label={t('appli.retour')}><Icone nom="retour" taille={18} /></button>
-      <div className="bv-progression" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progression * 100)}>
-        <i style={{ width: `${Math.round(progression * 100)}%` }} />
-      </div>
-      {onPasser ? <button type="button" className="bv-passer" onClick={onPasser}>{t('appli.passer')}</button> : <Langues />}
+      {/* Sans progression (connexion, ConnexionAppli.jsx) : un simple espace, la langue reste à droite. */}
+      {progression == null ? <div className="bv-grandit" /> : (
+        <div className="bv-progression" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progression * 100)}>
+          <i style={{ width: `${Math.round(progression * 100)}%` }} />
+        </div>
+      )}
+      {onFermer ? <button type="button" className="bv-rond" onClick={onFermer} aria-label={t('appli.fermer')}><Icone nom="croix" taille={18} /></button>
+        : onPasser ? <button type="button" className="bv-passer" onClick={onPasser}>{t('appli.passer')}</button> : <Langues />}
     </div>
   );
 }
