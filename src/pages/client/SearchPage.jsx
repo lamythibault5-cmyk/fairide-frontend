@@ -3,7 +3,7 @@ import { imgProps } from '../../images';
 import Icone from '../../components/Icone';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
+import { platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
 import { COMMUNES, COMMUNES_SUGGEREES, RESTAURANT_TYPES } from '../../menuCategories';
 import usePageMeta from '../../hooks/usePageMeta';
@@ -67,6 +67,9 @@ export default function SearchPage() {
   const [requete, setRequete] = useState('');
   const [bio, setBio] = useState(false);
   const [vegan, setVegan] = useState(false);
+  // Halal et sans gluten (backend migration 042) : déclarés par le commerce, voir dietary.js.
+  const [halal, setHalal] = useState(false);
+  const [sansGluten, setSansGluten] = useState(false);
   const [restaurants, setRestaurants] = useState([]);
   const [commandes, setCommandes] = useState([]);
   const [chargement, setChargement] = useState(true);
@@ -82,10 +85,10 @@ export default function SearchPage() {
   }, [token]);
 
   const q = normaliser(requete);
-  const filtreRegime = bio || vegan;
+  const filtreRegime = bio || vegan || halal || sansGluten;
   const actif = q.length >= 2 || filtreRegime;
-  const platOk = (p) => (!bio || platBio(p)) && (!vegan || platVegan(p));
-  const restoOk = (r) => (!bio || restoBio(r)) && (!vegan || restoVegan(r));
+  const platOk = (p) => (!bio || platBio(p)) && (!vegan || platVegan(p)) && (!halal || platHalal(p)) && (!sansGluten || platSansGluten(p));
+  const restoOk = (r) => (!bio || restoBio(r)) && (!vegan || restoVegan(r)) && (!halal || restoHalal(r)) && (!sansGluten || restoSansGluten(r));
 
   const resultats = useMemo(() => {
     if (!actif) return null;
@@ -121,7 +124,7 @@ export default function SearchPage() {
 
     const total = commerces.length + plats.length + cuisines.length + communes.length + aide.length + rubriques.length + mesCommandes.length;
     return { commerces, plats, cuisines, communes, aide, rubriques, mesCommandes, total };
-  }, [actif, q, restaurants, commandes, user, bio, vegan]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [actif, q, restaurants, commandes, user, bio, vegan, halal, sansGluten]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Entrée sur un texte qui n'a qu'un résultat : on y va. Sur plusieurs, on ne devine pas.
   function soumettre(e) {
@@ -164,6 +167,8 @@ export default function SearchPage() {
         <div className="recherche-pastilles" role="group" aria-label={t('search.dietFilters')} style={{ margin: '0 0 12px' }}>
           {bio && <button type="button" className="pill recherche-pastille active" aria-pressed onClick={() => setBio(false)}>{t('search.filterBio')} ✕</button>}
           {vegan && <button type="button" className="pill recherche-pastille active" aria-pressed onClick={() => setVegan(false)}>{t('search.filterVegan')} ✕</button>}
+          {halal && <button type="button" className="pill recherche-pastille active" aria-pressed onClick={() => setHalal(false)}>{t('search.filterHalal')} ✕</button>}
+          {sansGluten && <button type="button" className="pill recherche-pastille active" aria-pressed onClick={() => setSansGluten(false)}>{t('search.filterGlutenFree')} ✕</button>}
           <span className="small">{t('search.dietHint')}</span>
         </div>
       )}
@@ -183,6 +188,8 @@ export default function SearchPage() {
               ))}
               <button type="button" className={`pill recherche-pastille${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('search.filterBio')}</button>
               <button type="button" className={`pill recherche-pastille${vegan ? ' active' : ''}`} aria-pressed={vegan} onClick={() => setVegan((v) => !v)}>{t('search.filterVegan')}</button>
+              <button type="button" className={`pill recherche-pastille${halal ? ' active' : ''}`} aria-pressed={halal} onClick={() => setHalal((v) => !v)}>{t('search.filterHalal')}</button>
+              <button type="button" className={`pill recherche-pastille${sansGluten ? ' active' : ''}`} aria-pressed={sansGluten} onClick={() => setSansGluten((v) => !v)}>{t('search.filterGlutenFree')}</button>
             </div>
           </div>
           <div className="card">

@@ -90,7 +90,11 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
         {/* 1 000 caractères : la même limite que le serveur (routes/reviews.js LONGUEUR_MAX_AVIS). */}
         <input maxLength={1000} value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder={t('review.foodCommentPlaceholder')} style={{ marginTop: 6 }} />
       </div>}
-      {order.driverName && (
+      {/* Pourboire déjà laissé en payant la commande : on ne le redemande pas. */}
+      {order.driverName && order.tipPaid && (
+        <p className="small" style={{ margin: '0 0 12px' }}>{t('review.tipAlreadyPaid', { name: order.driverName, amount: euros(order.tipAmount) })}</p>
+      )}
+      {order.driverName && !order.tipPaid && (
         <div style={{ marginBottom: 12 }}>
           <div className="small" style={{ marginBottom: 4, fontWeight: 600 }}>{t('review.tipPrompt', { name: order.driverName })}</div>
           <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
@@ -352,8 +356,17 @@ export default function Orders() {
           {!APPLI && codeDeRemise(o)}
           <div className="suivi-total">
             <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
-            <b>{euros(o.total)}</b>
+            {/* Pourboire payé avec la commande : débité en plus du total (backend pourboireCommande.js). */}
+            <b>{euros(o.total + (o.tipPaid && o.tipAtCheckout > 0 ? o.tipAtCheckout : 0))}</b>
           </div>
+          {o.tipPaid && o.tipAtCheckout > 0 && <div className="small" style={{ textAlign: 'right' }}>{t('orders.tipIncluded', { amount: euros(o.tipAtCheckout) })}</div>}
+          {o.tipRefunded && o.tipAtCheckout > 0 && <div className="small" style={{ textAlign: 'right' }}>{t('orders.tipRefunded', { amount: euros(o.tipAtCheckout) })}</div>}
+          {/* Déposée devant la porte : la photo prise par le livreur (lien signé, valable quelques minutes ; effacée après 30 jours). */}
+          {o.deliveredPhoto?.url && (
+            <a className="small" href={o.deliveredPhoto.url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 6 }}>
+              <Icone nom="porte" taille={14} className="icone-texte" /> {t('orders.doorDropPhoto')}
+            </a>
+          )}
           {/* PAIEMENT NON TERMINÉ (audit du 15/10/2026). Revenu de Stripe sans payer (bouton Retour, navigateur de l'appli
               fermé), le client trouvait ici « le commerce doit encore confirmer » et un seul bouton Annuler, et son panier
               avait disparu. Deux choix, faits par lui et non devinés : payer cette commande-ci, ou l'annuler et retrouver son

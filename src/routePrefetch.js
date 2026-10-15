@@ -17,6 +17,7 @@ const CHARGEURS = {
   '/dashboard/preview': () => import('./pages/restaurant/PreviewPage'),
   '/dashboard/promotions': () => import('./pages/restaurant/PromotionsPage'),
   '/dashboard/reviews': () => import('./pages/restaurant/ReviewsPage'),
+  '/dashboard/stats': () => import('./pages/restaurant/StatsPage'),
   '/dashboard/invoices': () => import('./pages/restaurant/InvoicesPage'),
   '/dashboard/guide': () => import('./pages/restaurant/GuidePage'),
   '/driver': () => import('./pages/driver/Dashboard'),

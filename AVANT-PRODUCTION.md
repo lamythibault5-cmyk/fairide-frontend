@@ -73,8 +73,9 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
 **Juridique**
 - [ ] 🟠 **J — Relecture** : contrat commerce 2026.19 (préavis 16 jours contre les 30 promis ; positions sponsorisées ;
       mandat de tarification), contrat livreur (clause de remplacement, assurance), CGU-2026-10-14,
-      confidentialité CONF-2026-10-14 (DPO : la phrase « notre taille ne l'exige pas » n'est pas le bon critère —
-      suivi de la position des livreurs), règlement P2B.
+      confidentialité CONF-2026-10-15 (DPO : la phrase « notre taille ne l'exige pas » n'est pas le bon critère —
+      suivi de la position des livreurs ; nouveau le 15/10 : photo du dépôt devant la porte 30 jours, position écran
+      verrouillé pendant la livraison, bouton d'urgence fondé sur les intérêts vitaux art. 6.1.d), règlement P2B.
 - [ ] 🟠 **F — DPA (RGPD art. 28)** à signer et archiver : Stripe, Resend, Cloudinary, Sentry, Vercel, Railway,
       Anthropic, MapTiler, Google/Firebase. La plupart se signent en ligne.
 - [ ] 🟠 **F — Politique de confidentialité, prestataires manquants** : Geoapify / Google Places / fournisseur Peppol /
@@ -91,6 +92,12 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       créé en mode test n'existe pas en mode live. Prévoir l'e-mail et la relance.
 - [ ] 🔴 **F — Un premier vrai paiement** de quelques euros, remboursé ensuite, pour voir l'argent arriver chez
       le commerce et le livreur (virement du lundi).
+- [ ] 🟡 **T — Allumer Apple Pay et Google Pay** : tableau de bord Stripe › Settings › Payments › **Payment methods**,
+      activer *Apple Pay* et *Google Pay*, **en mode test ET en mode live** (deux réglages séparés). Rien à coder : la page
+      Stripe Checkout les affiche d'elle-même dès que « Carte » est proposée (c'est le cas, `payment_method_types`
+      `bancontact` + `card`), et une page hébergée par Stripe ne demande aucune vérification de domaine. À essayer :
+      iPhone (Safari et l'application), Android (Chrome et l'application) — le bouton n'apparaît que sur un appareil
+      qui a une carte enregistrée dans Wallet / Google Pay. La politique de confidentialité les cite déjà.
 
 **Livreurs**
 - [ ] 🔴 **F — Assurance accidents + protection juridique souscrite**, références saisies (paramètre
@@ -104,6 +111,44 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       (Admin › Prêt au lancement).
 - [ ] 🟡 **T — Notifications natives en production** : `FCM_SERVICE_ACCOUNT_JSON` n'est posée qu'en staging
       (*vérifié : absente en production*). La poser en production avant les applications.
+
+**Fonctions ajoutées le 15/10 (comparaison avec Uber Eats) — à vérifier sur le staging, puis une fois en live**
+- [ ] 🔴 **F — Pourboire au paiement** (`fairide-backend/pourboireCommande.js`). Sur le staging : commande en livraison,
+      choisir 2 € → la page Stripe montre une ligne « Pourboire pour ton livreur » et débite total + 2 € ; à la livraison,
+      un second virement de 2 € part au livreur (Stripe › Connect › Transfers, `tip_payout`). Puis une commande **refusée**
+      avec pourboire : dans Stripe, **deux** remboursements (le pourboire, puis la commande). Puis « client absent » après
+      l'attente : le pourboire reste au livreur. Mes commandes affiche « dont 2 € de pourboire » ou « pourboire rendu ».
+- [ ] 🔴 **F — Photo du dépôt devant la porte** : commande avec « Déposer devant la porte », le livreur prend la photo
+      depuis l'application → la commande passe « livrée » sans code ; le client voit « Voir la photo du dépôt » ; Admin ›
+      Commandes › fiche : la photo s'ouvre (lien de 5 minutes). Demande que **Cloudinary** soit configuré en production
+      (variables `CLOUDINARY_*`, déjà utilisées pour les photos des commerces).
+- [ ] 🟡 **F — Temps de préparation** : dans un commerce, Mon commerce › Commandes et capacité › régler 25 min ; une
+      nouvelle commande annonce une heure d'arrivée 13 minutes plus tard qu'avec les 12 minutes par défaut.
+- [ ] 🔴 **F — Bouton d'urgence du livreur** : depuis un compte livreur de test, Urgence › Prévenir l'équipe → une tâche
+      « URGENCE livreur » (priorité haute) dans Admin › Tâches **et** un e-mail [Livreurs] à `ADMIN_EMAILS` (vérifier qu'il
+      arrive, et qu'une règle Outlook ne l'enterre pas dans un dossier). Décider **qui répond** à une alerte, le soir
+      compris, et l'écrire dans `docs/procedures-incidents.md`.
+- [ ] 🔴 **F — Position du livreur écran verrouillé** (Android, sur un vrai téléphone) : prendre une course, la marquer
+      récupérée, verrouiller l'écran 5 minutes en marchant → la carte du client continue de bouger, et la notification
+      « Fairide : livraison en cours » est visible ; elle disparaît à la livraison. Recommencer en passant sur Waze.
+- [ ] 🔴 **D — Déclaration Google Play** : Play Console › Contenu de l'application › *Types de services de premier plan*
+      → « location », avec une courte vidéo de la notification pendant une course (docs/application-mobile.md, point 11).
+- [ ] 🔴 **D — iPhone** : `NSLocationAlwaysAndWhenInUseUsageDescription` et *Background Modes › Location updates* dans le
+      projet iOS (docs/application-mobile.md, point 11), sinon Apple refuse l'application.
+- [ ] 🔴 **F — Cartes enregistrées** (`fairide-backend/cartesEnregistrees.js`) : sur le staging, payer une commande en
+      cochant « enregistrer » sur la page Stripe → la commande suivante repropose la carte ; Mon compte › Moyens de
+      paiement la montre (marque, 4 chiffres) et la retire. Supprimer le compte de test → le client Stripe disparaît
+      (Stripe › Clients). Si Stripe refuse un jour de créer le client, la page de paiement s'ouvre quand même (sans la case).
+- [ ] 🟡 **F — Halal et sans gluten** : dans un commerce, Ma carte › « Halal, sans gluten, vegan, bio » → cocher « tout
+      halal » et un plat sans gluten ; côté client, les pastilles Halal et Sans gluten de la liste et de la Recherche le
+      trouvent, et le plat porte la mention. Dire aux commerces que c'est **leur** déclaration (règle des 20 mg/kg rappelée
+      à l'écran pour le sans gluten).
+- [ ] 🟡 **F — Statistiques du commerce** : Mon compte › Statistiques, sur un commerce qui a des commandes de test ; les
+      chiffres doivent tomber juste avec Mes commandes (7, 30, 90 jours).
+- [ ] 🟠 **F — Les livreurs réacceptent la politique de géolocalisation** : elle dit maintenant que la position est envoyée
+      écran verrouillé pendant la livraison, et décrit le bouton d'urgence (`docs/livreurs/politique-geolocalisation.md`).
+      Sa version change avec son texte : chaque livreur la relit avant sa prochaine course, rien à faire de plus que le
+      prévenir.
 
 **Comptable** (questions ouvertes du 14-15/10)
 - [ ] 🟠 **C —** Frais de système de 10 % vendus au **consommateur** (pas au livreur) → base TVA du livreur assujetti =

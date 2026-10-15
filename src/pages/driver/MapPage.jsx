@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import DriverNavigationMap from '../../components/DriverNavigationMap';
 import CarteSuivi from '../../components/CarteSuivi';
 import { useLanguage } from '../../context/LanguageContext';
+import { suivrePositionCourse } from '../../natif';
 
 // Cadence maximale d'envoi de la position au serveur — même valeur que Dashboard.jsx, un seul rythme
 // pour les deux pages qui partagent la position.
@@ -63,23 +64,29 @@ export default function MapPage() {
     activeIdsRef.current = active.filter((o) => o.status === 'livraison').map((o) => o.id);
   }, [active]);
 
+  // En livraison, dans l'application : suivi en arrière-plan, téléphone verrouillé compris (natif.js suivrePositionCourse).
+  const enLivraison = active.some((o) => o.status === 'livraison');
   useEffect(() => {
-    if (!('geolocation' in navigator) || user?.locationSharingEnabled === false) {
+    if (user?.locationSharingEnabled === false) {
       setSharingLocation(false);
-      return;
+      return undefined;
     }
     let deniedNotified = false;
     let lastSentAt = 0;
     let lastShownAt = 0;
+    let arreter = null;
+    let fini = false;
 
     // Même bascule que dans Dashboard.jsx : watchPosition au lieu d'un getCurrentPosition relancé par
     // setInterval, que le verrouillage de l'écran suspendait en silence en pleine course. Ici l'enjeu
     // est double, puisque cette page sert aussi de guidage : la carte doit suivre le livreur en continu,
     // pas se rafraîchir toutes les 8 secondes.
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
+    suivrePositionCourse({
+      arrierePlan: enLivraison,
+      titre: t('dashDriver.bgTrackingTitle'),
+      message: t('dashDriver.bgTrackingMessage'),
+      onPosition: ({ latitude, longitude }) => {
         setSharingLocation(true);
-        const { latitude, longitude } = pos.coords;
         const now = Date.now();
 
         // Rafraîchissement de la carte volontairement bridé, contrairement à ce que je pensais en
@@ -99,19 +106,18 @@ export default function MapPage() {
           api(`/orders/${id}/location`, { method: 'PATCH', token, body: { lat: latitude, lng: longitude } }).catch(() => {});
         });
       },
-      () => {
+      onErreur: () => {
         setSharingLocation(false);
         if (!deniedNotified) {
           deniedNotified = true;
           toast(t('mapDriver.toastAllowGeo'));
         }
-      },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
-    );
+      }
+    }).then((stop) => { if (fini) stop(); else arreter = stop; });
 
-    return () => navigator.geolocation.clearWatch(watchId);
+    return () => { fini = true; arreter?.(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, user?.locationSharingEnabled]);
+  }, [token, user?.locationSharingEnabled, enLivraison]);
 
   if (!orders) return <div className="empty">{t('mapDriver.loading')}</div>;
 

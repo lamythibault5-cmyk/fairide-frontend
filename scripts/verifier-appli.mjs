@@ -44,7 +44,7 @@ const PAGES = {
   visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', ...COMMUNES],
   client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', ...COMMUNES],
   driver: ['/', '/driver', '/driver/onboarding', '/driver/map', '/driver/earnings', '/driver/invoices', '/driver/reviews', '/documents', '/account', ...COMMUNES],
-  restaurant: ['/', '/dashboard', '/dashboard/menu', '/dashboard/orders', '/dashboard/preview', '/dashboard/promotions', '/dashboard/reviews', '/dashboard/invoices', '/dashboard/guide', '/sales', '/account', '/carte/valider/essai', ...COMMUNES]
+  restaurant: ['/', '/dashboard', '/dashboard/menu', '/dashboard/orders', '/dashboard/preview', '/dashboard/promotions', '/dashboard/reviews', '/dashboard/stats', '/dashboard/invoices', '/dashboard/guide', '/sales', '/account', '/carte/valider/essai', ...COMMUNES]
 };
 
 // Le serveur simulé. Par défaut une liste vide (sans danger : .map, .length, .filter marchent ; une propriété lue
@@ -59,6 +59,17 @@ function simuler(chemin, methode, profil) {
   if (/^\/restaurants$/.test(chemin)) return [COMMERCE];
   if (/^\/restaurants\/[^/]+\/reviews$/.test(chemin)) return { reviews: [], average: null, count: 0 };
   if (/^\/restaurants\/[^/]+\/capacity$/.test(chemin)) return { full: false };
+  // Statistiques du commerce (backend analytiqueCommerce.js) : 30 jours d'une petite pizzeria, forme exacte de la réponse.
+  if (methode === 'GET' && /^\/restaurants\/[^/]+\/analytics$/.test(chemin)) {
+    const parJour = Array.from({ length: 30 }, (_, i) => ({ jour: new Date(Date.UTC(2026, 8, 16 + i)).toISOString().slice(0, 10), commandes: (i * 7) % 5, chiffre: ((i * 7) % 5) * 21.5 }));
+    return {
+      jours: 30, debut: '2026-09-15T22:00:00.000Z', fin: '2026-10-15T22:00:00.000Z', commandes: 58, chiffreAffaires: 1247, panierMoyen: 21.5,
+      livraison: 41, emporter: 17, refusees: 2, expirees: 1, annulees: 1, tauxAcceptation: 0.951, acceptationMedianeMin: 1.8, preparationMedianeMin: 16,
+      clients: 39, clientsRevenus: 12, avis: { nombre: 6, moyenne: 4.5 }, precedent: { commandes: 47, chiffreAffaires: 998, panierMoyen: 21.2 },
+      parJour, parHeure: Array.from({ length: 24 }, (_, h) => (h >= 11 && h <= 14 ? 6 : h >= 18 && h <= 21 ? 8 : 0)),
+      parJourSemaine: [6, 5, 7, 8, 11, 13, 8], topPlats: [{ nom: 'Margherita', quantite: 22, chiffre: 264 }, { nom: 'Quatre fromages', quantite: 14, chiffre: 210 }]
+    };
+  }
   // Mises en avant payantes : un objet ; commune pas encore ouverte à la vente, comme pour un commerce qui démarre.
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/placements$/.test(chemin)) return { enabled: false, commune: 'Ixelles', sections: [], bookings: [] };
   if (/^\/restaurants\/[^/]+$/.test(chemin) && !/^\/restaurants\/(favorites|lookup)/.test(chemin)) return profil === 'restaurant' ? REELLES['/restaurants/mine/dashboard'][0] : COMMERCE;

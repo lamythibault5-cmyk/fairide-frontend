@@ -48,6 +48,7 @@ const RestaurantPreviewPage = lazyPage(() => import('./pages/restaurant/PreviewP
 const RestaurantEditPage = lazyPage(() => import('./pages/restaurant/EditPage'));
 const RestaurantPromotionsPage = lazyPage(() => import('./pages/restaurant/PromotionsPage'));
 const RestaurantReviewsPage = lazyPage(() => import('./pages/restaurant/ReviewsPage'));
+const RestaurantStatsPage = lazyPage(() => import('./pages/restaurant/StatsPage'));
 const RestaurantInvoicesPage = lazyPage(() => import('./pages/restaurant/InvoicesPage'));
 const RestaurantGuidePage = lazyPage(() => import('./pages/restaurant/GuidePage'));
 const RestaurantTerminalPage = lazyPage(() => import('./pages/restaurant/TerminalPage'));
@@ -189,6 +190,7 @@ export default function App() {
               une position qui n'arrivait pas. L'ancienne adresse mène aux commandes. */}
           <Route path="map" element={<Navigate to="/dashboard/orders" replace />} />
           <Route path="reviews" element={<RestaurantReviewsPage />} />
+          <Route path="stats" element={<RestaurantStatsPage />} />
           <Route path="invoices" element={<RestaurantInvoicesPage />} />
           <Route path="guide" element={<RestaurantGuidePage />} />
           <Route path="terminal" element={<RestaurantTerminalPage />} />

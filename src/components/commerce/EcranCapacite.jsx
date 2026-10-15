@@ -27,6 +27,10 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
   const [plafond, setPlafond] = useState(PLAFOND_DEFAUT);
   // Montant minimum de commande (plan de test PAN-3) : vide = aucun minimum.
   const [minimum, setMinimum] = useState('');
+  // Temps de préparation habituel (backend migration 041) : sert à l'heure d'arrivée annoncée au client. Coché = les
+  // 12 minutes par défaut ; la mesure de Fairide (médiane des 30 derniers jours) aide à régler, sans rien imposer.
+  const [prepaDefaut, setPrepaDefaut] = useState(true);
+  const [prepa, setPrepa] = useState(15);
   const [enCours, setEnCours] = useState(false);
 
   useEffect(() => {
@@ -37,6 +41,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
       setRayonLibre(r.deliveryRadiusIsDefault !== false); if (r.deliveryRadiusKm != null) setRayon(r.deliveryRadiusKm);
       setPlafondLibre(r.maxOrdersPerDay === null); if (r.maxOrdersPerDay !== null) setPlafond(r.maxOrdersPerDay);
       setMinimum(r.minOrderAmount ? String(r.minOrderAmount).replace('.', ',') : '');
+      setPrepaDefaut(r.prepMinutes == null); setPrepa(r.prepMinutes ?? r.measuredPrepMinutes ?? r.defaultPrepMinutes ?? 15);
     }).catch((e) => toast(e.message, 'erreur'));
     return () => { annule = true; };
   }, [restoId, token, toast]);
@@ -46,9 +51,11 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
     if (!plafondLibre && (!Number.isInteger(n) || n < 1)) { toast(t('editResto.capacityCapInvalid'), 'erreur'); return; }
     const min = minimum.trim() === '' ? null : Number(minimum.replace(',', '.'));
     if (min !== null && (!Number.isFinite(min) || min < 1 || min > 100)) { toast(t('editResto.minOrderInvalid'), 'erreur'); return; }
+    const p = Number(prepa);
+    if (!prepaDefaut && (!Number.isInteger(p) || p < 5 || p > 90)) { toast(t('editResto.prepInvalid'), 'erreur'); return; }
     setEnCours(true);
     try {
-      await api(`/restaurants/${restoId}/order-limits`, { method: 'PUT', token, body: { deliveryRadiusKm: rayonLibre ? null : rayon, maxOrdersPerDay: plafondLibre ? null : n, minOrderAmount: min } });
+      await api(`/restaurants/${restoId}/order-limits`, { method: 'PUT', token, body: { deliveryRadiusKm: rayonLibre ? null : rayon, maxOrdersPerDay: plafondLibre ? null : n, minOrderAmount: min, prepMinutes: prepaDefaut ? null : p } });
       await loadDashboard?.(restoId);
       toast(t('editResto.capacitySaved'), 'succes');
       onFermer();
@@ -84,6 +91,31 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
               )}
             </div>
           )}
+
+          <div className="field" role="group" aria-labelledby="capacite-prepa-titre">
+            <span className="titre-groupe" id="capacite-prepa-titre"><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('editResto.prepTitle')}</span>
+            <p className="small" style={{ margin: '0 0 8px' }}>{t('editResto.prepHelp')}</p>
+            <label className="row small" style={{ gap: 8, alignItems: 'center', marginBottom: 8 }}>
+              <input type="checkbox" checked={prepaDefaut} onChange={(e) => setPrepaDefaut(e.target.checked)} />
+              {t('editResto.prepDefault', { n: etat.defaultPrepMinutes ?? 12 })}
+            </label>
+            {!prepaDefaut && (
+              <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                <button type="button" className="btn-ghost" aria-label="−" style={{ minWidth: 44, minHeight: 44 }} onClick={() => setPrepa((v) => Math.max(5, Number(v) - 5))}>−5</button>
+                <input type="number" inputMode="numeric" min="5" max="90" value={prepa} onChange={(e) => setPrepa(e.target.value)} style={{ width: 90, textAlign: 'center' }} aria-label={t('editResto.prepTitle')} />
+                <button type="button" className="btn-ghost" aria-label="+" style={{ minWidth: 44, minHeight: 44 }} onClick={() => setPrepa((v) => Math.min(90, Number(v) + 5))}>+5</button>
+                <span className="small">{t('editResto.prepUnit')}</span>
+              </div>
+            )}
+            {etat.measuredPrepMinutes != null && (
+              <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>
+                {t('editResto.prepMeasured', { n: etat.measuredPrepMinutes, orders: etat.measuredPrepOrders })}{' '}
+                {(prepaDefaut || Number(prepa) !== etat.measuredPrepMinutes) && etat.measuredPrepMinutes >= 5 && etat.measuredPrepMinutes <= 90 && (
+                  <button type="button" className="lien-bouton" onClick={() => { setPrepaDefaut(false); setPrepa(etat.measuredPrepMinutes); }}>{t('editResto.prepUseMeasured')}</button>
+                )}
+              </p>
+            )}
+          </div>
 
           <div className="field" role="group" aria-labelledby="capacite-plafond-titre">
             <span className="titre-groupe" id="capacite-plafond-titre"><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('editResto.capacityCapTitle')}</span>

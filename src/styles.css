@@ -1188,8 +1188,8 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .fiche-modes button.est-actif { background: #fff; color: var(--ink); box-shadow: var(--shadow-3); }
 
 /* Panneau des frais : le pendant du « €1.79 Delivery Fee / 17 min Earliest arrival » d'Uber,
-   moins le délai — aucun champ de temps de préparation n'existe, ni ici ni au serveur, et on
-   n'annonce pas une heure d'arrivée qu'on ne sait pas calculer. */
+   moins le délai — le temps de préparation du commerce existe (backend migration 041), mais sans
+   l'adresse le trajet est inconnu, et on n'annonce pas une heure d'arrivée qu'on ne sait pas calculer. */
 .fiche-panneau {
   display: flex; flex-direction: column; gap: 2px;
   padding: 14px 16px; margin-bottom: 12px;

@@ -40,6 +40,10 @@ function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
           {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
           {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}</span>}
           {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}</span>}
+          {/* Halal, sans gluten : d\u00E9clar\u00E9s par le commerce (backend migration 042), dits en toutes lettres \u2014 un client qui
+              cherche l'un ou l'autre doit le lire, pas deviner une ic\u00F4ne. */}
+          {item.halal && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.halal')}</span>}
+          {item.glutenFree && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.glutenFree')}</span>}
           {/* Alcool : l'âge exigé à la remise, annoncé avant l'ajout au panier (backlog C3). */}
           {item.isAlcohol && <span className="plat-age" title={t('conformite.alcoholBadgeTitle', { age: Math.max(18, item.minAge || 18) })}> {Math.max(18, item.minAge || 18)}+</span>}
         </span>

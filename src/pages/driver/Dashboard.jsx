@@ -7,8 +7,10 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import LigneCompte from '../../components/LigneCompte';
 import IncidentsCourse from '../../components/livreur/IncidentsCourse';
+import PhotoDepot from '../../components/livreur/PhotoDepot';
+import BoutonUrgence from '../../components/livreur/BoutonUrgence';
 import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
-import { experienceApp, allerAuPaiement } from '../../natif';
+import { experienceApp, allerAuPaiement, suivrePositionCourse } from '../../natif';
 import Icone from '../../components/Icone';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -194,18 +196,21 @@ export default function DriverDashboard() {
   // le client ne le voient. watchPosition est alimenté par le GPS lui-même et continue à émettre plus
   // longtemps dans ces conditions.
   //
-  // Ce que cela ne règle PAS : navigateur fermé ou appareil en veille prolongée. La géolocalisation en
-  // arrière-plan n'existe pas sur le web ; elle demande une app native ou un emballage Capacitor. D'où
-  // l'horodatage renvoyé au client (lastLocationAt ci-dessous) : tant que le suivi peut s'interrompre,
-  // une carte figée doit être lisible comme telle plutôt que passer pour une position à jour.
+  // Ce que cela ne règle PAS sur le site : navigateur fermé ou appareil en veille prolongée. La géolocalisation en
+  // arrière-plan n'existe pas sur le web. DANS L'APPLICATION, pendant une course en livraison, elle existe depuis le
+  // 15/10/2026 (natif.js suivrePositionCourse, service au premier plan avec sa notification) : le suivi reprend quand
+  // `enLivraison` change. L'horodatage renvoyé au client reste : une carte figée doit se lire comme telle.
+  const enLivraison = mine.some((o) => o.status === 'livraison');
   useEffect(() => {
-    if (!('geolocation' in navigator) || user?.locationSharingEnabled === false) {
+    if (user?.locationSharingEnabled === false) {
       setSharingLocation(false);
       return undefined;
     }
     let deniedNotified = false;
     let lastSentAt = 0;
     let lastCoords = null;
+    let arreter = null;
+    let fini = false;
 
     function send(latitude, longitude) {
       if (!activeIdsRef.current.length) return;
@@ -216,25 +221,26 @@ export default function DriverDashboard() {
       });
     }
 
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
+    suivrePositionCourse({
+      arrierePlan: enLivraison,
+      titre: t('dashDriver.bgTrackingTitle'),
+      message: t('dashDriver.bgTrackingMessage'),
+      onPosition: ({ latitude, longitude }) => {
         setSharingLocation(true);
-        const { latitude, longitude } = pos.coords;
         lastCoords = { latitude, longitude };
-        // watchPosition peut émettre plusieurs fois par seconde en déplacement : on limite les envois
+        // La position peut arriver plusieurs fois par seconde en déplacement : on limite les envois
         // au même rythme que l'ancien sondage, pour ne pas multiplier les requêtes par course.
         if (Date.now() - lastSentAt < MIN_LOCATION_SEND_INTERVAL_MS) return;
         send(latitude, longitude);
       },
-      () => {
+      onErreur: () => {
         setSharingLocation(false);
         if (!deniedNotified) {
           deniedNotified = true;
           toast(t('dashDriver.toastAllowGeo'));
         }
-      },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
-    );
+      }
+    }).then((stop) => { if (fini) stop(); else arreter = stop; });
 
     // Battement de cœur. watchPosition n'émet QUE lorsque la position change : un livreur immobile —
     // arrêté devant le restaurant en attendant la commande, ou coincé à un feu — n'envoyait donc plus
@@ -248,11 +254,12 @@ export default function DriverDashboard() {
     }, MIN_LOCATION_SEND_INTERVAL_MS);
 
     return () => {
-      navigator.geolocation.clearWatch(watchId);
+      fini = true;
+      arreter?.();
       clearInterval(heartbeat);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, user?.locationSharingEnabled]);
+  }, [token, user?.locationSharingEnabled, enLivraison]);
 
   // Refuser une course (B23bis) : elle quitte SA liste, et rien d'autre — le refus n'est relu par aucune
   // autre décision (docs/dispatch.md côté serveur). Retrait local immédiat, sans attendre le rechargement.
@@ -387,6 +394,9 @@ export default function DriverDashboard() {
         </button>
       )}
 
+      {/* Urgence (accident, agression, malaise) : 112 d'abord, puis l'équipe Fairide avec la position (BoutonUrgence.jsx). */}
+      {peutRouler && <div className="row" style={{ justifyContent: 'flex-end', margin: '8px 0' }}><BoutonUrgence token={token} toast={toast} /></div>}
+
       {/* Selfie de contrôle au hasard à la prise de service (CODE-14) : sans lui, aucune course n'est proposée. */}
       {peutRouler && <SelfieControle token={token} onDepose={load} />}
 
@@ -473,6 +483,7 @@ export default function DriverDashboard() {
             </div>
             {/* Application : le code du client tapé, on glisse pour livrer (même raison que pour la récupération). */}
             {experienceApp() && <GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} onConfirmer={() => deliver(o)} />}
+            <PhotoDepot order={o} token={token} toast={toast} onLivree={load} />
             <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
           </div>
         ))}
