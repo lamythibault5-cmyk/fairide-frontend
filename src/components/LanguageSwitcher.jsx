@@ -19,3 +19,19 @@ export default function LanguageSwitcher() {
     </div>
   );
 }
+
+// Dans une feuille de l'application (Mon compte › Langue) : trois rangées pleines, comme les choix de l'accueil, au lieu des
+// trois pastilles de l'en-tête du site, petites et perdues dans une feuille.
+const NOMS = { fr: 'Français', en: 'English', nl: 'Nederlands' };
+export function ListeLangues() {
+  const { language, setLanguage, languages } = useLanguage();
+  return (
+    <div role="radiogroup" aria-label="Langue / Taal / Language">
+      {languages.map((l) => (
+        <button key={l} type="button" role="radio" aria-checked={l === language} className={`bv-option${l === language ? ' on' : ''}`} onClick={() => setLanguage(l)}>
+          <span>{NOMS[l] || l}</span>
+        </button>
+      ))}
+    </div>
+  );
+}

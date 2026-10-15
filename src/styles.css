@@ -2391,10 +2391,12 @@ main.page-fade { min-height: calc(100dvh - 140px); }
    quelle sur une carte blanche, elle serait littéralement blanche sur blanc.
    Ciblée sur .card et non sur une page précise : le sélecteur vit désormais dans la page
    Compte, et toute autre carte qui l'accueillerait un jour hériterait du bon rendu. */
-.card .lang-switcher { background: var(--cream-dim); align-self: flex-start; }
-.card .lang-switcher button { color: var(--ink-soft); opacity: 1; }
-.card .lang-switcher button:hover { color: var(--ink); }
-.card .lang-switcher button.active { background: var(--iris); color: #fff; }
+/* Aussi dans une feuille (Mon compte dans l'app, LigneCompte.jsx) : hors d'une .card, les boutons gardaient le blanc sur
+   transparent de l'en-tête iris — sur la feuille blanche, seule la langue choisie restait visible. */
+.card .lang-switcher, .plat-panneau .lang-switcher { background: var(--cream-dim); align-self: flex-start; }
+.card .lang-switcher button, .plat-panneau .lang-switcher button { color: var(--ink-soft); opacity: 1; }
+.card .lang-switcher button:hover, .plat-panneau .lang-switcher button:hover { color: var(--ink); }
+.card .lang-switcher button.active, .plat-panneau .lang-switcher button.active { background: var(--iris); color: #fff; }
 
 .dashboard-profile-card { display: flex; align-items: center; gap: 10px; padding: 10px 6px 0; border-top: 1px solid var(--line); margin-top: 10px; padding-top: 14px; }
 .dashboard-profile-avatar {
@@ -3144,7 +3146,7 @@ button.account-link-row:last-child { border-bottom: none; }
 .account-panneau { padding: 14px 15px 16px; }
 /* Application : le contenu d'une rangée de Mon compte ouvert dans une feuille (LigneCompte.jsx). La feuille a ses marges ;
    un tableau large (reçus, relevés) défile sur le côté dans la feuille au lieu d'élargir l'écran. */
-.account-panneau--feuille { padding: 0 0 16px; }
+.account-panneau--feuille, .card.account-panneau--feuille { padding: 0 0 16px; margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
 .account-panneau--feuille table { display: block; max-width: 100%; overflow-x: auto; }
 /* Application : un tableau large (gains, factures, relevés) défile sur le côté dans sa page, au lieu d'élargir tout l'écran
    (html.appli, posé par garderLesLiensDansLApp dans natif.js). */
