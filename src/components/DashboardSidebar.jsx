@@ -13,9 +13,9 @@ import { useCurseurOnglets } from '../hooks/useCurseurOnglets';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import useNotificationsClient from '../hooks/useNotificationsClient';
 import { ADMIN_HUBS, hubBadge, hubModules, moduleForPath } from '../pages/admin/adminModules';
-import { estNatif } from '../natif';
+import { experienceApp } from '../natif';
 
-const NATIF = estNatif();
+const NATIF = experienceApp();
 
 // Où mène le logo de la barre latérale, et où l'on atterrit après connexion (voir pages/Home.jsx).
 // Pour un client, c'est la liste des restaurants : la page /home qui s'y interposait n'affichait

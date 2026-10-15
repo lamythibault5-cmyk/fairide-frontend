@@ -28,6 +28,17 @@ export function estNatif() {
   try { return Capacitor.isNativePlatform(); } catch { return false; }
 }
 
+// L'EXPÉRIENCE « APPLICATION » : la vraie application (Capacitor) OU le site ajouté à l'écran d'accueil, qui s'ouvre en plein
+// écran comme une app (fondateur, 2026-10-15 : sur iPhone, avant TestFlight, c'est l'application). Pour CE QU'ON MONTRE
+// seulement : accueil de l'app au premier lancement, pas de page vitrine, feuilles et gestes. Les fonctions natives
+// (connexion Apple/Google native, vibrations, push APNs/FCM) restent derrière estNatif().
+export function ecranAccueil() {
+  try { return window.matchMedia?.('(display-mode: standalone)').matches === true || window.navigator.standalone === true; } catch { return false; }
+}
+export function experienceApp() {
+  return estNatif() || ecranAccueil();
+}
+
 // 'web' | 'ios' | 'android'
 export function plateforme() {
   try { return Capacitor.getPlatform(); } catch { return 'web'; }

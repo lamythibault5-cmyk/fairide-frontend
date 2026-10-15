@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
-import { estNatif } from '../natif';
+import { experienceApp } from '../natif';
 import { abonner } from '../push';
 import { ecrireBienvenue, lireBienvenue } from '../bienvenue';
 import { EcranPermission } from '../pages/app/EcransBienvenue';
@@ -25,7 +25,7 @@ export default function AmorceNotifications() {
   const [ouvert, setOuvert] = useState(() => lireBienvenue().amorceNotifs === 'a-faire');
   const [attente, setAttente] = useState(false);
 
-  if (!ouvert || !user || !estNatif() || user.isAdmin || !['client', 'restaurant', 'driver'].includes(role)) return null;
+  if (!ouvert || !user || !experienceApp() || user.isAdmin || !['client', 'restaurant', 'driver'].includes(role)) return null;
 
   const fermer = () => { ecrireBienvenue({ amorceNotifs: 'fait' }); setOuvert(false); };
   async function activer() {
