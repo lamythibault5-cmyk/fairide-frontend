@@ -14,7 +14,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
 import { SkeletonCards } from './Skeleton';
-import { estNatif, plateforme } from '../natif';
+import { estNatif, experienceApp, plateforme } from '../natif';
 import { lireBienvenue } from '../bienvenue';
 
 // « Activer les notifications » juste après l'inscription, dans l'application seulement (voir AmorceNotifications.jsx).
@@ -201,7 +201,7 @@ export default function Layout() {
         </div>
         <CookieBanner />
         {seesClientCart && <FloatingCart />}
-        {estNatif() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
+        {experienceApp() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
         {retourParGlissement && <Suspense fallback={null}><RetourParGlissement /></Suspense>}
       </>
     );

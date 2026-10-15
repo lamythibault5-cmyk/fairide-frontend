@@ -4,7 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../api';
-import { estNatif, demanderPosition, connexionFournisseur } from '../../natif';
+import { experienceApp, demanderPosition, connexionFournisseur } from '../../natif';
 import { communeDepuisCodePostal, communeRingDistance, haversineDistanceKm } from '../../menuCategories';
 import { ecrireBienvenue } from '../../bienvenue';
 import { repondAuxEnvies } from '../../envies';
@@ -121,7 +121,7 @@ export default function Bienvenue() {
   }, [ecran, liste]);
 
   if (user) return <Navigate to="/" replace />;
-  if (!estNatif() && !apercu) return <Navigate to="/" replace />;
+  if (!experienceApp() && !apercu) return <Navigate to="/" replace />;
 
   function aller(suivant, { sansHistorique = false } = {}) {
     if (!sansHistorique) setHistorique((h) => [...h, ecran]);

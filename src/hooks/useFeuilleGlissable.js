@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { estNatif } from '../natif';
+import { experienceApp } from '../natif';
 import { mouvementReduit, vibrer } from '../gestes';
 
 /* FEUILLE QU'ON TIRE VERS LE BAS POUR LA FERMER — la fiche d'un plat (FichePlat) et les sous-écrans du paiement
@@ -21,7 +21,7 @@ export default function useFeuilleGlissable({ panneau, defile, fermerAnime, ferm
   const geste = useRef(null);
   const anim = useRef(null);
   const module = useRef(null);
-  const natif = estNatif() && !mouvementReduit();
+  const natif = experienceApp() && !mouvementReduit();
   if (natif && !module.current) import('../ressort').then((m) => { module.current = m; }).catch(() => {});
 
   const poser = (y) => { if (panneau.current) panneau.current.style.transform = y ? `translateY(${y}px)` : ''; };
