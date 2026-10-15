@@ -5,11 +5,15 @@
 // Play) arrive le 6 octobre 2026.
 export const CAMPAGNE_RESEAUX = new Date('2026-10-16T00:00:00+02:00');
 export const APP_STORES = new Date('2026-10-06T00:00:00+02:00');
-export const OUVERTURE_EMPORTER = new Date('2026-11-01T00:00:00+01:00');
-export const OUVERTURE_LIVRAISON = new Date('2026-11-10T00:00:00+01:00');
+// Les trois dates se surchargent à la construction (VITE_PICKUP_OPEN_AT, VITE_DELIVERY_OPEN_AT, VITE_ONLINE_PAYMENT_OPEN_AT) :
+// l'application de test et l'environnement de staging ouvrent tout de suite, comme le serveur de staging
+// (FAIRIDE_*_OPEN_AT). Sans variable, les dates du lancement.
+const dateEnv = (v, defaut) => new Date(v || defaut);
+export const OUVERTURE_EMPORTER = dateEnv(import.meta.env.VITE_PICKUP_OPEN_AT, '2026-11-01T00:00:00+01:00');
+export const OUVERTURE_LIVRAISON = dateEnv(import.meta.env.VITE_DELIVERY_OPEN_AT, '2026-11-10T00:00:00+01:00');
 // Paiement en ligne (à emporter payé en ligne) : ouvre avec la livraison, le 10 novembre 2026 (fondateur, 2026-09-19).
 // Avant cette date, l'à emporter n'est possible que payé sur place. Miroir de FAIRIDE_ONLINE_PAYMENT_OPEN_AT.
-export const OUVERTURE_PAIEMENT_EN_LIGNE = new Date('2026-11-10T00:00:00+01:00');
+export const OUVERTURE_PAIEMENT_EN_LIGNE = dateEnv(import.meta.env.VITE_ONLINE_PAYMENT_OPEN_AT, '2026-11-10T00:00:00+01:00');
 export function paiementEnLigneOuvert(user) { return Date.now() >= OUVERTURE_PAIEMENT_EN_LIGNE.getTime() || !!user?.isAdmin || !!user?.isTest || !!user?.simulation; }
 export function dateOuverturePaiementEnLigne(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENT_EN_LIGNE, locale); }
 // Premières commandes payées en ligne : c'est cette date qui fait courir le mois offert de l'abonnement.

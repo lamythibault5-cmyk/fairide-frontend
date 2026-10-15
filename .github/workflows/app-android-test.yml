@@ -1,0 +1,124 @@
+# Application Android de TEST (« Fairide Test », be.fairide.app.test), reliée au serveur de STAGING.
+#
+# POURQUOI. Tester la vraie application native sur un téléphone, avant les magasins (fondateur, 2026-10-15) : connexion
+# Google native, bouton Retour, notifications, paiement Stripe en mode test — sans toucher aux vraies données. Chaque
+# build est envoyé aux testeurs par Firebase App Distribution (e-mail + installation en un geste, mises à jour notifiées).
+#
+# CONFIGURATION (Réglages du dépôt › Secrets and variables › Actions). Rien d'autre à toucher dans le code.
+#   Variables :
+#     STAGING_API_BASE        obligatoire — ex. https://fairide-backend-staging.up.railway.app/api. Sans elle le build
+#                             S'ARRÊTE : une application de test reliée à la production toucherait les vraies données.
+#     VITE_GOOGLE_CLIENT_ID   facultatif — bouton « Continuer avec Google »
+#     FIREBASE_ANDROID_APP_ID facultatif — ID de l'app Android be.fairide.app.test dans Firebase (1:…:android:…)
+#   Secrets :
+#     GOOGLE_SERVICES_JSON           facultatif — contenu de google-services.json (notifications push)
+#     ANDROID_TEST_KEYSTORE_BASE64   facultatif — clé de signature de l'app de test, en base64 ; avec
+#     ANDROID_TEST_KEYSTORE_PASSWORD   son mot de passe. Sans elle, chaque version demande de désinstaller la précédente.
+#     FIREBASE_SERVICE_ACCOUNT       facultatif — JSON d'un compte de service Firebase (rôle « Firebase App Distribution
+#                                    Admin ») : sans lui, l'APK reste téléchargeable dans les artefacts du build.
+#
+# Dépôt public : ces secrets ne servent qu'aux push sur les branches ci-dessous et aux lancements manuels, jamais aux
+# propositions de fusion venues d'ailleurs (voir ci.yml).
+name: App Android de test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feat/app-test-android]
+
+concurrency:
+  group: app-android-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: Construire et distribuer Fairide Test
+    runs-on: ubuntu-latest
+    env:
+      VITE_API_BASE: ${{ vars.STAGING_API_BASE }}
+      VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+      # Le staging ouvre tout de suite : commandes, livraison et paiement en ligne (voir src/launch.js).
+      VITE_PICKUP_OPEN_AT: '2026-01-01T00:00:00+01:00'
+      VITE_DELIVERY_OPEN_AT: '2026-01-01T00:00:00+01:00'
+      VITE_ONLINE_PAYMENT_OPEN_AT: '2026-01-01T00:00:00+01:00'
+      VERSION_CODE: ${{ github.run_number }}
+    steps:
+      - name: Serveur de staging configuré ?
+        run: |
+          if [ -z "$VITE_API_BASE" ]; then
+            echo "::error::Variable STAGING_API_BASE absente : l'application de test ne doit jamais parler à la production."
+            exit 1
+          fi
+          case "$VITE_API_BASE" in *fairide-backend-production*) echo "::error::STAGING_API_BASE pointe vers la production."; exit 1;; esac
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Site (dist/) relié au staging
+        run: npm run build
+
+      - name: Copie dans le projet Android
+        run: npx cap sync android
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Firebase (notifications), si configuré
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json; echo "google-services.json posé"; else echo "Sans google-services.json : pas de notifications push dans ce build."; fi
+
+      - name: Clé de signature de test, si configurée
+        env:
+          KS_B64: ${{ secrets.ANDROID_TEST_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_TEST_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            printf '%s' "$KS_B64" | base64 -d > "$RUNNER_TEMP/fairide-test.keystore"
+            echo "ANDROID_TEST_KEYSTORE=$RUNNER_TEMP/fairide-test.keystore" >> "$GITHUB_ENV"
+            echo "ANDROID_TEST_KEYSTORE_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
+          else
+            echo "Sans clé de test : signé avec une clé jetable (désinstaller l'ancienne version avant d'installer celle-ci)."
+          fi
+
+      - name: APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/fairide-test-${{ github.run_number }}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fairide-test-${{ github.run_number }}
+          path: ${{ runner.temp }}/fairide-test-${{ github.run_number }}.apk
+          retention-days: 14
+
+      # Un secret ne se lit pas dans un `if:` : on le teste dans une étape, qui dit oui ou non à la suivante.
+      - name: Firebase App Distribution configurée ?
+        id: fb
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          APP_ID: ${{ vars.FIREBASE_ANDROID_APP_ID }}
+        run: |
+          if [ -n "$SA" ] && [ -n "$APP_ID" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "Pas d'envoi Firebase : l'APK est dans les artefacts de ce build."; fi
+
+      - name: Envoi aux testeurs (Firebase App Distribution)
+        if: steps.fb.outputs.ok == 'true'
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ vars.FIREBASE_ANDROID_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: testeurs
+          file: ${{ runner.temp }}/fairide-test-${{ github.run_number }}.apk
+          releaseNotes: "${{ github.ref_name }} @ ${{ github.sha }} — ${{ github.event.head_commit.message }}"

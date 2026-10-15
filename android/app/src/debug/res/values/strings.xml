@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Application de test (build « debug », identifiant be.fairide.app.test) : un nom à part pour ne jamais la confondre,
+     sur le téléphone, avec l'application des magasins. -->
+<resources>
+    <string name="app_name">Fairide Test</string>
+    <string name="title_activity_main">Fairide Test</string>
+</resources>
