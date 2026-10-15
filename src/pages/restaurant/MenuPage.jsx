@@ -19,6 +19,7 @@ import GalleryPickerModal from '../../components/GalleryPickerModal';
 import { galleryForSection } from '../../menuCategories';
 import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import ConformiteCarte from '../../components/conformite/ConformiteCarte';
+import MentionsAlimentaires from '../../components/commerce/MentionsAlimentaires';
 import MenuReadiness from '../../components/MenuReadiness';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import HaussePrix from '../../components/HaussePrix';
@@ -499,6 +500,8 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       {modeAdmin && <MenuReadiness restaurant={restaurant} restoId={restoId} token={token} modeAdmin onConfirmed={() => loadDashboard(restoId)} />}
       {/* Carte signée, allergènes, vendeur professionnel (backlog de conformité A1, A2, A8). */}
       <ConformiteCarte restoId={restoId} rafraichir={restaurant} onChange={() => loadDashboard(restoId)} />
+      {/* Halal, sans gluten, vegan, bio : déclarés par le commerce lui-même, malgré le verrou de la carte. */}
+      <MentionsAlimentaires restaurant={restaurant} restoId={restoId} token={token} onChange={() => loadDashboard(restoId)} />
       <div className="menu-etape">
         <span className="menu-etape-num">1</span>
         <div>

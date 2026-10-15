@@ -18,6 +18,7 @@ import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher, { ListeLangues } from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
 import MesDonnees from '../components/MesDonnees';
+import CartesEnregistrees from '../components/client/CartesEnregistrees';
 import NouvellesFairide from '../components/NouvellesFairide';
 import MesCasquettes from '../components/MesCasquettes';
 import InboxSection from '../components/InboxSection';
@@ -765,8 +766,8 @@ export default function Account() {
 
       {/* ——— Selon le rôle. Une rubrique ne figure qu'à UN endroit : ce qui est dans la barre du bas
           (restaurants, recherche, commandes, favoris, carte) n'est pas repris ici. ———
-          Client : « Moyens de paiement » et « Titres restaurant » mènent à une réponse écrite, pas à un
-          réglage — Fairide n'enregistre pas de carte et n'accepte pas encore les titres-restaurant. */}
+          Client : « Moyens de paiement » liste les cartes qu'il a enregistrées chez Stripe (et les retire) ; « Titres
+          restaurant » mène à une réponse écrite — Fairide n'accepte pas encore les titres-restaurant. */}
       {role === 'client' && (
         <div className="card account-groupe" aria-label={t('accountUi.ordersAndFairide')}>
           {/* Les favoris ont quitté la barre du bas, ramenée à cinq onglets pour que chaque cible
@@ -776,7 +777,10 @@ export default function Account() {
               écrite sous « Mes infos », deux blocs plus haut, et menait au même endroit — la même
               donnée, présentée deux fois comme deux réglages différents. Fairide ne retient qu'UNE
               adresse ; elle vit donc à un seul endroit, sous « Mes infos », où elle se modifie. */}
-          <LigneCompte to="/aide?sujet=paiement" icone="carteBancaire" titre={t('accountUi.paymentMethods')} />
+          {/* Cartes enregistrées chez Stripe par le client lui-même (15/10/2026, backend cartesEnregistrees.js). */}
+          <LigneCompte icone="carteBancaire" titre={t('accountUi.paymentMethods')} sous={t('savedCards.rowSub')} ouverte={ouvertes.has('cartes')} onClick={() => basculer('cartes')}>
+            {ouvertes.has('cartes') && <CartesEnregistrees />}
+          </LigneCompte>
           <LigneCompte to="/aide?sujet=titres-restaurant" icone="ticket" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />
           <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />
           {/* Commerciaux Fairide (routes/adminSales.js) : la rubrique Sales n'apparaît que si l'admin a donné l'accès à ce compte
@@ -1014,6 +1018,7 @@ export default function Account() {
           </LigneCompte>
 
           {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas. Ici elles gardent leur nom. */}
+          <LigneCompte to="/dashboard/stats" icone="stats" titre={t('accountUi.stats')} sous={t('accountUi.statsSub')} />
           <LigneCompte to="/dashboard/promotions" icone="etiquette" titre={t('accountUi.promotions')} />
           <LigneCompte to="/dashboard/guide" icone="guide" titre={t('accountUi.guide')} />
           <LigneCompte to="/dashboard/reviews" icone="etoile" titre={t('accountUi.customerReviews')} sous={restaurant.reviewCount > 0 ? t('accountUi.ratingSummary', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('accountUi.noReviewsYet')} />

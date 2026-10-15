@@ -5,7 +5,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
-import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
+import { platBio, platVegan, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 // Chargée à la demande : la carte tire Leaflet (~150 Ko) avec elle, et cette page fait partie des
 // rares gardées en import statique pour le référencement. Sans ce découpage, tout visiteur d'une fiche
 // de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
@@ -241,6 +241,9 @@ export default function RestaurantList() {
   const [cuisine, setCuisine] = useState(filtresInitiaux.cuisine || '');
   const [bio, setBio] = useState(!!filtresInitiaux.bio);
   const [vegan, setVegan] = useState(!!filtresInitiaux.vegan);
+  // Halal et sans gluten (backend migration 042) : déclarés par le commerce, voir dietary.js.
+  const [halal, setHalal] = useState(!!filtresInitiaux.halal);
+  const [sansGluten, setSansGluten] = useState(!!filtresInitiaux.sansGluten);
   // Les memes filtres que sur la carte, avec les memes noms : prix, emporter, et un tri.
   // Les avoir des deux cotes evite d'avoir a changer de vue pour affiner une recherche.
   const [prix, setPrix] = useState(0);
@@ -296,12 +299,14 @@ export default function RestaurantList() {
     { value: '', emoji: 'restaurants', label: t('restaurantList.allCuisines') },
     ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.icone, label: restaurantTypeLabel(rt.value, t) })),
     { value: '__bio', emoji: 'feuille', label: t('restaurantList.chipBio'), regime: 'bio' },
-    { value: '__vegan', emoji: 'feuille', label: t('restaurantList.chipVegan'), regime: 'vegan' }
+    { value: '__vegan', emoji: 'feuille', label: t('restaurantList.chipVegan'), regime: 'vegan' },
+    { value: '__halal', emoji: 'coche', label: t('restaurantList.chipHalal'), regime: 'halal' },
+    { value: '__sansGluten', emoji: 'coche', label: t('restaurantList.chipGlutenFree'), regime: 'sansGluten' }
   ];
-  const chipActive = (opt) => (opt.regime === 'bio' ? bio : opt.regime === 'vegan' ? vegan : cuisine === opt.value);
+  const REGIMES = { bio: [bio, setBio], vegan: [vegan, setVegan], halal: [halal, setHalal], sansGluten: [sansGluten, setSansGluten] };
+  const chipActive = (opt) => (opt.regime ? REGIMES[opt.regime][0] : cuisine === opt.value);
   const surChip = (opt) => {
-    if (opt.regime === 'bio') setBio((v) => !v);
-    else if (opt.regime === 'vegan') setVegan((v) => !v);
+    if (opt.regime) REGIMES[opt.regime][1]((v) => !v);
     else setCuisine(cuisine === opt.value ? '' : opt.value);
   };
 
@@ -325,7 +330,7 @@ export default function RestaurantList() {
   const base = homeCommune ? [...restaurants].sort((a, b) => rang(a) - rang(b)) : restaurants;
   const communeEpingles = commune || homeCommune;
   const placements = communeEpingles ? placementsTous.filter((p) => !p.commune || p.commune === communeEpingles) : [];
-  const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || prix || emporter || tri !== 'recommande');
+  const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || halal || sansGluten || prix || emporter || tri !== 'recommande');
 
   // Distance a vol d'oiseau depuis l'adresse du compte, quand elle est connue.
   const distanceDe = (r) => (user?.lat && user?.lng && r.lat && r.lng ? haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) : null);
@@ -336,6 +341,8 @@ export default function RestaurantList() {
       if (cuisine && r.cuisine !== cuisine && !(r.extraCuisines || []).includes(cuisine)) return false; // type principal ou secondaire
       if (bio && !restoBio(r)) return false;
       if (vegan && !restoVegan(r)) return false;
+      if (halal && !restoHalal(r)) return false;
+      if (sansGluten && !restoSansGluten(r)) return false;
       if (search && !`${r.name} ${r.desc} ${r.cuisine}`.toLowerCase().includes(search.toLowerCase())) return false;
       if (prix && bandePrix(r) !== prix) return false;
       if (emporter && !r.offersPickup) return false;
@@ -638,7 +645,7 @@ export default function RestaurantList() {
           sortir (audit du 15/10/2026). On dit que c'est le filtre, et on l'efface en un geste. */}
       {!loading && hasActiveFilter && list.length === 0 && (
         <EtatVide icone="recherche" titre={t('restaurantList.emptyFiltered')}>
-          <button type="button" className="btn-teal" onClick={() => { setSearch(''); setCuisine(''); setCommune(''); setBio(false); setVegan(false); setPrix(0); setEmporter(false); setTri('recommande'); }}>
+          <button type="button" className="btn-teal" onClick={() => { setSearch(''); setCuisine(''); setCommune(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false); setPrix(0); setEmporter(false); setTri('recommande'); }}>
             {t('restaurantList.clearFilters')}
           </button>
         </EtatVide>

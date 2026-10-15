@@ -135,6 +135,16 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       → « location », avec une courte vidéo de la notification pendant une course (docs/application-mobile.md, point 11).
 - [ ] 🔴 **D — iPhone** : `NSLocationAlwaysAndWhenInUseUsageDescription` et *Background Modes › Location updates* dans le
       projet iOS (docs/application-mobile.md, point 11), sinon Apple refuse l'application.
+- [ ] 🔴 **F — Cartes enregistrées** (`fairide-backend/cartesEnregistrees.js`) : sur le staging, payer une commande en
+      cochant « enregistrer » sur la page Stripe → la commande suivante repropose la carte ; Mon compte › Moyens de
+      paiement la montre (marque, 4 chiffres) et la retire. Supprimer le compte de test → le client Stripe disparaît
+      (Stripe › Clients). Si Stripe refuse un jour de créer le client, la page de paiement s'ouvre quand même (sans la case).
+- [ ] 🟡 **F — Halal et sans gluten** : dans un commerce, Ma carte › « Halal, sans gluten, vegan, bio » → cocher « tout
+      halal » et un plat sans gluten ; côté client, les pastilles Halal et Sans gluten de la liste et de la Recherche le
+      trouvent, et le plat porte la mention. Dire aux commerces que c'est **leur** déclaration (règle des 20 mg/kg rappelée
+      à l'écran pour le sans gluten).
+- [ ] 🟡 **F — Statistiques du commerce** : Mon compte › Statistiques, sur un commerce qui a des commandes de test ; les
+      chiffres doivent tomber juste avec Mes commandes (7, 30, 90 jours).
 - [ ] 🟠 **F — Les livreurs réacceptent la politique de géolocalisation** : elle dit maintenant que la position est envoyée
       écran verrouillé pendant la livraison, et décrit le bouton d'urgence (`docs/livreurs/politique-geolocalisation.md`).
       Sa version change avec son texte : chaque livreur la relit avant sa prochaine course, rien à faire de plus que le
