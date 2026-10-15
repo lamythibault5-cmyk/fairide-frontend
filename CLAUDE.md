@@ -292,6 +292,14 @@ What the front end has to know:
 - Companion scripts, same directory: `prix.js` (bulk price edit, by factor or by Excel CSV),
   `sauvegarde-carte.js` (snapshot before any `--remplacer`), `apercu-carte.js` (renders a card to a
   standalone HTML page for review, without publishing anything).
+- **Importing a ready `<shop>-menu.json` into production**: follow « Chemin rapide » in
+  `../fairide-backend/docs/importer-une-carte.md` — commands, which option for which kind of file, and the traps.
+  `scripts/tunnel-railway.js` opens the database tunnel (`ssh -L` does not work on Railway) and exports the production
+  credentials; `scripts/preparer-carte.js --sans-generiques` strips stock photos. **Never multiply prices at import**
+  (neither × 1.121 nor × 1.10): shop prices go in as they are with `--prix-magasin`, and the business itself chooses to add
+  the commission. Run the scripts from `origin/main` — an older branch has an importer without `--prix-magasin`.
+- **Which businesses are real**: `restaurants.is_demo = false`. Of those, the ones with `in_store_prices_checked_at` are the
+  only cards whose prices have been checked (5 on 2026-10-15: Hill's Burger, L'arbre à pain, Snack Turko, Pitaki, DIJII SHOP).
 
 An imported card is written but **not online**: the business stays `pending` until someone clicks
 Approve and Publish in the admin console. Don't describe an import as "live".
@@ -300,7 +308,8 @@ Approve and Publish in the admin console. Don't describe an import as "live".
 (printed menu, chalkboard), not on a platform — set by `importer-carte.js --prix-magasin` or the admin drawer toggle
 (`PATCH /admin/restaurants/:id/in-store-prices`); the admin list shows « Prix magasin ✓ » / « Prix à vérifier ». Only a
 marked card offers the business, on the « C'est bon » page ([ValiderCarte.jsx](src/pages/ValiderCarte.jsx)), one choice:
-keep its prices, or raise the whole card by the maximum increase (+11.1 %, `hausseMaxPourcent`), rounded up to €0.10, paid
+keep its prices, or raise the whole card by the maximum increase (+11.1 %, `hausseMaxPourcent`), rounded **down** to €0.10
+(since 2026-10-14 — rounding up broke the cap: €10.00 → €11.20 is +12 %), paid
 add-ons too. Choice, prices and signature go in one transaction, once (`fairide_rate_choice`). Structured `*-menu.json`
 imports no longer get name-guessed option groups (`optionsExact`): the file's choices, including « none », are final. A
 choice inside a choice (Habebe's « Formule + soft » → Spa/Pales) is flattened into the parent list (`aplatirChoix`): the

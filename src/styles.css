@@ -204,7 +204,9 @@ h1, h2, h3 { font-family: var(--font-titre); font-weight: 700; letter-spacing: 0
 
 a { color: inherit; }
 
-.wrap { max-width: 960px; margin: 0 auto; padding: 0 20px 60px; }
+/* --gouttiere : la marge latérale de la page, lue par ce qui doit aller d'un bord à l'autre de l'écran (bandeau d'une
+   fiche commerce, voir .fiche-page). 20px ici, 16px dans l'espace connecté sous 900px (.dashboard-main). */
+.wrap { --gouttiere: 20px; max-width: 960px; margin: 0 auto; padding: 0 var(--gouttiere) 60px; }
 
 /* Aplat iris strict : plus de dégradé ni de halo doré derrière (voir .hero::after supprimé
    plus bas). La bannière se détache du contenu par un simple changement de fond, pas par une
@@ -2569,9 +2571,9 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     flex: 1 1 0; min-width: 0; height: 60px; padding: 0 2px;
     flex-direction: column; justify-content: center; align-items: center; gap: 2px;
     border-radius: var(--radius-pill); background: transparent; border: 0; box-shadow: none;
-    /* 10px (et non 11) : « Commandes », « Recherche » tenaient trop juste dans la pastille. Un léger interlettrage
+    /* 9,5px (11, puis 10, puis 9,5 le 2026-10-14) : « Commandes », « Restaurants » touchaient encore le bord de la pastille. Un léger interlettrage
        positif garde un si petit texte lisible (Apple, typographie de l'interface). */
-    color: var(--ink-soft); font-size: 10px; font-weight: 500; letter-spacing: .01em;
+    color: var(--ink-soft); font-size: 9.5px; font-weight: 500; letter-spacing: .01em;
     transition: height .14s var(--ressort-ui), color .12s;
   }
   .dashboard-nav-link:hover, .dashboard-nav-link.active { background: transparent; }
@@ -2614,7 +2616,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   /* Les titres de page et l'en-tête de Mon compte réservaient ici la place de la pastille de
      marque, fixée en haut à droite. Elle a été retirée (voir Layout.jsx) : ils reprennent toute la
      largeur. */
-  .dashboard-main { padding: 18px 16px 30px; }
+  .dashboard-main { --gouttiere: 16px; padding: 18px var(--gouttiere) 30px; }
   .dashboard-right { padding: 0 16px 24px; }
   /* Les pastilles flottent : elles occupent les 68 derniers pixels de l'écran (12 de marge + 56 de
      diamètre). Le dernier bloc de la page doit donc dégager cette hauteur, plus une respiration,
@@ -3301,8 +3303,10 @@ button.account-link-row:last-child { border-bottom: none; }
 .recherche-champ input::placeholder { color: var(--ink-faint); }
 /* Le navigateur ajoute sa propre croix aux champs type=search : on garde la nôtre, une seule. */
 .recherche-champ input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+/* padding: 0 et min-height: 0 : sans eux, le style général des boutons (12px 20px de rembourrage, 44px de haut) écrasait
+   l'icône à 0px de large dans ce rond de 34px — le « rond gris vide » signalé le 2026-10-14. */
 .recherche-effacer {
-  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer;
+  flex-shrink: 0; width: 34px; height: 34px; min-height: 0; padding: 0; border-radius: 50%; border: 0; cursor: pointer;
   background: var(--cream-dim); color: var(--ink-soft); font-size: 14px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
 }
@@ -4807,3 +4811,21 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 
 /* Le nom dans un titre (components/AvecMarque.jsx) : le mot-logo, à la graisse du logo, sans changer la taille du titre. */
 .mot-marque { font-weight: 800; letter-spacing: -0.03em; }
+
+/* FICHE D'UN COMMERCE SUR TÉLÉPHONE : le bandeau collant (croix, recherche) et la barre des sections vont d'un bord à
+   l'autre, comme la photo de couverture. Ils s'arrêtaient à la marge de la page : en défilant, la photo pleine largeur
+   passait dessous et dépassait de chaque côté, comme découpée par l'en-tête (capture du fondateur, 2026-10-14). */
+@media (max-width: 640px) {
+  .fiche-page .flux-entete, .fiche-page .category-quicknav {
+    margin-left: calc(-1 * var(--gouttiere, 20px)); margin-right: calc(-1 * var(--gouttiere, 20px));
+    padding-left: var(--gouttiere, 20px); padding-right: var(--gouttiere, 20px);
+  }
+}
+
+/* Recherche dans une carte : le bouton qui valide (iris, une coche) et la ligne du nombre de plats trouvés. */
+.recherche-valider {
+  flex-shrink: 0; width: 34px; height: 34px; min-height: 0; padding: 0; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--iris); color: #fff; display: grid; place-items: center; margin-left: 4px;
+}
+.recherche-valider:active { transform: scale(.92); }
+.fiche-recherche-resultat { margin: -4px 0 10px; font-size: 13px; font-weight: 500; color: var(--iris); }

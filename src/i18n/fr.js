@@ -6609,6 +6609,9 @@ export default {
       feePickup: 'Gratuit',
       feePickupLabel: 'Retrait sur place',
       searchDish: 'Rechercher un plat',
+      searchSubmit: 'Voir les résultats',
+      searchCountOne: '1 plat trouvé',
+      searchCount: '{n} plats trouvés',
       noDishMatch: 'Aucun plat ne correspond à « {q} ».',
       clearSearch: 'Effacer la recherche'
     },

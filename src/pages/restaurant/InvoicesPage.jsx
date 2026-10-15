@@ -124,7 +124,10 @@ export default function InvoicesPage() {
         emailPath={(inv) => `/invoices/restaurant/${inv.id}/send`}
         titre={t('invoicesResto.archiveTitle')}
         description={t('invoicesResto.archiveDesc2')}
-        colonneMontant="Total TTC"
+        // « Total », pas « Total TTC » : sous la franchise TVA (depuis le 7/9/2026), la facture de Fairide ne porte pas de TVA
+        // et « TTC » laisserait croire le contraire ; une facture plus ancienne, avec TVA, garde son total juste. Même libellé
+        // que les factures livreur (driver/InvoicesPage.jsx).
+        colonneMontant="Total"
       />
 
       <InvoicePreferences />

@@ -13,6 +13,9 @@ import { useCurseurOnglets } from '../hooks/useCurseurOnglets';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import useNotificationsClient from '../hooks/useNotificationsClient';
 import { ADMIN_HUBS, hubBadge, hubModules, moduleForPath } from '../pages/admin/adminModules';
+import { estNatif } from '../natif';
+
+const NATIF = estNatif();
 
 // Où mène le logo de la barre latérale, et où l'on atterrit après connexion (voir pages/Home.jsx).
 // Pour un client, c'est la liste des restaurants : la page /home qui s'y interposait n'affichait
@@ -127,7 +130,10 @@ export default function DashboardSidebar() {
    * libellés s'effacent et la barre se resserre autour des icônes ; on remonte — le geste de quelqu'un qui
    * cherche où aller — elle reprend sa taille. Même hook et même règle que l'en-tête du site, pour que les
    * deux bougent ensemble. Au-dessus de 900px la classe ne change rien : la barre latérale ne recouvre rien. */
-  const compacte = useEnteteDefilement({ seuil: 120 });
+  // Quasi instantané (retour du fondateur, 2026-10-14 : « elle met trop de temps à se réduire ») : 120px de défilement
+  // avant la première réduction, c'était près d'un écran de pouce. Dans l'application, 24px et 3px de marge — dès que le
+  // doigt descend ; sur le site, 60px et 6px, un peu plus de tolérance au tremblement d'un trackpad.
+  const compacte = useEnteteDefilement(NATIF ? { seuil: 24, marge: 3 } : { seuil: 60, marge: 6 });
   // Le compte admin (fairide.entreprise@gmail.com, voir middleware/auth.js isAdminEmail) sert
   // exclusivement à l'ERP interne : peu importe le rôle "métier" sous-jacent du compte ou la page visitée,
   // la sidebar ne montre jamais la nav client/restaurateur/livreur pour ce compte — seulement les 7

@@ -267,9 +267,10 @@
 /* Carte « Favoris » (ancienne carte à bandeau) : même visuel, dans le fil. */
 .visuel-vide.cover-banner-sm { position: relative; inset: auto; height: 110px; }
 @media (max-width: 640px) {
-  .fiche-media { min-height: 170px; margin-left: -20px; margin-right: -20px; }
+  /* La marge réelle de la page (--gouttiere) et non 20px fixes : connecté, elle est de 16px, et la photo dépassait. */
+  .fiche-media { min-height: 170px; margin-left: calc(-1 * var(--gouttiere, 20px)); margin-right: calc(-1 * var(--gouttiere, 20px)); }
   .fiche-media > .fiche-couverture { margin: 0; width: 100%; }
-  .fiche-media > .fiche-logo { left: 20px; }
+  .fiche-media > .fiche-logo { left: var(--gouttiere, 20px); }
   .visuel-vide--bandeau { border-radius: 0; }
   .visuel-vide--bandeau .visuel-vide-initiale { font-size: 96px; }
 }

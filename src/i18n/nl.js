@@ -6565,6 +6565,9 @@ export default {
       feePickup: 'Gratis',
       feePickupLabel: 'Afhalen in de zaak',
       searchDish: 'Zoek een gerecht',
+      searchSubmit: 'Resultaten bekijken',
+      searchCountOne: '1 gerecht gevonden',
+      searchCount: '{n} gerechten gevonden',
       noDishMatch: 'Geen gerecht komt overeen met "{q}".',
       clearSearch: 'Zoekopdracht wissen'
     },
