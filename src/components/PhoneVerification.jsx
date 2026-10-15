@@ -33,7 +33,7 @@ export default function PhoneVerification() {
   }
 
   async function confirmer() {
-    if (!code.trim()) { toast(t('accountUi.toastCodeRequired')); return; }
+    if (!code.trim()) { toast(t('accountUi.toastCodeRequired'), 'erreur'); return; }
     setOccupe(true);
     try {
       await api('/auth/me/phone/verify', { method: 'POST', token, body: { code: code.trim() } });

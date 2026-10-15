@@ -34,7 +34,7 @@ export default function EcranSuppression({ restoId, onFermer }) {
     try {
       await api(`/restaurants/${restoId}/request-deletion`, { method: 'POST', token });
       setEtape(2);
-      toast(t('editResto.toastCodeSent'));
+      toast(t('editResto.toastCodeSent'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -47,7 +47,7 @@ export default function EcranSuppression({ restoId, onFermer }) {
     setEnCours(true);
     try {
       await api(`/restaurants/${restoId}`, { method: 'DELETE', token, body: { code, reason: raison, comment: commentaire.trim() } });
-      toast(t('editResto.toastDeleted'));
+      toast(t('editResto.toastDeleted'), 'succes');
       window.location.href = '/dashboard';
     } catch (e) {
       toast(e.message, 'erreur');

@@ -24,6 +24,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import HaussePrix from '../../components/HaussePrix';
 import DemandeModifCarte from '../../components/DemandeModifCarte';
 import TvaCarte from '../../components/commerce/TvaCarte';
+import { defilement } from '../../gestes';
 import Icone from '../../components/Icone';
 
 // `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
@@ -149,7 +150,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     setBulkDeleting(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk-delete`, { method: 'POST', token, body: { itemIds: Array.from(selectedIds) } });
-      toast(t('menuPage.toastDishesDeleted', { n: selectedIds.size }));
+      toast(t('menuPage.toastDishesDeleted', { n: selectedIds.size }), 'succes');
       setSelectedIds(new Set());
       setSelectSectionId(null);
       loadDashboard(restoId);
@@ -186,7 +187,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await api(`/restaurants/${restoId}/menu`, { method: 'POST', token, body: { name: itemName.trim(), price, category: itemCategory, imageUrl: itemImageUrl.trim() } });
       setItemName(''); setItemPrice(''); setItemImageUrl('');
       loadDashboard(restoId);
-      toast(t('menuPage.toastDishAdded'));
+      toast(t('menuPage.toastDishAdded'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     }
@@ -205,7 +206,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     try {
       await api(`/restaurants/${restoId}/menu/${itemId}`, { method: 'PATCH', token, body: patch });
       await loadDashboard(restoId);
-      toast(t('menuPage.toastDishUpdated'));
+      toast(t('menuPage.toastDishUpdated'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
       throw e;
@@ -251,7 +252,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     try {
       const groupe = await api(`/restaurants/${restoId}/option-groups`, { method: 'POST', token, body: payload });
       await loadDashboard(restoId);
-      toast(t('menuPage.toastGroupCreated'));
+      toast(t('menuPage.toastGroupCreated'), 'succes');
       return groupe;
     } catch (e) {
       toast(e.message, 'erreur');
@@ -263,7 +264,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     try {
       await api(`/restaurants/${restoId}/option-groups/${groupId}`, { method: 'PATCH', token, body: payload });
       await loadDashboard(restoId);
-      toast(t('menuPage.toastGroupUpdated'));
+      toast(t('menuPage.toastGroupUpdated'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
       throw e;
@@ -274,7 +275,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     try {
       await api(`/restaurants/${restoId}/option-groups/${groupId}`, { method: 'DELETE', token });
       await loadDashboard(restoId);
-      toast(t('menuPage.toastGroupDeleted'));
+      toast(t('menuPage.toastGroupDeleted'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     }
@@ -284,7 +285,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     try {
       await api(`/restaurants/${restoId}/sections`, { method: 'POST', token, body: { name } });
       await loadDashboard(restoId);
-      toast(t('menuPage.toastSectionCreated'));
+      toast(t('menuPage.toastSectionCreated'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
       throw e;
@@ -332,7 +333,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         method: 'POST', token, body: { itemIds: [...applySelectedIds] }
       });
       await loadDashboard(restoId);
-      toast(t('menuPage.toastPhotoApplied', { n: res.count }));
+      toast(t('menuPage.toastPhotoApplied', { n: res.count }), 'succes');
       setSectionApplyPanel(null);
     } catch (e) {
       toast(e.message, 'erreur');
@@ -372,7 +373,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
 
   function openAddItemTile(section) {
     setAddSectionId(section.id);
-    setTimeout(() => document.getElementById(`ajout-plat-${section.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+    setTimeout(() => document.getElementById(`ajout-plat-${section.id}`)?.scrollIntoView({ behavior: defilement(), block: 'center' }), 50);
     setItemCategory(section.name);
     setItemName('');
     setItemPrice('');
@@ -397,7 +398,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     try {
       await api(`/restaurants/${restoId}/sections/${section.id}`, { method: 'DELETE', token });
       await loadDashboard(restoId);
-      toast(t('menuPage.toastSectionDeleted'));
+      toast(t('menuPage.toastSectionDeleted'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -407,13 +408,13 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   }
 
   async function addStarterTemplateItems(items) {
-    if (!items.length) { toast(t('menuPage.toastPickOne')); return; }
+    if (!items.length) { toast(t('menuPage.toastPickOne'), 'erreur'); return; }
     setAddingTemplate(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
       setTemplateOpen(false);
       loadDashboard(restoId);
-      toast(t('menuPage.toastDishesAdded', { n: items.length }));
+      toast(t('menuPage.toastDishesAdded', { n: items.length }), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -439,7 +440,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await loadDashboard(restoId);
       setStartChoiceMade(false);
       setMethodesOuvertes(true);
-      toast(t('menuPage.resetDone', { n: r.deleted }));
+      toast(t('menuPage.resetDone', { n: r.deleted }), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -465,13 +466,13 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const [ajusting, setAjusting] = useState(false);
   async function ajusterTousLesPrix() {
     const percent = Number(ajustPct);
-    if (!Number.isFinite(percent) || percent === 0) { toast(t('menuPage.adjustInvalid')); return; }
+    if (!Number.isFinite(percent) || percent === 0) { toast(t('menuPage.adjustInvalid'), 'erreur'); return; }
     setAjusting(true);
     try {
       const r = await api(`/restaurants/${restoId}/menu/adjust-prices`, { method: 'POST', token, body: { percent } });
       await loadDashboard(restoId);
       setAjustConfirm(false); setAjustPct('');
-      toast(t('menuPage.adjustDone', { n: r.updated, p: `${percent > 0 ? '+' : ''}${percent} %` }));
+      toast(t('menuPage.adjustDone', { n: r.updated, p: `${percent > 0 ? '+' : ''}${percent} %` }), 'succes');
     } catch (e) { toast(e.message, 'erreur'); } finally { setAjusting(false); }
   }
 
@@ -482,7 +483,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     try {
       await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
       loadDashboard(restoId);
-      toast(t('menuPage.toastProductsAdded', { n: items.length }));
+      toast(t('menuPage.toastProductsAdded', { n: items.length }), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -492,7 +493,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
 
   return (
     <div>
-      <MenuReadiness restaurant={restaurant} restoId={restoId} token={token} modeAdmin={modeAdmin} onConfirmed={() => loadDashboard(restoId)} />
+      {/* Côté commerce, la remise de carte et les étapes restantes sont dans la liste « Avant d'être en ligne » du tableau
+          de bord (MiseEnLigne.jsx, audit du 15/10/2026) : les répéter ici donnait trois boutons pour une seule validation.
+          La console admin garde sa note « carte remise, en attente du commerce ». */}
+      {modeAdmin && <MenuReadiness restaurant={restaurant} restoId={restoId} token={token} modeAdmin onConfirmed={() => loadDashboard(restoId)} />}
       {/* Carte signée, allergènes, vendeur professionnel (backlog de conformité A1, A2, A8). */}
       <ConformiteCarte restoId={restoId} rafraichir={restaurant} onChange={() => loadDashboard(restoId)} />
       <div className="menu-etape">

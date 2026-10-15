@@ -1,8 +1,10 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { api, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { mouvementReduit } from '../../gestes';
+import AllergenesPlat from './AllergenesPlat';
 
 /* « Ma carte et mes engagements » — ce que le commerce signe lui-même (backlog de conformité du
  * 23/09/2026). L'équipe Fairide ne peut rien signer à sa place : en « agir pour », le serveur refuse
@@ -50,6 +52,14 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
     setReferent((x) => x || r.allergens.referentName || '');
   }).catch(() => {});
   useEffect(() => { if (restoId) charger(); }, [restoId, rafraichir]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Arrivée par « Signer mes engagements » (liste Avant d'être en ligne, lien …/menu#conformite-carte) : le routeur ne
+  // défile pas vers une ancre, et ce panneau n'existe qu'une fois ses données reçues. On y va nous-mêmes, une fois.
+  const ancreFaite = useRef(false);
+  useEffect(() => {
+    if (!d || ancreFaite.current || window.location.hash !== '#conformite-carte') return;
+    ancreFaite.current = true;
+    document.getElementById('conformite-carte')?.scrollIntoView({ behavior: mouvementReduit() ? 'auto' : 'smooth', block: 'start' });
+  }, [d]);
 
   if (!d) return null;
   const date = (ms) => new Date(ms).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
@@ -91,7 +101,7 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
   const fait = (texte) => <p className="small" style={{ margin: '2px 0 0' }}>✓ {texte}</p>;
 
   return (
-    <details className="card conformite-carte" open={!toutSigne}>
+    <details className="card conformite-carte" id="conformite-carte" open={!toutSigne}>
       <summary>
         <b>{t('conformite.menuPanelTitle')}</b>{' '}
         {toutSigne ? <span className="pill teal">✓ {t('conformite.menuPanelDone')}</span> : <span className="pill texte-erreur">{t('conformite.signAllCount', { n: aSigner.length || 1 })}</span>}
@@ -113,8 +123,15 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
               <>
                 <p className="small" style={{ margin: '0 0 4px', color: 'var(--red)' }}>{t('conformite.menuMissingCount', { n: m.missing.length })}</p>
                 <ul className="small" style={{ margin: '0 0 6px 18px' }}>
-                  {m.missing.slice(0, 8).map((x) => <li key={`${x.itemId}-${x.code}`}>{x.name} — {t(`conformite.menuMissing_${x.code}`)}</li>)}
-                  {m.missing.length > 8 && <li>…</li>}
+                  {/* Allergènes manquants : déclarables ici, plat par plat (AllergenesPlat) — tous affichés, pas seulement les
+                      huit premiers, puisque chacun a maintenant son bouton. */}
+                  {m.missing.filter((x) => x.code === 'ALLERGENES_NON_DECLARES').map((x) => (
+                    <li key={`${x.itemId}-${x.code}`} style={{ marginBottom: 6 }}>{x.name} — {t(`conformite.menuMissing_${x.code}`)}
+                      <AllergenesPlat restoId={restoId} token={token} plat={x} onEnregistre={() => { charger(); onChange?.(); }} />
+                    </li>
+                  ))}
+                  {m.missing.filter((x) => x.code !== 'ALLERGENES_NON_DECLARES').slice(0, 8).map((x) => <li key={`${x.itemId}-${x.code}`}>{x.name} — {t(`conformite.menuMissing_${x.code}`)}</li>)}
+                  {m.missing.filter((x) => x.code !== 'ALLERGENES_NON_DECLARES').length > 8 && <li>…</li>}
                 </ul>
               </>
             )}

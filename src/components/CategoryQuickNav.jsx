@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { sectionLabel } from '../menuCategories';
+import { defilement } from '../gestes';
 
 // Barre de navigation rapide entre sections du menu (Entrées, Plats, Desserts, Boissons...), fixée en
 // haut de l'écran pendant qu'on parcourt le menu. Met en évidence la section actuellement lue, fait
@@ -92,7 +93,7 @@ export default function CategoryQuickNav({ categories }) {
     const rangee = rangeeRef.current;
     if (!btn || !rangee) return;
     const cible = btn.offsetLeft - (rangee.clientWidth - btn.offsetWidth) / 2;
-    rangee.scrollTo({ left: Math.max(0, cible), behavior: 'smooth' });
+    rangee.scrollTo({ left: Math.max(0, cible), behavior: defilement() });
   }, [active]);
 
   function jumpTo(id) {

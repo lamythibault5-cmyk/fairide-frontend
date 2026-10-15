@@ -25,7 +25,7 @@ export default function EcranLegal({ restaurant, restoId, loadDashboard, onFerme
   const { enregistrer, enCours } = useEnregistrerCommerce({ restoId, loadDashboard, onFermer });
 
   function valider() {
-    if (!nomLegal.trim() || !bce.trim() || !tva.trim() || !responsable.trim()) { toast(t('editResto.toastLegalRequired')); return; }
+    if (!nomLegal.trim() || !bce.trim() || !tva.trim() || !responsable.trim()) { toast(t('editResto.toastLegalRequired'), 'erreur'); return; }
     enregistrer({
       legalName: nomLegal.trim(), companyNumber: bce.trim(), vatNumber: tva.trim(), responsibleName: responsable.trim(),
       afscaNumber: afsca.trim(), sellsAlcohol: alcool, alcoholAgeAck: engagementAge

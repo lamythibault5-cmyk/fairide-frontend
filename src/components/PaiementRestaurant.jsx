@@ -51,14 +51,14 @@ function CoordonneesLegales({ restaurant, onSaved, enchainer = false }) {
   }, [companyNumber, vatNumber]);
   async function enregistrer() {
     const chiffresBce = companyNumber.replace(/\D/g, '');
-    if (!chiffresBce) { toast(t('paiementResto.legalMissing')); return; }
+    if (!chiffresBce) { toast(t('paiementResto.legalMissing'), 'erreur'); return; }
     // En Belgique, le numéro de TVA est TOUJOURS « BE » + le numéro d'entreprise (même en franchise) : laissé vide, on
     // le déduit au lieu de le faire retaper (12 oct. 2026 — un champ de moins avant Stripe).
     const tva = vatNumber.trim() || `BE${chiffresBce}`;
     setSaving(true);
     try {
       await api(`/restaurants/${restaurant.id}`, { method: 'PATCH', token, body: { legalName: legalName.trim(), companyNumber: companyNumber.trim(), vatNumber: tva } });
-      if (!enchainer) toast(t('paiementResto.legalSaved'));
+      if (!enchainer) toast(t('paiementResto.legalSaved'), 'succes');
       setEdition(false); onSaved?.({ enchainer });
     } catch (e) { toast(e.message, 'erreur'); } finally { setSaving(false); }
   }

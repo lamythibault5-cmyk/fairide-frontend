@@ -1,8 +1,9 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 import useDialogue from '../hooks/useDialogue';
 import useFeuilleGlissable from '../hooks/useFeuilleGlissable';
+import { mouvementReduit } from '../gestes';
 
 // Un sous-écran du paiement : l'adresse, les options de remise.
 //
@@ -33,17 +34,28 @@ export default function SousEcran({ titre, onFermer, children, pied = null }) {
    * useDialogue garde cette séparation (voir son en-tête) et ajoute le piège à focus et le retour du
    * focus au bouton d'ouverture. Ce sous-écran contient des champs de saisie : c'est précisément
    * celui où un effet mal découpé se verrait le plus vite. */
-  useDialogue(racine, onFermer);
-  // Même geste que la fiche d'un plat : tirer vers le bas ferme (physique dans l'application, voir le hook).
+  // SORTIE ANIMÉE, comme la fiche d'un plat (audit du 15/10/2026) : le sous-écran montait du bas mais s'éteignait d'un coup
+  // au ‹ ou à Échap. Il redescend (mêmes classes que FichePlat), puis l'appelant le démonte. Sans mouvement : tout de suite.
+  // Une fermeture décidée par l'appelant (« Enregistrer ») reste immédiate : rien n'attend une animation pour agir.
+  const [ferme, setFerme] = useState(false);
+  function fermerAnime() {
+    if (ferme) return;
+    if (mouvementReduit()) { onFermer(); return; }
+    setFerme(true);
+    setTimeout(onFermer, 230);
+  }
+  useDialogue(racine, fermerAnime);
+  // Même geste que la fiche d'un plat : tirer vers le bas ferme (physique dans l'application, voir le hook). Fermé par le
+  // ressort, le panneau est déjà hors de l'écran : on ferme sans rejouer la sortie (fermerTout).
   const panneau = useRef(null);
   const defile = useRef(null);
-  const glisser = useFeuilleGlissable({ panneau, defile, fermerAnime: onFermer });
+  const glisser = useFeuilleGlissable({ panneau, defile, fermerAnime, fermerTout: onFermer });
 
   return createPortal(
-    <div className="plat-feuille" role="dialog" aria-modal="true" aria-label={titre} ref={racine} tabIndex={-1}>
+    <div className={`plat-feuille${ferme ? ' plat-feuille--ferme' : ''}`} role="dialog" aria-modal="true" aria-label={titre} ref={racine} tabIndex={-1}>
       <div className="plat-panneau" ref={panneau} {...glisser}>
         <div className="sous-ecran-tete">
-          <button type="button" className="flux-bouton" onClick={onFermer} aria-label={t('common.close')} title={t('common.close')}>
+          <button type="button" className="flux-bouton" onClick={fermerAnime} aria-label={t('common.close')} title={t('common.close')}>
             <span aria-hidden="true">‹</span>
           </button>
           <span className="flux-titre">{titre}</span>

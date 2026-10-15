@@ -6,6 +6,13 @@ export function mouvementReduit() {
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
 }
 
+// Comportement de défilement à passer à scrollIntoView / scrollTo : « smooth », sauf si l'utilisateur a demandé moins de
+// mouvement. Un `behavior: 'smooth'` écrit en dur passe outre la règle CSS globale de mouvement réduit (styles.css), qui ne
+// touche que les animations CSS : onze défilements l'ignoraient (audit du 15/10/2026).
+export function defilement() {
+  return mouvementReduit() ? 'auto' : 'smooth';
+}
+
 // Un « tic » sous le doigt, comme un bouton physique. Android seulement ; muet ailleurs.
 import { estNatif, vibrerNatif } from './natif';
 

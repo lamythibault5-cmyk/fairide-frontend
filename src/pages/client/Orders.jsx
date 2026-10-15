@@ -67,7 +67,7 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
         }
         return;
       }
-      toast(t('review.toastThanks'));
+      toast(t('review.toastThanks'), 'succes');
       onDone();
     } catch (e) {
       toast(e.message, 'erreur');
@@ -92,7 +92,7 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
               <button
                 key={amount}
                 type="button"
-                className={tipChoice === amount && !tipInput.trim() ? 'btn-gold' : 'btn-ghost'}
+                className={tipChoice === amount && !tipInput.trim() ? 'btn-teal' : 'btn-ghost'}
                 onClick={() => { setTipChoice(amount); setTipInput(''); }}
                 style={{ padding: '6px 12px', fontSize: 13 }}
               >
@@ -122,6 +122,8 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
+  // Annuler une commande passe par une confirmation (audit du 15/10/2026) : un toucher l'annulait aussitôt.
+  const [aAnnuler, setAAnnuler] = useState(null);
   const { token, role } = useAuth();
   const toast = useToast();
   const { previewMode } = usePreviewMode();
@@ -151,7 +153,7 @@ export default function Orders() {
       if (!confirme && cart.hasConflict(restaurant.id)) { setARecommander(order); return; }
       cart.addMany({ restaurantId: restaurant.id, restaurantName: restaurant.name, lignes });
       if (manquants.length) toast(t('orders.reorderMissing', { items: manquants.join(', ') }));
-      else toast(t('orders.reorderDone'));
+      else toast(t('orders.reorderDone'), 'succes');
       navigate('/panier');
     } catch (e) {
       toast(e.message, 'erreur');
@@ -179,7 +181,44 @@ export default function Orders() {
     try {
       const updated = await api(`/orders/${orderId}/cancel`, { method: 'PATCH', token });
       setOrders((prev) => prev.map((x) => (x.id === orderId ? updated : x)));
-      toast(t('orders.toastCancelled'));
+      toast(t('orders.toastCancelled'), 'succes');
+    } catch (e) {
+      toast(e.message, 'erreur');
+    } finally {
+      setCancellingId(null);
+    }
+  }
+
+  // Commande en ligne créée mais jamais payée : le commerce ne la voit pas (il ne reçoit que les commandes payées).
+  const impayeeEnLigne = (o) => o.status === 'nouveau' && !o.paid && o.paymentMode !== 'on_site';
+  const [payingId, setPayingId] = useState(null);
+  // Même chemin que « Commander et payer » au checkout : une nouvelle session Stripe pour CETTE commande.
+  async function payerMaintenant(o) {
+    setPayingId(o.id);
+    try {
+      const pay = await api(`/payments/checkout/${o.id}`, { method: 'POST', token });
+      if (pay.simulated) {
+        cart.discardStashed();
+        setOrders(await api('/orders/mine', { token }));
+        toast(t('checkout.toastOrderPaid'), 'succes');
+        setPayingId(null);
+      } else {
+        await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
+      }
+    } catch (e) {
+      toast(e.message, 'erreur');
+      setPayingId(null);
+    }
+  }
+  // Annule la commande impayée (le solde et le bon cadeau retenus sont rendus par le serveur) et rend le panier mis de côté
+  // pour elle, s'il est encore là — sinon on renvoie au commerce, où le client recompose sa commande.
+  async function revenirAuPanier(o) {
+    setCancellingId(o.id);
+    try {
+      const updated = await api(`/orders/${o.id}/cancel`, { method: 'PATCH', token });
+      setOrders((prev) => prev.map((x) => (x.id === o.id ? updated : x)));
+      if (cart.restoreStashed(o.id)) navigate('/panier');
+      else navigate(`/restaurants/${o.restaurantId}`);
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -306,13 +345,30 @@ export default function Orders() {
             <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
             <b>{euros(o.total)}</b>
           </div>
-          {o.status === 'nouveau' && (
+          {/* PAIEMENT NON TERMINÉ (audit du 15/10/2026). Revenu de Stripe sans payer (bouton Retour, navigateur de l'appli
+              fermé), le client trouvait ici « le commerce doit encore confirmer » et un seul bouton Annuler, et son panier
+              avait disparu. Deux choix, faits par lui et non devinés : payer cette commande-ci, ou l'annuler et retrouver son
+              panier. Rien n'est annulé tout seul : Stripe peut confirmer un paiement quelques secondes après la fermeture. */}
+          {impayeeEnLigne(o) && (
+            <div className="paiement-non-termine">
+              <p className="small" style={{ margin: '0 0 10px' }}>{t('orders.unpaidText')}</p>
+              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                <button type="button" className="btn-gold" disabled={payingId === o.id || cancellingId === o.id} onClick={() => payerMaintenant(o)}>
+                  {payingId === o.id ? '…' : t('orders.payNow')}
+                </button>
+                <button type="button" className="btn-outline" disabled={payingId === o.id || cancellingId === o.id} onClick={() => revenirAuPanier(o)}>
+                  {cancellingId === o.id ? '…' : t('orders.backToCart')}
+                </button>
+              </div>
+            </div>
+          )}
+          {o.status === 'nouveau' && !impayeeEnLigne(o) && (
             <>
               <button
                 className="btn-ghost"
                 style={{ marginTop: 8, color: 'var(--red)' }}
                 disabled={cancellingId === o.id}
-                onClick={() => cancelOrder(o.id)}
+                onClick={() => setAAnnuler(o)}
               >
                 {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
               </button>
@@ -350,6 +406,15 @@ export default function Orders() {
         </div>
         </Fragment>
       ))}
+      <ConfirmDialog
+        open={!!aAnnuler}
+        title={t('orders.cancelConfirmTitle')}
+        message={t(aAnnuler?.paid ? 'orders.cancelConfirmPaid' : 'orders.cancelConfirmBody')}
+        confirmLabel={t('orders.cancelOrder')}
+        danger
+        onCancel={() => setAAnnuler(null)}
+        onConfirm={() => { const o = aAnnuler; setAAnnuler(null); cancelOrder(o.id); }}
+      />
       <ConfirmDialog
         open={!!aRecommander}
         title={t('orders.reorderConflictTitle')}

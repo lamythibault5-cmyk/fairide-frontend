@@ -35,7 +35,7 @@ export default function DispatchTab() {
   async function enregistrer() {
     const body = {};
     for (const cle of Object.keys(saisie)) body[cle] = cle === 'delivery_no_courier_cancel_min' || cle === 'delivery_seller' ? saisie[cle] : Number(saisie[cle]);
-    try { await api('/admin/compliance/parameters', { method: 'PATCH', token, body }); toast(t('conformite.paramsSaved')); chargerParams(); }
+    try { await api('/admin/compliance/parameters', { method: 'PATCH', token, body }); toast(t('conformite.paramsSaved'), 'succes'); chargerParams(); }
     catch (e) { toast(e.message, 'erreur'); }
   }
   return (

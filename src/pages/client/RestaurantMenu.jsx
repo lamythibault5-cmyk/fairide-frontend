@@ -19,7 +19,7 @@ import { StarsDisplay } from '../../components/Stars';
 // l'affichage d'une fiche de commerce, qui est une page publique et indexable.
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 import FichePlat from '../../components/FichePlat';
-import { envolerVersPanier, vibrer } from '../../gestes';
+import { envolerVersPanier, vibrer, defilement } from '../../gestes';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import EnteteFlux from '../../components/EnteteFlux';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
@@ -92,6 +92,10 @@ export default function RestaurantMenu() {
   // Article qu'on essayait d'ajouter quand le panier contenait déjà un autre commerce (voir addToCart) —
   // conservé le temps que l'utilisateur confirme ou annule le remplacement du panier.
   const [conflictItem, setConflictItem] = useState(null);
+  // Panier d'un autre commerce que le client a accepté de remplacer : il ne l'est qu'AU MOMENT où le plat est ajouté
+  // (addOne force=true), pas à l'ouverture de la fiche — fermer la fiche sans rien ajouter vidait quand même l'ancien
+  // panier (audit du 15/10/2026).
+  const [remplacerPanier, setRemplacerPanier] = useState(false);
   // Un seul avis « commerce fermé, ton panier est gardé » par visite de la fiche.
   const avertiFerme = useRef(false);
   const cart = useCart();
@@ -357,7 +361,7 @@ export default function RestaurantMenu() {
     // n'a lieu qu'après un second aller-retour. C'est précisément le cas que l'ancien code traitait
     // déjà à part, et la raison qu'il en donnait vaut désormais pour tous les plats — pas de closure
     // périmée, le changement de commerce peut être appliqué séparément dès maintenant.
-    cart.switchRestaurant(id, restaurant.name);
+    setRemplacerPanier(true);
     setPickerItem(item);
   }
 
@@ -388,7 +392,7 @@ export default function RestaurantMenu() {
             <form className="recherche-champ fiche-recherche" role="search" onSubmit={(e) => {
               e.preventDefault();
               champRechercheRef.current?.blur();
-              document.querySelector('[id^="menu-cat-"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              document.querySelector('[id^="menu-cat-"]')?.scrollIntoView({ behavior: defilement(), block: 'start' });
             }}>
               <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={18} /></span>
               <input
@@ -662,15 +666,16 @@ export default function RestaurantMenu() {
         <FichePlat
           item={{ ...pickerItem, ...localizedItem(pickerItem, language) }}
           imageUrl={resolveItemImage(pickerItem, restaurant.sections)}
-          onCancel={() => setPickerItem(null)}
+          onCancel={() => { setPickerItem(null); setRemplacerPanier(false); }}
           onConfirm={(optionItemIds, snapshot, unitPrice, qty, note) => {
             // Le nom enregistré est le nom TRADUIT, comme lors d'un ajout direct : l'ancienne
             // fenêtre gardait `pickerItem.name`, donc un panier en néerlandais pouvait afficher des
             // plats en français selon la façon dont on les avait ajoutés.
             // Même image que la fiche et que la carte : sinon le panier affichait le carré gris de
             // repli pour un plat dont on venait de voir la photo en grand.
-            cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: pickerItem.id, name: localizedItem(pickerItem, language).name, imageUrl: resolveItemImage(pickerItem, restaurant.sections), unitPrice, optionItemIds, optionsSnapshot: snapshot, qty, note });
+            cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: pickerItem.id, name: localizedItem(pickerItem, language).name, imageUrl: resolveItemImage(pickerItem, restaurant.sections), unitPrice, optionItemIds, optionsSnapshot: snapshot, qty, note, force: remplacerPanier });
             setPickerItem(null);
+            setRemplacerPanier(false);
           }}
         />
       )}
@@ -723,7 +728,8 @@ export default function RestaurantMenu() {
             )}
 
           <div className="modal-pied">
-            <button type="button" className="btn-gold" onClick={() => setInfosOuvertes(false)}>{t('common.close')}</button>
+            {/* Fermer n'est pas une étape : contour, pas lime (audit du 15/10/2026, « une pointe de lime par vue »). */}
+            <button type="button" className="btn-outline" onClick={() => setInfosOuvertes(false)}>{t('common.close')}</button>
           </div>
         </Modale>
       )}

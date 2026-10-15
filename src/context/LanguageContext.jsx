@@ -16,6 +16,12 @@ function resolve(dict, path) {
   return path.split('.').reduce((node, key) => (node == null ? undefined : node[key]), dict);
 }
 
+// Traduction hors composant (api.js) : même règle que t() — langue active, puis français, puis la clé. Sans variables.
+// Les messages d'erreur du réseau et de session expirée y passaient en français quelle que soit la langue choisie.
+export function traduire(key) {
+  return resolve(translations[langueCourante], key) ?? resolve(translations[DEFAULT_LANGUAGE], key) ?? key;
+}
+
 // `initial` vient de l'ADRESSE, lue dans main.jsx : /nl/… affiche le néerlandais, point. Le choix
 // n'est plus lu dans localStorage au démarrage — deux sources de vérité pour une même question
 // donnaient une page néerlandaise servie sous une adresse française, c'est-à-dire exactement le

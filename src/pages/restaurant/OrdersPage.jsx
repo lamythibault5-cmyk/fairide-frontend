@@ -25,6 +25,9 @@ import { euros } from '../../prixPlat';
 import EtatVide from '../../components/EtatVide';
 
 // Où en est le ticket de la commande sur le terminal Fairide (backend : GET /orders/restaurant/:id → print).
+// « #012 » : même forme que le ticket imprimé et la fenêtre « nouvelle commande » (NouvelleCommandeModale).
+const numeroCommande = (o) => `#${String(o.orderNumber).padStart(3, '0')}`;
+
 function EtatImpression({ p, t }) {
   if (!p) return null;
   const raison = p.lastError ? t(`terminal.printer_${p.lastError}`, {}) : '';
@@ -54,6 +57,28 @@ export default function OrdersPage() {
   const { token } = useAuth();
   const toast = useToast();
   const { orders, restaurant, restoId, loadDashboard } = useOutletContext();
+
+  /* ÉCRAN ALLUMÉ PENDANT LE SERVICE (audit UX du 15/10/2026). Une tablette de comptoir qui se met en veille ne sonne plus
+     et ne voit plus les commandes : après 15 minutes elles sont annulées (acceptation.js), et le commerce mis en pause.
+     Seulement sur cette page (pas tout le tableau de bord : un téléphone laissé sur « Ma carte » viderait sa batterie),
+     redemandé au retour sur l'onglet — le navigateur relâche le verrou dès que la page est cachée. Sans l'API (anciens
+     navigateurs), rien ne change. */
+  useEffect(() => {
+    if (!('wakeLock' in navigator)) return undefined;
+    let verrou = null;
+    let actif = true;
+    const prendre = async () => {
+      if (!actif || document.visibilityState !== 'visible') return;
+      try { verrou = await navigator.wakeLock.request('screen'); } catch { /* refusé (économie d'énergie) : sans effet */ }
+    };
+    prendre();
+    document.addEventListener('visibilitychange', prendre);
+    return () => {
+      actif = false;
+      document.removeEventListener('visibilitychange', prendre);
+      verrou?.release?.().catch(() => {});
+    };
+  }, []);
 
   // On garde la commande choisie, mais on affiche toujours sa dernière version (sondage de 15 s, actions) :
   // un instantané restait « Prête » avec son champ de code après validation, et un second clic échouait.
@@ -216,7 +241,7 @@ export default function OrdersPage() {
     try {
       await api(`/orders/${orderId}/confirm-takeaway`, { method: 'PATCH', token, body: { code, ...(ageVerifie ? { ageCheck: 'verified' } : {}) } });
       setPickupCodeInputs((prev) => { const next = { ...prev }; delete next[orderId]; return next; });
-      toast(t('ordersResto.toastTakeawayDone'));
+      toast(t('ordersResto.toastTakeawayDone'), 'succes');
       loadDashboard(restoId);
     } catch (e) {
       toast(e.message, 'erreur');
@@ -277,7 +302,9 @@ export default function OrdersPage() {
       onClick={() => setSelectedOrder(o)}
     >
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: `${stageColor}22`, color: stageColor }}>
+        {/* Étape en texte foncé, la couleur sur la pastille seule (audit du 15/10/2026) : le libellé était écrit dans la couleur
+            de l'étape sur un fond de cette même couleur, en 11 px (« En préparation » lime sur lime : contraste 1,3:1). */}
+        <span className="etape-pastille" style={{ '--etape-couleur': stageColor }}>
           <Icone nom={stage.icon} taille={16} className="icone-texte" /> {t(`orderStatus.stage_${stage.key}`)}
         </span>
         <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
@@ -294,7 +321,9 @@ export default function OrdersPage() {
       </div>
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <b>{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6 }}>{t('ordersResto.trainingBadge')}</span>}</b>
-        <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
+        {/* Le numéro du ticket imprimé et de la fenêtre « nouvelle commande », en grand : c'est lui qu'on annonce en cuisine.
+            Il remplace le badge de statut, qui répétait l'étape écrite juste au-dessus. */}
+        {o.orderNumber ? <span className="commande-numero">{numeroCommande(o)}</span> : <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>}
       </div>
       <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
       {o.print && <div style={{ margin: '4px 0' }}><EtatImpression p={o.print} t={t} /></div>}
@@ -329,8 +358,9 @@ export default function OrdersPage() {
             <button className="btn-outline btn-sm" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
           </>
         )}
+        {/* Iris et non lime : avec plusieurs commandes en préparation, l'écran alignait autant de boutons lime. */}
         {o.status === 'preparation' && (
-          <button className="btn-gold btn-sm" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+          <button className="btn-teal btn-sm" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
         )}
         {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
           <button className="btn-ghost btn-sm" style={{ color: 'var(--red)' }} onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{t('ordersResto.customerNoShow')}</button>
@@ -392,7 +422,7 @@ export default function OrdersPage() {
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
               <h3 style={{ margin: 0 }}>{t('ordersResto.orderOf', { name: selectedOrder.clientName })}</h3>
-              <span className={`status-badge status-${selectedOrder.status}`}>{statusLabel(selectedOrder.status, selectedOrder.orderType, t)}</span>
+              {selectedOrder.orderNumber ? <span className="commande-numero">{numeroCommande(selectedOrder)}</span> : <span className={`status-badge status-${selectedOrder.status}`}>{statusLabel(selectedOrder.status, selectedOrder.orderType, t)}</span>}
             </div>
             <div className={`order-type-badge order-type-badge-${orderTypeColor(selectedOrder)}`} style={{ marginBottom: 8 }}>{orderTypeLabel(selectedOrder, t)}</div>
             {(() => {
@@ -400,7 +430,7 @@ export default function OrdersPage() {
               const stg = ORDER_STAGES.find((s) => s.key === sk);
               const col = stageColors[sk];
               return (
-                <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, marginBottom: 8, background: `${col}22`, color: col }}>
+                <span className="etape-pastille" style={{ '--etape-couleur': col, marginBottom: 8 }}>
                   <Icone nom={stg.icon} taille={16} className="icone-texte" /> {t(`orderStatus.stage_${stg.key}`)}
                 </span>
               );

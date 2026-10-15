@@ -33,7 +33,7 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
       if (Number.isNaN(min) || min < 5 || min > 200) { toast(t('editResto.toastAmount5_200')); return; }
     }
     const propre = fraisPropres.trim() === '' ? null : Number(fraisPropres.replace(',', '.'));
-    if (livreLuiMeme && propre !== null && (Number.isNaN(propre) || propre < 0 || propre > 20)) { toast(t('editResto.ownFeeInvalid')); return; }
+    if (livreLuiMeme && propre !== null && (Number.isNaN(propre) || propre < 0 || propre > 20)) { toast(t('editResto.ownFeeInvalid'), 'erreur'); return; }
     setEnCours(true);
     try {
       await api(`/restaurants/${restoId}/delivery-discount`, {
@@ -41,7 +41,7 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
         body: { freeDelivery: gratuite, deliveryFeeDiscount: gratuite ? 0 : montant, freeDeliveryMinOrder: min, ...(livreLuiMeme ? { ownDeliveryFee: propre } : {}) }
       });
       await loadDashboard(restoId);
-      toast(t('editResto.toastOfferUpdated'));
+      toast(t('editResto.toastOfferUpdated'), 'succes');
       onFermer();
     } catch (e) {
       toast(e.message, 'erreur');

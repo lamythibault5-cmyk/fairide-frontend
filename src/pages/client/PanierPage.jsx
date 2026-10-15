@@ -8,6 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import Icone from '../../components/Icone';
 import EnteteFlux from '../../components/EnteteFlux';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/UpsellPanier';
 import { euros, libellePromo } from '../../prixPlat';
 
@@ -26,6 +27,8 @@ export default function PanierPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { token } = useAuth();
+  // « Vider » demande confirmation (audit du 15/10/2026) : un toucher effaçait tout le panier, sans retour possible.
+  const [viderOuvert, setViderOuvert] = useState(false);
   const [restaurant, setRestaurant] = useState(null);
   const [chargement, setChargement] = useState(true);
 
@@ -84,7 +87,9 @@ export default function PanierPage() {
             </div>
           </div>
         ))}
-        <button type="button" className="btn-ghost panier-vider" onClick={() => cart.clearLines()}>{t('floatingCart.clear')}</button>
+        <button type="button" className="btn-ghost panier-vider" onClick={() => setViderOuvert(true)}>{t('floatingCart.clear')}</button>
+        <ConfirmDialog open={viderOuvert} title={t('floatingCart.clearConfirmTitle')} message={t('floatingCart.clearConfirmBody')}
+          confirmLabel={t('floatingCart.clear')} danger onConfirm={() => { setViderOuvert(false); cart.clearLines(); }} onCancel={() => setViderOuvert(false)} />
       </div>
 
       {restaurant && <LastChanceUpsell desserts={desserts} drinks={drinks} restaurant={restaurant} cart={cart} t={t} />}

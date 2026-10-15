@@ -197,6 +197,9 @@ export function ProchaineEtape({ order }) {
   const { status, orderType } = order;
   const livraison = orderType === 'delivery';
   let cle = null;
+  // Paiement en ligne pas terminé : le commerce ne voit pas encore la commande, « il doit la confirmer » serait faux. Mes
+  // commandes affiche à la place « Paiement non terminé » et ses deux choix (Orders.jsx, impayeeEnLigne).
+  if (status === 'nouveau' && order.paid === false && order.paymentMode !== 'on_site') return null;
   if (status === 'nouveau' && order.acceptDeadline) {
     return <div className="small order-next">{t('orderStatus.next_nouveau_deadline', { time: formatTime(order.acceptDeadline) })}</div>;
   }

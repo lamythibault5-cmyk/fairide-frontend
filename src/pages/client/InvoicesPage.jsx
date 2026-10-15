@@ -61,7 +61,7 @@ export default function InvoicesPage() {
   }
 
   async function downloadSelected() {
-    if (selected.size === 0) { toast(t('invoicesClient.toastSelectOne')); return; }
+    if (selected.size === 0) { toast(t('invoicesClient.toastSelectOne'), 'erreur'); return; }
     setDownloading(true);
     try {
       // apiDownload gère désormais POST + corps JSON, et surtout le 401 : un client dont la session a

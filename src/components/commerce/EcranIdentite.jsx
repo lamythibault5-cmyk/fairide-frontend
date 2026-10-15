@@ -40,7 +40,7 @@ export default function EcranIdentite({ restaurant, restoId, loadDashboard, onFe
   }
 
   function valider() {
-    if (!nom.trim()) { toast(t('editResto.toastNameRequired')); return; }
+    if (!nom.trim()) { toast(t('editResto.toastNameRequired'), 'erreur'); return; }
     enregistrer({ name: nom.trim(), desc: desc.trim(), coverImageUrl: couverture.trim(), logoImageUrl: logo.trim() });
   }
 

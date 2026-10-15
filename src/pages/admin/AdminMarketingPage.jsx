@@ -15,6 +15,7 @@ import { StatusPill } from './marketing/MarketingPills';
 import { STATUSES, resumeAudience } from './marketing/marketingUtils';
 import '../../admin-marketing.css';
 import useEtatPage from '../../hooks/useEtatPage';
+import { defilement } from '../../gestes';
 
 // Application Marketing : campagnes e-mail ciblées. Trois onglets — Campagnes (KPI + liste + fiche
 // dans le tiroir), Nouvelle campagne (formulaire avec audience en direct et aperçu), Désinscrits.
@@ -75,7 +76,7 @@ export default function AdminMarketingPage() {
     setSelectedId(null);
     setEdition(c);
     setOnglet('nouvelle');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: defilement() });
   }
   function nouvelle() { setEdition(null); setOnglet('nouvelle'); }
 

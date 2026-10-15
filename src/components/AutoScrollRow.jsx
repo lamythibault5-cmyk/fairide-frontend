@@ -220,6 +220,10 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, m
     viewport.addEventListener('click', onClickCapture, true);
     viewport.addEventListener('mouseenter', onEnter);
     viewport.addEventListener('mouseleave', onLeave);
+    // Clavier (WCAG 2.2.2, audit du 15/10/2026) : une carte atteinte avec Tab arrête la rangée, comme le survol ; elle
+    // repart quand le focus en sort. Sans ça, la carte focalisée filait hors de l'écran sous les yeux.
+    viewport.addEventListener('focusin', onEnter);
+    viewport.addEventListener('focusout', onLeave);
     viewport.addEventListener('wheel', onWheel, { passive: false });
 
     return () => {
@@ -235,6 +239,8 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, m
       viewport.removeEventListener('click', onClickCapture, true);
       viewport.removeEventListener('mouseenter', onEnter);
       viewport.removeEventListener('mouseleave', onLeave);
+      viewport.removeEventListener('focusin', onEnter);
+      viewport.removeEventListener('focusout', onLeave);
       viewport.removeEventListener('wheel', onWheel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

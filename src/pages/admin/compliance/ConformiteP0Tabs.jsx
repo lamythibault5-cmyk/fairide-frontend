@@ -174,7 +174,7 @@ export function BreachesTab() {
   async function enregistrer() {
     try {
       await api('/admin/compliance/breaches', { method: 'POST', token, body: { ...nouvelle, personsCount: nouvelle.personsCount ? Number(nouvelle.personsCount) : undefined } });
-      setNouvelle(null); toast(t('conformite.breachSaved')); charger();
+      setNouvelle(null); toast(t('conformite.breachSaved'), 'succes'); charger();
     } catch (e) { toast(e.message, 'erreur'); }
   }
   const marquer = (b, champ) => api(`/admin/compliance/breaches/${b.id}`, { method: 'PATCH', token, body: { [champ]: new Date().toISOString() } }).then(charger).catch((e) => toast(e.message, 'erreur'));
@@ -233,7 +233,7 @@ export function ProcessorsTab() {
   const val = (p, k) => (edition[p.name]?.[k] ?? p[k] ?? '');
   const poser = (p, k, v) => setEdition((e) => ({ ...e, [p.name]: { ...(e[p.name] || {}), [k]: v } }));
   async function enregistrer(p) {
-    try { await api(`/admin/compliance/processors/${encodeURIComponent(p.name)}`, { method: 'PATCH', token, body: edition[p.name] || {} }); setEdition((e) => ({ ...e, [p.name]: undefined })); toast(t('conformite.processorSaved')); charger(); }
+    try { await api(`/admin/compliance/processors/${encodeURIComponent(p.name)}`, { method: 'PATCH', token, body: edition[p.name] || {} }); setEdition((e) => ({ ...e, [p.name]: undefined })); toast(t('conformite.processorSaved'), 'succes'); charger(); }
     catch (e) { toast(e.message, 'erreur'); }
   }
   return (
@@ -326,7 +326,7 @@ export function ParametersTab() {
   async function enregistrer() {
     try {
       await api('/admin/compliance/parameters', { method: 'PATCH', token, body: { ...(age ? { alcohol_min_age: Number(age) } : {}), ...(date !== null ? { allergens_per_item_required_from: date } : {}), ...autres } });
-      toast(t('conformite.paramsSaved')); setAge(''); setDate(null); setAutres({}); charger();
+      toast(t('conformite.paramsSaved'), 'succes'); setAge(''); setDate(null); setAutres({}); charger();
     } catch (e) { toast(e.message, 'erreur'); }
   }
   const champ = (cle) => (autres[cle] !== undefined ? autres[cle] : lire(cle));

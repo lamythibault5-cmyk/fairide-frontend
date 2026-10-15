@@ -29,7 +29,7 @@ export default function EcranCuisines({ restaurant, restoId, loadDashboard, onFe
     try {
       await api(`/restaurants/${restoId}/extra-cuisines`, { method: 'PATCH', token, body: { cuisines: choix } });
       await loadDashboard?.(restoId);
-      toast(t('editResto.cuisinesSaved'));
+      toast(t('editResto.cuisinesSaved'), 'succes');
       onFermer();
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(false); }
   }

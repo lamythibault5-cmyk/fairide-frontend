@@ -57,7 +57,8 @@ export default function InterrupteurService({ restaurant, restoId, token, toast,
           </div>
           {/* Plus rien à préparer aujourd'hui : stoppé jusqu'au lendemain 6 h, rouvre tout seul (fondateur, 2026-10-10). */}
           <div className="paiement-encart" style={{ marginBottom: 12 }}>
-            <button type="button" className="btn-gold" disabled={enCours} style={{ width: '100%', minHeight: 48 }} onClick={() => stopperJour(true)}><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{t('ordersResto.stopTodayBtn')}</button>
+            {/* Arrêter pour la journée n'est pas l'action mise en avant de cet écran : contour, comme « Fermer jusqu'à réouverture ». */}
+            <button type="button" className="btn-outline" disabled={enCours} style={{ width: '100%', minHeight: 48 }} onClick={() => stopperJour(true)}><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{t('ordersResto.stopTodayBtn')}</button>
             <p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.stopTodayHelp')}</p>
           </div>
           <button type="button" className="btn-outline" disabled={enCours} style={{ width: '100%', minHeight: 48 }} onClick={() => ouvrir(false)}>{t('ordersResto.closeUntilReopen')}</button>

@@ -19,7 +19,7 @@ export const ATTENTE_PORTE_MIN = 10;
 export const APPELS_CLIENT_MIN = 2;
 
 // Libellé d'un manquement du dossier livreur ajouté par le backlog (les autres restent dans courierOnboarding).
-export const MANQUES_CONFORMITE = ['nationalite', 'titre_sejour', 'carte_professionnelle', 'transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate'];
+export const MANQUES_CONFORMITE = ['nationalite', 'titre_sejour', 'carte_professionnelle', 'transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur'];
 export function libelleManque(m, t) {
   return MANQUES_CONFORMITE.includes(m) ? t(`conformite.courierMissing_${m}`) : t(`courierOnboarding.missing_${m}`);
 }

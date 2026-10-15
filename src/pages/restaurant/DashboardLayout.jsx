@@ -13,10 +13,9 @@ import NouvelleCommandeModale from '../../components/NouvelleCommandeModale';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
-import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
+import { useLanguage } from '../../context/LanguageContext';
 import BandeauOuverture from '../../components/BandeauOuverture';
-import CarteAValider from '../../components/commerce/CarteAValider';
+import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import { cuisineDepuisOsm } from '../../osmCuisine';
 import { demarrerTerminalNavigateur } from '../../terminalNavigateur';
 import { remonterEnHaut } from '../../remonter';
@@ -86,7 +85,7 @@ export default function DashboardLayout() {
       // le formulaire ne s'ouvre qu'en dernier recours, déjà prérempli.
       else if (list.length === 0) {
         creerDepuisIndice().then((r) => {
-          if (r) { setMyRestos([r]); pickResto(r.id); toast(t('dashResto.toastAutoCreated', { name: r.name })); }
+          if (r) { setMyRestos([r]); pickResto(r.id); toast(t('dashResto.toastAutoCreated', { name: r.name }), 'succes'); }
           else setNewRestoOpen(true);
         });
       }
@@ -271,7 +270,7 @@ export default function DashboardLayout() {
       window.location.href = r.url;
     } catch (e) {
       // Numéros d'entreprise / TVA manquants : on emmène vers la sous-section Paiement qui les demande.
-      if (e.code === 'LEGAL_INFO_REQUIRED' || /LEGAL_INFO_REQUIRED|numéro d'entreprise/i.test(e.message || '')) { toast(t('dashResto.toastLegalFirst')); navigate('/account?ouvrir=paiement&retour=/dashboard'); }
+      if (e.code === 'LEGAL_INFO_REQUIRED' || /LEGAL_INFO_REQUIRED|numéro d'entreprise/i.test(e.message || '')) { toast(t('dashResto.toastLegalFirst'), 'erreur'); navigate('/account?ouvrir=paiement&retour=/dashboard'); }
       else toast(e.message, 'erreur');
       setConnecting(false);
     }
@@ -315,14 +314,10 @@ export default function DashboardLayout() {
       )}
       {/* Les vraies dates d'ouverture des commandes (à emporter, livraison), en tête de l'accueil du commerce. */}
       {restaurant && surAccueil && <BandeauOuverture role="restaurant" />}
-      {/* CODE-3 : carte proposée par Fairide, pas encore validée — sur toutes les pages (le terminal reste sur Commandes). */}
-      {restaurant && !actingAs && <CarteAValider restaurant={restaurant} restoId={restoId} token={token} />}
       {newRestoOpen && surAccueil && <CreationCommerce fondateur={fondateur} onCree={commerceCree} ouvrirDemandeCarte={ouvrirDemandeCarte} />}
 
-      {/* Ce qui bloque encore le commerce, en rangées du même dessin que Mon compte (LigneCompte) : la
-          validation par Fairide, les paiements Stripe. Le détail se déplie ; la carte n'existe que s'il
-          reste quelque chose à faire — un commerce validé et payé n'a rien à lire ici. */}
-      {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active' || (!restaurant.publicListed && !restaurant.isDemo) || restaurant.fairideDeliveryDisabled) && (
+      {/* Deux alertes qui ne sont pas des étapes : le blocage par l'équipe, la livraison coupée dans la zone. */}
+      {restaurant && (restaurant.adminStatus === 'blocked' || restaurant.fairideDeliveryDisabled) && (
         <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
           {restaurant.adminStatus === 'blocked' && (
             <LigneCompte accent="danger" icone="interdit" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
@@ -331,50 +326,21 @@ export default function DashboardLayout() {
               </p>
             </LigneCompte>
           )}
-          {restaurant.adminStatus !== 'approved' && restaurant.adminStatus !== 'blocked' && (
-            <LigneCompte accent="warn" icone="horloge" titre={t('dashResto.pendingTitle')} sous={t('dashResto.pendingSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
-              <p className="small" style={{ margin: 0 }}>
-                {t('dashResto.pendingText')}
-              </p>
-            </LigneCompte>
-          )}
-          {/* Validé mais pas encore publié : le commerce n'apparaît pas aux clients, et le restaurateur doit le
-              savoir sans avoir à le deviner en cherchant sa fiche sur le site. */}
-          {restaurant.adminStatus === 'approved' && !restaurant.publicListed && !restaurant.isDemo && (
-            <LigneCompte accent="warn" icone="masque" titre={t('dashResto.notListedTitle')} sous={t('dashResto.notListedSub')} ouverte={statutOuvert === 'visibilite'} onClick={() => setStatutOuvert(statutOuvert === 'visibilite' ? null : 'visibilite')}>
-              <p className="small" style={{ margin: 0 }}>{t('dashResto.notListedText')}</p>
-            </LigneCompte>
-          )}
-          {/* À emporter payé uniquement sur place : aucun paiement ne transite par Fairide, la rangée n'a rien à demander.
-              Même règle que formules.paiementsRequis côté serveur. */}
           {/* Livraison Fairide coupée par l'équipe : commerce seul dans sa zone, aucun livreur à proximité (2026-10-08). */}
           {restaurant.fairideDeliveryDisabled && (
             <LigneCompte accent="warn" icone="scooter" titre={t('dashResto.zoneDeliveryOffTitle')}
               sous={t('dashResto.zoneDeliveryOffText') + (restaurant.fairideDeliveryDisabledReason ? ` (${restaurant.fairideDeliveryDisabledReason})` : '')} />
           )}
-          {/* Fondateur, 2026-10-09 : à configurer dès l'inscription, pour tout commerce sans compte Stripe actif. */}
-          {restaurant.stripeConnectStatus !== 'active' && (
-            <LigneCompte
-              accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"
-              titre={restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.paymentInfoTitle') : t('dashResto.paymentsToConfigure')}
-              sous={restaurant.stripeConnectStatus === 'restricted'
-                ? t('dashResto.stripeNeedsInfoResto')
-                : paiementsOuverts() ? t('dashResto.viaStripeNow') : t('dashResto.viaStripeResto', { date: dateOuverturePaiements(getLocale()) })}
-              action={restaurant.stripeConnectStatus === 'restricted' ? (
-                <button type="button" className="btn-gold btn-sm" disabled={connecting} onClick={connectOnboard}>
-                  {connecting ? '...' : t('dashResto.complete')}
-                </button>
-              ) : paiementsOuverts() ? (
-                <button type="button" className="btn-gold btn-sm" disabled={connecting} onClick={connectOnboard}>
-                  {connecting ? '...' : t('dashResto.paymentsConfigureBtn')}
-                </button>
-              ) : (
-                // Activation pas encore ouverte : le détail (et Stripe expliqué) est dans Mon compte › Paiement.
-                <Link to="/account?ouvrir=paiement&retour=/dashboard" className="btn-outline btn-sm" style={{ display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
-              )}
-            />
-          )}
         </div>
+      )}
+      {/* Tout ce qui reste avant d'être vu des clients, en une liste et un seul prochain bouton (MiseEnLigne.jsx) :
+          remplace la carte d'état (validation, visibilité, Stripe), le bandeau « Ta carte attend ta validation »
+          (CarteAValider) et la liste de MenuReadiness. Complète sur Mon commerce, une rangée « Prochaine étape » ailleurs
+          — y compris sur le terminal. En « agir pour », l'équipe voit la liste sans aucun bouton : elle ne signe ni ne
+          valide rien à la place du commerce. */}
+      {restaurant && (
+        <MiseEnLigne restaurant={restaurant} restoId={restoId} token={token} onConnect={connectOnboard} connecting={connecting}
+          onChange={() => loadDashboard(restoId)} compact={!surAccueil} lectureSeule={!!actingAs} />
       )}
 
       {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même

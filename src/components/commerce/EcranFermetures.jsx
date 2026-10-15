@@ -28,7 +28,7 @@ export default function EcranFermetures({ restaurant, restoId, loadDashboard, on
       await api(`/restaurants/${restoId}/closures`, { method: 'POST', token, body: { startDate: debut, endDate: fin || null, reason: motif.trim() } });
       await loadDashboard(restoId);
       setDebut(''); setFin(''); setMotif('');
-      toast(t('editResto.toastClosureAdded'));
+      toast(t('editResto.toastClosureAdded'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {

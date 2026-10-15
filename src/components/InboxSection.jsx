@@ -89,12 +89,12 @@ export default function InboxSection() {
 
   async function creer(e) {
     e.preventDefault();
-    if (!sujet.trim() || !corps.trim()) { toast(t('inbox.subjectBodyRequired')); return; }
+    if (!sujet.trim() || !corps.trim()) { toast(t('inbox.subjectBodyRequired'), 'erreur'); return; }
     setEnvoi(true);
     try {
       const r = await api('/inbox', { method: 'POST', token, body: { subject: sujet.trim(), body: corps.trim() } });
       setSujet(''); setCorps('');
-      toast(t('inbox.sent'));
+      toast(t('inbox.sent'), 'succes');
       setThreads((prev) => [r.thread, ...(prev || [])]);
       setCourant({ thread: r.thread, messages: [r.message] });
       setVue('thread');

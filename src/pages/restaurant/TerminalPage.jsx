@@ -59,7 +59,7 @@ export default function TerminalPage() {
     try {
       const s = await api(`/restaurants/${restoId}/print-settings`, { method: 'PATCH', token, body: patch });
       setDonnees((d) => ({ ...d, settings: s }));
-      toast(t('terminal.saved'));
+      toast(t('terminal.saved'), 'succes');
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
@@ -72,7 +72,7 @@ export default function TerminalPage() {
       const r = await api(`/restaurants/${restoId}/terminals`, { method: 'POST', token, body: { ...info, label: info.model ? `${info.model}` : undefined } });
       if (!transmettreJeton(r.token, API_BASE)) throw new Error(t('terminal.bridgeError'));
       setIci({ terminal: true, associe: true, imprimante: etatImprimante() });
-      toast(t('terminal.paired'));
+      toast(t('terminal.paired'), 'succes');
       charger();
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
@@ -90,14 +90,14 @@ export default function TerminalPage() {
     try {
       await api(`/restaurants/${restoId}/terminals/${x.id}`, { method: 'DELETE', token });
       setARetirer(null);
-      toast(t('terminal.removed'));
+      toast(t('terminal.removed'), 'succes');
       charger();
     } catch (e) { toast(e.message, 'erreur'); }
   }
 
   async function testDirect() {
     setBusy(true);
-    try { await imprimerSurGoodcom(ticketTestLocal(t, donnees?.terminals?.[0]?.restaurantName || ''), 32); toast(t('terminal.webDirectOk')); }
+    try { await imprimerSurGoodcom(ticketTestLocal(t, donnees?.terminals?.[0]?.restaurantName || ''), 32); toast(t('terminal.webDirectOk'), 'succes'); }
     catch (e) { toast(t('terminal.webDirectFail', { reason: t(`terminal.printer_${e.code || 'unknown'}`) }), 'erreur'); }
     finally { setBusy(false); }
   }

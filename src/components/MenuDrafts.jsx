@@ -69,7 +69,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
       setNom('');
       await charger();
       ouvrir(cree.id);
-      toast(t('menuPage.draftsCreated'));
+      toast(t('menuPage.draftsCreated'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -108,7 +108,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
       });
       setModifie(false);
       await charger();
-      toast(t('menuPage.draftsSaved'));
+      toast(t('menuPage.draftsSaved'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -134,7 +134,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
       setPublication(null);
       await charger();
       onPublished?.();
-      toast(t('menuPage.draftsPublishDone', { n: r.published }));
+      toast(t('menuPage.draftsPublishDone', { n: r.published }), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -149,7 +149,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
       if (ouvert?.id === suppression.id) setOuvert(null);
       setSuppression(null);
       await charger();
-      toast(t('menuPage.draftsDeleted'));
+      toast(t('menuPage.draftsDeleted'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     }

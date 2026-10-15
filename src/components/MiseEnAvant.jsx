@@ -23,7 +23,7 @@ export default function MiseEnAvant({ restoId, token, toast }) {
   useEffect(() => { if (etat?.minStartsOn && !dateDebut) setDateDebut(etat.minStartsOn); }, [etat?.minStartsOn, dateDebut]);
   useEffect(() => {
     // Retour de la page de paiement Stripe.
-    try { const q = new URLSearchParams(window.location.search).get('placement'); if (q === 'paid') toast(t('placements.paidThanks')); else if (q === 'cancelled') toast(t('placements.payLater')); if (q) window.history.replaceState({}, '', window.location.pathname); } catch { /* sans historique */ }
+    try { const q = new URLSearchParams(window.location.search).get('placement'); if (q === 'paid') toast(t('placements.paidThanks'), 'succes'); else if (q === 'cancelled') toast(t('placements.payLater')); if (q) window.history.replaceState({}, '', window.location.pathname); } catch { /* sans historique */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const resteMinutes = (iso) => Math.max(0, Math.ceil((new Date(iso).getTime() - maintenant) / 60000));
@@ -52,7 +52,7 @@ export default function MiseEnAvant({ restoId, token, toast }) {
     setOccupe(true);
     try {
       const data = await api(`/restaurants/${restoId}/placements`, { method: 'POST', token, body: { sectionKey: choix.sectionKey, slot: choix.slot, weeks: semaines, startsOn: dateDebut || undefined } });
-      if (data.decision === 'accepted' && data.checkoutUrl) { setDecision({ checkoutUrl: data.checkoutUrl, paymentDueAt: data.paymentDueAt, note: data.booking?.decisionNote || '' }); toast(t('placements.autoAccepted', { minutes: data.paymentMinutes || etat?.paymentMinutes || 10 })); }
+      if (data.decision === 'accepted' && data.checkoutUrl) { setDecision({ checkoutUrl: data.checkoutUrl, paymentDueAt: data.paymentDueAt, note: data.booking?.decisionNote || '' }); toast(t('placements.autoAccepted', { minutes: data.paymentMinutes || etat?.paymentMinutes || 10 }), 'succes'); }
       else if (data.decision === 'accepted') toast(t('placements.autoFree'));
       else toast(t('placements.requested'));
       setChoix(null); setSemaines(1); charger();

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -13,19 +13,21 @@ export default function ResetPassword() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  // Lien refusé par le serveur (périmé ou déjà utilisé) : on propose d'en demander un autre au lieu d'un toast seul.
+  const [lienRefuse, setLienRefuse] = useState(false);
   const { resetPassword } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
 
   async function submit(e) {
     e.preventDefault();
-    if (!token) { toast(t('resetPassword.toastInvalid')); return; }
+    if (!token) { toast(t('resetPassword.toastInvalid'), 'erreur'); return; }
     if (password.length < 6 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
-      toast(t('resetPassword.toastWeak'));
+      toast(t('resetPassword.toastWeak'), 'erreur');
       return;
     }
     if (password !== passwordConfirm) {
-      toast(t('resetPassword.toastMismatch'));
+      toast(t('resetPassword.toastMismatch'), 'erreur');
       return;
     }
     setLoading(true);
@@ -34,6 +36,7 @@ export default function ResetPassword() {
       setDone(true);
     } catch (err) {
       toast(err.message, 'erreur');
+      if (err.status === 400) setLienRefuse(true);
     } finally {
       setLoading(false);
     }
@@ -44,8 +47,12 @@ export default function ResetPassword() {
       <div className="auth-box">
         <div className="card">
           <h2 style={{ marginTop: 0 }}>{t('resetPassword.title')}</h2>
-          {!token && (
-            <p className="small texte-erreur">{t('resetPassword.invalidLink')}</p>
+          {(!token || lienRefuse) && (
+            <>
+              <p className="small texte-erreur">{t('resetPassword.invalidLink')}</p>
+              {/* Sans ce bouton, la page s'arrêtait là : il fallait deviner qu'il faut repasser par « Se connecter ». */}
+              <Link to="/login?oubli=1" className="btn-gold btn-block" style={{ display: 'block', textAlign: 'center', marginBottom: lienRefuse ? 14 : 0 }}>{t('resetPassword.newLink')}</Link>
+            </>
           )}
           {token && done && (
             <>
@@ -53,7 +60,7 @@ export default function ResetPassword() {
               <button className="btn-gold btn-block" onClick={() => navigate('/login')}>{t('resetPassword.login')}</button>
             </>
           )}
-          {token && !done && (
+          {token && !done && !lienRefuse && (
             <form onSubmit={submit}>
               <div className="field">
                 <label htmlFor="reset-mdp">{t('resetPassword.title')}</label>

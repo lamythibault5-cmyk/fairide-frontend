@@ -27,7 +27,7 @@ export default function VendeurLivraison({ order, token, onUpdated }) {
     setOccupe(true);
     try {
       const maj = await api(`/orders/${order.id}/decline-courier`, { method: 'PATCH', token });
-      toast(t('conformite.declineCourierDone'));
+      toast(t('conformite.declineCourierDone'), 'succes');
       onUpdated(maj);
     } catch (e) { toast(e.message, 'erreur'); }
     finally { setOccupe(false); setDemande(false); }

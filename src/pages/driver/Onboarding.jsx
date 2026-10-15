@@ -15,6 +15,7 @@ import ouvrirDocument from '../../ouvrirDocument';
 import { EtapeNotices, ConsentementBiometrique } from '../../components/conformite/LivreurConformite';
 import { TarifMinimum, DocumentsVente } from '../../components/conformite/EspaceVendeurLivreur';
 import { libelleManque } from '../../conformite';
+import { defilement } from '../../gestes';
 import Icone from '../../components/Icone';
 
 // Parcours d'inscription du livreur, en étapes : statut (économie collaborative / étudiant-indépendant /
@@ -45,6 +46,10 @@ const CAISSES = ['Liantis', 'Acerta', 'Xerius', 'Partena', 'Securex', 'UCM', 'Gr
 // Attestations d'assurance, permis, titre de séjour : date d'échéance demandée, Fairide rappelle le renouvellement.
 // Carte professionnelle (CODE-14) : sa date d'expiration est exigée — sans carte valide, un livreur hors UE ne prend pas de course.
 const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance', 'driving_licence', 'residence_permit', 'professional_card'];
+// Date exigée AVANT le dépôt : sans elle, le titre de séjour ne compte pas (routes/couriers.js) et la carte professionnelle est
+// refusée par le serveur. Le champ date était commun à toutes les pièces et sans libellé visible (seulement une infobulle) :
+// un titre déposé sans date restait « manquant » sans explication (audit UX du 15/10/2026).
+const ECHEANCE_REQUISE = ['residence_permit', 'professional_card'];
 const euro = (n) => euros(Number(n || 0));
 // Taux stocké en fraction (0.107) affiché en pourcentage (« 10,7 ») ; « — » si la configuration ne le donne pas.
 const pctTexte = (x) => (x == null || x === '' ? '—' : `${(Number(x) * 100).toLocaleString(getLocale(), { maximumFractionDigits: 2 })}`);
@@ -73,8 +78,8 @@ export default function Onboarding() {
       try {
         let r = await charger();
         if (params.get('identity') === 'retour') { r = await api('/couriers/me/identity/refresh', { method: 'POST', token }); setD(r); params.delete('identity'); setParams(params, { replace: true }); }
-        if (params.get('identity') === 'ok') { toast(t('courierOnboarding.identityOk')); params.delete('identity'); setParams(params, { replace: true }); }
-        if (params.get('identity') === 'erreur') { toast(t('courierOnboarding.identityFailed')); params.delete('identity'); setParams(params, { replace: true }); }
+        if (params.get('identity') === 'ok') { toast(t('courierOnboarding.identityOk'), 'succes'); params.delete('identity'); setParams(params, { replace: true }); }
+        if (params.get('identity') === 'erreur') { toast(t('courierOnboarding.identityFailed'), 'erreur'); params.delete('identity'); setParams(params, { replace: true }); }
         // Retour de Stripe lancé depuis le dossier (EtapePaiement) : on relit le statut du compte de paiement et on
         // reprend à l'envoi du dossier, au lieu de laisser le livreur chercher où il en était.
         if (params.get('connect') !== 'return' && (r?.user?.stripeConnectStatus || user?.stripeConnectStatus) === 'pending') {
@@ -120,7 +125,7 @@ export default function Onboarding() {
     return !MANQUES_PAR_ETAPE[e].some((m) => manques.includes(m) && !MANQUES_INFORMATIFS.includes(m));
   };
   const enDossier = c.lifecycleStatus === 'draft' || c.lifecycleStatus === 'rejected';
-  const allerAuChangement = () => { document.getElementById('changement-statut')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  const allerAuChangement = () => { document.getElementById('changement-statut')?.scrollIntoView({ behavior: defilement(), block: 'start' }); };
 
   return (
     <div className="courier-onboarding">
@@ -150,6 +155,11 @@ export default function Onboarding() {
       </details>
 
       <Notifications t={t} token={token} />
+
+      {/* Dossier envoyé (ou validé) et une pièce refusée par l'équipe : les étapes sont masquées hors brouillon, le livreur
+          n'avait aucun moyen de la remplacer (audit UX du 15/10/2026). Il est prévenu par e-mail et notification ; ici, la
+          pièce, le motif, et le bouton pour en déposer une autre. */}
+      {!enDossier && <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />}
 
       {/* Livreur déjà validé : les notices (B4, B8) doivent être relues quand leur texte change, sinon le
           serveur refuse la prochaine course (NOTICES_A_ACCEPTER). Les étapes ci-dessous ne s'affichent
@@ -358,7 +368,9 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
           </div>
         </div>
       )}
-      <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-gold" onClick={onNext}>{t('courierOnboarding.next')}</button></div>
+      {/* « Suivant » n'est le bouton lime qu'une fois l'identité lancée : avant, c'étaient les trois façons de la vérifier qu'il
+          fallait voir, et le lime poussait à passer l'étape sans rien faire (audit du 15/10/2026). */}
+      <div className="row" style={{ marginTop: 12 }}><button type="button" className={id.status === 'verified' || id.status === 'processing' || (id.provider === 'manual' && carte.length > 0) || (id.provider === 'in_person' && id.status === 'pending') ? 'btn-gold' : 'btn-outline'} onClick={onNext}>{t('courierOnboarding.next')}</button></div>
       <ConsentementBiometrique consent={consentement} token={token} onFermer={() => setConsentement(null)}
         onAccepte={() => { setConsentement(null); demarrer('stripe_identity'); }}
         onManuel={async () => { setConsentement(null); await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click(); }} />
@@ -424,7 +436,8 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
     companyNumber: c.independent?.companyNumber ?? '', vatStatus: c.independent?.vatStatus ?? '', vatNumber: c.independent?.vatNumber ?? '', legalName: c.independent?.legalName ?? '', seatAddress: c.independent?.seatAddress ?? '',
     nationalityGroup: c.nationalityGroup ?? '' });
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
-  const [expiry, setExpiry] = useState('');
+  // Une date par pièce (elle était partagée : la date d'un permis partait avec l'assurance déposée ensuite).
+  const [echeances, setEcheances] = useState({});
   const [partie, setPartie] = useState(0);
   const fichiers = useRef({});
   const motorise = ['scooter', 'voiture'].includes(f.vehicleType);
@@ -445,11 +458,12 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
   }
   async function deposer(docType, e) {
     const files = [...(e.target.files || [])].slice(0, 6); e.target.value = ''; if (!files.length) return;
+    const expiry = echeances[docType] || '';
     for (const file of files) {
-      const ok = await action(() => apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType, expiresAt: AVEC_ECHEANCE.includes(docType) ? expiry : undefined } }), files.length === 1 ? t('courierOnboarding.toastDocUploaded') : null);
+      const ok = await action(() => apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType, expiresAt: AVEC_ECHEANCE.includes(docType) ? expiry || undefined : undefined } }), files.length === 1 ? t('courierOnboarding.toastDocUploaded') : null);
       if (!ok) break;
     }
-    if (files.length > 1) toast(t('courierOnboarding.toastDocsUploaded', { n: files.length }));
+    if (files.length > 1) toast(t('courierOnboarding.toastDocsUploaded', { n: files.length }), 'succes');
   }
   // Photo de profil pour tous, pièces du statut, puis permis / immatriculation / assurance pour un véhicule motorisé.
   // Hors EEE (B2) : titre de séjour (avec échéance) et carte professionnelle d'indépendant.
@@ -564,11 +578,32 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
                     {!x.verifiedAt && <button type="button" className="btn-ghost btn-sm" onClick={() => action(() => api(`/couriers/me/documents/${x.id}`, { method: 'DELETE', token }))}>{t('courierOnboarding.docDelete')}</button>}
                   </div>
                 ))}
+                {/* DISPENSE DEMANDÉE (audit UX du 15/10/2026, backend migration 038). Réfugié, résident de longue durée, famille
+                    d'un citoyen européen… : le titre de séjour suffit. Seule l'équipe pouvait le noter ; le dossier restait bloqué
+                    sans issue. La case permet d'envoyer le dossier ; la dispense n'est accordée que par l'équipe, et aucune course
+                    n'est possible avant (couriers.peutPrendreCourse). */}
+                {type === 'professional_card' && (c.selfEmploymentByResidence ? (
+                  <p className="small" style={{ margin: '6px 0 0' }}><Icone nom="valider" taille={16} className="icone-texte" /> {t('courierOnboarding.proCardExemptGranted')}</p>
+                ) : (
+                  <label className="small" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8 }}>
+                    <input type="checkbox" style={{ width: 'auto', marginTop: 2 }} checked={!!c.selfEmploymentClaimedAt} disabled={busy}
+                      onChange={(e) => action(() => api('/couriers/me', { method: 'PATCH', token, body: { selfEmploymentClaim: e.target.checked } }))} />
+                    <span>{t('courierOnboarding.proCardExemptClaim')}</span>
+                  </label>
+                ))}
               </div>
               <div className="courier-doc-actions">
-                {AVEC_ECHEANCE.includes(type) && <input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} title={t('courierOnboarding.docExpiryLabel')} />}
+                {AVEC_ECHEANCE.includes(type) && (
+                  <label className="courier-doc-echeance small">
+                    {t(ECHEANCE_REQUISE.includes(type) ? 'courierOnboarding.docExpiryRequiredLabel' : 'courierOnboarding.docExpiryLabel')}
+                    <input type="date" value={echeances[type] || ''} onChange={(e) => setEcheances((x) => ({ ...x, [type]: e.target.value }))} />
+                  </label>
+                )}
                 <input ref={(el) => { fichiers.current[type] = el; }} type="file" multiple={!['profile_photo', 'selfie'].includes(type)} accept={['profile_photo', 'selfie'].includes(type) ? 'image/*' : 'application/pdf,image/*'} capture={type === 'selfie' ? 'user' : undefined} style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
-                <button type="button" className="btn-outline" disabled={busy} onClick={() => fichiers.current[type]?.click()}>{docsDe(type).length ? t('courierOnboarding.docReplace') : t('courierOnboarding.docUpload')}</button>
+                <button type="button" className="btn-outline" disabled={busy} onClick={() => {
+                  if (ECHEANCE_REQUISE.includes(type) && !echeances[type]) { toast(t('courierOnboarding.docExpiryFirst'), 'erreur'); return; }
+                  fichiers.current[type]?.click();
+                }}>{docsDe(type).length ? t('courierOnboarding.docReplace') : t('courierOnboarding.docUpload')}</button>
               </div>
             </div>
           ))}
@@ -595,13 +630,14 @@ function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
       <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.paymentHelp')}</p>
       {statut === 'active' ? <div className="courier-ok"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.paymentActive')}</div> : (
         <>
-          <button type="button" className="btn-teal" disabled={connecting || busy} onClick={connecter}>{connecting ? '…' : t('courierOnboarding.paymentStart')}</button>
+          {/* Activer : LE geste de cet écran (lime) ; « Suivant » passe en contour tant que ce n'est pas fait (audit du 15/10/2026). */}
+          <button type="button" className="btn-gold" disabled={connecting || busy} onClick={connecter}>{connecting ? '…' : t('courierOnboarding.paymentStart')}</button>
           {erreur && <p className="small" style={{ margin: '8px 0 0' }}>{erreur}</p>}
           {/* La date d'ouverture ne se montre qu'AVANT l'ouverture : après, « l'activation ouvre le 5 octobre » se lisait au passé. */}
           {!paiementsOuverts() && <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('courierOnboarding.paymentLater', { date: dateOuverturePaiements(getLocale()) })}</p>}
         </>
       )}
-      <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-gold" onClick={onNext}>{t('courierOnboarding.next')}</button></div>
+      <div className="row" style={{ marginTop: 12 }}><button type="button" className={statut === 'active' ? 'btn-gold' : 'btn-outline'} onClick={onNext}>{t('courierOnboarding.next')}</button></div>
       {/* Le livreur vend la livraison (décision du 23/09/2026) : son tarif minimum se règle ici, et seulement ici. */}
       <div style={{ marginTop: 14 }}><TarifMinimum key={d.courier?.minFeeCents ?? 'aucun'} courier={d.courier} token={token} action={action} busy={busy} /></div>
     </div>
@@ -743,6 +779,50 @@ function ChangementStatut({ d, t, token, action, busy, onChanged }) {
         </div>
       )}
       <ConfirmDialog open={confirm} title={t('courierOnboarding.changeStatusConfirmTitle')} message={t('courierOnboarding.changeStatusConfirmBody', { status: cible ? t(`courierOnboarding.status_${cible}`) : '' })} confirmLabel={t('courierOnboarding.changeStatusBtn')} loading={busy} onConfirm={changer} onCancel={() => setConfirm(false)} />
+    </div>
+  );
+}
+
+// Pièces refusées sans remplacement déposé depuis, hors brouillon (voir l'appel plus haut).
+function PiecesARemplacer({ d, t, token, busy, action }) {
+  const toast = useToast();
+  const [echeances, setEcheances] = useState({});
+  const fichiers = useRef({});
+  const docs = d.documents ?? [];
+  const types = [...new Set(docs.filter((x) => x.rejectedReason).map((x) => x.docType))]
+    .filter((type) => !docs.some((x) => x.docType === type && !x.rejectedReason));
+  if (!types.length) return null;
+  async function deposer(type, e) {
+    const file = e.target.files?.[0]; e.target.value = ''; if (!file) return;
+    await action(() => apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType: type, expiresAt: AVEC_ECHEANCE.includes(type) ? echeances[type] || undefined : undefined } }), t('courierOnboarding.toastDocUploaded'));
+  }
+  return (
+    <div className="card" role="alert" style={{ borderColor: 'var(--red)' }}>
+      <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('courierOnboarding.docsToReplaceTitle')}</h3>
+      {types.map((type) => {
+        const refus = docs.filter((x) => x.docType === type && x.rejectedReason).at(-1);
+        return (
+          <div key={type} className="courier-doc">
+            <div>
+              <b>{t(`courierOnboarding.doc_${type}`)}</b>
+              <p className="small texte-erreur" style={{ margin: '2px 0 0' }}>{refus?.rejectedReason}</p>
+            </div>
+            <div className="courier-doc-actions">
+              {AVEC_ECHEANCE.includes(type) && (
+                <label className="courier-doc-echeance small">
+                  {t(ECHEANCE_REQUISE.includes(type) ? 'courierOnboarding.docExpiryRequiredLabel' : 'courierOnboarding.docExpiryLabel')}
+                  <input type="date" value={echeances[type] || ''} onChange={(e) => setEcheances((x) => ({ ...x, [type]: e.target.value }))} />
+                </label>
+              )}
+              <input ref={(el) => { fichiers.current[type] = el; }} type="file" accept={['profile_photo', 'selfie'].includes(type) ? 'image/*' : 'application/pdf,image/*'} capture={type === 'selfie' ? 'user' : undefined} style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
+              <button type="button" className="btn-gold" disabled={busy} onClick={() => {
+                if (ECHEANCE_REQUISE.includes(type) && !echeances[type]) { toast(t('courierOnboarding.docExpiryFirst'), 'erreur'); return; }
+                fichiers.current[type]?.click();
+              }}>{t('courierOnboarding.docReplace')}</button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

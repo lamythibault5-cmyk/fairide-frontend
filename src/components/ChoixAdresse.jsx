@@ -20,7 +20,8 @@ import Icone from './Icone';
 // qu'il ne connaît pas (POST /auth/me/addresses). C'était le trou : la commande refusait bien une
 // fausse adresse, mais Mon compte l'enregistrait sans rien vérifier, et c'est cette adresse-là que
 // tout le reste affichait. La vérification vit maintenant au point d'écriture, pas à l'arrivée.
-export default function ChoixAdresse({ onFermer, onChoisie }) {
+// `onSaisieManuelle` (paiement) : l'adresse introuvable par la recherche se tape à la main, champ par champ.
+export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) {
   const { t } = useLanguage();
   const { token, user, refreshUser } = useAuth();
   const toast = useToast();
@@ -150,6 +151,11 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
       ) : (
       <>
       <AddressSearch onSelect={ajouter} />
+      {/* L'aide de la recherche disait « remplis les champs à la main ci-dessous » alors qu'il n'y en avait pas : une rue
+          récente ou absente d'OpenStreetMap laissait le client sans issue (audit du 15/10/2026). */}
+      {onSaisieManuelle && (
+        <button type="button" className="btn-ghost btn-sm" style={{ marginTop: 6 }} onClick={onSaisieManuelle}>{t('adresses.typeManually')}</button>
+      )}
       <h3 className="adresses-titre">{t('adresses.saved')}</h3>
       {adresses === null && <p className="small">{t('adresses.loading')}</p>}
       {adresses !== null && adresses.length === 0 && (

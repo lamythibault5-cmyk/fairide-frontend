@@ -28,7 +28,7 @@ export default function ReviewsPage() {
     setSaving(true);
     try {
       await api(`/reviews/${reviewId}/reply`, { method: 'PATCH', token, body: { reply: replyDrafts[reviewId] || '' } });
-      toast(t('reviewsResto.toastSaved'));
+      toast(t('reviewsResto.toastSaved'), 'succes');
       setEditingId(null);
       await loadDashboard(restoId);
     } catch (e) {

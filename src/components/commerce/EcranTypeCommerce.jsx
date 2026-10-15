@@ -27,7 +27,7 @@ export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, 
     try {
       await api(`/restaurants/${restoId}/request-cuisine-change`, { method: 'POST', token });
       setEtape(2);
-      toast(t('editResto.toastCodeSent'));
+      toast(t('editResto.toastCodeSent'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -49,7 +49,7 @@ export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, 
         if (items.length) await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } }).catch((e) => { if (e.code !== 'MENU_LOCKED') throw e; });
       }
       await loadDashboard(restoId);
-      toast(t('editResto.toastTypeUpdated'));
+      toast(t('editResto.toastTypeUpdated'), 'succes');
       onFermer();
     } catch (e) {
       toast(e.message, 'erreur');

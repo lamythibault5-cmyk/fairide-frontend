@@ -42,7 +42,7 @@ function Critere({ l, token, toast, onSaved }) {
     setEnvoi(true);
     try {
       onSaved(await api(`/admin/compliance/platform-work-criteria/${l.critere}`, { method: 'POST', token, body: { met: rempli, explanation: explication } }));
-      toast(t('criteresSalariat.saved')); setOuvert(false);
+      toast(t('criteresSalariat.saved'), 'succes'); setOuvert(false);
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); }
   }
   return (
