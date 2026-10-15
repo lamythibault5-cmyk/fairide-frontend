@@ -37,6 +37,7 @@ const Orders = lazyPage(() => import('./pages/client/Orders'));
 const OrderResult = lazyPage(() => import('./pages/client/OrderResult'));
 const ClientMapPage = lazyPage(() => import('./pages/client/MapPage'));
 const PanierPage = lazyPage(() => import('./pages/client/PanierPage'));
+const CommandeGroupee = lazyPage(() => import('./pages/client/CommandeGroupee'));
 const ClientInvoicesPage = lazyPage(() => import('./pages/client/InvoicesPage'));
 const Account = lazyPage(() => import('./pages/Account'));
 
@@ -109,6 +110,7 @@ const AccessibilityPage = lazyPage(() => import('./pages/legal/AccessibilityPage
 const ReportPage = lazyPage(() => import('./pages/legal/ReportPage'));
 // « C'est bon » en un geste (CODE-3) : page publique à jeton, sans compte — le lien est envoyé au commerce.
 const ValiderCarte = lazyPage(() => import('./pages/ValiderCarte'));
+const EquipeInvitation = lazyPage(() => import('./pages/EquipeInvitation'));
 const HelpPage = lazyPage(() => import('./pages/HelpPage'));
 const OurStory = lazyPage(() => import('./pages/OurStory'));
 const SalesPage = lazyPage(() => import('./pages/client/SalesPage'));
@@ -171,6 +173,8 @@ export default function App() {
         <Route path="/map" element={<ProtectedRoute role="client"><ClientMapPage /></ProtectedRoute>} />
         {/* Le panier a sa page : il se depliait par-dessus le menu qu'on etait en train de lire. */}
         <Route path="/panier" element={<ProtectedRoute role="client"><PanierPage /></ProtectedRoute>} />
+        {/* Commande groupée (backend routes/commandesGroupees.js) : un compte client, comme pour commander. */}
+        <Route path="/groupe/:code" element={<ProtectedRoute role="client"><CommandeGroupee /></ProtectedRoute>} />
         <Route path="/invoices" element={<ProtectedRoute role="client"><ClientInvoicesPage /></ProtectedRoute>} />
         <Route path="/order-success" element={<ProtectedRoute role="client"><OrderResult success /></ProtectedRoute>} />
         <Route path="/order-cancelled" element={<ProtectedRoute role="client"><OrderResult success={false} /></ProtectedRoute>} />
@@ -256,6 +260,8 @@ export default function App() {
         <Route path="/accessibilite" element={<AccessibilityPage />} />
         <Route path="/signaler" element={<ReportPage />} />
         <Route path="/carte/valider/:token" element={<ValiderCarte />} />
+        {/* Invitation dans l'équipe d'un commerce (backend equipeCommerce.js) : publique, la connexion vient après. */}
+        <Route path="/equipe/:token" element={<EquipeInvitation />} />
         <Route path="/aide" element={<HelpPage />} />
         <Route path="/notre-histoire" element={<OurStory />} />
 

@@ -145,6 +145,14 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       à l'écran pour le sans gluten).
 - [ ] 🟡 **F — Statistiques du commerce** : Mon compte › Statistiques, sur un commerce qui a des commandes de test ; les
       chiffres doivent tomber juste avec Mes commandes (7, 30, 90 jours).
+- [ ] 🔴 **F — Équipe du commerce** (`fairide-backend/equipeCommerce.js`) : depuis un commerce de test, Mon compte › Mon
+      équipe › inviter une deuxième adresse ; l'e-mail arrive, le lien `/equipe/…` ouvert avec CE compte rejoint l'équipe
+      (avec un autre compte : refusé). Le membre ne voit que Commandes et Mon compte ; il accepte, refuse, marque prête, met
+      en pause, met un plat en rupture ; il reçoit la notification de nouvelle commande. Retiré : plus rien, tout de suite.
+      Dire aux commerces que le membre n'a accès ni aux paiements, ni aux factures, ni à la carte.
+- [ ] 🟡 **F — Commande groupée** (`fairide-backend/routes/commandesGroupees.js`) : sur une fiche, « Commande groupée »,
+      partager le lien à un deuxième compte ; il choisit ses plats et « Envoyer au groupe » ; l'hôte ferme le groupe →
+      les parts arrivent dans son panier avec « Pour <prénom> » (visible sur le ticket imprimé), puis paiement habituel.
 - [ ] 🟠 **F — Les livreurs réacceptent la politique de géolocalisation** : elle dit maintenant que la position est envoyée
       écran verrouillé pendant la livraison, et décrit le bouton d'urgence (`docs/livreurs/politique-geolocalisation.md`).
       Sa version change avec son texte : chaque livreur la relit avant sa prochaine course, rien à faire de plus que le

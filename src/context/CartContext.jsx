@@ -139,9 +139,11 @@ export function CartProvider({ children }) {
     setLines((prev) => {
       const next = switching ? {} : { ...prev };
       for (const l of nouvelles) {
-        const key = lineKeyFor(l.itemId, l.optionItemIds);
+        // La consigne fait partie de la ligne (commande groupée : « Pour Igor », pages/client/CommandeGroupee.jsx).
+        const consigne = String(l.note || '').trim().slice(0, 140);
+        const key = lineKeyFor(l.itemId, l.optionItemIds, consigne);
         const n = Math.min(99, Math.max(1, Math.floor(Number(l.qty) || 1)));
-        next[key] = { itemId: l.itemId, name: l.name, imageUrl: l.imageUrl, optionItemIds: l.optionItemIds || [], optionsSnapshot: l.optionsSnapshot || [], unitPrice: l.unitPrice, qty: Math.min(99, (next[key]?.qty || 0) + n) };
+        next[key] = { itemId: l.itemId, name: l.name, imageUrl: l.imageUrl, optionItemIds: l.optionItemIds || [], optionsSnapshot: l.optionsSnapshot || [], unitPrice: l.unitPrice, note: consigne || undefined, qty: Math.min(99, (next[key]?.qty || 0) + n) };
       }
       return next;
     });
