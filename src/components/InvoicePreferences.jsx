@@ -22,7 +22,7 @@ export default function InvoicePreferences() {
     try {
       const r = await api('/invoices/restaurant/preferences', { method: 'PATCH', token, body: { [champ]: valeur } });
       setPrefs(r);
-      toast(t('invoicePrefs.saved'));
+      toast(t('invoicePrefs.saved'), 'succes');
     } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
 

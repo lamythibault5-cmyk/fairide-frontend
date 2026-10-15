@@ -15,7 +15,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 // Montants et distances au format de la langue (« 4,50 », « 0,3 ») : toFixed écrivait « 4.50 € » en français.
 const dec = (v, n = 2) => Number(v || 0).toLocaleString(getLocale(), { minimumFractionDigits: n, maximumFractionDigits: n });
-import { dateOuverturePaiements } from '../../launch';
+import { paiementsOuverts } from '../../launch';
 import BandeauOuverture from '../../components/BandeauOuverture';
 import useRevalidation from '../../useRevalidation';
 import useAlerteLivreur from '../../hooks/useAlerteLivreur';
@@ -122,8 +122,16 @@ export default function DriverDashboard() {
   // pourquoi les longues distances sont en tête (motorisé).
   const [vehicule, setVehicule] = useState(null);
   const [sac, setSac] = useState(null);
-  useEffect(() => { api('/couriers/me', { token }).then((d) => setSac(d.courier?.bag || null)).catch(() => {}); }, [token]);
-  useEffect(() => { api('/couriers/me', { token }).then((d) => setVehicule({ type: d.courier?.vehicleType || '', bikeMaxKm: d.pricing?.bikeMaxKm || 4, rate: ['velo', 'velo_electrique'].includes(d.courier?.vehicleType || '') ? d.pricing?.driverPerKmBike : d.pricing?.driverPerKmMotor, base: d.pricing?.deliveryBaseFee, baseKm: d.pricing?.deliveryBaseKm })).catch(() => {}); }, [token]);
+  // Un seul appel au dossier (il y en avait deux, identiques) : sac, véhicule, et l'état du dossier — qui décide du message
+  // affiché avant la validation (pas encore envoyé, à corriger, ou en cours de vérification).
+  const [dossier, setDossier] = useState(null);
+  useEffect(() => {
+    api('/couriers/me', { token }).then((d) => {
+      setSac(d.courier?.bag || null);
+      setVehicule({ type: d.courier?.vehicleType || '', bikeMaxKm: d.pricing?.bikeMaxKm || 4, rate: ['velo', 'velo_electrique'].includes(d.courier?.vehicleType || '') ? d.pricing?.driverPerKmBike : d.pricing?.driverPerKmMotor, base: d.pricing?.deliveryBaseFee, baseKm: d.pricing?.deliveryBaseKm });
+      setDossier({ statut: d.courier?.lifecycleStatus || null, motif: d.courier?.reviewReason || '' });
+    }).catch(() => {});
+  }, [token]);
 
   async function load() {
     try {
@@ -379,27 +387,11 @@ export default function DriverDashboard() {
       {/* Selfie de contrôle au hasard à la prise de service (CODE-14) : sans lui, aucune course n'est proposée. */}
       {peutRouler && <SelfieControle token={token} onDepose={load} />}
 
-      {/* Rangées d'état qui demandent une action ou une vigilance : paiements à configurer, position
-          partagée pendant une livraison. Rien d'autre — la carte n'apparaît que s'il y a une rangée. */}
-      {((approuve && user?.stripeConnectStatus !== 'active') || active.length > 0) && (
+      {/* Rangée de vigilance : position partagée pendant une livraison. Les paiements à activer ne sont plus ici (audit du
+          15/10/2026) : ils remplacent la liste des offres, plus bas, avec le seul bouton de l'écran — deux boutons « Activer »
+          l'un au-dessus de l'autre ne disaient pas mieux la même chose. */}
+      {active.length > 0 && (
       <div className="card account-groupe" aria-label={t('dashDriver.ariaAccount')}>
-        {approuve && user?.stripeConnectStatus !== 'active' && (
-          <LigneCompte
-            accent={user?.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"
-            titre={user?.stripeConnectStatus === 'restricted' ? t('dashDriver.paymentInfoTitle') : t('dashDriver.paymentsToConfigure')}
-            sous={user?.stripeConnectStatus === 'restricted'
-              ? t('dashDriver.stripeNeedsInfo')
-              : t('dashDriver.viaStripe', { date: dateOuverturePaiements(getLocale()) })}
-            action={user?.stripeConnectStatus === 'restricted' ? (
-              <button type="button" className="btn-gold btn-sm" disabled={connecting} onClick={connectOnboard}>
-                {connecting ? '...' : t('dashDriver.complete')}
-              </button>
-            ) : (
-              // Activation fermée jusqu'à début octobre 2026 : l'explication complète (et Stripe) est dans Mon compte › Paiement.
-              <Link to="/account" className="btn-outline btn-sm" style={{ display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
-            )}
-          />
-        )}
         {active.length > 0 && (
           <LigneCompte
             accent={user?.locationSharingEnabled === false ? 'warn' : sharingLocation ? 'ok' : 'warn'} icone="position"
@@ -415,15 +407,34 @@ export default function DriverDashboard() {
       </div>
       )}
 
-      {!approuve ? (
-        <div className="empty" style={{ padding: '40px 20px' }}>
-          {/* Une icône, pas son nom : la ligne affichait littéralement « horloge » ou « interdit » en
-              34px — reliquat du remplacement des emojis par <Icone>, où la chaîne était restée seule. */}
-          <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><Icone nom={user?.adminStatus === 'blocked' ? 'interdit' : 'horloge'} taille={34} /></div>
-          <b>{user?.adminStatus === 'blocked' ? t('dashDriver.blockedTitle') : t('dashDriver.waitingTitle')}</b>
-          <p className="small" style={{ margin: '6px auto 0', maxWidth: 420 }}>{user?.adminStatus === 'blocked' ? t('dashDriver.blockedText') : t('dashDriver.waitingEmpty')}</p>
-        </div>
-      ) : (<>
+      {!approuve ? (() => {
+        /* LE MESSAGE SUIT L'ÉTAT DU DOSSIER (audit du 15/10/2026). « L'équipe vérifie ton dossier » s'affichait aussi à un
+           livreur qui ne l'avait pas encore envoyé, ou dont le dossier était à corriger — sans bouton : il attendait une
+           vérification qui n'avait pas commencé. Brouillon ou refusé : un seul bouton vers le dossier. Envoyé : on attend,
+           avec le dossier consultable. Bloqué : inchangé. */
+        const bloque = user?.adminStatus === 'blocked';
+        const statut = dossier?.statut;
+        const aCompleter = !bloque && statut === 'draft';
+        const aCorriger = !bloque && statut === 'rejected';
+        const titre = bloque ? t('dashDriver.blockedTitle') : aCompleter ? t('dashDriver.fileToCompleteTitle') : aCorriger ? t('dashDriver.fileToFixTitle') : t('dashDriver.waitingTitle');
+        const texte = bloque ? t('dashDriver.blockedText') : aCompleter ? t('dashDriver.fileToCompleteText') : aCorriger ? t('dashDriver.fileToFixText') : t('dashDriver.waitingEmpty');
+        return (
+          <div className="empty" style={{ padding: '40px 20px' }}>
+            {/* Une icône, pas son nom : la ligne affichait littéralement « horloge » ou « interdit » en
+                34px — reliquat du remplacement des emojis par <Icone>, où la chaîne était restée seule. */}
+            <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><Icone nom={bloque ? 'interdit' : (aCompleter || aCorriger) ? 'dossier' : 'horloge'} taille={34} /></div>
+            <b>{titre}</b>
+            <p className="small" style={{ margin: '6px auto 0', maxWidth: 420 }}>{texte}</p>
+            {aCorriger && dossier.motif && <p className="small" style={{ margin: '6px auto 0', maxWidth: 420, color: 'var(--red)' }}>{t('courierOnboarding.rejectedReason', { reason: dossier.motif })}</p>}
+            {(aCompleter || aCorriger) && (
+              <Link to="/driver/onboarding" className="btn-gold" style={{ display: 'inline-block', marginTop: 14 }}>{aCorriger ? t('dashDriver.fileToFixBtn') : t('dashDriver.fileToCompleteBtn')}</Link>
+            )}
+            {!bloque && !aCompleter && !aCorriger && (
+              <Link to="/driver/onboarding" className="btn-outline btn-sm" style={{ display: 'inline-block', marginTop: 14 }}>{t('dashDriver.fileSeeBtn')}</Link>
+            )}
+          </div>
+        );
+      })() : (<>
         {/* LA COURSE EN MAIN D'ABORD. Un livreur en pleine livraison ouvrait la page sur la liste des
             nouvelles offres et devait descendre pour retrouver le code client à saisir. L'ordre suit
             maintenant l'urgence : je livre → je vais chercher → je pourrais prendre. Une section vide
@@ -454,7 +465,8 @@ export default function DriverDashboard() {
                 value={codeInputs[o.id] || ''}
                 onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
               />
-              {!estNatif() && <button className="btn-teal btn-sm" onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
+              {/* Taille normale (audit du 15/10/2026) : c'est le geste qui clôt la course, fait d'une main, souvent dehors. */}
+              {!estNatif() && <button className="btn-teal" onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
             </div>
             {/* Application : le code du client tapé, on glisse pour livrer (même raison que pour la récupération). */}
             {estNatif() && <GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} onConfirmer={() => deliver(o)} />}
@@ -465,7 +477,18 @@ export default function DriverDashboard() {
         {awaitingPickup.length > 0 && <h2 className="section-title" style={active.length ? undefined : { marginTop: 0 }}>{t('dashDriver.awaitingPickup')}</h2>}
         {awaitingPickup.map(carteRetrait)}
 
-        {enPause ? (
+        {/* Validé mais paiements pas encore actifs : le serveur refuse toute prise de course (routes/orders.js, 403). La
+            liste montrait quand même les offres et leurs boutons « Prendre », qui échouaient un par un. On dit plutôt ce qui
+            manque, avec le même bouton que la rangée Paiements. */}
+        {!peutRouler ? (
+          <EtatVide icone="carteBancaire" titre={t('dashDriver.paymentsFirstTitle')} texte={t('dashDriver.paymentsFirstText')}>
+            {user?.stripeConnectStatus === 'restricted' || paiementsOuverts() ? (
+              <button type="button" className="btn-gold" disabled={connecting} onClick={connectOnboard}>
+                {connecting ? '...' : user?.stripeConnectStatus === 'restricted' ? t('dashDriver.complete') : t('dashDriver.paymentsActivateBtn')}
+              </button>
+            ) : null}
+          </EtatVide>
+        ) : enPause ? (
           <div className="empty">{t('dashDriver.pausedText')}</div>
         ) : (
         <>
@@ -512,7 +535,8 @@ export default function DriverDashboard() {
                 </span>
                 <span className="row" style={{ gap: 6 }}>
                   <button className="btn-outline btn-sm" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
-                  <button className="btn-teal btn-sm" onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
+                  {/* Prendre la course : taille normale ; Refuser reste petit et neutre (aucune conséquence pour le livreur). */}
+                  <button className="btn-teal" onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
                 </span>
               </div>
             </div>

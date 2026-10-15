@@ -54,7 +54,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
     setMailId(inv.id);
     try {
       const r = await api(emailPath(inv), { method: 'POST', token });
-      toast(t('invoiceArchive.emailSent', { to: r.to || '' }));
+      toast(t('invoiceArchive.emailSent', { to: r.to || '' }), 'succes');
       setData((d) => ({ ...d, invoices: d.invoices.map((x) => (x.id === inv.id ? { ...x, emailedAt: new Date().toISOString(), status: x.status === 'emise' ? 'envoyee' : x.status } : x)) }));
     } catch (e) {
       toast(e.message, 'erreur');

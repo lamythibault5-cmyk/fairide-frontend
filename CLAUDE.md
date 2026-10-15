@@ -140,8 +140,10 @@ Two functions in [src/api.js](src/api.js) — everything goes through them:
 - `apiUpload(path, { file, token, fieldName, fields })` — multipart; deliberately sets no
   `Content-Type` so the browser writes its own FormData boundary
 
-Both throw `ApiError` (an `Error` with a `status` field) carrying a French, user-facing message.
-Callers catch and pass to `useToast()`. Don't call `fetch` directly in a component.
+Both throw `ApiError` (an `Error` with a `status` field) carrying a user-facing message: the server's own text, or for
+network failure / expired session / unknown error a translated one (`traduire()` from LanguageContext, usable outside
+components). The server translates its error messages for EN / NL users at the exit (`../fairide-backend/traductionErreurs.js`,
+keyed on the exact French text; a test fails if a listed text disappears from the routes) — reword an error there too. Callers catch and pass to `useToast()`. Don't call `fetch` directly in a component.
 
 **401 handling is centralised.** A 401 on a request that *sent a token* means an expired session:
 `api()` clears the session through the handler `AuthContext` registers via `setSessionExpiredHandler`,
@@ -347,9 +349,21 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   the services screen ends with one « offert pendant le lancement » note (no formulas box, no terminal). Courier screen 2
   is status + company number + vehicle only; bag and « another platform? » are in the profile's Infos step, the
   municipality comes from the address. The courier profile opens on a « Prochaine étape » card.
+  **Since 2026-10-15 (UX audit)** courier signup is three screens (account, identity, address): the company number is
+  optional there (the dossier still requires it before submission, missing item `bce`), there is no ID / selfie step (the
+  dossier's identity step does it), and no location prompt (PositionRequise asks above the job list). The selfie document
+  is not required once Stripe Identity or an in-person check verified the face (`couriers.documentsRequis`). A non-EEA
+  courier can *claim* the professional-card exemption (`self_employment_claimed_at`): it unblocks submission only; approval
+  and rides still need the team's `self_employment_by_residence`. The signup draft is kept 48 h in localStorage (declared
+  in `cookies.technical`).
 - **Merchant**: card signature, allergen attestation and professional declaration in
   [ConformiteCarte](src/components/conformite/ConformiteCarte.jsx) (menu page); allergens / VAT / alcohol
   per dish in the dish editor; allergy confirmation and ID check at the counter in the orders page.
+  Everything left before going live is **one list with one next button**,
+  [MiseEnLigne](src/components/commerce/MiseEnLigne.jsx) (2026-10-15): full on « Mon commerce », a « Prochaine étape » row
+  on the other dashboard pages, read-only in « agir pour ». It replaced the status card, the CarteAValider banner and
+  MenuReadiness's merchant list — add a new go-live step there, not in a new banner. Signing the menu now also confirms a
+  menu handed over by the team (`carteSignee.signer` sets `menu_confirmed_at`; backend migration 037 repaired shops left hidden).
 - **Courier**: notices to accept before the first ride, biometric consent before Stripe Identity,
   nationality and residence permit (onboarding); ID check at the door (dashboard).
 - **Admin**: suspending anyone goes through [DecisionDialog](src/components/admin/DecisionDialog.jsx)
@@ -485,6 +499,13 @@ Never add anything that ranks, rates or penalises couriers for refusing: the bac
 `tests/trois-vendeurs.test.js` fails if dispatch starts reading such data, and the courier notice promises it.
 
 ## Conventions
+
+**French UI copy says « tu », everywhere (founder decision, 2026-10-15)** — clients, businesses and couriers alike. The
+exceptions are deliberate: the legal pages (`terms.*` and `privacy.*` are hashed and versioned, `cookiesPolicy.*`,
+`accessibilite.*`, the ranking and DSA-report texts in `conformite.ranking_*`) keep « vous », and so does a business speaking
+*to* Fairide (« je vous envoie ma carte »). Scroll calls take `behavior: defilement()` from [src/gestes.js](src/gestes.js),
+never a hard-coded `'smooth'` (it ignores reduced motion). The cart is kept 24 h in localStorage (declared in
+`cookiesPolicy.technical`); scheduled-order slots follow the business's hours and closures (`scheduleUtils.js`).
 
 **Code comments are in French, and they are unusually substantive** — they explain *why*, cite
 the file that motivated a decision, and record what was tried and rejected. This is the

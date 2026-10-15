@@ -14,13 +14,13 @@ export default function LienValidationCarte({ restaurantId, phone, token, toast 
     try {
       const l = await api(`/admin/restaurants/${restaurantId}/menu-validation-link`, { method: 'POST', token, body: send ? { send } : {} });
       setLien(l);
-      if (l.emailed) toast(t('validerCarte.adminEmailed'));
+      if (l.emailed) toast(t('validerCarte.adminEmailed'), 'succes');
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(false); }
   }
   const message = lien ? t('validerCarte.adminMessage', { name: lien.restaurantName, url: lien.url }) : '';
   const tel = String(phone || '').replace(/[^\d+]/g, '');
   async function copier() {
-    try { await navigator.clipboard.writeText(lien.url); toast(t('validerCarte.adminCopied')); } catch { toast(lien.url); }
+    try { await navigator.clipboard.writeText(lien.url); toast(t('validerCarte.adminCopied'), 'succes'); } catch { toast(lien.url); }
   }
   return (
     <div className="field">

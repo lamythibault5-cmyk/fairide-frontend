@@ -44,7 +44,7 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
     try {
       await api(`/restaurants/${restoId}/menu/confirm`, { method: 'POST', token, body: {} });
       await onConfirmed?.();
-      toast(t('menuPage.handoverConfirmed'));
+      toast(t('menuPage.handoverConfirmed'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {

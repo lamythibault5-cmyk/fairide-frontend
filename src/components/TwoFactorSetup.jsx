@@ -67,13 +67,13 @@ export default function TwoFactorSetup() {
       // PATCH /auth/me avant la même correction (voir api.js).
       await api('/auth/totp/disable', { method: 'POST', token, logoutOn401: false, body: { password: motDePasse, code: code.trim() } });
       setMotDePasse(''); setCode(''); setEtape('repos');
-      toast(t('twofa.removed'));
+      toast(t('twofa.removed'), 'succes');
       await refreshUser?.();
     } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
 
   function copierCodes() {
-    navigator.clipboard.writeText(codesSecours.join('\n')).then(() => toast(t('twofa.copied')), () => toast(t('twofa.copyFailed')));
+    navigator.clipboard.writeText(codesSecours.join('\n')).then(() => toast(t('twofa.copied'), 'succes'), () => toast(t('twofa.copyFailed'), 'erreur'));
   }
 
   return (

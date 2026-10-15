@@ -10,6 +10,7 @@ import CrmMap, { distanceM } from '../../components/CrmMap';
 import '../../crm.css';
 import BusinessSearch from '../../components/BusinessSearch';
 import { communeDepuisCodePostal } from '../../menuCategories';
+import { defilement } from '../../gestes';
 import Icone from '../../components/Icone';
 
 // Page « Sales » des commerciaux : la personne à qui l'admin a donné l'accès (Admin › Sales) enregistre ici les
@@ -219,7 +220,7 @@ export default function SalesPage() {
         <button type="button" role="tab" aria-selected={vue === 'zones'} className={`chip${vue === 'zones' ? ' active' : ''}`} onClick={() => setVue('zones')}>{t('sales.viewZones')}{zones.length ? ` · ${zones.filter((z) => z.status === 'todo').length} ${t('sales.viewZonesTodo')}` : ''}</button>
         <button type="button" role="tab" aria-selected={vue === 'todo'} className={`chip${vue === 'todo' ? ' active' : ''}${aFaire.length ? ' crm-segment-alerte' : ''}`} onClick={() => setVue('todo')}>{t('sales.viewTodo')}{aFaire.length ? ` · ${aFaire.length}` : ''}</button>
       </div>
-      {vue === 'zones' && <ZonesView zones={zones} t={t} busy={zoneBusy} onFocus={(k) => { setZoneActive(k); setCarteVisible(true); document.querySelector('.crm-carte-carte')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} onClaim={prendreZone} onRelease={laisserZone} />}
+      {vue === 'zones' && <ZonesView zones={zones} t={t} busy={zoneBusy} onFocus={(k) => { setZoneActive(k); setCarteVisible(true); document.querySelector('.crm-carte-carte')?.scrollIntoView({ behavior: defilement(), block: 'start' }); }} onClaim={prendreZone} onRelease={laisserZone} />}
 
       {vue !== 'zones' && (
       <div className="admin-control-panel">
@@ -311,13 +312,13 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
   }
   async function valider(e) {
     e.preventDefault();
-    if (!f.name.trim()) { toast(t('sales.errName')); return; }
+    if (!f.name.trim()) { toast(t('sales.errName'), 'erreur'); return; }
     setEnvoi(true);
     try {
       const c = choix !== 'autre' && reco?.candidates?.[choix];
       const position = c && c.lat !== null && c.lat !== undefined ? { lat: c.lat, lng: c.lng } : reco?.position ? { lat: reco.position.lat, lng: reco.position.lng } : {};
       const p = await api('/sales/prospects', { method: 'POST', token, body: { ...f, ...position, photoUrl: reco?.photoUrl || undefined } });
-      toast(t('sales.photoSaved')); onSaved(p);
+      toast(t('sales.photoSaved'), 'succes'); onSaved(p);
     } catch (err) { toast(err.message); } finally { setEnvoi(false); }
   }
   const zone = reco?.zone; const zoneEtat = zone && zones.find((z) => z.key === zone.key);
@@ -490,7 +491,7 @@ function ProspectForm({ token, t, toast, onClose, onSaved, ficheWeb = null, nomI
       if (!a.found && !a.name && !a.phone) { toast(t('sales.pasteNone'), 'erreur'); return; }
       setF((s) => ({ ...s, name: s.name || a.name || '', address: a.address || s.address, commune: a.commune || s.commune, phone: s.phone || a.phone || '' }));
       setRecherche('fermee');
-      toast(t('sales.pasteDone'));
+      toast(t('sales.pasteDone'), 'succes');
     } catch (err) { toast(err.message, 'erreur'); } finally { setCollageEnCours(false); }
   }
   async function prendrePosition() {
@@ -501,7 +502,7 @@ function ProspectForm({ token, t, toast, onClose, onSaved, ficheWeb = null, nomI
     e.preventDefault();
     if (!f.name.trim()) { toast(t('sales.errName'), 'erreur'); return; }
     setEnvoi(true);
-    try { onSaved(await api('/sales/prospects', { method: 'POST', token, body: position ? { ...f, ...position } : f })); toast(t('sales.toastCreated')); } catch (err) { toast(err.message, 'erreur'); } finally { setEnvoi(false); }
+    try { onSaved(await api('/sales/prospects', { method: 'POST', token, body: position ? { ...f, ...position } : f })); toast(t('sales.toastCreated'), 'succes'); } catch (err) { toast(err.message, 'erreur'); } finally { setEnvoi(false); }
   }
   // Portail : la page connectée anime son contenu (page-fade), ce qui crée un contexte d'empilement — rendu dans
   // la page, le volet passait SOUS la barre de navigation du bas. Même remède que ConfirmDialog.
@@ -726,7 +727,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
 
             <div className="row" style={{ justifyContent: 'space-between', marginTop: 8 }}>
               <span className="small">{t('sales.createdOn', { date: fmt(p.createdAt) })}</span>
-              <button type="button" className="btn-danger-ghost" onClick={() => setConfirm({ title: t('sales.confirmDelete', { name: p.name }), danger: true, run: async () => { try { await api(`/sales/prospects/${id}`, { method: 'DELETE', token }); toast(t('sales.toastDeleted')); onDeleted(); } catch (e) { toast(e.message, 'erreur'); } } })}>{t('sales.deleteProspect')}</button>
+              <button type="button" className="btn-danger-ghost" onClick={() => setConfirm({ title: t('sales.confirmDelete', { name: p.name }), danger: true, run: async () => { try { await api(`/sales/prospects/${id}`, { method: 'DELETE', token }); toast(t('sales.toastDeleted'), 'succes'); onDeleted(); } catch (e) { toast(e.message, 'erreur'); } } })}>{t('sales.deleteProspect')}</button>
             </div>
           </>
         )}

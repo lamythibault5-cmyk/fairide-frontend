@@ -158,6 +158,10 @@
 .co-barre-detail { font-size: 12.5px; opacity: .85; }
 .co-barre .btn-gold { min-height: 48px; font-size: 16px; font-weight: 800; }
 .co-barre-attente { font-weight: 600; display: inline-flex; align-items: flex-start; gap: 6px; }
+/* Refus du devis (commerce fermé, adresse trop loin…) : toute la largeur de la barre, au-dessus du montant, en blanc sur
+   l'aplat iris où le rouge se lirait mal. */
+.co-barre { flex-wrap: wrap; }
+.co-refus { flex: 1 0 100%; order: -1; margin: 0; font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--cream); }
 /* Téléphone : la barre reste collée en bas de l'écran pendant tout le formulaire. */
 @media (max-width: 900px) {
   .checkout-page { padding-bottom: 120px; }
@@ -220,6 +224,8 @@
 .suivi-code-valeur { font-size: 32px; font-weight: 800; letter-spacing: 8px; color: var(--iris); line-height: 1.1; }
 .suivi-total { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
 .suivi-total b { font-size: 17px; }
+/* Paiement en ligne pas terminé (Orders.jsx) : encadré en filet iris, comme tout ce qui attend un geste du client. */
+.paiement-non-termine { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--iris); border-radius: var(--radius); }
 .suivi-carte.est-passee { padding-top: 16px; padding-bottom: 16px; }
 .suivi-carte.est-passee .suivi-resto { font-size: 16px; }
 
@@ -280,8 +286,11 @@
    devient le repère de ses descendants en position fixe — la carte plein écran (.carte-plein-ecran, position: fixed)
    se dimensionnait alors sur la boîte de la page (hauteur nulle) au lieu de l écran, et Leaflet s initialisait à
    0 px. Aucune transformation sur .page-fade : elle porte aussi les barres fixes du panier et du paiement. */
-@keyframes page-arrive { from { opacity: 0; } to { opacity: 1; } }
-.page-fade { animation: page-arrive .26s cubic-bezier(.2, .8, .2, 1) both; }
+/* 120 ms depuis 40 % d'opacité (audit du 15/10/2026) : 260 ms depuis 0 faisait passer chaque onglet par un écran blanc, en
+   plus de la barre de progression et des squelettes. Le plan de mouvement visait ~120 ms ; cette règle-ci l'emportait sur
+   celle de styles.css (chargée après). */
+@keyframes page-arrive { from { opacity: .4; } to { opacity: 1; } }
+.page-fade { animation: page-arrive .12s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .page-fade { animation: none; } }
 
 /* ---------- États vides : la pastille prend la teinte Fairide plutôt qu'un gris neutre ---------- */
@@ -389,7 +398,8 @@
 /* État d'ouverture : une pastille teintée, lisible d'un coup d'œil. */
 .fiche-statut { width: fit-content; max-width: 100%; padding: 7px 13px; border-radius: 14px; background: var(--surface-soft); margin: 0 0 14px; font-size: 13.5px; }
 .fiche-statut.est-ouvert { background: rgba(59, 47, 181, 0.08); }
-.fiche-statut.est-ouvert .fiche-statut-point { animation: fiche-pouls 2.2s ease-in-out infinite; }
+/* Trois pulsations puis repos (audit du 15/10/2026) : en boucle infinie sur chaque fiche ouverte, elle repeignait sans fin. */
+.fiche-statut.est-ouvert .fiche-statut-point { animation: fiche-pouls 2.2s ease-in-out 3; }
 @keyframes fiche-pouls { 0%, 100% { box-shadow: 0 0 0 0 rgba(59, 47, 181, 0.35); } 50% { box-shadow: 0 0 0 5px rgba(59, 47, 181, 0); } }
 @media (prefers-reduced-motion: reduce) { .fiche-statut.est-ouvert .fiche-statut-point { animation: none; } }
 

@@ -25,13 +25,20 @@ function nouvelIdDemande() {
   try { return crypto.randomUUID(); } catch { return `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`; }
 }
 
-// Conservé dans sessionStorage pour survivre à un rafraîchissement de page (F5) sans persister
-// indéfiniment comme le ferait localStorage (le panier reste propre à cet onglet).
+/* GARDÉ 24 HEURES, MÊME APPLI OU ONGLET FERMÉ (audit UX du 15/10/2026). Il ne vivait que dans sessionStorage, perdu à la
+   fermeture de l'onglet ou de l'application — alors que la fiche d'un commerce fermé promet « ton panier est gardé jusqu'à
+   la réouverture ». localStorage, daté, oublié au-delà de 24 h ; vidé à la déconnexion volontaire (plus bas). Déclaré dans
+   la politique des cookies (cookiesPolicy.technical). La copie mise de côté pendant un paiement reste, elle, propre à
+   l'onglet (PENDING_KEY, sessionStorage). */
+const PANIER_MAX_MS = 24 * 3600 * 1000;
 function loadPersisted() {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    let raw = localStorage.getItem(STORAGE_KEY);
+    // Panier d'avant ce changement, encore dans l'onglet : repris une fois.
+    if (!raw) raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande() };
     const parsed = JSON.parse(raw);
+    if (parsed.at && Date.now() - parsed.at > PANIER_MAX_MS) return { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande() };
     return { restaurantId: parsed.restaurantId ?? null, restaurantName: parsed.restaurantName ?? '', lines: parsed.lines ?? {}, requestId: parsed.requestId || nouvelIdDemande() };
   } catch {
     return { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande() };
@@ -66,7 +73,8 @@ export function CartProvider({ children }) {
 
   useEffect(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ restaurantId, restaurantName, lines, requestId }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ restaurantId, restaurantName, lines, requestId, at: Date.now() }));
+      sessionStorage.removeItem(STORAGE_KEY);
     } catch {
       // stockage indisponible (navigation privée stricte, etc.) — le panier reste fonctionnel en mémoire
     }
@@ -188,21 +196,36 @@ export function CartProvider({ children }) {
   // D'où la mise de côté : le panier visible est vidé, sa copie est conservée à part, et seule la page
   // de retour décide de son sort — restauration si le paiement n'a pas abouti, suppression s'il a
   // abouti. Aucune décision n'est prise à l'aveugle avant de connaître l'issue.
-  function stashForPayment() {
+  // `orderId` : la commande pour laquelle le panier part au paiement. Retenu pour qu'un retour SANS passer par la page de
+  // retour de Stripe (bouton Retour, navigateur de l'appli fermé) retrouve le bon panier depuis Mes commandes, et pas
+  // celui d'une autre tentative (audit du 15/10/2026).
+  function stashForPayment(orderId = null) {
     try {
-      sessionStorage.setItem(PENDING_KEY, JSON.stringify({ restaurantId, restaurantName, lines }));
+      sessionStorage.setItem(PENDING_KEY, JSON.stringify({ restaurantId, restaurantName, lines, orderId }));
     } catch { /* stockage indisponible : le panier sera simplement perdu en cas d'abandon */ }
     setLines({});
     setRestaurantId(null);
   }
 
+  // Un panier attend-il l'issue d'un paiement ? Avec `orderId`, seulement s'il a été mis de côté pour cette commande-là.
+  function hasStashed(orderId = null) {
+    try {
+      const parsed = JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null');
+      if (!parsed?.lines || Object.keys(parsed.lines).length === 0) return false;
+      return !orderId || !parsed.orderId || String(parsed.orderId) === String(orderId);
+    } catch {
+      return false;
+    }
+  }
+
   // Paiement non abouti : on remet le panier tel qu'il était avant la redirection.
-  // Retourne true si quelque chose a effectivement été restauré.
-  function restoreStashed() {
+  // Retourne true si quelque chose a effectivement été restauré. Avec `orderId`, ne rend que le panier de cette commande.
+  function restoreStashed(orderId = null) {
     try {
       const raw = sessionStorage.getItem(PENDING_KEY);
       if (!raw) return false;
       const parsed = JSON.parse(raw);
+      if (orderId && parsed?.orderId && String(parsed.orderId) !== String(orderId)) return false;
       sessionStorage.removeItem(PENDING_KEY);
       if (!parsed?.lines || Object.keys(parsed.lines).length === 0) return false;
       setRestaurantId(parsed.restaurantId ?? null);
@@ -275,7 +298,7 @@ export function CartProvider({ children }) {
   const rawTotal = useMemo(() => +Object.values(lines).reduce((a, l) => a + l.unitPrice * l.qty, 0).toFixed(2), [lines]);
 
   return (
-    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, requestId, rawTotal, hasConflict, switchRestaurant, addOne, addMany, changeLineQty, removeLine, clear, clearLines, stashForPayment, restoreStashed, discardStashed, totals }}>
+    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, requestId, rawTotal, hasConflict, switchRestaurant, addOne, addMany, changeLineQty, removeLine, clear, clearLines, stashForPayment, hasStashed, restoreStashed, discardStashed, totals }}>
       {children}
     </CartContext.Provider>
   );

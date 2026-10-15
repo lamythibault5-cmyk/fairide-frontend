@@ -26,7 +26,7 @@ export default function EcranAdresse({ restaurant, restoId, loadDashboard, onFer
   const { enregistrer, enCours } = useEnregistrerCommerce({ restoId, loadDashboard, onFermer });
 
   function valider() {
-    if (!commune.trim()) { toast(t('editResto.toastCommuneRequired')); return; }
+    if (!commune.trim()) { toast(t('editResto.toastCommuneRequired'), 'erreur'); return; }
     if ((recoEtat === 'none' || recoEtat === 'error') && !confirmee) { toast(t('editResto.toastAddressConfirm')); return; }
     enregistrer({
       commune, addressCity: commune, neighborhood: quartier.trim(),

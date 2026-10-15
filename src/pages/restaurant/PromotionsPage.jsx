@@ -148,14 +148,14 @@ export default function PromotionsPage() {
         if (!y || y <= x) { toast(t('promosPage.toastThreshold')); setSaving(false); return; }
         await api(`/restaurants/${restoId}/promotions`, { method: 'POST', token, body: { discountValue: x, minCartTotal: y } });
       } else {
-        if (!itemId) { toast(t('promosPage.toastChooseDish')); setSaving(false); return; }
+        if (!itemId) { toast(t('promosPage.toastChooseDish'), 'erreur'); setSaving(false); return; }
         const body = type === 'percent' ? { type: 'percent', value: Number(percentValue) } : { type: 'bogo', value: Number(bogoN) };
         await api(`/restaurants/${restoId}/menu/${itemId}/promotions`, { method: 'POST', token, body });
       }
       setFormOpen(false);
       setItemId(''); setDiscountValue(''); setMinCartTotal('');
       loadPromos();
-      toast(t('promosPage.toastCreated'));
+      toast(t('promosPage.toastCreated'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -180,7 +180,7 @@ export default function PromotionsPage() {
     try {
       await api(`/promotions/${promo.id}`, { method: 'DELETE', token });
       loadPromos();
-      toast(t('promosPage.toastDeleted'));
+      toast(t('promosPage.toastDeleted'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {

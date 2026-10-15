@@ -50,7 +50,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
     try {
       await api(`/restaurants/${restoId}/order-limits`, { method: 'PUT', token, body: { deliveryRadiusKm: rayonLibre ? null : rayon, maxOrdersPerDay: plafondLibre ? null : n, minOrderAmount: min } });
       await loadDashboard?.(restoId);
-      toast(t('editResto.capacitySaved'));
+      toast(t('editResto.capacitySaved'), 'succes');
       onFermer();
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(false); }
   }

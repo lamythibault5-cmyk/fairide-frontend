@@ -41,7 +41,7 @@ export default function DriverDocuments() {
     setBusy(true);
     try {
       const r = await apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType, ...(side ? { side } : {}) } });
-      setDossier(r); toast(t('driverDocs.uploaded'));
+      setDossier(r); toast(t('driverDocs.uploaded'), 'succes');
     } catch (err) { toast(err.message, 'erreur'); } finally { setBusy(false); }
   }
   async function supprimer(id) {

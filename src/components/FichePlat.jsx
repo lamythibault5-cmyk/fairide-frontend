@@ -235,10 +235,12 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
           ref={boutonAjouter}
           disabled={bloque || ferme}
           onClick={() => {
-            // Le plat s'envole vers le panier pendant que la fiche redescend : on voit où il est parti.
+            // Le plat s'envole vers le panier : on voit où il est parti. L'ajout, lui, n'attend plus la fin de l'animation de
+            // fermeture (230 ms sur le chemin de l'action — audit du 15/10/2026, « on n'attend jamais une animation pour agir ») :
+            // le panier est à jour tout de suite, l'envol (élément à part, gestes.js) continue seul.
             vibrer(14);
             envolerVersPanier({ depuis: boutonAjouter.current?.getBoundingClientRect(), image: imageUrl, quantite: qty });
-            fermer(() => onConfirm(optionItemIds, snapshot, prixUnite, qty, note.trim()));
+            onConfirm(optionItemIds, snapshot, prixUnite, qty, note.trim());
           }}
         >
           {/* Le libellé annonce la quantité ET le prix : on sait ce qu'on ajoute sans remonter. */}

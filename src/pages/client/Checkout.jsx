@@ -1,5 +1,5 @@
 import { allerAuPaiement } from '../../natif';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { euros, libellePromo } from '../../prixPlat';
@@ -20,6 +20,7 @@ import { serviceOuvert, dateOuverture, paiementEnLigneOuvert, dateOuverturePaiem
 import CodePromoCheckout from '../../components/client/CodePromoCheckout';
 import CheckoutConformite from '../../components/conformite/CheckoutConformite';
 import { manqueConformite } from '../../conformite';
+import { defilement } from '../../gestes';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
@@ -66,7 +67,9 @@ export default function Checkout() {
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
-  const [dateOptions] = useState(() => getScheduleDateOptions(7, libellesDates));
+  // Les jours et créneaux suivent les horaires du commerce (scheduleUtils.js) : recalculés une fois la fiche chargée.
+  const ouverture = restaurant ? { hours: restaurant.hours, closures: restaurant.closures } : null;
+  const dateOptions = useMemo(() => getScheduleDateOptions(7, libellesDates, ouverture), [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
   const [placing, setPlacing] = useState(false);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [paying, setPaying] = useState(false);
@@ -88,6 +91,10 @@ export default function Checkout() {
   useEffect(() => {
     if (commandeTermineeRef.current) return;
     if (!restaurantId || cart.count === 0) {
+      // Retour arrière depuis la page de paiement : le panier est mis de côté (stashForPayment), pas perdu. « Ton panier
+      // est vide » était faux ; Mes commandes montre la commande au paiement non terminé, avec « Payer » et « Revenir au
+      // panier » (audit du 15/10/2026).
+      if (cart.hasStashed()) { navigate('/orders', { replace: true }); return; }
       // Arrivé ici sans panier (lien direct, onglet rouvert) : on le dit, au lieu de changer de page sans un mot (PAN-6).
       toast(t('checkout.toastEmptyCart'));
       navigate('/restaurants');
@@ -106,7 +113,7 @@ export default function Checkout() {
     fulfillmentInitRef.current = true;
     // Commerce sans livraison ni à emporter (commande en ligne fermée) : retour à sa fiche, le panier est conservé.
     if (!restaurant.offersDelivery && !restaurant.offersPickup) {
-      toast(t('checkout.toastNoOnlineOrder'));
+      toast(t('checkout.toastNoOnlineOrder'), 'erreur');
       navigate(`/restaurants/${restaurantId}`);
       return;
     }
@@ -143,7 +150,9 @@ export default function Checkout() {
     const id = setTimeout(() => {
       api('/orders/devis', { method: 'POST', token, body: corps })
         .then((o) => { if (actif) setDevis({ cle, order: o }); })
-        .catch(() => { if (actif) setDevis(null); });
+        // Le refus est gardé (et non plus effacé) : s'il vient du commerce ou de l'adresse, il s'affiche sous le bouton
+        // AVANT le clic, au lieu d'un toast qui disparaît après (audit du 15/10/2026, voir refusDevis plus bas).
+        .catch((e) => { if (actif) setDevis({ cle, erreur: { message: e.message, code: e.code, status: e.status } }); });
     }, 450);
     return () => { actif = false; clearTimeout(id); };
   });
@@ -171,7 +180,7 @@ export default function Checkout() {
   const soldeUtilise = useBalance && !surPlaceChoisi;
   const apresCodePromo = Math.max(0, +(estimatedTotalBeforeBalance - (codePromo?.discount || 0)).toFixed(2));
   const estimatedTotal = Math.max(0, apresCodePromo - (soldeUtilise ? Math.min(user.balance || 0, apresCodePromo) : 0));
-  const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate) : [];
+  const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate, ouverture) : [];
   const scheduledPreview = scheduleDate && scheduleTime
     ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
     : null;
@@ -233,14 +242,22 @@ export default function Checkout() {
   const corpsActuel = corpsCommande();
   const devisValide = corpsActuel && devis && devis.cle === JSON.stringify(corpsActuel) ? devis.order : null;
   const montantAnnonce = devisValide ? Number(devisValide.total) : estimatedTotal;
+  // Refus du serveur sur le panier affiché : commerce fermé ou en pause, adresse introuvable ou trop loin, commerce pas
+  // encore actif… Sauf ce que le client règle sur cette page même (CGU, âge, téléphone, dépôt devant la porte avec de
+  // l'alcool) : ces cases sont sous ses yeux, les annoncer avant qu'il ait pu les cocher serait du bruit. Ni les erreurs
+  // réseau, serveur ou de cadence (429) : celles-là ne disent rien de la commande.
+  const REFUS_REGLES_ICI = ['CGU_A_ACCEPTER', 'AGE_DECLARATION_REQUISE', 'PHONE_REQUIRED', 'DEPOT_ALCOOL_INTERDIT'];
+  const erreurDevis = corpsActuel && devis?.erreur && devis.cle === JSON.stringify(corpsActuel) ? devis.erreur : null;
+  const refusDevis = erreurDevis && erreurDevis.status >= 400 && erreurDevis.status < 500 && erreurDevis.status !== 429
+    && !REFUS_REGLES_ICI.includes(erreurDevis.code) ? erreurDevis.message : null;
 
   async function placeOrder() {
     if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
-      toast(t('checkout.toastAddressRequired'));
+      toast(t('checkout.toastAddressRequired'), 'erreur');
       return;
     }
     if (scheduleEnabled && (!scheduleDate || !scheduleTime)) {
-      toast(t('checkout.toastScheduledDateTimeRequired'));
+      toast(t('checkout.toastScheduledDateTimeRequired'), 'erreur');
       return;
     }
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
@@ -248,7 +265,7 @@ export default function Checkout() {
       toast(manque);
       // Sur téléphone, la case à cocher est tout en bas, loin du bouton : on y amène le client au lieu de le laisser chercher.
       const caseManquante = [...document.querySelectorAll('.checkout-conformite .co-case input')].find((i) => !i.checked);
-      if (caseManquante) { caseManquante.closest('.co-case').scrollIntoView({ behavior: 'smooth', block: 'center' }); caseManquante.focus({ preventScroll: true }); }
+      if (caseManquante) { caseManquante.closest('.co-case').scrollIntoView({ behavior: defilement(), block: 'center' }); caseManquante.focus({ preventScroll: true }); }
       return;
     }
     setPlacing(true);
@@ -306,7 +323,7 @@ export default function Checkout() {
         await api(`/orders/${order.id}/confirm-on-site`, { method: 'POST', token });
         commandeTermineeRef.current = true;
         cart.clear();
-        toast(t('checkout.toastOnSiteConfirmed'));
+        toast(t('checkout.toastOnSiteConfirmed'), 'succes');
         navigate('/orders');
         return;
       }
@@ -315,7 +332,7 @@ export default function Checkout() {
         // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
         commandeTermineeRef.current = true;
         cart.clear();
-        toast(t('checkout.toastOrderPaid'));
+        toast(t('checkout.toastOrderPaid'), 'succes');
         navigate('/orders');
       } else {
         // Le panier est mis de côté, pas vidé et pas laissé en place — voir stashForPayment() dans
@@ -324,7 +341,7 @@ export default function Checkout() {
         // le laisser en place lui laissait un panier d'articles déjà payés s'il ne revenait jamais
         // sur la page de retour. La copie mise de côté est restaurée ou supprimée par OrderResult.jsx,
         // une fois l'issue réellement connue.
-        cart.stashForPayment();
+        cart.stashForPayment(order.id);
         await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
       }
     } catch (e) {
@@ -341,7 +358,7 @@ export default function Checkout() {
     setCancelling(true);
     try {
       await api(`/orders/${pendingOrder.id}/cancel`, { method: 'PATCH', token });
-      toast(t('checkout.toastOrderCancelled'));
+      toast(t('checkout.toastOrderCancelled'), 'succes');
       setPendingOrder(null);
       if (pendingOrder.balanceUsed > 0) refreshUser().catch(() => {});
     } catch (e) {
@@ -480,7 +497,7 @@ export default function Checkout() {
                     type="button"
                     className={`choix-carte${scheduleEnabled ? ' est-actif' : ''}`}
                     aria-pressed={scheduleEnabled}
-                    onClick={() => { setScheduleEnabled(true); setScheduleDate(dateOptions[0].value); setScheduleTime(''); }}
+                    onClick={() => { setScheduleEnabled(true); setScheduleDate(dateOptions[0]?.value || ''); setScheduleTime(''); }}
                   >
                     <Icone nom="horloge" taille={20} />
                     <span>{t('checkout.scheduleLater')}</span>
@@ -521,6 +538,9 @@ export default function Checkout() {
           {(
           <aside className="checkout-recap">
           <div className="cart-bar co-barre">
+            {/* Dans la barre, au-dessus du montant : sur téléphone elle est fixée en bas de l'écran, un message placé après
+                elle s'afficherait ailleurs que près du bouton. */}
+            {refusDevis && <p className="co-refus" role="alert"><Icone nom="alerte" taille={16} className="icone-texte" /> {refusDevis}</p>}
             <span className="co-barre-total">
               <span className="co-barre-montant">{euros(montantAnnonce)}</span>
               <span className="co-barre-detail">{t(`checkout.barCount${devisValide ? 'Exact' : ''}${cart.count > 1 ? 'Plural' : ''}`, { count: cart.count })}</span>
@@ -644,16 +664,19 @@ export default function Checkout() {
       {sousEcran === 'adresse' && (
         <ChoixAdresse
           onFermer={() => setSousEcran(null)}
+          onSaisieManuelle={() => setSousEcran('adresse-manuelle')}
           onChoisie={(a) => {
             setAddressStreet(a.street); setAddressNumber(a.number);
             setAddressPostalCode(a.postalCode); setAddressCity(a.city);
           }}
         />
       )}
-      {false && (
+      {/* Saisie à la main, ouverte depuis le carnet quand la recherche ne trouve pas la rue (audit du 15/10/2026). Le serveur
+          géocode et refuse une adresse introuvable ou hors rayon : le refus s'affiche sous le bouton de paiement. */}
+      {sousEcran === 'adresse-manuelle' && (
         <SousEcran titre={t('checkout.addressTitle')} onFermer={() => setSousEcran(null)} pied={
           <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} onClick={() => {
-            if (adresseIncomplete) { toast(t('checkout.toastAddressRequired')); return; }
+            if (adresseIncomplete) { toast(t('checkout.toastAddressRequired'), 'erreur'); return; }
             setSousEcran(null);
           }}>{t('checkout.addressSave')}</button>
         }>

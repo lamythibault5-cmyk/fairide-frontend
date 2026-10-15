@@ -29,7 +29,7 @@ export default function PeppolSettings({ endpoint }) {
     try {
       const d = await api(endpoint, { method: 'PATCH', token, body: { peppolId: peppolId.trim(), ...changements } });
       setData(d); setPeppolId(d.peppolId || '');
-      toast(t('peppol.toastSaved'));
+      toast(t('peppol.toastSaved'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {

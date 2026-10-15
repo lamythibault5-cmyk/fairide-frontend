@@ -1,7 +1,8 @@
 import { useEffect, useId, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { euros } from '../prixPlat';
 import usePageMeta from '../hooks/usePageMeta';
 import AvecMarque from '../components/AvecMarque';
@@ -19,6 +20,10 @@ import AvecMarque from '../components/AvecMarque';
  * priceWithFairideRate), et le choix part avec « C'est bon ». Par défaut : garder — on ne monte pas ses prix sans un geste. */
 export default function ValiderCarte() {
   const { token } = useParams();
+  // Commerçant connecté (arrivé par la liste « Avant d'être en ligne ») : la page finie le ramène à son tableau de bord au
+  // lieu de « tu peux fermer cette page », qui laissait l'appli sans issue. Lien reçu par SMS sans être connecté : inchangé.
+  const { role, roles } = useAuth();
+  const commercant = role === 'restaurant' || (Array.isArray(roles) && roles.includes('restaurant'));
   const { t, locale } = useLanguage();
   const id = useId();
   // Page à jeton : jamais indexée, jamais suivie (le lien est personnel).
@@ -57,7 +62,8 @@ export default function ValiderCarte() {
     return (
       <main className="container" style={{ maxWidth: 640, padding: '32px 16px' }}>
         <h1>{t('validerCarte.doneTitle')}</h1>
-        <p>{t('validerCarte.doneText', { name: carte?.restaurant?.name || '' })}</p>
+        <p>{t(commercant ? 'validerCarte.doneTextConnected' : 'validerCarte.doneText', { name: carte?.restaurant?.name || '' })}</p>
+        {commercant && <Link to="/dashboard" className="btn-gold" style={{ display: 'inline-block', marginTop: 8 }}>{t('validerCarte.backToDashboard')}</Link>}
       </main>
     );
   }

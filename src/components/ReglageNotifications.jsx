@@ -21,9 +21,9 @@ export default function ReglageNotifications({ textes }) {
   if (!push.supporte || !push.disponible) return null;
 
   async function basculer() {
-    if (push.abonne) { await push.desactiver(); toast(t('notifs.offDone')); return; }
+    if (push.abonne) { await push.desactiver(); toast(t('notifs.offDone'), 'succes'); return; }
     const issue = await push.activer();
-    if (issue === 'ok') toast(t('notifs.onDone'));
+    if (issue === 'ok') toast(t('notifs.onDone'), 'succes');
     else if (issue === 'refuse') toast(t('notifs.refused'), 'erreur');
     else toast(t('notifs.failed'), 'erreur');
   }

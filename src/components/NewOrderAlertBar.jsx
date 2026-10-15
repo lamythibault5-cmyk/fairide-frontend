@@ -17,7 +17,7 @@ import { useToast } from '../context/ToastContext';
 import { SONNERIES, REPETITIONS } from '../hooks/useNewOrderAlert';
 import Icone from './Icone';
 
-export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme }) {
+export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme }) {
   const { t } = useLanguage();
   const toast = useToast();
   const active = newCount > 0;
@@ -28,13 +28,13 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
   async function basculerPush() {
     if (push.abonne) {
       await push.desactiver();
-      toast(t('alertBar.pushOffDone'));
+      toast(t('alertBar.pushOffDone'), 'succes');
       return;
     }
     const issue = await push.activer();
-    if (issue === 'ok') toast(t('alertBar.pushOnDone'));
-    else if (issue === 'refuse') toast(t('alertBar.pushRefused'));
-    else toast(t('alertBar.pushFailed'));
+    if (issue === 'ok') toast(t('alertBar.pushOnDone'), 'succes');
+    else if (issue === 'refuse') toast(t('alertBar.pushRefused'), 'erreur');
+    else toast(t('alertBar.pushFailed'), 'erreur');
   }
 
   // Ce que la barre peut promettre, dans l'ordre décroissant de garantie.
@@ -61,6 +61,14 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
 
       <span className="small alerte-aide" style={{ flex: 1, minWidth: 220 }}>{aide}</span>
 
+      {/* Son voulu mais encore bloqué par le navigateur (page rechargée, aucun geste depuis) : l'alarme ne sonnerait pas.
+          Un toucher n'importe où suffit à la débloquer ; ce bouton donne une raison de le faire (audit du 15/10/2026). */}
+      {soundEnabled && audioBloque && (
+        <button type="button" className="btn-gold alerte-son-bloque" onClick={debloquerAudio}>
+          <Icone nom="sonCoupe" taille={18} className="icone-texte" />{' '}{t('alertBar.tapToEnableSound')}
+        </button>
+      )}
+
       <div className="row alerte-actions" style={{ gap: 8 }}>
         <button
           type="button"
@@ -69,7 +77,7 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
           aria-pressed={soundEnabled}
           onClick={() => setSoundEnabled(!soundEnabled)}
         >
-          {soundEnabled ? t('alertBar.soundOn') : t('alertBar.soundOff')}
+          {soundEnabled && !audioBloque ? t('alertBar.soundOn') : t('alertBar.soundOff')}
         </button>
 
         {/* Sonnerie au choix (3) et test de l'alarme (fondateur, 2026-10-01) : on entend tout de suite ce qui sonnera

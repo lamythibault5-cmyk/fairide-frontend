@@ -29,6 +29,7 @@ import AbonnementOffert from '../components/commerce/AbonnementOffert';
 import OffreFormules from '../components/OffreFormules';
 import TerminalFairide from '../components/TerminalFairide';
 import { euros } from '../prixPlat';
+import { defilement } from '../gestes';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -88,7 +89,7 @@ export default function Account() {
         return;
       }
       await navigator.clipboard.writeText(lien);
-      toast(t('accountUi.toastLinkCopied', { link: lien }));
+      toast(t('accountUi.toastLinkCopied', { link: lien }), 'succes');
     } catch (e) {
       if (e?.name === 'AbortError') return;
       toast(t('accountUi.toastShareUnavailable', { link: lien }));
@@ -173,7 +174,7 @@ export default function Account() {
     // reprogrammait plus rien. « Configurer mes paiements » laissait le restaurateur en haut de Mon compte.
     const id = setTimeout(() => {
       dejaDeroule.current = true;
-      (document.getElementById(`section-${sectionDemandee}`) || cible).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      (document.getElementById(`section-${sectionDemandee}`) || cible).scrollIntoView({ behavior: defilement(), block: 'start' });
     }, 150);
     return () => clearTimeout(id);
   }, [sectionDemandee, restaurant, role]);
@@ -265,7 +266,7 @@ export default function Account() {
     try {
       await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, pickupPaymentMode } });
       refreshRestaurant();
-      toast(t('accountUi.toastServicesUpdated'));
+      toast(t('accountUi.toastServicesUpdated'), 'succes');
     } catch (err) {
       toast(err.message, 'erreur');
     } finally {
@@ -276,7 +277,7 @@ export default function Account() {
   // Depuis « Services proposés » : déplie l'abonnement et l'amène à l'écran.
   function voirAbonnement() {
     setOuvertes((prev) => new Set(prev).add('abonnement'));
-    setTimeout(() => document.getElementById('section-abonnement')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+    setTimeout(() => document.getElementById('section-abonnement')?.scrollIntoView({ behavior: defilement(), block: 'start' }), 120);
   }
 
   async function subscribeNow() {
@@ -339,7 +340,7 @@ export default function Account() {
   function copyReferralCode() {
     if (!referralStats?.code) return;
     navigator.clipboard.writeText(referralStats.code).then(() => {
-      toast(t('account.referral.toastCopied'));
+      toast(t('account.referral.toastCopied'), 'succes');
     }).catch(() => {});
   }
 
@@ -366,7 +367,7 @@ export default function Account() {
     setConverting(true);
     try {
       const result = await api('/auth/balance/convert', { method: 'POST', token, body: { amount } });
-      toast(t('account.convert.toastSuccess', { code: result.code }));
+      toast(t('account.convert.toastSuccess', { code: result.code }), 'succes');
       setConvertAmount('');
       setGeneratedCodes((prev) => [{ code: result.code, amount: Number(result.amount), used: false, createdAt: new Date().toISOString() }, ...(prev || [])]);
       await refreshUser();
@@ -402,7 +403,7 @@ export default function Account() {
         addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
         addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim()
       });
-      toast(t('account.toastInfoUpdated'));
+      toast(t('account.toastInfoUpdated'), 'succes');
     } catch (err) {
       toast(err.message, 'erreur');
     } finally {
@@ -415,7 +416,7 @@ export default function Account() {
     try {
       await requestDeletionCode();
       setDeleteCodeSent(true);
-      toast(t('account.toastDeleteCodeSent'));
+      toast(t('account.toastDeleteCodeSent'), 'succes');
     } catch (err) {
       toast(err.message, 'erreur');
     } finally {
@@ -424,7 +425,7 @@ export default function Account() {
   }
 
   async function handleDeleteAccount() {
-    if (!deleteCode) { toast(t('account.toastDeleteCodeRequired')); return; }
+    if (!deleteCode) { toast(t('account.toastDeleteCodeRequired'), 'erreur'); return; }
     setDeleting(true);
     try {
       const result = await deleteAccount({ code: deleteCode, reason: deleteReason, comment: deleteComment.trim() });
@@ -873,7 +874,7 @@ export default function Account() {
               <div className="paiement-encart" style={{ marginBottom: 12 }}>
                 <b>{t('accountUi.subContractTitle')}</b>
                 <p className="small" style={{ margin: '4px 0 8px' }}>{t('accountUi.subContractText')}</p>
-                <button type="button" className="btn-gold" onClick={() => { setOuvertes((prev) => new Set(prev).add('contrat')); setTimeout(() => document.getElementById('section-contrat')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>{t('accountUi.subContractBtn')}</button>
+                <button type="button" className="btn-gold" onClick={() => { setOuvertes((prev) => new Set(prev).add('contrat')); setTimeout(() => document.getElementById('section-contrat')?.scrollIntoView({ behavior: defilement(), block: 'start' }), 120); }}>{t('accountUi.subContractBtn')}</button>
               </div>
             )}
             {/* Fiche pas encore validée : le bouton d'abonnement ci-dessous exige adminStatus === 'approved', et
@@ -1090,7 +1091,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
     try {
       await requestContactChange(field, newValue.trim());
       setCodeSent(true);
-      toast(t('accountUi.toastCodeSent'));
+      toast(t('accountUi.toastCodeSent'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -1099,11 +1100,11 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
   }
 
   async function confirm() {
-    if (!code.trim()) { toast(t('accountUi.toastCodeRequired')); return; }
+    if (!code.trim()) { toast(t('accountUi.toastCodeRequired'), 'erreur'); return; }
     setConfirming(true);
     try {
       await confirmContactChange(field, newValue.trim(), code.trim());
-      toast(t('accountUi.toastFieldUpdated', { label }));
+      toast(t('accountUi.toastFieldUpdated', { label }), 'succes');
       cancel();
     } catch (e) {
       toast(e.message, 'erreur');

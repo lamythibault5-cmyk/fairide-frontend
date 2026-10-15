@@ -45,7 +45,7 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
     if (!nouveaux.length) return;
     setFichiers((f) => {
       const tous = [...f, ...nouveaux.filter((n) => !f.some((x) => x.name === n.name && x.size === n.size))];
-      if (tous.length > MAX_FICHIERS) toast(t('menuConcierge.filesTooMany', { n: MAX_FICHIERS }));
+      if (tous.length > MAX_FICHIERS) toast(t('menuConcierge.filesTooMany', { n: MAX_FICHIERS }), 'erreur');
       return tous.slice(0, MAX_FICHIERS);
     });
   }
@@ -58,19 +58,19 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
       const r = fichiers.length
         ? await apiUpload(`/restaurants/${restoId}/menu/concierge`, { files: fichiers, token, fieldName: 'files', fields: { platform, url: url.trim(), notes: notes.trim(), wantsPhotos: photos ? 'true' : 'false' } })
         : await api(`/restaurants/${restoId}/menu/concierge`, { method: 'POST', token, body: { platform, url: url.trim(), notes: notes.trim(), wantsPhotos: photos } });
-      setDemande(r.request); setFichiers([]); toast(t('menuConcierge.sent'));
+      setDemande(r.request); setFichiers([]); toast(t('menuConcierge.sent'), 'succes');
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   async function enregistrerNote() {
     setBusy(true);
     try {
       const r = await api(`/restaurants/${restoId}/menu/concierge/${demande.id}`, { method: 'PATCH', token, body: { notes: noteEdit.trim() } });
-      setDemande(r.request); setEditNote(false); toast(t('menuConcierge.noteSaved'));
+      setDemande(r.request); setEditNote(false); toast(t('menuConcierge.noteSaved'), 'succes');
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   async function annuler() {
     setBusy(true);
-    try { await api(`/restaurants/${restoId}/menu/concierge/${demande.id}`, { method: 'DELETE', token }); setDemande(null); toast(t('menuConcierge.cancelled')); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+    try { await api(`/restaurants/${restoId}/menu/concierge/${demande.id}`, { method: 'DELETE', token }); setDemande(null); toast(t('menuConcierge.cancelled'), 'succes'); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   if (demande === undefined) return <p className="small">{t('menuConcierge.loading')}</p>;

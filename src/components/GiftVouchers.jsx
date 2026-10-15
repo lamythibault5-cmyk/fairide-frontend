@@ -180,7 +180,7 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
   }
   async function envoyer() {
     setEnCours('email');
-    try { await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}/send`, { method: 'POST', token, body: { email } }); toast(t('bons.gvEmailSent', { email })); }
+    try { await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}/send`, { method: 'POST', token, body: { email } }); toast(t('bons.gvEmailSent', { email }), 'succes'); }
     catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   function imprimer() {

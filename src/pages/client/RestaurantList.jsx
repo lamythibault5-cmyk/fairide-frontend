@@ -634,8 +634,14 @@ export default function RestaurantList() {
           )}
         </>
       )}
+      {/* Filtres trop serrés : « Aucun restaurant pour le moment » laissait croire qu'il n'y en avait aucun, sans moyen d'en
+          sortir (audit du 15/10/2026). On dit que c'est le filtre, et on l'efface en un geste. */}
       {!loading && hasActiveFilter && list.length === 0 && (
-        <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
+        <EtatVide icone="recherche" titre={t('restaurantList.emptyFiltered')}>
+          <button type="button" className="btn-teal" onClick={() => { setSearch(''); setCuisine(''); setCommune(''); setBio(false); setVegan(false); setPrix(0); setEmporter(false); setTri('recommande'); }}>
+            {t('restaurantList.clearFilters')}
+          </button>
+        </EtatVide>
       )}
       {!loading && restaurants.length === 0 && (
         <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />

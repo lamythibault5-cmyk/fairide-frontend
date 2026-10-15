@@ -36,7 +36,7 @@ export default function RestaurantContract({ restoId, onAccepte }) {
     if (!lu) { toast(t('restoContract.errRead'), 'erreur'); return; }
     if (!nom.trim()) { toast(t('restoContract.errName'), 'erreur'); return; }
     setBusy(true);
-    try { const r = await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName: nom.trim(), readConfirmed: true } }); setD(r); toast(t('restoContract.accepted')); onAccepte?.(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+    try { const r = await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName: nom.trim(), readConfirmed: true } }); setD(r); toast(t('restoContract.accepted'), 'succes'); onAccepte?.(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   const basculer = (g) => {
     setOuverts((s) => { const n = new Set(s); if (n.has(g)) n.delete(g); else n.add(g); return n; });

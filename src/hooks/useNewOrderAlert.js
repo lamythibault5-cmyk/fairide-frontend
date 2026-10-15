@@ -213,10 +213,16 @@ export default function useNewOrderAlert(orders, ready) {
     function unlock() {
       if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     }
+    // Son encore bloqué par le navigateur (page rechargée, tablette jamais touchée depuis) : la barre l'affiche en grand au
+    // lieu de « Son activé », qui mentait (audit UX du 15/10/2026).
+    const suivre = () => setAudioBloque(ctx.state !== 'running');
+    suivre();
+    ctx.addEventListener?.('statechange', suivre);
     const events = ['pointerdown', 'keydown', 'touchstart'];
     events.forEach((e) => window.addEventListener(e, unlock, { passive: true }));
 
     return () => {
+      ctx.removeEventListener?.('statechange', suivre);
       events.forEach((e) => window.removeEventListener(e, unlock));
       // Fermeture explicite : sans elle, chaque remontage du tableau de bord laissait un contexte
       // audio derrière lui, et Chrome refuse d'en ouvrir plus d'environ six par page.
@@ -224,6 +230,9 @@ export default function useNewOrderAlert(orders, ready) {
       ctx.close().catch(() => {});
     };
   }, []);
+
+  const [audioBloque, setAudioBloque] = useState(false);
+  const debloquerAudio = useCallback(() => { ctxRef.current?.resume?.().catch(() => {}); }, []);
 
   const ring = useCallback(() => {
     if (!soundEnabled) return;
@@ -318,5 +327,5 @@ export default function useNewOrderAlert(orders, ready) {
     return () => { document.title = base; };
   }, [newCount]);
 
-  return { newCount, soundEnabled, setSoundEnabled, permission, requestPermission, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme };
+  return { audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme };
 }

@@ -26,7 +26,7 @@ export default function NouvellesFairide({ ouverte, onClick }) {
     try {
       const r = await api('/auth/me/marketing', { method: 'PATCH', token, body: { marketingEmails: voulu } });
       setAbonne(r.marketingEmails);
-      toast(t('nouvelles.saved'));
+      toast(t('nouvelles.saved'), 'succes');
     } catch (err) {
       toast(err.message, 'erreur');
     } finally {

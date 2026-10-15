@@ -12,8 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import AddressRecognition from '../components/AddressRecognition';
-import { api, apiUpload } from '../api';
-import IdentityDocsPicker from '../components/IdentityDocsPicker';
+import { api } from '../api';
 import PhoneInput from '../components/PhoneInput';
 import EmailDomainChips from '../components/EmailDomainChips';
 import AddressSearch from '../components/AddressSearch';
@@ -29,6 +28,7 @@ import { suivre } from '../analytics';
 import { bceValide, raisonBce, codePostalValide } from '../validation';
 import Icone from '../components/Icone';
 import AvecMarque from '../components/AvecMarque';
+import { defilement } from '../gestes';
 
 function roles(t) {
   return [
@@ -64,7 +64,10 @@ function roles(t) {
    Chacun valide ce qu'il porte, donc « Continuer » bloque au plus pres de la faute. */
 const STEP_KEYS = {
   client: ['account', 'identity', 'address'],
-  driver: ['account', 'identity', 'documents', 'address'],
+  // Livreur : plus de pièces d'identité ni de selfie à l'inscription (audit UX du 15/10/2026). Ils étaient gardés en mémoire
+  // jusqu'à la création du compte — perdus au moindre rechargement, et Android ferme souvent l'onglet en ouvrant l'appareil
+  // photo. L'identité se vérifie dans le dossier (Stripe Identity, pièce téléversée ou en personne), qui l'exige avant envoi.
+  driver: ['account', 'identity', 'address'],
   restaurant: ['account', 'identity', 'business', 'details', 'hours', 'services', 'address']
 };
 
@@ -76,7 +79,11 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 // l'impression d'être enfermé dans le formulaire dès l'arrivée ou au moindre changement d'onglet.
 // Le gain d'un tap ne vaut pas ce saut de page à chaque étape.
 const CLE_BROUILLON = 'fairide_inscription_brouillon';
-const BROUILLON_MAX_MS = 6 * 3600 * 1000; // au-delà, une inscription interrompue ne se reprend plus
+/* BROUILLON GARDÉ 48 H, MÊME ONGLET FERMÉ (audit UX du 15/10/2026). Il ne survivait qu'à un rechargement du même onglet
+   (sessionStorage) : un restaurateur qui fermait la page pour aller chercher son numéro d'entreprise recommençait tout.
+   localStorage, 48 h, effacé à l'inscription réussie ou par « Recommencer » ; jamais de mot de passe ni de code dedans.
+   Déclaré dans la politique des cookies (stockage technique, cookies.technical). */
+const BROUILLON_MAX_MS = 48 * 3600 * 1000; // au-delà, une inscription interrompue ne se reprend plus
 
 export default function Auth() {
   const { t, language } = useLanguage();
@@ -391,22 +398,6 @@ export default function Auth() {
     setPassword(''); setErrors({});
   }
   function oublierGoogle() { setGoogleCredential(null); setGoogleProfile(null); setEmail(''); }
-  // Pièce d'identité du livreur (recto / verso) et attestation étudiant, gardées dans le navigateur jusqu'à la
-  // création du compte, puis envoyées au dossier coursier — voir televerserDocumentsLivreur.
-  const [docKind, setDocKind] = useState('identity_card');
-  const [docRecto, setDocRecto] = useState(null);
-  const [docVerso, setDocVerso] = useState(null);
-  const [docStudent, setDocStudent] = useState(null);
-  const [docSelfie, setDocSelfie] = useState(null);
-  async function televerserDocumentsLivreur(token) {
-    if (role !== 'driver' || !token) return;
-    const envois = [[docKind, 'recto', docRecto], [docKind, 'verso', docVerso], ['selfie', null, docSelfie], ['school_certificate', null, docStudent]].filter((x) => x[2]);
-    let echecs = 0;
-    for (const [docType, side, file] of envois) {
-      try { await apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType, ...(side ? { side } : {}) } }); } catch { echecs++; }
-    }
-    if (echecs) toast(t('authDocs.uploadFailed'));
-  }
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
   const [pendingChannel, setPendingChannel] = useState('email'); // 'sms' | 'email' : par où le code est parti
@@ -422,7 +413,8 @@ export default function Auth() {
   // avec lui par le même bouton « Se connecter » — il reste valable une heure.
   const [googleEnAttente2fa, setGoogleEnAttente2fa] = useState(null);
   const [resending, setResending] = useState(false);
-  const [forgotMode, setForgotMode] = useState(false);
+  // ?oubli=1 : arrivée depuis un lien de réinitialisation périmé (ResetPassword.jsx), directement sur « mot de passe oublié ».
+  const [forgotMode, setForgotMode] = useState(() => searchParams.get('oubli') === '1');
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSubmitted, setForgotSubmitted] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
@@ -441,7 +433,7 @@ export default function Auth() {
     referralCode: [referralCode, setReferralCode], referralOpen: [referralOpen, setReferralOpen],
     legalName: [legalName, setLegalName], companyNumber: [companyNumber, setCompanyNumber], vatNumber: [vatNumber, setVatNumber],
     responsibleName: [responsibleName, setResponsibleName], responsibleTouched: [responsibleTouched, setResponsibleTouched],
-    courierStatus: [courierStatus, setCourierStatus], schoolName: [schoolName, setSchoolName], academicYear: [academicYear, setAcademicYear], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption], docKind: [docKind, setDocKind],
+    courierStatus: [courierStatus, setCourierStatus], schoolName: [schoolName, setSchoolName], academicYear: [academicYear, setAcademicYear], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption],
     autrePlateforme: [autrePlateforme, setAutrePlateforme], plateformes: [plateformes, setPlateformes], plateformeAutre: [plateformeAutre, setPlateformeAutre], zonesPreferees: [zonesPreferees, setZonesPreferees],
     commerceTrouve: [commerceTrouve, setCommerceTrouve], nomCommerce: [nomCommerce, setNomCommerce], services: [services, setServices],
     cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
@@ -454,14 +446,23 @@ export default function Auth() {
     forgotMode: [forgotMode, setForgotMode], forgotEmail: [forgotEmail, setForgotEmail]
   };
   const brouillonRepris = useRef(false);
+  // Inscription reprise après être parti (pas un simple rechargement) : on le dit, avec « Recommencer ».
+  const [brouillonReprisVisible, setBrouillonRepris] = useState(false);
+  function recommencer() {
+    try { localStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
+    window.location.reload();
+  }
   const attenteBrouillon = useRef(null); // { role, mode } restaurés, tant qu'ils ne sont pas encore appliqués
   useLayoutEffect(() => {
     brouillonRepris.current = true;
     try {
       const nav = performance.getEntriesByType?.('navigation')?.[0];
-      if (nav?.type !== 'reload') { sessionStorage.removeItem(CLE_BROUILLON); return; }
-      const b = JSON.parse(sessionStorage.getItem(CLE_BROUILLON) || 'null');
-      if (!b || Date.now() - (b.at || 0) > BROUILLON_MAX_MS) return;
+      const b = JSON.parse(localStorage.getItem(CLE_BROUILLON) || 'null');
+      if (!b || Date.now() - (b.at || 0) > BROUILLON_MAX_MS) { localStorage.removeItem(CLE_BROUILLON); return; }
+      // Arrivée par un lien vers un AUTRE type de compte (« Devenir livreur » après un brouillon de commerce) : le lien
+      // l'emporte, le brouillon reste pour plus tard. Un rechargement reprend toujours.
+      if (nav?.type !== 'reload' && (roleHint || audience) && b.champs?.role && b.champs.role !== role) return;
+      if (nav?.type !== 'reload' && b.champs?.mode === 'register') setBrouillonRepris(true);
       attenteBrouillon.current = { role: b.champs?.role ?? role, mode: b.champs?.mode ?? mode };
       for (const [cle, valeur] of Object.entries(b.champs || {})) champsBrouillon[cle]?.[1](valeur);
     } catch { /* stockage indisponible ou brouillon illisible : formulaire vierge */ }
@@ -473,7 +474,7 @@ export default function Auth() {
     const minuteur = setTimeout(() => {
       try {
         const champs = Object.fromEntries(Object.entries(champsBrouillon).map(([cle, [valeur]]) => [cle, valeur]));
-        sessionStorage.setItem(CLE_BROUILLON, JSON.stringify({ at: Date.now(), champs }));
+        localStorage.setItem(CLE_BROUILLON, JSON.stringify({ at: Date.now(), champs }));
       } catch { /* stockage plein ou indisponible */ }
     }, 250);
     return () => clearTimeout(minuteur);
@@ -499,21 +500,23 @@ export default function Auth() {
   // naviguer, et le bouton reste en « Chargement… » jusque-là. Sans cela, le bouton redevenait actif pendant
   // que la page d'arrivée se téléchargeait en coulisse — sur mobile, on croyait que le toucher n'avait pas pris.
   async function allerApresConnexion(user) {
-    try { sessionStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
+    try { localStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
     await attendrePage(from === '/' ? espaceApresConnexion(user) : from);
     navigate(from);
   }
   // Après une INSCRIPTION (compte créé, code vérifié), on arrive directement dans son espace — jamais sur la page de
-  // connexion ni sur l'accueil (fondateur, 2026-09-18) : client → Mon compte, commerce → tableau de bord, livreur →
+  // connexion ni sur l'accueil (fondateur, 2026-09-18) : client → les commerces, commerce → tableau de bord, livreur →
   // espace livreur (où l'attend la vérification d'identité). `replace` : le bouton Retour ne ramène pas au formulaire.
+  // Client : les commerces et non plus Mon compte (audit du 15/10/2026) — l'accueil de l'appli venait d'annoncer « N commerces
+  // livrent chez toi », et le client tombait sur une page de réglages sans lien vers eux.
   async function allerApresInscription(user) {
-    try { sessionStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
+    try { localStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
     // Exception : un CLIENT arrivé ici depuis une page précise (un commerce cliqué dans la liste, voir
     // RestaurantCard dans RestaurantList.jsx) y retourne — il s'est inscrit pour voir cette carte-là,
     // pas pour remplir son profil (fondateur, 2026-09-27).
     const cible = user?.role === 'restaurant' ? '/dashboard'
       : user?.role === 'driver' ? '/driver/onboarding'
-      : from !== '/' ? from : '/account';
+      : from !== '/' ? from : '/restaurants';
     await attendrePage(cible);
     navigate(cible, { replace: true });
   }
@@ -599,20 +602,14 @@ export default function Auth() {
         if (!courierStatus) e.courierStatus = t('auth.errCourierStatus');
         if (!vehicleType) e.vehicleType = t('auth.errVehicle');
         // Sac, autres plateformes, communes : plus demandés ici (12 oct. 2026), voir l'écran 2 plus bas.
-        // Numéro d'entreprise : requis pour l'étudiant-indépendant comme pour l'indépendant (facturation mensuelle).
-        if (['student_independent', 'independent'].includes(courierStatus) && !companyNumber.trim()) e.companyNumber = required;
-        else if (companyNumber.trim() && !bceValide(companyNumber)) { const why = raisonBce(companyNumber); e.companyNumber = why?.raison === 'longueur' ? t('auth.errCompanyNumberLength', { n: why.chiffres }) : why?.raison === 'prefixe' ? t('auth.errCompanyNumberPrefix') : t('auth.errCompanyNumberKey'); }
+        // Facultatif à l'inscription (audit UX du 15/10/2026) : le dossier l'exige avant envoi. Vérifié seulement s'il est donné.
+        if (companyNumber.trim() && !bceValide(companyNumber)) { const why = raisonBce(companyNumber); e.companyNumber = why?.raison === 'longueur' ? t('auth.errCompanyNumberLength', { n: why.chiffres }) : why?.raison === 'prefixe' ? t('auth.errCompanyNumberPrefix') : t('auth.errCompanyNumberKey'); }
         if (courierStatus === 'student_independent') {
           if (schoolName.trim().length < 2) e.schoolName = required;
           if (!academicYear.trim()) e.academicYear = required;
           else if (!/^\d{4}(\s*[-/–]\s*\d{2,4})?$/.test(academicYear.trim())) e.academicYear = t('auth.errAcademicYear');
         }
       }
-    }
-    if (key === 'documents') {
-      if (!docRecto) e.docRecto = t('authDocs.errFront');
-      if (!docVerso) e.docVerso = t('authDocs.errBack');
-      if (!docSelfie) e.docSelfie = t('authDocs.errSelfie');
     }
     // « business » (fondateur, 2026-10-13) : le nom du commerce et son numéro sur place, saisis à la main — plus de recherche
     // par code postal, qui ne trouvait pas les commerces.
@@ -720,7 +717,7 @@ export default function Auth() {
   const verifEnCours = useRef(false);
   // Le premier champ en faute est amené à l'écran : sur téléphone, l'erreur d'un champ du haut restait hors de vue.
   function montrerPremiereErreur() {
-    setTimeout(() => document.querySelector('.input-invalid, .field-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+    setTimeout(() => document.querySelector('.input-invalid, .field-error')?.scrollIntoView({ behavior: defilement(), block: 'center' }), 60);
   }
   /* CHAQUE ÉCRAN COMMENCE EN HAUT.
      Le changement d'étape ne remplace que le contenu du formulaire : la page, elle, garde la position
@@ -784,7 +781,7 @@ export default function Auth() {
         ? await loginWithApple(response.credential, role, { givenName: fed.prenom || undefined, familyName: fed.nom || undefined })
         : await loginWithGoogle(response.credential, role, {});
       reussi = true;
-      toast(t('auth.welcome', { name: data.user.name }));
+      toast(t('auth.welcome', { name: data.user.name }), 'succes');
       await allerApresConnexion(data.user);
     } catch (err) {
       if (err.message === 'INCOMPLETE_PROFILE') {
@@ -823,8 +820,7 @@ export default function Auth() {
       ...(refusNouvelles ? { marketingOptOut: true } : {})
     });
     suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
-    await televerserDocumentsLivreur(data.token);
-    toast(t('auth.welcome', { name: data.user.name }));
+    toast(t('auth.welcome', { name: data.user.name }), 'succes');
     // Une inscription, même par Google, arrive dans son espace (tableau de bord, dossier livreur) — pas sur l'accueil.
     await allerApresInscription(data.user);
     return true;
@@ -910,26 +906,24 @@ export default function Auth() {
           }
         }
         if (role === 'restaurant' && !accepteEngagements) {
-          toast(t('auth.engagementsRequired'));
+          toast(t('auth.engagementsRequired'), 'erreur');
           setLoading(false);
           return;
         }
         if (role === 'client' && !accepteCgu) {
-          toast(t('conformite.toastTermsRequired'));
+          toast(t('conformite.toastTermsRequired'), 'erreur');
           setLoading(false);
           return;
         }
-        if (role === 'driver' && 'geolocation' in navigator) {
-          // Demande l'autorisation de géolocalisation une seule fois, à la création du compte.
-          // Elle pourra être désactivée plus tard dans les réglages du compte.
-          navigator.geolocation.getCurrentPosition(() => {}, () => {}, { timeout: 5000 });
-        }
+        // Plus de demande de position à la création du compte livreur (audit UX du 15/10/2026) : elle venait des semaines avant
+        // la première course et avant la lecture de la politique de géolocalisation. Elle est demandée là où elle sert, au-dessus
+        // de la liste des courses, avec son explication (components/livreur/PositionRequise.jsx).
         if (googleCredential) {
           try {
             reussi = await inscrireViaGoogle();
           } catch (err) {
             // Jeton Google expiré (il vit une heure) ou refusé : on repart de la première étape.
-            if (/google|token|jeton|expir/i.test(err.message || '') && err.message !== 'INCOMPLETE_PROFILE') { oublierGoogle(); setStep(0); toast(t('auth.googleExpired')); }
+            if (/google|token|jeton|expir/i.test(err.message || '') && err.message !== 'INCOMPLETE_PROFILE') { oublierGoogle(); setStep(0); toast(t('auth.googleExpired'), 'erreur'); }
             // Profil refusé par le serveur : on affiche sa raison (« numéro d'entreprise requis »…), pas le code interne.
             else if (err.message === 'INCOMPLETE_PROFILE') toast(err.data?.detail || t('auth.errGoogleIncomplete'), 'erreur');
             else throw err;
@@ -958,20 +952,19 @@ export default function Auth() {
           setPendingChannel(data.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(data.phoneMasked || phone.trim());
           toast(t(data.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
         } else if (data.token) {
-          await televerserDocumentsLivreur(data.token);
-          toast(t('auth.welcome', { name: data.user.name }));
+          toast(t('auth.welcome', { name: data.user.name }), 'succes');
           await allerApresInscription(data.user);
         }
       } else if (googleEnAttente2fa) {
         const data = await connexionFed(fournisseurFed, googleEnAttente2fa, role, { totpCode: totpCode.trim() });
         reussi = true;
         setGoogleEnAttente2fa(null);
-        toast(t('auth.welcome', { name: data.user.name }));
+        toast(t('auth.welcome', { name: data.user.name }), 'succes');
         await allerApresConnexion(data.user);
       } else {
         const data = await login(email.trim(), password, totpCode.trim() || undefined);
         reussi = true;
-        toast(t('auth.welcome', { name: data.user.name }));
+        toast(t('auth.welcome', { name: data.user.name }), 'succes');
         await allerApresConnexion(data.user);
       }
     } catch (err) {
@@ -1026,8 +1019,7 @@ export default function Auth() {
     try {
       const data = await verifyEmail(pendingEmail, code.trim());
       reussi = true;
-      await televerserDocumentsLivreur(data.token);
-      toast(t('auth.welcome', { name: data.user.name }));
+      toast(t('auth.welcome', { name: data.user.name }), 'succes');
       await allerApresInscription(data.user);
     } catch (err) {
       toast(err.message, 'erreur');
@@ -1131,6 +1123,7 @@ export default function Auth() {
               <label htmlFor="auth-f-2">{t('auth.verifyCodeLabel')}</label>
               <input id="auth-f-2"
                 value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456"
+                inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*"
                 maxLength={6} style={{ textAlign: 'center', fontSize: 22, letterSpacing: 6 }}
               />
             </div>
@@ -1190,6 +1183,12 @@ export default function Auth() {
               </div>
             )}
 
+            {brouillonReprisVisible && (
+              <div className="auth-brouillon" role="status">
+                <span className="small">{t('auth.draftResumed')}</span>
+                <button type="button" className="btn-ghost btn-sm" onClick={recommencer}>{t('auth.draftRestart')}</button>
+              </div>
+            )}
             <div className="auth-step-head">
               <h3>{stepCopy.title}</h3>
               <p className="small">{stepCopy.sub}</p>
@@ -1219,13 +1218,13 @@ export default function Auth() {
                   <div className="field" style={{ flex: 1 }}>
                     <label htmlFor="auth-f-3">{t('auth.firstName')}</label>
                     <input id="auth-f-3" className={errors.firstName ? 'input-invalid' : undefined}
-                      value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t('auth.firstName')} />
+                      value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t('auth.firstName')} autoComplete="given-name" />
                     {fieldError('firstName')}
                   </div>
                   <div className="field" style={{ flex: 1 }}>
                     <label htmlFor="auth-f-4">{t('auth.lastName')}</label>
                     <input id="auth-f-4" className={errors.lastName ? 'input-invalid' : undefined}
-                      value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t('auth.lastName')} />
+                      value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t('auth.lastName')} autoComplete="family-name" />
                     {fieldError('lastName')}
                   </div>
                 </div>
@@ -1283,9 +1282,9 @@ export default function Auth() {
                     )}
                     {['student_independent', 'independent'].includes(courierStatus) && (
                       <div className="field">
-                        <label htmlFor="auth-f-19">{t('auth.companyNumberDriver')}</label>
+                        <label htmlFor="auth-f-19">{t('auth.companyNumberDriver')} <span className="small">· {t('authDocs.optional')}</span></label>
                         <input id="auth-f-19" className={errors.companyNumber ? 'input-invalid' : undefined}
-                          value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+                          value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" inputMode="numeric" />
                         {fieldError('companyNumber')}
                         <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.companyNumberDriverHelp')}</p>
                       </div>
@@ -1540,10 +1539,6 @@ export default function Auth() {
               </>
             )}
 
-            {stepKey === 'documents' && (
-              <IdentityDocsPicker kind={docKind} setKind={setDocKind} recto={docRecto} setRecto={setDocRecto} verso={docVerso} setVerso={setDocVerso} student={docStudent} setStudent={setDocStudent} selfie={docSelfie} setSelfie={setDocSelfie} errors={errors} />
-            )}
-
             {stepKey === 'address' && (
               <>
                 <AddressSearch onSelect={(a) => { setAddressStreet(a.street); if (a.number) setAddressNumber(a.number); if (a.postalCode) setAddressPostalCode(a.postalCode); if (a.city) setAddressCity(a.city); }} />
@@ -1551,7 +1546,7 @@ export default function Auth() {
                   <div className="field" style={{ flex: 2 }}>
                     <label htmlFor="auth-f-8">{t('auth.street')}</label>
                     <input id="auth-f-8" className={errors.addressStreet ? 'input-invalid' : undefined}
-                      value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('auth.phStreet')} />
+                      value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('auth.phStreet')} autoComplete={role === 'restaurant' ? 'off' : 'address-line1'} />
                     {fieldError('addressStreet')}
                   </div>
                   <div className="field" style={{ flex: 1 }}>
@@ -1565,13 +1560,13 @@ export default function Auth() {
                   <div className="field" style={{ flex: 1 }}>
                     <label htmlFor="auth-f-10">{t('auth.postalCode')}</label>
                     <input id="auth-f-10" className={errors.addressPostalCode ? 'input-invalid' : undefined}
-                      value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+                      value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" inputMode="numeric" autoComplete={role === 'restaurant' ? 'off' : 'postal-code'} />
                     {fieldError('addressPostalCode')}
                   </div>
                   <div className="field" style={{ flex: 2 }}>
                     <label htmlFor="auth-f-11">{t('auth.city')}</label>
                     <input id="auth-f-11" className={errors.addressCity ? 'input-invalid' : undefined}
-                      value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('auth.phCity')} />
+                      value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('auth.phCity')} autoComplete={role === 'restaurant' ? 'off' : 'address-level2'} />
                     {fieldError('addressCity')}
                   </div>
                 </div>

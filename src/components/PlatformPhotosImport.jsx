@@ -108,10 +108,10 @@ export default function PlatformPhotosImport({ restoId, token, items = [], secti
   }, [resultat, sections, affectations, parCle, enRelecture]);
 
   async function appliquer() {
-    if (!affectations.length) { toast(t('platformPhotos.nothingSelected')); return; }
+    if (!affectations.length) { toast(t('platformPhotos.nothingSelected'), 'erreur'); return; }
     if (enRelecture) {
       onMatched?.(affectations);
-      toast(t('platformPhotos.reviewApplied', { n: affectations.length }));
+      toast(t('platformPhotos.reviewApplied', { n: affectations.length }), 'succes');
       onClose?.();
       return;
     }

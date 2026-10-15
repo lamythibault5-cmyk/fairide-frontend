@@ -38,7 +38,7 @@ export default function DemandeModifCarte({ restoId }) {
       setMessage(''); setFichiers([]);
       if (champFichier.current) champFichier.current.value = '';
       vibrer(14);
-      toast(t('menuPage.modifSent'));
+      toast(t('menuPage.modifSent'), 'succes');
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(false); }
   }
 

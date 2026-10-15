@@ -642,7 +642,8 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 /* PETIT BOUTON (2026-10-13). 175 boutons étaient rapetissés en ligne, en une douzaine de tailles (4px 10px / 12px,
    6px 12px / 13px, 6px 14px / 13px, 8px 14px / 13px…). Une seule taille maintenant, pour qu'une rangée d'actions ait
    un rythme. La hauteur minimale de 44px des boutons pleins et à contour reste : c'est la cible du pouce. */
-.btn-sm { padding: 6px 12px; font-size: 13px; }
+/* 14 px (audit UX du 15/10/2026) : 13 px sur 173 boutons, trop petit pour un restaurateur au comptoir ou un livreur à vélo. */
+.btn-sm { padding: 6px 12px; font-size: 14px; }
 .btn-ghost.btn-sm, .btn-danger-ghost.btn-sm { padding: 4px 8px; }
 /* Texte d'erreur posé dans un paragraphe (44 endroits l'écrivaient en ligne). */
 .texte-erreur { color: var(--red); }
@@ -940,6 +941,8 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .bandeau-allergie { border: 1px solid var(--red); border-radius: var(--radius-chip); color: var(--red); padding: 6px 10px; margin: 6px 0; font-size: 14px; }
 .bandeau-allergie.est-confirme { border-color: var(--line); color: var(--ink); }
 .badge-alcool { font-weight: 700; margin: 4px 0; }
+/* Allergènes d'un plat déclarés depuis « Ma carte et mes engagements » (AllergenesPlat.jsx). */
+.allergenes-plat { margin: 8px 0 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-field); }
 .grille-allergenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 4px 12px; }
 .champs-conformite-plat { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px 12px; }
 .conformite-carte summary, .notice-livreur summary { cursor: pointer; }
@@ -1381,6 +1384,14 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .status-refuse { background: rgba(217,45,60,0.12); color: var(--red); }
 .status-annule { background: rgba(217,45,60,0.12); color: var(--red); }
 
+/* Étape d'une commande côté commerce (OrdersPage) : texte foncé lisible en plein service, la couleur de l'étape sur une
+   pastille ronde seulement (--etape-couleur, posée en ligne). Avant : libellé de 11 px dans la couleur de l'étape sur un
+   fond de la même couleur — lime sur lime à 1,3:1 (audit du 15/10/2026). */
+.etape-pastille { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink); padding: 4px 10px 4px 8px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #fff; }
+.etape-pastille::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--etape-couleur, var(--ink-faint)); flex: none; }
+/* Numéro de commande en grand sur la carte et dans le détail, comme sur le ticket. */
+.commande-numero { font-family: var(--font-titre); font-size: 20px; font-weight: 700; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+
 /* Couleur du type de commande, pour repérer d'un coup d'œil : jaune = livraison, bleu = à emporter,
    violet = sur place, orange = heure programmée (prioritaire sur le type). Voir orderTypeColor() dans orderStatus.jsx. */
 .order-type-yellow { border-left: 4px solid var(--iris); }
@@ -1396,7 +1407,9 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .two-col { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
 @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
 
-.small { font-size: 12px; color: var(--ink-soft); }
+/* Texte d'aide : 14 px (audit UX du 15/10/2026). À 12 px gris, utilisé 1 554 fois, c'était la plupart des explications de
+   l'application — illisible pour une partie des clients et des commerçants. Le gris (--ink-soft) reste à 6,5:1 sur blanc. */
+.small { font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
 h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg)); margin: 40px 0 16px; }
 
 .auth-box { max-width: 380px; margin: 40px auto; }
@@ -1419,6 +1432,8 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    le formulaire est court et qu'il se termine ; le compteur écrit « Étape 2 sur 3 » qui
    l'accompagnait a été retiré — il répétait la même information en la nommant, et annoncer un
    nombre d'étapes attire l'attention sur leur nombre plutôt que sur la question posée. */
+/* Inscription reprise après être parti (Auth.jsx, brouillon de 48 h) : une ligne, et « Recommencer ». */
+.auth-brouillon { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: var(--radius-field); }
 .auth-step-head { margin-bottom: 18px; }
 .auth-step-head h3 { font-size: 21px; margin: 0 0 4px; }
 .auth-step-head p.small { margin: 0; line-height: 1.45; }
@@ -1505,6 +1520,13 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    (signalé par le fondateur sur un numéro de rue inexistant, 2026-09-17). */
 /* Une erreur se dit en rouge d'état. Jamais en lime : c'est l'accent de la marque. */
 .toast-erreur { background: var(--red); color: #fff; }
+/* Succès (audit du 15/10/2026) : même fond encre, précédé d'une coche dans le vert d'état (« validé ») — on distingue « c'est
+   fait » d'une simple information sans troisième couleur de fond. Erreur : une croix pour fermer, la seule zone cliquable
+   d'un toast (le reste laisse passer les touchers vers la page). */
+.toast { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.toast-coche { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; flex: none; }
+.toast-fermer { pointer-events: auto; background: none; border: 0; color: inherit; font-size: 20px; line-height: 1; padding: 0 0 0 6px; min-width: 32px; min-height: 32px; cursor: pointer; flex: none; }
+.toast:not(.show) .toast-fermer { pointer-events: none; }
 /* Bandeau hors ligne (BandeauHorsLigne.jsx) : en haut, au-dessus de tout sauf le toast ; fond encre comme le toast,
    pas de troisième couleur de fond. */
 .bandeau-hors-ligne { position: fixed; top: 0; left: 0; right: 0; z-index: 590; background: var(--chip); color: #fff; text-align: center; font-size: 14px; font-weight: 600; padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
@@ -2219,10 +2241,12 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 main.page-fade { min-height: calc(100dvh - 140px); }
 /* Barre de progression de navigation (components/NavigationFeedback.jsx) : fine, en haut, avance vite
    puis ralentit tant que la page se charge, file jusqu'au bout et s'efface quand elle est affichée. */
-.nav-progress { position: fixed; top: 0; left: 0; height: 3px; z-index: 4000; background: linear-gradient(90deg, var(--teal), var(--gold)); border-radius: 0 3px 3px 0; pointer-events: none; box-shadow: var(--shadow-3); }
+/* Barre de chargement en transform (scaleX) et non en largeur (audit du 15/10/2026) : animer `width` recalcule la mise en
+   page à chaque image pendant 6 s, au moment où la page suivante se charge. Iris uni : la règle « pas de dégradé ». */
+.nav-progress { position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 4000; background: var(--iris); transform: scaleX(0); transform-origin: left center; pointer-events: none; }
 .nav-progress.encours { animation: nav-progress-avance 6s cubic-bezier(.1,.7,.2,1) forwards; }
-.nav-progress.fin { width: 100%; animation: nav-progress-fin .3s ease forwards; }
-@keyframes nav-progress-avance { 0% { width: 0; } 20% { width: 45%; } 60% { width: 78%; } 100% { width: 92%; } }
+.nav-progress.fin { transform: scaleX(1); animation: nav-progress-fin .3s ease forwards; }
+@keyframes nav-progress-avance { 0% { transform: scaleX(0); } 20% { transform: scaleX(.45); } 60% { transform: scaleX(.78); } 100% { transform: scaleX(.92); } }
 @keyframes nav-progress-fin { 0% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .page-fade { animation: none; } .nav-progress.encours { animation-duration: 1s; } }
 
@@ -3651,6 +3675,9 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .courier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 12px; }
 .courier-doc { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px dashed var(--line); flex-wrap: wrap; }
 .courier-doc-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+/* Date de validité d'une pièce : libellé visible au-dessus du champ (il n'avait qu'une infobulle, invisible au toucher). */
+.courier-doc-echeance { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+.courier-doc-echeance input { font-weight: 400; }
 .courier-missing { margin: 0; padding-left: 18px; }
 .courier-missing li { margin: 2px 0; }
 .courier-bar { height: 10px; background: var(--cream-dim); border-radius: var(--radius-pill); overflow: hidden; }

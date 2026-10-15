@@ -1,4 +1,4 @@
-import { getLanguage } from './context/LanguageContext';
+import { getLanguage, traduire } from './context/LanguageContext';
 
 export const API_BASE = import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
 
@@ -36,13 +36,13 @@ export function setSessionExpiredHandler(fn) {
 function handleResponse(res, data, hadToken, logoutOn401) {
   if (res.ok) return data;
   if (res.status === 401 && hadToken && logoutOn401) {
-    const error = new ApiError(data.code === 'ACCOUNT_DELETED' ? data.error : 'Ta session a expiré. Reconnecte-toi pour continuer.', 401);
+    const error = new ApiError(data.code === 'ACCOUNT_DELETED' ? data.error : traduire('auth.sessionExpired'), 401);
     error.code = data.code;
     // Le contexte reçoit la raison : compte supprimé (le dire) ou simple session périmée.
     if (onSessionExpired) onSessionExpired(data.code);
     throw error;
   }
-  const error = new ApiError(data.error || 'Une erreur est survenue.', res.status);
+  const error = new ApiError(data.error || traduire('common.genericError'), res.status);
   if (data.code) error.code = data.code;
   if (data.field) error.field = data.field;
   /* Le corps complet est attaché à l'erreur. Certaines routes répondent en erreur ET renvoient
@@ -66,7 +66,7 @@ export async function api(path, { method = 'GET', body, token, logoutOn401 = tru
   try {
     res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
   } catch {
-    throw new ApiError("Impossible de joindre le serveur Fairide. Réessaie dans un instant.", 0);
+    throw new ApiError(traduire('common.serverUnreachable'), 0);
   }
   const data = await res.json().catch(() => ({}));
   const corps = handleResponse(res, data, !!token, logoutOn401);
@@ -108,7 +108,7 @@ export async function apiDownload(path, { token, filename, method = 'GET', body,
       body: body ? (estFormData ? body : JSON.stringify(body)) : undefined
     });
   } catch {
-    throw new Error("Impossible de joindre le serveur Fairide. Réessaie dans un instant.");
+    throw new Error(traduire('common.serverUnreachable'));
   }
   if (!res.ok) {
     // Les erreurs de ces routes restent en JSON même quand le succès est un PDF.
@@ -117,7 +117,7 @@ export async function apiDownload(path, { token, filename, method = 'GET', body,
        l'expiration affichait une erreur générique et laissait l'utilisateur sur une page dont plus
        rien ne fonctionnait, sans jamais le renvoyer vers /login. */
     if (res.status === 401 && token) {
-      const error = new ApiError(data.code === 'ACCOUNT_DELETED' ? data.error : 'Ta session a expiré. Reconnecte-toi pour continuer.', 401);
+      const error = new ApiError(data.code === 'ACCOUNT_DELETED' ? data.error : traduire('auth.sessionExpired'), 401);
       error.code = data.code;
       if (onSessionExpired) onSessionExpired(data.code);
       throw error;
@@ -154,7 +154,7 @@ export async function apiUpload(path, { file, files, token, fieldName = 'image',
   try {
     res = await fetch(API_BASE + path, { method: 'POST', headers, body: formData });
   } catch {
-    throw new ApiError("Impossible de joindre le serveur Fairide. Réessaie dans un instant.", 0);
+    throw new ApiError(traduire('common.serverUnreachable'), 0);
   }
   const data = await res.json().catch(() => ({}));
   return handleResponse(res, data, !!token, true);

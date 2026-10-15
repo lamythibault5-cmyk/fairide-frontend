@@ -16,7 +16,7 @@ export default function EcranHoraires({ restaurant, restoId, loadDashboard, onFe
 
   function valider() {
     if (!horaires || !Object.values(horaires).some((creneaux) => Array.isArray(creneaux) && creneaux.length)) {
-      toast(t('editResto.toastHoursRequired'));
+      toast(t('editResto.toastHoursRequired'), 'erreur');
       return;
     }
     enregistrer({ hours: horaires });

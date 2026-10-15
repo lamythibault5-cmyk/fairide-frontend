@@ -24,7 +24,7 @@ export default function DocumentsPage() {
 
   async function accepterCgu() {
     setBusy(true);
-    try { await api('/auth/terms/accept', { method: 'POST', token, body: { accepted: true, version: d.terms.version, context: 'reaccept' } }); toast(t('mesDocuments.termsAccepted')); await charger(); }
+    try { await api('/auth/terms/accept', { method: 'POST', token, body: { accepted: true, version: d.terms.version, context: 'reaccept' } }); toast(t('mesDocuments.termsAccepted'), 'succes'); await charger(); }
     catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   const Signature = ({ url }) => (url ? <img src={url} alt={t('signature.aria')} style={{ display: 'block', maxWidth: 200, maxHeight: 80, marginTop: 6, background: '#fff', border: '1px solid var(--line, #e1d9c4)', borderRadius: 8 }} /> : null);
