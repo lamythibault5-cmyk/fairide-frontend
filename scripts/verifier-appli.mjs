@@ -92,6 +92,21 @@ async function ouvrir(navigateur, base, { profil, appli = true, consentement = '
       if (e) window.__erreurs.push(`${e.message} (${(e.stack || '').split(String.fromCharCode(10))[1]?.trim().replace(/https?:\/\/[^/]+/, '') || ''})`);
       consoleErreur(...a);
     };
+    // LE FLASH (fondateur, 2026-10-15 : « je vois parfois le site une fraction de seconde au chargement »). La vérification
+    // regarde la page une fois posée ; ce guetteur, posé avant le premier octet, note TOUT instant où un morceau du site est
+    // visible pendant le chargement — même une seule image — sauf s'il est encore caché sous l'écran de lancement (#splash).
+    if (appli) {
+      window.__siteVu = [];
+      const guetter = () => {
+        const splash = document.getElementById('splash');
+        if (splash && !splash.classList.contains('splash-fin')) return;
+        const visible = (sel) => [...document.querySelectorAll(sel)].some((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; });
+        for (const [nom, sel] of [['en-tête du site', '.hero .header-row'], ['pied de page du site', 'footer.site-footer'], ['liens légaux du site', '.dashboard-footer-links'], ['carte cookies du site', '[role="dialog"] a[href$="/cookies"]']]) {
+          if (visible(sel) && !window.__siteVu.includes(nom)) window.__siteVu.push(nom);
+        }
+      };
+      new MutationObserver(guetter).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+    }
     if (sessionStorage.getItem('verif-init')) return;
     sessionStorage.setItem('verif-init', '1');
     localStorage.clear();
@@ -124,6 +139,8 @@ async function examiner(page, { profil, appli }) {
       if (voit('footer.site-footer')) problemes.push('pied de page du site');
       if (voit('.dashboard-footer-links')) problemes.push('liens légaux du site');
       if (voit('[role="dialog"] a[href="/cookies"]')) problemes.push('carte cookies du site');
+      // Vu un instant pendant le chargement, puis disparu : un flash, que l'utilisateur voit quand même.
+      for (const nom of window.__siteVu || []) if (!problemes.includes(nom)) problemes.push(`${nom} (flash au chargement)`);
       // Connecté : la coquille à onglets (les onglets eux-mêmes s'effacent exprès dans le parcours de commande).
       const coquille = profil === 'visiteur' ? voit('.appli-barre') || voit('.bv') : !!document.querySelector('.dashboard-shell') || voit('.bv');
       if (!coquille && !problemes.length) problemes.push("coquille de l'app absente");

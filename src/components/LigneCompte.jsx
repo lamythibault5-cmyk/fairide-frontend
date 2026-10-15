@@ -53,7 +53,8 @@ export default function LigneCompte({ to, onClick, icone, titre, sous, danger = 
       {ouverte && !APPLI && <div className="account-panneau">{children}</div>}
       {ouverte && APPLI && (
         <SousEcran titre={typeof titre === 'string' ? titre : ''} onFermer={onClick}>
-          <div className="account-panneau account-panneau--feuille">{children}</div>
+          {/* « card » : tout ce que la CSS règle « dans une carte » (sélecteur de langue, tableaux…) vaut aussi dans la feuille. */}
+          <div className="card account-panneau account-panneau--feuille">{children}</div>
         </SousEcran>
       )}
     </div>

@@ -1,5 +1,5 @@
 import GarantieAbonnement from '../components/GarantieAbonnement';
-import { allerAuPaiement } from '../natif';
+import { allerAuPaiement, experienceApp } from '../natif';
 import { useEffect, useRef, useState, useId } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
@@ -15,7 +15,7 @@ import { ouvrirPdf, telechargerPdf } from '../pdf';
 import { API_BASE } from '../api';
 import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
-import LanguageSwitcher from '../components/LanguageSwitcher';
+import LanguageSwitcher, { ListeLangues } from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
 import MesDonnees from '../components/MesDonnees';
 import NouvellesFairide from '../components/NouvellesFairide';
@@ -658,7 +658,7 @@ export default function Account() {
             localStorage (voir LanguageContext) : on ne le règle qu'une fois. Sa place est donc ici. */}
         <LigneCompte icone="globe" titre={t('account.language')} sous={LANGUE_LABEL[language] || language} ouverte={ouvertes.has('langue')} onClick={() => basculer('langue')}>
           <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
-          <LanguageSwitcher />
+          {experienceApp() ? <ListeLangues /> : <LanguageSwitcher />}
         </LigneCompte>
         <NouvellesFairide ouverte={ouvertes.has('nouvelles')} onClick={() => basculer('nouvelles')} />
         <LigneCompte icone="dossier" titre={t('accountUi.myData_rowTitle')} sous={t('accountUi.myData_rowSub')} ouverte={ouvertes.has('donnees')} onClick={() => basculer('donnees')}>
