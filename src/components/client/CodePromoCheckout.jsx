@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
@@ -12,7 +12,16 @@ export default function CodePromoCheckout({ token, toast, subtotal, deliveryFee,
   const [code, setCode] = useState(applique?.code || '');
   const [enCours, setEnCours] = useState(false);
   // Le panier ou le mode a changé : l'aperçu ne vaut plus, on le retire (la commande le recalculerait de toute façon).
-  useEffect(() => { if (applique) onChange(null); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [subtotal, deliveryFee, payOnSite]);
+  // Pas au montage : dans l'app, ce champ vit dans une feuille qu'on rouvre — le code déjà appliqué doit y rester.
+  // On compare aux valeurs précédentes plutôt que de sauter « le premier passage » : en développement, React joue deux fois.
+  const precedent = useRef(`${subtotal}|${deliveryFee}|${payOnSite}`);
+  useEffect(() => {
+    const cle = `${subtotal}|${deliveryFee}|${payOnSite}`;
+    if (cle === precedent.current) return;
+    precedent.current = cle;
+    if (applique) onChange(null);
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [subtotal, deliveryFee, payOnSite]);
 
   async function appliquer() {
     setEnCours(true);

@@ -1,0 +1,184 @@
+// VÉRIFICATION DE L'APPLICATION — `npm run check:app`, à lancer avant chaque push (fondateur, 2026-10-15 : « je ne veux
+// même pas avoir en tête qu'un bouton puisse mener à la vue du site »).
+//
+// Le site et l'application partagent le même code ; c'est experienceApp() (src/natif.js) qui retire, dans l'app, tout le
+// cadre du site (Layout.jsx, APPLI). Ce script le prouve page par page : il démarre Vite, ouvre Chrome au format téléphone
+// (375×667) EN MODE APPLICATION (le site ajouté à l'écran d'accueil : display-mode standalone), avec une session de chacun
+// des profils — sans compte, client, livreur, commerce — et un serveur simulé (aucun appel au vrai serveur, aucun compte
+// créé). Sur chaque page, il échoue si :
+//   - l'en-tête du site, son pied de page, la rangée des liens légaux ou la carte des cookies apparaît ;
+//   - la page a planté (AppErrorBoundary) — une page plantée ne montrerait aucun cadre, ce serait un faux « bon » ;
+//   - la coquille de l'app manque (barre d'onglets connecté, barre d'app ou écran plein sans compte) ;
+//   - un écran plein de l'app (.bv : accueil, connexion, consentement) dépasse l'écran et oblige à défiler.
+// Il vérifie aussi la page /login DU SITE, hors mode app, pour s'assurer qu'elle n'a pas été touchée.
+//
+// Ajouter une page à l'application, c'est l'ajouter dans PAGES ci-dessous. Une page qui plante faute de données simulées
+// se corrige dans `simuler()` (réponse plus réaliste), pas en la retirant de la liste.
+//
+// Il faut Chrome (ou Edge) installé : le pilote (playwright-core) ne télécharge aucun navigateur.
+import { createServer } from 'vite';
+import { readFileSync } from 'node:fs';
+import { chromium } from 'playwright-core';
+
+// Réponses réelles capturées sur le serveur (dossier livreur, Mes documents) : les pages qui en lisent beaucoup de champs.
+const REELLES = JSON.parse(readFileSync(new URL('./verifier-appli-donnees.json', import.meta.url), 'utf8'));
+
+const LARGEUR = 375;
+const HAUTEUR = 667;
+
+const COMMERCE = {
+  id: 1, name: 'Chez Simone', cuisine: 'Pizza', commune: 'Ixelles', status: 'approved', lat: 50.83, lng: 4.37, deliveryRadiusKm: 6,
+  address: 'Rue du Midi 12, 1000 Bruxelles', hours: { mon: [{ open: '11:00', close: '22:00' }] }, menu: [], sections: [], offersDelivery: true, offersPickup: true,
+  reviewCount: 0, rating: 4.5
+};
+const UTILISATEURS = {
+  client: { id: 11, name: 'Cléa Client', firstName: 'Cléa', lastName: 'Client', email: 'client@exemple.be', role: 'client', roles: ['client'], phone: '+32 470 00 00 01' },
+  driver: { id: 12, name: 'Lou Livreur', firstName: 'Lou', lastName: 'Livreur', email: 'livreur@exemple.be', role: 'driver', roles: ['driver'], phone: '+32 470 00 00 02' },
+  restaurant: { id: 13, name: 'Rémi Resto', firstName: 'Rémi', lastName: 'Resto', email: 'resto@exemple.be', role: 'restaurant', roles: ['restaurant'], phone: '+32 470 00 00 03', restaurantId: 1 }
+};
+
+// Pages ouvertes pour chaque profil. Les pages du site (aide, légales, « C'est bon »…) y sont exprès : dans l'app, elles
+// doivent s'afficher dans la coquille de l'app, pas dans celle du site.
+const COMMUNES = ['/aide', '/cgv', '/confidentialite', '/mentions-legales', '/cookies', '/classement', '/signaler', '/accessibilite', '/notre-histoire', '/une-page-qui-n-existe-pas'];
+const PAGES = {
+  visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', ...COMMUNES],
+  client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', ...COMMUNES],
+  driver: ['/', '/driver', '/driver/onboarding', '/driver/map', '/driver/earnings', '/driver/invoices', '/driver/reviews', '/documents', '/account', ...COMMUNES],
+  restaurant: ['/', '/dashboard', '/dashboard/menu', '/dashboard/orders', '/dashboard/preview', '/dashboard/promotions', '/dashboard/reviews', '/dashboard/invoices', '/dashboard/guide', '/sales', '/account', '/carte/valider/essai', ...COMMUNES]
+};
+
+// Le serveur simulé. Par défaut une liste vide (sans danger : .map, .length, .filter marchent ; une propriété lue
+// donne undefined comme sur un objet vide). Les réponses qui doivent être un objet sont écrites ici.
+function simuler(chemin, methode, profil) {
+  const u = UTILISATEURS[profil];
+  if (/^\/auth\/me$/.test(chemin)) return methode === 'GET' ? u : { ...u, user: u };
+  if (/^\/auth\/terms\/current$/.test(chemin)) return { version: '2026-10-12' };
+  if (methode === 'GET' && REELLES[chemin]) return REELLES[chemin];
+  // Le tableau de bord du commerce (réponse réelle, identifiants UUID) : chaque page du commerce lit ensuite /restaurants/<id>/…
+  if (methode === 'GET' && /^\/restaurants\/[^/]+\/compliance$/.test(chemin)) return REELLES['/restaurants/:id/compliance'];
+  if (/^\/restaurants$/.test(chemin)) return [COMMERCE];
+  if (/^\/restaurants\/[^/]+\/reviews$/.test(chemin)) return { reviews: [], average: null, count: 0 };
+  if (/^\/restaurants\/[^/]+\/capacity$/.test(chemin)) return { full: false };
+  // Mises en avant payantes : un objet ; commune pas encore ouverte à la vente, comme pour un commerce qui démarre.
+  if (methode === 'GET' && /^\/restaurants\/[^/]+\/placements$/.test(chemin)) return { enabled: false, commune: 'Ixelles', sections: [], bookings: [] };
+  if (/^\/restaurants\/[^/]+$/.test(chemin) && !/^\/restaurants\/(favorites|lookup)/.test(chemin)) return profil === 'restaurant' ? REELLES['/restaurants/mine/dashboard'][0] : COMMERCE;
+  if (/^\/menu-validation\/[^/]+$/.test(chemin)) return { restaurant: { name: COMMERCE.name, responsibleName: 'Rémi Resto' }, items: [], sha256: 'essai', alreadyValidated: false, fairideRateChoice: null };
+  if (/^\/couriers\/options$/.test(chemin)) return { statuses: ['independent', 'student_independent'], vehicles: ['velo', 'velo_electrique', 'scooter', 'voiture'], bikeMaxKm: 4, legal: {} };
+  if (methode !== 'GET') return {};
+  return [];
+}
+
+async function lancerNavigateur() {
+  for (const channel of ['chrome', 'msedge']) {
+    try { return await chromium.launch({ channel, headless: true }); } catch { /* essai suivant */ }
+  }
+  throw new Error('Ni Chrome ni Edge trouvé : installe Google Chrome pour lancer cette vérification.');
+}
+
+async function ouvrir(navigateur, base, { profil, appli = true, consentement = 'refused' }) {
+  const ctx = await navigateur.newContext({ viewport: { width: LARGEUR, height: HAUTEUR }, isMobile: true, hasTouch: true, locale: 'fr-BE' });
+  await ctx.addInitScript(({ appli, consentement, session, role }) => {
+    if (appli) {
+      const original = window.matchMedia.bind(window);
+      window.matchMedia = (q) => (String(q).includes('display-mode: standalone')
+        ? { matches: true, media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }
+        : original(q));
+    }
+    // Erreurs de rendu (React les passe à console.error) : la dernière est citée quand une page plante.
+    window.__erreurs = [];
+    const consoleErreur = console.error.bind(console);
+    console.error = (...a) => {
+      const e = a.find((x) => x instanceof Error);
+      if (e) window.__erreurs.push(`${e.message} (${(e.stack || '').split(String.fromCharCode(10))[1]?.trim().replace(/https?:\/\/[^/]+/, '') || ''})`);
+      consoleErreur(...a);
+    };
+    if (sessionStorage.getItem('verif-init')) return;
+    sessionStorage.setItem('verif-init', '1');
+    localStorage.clear();
+    localStorage.setItem('fairide_bienvenue', JSON.stringify({ vu: true, role: role || 'client', commune: 'Ixelles' }));
+    if (consentement) { localStorage.setItem('fairide_cookie_consent', consentement); localStorage.setItem('fairide_cookie_consent_at', String(Date.now())); }
+    if (session) localStorage.setItem('fairide_session', JSON.stringify(session));
+  }, { appli, consentement, session: profil === 'visiteur' ? null : { token: `jeton-${profil}`, user: UTILISATEURS[profil] }, role: profil === 'visiteur' ? null : profil });
+  const page = await ctx.newPage();
+  const origine = new URL(base).origin;
+  await page.route('**/*', (route) => {
+    const url = new URL(route.request().url());
+    if (url.origin === origine) return route.continue();
+    if (url.pathname.includes('/api/')) {
+      const chemin = url.pathname.replace(/^.*\/api/, '');
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(simuler(chemin, route.request().method(), profil)) });
+    }
+    return route.abort(); // images, cartes, polices externes : inutiles ici
+  });
+  return { ctx, page };
+}
+
+async function examiner(page, { profil, appli }) {
+  await page.waitForTimeout(900);
+  return page.evaluate(({ profil, appli }) => {
+    const voit = (sel) => [...document.querySelectorAll(sel)].some((el) => el.getClientRects().length > 0);
+    const problemes = [];
+    if (voit('[data-page-plantee]')) problemes.push(`page plantée : ${(window.__erreurs || []).pop() || 'cause inconnue'}`);
+    if (appli) {
+      if (voit('.hero .header-row')) problemes.push('en-tête du site');
+      if (voit('footer.site-footer')) problemes.push('pied de page du site');
+      if (voit('.dashboard-footer-links')) problemes.push('liens légaux du site');
+      if (voit('[role="dialog"] a[href="/cookies"]')) problemes.push('carte cookies du site');
+      // Connecté : la coquille à onglets (les onglets eux-mêmes s'effacent exprès dans le parcours de commande).
+      const coquille = profil === 'visiteur' ? voit('.appli-barre') || voit('.bv') : !!document.querySelector('.dashboard-shell') || voit('.bv');
+      if (!coquille && !problemes.length) problemes.push("coquille de l'app absente");
+      const plein = [...document.querySelectorAll('.bv')].filter((el) => el.getClientRects().length > 0).pop();
+      if (plein && plein.scrollHeight > plein.clientHeight + 1) problemes.push(`écran plein trop haut (${plein.scrollHeight} px pour ${plein.clientHeight})`);
+    }
+    return { arrivee: location.pathname + location.search, problemes };
+  }, { profil, appli });
+}
+
+const serveur = await createServer({ server: { port: 0, strictPort: false }, logLevel: 'silent' });
+await serveur.listen();
+const base = serveur.resolvedUrls.local[0].replace(/\/$/, '');
+const navigateur = await lancerNavigateur();
+const resultats = [];
+try {
+  for (const [profil, chemins] of Object.entries(PAGES)) {
+    const { ctx, page } = await ouvrir(navigateur, base, { profil });
+    for (const chemin of chemins) {
+      await page.goto(base + chemin);
+      resultats.push({ profil, page: chemin, ...(await examiner(page, { profil, appli: true })) });
+    }
+    await ctx.close();
+  }
+  // Premier lancement : l'accueil de l'app, puis le consentement en écran de l'app (jamais la carte du site).
+  {
+    const { ctx, page } = await ouvrir(navigateur, base, { profil: 'visiteur', consentement: null });
+    await page.goto(`${base}/bienvenue`);
+    resultats.push({ profil: 'visiteur', page: '/bienvenue', ...(await examiner(page, { profil: 'visiteur', appli: true })) });
+    await page.goto(`${base}/restaurants`);
+    const r = await examiner(page, { profil: 'visiteur', appli: true });
+    const consentement = await page.locator('#consentement-titre').count();
+    if (!consentement) r.problemes.push("écran de consentement de l'app absent");
+    resultats.push({ profil: 'visiteur', page: '/restaurants (sans consentement)', ...r });
+    await ctx.close();
+  }
+  // Le site, lui, garde son cadre : /login hors mode app doit être la page du site.
+  {
+    const { ctx, page } = await ouvrir(navigateur, base, { profil: 'visiteur', appli: false });
+    await page.goto(`${base}/login`);
+    const r = await examiner(page, { profil: 'visiteur', appli: false });
+    if (!(await page.locator('.hero .header-row').count())) r.problemes.push("le site a perdu son en-tête sur /login");
+    resultats.push({ profil: 'site', page: '/login', ...r });
+    await ctx.close();
+  }
+} finally {
+  await navigateur.close();
+  await serveur.close();
+}
+
+const echecs = resultats.filter((r) => r.problemes.length);
+for (const r of resultats) {
+  const etat = r.problemes.length ? `ÉCHEC  ${r.problemes.join(' · ')}` : 'ok';
+  const arrivee = r.arrivee && r.arrivee !== r.page ? ` → ${r.arrivee}` : '';
+  console.log(`${r.profil.padEnd(10)} ${(r.page + arrivee).padEnd(52)} ${etat}`);
+}
+console.log(`\n${resultats.length} pages vérifiées en mode application, ${echecs.length} en échec.`);
+process.exit(echecs.length ? 1 : 0);

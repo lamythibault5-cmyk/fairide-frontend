@@ -47,7 +47,7 @@ export default class AppErrorBoundary extends Component {
     if (!this.state.hasError) return this.props.children;
     const L = textes();
     return (
-      <div className="center-page" style={{ padding: '60px 20px', textAlign: 'center' }}>
+      <div className="center-page" data-page-plantee style={{ padding: '60px 20px', textAlign: 'center' }}>
         <div style={{ fontSize: 40 }}></div>
         <h2>{L.title}</h2>
         <p className="small" style={{ maxWidth: 420, margin: '0 auto 20px' }}>{L.body}</p>

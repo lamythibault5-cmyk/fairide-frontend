@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
+import { allerAuPaiement } from '../../natif';
 import { useAuth } from '../../context/AuthContext';
 import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
@@ -267,7 +268,10 @@ export default function DashboardLayout() {
     setConnecting(true);
     try {
       const r = await api(`/restaurants/${restoId}/connect/onboard`, { method: 'POST', token });
-      window.location.href = r.url;
+      // Dans l'app, Stripe s'ouvre dans le navigateur intégré et l'on revient ici en le fermant (allerAuPaiement, natif.js) ;
+      // sur le site, rien ne change : la page part vers Stripe.
+      await allerAuPaiement(r.url, { retour: '/dashboard' });
+      setConnecting(false);
     } catch (e) {
       // Numéros d'entreprise / TVA manquants : on emmène vers la sous-section Paiement qui les demande.
       if (e.code === 'LEGAL_INFO_REQUIRED' || /LEGAL_INFO_REQUIRED|numéro d'entreprise/i.test(e.message || '')) { toast(t('dashResto.toastLegalFirst'), 'erreur'); navigate('/account?ouvrir=paiement&retour=/dashboard'); }

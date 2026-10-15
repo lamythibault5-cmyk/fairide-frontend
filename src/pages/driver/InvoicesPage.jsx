@@ -7,6 +7,7 @@ import InvoiceArchive from '../../components/InvoiceArchive';
 import { euros } from '../../prixPlat';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import EtatVide from '../../components/EtatVide';
+import { experienceApp } from '../../natif';
 
 function currentMonthValue() {
   const d = new Date();
@@ -64,7 +65,8 @@ export default function InvoicesPage() {
         </p>
         <div className="row" style={{ gap: 8, alignItems: 'center' }}>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 180 }} />
-          <button className="btn-teal" onClick={() => window.print()}>{t('invoicesDriver.print')}</button>
+          {/* Imprimer n'existe pas dans l'application (WebView) : le bouton n'y faisait rien. */}
+          {!experienceApp() && <button className="btn-teal" onClick={() => window.print()}>{t('invoicesDriver.print')}</button>}
         </div>
       </div>
 

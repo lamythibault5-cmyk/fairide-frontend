@@ -1,5 +1,11 @@
 import { Link } from 'react-router-dom';
 import Icone from './Icone';
+import SousEcran from './SousEcran';
+import { experienceApp } from '../natif';
+
+// Application (2026-10-15) : une rangée pliable n'ouvre plus son contenu sous elle (« Mes infos » dépliait huit champs au
+// milieu de Mon compte) mais dans une feuille, comme l'adresse ou la remise au paiement. Fermer la feuille replie la rangée.
+const APPLI = experienceApp();
 
 // Une rangée de menu : icône, titre, sous-titre, et à droite un chevron ou une action. Le même dessin
 // partout dans l'espace connecté — la page Mon compte, les statuts en tête des tableaux de bord du
@@ -44,7 +50,12 @@ export default function LigneCompte({ to, onClick, icone, titre, sous, danger = 
   return (
     <div className={`account-pliable${ouverte ? ' ouverte' : ''}`}>
       <button type="button" className={classe} onClick={onClick} aria-expanded={ouverte}>{contenu}</button>
-      {ouverte && <div className="account-panneau">{children}</div>}
+      {ouverte && !APPLI && <div className="account-panneau">{children}</div>}
+      {ouverte && APPLI && (
+        <SousEcran titre={typeof titre === 'string' ? titre : ''} onFermer={onClick}>
+          <div className="account-panneau account-panneau--feuille">{children}</div>
+        </SousEcran>
+      )}
     </div>
   );
 }

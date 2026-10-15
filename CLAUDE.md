@@ -43,7 +43,31 @@ On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to r
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](src/pages/app/InscriptionAppli.jsx)):
 « Continuer avec mon e-mail », and Apple / Google for an account that does not exist yet, no longer go to `/login` — one question
 per screen, no scrolling at 375×667, same data and routes as Auth.jsx (change a field rule in both, and in the backend). Only
-« J'ai déjà un compte » still opens `/login`. The onboarding copy makes **no claim the code does not back** — never « moins cher » (it depends on the
+**The app has no website chrome** (2026-10-15, [Layout.jsx](src/components/Layout.jsx), `APPLI`): when `experienceApp()`,
+no page shows the site header, footer, legal-links row or cookie card. Signed in, every page — help, legal, « C'est bon » —
+stays in the tab shell with a « ← Retour »; legal links and « Gérer mes cookies » live at the bottom of Mon compte. Signed
+out, a slim app bar (brand or back, « Se connecter »). `/login` is [ConnexionAppli.jsx](src/pages/app/ConnexionAppli.jsx)
+(2FA, unconfirmed e-mail, forgotten password, Apple/Google), and consent is a full-screen
+[ConsentementAppli.jsx](src/components/ConsentementAppli.jsx) (or an unticked box at the end of the in-app signup). Stripe
+(Connect, Identity, billing portal) always opens through `allerAuPaiement` (in-app browser, return path) — never
+`window.location.href`, which left the app.
+**First-day flows are app screens too** (phase 2, 2026-10-15), opened full-screen through [EcranPlein](src/components/EcranPlein.jsx)
+(a portal into `<body>` — inside the shell, `.page-fade` broke `position: fixed`): a business's « Envoyer ma carte »
+([EnvoiCarteAppli](src/components/commerce/EnvoiCarteAppli.jsx)), the courier's draft dossier
+([DossierAppli](src/pages/driver/DossierAppli.jsx), one topic or one document per screen; rules shared with Onboarding.jsx in
+[dossierCommun.js](src/pages/driver/dossierCommun.js)), and in checkout the codes, allergy request and the age / T&Cs boxes
+as sheets (the last one opened by the pay button). In the app, the T&Cs link opens a sheet ([CgvEnFeuille](src/components/CgvEnFeuille.jsx)),
+never a tab. The website keeps its pages unchanged.
+**App-wide rules (final phase, 2026-10-15)**: a folding [LigneCompte](src/components/LigneCompte.jsx) row opens its content
+in a sheet in the app (every Mon compte section at once); any `target="_blank"` link is caught by `garderLesLiensDansLApp`
+(natif.js) — a Fairide page opens in the app, another site in the in-app browser, maps/Waze/tel unchanged; `apiDownload` hands
+files to the share sheet in the native app; « Imprimer » is hidden in the app; `html.appli` marks app mode for CSS (wide tables
+scroll sideways). Orders put the delivery code under the progress bar and open the review and « Signaler » in sheets;
+new promotions open in a sheet. Local backend on a Neon dev database: see `../fairide-backend/.env` (port 5173 for CORS).
+**`npm run check:app` before every push** ([scripts/verifier-appli.mjs](scripts/verifier-appli.mjs)): opens every app page at
+375×667 in app mode for four profiles against a mocked backend (real captured responses in `scripts/verifier-appli-donnees.json`)
+and fails on any website chrome, a crashed page, or a full-screen screen that scrolls. Needs Chrome or Edge installed. A new
+app page goes into its `PAGES`; a page crashing for lack of data gets a better mock, it is never removed from the list. The onboarding copy makes **no claim the code does not back** — never « moins cher » (it depends on the
 business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them.
 
 **Push notifications (2026-10-11), what exists:** order-status pushes for all three roles come from a DB trigger
@@ -66,7 +90,7 @@ npm run lint      # oxlint — the only automated check that exists
 npm run preview   # serve the build locally
 ```
 
-`npm run lint` is the whole verification story **in this repo**, and it currently reports ~168
+`npm run lint` (plus `npm run check:app`, see above, for anything the app shows) is the whole verification story **in this repo**, and it currently reports ~168
 pre-existing warnings across the codebase. Don't read a clean-looking tail as success: check that
 *your* files are absent from the output. There is nothing else to run here, so read your changes
 carefully and, where behaviour matters, check them in the browser with `npm run dev`.

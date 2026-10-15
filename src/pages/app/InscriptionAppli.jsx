@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import LienCgv from '../../components/CgvEnFeuille';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -16,6 +17,7 @@ import { bceValide, raisonBce, codePostalValide } from '../../validation';
 import { lireBienvenue } from '../../bienvenue';
 import { attendrePage } from '../../routePrefetch';
 import { suivre } from '../../analytics';
+import { setConsent } from '../../consent';
 import { Haut, Option, Fait } from './EcransBienvenue';
 
 /* L'INSCRIPTION DANS L'ACCUEIL DE L'APPLICATION (fondateur, 2026-10-15).
@@ -58,7 +60,7 @@ function decoderJwt(jeton) {
 
 // Un champ de l'accueil : libellé, saisie, puis l'erreur à la place de l'aide.
 // `labelMasque` : le titre de l'écran sert déjà de libellé à l'œil, celui-ci est pour les lecteurs d'écran.
-function Champ({ id, label, labelMasque, erreur, aide, children }) {
+export function Champ({ id, label, labelMasque, erreur, aide, children }) {
   return (
     <div className="bv-champ">
       {label && <label htmlFor={id} className={labelMasque ? 'sr-only' : undefined}>{label}</label>}
@@ -79,7 +81,7 @@ function Segments({ label, valeur, options, onChoix }) {
   );
 }
 
-export default function InscriptionAppli({ role, fed, onQuitter, onConnexion }) {
+export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConnexion }) {
   const { t } = useLanguage();
   const { register, verifyEmail, resendCode, loginWithGoogle, loginWithApple } = useAuth();
   const toast = useToast();
@@ -127,6 +129,9 @@ export default function InscriptionAppli({ role, fed, onQuitter, onConnexion }) 
   const [referralOuvert, setReferralOuvert] = useState(false);
   const [versionCgu, setVersionCgu] = useState('');
   const [siteWeb, setSiteWeb] = useState(''); // pot de miel, comme sur le site
+  // Rapports d'erreur (Sentry) : la question de la carte des cookies, posée ici par une case NON cochée — ainsi le
+  // nouvel inscrit n'a pas en plus l'écran de consentement de l'app (ConsentementAppli.jsx). Modifiable dans Mon compte.
+  const [rapports, setRapports] = useState(false);
 
   const [index, setIndex] = useState(0);
   const [recule, setRecule] = useState(false);
@@ -275,7 +280,8 @@ export default function InscriptionAppli({ role, fed, onQuitter, onConnexion }) 
   // Compte ouvert : droit dans son espace, comme après l'inscription du site (allerApresInscription d'Auth.jsx).
   async function arriver(user) {
     toast(t('auth.welcome', { name: user.name }), 'succes');
-    const cible = user?.role === 'restaurant' ? '/dashboard' : user?.role === 'driver' ? '/driver/onboarding' : '/restaurants';
+    // Un client venu d'un commerce touché sans compte y retourne (comme sur le site, Auth.jsx).
+    const cible = user?.role === 'restaurant' ? '/dashboard' : user?.role === 'driver' ? '/driver/onboarding' : depuis && depuis !== '/' ? depuis : '/restaurants';
     await attendrePage(cible);
     navigate(cible, { replace: true });
   }
@@ -323,6 +329,7 @@ export default function InscriptionAppli({ role, fed, onQuitter, onConnexion }) 
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
       ...(refusNouvelles ? { marketingOptOut: true } : {})
     };
+    setConsent(rapports ? 'accepted' : 'refused');
     setAttente(true);
     let reussi = false;
     try {
@@ -665,7 +672,7 @@ export default function InscriptionAppli({ role, fed, onQuitter, onConnexion }) 
           {role === 'client' && (
             <label className="bv-case-ligne">
               <input type="checkbox" checked={accepteCgu} onChange={(e) => setAccepteCgu(e.target.checked)} />
-              <span>{t('conformite.termsAcceptPrefix')} <Link to="/cgv" target="_blank" rel="noopener">{t('conformite.termsLink')}</Link>{versionCgu ? ` (${versionCgu})` : ''}.</span>
+              <span>{t('conformite.termsAcceptPrefix')} <LienCgv>{t('conformite.termsLink')}</LienCgv>{versionCgu ? ` (${versionCgu})` : ''}.</span>
             </label>
           )}
           {erreurs.cgu && <p className="field-error" role="alert">{erreurs.cgu}</p>}
@@ -674,6 +681,10 @@ export default function InscriptionAppli({ role, fed, onQuitter, onConnexion }) 
           <label className="bv-case-ligne bv-case-discrete">
             <input type="checkbox" checked={refusNouvelles} onChange={(e) => setRefusNouvelles(e.target.checked)} />
             <span>{t('nouvelles.signupOptOut')}</span>
+          </label>
+          <label className="bv-case-ligne bv-case-discrete">
+            <input type="checkbox" checked={rapports} onChange={(e) => setRapports(e.target.checked)} />
+            <span>{t('appli.insRapports')}</span>
           </label>
           {referralOuvert ? (
             <Champ id="bv-i-code-promo" label={t('auth.promoCode')}>

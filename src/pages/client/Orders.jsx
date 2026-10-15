@@ -1,4 +1,10 @@
-import { allerAuPaiement } from '../../natif';
+import { allerAuPaiement, experienceApp } from '../../natif';
+import SousEcran from '../../components/SousEcran';
+
+/* DANS L'APPLICATION (2026-10-15), la carte d'une commande en cours se lit dans l'ordre où l'on en a besoin : le code à
+ * donner au livreur (ou à montrer au commerce) juste sous la progression, plus en bas sous la carte ; l'avis et le
+ * pourboire, et « Signaler un problème », s'ouvrent dans une feuille au lieu de s'insérer dans la carte. */
+const APPLI = experienceApp();
 import { Fragment, useEffect, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
@@ -128,6 +134,16 @@ export default function Orders() {
   const toast = useToast();
   const { previewMode } = usePreviewMode();
   const { t } = useLanguage();
+  // Le code à donner au livreur ou à montrer au commerce : sous la progression dans l'app, plus bas sur le site.
+  const codeDeRemise = (o) => (o.paid && o.deliveryCode && o.status !== 'livre' && o.status !== 'refuse' ? (
+    <div className="suivi-code">
+      <div className="suivi-code-lib">
+        {o.orderType === 'pickup' && t('orders.codeShowRestaurant')}
+        {o.orderType === 'delivery' && t('orders.codeGiveDriver')}
+      </div>
+      <div className="suivi-code-valeur">{o.deliveryCode}</div>
+    </div>
+  ) : null);
   const cart = useCart();
   const navigate = useNavigate();
   // Signalements déjà envoyés, par commande (plan de test USR-10) — affichés à la place du bouton.
@@ -277,6 +293,7 @@ export default function Orders() {
           </div>
           {!estPassee(o) && <ProgressBar status={o.status} orderType={o.orderType} />}
           {!estPassee(o) && <DeliveryTiming order={o} />}
+          {APPLI && codeDeRemise(o)}
           {o.status !== 'livre' && <ProchaineEtape order={o} />}
           {/* UN ARTICLE PAR LIGNE, avec sa quantité dans une case.
               Les articles étaient aplatis en une seule chaîne par .join(', ') : « 2× Maxi Frites
@@ -332,15 +349,7 @@ export default function Orders() {
               </div>
             </div>
           )}
-          {o.paid && o.deliveryCode && o.status !== 'livre' && o.status !== 'refuse' && (
-            <div className="suivi-code">
-              <div className="suivi-code-lib">
-                {o.orderType === 'pickup' && t('orders.codeShowRestaurant')}
-                {o.orderType === 'delivery' && t('orders.codeGiveDriver')}
-              </div>
-              <div className="suivi-code-valeur">{o.deliveryCode}</div>
-            </div>
-          )}
+          {!APPLI && codeDeRemise(o)}
           <div className="suivi-total">
             <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
             <b>{euros(o.total)}</b>
@@ -388,12 +397,15 @@ export default function Orders() {
           {o.status === 'livre' && o.reviewed && o.driverName && !o.tipPaid && reviewingId !== o.id && (
             <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => setReviewingId(o.id)}>{t('orders.leaveTip')}</button>
           )}
-          {reviewingId === o.id && (
-            <ReviewForm
-              order={o} token={token} toast={toast} t={t} pourboireSeul={!!o.reviewed}
-              onDone={(maj = {}) => { setReviewingId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, reviewed: true, ...maj } : x))); }}
-            />
-          )}
+          {reviewingId === o.id && (() => {
+            const formulaire = (
+              <ReviewForm
+                order={o} token={token} toast={toast} t={t} pourboireSeul={!!o.reviewed}
+                onDone={(maj = {}) => { setReviewingId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, reviewed: true, ...maj } : x))); }}
+              />
+            );
+            return APPLI ? <SousEcran titre={o.reviewed ? t('orders.leaveTip') : t('orders.leaveReview')} onFermer={() => setReviewingId(null)}>{formulaire}</SousEcran> : formulaire;
+          })()}
           {/* Signaler un problème (USR-10) : commande payée et terminée ; « jamais reçue » aussi pendant la livraison. */}
           {o.paid && ['livre', 'livraison'].includes(o.status) && (
             <SignalerProbleme order={o} token={token} toast={toast} signalement={signalements[o.id]}

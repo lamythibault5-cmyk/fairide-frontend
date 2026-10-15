@@ -8,7 +8,7 @@ import ErrorCard from '../../components/ErrorCard';
 import LigneCompte from '../../components/LigneCompte';
 import IncidentsCourse from '../../components/livreur/IncidentsCourse';
 import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
-import { experienceApp } from '../../natif';
+import { experienceApp, allerAuPaiement } from '../../natif';
 import Icone from '../../components/Icone';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -111,7 +111,10 @@ export default function DriverDashboard() {
     setConnecting(true);
     try {
       const r = await api('/auth/me/connect/onboard', { method: 'POST', token });
-      window.location.href = r.url;
+      // Dans l'app, Stripe s'ouvre dans le navigateur intégré et l'on revient ici en le fermant (allerAuPaiement, natif.js) ;
+      // sur le site, rien ne change : la page part vers Stripe.
+      await allerAuPaiement(r.url, { retour: '/driver' });
+      setConnecting(false);
     } catch (e) {
       toast(e.message, 'erreur');
       setConnecting(false);

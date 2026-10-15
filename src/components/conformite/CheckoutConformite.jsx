@@ -1,5 +1,5 @@
 import { useEffect, useId } from 'react';
-import { Link } from 'react-router-dom';
+import LienCgv from '../CgvEnFeuille';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -15,8 +15,13 @@ import { useLanguage } from '../../context/LanguageContext';
  *   C2 — comment les frais sont calculés, et l'absence de droit de rétractation (CDE VI.53).
  *
  * Contrôlé par Checkout.jsx (`valeur` / `onChange`) : c'est lui qui envoie ces champs avec la commande.
- * Le serveur revérifie tout : ce bloc ne fait qu'éviter au client un aller-retour d'erreur. */
-export default function CheckoutConformite({ restaurant, lignes, valeur, onChange }) {
+ * Le serveur revérifie tout : ce bloc ne fait qu'éviter au client un aller-retour d'erreur.
+ *
+ * `partie` (application, 2026-10-15) : le bloc se découpe pour que rien d'obligatoire ne reste en bas d'une longue page —
+ * 'allergie' dans une feuille ouverte par une rangée, 'cases' (âge, CGU) dans la feuille « Avant de commander » ouverte
+ * par le bouton de paiement, 'infos' (frais, rétractation) sous le récapitulatif. Sans `partie`, tout, comme sur le site.
+ * Une seule instance lit la version des CGU (`charger`), les autres ne font qu'afficher. */
+export default function CheckoutConformite({ restaurant, lignes, valeur, onChange, partie = null, charger = true }) {
   const { token } = useAuth();
   const { t } = useLanguage();
   const id = useId();
@@ -24,6 +29,7 @@ export default function CheckoutConformite({ restaurant, lignes, valeur, onChang
 
   // Version des CGU en vigueur, et si ce compte l'a déjà acceptée (GET /auth/terms).
   useEffect(() => {
+    if (!charger) return undefined;
     let annule = false;
     api('/auth/terms', { token })
       .then((r) => { if (!annule) maj({ termsVersion: r.version, termsNeeded: !r.accepted }); })
@@ -36,11 +42,10 @@ export default function CheckoutConformite({ restaurant, lignes, valeur, onChang
   // Âge exigé : le plus élevé des plats, 18 par défaut (politique Fairide, voir alcool.js côté serveur).
   const ageRequis = platsAlcool.length ? Math.max(18, ...platsAlcool.map((m) => m.minAge || 18)) : null;
   const telephone = restaurant?.allergenContactPhone || '';
+  const voir = (p) => !partie || partie === p;
 
-  return (
-    <div className="checkout-conformite" style={{ marginTop: 12 }}>
-      <details open={!!valeur.allergyRequest} style={{ marginBottom: 10 }}>
-        <summary className="small" style={{ cursor: 'pointer', fontWeight: 600 }}>{t('conformite.allergyToggle')}</summary>
+  const allergie = (
+    <>
         <div className="field" style={{ marginTop: 6 }}>
           <label htmlFor={`${id}-allergie`} className="small">{t('conformite.allergyLabel')}</label>
           <textarea id={`${id}-allergie`} rows={2} maxLength={500} value={valeur.allergyRequest || ''}
@@ -48,31 +53,46 @@ export default function CheckoutConformite({ restaurant, lignes, valeur, onChang
         </div>
         <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.allergyHow')}</p>
         {telephone && <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.allergyCallFirst', { phone: telephone })}</p>}
-      </details>
+    </>
+  );
 
-      {ageRequis && (
+  return (
+    <div className="checkout-conformite" style={{ marginTop: partie ? 0 : 12 }}>
+      {!partie && (
+        <details open={!!valeur.allergyRequest} style={{ marginBottom: 10 }}>
+          <summary className="small" style={{ cursor: 'pointer', fontWeight: 600 }}>{t('conformite.allergyToggle')}</summary>
+          {allergie}
+        </details>
+      )}
+      {partie === 'allergie' && allergie}
+
+      {voir('cases') && ageRequis && (
         <label className="co-case">
           <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!valeur.ageDeclaration} onChange={(e) => maj({ ageDeclaration: e.target.checked })} />
           <span className="small">{t('conformite.ageDeclaration', { age: ageRequis })}</span>
         </label>
       )}
 
-      {valeur.termsNeeded && (
+      {voir('cases') && valeur.termsNeeded && (
         <label className="co-case">
           <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!valeur.acceptTerms} onChange={(e) => maj({ acceptTerms: e.target.checked })} />
           <span className="small">
-            {t('conformite.termsAcceptPrefix')} <Link to="/cgv" target="_blank" rel="noopener">{t('conformite.termsLink')}</Link>{valeur.termsVersion ? ` (${valeur.termsVersion})` : ''}.
+            {t('conformite.termsAcceptPrefix')} <LienCgv>{t('conformite.termsLink')}</LienCgv>{valeur.termsVersion ? ` (${valeur.termsVersion})` : ''}.
           </span>
         </label>
       )}
 
-      <details style={{ marginBottom: 8 }}>
-        <summary className="small" style={{ cursor: 'pointer' }}>{t('conformite.feesHowTitle')}</summary>
-        <p className="small" style={{ margin: '6px 0 0' }}>{t('conformite.feesHowBody')}</p>
-      </details>
-      <p className="small" style={{ margin: 0, color: 'var(--ink-soft)' }}>
-        {t('conformite.noWithdrawal')} <Link to="/cgv">{t('conformite.cancellationLink')}</Link>
-      </p>
+      {voir('infos') && (
+        <>
+          <details style={{ marginBottom: 8 }}>
+            <summary className="small" style={{ cursor: 'pointer' }}>{t('conformite.feesHowTitle')}</summary>
+            <p className="small" style={{ margin: '6px 0 0' }}>{t('conformite.feesHowBody')}</p>
+          </details>
+          <p className="small" style={{ margin: 0, color: 'var(--ink-soft)' }}>
+            {t('conformite.noWithdrawal')} <LienCgv cible={null}>{t('conformite.cancellationLink')}</LienCgv>
+          </p>
+        </>
+      )}
     </div>
   );
 }

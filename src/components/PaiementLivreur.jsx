@@ -1,4 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { allerAuPaiement } from '../natif';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { paiementsOuverts, dateOuverturePaiements } from '../launch';
 
@@ -20,6 +25,17 @@ export default function PaiementLivreur({ user, deliveries }) {
   const totaux = livrees.reduce((a, o) => ({ courses: a.courses + part(o), pourboires: a.pourboires + pourboire(o) }), { courses: 0, pourboires: 0 });
   const ouvert = paiementsOuverts();
   const stripeActif = user?.stripeConnectStatus === 'active';
+  // « Activer » était un bouton désactivé, sans action, même une fois les paiements ouverts (audit du 15/10/2026) : il lance
+  // maintenant la même activation Stripe que le tableau de bord (Dashboard.jsx), et l'on revient ici.
+  const { token } = useAuth();
+  const toast = useToast();
+  const [ouverture, setOuverture] = useState(false);
+  async function activer() {
+    setOuverture(true);
+    try { const r = await api('/auth/me/connect/onboard', { method: 'POST', token }); await allerAuPaiement(r.url, { retour: '/account' }); }
+    catch (e) { toast(e.message, 'erreur'); }
+    finally { setOuverture(false); }
+  }
 
   return (
     <div className="paiement-resto">
@@ -45,8 +61,8 @@ export default function PaiementLivreur({ user, deliveries }) {
           <p className="small" style={{ margin: '4px 0 0' }}>{stripeActif ? t('paiementLivreur.activationDoneText') : ouvert ? t('paiementLivreur.activationOpenText') : t('paiementLivreur.activationClosedText', { date: dateOuverturePaiements(getLocale()) })}</p>
         </div>
         {!stripeActif && (
-          <button type="button" className="btn-gold" disabled title={ouvert ? undefined : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}>
-            {ouvert ? t('paiementResto.activateBtn') : t('paiementResto.activateSoonBtn')}
+          <button type="button" className="btn-gold" disabled={!ouvert || ouverture} onClick={activer} title={ouvert ? undefined : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}>
+            {ouverture ? '…' : ouvert ? t('paiementResto.activateBtn') : t('paiementResto.activateSoonBtn')}
           </button>
         )}
       </div>

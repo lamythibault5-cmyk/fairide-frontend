@@ -1,0 +1,516 @@
+{
+ "_source": "Réponses réelles du serveur (base de test en mémoire du backend : livreur et commerce qui viennent de s’inscrire), capturées le 2026-10-15 pour scripts/verifier-appli.mjs. À recapturer si la page qui les lit plante dans la vérification.",
+ "/couriers/me": {
+  "courier": {
+   "id": "eb11ec23-d14d-4b1c-9c91-9845c151705d",
+   "userId": "30758102-3c45-4153-b6e9-29de55d81a7e",
+   "statusType": "independent",
+   "lifecycleStatus": "draft",
+   "statusVerifiedAt": null,
+   "statusDocuments": [],
+   "socialInsuranceFund": "",
+   "payoutIbanKnown": false,
+   "zone": "Etterbeek",
+   "vehicleType": "velo",
+   "licenceNumber": "",
+   "licencePlate": "",
+   "otherPlatforms": {
+    "works": null,
+    "list": [],
+    "note": ""
+   },
+   "preferredZones": [],
+   "nationalityGroup": "",
+   "selfEmploymentByResidence": false,
+   "selfEmploymentClaimedAt": null,
+   "minFeeCents": null,
+   "minFeePerKmCents": null,
+   "iban": "BE79 **** 6833",
+   "hasIban": true,
+   "birthDate": "1999-05-05",
+   "nationalNumberMasked": "",
+   "hasNationalNumber": false,
+   "identity": {
+    "provider": null,
+    "status": "none",
+    "verifiedAt": null,
+    "firstName": "",
+    "lastName": "",
+    "documentType": null,
+    "nameMatchAccount": null,
+    "nameMatchStripe": null
+   },
+   "student": {
+    "school": "",
+    "academicYear": "",
+    "socialInsuranceFund": ""
+   },
+   "independent": {
+    "companyNumber": "0500.123.486",
+    "vatStatus": "franchise",
+    "vatNumber": "",
+    "legalName": "",
+    "seatAddress": "",
+    "companyVerified": false,
+    "socialInsuranceFund": ""
+   },
+   "needsRenewal": false,
+   "renewalYear": null,
+   "submittedAt": null,
+   "reviewedAt": null,
+   "reviewReason": "",
+   "bag": {
+    "option": "",
+    "depositStatus": "none",
+    "depositAmount": 40,
+    "deliveredAt": null,
+    "returnedAt": null,
+    "refundedAt": null,
+    "note": ""
+   },
+   "createdAt": "2026-10-15T13:46:02.571Z",
+   "updatedAt": "2026-10-15T13:46:02.571Z"
+  },
+  "documents": [],
+  "contracts": [],
+  "thresholds": {
+   "year": 2026,
+   "grossTotal": 0,
+   "withholdingTotal": 0,
+   "netTotal": 0,
+   "deliveries": 0,
+   "alertsSent": {},
+   "incomeExternalDeclared": 0,
+   "frozenAt": null
+  },
+  "legal": {
+   "year": 2026,
+   "herite": false,
+   "studentParentsCeiling": 12300,
+   "franchiseMaxTurnover": 25000,
+   "independentSocialRate": 0.205,
+   "independentComplementaryExemption": 1922.16,
+   "independentMinQuarterly": 890.42,
+   "independentStarterQuarterly": 459.82,
+   "studentIndependentExemption": 8687.04,
+   "studentIndependentCeiling": 17374.08,
+   "adultMinAge": 18
+  },
+  "situation": {
+   "type": "none",
+   "used": 0,
+   "max": null,
+   "pct": 0,
+   "remaining": null,
+   "bloque": false
+  },
+  "missing": [
+   "identite",
+   "registre_national",
+   "document_profile_photo",
+   "document_selfie",
+   "caisse",
+   "siege",
+   "nationalite",
+   "transparency_notice",
+   "geolocation_policy",
+   "dac7_info",
+   "self_billing_mandate",
+   "declaration_honneur",
+   "contrat"
+  ],
+  "identityProviders": {
+   "stripe_identity": false,
+   "manual": true,
+   "in_person": true
+  },
+  "zones": [
+   "Anderlecht",
+   "Auderghem",
+   "Berchem-Sainte-Agathe",
+   "Bruxelles",
+   "Etterbeek",
+   "Evere",
+   "Forest",
+   "Ganshoren",
+   "Ixelles",
+   "Jette",
+   "Koekelberg",
+   "Molenbeek-Saint-Jean",
+   "Saint-Gilles",
+   "Saint-Josse-ten-Noode",
+   "Schaerbeek",
+   "Uccle",
+   "Watermael-Boitsfort",
+   "Woluwe-Saint-Lambert",
+   "Woluwe-Saint-Pierre"
+  ],
+  "vehicles": [
+   "velo",
+   "velo_electrique",
+   "scooter",
+   "voiture"
+  ],
+  "requiredDocuments": {
+   "student_independent": [],
+   "independent": []
+  },
+  "commonDocuments": [
+   "profile_photo",
+   "selfie"
+  ],
+  "motorizedDocuments": [],
+  "pricing": {
+   "deliveryBaseFee": 5,
+   "deliveryBaseKm": 1,
+   "clientPerKm": 0.8,
+   "driverPerKmMotor": 0.8,
+   "driverPerKmBike": 0.8,
+   "secondOrderRadiusKm": 2,
+   "bikeMaxKm": 4
+  },
+  "insurancePolicy": "",
+  "contractVersions": {
+   "student_independent": "ETI-2026.8",
+   "independent": "IND-v4-2026.8"
+  },
+  "user": {
+   "name": "Test Livreur",
+   "email": "driver-61b01a0b@example.test",
+   "phone": "+32477c5e766",
+   "address": "Rue Test 1, 1200 Bruxelles",
+   "stripeConnectStatus": "active",
+   "adminStatus": "approved",
+   "companyNumber": "",
+   "vatNumber": ""
+  }
+ },
+ "/me/documents": {
+  "terms": {
+   "version": "CGU-2026-10-14",
+   "effectiveAt": "2026-10-14T00:00:00+02:00",
+   "accepted": false,
+   "lastAccepted": null,
+   "path": "/cgv"
+  },
+  "privacy": {
+   "version": "CONF-2026-10-14",
+   "effectiveAt": "2026-10-14T00:00:00+02:00",
+   "path": "/confidentialite"
+  },
+  "restaurants": [],
+  "courier": {
+   "statusType": "independent",
+   "currentVersion": "IND-v4-2026.8",
+   "title": "Contrat de coursier indépendant (v4)",
+   "signed": false,
+   "signPath": "/driver",
+   "previewPath": "/couriers/me/contract/preview",
+   "contracts": []
+  }
+ },
+ "/restaurants/mine/dashboard": [
+  {
+   "id": "e7653c45-c2f9-4c7b-ba31-97b7f4ec535e",
+   "ownerId": "5a48e14f-ff82-43d0-9834-b3c734996489",
+   "name": "Resto Test",
+   "certified": true,
+   "vitrine": false,
+   "legalName": "",
+   "companyNumber": "",
+   "vatNumber": "",
+   "responsibleName": "",
+   "afscaNumber": "",
+   "allergenContactPhone": "",
+   "allergenProcedureAttested": false,
+   "professionalDeclared": false,
+   "menuSigned": false,
+   "menuSignedAt": null,
+   "sellsAlcohol": false,
+   "alcoholAgeAckAt": null,
+   "commune": "Etterbeek",
+   "cuisine": "Autre",
+   "extraCuisines": [],
+   "cuisines": [
+    "Autre"
+   ],
+   "rating": 4.5,
+   "reviewCount": 0,
+   "desc": "",
+   "open": true,
+   "address": "Rue du Test 2, 1040 Etterbeek",
+   "phone": "",
+   "phoneSecondary": "",
+   "phonePublic": true,
+   "phoneSecondaryPublic": true,
+   "deliveryRadiusKm": 6,
+   "maxOrdersPerDay": null,
+   "email": "",
+   "emailSecondary": "",
+   "website": "",
+   "addressStreet": "",
+   "addressNumber": "",
+   "addressPostalCode": "",
+   "addressCity": "",
+   "neighborhood": "",
+   "coverImageUrl": "https://images.unsplash.com/photo-1600628421066-f6bda6a7b976?w=900&q=80",
+   "logoImageUrl": "data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20200%20200'%3E%3Crect%20width%3D'200'%20height%3D'200'%20rx%3D'100'%20fill%3D'%233B6FA0'%2F%3E%3Ccircle%20cx%3D'100'%20cy%3D'100'%20r%3D'88'%20fill%3D'none'%20stroke%3D'%2316233A'%20stroke-width%3D'6'%2F%3E%3Ctext%20x%3D'100'%20y%3D'104'%20font-family%3D'Georgia%2C%22Times%20New%20Roman%22%2Cserif'%20font-weight%3D'700'%20font-size%3D'78'%20fill%3D'%23FBF8F2'%20text-anchor%3D'middle'%20dominant-baseline%3D'central'%3ERT%3C%2Ftext%3E%3C%2Fsvg%3E",
+   "openingHours": "",
+   "hours": null,
+   "openStatus": {
+    "isOpen": true,
+    "opensToday": false,
+    "opensAt": null,
+    "isExceptionalClosure": false,
+    "closedReason": null,
+    "reopensDate": null
+   },
+   "pausedUntil": null,
+   "minOrderAmount": null,
+   "closures": [],
+   "lat": null,
+   "lng": null,
+   "hasPromo": false,
+   "activeCartPromo": null,
+   "fairideAdvantage": null,
+   "subscriptionStatus": "inactive",
+   "stripeConnectStatus": "not_started",
+   "adminStatus": "pending",
+   "publicListed": false,
+   "isDemo": false,
+   "onboarding": {
+    "plan": "complete",
+    "itemCount": 0,
+    "menuReady": false,
+    "paymentsRequired": true,
+    "subscriptionActive": true,
+    "subscriptionRequired": false,
+    "menuPending": false,
+    "menuReviewRequestedAt": null,
+    "menuConfirmedAt": null,
+    "menuConfirmedName": "",
+    "contractAccepted": false,
+    "contractVersion": "RESTO-2026.19",
+    "paymentsReady": false,
+    "adminApproved": false,
+    "publicListed": false
+   },
+   "subscriptionCurrentPeriodEnd": null,
+   "freeTrialMonths": 1,
+   "deliveryMode": "fairide",
+   "fairideDeliveryDisabled": false,
+   "fairideDeliveryDisabledReason": "",
+   "freeDelivery": false,
+   "deliveryFeeDiscount": 0,
+   "freeDeliveryMinOrder": null,
+   "ownDeliveryFee": null,
+   "offersDelivery": true,
+   "offersPickup": true,
+   "wantsDelivery": true,
+   "wantsPickup": true,
+   "pickupPayOnSite": false,
+   "pickupPaymentMode": "online",
+   "plan": "complete",
+   "subscriptionRequired": false,
+   "subscriptionWaived": true,
+   "terminal": {
+    "status": "none",
+    "depositAmount": 80,
+    "eligibleOffert": true,
+    "signupRank": 1,
+    "offerRank": 50,
+    "offerUntil": 1792101600000,
+    "offerOpen": true,
+    "deliveredAt": null,
+    "returnedAt": null,
+    "refundedAt": null
+   },
+   "optionGroups": [],
+   "sections": [],
+   "menuSourceLang": null,
+   "menu": []
+  }
+ ],
+ "/restaurants/:id/compliance": {
+  "menu": {
+   "signed": false,
+   "itemCount": 0,
+   "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "lastSigned": null,
+   "text": "Je valide ma carte : les prix affichés sont mes prix TTC, les taux de TVA sont ceux que j'applique, et les allergènes et mentions d'alcool sont exacts. J'en réponds envers mes clients.",
+   "translations": {
+    "en": "I approve my menu: the prices shown are my prices including VAT, the VAT rates are the ones I apply, and the allergen and alcohol information is accurate. I am answerable for it to my customers.",
+    "nl": "Ik keur mijn kaart goed: de getoonde prijzen zijn mijn prijzen inclusief btw, de btw-tarieven zijn die welke ik toepas, en de allergenen- en alcoholvermeldingen kloppen. Ik sta daarvoor in tegenover mijn klanten."
+   },
+   "missing": [],
+   "vatAutoCount": 0
+  },
+  "allergens": {
+   "list": [
+    {
+     "code": 1,
+     "fr": "Gluten",
+     "en": "Gluten",
+     "nl": "Gluten"
+    },
+    {
+     "code": 2,
+     "fr": "Crustacés",
+     "en": "Crustaceans",
+     "nl": "Schaaldieren"
+    },
+    {
+     "code": 3,
+     "fr": "Œufs",
+     "en": "Eggs",
+     "nl": "Eieren"
+    },
+    {
+     "code": 4,
+     "fr": "Poissons",
+     "en": "Fish",
+     "nl": "Vis"
+    },
+    {
+     "code": 5,
+     "fr": "Arachides",
+     "en": "Peanuts",
+     "nl": "Pinda’s"
+    },
+    {
+     "code": 6,
+     "fr": "Soja",
+     "en": "Soy",
+     "nl": "Soja"
+    },
+    {
+     "code": 7,
+     "fr": "Lait",
+     "en": "Milk",
+     "nl": "Melk"
+    },
+    {
+     "code": 8,
+     "fr": "Fruits à coque",
+     "en": "Tree nuts",
+     "nl": "Noten"
+    },
+    {
+     "code": 9,
+     "fr": "Céleri",
+     "en": "Celery",
+     "nl": "Selderij"
+    },
+    {
+     "code": 10,
+     "fr": "Moutarde",
+     "en": "Mustard",
+     "nl": "Mosterd"
+    },
+    {
+     "code": 11,
+     "fr": "Sésame",
+     "en": "Sesame",
+     "nl": "Sesamzaad"
+    },
+    {
+     "code": 12,
+     "fr": "Sulfites",
+     "en": "Sulphites",
+     "nl": "Sulfiet"
+    },
+    {
+     "code": 13,
+     "fr": "Lupin",
+     "en": "Lupin",
+     "nl": "Lupine"
+    },
+    {
+     "code": 14,
+     "fr": "Mollusques",
+     "en": "Molluscs",
+     "nl": "Weekdieren"
+    }
+   ],
+   "perItemRequiredFrom": null,
+   "undeclaredCount": 0,
+   "contactPhone": "",
+   "fallbackPhone": "",
+   "referentName": "",
+   "attestation": {
+    "version": "ALLERGENES-2026.1",
+    "text": [
+     "Je dispose d'une procédure écrite d'information sur les 14 allergènes réglementaires (règlement (UE) 1169/2011, annexe II) pour chaque plat que je vends via Fairide.",
+     "Une personne formée à cette procédure est présente pendant les heures où j'accepte des commandes.",
+     "Je réponds sans délai et gratuitement à toute demande d'information sur les allergènes, par téléphone au numéro affiché sur ma fiche, avant que le client ne commande.",
+     "Lorsqu'une commande porte une demande liée à une allergie ou une intolérance, je ne l'accepte que si je peux la servir en respectant cette demande ; sinon je la refuse, et le client est remboursé intégralement.",
+     "Je tiens la procédure écrite à la disposition de l'AFSCA et de Fairide sur simple demande."
+    ],
+    "translations": {
+     "en": [
+      "I have a written procedure for providing information on the 14 regulated allergens (Regulation (EU) 1169/2011, Annex II) for every dish I sell through Fairide.",
+      "A person trained in this procedure is present during the hours when I accept orders.",
+      "I answer any request for allergen information promptly and free of charge, by phone on the number shown on my page, before the customer orders.",
+      "When an order carries a request linked to an allergy or intolerance, I accept it only if I can serve it while respecting that request; otherwise I refuse it, and the customer is refunded in full.",
+      "I make the written procedure available to the AFSCA and to Fairide on simple request."
+     ],
+     "nl": [
+      "Ik beschik over een schriftelijke procedure om informatie te geven over de 14 gereglementeerde allergenen (Verordening (EU) 1169/2011, bijlage II) voor elk gerecht dat ik via Fairide verkoop.",
+      "Een persoon die in deze procedure is opgeleid, is aanwezig tijdens de uren waarin ik bestellingen aanvaard.",
+      "Ik beantwoord elke vraag naar allergeneninformatie onverwijld en kosteloos, telefonisch op het nummer op mijn fiche, voordat de klant bestelt.",
+      "Wanneer een bestelling een vraag in verband met een allergie of intolerantie bevat, aanvaard ik ze alleen als ik ze met respect voor die vraag kan bereiden; anders weiger ik ze, en de klant wordt volledig terugbetaald.",
+      "Ik stel de schriftelijke procedure op eenvoudig verzoek ter beschikking van het FAVV en van Fairide."
+     ]
+    },
+    "attestedAt": null,
+    "attestedName": ""
+   }
+  },
+  "professional": {
+   "version": "PRO-2026.3",
+   "text": [
+    "Je vends via Fairide en tant que professionnel, au nom de l'entreprise identifiée par le numéro d'entreprise et la TVA de ma fiche.",
+    "Je suis le vendeur des produits : le contrat de vente est conclu entre le client et mon commerce. Fairide assure la mise en relation, le paiement et, le cas échéant, la livraison.",
+    "Je ne propose via Fairide que des produits et des services conformes au droit de l'Union européenne et au droit belge qui leur sont applicables.",
+    "Les informations d'identification affichées sur ma fiche (dénomination, adresse, numéro d'entreprise, TVA, e-mail, téléphone) sont exactes, et je les tiens à jour.",
+    "Mon établissement est enregistré auprès de l'AFSCA pour les activités que j'exerce, et je dispose de toutes les autorisations que ces activités exigent.",
+    "Je dispose des assurances obligatoires pour mon activité, et je fournis à Fairide, sur simple demande, la preuve de l'un ou l'autre de ces enregistrements, autorisations ou assurances.",
+    "Je préviens Fairide sans délai si l'un d'eux est suspendu, retiré ou n'est plus valable.",
+    "Si je vends des boissons alcoolisées, je vérifie l'âge du client au moment de préparer et de remettre la commande, et je refuse la vente aux moins de 18 ans (16 ans pour la bière et le vin)."
+   ],
+   "translations": {
+    "en": [
+     "I sell through Fairide as a professional, on behalf of the business identified by the company number and VAT number on my page.",
+     "I am the seller of the products: the sales contract is concluded between the customer and my business. Fairide provides the connection, the payment and, where applicable, the delivery.",
+     "Through Fairide, I only offer products and services that comply with the European Union and Belgian law applicable to them.",
+     "The identification details shown on my page (name, address, company number, VAT, e-mail, phone) are accurate, and I keep them up to date.",
+     "My establishment is registered with the AFSCA (Belgian food safety agency) for the activities I carry out, and I hold every authorisation those activities require.",
+     "I hold the insurance my activity requires, and I provide Fairide, on simple request, with proof of any of these registrations, authorisations or insurance policies.",
+     "I inform Fairide without delay if any of them is suspended, withdrawn or no longer valid.",
+     "If I sell alcoholic drinks, I check the customer's age when preparing and handing over the order, and I refuse the sale to anyone under 18 (16 for beer and wine)."
+    ],
+    "nl": [
+     "Ik verkoop via Fairide als professional, namens de onderneming die geïdentificeerd wordt door het ondernemingsnummer en het btw-nummer op mijn fiche.",
+     "Ik ben de verkoper van de producten: de koopovereenkomst wordt gesloten tussen de klant en mijn zaak. Fairide zorgt voor het in contact brengen, de betaling en, in voorkomend geval, de levering.",
+     "Via Fairide bied ik enkel producten en diensten aan die voldoen aan het recht van de Europese Unie en het Belgische recht dat erop van toepassing is.",
+     "De identificatiegegevens op mijn fiche (benaming, adres, ondernemingsnummer, btw, e-mail, telefoon) zijn juist, en ik houd ze up-to-date.",
+     "Mijn vestiging is bij het FAVV geregistreerd voor de activiteiten die ik uitoefen, en ik beschik over alle toelatingen die deze activiteiten vereisen.",
+     "Ik beschik over de verplichte verzekeringen voor mijn activiteit, en ik bezorg Fairide op eenvoudig verzoek het bewijs van elk van deze registraties, toelatingen of verzekeringen.",
+     "Ik verwittig Fairide onmiddellijk als een ervan geschorst, ingetrokken of niet meer geldig is.",
+     "Als ik alcoholische dranken verkoop, controleer ik de leeftijd van de klant bij het klaarmaken en overhandigen van de bestelling, en weiger ik de verkoop aan wie jonger is dan 18 jaar (16 jaar voor bier en wijn)."
+    ]
+   },
+   "declaredAt": null,
+   "declaredName": "",
+   "upToDate": false
+  },
+  "alcohol": {
+   "sells": false,
+   "alcoholItems": 0,
+   "authorized": false,
+   "platformMinAge": 18,
+   "salesOpen": false
+  },
+  "vatRegime": null
+ }
+}

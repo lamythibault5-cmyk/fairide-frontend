@@ -1,4 +1,6 @@
-import { ouvrirPdfBlob } from '../../natif';
+import { allerAuPaiement, experienceApp } from '../../natif';
+import { MANQUES_INFORMATIFS, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
+import DossierAppli from './DossierAppli';
 import SacLivraison from '../../components/SacLivraison';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -35,34 +37,13 @@ const MANQUES_PAR_ETAPE = {
   engagements: ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur', 'contrat'],
   paiement: [], envoi: ['statut_non_verifie']
 };
-// « statut_non_verifie » n'est pas une action du livreur : c'est Fairide qui vérifie. Il n'empêche
-// donc pas d'envoyer le dossier, il est simplement affiché à titre d'information.
-const MANQUES_INFORMATIFS = ['statut_non_verifie'];
 // Deux statuts (CODE-12, DEC-19 : plus d'économie collaborative, régime fermé aux livreurs de plateformes).
 const STATUTS = ['student_independent', 'independent'];
 const EMOJI_STATUT = { student_independent: 'guide', independent: 'mallette' }; // noms d'icônes (Icone.jsx)
-// Caisses d'assurances sociales agréées en Belgique (noms propres, pas de traduction).
-const CAISSES = ['Liantis', 'Acerta', 'Xerius', 'Partena', 'Securex', 'UCM', 'Group S', 'Caisse nationale auxiliaire'];
-// Attestations d'assurance, permis, titre de séjour : date d'échéance demandée, Fairide rappelle le renouvellement.
-// Carte professionnelle (CODE-14) : sa date d'expiration est exigée — sans carte valide, un livreur hors UE ne prend pas de course.
-const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance', 'driving_licence', 'residence_permit', 'professional_card'];
-// Date exigée AVANT le dépôt : sans elle, le titre de séjour ne compte pas (routes/couriers.js) et la carte professionnelle est
-// refusée par le serveur. Le champ date était commun à toutes les pièces et sans libellé visible (seulement une infobulle) :
-// un titre déposé sans date restait « manquant » sans explication (audit UX du 15/10/2026).
-const ECHEANCE_REQUISE = ['residence_permit', 'professional_card'];
 const euro = (n) => euros(Number(n || 0));
 // Taux stocké en fraction (0.107) affiché en pourcentage (« 10,7 ») ; « — » si la configuration ne le donne pas.
 const pctTexte = (x) => (x == null || x === '' ? '—' : `${(Number(x) * 100).toLocaleString(getLocale(), { maximumFractionDigits: 2 })}`);
 const euroOuTiret = (x) => (x == null || x === '' ? '—' : euro(x));
-// Un PDF protégé par le jeton ne peut pas être un simple lien : on le télécharge puis on l'ouvre.
-async function ouvrirPdf(url, token, messageErreur) {
-  try {
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) throw new Error(messageErreur);
-    const blob = await res.blob(); await ouvrirPdfBlob(blob);
-  } catch (e) { alert(e.message); }
-}
-
 export default function Onboarding() {
   const { t } = useLanguage();
   const { token, user, refreshUser } = useAuth();
@@ -125,6 +106,9 @@ export default function Onboarding() {
     return !MANQUES_PAR_ETAPE[e].some((m) => manques.includes(m) && !MANQUES_INFORMATIFS.includes(m));
   };
   const enDossier = c.lifecycleStatus === 'draft' || c.lifecycleStatus === 'rejected';
+  if (experienceApp() && enDossier) {
+    return <DossierAppli d={d} charger={charger} token={token} user={user} busy={busy} action={action} refreshUser={refreshUser} etapeDemandee={etape} />;
+  }
   const allerAuChangement = () => { document.getElementById('changement-statut')?.scrollIntoView({ behavior: defilement(), block: 'start' }); };
 
   return (
@@ -308,7 +292,8 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
     await action(async () => {
       try {
         const r = await api('/couriers/me/identity/start', { method: 'POST', token, body: { provider } });
-        if (r.url) { window.location.href = r.url; return null; }
+        // Stripe Identity dans le navigateur intégré de l'app (allerAuPaiement), retour au dossier à la fermeture.
+        if (r.url) { await allerAuPaiement(r.url, { retour: '/driver/onboarding' }); return null; }
       } catch (e) {
         // B1 : le selfie exige un consentement biométrique séparé — on l'affiche au lieu de l'erreur.
         if (e.code === 'CONSENTEMENT_BIOMETRIQUE_REQUIS') { setConsentement(e.data?.consent || null); return null; }
@@ -429,12 +414,7 @@ function ChampCaisse({ f, set, t }) {
 function EtapeInfos({ d, t, busy, token, action, onNext }) {
   const toast = useToast();
   const c = d.courier; const legal = d.legal ?? {};
-  const [f, setF] = useState({ birthDate: c.birthDate ?? '', nationalNumber: '', zone: c.zone || c.preferredZones?.[0] || '',
-    worksOtherPlatforms: c.otherPlatforms?.works === true ? 'yes' : c.otherPlatforms?.works === false ? 'no' : '', vehicleType: c.vehicleType ?? '', licenceNumber: c.licenceNumber ?? '', licencePlate: c.licencePlate ?? '', bagOption: c.bag?.option || '',
-    schoolName: c.student?.school ?? '', academicYear: c.student?.academicYear ?? '',
-    socialInsuranceFund: c.socialInsuranceFund ?? c.student?.socialInsuranceFund ?? '',
-    companyNumber: c.independent?.companyNumber ?? '', vatStatus: c.independent?.vatStatus ?? '', vatNumber: c.independent?.vatNumber ?? '', legalName: c.independent?.legalName ?? '', seatAddress: c.independent?.seatAddress ?? '',
-    nationalityGroup: c.nationalityGroup ?? '' });
+  const [f, setF] = useState(() => infosDepuisDossier(c));
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   // Une date par pièce (elle était partagée : la date d'un permis partait avec l'assurance déposée ensuite).
   const [echeances, setEcheances] = useState({});
@@ -445,14 +425,8 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
   // Silencieux : appelé à chaque « Continuer », un toast « Enregistré » par écran ne dirait rien de plus
   // que le passage à l'écran suivant. Une erreur, elle, s'affiche toujours (voir action()).
   async function enregistrer() {
-    const body = { ...f };
-    if (!body.nationalNumber) delete body.nationalNumber;
-    if (!body.bagOption) delete body.bagOption;
     // Oui / non en texte dans le formulaire, booléen pour le serveur ; vide = pas encore répondu, rien n'est envoyé.
-    if (body.worksOtherPlatforms === 'yes' || body.worksOtherPlatforms === 'no') body.worksOtherPlatforms = body.worksOtherPlatforms === 'yes'; else delete body.worksOtherPlatforms;
-    if (!body.nationalityGroup) delete body.nationalityGroup;
-    for (const k of Object.keys(body)) if (body[k] === null) delete body[k];
-    const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body }));
+    const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: corpsInfos(f) }));
     if (ok) setF((x) => ({ ...x, nationalNumber: '' }));
     return ok;
   }
@@ -468,7 +442,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
   // Photo de profil pour tous, pièces du statut, puis permis / immatriculation / assurance pour un véhicule motorisé.
   // Hors EEE (B2) : titre de séjour (avec échéance) et carte professionnelle d'indépendant.
   const horsEee = f.nationalityGroup === 'THIRD';
-  const docsRequis = [...new Set([...(d.commonDocuments ?? ['profile_photo']), ...(d.requiredDocuments?.[c.statusType] ?? []), ...(motorise ? (d.motorizedDocuments ?? ['driving_licence', 'vehicle_registration', 'vehicle_insurance']) : []), ...(horsEee ? ['residence_permit', 'professional_card'] : [])])];
+  const docsRequis = documentsRequis(d, { statusType: c.statusType, motorise, horsEee });
   const docsDe = (type) => (d.documents ?? []).filter((x) => x.docType === type);
 
   // L'ÉTAPE EN QUATRE ÉCRANS (2026-09-23). Elle tenait sur une seule page : identité administrative,
@@ -622,7 +596,9 @@ function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
   const statut = d.user?.stripeConnectStatus || user?.stripeConnectStatus;
   async function connecter() {
     setConnecting(true); setErreur('');
-    try { const r = await api('/auth/me/connect/onboard', { method: 'POST', token, body: { retour: 'onboarding' } }); window.location.href = r.url; } catch (e) { setErreur(e.message); setConnecting(false); }
+    // Dans l'app, Stripe s'ouvre dans le navigateur intégré et l'on revient ici en le fermant (allerAuPaiement, natif.js) ;
+    // sur le site, rien ne change : la page part vers Stripe.
+    try { const r = await api('/auth/me/connect/onboard', { method: 'POST', token, body: { retour: 'onboarding' } }); await allerAuPaiement(r.url, { retour: '/driver/onboarding' }); setConnecting(false); } catch (e) { setErreur(e.message); setConnecting(false); }
   }
   return (
     <div className="card">

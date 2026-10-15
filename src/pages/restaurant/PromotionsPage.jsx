@@ -1,5 +1,9 @@
 import { useEffect, useState, useId } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
+import SousEcran from '../../components/SousEcran';
+import { experienceApp } from '../../natif';
+
+const APPLI = experienceApp();
 import { api } from '../../api';
 import GiftVouchers from '../../components/GiftVouchers';
 import MiseEnAvant from '../../components/MiseEnAvant';
@@ -188,6 +192,60 @@ export default function PromotionsPage() {
     }
   }
 
+  // Les champs d'une nouvelle promotion : dans une carte sur le site, dans une feuille dans l'app.
+  const champsPromo = (
+    <>
+        <div className="field">
+          <label htmlFor={idsA11y + '-type'}>{t('promosPage.type')}</label>
+          <select id={idsA11y + '-type'} value={type} onChange={(e) => setType(e.target.value)}>
+            {TYPES.map((tp) => <option key={tp.value} value={tp.value}>{t(`promosPage.${tp.label}`)}</option>)}
+          </select>
+        </div>
+
+        {type !== 'cart_threshold' && (
+          <div className="field">
+            <label htmlFor={idsA11y + '-dish'}>{t('promosPage.dish')}</label>
+            <select id={idsA11y + '-dish'} value={itemId} onChange={(e) => setItemId(e.target.value)}>
+              <option value="">{t('promosPage.chooseDish')}</option>
+              {(restaurant.menu || []).map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
+            </select>
+          </div>
+        )}
+
+        {type === 'percent' && (
+          <div className="field">
+            <label htmlFor={idsA11y + '-discount'}>{t('promosPage.discount')}</label>
+            <select id={idsA11y + '-discount'} value={percentValue} onChange={(e) => setPercentValue(e.target.value)}>
+              {[10, 15, 20, 25, 30, 40, 50].map((v) => <option key={v} value={v}>{v}%</option>)}
+            </select>
+          </div>
+        )}
+
+        {type === 'bogo' && (
+          <div className="field">
+            <label htmlFor={idsA11y + '-buyn'}>{t('promosPage.buyN')}</label>
+            <select id={idsA11y + '-buyn'} value={bogoN} onChange={(e) => setBogoN(e.target.value)}>
+              {[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>{t('promosPage.bogoOption', { n: v })}</option>)}
+            </select>
+          </div>
+        )}
+
+        {type === 'cart_threshold' && (
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label htmlFor={idsA11y + '-amountoff'}>{t('promosPage.amountOff')}</label>
+              <input id={idsA11y + '-amountoff'} type="number" step="0.5" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="5" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label htmlFor={idsA11y + '-threshold'}>{t('promosPage.threshold')}</label>
+              <input id={idsA11y + '-threshold'} type="number" step="0.5" value={minCartTotal} onChange={(e) => setMinCartTotal(e.target.value)} placeholder="30" />
+            </div>
+          </div>
+        )}
+
+    </>
+  );
+
   return (
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('promosPage.title')}</h2>
@@ -228,57 +286,17 @@ export default function PromotionsPage() {
 
       {!formOpen ? (
         <button type="button" className="btn-teal" onClick={() => setFormOpen(true)}>{t('promosPage.addPromo')}</button>
+      ) : APPLI ? (
+        // Application : le formulaire dans une feuille, « Créer » épinglé en bas (il était au bout d'une carte, sous la page).
+        <SousEcran titre={t('promosPage.newPromo')} onFermer={() => setFormOpen(false)} pied={
+          <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} disabled={saving} onClick={createPromo}>{saving ? '...' : t('promosPage.createPromo')}</button>
+        }>
+          {champsPromo}
+        </SousEcran>
       ) : (
         <div className="card">
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('promosPage.newPromo')}</h3>
-          <div className="field">
-            <label htmlFor={idsA11y + '-type'}>{t('promosPage.type')}</label>
-            <select id={idsA11y + '-type'} value={type} onChange={(e) => setType(e.target.value)}>
-              {TYPES.map((tp) => <option key={tp.value} value={tp.value}>{t(`promosPage.${tp.label}`)}</option>)}
-            </select>
-          </div>
-
-          {type !== 'cart_threshold' && (
-            <div className="field">
-              <label htmlFor={idsA11y + '-dish'}>{t('promosPage.dish')}</label>
-              <select id={idsA11y + '-dish'} value={itemId} onChange={(e) => setItemId(e.target.value)}>
-                <option value="">{t('promosPage.chooseDish')}</option>
-                {(restaurant.menu || []).map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
-              </select>
-            </div>
-          )}
-
-          {type === 'percent' && (
-            <div className="field">
-              <label htmlFor={idsA11y + '-discount'}>{t('promosPage.discount')}</label>
-              <select id={idsA11y + '-discount'} value={percentValue} onChange={(e) => setPercentValue(e.target.value)}>
-                {[10, 15, 20, 25, 30, 40, 50].map((v) => <option key={v} value={v}>{v}%</option>)}
-              </select>
-            </div>
-          )}
-
-          {type === 'bogo' && (
-            <div className="field">
-              <label htmlFor={idsA11y + '-buyn'}>{t('promosPage.buyN')}</label>
-              <select id={idsA11y + '-buyn'} value={bogoN} onChange={(e) => setBogoN(e.target.value)}>
-                {[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>{t('promosPage.bogoOption', { n: v })}</option>)}
-              </select>
-            </div>
-          )}
-
-          {type === 'cart_threshold' && (
-            <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor={idsA11y + '-amountoff'}>{t('promosPage.amountOff')}</label>
-                <input id={idsA11y + '-amountoff'} type="number" step="0.5" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="5" />
-              </div>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor={idsA11y + '-threshold'}>{t('promosPage.threshold')}</label>
-                <input id={idsA11y + '-threshold'} type="number" step="0.5" value={minCartTotal} onChange={(e) => setMinCartTotal(e.target.value)} placeholder="30" />
-              </div>
-            </div>
-          )}
-
+          {champsPromo}
           <div className="row" style={{ gap: 8 }}>
             <button className="btn-teal" disabled={saving} onClick={createPromo}>{saving ? '...' : t('promosPage.createPromo')}</button>
             <button className="btn-ghost" onClick={() => setFormOpen(false)}>{t('promosPage.cancel')}</button>

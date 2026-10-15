@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import SousEcran from '../SousEcran';
+import { experienceApp } from '../../natif';
 import { api, apiUpload } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -41,8 +43,19 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
   }
 
   const idBase = `probleme-${order.id}`;
+  // Application : le formulaire s'ouvre dans une feuille au lieu de s'insérer au milieu de la carte de commande.
+  if (experienceApp()) {
+    return (
+      <>
+        <button type="button" className="btn-ghost" style={{ marginTop: 8 }} onClick={() => setOuvert(true)}>{t('orders.problem_button')}</button>
+        <SousEcran titre={t('orders.problem_title')} onFermer={() => setOuvert(false)}>{formulaire(false)}</SousEcran>
+      </>
+    );
+  }
+  return formulaire(true);
+  function formulaire(enLigne) {
   return (
-    <form onSubmit={envoyer} style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: 14, marginTop: 8 }}>
+    <form onSubmit={envoyer} style={enLigne ? { background: 'var(--cream-dim)', borderRadius: 10, padding: 14, marginTop: 8 } : undefined}>
       <p className="small" style={{ margin: '0 0 8px', fontWeight: 700 }}>{t('orders.problem_title')}</p>
       <div className="field">
         <label htmlFor={`${idBase}-type`}>{t('orders.problem_kindLabel')}</label>
@@ -66,4 +79,5 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
       </div>
     </form>
   );
+  }
 }

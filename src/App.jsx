@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { lazyPage } from './lazyPage';
+import { experienceApp } from './natif';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import Layout from './components/Layout';
 import ScrollRestorer from './components/ScrollRestorer';
@@ -92,6 +93,8 @@ const AdminMessagesPage = lazyPage(() => import('./pages/admin/AdminMessagesPage
 
 // --- Accueil de l'application iOS / Android (premier lancement, voir pages/app/Bienvenue.jsx) ---
 const Bienvenue = lazyPage(() => import('./pages/app/Bienvenue'));
+// La connexion dans l'application : un écran de l'accueil, pas la page du site (voir ConnexionAppli.jsx).
+const ConnexionAppli = lazyPage(() => import('./pages/app/ConnexionAppli'));
 
 // --- Pages légales ---
 const LegalNotice = lazyPage(() => import('./pages/legal/LegalNotice'));
@@ -144,7 +147,7 @@ export default function App() {
       <Route path="/bienvenue" element={<Bienvenue />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Auth />} />
+        <Route path="/login" element={experienceApp() ? <ConnexionAppli /> : <Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Volontairement publiques (pas de ProtectedRoute) : consultables sans compte pour être
