@@ -1,2 +1,8 @@
 /build/*
 !/build/.npmkeep
+
+# Configuration Firebase : jamais dans ce dépôt public — la CI l'écrit depuis le secret GOOGLE_SERVICES_JSON.
+google-services.json
+# Clé de signature de l'application de test : secret GitHub seulement.
+*.keystore
+*.jks
