@@ -1,5 +1,8 @@
 # Avant la mise en ligne
 
+> **Remplacé le 15 octobre 2026 par [AVANT-PRODUCTION.md](AVANT-PRODUCTION.md)**, la liste unique à suivre.
+> Ce fichier reste pour son détail technique (conditions de commande §1, sécurité §5), cité depuis la nouvelle liste.
+
 Ce qu'il reste à faire avant d'ouvrir Fairide à de vrais commerçants et de vrais clients.
 
 **Réécrit le 2 octobre 2026.** La version précédente (30 août, mise à jour jusqu'au 18 septembre) annonçait
