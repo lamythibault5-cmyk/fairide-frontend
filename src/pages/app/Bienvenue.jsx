@@ -12,6 +12,7 @@ import {
   Haut, EcranAccueil, EcranProfil, EcranChoix, EcranCartes, EcranPourquoi, EcranEnvies, EcranPermission, EcranCodePostal,
   EcranRecherche, EcranCompte, EcranPromesses
 } from './EcransBienvenue';
+import InscriptionAppli from './InscriptionAppli';
 
 /* ACCUEIL DE L'APPLICATION iOS / ANDROID — /bienvenue, premier lancement seulement.
  *
@@ -28,6 +29,8 @@ import {
  *   - Pas de démo « choisis 3 commerces » ni de partage (retirés par le fondateur, « trop long ») : la position
  *     mène au chargement, puis aux commerces qui livrent vraiment chez toi, au-dessus des boutons de compte.
  *   - Le compte est demandé APRÈS avoir vu les commerces (règle 5.1.1 d'Apple), Apple à côté de Google (4.8).
+ *   - L'inscription elle-même se fait ICI, dans les mêmes écrans (InscriptionAppli.jsx, 2026-10-15) : plus de passage
+ *     par /login, la page du site avec son en-tête. Seul « J'ai déjà un compte » y mène encore.
  *   - Les notifications ne sont proposées qu'une fois le compte créé (AmorceNotifications.jsx) : le jeton de
  *     l'appareil s'enregistre sur un compte, il n'y a rien à quoi l'attacher avant. Pour les trois profils : le
  *     livreur est prévenu des courses qu'il verrait (backend notifLivreurs.js, depuis le 2026-10-11).
@@ -74,7 +77,7 @@ function pointsDuCercle(items, position) {
 
 export default function Bienvenue() {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, loginWithGoogle, loginWithApple } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -93,6 +96,8 @@ export default function Bienvenue() {
   const [cp, setCp] = useState('');
   const [liste, setListe] = useState(null);
   const [attente, setAttente] = useState(false);
+  // Jeton Apple / Google d'une personne qui n'a pas encore de compte : l'inscription s'en sert au lieu d'un mot de passe.
+  const [fed, setFed] = useState(null);
 
   const communeCp = cp.length === 4 ? communeDepuisCodePostal(cp) : '';
   const parcours = useMemo(() => ['accueil', 'profil', ...(role ? PARCOURS[role] : [])], [role]);
@@ -120,7 +125,8 @@ export default function Bienvenue() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ecran, liste]);
 
-  if (user) return <Navigate to="/" replace />;
+  // Pendant l'inscription, c'est elle qui choisit où arriver une fois le compte ouvert (son espace, pas l'accueil).
+  if (user && ecran !== 'inscription') return <Navigate to="/" replace />;
   if (!experienceApp() && !apercu) return <Navigate to="/" replace />;
 
   function aller(suivant, { sansHistorique = false } = {}) {
@@ -163,22 +169,29 @@ export default function Bienvenue() {
       amorceNotifs: 'a-faire'
     });
   }
-  // Page de connexion : rôle présélectionné. Avec un jeton Apple/Google, Auth.jsx le traite tout de suite (connexion
-  // si le compte existe, sinon formulaire d'inscription prérempli) ; sinon, formulaire d'inscription par e-mail.
-  const roleParam = role && role !== 'client' ? `role=${role}` : '';
+  // Apple / Google : le compte existe → session ouverte (la garde plus haut renvoie à l'accueil) ; il n'existe pas encore
+  // (INCOMPLETE_PROFILE) → l'inscription de l'application, sans e-mail ni mot de passe à donner. Seul un compte protégé par
+  // un second facteur passe par /login, qui sait demander le code (Auth.jsx traite le jeton reçu dans `state`).
   async function viaFournisseur(fournisseur) {
     setAttente(true);
     try {
-      const fed = await connexionFournisseur(fournisseur);
+      const jeton = await connexionFournisseur(fournisseur);
       memoriser();
-      navigate(`/login${roleParam ? `?${roleParam}` : ''}`, { state: { fed } });
+      try {
+        if (jeton.fournisseur === 'apple') await loginWithApple(jeton.jeton, role, { givenName: jeton.prenom || undefined, familyName: jeton.nom || undefined });
+        else await loginWithGoogle(jeton.jeton, role, {});
+      } catch (err) {
+        if (err.message === 'INCOMPLETE_PROFILE') { setFed(jeton); aller('inscription'); return; }
+        if (err.code === 'TOTP_REQUIRED') { navigate('/login', { state: { fed: jeton } }); return; }
+        toast(err.message, 'erreur');
+      }
     } catch (err) {
       if (!/annul|cancel|1001|12501/i.test(err?.message || '')) toast(t('appli.nativeLoginFailed'), 'erreur');
     } finally {
       setAttente(false);
     }
   }
-  const viaEmail = () => { memoriser(); navigate(`/login?audience=${role === 'restaurant' ? 'partner' : 'client'}${roleParam ? `&${roleParam}` : ''}`); };
+  const viaEmail = () => { memoriser(); setFed(null); aller('inscription'); };
   const dejaInscrit = () => { ecrireBienvenue({ vu: true, amorceNotifs: 'a-faire' }); navigate('/login'); };
 
   const fondIris = ['accueil', 'recherche', 'lvPromesses', 'coPromesses'].includes(ecran);
@@ -214,7 +227,7 @@ export default function Bienvenue() {
       contenu = <EcranRecherche commune={position ? '' : communeCp} points={liste ? points : []} envies={envies} />; break;
     case 'compte':
       contenu = (
-        <EcranCompte role={role} resultats={resultats} avecPosition={!!position} commune={communeCp} points={points} attente={attente}
+        <EcranCompte role={role} resultats={resultats} avecPosition={!!position} commune={communeCp} attente={attente}
           onFournisseur={viaFournisseur} onEmail={viaEmail} onConnexion={dejaInscrit} />
       ); break;
     case 'lvPromesses':
@@ -239,6 +252,9 @@ export default function Bienvenue() {
     default:
       contenu = null;
   }
+
+  // L'inscription a ses propres écrans (en-tête, progression, animation) : elle rend tout le plein écran.
+  if (ecran === 'inscription') return <InscriptionAppli role={role} fed={fed} onQuitter={retour} onConnexion={dejaInscrit} />;
 
   return (
     <div className={`bv${fondIris ? ' bv-iris' : ''}`}>
