@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fairide, e-mails : choisir le nouveau look</title>
+<!--
+  Maquette (2026-10-16) : les e-mails transactionnels prennent le look de l'app et du site (bandeau iris, feuille blanche,
+  vélo sur sa route, lime pour la seule action décisive). Cinq versions des mêmes e-mails, côte à côte, chacune dans un
+  <iframe srcdoc> pour que ses styles restent isolés.
+
+  Chaque e-mail est écrit comme un VRAI e-mail : tables imbriquées, styles en ligne, 600 px, bouton « à l'épreuve
+  d'Outlook », texte d'aperçu caché, pas de SVG (les images sont des PNG / un GIF dessinés ici sur un <canvas>, à héberger
+  en production sur fairide.be/email/…), pas de police web exigée. Textes : ceux de fairide-backend/emailTexts.js et
+  email.js ; les tournures nouvelles sont listées en bas de page.
+
+  « Aujourd'hui » est la copie fidèle de ce que produit emailEnveloppe.js (habiller + recolorer) avec les modèles d'email.js.
+
+  Ouvrir : double-clic, ou `npm run dev -- --host` puis /mockups/emails.html. Rien n'est branché, aucune ressource réseau.
+-->
+<style>
+@font-face { font-family: 'Inter'; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2'), url('../public/fonts/inter-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Inter Tight'; font-weight: 500 700; font-display: swap;
+  src: url('/fonts/inter-tight-latin.woff2') format('woff2'), url('../public/fonts/inter-tight-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Bricolage Grotesque'; font-weight: 700 800; font-display: swap;
+  src: url('/fonts/bricolage-grotesque-latin.woff2') format('woff2'), url('../public/fonts/bricolage-grotesque-latin.woff2') format('woff2'); }
+:root {
+  --iris: #3B2FB5; --iris-deep: #2A2185; --lime: #C8F03C; --ink: #14121F; --ink-soft: #6B655D; --ink-faint: #8A8377;
+  --line: #DCD8D0; --fond: #ECEAE4;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fond); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; }
+.page { max-width: 3400px; margin: 0 auto; padding: 28px 16px 60px; }
+.page h1 { font-family: 'Inter Tight', 'Inter', sans-serif; font-size: 28px; margin: 0 0 8px; }
+.page h2 { font-family: 'Inter Tight', 'Inter', sans-serif; font-size: 20px; margin: 36px 0 10px; }
+.intro { max-width: 980px; color: var(--ink-soft); line-height: 1.5; font-size: 15px; }
+.intro ul { margin: 6px 0 0; padding-left: 20px; }
+.intro li { margin: 3px 0; }
+.intro b { color: var(--ink); }
+.reglages { position: sticky; top: 0; z-index: 5; background: var(--fond); padding: 12px 0; margin: 14px 0 6px; border-bottom: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+.groupe { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.groupe > span { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.seg { display: inline-flex; flex-wrap: wrap; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer; color: var(--ink); }
+.seg button.on { background: var(--iris); color: #fff; }
+.case { font-size: 13px; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.rangee { display: flex; flex-wrap: wrap; gap: 26px; align-items: flex-start; margin-top: 18px; }
+.colonne { flex: none; }
+.colonne h3 { font-size: 17px; margin: 0 0 4px; }
+.colonne .note { font-size: 13px; color: var(--ink-soft); line-height: 1.45; margin: 0 0 10px; max-width: 100%; }
+.colonne .note b { color: var(--ink); font-weight: 600; }
+.boite { background: #fff; border: 1px solid #CFCBC2; border-radius: 14px 14px 0 0; padding: 10px 14px; font-size: 13px; line-height: 1.35; }
+.boite .exp { font-weight: 700; }
+.boite .obj { font-weight: 600; }
+.boite .ape { color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cadre-mail { border: 1px solid #CFCBC2; border-top: 0; background: #fff; border-radius: 0 0 14px 14px; overflow: hidden; }
+.cadre-mail.sombre { background: #121212; }
+iframe { display: block; border: 0; width: 100%; height: 400px; background: transparent; }
+.mesure { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+.mesure b { color: var(--ink); }
+details { margin-top: 6px; font-size: 12px; }
+details pre { max-height: 320px; overflow: auto; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+table.donnees { border-collapse: collapse; background: #fff; border: 1px solid var(--line); font-size: 13px; line-height: 1.4; width: 100%; max-width: 1500px; }
+table.donnees th, table.donnees td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+table.donnees th { background: #F7F6F2; font-weight: 600; }
+table.donnees td small { color: var(--ink-soft); }
+.defile { overflow-x: auto; }
+.oui { color: #1E7A3C; font-weight: 600; } .non { color: #B23A2E; font-weight: 600; } .moyen { color: #9A6B00; font-weight: 600; }
+.texte { max-width: 980px; font-size: 14px; line-height: 1.55; }
+.texte code { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; font-size: 12.5px; }
+.avert { font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
+@media (max-width: 700px) { .colonne { width: 100%; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Les e-mails Fairide : choisir le nouveau look</h1>
+  <div class="intro">
+    <p>Les mêmes e-mails, écrits comme de vrais e-mails, dans cinq versions côte à côte. « Aujourd'hui » est la copie fidèle de ce qui part maintenant.
+      Les quatre propositions reprennent le bandeau iris, la feuille blanche, le vélo sur sa route et le bouton lime de l'app.</p>
+    <ul>
+      <li><b>Ce qu'un e-mail sait faire :</b> tables, couleurs pleines, coins arrondis (sauf Outlook bureau, qui les met carrés), images PNG, un GIF animé
+        (Gmail, Apple Mail ; Outlook bureau 2013–2019 n'en montre que la 1re image), une version téléphone, un mode sombre choisi par nous chez Apple Mail.</li>
+      <li><b>Ce qu'il ne sait pas faire :</b> pas de SVG (le vélo et la route sont donc des images à héberger sur fairide.be), pas d'animation CSS fiable,
+        pas de police Fairide garantie (Inter seulement chez Apple Mail, Arial ailleurs : c'est ce que montrent les modes Gmail et Outlook),
+        pas d'image de fond fiable, pas de flexbox. Gmail coupe un e-mail au-delà de 102 Ko de HTML. Outlook bureau bloque les images par défaut.</li>
+      <li><b>Le mode sombre</b> se décide chez le lecteur : Apple Mail applique nos couleurs sombres, Gmail (app) et Outlook inversent eux-mêmes les couleurs claires
+        sans nous demander (les images, elles, ne bougent pas). Les deux sont simulés ci-dessous, l'inversion est une approximation.</li>
+    </ul>
+  </div>
+
+  <div class="reglages" id="reglages">
+    <div class="groupe"><span>E-mail</span><div class="seg" data-reglage="mail"></div></div>
+    <div class="groupe"><span>Largeur</span><div class="seg" data-reglage="largeur"></div></div>
+    <div class="groupe"><span>Rendu</span><div class="seg" data-reglage="rendu"></div></div>
+    <label class="case"><input type="checkbox" id="bloquees"> Images bloquées (Outlook, par défaut)</label>
+  </div>
+
+  <div class="rangee" id="rangee"></div>
+
+  <h2>Ce que chaque client affiche</h2>
+  <div class="defile"><table class="donnees" id="compat"></table></div>
+
+  <h2>Images à héberger (fairide.be/email/…)</h2>
+  <div class="defile"><table class="donnees" id="images"></table></div>
+  <p class="avert" id="avert-images"></p>
+
+  <h2>Ce qui change dans le code si on choisit une proposition</h2>
+  <div class="texte">
+    <p>Les ~40 modèles d'<code>email.js</code> ne changent presque pas : tout passe déjà par <code>envoyer()</code> → <code>habiller()</code>.</p>
+    <ul>
+      <li><code>habiller(html, { titre, previsualisation, lang, etiquette, route })</code> est remplacée (emailEnveloppe.js). Pour A et D, le premier <code>&lt;h1&gt;</code>
+        du modèle est retiré du corps et monte dans le bandeau (une expression régulière, comme <code>recolorer</code>) ; un émoji en tête du titre est retiré.
+        <code>etiquette</code> (« Commande payée ») et <code>route</code> (attente / payée / en route) sont facultatifs : sans eux, le bandeau montre la route seule.</li>
+      <li>Les blocs partagés d'email.js prennent le nouveau dessin : <code>blocCode</code> (cadre en pointillés iris), <code>lignesPlats</code> et <code>ligne</code>
+        (quantité en iris, montants « 17,00 € » au lieu de « 17.00€ »), <code>boutonPrincipal</code> (pilule lime), et un nouveau <code>encadre()</code> pour les
+        quatre encadrés écrits à la main (#F0EBDD, #FCE8D6). <code>footer(L)</code> passe dans l'enveloppe (qui reçoit déjà <code>lang</code>).</li>
+      <li>Constat en passant : les six boutons écrits en dur avec <code>#B5482E</code> (mot de passe, carte prête, commerce validé, livreur validé…) partent
+        <b>aujourd'hui en rouge brique</b>, parce que <code>recolorer</code> ne connaît pas cette couleur ; et <code>envoyer()</code> ne passe jamais
+        <code>previsualisation</code>, donc la ligne d'aperçu montre « fairide Merci, … ». Les deux se voient dans la colonne « Aujourd'hui ».</li>
+      <li>Le texte d'aperçu (une phrase par modèle) est nouveau : à ajouter dans emailTexts.js, en trois langues.</li>
+    </ul>
+  </div>
+
+  <h2>Tournures inventées pour cette maquette</h2>
+  <div class="texte" id="inventees"></div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================================================================
+   1. LES COULEURS ET LES POLICES DES E-MAILS
+   ===================================================================================================================== */
+const C = { iris: '#3B2FB5', irisDeep: '#2A2185', lime: '#C8F03C', ink: '#14121F', soft: '#6B655D', faint: '#8A8377', line: '#DCD8D0', surface: '#F4F2ED', irisPale: '#C9C4F0' };
+const POL = 'Inter, Arial, Helvetica, sans-serif';
+const POL_T = "'Inter Tight', Inter, Arial, Helvetica, sans-serif";
+const SITE = 'https://fairide.be';
+let MOT_BRICOLAGE = true; // la police du mot « fairide » a-t-elle pu être chargée pour dessiner le logo ?
+
+/* =====================================================================================================================
+   2. LES IMAGES : dessinées ici sur un <canvas> (le vélo « 5a » de BrandMark.jsx, au chiffre près), exportées en PNG.
+      En production, ce sont des fichiers hébergés sur fairide.be/email/ ; l'e-mail ne contient que leur adresse.
+   ===================================================================================================================== */
+function melange(a, b, t) {
+  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+  return '#' + pa.map((v, i) => Math.round(v + (pb[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+function toile(w, h, k = 2) {
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
+  const x = c.getContext('2d');
+  x.scale(k, k);
+  return [c, x];
+}
+function rect(x, a, b, w, h, r) { x.beginPath(); x.roundRect(a, b, w, h, r); }
+// Le vélo dans les unités de BrandMark (boîte -3..79 × 5..47, roues r=12,5 en (15;29) et (61;29), trait 5).
+function veloUnites(x, couleur) {
+  x.strokeStyle = couleur; x.lineWidth = 5; x.lineCap = 'round';
+  x.beginPath(); x.arc(15, 29, 12.5, 0, Math.PI * 2); x.stroke();
+  x.beginPath(); x.arc(61, 29, 12.5, 0, Math.PI * 2); x.stroke();
+  x.fillStyle = couleur;
+  rect(x, 16, 8, 44, 5, 2.5); x.fill();
+  x.save(); x.translate(27, 22.5); x.rotate(42 * Math.PI / 180); x.translate(-27, -22.5);
+  rect(x, 13, 20, 28, 5, 2.5); x.fill();
+  x.restore();
+}
+// Vélo de largeur `l`, bord gauche en `g`, bas des roues en `bas`.
+function velo(x, g, bas, l, couleur) {
+  const s = l / 82;
+  x.save(); x.translate(g + 3 * s, bas - 44 * s); x.scale(s, s); veloUnites(x, couleur); x.restore();
+}
+function png(c) {
+  const data = c.toDataURL('image/png');
+  return { data, octets: Math.round((data.length - data.indexOf(',') - 1) * 3 / 4), type: 'PNG' };
+}
+
+const ROUTE = { W: 544, H: 56, Y: 47, VELO: 44 };
+const POINTILLE = melange(C.iris, '#ffffff', 0.375);
+// La route du bandeau : fond iris cuit dans l'image (pas de liseré au bord du vélo), pointillés clairs, trace lime derrière le vélo,
+// un arrêt blanc au bout (l'adresse). `pos` : 0 = vélo au départ, 1 = arrivé.
+function dessinerRoute(x, { pos = 0, trace = true, decalage = 0, bond = 0 } = {}) {
+  const { W, H, Y, VELO } = ROUTE;
+  x.fillStyle = C.iris; x.fillRect(0, 0, W, H);
+  x.strokeStyle = POINTILLE; x.lineWidth = 2.5; x.lineCap = 'butt'; x.setLineDash([8, 6]); x.lineDashOffset = decalage;
+  x.beginPath(); x.moveTo(0, Y); x.lineTo(W - 14, Y); x.stroke(); x.setLineDash([]);
+  const g = pos * (W - VELO - 22);
+  if (trace && pos > 0) { x.strokeStyle = C.lime; x.lineWidth = 4; x.lineCap = 'round'; x.beginPath(); x.moveTo(2, Y); x.lineTo(g + VELO * 0.25, Y); x.stroke(); }
+  x.fillStyle = '#ffffff'; x.beginPath(); x.arc(W - 8, Y, 6.5, 0, Math.PI * 2); x.fill();
+  x.fillStyle = C.iris; x.beginPath(); x.arc(W - 8, Y, 2.6, 0, Math.PI * 2); x.fill();
+  velo(x, g, Y - 2.5 - bond, VELO, C.lime);
+}
+
+function dessinerLogo(couleurVelo, couleurMot) {
+  const police = MOT_BRICOLAGE ? "800 25px 'Bricolage Grotesque'" : '900 23px Arial';
+  const [m, mx] = toile(10, 10, 1); mx.font = police; if ('letterSpacing' in mx) mx.letterSpacing = '-0.75px';
+  const largeurMot = Math.ceil(mx.measureText('fairide').width);
+  const W = 48 + largeurMot + 2, H = 28;
+  const [c, x] = toile(W, H);
+  velo(x, 0, 24.5, 40, couleurVelo);
+  x.font = police; if ('letterSpacing' in x) x.letterSpacing = '-0.75px';
+  x.fillStyle = couleurMot; x.textBaseline = 'alphabetic'; x.fillText('fairide', 47, 21.5);
+  return { ...png(c), w: W, h: H };
+}
+
+/* Encodeur GIF minimal (GIF89a, LZW, palette de 16 couleurs, boucle infinie). Les images suivant la première ne codent que la
+   bande de la route (le reste ne bouge pas) : c'est ce qui garde le fichier léger. */
+function encoderGif(images, W, H, palette, delai, bande) {
+  const o = [];
+  const b = (v) => o.push(v & 255);
+  const m = (v) => { b(v); b(v >> 8); };
+  const s = (t) => { for (const ch of t) b(ch.charCodeAt(0)); };
+  const k = Math.log2(palette.length);
+  s('GIF89a'); m(W); m(H); b(0x80 | ((k - 1) << 4) | (k - 1)); b(0); b(0);
+  for (const [r, g, bl] of palette) { b(r); b(g); b(bl); }
+  b(0x21); b(0xFF); b(11); s('NETSCAPE2.0'); b(3); b(1); m(0); b(0);
+  images.forEach((idx, n) => {
+    const [y0, y1] = n === 0 ? [0, H] : bande;
+    const h = y1 - y0;
+    const sous = n === 0 ? idx : idx.subarray(y0 * W, y1 * W);
+    b(0x21); b(0xF9); b(4); b(0x04); m(delai); b(0); b(0);
+    b(0x2C); m(0); m(y0); m(W); m(h); b(0);
+    const min = Math.max(2, k);
+    b(min);
+    const donnees = lzw(sous, min);
+    for (let i = 0; i < donnees.length; i += 255) { const n2 = Math.min(255, donnees.length - i); b(n2); for (let j = 0; j < n2; j++) b(donnees[i + j]); }
+    b(0);
+  });
+  b(0x3B);
+  return new Uint8Array(o);
+}
+function lzw(idx, min) {
+  const clear = 1 << min, fin = clear + 1;
+  let taille = min + 1, suivant = fin + 1, table = new Map();
+  const sortie = []; let cur = 0, bits = 0;
+  const emettre = (code) => { cur |= code << bits; bits += taille; while (bits >= 8) { sortie.push(cur & 255); cur >>>= 8; bits -= 8; } };
+  emettre(clear);
+  let prefixe = idx[0];
+  for (let i = 1; i < idx.length; i++) {
+    const c = idx[i];
+    const cle = (prefixe << 8) | c;
+    const code = table.get(cle);
+    if (code !== undefined) { prefixe = code; continue; }
+    emettre(prefixe);
+    if (suivant === 4096) { emettre(clear); table = new Map(); suivant = fin + 1; taille = min + 1; }
+    else { if (suivant >= (1 << taille)) taille++; table.set(cle, suivant++); }
+    prefixe = c;
+  }
+  emettre(prefixe); emettre(fin);
+  if (bits > 0) sortie.push(cur & 255);
+  return sortie;
+}
+function base64(u8) { let t = ''; for (let i = 0; i < u8.length; i += 0x8000) t += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(t); }
+
+function fabriquerGif() {
+  const k = 2, W = ROUTE.W * k, H = ROUTE.H * k;
+  const hex = [];
+  for (let i = 0; i < 8; i++) hex.push(melange(C.iris, C.lime, i / 7));
+  for (let i = 1; i <= 8; i++) hex.push(melange(C.iris, '#ffffff', [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1][i - 1]));
+  const palette = hex.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
+  const memo = new Map();
+  const plusProche = (r, g, bl) => {
+    const cle = (r << 16) | (g << 8) | bl;
+    let v = memo.get(cle);
+    if (v === undefined) {
+      let best = 0, d = Infinity;
+      palette.forEach(([pr, pg, pb], i) => { const e = (pr - r) ** 2 + (pg - g) ** 2 + (pb - bl) ** 2; if (e < d) { d = e; best = i; } });
+      memo.set(cle, best); v = best;
+    }
+    return v;
+  };
+  const images = []; let premiere = null;
+  const N = 14;
+  for (let n = 0; n < N; n++) {
+    const [c, x] = toile(ROUTE.W, ROUTE.H, k);
+    dessinerRoute(x, { pos: 0.46, decalage: n * 2, bond: (n % 4 < 2) ? 0 : 0.8 });
+    if (n === 0) premiere = png(c);
+    const px = x.getImageData(0, 0, W, H).data;
+    const idx = new Uint8Array(W * H);
+    for (let i = 0; i < W * H; i++) idx[i] = plusProche(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]);
+    images.push(idx);
+  }
+  const haut = Math.floor((ROUTE.Y - 2.5 - ROUTE.VELO * 42 / 82 - 3) * k);
+  const octets = encoderGif(images, W, H, palette, 6, [Math.max(0, haut), H]);
+  return { gif: { data: 'data:image/gif;base64,' + base64(octets), octets: octets.length, type: 'GIF', w: ROUTE.W, h: ROUTE.H }, premiere };
+}
+
+const IMG = {}; // nom → { data, octets, w, h, fichier, role, type }
+function fabriquerImages() {
+  const ajoute = (nom, fichier, role, img) => { IMG[nom] = { ...img, fichier, role }; };
+  // Aujourd'hui : l'icône de l'app (public/icons/icon-192.png), affichée en 36 px.
+  { const [c, x] = toile(36, 36, 2); x.save(); x.scale(36 / 132, 36 / 132); x.fillStyle = C.iris; rect(x, 0, 0, 132, 132, 32); x.fill(); x.translate(28, 44); veloUnites(x, C.lime); x.restore();
+    ajoute('logo-tuile', '../icons/icon-192.png', 'Aujourd\'hui : logo du bandeau (existe déjà, 192 px)', { ...png(c), w: 36, h: 36 }); }
+  ajoute('logo-blanc', 'logo-blanc@2x.png', 'Logo sur iris (A, B, D) et sur fond sombre (C, mode sombre)', dessinerLogo(C.lime, '#ffffff'));
+  ajoute('logo-iris', 'logo-iris@2x.png', 'Logo sur blanc (B, C)', dessinerLogo(C.iris, C.ink));
+  for (const [nom, pos] of [['route-attente', 0], ['route-payee', 0.3], ['route-en-route', 0.72]]) {
+    const [c, x] = toile(ROUTE.W, ROUTE.H); dessinerRoute(x, { pos });
+    ajoute(nom, `${nom}@2x.png`, `Bandeau A : vélo ${pos === 0 ? 'au départ (codes, mot de passe, commerce)' : pos < 0.5 ? 'parti (commande payée)' : 'presque arrivé (livreur en route)'}`, { ...png(c), w: ROUTE.W, h: ROUTE.H });
+  }
+  const { gif, premiere } = fabriquerGif();
+  ajoute('route-animee', 'route-animee@2x.gif', 'Bandeau D : le vélo roule (14 images, 0,84 s, en boucle)', gif);
+  ajoute('route-animee-1', 'route-animee@2x.gif (1re image)', 'Ce qu\'Outlook 2013–2019 montre du GIF', { ...premiere, w: ROUTE.W, h: ROUTE.H });
+  { const [c, x] = toile(544, 22); x.strokeStyle = 'rgba(255,255,255,.32)'; x.lineWidth = 2; x.setLineDash([8, 6]); x.beginPath(); x.moveTo(0, 18); x.lineTo(500, 18); x.stroke(); x.setLineDash([]);
+    velo(x, 512, 16.5, 30, C.lime); ajoute('route-pied', 'route-pied@2x.png', 'Pied de A et D : la route, le vélo garé', { ...png(c), w: 544, h: 22 }); }
+  const separateur = (pointilles, couleurVelo) => {
+    const [c, x] = toile(536, 30); x.strokeStyle = pointilles; x.lineWidth = 2.5; x.setLineDash([8, 6]);
+    x.beginPath(); x.moveTo(0, 26); x.lineTo(244, 26); x.moveTo(296, 26); x.lineTo(536, 26); x.stroke(); x.setLineDash([]);
+    velo(x, 248, 24.5, 40, couleurVelo); return { ...png(c), w: 536, h: 30 };
+  };
+  ajoute('separateur-iris', 'separateur-iris@2x.png', 'C : la route qui sépare (sur blanc)', separateur('rgba(59,47,181,.42)', C.iris));
+  ajoute('separateur-clair', 'separateur-clair@2x.png', 'C, mode sombre Apple Mail : la même, claire', separateur('rgba(255,255,255,.35)', C.lime));
+  { const [c, x] = toile(18, 18); x.fillStyle = C.lime; x.beginPath(); x.arc(9, 9, 9, 0, Math.PI * 2); x.fill();
+    x.save(); x.translate(9 - 7.2, 9 - 7.2); x.scale(0.6, 0.6); x.strokeStyle = C.ink; x.lineWidth = 3.2; x.lineCap = 'round'; x.lineJoin = 'round';
+    x.beginPath(); x.moveTo(5, 12.5); x.lineTo(9.5, 17); x.lineTo(19, 7.5); x.stroke(); x.restore();
+    ajoute('coche', 'coche-lime@2x.png', 'A, D : la coche lime de l\'étiquette', { ...png(c), w: 18, h: 18 }); }
+  { const [c, x] = toile(30, 16); velo(x, 0, 15.5, 30, C.iris); ajoute('velo-iris', 'velo-iris@2x.png', 'B : petit vélo du pied', { ...png(c), w: 30, h: 16 }); }
+}
+const urlProd = (nom) => nom === 'logo-tuile' ? `${SITE}/icons/icon-192.png` : `${SITE}/email/${IMG[nom].fichier}`;
+
+/* =====================================================================================================================
+   3. LES ÉCHANTILLONS : textes de emailTexts.js (fr) et email.js. Données de commande inventées.
+   ===================================================================================================================== */
+const D = {
+  client: 'Camille', clientNom: 'Camille D.', resto: 'Chez Nour', adresse: 'Rue de Flandre 42, 1000 Bruxelles',
+  plats: [[2, 'Falafel wrap', 8.5], [1, 'Houmous maison', 5.5], [1, 'Limonade gingembre', 3.5]],
+  livraison: 4.5, codeLivraison: '4821', codeVerif: '482913', programmee: 'vendredi 16 octobre à 19:30',
+  quand: '16 oct. 2026, 19:02', telClient: '+32 470 12 34 56', note: 'Pas de piment dans le houmous, merci !'
+};
+const sousTotal = D.plats.reduce((t, [q, , p]) => t + q * p, 0);
+const total = sousTotal + D.livraison;
+const eur = (v) => v.toFixed(2).replace('.', ',') + ' €';     // nouveau format
+const eurAvant = (v) => v.toFixed(2) + '€';                          // format d'aujourd'hui (toFixed(2) + '€')
+const FOOTER = 'Fairide, la livraison de repas à commission réduite.<br>Fairide SRL · BCE 1042.169.780 · contact@fairide.be';
+const LIEN_RECU = `${SITE}/invoices`;
+const LIEN_RESET = `${SITE}/reset-password?token=8f3c2a91d4e07b65c1a9f0e2d3b4c5a6`;
+const LIEN_SUIVI = `${SITE}/orders`;
+const LIEN_COMMANDES = `${SITE}/restaurant/orders`;
+const LEGAL = [
+  '<b>Vendeur</b> : Chez Nour SRL · Rue de Flandre 42, 1000 Bruxelles · BCE 0712.345.678 · TVA BE0712345678 · bonjour@cheznour.be · +32 2 512 34 56',
+  'Plats : vendeur professionnel. La vente des plats est conclue entre vous et ce commerce ; Fairide assure la mise en relation et encaisse le paiement pour son compte.',
+  `<b>Livraison</b> (${D.livraison.toFixed(2)} €) : vendue par un livreur indépendant partenaire de Fairide, nommé dès qu'il accepte la course, son nom apparaît dans le suivi de votre commande, et vous pouvez le refuser sans frais tant que la commande n'est pas partie.`,
+  '<b>Allergènes</b>',
+  'LISTE',
+  "En cas d'allergie sévère, contactez le commerce : +32 2 512 34 56.",
+  "Pas de droit de rétractation pour les denrées alimentaires et les repas (art. VI.53 du Code de droit économique). Les conditions d'annulation figurent dans nos conditions générales.",
+  'Réclamation : écrivez à contact@fairide.be ; nous répondons sous 5 jours ouvrables.',
+  "À défaut d'accord : Service de Médiation pour le Consommateur, North Gate II, boulevard du Roi Albert II 8 bte 1, 1000 Bruxelles, mediationconsommateur.be.",
+  'Conditions générales acceptées : version 2026-10-01 (fairide.be/cgv).',
+  'Plateforme : Fairide SRL, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgique, BCE 1042.169.780.'
+];
+const ALLERGENES = ['Falafel wrap : gluten, sésame', 'Houmous maison : sésame', 'Limonade gingembre : aucun des 14 allergènes réglementaires'];
+const TEXTE_RECU = 'Ton reçu (un bloc par vendeur, avec la TVA) est disponible dans « Mes factures » :';
+
+/* Chaque échantillon : objet, aperçu (nouveau), étiquette (nouvelle), position du vélo, titre, et le corps écrit avec les
+   blocs partagés `k` (k.p, k.petit, k.code, k.recap, k.bouton, k.encadre, k.legal, k.lien). `avant()` rend le HTML exact
+   du modèle d'aujourd'hui (email.js), avant habiller(). */
+const ECHANTILLONS = [
+  {
+    id: 'payee', nom: 'Commande payée', sujet: 'Ta commande Fairide est confirmée !',
+    apercu: `Chez Nour a bien reçu ta commande. Total payé : ${eur(total)}. Ton code de livraison est dans l'e-mail.`,
+    etiquette: 'Commande payée', fait: true, route: 'route-payee', titre: `Merci, ${D.client} !`,
+    corps: (k) => [
+      k.p(`Ta commande chez <b>${D.resto}</b> a bien été payée. Voici le récapitulatif :`),
+      k.recap({ entete: [D.resto, D.quand], lignes: D.plats.map(([q, n, p]) => [q, n, eur(q * p)]), extras: [['Livraison', eur(D.livraison)]], total: ['Total', eur(total)] }),
+      k.p(`Adresse de livraison : ${D.adresse}`),
+      k.code("Ton code de livraison, à donner au livreur quand il te remet ta commande :", D.codeLivraison),
+      k.petit("Garde ce code pour toi : le livreur ne peut valider la livraison qu'avec lui. Tu le retrouves aussi dans « Mes commandes »."),
+      k.bouton('Suivre ma commande', LIEN_SUIVI),
+      k.petit(`${TEXTE_RECU} ${k.lien(LIEN_RECU, 'fairide.be/invoices')}`),
+      k.legal(LEGAL, ALLERGENES)
+    ].join('\n'),
+    avant: () => `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+          <h1 style="color:#16233A;">Merci, ${D.client} !</h1>
+          <p>Ta commande chez <b>${D.resto}</b> a bien été payée. Voici le récapitulatif :</p>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;color:#16233A;">
+            ${D.plats.map(([q, n, p]) => `<tr><td style="padding:4px 0;">${q}× ${n}</td><td style="padding:4px 0;text-align:right;">${(q * p).toFixed(2)}€</td></tr>`).join('')}
+            ${ligneAvant('Livraison', eurAvant(D.livraison), { bordure: true })}
+            ${ligneAvant('Total', eurAvant(total), { gras: true })}
+          </table>
+          <p style="margin-top:16px;">Adresse de livraison : ${D.adresse}</p>
+          ${blocCodeAvant("Ton code de livraison, à donner au livreur quand il te remet ta commande :", D.codeLivraison)}
+          <p style="${FOOTER_STYLE}">Garde ce code pour toi : le livreur ne peut valider la livraison qu'avec lui. Tu le retrouves aussi dans « Mes commandes ».</p>
+          <p style="${FOOTER_STYLE}">${TEXTE_RECU} <a href="${LIEN_RECU}">fairide.be/invoices</a></p>
+          ${legalAvant()}
+          <p style="${FOOTER_STYLE}">${FOOTER}</p>
+        </div>`
+  },
+  {
+    id: 'verif', nom: 'Code d\'inscription', sujet: 'Confirme ton adresse email | Fairide',
+    apercu: `Ton code : ${D.codeVerif}. Il expire dans 15 minutes.`,
+    etiquette: 'Inscription', route: 'route-attente', titre: `Bienvenue, ${D.client} !`,
+    corps: (k) => [
+      k.p('Confirme ton adresse email pour activer ton compte Fairide avec le code ci-dessous :'),
+      k.code('', D.codeVerif),
+      k.petit("Ce code expire dans 15 minutes. Si tu n'es pas à l'origine de cette inscription, ignore cet email.")
+    ].join('\n'),
+    avant: () => `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+          <h1 style="color:#16233A;">Bienvenue, ${D.client} !</h1>
+          <p>Confirme ton adresse email pour activer ton compte Fairide avec le code ci-dessous :</p>
+          ${blocCodeAvant('', D.codeVerif)}
+          <p style="color:#3A4A63;font-size:13px;">Ce code expire dans 15 minutes. Si tu n'es pas à l'origine de cette inscription, ignore cet email.</p>
+          <p style="${FOOTER_STYLE}">${FOOTER}</p>
+        </div>`
+  },
+  {
+    id: 'route', nom: 'Livreur en route', sujet: 'Ton livreur est en route ! | Fairide',
+    apercu: `Ta commande de chez ${D.resto} arrive. Donne le code à ton livreur à l'arrivée.`,
+    etiquette: 'En route', route: 'route-en-route', titre: 'Ton livreur est en route !',
+    corps: (k) => [
+      k.p(`Bonjour ${D.client},`),
+      k.p(`Le livreur vient de récupérer ta commande chez <b>${D.resto}</b> et se dirige vers ton adresse de livraison.`),
+      k.code("Code de confirmation de livraison, à donner à ton livreur à l'arrivée :", D.codeLivraison),
+      k.bouton('Suivre ma commande', LIEN_SUIVI)
+    ].join('\n'),
+    avant: () => `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+          <h1 style="color:#16233A;">🛵 Ton livreur est en route !</h1>
+          <p>Bonjour ${D.client},</p>
+          <p>Le livreur vient de récupérer ta commande chez <b>${D.resto}</b> et se dirige vers ton adresse de livraison.</p>
+          ${blocCodeAvant("Code de confirmation de livraison, à donner à ton livreur à l'arrivée :", D.codeLivraison)}
+          <p style="${FOOTER_STYLE}">${FOOTER}</p>
+        </div>`
+  },
+  {
+    id: 'commerce', nom: 'Nouvelle commande (commerce)', sujet: `Nouvelle commande payée : ${D.clientNom}`,
+    apercu: `${D.clientNom}, 4 articles, ${eur(sousTotal)}. À accepter dans ton espace Fairide.`,
+    etiquette: 'À accepter', route: 'route-attente', titre: 'Nouvelle commande !',
+    corps: (k) => [
+      k.p(`<b>${D.clientNom}</b> vient de payer une commande chez <b>${D.resto}</b>.`),
+      k.encadre(`Commande programmée pour le ${D.programmee}.`),
+      k.recap({ entete: [D.clientNom, D.quand], lignes: D.plats.map(([q, n, p]) => [q, n, eur(q * p)]), extras: [], total: ['Sous-total plats', eur(sousTotal)] }),
+      k.p(`Adresse de livraison : ${D.adresse}`),
+      k.p("Consigne de livraison : Sonner à l'arrivée"),
+      k.p(`Note du client : ${D.note}`),
+      k.p(`Téléphone client : ${D.telClient}`),
+      k.bouton('Voir la commande', LIEN_COMMANDES),
+      k.petit('Connecte-toi à ton espace Fairide pour accepter la commande.')
+    ].join('\n'),
+    avant: () => `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+          <h1 style="color:#16233A;">Nouvelle commande !</h1>
+          <p><b>${D.clientNom}</b> vient de payer une commande chez <b>${D.resto}</b>.</p>
+          <p style="background:#FCE8D6;border-radius:8px;padding:10px 14px;color:#16233A;font-weight:bold;">🕐 Commande programmée pour le ${D.programmee}.</p>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;color:#16233A;">
+            ${D.plats.map(([q, n, p]) => `<tr><td style="padding:4px 0;">${q}× ${n}</td><td style="padding:4px 0;text-align:right;">${(q * p).toFixed(2)}€</td></tr>`).join('')}
+            ${ligneAvant('Sous-total plats', eurAvant(sousTotal), { gras: true, bordure: true })}
+          </table>
+          <p style="margin-top:16px;">Adresse de livraison : ${D.adresse}</p>
+          <p>Consigne de livraison : Sonner à l'arrivée</p>
+          <p>Note du client : ${D.note}</p>
+          <p>Téléphone client : ${D.telClient}</p>
+          <p style="${FOOTER_STYLE}">Connecte-toi à ton espace Fairide pour accepter la commande.</p>
+        </div>`
+  },
+  {
+    id: 'mdp', nom: 'Mot de passe oublié', sujet: 'Réinitialise ton mot de passe | Fairide',
+    apercu: 'Choisis un nouveau mot de passe. Le lien expire dans 1 heure.',
+    etiquette: 'Mot de passe', route: 'route-attente', titre: 'Mot de passe oublié ?',
+    corps: (k) => [
+      k.p(`Bonjour ${D.client},`),
+      k.p('Clique sur le bouton ci-dessous pour choisir un nouveau mot de passe :'),
+      k.bouton('Réinitialiser mon mot de passe', LIEN_RESET),
+      k.petit("Ce lien expire dans 1 heure. Si tu n'es pas à l'origine de cette demande, ignore cet email : ton mot de passe restera inchangé.")
+    ].join('\n'),
+    avant: () => `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+          <h1 style="color:#16233A;">Mot de passe oublié ?</h1>
+          <p>Bonjour ${D.client},</p>
+          <p>Clique sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
+          <div style="text-align:center;margin:20px 0;">
+            <a href="${LIEN_RESET}" style="background:#B5482E;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;display:inline-block;">Réinitialiser mon mot de passe</a>
+          </div>
+          <p style="color:#3A4A63;font-size:13px;">Ce lien expire dans 1 heure. Si tu n'es pas à l'origine de cette demande, ignore cet email : ton mot de passe restera inchangé.</p>
+          <p style="${FOOTER_STYLE}">${FOOTER}</p>
+        </div>`
+  }
+];
+
+/* =====================================================================================================================
+   4. « AUJOURD'HUI » : copie fidèle d'email.js (blocCode, ligne, FOOTER_STYLE, blocInformationsLegales) et d'emailEnveloppe.js
+   ===================================================================================================================== */
+const FOOTER_STYLE = 'color:#3A4A63;font-size:13px;margin-top:16px;';
+function blocCodeAvant(label, code) {
+  return `<div style="background:#F0EBDD;border-radius:10px;padding:16px;text-align:center;margin:16px 0;">
+            ${label ? `<p style="margin:0 0 6px;font-size:13px;color:#3A4A63;">${label}</p>` : ''}
+            <p style="margin:0;font-size:${label ? 28 : 32}px;font-weight:bold;letter-spacing:${label ? 4 : 6}px;color:#16233A;">${code}</p>
+          </div>`;
+}
+function ligneAvant(label, montant, o = {}) {
+  const style = `padding:${o.gras ? 8 : 4}px 0;${o.gras ? 'font-weight:bold;' : ''}${o.bordure ? 'border-top:1px solid #E1D9C4;' : ''}`;
+  return `<tr><td style="${style}">${label}</td><td style="${style}text-align:right;">${montant}</td></tr>`;
+}
+function legalAvant() {
+  const p = (h, s = '') => `<p style="font-size:13px;line-height:1.5;color:#3A4A63;margin:6px 0;${s}">${h}</p>`;
+  return `
+    <div style="border-top:1px solid #E1D9C4;margin-top:20px;padding-top:12px;">
+      ${p(LEGAL[0])}${p(LEGAL[1])}${p(LEGAL[2])}${p(`<b>Allergènes</b>`)}<ul style="font-size:13px;color:#3A4A63;margin:4px 0 6px 18px;padding:0;">${ALLERGENES.map((a) => `<li>${a}</li>`).join('')}</ul>
+      ${LEGAL.slice(5, 10).map((t) => p(t)).join('')}${p(LEGAL[10], 'color:#8A8377;')}
+    </div>`;
+}
+const AVANT = { IRIS: '#3B2FB5', LIME: '#C8F03C', ENCRE: '#14121F', ENCRE_DOUCE: '#6B655D', FILET: '#DCD8D0', SURFACE: '#F4F2ED', POLICE: "'Space Grotesk', Arial, Helvetica, sans-serif" };
+const COULEURS = [['#16233A', AVANT.ENCRE], ['#3A4A63', AVANT.ENCRE_DOUCE], ['#F0EBDD', AVANT.SURFACE], ['#F4F1EA', AVANT.SURFACE], ['#E1D9C4', AVANT.FILET], ['#1E8A7A', AVANT.IRIS], ['#0F7B6C', AVANT.IRIS]];
+function recolorer(html) {
+  let h = String(html || '');
+  for (const [a, b] of COULEURS) h = h.replace(new RegExp(a, 'gi'), b);
+  return h.replace(/font-family:sans-serif;max-width:480px;margin:0 auto;/g, `font-family:${AVANT.POLICE};color:${AVANT.ENCRE};font-size:15px;line-height:1.55;`);
+}
+function habillerAvant(html, { titre = 'Fairide', lang = 'fr' } = {}) {
+  const { IRIS, ENCRE, ENCRE_DOUCE, FILET, POLICE } = AVANT;
+  const corps = recolorer(html);
+  return `<!doctype html>
+<html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light">
+<title>${String(titre).replace(/[<>&]/g, '')}</title></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;">
+  <tr><td align="center" style="padding:24px 12px;">
+    <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;border-collapse:separate;">
+      <tr><td style="background:${IRIS};border-radius:20px 20px 0 0;padding:18px 24px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td style="vertical-align:middle;padding-right:10px;"><a href="${SITE}" style="text-decoration:none;"><img src="{{IMG:logo-tuile}}" width="36" height="36" alt="" style="display:block;border:0;border-radius:8px;"></a></td>
+          <td style="vertical-align:middle;"><a href="${SITE}" style="text-decoration:none;font-family:${POLICE};font-size:24px;font-weight:800;letter-spacing:-0.5px;color:#ffffff;">fairide</a></td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="background:#ffffff;border:1px solid ${FILET};border-top:0;border-radius:0 0 20px 20px;padding:24px;font-family:${POLICE};color:${ENCRE};font-size:15px;line-height:1.55;">
+        ${corps}
+      </td></tr>
+      <tr><td style="padding:14px 8px 0;font-family:${POLICE};font-size:12px;line-height:1.5;color:${ENCRE_DOUCE};text-align:center;">
+        Fairide · Bruxelles · <a href="${SITE}" style="color:${IRIS};text-decoration:none;">fairide.be</a>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`;
+}
+function sansTiretsCadratins(t) {
+  return t.replace(/&mdash;|&#8212;|&#x2014;/gi, '—').replace(/\s+—\s+(Fairide\s*)$/, ' | $1').replace(/(^|>|\n)(\s*)—\s+/g, '$1$2')
+    .replace(/\s*—\s*,/g, ',').replace(/\s+—\s+/g, ', ').replace(/—/g, '-');
+}
+
+/* =====================================================================================================================
+   5. LES BLOCS PARTAGÉS DES PROPOSITIONS (ce qui remplacerait blocCode, lignesPlats/ligne, boutonPrincipal, encadre)
+      Classes fx-* : seulement des accroches pour le mode sombre et le téléphone (<style> en tête) ; tout le dessin est en ligne.
+   ===================================================================================================================== */
+const T = `font-family:${POL};`;
+function blocs(style) {
+  const k = {};
+  k.p = (h) => `<p class="fx-t" style="margin:0 0 16px;${T}font-size:16px;line-height:24px;color:${C.ink};">${h}</p>`;
+  k.petit = (h) => `<p class="fx-doux" style="margin:0 0 14px;${T}font-size:13px;line-height:20px;color:${C.soft};">${h}</p>`;
+  k.lien = (url, t) => `<a class="fx-lien" href="${url}" style="color:${C.iris};text-decoration:underline;">${t}</a>`;
+  // Bouton « à l'épreuve d'Outlook » : la couleur est sur la cellule (Outlook ignore le padding d'un <a>), mso-padding-alt pour Word.
+  k.bouton = (libelle, url) => `<table role="presentation" class="fx-btn" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 22px;border-collapse:separate;"><tr>
+  <td class="fx-bouton" align="center" bgcolor="${C.lime}" style="background:${C.lime};border-radius:999px;mso-padding-alt:14px 28px;">
+    <a href="${url}" style="display:inline-block;padding:14px 28px;${T}font-size:16px;line-height:20px;font-weight:700;color:${C.ink};text-decoration:none;border-radius:999px;">${libelle}</a>
+  </td></tr></table>`;
+  // Code : cadre en pointillés iris, comme dans le suivi de commande de l'app.
+  k.code = (label, code) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 18px;border-collapse:separate;"><tr>
+  <td class="fx-code" align="center" style="border:2px dashed ${C.iris};border-radius:16px;padding:16px 16px 18px;">
+    ${label ? `<p class="fx-doux" style="margin:0 0 8px;${T}font-size:13px;line-height:19px;color:${C.soft};">${label}</p>` : ''}
+    <p class="fx-t" style="margin:0;font-family:${POL_T};font-size:${label ? 32 : 36}px;line-height:${label ? 38 : 42}px;font-weight:700;letter-spacing:${label ? 8 : 10}px;color:${C.ink};mso-line-height-rule:exactly;">${code}</p>
+  </td></tr></table>`;
+  k.encadre = (h) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;border-collapse:separate;"><tr>
+  <td class="fx-filet fx-t" style="border:1px solid ${C.line};border-left:4px solid ${C.iris};border-radius:12px;padding:12px 16px;${T}font-size:15px;line-height:22px;font-weight:700;color:${C.ink};">${h}</td></tr></table>`;
+  const cel = (h, s = '') => `<td class="fx-t" style="${T}font-size:15px;line-height:22px;color:${C.ink};${s}">${h}</td>`;
+  const qte = (q, s = '') => `<td class="fx-iris" width="36" valign="top" style="${T}font-size:15px;line-height:22px;font-weight:700;color:${C.iris};${s}">${q}×</td>`;
+  if (style === 'ticket') {
+    k.recap = ({ entete, lignes, extras, total }) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 20px;border-collapse:separate;"><tr>
+  <td class="fx-filet" style="border:1px solid ${C.line};border-radius:16px;padding:14px 18px 16px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      ${cel(`<b>${entete[0]}</b>`)}<td class="fx-doux" align="right" style="${T}font-size:13px;line-height:22px;color:${C.soft};">${entete[1]}</td></tr></table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
+      ${lignes.map(([q, n, m]) => `<tr>${qte(q, 'padding:5px 0;')}${cel(n, 'padding:5px 8px 5px 0;')}${cel(m, 'padding:5px 0;text-align:right;white-space:nowrap;')}</tr>`).join('')}
+      <tr><td colspan="3" style="padding:8px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="fx-filet" style="border-top:2px dashed ${C.line};font-size:0;line-height:0;height:8px;">&nbsp;</td></tr></table></td></tr>
+      ${extras.map(([l, m]) => `<tr><td></td>${cel(l, `padding:3px 8px 3px 0;color:${C.soft};`)}${cel(m, `padding:3px 0;text-align:right;white-space:nowrap;color:${C.soft};`)}</tr>`).join('')}
+      <tr><td colspan="2" class="fx-t" style="padding:8px 0 0;${T}font-size:18px;line-height:24px;font-weight:700;color:${C.ink};">${total[0]}</td>
+          <td class="fx-t" align="right" style="padding:8px 0 0;font-family:${POL_T};font-size:22px;line-height:24px;font-weight:700;color:${C.ink};white-space:nowrap;">${total[1]}</td></tr>
+    </table>
+  </td></tr></table>`;
+  } else {
+    const filet = style === 'liste';
+    const b = filet ? `border-bottom:1px solid ${C.line};` : '';
+    k.recap = ({ lignes, extras, total }) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border-collapse:collapse;">
+  ${lignes.map(([q, n, m]) => `<tr>${qte(q, `padding:${filet ? 10 : 6}px 0;${b}`)}${cel(n, `padding:${filet ? 10 : 6}px 8px ${filet ? 10 : 6}px 0;${b}`)}${cel(m, `padding:${filet ? 10 : 6}px 0;${b}text-align:right;white-space:nowrap;`)}</tr>`.replace(/<td class="fx-/g, filet ? '<td class="fx-filet fx-' : '<td class="fx-')).join('')}
+  ${extras.map(([l, m]) => `<tr><td${filet ? ` class="fx-filet" style="${b}"` : ''}></td>${cel(l, `padding:${filet ? 10 : 6}px 8px ${filet ? 10 : 6}px 0;${b}color:${C.soft};`)}${cel(m, `padding:${filet ? 10 : 6}px 0;${b}text-align:right;white-space:nowrap;color:${C.soft};`)}</tr>`).join('')}
+  <tr><td colspan="2" class="fx-t${filet ? '' : ' fx-filet'}" style="padding:14px 0 0;${filet ? '' : `border-top:1px solid ${C.line};`}${T}font-size:18px;line-height:24px;font-weight:700;color:${C.ink};">${total[0]}</td>
+      <td class="fx-t${filet ? '' : ' fx-filet'}" align="right" style="padding:14px 0 0;${filet ? '' : `border-top:1px solid ${C.line};`}font-family:${POL_T};font-size:22px;line-height:24px;font-weight:700;color:${C.ink};white-space:nowrap;">${total[1]}</td></tr>
+</table>`;
+  }
+  k.legal = (lignes, allergenes) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0;"><tr>
+  <td class="fx-filet" style="border-top:1px solid ${C.line};padding-top:14px;">
+    ${lignes.map((l, i) => l === 'LISTE'
+      ? allergenes.map((a) => `<p class="fx-doux" style="margin:0 0 4px 12px;${T}font-size:12px;line-height:18px;color:${C.soft};">· ${a}</p>`).join('')
+      : `<p class="fx-doux" style="margin:0 0 8px;${T}font-size:12px;line-height:18px;color:${i === lignes.length - 1 ? C.faint : C.soft};">${l}</p>`).join('\n    ')}
+  </td></tr></table>`;
+  return k;
+}
+
+/* =====================================================================================================================
+   6. LES ENVELOPPES (ce qui remplacerait habiller)
+   ===================================================================================================================== */
+function tete(sujet, sombre, mobile, extra = '') {
+  return `<!doctype html>
+<html lang="fr" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark">
+<title>${sujet}</title>
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+<!--[if !mso]><!--><style>/*polices*/
+@font-face{font-family:'Inter';font-weight:400 700;src:url('{{F:inter-latin}}') format('woff2');}
+@font-face{font-family:'Inter Tight';font-weight:500 700;src:url('{{F:inter-tight-latin}}') format('woff2');}
+/*fin-polices*/</style><!--<![endif]-->
+<style>
+:root{color-scheme:light dark;supported-color-schemes:light dark;}
+body{margin:0;padding:0;-webkit-text-size-adjust:100%;}
+a[x-apple-data-detectors]{color:inherit!important;text-decoration:none!important;}
+@media (max-width:620px){
+.fx-dehors{padding:0!important;}
+.fx-pad{padding-left:20px!important;padding-right:20px!important;}
+.fx-titre{font-size:28px!important;line-height:32px!important;}
+.fx-carre{border-radius:0!important;}
+.fx-btn{width:100%!important;}
+.fx-btn a{display:block!important;text-align:center!important;}
+${mobile}
+}
+/*sombre*/@media (prefers-color-scheme:dark){
+body,.fx-page{background:#0F0E15!important;}
+.fx-feuille{background:#17161F!important;}
+.fx-t,.fx-feuille p,.fx-feuille td{color:#ECEAF5!important;}
+.fx-doux,.fx-feuille .fx-doux{color:#ABA6BC!important;}
+.fx-iris,.fx-lien{color:#B3ABFF!important;}
+.fx-filet{border-color:#34313F!important;}
+.fx-feuille td.fx-code{border-color:#9C93F5!important;}
+.fx-feuille .fx-bouton a{color:#14121F!important;}
+${sombre}
+}/*fin-sombre*/
+${extra}
+</style>
+</head>`;
+}
+const REMPLISSAGE = '&#847;&zwnj;&nbsp;'.repeat(60);
+const preheader = (t) => `<div style="display:none;max-height:0;max-width:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#FFFFFF;opacity:0;">${t}</div>
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${REMPLISSAGE}</div>`;
+const imgTag = (nom, w, h, alt, style = '', classe = '') => `<img${classe ? ` class="${classe}"` : ''} src="{{IMG:${nom}}}" width="${w}" height="${h}" alt="${alt}" style="display:block;border:0;outline:none;text-decoration:none;${style}">`;
+const ouvrir = (bg) => `<body class="fx-page" style="margin:0;padding:0;background:${bg};">`;
+const cadre = (contenu, pad = '24px 12px') => `<table role="presentation" class="fx-page" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF" style="background:#FFFFFF;"><tr><td align="center" class="fx-dehors" style="padding:${pad};">
+<!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;border-collapse:separate;">
+${contenu}
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+</td></tr></table>`;
+// La coche lime ne sert qu'aux étapes faites (« Commande payée ») ; sinon l'étiquette est du texte iris pâle.
+const etiquetteIris = (t, coche) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr>
+  ${coche ? `<td style="padding-right:6px;vertical-align:middle;">${imgTag('coche', 18, 18, '')}</td>` : ''}
+  <td style="vertical-align:middle;${T}font-size:13px;line-height:18px;font-weight:600;color:${coche ? '#FFFFFF' : C.irisPale};">${t}</td></tr></table>`;
+const pied = (couleur, lien) => `<p class="fx-doux" style="margin:0 0 6px;${T}font-size:12px;line-height:18px;color:${couleur};">${FOOTER}</p>
+<p style="margin:0;${T}font-size:12px;line-height:18px;"><a href="${SITE}" style="color:${lien};text-decoration:none;font-weight:700;">fairide.be</a></p>`;
+
+// A et D : bandeau iris (logo, étiquette, grand titre blanc, le vélo sur sa route), feuille blanche aux coins ronds qui monte, pied iris.
+function enveloppeA(e, corps, { anime = false } = {}) {
+  const route = anime ? 'route-animee' : e.route;
+  return `${tete(e.sujet, '', '.fx-route{width:100%!important;}')}
+${ouvrir('#FFFFFF')}
+${preheader(e.apercu)}
+${cadre(`<tr><td class="fx-carre fx-pad" bgcolor="${C.iris}" style="background:${C.iris};border-radius:28px 28px 0 0;padding:22px 28px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+    <td valign="middle"><a href="${SITE}" style="text-decoration:none;">${imgTag('logo-blanc', IMG['logo-blanc'].w, 28, 'fairide', `color:#FFFFFF;font-family:${POL};font-size:22px;font-weight:800;`)}</a></td>
+    <td valign="middle" align="right">${etiquetteIris(e.etiquette, e.fait)}</td></tr></table>
+  <h1 class="fx-titre" style="margin:26px 0 4px;font-family:${POL_T};font-size:34px;line-height:40px;font-weight:700;color:#FFFFFF;mso-line-height-rule:exactly;">${e.titre}</h1>
+  ${imgTag(route, ROUTE.W, ROUTE.H, '', 'width:100%;max-width:544px;height:auto;', 'fx-route')}
+</td></tr>
+<tr><td bgcolor="${C.iris}" style="background:${C.iris};padding:0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;"><tr><td class="fx-feuille" bgcolor="#FFFFFF" height="28" style="background:#FFFFFF;border-radius:26px 26px 0 0;height:28px;font-size:0;line-height:0;">&nbsp;</td></tr></table>
+</td></tr>
+<tr><td class="fx-feuille fx-pad" bgcolor="#FFFFFF" style="background:#FFFFFF;padding:0 28px 12px;${T}font-size:16px;line-height:24px;color:${C.ink};">
+${corps}
+</td></tr>
+<tr><td bgcolor="${C.iris}" style="background:${C.iris};padding:0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;"><tr><td class="fx-feuille" bgcolor="#FFFFFF" height="26" style="background:#FFFFFF;border-radius:0 0 26px 26px;height:26px;font-size:0;line-height:0;">&nbsp;</td></tr></table>
+</td></tr>
+<tr><td class="fx-carre fx-pad" bgcolor="${C.iris}" style="background:${C.iris};border-radius:0 0 28px 28px;padding:16px 28px 26px;">
+  ${imgTag('route-pied', 544, 22, '', 'width:100%;max-width:544px;height:auto;margin:0 0 14px;')}
+  ${pied(C.irisPale, '#FFFFFF')}
+</td></tr>`)}
+</body></html>`;
+}
+
+// B : ticket. Fine bande iris en haut d'une carte bordée d'un filet, étiquette iris, grand titre, récapitulatif comme un reçu.
+function enveloppeB(e, corps) {
+  return `${tete(e.sujet, '.fx-logo-clair{display:none!important;}.fx-logo-sombre{display:block!important;max-height:none!important;}', '')}
+${ouvrir('#FFFFFF')}
+${preheader(e.apercu)}
+${cadre(`<tr><td bgcolor="${C.iris}" height="8" style="background:${C.iris};border-radius:18px 18px 0 0;height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr><td class="fx-feuille fx-filet fx-pad" bgcolor="#FFFFFF" style="background:#FFFFFF;border:1px solid ${C.line};border-top:0;border-radius:0 0 18px 18px;padding:22px 26px 10px;${T}font-size:16px;line-height:24px;color:${C.ink};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+    <td valign="middle"><a href="${SITE}" style="text-decoration:none;">${imgTag('logo-iris', Math.round(IMG['logo-iris'].w * 22 / 28), 22, 'fairide', `color:${C.iris};font-family:${POL};font-size:18px;font-weight:800;`, 'fx-logo-clair')}<!--[if !mso]><!-->${imgTag('logo-blanc', Math.round(IMG['logo-blanc'].w * 22 / 28), 22, 'fairide', 'display:none;max-height:0;overflow:hidden;', 'fx-logo-sombre')}<!--<![endif]--></a></td>
+    </tr></table>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 10px;border-collapse:separate;"><tr>
+    <td bgcolor="${C.iris}" style="background:${C.iris};border-radius:999px;padding:5px 12px;${T}font-size:12px;line-height:16px;font-weight:700;color:#FFFFFF;">${e.etiquette}</td></tr></table>
+  <h1 class="fx-titre fx-t" style="margin:0 0 18px;font-family:${POL_T};font-size:32px;line-height:38px;font-weight:700;color:${C.ink};mso-line-height-rule:exactly;">${e.titre}</h1>
+${corps}
+</td></tr>
+<tr><td align="center" class="fx-pad" style="padding:22px 26px 0;">
+  ${imgTag('velo-iris', 30, 16, '', 'margin:0 auto 10px;')}
+  <p class="fx-doux" style="margin:0 0 4px;${T}font-size:12px;line-height:18px;color:${C.soft};text-align:center;">${FOOTER}</p>
+  <p style="margin:0;${T}font-size:12px;line-height:18px;text-align:center;"><a class="fx-lien" href="${SITE}" style="color:${C.iris};text-decoration:none;font-weight:700;">fairide.be</a></p>
+</td></tr>`)}
+</body></html>`;
+}
+
+// C : sobre. Blanc, petit logo, la route (pointillés iris + vélo) comme séparateur, beaucoup d'air. Le plus sûr en sombre et sous Outlook.
+function enveloppeC(e, corps) {
+  const sep = (marge) => `${imgTag('separateur-iris', 536, 30, '', `width:100%;max-width:536px;height:auto;margin:${marge};`, 'fx-sep-clair')}<!--[if !mso]><!-->${imgTag('separateur-clair', 536, 30, '', `display:none;max-height:0;overflow:hidden;width:100%;max-width:536px;height:auto;margin:${marge};`, 'fx-sep-sombre')}<!--<![endif]-->`;
+  return `${tete(e.sujet, '.fx-logo-clair,.fx-sep-clair{display:none!important;}.fx-logo-sombre,.fx-sep-sombre{display:block!important;max-height:none!important;}', '.fx-sep-clair,.fx-sep-sombre{width:100%!important;}')}
+${ouvrir('#FFFFFF')}
+${preheader(e.apercu)}
+${cadre(`<tr><td class="fx-feuille fx-pad" bgcolor="#FFFFFF" style="background:#FFFFFF;padding:36px 32px 8px;${T}font-size:16px;line-height:24px;color:${C.ink};">
+  <a href="${SITE}" style="text-decoration:none;">${imgTag('logo-iris', IMG['logo-iris'].w, 28, 'fairide', `color:${C.iris};font-family:${POL};font-size:22px;font-weight:800;`, 'fx-logo-clair')}<!--[if !mso]><!-->${imgTag('logo-blanc', IMG['logo-blanc'].w, 28, 'fairide', 'display:none;max-height:0;overflow:hidden;', 'fx-logo-sombre')}<!--<![endif]--></a>
+  ${sep('22px 0 30px')}
+  <p class="fx-iris" style="margin:0 0 6px;${T}font-size:13px;line-height:18px;font-weight:700;color:${C.iris};">${e.etiquette}</p>
+  <h1 class="fx-titre fx-t" style="margin:0 0 20px;font-family:${POL_T};font-size:34px;line-height:40px;font-weight:700;color:${C.ink};mso-line-height-rule:exactly;">${e.titre}</h1>
+${corps}
+  ${sep('26px 0 18px')}
+  ${pied(C.soft, C.iris).replace('<a href', '<a class="fx-lien" href')}
+</td></tr>`, '12px 12px 28px')}
+</body></html>`;
+}
+
+const VARIANTES = [
+  { id: 'avant', nom: 'Aujourd\'hui', note: 'Ce qui part maintenant (emailEnveloppe.js). <b>Constats :</b> pas de texte d\'aperçu, police Space Grotesk que personne n\'a (Arial partout), montants « 17.00€ », émojis dans certains titres, et le bouton du mot de passe part en rouge brique.',
+    faire: (e) => sansTiretsCadratins(habillerAvant(e.avant(), { titre: e.sujet })) },
+  { id: 'a', nom: 'A · Bandeau + feuille', note: '<b>Forces :</b> le plus proche de l\'app (bandeau iris, titre en grand, vélo qui avance selon l\'étape, feuille qui monte). <b>Risques :</b> Outlook bureau met tout carré (reste propre) ; images bloquées : le titre reste lisible, la route disparaît ; 4 images différentes à héberger.',
+    faire: (e) => enveloppeA(e, e.corps(blocs('liste'))) },
+  { id: 'b', nom: 'B · Ticket', note: '<b>Forces :</b> compact, le récapitulatif se lit comme un reçu, l\'étiquette dit le statut d\'un coup d\'œil. Le moins d\'images (2). <b>Risques :</b> moins « Fairide » que A ; la fine bande iris est carrée sous Outlook ; en sombre forcé, le petit vélo iris se voit mal.',
+    faire: (e) => enveloppeB(e, e.corps(blocs('ticket'))) },
+  { id: 'c', nom: 'C · Sobre', note: '<b>Forces :</b> presque tout est blanc et encre, donc l\'inversion de Gmail ou d\'Outlook ne casse rien ; rien à arrondir pour Outlook ; Apple Mail passe en sombre avec nos images claires. <b>Risques :</b> le moins chaleureux ; sous Gmail app sombre, la route iris est terne (image non inversée).',
+    faire: (e) => enveloppeC(e, e.corps(blocs('sobre'))) },
+  { id: 'd', nom: 'D · Bandeau animé', note: '<b>Forces :</b> A, avec le vélo qui roule (GIF). <b>Risques :</b> un seul GIF pour toutes les étapes (pas de progression) ; Outlook 2013–2019 n\'en montre que la 1re image (prévue jolie) ; un peu plus lourd à télécharger à chaque ouverture.',
+    faire: (e) => enveloppeA(e, e.corps(blocs('liste')), { anime: true }) }
+];
+
+/* =====================================================================================================================
+   7. LES RENDUS : ce que fait chaque client du même HTML
+   ===================================================================================================================== */
+const POLICES_LOCALES = { 'inter-latin': ['/fonts/inter-latin.woff2', '../public/fonts/inter-latin.woff2'], 'inter-tight-latin': ['/fonts/inter-tight-latin.woff2', '../public/fonts/inter-tight-latin.woff2'] };
+function versProduction(html) {
+  return html.replace(/\{\{IMG:([a-z0-9-]+)\}\}/g, (m, n) => urlProd(n)).replace(/\{\{F:([a-z-]+)\}\}/g, (m, n) => `${SITE}/fonts/${n}.woff2`);
+}
+function lum(hex) {
+  const v = hex.length === 4 ? [1, 2, 3].map((i) => parseInt(hex[i] + hex[i], 16)) : [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const [r, g, b] = v.map((c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function inverserL(hex, plancher) {
+  let [r, g, b] = (hex.length === 4 ? [1, 2, 3].map((i) => parseInt(hex[i] + hex[i], 16)) : [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))).map((v) => v / 255);
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0; const l = (mx + mn) / 2;
+  if (mx !== mn) { const d = mx - mn; s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h /= 6; }
+  let l2 = 1 - l; if (plancher != null) l2 = Math.max(plancher[0], Math.min(plancher[1], l2));
+  const f = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1 / 6) return p + (q - p) * 6 * t; if (t < 1 / 2) return q; if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6; return p; };
+  let rr, gg, bb; if (s === 0) { rr = gg = bb = l2; } else { const q = l2 < 0.5 ? l2 * (1 + s) : l2 + s - l2 * s, p = 2 * l2 - q; rr = f(p, q, h + 1 / 3); gg = f(p, q, h); bb = f(p, q, h - 1 / 3); }
+  return '#' + [rr, gg, bb].map((v) => Math.round(v * 255).toString(16).padStart(2, '0')).join('');
+}
+const fondSombre = (hex) => lum(hex) > 0.4 ? inverserL(hex, [0.08, 1]) : hex;
+const texteSombre = (hex) => lum(hex) < 0.3 ? inverserL(hex, [0, 0.92]) : hex;
+
+function rendre(html, { rendu, bloquees, anime }) {
+  let h = html.replace(/\{\{F:([a-z-]+)\}\}/g, (m, n) => POLICES_LOCALES[n].join("') format('woff2'),url('"));
+  h = h.replace(/\{\{IMG:([a-z0-9-]+)\}\}/g, (m, n) => (rendu === 'outlook' && n === 'route-animee' ? IMG['route-animee-1'] : IMG[n]).data);
+  if (rendu === 'gmail' || rendu === 'outlook' || rendu === 'sombre-gmail') h = h.replace(/\/\*polices\*\/[\s\S]*?\/\*fin-polices\*\//g, '');
+  if (rendu === 'outlook') {
+    // Outlook lit le contenu des commentaires [if mso] ; le réglage DPI (<noscript><xml>) n'affiche rien chez lui : on le retire.
+    h = h.replace(/<!--\[if mso\]>([\s\S]*?)<!\[endif\]-->/g, '$1').replace(/<noscript>[\s\S]*?<\/noscript>/g, '').replace(/<!--\[if !mso\]><!-->[\s\S]*?<!--<!\[endif\]-->/g, '')
+      .replace(/<style[\s\S]*?<\/style>/g, '').replace(/border-radius:[^;"]*;?/g, '').replace(/font-family:[^;"]*;?/g, 'font-family:Arial, sans-serif;');
+  }
+  if (rendu === 'sombre-gmail') h = h.replace(/\/\*sombre\*\/[\s\S]*?\/\*fin-sombre\*\//g, '');
+  if (rendu === 'sombre-apple') h = h.replace(/@media \(prefers-color-scheme:dark\)/g, '@media all');
+  if (bloquees || rendu === 'sombre-gmail') {
+    const doc = new DOMParser().parseFromString(h, 'text/html');
+    if (bloquees) doc.querySelectorAll('img').forEach((im) => {
+      const sp = doc.createElement('span');
+      const w = im.getAttribute('width'), hh = im.getAttribute('height');
+      sp.setAttribute('style', `display:inline-block;box-sizing:border-box;width:${w}px;max-width:100%;height:${hh}px;outline:1px dashed rgba(128,128,128,.7);outline-offset:-1px;overflow:hidden;font-size:11px;line-height:14px;color:#888;font-family:Arial,sans-serif;${im.getAttribute('style') || ''};height:${hh}px;`);
+      if (im.className) sp.className = im.className;
+      sp.textContent = im.getAttribute('alt') || '';
+      im.replaceWith(sp);
+    });
+    if (rendu === 'sombre-gmail') {
+      doc.querySelectorAll('[bgcolor]').forEach((el) => el.setAttribute('bgcolor', fondSombre(el.getAttribute('bgcolor'))));
+      doc.querySelectorAll('[style]').forEach((el) => {
+        el.setAttribute('style', el.getAttribute('style').replace(/(^|;)\s*([a-z-]+)\s*:([^;]*)/gi, (m, a, prop, val) =>
+          a + prop + ':' + val.replace(/#[0-9a-f]{6}\b|#[0-9a-f]{3}\b/gi, (hex) => prop.toLowerCase() === 'color' ? texteSombre(hex) : /^(background|border)/i.test(prop) ? fondSombre(hex) : hex)));
+      });
+      doc.body.style.color = doc.body.style.color || '#E8E8E8';
+      const st = doc.createElement('style'); st.textContent = 'html{background:#121212}a:not([style*="color"]){color:#8AB4F8}';
+      doc.head.appendChild(st);
+    }
+    h = '<!doctype html>\n' + doc.documentElement.outerHTML;
+  }
+  return h;
+}
+function apercuBoite(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('style,title,script').forEach((n) => n.remove());
+  // Le remplissage (&#847;&zwnj;&nbsp;) qui suit le texte d'aperçu pousse le reste hors de la ligne, comme chez Gmail.
+  const t = doc.body.textContent || '';
+  const coupe = t.indexOf('͏');
+  return (coupe >= 0 ? t.slice(0, coupe) : t).replace(/[‌ \s]+/g, ' ').trim().slice(0, 140);
+}
+const octets = (s) => new TextEncoder().encode(s).length;
+const ko = (n) => (n / 1024).toFixed(1).replace('.', ',') + ' Ko';
+
+/* =====================================================================================================================
+   8. LA PAGE
+   ===================================================================================================================== */
+const ETAT = { mail: 'payee', largeur: 640, rendu: 'apple', bloquees: false };
+const CHOIX = {
+  mail: ECHANTILLONS.map((e) => [e.id, e.nom]),
+  largeur: [[640, 'Ordinateur (e-mail de 600 px)'], [375, 'Téléphone 375']],
+  rendu: [['apple', 'Normal (Apple Mail)'], ['gmail', 'Comme Gmail'], ['outlook', 'Comme Outlook bureau'], ['sombre-apple', 'Sombre : Apple Mail'], ['sombre-gmail', 'Sombre : Gmail app / Outlook']]
+};
+function reglages() {
+  document.querySelectorAll('.seg').forEach((seg) => {
+    const cle = seg.dataset.reglage;
+    seg.innerHTML = CHOIX[cle].map(([v, t]) => `<button type="button" data-v="${v}" class="${String(ETAT[cle]) === String(v) ? 'on' : ''}">${t}</button>`).join('');
+    seg.onclick = (ev) => { const b = ev.target.closest('button'); if (!b) return; ETAT[cle] = cle === 'largeur' ? Number(b.dataset.v) : b.dataset.v; reglages(); dessiner(); };
+  });
+  const cb = document.getElementById('bloquees'); cb.checked = ETAT.bloquees; cb.onchange = () => { ETAT.bloquees = cb.checked; dessiner(); };
+}
+const rangee = document.getElementById('rangee');
+function dessiner() {
+  const e = ECHANTILLONS.find((x) => x.id === ETAT.mail);
+  rangee.innerHTML = '';
+  window.__mesures = {};
+  VARIANTES.forEach((v) => {
+    const html = v.faire(e);
+    const prod = versProduction(html);
+    const taille = octets(prod);
+    window.__mesures[v.id] = taille;
+    const col = document.createElement('div');
+    col.className = 'colonne'; col.style.width = ETAT.largeur + 2 + 'px'; col.dataset.variante = v.id;
+    const sombre = ETAT.rendu.startsWith('sombre');
+    col.innerHTML = `<h3>${v.nom}</h3><p class="note">${v.note}</p>
+      <div class="boite"><div class="exp">Fairide</div><div class="obj">${sansTiretsCadratins(e.sujet)}</div><div class="ape"></div></div>
+      <div class="cadre-mail${sombre ? ' sombre' : ''}"><iframe title="${v.nom}"></iframe></div>
+      <div class="mesure">HTML envoyé : <b>${ko(taille)}</b> (Gmail coupe à 102 Ko)${v.id === 'd' ? ` · GIF : ${ko(IMG['route-animee'].octets)} téléchargés à l'ouverture` : ''}</div>
+      <details><summary>Voir le HTML envoyé</summary><pre></pre></details>`;
+    col.querySelector('.ape').textContent = apercuBoite(prod);
+    col.querySelector('pre').textContent = prod;
+    const fr = col.querySelector('iframe');
+    fr.style.height = '60px';
+    fr.dataset.id = v.id;
+    const vue = rendre(html, ETAT) + `<script>(function(){function h(){parent.postMessage({fx:${JSON.stringify(v.id)},h:Math.ceil(Math.max(document.body.scrollHeight,document.body.getBoundingClientRect().height))},'*')}addEventListener('load',h);setTimeout(h,250);if(document.fonts)document.fonts.ready.then(h);document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('a'))e.preventDefault()},true)})()<\/script>`;
+    fr.srcdoc = vue;
+    rangee.appendChild(col);
+  });
+}
+addEventListener('message', (ev) => {
+  const d = ev.data; if (!d || !d.fx) return;
+  const fr = rangee.querySelector(`iframe[data-id="${d.fx}"]`); if (fr) fr.style.height = Math.max(60, d.h) + 'px';
+});
+
+function tableaux() {
+  const lignes = [
+    ['Aujourd\'hui', ['Arial (Space Grotesk absente)', 'Coins ronds', '-', 'App iOS : tout s\'inverse sauf l\'iris ; Android : en partie'],
+      ['Arial', 'Coins ronds', '-', 'Reste clair (« light only »)'],
+      ['Arial', '<span class="non">Carrés</span>', '-', 'Inversion partielle ; logo bloqué : « fairide » seul'],
+      ['Arial', 'Coins ronds', '-', 'Inversion partielle']],
+    ['A · Bandeau + feuille', ['Arial', 'Coins ronds, feuille qui monte', '-', '<span class="moyen">Feuille sombre, bouton lime assombri (iOS)</span>'],
+      ['<span class="oui">Inter</span> (chargée de fairide.be)', 'Coins ronds', '-', '<span class="oui">Nos couleurs : feuille sombre, lime intact</span>'],
+      ['Arial', '<span class="non">Carrés</span> (la feuille devient un bord droit)', '-', 'Inversion partielle ; images bloquées : titre et texte restent'],
+      ['Arial', 'Coins ronds', '-', 'Inversion partielle, bandeau iris gardé']],
+    ['B · Ticket', ['Arial', 'Coins ronds', '-', '<span class="moyen">Carte sombre, petit vélo iris peu visible</span>'],
+      ['<span class="oui">Inter</span>', 'Coins ronds', '-', '<span class="oui">Nos couleurs, logo clair</span>'],
+      ['Arial', '<span class="non">Carrés</span>', '-', 'Inversion partielle'],
+      ['Arial', 'Coins ronds', '-', 'Inversion partielle']],
+    ['C · Sobre', ['Arial', 'Rien à arrondir (bouton, code)', '-', '<span class="oui">Peu de couleurs : rien ne casse</span> ; route iris terne'],
+      ['<span class="oui">Inter</span>', 'Coins ronds', '-', '<span class="oui">Nos couleurs, route et logo clairs</span>'],
+      ['Arial', '<span class="oui">Presque rien à perdre</span>', '-', 'Inversion partielle'],
+      ['Arial', 'Coins ronds', '-', 'Inversion partielle']],
+    ['D · Bandeau animé', ['Arial', 'Coins ronds', '<span class="oui">Animé</span>', 'Comme A'],
+      ['<span class="oui">Inter</span>', 'Coins ronds', '<span class="oui">Animé</span>', 'Comme A'],
+      ['Arial', '<span class="non">Carrés</span>', '<span class="moyen">1re image (2013–2019) ; Microsoft 365 l\'anime</span>', 'Comme A'],
+      ['Arial', 'Coins ronds', '<span class="oui">Animé</span>', 'Comme A']]
+  ];
+  const clients = ['Gmail (web, app Android et iOS)', 'Apple Mail, iPhone, iPad', 'Outlook bureau (Windows)', 'Outlook.com, nouvel Outlook, app Outlook'];
+  document.getElementById('compat').innerHTML = `<tr><th></th>${clients.map((c) => `<th>${c}</th>`).join('')}</tr>` +
+    lignes.map(([nom, ...cl]) => `<tr><th>${nom}</th>${cl.map(([p, r, g, s]) => `<td><small>Police</small> ${p}<br><small>Coins</small> ${r}<br><small>GIF</small> ${g}<br><small>Sombre</small> ${s}</td>`).join('')}</tr>`).join('') +
+    `<tr><th>Tous</th><td colspan="4"><small>Version téléphone (media queries)</small> Gmail, Apple Mail, Outlook.com : oui ; Outlook bureau : sans objet. <small>Images</small> Gmail, Apple Mail : affichées ; Outlook bureau : bloquées tant que l'expéditeur n'est pas approuvé (case « Images bloquées »). <small>Texte d'aperçu</small> tous, sauf aujourd'hui où il n'est jamais fourni.</td></tr>`;
+  const util = { 'logo-tuile': 'Aujourd\'hui', 'logo-blanc': 'A, B (sombre), C (sombre), D', 'logo-iris': 'B, C', 'route-attente': 'A', 'route-payee': 'A', 'route-en-route': 'A', 'route-animee': 'D', 'route-animee-1': 'D (Outlook)', 'route-pied': 'A, D', 'separateur-iris': 'C', 'separateur-clair': 'C (sombre)', coche: 'A, D', 'velo-iris': 'B' };
+  let somme = 0;
+  document.getElementById('images').innerHTML = '<tr><th>Fichier</th><th>Rôle</th><th>Affichée</th><th>Fichier (×2)</th><th>Poids (sortie canvas)</th><th>Utilisée par</th><th>Aperçu</th></tr>' +
+    Object.entries(IMG).map(([n, i]) => { if (n !== 'route-animee-1' && n !== 'logo-tuile') somme += i.octets;
+      return `<tr><td>${n === 'logo-tuile' ? 'icons/icon-192.png' : n === 'route-animee-1' ? '(dans le GIF)' : 'email/' + i.fichier}</td><td>${i.role}</td><td>${i.w} × ${i.h}</td><td>${n === 'logo-tuile' ? '192 × 192' : `${i.w * 2} × ${i.h * 2}`}</td><td>${ko(i.octets)}</td><td>${util[n] || ''}</td><td style="background:${/blanc|route|coche/.test(n) && !/iris|clair/.test(n) ? '#3B2FB5' : n === 'separateur-clair' ? '#17161F' : '#fff'}"><img src="${i.data}" style="max-width:220px;height:${Math.min(i.h, 40)}px;width:auto;display:block"></td></tr>`; }).join('');
+  document.getElementById('avert-images').textContent = `Total des nouvelles images : ${ko(somme)} (PNG tels que sortis du canvas ; un passage par oxipng ou pngquant les réduit d'environ moitié). Le logo du mot « fairide » est ${MOT_BRICOLAGE ? 'dessiné en Bricolage Grotesque' : 'dessiné en Arial Black, car Bricolage Grotesque n\'a pas pu être chargée (ouvrir via npm run dev pour la vraie police)'}. Toutes en ×2 pour les écrans Retina, affichées à la moitié.`;
+  document.getElementById('inventees').innerHTML = `<ul>
+    <li>Les étiquettes : « Commande payée », « Inscription », « En route », « À accepter », « Mot de passe ».</li>
+    <li>Les textes d'aperçu des cinq e-mails (aucun n'existe aujourd'hui), par exemple « Ton code : 482913. Il expire dans 15 minutes. »</li>
+    <li>Le bouton lime « Suivre ma commande » (commande payée, livreur en route) ; « Voir la commande » vient d'emailTexts.js (alertes.attenteCta).</li>
+    <li>Les montants au format belge « 17,00 € » au lieu de « 17.00€ ».</li>
+    <li>Les données : Camille D., Chez Nour, ses plats, allergènes, numéros, la version des CGV ; tout le reste vient d'emailTexts.js, email.js et emailLegal.js. Les émojis des titres (🛵, 🕐) sont retirés dans les propositions.</li></ul>`;
+}
+
+(async function () {
+  try {
+    await Promise.race([Promise.all([document.fonts.load("800 25px 'Bricolage Grotesque'"), document.fonts.load("700 20px 'Inter Tight'")]), new Promise((r) => setTimeout(r, 2500))]);
+  } catch (e) { /* police absente : repli */ }
+  MOT_BRICOLAGE = [...document.fonts].some((f) => f.family.replace(/["']/g, '') === 'Bricolage Grotesque' && f.status === 'loaded');
+  fabriquerImages();
+  reglages();
+  dessiner();
+  tableaux();
+  window.__pret = true;
+})();
+</script>
+</body>
+</html>

@@ -17,12 +17,12 @@
    1 · LA LISTE DES COMMERCES (RestaurantList.jsx, TeteListe.jsx)
    --------------------------------------------------------------------------------------------------------------------- */
 
-/* SUR LE SITE, À TOUTES LES LARGEURS : le bandeau défile avec la page et la bande des cuisines reste seule en haut, en
-   barre blanche à filet d'un bord à l'autre (maquette : bandeau dans le fil, bande « collant » en blanc plein). Le haut
-   entier est collant avec un `top` négatif de la hauteur du bandeau. Le repli de l'app (le bandeau qui remonte puis
-   revient, useEnteteDefilement) et sa bande en pilule flottante restent à l'app : sur le site, la pilule blanche posée
-   au-dessus des cartes se lisait comme le verre de l'app sans en être. */
-html:not(.appli) .sl-liste .liste-tete--bandeau { top: calc(-1 * var(--lt-hb)); margin-bottom: 0; transform: none; }
+/* SUR LE SITE, À TOUTES LES LARGEURS : comme dans l'app, le bandeau « Livrer à » s'efface quand on descend et REVIENT dès
+   qu'on remonte (useEnteteDefilement, TeteListe.jsx ; fondateur, 2026-10-16). L'en-tête entier est collant en haut ; replié,
+   il remonte exactement de la hauteur du bandeau et la bande des cuisines reste seule au bord, en barre blanche à filet d'un
+   bord à l'autre (pas la pilule flottante de l'app : sur le site, pas de verre). */
+html:not(.appli) .sl-liste .liste-tete--bandeau { top: 0; margin-bottom: 0; }
+html:not(.appli) .sl-liste .liste-tete--bandeau.liste-tete--replie { transform: translateY(calc(-1 * var(--lt-hb))); }
 html:not(.appli) .sl-liste .lt-bandeau,
 html:not(.appli) .sl-liste .liste-tete--replie .lt-bandeau { transform: none; }
 html:not(.appli) .sl-liste .liste-tete--bandeau .lt-puces { margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: #fff; }
@@ -92,7 +92,9 @@ html:not(.appli) .sl-liste--grand .liste-section { margin-bottom: 36px; }
 html:not(.appli) .sl-liste--grand .liste-section > .section-title { font-size: 20px !important; margin-bottom: 14px !important; }
 
 /* La colonne des filtres : collée sous la bande des cuisines quand on descend. */
-.sl-filtres { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; }
+.sl-filtres { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; transition: top .45s cubic-bezier(.34, 1.25, .64, 1); }
+/* Le bandeau revient quand on remonte : la colonne des filtres se pose alors sous lui, plus seulement sous la bande. */
+.sl-liste:has(.liste-tete--bandeau:not(.liste-tete--replie)) .sl-filtres { top: calc(var(--lt-hb, 140px) + 84px); }
 .sl-filtres-actifs { display: flex; flex-wrap: wrap; gap: 6px; }
 .sl-groupe { display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 0; border: 0; }
 .sl-groupe-titre { padding: 0; margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); }
