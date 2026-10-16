@@ -15,7 +15,7 @@ html:not(.appli) .wrap.wrap-accueil { max-width: calc(1120px + 2 * var(--gouttie
    --------------------------------------------------------------------------------------------------------------------- */
 html:not(.appli) .sa-accueil .sa-bandeau {
   position: relative; isolation: isolate; color: #fff;
-  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); gap: 56px; align-items: end;
+  display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); gap: 48px; align-items: center;
   padding: 44px 0 88px;
 }
 html:not(.appli) .sa-accueil .sa-bandeau::before {
@@ -33,8 +33,9 @@ html:not(.appli) .sa-accueil .sa-belge {
 /* !important : BelgianMark pose sa taille en style en ligne, et .be-mark (styles.css) la force à 150 px. */
 html:not(.appli) .sa-accueil .sa-belge .be-mark { width: 52px !important; height: 26px !important; margin: 0; }
 
+/* Le slogan en lime (fondateur, 2026-10-16) : lime sur iris, ~6:1, lisible ; jamais de lime sur le blanc. */
 html:not(.appli) .sa-accueil .sa-titre {
-  font-size: clamp(40px, 5vw, 60px); line-height: 1.03; letter-spacing: -0.025em; color: #fff; margin: 22px 0 16px;
+  font-size: clamp(40px, 5vw, 60px); line-height: 1.03; letter-spacing: -0.025em; color: var(--lime); margin: 22px 0 16px;
   text-wrap: balance;
 }
 html:not(.appli) .sa-accueil .sa-sous { font-size: 17px; line-height: 1.5; color: rgba(255,255,255,.84); margin: 0 0 26px; max-width: 560px; }
@@ -52,30 +53,42 @@ html:not(.appli) .sa-accueil .sa-ouverture {
 html:not(.appli) .sa-accueil .sa-ouverture svg { flex: none; margin-top: 1px; }
 html:not(.appli) .sa-accueil .sa-ouverture-court { display: none; }
 
-/* Le vélo de la marque arrive sur sa route, comme dans l'app (EcransBienvenue.jsx) et sur les écrans vides. */
+/* Le vélo de la marque roule sur sa route en boucle (Landing.jsx, SceneRoute) : 9 s, arrêt au commerce à 30-40 %, à
+   l'adresse à 68-78 %, puis il s'efface et repart du début. Les deux repères sursautent quand il s'y arrête. Les distances
+   sont dans le repère du vélo (agrandi 1,15 fois) : 160 → devant le commerce, 300 → devant l'épingle. */
 html:not(.appli) .sa-accueil .sa-scene { display: block; width: 100%; max-width: 520px; height: auto; overflow: visible; color: var(--lime); margin-top: 34px; }
-.sa-scene .sa-scene-route { stroke: rgba(255,255,255,.35); animation: sa-route .45s linear 4; }
-@keyframes sa-route { to { stroke-dashoffset: 16; } }
-.sa-scene .sa-scene-repere { color: rgba(255,255,255,.92); transform-box: fill-box; transform-origin: 50% 100%; animation: sa-saute .45s var(--ressort-ui) backwards; }
-.sa-scene .sa-scene-velo { animation: sa-arrive 1.7s cubic-bezier(.25, .8, .3, 1) backwards; }
-@keyframes sa-arrive { from { transform: translateX(-220px); } }
-.sa-scene .sa-scene-bob { transform-box: fill-box; transform-origin: 50% 100%; animation: sa-bonds .75s ease-in-out 2, sa-respire 2.4s ease-in-out 1.7s infinite; }
+.sa-scene .sa-scene-route { stroke: rgba(255,255,255,.35); }
+.sa-scene .sa-scene-repere { color: rgba(255,255,255,.92); transform-box: fill-box; transform-origin: 50% 100%; }
+.sa-scene .sa-scene-boutique { animation: sa-boutique 9s ease-in-out infinite; }
+.sa-scene .sa-scene-epingle { animation: sa-epingle 9s ease-in-out infinite; }
+@keyframes sa-boutique { 0%, 29%, 39%, 100% { transform: none; } 32% { transform: translateY(-7px) scale(1.12); } 35% { transform: none; } }
+@keyframes sa-epingle { 0%, 67%, 77%, 100% { transform: none; } 70% { transform: translateY(-9px) scale(1.15); } 73% { transform: none; } }
+.sa-scene .sa-scene-velo { animation: sa-tournee 9s ease-in-out infinite; }
+@keyframes sa-tournee {
+  0% { transform: translateX(0); opacity: 0; }
+  5% { opacity: 1; }
+  30%, 40% { transform: translateX(160px); }
+  68%, 78% { transform: translateX(300px); }
+  86% { opacity: 1; }
+  92%, 100% { transform: translateX(360px); opacity: 0; }
+}
+.sa-scene .sa-scene-bob { transform-box: fill-box; transform-origin: 50% 100%; animation: sa-bonds .75s ease-in-out infinite; }
 @keyframes sa-bonds { 0%, 100% { transform: none; } 20%, 60% { transform: translateY(-2px) rotate(-3deg); } 40%, 80% { transform: translateY(0) rotate(1deg); } }
-@keyframes sa-respire { 50% { transform: translateY(-1.5px) rotate(-1deg); } }
 @keyframes sa-saute { from { transform: scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
 
 /* « Pourquoi Fairide ? » (HeroPrix.jsx) : deux barres à l'échelle, sur une carte blanche. */
-html:not(.appli) .sa-accueil .sa-prix { background: #fff; color: var(--ink); border-radius: 22px; padding: 22px 24px; min-width: 0; }
-html:not(.appli) .sa-accueil .sa-prix-titre { font-size: 18px; margin: 0 0 16px; }
-html:not(.appli) .sa-accueil .sa-prix-ligne { display: grid; grid-template-columns: 128px minmax(0, 1fr) 54px; align-items: center; gap: 14px; font-size: 14px; }
-html:not(.appli) .sa-accueil .sa-prix-ligne + .sa-prix-ligne { margin-top: 12px; }
-html:not(.appli) .sa-accueil .sa-prix-ligne .wordmark { font-size: 17px; font-weight: 800; }
-html:not(.appli) .sa-accueil .sa-prix-ligne i { display: block; height: 10px; border-radius: 5px; background: var(--surface-soft); overflow: hidden; }
-html:not(.appli) .sa-accueil .sa-prix-ligne i b { display: block; height: 100%; border-radius: 5px; background: var(--ink-mute); animation: sa-pousse 1.1s cubic-bezier(.2, .8, .25, 1) .5s backwards; }
+/* Plus grande depuis le 2026-10-16 (fondateur : « prendre plus de place à droite ») : colonne plus large, chiffres en grand. */
+html:not(.appli) .sa-accueil .sa-prix { background: #fff; color: var(--ink); border-radius: 28px; padding: 34px 36px 36px; min-width: 0; }
+html:not(.appli) .sa-accueil .sa-prix-titre { font-size: 26px; letter-spacing: -0.015em; margin: 0 0 28px; }
+html:not(.appli) .sa-accueil .sa-prix-ligne { display: grid; grid-template-columns: 150px minmax(0, 1fr) 84px; align-items: center; gap: 18px; font-size: 16px; }
+html:not(.appli) .sa-accueil .sa-prix-ligne + .sa-prix-ligne { margin-top: 22px; }
+html:not(.appli) .sa-accueil .sa-prix-ligne .wordmark { font-size: 24px; font-weight: 800; }
+html:not(.appli) .sa-accueil .sa-prix-ligne i { display: block; height: 14px; border-radius: 7px; background: var(--surface-soft); overflow: hidden; }
+html:not(.appli) .sa-accueil .sa-prix-ligne i b { display: block; height: 100%; border-radius: 7px; background: var(--ink-mute); animation: sa-pousse 1.1s cubic-bezier(.2, .8, .25, 1) .5s backwards; }
 html:not(.appli) .sa-accueil .sa-prix-nous i b { background: var(--iris); }
 @keyframes sa-pousse { from { width: 0; } }
-html:not(.appli) .sa-accueil .sa-prix-ligne strong { text-align: right; font-family: var(--font-titre); font-size: 17px; white-space: nowrap; }
-html:not(.appli) .sa-accueil .sa-prix-nous strong { color: var(--iris); font-size: 20px; }
+html:not(.appli) .sa-accueil .sa-prix-ligne strong { text-align: right; font-family: var(--font-titre); font-size: 24px; letter-spacing: -0.02em; white-space: nowrap; }
+html:not(.appli) .sa-accueil .sa-prix-nous strong { color: var(--iris); font-size: 34px; }
 
 /* ---------------------------------------------------------------------------------------------------------------------
    2 · LA FEUILLE BLANCHE
@@ -172,8 +185,14 @@ html:not(.appli) .sa-accueil .sa-store small { font-size: 10.5px; font-weight: 5
   html:not(.appli) .sa-accueil .sa-ouverture-court { display: flex; }
   /* Sur un téléphone, le vélo belge ouvre déjà le bandeau : pas de second vélo plus bas. */
   html:not(.appli) .sa-accueil .sa-scene { display: none; }
-  html:not(.appli) .sa-accueil .sa-prix { padding: 18px 18px 16px; border-radius: 20px; }
-  html:not(.appli) .sa-accueil .sa-prix-ligne { grid-template-columns: 104px minmax(0, 1fr) 46px; gap: 10px; font-size: 13.5px; }
+  html:not(.appli) .sa-accueil .sa-prix { padding: 20px 18px; border-radius: 20px; }
+  html:not(.appli) .sa-accueil .sa-prix-titre { font-size: 19px; margin-bottom: 16px; }
+  html:not(.appli) .sa-accueil .sa-prix-ligne { grid-template-columns: 104px minmax(0, 1fr) 56px; gap: 10px; font-size: 13.5px; }
+  html:not(.appli) .sa-accueil .sa-prix-ligne + .sa-prix-ligne { margin-top: 14px; }
+  html:not(.appli) .sa-accueil .sa-prix-ligne .wordmark { font-size: 18px; }
+  html:not(.appli) .sa-accueil .sa-prix-ligne i { height: 10px; }
+  html:not(.appli) .sa-accueil .sa-prix-ligne strong { font-size: 18px; }
+  html:not(.appli) .sa-accueil .sa-prix-nous strong { font-size: 24px; }
   html:not(.appli) .sa-accueil .sa-feuille { margin-top: -26px; padding-top: 30px; }
   html:not(.appli) .sa-accueil .sa-feuille::before { border-radius: 26px 26px 0 0; }
   html:not(.appli) .sa-accueil .hero-preview-head { font-size: 23px; }
