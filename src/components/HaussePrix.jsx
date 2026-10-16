@@ -7,7 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import AvecMarque from './AvecMarque';
 
 // « Tes prix sur Fairide » — modèle du 13/10/2026 (fondateur). Par défaut, la carte affiche les prix du commerce et Fairide
-// garde 10 % du prix payé. La barre monte les prix de 0 à etat.max (+ 11,1 % en franchise TVA), la hausse qui rend au
+// garde 10 % du prix payé. La barre monte les prix de 0 à etat.max (10 %, plafond du 16/10/2026 ; 11,1 % du 13 au 16/10, la hausse qui rendait au
 // commerce son prix entier ; jamais plus. Le serveur recalcule toute la carte (PUT /restaurants/:id/price-markup, arrondi au
 // 0,10 € inférieur pour ne jamais dépasser le plafond, prixMagasin.js côté serveur) et retrouve les prix du commerce au retour à 0 %.
 const EXEMPLE_SUR_PLACE = 10;
@@ -40,7 +40,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
   const partFairideHt = Math.round(affiche * (etat.fairideRateHt ?? r) * 100) / 100;
   const recu = affiche - partFairide;
   const tauxAffiche = (r * 100).toLocaleString(locale, { maximumFractionDigits: 1 });
-  // Pourcentages à une décimale, dans la langue de l'écran (11,1 / 11.1 pour la hausse maximale).
+  // Pourcentages à une décimale, dans la langue de l'écran.
   const pct = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
   const change = valeur !== etat.percent;
   const demande = etat.requested !== null && etat.requested !== undefined ? etat.requested : null;
