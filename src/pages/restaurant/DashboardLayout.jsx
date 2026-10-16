@@ -27,6 +27,7 @@ import { remonterEnHaut } from '../../remonter';
 // commun à toutes les sous-pages : création du commerce (components/commerce/CreationCommerce.jsx) et
 // bannières (validation/abonnement/Stripe).
 const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
+const PAGES_BANDEAU = ['/dashboard', '/dashboard/edit', '/dashboard/orders', '/dashboard/menu', '/dashboard/stats'];
 
 export default function DashboardLayout() {
   const { t } = useLanguage();
@@ -40,6 +41,9 @@ export default function DashboardLayout() {
   // /dashboard/edit est l'ancienne adresse des infos : même page (la redirection ne joue qu'avec un restaurant).
   const chemin = useLocation().pathname.replace(/\/$/, '');
   const surAccueil = ['/dashboard', '/dashboard/edit'].includes(chemin);
+  // Pages au bandeau iris (2026-10-16, ecran-commerce.css) : elles portent elles-mêmes le nom du commerce et posent
+  // les blocs communs (alertes, prochaine étape, alerte de commande) en tête de leur feuille blanche.
+  const avecBandeau = PAGES_BANDEAU.includes(chemin);
   const [myRestos, setMyRestos] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
@@ -282,8 +286,48 @@ export default function DashboardLayout() {
 
   if (!myRestos) return <SkeletonCards count={2} />;
 
+  // Les blocs communs à toutes les pages, sous le nom : deux alertes qui ne sont pas des étapes, le calendrier
+  // d'ouverture (accueil) ou la prochaine étape (ailleurs), l'alerte de nouvelle commande. Les pages au bandeau les
+  // posent en tête de leur feuille (`communs` du contexte) ; les autres les reçoivent ici, comme avant.
+  const bandeau = avecBandeau && !!restaurant;
+  const communs = restaurant && (
+    <>
+      {/* Deux alertes qui ne sont pas des étapes : le blocage par l'équipe, la livraison coupée dans la zone. */}
+      {(restaurant.adminStatus === 'blocked' || restaurant.fairideDeliveryDisabled) && (
+        <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
+          {restaurant.adminStatus === 'blocked' && (
+            <LigneCompte accent="danger" icone="interdit" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+              <p className="small" style={{ margin: 0 }}>
+                {t('dashResto.blockedText')}
+              </p>
+            </LigneCompte>
+          )}
+          {/* Livraison Fairide coupée par l'équipe : commerce seul dans sa zone, aucun livreur à proximité (2026-10-08). */}
+          {restaurant.fairideDeliveryDisabled && (
+            <LigneCompte accent="warn" icone="scooter" titre={t('dashResto.zoneDeliveryOffTitle')}
+              sous={t('dashResto.zoneDeliveryOffText') + (restaurant.fairideDeliveryDisabledReason ? ` (${restaurant.fairideDeliveryDisabledReason})` : '')} />
+          )}
+        </div>
+      )}
+      {/* Les vraies dates d'ouverture des commandes (à emporter, livraison), sur l'accueil du commerce. */}
+      {surAccueil && <BandeauOuverture role="restaurant" />}
+      {/* Tout ce qui reste avant d'être vu des clients, en une liste et un seul prochain bouton (MiseEnLigne.jsx) :
+          remplace la carte d'état (validation, visibilité, Stripe), le bandeau « Ta carte attend ta validation »
+          (CarteAValider) et la liste de MenuReadiness. Complète sur Mon commerce (la route du bandeau, EditPage), une
+          rangée « Prochaine étape » ailleurs — y compris sur le terminal. En « agir pour », l'équipe voit la liste sans
+          aucun bouton : elle ne signe ni ne valide rien à la place du commerce. */}
+      {!surAccueil && (
+        <MiseEnLigne restaurant={restaurant} restoId={restoId} token={token} onConnect={connectOnboard} connecting={connecting}
+          onChange={() => loadDashboard(restoId)} lectureSeule={!!actingAs} />
+      )}
+      {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même
+          s'il est en train de modifier son menu ou de consulter ses avis. */}
+      <NewOrderAlertBar {...orderAlert} push={push} />
+    </>
+  );
+
   return (
-    <div>
+    <div className={bandeau && !actingAs && myRestos.length === 1 ? 'ec-coquille--bandeau' : undefined}>
       {actingAs && (
         <div className="agir-bandeau" role="status">
           <span><Icone nom="reglages" taille={16} className="icone-texte" />{' '}{t('dashResto.actingBanner', { name: user?.name || '', admin: actingAdminEmail })}</span>
@@ -291,7 +335,7 @@ export default function DashboardLayout() {
         </div>
       )}
       {myRestos.length === 1 ? (
-        <h2 style={{ margin: '0 0 14px' }}>{myRestos[0].name}</h2>
+        !bandeau && <h2 style={{ margin: '0 0 14px' }}>{myRestos[0].name}</h2>
       ) : (
         <div className="card">
           <h2 style={{ marginTop: 0 }}>{t('dashResto.myRestaurant')}</h2>
@@ -316,40 +360,8 @@ export default function DashboardLayout() {
           )}
         </div>
       )}
-      {/* Les vraies dates d'ouverture des commandes (à emporter, livraison), en tête de l'accueil du commerce. */}
-      {restaurant && surAccueil && <BandeauOuverture role="restaurant" />}
       {newRestoOpen && surAccueil && <CreationCommerce fondateur={fondateur} onCree={commerceCree} ouvrirDemandeCarte={ouvrirDemandeCarte} />}
-
-      {/* Deux alertes qui ne sont pas des étapes : le blocage par l'équipe, la livraison coupée dans la zone. */}
-      {restaurant && (restaurant.adminStatus === 'blocked' || restaurant.fairideDeliveryDisabled) && (
-        <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
-          {restaurant.adminStatus === 'blocked' && (
-            <LigneCompte accent="danger" icone="interdit" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
-              <p className="small" style={{ margin: 0 }}>
-                {t('dashResto.blockedText')}
-              </p>
-            </LigneCompte>
-          )}
-          {/* Livraison Fairide coupée par l'équipe : commerce seul dans sa zone, aucun livreur à proximité (2026-10-08). */}
-          {restaurant.fairideDeliveryDisabled && (
-            <LigneCompte accent="warn" icone="scooter" titre={t('dashResto.zoneDeliveryOffTitle')}
-              sous={t('dashResto.zoneDeliveryOffText') + (restaurant.fairideDeliveryDisabledReason ? ` (${restaurant.fairideDeliveryDisabledReason})` : '')} />
-          )}
-        </div>
-      )}
-      {/* Tout ce qui reste avant d'être vu des clients, en une liste et un seul prochain bouton (MiseEnLigne.jsx) :
-          remplace la carte d'état (validation, visibilité, Stripe), le bandeau « Ta carte attend ta validation »
-          (CarteAValider) et la liste de MenuReadiness. Complète sur Mon commerce, une rangée « Prochaine étape » ailleurs
-          — y compris sur le terminal. En « agir pour », l'équipe voit la liste sans aucun bouton : elle ne signe ni ne
-          valide rien à la place du commerce. */}
-      {restaurant && (
-        <MiseEnLigne restaurant={restaurant} restoId={restoId} token={token} onConnect={connectOnboard} connecting={connecting}
-          onChange={() => loadDashboard(restoId)} compact={!surAccueil} lectureSeule={!!actingAs} />
-      )}
-
-      {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même
-          s'il est en train de modifier son menu ou de consulter ses avis. */}
-      {restaurant && <NewOrderAlertBar {...orderAlert} push={push} />}
+      {!bandeau && communs}
       {/* La commande qui vient d'arriver, affichée d'elle-même (fondateur, 2026-10-01). */}
       {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} />}
 
@@ -369,7 +381,8 @@ export default function DashboardLayout() {
       )}
       {restaurant && (
         <div className="page-fade" key={chemin}>
-          <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard }} />
+          <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard,
+            communs: bandeau ? communs : null, onConnect: connectOnboard, connecting, lectureSeule: !!actingAs }} />
         </div>
       )}
     </div>

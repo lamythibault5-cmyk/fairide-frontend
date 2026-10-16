@@ -10,7 +10,9 @@ import SousEcran from '../SousEcran';
 // fermeture jusqu'à réouverture manuelle comme avant. Les commandes en cours continuent dans tous les cas.
 const DUREES = [15, 30, 60];
 
-export default function InterrupteurService({ restaurant, restoId, token, toast, loadDashboard }) {
+// `surBandeau` (2026-10-16, Commandes au bandeau iris) : même geste, dessiné pour le bandeau — un cadre clair et un
+// interrupteur lime qui rebondit (ecran-commerce.css).
+export default function InterrupteurService({ restaurant, restoId, token, toast, loadDashboard, surBandeau = false }) {
   const { t } = useLanguage();
   const [choix, setChoix] = useState(false);
   const [enCours, setEnCours] = useState(false);
@@ -38,15 +40,25 @@ export default function InterrupteurService({ restaurant, restoId, token, toast,
     else ouvrir(true);
   }
 
+  const texte = (
+    <>
+      <b>{ouvert ? t('ordersResto.openTitle') : stoppeJour ? t('ordersResto.stoppedTodayTitle') : enPause ? t('ordersResto.pauseUntil', { time: reprise }) : t('ordersResto.pausedTitle')}</b>
+      <span>{enCours ? '…' : ouvert ? t('ordersResto.openSub') : stoppeJour ? t('ordersResto.stoppedTodaySub', { time: reprise }) : enPause ? t('ordersResto.pauseResumeNow') : t('ordersResto.pausedSub')}</span>
+    </>
+  );
   return (
     <>
-      <button type="button" className={`service-switch${ouvert ? '' : ' off'}`} aria-pressed={!!ouvert} disabled={enCours} onClick={toucher}>
-        <span className="service-switch-dot" aria-hidden="true" />
-        <span className="service-switch-text">
-          <b>{ouvert ? t('ordersResto.openTitle') : stoppeJour ? t('ordersResto.stoppedTodayTitle') : enPause ? t('ordersResto.pauseUntil', { time: reprise }) : t('ordersResto.pausedTitle')}</b>
-          <span>{enCours ? '…' : ouvert ? t('ordersResto.openSub') : stoppeJour ? t('ordersResto.stoppedTodaySub', { time: reprise }) : enPause ? t('ordersResto.pauseResumeNow') : t('ordersResto.pausedSub')}</span>
-        </span>
-      </button>
+      {surBandeau ? (
+        <button type="button" className={`ec-service${ouvert ? ' on' : ''}`} aria-pressed={!!ouvert} disabled={enCours} onClick={toucher}>
+          <span className="ec-service-texte">{texte}</span>
+          <span className={`ec-interrupteur ec-interrupteur--lime${ouvert ? ' on' : ''}`} aria-hidden="true" />
+        </button>
+      ) : (
+        <button type="button" className={`service-switch${ouvert ? '' : ' off'}`} aria-pressed={!!ouvert} disabled={enCours} onClick={toucher}>
+          <span className="service-switch-dot" aria-hidden="true" />
+          <span className="service-switch-text">{texte}</span>
+        </button>
+      )}
       {choix && (
         <SousEcran titre={t('ordersResto.pauseTitle')} onFermer={() => setChoix(false)}>
           <p className="small" style={{ margin: '0 0 12px' }}>{t('ordersResto.pauseHelp')}</p>

@@ -7,7 +7,11 @@ import { useEffect, useRef, useState } from 'react';
  * colonnes ; grille et axes en filets d'un pixel, discrets ; textes en encre, jamais dans la couleur des données ; chaque
  * colonne est sa propre cible de survol ET de focus clavier, plus large que la colonne peinte, avec une bulle « valeur
  * d'abord, libellé ensuite » ; et toujours une vue en tableau, pour que rien ne dépende du survol.
- * Le dessin suit la largeur réelle du conteneur (ResizeObserver) : un viewBox étiré déformerait les textes. */
+ * Le dessin suit la largeur réelle du conteneur (ResizeObserver) : un viewBox étiré déformerait les textes.
+ *
+ * 2026-10-16 (Statistiques au bandeau iris) : les colonnes POUSSENT à l'affichage, l'une après l'autre (.gb-barre, animée
+ * dans ecran-commerce.css sous .ec-graphique), et TOUCHER une colonne garde sa bulle ouverte — au doigt, le survol
+ * disparaissait dès qu'on levait le doigt. Toucher de nouveau la referme. */
 const HAUTEUR_AXE_X = 22;
 const MARGE_GAUCHE = 34;
 
@@ -24,6 +28,7 @@ export default function GraphiqueBarres({ titre, donnees, formatValeur = (v) => 
   const boite = useRef(null);
   const [largeur, setLargeur] = useState(0);
   const [survol, setSurvol] = useState(null);
+  const [touche, setTouche] = useState(null);
   useEffect(() => {
     const el = boite.current;
     if (!el) return undefined;
@@ -42,7 +47,8 @@ export default function GraphiqueBarres({ titre, donnees, formatValeur = (v) => 
   const y = (v) => hTrace - (v / haut) * (hTrace - 8);
   // Un libellé d'axe X sur n, pour qu'ils ne se chevauchent pas (environ 44 px chacun).
   const tousLes = Math.max(1, Math.ceil(44 / Math.max(1, fente)));
-  const actif = survol !== null ? donnees[survol] : null;
+  const iActif = survol ?? (touche !== null && touche < donnees.length ? touche : null);
+  const actif = iActif !== null ? donnees[iActif] : null;
 
   return (
     <figure style={{ margin: 0 }}>
@@ -66,15 +72,16 @@ export default function GraphiqueBarres({ titre, donnees, formatValeur = (v) => 
               const chemin = h <= 0 ? '' : `M${x0},${hTrace} V${yTop + r} Q${x0},${yTop} ${x0 + r},${yTop} H${x0 + epaisseur - r} Q${x0 + epaisseur},${yTop} ${x0 + epaisseur},${yTop + r} V${hTrace} Z`;
               return (
                 <g key={d.cle}>
-                  {chemin && <path d={chemin} fill="var(--iris)" opacity={survol === null || survol === i ? 1 : 0.55} />}
+                  {chemin && <path className="gb-barre" style={{ '--i': i }} d={chemin} fill="var(--iris)" opacity={iActif === null || iActif === i ? 1 : 0.55} />}
                   {i % tousLes === 0 && (
                     <text x={cx} y={hauteur - 6} textAnchor="middle" fontSize="11" fill="var(--ink-soft)">{d.court || d.libelle}</text>
                   )}
                   {/* Cible de survol et de focus : toute la fente, sur toute la hauteur. */}
                   <rect x={MARGE_GAUCHE + i * fente} y={0} width={Math.max(fente, 1)} height={hTrace} fill="transparent"
                     tabIndex={0} aria-label={`${d.libelle} : ${formatValeur(d.valeur)}`}
-                    onPointerEnter={() => setSurvol(i)} onPointerLeave={() => setSurvol(null)}
-                    onFocus={() => setSurvol(i)} onBlur={() => setSurvol(null)} style={{ outline: 'none', cursor: 'default' }} />
+                    onPointerEnter={(e) => { if (e.pointerType === 'mouse') setSurvol(i); }} onPointerLeave={() => setSurvol(null)}
+                    onClick={() => setTouche((v) => (v === i ? null : i))}
+                    onFocus={(e) => { if (e.target.matches?.(':focus-visible')) setSurvol(i); }} onBlur={() => setSurvol(null)} style={{ outline: 'none', cursor: 'pointer' }} />
                 </g>
               );
             })}
@@ -84,7 +91,7 @@ export default function GraphiqueBarres({ titre, donnees, formatValeur = (v) => 
         {actif && (
           <div role="status" style={{
             position: 'absolute', pointerEvents: 'none', top: Math.max(0, y(actif.valeur) - 52),
-            left: Math.min(Math.max(0, MARGE_GAUCHE + survol * fente + fente / 2 - 70), Math.max(0, largeur - 140)),
+            left: Math.min(Math.max(0, MARGE_GAUCHE + iActif * fente + fente / 2 - 70), Math.max(0, largeur - 140)),
             width: 140, background: '#fff', border: '1px solid var(--line)', borderRadius: 8, padding: '6px 8px', fontSize: 12
           }}>
             <b style={{ display: 'block', fontSize: 14 }}>{formatValeur(actif.valeur)}</b>

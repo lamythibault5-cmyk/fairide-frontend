@@ -1,0 +1,105 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../../api';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { useToast } from '../../context/ToastContext';
+import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
+import { experienceApp } from '../../natif';
+
+/* LES ÉTAPES « AVANT D'ÊTRE EN LIGNE » (voir l'en-tête de MiseEnLigne.jsx pour l'ordre et les règles). Calcul seul, sans
+ * rendu : la rangée « Prochaine étape » des pages du tableau de bord et la route de Mon commerce (EditPage) le partagent.
+ * Chaque étape : { cle, icone, titre, sous?, fait?, attente?, action?: { libelle, to | onClick, disabled } }. */
+// Les étapes, dans l'ordre, et la prochaine que le commerce peut faire ; null s'il n'y a rien à montrer.
+export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, connecting, onChange, lectureSeule = false }) {
+  const { t } = useLanguage();
+  const toast = useToast();
+  const navigate = useNavigate();
+  const [conformite, setConformite] = useState(null);
+  const [demandeCarte, setDemandeCarte] = useState(null);
+  const [occupe, setOccupe] = useState(false);
+  const o = restaurant?.onboarding;
+  const nbPlats = (restaurant?.menu || []).length;
+
+  // Les engagements (allergènes, déclaration pro) ne sont pas dans la fiche : même route que ConformiteCarte. Relue à
+  // chaque rechargement de la fiche (un prix changé remet la carte à signer, une signature la complète).
+  useEffect(() => {
+    if (!restoId || restaurant?.isDemo) return;
+    api(`/restaurants/${restoId}/compliance`, { token }).then(setConformite).catch(() => setConformite(null));
+  }, [restoId, token, restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Carte vide : une demande « Fairide s'en occupe » déjà envoyée change l'étape 1 d'« à faire » en « on attend ».
+  useEffect(() => {
+    if (!restoId || nbPlats > 0) return;
+    api(`/restaurants/${restoId}/menu/concierge`, { token }).then((r) => setDemandeCarte(r.request || null)).catch(() => setDemandeCarte(null));
+  }, [restoId, token, nbPlats]);
+
+  if (!restaurant || !o || restaurant.isDemo || restaurant.adminStatus === 'blocked') return null;
+
+  async function validerCarte() {
+    setOccupe(true);
+    try {
+      if (restaurant.menuSigned) {
+        // Carte signée avant le correctif du 15/10 mais jamais confirmée : la confirmation seule suffit.
+        await api(`/restaurants/${restoId}/menu/confirm`, { method: 'POST', token, body: {} });
+        await onChange?.();
+        toast(t('menuPage.handoverConfirmed'), 'succes');
+      } else {
+        // La page « C'est bon », la même que celle envoyée par SMS : une seule page de validation, quel que soit le chemin.
+        const l = await api(`/restaurants/${restoId}/menu-validation-link`, { method: 'POST', token });
+        navigate(`/carte/valider/${l.token}`);
+      }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
+  }
+
+  const engagementsOk = !!o.contractAccepted && (!conformite || (
+    !!conformite.allergens?.attestation?.attestedAt && !!conformite.professional?.declaredAt && conformite.professional?.upToDate !== false));
+  const stripeRestreint = restaurant.stripeConnectStatus === 'restricted';
+
+  // `action` : ce que le commerce peut faire maintenant ({ libelle, to } ou { libelle, onClick }) ; `attente` : étape de
+  // Fairide, sans bouton. Une étape faite n'a ni l'un ni l'autre.
+  const etapes = [];
+  etapes.push(nbPlats > 0
+    ? { cle: 'carte', fait: true, icone: 'carte', titre: t('miseEnLigne.menuDone', { n: nbPlats }) }
+    : demandeCarte
+      ? { cle: 'carte', attente: true, icone: 'horloge', titre: t('miseEnLigne.menuPreparing'), sous: t('miseEnLigne.menuPreparingSub') }
+      : { cle: 'carte', icone: 'carte', titre: t('miseEnLigne.menuSend'), sous: t('miseEnLigne.menuSendSub'), action: { libelle: t('miseEnLigne.menuSendBtn'), to: experienceApp() ? '/dashboard/menu?envoyer=1' : '/dashboard/menu' } });
+  // Un commerce vitrine ne vend pas : rien à signer (même règle que l'ancien bandeau CarteAValider).
+  if (!restaurant.vitrine && nbPlats > 0) {
+    const carteValidee = restaurant.menuSigned && !o.menuPending;
+    etapes.push(carteValidee
+      ? { cle: 'valider', fait: true, icone: 'valider', titre: t('miseEnLigne.validateDone') }
+      : { cle: 'valider', icone: 'valider', titre: t('miseEnLigne.validate'), sous: t('miseEnLigne.validateSub'),
+          action: { libelle: occupe ? '…' : t('miseEnLigne.validateBtn'), onClick: validerCarte, disabled: occupe } });
+  }
+  etapes.push(engagementsOk
+    ? { cle: 'engagements', fait: true, icone: 'contrat', titre: t('miseEnLigne.commitmentsDone') }
+    : { cle: 'engagements', icone: 'contrat', titre: t('miseEnLigne.commitments'), sous: t('miseEnLigne.commitmentsSub'),
+        action: { libelle: t('miseEnLigne.commitmentsBtn'), to: o.contractAccepted ? '/dashboard/menu#conformite-carte' : '/account?ouvrir=contrat&retour=/dashboard' } });
+  // À emporter payé sur place seulement : rien ne transite par Fairide, pas d'étape paiements (formules.paiementsRequis).
+  if (o.paymentsRequired !== false) {
+    const actif = restaurant.stripeConnectStatus === 'active';
+    etapes.push(actif
+      ? { cle: 'paiements', fait: true, icone: 'carteBancaire', titre: t('miseEnLigne.paymentsDone') }
+      : (stripeRestreint || paiementsOuverts())
+        ? { cle: 'paiements', icone: 'carteBancaire', titre: stripeRestreint ? t('dashResto.paymentInfoTitle') : t('miseEnLigne.payments'),
+            sous: stripeRestreint ? t('dashResto.stripeNeedsInfoResto') : t('miseEnLigne.paymentsSub'),
+            action: { libelle: connecting ? '…' : (stripeRestreint ? t('dashResto.complete') : t('dashResto.paymentsConfigureBtn')), onClick: onConnect, disabled: connecting } }
+        // Activation pas encore ouverte : ce n'est pas une action possible aujourd'hui, on dit quand.
+        : { cle: 'paiements', attente: true, icone: 'carteBancaire', titre: t('miseEnLigne.payments'),
+            sous: t('dashResto.viaStripeResto', { date: dateOuverturePaiements(getLocale()) }) });
+  }
+  etapes.push(restaurant.adminStatus === 'approved'
+    ? { cle: 'verification', fait: true, icone: 'bouclier', titre: t('miseEnLigne.checkDone') }
+    : { cle: 'verification', attente: true, icone: 'bouclier', titre: t('miseEnLigne.check'), sous: t('miseEnLigne.checkSub') });
+  etapes.push(restaurant.publicListed
+    ? { cle: 'enLigne', fait: true, icone: 'globe', titre: t('miseEnLigne.listedDone') }
+    : { cle: 'enLigne', attente: true, icone: 'globe', titre: t('miseEnLigne.listed'), sous: t('miseEnLigne.listedSub') });
+
+  // « Agir pour » (console admin) : l'équipe voit la liste, mais ne signe ni ne valide rien à la place du commerce.
+  if (lectureSeule) etapes.forEach((e) => { delete e.action; });
+  const restantes = etapes.filter((e) => !e.fait);
+  if (!restantes.length) return null;
+  const prochaine = restantes.find((e) => e.action);
+  const faites = etapes.length - restantes.length;
+
+  return { etapes, restantes, prochaine, faites };
+}

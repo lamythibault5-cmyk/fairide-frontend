@@ -5585,6 +5585,24 @@ export default {
       photoTitle: 'Photo de la commande',
       photoText: 'Sur chaque commande (essai ou vraie), le bouton dans Mes commandes te permet de photographier la commande AVANT de la remettre : mets le ticket avec le numéro de commande et tous les produits dans le cadre. L\'heure, le numéro et la liste des produits sont enregistrés avec la photo : c\'est ta preuve si un client se plaint.'
     },
+    ecranCommerce: {
+      verrouAide: "L'interrupteur met un plat en rupture pour aujourd'hui, il revient tout seul demain. Tout le reste se change par une demande à Fairide.",
+      prochaineEtape: 'Prochaine étape',
+      rienAFaire: "Rien à faire de ton côté : Fairide s'occupe de la suite",
+      enLigne: 'En ligne',
+      pasEnLigne: 'Pas encore en ligne',
+      resteAccepter: 'Encore {n} min pour accepter',
+      min: 'min',
+      gereeAvecFairide: 'gérée avec Fairide',
+      taCarte: 'Ta carte',
+      produitsEnLigne: '{n} produits en ligne',
+      produitEnLigne: '{n} produit en ligne',
+      aucunEnLigne: "Aucun produit en ligne pour l'instant",
+      sectionsCarte: 'Sections de ta carte',
+      retire: 'Retiré de la carte',
+      enVente: 'en vente',
+      enVenteAujourdhui: "En vente aujourd'hui"
+    },
     ordersResto: {
       stopTodayBtn: 'Stopper les commandes pour aujourd\'hui',
       stopTodayHelp: 'Plus rien à préparer aujourd\'hui ? Les clients ne peuvent plus commander, les commandes déjà reçues continuent. Les commandes rouvrent TOUTES SEULES demain à 6 h : tu n\'as rien à faire. Tu peux aussi rouvrir plus tôt d\'un simple geste.',

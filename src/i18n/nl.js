@@ -5578,6 +5578,24 @@ export default {
       photoTitle: 'Foto van de bestelling',
       photoText: 'Bij elke bestelling (test of echt) laat de knop in Mijn bestellingen je de bestelling fotograferen VÓÓR je ze overhandigt: zet het ticket met het bestelnummer en alle producten in beeld. Tijd, nummer en productlijst worden met de foto bewaard: jouw bewijs als een klant klaagt.'
     },
+    ecranCommerce: {
+      verrouAide: 'Met de schakelaar zet je een gerecht voor vandaag op uitverkocht; morgen komt het vanzelf terug. De rest pas je aan met een aanvraag aan Fairide.',
+      prochaineEtape: 'Volgende stap',
+      rienAFaire: 'Niets te doen van jouw kant: Fairide doet de rest',
+      enLigne: 'Online',
+      pasEnLigne: 'Nog niet online',
+      resteAccepter: 'Nog {n} min om te aanvaarden',
+      min: 'min',
+      gereeAvecFairide: 'beheerd met Fairide',
+      taCarte: 'Je kaart',
+      produitsEnLigne: '{n} producten online',
+      produitEnLigne: '{n} product online',
+      aucunEnLigne: 'Nog geen producten online',
+      sectionsCarte: 'Rubrieken van je kaart',
+      retire: 'Van de kaart gehaald',
+      enVente: 'te koop',
+      enVenteAujourdhui: 'Vandaag te koop'
+    },
     ordersResto: {
       stopTodayBtn: 'Bestellingen stoppen voor vandaag',
       stopTodayHelp: 'Niets meer te bereiden vandaag? Klanten kunnen niet meer bestellen, al ontvangen bestellingen gaan door. Morgen om 6 u gaan de bestellingen VANZELF weer open: jij hoeft niets te doen. Je kunt ook vroeger heropenen met één tik.',

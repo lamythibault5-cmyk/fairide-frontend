@@ -27,6 +27,7 @@ import DemandeModifCarte from '../../components/DemandeModifCarte';
 import TvaCarte from '../../components/commerce/TvaCarte';
 import { defilement } from '../../gestes';
 import Icone from '../../components/Icone';
+import CarteCommerce from '../../components/commerce/CarteCommerce';
 
 // `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
 // (console admin : AdminMenuPage) ; `modeAdmin` retire la demande « Fairide s'en occupe », sans objet pour l'équipe.
@@ -35,7 +36,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const toast = useToast();
   const { t } = useLanguage();
   const contexteOutlet = useOutletContext();
-  const { restaurant, restoId, loadDashboard } = contexte || contexteOutlet || {};
+  const { restaurant, restoId, loadDashboard, communs } = contexte || contexteOutlet || {};
 
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
@@ -490,6 +491,13 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  // CÔTÉ COMMERCE : la carte au bandeau iris, en lecture seule avec l'interrupteur « En vente aujourd'hui » (2026-10-16,
+  // components/commerce/CarteCommerce.jsx). Ce qui suit est la console admin (modeAdmin) : l'éditeur complet.
+  if (!modeAdmin) {
+    return <CarteCommerce restaurant={restaurant} restoId={restoId} loadDashboard={loadDashboard} communs={communs}
+      urlSuggeree={importUrl} onStock={changerStock} onWithdraw={changerRetrait} />;
   }
 
   return (
