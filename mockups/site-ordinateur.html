@@ -1,0 +1,1671 @@
+<!doctype html>
+<html lang="fr" data-barres="verre" data-cote="iris" data-dispo="cote">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fairide — le site sur ordinateur</title>
+<!--
+  Maquette (2026-10-16) : le SITE sur un ordinateur portable, dans la famille visuelle que le fondateur a retenue le même
+  jour pour l'app. Sa demande : « que le site ressemble plus à l'app, mais sans ce qui est propre à l'app, et pensé pour
+  un ordinateur ». C'est une maquette pour décider, pas l'implémentation.
+
+  Le style vient de tous-les-ecrans.html (téléphones « Proposition »), onboarding-chaleur.html (version D) et
+  barre-onglets-verre.html (version 2) : bandeau iris, vélo de la marque qui roule sur une route en pointillés, feuille
+  blanche qui monte dessous, un bouton lime décisif, coches lime qui sautent, chiffres qui roulent.
+
+  Neuf sections, chacune « Aujourd'hui » (approché d'après Layout.jsx, DashboardSidebar.jsx, Landing.jsx, Auth.jsx, les
+  src/ecran-*.css et les captures du site à 1280 px) à côté de « Proposition ». Chaque écran est dessiné à 1440 × 900
+  puis réduit (transform: scale) pour tenir dans la largeur de la page ; la zone de contenu de chaque écran défile.
+    1. Le cadre : barre latérale, largeurs de lecture, survol, anneau de focus, carte des cookies.
+    2. La connexion et l'inscription (la page d'accueil des visiteurs, /, et leur en-tête ne changent pas : hors maquette).
+    3. La liste des commerces.          4. La page d'un commerce.        5. Le panier et le paiement.
+    6. Mes commandes.                   7. Mon compte.                   8. Commerce : Commandes et Mon commerce.
+    9. Livreur : tableau de bord.
+
+  Ce qui reste à l'app et n'apparaît pas ici : barre d'onglets du bas, glisser pour confirmer (le site garde des
+  boutons), lentille qu'on fait glisser au doigt, feuilles qu'on tire vers le bas, vibrations, feuilles plein écran (le
+  site ouvre des fenêtres de dialogue), habillage d'app. À la place : survol, focus clavier, mises en page larges,
+  colonnes latérales, dialogues.
+
+  Une décision à prendre, en haut de la page : « Verre / Blanc plein » bascule TOUTES les bandes collantes (cuisines,
+  sections du menu) entre un verre discret et un blanc plein à filet (le choix du fondateur du 2026-10-13 pour le site).
+  Deux autres réglages servent à regarder : la barre latérale iris ou blanche, et les écrans côte à côte ou empilés.
+
+  Ouvrir : double-clic (file://), ou `npm run dev -- --host` puis /mockups/site-ordinateur.html.
+  Rien n'est branché ; noms, plats, prix, heures, distances et codes sont des exemples. Pas d'étoiles : aucun avis réel.
+
+  Règles gardées : fond blanc ou iris, lime seulement en aplat avec texte encre (ou sur iris), un geste lime décisif par
+  écran, icônes au trait copiées de src/components/Icone.jsx, pas d'emoji, polices servies en local, « tu ».
+  Entorses assumées (voir aussi le compte rendu) : le verre des bandes collantes (option « Verre ») ; le fond des cartes
+  (plan de ville) ; la photo de couverture et les vignettes (aplats de couleur qui tiennent lieu de photos).
+  Mouvement : animations CSS, coupées avec prefers-reduced-motion ; celles des écrans hors de vue sont en pause.
+-->
+<style>
+@font-face { font-family: 'Inter'; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2'), url('../public/fonts/inter-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Inter Tight'; font-weight: 500 700; font-display: swap;
+  src: url('/fonts/inter-tight-latin.woff2') format('woff2'), url('../public/fonts/inter-tight-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Bricolage Grotesque'; font-weight: 700 800; font-display: swap;
+  src: url('/fonts/bricolage-grotesque-latin.woff2') format('woff2'), url('../public/fonts/bricolage-grotesque-latin.woff2') format('woff2'); }
+:root {
+  --iris: #3B2FB5; --iris-deep: #2A2185; --lime: #C8F03C; --ink: #14121F; --ink-soft: #6B655D; --ink-faint: #8A8377;
+  --line: #DCD8D0; --cream-dim: #F4F2ED; --surface-soft: #EFEFEF; --red: #C8382B; --green: #2E7D4F;
+  --ressort: cubic-bezier(.34, 1.45, .64, 1); --ressort-fort: cubic-bezier(.3, 1.8, .5, 1);
+  --titre: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --cote: 256px; --large: 1120px; --lecture: 760px;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 70px; }
+body { margin: 0; background: #ECEAE4; color: var(--ink); font-family: 'Inter', system-ui, sans-serif; }
+.marque { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; letter-spacing: -0.03em; }
+
+/* =============================== La page de la maquette =============================== */
+.page { max-width: 1760px; margin: 0 auto; padding: 28px 24px 100px; }
+.page > h1 { font-family: var(--titre); font-size: 30px; margin: 0 0 8px; }
+.page > p { color: var(--ink-soft); max-width: 900px; margin: 0 0 10px; line-height: 1.5; }
+.nav-page { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 24px; margin: 16px -24px 0;
+  background: rgba(236,234,228,.94); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid #D6D2C9; }
+.nav-page a { background: #fff; border: 1px solid #CFCBC2; border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.nav-page a:hover { border-color: var(--iris); color: var(--iris); }
+.nav-page .sep { flex: 1; }
+.reglage { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft); }
+.reglage.decision { color: var(--ink); font-weight: 700; }
+.bascule { display: inline-flex; background: #fff; border: 1px solid #CFCBC2; border-radius: 999px; padding: 3px; }
+.bascule button { border: 0; background: none; font: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; cursor: pointer; color: var(--ink); }
+.bascule button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.decision .bascule { border-color: var(--iris); }
+.decision .bascule button[aria-pressed="true"] { background: var(--iris); }
+.nav-page :focus-visible, .sous-cadre :focus-visible { outline: 3px solid var(--iris); outline-offset: 2px; }
+
+section.sm { margin-top: 44px; padding-top: 24px; border-top: 1px solid #D6D2C9; scroll-margin-top: 70px; }
+section.sm > h2 { display: flex; align-items: center; gap: 12px; font-family: var(--titre); font-size: 26px; margin: 0 0 6px; }
+.num-sec { width: 34px; height: 34px; border-radius: 10px; background: var(--iris); color: #fff; display: grid; place-items: center; font-size: 16px; flex: none; }
+section.sm > p { color: var(--ink-soft); max-width: 920px; margin: 0 0 18px; line-height: 1.5; }
+.paire { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.paire + .paire { margin-top: 40px; }
+html[data-dispo="pile"] .paire { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+html[data-dispo="pile"] .cadre { max-width: 1442px; }
+.vue h3 { font-size: 15px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.etiq { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: #fff; border: 1px solid #CFCBC2; color: var(--ink-soft); }
+.etiq.prop { background: var(--iris); border-color: var(--iris); color: #fff; }
+.url { font-family: ui-monospace, Consolas, monospace; font-size: 12px; font-weight: 500; color: var(--ink-faint); }
+.vue .note { font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; margin: 0 0 10px; min-height: 40px; }
+.cadre { position: relative; width: 100%; height: 450px; border-radius: 10px; overflow: hidden; border: 1px solid #C9C4BA; background: #fff; }
+.sous-cadre { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.petit-btn { background: #fff; border: 1px solid #CFCBC2; border-radius: 999px; padding: 6px 13px; font: inherit; font-size: 13px; cursor: pointer; color: var(--ink); }
+.petit-btn[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* =============================== L'écran (1440 × 900, réduit) =============================== */
+.ecran { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; overflow: hidden; background: #fff; font-size: 15px; line-height: 1.4; color: var(--ink); isolation: isolate; }
+.cadre:not(.vu) .ecran *, .cadre:not(.vu) .ecran *::before, .cadre:not(.vu) .ecran *::after { animation-play-state: paused !important; }
+:where(.ecran) :where(h1, h2, h3, p) { margin: 0; }
+:where(.ecran) :where(button) { font: inherit; color: inherit; }
+:where(.ecran) :where(a) { color: inherit; }
+.site { display: flex; height: 100%; }
+.cote { flex: none; width: var(--cote); height: 100%; display: flex; flex-direction: column; }
+.zone { position: relative; flex: 1; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+.zone-in { min-height: 100%; display: flex; flex-direction: column; }
+.col { width: 100%; max-width: calc(var(--large) + 96px); margin: 0 auto; padding: 0 48px; }
+.col.lecture { max-width: calc(var(--lecture) + 96px); }
+.small { font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
+.faint { color: var(--ink-faint); }
+.ic-in { display: inline-flex; vertical-align: -3px; }
+.chev { flex: none; width: 8px; height: 8px; border-right: 2px solid var(--ink-faint); border-top: 2px solid var(--ink-faint); transform: rotate(45deg); margin-right: 4px; }
+.chevron-bas { flex: none; width: 9px; height: 9px; margin: -4px 4px 0 0; border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: rotate(45deg); }
+
+/* Boutons */
+.b { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-size: 15px; font-weight: 700; padding: 12px 22px; border-radius: 999px; border: 1px solid transparent;
+  cursor: pointer; text-decoration: none; white-space: nowrap; transition: background .15s, color .15s, border-color .15s, transform .12s; }
+.b:active { transform: scale(.97); }
+.b.lime { background: var(--lime); color: var(--ink); }
+.b.lime:hover { background: #B9E22B; }
+.b.iris { background: var(--iris); color: #fff; }
+.b.iris:hover { background: var(--iris-deep); }
+.b.contour { background: #fff; color: var(--ink); border-color: var(--line); }
+.b.contour:hover { border-color: var(--iris); color: var(--iris); }
+.b.blanc { background: #fff; color: var(--iris); }
+.b.blanc:hover { background: rgba(255,255,255,.86); }
+.b.contour-blanc { background: transparent; color: #fff; border-color: rgba(255,255,255,.45); }
+.b.contour-blanc:hover { border-color: #fff; background: rgba(255,255,255,.08); }
+.b.texte { background: none; color: var(--ink-soft); padding-left: 8px; padding-right: 8px; }
+.b.texte:hover { color: var(--ink); text-decoration: underline; }
+.b.plein { width: 100%; }
+.b.gros { padding: 16px 28px; font-size: 16.5px; }
+.b.mini { padding: 8px 14px; font-size: 13.5px; }
+.lien { color: var(--iris); font-weight: 600; text-decoration: none; background: none; border: 0; padding: 0; cursor: pointer; font: inherit; }
+.lien:hover { text-decoration: underline; }
+.rond { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink); display: grid; place-items: center; cursor: pointer; padding: 0; flex: none; transition: border-color .15s, color .15s; }
+.rond:hover { border-color: var(--iris); color: var(--iris); }
+
+/* Badges, pastilles, champs */
+.badge { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: var(--surface-soft); color: var(--ink); white-space: nowrap; }
+.badge.doux { background: rgba(59,47,181,.1); color: var(--iris); }
+.badge.rouge { background: rgba(200,56,43,.1); color: var(--red); }
+.badge.vert { background: rgba(46,125,79,.12); color: var(--green); }
+.badge.lime { background: var(--lime); color: var(--ink); }
+.badge.blanc-iris { background: rgba(255,255,255,.16); color: #fff; }
+.puce { position: relative; z-index: 1; flex: none; display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: #fff;
+  font: inherit; font-size: 14px; font-weight: 500; color: var(--ink); white-space: nowrap; cursor: pointer; transition: background .15s, color .2s, border-color .15s; }
+.puce:hover { border-color: var(--iris); }
+.puce.on { background: var(--iris); border-color: var(--iris); color: #fff; }
+.champ { display: flex; align-items: center; gap: 10px; width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 0 14px; height: 48px; font: inherit; font-size: 15px; color: var(--ink); background: #fff; transition: border-color .15s; }
+.champ:hover { border-color: #B9B3A8; }
+.champ input { flex: 1; min-width: 0; border: 0; outline: 0; font: inherit; background: none; color: inherit; height: 100%; }
+.champ input::placeholder { color: var(--ink-faint); }
+.etiquette-champ { display: block; font-size: 13px; font-weight: 600; margin: 0 0 6px; }
+.carte { border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+.titre-sec { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin: 0 0 10px; letter-spacing: .05em; text-transform: uppercase; }
+.interrupteur { position: relative; width: 52px; height: 30px; border-radius: 15px; background: var(--line); border: 0; padding: 0; cursor: pointer; flex: none; transition: background .25s; }
+.interrupteur::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .35s var(--ressort); }
+.interrupteur.on { background: var(--iris); }
+.interrupteur.on::after { transform: translateX(22px); }
+.interrupteur.lime-on { background: rgba(255,255,255,.25); }
+.interrupteur.lime-on.on { background: var(--lime); }
+.interrupteur.lime-on.on::after { background: var(--iris); }
+.photo { position: relative; display: grid; place-items: end start; padding: 10px 12px; color: #fff; font-family: var(--titre); font-weight: 700; letter-spacing: -0.01em; line-height: 1; overflow: hidden; }
+
+/* Animations */
+@keyframes saute { from { transform: scale(.3); } to { transform: none; } }
+@keyframes monte { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+@keyframes pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
+@keyframes voie { to { stroke-dashoffset: -16; } }
+@keyframes roule { from { transform: translateY(110%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fondu { from { opacity: 0; } }
+@keyframes sonne { 0%, 60%, 100% { transform: none; } 10%, 30%, 50% { transform: rotate(14deg); } 20%, 40% { transform: rotate(-14deg); } }
+@keyframes pouls { 0%, 100% { box-shadow: 0 0 0 0 rgba(200,56,43,.45); } 60% { box-shadow: 0 0 0 8px rgba(200,56,43,0); } }
+@keyframes pouls-lime { 0%, 100% { box-shadow: 0 0 0 0 rgba(200,240,60,.7); } 60% { box-shadow: 0 0 0 9px rgba(200,240,60,0); } }
+@keyframes dialogue { from { transform: translateY(16px) scale(.97); opacity: 0; } }
+.saute { animation: saute .35s var(--ressort) both; }
+.ch { display: inline-block; }
+.ch.roule { animation: roule .4s var(--ressort) both; }
+
+/* La route en pointillés et le vélo de la marque. */
+.route { position: relative; height: 30px; }
+.route svg.voie { position: absolute; left: 0; right: 0; bottom: 3px; width: 100%; height: 4px; overflow: visible; }
+.route .velo { position: absolute; bottom: 6px; line-height: 0; transition: left .9s cubic-bezier(.3, .7, .4, 1); }
+.route .velo svg { transform-origin: 50% 100%; }
+.route.roule .voie line { animation: voie .5s linear infinite; }
+.route.roule .velo svg { animation: pedale .5s ease-in-out infinite; }
+.route-etapes { position: relative; height: 48px; }
+.re-voie { position: absolute; left: 0; right: 0; top: 35px; border-top: 3px dashed rgba(255,255,255,.35); }
+.re-fait { position: absolute; left: 0; top: 34px; height: 4px; border-radius: 2px; background: var(--lime); transition: width 1.2s cubic-bezier(.3, .7, .4, 1); }
+.re-arret { position: absolute; top: 36px; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--iris); border: 2px solid rgba(255,255,255,.5); display: grid; place-items: center; }
+.re-arret.actuel { background: #fff; border-color: #fff; }
+.re-arret.fait { width: 22px; height: 22px; margin: -11px 0 0 -11px; background: var(--lime); border: 0; color: var(--ink); animation: saute .35s var(--ressort) both; }
+.re-velo { position: absolute; top: 2px; line-height: 0; transition: left 1.2s cubic-bezier(.3, .7, .4, 1); }
+.re-velo.roule svg { animation: pedale .4s ease-in-out infinite; }
+.re-libs { position: relative; height: 20px; font-size: 13px; color: rgba(255,255,255,.62); margin-top: 6px; }
+.re-libs span { position: absolute; translate: -50% 0; white-space: nowrap; }
+.re-libs span:first-child { translate: 0 0; } .re-libs span:last-child { translate: -100% 0; }
+.re-libs .fait { color: rgba(255,255,255,.85); } .re-libs .actuel { color: #fff; font-weight: 700; }
+
+/* Chiffres roulants */
+.roulant { display: inline-flex; overflow: hidden; font-variant-numeric: tabular-nums; vertical-align: bottom; }
+
+/* =============================== AUJOURD'HUI (le site d'aujourd'hui, approché) =============================== */
+.auj .cote { background: #fff; border-right: 1px solid var(--line); padding: 24px 16px 18px; }
+.auj-marque { display: flex; align-items: center; gap: 12px; padding: 0 8px 26px; }
+.auj-tuile { width: 40px; height: 40px; border-radius: 10px; background: var(--iris); display: grid; place-items: center; }
+.auj-marque .marque { font-size: 26px; }
+.auj-nav a { display: flex; align-items: center; gap: 12px; padding: 13px 14px; white-space: nowrap; margin-bottom: 4px; border-radius: 14px; color: #4F4A45; font-weight: 600; text-decoration: none; }
+.auj-nav a svg { color: #4F4A45; }
+.auj-nav a.on { background: rgba(59,47,181,.1); color: var(--iris); }
+.auj-nav a.on svg { color: var(--iris); }
+.auj-nav .n { margin-left: auto; min-width: 22px; height: 22px; border-radius: 11px; background: var(--iris); color: #fff; font-size: 12px; display: grid; place-items: center; }
+.auj-user { margin-top: auto; border-top: 1px solid var(--line); padding: 16px 8px 0; display: flex; gap: 12px; align-items: center; }
+.auj-av { width: 44px; height: 44px; border-radius: 50%; background: #000; color: #fff; display: grid; place-items: center; font-weight: 700; flex: none; }
+.auj-user b { display: block; font-size: 14.5px; }
+.auj-user small { display: block; font-size: 11.5px; letter-spacing: .05em; color: var(--ink-soft); }
+.auj-user u { font-size: 13px; color: var(--ink-soft); }
+.auj .zone { background: #fff; }
+.auj-bande { margin: 24px 24px 0; background: var(--iris); color: #fff; border-radius: 24px 24px 0 0; padding: 26px 26px 48px; }
+.auj-bande.plein { margin: 0; border-radius: 0; }
+.auj-feuille { position: relative; margin: -24px 24px 0; background: #fff; border-radius: 24px 24px 0 0; padding: 22px 24px 40px; flex: 1; }
+.auj-feuille.plein { margin: -24px 0 0; }
+.auj-h1 { font-family: var(--titre); font-size: 34px; font-weight: 700; }
+.auj-pied { display: flex; gap: 18px; justify-content: center; padding: 18px; font-size: 12.5px; color: var(--ink-soft); border-top: 1px solid var(--line); }
+.auj-cookie { position: absolute; left: 12px; bottom: 12px; z-index: 30; width: 420px; display: flex; align-items: center; gap: 12px; background: #000; color: #fff; border-radius: 14px; padding: 12px 12px 12px 14px; font-size: 12.5px; line-height: 1.4; }
+.auj-cookie u { display: block; }
+.auj-cookie .b { padding: 10px 14px; font-size: 14px; font-weight: 600; }
+.auj-cookie .b.lime { box-shadow: 0 0 0 2px #000, 0 0 0 4px var(--iris); }
+.auj-cookie .b.contour-blanc { border-color: #fff; }
+.auj .puce.on { background: var(--iris); }
+.auj-carte-r { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: #fff; }
+.auj-visuel { position: relative; height: 170px; display: grid; place-items: center; font-family: var(--titre); font-size: 96px; font-weight: 800; overflow: hidden; }
+.auj-visuel::before { content: ''; position: absolute; width: 300px; height: 300px; border-radius: 50%; right: -90px; top: -110px; background: rgba(255,255,255,.12); }
+.auj-visuel.lime { background: var(--lime); color: var(--iris); }
+.auj-visuel.lime::before { background: rgba(20,18,31,.05); }
+.auj-visuel.iris { background: var(--iris); color: var(--lime); }
+.auj-visuel.nuit { background: var(--iris-deep); color: #fff; }
+.auj-visuel .coeur { position: absolute; top: 12px; right: 12px; color: #fff; }
+.auj-corps { padding: 12px 14px 16px; }
+.auj-corps b { font-size: 17px; }
+.auj-corps p { font-size: 13.5px; color: var(--ink-soft); margin-top: 2px; }
+.auj :focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+
+/* =============================== PROPOSITION =============================== */
+.prop :focus { outline: none; }
+.prop :focus-visible, .prop .focus-demo { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--iris) !important; }
+.prop .sur-iris :focus-visible, .prop .sur-iris .focus-demo { box-shadow: 0 0 0 2px var(--iris), 0 0 0 4px var(--lime) !important; }
+html[data-cote="blanc"] .prop .cote :focus-visible, html[data-cote="blanc"] .prop .cote .focus-demo { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--iris) !important; }
+
+/* La barre latérale iris (par défaut) ou blanche. */
+.prop .cote { background: var(--iris); color: #fff; padding: 26px 18px 18px; }
+.cote-marque { display: flex; align-items: center; gap: 10px; padding: 0 10px 28px; color: inherit; text-decoration: none; }
+.cote-marque .marque { font-size: 28px; line-height: 1; }
+.cm-tuile { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: var(--iris); }
+.nav-cote { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.nav-cote a { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 14px; white-space: nowrap; border-radius: 999px; color: rgba(255,255,255,.82); font-weight: 600; text-decoration: none; transition: color .25s, background .15s; }
+.nav-cote a:hover { background: rgba(255,255,255,.1); color: #fff; }
+.nav-cote a.on, .nav-cote a.on:hover { background: transparent; color: var(--iris); }
+.nav-pouce { position: absolute; left: 0; right: 0; top: 0; height: 48px; border-radius: 999px; background: #fff; transition: transform .45s var(--ressort); }
+.cpt { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: rgba(255,255,255,.18); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.nav-cote a.on .cpt { background: var(--iris); }
+.cote-bas { margin-top: auto; display: flex; flex-direction: column; gap: 12px; padding: 0 6px; }
+.cote-user { display: flex; align-items: center; gap: 12px; padding: 14px 4px 0; border-top: 1px solid rgba(255,255,255,.18); }
+.cote-av { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.55); display: grid; place-items: center; font-weight: 700; flex: none; }
+.cote-user b { display: block; font-size: 14.5px; }
+.cote-user button { background: none; border: 0; padding: 0; color: rgba(255,255,255,.75); font-size: 13px; text-decoration: underline; cursor: pointer; }
+.cote-user button:hover { color: #fff; }
+.cote-langues { display: flex; gap: 4px; font-size: 12.5px; }
+.cote-langues button { border: 1px solid transparent; background: none; border-radius: 999px; padding: 3px 9px; color: rgba(255,255,255,.7); cursor: pointer; font-weight: 600; }
+.cote-langues button.on { border-color: rgba(255,255,255,.5); color: #fff; }
+.cote-legal { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 11.5px; }
+.cote-legal a { color: rgba(255,255,255,.62); text-decoration: none; }
+.cote-legal a:hover { color: #fff; text-decoration: underline; }
+html[data-cote="blanc"] .prop .cote { background: #fff; color: var(--ink); border-right: 1px solid var(--line); }
+html[data-cote="blanc"] .prop .nav-cote a { color: #4F4A45; }
+html[data-cote="blanc"] .prop .nav-cote a:hover { background: var(--cream-dim); color: var(--ink); }
+html[data-cote="blanc"] .prop .nav-cote a.on { background: transparent; color: #fff; }
+html[data-cote="blanc"] .prop .nav-pouce { background: var(--iris); }
+html[data-cote="blanc"] .prop .cpt { background: rgba(59,47,181,.1); color: var(--iris); }
+html[data-cote="blanc"] .prop .nav-cote a.on .cpt { background: #fff; color: var(--iris); }
+html[data-cote="blanc"] .prop .cote-user { border-top-color: var(--line); }
+html[data-cote="blanc"] .prop .cote-av { border-color: var(--line); }
+html[data-cote="blanc"] .prop .cote-user button, html[data-cote="blanc"] .prop .cote-langues button, html[data-cote="blanc"] .prop .cote-legal a { color: var(--ink-soft); }
+html[data-cote="blanc"] .prop .cote-langues button.on { border-color: var(--line); color: var(--ink); }
+
+/* Le bandeau iris et la feuille blanche. La zone est iris : bandeau et barre latérale font un seul cadre. */
+.prop .zone { background: var(--iris); }
+.bande { position: relative; color: #fff; padding: 30px 0 56px; }
+.b-ctx { display: flex; align-items: center; gap: 8px; font-size: 14px; color: rgba(255,255,255,.75); }
+.b-ctx b { color: #fff; font-weight: 600; }
+.b-titre { font-family: var(--titre); font-size: 38px; font-weight: 700; line-height: 1.1; margin: 10px 0 6px; }
+.b-sous { color: rgba(255,255,255,.82); font-size: 16px; }
+.bande .rond { background: transparent; border-color: rgba(255,255,255,.4); color: #fff; }
+.bande .rond:hover { border-color: #fff; }
+.feuille { position: relative; flex: 1; background: #fff; border-radius: 28px 28px 0 0; margin-top: -26px; padding: 30px 0 64px; animation: monte .5s var(--ressort) backwards; }
+.sec-titre { display: flex; align-items: center; gap: 10px; font-family: var(--titre); font-size: 21px; font-weight: 700; margin: 0 0 14px; }
+.sec-titre svg { color: var(--iris); }
+
+/* Les bandes collantes : Verre ou Blanc plein. */
+.collant { position: sticky; top: 0; z-index: 6; }
+.cl-boite { position: relative; margin: 0 0 18px; }
+.cl-defile { position: relative; display: flex; gap: 4px; padding: 6px; overflow-x: auto; scrollbar-width: none; }
+.cl-defile::-webkit-scrollbar { display: none; }
+.cl-pouce { position: absolute; z-index: 0; top: 6px; left: 0; height: 40px; border-radius: 999px; pointer-events: none; transition: transform .45s var(--ressort), width .35s var(--ressort); }
+.collant .puce { background: transparent; border-color: transparent; }
+.collant .puce.on { background: transparent; border-color: transparent; font-weight: 600; }
+html[data-barres="verre"] .prop .collant { padding-top: 10px; }
+html[data-barres="verre"] .prop .cl-boite { border-radius: 999px; background: rgba(255,255,255,.55);
+  -webkit-backdrop-filter: blur(14px) saturate(180%); backdrop-filter: blur(14px) saturate(180%); border: 1px solid rgba(255,255,255,.8);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 10px 28px rgba(20,18,31,.12), 0 1px 3px rgba(20,18,31,.06); }
+html[data-barres="verre"] .prop .cl-pouce { background: rgba(255,255,255,.5); border: 1px solid rgba(255,255,255,.85);
+  box-shadow: inset 0 1.5px 1px rgba(255,255,255,.95), inset 4px 0 7px -2px rgba(255,70,170,.3), inset -4px 0 7px -2px rgba(40,190,255,.34), inset 0 -3px 6px -2px rgba(255,220,90,.26), 0 2px 10px rgba(20,18,31,.12); }
+html[data-barres="verre"] .prop .collant .puce { color: rgba(20,18,31,.88); }
+html[data-barres="verre"] .prop .collant .puce:hover { background: rgba(255,255,255,.5); }
+html[data-barres="verre"] .prop .collant .puce.on { color: var(--iris); background: transparent; }
+html[data-barres="blanc"] .prop .collant { background: #fff; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+html[data-barres="blanc"] .prop .cl-boite { margin: 0; padding: 4px 0; }
+html[data-barres="blanc"] .prop .cl-defile { padding: 6px 0; }
+html[data-barres="blanc"] .prop .cl-pouce { background: var(--iris); }
+html[data-barres="blanc"] .prop .collant .puce:not(.on) { border-color: var(--line); }
+html[data-barres="blanc"] .prop .collant .puce:not(.on):hover { border-color: var(--iris); }
+html[data-barres="blanc"] .prop .collant .puce.on { color: #fff; }
+
+/* La carte des cookies : iris, deux boutons identiques (même taille, même graisse, même couleur). */
+.cookie-p { position: absolute; left: calc(var(--cote) + 24px); bottom: 24px; z-index: 30; width: 460px; background: var(--iris); color: #fff; border-radius: 20px; padding: 18px 18px 16px; animation: monte .45s var(--ressort) both; }
+.cookie-p p { font-size: 14px; line-height: 1.45; margin: 0 0 4px; }
+.cookie-p a { color: #fff; font-size: 13px; }
+.cookie-p .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.cookie-p .b { padding: 11px 16px; font-size: 15px; font-weight: 700; }
+.cookie-p[hidden], .auj-cookie[hidden] { display: none; }
+
+/* Les cartes de commerce (survol : le filet passe à l'iris et la carte monte un peu ; pas d'ombre). */
+.grille-c { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 22px 18px; }
+.carte-c { position: relative; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: #fff; text-decoration: none; color: inherit; cursor: pointer;
+  transition: transform .3s var(--ressort), border-color .2s; }
+.carte-c:hover, .carte-c.survol-demo { border-color: var(--iris); transform: translateY(-4px); }
+.carte-c .photo { aspect-ratio: 16 / 10; font-size: 26px; }
+.cc-fav { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: #fff; color: var(--ink); display: grid; place-items: center; cursor: pointer; padding: 0; transition: transform .2s var(--ressort); }
+.cc-fav:hover { transform: scale(1.1); color: var(--iris); }
+.cc-fav.on { color: var(--iris); }
+.cc-fav.on svg { fill: var(--iris); }
+.cc-offre { position: absolute; top: 12px; left: 12px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0; background: var(--lime); color: var(--ink); padding: 4px 9px; border-radius: 999px; }
+.cc-corps { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 3px; }
+.cc-nom { font-size: 16.5px; font-weight: 800; }
+.cc-sous { font-size: 13.5px; color: var(--ink-soft); }
+.cc-infos { display: flex; gap: 6px; font-size: 13.5px; color: var(--ink-soft); }
+.cc-nouveau { color: var(--iris); font-weight: 700; }
+.carte-c .cc-voir { position: absolute; right: 14px; bottom: 14px; width: 30px; height: 30px; border-radius: 50%; background: var(--iris); color: #fff; display: grid; place-items: center; opacity: 0; transform: translateX(-6px); transition: opacity .2s, transform .3s var(--ressort); }
+.carte-c:hover .cc-voir, .carte-c.survol-demo .cc-voir, .carte-c:focus-visible .cc-voir { opacity: 1; transform: none; }
+
+/* Les largeurs (section 1). */
+.guides { position: absolute; inset: 0; z-index: 25; pointer-events: none; display: none; }
+.guides.on { display: block; }
+.guide { position: absolute; top: 0; bottom: 0; border-left: 2px dashed rgba(200,56,43,.75); border-right: 2px dashed rgba(200,56,43,.75); }
+.guide span { position: absolute; top: 12px; left: 50%; translate: -50% 0; white-space: nowrap; background: var(--red); color: #fff; font-size: 12.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+.guide.lecture { border-color: rgba(42,33,133,.8); border-left-style: dotted; border-right-style: dotted; }
+.guide.lecture span { background: var(--iris-deep); top: 44px; }
+
+/* ---------- 1 · Recherche (le cadre) ---------- */
+.cherche-gros { display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 8px 0 22px; border-radius: 999px; background: #fff; color: var(--ink); margin-top: 18px; }
+.cherche-gros svg { color: var(--iris); flex: none; }
+.cherche-gros input { flex: 1; border: 0; outline: 0; font: inherit; font-size: 17px; background: none; color: var(--ink); }
+.cherche-gros input::placeholder { color: var(--ink-faint); }
+.cherche-gros .b { padding: 12px 20px; }
+.suggestions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.suggestions button { border: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff; border-radius: 999px; padding: 7px 14px; font-size: 13.5px; cursor: pointer; }
+.suggestions button:hover { border-color: #fff; background: rgba(255,255,255,.08); }
+.plats-res { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; margin-top: 30px; }
+.plat-res { display: flex; align-items: center; gap: 14px; padding: 12px 8px; border-bottom: 1px solid var(--line); border-radius: 0; cursor: pointer; transition: background .15s; }
+.plat-res:hover { background: var(--cream-dim); }
+.plat-res .photo { width: 56px; height: 56px; border-radius: 12px; flex: none; }
+.plat-res .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.plat-res small { font-size: 13px; color: var(--ink-soft); }
+
+/* ---------- 2 · Accueil sans compte ---------- */
+.auj-tete { background: var(--iris); color: #fff; padding: 18px 40px; display: flex; align-items: center; gap: 28px; }
+.auj-tete .marque { font-size: 38px; line-height: 1; }
+.auj-tete .slogan { font-size: 13px; color: rgba(255,255,255,.8); }
+.auj-tete nav { display: flex; gap: 26px; margin: 0 auto; font-weight: 600; }
+.tuile-ic { width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line); color: var(--iris); display: grid; place-items: center; flex: none; }
+.toast-ecran { position: absolute; left: 50%; bottom: 28px; translate: -50% 0; z-index: 40; background: var(--ink); color: #fff; font-size: 14px; padding: 10px 18px; border-radius: 999px; animation: monte .35s var(--ressort) both; }
+
+/* ---------- 2b · Connexion ---------- */
+.auj-auth { display: flex; justify-content: center; padding: 40px 0; background: #fff; }
+.auj-auth .carte { width: 380px; padding: 26px; }
+.auj-tabs { display: flex; gap: 8px; margin: 18px 0 20px; }
+.auth-page { display: flex; flex-direction: column; height: 100%; background: var(--iris); }
+.auth-p { flex: 1; min-height: 0; display: grid; grid-template-columns: 560px 1fr; background: var(--iris); }
+.auth-scene svg { width: 340px; height: auto; }
+.auth-gauche { position: relative; color: #fff; padding: 20px 56px 36px; display: flex; flex-direction: column; }
+.auth-gauche h1 { font-family: var(--titre); font-size: 48px; line-height: 1.05; margin: auto 0 14px; }
+.auth-gauche .sous { font-size: 17px; color: rgba(255,255,255,.84); line-height: 1.5; max-width: 400px; }
+.auth-scene { margin-top: auto; padding-top: 30px; }
+.auth-droite { position: relative; background: #fff; border-radius: 32px 0 0 32px; display: grid; place-items: center; padding: 40px; animation: entre-cote .55s var(--ressort) backwards; }
+@keyframes entre-cote { from { transform: translateX(40px); opacity: .5; } }
+.auth-form { width: 420px; }
+.segment { position: relative; display: flex; padding: 4px; border-radius: 999px; background: var(--cream-dim); margin-bottom: 26px; }
+.segment button { position: relative; z-index: 1; flex: 1; border: 0; background: none; font-size: 15px; font-weight: 600; padding: 10px; border-radius: 999px; color: var(--ink-soft); cursor: pointer; transition: color .25s; }
+.segment button.on { color: #fff; }
+.seg-pouce { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: var(--iris); transition: transform .45s var(--ressort); }
+.segment.droite .seg-pouce { transform: translateX(100%); }
+.auth-form h2 { font-family: var(--titre); font-size: 28px; margin-bottom: 6px; }
+.auth-form .champ-bloc { margin-top: 16px; }
+.ou { display: flex; align-items: center; gap: 12px; color: var(--ink-faint); font-size: 13px; margin: 18px 0; }
+.ou::before, .ou::after { content: ''; flex: 1; border-top: 1px solid var(--line); }
+.g-logo { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center; font-weight: 800; font-size: 12px; }
+.etapes-auth { margin-top: 30px; }
+[data-mode="login"] .seul-inscription, [data-mode="register"] .seul-connexion { display: none !important; }
+
+/* ---------- 3 · Liste ---------- */
+.adresse-bande { display: flex; align-items: center; gap: 14px; background: none; border: 0; color: #fff; padding: 4px 6px 4px 0; text-align: left; cursor: pointer; border-radius: 999px; }
+.adresse-bande .rond-ic { width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,.4); display: grid; place-items: center; flex: none; transition: border-color .15s; }
+.adresse-bande:hover .rond-ic { border-color: #fff; }
+.adresse-bande small { display: block; font-size: 13px; color: rgba(255,255,255,.72); }
+.adresse-bande b { font-size: 20px; }
+.liste-haut { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.seg-iris { position: relative; display: inline-flex; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.12); }
+.seg-iris button { position: relative; z-index: 1; border: 0; background: none; font-size: 14px; font-weight: 600; padding: 9px 16px; border-radius: 999px; color: rgba(255,255,255,.85); cursor: pointer; display: inline-flex; gap: 7px; align-items: center; transition: color .25s; }
+.seg-iris button.on { color: var(--iris); }
+.seg-iris .sp { position: absolute; top: 4px; bottom: 4px; left: 4px; border-radius: 999px; background: #fff; transition: transform .45s var(--ressort), width .35s var(--ressort); }
+.route-bande { margin-top: 18px; }
+.liste-corps { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 36px; align-items: start; }
+.filtres { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 22px; }
+html[data-barres="blanc"] .filtres { top: 90px; }
+.filtres .titre-sec { margin-bottom: 8px; }
+.radio-l { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin: 0 -10px; border-radius: 10px; cursor: pointer; font-size: 14.5px; }
+.radio-l:hover { background: var(--cream-dim); }
+.radio-l i { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); flex: none; display: grid; place-items: center; }
+.radio-l.on i { border-color: var(--iris); }
+.radio-l.on i::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--iris); animation: saute .3s var(--ressort); }
+.case-l { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin: 0 -10px; border-radius: 10px; cursor: pointer; font-size: 14.5px; }
+.case-l:hover { background: var(--cream-dim); }
+.case-l i { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--line); flex: none; display: grid; place-items: center; color: #fff; }
+.case-l.on i { background: var(--iris); border-color: var(--iris); animation: saute .3s var(--ressort); }
+.prix-puces { display: flex; gap: 6px; }
+.prix-puces .puce { height: 36px; padding: 0 14px; }
+.local { display: flex; gap: 10px; font-size: 13px; color: var(--ink-soft); line-height: 1.45; border-top: 1px solid var(--line); padding-top: 16px; }
+.local svg { flex: none; color: var(--iris); }
+.liste-sec + .liste-sec { margin-top: 34px; }
+
+/* ---------- 4 · Fiche d'un commerce ---------- */
+.couv { position: relative; height: 300px; display: grid; place-items: center; color: rgba(255,255,255,.75); font-family: var(--titre); font-size: 22px; font-weight: 600; background: #7A2E1F; }
+.couv::after { content: ''; position: absolute; width: 520px; height: 520px; border-radius: 50%; right: 8%; top: -40%; background: rgba(255,255,255,.07); }
+.flottants { position: absolute; top: 20px; left: 0; right: 0; z-index: 3; display: flex; justify-content: space-between; padding: 0 28px; }
+.flottants > div { display: flex; gap: 10px; }
+.rond-iris { width: 46px; height: 46px; border-radius: 50%; border: 2px solid #fff; background: var(--iris); color: #fff; display: grid; place-items: center; cursor: pointer; padding: 0; transition: background .15s, transform .2s var(--ressort); }
+.rond-iris:hover { background: var(--iris-deep); transform: scale(1.06); }
+.rond-iris.on svg { fill: #fff; }
+.prop .rond-iris:focus-visible { box-shadow: 0 0 0 2px var(--iris), 0 0 0 4px var(--lime) !important; }
+.fiche-feuille { padding-top: 0; }
+.fiche-grille { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; align-items: start; }
+.logo-c { position: absolute; top: -40px; width: 80px; height: 80px; border-radius: 24px; background: var(--iris); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 24px; border: 4px solid #fff; animation: saute .45s var(--ressort) .15s both; }
+.fiche-tete { position: relative; padding-top: 54px; }
+.fiche-tete h1 { font-family: var(--titre); font-size: 40px; letter-spacing: -0.01em; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 14px; }
+.ouvert { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; padding: 5px 12px; border-radius: 999px; background: rgba(59,47,181,.1); color: var(--iris); font-weight: 600; }
+.ouvert i { width: 7px; height: 7px; border-radius: 50%; background: var(--iris); }
+.faits { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; margin-bottom: 20px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.seg-gris { position: relative; display: inline-flex; padding: 4px; border-radius: 999px; background: var(--cream-dim); }
+.seg-gris button { position: relative; z-index: 1; border: 0; background: none; font-size: 14px; font-weight: 600; padding: 8px 15px; border-radius: 999px; color: var(--ink-soft); cursor: pointer; transition: color .25s; }
+.seg-gris button.on { color: #fff; }
+.seg-gris .sp { position: absolute; top: 4px; bottom: 4px; left: 4px; border-radius: 999px; background: var(--iris); transition: transform .45s var(--ressort), width .35s var(--ressort); }
+.frais { display: flex; gap: 28px; font-size: 14.5px; }
+.frais span { display: flex; flex-direction: column; }
+.frais small { font-size: 12.5px; color: var(--ink-soft); }
+.menu-sec { scroll-margin-top: 80px; }
+.menu-sec + .menu-sec { margin-top: 30px; }
+.menu-sec h2 { display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 800; margin-bottom: 6px; }
+.menu-sec h2::before { content: ''; width: 4px; height: 20px; border-radius: 2px; background: var(--iris); }
+.menu-sec h2 small { font-size: 12px; font-weight: 700; color: var(--ink-soft); background: var(--surface-soft); padding: 2px 8px; border-radius: 999px; }
+.plats2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+.plat { position: relative; display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.plat:hover .plat-nom { color: var(--iris); }
+.plat-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.plat-nom { font-size: 15.5px; font-weight: 700; transition: color .15s; }
+.plat-desc { font-size: 13px; color: var(--ink-soft); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.plat-prix { font-size: 15px; font-weight: 800; margin-top: auto; }
+.plat .photo { width: 104px; height: 104px; border-radius: 14px; flex: none; font-size: 14px; }
+.plat.sans-photo { padding-right: 56px; }
+/* Le « + » iris qui s'ouvre en compteur (3C). */
+.pas { position: absolute; right: 6px; bottom: 22px; z-index: 2; height: 40px; width: 40px; border-radius: 20px; overflow: hidden; background: var(--iris); color: #fff; border: 1px solid var(--iris); transition: width .42s var(--ressort); }
+.plat.sans-photo .pas { right: 0; bottom: 16px; }
+.pas button { position: absolute; top: 1px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: transparent; color: inherit; display: grid; place-items: center; padding: 0; cursor: pointer; transition: opacity .2s, background .15s; }
+.pas button:hover { background: rgba(255,255,255,.14); }
+.pas .p-plus { right: 1px; } .pas .p-moins { left: 1px; }
+.pas .p-n { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 28px; height: 28px; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center; font-weight: 800; font-size: 14px; transition: opacity .2s; overflow: hidden; }
+.pas.ferme .p-moins, .pas.ferme .p-n { opacity: 0; pointer-events: none; }
+.pas.replie .p-moins, .pas.replie .p-plus { opacity: 0; pointer-events: none; }
+.pas.replie .p-n { opacity: 1; }
+.pas.ouvert { width: 110px; }
+.prop .pas button:focus-visible { box-shadow: inset 0 0 0 2px #fff !important; }
+.panier-col { position: sticky; top: 84px; border: 1px solid var(--line); border-radius: 22px; padding: 20px; background: #fff; margin-top: 24px; }
+.panier-col h3 { display: flex; align-items: center; justify-content: space-between; font-size: 18px; margin-bottom: 4px; }
+.pc-ligne { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.pc-ligne .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pc-ligne small { color: var(--ink-soft); font-size: 12.5px; }
+.mini-pas { display: inline-flex; align-items: center; height: 32px; border-radius: 16px; background: var(--iris); color: #fff; flex: none; }
+.mini-pas button { width: 30px; height: 30px; border: 0; background: none; color: #fff; display: grid; place-items: center; cursor: pointer; border-radius: 50%; padding: 0; }
+.mini-pas button:hover { background: rgba(255,255,255,.14); }
+.mini-pas b { width: 22px; height: 22px; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center; font-size: 12.5px; overflow: hidden; }
+.panier-vide { text-align: center; padding: 10px 0 4px; }
+.panier-vide svg.scene { width: 100%; height: auto; }
+.voir-panier { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 16px; height: 56px; padding: 0 6px 0 22px; border-radius: 28px; border: 0; background: var(--iris); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; transition: background .15s; }
+.voir-panier:hover { background: var(--iris-deep); }
+.voir-panier span:first-child { flex: 1; text-align: left; }
+.vp-total { height: 44px; display: flex; align-items: center; padding: 0 14px; border-radius: 22px; background: #fff; color: var(--iris); font-variant-numeric: tabular-nums; overflow: hidden; }
+.pc-ligne.entre { animation: monte .35s var(--ressort) both; }
+/* Le dialogue du plat (sur le site : une fenêtre, pas une feuille plein écran). */
+.dialogue { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; }
+.dialogue[hidden] { display: none; }
+.dl-voile { position: absolute; inset: 0; background: rgba(20,18,31,.45); animation: fondu .2s ease both; }
+.dl-boite { position: relative; width: 560px; background: #fff; border-radius: 24px; overflow: hidden; animation: dialogue .3s var(--ressort) both; }
+.dl-boite .photo { height: 240px; font-size: 26px; }
+.dl-x { position: absolute; top: 14px; right: 14px; z-index: 2; }
+.dl-corps { padding: 20px 24px 6px; }
+.dl-corps h2 { font-family: var(--titre); font-size: 26px; }
+.dl-corps .dl-prix { font-size: 18px; font-weight: 700; margin: 4px 0 8px; }
+.dl-opts { margin-top: 14px; }
+.dl-pied { display: flex; padding: 16px 24px 22px; }
+.bloc-lime { flex: 1; display: flex; align-items: center; height: 56px; border-radius: 28px; background: var(--lime); color: var(--ink); padding: 0 6px; gap: 2px; }
+.bl-pas { width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(20,18,31,.08); color: var(--ink); display: grid; place-items: center; cursor: pointer; padding: 0; flex: none; }
+.bl-pas:hover { background: rgba(20,18,31,.14); }
+.bl-n { min-width: 30px; text-align: center; font-weight: 800; font-size: 17px; overflow: hidden; }
+.bl-sep { width: 1px; height: 26px; background: rgba(20,18,31,.2); margin: 0 6px; }
+.bl-ajouter { flex: 1; height: 100%; border: 0; background: none; font-size: 16px; font-weight: 700; color: var(--ink); cursor: pointer; }
+.prop .bloc-lime :focus-visible { box-shadow: inset 0 0 0 2px var(--ink) !important; }
+
+/* ---------- 5 · Paiement ---------- */
+.deux-col { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; align-items: start; }
+.options { display: flex; flex-direction: column; gap: 8px; }
+.options.cote-a-cote { flex-direction: row; }
+.options.cote-a-cote .option { flex: 1; }
+.option { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 16px; padding: 12px 14px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.option:hover { border-color: var(--iris); }
+.option small { display: block; font-weight: 400; color: var(--ink-soft); margin-top: 2px; font-size: 13px; }
+.option .tuile-ic { width: 38px; height: 38px; }
+.option.on { background: var(--iris); border-color: var(--iris); color: #fff; }
+.option.on small { color: rgba(255,255,255,.8); }
+.option.on .tuile-ic { color: #fff; border-color: rgba(255,255,255,.4); }
+.case { margin-left: auto; width: 24px; height: 24px; border-radius: 8px; border: 1px solid var(--line); flex: none; display: grid; place-items: center; }
+.option.on .case { background: var(--lime); border-color: var(--lime); color: var(--ink); animation: saute .3s var(--ressort); }
+.bloc-p + .bloc-p { margin-top: 28px; }
+.ligne-l { display: flex; align-items: center; gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--line); cursor: pointer; border-radius: 0; transition: background .15s; }
+.ligne-l:hover { background: var(--cream-dim); }
+.ligne-l > svg { color: var(--iris); flex: none; }
+.ligne-l .grow { flex: 1; display: flex; flex-direction: column; }
+.ligne-l small { font-size: 13px; color: var(--ink-soft); }
+.recap { position: sticky; top: 24px; border: 1px solid var(--line); border-radius: 22px; padding: 22px; }
+.prix-l { display: flex; justify-content: space-between; gap: 10px; font-size: 14.5px; padding: 5px 0; }
+.prix-l small { display: block; font-size: 12px; color: var(--ink-faint); }
+.prix-l.total { font-size: 20px; font-weight: 800; padding-top: 12px; margin-top: 8px; border-top: 1px solid var(--line); }
+.tips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.tips .puce { height: 38px; }
+.payer-note { display: flex; gap: 8px; align-items: center; justify-content: center; font-size: 12.5px; color: var(--ink-soft); margin-top: 10px; }
+
+/* ---------- 6 · Mes commandes ---------- */
+.suivi-grille { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; }
+.plan-boite { position: relative; height: 330px; border-radius: 20px; overflow: hidden; border: 1px solid var(--line); }
+.plan-boite svg.plan { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pin { position: absolute; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; display: grid; place-items: center; background: var(--iris); color: #fff; border: 2.5px solid #fff; }
+.pin.maison { background: var(--lime); color: var(--ink); border-color: var(--iris); animation: pouls-lime 2.2s ease-out infinite; }
+.pin.velo-pin { width: 46px; height: 30px; margin: -15px 0 0 -23px; border-radius: 15px; background: var(--iris); }
+.code-suivi { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 18px; border: 2px dashed var(--iris); border-radius: 16px; margin-bottom: 16px; }
+.code-suivi b { font-size: 30px; letter-spacing: 8px; color: var(--iris); }
+.tableau { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.tableau th { text-align: left; font-size: 12px; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.tableau td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tableau tr.cl { cursor: pointer; transition: background .15s; }
+.tableau tr.cl:hover td { background: var(--cream-dim); }
+.tableau td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.tableau .actions { text-align: right; white-space: nowrap; }
+.nom-c { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+.nom-c .photo { width: 40px; height: 40px; border-radius: 10px; font-size: 0; }
+
+/* ---------- 7 · Mon compte ---------- */
+.cpt-tete { display: flex; align-items: center; gap: 18px; }
+.avatar-l { width: 72px; height: 72px; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center; font-size: 24px; font-weight: 800; flex: none; animation: saute .45s var(--ressort-fort) both; }
+.raccourcis { display: flex; gap: 10px; margin-left: auto; }
+.raccourcis button { display: inline-flex; align-items: center; gap: 9px; border: 1px solid rgba(255,255,255,.32); background: transparent; color: #fff; border-radius: 999px; padding: 10px 18px; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s; }
+.raccourcis button:hover { background: rgba(255,255,255,.1); border-color: #fff; }
+.reglages { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 40px; align-items: start; }
+.reg-nav { position: sticky; top: 24px; display: flex; flex-direction: column; }
+.reg-nav .titre-sec { margin: 16px 0 6px 14px; }
+.reg-nav .titre-sec:first-child { margin-top: 0; }
+.reg-nav button { position: relative; display: flex; align-items: center; gap: 12px; border: 0; background: none; text-align: left; padding: 10px 14px; border-radius: 12px; font-size: 14.5px; font-weight: 600; color: var(--ink); cursor: pointer; transition: background .15s, color .15s; }
+.reg-nav button svg { color: var(--ink-soft); flex: none; }
+.reg-nav button:hover { background: var(--cream-dim); }
+.reg-nav button.on { background: rgba(59,47,181,.1); color: var(--iris); }
+.reg-nav button.on svg { color: var(--iris); }
+.reg-nav button .cpt { background: var(--iris); color: #fff; }
+.reg-nav button.danger { color: var(--red); }
+.reg-nav button.danger svg { color: var(--red); }
+.panneau h2 { font-family: var(--titre); font-size: 26px; margin-bottom: 4px; }
+.panneau > .small { margin-bottom: 22px; }
+.form2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 20px; max-width: var(--lecture); }
+.form2 .large { grid-column: 1 / -1; }
+.form2 > * { min-width: 0; }
+.pied-form { display: flex; gap: 10px; margin-top: 26px; }
+.panneau[hidden] { display: none; }
+.panneau { animation: fondu .25s ease; }
+.liste-l { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; max-width: var(--lecture); }
+.liste-l .ligne-l { padding: 14px 18px; }
+.liste-l .ligne-l:last-child { border-bottom: 0; }
+
+/* ---------- 8 · Commerce ---------- */
+.service { display: flex; align-items: center; gap: 16px; border: 1px solid rgba(255,255,255,.3); border-radius: 22px; padding: 14px 16px 14px 20px; margin-top: 18px; }
+.service .grow { flex: 1; display: flex; flex-direction: column; }
+.service b { font-size: 18px; }
+.service small { font-size: 13.5px; color: rgba(255,255,255,.78); }
+.puces-iris { display: flex; gap: 8px; }
+.puce-i { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(255,255,255,.32); border-radius: 999px; padding: 8px 14px; font-size: 13.5px; font-weight: 600; color: #fff; background: transparent; cursor: pointer; }
+.puce-i:hover { border-color: #fff; }
+.tableau-k { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.kol { background: var(--cream-dim); border-radius: 20px; padding: 12px; min-height: 560px; }
+.kol-t { display: flex; align-items: center; gap: 8px; padding: 4px 6px 12px; font-weight: 800; font-size: 15.5px; }
+.kol-t .n { min-width: 24px; height: 24px; padding: 0 7px; border-radius: 12px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12.5px; }
+.kol-t .sonne { color: var(--red); display: inline-flex; animation: sonne 1.2s ease-in-out infinite; transform-origin: 50% 10%; }
+.cmd { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px; transition: transform .3s var(--ressort), border-color .2s, opacity .3s; }
+.cmd + .cmd { margin-top: 10px; }
+.cmd:hover { border-color: #B9B3A8; }
+.cmd.urgent { border: 2px solid var(--red); padding: 13px; animation: pouls 1.6s ease-out infinite; }
+.cmd.part { opacity: 0; transform: translateX(40px) scale(.96); }
+.cmd.entre { animation: monte .4s var(--ressort) both; }
+.cmd-l1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.cmd-num { font-size: 20px; font-weight: 800; }
+.cmd-cli { font-size: 14.5px; font-weight: 600; }
+.cmd-art { font-size: 13.5px; color: var(--ink-soft); margin: 8px 0 10px; line-height: 1.45; }
+.cmd-btns { display: flex; gap: 8px; }
+.cmd-btns .b { flex: 1; padding: 10px 12px; font-size: 14px; }
+.cmd-delai { display: flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--red); font-weight: 600; margin-top: 8px; }
+.anneau { --p: 1; position: relative; width: 54px; height: 54px; border-radius: 50%; flex: none; display: grid; place-items: center; align-content: center; line-height: 1; background: conic-gradient(var(--iris) calc(var(--p) * 360deg), var(--cream-dim) 0); }
+.anneau::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #fff; }
+.anneau > * { position: relative; }
+.anneau b { font-size: 15px; font-variant-numeric: tabular-nums; } .anneau small { font-size: 10px; color: var(--ink-soft); }
+.anneau.presse { background: conic-gradient(var(--red) calc(var(--p) * 360deg), var(--cream-dim) 0); }
+.temps { display: flex; gap: 4px; margin-bottom: 10px; }
+.temps button { flex: 1; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 0; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.temps button.on { background: var(--iris); border-color: var(--iris); color: #fff; }
+.compte-a-rebours { font-size: 13px; color: var(--ink-soft); }
+.kol-vide { text-align: center; font-size: 13.5px; color: var(--ink-faint); padding: 30px 10px; border: 1.5px dashed var(--line); border-radius: 16px; }
+.etapes-c { display: flex; flex-direction: column; }
+.etape-c { display: flex; align-items: center; gap: 14px; padding: 13px 4px; border-bottom: 1px solid var(--line); }
+.etape-c .grow { flex: 1; display: flex; flex-direction: column; font-size: 15px; }
+.etape-c small { font-size: 13px; color: var(--ink-soft); }
+.coche { width: 26px; height: 26px; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center; flex: none; animation: saute .35s var(--ressort) both; }
+.rond-vide { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line); flex: none; }
+.prochaine { display: flex; gap: 16px; align-items: center; border: 1px solid var(--line); border-radius: 20px; padding: 18px 20px; margin-bottom: 18px; }
+.prochaine .grow { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.prochaine small { font-size: 12px; font-weight: 700; color: var(--iris); letter-spacing: .05em; text-transform: uppercase; }
+.prochaine b { font-size: 19px; }
+.apercu-fiche { border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+.apercu-fiche .photo { height: 130px; font-size: 18px; }
+.tuiles-k { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.tuile-k { border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; transition: border-color .2s; }
+.tuile-k:hover { border-color: var(--iris); }
+.tuile-k b { font-family: var(--titre); font-size: 24px; }
+.tuile-k small { font-size: 13px; color: var(--ink-soft); }
+
+/* ---------- 9 · Livreur ---------- */
+.dispo-l { display: flex; align-items: center; gap: 16px; }
+.gains-j { margin-left: auto; text-align: right; }
+.gains-j small { display: block; font-size: 13px; color: rgba(255,255,255,.75); }
+.gains-j b { font-family: var(--titre); font-size: 32px; font-variant-numeric: tabular-nums; }
+.livreur-grille { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 28px; align-items: start; }
+.course { display: block; width: 100%; text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 20px; padding: 16px; cursor: pointer; transition: border-color .2s, transform .3s var(--ressort); }
+.course + .course { margin-top: 10px; }
+.course:hover { border-color: #B9B3A8; }
+.course.on { border: 2px solid var(--iris); padding: 15px; }
+.course-l1 { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.prix-chip { display: inline-flex; flex-direction: column; background: var(--iris); color: #fff; border-radius: 14px; padding: 6px 12px; font-size: 18px; font-weight: 800; line-height: 1.15; }
+.prix-chip small { font-size: 10.5px; font-weight: 600; opacity: .8; }
+.trajet { display: flex; align-items: center; gap: 6px; margin: 12px 0 6px; }
+.tj-pt { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--iris); color: #fff; flex: none; }
+.tj-pt.maison { background: var(--lime); color: var(--ink); }
+.tj-voie { flex: 1; position: relative; height: 22px; display: grid; place-items: center; font-size: 12.5px; }
+.tj-voie::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 2.5px dashed rgba(59,47,181,.35); }
+.tj-voie b { position: relative; background: #fff; padding: 0 8px; }
+.tj-libs { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--ink-soft); line-height: 1.35; }
+.tj-libs span:last-child { text-align: right; }
+.detail-c { border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+.detail-c .plan-boite { border: 0; border-radius: 0; height: 300px; border-bottom: 1px solid var(--line); }
+.detail-corps { padding: 18px 22px 20px; }
+.detail-corps h3 { font-family: var(--titre); font-size: 22px; }
+.detail-l { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0 16px; }
+.detail-l > div { display: flex; gap: 10px; font-size: 14px; line-height: 1.4; }
+.detail-l svg { color: var(--iris); flex: none; margin-top: 2px; }
+.detail-l small { display: block; color: var(--ink-soft); font-size: 12.5px; }
+.urgence { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(255,255,255,.4); background: transparent; color: #fff; border-radius: 999px; padding: 9px 15px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.urgence:hover { border-color: #fff; }
+.pause-voile { opacity: .45; pointer-events: none; transition: opacity .3s; }
+
+/* ---------- Retouches communes ---------- */
+.pilule-auj { position: absolute; left: calc(var(--cote) + (1440px - var(--cote)) / 2); bottom: 28px; translate: -50% 0; z-index: 20; display: flex; align-items: center; gap: 10px; background: var(--iris); color: #fff; border-radius: 999px; padding: 14px 22px; font-weight: 600; }
+.pilule-auj .pil-n { min-width: 22px; height: 22px; border-radius: 11px; background: var(--lime); color: var(--ink); font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.interrupteur.blanc-on { background: rgba(255,255,255,.25); }
+.interrupteur.blanc-on.on { background: #fff; }
+.interrupteur.blanc-on.on::after { background: var(--iris); }
+.prop .sur-iris .cherche-gros:focus-within, .prop .sur-iris .adresse-p:focus-within { box-shadow: 0 0 0 2px var(--iris), 0 0 0 4px var(--lime) !important; }
+.prop .cherche-gros input:focus-visible, .prop .adresse-p input:focus-visible, .prop .champ input:focus-visible { box-shadow: none !important; }
+.prop .champ:focus-within { border-color: var(--iris); box-shadow: 0 0 0 1px var(--iris); }
+.sur-iris .b.texte, .sur-iris .b.texte:hover { color: #fff; }
+.auj .zone { scrollbar-width: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Le site <span class="marque">fairide</span> sur un ordinateur portable</h1>
+  <p>Ta demande : que le site ressemble plus à l’app, sans ce qui est propre à l’app, et pensé pour un ordinateur. Chaque section montre le site
+    d’aujourd’hui (approché d’après le vrai code et les captures à 1280 px) à côté de la proposition : la même famille que l’app (bandeau iris,
+    vélo sur sa route, feuille blanche, un seul bouton lime décisif), mais avec ce qu’un ordinateur fait mieux qu’un téléphone :
+    survol, clavier, colonnes côte à côte, fenêtres de dialogue. Les écrans sont dessinés à 1440 × 900 puis réduits ; on peut cliquer,
+    survoler et faire défiler dedans. Noms, plats, prix et heures sont des exemples.</p>
+  <p>Ce qui reste dans l’app : la barre d’onglets du bas, glisser pour confirmer, la lentille qu’on fait glisser au doigt, les feuilles qu’on
+    tire vers le bas, les vibrations, les écrans plein format à la place des dialogues.</p>
+  <nav class="nav-page" aria-label="Sections et réglages">
+    <a href="#s1">1 · Cadre</a><a href="#s2">2 · Connexion</a><a href="#s3">3 · Liste</a><a href="#s4">4 · Commerce</a><a href="#s5">5 · Paiement</a>
+    <a href="#s6">6 · Commandes</a><a href="#s7">7 · Compte</a><a href="#s8">8 · Espace commerce</a><a href="#s9">9 · Livreur</a>
+    <span class="sep"></span>
+    <span class="reglage decision">Bandes collantes
+      <span class="bascule" data-reglage="barres"><button type="button" data-v="verre" aria-pressed="true">Verre</button><button type="button" data-v="blanc" aria-pressed="false">Blanc plein</button></span></span>
+    <span class="reglage">Barre latérale
+      <span class="bascule" data-reglage="cote"><button type="button" data-v="iris" aria-pressed="true">Iris</button><button type="button" data-v="blanc" aria-pressed="false">Blanche</button></span></span>
+    <span class="reglage">Écrans
+      <span class="bascule" data-reglage="dispo"><button type="button" data-v="cote" aria-pressed="true">Côte à côte</button><button type="button" data-v="pile" aria-pressed="false">Empilés</button></span></span>
+  </nav>
+
+  <section class="sm" id="s1">
+    <h2><span class="num-sec">1</span>Le cadre : barre latérale, largeurs, survol, focus, cookies</h2>
+    <p>La barre latérale (dès 900 px, comme aujourd’hui) devient iris : avec le bandeau du haut, elle forme un seul cadre iris dans lequel la
+      feuille blanche monte. L’onglet actif est une pastille blanche qui glisse d’un lien à l’autre. Le contenu a deux largeurs fixes, centrées :
+      1 120 px pour les listes, grilles et tableaux, 760 px pour les formulaires et les textes (bouton « Montrer les largeurs »). Survol : le filet
+      passe à l’iris et la carte monte un peu, jamais d’ombre. Focus clavier : un anneau iris sur le blanc, lime sur l’iris (essaie Tab).
+      La carte des cookies passe en iris ; « Accepter » et « Refuser » restent identiques (taille, graisse, couleur).</p>
+    <div class="paire">
+      <div class="vue"><h3><span class="etiq">Aujourd’hui</span>Recherche <span class="url">/search</span></h3>
+        <p class="note">Barre latérale blanche, onglet actif en pastille iris pâle. La largeur du contenu suit la fenêtre. Carte des cookies noire, « Accepter » en lime et « Refuser » en contour.</p>
+        <div class="cadre" data-ecran="cadreAuj"></div></div>
+      <div class="vue"><h3><span class="etiq prop">Proposition</span>Recherche <span class="url">/search</span></h3>
+        <p class="note">Barre latérale iris, marque en haut, langues et liens légaux en bas. Le champ montre l’anneau de focus sur iris ; la deuxième carte, l’état survolé.</p>
+        <div class="cadre" data-ecran="cadreProp"></div>
+        <div class="sous-cadre"><button type="button" class="petit-btn" data-guides aria-pressed="false">Montrer les largeurs</button><button type="button" class="petit-btn" data-cookies>Remettre la carte des cookies</button></div></div>
+    </div>
+  </section>
+
+  <section class="sm" id="s2">
+    <h2><span class="num-sec">2</span>Connexion et inscription</h2>
+    <p>La page d’accueil des visiteurs (/) ne change pas : elle reste hors de cette maquette, et l’en-tête des visiteurs aussi (gardé tel quel en haut
+      de la connexion). Sous lui, la connexion s’ouvre en deux moitiés : l’iris à gauche (et, à l’inscription, la route des étapes où le vélo
+      attend), le formulaire sur la feuille blanche à droite, avec le seul bouton lime.</p>
+    <div class="paire">
+      <div class="vue"><h3><span class="etiq">Aujourd’hui</span>Connexion <span class="url">/login</span></h3>
+        <p class="note">Une carte de 380 px au milieu d’une page blanche, sous l’en-tête iris réduit.</p>
+        <div class="cadre" data-ecran="authAuj"></div></div>
+      <div class="vue"><h3><span class="etiq prop">Proposition</span>Connexion et inscription <span class="url">/login</span></h3>
+        <p class="note">En-tête des visiteurs inchangé. « Connexion / Inscription » est un sélecteur à pouce iris. À l’inscription, le vélo attend à la première des trois étapes.</p>
+        <div class="cadre" data-ecran="authProp"></div></div>
+    </div>
+  </section>
+
+  <section class="sm" id="s3">
+    <h2><span class="num-sec">3</span>La liste des commerces</h2>
+    <p>L’adresse sur le bandeau, avec le choix Livraison / À emporter à droite. La bande des cuisines colle en haut quand on descend (Verre ou
+      Blanc plein, en haut de la page). Sur un ordinateur, les filtres passent dans une colonne à gauche et les commerces dans une grille qui
+      s’adapte à la largeur, au lieu de rangées qui défilent de côté.</p>
+    <div class="paire">
+      <div class="vue"><h3><span class="etiq">Aujourd’hui</span>Restaurants <span class="url">/restaurants</span></h3>
+        <p class="note">Bandeau et feuille déjà là depuis aujourd’hui ; cartes en rangées horizontales, filtres en pastilles sous la bande.</p>
+        <div class="cadre" data-ecran="listeAuj"></div></div>
+      <div class="vue"><h3><span class="etiq prop">Proposition</span>Restaurants <span class="url">/restaurants</span></h3>
+        <p class="note">Fais défiler dans l’écran : la bande des cuisines reste en haut. Survole une carte, clique sur un cœur.</p>
+        <div class="cadre" data-ecran="listeProp"></div>
+        <div class="sous-cadre"><button type="button" class="petit-btn" data-defiler="listeProp" data-y="330">Faire défiler</button></div></div>
+    </div>
+  </section>
+
+  <section class="sm" id="s4">
+    <h2><span class="num-sec">4</span>La page d’un commerce</h2>
+    <p>La photo bord à bord, la feuille qui monte dessus avec le logo à cheval. Les ronds flottants sont iris plein avec un filet blanc. La bande des
+      sections colle en haut. Le menu passe sur deux colonnes, et le panier vit dans une colonne collante à droite : le « + » s’ouvre en
+      compteur (3C), le total roule. Un clic sur un plat ouvre une fenêtre de dialogue, pas une feuille plein écran.</p>
+    <div class="paire">
+      <div class="vue"><h3><span class="etiq">Aujourd’hui</span>Chez Simone <span class="url">/restaurant/chez-simone</span></h3>
+        <p class="note">Sur le site, la page n’a pas changé aujourd’hui : croix et loupe en haut, pastilles des sections, photo arrondie, pilule du panier en bas.</p>
+        <div class="cadre" data-ecran="ficheAuj"></div></div>
+      <div class="vue"><h3><span class="etiq prop">Proposition</span>Chez Simone <span class="url">/restaurant/chez-simone</span></h3>
+        <p class="note">Ajoute des plats avec « + », ouvre un plat en cliquant sur son nom, fais défiler pour voir la bande des sections coller.</p>
+        <div class="cadre" data-ecran="ficheProp"></div>
+        <div class="sous-cadre"><button type="button" class="petit-btn" data-defiler="ficheProp" data-y="470">Faire défiler</button></div></div>
+    </div>
+  </section>
+
+  <section class="sm" id="s5">
+    <h2><span class="num-sec">5</span>Le panier et le paiement</h2>
+    <p>La route Panier → Paiement → Suivi traverse le bandeau. À gauche, les choix (une coche lime saute sur l’option prise) ; à droite, le récapitulatif
+      collant avec le panier modifiable, le pourboire et le total qui roule, et le seul bouton lime : « Commander et payer ».</p>
+    <div class="paire">
+      <div class="vue"><h3><span class="etiq">Aujourd’hui</span>Paiement <span class="url">/checkout</span></h3>
+        <p class="note">Déjà en deux colonnes, mais le bandeau est une carte posée dans la page, et le bouton de paiement est en haut à droite, avant le panier.</p>
+        <div class="cadre" data-ecran="payerAuj"></div></div>
+      <div class="vue"><h3><span class="etiq prop">Proposition</span>Paiement <span class="url">/checkout</span></h3>
+        <p class="note">Change le mode, l’heure, le pourboire : le total roule. Le bouton lime ferme le récapitulatif.</p>
+        <div class="cadre" data-ecran="payerProp"></div></div>
+    </div>
+  </section>
+
+  <section class="sm" id="s6">
+    <h2><span class="num-sec">6</span>Mes commandes</h2>
+    <p>La commande en cours garde le bandeau iris de l’app (1C) : le statut en grand, la route où le vélo roule d’arrêt en arrêt. Sur un ordinateur, la carte
+      du trajet et le code à donner au livreur tiennent côte à côte. Les commandes passées deviennent un tableau compact.</p>
+    <div class="paire">
+      <div class="vue"><h3><span class="etiq">Aujourd’hui</span>Mes commandes <span class="url">/orders</span></h3>
+        <p class="note">Une colonne : la commande en cours, puis chaque commande passée dans sa carte.</p>
+        <div class="cadre" data-ecran="commandesAuj"></div></div>
+      <div class="vue"><h3><span class="etiq prop">Proposition</span>Mes commandes <span class="url">/orders</span></h3>
+        <p class="note">Survole une ligne du tableau ; « Commander à nouveau » remplit le panier comme aujourd’hui.</p>
+        <div class="cadre" data-ecran="commandesProp"></div></div>
+    </div>
+  </section>
+
+  <section class="sm" id="s7">
+    <h2><span class="num-sec">7</span>Mon compte</h2>
+    <p>Le bandeau garde l’avatar et les trois raccourcis. Dessous, au lieu d’une longue colonne de lignes, deux colonnes : les catégories à gauche,
+      le contenu à droite, en 760 px au plus.</p>
+    <div class="paire">
+      <div class="vue"><h3><span class="etiq">Aujourd’hui</span>Mon compte <span class="url">/account</span></h3>
+        <p class="note">Bandeau en carte, puis une seule colonne de lignes qui ouvrent chacune une sous-page.</p>
+        <div class="cadre" data-ecran="compteAuj"></div></div>
+      <div class="vue"><h3><span class="etiq prop">Proposition</span>Mon compte <span class="url">/account</span></h3>
+        <p class="note">Clique sur une catégorie à gauche : le contenu change à droite, sans quitter la page.</p>
+        <div class="cadre" data-ecran="compteProp"></div></div>
+    </div>
+  </section>
+
+  <section class="sm" id="s8">
+    <h2><span class="num-sec">8</span>Espace commerce : Commandes et Mon commerce</h2>
+    <p>Les commandes deviennent un tableau à trois colonnes : Nouvelles, En préparation, Prêtes. La nouvelle commande sonne, son anneau compte les
+      minutes ; seule la plus pressée a le bouton lime « Accepter », les autres sont en iris. Accepte-la : elle passe en préparation et le lime
+      passe à la suivante. Mon commerce devient une vue d’ensemble sur deux colonnes.</p>
+    <div class="paire">
+      <div class="vue"><h3><span class="etiq">Aujourd’hui</span>Mes commandes <span class="url">/dashboard/orders</span></h3>
+        <p class="note">Une colonne de grandes cartes ; trois boutons lime dans la même vue (Signer, le son, Couper l’alarme).</p>
+        <div class="cadre" data-ecran="tableauAuj"></div></div>
+      <div class="vue"><h3><span class="etiq prop">Proposition</span>Mes commandes <span class="url">/dashboard/orders</span></h3>
+        <p class="note">Le service, le son et la prochaine étape montent dans le bandeau. Les minutes défilent pour de vrai (accélérées).</p>
+        <div class="cadre" data-ecran="tableauProp"></div></div>
+    </div>
+    <div class="paire">
+      <div class="vue"><h3><span class="etiq">Aujourd’hui</span>Mon commerce <span class="url">/dashboard</span></h3>
+        <p class="note">Le bandeau des étapes et la liste, sur toute la largeur de la fenêtre.</p>
+        <div class="cadre" data-ecran="commerceAuj"></div></div>
+      <div class="vue"><h3><span class="etiq prop">Proposition</span>Mon commerce <span class="url">/dashboard</span></h3>
+        <p class="note">Les étapes à gauche avec la prochaine en tête (seul lime : « Signer ») ; à droite, la fiche telle que les clients la verront et la carte.</p>
+        <div class="cadre" data-ecran="commerceProp"></div></div>
+    </div>
+  </section>
+
+  <section class="sm" id="s9">
+    <h2><span class="num-sec">9</span>Livreur : le tableau de bord sur un ordinateur</h2>
+    <p>Les livreurs roulent avec leur téléphone ; sur un ordinateur, on reste léger : la liste des courses à gauche, la carte et le détail de la course
+      choisie à droite. Pas de glissière : des boutons.</p>
+    <div class="paire">
+      <div class="vue"><h3><span class="etiq">Aujourd’hui</span>Courses <span class="url">/driver</span></h3>
+        <p class="note">Le bandeau en carte, puis les courses l’une sous l’autre sur toute la largeur.</p>
+        <div class="cadre" data-ecran="livreurAuj"></div></div>
+      <div class="vue"><h3><span class="etiq prop">Proposition</span>Courses <span class="url">/driver</span></h3>
+        <p class="note">Clique sur une course : la carte et le détail suivent. « Disponible » coupé, la liste s’éteint.</p>
+        <div class="cadre" data-ecran="livreurProp"></div></div>
+    </div>
+  </section>
+</div>
+
+<script>
+'use strict';
+/* ================================= Outils communs ================================= */
+// Tracés copiés de src/components/Icone.jsx (via tous-les-ecrans.html).
+const ICONES = {
+  restaurants: '<path d="M4 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3"/><path d="M6 12v9"/><path d="M17 3c-1.7 0-3 2.2-3 5s1.3 4 3 4 3 0 3 0V3Z"/><path d="M17 12v9"/>',
+  recherche: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  commandes: '<path d="M3 8h18l-1.3 11a2 2 0 0 1-2 1.8H6.3a2 2 0 0 1-2-1.8L3 8Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/>',
+  favoris: '<path d="M12 20s-7-4.4-7-9.3A4 4 0 0 1 12 8a4 4 0 0 1 7 2.7C19 15.6 12 20 12 20Z"/>',
+  carte: '<path d="M9 4 3 7v13l6-3 6 3 6-3V4l-6 3-6-3Z"/><path d="M9 4v13"/><path d="M15 7v13"/>',
+  compte: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  commerce: '<path d="M4 9h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9Z"/><path d="M3 9 5 4h14l2 5"/><path d="M9 21v-6h6v6"/>',
+  sac: '<path d="M5 8h14l-1 12a1 1 0 0 1-1 .9H7a1 1 0 0 1-1-.9L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  scooter: '<circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 17.5h8"/><path d="M18.5 17.5 16 7h-3"/><path d="M5.5 15V12h6l3.5 5.5"/>',
+  euro: '<circle cx="12" cy="12" r="9"/><path d="M16 9.2A4.3 4.3 0 0 0 13 8c-2.2 0-4 1.8-4 4s1.8 4 4 4a4.3 4.3 0 0 0 3-1.2"/><path d="M7.5 11h5"/><path d="M7.5 13.5h5"/>',
+  carteBancaire: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/>',
+  etiquette: '<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9Z"/><circle cx="7.5" cy="7.5" r="1.3"/>',
+  courrier: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  cadenas: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  cle: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9"/><path d="m17 6 2 2"/><path d="m14.5 8.5 2 2"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18"/><path d="M12 3a15 15 0 0 0 0 18"/>',
+  bouclier: '<path d="M12 3 5 6v5.5c0 4.3 3 7.6 7 9.5 4-1.9 7-5.2 7-9.5V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>',
+  document: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/>',
+  contrat: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/><path d="M9 16c1.2-2.5 2-2.5 3 0s1.8 2.5 3 0"/>',
+  dossier: '<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5 16c.6-1.5 2-2.2 3.5-2.2S11.4 14.5 12 16"/><path d="M15 10h4"/><path d="M15 14h4"/>',
+  boussole: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/>',
+  bouee: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/><path d="m5.6 5.6 3.8 3.8"/><path d="m14.6 14.6 3.8 3.8"/><path d="m18.4 5.6-3.8 3.8"/><path d="m9.4 14.6-3.8 3.8"/>',
+  horloge: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.5l3.5 2"/>',
+  position: '<path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/>',
+  cloche: '<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+  maison: '<path d="m3 10 9-7 9 7"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/><path d="M10 21v-6h4v6"/>',
+  sonnette: '<rect x="6" y="3" width="12" height="18" rx="4"/><circle cx="12" cy="9" r="2"/><path d="M10 15h4"/>',
+  porte: '<path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17"/><path d="M3 21h18"/><circle cx="15" cy="12" r="1"/>',
+  telephone: '<path d="M6.5 3h3l1.5 4.5-2 1.5a12 12 0 0 0 6 6l1.5-2L21 14.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4 5.2 2 2 0 0 1 6 3Z"/>',
+  imprimante: '<path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7v-7Z"/>',
+  reglages: '<path d="M4 6h10"/><path d="M18 6h2"/><circle cx="16" cy="6" r="2"/><path d="M4 12h4"/><path d="M12 12h8"/><circle cx="10" cy="12" r="2"/><path d="M4 18h12"/><circle cx="18" cy="18" r="2"/>',
+  alerte: '<path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/>',
+  megaphone: '<path d="M3 10v4a1 1 0 0 0 1 1h3l8 5V4L7 9H4a1 1 0 0 0-1 1Z"/><path d="M19 9a4 4 0 0 1 0 6"/>',
+  son: '<path d="M11 5 6.5 9H3v6h3.5L11 19V5Z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6"/><path d="M18 6.7a7.5 7.5 0 0 1 0 10.6"/>',
+  pizza: '<path d="M12 21 3.6 6.5a17 17 0 0 1 16.8 0Z"/><path d="M5.3 9.4a13.5 13.5 0 0 1 13.4 0"/><circle cx="10" cy="12" r="1"/><circle cx="14" cy="13.5" r="1"/>',
+  burger: '<path d="M4 11a8 6.5 0 0 1 16 0Z"/><path d="M3 14.5h18"/><path d="M4.5 17.5h15v.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-.5Z"/>',
+  frites: '<path d="M6 11h12l-1.6 10H7.6Z"/><path d="M8 11 7 4.5"/><path d="M11 11V3.5"/><path d="M14 11l.8-6.5"/><path d="M17 11l1.3-5"/>',
+  bol: '<path d="M3 11h18a9 9 0 0 1-18 0Z"/><path d="M9 21h6"/><path d="M8 7.5c1-1.4 3-1.4 4 0s3 1.4 4 0"/>',
+  tasse: '<path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"/><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3.5v3"/><path d="M12 3.5v3"/>',
+  feuille: '<path d="M5 19C5 10 11 4.5 20 4c-.4 9-6 15-15 15Z"/><path d="M5 19 13.5 10.5"/>',
+  poisson: '<path d="M3 12c2.8-3.6 6.4-5.5 10.5-5.5 3 0 5.6 2 7.5 5.5-1.9 3.5-4.5 5.5-7.5 5.5C9.4 17.5 5.8 15.6 3 12Z"/><path d="M3 12 1.5 8.5"/><path d="M3 12l-1.5 3.5"/><path d="M16 11h.01"/>',
+  retour: '<path d="M15 5 8 12l7 7"/>',
+  valider: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  croix: '<path d="M6 6l12 12"/><path d="M18 6 6 18"/>',
+  plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
+  moins: '<path d="M5 12h14"/>',
+  fleche: '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+  calendrier: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/>'
+};
+const ic = (n, t = 20, sw = 1.8) => `<svg width="${t}" height="${t}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONES[n]}</svg>`;
+// Le vélo « 5a » sans tuile (BrandMark.jsx).
+const VELO_G = (c) => `<g fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round"><circle cx="15" cy="29" r="12.5"/><circle cx="61" cy="29" r="12.5"/></g><g fill="${c}"><rect x="16" y="8" width="44" height="5" rx="2.5"/><g transform="rotate(42 27 22.5)"><rect x="13" y="20" width="28" height="5" rx="2.5"/></g></g>`;
+const velo = (c, l = 34) => `<svg viewBox="-3 5 82 42" width="${l}" height="${Math.round(l * 42 / 82)}" aria-hidden="true">${VELO_G(c)}</svg>`;
+// Le vélo aux couleurs du drapeau (BelgianMark.jsx).
+const route = (c, pos = 10, { roule = false, l = 40, trait = 'rgba(255,255,255,.4)', classe = '' } = {}) =>
+  `<div class="route${roule ? ' roule' : ''} ${classe}"><svg class="voie" preserveAspectRatio="none" viewBox="0 0 100 4"><line x1="0" y1="2" x2="100" y2="2" stroke="${trait}" stroke-width="3" stroke-dasharray="8 8" vector-effect="non-scaling-stroke"/></svg><span class="velo" style="left:calc(${pos}% - ${l / 2}px)">${velo(c, l)}</span></div>`;
+// Une route d'étapes : arrêts, partie faite en lime, vélo qui roule jusqu'à l'arrêt en cours (animé à l'arrivée à l'écran).
+function routeEtapes(n, fait, libs) {
+  const pos = (k) => (100 * k) / (n - 1);
+  const arrets = Array.from({ length: n }, (_, k) => `<span class="re-arret${k < fait ? ' fait' : k === fait ? ' actuel' : ''}" style="left:${pos(k)}%;animation-delay:${.25 + k * .12}s">${k < fait ? ic('valider', 13, 2.8) : ''}</span>`).join('');
+  return `<div class="route-etapes" data-cible="${pos(fait)}"><span class="re-voie"></span><span class="re-fait" style="width:0"></span>${arrets}
+    <span class="re-velo" style="left:-21px">${velo('#C8F03C', 42)}</span></div>${libs ? `<div class="re-libs">${libs.map((l, k) => `<span class="${k < fait ? 'fait' : k === fait ? 'actuel' : ''}" style="left:${pos(k)}%">${l}</span>`).join('')}</div>` : ''}`;
+}
+function animerRoutes(racine) {
+  racine.querySelectorAll('.route-etapes').forEach((r) => {
+    const cible = Number(r.dataset.cible);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      r.querySelector('.re-fait').style.width = `${cible}%`;
+      const v = r.querySelector('.re-velo');
+      v.style.left = `calc(${cible}% - 21px)`;
+      v.classList.add('roule');
+      setTimeout(() => v.classList.remove('roule'), 1300);
+    }));
+  });
+}
+// Le vélo qui attend sur sa route (EtatVide), sur fond blanc.
+function scene(surIris = false) {
+  const trait = surIris ? '#FFFFFF' : '#3B2FB5';
+  const voie = surIris ? 'rgba(255,255,255,.45)' : 'rgba(59,47,181,.32)';
+  return `<svg class="scene" viewBox="0 0 280 140" aria-hidden="true">
+    <line x1="14" y1="123" x2="266" y2="123" stroke="${voie}" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 8"/>
+    <g transform="translate(220 80) scale(1.7)"><g fill="none" stroke="${trait}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONES.position}</g></g>
+    <g transform="translate(84 68) scale(1.25)">${VELO_G(surIris ? '#C8F03C' : '#3B2FB5')}</g></svg>`;
+}
+// Un plan de ville (fond des cartes ; exception assumée, comme dans l'app). Coordonnées 600 × 340, étiré sans garder les proportions.
+function plan(trajet = 'M120 90 H300 V180 H470') {
+  return `<svg class="plan" viewBox="0 0 600 340" preserveAspectRatio="none" aria-hidden="true">
+    <rect width="600" height="340" fill="#ECE9E2"/>
+    <path d="M-10 262 C 120 240, 200 312, 340 282 S 560 232, 620 262" stroke="#D3E2E8" stroke-width="24" fill="none"/>
+    <rect x="370" y="22" width="130" height="52" rx="10" fill="#DCE6D2"/><rect x="40" y="200" width="70" height="44" rx="10" fill="#DCE6D2"/>
+    <g stroke="#fff" stroke-width="12" stroke-linecap="round" fill="none"><path d="M0 90 H600"/><path d="M0 180 H600"/><path d="M120 0 V340"/><path d="M300 0 V340"/><path d="M470 0 L540 340"/><path d="M0 10 L250 340"/></g>
+    <g stroke="#fff" stroke-width="5" fill="none"><path d="M0 135 H600"/><path d="M210 0 V340"/><path d="M390 0 V340"/><path d="M0 230 H600"/><path d="M0 45 H600"/></g>
+    <path d="${trajet}" stroke="#3B2FB5" stroke-width="5" stroke-dasharray="10 9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+const pin = (x, y, classe, icone) => `<span class="pin ${classe}" style="left:${x}%;top:${y}%">${icone}</span>`;
+const REDUIT = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const euros = (n) => `${n.toFixed(2).replace('.', ',')} €`;
+// Les chiffres qui changent roulent ; les autres restent en place (alignés à droite).
+function chiffres(nv, av = '') {
+  const d = nv.length - av.length;
+  return [...nv].map((c, k) => `<span class="ch${av[k - d] !== c ? ' roule' : ''}">${c === ' ' ? '&nbsp;' : c}</span>`).join('');
+}
+function rouler(el, texte) { if (!el) return; const av = el.dataset.v || el.textContent; if (av === texte) return; el.innerHTML = chiffres(texte, av); el.dataset.v = texte; }
+
+/* ================================= Données d'exemple ================================= */
+const PH = { pizza: '#C2412D', burger: '#2F2A26', pain: '#B8862F', grec: '#1F6F8B', kebab: '#4E7A2E', brun: '#8A3B2B', rouge: '#9C3B22', creme: '#A8743A', vert: '#5B7F3A', choco: '#5A3424' };
+const COMMERCES = [
+  { n: 'Chez Simone', s: 'Pizza · Ixelles · 1,2 km', c: PH.pizza, p: 'Margherita', info: ['€€', '25–35 min'], offre: '−10 % sur la carte' },
+  { n: 'Hill’s Burger', s: 'Burgers · Etterbeek · 2,0 km', c: PH.burger, p: 'Smash burger', info: ['€€', '30–40 min'] },
+  { n: 'L’arbre à pain', s: 'Boulangerie · Saint-Gilles · 1,6 km', c: PH.pain, p: 'Croissants', info: ['€', 'À emporter'], nouveau: true },
+  { n: 'Pitaki', s: 'Grec · Ixelles · 0,9 km', c: PH.grec, p: 'Pita gyros', info: ['€', '20–30 min'] },
+  { n: 'Snack Turko', s: 'Kebab & Grill · Schaerbeek · 3,1 km', c: PH.kebab, p: 'Dürüm', info: ['€', '35–45 min'], nouveau: true }
+];
+const CUISINES = [['restaurants', 'Tous'], ['pizza', 'Pizza'], ['burger', 'Burgers'], ['poisson', 'Sushi'], ['bol', 'Italien'], ['frites', 'Belge'], ['bol', 'Asiatique'], ['feuille', 'Healthy'], ['feuille', 'Végétarien'], ['restaurants', 'Kebab & Grill'], ['tasse', 'Coffee Shop'], ['commerce', 'Boulangerie']];
+const carteC = (c, demo = false) => `<div class="carte-c${demo ? ' survol-demo' : ''}" tabindex="0" role="link" aria-label="${c.n}">
+  <span class="photo" style="background:${c.c}">${c.p}</span>${c.offre ? `<span class="cc-offre">${c.offre}</span>` : ''}
+  <button type="button" class="cc-fav" aria-label="Ajouter ${c.n} aux favoris" aria-pressed="false">${ic('favoris', 18)}</button>
+  <span class="cc-corps"><span class="cc-nom">${c.n}</span><span class="cc-sous">${c.s}</span>
+  <span class="cc-infos">${c.nouveau ? '<span class="cc-nouveau">Nouveau</span><span aria-hidden="true">·</span>' : ''}${c.info.map((x) => `<span>${x}</span>`).join('<span aria-hidden="true">·</span>')}</span></span>
+  <span class="cc-voir" aria-hidden="true">${ic('fleche', 16, 2.2)}</span></div>`;
+const VIS = ['iris', 'lime', 'nuit', 'lime'];
+const carteAuj = (c, k) => `<div class="auj-carte-r"><div class="auj-visuel ${VIS[k % 4]}">${c.n[0]}<span class="coeur">${ic('favoris', 24)}</span></div>
+  <div class="auj-corps"><b>${c.n}</b><p>${c.s}</p><p>${c.nouveau ? '<span class="badge doux">Nouveau</span> ' : ''}${c.info[0]} · Livraison</p></div></div>`;
+const MENU = [
+  { id: 'pizzas', t: 'Pizzas', plats: [
+    { id: 'margherita', n: 'Margherita', d: 'Tomate San Marzano, mozzarella fior di latte, basilic.', p: 9.5, ph: PH.pizza },
+    { id: 'regina', n: 'Regina', d: 'Jambon, champignons, mozzarella.', p: 12, ph: PH.rouge },
+    { id: 'diavola', n: 'Diavola', d: 'Salami piquant, mozzarella, piment.', p: 12.5, ph: PH.brun },
+    { id: 'formaggi', n: 'Quattro formaggi', d: 'Mozzarella, gorgonzola, taleggio, parmesan.', p: 13.5, ph: PH.creme },
+    { id: 'ortolana', n: 'Ortolana', d: 'Légumes grillés, mozzarella, pesto.', p: 12 },
+    { id: 'calzone', n: 'Calzone', d: 'Jambon, ricotta, mozzarella, pliée et dorée.', p: 13 }] },
+  { id: 'pates', t: 'Pâtes', plats: [
+    { id: 'carbonara', n: 'Carbonara', d: 'Guanciale, pecorino, jaune d’œuf, poivre.', p: 13.5, ph: PH.creme },
+    { id: 'arrabbiata', n: 'Arrabbiata', d: 'Tomate, ail, piment.', p: 11.5 },
+    { id: 'lasagne', n: 'Lasagne', d: 'Bolognaise, béchamel, parmesan.', p: 14, ph: PH.rouge }] },
+  { id: 'salades', t: 'Salades', plats: [
+    { id: 'caprese', n: 'Caprese', d: 'Tomates, mozzarella, basilic, huile d’olive.', p: 9.5, ph: PH.vert },
+    { id: 'roquette', n: 'Roquette', d: 'Roquette, parmesan, tomates séchées.', p: 10.5 }] },
+  { id: 'desserts', t: 'Desserts', plats: [
+    { id: 'tiramisu', n: 'Tiramisu', d: 'Mascarpone, café, cacao.', p: 5.5, ph: PH.choco },
+    { id: 'pannacotta', n: 'Panna cotta', d: 'Coulis de fruits rouges.', p: 5 }] },
+  { id: 'boissons', t: 'Boissons', plats: [
+    { id: 'eau', n: 'Eau pétillante 50 cl', d: '', p: 2.5 },
+    { id: 'cola', n: 'Cola 33 cl', d: '', p: 2.8 }] }
+];
+const PLATS = Object.fromEntries(MENU.flatMap((s) => s.plats).map((p) => [p.id, p]));
+
+/* ================================= Le cadre de chaque écran ================================= */
+const NAV = {
+  client: [['restaurants', 'Restaurants'], ['carte', 'Carte'], ['recherche', 'Recherche'], ['commandes', 'Mes commandes'], ['compte', 'Mon compte', 1]],
+  commerce: [['commerce', 'Mon commerce'], ['restaurants', 'Mon menu'], ['commandes', 'Mes commandes', 2], ['compte', 'Mon compte']],
+  livreur: [['sac', 'Courses'], ['carte', 'Carte'], ['euro', 'Gains'], ['compte', 'Mon compte']]
+};
+const GENS = { client: ['C', 'Cléa Client', 'Client'], commerce: ['R', 'Rémi Resto', 'Commerce'], livreur: ['L', 'Lou Livreur', 'Livreur'] };
+function coteAuj(role, actif) {
+  const [i, n, r] = GENS[role];
+  return `<aside class="cote"><div class="auj-marque"><span class="auj-tuile">${velo('#C8F03C', 30)}</span><span class="marque">fairide</span></div>
+    <nav class="auj-nav">${NAV[role].map(([icn, l, cpt], k) => `<a href="#" class="${k === actif ? 'on' : ''}">${ic(icn, 24, 1.7)}${l}${cpt ? `<span class="n">${cpt}</span>` : ''}</a>`).join('')}</nav>
+    <div class="auj-user"><span class="auj-av">${i}</span><span><b>${n}</b><small>${r.toUpperCase()}</small><u>Se déconnecter</u></span></div></aside>`;
+}
+function coteProp(role, actif) {
+  const [i, n] = GENS[role];
+  return `<aside class="cote sur-iris"><a href="#" class="cote-marque" aria-label="Fairide, accueil"><span class="cm-tuile">${velo('#C8F03C', 36)}</span><span class="marque">fairide</span></a>
+    <nav class="nav-cote" aria-label="Navigation"><span class="nav-pouce" aria-hidden="true"${actif < 0 ? ' hidden' : ''}></span>${NAV[role].map(([icn, l, cpt], k) => `<a href="#" class="${k === actif ? 'on' : ''}"${k === actif ? ' aria-current="page"' : ''}>${ic(icn, 22, 1.8)}${l}${cpt ? `<span class="cpt">${cpt}</span>` : ''}</a>`).join('')}</nav>
+    <div class="cote-bas"><div class="cote-langues" role="group" aria-label="Langue"><button class="on" type="button" aria-pressed="true">FR</button><button type="button" aria-pressed="false">NL</button><button type="button" aria-pressed="false">EN</button></div>
+      <div class="cote-legal"><a href="#">Mentions légales</a><a href="#">CGV</a><a href="#">Confidentialité</a><a href="#">Cookies</a></div>
+      <div class="cote-user"><span class="cote-av">${i}</span><span><b>${n}</b><button type="button">Se déconnecter</button></span></div></div></aside>`;
+}
+const PIED_AUJ = '<div class="auj-pied"><span>Mentions légales</span><span>CGV</span><span>Confidentialité</span><span>Cookies</span></div>';
+const COOKIE_TEXTE = 'Cookies techniques seulement — et, si tu acceptes, un outil qui nous aide à corriger les pannes. Aucune pub.';
+const cookieAuj = () => `<div class="auj-cookie" role="dialog" aria-label="Cookies"><span>${COOKIE_TEXTE} <u>Politique des cookies</u></span><button type="button" class="b lime" data-cookie>Accepter</button><button type="button" class="b contour-blanc" data-cookie>Refuser</button></div>`;
+const cookieProp = (sansCote = false) => `<div class="cookie-p sur-iris${sansCote ? ' sans-cote' : ''}" role="dialog" aria-label="Cookies"><p>${COOKIE_TEXTE}</p><a href="#">Politique des cookies</a>
+  <div class="deux"><button type="button" class="b blanc" data-cookie>Accepter</button><button type="button" class="b blanc" data-cookie>Refuser</button></div></div>`;
+const shellAuj = (role, actif, contenu, extra = '') => `<div class="site">${coteAuj(role, actif)}<div class="zone"><div class="zone-in">${contenu}</div></div></div>${extra}`;
+const shellProp = (role, actif, contenu, extra = '') => `<div class="site">${coteProp(role, actif)}<div class="zone"><div class="zone-in">${contenu}</div></div></div>${extra}`;
+const bande = (inner, style = '') => `<header class="bande sur-iris"${style ? ` style="${style}"` : ''}><div class="col">${inner}</div></header>`;
+const option = (icone, titre, sous = '', on = false) => `<button type="button" class="option${on ? ' on' : ''}" aria-pressed="${on}"><span class="tuile-ic">${ic(icone, 19)}</span><span>${titre}${sous ? `<small>${sous}</small>` : ''}</span><span class="case">${on ? ic('valider', 15, 2.8) : ''}</span></button>`;
+const puceBande = (liste, actif = 0, attr = '') => liste.map(([icone, l, extra], k) => `<button type="button" class="puce${k === actif ? ' on' : ''}" aria-pressed="${k === actif}"${attr ? ` ${attr}="${extra || k}"` : ''}>${icone ? ic(icone, 18) : ''}${l}</button>`).join('');
+const routeAuj = (pos, libs) => `<div style="position:relative;margin-top:14px">${route('#C8F03C', pos, { l: 36 })}${libs ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.75);margin-top:4px">${libs.map((l, k) => `<span${k === 1 ? ' style="color:#fff;font-weight:700"' : ''}>${l}</span>`).join('')}</div>` : ''}</div>`;
+
+/* ================================= Les écrans ================================= */
+const ECRANS = {};
+
+/* ---------- 1 · Le cadre (Recherche) ---------- */
+ECRANS.cadreAuj = () => shellAuj('client', 2, `<div style="padding:34px 40px 30px;flex:1">
+    <h1 class="auj-h1">Recherche</h1>
+    <div class="champ" style="margin:18px 0 22px;height:52px;border-radius:999px">${ic('recherche')}<input placeholder="Chercher un restaurant ou un plat" aria-label="Recherche"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px">${['Pizza', 'Burgers', 'Sushi', 'Italien', 'Belge', 'Asiatique', 'Healthy'].map((x, k) => `<span class="puce${k === 0 ? ' on' : ''}">${x}</span>`).join('')}</div>
+    <div style="font-weight:800;font-size:19px;margin-bottom:12px">Commerces</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">${COMMERCES.slice(0, 4).map(carteAuj).join('')}</div></div>${PIED_AUJ}`, cookieAuj());
+
+ECRANS.cadreProp = () => shellProp('client', 2, `${bande(`<div class="b-ctx">${ic('recherche', 16)} <b>Recherche</b></div>
+    <label class="cherche-gros focus-demo">${ic('recherche', 22)}<input placeholder="Chercher un restaurant ou un plat" aria-label="Chercher un restaurant ou un plat"><button type="button" class="b iris">Chercher</button></label>
+    <div class="suggestions">${['Pizza', 'Margherita', 'Hill’s Burger', 'Croissants', 'Halal'].map((x) => `<button type="button">${x}</button>`).join('')}</div>
+    ${route('#C8F03C', 12, { l: 44, classe: 'route-bande' })}`)}
+  <main class="feuille"><div class="col">
+    <h2 class="sec-titre">${ic('commerce')} Commerces</h2>
+    <div class="grille-c" style="grid-template-columns:repeat(4,minmax(0,1fr))">${COMMERCES.slice(0, 4).map((c, k) => carteC(c, k === 1)).join('')}</div>
+    <h2 class="sec-titre" style="margin-top:34px">${ic('restaurants')} Plats</h2>
+    <div class="plats-res" style="margin-top:0">${[['Margherita', 'Chez Simone', 9.5, PH.pizza], ['Smash burger', 'Hill’s Burger', 12.5, PH.burger], ['Pita gyros', 'Pitaki', 8.5, PH.grec], ['Croissant au beurre', 'L’arbre à pain', 1.6, PH.pain]].map(([n, c, p, col]) =>
+      `<div class="plat-res" tabindex="0"><span class="photo" style="background:${col}"></span><span class="grow"><b>${n}</b><small>${c}</small></span><b>${euros(p)}</b></div>`).join('')}</div>
+  </div></main>`, `${cookieProp()}<div class="guides" aria-hidden="true"><div class="guide" style="left:304px;width:1088px"><span>Listes, grilles, tableaux : 1 120 px au plus (ici 1 088)</span></div><div class="guide lecture" style="left:468px;width:760px"><span>Formulaires et textes : 760 px au plus</span></div></div>`);
+
+/* ---------- 2 · Accueil sans compte ---------- */
+/* ---------- 2b · Connexion ---------- */
+ECRANS.authAuj = () => `<div class="zone" style="height:100%"><div class="zone-in">
+  <div class="auj-tete" style="padding:14px 40px">${velo('#C8F03C', 44)}<span style="margin-left:auto;font-weight:600;display:inline-flex;gap:8px;align-items:center">FR <span class="chevron-bas"></span></span></div>
+  <div class="auj-auth"><div class="carte"><div style="display:flex;align-items:center;gap:10px"><span class="auj-tuile" style="width:30px;height:30px;border-radius:8px">${velo('#C8F03C', 22)}</span><span class="marque" style="font-size:22px">fairide</span></div>
+    <div class="auj-tabs"><span class="puce on">Connexion</span><span class="puce">Inscription</span></div>
+    <label class="etiquette-champ">Email</label><div class="champ"><input placeholder="toi@exemple.com"></div>
+    <label class="etiquette-champ" style="margin-top:14px">Mot de passe</label><div class="champ"><input type="password" value="motdepasse"></div>
+    <p style="margin:10px 0 16px"><span class="lien" style="font-size:14px">Mot de passe oublié ?</span></p>
+    <span class="b lime plein">Se connecter</span><div class="ou">ou</div><span class="b contour plein"><span class="g-logo">G</span> Continuer avec Google</span></div></div>
+  <div style="margin-top:auto">${PIED_AUJ}</div></div></div>`;
+
+ECRANS.authProp = () => `<div class="auth-page"><div class="auj-tete" style="padding:14px 40px">${velo('#C8F03C', 44)}<span style="margin-left:auto;font-weight:600;display:inline-flex;gap:8px;align-items:center">FR <span class="chevron-bas"></span></span></div>
+  <div class="auth-p" data-mode="login">
+  <div class="auth-gauche sur-iris">
+    <div class="seul-connexion" style="margin-top:auto"><h1>Content de te revoir.</h1><p class="sous">Tes commandes, tes favoris et tes adresses t’attendent.</p></div>
+    <div class="seul-inscription" style="margin-top:auto"><h1>Crée ton compte.</h1><p class="sous">Trois étapes, une question à la fois.</p>
+      <div class="etapes-auth">${routeEtapes(3, 0, ['Toi', 'Contact', 'Mot de passe'])}</div></div>
+    <div class="auth-scene seul-connexion">${scene(true)}</div><div class="auth-scene seul-inscription"></div></div>
+  <div class="auth-droite"><div class="auth-form">
+    <div class="segment" role="tablist" aria-label="Connexion ou inscription"><span class="seg-pouce"></span><button type="button" role="tab" class="on" aria-selected="true" data-m="login">Connexion</button><button type="button" role="tab" aria-selected="false" data-m="register">Inscription</button></div>
+    <form class="seul-connexion" data-faux>
+      <h2>Connexion</h2><p class="small">Avec ton e-mail, ou avec Google.</p>
+      <div class="champ-bloc"><label class="etiquette-champ" for="ap-mail">Email</label><div class="champ">${ic('courrier', 18)}<input id="ap-mail" placeholder="toi@exemple.com" value="clea@exemple.be"></div></div>
+      <div class="champ-bloc"><label class="etiquette-champ" for="ap-mdp">Mot de passe</label><div class="champ">${ic('cadenas', 18)}<input id="ap-mdp" type="password" value="motdepasse1"><button type="button" class="lien" style="font-size:13.5px">Afficher</button></div></div>
+      <p style="text-align:right;margin:10px 0 20px"><a href="#" class="lien" style="font-size:14px">Mot de passe oublié ?</a></p>
+      <button type="submit" class="b lime plein gros">Se connecter</button>
+      <div class="ou">ou</div><button type="button" class="b contour plein"><span class="g-logo">G</span>Continuer avec Google</button></form>
+    <form class="seul-inscription" data-faux>
+      <h2>Comment tu t’appelles ?</h2><p class="small">Étape 1 sur 3</p>
+      <div class="form2" style="margin-top:16px"><div><label class="etiquette-champ" for="ap-pr">Prénom</label><div class="champ"><input id="ap-pr" placeholder="Cléa"></div></div><div><label class="etiquette-champ" for="ap-nom">Nom</label><div class="champ"><input id="ap-nom" placeholder="Martin"></div></div></div>
+      <button type="submit" class="b lime plein gros" style="margin-top:24px">Continuer</button>
+      <div class="ou">ou</div><button type="button" class="b contour plein"><span class="g-logo">G</span>Continuer avec Google</button>
+      <p class="small" style="margin-top:16px;text-align:center">Commerce ou livreur ? <a href="#" class="lien">Rejoindre Fairide</a></p></form>
+  </div></div></div></div>`;
+
+/* ---------- 3 · Liste ---------- */
+ECRANS.listeAuj = () => shellAuj('client', 0, `<div class="auj-bande plein" style="padding:22px 34px 46px">
+    <div style="display:flex;align-items:center;gap:16px"><span class="rond" style="width:50px;height:50px;background:none;border-color:rgba(255,255,255,.4);color:#fff">${ic('maison')}</span><span style="flex:1"><small style="display:block;color:rgba(255,255,255,.75)">Livrer à</small><b style="font-size:19px">Rue du Bailli 12, Ixelles</b></span><span class="chevron-bas"></span></div>
+    ${route('#C8F03C', 8, { l: 36 })}</div>
+  <div class="auj-feuille plein" style="padding:16px 24px 40px">
+    <div style="display:flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:6px;overflow:hidden">${puceBande(CUISINES.slice(0, 10))}</div>
+    <div style="display:flex;gap:10px;margin:18px 0">${[['sac', 'À emporter'], ['euro', 'Prix'], ['reglages', 'Trier']].map(([i, l]) => `<span class="puce">${ic(i, 17)}${l}</span>`).join('')}</div>
+    <div style="background:var(--surface-soft);border-radius:999px;padding:10px 18px;font-size:14px;color:var(--ink-soft);display:flex;gap:8px;align-items:center">${ic('position', 16)} Manger local : les commerces de Ixelles d'abord, puis les communes voisines.</div>
+    ${['Autour de toi', 'Offres'].map((t, j) => `<div style="font-weight:800;font-size:19px;margin:22px 0 12px;display:flex;gap:8px;align-items:center"><span style="color:var(--iris)">${ic(j ? 'etiquette' : 'position')}</span>${t}</div>
+      <div style="display:flex;gap:16px;overflow:hidden">${COMMERCES.slice(j, j + 4).map((c, k) => `<div style="flex:0 0 300px">${carteAuj(c, k + j)}</div>`).join('')}</div>`).join('')}
+  </div>`);
+
+ECRANS.listeProp = () => shellProp('client', 0, `${bande(`<div class="liste-haut">
+      <button type="button" class="adresse-bande"><span class="rond-ic">${ic('maison', 22)}</span><span><small>Livrer à</small><b>Rue du Bailli 12, Ixelles</b></span><span class="chevron-bas" style="margin-left:8px"></span></button>
+      <div class="seg-iris" data-seg role="group" aria-label="Mode"><span class="sp"></span><button type="button" class="on" aria-pressed="true">${ic('scooter', 18)}Livraison</button><button type="button" aria-pressed="false">${ic('sac', 18)}À emporter</button></div></div>
+    ${route('#C8F03C', 6, { l: 44, classe: 'route-bande' })}`, 'padding-bottom:50px')}
+  <main class="feuille" style="padding-top:12px">
+    <div class="collant"><div class="col"><div class="cl-boite"><div class="cl-defile" data-puces role="group" aria-label="Cuisines"><span class="cl-pouce" aria-hidden="true"></span>${puceBande(CUISINES)}</div></div></div></div>
+    <div class="col"><div class="liste-corps">
+      <aside class="filtres" aria-label="Filtres">
+        <div role="radiogroup" aria-label="Trier"><p class="titre-sec">Trier</p><div class="radio-l on" role="radio" aria-checked="true" tabindex="0"><i></i>Les plus proches</div><div class="radio-l" role="radio" aria-checked="false" tabindex="-1"><i></i>Nouveaux sur Fairide</div></div>
+        <div><p class="titre-sec">Prix</p><div class="prix-puces">${['€', '€€', '€€€'].map((x) => `<button type="button" class="puce" aria-pressed="false">${x}</button>`).join('')}</div></div>
+        <div><p class="titre-sec">Envies</p>${['Bio', 'Vegan', 'Halal', 'Sans gluten'].map((x) => `<div class="case-l" role="checkbox" aria-checked="false" tabindex="0"><i>${ic('valider', 14, 3)}</i>${x}</div>`).join('')}</div>
+        <p class="local">${ic('position', 18)}<span>Manger local : les commerces d’Ixelles d’abord, puis les communes voisines.</span></p>
+      </aside>
+      <div>
+        <section class="liste-sec"><h2 class="sec-titre">${ic('position')} Autour de toi</h2><div class="grille-c">${[3, 0, 2, 1, 4].map((k) => carteC(COMMERCES[k])).join('')}</div></section>
+        <section class="liste-sec"><h2 class="sec-titre">${ic('etiquette')} Offres</h2><div class="grille-c">${[0].map((k) => carteC(COMMERCES[k])).join('')}</div></section>
+        <section class="liste-sec"><h2 class="sec-titre">${ic('boussole')} À découvrir</h2><div class="grille-c">${[2, 4, 1].map((k) => carteC(COMMERCES[k])).join('')}</div></section>
+      </div></div></div>
+  </main>`);
+
+/* ---------- 4 · Fiche d'un commerce ---------- */
+const platHtml = (p, auj = false) => `<div class="plat${p.ph ? '' : ' sans-photo'}" data-plat="${p.id}"><div class="plat-txt"><span class="plat-nom"${auj ? '' : ' role="button" tabindex="0"'}>${p.n}</span>${p.d ? `<span class="plat-desc">${p.d}</span>` : ''}<span class="plat-prix">${euros(p.p)}</span></div>
+  ${p.ph ? `<span class="photo" style="background:${p.ph}"></span>` : ''}
+  <div class="pas ferme" data-pas="${p.id}"${auj ? ' style="pointer-events:none"' : ''}><button type="button" class="p-moins" aria-label="Retirer une ${p.n}" tabindex="-1">${ic('moins', 18, 2.4)}</button><span class="p-n">0</span><button type="button" class="p-plus" aria-label="Ajouter ${p.n}">${ic('plus', 18, 2.4)}</button></div></div>`;
+ECRANS.ficheAuj = () => shellAuj('client', 0, `<div style="position:sticky;top:0;background:#fff;z-index:3;padding:20px 32px 0">
+    <div style="display:flex;justify-content:space-between"><span class="rond" style="width:46px;height:46px">${ic('croix', 22, 2.2)}</span><span class="rond" style="width:46px;height:46px">${ic('recherche', 22)}</span></div>
+    <div style="display:flex;gap:8px;padding:14px 0">${puceBande(MENU.map((s) => ['', s.t]))}</div></div>
+  <div style="padding:0 32px 120px"><div style="height:250px;border-radius:0 0 24px 24px;background:#5A2A17"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:26px 0 10px"><h1 style="font-family:var(--titre);font-size:44px">Chez Simone</h1>${ic('favoris', 30, 1.6)}</div>
+    <div class="meta"><span class="badge doux">Nouveau</span><span class="badge">Ixelles</span><span class="badge" style="background:#fff;border:1px solid var(--line)">Infos ›</span></div>
+    <span class="ouvert"><i></i>Ouvert · 11:30–22:00</span>
+    <p class="small" style="margin:12px 0 22px;font-size:15px">Pizzas au feu de bois, pâte maturée 48 h.</p>
+    <div class="menu-sec"><h2>Pizzas <small>6</small></h2><div class="plats2">${MENU[0].plats.map((p) => platHtml(p, true)).join('')}</div></div></div>`,
+  `<div class="pilule-auj">${ic('commandes', 20)}<span>Voir le panier</span><span class="pil-n">3</span><b>32,50 €</b></div>`);
+
+ECRANS.ficheProp = () => shellProp('client', 0, `<div class="couv" style="background:${PH.pizza}">
+    <div class="flottants"><div><button type="button" class="rond-iris" aria-label="Retour">${ic('retour', 20, 2.2)}</button></div>
+      <div><button type="button" class="rond-iris" aria-label="Chercher dans la carte">${ic('recherche', 20, 2)}</button><button type="button" class="rond-iris" data-coeur aria-pressed="false" aria-label="Ajouter aux favoris">${ic('favoris', 20, 2)}</button></div></div>
+    <span>Photo du commerce</span></div>
+  <main class="feuille fiche-feuille"><div class="col"><div class="fiche-grille">
+    <div class="fiche-gauche">
+      <div class="fiche-tete"><span class="logo-c">CS</span><h1>Chez Simone</h1>
+        <div class="meta"><span class="ouvert"><i></i>Ouvert · jusqu’à 22:00</span><span class="badge doux">Nouveau</span><span class="badge">Pizza</span><span class="badge">Ixelles · 1,2 km</span><button type="button" class="b contour mini" style="padding:5px 12px">Infos et allergènes</button></div>
+        <p class="small" style="font-size:15px;margin-bottom:16px">Pizzas au feu de bois, pâte maturée 48 h.</p>
+        <div class="faits"><div class="seg-gris" data-seg role="group" aria-label="Mode"><span class="sp"></span><button type="button" class="on" aria-pressed="true">Livraison</button><button type="button" aria-pressed="false">À emporter</button></div>
+          <div class="frais"><span><b>5,80 €</b><small>Livraison</small></span><span><b>25–35 min</b><small>Estimation</small></span></div></div></div>
+      <div class="collant"><div class="cl-boite"><div class="cl-defile" data-sections role="group" aria-label="Sections du menu"><span class="cl-pouce" aria-hidden="true"></span>${puceBande(MENU.map((s) => ['', s.t, s.id]), 0, 'data-va')}</div></div></div>
+      ${MENU.map((s) => `<section class="menu-sec" id="fp-${s.id}" data-sec="${s.id}"><h2>${s.t} <small>${s.plats.length}</small></h2><div class="plats2">${s.plats.map((p) => platHtml(p)).join('')}</div></section>`).join('')}
+    </div>
+    <aside class="panier-col" data-panier aria-label="Ton panier">
+      <h3>Ton panier <span class="small" data-nb></span></h3>
+      <div data-lignes></div>
+      <div class="panier-vide" data-vide>${scene()}<p class="small">Ajoute un plat avec « + » : il apparaît ici.</p></div>
+      <div data-pied><div class="prix-l" style="margin-top:8px"><span>Sous-total</span><b class="roulant" data-st>0,00 €</b></div><p class="small">Livraison et pourboire au moment de payer.</p>
+        <button type="button" class="voir-panier"><span>Voir le panier</span><span class="vp-total roulant" data-total>0,00 €</span></button></div>
+    </aside></div></div></main>`,
+  `<div class="dialogue" data-dialogue hidden role="dialog" aria-modal="true" aria-labelledby="dl-titre"><div class="dl-voile" data-fermer></div><div class="dl-boite">
+    <button type="button" class="rond-iris dl-x" data-fermer aria-label="Fermer">${ic('croix', 20, 2.2)}</button>
+    <span class="photo" data-dl-photo></span><div class="dl-corps"><h2 id="dl-titre" data-dl-nom></h2><p class="dl-prix" data-dl-prix></p><p class="small" data-dl-desc style="font-size:14.5px"></p>
+    <p class="small dl-opts">Allergènes : gluten, lait. Demande au commerce en cas de doute.</p></div>
+    <div class="dl-pied"><div class="bloc-lime"><button type="button" class="bl-pas" data-dl-moins aria-label="Un de moins">${ic('moins', 18, 2.4)}</button><span class="bl-n roulant" data-dl-n>1</span><button type="button" class="bl-pas" data-dl-plus aria-label="Un de plus">${ic('plus', 18, 2.4)}</button><span class="bl-sep"></span><button type="button" class="bl-ajouter" data-dl-ajouter>Ajouter</button></div></div></div></div>`);
+
+/* ---------- 5 · Paiement ---------- */
+const LIGNES_PANIER = [['Margherita', 'Mozzarella fior di latte', 9.5, 1], ['Regina', '', 12, 1], ['Tiramisu', '', 5.5, 2]];
+ECRANS.payerAuj = () => shellAuj('client', -1, `<div class="auj-bande"><div style="display:flex;align-items:center;gap:12px;font-size:14px"><span class="rond" style="background:none;border-color:rgba(255,255,255,.4);color:#fff">${ic('retour', 18)}</span><b>Chez Simone</b> · 4 articles</div>
+    <h1 class="auj-h1" style="margin:16px 0 4px">Paiement</h1>${routeAuj(50, ['Panier', 'Paiement', 'Suivi'])}</div>
+  <div class="auj-feuille" style="display:grid;grid-template-columns:1fr 340px;gap:22px;align-items:start">
+    <div class="carte" style="padding:22px"><p class="titre-sec">Comment récupérer ta commande ?</p><div class="options">${option('scooter', 'Livraison', '', true)}${option('sac', 'À emporter')}</div>
+      <div class="ligne-l">${ic('maison')}<span class="grow"><b>Rue du Bailli 12, 1050 Ixelles</b><small>Modifier l’adresse</small></span><span class="chev"></span></div>
+      <div class="ligne-l" style="border:0">${ic('sonnette')}<span class="grow"><b>Sonner et attendre</b><small>Ajouter des consignes</small></span><span class="chev"></span></div>
+      <p class="titre-sec" style="margin-top:14px">Quand la recevoir ?</p><div class="options">${option('scooter', 'Dès que possible', '', true)}${option('horloge', 'Programmer')}</div></div>
+    <div><div style="background:var(--iris);color:#fff;border-radius:18px;padding:18px"><b style="font-size:24px">38,30 €</b><div style="font-size:13px;opacity:.85">4 articles · total estimé</div><span class="b lime plein" style="margin-top:12px">Commander et payer</span></div>
+      <div class="carte" style="padding:18px;margin-top:14px"><p class="titre-sec">Pourboire pour ton livreur</p><div class="tips" style="margin:0 0 10px">${['Aucun', '1,00 €', '2,00 €', '3,00 €', 'Autre'].map((x, k) => `<span class="puce${k ? '' : ' on'}" style="height:34px;padding:0 11px;font-size:13px">${x}</span>`).join('')}</div>
+        <p class="small">Facultatif. 100 % pour le livreur, versé quand il a fait la course. Si la commande n’est pas livrée, il t’est rendu.</p>
+        <p class="titre-sec" style="margin-top:16px">Ta commande</p>${LIGNES_PANIER.map(([n, d, p, q]) => `<div class="pc-ligne"><span class="grow"><b>${n}</b><small>${euros(p)}</small></span><span class="puce" style="height:34px">−&nbsp;&nbsp;${q}&nbsp;&nbsp;+</span></div>`).join('')}</div></div>
+  </div>`, cookieAuj());
+
+ECRANS.payerProp = () => shellProp('client', -1, `${bande(`<div class="b-ctx"><button type="button" class="rond" aria-label="Retour au panier">${ic('retour', 18, 2)}</button><b>Chez Simone</b> · 4 articles</div>
+    <h1 class="b-titre">Paiement</h1><div style="margin-top:8px">${routeEtapes(3, 1, ['Panier', 'Paiement', 'Suivi'])}</div>`)}
+  <main class="feuille"><div class="col"><div class="deux-col">
+    <div>
+      <section class="bloc-p"><p class="titre-sec">Comment récupérer ta commande ?</p><div class="options cote-a-cote" data-choix data-mode-cmd>${option('scooter', 'Livraison', 'Chez toi, vers 12:45', true)}${option('sac', 'À emporter', 'Chaussée d’Ixelles 120')}</div>
+        <div style="margin-top:8px" data-si-livraison><div class="ligne-l" tabindex="0">${ic('maison')}<span class="grow"><b>Rue du Bailli 12, 1050 Ixelles</b><small>Modifier l’adresse</small></span><span class="chev"></span></div>
+          <div class="ligne-l" tabindex="0">${ic('sonnette')}<span class="grow"><b>Sonner et attendre</b><small>Ajouter des consignes</small></span><span class="chev"></span></div></div></section>
+      <section class="bloc-p"><p class="titre-sec">Quand la recevoir ?</p><div class="options cote-a-cote" data-choix>${option('scooter', 'Dès que possible', 'Vers 12:45', true)}${option('horloge', 'Programmer', 'Choisis un créneau')}</div></section>
+      <section class="bloc-p" data-si-livraison><p class="titre-sec">Pourboire pour ton livreur</p><div class="tips" data-tips>${['Aucun', '1,00 €', '2,00 €', '3,00 €', 'Autre'].map((x, k) => `<button type="button" class="puce${k ? '' : ' on'}" aria-pressed="${!k}" data-tip="${[0, 1, 2, 3, 0][k]}">${x}</button>`).join('')}</div>
+        <p class="small" style="margin-top:10px">Facultatif. 100 % pour le livreur, versé quand il a fait la course. Si la commande n’est pas livrée, il t’est rendu.</p></section>
+      <section class="bloc-p"><p class="titre-sec">Paiement</p><p class="small" style="display:flex;gap:10px;align-items:center;font-size:14px">${ic('carteBancaire', 22)} Carte, Bancontact ou un autre moyen proposé par Stripe. Fairide ne garde jamais tes données de carte.</p></section>
+    </div>
+    <aside class="recap" aria-label="Récapitulatif">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="font-size:18px">Ta commande</h3><button type="button" class="lien" style="font-size:14px">+ Ajouter un plat</button></div><p class="small">Chez Simone</p>
+      ${LIGNES_PANIER.map(([n, d, p, q]) => `<div class="pc-ligne"><span class="grow"><b>${n}</b><small>${euros(p)}${d ? ` · ${d}` : ''}</small></span><span class="mini-pas"><button type="button" aria-label="Un de moins">${ic('moins', 14, 2.6)}</button><b>${q}</b><button type="button" aria-label="Un de plus">${ic('plus', 14, 2.6)}</button></span></div>`).join('')}
+      <div style="margin-top:10px"><div class="prix-l"><span>Sous-total</span><span>32,50 €</span></div>
+        <div class="prix-l" data-si-livraison><span>Livraison<small>1,2 km · TVA comprise</small></span><span>5,80 €</span></div>
+        <div class="prix-l" data-si-livraison><span>Pourboire</span><span class="roulant" data-pourboire>0,00 €</span></div></div>
+      <div class="prix-l total"><span>Total</span><span class="roulant" data-total>38,30 €</span></div>
+      <button type="button" class="b lime plein gros" style="margin-top:14px">Commander et payer</button>
+      <p class="payer-note">${ic('cadenas', 14)} Paiement traité par Stripe</p>
+    </aside></div></div></main>`);
+
+/* ---------- 6 · Mes commandes ---------- */
+const PASSEES = [
+  ['Hill’s Burger', PH.burger, '12 nov., 19:42', '2 articles', '<span class="badge vert">Livrée</span>', '24,80 €'],
+  ['L’arbre à pain', PH.pain, '9 nov., 08:15', '4 articles', '<span class="badge doux">À emporter · retirée</span>', '11,20 €'],
+  ['Pitaki', PH.grec, '5 nov., 20:03', '3 articles', '<span class="badge vert">Livrée</span>', '19,60 €'],
+  ['Snack Turko', PH.kebab, '2 nov., 13:10', '1 article', '<span class="badge rouge">Annulée · remboursée</span>', '9,50 €']
+];
+ECRANS.commandesAuj = () => shellAuj('client', 3, `<div style="padding:30px 40px">
+    <h1 class="auj-h1" style="margin-bottom:18px">Mes commandes</h1>
+    <div style="background:var(--iris);color:#fff;border-radius:22px;padding:22px 26px 18px"><div style="font-size:14px;opacity:.8">Chez Simone · #012</div><h2 style="font-family:var(--titre);font-size:30px;margin:6px 0 4px">C’est en cuisine</h2><p style="opacity:.85">Livraison estimée à 12:51</p>${routeEtapes(5, 1, ['Envoyée', 'Préparation', 'Prête', 'En route', 'Livrée'])}</div>
+    <div class="carte" style="padding:16px 18px;margin-top:12px;display:flex;justify-content:space-between;align-items:center"><span class="small" style="font-size:14.5px">Ton code, à donner au livreur</span><b style="font-size:24px;letter-spacing:6px;color:var(--iris)">4821</b></div>
+    <p class="titre-sec" style="margin-top:26px">Commandes passées</p>
+    ${PASSEES.slice(0, 3).map(([n, c, d, a, s, t]) => `<div class="carte" style="padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px"><span class="photo" style="width:48px;height:48px;border-radius:12px;background:${c}"></span><span style="flex:1"><b>${n}</b><span class="small" style="display:block">${d} · ${a} · ${t}</span></span>${s}<span class="b contour mini">Commander à nouveau</span></div>`).join('')}</div>`);
+
+ECRANS.commandesProp = () => shellProp('client', 3, `${bande(`<div class="b-ctx"><b>Chez Simone</b> · Commande #012 · 4 articles</div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px"><div><h1 class="b-titre">C’est en cuisine</h1><p class="b-sous">Livraison estimée à <b>12:51</b>, dans 24 min environ.</p></div>
+      <button type="button" class="b contour-blanc mini">${ic('telephone', 16)} Appeler Chez Simone</button></div>
+    <div style="margin-top:16px">${routeEtapes(5, 1, ['Envoyée', 'Préparation', 'Prête', 'En route', 'Livrée'])}</div>`)}
+  <main class="feuille"><div class="col">
+    <div class="suivi-grille">
+      <div class="plan-boite">${plan()}${pin(20, 26.5, '', ic('commerce', 18))}${pin(78.3, 52.9, 'maison', ic('maison', 18))}</div>
+      <div>
+        <div class="code-suivi"><span><span class="small" style="display:block;font-size:14px">Ton code, à donner au livreur</span><b>4821</b></span><span style="color:var(--iris)">${ic('bouclier', 34, 1.6)}</span></div>
+        <p style="font-size:15px;line-height:1.5">C'est en préparation. Un livreur viendra ensuite la chercher sur place ; tu seras prévenu par e-mail quand il partira.</p>
+        <div style="margin-top:16px;border-top:1px solid var(--line)">${[['1', 'Margherita'], ['1', 'Regina'], ['2', 'Tiramisu']].map(([q, n]) => `<div class="prix-l" style="padding:9px 0;border-bottom:1px solid var(--line)"><span><b>${q} ×</b> ${n}</span></div>`).join('')}
+          <div class="prix-l total" style="border:0;margin:0"><span>Payé</span><span>38,30 €</span></div></div>
+        <button type="button" class="b contour mini" style="margin-top:10px">${ic('bouee', 16)} Aide sur cette commande</button>
+      </div></div>
+    <h2 class="sec-titre" style="margin-top:36px">${ic('horloge')} Commandes passées</h2>
+    <table class="tableau"><thead><tr><th>Commerce</th><th>Date</th><th>Articles</th><th>Statut</th><th style="text-align:right">Total</th><th></th></tr></thead><tbody>
+      ${PASSEES.map(([n, c, d, a, s, t], k) => `<tr class="cl" tabindex="0"><td><span class="nom-c"><span class="photo" style="background:${c}"></span>${n}</span></td><td>${d}</td><td>${a}</td><td>${s}</td><td class="num">${t}</td>
+        <td class="actions">${k === 3 ? '' : '<button type="button" class="b contour mini">Commander à nouveau</button> '}<button type="button" class="b texte mini">Reçu</button></td></tr>`).join('')}
+    </tbody></table>
+  </div></main>`);
+
+/* ---------- 7 · Mon compte ---------- */
+const LIGNES_COMPTE = [['compte', 'Mes infos', 'Rue du Bailli 12, Ixelles'], ['cadenas', 'Coordonnées de connexion', 'téléphone à vérifier'], ['cle', 'Changer de mot de passe', ''], ['globe', 'Langue', 'Français'], ['courrier', 'Nouvelles de Fairide', 'Tu les reçois par e-mail'], ['dossier', 'Mes données et mes sessions', 'Télécharger mes données, me déconnecter partout'], ['document', 'Mes documents', 'Conditions générales, confidentialité, contrats acceptés et signés']];
+ECRANS.compteAuj = () => shellAuj('client', 4, `<div class="auj-bande" style="margin:24px 24px 0;padding:26px 26px 46px">
+    <div style="display:flex;align-items:center;gap:16px"><span style="width:76px;height:76px;border-radius:50%;background:var(--lime);color:var(--ink);display:grid;place-items:center;font-size:26px;font-weight:800">CC</span><span><b style="font-family:var(--titre);font-size:34px;display:block">Cléa Client</b><span style="opacity:.85">client@exemple.be</span></span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px">${[['favoris', 'Favoris'], ['commandes', 'Mes commandes'], ['document', 'Mes factures']].map(([i, l]) => `<span style="border:1px solid rgba(255,255,255,.3);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:600">${ic(i, 24)}${l}</span>`).join('')}</div></div>
+  <div class="auj-feuille" style="padding:4px 24px 40px">
+    <div class="ligne-l" style="padding:16px 8px"><span class="tuile-ic" style="color:#D9822B;border-color:#D9822B">${ic('courrier', 20)}</span><span class="grow"><b>Messages</b><b style="font-size:13.5px">1 nouveau(x) message(s)</b></span><span class="chev"></span></div>
+    <p class="titre-sec" style="margin:22px 0 10px">Mon profil</p>
+    <div class="liste-l" style="max-width:none">${LIGNES_COMPTE.map(([i, t, s]) => `<div class="ligne-l"><span class="tuile-ic">${ic(i, 19)}</span><span class="grow"><b>${t}</b>${s ? `<small>${s}</small>` : ''}</span><span class="chev"></span></div>`).join('')}</div></div>`);
+
+ECRANS.compteProp = () => shellProp('client', 4, `${bande(`<div class="cpt-tete"><span class="avatar-l">CC</span><div><h1 class="b-titre" style="margin:0 0 2px !important">Cléa Client</h1><p class="b-sous">client@exemple.be</p></div>
+    <div class="raccourcis"><button type="button">${ic('favoris', 18)}Favoris</button><button type="button">${ic('commandes', 18)}Mes commandes</button><button type="button">${ic('document', 18)}Mes factures</button></div></div>`)}
+  <main class="feuille"><div class="col"><div class="reglages">
+    <nav class="reg-nav" data-reg aria-label="Réglages du compte">
+      <p class="titre-sec">Mon profil</p>
+      <button type="button" class="on" data-p="infos" aria-current="true">${ic('compte', 20)}Mes infos</button>
+      <button type="button" data-p="Coordonnées de connexion">${ic('cadenas', 20)}Coordonnées de connexion</button>
+      <button type="button" data-p="Changer de mot de passe">${ic('cle', 20)}Changer de mot de passe</button>
+      <button type="button" data-p="langue">${ic('globe', 20)}Langue</button>
+      <p class="titre-sec">Messages</p>
+      <button type="button" data-p="Messages">${ic('courrier', 20)}Messages<span class="cpt">1</span></button>
+      <button type="button" data-p="Nouvelles de Fairide">${ic('megaphone', 20)}Nouvelles de Fairide</button>
+      <p class="titre-sec">Confidentialité et documents</p>
+      <button type="button" data-p="Mes données et mes sessions">${ic('dossier', 20)}Mes données et mes sessions</button>
+      <button type="button" data-p="documents">${ic('document', 20)}Mes documents</button>
+      <button type="button" data-p="Aide">${ic('bouee', 20)}Aide</button>
+      <button type="button" class="danger" data-p="Se déconnecter" style="margin-top:8px">${ic('porte', 20)}Se déconnecter</button>
+    </nav>
+    <div>
+      <section class="panneau" data-panneau="infos"><h2 style="margin-bottom:20px">Mes infos</h2>
+        <div class="form2">
+          <div><label class="etiquette-champ" for="cp-pr">Prénom</label><div class="champ"><input id="cp-pr" value="Cléa"></div></div>
+          <div><label class="etiquette-champ" for="cp-nom">Nom</label><div class="champ"><input id="cp-nom" value="Client"></div></div>
+          <div class="large"><label class="etiquette-champ" for="cp-tel">Téléphone</label><div class="champ"><input id="cp-tel" value="+32 470 12 34 56"><span class="badge rouge">à vérifier</span></div></div>
+          <div class="large"><label class="etiquette-champ" for="cp-adr">Adresse de livraison</label><div class="champ">${ic('maison', 18)}<input id="cp-adr" value="Rue du Bailli 12, 1050 Ixelles"></div>
+            <button type="button" class="lien" style="margin-top:10px;font-size:14px">+ Ajouter une adresse</button></div></div>
+        <div class="pied-form"><button type="button" class="b iris">Enregistrer</button><button type="button" class="b texte">Annuler</button></div></section>
+      <section class="panneau" data-panneau="langue" hidden><h2 style="margin-bottom:20px">Langue</h2><div class="options" style="max-width:420px" data-choix>${option('globe', 'Français', '', true)}${option('globe', 'Nederlands')}${option('globe', 'English')}</div></section>
+      <section class="panneau" data-panneau="documents" hidden><h2>Mes documents</h2><p class="small">Conditions générales, confidentialité, contrats acceptés et signés</p>
+        <div class="liste-l">${[['contrat', 'Conditions générales de vente', 'Acceptées à l’inscription'], ['bouclier', 'Politique de confidentialité', 'CONF-2026-10-16'], ['document', 'Politique des cookies', '']].map(([i, t, s]) => `<div class="ligne-l" tabindex="0"><span class="tuile-ic">${ic(i, 19)}</span><span class="grow"><b>${t}</b>${s ? `<small>${s}</small>` : ''}</span><span class="chev"></span></div>`).join('')}</div></section>
+      <section class="panneau" data-panneau="autre" hidden><h2 data-titre-autre></h2><p class="small">Le même contenu qu’aujourd’hui, ouvert ici à droite au lieu d’une sous-page.</p></section>
+    </div></div></div></main>`);
+
+/* ---------- 8 · Commerce ---------- */
+ECRANS.tableauAuj = () => shellAuj('commerce', 2, `<div class="auj-bande" style="margin:24px 24px 0;padding:22px 24px 44px">
+    <div style="display:flex;justify-content:space-between;font-size:14px"><b>Chez Simone</b><span style="opacity:.85">2 en cours · 6 aujourd'hui</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);border-radius:18px;padding:14px 18px;margin-top:14px"><span><b style="font-size:18px;display:block">Ouvert aux commandes</b><span style="font-size:13.5px;opacity:.85">Touche pour mettre en pause</span></span><span class="interrupteur lime-on on"></span></div>
+    <u style="display:inline-block;margin-top:12px;font-size:14px">terminal en ligne</u></div>
+  <div class="auj-feuille" style="padding:22px 24px 40px">
+    <div class="carte" style="display:flex;align-items:center;gap:14px;padding:14px 18px"><span style="color:#D9822B">${ic('contrat', 22)}</span><span style="flex:1"><b>Prochaine étape : Signe tes engagements</b><span class="small" style="display:block">Étapes restantes avant d'être visible des clients : 4</span></span><span class="b lime">Signer</span></div>
+    <div class="carte" style="border-left:4px solid var(--red);padding:16px 18px;margin-top:12px"><div style="display:flex;align-items:center;gap:16px"><b style="font-size:15px">1 commande à traiter</b><span class="small" style="flex:1">Garde cet onglet ouvert pendant le service, ou active les notifications pour être prévenu même onglet fermé.</span><span class="b lime">${ic('son', 18)} Touche ici pour activer le son des commandes</span></div>
+      <div style="display:flex;gap:8px;margin-top:12px"><span class="b contour mini">Son coupé</span><span class="b texte mini">Réglages de l'alarme</span><span class="b lime mini">Couper l'alarme</span><span class="b contour mini">Activer les notifications</span></div></div>
+    <div class="carte" style="border-left:4px solid var(--red);padding:16px 18px;margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><span class="badge" style="background:#fff;border:1px solid var(--line)"><i style="width:8px;height:8px;border-radius:50%;background:var(--red)"></i>${ic('cloche', 14)} Nouvelle · à traiter</span><b style="display:block;font-size:22px;margin-top:10px">Camille M.</b><span class="small">+32 470 12 34 56</span></div>
+        <div style="text-align:right"><span class="anneau" style="--p:.8;display:inline-grid"><b>12</b><small>min</small></span><b style="display:block;font-size:22px;margin-top:4px">#014</b></div></div>
+      <p style="margin-top:10px;font-weight:600">1× Margherita, 1× Regina, 2× Tiramisu</p><p class="small" style="color:var(--iris)">${ic('horloge', 14)} À accepter avant 12:28 (encore 12 min) — sans réponse, la commande est annulée et le client remboursé automatiquement.</p></div>
+  </div>`);
+
+ECRANS.tableauProp = () => shellProp('commerce', 2, `${bande(`<div style="display:flex;align-items:flex-end;gap:16px"><div><div class="b-ctx"><b>Chez Simone</b> · <span data-k-resume>2 nouvelles · 2 en préparation</span></div><h1 class="b-titre" style="margin-bottom:0 !important">Commandes</h1></div>
+      <div class="puces-iris" style="margin-left:auto"><button type="button" class="puce-i">${ic('son', 16)} Son activé</button><button type="button" class="puce-i">${ic('imprimante', 16)} Imprimante reliée</button><button type="button" class="puce-i">${ic('reglages', 16)} Réglages de l’alarme</button></div></div>
+    <div class="service"><div class="grow"><b>Ouvert aux commandes</b><small>Clique pour mettre en pause</small></div><button type="button" class="interrupteur blanc-on on" data-service aria-pressed="true" aria-label="Ouvert aux commandes"></button></div>`, 'padding-bottom:50px')}
+  <main class="feuille"><div class="col"><div class="tableau-k" data-board>
+    <section class="kol" data-kol="nouv" aria-label="Nouvelles"><h2 class="kol-t"><span class="sonne">${ic('cloche', 18)}</span>Nouvelles <span class="n" data-n></span></h2><div data-cartes></div></section>
+    <section class="kol" data-kol="prep" aria-label="En préparation"><h2 class="kol-t">${ic('horloge', 18)} En préparation <span class="n" data-n></span></h2><div data-cartes></div></section>
+    <section class="kol" data-kol="pret" aria-label="Prêtes"><h2 class="kol-t">${ic('valider', 18)} Prêtes <span class="n" data-n></span></h2><div data-cartes></div></section>
+  </div></div></main>`,
+  `<div class="dialogue" data-confirm hidden role="dialog" aria-modal="true" aria-labelledby="cf-titre"><div class="dl-voile" data-fermer></div><div class="dl-boite" style="width:460px;padding:26px">
+    <h2 id="cf-titre" style="font-family:var(--titre);font-size:24px" data-cf-titre></h2><p class="small" style="font-size:14.5px;margin:8px 0 20px">Le client est prévenu et remboursé automatiquement.</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end"><button type="button" class="b contour" data-fermer>Garder la commande</button><button type="button" class="b iris" data-cf-ok>Refuser la commande</button></div></div></div>`);
+
+ECRANS.commerceAuj = () => shellAuj('commerce', 0, `<div class="auj-bande plein" style="padding:28px 40px 50px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:15px"><b>Chez Simone</b> · Pizza · Ixelles</span><span class="badge blanc-iris" style="font-size:14px;padding:7px 14px">Pas encore en ligne</span></div>
+    <h1 class="auj-h1" style="margin:12px 0 4px;font-size:40px">Avant d'être en ligne</h1><p style="opacity:.85;font-size:16px">2 étapes faites sur 6</p>${routeEtapes(6, 2)}</div>
+  <div class="auj-feuille plein" style="padding:22px 40px 40px">
+    <div class="carte" style="display:flex;gap:16px;padding:18px 20px"><span class="tuile-ic">${ic('contrat', 22)}</span><span><small style="font-size:12px;font-weight:700;color:var(--iris);letter-spacing:.05em">PROCHAINE ÉTAPE</small><b style="display:block;font-size:19px">Signe tes engagements</b><span class="small" style="font-size:14.5px">Contrat de partenariat, procédure allergènes et déclaration de professionnel : une case et ton nom.</span></span></div>
+    <span class="b lime plein gros" style="margin:14px 0 8px">Signer</span>
+    ${[['Ta carte est en place', 1], ['Carte validée', 1], ['Configure tes paiements', 0]].map(([t, f]) => `<div class="etape-c">${f ? `<span class="coche">${ic('valider', 14, 2.8)}</span>` : `<span class="tuile-ic">${ic('carteBancaire', 19)}</span>`}<span class="grow">${t}${f ? '' : '<small>Chez Stripe, en quelques minutes : ton identité et ton IBAN. Versement chaque lundi.</small>'}</span>${f ? '<span class="badge">Fait</span>' : ''}</div>`).join('')}
+  </div>`);
+
+ECRANS.commerceProp = () => shellProp('commerce', 0, `${bande(`<div class="b-ctx"><b>Chez Simone</b> · Pizza · Ixelles <span class="badge blanc-iris" style="margin-left:8px">Pas encore en ligne</span></div>
+    <h1 class="b-titre">Avant d’être en ligne</h1><p class="b-sous">2 étapes faites sur 6</p>
+    <div style="margin-top:12px">${routeEtapes(6, 2, ['Ta carte', 'Carte validée', 'Engagements', 'Paiements', 'Vérification', 'En ligne'])}</div>`)}
+  <main class="feuille"><div class="col"><div class="deux-col">
+    <div>
+      <div class="prochaine"><span class="tuile-ic">${ic('contrat', 22)}</span><span class="grow"><small>Prochaine étape</small><b>Signe tes engagements</b><span class="small" style="font-size:14px">Contrat de partenariat, procédure allergènes et déclaration de professionnel : une case et ton nom.</span></span><button type="button" class="b lime gros">Signer</button></div>
+      <div class="etapes-c">
+        ${[['Ta carte est en place', '', 'f'], ['Carte validée', '', 'f'], ['Configure tes paiements', 'Chez Stripe, en quelques minutes : ton identité et ton IBAN. Versement chaque lundi.', 'b'], ['Vérification par Fairide', 'On vérifie ton numéro d’entreprise et tes documents.', ''], ['Mise en ligne', 'Commandes à emporter dès le 1er novembre, livraison dès le 10.', '']].map(([t, s, e]) =>
+          `<div class="etape-c">${e === 'f' ? `<span class="coche">${ic('valider', 14, 2.8)}</span>` : '<span class="rond-vide"></span>'}<span class="grow">${t}${s ? `<small>${s}</small>` : ''}</span>${e === 'f' ? '<span class="badge">Fait</span>' : e === 'b' ? '<button type="button" class="b contour mini">Configurer mes paiements</button>' : ''}</div>`).join('')}
+      </div></div>
+    <aside>
+      <p class="titre-sec">Ta fiche, comme les clients la verront</p>
+      <div class="apercu-fiche"><span class="photo" style="background:${PH.pizza};height:130px;display:grid">Photo du commerce</span><div style="padding:12px 16px 16px"><b style="font-size:17px">Chez Simone</b><p class="small">Pizza · Ixelles · 11:30–22:00</p><button type="button" class="lien" style="font-size:14px;margin-top:6px">Modifier la fiche</button></div></div>
+      <div class="tuiles-k"><div class="tuile-k" tabindex="0"><small>Ta carte</small><b>42 plats</b><span class="lien" style="font-size:13.5px">Modifier</span></div><div class="tuile-k" tabindex="0"><small>Horaires</small><b>11:30–22:00</b><span class="lien" style="font-size:13.5px">Modifier</span></div></div>
+    </aside></div></div></main>`);
+
+/* ---------- 9 · Livreur ---------- */
+const COURSES = [
+  { r: 'Chez Simone', ra: 'Chaussée d’Ixelles 120', l: 'Rue du Bailli 12, Ixelles', km: '1,2 km', min: '~6 min', prix: '5,22 €', trajet: 'M120 90 H300 V180 H470', a: [20, 26.5], b: [78.3, 52.9], pret: 'prête dans 6 min' },
+  { r: 'Hill’s Burger', ra: 'Rue Belliard 46', l: 'Avenue de la Couronne 88, Ixelles', km: '2,6 km', min: '~12 min', prix: '5,94 €', trajet: 'M210 45 V135 H390 V230 H520', a: [35, 13.2], b: [86.7, 67.6], pret: 'prête dans 12 min' },
+  { r: 'Pitaki', ra: 'Rue Lesbroussart 31', l: 'Place Flagey 7, Ixelles', km: '0,9 km', min: '~5 min', prix: '4,50 €', trajet: 'M300 180 H390 V230', a: [50, 52.9], b: [65, 67.6], pret: 'prête' }
+];
+const htmlCourse = (c, k) => `<button type="button" class="course${k === 0 ? ' on' : ''}" data-c="${k}" aria-pressed="${k === 0}"><span class="course-l1"><b style="font-size:16px">${c.r}</b><span class="prix-chip">${c.prix}<small>pour toi</small></span></span>
+  <span class="trajet"><span class="tj-pt">${ic('commerce', 16)}</span><span class="tj-voie"><b>${c.km}</b></span><span class="tj-pt maison">${ic('maison', 16)}</span></span>
+  <span class="tj-libs"><span>${c.ra}</span><span>${c.l}</span></span></button>`;
+ECRANS.livreurAuj = () => shellAuj('livreur', 0, `<div class="auj-bande" style="margin:24px 24px 0;border-radius:24px;padding:24px 26px 26px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span><b style="font-size:26px;font-family:var(--titre);display:block">Disponible</b><span style="opacity:.85">Les commerces peuvent te proposer des courses</span></span><span class="interrupteur lime-on on"></span></div>
+    ${route('#C8F03C', 50, { l: 40 })}</div>
+  <div style="padding:18px 24px 40px">
+    <div style="background:var(--surface-soft);border-left:4px solid var(--iris);border-radius:10px;padding:14px 18px;font-size:14.5px"><b>Ouverture des commandes :</b> les premières livraisons démarrent le 10 novembre. D'ici là, complète ton dossier et active tes paiements pour être prêt.</div>
+    <p class="titre-sec" style="margin-top:20px">Courses proposées</p>
+    ${COURSES.map((c) => `<div class="carte" style="padding:16px 18px;margin-bottom:10px"><div style="display:flex;justify-content:space-between"><b>${c.r} → ${c.l}</b><b>${c.prix}</b></div><p class="small">${c.ra} · ${c.km} · ${c.min}</p><div style="display:flex;gap:8px;margin-top:10px"><span class="b iris mini">Accepter</span><span class="b texte mini">Détails</span></div></div>`).join('')}
+  </div>`);
+
+ECRANS.livreurProp = () => shellProp('livreur', 0, `${bande(`<div class="dispo-l"><div><div class="b-ctx">Lou Livreur · Vélo</div><h1 class="b-titre" data-dispo-titre>Tu es disponible</h1><p class="b-sous" data-dispo-sous>3 courses proposées autour de toi</p></div>
+      <div class="gains-j"><small>Aujourd’hui · 2 courses</small><b>11,60 €</b></div></div>
+    <div style="display:flex;align-items:center;gap:14px;margin-top:16px"><div class="service" style="margin:0;flex:1"><div class="grow"><b>Disponible</b><small>Les commerces peuvent te proposer des courses</small></div><button type="button" class="interrupteur blanc-on on" data-dispo aria-pressed="true" aria-label="Disponible"></button></div>
+      <button type="button" class="urgence">${ic('alerte', 18)} Urgence</button></div>
+    ${route('#C8F03C', 50, { l: 44, roule: true, classe: 'route-bande' })}`)}
+  <main class="feuille"><div class="col"><div class="livreur-grille" data-courses>
+    <div><p class="titre-sec">Courses proposées</p>${COURSES.map(htmlCourse).join('')}
+      <p class="small" style="margin-top:14px">Sur un ordinateur, tu peux préparer ton service ; la course elle-même se suit sur ton téléphone.</p></div>
+    <div class="detail-c"><div class="plan-boite" data-plan></div><div class="detail-corps">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h3 data-d-titre></h3><p class="small" data-d-sous style="font-size:14px"></p></div><span class="prix-chip"><span data-d-prix></span><small>pour toi</small></span></div>
+      <div class="detail-l"><div>${ic('commerce')}<span><b>Retrait</b><small data-d-ra></small></span></div><div>${ic('maison')}<span><b>Livraison</b><small data-d-l></small></span></div></div>
+      <div style="display:flex;gap:10px"><button type="button" class="b lime gros" style="flex:1" data-accepter-course>Accepter la course</button><button type="button" class="b contour gros">Passer</button></div></div></div>
+  </div></div></main>`);
+
+/* ================================= Ce qui bouge ================================= */
+const BRANCHER = {};
+function posePouce(pouce, el) { if (!pouce || !el) return; pouce.style.width = `${el.offsetWidth}px`; pouce.style.transform = `translateX(${el.offsetLeft}px)`; }
+function brancherCommun(e) {
+  e.addEventListener('click', (ev) => { const a = ev.target.closest('a[href="#"]'); if (a) ev.preventDefault(); });
+  e.querySelectorAll('form').forEach((f) => f.addEventListener('submit', (ev) => ev.preventDefault()));
+  // La barre latérale : la pastille glisse jusqu'au lien choisi.
+  e.querySelectorAll('.nav-cote').forEach((nav) => {
+    const pouce = nav.querySelector('.nav-pouce');
+    const liens = [...nav.querySelectorAll('a')];
+    const poser = () => { const on = nav.querySelector('a.on'); if (on && pouce) pouce.style.transform = `translateY(${on.offsetTop}px)`; };
+    poser(); nav._poser = poser;
+    liens.forEach((a) => a.addEventListener('click', () => { liens.forEach((l) => { l.classList.toggle('on', l === a); l.toggleAttribute('aria-current', l === a); }); if (pouce) pouce.hidden = false; poser(); }));
+  });
+  e.querySelectorAll('.cote-langues').forEach((g) => g.addEventListener('click', (ev) => { const b = ev.target.closest('button'); if (!b) return; g.querySelectorAll('button').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); }));
+  e.querySelectorAll('.cc-fav').forEach((b) => b.addEventListener('click', (ev) => { ev.stopPropagation(); const on = !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.animate?.([{ transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 350, easing: 'cubic-bezier(.34,1.45,.64,1)' }); }));
+  e.querySelectorAll('[data-coeur]').forEach((b) => b.addEventListener('click', () => { const on = !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }));
+  // Les sélecteurs à pouce (Livraison / À emporter).
+  e.querySelectorAll('[data-seg]').forEach((s) => {
+    const sp = s.querySelector('.sp'); const bs = [...s.querySelectorAll('button')];
+    const poser = () => posePouce(sp, s.querySelector('button.on'));
+    poser(); s._poser = poser;
+    bs.forEach((b) => b.addEventListener('click', () => { bs.forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); poser(); }));
+  });
+  // Les options à coche lime.
+  e.querySelectorAll('[data-choix]').forEach((g) => g.addEventListener('click', (ev) => {
+    const o = ev.target.closest('.option'); if (!o) return;
+    g.querySelectorAll('.option').forEach((x) => { const on = x === o; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); x.querySelector('.case').innerHTML = on ? ic('valider', 15, 2.8) : ''; });
+    g.dispatchEvent(new CustomEvent('choix', { detail: [...g.querySelectorAll('.option')].indexOf(o) }));
+  }));
+  // Les bandes de pastilles collantes : la pastille choisie sous un pouce (verre : une lentille ; blanc plein : iris).
+  e.querySelectorAll('[data-puces]').forEach((d) => {
+    const pouce = d.querySelector('.cl-pouce');
+    const poser = () => posePouce(pouce, d.querySelector('.puce.on'));
+    poser(); d._poser = poser;
+    d.addEventListener('click', (ev) => { const p = ev.target.closest('.puce'); if (!p) return; d.querySelectorAll('.puce').forEach((x) => { x.classList.toggle('on', x === p); x.setAttribute('aria-pressed', x === p); }); poser(); });
+  });
+  e.querySelectorAll('[data-cookie]').forEach((b) => b.addEventListener('click', () => { b.closest('[role="dialog"]').hidden = true; }));
+  e.querySelectorAll('.radio-l').forEach((r) => r.addEventListener('click', () => { r.parentElement.querySelectorAll('.radio-l').forEach((x) => { x.classList.toggle('on', x === r); x.setAttribute('aria-checked', x === r); }); }));
+  e.querySelectorAll('.case-l').forEach((r) => r.addEventListener('click', () => { const on = !r.classList.contains('on'); r.classList.toggle('on', on); r.setAttribute('aria-checked', on); }));
+  e.querySelectorAll('.prix-puces .puce, .tips .puce').forEach((p) => p.addEventListener('click', () => {
+    if (p.closest('.tips')) p.parentElement.querySelectorAll('.puce').forEach((x) => { x.classList.toggle('on', x === p); x.setAttribute('aria-pressed', x === p); });
+    else { const on = !p.classList.contains('on'); p.classList.toggle('on', on); p.setAttribute('aria-pressed', on); }
+  }));
+}
+function toast(e, texte) {
+  e.querySelectorAll('.toast-ecran').forEach((t) => t.remove());
+  const t = document.createElement('div'); t.className = 'toast-ecran'; t.textContent = texte; e.appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+BRANCHER.authProp = (e) => {
+  const racine = e.querySelector('.auth-p'); const seg = e.querySelector('.segment');
+  seg.addEventListener('click', (ev) => {
+    const b = ev.target.closest('button'); if (!b) return;
+    seg.querySelectorAll('button').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
+    seg.classList.toggle('droite', b.dataset.m === 'register');
+    racine.dataset.mode = b.dataset.m;
+    if (b.dataset.m === 'register') { const rr = e.querySelector('.route-etapes'); rr.querySelector('.re-fait').style.width = '0'; rr.querySelector('.re-velo').style.left = '-21px'; setTimeout(() => animerRoutes(e), 60); }
+  });
+};
+
+BRANCHER.ficheProp = (e) => {
+  const zone = e.querySelector('.zone');
+  const panier = new Map([['margherita', 1], ['tiramisu', 2]]);
+  const lignes = e.querySelector('[data-lignes]'); const vide = e.querySelector('[data-vide]'); const pied = e.querySelector('[data-pied]');
+  const timers = new Map();
+  function majPas(id, sens) {
+    const pas = e.querySelector(`[data-pas="${id}"]`); if (!pas) return;
+    const n = panier.get(id) || 0; const nEl = pas.querySelector('.p-n');
+    const av = nEl.textContent; nEl.innerHTML = chiffres(String(n), sens ? av : String(n));
+    clearTimeout(timers.get(id));
+    if (n === 0) { pas.className = 'pas ferme'; return; }
+    if (sens) { pas.className = 'pas ouvert'; timers.set(id, setTimeout(() => { pas.className = 'pas replie'; }, 2200)); }
+    else pas.className = 'pas replie';
+    pas.querySelector('.p-moins').tabIndex = n ? 0 : -1;
+  }
+  function rendre(nouveau) {
+    let st = 0; let nb = 0;
+    lignes.innerHTML = [...panier].filter(([, q]) => q > 0).map(([id, q]) => { const p = PLATS[id]; st += p.p * q; nb += q;
+      return `<div class="pc-ligne${id === nouveau ? ' entre' : ''}"><span class="grow"><b>${p.n}</b><small>${euros(p.p * q)}</small></span><span class="mini-pas"><button type="button" data-l-moins="${id}" aria-label="Un ${p.n} de moins">${ic('moins', 14, 2.6)}</button><b>${q}</b><button type="button" data-l-plus="${id}" aria-label="Un ${p.n} de plus">${ic('plus', 14, 2.6)}</button></span></div>`; }).join('');
+    vide.hidden = nb > 0; pied.hidden = nb === 0;
+    e.querySelector('[data-nb]').textContent = nb ? `${nb} article${nb > 1 ? 's' : ''}` : '';
+    rouler(e.querySelector('[data-st]'), euros(st)); rouler(e.querySelector('[data-total]'), euros(st));
+  }
+  function changer(id, d) { const n = Math.max(0, (panier.get(id) || 0) + d); const nouveau = !panier.get(id) && n > 0; panier.set(id, n); majPas(id, d > 0); rendre(nouveau ? id : null); }
+  e.querySelectorAll('[data-pas]').forEach((pas) => {
+    const id = pas.dataset.pas;
+    pas.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if (pas.classList.contains('replie')) { pas.className = 'pas ouvert'; clearTimeout(timers.get(id)); timers.set(id, setTimeout(() => { pas.className = 'pas replie'; }, 2200)); return; }
+      if (ev.target.closest('.p-plus')) changer(id, 1); else if (ev.target.closest('.p-moins')) changer(id, -1);
+    });
+  });
+  lignes.addEventListener('click', (ev) => { const m = ev.target.closest('[data-l-moins]'); const p = ev.target.closest('[data-l-plus]'); if (m) changer(m.dataset.lMoins, -1); if (p) changer(p.dataset.lPlus, 1); });
+  panier.forEach((q, id) => { const pas = e.querySelector(`[data-pas="${id}"]`); pas.className = 'pas replie'; pas.querySelector('.p-n').textContent = q; });
+  rendre(null);
+  // La fenêtre du plat.
+  const dl = e.querySelector('[data-dialogue]'); let plat = null; let n = 1;
+  const majDl = () => { rouler(dl.querySelector('[data-dl-n]'), String(n)); dl.querySelector('[data-dl-ajouter]').textContent = `Ajouter · ${euros(plat.p * n)}`; dl.querySelector('[data-dl-moins]').disabled = n <= 1; };
+  function ouvrir(id) { plat = PLATS[id]; n = 1; const ph = dl.querySelector('[data-dl-photo]'); ph.style.background = plat.ph || 'var(--cream-dim)'; ph.style.display = plat.ph ? '' : 'none';
+    dl.querySelector('[data-dl-nom]').textContent = plat.n; dl.querySelector('[data-dl-prix]').textContent = euros(plat.p); dl.querySelector('[data-dl-desc]').textContent = plat.d;
+    dl.querySelector('[data-dl-n]').dataset.v = ''; majDl(); dl.hidden = false; dl.querySelector('[data-dl-ajouter]').focus(); }
+  const fermer = () => { dl.hidden = true; };
+  e.querySelectorAll('.plat').forEach((p) => { p.addEventListener('click', () => ouvrir(p.dataset.plat)); p.querySelector('.plat-nom').addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ouvrir(p.dataset.plat); } }); });
+  dl.querySelectorAll('[data-fermer]').forEach((b) => b.addEventListener('click', fermer));
+  dl.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') fermer(); });
+  dl.querySelector('[data-dl-plus]').addEventListener('click', () => { n++; majDl(); });
+  dl.querySelector('[data-dl-moins]').addEventListener('click', () => { if (n > 1) { n--; majDl(); } });
+  dl.querySelector('[data-dl-ajouter]').addEventListener('click', () => { const id = plat.id; fermer(); changer(id, n); });
+  // La bande des sections : un clic fait défiler, le défilement choisit la section.
+  const bandeS = e.querySelector('[data-sections]'); const pouce = bandeS.querySelector('.cl-pouce');
+  const choisir = (id) => { bandeS.querySelectorAll('.puce').forEach((x) => { const on = x.dataset.va === id; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); }); posePouce(pouce, bandeS.querySelector('.puce.on')); };
+  bandeS._poser = () => posePouce(pouce, bandeS.querySelector('.puce.on'));
+  bandeS._poser();
+  bandeS.addEventListener('click', (ev) => { const p = ev.target.closest('.puce'); if (!p) return; const sec = e.querySelector(`[data-sec="${p.dataset.va}"]`);
+    const y = sec.getBoundingClientRect().top - zone.getBoundingClientRect().top; const s = zone.getBoundingClientRect().height / 900; zone.scrollTo({ top: zone.scrollTop + y / s - 76, behavior: REDUIT ? 'auto' : 'smooth' }); choisir(p.dataset.va); });
+  zone.addEventListener('scroll', () => { const s = zone.getBoundingClientRect().height / 900; let actif = MENU[0].id;
+    e.querySelectorAll('[data-sec]').forEach((sec) => { if ((sec.getBoundingClientRect().top - zone.getBoundingClientRect().top) / s < 120) actif = sec.dataset.sec; });
+    if (!bandeS.querySelector(`.puce.on[data-va="${actif}"]`)) choisir(actif); }, { passive: true });
+};
+
+BRANCHER.payerProp = (e) => {
+  let pourboire = 0; let livraison = true;
+  const maj = () => { const t = 32.5 + (livraison ? 5.8 + pourboire : 0); rouler(e.querySelector('[data-pourboire]'), euros(pourboire)); rouler(e.querySelector('[data-total]'), euros(t)); };
+  e.querySelectorAll('[data-tip]').forEach((b) => b.addEventListener('click', () => { pourboire = Number(b.dataset.tip); maj(); }));
+  e.querySelector('[data-mode-cmd]').addEventListener('choix', (ev) => { livraison = ev.detail === 0; e.querySelectorAll('[data-si-livraison]').forEach((x) => { x.hidden = !livraison; }); maj(); });
+  e.querySelector('[data-total]').dataset.v = '38,30 €';
+};
+
+BRANCHER.compteProp = (e) => {
+  const nav = e.querySelector('[data-reg]');
+  nav.addEventListener('click', (ev) => {
+    const b = ev.target.closest('button'); if (!b) return;
+    nav.querySelectorAll('button').forEach((x) => { x.classList.toggle('on', x === b); x.toggleAttribute('aria-current', x === b); });
+    const cle = b.dataset.p; const connu = e.querySelector(`[data-panneau="${cle}"]`);
+    e.querySelectorAll('[data-panneau]').forEach((p) => { p.hidden = true; });
+    if (connu) connu.hidden = false; else { const a = e.querySelector('[data-panneau="autre"]'); a.querySelector('[data-titre-autre]').textContent = cle; a.hidden = false; }
+  });
+};
+
+BRANCHER.tableauProp = (e) => {
+  const CMD = [
+    { id: '014', cli: 'Camille M.', mode: 'Livraison', art: '1× Margherita, 1× Regina, 2× Tiramisu', total: '32,50 €', etat: 'nouv', reste: 4 * 60 + 20, limite: '12:28' },
+    { id: '015', cli: 'Yanis B.', mode: 'À emporter', art: '2× Diavola, 1× Cola 33 cl', total: '27,80 €', etat: 'nouv', reste: 11 * 60 + 5, limite: '12:35' },
+    { id: '013', cli: 'Sarah L.', mode: 'Livraison', art: '1× Carbonara, 1× Panna cotta', total: '18,50 €', etat: 'prep', pret: 8 },
+    { id: '012', cli: 'Tom D.', mode: 'À emporter', art: '1× Calzone', total: '13,00 €', etat: 'prep', pret: 3 },
+    { id: '011', cli: 'Inès K.', mode: 'Livraison', art: '2× Margherita', total: '19,00 €', etat: 'pret', info: 'Livreur dans 4 min' },
+    { id: '010', cli: 'Marc V.', mode: 'À emporter', art: '1× Lasagne, 1× Eau pétillante 50 cl', total: '16,50 €', etat: 'pret', info: 'Le client vient la chercher' }
+  ];
+  const MAX = 15 * 60; let entre = null;
+  const temps = (o) => `<div class="temps" role="group" aria-label="Temps de préparation">${[10, 20, 30, 45].map((m) => `<button type="button" class="${m === (o.choix || 20) ? 'on' : ''}" data-temps="${m}">${m} min</button>`).join('')}</div>`;
+  function carte(o, urgent) {
+    const tete = `<div class="cmd-l1"><div><span class="cmd-num">#${o.id}</span> <span class="badge doux">${o.mode}</span><div class="cmd-cli">${o.cli}</div></div>`;
+    const art = `<p class="cmd-art">${o.art} · <b style="color:var(--ink)">${o.total}</b></p>`;
+    const cls = `cmd${urgent ? ' urgent' : ''}${o.id === entre ? ' entre' : ''}`;
+    if (o.etat === 'nouv') { const min = Math.ceil(o.reste / 60);
+      return `<article class="${cls}" data-id="${o.id}">${tete}<span class="anneau${min <= 5 ? ' presse' : ''}" style="--p:${(o.reste / MAX).toFixed(3)}"><b>${min}</b><small>min</small></span></div>${art}${temps(o)}
+        <div class="cmd-btns"><button type="button" class="b ${urgent ? 'lime' : 'iris'}" data-accepter>Accepter</button><button type="button" class="b contour" data-refuser>Refuser</button></div>
+        <p class="cmd-delai">${ic('horloge', 14)} À accepter avant ${o.limite} (encore ${min} min)</p></article>`; }
+    if (o.etat === 'prep') return `<article class="${cls}" data-id="${o.id}">${tete}<span class="badge">Prête dans ${o.pret} min</span></div>${art}
+        <div class="cmd-btns"><button type="button" class="b iris" data-prete>Prête</button><button type="button" class="b contour" style="flex:0 0 auto" aria-label="Imprimer le ticket">${ic('imprimante', 18)}</button></div></article>`;
+    return `<article class="${cls}" data-id="${o.id}">${tete}<span class="badge vert">Prête</span></div>${art}<p class="small" style="display:flex;gap:6px;align-items:center">${ic(o.mode === 'Livraison' ? 'scooter' : 'sac', 16)} ${o.info}</p>
+      ${o.mode === 'À emporter' ? '<div class="cmd-btns" style="margin-top:10px"><button type="button" class="b contour" data-remise>Remise au client</button></div>' : ''}</article>`;
+  }
+  function rendre() {
+    const nouv = CMD.filter((o) => o.etat === 'nouv').sort((a, b) => a.reste - b.reste);
+    ['nouv', 'prep', 'pret'].forEach((k) => {
+      const liste = k === 'nouv' ? nouv : CMD.filter((o) => o.etat === k);
+      const kol = e.querySelector(`[data-kol="${k}"]`);
+      kol.querySelector('[data-n]').textContent = liste.length;
+      kol.querySelector('[data-cartes]').innerHTML = liste.length ? liste.map((o, i) => carte(o, k === 'nouv' && i === 0)).join('') : `<p class="kol-vide">${k === 'nouv' ? 'Aucune nouvelle commande. Elle sonnera ici.' : 'Rien pour l’instant.'}</p>`;
+      const sonne = kol.querySelector('.sonne'); if (sonne) sonne.style.animationPlayState = liste.length ? '' : 'paused';
+    });
+    e.querySelector('[data-k-resume]').textContent = `${nouv.length} nouvelle${nouv.length > 1 ? 's' : ''} · ${CMD.filter((o) => o.etat === 'prep').length} en préparation`;
+    entre = null;
+  }
+  function deplacer(id, etat, maj = {}) {
+    const el = e.querySelector(`[data-id="${id}"]`); const o = CMD.find((x) => x.id === id);
+    Object.assign(o, maj, { etat }); entre = etat ? id : null;
+    if (el && !REDUIT) { el.classList.add('part'); setTimeout(rendre, 280); } else rendre();
+  }
+  e.querySelector('[data-board]').addEventListener('click', (ev) => {
+    const art = ev.target.closest('[data-id]'); if (!art) return; const id = art.dataset.id; const o = CMD.find((x) => x.id === id);
+    const t = ev.target.closest('[data-temps]'); if (t) { o.choix = Number(t.dataset.temps); art.querySelectorAll('[data-temps]').forEach((b) => b.classList.toggle('on', b === t)); return; }
+    if (ev.target.closest('[data-accepter]')) deplacer(id, 'prep', { pret: o.choix || 20 });
+    else if (ev.target.closest('[data-prete]')) deplacer(id, 'pret', { info: o.mode === 'Livraison' ? 'En attente du livreur' : 'Le client vient la chercher' });
+    else if (ev.target.closest('[data-remise]')) { CMD.splice(CMD.indexOf(o), 1); deplacer(id, null); }
+    else if (ev.target.closest('[data-refuser]')) { const cf = e.querySelector('[data-confirm]'); cf.querySelector('[data-cf-titre]').textContent = `Refuser la commande #${id} ?`; cf.hidden = false; cf.dataset.id = id; cf.querySelector('[data-fermer].b').focus(); }
+  });
+  const cf = e.querySelector('[data-confirm]');
+  cf.querySelectorAll('[data-fermer]').forEach((b) => b.addEventListener('click', () => { cf.hidden = true; }));
+  cf.querySelector('[data-cf-ok]').addEventListener('click', () => { cf.hidden = true; const o = CMD.find((x) => x.id === cf.dataset.id); CMD.splice(CMD.indexOf(o), 1); deplacer(o.id, null); });
+  e.querySelector('[data-service]').addEventListener('click', (ev) => { const b = ev.currentTarget; const on = !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+    b.parentElement.querySelector('b').textContent = on ? 'Ouvert aux commandes' : 'En pause'; b.parentElement.querySelector('small').textContent = on ? 'Clique pour mettre en pause' : 'Les clients ne peuvent pas commander. Clique pour rouvrir.'; });
+  rendre();
+  // Les minutes défilent, accélérées (une minute toutes les 6 secondes), seulement quand l'écran est à l'écran.
+  const cadre = e.closest('.cadre');
+  setInterval(() => {
+    if (!cadre.classList.contains('vu') || document.hidden) return;
+    CMD.filter((o) => o.etat === 'nouv' && o.reste > 60).forEach((o) => {
+      o.reste -= 10;
+      const art = e.querySelector(`[data-id="${o.id}"]`); if (!art) return; const min = Math.ceil(o.reste / 60);
+      const an = art.querySelector('.anneau'); an.style.setProperty('--p', (o.reste / MAX).toFixed(3)); an.classList.toggle('presse', min <= 5);
+      const b = an.querySelector('b'); if (b.textContent !== String(min)) { b.textContent = min; art.querySelector('.cmd-delai').innerHTML = `${ic('horloge', 14)} À accepter avant ${o.limite} (encore ${min} min)`; }
+    });
+  }, 1000);
+};
+
+BRANCHER.livreurProp = (e) => {
+  const zoneC = e.querySelector('[data-courses]');
+  function montrer(k) {
+    const c = COURSES[k];
+    e.querySelectorAll('.course').forEach((b, i) => { b.classList.toggle('on', i === k); b.setAttribute('aria-pressed', i === k); });
+    e.querySelector('[data-plan]').innerHTML = plan(c.trajet) + pin(c.a[0], c.a[1], '', ic('commerce', 18)) + pin(c.b[0], c.b[1], 'maison', ic('maison', 18));
+    e.querySelector('[data-d-titre]').textContent = `${c.r} → ${c.l.split(',')[0]}`;
+    e.querySelector('[data-d-sous]').textContent = `${c.km} · ${c.min} à vélo · ${c.pret}`;
+    e.querySelector('[data-d-prix]').textContent = c.prix; e.querySelector('[data-d-ra]').textContent = `${c.r}, ${c.ra}`; e.querySelector('[data-d-l]').textContent = c.l;
+    const acc = e.querySelector('[data-accepter-course]'); acc.textContent = 'Accepter la course'; acc.disabled = false;
+  }
+  e.querySelectorAll('.course').forEach((b, k) => b.addEventListener('click', () => montrer(k)));
+  e.querySelector('[data-accepter-course]').addEventListener('click', (ev) => { ev.currentTarget.textContent = 'Course acceptée : suis-la sur ton téléphone'; toast(e, 'Course acceptée'); });
+  e.querySelector('[data-dispo]').addEventListener('click', (ev) => {
+    const b = ev.currentTarget; const on = !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+    zoneC.classList.toggle('pause-voile', !on); e.querySelector('.route-bande').classList.toggle('roule', on);
+    e.querySelector('[data-dispo-titre]').textContent = on ? 'Tu es disponible' : 'Tu es en pause';
+    e.querySelector('[data-dispo-sous]').textContent = on ? '3 courses proposées autour de toi' : 'Aucune course ne te sera proposée';
+  });
+  montrer(0);
+};
+
+/* ================================= Montage, mise à l'échelle, réglages ================================= */
+const cadres = [...document.querySelectorAll('.cadre[data-ecran]')];
+function ajuster() {
+  cadres.forEach((c) => { const s = c.clientWidth / 1440; const e = c.firstElementChild; if (!e) return; e.style.transform = `scale(${s})`; c.style.height = `${Math.round(900 * s)}px`; });
+}
+function reposerPouces() { document.querySelectorAll('.ecran').forEach((e) => e.querySelectorAll('.nav-cote, [data-seg], [data-puces], [data-sections]').forEach((x) => x._poser && x._poser())); }
+cadres.forEach((c) => {
+  const cle = c.dataset.ecran; const prop = /Prop$/.test(cle);
+  c.innerHTML = `<div class="ecran ${prop ? 'prop' : 'auj'}">${ECRANS[cle]()}</div>`;
+  const e = c.firstElementChild;
+  brancherCommun(e);
+  if (BRANCHER[cle]) BRANCHER[cle](e);
+});
+ajuster();
+window.addEventListener('resize', ajuster);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(reposerPouces);
+
+// Les animations ne tournent que dans les écrans visibles ; les routes d'étapes s'animent à la première apparition.
+const vus = new WeakSet();
+const obs = 'IntersectionObserver' in window ? new IntersectionObserver((entrees) => entrees.forEach((en) => {
+  en.target.classList.toggle('vu', en.isIntersecting);
+  if (en.isIntersecting && !vus.has(en.target)) { vus.add(en.target); animerRoutes(en.target); }
+}), { threshold: 0.05 }) : null;
+cadres.forEach((c) => { if (obs) obs.observe(c); else { c.classList.add('vu'); animerRoutes(c); } });
+
+// Les réglages en haut de la page.
+document.querySelectorAll('[data-reglage]').forEach((g) => g.addEventListener('click', (ev) => {
+  const b = ev.target.closest('button'); if (!b) return;
+  g.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  document.documentElement.dataset[g.dataset.reglage] = b.dataset.v;
+  if (g.dataset.reglage === 'dispo') ajuster();
+  requestAnimationFrame(reposerPouces);
+}));
+document.querySelectorAll('[data-guides]').forEach((b) => b.addEventListener('click', () => {
+  const g = b.closest('.vue').querySelector('.guides'); const on = !g.classList.contains('on'); g.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+}));
+document.querySelectorAll('[data-cookies]').forEach((b) => b.addEventListener('click', () => { b.closest('.vue').querySelectorAll('.cookie-p').forEach((x) => { x.hidden = false; }); }));
+document.querySelectorAll('[data-defiler]').forEach((b) => b.addEventListener('click', () => {
+  const z = document.querySelector(`.cadre[data-ecran="${b.dataset.defiler}"] .zone`); const bas = z.scrollTop < 10;
+  z.scrollTo({ top: bas ? Number(b.dataset.y) : 0, behavior: REDUIT ? 'auto' : 'smooth' }); b.textContent = bas ? 'Remonter' : 'Faire défiler';
+}));
+
+</script>
+</body>
+</html>
