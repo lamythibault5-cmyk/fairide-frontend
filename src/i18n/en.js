@@ -4373,6 +4373,25 @@ export default {
       deliveriesWithTip: 'Deliveries with a tip',
       none: 'No tip received yet.'
     },
+    siteLivreur: {
+      // Courier area on the website (founder, 2026-10-16, mockups/site-ordinateur.html, "Livreur"): Dashboard.jsx, PageLivreur.jsx.
+      disponible: "You're available",
+      enPause: "You're on a break",
+      proposees: '{n} rides offered near you',
+      proposeeUne: '1 ride offered near you',
+      aucuneProposee: 'No ride offered right now',
+      pauseSous: 'No new rides until you resume',
+      aujourdhui: 'Today',
+      aujourdhuiCourses: 'Today · {n} rides',
+      aujourdhuiUne: 'Today · 1 ride',
+      cliquePause: 'Click to take a break',
+      cliqueReprendre: 'Click to receive rides',
+      retrait: 'Pickup',
+      livraison: 'Delivery',
+      astuceTelephone: 'On a computer you can get your shift ready; the ride itself is easier to follow on your phone.',
+      facturesSous: 'Your sales statements and your payments summary, month by month.',
+      dossierSous: 'Your status, your documents and your commitments, in one place.'
+    },
     invoicesDriver: {
       title: 'Invoices',
       paymentsSummary: 'Payments summary',
@@ -5942,6 +5961,35 @@ export default {
       tapToPause: 'Tap to pause',
       tapToResume: 'Tap to receive rides'
     },
+    // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
+    sitePro: {
+      reglagesService: 'Service settings',
+      commandes: 'Orders',
+      tableau: 'Current orders',
+      colNouvelles: 'New',
+      colPreparation: 'Being prepared',
+      colPretes: 'Ready',
+      videNouvelles: 'No new orders. They will ring here.',
+      videColonne: 'Nothing for now.',
+      terminalEnLigne: 'Terminal online',
+      terminalHorsLigne: 'Terminal offline',
+      terminalAucun: 'Link a terminal',
+      ficheTitre: 'Your page, as customers will see it',
+      photoAbsente: 'No photo yet',
+      modifierFiche: 'Edit your page',
+      voirCommeClient: 'See it as a customer',
+      tuileCarte: 'Your menu',
+      plat: '{n} dish',
+      plats: '{n} dishes',
+      tuileHoraires: "Today's hours",
+      modifier: 'Edit',
+      etape_carte: 'Your menu',
+      etape_valider: 'Menu approved',
+      etape_engagements: 'Commitments',
+      etape_paiements: 'Payments',
+      etape_verification: 'Check',
+      etape_enLigne: 'Online'
+    },
     // "Before going live" checklist for businesses (components/commerce/MiseEnLigne.jsx, UX audit of 15/10/2026).
     miseEnLigne: {
       title: 'Before going live',
@@ -6085,6 +6133,10 @@ export default {
       confirme_client: 'You will be able to order from other businesses with this account. Your business and your deliveries do not change. Ordering from your own business stays blocked: that would be money going in a circle, not an order.',
       confirme_restaurant: 'You will be able to create your business and prepare its menu. It becomes visible to customers, and able to take money, only once the team has approved it and your payments are verified.',
       confirme_driver: 'Your courier file will be created. You will then need to upload your documents and wait for the team\'s approval before taking any delivery.'
+    },
+    // Mon compte sur ordinateur (site, 2026-10-16) : la colonne des rubriques (RubriquesCompte.jsx).
+    siteCompte: {
+      navAria: 'Account sections'
     },
     savedCards: {
       rowSub: 'Cards saved with Stripe',
@@ -6537,6 +6589,22 @@ export default {
       legal: "The European Accessibility Act (Directive (EU) 2019/882) exempts microenterprises providing services from publishing an accessibility statement. Fairide is one. This page is our commitment nonetheless.",
       updated: "Last updated: 6 October 2026."
     },
+    // Le cadre du site (lot « cadre », 2026-10-16) : barre latérale, connexion en deux moitiés. Voir site-cadre.css.
+    siteCadre: {
+      langue: 'Language',
+      liensLegaux: 'Legal links',
+      choixConnexion: 'Log in or sign up',
+      connexionTitre: 'Good to see you again.',
+      connexionSous: 'Log in to get back to your space.',
+      inscriptionClient: 'Create your account.',
+      inscriptionCommerce: 'Sign up your business.',
+      inscriptionLivreur: 'Become a courier.',
+      etape: 'Step {n} of {total}',
+      oubliTitre: 'No worries.',
+      oubliSous: 'You’ll get a link by e-mail to choose a new password.',
+      codeTitre: 'Almost there.',
+      codeSous: 'One last code and you’re in.'
+    },
     footer: {
       tagline: 'Reduced-commission delivery from local restaurants and shops in Brussels.',
       belgian: 'Designed and run from Belgium, by Belgians, for Belgians.',
@@ -6751,12 +6819,34 @@ export default {
       chipHalal: 'Halal',
       chipGlutenFree: 'Gluten-free'
     },
+    siteListe: {
+      modeLivraison: 'Delivery',
+      modeAria: 'Delivery or pickup',
+      filtresAria: 'Filters',
+      triNote: 'Best rated',
+      triDistance: 'Closest',
+      envies: 'Dietary',
+      carteColonneAria: 'Businesses on the map'
+    },
     map: {
       home: 'Your home',
       backToMapAria: 'Back to map',
       viewRestaurant: 'View restaurant →',
       backToMap: '← Back to map',
       reviewsCount: '({count} reviews)'
+    },
+    siteFiche: {
+      oneItem: '1 item',
+      items: '{n} items',
+      cartElsewhere: 'Your cart holds dishes from {name}.',
+      emptyHint: 'Add a dish with “+”: it shows up here.',
+      oneMore: 'One more {name}',
+      subtotal: 'Subtotal',
+      noteDelivery: 'Delivery and tip are added at checkout.',
+      notePickup: 'Pickup: no delivery fee.',
+      radiusValue: '{km} km',
+      radiusLabel: 'Delivery radius',
+      minimumLabel: 'Minimum order'
     },
     restaurantMenu: {
       closedForToday: 'This business is no longer taking orders today. It reopens tomorrow at {time}.',
@@ -6928,6 +7018,18 @@ export default {
       remove: "Remove {adresse}",
       removeShort: "Remove",
       loading: "Loading…"
+    },
+    siteCommande: {
+      recap: 'Summary',
+      suiteAuPaiement: 'Any delivery fee and tip: next step.',
+      stripe: 'Online payment processed by Stripe',
+      colCommerce: 'Shop',
+      colDate: 'Date',
+      colArticles: 'Items',
+      colStatut: 'Status',
+      colTotal: 'Total',
+      colActions: 'Actions',
+      details: 'Details'
     },
     checkout: {
       simulationTitle: 'Simulation: fictitious payment',

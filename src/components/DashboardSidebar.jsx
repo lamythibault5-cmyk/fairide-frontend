@@ -113,6 +113,20 @@ function AdminNav({ t }) {
   );
 }
 
+// FR · NL · EN au bas de la barre latérale du site : trois petites pastilles, celle de la langue choisie cernée d'un filet.
+const NOMS_LANGUES = { fr: 'FR', nl: 'NL', en: 'EN' };
+function SelecteurLangue({ t }) {
+  const { language, setLanguage, languages } = useLanguage();
+  const ordre = ['fr', 'nl', 'en'].filter((l) => languages.includes(l));
+  return (
+    <div className="site-cote-langues" role="group" aria-label={t('siteCadre.langue')}>
+      {ordre.map((l) => (
+        <button key={l} type="button" lang={l} aria-pressed={l === language} onClick={() => setLanguage(l)}>{NOMS_LANGUES[l]}</button>
+      ))}
+    </div>
+  );
+}
+
 export default function DashboardSidebar() {
   const { user, role, logout } = useAuth();
   const { t } = useLanguage();
@@ -156,7 +170,8 @@ export default function DashboardSidebar() {
       {/* La marque n'est pas un lien (fondateur, 2026-10-16) : elle menait à la liste des commerces, ce qu'on ne
           devine pas en la touchant. Les onglets juste en dessous y mènent déjà. */}
       <div className="dashboard-sidebar-brand">
-        <BrandMark size={30} />
+        {/* Sur le site, la tuile de la maquette (40 px, site-cadre.css) ; l'app garde la sienne. */}
+        <BrandMark size={NATIF ? 30 : 40} />
         <span className="wordmark">fairide</span>
       </div>
       {previewMode && role === 'restaurant' && (
@@ -182,6 +197,21 @@ export default function DashboardSidebar() {
           </NavLink>
         ))}
       </nav>
+      )}
+      {/* LE BAS DE LA BARRE, SUR LE SITE (fondateur, 2026-10-16, mockups/site-ordinateur.html) : la langue et les liens
+          légaux y descendent — ils étaient une rangée sous chaque page, et la langue n'existait que dans Mon compte. Rendu
+          hors de l'app seulement (l'app n'a aucun cadre du site, voir Layout.jsx) ; masqué sous 900px, où la barre devient
+          les onglets du bas (site-cadre.css). */}
+      {!NATIF && (
+        <div className="site-cote-bas">
+          <SelecteurLangue t={t} />
+          <nav className="site-cote-legal" aria-label={t('siteCadre.liensLegaux')}>
+            <Link to="/mentions-legales">{t('footer.legalNotice')}</Link>
+            <Link to="/cgv">{t('footer.terms')}</Link>
+            <Link to="/confidentialite">{t('footer.privacy')}</Link>
+            <Link to="/cookies">{t('footer.cookies')}</Link>
+          </nav>
+        </div>
       )}
       <div className="dashboard-profile-card">
         <div className="dashboard-profile-avatar">{initial}</div>

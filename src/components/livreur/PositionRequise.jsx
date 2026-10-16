@@ -18,8 +18,12 @@ import { demanderPosition, etatPosition, plateforme } from '../../natif';
  *
  * REDEMANDER. Tant que le système accepte de reposer la question, le bouton la repose. Quand il refuse pour de bon
  * (« denied »), seule la personne peut la rouvrir : on lui dit exactement où, et on revérifie à chaque retour dans
- * l'application (visibilitychange — natif.js le déclenche au retour au premier plan). */
-export default function PositionRequise({ children }) {
+ * l'application (visibilitychange — natif.js le déclenche au retour au premier plan).
+ *
+ * `repli` (site sur un ordinateur, 2026-10-16) : ce qui s'affiche à la place de la demande. La colonne de droite du tableau
+ * de bord (carte et détail de la course choisie) passe `repli={null}` : la demande est déjà dans la liste, à gauche, une
+ * seule fois. */
+export default function PositionRequise({ children, repli }) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const toast = useToast();
@@ -35,8 +39,10 @@ export default function PositionRequise({ children }) {
     return () => { document.removeEventListener('visibilitychange', auRetour); window.removeEventListener('focus', auRetour); };
   }, [verifier]);
 
+  const avecRepli = repli !== undefined;
   // Partage coupé dans Mon compte : même effet que l'autorisation refusée (le client ne verrait rien).
   if (user?.locationSharingEnabled === false) {
+    if (avecRepli) return repli;
     return (
       <div className="card position-requise" role="alert">
         <b>{t('dashDriver.posReqTitre')}</b>
@@ -47,6 +53,7 @@ export default function PositionRequise({ children }) {
   }
   if (etat === 'granted') return children;
   if (etat === 'verification') return null;
+  if (avecRepli) return repli;
 
   async function autoriser() {
     setAttente(true);

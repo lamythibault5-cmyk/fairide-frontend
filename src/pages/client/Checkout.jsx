@@ -17,7 +17,7 @@ import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../or
 import Icone from '../../components/Icone';
 import ChoixPastilles from '../../components/ChoixPastilles';
 import ChiffresRoulants from '../../components/ChiffresRoulants';
-import { BandeauCommande, BarreCommande, FeuilleCommande, OptionCommande, RouteCommande } from '../../components/EcranCommande';
+import { BandeauCommande, BarreCommande, FeuilleCommande, OptionCommande, RouteCommande, RouteEtapes } from '../../components/EcranCommande';
 import SousEcran from '../../components/SousEcran';
 import AddressSearch from '../../components/AddressSearch';
 import ChoixAdresse from '../../components/ChoixAdresse';
@@ -397,6 +397,30 @@ export default function Checkout() {
     }
   }
 
+  // Le pourboire : en tête du récapitulatif dans l'app, dans la colonne des choix sur le site (voir plus bas).
+  const blocPourboire = offrePourboire && (
+    <div className="field ec-pourboire">
+      <span className="field-intitule ec-section">{t('checkout.tipTitle')}</span>
+      <ChoixPastilles
+        libelle={t('checkout.tipTitle')}
+        valeur={pourboire}
+        onChange={setPourboire}
+        options={[
+          { value: '0', label: t('review.tipNone') },
+          { value: '1', label: euros(1) },
+          { value: '2', label: euros(2) },
+          { value: '3', label: euros(3) },
+          { value: 'autre', label: t('checkout.tipOther') }
+        ]}
+      />
+      {pourboire === 'autre' && (
+        <input aria-label={t('checkout.tipOtherPh')} type="number" inputMode="decimal" min="0.5" step="0.5" placeholder={t('checkout.tipOtherPh')}
+          value={pourboireAutre} onChange={(e) => setPourboireAutre(e.target.value)} style={{ marginTop: 6, maxWidth: 160 }} />
+      )}
+      <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('checkout.tipSub')}</p>
+    </div>
+  );
+
   // Le bon cadeau : son champ et sa réponse, repliés sous le récapitulatif sur le site, dans la feuille « Codes » dans l'app.
   const champBonCadeau = (
     <>
@@ -422,7 +446,7 @@ export default function Checkout() {
   );
 
   return (
-    <div className="checkout-page ec-page">
+    <div className="checkout-page ec-page sc-page">
       {/* Le retour mène au PANIER, et non plus directement à la carte du commerce : c'est l'écran
           d'où l'on vient, donc celui qu'on s'attend à retrouver en reculant. Revenir à la carte pour
           ajouter un plat reste possible — c'est « Ajouter un plat », dans la barre de récapitulatif
@@ -435,8 +459,11 @@ export default function Checkout() {
         haut={<><b>{restaurant.name}</b> · {t(cart.count > 1 ? 'ecranCommande.articlesPluriel' : 'ecranCommande.articles', { count: cart.count })}</>}
         titre={t('checkout.headerTitle')}
       >
-        <RouteCommande position={50} depart={8} actuelle={1}
-          etapes={[t('ecranCommande.etapePanier'), t('checkout.headerTitle'), t('ecranCommande.etapeSuivi')]} />
+        {/* Le site a la route à arrêts (RouteEtapes) ; l'app garde la sienne, sans arrêts. */}
+        {APPLI ? (
+          <RouteCommande position={50} depart={8} actuelle={1}
+            etapes={[t('ecranCommande.etapePanier'), t('checkout.headerTitle'), t('ecranCommande.etapeSuivi')]} />
+        ) : <RouteEtapes actuelle={1} />}
       </BandeauCommande>
       <FeuilleCommande>
       {/* Simulation (Admin › Simulation) : le paiement est fictif (backend payments.js, commerce de simulation) — on le
@@ -576,6 +603,23 @@ export default function Checkout() {
                 )}
               </div>
             )}
+            {/* Site (2026-10-16, mockups/site-ordinateur.html) : le pourboire est un choix comme les autres, il rejoint la colonne
+                des choix ; le total du récapitulatif roule quand il change. L'app le garde en tête du récapitulatif. */}
+            {!APPLI && blocPourboire}
+            {/* Site : les codes, l'allergie, l'âge et les CGU sont des choix aussi — ils passent dans cette colonne, AVANT le
+                récapitulatif et son bouton « Commander et payer » (dans l'ordre de lecture comme à l'écran), et le bouton reste
+                sous les yeux, juste sous le total. L'app les garde en rangées et en feuilles (voir APPLI plus bas). */}
+            {!APPLI && cart.count > 0 && (
+              <div className="sc-codes">
+                <details style={{ marginTop: 10 }} open={!!giftCode}>
+                  <summary className="small" style={{ cursor: 'pointer' }}><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherSummary')}</summary>
+                  {champBonCadeau}
+                </details>
+                <CodePromoCheckout token={token} toast={toast} subtotal={totals.subtotal} deliveryFee={fulfillmentType === 'delivery' ? Math.max(0, totals.deliveryFee - totals.deliveryDiscount) : 0}
+                  payOnSite={surPlaceChoisi} applique={codePromo} onChange={setCodePromo} />
+                <CheckoutConformite restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
+              </div>
+            )}
             {/* « Continuer » n'existe pas à la dernière étape : là, c'est le bouton de paiement du
                 récapitulatif qui prend le relais — deux actions principales sur le même écran
                 feraient hésiter au moment le moins opportun. */}
@@ -608,32 +652,14 @@ export default function Checkout() {
                   ? t('checkout.deliveryOpenSoon', { date: dateOuverture('delivery', getLocale()) })
                   : t('checkout.ordersOpenSoon', { date: dateOuverture('pickup', getLocale()) })}</span>
             )}
+            {/* Site, sous le bouton du récapitulatif (ordinateur seulement, site-commande.css) : qui encaisse. Pas pour un
+                paiement sur place, que Stripe ne traite pas. */}
+            {!APPLI && !surPlaceChoisi && <p className="sc-payer-note"><Icone nom="cadenas" taille={14} /> {t('siteCommande.stripe')}</p>}
           </BarreCommande>
           {cart.count > 0 && (
           <div className="card">
             {/* Le pourboire avant le récapitulatif (2026-10-16) : le choisir fait rouler le total de la barre. */}
-            {offrePourboire && (
-              <div className="field ec-pourboire">
-                <span className="field-intitule ec-section">{t('checkout.tipTitle')}</span>
-                <ChoixPastilles
-                  libelle={t('checkout.tipTitle')}
-                  valeur={pourboire}
-                  onChange={setPourboire}
-                  options={[
-                    { value: '0', label: t('review.tipNone') },
-                    { value: '1', label: euros(1) },
-                    { value: '2', label: euros(2) },
-                    { value: '3', label: euros(3) },
-                    { value: 'autre', label: t('checkout.tipOther') }
-                  ]}
-                />
-                {pourboire === 'autre' && (
-                  <input aria-label={t('checkout.tipOtherPh')} type="number" inputMode="decimal" min="0.5" step="0.5" placeholder={t('checkout.tipOtherPh')}
-                    value={pourboireAutre} onChange={(e) => setPourboireAutre(e.target.value)} style={{ marginTop: 6, maxWidth: 160 }} />
-                )}
-                <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('checkout.tipSub')}</p>
-              </div>
-            )}
+            {APPLI && blocPourboire}
             <div className="co-recap-tete">
               <h3>{t('checkout.yourOrder')}<span className="co-recap-resto">{restaurant.name}</span></h3>
               <Link to={`/restaurants/${restaurantId}`} className="co-ajouter">{t('checkout.addMore')}</Link>
@@ -687,7 +713,8 @@ export default function Checkout() {
               {/* Avec le devis du serveur, les remises qu'il a appliquées (bon cadeau, code promo) sont listées : la somme des lignes doit tomber sur le total. */}
               {devisValide?.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: devisValide.giftVoucherCode })}</span><span>-{euros(devisValide.giftVoucherDiscount)}</span></div>}
               {pourboireChoisi > 0 && <div className="line"><span>{t('checkout.tipLine')}</span><span>{euros(pourboireChoisi)}</span></div>}
-              <div className="line total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span>{euros(montantDebite)}</span></div>
+              {/* Sur le site, ce total est celui que l'on regarde (la barre n'y garde que le bouton) : ses chiffres roulent. */}
+              <div className="line total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span className="sc-roulant">{APPLI ? euros(montantDebite) : <ChiffresRoulants valeur={euros(montantDebite)} />}</span></div>
             </div>
             {user.balance > 0 && (
               <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
@@ -716,17 +743,7 @@ export default function Checkout() {
                 {/* Seule instance qui lit la version des CGU : les feuilles ne font qu'afficher. */}
                 <CheckoutConformite partie="infos" restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
               </>
-            ) : (
-            <>
-            <details style={{ marginTop: 10 }} open={!!giftCode}>
-              <summary className="small" style={{ cursor: 'pointer' }}><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherSummary')}</summary>
-              {champBonCadeau}
-            </details>
-            <CodePromoCheckout token={token} toast={toast} subtotal={totals.subtotal} deliveryFee={fulfillmentType === 'delivery' ? Math.max(0, totals.deliveryFee - totals.deliveryDiscount) : 0}
-              payOnSite={surPlaceChoisi} applique={codePromo} onChange={setCodePromo} />
-            <CheckoutConformite restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
-            </>
-            )}
+            ) : null}
           </div>
           )}
           </aside>

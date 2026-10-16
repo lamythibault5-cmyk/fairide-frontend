@@ -4383,6 +4383,25 @@ export default {
       deliveriesWithTip: 'Livraisons avec pourboire',
       none: 'Pas encore de pourboire reçu.'
     },
+    siteLivreur: {
+      // Espace livreur sur le site (fondateur, 2026-10-16, mockups/site-ordinateur.html, « Livreur ») : Dashboard.jsx, PageLivreur.jsx.
+      disponible: 'Tu es disponible',
+      enPause: 'Tu es en pause',
+      proposees: '{n} courses proposées autour de toi',
+      proposeeUne: '1 course proposée autour de toi',
+      aucuneProposee: 'Aucune course proposée pour le moment',
+      pauseSous: "Pas de nouvelle course tant que tu n'as pas repris",
+      aujourdhui: "Aujourd'hui",
+      aujourdhuiCourses: "Aujourd'hui · {n} courses",
+      aujourdhuiUne: "Aujourd'hui · 1 course",
+      cliquePause: 'Clique pour te mettre en pause',
+      cliqueReprendre: 'Clique pour recevoir des courses',
+      retrait: 'Retrait',
+      livraison: 'Livraison',
+      astuceTelephone: 'Sur un ordinateur, tu peux préparer ton service ; la course elle-même se suit plus facilement sur ton téléphone.',
+      facturesSous: 'Tes relevés des ventes et le récap de tes paiements, mois par mois.',
+      dossierSous: 'Ton statut, tes documents et tes engagements, au même endroit.'
+    },
     invoicesDriver: {
       title: 'Factures',
       paymentsSummary: 'Récap de paiements',
@@ -5958,6 +5977,35 @@ export default {
       tapToPause: 'Touche pour te mettre en pause',
       tapToResume: 'Touche pour recevoir des courses'
     },
+    // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
+    sitePro: {
+      reglagesService: 'Réglages du service',
+      commandes: 'Commandes',
+      tableau: 'Commandes en cours',
+      colNouvelles: 'Nouvelles',
+      colPreparation: 'En préparation',
+      colPretes: 'Prêtes',
+      videNouvelles: 'Aucune nouvelle commande. Elle sonnera ici.',
+      videColonne: "Rien pour l'instant.",
+      terminalEnLigne: 'Terminal en ligne',
+      terminalHorsLigne: 'Terminal hors ligne',
+      terminalAucun: 'Associer un terminal',
+      ficheTitre: 'Ta fiche, comme les clients la verront',
+      photoAbsente: 'Pas encore de photo',
+      modifierFiche: 'Modifier la fiche',
+      voirCommeClient: 'Voir comme un client',
+      tuileCarte: 'Ta carte',
+      plat: '{n} plat',
+      plats: '{n} plats',
+      tuileHoraires: 'Horaires du jour',
+      modifier: 'Modifier',
+      etape_carte: 'Ta carte',
+      etape_valider: 'Carte validée',
+      etape_engagements: 'Engagements',
+      etape_paiements: 'Paiements',
+      etape_verification: 'Vérification',
+      etape_enLigne: 'En ligne'
+    },
     // Liste « Avant d'être en ligne » du commerce (components/commerce/MiseEnLigne.jsx, audit UX du 15/10/2026).
     miseEnLigne: {
       title: "Avant d'être en ligne",
@@ -6104,6 +6152,10 @@ export default {
       confirme_client: 'Tu pourras commander chez les autres commerces avec ce compte. Ton commerce et tes livraisons ne changent pas. Chez toi, en revanche, tu ne peux pas commander : ce serait un aller-retour d\'argent, pas une commande.',
       confirme_restaurant: 'Tu pourras créer ton commerce et préparer ta carte. Il ne sera visible des clients, et ne pourra encaisser, qu\'une fois validé par l\'équipe et tes paiements vérifiés.',
       confirme_driver: 'Ton dossier livreur sera créé. Il faudra ensuite déposer tes documents et attendre la validation de l\'équipe avant de prendre des courses.'
+    },
+    // Mon compte sur ordinateur (site, 2026-10-16) : la colonne des rubriques (RubriquesCompte.jsx).
+    siteCompte: {
+      navAria: 'Rubriques du compte'
     },
     savedCards: {
       rowSub: 'Cartes enregistrées chez Stripe',
@@ -6571,6 +6623,22 @@ export default {
       legal: "L'Acte européen sur l'accessibilité (directive (UE) 2019/882) exempte les microentreprises qui fournissent des services de l'obligation de publier une déclaration d'accessibilité. Fairide en est une. Cette page n'en est pas moins notre engagement.",
       updated: "Dernière mise à jour : 6 octobre 2026."
     },
+    // Le cadre du site (lot « cadre », 2026-10-16) : barre latérale, connexion en deux moitiés. Voir site-cadre.css.
+    siteCadre: {
+      langue: 'Langue',
+      liensLegaux: 'Liens légaux',
+      choixConnexion: 'Connexion ou inscription',
+      connexionTitre: 'Content de te revoir.',
+      connexionSous: 'Connecte-toi pour retrouver ton espace.',
+      inscriptionClient: 'Crée ton compte.',
+      inscriptionCommerce: 'Inscris ton commerce.',
+      inscriptionLivreur: 'Deviens livreur.',
+      etape: 'Étape {n} sur {total}',
+      oubliTitre: 'Pas de souci.',
+      oubliSous: 'Tu reçois un lien par e-mail pour choisir un nouveau mot de passe.',
+      codeTitre: 'Presque fini.',
+      codeSous: 'Un dernier code, et c’est parti.'
+    },
     footer: {
       tagline: 'La livraison de repas et de commerces locaux à commission réduite, à Bruxelles.',
       belgian: 'Conçu et opéré depuis la Belgique, par des Belges, pour des Belges.',
@@ -6804,12 +6872,34 @@ export default {
       chipHalal: 'Halal',
       chipGlutenFree: 'Sans gluten'
     },
+    siteListe: {
+      modeLivraison: 'Livraison',
+      modeAria: 'Livraison ou à emporter',
+      filtresAria: 'Filtres',
+      triNote: 'Les mieux notés',
+      triDistance: 'Les plus proches',
+      envies: 'Envies',
+      carteColonneAria: 'Commerces sur la carte'
+    },
     map: {
       home: 'Chez toi',
       backToMapAria: 'Retour à la carte',
       viewRestaurant: 'Voir le restaurant →',
       backToMap: '← Retour à la carte',
       reviewsCount: '({count} avis)'
+    },
+    siteFiche: {
+      oneItem: '1 article',
+      items: '{n} articles',
+      cartElsewhere: 'Ton panier contient des plats de {name}.',
+      emptyHint: 'Ajoute un plat avec « + » : il apparaît ici.',
+      oneMore: 'Un {name} de plus',
+      subtotal: 'Sous-total',
+      noteDelivery: 'Livraison et pourboire au moment de payer.',
+      notePickup: 'À emporter : pas de frais de livraison.',
+      radiusValue: '{km} km',
+      radiusLabel: 'Rayon de livraison',
+      minimumLabel: 'Commande minimum'
     },
     restaurantMenu: {
       closedForToday: 'Ce commerce ne prend plus de commandes aujourd\'hui. Il rouvre demain à {time}.',
@@ -6981,6 +7071,18 @@ export default {
       remove: "Supprimer {adresse}",
       removeShort: "Supprimer",
       loading: "Chargement…"
+    },
+    siteCommande: {
+      recap: 'Récapitulatif',
+      suiteAuPaiement: 'Livraison et pourboire éventuels : à l’étape suivante.',
+      stripe: 'Paiement en ligne traité par Stripe',
+      colCommerce: 'Commerce',
+      colDate: 'Date',
+      colArticles: 'Articles',
+      colStatut: 'Statut',
+      colTotal: 'Total',
+      colActions: 'Actions',
+      details: 'Détails'
     },
     checkout: {
       simulationTitle: 'Simulation : paiement fictif',

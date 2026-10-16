@@ -4382,6 +4382,25 @@ export default {
       deliveriesWithTip: 'Leveringen met fooi',
       none: 'Nog geen fooi ontvangen.'
     },
+    siteLivreur: {
+      // Koeriersruimte op de website (oprichter, 2026-10-16, mockups/site-ordinateur.html, « Livreur ») : Dashboard.jsx, PageLivreur.jsx.
+      disponible: 'Je bent beschikbaar',
+      enPause: 'Je bent in pauze',
+      proposees: '{n} ritten aangeboden in je buurt',
+      proposeeUne: '1 rit aangeboden in je buurt',
+      aucuneProposee: 'Momenteel geen rit aangeboden',
+      pauseSous: 'Geen nieuwe ritten tot je hervat',
+      aujourdhui: 'Vandaag',
+      aujourdhuiCourses: 'Vandaag · {n} ritten',
+      aujourdhuiUne: 'Vandaag · 1 rit',
+      cliquePause: 'Klik om te pauzeren',
+      cliqueReprendre: 'Klik om ritten te ontvangen',
+      retrait: 'Ophalen',
+      livraison: 'Levering',
+      astuceTelephone: 'Op een computer kun je je dienst voorbereiden; de rit zelf volg je makkelijker op je telefoon.',
+      facturesSous: 'Je verkoopoverzichten en het overzicht van je betalingen, maand per maand.',
+      dossierSous: 'Je statuut, je documenten en je engagementen, op één plek.'
+    },
     invoicesDriver: {
       title: 'Facturen',
       paymentsSummary: 'Betalingsoverzicht',
@@ -5951,6 +5970,35 @@ export default {
       tapToPause: 'Tik om te pauzeren',
       tapToResume: 'Tik om ritten te ontvangen'
     },
+    // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
+    sitePro: {
+      reglagesService: 'Instellingen van de service',
+      commandes: 'Bestellingen',
+      tableau: 'Lopende bestellingen',
+      colNouvelles: 'Nieuw',
+      colPreparation: 'In bereiding',
+      colPretes: 'Klaar',
+      videNouvelles: 'Geen nieuwe bestellingen. Ze rinkelen hier.',
+      videColonne: 'Voorlopig niets.',
+      terminalEnLigne: 'Terminal online',
+      terminalHorsLigne: 'Terminal offline',
+      terminalAucun: 'Een terminal koppelen',
+      ficheTitre: 'Je fiche, zoals klanten ze zullen zien',
+      photoAbsente: 'Nog geen foto',
+      modifierFiche: 'Fiche aanpassen',
+      voirCommeClient: 'Bekijken als klant',
+      tuileCarte: 'Je kaart',
+      plat: '{n} gerecht',
+      plats: '{n} gerechten',
+      tuileHoraires: 'Openingsuren vandaag',
+      modifier: 'Aanpassen',
+      etape_carte: 'Je kaart',
+      etape_valider: 'Kaart goedgekeurd',
+      etape_engagements: 'Verbintenissen',
+      etape_paiements: 'Betalingen',
+      etape_verification: 'Controle',
+      etape_enLigne: 'Online'
+    },
     // Lijst « Voordat je online gaat » voor zaken (components/commerce/MiseEnLigne.jsx, UX-audit van 15/10/2026).
     miseEnLigne: {
       title: 'Voordat je online gaat',
@@ -6094,6 +6142,10 @@ export default {
       confirme_client: 'Je zult bij andere zaken kunnen bestellen met dit account. Je zaak en je leveringen veranderen niet. Bij jezelf bestellen blijft geblokkeerd: dat is geld dat rondjes draait, geen bestelling.',
       confirme_restaurant: 'Je zult je zaak kunnen aanmaken en haar kaart voorbereiden. Ze wordt pas zichtbaar voor klanten, en kan pas geld ontvangen, na goedkeuring door het team en verificatie van je betalingen.',
       confirme_driver: 'Je koeriersdossier wordt aangemaakt. Daarna laad je je documenten op en wacht je op de goedkeuring van het team voor je ritten kunt aannemen.'
+    },
+    // Mon compte sur ordinateur (site, 2026-10-16) : la colonne des rubriques (RubriquesCompte.jsx).
+    siteCompte: {
+      navAria: 'Rubrieken van je account'
     },
     savedCards: {
       rowSub: 'Kaarten opgeslagen bij Stripe',
@@ -6546,6 +6598,22 @@ export default {
       legal: "De Europese toegankelijkheidsakte (richtlijn (EU) 2019/882) stelt micro-ondernemingen die diensten verlenen vrij van het publiceren van een toegankelijkheidsverklaring. Fairide is er een. Deze pagina blijft niettemin ons engagement.",
       updated: "Laatst bijgewerkt: 6 oktober 2026."
     },
+    // Le cadre du site (lot « cadre », 2026-10-16) : barre latérale, connexion en deux moitiés. Voir site-cadre.css.
+    siteCadre: {
+      langue: 'Taal',
+      liensLegaux: 'Juridische links',
+      choixConnexion: 'Inloggen of registreren',
+      connexionTitre: 'Fijn je terug te zien.',
+      connexionSous: 'Log in om je ruimte terug te vinden.',
+      inscriptionClient: 'Maak je account aan.',
+      inscriptionCommerce: 'Schrijf je zaak in.',
+      inscriptionLivreur: 'Word koerier.',
+      etape: 'Stap {n} van {total}',
+      oubliTitre: 'Geen zorgen.',
+      oubliSous: 'Je krijgt een link per e-mail om een nieuw wachtwoord te kiezen.',
+      codeTitre: 'Bijna klaar.',
+      codeSous: 'Nog één code en je bent binnen.'
+    },
     footer: {
       tagline: 'Levering van maaltijden en lokale handelszaken tegen verlaagde commissie, in Brussel.',
       belgian: 'Ontworpen en beheerd vanuit België, door Belgen, voor Belgen.',
@@ -6760,12 +6828,34 @@ export default {
       chipHalal: 'Halal',
       chipGlutenFree: 'Glutenvrij'
     },
+    siteListe: {
+      modeLivraison: 'Levering',
+      modeAria: 'Levering of afhalen',
+      filtresAria: 'Filters',
+      triNote: 'Best beoordeeld',
+      triDistance: 'Dichtstbij',
+      envies: 'Voeding',
+      carteColonneAria: 'Zaken op de kaart'
+    },
     map: {
       home: 'Bij jou thuis',
       backToMapAria: 'Terug naar de kaart',
       viewRestaurant: 'Restaurant bekijken →',
       backToMap: '← Terug naar de kaart',
       reviewsCount: '({count} beoordelingen)'
+    },
+    siteFiche: {
+      oneItem: '1 artikel',
+      items: '{n} artikelen',
+      cartElsewhere: 'Je winkelmandje bevat gerechten van {name}.',
+      emptyHint: 'Voeg een gerecht toe met „+”: het verschijnt hier.',
+      oneMore: 'Nog een {name}',
+      subtotal: 'Subtotaal',
+      noteDelivery: 'Bezorging en fooi bij het betalen.',
+      notePickup: 'Afhalen: geen bezorgkosten.',
+      radiusValue: '{km} km',
+      radiusLabel: 'Bezorgstraal',
+      minimumLabel: 'Minimale bestelling'
     },
     restaurantMenu: {
       closedForToday: 'Deze zaak neemt vandaag geen bestellingen meer aan. Ze gaat morgen om {time} weer open.',
@@ -6937,6 +7027,18 @@ export default {
       remove: "{adresse} verwijderen",
       removeShort: "Verwijderen",
       loading: "Laden…"
+    },
+    siteCommande: {
+      recap: 'Overzicht',
+      suiteAuPaiement: 'Eventuele bezorging en fooi: in de volgende stap.',
+      stripe: 'Online betaling verwerkt door Stripe',
+      colCommerce: 'Zaak',
+      colDate: 'Datum',
+      colArticles: 'Artikelen',
+      colStatut: 'Status',
+      colTotal: 'Totaal',
+      colActions: 'Acties',
+      details: 'Details'
     },
     checkout: {
       simulationTitle: 'Simulatie: fictieve betaling',

@@ -18,6 +18,10 @@ import { useToast } from '../context/ToastContext';
 import { SONNERIES, REPETITIONS } from '../hooks/useNewOrderAlert';
 import Icone from './Icone';
 
+// Sur le site (2026-10-16, mockups/site-ordinateur.html) : un seul lime par vue, celui de la page (Signer, Accepter…) ; les
+// boutons pressants de la barre passent en iris. Dans l'app, ils restent lime, comme avant.
+const PRESSANT = experienceApp() ? 'btn-gold' : 'btn-teal';
+
 export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme }) {
   const { t } = useLanguage();
   const toast = useToast();
@@ -66,7 +70,7 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
       {/* Son voulu mais encore bloqué par le navigateur (page rechargée, aucun geste depuis) : l'alarme ne sonnerait pas.
           Un toucher n'importe où suffit à la débloquer ; ce bouton donne une raison de le faire (audit du 15/10/2026). */}
       {soundEnabled && audioBloque && (
-        <button type="button" className="btn-gold alerte-son-bloque" onClick={debloquerAudio}>
+        <button type="button" className={`${PRESSANT} alerte-son-bloque`} onClick={debloquerAudio}>
           <Icone nom="sonCoupe" taille={18} className="icone-texte" />{' '}{t('alertBar.tapToEnableSound')}
         </button>
       )}
@@ -102,7 +106,7 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
           </select>
         )}
         {alarmeEnCours && couperAlarme && (
-          <button type="button" className="btn-gold btn-sm" onClick={couperAlarme}><Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.stopAlarm')}</button>
+          <button type="button" className={`${PRESSANT} btn-sm`} onClick={couperAlarme}><Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.stopAlarm')}</button>
         )}
         {reglagesOuverts && setVolume && (
           <label className="alerte-volume" title={t('alertBar.volume')}>
@@ -124,7 +128,7 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
         {push?.supporte && push?.disponible && (
           <button
             type="button"
-            className={push.abonne ? 'btn-outline' : 'btn-gold'}
+            className={push.abonne ? 'btn-outline' : PRESSANT}
             style={{ padding: '6px 12px', fontSize: 13 }}
             aria-pressed={push.abonne}
             disabled={push.occupe}

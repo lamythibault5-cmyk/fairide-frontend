@@ -14,6 +14,7 @@ import DemandeModifCarte from '../DemandeModifCarte';
 import TvaCarte from './TvaCarte';
 import Icone from '../Icone';
 import { BandeauCommerce, FeuilleCommerce } from './BandeauCommerce';
+import { SITE } from './CadreSite';
 
 /* « MA CARTE » CÔTÉ COMMERCE, AU BANDEAU IRIS (fondateur, 2026-10-16, mockups/tous-les-ecrans.html › Ma carte,
  * « Interrupteur de rupture »). Le commerce ne modifie pas ses plats lui-même (fondateur, 2026-10-01) : il met un plat en
@@ -62,8 +63,9 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
   };
 
   const titreEnLigne = enLigne === 0 ? t('ecranCommerce.aucunEnLigne') : t(enLigne === 1 ? 'ecranCommerce.produitEnLigne' : 'ecranCommerce.produitsEnLigne', { n: enLigne });
+  // Sur le site : largeur de lecture (site-pro.css), une liste de plats n'a rien à gagner à 1 120 px.
   return (
-    <div>
+    <div className={SITE ? 'sp-page sp-page--lecture' : undefined}>
       <BandeauCommerce>
         <div className="ec-b-haut">
           <span><b>{restaurant.name}</b></span>

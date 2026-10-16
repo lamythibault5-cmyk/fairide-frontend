@@ -1,0 +1,291 @@
+/* =====================================================================================================================
+   LE CADRE DU SITE (lot « cadre », fondateur 2026-10-16, section 1 et 2 de mockups/site-ordinateur.html, choix retenus :
+   barre latérale BLANCHE, bandes collantes en BLANC PLEIN). Importé par components/Layout.jsx : il vaut pour toutes les
+   pages connectées du site, et pour la connexion du site (pages/Auth.jsx).
+
+   CE FICHIER NE TOUCHE PAS L'APPLICATION. Tout ce qui change la barre latérale est sous `html:not(.appli)` : dans l'app
+   (html.appli, natif.js), même sur une tablette de plus de 900 px, la barre reste celle d'avant ; la barre d'onglets en
+   verre du bas reste dans styles.css. Le verre, le flou et les ombres douces n'existent que dans l'app : ici, du blanc
+   plein, un filet, de l'iris.
+
+   ---------------------------------------------------------------------------------------------------------------------
+   OUTILS COMMUNS — à utiliser par les pages du site plutôt que de réécrire une largeur ou un bandeau dans chaque fichier :
+
+     .site-col               colonne centrée, LARGE : 1 120 px au plus (--site-large). Listes, grilles, tableaux.
+     .site-col--lecture      colonne centrée, LECTURE : 760 px au plus (--site-lecture). Formulaires, textes, réglages.
+                             Les deux ne posent AUCUNE marge latérale : la gouttière est celle de .dashboard-main.
+     .site-bande             bandeau iris du haut de page, d'un bord à l'autre de la zone de contenu (il annule la marge
+                             de .dashboard-main, encoche comprise sur téléphone). Mettre une .site-col dedans.
+       .site-bande-ctx       la petite ligne de contexte (icône + nom de la rubrique) ;
+       .site-bande-titre     le titre (h1), 38 px sur ordinateur, 28 px sur téléphone ;
+       .site-bande-sous      la phrase sous le titre.
+     .site-feuille           la feuille blanche aux coins ronds qui monte sur le bandeau (juste après .site-bande).
+                             Elle aussi va d'un bord à l'autre ; mettre une .site-col dedans.
+     .site-collant           bande collante (filtres, sections) : blanc plein et filet en bas, jamais de verre.
+     .site-survol            carte cliquable : au survol, le filet passe à l'iris et la carte monte de 3 px ; pas d'ombre.
+     .site-ligne-survol      rangée cliquable (liste, tableau) : au survol, un aplat gris clair.
+     .sur-iris               tout ce qui est posé sur l'iris : l'anneau de focus y devient LIME (iris sur iris est
+                             invisible). .site-bande et la moitié iris de la connexion le sont d'office.
+
+   Focus clavier : anneau iris de 2 px décollé de 2 px sur le blanc (règle générale de styles.css, « L'ANNEAU DE MISE AU
+   POINT »), lime sur l'iris (ci-dessous). Survol : jamais d'ombre ni de halo — un filet iris, un aplat gris, ou l'iris
+   foncé pour un bouton plein.
+   ===================================================================================================================== */
+
+:root {
+  --site-large: 1120px;
+  --site-lecture: 760px;
+  /* Le ressort des maquettes (cubic-bezier qui dépasse un peu puis revient) : la pastille de la barre latérale, le
+     sélecteur Connexion / Inscription, la feuille qui monte. */
+  --site-ressort: cubic-bezier(.34, 1.45, .64, 1);
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   1 · LES DEUX LARGEURS
+   --------------------------------------------------------------------------------------------------------------------- */
+.site-col { width: 100%; max-width: var(--site-large); margin-left: auto; margin-right: auto; box-sizing: border-box; }
+.site-col--lecture { max-width: var(--site-lecture); }
+
+/* Pages connectées qui ne sont à aucun espace (aide, pages légales, notre histoire, page introuvable…) : elles vivent
+   maintenant dans la coquille du site (Layout.jsx) et se lisent sur la largeur de lecture, centrées. */
+.site-page-generique { max-width: var(--site-lecture); margin-left: auto; margin-right: auto; }
+@media (min-width: 901px) { .site-page-generique { padding-top: 16px; } }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   2 · LE BANDEAU IRIS ET LA FEUILLE BLANCHE
+   --------------------------------------------------------------------------------------------------------------------- */
+.site-bande {
+  position: relative; background: var(--iris); color: #fff;
+  /* Ce que .dashboard-main met autour de la page (24 px en haut, 28 px sur les côtés au-dessus de 900 px). */
+  margin: -24px -28px 0; padding: 30px 28px 56px;
+}
+.site-bande-ctx { display: flex; align-items: center; gap: 8px; font-size: 14px; color: rgba(255, 255, 255, .75); }
+.site-bande-ctx b { color: #fff; font-weight: 600; }
+.site-bande .site-bande-titre { font-family: var(--font-titre); font-size: 38px; font-weight: 700; line-height: 1.1; margin: 10px 0 6px; color: #fff; }
+.site-bande-sous { margin: 0; color: rgba(255, 255, 255, .82); font-size: 16px; line-height: 1.45; }
+.site-bande a:not([class]) { color: #fff; }
+.site-feuille {
+  position: relative; background: #fff; color: var(--ink);
+  border-radius: 28px 28px 0 0; margin: -26px -28px 0; padding: 30px 28px 48px;
+  animation: site-monte .5s var(--site-ressort) backwards;
+}
+@keyframes site-monte { from { transform: translateY(40px); opacity: .4; } }
+@media (max-width: 900px) {
+  .site-bande {
+    margin: calc(-16px - env(safe-area-inset-top)) calc(-1 * var(--gouttiere, 16px)) 0;
+    padding: calc(18px + env(safe-area-inset-top)) var(--gouttiere, 16px) 46px;
+  }
+  .site-bande .site-bande-titre { font-size: 28px; }
+  .site-bande-sous { font-size: 15px; }
+  .site-feuille { border-radius: 24px 24px 0 0; margin: -22px calc(-1 * var(--gouttiere, 16px)) 0; padding: 22px var(--gouttiere, 16px) 32px; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   3 · BANDES COLLANTES, SURVOL, FOCUS
+   --------------------------------------------------------------------------------------------------------------------- */
+/* Blanc plein et filet (choix du fondateur pour le site, 2026-10-13, confirmé le 2026-10-16). */
+.site-collant { position: sticky; top: 0; z-index: 20; background: #fff; border-bottom: 1px solid var(--line); }
+
+.site-survol { border: 1px solid var(--line); transition: border-color .2s, transform .3s var(--site-ressort); }
+.site-survol:hover, .site-survol:focus-visible { border-color: var(--iris); }
+@media (hover: hover) { .site-survol:hover { transform: translateY(-3px); } }
+.site-ligne-survol { transition: background .15s; }
+.site-ligne-survol:hover { background: var(--cream-dim); }
+
+/* Sur l'iris, l'anneau iris de styles.css disparaît : il passe au lime (règle 1 de l'identité : le lime vit sur l'iris). */
+.sur-iris :focus-visible, .site-bande :focus-visible, .auth-site-iris :focus-visible { outline-color: var(--lime); }
+.sur-iris :is(input, select, textarea):focus-visible, .site-bande :is(input, select, textarea):focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   4 · LA BARRE LATÉRALE BLANCHE (≥ 901 px, site seulement — DashboardSidebar.jsx)
+   La marque en haut ; la navigation, dont l'onglet actif est une pastille IRIS qui GLISSE d'un lien à l'autre
+   (.nav-curseur, posée par useCurseurOnglets.js, la même que la barre du bas) ; en bas, la langue, les liens légaux
+   (ils quittent le pied de la page) et la personne connectée.
+   --------------------------------------------------------------------------------------------------------------------- */
+.site-cote-bas { display: none; }
+@media (min-width: 901px) {
+  html:not(.appli) .dashboard-sidebar { padding: 24px 12px 16px; }
+  html:not(.appli) .dashboard-sidebar-brand { gap: 10px; margin: 0; padding: 0 10px 26px; }
+  html:not(.appli) .dashboard-sidebar-brand .wordmark { font-size: 26px; line-height: 1; letter-spacing: -0.03em; font-weight: 800; }
+  html:not(.appli) .dashboard-sidebar-brand .mark { border-radius: 11px; overflow: hidden; }
+
+  /* 4 px de marge intérieure : la nav défile (overflow), elle rognerait sinon l'anneau de focus de ses liens. */
+  html:not(.appli) .dashboard-nav { position: relative; gap: 4px; }
+  html:not(.appli) .dashboard-sidebar > .dashboard-nav { padding: 4px; }
+  html:not(.appli) .dashboard-nav > .nav-curseur {
+    display: block; position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none;
+    background: var(--iris); border-radius: var(--radius-pill); opacity: 0;
+    transition: transform .45s var(--site-ressort), width .3s var(--site-ressort), height .3s var(--site-ressort), opacity .15s;
+  }
+  html:not(.appli) .dashboard-nav-link {
+    /* 14,5 px et 12 px de marge : « Mon dossier livreur » tient sur une ligne dans les 240 px de la barre. */
+    position: relative; z-index: 1; min-height: 48px; padding: 0 12px; gap: 11px;
+    border-radius: var(--radius-pill); color: var(--ink-soft); font-size: 14.5px; font-weight: 600;
+    transition: color .25s, background .15s;
+  }
+  html:not(.appli) .dashboard-nav-link:hover { background: var(--cream-dim); color: var(--ink); }
+  html:not(.appli) .dashboard-nav-link.active, html:not(.appli) .dashboard-nav-link.active:hover { background: transparent; color: #fff; }
+  /* L'anneau de focus de l'onglet actif : iris décollé de 2 px, donc posé sur le blanc de la barre (styles.css le
+     mettait en blanc, pensé pour l'ancienne pastille claire — invisible ici). */
+  html:not(.appli) .dashboard-nav-link.active:focus-visible { outline-color: var(--iris); }
+  /* Les compteurs : iris pâle au repos, blanc sur la pastille active. Le rouge d'alerte de l'admin reste rouge. */
+  html:not(.appli) .dashboard-nav-link .nav-badge { min-width: 22px; height: 22px; padding: 0 6px; font-size: 12px; background: rgba(59, 47, 181, .1); color: var(--iris); }
+  html:not(.appli) .dashboard-nav-link.active .nav-badge { background: #fff; color: var(--iris); }
+  html:not(.appli) .dashboard-nav-link .nav-badge.tone-danger { background: var(--red); color: #fff; }
+
+  html:not(.appli) .site-cote-bas { display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; margin-top: 12px; padding: 0 6px; }
+  .site-cote-langues { display: flex; gap: 4px; }
+  .site-cote-langues button {
+    min-height: 0; padding: 4px 10px; border: 1px solid transparent; border-radius: var(--radius-pill); background: none;
+    font-size: 12.5px; font-weight: 600; color: var(--ink-soft);
+  }
+  .site-cote-langues button:hover { color: var(--ink); filter: none; }
+  .site-cote-langues button[aria-pressed="true"] { border-color: var(--line); color: var(--ink); }
+  .site-cote-legal { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 11.5px; line-height: 1.6; }
+  .site-cote-legal a { color: var(--ink-soft); text-decoration: none; }
+  .site-cote-legal a:hover { color: var(--ink); text-decoration: underline; }
+
+  /* La personne connectée : un rond à filet, le nom, « Se déconnecter ». */
+  html:not(.appli) .dashboard-profile-card { margin-top: 0; padding: 14px 4px 0; gap: 12px; }
+  html:not(.appli) .dashboard-profile-avatar { width: 40px; height: 40px; background: #fff; color: var(--ink); border: 1.5px solid var(--line); font-size: 15px; }
+  html:not(.appli) .dashboard-profile-name { font-size: 14.5px; }
+  html:not(.appli) .dashboard-profile-logout { font-size: 13px; font-weight: 500; }
+  html:not(.appli) .dashboard-profile-logout:hover { color: var(--ink); }
+
+  /* Les liens légaux sont dans la barre latérale : la rangée du pied de page ne sert plus qu'au téléphone. */
+  html:not(.appli) .dashboard-footer-links { display: none; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   5 · LA CARTE DES COOKIES (CookieBanner.jsx)
+   Iris ; « Accepter » et « Refuser » strictement identiques — même taille, même graisse, même couleur — parce que refuser
+   doit être aussi simple qu'accepter (RGPD, directive ePrivacy, lignes de l'APD). Pas de lime ici : la carte s'affiche
+   par-dessus des pages qui ont déjà leur action lime.
+   --------------------------------------------------------------------------------------------------------------------- */
+.carte-cookies {
+  position: fixed; z-index: 200; left: 24px; bottom: calc(24px + env(safe-area-inset-bottom));
+  width: min(440px, calc(100vw - 24px)); box-sizing: border-box;
+  background: var(--iris); color: #fff; border-radius: 20px; padding: 18px 18px 16px;
+  animation: site-monte .45s var(--site-ressort) backwards;
+}
+/* La carte prend le focus à son arrivée (CookieBanner.jsx) pour que la première tabulation mène aux choix : sans anneau. */
+.carte-cookies:focus { outline: none; }
+.carte-cookies-texte { margin: 0 0 4px; font-size: 14px; line-height: 1.45; color: #fff; }
+.carte-cookies-lien { color: #fff; font-size: 13px; text-decoration: underline; }
+.carte-cookies-choix { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.carte-cookies .carte-cookies-choix button {
+  min-height: 44px; padding: 10px 16px; border: 0; border-radius: var(--radius-pill);
+  background: #fff; color: var(--iris); font-size: 15px; font-weight: 700;
+}
+.carte-cookies .carte-cookies-choix button:hover { background: rgba(255, 255, 255, .88); filter: none; }
+.carte-cookies :focus-visible { outline-color: var(--lime); }
+/* À côté de la barre latérale du site, pas par-dessus. */
+@media (min-width: 901px) { .dashboard-shell ~ .carte-cookies { left: calc(240px + 24px); } }
+@media (max-width: 900px) {
+  .carte-cookies { left: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); width: calc(100vw - 24px); padding: 16px 16px 14px; }
+  /* Au-dessus de la barre d'onglets du bas, qu'elle ne doit pas cacher. */
+  .dashboard-shell:not(.dashboard-shell--flux) ~ .carte-cookies { bottom: calc(var(--hauteur-onglets) + 4px + env(safe-area-inset-bottom)); }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   6 · LA CONNEXION ET L'INSCRIPTION DU SITE (/login, pages/Auth.jsx — section 2 de la maquette)
+   Sous l'en-tête des visiteurs (inchangé), deux moitiés : l'iris à gauche, qui prolonge l'en-tête (titre, vélo qui attend
+   sur sa route, ou la route des étapes de l'inscription), et la feuille blanche à droite avec le formulaire. Un seul
+   bouton lime : l'action du formulaire. Sur téléphone : le bandeau iris en haut, la feuille qui monte dessous.
+   La page sort de la colonne de 960 px de .wrap (elle va d'un bord à l'autre de la fenêtre) et remonte sur les 24 px
+   qu'il laisse sous l'en-tête.
+   --------------------------------------------------------------------------------------------------------------------- */
+.auth-site {
+  --auth-bord: max(24px, calc((100vw - 1120px) / 2));
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+  width: 100vw; margin: -24px calc(50% - 50vw) 0; min-height: calc(100svh - 77px);
+  background: var(--iris);
+}
+.auth-site-iris { display: flex; flex-direction: column; color: #fff; padding: 40px 48px 36px var(--auth-bord); }
+.auth-site-titre { margin: auto 0; max-width: 460px; }
+.auth-site-titre h1 { font-family: var(--font-titre); font-size: clamp(36px, 3.6vw, 48px); line-height: 1.05; font-weight: 700; color: #fff; margin: 0 0 14px; }
+.auth-site-titre p { margin: 0; font-size: 17px; line-height: 1.5; color: rgba(255, 255, 255, .84); }
+.auth-site-scene { margin-top: 24px; color: #fff; }
+.auth-site-scene svg { display: block; width: min(340px, 100%); height: auto; }
+.auth-site-feuille {
+  position: relative; display: flex; justify-content: center; align-items: center;
+  /* Arrondi en haut seulement : en bas, la feuille rejoint le blanc de la page (le pied de page suit). */
+  background: #fff; border-radius: 32px 0 0 0; padding: 56px 40px 64px;
+  animation: auth-entre .55s var(--site-ressort) backwards;
+}
+/* L'inscription change de hauteur à chaque étape : elle part du haut, pour que le sélecteur ne saute pas d'une étape à l'autre. */
+.auth-site--long .auth-site-feuille { align-items: flex-start; }
+@keyframes auth-entre { from { transform: translateX(40px); opacity: .5; } }
+.auth-site .auth-box { width: 100%; max-width: 440px; margin: 0; scroll-margin-top: 96px; }
+.auth-site .auth-box h2 { font-size: 26px; margin: 0 0 8px; }
+.auth-site-form { display: block; }
+
+/* Connexion / Inscription : un sélecteur à pouce iris qui glisse. */
+.auth-segment { position: relative; display: flex; padding: 4px; margin: 0 0 26px; border-radius: var(--radius-pill); background: var(--cream-dim); }
+.auth-segment-pouce {
+  position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: var(--radius-pill);
+  background: var(--iris); transition: transform .45s var(--site-ressort);
+}
+.auth-segment--droite .auth-segment-pouce { transform: translateX(100%); }
+.auth-segment button {
+  position: relative; z-index: 1; flex: 1; min-height: 44px; padding: 10px; border: 0; border-radius: var(--radius-pill);
+  background: none; color: var(--ink-soft); font-size: 15px; font-weight: 600; transition: color .25s;
+}
+.auth-segment button:hover { filter: none; color: var(--ink); }
+.auth-segment button[aria-selected="true"] { color: #fff; }
+
+/* La route des étapes de l'inscription, sur l'iris : arrêts, partie faite en lime, le vélo à l'étape en cours. */
+.auth-route { position: relative; height: 48px; margin-top: 26px; --auth-pos: 0%; }
+.auth-route-voie { position: absolute; left: 0; right: 0; top: 35px; border-top: 3px dashed rgba(255, 255, 255, .35); }
+.auth-route-fait { position: absolute; left: 0; top: 34px; height: 4px; width: var(--auth-pos); border-radius: 2px; background: var(--lime); transition: width .9s cubic-bezier(.3, .7, .4, 1); }
+.auth-route-arret {
+  position: absolute; top: 36px; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; box-sizing: border-box;
+  background: var(--iris); border: 2px solid rgba(255, 255, 255, .5); display: grid; place-items: center; color: var(--ink);
+}
+.auth-route-arret--actuel { background: #fff; border-color: #fff; }
+.auth-route-arret--fait { width: 22px; height: 22px; margin: -11px 0 0 -11px; background: var(--lime); border: 0; }
+.auth-route-velo { position: absolute; top: 2px; left: calc(var(--auth-pos) - 21px); line-height: 0; transition: left .9s cubic-bezier(.3, .7, .4, 1); }
+.auth-route-texte { margin: 10px 0 0; font-size: 13.5px; color: rgba(255, 255, 255, .78); }
+
+@media (max-width: 960px) {
+  .auth-site { grid-template-columns: minmax(0, 1fr); min-height: 0; margin-top: -24px; }
+  .auth-site-iris { padding: 22px 20px 48px; }
+  .auth-site-titre { margin: 0; }
+  .auth-site-titre h1 { font-size: 28px; margin-bottom: 6px; }
+  .auth-site-titre p { font-size: 15px; }
+  .auth-site-scene { display: none; }
+  .auth-route { margin-top: 14px; }
+  .auth-site-feuille { align-items: flex-start; border-radius: 26px 26px 0 0; margin-top: -26px; padding: 26px 20px 40px; animation-name: site-monte; }
+  .auth-site .auth-box { max-width: 480px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-feuille, .carte-cookies, .auth-site-feuille { animation: none; }
+  .site-survol, .site-survol:hover { transition: none; transform: none; }
+  html:not(.appli) .dashboard-nav > .nav-curseur, .auth-segment-pouce, .auth-route-fait, .auth-route-velo { transition: none; }
+}
+
+/* ---------- BANDEAUX D'UN BORD À L'AUTRE, PARTOUT SUR UN ORDINATEUR (2026-10-16, après la fusion des lots) ----------
+   La liste, la fiche et le paiement posaient leur bandeau iris d'un bord à l'autre de la zone de contenu ; le commerce, le
+   livreur et Mon compte le posaient en carte arrondie dans les marges. Même règle pour tous : le bandeau annule la marge de
+   .dashboard-main (24 px en haut, 28 px sur les côtés), coins droits, et c'est son rembourrage qui garde le contenu centré
+   sur la largeur de la page (1 120 px pour un tableau de bord, 860 / 1 040 px pour une page de lecture du livreur). La
+   feuille blanche dessous suit la même largeur. Préfixées par .dashboard-main : les feuilles des lots, chargées après,
+   posent les mêmes propriétés au même poids. Les conteneurs perdent leur max-width : c'est le rembourrage qui centre. */
+@media (min-width: 901px) {
+  /* Commerce (ecran-commerce.css, site-pro.css). */
+  html:not(.appli) .dashboard-main .ec-bandeau { margin: -24px -28px 0; border-radius: 0; padding-left: max(60px, calc((100% - var(--sp-large, 1120px)) / 2)); padding-right: max(60px, calc((100% - var(--sp-large, 1120px)) / 2)); }
+  html:not(.appli) .dashboard-main .ec-feuille { margin-left: -28px; margin-right: -28px; padding-left: max(60px, calc((100% - var(--sp-large, 1120px)) / 2)); padding-right: max(60px, calc((100% - var(--sp-large, 1120px)) / 2)); }
+  /* Livreur (ecran-livreur.css, site-livreur.css). */
+  html:not(.appli) .dashboard-main .ecl { --ecl-l: 1180px; max-width: none; }
+  html:not(.appli) .dashboard-main .ecl-page { --ecl-l: 860px; }
+  html:not(.appli) .dashboard-main .ecl-page.ecl-page-large, html:not(.appli) .dashboard-main .ecl-gains { --ecl-l: 1040px; }
+  html:not(.appli) .dashboard-main .ecl > .ecl-bandeau { margin: -24px -28px 0; border-radius: 0; padding-left: max(60px, calc((100% - var(--ecl-l)) / 2)); padding-right: max(60px, calc((100% - var(--ecl-l)) / 2)); }
+  html:not(.appli) .dashboard-main .ecl > .ecl-feuille { margin-left: -28px; margin-right: -28px; padding-left: max(60px, calc((100% - var(--ecl-l)) / 2)); padding-right: max(60px, calc((100% - var(--ecl-l)) / 2)); }
+}
+@media (min-width: 1100px) {
+  /* Mon compte (ecran-compte.css, site-compte.css) : ses deux colonnes ne s'ouvrent qu'à partir de 1 100 px. */
+  html:not(.appli) .dashboard-main .compte-ecran { max-width: none; }
+  html:not(.appli) .dashboard-main .compte-ecran .compte-bandeau { margin: -24px -28px 0; border-radius: 0; padding-left: max(60px, calc((100% - 1120px) / 2)); padding-right: max(60px, calc((100% - 1120px) / 2)); }
+  html:not(.appli) .dashboard-main .compte-ecran .compte-feuille { margin-left: -28px; margin-right: -28px; padding-left: max(60px, calc((100% - 1120px) / 2)); padding-right: max(60px, calc((100% - 1120px) / 2)); }
+}

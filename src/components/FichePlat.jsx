@@ -214,7 +214,8 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
         </div>
       </div>
 
-      <div className="field plat-note" style={{ padding: '0 16px' }}>
+      {/* --plat-marge : 24px dans la fenêtre du site sur ordinateur (site-fiche.css), alignée sur le nom et le bouton. */}
+      <div className="field plat-note" style={{ padding: '0 var(--plat-marge, 16px)' }}>
         <label htmlFor="plat-note" className="small" style={{ fontWeight: 700 }}>{t('platSheet.noteLabel')}</label>
         <input id="plat-note" maxLength={140} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('platSheet.notePlaceholder')} />
       </div>

@@ -1,0 +1,278 @@
+/* =====================================================================================================================
+   LOT « LISTE » DU SITE (fondateur, 2026-10-16, mockups/site-ordinateur.html, section « Liste » et « Le cadre ») : la liste
+   des commerces, la recherche, la carte et les favoris sur un ordinateur, et les mêmes pages sur un téléphone quand c'est
+   le SITE qui s'affiche. Importé par RestaurantList.jsx, SearchPage.jsx, MapPage.jsx et Favorites.jsx.
+
+   TOUT EST SOUS html:not(.appli). L'app (native, ou site ajouté à l'écran d'accueil : html.appli, natif.js) ne change pas
+   d'un pixel ; ses règles restent dans ecran-liste.css. Les classes sl-liste--grand / --colonne et sl-carte ne sont posées
+   que sur le site (useSiteLarge, TeteListe.jsx), à partir de 900 et 1 100 px.
+
+   Décisions du fondateur reprises ici : bandes collantes en BLANC PLEIN à filet sur le site (pas de verre, pas de flou),
+   survol = filet iris et la carte monte un peu, jamais d'ombre ; contenu centré sur 1 120 px au plus.
+   Ce fichier passe AVANT styles.css (importé par RestaurantList, chargé avec App) : chaque règle qui en reprend une de
+   styles.css ou de client-ui.css est écrite plus précise qu'elle.
+   ===================================================================================================================== */
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   1 · LA LISTE DES COMMERCES (RestaurantList.jsx, TeteListe.jsx)
+   --------------------------------------------------------------------------------------------------------------------- */
+
+/* SUR LE SITE, À TOUTES LES LARGEURS : le bandeau défile avec la page et la bande des cuisines reste seule en haut, en
+   barre blanche à filet d'un bord à l'autre (maquette : bandeau dans le fil, bande « collant » en blanc plein). Le haut
+   entier est collant avec un `top` négatif de la hauteur du bandeau. Le repli de l'app (le bandeau qui remonte puis
+   revient, useEnteteDefilement) et sa bande en pilule flottante restent à l'app : sur le site, la pilule blanche posée
+   au-dessus des cartes se lisait comme le verre de l'app sans en être. */
+html:not(.appli) .sl-liste .liste-tete--bandeau { top: calc(-1 * var(--lt-hb)); margin-bottom: 0; transform: none; }
+html:not(.appli) .sl-liste .lt-bandeau,
+html:not(.appli) .sl-liste .liste-tete--replie .lt-bandeau { transform: none; }
+html:not(.appli) .sl-liste .liste-tete--bandeau .lt-puces { margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: #fff; }
+html:not(.appli) .sl-liste .liste-tete--bandeau .lt-defile { border-radius: 0; }
+html:not(.appli) .sl-liste .liste-tete--bandeau .lt-piste { padding: 6px 12px; }
+html:not(.appli) .sl-liste .sl-corps { margin-top: 16px; }
+/* « Manger local » sur le site : le texte et l'icône sur un filet, sans fond gris (fonds blancs ou iris seulement). */
+html:not(.appli) .sl-liste .local-bandeau { flex-wrap: nowrap; align-items: flex-start; padding: 10px 12px; background: #fff; border: 1px solid var(--line); line-height: 1.4; }
+html:not(.appli) .sl-liste .local-bandeau svg { flex: none; margin-top: 1px; color: var(--iris); }
+
+/* À partir de 900 px : le bandeau de la maquette (plus haut, l'adresse en grand, Livraison / À emporter à droite). */
+html:not(.appli) .sl-liste--grand .liste-tete--bandeau { --lt-hb: 140px; }
+/* Le contenu du bandeau s'aligne sur la colonne de 1 120 px (100 % = la largeur du haut, marges négatives comprises). */
+html:not(.appli) .sl-liste--grand .lt-bandeau { padding: 24px max(28px, calc((100% - 1120px) / 2)) 0; }
+html:not(.appli) .sl-liste--grand .lt-bandeau--mode {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; align-content: start; column-gap: 24px;
+}
+html:not(.appli) .sl-liste--grand .lt-bandeau--mode .lt-route { grid-column: 1 / -1; }
+html:not(.appli) .sl-liste--grand .lt-adresse { width: auto; max-width: 100%; justify-self: start; gap: 14px; padding: 2px 10px 2px 0; border-radius: 999px; }
+html:not(.appli) .sl-liste--grand .lt-adresse:hover:not(:disabled) { background: none; }
+html:not(.appli) .sl-liste--grand .lt-adresse:hover .lt-adresse-icone { border-color: #fff; }
+html:not(.appli) .sl-liste--grand .lt-adresse-icone { width: 48px; height: 48px; border-color: rgba(255, 255, 255, .4); transition: border-color .15s; }
+html:not(.appli) .sl-liste--grand .lt-adresse-texte { flex: 0 1 auto; }
+html:not(.appli) .sl-liste--grand .lt-adresse-intitule { font-size: 13px; }
+html:not(.appli) .sl-liste--grand .lt-adresse-valeur { font-size: 20px; font-weight: 700; }
+html:not(.appli) .sl-liste--grand .lt-chevron { margin-left: 4px; }
+html:not(.appli) .sl-liste--grand .lt-route { margin-top: 14px; }
+
+/* Livraison / À emporter : un sélecteur à pouce blanc sur l'iris (maquette : .seg-iris). */
+.lt-mode { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, .12); }
+.lt-mode > button {
+  position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: none;
+  color: rgba(255, 255, 255, .88); font-size: 14px; font-weight: 600; white-space: nowrap; transition: color .25s;
+}
+.lt-mode > button:hover:not(:disabled) { filter: none; color: #fff; }
+.lt-mode > button.on, .lt-mode > button.on:hover:not(:disabled) { color: var(--iris); }
+.lt-mode > button:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.lt-mode-pouce {
+  position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: #fff;
+  transition: transform .45s cubic-bezier(.34, 1.45, .64, 1);
+}
+.lt-mode--emporter .lt-mode-pouce { transform: translateX(100%); }
+
+/* La bande des cuisines : blanche, à filet, d'un bord à l'autre ; les pastilles cerclées, la choisie en iris plein. */
+html:not(.appli) .sl-liste--grand .lt-puces { margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: #fff; }
+html:not(.appli) .sl-liste--grand .lt-defile { border-radius: 0; }
+html:not(.appli) .sl-liste--grand .liste-tete--bandeau .lt-defile { width: calc(100% - 56px); max-width: 1120px; margin: 0 auto; }
+html:not(.appli) .sl-liste--grand .lt-piste,
+html:not(.appli) .sl-liste--grand .liste-tete--bandeau .lt-piste { gap: 8px; padding: 10px 0; }
+html:not(.appli) .sl-liste--grand .lt-puce {
+  min-height: 40px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px;
+  transition: color .15s, border-color .15s, background .15s;
+}
+html:not(.appli) .sl-liste--grand .lt-puce:hover { border-color: var(--iris); }
+html:not(.appli) .sl-liste--grand .lt-puce[data-cuisine].on { border-color: transparent; }
+html:not(.appli) .sl-liste--grand .lt-puce[data-regime].on { border-color: var(--iris); }
+html:not(.appli) .sl-liste--grand .lt-lentille { border-radius: 999px; }
+
+/* Le corps : la colonne de 1 120 px ; avec la colonne des filtres, 220 px à gauche et la grille à droite. */
+html:not(.appli) .sl-liste--grand .sl-corps { max-width: 1120px; margin: 26px auto 0; }
+html:not(.appli) .sl-liste--grand .local-bandeau { margin-bottom: 22px; }
+html:not(.appli) .sl-liste--colonne .sl-corps { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 36px; align-items: start; }
+.sl-contenu { min-width: 0; }
+html:not(.appli) .sl-liste--grand .liste-section { margin-bottom: 36px; }
+/* !important : la taille du titre de rangée est écrite en ligne (Section, RestaurantList.jsx), pour l'app. */
+html:not(.appli) .sl-liste--grand .liste-section > .section-title { font-size: 20px !important; margin-bottom: 14px !important; }
+
+/* La colonne des filtres : collée sous la bande des cuisines quand on descend. */
+.sl-filtres { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; }
+.sl-filtres-actifs { display: flex; flex-wrap: wrap; gap: 6px; }
+.sl-groupe { display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 0; border: 0; }
+.sl-groupe-titre { padding: 0; margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); }
+.sl-choix {
+  position: relative; display: flex; align-items: center; gap: 10px; margin: 0 -10px; padding: 8px 10px;
+  border-radius: 10px; font-size: 14.5px; color: var(--ink); cursor: pointer; transition: background .15s;
+}
+.sl-choix:hover { background: var(--cream-dim); }
+/* Le vrai bouton radio / la vraie case restent dans la page (clavier, lecteur d'écran), sous le dessin. */
+.sl-choix input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none; }
+.sl-choix:has(input:focus-visible) { outline: 2px solid var(--iris); outline-offset: -2px; }
+.sl-choix i { flex: none; width: 20px; height: 20px; display: grid; place-items: center; border: 1.5px solid var(--line); color: #fff; transition: border-color .15s, background .15s; }
+.sl-choix--radio i { border-radius: 50%; }
+.sl-choix--radio.on i { border-color: var(--iris); }
+.sl-choix--radio.on i::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--iris); animation: sl-saute .3s cubic-bezier(.34, 1.45, .64, 1); }
+.sl-choix--case i { border-radius: 6px; }
+.sl-choix--case i svg { opacity: 0; }
+.sl-choix--case.on i { background: var(--iris); border-color: var(--iris); animation: sl-saute .3s cubic-bezier(.34, 1.45, .64, 1); }
+.sl-choix--case.on i svg { opacity: 1; }
+.sl-choix--off { color: var(--ink-faint); cursor: not-allowed; }
+.sl-choix--off:hover { background: none; }
+@keyframes sl-saute { 0% { transform: scale(.4); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.sl-prix { display: flex; gap: 6px; }
+html:not(.appli) .sl-prix .cuisine-chip { min-height: 36px; padding: 0 14px; }
+.sl-local { display: flex; gap: 10px; margin: 0; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.45; color: var(--ink-soft); }
+.sl-local svg { flex: none; color: var(--iris); }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   2 · LES GRILLES DE CARTES (liste, recherche) ET LE CŒUR DES CARTES
+   --------------------------------------------------------------------------------------------------------------------- */
+@media (min-width: 641px) {
+  html:not(.appli) .rest-grid.sl-grille { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px 18px; }
+}
+/* Survol (maquette) : le filet passe à l'iris et la carte monte un peu ; pas d'ombre. L'entrée des cartes (popIn, styles.css)
+   tient son `transform` à la fin (`both`) et écraserait la montée : elle passe en `backwards`. */
+html:not(.appli) .sl-grille .rest-card.rc { animation-fill-mode: backwards; transition: transform .3s cubic-bezier(.34, 1.45, .64, 1), border-color .2s; }
+@media (hover: hover) {
+  html:not(.appli) .sl-grille .rest-card.rc:hover { border-color: var(--iris); transform: translateY(-4px); }
+}
+
+/* Le cœur : un rond blanc, le cœur à l'encre, plein d'iris quand le commerce est en favori (maquette : .cc-fav). Le rouge
+   n'est pas une couleur de la marque, et un cœur blanc à ombre se perdait sur les visuels clairs. */
+html:not(.appli) .sl-liste .rest-card.rc .favorite-heart.rc-fav,
+html:not(.appli) .fav-ecran .fav-photo .favorite-heart.rest-card-fav {
+  top: 10px; right: 10px; width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%;
+  background: #fff; filter: none; display: grid; place-items: center; transition: transform .2s cubic-bezier(.34, 1.45, .64, 1);
+}
+html:not(.appli) .sl-liste .rest-card.rc .favorite-heart.rc-fav svg,
+html:not(.appli) .fav-ecran .fav-photo .favorite-heart.rest-card-fav svg { width: 18px; height: 18px; }
+html:not(.appli) .sl-liste .rest-card.rc .favorite-heart.rc-fav svg path,
+html:not(.appli) .fav-ecran .fav-photo .favorite-heart.rest-card-fav svg path { fill: transparent; stroke: var(--ink); stroke-width: 2; }
+html:not(.appli) .sl-liste .rest-card.rc .favorite-heart.rc-fav.is-active svg path,
+html:not(.appli) .fav-ecran .fav-photo .favorite-heart.rest-card-fav.is-active svg path { fill: var(--iris); stroke: var(--iris); }
+@media (hover: hover) {
+  html:not(.appli) .sl-liste .rest-card.rc .favorite-heart.rc-fav:hover,
+  html:not(.appli) .fav-ecran .fav-photo .favorite-heart.rest-card-fav:hover { transform: scale(1.1); }
+  html:not(.appli) .sl-liste .rest-card.rc .favorite-heart.rc-fav:hover svg path,
+  html:not(.appli) .fav-ecran .fav-photo .favorite-heart.rest-card-fav:hover svg path { stroke: var(--iris); }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   3 · LES ÉCRANS À BANDEAU (recherche, favoris) : le contenu s'aligne sur la colonne de 1 120 px.
+   .eb-bandeau et .eb-feuille débordent de la page de --eb-mg de chaque côté (ecran-liste.css) : 100 % est la largeur de
+   la page, d'où le « + 2 × --eb-mg ».
+   --------------------------------------------------------------------------------------------------------------------- */
+html:not(.appli) .sl-recherche .eb-bandeau, html:not(.appli) .fav-ecran .eb-bandeau {
+  padding-left: max(calc(var(--eb-mg) + 4px), calc((100% + 2 * var(--eb-mg) - 1120px) / 2));
+  padding-right: max(calc(var(--eb-mg) + 4px), calc((100% + 2 * var(--eb-mg) - 1120px) / 2));
+}
+html:not(.appli) .sl-recherche .eb-feuille, html:not(.appli) .fav-ecran .eb-feuille {
+  padding-left: max(var(--eb-mg), calc((100% + 2 * var(--eb-mg) - 1120px) / 2));
+  padding-right: max(var(--eb-mg), calc((100% + 2 * var(--eb-mg) - 1120px) / 2));
+  padding-bottom: 24px;
+}
+@media (min-width: 900px) {
+  html:not(.appli) .sl-recherche .eb-bandeau, html:not(.appli) .fav-ecran .eb-bandeau { padding-top: 30px; padding-bottom: 56px; }
+  html:not(.appli) .sl-recherche .eb-feuille, html:not(.appli) .fav-ecran .eb-feuille { padding-top: 30px; border-radius: 28px 28px 0 0; }
+  html:not(.appli) .fav-ecran .eb-titre { font-size: 38px; }
+  html:not(.appli) .fav-ecran .eb-sous { font-size: 16px; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   4 · LA RECHERCHE (SearchPage.jsx) : le champ sur le bandeau, les résultats dans la feuille.
+   --------------------------------------------------------------------------------------------------------------------- */
+.sl-bande-ctx {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 14px;
+  font-family: var(--font-ui); font-size: 14px; font-weight: 600; line-height: 1.3; letter-spacing: 0; color: rgba(255, 255, 255, .82);
+}
+html:not(.appli) .recherche-champ.sl-cherche {
+  margin: 0; min-height: 56px; padding: 0 8px 0 20px; border: 0; border-radius: 999px; background: #fff;
+}
+/* Sur l'iris, l'anneau de focus est lime (maquette, « Le cadre »). */
+html:not(.appli) .recherche-champ.sl-cherche:focus-within { outline: 3px solid var(--lime); outline-offset: 3px; }
+html:not(.appli) .sl-cherche .recherche-loupe { color: var(--iris); }
+html:not(.appli) .sl-cherche input { font-size: 17px; }
+.sl-bande-route { margin-top: 18px; }
+html:not(.appli) .sl-recherche .eb-feuille > .recherche-pastilles { margin-bottom: 20px !important; }
+/* Les pastilles-boutons (Bio, Vegan…) prenaient la taille des boutons (15 px) à côté des pastilles-liens (13 px). */
+html:not(.appli) .sl-recherche .pill.recherche-pastille { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 500; padding: 7px 14px; }
+
+/* Les groupes : plus de cadres empilés, des sections sous un titre, comme la liste des commerces. */
+html:not(.appli) .sl-recherche .card { margin: 0 0 32px; padding: 0; border: 0; border-radius: 0; background: none; }
+html:not(.appli) .sl-recherche .recherche-titre-groupe,
+html:not(.appli) .sl-recherche .recherche-groupe .recherche-titre-groupe {
+  margin: 0 0 12px; padding: 0; font-family: var(--font-titre); font-size: 20px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--ink);
+}
+html:not(.appli) .sl-recherche .recherche-groupe { padding: 0; overflow: visible; }
+html:not(.appli) .sl-recherche .recherche-lignes { border-top: 1px solid var(--line); }
+html:not(.appli) .sl-recherche .recherche-ligne { padding-left: 8px; padding-right: 8px; }
+html:not(.appli) .sl-recherche .sl-res-commerces { margin-bottom: 32px; }
+html:not(.appli) .sl-recherche .rc-nom { font-size: 16px; font-weight: 800; margin: 0; line-height: 1.25; }
+/* À partir de 1 100 px : les plats (et les autres lignes) sur deux colonnes, un filet sous chaque ligne. */
+@media (min-width: 1100px) {
+  html:not(.appli) .sl-recherche .recherche-lignes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; border-top: 0; }
+  html:not(.appli) .sl-recherche .recherche-lignes .recherche-ligne,
+  html:not(.appli) .sl-recherche .recherche-lignes .recherche-ligne:last-child { border-bottom: 1px solid var(--line); }
+}
+@media (max-width: 640px) {
+  html:not(.appli) .sl-recherche .recherche-titre-groupe,
+  html:not(.appli) .sl-recherche .recherche-groupe .recherche-titre-groupe { font-size: 18px; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   5 · LA CARTE (MapPage.jsx). Sur le site, rien ne porte d'ombre : les commandes posées sur le plan sont blanches à filet.
+   À partir de 1 100 px (.sl-carte), une colonne blanche de 380 px à gauche porte la recherche, les filtres et les commerces.
+   --------------------------------------------------------------------------------------------------------------------- */
+html:not(.appli) .carte-page .carte-recherche,
+html:not(.appli) .carte-page .carte-pastilles .cuisine-chip,
+html:not(.appli) .carte-page .carte-compte,
+html:not(.appli) .carte-page .carte-reinit,
+html:not(.appli) .carte-page .carte-resultat,
+html:not(.appli) .carte-page .carte-panneau,
+html:not(.appli) .carte-page .leaflet-control-zoom.leaflet-bar { box-shadow: none; border: 1px solid var(--line); }
+html:not(.appli) .carte-page .carte-compte, html:not(.appli) .carte-page .carte-reinit { background: #fff; }
+html:not(.appli) .carte-page .carte-recherche:focus-within { box-shadow: var(--ring); border-color: var(--iris); }
+html:not(.appli) .carte-page .carte-pastilles .cuisine-chip:hover { border-color: var(--iris); }
+
+html:not(.appli) .sl-carte { display: flex; }
+html:not(.appli) .sl-carte .carte-plein { flex: 1 1 auto; min-width: 0; }
+.sl-carte-colonne {
+  flex: 0 0 380px; height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  background: #fff; border-right: 1px solid var(--line);
+}
+/* Les commandes ne flottent plus sur le plan : elles sont le haut de la colonne, collé quand la liste défile. */
+html:not(.appli) .sl-carte-colonne .carte-controles {
+  position: sticky; top: 0; left: auto; right: auto; z-index: 2; padding: 20px 20px 14px; gap: 10px;
+  background: #fff; border-bottom: 1px solid var(--line); pointer-events: auto;
+}
+html:not(.appli) .sl-carte-colonne .carte-pastilles { flex-wrap: wrap; overflow: visible; }
+html:not(.appli) .sl-carte-colonne .carte-recherche { min-height: 48px; }
+html:not(.appli) .sl-carte-colonne .carte-compte, html:not(.appli) .sl-carte-colonne .carte-reinit { border-color: transparent; padding-left: 0; }
+html:not(.appli) .sl-carte-colonne .carte-reinit { padding-left: 12px; border-color: var(--line); }
+.sl-carte-liste { list-style: none; margin: 0; padding: 10px 12px 28px; }
+.sl-carte-ligne {
+  display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid transparent; border-radius: 18px;
+  color: var(--ink); text-decoration: none; transition: border-color .15s, background .15s;
+}
+.sl-carte-ligne:hover { border-color: var(--iris); }
+.sl-carte-ligne:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+.sl-carte-ligne .carte-fiche-texte small + small { margin-top: 2px; }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   6 · LES FAVORIS (Favorites.jsx) sur un ordinateur : la grille de cartes de la liste, à filet, qui montent au survol.
+   --------------------------------------------------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+  html:not(.appli) .fav-ecran .fav-grille { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px 18px; }
+  html:not(.appli) .fav-ecran .fav-carte {
+    gap: 3px; padding-bottom: 14px; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+    transition: transform .3s cubic-bezier(.34, 1.45, .64, 1), border-color .2s, opacity .3s;
+  }
+  html:not(.appli) .fav-ecran .fav-carte > :not(.fav-photo) { margin-left: 14px; margin-right: 14px; }
+  html:not(.appli) .fav-ecran .fav-photo { height: auto; aspect-ratio: 16 / 10; margin-bottom: 8px; border-radius: 0; }
+  html:not(.appli) .fav-ecran .fav-nom { font-size: 16px; font-weight: 800; }
+}
+@media (min-width: 900px) and (hover: hover) {
+  html:not(.appli) .fav-ecran .fav-carte:not(.fav-carte--sort):hover { border-color: var(--iris); transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not(.appli) .sl-grille .rest-card.rc:hover, html:not(.appli) .fav-ecran .fav-carte:not(.fav-carte--sort):hover { transform: none; }
+  .lt-mode-pouce, .sl-choix i, .sl-grille .rest-card.rc { transition: none; }
+  .sl-choix--radio.on i::after, .sl-choix--case.on i { animation: none; }
+}

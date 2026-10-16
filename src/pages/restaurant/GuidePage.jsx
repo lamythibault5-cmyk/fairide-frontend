@@ -1,5 +1,6 @@
 import { useLanguage } from '../../context/LanguageContext';
 import Rich from '../../components/Rich';
+import CadreSite, { SITE } from '../../components/commerce/CadreSite';
 
 // Mode d'emploi du restaurateur : comment recevoir et traiter les commandes Fairide. Contenu statique
 // (pas de données chargées, pas de nouvelle table) qui ne décrit QUE des fonctionnalités réellement
@@ -45,9 +46,9 @@ const SECTIONS = [
 export default function GuidePage() {
   const { t } = useLanguage();
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('guide.title')}</h2>
-      <p className="small" style={{ margin: '0 0 16px' }}>{t('guide.intro')}</p>
+    <CadreSite titre={t('guide.title')} sous={t('guide.intro')} lecture>
+      {!SITE && <h2 className="section-title" style={{ marginTop: 0 }}>{t('guide.title')}</h2>}
+      {!SITE && <p className="small" style={{ margin: '0 0 16px' }}>{t('guide.intro')}</p>}
 
       {SECTIONS.map((s, rang) => (
         <section key={s.n} className="card" style={s.accent ? { borderLeft: '3px solid var(--iris)' } : undefined}>
@@ -74,6 +75,6 @@ export default function GuidePage() {
           })}
         </section>
       ))}
-    </div>
+    </CadreSite>
   );
 }

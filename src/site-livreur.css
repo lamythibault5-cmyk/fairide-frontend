@@ -1,0 +1,131 @@
+/* L'ESPACE LIVREUR SUR LE SITE (fondateur, 2026-10-16, mockups/site-ordinateur.html, section 9 « Livreur », version
+   « Proposition », barre latérale blanche et pas de verre sur le site).
+   Même famille que l'app (ecran-livreur.css : bandeau iris, vélo sur sa route, feuille blanche), pensée pour un ordinateur :
+     - Tableau de bord (/driver, Dashboard.jsx) : sur le bandeau, qui roule et sur quoi, « Tu es disponible », les courses
+       proposées, les gains du jour à droite, l'interrupteur et Urgence côte à côte. À partir de 1100 px, les courses en
+       liste à gauche (boutons compacts), la carte et le détail de la course choisie à droite ; une course en main, son
+       détail à gauche et sa carte à droite. Des boutons partout (la glissière est réservée à l'app).
+     - Gains (EarningsPage.jsx) : à partir de 1100 px, les règles et les mois à gauche, le détail à droite.
+     - Carte, Factures, Avis, dossier (PageLivreur.jsx) : le même bandeau, le contenu dans la feuille, à largeur de lecture.
+   Sur un téléphone (site, sous 900 px), le bandeau va d'un bord à l'autre comme dans l'app (ecran-livreur.css) et la page
+   reste en une colonne.
+   L'APP NE CHANGE PAS : tout ce qui suit est réservé au site (html:not(.appli)), ou porte sur des éléments que seul le site
+   affiche (.ecl-bandeau-site, .ecl-site-grille, .ecl-choix, .ecl-fiche-course, .ecl-page). Seule exception : .ecl-site-cols /
+   .ecl-site-col, des enveloppes sans boîte (display: contents) partout ailleurs que sur le site large.
+   Fond blanc ou iris, lime en aplat sous de l'encre, un seul geste lime par écran (« Prendre la course »), pas d'ombre. */
+
+/* Enveloppes neutres (EarningsPage.jsx) : sans boîte dans l'app et sur un téléphone, colonnes sur le site large. */
+.ecl-site-cols, .ecl-site-col { display: contents; }
+
+/* ---------- Le bandeau du tableau de bord, sur le site (Dashboard.jsx, bandeauSite) ---------- */
+.ecl-bandeau-site { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; align-items: center;
+  grid-template-areas: "ctx urgence" "titre titre" "sous sous" "gains gains" "service service" "route route" "partage partage"; }
+.ecl-bandeau-site > .ecl-b-ctx { grid-area: ctx; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-height: 36px; margin: 0; font-size: 13px; color: rgba(255, 255, 255, .78); }
+.ecl-bandeau-site > .ecl-b-ctx b { color: #fff; font-weight: 600; }
+/* Sur un téléphone, les gains du jour tiennent sur une ligne sous le sous-titre ; sur un ordinateur, en grand à droite. */
+.ecl-bandeau-site > .ecl-gains-j { grid-area: gains; display: flex; align-items: baseline; gap: 8px; margin: 8px 0 0; color: #fff; }
+.ecl-gains-j small { font-size: 13px; color: rgba(255, 255, 255, .78); white-space: nowrap; }
+.ecl-gains-j b { font-family: var(--font-titre); font-size: 18px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ecl-bandeau-site > .ecl-b-titre { grid-area: titre; font-size: 26px; }
+.ecl-bandeau-site > .ecl-b-sous { grid-area: sous; }
+.ecl-bandeau-site > .ecl-service { grid-area: service; }
+.ecl-bandeau-site > .ecl-urgence { grid-area: urgence; justify-self: end; }
+.ecl-bandeau-site > .ecl-route, .ecl-bandeau-site > .ecl-trajet { grid-area: route; }
+.ecl-bandeau-site > .ecl-partage { grid-area: partage; }
+
+/* ---------- Le cadre sur un ordinateur : le bandeau, et la feuille blanche qui monte dessus ---------- */
+@media (min-width: 901px) {
+  html:not(.appli) .ecl { max-width: 1180px; margin: 0 auto; }
+  html:not(.appli) .ecl-page { max-width: 860px; }
+  html:not(.appli) .ecl-page.ecl-page-large, html:not(.appli) .ecl-gains { max-width: 1040px; }
+  html:not(.appli) .ecl-bandeau { padding: 26px 36px 60px; border-radius: 28px; }
+  /* La feuille couvre le bas du bandeau (ses coins compris) : on voit ses propres coins arrondis se détacher sur l'iris. */
+  html:not(.appli) .ecl-feuille { margin-top: -30px; padding: 30px 36px 8px; background: #fff; border-radius: 28px 28px 0 0;
+    animation: ecl-monte .45s var(--ecl-ressort) backwards; }
+  html:not(.appli) .ecl-b-titre { font-size: 34px; }
+  html:not(.appli) .ecl-b-sous { font-size: 15.5px; }
+
+  .ecl-bandeau-site { column-gap: 24px;
+    grid-template-areas: "ctx gains" "titre gains" "sous gains" "service urgence" "route route" "partage partage"; }
+  .ecl-bandeau-site.avec-course { grid-template-areas: "ctx gains" "titre urgence" "sous urgence" "route route" "partage partage"; }
+  .ecl-bandeau-site > .ecl-b-ctx { font-size: 14px; min-height: 0; }
+  .ecl-bandeau-site > .ecl-b-titre { font-size: 38px; margin: 8px 0 6px; }
+  .ecl-bandeau-site > .ecl-gains-j { display: block; justify-self: end; align-self: start; margin: 0; text-align: right; }
+  .ecl-gains-j small, .ecl-gains-j b { display: block; }
+  .ecl-gains-j b { font-size: 32px; }
+  .ecl-bandeau-site > .ecl-service { margin-top: 18px; }
+  .ecl-bandeau-site > .ecl-urgence { align-self: end; margin-top: 18px; }
+  .ecl-bandeau-site.avec-course > .ecl-urgence { align-self: center; margin-top: 0; }
+  .ecl-bandeau-site .ecl-urgence > .btn-outline { padding: 9px 16px; font-size: 14px; min-height: 44px !important; }
+  .ecl-bandeau-site > .ecl-service { padding: 14px 16px 14px 20px; }
+  .ecl-bandeau-site > .ecl-route { margin-top: 18px; }
+  .ecl-bandeau-site > .ecl-trajet { margin-top: 20px; }
+}
+
+/* ---------- Tableau de bord, site large : la liste à gauche, la carte et le détail à droite ---------- */
+.ecl-site-grille { display: grid; grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); gap: 28px; align-items: start; }
+.ecl-site-grille.seule { grid-template-columns: minmax(0, 1fr); max-width: 760px; margin: 0 auto; }
+.ecl-site-gauche, .ecl-site-droite { min-width: 0; }
+.ecl-site-gauche > .ecl-h2:first-child, .ecl-site-droite > .ecl-h2:first-child { margin-top: 0; }
+/* À droite, la course choisie reste en vue pendant qu'on fait défiler la liste. Jamais plus haute que la fenêtre : sinon
+   « Prendre la course », en bas, resterait hors de vue tant que la liste défile. Une course en main : pas collante (la
+   colonne porte aussi l'interrupteur et les nouvelles offres). */
+.ecl-site-droite.collante { position: sticky; top: 20px; max-height: calc(100dvh - 40px); overflow-y: auto; scrollbar-width: thin; border-radius: 22px; }
+.ecl-site-droite > .ecl-service.sur-blanc { margin-top: 16px; }
+.ecl-en-main { margin-top: 0; padding: 20px 22px; }
+.ecl-en-main + .ecl-h2 { margin-top: 26px; }
+.ecl-astuce { margin: 14px 0 0; }
+
+/* Une course de la liste : un bouton, cerclé d'iris quand c'est elle qu'on regarde à droite. */
+.ecl-choix-liste { margin-top: 12px; }
+.ecl-choix { display: block; width: 100%; text-align: left; font: inherit; color: inherit; background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 16px; cursor: pointer;
+  transition: border-color .2s, transform .32s var(--ecl-ressort), opacity .32s; }
+.ecl-choix + .ecl-choix { margin-top: 10px; }
+.ecl-choix:hover { border-color: #B9B3A8; }
+.ecl-choix.on { border: 2px solid var(--iris); padding: 15px; }
+.ecl-choix:focus-visible { outline: 3px solid var(--iris); outline-offset: 2px; }
+.ecl-choix.part { opacity: 0; transform: translateX(-60px); }
+.ecl-choix .ecl-offre-nom b { font-size: 16px; }
+.ecl-choix .ecl-trajet-carte { margin: 12px 0 6px; }
+.ecl-choix .ecl-tj-libs { font-size: 12.5px; }
+
+/* Le détail : la carte en haut, puis la course. Aussi pour la course en main (la carte et les deux adresses). */
+.ecl-fiche-course { border: 1px solid var(--line); border-radius: 22px; overflow: hidden; background: #fff; }
+.ecl-carte-course { display: block; width: 100%; border-bottom: 1px solid var(--line); background: var(--cream-dim); }
+.ecl-fc-corps { padding: 18px 22px 20px; }
+.ecl-fc-tete { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.ecl-fc-tete h2 { font-family: var(--font-titre); font-size: 22px; font-weight: 700; line-height: 1.2; letter-spacing: 0; margin: 0 0 4px; overflow-wrap: anywhere; }
+.ecl-fc-tete .small { margin: 0; font-size: 14px; }
+.ecl-lieux { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0 4px; }
+.ecl-lieux > div { display: flex; gap: 10px; font-size: 14px; line-height: 1.4; min-width: 0; }
+.ecl-lieux > div > svg { flex: none; color: var(--iris); margin-top: 2px; }
+.ecl-lieux small { display: block; font-size: 12.5px; color: var(--ink-soft); overflow-wrap: anywhere; }
+.ecl-fc-corps > .ecl-lieux:last-child { margin-bottom: 0; }
+.ecl-fc-actions { display: flex; gap: 10px; margin-top: 16px; }
+.ecl-fc-actions .btn-gold { flex: 1; padding: 14px 20px; font-size: 16px; font-weight: 700; border-radius: var(--radius-pill); }
+.ecl-fc-actions .btn-outline { flex: none; padding: 14px 22px; font-size: 15px; font-weight: 700; border-radius: var(--radius-pill); }
+
+/* ---------- Gains, site large : les règles et les mois à gauche, le détail à droite ---------- */
+@media (min-width: 1100px) {
+  html:not(.appli) .ecl-gains .ecl-site-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; align-items: start; }
+  html:not(.appli) .ecl-gains .ecl-site-col { display: block; min-width: 0; }
+  html:not(.appli) .ecl-gains .ecl-site-col:first-child { position: sticky; top: 20px; }
+  html:not(.appli) .ecl-gains .ecl-site-col:only-child { position: static; grid-column: 1 / -1; }
+  html:not(.appli) .ecl-gains .ecl-site-col > .ecl-titre-sec:first-child { margin-top: 0 !important; }
+  html:not(.appli) .ecl-gains .ecl-barres { height: 190px; }
+}
+@media (min-width: 901px) {
+  html:not(.appli) .ecl-gains .ecl-gros { font-size: 52px; }
+}
+
+/* Impression (Factures : « Imprimer ») : l'iris ne s'imprime pas, le titre passe en encre sur blanc. */
+@media print {
+  .ecl-page > .ecl-bandeau { background: none !important; color: var(--ink) !important; padding: 0 !important; margin: 0 0 12px !important; }
+  .ecl-page > .ecl-bandeau .ecl-b-titre, .ecl-page > .ecl-bandeau .ecl-b-sous { color: var(--ink) !important; }
+  .ecl-page > .ecl-bandeau .ecl-route { display: none; }
+  .ecl-page > .ecl-feuille { margin: 0 !important; padding: 0 !important; animation: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ecl-choix, .ecl-fiche-course { transition: none !important; }
+}

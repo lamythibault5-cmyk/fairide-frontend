@@ -25,9 +25,14 @@ export function vibrer(motif = 12) {
 
 // Où atterrit un ajout : la pilule du panier si elle est affichée, sinon l'endroit où elle va apparaître
 // (centrée au-dessus des onglets sur téléphone, en bas à droite sur ordinateur — voir .panier-pilule).
+// Sur la fiche d'un commerce vue sur un ordinateur, le panier vit dans une colonne à droite (PanierColonne.jsx) et la
+// pilule est masquée : l'ajout atterrit sur son bouton « Voir le panier » (data-cible-panier), s'il est affiché.
 function cibleDuPanier() {
+  const colonne = document.querySelector('[data-cible-panier]');
+  const rc = colonne?.getBoundingClientRect();
+  if (rc && rc.width > 0 && rc.bottom > 0 && rc.top < window.innerHeight) return { x: rc.left + rc.width / 2, y: rc.top + rc.height / 2 };
   const pilule = document.querySelector('.panier-pilule');
-  if (pilule) {
+  if (pilule && pilule.getClientRects().length) {
     const r = pilule.getBoundingClientRect();
     return { x: r.left + 28, y: r.top + r.height / 2 };
   }

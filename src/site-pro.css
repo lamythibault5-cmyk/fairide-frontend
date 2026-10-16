@@ -1,0 +1,197 @@
+/* L'ESPACE COMMERCE SUR LE SITE (fondateur, 2026-10-16, « Proposition » de la section 8 de mockups/site-ordinateur.html ;
+   lot « pro »). Importé par DashboardLayout. La famille de l'app (bandeau iris, feuille blanche, un seul lime décisif, voir
+   ecran-commerce.css) pensée pour un ordinateur : deux largeurs centrées (1 120 px, 760 px pour lire), le tableau des
+   commandes à trois colonnes, Mon commerce en vue d'ensemble sur deux colonnes, les réglages du service en pastilles
+   claires sur le bandeau. Rien ici ne touche l'app : les classes .sp-* ne sont posées que sur le site (SITE dans
+   CadreSite.jsx, OrdersPage, EditPage) et ce qui retouche les classes .ec-* communes est préfixé html:not(.appli).
+   Pas de verre sur le site. Les colonnes suivent la largeur de la FEUILLE (requêtes de conteneur sur .sp-cadre), pas celle
+   de la fenêtre : la barre latérale peut changer de largeur sans casser le tableau. */
+
+/* ---------- Les deux largeurs, à côté de la barre latérale ---------- */
+@media (min-width: 901px) {
+  html:not(.appli) .ec-bandeau { padding: 28px max(32px, calc((100% - var(--sp-large, 1120px)) / 2)) 58px; border-radius: 26px 26px 0 0; }
+  html:not(.appli) .ec-bandeau .ec-b-titre { font-size: 36px; margin: 10px 0 6px; }
+  html:not(.appli) .ec-bandeau .ec-b-sous { font-size: 15.5px; max-width: 760px; }
+  html:not(.appli) .ec-feuille { margin-top: -28px; padding: 30px max(32px, calc((100% - var(--sp-large, 1120px)) / 2)) 48px; border-radius: 28px 28px 0 0; }
+  .sp-page--lecture { --sp-large: 760px; }
+}
+/* Toutes les largeurs du site : le titre du bandeau ne bouge plus d'une page à l'autre. */
+html:not(.appli) .ec-b-haut { min-height: 28px; }
+
+/* Les requêtes de conteneur : la feuille du tableau (Commandes) et la vue d'ensemble (Mon commerce). */
+.sp-cadre { container: sp-cadre / inline-size; }
+
+/* ---------- Les pastilles claires du bandeau (son, terminal, alarme, notifications, prochaine étape) ---------- */
+.sp-puces { display: flex; flex-wrap: wrap; gap: 8px; }
+.sp-puce { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 15px; border-radius: var(--radius-pill); border: 1px solid rgba(255, 255, 255, .34);
+  background: transparent; color: #fff; font: inherit; font-size: 13.5px; font-weight: 600; white-space: nowrap; cursor: pointer; text-decoration: none; transition: border-color .15s, background .15s; }
+.sp-puce:hover { border-color: #fff; background: rgba(255, 255, 255, .08); }
+.sp-puce:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.sp-puce:disabled { opacity: .6; cursor: default; }
+.sp-puce[aria-pressed="false"] { color: rgba(255, 255, 255, .8); }
+.sp-puce--blanche, .sp-puce--blanche:hover { background: #fff; border-color: #fff; color: var(--iris); }
+.sp-puce--blanche:hover { background: rgba(255, 255, 255, .88); }
+.sp-puce svg { flex: none; }
+
+.sp-b-alerte { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.sp-b-alerte .sp-b-aide { flex: 1 1 280px; }
+.sp-b-alerte .sp-puce { white-space: normal; text-align: left; line-height: 1.25; padding-top: 8px; padding-bottom: 8px; }
+.sp-b-aide { margin: 0; font-size: 13px; line-height: 1.45; color: rgba(255, 255, 255, .78); }
+.sp-b-aide b { color: #fff; }
+.sp-reglages { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; padding: 12px 14px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, .3); }
+.sp-reglages label { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: rgba(255, 255, 255, .82); }
+.sp-reglages select { width: auto; min-width: 150px; padding: 7px 10px; font-size: 13.5px; border-radius: 10px; border: 0; background: #fff; color: var(--ink); }
+.sp-reglages input[type="range"] { width: 160px; accent-color: var(--lime); }
+.sp-b-etape { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-top: 12px; padding: 10px 10px 10px 16px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, .3); }
+.sp-b-etape-texte { flex: 1 1 260px; display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 14px; color: rgba(255, 255, 255, .82); }
+.sp-b-etape-texte b { color: #fff; font-weight: 600; }
+.sp-b-etape-texte svg { flex: none; color: var(--lime); }
+
+/* Le haut du bandeau de Commandes : le titre à gauche, les pastilles à droite ; l'aide et les réglages sur toute la largeur. */
+.sp-b-ligne { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.sp-alerte { display: contents; }
+.sp-b-ligne .ec-b-titre { margin-bottom: 0; }
+@media (min-width: 1100px) {
+  .sp-b-ligne { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "titres puces" "reglages reglages" "alerte alerte"; align-items: end; gap: 12px 24px; }
+  .sp-b-titres { grid-area: titres; }
+  .sp-puces { grid-area: puces; justify-content: flex-end; max-width: 640px; }
+  .sp-reglages { grid-area: reglages; }
+  .sp-b-alerte { grid-area: alerte; }
+}
+
+/* Téléphone : les pastilles tiennent sur une ligne qui défile de côté, pour que la première commande reste en vue. */
+@media (max-width: 900px) {
+  .sp-puces { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 2px 20px; }
+  .sp-puces::-webkit-scrollbar { display: none; }
+  .sp-puces .sp-puce { flex: none; }
+  .sp-b-aide { font-size: 12.5px; }
+  .sp-b-etape { flex-wrap: nowrap; padding: 8px 8px 8px 14px; }
+  .sp-b-etape-texte { flex: 1 1 0; font-size: 13px; }
+  .sp-b-etape .sp-puce { flex: none; }
+  .sp-b-alerte .sp-puce { font-size: 13px; }
+  /* Le titre « Commandes » est déjà l'onglet du bas : lu par les lecteurs d'écran, plus affiché (la place va aux commandes). */
+  .sp-b-titres .ec-b-titre { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
+  .sp-b-ligne { gap: 10px; }
+  /* Le bandeau prenait les deux tiers de l'écran (fusion du 2026-10-16) : l'aide tient sur deux lignes, le bouton du son sur
+     une, la prochaine étape aussi sur deux ; tout reste lisible en entier sur un ordinateur. */
+  .sp-b-aide { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .sp-b-alerte { gap: 8px; }
+  .sp-b-alerte .sp-puce { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; min-height: 40px; padding-top: 0; padding-bottom: 0; }
+  .sp-b-etape { margin-top: 8px; }
+  .sp-b-etape-texte { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.35; }
+  .sp-b-etape-texte svg { display: none; }
+}
+
+/* ---------- Commandes : le tableau ---------- */
+.sp-tableau { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.sp-kol { background: var(--cream-dim); border-radius: 20px; padding: 12px; }
+.sp-kol-t { display: flex; align-items: center; gap: 8px; margin: 0; padding: 4px 6px 12px; font-family: var(--font-ui); font-size: 15.5px; font-weight: 800; }
+.sp-kol-ic { display: inline-flex; color: var(--iris); }
+.sp-kol--nouv .sp-kol-ic { color: var(--red); }
+.sp-sonne svg { animation: ec-sonne 1.2s ease-in-out infinite; transform-origin: 50% 10%; }
+.sp-kol-n { min-width: 24px; height: 24px; padding: 0 7px; border-radius: 12px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12.5px; font-weight: 700; }
+.sp-kol-vide { margin: 0; text-align: center; font-size: 13.5px; color: var(--ink-faint); padding: 26px 12px; border: 1.5px dashed var(--line); border-radius: 16px; }
+.sp-vide-etroit { display: none; }
+@container sp-cadre (min-width: 840px) {
+  .sp-tableau { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 16px; }
+  .sp-kol { min-height: 420px; }
+  .sp-historique-grille { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+}
+@container sp-cadre (max-width: 839.98px) {
+  .sp-tableau--vide { display: none; }
+  .sp-vide-etroit { display: block; }
+}
+
+/* Une commande du tableau. La plus pressée des nouvelles : bordure rouge qui bat (la seule à porter le lime). */
+@keyframes sp-pouls { 0%, 100% { box-shadow: 0 0 0 0 rgba(200, 56, 43, .4); } 60% { box-shadow: 0 0 0 8px rgba(200, 56, 43, 0); } }
+.sp-cmd { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px; cursor: pointer; transition: border-color .15s; font-size: 14px; }
+.sp-kol .sp-cmd + .sp-cmd { margin-top: 10px; }
+.sp-cmd:hover { border-color: #B9B3A8; }
+.sp-cmd--pressee { border: 2px solid var(--red); padding: 13px; animation: sp-pouls 1.6s ease-out infinite; }
+.sp-cmd--pressee:hover { border-color: var(--red); }
+.sp-cmd-l1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.sp-cmd-qui { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.sp-cmd-tete { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
+.sp-cmd-num { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sp-cmd-client { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.sp-cmd-tel { font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; }
+.sp-cmd-outils { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px; max-width: 76px; }
+.sp-outil { width: 34px; height: 34px; min-height: 0 !important; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink-soft);
+  display: inline-grid; place-items: center; grid-auto-flow: column; cursor: pointer; font-size: 11px; text-decoration: none; transition: border-color .15s, color .15s; }
+@media (pointer: coarse) { .sp-outil { width: 44px; height: 44px; } }
+.sp-outil:hover { border-color: var(--iris); color: var(--iris); }
+.sp-outil:disabled { opacity: .5; cursor: default; }
+.sp-cmd-outils .ec-anneau { order: -1; margin: 0 0 2px auto; }
+.sp-cmd-etape { margin-top: 8px; }
+.sp-cmd-art { margin: 8px 0 6px; font-size: 14px; font-weight: 600; line-height: 1.45; }
+.sp-cmd-paiement { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+.sp-cmd-paiement .paiement-badge { margin: 0; }
+.sp-cmd .small { line-height: 1.45; }
+.sp-cmd-info { margin-top: 2px; }
+.sp-cmd .echeance-acceptation { margin-top: 4px; }
+.sp-cmd-actions { margin-top: 10px; cursor: default; }
+.sp-cmd-actions .ec-segment button { font-size: 12.5px; padding: 0 4px; }
+.sp-cmd-boutons { display: flex; gap: 8px; margin-top: 10px; cursor: default; }
+.sp-cmd-boutons .ec-bouton { flex: 1 1 0; width: auto; margin: 0; min-height: 46px !important; padding: 10px 12px; font-size: 15px; }
+.sp-bouton-contour { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.sp-bouton-contour:hover:not(:disabled) { border-color: var(--iris); color: var(--iris); }
+.sp-cmd-code { display: flex; gap: 8px; margin-top: 10px; cursor: default; }
+.sp-cmd-code input { flex: 1 1 auto; min-width: 0; }
+.sp-pas-venu { color: var(--red) !important; margin-top: 8px; padding-left: 0 !important; }
+.sp-historique { margin-top: 18px; }
+.sp-historique-grille { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 10px; }
+.sp-historique .sp-cmd { opacity: .8; }
+
+/* ---------- Mon commerce : la vue d'ensemble ---------- */
+.sp-ensemble { display: grid; grid-template-columns: minmax(0, 1fr); }
+.sp-apercu { margin: 6px 0 4px; }
+.sp-apercu > .ec-feuille-titre { margin-top: 0; }
+@container sp-cadre (min-width: 820px) {
+  .sp-ensemble { grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: auto 1fr; column-gap: 40px; }
+  .sp-ensemble-etapes { grid-column: 1; grid-row: 1; }
+  .sp-ensemble-reste { grid-column: 1; grid-row: 2; }
+  .sp-apercu { grid-column: 2; grid-row: 1 / span 2; align-self: start; position: sticky; top: 20px; margin: 0; }
+}
+.sp-ensemble-reste > .ec-feuille-titre:first-child { margin-top: 4px; }
+/* La prochaine étape : le bouton lime dans sa carte, à droite ; dessous quand la place manque. */
+.sp-prochaine { align-items: center; flex-wrap: wrap; padding: 18px 20px; border-radius: 20px; }
+.sp-prochaine .ec-prochaine-texte b { font-size: 19px; }
+.sp-prochaine .ec-prochaine-texte span { font-size: 14px; }
+.sp-prochaine .ec-bouton { flex: none; width: auto; margin: 0; padding: 0 30px; min-height: 52px !important; }
+@container sp-cadre (max-width: 560px) {
+  .sp-prochaine { align-items: flex-start; }
+  .sp-prochaine .ec-bouton { flex: 1 1 100%; }
+}
+/* La fiche telle que la verront les clients, et les deux tuiles. */
+.sp-fiche { border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: #fff; }
+.sp-fiche-photo { position: relative; overflow: hidden; height: 150px; background: var(--cream-dim); display: grid; place-items: center; color: var(--ink-faint); font-size: 13.5px; }
+.sp-fiche-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.sp-fiche-photo span { display: inline-flex; align-items: center; gap: 8px; }
+.sp-fiche-corps { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px 16px; }
+.sp-fiche-corps b { font-size: 17px; }
+.sp-fiche-liens { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; }
+.sp-lien { background: none; border: 0; padding: 0; min-height: 0 !important; font: inherit; font-size: 14px; font-weight: 600; color: var(--iris); cursor: pointer; text-decoration: none; }
+.sp-lien:hover { text-decoration: underline; }
+.sp-tuiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.sp-tuile { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 18px; background: #fff;
+  color: var(--ink); font: inherit; text-align: left; text-decoration: none; cursor: pointer; transition: border-color .2s; min-width: 0; }
+.sp-tuile:hover { border-color: var(--iris); }
+.sp-tuile:hover .sp-lien { text-decoration: underline; }
+.sp-tuile small { font-size: 13px; color: var(--ink-soft); }
+.sp-tuile b { font-family: var(--font-titre); font-size: 21px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.sp-tuile .sp-lien { font-size: 13.5px; }
+
+/* La route du bandeau porte le nom de chaque arrêt, dès qu'il y a la place. */
+.sp-route-libs { position: absolute; left: 0; right: 0; top: 54px; height: 18px; font-size: 12.5px; color: rgba(255, 255, 255, .62); }
+.sp-route-libs span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.sp-route-libs .fait { color: rgba(255, 255, 255, .86); }
+.sp-route-libs .actuel { color: #fff; font-weight: 700; }
+.ec-route:has(.sp-route-libs) { height: 74px; }
+@media (max-width: 760px) {
+  .sp-route-libs { display: none; }
+  .ec-route:has(.sp-route-libs) { height: 48px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-cmd--pressee, .sp-sonne svg { animation: none !important; }
+}

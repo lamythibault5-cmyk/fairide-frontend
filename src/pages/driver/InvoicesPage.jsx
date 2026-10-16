@@ -8,6 +8,7 @@ import { euros } from '../../prixPlat';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import EtatVide from '../../components/EtatVide';
 import { experienceApp } from '../../natif';
+import PageLivreur from '../../components/livreur/PageLivreur';
 
 function currentMonthValue() {
   const d = new Date();
@@ -42,9 +43,9 @@ export default function InvoicesPage() {
 
   if (!orders) return <SkeletonCards count={3} />;
 
+  // Sur le site, le bandeau iris de l'espace livreur (PageLivreur.jsx) ; dans l'app, le titre de section, comme avant.
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('invoicesDriver.title')}</h2>
+    <PageLivreur titre={t('invoicesDriver.title')} sous={t('siteLivreur.facturesSous')}>
 
       {/* Relevés mensuels des ventes encaissées pour son compte (fondateur, 2026-10-14 : plus des autofacturations,
           art. 53 §2 C.TVA) : pièce de son journal des recettes (AR n°1 art. 14), pas une facture — ni UBL ni Peppol.
@@ -107,6 +108,6 @@ export default function InvoicesPage() {
           </table>
         )}
       </div>
-    </div>
+    </PageLivreur>
   );
 }

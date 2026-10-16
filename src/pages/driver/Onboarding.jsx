@@ -1,6 +1,7 @@
 import { allerAuPaiement, experienceApp } from '../../natif';
 import { MANQUES_INFORMATIFS, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 import DossierAppli from './DossierAppli';
+import PageLivreur from '../../components/livreur/PageLivreur';
 import SacLivraison from '../../components/SacLivraison';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -112,8 +113,8 @@ export default function Onboarding() {
   const allerAuChangement = () => { document.getElementById('changement-statut')?.scrollIntoView({ behavior: defilement(), block: 'start' }); };
 
   return (
-    <div className="courier-onboarding">
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('courierOnboarding.title')}</h2>
+    // Site : le bandeau iris de l'espace livreur (PageLivreur.jsx) ; app (dossier validé ou envoyé) : comme avant.
+    <PageLivreur classe="courier-onboarding" titre={t('courierOnboarding.title')} sous={t('siteLivreur.dossierSous')}>
 
       {/* État du dossier */}
       <EtatDossier d={d} t={t} onChangeStatus={allerAuChangement} />
@@ -204,7 +205,7 @@ export default function Onboarding() {
       {(valide || c.lifecycleStatus === 'suspended' || c.lifecycleStatus === 'blocked_threshold') && <DocumentsVente token={token} />}
       {!enDossier && <ChangementStatut d={d} t={t} token={token} action={action} busy={busy} onChanged={() => { setEtape('statut'); refreshUser?.(); }} />}
       <p className="small" style={{ marginTop: 16, opacity: 0.75 }}>{t('courierOnboarding.legalFooter', { year: legal.year ?? new Date().getFullYear() })} · <Link to="/driver">{t('courierOnboarding.backToDashboard')}</Link></p>
-    </div>
+    </PageLivreur>
   );
 }
 

@@ -10,6 +10,7 @@ import CommissionStatements from '../../components/CommissionStatements';
 import InvoicePreferences from '../../components/InvoicePreferences';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
+import CadreSite, { SITE } from '../../components/commerce/CadreSite';
 import EtatVide from '../../components/EtatVide';
 import AvecMarque from '../../components/AvecMarque';
 
@@ -88,9 +89,9 @@ export default function InvoicesPage() {
   const periodRange = `01/${month.split('-')[1]}/${month.split('-')[0]}, ${lastDayOfMonth(month)}/${month.split('-')[1]}/${month.split('-')[0]}`;
 
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('invoicesResto.title')}</h2>
-      <p className="small no-print" style={{ margin: '-6px 0 12px' }}>{t('invoicesResto.pageIntro')}</p>
+    <CadreSite titre={t('invoicesResto.title')} sous={t('invoicesResto.pageIntro')}>
+      {!SITE && <h2 className="section-title" style={{ marginTop: 0 }}>{t('invoicesResto.title')}</h2>}
+      {!SITE && <p className="small no-print" style={{ margin: '-6px 0 12px' }}>{t('invoicesResto.pageIntro')}</p>}
 
       <div className="auth-tabs no-print" role="tablist" style={{ marginBottom: 14 }}>
         {[['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ['abonnement', t('invoicesResto.tabSubscription')]].map(([cle, label]) => (
@@ -257,6 +258,6 @@ export default function InvoicesPage() {
         </div>
       )}
       </>)}
-    </div>
+    </CadreSite>
   );
 }
