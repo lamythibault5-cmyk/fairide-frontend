@@ -5569,6 +5569,24 @@ export default {
       photoTitle: 'Order photo',
       photoText: 'On every order (test or real), the button in My orders lets you photograph the order BEFORE handing it over: put the ticket with the order number and all the products in the frame. Time, number and product list are stored with the photo: your proof if a customer complains.'
     },
+    ecranCommerce: {
+      verrouAide: 'The switch marks a dish as sold out for today; it comes back on its own tomorrow. Anything else is changed through a request to Fairide.',
+      prochaineEtape: 'Next step',
+      rienAFaire: 'Nothing to do on your side: Fairide takes it from here',
+      enLigne: 'Live',
+      pasEnLigne: 'Not live yet',
+      resteAccepter: '{n} min left to accept',
+      min: 'min',
+      gereeAvecFairide: 'managed with Fairide',
+      taCarte: 'Your menu',
+      produitsEnLigne: '{n} items online',
+      produitEnLigne: '{n} item online',
+      aucunEnLigne: 'No items online yet',
+      sectionsCarte: 'Sections of your menu',
+      retire: 'Removed from the menu',
+      enVente: 'on sale',
+      enVenteAujourdhui: 'On sale today'
+    },
     ordersResto: {
       stopTodayBtn: 'Stop orders for today',
       stopTodayHelp: 'Nothing left to prepare today? Customers can no longer order, orders already received carry on. Orders reopen BY THEMSELVES tomorrow at 6 am: nothing to do on your side. You can also reopen earlier with one tap.',

@@ -12,7 +12,8 @@ import { vibrer } from '../gestes';
 // Fairide le fait. Chaque demande devient une tâche « Modifier la carte » ; son statut s'affiche ici.
 const EXEMPLES = ['modifExample1', 'modifExample2', 'modifExample3'];
 
-export default function DemandeModifCarte({ restoId }) {
+// `lime` : le bouton d'envoi est l'action décisive de l'écran (Ma carte côté commerce, 2026-10-16).
+export default function DemandeModifCarte({ restoId, lime = false }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -63,7 +64,7 @@ export default function DemandeModifCarte({ restoId }) {
           <Icone nom="apercu" taille={16} className="icone-texte" />{' '}{fichiers.length ? t('menuPage.modifFiles', { n: fichiers.length }) : t('menuPage.modifAttach')}
           <input ref={champFichier} type="file" accept="image/*,application/pdf" multiple hidden onChange={(e) => setFichiers([...(e.target.files || [])].slice(0, 5))} />
         </label>
-        <button type="button" className="btn-teal" style={{ flex: '1 1 160px', minHeight: 44 }} disabled={enCours} onClick={envoyer}>
+        <button type="button" className={lime ? 'btn-gold' : 'btn-teal'} style={{ flex: '1 1 160px', minHeight: 44 }} disabled={enCours} onClick={envoyer}>
           {enCours ? '…' : t('menuPage.modifSend')}
         </button>
       </div>
