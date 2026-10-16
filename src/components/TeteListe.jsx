@@ -29,7 +29,21 @@ const VELO = (
   </svg>
 );
 
-export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande }) {
+/* La route en pointillés et le vélo lime, immobile : le bandeau de la page Recherche du site (SearchPage.jsx) la reprend,
+ * comme la maquette (mockups/site-ordinateur.html, « Le cadre »). Mêmes classes que la route du bandeau ci-dessous. */
+export function RouteVelo({ position = 12, className = '' }) {
+  return (
+    <div className={`lt-route${className ? ` ${className}` : ''}`} aria-hidden="true">
+      <span className="lt-velo" style={{ left: `${position}%` }}>{VELO}</span>
+    </div>
+  );
+}
+
+/* `mode` (site seulement, connecté, à partir de 900 px) : Livraison / À emporter à droite de l'adresse, sur le bandeau.
+ * C'est le filtre « À emporter » qui existait déjà (RestaurantList.jsx, `emporter`) : « À emporter » ne garde que les
+ * commerces qui proposent l'emporter, « Livraison » les montre tous, comme la pastille éteinte d'avant. Même état, même
+ * logique : seule la place change. Forme : { emporter, choisir(bool), libelleLivraison, libelleEmporter, libelleGroupe }. */
+export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null }) {
   const app = experienceApp();
   const bandeau = adresse != null;
   // Collée en haut quand on est connecté (coquille à onglets) ou dans l'app ; dans le fil de la page sur le site public.
@@ -140,7 +154,7 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
       className={`liste-tete${collante ? ' liste-tete--collante' : ''}${bandeau ? ' liste-tete--bandeau' : ''}${replie ? ' liste-tete--replie' : ''}`}
     >
       {bandeau && (
-        <div className="lt-bandeau">
+        <div className={`lt-bandeau${mode ? ' lt-bandeau--mode' : ''}`}>
           {/* aria-label : le mot « Modifier » a quitté l'écran au profit d'un chevron (capture du fondateur, 2026-09-17), et
               un chevron seul ne dit rien à un lecteur d'écran — le libellé porte l'action, le chevron est aria-hidden. */}
           <button type="button" className="lt-adresse" onClick={onAdresse} aria-label={libelleChanger} tabIndex={replie ? -1 : undefined}>
@@ -151,6 +165,17 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
             </span>
             <span className="lt-chevron" aria-hidden="true" />
           </button>
+          {mode && (
+            <div className={`lt-mode${mode.emporter ? ' lt-mode--emporter' : ''}`} role="group" aria-label={mode.libelleGroupe}>
+              <span className="lt-mode-pouce" aria-hidden="true" />
+              <button type="button" className={mode.emporter ? '' : 'on'} aria-pressed={!mode.emporter} onClick={() => mode.choisir(false)}>
+                <Icone nom="scooter" taille={18} />{mode.libelleLivraison}
+              </button>
+              <button type="button" className={mode.emporter ? 'on' : ''} aria-pressed={mode.emporter} onClick={() => mode.choisir(true)}>
+                <Icone nom="sac" taille={18} />{mode.libelleEmporter}
+              </button>
+            </div>
+          )}
           <div className="lt-route" aria-hidden="true">
             <span className="lt-velo" ref={velo}>{VELO}</span>
           </div>

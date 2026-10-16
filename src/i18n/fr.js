@@ -6772,6 +6772,15 @@ export default {
       chipHalal: 'Halal',
       chipGlutenFree: 'Sans gluten'
     },
+    siteListe: {
+      modeLivraison: 'Livraison',
+      modeAria: 'Livraison ou à emporter',
+      filtresAria: 'Filtres',
+      triNote: 'Les mieux notés',
+      triDistance: 'Les plus proches',
+      envies: 'Envies',
+      carteColonneAria: 'Commerces sur la carte'
+    },
     map: {
       home: 'Chez toi',
       backToMapAria: 'Retour à la carte',

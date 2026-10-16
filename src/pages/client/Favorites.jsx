@@ -13,6 +13,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { restaurantTypeLabel } from '../../menuCategories';
 import { mouvementReduit, vibrer } from '../../gestes';
 import '../../ecran-liste.css';
+import '../../site-liste.css';
 
 /* MES FAVORIS (fondateur, 2026-10-16, proposition « Le cœur qui bat » de mockups/tous-les-ecrans.html). Le titre et le
  * nombre de commerces sur un bandeau iris, les cartes dans la feuille blanche. Chaque carte porte le cœur des cartes de

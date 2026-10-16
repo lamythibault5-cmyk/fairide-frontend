@@ -1,14 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { imgProps } from '../../images';
 import Icone from '../../components/Icone';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
-import { COMMUNES, COMMUNES_SUGGEREES, RESTAURANT_TYPES } from '../../menuCategories';
+import { COMMUNES, COMMUNES_SUGGEREES, RESTAURANT_TYPES, restaurantTypeLabel } from '../../menuCategories';
 import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
+import { experienceApp } from '../../natif';
+import { RouteVelo } from '../../components/TeteListe';
+import VisuelVide from '../../components/VisuelVide';
+import CertifiedBadge from '../../components/CertifiedBadge';
+import { imgProps, cacherImageCassee } from '../../images';
+import '../../ecran-liste.css';
+import '../../site-liste.css';
 
 // Recherche transversale — un seul champ, tout ce que Fairide sait chercher.
 //
@@ -143,11 +149,12 @@ export default function SearchPage() {
 
   const prix = (p) => (typeof p.price === 'number' ? euros(p.price) : p.price ? euros(Number(p.price)) : '');
 
-  return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('search.title')}</h2>
-
-      <form className="recherche-champ" onSubmit={soumettre} role="search">
+  /* LE SITE (fondateur, 2026-10-16, mockups/site-ordinateur.html, « Le cadre ») : le titre et le champ sur un bandeau iris,
+   * avec la route et le vélo, et ce qu'on trouve dans la feuille blanche dessous — les commerces en cartes (grille), les
+   * plats sur deux colonnes à partir de 1 100 px. Mêmes résultats, même ordre, mêmes liens. L'app garde son écran tel quel. */
+  const site = !experienceApp();
+  const champRecherche = (
+      <form className={`recherche-champ${site ? ' sl-cherche' : ''}`} onSubmit={soumettre} role="search">
         <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={20} /></span>
         <input
           ref={champ}
@@ -163,7 +170,8 @@ export default function SearchPage() {
           <button type="button" className="recherche-effacer" onClick={() => { setRequete(''); champ.current?.focus(); }} aria-label={t('search.clear')}>✕</button>
         )}
       </form>
-      {filtreRegime && (
+  );
+  const pastillesRegime = filtreRegime && (
         <div className="recherche-pastilles" role="group" aria-label={t('search.dietFilters')} style={{ margin: '0 0 12px' }}>
           {bio && <button type="button" className="pill recherche-pastille active" aria-pressed onClick={() => setBio(false)}>{t('search.filterBio')} ✕</button>}
           {vegan && <button type="button" className="pill recherche-pastille active" aria-pressed onClick={() => setVegan(false)}>{t('search.filterVegan')} ✕</button>}
@@ -171,8 +179,9 @@ export default function SearchPage() {
           {sansGluten && <button type="button" className="pill recherche-pastille active" aria-pressed onClick={() => setSansGluten(false)}>{t('search.filterGlutenFree')} ✕</button>}
           <span className="small">{t('search.dietHint')}</span>
         </div>
-      )}
-
+  );
+  const corps = (
+    <>
       {/* Avant la première lettre, on montre par où commencer : les cuisines et les communes, qui sont
           ce qu'on cherche le plus, plus le chemin vers l'aide. Une page vide avec un champ ne dit
           rien de ce qu'il accepte. */}
@@ -224,12 +233,22 @@ export default function SearchPage() {
 
       {actif && !chargement && resultats.total > 0 && (
         <>
-          <Groupe titre={t('search.businesses')} quand={resultats.commerces.length}>
-            {resultats.commerces.map((r) => (
-              <Ligne key={r.id} to={`/restaurants/${r.id}`} image={r.coverImageUrl} icone="commerce" titre={r.name}
-                sous={[r.cuisine, r.commune].filter(Boolean).join(' · ')} />
-            ))}
-          </Groupe>
+          {site && resultats.commerces.length > 0 && (
+            <section className="sl-res-commerces">
+              <h3 className="recherche-titre-groupe">{t('search.businesses')}</h3>
+              <div className="rest-grid sl-grille">
+                {resultats.commerces.map((r) => <CarteCommerce key={r.id} r={r} t={t} />)}
+              </div>
+            </section>
+          )}
+          {!site && (
+            <Groupe titre={t('search.businesses')} quand={resultats.commerces.length}>
+              {resultats.commerces.map((r) => (
+                <Ligne key={r.id} to={`/restaurants/${r.id}`} image={r.coverImageUrl} icone="commerce" titre={r.name}
+                  sous={[r.cuisine, r.commune].filter(Boolean).join(' · ')} />
+              ))}
+            </Groupe>
+          )}
           <Groupe titre={t('search.dishes')} quand={resultats.plats.length}>
             {resultats.plats.map(({ restaurant, plat }) => (
               <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} to={`/restaurants/${restaurant.id}`} image={plat.imageUrl} icone="restaurants"
@@ -260,7 +279,48 @@ export default function SearchPage() {
           </Groupe>
         </>
       )}
+    </>
+  );
+
+  if (!site) {
+    return (
+      <div>
+        <h2 className="section-title" style={{ marginTop: 0 }}>{t('search.title')}</h2>
+        {champRecherche}
+        {pastillesRegime}
+        {corps}
+      </div>
+    );
+  }
+  return (
+    <div className="ecran-bandeau sl-recherche">
+      <div className="eb-bandeau sl-bande">
+        <h1 className="sl-bande-ctx"><Icone nom="recherche" taille={16} />{t('search.title')}</h1>
+        {champRecherche}
+        <RouteVelo className="sl-bande-route" />
+      </div>
+      <div className="eb-feuille sl-feuille">
+        {pastillesRegime}
+        {corps}
+      </div>
     </div>
+  );
+}
+
+// Un commerce trouvé, sur le site : la carte de la liste des commerces (photo, nom, cuisine · quartier), sans le cœur — la
+// recherche ne charge pas les favoris. Même destination que la ligne de l'app : la fiche du commerce.
+function CarteCommerce({ r, t }) {
+  return (
+    <Link to={`/restaurants/${r.id}`} className="rest-card rc">
+      <div className="rc-media">
+        <VisuelVide nom={r.name} cuisine={r.cuisine} />
+        {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 50vw, 280px')} alt="" className="rc-photo" onError={cacherImageCassee} />}
+      </div>
+      <div className="rc-corps">
+        <h4 className="rest-card-name rc-nom"><span className="rest-card-name-text">{r.name}</span>{r.certified && <CertifiedBadge />}</h4>
+        <p className="rc-sous">{[r.cuisine && (restaurantTypeLabel(r.cuisine, t) || r.cuisine), r.neighborhood || r.commune].filter(Boolean).join(' · ')}</p>
+      </div>
+    </Link>
   );
 }
 

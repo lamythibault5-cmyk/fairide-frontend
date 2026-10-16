@@ -6719,6 +6719,15 @@ export default {
       chipHalal: 'Halal',
       chipGlutenFree: 'Gluten-free'
     },
+    siteListe: {
+      modeLivraison: 'Delivery',
+      modeAria: 'Delivery or pickup',
+      filtresAria: 'Filters',
+      triNote: 'Best rated',
+      triDistance: 'Closest',
+      envies: 'Dietary',
+      carteColonneAria: 'Businesses on the map'
+    },
     map: {
       home: 'Your home',
       backToMapAria: 'Back to map',
