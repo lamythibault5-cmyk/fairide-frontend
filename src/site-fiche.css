@@ -1,0 +1,326 @@
+/* =====================================================================================================================
+   FICHE D'UN COMMERCE SUR LE SITE (fondateur, 2026-10-16 : « Proposition » de « Page d'un commerce » dans
+   mockups/site-ordinateur.html, bandes collantes en « Blanc plein »). Importé par RestaurantMenu.jsx ; la page porte
+   .fiche-site (jamais dans l'app, qui a .fiche-appli et ecran-fiche.css — rien ici ne la touche).
+
+   La même famille que l'app, sans ce qui est propre à l'app (verre, flou, ombres douces, gestes au doigt) :
+   - la photo de couverture d'un bord à l'autre de la zone de la page (les marges à annuler sont MESURÉES par
+     RestaurantMenu.jsx : --fiche-bord-g / -d / -h) ;
+   - la feuille blanche qui monte dessus, le logo à cheval ;
+   - la croix, la loupe et le cœur en RONDS IRIS PLEINS à filet blanc. Sur un ordinateur ils partent avec la photo (la barre
+     latérale fait la navigation) ; sur un téléphone ils collent en haut de l'écran : la barre latérale y est masquée, la
+     croix redevient la seule sortie ;
+   - la bande des sections BLANCHE PLEINE, collante, une pastille iris qui suit la section lue (CategoryQuickNav `pouce`) ;
+   - Livraison / À emporter et les frais sur une rangée entre deux filets ;
+   - la carte sur deux colonnes de plats et, à droite, le panier dans une colonne collante (PanierColonne.jsx), quand la
+     page est assez large ; sinon une colonne et la barre du panier en bas (FloatingCart).
+   Les largeurs se lisent sur la PAGE (requêtes de conteneur), pas sur l'écran : connectée, la page vit à côté de la barre
+   latérale ; visiteur, elle a toute la fenêtre. Seule exception : ce qui dépend de la barre latérale elle-même (les ronds
+   collants, la barre du panier en bas) suit sa règle à elle, `max-width: 900px` (styles.css, .dashboard-shell--flux).
+   ===================================================================================================================== */
+
+/* ---------- La page ---------- */
+.fiche-page.fiche-site {
+  position: relative;
+  container: fiche / inline-size;
+  margin: calc(-1 * var(--fiche-bord-h, 0px)) calc(-1 * var(--fiche-bord-d, 0px)) 0 calc(-1 * var(--fiche-bord-g, 0px));
+}
+
+/* ---------- La photo, bord à bord ---------- */
+.fiche-site .fiche-couv { position: relative; height: 220px; overflow: hidden; background: var(--surface-soft); }
+.fiche-site .fiche-couv > .visuel-vide--bandeau { border-radius: 0; }
+.fiche-site .fiche-couv > .fiche-couverture {
+  position: relative; z-index: 1; display: block; width: 100%; height: 100%; margin: 0;
+  border-radius: 0; object-fit: cover; background: transparent;
+}
+@container fiche (min-width: 700px) {
+  .fiche-site .fiche-couv { height: 300px; }
+}
+
+/* ---------- Les ronds flottants (EnteteFlux `flottant`) ---------- */
+.fiche-page.fiche-site .flux-entete--flottant {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 42;
+  display: block; height: 0; min-height: 0; margin: 0; padding: 0; background: none;
+}
+.fiche-site .flux-entete--flottant > .flux-bouton { position: absolute; top: 20px; left: 28px; }
+.fiche-site .flux-entete--flottant > .flux-actions { position: absolute; top: 20px; right: 28px; margin: 0; gap: 10px; }
+.fiche-site .flux-entete--flottant .flux-bouton,
+.fiche-site .favorite-heart--rond {
+  width: 46px; height: 46px; min-height: 0; padding: 0; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: 2px solid #fff; background: var(--iris); color: #fff; text-decoration: none;
+  cursor: pointer; transition: transform .2s var(--ressort-ui), background .15s ease;
+}
+.fiche-site .flux-entete--flottant .flux-bouton:hover, .fiche-site .favorite-heart--rond:hover { background: var(--iris-deep); transform: scale(1.06); }
+.fiche-site .flux-entete--flottant .flux-bouton:active, .fiche-site .favorite-heart--rond:active { transform: scale(.92); }
+.fiche-site .flux-entete--flottant .flux-bouton:focus-visible, .fiche-site .favorite-heart--rond:focus-visible {
+  outline: none; box-shadow: 0 0 0 2px var(--iris), 0 0 0 4px var(--lime);
+}
+.fiche-site .flux-entete--flottant .flux-bouton--fermer { font-size: 28px; font-weight: 400; }
+.fiche-site .flux-entete--flottant .flux-bouton svg { width: 20px; height: 20px; }
+/* Le cœur : tracé blanc, plein blanc une fois choisi (le rose sur l'iris ne se lit pas). */
+.fiche-site .favorite-heart--rond svg { width: 21px; height: 21px; }
+.fiche-site .favorite-heart--rond svg path { fill: transparent; stroke: #fff; stroke-width: 2; }
+.fiche-site .favorite-heart--rond.is-active svg path { fill: #fff; stroke: #fff; }
+.fiche-site .favorite-heart--rond:disabled { opacity: 1; cursor: progress; }
+/* La recherche ouverte : un champ blanc à gauche du cœur. */
+.fiche-site .flux-entete--flottant .fiche-recherche {
+  flex: 0 1 auto; width: 380px; max-width: calc(100cqw - 180px); min-width: 0; height: 46px; margin: 0; padding: 0 5px 0 14px; gap: 6px;
+  background: #fff; border: 1.5px solid var(--line); border-radius: 23px;
+}
+.fiche-site .flux-entete--flottant .fiche-recherche:focus-within { border-color: var(--iris); }
+.fiche-site .flux-entete--flottant .fiche-recherche input { min-height: 0; padding: 0; font-size: 16px; }
+.fiche-page.fiche-site .flux-entete--flottant .fiche-recherche button { min-height: 0; height: 34px; width: 34px; }
+
+/* Téléphone et tablette : la barre latérale est masquée sur cette page (Layout.jsx, estFluxCommande) — les ronds collent en
+   haut de l'écran. Une fois le grand titre passé (--compact, RestaurantMenu.jsx), un aplat blanc se glisse derrière eux :
+   les plats ne défilent plus entre les ronds, et la bande des sections se pose juste dessous. */
+@media (max-width: 900px) {
+  .fiche-page.fiche-site .flux-entete--flottant { position: sticky; top: 0; margin: 0; padding: 0; }
+  .fiche-site .flux-entete--flottant > .flux-bouton { top: 12px; left: 12px; }
+  .fiche-site .flux-entete--flottant > .flux-actions { top: 12px; right: 12px; gap: 8px; }
+  .fiche-site .flux-entete--flottant .flux-bouton, .fiche-site .favorite-heart--rond { width: 44px; height: 44px; }
+  .fiche-site .flux-entete--flottant > .flux-actions:has(.fiche-recherche) { left: 64px; }
+  .fiche-site .flux-entete--flottant .fiche-recherche { flex: 1 1 auto; width: auto; max-width: none; height: 44px; }
+  .fiche-site.fiche-site--compact .flux-entete--flottant::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 64px; background: #fff;
+  }
+}
+
+/* ---------- La feuille ---------- */
+.fiche-site-feuille {
+  position: relative; z-index: 2; margin-top: -26px; padding: 0 16px 32px;
+  background: #fff; border-radius: 26px 26px 0 0;
+  animation: fiche-site-monte .45s var(--ressort-ui) backwards;
+}
+@keyframes fiche-site-monte { from { transform: translateY(36px); } to { transform: none; } }
+.fiche-site-grille { max-width: 1120px; margin: 0 auto; }
+.fiche-site-gauche { min-width: 0; container: carte / inline-size; }
+.fiche-site .fiche-decouvrir { max-width: 1120px; margin: 28px auto 0; }
+@container fiche (min-width: 700px) {
+  .fiche-site-feuille { margin-top: -28px; padding: 0 40px 48px; border-radius: 28px 28px 0 0; }
+}
+@container fiche (min-width: 1150px) {
+  .fiche-site-feuille { padding: 0 48px 56px; }
+}
+
+/* ---------- L'en-tête : logo à cheval, nom, pastilles ---------- */
+.fiche-site .fiche-entete { position: relative; margin: 0; padding-top: 22px; }
+.fiche-site .fiche-entete--logo { padding-top: 46px; }
+.fiche-site .fiche-entete > .fiche-logo {
+  position: absolute; top: -34px; left: 0; bottom: auto; z-index: 3;
+  width: 68px; height: 68px; border-radius: 20px; border: 4px solid #fff; outline: none; box-shadow: none;
+  background: #fff; object-fit: cover;
+  animation: fiche-site-saute .45s var(--ressort-ui) .15s backwards;
+}
+@keyframes fiche-site-saute { from { transform: scale(.3); } to { transform: none; } }
+.fiche-site .fiche-nom { font-size: 27px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.01em; }
+.fiche-site .fiche-meta { margin: 0 0 10px; }
+.fiche-site .fiche-statut { margin: 0 0 10px; }
+.fiche-site .fiche-desc { margin: 2px 0 12px; font-size: 15px; }
+@container fiche (min-width: 700px) {
+  .fiche-site .fiche-entete { padding-top: 26px; }
+  .fiche-site .fiche-entete--logo { padding-top: 54px; }
+  .fiche-site .fiche-entete > .fiche-logo { top: -40px; width: 80px; height: 80px; border-radius: 24px; }
+  .fiche-site .fiche-nom { font-size: 40px; margin-bottom: 10px; }
+  /* Les pastilles et l'état d'ouverture sur une même ligne quand elles y tiennent. */
+  .fiche-site .fiche-meta, .fiche-site .fiche-statut { display: inline-flex; vertical-align: middle; margin: 0 8px 12px 0; }
+  .fiche-site .fiche-statut { padding-top: 5px; padding-bottom: 5px; }
+}
+
+/* Livraison / À emporter et les frais, sur une rangée entre deux filets (ecran-fiche.css met .fiche-faits en `contents`). */
+.fiche-site .fiche-faits {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px;
+  padding: 12px 0; margin: 2px 0 16px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.fiche-site .fiche-faits:empty { display: none; }
+.fiche-site .fiche-entete .fiche-modes {
+  position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; gap: 0; flex: none;
+  margin: 0; padding: 4px; background: var(--cream-dim); border-radius: var(--radius-pill);
+}
+.fiche-site .fiche-entete .fiche-modes button {
+  position: relative; z-index: 1; min-height: 40px; padding: 8px 16px; white-space: nowrap;
+  background: transparent; box-shadow: none; color: var(--ink-soft); font-size: 14px; font-weight: 600; transition: color .25s ease;
+}
+.fiche-site .fiche-entete .fiche-modes button:hover:not(.est-actif) { color: var(--ink); }
+.fiche-site .fiche-entete .fiche-modes button.est-actif { background: transparent; box-shadow: none; color: #fff; }
+.fiche-site .fiche-modes-pouce {
+  display: block; position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px);
+  border-radius: var(--radius-pill); background: var(--iris); transition: transform .45s var(--ressort-ui);
+}
+.fiche-site .fiche-modes[data-mode="pickup"] .fiche-modes-pouce { transform: translateX(100%); }
+.fiche-frais { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 14.5px; }
+.fiche-frais > span { display: flex; flex-direction: column; line-height: 1.3; }
+.fiche-frais small { font-size: 12.5px; color: var(--ink-soft); }
+.fiche-site .fiche-offres { border-radius: var(--radius); margin-bottom: 14px; }
+/* Téléphone : la bascule seule sur sa ligne, les frais dessous en colonnes égales (un libellé peut passer sur deux lignes). */
+@container fiche (max-width: 559px) {
+  .fiche-site .fiche-frais { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); width: 100%; gap: 12px; }
+}
+
+/* ---------- La bande des sections : blanche pleine, collante, la pastille iris qui glisse ---------- */
+.fiche-page.fiche-site .category-quicknav {
+  position: sticky; top: 0; z-index: 41;
+  margin: 0 0 18px; padding: 8px 0; background: #fff; border-bottom: 1px solid var(--line);
+}
+.fiche-site .category-quicknav-sections { gap: 6px; }
+.fiche-site .category-quicknav button {
+  position: relative; z-index: 1; min-height: 40px; height: 40px; padding: 0 16px;
+  background: transparent; border: 1px solid var(--line); color: var(--ink); font-size: 14px; font-weight: 500;
+}
+.fiche-site .category-quicknav button:hover { border-color: var(--iris); }
+.fiche-site .category-quicknav button.active { background: transparent; border-color: transparent; color: #fff; font-weight: 600; }
+.fiche-site .category-quicknav--pouce .quicknav-lentille {
+  display: block; position: absolute; z-index: 0; left: 0; top: 0; width: 0; height: 40px;
+  border-radius: var(--radius-pill); pointer-events: none; background: var(--iris);
+  transition: transform .42s var(--ressort-ui), width .3s var(--ressort-ui);
+}
+.fiche-site [id^="menu-cat-"] { scroll-margin-top: 76px; }
+@media (max-width: 900px) {
+  /* Sous les ronds, d'un bord à l'autre de l'écran (la feuille a 16px de marge). */
+  .fiche-page.fiche-site .category-quicknav { top: 64px; margin: 0 -16px 14px; padding: 6px 16px 8px; }
+  .fiche-site [id^="menu-cat-"] { scroll-margin-top: 132px; }
+}
+
+/* ---------- La carte : deux colonnes de plats quand la place le permet ---------- */
+.fiche-site .fiche-carte-plats { margin: 0 0 24px; }
+.fiche-site .plats-liste { grid-template-columns: minmax(0, 1fr); }
+@container carte (min-width: 560px) {
+  .fiche-site .plats-liste { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; }
+  /* Deux plats côte à côte ont la même hauteur : le filet du dessous s'aligne d'une colonne à l'autre. */
+  .fiche-site .plats-liste > .plat-ligne { display: flex; }
+  .fiche-site .plats-liste > .plat-ligne > .plat { flex: 1 1 auto; }
+}
+/* Le « + » reste posé sur le coin de la photo même quand la description et les allergènes allongent la ligne (ancré en bas
+   de LIGNE, il tombait sous la photo) : 14px de marge + 112px de photo − 40px de rond − 6px. Même règle que l'app. */
+.fiche-site .plat-ligne:not(.plat-ligne-sans-photo) > .plat-pas { bottom: auto; top: 80px; }
+@media (max-width: 400px) { .fiche-site .plat-ligne:not(.plat-ligne-sans-photo) > .plat-pas { top: 64px; } }
+.fiche-site .fiche-vendeur { margin-top: 8px; }
+
+/* ---------- Le panier, colonne collante à droite (PanierColonne.jsx) ---------- */
+.fiche-panier-col { display: none; }
+@container fiche (min-width: 980px) {
+  .fiche-site--panier .fiche-site-grille { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 32px; align-items: start; }
+  .fiche-site--panier .fiche-panier-col {
+    display: flex; flex-direction: column; position: sticky; top: 72px; margin-top: 24px;
+    max-height: calc(100vh - 96px); padding: 20px; background: #fff; border: 1px solid var(--line); border-radius: 22px;
+  }
+}
+@container fiche (min-width: 1150px) {
+  .fiche-site--panier .fiche-site-grille { grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; }
+}
+.fiche-panier-titre { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 4px; font-size: 18px; }
+.fiche-panier-nb { font-family: var(--font-ui); font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+.fiche-panier-ailleurs { margin: 4px 0 0; }
+.fiche-panier-vide .etat-vide { padding: 6px 0 2px; }
+.fiche-panier-vide .etat-vide-scene { max-width: 240px; margin-bottom: 6px; }
+.fiche-panier-vide .etat-vide--scene .etat-vide-titre { font-size: 18px; margin-bottom: 2px; }
+.fiche-panier-vide .etat-vide-texte { font-size: 13.5px; text-wrap: balance; }
+.fiche-panier-lignes { list-style: none; margin: 4px 0 0; padding: 0; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.fiche-panier-ligne {
+  display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px;
+  animation: fiche-panier-entre .35s var(--ressort-ui) backwards;
+}
+@keyframes fiche-panier-entre { from { transform: translateY(14px); opacity: .3; } to { transform: none; opacity: 1; } }
+.fiche-panier-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.fiche-panier-ligne-texte b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fiche-panier-ligne-texte small { font-size: 12.5px; color: var(--ink-soft); line-height: 1.35; }
+.fiche-panier-ligne-prix { font-variant-numeric: tabular-nums; }
+/* Le compteur « − n + » de la version 3C, en petit : iris plein, le chiffre dans un rond lime (lime sur iris). */
+.fiche-panier-pas { display: inline-flex; align-items: center; flex: none; height: 32px; padding: 0 1px; border-radius: 16px; background: var(--iris); color: #fff; }
+/* min-height !important : la règle des 44 px tactiles (styles.css, spécificité 0,3,1) étirait ces ronds en ovales. */
+.fiche-panier-pas button {
+  width: 30px; height: 30px; min-height: 0 !important; padding: 0; border: 0; border-radius: 50%;
+  display: grid; place-items: center; background: transparent; color: #fff; font-size: 18px; font-weight: 600; line-height: 1; cursor: pointer;
+  transition: background .15s ease, transform .12s ease;
+}
+.fiche-panier-pas button:hover:not(:disabled) { background: rgba(255, 255, 255, .16); }
+.fiche-panier-pas button:active:not(:disabled) { transform: scale(.85); }
+.fiche-panier-pas button:disabled { opacity: .4; cursor: default; }
+.fiche-panier-pas button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
+.fiche-panier-pas b {
+  width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--lime); color: var(--ink); font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums;
+  animation: plat-pas-chiffre .3s cubic-bezier(.34, 1.45, .64, 1);
+}
+.fiche-panier-st { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 12px 0 2px; font-size: 15px; }
+.fiche-panier-st b { display: inline-flex; overflow: hidden; font-size: 16px; font-variant-numeric: tabular-nums; }
+.fiche-panier-note { margin: 0; }
+.fiche-voir-panier {
+  display: flex; align-items: center; gap: 12px; flex: none; height: 56px; margin-top: 16px; padding: 0 6px 0 22px;
+  border-radius: 28px; background: var(--iris); color: #fff; font-size: 16px; font-weight: 700; text-decoration: none;
+  transition: background .15s ease;
+}
+.fiche-voir-panier:hover { background: var(--iris-deep); }
+.fiche-voir-panier:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--iris); }
+.fiche-voir-panier > span:first-child { flex: 1; }
+.fiche-voir-panier-total {
+  height: 44px; display: flex; align-items: center; padding: 0 14px; border-radius: 22px;
+  background: #fff; color: var(--iris); font-variant-numeric: tabular-nums; overflow: hidden;
+}
+/* Le bouton rebondit quand un plat y atterrit (deux classes en alternance : une animation ne repart pas si sa classe reste). */
+.fiche-voir-panier--rebond0 { animation: fiche-panier-rebond0 .45s cubic-bezier(.34, 1.45, .64, 1); }
+.fiche-voir-panier--rebond1 { animation: fiche-panier-rebond1 .45s cubic-bezier(.34, 1.45, .64, 1); }
+@keyframes fiche-panier-rebond0 { 35% { transform: scale(1.04, .92); } 70% { transform: scale(.99, 1.03); } }
+@keyframes fiche-panier-rebond1 { 35% { transform: scale(1.04, .92); } 70% { transform: scale(.99, 1.03); } }
+
+/* La colonne affichée, la pilule flottante ferait doublon (PanierColonne pose la classe). */
+html.panier-en-colonne .panier-pilule { display: none; }
+
+/* ---------- Téléphone : la barre du panier en bas de l'écran ----------
+   Sur cette page, sous 900px, il n'y a pas d'onglets en dessous (ils s'effacent dans le parcours de commande) : la pilule
+   descend au bas de l'écran et prend la forme de la barre de l'app — le sac et son compteur, « Voir le panier », le total
+   dans une pastille blanche dont les chiffres roulent — en iris plein, sans verre. */
+@media (max-width: 900px) {
+  html:not(.appli) body:has(.fiche-site) .panier-pilule {
+    left: 16px; right: 16px; transform: none; max-width: 520px; margin: 0 auto;
+    bottom: calc(16px + env(safe-area-inset-bottom)); height: 60px; gap: 14px; padding: 8px 8px 8px 20px;
+    border-radius: 30px; font-size: 15.5px; font-weight: 600; box-shadow: none;
+    animation-name: fiche-barre-arrive;
+  }
+  html:not(.appli) body:has(.fiche-site) .panier-pilule--rebond { animation: fiche-barre-rebond .45s cubic-bezier(.34, 1.45, .64, 1) both; }
+  html:not(.appli) body:has(.fiche-site) .panier-pilule-texte { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; }
+  html:not(.appli) body:has(.fiche-site) .panier-pilule-total {
+    height: 44px; display: flex; align-items: center; padding: 0 16px; border-radius: 22px;
+    background: #fff; color: var(--iris); overflow: hidden; font-variant-numeric: tabular-nums;
+  }
+  html:not(.appli) body:has(.fiche-site) .panier-pilule-compte { min-width: 20px; height: 20px; font-size: 12px; top: -7px; right: -9px; }
+}
+@keyframes fiche-barre-arrive { from { transform: translateY(140%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fiche-barre-rebond { 0%, 100% { transform: none; } 30% { transform: scale(1.03, .9); } 60% { transform: scale(.99, 1.04); } }
+
+/* ---------- La fiche d'un plat (FichePlat.jsx) sur le site ----------
+   Ordinateur : une fenêtre de dialogue centrée (styles.css), ici ses finitions — coins de 24px, croix en rond iris à filet
+   blanc en haut à droite, le bloc lime « − n + Ajouter » bien dégagé. Téléphone : une feuille qui monte du bas, coins du
+   haut arrondis, la page assombrie derrière. L'app garde sa feuille plein écran (html.appli, rien ne change). */
+@media (min-width: 901px) {
+  html:not(.appli) .plat-feuille { padding: 32px; }
+  /* flex: 0 : la fenêtre prend la hauteur de son contenu (elle s'étirait jusqu'à 88vh, un grand blanc sous un plat simple). */
+  html:not(.appli) .plat-panneau { flex: 0 1 auto; max-width: 560px; max-height: min(88vh, 820px); border-radius: 24px; --plat-marge: 24px; }
+  html:not(.appli) .plat-photo { max-height: 240px; }
+  html:not(.appli) .plat-corps { max-width: none; padding: 20px 24px 8px; }
+  html:not(.appli) .plat-pied { border-top: 0; padding: 12px 24px 22px; }
+  html:not(.appli) body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { padding-top: 24px; padding-right: 80px; }
+}
+html:not(.appli) .plat-fermer {
+  top: 14px; right: 14px; left: auto; z-index: 2; width: 46px; height: 46px; min-height: 0; padding: 0;
+  background: var(--iris); color: #fff; border: 2px solid #fff; box-shadow: none; font-size: 28px;
+  transition: background .15s ease, transform .2s var(--ressort-ui);
+}
+html:not(.appli) .plat-fermer:hover { background: var(--iris-deep); transform: scale(1.06); }
+html:not(.appli) .plat-fermer:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--iris), 0 0 0 4px var(--lime); }
+@media (max-width: 900px) {
+  html:not(.appli) .plat-feuille { justify-content: flex-end; background: rgba(20, 18, 31, .45); animation: fond-apparait .25s ease both; }
+  html:not(.appli) .plat-panneau { flex: 0 1 auto; max-height: calc(100dvh - 32px); border-radius: 24px 24px 0 0; overflow: hidden; }
+  html:not(.appli) .plat-poignee { top: 8px; }
+  html:not(.appli) .plat-fermer { top: 12px; right: 12px; width: 44px; height: 44px; }
+  /* Sans photo, la croix est à droite : le nom garde sa ligne, il lui laisse simplement la place. */
+  html:not(.appli) body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { padding-top: 26px; padding-right: 72px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fiche-site-feuille, .fiche-site .fiche-entete > .fiche-logo, .fiche-panier-ligne, .fiche-panier-pas b,
+  .fiche-voir-panier--rebond0, .fiche-voir-panier--rebond1 { animation: none; }
+  .fiche-site .quicknav-lentille, .fiche-site .fiche-modes-pouce { transition: none; }
+  html:not(.appli) body:has(.fiche-site) .panier-pilule { animation: none; }
+}

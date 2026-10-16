@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import urlSure from '../../urlSure';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -35,14 +35,18 @@ import { localizedItem } from '../../menuTranslation';
 import { resolveItemImage, restaurantTypeLabel } from '../../menuCategories';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
 import { experienceApp } from '../../natif';
+import PanierColonne from '../../components/PanierColonne';
 import '../../ecran-fiche.css';
+import '../../site-fiche.css';
 
 /* DANS L'APP, LA FICHE MONTE EN FEUILLE SUR LA PHOTO (fondateur, 2026-10-16, « Proposition » de « Fiche d'un commerce »
  * dans mockups/tous-les-ecrans.html). La photo de couverture prend le haut de l'écran, bord à bord ; la page monte dessus
  * en feuille blanche aux coins arrondis, le logo posé à cheval ; la croix, la recherche et le cœur flottent en RONDS IRIS
  * par-dessus (blancs sur verre blanc dans la maquette, ils étaient illisibles sur une photo claire — retour du fondateur) ;
  * les sections passent dans une bande de verre où une lentille suit la section qu'on lit (CategoryQuickNav `verre`).
- * Même contenu, mêmes fonctions, même ordre que sur le site, qui garde sa mise en page (styles dans ecran-fiche.css). */
+ * Même contenu, mêmes fonctions, même ordre que sur le site (styles dans ecran-fiche.css).
+ * Le site a reçu la même famille le même jour, pensée pour un ordinateur (fiche-site, site-fiche.css) : voir le rendu
+ * en bas de ce composant. */
 const APPLI = experienceApp();
 
 // Clé du jour (openingHours) → clé de traduction du nom du jour (resa.monday…).
@@ -100,7 +104,7 @@ export default function RestaurantMenu() {
   // App sans compte : la barre d'app (Layout.jsx) colle en haut de l'écran, les ronds flottants et la bande des sections
   // collent juste dessous. Sa hauteur dépend du bouton qu'elle porte (marque ou Retour) : on la mesure.
   const pageRef = useRef(null);
-  const { token, user } = useAuth();
+  const { token, user, role } = useAuth();
   const [pickerItem, setPickerItem] = useState(null);
   // Article qu'on essayait d'ajouter quand le panier contenait déjà un autre commerce (voir addToCart) —
   // conservé le temps que l'utilisateur confirme ou annule le remplacement du panier.
@@ -155,6 +159,42 @@ export default function RestaurantMenu() {
     if (!APPLI || !pageRef.current) return;
     const barre = document.querySelector('.appli-barre');
     if (barre) pageRef.current.style.setProperty('--fiche-haut', `${barre.offsetHeight}px`);
+  }, [restaurant]);
+  /* SUR LE SITE, LA PHOTO VA D'UN BORD À L'AUTRE DE LA ZONE DE LA PAGE. La page est rendue dans la colonne principale
+     (.dashboard-main, connecté) ou dans le .wrap de 960px (visiteur), chacun avec sa marge intérieure : on MESURE de combien
+     sortir de chaque côté au lieu de recopier ces marges ici — elles changent avec la largeur de l'écran, et vivent dans
+     styles.css. Connecté : jusqu'aux bords de la colonne principale (la barre latérale reste à gauche) ; visiteur : jusqu'aux
+     bords de la fenêtre. Mesuré avant l'affichage (pas de saut), puis à chaque changement de taille. */
+  useLayoutEffect(() => {
+    const racine = pageRef.current;
+    if (APPLI || !racine) return undefined;
+    const zone = racine.closest('main');
+    if (!zone) return undefined;
+    const tableau = zone.classList.contains('dashboard-main');
+    const cadre = tableau ? zone : (zone.parentElement || zone);
+    // La place « naturelle » de la page = sa boîte actuelle plus les débords déjà appliqués. Pas la boîte de son parent : la
+    // marge négative du haut fusionne avec celle du parent (même bord, ni padding ni bordure), qui remonte avec elle — la
+    // mesure retombait à 0 au tour suivant, et la page sautait de 24px en boucle.
+    const applique = (nom) => parseFloat(racine.style.getPropertyValue(nom)) || 0;
+    function poser(nom, valeur) {
+      const v = `${Math.max(0, Math.round(valeur))}px`;
+      if (racine.style.getPropertyValue(nom) !== v) racine.style.setProperty(nom, v);
+    }
+    function mesurer() {
+      const r = racine.getBoundingClientRect();
+      const c = cadre.getBoundingClientRect();
+      const gauche = r.left + applique('--fiche-bord-g');
+      const droite = r.right - applique('--fiche-bord-d');
+      const haut = r.top + applique('--fiche-bord-h');
+      poser('--fiche-bord-g', tableau ? gauche - c.left : gauche);
+      poser('--fiche-bord-d', tableau ? c.right - droite : document.documentElement.clientWidth - droite);
+      poser('--fiche-bord-h', haut - c.top);
+    }
+    mesurer();
+    window.addEventListener('resize', mesurer);
+    const obs = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(mesurer);
+    obs?.observe(cadre);
+    return () => { window.removeEventListener('resize', mesurer); obs?.disconnect(); };
   }, [restaurant]);
   // Ouvrir la loupe donne le clavier tout de suite : un champ qui apparaît et qu'il faut ensuite
   // toucher pour écrire dedans demande deux gestes là où on en attend un.
@@ -383,13 +423,15 @@ export default function RestaurantMenu() {
     setPickerItem(item);
   }
 
+  // Le cœur est un rond flottant avec la croix et la loupe, dans l'app comme sur le site (2026-10-16).
   const coeur = (
-    <FavoriteHeart active={isFavorite} busy={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className={APPLI ? 'favorite-heart--rond' : 'favorite-heart-inline'} />
+    <FavoriteHeart active={isFavorite} busy={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className="favorite-heart--rond" />
   );
-  // Les sections : dans l'app, sous l'en-tête, dans la feuille (bande de verre) ; sur le site, sous le bandeau du parcours.
+  // Les sections : sous l'en-tête, dans la feuille. Dans l'app, une bande de verre ; sur le site, une bande blanche pleine
+  // où une pastille iris glisse d'une section à l'autre (`pouce`).
   const sectionsEtResultat = (
     <>
-      <CategoryQuickNav categories={sectionsFiltrees} verre={APPLI} />
+      <CategoryQuickNav categories={sectionsFiltrees} verre={APPLI} pouce={!APPLI} />
       {/* Le résultat d'une recherche, dit en clair (et annoncé aux lecteurs d'écran) : la carte filtrée seule ne disait
           pas que le tri avait eu lieu. Zéro résultat : le message « aucun plat » plus bas suffit. */}
       {q && menuFiltre.length > 0 && (
@@ -400,267 +442,277 @@ export default function RestaurantMenu() {
     </>
   );
 
-  return (
-    <div className={`fiche-page${APPLI ? ' fiche-appli' : ''}`} ref={pageRef}>
-      {/* LE BANDEAU D'ABORD, LES SECTIONS DESSOUS. C'était l'inverse : la barre des sections était
-          rendue en premier et collée à `top: 0`, la croix venait après et ne collait à rien. En
-          descendant dans la carte, on gardait donc la table des matières et on perdait la sortie —
-          alors que les onglets du bas s'effacent sur cette page justement parce que cette croix est
-          censée être la seule sortie (voir Layout.jsx et EnteteFlux.jsx).
-          Les deux sont maintenant collants et EMPILÉS : le bandeau à `top: 0`, les sections juste
-          dessous à la hauteur du bandeau (--h-bandeau dans styles.css). C'est la disposition
-          d'Uber Eats, et celle que le fondateur décrit : croix, nom, recherche, puis les sections.
-
-          La croix, et non une flèche : d'ici on SORT du parcours pour revenir à la liste. Le lien de
-          texte qui vivait là faisait 18px de haut — on le manquait au pouce. */}
-      <EnteteFlux
-        vers="/restaurants"
-        geste="fermer"
-        libelle={t('restaurantMenu.backToRestaurants')}
-        titre={restaurant.name}
-        titreEstompe={grandTitreVisible || rechercheOuverte}
-        flottant={APPLI}
-        actions={<>{restaurant.menu.length > 8 ? (
-          rechercheOuverte ? (
-            /* VALIDER LA RECHERCHE (retour du fondateur, 2026-10-14) : rien ne confirmait l'action — la touche Entrée ne
-               faisait rien et le rond gris restait vide. « Voir les résultats » (ou Entrée) ferme le clavier et amène à la
-               première section trouvée ; le nombre de plats s'affiche sous la barre des sections (fiche-recherche-resultat). */
-            <form className="recherche-champ fiche-recherche" role="search" onSubmit={(e) => {
-              e.preventDefault();
-              champRechercheRef.current?.blur();
-              document.querySelector('[id^="menu-cat-"]')?.scrollIntoView({ behavior: defilement(), block: 'start' });
-            }}>
-              <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={18} /></span>
-              <input
-                ref={champRechercheRef}
-                type="search" enterKeyHint="search" value={requete} onChange={(e) => setRequete(e.target.value)}
-                placeholder={t('restaurantMenu.searchDish')} aria-label={t('restaurantMenu.searchDish')}
-              />
-              {/* Fermer VIDE la recherche : replier le champ en gardant un filtre actif laisserait
-                  une carte amputée sans rien à l'écran pour dire pourquoi. Une croix, plus le rond « interdit ». */}
-              <button
-                type="button" className="recherche-effacer"
-                onClick={() => { setRequete(''); setRechercheOuverte(false); }}
-                aria-label={t('restaurantMenu.clearSearch')} title={t('restaurantMenu.clearSearch')}
-              >
-                <Icone nom="croix" taille={16} />
-              </button>
-              {requete.trim() && (
-                <button type="submit" className="recherche-valider" aria-label={t('restaurantMenu.searchSubmit')} title={t('restaurantMenu.searchSubmit')}>
-                  <Icone nom="valider" taille={18} />
-                </button>
-              )}
-            </form>
-          ) : (
+  /* LA CROIX, LA LOUPE ET LE CŒUR, EN RONDS IRIS FLOTTANTS (`flottant`).
+     Ils étaient d'abord un bandeau collant (croix, nom, recherche) au-dessus des sections : le BANDEAU D'ABORD, LES SECTIONS
+     DESSOUS — la croix devait rester la sortie de la page, puisque les onglets du bas s'y effacent (Layout.jsx,
+     EnteteFlux.jsx). Dans l'app (2026-10-16) puis sur le site (même jour, mockups/site-ordinateur.html) ils flottent sur la
+     photo de couverture. Sur téléphone ils collent en haut de l'écran, la bande des sections juste dessous : c'est toujours
+     la seule sortie. Sur un ordinateur, la barre latérale fait la navigation : ils partent avec la photo (site-fiche.css).
+     La croix, et non une flèche : d'ici on SORT du parcours pour revenir à la liste. */
+  const entete = (
+    <EnteteFlux
+      vers="/restaurants"
+      geste="fermer"
+      libelle={t('restaurantMenu.backToRestaurants')}
+      titre={restaurant.name}
+      titreEstompe={grandTitreVisible || rechercheOuverte}
+      flottant
+      actions={<>{restaurant.menu.length > 8 ? (
+        rechercheOuverte ? (
+          /* VALIDER LA RECHERCHE (retour du fondateur, 2026-10-14) : rien ne confirmait l'action — la touche Entrée ne
+             faisait rien et le rond gris restait vide. « Voir les résultats » (ou Entrée) ferme le clavier et amène à la
+             première section trouvée ; le nombre de plats s'affiche sous la barre des sections (fiche-recherche-resultat). */
+          <form className="recherche-champ fiche-recherche" role="search" onSubmit={(e) => {
+            e.preventDefault();
+            champRechercheRef.current?.blur();
+            document.querySelector('[id^="menu-cat-"]')?.scrollIntoView({ behavior: defilement(), block: 'start' });
+          }}>
+            <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={18} /></span>
+            <input
+              ref={champRechercheRef}
+              type="search" enterKeyHint="search" value={requete} onChange={(e) => setRequete(e.target.value)}
+              placeholder={t('restaurantMenu.searchDish')} aria-label={t('restaurantMenu.searchDish')}
+            />
+            {/* Fermer VIDE la recherche : replier le champ en gardant un filtre actif laisserait
+                une carte amputée sans rien à l'écran pour dire pourquoi. Une croix, plus le rond « interdit ». */}
             <button
-              type="button" className="flux-bouton"
-              onClick={() => setRechercheOuverte(true)}
-              aria-label={t('restaurantMenu.searchDish')} title={t('restaurantMenu.searchDish')}
+              type="button" className="recherche-effacer"
+              onClick={() => { setRequete(''); setRechercheOuverte(false); }}
+              aria-label={t('restaurantMenu.clearSearch')} title={t('restaurantMenu.clearSearch')}
             >
-              <Icone nom="recherche" taille={20} />
+              <Icone nom="croix" taille={16} />
             </button>
-          )
-        ) : null}{APPLI && coeur}</>}
-      />
-      {!APPLI && sectionsEtResultat}
-
-      {/* L'EN-TÊTE SORT DE LA CARTE.
-          Tout ce bloc vivait dans un <div className="card"> : un rectangle blanc cerné d'un filet,
-          avec 24px de marge intérieure, dans lequel la photo devait déborder par des marges
-          négatives de -22px pour paraître pleine largeur. Le contour n'apportait rien — il
-          encadrait le sujet de la page, pas un élément parmi d'autres — et le débordement était
-          un contournement de ce contour. Les deux partent ensemble. */}
-      <header className={`fiche-entete${restaurant.logoImageUrl ? ' fiche-entete--logo' : ''}`}>
-        {/* Le bandeau existe toujours : sans photo de couverture (ou si elle ne charge pas), c'est un visuel aux
-            couleurs de Fairide (VisuelVide) qui tient la place — plus de bloc gris qui ressemble à une image cassée. */}
-        <div className="fiche-media">
-          <VisuelVide nom={restaurant.name} cuisine={restaurant.cuisine} taille="bandeau" className="fiche-couverture-vide" />
-          {restaurant.coverImageUrl && <img {...imgProps(restaurant.coverImageUrl, 960, '(max-width: 960px) 100vw, 960px')} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" onError={cacherImageCassee} />}
-          {restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" onError={cacherImageCassee} />}
-        </div>
-        {/* La feuille blanche qui monte sur la photo dans l'app ; sur le site, `display: contents` (rien ne change). */}
-        <div className="fiche-feuille">
-        <div className="fiche-titre-ligne">
-          {/* h1 et non h2 : la fiche est la page la plus importante du site pour le
-              référencement et n'avait aucun titre de niveau 1. Son sujet est le commerce. */}
-          <h1 className="fiche-nom" ref={titreRef}>
-            <span>{restaurant.name}</span>
-            {restaurant.certified && <CertifiedBadge size={20} />}
-          </h1>
-          {/* Dans l'app, le cœur flotte en haut à droite avec la croix (bandeau ci-dessus). */}
-          {!APPLI && coeur}
-        </div>
-
-        {/* UNE SEULE LIGNE DE MÉTA, à la place de six.
-            Il y avait, empilées : la note, la description + commune, le site, le téléphone, les
-            horaires du jour, et un bouton pour déplier la semaine. Uber tient l'équivalent sur une
-            ligne — « 4.1 ★ (4 000+) · €1.79 Delivery Fee · Info » — et range le reste derrière
-            « Info ». Le visiteur vient lire une carte. */}
-        <p className="fiche-meta">
-          {/* Pas d'étoiles quand personne n'a encore noté : cinq étoiles vides à côté du mot
-              « Nouveau » se lisaient comme une note de zéro sur cinq, ce qui est le contraire de
-              ce qu'on veut dire d'un commerce qui vient d'arriver. */}
-          {restaurant.reviewCount > 0 ? (
-            <>
-              <span className="fiche-meta-note"><StarsDisplay value={restaurant.rating} size={13} /></span>
-              <span>{t('restaurantMenu.ratingReviews', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount })}</span>
-            </>
-          ) : (
-            <span>{t('restaurantList.newBadge')}</span>
-          )}
-          {restaurant.commune && <><span aria-hidden="true">·</span><span>{restaurant.commune}</span></>}
-          <span aria-hidden="true">·</span>
-          <button type="button" className="fiche-infos-lien" onClick={() => setInfosOuvertes(true)}>
-            {t('restaurantMenu.infoButton')}
+            {requete.trim() && (
+              <button type="submit" className="recherche-valider" aria-label={t('restaurantMenu.searchSubmit')} title={t('restaurantMenu.searchSubmit')}>
+                <Icone nom="valider" taille={18} />
+              </button>
+            )}
+          </form>
+        ) : (
+          <button
+            type="button" className="flux-bouton"
+            onClick={() => setRechercheOuverte(true)}
+            aria-label={t('restaurantMenu.searchDish')} title={t('restaurantMenu.searchDish')}
+          >
+            <Icone nom="recherche" taille={20} />
           </button>
+        )
+      ) : null}{coeur}</>}
+    />
+  );
+
+  /* L'EN-TÊTE SORT DE LA CARTE.
+     Tout ce bloc vivait dans un <div className="card"> : un rectangle blanc cerné d'un filet,
+     avec 24px de marge intérieure, dans lequel la photo devait déborder par des marges
+     négatives de -22px pour paraître pleine largeur. Le contour n'apportait rien — il
+     encadrait le sujet de la page, pas un élément parmi d'autres — et le débordement était
+     un contournement de ce contour. Les deux partent ensemble.
+     Le bandeau existe toujours : sans photo de couverture (ou si elle ne charge pas), c'est un visuel aux
+     couleurs de Fairide (VisuelVide) qui tient la place — plus de bloc gris qui ressemble à une image cassée.
+     Sur le site, la photo va d'un bord à l'autre de la colonne de la page : on la demande donc plus large. */
+  const couverture = (
+    <>
+      <VisuelVide nom={restaurant.name} cuisine={restaurant.cuisine} taille="bandeau" className="fiche-couverture-vide" />
+      {restaurant.coverImageUrl && <img {...(APPLI ? imgProps(restaurant.coverImageUrl, 960, '(max-width: 960px) 100vw, 960px') : imgProps(restaurant.coverImageUrl, 1200, '100vw'))} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" onError={cacherImageCassee} />}
+    </>
+  );
+  const logo = restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" onError={cacherImageCassee} />;
+
+  // Les frais, selon le mode. Le panneau gris de l'app est inchangé ; sur le site, les mêmes faits en colonnes « valeur /
+  // libellé » à droite de la bascule (mockups/site-ordinateur.html). Rien de plus n'y est dit (voir le panneau ci-dessous).
+  const fraisLivraison = modeActif === 'pickup'
+    ? t('restaurantMenu.feePickup')
+    : restaurant.freeDelivery
+      ? t('restaurantMenu.feeFree')
+      : t('restaurantMenu.feeFrom', { amount: tarifLivraison(restaurant).depart.toFixed(2).replace('.', ',') });
+  /* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
+     forfaitaire côté client : le montant exact dépend de la distance et se calcule au
+     serveur, exactement comme l'annonce déjà le paiement. Aucun délai d'arrivée n'y figure : le
+     commerce règle son temps de préparation (backend migration 041), mais le trajet dépend de
+     l'adresse, inconnue ici — l'heure estimée n'existe qu'une fois la commande passée. La maquette du site
+     montrait une « Estimation » en minutes : pas reprise, pour la même raison (et le délai de préparation
+     n'est pas dans la fiche publique). */
+  const panneauFrais = onlineOrderingDisabled ? null : APPLI ? (
+    <div className="fiche-panneau">
+      <b>{fraisLivraison}</b>
+      <span className="fiche-panneau-cle">{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</span>
+      {/* Distance choisie par le commerce (Mon commerce › Commandes et capacité). */}
+      {modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
+        <span className="fiche-panneau-cle">{t('restoMenuUi.deliversUpTo', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</span>
+      )}
+      {/* Montant minimum choisi par le commerce (PAN-3), annoncé avant de composer le panier. */}
+      {restaurant.minOrderAmount > 0 && (
+        <span className="fiche-panneau-cle">{t('restoMenuUi.minOrder', { amount: euros(restaurant.minOrderAmount) })}</span>
+      )}
+    </div>
+  ) : (
+    <div className="fiche-frais">
+      <span><b>{fraisLivraison}</b><small>{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</small></span>
+      {modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
+        <span><b>{t('siteFiche.radiusValue', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</b><small>{t('siteFiche.radiusLabel')}</small></span>
+      )}
+      {restaurant.minOrderAmount > 0 && (
+        <span><b>{euros(restaurant.minOrderAmount)}</b><small>{t('siteFiche.minimumLabel')}</small></span>
+      )}
+    </div>
+  );
+
+  // Tout ce qui suit la photo jusqu'à la carte : dans la feuille de l'app, dans l'en-tête de la colonne de gauche sur le site.
+  const infos = (
+    <>
+      <div className="fiche-titre-ligne">
+        {/* h1 et non h2 : la fiche est la page la plus importante du site pour le
+            référencement et n'avait aucun titre de niveau 1. Son sujet est le commerce. */}
+        <h1 className="fiche-nom" ref={titreRef}>
+          <span>{restaurant.name}</span>
+          {restaurant.certified && <CertifiedBadge size={20} />}
+        </h1>
+      </div>
+
+      {/* UNE SEULE LIGNE DE MÉTA, à la place de six.
+          Il y avait, empilées : la note, la description + commune, le site, le téléphone, les
+          horaires du jour, et un bouton pour déplier la semaine. Uber tient l'équivalent sur une
+          ligne — « 4.1 ★ (4 000+) · €1.79 Delivery Fee · Info » — et range le reste derrière
+          « Info ». Le visiteur vient lire une carte. */}
+      <p className="fiche-meta">
+        {/* Pas d'étoiles quand personne n'a encore noté : cinq étoiles vides à côté du mot
+            « Nouveau » se lisaient comme une note de zéro sur cinq, ce qui est le contraire de
+            ce qu'on veut dire d'un commerce qui vient d'arriver. */}
+        {restaurant.reviewCount > 0 ? (
+          <>
+            <span className="fiche-meta-note"><StarsDisplay value={restaurant.rating} size={13} /></span>
+            <span>{t('restaurantMenu.ratingReviews', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount })}</span>
+          </>
+        ) : (
+          <span>{t('restaurantList.newBadge')}</span>
+        )}
+        {restaurant.commune && <><span aria-hidden="true">·</span><span>{restaurant.commune}</span></>}
+        <span aria-hidden="true">·</span>
+        <button type="button" className="fiche-infos-lien" onClick={() => setInfosOuvertes(true)}>
+          {t('restaurantMenu.infoButton')}
+        </button>
+      </p>
+      {/* ÉTAT D'OUVERTURE EN UNE LIGNE (refonte du 2026-09-29) : un point vert ou rouge, « Ouvert · horaires du jour »
+          ou « Fermé · ouvre dans… ». C'était un grand encadré rouge qui, empilé avec l'offre et l'annonce d'ouverture,
+          repoussait la carte sous la ligne de flottaison. La fermeture exceptionnelle garde son encadré au-dessus. */}
+      {restaurant.hours && !openStatus.isExceptionalClosure && (
+        <p className={`fiche-statut ${openStatus.isOpen ? 'est-ouvert' : 'est-ferme'}`}>
+          <span className="fiche-statut-point" aria-hidden="true" />
+          <b>{openStatus.isOpen ? t('restoMenuUi.statusOpen') : t('restoMenuUi.statusClosed')}</b>
+          <span className="fiche-statut-detail">
+            {openStatus.isOpen
+              ? formatDaySchedule(restaurant.hours, openStatus.todayKey, t)
+              : openStatus.opensToday
+                ? t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now, t), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
+                : openStatus.fermePourLaJournee
+                  ? t('restaurantMenu.closedForToday', { time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
+                : openStatus.fermeParLeCommerce
+                  ? t('restoMenuUi.closedForNow')
+                  : t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}
+          </span>
         </p>
-        {/* ÉTAT D'OUVERTURE EN UNE LIGNE (refonte du 2026-09-29) : un point vert ou rouge, « Ouvert · horaires du jour »
-            ou « Fermé · ouvre dans… ». C'était un grand encadré rouge qui, empilé avec l'offre et l'annonce d'ouverture,
-            repoussait la carte sous la ligne de flottaison. La fermeture exceptionnelle garde son encadré au-dessus. */}
-        {restaurant.hours && !openStatus.isExceptionalClosure && (
-          <p className={`fiche-statut ${openStatus.isOpen ? 'est-ouvert' : 'est-ferme'}`}>
-            <span className="fiche-statut-point" aria-hidden="true" />
-            <b>{openStatus.isOpen ? t('restoMenuUi.statusOpen') : t('restoMenuUi.statusClosed')}</b>
-            <span className="fiche-statut-detail">
-              {openStatus.isOpen
-                ? formatDaySchedule(restaurant.hours, openStatus.todayKey, t)
-                : openStatus.opensToday
-                  ? t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now, t), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
-                  : openStatus.fermePourLaJournee
-                    ? t('restaurantMenu.closedForToday', { time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
-                  : openStatus.fermeParLeCommerce
-                    ? t('restoMenuUi.closedForNow')
-                    : t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}
-            </span>
+      )}
+
+      {restaurant.desc && <p className="fiche-desc">{restaurant.desc}</p>}
+
+      {/* La bascule et les frais sur une même rangée entre deux filets (.fiche-faits), dans l'app comme sur le site. */}
+      <div className="fiche-faits">
+      {/* BASCULE LIVRAISON / À EMPORTER, affichée seulement quand les deux existent. Un pouce iris glisse sous le mode
+          choisi (.fiche-modes-pouce). */}
+      {modesPossibles.length > 1 && (
+        <div className="fiche-modes" role="group" aria-label={t('restaurantMenu.modeLabel')} data-mode={modeActif}>
+          <span className="fiche-modes-pouce" aria-hidden="true" />
+          <button type="button" className={modeActif === 'delivery' ? 'est-actif' : ''} aria-pressed={modeActif === 'delivery'} onClick={() => choisirMode('delivery')}>
+            {t('restaurantMenu.modeDelivery')}
+          </button>
+          <button type="button" className={modeActif === 'pickup' ? 'est-actif' : ''} aria-pressed={modeActif === 'pickup'} onClick={() => choisirMode('pickup')}>
+            {t('restaurantMenu.modePickup')}
+          </button>
+        </div>
+      )}
+      {panneauFrais}
+      </div>
+
+      {/* UNE SEULE CARTE D'OFFRE, au lieu de deux bandeaux de deux couleurs.
+          La promotion et la livraison offerte étaient deux <div> sans classe, l'un rouge l'autre
+          iris, écrits en style inline. Ils disent la même chose — « tu paies moins ici » — donc
+          ils tiennent dans un seul encart, celui de « Savings and more ». */}
+      {(restaurant.fairideAdvantage || restaurant.hasPromo || restaurant.freeDelivery || restaurant.freeDeliveryMinOrder != null || restaurant.deliveryFeeDiscount > 0) && (
+        <div className="fiche-offres">
+          <span className="fiche-offres-icone" aria-hidden="true"><Icone nom="etiquette" taille={20} /></span>
+          <div className="fiche-offres-texte">
+            {restaurant.fairideAdvantage && (
+              <span>{restaurant.fairideAdvantage.mode === 'amount'
+                ? t('restaurantMenu.fairideAdvantageAmount', { name: restaurant.name, v: `${Number(restaurant.fairideAdvantage.value).toFixed(2).replace('.', ',').replace(/,00$/, '')} €` })
+                : t('restaurantMenu.fairideAdvantagePercent', { name: restaurant.name, v: restaurant.fairideAdvantage.value })}</span>
+            )}
+            {restaurant.hasPromo && !restaurant.fairideAdvantage && <span>{t('restaurantMenu.promoBanner')}</span>}
+            {(restaurant.freeDelivery || restaurant.freeDeliveryMinOrder != null || restaurant.deliveryFeeDiscount > 0) && (
+              <span>{restaurant.freeDelivery
+                ? t('restoMenuUi.freeDeliveryBy', { name: restaurant.name })
+                : restaurant.freeDeliveryMinOrder != null
+                  ? t('restoMenuUi.freeDeliveryFrom', { name: restaurant.name, min: restaurant.freeDeliveryMinOrder.toFixed(2) })
+                  : t('restoMenuUi.deliveryDiscountBy', { name: restaurant.name, amount: restaurant.deliveryFeeDiscount.toFixed(2) })}</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {complet && (
+        <div className="closed-banner" role="status">
+          <div className="closed-banner-title">{t('restoMenuUi.fullTodayTitle')}</div>
+          <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.fullTodayText', { name: restaurant.name })}</p>
+        </div>
+      )}
+      {/* La fermeture reste seule en alerte : c'est la seule information qui empêche de commander.
+          Les sept lignes d'horaires qu'elle dépliait sont maintenant dans « Infos ». */}
+      {restaurant.hours && openStatus.isExceptionalClosure && (
+        <div className="closed-banner">
+          <div className="closed-banner-title">{t('restoMenuUi.exceptionalClosure')}</div>
+          {openStatus.closedReason && <p className="small" style={{ margin: 0 }}>{openStatus.closedReason}</p>}
+          <p className="small" style={{ margin: '4px 0 0' }}>
+            {openStatus.reopensDate ? t('restoMenuUi.reopenOn', { date: formatDateFr(openStatus.reopensDate) }) : t('restoMenuUi.reopenUnknown')}
           </p>
-        )}
-
-        {restaurant.desc && <p className="fiche-desc">{restaurant.desc}</p>}
-
-        {/* La bascule et les frais sur une même rangée dans l'app (.fiche-faits) ; `display: contents` sur le site. */}
-        <div className="fiche-faits">
-        {/* BASCULE LIVRAISON / À EMPORTER, affichée seulement quand les deux existent. Dans l'app, un pouce iris glisse
-            sous le mode choisi (.fiche-modes-pouce, caché sur le site). */}
-        {modesPossibles.length > 1 && (
-          <div className="fiche-modes" role="group" aria-label={t('restaurantMenu.modeLabel')} data-mode={modeActif}>
-            <span className="fiche-modes-pouce" aria-hidden="true" />
-            <button type="button" className={modeActif === 'delivery' ? 'est-actif' : ''} aria-pressed={modeActif === 'delivery'} onClick={() => choisirMode('delivery')}>
-              {t('restaurantMenu.modeDelivery')}
-            </button>
-            <button type="button" className={modeActif === 'pickup' ? 'est-actif' : ''} aria-pressed={modeActif === 'pickup'} onClick={() => choisirMode('pickup')}>
-              {t('restaurantMenu.modePickup')}
-            </button>
-          </div>
-        )}
-
-        {/* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
-            forfaitaire côté client : le montant exact dépend de la distance et se calcule au
-            serveur, exactement comme l'annonce déjà le paiement. Aucun délai d'arrivée n'y figure : le
-            commerce règle son temps de préparation (backend migration 041), mais le trajet dépend de
-            l'adresse, inconnue ici — l'heure estimée n'existe qu'une fois la commande passée. */}
-        {!onlineOrderingDisabled && (
-          <div className="fiche-panneau">
-            <b>{modeActif === 'pickup'
-              ? t('restaurantMenu.feePickup')
-              : restaurant.freeDelivery
-                ? t('restaurantMenu.feeFree')
-                : t('restaurantMenu.feeFrom', { amount: tarifLivraison(restaurant).depart.toFixed(2).replace('.', ',') })}</b>
-            <span className="fiche-panneau-cle">{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</span>
-            {/* Distance choisie par le commerce (Mon commerce › Commandes et capacité). */}
-            {modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
-              <span className="fiche-panneau-cle">{t('restoMenuUi.deliversUpTo', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</span>
-            )}
-            {/* Montant minimum choisi par le commerce (PAN-3), annoncé avant de composer le panier. */}
-            {restaurant.minOrderAmount > 0 && (
-              <span className="fiche-panneau-cle">{t('restoMenuUi.minOrder', { amount: euros(restaurant.minOrderAmount) })}</span>
-            )}
-          </div>
-        )}
         </div>
-
-        {/* UNE SEULE CARTE D'OFFRE, au lieu de deux bandeaux de deux couleurs.
-            La promotion et la livraison offerte étaient deux <div> sans classe, l'un rouge l'autre
-            iris, écrits en style inline. Ils disent la même chose — « tu paies moins ici » — donc
-            ils tiennent dans un seul encart, celui de « Savings and more ». */}
-        {(restaurant.fairideAdvantage || restaurant.hasPromo || restaurant.freeDelivery || restaurant.freeDeliveryMinOrder != null || restaurant.deliveryFeeDiscount > 0) && (
-          <div className="fiche-offres">
-            <span className="fiche-offres-icone" aria-hidden="true"><Icone nom="etiquette" taille={20} /></span>
-            <div className="fiche-offres-texte">
-              {restaurant.fairideAdvantage && (
-                <span>{restaurant.fairideAdvantage.mode === 'amount'
-                  ? t('restaurantMenu.fairideAdvantageAmount', { name: restaurant.name, v: `${Number(restaurant.fairideAdvantage.value).toFixed(2).replace('.', ',').replace(/,00$/, '')} €` })
-                  : t('restaurantMenu.fairideAdvantagePercent', { name: restaurant.name, v: restaurant.fairideAdvantage.value })}</span>
-              )}
-              {restaurant.hasPromo && !restaurant.fairideAdvantage && <span>{t('restaurantMenu.promoBanner')}</span>}
-              {(restaurant.freeDelivery || restaurant.freeDeliveryMinOrder != null || restaurant.deliveryFeeDiscount > 0) && (
-                <span>{restaurant.freeDelivery
-                  ? t('restoMenuUi.freeDeliveryBy', { name: restaurant.name })
-                  : restaurant.freeDeliveryMinOrder != null
-                    ? t('restoMenuUi.freeDeliveryFrom', { name: restaurant.name, min: restaurant.freeDeliveryMinOrder.toFixed(2) })
-                    : t('restoMenuUi.deliveryDiscountBy', { name: restaurant.name, amount: restaurant.deliveryFeeDiscount.toFixed(2) })}</span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {complet && (
-          <div className="closed-banner" role="status">
-            <div className="closed-banner-title">{t('restoMenuUi.fullTodayTitle')}</div>
-            <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.fullTodayText', { name: restaurant.name })}</p>
-          </div>
-        )}
-        {/* La fermeture reste seule en alerte : c'est la seule information qui empêche de commander.
-            Les sept lignes d'horaires qu'elle dépliait sont maintenant dans « Infos ». */}
-        {restaurant.hours && openStatus.isExceptionalClosure && (
-          <div className="closed-banner">
-            <div className="closed-banner-title">{t('restoMenuUi.exceptionalClosure')}</div>
-            {openStatus.closedReason && <p className="small" style={{ margin: 0 }}>{openStatus.closedReason}</p>}
-            <p className="small" style={{ margin: '4px 0 0' }}>
-              {openStatus.reopensDate ? t('restoMenuUi.reopenOn', { date: formatDateFr(openStatus.reopensDate) }) : t('restoMenuUi.reopenUnknown')}
-            </p>
-          </div>
-        )}
-        {/* Avant le 1er novembre : à emporter et livraison à venir ; du 1er au 10 novembre : seule la livraison (et l'à emporter payé
-            en ligne) attend. Rien n'est annoncé pour un commerce qui ne propose aucun service en ligne, et l'à emporter
-            n'est promis que s'il se paie sur place (le paiement en ligne ouvre avec la livraison). */}
-        {bandeauOuverture && (
-          <div className="ouverture-bandeau fiche-info" role="status">
-            <span className="fiche-info-icone" aria-hidden="true"><Icone nom="horloge" taille={18} /></span>
-            <span>
-            {!emporterSurPlace
-              ? t('restaurantMenu.ordersOpenBannerOnlineOnly', { date: dateOuvertureLivraison(getLocale()) })
-              : commandesOuvertes(user)
-                ? t('restaurantMenu.ordersOpenBannerResaOpen', { date: dateOuvertureLivraison(getLocale()) })
-                : restaurant.offersDelivery
-                  ? t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureEmporter(getLocale()) })
-                  : t('restaurantMenu.ordersOpenBannerPickupOnly', { date: dateOuvertureEmporter(getLocale()) })}
-            </span>
-          </div>
-        )}
-        {/* Livraison Fairide coupée dans la zone par l'équipe (08/10) : le client sait que seul l'à emporter est possible ici. */}
-        {restaurant.fairideDeliveryDisabled && restaurant.offersPickup && (
-          <div className="ouverture-bandeau fiche-info" role="status">
-            <span className="fiche-info-icone" aria-hidden="true"><Icone nom="scooter" taille={18} /></span>
-            <span>{t('restaurantMenu.deliveryUnavailableZone')}</span>
-          </div>
-        )}
+      )}
+      {/* Avant le 1er novembre : à emporter et livraison à venir ; du 1er au 10 novembre : seule la livraison (et l'à emporter payé
+          en ligne) attend. Rien n'est annoncé pour un commerce qui ne propose aucun service en ligne, et l'à emporter
+          n'est promis que s'il se paie sur place (le paiement en ligne ouvre avec la livraison). */}
+      {bandeauOuverture && (
+        <div className="ouverture-bandeau fiche-info" role="status">
+          <span className="fiche-info-icone" aria-hidden="true"><Icone nom="horloge" taille={18} /></span>
+          <span>
+          {!emporterSurPlace
+            ? t('restaurantMenu.ordersOpenBannerOnlineOnly', { date: dateOuvertureLivraison(getLocale()) })
+            : commandesOuvertes(user)
+              ? t('restaurantMenu.ordersOpenBannerResaOpen', { date: dateOuvertureLivraison(getLocale()) })
+              : restaurant.offersDelivery
+                ? t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureEmporter(getLocale()) })
+                : t('restaurantMenu.ordersOpenBannerPickupOnly', { date: dateOuvertureEmporter(getLocale()) })}
+          </span>
         </div>
-      </header>
-      {APPLI && sectionsEtResultat}
+      )}
+      {/* Livraison Fairide coupée dans la zone par l'équipe (08/10) : le client sait que seul l'à emporter est possible ici. */}
+      {restaurant.fairideDeliveryDisabled && restaurant.offersPickup && (
+        <div className="ouverture-bandeau fiche-info" role="status">
+          <span className="fiche-info-icone" aria-hidden="true"><Icone nom="scooter" taille={18} /></span>
+          <span>{t('restaurantMenu.deliveryUnavailableZone')}</span>
+        </div>
+      )}
+    </>
+  );
 
+  /* LA CARTE. La recherche vit dans les ronds flottants, derrière la loupe : elle occupait ici une ligne entière et partait
+     au défilement comme le reste — or c'est en descendant dans une longue carte qu'on se met à chercher, pas en arrivant.
+     Le seuil de 8 plats et l'habillage (.recherche-champ, celui de la recherche du site) ne changent pas. */
+  const carte = (
+    <>
       {onlineOrderingDisabled && (
         <div className="fiche-info">
           <span className="fiche-info-icone" aria-hidden="true"><Icone nom="horloge" taille={18} /></span>
           <span>{t('restoMenuUi.orderingNotOpenInfo')}</span>
         </div>
       )}
-
-      {/* LA RECHERCHE DANS LA CARTE A DÉMÉNAGÉ dans le bandeau collant, derrière la loupe (voir
-          plus haut). Elle occupait ici une ligne entière et partait au défilement comme le reste —
-          or c'est en descendant dans une longue carte qu'on se met à chercher, pas en arrivant.
-          Le seuil de 8 plats et l'habillage (.recherche-champ, celui de la recherche du site) ne
-          changent pas ; seul l'endroit change. */}
-
       <div className="fiche-carte-plats">
         {restaurant.menu.length === 0 && <div className="empty">{t('restaurantMenu.noMenuYet')}</div>}
         {restaurant.menu.length > 0 && menuFiltre.length === 0 && (
@@ -668,33 +720,32 @@ export default function RestaurantMenu() {
         )}
         <MenuCategorySections menu={menuFiltre} sections={sectionsFiltrees} onAdd={addToCart} onQuickAdd={ajoutDirect} hideAdd={onlineOrderingDisabled} />
       </div>
+    </>
+  );
 
-      {/* Vendeur (A8) : toujours affiché avant la commande, désormais sous la carte plutôt qu'entre l'en-tête et les plats. */}
-      <FicheVendeur restaurant={restaurant} />
-
-      {reviews && reviews.reviews.length > 0 && (
-        <div className="card" style={{ marginTop: 18 }}>
-          <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('restaurantMenu.reviewsTitle')}</h3>
-          {reviews.reviews.map((r, i) => (
-            <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--cream-dim)' }}>
-              <div className="row" style={{ justifyContent: 'space-between' }}>
-                <b style={{ fontSize: 13 }}>{r.clientName}</b>
-                <StarsDisplay value={r.foodRating} />
-              </div>
-              {r.foodComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.foodComment}</p>}
-              {r.restaurantReply && (
-                <div style={{ marginTop: 6, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
-                  <div className="small" style={{ fontWeight: 700 }}>{t('restaurantMenu.reviewReplyFrom', { name: restaurant.name })}</div>
-                  <p className="small" style={{ margin: '2px 0 0' }}>{r.restaurantReply}</p>
-                </div>
-              )}
+  const avis = reviews && reviews.reviews.length > 0 && (
+    <div className="card" style={{ marginTop: 18 }}>
+      <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('restaurantMenu.reviewsTitle')}</h3>
+      {reviews.reviews.map((r, i) => (
+        <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--cream-dim)' }}>
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <b style={{ fontSize: 13 }}>{r.clientName}</b>
+            <StarsDisplay value={r.foodRating} />
+          </div>
+          {r.foodComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.foodComment}</p>}
+          {r.restaurantReply && (
+            <div style={{ marginTop: 6, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
+              <div className="small" style={{ fontWeight: 700 }}>{t('restaurantMenu.reviewReplyFrom', { name: restaurant.name })}</div>
+              <p className="small" style={{ margin: '2px 0 0' }}>{r.restaurantReply}</p>
             </div>
-          ))}
+          )}
         </div>
-      )}
+      ))}
+    </div>
+  );
 
-      {discover.length > 0 && <DiscoverSection restaurants={discover} t={t} />}
-
+  const fenetres = (
+    <>
       {/* `imageUrl` : la MÊME résolution que la carte du plat (resolveItemImage, MenuCategorySections).
           Le champ `item.imageUrl` est souvent vide et la photo vient alors de la section ou de la
           banque d'images — le prendre seul donnait une fiche SANS photo là où la carte en montrait
@@ -788,13 +839,71 @@ export default function RestaurantMenu() {
           </div>
         </Modale>
       )}
+    </>
+  );
+
+  const decouvrir = discover.length > 0 && <DiscoverSection restaurants={discover} t={t} />;
+
+  if (APPLI) {
+    return (
+      <div className="fiche-page fiche-appli" ref={pageRef}>
+        {entete}
+        <header className={`fiche-entete${restaurant.logoImageUrl ? ' fiche-entete--logo' : ''}`}>
+          <div className="fiche-media">
+            {couverture}
+            {logo}
+          </div>
+          {/* La feuille blanche qui monte sur la photo. */}
+          <div className="fiche-feuille">{infos}</div>
+        </header>
+        {sectionsEtResultat}
+        {carte}
+        {/* Vendeur (A8) : toujours affiché avant la commande, sans clic, sous la carte plutôt qu'entre l'en-tête et les plats. */}
+        <FicheVendeur restaurant={restaurant} />
+        {avis}
+        {decouvrir}
+        {fenetres}
+      </div>
+    );
+  }
+
+  /* SUR LE SITE (fondateur, 2026-10-16, « Proposition » de « Page d'un commerce » dans mockups/site-ordinateur.html) : la
+     photo d'un bord à l'autre de la page, la feuille blanche qui monte dessus avec le logo à cheval, puis deux colonnes — à
+     gauche l'en-tête, la bande des sections (blanche, collante) et la carte sur deux colonnes de plats ; à droite le panier,
+     collant (PanierColonne). Sur un téléphone, une seule colonne et la barre du panier en bas (FloatingCart). Mise en page
+     dans site-fiche.css ; la page reprend la largeur de sa zone (--fiche-bord-*, mesurées plus haut). Le panier en colonne
+     n'a de sens que pour qui peut commander : pas pour un livreur, un commerce ou l'équipe venus regarder la fiche. */
+  const avecPanier = !user || (!user.isAdmin && role === 'client');
+  return (
+    // --compact : le grand titre a quitté l'écran — sur téléphone, un aplat blanc passe derrière les ronds collants.
+    <div className={`fiche-page fiche-site${avecPanier ? ' fiche-site--panier' : ''}${grandTitreVisible ? '' : ' fiche-site--compact'}`} ref={pageRef}>
+      {entete}
+      <div className="fiche-couv">{couverture}</div>
+      <div className="fiche-site-feuille">
+        <div className="fiche-site-grille">
+          <div className="fiche-site-gauche">
+            <header className={`fiche-entete${restaurant.logoImageUrl ? ' fiche-entete--logo' : ''}`}>
+              {logo}
+              {infos}
+            </header>
+            {sectionsEtResultat}
+            {carte}
+            {/* Vendeur (A8) : toujours affiché avant la commande, sans clic, sous la carte. */}
+            <FicheVendeur restaurant={restaurant} />
+            {avis}
+          </div>
+          {avecPanier && <PanierColonne restaurant={restaurant} mode={modeActif} />}
+        </div>
+        {decouvrir}
+      </div>
+      {fenetres}
     </div>
   );
 }
 
 function DiscoverSection({ restaurants, t }) {
   return (
-    <div style={{ marginTop: 18, marginBottom: 18 }}>
+    <div className="fiche-decouvrir" style={{ marginTop: 18, marginBottom: 18 }}>
       <h3 className="section-title" style={{ fontSize: 16 }}>{t('restaurantMenu.discoverTitle')}</h3>
       <AutoScrollRow
         items={restaurants}
