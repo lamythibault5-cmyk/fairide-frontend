@@ -2706,6 +2706,9 @@ main.page-fade { min-height: calc(100dvh - 140px); }
      sinon les liens légaux finissent sous les boutons et deviennent incliquables. Mesuré : sans
      cette marge, le pied dépassait de 68px exactement. */
   .dashboard-footer-links { margin: 24px 16px 0; padding-bottom: calc(24px + var(--hauteur-onglets) + env(safe-area-inset-bottom)); }
+  /* Dans l'app, ces liens n'existent pas (Layout.jsx) : c'est la page qui garde la place des onglets flottants. Sans elle, le
+     dernier bouton d'une page restait sous la barre, même tout en bas (invitation dans l'équipe, 2026-10-16). */
+  html.appli .dashboard-shell:not(.dashboard-shell--flux) .dashboard-main { padding-bottom: calc(var(--hauteur-onglets) + 24px + env(safe-area-inset-bottom)); }
   /* PARCOURS DE COMMANDE : les onglets s'effacent (voir estFluxCommande dans Layout.jsx).
      Dès qu'on entre dans un commerce, on ne navigue plus, on fait quelque chose. Les onglets ne
      proposaient plus que de partir, et ils recouvraient le total au moment de payer. La sortie
