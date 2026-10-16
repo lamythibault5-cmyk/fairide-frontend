@@ -19,6 +19,9 @@ import LanguageSwitcher, { ListeLangues } from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
 import MesDonnees from '../components/MesDonnees';
 import CartesEnregistrees from '../components/client/CartesEnregistrees';
+import EquipeCommerce from '../components/commerce/EquipeCommerce';
+import { definirModeEquipe } from '../modeEquipe';
+import '../ecran-equipe-groupe.css';
 import NouvellesFairide from '../components/NouvellesFairide';
 import MesCasquettes from '../components/MesCasquettes';
 import InboxSection from '../components/InboxSection';
@@ -110,6 +113,7 @@ export default function Account() {
   const [driverDeliveries, setDriverDeliveries] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
+  const [membreEquipe, setMembreEquipe] = useState(false);
   // Reçus de la sous-section Paiement : toutes les commandes du restaurant, filtrées sur « payées » à l'affichage.
   const [commandesResto, setCommandesResto] = useState([]);
   const [now, setNow] = useState(() => new Date());
@@ -222,6 +226,11 @@ export default function Account() {
   function rechargerRestaurant() {
     if (role !== 'restaurant') return;
     api('/restaurants/mine/dashboard', { token }).then((list) => {
+      // Membre de l'équipe d'un commerce (backend equipeCommerce.js) : pas les rubriques du propriétaire.
+      setMembreEquipe(list[0]?.staffRole === 'service');
+      // Partagé avec la barre d'onglets (modeEquipe.js) : sans lui, un membre arrivé directement sur Mon compte voyait les
+      // onglets du propriétaire (Mon commerce, Mon menu) jusqu'à sa première visite des commandes.
+      definirModeEquipe(list[0]?.staffRole === 'service');
       if (list[0]) {
         setRestoId(list[0].id);
         api(`/orders/restaurant/${list[0].id}`, { token }).then((rows) => setCommandesResto(Array.isArray(rows) ? rows : [])).catch(() => {});
@@ -483,9 +492,11 @@ export default function Account() {
       ? [{ to: '/driver', icone: 'commandes', libelle: t('nav.orders') },
          { to: '/driver/earnings', icone: 'euro', libelle: t('nav.earnings') },
          { to: '/driver/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }]
-      : [{ to: '/dashboard/orders', icone: 'commandes', libelle: t('nav.orders') },
-         { to: '/dashboard/preview', icone: 'apercu', libelle: t('nav.customerPreview') },
-         { to: '/dashboard/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }];
+      : membreEquipe
+        ? [{ to: '/dashboard/orders', icone: 'commandes', libelle: t('nav.orders') }]
+        : [{ to: '/dashboard/orders', icone: 'commandes', libelle: t('nav.orders') },
+           { to: '/dashboard/preview', icone: 'apercu', libelle: t('nav.customerPreview') },
+           { to: '/dashboard/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }];
   const adresseResume = user.addressStreet && user.addressCity ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',') : null;
   const solde = Number(user.balance || 0).toFixed(2);
 
@@ -494,7 +505,7 @@ export default function Account() {
 
   // Les rubriques de la colonne de gauche, sur ordinateur : les mêmes groupes que la feuille, aux mêmes conditions.
   const rubriqueRole = role === 'client' ? { icone: 'commandes', titre: t('accountUi.ordersAndFairide') }
-    : role === 'restaurant' && restaurant ? { icone: 'commerce', titre: t('accountUi.myBusiness') }
+    : role === 'restaurant' && restaurant ? { icone: 'commerce', titre: membreEquipe ? t('team.rowTitle') : t('accountUi.myBusiness') }
       : role === 'driver' ? { icone: 'scooter', titre: t('accountUi.myRides') } : null;
   const rubriques = [
     { cle: 'messages', icone: 'courrier', titre: t('inbox.rowTitle'), compteur: nonLus },
@@ -832,8 +843,24 @@ export default function Account() {
         </div>
       )}
 
-      {role === 'restaurant' && restaurant && <h2 className="compte-feuille-titre">{t('accountUi.myBusiness')}</h2>}
-      {role === 'restaurant' && restaurant && (
+      {/* Membre de l'équipe : il fait le service de ce commerce, il n'en gère ni la fiche ni l'argent. */}
+      {/* Le dessin (2026-10-16, ecran-equipe-groupe.css) : un groupe de la feuille comme les autres — le commerce et ce que
+          le membre y fait, puis la rangée des commandes. */}
+      {role === 'restaurant' && restaurant && membreEquipe && <h2 className="compte-feuille-titre">{t('team.rowTitle')}</h2>}
+      {role === 'restaurant' && restaurant && membreEquipe && (
+        <div className="card account-groupe" aria-label={t('team.rowTitle')}>
+          <div className="eg-membre-carte">
+            <span className="eg-tuile" aria-hidden="true"><Icone nom="commerce" taille={19} /></span>
+            <div>
+              <b>{restaurant.name}</b>
+              <p>{t('team.memberCard', { name: restaurant.name })}</p>
+            </div>
+          </div>
+          <LigneCompte to="/dashboard/orders" icone="commandes" titre={t('nav.orders')} />
+        </div>
+      )}
+      {role === 'restaurant' && restaurant && !membreEquipe && <h2 className="compte-feuille-titre">{t('accountUi.myBusiness')}</h2>}
+      {role === 'restaurant' && restaurant && !membreEquipe && (
         <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>
           {/* Plus de rangée « Carte » (2026-09-23) : la page promettait de suivre les livreurs en direct,
               mais leur position n'est jamais envoyée au commerce (voir App.jsx, route dashboard/map). */}
@@ -1061,6 +1088,10 @@ export default function Account() {
 
           {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas. Ici elles gardent leur nom. */}
           <LigneCompte to="/dashboard/stats" icone="stats" titre={t('accountUi.stats')} sous={t('accountUi.statsSub')} />
+          {/* L'équipe du commerce (backend equipeCommerce.js) : inviter, voir, retirer. */}
+          <LigneCompte icone="personnes" titre={t('team.rowTitle')} sous={t('team.rowSub')} ouverte={ouvertes.has('equipe')} onClick={() => basculer('equipe')}>
+            {ouvertes.has('equipe') && restoId && <EquipeCommerce restoId={restoId} />}
+          </LigneCompte>
           <LigneCompte to="/dashboard/promotions" icone="etiquette" titre={t('accountUi.promotions')} />
           <LigneCompte to="/dashboard/guide" icone="guide" titre={t('accountUi.guide')} />
           <LigneCompte to="/dashboard/reviews" icone="etoile" titre={t('accountUi.customerReviews')} sous={restaurant.reviewCount > 0 ? t('accountUi.ratingSummary', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('accountUi.noReviewsYet')} />

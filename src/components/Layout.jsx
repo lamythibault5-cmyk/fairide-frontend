@@ -40,7 +40,7 @@ const AVEC_RETOUR_COMPTE = ['/aide', '/notre-histoire'];
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
-const DASHBOARD_PATHS = ['/restaurants', '/recherche', '/favorites', '/orders', '/map', '/panier', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/sales', '/documents', '/dashboard', '/driver', '/admin'];
+const DASHBOARD_PATHS = ['/restaurants', '/recherche', '/favorites', '/orders', '/map', '/panier', '/groupe', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/sales', '/documents', '/dashboard', '/driver', '/admin'];
 // Sous-sections de « Mon compte » : les pages qu on atteint depuis ses rangées. On y propose le chemin
 // du retour, parce qu y arriver par le compte puis repartir par la barre du bas oblige à retraverser
 // toute la navigation pour revenir d où l on vient. /account n y figure pas : c est la destination.
@@ -83,7 +83,8 @@ const HORS_COQUILLE = ['/login', '/reset-password'];
  * barre du bas (DESIGN.md, et les captures fournies par le fondateur).
  *
  * Voir EnteteFlux.jsx, qui porte la seule sortie de ces pages. */
-const FLUX_COMMANDE = ['/panier', '/checkout', '/order-success', '/order-cancelled'];
+// La commande groupée (/groupe/:code) en fait partie : elle a sa barre du bas et son retour à la carte, comme le panier.
+const FLUX_COMMANDE = ['/panier', '/checkout', '/order-success', '/order-cancelled', '/groupe'];
 // Fiche resto (/restaurants/:id) consultable sans compte (voir App.jsx) — un visiteur non connecté y
 // arrive donc sur la nav publique plutôt que la coquille sidebar. On y allège quand même ce header
 // (pas de gros bloc "Connexion/Inscription" au-dessus d'une carte de menu) : l'ajout au panier redirige
@@ -163,7 +164,8 @@ export default function Layout() {
   // La pilule du panier ne s'affiche pas sur les pages QUI SONT le panier : sur /panier elle
   // doublerait le contenu de la page, sur /checkout elle proposerait de revenir en arriere au
   // moment de payer. Ailleurs, elle est le seul acces au panier.
-  const pageDuPanier = location.pathname === '/panier' || location.pathname.startsWith('/checkout');
+  // La commande groupée non plus : elle porte déjà « Envoyer mon panier au groupe » dans sa barre du bas.
+  const pageDuPanier = location.pathname === '/panier' || location.pathname.startsWith('/checkout') || location.pathname.startsWith('/groupe/');
   const seesClientCart = !user?.isAdmin && !pageDuPanier && (role === 'client' || (previewMode && role === 'restaurant'));
   const leanHeader = !user && RESTAURANT_DETAIL_PATH.test(location.pathname);
   // Le fond de cuisine ne vit que sur l accueil PUBLIC : c est la seule page dont le rôle est de

@@ -14,13 +14,21 @@ import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import useNotificationsClient from '../hooks/useNotificationsClient';
 import { ADMIN_HUBS, hubBadge, hubModules, moduleForPath } from '../pages/admin/adminModules';
 import { experienceApp } from '../natif';
+import { useModeEquipe } from '../modeEquipe';
 
 const NATIF = experienceApp();
 
 
 // Items de nav par rôle : mêmes cibles que l'ancien .role-nav de Layout.jsx, juste redisposées
 // verticalement avec une icône — pas de nouvelle page/route inventée ici.
-function navItemsForRole(role, t, user) {
+function navItemsForRole(role, t, user, membreEquipe = false) {
+  // Membre de l'équipe d'un commerce (modeEquipe.js) : le service seulement, ses commandes et son compte.
+  if (role === 'restaurant' && membreEquipe) {
+    return [
+      { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders'), court: t('nav.court.orders') },
+      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
+    ];
+  }
   if (role === 'client') {
     return [
       // CINQ onglets, plus six. Sur un téléphone, la barre du bas n'a de place que pour cinq cibles
@@ -131,10 +139,13 @@ export default function DashboardSidebar() {
   const { user, role, logout } = useAuth();
   const { t } = useLanguage();
   const { previewMode, exitPreview } = usePreviewMode();
+  const membreEquipe = useModeEquipe();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const navRef = useRef(null);
-  useCurseurOnglets(navRef, `${pathname}|${user?.isAdmin ? 'admin' : ''}`);
+  // Membre de l'équipe d'un commerce (modeEquipe.js) : la liste des onglets change sans changer d'adresse — la pastille
+  // restait sur la place de l'ancien onglet « Commandes », et l'onglet actif, blanc sur blanc, disparaissait.
+  useCurseurOnglets(navRef, `${pathname}|${user?.isAdmin ? 'admin' : ''}|${membreEquipe ? 'equipe' : ''}`);
   /* LA BARRE DU BAS SE RÉDUIT AU DÉFILEMENT (sous 900px, voir styles.css) : on descend pour lire, les
    * libellés s'effacent et la barre se resserre autour des icônes ; on remonte — le geste de quelqu'un qui
    * cherche où aller — elle reprend sa taille. Même hook et même règle que l'en-tête du site, pour que les
@@ -157,7 +168,7 @@ export default function DashboardSidebar() {
   // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
   // correspondantes, toujours réservées aux vrais clients côté API.
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
-  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user);
+  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe);
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
 
   function leavePreview() {
