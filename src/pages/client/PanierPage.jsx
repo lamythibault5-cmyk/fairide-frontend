@@ -40,7 +40,7 @@ export default function PanierPage() {
   if (cart.count === 0) {
     return (
       <EtatVide
-        icone="sac" titre={t('panier.emptyTitle')} texte={t('panier.emptyText')}
+        icone="sac" scene="panier" titre={t('panier.emptyTitle')} texte={t('panier.emptyText')}
         actionVers="/restaurants" actionTexte={t('orders.emptyAction')}
       />
     );

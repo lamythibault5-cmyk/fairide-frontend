@@ -6599,6 +6599,8 @@ export default {
       discoverInfoJoin: 'List my business'
     },
     menuCategories: {
+      inCart: '{n} in the basket',
+      oneLess: 'One less {name}',
       quickAdd: 'Add {name} to cart',
       soldOutToday: 'Sold out today · back tomorrow',
       category: { entree: 'Starters', plat: 'Mains', dessert: 'Desserts', boisson: 'Drinks' },
@@ -6752,6 +6754,14 @@ export default {
       titleReadyOne: 'order ready'
     },
     orderStatus: {
+      // Titres du bandeau de suivi d'une commande en cours (orderStatus.jsx, titreSuivi ; 2026-10-16).
+      grand: {
+        nouveau: 'The shop is checking your order',
+        preparation: 'It’s being prepared',
+        pretDelivery: 'Ready, waiting for a courier',
+        pretPickup: 'Ready, you can come and get it',
+        livraison: 'On its way to you'
+      },
       acceptBefore: 'Accept before {time} ({min} min left) — without an answer, the order is cancelled and the customer refunded automatically.',
       acceptNow: 'Time is up: the order will be cancelled and the customer refunded within a minute.',
       next_nouveau_deadline: 'The shop still has to confirm your order. Without an answer before {time}, it is cancelled and you are refunded automatically — you can also cancel it yourself until then.',
@@ -6986,8 +6996,8 @@ export default {
       sectionCurrent: 'In progress',
       sectionPast: 'Past orders',
       title: 'My orders',
-      empty: "No orders yet",
-      emptyHint: 'Everything you order shows up here, with its live tracking.',
+      empty: 'Nothing on its way yet',
+      emptyHint: 'As soon as you order, you follow it here all the way to your door.',
       emptyAction: 'Browse the shops',
       pickupAt: 'To pick up at {name}{address}',
       driver: 'Courier: {name}{phone}',
@@ -7077,7 +7087,7 @@ export default {
     favorites: {
       title: 'My favorites',
       emptyTitle: 'No favorites yet',
-      empty: 'Tap the heart on a shop page to find it here.'
+      empty: 'Tap the heart of a shop you like: it will wait for you here.'
     },
     account: {
       title: 'My account',

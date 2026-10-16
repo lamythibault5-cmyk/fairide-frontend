@@ -7,6 +7,7 @@ import useFeuilleGlissable from '../hooks/useFeuilleGlissable';
 import { libellesAllergenes } from '../allergenes';
 import { prixRemise, euros } from '../prixPlat';
 import { envolerVersPanier, mouvementReduit, vibrer } from '../gestes';
+import ChiffresRoulants from './ChiffresRoulants';
 
 // LA FICHE D'UN PLAT. Jusqu'ici, un plat n'avait aucun écran à lui.
 //
@@ -244,7 +245,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
           }}
         >
           {/* Le libellé annonce la quantité ET le prix : on sait ce qu'on ajoute sans remonter. */}
-          {t('platSheet.add', { n: qty })} · {euros(total)}
+          {t('platSheet.add', { n: qty })} · <span className="plat-ajouter-prix"><ChiffresRoulants valeur={euros(total)} /></span>
         </button>
       </div>
       </div>

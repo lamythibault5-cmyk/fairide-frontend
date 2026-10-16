@@ -6652,6 +6652,8 @@ export default {
       discoverInfoJoin: 'Inscrire mon commerce'
     },
     menuCategories: {
+      inCart: '{n} dans le panier',
+      oneLess: 'Un {name} de moins',
       quickAdd: 'Ajouter {name} au panier',
       soldOutToday: 'Épuisé aujourd\'hui · de retour demain',
       category: { entree: 'Entrées', plat: 'Plats', dessert: 'Desserts', boisson: 'Boissons' },
@@ -6805,6 +6807,14 @@ export default {
       titleReadyOne: 'commande prête'
     },
     orderStatus: {
+      // Titres du bandeau de suivi d'une commande en cours (orderStatus.jsx, titreSuivi ; 2026-10-16).
+      grand: {
+        nouveau: 'Le commerce regarde ta commande',
+        preparation: 'C’est en cuisine',
+        pretDelivery: 'Prête, on attend un livreur',
+        pretPickup: 'Prête, tu peux venir la chercher',
+        livraison: 'En route vers toi'
+      },
       acceptBefore: 'À accepter avant {time} (encore {min} min) — sans réponse, la commande est annulée et le client remboursé automatiquement.',
       acceptNow: 'Délai dépassé : la commande va être annulée et le client remboursé dans la minute.',
       next_nouveau_deadline: 'Le commerce doit encore confirmer ta commande. Sans réponse avant {time}, elle est annulée et tu es remboursé automatiquement — tu peux aussi l\'annuler toi-même d\'ici là.',
@@ -7039,8 +7049,8 @@ export default {
       sectionCurrent: 'En cours',
       sectionPast: 'Commandes passées',
       title: 'Mes commandes',
-      empty: 'Pas encore de commande',
-      emptyHint: 'Tout ce que tu commandes apparaît ici, avec son suivi en direct.',
+      empty: 'Rien en route pour l’instant',
+      emptyHint: 'Dès que tu commandes, tu suis ici ta commande jusqu’à ta porte.',
       emptyAction: 'Parcourir les commerces',
       pickupAt: 'À venir chercher chez {name}{address}',
       driver: 'Livreur : {name}{phone}',
@@ -7130,7 +7140,7 @@ export default {
     favorites: {
       title: 'Mes favoris',
       emptyTitle: 'Pas encore de favori',
-      empty: 'Touche le cœur sur la fiche d\'un commerce pour le retrouver ici.'
+      empty: 'Touche le cœur d’un commerce que tu aimes : il t’attendra ici.'
     },
     account: {
       title: 'Mon compte',

@@ -1355,6 +1355,22 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .etat-vide-titre { font-size: 19px; }
 .etat-vide-texte { margin: 2px 0 0; max-width: 34ch; color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
 .etat-vide-action { margin-top: 18px; text-decoration: none; }
+/* Le vélo qui attend (EtatVide, `scene`, 2026-10-16) : il arrive de la gauche en roulant, fait deux petits bonds, puis
+   respire ; le repère saute à côté de lui, le cœur flotte. Iris sur blanc ; la route est un pointillé iris léger. */
+.etat-vide--scene { padding-top: 28px; }
+.etat-vide-scene { display: block; width: 100%; max-width: 300px; height: auto; overflow: hidden; color: var(--iris); margin-bottom: 18px; }
+.etat-vide-scene .ev-route { stroke: rgba(59, 47, 181, .32); fill: none; animation: ev-route .45s linear 3; }
+@keyframes ev-route { to { stroke-dashoffset: 16; } }
+.etat-vide-scene .ev-velo { animation: ev-arrive 1.5s cubic-bezier(.25, .8, .3, 1) both; }
+@keyframes ev-arrive { from { transform: translateX(-150px); } to { transform: none; } }
+.etat-vide-scene .ev-bob { transform-box: fill-box; transform-origin: 50% 100%; animation: bv-bonds .75s ease-in-out 2, ev-respire 2.2s ease-in-out 1.6s infinite; }
+@keyframes ev-respire { 50% { transform: translateY(-1.5px) rotate(-1deg); } }
+.etat-vide-scene .ev-apparait { transform-box: fill-box; transform-origin: 50% 100%; animation: bv-saute .45s var(--ressort-ui) 1.25s both; }
+.etat-vide-scene .ev-flotte { transform-box: fill-box; transform-origin: center; animation: ev-flotte 2.6s ease-in-out 1.7s infinite; }
+@keyframes ev-flotte { 50% { transform: translateY(-6px); } }
+.etat-vide--scene .etat-vide-titre { font-family: var(--font-titre); font-size: 25px; line-height: 1.15; margin-bottom: 6px; }
+.etat-vide--scene .etat-vide-texte { font-size: 15px; max-width: 30ch; }
+@media (prefers-reduced-motion: reduce) { .etat-vide-scene * { animation: none !important; } }
 /* CARTE D'ERREUR DE CHARGEMENT (components/ErrorCard.jsx).
    Déplacée depuis admin-erp.css, qui n'est chargée que par AdminLayout : le composant sert
    maintenant au livreur et au restaurateur, où ces règles n'existaient pas — il y serait arrivé
@@ -4146,6 +4162,36 @@ html.avec-pilule-panier main { padding-bottom: calc(76px + env(safe-area-inset-b
   .panier-pilule { bottom: 24px; left: auto; right: 24px; transform: none; }
 }
 
+/* DANS L'APP, LA BARRE DU PANIER EN VERRE (fondateur, 2026-10-16, version 2C de mockups/autres-idees.html) : pleine largeur,
+   le verre de la barre d'onglets, le sac et son compteur lime, « Voir le panier », et le total dans une pastille iris dont
+   les chiffres roulent (FloatingCart). Sur la carte d'un commerce, les onglets sont masqués (estFluxCommande) : la barre
+   descend au bas de l'écran. Le site garde la pilule iris. */
+.chiffre-roulant { display: inline-block; }
+.chiffre-roulant.roule { animation: chiffre-roule .4s cubic-bezier(.34, 1.45, .64, 1) both; }
+@keyframes chiffre-roule { from { transform: translateY(110%); opacity: 0; } to { transform: none; opacity: 1; } }
+html.appli .panier-pilule {
+  left: 16px; right: 16px; transform: none; max-width: 520px; margin: 0 auto;
+  height: 60px; gap: 14px; padding: 8px 8px 8px 20px; border-radius: 30px; font-size: 15.5px; font-weight: 600;
+  color: var(--ink); text-shadow: 0 0 8px rgba(255, 255, 255, .75);
+  background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .6);
+  -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
+    inset 4px 0 10px -4px rgba(255, 70, 170, .22), inset -4px 0 10px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
+  animation: panier-arrive-app .35s cubic-bezier(.2, .9, .25, 1.15) both;
+}
+html.appli .panier-pilule--rebond { animation: panier-gelee .5s cubic-bezier(.34, 1.45, .64, 1) both; }
+html.appli .panier-pilule svg { filter: drop-shadow(0 0 4px rgba(255, 255, 255, .6)); }
+html.appli .panier-pilule-texte { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; }
+html.appli .panier-pilule-total { height: 44px; padding: 0 16px; border-radius: 22px; background: var(--iris); color: #fff; text-shadow: none;
+  display: flex; align-items: center; overflow: hidden; font-variant-numeric: tabular-nums; }
+html.appli .panier-pilule-compte { min-width: 20px; height: 20px; font-size: 12px; top: -7px; right: -9px; text-shadow: none; }
+html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(:has(.dashboard-sidebar)) .panier-pilule { bottom: calc(16px + env(safe-area-inset-bottom)); }
+@keyframes panier-arrive-app { from { transform: translateY(140%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes panier-gelee { 0% { transform: none; } 30% { transform: scale(1.04, .9); } 60% { transform: scale(.99, 1.04); } 100% { transform: none; } }
+@media (prefers-reduced-transparency: reduce) {
+  html.appli .panier-pilule { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); text-shadow: none; }
+}
+
 /* La page Panier. */
 .panier-retour { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 10px; font-size: 14px; font-weight: 500; color: var(--iris); text-decoration: none; }
 .panier-retour:hover { text-decoration: underline; }
@@ -4344,6 +4390,17 @@ html.avec-pilule-panier main { padding-bottom: calc(76px + env(safe-area-inset-b
 .plat-quantite button:disabled { opacity: .5; cursor: default; }
 .plat-quantite span { min-width: 28px; text-align: center; font-weight: 700; font-size: 17px; }
 .plat-ajouter { min-height: 48px; }
+/* UN SEUL BLOC LIME (fondateur, 2026-10-16, version 3C) : « − n + » et « Ajouter n · prix » collés, séparés par un filet.
+   Tant qu'une option obligatoire manque, le bloc entier passe au gris avec le bouton. */
+.plat-pied { gap: 0; }
+.plat-pied .plat-quantite { height: 56px; padding: 0 2px 0 6px; gap: 0; background: var(--lime); border-radius: 28px 0 0 28px; }
+.plat-pied .plat-quantite button { width: 42px; height: 42px; min-height: 0; padding: 0; border: 0; background: transparent; color: var(--ink); font-size: 22px; font-weight: 600; }
+.plat-pied .plat-quantite button:active { transform: scale(.85); }
+.plat-pied .plat-quantite span { min-width: 22px; font-weight: 800; }
+.plat-pied > .btn-gold.plat-ajouter { position: relative; height: 56px; min-height: 56px; border-radius: 0 28px 28px 0; box-shadow: none; }
+.plat-pied > .btn-gold.plat-ajouter::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 1px; background: rgba(20, 18, 31, .2); }
+.plat-pied:has(.plat-ajouter:disabled) .plat-quantite { background: var(--line); }
+.plat-ajouter-prix { display: inline-flex; overflow: hidden; vertical-align: bottom; }
 .plat-bloque { flex: 1 0 100%; order: -1; margin: 0 0 4px; font-size: 13px; color: var(--red); }
 /* Au-delà du téléphone, la feuille reste plein écran mais son contenu se recentre : une photo
    étirée sur 1400px et une ligne d'option large comme l'écran seraient illisibles. */

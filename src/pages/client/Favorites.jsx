@@ -35,7 +35,7 @@ export default function Favorites() {
           page, le rectangle hachuré se lit comme une panne. Voir le commentaire d'EtatVide. */}
       {!loading && restaurants.length === 0 && (
         <EtatVide
-          icone="favoris" titre={t('favorites.emptyTitle')} texte={t('favorites.empty')}
+          icone="favoris" scene="favoris" titre={t('favorites.emptyTitle')} texte={t('favorites.empty')}
           actionVers="/restaurants" actionTexte={t('orders.emptyAction')}
         />
       )}

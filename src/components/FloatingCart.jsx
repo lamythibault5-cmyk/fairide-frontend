@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
 import { euros } from '../prixPlat';
+import ChiffresRoulants from './ChiffresRoulants';
 
 // La pilule du panier : « Voir le panier · 2 », posee au-dessus de la barre d'onglets.
 //
@@ -45,8 +46,8 @@ export default function FloatingCart() {
             combien d'articles attendent, sans avoir a lire. */}
         <span className="panier-pilule-compte" key={cart.count}>{cart.count}</span>
       </span>
-      <span>{t('panier.viewCart')}</span>
-      <b>{euros(cart.rawTotal)}</b>
+      <span className="panier-pilule-texte">{t('panier.viewCart')}</span>
+      <b className="panier-pilule-total"><ChiffresRoulants valeur={euros(cart.rawTotal)} /></b>
     </Link>
   );
 }

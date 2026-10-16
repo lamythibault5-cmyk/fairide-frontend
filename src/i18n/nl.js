@@ -6608,6 +6608,8 @@ export default {
       discoverInfoJoin: 'Mijn zaak inschrijven'
     },
     menuCategories: {
+      inCart: '{n} in het mandje',
+      oneLess: 'Eén {name} minder',
       quickAdd: '{name} aan winkelmand toevoegen',
       soldOutToday: 'Vandaag uitverkocht · morgen terug',
       category: { entree: 'Voorgerechten', plat: 'Hoofdgerechten', dessert: 'Desserts', boisson: 'Dranken' },
@@ -6761,6 +6763,14 @@ export default {
       titleReadyOne: 'bestelling klaar'
     },
     orderStatus: {
+      // Titres du bandeau de suivi d'une commande en cours (orderStatus.jsx, titreSuivi ; 2026-10-16).
+      grand: {
+        nouveau: 'De zaak bekijkt je bestelling',
+        preparation: 'Het wordt bereid',
+        pretDelivery: 'Klaar, we wachten op een koerier',
+        pretPickup: 'Klaar, je kunt ze komen halen',
+        livraison: 'Onderweg naar jou'
+      },
       acceptBefore: 'Te aanvaarden vóór {time} (nog {min} min) — zonder antwoord wordt de bestelling geannuleerd en de klant automatisch terugbetaald.',
       acceptNow: 'Termijn verstreken: de bestelling wordt binnen de minuut geannuleerd en de klant terugbetaald.',
       next_nouveau_deadline: 'De zaak moet je bestelling nog bevestigen. Zonder antwoord vóór {time} wordt ze geannuleerd en word je automatisch terugbetaald — tot dan kan je ze ook zelf annuleren.',
@@ -6995,8 +7005,8 @@ export default {
       sectionCurrent: 'Lopend',
       sectionPast: 'Eerdere bestellingen',
       title: 'Mijn bestellingen',
-      empty: 'Nog geen bestellingen',
-      emptyHint: 'Alles wat je bestelt verschijnt hier, met live opvolging.',
+      empty: 'Nog niets onderweg',
+      emptyHint: 'Zodra je bestelt, volg je hier je bestelling tot aan je deur.',
       emptyAction: 'Zaken bekijken',
       pickupAt: 'Op te halen bij {name}{address}',
       driver: 'Koerier: {name}{phone}',
@@ -7086,7 +7096,7 @@ export default {
     favorites: {
       title: 'Mijn favorieten',
       emptyTitle: 'Nog geen favorieten',
-      empty: 'Tik op het hartje op een winkelpagina om hem hier terug te vinden.'
+      empty: 'Tik op het hartje van een zaak die je leuk vindt: ze wacht hier op je.'
     },
     account: {
       title: 'Mijn account',
