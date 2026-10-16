@@ -50,6 +50,15 @@ total in an iris chip whose digits roll (FloatingCart, `ChiffresRoulants`) — 2
 number in a lime circle and folds back to a circle that keeps the count (`PasPlat`, MenuCategorySections), and the dish sheet's
 quantity and « Ajouter » are one lime block — 3C; full-page empty screens (orders, favourites, cart) show the bike waiting on its
 road (`EtatVide scene=…`) — 4B. Buttons inside these need `min-height` overrides: the global 44 px touch rule has specificity (0,3,1).
+**Every main screen in that style (2026-10-16, « Proposition » phones of [mockups/tous-les-ecrans.html](mockups/tous-les-ecrans.html))**:
+restaurant list (address on an iris band with the riding bike, glass cuisine strip with a draggable lens: TeteListe.jsx,
+lentillePuces.js), map, favourites, restaurant page (sheet over the cover, glass sections strip, floating round buttons in solid iris
+with a white ring — white-on-glass was unreadable), cart / checkout / order confirmed (EcranCommande.jsx), Mon compte (EnteteCompte.jsx),
+business dashboard / orders / menu / stats (BandeauCommerce.jsx, CarteCommerce.jsx), courier dashboard / job in progress / earnings
+(RouteVelo.jsx). **Each family's CSS lives in its own file imported by its pages**: `src/ecran-liste.css`, `ecran-fiche.css`,
+`ecran-commande.css`, `ecran-compte.css`, `ecran-commerce.css`, `ecran-livreur.css` — look there before styles.css. Glass, blur and soft
+shadows are scoped to `html.appli`; the website keeps iris bands and white sheets without glass. `.page-fade` animates with
+`backwards`, not `both`: an opacity held after the animation disables `backdrop-filter` for everything inside the page.
 In the app, `/` never shows the marketing landing: first launch → `/bienvenue`, afterwards → `/restaurants` (Home.jsx).
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](src/pages/app/InscriptionAppli.jsx)):

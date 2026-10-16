@@ -320,7 +320,10 @@
    plus de la barre de progression et des squelettes. Le plan de mouvement visait ~120 ms ; cette règle-ci l'emportait sur
    celle de styles.css (chargée après). */
 @keyframes page-arrive { from { opacity: .4; } to { opacity: 1; } }
-.page-fade { animation: page-arrive .12s ease-out both; }
+/* `backwards` et non `both` (2026-10-16) : une opacité tenue par l'animation après sa fin éteint le `backdrop-filter` de tout
+   ce que la page contient (le verre de la liste, de la fiche, du paiement, du commerce). L'état final est l'état normal de la
+   page (opacité 1) : rien d'autre ne change. */
+.page-fade { animation: page-arrive .12s ease-out backwards; }
 @media (prefers-reduced-motion: reduce) { .page-fade { animation: none; } }
 
 /* ---------- États vides : la pastille prend la teinte Fairide plutôt qu'un gris neutre ---------- */
