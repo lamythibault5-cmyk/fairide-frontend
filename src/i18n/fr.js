@@ -6539,6 +6539,22 @@ export default {
       legal: "L'Acte européen sur l'accessibilité (directive (UE) 2019/882) exempte les microentreprises qui fournissent des services de l'obligation de publier une déclaration d'accessibilité. Fairide en est une. Cette page n'en est pas moins notre engagement.",
       updated: "Dernière mise à jour : 6 octobre 2026."
     },
+    // Le cadre du site (lot « cadre », 2026-10-16) : barre latérale, connexion en deux moitiés. Voir site-cadre.css.
+    siteCadre: {
+      langue: 'Langue',
+      liensLegaux: 'Liens légaux',
+      choixConnexion: 'Connexion ou inscription',
+      connexionTitre: 'Content de te revoir.',
+      connexionSous: 'Connecte-toi pour retrouver ton espace.',
+      inscriptionClient: 'Crée ton compte.',
+      inscriptionCommerce: 'Inscris ton commerce.',
+      inscriptionLivreur: 'Deviens livreur.',
+      etape: 'Étape {n} sur {total}',
+      oubliTitre: 'Pas de souci.',
+      oubliSous: 'Tu reçois un lien par e-mail pour choisir un nouveau mot de passe.',
+      codeTitre: 'Presque fini.',
+      codeSous: 'Un dernier code, et c’est parti.'
+    },
     footer: {
       tagline: 'La livraison de repas et de commerces locaux à commission réduite, à Bruxelles.',
       belgian: 'Conçu et opéré depuis la Belgique, par des Belges, pour des Belges.',

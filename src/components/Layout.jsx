@@ -17,6 +17,8 @@ import FloatingCart from './FloatingCart';
 import { SkeletonCards } from './Skeleton';
 import { estNatif, experienceApp, plateforme } from '../natif';
 import { lireBienvenue } from '../bienvenue';
+// Le cadre du site (barre latérale blanche, largeurs, bandeau et feuille, carte des cookies, connexion) : voir son en-tête.
+import '../site-cadre.css';
 
 // « Activer les notifications » juste après l'inscription, dans l'application seulement (voir AmorceNotifications.jsx).
 // Chargé à la demande : sur fairide.be la condition est toujours fausse, et le module n'est jamais téléchargé.
@@ -61,6 +63,12 @@ const attentePage = <div style={{ paddingTop: 8 }}><SkeletonCards count={3} /></
 function isDashboardPath(pathname) {
   return DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
+/* CONNECTÉ, TOUT LE SITE EST DANS LA COQUILLE (fondateur, 2026-10-16, mockups/site-ordinateur.html : le « cadre » de chaque
+ * page connectée est la barre latérale). L'aide, les pages légales, notre histoire, « C'est bon » et la page introuvable
+ * s'ouvraient sous l'en-tête iris du site, avec une seconde navigation (Restaurants · Favoris · Mes commandes) qui ne
+ * ressemblait à rien d'autre une fois connecté — l'app, elle, les garde déjà dans sa coquille. Seules la connexion et le
+ * nouveau mot de passe restent des pages de visiteur : on y vient sans session, ou pour en changer. */
+const HORS_COQUILLE = ['/login', '/reset-password'];
 /* LE PARCOURS DE COMMANDE : les onglets du bas s'y effacent.
  *
  * À partir du moment où l'on entre dans un commerce, on ne navigue plus, on fait quelque chose —
@@ -179,7 +187,10 @@ export default function Layout() {
   // démonter là-bas casserait la mise en page pour rien. On ne retire donc PAS <DashboardSidebar />
   // du rendu — cela coûterait en prime un remontage complet à chaque entrée dans le parcours.
   const dansLeFlux = estFluxCommande(location.pathname);
-  if (user && (isDashboardPath(location.pathname) || APPLI)) {
+  if (user && (isDashboardPath(location.pathname) || APPLI || !HORS_COQUILLE.includes(location.pathname))) {
+    // Site : une page qui n'est à aucun espace (aide, pages légales…) se lit centrée sur la largeur de lecture
+    // (.site-page-generique, site-cadre.css). Rien ne change dans l'app.
+    const pageGenerique = !APPLI && !isDashboardPath(location.pathname);
     return (
       <>
         <div className={`dashboard-shell${rightSlot ? ' has-right' : ''}${dansLeFlux ? ' dashboard-shell--flux' : ''}`}>
@@ -199,7 +210,7 @@ export default function Layout() {
             {APPLI && !isDashboardPath(location.pathname) && !AVEC_RETOUR_COMPTE.includes(location.pathname) && (
               <button type="button" className="dashboard-retour" data-retour-natif onClick={retourAppli}>← {t('appli.retour')}</button>
             )}
-            <div className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
+            <div className={`page-fade${pageGenerique ? ' site-page-generique' : ''}`} key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
               <Suspense fallback={attentePage}>
                 <Outlet context={{ setRightSlot }} />
               </Suspense>
@@ -211,7 +222,9 @@ export default function Layout() {
               de main, se retrouvait AU-DESSUS de la colonne de droite. Sur le tableau de bord d'un
               livreur, on lisait donc « Mentions légales · CGV · Confidentialité » puis, en dessous,
               la carte « Aujourd'hui » avec ses compteurs — du contenu après le pied de page.
-              Il est maintenant une zone de la grille à lui, toujours la dernière. */}
+              Il est maintenant une zone de la grille à lui, toujours la dernière.
+              Sur le site au-dessus de 900px, ces liens vivent au bas de la barre latérale (DashboardSidebar.jsx) et la rangée
+              est masquée (site-cadre.css) : elle ne sert plus qu'au téléphone. */}
           {!APPLI && <div className="dashboard-footer-links">
             <Link to="/mentions-legales">{t('footer.legalNotice')}</Link>
             <Link to="/cgv">{t('footer.terms')}</Link>

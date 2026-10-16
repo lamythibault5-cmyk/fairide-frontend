@@ -19,7 +19,6 @@ import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
 import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES } from '../menuCategories';
 import { MAX_CUISINES } from '../components/commerce/EcranCuisines';
-import { cuisineDepuisOsm } from '../osmCuisine';
 import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
 import { attendrePage, espaceApresConnexion, prechargerPage } from '../routePrefetch';
@@ -84,6 +83,69 @@ const CLE_BROUILLON = 'fairide_inscription_brouillon';
    localStorage, 48 h, effacé à l'inscription réussie ou par « Recommencer » ; jamais de mot de passe ni de code dedans.
    Déclaré dans la politique des cookies (stockage technique, cookies.technical). */
 const BROUILLON_MAX_MS = 48 * 3600 * 1000; // au-delà, une inscription interrompue ne se reprend plus
+
+/* LA CONNEXION DU SITE EN DEUX MOITIÉS (fondateur, 2026-10-16, section 2 de mockups/site-ordinateur.html). Sous l'en-tête
+   des visiteurs, qui ne change pas : l'iris à gauche prolonge l'en-tête (un titre, le vélo de la marque qui attend sur sa
+   route, ou la route des étapes de l'inscription) ; le formulaire est posé sur une feuille blanche à droite, sans carte
+   autour. Sur téléphone, le bandeau iris en haut et la feuille qui monte dessous. Mêmes formulaires, mêmes règles et mêmes
+   fonctions qu'avant (double authentification, e-mail non confirmé, mot de passe oublié, Google, étapes commerce et
+   livreur, engagements, case des CGV, refus des nouvelles) : seul l'habillage change. Styles : site-cadre.css, partie 6.
+   `.auth-box` reste sur le conteneur du formulaire : le retour en haut à chaque étape le vise (voir premierRendu). */
+function CadreConnexion({ decorClass, titre, sous, route, scene = true, children }) {
+  return (
+    <div className={`decor-page auth-decor auth-site${route ? ' auth-site--long' : ''} ${decorClass}`}>
+      <section className="auth-site-iris sur-iris">
+        <div className="auth-site-titre">
+          <h1>{titre}</h1>
+          {sous && <p>{sous}</p>}
+          {route}
+        </div>
+        {scene && !route && <div className="auth-site-scene"><SceneVelo /></div>}
+      </section>
+      <div className="auth-site-feuille">
+        <div className="auth-box">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// Le vélo de la marque qui attend sur sa route pointillée, à côté d'un repère (EtatVide.jsx, mais sur l'iris : vélo lime).
+function SceneVelo() {
+  return (
+    <svg viewBox="0 0 280 140" aria-hidden="true">
+      <line x1="14" y1="123" x2="266" y2="123" stroke="rgba(255,255,255,.45)" strokeWidth="3" strokeLinecap="round" strokeDasharray="8 8" />
+      <g transform="translate(214 74) scale(1.75)" fill="none" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" /><circle cx="12" cy="10" r="2.6" />
+      </g>
+      <g transform="translate(70 68) scale(1.25)">
+        <g fill="none" stroke="#C8F03C" strokeWidth="5" strokeLinecap="round"><circle cx="15" cy="29" r="12.5" /><circle cx="61" cy="29" r="12.5" /></g>
+        <g fill="#C8F03C"><rect x="16" y="8" width="44" height="5" rx="2.5" /><g transform="rotate(42 27 22.5)"><rect x="13" y="20" width="28" height="5" rx="2.5" /></g></g>
+      </g>
+    </svg>
+  );
+}
+
+/* La route des étapes de l'inscription : un arrêt par étape, la partie faite en lime avec une coche, le vélo lime à
+   l'étape en cours. Le nombre d'arrêts suit le type de compte (3 pour un client ou un livreur, jusqu'à 7 pour un
+   commerce) ; la phrase dessous dit « Étape n sur N » pour qui ne lit pas le dessin. */
+function RouteEtapes({ total, actuelle, texte }) {
+  const pos = (k) => (total > 1 ? (100 * k) / (total - 1) : 0);
+  return (
+    <div>
+      <div className="auth-route" style={{ '--auth-pos': `${pos(actuelle)}%` }} aria-hidden="true">
+        <span className="auth-route-voie" />
+        <span className="auth-route-fait" />
+        {Array.from({ length: total }, (_, k) => (
+          <span key={k} className={`auth-route-arret${k < actuelle ? ' auth-route-arret--fait' : k === actuelle ? ' auth-route-arret--actuel' : ''}`} style={{ left: `${pos(k)}%` }}>
+            {k < actuelle && <Icone nom="valider" taille={13} />}
+          </span>
+        ))}
+        <span className="auth-route-velo"><BrandMark size={42} tile={false} color="#C8F03C" animer={false} /></span>
+      </div>
+      <p className="auth-route-texte">{texte}</p>
+    </div>
+  );
+}
 
 export default function Auth() {
   const { t, language } = useLanguage();
@@ -190,8 +252,6 @@ export default function Auth() {
   const [horairesSiteSource, setHorairesSiteSource] = useState('');
   const [typeDepuisSite, setTypeDepuisSite] = useState(false); // le type affiché vient du site, pas d'un choix
   const [relireSite, setRelireSite] = useState(0);
-  const emailDepuisFiche = useRef('');
-  const restoPhoneDepuisFiche = useRef('');
   const cuisineFinale = cuisine === 'Autre' ? (customCuisine.trim() || 'Autre') : cuisine;
   // Dès que le commerce est trouvé dans la recherche : horaires publiés sur son site (schema.org ou texte), et s'il
   // n'a pas de site ou que le site ne les donne pas, recherche web par nom + adresse (site officiel et horaires).
@@ -297,29 +357,8 @@ export default function Auth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyNumber, vatNumber, role]);
 
-  // La fiche choisie sur le web préremplit ce qu'elle sait ; le reste est mémorisé pour la création du restaurant.
-  function appliquerCommerce(fiche) {
-    setCommerceTrouve(fiche);
-    if (!fiche) return;
-    // La fiche est modifiable : chaque correction du restaurateur se répercute sur l'adresse et le téléphone.
-    setAddressStreet(fiche.street || '');
-    setAddressNumber(fiche.number || '');
-    setAddressPostalCode(fiche.postalCode || '');
-    setAddressCity(fiche.city || '');
-    // Le numéro de la fiche est celui du restaurant (sur place) : il remplit restoPhone, jamais le numéro personnel.
-    if (fiche.phone && (!restoPhone.trim() || restoPhone === restoPhoneDepuisFiche.current)) { setRestoPhone(fiche.phone); restoPhoneDepuisFiche.current = fiche.phone; }
-    const typeDevine = cuisineDepuisOsm(fiche.cuisine, fiche.type);
-    if (typeDevine && !cuisine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
-    // Horaires publiés sur le web → structure par jour, tant que le restaurateur n'a pas commencé à les régler lui-même.
-    if (fiche.openingHours && (!hours || hoursDepuisWeb)) { const h = horairesDepuisOsm(fiche.openingHours); if (h) { setHours(h); setHoursDepuisWeb(true); } }
-    // L'e-mail du commerce noté dans la fiche devient l'e-mail du compte (dernière étape), tant qu'il n'a pas été changé à la main.
-    if (fiche.email && (!email.trim() || email === emailDepuisFiche.current)) { setEmail(fiche.email); emailDepuisFiche.current = fiche.email; }
-    if (fiche.companyNumber && !companyNumber.trim()) setCompanyNumber(fiche.companyNumber.replace(/^BE/i, '').trim());
-    try {
-      const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
-      localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: fiche.name, street: fiche.street || ancien.street || '', number: fiche.number || ancien.number || '', postalCode: fiche.postalCode || ancien.postalCode || '', city: fiche.city || fiche.commune || ancien.city || '', cuisine: fiche.cuisine || fiche.type || '', phone: fiche.phone || '', email: fiche.email || '', website: fiche.website || '', openingHours: fiche.openingHours || '', commune: fiche.city || '', lat: fiche.lat ?? null, lng: fiche.lng ?? null }));
-    } catch { /* sans stockage */ }
-  }
+  // appliquerCommerce (une fiche trouvée sur le web préremplissait l'adresse, le téléphone, la cuisine, les horaires) est
+  // retiré avec la recherche du commerce par code postal (fondateur, 2026-10-13, voir nomCommerce) : il n'était plus appelé.
   useEffect(() => {
     if (role !== 'restaurant') return;
     try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, services })); } catch { /* sans stockage */ }
@@ -1063,13 +1102,8 @@ export default function Auth() {
 
   if (forgotMode) {
     return (
-      <div className={`decor-page auth-decor ${decorClass}`}>
-        <div className="auth-box">
-        <div className="card">
-          <div className="auth-brand">
-            <BrandMark size={26} />
-            <span className="wordmark">fairide</span>
-          </div>
+      <CadreConnexion decorClass={decorClass} titre={t('siteCadre.oubliTitre')} sous={t('siteCadre.oubliSous')}>
+        <div className="auth-site-form">
           <h2 style={{ marginTop: 0 }}>{t('auth.forgotTitle')}</h2>
           {forgotSubmitted ? (
             <>
@@ -1100,20 +1134,14 @@ export default function Auth() {
             </>
           )}
         </div>
-        </div>
-      </div>
+      </CadreConnexion>
     );
   }
 
   if (pendingEmail) {
     return (
-      <div className={`decor-page auth-decor ${decorClass}`}>
-        <div className="auth-box">
-        <div className="card">
-          <div className="auth-brand">
-            <BrandMark size={26} />
-            <span className="wordmark">fairide</span>
-          </div>
+      <CadreConnexion decorClass={decorClass} titre={t('siteCadre.codeTitre')} sous={t('siteCadre.codeSous')}>
+        <div className="auth-site-form">
           <h2 style={{ marginTop: 0 }}>{t(pendingChannel === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle')}</h2>
           <p className="small" style={{ marginBottom: 14 }}>
             {pendingChannel === 'sms' ? t('auth.verifyTextSms', { phone: pendingPhone }) : t('auth.verifyText', { email: pendingEmail })}
@@ -1138,34 +1166,29 @@ export default function Auth() {
             {t('auth.back')}
           </button>
         </div>
-        </div>
-      </div>
+      </CadreConnexion>
     );
   }
 
+  /* Le titre de la moitié iris. Le bandeau « Espace client » + accroche qui surmontait la carte a disparu de l'inscription :
+     il redisait le sélecteur de rôle et poussait le premier champ hors de l'écran sur un téléphone. Il ne reste que pour qui
+     arrive par un lien d'audience (?pour=commerce) sans s'inscrire, où il sert d'accueil — c'est maintenant ce titre. */
+  const titreIris = mode === 'register'
+    ? t(role === 'restaurant' ? 'siteCadre.inscriptionCommerce' : role === 'driver' ? 'siteCadre.inscriptionLivreur' : 'siteCadre.inscriptionClient')
+    : audience ? <AvecMarque>{role === 'client' ? t('auth.clientHeading') : t('auth.partnerHeading')}</AvecMarque> : t('siteCadre.connexionTitre');
   return (
-    <div className={`decor-page auth-decor ${decorClass}`}>
-      {/* Le bandeau « Espace client » + accroche au-dessus de la carte a disparu de l'inscription.
-          Il redisait ce que le sélecteur de rôle affiche déjà trois centimètres plus bas, et il
-          poussait le premier champ hors de l'écran sur un téléphone : on arrivait sur une page
-          d'inscription sans voir où s'inscrire. Il ne reste que pour qui arrive par un lien
-          d'audience (?pour=commerce), où il sert d'accueil et pas de répétition. */}
-      {audience && mode !== 'register' && (
-        <div style={{ textAlign: 'center', marginBottom: 18 }}>
-          <h2 style={{ margin: 0, fontSize: 22 }}>
-            <AvecMarque>{role === 'client' ? t('auth.clientHeading') : t('auth.partnerHeading')}</AvecMarque>
-          </h2>
-        </div>
-      )}
-      <div className="auth-box">
-      <div className="card">
-        <div className="auth-brand">
-          <BrandMark size={26} />
-          <span className="wordmark">fairide</span>
-        </div>
-        <div className="auth-tabs" role="tablist">
-          <button type="button" role="tab" aria-selected={mode === 'login'} className={`chip${mode === 'login' ? ' active' : ''}`} onClick={() => setMode('login')}>{t('auth.login')}</button>
-          <button type="button" role="tab" aria-selected={mode === 'register'} className={`chip${mode === 'register' ? ' active' : ''}`} onClick={() => setMode('register')}>{t('auth.register')}</button>
+    <CadreConnexion
+      decorClass={decorClass}
+      titre={titreIris}
+      sous={mode === 'login' && !audience ? t('siteCadre.connexionSous') : null}
+      route={mode === 'register' ? <RouteEtapes total={steps.length} actuelle={Math.min(step, steps.length - 1)} texte={t('siteCadre.etape', { n: Math.min(step, steps.length - 1) + 1, total: steps.length })} /> : null}
+    >
+      <div className="auth-site-form">
+        {/* Connexion / Inscription : un sélecteur à pouce iris qui glisse (site-cadre.css, .auth-segment). */}
+        <div className={`auth-segment${mode === 'register' ? ' auth-segment--droite' : ''}`} role="tablist" aria-label={t('siteCadre.choixConnexion')}>
+          <span className="auth-segment-pouce" aria-hidden="true" />
+          <button type="button" role="tab" aria-selected={mode === 'login'} onClick={() => setMode('login')}>{t('nav.login')}</button>
+          <button type="button" role="tab" aria-selected={mode === 'register'} onClick={() => setMode('register')}>{t('nav.register')}</button>
         </div>
 
         {mode === 'register' ? (
@@ -1745,7 +1768,6 @@ export default function Auth() {
           </>
         )}
       </div>
-      </div>
-    </div>
+    </CadreConnexion>
   );
 }

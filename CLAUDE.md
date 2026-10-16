@@ -215,6 +215,26 @@ thrown to the caller as normal. Don't add per-call 401 checks.
 Global class names, no CSS modules, no Tailwind. Inline `style={{}}` is used freely for
 one-off spacing and is an accepted pattern here.
 
+**The website shell (2026-10-16, sections 1–2 of [mockups/site-ordinateur.html](mockups/site-ordinateur.html), white sidebar and
+solid-white sticky bars chosen by the founder) lives in [src/site-cadre.css](src/site-cadre.css)**, imported by Layout.jsx; its header
+lists the shared utilities — use them instead of re-writing a width or a band per page: `.site-col` (centred, 1,120 px max:
+lists, grids, tables) and `.site-col--lecture` (760 px: forms, text); `.site-bande` (iris band, edge to edge of the content
+area — it cancels `.dashboard-main`'s padding, notch included on phones) with `.site-bande-ctx` / `-titre` / `-sous`, then
+`.site-feuille` (white sheet with rounded top corners rising over it; put a `.site-col` inside both); `.site-collant` (sticky bar:
+solid white + hairline, never glass); `.site-survol` (clickable card: border turns iris, lifts 3 px, no shadow) and
+`.site-ligne-survol` (row: grey tint); `.sur-iris` (focus ring turns lime — the default ring is 2 px iris offset 2 px, invisible
+on iris). On the website, **every signed-in page is in the sidebar shell** except `/login` and `/reset-password` (Layout.jsx,
+`HORS_COQUILLE`): help, legal pages, notre-histoire, « C'est bon », 404 no longer show the iris site header; pages outside the
+role spaces get `.site-page-generique` (760 px, centred). Sidebar ≥ 900 px, website only (`html:not(.appli)` — the app's sidebar
+and glass tab bar are untouched): brand tile, nav whose active tab is an iris pill sliding between links (the same `.nav-curseur`
+/ useCurseurOnglets.js as the bottom bar), pale-iris counters (white on the active pill), and at the bottom FR · NL · EN, the legal
+links (the `.dashboard-footer-links` row is now phone-only) and the user block. The cookie card is iris with « Accepter » and
+« Refuser » as the same white button (APD: refusing as easy as accepting); it takes focus itself so no ring favours one choice.
+The website `/login` (Auth.jsx, `CadreConnexion`) is two halves under the unchanged visitor header: iris left (title, the bike
+waiting on its road, or during sign-up the step road `RouteEtapes`), the form on a white sheet right, Connexion / Inscription as
+a sliding iris segment, one lime action; on phones the iris band on top and the sheet rising under it. Strings: `siteCadre` i18n
+namespace.
+
 At this size, **find the neighbouring rule before adding one.** Selectors of equal specificity are
 resolved by order, and several blocks near the bottom (the 520px media query especially) override
 rules written hundreds of lines earlier. A rule that "doesn't apply" is usually a rule that applies

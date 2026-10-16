@@ -6505,6 +6505,22 @@ export default {
       legal: "The European Accessibility Act (Directive (EU) 2019/882) exempts microenterprises providing services from publishing an accessibility statement. Fairide is one. This page is our commitment nonetheless.",
       updated: "Last updated: 6 October 2026."
     },
+    // Le cadre du site (lot « cadre », 2026-10-16) : barre latérale, connexion en deux moitiés. Voir site-cadre.css.
+    siteCadre: {
+      langue: 'Language',
+      liensLegaux: 'Legal links',
+      choixConnexion: 'Log in or sign up',
+      connexionTitre: 'Good to see you again.',
+      connexionSous: 'Log in to get back to your space.',
+      inscriptionClient: 'Create your account.',
+      inscriptionCommerce: 'Sign up your business.',
+      inscriptionLivreur: 'Become a courier.',
+      etape: 'Step {n} of {total}',
+      oubliTitre: 'No worries.',
+      oubliSous: 'You’ll get a link by e-mail to choose a new password.',
+      codeTitre: 'Almost there.',
+      codeSous: 'One last code and you’re in.'
+    },
     footer: {
       tagline: 'Reduced-commission delivery from local restaurants and shops in Brussels.',
       belgian: 'Designed and run from Belgium, by Belgians, for Belgians.',

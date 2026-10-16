@@ -6514,6 +6514,22 @@ export default {
       legal: "De Europese toegankelijkheidsakte (richtlijn (EU) 2019/882) stelt micro-ondernemingen die diensten verlenen vrij van het publiceren van een toegankelijkheidsverklaring. Fairide is er een. Deze pagina blijft niettemin ons engagement.",
       updated: "Laatst bijgewerkt: 6 oktober 2026."
     },
+    // Le cadre du site (lot « cadre », 2026-10-16) : barre latérale, connexion en deux moitiés. Voir site-cadre.css.
+    siteCadre: {
+      langue: 'Taal',
+      liensLegaux: 'Juridische links',
+      choixConnexion: 'Inloggen of registreren',
+      connexionTitre: 'Fijn je terug te zien.',
+      connexionSous: 'Log in om je ruimte terug te vinden.',
+      inscriptionClient: 'Maak je account aan.',
+      inscriptionCommerce: 'Schrijf je zaak in.',
+      inscriptionLivreur: 'Word koerier.',
+      etape: 'Stap {n} van {total}',
+      oubliTitre: 'Geen zorgen.',
+      oubliSous: 'Je krijgt een link per e-mail om een nieuw wachtwoord te kiezen.',
+      codeTitre: 'Bijna klaar.',
+      codeSous: 'Nog één code en je bent binnen.'
+    },
     footer: {
       tagline: 'Levering van maaltijden en lokale handelszaken tegen verlaagde commissie, in Brussel.',
       belgian: 'Ontworpen en beheerd vanuit België, door Belgen, voor Belgen.',
