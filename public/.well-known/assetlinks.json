@@ -1,11 +1,15 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "be.fairide.app",
       "sha256_cert_fingerprints": [
-        "REMPLACER_PAR_L_EMPREINTE_SHA256_DU_CERTIFICAT_DE_SIGNATURE_PLAY"
+        "E1:4A:97:BC:7D:C1:FE:32:B6:E9:75:BB:97:70:07:4E:2F:48:B4:5B:82:7F:C9:49:04:D1:52:F9:AA:EE:CF:D8",
+        "DE:EB:D0:1F:99:10:49:42:58:1F:68:53:F7:8E:63:32:28:CC:2F:6A:A0:DF:48:F3:87:66:7A:D6:FF:D6:FA:BC",
+        "F2:63:CE:0E:3A:29:74:15:B8:32:D2:64:73:8C:71:B4:3A:76:D0:3D:3C:FA:33:0F:90:44:5B:4C:FE:FB:BF:0C"
       ]
     }
   }
