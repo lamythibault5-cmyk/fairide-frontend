@@ -1,11 +1,42 @@
 // Sentry chargé à la demande : la bibliothèque (plusieurs dizaines de Ko) ne part plus dans le paquet principal de
-// chaque visiteur, seulement chez ceux qui ont accepté les cookies de mesure (voir main.jsx). Sans consentement,
+// chaque visiteur, seulement quand les rapports sont actifs (rapportsPanneActifs, consent.js ; voir main.jsx). Sinon,
 // signalerErreur ne fait rien — comme captureException avant Sentry.init.
 let sentry = null;
 
-export async function demarrerSentry(options) {
+/* RÉGLAGE PRUDENT (2026-10-16, issu de la recherche sur les rapports sans consentement) : les ERREURS seulement. Pas de
+ * mesure de performance (aucun tracesSampleRate), pas de sessions (BrowserSession retiré), pas de journal de la console
+ * dans le fil d'Ariane (il peut contenir n'importe quoi), adresses sans leurs paramètres (?token=…, ?code=…), aucune
+ * donnée personnelle devinée par le SDK (sendDefaultPii: false), et jamais d'identité d'utilisateur (aucun setUser). */
+const sansParametres = (url) => (typeof url === 'string' ? url.split(/[?#]/)[0] : url);
+function nettoyer(evenement) {
+  if (evenement.request) {
+    evenement.request.url = sansParametres(evenement.request.url);
+    delete evenement.request.query_string;
+    delete evenement.request.cookies;
+  }
+  for (const b of evenement.breadcrumbs || []) {
+    if (b.data?.url) b.data.url = sansParametres(b.data.url);
+    if (b.data?.from) b.data.from = sansParametres(b.data.from);
+    if (b.data?.to) b.data.to = sansParametres(b.data.to);
+  }
+  return evenement;
+}
+function reglages(S, dsn) {
+  return {
+    dsn,
+    sendDefaultPii: false,
+    integrations: (parDefaut) => [
+      ...parDefaut.filter((i) => i.name !== 'BrowserSession' && i.name !== 'Breadcrumbs'),
+      S.breadcrumbsIntegration({ console: false }),
+    ],
+    beforeSend: nettoyer,
+    beforeBreadcrumb: (b) => (b.category === 'console' ? null : b),
+  };
+}
+
+export async function demarrerSentry(dsn) {
   const S = await import('@sentry/react');
-  S.init(options);
+  S.init(reglages(S, dsn));
   sentry = S;
 }
 
@@ -31,7 +62,7 @@ export async function arreterSentry() {
 export async function envoyerCeRapport(dsn, error, extra) {
   if (sentry) { sentry.captureException(error, { extra }); return; }
   const S = await import('@sentry/react');
-  S.init({ dsn, sendDefaultPii: false, defaultIntegrations: false });
+  S.init({ ...reglages(S, dsn), integrations: [], defaultIntegrations: false });
   S.captureException(error, { extra });
   await S.flush(4000);
 }

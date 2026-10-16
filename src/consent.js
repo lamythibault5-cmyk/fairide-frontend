@@ -7,6 +7,8 @@
 // ne parte avant le choix — l'APD/GBA a déjà sanctionné exactement ce schéma en Belgique.
 //
 // Valeurs possibles : 'accepted' | 'refused' | null (pas encore répondu).
+import { experienceApp } from './natif';
+
 const STORAGE_KEY = 'fairide_cookie_consent';
 // Date du choix : la politique cookies promet un choix conservé 12 mois ; passé ce délai la bannière revient.
 const DATE_KEY = 'fairide_cookie_consent_at';
@@ -31,6 +33,15 @@ export function getConsent() {
   }
   // Repli sûr quand rien n'a jamais été choisi : null, donc rien de non essentiel ne démarre.
   return inMemoryConsent;
+}
+
+/* RAPPORTS DE PANNE (Sentry). Sur le site : seulement après « Accepter » sur la bannière. Dans l'app : ACTIFS SAUF REFUS
+ * (fondateur, 2026-10-16, risque accepté en connaissance de cause : la recherche du jour sur l'art. 10/2 de la loi du
+ * 30 juillet 2018 n'a pas tranché, question posée à l'avocat dans AVANT-PRODUCTION.md). Base : intérêt légitime, avec
+ * un bouton pour couper dans Mon compte et une case décochable à l'inscription ; Sentry réduit aux erreurs (sentry.js). */
+export function rapportsPanneActifs() {
+  const choix = getConsent();
+  return choix === 'accepted' || (choix === null && experienceApp());
 }
 
 export function hasAcceptedConsent() {

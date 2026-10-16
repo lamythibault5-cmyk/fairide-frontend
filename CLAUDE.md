@@ -52,12 +52,14 @@ per screen, no scrolling at 375×667, same data and routes as Auth.jsx (change a
 no page shows the site header, footer, legal-links row or cookie card. Signed in, every page — help, legal, « C'est bon » —
 stays in the tab shell with a « ← Retour »; legal links live at the bottom of Mon compte. Signed
 out, a slim app bar (brand or back, « Se connecter »). `/login` is [ConnexionAppli.jsx](src/pages/app/ConnexionAppli.jsx)
-(2FA, unconfirmed e-mail, forgotten password, Apple/Google). **The app asks for one consent only, crash reports (Sentry), and never
-with a blocking screen** (2026-10-16; the full-screen ConsentementAppli was removed): an unticked box in its own card at the end of
-the in-app sign-up (never next to the opposite-direction « no news » box), a « Envoyer le rapport » offer on the crash screen
-([AppErrorBoundary](src/components/AppErrorBoundary.jsx), one report only: `envoyerCeRapport` in sentry.js), and an on/off row in Mon
-compte (`RapportsPanne`, Account.jsx). No answer = no reports. Sending without consent was researched (Belgian art. 10/2 loi
-30-07-2018, APD 85/2022): unclear, so it stays opt-in until the lawyer answers. Stripe
+(2FA, unconfirmed e-mail, forgotten password, Apple/Google). **Crash reports (Sentry) are ON BY DEFAULT in the app, never behind a
+blocking screen** (founder, 2026-10-16, risk accepted: the research on Belgian art. 10/2 loi 30-07-2018 / APD 85/2022 found it
+unclear, question for the lawyer in AVANT-PRODUCTION.md). The rule lives in `rapportsPanneActifs` (consent.js): accepted, or no answer
+and `experienceApp()`. Off switches: a pre-ticked box in its own card at the end of the in-app sign-up (never next to the
+opposite-direction « no news » box) and an Activer / Couper row in Mon compte (`RapportsPanne`, Account.jsx). Someone who turned them
+off is offered « Envoyer le rapport » on the crash screen ([AppErrorBoundary](src/components/AppErrorBoundary.jsx), one report only).
+Sentry is set to errors only, no sessions, no console breadcrumbs, URLs without parameters, no user identity (sentry.js). The
+privacy policy (CONF-2026-10-16) says so. On the website nothing changes: Sentry only after « Accepter » on the cookie banner. Stripe
 (Connect, Identity, billing portal) always opens through `allerAuPaiement` (in-app browser, return path) — never
 `window.location.href`, which left the app.
 **First-day flows are app screens too** (phase 2, 2026-10-15), opened full-screen through [EcranPlein](src/components/EcranPlein.jsx)

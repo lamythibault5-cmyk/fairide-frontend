@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fairide — tous les écrans</title>
+<!--
+  Maquette (2026-10-16) : tous les écrans de l'app dans le style retenu par le fondateur. Il voulait « voir si on touche
+  vraiment tous les écrans et si on peut tous les rendre aussi beaux ». Le style vient de trois maquettes :
+    - onboarding-chaleur.html, version D : bandeau iris, vélo de la marque qui roule sur une route en pointillés,
+      feuille blanche aux coins ronds qui monte dessous, boutons lime (texte encre), coches lime qui sautent ;
+    - barre-onglets-verre.html, version 2 : barre d'onglets en verre liquide, lentille irisée qui grossit à l'appui et
+      suit le doigt (le CSS et le code de réfraction carteDeplacement / filtrePour sont repris tels quels) ;
+    - autres-idees.html : 1C (suivi au bandeau iris), 2C (barre du panier en verre, total qui roule dans une pastille
+      iris), 3C (+ iris qui s'ouvre en compteur, chiffre dans un rond lime ; dans la fiche du plat, compteur et
+      « Ajouter » ne font qu'un bloc lime), 4B (écran vide : le vélo attend sur sa route, un bouton lime), 5C (pastilles
+      de cuisine collées en haut dans une bande de verre, la cuisine choisie sous une lentille). Pas de barre de
+      recherche en haut de la liste : la recherche a son onglet.
+
+  Partie 1 : le haut de la liste des commerces (idée 5) avec l'adresse au-dessus des pastilles, qui se replie en
+  descendant et revient en remontant. Aujourd'hui + deux variantes.
+  Partie 2 : chaque autre écran (client, commerce, livreur), l'app d'aujourd'hui (approchée d'après le vrai composant
+  de src/pages/) à gauche, la proposition à droite. Mêmes contenus et mêmes fonctions qu'aujourd'hui : seul l'habit
+  change. Rien n'est branché ; noms, plats, prix, heures, distances et codes sont des exemples.
+
+  Ouvrir : double-clic, ou `npm run dev -- --host` puis /mockups/tous-les-ecrans.html depuis le téléphone (même Wi-Fi).
+
+  Règles de l'identité gardées : fond blanc ou iris, lime seulement en aplat avec texte encre (ou sur iris), un accent
+  lime décisif par écran, icônes au trait copiées de src/components/Icone.jsx, pas d'emoji, polices servies en local.
+  Le verre (flou, reflets, ombre douce) reprend l'exception accordée à la barre d'onglets de l'app ; la réfraction ne se
+  voit que sur Chrome et Android (Safari garde le flou et l'irisation). Exception assumée : le fond de la carte (onglet
+  Carte, et l'aperçu du trajet du livreur) est un plan de ville, ni blanc ni iris.
+  Mouvement : animations CSS, réduites à rien avec prefers-reduced-motion ; celles des téléphones hors de l'écran sont
+  en pause.
+-->
+<style>
+@font-face { font-family: 'Inter'; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2'), url('../public/fonts/inter-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Inter Tight'; font-weight: 500 700; font-display: swap;
+  src: url('/fonts/inter-tight-latin.woff2') format('woff2'), url('../public/fonts/inter-tight-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Bricolage Grotesque'; font-weight: 700 800; font-display: swap;
+  src: url('/fonts/bricolage-grotesque-latin.woff2') format('woff2'), url('../public/fonts/bricolage-grotesque-latin.woff2') format('woff2'); }
+/*@@CSS@@*/
+</style>
+</head>
+<body>
+<!--@@BODY@@-->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="filtres"></defs></svg>
+<script>
+'use strict';
+/*@@JS@@*/
+</script>
+</body>
+</html>

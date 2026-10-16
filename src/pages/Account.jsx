@@ -31,7 +31,7 @@ import OffreFormules from '../components/OffreFormules';
 import TerminalFairide from '../components/TerminalFairide';
 import { euros } from '../prixPlat';
 import { defilement } from '../gestes';
-import { resetConsent, getConsent, setConsent, onConsentChange } from '../consent';
+import { resetConsent, getConsent, setConsent, onConsentChange, rapportsPanneActifs } from '../consent';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -1077,13 +1077,13 @@ export default function Account() {
   );
 }
 
-/* Les rapports de panne, dans l'app (2026-10-16) : la seule chose que l'app demande d'accepter. Un bouton, l'état en clair ;
-   « Couper » arrête Sentry tout de suite (main.jsx). Même choix que la case de l'inscription et la carte cookies du site. */
+/* Les rapports de panne, dans l'app (2026-10-16) : actifs par défaut, et c'est ici qu'on les coupe. Un bouton, l'état en
+   clair ; « Couper » arrête Sentry tout de suite (main.jsx). Même choix que la case de l'inscription. */
 function RapportsPanne() {
   const { t } = useLanguage();
-  const [choix, setChoix] = useState(getConsent);
+  const [, setChoix] = useState(getConsent); // relu à chaque changement, d'ici ou d'ailleurs
   useEffect(() => onConsentChange(setChoix), []);
-  const actif = choix === 'accepted';
+  const actif = rapportsPanneActifs(); // dans l'app : actifs tant qu'on ne les a pas coupés
   return (
     <LigneCompte icone="bogue" titre={t('appli.rapTitre')} sous={actif ? t('appli.rapActif') : t('appli.rapInactif')}
       action={(

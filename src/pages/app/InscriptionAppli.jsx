@@ -131,12 +131,11 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   const [referralOuvert, setReferralOuvert] = useState(false);
   const [versionCgu, setVersionCgu] = useState('');
   const [siteWeb, setSiteWeb] = useState(''); // pot de miel, comme sur le site
-  /* Rapports de panne (Sentry) : la seule question de consentement de l'app, par une case NON cochée (CJUE Planet49 :
-   * une case pré-cochée n'est pas un consentement). Dans une carte à part, au libellé positif, et JAMAIS collée à la case
-   * « Ne pas m'envoyer les nouvelles », qui se coche dans l'autre sens : deux cases de sens contraires côte à côte, on
-   * coche l'une pour l'autre, et un « oui » obtenu par erreur ne vaut rien (fondateur, 2026-10-16). Modifiable dans
-   * Mon compte ; proposée aussi sur l'écran d'une panne (AppErrorBoundary.jsx). */
-  const [rapports, setRapports] = useState(false);
+  /* Rapports de panne (Sentry) : dans l'app ils sont ACTIFS SAUF REFUS (fondateur, 2026-10-16 ; rapportsPanneActifs,
+   * consent.js). La case est donc cochée d'avance et se décoche : ce n'est pas un consentement (une case pré-cochée n'en
+   * serait pas un, CJUE Planet49) mais la possibilité de refuser. Dans une carte à part, jamais collée à la case « Ne pas
+   * m'envoyer les nouvelles », qui se coche dans l'autre sens. Se coupe aussi dans Mon compte. */
+  const [rapports, setRapports] = useState(true);
 
   const [index, setIndex] = useState(0);
   const [recule, setRecule] = useState(false);
