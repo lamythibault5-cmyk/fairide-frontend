@@ -199,7 +199,9 @@ export default function Bienvenue() {
   const viaEmail = () => { memoriser(); setFed(null); aller('inscription'); };
   const dejaInscrit = () => { ecrireBienvenue({ vu: true, amorceNotifs: 'a-faire' }); navigate('/login'); };
 
-  const fondIris = ['accueil', 'recherche', 'lvPromesses', 'coPromesses'].includes(ecran);
+  // L'accueil a rejoint le bandeau iris le 2026-10-16 (version B2 de mockups/accueil-appli.html) : slogan sur l'iris, le
+  // reste dans la feuille blanche, comme les écrans suivants.
+  const fondIris = ['recherche', 'lvPromesses', 'coPromesses'].includes(ecran);
   const sansHaut = ['accueil', 'recherche'].includes(ecran);
   // « Passer » saute les questions, jamais le message : on atterrit sur « Pourquoi passer à Fairide ? ».
   const passerQuestions = ['buts', 'freins', 'cartes'].includes(ecran) ? () => aller('pourquoi') : null;

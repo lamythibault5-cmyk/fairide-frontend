@@ -4815,6 +4815,8 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-progression i { display: block; height: 100%; background: var(--iris); transition: width .3s; }
 .bv-iris .bv-progression { background: rgba(255,255,255,.25); }
 .bv-iris .bv-progression i { background: #fff; }
+.bv-iris .bv-route { color: var(--lime); }
+.bv-iris .bv-route::before { border-top-color: rgba(255,255,255,.3); }
 /* La progression en route (EcransBienvenue.jsx, Route) : pointillés, le trajet fait en plein, le vélo de la marque au
    bout. Couleur du texte : iris sur fond blanc, lime sur le bandeau iris. */
 .bv-route { position: relative; flex: 1; height: 22px; color: var(--iris); }
@@ -4872,10 +4874,28 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-petit { font-size: 12px; color: var(--ink-faint); display: block; }
 .bv-iris .bv-petit { color: rgba(255,255,255,.7); }
 
-/* Le « 10 % » de l'accueil, en très grand, la fourchette des autres applis à côté. */
-.bv-gros { display: flex; align-items: flex-end; gap: 12px; }
-.bv-gros b { font-size: 88px; line-height: .85; letter-spacing: -0.04em; font-weight: 700; white-space: nowrap; }
-.bv-gros span { font-size: 15px; line-height: 1.3; color: rgba(255,255,255,.8); padding-bottom: 4px; }
+/* LE PREMIER ÉCRAN (version B2 de mockups/accueil-appli.html, 2026-10-16) : la marque et la langue, le slogan du site
+   sur l'iris, le vélo qui arrive devant un commerce, puis la feuille (phrase, barres de commission, bouton). Il remplace
+   le « 10 % » de 88 px sur fond tout iris, jugé « trop fort » par le fondateur. */
+.bv-bandeau .bv-ligne-haut { align-items: center; margin-top: 8px; }
+.bv-bandeau .bv-ligne-haut .bv-langues { border-color: rgba(255,255,255,.35); }
+.bv-bandeau .bv-ligne-haut .bv-langues button.on { background: #fff; color: var(--iris); }
+.bv-marque { display: inline-flex; align-items: center; gap: 9px; font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+.bv-bandeau .bv-ecran > .bv-titre-accueil { font-size: clamp(30px, 9.4vw, 36px); line-height: 1.06; margin: 28px 0 0; }
+.bv-scene { display: block; width: 100%; max-width: 380px; height: auto; overflow: visible; color: var(--lime); margin: 12px 0 26px; }
+.bv-scene-route { stroke: rgba(255,255,255,.35); animation: bv-route .45s linear 4; }
+@keyframes bv-route { to { stroke-dashoffset: 16; } }
+.bv-scene-repere { color: rgba(255,255,255,.92); transform-box: fill-box; transform-origin: 50% 100%; animation: bv-saute .45s var(--ressort-ui) 1.25s backwards; }
+.bv-scene-velo { animation: bv-arrive 1.6s cubic-bezier(.25, .8, .3, 1) backwards; }
+@keyframes bv-arrive { from { transform: translateX(-190px); } }
+.bv-scene-bob { transform-box: fill-box; transform-origin: 50% 100%; animation: bv-bonds .75s ease-in-out 2, bv-respire 2.4s ease-in-out 1.6s infinite; }
+@keyframes bv-respire { 50% { transform: translateY(-1.5px) rotate(-1deg); } }
+@media (prefers-reduced-motion: reduce) { .bv-scene * { animation: none !important; } }
+.bv-feuille .bv-accroche { color: var(--ink); font-size: 16px; margin-bottom: 14px; }
+.bv-carte.bv-barres { margin: 0; padding: 14px 16px; gap: 10px 12px; }
+.bv-carte.bv-barres b { color: var(--iris); }
+.bv-be-accueil { justify-content: center; margin: 22px 0 2px; }
+.bv-bandeau .bv-titre-accueil ~ .bv-feuille { flex: none; }
 
 .bv-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; margin-top: 10px; font-size: 16px; font-weight: 700; border-radius: 999px; }
 .bv-btn:disabled, .btn-connexion:disabled { opacity: .5; cursor: default; }
