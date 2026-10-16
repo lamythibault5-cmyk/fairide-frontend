@@ -6735,6 +6735,19 @@ export default {
       backToMap: '← Terug naar de kaart',
       reviewsCount: '({count} beoordelingen)'
     },
+    siteFiche: {
+      oneItem: '1 artikel',
+      items: '{n} artikelen',
+      cartElsewhere: 'Je winkelmandje bevat gerechten van {name}.',
+      emptyHint: 'Voeg een gerecht toe met „+”: het verschijnt hier.',
+      oneMore: 'Nog een {name}',
+      subtotal: 'Subtotaal',
+      noteDelivery: 'Bezorging en fooi bij het betalen.',
+      notePickup: 'Afhalen: geen bezorgkosten.',
+      radiusValue: '{km} km',
+      radiusLabel: 'Bezorgstraal',
+      minimumLabel: 'Minimale bestelling'
+    },
     restaurantMenu: {
       closedForToday: 'Deze zaak neemt vandaag geen bestellingen meer aan. Ze gaat morgen om {time} weer open.',
       deliveryUnavailableZone: 'Levering momenteel niet beschikbaar in deze zone: alleen afhaalbestellingen zijn mogelijk bij deze zaak.',

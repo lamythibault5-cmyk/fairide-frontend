@@ -6726,6 +6726,19 @@ export default {
       backToMap: '← Back to map',
       reviewsCount: '({count} reviews)'
     },
+    siteFiche: {
+      oneItem: '1 item',
+      items: '{n} items',
+      cartElsewhere: 'Your cart holds dishes from {name}.',
+      emptyHint: 'Add a dish with “+”: it shows up here.',
+      oneMore: 'One more {name}',
+      subtotal: 'Subtotal',
+      noteDelivery: 'Delivery and tip are added at checkout.',
+      notePickup: 'Pickup: no delivery fee.',
+      radiusValue: '{km} km',
+      radiusLabel: 'Delivery radius',
+      minimumLabel: 'Minimum order'
+    },
     restaurantMenu: {
       closedForToday: 'This business is no longer taking orders today. It reopens tomorrow at {time}.',
       deliveryUnavailableZone: 'Delivery unavailable in this area for now: only takeaway orders are possible at this business.',

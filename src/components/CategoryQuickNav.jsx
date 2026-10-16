@@ -31,7 +31,10 @@ const MARGE_SEUIL_PX = 8;
 // `verre` (fiche d'un commerce dans l'app, 2026-10-16) : la bande devient une bande de verre et la section lue est
 // marquée par une LENTILLE qui glisse d'une section à l'autre au défilement — comme celle de la barre d'onglets. Le geste
 // (appuyer, glisser la lentille) vit dans bandeSectionsVerre.js, chargé à la demande dans l'app seulement.
-export default function CategoryQuickNav({ categories, verre = false }) {
+// `pouce` (fiche d'un commerce sur le site, 2026-10-16, « Blanc plein » de mockups/site-ordinateur.html) : la même pastille
+// iris qui glisse d'une section à l'autre, sur une bande blanche pleine — sans verre ni geste au doigt (rien de plus à charger).
+export default function CategoryQuickNav({ categories, verre = false, pouce = false }) {
+  const avecLentille = verre || pouce;
   const { t, language } = useLanguage();
   const [active, setActive] = useState(categories[0]?.id);
   const categoriesRef = useRef(categories);
@@ -104,7 +107,7 @@ export default function CategoryQuickNav({ categories, verre = false }) {
   // La lentille se pose sur la section allumée : sa largeur, sa hauteur, sa place dans la rangée (qui défile de côté —
   // offsetLeft et non la position à l'écran). Reposée aussi quand la bande change de taille (police chargée, rotation).
   useEffect(() => {
-    if (!verre) return undefined;
+    if (!avecLentille) return undefined;
     const lentille = lentilleRef.current;
     const rangee = rangeeRef.current;
     if (!lentille || !rangee) return undefined;
@@ -130,7 +133,7 @@ export default function CategoryQuickNav({ categories, verre = false }) {
     const obs = new ResizeObserver(poser);
     obs.observe(rangee);
     return () => obs.disconnect();
-  }, [active, verre, categories]);
+  }, [active, avecLentille, categories]);
 
   // Le geste de la lentille : chargé seulement quand la bande est en verre (l'app), jamais sur le site.
   useEffect(() => {
@@ -160,9 +163,9 @@ export default function CategoryQuickNav({ categories, verre = false }) {
   if (categories.length < 2) return null;
 
   return (
-    <nav className={`category-quicknav${verre ? ' category-quicknav--verre' : ''}`} ref={barreRef} aria-label={t('ecranFiche.sections')}>
+    <nav className={`category-quicknav${verre ? ' category-quicknav--verre' : ''}${pouce ? ' category-quicknav--pouce' : ''}`} ref={barreRef} aria-label={t('ecranFiche.sections')}>
       <div className="category-quicknav-sections" ref={rangeeRef}>
-        {verre && <span className="quicknav-lentille" ref={lentilleRef} aria-hidden="true" />}
+        {avecLentille && <span className="quicknav-lentille" ref={lentilleRef} aria-hidden="true" />}
         {categories.map((c) => (
           <button
             key={c.id}

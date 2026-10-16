@@ -6779,6 +6779,19 @@ export default {
       backToMap: '← Retour à la carte',
       reviewsCount: '({count} avis)'
     },
+    siteFiche: {
+      oneItem: '1 article',
+      items: '{n} articles',
+      cartElsewhere: 'Ton panier contient des plats de {name}.',
+      emptyHint: 'Ajoute un plat avec « + » : il apparaît ici.',
+      oneMore: 'Un {name} de plus',
+      subtotal: 'Sous-total',
+      noteDelivery: 'Livraison et pourboire au moment de payer.',
+      notePickup: 'À emporter : pas de frais de livraison.',
+      radiusValue: '{km} km',
+      radiusLabel: 'Rayon de livraison',
+      minimumLabel: 'Commande minimum'
+    },
     restaurantMenu: {
       closedForToday: 'Ce commerce ne prend plus de commandes aujourd\'hui. Il rouvre demain à {time}.',
       deliveryUnavailableZone: 'Livraison indisponible pour le moment dans cette zone : seules les commandes à emporter sont possibles chez ce commerce.',
