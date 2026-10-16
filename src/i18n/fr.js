@@ -6988,6 +6988,18 @@ export default {
       removeShort: "Supprimer",
       loading: "Chargement…"
     },
+    siteCommande: {
+      recap: 'Récapitulatif',
+      suiteAuPaiement: 'Livraison et pourboire éventuels : à l’étape suivante.',
+      stripe: 'Paiement en ligne traité par Stripe',
+      colCommerce: 'Commerce',
+      colDate: 'Date',
+      colArticles: 'Articles',
+      colStatut: 'Statut',
+      colTotal: 'Total',
+      colActions: 'Actions',
+      details: 'Détails'
+    },
     checkout: {
       simulationTitle: 'Simulation : paiement fictif',
       simulationText: 'Rien n\'est débité et aucune carte n\'est demandée : la commande est marquée payée et part au commerce de simulation, qui l\'imprime sur son terminal simulé.',

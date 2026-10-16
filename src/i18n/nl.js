@@ -6944,6 +6944,18 @@ export default {
       removeShort: "Verwijderen",
       loading: "Laden…"
     },
+    siteCommande: {
+      recap: 'Overzicht',
+      suiteAuPaiement: 'Eventuele bezorging en fooi: in de volgende stap.',
+      stripe: 'Online betaling verwerkt door Stripe',
+      colCommerce: 'Zaak',
+      colDate: 'Datum',
+      colArticles: 'Artikelen',
+      colStatut: 'Status',
+      colTotal: 'Totaal',
+      colActions: 'Acties',
+      details: 'Details'
+    },
     checkout: {
       simulationTitle: 'Simulatie: fictieve betaling',
       simulationText: 'Er wordt niets aangerekend en geen kaart gevraagd: de bestelling wordt als betaald gemarkeerd en gaat naar de simulatiezaak, die ze afdrukt op haar gesimuleerde terminal.',
