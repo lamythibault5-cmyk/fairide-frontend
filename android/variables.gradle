@@ -1,8 +1,9 @@
 ext {
     minSdkVersion = 23
-    // 36 : exigé par androidx.browser 1.9.0 (connexion Apple/Google native). La cible (targetSdk) reste 35.
+    // 36 : exigé par androidx.browser 1.9.0 (connexion Apple/Google native).
     compileSdkVersion = 36
-    targetSdkVersion = 35
+    // 36 : exigé par Google Play pour toute nouvelle application ou mise à jour depuis le 31/08/2026.
+    targetSdkVersion = 36
     androidxActivityVersion = '1.9.2'
     androidxAppCompatVersion = '1.7.0'
     androidxCoordinatorLayoutVersion = '1.2.0'
