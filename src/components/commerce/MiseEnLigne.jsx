@@ -43,6 +43,18 @@ export default function MiseEnLigne(props) {
   const etat = useMiseEnLigne(props);
   if (!etat?.prochaine) return null;
   const { restantes, prochaine } = etat;
+  // Sur le bandeau iris de Commandes (site, 2026-10-16) : une ligne claire et un bouton blanc — le lime de la page est à
+  // « Accepter ». Même étape, même action.
+  if (props.surBandeau) {
+    const a = prochaine.action;
+    return (
+      <div className="sp-b-etape">
+        <span className="sp-b-etape-texte"><Icone nom={prochaine.icone} taille={18} /><span><b>{t('miseEnLigne.nextStep', { step: prochaine.titre })}</b>{' · '}{t('miseEnLigne.remaining', { n: restantes.length })}</span></span>
+        {a.to ? <Link to={a.to} className="sp-puce sp-puce--blanche">{a.libelle}</Link>
+          : <button type="button" className="sp-puce sp-puce--blanche" onClick={a.onClick} disabled={a.disabled}>{a.libelle}</button>}
+      </div>
+    );
+  }
   return (
     <div className="card account-groupe" aria-label={t('miseEnLigne.title')}>
       <LigneCompte icone={prochaine.icone} accent="warn" titre={t('miseEnLigne.nextStep', { step: prochaine.titre })}
@@ -54,7 +66,9 @@ export default function MiseEnLigne(props) {
 // La route sur le bandeau : un arrêt par étape, coche lime sur chaque étape faite, le vélo sur la première qui reste. Il part
 // du début et roule jusqu'à elle à l'arrivée sur la page (transition CSS sur `left`).
 const posArret = (k, n) => (n > 1 ? 6 + (88 * k) / (n - 1) : 50);
-export function RouteMiseEnLigne({ etapes }) {
+// `libelles` (site) : le nom court de chaque arrêt sous la route (sitePro.etape_<cle>), masqué quand la place manque.
+export function RouteMiseEnLigne({ etapes, libelles = false }) {
+  const { t } = useLanguage();
   const n = etapes.length;
   const actuel = Math.max(0, etapes.findIndex((e) => !e.fait));
   const [parti, setParti] = useState(false);
@@ -75,13 +89,21 @@ export function RouteMiseEnLigne({ etapes }) {
         </span>
       ))}
       <span className={`ec-route-velo${roule ? ' roule' : ''}`} style={{ left: `${cible}%` }}><VeloMarque /></span>
+      {libelles && (
+        <span className="sp-route-libs">
+          {etapes.map((e, k) => (
+            <span key={e.cle} className={e.fait ? 'fait' : k === actuel ? 'actuel' : undefined} style={{ left: `${posArret(k, n)}%` }}>{t(`sitePro.etape_${e.cle}`)}</span>
+          ))}
+        </span>
+      )}
     </div>
   );
 }
 
 // Dans la feuille : la prochaine étape en carte avec LE bouton lime, puis les autres (coche lime, en cours, à faire avec un
 // bouton discret). Sans prochaine étape (il ne reste que des étapes de Fairide, ou « agir pour ») : on le dit, sans bouton.
-export function EtapesMiseEnLigne({ etat }) {
+// `boutonDansCarte` (site) : le bouton lime dans la carte de la prochaine étape, à droite, au lieu de pleine largeur dessous.
+export function EtapesMiseEnLigne({ etat, boutonDansCarte = false }) {
   const { t } = useLanguage();
   const { etapes, prochaine } = etat;
   const p = prochaine;
@@ -90,15 +112,16 @@ export function EtapesMiseEnLigne({ etat }) {
     : <button type="button" className="ec-bouton ec-bouton--lime" onClick={p.action.onClick} disabled={p.action.disabled}>{p.action.libelle}</button>);
   return (
     <section aria-label={t('miseEnLigne.title')}>
-      <div className="ec-prochaine">
+      <div className={`ec-prochaine${boutonDansCarte ? ' sp-prochaine' : ''}`}>
         <span className="ec-tuile"><Icone nom={p ? p.icone : 'horloge'} taille={20} /></span>
         <span className="ec-prochaine-texte">
           <small>{t('ecranCommerce.prochaineEtape')}</small>
           <b>{p ? p.titre : t('ecranCommerce.rienAFaire')}</b>
           {p?.sous && <span>{p.sous}</span>}
         </span>
+        {boutonDansCarte && boutonLime}
       </div>
-      {boutonLime}
+      {!boutonDansCarte && boutonLime}
       <div className="ec-etapes">
         {etapes.filter((e) => e !== p).map((e) => (
           <div key={e.cle} className="ec-etape">

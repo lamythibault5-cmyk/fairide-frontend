@@ -3,6 +3,7 @@ import { usePreviewMode } from '../../context/PreviewModeContext';
 import RestaurantPreview from '../../components/RestaurantPreview';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
+import CadreSite, { SITE } from '../../components/commerce/CadreSite';
 
 export default function PreviewPage() {
   const { t } = useLanguage();
@@ -16,9 +17,9 @@ export default function PreviewPage() {
   }
 
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('previewPage.title')}</h2>
-      <p className="small" style={{ margin: '0 0 14px' }}>{t('previewPage.intro')}</p>
+    <CadreSite titre={t('previewPage.title')} sous={t('previewPage.intro')}>
+      {!SITE && <h2 className="section-title" style={{ marginTop: 0 }}>{t('previewPage.title')}</h2>}
+      {!SITE && <p className="small" style={{ margin: '0 0 14px' }}>{t('previewPage.intro')}</p>}
       {restaurant && !restaurant.publicListed && !restaurant.isDemo && (
         <div className="card preview-not-visible" role="status">
           <b><Icone nom="masque" taille={16} className="icone-texte" />{' '}{t('previewPage.notVisibleTitle')}</b>
@@ -35,6 +36,6 @@ export default function PreviewPage() {
       <div className="card" style={{ border: '2px solid var(--ink)' }}>
         <RestaurantPreview restaurant={restaurant} />
       </div>
-    </div>
+    </CadreSite>
   );
 }

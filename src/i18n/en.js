@@ -5910,6 +5910,35 @@ export default {
       tapToPause: 'Tap to pause',
       tapToResume: 'Tap to receive rides'
     },
+    // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
+    sitePro: {
+      reglagesService: 'Service settings',
+      commandes: 'Orders',
+      tableau: 'Current orders',
+      colNouvelles: 'New',
+      colPreparation: 'Being prepared',
+      colPretes: 'Ready',
+      videNouvelles: 'No new orders. They will ring here.',
+      videColonne: 'Nothing for now.',
+      terminalEnLigne: 'Terminal online',
+      terminalHorsLigne: 'Terminal offline',
+      terminalAucun: 'Link a terminal',
+      ficheTitre: 'Your page, as customers will see it',
+      photoAbsente: 'No photo yet',
+      modifierFiche: 'Edit your page',
+      voirCommeClient: 'See it as a customer',
+      tuileCarte: 'Your menu',
+      plat: '{n} dish',
+      plats: '{n} dishes',
+      tuileHoraires: "Today's hours",
+      modifier: 'Edit',
+      etape_carte: 'Your menu',
+      etape_valider: 'Menu approved',
+      etape_engagements: 'Commitments',
+      etape_paiements: 'Payments',
+      etape_verification: 'Check',
+      etape_enLigne: 'Online'
+    },
     // "Before going live" checklist for businesses (components/commerce/MiseEnLigne.jsx, UX audit of 15/10/2026).
     miseEnLigne: {
       title: 'Before going live',

@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { StarsDisplay } from '../../components/Stars';
 import { useLanguage } from '../../context/LanguageContext';
 import EtatVide from '../../components/EtatVide';
+import CadreSite, { SITE } from '../../components/commerce/CadreSite';
 
 // La réponse du restaurateur est publique (visible aux clients sur la fiche resto, voir
 // RestaurantMenu.jsx) — pensée pour se justifier publiquement en cas d'avis contestable, pas comme
@@ -39,8 +40,8 @@ export default function ReviewsPage() {
   }
 
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('reviewsResto.title')}</h2>
+    <CadreSite titre={t('reviewsResto.title')} lecture>
+      {!SITE && <h2 className="section-title" style={{ marginTop: 0 }}>{t('reviewsResto.title')}</h2>}
       <div className="row" style={{ gap: 6, marginBottom: 14 }}>
         {/* Pas d'étoiles sans avis, ici comme côté client : restaurants.rating vaut 4,5 par défaut en base, et le
             commerçant voyait 4,5 étoiles remplies à côté de « aucun avis » (RES-15 du plan de test). */}
@@ -90,6 +91,6 @@ export default function ReviewsPage() {
           ))}
         </div>
       )}
-    </div>
+    </CadreSite>
   );
 }

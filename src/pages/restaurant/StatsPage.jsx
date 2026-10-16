@@ -8,6 +8,7 @@ import GraphiqueBarres from '../../components/commerce/GraphiqueBarres';
 import ChiffresRoulants from '../../components/ChiffresRoulants';
 import { BandeauCommerce, FeuilleCommerce, SegmentGlisse } from '../../components/commerce/BandeauCommerce';
 import { vibrer } from '../../gestes';
+import { SITE } from '../../components/commerce/CadreSite';
 
 /* STATISTIQUES DU COMMERCE (comparaison avec Uber Eats Manager, 15 oct. 2026 ; backend analytiqueCommerce.js,
  * GET /restaurants/:id/analytics?days=7|30|90).
@@ -91,7 +92,8 @@ export default function StatsPage() {
           <Link to="/account" state={{ restaurerDefilement: true }} className="ec-b-retour">{t('nav.backToAccount')}</Link>
           {restaurant?.name && <span><b>{restaurant.name}</b></span>}
         </div>
-        <h1 className="ec-b-titre" style={{ fontSize: 26 }}>{t('statsResto.title')}</h1>
+        {/* Sur le site, la taille commune des titres de bandeau (site-pro.css). */}
+        <h1 className="ec-b-titre" style={SITE ? undefined : { fontSize: 26 }}>{t('statsResto.title')}</h1>
         <SegmentGlisse lime libelle={t('statsResto.period')} valeur={jours} onChange={(v) => { vibrer(8); setJours(v); }}
           options={PERIODES.map((p) => ({ value: p, label: t(`statsResto.days${p}`) }))} />
         <p className="ec-b-sous" style={{ marginTop: 16 }}>{t('statsResto.revenue')}</p>
