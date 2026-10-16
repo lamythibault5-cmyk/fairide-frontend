@@ -5743,6 +5743,31 @@ export default {
       toCollectOnSite: 'À payer sur place',
       paidOnlineBadge: 'Déjà payé en ligne'
     },
+    ecranLivreur: {
+      // Écrans livreur au bandeau iris (fondateur, 2026-10-16, mockups/tous-les-ecrans.html, Livreur) : Dashboard.jsx, EarningsPage.jsx.
+      course: 'Course',
+      directionCommerce: 'Direction {name}',
+      enRouteVers: 'En route vers {name}',
+      enRoute: 'En route',
+      terminee: 'Course terminée',
+      termineeSous: 'ajoutée à tes gains',
+      livree: 'Livrée',
+      prixPropose: 'Prix proposé',
+      prixMontant: '{fee} €',
+      minutes: '~{min} min',
+      grilleVelo: 'Ta grille et tes courses à vélo',
+      grilleMoteur: 'Ta grille et tes distances',
+      ariaTrajet: 'Trajet du commerce au client',
+      brutCourses: 'Brut {gross} · {n} courses',
+      brutUneCourse: 'Brut {gross} · 1 course',
+      bulle: '{net} · {n} courses',
+      bulleUne: '{net} · 1 course',
+      ariaRegles: 'Ce que tu gardes',
+      regleGrilleChiffre: '90 %',
+      regleGrille: 'de ta grille sur chaque course',
+      reglePourboiresChiffre: '100 %',
+      reglePourboires: 'de tes pourboires'
+    },
     dashDriver: {
       // État du dossier avant validation (audit UX du 15/10/2026, Dashboard.jsx).
       fileToCompleteTitle: "Ton dossier n'est pas encore envoyé",

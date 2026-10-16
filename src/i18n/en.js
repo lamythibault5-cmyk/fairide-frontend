@@ -5727,6 +5727,31 @@ export default {
       toCollectOnSite: 'To pay on site',
       paidOnlineBadge: 'Already paid online'
     },
+    ecranLivreur: {
+      // Courier screens with the iris header (founder, 2026-10-16, mockups/tous-les-ecrans.html, Livreur): Dashboard.jsx, EarningsPage.jsx.
+      course: 'Ride',
+      directionCommerce: 'Heading to {name}',
+      enRouteVers: 'On the way to {name}',
+      enRoute: 'On the way',
+      terminee: 'Ride complete',
+      termineeSous: 'added to your earnings',
+      livree: 'Delivered',
+      prixPropose: 'Offered price',
+      prixMontant: '€{fee}',
+      minutes: '~{min} min',
+      grilleVelo: 'Your rates and bike rides',
+      grilleMoteur: 'Your rates and distances',
+      ariaTrajet: 'Route from the business to the customer',
+      brutCourses: 'Gross {gross} · {n} rides',
+      brutUneCourse: 'Gross {gross} · 1 ride',
+      bulle: '{net} · {n} rides',
+      bulleUne: '{net} · 1 ride',
+      ariaRegles: 'What you keep',
+      regleGrilleChiffre: '90%',
+      regleGrille: 'of your rate on every ride',
+      reglePourboiresChiffre: '100%',
+      reglePourboires: 'of your tips'
+    },
     dashDriver: {
       // File state before approval (UX audit of 15/10/2026, Dashboard.jsx).
       fileToCompleteTitle: "Your file hasn't been sent yet",

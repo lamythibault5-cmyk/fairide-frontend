@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import Icone from '../Icone';
 import { experienceApp } from '../../natif';
 import { mouvementReduit, vibrer } from '../../gestes';
+import { VeloMarque } from './RouteVelo';
+import '../../ecran-livreur.css';
 
 /* GLISSER POUR CONFIRMER — « commande récupérée », « commande livrée », côté livreur, dans l'application seulement.
  *
@@ -13,7 +15,11 @@ import { mouvementReduit, vibrer } from '../../gestes';
  * Le pouce suit le doigt 1:1 (Pointer Events, capture), et au lâcher on décide d'après l'élan projeté, pas
  * seulement d'après la position : un coup sec vers la droite suffit. Retour en place par le ressort, à la vitesse
  * du doigt (src/ressort.js, chargé seulement dans l'application). Rien qui note ou classe le livreur : ce n'est
- * qu'une autre façon d'appuyer. */
+ * qu'une autre façon d'appuyer.
+ *
+ * L'HABIT (fondateur, 2026-10-16, mockups/tous-les-ecrans.html, « Glisse le vélo ») : la piste est un bloc lime au texte
+ * encre qui luit, et le pouce est le vélo de la marque, lime sur un rond iris, qui pédale sur place en attendant ; au
+ * bout, une coche qui saute. Le geste et les libellés ne changent pas (ecran-livreur.css, .glisser-velo). */
 export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = false, children }) {
   const natif = experienceApp();
   const piste = useRef(null);
@@ -73,13 +79,13 @@ export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = 
   }
 
   return (
-    <div ref={piste} className={`glisser-confirmer${fait ? ' est-fait' : ''}${disabled ? ' est-inactif' : ''}`} role="group" aria-label={libelle}>
+    <div ref={piste} className={`glisser-confirmer glisser-velo${fait ? ' est-fait' : ''}${disabled ? ' est-inactif' : ''}`} role="group" aria-label={libelle}>
       <span className="glisser-confirmer-texte">{fait ? '…' : libelle}</span>
       {/* Le pouce est aussi un vrai bouton : au clavier ou au lecteur d'écran, Entrée confirme sans glisser. */}
       <button type="button" ref={pouce} className="glisser-confirmer-pouce" aria-label={libelle} disabled={disabled || fait}
         onPointerDown={debut} onPointerMove={suite} onPointerUp={finir} onPointerCancel={finir}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFait(true); onConfirmer(); } }}>
-        <Icone nom={fait ? 'valider' : 'retour'} taille={22} />
+        {fait ? <Icone nom="valider" taille={24} /> : <VeloMarque largeur={32} />}
       </button>
     </div>
   );
