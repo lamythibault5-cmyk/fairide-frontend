@@ -41,8 +41,8 @@ const UTILISATEURS = {
 // doivent s'afficher dans la coquille de l'app, pas dans celle du site.
 const COMMUNES = ['/aide', '/cgv', '/confidentialite', '/mentions-legales', '/cookies', '/classement', '/signaler', '/accessibilite', '/notre-histoire', '/une-page-qui-n-existe-pas'];
 const PAGES = {
-  visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', ...COMMUNES],
-  client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', ...COMMUNES],
+  visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', '/equipe/essai', ...COMMUNES],
+  client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', '/groupe/essai1234', '/equipe/essai', ...COMMUNES],
   driver: ['/', '/driver', '/driver/onboarding', '/driver/map', '/driver/earnings', '/driver/invoices', '/driver/reviews', '/documents', '/account', ...COMMUNES],
   restaurant: ['/', '/dashboard', '/dashboard/menu', '/dashboard/orders', '/dashboard/preview', '/dashboard/promotions', '/dashboard/reviews', '/dashboard/stats', '/dashboard/invoices', '/dashboard/guide', '/sales', '/account', '/carte/valider/essai', ...COMMUNES]
 };
@@ -73,6 +73,14 @@ function simuler(chemin, methode, profil) {
   // Mises en avant payantes : un objet ; commune pas encore ouverte à la vente, comme pour un commerce qui démarre.
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/placements$/.test(chemin)) return { enabled: false, commune: 'Ixelles', sections: [], bookings: [] };
   if (/^\/restaurants\/[^/]+$/.test(chemin) && !/^\/restaurants\/(favorites|lookup)/.test(chemin)) return profil === 'restaurant' ? REELLES['/restaurants/mine/dashboard'][0] : COMMERCE;
+  // Commande groupée (backend routes/commandesGroupees.js) : un groupe ouvert, vu par son hôte, avec deux parts.
+  if (methode === 'GET' && /^\/group-orders\/[^/]+$/.test(chemin)) return {
+    code: 'essai1234', status: 'open', isHost: true, hostFirstName: 'Cléa', restaurant: { id: 1, name: COMMERCE.name }, participants: 2, total: 27,
+    lines: [{ id: 'l1', guestName: 'Cléa', mine: true, itemId: 'p1', name: 'Margherita', qty: 1, optionItemIds: [], optionsSnapshot: [], unitPrice: 9, note: null },
+      { id: 'l2', guestName: 'Igor', mine: false, itemId: 'p1', name: 'Margherita', qty: 2, optionItemIds: [], optionsSnapshot: [], unitPrice: 9, note: null }]
+  };
+  // Invitation dans l'équipe d'un commerce (backend equipeCommerce.js).
+  if (methode === 'GET' && /^\/restaurants\/team\/invitation\/[^/]+$/.test(chemin)) return { restaurantName: COMMERCE.name, emailHint: 'sa…@exemple.be', expired: false };
   if (/^\/menu-validation\/[^/]+$/.test(chemin)) return { restaurant: { name: COMMERCE.name, responsibleName: 'Rémi Resto' }, items: [], sha256: 'essai', alreadyValidated: false, fairideRateChoice: null };
   if (/^\/couriers\/options$/.test(chemin)) return { statuses: ['independent', 'student_independent'], vehicles: ['velo', 'velo_electrique', 'scooter', 'voiture'], bikeMaxKm: 4, legal: {} };
   if (methode !== 'GET') return {};

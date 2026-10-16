@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { tarifLivraison } from '../../livraison';
 import Icone from '../../components/Icone';
+import BandeauGroupe from '../../components/client/BandeauGroupe';
 import VisuelVide from '../../components/VisuelVide';
 import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, dateOuvertureEmporter } from '../../launch';
 import { useToast } from '../../context/ToastContext';
@@ -614,6 +615,20 @@ export default function RestaurantMenu() {
       )}
 
       {restaurant.desc && <p className="fiche-desc">{restaurant.desc}</p>}
+
+      {/* Commande groupée (pages/client/CommandeGroupee.jsx) : le bandeau quand on compose sa part, sinon le bouton
+          pour en ouvrir une — compte client exigé, comme pour commander. */}
+      <BandeauGroupe restaurantId={restaurant.id} />
+      {user && !onlineOrderingDisabled && (
+        <button type="button" className="fiche-groupe" onClick={async () => {
+          try {
+            const g = await api('/group-orders', { method: 'POST', token, body: { restaurantId: restaurant.id } });
+            navigate(`/groupe/${g.code}`);
+          } catch (e) { toast(e.message, 'erreur'); }
+        }}>
+          <Icone nom="compte" taille={16} className="icone-texte" /> {t('groupOrder.start')}
+        </button>
+      )}
 
       {/* La bascule et les frais sur une même rangée entre deux filets (.fiche-faits), dans l'app comme sur le site. */}
       <div className="fiche-faits">

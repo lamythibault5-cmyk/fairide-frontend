@@ -14,6 +14,7 @@ import { experienceApp } from '../../natif';
 import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/UpsellPanier';
 import { euros, libellePromo } from '../../prixPlat';
 import { mouvementReduit, vibrer } from '../../gestes';
+import BandeauGroupe from '../../components/client/BandeauGroupe';
 
 // Le panier, sur sa propre page.
 //
@@ -124,6 +125,8 @@ export default function PanierPage() {
       </BandeauCommande>
 
       <FeuilleCommande>
+        {/* Commande groupée en cours : ce panier est une part à envoyer au groupe, pas à payer soi-même. */}
+        <BandeauGroupe restaurantId={cart.restaurantId} />
         <div className="sc-grille">
         <div className="sc-principal">
         <div className="panier-lignes">
