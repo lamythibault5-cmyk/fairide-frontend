@@ -91,7 +91,7 @@ const BROUILLON_MAX_MS = 48 * 3600 * 1000; // au-delà, une inscription interrom
    jour (« trop appli ») : la barre d'étape du formulaire suffit. Mêmes formulaires, mêmes règles et mêmes
    fonctions qu'avant (double authentification, e-mail non confirmé, mot de passe oublié, Google, étapes commerce et
    livreur, engagements, case des CGV, refus des nouvelles) : seul l'habillage change. Styles : site-cadre.css, partie 6.
-   `.auth-box` reste sur le conteneur du formulaire : le retour en haut à chaque étape le vise (voir premierRendu). */
+   `.auth-box` reste sur le conteneur du formulaire (scroll-margin-top, site-cadre.css). */
 function CadreConnexion({ decorClass, titre, sous, long = false, scene = true, children }) {
   return (
     <div className={`decor-page auth-decor auth-site${long ? ' auth-site--long' : ''} ${decorClass}`}>
@@ -513,6 +513,25 @@ export default function Auth() {
   // renvoyer systématiquement à l'accueil (voir RestaurantMenu.jsx / RestaurantList.jsx).
   const from = location.state?.from || '/';
 
+  // UN LIEN VERS CETTE PAGE QUAND ON Y EST DÉJÀ (fondateur, 2026-10-16) : « Connexion » ou « Inscription » de l'en-tête,
+  // « Ajouter mon commerce » ou « Devenir livreur » du pied de page. Même chemin (/login) : la page n'est pas remontée,
+  // et mode et rôle, lus dans l'adresse une seule fois à l'arrivée, ne suivaient pas — on cliquait « Connexion » et
+  // l'inscription restait affichée. Chaque nouvelle navigation (location.key) relit donc l'adresse, repart de la
+  // première étape et remonte en haut de la page.
+  const derniereNavigation = useRef(location.key);
+  useEffect(() => {
+    if (derniereNavigation.current === location.key) return;
+    derniereNavigation.current = location.key;
+    const a = searchParams.get('audience');
+    const r = searchParams.get('role');
+    setMode(a ? 'register' : 'login');
+    setRole(ROLES.some((x) => x.value === r) ? r : a === 'partner' ? 'restaurant' : 'client');
+    setForgotMode(searchParams.get('oubli') === '1');
+    setStep(0);
+    remonterEnHaut();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
+
   // Arrivée après connexion : on attend (brièvement) que le code de la page suivante soit chargé avant de
   // naviguer, et le bouton reste en « Chargement… » jusque-là. Sans cela, le bouton redevenait actif pendant
   // que la page d'arrivée se téléchargeait en coulisse — sur mobile, on croyait que le toucher n'avait pas pris.
@@ -740,19 +759,16 @@ export default function Auth() {
      Le changement d'étape ne remplace que le contenu du formulaire : la page, elle, garde la position
      de défilement. On appuyait donc sur « Continuer » en bas d'un écran long — les horaires, les
      services — et on arrivait au milieu du suivant, souvent sous son titre, sans rien pour dire qu'on
-     avait changé d'étape. C'est la carte entière qu'on ramène, et non le seul titre : les onglets et
-     le fil d'avancement font partie de ce qu'on doit revoir en arrivant.
-     Vaut aussi pour « Retour », qui souffrait du même défaut.
-     `behavior` suit prefers-reduced-motion, comme montrerPremiereErreur juste au-dessus. */
-  const premierRendu = useRef(true);
+     avait changé d'étape. Les étapes remontent en haut avec remonterEnHaut (effet sur `step`, plus haut).
+     Passer de « Connexion » à « Inscription » (ou l'inverse) aussi, et EN HAUT DE LA PAGE, titre compris (fondateur,
+     2026-10-16) : avant, on amenait la carte du formulaire sous l'en-tête, et sur téléphone le titre restait au-dessus,
+     hors de l'écran. */
+  const modeAffiche = useRef(mode);
   useEffect(() => {
-    if (premierRendu.current) { premierRendu.current = false; return; }
-    if (mode !== 'register') return;
-    const carte = document.querySelector('.auth-box');
-    if (!carte) return;
-    const doux = !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-    carte.scrollIntoView({ behavior: doux ? 'smooth' : 'auto', block: 'start' });
-  }, [step, mode]);
+    if (modeAffiche.current === mode) return;
+    modeAffiche.current = mode;
+    remonterEnHaut();
+  }, [mode]);
 
   async function goNext() {
     if (verifEnCours.current) return;
