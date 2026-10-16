@@ -5736,6 +5736,31 @@ export default {
       toCollectOnSite: 'Ter plaatse te betalen',
       paidOnlineBadge: 'Al online betaald'
     },
+    ecranLivreur: {
+      // Koeriersschermen met de irisband (oprichter, 2026-10-16, mockups/tous-les-ecrans.html, Livreur): Dashboard.jsx, EarningsPage.jsx.
+      course: 'Rit',
+      directionCommerce: 'Op weg naar {name}',
+      enRouteVers: 'Onderweg naar {name}',
+      enRoute: 'Onderweg',
+      terminee: 'Rit afgerond',
+      termineeSous: 'bij je inkomsten gezet',
+      livree: 'Geleverd',
+      prixPropose: 'Voorgestelde prijs',
+      prixMontant: '€ {fee}',
+      minutes: '~{min} min',
+      grilleVelo: 'Je tarief en je fietsritten',
+      grilleMoteur: 'Je tarief en je afstanden',
+      ariaTrajet: 'Traject van de zaak naar de klant',
+      brutCourses: 'Bruto {gross} · {n} ritten',
+      brutUneCourse: 'Bruto {gross} · 1 rit',
+      bulle: '{net} · {n} ritten',
+      bulleUne: '{net} · 1 rit',
+      ariaRegles: 'Wat je houdt',
+      regleGrilleChiffre: '90 %',
+      regleGrille: 'van je tarief op elke rit',
+      reglePourboiresChiffre: '100 %',
+      reglePourboires: 'van je fooien'
+    },
     dashDriver: {
       // Staat van het dossier vóór goedkeuring (UX-audit van 15/10/2026, Dashboard.jsx).
       fileToCompleteTitle: 'Je dossier is nog niet verstuurd',
