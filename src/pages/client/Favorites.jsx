@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
@@ -8,13 +8,23 @@ import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import VisuelVide from '../../components/VisuelVide';
 import EtatVide from '../../components/EtatVide';
+import FavoriteHeart from '../../components/FavoriteHeart';
 import { useLanguage } from '../../context/LanguageContext';
 import { restaurantTypeLabel } from '../../menuCategories';
+import { mouvementReduit, vibrer } from '../../gestes';
+import '../../ecran-liste.css';
 
+/* MES FAVORIS (fondateur, 2026-10-16, proposition « Le cœur qui bat » de mockups/tous-les-ecrans.html). Le titre et le
+ * nombre de commerces sur un bandeau iris, les cartes dans la feuille blanche. Chaque carte porte le cœur des cartes de
+ * la liste : le toucher retire le favori SUR PLACE — le cœur se vide, la carte s'efface, les autres se resserrent — sans
+ * passer par la fiche du commerce. Plus rien : le vélo attend sur sa route (EtatVide scene="favoris"). */
 export default function Favorites() {
   const { token, role } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Les cartes en train de partir (cœur touché) : elles s'effacent avant d'être retirées de la liste.
+  const [sortantes, setSortantes] = useState(() => new Set());
+  const minuteurs = useRef([]);
   const toast = useToast();
   const { previewMode } = usePreviewMode();
   const { t } = useLanguage();
@@ -24,36 +34,73 @@ export default function Favorites() {
     // plutôt qu'un message d'erreur trompeur, voir MapPage.jsx pour le même filet.
     const isPreviewingRestaurant = previewMode && role === 'restaurant';
     api('/restaurants/favorites/mine', { token }).then(setRestaurants).catch((e) => { if (!isPreviewingRestaurant) toast(e.message, 'erreur'); }).finally(() => setLoading(false));
+    const enCours = minuteurs.current;
+    return () => enCours.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Le cœur touché : la carte part tout de suite (le geste répond), le serveur suit. S'il refuse, elle revient.
+  async function retirer(e, r) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (sortantes.has(r.id)) return;
+    vibrer(10);
+    setSortantes((s) => new Set(s).add(r.id));
+    const duree = mouvementReduit() ? 0 : 520;
+    const fin = new Promise((ok) => { minuteurs.current.push(setTimeout(ok, duree)); });
+    try {
+      await api(`/restaurants/${r.id}/favorite`, { method: 'DELETE', token });
+      await fin;
+      setRestaurants((liste) => liste.filter((x) => x.id !== r.id));
+    } catch (err) {
+      toast(err.message, 'erreur');
+    } finally {
+      setSortantes((s) => { const n = new Set(s); n.delete(r.id); return n; });
+    }
+  }
+
+  const n = restaurants.length;
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('favorites.title')}</h2>
-      {loading && <SkeletonCards count={4} />}
-      {/* Un écran vide, pas une phrase dans un cadre en pointillés : quand le vide occupe toute la
-          page, le rectangle hachuré se lit comme une panne. Voir le commentaire d'EtatVide. */}
-      {!loading && restaurants.length === 0 && (
-        <EtatVide
-          icone="favoris" scene="favoris" titre={t('favorites.emptyTitle')} texte={t('favorites.empty')}
-          actionVers="/restaurants" actionTexte={t('orders.emptyAction')}
-        />
-      )}
-      <div className="rest-grid">
-        {!loading && restaurants.map((r) => (
-          <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card">
-            {r.coverImageUrl
-              ? <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 100vw, 480px')} alt={r.name} className="cover-banner-sm" onError={cacherImageCassee} />
-              : <VisuelVide nom={r.name} cuisine={r.cuisine} taille="bandeau" className="cover-banner-sm" />}
-            <div className="pill-row">
-              <span className="pill teal">{r.commune}</span>
-              {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
-            </div>
-            <h3 style={{ margin: '8px 0 4px' }}>{r.name}</h3>
-            <p className="small">{r.desc || ''} {r.cuisine ? `· ${restaurantTypeLabel(r.cuisine, t)}` : ''}</p>
-            <span className="small">{t('restaurantList.dishesCount', { count: r.menu.length })}</span>
-          </Link>
-        ))}
+    <div className="ecran-bandeau fav-ecran">
+      <div className="eb-bandeau">
+        <h1 className="eb-titre">{t('favorites.title')}</h1>
+        {!loading && <p className="eb-sous" aria-live="polite">{n === 0 ? t('ecranListe.favorisAucun') : n === 1 ? t('ecranListe.favorisUn') : t('ecranListe.favorisN', { n })}</p>}
+      </div>
+      <div className="eb-feuille">
+        {loading && <SkeletonCards count={4} />}
+        {/* Un écran vide, pas une phrase dans un cadre en pointillés : quand le vide occupe toute la
+            page, le rectangle hachuré se lit comme une panne. Voir le commentaire d'EtatVide. */}
+        {!loading && n === 0 && (
+          <EtatVide
+            icone="favoris" scene="favoris" titre={t('favorites.emptyTitle')} texte={t('favorites.empty')}
+            actionVers="/restaurants" actionTexte={t('orders.emptyAction')}
+          />
+        )}
+        {!loading && n > 0 && (
+          <div className="fav-grille">
+            {restaurants.map((r) => {
+              const sort = sortantes.has(r.id);
+              return (
+                <Link key={r.id} to={`/restaurants/${r.id}`} className={`fav-carte${sort ? ' fav-carte--sort' : ''}`}>
+                  <span className="fav-photo">
+                    <VisuelVide nom={r.name} cuisine={r.cuisine} />
+                    {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 50vw, 240px')} alt="" onError={cacherImageCassee} />}
+                    <FavoriteHeart
+                      active={!sort}
+                      onClick={(e) => retirer(e, r)}
+                      title={t('ecranListe.favorisRetirer')}
+                      className={`rest-card-fav${sort ? ' fav-bat' : ''}`}
+                    />
+                  </span>
+                  <b className="fav-nom">{r.name}</b>
+                  <span className="fav-ligne">{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune].filter(Boolean).join(' · ')}</span>
+                  <span className="fav-ligne fav-discret">{[r.neighborhood, t('restaurantList.dishesCount', { count: (r.menu || []).length })].filter(Boolean).join(' · ')}</span>
+                  {r.desc && <span className="fav-desc">{r.desc}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

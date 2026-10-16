@@ -6663,6 +6663,15 @@ export default {
       glutenFree: 'Glutenvrij',
       declaredByBusiness: 'Aangegeven door de zaak'
     },
+    ecranListe: {
+      cuisinesAria: 'Soorten keuken',
+      favorisUn: '1 zaak',
+      favorisN: '{n} zaken',
+      favorisAucun: 'Nog geen enkele',
+      favorisRetirer: 'Uit favorieten verwijderen',
+      carteVoir: 'Bekijken',
+      carteFermer: 'Sluiten'
+    },
     restaurantList: {
       sectionFreeDelivery: 'Gratis levering',
       sectionDeliveryFrom: 'Levering vanaf {amount}',

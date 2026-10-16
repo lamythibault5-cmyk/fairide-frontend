@@ -13,6 +13,12 @@ import { iconeHtml } from '../iconeHtml';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
+// Les icônes des épingles, rendues ICI, au chargement du module : iconeHtml rend avec flushSync, que React refuse quand on
+// l'appelle depuis un effet en cours de validation (« flushSync was called from inside a lifecycle method ») — l'icône
+// sortait vide, et restait vide (gardée en cache). Les épingles s'affichaient sans leur dessin (relevé le 2026-10-16).
+for (const nom of new Set(['restaurants', ...RESTAURANT_TYPES.map((t) => t.icone)])) iconeHtml(nom, 16);
+iconeHtml('maison', 15);
+
 function cuisineEmoji(cuisine) {
   return RESTAURANT_TYPES.find((t) => t.value === cuisine)?.icone || 'restaurants'; // un nom d'icône (Icone.jsx)
 }
@@ -30,14 +36,16 @@ function pinIcon(cuisine, active) {
 function homeIcon() {
   return L.divIcon({
     className: 'map-pin-wrap',
-    html: '<div class="map-pin map-pin-home"><span class="map-pin-emoji"></span></div>',
+    html: `<div class="map-pin map-pin-home"><span class="map-pin-emoji">${iconeHtml('maison', 15)}</span></div>`,
     iconSize: [34, 34],
     iconAnchor: [17, 32],
     popupAnchor: [0, -30]
   });
 }
 
-export default function RestaurantsMap({ restaurants, height = 420, singleMarker = false, userLocation = null, cadrerSurCommerces = false }) {
+// `renderFiche(commerce, fermer)` : la page dessine elle-même la fiche du commerce touché (la carte plein écran, MapPage.jsx :
+// une fiche compacte qui monte au-dessus des onglets). Sans elle, la fiche détaillée ci-dessous.
+export default function RestaurantsMap({ restaurants, height = 420, singleMarker = false, userLocation = null, cadrerSurCommerces = false, renderFiche = null }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -133,7 +141,8 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
   return (
     <div style={{ position: 'relative', height: pleineHauteur ? '100%' : undefined }}>
       <div ref={containerRef} style={{ height, borderRadius: pleineHauteur ? 0 : 'var(--radius)', overflow: 'hidden' }} />
-      {selected && (
+      {selected && renderFiche && renderFiche(selected, () => setSelected(null))}
+      {selected && !renderFiche && (
         <div className="map-detail-card">
           <button className="map-detail-close" onClick={() => setSelected(null)} aria-label={t('map.backToMapAria')}>✕</button>
           {selected.coverImageUrl && <img loading="lazy" src={selected.coverImageUrl} alt={selected.name} className="map-detail-cover" />}

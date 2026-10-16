@@ -6,6 +6,10 @@ import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
 import { RESTAURANT_TYPES, restaurantTypeLabel, haversineDistanceKm } from '../../menuCategories';
 import Icone from '../../components/Icone';
+import VisuelVide from '../../components/VisuelVide';
+import CertifiedBadge from '../../components/CertifiedBadge';
+import { cacherImageCassee } from '../../images';
+import '../../ecran-liste.css';
 
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 
@@ -112,6 +116,34 @@ export default function MapPage() {
   const basculer = (nom) => setPanneau((p) => (p === nom ? null : nom));
   const LIBELLE_TRI = { recommande: t('mapClient.sortRecommended'), note: t('mapClient.sortRating'), distance: t('mapClient.sortDistance') };
 
+  /* LA FICHE DU COMMERCE TOUCHÉ (fondateur, 2026-10-16, proposition « Verre sur le plan » de mockups/tous-les-ecrans.html).
+   * Plus la grande bulle à photo et deux boutons : une fiche compacte qui monte au-dessus des onglets — en verre dans
+   * l'app, blanche à filet sur le site —, la photo, le nom, « cuisine · commune · quartier · distance », la note (seulement
+   * s'il y a de vrais avis, sinon « Nouveau ») et la promo, l'adresse, et « Voir ». La croix (ou un toucher sur le plan)
+   * la ferme : c'était « Retour à la carte ». */
+  const fiche = (r, fermer) => (
+    <div className="carte-fiche" key={r.id}>
+      <span className="carte-fiche-photo">
+        <VisuelVide nom={r.name} cuisine={r.cuisine} />
+        {r.coverImageUrl && <img src={r.coverImageUrl} alt="" loading="lazy" onError={cacherImageCassee} />}
+      </span>
+      <span className="carte-fiche-texte">
+        <b className="carte-fiche-nom"><span>{r.name}</span>{r.certified && <CertifiedBadge size={14} />}</b>
+        <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.neighborhood, r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ')}</small>
+        <small className="carte-fiche-infos">
+          {/* Pas d'étoile sans avis : une note que personne n'a donnée n'est pas un avis (CDE VI.100). */}
+          {r.reviewCount > 0
+            ? <span><span aria-hidden="true">★</span> {Number(r.rating).toFixed(1)} {t('map.reviewsCount', { count: r.reviewCount })}</span>
+            : <span className="carte-fiche-nouveau">{t('restaurantList.newBadge')}</span>}
+          {r.hasPromo && <span className="carte-fiche-promo">{t('restoMap.promo')}</span>}
+        </small>
+        {r.address && <small className="carte-fiche-adresse">{r.address}</small>}
+      </span>
+      <Link to={`/restaurants/${r.id}`} className="btn-gold carte-fiche-voir">{t('ecranListe.carteVoir')}</Link>
+      <button type="button" className="carte-fiche-fermer" onClick={fermer} aria-label={t('map.backToMapAria')}><Icone nom="croix" taille={14} /></button>
+    </div>
+  );
+
   return (
     <div className="carte-page carte-plein-ecran">
       <div className="carte-plein">
@@ -121,6 +153,7 @@ export default function MapPage() {
             height="100%"
             userLocation={position ? { ...position, address: user.address } : null}
             cadrerSurCommerces={!!recherche.trim()}
+            renderFiche={fiche}
           />
         </Suspense>
 

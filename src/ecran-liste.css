@@ -1,0 +1,295 @@
+/* =====================================================================================================================
+   LOT « LISTE » (fondateur, 2026-10-16, mockups/tous-les-ecrans.html) : le haut de la liste des commerces (proposition A),
+   la carte et les favoris. Importé par RestaurantList.jsx, MapPage.jsx et Favorites.jsx.
+
+   Règles de la marque : fonds blancs ou iris ; lime seulement en aplat sous de l'encre, ou sur l'iris. Le VERRE (flou,
+   reflets, ombres douces) n'existe que dans l'app (html.appli : l'app native et le site ajouté à l'écran d'accueil),
+   comme la barre d'onglets : sur le site, la même chose en blanc plein à filet, sans ombre.
+   ===================================================================================================================== */
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   1 · LE HAUT DE LA LISTE (TeteListe.jsx)
+   --------------------------------------------------------------------------------------------------------------------- */
+.liste-tete {
+  /* Ce que .dashboard-main met autour de la page : le bandeau l'annule pour aller bord à bord, jusque sous l'encoche. */
+  --lt-mh: 24px;
+  --lt-mg: 28px;
+  /* Hauteur du bandeau sans l'encoche : fixe, pour que le repli soit une constante (voir --replie). */
+  --lt-hb: 118px;
+  margin-bottom: 14px;
+}
+@media (max-width: 900px) {
+  .liste-tete { --lt-mh: calc(16px + env(safe-area-inset-top)); --lt-mg: 16px; }
+}
+.liste-tete--collante { position: sticky; top: var(--lt-dessus, 0px); z-index: 30; }
+.liste-tete--bandeau {
+  margin: calc(-1 * var(--lt-mh)) calc(-1 * var(--lt-mg)) 14px;
+  pointer-events: none;
+  transition: transform .45s cubic-bezier(.34, 1.25, .64, 1);
+}
+.liste-tete--bandeau > * { pointer-events: auto; }
+/* Replié : tout l'en-tête remonte de la hauteur du bandeau ; la bande des cuisines s'arrête à 10 px du haut (sous
+   l'encoche). 22 = 10 px de marge + les 12 px dont la bande mord sur la lèvre du bandeau. */
+.liste-tete--bandeau.liste-tete--replie { transform: translateY(calc(22px - var(--lt-hb))); }
+/* …et le bandeau, lui, part un peu plus haut : sa lèvre (et les coins iris autour) ne dépasse plus au-dessus de la bande. */
+.lt-bandeau { transition: transform .45s cubic-bezier(.34, 1.25, .64, 1); }
+.liste-tete--replie .lt-bandeau { transform: translateY(calc(-40px - env(safe-area-inset-top))); }
+
+.lt-bandeau {
+  position: relative; box-sizing: border-box;
+  height: calc(var(--lt-hb) + env(safe-area-inset-top));
+  padding: calc(12px + env(safe-area-inset-top)) 16px 0;
+  background: var(--iris); color: #fff;
+}
+/* La lèvre de la feuille blanche, comme le suivi de commande et les écrans de bienvenue. */
+.lt-bandeau::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 23px;
+  background: #fff; border-radius: 24px 24px 0 0;
+}
+.lt-adresse {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 2px;
+  background: none; border: 0; border-radius: 14px; color: #fff; text-align: left; font: inherit;
+}
+.lt-adresse:hover:not(:disabled) { filter: none; background: rgba(255, 255, 255, .06); }
+.lt-adresse:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.lt-adresse-icone {
+  flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid rgba(255, 255, 255, .35);
+}
+.lt-adresse-texte { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; line-height: 1.25; }
+.lt-adresse-intitule { font-size: 12.5px; color: rgba(255, 255, 255, .75); }
+/* Une adresse longue se coupe : elle ne pousse pas le chevron hors de l'écran, et le bandeau garde sa hauteur. */
+.lt-adresse-valeur { font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-chevron {
+  flex: none; width: 9px; height: 9px; margin: -4px 6px 0 0;
+  border-right: 2.5px solid #fff; border-bottom: 2.5px solid #fff; transform: rotate(45deg);
+}
+/* La route en pointillés et le vélo lime : il avance quand on fait défiler la page (TeteListe.jsx). */
+.lt-route { position: relative; height: 26px; margin-top: 4px; }
+.lt-route::before {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 4px; height: 3px; border-radius: 2px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .4) 0 8px, transparent 8px 16px);
+}
+.lt-velo { position: absolute; bottom: 7px; left: 8%; width: 30px; margin-left: -15px; line-height: 0; color: var(--lime); transition: left .3s ease-out; }
+.lt-velo svg { display: block; transform-origin: 50% 100%; }
+.lt-velo.roule svg { animation: lt-pedale .5s ease-in-out infinite; }
+@keyframes lt-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
+
+/* La bande des cuisines. Sur le site : blanche à filet, la lentille est une pastille iris pleine. */
+.lt-puces { position: relative; border-radius: 30px; background: #fff; border: 1px solid var(--line); }
+.liste-tete--bandeau .lt-puces { margin: -12px 10px 0; }
+.lt-defile { overflow-x: auto; overflow-y: hidden; border-radius: 30px; scrollbar-width: none; overscroll-behavior-x: contain; }
+.lt-defile::-webkit-scrollbar { display: none; }
+.lt-piste { position: relative; display: flex; align-items: center; gap: 2px; width: max-content; padding: 5px; }
+.lt-lentille {
+  position: absolute; top: 0; left: 0; z-index: 0; border-radius: 22px; pointer-events: none; opacity: 0;
+  background: var(--iris);
+  transition: transform .42s cubic-bezier(.34, 1.45, .64, 1), width .3s cubic-bezier(.34, 1.45, .64, 1), opacity .15s, scale .3s cubic-bezier(.34, 1.45, .64, 1), box-shadow .2s;
+}
+.lt-puce {
+  position: relative; z-index: 1; flex: none; display: inline-flex; align-items: center; gap: 7px;
+  min-height: 44px; padding: 9px 15px; border: 0; border-radius: 22px; background: transparent;
+  color: var(--ink); font-size: 13px; font-weight: 500; white-space: nowrap; touch-action: pan-x;
+  -webkit-user-drag: none; transition: color .15s, background .15s;
+}
+.lt-puce:hover:not(:disabled) { filter: none; }
+.lt-puce svg { flex: none; }
+.lt-puce[data-cuisine].on { color: #fff; }
+/* Bio, Vegan, Halal, Sans gluten : des bascules, allumées en iris plein — la lentille, elle, dit la cuisine. */
+.lt-puce[data-regime].on { background: var(--iris); color: #fff; }
+.lt-trait { flex: none; width: 1px; height: 22px; margin: 0 6px; background: var(--line); }
+
+/* Dans l'app : le verre de la barre d'onglets (styles.css, html.appli .dashboard-nav), version 2 de
+   mockups/barre-onglets-verre.html. Exception voulue à la règle 2 (flou, reflets, ombre), limitée à l'app. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html.appli .lt-puces {
+    background: rgba(255, 255, 255, .22); border-color: rgba(255, 255, 255, .6);
+    -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
+      0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
+  }
+  html.appli .lt-lentille {
+    background: rgba(255, 255, 255, .42); border: 1px solid rgba(255, 255, 255, .75);
+    -webkit-backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08); backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08);
+    box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, .95), inset 4px 0 7px -2px rgba(255, 70, 170, .32), inset -4px 0 7px -2px rgba(40, 190, 255, .36),
+      inset 0 -3px 6px -2px rgba(255, 220, 90, .28), 0 2px 10px rgba(20, 18, 31, .12);
+  }
+  /* Réfraction (Chromium seulement : lentillePuces.js pose la classe et les filtres). */
+  html.appli .lt-puces--refraction {
+    -webkit-backdrop-filter: var(--verre-bande) blur(2px) saturate(190%) brightness(1.06); backdrop-filter: var(--verre-bande) blur(2px) saturate(190%) brightness(1.06);
+  }
+  html.appli .lt-puces--refraction .lt-lentille {
+    -webkit-backdrop-filter: var(--verre-lentille) saturate(230%) brightness(1.08); backdrop-filter: var(--verre-lentille) saturate(230%) brightness(1.08);
+  }
+  /* Sur le verre : encre et halo blanc léger, sinon les libellés disparaissent sur une photo qui passe dessous. */
+  html.appli .lt-puce { color: rgba(20, 18, 31, .86); text-shadow: 0 0 8px rgba(255, 255, 255, .75); }
+  html.appli .lt-puce svg { filter: drop-shadow(0 0 4px rgba(255, 255, 255, .6)); }
+  html.appli .lt-puce[data-cuisine].on, html.appli .lt-puce--survol { color: var(--iris); font-weight: 600; touch-action: none; }
+  html.appli .lt-puce[data-regime].on { color: #fff; text-shadow: none; }
+  html.appli .lt-puce[data-regime].on svg { filter: none; }
+  html.appli .lt-trait { background: rgba(20, 18, 31, .14); }
+  /* L'appui : la lentille grossit et ses bords s'irisent davantage ; en glissant, elle suit le doigt sans retard. */
+  html.appli .lt-puces--appui .lt-lentille {
+    scale: 1.08 1.14;
+    box-shadow: inset 0 1.5px 1px #fff, inset 6px 0 9px -2px rgba(255, 70, 170, .45), inset -6px 0 9px -2px rgba(40, 190, 255, .5),
+      inset 0 -4px 8px -2px rgba(255, 220, 90, .38), 0 8px 24px rgba(20, 18, 31, .2);
+  }
+  html.appli .lt-puces--glisse .lt-lentille { transition: transform .05s linear, width .3s cubic-bezier(.34, 1.45, .64, 1), scale .3s cubic-bezier(.34, 1.45, .64, 1), box-shadow .2s; }
+  html.appli .lt-puces--appui .lt-puce:active { transform: none; }
+  /* Changer de cuisine : la lentille part comme une goutte (s'étire, puis reprend sa forme). */
+  html.appli .lt-lentille--etire { animation: lt-goutte .45s cubic-bezier(.34, 1.45, .64, 1); }
+}
+@keyframes lt-goutte { 0% { scale: 1 1; } 35% { scale: 1.3 .86; } 70% { scale: .96 1.05; } 100% { scale: 1 1; } }
+@media (prefers-reduced-transparency: reduce) {
+  html.appli .lt-puces { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); }
+  html.appli .lt-lentille { background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html.appli .lt-puce[data-cuisine].on { color: #fff; text-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .liste-tete--bandeau, .lt-velo, .lt-lentille { transition: none !important; }
+  .lt-velo.roule svg, .lt-lentille--etire { animation: none !important; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   2 · LA CARTE (MapPage.jsx) — proposition « Verre sur le plan » : épingles iris rondes qui grossissent au toucher, la
+   maison dans un rond lime, la fiche du commerce qui monte au-dessus des onglets. Dans l'app, la recherche, les filtres,
+   le compteur, le zoom et la fiche sont en verre ; sur le site, ils restent blancs.
+   Ce fichier passe AVANT styles.css (importé par RestaurantList, chargé avec App) : les règles qui reprennent une règle de
+   styles.css sont écrites plus précises qu'elle, jamais à égalité.
+   --------------------------------------------------------------------------------------------------------------------- */
+.carte-page .map-pin.map-pin {
+  width: 32px; height: 32px; border-radius: 50%; transform: none;
+  background: var(--iris); color: #fff; border: 2.5px solid #fff;
+}
+.carte-page .map-pin .map-pin-emoji { transform: none; }
+/* Touchée : elle grossit, monte un peu, et son icône passe au lime (sur l'iris). */
+.carte-page .map-pin.map-pin.active { background: var(--iris); color: var(--lime); transform: scale(1.32) translateY(-4px); animation: carte-epingle .35s cubic-bezier(.3, 1.8, .5, 1) both; }
+@keyframes carte-epingle { from { transform: none; } to { transform: scale(1.32) translateY(-4px); } }
+.carte-page .leaflet-marker-icon:has(.map-pin.active) { z-index: 900 !important; }
+/* Chez toi : un rond lime cerclé d'iris, la maison à l'encre. */
+.carte-page .map-pin.map-pin.map-pin-home { background: var(--lime); color: var(--ink); border: 3px solid var(--iris); }
+
+/* La fiche du commerce touché. */
+.carte-fiche {
+  position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 600; max-width: 520px; margin: 0 auto;
+  display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 24px;
+  background: #fff; border: 1px solid var(--line); color: var(--ink);
+  animation: carte-fiche-monte .45s cubic-bezier(.34, 1.45, .64, 1) both;
+}
+@keyframes carte-fiche-monte { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 900px) {
+  .carte-plein-ecran .carte-fiche { bottom: calc(var(--hauteur-onglets) + 12px + env(safe-area-inset-bottom)); }
+}
+@media (min-width: 901px) { .carte-fiche { left: 16px; right: auto; width: 420px; } }
+.carte-fiche-photo { position: relative; flex: none; width: 64px; height: 64px; border-radius: 14px; overflow: hidden; }
+.carte-fiche-photo img { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: cover; }
+.carte-fiche-photo .visuel-vide-initiale { font-size: 30px; }
+.carte-fiche-photo .visuel-vide-emoji { display: none; }
+.carte-fiche-texte { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 8px; }
+.carte-fiche-nom { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 15px; font-weight: 700; }
+.carte-fiche-nom > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.carte-fiche-texte small { display: block; font-size: 12px; line-height: 1.35; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.carte-fiche-nouveau { color: var(--iris); font-weight: 700; }
+.carte-fiche-promo { margin-left: 6px; padding: 1px 7px; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); font-weight: 700; }
+.carte-fiche a.carte-fiche-voir { flex: none; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 700; text-decoration: none; }
+/* La croix (« Retour à la carte ») : un rond de 28 px, mais 44 px à toucher, posé sur le coin de la fiche. */
+.carte-fiche button.carte-fiche-fermer.carte-fiche-fermer {
+  position: absolute; top: -16px; right: -10px; width: 44px; height: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--ink); display: grid; place-items: center;
+}
+.carte-fiche-fermer::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: #fff; border: 1px solid var(--line); }
+.carte-fiche-fermer svg { position: relative; }
+/* Le zoom de Leaflet vit en bas à droite : il remonte au-dessus de la fiche quand elle est ouverte. */
+.carte-plein:has(.carte-fiche) .leaflet-top.leaflet-left { bottom: 210px; }
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html.appli .carte-page .carte-recherche, html.appli .carte-page .carte-pastilles .cuisine-chip, html.appli .carte-page .carte-compte,
+  html.appli .carte-page .carte-reinit, html.appli .carte-page .carte-panneau, html.appli .carte-page .leaflet-control-zoom.leaflet-bar,
+  html.appli .carte-page .carte-resultat, html.appli .carte-page .carte-fiche, html.appli .carte-page .carte-fiche-fermer::before {
+    background: rgba(255, 255, 255, .3); border: 1px solid rgba(255, 255, 255, .6); color: rgba(20, 18, 31, .9);
+    -webkit-backdrop-filter: blur(6px) saturate(190%) brightness(1.06); backdrop-filter: blur(6px) saturate(190%) brightness(1.06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
+      0 8px 24px rgba(20, 18, 31, .14), 0 1px 3px rgba(20, 18, 31, .08);
+    text-shadow: 0 0 8px rgba(255, 255, 255, .75);
+  }
+  /* La recherche et la fiche ont les bords irisés de la lentille ; la fiche est un peu plus blanche pour se lire sur le plan. */
+  html.appli .carte-page .carte-recherche, html.appli .carte-page .carte-fiche {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
+      inset 5px 0 8px -4px rgba(255, 70, 170, .22), inset -5px 0 8px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .18), 0 1px 3px rgba(20, 18, 31, .08);
+  }
+  /* Les pastilles défilent de côté : leur conteneur rogne ce qui dépasse, l'ombre comprise (un rectangle gris se
+     dessinait autour de la rangée). De la place pour l'ombre, rendue aussitôt par une marge négative, et une ombre courte. */
+  html.appli .carte-page .carte-pastilles { margin: -6px -12px -12px; padding: 6px 12px 12px; max-width: none; align-self: stretch; }
+  html.appli .carte-page .carte-pastilles .cuisine-chip { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 0 14px rgba(255, 255, 255, .25), 0 3px 8px rgba(20, 18, 31, .14); }
+  html.appli .carte-page .carte-recherche { height: 50px; padding: 0 16px; }
+  html.appli .carte-page .carte-recherche input { color: var(--ink); }
+  html.appli .carte-page .carte-fiche, html.appli .carte-page .carte-panneau { background: rgba(255, 255, 255, .55); }
+  html.appli .carte-page .carte-pastilles .cuisine-chip svg, html.appli .carte-page .carte-recherche svg { filter: drop-shadow(0 0 4px rgba(255, 255, 255, .6)); }
+  html.appli .carte-page .carte-pastilles .cuisine-chip.active, html.appli .carte-page .carte-panneau .cuisine-chip.active {
+    background: var(--iris); border-color: var(--iris); color: #fff; text-shadow: none;
+  }
+  html.appli .carte-page .carte-pastilles .cuisine-chip.active svg { filter: none; }
+  html.appli .carte-page .carte-panneau .cuisine-chip { background: rgba(255, 255, 255, .5); border-color: rgba(255, 255, 255, .7); }
+  html.appli .carte-page .leaflet-control-zoom.leaflet-bar a { background: transparent; color: var(--ink); border-bottom-color: rgba(255, 255, 255, .6); }
+  html.appli .carte-page .carte-fiche .btn-gold, html.appli .carte-page .carte-fiche-nouveau, html.appli .carte-page .carte-fiche-promo { text-shadow: none; }
+  html.appli .carte-page .carte-fiche-fermer::before { background: rgba(255, 255, 255, .6); }
+  /* Les épingles et la maison se décollent du plan (ombre douce : l'app seulement) ; la maison respire. */
+  html.appli .carte-page .map-pin.map-pin { box-shadow: 0 3px 8px rgba(20, 18, 31, .25); }
+  html.appli .carte-page .map-pin.map-pin.map-pin-home { animation: carte-pouls 2.2s ease-out infinite; }
+}
+@keyframes carte-pouls { 0%, 100% { box-shadow: 0 0 0 0 rgba(200, 240, 60, .7), 0 2px 6px rgba(20, 18, 31, .25); } 60% { box-shadow: 0 0 0 10px rgba(200, 240, 60, 0), 0 2px 6px rgba(20, 18, 31, .25); } }
+@media (prefers-reduced-transparency: reduce) {
+  html.appli .carte-page .carte-recherche, html.appli .carte-page .carte-pastilles .cuisine-chip, html.appli .carte-page .carte-compte,
+  html.appli .carte-page .carte-reinit, html.appli .carte-page .carte-panneau, html.appli .carte-page .carte-resultat, html.appli .carte-page .carte-fiche {
+    background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .carte-fiche, .carte-page .map-pin.map-pin.active, html.appli .carte-page .map-pin.map-pin.map-pin-home { animation: none !important; }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   3 · LE BANDEAU IRIS D'UN ÉCRAN PLEIN (Favorites.jsx) : le titre sur l'iris, bord à bord jusque sous l'encoche, puis la
+   feuille blanche aux coins arrondis qui remonte dessus — la famille des écrans de bienvenue et du suivi de commande.
+   --------------------------------------------------------------------------------------------------------------------- */
+.ecran-bandeau { --eb-mh: 24px; --eb-mg: 28px; }
+@media (max-width: 900px) { .ecran-bandeau { --eb-mh: calc(16px + env(safe-area-inset-top)); --eb-mg: 16px; } }
+.eb-bandeau {
+  margin: calc(-1 * var(--eb-mh)) calc(-1 * var(--eb-mg)) 0;
+  padding: calc(20px + env(safe-area-inset-top)) calc(var(--eb-mg) + 4px) 46px;
+  background: var(--iris); color: #fff;
+}
+.eb-titre { font-family: var(--font-titre); font-size: 28px; line-height: 1.1; font-weight: 700; letter-spacing: 0; margin: 4px 0 6px; color: #fff; }
+.eb-sous { margin: 0; font-size: 14.5px; line-height: 1.4; color: rgba(255, 255, 255, .82); }
+.eb-feuille {
+  position: relative; margin: -24px calc(-1 * var(--eb-mg)) 0; padding: 20px var(--eb-mg) 0;
+  background: #fff; border-radius: 26px 26px 0 0;
+  animation: eb-monte .45s cubic-bezier(.34, 1.45, .64, 1) backwards;
+}
+@keyframes eb-monte { from { transform: translateY(36px); opacity: .5; } to { transform: none; opacity: 1; } }
+.eb-feuille .etat-vide--scene { padding-top: 8px; }
+
+/* Les favoris : deux colonnes, la photo, le cœur des cartes de la liste, et trois lignes. */
+.fav-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+@media (min-width: 640px) { .fav-grille { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
+.fav-carte {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0; color: var(--ink); text-decoration: none;
+  transition: transform .3s cubic-bezier(.34, 1.45, .64, 1), opacity .3s;
+}
+.fav-carte:active { transform: scale(.98); }
+.fav-carte--sort { transform: scale(.6); opacity: 0; pointer-events: none; transition-delay: .2s; }
+.fav-photo { position: relative; display: block; height: 112px; margin-bottom: 6px; border-radius: 14px; overflow: hidden; }
+.fav-photo img { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: cover; }
+.fav-photo .visuel-vide-initiale { font-size: 52px; }
+.fav-photo .favorite-heart { z-index: 2; }
+.fav-nom { font-size: 15px; font-weight: 700; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fav-ligne { font-size: 13px; line-height: 1.35; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fav-discret { color: var(--ink-faint); }
+.fav-desc { font-size: 12.5px; line-height: 1.35; color: var(--ink-faint); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* Le cœur qu'on vient de toucher bat une fois en se vidant, puis la carte s'efface. */
+.fav-carte .favorite-heart.fav-bat svg { animation: fav-bat .3s cubic-bezier(.3, 1.8, .5, 1); }
+@keyframes fav-bat { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 70% { transform: scale(.9); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .eb-feuille, .fav-carte .favorite-heart.fav-bat svg { animation: none; }
+  .fav-carte { transition: none; }
+}
