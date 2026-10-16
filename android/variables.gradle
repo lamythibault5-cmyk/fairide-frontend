@@ -1,5 +1,6 @@
 ext {
-    minSdkVersion = 23
+    // 24 (Android 7.0) : exigé par la protection automatique de Google Play (anti-copie modifiée de l'application).
+    minSdkVersion = 24
     // 36 : exigé par androidx.browser 1.9.0 (connexion Apple/Google native).
     compileSdkVersion = 36
     // 36 : exigé par Google Play pour toute nouvelle application ou mise à jour depuis le 31/08/2026.
