@@ -28,7 +28,10 @@ const SEUIL_REPLI_PX = 70;
 // De quoi le titre ne colle pas au bord inférieur de la barre au moment où il bascule.
 const MARGE_SEUIL_PX = 8;
 
-export default function CategoryQuickNav({ categories }) {
+// `verre` (fiche d'un commerce dans l'app, 2026-10-16) : la bande devient une bande de verre et la section lue est
+// marquée par une LENTILLE qui glisse d'une section à l'autre au défilement — comme celle de la barre d'onglets. Le geste
+// (appuyer, glisser la lentille) vit dans bandeSectionsVerre.js, chargé à la demande dans l'app seulement.
+export default function CategoryQuickNav({ categories, verre = false }) {
   const { t, language } = useLanguage();
   const [active, setActive] = useState(categories[0]?.id);
   const categoriesRef = useRef(categories);
@@ -36,6 +39,8 @@ export default function CategoryQuickNav({ categories }) {
   const buttonRefs = useRef(new Map());
   const barreRef = useRef(null);
   const rangeeRef = useRef(null);
+  const lentilleRef = useRef(null);
+  const activeAvant = useRef(null);
   // Pendant le défilement lancé par un clic, le suivi est suspendu : la barre ne s'allume pas sur chaque section
   // traversée, elle reste sur celle qu'on a demandée (voir jumpTo).
   const verrou = useRef(0);
@@ -96,6 +101,49 @@ export default function CategoryQuickNav({ categories }) {
     rangee.scrollTo({ left: Math.max(0, cible), behavior: defilement() });
   }, [active]);
 
+  // La lentille se pose sur la section allumée : sa largeur, sa hauteur, sa place dans la rangée (qui défile de côté —
+  // offsetLeft et non la position à l'écran). Reposée aussi quand la bande change de taille (police chargée, rotation).
+  useEffect(() => {
+    if (!verre) return undefined;
+    const lentille = lentilleRef.current;
+    const rangee = rangeeRef.current;
+    if (!lentille || !rangee) return undefined;
+    function poser() {
+      const btn = buttonRefs.current.get(active);
+      if (!btn) return;
+      const repos = `translateX(${btn.offsetLeft}px)`;
+      lentille.dataset.repos = repos;
+      lentille.style.transform = repos;
+      lentille.style.width = `${btn.offsetWidth}px`;
+      lentille.style.height = `${btn.offsetHeight}px`;
+      lentille.style.top = `${btn.offsetTop}px`;
+    }
+    poser();
+    // La goutte qui s'étire en changeant de section (pas au premier affichage ; coupée si le système réduit les animations).
+    if (activeAvant.current !== null && activeAvant.current !== active) {
+      lentille.classList.remove('quicknav-lentille--etire');
+      void lentille.offsetWidth;
+      lentille.classList.add('quicknav-lentille--etire');
+    }
+    activeAvant.current = active;
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const obs = new ResizeObserver(poser);
+    obs.observe(rangee);
+    return () => obs.disconnect();
+  }, [active, verre, categories]);
+
+  // Le geste de la lentille : chargé seulement quand la bande est en verre (l'app), jamais sur le site.
+  useEffect(() => {
+    if (!verre || categories.length < 2) return undefined;
+    let debrancher = null;
+    let annule = false;
+    import('../bandeSectionsVerre').then(({ brancherBandeSections }) => {
+      if (annule || !barreRef.current || !rangeeRef.current || !lentilleRef.current) return;
+      debrancher = brancherBandeSections(barreRef.current, rangeeRef.current, lentilleRef.current);
+    }).catch(() => { /* sans le geste, la bande reste une rangée de boutons */ });
+    return () => { annule = true; debrancher?.(); };
+  }, [verre, categories.length]);
+
   function jumpTo(id) {
     const el = document.getElementById(`menu-cat-${id}`);
     if (!el) return;
@@ -112,20 +160,22 @@ export default function CategoryQuickNav({ categories }) {
   if (categories.length < 2) return null;
 
   return (
-    <div className="category-quicknav" ref={barreRef}>
+    <nav className={`category-quicknav${verre ? ' category-quicknav--verre' : ''}`} ref={barreRef} aria-label={t('ecranFiche.sections')}>
       <div className="category-quicknav-sections" ref={rangeeRef}>
+        {verre && <span className="quicknav-lentille" ref={lentilleRef} aria-hidden="true" />}
         {categories.map((c) => (
           <button
             key={c.id}
             type="button"
             ref={(el) => { if (el) buttonRefs.current.set(c.id, el); else buttonRefs.current.delete(c.id); }}
             className={active === c.id ? 'active' : ''}
+            aria-current={active === c.id ? 'true' : undefined}
             onClick={() => jumpTo(c.id)}
           >
             {sectionLabel(c, language, t)}
           </button>
         ))}
       </div>
-    </div>
+    </nav>
   );
 }

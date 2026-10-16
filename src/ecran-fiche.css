@@ -1,0 +1,211 @@
+/* =====================================================================================================================
+   FICHE D'UN COMMERCE DANS L'APP — la feuille qui monte sur la photo (fondateur, 2026-10-16 ; « Proposition » de l'écran
+   « Fiche d'un commerce » dans mockups/tous-les-ecrans.html). Importé par RestaurantMenu.jsx.
+
+   Ce qui change, dans l'app seulement (.fiche-appli, posé quand experienceApp()) :
+   - la photo de couverture prend le haut de l'écran, bord à bord, sous la barre d'état ;
+   - la page monte dessus en FEUILLE blanche aux coins arrondis, le logo posé à cheval ;
+   - la croix, la recherche et le cœur flottent en RONDS IRIS à filet blanc par-dessus la photo puis la page. Pourquoi
+     l'iris : la maquette les voulait en verre blanc avec une icône blanche, illisibles sur une photo claire (retour du
+     fondateur). L'iris plein garde l'icône blanche lisible partout ; le filet blanc le détache d'une photo sombre et du
+     visuel de marque iris qui remplace une photo absente ; sur la page blanche, l'iris tranche. Le lime aurait ajouté
+     trois pointes lime à un écran qui en a déjà (compteur des plats, compte du panier) ;
+   - les sections passent dans une bande de verre où une lentille suit la section qu'on lit (CategoryQuickNav `verre`,
+     le geste dans bandeSectionsVerre.js), comme la barre d'onglets ;
+   - Livraison / À emporter : un pouce iris qui glisse, les frais à droite, sur une rangée entre deux filets.
+   Le verre, le flou et les ombres douces restent sous html.appli (règle 2 de l'identité : exception de l'app). Le site
+   garde sa mise en page : les enveloppes ajoutées pour l'app y sont `display: contents`.
+   ===================================================================================================================== */
+
+/* Le site : rien ne change. */
+.fiche-feuille, .fiche-faits { display: contents; }
+.fiche-modes-pouce, .quicknav-lentille { display: none; }
+
+/* ---------- Les repères : ce qui colle en haut, et de combien la photo remonte ----------
+   --fiche-remonte : la marge du haut de la page que la photo et les ronds reprennent pour toucher le bord de l'écran.
+   --fiche-haut    : où collent les ronds (et, 64px plus bas, la bande des sections) : sous la barre d'état connecté ;
+                     sous la barre d'app sans compte (mesurée par RestaurantMenu.jsx, 57px en attendant).
+   --fiche-statut  : la hauteur de barre d'état que la photo couvre en plus (connecté seulement). */
+.fiche-appli { --fiche-remonte: 16px; --fiche-haut: 57px; --fiche-statut: 0px; --fiche-g: var(--gouttiere, 16px); }
+.dashboard-main .fiche-appli { --fiche-remonte: calc(16px + env(safe-area-inset-top, 0px)); --fiche-haut: env(safe-area-inset-top, 0px); --fiche-statut: env(safe-area-inset-top, 0px); }
+@media (min-width: 901px) {
+  .dashboard-main .fiche-appli { --fiche-remonte: 24px; --fiche-haut: 0px; --fiche-statut: 0px; }
+}
+
+/* ---------- Les ronds flottants (EnteteFlux `flottant`) ----------
+   Le bandeau ne prend plus de hauteur : il colle en haut et porte ses boutons en position absolue. */
+.fiche-page.fiche-appli .flux-entete--flottant {
+  position: sticky; top: var(--fiche-haut); z-index: 42;
+  display: block; height: 0; min-height: 0; padding: 0; margin: calc(-1 * var(--fiche-remonte)) 0 0; background: none;
+}
+.fiche-appli .flux-entete--flottant > .flux-bouton { position: absolute; top: 12px; left: calc(12px - var(--fiche-g)); }
+.fiche-appli .flux-entete--flottant > .flux-actions { position: absolute; top: 12px; right: calc(12px - var(--fiche-g)); margin: 0; gap: 8px; }
+/* Les ronds : iris plein, icône blanche, filet blanc. */
+.fiche-appli .flux-entete--flottant .flux-bouton,
+.fiche-appli .favorite-heart--rond {
+  width: 44px; height: 44px; min-height: 0; padding: 0; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: 2px solid #fff; background: var(--iris); color: #fff;
+  cursor: pointer; transition: transform .12s ease, background .15s ease;
+}
+.fiche-appli .flux-entete--flottant .flux-bouton:hover, .fiche-appli .favorite-heart--rond:hover { background: var(--iris-deep); }
+.fiche-appli .flux-entete--flottant .flux-bouton:active, .fiche-appli .favorite-heart--rond:active { transform: scale(.9); }
+.fiche-appli .flux-entete--flottant .flux-bouton:focus-visible, .fiche-appli .favorite-heart--rond:focus-visible { outline: 3px solid var(--lime); outline-offset: 1px; }
+.fiche-appli .flux-entete--flottant .flux-bouton--fermer { font-size: 28px; font-weight: 400; }
+.fiche-appli .flux-entete--flottant .flux-bouton svg { width: 20px; height: 20px; }
+/* Le cœur : tracé blanc, plein blanc une fois choisi (le rose sur l'iris ne se lisait pas). */
+.fiche-appli .favorite-heart--rond svg { width: 21px; height: 21px; }
+.fiche-appli .favorite-heart--rond svg path { fill: transparent; stroke: #fff; stroke-width: 2; }
+.fiche-appli .favorite-heart--rond.is-active svg path { fill: #fff; stroke: #fff; }
+.fiche-appli .favorite-heart--rond:disabled { opacity: 1; cursor: progress; }
+/* La recherche ouverte : un champ blanc entre la croix et le cœur. */
+.fiche-appli .flux-entete--flottant > .flux-actions:has(.fiche-recherche) { left: calc(64px - var(--fiche-g)); }
+.fiche-appli .flux-entete--flottant .fiche-recherche {
+  flex: 1 1 auto; width: auto; min-width: 0; height: 44px; margin: 0; padding: 0 4px 0 12px; gap: 6px;
+  background: #fff; border: 1.5px solid var(--line); border-radius: 22px;
+}
+.fiche-appli .flux-entete--flottant .fiche-recherche:focus-within { border-color: var(--iris); }
+.fiche-appli .flux-entete--flottant .fiche-recherche input { min-height: 0; padding: 0; font-size: 16px; }
+/* Les deux ronds du champ (effacer, valider) gardent leurs 34px : la règle générale des 44px de haut en faisait des ovales. */
+.fiche-page.fiche-appli .flux-entete--flottant .fiche-recherche button { min-height: 0; height: 34px; width: 34px; }
+
+/* ---------- La photo, bord à bord ---------- */
+.fiche-appli .fiche-entete { margin-bottom: 0; }
+.fiche-appli .fiche-media {
+  position: relative; height: calc(236px + var(--fiche-statut)); min-height: 0;
+  margin: 0 calc(-1 * var(--fiche-g)); overflow: visible;
+}
+.fiche-appli .fiche-media > .fiche-couverture { height: 100%; width: 100%; margin: 0; border-radius: 0; object-fit: cover; }
+.fiche-appli .fiche-media > .visuel-vide--bandeau { border-radius: 0; }
+/* L'initiale du visuel de marque au milieu de la partie visible (la feuille couvre le bas, la barre d'état le haut). */
+.fiche-appli .fiche-media > .visuel-vide--bandeau .visuel-vide-initiale { top: calc(50% + var(--fiche-statut) / 2 - 13px); }
+/* Le logo, posé à cheval sur le bord de la feuille. */
+.fiche-appli .fiche-media > .fiche-logo {
+  z-index: 3; left: calc(var(--fiche-g) + 2px); bottom: -10px; width: 68px; height: 68px;
+  border-radius: 22px; border: 4px solid #fff; outline: none; box-shadow: none;
+  animation: fiche-logo-saute .45s var(--ressort-ui) .15s backwards;
+}
+@keyframes fiche-logo-saute { from { transform: scale(.3); } to { transform: none; } }
+
+/* ---------- La feuille ---------- */
+.fiche-appli .fiche-feuille {
+  display: block; position: relative; z-index: 2;
+  margin: -26px calc(-1 * var(--fiche-g)) 0; padding: 22px var(--fiche-g) 2px;
+  background: #fff; border-radius: 26px 26px 0 0;
+  animation: fiche-feuille-monte .45s var(--ressort-ui) backwards;
+}
+.fiche-appli .fiche-entete--logo .fiche-feuille { padding-top: 48px; }
+@keyframes fiche-feuille-monte { from { transform: translateY(36px); } to { transform: none; } }
+.fiche-appli .fiche-nom { font-size: 27px; line-height: 1.15; margin: 0 0 8px; }
+.fiche-appli .fiche-meta { margin: 0 0 10px; }
+.fiche-appli .fiche-statut { margin-bottom: 10px; }
+.fiche-appli .fiche-desc { margin: 0 0 12px; }
+
+/* Livraison / À emporter et les frais, sur une rangée entre deux filets. */
+.fiche-appli .fiche-faits {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 0; margin: 0 0 12px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.fiche-appli .fiche-faits:empty { display: none; }
+.fiche-appli .fiche-entete .fiche-modes {
+  position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; gap: 0; flex: none;
+  margin: 0; padding: 4px; background: var(--cream-dim); border-radius: var(--radius-pill);
+}
+.fiche-appli .fiche-modes button {
+  position: relative; z-index: 1; min-height: 40px; padding: 8px 12px; white-space: nowrap;
+  background: transparent; box-shadow: none; color: var(--ink-soft); font-size: 13.5px; font-weight: 600; transition: color .2s ease;
+}
+.fiche-appli .fiche-modes button.est-actif { background: transparent; box-shadow: none; color: #fff; }
+.fiche-appli .fiche-modes-pouce {
+  display: block; position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px);
+  border-radius: var(--radius-pill); background: var(--iris); transition: transform .45s var(--ressort-ui);
+}
+.fiche-appli .fiche-modes[data-mode="pickup"] .fiche-modes-pouce { transform: translateX(100%); }
+.fiche-appli .fiche-entete .fiche-panneau { margin: 0; min-width: 0; align-items: flex-end; text-align: right; gap: 1px; }
+.fiche-appli .fiche-entete .fiche-panneau b { font-size: 14.5px; }
+.fiche-appli .fiche-panneau-cle { font-size: 12.5px; line-height: 1.3; }
+/* Un seul mode : pas de bascule, les frais se lisent à gauche. */
+.fiche-appli .fiche-faits:not(:has(.fiche-modes)) .fiche-panneau { align-items: flex-start; text-align: left; }
+.fiche-appli .fiche-offres { border-radius: var(--radius); margin-bottom: 14px; }
+/* Le « + » des plats reste posé sur le coin de la photo même quand la description et les allergènes allongent la ligne
+   (ancré en bas de LIGNE, il tombait sous la photo) : 14px de marge + 112px de photo − 40px de rond − 6px. */
+.fiche-appli .plat-ligne:not(.plat-ligne-sans-photo) > .plat-pas { bottom: auto; top: 80px; }
+
+/* ---------- La bande des sections ----------
+   Collée sous les ronds. Sans verre (navigateur sans backdrop-filter, transparence réduite) : blanche à filet, la section
+   lue en iris plein ; en verre : la lentille. */
+.fiche-page.fiche-appli .category-quicknav--verre {
+  top: calc(var(--fiche-haut) + 64px); z-index: 40;
+  margin: 4px -6px 12px; padding: 0; border-radius: 30px;
+  background: #fff; border: 1px solid var(--line);
+}
+.fiche-appli .category-quicknav--verre .category-quicknav-sections { gap: 2px; padding: 4px; border-radius: 30px; }
+.fiche-appli .category-quicknav--verre button {
+  position: relative; z-index: 1; background: transparent; border-color: transparent; color: var(--ink);
+  touch-action: pan-x; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.fiche-appli .category-quicknav--verre button:hover { border-color: transparent; }
+.fiche-appli .category-quicknav--verre button.active { touch-action: none; }
+.fiche-appli .category-quicknav--verre button.active, .fiche-appli .category-quicknav--verre button.quicknav-survol { background: transparent; border-color: transparent; color: #fff; font-weight: 600; }
+.fiche-appli .category-quicknav--glisse button.active:not(.quicknav-survol) { color: var(--ink); font-weight: 500; }
+.fiche-appli .category-quicknav--verre .quicknav-lentille {
+  display: block; position: absolute; z-index: 0; left: 0; top: 4px; width: 0; height: 44px;
+  border-radius: 22px; pointer-events: none; background: var(--iris);
+  transition: transform .42s var(--ressort-ui), width .3s var(--ressort-ui), height .3s var(--ressort-ui), scale .3s var(--ressort-ui), box-shadow .2s;
+}
+.fiche-appli .category-quicknav--glisse .quicknav-lentille { transition: transform .05s linear, width .3s var(--ressort-ui), scale .3s var(--ressort-ui), box-shadow .2s; }
+.fiche-appli .category-quicknav--appui .quicknav-lentille { scale: 1.08 1.14; }
+.fiche-appli .quicknav-lentille--etire { animation: quicknav-goutte .45s var(--ressort-ui); }
+@keyframes quicknav-goutte { 0% { scale: 1 1; } 35% { scale: 1.3 .84; } 70% { scale: .96 1.05; } 100% { scale: 1 1; } }
+/* Les ancres des sections atterrissent sous les ronds et la bande, pas derrière. */
+.fiche-appli [id^="menu-cat-"] { scroll-margin-top: calc(var(--fiche-haut) + 64px + 54px + 10px); }
+
+/* Le verre : la recette de la barre d'onglets et de la barre du panier (styles.css). */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html.appli .fiche-page.fiche-appli .category-quicknav--verre {
+    background: rgba(255, 255, 255, .22); border-color: rgba(255, 255, 255, .6);
+    -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
+      0 10px 30px rgba(20, 18, 31, .14), 0 1px 3px rgba(20, 18, 31, .08);
+  }
+  html.appli .fiche-appli .category-quicknav--verre button { color: rgba(20, 18, 31, .86); text-shadow: 0 0 8px rgba(255, 255, 255, .75); }
+  html.appli .fiche-appli .category-quicknav--verre button.active, html.appli .fiche-appli .category-quicknav--verre button.quicknav-survol { color: var(--iris); }
+  html.appli .fiche-appli .category-quicknav--glisse button.active:not(.quicknav-survol) { color: rgba(20, 18, 31, .86); }
+  html.appli .fiche-appli .category-quicknav--verre .quicknav-lentille {
+    background: rgba(255, 255, 255, .42); border: 1px solid rgba(255, 255, 255, .75);
+    -webkit-backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08); backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08);
+    box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, .95), inset 4px 0 7px -2px rgba(255, 70, 170, .32), inset -4px 0 7px -2px rgba(40, 190, 255, .36),
+      inset 0 -3px 6px -2px rgba(255, 220, 90, .28), 0 2px 10px rgba(20, 18, 31, .12);
+  }
+  html.appli .fiche-appli .category-quicknav--appui .quicknav-lentille {
+    box-shadow: inset 0 1.5px 1px #fff, inset 6px 0 9px -2px rgba(255, 70, 170, .45), inset -6px 0 9px -2px rgba(40, 190, 255, .5),
+      inset 0 -4px 8px -2px rgba(255, 220, 90, .38), 0 8px 24px rgba(20, 18, 31, .2);
+  }
+}
+/* LE FONDU D'ARRIVÉE DE LA PAGE ÉTEIGNAIT LE FLOU. .page-fade (client-ui.css) garde son opacité finale (fill-mode `both`) :
+   Chrome en fait alors une « racine de fond » et le backdrop-filter de la bande ne floutait plus rien — le texte des plats
+   passait net sous les sections (vérifié le 2026-10-16 : sans l'animation, le flou revient). `backwards` garde le fondu
+   et lâche l'opacité une fois fini. La barre du panier, hors de .page-fade, n'avait pas le problème. */
+html.appli .page-fade:has(> .fiche-appli) { animation-fill-mode: backwards; }
+@media (prefers-reduced-transparency: reduce) {
+  html.appli .fiche-page.fiche-appli .category-quicknav--verre { background: #fff; border-color: var(--line); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+  html.appli .fiche-appli .category-quicknav--verre button { color: var(--ink); text-shadow: none; }
+  html.appli .fiche-appli .category-quicknav--verre button.active { color: #fff; }
+  html.appli .fiche-appli .category-quicknav--verre .quicknav-lentille { background: var(--iris); border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+}
+
+/* Les ronds se décollent de la photo par une ombre douce (app seulement, comme le verre). */
+html.appli .fiche-appli .flux-entete--flottant .flux-bouton,
+html.appli .fiche-appli .favorite-heart--rond { box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 0 1px 3px rgba(20, 18, 31, .18); }
+html.appli .fiche-appli .flux-entete--flottant .fiche-recherche { box-shadow: 0 4px 14px rgba(20, 18, 31, .16); }
+
+/* ---------- La fiche d'un plat ouverte depuis cette page : sa croix est un rond flottant de la même famille ---------- */
+html.appli body:has(.fiche-appli) .plat-fermer { background: var(--iris); color: #fff; border: 2px solid #fff; box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 0 1px 3px rgba(20, 18, 31, .18); }
+html.appli body:has(.fiche-appli) .plat-fermer:active { transform: scale(.9); }
+/* Sans photo, la croix flottait sur le nom du plat : le contenu commence sous elle. */
+body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fiche-appli .fiche-feuille, .fiche-appli .fiche-media > .fiche-logo, .fiche-appli .quicknav-lentille--etire { animation: none; }
+  .fiche-appli .category-quicknav--verre .quicknav-lentille, .fiche-appli .fiche-modes-pouce { transition: none; }
+}

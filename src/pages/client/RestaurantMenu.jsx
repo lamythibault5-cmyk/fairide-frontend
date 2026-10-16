@@ -34,6 +34,16 @@ import { restaurantJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 import { localizedItem } from '../../menuTranslation';
 import { resolveItemImage, restaurantTypeLabel } from '../../menuCategories';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
+import { experienceApp } from '../../natif';
+import '../../ecran-fiche.css';
+
+/* DANS L'APP, LA FICHE MONTE EN FEUILLE SUR LA PHOTO (fondateur, 2026-10-16, « Proposition » de « Fiche d'un commerce »
+ * dans mockups/tous-les-ecrans.html). La photo de couverture prend le haut de l'écran, bord à bord ; la page monte dessus
+ * en feuille blanche aux coins arrondis, le logo posé à cheval ; la croix, la recherche et le cœur flottent en RONDS IRIS
+ * par-dessus (blancs sur verre blanc dans la maquette, ils étaient illisibles sur une photo claire — retour du fondateur) ;
+ * les sections passent dans une bande de verre où une lentille suit la section qu'on lit (CategoryQuickNav `verre`).
+ * Même contenu, mêmes fonctions, même ordre que sur le site, qui garde sa mise en page (styles dans ecran-fiche.css). */
+const APPLI = experienceApp();
 
 // Clé du jour (openingHours) → clé de traduction du nom du jour (resa.monday…).
 
@@ -87,6 +97,9 @@ export default function RestaurantMenu() {
   // voir `titreEstompe` dans EnteteFlux.jsx.
   const titreRef = useRef(null);
   const [grandTitreVisible, setGrandTitreVisible] = useState(true);
+  // App sans compte : la barre d'app (Layout.jsx) colle en haut de l'écran, les ronds flottants et la bande des sections
+  // collent juste dessous. Sa hauteur dépend du bouton qu'elle porte (marque ou Retour) : on la mesure.
+  const pageRef = useRef(null);
   const { token, user } = useAuth();
   const [pickerItem, setPickerItem] = useState(null);
   // Article qu'on essayait d'ajouter quand le panier contenait déjà un autre commerce (voir addToCart) —
@@ -137,6 +150,11 @@ export default function RestaurantMenu() {
     const obs = new IntersectionObserver(([e]) => setGrandTitreVisible(e.isIntersecting), { threshold: 0 });
     obs.observe(el);
     return () => obs.disconnect();
+  }, [restaurant]);
+  useEffect(() => {
+    if (!APPLI || !pageRef.current) return;
+    const barre = document.querySelector('.appli-barre');
+    if (barre) pageRef.current.style.setProperty('--fiche-haut', `${barre.offsetHeight}px`);
   }, [restaurant]);
   // Ouvrir la loupe donne le clavier tout de suite : un champ qui apparaît et qu'il faut ensuite
   // toucher pour écrire dedans demande deux gestes là où on en attend un.
@@ -365,8 +383,25 @@ export default function RestaurantMenu() {
     setPickerItem(item);
   }
 
+  const coeur = (
+    <FavoriteHeart active={isFavorite} busy={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className={APPLI ? 'favorite-heart--rond' : 'favorite-heart-inline'} />
+  );
+  // Les sections : dans l'app, sous l'en-tête, dans la feuille (bande de verre) ; sur le site, sous le bandeau du parcours.
+  const sectionsEtResultat = (
+    <>
+      <CategoryQuickNav categories={sectionsFiltrees} verre={APPLI} />
+      {/* Le résultat d'une recherche, dit en clair (et annoncé aux lecteurs d'écran) : la carte filtrée seule ne disait
+          pas que le tri avait eu lieu. Zéro résultat : le message « aucun plat » plus bas suffit. */}
+      {q && menuFiltre.length > 0 && (
+        <p className="fiche-recherche-resultat" role="status">
+          {menuFiltre.length === 1 ? t('restaurantMenu.searchCountOne') : t('restaurantMenu.searchCount', { n: menuFiltre.length })}
+        </p>
+      )}
+    </>
+  );
+
   return (
-    <div className="fiche-page">
+    <div className={`fiche-page${APPLI ? ' fiche-appli' : ''}`} ref={pageRef}>
       {/* LE BANDEAU D'ABORD, LES SECTIONS DESSOUS. C'était l'inverse : la barre des sections était
           rendue en premier et collée à `top: 0`, la croix venait après et ne collait à rien. En
           descendant dans la carte, on gardait donc la table des matières et on perdait la sortie —
@@ -384,7 +419,8 @@ export default function RestaurantMenu() {
         libelle={t('restaurantMenu.backToRestaurants')}
         titre={restaurant.name}
         titreEstompe={grandTitreVisible || rechercheOuverte}
-        actions={restaurant.menu.length > 8 ? (
+        flottant={APPLI}
+        actions={<>{restaurant.menu.length > 8 ? (
           rechercheOuverte ? (
             /* VALIDER LA RECHERCHE (retour du fondateur, 2026-10-14) : rien ne confirmait l'action — la touche Entrée ne
                faisait rien et le rond gris restait vide. « Voir les résultats » (ou Entrée) ferme le clavier et amène à la
@@ -424,16 +460,9 @@ export default function RestaurantMenu() {
               <Icone nom="recherche" taille={20} />
             </button>
           )
-        ) : null}
+        ) : null}{APPLI && coeur}</>}
       />
-      <CategoryQuickNav categories={sectionsFiltrees} />
-      {/* Le résultat d'une recherche, dit en clair (et annoncé aux lecteurs d'écran) : la carte filtrée seule ne disait
-          pas que le tri avait eu lieu. Zéro résultat : le message « aucun plat » plus bas suffit. */}
-      {q && menuFiltre.length > 0 && (
-        <p className="fiche-recherche-resultat" role="status">
-          {menuFiltre.length === 1 ? t('restaurantMenu.searchCountOne') : t('restaurantMenu.searchCount', { n: menuFiltre.length })}
-        </p>
-      )}
+      {!APPLI && sectionsEtResultat}
 
       {/* L'EN-TÊTE SORT DE LA CARTE.
           Tout ce bloc vivait dans un <div className="card"> : un rectangle blanc cerné d'un filet,
@@ -441,7 +470,7 @@ export default function RestaurantMenu() {
           négatives de -22px pour paraître pleine largeur. Le contour n'apportait rien — il
           encadrait le sujet de la page, pas un élément parmi d'autres — et le débordement était
           un contournement de ce contour. Les deux partent ensemble. */}
-      <header className="fiche-entete">
+      <header className={`fiche-entete${restaurant.logoImageUrl ? ' fiche-entete--logo' : ''}`}>
         {/* Le bandeau existe toujours : sans photo de couverture (ou si elle ne charge pas), c'est un visuel aux
             couleurs de Fairide (VisuelVide) qui tient la place — plus de bloc gris qui ressemble à une image cassée. */}
         <div className="fiche-media">
@@ -449,6 +478,8 @@ export default function RestaurantMenu() {
           {restaurant.coverImageUrl && <img {...imgProps(restaurant.coverImageUrl, 960, '(max-width: 960px) 100vw, 960px')} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" onError={cacherImageCassee} />}
           {restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" onError={cacherImageCassee} />}
         </div>
+        {/* La feuille blanche qui monte sur la photo dans l'app ; sur le site, `display: contents` (rien ne change). */}
+        <div className="fiche-feuille">
         <div className="fiche-titre-ligne">
           {/* h1 et non h2 : la fiche est la page la plus importante du site pour le
               référencement et n'avait aucun titre de niveau 1. Son sujet est le commerce. */}
@@ -456,7 +487,8 @@ export default function RestaurantMenu() {
             <span>{restaurant.name}</span>
             {restaurant.certified && <CertifiedBadge size={20} />}
           </h1>
-          <FavoriteHeart active={isFavorite} busy={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className="favorite-heart-inline" />
+          {/* Dans l'app, le cœur flotte en haut à droite avec la croix (bandeau ci-dessus). */}
+          {!APPLI && coeur}
         </div>
 
         {/* UNE SEULE LIGNE DE MÉTA, à la place de six.
@@ -505,9 +537,13 @@ export default function RestaurantMenu() {
 
         {restaurant.desc && <p className="fiche-desc">{restaurant.desc}</p>}
 
-        {/* BASCULE LIVRAISON / À EMPORTER, affichée seulement quand les deux existent. */}
+        {/* La bascule et les frais sur une même rangée dans l'app (.fiche-faits) ; `display: contents` sur le site. */}
+        <div className="fiche-faits">
+        {/* BASCULE LIVRAISON / À EMPORTER, affichée seulement quand les deux existent. Dans l'app, un pouce iris glisse
+            sous le mode choisi (.fiche-modes-pouce, caché sur le site). */}
         {modesPossibles.length > 1 && (
-          <div className="fiche-modes" role="group" aria-label={t('restaurantMenu.modeLabel')}>
+          <div className="fiche-modes" role="group" aria-label={t('restaurantMenu.modeLabel')} data-mode={modeActif}>
+            <span className="fiche-modes-pouce" aria-hidden="true" />
             <button type="button" className={modeActif === 'delivery' ? 'est-actif' : ''} aria-pressed={modeActif === 'delivery'} onClick={() => choisirMode('delivery')}>
               {t('restaurantMenu.modeDelivery')}
             </button>
@@ -540,6 +576,7 @@ export default function RestaurantMenu() {
             )}
           </div>
         )}
+        </div>
 
         {/* UNE SEULE CARTE D'OFFRE, au lieu de deux bandeaux de deux couleurs.
             La promotion et la livraison offerte étaient deux <div> sans classe, l'un rouge l'autre
@@ -607,8 +644,9 @@ export default function RestaurantMenu() {
             <span>{t('restaurantMenu.deliveryUnavailableZone')}</span>
           </div>
         )}
-
+        </div>
       </header>
+      {APPLI && sectionsEtResultat}
 
       {onlineOrderingDisabled && (
         <div className="fiche-info">
