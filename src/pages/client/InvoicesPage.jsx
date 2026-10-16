@@ -8,6 +8,8 @@ import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+// Même famille que Mon compte sur le site (titre, largeur de lecture, rangées) ; sans effet dans l'app.
+import '../../site-compte.css';
 
 // Liste les commandes payées en ligne avec leur REÇU FAIRIDE (CODE-1, 8 oct. 2026 — recuClient.js côté serveur) : un bloc
 // par vendeur (commerce, livreur, Fairide), TVA par taux, « Payé », heure de Bruxelles. Il remplace la facture automatique
@@ -79,8 +81,8 @@ export default function InvoicesPage() {
   if (!orders) return <SkeletonCards count={3} />;
 
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('invoicesClient.title')}</h2>
+    <div className="compte-sous-page">
+      <h2 className="section-title compte-sous-titre" style={{ marginTop: 0 }}>{t('invoicesClient.title')}</h2>
       <p className="small" style={{ margin: '-6px 0 12px', opacity: 0.85 }}>{t('invoicesClient.peppolNote')}</p>
 
       {downloadable.length > 0 && (

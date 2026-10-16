@@ -6121,6 +6121,10 @@ export default {
       confirme_restaurant: 'Tu pourras créer ton commerce et préparer ta carte. Il ne sera visible des clients, et ne pourra encaisser, qu\'une fois validé par l\'équipe et tes paiements vérifiés.',
       confirme_driver: 'Ton dossier livreur sera créé. Il faudra ensuite déposer tes documents et attendre la validation de l\'équipe avant de prendre des courses.'
     },
+    // Mon compte sur ordinateur (site, 2026-10-16) : la colonne des rubriques (RubriquesCompte.jsx).
+    siteCompte: {
+      navAria: 'Rubriques du compte'
+    },
     savedCards: {
       rowSub: 'Cartes enregistrées chez Stripe',
       intro: "Quand tu paies, la page Stripe te propose d'enregistrer ta carte. Si tu coches la case, Stripe la garde et te la repropose la fois suivante. Fairide n'en voit que la marque, les 4 derniers chiffres et l'échéance.",

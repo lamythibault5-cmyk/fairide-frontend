@@ -6102,6 +6102,10 @@ export default {
       confirme_restaurant: 'You will be able to create your business and prepare its menu. It becomes visible to customers, and able to take money, only once the team has approved it and your payments are verified.',
       confirme_driver: 'Your courier file will be created. You will then need to upload your documents and wait for the team\'s approval before taking any delivery.'
     },
+    // Mon compte sur ordinateur (site, 2026-10-16) : la colonne des rubriques (RubriquesCompte.jsx).
+    siteCompte: {
+      navAria: 'Account sections'
+    },
     savedCards: {
       rowSub: 'Cards saved with Stripe',
       intro: 'When you pay, the Stripe page offers to save your card. If you tick the box, Stripe keeps it and offers it again next time. Fairide only sees the brand, the last 4 digits and the expiry date.',

@@ -7,6 +7,8 @@ import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { SkeletonCards } from '../components/Skeleton';
 import Icone from '../components/Icone';
+// Même famille que Mon compte sur le site (titre, largeur de lecture, cartes) ; sans effet dans l'app.
+import '../site-compte.css';
 
 // « Mes documents » (fondateur, 2026-10-09) : tout ce que la personne a accepté ou signé, facile à retrouver, à lire et à
 // enregistrer — conditions générales et politique de confidentialité (client, commerce, livreur), contrat de partenariat du
@@ -36,8 +38,8 @@ export default function DocumentsPage() {
   );
 
   return (
-    <div className="container" style={{ paddingBottom: 40 }}>
-      <h1 style={{ margin: '0 0 4px' }}>{t('mesDocuments.title')}</h1>
+    <div className="container compte-sous-page" style={{ paddingBottom: 40 }}>
+      <h1 className="compte-sous-titre" style={{ margin: '0 0 4px' }}>{t('mesDocuments.title')}</h1>
       <p className="small" style={{ margin: '0 0 16px', opacity: 0.8 }}>{t('mesDocuments.intro')}</p>
       {!d ? <SkeletonCards count={2} /> : (
         <>
