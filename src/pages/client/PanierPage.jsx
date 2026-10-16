@@ -9,7 +9,8 @@ import EtatVide from '../../components/EtatVide';
 import Icone from '../../components/Icone';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import ChiffresRoulants from '../../components/ChiffresRoulants';
-import { BandeauCommande, BarreCommande, FeuilleCommande, RouteCommande } from '../../components/EcranCommande';
+import { BandeauCommande, BarreCommande, FeuilleCommande, RouteCommande, RouteEtapes } from '../../components/EcranCommande';
+import { experienceApp } from '../../natif';
 import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/UpsellPanier';
 import { euros, libellePromo } from '../../prixPlat';
 import { mouvementReduit, vibrer } from '../../gestes';
@@ -29,6 +30,12 @@ import { mouvementReduit, vibrer } from '../../gestes';
 // bandeau iris où le vélo arrive, les lignes dans la feuille blanche, des compteurs iris au chiffre dans un rond lime (comme
 // le « − n + » de la carte, 3C), et dans l'app le sous-total qui roule dans la pastille iris d'une barre de verre (2C). Même
 // contenu et mêmes fonctions qu'avant.
+//
+// LE SITE (2026-10-16, mockups/site-ordinateur.html, section 5) : la route Panier → Paiement → Suivi traverse le bandeau, et
+// sur un ordinateur la page passe en deux colonnes — les lignes et les suggestions à gauche, un récapitulatif collant à
+// droite (sous-total qui roule, le seul bouton lime). Sur un téléphone, la barre iris reste collée en bas. Styles :
+// site-commande.css, sous html:not(.appli) ; l'app garde exactement sa page.
+const APPLI = experienceApp();
 
 // Les deux traits du compteur : Icone.jsx n'a ni plus ni moins.
 const TRAIT_MOINS = <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 12h12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>;
@@ -92,8 +99,18 @@ export default function PanierPage() {
     }, 260);
   }
 
+  const barre = (
+    <BarreCommande montant={sousTotal} className="panier-barre">
+      <span className="co-barre-total">
+        <span className="co-barre-montant"><ChiffresRoulants valeur={euros(sousTotal)} /></span>
+        <span className="co-barre-detail">{t('common.subtotal')}</span>
+      </span>
+      <button type="button" className="btn-gold" onClick={() => navigate('/checkout')}>{t('panier.toCheckout')}</button>
+    </BarreCommande>
+  );
+
   return (
-    <div className="panier-page ec-page">
+    <div className="panier-page ec-page sc-page">
       {/* Une flèche, et non une croix : d'ici on RECULE d'un pas, vers la carte du commerce — on ne
           quitte pas le parcours. Le nom du commerce est en tête du bandeau, comme chez Uber. */}
       <BandeauCommande
@@ -103,10 +120,12 @@ export default function PanierPage() {
         titre={t('panier.title')}
         sous={t(cart.count > 1 ? 'ecranCommande.articlesPluriel' : 'ecranCommande.articles', { count: cart.count })}
       >
-        <RouteCommande position={22} depart={-12} />
+        {APPLI ? <RouteCommande position={22} depart={-12} /> : <RouteEtapes actuelle={0} />}
       </BandeauCommande>
 
       <FeuilleCommande>
+        <div className="sc-grille">
+        <div className="sc-principal">
         <div className="panier-lignes">
           {Object.entries(cart.lines).map(([cle, ligne]) => (
             <div key={cle} className={`panier-ligne${sortantes.has(cle) ? ' ec-sort' : ''}`}>
@@ -141,15 +160,20 @@ export default function PanierPage() {
             <span className="small">{d.name || libellePromo(d.promo, t) || d.label}</span><span className="small">-{euros(d.discount)}</span>
           </div>
         ))}
+        </div>
+        {/* Site : le récapitulatif à droite (sur un téléphone, seule la barre en reste, collée en bas de l'écran). */}
+        {!APPLI && (
+          <aside className="sc-recap" aria-label={t('siteCommande.recap')}>
+            <h2 className="sc-recap-titre">{t('siteCommande.recap')}</h2>
+            <p className="sc-recap-sous">{cart.restaurantName || restaurant?.name || ''} · {t(cart.count > 1 ? 'ecranCommande.articlesPluriel' : 'ecranCommande.articles', { count: cart.count })}</p>
+            {barre}
+            <p className="sc-recap-note">{t('siteCommande.suiteAuPaiement')}</p>
+          </aside>
+        )}
+        </div>
       </FeuilleCommande>
 
-      <BarreCommande montant={sousTotal} className="panier-barre">
-        <span className="co-barre-total">
-          <span className="co-barre-montant"><ChiffresRoulants valeur={euros(sousTotal)} /></span>
-          <span className="co-barre-detail">{t('common.subtotal')}</span>
-        </span>
-        <button type="button" className="btn-gold" onClick={() => navigate('/checkout')}>{t('panier.toCheckout')}</button>
-      </BarreCommande>
+      {APPLI && barre}
     </div>
   );
 }

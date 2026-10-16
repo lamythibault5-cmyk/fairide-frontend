@@ -1,0 +1,213 @@
+/* LE PARCOURS DE COMMANDE SUR LE SITE : Panier, Paiement, Commande confirmée, Mes commandes (fondateur, 2026-10-16,
+   « Proposition » de mockups/site-ordinateur.html, sections 5 et 6). Importé par components/EcranCommande.jsx, donc par les
+   quatre pages.
+   Tout est sous `html:not(.appli)` : l'app (html.appli, natif ou écran d'accueil) garde exactement ses écrans
+   (ecran-commande.css, client-ui.css). Les seules règles hors de ce cadre sont les `display: contents` des enveloppes
+   ajoutées pour la mise en page du site : partout ailleurs, elles n'existent pas pour le rendu.
+   Sur un ordinateur (au-delà de 900 px, quand la barre latérale apparaît) :
+   - le bandeau iris va d'un bord à l'autre de la zone de contenu, la feuille blanche monte dessus, et leur contenu tient
+     dans une colonne de 1 120 px au plus, centrée ;
+   - panier et paiement passent en deux colonnes : les choix à gauche, un récapitulatif collant à droite qui porte le seul
+     bouton lime ;
+   - Mes commandes : la commande en cours EST le bandeau, la carte du trajet et le code au livreur côte à côte, les commandes
+     passées en tableau compact (des cartes compactes sur un téléphone).
+   Pas de verre, pas d'ombre : des filets (--line), comme le reste du site. Le bandeau annule la marge intérieure de
+   .dashboard-main (24px 28px sur ordinateur, styles.css) : si elle change, changer --sc-haut / --sc-cote ci-dessous. */
+
+/* Les enveloppes de mise en page : transparentes hors du site sur ordinateur. */
+.ec-col, .sc-grille, .sc-principal, .sc-merci-grille, .sc-merci-texte, .sc-merci-actions { display: contents; }
+.sc-payer-note { display: none; }
+
+/* ---------- Commun : la route Panier → Paiement → Suivi (RouteEtapes), sur iris ---------- */
+html:not(.appli) .sc-route { margin-top: 6px; }
+html:not(.appli) .sc-route .route-suivi { margin-bottom: 4px; }
+html:not(.appli) .sc-route .rs-arret.fait svg { stroke-width: 3; }
+
+/* ---------- Mes commandes, site, toutes largeurs ---------- */
+html:not(.appli) .sc-commandes .sc-surtitre { font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0; color: rgba(255, 255, 255, .75); margin: 0 0 4px; }
+html:not(.appli) .sc-commandes .sc-bandeau-suivi .ec-haut { min-height: 0; }
+html:not(.appli) .sc-commandes .sc-bandeau-suivi .small { color: rgba(255, 255, 255, .82); }
+html:not(.appli) .sc-commandes .sc-bandeau-suivi .small b { color: #fff; }
+html:not(.appli) .sc-commandes .sc-titre-suivi { animation: suivi-titre .35s ease both; }
+html:not(.appli) .sc-commandes .sc-notifs { display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 16px; }
+html:not(.appli) .sc-commandes .sc-notifs > :last-child { flex: 1 1 280px; }
+html:not(.appli) .sc-commandes .sc-suivi .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 0 0 10px; color: var(--ink); font-size: 13.5px; }
+html:not(.appli) .sc-commandes .sc-suivi .suivi-code { margin: 0 0 12px; }
+html:not(.appli) .sc-commandes .sc-autre-en-cours { margin-top: 24px; }
+html:not(.appli) .sc-commandes .sc-sec-titre { display: flex; align-items: center; gap: 10px; font-family: var(--font-titre); font-size: 21px; font-weight: 700; margin: 36px 0 12px; }
+html:not(.appli) .sc-commandes .sc-sec-titre svg { color: var(--iris); }
+html:not(.appli) .sc-passees { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+html:not(.appli) .sc-passees .sc-nom-c { display: flex; align-items: center; gap: 12px; min-width: 0; }
+html:not(.appli) .sc-passees .sc-tuile { flex: none; width: 40px; height: 40px; border-radius: 10px; background: rgba(59, 47, 181, .08); color: var(--iris); display: grid; place-items: center; }
+html:not(.appli) .sc-passees .sc-nom-texte { display: flex; flex-direction: column; min-width: 0; }
+html:not(.appli) .sc-passees .sc-nom-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html:not(.appli) .sc-passees .sc-nom-texte small { font-size: 12.5px; color: var(--ink-soft); }
+html:not(.appli) .sc-passees .status-badge { text-transform: none; letter-spacing: 0; font-size: 12px; white-space: nowrap; }
+html:not(.appli) .sc-passees .status-livre { background: rgba(46, 125, 79, .12); color: var(--green); }
+html:not(.appli) .sc-passees .status-annule, html:not(.appli) .sc-passees .status-refuse { background: rgba(200, 56, 43, .1); color: var(--red); }
+html:not(.appli) .sc-passees .sc-details { display: inline-flex; align-items: center; gap: 7px; margin-left: 6px; padding: 8px 10px; border: 0; border-radius: var(--radius-pill);
+  background: none; color: var(--ink-soft); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+html:not(.appli) .sc-passees .sc-details:hover { color: var(--ink); }
+html:not(.appli) .sc-passees .sc-details:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+html:not(.appli) .sc-passees .sc-chevron { width: 7px; height: 7px; margin-top: -4px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .2s, margin .2s; }
+html:not(.appli) .sc-passees .sc-details[aria-expanded="true"] .sc-chevron { transform: rotate(-135deg); margin-top: 3px; }
+html:not(.appli) .sc-passees .sc-detail .suivi-resume { margin: 0 0 6px; }
+html:not(.appli) .sc-passees .sc-detail .order-next { margin: 0 0 8px; color: var(--ink); font-size: 13.5px; }
+html:not(.appli) .sc-passees .sc-detail > :first-child { margin-top: 0; }
+
+/* Paiement : codes, allergie, âge et CGU dans la colonne des choix (Checkout.jsx). */
+html:not(.appli) .sc-page .sc-codes { margin-top: 22px; padding-top: 6px; border-top: 1px solid var(--line); }
+
+/* ---------- Téléphone (site) ---------- */
+@media (max-width: 900px) {
+  html:not(.appli) .sc-page .sc-grille, html:not(.appli) .sc-page .sc-principal { display: block; }
+  /* Le récapitulatif du panier se réduit à sa barre, collée en bas de l'écran (client-ui.css) : le reste est sur la page. */
+  html:not(.appli) .sc-page .sc-recap { display: contents; }
+  html:not(.appli) .sc-page .sc-recap-titre, html:not(.appli) .sc-page .sc-recap-sous, html:not(.appli) .sc-page .sc-recap-note { display: none; }
+  /* La barre du paiement sur une ligne, comme celle du panier : le total à gauche, « Commander et payer » à côté (le bouton
+     ne passe plus sous le montant, qui faisait une barre de 120 px de haut). Le refus du devis garde toute la largeur. */
+  html:not(.appli) .sc-page .checkout-recap .cart-bar.co-barre { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  html:not(.appli) .sc-page .checkout-recap .cart-bar.co-barre .co-barre-total { flex: none; }
+  html:not(.appli) .sc-page .checkout-recap .cart-bar.co-barre .btn-gold { flex: 1 1 0; min-width: 0; padding: 0 14px; font-size: 15px; white-space: nowrap; }
+}
+
+/* ---------- Ordinateur (site) ---------- */
+@media (min-width: 901px) {
+  html:not(.appli) .sc-page { --sc-haut: 24px; --sc-cote: 28px; --sc-col: 1120px; }
+  html:not(.appli) .sc-page .ec-col { display: block; width: 100%; max-width: var(--sc-col); margin: 0 auto; }
+
+  /* Le bandeau d'un bord à l'autre ; la feuille monte dessus, coins arrondis. */
+  html:not(.appli) .sc-page .ec-bandeau { margin: calc(-1 * var(--sc-haut)) calc(-1 * var(--sc-cote)) 0; border-radius: 0; padding: 30px 48px 58px; }
+  html:not(.appli) .sc-page .ec-haut { font-size: 14px; }
+  html:not(.appli) .sc-page .ec-titre { font-size: 38px; margin: 10px 0 6px; }
+  html:not(.appli) .sc-page .ec-sous { font-size: 16px; }
+  html:not(.appli) .sc-page .ec-feuille { margin: -28px calc(-1 * var(--sc-cote)) 0; border-radius: 28px 28px 0 0; padding: 32px 48px 64px; }
+  html:not(.appli) .sc-page .sc-route { margin-top: 12px; }
+
+  /* Deux colonnes : le principal, et le récapitulatif collant (380 px, comme la maquette). */
+  html:not(.appli) .sc-page .sc-grille,
+  html:not(.appli) .sc-page .checkout-grille { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; align-items: start; }
+  html:not(.appli) .sc-page .sc-principal { display: block; min-width: 0; }
+  html:not(.appli) .sc-page .sc-recap,
+  html:not(.appli) .sc-page .checkout-recap { position: sticky; top: 24px; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 22px; padding: 22px; background: #fff; }
+  html:not(.appli) .sc-page .sc-recap-titre { font-family: var(--font-titre); font-size: 18px; font-weight: 700; margin: 0; }
+  html:not(.appli) .sc-page .sc-recap-sous { margin: 2px 0 14px; font-size: 13px; color: var(--ink-soft); }
+  html:not(.appli) .sc-page .sc-recap-note { order: 2; margin: 10px 0 0; font-size: 12.5px; color: var(--ink-soft); text-align: center; }
+
+  /* La barre (BarreCommande) devient le pied du récapitulatif : plus d'aplat iris, le bouton lime en pleine largeur. */
+  html:not(.appli) .sc-page .sc-recap .cart-bar,
+  html:not(.appli) .sc-page .checkout-recap .cart-bar { position: static; order: 1; display: flex; flex-direction: column; align-items: stretch; gap: 12px; margin: 0;
+    padding: 0; border-radius: 0; background: none; color: var(--ink); animation: none; }
+  html:not(.appli) .sc-page .checkout-recap .cart-bar { margin-top: 16px; }
+  html:not(.appli) .sc-page .cart-bar .btn-gold { width: 100%; min-height: 52px; font-size: 16.5px; }
+  html:not(.appli) .sc-page .cart-bar .small, html:not(.appli) .sc-page .cart-bar .co-barre-attente { color: var(--ink-soft); }
+  html:not(.appli) .sc-page .cart-bar .co-refus { color: var(--red); }
+  /* Panier : le sous-total qui roule, en ligne de total. Paiement : le total est celui du détail (il roule aussi). */
+  html:not(.appli) .sc-page .sc-recap .co-barre-total { flex-direction: row-reverse; justify-content: space-between; align-items: baseline; gap: 10px;
+    padding-top: 12px; border-top: 1px solid var(--line); }
+  html:not(.appli) .sc-page .sc-recap .co-barre-montant { font-size: 20px; }
+  html:not(.appli) .sc-page .sc-recap .co-barre-detail { font-size: 16px; font-weight: 800; opacity: 1; }
+  html:not(.appli) .sc-page .checkout-recap .co-barre-total { display: none; }
+  html:not(.appli) .sc-page .sc-payer-note { display: flex; gap: 6px; align-items: center; justify-content: center; margin: 0; font-size: 12.5px; color: var(--ink-soft); }
+
+  /* ---------- Panier ---------- */
+  html:not(.appli) .sc-page .ec-feuille .panier-ligne { gap: 16px; padding: 14px 0; }
+  html:not(.appli) .sc-page .ec-feuille .panier-ligne-image { width: 64px; height: 64px; }
+  html:not(.appli) .sc-page .ec-feuille .panier-ligne-texte { font-size: 15.5px; }
+  html:not(.appli) .sc-page .ec-feuille .upsell-row { margin: 0 0 8px; padding: 0 0 4px; }
+
+  /* ---------- Paiement ---------- */
+  /* À gauche, les choix : plus de cadre, des titres de section, les options deux à deux comme la maquette. */
+  html:not(.appli) .sc-page .checkout-form .card { border: 0; border-radius: 0; padding: 0; margin: 0; background: none; }
+  html:not(.appli) .sc-page .checkout-form .ec-options { flex-direction: row; }
+  html:not(.appli) .sc-page .checkout-form .ec-option { flex: 1 1 0; min-width: 0; }
+  html:not(.appli) .sc-page .checkout-form .field + .field { margin-top: 28px; }
+  html:not(.appli) .sc-page .checkout-form .checkout-rangee { padding-left: 4px; padding-right: 4px; }
+  html:not(.appli) .sc-page .checkout-form .ec-pourboire .choix-pastilles { flex-wrap: wrap; }
+  html:not(.appli) .sc-page .checkout-form .ec-pourboire .cuisine-chip { flex: 0 0 auto; padding: 8px 16px; }
+  /* À droite : « Ta commande », les lignes modifiables (compteur iris, nombre dans un rond lime), le détail, le total. */
+  html:not(.appli) .sc-page .checkout-recap .card { border: 0; border-radius: 0; padding: 0; margin: 0; background: none; }
+  html:not(.appli) .sc-page .ec-feuille .co-recap-tete { margin-top: 0; }
+  html:not(.appli) .sc-page .ec-feuille .co-recap-tete h3 { font-family: var(--font-titre); font-size: 18px !important; font-weight: 700 !important; color: var(--ink);
+    letter-spacing: 0; text-transform: none; }
+  html:not(.appli) .sc-page .ec-feuille .co-recap-resto { color: var(--ink-soft); }
+  html:not(.appli) .sc-page .co-ligne { padding: 10px 0; }
+  html:not(.appli) .sc-page .co-qte { height: 32px; border: 0; background: var(--iris); color: #fff; }
+  html:not(.appli) .sc-page .co-qte button { width: 30px; height: 30px; min-height: 0; color: #fff; font-size: 17px; }
+  html:not(.appli) .sc-page .co-qte button:hover { background: rgba(255, 255, 255, .14); }
+  html:not(.appli) .sc-page .co-qte button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
+  html:not(.appli) .sc-page .co-qte span { min-width: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center; font-size: 12.5px; }
+  html:not(.appli) .sc-page .checkout-recap .divider { margin: 6px 0; }
+  html:not(.appli) .sc-page .checkout-recap .breakdown { font-size: 14px; }
+  html:not(.appli) .sc-page .checkout-recap .breakdown .line { gap: 10px; padding: 4px 0; }
+  html:not(.appli) .sc-page .checkout-recap .breakdown .total { font-size: 20px; font-weight: 800; padding-top: 12px; margin-top: 8px; }
+  html:not(.appli) .sc-page .sc-roulant { display: inline-flex; overflow: hidden; font-variant-numeric: tabular-nums; }
+  /* La carte « Confirme ta commande » (total qui a bougé) : une colonne de lecture, pas toute la largeur. */
+  html:not(.appli) .sc-page.checkout-page .ec-col > .card { max-width: 640px; }
+
+  /* ---------- Commande confirmée ---------- */
+  html:not(.appli) .sc-page.ec-merci { max-width: none; margin: 0; }
+  html:not(.appli) .sc-page .ec-merci-bandeau { padding-top: 30px; padding-bottom: 58px; }
+  html:not(.appli) .sc-page .ec-merci-bandeau .ec-col { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  html:not(.appli) .sc-page .ec-merci-bandeau .ec-titre { font-size: 34px; }
+  html:not(.appli) .sc-page .sc-merci-grille { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; align-items: start; max-width: 880px; margin: 0 auto; }
+  html:not(.appli) .sc-page .sc-merci-texte { display: block; min-width: 0; }
+  html:not(.appli) .sc-page .ec-merci-texte { font-size: 15.5px; }
+  html:not(.appli) .sc-page .sc-merci-actions { display: block; position: sticky; top: 24px; border: 1px solid var(--line); border-radius: 22px; padding: 22px; }
+  html:not(.appli) .sc-page .sc-merci-actions .ec-merci-bouton { margin-top: 0; }
+
+  /* ---------- Mes commandes ---------- */
+  html:not(.appli) .sc-commandes .sc-surtitre { font-size: 14px; }
+  html:not(.appli) .sc-commandes .sc-bandeau-suivi .small { font-size: 15px; }
+  html:not(.appli) .sc-commandes .sc-bandeau-suivi .route-suivi { margin-top: 18px; }
+  html:not(.appli) .sc-commandes .sc-bandeau-suivi .rs-libs { font-size: 13px; }
+  /* Deux colonnes (Orders.jsx, corpsSite) : la carte du trajet et le code côte à côte pendant la livraison, sinon le suivi
+     à gauche, le code, le total et les actions à droite. */
+  html:not(.appli) .sc-commandes .sc-suivi { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 32px; align-items: start; }
+  html:not(.appli) .sc-commandes .sc-suivi.avec-carte { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+  html:not(.appli) .sc-commandes .sc-suivi-g, html:not(.appli) .sc-commandes .sc-suivi-d { min-width: 0; }
+  html:not(.appli) .sc-commandes .sc-suivi-carte > div { margin-top: 0 !important; }
+  html:not(.appli) .sc-commandes .sc-suivi .suivi-code { margin-top: 0; }
+  html:not(.appli) .sc-commandes .sc-autre-en-cours { margin-top: 28px; padding: 0 22px 22px; }
+  html:not(.appli) .sc-commandes .sc-autre-en-cours .suivi-bandeau { margin: 0 -22px 16px; padding: 22px 24px 40px; }
+
+  /* Les commandes passées : un tableau compact, comme la maquette. */
+  html:not(.appli) .sc-passees th { text-align: left; font-size: 12px; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase;
+    padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  html:not(.appli) .sc-passees td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  html:not(.appli) .sc-passees tr.sc-passee td { transition: background .15s; }
+  html:not(.appli) .sc-passees tr.sc-passee:hover td, html:not(.appli) .sc-passees tr.sc-passee.ouverte td { background: var(--cream-dim); }
+  html:not(.appli) .sc-passees tr.ouverte td { border-bottom-color: transparent; }
+  html:not(.appli) .sc-passees .sc-num { text-align: right; }
+  html:not(.appli) .sc-passees td.sc-num { font-variant-numeric: tabular-nums; font-weight: 700; }
+  html:not(.appli) .sc-passees .sc-c-date { white-space: nowrap; }
+  html:not(.appli) .sc-passees .sc-c-actions { text-align: right; white-space: nowrap; }
+  html:not(.appli) .sc-passees .sc-c-actions .btn-outline { min-height: 36px; padding: 6px 14px; font-size: 13.5px; background: #fff; }
+  html:not(.appli) .sc-passees .sc-tel-seul { display: none; }
+  html:not(.appli) .sc-passees .sc-passee-detail td { padding: 2px 12px 18px 64px; background: var(--cream-dim); }
+}
+
+/* Téléphone : chaque commande passée est une carte compacte (nom et total, articles et statut, actions). */
+@media (max-width: 900px) {
+  html:not(.appli) .sc-commandes .sc-suivi { display: flex; flex-direction: column; }
+  html:not(.appli) .sc-commandes .sc-suivi-g, html:not(.appli) .sc-commandes .sc-suivi-d { display: contents; }
+  html:not(.appli) .sc-commandes .sc-suivi-code { order: -1; }
+  html:not(.appli) .sc-commandes .sc-suivi-carte { order: 1; }
+  html:not(.appli) .sc-commandes .sc-suivi-total, html:not(.appli) .sc-commandes .sc-suivi-actions { order: 2; }
+  html:not(.appli) .sc-commandes .sc-sec-titre { font-size: 18px; margin-top: 28px; }
+  html:not(.appli) .sc-passees, html:not(.appli) .sc-passees tbody, html:not(.appli) .sc-passees tr, html:not(.appli) .sc-passees td { display: block; }
+  html:not(.appli) .sc-passees thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  html:not(.appli) .sc-passees tr.sc-passee { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "nom total" "art statut" "act act";
+    gap: 6px 12px; align-items: center; margin-top: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; }
+  html:not(.appli) .sc-passees tr.sc-passee.ouverte { border-radius: 16px 16px 0 0; border-bottom: 0; }
+  html:not(.appli) .sc-passees .sc-c-nom { grid-area: nom; min-width: 0; }
+  html:not(.appli) .sc-passees .sc-c-date { display: none; }
+  html:not(.appli) .sc-passees .sc-c-art { grid-area: art; font-size: 13px; color: var(--ink-soft); padding-left: 48px; }
+  html:not(.appli) .sc-passees .sc-c-statut { grid-area: statut; justify-self: end; }
+  html:not(.appli) .sc-passees .sc-c-total { grid-area: total; justify-self: end; font-weight: 800; font-variant-numeric: tabular-nums; }
+  html:not(.appli) .sc-passees .sc-c-actions { grid-area: act; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+  html:not(.appli) .sc-passees .sc-c-actions .btn-outline { min-height: 40px; padding: 8px 14px; font-size: 14px; }
+  html:not(.appli) .sc-passees .sc-details { margin-left: auto; min-height: 40px; }
+  html:not(.appli) .sc-passees .sc-tuile { width: 36px; height: 36px; }
+  html:not(.appli) .sc-passees tr.sc-passee-detail { padding: 0 14px 14px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 16px 16px; }
+}

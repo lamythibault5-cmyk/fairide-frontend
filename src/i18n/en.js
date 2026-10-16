@@ -6897,6 +6897,18 @@ export default {
       removeShort: "Remove",
       loading: "Loading…"
     },
+    siteCommande: {
+      recap: 'Summary',
+      suiteAuPaiement: 'Any delivery fee and tip: next step.',
+      stripe: 'Online payment processed by Stripe',
+      colCommerce: 'Shop',
+      colDate: 'Date',
+      colArticles: 'Items',
+      colStatut: 'Status',
+      colTotal: 'Total',
+      colActions: 'Actions',
+      details: 'Details'
+    },
     checkout: {
       simulationTitle: 'Simulation: fictitious payment',
       simulationText: 'Nothing is charged and no card is asked for: the order is marked as paid and sent to the simulation business, which prints it on its simulated terminal.',

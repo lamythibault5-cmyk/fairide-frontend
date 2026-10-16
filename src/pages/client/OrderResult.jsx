@@ -133,13 +133,15 @@ export default function OrderResult({ success }) {
   /* COMMANDE PAYÉE : LE MOMENT DE L'APPLICATION. Depuis le 2026-10-16 (« Proposition » de mockups/tous-les-ecrans.html,
      fondateur) : plein écran iris, le vélo de la marque roule jusqu'au commerce qui apparaît, la coche lime saute ; le
      récapitulatif (commerce, plats, mode, total débité) monte dans la feuille blanche. Mêmes textes, mêmes deux actions ;
-     « Voir mes commandes » reste la seule action lime. Les autres états (vérification, attente, échec) restent sobres. */
+     « Voir mes commandes » reste la seule action lime. Les autres états (vérification, attente, échec) restent sobres.
+     Sur le site, sur un ordinateur (site-commande.css) : le bandeau va d'un bord à l'autre, la feuille passe en deux colonnes
+     — le récapitulatif à gauche, les deux actions dans un cadre à droite. */
   if (state === 'paid') {
     // Comme Mes commandes : le pourboire payé avec la commande est débité en plus du total (backend pourboireCommande.js).
     const debite = commande ? Number(commande.total) + (commande.tipPaid && commande.tipAtCheckout > 0 ? Number(commande.tipAtCheckout) : 0) : null;
     const lieu = commande?.orderType === 'pickup' ? commande.restaurantAddress : commande?.address;
     return (
-      <div className="ec-page ec-merci">
+      <div className="ec-page ec-merci sc-page">
         <BandeauCommande className="ec-merci-bandeau">
           <svg className="ec-merci-scene" viewBox="0 0 280 120" aria-hidden="true">
             <line className="ec-merci-route" x1="10" y1="103" x2="270" y2="103" strokeWidth="3" strokeLinecap="round" strokeDasharray="8 8" />
@@ -157,6 +159,10 @@ export default function OrderResult({ success }) {
           {orderId && <p className="ec-sous">{t('orderResult.orderNumber', { id: String(orderId).slice(0, 8) })}</p>}
         </BandeauCommande>
         <FeuilleCommande>
+          {/* Site sur ordinateur (site-commande.css) : le récapitulatif à gauche, les deux actions à droite. Ailleurs, ces deux
+              enveloppes sont en `display: contents` : la feuille reste une colonne. */}
+          <div className="sc-merci-grille">
+          <div className="sc-merci-texte">
           <p className="ec-merci-texte">{view.text}</p>
           {commande && (
             <div className="ec-recap">
@@ -172,8 +178,12 @@ export default function OrderResult({ success }) {
               </div>
             </div>
           )}
+          </div>
+          <div className="sc-merci-actions">
           <Link to="/orders" className="btn-gold ec-merci-bouton">{t('orderResult.viewOrders')}</Link>
           <Link to="/restaurants" className="btn-ghost ec-merci-retour">{t('ecranCommande.retourCommerces')}</Link>
+          </div>
+          </div>
         </FeuilleCommande>
       </div>
     );
