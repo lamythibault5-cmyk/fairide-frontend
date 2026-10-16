@@ -6678,6 +6678,15 @@ export default {
       glutenFree: 'Sans gluten',
       declaredByBusiness: 'Déclaré par le commerce'
     },
+    ecranListe: {
+      cuisinesAria: 'Types de cuisine',
+      favorisUn: '1 commerce',
+      favorisN: '{n} commerces',
+      favorisAucun: 'Aucun pour l’instant',
+      favorisRetirer: 'Retirer des favoris',
+      carteVoir: 'Voir',
+      carteFermer: 'Fermer la fiche'
+    },
     restaurantList: {
       sectionFreeDelivery: 'Livraison offerte',
       sectionDeliveryFrom: 'Livraison dès {amount}',

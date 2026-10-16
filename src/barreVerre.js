@@ -51,8 +51,8 @@ function carteDeplacement(l, h) {
 
 let defs = null;
 let compteur = 0;
-// Un filtre par élément, réécrit quand sa taille change. `irise` : trois forces, une par couleur (bords arc-en-ciel).
-function poserFiltre(el, variable, echelle, irise) {
+// Un filtre par élément, réécrit quand sa taille change (servi aussi à la bande des cuisines, lentillePuces.js). `irise` : trois forces, une par couleur (bords arc-en-ciel).
+export function poserFiltre(el, variable, echelle, irise) {
   const l = Math.round(el.offsetWidth);
   const h = Math.round(el.offsetHeight);
   if (!l || !h) return;
@@ -84,7 +84,7 @@ function poserFiltre(el, variable, echelle, irise) {
 }
 
 // Chromium (Android, WebView Android) : la réfraction marche. Safari / WKWebView : non, on s'en passe.
-const refractionPossible = () => /Chrome\/|Chromium/.test(navigator.userAgent) && !/Edg\/|Firefox/.test(navigator.userAgent);
+export const refractionPossible = () => /Chrome\/|Chromium/.test(navigator.userAgent) && !/Edg\/|Firefox/.test(navigator.userAgent);
 
 /* Branche la barre. Rend la fonction qui débranche. `nav` : .dashboard-nav ; `curseur` : sa .nav-curseur. */
 export function brancherBarreVerre(nav, curseur) {

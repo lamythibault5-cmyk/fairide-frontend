@@ -29,6 +29,8 @@ import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 import EtatVide from '../../components/EtatVide';
+import TeteListe from '../../components/TeteListe';
+import '../../ecran-liste.css';
 import AvecMarque from '../../components/AvecMarque';
 
 // Bandes de prix, calculees sur le prix MEDIAN des plats de la carte : aucune colonne « niveau de
@@ -475,57 +477,24 @@ export default function RestaurantList() {
           panier, et on découvrait à la fin où tout cela irait — l'adresse du compte, pas forcément
           celle du moment. C'est la place qu'elle occupe chez Uber Eats : en tête du fil, avant même
           de choisir un commerce, parce qu'elle détermine ce qui est pertinent.
-          Rien pour un visiteur non connecté : il n'a pas encore d'adresse à afficher.
-          aria-label sur le bouton : le mot « Modifier » a quitté l'écran au profit d'un chevron
-          (capture du fondateur, 2026-09-17), et un chevron seul ne dit rien à un lecteur d'écran —
-          le libellé porte donc l'action, et le chevron est marqué aria-hidden. */}
-      {user && (
-        <button
-          type="button"
-          className="fiche-adresse"
-          onClick={() => setChoixAdresse(true)}
-          aria-label={t('restaurantMenu.changeAddress')}
-        >
-          <Icone nom="maison" taille={18} />
-          <span className="fiche-adresse-texte">
-            <span className="fiche-adresse-intitule">{t('restaurantMenu.deliverTo')}</span>
-            <span className="fiche-adresse-valeur">
-              {user.addressStreet && user.addressCity
-                ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',')
-                : t('restaurantMenu.noAddress')}
-            </span>
-          </span>
-          {/* Le chevron est dessiné en CSS (deux bords tournés) et non écrit en caractère : « ⌄ » ne
-              pèse pas le même trait d'une police à l'autre, et se retrouve souvent décentré. */}
-          <span className="fiche-adresse-chevron" aria-hidden="true" />
-        </button>
-      )}
+          Rien pour un visiteur non connecté : il n'a pas encore d'adresse à afficher (adresse null, pas de bandeau).
+          Depuis le 2026-10-16, l'adresse est sur un bandeau iris et les pastilles de cuisine dans une bande collée en
+          haut, la cuisine choisie sous une lentille : voir TeteListe.jsx. */}
+      <TeteListe
+        adresse={user ? (user.addressStreet && user.addressCity
+          ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',')
+          : t('restaurantMenu.noAddress')) : null}
+        intituleAdresse={t('restaurantMenu.deliverTo')}
+        libelleChanger={t('restaurantMenu.changeAddress')}
+        onAdresse={() => setChoixAdresse(true)}
+        options={cuisineOptions}
+        estActive={chipActive}
+        surPuce={surChip}
+        cuisine={cuisine}
+        choisirCuisine={setCuisine}
+        libelleBande={t('ecranListe.cuisinesAria')}
+      />
       {choixAdresse && <ChoixAdresse onFermer={() => setChoixAdresse(false)} />}
-      {/* Les pastilles sont des <button>, pas des <div onClick>. C'était le seul endroit du dépôt
-          où une .cuisine-chip n'en était pas un — partout ailleurs (MapPage, ChoixPastilles) elle
-          porte déjà type="button" et aria-pressed. Un <div> ne reçoit pas le focus : ces pastilles
-          étaient injoignables au clavier, alors que filtrer par type de cuisine est le premier
-          geste d'un client sur cette page. L'anneau de mise au point posé avec la grammaire des
-          boutons ne pouvait donc jamais s'y afficher. */}
-      <div className="cuisine-scroll">
-        <AutoScrollRow
-          items={cuisineOptions}
-          keyFor={(opt) => opt.value}
-          className="cuisine-track"
-          renderItem={(opt, i, key) => (
-            <button
-              key={key}
-              type="button"
-              className={`cuisine-chip${chipActive(opt) ? ' active' : ''}`}
-              aria-pressed={chipActive(opt)}
-              onClick={() => surChip(opt)}
-            >
-              <span className="emoji"><Icone nom={opt.emoji} taille={18} /></span>
-              <span>{opt.label}</span>
-            </button>
-          )}
-        />
-      </div>
       {/* LE CHAMP DE RECHERCHE ET LE MENU DES COMMUNES ONT QUITTÉ CETTE PAGE (fondateur, 2026-09-17).
           Deux commandes de plus en haut du fil, alors que la recherche a déjà son propre écran — une
           pastille lui est dédiée dans la barre du bas — et que les communes se choisissent aussi
