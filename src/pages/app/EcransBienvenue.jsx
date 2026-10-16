@@ -114,19 +114,57 @@ export function Option({ on, icone, titre, sous, multi, onClick }) {
   );
 }
 
+/* Le vélo arrive sur sa route pointillée et s'arrête devant un commerce (même scène que les écrans vides, EtatVide.jsx,
+ * en lime sur l'iris). Le commerce saute une fois le vélo passé. */
+function SceneAccueil() {
+  return (
+    <svg className="bv-scene" viewBox="0 0 320 96" aria-hidden="true">
+      <line className="bv-scene-route" x1="6" y1="86" x2="314" y2="86" strokeWidth="3" strokeLinecap="round" strokeDasharray="8 8" />
+      <g transform="translate(260 42)">
+        <g className="bv-scene-repere">
+          <rect x="-1" y="-1" width="38" height="38" rx="11" fill="none" stroke="currentColor" strokeWidth="1.6" opacity=".55" />
+          <g transform="translate(6 6) scale(1.05)" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 9h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9Z" /><path d="M3 9 5 4h14l2 5" /><path d="M9 21v-6h6v6" />
+          </g>
+        </g>
+      </g>
+      <g transform="translate(36 31) scale(1.2)">
+        <g className="bv-scene-velo"><g className="bv-scene-bob">
+          <g fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"><circle cx="15" cy="29" r="12.5" /><circle cx="61" cy="29" r="12.5" /></g>
+          <g fill="currentColor"><rect x="16" y="8" width="44" height="5" rx="2.5" /><g transform="rotate(42 27 22.5)"><rect x="13" y="20" width="28" height="5" rx="2.5" /></g></g>
+        </g></g>
+      </g>
+    </svg>
+  );
+}
+
+/* PREMIER ÉCRAN, version B2 de mockups/accueil-appli.html (fondateur, 2026-10-16 : l'ancien, tout iris avec un « 10 % »
+ * de 88 px, était « trop fort »). Même cadre que les écrans suivants : le slogan du site dans le bandeau iris, le vélo
+ * dessous, puis la feuille blanche avec la phrase, les barres de commission (celles de « Pourquoi passer à Fairide ? ») et
+ * le seul bouton lime. Le slogan est celui de l'accueil du site (landing.title1/title2), pour les trois langues. */
 export function EcranAccueil({ onCommencer, onConnexion }) {
   const { t } = useLanguage();
   return (
     <>
-      <div className="bv-ligne-haut"><BrandMark size={72} /><Langues /></div>
+      <div className="bv-ligne-haut">
+        <span className="bv-marque"><BrandMark size={34} tile={false} color="#C8F03C" /><span className="wordmark">fairide</span></span>
+        <Langues />
+      </div>
+      <h1 className="bv-titre bv-titre-accueil">{t('landing.title1')}<br />{t('landing.title2')}</h1>
+      {/* Sur un grand écran, c'est le bandeau qui grandit (le vélo descend vers la feuille), pas la feuille. */}
       <div className="bv-grandit" />
-      {/* Sans texte barré (fondateur, 2026-10-16) : la fourchette des autres applis est écrite en clair. */}
-      <div className="bv-gros"><b>10 %</b><span>{t('appli.commission')}<br />{t('appli.ailleurs')}</span></div>
-      <h1 className="bv-titre bv-titre-accueil">{t('appli.accTitre')}</h1>
-      <p className="bv-sous">{t('appli.accSub')}</p>
-      <span className="bv-pastille"><Drapeau /> {t('appli.beChip')}</span>
-      <button type="button" className="bv-btn btn-gold" onClick={onCommencer}>{t('appli.commencer')}</button>
-      <button type="button" className="bv-lien" onClick={onConnexion}>{t('appli.dejaCompte')}</button>
+      <SceneAccueil />
+      <Feuille>
+        <p className="bv-sous bv-accroche">{t('appli.accSub')}</p>
+        {/* Sans texte barré (fondateur, 2026-10-16) : la fourchette des autres applis est écrite en clair. */}
+        <div className="bv-carte bv-barres" aria-label={`Fairide 10 %, ${t('appli.autresApplis')} 22–32 %`}>
+          <span>Fairide</span><i className="fairide" /><span><b>10 %</b></span>
+          <span>{t('appli.autresApplis')}</span><i className="autres"><em /></i><span>22–32 %</span>
+        </div>
+        <p className="bv-petit bv-ligne-be bv-be-accueil"><Drapeau /> {t('appli.beChip')}</p>
+        <button type="button" className="bv-btn btn-gold" onClick={onCommencer}>{t('appli.commencer')}</button>
+        <button type="button" className="bv-lien" onClick={onConnexion}>{t('appli.dejaCompte')}</button>
+      </Feuille>
     </>
   );
 }
