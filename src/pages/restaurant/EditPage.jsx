@@ -16,6 +16,10 @@ import EcranCuisines from '../../components/commerce/EcranCuisines';
 import EcranCapacite from '../../components/commerce/EcranCapacite';
 import { restaurantTypeLabel } from '../../menuCategories';
 import EcranSuppression from '../../components/commerce/EcranSuppression';
+import { BandeauCommerce, FeuilleCommerce } from '../../components/commerce/BandeauCommerce';
+import { useAuth } from '../../context/AuthContext';
+import { RouteMiseEnLigne, EtapesMiseEnLigne } from '../../components/commerce/MiseEnLigne';
+import useMiseEnLigne from '../../components/commerce/useMiseEnLigne';
 
 // « Mon commerce » : une rangée par sujet, qui dit l'état actuel, et un sous-écran pour le changer.
 //
@@ -29,6 +33,10 @@ import EcranSuppression from '../../components/commerce/EcranSuppression';
 //
 // Un sous-écran est monté à l'ouverture et démonté à la fermeture : ses champs partent de `restaurant`
 // une seule fois, et le rafraîchissement du tableau de bord toutes les 15 s n'efface plus une saisie.
+//
+// BANDEAU IRIS (fondateur, 2026-10-16, mockups/tous-les-ecrans.html › Mon commerce) : le nom, l'état en ligne et la
+// route vers la mise en ligne sur le bandeau (le vélo sur l'étape en cours) ; dans la feuille, la prochaine étape et son
+// bouton lime, les autres étapes, puis les blocs communs du tableau de bord et les rangées ci-dessous.
 const ECRANS = {
   identite: EcranIdentite, contact: EcranContact, adresse: EcranAdresse, horaires: EcranHoraires,
   fermetures: EcranFermetures, legal: EcranLegal, livraison: EcranLivreurs, offre: EcranOffreLivraison,
@@ -42,8 +50,10 @@ function aujourdhuiIso() {
 
 export default function EditPage() {
   const { t } = useLanguage();
-  const { restaurant, drivers, restoId, loadDashboard } = useOutletContext();
+  const { restaurant, drivers, restoId, loadDashboard, communs, onConnect, connecting, lectureSeule } = useOutletContext();
+  const { token } = useAuth();
   const [ouvert, setOuvert] = useState(null);
+  const etapes = useMiseEnLigne({ restaurant, restoId, token, onConnect, connecting, onChange: () => loadDashboard(restoId), lectureSeule });
 
   if (!restaurant) return null;
   const r = restaurant;
@@ -63,8 +73,24 @@ export default function EditPage() {
   const Ecran = ouvert ? ECRANS[ouvert] : null;
   const ligne = (cle, props) => <LigneCompte {...props} onClick={() => setOuvert(cle)} />;
 
+  const type = restaurantTypeLabel(r.cuisine, t) || r.cuisine;
   return (
     <div>
+      <BandeauCommerce>
+        <div className="ec-b-haut">
+          {/* Sans étape restante, le nom devient le titre : il n'est pas répété au-dessus. */}
+          <span>{etapes && <><b>{r.name}</b>{type || r.commune ? ' · ' : ''}</>}{[type, r.commune].filter(Boolean).join(' · ')}</span>
+          <span className="ec-chip">{r.publicListed ? t('ecranCommerce.enLigne') : t('ecranCommerce.pasEnLigne')}</span>
+        </div>
+        <h1 className="ec-b-titre">{etapes ? t('miseEnLigne.title') : r.name}</h1>
+        {etapes && <p className="ec-b-sous">{t('miseEnLigne.progress', { done: etapes.faites, total: etapes.etapes.length })}</p>}
+        {etapes && <RouteMiseEnLigne etapes={etapes.etapes} />}
+      </BandeauCommerce>
+      <FeuilleCommerce>
+      {etapes && <EtapesMiseEnLigne etat={etapes} />}
+      {communs}
+
+      <p className="ec-feuille-titre">{t('editResto.groupShop')}</p>
       <div className="card account-groupe" aria-label={t('editResto.groupShop')}>
         {ligne('identite', { icone: 'commerce', titre: t('editResto.rowIdentity'), sous: r.name })}
         {ligne('adresse', { icone: 'position', titre: t('editResto.address'), sous: adresse || aCompleter, accent: adresse ? undefined : 'warn' })}
@@ -73,6 +99,7 @@ export default function EditPage() {
         {ligne('contact', { icone: 'telephone', titre: t('editResto.rowContact'), sous: contact || aCompleter })}
       </div>
 
+      <p className="ec-feuille-titre">{t('editResto.delivery')}</p>
       <div className="card account-groupe" aria-label={t('editResto.delivery')}>
         {ligne('livraison', { icone: 'scooter', titre: t('editResto.delivery'), sous: r.deliveryMode === 'own' ? t('editResto.deliveryOwn', { n: drivers.length }) : t('editResto.deliveryPool') })}
         {ligne('offre', { icone: 'etiquette', titre: t('editResto.rowDeliveryOffer'), sous: offre })}
@@ -80,12 +107,15 @@ export default function EditPage() {
         {ligne('capacite', { icone: 'reglages', titre: t('editResto.rowCapacity'), sous: r.deliveryRadiusKm == null && r.maxOrdersPerDay == null ? t('editResto.capacitySubNone', { km: 6 }) : [r.deliveryRadiusKm != null && t('editResto.capacitySubRadius', { km: String(r.deliveryRadiusKm).replace('.', ',') }), r.maxOrdersPerDay != null && t('editResto.capacitySubCap', { n: r.maxOrdersPerDay })].filter(Boolean).join(' · ') })}
       </div>
 
+      <p className="ec-feuille-titre">{t('editResto.rowLegal')}</p>
       <div className="card account-groupe" aria-label={t('editResto.rowLegal')}>
         {ligne('legal', { icone: 'document', titre: t('editResto.rowLegal'), sous: legalManquant ? aCompleter : `BCE ${r.companyNumber}`, accent: legalManquant ? 'warn' : undefined })}
         {ligne('type', { icone: 'restaurants', titre: t('editResto.rowType'), sous: r.cuisine })}
         {ligne('cuisines', { icone: 'restaurants', titre: t('editResto.rowCuisines'), sous: (r.extraCuisines || []).length ? (r.extraCuisines || []).map((c) => restaurantTypeLabel(c, t) || c).join(', ') : t('editResto.cuisinesNone') })}
         {ligne('suppression', { icone: 'interdit', titre: t('editResto.deleteTitle'), danger: true })}
       </div>
+
+      </FeuilleCommerce>
 
       {Ecran && <Ecran restaurant={r} drivers={drivers} restoId={restoId} loadDashboard={loadDashboard} onFermer={() => setOuvert(null)} />}
     </div>

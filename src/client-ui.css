@@ -228,6 +228,36 @@
 .paiement-non-termine { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--iris); border-radius: var(--radius); }
 .suivi-carte.est-passee { padding-top: 16px; padding-bottom: 16px; }
 .suivi-carte.est-passee .suivi-resto { font-size: 16px; }
+/* COMMANDE EN COURS : LE BANDEAU IRIS (2026-10-16, version 1C ; Orders.jsx, RouteSuivi dans orderStatus.jsx). Le haut de la
+   carte est iris, le statut en grand, la route lime ; le bas reste blanc et remonte sur le bandeau en coins arrondis. */
+.card.suivi-carte--bandeau { padding: 0 16px 16px; overflow: hidden; border-color: var(--iris); }
+.suivi-bandeau { position: relative; margin: 0 -16px 12px; padding: 18px 18px 38px; background: var(--iris); color: #fff; }
+.suivi-bandeau::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 22px; background: #fff; border-radius: 22px 22px 0 0; }
+.suivi-bandeau-haut { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: rgba(255, 255, 255, .78); }
+.suivi-bandeau-haut b { color: #fff; font-weight: 600; }
+.suivi-bandeau-titre { font-family: var(--font-titre); font-size: 27px; line-height: 1.1; font-weight: 700; margin: 10px 0 6px; color: #fff; animation: suivi-titre .35s ease both; }
+@keyframes suivi-titre { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.suivi-bandeau .small { color: rgba(255, 255, 255, .82); }
+.suivi-bandeau .small b { color: #fff; }
+.route-suivi { position: relative; height: 48px; margin: 12px 0 6px; color: var(--lime); }
+.rs-voie { position: absolute; top: 35px; height: 3px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .38) 0 7px, transparent 7px 13px); }
+.route-suivi.en-route .rs-voie { animation: rs-voie .5s linear infinite; }
+@keyframes rs-voie { to { background-position: -13px 0; } }
+.rs-fait { position: absolute; top: 35px; height: 3px; border-radius: 2px; background: var(--lime); transition: width .9s cubic-bezier(.3, .7, .4, 1); }
+.rs-arret { position: absolute; top: 36.5px; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--iris); border: 2px solid rgba(255, 255, 255, .45); display: grid; place-items: center; }
+.rs-arret.actuel { width: 12px; height: 12px; margin: -6px 0 0 -6px; background: var(--lime); border-color: var(--lime); }
+.rs-arret.fait { width: 20px; height: 20px; margin: -10px 0 0 -10px; background: var(--lime); border: 0; color: var(--ink); animation: rs-coche .35s cubic-bezier(.34, 1.45, .64, 1) both; }
+@keyframes rs-coche { from { transform: scale(.3); } to { transform: none; } }
+.rs-velo { position: absolute; top: 2px; width: 42px; margin-left: -21px; line-height: 0; transition: left .9s cubic-bezier(.3, .7, .4, 1); }
+.rs-velo svg { transform-origin: 50% 100%; }
+.rs-velo.roule svg { animation: rs-bonds .9s ease-in-out; }
+@keyframes rs-bonds { 0%, 100% { transform: none; } 20%, 60% { transform: translateY(-2px) rotate(-3deg); } 40%, 80% { transform: translateY(0) rotate(1deg); } }
+.route-suivi.en-route .rs-velo svg { animation: rs-pedale .5s ease-in-out infinite; }
+@keyframes rs-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
+.rs-libs { list-style: none; display: grid; padding: 0; margin: 0; text-align: center; font-size: 11.5px; line-height: 1.2; color: rgba(255, 255, 255, .6); }
+.rs-libs .fait { color: rgba(255, 255, 255, .82); }
+.rs-libs .actuel { color: #fff; font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .route-suivi *, .suivi-bandeau-titre { animation: none !important; transition: none !important; } }
 
 /* Liste client : vrai commerce inscrit, pas encore ouvert aux commandes (RestaurantList.jsx, CarteBientot). */
 .rc-bientot { cursor: default; }
@@ -290,7 +320,10 @@
    plus de la barre de progression et des squelettes. Le plan de mouvement visait ~120 ms ; cette règle-ci l'emportait sur
    celle de styles.css (chargée après). */
 @keyframes page-arrive { from { opacity: .4; } to { opacity: 1; } }
-.page-fade { animation: page-arrive .12s ease-out both; }
+/* `backwards` et non `both` (2026-10-16) : une opacité tenue par l'animation après sa fin éteint le `backdrop-filter` de tout
+   ce que la page contient (le verre de la liste, de la fiche, du paiement, du commerce). L'état final est l'état normal de la
+   page (opacité 1) : rien d'autre ne change. */
+.page-fade { animation: page-arrive .12s ease-out backwards; }
 @media (prefers-reduced-motion: reduce) { .page-fade { animation: none; } }
 
 /* ---------- États vides : la pastille prend la teinte Fairide plutôt qu'un gris neutre ---------- */
@@ -418,6 +451,30 @@
 .plat-ligne > .plat-ajout:hover { background: var(--iris-deep); border-color: var(--iris-deep); }
 .plat-ligne > .plat-ajout:active { background: var(--lime); color: var(--ink); border-color: var(--lime); box-shadow: none; }
 .plat-ligne:last-child > .plat { border-bottom-color: transparent; }
+/* LE COMPTEUR DU PLAT (MenuCategorySections, PasPlat ; 2026-10-16, version 3C). Iris plein, ancré à droite : fermé c'est le
+   « + », ouvert il s'étire vers la gauche en « − n + » avec un ressort, replié il garde le nombre dans un rond lime. */
+.plat-pas { position: absolute; right: 6px; bottom: 20px; z-index: 1; width: 40px; height: 40px; border-radius: 20px; overflow: hidden;
+  background: var(--iris); color: #fff; box-shadow: 0 3px 10px rgba(59, 47, 181, .28); transition: width .42s cubic-bezier(.34, 1.6, .64, 1); }
+.plat-ligne-sans-photo > .plat-pas { bottom: auto; top: 50%; right: 0; translate: 0 -50%; }
+/* min-height !important : la règle des 44 px tactiles (styles.css, button:not(...)) a une spécificité de (0,3,1) et étirait
+   le rond lime en ovale. La cible tactile reste le compteur entier, 40 px de haut. */
+.plat-pas button { position: absolute; top: 2px; width: 36px; height: 36px; min-height: 0 !important; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: inherit; display: grid; place-items: center; font-size: 22px; font-weight: 600; line-height: 1; cursor: pointer;
+  box-shadow: none; transition: opacity .2s, transform .12s; }
+.plat-pas button:active { transform: scale(.85); }
+.plat-pas button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
+.plat-pas .plat-pas-plus { right: 2px; }
+.plat-pas .plat-pas-moins { left: 2px; }
+.plat-pas .plat-pas-chiffre { left: 50%; top: 6px; width: 28px; height: 28px; margin-left: -14px; background: var(--lime); color: var(--ink); font-size: 14px; font-weight: 800; overflow: hidden; }
+.plat-pas .plat-pas-chiffre span { display: block; animation: plat-pas-chiffre .3s cubic-bezier(.34, 1.45, .64, 1); }
+@keyframes plat-pas-chiffre { from { transform: translateY(70%); opacity: 0; } to { transform: none; opacity: 1; } }
+.plat-pas--ouvert { width: 110px; }
+.plat-pas--ferme .plat-pas-moins, .plat-pas--ferme .plat-pas-chiffre, .plat-pas--replie .plat-pas-moins, .plat-pas--replie .plat-pas-plus { opacity: 0; pointer-events: none; }
+.plat-pas--bosse0 { animation: plat-pas-bosse0 .45s cubic-bezier(.34, 1.45, .64, 1); }
+.plat-pas--bosse1 { animation: plat-pas-bosse1 .45s cubic-bezier(.34, 1.45, .64, 1); }
+@keyframes plat-pas-bosse0 { 30% { scale: 1.12 .9; } 60% { scale: .96 1.05; } }
+@keyframes plat-pas-bosse1 { 30% { scale: 1.12 .9; } 60% { scale: .96 1.05; } }
+@media (prefers-reduced-motion: reduce) { .plat-pas, .plat-pas * { animation: none !important; transition: none !important; } }
 
 /* « À découvrir » en bas de fiche : de vraies vignettes (photo ou visuel de marque), plus grandes. */
 .discover-card { flex-basis: 172px; border-radius: 16px; }

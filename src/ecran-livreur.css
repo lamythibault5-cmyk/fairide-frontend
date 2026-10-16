@@ -1,0 +1,210 @@
+/* ÉCRANS DU LIVREUR AU BANDEAU IRIS (fondateur, 2026-10-16 : propositions de la partie « Livreur » de
+   mockups/tous-les-ecrans.html). Même famille que l'accueil de l'app (.bv-bandeau) et le suivi du client (RouteSuivi) :
+   en haut un bandeau iris où roule le vélo de la marque, en lime ; dessous, une feuille blanche aux coins ronds.
+     - Tableau de bord (/driver, Dashboard.jsx) : l'interrupteur de disponibilité est sur le bandeau ; disponible, le vélo
+       roule, en pause il s'arrête. Chaque course a son trajet en pointillés, son prix dans une pastille iris et
+       « Prendre la course » en lime.
+     - Course en cours (même page) : le trajet est sur le bandeau. Le vélo attend au commerce, roule vers la maison, saute à
+       l'arrivée. La glissière (GlisserPourConfirmer, app seulement) est un bloc lime où l'on fait glisser le vélo ; le code
+       du client se tape dans quatre cases.
+     - Gains (/driver/earnings, EarningsPage.jsx) : l'année se choisit sur le bandeau, le net versé roule
+       (ChiffresRoulants), les mois sont des barres iris, deux tuiles disent les deux règles (90 % / 100 %).
+   Préfixe .ecl- (écran livreur). Fichier importé par ces pages : le site ne le charge qu'en les ouvrant.
+   Sur le site : sous 900 px le bandeau va d'un bord à l'autre comme dans l'app ; au-dessus (barre latérale), c'est un
+   bloc iris aux coins ronds et la feuille redevient la page. Ombre douce : dans l'app seulement (html.appli). */
+
+.ecl { --ecl-ressort: cubic-bezier(.34, 1.45, .64, 1); --ecl-ressort-fort: cubic-bezier(.3, 1.8, .5, 1); }
+
+/* ---------- Bandeau iris et feuille blanche ---------- */
+.ecl-bandeau { position: relative; background: var(--iris); color: #fff; padding: 18px 20px 20px; border-radius: 22px; }
+.ecl-feuille { position: relative; margin-top: 16px; }
+@media (max-width: 900px) {
+  /* Les marges négatives annulent celles de .dashboard-main (16 px + encoche en haut, la gouttière sur les côtés). */
+  .ecl-bandeau { margin: calc(-16px - env(safe-area-inset-top)) calc(-1 * var(--gouttiere, 16px)) 0; padding: calc(18px + env(safe-area-inset-top)) 20px 46px; border-radius: 0; }
+  .ecl-feuille { margin: -24px calc(-1 * var(--gouttiere, 16px)) 0; padding: 20px 18px 8px; background: #fff; border-radius: 26px 26px 0 0; animation: ecl-monte .45s var(--ecl-ressort) both; }
+}
+@keyframes ecl-monte { from { transform: translateY(36px); opacity: .5; } to { transform: none; opacity: 1; } }
+.ecl-b-haut { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: rgba(255, 255, 255, .78); min-height: 36px; }
+.ecl-b-haut b { color: #fff; font-weight: 600; }
+.ecl-b-droite { display: flex; align-items: center; gap: 8px; }
+.ecl-b-titre { font-family: var(--font-titre); font-size: 28px; line-height: 1.1; font-weight: 700; letter-spacing: 0; margin: 12px 0 6px; color: #fff; overflow-wrap: anywhere; }
+.ecl-b-sous { margin: 0; color: rgba(255, 255, 255, .82); font-size: 14.5px; line-height: 1.4; }
+.ecl-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; background: var(--lime); color: var(--ink); padding: 5px 10px; border-radius: var(--radius-pill); animation: ecl-saute .35s var(--ecl-ressort) both; }
+@keyframes ecl-saute { from { transform: scale(.3); } to { transform: none; } }
+/* Urgence (BoutonUrgence.jsx) sur le bandeau : contour blanc ; le rouge ne se lit pas sur l'iris. Ses couleurs sont en ligne. */
+.ecl-urgence > .btn-outline { color: #fff !important; border-color: rgba(255, 255, 255, .45) !important; background: transparent; padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: var(--radius-pill); }
+
+/* ---------- L'interrupteur « Disponible pour livrer » ---------- */
+.ecl-service { display: flex; align-items: center; gap: 14px; width: 100%; margin-top: 14px; padding: 14px 14px 14px 18px; border-radius: 22px; border: 1px solid rgba(255, 255, 255, .3);
+  background: transparent; color: #fff; font: inherit; text-align: left; cursor: pointer; transition: background .25s, transform .12s; }
+.ecl-service.on { background: rgba(255, 255, 255, .1); }
+.ecl-service:active:not(:disabled) { transform: scale(.98); }
+.ecl-service:disabled { opacity: .7; cursor: default; }
+.ecl-service-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ecl-service-txt b { font-size: 17px; }
+.ecl-service-txt span { font-size: 13px; opacity: .8; }
+.ecl-inter { position: relative; width: 50px; height: 30px; border-radius: 15px; background: rgba(255, 255, 255, .25); flex: none; transition: background .25s; }
+.ecl-inter::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .35s var(--ecl-ressort); }
+.ecl-service.on .ecl-inter { background: var(--lime); }
+.ecl-service.on .ecl-inter::after { transform: translateX(20px); background: var(--iris); }
+/* Dans la feuille (une course est en main, le bandeau montre son trajet) : sur blanc, l'interrupteur est iris. */
+.ecl-service.sur-blanc { margin: 18px 0 0; border-color: var(--line); color: var(--ink); background: #fff; }
+.ecl-service.sur-blanc .ecl-inter { background: var(--line); }
+.ecl-service.sur-blanc.on .ecl-inter { background: var(--iris); }
+.ecl-service.sur-blanc.on .ecl-inter::after { background: #fff; }
+
+/* ---------- La route et le vélo (RouteVelo.jsx) ---------- */
+.ecl-route { position: relative; height: 34px; margin-top: 14px; color: var(--lime); transition: opacity .3s; }
+.ecl-voie { position: absolute; left: 0; right: 0; bottom: 4px; height: 3px; background: linear-gradient(90deg, rgba(255, 255, 255, .4) 0 8px, transparent 8px) 0 0 / 16px 3px repeat-x; }
+.ecl-route.roule .ecl-voie { animation: ecl-voie .5s linear infinite; }
+@keyframes ecl-voie { to { background-position: -16px 0; } }
+.ecl-velo { position: absolute; bottom: 7px; width: 42px; margin-left: -21px; line-height: 0; transition: left 1.4s cubic-bezier(.3, .7, .4, 1); }
+.ecl-velo svg { display: block; transform-origin: 50% 100%; }
+.ecl-route.roule .ecl-velo svg { animation: ecl-pedale .5s ease-in-out infinite; }
+@keyframes ecl-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
+.ecl-route.saut .ecl-velo svg { animation: ecl-saut .6s var(--ecl-ressort) 1.3s; }
+@keyframes ecl-saut { 0%, 100% { transform: none; } 40% { transform: translateY(-10px) rotate(-6deg); } }
+.ecl-route.pause { opacity: .45; }
+/* Le trajet d'une course : le commerce, la route, la maison. La route passe au milieu des deux ronds. */
+.ecl-trajet { display: flex; align-items: flex-end; gap: 4px; margin-top: 16px; }
+.ecl-trajet .ecl-route { flex: 1; height: 44px; margin: 0; }
+.ecl-trajet .ecl-voie { bottom: 16.5px; }
+.ecl-trajet .ecl-velo { bottom: 19px; }
+.ecl-pt { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .4); display: grid; place-items: center; color: #fff; flex: none; }
+.ecl-pt.maison { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+.ecl-pt.maison.arrivee { animation: ecl-saute .4s var(--ecl-ressort-fort) 1.25s both; }
+/* Partage de position pendant la livraison (ce que disait la rangée « Partage de position »). */
+.ecl-partage { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 0; font-size: 12.5px; line-height: 1.4; color: rgba(255, 255, 255, .82); }
+.ecl-partage b { color: #fff; font-weight: 600; }
+.ecl-partage i { flex: none; width: 9px; height: 9px; margin-top: 4px; border-radius: 50%; background: var(--lime); }
+.ecl-partage.ok i { animation: ecl-pouls 2s ease-out infinite; }
+.ecl-partage.attention i { background: transparent; border: 2px solid #fff; }
+@keyframes ecl-pouls { 0%, 100% { box-shadow: 0 0 0 0 rgba(200, 240, 60, .7); } 60% { box-shadow: 0 0 0 8px rgba(200, 240, 60, 0); } }
+
+/* ---------- Dans la feuille ---------- */
+.ecl-h2 { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 17px; font-weight: 700; margin: 22px 0 8px; }
+.ecl-feuille > .ecl-h2:first-child, .ecl-feuille > :first-child .ecl-h2:first-child { margin-top: 0; }
+.ecl-titre-sec { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin: 18px 0 8px; letter-spacing: .05em; text-transform: uppercase; }
+.ecl-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-pill); white-space: nowrap; }
+.ecl-badge.lime { background: var(--lime); color: var(--ink); }
+.ecl-badge.doux { background: rgba(59, 47, 181, .1); color: var(--iris); }
+.ecl-badge.neutre { background: var(--surface-soft); color: var(--ink); }
+.ecl-grille { margin: 0 0 6px; font-size: 13.5px; }
+.ecl-grille summary { display: flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; color: var(--iris); font-weight: 600; list-style: none; }
+.ecl-grille summary::-webkit-details-marker { display: none; }
+.ecl-grille p { margin: 4px 0 6px; }
+
+/* Une course proposée. */
+.ecl-offre { border: 1px solid var(--line); border-radius: 20px; padding: 14px; margin-top: 12px; background: #fff; transition: transform .32s var(--ecl-ressort), opacity .32s, border-color .2s; }
+.ecl-offre.prise { border-color: var(--iris); box-shadow: inset 0 0 0 1px var(--iris); }
+.ecl-offre.part { opacity: 0; transform: translateX(-60px); }
+.ecl-offre-tete { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.ecl-offre-nom { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ecl-offre-nom b { font-size: 17px; line-height: 1.25; }
+.ecl-offre-nom small { font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
+.ecl-prix { flex: none; display: inline-flex; flex-direction: column; background: var(--iris); color: #fff; border-radius: 16px; padding: 6px 12px; font-size: 18px; font-weight: 800; line-height: 1.15; white-space: nowrap; }
+.ecl-prix small { font-size: 10.5px; font-weight: 600; opacity: .8; }
+.ecl-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ecl-trajet-carte { display: flex; align-items: center; gap: 6px; margin: 12px 0 4px; }
+.ecl-tj-pt { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--iris); color: #fff; flex: none; }
+.ecl-tj-pt.maison { background: var(--lime); color: var(--ink); }
+.ecl-tj-voie { flex: 1; min-width: 0; position: relative; height: 22px; display: grid; place-items: center; font-size: 12px; }
+.ecl-tj-voie::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 2.5px dashed rgba(59, 47, 181, .35); }
+.ecl-tj-voie b { position: relative; background: #fff; padding: 0 8px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.ecl-tj-libs { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--ink-soft); line-height: 1.35; }
+.ecl-tj-libs > span { min-width: 0; overflow-wrap: anywhere; }
+.ecl-tj-libs > span:last-child { text-align: right; }
+.ecl-faint { color: var(--ink-faint); }
+.ecl-offre .small { margin-top: 6px; }
+.ecl-offre-pied { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.ecl-offre-pied .btn-ghost { flex: none; min-height: 44px; padding: 10px 8px; font-weight: 600; }
+.ecl-offre-pied .btn-gold { flex: 1; padding: 12px 14px; font-size: 15px; font-weight: 700; border-radius: var(--radius-pill); }
+
+/* La course en main : le code du comptoir, les articles, l'itinéraire, le code du client. */
+.ecl-code { padding: 12px 14px; border: 2px dashed var(--iris); border-radius: 14px; text-align: center; }
+.ecl-code-lib { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 4px; }
+.ecl-code-valeur { font-size: 32px; font-weight: 800; letter-spacing: 8px; color: var(--iris); line-height: 1.1; }
+.ecl-articles { list-style: none; padding: 0; margin: 12px 0 6px; }
+.ecl-articles li { display: flex; gap: 10px; align-items: flex-start; padding: 5px 0; font-size: 14px; }
+.ecl-articles li > span:last-child { min-width: 0; display: flex; flex-direction: column; }
+.ecl-articles small { font-size: 12.5px; color: var(--ink-soft); }
+.ecl-qte { flex: none; min-width: 24px; height: 24px; padding: 0 4px; border: 1px solid var(--line); border-radius: 6px; display: grid; place-items: center; font-size: 12.5px; font-weight: 700; }
+.ecl-itineraire { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 10px; }
+.ecl-itineraire a { width: 100%; padding: 12px 10px; font-size: 14.5px; font-weight: 700; text-align: center; text-decoration: none; border-radius: var(--radius-pill); box-sizing: border-box; }
+.ecl-ligne { display: flex; align-items: center; gap: 12px; padding: 2px 0 12px; margin-bottom: 4px; border-bottom: 1px solid var(--line); font-size: 15px; }
+.ecl-ligne > svg { flex: none; color: var(--iris); }
+.ecl-ligne .ecl-grow { flex: 1; min-width: 0; font-weight: 600; }
+.ecl-ligne .ecl-grow small { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 400; color: var(--ink-soft); }
+.ecl-rond { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; color: var(--iris); }
+.ecl-course-carte { border: 1px solid var(--line); border-radius: 20px; padding: 14px; margin-top: 12px; }
+.ecl-course-tete { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.ecl-course-tete b { font-size: 16px; }
+.ecl-glisser { margin-top: 14px; }
+.ecl-glisser .glisser-confirmer { margin-top: 0; }
+/* Le code du client, chiffre par chiffre. Un seul vrai champ, transparent, posé sur les quatre cases. */
+.ecl-code-cases { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 340px; cursor: text; }
+.ecl-code-cases input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; opacity: 0; font-size: 16px; caret-color: transparent; }
+.ecl-code-cases > span { height: 56px; border-radius: 14px; border: 1.5px solid var(--line); background: #fff; display: grid; place-items: center; font-size: 26px; font-weight: 800; color: var(--iris); transition: border-color .15s; }
+.ecl-code-cases > span.plein { border-color: var(--iris); animation: ecl-saute .3s var(--ecl-ressort); }
+.ecl-code-cases:focus-within > span.actuel { border: 2px solid var(--iris); }
+.ecl-code-envoi { margin-top: 10px; }
+
+/* Livrées aujourd'hui. */
+.ecl-groupe { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.ecl-lc { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 15px; }
+.ecl-lc:last-child { border-bottom: 0; }
+.ecl-lc .ecl-grow { flex: 1; min-width: 0; }
+.ecl-lc .ecl-grow small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-soft); }
+.ecl-tuile-ic { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); color: var(--iris); display: grid; place-items: center; flex: none; }
+
+/* ---------- La glissière (GlisserPourConfirmer.jsx, app seulement) : un bloc lime, le vélo comme pouce ---------- */
+.glisser-confirmer.glisser-velo { background: var(--lime); color: var(--ink); }
+.glisser-velo .glisser-confirmer-pouce { background: var(--iris); color: var(--lime); }
+.glisser-velo .glisser-confirmer-pouce svg { transform: none; }
+.glisser-velo.est-fait .glisser-confirmer-pouce { color: #fff; animation: ecl-saute .4s cubic-bezier(.3, 1.8, .5, 1); }
+.glisser-velo:not(.est-fait):not(.est-inactif) .glisser-confirmer-pouce svg { animation: ecl-pedale .5s ease-in-out infinite; }
+.glisser-velo:not(.est-fait) .glisser-confirmer-texte {
+  background: linear-gradient(90deg, var(--ink) 40%, rgba(20, 18, 31, .45) 50%, var(--ink) 60%) 0 0 / 300% 100% no-repeat;
+  -webkit-background-clip: text; background-clip: text; color: transparent; animation: ecl-reflet 2.4s linear infinite;
+}
+@keyframes ecl-reflet { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+html.appli .glisser-velo .glisser-confirmer-pouce { box-shadow: 0 3px 10px rgba(42, 33, 133, .35); }
+
+/* ---------- Gains ---------- */
+.ecl-annees { display: inline-flex; gap: 2px; padding: 4px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .12); max-width: 62%; overflow-x: auto; scrollbar-width: none; }
+.ecl-annees::-webkit-scrollbar { display: none; }
+/* Spécificité au-dessus de la règle tactile de 44 px (styles.css, pointer: coarse) : le groupe garde sa hauteur de pastille. */
+html .ecl .ecl-annees button.ecl-an { min-height: 32px; border: 0; background: transparent; font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px;
+  border-radius: var(--radius-pill); color: rgba(255, 255, 255, .85); cursor: pointer; white-space: nowrap; transition: background .25s, color .2s; }
+html .ecl .ecl-annees button.ecl-an.on { background: var(--lime); color: var(--ink); }
+.ecl-net-lib { margin: 18px 0 0; }
+.ecl-gros { font-family: var(--font-titre); font-size: 42px; font-weight: 700; letter-spacing: 0; line-height: 1.1; overflow: hidden; white-space: nowrap; font-variant-numeric: tabular-nums; margin: 2px 0 4px; color: #fff; }
+.ecl-regles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ecl-regle { display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid var(--line); border-radius: 16px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.35; }
+.ecl-regle svg { color: var(--iris); }
+.ecl-regle b { font-family: var(--font-titre); font-size: 22px; color: var(--ink); }
+.ecl-aide { margin: 10px 0 0; }
+.ecl-barres { position: relative; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: max(2px, calc(24px - var(--n) * 1px)); align-items: end;
+  height: 150px; padding-bottom: 18px; margin-top: 34px; border-bottom: 1px solid var(--line); }
+html .ecl .ecl-barres button.ecl-barre-v { position: relative; height: 100%; min-height: 0; display: flex; align-items: flex-end; justify-content: center; border: 0; background: none; padding: 0; cursor: pointer; font: inherit; color: inherit; }
+.ecl-barre-v i { display: block; width: 100%; max-width: 44px; height: var(--h); min-height: 2px; background: var(--iris); border-radius: 4px 4px 0 0; transform-origin: bottom;
+  animation: ecl-pousse .7s var(--ecl-ressort) both; animation-delay: calc(var(--i) * 30ms); }
+@keyframes ecl-pousse { from { transform: scaleY(0); } to { transform: none; } }
+.ecl-barre-v:hover i, .ecl-barre-v.montre i { background: var(--iris-deep); }
+.ecl-barre-v.negatif i { background: var(--red); }
+.ecl-bv-lib { position: absolute; bottom: -18px; left: 50%; translate: -50% 0; font-size: 10px; color: var(--ink-faint); white-space: nowrap; }
+.ecl-bulle { position: absolute; bottom: calc(var(--h) + 6px); left: 50%; translate: -50% 0; z-index: 2; white-space: nowrap; font-size: 12px; font-weight: 600; background: var(--ink); color: #fff;
+  padding: 4px 8px; border-radius: 8px; opacity: 0; pointer-events: none; transition: opacity .15s; }
+.ecl-barre-v:first-child .ecl-bulle { left: 0; translate: 0 0; }
+.ecl-barre-v:last-child:not(:first-child) .ecl-bulle { left: auto; right: 0; translate: 0 0; }
+.ecl-barre-v:hover .ecl-bulle, .ecl-barre-v.montre .ecl-bulle { opacity: 1; }
+.ecl-detail { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.ecl-detail:last-child { border-bottom: 0; }
+.ecl-detail .ecl-badge { min-width: 86px; justify-content: center; }
+.ecl-detail .ecl-grow { flex: 1; min-width: 0; }
+.ecl-detail .ecl-grow small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-soft); }
+.ecl-liens { margin: 16px 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ecl, .ecl *, .glisser-velo, .glisser-velo * { animation: none !important; transition: none !important; }
+}

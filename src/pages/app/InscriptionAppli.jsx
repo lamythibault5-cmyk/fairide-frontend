@@ -53,6 +53,7 @@ const ETAPE_DU_CHAMP = {
 };
 const STATUTS = [['independent', 'document'], ['student_independent', 'guide']];
 const MDP_FORME = (v) => v.length >= 6 && /[A-Z]/.test(v) && /[a-z]/.test(v);
+const sansAccents = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 function decoderJwt(jeton) {
   try { const b = jeton.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(decodeURIComponent(escape(atob(b)))); } catch { return {}; }
@@ -115,6 +116,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   const [restoPhone, setRestoPhone] = useState('');
   const [cuisine, setCuisine] = useState('');
   const [customCuisine, setCustomCuisine] = useState('');
+  const [rechercheType, setRechercheType] = useState('');
   const [legalName, setLegalName] = useState('');
   const [vatNumber, setVatNumber] = useState('');
   const [responsable, setResponsable] = useState(null); // null : la personne qui s'inscrit
@@ -129,9 +131,11 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   const [referralOuvert, setReferralOuvert] = useState(false);
   const [versionCgu, setVersionCgu] = useState('');
   const [siteWeb, setSiteWeb] = useState(''); // pot de miel, comme sur le site
-  // Rapports d'erreur (Sentry) : la question de la carte des cookies, posée ici par une case NON cochée — ainsi le
-  // nouvel inscrit n'a pas en plus l'écran de consentement de l'app (ConsentementAppli.jsx). Modifiable dans Mon compte.
-  const [rapports, setRapports] = useState(false);
+  /* Rapports de panne (Sentry) : dans l'app ils sont ACTIFS SAUF REFUS (fondateur, 2026-10-16 ; rapportsPanneActifs,
+   * consent.js). La case est donc cochée d'avance et se décoche : ce n'est pas un consentement (une case pré-cochée n'en
+   * serait pas un, CJUE Planet49) mais la possibilité de refuser. Dans une carte à part, jamais collée à la case « Ne pas
+   * m'envoyer les nouvelles », qui se coche dans l'autre sens. Se coupe aussi dans Mon compte. */
+  const [rapports, setRapports] = useState(true);
 
   const [index, setIndex] = useState(0);
   const [recule, setRecule] = useState(false);
@@ -404,13 +408,14 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   const basculerJour = (d) => { setJours((l) => (l.includes(d) ? l.filter((x) => x !== d) : [...l, d])); setErreurs({}); };
   const changerCreneau = (i, champ, v) => setCreneaux((l) => l.map((c, j) => (j === i ? { ...c, [champ]: v } : c)));
 
+  let entete = null; // titre et sous-titre de l'étape : sur le bandeau iris, au-dessus de la feuille
   let contenu = null;
   let bouton = t('appli.continuer');
   switch (etape) {
     case 'email':
+      entete = titre(t('appli.insEmailTitre'), t('appli.insEmailSous'));
       contenu = (
         <>
-          {titre(t('appli.insEmailTitre'), t('appli.insEmailSous'))}
           <Champ id="bv-i-email" label={t('auth.email')} erreur={erreurs.email}>
             <input id="bv-i-email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false}
               className={erreurs.email ? 'input-invalid' : undefined} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
@@ -437,9 +442,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'nom':
+      entete = titre(t('appli.insNomTitre'), role === 'restaurant' ? t('auth.stepIdentitySubRestaurant') : null);
       contenu = (
         <>
-          {titre(t('appli.insNomTitre'), role === 'restaurant' ? t('auth.stepIdentitySubRestaurant') : null)}
           <Champ id="bv-i-prenom" label={t('auth.firstName')} erreur={erreurs.firstName}>
             <input id="bv-i-prenom" autoComplete="given-name" className={erreurs.firstName ? 'input-invalid' : undefined} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           </Champ>
@@ -450,9 +455,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'tel':
+      entete = titre(t('appli.insTelTitre'), role === 'restaurant' ? t('auth.phoneOwnerHelp') : t('auth.stepIdentitySub'));
       contenu = (
         <>
-          {titre(t('appli.insTelTitre'), role === 'restaurant' ? t('auth.phoneOwnerHelp') : t('auth.stepIdentitySub'))}
           <Champ id="bv-i-tel" label={t('auth.phone')} labelMasque erreur={erreurs.phone}>
             <PhoneInput id="bv-i-tel" value={phone} onChange={setPhone} invalid={!!erreurs.phone} />
           </Champ>
@@ -460,9 +465,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'commerce':
+      entete = titre(t('appli.insCommerceTitre'));
       contenu = (
         <>
-          {titre(t('appli.insCommerceTitre'))}
           <Champ id="bv-i-commerce" label={t('auth.businessNameLabel')} erreur={erreurs.nomCommerce} aide={t('auth.businessNameHelp')}>
             <input id="bv-i-commerce" autoComplete="organization" className={erreurs.nomCommerce ? 'input-invalid' : undefined} value={nomCommerce}
               onChange={(e) => setNomCommerce(e.target.value)} placeholder={t('auth.businessNamePh')} />
@@ -476,16 +481,27 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
         </>
       );
       break;
-    case 'type':
+    /* Des pastilles plutôt que la liste déroulante du téléphone, qui sortait de l'app (retour du fondateur, 2026-10-16).
+       35 types : un champ de recherche filtre, et seule la boîte des pastilles défile, pas l'écran. « Autre » reste
+       toujours visible, en dernier, pour un commerce que la recherche ne trouve pas ; le type déjà choisi aussi. */
+    case 'type': {
+      const cherche = sansAccents(rechercheType.trim());
+      const types = RESTAURANT_TYPES.filter((rt) => rt.value === 'Autre' || rt.value === cuisine || !cherche ||sansAccents(restaurantTypeLabel(rt.value, t)).includes(cherche));
+      entete = titre(t('appli.insTypeTitre'), t('auth.cuisineHelp'));
       contenu = (
         <>
-          {titre(t('appli.insTypeTitre'), t('auth.cuisineHelp'))}
-          <Champ id="bv-i-type" label={t('auth.cuisineLabel')} erreur={erreurs.cuisine}>
-            <select id="bv-i-type" className={erreurs.cuisine ? 'input-invalid' : undefined} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
-              <option value="">{t('auth.cuisinePlaceholder')}</option>
-              {RESTAURANT_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{restaurantTypeLabel(rt.value, t)}</option>)}
-            </select>
-          </Champ>
+          <label htmlFor="bv-i-type" className="sr-only">{t('appli.insTypeChercher')}</label>
+          <input id="bv-i-type" type="search" className="bv-types-recherche" autoComplete="off" enterKeyHint="search"
+            value={rechercheType} onChange={(e) => setRechercheType(e.target.value)} placeholder={t('appli.insTypeChercher')} />
+          <div className={`bv-types${cuisine === 'Autre' ? ' avec-autre' : ''}`} role="radiogroup" aria-label={t('auth.cuisineLabel')}>
+            {types.map((rt) => (
+              <button key={rt.value} type="button" role="radio" aria-checked={cuisine === rt.value}
+                className={`bv-type${cuisine === rt.value ? ' on' : ''}`} onClick={() => setCuisine(rt.value)}>
+                <Icone nom={rt.icone} taille={16} />{restaurantTypeLabel(rt.value, t)}
+              </button>
+            ))}
+          </div>
+          {erreurs.cuisine && <p className="field-error" role="alert">{erreurs.cuisine}</p>}
           {cuisine === 'Autre' && (
             <Champ id="bv-i-type-autre" label={t('dashResto.specifyType')}>
               <input id="bv-i-type-autre" value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} />
@@ -494,10 +510,11 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
         </>
       );
       break;
+    }
     case 'entreprise':
+      entete = titre(t('appli.insEntrepriseTitre'));
       contenu = (
         <>
-          {titre(t('appli.insEntrepriseTitre'))}
           <Champ id="bv-i-bce" label={t('auth.companyNumberResto')} erreur={erreurs.companyNumber} aide={t('auth.companyNumberRestoHelp')}>
             <input id="bv-i-bce" inputMode="numeric" className={erreurs.companyNumber ? 'input-invalid' : undefined} value={companyNumber}
               onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
@@ -521,9 +538,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'horaires':
+      entete = titre(t('appli.insHorairesTitre'), t('appli.insHorairesSous'));
       contenu = (
         <>
-          {titre(t('appli.insHorairesTitre'), t('appli.insHorairesSous'))}
           <span className="bv-etiquette" id="bv-i-jours">{t('appli.insJours')}</span>
           <div className="bv-jours" role="group" aria-labelledby="bv-i-jours">
             {DAY_ORDER.map((d) => (
@@ -553,9 +570,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'services':
+      entete = titre(t('auth.stepServicesTitle'), t('auth.servicesHelp'));
       contenu = (
         <>
-          {titre(t('auth.stepServicesTitle'), t('auth.servicesHelp'))}
           <Option multi on={services.delivery} icone="scooter" titre={t('auth.serviceDelivery')} onClick={() => setServices((s) => ({ ...s, delivery: !s.delivery }))} />
           {services.delivery && (
             <Segments label={t('auth.serviceDelivery')} valeur={services.deliveryMode} onChoix={(v) => setServices((s) => ({ ...s, deliveryMode: v }))}
@@ -574,9 +591,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'statut':
+      entete = titre(t('auth.courierStatusTitle'), t('appli.insStatutSous'));
       contenu = (
         <>
-          {titre(t('auth.courierStatusTitle'), t('appli.insStatutSous'))}
           {STATUTS.map(([st, icone]) => (
             <Option key={st} on={courierStatus === st} icone={icone} titre={t(`auth.courierStatus_${st}`)} sous={t(`appli.insStatut_${st}`)} onClick={() => setCourierStatus(st)} />
           ))}
@@ -585,9 +602,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'etudes':
+      entete = titre(t('appli.insEtudesTitre'));
       contenu = (
         <>
-          {titre(t('appli.insEtudesTitre'))}
           <Champ id="bv-i-ecole" label={t('auth.schoolName')} erreur={erreurs.schoolName}>
             <input id="bv-i-ecole" autoComplete="organization" className={erreurs.schoolName ? 'input-invalid' : undefined} value={schoolName}
               onChange={(e) => setSchoolName(e.target.value)} placeholder={t('auth.schoolNamePlaceholder')} />
@@ -602,9 +619,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
     case 'bce':
       // Facultatif : sans numéro, le bouton dit « plus tard » — le dossier le demandera avant la première course.
       if (!companyNumber.trim()) bouton = t('appli.insPlusTard');
+      entete = titre(t('auth.companyNumberDriver'), t('auth.companyNumberDriverHelp'));
       contenu = (
         <>
-          {titre(t('auth.companyNumberDriver'), t('auth.companyNumberDriverHelp'))}
           <Champ id="bv-i-bce-lv" label={t('auth.companyNumberDriver')} labelMasque erreur={erreurs.companyNumber}>
             <input id="bv-i-bce-lv" inputMode="numeric" className={erreurs.companyNumber ? 'input-invalid' : undefined} value={companyNumber}
               onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
@@ -614,9 +631,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       break;
     case 'vehicule': {
       const km = courierOptions?.bikeMaxKm || 4;
+      entete = titre(t('auth.vehicleTitle'));
       contenu = (
         <>
-          {titre(t('auth.vehicleTitle'))}
           <div className="bv-grille">
             {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
               <Option key={v} on={vehicleType === v} titre={t(`courierOnboarding.vehicle_${v}`)} onClick={() => setVehicleType(v)} />
@@ -629,10 +646,10 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       break;
     }
     case 'adresse':
+      entete = titre(role === 'restaurant' ? t('auth.stepAddressTitleRestaurant') : role === 'client' ? t('appli.insAdresseClient') : t('auth.stepAddressTitle'),
+        role === 'client' ? t('auth.stepAddressSubClient') : role === 'driver' ? t('auth.stepAddressSubDriver') : null);
       contenu = (
         <>
-          {titre(role === 'restaurant' ? t('auth.stepAddressTitleRestaurant') : role === 'client' ? t('appli.insAdresseClient') : t('auth.stepAddressTitle'),
-            role === 'client' ? t('auth.stepAddressSubClient') : role === 'driver' ? t('auth.stepAddressSubDriver') : null)}
           <div className="bv-champ">
             <AddressSearch compact onSelect={(a) => { setAddressStreet(a.street); if (a.number) setAddressNumber(a.number); if (a.postalCode) setAddressPostalCode(a.postalCode); if (a.city) setAddressCity(a.city); }} />
           </div>
@@ -660,9 +677,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       break;
     case 'fin':
       bouton = t('auth.createAccount');
+      entete = titre(t('appli.insFinTitre'), t(role === 'restaurant' ? 'appli.insFinCommerce' : role === 'driver' ? 'appli.insFinLivreur' : 'appli.insFinClient'));
       contenu = (
         <>
-          {titre(t('appli.insFinTitre'), t(role === 'restaurant' ? 'appli.insFinCommerce' : role === 'driver' ? 'appli.insFinLivreur' : 'appli.insFinClient'))}
           {role === 'driver' && (
             <>
               <Fait icone="euro" titre={t('appli.insFinLv1')} sous={t('auth.driverFeeNotice')} />
@@ -678,13 +695,13 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
           {erreurs.cgu && <p className="field-error" role="alert">{erreurs.cgu}</p>}
           {role === 'restaurant' && <EngagementsInscription checked={accepteEngagements} onChange={setAccepteEngagements} />}
           {erreurs.engagements && <p className="field-error" role="alert">{erreurs.engagements}</p>}
+          <label className="bv-case-ligne bv-case-carte">
+            <input type="checkbox" checked={rapports} onChange={(e) => setRapports(e.target.checked)} />
+            <span><b>{t('appli.insRapportsTitre')}</b>{t('appli.insRapports')}</span>
+          </label>
           <label className="bv-case-ligne bv-case-discrete">
             <input type="checkbox" checked={refusNouvelles} onChange={(e) => setRefusNouvelles(e.target.checked)} />
             <span>{t('nouvelles.signupOptOut')}</span>
-          </label>
-          <label className="bv-case-ligne bv-case-discrete">
-            <input type="checkbox" checked={rapports} onChange={(e) => setRapports(e.target.checked)} />
-            <span>{t('appli.insRapports')}</span>
           </label>
           {referralOuvert ? (
             <Champ id="bv-i-code-promo" label={t('auth.promoCode')}>
@@ -698,10 +715,10 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       break;
     case 'code':
       bouton = t('auth.confirm');
+      entete = titre(t(enAttente.canal === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle'),
+        enAttente.canal === 'sms' ? t('auth.verifyTextSms', { phone: enAttente.telephone }) : t('auth.verifyText', { email: enAttente.email }));
       contenu = (
         <>
-          {titre(t(enAttente.canal === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle'),
-            enAttente.canal === 'sms' ? t('auth.verifyTextSms', { phone: enAttente.telephone }) : t('auth.verifyText', { email: enAttente.email }))}
           <label htmlFor="bv-i-code" className="sr-only">{t('auth.verifyCodeLabel')}</label>
           <input id="bv-i-code" className={`bv-saisie${erreurs.code ? ' input-invalid' : ''}`} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6}
             placeholder="123456" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
@@ -714,13 +731,14 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   }
 
   return (
-    <div className="bv" ref={fond}>
+    <div className="bv bv-bandeau" ref={fond}>
       <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={etape}>
         <Haut onRetour={reculer} progression={progression} />
-        <form className="bv-form" onSubmit={avancer} noValidate>
+        {entete}
+        <form className="bv-form bv-feuille" onSubmit={avancer} noValidate>
           {contenu}
           <div className="bv-grandit" />
-          <button type="submit" className={`bv-btn ${etape === 'fin' || etape === 'code' ? 'btn-gold' : 'btn-teal'}`} disabled={attente}>
+          <button type="submit" className="bv-btn btn-gold" disabled={attente}>
             {attente ? t('common.loading') : bouton}
           </button>
         </form>

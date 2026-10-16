@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
-  categoryEmoji, categoryImage, categoryLabel, getStarterTemplate,
+  categoryEmoji, categoryLabel, getStarterTemplate,
   CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, resolveItemImage,
   groupBySubsection
 } from '../../menuCategories';
@@ -27,6 +27,7 @@ import DemandeModifCarte from '../../components/DemandeModifCarte';
 import TvaCarte from '../../components/commerce/TvaCarte';
 import { defilement } from '../../gestes';
 import Icone from '../../components/Icone';
+import CarteCommerce from '../../components/commerce/CarteCommerce';
 
 // `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
 // (console admin : AdminMenuPage) ; `modeAdmin` retire la demande « Fairide s'en occupe », sans objet pour l'équipe.
@@ -35,7 +36,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const toast = useToast();
   const { t } = useLanguage();
   const contexteOutlet = useOutletContext();
-  const { restaurant, restoId, loadDashboard } = contexte || contexteOutlet || {};
+  const { restaurant, restoId, loadDashboard, communs } = contexte || contexteOutlet || {};
 
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
@@ -492,6 +493,13 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
+  // CÔTÉ COMMERCE : la carte au bandeau iris, en lecture seule avec l'interrupteur « En vente aujourd'hui » (2026-10-16,
+  // components/commerce/CarteCommerce.jsx). Ce qui suit est la console admin (modeAdmin) : l'éditeur complet.
+  if (!modeAdmin) {
+    return <CarteCommerce restaurant={restaurant} restoId={restoId} loadDashboard={loadDashboard} communs={communs}
+      urlSuggeree={importUrl} onStock={changerStock} onWithdraw={changerRetrait} />;
+  }
+
   return (
     <div>
       {/* Côté commerce, la remise de carte et les étapes restantes sont dans la liste « Avant d'être en ligne » du tableau
@@ -573,7 +581,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           const rawItems = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
           const order = localOrder[section.id];
           const items = order ? order.map((id) => rawItems.find((i) => i.id === id)).filter(Boolean) : rawItems;
-          const image = section.imageUrl || categoryImage(section.name);
           const sectionSubsections = [...new Set(rawItems.map((i) => i.subsection).filter(Boolean))];
           const inReorder = reorderSectionId === section.id;
           const subsectionGroups = inReorder ? null : groupBySubsection(items, section.name, t);
@@ -581,7 +588,8 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             <div key={section.id} style={{ marginBottom: 16 }}>
               <div className="category-header" style={{ justifyContent: 'space-between' }}>
                 <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                  {image && <img loading="lazy" src={image} alt={section.name} />}
+                  {/* Plus de vignette devant le nom de la section (fondateur, 2026-10-16) : une photo d'illustration que le
+                      client ne voit pas et que le commerce ne peut pas changer ne faisait que l'intriguer. */}
                   {editingSectionId === section.id ? (
                     <div className="row" style={{ gap: 6 }}>
                       <input style={{ width: 180 }} value={editSectionName} onChange={(e) => setEditSectionName(e.target.value)} />

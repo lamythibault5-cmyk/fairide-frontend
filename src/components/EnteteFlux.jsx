@@ -39,7 +39,11 @@ import { useLanguage } from '../context/LanguageContext';
 // est rendu en permanence — jamais monté puis démonté — mais estompé tant que le grand titre de la
 // page est encore à l'écran : l'afficher deux fois à dix pixels d'écart est du bruit, et le faire
 // APPARAÎTRE ferait sauter la largeur du bandeau à chaque passage. On ne bouge que l'opacité.
-export default function EnteteFlux({ vers, onRetour, geste = 'retour', titre = '', libelle = '', titreEstompe = false, actions = null }) {
+//
+// `flottant` (fiche d'un commerce dans l'app, 2026-10-16) : plus de bandeau blanc, les boutons flottent en ronds iris sur la
+// photo de couverture puis sur la page (ecran-fiche.css). Le bandeau ne prend alors aucune hauteur et le nom n'y est pas
+// affiché : la page monte en feuille sur la photo, la bande des sections colle juste sous les ronds.
+export default function EnteteFlux({ vers, onRetour, geste = 'retour', titre = '', libelle = '', titreEstompe = false, actions = null, flottant = false }) {
   const { t } = useLanguage();
   const fermer = geste === 'fermer';
   // Le libellé accessible dit où l'on va, pas ce que le bouton dessine : « Fermer » tout court ne
@@ -51,7 +55,7 @@ export default function EnteteFlux({ vers, onRetour, geste = 'retour', titre = '
   // accessible est porté par le bouton lui-même — sans quoi il serait annoncé deux fois.
   const glyphe = <span aria-hidden="true">{fermer ? '×' : '‹'}</span>;
   return (
-    <div className="flux-entete">
+    <div className={`flux-entete${flottant ? ' flux-entete--flottant' : ''}`}>
       {onRetour ? (
         // Un vrai <button> et non un lien : reculer d'une étape n'est pas une adresse. Un lien
         // vide donnerait un clic droit « ouvrir dans un nouvel onglet » qui ne mènerait nulle part.
@@ -65,7 +69,7 @@ export default function EnteteFlux({ vers, onRetour, geste = 'retour', titre = '
       )}
       {/* aria-hidden quand il est estompé : le nom est alors déjà annoncé par le <h1> de la page,
           et un lecteur d'écran lirait deux fois le même commerce à la suite. */}
-      {titre && (
+      {titre && !flottant && (
         <span className={`flux-titre${titreEstompe ? ' flux-titre--estompe' : ''}`} aria-hidden={titreEstompe || undefined}>
           {titre}
         </span>

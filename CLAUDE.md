@@ -38,6 +38,27 @@ inside a WebView) are loaded with `import()` from `natif.js` only, so the websit
 
 **The app has its own first-launch screens** (2026-10-11, [src/pages/app/Bienvenue.jsx](src/pages/app/Bienvenue.jsx),
 route `/bienvenue`, outside `<Layout>`; designed with the founder on [mockups/app-onboarding.html](mockups/app-onboarding.html)).
+**Look since 2026-10-16** (version D of [mockups/onboarding-chaleur.html](mockups/onboarding-chaleur.html)): every white screen of the
+welcome flow, the in-app sign-up and the in-app login has an **iris header** (back, progress, title) and the rest in a white
+**sheet** with rounded top corners — a screen puts what follows its title in `<Feuille>` (EcransBienvenue.jsx), the container
+carries `.bv-bandeau`. Progress is a dashed road the brand bicycle rides along (`Route`); main buttons are lime; ticked
+options show a lime check. Outside a `.bv-bandeau` screen (notifications primer, courier dossier) `.bv-feuille` is `display: contents`.
+**Same family, client screens (2026-10-16, versions picked on [mockups/autres-idees.html](mockups/autres-idees.html))**: an order in
+progress opens on an iris header with a big friendly status (`titreSuivi`) and a road where the lime bike rolls stop to stop
+(`RouteSuivi`, orderStatus.jsx; past orders keep the compact card) — 1C; in the app the cart is a full-width glass bar with the
+total in an iris chip whose digits roll (FloatingCart, `ChiffresRoulants`) — 2C; a dish's « + » opens into « − n + » with the
+number in a lime circle and folds back to a circle that keeps the count (`PasPlat`, MenuCategorySections), and the dish sheet's
+quantity and « Ajouter » are one lime block — 3C; full-page empty screens (orders, favourites, cart) show the bike waiting on its
+road (`EtatVide scene=…`) — 4B. Buttons inside these need `min-height` overrides: the global 44 px touch rule has specificity (0,3,1).
+**Every main screen in that style (2026-10-16, « Proposition » phones of [mockups/tous-les-ecrans.html](mockups/tous-les-ecrans.html))**:
+restaurant list (address on an iris band with the riding bike, glass cuisine strip with a draggable lens: TeteListe.jsx,
+lentillePuces.js), map, favourites, restaurant page (sheet over the cover, glass sections strip, floating round buttons in solid iris
+with a white ring — white-on-glass was unreadable), cart / checkout / order confirmed (EcranCommande.jsx), Mon compte (EnteteCompte.jsx),
+business dashboard / orders / menu / stats (BandeauCommerce.jsx, CarteCommerce.jsx), courier dashboard / job in progress / earnings
+(RouteVelo.jsx). **Each family's CSS lives in its own file imported by its pages**: `src/ecran-liste.css`, `ecran-fiche.css`,
+`ecran-commande.css`, `ecran-compte.css`, `ecran-commerce.css`, `ecran-livreur.css` — look there before styles.css. Glass, blur and soft
+shadows are scoped to `html.appli`; the website keeps iris bands and white sheets without glass. `.page-fade` animates with
+`backwards`, not `both`: an opacity held after the animation disables `backdrop-filter` for everything inside the page.
 In the app, `/` never shows the marketing landing: first launch → `/bienvenue`, afterwards → `/restaurants` (Home.jsx).
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](src/pages/app/InscriptionAppli.jsx)):
@@ -45,10 +66,16 @@ is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [In
 per screen, no scrolling at 375×667, same data and routes as Auth.jsx (change a field rule in both, and in the backend). Only
 **The app has no website chrome** (2026-10-15, [Layout.jsx](src/components/Layout.jsx), `APPLI`): when `experienceApp()`,
 no page shows the site header, footer, legal-links row or cookie card. Signed in, every page — help, legal, « C'est bon » —
-stays in the tab shell with a « ← Retour »; legal links and « Gérer mes cookies » live at the bottom of Mon compte. Signed
+stays in the tab shell with a « ← Retour »; legal links live at the bottom of Mon compte. Signed
 out, a slim app bar (brand or back, « Se connecter »). `/login` is [ConnexionAppli.jsx](src/pages/app/ConnexionAppli.jsx)
-(2FA, unconfirmed e-mail, forgotten password, Apple/Google), and consent is a full-screen
-[ConsentementAppli.jsx](src/components/ConsentementAppli.jsx) (or an unticked box at the end of the in-app signup). Stripe
+(2FA, unconfirmed e-mail, forgotten password, Apple/Google). **Crash reports (Sentry) are ON BY DEFAULT in the app, never behind a
+blocking screen** (founder, 2026-10-16, risk accepted: the research on Belgian art. 10/2 loi 30-07-2018 / APD 85/2022 found it
+unclear, question for the lawyer in AVANT-PRODUCTION.md). The rule lives in `rapportsPanneActifs` (consent.js): accepted, or no answer
+and `experienceApp()`. Off switches: a pre-ticked box in its own card at the end of the in-app sign-up (never next to the
+opposite-direction « no news » box) and an Activer / Couper row in Mon compte (`RapportsPanne`, Account.jsx). Someone who turned them
+off is offered « Envoyer le rapport » on the crash screen ([AppErrorBoundary](src/components/AppErrorBoundary.jsx), one report only).
+Sentry is set to errors only, no sessions, no console breadcrumbs, URLs without parameters, no user identity (sentry.js). The
+privacy policy (CONF-2026-10-16) says so. On the website nothing changes: Sentry only after « Accepter » on the cookie banner. Stripe
 (Connect, Identity, billing portal) always opens through `allerAuPaiement` (in-app browser, return path) — never
 `window.location.href`, which left the app.
 **First-day flows are app screens too** (phase 2, 2026-10-15), opened full-screen through [EcranPlein](src/components/EcranPlein.jsx)
@@ -219,10 +246,14 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
    you need "the accent, but on a light surface", the token is `--gold-deep` — which is iris.
 2. **Backgrounds are white or iris. No third background colour**, and no gradients, no blurred
    halos, no drop shadows. Elevation is expressed by a hairline border.
-   *One exception (2026-10-13, asked for):* in the **app only** (`html.natif`), the bottom tab bar is translucent white
-   with a backdrop blur, Revolut-style. On the website it stays solid white (tried, then reverted on request).
+   *One exception (asked for):* in the **app only** (`html.appli`: native app and home-screen site), the bottom tab bar is
+   **liquid glass** since 2026-10-16 (version 2 of [mockups/barre-onglets-verre.html](mockups/barre-onglets-verre.html), after
+   WhatsApp): near-transparent, short blur, highlights and a soft shadow; the active tab is a glass lens with iridescent edges
+   that grows when pressed and follows the finger ([src/barreVerre.js](src/barreVerre.js), loaded with `import()` in the app only;
+   on Chromium/Android it also refracts what passes under its edges). On the website it stays solid white.
 3. **One lime accent per view.** If a screen already has a `btn-gold`, its active tab / badge /
-   nav item uses white or iris instead.
+   nav item uses white or iris instead. *Exception (founder, 2026-10-16):* the app's welcome/sign-up screens pair the lime
+   button with the lime check of ticked options and the « Salut ! » chip.
 
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.

@@ -5,14 +5,15 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
-import LigneCompte from '../../components/LigneCompte';
 import IncidentsCourse from '../../components/livreur/IncidentsCourse';
 import PhotoDepot from '../../components/livreur/PhotoDepot';
 import BoutonUrgence from '../../components/livreur/BoutonUrgence';
 import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
+import RouteVelo from '../../components/livreur/RouteVelo';
 import { experienceApp, allerAuPaiement, suivrePositionCourse } from '../../natif';
+import { mouvementReduit, vibrer } from '../../gestes';
 import Icone from '../../components/Icone';
-import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
+import { DeliveryTiming, DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 // Montants et distances au format de la langue (« 4,50 », « 0,3 ») : toFixed écrivait « 4.50 € » en français.
@@ -27,6 +28,7 @@ import NotifCourses from '../../components/livreur/NotifCourses';
 import PositionRequise from '../../components/livreur/PositionRequise';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 import EtatVide from '../../components/EtatVide';
+import '../../ecran-livreur.css';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
@@ -50,15 +52,29 @@ function BoutonsItineraire({ adresse, lat, lng, t }) {
   const point = lat != null && lng != null ? `${lat},${lng}` : null;
   const waze = point ? `https://waze.com/ul?ll=${point}&navigate=yes` : `https://waze.com/ul?q=${encodeURIComponent(adresse)}&navigate=yes`;
   const google = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(point || adresse)}`;
+  // CÔTE À CÔTE (fondateur, 2026-10-16, maquette « Course en cours ») : Waze garde le bouton plein, Google Maps passe d'un
+  // lien discret à un bouton à contour de même taille, plus facile à toucher au guidon.
   return (
-    <div style={{ margin: '10px 0' }}>
-      <a href={waze} target="_blank" rel="noopener noreferrer" className="btn-teal" style={{ display: 'block', width: '100%', textAlign: 'center', padding: '14px 16px', fontSize: 16, fontWeight: 700, textDecoration: 'none', boxSizing: 'border-box' }}>
-        {t('dashDriver.openWaze')}
-      </a>
-      <div className="small" style={{ textAlign: 'center', marginTop: 6 }}>
-        <a href={google} target="_blank" rel="noopener noreferrer">{t('dashDriver.directions')} (Google Maps) ↗</a>
-      </div>
+    <div className="ecl-itineraire">
+      <a href={waze} target="_blank" rel="noopener noreferrer" className="btn-teal">{t('dashDriver.openWaze')}</a>
+      <a href={google} target="_blank" rel="noopener noreferrer" className="btn-outline" aria-label={`${t('dashDriver.directions')} (Google Maps)`}>Google Maps ↗</a>
     </div>
+  );
+}
+
+/* LE CODE DU CLIENT EN QUATRE CASES (fondateur, 2026-10-16, maquette « Course en cours »). Un seul vrai champ, transparent,
+ * posé sur les cases : le clavier numérique, le collage et le lecteur d'écran marchent comme avant. Les codes de remise ont
+ * quatre chiffres (serveur, routes/orders.js) ; la validation reste celle de deliver() et du serveur. */
+function CodeCases({ valeur, onChange, onValider, libelle }) {
+  return (
+    <label className="ecl-code-cases">
+      <input aria-label={libelle} inputMode="numeric" autoComplete="off" maxLength={4} value={valeur}
+        onChange={(e) => onChange(e.target.value.replace(/D/g, '').slice(0, 4))}
+        onKeyDown={(e) => { if (e.key === 'Enter') onValider(); }} />
+      {[0, 1, 2, 3].map((k) => (
+        <span key={`${k}-${valeur[k] || ''}`} aria-hidden="true" className={`${valeur[k] ? 'plein' : ''}${k === Math.min(valeur.length, 3) ? ' actuel' : ''}`}>{valeur[k] || ''}</span>
+      ))}
+    </label>
   );
 }
 
@@ -266,17 +282,31 @@ export default function DriverDashboard() {
   async function refuserOffre(id) {
     try {
       await api(`/orders/${id}/refuse-offer`, { method: 'PATCH', token });
-      setAvailable((prev) => prev.filter((x) => x.id !== id));
+      // La carte glisse vers la gauche, puis quitte la liste (ecran-livreur.css, .ecl-offre.part).
+      setPartantes((p) => [...p, id]);
+      setTimeout(() => {
+        setAvailable((prev) => prev.filter((x) => x.id !== id));
+        setPartantes((p) => p.filter((x) => x !== id));
+      }, mouvementReduit() ? 0 : 300);
       toast(t('conformite.offerRefused'));
     } catch (e) { toast(e.message, 'erreur'); }
   }
 
+  // Course en train d'être prise (bordure iris le temps de la réponse) et cartes refusées qui s'en vont.
+  const [prise, setPrise] = useState(null);
+  const [partantes, setPartantes] = useState([]);
   async function claim(id) {
-    try { await api(`/orders/${id}/claim`, { method: 'PATCH', token }); load(); }
-    catch (e) {
+    setPrise(id);
+    try {
+      await api(`/orders/${id}/claim`, { method: 'PATCH', token });
+      if (experienceApp()) vibrer([10, 30, 10]);
+      await load();
+    } catch (e) {
       toast(e.message, 'erreur');
       // Notices à relire (B4) ou titre de séjour expiré (B2) : ça se règle dans l'espace livreur, on y va.
       if (['NOTICES_A_ACCEPTER', 'TITRE_SEJOUR_EXPIRE'].includes(e.code)) navigate('/driver/onboarding');
+    } finally {
+      setPrise(null);
     }
   }
 
@@ -288,12 +318,22 @@ export default function DriverDashboard() {
     try {
       await api(`/orders/${id}/deliver`, { method: 'PATCH', token, body: { code, ...(ageVerifie ? { ageCheck: 'verified' } : {}) } });
       setCodeInputs((prev) => { const next = { ...prev }; delete next[id]; return next; });
+      setTerminee({ id, fee: order.driverFee ?? order.deliveryFee });
       toast(t('dashDriver.toastDelivered'));
       load();
     } catch (e) {
       toast(e.message, 'erreur');
     }
   }
+
+  // COURSE TERMINÉE (maquette « Course en cours », 2026-10-16) : juste après la remise, le bandeau garde le trajet un moment,
+  // le vélo roule jusqu'à la maison et saute. Puis il revient à la disponibilité. Rien d'autre ne dépend de cet état.
+  const [terminee, setTerminee] = useState(null);
+  useEffect(() => {
+    if (!terminee) return undefined;
+    const id = setTimeout(() => setTerminee(null), 9000);
+    return () => clearTimeout(id);
+  }, [terminee]);
 
   // RETRAIT CONFIRMÉ PAR LE LIVREUR (simulation du 10 oct. 2026) : le commerce n'a plus rien à taper. Il compare à l'œil
   // le code affiché ici avec le sien, remet la commande, et c'est ce bouton qui la fait passer « en livraison ».
@@ -345,232 +385,304 @@ export default function DriverDashboard() {
   const approuve = user?.adminStatus === 'approved';
   const peutRouler = approuve && user?.stripeConnectStatus === 'active';
   const enPause = !!user?.driverPaused;
+  const appli = experienceApp();
 
-  // Une carte de course livrée ou à récupérer : on la montre TOUJOURS, pause ou non — se mettre en
-  // pause coupe les nouvelles offres, pas les courses déjà prises.
-  const carteRetrait = (o) => (
-    <div className="card" key={o.id}>
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <b>{o.restaurantName}</b>
-        <span className={`status-badge status-${o.status}`}>{o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing')}</span>
+  /* LE BANDEAU IRIS (fondateur, 2026-10-16, mockups/tous-les-ecrans.html, « Le vélo roule quand tu es dispo » et « Glisse
+     le vélo »). Sans course en main, il porte l'interrupteur : disponible, le vélo roule sur sa route ; en pause, il
+     s'arrête. Avec une course en main, il montre son trajet : le vélo attend au commerce, roule vers la maison une fois la
+     commande récupérée, et saute à l'arrivée (état `terminee`, quelques secondes après la remise). Une seule course est au
+     bandeau — celle qu'on livre d'abord, sinon celle à récupérer — ; les autres suivent en cartes dans la feuille. */
+  const principale = approuve ? (active[0] || awaitingPickup[0] || null) : null;
+  const autresActives = active.filter((o) => o !== principale);
+  const autresRetraits = awaitingPickup.filter((o) => o !== principale);
+  const course = principale || (approuve && terminee ? terminee : null);
+  const enRetrait = !!principale && principale.status !== 'livraison';
+  const fraisCourse = (o) => dec(o.driverFee ?? o.deliveryFee ?? o.fee);
+  const etatRetrait = (o) => (o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing'));
+  let titreBandeau = null;
+  let sousBandeau = null;
+  if (principale && enRetrait) {
+    titreBandeau = t('ecranLivreur.directionCommerce', { name: principale.restaurantName });
+    sousBandeau = [principale.restaurantAddress && t('dashDriver.pickupAt', { address: principale.restaurantAddress }), etatRetrait(principale)].filter(Boolean).join(' · ');
+  } else if (principale) {
+    titreBandeau = principale.clientName ? t('ecranLivreur.enRouteVers', { name: principale.clientName }) : t('ecranLivreur.enRoute');
+    sousBandeau = [t('dashDriver.deliveryAt', { address: principale.address }), principale.travelMinutes && t('ecranLivreur.minutes', { min: principale.travelMinutes })].filter(Boolean).join(' · ');
+  } else if (course) {
+    titreBandeau = t('ecranLivreur.terminee');
+    sousBandeau = `${t('dashDriver.rideFee', { fee: fraisCourse(course) })} · ${t('ecranLivreur.termineeSous')}`;
+  }
+  const partageOk = user?.locationSharingEnabled !== false && sharingLocation;
+
+  const interrupteur = (surBlanc) => (
+    <button type="button" className={`ecl-service${enPause ? '' : ' on'}${surBlanc ? ' sur-blanc' : ''}`} aria-pressed={!enPause} disabled={togglingPause}
+      onClick={() => { if (appli) vibrer(10); togglePause(); }}>
+      <span className="ecl-service-txt">
+        <b>{enPause ? t('dashDriver.accountPaused') : t('dashDriver.availableToDeliver')}</b>
+        <span>{togglingPause ? '…' : enPause ? t('dashDriver.tapToResume') : t('dashDriver.tapToPause')}</span>
+      </span>
+      <span className="ecl-inter" aria-hidden="true" />
+    </button>
+  );
+
+  // Un article par ligne, sa quantité dans une case (comme Mes commandes côté client).
+  const articles = (o) => (o.items?.length ? (
+    <ul className="ecl-articles">
+      {o.items.map((i, k) => {
+        const extra = [i.options?.length ? i.options.map((x) => x.name).join(', ') : '', i.note ? `« ${i.note} »` : ''].filter(Boolean).join(' ');
+        return <li key={k}><span className="ecl-qte">{i.qty}</span><span><b>{i.name}</b>{extra && <small>{extra}</small>}</span></li>;
+      })}
+    </ul>
+  ) : null);
+
+  // À récupérer : le code du comptoir, puis glisser (app) ou le bouton (site) une fois la commande en main.
+  const detailRetrait = (o, auBandeau) => (
+    <>
+      <div className="ecl-code">
+        <div className="ecl-code-lib">{t('dashDriver.codeForRestaurant')}</div>
+        <div className="ecl-code-valeur">{o.pickupCode}</div>
       </div>
-      <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-      {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
+      {o.status !== 'pret' && <p className="small" style={{ margin: '10px 0 0' }}>{t('dashDriver.stillPreparing')}</p>}
+      {articles(o)}
+      <BoutonsItineraire adresse={o.restaurantAddress} lat={o.restaurantLat} lng={o.restaurantLng} t={t} />
+      {!auBandeau && o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
       <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
       {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
       <DeliveryTiming order={o} />
-      <div className="small" style={{ marginTop: 4 }}>{t('dashDriver.rideFee', { fee: dec(o.driverFee ?? o.deliveryFee) })}</div>
-      <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
-        <div className="small" style={{ marginBottom: 2 }}>{t('dashDriver.codeForRestaurant')}</div>
-        <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.pickupCode}</div>
-      </div>
-      {o.status !== 'pret' && <p className="small">{t('dashDriver.stillPreparing')}</p>}
-      <BoutonsItineraire adresse={o.restaurantAddress} lat={o.restaurantLat} lng={o.restaurantLng} t={t} />
       {/* Dans l'application : glisser pour confirmer (un appui dans la poche ne valide rien). Sur le site : le bouton. */}
-      <GlisserPourConfirmer libelle={t('dashDriver.pickedUpButton')} disabled={retraitEnCours === o.id} onConfirmer={() => confirmerRetrait(o)}>
-        <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => confirmerRetrait(o)}>
-          {retraitEnCours === o.id ? '…' : t('dashDriver.pickedUpButton')}
-        </button>
-      </GlisserPourConfirmer>
+      <div className="ecl-glisser">
+        <GlisserPourConfirmer libelle={t('dashDriver.pickedUpButton')} disabled={retraitEnCours === o.id} onConfirmer={() => confirmerRetrait(o)}>
+          <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => confirmerRetrait(o)}>
+            {retraitEnCours === o.id ? '…' : t('dashDriver.pickedUpButton')}
+          </button>
+        </GlisserPourConfirmer>
+      </div>
       <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
-    </div>
+    </>
   );
 
-  return (
-    <div>
-      <BandeauOuverture role="driver" />
-      {/* L'INTERRUPTEUR EN TÊTE (2026-09-23). Comme l'app Uber Driver : la première chose que le
-          livreur voit, c'est s'il reçoit des courses ou non, et le geste pour changer, sur toute la
-          largeur. Avant, « Pause » était un petit bouton au bout d'une rangée, sous deux liens vers le
-          dossier et les gains — liens qui existent déjà dans la barre du bas et dans Mon compte, et
-          qui sont partis d'ici pour cette raison (une rubrique, un seul endroit). */}
-      {peutRouler && (
-        <button type="button" className={`driver-switch${enPause ? ' off' : ''}`} aria-pressed={!enPause} disabled={togglingPause} onClick={togglePause}>
-          <span className="driver-switch-dot" aria-hidden="true" />
-          <span className="driver-switch-text">
-            <b>{enPause ? t('dashDriver.accountPaused') : t('dashDriver.availableToDeliver')}</b>
-            <span>{togglingPause ? '…' : enPause ? t('dashDriver.tapToResume') : t('dashDriver.tapToPause')}</span>
+  // En livraison : sonner / appeler, l'itinéraire, le code du client en cases, puis glisser (app) ou le bouton (site).
+  const detailLivraison = (o, auBandeau) => (
+    <>
+      <BandeauAllergie order={o} />
+      <BadgeAlcool order={o} />
+      {(o.deliveryInstructions || o.clientPhone) && (
+        <div className="ecl-ligne">
+          <Icone nom={DELIVERY_INSTRUCTION_OPTIONS.find((x) => x.value === o.deliveryInstructions)?.icon || (o.deliveryInstructions ? 'sonnette' : 'telephone')} taille={20} />
+          <span className="ecl-grow">
+            {o.deliveryInstructions ? deliveryInstructionLabel(o.deliveryInstructions) : null}
+            {o.deliveryNote && <small>{o.deliveryNote}</small>}
+            {o.clientPhone && <small><a href={`tel:${o.clientPhone}`}>{o.clientPhone}</a></small>}
           </span>
-        </button>
+          {o.clientPhone && <a className="ecl-rond" href={`tel:${o.clientPhone}`} aria-label={o.clientPhone}><Icone nom="telephone" taille={18} /></a>}
+        </div>
       )}
+      {articles(o)}
+      <BoutonsItineraire adresse={o.address} lat={o.deliveryLat} lng={o.deliveryLng} t={t} />
+      {!auBandeau && <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>}
+      {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
+      {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
+      <DeliveryTiming order={o} />
+      <p className="ecl-titre-sec">{t('dashDriver.phCustomerCode')}</p>
+      <CodeCases libelle={t('dashDriver.phCustomerCode')} valeur={codeInputs[o.id] || ''} onValider={() => deliver(o)}
+        onChange={(v) => setCodeInputs((prev) => ({ ...prev, [o.id]: v }))} />
+      {/* Taille normale (audit du 15/10/2026) : c'est le geste qui clôt la course, fait d'une main, souvent dehors. */}
+      {!appli && <button type="button" className="btn-teal ecl-code-envoi" onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
+      {/* Application : le code du client tapé, on glisse pour livrer (même raison que pour la récupération). */}
+      {appli && <div className="ecl-glisser"><GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} onConfirmer={() => deliver(o)} /></div>}
+      <PhotoDepot order={o} token={token} toast={toast} onLivree={() => { setTerminee({ id: o.id, fee: o.driverFee ?? o.deliveryFee }); load(); }} />
+      <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
+    </>
+  );
 
-      {/* Urgence (accident, agression, malaise) : 112 d'abord, puis l'équipe Fairide avec la position (BoutonUrgence.jsx). */}
-      {peutRouler && <div className="row" style={{ justifyContent: 'flex-end', margin: '8px 0' }}><BoutonUrgence token={token} toast={toast} /></div>}
+  // Une course proposée : son trajet en pointillés, son prix dans une pastille iris, « Prendre la course » en lime.
+  const carteOffre = (o) => {
+    const km = o.distanceKm != null ? (o.longDistance ? t('dashDriver.longDistance', { km: dec(o.distanceKm, 1) }) : t('dashDriver.shortDistance', { km: dec(o.distanceKm, 1) })) : null;
+    const voie = [km, o.travelMinutes && t('ecranLivreur.minutes', { min: o.travelMinutes })].filter(Boolean).join(' · ');
+    return (
+      <article className={`ecl-offre${prise === o.id ? ' prise' : ''}${partantes.includes(o.id) ? ' part' : ''}`} key={o.id}>
+        <div className="ecl-offre-tete">
+          <span className="ecl-offre-nom"><b>{o.restaurantName}</b><small>{o.items.map(formatOrderItem).join(', ')}</small></span>
+          <span className="ecl-prix"><small>{t('ecranLivreur.prixPropose')}</small>{t('ecranLivreur.prixMontant', { fee: fraisCourse(o) })}</span>
+        </div>
+        <div className="ecl-badges">
+          <span className={`ecl-badge ${o.status === 'pret' ? 'lime' : 'doux'}`}>{etatRetrait(o)}</span>
+          {o.commune && <span className="ecl-badge neutre">{o.commune}</span>}
+        </div>
+        <div className="ecl-trajet-carte">
+          <span className="ecl-tj-pt" aria-hidden="true"><Icone nom="commerce" taille={16} /></span>
+          <span className="ecl-tj-voie">{voie && <b>{voie}</b>}</span>
+          <span className="ecl-tj-pt maison" aria-hidden="true"><Icone nom="maison" taille={16} /></span>
+        </div>
+        {/* Adresse sans numéro ni nom du client avant la prise (le serveur ne les envoie pas). */}
+        <div className="ecl-tj-libs">
+          <span>{o.restaurantAddress ? t('dashDriver.pickupAt', { address: o.restaurantAddress }) : null}</span>
+          <span>{t('dashDriver.deliveryAt', { address: o.address })}<br /><span className="ecl-faint">{t('conformite.offerApproxAddress')}</span></span>
+        </div>
+        <DeliveryTiming order={o} />
+        {o.bonusCents > 0 && <p className="small" style={{ margin: '6px 0 0' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</p>}
+        <div className="ecl-offre-pied">
+          {/* Refuser reste discret et neutre : aucune conséquence pour le livreur. */}
+          <button type="button" className="btn-ghost" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
+          <button type="button" className="btn-gold" disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : t('dashDriver.takeRide')}</button>
+        </div>
+      </article>
+    );
+  };
 
-      {/* Selfie de contrôle au hasard à la prise de service (CODE-14) : sans lui, aucune course n'est proposée. */}
-      {peutRouler && <SelfieControle token={token} onDepose={load} />}
+  const urgence = peutRouler && <span className="ecl-urgence"><BoutonUrgence token={token} toast={toast} /></span>;
 
-      {/* Rangée de vigilance : position partagée pendant une livraison. Les paiements à activer ne sont plus ici (audit du
-          15/10/2026) : ils remplacent la liste des offres, plus bas, avec le seul bouton de l'écran — deux boutons « Activer »
-          l'un au-dessus de l'autre ne disaient pas mieux la même chose. */}
-      {active.length > 0 && (
-      <div className="card account-groupe" aria-label={t('dashDriver.ariaAccount')}>
+  return (
+    <div className="ecl ecl-tableau">
+      <section className="ecl-bandeau">
+        <div className="ecl-b-haut">
+          {course
+            ? <span><b>{t('ecranLivreur.course')}</b> · {t('ecranLivreur.prixMontant', { fee: fraisCourse(course) })}</span>
+            : <span><b>{t('nav.rides')}</b></span>}
+          {/* Urgence (accident, agression, malaise) : 112 d'abord, puis l'équipe Fairide avec la position (BoutonUrgence.jsx). */}
+          <span className="ecl-b-droite">{!principale && course && <span className="ecl-chip">{t('ecranLivreur.livree')}</span>}{urgence}</span>
+        </div>
+        {titreBandeau && <h1 className="ecl-b-titre" key={titreBandeau}>{titreBandeau}</h1>}
+        {sousBandeau && <p className="ecl-b-sous">{sousBandeau}</p>}
+        {/* L'INTERRUPTEUR EN TÊTE (2026-09-23), sur le bandeau depuis le 2026-10-16 : la première chose que le livreur voit,
+            c'est s'il reçoit des courses ou non, et le geste pour changer, sur toute la largeur. */}
+        {!course && peutRouler && interrupteur(false)}
+        {course ? (
+          <div className="ecl-trajet" aria-label={t('ecranLivreur.ariaTrajet')} role="img">
+            <span className="ecl-pt"><Icone nom="commerce" taille={18} /></span>
+            <RouteVelo key={`course-${course.id}`} position={enRetrait ? 12 : principale ? 50 : 88} depart={enRetrait ? undefined : 12} roule={!!principale && !enRetrait} saut={!principale} />
+            <span className={`ecl-pt maison${principale ? '' : ' arrivee'}`}><Icone nom="maison" taille={18} /></span>
+          </div>
+        ) : (
+          <RouteVelo key="dispo" position={50} roule={peutRouler && !enPause} pause={peutRouler && enPause} />
+        )}
+        {/* Partage de position pendant une livraison (c'était la rangée « Partage de position » de la page). */}
         {active.length > 0 && (
-          <LigneCompte
-            accent={user?.locationSharingEnabled === false ? 'warn' : sharingLocation ? 'ok' : 'warn'} icone="position"
-            titre={t('dashDriver.locationSharing')}
-            sous={user?.locationSharingEnabled === false
+          <p className={`ecl-partage ${partageOk ? 'ok' : 'attention'}`}>
+            <i aria-hidden="true" />
+            <span><b>{t('dashDriver.locationSharing')}</b> · {user?.locationSharingEnabled === false
               ? t('dashDriver.sharingDisabledSub')
               : sharingLocation
                 ? t('dashDriver.sharingOnSub', { last: lastPositionAt ? t('dashDriver.geoLastSentDot', { time: formatClock(lastPositionAt) }) : '' })
-                : t('dashDriver.sharingWaitingSub')}
-            action={null}
-          />
+                : t('dashDriver.sharingWaitingSub')}</span>
+          </p>
         )}
-      </div>
-      )}
+      </section>
 
-      {!approuve ? (() => {
-        /* LE MESSAGE SUIT L'ÉTAT DU DOSSIER (audit du 15/10/2026). « L'équipe vérifie ton dossier » s'affichait aussi à un
-           livreur qui ne l'avait pas encore envoyé, ou dont le dossier était à corriger — sans bouton : il attendait une
-           vérification qui n'avait pas commencé. Brouillon ou refusé : un seul bouton vers le dossier. Envoyé : on attend,
-           avec le dossier consultable. Bloqué : inchangé. */
-        const bloque = user?.adminStatus === 'blocked';
-        const statut = dossier?.statut;
-        const aCompleter = !bloque && statut === 'draft';
-        const aCorriger = !bloque && statut === 'rejected';
-        const titre = bloque ? t('dashDriver.blockedTitle') : aCompleter ? t('dashDriver.fileToCompleteTitle') : aCorriger ? t('dashDriver.fileToFixTitle') : t('dashDriver.waitingTitle');
-        const texte = bloque ? t('dashDriver.blockedText') : aCompleter ? t('dashDriver.fileToCompleteText') : aCorriger ? t('dashDriver.fileToFixText') : t('dashDriver.waitingEmpty');
-        return (
-          <div className="empty" style={{ padding: '40px 20px' }}>
-            {/* Une icône, pas son nom : la ligne affichait littéralement « horloge » ou « interdit » en
-                34px — reliquat du remplacement des emojis par <Icone>, où la chaîne était restée seule. */}
-            <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><Icone nom={bloque ? 'interdit' : (aCompleter || aCorriger) ? 'dossier' : 'horloge'} taille={34} /></div>
-            <b>{titre}</b>
-            <p className="small" style={{ margin: '6px auto 0', maxWidth: 420 }}>{texte}</p>
-            {aCorriger && dossier.motif && <p className="small" style={{ margin: '6px auto 0', maxWidth: 420, color: 'var(--red)' }}>{t('courierOnboarding.rejectedReason', { reason: dossier.motif })}</p>}
-            {(aCompleter || aCorriger) && (
-              <Link to="/driver/onboarding" className="btn-gold" style={{ display: 'inline-block', marginTop: 14 }}>{aCorriger ? t('dashDriver.fileToFixBtn') : t('dashDriver.fileToCompleteBtn')}</Link>
-            )}
-            {!bloque && !aCompleter && !aCorriger && (
-              <Link to="/driver/onboarding" className="btn-outline btn-sm" style={{ display: 'inline-block', marginTop: 14 }}>{t('dashDriver.fileSeeBtn')}</Link>
-            )}
-          </div>
-        );
-      })() : (<>
-        {/* LA COURSE EN MAIN D'ABORD. Un livreur en pleine livraison ouvrait la page sur la liste des
-            nouvelles offres et devait descendre pour retrouver le code client à saisir. L'ordre suit
-            maintenant l'urgence : je livre → je vais chercher → je pourrais prendre. Une section vide
-            ne s'affiche plus du tout, plutôt que « Pas de livraison en cours ». */}
-        {active.length > 0 && <h2 className="section-title" style={{ marginTop: 0 }}>{t('dashDriver.myOngoing')}</h2>}
-        {active.map((o) => (
-          <div className="card" key={o.id}>
-            <b>{o.restaurantName}</b> → {o.clientName}
-            <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-            <BandeauAllergie order={o} />
-            <BadgeAlcool order={o} />
-            {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
-            <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
-            <BoutonsItineraire adresse={o.address} lat={o.deliveryLat} lng={o.deliveryLng} t={t} />
-            {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
-            {o.deliveryInstructions && (
-              <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
-            )}
-            <DeliveryTiming order={o} />
-            <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: dec(o.driverFee ?? o.deliveryFee) })}</div>
-            {o.clientPhone && <div className="small"><Icone nom="telephone" taille={16} className="icone-texte" />{' '}<a href={`tel:${o.clientPhone}`}>{o.clientPhone}</a></div>}
-            <div className="row" style={{ marginTop: 8, gap: 8 }}>
-              <input aria-label={t('dashDriver.phCustomerCode')}
-                placeholder={t('dashDriver.phCustomerCode')}
-                inputMode="numeric" autoComplete="off"
-                onKeyDown={(e) => { if (e.key === 'Enter') deliver(o); }}
-                style={{ maxWidth: 140 }}
-                value={codeInputs[o.id] || ''}
-                onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
-              />
-              {/* Taille normale (audit du 15/10/2026) : c'est le geste qui clôt la course, fait d'une main, souvent dehors. */}
-              {!experienceApp() && <button className="btn-teal" onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
+      <div className="ecl-feuille">
+        <BandeauOuverture role="driver" />
+        {/* Selfie de contrôle au hasard à la prise de service (CODE-14) : sans lui, aucune course n'est proposée. */}
+        {peutRouler && <SelfieControle token={token} onDepose={load} />}
+
+        {!approuve ? (() => {
+          /* LE MESSAGE SUIT L'ÉTAT DU DOSSIER (audit du 15/10/2026). « L'équipe vérifie ton dossier » s'affichait aussi à un
+             livreur qui ne l'avait pas encore envoyé, ou dont le dossier était à corriger — sans bouton : il attendait une
+             vérification qui n'avait pas commencé. Brouillon ou refusé : un seul bouton vers le dossier. Envoyé : on attend,
+             avec le dossier consultable. Bloqué : inchangé. */
+          const bloque = user?.adminStatus === 'blocked';
+          const statut = dossier?.statut;
+          const aCompleter = !bloque && statut === 'draft';
+          const aCorriger = !bloque && statut === 'rejected';
+          const titre = bloque ? t('dashDriver.blockedTitle') : aCompleter ? t('dashDriver.fileToCompleteTitle') : aCorriger ? t('dashDriver.fileToFixTitle') : t('dashDriver.waitingTitle');
+          const texte = bloque ? t('dashDriver.blockedText') : aCompleter ? t('dashDriver.fileToCompleteText') : aCorriger ? t('dashDriver.fileToFixText') : t('dashDriver.waitingEmpty');
+          return (
+            <div className="empty" style={{ padding: '40px 20px' }}>
+              {/* Une icône, pas son nom : la ligne affichait littéralement « horloge » ou « interdit » en
+                  34px — reliquat du remplacement des emojis par <Icone>, où la chaîne était restée seule. */}
+              <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><Icone nom={bloque ? 'interdit' : (aCompleter || aCorriger) ? 'dossier' : 'horloge'} taille={34} /></div>
+              <b>{titre}</b>
+              <p className="small" style={{ margin: '6px auto 0', maxWidth: 420 }}>{texte}</p>
+              {aCorriger && dossier.motif && <p className="small" style={{ margin: '6px auto 0', maxWidth: 420, color: 'var(--red)' }}>{t('courierOnboarding.rejectedReason', { reason: dossier.motif })}</p>}
+              {(aCompleter || aCorriger) && (
+                <Link to="/driver/onboarding" className="btn-gold" style={{ display: 'inline-block', marginTop: 14 }}>{aCorriger ? t('dashDriver.fileToFixBtn') : t('dashDriver.fileToCompleteBtn')}</Link>
+              )}
+              {!bloque && !aCompleter && !aCorriger && (
+                <Link to="/driver/onboarding" className="btn-outline btn-sm" style={{ display: 'inline-block', marginTop: 14 }}>{t('dashDriver.fileSeeBtn')}</Link>
+              )}
             </div>
-            {/* Application : le code du client tapé, on glisse pour livrer (même raison que pour la récupération). */}
-            {experienceApp() && <GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} onConfirmer={() => deliver(o)} />}
-            <PhotoDepot order={o} token={token} toast={toast} onLivree={load} />
-            <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
-          </div>
-        ))}
+          );
+        })() : (<>
+          {/* LA COURSE EN MAIN D'ABORD. L'ordre suit l'urgence : je livre → je vais chercher → je pourrais prendre. La course
+              du bandeau ouvre la feuille ; une section vide ne s'affiche pas. */}
+          {principale && (enRetrait ? detailRetrait(principale, true) : detailLivraison(principale, true))}
 
-        {awaitingPickup.length > 0 && <h2 className="section-title" style={active.length ? undefined : { marginTop: 0 }}>{t('dashDriver.awaitingPickup')}</h2>}
-        {awaitingPickup.map(carteRetrait)}
-
-        {/* Validé mais paiements pas encore actifs : le serveur refuse toute prise de course (routes/orders.js, 403). La
-            liste montrait quand même les offres et leurs boutons « Prendre », qui échouaient un par un. On dit plutôt ce qui
-            manque, avec le même bouton que la rangée Paiements. */}
-        {!peutRouler ? (
-          <EtatVide icone="carteBancaire" titre={t('dashDriver.paymentsFirstTitle')} texte={t('dashDriver.paymentsFirstText')}>
-            {user?.stripeConnectStatus === 'restricted' || paiementsOuverts() ? (
-              <button type="button" className="btn-gold" disabled={connecting} onClick={connectOnboard}>
-                {connecting ? '...' : user?.stripeConnectStatus === 'restricted' ? t('dashDriver.complete') : t('dashDriver.paymentsActivateBtn')}
-              </button>
-            ) : null}
-          </EtatVide>
-        ) : enPause ? (
-          <div className="empty">{t('dashDriver.pausedText')}</div>
-        ) : (
-        <>
-          <AlerteLivreurBar {...alerte} />
-          {sac?.option === 'fairide' && sac.depositStatus !== 'refunded' && (
-            <div className="card sac-fairide" style={{ borderLeft: '4px solid var(--iris)' }}>
-              <b>{t('dashDriver.bagTitle')}</b>
-              <p className="small" style={{ margin: '4px 0 0' }}>{t(`dashDriver.bag_${sac.depositStatus}`, { amount: Number(sac.depositAmount || 40).toFixed(0) })}</p>
-            </div>
-          )}
-          <h2 className="section-title" style={active.length || awaitingPickup.length ? undefined : { marginTop: 0 }}>{t('dashDriver.availableOrders')}</h2>
-          {vehicule?.type && (
-            <p className="small" style={{ margin: '-6px 0 10px' }}>
-              {['velo', 'velo_electrique'].includes(vehicule.type) ? t('dashDriver.bikeRule', { km: vehicule.bikeMaxKm }) : t('dashDriver.motorRule', { km: vehicule.bikeMaxKm })}
-              {vehicule.rate !== undefined && <> {t('dashDriver.rateRule', { base: dec(vehicule.base || 0), baseKm: vehicule.baseKm, rate: dec(vehicule.rate || 0) })}</>}
-            </p>
-          )}
-          <NotifCourses />
-          {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
-          <PositionRequise>
-          {available.length === 0 && <EtatVide icone="scooter" titre={t('dashDriver.noneAvailable')} />}
-          {available.map((o) => (
-            <div className="card" key={o.id}>
-              <div className="row" style={{ justifyContent: 'space-between' }}>
-                <b>{o.restaurantName}</b>
-                <span className="row" style={{ gap: 6 }}>
-                  {o.distanceKm != null && <span className={`pill${o.longDistance ? ' gold' : ''}`}>{o.longDistance ? t('dashDriver.longDistance', { km: dec(o.distanceKm, 1) }) : t('dashDriver.shortDistance', { km: dec(o.distanceKm, 1) })}</span>}
-                  <span className="pill teal">{o.commune}</span>
-                </span>
-              </div>
-              <span className={`status-badge status-${o.status}`} style={{ marginBottom: 6, display: 'inline-block' }}>
-                {o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing')}
-              </span>
-              <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-              {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
-              {/* Adresse sans numéro ni nom du client avant la prise (le serveur ne les envoie pas). */}
-              <div className="small" style={{ marginBottom: 4 }}>{t('dashDriver.deliveryAt', { address: o.address })} <span style={{ color: 'var(--ink-soft)' }}>({t('conformite.offerApproxAddress')})</span></div>
-              {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
-              <DeliveryTiming order={o} />
-              <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-                <span className="small">
-                  <b>{t('conformite.offerPrice', { fee: dec(o.driverFee ?? o.deliveryFee) })}</b>
-                  {o.bonusCents > 0 && <span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</span>}
-                </span>
-                <span className="row" style={{ gap: 6 }}>
-                  <button className="btn-outline btn-sm" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
-                  {/* Prendre la course : taille normale ; Refuser reste petit et neutre (aucune conséquence pour le livreur). */}
-                  <button className="btn-teal" onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
-                </span>
-              </div>
+          {autresActives.length > 0 && <h2 className="ecl-h2">{t('dashDriver.myOngoing')}</h2>}
+          {autresActives.map((o) => (
+            <div className="ecl-course-carte" key={o.id}>
+              <div className="ecl-course-tete"><span><b>{o.restaurantName}</b> → {o.clientName}</span><span className="ecl-badge doux">{t('dashDriver.rideFee', { fee: fraisCourse(o) })}</span></div>
+              {detailLivraison(o, false)}
             </div>
           ))}
-          </PositionRequise>
-        </>
-        )}
 
-        {livreesAujourdhui.length > 0 && (<>
-          <h2 className="section-title">{t('dashDriver.deliveredToday')}</h2>
-          {livreesAujourdhui.map((o) => (
-            <div className="card" key={o.id}>
-              <div className="row" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-                <span><b>{o.restaurantName}</b>{o.commune ? ` → ${o.commune}` : ''}</span>
-                <span className="small">{ligneGain(o)}</span>
-              </div>
+          {autresRetraits.length > 0 && <h2 className="ecl-h2">{t('dashDriver.awaitingPickup')}</h2>}
+          {autresRetraits.map((o) => (
+            <div className="ecl-course-carte" key={o.id}>
+              <div className="ecl-course-tete"><b>{o.restaurantName}</b><span className={`ecl-badge ${o.status === 'pret' ? 'lime' : 'doux'}`}>{etatRetrait(o)}</span></div>
+              <div className="small" style={{ marginBottom: 10 }}>{t('dashDriver.rideFee', { fee: fraisCourse(o) })}</div>
+              {detailRetrait(o, false)}
             </div>
           ))}
+
+          {/* Une course en main : le bandeau montre son trajet, l'interrupteur descend ici. Se mettre en pause coupe les
+              nouvelles offres, pas les courses déjà prises. */}
+          {course && peutRouler && interrupteur(true)}
+
+          {/* Validé mais paiements pas encore actifs : le serveur refuse toute prise de course (routes/orders.js, 403). La
+              liste montrait quand même les offres et leurs boutons « Prendre », qui échouaient un par un. On dit plutôt ce qui
+              manque, avec le seul bouton de l'écran. */}
+          {!peutRouler ? (
+            <EtatVide icone="carteBancaire" titre={t('dashDriver.paymentsFirstTitle')} texte={t('dashDriver.paymentsFirstText')}>
+              {user?.stripeConnectStatus === 'restricted' || paiementsOuverts() ? (
+                <button type="button" className="btn-gold" disabled={connecting} onClick={connectOnboard}>
+                  {connecting ? '...' : user?.stripeConnectStatus === 'restricted' ? t('dashDriver.complete') : t('dashDriver.paymentsActivateBtn')}
+                </button>
+              ) : null}
+            </EtatVide>
+          ) : enPause ? (
+            <div className="empty" style={{ marginTop: 18 }}>{t('dashDriver.pausedText')}</div>
+          ) : (
+          <>
+            {sac?.option === 'fairide' && sac.depositStatus !== 'refunded' && (
+              <div className="card sac-fairide" style={{ borderLeft: '4px solid var(--iris)' }}>
+                <b>{t('dashDriver.bagTitle')}</b>
+                <p className="small" style={{ margin: '4px 0 0' }}>{t(`dashDriver.bag_${sac.depositStatus}`, { amount: Number(sac.depositAmount || 40).toFixed(0) })}</p>
+              </div>
+            )}
+            <h2 className="ecl-h2">{t('dashDriver.availableOrders')}{available.length > 0 && <span className="ecl-badge doux">{available.length}</span>}</h2>
+            {vehicule?.type && (
+              <details className="ecl-grille">
+                <summary><Icone nom="euro" taille={16} />{['velo', 'velo_electrique'].includes(vehicule.type) ? t('ecranLivreur.grilleVelo') : t('ecranLivreur.grilleMoteur')}</summary>
+                <p className="small">
+                  {['velo', 'velo_electrique'].includes(vehicule.type) ? t('dashDriver.bikeRule', { km: vehicule.bikeMaxKm }) : t('dashDriver.motorRule', { km: vehicule.bikeMaxKm })}
+                  {vehicule.rate !== undefined && <> {t('dashDriver.rateRule', { base: dec(vehicule.base || 0), baseKm: vehicule.baseKm, rate: dec(vehicule.rate || 0) })}</>}
+                </p>
+              </details>
+            )}
+            <NotifCourses />
+            {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
+            <PositionRequise>
+              {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} />}
+              {available.map(carteOffre)}
+            </PositionRequise>
+            {/* Son, vibration, notifications : sous les offres depuis le 2026-10-16 (maquette), pour que la première course
+                proposée tienne dans le premier écran. */}
+            <AlerteLivreurBar {...alerte} />
+          </>
+          )}
+
+          {livreesAujourdhui.length > 0 && (<>
+            <h2 className="ecl-h2">{t('dashDriver.deliveredToday')}</h2>
+            <div className="ecl-groupe">
+              {livreesAujourdhui.map((o) => (
+                <div className="ecl-lc" key={o.id}>
+                  <span className="ecl-tuile-ic" aria-hidden="true"><Icone nom="commandes" taille={18} /></span>
+                  <span className="ecl-grow"><b>{o.restaurantName}</b>{o.commune ? ` → ${o.commune}` : ''}<small>{ligneGain(o)}</small></span>
+                  {o.deliveredAt && <span className="ecl-badge neutre">{formatClock(new Date(o.deliveredAt))}</span>}
+                </div>
+              ))}
+            </div>
+          </>)}
         </>)}
-      </>)}
+      </div>
       <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
         onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); deliver(o, true); }}
         onRefuse={() => refuserRemiseAge(ageAVerifier)} />

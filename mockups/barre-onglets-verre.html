@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fairide — barre d'onglets en verre</title>
+<!--
+  Maquette (2026-10-16) : la barre d'onglets du bas en « verre liquide », sur le modèle de la nouvelle barre de WhatsApp
+  (retour du fondateur, capture iOS) : flottante, transparente, le contenu qui passe dessous se voit à travers et se
+  déforme sur les bords ; l'onglet actif est une lentille de verre qui grossit quand on appuie et qu'on peut faire
+  glisser du doigt. Quatre versions côte à côte. Rien n'est branché.
+
+  Ouvrir : double-clic, ou `npm run dev -- --host` puis /mockups/barre-onglets-verre.html depuis le téléphone.
+
+  À SAVOIR AVANT DE CHOISIR. La vraie réfraction (le texte tordu sur les bords de la lentille) passe par un filtre SVG
+  dans `backdrop-filter`, que seuls Chrome et Android savent faire. Safari (donc l'iPhone, l'app iOS comprise) garde
+  le flou, les reflets et l'irisation, mais pas la déformation : la maquette le montre telle quelle sur chaque
+  navigateur. L'effet natif exact de WhatsApp est la barre « Liquid Glass » d'iOS 26, dessinée par le système ; dans
+  notre app (une page web dans Capacitor), il faudrait une barre native pour l'avoir.
+
+  Exceptions à l'identité : flou, reflets et une ombre douce sous la barre, limités à cette barre et à l'app (comme la
+  barre translucide déjà en place depuis le 2026-10-13, styles.css).
+-->
+<style>
+@font-face { font-family: 'Inter'; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2'), url('../public/fonts/inter-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Inter Tight'; font-weight: 500 700; font-display: swap;
+  src: url('/fonts/inter-tight-latin.woff2') format('woff2'), url('../public/fonts/inter-tight-latin.woff2') format('woff2'); }
+:root { --iris: #3B2FB5; --lime: #C8F03C; --ink: #14121F; --ink-soft: #6B655D; --ink-faint: #8A8377; --line: #DCD8D0; --ressort: cubic-bezier(.34, 1.45, .64, 1); }
+* { box-sizing: border-box; }
+body { margin: 0; background: #ECEAE4; color: var(--ink); font-family: 'Inter', system-ui, sans-serif; }
+.page { max-width: 1680px; margin: 0 auto; padding: 28px 16px 60px; }
+.page > h1 { font-family: 'Inter Tight', 'Inter', sans-serif; font-size: 28px; margin: 0 0 6px; }
+.page > p { color: var(--ink-soft); max-width: 780px; margin: 0 0 10px; line-height: 1.5; }
+.commandes { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 22px; }
+.commandes button { background: #fff; border: 1px solid #CFCBC2; border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+.commandes button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.moteur { font-size: 13px; color: var(--ink-soft); }
+.rangee { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; }
+.colonne { width: 375px; max-width: 100%; }
+.colonne h2 { font-size: 17px; margin: 0 0 4px; }
+.colonne .note { font-size: 13px; color: var(--ink-soft); line-height: 1.45; min-height: 58px; margin: 0 0 10px; }
+.tel { position: relative; width: 375px; max-width: 100%; height: 667px; border-radius: 34px; overflow: hidden; background: #fff; border: 1px solid #CFCBC2; }
+.tel.sombre { background: #0E0D14; }
+
+/* ---------- Le contenu qui défile dessous : une liste de commerces ---------- */
+.defile { position: absolute; inset: 0; overflow-y: auto; padding: 18px 16px 120px; scrollbar-width: none; }
+.defile::-webkit-scrollbar { display: none; }
+.defile h3 { font-family: 'Inter Tight', 'Inter', sans-serif; font-size: 26px; margin: 8px 0 4px; letter-spacing: -0.01em; }
+.defile .sous { color: var(--ink-soft); font-size: 14px; margin: 0 0 14px; }
+.puces { display: flex; gap: 8px; margin-bottom: 16px; overflow: hidden; }
+.puces span { flex: none; border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 500; }
+.puces span:first-child { background: var(--iris); color: #fff; border-color: var(--iris); }
+.commerce { margin-bottom: 18px; }
+.photo { height: 132px; border-radius: 16px; display: flex; align-items: flex-end; padding: 12px 14px; color: #fff; font-family: 'Inter Tight', 'Inter', sans-serif; font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.commerce b { display: block; margin-top: 8px; font-size: 16px; }
+.commerce small { color: var(--ink-soft); font-size: 13px; }
+.tel.sombre .defile { color: #fff; }
+.tel.sombre .defile .sous, .tel.sombre .commerce small { color: #A9A4B8; }
+.tel.sombre .puces span { border-color: #34313F; }
+
+/* ---------- La barre : commun ---------- */
+.barre { position: absolute; left: 14px; right: 14px; bottom: 18px; height: 70px; border-radius: 35px; padding: 5px; display: flex; touch-action: none; user-select: none; -webkit-user-select: none; z-index: 2; }
+.onglet { position: relative; z-index: 2; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 0; background: none; padding: 0; color: var(--ink-soft); font: inherit; font-size: 10px; font-weight: 600; letter-spacing: .01em; cursor: pointer; transition: color .15s; }
+.onglet svg { width: 24px; height: 24px; transition: transform .2s var(--ressort); }
+.onglet.on { color: var(--iris); }
+.tel.sombre .onglet { color: #C9C5D6; }
+.tel.sombre .onglet.on { color: #fff; }
+.curseur { position: absolute; z-index: 1; top: 5px; left: 0; height: 60px; border-radius: 30px; pointer-events: none;
+  transition: transform .42s var(--ressort), width .3s var(--ressort), height .3s var(--ressort), top .3s var(--ressort), border-radius .3s; }
+.barre.glisse .curseur { transition: transform .05s linear, width .3s var(--ressort), height .3s var(--ressort), top .3s var(--ressort); }
+
+/* ---------- 1 · Aujourd'hui (styles.css, html.natif) ---------- */
+.v1 .barre { background: rgba(255,255,255,.72); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(220,216,208,.7); }
+.v1 .curseur { background: var(--iris); }
+.v1 .onglet.on { color: #fff; }
+.v1 .tel.sombre .barre {background: rgba(30,28,40,.72); border-color: rgba(255,255,255,.12); }
+
+/* ---------- Verre : la barre des versions 2, 3 et 4 ---------- */
+/* Presque transparente : un voile blanc léger, un flou court (le texte dessous reste lisible en forme), la saturation
+   qui ravive les couleurs qui passent, un liseré clair en haut (le reflet) et une ombre douce qui la décolle du fond. */
+.verre .barre {
+  background: rgba(255,255,255,.22);
+  -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
+  border: 1px solid rgba(255,255,255,.6);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 1px rgba(255,255,255,.35), inset 0 0 18px rgba(255,255,255,.25), 0 10px 30px rgba(20,18,31,.16), 0 1px 3px rgba(20,18,31,.08);
+}
+.verre .tel.sombre .barre { background: rgba(40,38,52,.28); border-color: rgba(255,255,255,.22); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 18px rgba(255,255,255,.06), 0 10px 30px rgba(0,0,0,.4); }
+/* Sur du verre clair, le gris des onglets inactifs disparaissait sur les photos : encre, avec un halo blanc léger. */
+.verre .onglet { color: rgba(20,18,31,.8); text-shadow: 0 0 8px rgba(255,255,255,.7); }
+.verre .onglet svg { filter: drop-shadow(0 0 4px rgba(255,255,255,.6)); }
+.verre .tel.sombre .onglet { color: #E6E3EF; text-shadow: 0 0 8px rgba(0,0,0,.5); }
+.verre .tel.sombre .onglet svg { filter: drop-shadow(0 0 4px rgba(0,0,0,.45)); }
+/* Réfraction (Chrome / Android) : posée par le script, un filtre par taille d'élément. */
+.refraction.verre .barre { -webkit-backdrop-filter: var(--filtre-barre) blur(2px) saturate(190%) brightness(1.06); backdrop-filter: var(--filtre-barre) blur(2px) saturate(190%) brightness(1.06); }
+
+/* La lentille : l'onglet actif, en verre. Bord irisé (rose d'un côté, bleu de l'autre, comme sur la capture), reflet en
+   haut ; à l'appui elle grossit et se détache, et on peut la promener d'un onglet à l'autre. */
+.lentille {
+  background: rgba(255,255,255,.42);
+  -webkit-backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08); backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08);
+  border: 1px solid rgba(255,255,255,.75);
+  box-shadow: inset 0 1.5px 1px rgba(255,255,255,.95), inset 4px 0 7px -2px rgba(255,70,170,.32), inset -4px 0 7px -2px rgba(40,190,255,.36),
+    inset 0 -3px 6px -2px rgba(255,220,90,.28), 0 2px 10px rgba(20,18,31,.12);
+}
+.refraction .lentille { -webkit-backdrop-filter: var(--filtre-lentille) saturate(230%) brightness(1.08); backdrop-filter: var(--filtre-lentille) saturate(230%) brightness(1.08); }
+.barre.appui .lentille { box-shadow: inset 0 1.5px 1px rgba(255,255,255,1), inset 6px 0 9px -2px rgba(255,70,170,.45), inset -6px 0 9px -2px rgba(40,190,255,.5),
+    inset 0 -4px 8px -2px rgba(255,220,90,.38), 0 8px 24px rgba(20,18,31,.2); }
+
+/* ---------- 2 · Verre liquide : lentille en pilule ---------- */
+.v2 .barre.appui .curseur { transform: var(--x) scale(1.16, 1.22) !important; }
+.v2 .barre.appui .onglet.on svg { transform: scale(1.12); }
+/* Libellés un peu plus petits (retour du fondateur, 2026-10-16 : ils touchaient le bord de la lentille). */
+.v2 .onglet { font-size: 9px; letter-spacing: 0; }
+
+/* ---------- 3 · Cercle iris (WhatsApp bêta 2.26.41.7) ---------- */
+/* Un rond plein derrière l'icône seulement ; le libellé reste dessous, en iris. */
+.v3 .curseur { width: 46px !important; height: 46px; top: 6px; border-radius: 50%; background: var(--iris); }
+.v3 .onglet { justify-content: flex-start; padding-top: 10px; gap: 9px; }
+.v3 .onglet.on svg { color: #fff; transform: scale(1.04); }
+.v3 .barre.appui .curseur { transform: var(--x) scale(1.18) !important; }
+
+/* ---------- 4 · Cercle de verre ---------- */
+/* La même place que 3, mais le rond est une lentille de verre, et il s'étire en se déplaçant (comme une goutte). */
+.v4 .curseur { width: 50px !important; height: 50px; top: 4px; border-radius: 25px; }
+.v4 .onglet { justify-content: flex-start; padding-top: 10px; gap: 9px; }
+.v4 .onglet.on svg { transform: scale(1.1); }
+.v4 .curseur.etire { animation: goutte .45s var(--ressort); }
+@keyframes goutte { 0% { scale: 1 1; } 35% { scale: 1.45 .82; } 70% { scale: .94 1.06; } 100% { scale: 1 1; } }
+.v4 .barre.appui .curseur { transform: var(--x) scale(1.3) !important; }
+
+@media (prefers-reduced-motion: reduce) { .curseur, .onglet svg { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Barre d'onglets en verre : quatre essais</h1>
+  <p>Fais défiler la liste dans chaque téléphone pour voir le contenu passer sous la barre. Touche un onglet, ou garde le doigt
+    appuyé et fais-le glisser le long de la barre : la lentille suit et se pose sur l'onglet le plus proche.</p>
+  <p class="moteur" id="moteur"></p>
+  <div class="commandes">
+    <button type="button" id="defiler" aria-pressed="false">Faire défiler tout seul</button>
+    <button type="button" id="sombre" aria-pressed="false">Mode sombre</button>
+  </div>
+  <div class="rangee" id="rangee"></div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="filtres"></defs></svg>
+
+<script>
+const ICONES = {
+  restaurants: '<path d="M4 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3"/><path d="M6 12v9"/><path d="M17 3c-1.7 0-3 2.2-3 5s1.3 4 3 4 3 0 3 0V3Z"/><path d="M17 12v9"/>',
+  carte: '<path d="M9 4 3 7v13l6-3 6 3 6-3V4l-6 3-6-3Z"/><path d="M9 4v13"/><path d="M15 7v13"/>',
+  recherche: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  commandes: '<path d="M3 8h18l-1.3 11a2 2 0 0 1-2 1.8H6.3a2 2 0 0 1-2-1.8L3 8Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/>',
+  compte: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'
+};
+const ONGLETS = [['restaurants', 'Restaurants'], ['carte', 'Carte'], ['recherche', 'Recherche'], ['commandes', 'Commandes'], ['compte', 'Compte']];
+const COMMERCES = [
+  ['Chez Simone', 'Pizza · Ixelles · 1,2 km', '#C2412D', 'Margherita'], ['Hill’s Burger', 'Burgers · Etterbeek · 2,0 km', '#2F2A26', 'Smash'],
+  ['L’arbre à pain', 'Boulangerie · Saint-Gilles · 1,6 km', '#B8862F', 'Croissants'], ['Pitaki', 'Grec · Ixelles · 0,9 km', '#3B2FB5', 'Pita gyros'],
+  ['Snack Turko', 'Kebab & Grill · Schaerbeek · 3,1 km', '#4E7A2E', 'Dürüm'], ['DIJII SHOP', 'Épicerie · Bruxelles · 2,4 km', '#1F6F8B', 'Épicerie'],
+  ['Bubble Ixelles', 'Bubble Tea · Ixelles · 1,0 km', '#C8F03C', 'Taro'], ['Ramen Sablon', 'Ramen · Bruxelles · 2,7 km', '#8A3B2B', 'Tonkotsu']
+];
+const VERSIONS = [
+  { id: 'v1', nom: '1 · Aujourd’hui', note: 'La barre de l’app : blanc translucide, flou fort, pastille iris pleine.' },
+  { id: 'v2', nom: '2 · Verre liquide', note: 'Barre presque transparente, reflets ; l’onglet actif est une lentille en pilule qui grossit à l’appui et suit le doigt.', verre: true },
+  { id: 'v3', nom: '3 · Cercle iris', note: 'Comme la bêta de WhatsApp : un rond derrière l’icône seulement, le libellé dessous. Barre en verre.', verre: true },
+  { id: 'v4', nom: '4 · Cercle de verre', note: 'Le rond est une lentille de verre qui s’étire comme une goutte en changeant d’onglet.', verre: true }
+];
+
+const ic = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONES[n]}</svg>`;
+
+/* RÉFRACTION. Une carte de déplacement par taille d'élément : rouge = décalage horizontal, vert = vertical, 128 = rien.
+   Le centre reste net ; près du bord, le fond est tiré vers l'intérieur, comme à travers l'épaisseur d'un verre bombé. */
+const MOTEUR_REFRACTION = (() => { const ua = navigator.userAgent; return /Chrome|Chromium|Edg\//.test(ua) && !/Firefox/.test(ua); })();
+const cartes = new Map();
+function carteDeplacement(l, h, rayon, bord) {
+  const cle = `${l}x${h}x${rayon}x${bord}`;
+  if (cartes.has(cle)) return cartes.get(cle);
+  const c = document.createElement('canvas'); c.width = l; c.height = h;
+  const g = c.getContext('2d'); const img = g.createImageData(l, h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < l; x++) {
+    // Distance signée au bord d'un rectangle arrondi (négatif = dedans).
+    const qx = Math.abs(x + .5 - l / 2) - (l / 2 - rayon), qy = Math.abs(y + .5 - h / 2) - (h / 2 - rayon);
+    const dehors = Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - rayon;
+    const t = Math.max(0, Math.min(1, 1 + dehors / bord)); // 0 au cœur, 1 sur le bord
+    const force = t * t;
+    // Direction : vers le centre, depuis le point le plus proche du bord.
+    const nx = Math.sign(x + .5 - l / 2) * Math.max(qx, 0), ny = Math.sign(y + .5 - h / 2) * Math.max(qy, 0);
+    const n = Math.hypot(nx, ny) || 1;
+    const i = (y * l + x) * 4;
+    img.data[i] = 128 - (nx / n) * force * 127;
+    img.data[i + 1] = 128 - (ny / n) * force * 127;
+    img.data[i + 2] = 128; img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const url = c.toDataURL();
+  cartes.set(cle, url);
+  return url;
+}
+let nFiltre = 0;
+// Trois déplacements de force différente, un par couleur, recombinés : c'est l'irisation des bords.
+function filtrePour(el, echelle, irise) {
+  const r = el.getBoundingClientRect();
+  const l = Math.round(r.width), h = Math.round(r.height);
+  if (!l || !h) return '';
+  const id = `verre-${++nFiltre}`;
+  const carte = carteDeplacement(l, h, Math.min(l, h) / 2, Math.min(l, h) * .42);
+  const dep = (s, res) => `<feDisplacementMap in="SourceGraphic" in2="carte" scale="${s}" xChannelSelector="R" yChannelSelector="G" result="${res}"/>`;
+  const corps = irise
+    ? `${dep(echelle, 'r')}${dep(echelle * 1.12, 'v')}${dep(echelle * 1.24, 'b')}
+       <feColorMatrix in="r" type="matrix" values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="r2"/>
+       <feColorMatrix in="v" type="matrix" values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0" result="v2"/>
+       <feColorMatrix in="b" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0" result="b2"/>
+       <feBlend in="r2" in2="v2" mode="screen" result="rv"/><feBlend in="rv" in2="b2" mode="screen"/>`
+    : dep(echelle, 'fin');
+  document.getElementById('filtres').insertAdjacentHTML('beforeend',
+    `<filter id="${id}" x="0" y="0" width="${l}" height="${h}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feImage href="${carte}" x="0" y="0" width="${l}" height="${h}" result="carte" preserveAspectRatio="none"/>${corps}</filter>`);
+  return `url(#${id})`;
+}
+
+function monter(v) {
+  const col = document.createElement('div');
+  col.className = `colonne ${v.id}${v.verre ? ' verre' : ''}`;
+  col.innerHTML = `<h2>${v.nom}</h2><p class="note">${v.note}</p>
+    <div class="tel"><div class="defile"><h3>Restaurants</h3><p class="sous">Près de toi, à Ixelles</p>
+      <div class="puces"><span>Tout</span><span>Pizza</span><span>Burgers</span><span>Boulangerie</span><span>Healthy</span></div>
+      ${COMMERCES.map(([n, s, c, plat]) => `<div class="commerce"><div class="photo" style="background:${c};${c === '#C8F03C' ? 'color:#14121F' : ''}">${plat}</div><b>${n}</b><small>${s}</small></div>`).join('')}
+    </div>
+    <nav class="barre" aria-label="Onglets"><span class="curseur${v.verre ? ' lentille' : ''}"></span>
+      ${ONGLETS.map(([n, l], k) => `<button type="button" class="onglet${k === 0 ? ' on' : ''}" data-i="${k}">${ic(n)}<span>${l}</span></button>`).join('')}
+    </nav></div>`;
+  const barre = col.querySelector('.barre');
+  const curseur = barre.querySelector('.curseur');
+  const onglets = [...barre.querySelectorAll('.onglet')];
+  let actif = 0;
+
+  function poser(i, { libre = null } = {}) {
+    const o = onglets[i];
+    const largeurOnglet = o.offsetWidth;
+    const largeur = v.id === 'v3' ? 46 : v.id === 'v4' ? 50 : largeurOnglet;
+    const centre = libre !== null ? libre : o.offsetLeft + largeurOnglet / 2;
+    const min = 5 + largeur / 2, max = barre.clientWidth - 5 - largeur / 2;
+    const x = `translateX(${Math.max(min, Math.min(max, centre)) - largeur / 2}px)`;
+    curseur.style.setProperty('--x', x);
+    curseur.style.transform = x;
+    curseur.style.width = `${largeur}px`;
+  }
+  function choisir(i) {
+    if (i !== actif && v.id === 'v4') { curseur.classList.remove('etire'); void curseur.offsetWidth; curseur.classList.add('etire'); }
+    actif = i;
+    onglets.forEach((o, k) => o.classList.toggle('on', k === i));
+    poser(i);
+    if (navigator.vibrate) navigator.vibrate(8);
+  }
+  const plusProche = (x) => {
+    let meilleur = 0, d = Infinity;
+    onglets.forEach((o, k) => { const c = o.offsetLeft + o.offsetWidth / 2; if (Math.abs(c - x) < d) { d = Math.abs(c - x); meilleur = k; } });
+    return meilleur;
+  };
+
+  // Appui long et glissé : la lentille grossit, suit le doigt, puis se pose sur l'onglet le plus proche.
+  let depart = null;
+  barre.addEventListener('pointerdown', (e) => {
+    depart = { x: e.clientX, glisse: false };
+    barre.setPointerCapture(e.pointerId);
+    barre.classList.add('appui');
+  });
+  barre.addEventListener('pointermove', (e) => {
+    if (!depart) return;
+    const x = e.clientX - barre.getBoundingClientRect().left;
+    if (!depart.glisse && Math.abs(e.clientX - depart.x) > 6) { depart.glisse = true; barre.classList.add('glisse'); }
+    if (depart.glisse) {
+      poser(actif, { libre: x });
+      const k = plusProche(x);
+      onglets.forEach((o, j) => o.classList.toggle('on', j === k));
+    }
+  });
+  const fin = (e) => {
+    if (!depart) return;
+    const x = e.clientX - barre.getBoundingClientRect().left;
+    barre.classList.remove('appui', 'glisse');
+    choisir(plusProche(x));
+    depart = null;
+  };
+  barre.addEventListener('pointerup', fin);
+  barre.addEventListener('pointercancel', () => { barre.classList.remove('appui', 'glisse'); depart = null; poser(actif); });
+
+  requestAnimationFrame(() => {
+    poser(0);
+    if (v.verre && MOTEUR_REFRACTION) {
+      col.classList.add('refraction');
+      barre.style.setProperty('--filtre-barre', filtrePour(barre, 18, false));
+      curseur.style.setProperty('--filtre-lentille', filtrePour(curseur, 26, true));
+    }
+  });
+  return col;
+}
+
+const rangee = document.getElementById('rangee');
+VERSIONS.forEach((v) => rangee.appendChild(monter(v)));
+document.getElementById('moteur').textContent = MOTEUR_REFRACTION
+  ? 'Ce navigateur fait la réfraction (Chrome / Android) : les bords de la barre et de la lentille déforment ce qui passe dessous.'
+  : 'Ce navigateur (Safari ou Firefox) ne fait pas la réfraction : tu vois le flou, les reflets et l’irisation, comme sur iPhone.';
+
+let minuteur = null;
+document.getElementById('defiler').onclick = (e) => {
+  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+  e.currentTarget.setAttribute('aria-pressed', on);
+  clearInterval(minuteur);
+  if (on) minuteur = setInterval(() => document.querySelectorAll('.defile').forEach((d) => {
+    d.scrollTop = d.scrollTop + 1 >= d.scrollHeight - d.clientHeight ? 0 : d.scrollTop + 1;
+  }), 16);
+};
+document.getElementById('sombre').onclick = (e) => {
+  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+  e.currentTarget.setAttribute('aria-pressed', on);
+  document.querySelectorAll('.tel').forEach((t) => t.classList.toggle('sombre', on));
+};
+</script>
+</body>
+</html>

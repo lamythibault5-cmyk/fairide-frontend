@@ -5,6 +5,9 @@ import { libellesAllergenes } from '../allergenes';
 import { prixRemise, euros, libellePromo } from '../prixPlat';
 import { imgProps } from '../images';
 import Icone from './Icone';
+import { useEffect, useRef, useState } from 'react';
+import { useCart } from '../context/CartContext';
+import { vibrer } from '../gestes';
 
 // TOUTE LA CARTE EST LA CIBLE, plus seulement le « + » de son coin.
 //
@@ -24,6 +27,52 @@ import { imgProps } from '../images';
 // le « + ». C'est la forme qui se parcourt le plus vite au pouce (une colonne, la photo ne coupe pas le texte), et
 // un plat sans photo ne laisse plus de trou. Toute la ligne reste le bouton (voir l'ancien commentaire : une cible
 // de 30 px dans une carte de 250 obligeait à viser).
+/* LE « + » DEVIENT COMPTEUR (fondateur, 2026-10-16, version 3C de mockups/autres-idees.html). Un + iris plein ; dès
+ * qu'un plat est dans le panier, il s'ouvre en « − n + », le chiffre dans un rond lime (lime sur iris), puis se replie
+ * au bout de 2,6 s en un rond qui garde le nombre — on voit ce qu'on a déjà pris sans ouvrir le panier. Toucher le rond
+ * le rouvre. « − » retire un exemplaire de la dernière ligne de ce plat (un plat pris avec des options différentes
+ * fait plusieurs lignes : on enlève la plus récente). Le « + » reste l'ajout direct d'avant (onQuickAdd : fiche si
+ * des options sont obligatoires, envol vers le panier sinon). */
+const DUREE_OUVERT_MS = 2600;
+function PasPlat({ item, name, image, onAjout, t }) {
+  const cart = useCart();
+  const lignes = Object.entries(cart.lines).filter(([, l]) => l.itemId === item.id);
+  const qte = lignes.reduce((s, [, l]) => s + l.qty, 0);
+  const [ouvert, setOuvert] = useState(false);
+  const [bosse, setBosse] = useState(0);
+  const minuteur = useRef(null);
+  useEffect(() => () => clearTimeout(minuteur.current), []);
+  const garderOuvert = () => {
+    setOuvert(true);
+    clearTimeout(minuteur.current);
+    minuteur.current = setTimeout(() => setOuvert(false), DUREE_OUVERT_MS);
+  };
+  const etat = qte === 0 ? 'ferme' : ouvert ? 'ouvert' : 'replie';
+  const plus = (e) => {
+    e.stopPropagation();
+    onAjout(item, e.currentTarget.getBoundingClientRect(), image);
+    garderOuvert();
+    setBosse((b) => b + 1);
+  };
+  const moins = (e) => {
+    e.stopPropagation();
+    const derniere = lignes[lignes.length - 1];
+    if (!derniere) return;
+    vibrer(6);
+    cart.changeLineQty(derniere[0], -1);
+    garderOuvert();
+  };
+  return (
+    /* La bosse rejoue à chaque ajout : deux classes identiques en alternance (une animation ne repart pas si sa classe reste). */
+    <div className={`plat-pas plat-pas--${etat}${bosse ? ` plat-pas--bosse${bosse % 2}` : ''}`} role="group" aria-label={name}>
+      <button type="button" className="plat-pas-moins" tabIndex={etat === 'ouvert' ? 0 : -1} aria-hidden={etat !== 'ouvert'} onClick={moins} aria-label={t('menuCategories.oneLess', { name })}>−</button>
+      <button type="button" className="plat-pas-chiffre" tabIndex={etat === 'replie' ? 0 : -1} aria-hidden={etat === 'ferme'} onClick={(e) => { e.stopPropagation(); garderOuvert(); }}
+        aria-label={t('menuCategories.inCart', { n: qte })}><span key={qte}>{qte}</span></button>
+      <button type="button" className="plat-pas-plus" tabIndex={etat === 'replie' ? -1 : 0} onClick={plus} aria-label={t('menuCategories.quickAdd', { name })}><span aria-hidden="true">+</span></button>
+    </div>
+  );
+}
+
 function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
   const image = resolveItemImage(item, sections);
   // Nom et description dans la langue affichée, avec repli sur le texte du restaurateur (localizedItem).
@@ -76,10 +125,7 @@ function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
       <button type="button" className={`${classes} plat-cliquable`} onClick={() => onAdd(item)} aria-label={`${name}, ${euros(remise ?? item.price)}`}>
         {contenu}
       </button>
-      <button type="button" className="plat-ajout" aria-label={t('menuCategories.quickAdd', { name })}
-        onClick={(e) => { e.stopPropagation(); (onQuickAdd || onAdd)(item, e.currentTarget.getBoundingClientRect(), image); }}>
-        <span aria-hidden="true">+</span>
-      </button>
+      <PasPlat item={item} name={name} image={image} onAjout={onQuickAdd || onAdd} t={t} />
     </div>
   );
 }

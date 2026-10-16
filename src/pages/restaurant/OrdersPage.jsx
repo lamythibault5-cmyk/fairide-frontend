@@ -16,13 +16,15 @@ import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/
 import { buildTicketBytes, COLUMNS_58MM } from '../../escposTicket';
 import * as btPrinter from '../../bluetoothPrinter';
 import {
-  DeliveryTiming, EcheanceAcceptation, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
+  DeliveryTiming, EcheanceAcceptation, ProgressBar, RouteSuivi, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
   ORDER_STAGES, orderStageKey, orderStagePriority, stageColors as couleursEtapes
 } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 import Icone from '../../components/Icone';
 import EtatVide from '../../components/EtatVide';
+import { BandeauCommerce, FeuilleCommerce, SegmentGlisse } from '../../components/commerce/BandeauCommerce';
+import { vibrer } from '../../gestes';
 
 // Où en est le ticket de la commande sur le terminal Fairide (backend : GET /orders/restaurant/:id → print).
 // « #012 » : même forme que le ticket imprimé et la fenêtre « nouvelle commande » (NouvelleCommandeModale).
@@ -52,11 +54,32 @@ function CodeRetrait({ order, t }) {
   );
 }
 
+// LE TEMPS QUI RESTE POUR ACCEPTER, EN ANNEAU (2026-10-16, mockups/tous-les-ecrans.html › Commandes) : il se vide de
+// l'arrivée de la commande jusqu'à son échéance (acceptDeadline, la même que EcheanceAcceptation), rouge sous 5 minutes.
+function AnneauDelai({ order, t }) {
+  const [maintenant, setMaintenant] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setMaintenant(Date.now()), 10000);
+    return () => clearInterval(id);
+  }, []);
+  const fin = new Date(order.acceptDeadline).getTime();
+  const debut = new Date(order.createdAt).getTime();
+  const reste = Math.max(0, fin - maintenant);
+  const total = Math.max(60000, Number.isFinite(debut) ? fin - debut : 15 * 60000);
+  const min = Math.ceil(reste / 60000);
+  return (
+    <span className={`ec-anneau${min <= 5 ? ' ec-anneau--presse' : ''}`} style={{ '--ec-p': Math.min(1, reste / total) }}
+      role="img" aria-label={t('ecranCommerce.resteAccepter', { n: min })}>
+      <b>{min}</b><small>{t('ecranCommerce.min')}</small>
+    </span>
+  );
+}
+
 export default function OrdersPage() {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
-  const { orders, restaurant, restoId, loadDashboard } = useOutletContext();
+  const { orders, restaurant, restoId, loadDashboard, communs } = useOutletContext();
 
   /* ÉCRAN ALLUMÉ PENDANT LE SERVICE (audit UX du 15/10/2026). Une tablette de comptoir qui se met en veille ne sonne plus
      et ne voit plus les commandes : après 15 minutes elles sont annulées (acceptation.js), et le commerce mis en pause.
@@ -290,25 +313,30 @@ export default function OrdersPage() {
       await loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
     } catch (e) { toast(e.message, 'erreur'); } finally { setPhotoEnCours(null); }
   }
+  /* UNE COMMANDE (nouveau style, 2026-10-16, « La commande qui sonne ») : l'étape en pastille (la cloche bouge tant
+     qu'elle attend), l'anneau du temps pour accepter, le client et le numéro en grand, la route où le vélo passe d'étape
+     en étape (RouteSuivi : une fois acceptée, il roule jusqu'à « Préparation »), les articles ; puis le temps de
+     préparation à faire glisser et « Accepter ». Lime pour la plus urgente des nouvelles commandes seulement (une couleur
+     décisive par écran), iris pour les suivantes. Toucher la carte ouvre le détail, comme avant. */
+  const premiereNouvelle = enCours.find((o) => o.status === 'nouveau')?.id;
   const carteCommande = (o) => {
     const stageKey = orderStageKey(o);
     const stage = ORDER_STAGES.find((s) => s.key === stageKey);
     const stageColor = stageColors[stageKey];
+    const nouvelle = o.status === 'nouveau';
     return (
     <div
-      className={`card order-card-clickable order-type-${orderTypeColor(o)}`}
+      className={`ec-commande order-type-${orderTypeColor(o)}${nouvelle ? ' ec-commande--nouvelle' : ''}`}
       key={o.id}
       style={{ borderLeft: `5px solid ${stageColor}` }}
       onClick={() => setSelectedOrder(o)}
     >
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+      <div className="ec-cmd-l1">
         {/* Étape en texte foncé, la couleur sur la pastille seule (audit du 15/10/2026) : le libellé était écrit dans la couleur
             de l'étape sur un fond de cette même couleur, en 11 px (« En préparation » lime sur lime : contraste 1,3:1). */}
-        <span className="etape-pastille" style={{ '--etape-couleur': stageColor }}>
+        <span key={stageKey} className={`etape-pastille ec-saute${nouvelle ? ' ec-sonne' : ''}`} style={{ '--etape-couleur': stageColor }}>
           <Icone nom={stage.icon} taille={16} className="icone-texte" /> {t(`orderStatus.stage_${stage.key}`)}
         </span>
-        <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
-          disabled={envoiTicket === o.id} onClick={(e) => { e.stopPropagation(); if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}><Icone nom="imprimante" taille={16} className="icone-texte" /></button>
         {['nouveau', 'preparation', 'pret'].includes(o.status) && !o.preparedPhoto && (
           <label className="btn-ghost order-print-btn" title={t('ordersResto.photoHelp')} aria-label={t('ordersResto.photoBtn')} onClick={(e) => e.stopPropagation()}>
             {photoEnCours === o.id ? '…' : <Icone nom="apercu" taille={16} className="icone-texte" />}
@@ -318,54 +346,65 @@ export default function OrdersPage() {
         {o.preparedPhoto && (
           <a className="btn-ghost order-print-btn" href={o.preparedPhoto.url} target="_blank" rel="noreferrer" title={t('ordersResto.photoDone', { time: new Date(o.preparedPhoto.at).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })} onClick={(e) => e.stopPropagation()}><Icone nom="apercu" taille={16} className="icone-texte" />✓</a>
         )}
+        <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
+          disabled={envoiTicket === o.id} onClick={(e) => { e.stopPropagation(); if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}><Icone nom="imprimante" taille={16} className="icone-texte" /></button>
+        {nouvelle && o.acceptDeadline && <AnneauDelai order={o} t={t} />}
       </div>
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <b>{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6 }}>{t('ordersResto.trainingBadge')}</span>}</b>
-        {/* Le numéro du ticket imprimé et de la fenêtre « nouvelle commande », en grand : c'est lui qu'on annonce en cuisine.
-            Il remplace le badge de statut, qui répétait l'étape écrite juste au-dessus. */}
+      <div className="ec-cmd-l2">
+        <span className="ec-cmd-client">
+          <b>{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6 }}>{t('ordersResto.trainingBadge')}</span>}</b>
+          {o.clientPhone && <span><Icone nom="telephone" taille={14} className="icone-texte" />{' '}{o.clientPhone}</span>}
+        </span>
+        {/* Le numéro du ticket imprimé et de la fenêtre « nouvelle commande », en grand : c'est lui qu'on annonce en cuisine. */}
         {o.orderNumber ? <span className="commande-numero">{numeroCommande(o)}</span> : <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>}
       </div>
-      <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
+      <div className="row" style={{ gap: 6 }}>
+        <span className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</span>
+        {/* Paiement bien distinct (fondateur, 2026-10-07) : à payer sur place (encadré orange) ou déjà payé en ligne (vert). */}
+        {o.paymentMode === 'on_site' ? (
+          <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
+            {o.pickupNoShow ? t('ordersResto.noShowBadge') : `${t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}`}
+          </span>
+        ) : (
+          <span className="small paiement-badge paiement-en-ligne" style={{ fontWeight: 700 }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('ordersResto.paidOnlineBadge')}</span>
+        )}
+      </div>
       {o.print && <div style={{ margin: '4px 0' }}><EtatImpression p={o.print} t={t} /></div>}
-      {/* Paiement bien distinct (fondateur, 2026-10-07) : à payer sur place (encadré orange) ou déjà payé en ligne (vert). */}
-      {o.paymentMode === 'on_site' ? (
-        <div className="small paiement-badge paiement-sur-place" style={{ margin: '4px 0', fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
-          {o.pickupNoShow ? t('ordersResto.noShowBadge') : `${t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}`}
-        </div>
-      ) : (
-        <div className="small paiement-badge paiement-en-ligne" style={{ margin: '4px 0', fontWeight: 700 }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('ordersResto.paidOnlineBadge')}</div>
-      )}
-      <ProgressBar status={o.status} orderType={o.orderType} />
+      <div className="ec-route-blanc"><RouteSuivi status={o.status} orderType={o.orderType} /></div>
+      <p className="ec-cmd-articles">{o.items.map(formatOrderItem).join(', ')}</p>
+      {o.orderType === 'delivery' && <div className="small"><Icone nom="position" taille={16} className="icone-texte" />{' '}{o.address}</div>}
       <DeliveryTiming order={o} />
       <EcheanceAcceptation order={o} />
       <BandeauAllergie order={o} />
       <BadgeAlcool order={o} />
-      <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-      {o.orderType === 'delivery' && <div className="small"><Icone nom="position" taille={16} className="icone-texte" />{' '}{o.address}</div>}
-      {o.clientPhone && <div className="small"><Icone nom="telephone" taille={16} className="icone-texte" />{' '}{o.clientPhone}</div>}
       {o.orderType === 'delivery' && o.driverName && ['preparation', 'pret'].includes(o.status) && (
         <div className="small" style={{ fontWeight: 600 }}>{t('ordersResto.driverAssigned', { name: o.driverName })}</div>
       )}
-      <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
-        {o.status === 'nouveau' && (
-          <>
-            {/* Temps de préparation en plus, annoncé à l'acceptation (RES-10) : l'heure estimée du client recule d'autant. */}
-            <select aria-label={t('ordersResto.extraPrepLabel')} value={tempsEnPlus[o.id] || 0} onChange={(e) => setTempsEnPlus((p) => ({ ...p, [o.id]: Number(e.target.value) }))} style={{ width: 'auto', padding: '6px 8px', fontSize: 13 }}>
-              <option value={0}>{t('ordersResto.extraPrepNone')}</option>
-              {[10, 20, 30].map((m) => <option key={m} value={m}>{t('ordersResto.extraPrepMinutes', { n: m })}</option>)}
-            </select>
-            <button className="btn-teal btn-sm" disabled={actionEnCours === o.id} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 }))}>{t('ordersResto.accept')}</button>
-            <button className="btn-outline btn-sm" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
-          </>
-        )}
-        {/* Iris et non lime : avec plusieurs commandes en préparation, l'écran alignait autant de boutons lime. */}
-        {o.status === 'preparation' && (
-          <button className="btn-teal btn-sm" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
-        )}
-        {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
+      {nouvelle && (
+        <div className="ec-cmd-actions" onClick={(e) => e.stopPropagation()}>
+          {/* Temps de préparation en plus, annoncé à l'acceptation (RES-10) : l'heure estimée du client recule d'autant. */}
+          <p className="ec-feuille-titre">{t('ordersResto.extraPrepLabel')}</p>
+          <SegmentGlisse libelle={t('ordersResto.extraPrepLabel')} valeur={tempsEnPlus[o.id] || 0}
+            onChange={(v) => { vibrer(8); setTempsEnPlus((p) => ({ ...p, [o.id]: v })); }}
+            options={[{ value: 0, label: t('ordersResto.extraPrepNone') }, ...[10, 20, 30].map((m) => ({ value: m, label: t('ordersResto.extraPrepMinutes', { n: m }) }))]} />
+          <button type="button" className={`ec-bouton ${o.id === premiereNouvelle ? 'ec-bouton--lime' : 'ec-bouton--iris'}`} disabled={actionEnCours === o.id}
+            onClick={() => { vibrer(14); if (o.allergyRequest) setAllergieAConfirmer(o); else orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 }); }}>
+            {actionEnCours === o.id ? '…' : t('ordersResto.accept')}
+          </button>
+          <button type="button" className="ec-bouton ec-bouton--texte" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
+        </div>
+      )}
+      {/* Iris et non lime : avec plusieurs commandes en préparation, l'écran alignait autant de boutons lime. */}
+      {o.status === 'preparation' && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+        </div>
+      )}
+      {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
+        <div className="row" style={{ marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
           <button className="btn-ghost btn-sm" style={{ color: 'var(--red)' }} onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{t('ordersResto.customerNoShow')}</button>
-        )}
-      </div>
+        </div>
+      )}
       {o.status === 'pret' && o.orderType === 'pickup' && (
         <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
           <input aria-label={t('ordersResto.phCustomerCode')}
@@ -398,24 +437,33 @@ export default function OrdersPage() {
 
   return (
     <div className="no-print">
-      {/* Plus de carte de présentation du terminal ici : quatre paragraphes et une illustration lus à
-          chaque service, au-dessus des commandes. Elle reste dans Mon compte › Terminal Fairide. */}
-      {restaurant && (<>
-        <InterrupteurService restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
-        <RupturesDuJour restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
-      </>)}
-      <p className="small service-resume">{t('ordersResto.summary', { current: enCours.length, today: duJour })}
-        {terminaux && <> · <Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></>}
-      </p>
-
-      {enCours.length === 0 && <EtatVide icone="commandes" titre={orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} />}
-      {enCours.map(carteCommande)}
-      {closes.length > 0 && (
-        <details className="service-historique">
-          <summary>{t('ordersResto.history', { n: closes.length })}</summary>
-          {closes.map(carteCommande)}
-        </details>
-      )}
+      {/* LE BANDEAU (2026-10-16) : le nom, le résumé du service, l'interrupteur ouvert / en pause et l'état du terminal.
+          Plus de carte de présentation du terminal ici : elle reste dans Mon compte › Terminal Fairide. */}
+      <BandeauCommerce>
+        <div className="ec-b-haut">
+          <span><b>{restaurant?.name}</b></span>
+          <span>{t('ordersResto.summary', { current: enCours.length, today: duJour })}</span>
+        </div>
+        {restaurant && <InterrupteurService surBandeau restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />}
+        {terminaux && <span className="ec-terminal"><Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></span>}
+      </BandeauCommerce>
+      <FeuilleCommerce>
+        {communs}
+        {enCours.length === 0 && <EtatVide icone="commandes" titre={orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} />}
+        {enCours.map(carteCommande)}
+        {/* Rupture du jour, sous les commandes (le geste reste à portée pendant le service). */}
+        {restaurant && (
+          <div className="ec-ruptures">
+            <RupturesDuJour restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
+          </div>
+        )}
+        {closes.length > 0 && (
+          <details className="service-historique">
+            <summary>{t('ordersResto.history', { n: closes.length })}</summary>
+            {closes.map(carteCommande)}
+          </details>
+        )}
+      </FeuilleCommerce>
 
       {selectedOrder && createPortal(
         <div className="modal-overlay no-print" onClick={() => setSelectedOrder(null)}>

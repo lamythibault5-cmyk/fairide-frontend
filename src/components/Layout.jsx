@@ -9,7 +9,6 @@ import useInbox from '../hooks/useInbox';
 import BrandMark from './BrandMark';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
-import ConsentementAppli from './ConsentementAppli';
 import Icone from './Icone';
 import CuisineBackdrop from './CuisineBackdrop';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -31,7 +30,8 @@ const retourParGlissement = estNatif() && plateforme() === 'ios';
  * son pied de page, la rangée des liens légaux ni la carte des cookies : c'était le site qui reprenait la main au milieu
  * de l'app. Connecté, toutes les pages — aide, pages légales, « C'est bon » compris — restent dans la coquille à
  * onglets, avec un « Retour » ; les liens légaux vivent au bas de Mon compte. Déconnecté, une barre d'app (la marque ou
- * Retour, et « Se connecter »). Le consentement devient un écran de l'app (ConsentementAppli). */
+ * Retour, et « Se connecter »). Pas de carte cookies ni d'écran de consentement : l'app ne demande que l'envoi des
+ * rapports de panne, par une case à l'inscription, sur l'écran d'une panne et dans Mon compte (2026-10-16). */
 const APPLI = experienceApp();
 // Pages qui portent déjà leur « ← Mon compte » (RetourCompte.jsx) : pas de second Retour au-dessus.
 const AVEC_RETOUR_COMPTE = ['/aide', '/notre-histoire'];
@@ -219,7 +219,7 @@ export default function Layout() {
             <Link to="/cookies">{t('footer.cookies')}</Link>
           </div>}
         </div>
-        {APPLI ? <ConsentementAppli /> : <CookieBanner />}
+        {!APPLI && <CookieBanner />}
         {seesClientCart && <FloatingCart />}
         {experienceApp() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
         {retourParGlissement && <Suspense fallback={null}><RetourParGlissement /></Suspense>}
@@ -231,7 +231,7 @@ export default function Layout() {
   // La connexion de l'app (ConnexionAppli) est un écran plein, comme l'accueil : rendue seule. Dans .wrap, l'animation de
   // la page en faisait le repère de son `position: fixed`, et la barre d'app passait par-dessus son en-tête.
   if (APPLI && location.pathname === '/login') {
-    return <><Suspense fallback={null}><Outlet /></Suspense><ConsentementAppli /></>;
+    return <Suspense fallback={null}><Outlet /></Suspense>;
   }
   if (APPLI) {
     const accueilListe = location.pathname === '/restaurants' || location.key === 'default';
@@ -239,7 +239,8 @@ export default function Layout() {
       <>
         <div className="appli-barre">
           {accueilListe ? (
-            <Link to="/" className="appli-marque" aria-label="Fairide"><BrandMark size={30} /><span className="wordmark">fairide</span></Link>
+            // La marque n'est pas un lien (fondateur, 2026-10-16) : « / » ramenait sur cette même liste.
+            <span className="appli-marque"><BrandMark size={30} /><span className="wordmark">fairide</span></span>
           ) : (
             <button type="button" className="bv-rond" data-retour-natif onClick={retourAppli} aria-label={t('appli.retour')}><Icone nom="retour" taille={18} /></button>
           )}
@@ -252,7 +253,6 @@ export default function Layout() {
             </Suspense>
           </main>
         </div>
-        <ConsentementAppli />
         {retourParGlissement && <Suspense fallback={null}><RetourParGlissement /></Suspense>}
       </>
     );

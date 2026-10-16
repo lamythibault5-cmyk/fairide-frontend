@@ -4050,14 +4050,14 @@ export default {
     },
     privacy: {
       pageTitle: 'Politique de confidentialité · fairide.be',
-      draftWarning: "Version du 15 octobre 2026.",
+      draftWarning: "Version du 16 octobre 2026.",
       title: 'Politique de confidentialité',
       controllerTitle: 'Responsable du traitement',
       controller: 'FAIRIDE SRL, société à responsabilité limitée de droit belge, BCE 1042.169.780, TVA BE 1042.169.780, RPM Bruxelles, siège social Avenue du Castel 30, 1200 Woluwe-Saint-Lambert (Belgique), contact@fairide.be. Pour toute question sur vos données ou pour exercer vos droits : contact@fairide.be (ou le formulaire en bas de cette page). Fairide n\'a pas désigné de délégué à la protection des données, sa taille ne l\'y obligeant pas.',
       collectedTitle: 'Données collectées',
       collected: "**Compte (tous)** : nom, prénom, e-mail, téléphone, adresse postale, langue, mot de passe (haché), éventuellement genre et date de naissance ; pour la connexion Google, votre nom et votre e-mail transmis par Google. **Commandes** : contenu des commandes, adresse et instructions de livraison, coordonnées géographiques de l'adresse, historique, avis laissés, messages échangés avec le support ; si vous demandez que la commande soit déposée devant la porte, la photo du dépôt prise par le livreur. **Notifications** : l'historique des notifications liées à vos commandes (commande payée, acceptée, en route…). **Signalements** : le contenu d'un signalement (problème de commande, contenu illicite) et les photos que vous y joignez. **Paiement** : géré par Stripe ; Fairide ne reçoit que le montant, le moyen utilisé et l'identifiant de transaction, jamais votre numéro de carte ; si vous choisissez, sur la page Stripe, d'enregistrer votre carte, c'est Stripe qui la garde, et Fairide ne conserve que l'identifiant de client Stripe de votre compte et ne voit que la marque, les 4 derniers chiffres et l'échéance (vous la retirez dans « Mon compte » ; supprimée avec votre compte). **Apple Pay et Google Pay** : si vous payez ainsi, Apple ou Google traitent aussi vos données de paiement, selon leur propre politique ; Fairide n'en reçoit rien de plus. **Commerces partenaires** : dénomination, numéro d'entreprise et de TVA, responsable, IBAN pour les versements, documents commerciaux. **Livreurs** : statut (indépendant, étudiant-indépendant) et numéro d'entreprise, pièce d'identité, numéro de registre national (chiffré), carte professionnelle pour un livreur ressortissant d'un pays hors Union européenne, IBAN, documents justificatifs, selfies de contrôle (voir « Vérification d'identité »), position seulement pendant une course acceptée (dans l'application, pendant la livraison, aussi quand le téléphone est verrouillé, signalé par une notification permanente), position, téléphone et course en cours au moment où il utilise le bouton d'urgence, historique des courses et gains. **Techniques** : adresse IP, type d'appareil et de navigateur, journaux de connexion, en cas d'erreur technique.",
       purposeTitle: 'Finalités et bases légales',
-      purpose: "**Exécution du contrat** (art. 6.1.b RGPD) : créer et gérer votre compte, traiter vos commandes et paiements, organiser la livraison, prouver la remise d'une commande déposée devant la porte (photo du dépôt), vous envoyer les messages liés à vos commandes, verser les commerces et les livreurs. **Obligation légale** (art. 6.1.c) : facturation et comptabilité, obligations fiscales et sociales liées aux livreurs et aux commerces (fiches 281, déclaration DAC7), lutte contre la fraude et le blanchiment via Stripe, réponse aux autorités. **Intérêt légitime** (art. 6.1.f) : sécurité de la plateforme, prévention des abus et de la fraude (dont le prêt d'un compte livreur), statistiques d'audience sans cookie ni identifiant, amélioration du service, gestion des litiges. **Intérêt légitime, aussi** : les e-mails d'information sur Fairide et ses services, envoyés à nos utilisateurs (art. XII.13 du Code de droit économique et arrêté royal du 4 avril 2003) : vous pouvez les refuser à l'inscription, puis à tout moment, en un clic depuis chaque e-mail ou dans « Mon compte » ; et la remontée des erreurs techniques de nos serveurs (Sentry), sans cookie. **Sauvegarde des intérêts vitaux** (art. 6.1.d) : quand un livreur utilise le bouton d'urgence, sa position, son téléphone et sa course en cours sont transmis à l'équipe Fairide pour lui venir en aide. **Consentement** (art. 6.1.a) : remontée d'erreurs techniques depuis votre navigateur (Sentry) après acceptation de la bannière, géolocalisation de votre appareil pendant une commande, vérification biométrique de l'identité d'un livreur (art. 9.2.a). Vous pouvez retirer un consentement à tout moment sans effet sur ce qui précède.",
+      purpose: "**Exécution du contrat** (art. 6.1.b RGPD) : créer et gérer votre compte, traiter vos commandes et paiements, organiser la livraison, prouver la remise d'une commande déposée devant la porte (photo du dépôt), vous envoyer les messages liés à vos commandes, verser les commerces et les livreurs. **Obligation légale** (art. 6.1.c) : facturation et comptabilité, obligations fiscales et sociales liées aux livreurs et aux commerces (fiches 281, déclaration DAC7), lutte contre la fraude et le blanchiment via Stripe, réponse aux autorités. **Intérêt légitime** (art. 6.1.f) : sécurité de la plateforme, prévention des abus et de la fraude (dont le prêt d'un compte livreur), statistiques d'audience sans cookie ni identifiant, amélioration du service, gestion des litiges. **Intérêt légitime, aussi** : les e-mails d'information sur Fairide et ses services, envoyés à nos utilisateurs (art. XII.13 du Code de droit économique et arrêté royal du 4 avril 2003) : vous pouvez les refuser à l'inscription, puis à tout moment, en un clic depuis chaque e-mail ou dans « Mon compte » ; la remontée des erreurs techniques de nos serveurs (Sentry), sans cookie ; et, dans l'application, l'envoi d'un rapport quand elle plante (Sentry, sans cookie ni votre nom), actif par défaut, que vous pouvez couper à tout moment dans « Mon compte ». **Sauvegarde des intérêts vitaux** (art. 6.1.d) : quand un livreur utilise le bouton d'urgence, sa position, son téléphone et sa course en cours sont transmis à l'équipe Fairide pour lui venir en aide. **Consentement** (art. 6.1.a) : remontée d'erreurs techniques depuis votre navigateur sur le site (Sentry), après acceptation de la bannière, géolocalisation de votre appareil pendant une commande, vérification biométrique de l'identité d'un livreur (art. 9.2.a). Vous pouvez retirer un consentement à tout moment sans effet sur ce qui précède.",
       sharingTitle: 'Destinataires et sous-traitants',
       sharing: 'Les données nécessaires à une commande (nom, adresse, téléphone, contenu) sont transmises au commerce partenaire et au livreur concernés, qui ne peuvent les utiliser que pour cette commande. Fairide ne vend ni ne loue aucune donnée personnelle. Les prestataires techniques ci-dessous traitent des données pour le compte de Fairide, sous contrat, sans droit de les utiliser pour eux-mêmes :',
       transfersTitle: 'Transferts hors Union européenne',
@@ -4067,7 +4067,7 @@ export default {
       rightsTitle: 'Vos droits',
       rights: "Vous disposez des droits d'accès, de rectification, d'effacement, de limitation, de portabilité et d'opposition, ainsi que du droit de retirer un consentement à tout moment. Depuis « Mon compte », vous pouvez télécharger vous-même une copie de vos données (export) et vous déconnecter de tous vos appareils. Écrivez à contact@fairide.be ou utilisez le formulaire ci-dessous : nous répondons dans un délai maximum d'un mois, prolongeable de deux mois pour une demande complexe (nous vous en informons alors), après vérification de votre identité si nécessaire. Ces démarches sont gratuites. La suppression de votre compte est aussi possible directement depuis « Mon compte ». Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de l'Autorité de protection des données (APD), Rue de la Presse 35, 1000 Bruxelles, [autoriteprotectiondonnees.be](https://www.autoriteprotectiondonnees.be), contact@apd-gba.be, +32 2 274 48 00.",
       cookiesTitle: 'Cookies, stockage local et statistiques',
-      cookies: 'Fairide n\'utilise que des cookies et stockages strictement nécessaires (session de connexion, panier, langue, choix de la bannière) et des préférences locales, détaillés dans la [politique des cookies](/cookies). Aucun cookie publicitaire, aucun pixel de réseau social. Les statistiques d\'audience, lorsqu\'elles sont activées, reposent sur un outil sans cookie ni identifiant individuel (Plausible) : il compte les pages vues et quelques événements (commande finalisée, inscription) sans jamais recevoir de nom, d\'e-mail ni de montant. Ce choix nous dispense de demander un consentement pour les statistiques. Seule la remontée d\'erreurs techniques (Sentry) est soumise à votre acceptation via la bannière.',
+      cookies: 'Fairide n\'utilise que des cookies et stockages strictement nécessaires (session de connexion, panier, langue, choix de la bannière) et des préférences locales, détaillés dans la [politique des cookies](/cookies). Aucun cookie publicitaire, aucun pixel de réseau social. Les statistiques d\'audience, lorsqu\'elles sont activées, reposent sur un outil sans cookie ni identifiant individuel (Plausible) : il compte les pages vues et quelques événements (commande finalisée, inscription) sans jamais recevoir de nom, d\'e-mail ni de montant. Ce choix nous dispense de demander un consentement pour les statistiques. Sur le site, seule la remontée d\'erreurs techniques (Sentry) est soumise à votre acceptation via la bannière ; dans l\'application, elle est active par défaut et se coupe dans « Mon compte ».',
       securityTitle: 'Sécurité',
       security: 'Connexions chiffrées (HTTPS), mots de passe hachés, numéros de registre national chiffrés, accès aux données restreint aux personnes qui en ont besoin, journalisation des actions d\'administration, hébergement en centres de données certifiés. En cas de violation de données susceptible d\'engendrer un risque pour vous, nous vous en informons et notifions l\'APD dans les délais légaux.',
       mandatoryTitle: 'Données obligatoires et facultatives',
@@ -5617,6 +5617,24 @@ export default {
       photoTitle: 'Photo de la commande',
       photoText: 'Sur chaque commande (essai ou vraie), le bouton dans Mes commandes te permet de photographier la commande AVANT de la remettre : mets le ticket avec le numéro de commande et tous les produits dans le cadre. L\'heure, le numéro et la liste des produits sont enregistrés avec la photo : c\'est ta preuve si un client se plaint.'
     },
+    ecranCommerce: {
+      verrouAide: "L'interrupteur met un plat en rupture pour aujourd'hui, il revient tout seul demain. Tout le reste se change par une demande à Fairide.",
+      prochaineEtape: 'Prochaine étape',
+      rienAFaire: "Rien à faire de ton côté : Fairide s'occupe de la suite",
+      enLigne: 'En ligne',
+      pasEnLigne: 'Pas encore en ligne',
+      resteAccepter: 'Encore {n} min pour accepter',
+      min: 'min',
+      gereeAvecFairide: 'gérée avec Fairide',
+      taCarte: 'Ta carte',
+      produitsEnLigne: '{n} produits en ligne',
+      produitEnLigne: '{n} produit en ligne',
+      aucunEnLigne: "Aucun produit en ligne pour l'instant",
+      sectionsCarte: 'Sections de ta carte',
+      retire: 'Retiré de la carte',
+      enVente: 'en vente',
+      enVenteAujourdhui: "En vente aujourd'hui"
+    },
     ordersResto: {
       stopTodayBtn: 'Stopper les commandes pour aujourd\'hui',
       stopTodayHelp: 'Plus rien à préparer aujourd\'hui ? Les clients ne peuvent plus commander, les commandes déjà reçues continuent. Les commandes rouvrent TOUTES SEULES demain à 6 h : tu n\'as rien à faire. Tu peux aussi rouvrir plus tôt d\'un simple geste.',
@@ -5774,6 +5792,31 @@ export default {
       toastNoShow: 'Commande close : client pas venu.',
       toCollectOnSite: 'À payer sur place',
       paidOnlineBadge: 'Déjà payé en ligne'
+    },
+    ecranLivreur: {
+      // Écrans livreur au bandeau iris (fondateur, 2026-10-16, mockups/tous-les-ecrans.html, Livreur) : Dashboard.jsx, EarningsPage.jsx.
+      course: 'Course',
+      directionCommerce: 'Direction {name}',
+      enRouteVers: 'En route vers {name}',
+      enRoute: 'En route',
+      terminee: 'Course terminée',
+      termineeSous: 'ajoutée à tes gains',
+      livree: 'Livrée',
+      prixPropose: 'Prix proposé',
+      prixMontant: '{fee} €',
+      minutes: '~{min} min',
+      grilleVelo: 'Ta grille et tes courses à vélo',
+      grilleMoteur: 'Ta grille et tes distances',
+      ariaTrajet: 'Trajet du commerce au client',
+      brutCourses: 'Brut {gross} · {n} courses',
+      brutUneCourse: 'Brut {gross} · 1 course',
+      bulle: '{net} · {n} courses',
+      bulleUne: '{net} · 1 course',
+      ariaRegles: 'Ce que tu gardes',
+      regleGrilleChiffre: '90 %',
+      regleGrille: 'de ta grille sur chaque course',
+      reglePourboiresChiffre: '100 %',
+      reglePourboires: 'de tes pourboires'
     },
     dashDriver: {
       // État du dossier avant validation (audit UX du 15/10/2026, Dashboard.jsx).
@@ -6104,6 +6147,10 @@ export default {
       dish: 'Plat',
       sold: 'Vendus',
       footnote: 'Commandes reçues sur Fairide (ni annulées, ni refusées), heure de Bruxelles, commandes d\'essai exclues. Le chiffre est le prix des plats payé par les clients, avant la commission de Fairide ; tes relevés dans « Factures » font foi.'
+    },
+    // Mon compte, bandeau iris (2026-10-16, EnteteCompte.jsx).
+    ecranCompte: {
+      raccourcis: 'Raccourcis'
     },
     accountUi: {
       simulationRow: 'Simulation : commandes d\'essai',
@@ -6684,6 +6731,8 @@ export default {
       discoverInfoJoin: 'Inscrire mon commerce'
     },
     menuCategories: {
+      inCart: '{n} dans le panier',
+      oneLess: 'Un {name} de moins',
       quickAdd: 'Ajouter {name} au panier',
       soldOutToday: 'Épuisé aujourd\'hui · de retour demain',
       category: { entree: 'Entrées', plat: 'Plats', dessert: 'Desserts', boisson: 'Boissons' },
@@ -6707,6 +6756,15 @@ export default {
       halal: 'Halal',
       glutenFree: 'Sans gluten',
       declaredByBusiness: 'Déclaré par le commerce'
+    },
+    ecranListe: {
+      cuisinesAria: 'Types de cuisine',
+      favorisUn: '1 commerce',
+      favorisN: '{n} commerces',
+      favorisAucun: 'Aucun pour l’instant',
+      favorisRetirer: 'Retirer des favoris',
+      carteVoir: 'Voir',
+      carteFermer: 'Fermer la fiche'
     },
     restaurantList: {
       sectionFreeDelivery: 'Livraison offerte',
@@ -6837,6 +6895,14 @@ export default {
       titleReadyOne: 'commande prête'
     },
     orderStatus: {
+      // Titres du bandeau de suivi d'une commande en cours (orderStatus.jsx, titreSuivi ; 2026-10-16).
+      grand: {
+        nouveau: 'Le commerce regarde ta commande',
+        preparation: 'C’est en cuisine',
+        pretDelivery: 'Prête, on attend un livreur',
+        pretPickup: 'Prête, tu peux venir la chercher',
+        livraison: 'En route vers toi'
+      },
       acceptBefore: 'À accepter avant {time} (encore {min} min) — sans réponse, la commande est annulée et le client remboursé automatiquement.',
       acceptNow: 'Délai dépassé : la commande va être annulée et le client remboursé dans la minute.',
       next_nouveau_deadline: 'Le commerce doit encore confirmer ta commande. Sans réponse avant {time}, elle est annulée et tu es remboursé automatiquement — tu peux aussi l\'annuler toi-même d\'ici là.',
@@ -7040,6 +7106,9 @@ export default {
       horaire: 'Horaire',
       payer: 'Paiement'
     },
+    ecranFiche: {
+      sections: 'Sections de la carte'
+    },
     platSheet: {
       allCrudites: 'Toutes les crudités',
       quantity: 'Quantité',
@@ -7053,6 +7122,14 @@ export default {
     flux: {
       close: 'Fermer',
       back: 'Retour'
+    },
+    // Panier, paiement et commande confirmée en bandeau iris (2026-10-16, EcranCommande.jsx).
+    ecranCommande: {
+      articles: '{count} article',
+      articlesPluriel: '{count} articles',
+      etapePanier: 'Panier',
+      etapeSuivi: 'Suivi',
+      retourCommerces: 'Retour aux restaurants'
     },
     panier: {
       title: 'Ton panier',
@@ -7071,8 +7148,8 @@ export default {
       sectionCurrent: 'En cours',
       sectionPast: 'Commandes passées',
       title: 'Mes commandes',
-      empty: 'Pas encore de commande',
-      emptyHint: 'Tout ce que tu commandes apparaît ici, avec son suivi en direct.',
+      empty: 'Rien en route pour l’instant',
+      emptyHint: 'Dès que tu commandes, tu suis ici ta commande jusqu’à ta porte.',
       emptyAction: 'Parcourir les commerces',
       pickupAt: 'À venir chercher chez {name}{address}',
       driver: 'Livreur : {name}{phone}',
@@ -7162,7 +7239,7 @@ export default {
     favorites: {
       title: 'Mes favoris',
       emptyTitle: 'Pas encore de favori',
-      empty: 'Touche le cœur sur la fiche d\'un commerce pour le retrouver ici.'
+      empty: 'Touche le cœur d’un commerce que tu aimes : il t’attendra ici.'
     },
     account: {
       title: 'Mon compte',
@@ -8532,14 +8609,21 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      rapCouper: 'Couper',
+      rapActiver: 'Activer',
+      rapInactif: 'Pas envoyés. Les activer nous aide à corriger les pannes.',
+      rapActif: 'Envoyés quand l’app plante, pour qu’on corrige plus vite.',
+      rapTitre: 'Rapports de panne',
+      insRapportsTitre: 'Envoyer les rapports de panne',
+      salut: 'Salut !',
       co3: '50 € vendus ou moins = 0 € d’abonnement',
-      co3S: 'Un mois calme ? Si tu vends 50 € ou moins, tu ne paies pas l’abonnement de ce mois. Automatiquement.',
+      co3S: 'Si tu vends 50 € ou moins dans le mois, tu ne paies pas l’abonnement de ce mois-là. Tu n’as rien à demander.',
       co4: 'Une case à cocher, aucun document',
-      co4S: 'Contrat et engagements acceptés d’un geste à l’inscription. Pas de numéro AFSCA ni de pièce à envoyer.',
+      co4S: 'Tu acceptes le contrat et tes engagements en cochant une case à l’inscription. Tu n’as ni numéro AFSCA ni document à envoyer.',
       nAccept: 'Ta commande est acceptée',
       nAcceptS: 'Ou refusée, avec le motif.',
       nRoute: 'Ton livreur est en route',
-      nRouteS: 'Puis livrée — ou prête à retirer, à emporter.',
+      nRouteS: 'Puis quand elle est livrée, ou prête à retirer si tu l’emportes.',
       coN1: 'Chaque nouvelle commande',
       coN1S: 'Et un rappel si elle attend ton acceptation.',
       coN2: 'Commande annulée, livreur qui attend',
@@ -8564,11 +8648,11 @@ export default {
       passer: 'Passer',
       beChip: 'Startup belge, née à Bruxelles',
       commission: 'de commission',
-      ailleurs: 'ailleurs',
+      ailleurs: '22 à 32 % ailleurs',
       autresApplis: 'Autres applis',
       accTitre: 'Le juste prix, sans frais cachés.',
-      accSub: 'Les commerces près de chez toi. Rien n’est ajouté au paiement, et Fairide prend 10 %, pas 30.',
-      profilTitre: 'Bienvenue sur Fairide. Tu es…',
+      accSub: 'Les commerces près de chez toi, sans rien d’ajouté au paiement. Fairide prend 10 % au commerce.',
+      profilTitre: 'Qu’est-ce qui t’amène sur Fairide ?',
       profilSub: 'On adapte la suite à ce que tu viens faire.',
       rClient: 'Je veux commander',
       rClientS: 'Repas et courses près de chez moi',
@@ -8577,11 +8661,11 @@ export default {
       rCommerce: 'J’ai un commerce',
       rCommerceS: 'Restaurant, snack, boulangerie, épicerie…',
       butTitre: 'Qu’est-ce qui compte pour toi ?',
-      plusieurs: 'Plusieurs choix possibles.',
+      plusieurs: 'Coche tout ce qui te parle.',
       bPrix: 'Les prix du commerce',
-      bPrixS: 'Sans menus gonflés par une commission de 30 %',
+      bPrixS: 'Une carte qui n’est pas gonflée pour payer la commission',
       bJuste: 'Un prix juste et clair',
-      bJusteS: 'Le total que j’attendais, sans surprise',
+      bJusteS: 'Payer le total que j’avais en tête',
       bLocal: 'Soutenir les commerces d’ici',
       bLocalS: 'Le snack, la pizzeria, la boulangerie d’à côté',
       bDecouvrir: 'Découvrir des adresses près de chez moi',
@@ -8600,13 +8684,13 @@ export default {
       c2: 'Le total au paiement n’est jamais celui que j’avais en tête.',
       c3: 'Je préfère que mon argent aille au restaurant plutôt qu’à une plateforme.',
       pqTitre: 'Pourquoi passer à Fairide ?',
-      pqSub: 'Moins de commission, aucun frais caché.',
-      pq1: '10 % de commission, pas 30',
-      pq1S: 'Les autres applis prennent 22 à 32 % au commerce. Fairide prend 10 % : le commerce n’a pas besoin de gonfler sa carte.',
+      pqSub: 'Trois différences avec les autres applis.',
+      pq1: '10 % de commission',
+      pq1S: 'Les autres applis prennent 22 à 32 % au commerce. Avec 10 %, il n’a pas besoin de gonfler sa carte.',
       pq2: 'Aucun frais ajouté au paiement',
-      pq2S: 'Prix de la carte + livraison. C’est tout.',
-      pq3: 'Plus juste pour tout le monde',
-      pq3S: 'Le commerce garde l’essentiel de chaque commande, le livreur reçoit tes pourboires en entier.',
+      pq2S: 'Tu paies les plats et la livraison, rien d’autre.',
+      pq3: 'Le commerce et le livreur gardent l’essentiel',
+      pq3S: 'Le commerce garde la plus grande partie de chaque commande, et ton livreur touche tous tes pourboires.',
       pqBe: 'Une startup belge, faite pour les commerces d’ici.',
       pqBtn: 'Trouver mes commerces',
       envTitre: 'Une envie en particulier ?',
@@ -8619,7 +8703,7 @@ export default {
       eHealthy: 'Healthy',
       eSucre: 'Café & sucré',
       posTitre: 'Trouve les commerces près de chez toi',
-      posSub: 'Ta position sert à une chose : te montrer les commerces qui livrent jusqu’à chez toi, les plus proches d’abord.',
+      posSub: 'On s’en sert seulement pour te montrer les commerces qui livrent jusqu’à chez toi.',
       pos1: 'Les plus proches d’abord',
       pos1S: 'Chaque commerce choisit jusqu’où il livre.',
       pos2: 'Jamais partagée avec les commerces',
@@ -8628,8 +8712,8 @@ export default {
       posNon: 'Pas maintenant, j’entre mon code postal',
       posEchec: 'Position indisponible : entre ton code postal.',
       cpTitre: 'Ton code postal',
-      cpSub: 'Juste pour trouver ta commune. L’adresse exacte, ce sera au moment de commander.',
-      cpHors: 'Pas encore livré ici — Fairide démarre à Bruxelles.',
+      cpSub: 'Il sert à trouver ta commune. Ton adresse exacte, on te la demandera au moment de commander.',
+      cpHors: 'On ne livre pas encore ici : Fairide commence par Bruxelles.',
       cpBtn: 'Voir mes commerces',
       calcTitre: 'On cherche les commerces qui livrent à {c}…',
       calcTitrePosition: 'On cherche les commerces qui livrent chez toi…',
@@ -8641,7 +8725,7 @@ export default {
       trouvesUn: '1 commerce livre chez toi',
       trouvesCommune: '{c} et alentours',
       aucun: 'Pas encore de commerce qui livre jusqu’ici', aucunSub: 'On arrive : crée ton compte, tu seras parmi les premiers.',
-      rayonNote: 'Chaque commerce choisit jusqu’où il livre — 6 km par défaut.',
+      rayonNote: 'Chaque commerce choisit jusqu’où il livre (6 km par défaut).',
       etAutres: '+ {n} autres',
       trouvesSub: 'Crée ton compte pour commander en deux touches, avec ton adresse enregistrée.',
       compteLivreur: 'Crée ton compte livreur',
@@ -8661,14 +8745,14 @@ export default {
       lv1: 'Tu fixes ton minimum',
       lv1S: 'Par course et par km. Tu ne vois que les courses au-dessus.',
       lv2: 'Refuser ne te pénalise jamais',
-      lv2S: 'Pas de note, pas de classement.',
+      lv2S: 'Les livreurs n’ont ni note ni classement.',
       lv3: '100 % des pourboires pour toi',
-      lv3S: 'Fairide n’en prend aucune part.',
-      lv4: 'Une case à cocher, pas de paperasse',
+      lv3S: 'Fairide n’y touche pas.',
+      lv4: 'Une case à cocher pour tes engagements',
       lv4S: 'Ton statut et ton véhicule, tu les déclares. Seule ta pièce d’identité est vérifiée.',
       lvBtn: 'Commencer à livrer',
       lvPosTitre: 'La position est indispensable pour livrer',
-      lvPosSub: 'Elle sert à une seule chose : montrer au client où en est sa commande, pendant la livraison.',
+      lvPosSub: 'On s’en sert uniquement pour montrer au client où en est sa commande, pendant la livraison.',
       lvPos1: 'Seulement pendant une livraison',
       lvPos1S: 'Du retrait chez le commerce à la remise au client. Jamais en attente de course. Dans l\'application, aussi écran verrouillé pendant la livraison, avec une notification qui te le montre.',
       lvPos2: 'Le client voit où tu es, pas ton nom complet',
@@ -8691,6 +8775,7 @@ export default {
       insTelTitre: 'Ton numéro de téléphone',
       insCommerceTitre: 'Ton commerce',
       insTypeTitre: 'Quel genre de commerce ?',
+      insTypeChercher: 'Chercher : pizza, boulangerie…',
       insEntrepriseTitre: 'Ton entreprise',
       insHorairesTitre: 'Quand es-tu ouvert ?',
       insHorairesSous: 'Choisis tes jours, puis tes heures. Un jour différent des autres ? Tu le régleras ensuite dans Mon commerce.',
@@ -8716,16 +8801,12 @@ export default {
       insFinCommerce: 'Une case à cocher, et c’est fini.',
       insFinLv1: 'Ce que tu gagnes',
       insFinLv2: 'Ta position',
-      insRapports: 'Envoyer les rapports d’erreur de l’app, pour nous aider à corriger les pannes (facultatif).',
-      // Coquille de l’application : connexion (ConnexionAppli.jsx) et consentement (ConsentementAppli.jsx), 2026-10-15.
+      insRapports: 'Si l’app plante, elle nous envoie ce qui s’est passé, sans ton nom, pour qu’on corrige plus vite. Décoche si tu préfères : tu peux aussi les couper dans Mon compte.',
+      // Coquille de l’application : connexion (ConnexionAppli.jsx), 2026-10-15 ; rapports de panne (inscription, Mon compte), 2026-10-16.
       connTitre: 'Content de te revoir',
       connSous: 'Connecte-toi avec ton e-mail et ton mot de passe.',
       connCreer: 'Pas encore de compte ? Créer un compte',
       connRetour: 'Retour à la connexion',
-      consTitre: 'Nous aider à corriger les pannes ?',
-      consSous: 'Si tu acceptes, l’app nous envoie un rapport quand une erreur se produit, pour qu’on puisse la corriger.',
-      consFait: 'Aucune pub, aucun suivi publicitaire',
-      consFaitS: 'Tu peux changer d’avis à tout moment, en bas de Mon compte.',
       // Phase 2 de l’app (2026-10-15) : envoyer sa carte (EnvoiCarteAppli), dossier livreur (DossierAppli), paiement (Checkout).
       fermer: 'Fermer',
       carteSourceTitre: 'D’où vient ta carte ?',

@@ -4059,14 +4059,14 @@ export default {
     },
     privacy: {
       pageTitle: 'Privacybeleid · fairide.be',
-      draftWarning: "Versie van 15 oktober 2026.",
+      draftWarning: "Versie van 16 oktober 2026.",
       title: 'Privacybeleid',
       controllerTitle: 'Verwerkingsverantwoordelijke',
       controller: 'FAIRIDE SRL (BV), besloten vennootschap naar Belgisch recht, KBO 1042.169.780, btw BE 1042.169.780, RPR Brussel, maatschappelijke zetel Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe (België), contact@fairide.be. Voor elke vraag over je gegevens of om je rechten uit te oefenen: contact@fairide.be (of het formulier onderaan deze pagina). Fairide heeft geen functionaris voor gegevensbescherming aangesteld; zijn omvang verplicht daar niet toe.',
       collectedTitle: 'Verzamelde gegevens',
       collected: "**Account (iedereen)**: naam, voornaam, e-mail, telefoon, postadres, taal, wachtwoord (gehasht), eventueel geslacht en geboortedatum; bij Google-aanmelding je naam en e-mail doorgegeven door Google. **Bestellingen**: inhoud van de bestellingen, bezorgadres en -instructies, geografische coördinaten van het adres, geschiedenis, achtergelaten beoordelingen, berichten met de klantendienst; als je vraagt de bestelling aan de deur achter te laten, de foto van de afgifte die de koerier neemt. **Meldingen**: de geschiedenis van meldingen over je bestellingen (bestelling betaald, aanvaard, onderweg…). **Signaleringen**: de inhoud van een signalering (probleem met een bestelling, onwettige inhoud) en de foto's die je eraan toevoegt. **Betaling**: verwerkt door Stripe; Fairide ontvangt enkel het bedrag, het gebruikte middel en de transactie-ID, nooit je kaartnummer; kies je op de Stripe-pagina om je kaart op te slaan, dan bewaart Stripe ze, en Fairide houdt enkel de Stripe-klant-ID van je account bij en ziet alleen het merk, de laatste 4 cijfers en de vervaldatum (je verwijdert ze in « Mijn account »; gewist samen met je account). **Apple Pay en Google Pay**: als je zo betaalt, verwerken Apple of Google ook je betaalgegevens, volgens hun eigen beleid; Fairide ontvangt niets meer. **Partnerzaken**: benaming, ondernemings- en btw-nummer, verantwoordelijke, IBAN voor uitbetalingen, commerciële documenten. **Koeriers**: statuut (zelfstandige, student-zelfstandige) en ondernemingsnummer, identiteitsbewijs, rijksregisternummer (versleuteld), beroepskaart voor een koerier van buiten de Europese Unie, IBAN, bewijsstukken, controleselfies (zie « Identiteitscontrole »), positie alleen tijdens een aanvaarde rit (in de app, tijdens de levering, ook als de telefoon vergrendeld is, aangegeven door een permanente melding), positie, telefoonnummer en lopende rit op het moment dat hij de noodknop gebruikt, ritgeschiedenis en verdiensten. **Technisch**: IP-adres, type toestel en browser, verbindingslogs, bij een technische fout.",
       purposeTitle: 'Doeleinden en rechtsgronden',
-      purpose: "**Uitvoering van de overeenkomst** (art. 6.1.b AVG): je account aanmaken en beheren, je bestellingen en betalingen verwerken, de bezorging organiseren, de afgifte bewijzen van een bestelling die aan de deur werd achtergelaten (foto van de afgifte), je berichten over je bestellingen sturen, de zaken en koeriers uitbetalen. **Wettelijke verplichting** (art. 6.1.c): facturatie en boekhouding, fiscale en sociale verplichtingen rond koeriers en zaken (fiches 281, DAC7-aangifte), fraude- en witwasbestrijding via Stripe, antwoorden aan overheden. **Gerechtvaardigd belang** (art. 6.1.f): beveiliging van het platform, preventie van misbruik en fraude (waaronder het uitlenen van een koeriersaccount), bezoekersstatistieken zonder cookies of identificatoren, verbetering van de dienst, geschillenbeheer. **Ook gerechtvaardigd belang**: informatiemails over Fairide en zijn diensten, verstuurd aan onze gebruikers (art. XII.13 van het Wetboek van economisch recht en koninklijk besluit van 4 april 2003): je kunt ze weigeren bij de inschrijving, en daarna op elk moment, met één klik vanuit elke e-mail of in “Mijn account”; en de melding van technische fouten op onze servers (Sentry), zonder cookie. **Vitale belangen** (art. 6.1.d): wanneer een koerier de noodknop gebruikt, worden zijn positie, telefoonnummer en lopende rit naar het Fairide-team gestuurd om hem te helpen. **Toestemming** (art. 6.1.a): melding van technische fouten vanuit je browser (Sentry) na aanvaarding van de banner, geolocatie van je toestel tijdens een bestelling, biometrische identiteitscontrole van een koerier (art. 9.2.a). Je kunt een toestemming op elk moment intrekken zonder gevolg voor wat eraan voorafging.",
+      purpose: "**Uitvoering van de overeenkomst** (art. 6.1.b AVG): je account aanmaken en beheren, je bestellingen en betalingen verwerken, de bezorging organiseren, de afgifte bewijzen van een bestelling die aan de deur werd achtergelaten (foto van de afgifte), je berichten over je bestellingen sturen, de zaken en koeriers uitbetalen. **Wettelijke verplichting** (art. 6.1.c): facturatie en boekhouding, fiscale en sociale verplichtingen rond koeriers en zaken (fiches 281, DAC7-aangifte), fraude- en witwasbestrijding via Stripe, antwoorden aan overheden. **Gerechtvaardigd belang** (art. 6.1.f): beveiliging van het platform, preventie van misbruik en fraude (waaronder het uitlenen van een koeriersaccount), bezoekersstatistieken zonder cookies of identificatoren, verbetering van de dienst, geschillenbeheer. **Ook gerechtvaardigd belang**: informatiemails over Fairide en zijn diensten, verstuurd aan onze gebruikers (art. XII.13 van het Wetboek van economisch recht en koninklijk besluit van 4 april 2003): je kunt ze weigeren bij de inschrijving, en daarna op elk moment, met één klik vanuit elke e-mail of in “Mijn account”; de melding van technische fouten op onze servers (Sentry), zonder cookie; en, in de app, een rapport wanneer ze crasht (Sentry, zonder cookie of je naam), standaard aan en op elk moment uit te zetten in “Mijn account”. **Vitale belangen** (art. 6.1.d): wanneer een koerier de noodknop gebruikt, worden zijn positie, telefoonnummer en lopende rit naar het Fairide-team gestuurd om hem te helpen. **Toestemming** (art. 6.1.a): melding van technische fouten vanuit je browser op de website (Sentry), na aanvaarding van de banner, geolocatie van je toestel tijdens een bestelling, biometrische identiteitscontrole van een koerier (art. 9.2.a). Je kunt een toestemming op elk moment intrekken zonder gevolg voor wat eraan voorafging.",
       sharingTitle: 'Ontvangers en verwerkers',
       sharing: 'De gegevens die voor een bestelling nodig zijn (naam, adres, telefoon, inhoud) worden aan de betrokken partnerzaak en koerier bezorgd, die ze enkel voor die bestelling mogen gebruiken. Fairide verkoopt noch verhuurt persoonsgegevens. De onderstaande technische dienstverleners verwerken gegevens voor rekening van Fairide, onder contract, zonder recht om ze voor zichzelf te gebruiken:',
       transfersTitle: 'Doorgiften buiten de Europese Unie',
@@ -4076,7 +4076,7 @@ export default {
       rightsTitle: 'Je rechten',
       rights: "Je hebt recht op inzage, rectificatie, wissing, beperking, overdraagbaarheid en bezwaar, en het recht om een toestemming op elk moment in te trekken. Via « Mijn account » kun je zelf een kopie van je gegevens downloaden (export) en je op al je toestellen afmelden. Schrijf naar contact@fairide.be of gebruik het formulier hieronder: we antwoorden binnen maximaal één maand, verlengbaar met twee maanden voor een complex verzoek (we brengen je dan op de hoogte), na verificatie van je identiteit indien nodig. Deze stappen zijn gratis. Je account verwijderen kan ook rechtstreeks via « Mijn account ». Vind je dat je rechten niet worden gerespecteerd, dan kun je een klacht indienen bij de Gegevensbeschermingsautoriteit (GBA), Drukpersstraat 35, 1000 Brussel, [gegevensbeschermingsautoriteit.be](https://www.gegevensbeschermingsautoriteit.be), contact@apd-gba.be, +32 2 274 48 00.",
       cookiesTitle: 'Cookies, lokale opslag en statistieken',
-      cookies: 'Fairide gebruikt enkel strikt noodzakelijke cookies en opslag (inlogsessie, winkelmandje, taal, keuze van de banner) en lokale voorkeuren, beschreven in het [cookiebeleid](/cookies). Geen advertentiecookies, geen pixels van sociale media. Bezoekersstatistieken, wanneer geactiveerd, steunen op een tool zonder cookies of individuele identificatoren (Plausible): die telt paginaweergaven en enkele gebeurtenissen (afgeronde bestelling, registratie) zonder ooit een naam, e-mail of bedrag te ontvangen. Daardoor is voor statistieken geen toestemming nodig. Enkel de melding van technische fouten (Sentry) hangt af van je aanvaarding via de banner.',
+      cookies: 'Fairide gebruikt enkel strikt noodzakelijke cookies en opslag (inlogsessie, winkelmandje, taal, keuze van de banner) en lokale voorkeuren, beschreven in het [cookiebeleid](/cookies). Geen advertentiecookies, geen pixels van sociale media. Bezoekersstatistieken, wanneer geactiveerd, steunen op een tool zonder cookies of individuele identificatoren (Plausible): die telt paginaweergaven en enkele gebeurtenissen (afgeronde bestelling, registratie) zonder ooit een naam, e-mail of bedrag te ontvangen. Daardoor is voor statistieken geen toestemming nodig. Op de website hangt enkel de melding van technische fouten (Sentry) af van je aanvaarding via de banner; in de app staat ze standaard aan en zet je ze uit in “Mijn account”.',
       securityTitle: 'Beveiliging',
       security: 'Versleutelde verbindingen (HTTPS), gehashte wachtwoorden, versleutelde rijksregisternummers, toegang tot gegevens beperkt tot wie ze nodig heeft, logging van beheerdershandelingen, hosting in gecertificeerde datacenters. Bij een gegevenslek dat een risico voor jou kan inhouden, informeren we je en melden we het aan de GBA binnen de wettelijke termijnen.',
       mandatoryTitle: 'Verplichte en optionele gegevens',
@@ -5610,6 +5610,24 @@ export default {
       photoTitle: 'Foto van de bestelling',
       photoText: 'Bij elke bestelling (test of echt) laat de knop in Mijn bestellingen je de bestelling fotograferen VÓÓR je ze overhandigt: zet het ticket met het bestelnummer en alle producten in beeld. Tijd, nummer en productlijst worden met de foto bewaard: jouw bewijs als een klant klaagt.'
     },
+    ecranCommerce: {
+      verrouAide: 'Met de schakelaar zet je een gerecht voor vandaag op uitverkocht; morgen komt het vanzelf terug. De rest pas je aan met een aanvraag aan Fairide.',
+      prochaineEtape: 'Volgende stap',
+      rienAFaire: 'Niets te doen van jouw kant: Fairide doet de rest',
+      enLigne: 'Online',
+      pasEnLigne: 'Nog niet online',
+      resteAccepter: 'Nog {n} min om te aanvaarden',
+      min: 'min',
+      gereeAvecFairide: 'beheerd met Fairide',
+      taCarte: 'Je kaart',
+      produitsEnLigne: '{n} producten online',
+      produitEnLigne: '{n} product online',
+      aucunEnLigne: 'Nog geen producten online',
+      sectionsCarte: 'Rubrieken van je kaart',
+      retire: 'Van de kaart gehaald',
+      enVente: 'te koop',
+      enVenteAujourdhui: 'Vandaag te koop'
+    },
     ordersResto: {
       stopTodayBtn: 'Bestellingen stoppen voor vandaag',
       stopTodayHelp: 'Niets meer te bereiden vandaag? Klanten kunnen niet meer bestellen, al ontvangen bestellingen gaan door. Morgen om 6 u gaan de bestellingen VANZELF weer open: jij hoeft niets te doen. Je kunt ook vroeger heropenen met één tik.',
@@ -5767,6 +5785,31 @@ export default {
       toastNoShow: 'Bestelling afgesloten: klant niet gekomen.',
       toCollectOnSite: 'Ter plaatse te betalen',
       paidOnlineBadge: 'Al online betaald'
+    },
+    ecranLivreur: {
+      // Koeriersschermen met de irisband (oprichter, 2026-10-16, mockups/tous-les-ecrans.html, Livreur): Dashboard.jsx, EarningsPage.jsx.
+      course: 'Rit',
+      directionCommerce: 'Op weg naar {name}',
+      enRouteVers: 'Onderweg naar {name}',
+      enRoute: 'Onderweg',
+      terminee: 'Rit afgerond',
+      termineeSous: 'bij je inkomsten gezet',
+      livree: 'Geleverd',
+      prixPropose: 'Voorgestelde prijs',
+      prixMontant: '€ {fee}',
+      minutes: '~{min} min',
+      grilleVelo: 'Je tarief en je fietsritten',
+      grilleMoteur: 'Je tarief en je afstanden',
+      ariaTrajet: 'Traject van de zaak naar de klant',
+      brutCourses: 'Bruto {gross} · {n} ritten',
+      brutUneCourse: 'Bruto {gross} · 1 rit',
+      bulle: '{net} · {n} ritten',
+      bulleUne: '{net} · 1 rit',
+      ariaRegles: 'Wat je houdt',
+      regleGrilleChiffre: '90 %',
+      regleGrille: 'van je tarief op elke rit',
+      reglePourboiresChiffre: '100 %',
+      reglePourboires: 'van je fooien'
     },
     dashDriver: {
       // Staat van het dossier vóór goedkeuring (UX-audit van 15/10/2026, Dashboard.jsx).
@@ -6094,6 +6137,10 @@ export default {
       dish: 'Gerecht',
       sold: 'Verkocht',
       footnote: 'Bestellingen ontvangen via Fairide (niet geannuleerd of geweigerd), Brusselse tijd, testbestellingen niet meegeteld. De omzet is de prijs van de gerechten die klanten betaalden, vóór de commissie van Fairide; je overzichten onder « Facturen » zijn de referentie.'
+    },
+    // Mon compte, bandeau iris (2026-10-16, EnteteCompte.jsx).
+    ecranCompte: {
+      raccourcis: 'Snelkoppelingen'
     },
     accountUi: {
       simulationRow: 'Simulatie: testbestellingen',
@@ -6640,6 +6687,8 @@ export default {
       discoverInfoJoin: 'Mijn zaak inschrijven'
     },
     menuCategories: {
+      inCart: '{n} in het mandje',
+      oneLess: 'Eén {name} minder',
       quickAdd: '{name} aan winkelmand toevoegen',
       soldOutToday: 'Vandaag uitverkocht · morgen terug',
       category: { entree: 'Voorgerechten', plat: 'Hoofdgerechten', dessert: 'Desserts', boisson: 'Dranken' },
@@ -6663,6 +6712,15 @@ export default {
       halal: 'Halal',
       glutenFree: 'Glutenvrij',
       declaredByBusiness: 'Aangegeven door de zaak'
+    },
+    ecranListe: {
+      cuisinesAria: 'Soorten keuken',
+      favorisUn: '1 zaak',
+      favorisN: '{n} zaken',
+      favorisAucun: 'Nog geen enkele',
+      favorisRetirer: 'Uit favorieten verwijderen',
+      carteVoir: 'Bekijken',
+      carteFermer: 'Sluiten'
     },
     restaurantList: {
       sectionFreeDelivery: 'Gratis levering',
@@ -6793,6 +6851,14 @@ export default {
       titleReadyOne: 'bestelling klaar'
     },
     orderStatus: {
+      // Titres du bandeau de suivi d'une commande en cours (orderStatus.jsx, titreSuivi ; 2026-10-16).
+      grand: {
+        nouveau: 'De zaak bekijkt je bestelling',
+        preparation: 'Het wordt bereid',
+        pretDelivery: 'Klaar, we wachten op een koerier',
+        pretPickup: 'Klaar, je kunt ze komen halen',
+        livraison: 'Onderweg naar jou'
+      },
       acceptBefore: 'Te aanvaarden vóór {time} (nog {min} min) — zonder antwoord wordt de bestelling geannuleerd en de klant automatisch terugbetaald.',
       acceptNow: 'Termijn verstreken: de bestelling wordt binnen de minuut geannuleerd en de klant terugbetaald.',
       next_nouveau_deadline: 'De zaak moet je bestelling nog bevestigen. Zonder antwoord vóór {time} wordt ze geannuleerd en word je automatisch terugbetaald — tot dan kan je ze ook zelf annuleren.',
@@ -6996,6 +7062,9 @@ export default {
       horaire: 'Tijd',
       payer: 'Betaling'
     },
+    ecranFiche: {
+      sections: 'Onderdelen van de kaart'
+    },
     platSheet: {
       allCrudites: 'Alle rauwkost',
       quantity: 'Aantal',
@@ -7009,6 +7078,14 @@ export default {
     flux: {
       close: 'Sluiten',
       back: 'Terug'
+    },
+    // Panier, paiement et commande confirmée en bandeau iris (2026-10-16, EcranCommande.jsx).
+    ecranCommande: {
+      articles: '{count} artikel',
+      articlesPluriel: '{count} artikelen',
+      etapePanier: 'Mandje',
+      etapeSuivi: 'Volgen',
+      retourCommerces: 'Terug naar restaurants'
     },
     panier: {
       title: 'Je winkelmandje',
@@ -7027,8 +7104,8 @@ export default {
       sectionCurrent: 'Lopend',
       sectionPast: 'Eerdere bestellingen',
       title: 'Mijn bestellingen',
-      empty: 'Nog geen bestellingen',
-      emptyHint: 'Alles wat je bestelt verschijnt hier, met live opvolging.',
+      empty: 'Nog niets onderweg',
+      emptyHint: 'Zodra je bestelt, volg je hier je bestelling tot aan je deur.',
       emptyAction: 'Zaken bekijken',
       pickupAt: 'Op te halen bij {name}{address}',
       driver: 'Koerier: {name}{phone}',
@@ -7118,7 +7195,7 @@ export default {
     favorites: {
       title: 'Mijn favorieten',
       emptyTitle: 'Nog geen favorieten',
-      empty: 'Tik op het hartje op een winkelpagina om hem hier terug te vinden.'
+      empty: 'Tik op het hartje van een zaak die je leuk vindt: ze wacht hier op je.'
     },
     account: {
       title: 'Mijn account',
@@ -8486,6 +8563,13 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      rapCouper: 'Uitzetten',
+      rapActiver: 'Aanzetten',
+      rapInactif: 'Niet verstuurd. Ze aanzetten helpt ons crashes op te lossen.',
+      rapActif: 'Verstuurd als de app crasht, zodat we het sneller oplossen.',
+      rapTitre: 'Crashrapporten',
+      insRapportsTitre: 'Crashrapporten versturen',
+      salut: 'Hoi!',
       co3: '€ 50 of minder verkocht = € 0 abonnement',
       co3S: 'Rustige maand? Verkoop je € 50 of minder, dan betaal je het abonnement van die maand niet. Automatisch.',
       co4: 'Eén vakje, geen documenten',
@@ -8518,11 +8602,11 @@ export default {
       passer: 'Overslaan',
       beChip: 'Belgische start-up, geboren in Brussel',
       commission: 'commissie',
-      ailleurs: 'elders',
+      ailleurs: '22 tot 32 % elders',
       autresApplis: 'Andere apps',
       accTitre: 'De eerlijke prijs, zonder verborgen kosten.',
-      accSub: 'De zaken bij jou in de buurt. Er komt niets bij bij het afrekenen, en Fairide neemt 10 %, geen 30.',
-      profilTitre: 'Welkom bij Fairide. Je bent…',
+      accSub: 'De zaken bij jou in de buurt, zonder extra kosten bij het afrekenen. Fairide neemt 10 % van de zaak.',
+      profilTitre: 'Wat brengt je naar Fairide?',
       profilSub: 'We passen de rest aan aan wat je komt doen.',
       rClient: 'Ik wil bestellen',
       rClientS: 'Maaltijden en boodschappen in de buurt',
@@ -8531,7 +8615,7 @@ export default {
       rCommerce: 'Ik heb een zaak',
       rCommerceS: 'Restaurant, snackbar, bakkerij, kruidenier…',
       butTitre: 'Wat vind jij belangrijk?',
-      plusieurs: 'Meerdere antwoorden mogelijk.',
+      plusieurs: 'Vink alles aan wat voor jou geldt.',
       bPrix: 'De prijzen van de zaak',
       bPrixS: 'Zonder menu’s die opgeblazen zijn door 30 % commissie',
       bJuste: 'Een eerlijke, duidelijke prijs',
@@ -8554,13 +8638,13 @@ export default {
       c2: 'Het totaal bij het afrekenen is nooit wat ik in gedachten had.',
       c3: 'Ik wil liever dat mijn geld naar het restaurant gaat dan naar een platform.',
       pqTitre: 'Waarom overstappen naar Fairide?',
-      pqSub: 'Minder commissie, geen verborgen kosten.',
-      pq1: '10 % commissie, geen 30',
+      pqSub: 'Drie verschillen met de andere apps.',
+      pq1: '10 % commissie',
       pq1S: 'Andere apps nemen 22 tot 32 % van de zaak. Fairide neemt 10 %: de zaak hoeft haar menukaart niet op te blazen.',
       pq2: 'Geen extra kosten bij het afrekenen',
       pq2S: 'Menuprijs + bezorging. Meer niet.',
-      pq3: 'Eerlijker voor iedereen',
-      pq3S: 'De zaak houdt het grootste deel van elke bestelling, de koerier krijgt je fooi volledig.',
+      pq3: 'De zaak en de koerier houden het grootste deel',
+      pq3S: 'De zaak houdt het grootste deel van elke bestelling, en je koerier krijgt al je fooien.',
       pqBe: 'Een Belgische start-up, gemaakt voor de zaken van hier.',
       pqBtn: 'Mijn zaken vinden',
       envTitre: 'Zin in iets speciaals?',
@@ -8645,6 +8729,7 @@ export default {
       insTelTitre: 'Je telefoonnummer',
       insCommerceTitre: 'Je zaak',
       insTypeTitre: 'Wat voor zaak heb je?',
+      insTypeChercher: 'Zoeken: pizza, bakkerij…',
       insEntrepriseTitre: 'Je onderneming',
       insHorairesTitre: 'Wanneer ben je open?',
       insHorairesSous: 'Kies je dagen en daarna je uren. Is één dag anders? Dat stel je later in bij Mijn zaak.',
@@ -8670,16 +8755,12 @@ export default {
       insFinCommerce: 'Eén vakje aanvinken en klaar.',
       insFinLv1: 'Wat je verdient',
       insFinLv2: 'Je locatie',
-      insRapports: 'Foutrapporten van de app versturen, zodat we storingen kunnen oplossen (optioneel).',
-      // Coquille de l’application : connexion (ConnexionAppli.jsx) et consentement (ConsentementAppli.jsx), 2026-10-15.
+      insRapports: 'Als de app crasht, stuurt ze ons wat er gebeurde, zonder je naam, zodat we het sneller oplossen. Vink uit als je dat liever hebt: je kunt ze ook uitzetten in Mijn account.',
+      // Coquille de l’application : connexion (ConnexionAppli.jsx), 2026-10-15 ; rapports de panne (inscription, Mon compte), 2026-10-16.
       connTitre: 'Fijn dat je er weer bent',
       connSous: 'Log in met je e-mailadres en wachtwoord.',
       connCreer: 'Nog geen account? Maak er een aan',
       connRetour: 'Terug naar inloggen',
-      consTitre: 'Help je ons storingen oplossen?',
-      consSous: 'Als je akkoord gaat, stuurt de app ons een rapport wanneer er een fout optreedt, zodat we die kunnen oplossen.',
-      consFait: 'Geen advertenties, geen advertentietracking',
-      consFaitS: 'Je kunt altijd van gedachten veranderen, onderaan Mijn account.',
       // Phase 2 de l’app (2026-10-15) : envoyer sa carte (EnvoiCarteAppli), dossier livreur (DossierAppli), paiement (Checkout).
       fermer: 'Sluiten',
       carteSourceTitre: 'Waar staat je menukaart?',

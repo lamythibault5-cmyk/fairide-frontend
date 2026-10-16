@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
    7.19 pourrait retirer cet export et casser TOUT le routage d'un coup, à la première mise en ligne
    suivante, sans que rien dans le code n'ait changé. */
 import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
-import { demarrerSentry } from './sentry';
+import { demarrerSentry, arreterSentry } from './sentry';
 import App from './App.jsx';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import BandeauHorsLigne from './components/BandeauHorsLigne';
@@ -18,7 +18,7 @@ import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './context/ToastContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { PreviewModeProvider } from './context/PreviewModeContext';
-import { hasAcceptedConsent, onConsentChange } from './consent';
+import { rapportsPanneActifs, onConsentChange } from './consent';
 import { langueDepuisChemin, PREFIXES, languePreferee } from './i18n/routing';
 import { historiqueLangue } from './i18n/historiqueLangue';
 import './styles.css';
@@ -38,17 +38,14 @@ import { ecouterNotificationsNatives } from './pushNatif';
 // démarrage, elle se substitue à la police de repli quand elle arrive.
 for (const lien of document.querySelectorAll('link[data-police]')) lien.media = 'all';
 
-// Sentry ne démarre qu'APRÈS consentement explicite : il transmet l'adresse IP, les URL visitées et le
-// contexte utilisateur à un sous-traitant établi aux États-Unis. Le démarrer au chargement de la page,
-// comme c'était le cas, revenait à collecter avant la réponse du visiteur et rendait la bannière
-// purement décorative (voir consent.js).
-// sendDefaultPii reste explicitement à false : même après acceptation, rien n'oblige à joindre les
-// données personnelles que le SDK sait deviner tout seul.
+// Sentry (rapports de panne) : sur le SITE, seulement après « Accepter » sur la bannière — le démarrer au chargement, comme
+// c'était le cas, rendait la bannière décorative. Dans l'APP, actif sauf refus (fondateur, 2026-10-16 ; règle et raisons
+// dans rapportsPanneActifs, consent.js). Réglage réduit aux erreurs, sans identité ni paramètres d'adresse (sentry.js).
 let sentryStarted = false;
 function startSentryIfAllowed() {
-  if (sentryStarted || !import.meta.env.VITE_SENTRY_DSN || !hasAcceptedConsent()) return;
+  if (sentryStarted || !import.meta.env.VITE_SENTRY_DSN || !rapportsPanneActifs()) return;
   sentryStarted = true;
-  demarrerSentry({ dsn: import.meta.env.VITE_SENTRY_DSN, sendDefaultPii: false }).catch(() => { sentryStarted = false; });
+  demarrerSentry(import.meta.env.VITE_SENTRY_DSN).catch(() => { sentryStarted = false; });
 }
 
 startSentryIfAllowed();
@@ -58,8 +55,12 @@ demarrerAnalytics();
 // Mise en ligne pendant qu'un onglet est ouvert : le code d'une section demandée n'existe plus sous son
 // ancien nom. Plutôt qu'une page vide, rechargement silencieux vers la nouvelle version (voir lazyPage.js).
 window.addEventListener('vite:preloadError', (e) => { e.preventDefault(); rechargerSiNouveauCode(e.payload); });
-// Acceptation en cours de visite : on démarre sans attendre un rechargement de page.
-onConsentChange(startSentryIfAllowed);
+// Acceptation en cours de visite : on démarre sans attendre un rechargement de page. Refus après coup (« Couper » dans
+// Mon compte, dans l'app) : on arrête tout de suite.
+onConsentChange(() => {
+  if (rapportsPanneActifs()) { startSentryIfAllowed(); return; }
+  if (sentryStarted) { sentryStarted = false; arreterSentry(); }
+});
 
 // Service worker : rend l'application installable, et surtout c'est le seul endroit qui peut
 // recevoir une notification push quand l'onglet est fermé (voir public/sw.js, qui ne met rien en

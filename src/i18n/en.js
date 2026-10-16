@@ -4050,14 +4050,14 @@ export default {
     },
     privacy: {
       pageTitle: 'Privacy policy · fairide.be',
-      draftWarning: "Version of 15 October 2026.",
+      draftWarning: "Version of 16 October 2026.",
       title: 'Privacy policy',
       controllerTitle: 'Data controller',
       controller: 'FAIRIDE SRL, a private limited company under Belgian law, CBE 1042.169.780, VAT BE 1042.169.780, RLE Brussels, registered office Avenue du Castel 30, 1200 Woluwe-Saint-Lambert (Belgium), contact@fairide.be. For any question about your data or to exercise your rights: contact@fairide.be (or the form at the bottom of this page). Fairide has not appointed a data protection officer, as its size does not require one.',
       collectedTitle: 'Data collected',
       collected: "**Account (everyone)**: name, first name, e-mail, phone, postal address, language, password (hashed), optionally gender and date of birth; with Google sign-in, your name and e-mail sent by Google. **Orders**: order contents, delivery address and instructions, geographic coordinates of the address, history, reviews left, messages exchanged with support; if you ask for the order to be left at the door, the photo of the drop-off taken by the courier. **Notifications**: the history of notifications about your orders (order paid, accepted, on its way…). **Reports**: the content of a report (order problem, illegal content) and the photos you attach to it. **Payment**: handled by Stripe; Fairide only receives the amount, the method used and the transaction ID, never your card number; if you choose, on the Stripe page, to save your card, Stripe keeps it, and Fairide only stores your account's Stripe customer ID and only sees the brand, the last 4 digits and the expiry date (you remove it in “My account”; deleted with your account). **Apple Pay and Google Pay**: if you pay this way, Apple or Google also process your payment data under their own policy; Fairide receives nothing more. **Partner businesses**: legal name, company and VAT numbers, contact person, IBAN for payouts, business documents. **Couriers**: status (self-employed, student self-employed) and company number, ID document, national register number (encrypted), professional card for a courier from a country outside the European Union, IBAN, supporting documents, check selfies (see “Identity verification”), position only during an accepted ride (in the app, during the delivery, also while the phone is locked, shown by a permanent notification), position, phone number and current ride at the moment they use the emergency button, ride history and earnings. **Technical**: IP address, device and browser type, connection logs, in case of a technical error.",
       purposeTitle: 'Purposes and legal bases',
-      purpose: "**Performance of the contract** (Art. 6(1)(b) GDPR): create and manage your account, process your orders and payments, organise delivery, prove the handover of an order left at the door (photo of the drop-off), send you order-related messages, pay businesses and couriers. **Legal obligation** (Art. 6(1)(c)): invoicing and accounting, tax and social obligations relating to couriers and businesses (281 forms, DAC7 reporting), anti-fraud and anti-money-laundering via Stripe, replies to authorities. **Legitimate interest** (Art. 6(1)(f)): platform security, prevention of abuse and fraud (including lending a courier account), audience statistics without cookies or identifiers, service improvement, dispute handling. **Legitimate interest, also**: information e-mails about Fairide and its services, sent to our users (Art. XII.13 of the Belgian Code of Economic Law and Royal Decree of 4 April 2003): you can refuse them when signing up, then at any time, in one click from any e-mail or in “My account”; and error reporting from our servers (Sentry), without cookies. **Vital interests** (Art. 6(1)(d)): when a courier uses the emergency button, their position, phone number and current ride are sent to the Fairide team so it can help them. **Consent** (Art. 6(1)(a)): technical error reporting from your browser (Sentry) after accepting the banner, geolocation of your device during an order, biometric identity verification of a courier (Art. 9(2)(a)). You may withdraw consent at any time without affecting prior processing.",
+      purpose: "**Performance of the contract** (Art. 6(1)(b) GDPR): create and manage your account, process your orders and payments, organise delivery, prove the handover of an order left at the door (photo of the drop-off), send you order-related messages, pay businesses and couriers. **Legal obligation** (Art. 6(1)(c)): invoicing and accounting, tax and social obligations relating to couriers and businesses (281 forms, DAC7 reporting), anti-fraud and anti-money-laundering via Stripe, replies to authorities. **Legitimate interest** (Art. 6(1)(f)): platform security, prevention of abuse and fraud (including lending a courier account), audience statistics without cookies or identifiers, service improvement, dispute handling. **Legitimate interest, also**: information e-mails about Fairide and its services, sent to our users (Art. XII.13 of the Belgian Code of Economic Law and Royal Decree of 4 April 2003): you can refuse them when signing up, then at any time, in one click from any e-mail or in “My account”; error reporting from our servers (Sentry), without cookies; and, in the app, a report sent when it crashes (Sentry, without cookies or your name), on by default, which you can turn off at any time in “My account”. **Vital interests** (Art. 6(1)(d)): when a courier uses the emergency button, their position, phone number and current ride are sent to the Fairide team so it can help them. **Consent** (Art. 6(1)(a)): technical error reporting from your browser on the website (Sentry), after accepting the banner, geolocation of your device during an order, biometric identity verification of a courier (Art. 9(2)(a)). You may withdraw consent at any time without affecting prior processing.",
       sharingTitle: 'Recipients and processors',
       sharing: 'The data needed for an order (name, address, phone, contents) is passed to the partner business and courier concerned, who may use it only for that order. Fairide neither sells nor rents personal data. The technical providers below process data on Fairide\'s behalf, under contract, with no right to use it for themselves:',
       transfersTitle: 'Transfers outside the European Union',
@@ -4067,7 +4067,7 @@ export default {
       rightsTitle: 'Your rights',
       rights: "You have the rights of access, rectification, erasure, restriction, portability and objection, and the right to withdraw consent at any time. From “My account”, you can download a copy of your data yourself (export) and log out of all your devices. Write to contact@fairide.be or use the form below: we reply within one month at most, extendable by two months for a complex request (we then inform you), after verifying your identity if necessary. These requests are free of charge. You can also delete your account directly from “My account”. If you believe your rights are not respected, you may lodge a complaint with the Belgian Data Protection Authority (APD/GBA), Rue de la Presse 35, 1000 Brussels, [dataprotectionauthority.be](https://www.dataprotectionauthority.be), contact@apd-gba.be, +32 2 274 48 00.",
       cookiesTitle: 'Cookies, local storage and statistics',
-      cookies: 'Fairide only uses strictly necessary cookies and storage (login session, cart, language, banner choice) and local preferences, detailed in the [cookie policy](/cookies). No advertising cookies, no social media pixels. Audience statistics, when enabled, rely on a tool without cookies or individual identifiers (Plausible): it counts page views and a few events (completed order, sign-up) without ever receiving a name, e-mail or amount. This choice means no consent is required for statistics. Only technical error reporting (Sentry) is subject to your acceptance via the banner.',
+      cookies: 'Fairide only uses strictly necessary cookies and storage (login session, cart, language, banner choice) and local preferences, detailed in the [cookie policy](/cookies). No advertising cookies, no social media pixels. Audience statistics, when enabled, rely on a tool without cookies or individual identifiers (Plausible): it counts page views and a few events (completed order, sign-up) without ever receiving a name, e-mail or amount. This choice means no consent is required for statistics. On the website, only technical error reporting (Sentry) is subject to your acceptance via the banner; in the app, it is on by default and can be turned off in “My account”.',
       securityTitle: 'Security',
       security: 'Encrypted connections (HTTPS), hashed passwords, encrypted national register numbers, data access restricted to those who need it, logging of administrative actions, hosting in certified data centres. In the event of a data breach likely to create a risk for you, we inform you and notify the DPA within the legal deadlines.',
       mandatoryTitle: 'Mandatory and optional data',
@@ -5601,6 +5601,24 @@ export default {
       photoTitle: 'Order photo',
       photoText: 'On every order (test or real), the button in My orders lets you photograph the order BEFORE handing it over: put the ticket with the order number and all the products in the frame. Time, number and product list are stored with the photo: your proof if a customer complains.'
     },
+    ecranCommerce: {
+      verrouAide: 'The switch marks a dish as sold out for today; it comes back on its own tomorrow. Anything else is changed through a request to Fairide.',
+      prochaineEtape: 'Next step',
+      rienAFaire: 'Nothing to do on your side: Fairide takes it from here',
+      enLigne: 'Live',
+      pasEnLigne: 'Not live yet',
+      resteAccepter: '{n} min left to accept',
+      min: 'min',
+      gereeAvecFairide: 'managed with Fairide',
+      taCarte: 'Your menu',
+      produitsEnLigne: '{n} items online',
+      produitEnLigne: '{n} item online',
+      aucunEnLigne: 'No items online yet',
+      sectionsCarte: 'Sections of your menu',
+      retire: 'Removed from the menu',
+      enVente: 'on sale',
+      enVenteAujourdhui: 'On sale today'
+    },
     ordersResto: {
       stopTodayBtn: 'Stop orders for today',
       stopTodayHelp: 'Nothing left to prepare today? Customers can no longer order, orders already received carry on. Orders reopen BY THEMSELVES tomorrow at 6 am: nothing to do on your side. You can also reopen earlier with one tap.',
@@ -5758,6 +5776,31 @@ export default {
       toastNoShow: 'Order closed: customer didn’t show.',
       toCollectOnSite: 'To pay on site',
       paidOnlineBadge: 'Already paid online'
+    },
+    ecranLivreur: {
+      // Courier screens with the iris header (founder, 2026-10-16, mockups/tous-les-ecrans.html, Livreur): Dashboard.jsx, EarningsPage.jsx.
+      course: 'Ride',
+      directionCommerce: 'Heading to {name}',
+      enRouteVers: 'On the way to {name}',
+      enRoute: 'On the way',
+      terminee: 'Ride complete',
+      termineeSous: 'added to your earnings',
+      livree: 'Delivered',
+      prixPropose: 'Offered price',
+      prixMontant: '€{fee}',
+      minutes: '~{min} min',
+      grilleVelo: 'Your rates and bike rides',
+      grilleMoteur: 'Your rates and distances',
+      ariaTrajet: 'Route from the business to the customer',
+      brutCourses: 'Gross {gross} · {n} rides',
+      brutUneCourse: 'Gross {gross} · 1 ride',
+      bulle: '{net} · {n} rides',
+      bulleUne: '{net} · 1 ride',
+      ariaRegles: 'What you keep',
+      regleGrilleChiffre: '90%',
+      regleGrille: 'of your rate on every ride',
+      reglePourboiresChiffre: '100%',
+      reglePourboires: 'of your tips'
     },
     dashDriver: {
       // File state before approval (UX audit of 15/10/2026, Dashboard.jsx).
@@ -6085,6 +6128,10 @@ export default {
       dish: 'Dish',
       sold: 'Sold',
       footnote: 'Orders received on Fairide (not cancelled or refused), Brussels time, test orders excluded. Revenue is the price of the dishes paid by customers, before the Fairide commission; your statements under “Invoices” are the reference.'
+    },
+    // Mon compte, bandeau iris (2026-10-16, EnteteCompte.jsx).
+    ecranCompte: {
+      raccourcis: 'Shortcuts'
     },
     accountUi: {
       simulationRow: 'Simulation: test orders',
@@ -6631,6 +6678,8 @@ export default {
       discoverInfoJoin: 'List my business'
     },
     menuCategories: {
+      inCart: '{n} in the basket',
+      oneLess: 'One less {name}',
       quickAdd: 'Add {name} to cart',
       soldOutToday: 'Sold out today · back tomorrow',
       category: { entree: 'Starters', plat: 'Mains', dessert: 'Desserts', boisson: 'Drinks' },
@@ -6654,6 +6703,15 @@ export default {
       halal: 'Halal',
       glutenFree: 'Gluten-free',
       declaredByBusiness: 'Declared by the business'
+    },
+    ecranListe: {
+      cuisinesAria: 'Cuisine types',
+      favorisUn: '1 business',
+      favorisN: '{n} businesses',
+      favorisAucun: 'None yet',
+      favorisRetirer: 'Remove from favorites',
+      carteVoir: 'View',
+      carteFermer: 'Close'
     },
     restaurantList: {
       sectionFreeDelivery: 'Free delivery',
@@ -6784,6 +6842,14 @@ export default {
       titleReadyOne: 'order ready'
     },
     orderStatus: {
+      // Titres du bandeau de suivi d'une commande en cours (orderStatus.jsx, titreSuivi ; 2026-10-16).
+      grand: {
+        nouveau: 'The shop is checking your order',
+        preparation: 'It’s being prepared',
+        pretDelivery: 'Ready, waiting for a courier',
+        pretPickup: 'Ready, you can come and get it',
+        livraison: 'On its way to you'
+      },
       acceptBefore: 'Accept before {time} ({min} min left) — without an answer, the order is cancelled and the customer refunded automatically.',
       acceptNow: 'Time is up: the order will be cancelled and the customer refunded within a minute.',
       next_nouveau_deadline: 'The shop still has to confirm your order. Without an answer before {time}, it is cancelled and you are refunded automatically — you can also cancel it yourself until then.',
@@ -6987,6 +7053,9 @@ export default {
       horaire: 'Time',
       payer: 'Payment'
     },
+    ecranFiche: {
+      sections: 'Menu sections'
+    },
     platSheet: {
       allCrudites: 'All the raw vegetables',
       quantity: 'Quantity',
@@ -7000,6 +7069,14 @@ export default {
     flux: {
       close: 'Close',
       back: 'Back'
+    },
+    // Panier, paiement et commande confirmée en bandeau iris (2026-10-16, EcranCommande.jsx).
+    ecranCommande: {
+      articles: '{count} item',
+      articlesPluriel: '{count} items',
+      etapePanier: 'Cart',
+      etapeSuivi: 'Tracking',
+      retourCommerces: 'Back to restaurants'
     },
     panier: {
       title: 'Your cart',
@@ -7018,8 +7095,8 @@ export default {
       sectionCurrent: 'In progress',
       sectionPast: 'Past orders',
       title: 'My orders',
-      empty: "No orders yet",
-      emptyHint: 'Everything you order shows up here, with its live tracking.',
+      empty: 'Nothing on its way yet',
+      emptyHint: 'As soon as you order, you follow it here all the way to your door.',
       emptyAction: 'Browse the shops',
       pickupAt: 'To pick up at {name}{address}',
       driver: 'Courier: {name}{phone}',
@@ -7109,7 +7186,7 @@ export default {
     favorites: {
       title: 'My favorites',
       emptyTitle: 'No favorites yet',
-      empty: 'Tap the heart on a shop page to find it here.'
+      empty: 'Tap the heart of a shop you like: it will wait for you here.'
     },
     account: {
       title: 'My account',
@@ -8477,6 +8554,13 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      rapCouper: 'Turn off',
+      rapActiver: 'Turn on',
+      rapInactif: 'Not sent. Turning them on helps us fix crashes.',
+      rapActif: 'Sent when the app crashes, so we can fix it faster.',
+      rapTitre: 'Crash reports',
+      insRapportsTitre: 'Send crash reports',
+      salut: 'Hi!',
       co3: 'Sell €50 or less = €0 subscription',
       co3S: 'Quiet month? If you sell €50 or less, you don’t pay that month’s subscription. Automatically.',
       co4: 'One checkbox, no documents',
@@ -8509,11 +8593,11 @@ export default {
       passer: 'Skip',
       beChip: 'Belgian start-up, born in Brussels',
       commission: 'commission',
-      ailleurs: 'elsewhere',
+      ailleurs: '22 to 32 % elsewhere',
       autresApplis: 'Other apps',
       accTitre: 'The fair price, no hidden fees.',
-      accSub: 'The places near you. Nothing is added at checkout, and Fairide takes 10 %, not 30.',
-      profilTitre: 'Welcome to Fairide. You are…',
+      accSub: 'The places near you, with nothing added at checkout. Fairide takes 10 % from the business.',
+      profilTitre: 'What brings you to Fairide?',
       profilSub: 'We’ll tailor the rest to what you’re here for.',
       rClient: 'I want to order',
       rClientS: 'Meals and groceries near me',
@@ -8522,7 +8606,7 @@ export default {
       rCommerce: 'I run a business',
       rCommerceS: 'Restaurant, snack bar, bakery, grocery…',
       butTitre: 'What matters to you?',
-      plusieurs: 'Pick as many as you like.',
+      plusieurs: 'Tick everything that applies to you.',
       bPrix: 'The shop\'s own prices',
       bPrixS: 'No menus inflated by a 30 % commission',
       bJuste: 'A fair, clear price',
@@ -8545,13 +8629,13 @@ export default {
       c2: 'The total at checkout is never what I had in mind.',
       c3: 'I’d rather my money went to the restaurant than to a platform.',
       pqTitre: 'Why switch to Fairide?',
-      pqSub: 'Less commission, no hidden fees.',
-      pq1: '10 % commission, not 30',
+      pqSub: 'Three differences from the other apps.',
+      pq1: '10 % commission',
       pq1S: 'Other apps take 22 to 32 % from the business. Fairide takes 10 %, so the business has no need to inflate its menu.',
       pq2: 'No fees added at checkout',
       pq2S: 'Menu price + delivery. That’s it.',
-      pq3: 'Fairer for everyone',
-      pq3S: 'The business keeps most of every order, the courier receives your tips in full.',
+      pq3: 'The business and the courier keep most of it',
+      pq3S: 'The business keeps most of every order, and your courier gets all of your tips.',
       pqBe: 'A Belgian start-up, made for local businesses.',
       pqBtn: 'Find my places',
       envTitre: 'Craving anything?',
@@ -8636,6 +8720,7 @@ export default {
       insTelTitre: 'Your phone number',
       insCommerceTitre: 'Your business',
       insTypeTitre: 'What kind of business?',
+      insTypeChercher: 'Search: pizza, bakery…',
       insEntrepriseTitre: 'Your company',
       insHorairesTitre: 'When are you open?',
       insHorairesSous: 'Pick your days, then your hours. One day different from the others? You can set it later in My business.',
@@ -8661,16 +8746,12 @@ export default {
       insFinCommerce: 'One box to tick and you’re done.',
       insFinLv1: 'What you earn',
       insFinLv2: 'Your location',
-      insRapports: 'Send the app’s error reports to help us fix crashes (optional).',
-      // Coquille de l’application : connexion (ConnexionAppli.jsx) et consentement (ConsentementAppli.jsx), 2026-10-15.
+      insRapports: 'If the app crashes, it sends us what happened, without your name, so we can fix it faster. Untick if you prefer: you can also turn them off in My account.',
+      // Coquille de l’application : connexion (ConnexionAppli.jsx), 2026-10-15 ; rapports de panne (inscription, Mon compte), 2026-10-16.
       connTitre: 'Welcome back',
       connSous: 'Sign in with your email and password.',
       connCreer: 'No account yet? Create one',
       connRetour: 'Back to sign in',
-      consTitre: 'Help us fix crashes?',
-      consSous: 'If you accept, the app sends us a report when an error happens, so we can fix it.',
-      consFait: 'No ads, no ad tracking',
-      consFaitS: 'You can change your mind anytime, at the bottom of My account.',
       // Phase 2 de l’app (2026-10-15) : envoyer sa carte (EnvoiCarteAppli), dossier livreur (DossierAppli), paiement (Checkout).
       fermer: 'Close',
       carteSourceTitre: 'Where is your menu?',

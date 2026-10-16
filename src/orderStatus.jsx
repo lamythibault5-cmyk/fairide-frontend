@@ -189,6 +189,61 @@ export function DeliveryTiming({ order }) {
   );
 }
 
+/* SUIVI EN BANDEAU IRIS (fondateur, 2026-10-16, version 1C de mockups/autres-idees.html). Une commande en cours s'ouvre
+   sur un bandeau iris : le statut en grand (titreSuivi), l'heure, et une route où le vélo de la marque, en lime, roule
+   d'arrêt en arrêt — chaque étape passée garde une coche lime, la route défile sous les roues pendant la livraison. Le
+   déplacement est une transition CSS sur `left` : quand le statut change (rafraîchissement de Mes commandes), le vélo
+   roule de lui-même de l'ancien arrêt au nouveau. Les étapes restent écrites en clair dessous. */
+export function titreSuivi(order, t) {
+  const { status, orderType } = order;
+  // Paiement en ligne pas terminé : le commerce ne voit pas encore la commande (même règle que ProchaineEtape).
+  if (status === 'nouveau' && order.paid === false && order.paymentMode !== 'on_site') return statusLabel(status, orderType, t, true);
+  if (status === 'pret') return t(orderType === 'delivery' ? 'orderStatus.grand.pretDelivery' : 'orderStatus.grand.pretPickup');
+  if (['nouveau', 'preparation', 'livraison'].includes(status)) return t(`orderStatus.grand.${status}`);
+  return statusLabel(status, orderType, t, true);
+}
+
+export function RouteSuivi({ status, orderType }) {
+  const { t } = useLanguage();
+  const [roule, setRoule] = useState(false);
+  const livraison = orderType === 'delivery';
+  const steps = livraison ? STEPS : PICKUP_STEPS;
+  const idx = steps.indexOf(status);
+  useEffect(() => {
+    setRoule(true);
+    const f = setTimeout(() => setRoule(false), 900);
+    return () => clearTimeout(f);
+  }, [idx]);
+  if (idx < 0) return null;
+  const dernier = livraison ? t('orderStatus.progress.delivered') : t('orderStatus.progress.pickedUp');
+  const labels = livraison
+    ? [t('orderStatus.progress.sent'), t('orderStatus.progress.preparation'), t('orderStatus.progress.ready'), t('orderStatus.progress.onTheWay'), dernier]
+    : [t('orderStatus.progress.sent'), t('orderStatus.progress.preparation'), t('orderStatus.progress.ready'), dernier];
+  const pas = 100 / steps.length;
+  return (
+    <>
+      <div className={`route-suivi${status === 'livraison' ? ' en-route' : ''}`} aria-hidden="true">
+        <span className="rs-voie" style={{ left: `${pas / 2}%`, right: `${pas / 2}%` }} />
+        <i className="rs-fait" style={{ left: `${pas / 2}%`, width: `${idx * pas}%` }} />
+        {steps.map((s, k) => (
+          <span key={s} className={`rs-arret${k < idx ? ' fait' : k === idx ? ' actuel' : ''}`} style={{ left: `${(k + 0.5) * pas}%` }}>
+            {k < idx && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>}
+          </span>
+        ))}
+        <span className={`rs-velo${roule ? ' roule' : ''}`} style={{ left: `${(idx + 0.5) * pas}%` }}>
+          <svg viewBox="-3 5 82 42" width="42" height="22">
+            <g fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"><circle cx="15" cy="29" r="12.5" /><circle cx="61" cy="29" r="12.5" /></g>
+            <g fill="currentColor"><rect x="16" y="8" width="44" height="5" rx="2.5" /><g transform="rotate(42 27 22.5)"><rect x="13" y="20" width="28" height="5" rx="2.5" /></g></g>
+          </svg>
+        </span>
+      </div>
+      <ol className="rs-libs" style={{ gridTemplateColumns: `repeat(${steps.length}, 1fr)` }}>
+        {labels.map((l, k) => <li key={l} className={k < idx ? 'fait' : k === idx ? 'actuel' : ''} aria-current={k === idx ? 'step' : undefined}>{l}</li>)}
+      </ol>
+    </>
+  );
+}
+
 // « Et maintenant ? » — une phrase sous le statut, qui dit ce qui se passe et ce que le client a à faire.
 // Les badges seuls laissaient deviner : entre « Prête » et l'arrivée du livreur, plus rien n'expliquait
 // l'attente.

@@ -23,7 +23,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { DeliveryTiming, ProchaineEtape, ProgressBar, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
+import { DeliveryTiming, ProchaineEtape, RouteSuivi, titreSuivi, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
@@ -268,6 +268,7 @@ export default function Orders() {
             remplit — parcourir les commerces. */}
         <EtatVide
           icone="sac"
+          scene="commandes"
           titre={t('orders.empty')}
           texte={t('orders.emptyHint')}
           actionVers="/restaurants"
@@ -287,16 +288,24 @@ export default function Orders() {
       {[...enCours, ...passees].map((o, rang) => (
         <Fragment key={o.id}>
         {rang === enCours.length && passees.length > 0 && <h2 className="suivi-section">{t('orders.sectionPast')}</h2>}
-        <div className={`card suivi-carte${estPassee(o) ? ' est-passee' : ''}`}>
-          <div className="suivi-tete">
-            <span className="suivi-tete-texte">
-              <b className="suivi-resto">{o.restaurantName}</b>
-              <span className="suivi-sous">{orderTypeLabel(o, t)} · {quand(o.createdAt)}</span>
-            </span>
-            <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span>
-          </div>
-          {!estPassee(o) && <ProgressBar status={o.status} orderType={o.orderType} />}
-          {!estPassee(o) && <DeliveryTiming order={o} />}
+        <div className={`card suivi-carte${estPassee(o) ? ' est-passee' : ' suivi-carte--bandeau'}`}>
+          {estPassee(o) ? (
+            <div className="suivi-tete">
+              <span className="suivi-tete-texte">
+                <b className="suivi-resto">{o.restaurantName}</b>
+                <span className="suivi-sous">{orderTypeLabel(o, t)} · {quand(o.createdAt)}</span>
+              </span>
+              <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span>
+            </div>
+          ) : (
+            /* En cours : le bandeau iris (orderStatus.jsx, RouteSuivi) ; le détail suit dans la partie blanche. */
+            <div className="suivi-bandeau">
+              <div className="suivi-bandeau-haut"><span><b>{o.restaurantName}</b> · {orderTypeLabel(o, t)}</span><span>{quand(o.createdAt)}</span></div>
+              <h2 className="suivi-bandeau-titre" key={o.status}>{titreSuivi(o, t)}</h2>
+              <DeliveryTiming order={o} />
+              <RouteSuivi status={o.status} orderType={o.orderType} />
+            </div>
+          )}
           {APPLI && codeDeRemise(o)}
           {o.status !== 'livre' && <ProchaineEtape order={o} />}
           {/* UN ARTICLE PAR LIGNE, avec sa quantité dans une case.

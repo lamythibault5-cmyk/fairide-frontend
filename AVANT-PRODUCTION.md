@@ -76,6 +76,14 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       confidentialité CONF-2026-10-15 (DPO : la phrase « notre taille ne l'exige pas » n'est pas le bon critère —
       suivi de la position des livreurs ; nouveau le 15/10 : photo du dépôt devant la porte 30 jours, position écran
       verrouillé pendant la livraison, bouton d'urgence fondé sur les intérêts vitaux art. 6.1.d), règlement P2B.
+- [ ] 🟠 **J — Rapports de panne sans consentement ?** Dans l'app ils sont ACTIFS PAR DÉFAUT depuis le 16/10 (choix du
+      fondateur, risque accepté : la recherche du jour n'a pas tranché ; voir CLAUDE.md). Si l'avocat dit non, repasser
+      `rapportsPanneActifs` (consent.js) à « accord seulement ». Question : « Au sens de l'art. 10/2 de la loi du 30 juillet 2018, tel que l'APD le lit dans
+      ses décisions 12/2019 et 85/2022, une intégration Sentry limitée aux erreurs (aucun identifiant durable, pas d'IP,
+      pas de mesure de performance ni de session, hébergement UE, données nettoyées, utilisée seulement pour corriger des
+      défauts) est-elle "strictement nécessaire" au service de livraison demandé par l'utilisateur ? Sinon, une
+      demande à chaque panne ("envoyer ce rapport ?") suffit-elle, sachant qu'un plantage natif est gardé sur l'appareil
+      jusqu'au lancement suivant ? »
 - [ ] 🟠 **F — DPA (RGPD art. 28)** à signer et archiver : Stripe, Resend, Cloudinary, Sentry, Vercel, Railway,
       Anthropic, MapTiler, Google/Firebase. La plupart se signent en ligne.
 - [ ] 🟠 **F — Politique de confidentialité, prestataires manquants** : Geoapify / Google Places / fournisseur Peppol /

@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../../api';
-import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { useToast } from '../../context/ToastContext';
-import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
+import { Link } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import LigneCompte from '../LigneCompte';
-import { experienceApp } from '../../natif';
+import useMiseEnLigne from './useMiseEnLigne';
+import { CocheTrait, VeloMarque } from './BandeauCommerce';
+import Icone from '../Icone';
 
 /* « AVANT D'ÊTRE EN LIGNE » : UNE SEULE LISTE, UN SEUL PROCHAIN BOUTON (audit UX du 15/10/2026).
  *
@@ -23,130 +22,95 @@ import { experienceApp } from '../../natif';
  *   6. la mise en ligne par l'équipe (publicListed).
  *
  * UN SEUL bouton plein : la première étape qui dépend du commerce. Les autres étapes à faire gardent un bouton discret,
- * les étapes de Fairide n'en ont pas (« on te prévient par e-mail »). `compact` (les autres pages du tableau de bord) :
+ * les étapes de Fairide n'en ont pas (« on te prévient par e-mail »). Sur les autres pages du tableau de bord :
  * une rangée « Prochaine étape », et rien du tout s'il ne reste que des étapes de Fairide.
- * La liste disparaît quand tout est fait. Un commerce de démonstration n'en a pas. */
-export default function MiseEnLigne({ restaurant, restoId, token, onConnect, connecting, onChange, compact = false, lectureSeule = false }) {
+ * La liste disparaît quand tout est fait. Un commerce de démonstration n'en a pas.
+ *
+ * NOUVEAU STYLE (fondateur, 2026-10-16, mockups/tous-les-ecrans.html, Commerce › Mon commerce) : sur « Mon commerce », la
+ * liste devient une ROUTE sur le bandeau iris (RouteMiseEnLigne : coches lime derrière, le vélo sur l'étape en cours) ; la
+ * prochaine étape a la carte et le bouton lime, le reste se range dessous (EtapesMiseEnLigne). Le calcul est dans
+ * useMiseEnLigne, appelé une fois par EditPage pour les deux morceaux ; le composant par défaut est la rangée « Prochaine étape »
+ * des autres pages, inchangée. */
+// Le bouton d'une étape : lime pour la prochaine, contour pour les autres.
+function bouton(e, principal) {
+  const classe = `${principal ? 'btn-gold' : 'btn-outline'} btn-sm`;
+  if (e.action.to) return <Link to={e.action.to} className={classe} style={{ display: 'inline-block' }}>{e.action.libelle}</Link>;
+  return <button type="button" className={classe} onClick={e.action.onClick} disabled={e.action.disabled}>{e.action.libelle}</button>;
+}
+
+export default function MiseEnLigne(props) {
   const { t } = useLanguage();
-  const toast = useToast();
-  const navigate = useNavigate();
-  const [conformite, setConformite] = useState(null);
-  const [demandeCarte, setDemandeCarte] = useState(null);
-  const [occupe, setOccupe] = useState(false);
-  const o = restaurant?.onboarding;
-  const nbPlats = (restaurant?.menu || []).length;
-
-  // Les engagements (allergènes, déclaration pro) ne sont pas dans la fiche : même route que ConformiteCarte. Relue à
-  // chaque rechargement de la fiche (un prix changé remet la carte à signer, une signature la complète).
-  useEffect(() => {
-    if (!restoId || restaurant?.isDemo) return;
-    api(`/restaurants/${restoId}/compliance`, { token }).then(setConformite).catch(() => setConformite(null));
-  }, [restoId, token, restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Carte vide : une demande « Fairide s'en occupe » déjà envoyée change l'étape 1 d'« à faire » en « on attend ».
-  useEffect(() => {
-    if (!restoId || nbPlats > 0) return;
-    api(`/restaurants/${restoId}/menu/concierge`, { token }).then((r) => setDemandeCarte(r.request || null)).catch(() => setDemandeCarte(null));
-  }, [restoId, token, nbPlats]);
-
-  if (!restaurant || !o || restaurant.isDemo || restaurant.adminStatus === 'blocked') return null;
-
-  async function validerCarte() {
-    setOccupe(true);
-    try {
-      if (restaurant.menuSigned) {
-        // Carte signée avant le correctif du 15/10 mais jamais confirmée : la confirmation seule suffit.
-        await api(`/restaurants/${restoId}/menu/confirm`, { method: 'POST', token, body: {} });
-        await onChange?.();
-        toast(t('menuPage.handoverConfirmed'), 'succes');
-      } else {
-        // La page « C'est bon », la même que celle envoyée par SMS : une seule page de validation, quel que soit le chemin.
-        const l = await api(`/restaurants/${restoId}/menu-validation-link`, { method: 'POST', token });
-        navigate(`/carte/valider/${l.token}`);
-      }
-    } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
-  }
-
-  const engagementsOk = !!o.contractAccepted && (!conformite || (
-    !!conformite.allergens?.attestation?.attestedAt && !!conformite.professional?.declaredAt && conformite.professional?.upToDate !== false));
-  const stripeRestreint = restaurant.stripeConnectStatus === 'restricted';
-
-  // `action` : ce que le commerce peut faire maintenant ({ libelle, to } ou { libelle, onClick }) ; `attente` : étape de
-  // Fairide, sans bouton. Une étape faite n'a ni l'un ni l'autre.
-  const etapes = [];
-  etapes.push(nbPlats > 0
-    ? { cle: 'carte', fait: true, icone: 'carte', titre: t('miseEnLigne.menuDone', { n: nbPlats }) }
-    : demandeCarte
-      ? { cle: 'carte', attente: true, icone: 'horloge', titre: t('miseEnLigne.menuPreparing'), sous: t('miseEnLigne.menuPreparingSub') }
-      : { cle: 'carte', icone: 'carte', titre: t('miseEnLigne.menuSend'), sous: t('miseEnLigne.menuSendSub'), action: { libelle: t('miseEnLigne.menuSendBtn'), to: experienceApp() ? '/dashboard/menu?envoyer=1' : '/dashboard/menu' } });
-  // Un commerce vitrine ne vend pas : rien à signer (même règle que l'ancien bandeau CarteAValider).
-  if (!restaurant.vitrine && nbPlats > 0) {
-    const carteValidee = restaurant.menuSigned && !o.menuPending;
-    etapes.push(carteValidee
-      ? { cle: 'valider', fait: true, icone: 'valider', titre: t('miseEnLigne.validateDone') }
-      : { cle: 'valider', icone: 'valider', titre: t('miseEnLigne.validate'), sous: t('miseEnLigne.validateSub'),
-          action: { libelle: occupe ? '…' : t('miseEnLigne.validateBtn'), onClick: validerCarte, disabled: occupe } });
-  }
-  etapes.push(engagementsOk
-    ? { cle: 'engagements', fait: true, icone: 'contrat', titre: t('miseEnLigne.commitmentsDone') }
-    : { cle: 'engagements', icone: 'contrat', titre: t('miseEnLigne.commitments'), sous: t('miseEnLigne.commitmentsSub'),
-        action: { libelle: t('miseEnLigne.commitmentsBtn'), to: o.contractAccepted ? '/dashboard/menu#conformite-carte' : '/account?ouvrir=contrat&retour=/dashboard' } });
-  // À emporter payé sur place seulement : rien ne transite par Fairide, pas d'étape paiements (formules.paiementsRequis).
-  if (o.paymentsRequired !== false) {
-    const actif = restaurant.stripeConnectStatus === 'active';
-    etapes.push(actif
-      ? { cle: 'paiements', fait: true, icone: 'carteBancaire', titre: t('miseEnLigne.paymentsDone') }
-      : (stripeRestreint || paiementsOuverts())
-        ? { cle: 'paiements', icone: 'carteBancaire', titre: stripeRestreint ? t('dashResto.paymentInfoTitle') : t('miseEnLigne.payments'),
-            sous: stripeRestreint ? t('dashResto.stripeNeedsInfoResto') : t('miseEnLigne.paymentsSub'),
-            action: { libelle: connecting ? '…' : (stripeRestreint ? t('dashResto.complete') : t('dashResto.paymentsConfigureBtn')), onClick: onConnect, disabled: connecting } }
-        // Activation pas encore ouverte : ce n'est pas une action possible aujourd'hui, on dit quand.
-        : { cle: 'paiements', attente: true, icone: 'carteBancaire', titre: t('miseEnLigne.payments'),
-            sous: t('dashResto.viaStripeResto', { date: dateOuverturePaiements(getLocale()) }) });
-  }
-  etapes.push(restaurant.adminStatus === 'approved'
-    ? { cle: 'verification', fait: true, icone: 'bouclier', titre: t('miseEnLigne.checkDone') }
-    : { cle: 'verification', attente: true, icone: 'bouclier', titre: t('miseEnLigne.check'), sous: t('miseEnLigne.checkSub') });
-  etapes.push(restaurant.publicListed
-    ? { cle: 'enLigne', fait: true, icone: 'globe', titre: t('miseEnLigne.listedDone') }
-    : { cle: 'enLigne', attente: true, icone: 'globe', titre: t('miseEnLigne.listed'), sous: t('miseEnLigne.listedSub') });
-
-  // « Agir pour » (console admin) : l'équipe voit la liste, mais ne signe ni ne valide rien à la place du commerce.
-  if (lectureSeule) etapes.forEach((e) => { delete e.action; });
-  const restantes = etapes.filter((e) => !e.fait);
-  if (!restantes.length) return null;
-  const prochaine = restantes.find((e) => e.action);
-  const faites = etapes.length - restantes.length;
-
-  const bouton = (e, principal) => {
-    const classe = `${principal ? 'btn-gold' : 'btn-outline'} btn-sm`;
-    if (e.action.to) return <Link to={e.action.to} className={classe} style={{ display: 'inline-block' }}>{e.action.libelle}</Link>;
-    return <button type="button" className={classe} onClick={e.action.onClick} disabled={e.action.disabled}>{e.action.libelle}</button>;
-  };
-
-  if (compact) {
-    if (!prochaine) return null;
-    return (
-      <div className="card account-groupe" aria-label={t('miseEnLigne.title')}>
-        <LigneCompte icone={prochaine.icone} accent="warn" titre={t('miseEnLigne.nextStep', { step: prochaine.titre })}
-          sous={t('miseEnLigne.remaining', { n: restantes.length })} action={bouton(prochaine, true)} />
-      </div>
-    );
-  }
-
+  const etat = useMiseEnLigne(props);
+  if (!etat?.prochaine) return null;
+  const { restantes, prochaine } = etat;
   return (
-    <section className="card account-groupe mise-en-ligne" aria-labelledby="mise-en-ligne-titre">
-      <div style={{ padding: '14px 16px 6px' }}>
-        <h3 id="mise-en-ligne-titre" style={{ margin: 0, fontSize: 16 }}>{t('miseEnLigne.title')}</h3>
-        <p className="small" style={{ margin: '4px 0 0' }}>
-          {t('miseEnLigne.progress', { done: faites, total: etapes.length })}
-          {' · '}{prochaine ? t('miseEnLigne.nextStep', { step: prochaine.titre }) : t('miseEnLigne.nothingForYou')}
-        </p>
-      </div>
-      {etapes.map((e) => (
-        <LigneCompte key={e.cle} icone={e.fait ? 'valider' : e.icone} accent={e.fait ? 'ok' : e.attente ? undefined : 'warn'}
-          titre={e.titre} sous={e.sous}
-          action={e.action ? bouton(e, e === prochaine) : <span className="small">{t(e.fait ? 'miseEnLigne.done' : e.attente ? 'miseEnLigne.waiting' : 'miseEnLigne.toDo')}</span>} />
+    <div className="card account-groupe" aria-label={t('miseEnLigne.title')}>
+      <LigneCompte icone={prochaine.icone} accent="warn" titre={t('miseEnLigne.nextStep', { step: prochaine.titre })}
+        sous={t('miseEnLigne.remaining', { n: restantes.length })} action={bouton(prochaine, true)} />
+    </div>
+  );
+}
+
+// La route sur le bandeau : un arrêt par étape, coche lime sur chaque étape faite, le vélo sur la première qui reste. Il part
+// du début et roule jusqu'à elle à l'arrivée sur la page (transition CSS sur `left`).
+const posArret = (k, n) => (n > 1 ? 6 + (88 * k) / (n - 1) : 50);
+export function RouteMiseEnLigne({ etapes }) {
+  const n = etapes.length;
+  const actuel = Math.max(0, etapes.findIndex((e) => !e.fait));
+  const [parti, setParti] = useState(false);
+  const [roule, setRoule] = useState(false);
+  useEffect(() => {
+    let a = requestAnimationFrame(() => { a = requestAnimationFrame(() => { setParti(true); setRoule(true); }); });
+    const f = setTimeout(() => setRoule(false), 1300);
+    return () => { cancelAnimationFrame(a); clearTimeout(f); };
+  }, []);
+  const cible = parti ? posArret(actuel, n) : posArret(0, n);
+  return (
+    <div className="ec-route" aria-hidden="true">
+      <span className="ec-route-voie" />
+      <i className="ec-route-fait" style={{ width: `${cible - 6}%` }} />
+      {etapes.map((e, k) => (
+        <span key={e.cle} className={`ec-route-arret${e.fait ? ' fait' : k === actuel ? ' actuel' : ''}`} style={{ left: `${posArret(k, n)}%`, animationDelay: `${0.25 + k * 0.12}s` }}>
+          {e.fait && <CocheTrait />}
+        </span>
       ))}
+      <span className={`ec-route-velo${roule ? ' roule' : ''}`} style={{ left: `${cible}%` }}><VeloMarque /></span>
+    </div>
+  );
+}
+
+// Dans la feuille : la prochaine étape en carte avec LE bouton lime, puis les autres (coche lime, en cours, à faire avec un
+// bouton discret). Sans prochaine étape (il ne reste que des étapes de Fairide, ou « agir pour ») : on le dit, sans bouton.
+export function EtapesMiseEnLigne({ etat }) {
+  const { t } = useLanguage();
+  const { etapes, prochaine } = etat;
+  const p = prochaine;
+  const boutonLime = p?.action && (p.action.to
+    ? <Link to={p.action.to} className="ec-bouton ec-bouton--lime">{p.action.libelle}</Link>
+    : <button type="button" className="ec-bouton ec-bouton--lime" onClick={p.action.onClick} disabled={p.action.disabled}>{p.action.libelle}</button>);
+  return (
+    <section aria-label={t('miseEnLigne.title')}>
+      <div className="ec-prochaine">
+        <span className="ec-tuile"><Icone nom={p ? p.icone : 'horloge'} taille={20} /></span>
+        <span className="ec-prochaine-texte">
+          <small>{t('ecranCommerce.prochaineEtape')}</small>
+          <b>{p ? p.titre : t('ecranCommerce.rienAFaire')}</b>
+          {p?.sous && <span>{p.sous}</span>}
+        </span>
+      </div>
+      {boutonLime}
+      <div className="ec-etapes">
+        {etapes.filter((e) => e !== p).map((e) => (
+          <div key={e.cle} className="ec-etape">
+            {e.fait ? <span className="ec-coche"><CocheTrait taille={13} /></span> : <span className="ec-tuile"><Icone nom={e.icone} taille={16} /></span>}
+            <span className="ec-etape-texte">
+              {e.titre}{e.sous && <small>{e.sous}</small>}
+              {e.action && <span className="ec-etape-action">{bouton(e, false)}</span>}
+            </span>
+            {!e.action && <span className={`ec-badge${e.fait ? '' : ' ec-badge--doux'}`}>{t(e.fait ? 'miseEnLigne.done' : e.attente ? 'miseEnLigne.waiting' : 'miseEnLigne.toDo')}</span>}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
