@@ -6988,6 +6988,14 @@ export default {
       close: 'Sluiten',
       back: 'Terug'
     },
+    // Panier, paiement et commande confirmée en bandeau iris (2026-10-16, EcranCommande.jsx).
+    ecranCommande: {
+      articles: '{count} artikel',
+      articlesPluriel: '{count} artikelen',
+      etapePanier: 'Mandje',
+      etapeSuivi: 'Volgen',
+      retourCommerces: 'Terug naar restaurants'
+    },
     panier: {
       title: 'Je winkelmandje',
       viewCart: 'Mandje bekijken',
