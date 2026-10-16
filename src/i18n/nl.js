@@ -6679,7 +6679,6 @@ export default {
       inscriptionClient: 'Maak je account aan.',
       inscriptionCommerce: 'Schrijf je zaak in.',
       inscriptionLivreur: 'Word koerier.',
-      etape: 'Stap {n} van {total}',
       oubliTitre: 'Geen zorgen.',
       oubliSous: 'Je krijgt een link per e-mail om een nieuw wachtwoord te kiezen.',
       codeTitre: 'Bijna klaar.',

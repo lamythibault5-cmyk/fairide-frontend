@@ -192,6 +192,15 @@ html:not(.appli) .sl-cherche .recherche-loupe { color: var(--iris); }
 html:not(.appli) .sl-cherche input { font-size: 17px; }
 .sl-bande-route { margin-top: 18px; }
 html:not(.appli) .sl-recherche .eb-feuille > .recherche-pastilles { margin-bottom: 20px !important; }
+/* SANS COMPTE (mise en page des visiteurs, .wrap sous l'en-tête iris) : pas de second bandeau iris sous l'en-tête
+   (fondateur, 2026-10-16 : « double bannière, trop lourd »). Le champ se pose sur le blanc, à filet, et la feuille ne
+   remonte plus. Connecté, le site n'a pas cet en-tête : le bandeau iris y reste. */
+html:not(.appli) .wrap .sl-recherche .eb-bandeau { background: #fff; color: var(--ink); padding-bottom: 6px; }
+html:not(.appli) .wrap .sl-recherche .sl-bande-ctx { color: var(--ink-soft); }
+html:not(.appli) .wrap .sl-recherche .recherche-champ.sl-cherche { border: 1px solid var(--line); background: var(--surface-soft); }
+html:not(.appli) .wrap .sl-recherche .recherche-champ.sl-cherche:focus-within { outline-color: var(--iris); }
+html:not(.appli) .wrap .sl-recherche .sl-bande-route { display: none; }
+html:not(.appli) .wrap .sl-recherche .eb-feuille { margin-top: 0; border-radius: 0; padding-top: 18px; animation: none; }
 /* Les pastilles-boutons (Bio, Vegan…) prenaient la taille des boutons (15 px) à côté des pastilles-liens (13 px). */
 html:not(.appli) .sl-recherche .pill.recherche-pastille { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 500; padding: 7px 14px; }
 

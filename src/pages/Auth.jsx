@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import BrandMark from '../components/BrandMark';
 import EngagementsInscription from '../components/commerce/EngagementsInscription';
 import { remonterEnHaut } from '../remonter';
 import urlSure from '../urlSure';
@@ -85,22 +84,23 @@ const CLE_BROUILLON = 'fairide_inscription_brouillon';
 const BROUILLON_MAX_MS = 48 * 3600 * 1000; // au-delà, une inscription interrompue ne se reprend plus
 
 /* LA CONNEXION DU SITE EN DEUX MOITIÉS (fondateur, 2026-10-16, section 2 de mockups/site-ordinateur.html). Sous l'en-tête
-   des visiteurs, qui ne change pas : l'iris à gauche prolonge l'en-tête (un titre, le vélo de la marque qui attend sur sa
-   route, ou la route des étapes de l'inscription) ; le formulaire est posé sur une feuille blanche à droite, sans carte
-   autour. Sur téléphone, le bandeau iris en haut et la feuille qui monte dessous. Mêmes formulaires, mêmes règles et mêmes
+   des visiteurs, qui ne change pas : l'iris à gauche prolonge l'en-tête (un titre et le vélo de la marque qui attend sur sa
+   route) ; le formulaire est posé sur une feuille blanche à droite, sans carte autour. Sur téléphone, PAS de second bandeau
+   iris sous celui de l'en-tête (fondateur, 2026-10-16 : « double bannière, trop lourd ») : le titre en encre sur le blanc,
+   le formulaire juste dessous (site-cadre.css, partie 6). La route des étapes à vélo de l'inscription est retirée le même
+   jour (« trop appli ») : la barre d'étape du formulaire suffit. Mêmes formulaires, mêmes règles et mêmes
    fonctions qu'avant (double authentification, e-mail non confirmé, mot de passe oublié, Google, étapes commerce et
    livreur, engagements, case des CGV, refus des nouvelles) : seul l'habillage change. Styles : site-cadre.css, partie 6.
    `.auth-box` reste sur le conteneur du formulaire : le retour en haut à chaque étape le vise (voir premierRendu). */
-function CadreConnexion({ decorClass, titre, sous, route, scene = true, children }) {
+function CadreConnexion({ decorClass, titre, sous, long = false, scene = true, children }) {
   return (
-    <div className={`decor-page auth-decor auth-site${route ? ' auth-site--long' : ''} ${decorClass}`}>
+    <div className={`decor-page auth-decor auth-site${long ? ' auth-site--long' : ''} ${decorClass}`}>
       <section className="auth-site-iris sur-iris">
         <div className="auth-site-titre">
           <h1>{titre}</h1>
           {sous && <p>{sous}</p>}
-          {route}
         </div>
-        {scene && !route && <div className="auth-site-scene"><SceneVelo /></div>}
+        {scene && <div className="auth-site-scene"><SceneVelo /></div>}
       </section>
       <div className="auth-site-feuille">
         <div className="auth-box">{children}</div>
@@ -122,28 +122,6 @@ function SceneVelo() {
         <g fill="#C8F03C"><rect x="16" y="8" width="44" height="5" rx="2.5" /><g transform="rotate(42 27 22.5)"><rect x="13" y="20" width="28" height="5" rx="2.5" /></g></g>
       </g>
     </svg>
-  );
-}
-
-/* La route des étapes de l'inscription : un arrêt par étape, la partie faite en lime avec une coche, le vélo lime à
-   l'étape en cours. Le nombre d'arrêts suit le type de compte (3 pour un client ou un livreur, jusqu'à 7 pour un
-   commerce) ; la phrase dessous dit « Étape n sur N » pour qui ne lit pas le dessin. */
-function RouteEtapes({ total, actuelle, texte }) {
-  const pos = (k) => (total > 1 ? (100 * k) / (total - 1) : 0);
-  return (
-    <div>
-      <div className="auth-route" style={{ '--auth-pos': `${pos(actuelle)}%` }} aria-hidden="true">
-        <span className="auth-route-voie" />
-        <span className="auth-route-fait" />
-        {Array.from({ length: total }, (_, k) => (
-          <span key={k} className={`auth-route-arret${k < actuelle ? ' auth-route-arret--fait' : k === actuelle ? ' auth-route-arret--actuel' : ''}`} style={{ left: `${pos(k)}%` }}>
-            {k < actuelle && <Icone nom="valider" taille={13} />}
-          </span>
-        ))}
-        <span className="auth-route-velo"><BrandMark size={42} tile={false} color="#C8F03C" animer={false} /></span>
-      </div>
-      <p className="auth-route-texte">{texte}</p>
-    </div>
   );
 }
 
@@ -1181,7 +1159,7 @@ export default function Auth() {
       decorClass={decorClass}
       titre={titreIris}
       sous={mode === 'login' && !audience ? t('siteCadre.connexionSous') : null}
-      route={mode === 'register' ? <RouteEtapes total={steps.length} actuelle={Math.min(step, steps.length - 1)} texte={t('siteCadre.etape', { n: Math.min(step, steps.length - 1) + 1, total: steps.length })} /> : null}
+      long={mode === 'register'}
     >
       <div className="auth-site-form">
         {/* Connexion / Inscription : un sélecteur à pouce iris qui glisse (site-cadre.css, .auth-segment). */}
