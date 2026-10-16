@@ -10,7 +10,6 @@ import BrandMark from './BrandMark';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
 import Icone from './Icone';
-import CuisineBackdrop from './CuisineBackdrop';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
@@ -180,8 +179,9 @@ export default function Layout() {
   // la fiche d'un commerce avaient aussi la vidéo (variante « douce », cartes opaques) et son fondu au
   // défilement. Retirés : ce sont des pages où l'on vient faire quelque chose, et la vidéo n'y est pas
   // l'argument. Le raisonnement du paragraphe sur /login ci-dessus vaut désormais pour elles aussi.
+  // L'accueil public (Landing.jsx) : depuis la version B du 2026-10-16, un bandeau iris plein et une feuille blanche, sans la
+  // vidéo de cuisine qui passait derrière (CuisineBackdrop, retiré). Il prend toute la largeur utile (site-accueil.css).
   const fondVitrine = !user && location.pathname === '/';
-  const fondCuisine = fondVitrine;
 
   // Parcours de commande : la coquille reçoit une classe, et c'est la CSS qui efface les onglets —
   // sous 900px seulement, là où ils flottent par-dessus le contenu. Sur ordinateur la barre latérale
@@ -275,15 +275,6 @@ export default function Layout() {
 
   return (
     <>
-      {/* Accueil : les visuels transparaissent dès l'arrivée, sous un en-tête iris plein qui fait cadre (fondateur,
-          2026-09-15 : un premier écran tout iris était « trop uniforme »). Ailleurs, révélés au défilement.
-          Essai inverse le 2026-09-18 — aplat plein au repos, ouvert au défilement — abandonné : c'est bien
-          la transparence dès l'arrivée qui est voulue ici. */}
-      {/* `fondVitrine` NE VAUT PLUS QUE l'accueil depuis que /login n'a plus de fond : les deux
-          conditions redondantes qui traînaient ici (`fondVitrine && pathname === '/'`, deux fois)
-          disaient la même chose que `fondVitrine` seul, et s'écrivaient encore comme s'il pouvait
-          désigner une autre adresse. */}
-      {fondCuisine && <CuisineBackdrop key={fondVitrine ? 'accueil' : 'autre'} desLeDebut={fondVitrine} />}
       {/* L'en-tête s'efface quand on descend et revient quand on remonte : voir useEnteteDefilement. */}
       <div className={`hero${leanHeader ? ' hero-lean' : ''}${enteteCache ? ' hero-cache' : ''}`}>
         <div className="hero-inner">
@@ -377,7 +368,7 @@ export default function Layout() {
           </div>
         </div>
       </div>
-      <div className={`wrap${fondVitrine ? ' wrap-fond' : ''}`} style={{ paddingTop: 24 }}>
+      <div className={`wrap${fondVitrine ? ' wrap-accueil' : ''}`} style={{ paddingTop: fondVitrine ? 0 : 24 }}>
         {/* <main> manquait sur toute la branche publique, celle qui sert les pages
             indexables. La branche tableau de bord en a une depuis toujours. */}
         <main className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
