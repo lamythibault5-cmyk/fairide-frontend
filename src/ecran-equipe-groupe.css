@@ -1,0 +1,201 @@
+/* LA COMMANDE GROUPÉE ET L'ÉQUIPE DU COMMERCE, DANS LA FAMILLE « BANDEAU + FEUILLE » (fondateur, 2026-10-16 : « the same
+   simple and minimalist feel »). Importé par pages/client/CommandeGroupee.jsx, components/client/BandeauGroupe.jsx,
+   components/commerce/EquipeCommerce.jsx, pages/EquipeInvitation.jsx et pages/Account.jsx (la carte du membre).
+   Rien de neuf dans le dessin : le bandeau iris et la feuille blanche du panier (EcranCommande.jsx, ecran-commande.css,
+   site-commande.css), des rangées à filets, une seule action lime par écran, l'iris pour le reste. Le verre ne vaut que dans
+   l'app (html.appli) ; les règles propres au site sont sous html:not(.appli). Pas d'ombre, pas de troisième fond. */
+
+/* ---------- Pièces communes ---------- */
+/* Le bouton secondaire : pastille à filet iris, texte iris (sur fond blanc). */
+.eg-bouton-iris {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 18px;
+  border: 1px solid var(--iris); border-radius: var(--radius-pill); background: #fff; color: var(--iris);
+  font: inherit; font-size: 14.5px; font-weight: 600; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap;
+  transition: background .15s, transform .12s;
+}
+.eg-bouton-iris:hover { background: rgba(59, 47, 181, .06); color: var(--iris); }
+.eg-bouton-iris:active { transform: scale(.97); }
+.eg-bouton-iris:disabled { opacity: .55; cursor: default; }
+.eg-bouton-iris svg { flex: none; }
+/* Le même, plein : l'action iris ordinaire quand la lime est déjà prise ailleurs sur l'écran. */
+.eg-bouton-plein { background: var(--iris); color: #fff; }
+.eg-bouton-plein:hover { background: var(--iris-deep); color: #fff; }
+/* L'action qu'on ne fait pas par mégarde : du texte gris, souligné au survol. */
+.eg-discret {
+  min-height: 42px; padding: 0 6px; border: 0; background: none; color: var(--ink-soft); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.eg-discret:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* L'encart : filet iris, coins ronds, une icône iris, le texte. Le bandeau du groupe (BandeauGroupe) et les états du groupe. */
+.eg-note {
+  display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px; padding: 12px 14px;
+  border: 1px solid var(--iris); border-radius: 16px; background: #fff; color: var(--ink); font-size: 14px; line-height: 1.45;
+}
+.eg-note > svg { flex: none; color: var(--iris); margin-top: 1px; }
+
+.eg-texte { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+.eg-petit { margin: 0; color: var(--ink-soft); font-size: 12.5px; line-height: 1.45; }
+.eg-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+
+/* ---------- La commande groupée (/groupe/:code) ---------- */
+.eg-page .ec-feuille .eg-section:first-child .ec-section,
+.eg-page .ec-feuille .eg-note + .sc-grille .eg-section:first-child .ec-section { margin-top: 4px; }
+.eg-page .ec-sous { font-size: 14px; }
+
+/* Le lien à partager : un champ à filet, le bouton iris à côté (dessous sur un téléphone étroit). */
+.eg-lien { display: flex; gap: 8px; align-items: center; }
+.eg-lien input {
+  flex: 1 1 auto; min-width: 0; height: 42px; min-height: 42px !important; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--radius-pill);
+  background: #fff; color: var(--ink-soft); font-size: 13.5px; text-overflow: ellipsis;
+}
+.eg-lien input:focus { border-color: var(--iris); color: var(--ink); }
+@media (max-width: 420px) {
+  .eg-lien { flex-direction: column; align-items: stretch; }
+}
+
+/* Les lignes d'une part : quantité, plat, prix, la croix. Un filet entre chaque. */
+.eg-lignes { list-style: none; margin: 0; padding: 0; }
+.eg-ligne { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+.eg-ligne:last-child { border-bottom: 0; }
+.eg-qte { flex: none; min-width: 32px; height: 26px; padding: 0 6px; border: 1px solid var(--line); border-radius: 8px; display: grid; place-items: center;
+  color: var(--iris); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.eg-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.eg-ligne-texte b { font-weight: 600; overflow-wrap: anywhere; }
+.eg-ligne-texte small { color: var(--ink-soft); font-size: 12.5px; margin-top: 1px; }
+.eg-prix { flex: none; font-variant-numeric: tabular-nums; color: var(--ink); }
+/* La croix : 40 px à toucher (min-height !important : la règle des 44 px tactiles de styles.css), un rond gris au survol. */
+.eg-retirer {
+  flex: none; width: 40px; height: 40px; min-height: 40px !important; margin: 0 -8px 0 -2px; padding: 0; border: 0; border-radius: 50%;
+  background: none; color: var(--ink-faint); display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s;
+}
+.eg-retirer:hover { background: var(--cream-dim); color: var(--red); }
+
+/* Toutes les parts : une tête par personne (initiale, prénom, sa somme), ses lignes en retrait. */
+.eg-personne { padding: 4px 0 6px; border-bottom: 1px solid var(--line); }
+.eg-personne:last-of-type, .eg-personne:has(+ .eg-total-feuille) { border-bottom: 0; }
+.eg-personne-tete { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; }
+.eg-personne-tete b { flex: 1; min-width: 0; font-weight: 700; }
+.eg-personne-tete .eg-prix { font-weight: 600; }
+.eg-initiale { flex: none; width: 32px; height: 32px; border-radius: 50%; background: rgba(59, 47, 181, .1); color: var(--iris);
+  display: grid; place-items: center; font-size: 13.5px; font-weight: 800; }
+.eg-personne .eg-lignes { padding-left: 42px; }
+.eg-personne .eg-ligne { min-height: 44px; font-size: 14px; }
+
+/* Le total estimé : une ligne de total sous un filet, la note dessous. */
+.eg-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 15px; }
+.eg-total b { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.eg-total-feuille { margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
+.eg-total-feuille .eg-petit { margin-top: 4px; }
+
+/* L'hôte : qui paie, puis rouvrir / annuler, discrets, en bas de la feuille. */
+.eg-hote { margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--line); }
+.eg-hote .eg-actions { margin-top: 8px; }
+.eg-hote .eg-actions > .eg-discret:first-child { margin-left: -6px; }
+
+/* La barre du bas : le bouton lime seul, sur toute la largeur. */
+.eg-page .cart-bar.eg-barre .btn-gold { flex: 1 1 auto; width: 100%; min-height: 48px; padding: 0 18px; font-size: 15.5px; white-space: normal; line-height: 1.2; }
+/* Site, téléphone : collée en bas de l'écran comme celle du panier (client-ui.css). */
+@media (max-width: 900px) {
+  html:not(.appli) .eg-page { padding-bottom: 96px; }
+  html:not(.appli) .eg-page .cart-bar.eg-barre {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; margin: 0; border-radius: 18px 18px 0 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); flex-direction: row;
+  }
+  html.appli .eg-page .cart-bar.eg-barre { flex-wrap: nowrap; }
+}
+/* Site, ordinateur : le total passe dans le récapitulatif de droite. */
+@media (min-width: 901px) {
+  html:not(.appli) .eg-page .sc-grille:has(.sc-recap) .eg-total-feuille .eg-total { display: none; }
+  html:not(.appli) .eg-page .sc-grille:has(.sc-recap) .eg-total-feuille { border-top: 0; padding-top: 0; }
+  html:not(.appli) .eg-page .sc-grille:has(.sc-recap) .eg-total-feuille .eg-petit { display: none; }
+  html:not(.appli) .eg-page .eg-recap-total { padding: 12px 0 14px; border-top: 1px solid var(--line); }
+  html:not(.appli) .eg-page .eg-recap-total .eg-total b { font-size: 20px; }
+  html:not(.appli) .eg-page .sc-recap .cart-bar.eg-barre { margin-top: 0; }
+  html:not(.appli) .eg-page .sc-principal .eg-section + .eg-section { margin-top: 8px; }
+  html:not(.appli) .eg-page .eg-lien { max-width: 640px; }
+}
+@media (max-width: 900px) {
+  html:not(.appli) .eg-page .eg-recap-total { display: none; }
+}
+
+/* ---------- Le bandeau du groupe (panier, fiche du commerce) ---------- */
+.eg-bandeau { flex-wrap: wrap; align-items: flex-start; font-size: 13.5px; }
+.eg-bandeau-texte { flex: 1 1 220px; min-width: 0; }
+.eg-bandeau .eg-actions { flex: 1 1 100%; margin: 2px 0 0 28px; gap: 4px 8px; }
+/* Téléphone étroit : les deux actions sous l'icône aussi, pour tenir sur une ligne. */
+@media (max-width: 420px) { .eg-bandeau .eg-actions { margin-left: 0; } }
+.eg-bandeau .eg-bouton-iris { min-height: 38px; padding: 0 14px; font-size: 13.5px; }
+.eg-bandeau .eg-discret { min-height: 38px; font-size: 13.5px; }
+@media (pointer: coarse) { .eg-bandeau .eg-bouton-iris, .eg-bandeau .eg-discret { min-height: 44px; } }
+
+/* ---------- Le bouton « Commande groupée » de la fiche (RestaurantMenu.jsx) ---------- */
+.eg-depart { margin: 0 0 14px; min-height: 40px; padding: 0 16px; font-size: 14px; }
+@media (pointer: coarse) { .eg-depart { min-height: 44px; } }
+
+/* ---------- L'équipe du commerce, côté propriétaire (Mon compte › Mon équipe) ---------- */
+.eg-equipe .eg-texte { margin-bottom: 4px; }
+.eg-membres { list-style: none; margin: 4px 0 0; padding: 0; }
+.eg-membre { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.eg-membre .eg-initiale { width: 38px; height: 38px; font-size: 15px; }
+.eg-membre-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.eg-membre-texte b { font-size: 14.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eg-membre-texte small { color: var(--ink-soft); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eg-membre-texte .eg-pastille { margin-top: 4px; }
+/* Le statut en pastille : vert « dans l'équipe », iris « invitation envoyée », orange « expirée », gris « retiré ». */
+.eg-pastille { align-self: flex-start; display: inline-block; padding: 3px 9px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 600; line-height: 1.35;
+  background: var(--cream-dim); color: var(--ink-soft); }
+.eg-pastille--active { background: rgba(46, 125, 79, .12); color: var(--green); }
+.eg-pastille--invited { background: rgba(59, 47, 181, .08); color: var(--iris); }
+.eg-pastille--expired { background: rgba(196, 110, 20, .12); color: var(--orange); }
+.eg-equipe-vide { margin: 8px 0 0; padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--ink-soft); font-size: 14px; }
+.eg-inviter { margin-top: 18px; }
+.eg-inviter h3 { margin: 0 0 10px; font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; }
+.eg-inviter-champs { display: grid; grid-template-columns: 1fr; gap: 0 12px; }
+@media (min-width: 560px) { .eg-inviter-champs { grid-template-columns: 3fr 2fr; } }
+.eg-inviter .field { margin-bottom: 12px; }
+.eg-inviter .field label { font-size: 13px; }
+
+/* ---------- La carte du membre de l'équipe (Mon compte) ---------- */
+.eg-membre-carte { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border-bottom: 1px solid var(--line); }
+.eg-membre-carte > .eg-tuile { flex: none; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; color: var(--iris); display: grid; place-items: center; }
+.eg-membre-carte b { display: block; font-size: 14.5px; margin-bottom: 2px; }
+.eg-membre-carte p { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.45; }
+/* Un seul raccourci (Mes commandes) : une tuile en largeur plutôt qu'un tiers de rangée. */
+.compte-raccourcis:has(> .compte-raccourci:only-child) { grid-template-columns: 1fr; }
+.compte-raccourcis > .compte-raccourci:only-child { flex-direction: row; min-height: 56px; gap: 10px; font-size: 14px; }
+
+/* ---------- L'invitation dans l'équipe (/equipe/:code) ---------- */
+.eg-invit { max-width: 520px; margin: 8px auto 32px; }
+.eg-invit-bandeau { position: relative; background: var(--iris); color: #fff; padding: 22px 22px 48px; border-radius: 26px 26px 0 0; }
+.eg-invit-ctx { display: flex; align-items: center; gap: 8px; margin: 0; color: rgba(255, 255, 255, .78); font-size: 13px; font-weight: 600; }
+.eg-invit-titre { margin: 12px 0 6px; color: #fff; font-family: var(--font-titre); font-size: 28px; line-height: 1.12; font-weight: 700; letter-spacing: 0; overflow-wrap: anywhere; }
+.eg-invit-sous { margin: 0; color: rgba(255, 255, 255, .82); font-size: 14.5px; line-height: 1.45; }
+.eg-invit-bandeau .ec-route-bloc { margin-top: 14px; }
+.eg-invit-feuille {
+  position: relative; margin-top: -22px; padding: 22px 22px 24px; background: #fff; border: 1px solid var(--line); border-top: 0;
+  border-radius: 26px 26px 26px 26px;
+}
+.eg-invit-feuille h2 { margin: 0 0 10px; font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; }
+.eg-peut { list-style: none; margin: 0 0 18px; padding: 0; }
+.eg-peut li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; line-height: 1.4; }
+.eg-peut li:last-child { border-bottom: 0; }
+.eg-peut li > span { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: rgba(59, 47, 181, .1); color: var(--iris); }
+.eg-peut li.eg-peut-pas { color: var(--ink-soft); }
+.eg-peut li.eg-peut-pas > span { background: var(--cream-dim); color: var(--ink-faint); }
+.eg-invit-actions { display: flex; flex-direction: column; gap: 8px; }
+.eg-invit-actions .btn-gold, .eg-invit-actions .eg-bouton-iris { width: 100%; min-height: 50px; font-size: 16px; font-weight: 700; justify-content: center; display: flex; align-items: center; text-decoration: none; }
+.eg-invit .eg-note { margin: 0 0 14px; }
+/* Téléphone : bandeau et feuille d'un bord à l'autre de la colonne, sans le cadre de la carte. */
+@media (max-width: 560px) {
+  .eg-invit { margin-top: 0; }
+  .eg-invit-feuille { border: 0; border-radius: 26px 26px 0 0; padding-left: 18px; padding-right: 18px; }
+  .eg-invit-bandeau { padding-left: 20px; padding-right: 20px; }
+}
+
+/* ---------- Dans l'app seulement : le ressort ---------- */
+html.appli .eg-invit-feuille { animation: ec-monte .45s cubic-bezier(.34, 1.45, .64, 1) backwards; }
+html.appli .eg-retirer:active, html.appli .eg-bouton-iris:active { transform: scale(.92); }
+@media (prefers-reduced-motion: reduce) {
+  html.appli .eg-invit-feuille { animation: none; }
+  .eg-bouton-iris, .eg-retirer { transition: none; }
+}

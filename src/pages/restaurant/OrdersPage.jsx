@@ -28,6 +28,7 @@ import { vibrer } from '../../gestes';
 import { experienceApp } from '../../natif';
 import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import AlerteBandeau from '../../components/commerce/AlerteBandeau';
+import { useModeEquipe } from '../../modeEquipe';
 
 // Le SITE (pas l'app) montre les commandes en tableau à trois colonnes (2026-10-16, mockups/site-ordinateur.html › Espace
 // commerce, lot « pro ») : Nouvelles, En préparation, Prêtes. L'app garde sa liste, inchangée.
@@ -94,6 +95,8 @@ export default function OrdersPage() {
   const { token } = useAuth();
   const toast = useToast();
   const { orders, restaurant, restoId, loadDashboard, communs, alerte, onConnect, connecting, lectureSeule } = useOutletContext();
+  // Membre de l'équipe (modeEquipe.js) : la mise en ligne du commerce et le terminal sont l'affaire du propriétaire.
+  const membreEquipe = useModeEquipe();
 
   /* ÉCRAN ALLUMÉ PENDANT LE SERVICE (audit UX du 15/10/2026). Une tablette de comptoir qui se met en veille ne sonne plus
      et ne voit plus les commandes : après 15 minutes elles sont annulées (acceptation.js), et le commerce mis en pause.
@@ -551,7 +554,7 @@ export default function OrdersPage() {
                     <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
                     <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
                   </div>
-                  <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-faint)' }}>{t('ordersResto.noTerminalHint')} <Link to="/dashboard/terminal">{t('ordersResto.terminalSettings')}</Link></p>
+                  <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-faint)' }}>{t('ordersResto.noTerminalHint')}{!membreEquipe && <> <Link to="/dashboard/terminal">{t('ordersResto.terminalSettings')}</Link></>}</p>
                 </>
               )}
               {apercu?.orderId === selectedOrder.id && <div style={{ marginTop: 12 }}><TicketPapier lines={apercu.lines} columns={apercu.columns} /></div>}
@@ -716,10 +719,11 @@ export default function OrdersPage() {
             <div className="ec-b-haut"><span><b>{restaurant?.name}</b>{' · '}{t('ordersResto.summary', { current: enCours.length, today: duJour })}</span></div>
             <h1 className="ec-b-titre">{t('sitePro.commandes')}</h1>
           </div>
-          {alerte && <AlerteBandeau {...alerte} terminal={etatTerminal} />}
+          {/* Le terminal se règle chez le propriétaire : un membre de l'équipe n'a pas la page (DashboardLayout le ramène ici). */}
+          {alerte && <AlerteBandeau {...alerte} terminal={membreEquipe ? null : etatTerminal} />}
         </div>
         {restaurant && <InterrupteurService surBandeau restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />}
-        {restaurant && <MiseEnLigne surBandeau restaurant={restaurant} restoId={restoId} token={token} onConnect={onConnect} connecting={connecting}
+        {restaurant && !membreEquipe && <MiseEnLigne surBandeau restaurant={restaurant} restoId={restoId} token={token} onConnect={onConnect} connecting={connecting}
           onChange={() => loadDashboard(restoId)} lectureSeule={lectureSeule} />}
       </BandeauCommerce>
       <FeuilleCommerce>
@@ -764,7 +768,7 @@ export default function OrdersPage() {
           <span>{t('ordersResto.summary', { current: enCours.length, today: duJour })}</span>
         </div>
         {restaurant && <InterrupteurService surBandeau restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />}
-        {terminaux && <span className="ec-terminal"><Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></span>}
+        {terminaux && !membreEquipe && <span className="ec-terminal"><Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></span>}
       </BandeauCommerce>
       <FeuilleCommerce>
         {communs}

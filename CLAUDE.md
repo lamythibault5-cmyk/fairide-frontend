@@ -245,6 +245,21 @@ end of site-cadre.css for the business, courier and account bands (cancel `.dash
 padding); change `.dashboard-main`'s padding and those rules change with it. **Scroll locks go on `<html>`, never `<body>`**
 (useDialogue, EcranPlein, CarteSuivi): html has `overflow-x: clip`, so a body in `overflow: hidden` became its own scroller, jumped
 to the top and dragged the sticky sidebar with it. The signed-out home page (`/`) and its visitor header are deliberately untouched.
+**Group orders and the business team in the same family (2026-10-16, [src/ecran-equipe-groupe.css](src/ecran-equipe-groupe.css), `eg-`
+classes, app and website rules in one file).** `/groupe/:code` (CommandeGroupee.jsx) reuses the cart's `BandeauCommande` /
+`FeuilleCommande` / `BarreCommande` (`ec-page sc-page`): iris band (back to the menu, restaurant, « Commande groupée », who pays ·
+participants, bike on its road), then Inviter (link field + iris share pill), Ma part, Toutes les parts grouped by person
+(initial, name, person total; hairline rows `qty× · dish · price · ×`), total estimé. Exactly one lime action, in the bottom bar
+(glass in the app, iris bar on the phone website, sticky recap column on a laptop): host « Fermer le groupe et commander », else
+« Envoyer mon panier au groupe », else « Choisir mes plats »; reopen / cancel stay quiet at the bottom. `/groupe` is in Layout's
+`DASHBOARD_PATHS` and `FLUX_COMMANDE` (no tabs, no floating cart there). `BandeauGroupe` is an iris-outlined notice (`.eg-note`)
+with an iris pill and a text « Quitter » — never lime; the restaurant page's « Commande groupée » is an iris-outline pill
+(`.eg-bouton-iris .eg-depart`), hidden while a group for that restaurant is being composed. Team: `EquipeCommerce` is a hairline
+list (initial, name, e-mail, status pill: green member / iris invited / orange expired, × to remove) and « Inviter quelqu'un » with
+one iris button; `/equipe/:token` (EquipeInvitation.jsx) is a centred band + sheet card (« {commerce} t'invite dans son équipe »,
+three ticks of what the member can do, one padlock line for what they can't, one lime action). A member's Mon compte has a
+« Mon équipe » group (restaurant + `team.memberCard` + the Commandes row) and calls `definirModeEquipe` itself, so the tab bar
+is right even before the orders page has loaded; on the orders page a member sees neither the « next step » nor terminal links.
 
 At this size, **find the neighbouring rule before adding one.** Selectors of equal specificity are
 resolved by order, and several blocks near the bottom (the 520px media query especially) override

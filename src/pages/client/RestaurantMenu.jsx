@@ -9,6 +9,7 @@ import { useCart } from '../../context/CartContext';
 import { tarifLivraison } from '../../livraison';
 import Icone from '../../components/Icone';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
+import { groupeEnCours } from '../../commandeGroupee';
 import VisuelVide from '../../components/VisuelVide';
 import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, dateOuvertureEmporter } from '../../launch';
 import { useToast } from '../../context/ToastContext';
@@ -73,6 +74,8 @@ function statutOuverture(restaurant, now) {
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
+  // Commande groupée quittée depuis le bandeau : le bouton « Commande groupée » revient tout de suite.
+  const [groupeQuitte, setGroupeQuitte] = useState(false);
   // Plafond de commandes du jour atteint (réglé par le commerce) : on le dit avant le panier, pas au paiement.
   const [complet, setComplet] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -617,16 +620,17 @@ export default function RestaurantMenu() {
       {restaurant.desc && <p className="fiche-desc">{restaurant.desc}</p>}
 
       {/* Commande groupée (pages/client/CommandeGroupee.jsx) : le bandeau quand on compose sa part, sinon le bouton
-          pour en ouvrir une — compte client exigé, comme pour commander. */}
-      <BandeauGroupe restaurantId={restaurant.id} />
-      {user && !onlineOrderingDisabled && (
-        <button type="button" className="fiche-groupe" onClick={async () => {
+          pour en ouvrir une — compte client exigé, comme pour commander. Le bouton est secondaire (pastille à filet iris,
+          ecran-equipe-groupe.css) : la lime de la fiche reste au panier. */}
+      <BandeauGroupe restaurantId={restaurant.id} onQuitter={() => setGroupeQuitte(true)} />
+      {user && !onlineOrderingDisabled && !(String(groupeEnCours()?.restaurantId) === String(restaurant.id) && !groupeQuitte) && (
+        <button type="button" className="eg-bouton-iris eg-depart" onClick={async () => {
           try {
             const g = await api('/group-orders', { method: 'POST', token, body: { restaurantId: restaurant.id } });
             navigate(`/groupe/${g.code}`);
           } catch (e) { toast(e.message, 'erreur'); }
         }}>
-          <Icone nom="compte" taille={16} className="icone-texte" /> {t('groupOrder.start')}
+          <Icone nom="personnes" taille={17} />{t('groupOrder.start')}
         </button>
       )}
 

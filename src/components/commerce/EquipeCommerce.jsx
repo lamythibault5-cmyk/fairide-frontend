@@ -4,10 +4,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import ConfirmDialog from '../ConfirmDialog';
+import Icone from '../Icone';
+import '../../ecran-equipe-groupe.css';
 
 /* L'ÉQUIPE DU COMMERCE, CÔTÉ PROPRIÉTAIRE (comparaison avec Uber Eats, 15 oct. 2026 ; backend equipeCommerce.js).
  * Inviter par e-mail (le lien vaut 7 jours, pour cette adresse seulement), voir qui est là, retirer quelqu'un — l'accès
- * se ferme aussitôt. Ce qu'un membre peut faire est dit en clair avant l'invitation : le service, rien d'autre. */
+ * se ferme aussitôt. Ce qu'un membre peut faire est dit en clair avant l'invitation : le service, rien d'autre.
+ * Le dessin (2026-10-16, ecran-equipe-groupe.css) : une liste à filets (initiale, prénom, e-mail, statut en pastille, la
+ * croix pour retirer), puis « Inviter quelqu'un » : deux champs et un seul bouton. */
 export default function EquipeCommerce({ restoId }) {
   const { token } = useAuth();
   const toast = useToast();
@@ -41,31 +45,41 @@ export default function EquipeCommerce({ restoId }) {
   }
 
   return (
-    <div>
-      <p className="small" style={{ margin: '0 0 10px' }}>{t('team.intro')}</p>
-      {membres === null ? <p className="small">…</p> : membres.length === 0 ? (
-        <p className="small" style={{ margin: '0 0 12px' }}>{t('team.none')}</p>
+    <div className="eg-equipe">
+      <p className="eg-texte">{t('team.intro')}</p>
+      {membres === null ? <p className="eg-texte">…</p> : membres.length === 0 ? (
+        <p className="eg-equipe-vide">{t('team.none')}</p>
       ) : (
-        <div style={{ marginBottom: 12 }}>
+        <ul className="eg-membres">
           {membres.map((m) => (
-            <div key={m.id} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--line)', gap: 8 }}>
-              <span className="small">
-                <b>{m.name || m.email}</b>{m.name ? ` · ${m.email}` : ''}
-                <span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t(`team.status_${m.status}`)}</span>
+            <li key={m.id} className="eg-membre">
+              <span className="eg-initiale" aria-hidden="true">{(m.name || m.email || '?').trim().charAt(0).toUpperCase()}</span>
+              <span className="eg-membre-texte">
+                <b>{m.name || m.email}</b>
+                {m.name && <small>{m.email}</small>}
+                {/* La pastille dit le statut en deux mots ; la phrase complète (« … : invite à nouveau ») en infobulle. */}
+                <span className={`eg-pastille eg-pastille--${m.status}`} title={t(`team.status_${m.status}`)}>
+                  {['invited', 'expired'].includes(m.status) ? t(`team.pill_${m.status}`) : t(`team.status_${m.status}`)}
+                </span>
               </span>
-              <button type="button" className="btn-danger-ghost" onClick={() => setARetirer(m)}>{t('team.remove')}</button>
-            </div>
+              <button type="button" className="eg-retirer" onClick={() => setARetirer(m)} aria-label={`${t('team.remove')} : ${m.name || m.email}`} title={t('team.remove')}>
+                <Icone nom="croix" taille={16} />
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
-      <form onSubmit={inviter}>
-        <div className="field">
-          <label htmlFor="equipe-email">{t('team.email')}</label>
-          <input id="equipe-email" type="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="prenom@exemple.be" />
-        </div>
-        <div className="field">
-          <label htmlFor="equipe-nom">{t('team.name')}</label>
-          <input id="equipe-nom" value={nom} maxLength={80} onChange={(e) => setNom(e.target.value)} />
+      <form className="eg-inviter" onSubmit={inviter}>
+        <h3>{t('team.inviteSection')}</h3>
+        <div className="eg-inviter-champs">
+          <div className="field">
+            <label htmlFor="equipe-email">{t('team.email')}</label>
+            <input id="equipe-email" type="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="prenom@exemple.be" />
+          </div>
+          <div className="field">
+            <label htmlFor="equipe-nom">{t('team.name')}</label>
+            <input id="equipe-nom" value={nom} maxLength={80} onChange={(e) => setNom(e.target.value)} />
+          </div>
         </div>
         <button type="submit" className="btn-teal" disabled={envoi || !email.trim()}>{envoi ? '…' : t('team.invite')}</button>
       </form>

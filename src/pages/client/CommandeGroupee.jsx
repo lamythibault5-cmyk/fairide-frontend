@@ -6,15 +6,29 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
+import { experienceApp } from '../../natif';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import EtatVide from '../../components/EtatVide';
+import Icone from '../../components/Icone';
+import { SkeletonCards } from '../../components/Skeleton';
+import { BandeauCommande, FeuilleCommande, BarreCommande, RouteCommande } from '../../components/EcranCommande';
 import { entrerDansGroupe, quitterGroupe } from '../../commandeGroupee';
+import '../../ecran-equipe-groupe.css';
+
+const APPLI = experienceApp();
 
 /* /groupe/:code — LA COMMANDE GROUPÉE (comparaison avec Uber Eats, 15 oct. 2026 ; backend routes/commandesGroupees.js).
  *
  * Chacun compose sa part dans SON panier, sur la carte habituelle du commerce (options, consignes, allergies : rien de
  * refait), puis l'envoie ici. L'hôte voit toutes les parts, ferme le groupe : elles entrent dans son panier, chaque ligne
  * marquée « Pour <prénom> » pour que le commerce sépare les sachets, et il paie tout par le paiement habituel (fondateur :
- * l'hôte paie). Il faut un compte pour participer (route protégée), comme pour commander. */
+ * l'hôte paie). Il faut un compte pour participer (route protégée), comme pour commander.
+ *
+ * L'ÉCRAN (2026-10-16, même famille que le panier : EcranCommande.jsx, ecran-equipe-groupe.css) : un bandeau iris (retour à
+ * la carte, le commerce, « Commande groupée », qui paie et combien de participants, le vélo sur sa route), puis la feuille
+ * blanche : inviter, ma part, toutes les parts (l'hôte), rangées à filets. UNE action lime, dans la barre du bas comme au
+ * panier (le récapitulatif collant sur ordinateur) : fermer et commander pour l'hôte, sinon envoyer son panier, sinon
+ * choisir ses plats. Le reste est iris ou discret. */
 export default function CommandeGroupee() {
   const { code } = useParams();
   const { token } = useAuth();
@@ -32,8 +46,8 @@ export default function CommandeGroupee() {
     .catch((e) => setErreur(e.message));
   useEffect(() => { charger(); }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (erreur) return <div className="card"><p className="small" role="alert" style={{ margin: 0 }}>{erreur}</p></div>;
-  if (!g) return <p className="small">…</p>;
+  if (erreur) return <EtatVide icone="personnes" titre={erreur} actionVers="/restaurants" actionTexte={t('orders.emptyAction')} />;
+  if (!g) return <SkeletonCards count={2} />;
 
   const lien = `${window.location.origin}/groupe/${g.code}`;
   const mesLignes = g.lines.filter((l) => l.mine);
@@ -86,68 +100,135 @@ export default function CommandeGroupee() {
 
   const parInvite = g.lines.reduce((acc, l) => { (acc[l.guestName] ||= []).push(l); return acc; }, {});
   const ouvert = g.status === 'open';
+  const peutCommander = g.isHost && ['open', 'locked'].includes(g.status) && g.lines.length > 0;
+  // L'UNIQUE action lime de l'écran : commander (hôte), sinon envoyer son panier, sinon aller choisir ses plats.
+  const decisive = peutCommander ? 'commander' : ouvert && panierIci ? 'envoyer' : ouvert ? 'choisir' : null;
+
+  // Une ligne d'une part : quantité, plat (et ses options), prix, et la croix pour la retirer tant que le groupe est ouvert.
+  const ligneDePart = (l) => (
+    <li key={l.id} className="eg-ligne">
+      <span className="eg-qte">{l.qty}×</span>
+      <span className="eg-ligne-texte">
+        <b>{l.name}</b>
+        {l.optionsSnapshot?.length > 0 && <small>{l.optionsSnapshot.map((o) => o.name).join(', ')}</small>}
+      </span>
+      <span className="eg-prix">{euros(l.unitPrice * l.qty)}</span>
+      {ouvert && (
+        <button type="button" className="eg-retirer" onClick={() => retirer(l)} aria-label={`${t('groupOrder.remove')} : ${l.name}`} title={t('groupOrder.remove')}>
+          <Icone nom="croix" taille={16} />
+        </button>
+      )}
+    </li>
+  );
+
+  const libelleDecisif = decisive === 'commander' ? t('groupOrder.order')
+    : decisive === 'envoyer' ? t('groupOrder.sendCart', { n: cart.count }) : t('groupOrder.pickDishes');
+  const actionDecisive = decisive === 'commander' ? () => commander() : decisive === 'envoyer' ? envoyer : choisir;
+  const barre = decisive && (
+    <BarreCommande montant={g.total} className="eg-barre">
+      <button type="button" className="btn-gold" disabled={occupe && decisive !== 'choisir'} onClick={actionDecisive}>
+        {occupe && decisive !== 'choisir' ? '…' : libelleDecisif}
+      </button>
+    </BarreCommande>
+  );
+  const total = g.isHost && g.lines.length > 0 && (
+    <div className="eg-total">
+      <span>{t('groupOrder.estimateLabel')}</span>
+      <b>{euros(g.total)}</b>
+    </div>
+  );
+
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('groupOrder.title', { name: g.restaurant.name })}</h2>
-      <p className="small" style={{ margin: '0 0 12px' }}>
-        {g.isHost ? t('groupOrder.youHost') : t('groupOrder.hostIs', { name: g.hostFirstName })} · {t('groupOrder.participants', { n: g.participants })}
-      </p>
-      {g.status === 'locked' && <p className="small paiement-encart" role="status">{g.isHost ? t('groupOrder.lockedHost') : t('groupOrder.lockedGuest', { name: g.hostFirstName })}</p>}
-      {['expired', 'cancelled'].includes(g.status) && <p className="small paiement-encart" role="status">{t('groupOrder.ended')}</p>}
+    <div className="eg-page ec-page sc-page">
+      <BandeauCommande
+        vers={`/restaurants/${g.restaurant.id}`}
+        libelleRetour={t('panier.backToMenu')}
+        haut={<b>{g.restaurant.name}</b>}
+        titre={t('groupOrder.start')}
+        sous={`${g.isHost ? t('groupOrder.youHost') : t('groupOrder.hostIs', { name: g.hostFirstName })} · ${t('groupOrder.participants', { n: g.participants })}`}
+      >
+        <RouteCommande position={g.status === 'open' ? 46 : 78} depart={8} />
+      </BandeauCommande>
 
-      {ouvert && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('groupOrder.inviteTitle')}</h3>
-          <p className="small" style={{ margin: '0 0 8px' }}>{t('groupOrder.inviteText')}</p>
-          <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <input readOnly value={lien} aria-label={t('groupOrder.inviteTitle')} style={{ flex: '1 1 200px' }} onFocus={(e) => e.target.select()} />
-            <button type="button" className="btn-outline" onClick={partager}>{t('groupOrder.share')}</button>
-          </div>
-        </div>
-      )}
+      <FeuilleCommande>
+        {g.status === 'locked' && (
+          <p className="eg-note" role="status"><Icone nom="cadenas" taille={18} />{g.isHost ? t('groupOrder.lockedHost') : t('groupOrder.lockedGuest', { name: g.hostFirstName })}</p>
+        )}
+        {['expired', 'cancelled'].includes(g.status) && (
+          <p className="eg-note" role="status"><Icone nom="horloge" taille={18} />{t('groupOrder.ended')}</p>
+        )}
 
-      {ouvert && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('groupOrder.myPart')}</h3>
-          {mesLignes.length === 0 && !panierIci && <p className="small" style={{ margin: '0 0 8px' }}>{t('groupOrder.myPartEmpty')}</p>}
-          {mesLignes.map((l) => (
-            <div key={l.id} className="row small" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
-              <span>{l.qty} × {l.name}{l.optionsSnapshot?.length ? ` (${l.optionsSnapshot.map((o) => o.name).join(', ')})` : ''}</span>
-              <button type="button" className="btn-danger-ghost" onClick={() => retirer(l)}>{t('groupOrder.remove')}</button>
-            </div>
-          ))}
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-            {panierIci && <button type="button" className="btn-teal" disabled={occupe} onClick={envoyer}>{occupe ? '…' : t('groupOrder.sendCart', { n: cart.count })}</button>}
-            <button type="button" className="btn-outline" onClick={choisir}>{t('groupOrder.pickDishes')}</button>
-          </div>
-        </div>
-      )}
+        <div className="sc-grille">
+        <div className="sc-principal">
+          {ouvert && (
+            <section className="eg-section" aria-labelledby="eg-inviter">
+              <h2 className="ec-section" id="eg-inviter">{t('groupOrder.inviteTitle')}</h2>
+              <p className="eg-texte">{t('groupOrder.inviteText')}</p>
+              <div className="eg-lien">
+                <input readOnly value={lien} aria-label={t('groupOrder.inviteTitle')} onFocus={(e) => e.target.select()} />
+                <button type="button" className="eg-bouton-iris" onClick={partager}><Icone nom="lien" taille={16} />{t('groupOrder.share')}</button>
+              </div>
+            </section>
+          )}
 
-      {g.isHost && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('groupOrder.allParts')}</h3>
-          {g.lines.length === 0 ? <p className="small" style={{ margin: 0 }}>{t('groupOrder.noPartsYet')}</p> : Object.entries(parInvite).map(([nom, lignes]) => (
-            <div key={nom} style={{ marginBottom: 8 }}>
-              <b className="small">{nom}</b>
-              {lignes.map((l) => (
-                <div key={l.id} className="row small" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
-                  <span>{l.qty} × {l.name} · {euros(l.unitPrice * l.qty)}</span>
-                  {ouvert && <button type="button" className="btn-danger-ghost" onClick={() => retirer(l)}>{t('groupOrder.remove')}</button>}
+          {ouvert && (
+            <section className="eg-section" aria-labelledby="eg-ma-part">
+              <h2 className="ec-section" id="eg-ma-part">{t('groupOrder.myPart')}</h2>
+              {mesLignes.length === 0 && !panierIci && <p className="eg-texte">{t('groupOrder.myPartEmpty')}</p>}
+              {mesLignes.length > 0 && <ul className="eg-lignes">{mesLignes.map(ligneDePart)}</ul>}
+              {/* Les actions de la part qui ne sont pas l'action lime (elle est dans la barre du bas). */}
+              {(decisive !== 'choisir' || (panierIci && decisive !== 'envoyer')) && (
+                <div className="eg-actions">
+                  {panierIci && decisive !== 'envoyer' && (
+                    <button type="button" className="eg-bouton-iris eg-bouton-plein" disabled={occupe} onClick={envoyer}>{occupe ? '…' : t('groupOrder.sendCart', { n: cart.count })}</button>
+                  )}
+                  {decisive !== 'choisir' && <button type="button" className="eg-bouton-iris" onClick={choisir}>{t('groupOrder.pickDishes')}</button>}
+                </div>
+              )}
+            </section>
+          )}
+
+          {g.isHost && (
+            <section className="eg-section" aria-labelledby="eg-parts">
+              <h2 className="ec-section" id="eg-parts">{t('groupOrder.allParts')}</h2>
+              {g.lines.length === 0 ? <p className="eg-texte">{t('groupOrder.noPartsYet')}</p> : Object.entries(parInvite).map(([nom, lignes]) => (
+                <div key={nom} className="eg-personne">
+                  <div className="eg-personne-tete">
+                    <span className="eg-initiale" aria-hidden="true">{nom.trim().charAt(0).toUpperCase()}</span>
+                    <b>{nom}</b>
+                    <span className="eg-prix">{euros(lignes.reduce((a, l) => a + l.unitPrice * l.qty, 0))}</span>
+                  </div>
+                  <ul className="eg-lignes">{lignes.map(ligneDePart)}</ul>
                 </div>
               ))}
+              {total && <div className="eg-total-feuille">{total}<p className="eg-petit">{t('groupOrder.estimateNote')}</p></div>}
+            </section>
+          )}
+
+          {g.isHost && ['open', 'locked'].includes(g.status) && (
+            <div className="eg-hote">
+              <p className="eg-petit">{t('groupOrder.hostPays')}</p>
+              <div className="eg-actions">
+                {g.status === 'locked' && <button type="button" className="eg-bouton-iris" onClick={() => hote('reopen')}>{t('groupOrder.reopen')}</button>}
+                <button type="button" className="eg-discret" onClick={() => hote('cancel')}>{t('groupOrder.cancel')}</button>
+              </div>
             </div>
-          ))}
-          {g.lines.length > 0 && <p className="small" style={{ margin: '8px 0', fontWeight: 600 }}>{t('groupOrder.estimate', { total: euros(g.total) })}</p>}
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            {['open', 'locked'].includes(g.status) && g.lines.length > 0 && (
-              <button type="button" className="btn-gold" disabled={occupe} onClick={() => commander()}>{occupe ? '…' : t('groupOrder.order')}</button>
-            )}
-            {g.status === 'locked' && <button type="button" className="btn-outline" onClick={() => hote('reopen')}>{t('groupOrder.reopen')}</button>}
-            {['open', 'locked'].includes(g.status) && <button type="button" className="btn-ghost" onClick={() => hote('cancel')}>{t('groupOrder.cancel')}</button>}
-          </div>
-          <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-soft)' }}>{t('groupOrder.hostPays')}</p>
+          )}
         </div>
-      )}
+        {/* Site : le récapitulatif collant à droite, qui porte l'action lime (sur un téléphone, seule la barre en reste). */}
+        {!APPLI && barre && (
+          <aside className="sc-recap" aria-label={t('siteCommande.recap')}>
+            <h2 className="sc-recap-titre">{t('siteCommande.recap')}</h2>
+            <p className="sc-recap-sous">{g.restaurant.name} · {t('groupOrder.participants', { n: g.participants })}</p>
+            {total && <div className="eg-recap-total">{total}</div>}
+            {barre}
+            {decisive === 'commander' && <p className="sc-recap-note">{t('groupOrder.estimateNote')}</p>}
+          </aside>
+        )}
+        </div>
+      </FeuilleCommande>
+
+      {APPLI && barre}
       <ConfirmDialog
         open={!!confirmerRemplacement}
         title={t('groupOrder.replaceTitle')}

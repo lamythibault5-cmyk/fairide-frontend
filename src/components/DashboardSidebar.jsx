@@ -143,7 +143,9 @@ export default function DashboardSidebar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const navRef = useRef(null);
-  useCurseurOnglets(navRef, `${pathname}|${user?.isAdmin ? 'admin' : ''}`);
+  // Membre de l'équipe d'un commerce (modeEquipe.js) : la liste des onglets change sans changer d'adresse — la pastille
+  // restait sur la place de l'ancien onglet « Commandes », et l'onglet actif, blanc sur blanc, disparaissait.
+  useCurseurOnglets(navRef, `${pathname}|${user?.isAdmin ? 'admin' : ''}|${membreEquipe ? 'equipe' : ''}`);
   /* LA BARRE DU BAS SE RÉDUIT AU DÉFILEMENT (sous 900px, voir styles.css) : on descend pour lire, les
    * libellés s'effacent et la barre se resserre autour des icônes ; on remonte — le geste de quelqu'un qui
    * cherche où aller — elle reprend sa taille. Même hook et même règle que l'en-tête du site, pour que les
