@@ -20,14 +20,16 @@ import { useEffect } from 'react';
 export default function useDialogue(racine, onFermer) {
   // 1. Ouverture : on gèle le fond, on prend le focus, on retient d'où l'on vient. Dépendances
   //    vides — tout ceci n'arrive qu'une fois, à l'ouverture, et se défait à la fermeture.
+  // Le gel du fond se pose sur <html>, pas sur <body> : html porte overflow-x: clip (styles.css), donc un body en
+  // overflow: hidden devenait sa propre boîte de défilement, revenait en haut, et la barre latérale collante sautait.
   useEffect(() => {
-    const avant = document.body.style.overflow;
+    const avant = document.documentElement.style.overflow;
     // Capturé AVANT de déplacer le focus, sinon on mémoriserait la fenêtre elle-même.
     const ouvrant = document.activeElement;
-    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     racine.current?.focus();
     return () => {
-      document.body.style.overflow = avant;
+      document.documentElement.style.overflow = avant;
       // `isConnected` : le bouton d'ouverture peut avoir disparu pendant que la fenêtre était
       // ouverte (une ligne supprimée, une liste rechargée). Lui rendre le focus échouerait en
       // silence et laisserait le focus nulle part, ce qui est pire que de ne rien faire.

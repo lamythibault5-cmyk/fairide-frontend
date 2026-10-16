@@ -72,6 +72,14 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
   /* Le titre « Commandes » est déjà l'onglet du bas : lu par les lecteurs d'écran, plus affiché (la place va aux commandes). */
   .sp-b-titres .ec-b-titre { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
   .sp-b-ligne { gap: 10px; }
+  /* Le bandeau prenait les deux tiers de l'écran (fusion du 2026-10-16) : l'aide tient sur deux lignes, le bouton du son sur
+     une, la prochaine étape aussi sur deux ; tout reste lisible en entier sur un ordinateur. */
+  .sp-b-aide { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .sp-b-alerte { gap: 8px; }
+  .sp-b-alerte .sp-puce { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; min-height: 40px; padding-top: 0; padding-bottom: 0; }
+  .sp-b-etape { margin-top: 8px; }
+  .sp-b-etape-texte { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.35; }
+  .sp-b-etape-texte svg { display: none; }
 }
 
 /* ---------- Commandes : le tableau ---------- */

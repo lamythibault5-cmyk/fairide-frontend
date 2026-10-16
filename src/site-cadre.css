@@ -264,3 +264,28 @@
   .site-survol, .site-survol:hover { transition: none; transform: none; }
   html:not(.appli) .dashboard-nav > .nav-curseur, .auth-segment-pouce, .auth-route-fait, .auth-route-velo { transition: none; }
 }
+
+/* ---------- BANDEAUX D'UN BORD À L'AUTRE, PARTOUT SUR UN ORDINATEUR (2026-10-16, après la fusion des lots) ----------
+   La liste, la fiche et le paiement posaient leur bandeau iris d'un bord à l'autre de la zone de contenu ; le commerce, le
+   livreur et Mon compte le posaient en carte arrondie dans les marges. Même règle pour tous : le bandeau annule la marge de
+   .dashboard-main (24 px en haut, 28 px sur les côtés), coins droits, et c'est son rembourrage qui garde le contenu centré
+   sur la largeur de la page (1 120 px pour un tableau de bord, 860 / 1 040 px pour une page de lecture du livreur). La
+   feuille blanche dessous suit la même largeur. Préfixées par .dashboard-main : les feuilles des lots, chargées après,
+   posent les mêmes propriétés au même poids. Les conteneurs perdent leur max-width : c'est le rembourrage qui centre. */
+@media (min-width: 901px) {
+  /* Commerce (ecran-commerce.css, site-pro.css). */
+  html:not(.appli) .dashboard-main .ec-bandeau { margin: -24px -28px 0; border-radius: 0; padding-left: max(60px, calc((100% - var(--sp-large, 1120px)) / 2)); padding-right: max(60px, calc((100% - var(--sp-large, 1120px)) / 2)); }
+  html:not(.appli) .dashboard-main .ec-feuille { margin-left: -28px; margin-right: -28px; padding-left: max(60px, calc((100% - var(--sp-large, 1120px)) / 2)); padding-right: max(60px, calc((100% - var(--sp-large, 1120px)) / 2)); }
+  /* Livreur (ecran-livreur.css, site-livreur.css). */
+  html:not(.appli) .dashboard-main .ecl { --ecl-l: 1180px; max-width: none; }
+  html:not(.appli) .dashboard-main .ecl-page { --ecl-l: 860px; }
+  html:not(.appli) .dashboard-main .ecl-page.ecl-page-large, html:not(.appli) .dashboard-main .ecl-gains { --ecl-l: 1040px; }
+  html:not(.appli) .dashboard-main .ecl > .ecl-bandeau { margin: -24px -28px 0; border-radius: 0; padding-left: max(60px, calc((100% - var(--ecl-l)) / 2)); padding-right: max(60px, calc((100% - var(--ecl-l)) / 2)); }
+  html:not(.appli) .dashboard-main .ecl > .ecl-feuille { margin-left: -28px; margin-right: -28px; padding-left: max(60px, calc((100% - var(--ecl-l)) / 2)); padding-right: max(60px, calc((100% - var(--ecl-l)) / 2)); }
+}
+@media (min-width: 1100px) {
+  /* Mon compte (ecran-compte.css, site-compte.css) : ses deux colonnes ne s'ouvrent qu'à partir de 1 100 px. */
+  html:not(.appli) .dashboard-main .compte-ecran { max-width: none; }
+  html:not(.appli) .dashboard-main .compte-ecran .compte-bandeau { margin: -24px -28px 0; border-radius: 0; padding-left: max(60px, calc((100% - 1120px) / 2)); padding-right: max(60px, calc((100% - 1120px) / 2)); }
+  html:not(.appli) .dashboard-main .compte-ecran .compte-feuille { margin-left: -28px; margin-right: -28px; padding-left: max(60px, calc((100% - 1120px) / 2)); padding-right: max(60px, calc((100% - 1120px) / 2)); }
+}

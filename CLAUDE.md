@@ -234,6 +234,17 @@ The website `/login` (Auth.jsx, `CadreConnexion`) is two halves under the unchan
 waiting on its road, or during sign-up the step road `RouteEtapes`), the form on a white sheet right, Connexion / Inscription as
 a sliding iris segment, one lime action; on phones the iris band on top and the sheet rising under it. Strings: `siteCadre` i18n
 namespace.
+**The rest of the website (same day, sections 3–9 of that mockup)**: each family has its own website CSS file, imported by its
+pages and scoped to `html:not(.appli)`: `src/site-liste.css` (list with a left filter column ≥ 1,100 px, search, map with a side
+list, favourites), `site-fiche.css` (restaurant page: menu in two columns, sticky cart column `PanierColonne.jsx`, dish as a
+centred dialog ≥ 900 px, bottom sheet below), `site-commande.css` (cart / checkout in two columns, past orders as a table),
+`site-compte.css` (Mon compte in two columns ≥ 1,100 px: `RubriquesCompte.jsx`), `site-pro.css` (business: orders board with three
+columns, Mon commerce overview, `CadreSite.jsx`), `site-livreur.css` (courier: jobs list + `CarteCourse.jsx` map and detail,
+`PageLivreur.jsx` for secondary pages). **On a laptop every iris band runs edge to edge of the content area** — one rule at the
+end of site-cadre.css for the business, courier and account bands (cancel `.dashboard-main`'s 24 / 28 px, centre the content with
+padding); change `.dashboard-main`'s padding and those rules change with it. **Scroll locks go on `<html>`, never `<body>`**
+(useDialogue, EcranPlein, CarteSuivi): html has `overflow-x: clip`, so a body in `overflow: hidden` became its own scroller, jumped
+to the top and dragged the sticky sidebar with it. The signed-out home page (`/`) and its visitor header are deliberately untouched.
 
 At this size, **find the neighbouring rule before adding one.** Selectors of equal specificity are
 resolved by order, and several blocks near the bottom (the 520px media query especially) override

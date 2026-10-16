@@ -33,9 +33,11 @@ function CarteSuiviPleinEcran({ role, rendreCarte, legende, etaSansEstimation, o
   const [eta, setEta] = useState(null);
   const [hauteurEcran, setHauteurEcran] = useState(() => window.innerHeight);
 
+  // Le gel du fond se pose sur <html>, pas sur <body> : html porte overflow-x: clip (styles.css), donc un body en
+  // overflow: hidden devenait sa propre boîte de défilement, revenait en haut, et la barre latérale collante sautait.
   useEffect(() => {
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const prevOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
     // Vue agrandie ouverte : pas de panier flottant par-dessus la carte (styles.css).
     document.documentElement.classList.add('tracking-plein-actif');
     const onKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
@@ -43,7 +45,7 @@ function CarteSuiviPleinEcran({ role, rendreCarte, legende, etaSansEstimation, o
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('resize', onResize);
     return () => {
-      document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overflow = prevOverflow;
       document.documentElement.classList.remove('tracking-plein-actif');
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('resize', onResize);
