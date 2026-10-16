@@ -6924,7 +6924,6 @@ export default {
       sectionNearby: "Autour de toi",
       sectionCravings: "Tes envies",
       localTitle: "Seulement les commerces de {commune}. « Autour de toi » montre les plus proches de ton adresse, toutes communes confondues.",
-      localAllTitle: 'Manger local : les commerces de {commune} d\'abord, puis les communes voisines.',
       localEmpty: 'Pas encore de commerce à {commune} : voici ceux des autres communes.',
       localSeeAll: 'Voir toutes les communes',
       localBack: 'Seulement {commune}',

@@ -6871,7 +6871,6 @@ export default {
       sectionNearby: 'Near you',
       sectionCravings: 'Your cravings',
       localTitle: 'Only the businesses of {commune}. “Near you” shows the closest to your address, whatever the commune.',
-      localAllTitle: 'Eat local: the businesses of {commune} first, then the neighbouring communes.',
       localEmpty: 'No business in {commune} yet: here are those of the other communes.',
       localSeeAll: 'See all communes',
       localBack: 'Only {commune}',
