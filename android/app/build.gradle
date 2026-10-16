@@ -30,6 +30,19 @@ android {
                 keyPassword System.getenv('ANDROID_TEST_KEYSTORE_PASSWORD')
             }
         }
+        // Clé d'ENVOI du Play Store (be.fairide.app) : signe le bundle .aab envoyé à Google, qui le re-signe avec la clé
+        // qu'il garde (Play App Signing). La CI la reçoit d'un secret GitHub (ANDROID_UPLOAD_KEYSTORE_BASE64, voir
+        // .github/workflows/app-android-store.yml). Fichier PKCS12, alias « upload ».
+        upload {
+            def ks = System.getenv('ANDROID_UPLOAD_KEYSTORE')
+            if (ks && file(ks).exists()) {
+                storeFile file(ks)
+                storeType 'pkcs12'
+                storePassword System.getenv('ANDROID_UPLOAD_KEYSTORE_PASSWORD')
+                keyAlias(System.getenv('ANDROID_UPLOAD_KEY_ALIAS') ?: 'upload')
+                keyPassword System.getenv('ANDROID_UPLOAD_KEYSTORE_PASSWORD')
+            }
+        }
     }
     buildTypes {
         // Application de test (« Fairide Test », reliée au serveur de staging) : identifiant à part pour cohabiter, sur le
@@ -40,6 +53,7 @@ android {
             if (System.getenv('ANDROID_TEST_KEYSTORE')) signingConfig signingConfigs.test
         }
         release {
+            if (System.getenv('ANDROID_UPLOAD_KEYSTORE')) signingConfig signingConfigs.upload
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
