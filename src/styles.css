@@ -3503,6 +3503,10 @@ button.dashboard-retour { background: none; border: 0; border-radius: 0; font-fa
 .record-drawer-foot { padding: 12px 18px; border-top: 1px solid var(--line); background: var(--cream-dim); display: flex; gap: 8px; flex-wrap: wrap; }
 .drawer-row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px dashed var(--line); }
 .drawer-row:last-child { border-bottom: none; }
+/* Commandes d'un commerce (console, onglet Commandes) : chaque ligne s'ouvre sur le détail de la commande. */
+.drawer-order-tete { width: 100%; background: none; border: none; border-bottom: 1px dashed var(--line); text-align: left; cursor: pointer; font: inherit; color: inherit; align-items: center; }
+.drawer-order-tete:hover { background: var(--surface-soft); }
+.drawer-order-detail { padding-left: 14px; border-left: 2px solid var(--line); margin: 2px 0 8px; }
 .drawer-section-title { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); }
 .drawer-box { height: 100vh; height: 100dvh; max-height: none; overflow-y: auto; border-radius: 0; border-left: 1px solid var(--line); border-top: none; border-bottom: none; border-right: none; animation: drawer-in .18s ease-out; padding: 20px 20px 32px; }
 /* Sections de la barre latérale admin : transparentes pour la mise en page (les liens restent des

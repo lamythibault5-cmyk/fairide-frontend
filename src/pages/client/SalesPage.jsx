@@ -70,6 +70,12 @@ export default function SalesPage() {
   const [zones, setZones] = useState([]);
   const [autres, setAutres] = useState([]);
   const [zoneActive, setZoneActive] = useState(null);
+  // Les zones regroupées PAR COMMUNE, avec ce qui reste à faire (fondateur, 16/10/2026) : GET /sales/communes.
+  const [communes, setCommunes] = useState([]);
+  // Recherche élargie (fondateur, 16/10/2026) : la barre cherche aussi les commerces démarchés par les autres et
+  // ceux que personne n'a encore faits (GET /sales/search). `communeCible` vient du sélecteur ou d'un clic sur une commune.
+  const [communeCible, setCommuneCible] = useState('');
+  const [elargie, setElargie] = useState(null);
   // Équipe (prénoms, inscrits, gains) et mes primes.
   const [equipe, setEquipe] = useState([]);
   const [primes, setPrimes] = useState(null);
@@ -81,17 +87,32 @@ export default function SalesPage() {
     const params = new URLSearchParams(); if (filtre) params.set('stage', filtre); if (recherche.trim()) params.set('q', recherche.trim());
     api(`/sales/prospects?${params.toString()}`, { token }).then((r) => setProspects(r.prospects)).catch((e) => { if (e.code === 'NOT_SALES_AGENT') setEtat({ agent: false }); else toast(e.message, 'erreur'); });
     api('/sales/zones', { token }).then(setZones).catch(() => {});
+    api('/sales/communes', { token }).then(setCommunes).catch(() => {});
     api('/sales/map', { token }).then(setAutres).catch(() => {}); // points gris des autres, sans nom de commerce
     api('/sales/team', { token }).then(setEquipe).catch(() => {});
     api('/sales/commissions', { token }).then((r) => setPrimes(r.commissions)).catch(() => {});
   }, [token, filtre, recherche, toast]);
   useEffect(() => { charger(); }, [charger]);
+  // Recherche élargie : dès deux lettres (ou une commune choisie), on demande au serveur les trois groupes — mes
+  // commerces, ceux démarchés par d'autres, ceux que personne n'a faits. Temporisée, pour ne pas appeler à chaque frappe.
+  useEffect(() => {
+    const q = recherche.trim();
+    if (q.length < 2 && !communeCible) { setElargie(null); return undefined; }
+    const id = setTimeout(() => {
+      const p = new URLSearchParams(); if (q) p.set('q', q); if (communeCible) p.set('commune', communeCible);
+      api(`/sales/search?${p.toString()}`, { token }).then(setElargie).catch(() => setElargie(null));
+    }, 350);
+    return () => clearTimeout(id);
+  }, [recherche, communeCible, token]);
   // Zone choisie : la liste ne montre que les commerces dans son rayon (ceux sans position restent visibles, on ne sait pas où ils sont).
   const zone = zones.find((z) => z.key === zoneActive) || null;
   const prospectsAffiches = useMemo(() => {
-    if (!prospects || !zone) return prospects;
-    return prospects.filter((p) => p.lat === null || p.lat === undefined || distanceM(zone.lat, zone.lng, p.lat, p.lng) <= zone.radius);
-  }, [prospects, zone]);
+    if (!prospects) return prospects;
+    // Commune choisie (sélecteur, ou clic depuis la vue par commune) : seuls mes commerces de cette commune.
+    const liste = communeCible ? prospects.filter((p) => p.commune === communeCible) : prospects;
+    if (!zone) return liste;
+    return liste.filter((p) => p.lat === null || p.lat === undefined || distanceM(zone.lat, zone.lng, p.lat, p.lng) <= zone.radius);
+  }, [prospects, zone, communeCible]);
   const sansPosition = (prospects || []).filter((p) => p.lat === null || p.lat === undefined).length;
   // À faire : prochaine action dépassée ou prévue aujourd'hui, hors commerces actifs ou refusés. En retard d'abord.
   const finJournee = useMemo(() => { const d = new Date(); d.setHours(23, 59, 59, 999); return d.getTime(); }, []);
@@ -220,13 +241,23 @@ export default function SalesPage() {
         <button type="button" role="tab" aria-selected={vue === 'zones'} className={`chip${vue === 'zones' ? ' active' : ''}`} onClick={() => setVue('zones')}>{t('sales.viewZones')}{zones.length ? ` · ${zones.filter((z) => z.status === 'todo').length} ${t('sales.viewZonesTodo')}` : ''}</button>
         <button type="button" role="tab" aria-selected={vue === 'todo'} className={`chip${vue === 'todo' ? ' active' : ''}${aFaire.length ? ' crm-segment-alerte' : ''}`} onClick={() => setVue('todo')}>{t('sales.viewTodo')}{aFaire.length ? ` · ${aFaire.length}` : ''}</button>
       </div>
-      {vue === 'zones' && <ZonesView zones={zones} t={t} busy={zoneBusy} onFocus={(k) => { setZoneActive(k); setCarteVisible(true); document.querySelector('.crm-carte-carte')?.scrollIntoView({ behavior: defilement(), block: 'start' }); }} onClaim={prendreZone} onRelease={laisserZone} />}
+      {vue === 'zones' && <ZonesView zones={zones} communes={communes} t={t} busy={zoneBusy} onFocus={(k) => { setZoneActive(k); setCarteVisible(true); document.querySelector('.crm-carte-carte')?.scrollIntoView({ behavior: defilement(), block: 'start' }); }} onClaim={prendreZone} onRelease={laisserZone} onCommune={(c) => { setCommuneCible(c); setVue('mine'); }} />}
 
       {vue !== 'zones' && (
       <div className="admin-control-panel">
         <div className="field" style={{ margin: 0, flex: '1 1 200px' }}>
           <input type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder={t('sales.searchPlaceholder')} aria-label={t('sales.searchPlaceholder')} />
+          <p className="small" style={{ margin: '4px 0 0', opacity: 0.75 }}>{t('sales.searchWideHint')}</p>
         </div>
+        {/* Commune : la recherche porte alors sur toute la commune, démarchés et pas encore démarchés compris. */}
+        {communes.length > 0 && (
+          <div className="field" style={{ margin: 0, flex: '0 1 200px' }}>
+            <select value={communeCible} onChange={(e) => setCommuneCible(e.target.value)} aria-label={t('sales.communeAll')}>
+              <option value="">{t('sales.communeAll')}</option>
+              {communes.map((c) => <option key={c.commune} value={c.commune}>{c.commune}{typeof c.businessesLeft === 'number' && c.businesses ? ` · ${c.businessesLeft}` : ''}</option>)}
+            </select>
+          </div>
+        )}
         <div className="role-pick crm-filtres" role="group" aria-label={t('sales.filterStage')}>
           <button type="button" className={`chip${filtre === '' ? ' active' : ''}`} onClick={() => setFiltre('')}>{t('sales.allStages')}</button>
           {STAGES.map((s) => <button key={s} type="button" className={`chip${filtre === s ? ' active' : ''}`} onClick={() => setFiltre(s)}>{stageLabel(s)}{etat?.stats?.byStage?.[s] ? ` · ${etat.stats.byStage[s]}` : ''}</button>)}
@@ -262,6 +293,45 @@ export default function SalesPage() {
           </button>
         ))}
       </div>
+
+      {/* Recherche élargie (fondateur, 16/10/2026) : après MES commerces, ceux que l'équipe a déjà démarchés — pour ne
+          pas frapper deux fois à la même porte — puis ceux que personne n'a encore faits, à prendre en un clic. */}
+      {vue === 'mine' && elargie && (
+        <>
+          {elargie.others.length > 0 && (
+            <div className="card crm-bloc-autres">
+              <b className="crm-bloc-titre"><Icone nom="compte" taille={16} className="icone-texte" />{' '}{t('sales.searchOthersTitle', { n: elargie.counts.others })}</b>
+              <p className="small" style={{ margin: '2px 0 8px' }}>{t('sales.searchOthersIntro')}</p>
+              <ul className="crm-zone-liste">
+                {elargie.others.map((o, i) => (
+                  <li key={`${o.name}-${i}`} className="crm-zone-ligne">
+                    <span className="crm-zone-nom"><b>{o.name}</b>{o.commune || o.address ? <span className="small"> · {[o.commune, o.address].filter(Boolean).join(' · ')}</span> : null}</span>
+                    <span className="small crm-zone-info">{stageLabel(o.stage)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {elargie.todo.length > 0 && (
+            <div className="card crm-bloc-todo">
+              <b className="crm-bloc-titre"><Icone nom="cible" taille={16} className="icone-texte" />{' '}{t('sales.searchTodoTitle', { n: elargie.counts.todo })}</b>
+              <p className="small" style={{ margin: '2px 0 8px' }}>{t('sales.searchTodoIntro')}</p>
+              <ul className="crm-zone-liste">
+                {elargie.todo.map((o, i) => (
+                  <li key={`${o.name}-${i}`} className="crm-zone-ligne">
+                    <span className="crm-zone-nom"><b>{o.name}</b><span className="small"> · {[o.commune, o.address, o.phone].filter(Boolean).join(' · ')}</span></span>
+                    <button type="button" className="btn-teal btn-sm" onClick={() => setCreation({ web: o })}>{t('sales.searchTodoAdd')}</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {elargie.pending && <p className="small" style={{ margin: '4px 0 0', opacity: 0.75 }}>{t('sales.searchPending')}</p>}
+          {!elargie.counts.mine && !elargie.counts.others && !elargie.counts.todo && recherche.trim() && (
+            <div className="card"><p className="small" style={{ margin: 0 }}>{t('sales.searchNothing', { q: recherche.trim() })}</p></div>
+          )}
+        </>
+      )}
 
       {photo && <PhotoProspect token={token} t={t} toast={toast} zones={zones} onClose={() => setPhoto(false)} onSaved={(p) => { setPhoto(false); charger(); setOuvert(p.id); }} />}
       {creation && <ProspectForm token={token} t={t} toast={toast} ficheWeb={creation?.web || null} nomInitial={creation?.nom || ''} onClose={() => setCreation(false)} onSaved={(p) => { setCreation(false); charger(); setOuvert(p.id); }} />}
@@ -898,10 +968,23 @@ function GuideCard({ t }) {
 // ----------------------------------------------------------------------------------------------- zones
 // Les zones à démarcher, réparties entre commerciaux : les miennes, celles à faire (personne dessus, les moins
 // démarchées d'abord), celles prises par d'autres — sans dire par qui (fondateur, 22/09). Un clic sur le nom cadre la carte.
-function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
+// PAR COMMUNE (fondateur, 16/10/2026) : un commercial pense « je fais Ixelles cet après-midi », pas en 24 cercles
+// mélangés. Chaque commune porte ses zones (à prendre / à moi / prises), ce qui y est déjà démarché et surtout ce qui
+// RESTE (compté par le serveur sur les listes OpenStreetMap, GET /sales/communes). Le second onglet garde l'ancienne
+// répartition par état, utile pour voir d'un coup les zones encore libres.
+function ZonesView({ zones, communes = [], t, busy, onFocus, onClaim, onRelease, onCommune }) {
+  const [par, setPar] = useState('commune'); // 'commune' | 'etat'
   const mine = zones.filter((z) => z.status === 'mine');
   const todo = zones.filter((z) => z.status === 'todo').sort((a, b) => (a.mine + a.others) - (b.mine + b.others));
   const taken = zones.filter((z) => z.status === 'taken');
+  const action = (z) => (z.status === 'mine'
+    ? <button type="button" className="btn-ghost" style={{ fontSize: 13 }} disabled={busy} onClick={() => onRelease(z.key)}>{t('sales.zoneLeave')}</button>
+    : z.status === 'todo'
+      ? <button type="button" className="btn-teal btn-sm" disabled={busy} onClick={() => onClaim(z.key)}>{t('sales.zoneTake')}</button>
+      : null);
+  const parCommune = (communes.length ? communes : [...new Set(zones.map((z) => z.commune))].map((c) => ({ commune: c })))
+    .map((c) => ({ ...c, zonesCompletes: zones.filter((z) => z.commune === c.commune) }))
+    .filter((c) => c.zonesCompletes.length || c.canvassedMine || c.canvassedOthers);
   const ligne = (z, action) => (
     <li key={z.key} className={`crm-zone-ligne crm-zone-${z.status}`}>
       <button type="button" className="crm-zone-nom" onClick={() => onFocus(z.key)}><Icone nom="cible" taille={16} className="icone-texte" />{' '}<b>{z.name}</b><span className="small"> · {z.commune} · {t(`sales.zoneTag_${z.tag}`)}</span></button>
@@ -909,9 +992,36 @@ function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
       {action}
     </li>
   );
+  if (par === 'commune') {
+    return (
+      <div className="crm-zones-vue">
+        <p className="small" style={{ margin: '0 0 10px' }}>{t('sales.zonesViewIntro')}</p>
+        <div className="role-pick" role="tablist" aria-label={t('sales.zonesTitle')} style={{ marginBottom: 10 }}>
+          <button type="button" role="tab" aria-selected="true" className="chip active" onClick={() => setPar('commune')}>{t('sales.zonesByCommune')}</button>
+          <button type="button" role="tab" aria-selected="false" className="chip" onClick={() => setPar('etat')}>{t('sales.zoneTodoGroup')}</button>
+        </div>
+        {parCommune.map((c) => (
+          <div key={c.commune} className="crm-commune">
+            <b className="crm-bloc-titre"><Icone nom="position" taille={16} className="icone-texte" />{' '}{c.commune}{c.zonesCompletes.length ? <span className="small"> · {t('sales.communeZonesTodo', { n: c.zonesCompletes.filter((z) => z.status === 'todo').length })}{c.zonesCompletes.some((z) => z.status === 'mine') ? ` · ${t('sales.communeZonesMine', { n: c.zonesCompletes.filter((z) => z.status === 'mine').length })}` : ''}</span> : null}</b>
+            <p className="small" style={{ margin: '2px 0 6px', opacity: 0.8 }}>
+              {t('sales.communeCanvassed', { mine: c.canvassedMine ?? 0, others: c.canvassedOthers ?? 0 })}
+              {typeof c.businessesLeft === 'number' && c.businesses ? ` · ${t('sales.communeLeft', { n: c.businessesLeft })}` : ''}
+              {c.pending ? ` · ${t('sales.communePending')}` : ''}
+            </p>
+            {c.zonesCompletes.length ? <ul className="crm-zone-liste">{c.zonesCompletes.map((z) => ligne(z, action(z)))}</ul> : null}
+            <button type="button" className="btn-outline btn-sm" style={{ marginBottom: 14 }} onClick={() => onCommune?.(c.commune)}>{t('sales.communeSearch')}</button>
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
     <div className="crm-zones-vue">
       <p className="small" style={{ margin: '0 0 10px' }}>{t('sales.zonesViewIntro')}</p>
+      <div className="role-pick" role="tablist" aria-label={t('sales.zonesTitle')} style={{ marginBottom: 10 }}>
+        <button type="button" role="tab" aria-selected="false" className="chip" onClick={() => setPar('commune')}>{t('sales.zonesByCommune')}</button>
+        <button type="button" role="tab" aria-selected="true" className="chip active" onClick={() => setPar('etat')}>{t('sales.zoneTodoGroup')}</button>
+      </div>
       <b className="crm-bloc-titre">{t('sales.zoneMineGroup')} · {mine.length}</b>
       {mine.length === 0 ? <p className="small" style={{ margin: '4px 0 12px' }}>{t('sales.zoneMineEmpty')}</p> : <ul className="crm-zone-liste">{mine.map((z) => ligne(z, <button type="button" className="btn-ghost" style={{ fontSize: 13 }} disabled={busy} onClick={() => onRelease(z.key)}>{t('sales.zoneLeave')}</button>))}</ul>}
       <b className="crm-bloc-titre"><Icone nom="position" taille={16} className="icone-texte" />{' '}{t('sales.zoneTodoGroup')} · {todo.length}</b>

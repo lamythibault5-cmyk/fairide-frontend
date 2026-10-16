@@ -212,7 +212,9 @@ export default function AdminRestaurantsPage() {
     setDetail(null);
     setOrders(null);
     api(`/admin/restaurants/${r.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
-    api(`/admin/orders?restaurantId=${r.id}&limit=20`, { token }).then((res) => setOrders(res.rows)).catch((e) => toast(e.message, 'erreur'));
+    // 50 commandes (au lieu de 20) : l'onglet « Commandes » du commerce sert à les REGARDER, pas seulement à montrer
+    // les dernières ; au-delà, « Tout voir » ouvre le module Commandes filtré sur ce commerce.
+    api(`/admin/orders?restaurantId=${r.id}&limit=50`, { token }).then((res) => setOrders({ rows: res.rows, total: res.total })).catch((e) => toast(e.message, 'erreur'));
   }
 
   // Ordre dans la bannière de la page d'accueil : 1 = premier, vide = tiré au sort avec les autres vrais commerces.
@@ -584,6 +586,91 @@ function ConformitePanel({ detail, onChanged }) {
   );
 }
 
+// LES COMMANDES D'UN COMMERCE, AVEC LEUR DÉTAIL (fondateur, 16/10/2026 : « permets à l'admin de voir les commandes et
+// détails pour chaque commerce »). L'onglet listait seulement date · client · total · statut ; on ouvre maintenant
+// chaque commande sur place (GET /admin/orders/:id) : articles, montants et qui touche quoi, paiement, livreur, codes,
+// remboursements et jalons. Rien de nouveau côté serveur — c'est la fiche de commande du module Commandes, rendue ici
+// pour ne pas avoir à quitter le commerce.
+function CommandesDuCommerce({ restaurantId, orders, token, tr, toast }) {
+  const [ouvert, setOuvert] = useState(null); // id de la commande dépliée
+  const [fiches, setFiches] = useState({}); // id -> détail (gardé en mémoire : rouvrir ne recharge pas)
+  const rows = orders?.rows || null;
+
+  function basculer(id) {
+    if (ouvert === id) { setOuvert(null); return; }
+    setOuvert(id);
+    if (fiches[id]) return;
+    api(`/admin/orders/${id}`, { token }).then((d) => setFiches((f) => ({ ...f, [id]: d }))).catch((e) => toast(e.message, 'erreur'));
+  }
+  const ligneMontant = (label, valeur, fort = false) => (
+    <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{label}</span><span className="small">{fort ? <b>{valeur}</b> : valeur}</span></div>
+  );
+
+  return (
+    <>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminCommon.recentOrders')}{orders ? ` · ${orders.total}` : ''}</h4>
+        <Link to={`/admin/orders?restaurantId=${restaurantId}`} className="small">{tr('adminRestos.seeAll')}</Link>
+      </div>
+      {!rows && <div className="small">{tr('adminCommon.loading')}</div>}
+      {rows && rows.length === 0 && <div className="small">{tr('adminCommon.noOrdersYet')}</div>}
+      {rows && rows.map((o) => {
+        const d = fiches[o.id];
+        const estOuverte = ouvert === o.id;
+        return (
+          <div key={o.id} className="drawer-order">
+            <button type="button" className="drawer-row drawer-order-tete" onClick={() => basculer(o.id)} aria-expanded={estOuverte}>
+              <span className="small">
+                {estOuverte ? '▾' : '▸'} {fmtDate(o.createdAt)} · {o.clientName}
+                {o.driverName ? tr('adminRestos.deliveredBySuffix', { name: o.driverName }) : ''}
+                {o.paymentMode === 'on_site' ? ` · ${tr('adminRestos.orderOnSite')}` : ''}
+                {o.isTraining ? ` · ${tr('adminRestos.orderTraining')}` : ''}
+                {o.hasRefund ? ' · ↩︎' : ''}
+              </span>
+              <span className="row" style={{ gap: 8 }}><b className="small">{money(o.total)}</b><span className={`status-badge status-${o.status}`}>{o.status}</span></span>
+            </button>
+            {estOuverte && !d && <div className="small" style={{ padding: '4px 0 10px' }}>{tr('adminCommon.loading')}</div>}
+            {estOuverte && d && (
+              <div className="drawer-order-detail" style={{ padding: '6px 0 12px' }}>
+                <div className="small" style={{ fontFamily: 'monospace', opacity: 0.7 }}>#{d.id.slice(0, 8)}</div>
+                {d.items.map((it, i) => (
+                  <div key={`${it.name}-${i}`} className="row" style={{ justifyContent: 'space-between' }}>
+                    <span className="small">{it.qty} × {it.name}{it.discount ? ` (−${money(it.discount)})` : ''}</span>
+                    <span className="small">{money(it.price * it.qty - (it.discount || 0))}</span>
+                  </div>
+                ))}
+                <div className="divider" />
+                {ligneMontant(tr('adminRestos.orderSubtotal'), money(d.subtotal))}
+                {d.orderType === 'delivery' && ligneMontant(tr('adminRestos.orderDelivery'), money(d.deliveryFee))}
+                {d.serviceFee > 0 && ligneMontant(tr('adminRestos.orderSystemFee'), money(d.serviceFee))}
+                {d.promoDiscount > 0 && ligneMontant(tr('adminRestos.orderPromo', { label: d.promoLabel || '' }), `−${money(d.promoDiscount)}`)}
+                {d.tipAmount > 0 && ligneMontant(tr('adminRestos.orderTip'), money(d.tipAmount))}
+                {ligneMontant(tr('adminRestos.orderTotal'), money(d.total), true)}
+                <div className="divider" />
+                {ligneMontant(tr('adminRestos.orderCommission'), money(d.commission))}
+                {ligneMontant(tr('adminRestos.orderRestaurantDue'), money(d.restaurantDue), true)}
+                {d.orderType === 'delivery' && ligneMontant(tr('adminRestos.orderDriverDue'), money(d.driverDue))}
+                <div className="divider" />
+                <div className="small">{tr('adminRestos.orderPayment', { mode: d.paymentMode === 'on_site' ? tr('adminRestos.orderOnSite') : d.paymentMode === 'balance' ? tr('adminRestos.orderBalance') : tr('adminRestos.orderOnline'), paid: d.paid ? tr('adminRestos.orderPaid') : tr('adminRestos.orderUnpaid') })}</div>
+                {d.address && <div className="small">{d.address}</div>}
+                {d.clientPhone && <div className="small">{d.clientPhone}</div>}
+                {d.refunds.length > 0 && (
+                  <div style={{ marginTop: 6 }}>
+                    {d.refunds.map((r) => <div key={r.id} className="small">↩︎ {money(r.amount)} · {r.responsibility}{r.reason ? ` · ${r.reason}` : ''}</div>)}
+                  </div>
+                )}
+                <div style={{ marginTop: 6 }}>
+                  {d.timeline.filter((x) => x.at).map((x, i) => <div key={`${x.label}-${i}`} className="small" style={{ opacity: 0.75 }}>• {x.label} — {fmtDate(x.at)}</div>)}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest, onTerminal, onLandingRank, onZoneDelivery }) {
   // Motif de coupure de la livraison Fairide (zone sans livreur), saisi dans la modale.
   const [zoneMotif, setZoneMotif] = useState('');
@@ -649,7 +736,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
       actions={<a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
       tabs={[
         { key: 'apercu', label: tr('adminCommon.tabOverview') },
-        { key: 'commandes', label: tr('adminCommon.tabOrders'), count: orders ? orders.length : null },
+        { key: 'commandes', label: tr('adminCommon.tabOrders'), count: orders ? orders.total : null },
         { key: 'finance', label: tr('adminCommon.tabFinance'), count: invoices ? invoices.length : null },
         { key: 'documents', label: tr('adminCommon.tabDocuments'), count: documents ? documents.length : null },
         { key: 'suivi', label: tr('adminCommon.tabFollowUp'), count: detail?.notes ? detail.notes.length : null }
@@ -789,20 +876,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
         </div>
       )}
       {detail && onglet === 'commandes' && (
-        <>
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminCommon.recentOrders')}</h4>
-            <Link to={`/admin/orders?restaurantId=${selected.id}`} className="small">{tr('adminRestos.seeAll')}</Link>
-          </div>
-          {!orders && <div className="small">{tr('adminCommon.loading')}</div>}
-          {orders && orders.length === 0 && <div className="small">{tr('adminCommon.noOrdersYet')}</div>}
-          {orders && orders.map((o) => (
-            <div key={o.id} className="drawer-row">
-              <span className="small">{fmtDate(o.createdAt)} · {o.clientName}{o.driverName ? tr('adminRestos.deliveredBySuffix', { name: o.driverName }) : ''}</span>
-              <span className="row" style={{ gap: 8 }}><b className="small">{money(o.total)}</b><span className={`status-badge status-${o.status}`}>{o.status}</span></span>
-            </div>
-          ))}
-        </>
+        <CommandesDuCommerce restaurantId={selected.id} orders={orders} token={token} tr={tr} toast={toast} />
       )}
       {detail && onglet === 'finance' && (
         <>
