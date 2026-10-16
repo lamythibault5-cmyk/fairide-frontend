@@ -6965,6 +6965,9 @@ export default {
       horaire: 'Time',
       payer: 'Payment'
     },
+    ecranFiche: {
+      sections: 'Menu sections'
+    },
     platSheet: {
       allCrudites: 'All the raw vegetables',
       quantity: 'Quantity',

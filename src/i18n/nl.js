@@ -6974,6 +6974,9 @@ export default {
       horaire: 'Tijd',
       payer: 'Betaling'
     },
+    ecranFiche: {
+      sections: 'Onderdelen van de kaart'
+    },
     platSheet: {
       allCrudites: 'Alle rauwkost',
       quantity: 'Aantal',

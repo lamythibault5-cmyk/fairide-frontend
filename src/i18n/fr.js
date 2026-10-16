@@ -7018,6 +7018,9 @@ export default {
       horaire: 'Horaire',
       payer: 'Paiement'
     },
+    ecranFiche: {
+      sections: 'Sections de la carte'
+    },
     platSheet: {
       allCrudites: 'Toutes les crudités',
       quantity: 'Quantité',
