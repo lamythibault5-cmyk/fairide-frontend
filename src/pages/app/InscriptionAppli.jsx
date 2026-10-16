@@ -131,8 +131,11 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   const [referralOuvert, setReferralOuvert] = useState(false);
   const [versionCgu, setVersionCgu] = useState('');
   const [siteWeb, setSiteWeb] = useState(''); // pot de miel, comme sur le site
-  // Rapports d'erreur (Sentry) : la question de la carte des cookies, posée ici par une case NON cochée — ainsi le
-  // nouvel inscrit n'a pas en plus l'écran de consentement de l'app (ConsentementAppli.jsx). Modifiable dans Mon compte.
+  /* Rapports de panne (Sentry) : la seule question de consentement de l'app, par une case NON cochée (CJUE Planet49 :
+   * une case pré-cochée n'est pas un consentement). Dans une carte à part, au libellé positif, et JAMAIS collée à la case
+   * « Ne pas m'envoyer les nouvelles », qui se coche dans l'autre sens : deux cases de sens contraires côte à côte, on
+   * coche l'une pour l'autre, et un « oui » obtenu par erreur ne vaut rien (fondateur, 2026-10-16). Modifiable dans
+   * Mon compte ; proposée aussi sur l'écran d'une panne (AppErrorBoundary.jsx). */
   const [rapports, setRapports] = useState(false);
 
   const [index, setIndex] = useState(0);
@@ -406,13 +409,14 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   const basculerJour = (d) => { setJours((l) => (l.includes(d) ? l.filter((x) => x !== d) : [...l, d])); setErreurs({}); };
   const changerCreneau = (i, champ, v) => setCreneaux((l) => l.map((c, j) => (j === i ? { ...c, [champ]: v } : c)));
 
+  let entete = null; // titre et sous-titre de l'étape : sur le bandeau iris, au-dessus de la feuille
   let contenu = null;
   let bouton = t('appli.continuer');
   switch (etape) {
     case 'email':
+      entete = titre(t('appli.insEmailTitre'), t('appli.insEmailSous'));
       contenu = (
         <>
-          {titre(t('appli.insEmailTitre'), t('appli.insEmailSous'))}
           <Champ id="bv-i-email" label={t('auth.email')} erreur={erreurs.email}>
             <input id="bv-i-email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false}
               className={erreurs.email ? 'input-invalid' : undefined} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
@@ -439,9 +443,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'nom':
+      entete = titre(t('appli.insNomTitre'), role === 'restaurant' ? t('auth.stepIdentitySubRestaurant') : null);
       contenu = (
         <>
-          {titre(t('appli.insNomTitre'), role === 'restaurant' ? t('auth.stepIdentitySubRestaurant') : null)}
           <Champ id="bv-i-prenom" label={t('auth.firstName')} erreur={erreurs.firstName}>
             <input id="bv-i-prenom" autoComplete="given-name" className={erreurs.firstName ? 'input-invalid' : undefined} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           </Champ>
@@ -452,9 +456,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'tel':
+      entete = titre(t('appli.insTelTitre'), role === 'restaurant' ? t('auth.phoneOwnerHelp') : t('auth.stepIdentitySub'));
       contenu = (
         <>
-          {titre(t('appli.insTelTitre'), role === 'restaurant' ? t('auth.phoneOwnerHelp') : t('auth.stepIdentitySub'))}
           <Champ id="bv-i-tel" label={t('auth.phone')} labelMasque erreur={erreurs.phone}>
             <PhoneInput id="bv-i-tel" value={phone} onChange={setPhone} invalid={!!erreurs.phone} />
           </Champ>
@@ -462,9 +466,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'commerce':
+      entete = titre(t('appli.insCommerceTitre'));
       contenu = (
         <>
-          {titre(t('appli.insCommerceTitre'))}
           <Champ id="bv-i-commerce" label={t('auth.businessNameLabel')} erreur={erreurs.nomCommerce} aide={t('auth.businessNameHelp')}>
             <input id="bv-i-commerce" autoComplete="organization" className={erreurs.nomCommerce ? 'input-invalid' : undefined} value={nomCommerce}
               onChange={(e) => setNomCommerce(e.target.value)} placeholder={t('auth.businessNamePh')} />
@@ -484,9 +488,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
     case 'type': {
       const cherche = sansAccents(rechercheType.trim());
       const types = RESTAURANT_TYPES.filter((rt) => rt.value === 'Autre' || rt.value === cuisine || !cherche ||sansAccents(restaurantTypeLabel(rt.value, t)).includes(cherche));
+      entete = titre(t('appli.insTypeTitre'), t('auth.cuisineHelp'));
       contenu = (
         <>
-          {titre(t('appli.insTypeTitre'), t('auth.cuisineHelp'))}
           <label htmlFor="bv-i-type" className="sr-only">{t('appli.insTypeChercher')}</label>
           <input id="bv-i-type" type="search" className="bv-types-recherche" autoComplete="off" enterKeyHint="search"
             value={rechercheType} onChange={(e) => setRechercheType(e.target.value)} placeholder={t('appli.insTypeChercher')} />
@@ -509,9 +513,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       break;
     }
     case 'entreprise':
+      entete = titre(t('appli.insEntrepriseTitre'));
       contenu = (
         <>
-          {titre(t('appli.insEntrepriseTitre'))}
           <Champ id="bv-i-bce" label={t('auth.companyNumberResto')} erreur={erreurs.companyNumber} aide={t('auth.companyNumberRestoHelp')}>
             <input id="bv-i-bce" inputMode="numeric" className={erreurs.companyNumber ? 'input-invalid' : undefined} value={companyNumber}
               onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
@@ -535,9 +539,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'horaires':
+      entete = titre(t('appli.insHorairesTitre'), t('appli.insHorairesSous'));
       contenu = (
         <>
-          {titre(t('appli.insHorairesTitre'), t('appli.insHorairesSous'))}
           <span className="bv-etiquette" id="bv-i-jours">{t('appli.insJours')}</span>
           <div className="bv-jours" role="group" aria-labelledby="bv-i-jours">
             {DAY_ORDER.map((d) => (
@@ -567,9 +571,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'services':
+      entete = titre(t('auth.stepServicesTitle'), t('auth.servicesHelp'));
       contenu = (
         <>
-          {titre(t('auth.stepServicesTitle'), t('auth.servicesHelp'))}
           <Option multi on={services.delivery} icone="scooter" titre={t('auth.serviceDelivery')} onClick={() => setServices((s) => ({ ...s, delivery: !s.delivery }))} />
           {services.delivery && (
             <Segments label={t('auth.serviceDelivery')} valeur={services.deliveryMode} onChoix={(v) => setServices((s) => ({ ...s, deliveryMode: v }))}
@@ -588,9 +592,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'statut':
+      entete = titre(t('auth.courierStatusTitle'), t('appli.insStatutSous'));
       contenu = (
         <>
-          {titre(t('auth.courierStatusTitle'), t('appli.insStatutSous'))}
           {STATUTS.map(([st, icone]) => (
             <Option key={st} on={courierStatus === st} icone={icone} titre={t(`auth.courierStatus_${st}`)} sous={t(`appli.insStatut_${st}`)} onClick={() => setCourierStatus(st)} />
           ))}
@@ -599,9 +603,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       );
       break;
     case 'etudes':
+      entete = titre(t('appli.insEtudesTitre'));
       contenu = (
         <>
-          {titre(t('appli.insEtudesTitre'))}
           <Champ id="bv-i-ecole" label={t('auth.schoolName')} erreur={erreurs.schoolName}>
             <input id="bv-i-ecole" autoComplete="organization" className={erreurs.schoolName ? 'input-invalid' : undefined} value={schoolName}
               onChange={(e) => setSchoolName(e.target.value)} placeholder={t('auth.schoolNamePlaceholder')} />
@@ -616,9 +620,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
     case 'bce':
       // Facultatif : sans numéro, le bouton dit « plus tard » — le dossier le demandera avant la première course.
       if (!companyNumber.trim()) bouton = t('appli.insPlusTard');
+      entete = titre(t('auth.companyNumberDriver'), t('auth.companyNumberDriverHelp'));
       contenu = (
         <>
-          {titre(t('auth.companyNumberDriver'), t('auth.companyNumberDriverHelp'))}
           <Champ id="bv-i-bce-lv" label={t('auth.companyNumberDriver')} labelMasque erreur={erreurs.companyNumber}>
             <input id="bv-i-bce-lv" inputMode="numeric" className={erreurs.companyNumber ? 'input-invalid' : undefined} value={companyNumber}
               onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
@@ -628,9 +632,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       break;
     case 'vehicule': {
       const km = courierOptions?.bikeMaxKm || 4;
+      entete = titre(t('auth.vehicleTitle'));
       contenu = (
         <>
-          {titre(t('auth.vehicleTitle'))}
           <div className="bv-grille">
             {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
               <Option key={v} on={vehicleType === v} titre={t(`courierOnboarding.vehicle_${v}`)} onClick={() => setVehicleType(v)} />
@@ -643,10 +647,10 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       break;
     }
     case 'adresse':
+      entete = titre(role === 'restaurant' ? t('auth.stepAddressTitleRestaurant') : role === 'client' ? t('appli.insAdresseClient') : t('auth.stepAddressTitle'),
+        role === 'client' ? t('auth.stepAddressSubClient') : role === 'driver' ? t('auth.stepAddressSubDriver') : null);
       contenu = (
         <>
-          {titre(role === 'restaurant' ? t('auth.stepAddressTitleRestaurant') : role === 'client' ? t('appli.insAdresseClient') : t('auth.stepAddressTitle'),
-            role === 'client' ? t('auth.stepAddressSubClient') : role === 'driver' ? t('auth.stepAddressSubDriver') : null)}
           <div className="bv-champ">
             <AddressSearch compact onSelect={(a) => { setAddressStreet(a.street); if (a.number) setAddressNumber(a.number); if (a.postalCode) setAddressPostalCode(a.postalCode); if (a.city) setAddressCity(a.city); }} />
           </div>
@@ -674,9 +678,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       break;
     case 'fin':
       bouton = t('auth.createAccount');
+      entete = titre(t('appli.insFinTitre'), t(role === 'restaurant' ? 'appli.insFinCommerce' : role === 'driver' ? 'appli.insFinLivreur' : 'appli.insFinClient'));
       contenu = (
         <>
-          {titre(t('appli.insFinTitre'), t(role === 'restaurant' ? 'appli.insFinCommerce' : role === 'driver' ? 'appli.insFinLivreur' : 'appli.insFinClient'))}
           {role === 'driver' && (
             <>
               <Fait icone="euro" titre={t('appli.insFinLv1')} sous={t('auth.driverFeeNotice')} />
@@ -692,13 +696,13 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
           {erreurs.cgu && <p className="field-error" role="alert">{erreurs.cgu}</p>}
           {role === 'restaurant' && <EngagementsInscription checked={accepteEngagements} onChange={setAccepteEngagements} />}
           {erreurs.engagements && <p className="field-error" role="alert">{erreurs.engagements}</p>}
+          <label className="bv-case-ligne bv-case-carte">
+            <input type="checkbox" checked={rapports} onChange={(e) => setRapports(e.target.checked)} />
+            <span><b>{t('appli.insRapportsTitre')}</b>{t('appli.insRapports')}</span>
+          </label>
           <label className="bv-case-ligne bv-case-discrete">
             <input type="checkbox" checked={refusNouvelles} onChange={(e) => setRefusNouvelles(e.target.checked)} />
             <span>{t('nouvelles.signupOptOut')}</span>
-          </label>
-          <label className="bv-case-ligne bv-case-discrete">
-            <input type="checkbox" checked={rapports} onChange={(e) => setRapports(e.target.checked)} />
-            <span>{t('appli.insRapports')}</span>
           </label>
           {referralOuvert ? (
             <Champ id="bv-i-code-promo" label={t('auth.promoCode')}>
@@ -712,10 +716,10 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       break;
     case 'code':
       bouton = t('auth.confirm');
+      entete = titre(t(enAttente.canal === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle'),
+        enAttente.canal === 'sms' ? t('auth.verifyTextSms', { phone: enAttente.telephone }) : t('auth.verifyText', { email: enAttente.email }));
       contenu = (
         <>
-          {titre(t(enAttente.canal === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle'),
-            enAttente.canal === 'sms' ? t('auth.verifyTextSms', { phone: enAttente.telephone }) : t('auth.verifyText', { email: enAttente.email }))}
           <label htmlFor="bv-i-code" className="sr-only">{t('auth.verifyCodeLabel')}</label>
           <input id="bv-i-code" className={`bv-saisie${erreurs.code ? ' input-invalid' : ''}`} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6}
             placeholder="123456" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
@@ -728,13 +732,14 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   }
 
   return (
-    <div className="bv" ref={fond}>
+    <div className="bv bv-bandeau" ref={fond}>
       <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={etape}>
         <Haut onRetour={reculer} progression={progression} />
-        <form className="bv-form" onSubmit={avancer} noValidate>
+        {entete}
+        <form className="bv-form bv-feuille" onSubmit={avancer} noValidate>
           {contenu}
           <div className="bv-grandit" />
-          <button type="submit" className={`bv-btn ${etape === 'fin' || etape === 'code' ? 'btn-gold' : 'btn-teal'}`} disabled={attente}>
+          <button type="submit" className="bv-btn btn-gold" disabled={attente}>
             {attente ? t('common.loading') : bouton}
           </button>
         </form>

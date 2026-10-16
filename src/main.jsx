@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
    7.19 pourrait retirer cet export et casser TOUT le routage d'un coup, à la première mise en ligne
    suivante, sans que rien dans le code n'ait changé. */
 import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
-import { demarrerSentry } from './sentry';
+import { demarrerSentry, arreterSentry } from './sentry';
 import App from './App.jsx';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import BandeauHorsLigne from './components/BandeauHorsLigne';
@@ -58,8 +58,12 @@ demarrerAnalytics();
 // Mise en ligne pendant qu'un onglet est ouvert : le code d'une section demandée n'existe plus sous son
 // ancien nom. Plutôt qu'une page vide, rechargement silencieux vers la nouvelle version (voir lazyPage.js).
 window.addEventListener('vite:preloadError', (e) => { e.preventDefault(); rechargerSiNouveauCode(e.payload); });
-// Acceptation en cours de visite : on démarre sans attendre un rechargement de page.
-onConsentChange(startSentryIfAllowed);
+// Acceptation en cours de visite : on démarre sans attendre un rechargement de page. Refus après coup (« Couper » dans
+// Mon compte, dans l'app) : on arrête tout de suite.
+onConsentChange((choix) => {
+  if (choix === 'accepted') { startSentryIfAllowed(); return; }
+  if (sentryStarted) { sentryStarted = false; arreterSentry(); }
+});
 
 // Service worker : rend l'application installable, et surtout c'est le seul endroit qui peut
 // recevoir une notification push quand l'onglet est fermé (voir public/sw.js, qui ne met rien en

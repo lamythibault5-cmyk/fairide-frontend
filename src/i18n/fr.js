@@ -8500,6 +8500,13 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      rapCouper: 'Couper',
+      rapActiver: 'Activer',
+      rapInactif: 'Pas envoyés. Les activer nous aide à corriger les pannes.',
+      rapActif: 'Envoyés quand l’app plante, pour qu’on corrige plus vite.',
+      rapTitre: 'Rapports de panne',
+      insRapportsTitre: 'Envoyer les rapports de panne',
+      salut: 'Salut !',
       co3: '50 € vendus ou moins = 0 € d’abonnement',
       co3S: 'Si tu vends 50 € ou moins dans le mois, tu ne paies pas l’abonnement de ce mois-là. Tu n’as rien à demander.',
       co4: 'Une case à cocher, aucun document',
@@ -8536,7 +8543,7 @@ export default {
       autresApplis: 'Autres applis',
       accTitre: 'Le juste prix, sans frais cachés.',
       accSub: 'Les commerces près de chez toi, sans rien d’ajouté au paiement. Fairide prend 10 % au commerce.',
-      profilTitre: 'Bienvenue sur Fairide. Tu es…',
+      profilTitre: 'Qu’est-ce qui t’amène sur Fairide ?',
       profilSub: 'On adapte la suite à ce que tu viens faire.',
       rClient: 'Je veux commander',
       rClientS: 'Repas et courses près de chez moi',
@@ -8545,7 +8552,7 @@ export default {
       rCommerce: 'J’ai un commerce',
       rCommerceS: 'Restaurant, snack, boulangerie, épicerie…',
       butTitre: 'Qu’est-ce qui compte pour toi ?',
-      plusieurs: 'Plusieurs choix possibles.',
+      plusieurs: 'Coche tout ce qui te parle.',
       bPrix: 'Les prix du commerce',
       bPrixS: 'Une carte qui n’est pas gonflée pour payer la commission',
       bJuste: 'Un prix juste et clair',
@@ -8685,16 +8692,12 @@ export default {
       insFinCommerce: 'Une case à cocher, et c’est fini.',
       insFinLv1: 'Ce que tu gagnes',
       insFinLv2: 'Ta position',
-      insRapports: 'Envoyer les rapports d’erreur de l’app, pour nous aider à corriger les pannes (facultatif).',
-      // Coquille de l’application : connexion (ConnexionAppli.jsx) et consentement (ConsentementAppli.jsx), 2026-10-15.
+      insRapports: 'Si l’app plante, elle nous envoie ce qui s’est passé, pour qu’on corrige plus vite. Facultatif, et tu peux changer d’avis dans Mon compte.',
+      // Coquille de l’application : connexion (ConnexionAppli.jsx), 2026-10-15 ; rapports de panne (inscription, Mon compte), 2026-10-16.
       connTitre: 'Content de te revoir',
       connSous: 'Connecte-toi avec ton e-mail et ton mot de passe.',
       connCreer: 'Pas encore de compte ? Créer un compte',
       connRetour: 'Retour à la connexion',
-      consTitre: 'Nous aider à corriger les pannes ?',
-      consSous: 'Si tu acceptes, l’app nous envoie un rapport quand une erreur se produit, pour qu’on puisse la corriger.',
-      consFait: 'Aucune pub, aucun suivi publicitaire',
-      consFaitS: 'Tu peux changer d’avis à tout moment, en bas de Mon compte.',
       // Phase 2 de l’app (2026-10-15) : envoyer sa carte (EnvoiCarteAppli), dossier livreur (DossierAppli), paiement (Checkout).
       fermer: 'Fermer',
       carteSourceTitre: 'D’où vient ta carte ?',

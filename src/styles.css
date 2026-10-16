@@ -2626,15 +2626,56 @@ main.page-fade { min-height: calc(100dvh - 140px); }
      règle 2 de l'identité (pas de flou), limitée à cette barre. Coût : un flou sur une bande de 74px, ce que Safari
      fait déjà pour ses propres barres ; si un Android modeste saccade, c'est ce bloc qu'il faut limiter à html.natif.
      Repli plein si le système demande moins de transparence. */
+  /* VERRE LIQUIDE (fondateur, 2026-10-16 : version 2 de mockups/barre-onglets-verre.html, sur le modèle de la barre de
+     WhatsApp). Remplace le blanc translucide du 2026-10-13, toujours dans l'app seulement (html.appli : l'app native ET le
+     site ajouté à l'écran d'accueil) ; le site garde sa barre blanche pleine. La barre est presque transparente : un voile
+     blanc léger, un flou court qui laisse deviner la forme de ce qui passe dessous, la saturation qui ravive les couleurs,
+     un reflet clair en haut et une ombre douce qui la décolle. L'onglet actif n'est plus une pastille iris pleine mais
+     une LENTILLE de verre aux bords irisés (rose d'un côté, bleu de l'autre) ; à l'appui elle grossit, et on peut la
+     promener du doigt (barreVerre.js). Sur Android, les bords courbent en plus ce qui passe dessous (réfraction).
+     Exceptions voulues à la règle 2 (flou, reflets, ombre), limitées à cette barre et à l'app. */
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    html.natif .dashboard-nav {
-      background: rgba(255, 255, 255, .72);
-      -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
-      border-color: rgba(220, 216, 208, .7);
+    html.appli .dashboard-nav {
+      background: rgba(255, 255, 255, .22);
+      -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
+      border-color: rgba(255, 255, 255, .6);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
+        0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
+      touch-action: none;
     }
+    html.appli .dashboard-nav.admin { touch-action: pan-x; }
+    html.appli .dashboard-nav-link { -webkit-user-drag: none; }
+    html.appli .nav-curseur {
+      background: rgba(255, 255, 255, .42);
+      -webkit-backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08); backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08);
+      border: 1px solid rgba(255, 255, 255, .75);
+      box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, .95), inset 4px 0 7px -2px rgba(255, 70, 170, .32), inset -4px 0 7px -2px rgba(40, 190, 255, .36),
+        inset 0 -3px 6px -2px rgba(255, 220, 90, .28), 0 2px 10px rgba(20, 18, 31, .12);
+      transition: transform .42s var(--ressort-ui), width .3s var(--ressort-ui), height .3s var(--ressort-ui), opacity .15s, scale .3s var(--ressort-ui), box-shadow .2s;
+    }
+    /* Réfraction (Chromium seulement : barreVerre.js pose la classe et les filtres). */
+    html.appli .dashboard-nav--refraction {
+      -webkit-backdrop-filter: var(--verre-barre) blur(2px) saturate(190%) brightness(1.06); backdrop-filter: var(--verre-barre) blur(2px) saturate(190%) brightness(1.06);
+    }
+    html.appli .dashboard-nav--refraction .nav-curseur {
+      -webkit-backdrop-filter: var(--verre-lentille) saturate(230%) brightness(1.08); backdrop-filter: var(--verre-lentille) saturate(230%) brightness(1.08);
+    }
+    /* Onglets sur le verre : encre et non plus gris, avec un halo blanc léger, sinon ils disparaissaient sur une photo. */
+    html.appli .dashboard-nav-link { color: rgba(20, 18, 31, .8); text-shadow: 0 0 8px rgba(255, 255, 255, .7); }
+    html.appli .dashboard-nav-link .dashboard-nav-icon { filter: drop-shadow(0 0 4px rgba(255, 255, 255, .6)); }
+    html.appli .dashboard-nav-link.active, html.appli .dashboard-nav-link--survol { color: var(--iris); }
+    /* Le libellé un peu plus petit, pour qu'il ne touche plus le bord de la lentille (fondateur, 2026-10-16). */
+    html.appli .dashboard-nav-label { font-size: 9px; letter-spacing: 0; }
+    /* L'appui : la lentille grossit et ses bords s'irisent davantage ; en glissant, elle suit le doigt sans retard. */
+    html.appli .dashboard-nav--appui .nav-curseur { scale: 1.12 1.18; box-shadow: inset 0 1.5px 1px #fff, inset 6px 0 9px -2px rgba(255, 70, 170, .45), inset -6px 0 9px -2px rgba(40, 190, 255, .5),
+      inset 0 -4px 8px -2px rgba(255, 220, 90, .38), 0 8px 24px rgba(20, 18, 31, .2); }
+    html.appli .dashboard-nav--glisse .nav-curseur { transition: transform .05s linear, scale .3s var(--ressort-ui), box-shadow .2s; }
+    html.appli .dashboard-nav--appui { transform: none; }
   }
   @media (prefers-reduced-transparency: reduce) {
-    html.natif .dashboard-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    html.appli .dashboard-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    html.appli .nav-curseur { background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    html.appli .dashboard-nav-link.active { color: #fff; }
   }
   .dashboard-sidebar--compacte .dashboard-nav-label { opacity: 0; max-height: 0; transform: translateY(4px); }
   /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
@@ -4710,6 +4751,47 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-progression i { display: block; height: 100%; background: var(--iris); transition: width .3s; }
 .bv-iris .bv-progression { background: rgba(255,255,255,.25); }
 .bv-iris .bv-progression i { background: #fff; }
+/* La progression en route (EcransBienvenue.jsx, Route) : pointillés, le trajet fait en plein, le vélo de la marque au
+   bout. Couleur du texte : iris sur fond blanc, lime sur le bandeau iris. */
+.bv-route { position: relative; flex: 1; height: 22px; color: var(--iris); }
+.bv-route::before { content: ''; position: absolute; left: 0; right: 0; top: 17px; border-top: 2px dashed var(--line); }
+.bv-route > i { position: absolute; left: 0; top: 16px; height: 4px; border-radius: 2px; background: currentColor; transition: width .7s cubic-bezier(.3, .7, .4, 1); }
+.bv-velo { position: absolute; top: 0; width: 34px; margin-left: -17px; transition: left .7s cubic-bezier(.3, .7, .4, 1); }
+.bv-velo svg { display: block; }
+.bv-velo.roule svg { animation: bv-bonds .7s ease-in-out; }
+@keyframes bv-bonds { 0%, 100% { transform: none; } 20%, 60% { transform: translateY(-2px) rotate(-3deg); } 40%, 80% { transform: translateY(0) rotate(1deg); } }
+
+/* LE BANDEAU IRIS (fondateur, 2026-10-16 : version D de mockups/onboarding-chaleur.html). L'écran est iris ; l'en-tête,
+   le titre et le sous-titre sont dessus, en blanc ; le reste monte dans la feuille blanche (.bv-feuille), qui va
+   jusqu'aux bords et en bas de l'écran. Exception voulue à la règle « un seul lime par écran » : le bouton lime ET la
+   coche lime des choix (aplat lime, trait encre, sur iris). */
+.bv.bv-bandeau { background: var(--iris); color: #fff; }
+.bv-bandeau .bv-ecran { padding-bottom: 0; }
+.bv-bandeau .bv-haut .bv-rond { border-color: rgba(255,255,255,.35); }
+.bv-bandeau .bv-haut .bv-langues { border-color: rgba(255,255,255,.35); }
+.bv-bandeau .bv-haut .bv-langues button.on { background: #fff; color: var(--iris); }
+.bv-bandeau .bv-haut .bv-passer { color: rgba(255,255,255,.85); }
+.bv-bandeau .bv-route { color: var(--lime); }
+.bv-bandeau .bv-route::before { border-top-color: rgba(255,255,255,.3); }
+.bv-bandeau .bv-sous { color: rgba(255,255,255,.82); }
+/* Le bandeau prend de la hauteur à la feuille : titre et marges un peu resserrés pour que chaque écran tienne à 375×667. */
+.bv-bandeau .bv-haut { margin-bottom: 10px; }
+.bv-bandeau .bv-ecran > .bv-titre { font-size: 28px; margin-top: 2px; }
+.bv-bandeau .bv-ecran > .bv-sous { margin-bottom: 14px; }
+.bv-bandeau .bv-feuille .bv-fait { padding: 12px 14px; margin-bottom: 8px; }
+.bv-bandeau .bv-barres { margin: 8px 0 6px; }
+.bv-bandeau .bv-feuille .bv-option { padding: 12px 14px; margin-bottom: 8px; }
+.bv-bandeau .bv-ecran > .bv-tuile.grande { background: transparent; border: 1px solid rgba(255,255,255,.4); width: 56px; height: 56px; border-radius: 18px; margin: 8px 0 10px; }
+.bv-bandeau .bv-ecran > .bv-tuile.grande svg { width: 28px; height: 28px; }
+.bv-feuille { display: flex; flex-direction: column; flex: 1; margin: 0 -22px; padding: 18px 22px calc(20px + env(safe-area-inset-bottom));
+  background: #fff; color: var(--ink); border-radius: 26px 26px 0 0; animation: bv-monte .4s var(--ressort-ui) backwards; }
+@keyframes bv-monte { from { transform: translateY(36px); opacity: .5; } to { transform: none; opacity: 1; } }
+.bv-feuille .bv-sous { color: var(--ink-soft); }
+/* Hors d'un écran à bandeau (amorce des notifications, dossier livreur) : la feuille ne fait rien. */
+.bv:not(.bv-bandeau) .bv-feuille { display: contents; }
+.bv-salut { align-self: flex-start; display: inline-flex; font-size: 13px; font-weight: 600; background: var(--lime); color: var(--ink); padding: 5px 11px; border-radius: var(--radius-pill); margin: 2px 0 6px; animation: bv-saute .35s var(--ressort-ui) .15s backwards; }
+@keyframes bv-saute { from { transform: scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .bv-feuille, .bv-salut, .bv-velo.roule svg { animation: none; } .bv-velo, .bv-route > i { transition: none; } }
 .bv-passer { background: none; border: 0; padding: 6px 4px; color: var(--ink-soft); font-size: 14px; }
 
 .bv-langues { display: flex; gap: 2px; border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
@@ -4733,7 +4815,7 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 
 .bv-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; margin-top: 10px; font-size: 16px; font-weight: 700; border-radius: 999px; }
 .bv-btn:disabled, .btn-connexion:disabled { opacity: .5; cursor: default; }
-.bv-btn.btn-teal:disabled { background: var(--line); color: var(--ink-faint); opacity: 1; }
+.bv-btn.btn-teal:disabled, .bv-btn.btn-gold:disabled { background: var(--line); color: var(--ink-faint); opacity: 1; }
 .bv-lien { display: block; width: 100%; background: none; border: 0; padding: 14px; color: var(--ink-soft); font-size: 15px; }
 .bv-iris .bv-lien { color: rgba(255,255,255,.85); }
 
@@ -4758,6 +4840,9 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-option.on small { color: rgba(255,255,255,.8); }
 .bv-case { margin-left: auto; width: 22px; height: 22px; border-radius: var(--radius-chip); border: 1px solid var(--line); flex: none; display: grid; place-items: center; }
 .bv-option.on .bv-case { border-color: #fff; }
+/* Coché : une coche lime (aplat, trait encre) qui saute dans la case, et la tuile qui rebondit (bandeau iris, 2026-10-16). */
+.bv-option.on .bv-case { background: var(--lime); border-color: var(--lime); color: var(--ink); animation: bv-saute .3s var(--ressort-ui); }
+.bv-option.on .bv-tuile { animation: bv-saute .3s var(--ressort-ui); }
 .bv-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .bv-grille .bv-option { flex-direction: column; align-items: flex-start; margin: 0; padding: 14px; }
 
@@ -4840,8 +4925,8 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
    recherche et le bouton à 375×667 ; avec « Autre », le champ à préciser prend sa place sous la boîte. */
 .bv-types-recherche { width: 100%; font-size: 16px; padding: 13px 16px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill); margin-bottom: 12px; }
 .bv-types-recherche:focus { outline: 2px solid var(--iris); border-color: var(--iris); }
-.bv-types { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; max-height: max(120px, calc(100dvh - 340px)); overflow-y: auto; overscroll-behavior: contain; padding: 2px 2px 8px; margin-bottom: 12px; }
-.bv-types.avec-autre { max-height: max(110px, calc(100dvh - 452px)); }
+.bv-types { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; max-height: max(120px, calc(100dvh - 385px)); overflow-y: auto; overscroll-behavior: contain; padding: 2px 2px 8px; margin-bottom: 12px; }
+.bv-types.avec-autre { max-height: max(110px, calc(100dvh - 490px)); }
 .bv-type { display: inline-flex; align-items: center; gap: 7px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 15px; font-weight: 500; transition: background .15s, color .15s, border-color .15s; }
 .bv-type svg { color: var(--iris); flex: none; }
 .bv-type.on { background: var(--iris); border-color: var(--iris); color: #fff; }
@@ -4895,6 +4980,9 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-case-ligne { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 12px; font-size: 14px; font-weight: 400; line-height: 1.45; cursor: pointer; }
 .bv-case-ligne input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--iris); }
 .bv-case-discrete { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; }
+/* La case des rapports de panne : sa propre carte, titre en gras, pour qu'on la lise et ne la coche pas en passant. */
+.bv-case-carte { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin: 6px 0 12px; font-size: 13px; color: var(--ink-soft); }
+.bv-case-carte b { display: block; font-size: 15px; color: var(--ink); margin-bottom: 2px; }
 /* Écrans de formulaire : un peu plus serrés que les écrans de l'accueil — le dernier écran du livreur porte deux avis et
    trois choix facultatifs, et doit tenir sans défiler (375×667). */
 .bv-form .bv-sous { margin-bottom: 16px; }

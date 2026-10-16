@@ -1,4 +1,5 @@
-import { useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
+import { experienceApp } from '../natif';
 
 // La pastille iris qui GLISSE d'un onglet à l'autre dans la barre du bas (sous 900px).
 //
@@ -41,6 +42,7 @@ export function useCurseurOnglets(navRef, cle) {
         nav.classList.add('dashboard-nav--pousse');
       }
       curseur.dataset.x = String(actif.offsetLeft);
+      curseur.dataset.y = String(actif.offsetTop);
       if (premiere) curseur.style.transition = 'none';
       curseur.style.opacity = '1';
       curseur.style.width = `${actif.offsetWidth}px`;
@@ -59,4 +61,16 @@ export function useCurseurOnglets(navRef, cle) {
     observateur.observe(nav);
     return () => observateur.disconnect();
   }, [navRef, cle]);
+
+  // Dans l'app : la barre en verre, sa lentille qu'on promène du doigt et la réfraction (barreVerre.js, chargé à part :
+  // le site n'en télécharge rien). Branchée une fois par barre, pas à chaque page.
+  useEffect(() => {
+    const nav = navRef.current;
+    const curseur = nav?.querySelector(':scope > .nav-curseur');
+    if (!nav || !curseur || !experienceApp()) return undefined;
+    let debrancher = null;
+    let fini = false;
+    import('../barreVerre').then(({ brancherBarreVerre }) => { if (!fini) debrancher = brancherBarreVerre(nav, curseur); }).catch(() => {});
+    return () => { fini = true; debrancher?.(); };
+  }, [navRef]);
 }

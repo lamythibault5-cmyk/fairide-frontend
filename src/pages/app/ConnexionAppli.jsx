@@ -156,19 +156,22 @@ export default function ConnexionAppli() {
     </>
   );
 
+  // Titre et sous-titre : sur le bandeau iris, au-dessus de la feuille (EcransBienvenue.jsx, Feuille).
+  const titre = (texte, sous) => <><h1 className="bv-titre bv-titre-form">{texte}</h1><p className="bv-sous">{sous}</p></>;
+  let entete;
   let contenu;
   let bouton = t('auth.signIn');
   switch (ecran) {
     case 'totp':
       bouton = t('auth.confirm');
-      contenu = <><h1 className="bv-titre bv-titre-form">{t('auth.totpLabel')}</h1><p className="bv-sous">{t('auth.totpHelp')}</p>{champCode}</>;
+      entete = titre(t('auth.totpLabel'), t('auth.totpHelp'));
+      contenu = champCode;
       break;
     case 'code':
       bouton = t('auth.confirm');
+      entete = titre(t('auth.verifyTitle'), t('auth.verifyText', { email: email.trim() }));
       contenu = (
         <>
-          <h1 className="bv-titre bv-titre-form">{t('auth.verifyTitle')}</h1>
-          <p className="bv-sous">{t('auth.verifyText', { email: email.trim() })}</p>
           {champCode}
           <button type="button" className="bv-lien" disabled={attente} onClick={renvoyer}>{t('auth.resendCode')}</button>
         </>
@@ -176,10 +179,9 @@ export default function ConnexionAppli() {
       break;
     case 'oubli':
       bouton = t('auth.sendLink');
+      entete = titre(t('auth.forgotTitle'), t('auth.forgotText'));
       contenu = (
         <>
-          <h1 className="bv-titre bv-titre-form">{t('auth.forgotTitle')}</h1>
-          <p className="bv-sous">{t('auth.forgotText')}</p>
           <Champ id="bv-c-email-oubli" label={t('auth.email')} erreur={erreurs.email}>
             <input id="bv-c-email-oubli" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false}
               className={erreurs.email ? 'input-invalid' : undefined} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
@@ -189,13 +191,13 @@ export default function ConnexionAppli() {
       break;
     case 'envoye':
       bouton = t('appli.connRetour');
-      contenu = <><h1 className="bv-titre bv-titre-form">{t('auth.forgotTitle')}</h1><p className="bv-sous">{t('auth.forgotSubmittedText', { email: email.trim() })}</p></>;
+      entete = titre(t('auth.forgotTitle'), t('auth.forgotSubmittedText', { email: email.trim() }));
+      contenu = null;
       break;
     default:
+      entete = titre(t('appli.connTitre'), t('appli.connSous'));
       contenu = (
         <>
-          <h1 className="bv-titre bv-titre-form">{t('appli.connTitre')}</h1>
-          <p className="bv-sous">{t('appli.connSous')}</p>
           <Champ id="bv-c-email" label={t('auth.email')} erreur={erreurs.email}>
             <input id="bv-c-email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false}
               className={erreurs.email ? 'input-invalid' : undefined} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
@@ -210,15 +212,16 @@ export default function ConnexionAppli() {
   }
 
   return (
-    <div className="bv">
+    <div className="bv bv-bandeau">
       <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={ecran}>
         <Haut onRetour={retour} progression={null} />
-        <form className="bv-form" onSubmit={valider} noValidate>
+        {entete}
+        <form className="bv-form bv-feuille" onSubmit={valider} noValidate>
           {contenu}
           <div className="bv-grandit" />
           {/* Apple / Google : dans la vraie application seulement, au-dessus du bouton (comme l'écran du compte). */}
           {ecran === 'connexion' && estNatif() && <BoutonsConnexionNative onChoix={viaFournisseur} disabled={attente} />}
-          <button type="submit" className="bv-btn btn-teal" disabled={attente}>{attente ? t('common.loading') : bouton}</button>
+          <button type="submit" className="bv-btn btn-gold" disabled={attente}>{attente ? t('common.loading') : bouton}</button>
           {/* Pas en double : après « aucun compte », le lien est déjà sous le champ e-mail. */}
           {ecran === 'connexion' && !pasDeCompte && <button type="button" className="bv-lien" onClick={creerCompte}>{t('appli.connCreer')}</button>}
         </form>

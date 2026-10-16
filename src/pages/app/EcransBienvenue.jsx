@@ -48,6 +48,45 @@ export function Fait({ icone, titre, sous, vedette, children }) {
   );
 }
 
+/* ACCUEIL « BANDEAU IRIS » (fondateur, 2026-10-16, version D de mockups/onboarding-chaleur.html). Le haut de chaque
+ * écran est iris : retour, la route du vélo, le titre ; ce qu'on choisit ou remplit monte dans une feuille blanche aux
+ * coins ronds. Un écran met ce qui suit son titre dans <Feuille>. Hors d'un écran à bandeau (.bv-bandeau : l'amorce des
+ * notifications, le dossier livreur), la feuille s'efface (display: contents) et rien ne change. */
+export function Feuille({ children }) {
+  return <div className="bv-feuille">{children}</div>;
+}
+
+// Le vélo de la marque (BrandMark.jsx, sans tuile), à la couleur du texte : lime sur le bandeau, iris sur fond blanc.
+function Velo() {
+  return (
+    <svg viewBox="-3 5 82 42" width="34" height="18" aria-hidden="true">
+      <g fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"><circle cx="15" cy="29" r="12.5" /><circle cx="61" cy="29" r="12.5" /></g>
+      <g fill="currentColor"><rect x="16" y="8" width="44" height="5" rx="2.5" /><g transform="rotate(42 27 22.5)"><rect x="13" y="20" width="28" height="5" rx="2.5" /></g></g>
+    </svg>
+  );
+}
+
+/* La progression est une route : le vélo part de là où il était à l'écran précédent et roule jusqu'au nouveau. L'en-tête
+ * est remonté à chaque écran (key), d'où la dernière position gardée ici, hors du composant. */
+let derniereProgression = 0;
+function Route({ progression }) {
+  const [depart] = useState(derniereProgression);
+  const [p, setP] = useState(depart);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setP(progression));
+    derniereProgression = progression;
+    return () => cancelAnimationFrame(id);
+  }, [progression]);
+  const pct = `${Math.round(p * 1000) / 10}%`;
+  return (
+    <div className="bv-route" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progression * 100)}>
+      <i style={{ width: pct }} />
+      {/* Les petits bonds ne jouent que pendant un vrai trajet. */}
+      <span className={`bv-velo${p !== depart ? ' roule' : ''}`} style={{ left: pct }}><Velo /></span>
+    </div>
+  );
+}
+
 // En-tête des écrans : retour, progression, langue. L'accueil et le chargement n'en ont pas.
 // `onFermer` : une croix à droite pour quitter un parcours lancé depuis l'app (dossier livreur, DossierAppli.jsx).
 export function Haut({ onRetour, progression, onPasser, onFermer }) {
@@ -57,11 +96,7 @@ export function Haut({ onRetour, progression, onPasser, onFermer }) {
       {/* data-retour-natif : le bouton Retour d'Android le déclenche (natif.js). */}
       <button type="button" className="bv-rond" data-retour-natif onClick={onRetour} aria-label={t('appli.retour')}><Icone nom="retour" taille={18} /></button>
       {/* Sans progression (connexion, ConnexionAppli.jsx) : un simple espace, la langue reste à droite. */}
-      {progression == null ? <div className="bv-grandit" /> : (
-        <div className="bv-progression" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progression * 100)}>
-          <i style={{ width: `${Math.round(progression * 100)}%` }} />
-        </div>
-      )}
+      {progression == null ? <div className="bv-grandit" /> : <Route progression={progression} />}
       {onFermer ? <button type="button" className="bv-rond" onClick={onFermer} aria-label={t('appli.fermer')}><Icone nom="croix" taille={18} /></button>
         : onPasser ? <button type="button" className="bv-passer" onClick={onPasser}>{t('appli.passer')}</button> : <Langues />}
     </div>
@@ -101,11 +136,14 @@ export function EcranProfil({ role, onChoix, onSuite }) {
   const { t } = useLanguage();
   return (
     <>
+      <span className="bv-salut">{t('appli.salut')}</span>
       <h1 className="bv-titre"><AvecMarque>{t('appli.profilTitre')}</AvecMarque></h1>
       <p className="bv-sous">{t('appli.profilSub')}</p>
-      {PROFILS.map(([v, icone, k]) => <Option key={v} on={role === v} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)} onClick={() => onChoix(v)} />)}
-      <div className="bv-grandit" />
-      <button type="button" className="bv-btn btn-teal" disabled={!role} onClick={onSuite}>{t('appli.continuer')}</button>
+      <Feuille>
+        {PROFILS.map(([v, icone, k]) => <Option key={v} on={role === v} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)} onClick={() => onChoix(v)} />)}
+        <div className="bv-grandit" />
+        <button type="button" className="bv-btn btn-gold" disabled={!role} onClick={onSuite}>{t('appli.continuer')}</button>
+      </Feuille>
     </>
   );
 }
@@ -117,13 +155,15 @@ export function EcranChoix({ titre, liste, choisis, onBasculer, onSuite, exigerU
     <>
       <h1 className="bv-titre">{titre}</h1>
       <p className="bv-sous">{t('appli.plusieurs')}</p>
-      {liste.map(([v, icone, k, avecSous]) => (
-        <Option key={v} multi on={choisis.includes(v)} icone={icone} titre={t(`appli.${k}`)} sous={avecSous ? t(`appli.${k}S`) : null} onClick={() => onBasculer(v)} />
-      ))}
-      <div className="bv-grandit" />
-      <button type="button" className="bv-btn btn-teal" disabled={exigerUn && !choisis.length} onClick={onSuite}>
-        {choisis.length || !libelleVide ? t('appli.continuer') : libelleVide}
-      </button>
+      <Feuille>
+        {liste.map(([v, icone, k, avecSous]) => (
+          <Option key={v} multi on={choisis.includes(v)} icone={icone} titre={t(`appli.${k}`)} sous={avecSous ? t(`appli.${k}S`) : null} onClick={() => onBasculer(v)} />
+        ))}
+        <div className="bv-grandit" />
+        <button type="button" className="bv-btn btn-gold" disabled={exigerUn && !choisis.length} onClick={onSuite}>
+          {choisis.length || !libelleVide ? t('appli.continuer') : libelleVide}
+        </button>
+      </Feuille>
     </>
   );
 }
@@ -153,27 +193,29 @@ export function EcranCartes({ onFini }) {
     <>
       <h1 className="bv-titre">{t('appli.cartesTitre')}</h1>
       <p className="bv-sous">{t('appli.cartesSub')}</p>
-      <div className="bv-paquet">
-        {index + 1 < CARTES.length && <div className="bv-glisse dessous"><div className="bv-guillemet">“</div>{t(`appli.${CARTES[index + 1]}`)}</div>}
-        <div
-          key={index}
-          className="bv-glisse"
-          style={{ transform: `translateX(${decalage}px) rotate(${decalage / 18}deg)`, opacity: depart ? 0 : 1, transition: x0.current === null ? 'transform .25s, opacity .25s' : 'none' }}
-          onPointerDown={(e) => { x0.current = e.clientX; e.currentTarget.setPointerCapture(e.pointerId); }}
-          onPointerMove={(e) => { if (x0.current !== null) setDx(e.clientX - x0.current); }}
-          onPointerUp={() => { if (x0.current === null) return; x0.current = null; if (Math.abs(dx) > 90) voter(dx > 0); else setDx(0); }}
-          onPointerCancel={() => { x0.current = null; setDx(0); }}
-        >
-          <span className="bv-tampon non" style={{ opacity: Math.max(0, -decalage / 90) }}>{t('appli.non')}</span>
-          <span className="bv-tampon oui" style={{ opacity: Math.max(0, decalage / 90) }}>{t('appli.oui')}</span>
-          <div className="bv-guillemet">“</div>{t(`appli.${CARTES[index]}`)}
+      <Feuille>
+        <div className="bv-paquet">
+          {index + 1 < CARTES.length && <div className="bv-glisse dessous"><div className="bv-guillemet">“</div>{t(`appli.${CARTES[index + 1]}`)}</div>}
+          <div
+            key={index}
+            className="bv-glisse"
+            style={{ transform: `translateX(${decalage}px) rotate(${decalage / 18}deg)`, opacity: depart ? 0 : 1, transition: x0.current === null ? 'transform .25s, opacity .25s' : 'none' }}
+            onPointerDown={(e) => { x0.current = e.clientX; e.currentTarget.setPointerCapture(e.pointerId); }}
+            onPointerMove={(e) => { if (x0.current !== null) setDx(e.clientX - x0.current); }}
+            onPointerUp={() => { if (x0.current === null) return; x0.current = null; if (Math.abs(dx) > 90) voter(dx > 0); else setDx(0); }}
+            onPointerCancel={() => { x0.current = null; setDx(0); }}
+          >
+            <span className="bv-tampon non" style={{ opacity: Math.max(0, -decalage / 90) }}>{t('appli.non')}</span>
+            <span className="bv-tampon oui" style={{ opacity: Math.max(0, decalage / 90) }}>{t('appli.oui')}</span>
+            <div className="bv-guillemet">“</div>{t(`appli.${CARTES[index]}`)}
+          </div>
         </div>
-      </div>
-      <div className="bv-votes">
-        <button type="button" className="bv-rond grand" onClick={() => voter(false)} aria-label={t('appli.non')}><Icone nom="croix" taille={24} /></button>
-        <button type="button" className="bv-rond grand plein" onClick={() => voter(true)} aria-label={t('appli.oui')}><Icone nom="valider" taille={26} /></button>
-      </div>
-      <p className="bv-petit bv-centre" style={{ marginTop: 14 }}>{t('appli.carteN', { n: index + 1, total: CARTES.length })}</p>
+        <div className="bv-votes">
+          <button type="button" className="bv-rond grand" onClick={() => voter(false)} aria-label={t('appli.non')}><Icone nom="croix" taille={24} /></button>
+          <button type="button" className="bv-rond grand plein" onClick={() => voter(true)} aria-label={t('appli.oui')}><Icone nom="valider" taille={26} /></button>
+        </div>
+        <p className="bv-petit bv-centre" style={{ marginTop: 14 }}>{t('appli.carteN', { n: index + 1, total: CARTES.length })}</p>
+      </Feuille>
     </>
   );
 }
@@ -185,18 +227,20 @@ export function EcranPourquoi({ onSuite }) {
     <>
       <h1 className="bv-titre"><AvecMarque>{t('appli.pqTitre')}</AvecMarque></h1>
       <p className="bv-sous">{t('appli.pqSub')}</p>
-      <Fait vedette icone="euro" titre={t('appli.pq1')} sous={t('appli.pq1S')}>
-        {/* Barres à l'échelle : 32 % = toute la largeur, la partie claire marque la fourchette 22-32 %. */}
-        <div className="bv-barres" aria-hidden="true">
-          <span>{t('appli.autresApplis')}</span><i className="autres"><em /></i><span>22–32 %</span>
-          <span>Fairide</span><i className="fairide" /><span><b>10 %</b></span>
-        </div>
-      </Fait>
-      <Fait icone="ticket" titre={t('appli.pq2')} sous={t('appli.pq2S')} />
-      <Fait icone="balance" titre={t('appli.pq3')} sous={t('appli.pq3S')} />
-      <p className="bv-petit bv-ligne-be"><Drapeau /> {t('appli.pqBe')}</p>
-      <div className="bv-grandit" />
-      <button type="button" className="bv-btn btn-teal" onClick={onSuite}>{t('appli.pqBtn')}</button>
+      <Feuille>
+        <Fait vedette icone="euro" titre={t('appli.pq1')} sous={t('appli.pq1S')}>
+          {/* Barres à l'échelle : 32 % = toute la largeur, la partie claire marque la fourchette 22-32 %. */}
+          <div className="bv-barres" aria-hidden="true">
+            <span>{t('appli.autresApplis')}</span><i className="autres"><em /></i><span>22–32 %</span>
+            <span>Fairide</span><i className="fairide" /><span><b>10 %</b></span>
+          </div>
+        </Fait>
+        <Fait icone="ticket" titre={t('appli.pq2')} sous={t('appli.pq2S')} />
+        <Fait icone="balance" titre={t('appli.pq3')} sous={t('appli.pq3S')} />
+        <p className="bv-petit bv-ligne-be"><Drapeau /> {t('appli.pqBe')}</p>
+        <div className="bv-grandit" />
+        <button type="button" className="bv-btn btn-gold" onClick={onSuite}>{t('appli.pqBtn')}</button>
+      </Feuille>
     </>
   );
 }
@@ -208,11 +252,13 @@ export function EcranEnvies({ envies, onBasculer, onSuite }) {
     <>
       <h1 className="bv-titre">{t('appli.envTitre')}</h1>
       <p className="bv-sous">{t('appli.envSub')}</p>
-      <div className="bv-grille">
-        {ENVIES.map(([v, icone, k]) => <Option key={v} on={envies.includes(v)} icone={icone} titre={t(`appli.${k}`)} onClick={() => onBasculer(v)} />)}
-      </div>
-      <div className="bv-grandit" />
-      <button type="button" className="bv-btn btn-teal" onClick={onSuite}>{envies.length ? t('appli.continuer') : t('appli.envTout')}</button>
+      <Feuille>
+        <div className="bv-grille">
+          {ENVIES.map(([v, icone, k]) => <Option key={v} on={envies.includes(v)} icone={icone} titre={t(`appli.${k}`)} onClick={() => onBasculer(v)} />)}
+        </div>
+        <div className="bv-grandit" />
+        <button type="button" className="bv-btn btn-gold" onClick={onSuite}>{envies.length ? t('appli.continuer') : t('appli.envTout')}</button>
+      </Feuille>
     </>
   );
 }
@@ -227,10 +273,12 @@ export function EcranPermission({ icone, titre, sous, faits, bouton, onOui, onNo
       <Tuile nom={icone} grande />
       <h1 className="bv-titre">{titre}</h1>
       <p className="bv-sous">{sous}</p>
-      {faits.map(([ic, ti, so]) => <Fait key={ti} icone={ic} titre={ti} sous={so} />)}
-      <div className="bv-grandit" />
-      <button type="button" className="bv-btn btn-teal" disabled={attente} onClick={onOui}>{attente ? t('common.loading') : bouton}</button>
-      {onNon && <button type="button" className="bv-lien" disabled={attente} onClick={onNon}>{libelleNon || t('appli.pasMaintenant')}</button>}
+      <Feuille>
+        {faits.map(([ic, ti, so]) => <Fait key={ti} icone={ic} titre={ti} sous={so} />)}
+        <div className="bv-grandit" />
+        <button type="button" className="bv-btn btn-gold" disabled={attente} onClick={onOui}>{attente ? t('common.loading') : bouton}</button>
+        {onNon && <button type="button" className="bv-lien" disabled={attente} onClick={onNon}>{libelleNon || t('appli.pasMaintenant')}</button>}
+      </Feuille>
     </>
   );
 }
@@ -243,12 +291,14 @@ export function EcranCodePostal({ cp, commune, onCp, onSuite }) {
     <>
       <h1 className="bv-titre">{t('appli.cpTitre')}</h1>
       <p className="bv-sous">{t('appli.cpSub')}</p>
-      <label htmlFor="bv-cp" className="sr-only">{t('appli.cpTitre')}</label>
-      <input id="bv-cp" ref={champ} className="bv-saisie" inputMode="numeric" maxLength={4} placeholder="1050" autoComplete="postal-code"
-        value={cp} onChange={(e) => onCp(e.target.value.replace(/\D/g, '').slice(0, 4))} />
-      <p className="bv-sous bv-centre" style={{ marginTop: 12, minHeight: 22 }} aria-live="polite">{commune || (cp.length === 4 ? t('appli.cpHors') : '')}</p>
-      <div className="bv-grandit" />
-      <button type="button" className="bv-btn btn-teal" disabled={!commune} onClick={onSuite}>{t('appli.cpBtn')}</button>
+      <Feuille>
+        <label htmlFor="bv-cp" className="sr-only">{t('appli.cpTitre')}</label>
+        <input id="bv-cp" ref={champ} className="bv-saisie" inputMode="numeric" maxLength={4} placeholder="1050" autoComplete="postal-code"
+          value={cp} onChange={(e) => onCp(e.target.value.replace(/\D/g, '').slice(0, 4))} />
+        <p className="bv-sous bv-centre" style={{ marginTop: 12, minHeight: 22 }} aria-live="polite">{commune || (cp.length === 4 ? t('appli.cpHors') : '')}</p>
+        <div className="bv-grandit" />
+        <button type="button" className="bv-btn btn-gold" disabled={!commune} onClick={onSuite}>{t('appli.cpBtn')}</button>
+      </Feuille>
     </>
   );
 }
@@ -300,6 +350,7 @@ const km = (d, locale) => `${d.toLocaleString(locale, { maximumFractionDigits: 1
 export function EcranCompte({ role, resultats, avecPosition, commune, onFournisseur, onEmail, onConnexion, attente }) {
   const { t, locale } = useLanguage();
   let haut;
+  let liste = null; // les commerces trouvés : en tête de la feuille, sous le bandeau
   if (role === 'client') {
     const n = resultats.length;
     const titre = !avecPosition && commune ? t('appli.trouvesCommune', { c: commune }) : n === 1 ? t('appli.trouvesUn') : t('appli.trouves', { n });
@@ -307,6 +358,10 @@ export function EcranCompte({ role, resultats, avecPosition, commune, onFourniss
       <>
         <h1 className="bv-titre">{n || !avecPosition ? titre : t('appli.aucun')}</h1>
         {!n && avecPosition && <p className="bv-sous">{t('appli.aucunSub')}</p>}
+      </>
+    );
+    liste = (
+      <>
         {n > 0 && (
           <div className="bv-carte bv-trouves">
             {resultats.slice(0, 3).map(({ r, km: d }) => (
@@ -328,12 +383,15 @@ export function EcranCompte({ role, resultats, avecPosition, commune, onFourniss
   return (
     <>
       {haut}
-      <div className="bv-grandit" />
-      {/* Feuille Apple/Google native : dans la vraie application seulement ; sur l'écran d'accueil, l'e-mail (et Google sur la page de connexion). */}
-      {estNatif() && <BoutonsConnexionNative onChoix={onFournisseur} disabled={attente} />}
-      {/* Seul bouton hors de l'application (site ajouté à l'écran d'accueil, aperçu) : il prend l'aplat iris, pas le filet. */}
-      <button type="button" className={`bv-btn ${estNatif() ? 'btn-outline' : 'btn-teal'}`} disabled={attente} onClick={onEmail}><Icone nom="courrier" /> {t('appli.continueEmail')}</button>
-      <button type="button" className="bv-lien" onClick={onConnexion}>{t('appli.dejaCompte')}</button>
+      <Feuille>
+        {liste}
+        <div className="bv-grandit" />
+        {/* Feuille Apple/Google native : dans la vraie application seulement ; sur l'écran d'accueil, l'e-mail (et Google sur la page de connexion). */}
+        {estNatif() && <BoutonsConnexionNative onChoix={onFournisseur} disabled={attente} />}
+        {/* Seul bouton hors de l'application (site ajouté à l'écran d'accueil, aperçu) : il prend l'aplat lime, pas le filet. */}
+        <button type="button" className={`bv-btn ${estNatif() ? 'btn-outline' : 'btn-gold'}`} disabled={attente} onClick={onEmail}><Icone nom="courrier" /> {t('appli.continueEmail')}</button>
+        <button type="button" className="bv-lien" onClick={onConnexion}>{t('appli.dejaCompte')}</button>
+      </Feuille>
     </>
   );
 }

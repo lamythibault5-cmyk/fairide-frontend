@@ -31,7 +31,7 @@ import OffreFormules from '../components/OffreFormules';
 import TerminalFairide from '../components/TerminalFairide';
 import { euros } from '../prixPlat';
 import { defilement } from '../gestes';
-import { resetConsent } from '../consent';
+import { resetConsent, getConsent, setConsent, onConsentChange } from '../consent';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -1058,6 +1058,7 @@ export default function Account() {
         <LigneCompte icone="lien" titre={t('accountUi.share')} sous={t('accountUi.shareSub')} onClick={partagerFairide} />
         <LigneCompte to="/aide?sujet=bug" icone="bogue" titre={t('accountUi.reportBug')} sous={t('accountUi.reportBugSub')} />
         {role !== 'client' && <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />}
+        {experienceApp() && <RapportsPanne />}
       </div>
 
       <button className="btn-danger-ghost" onClick={logout}>{t('nav.logout')}</button>
@@ -1067,11 +1068,30 @@ export default function Account() {
         <Link to="/cgv">CGV</Link>
         <Link to="/mentions-legales">{t('accountUi.legalNotice')}</Link>
         <Link to="/cookies">{t('footer.cookies')}</Link>
-        {/* Seul endroit de l'application pour revoir son choix : le pied de page du site, qui le portait, n'y est pas. */}
-        <button type="button" className="account-legal-bouton" onClick={resetConsent}>{t('footer.manageCookies')}</button>
+        {/* Sur le site : revoir son choix de cookies. Dans l'app, il n'y a qu'un choix, les rapports de panne, et il a sa
+            rangée plus haut (RapportsPanne). */}
+        {!experienceApp() && <button type="button" className="account-legal-bouton" onClick={resetConsent}>{t('footer.manageCookies')}</button>}
         <span className="account-build">Build {__BUILD_ID__}</span>
       </p>
     </div>
+  );
+}
+
+/* Les rapports de panne, dans l'app (2026-10-16) : la seule chose que l'app demande d'accepter. Un bouton, l'état en clair ;
+   « Couper » arrête Sentry tout de suite (main.jsx). Même choix que la case de l'inscription et la carte cookies du site. */
+function RapportsPanne() {
+  const { t } = useLanguage();
+  const [choix, setChoix] = useState(getConsent);
+  useEffect(() => onConsentChange(setChoix), []);
+  const actif = choix === 'accepted';
+  return (
+    <LigneCompte icone="bogue" titre={t('appli.rapTitre')} sous={actif ? t('appli.rapActif') : t('appli.rapInactif')}
+      action={(
+        <button type="button" className={actif ? 'btn-ghost' : 'btn-outline'} style={{ padding: '8px 14px', fontSize: 14 }}
+          onClick={() => setConsent(actif ? 'refused' : 'accepted')}>
+          {actif ? t('appli.rapCouper') : t('appli.rapActiver')}
+        </button>
+      )} />
   );
 }
 

@@ -8445,6 +8445,13 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      rapCouper: 'Turn off',
+      rapActiver: 'Turn on',
+      rapInactif: 'Not sent. Turning them on helps us fix crashes.',
+      rapActif: 'Sent when the app crashes, so we can fix it faster.',
+      rapTitre: 'Crash reports',
+      insRapportsTitre: 'Send crash reports',
+      salut: 'Hi!',
       co3: 'Sell €50 or less = €0 subscription',
       co3S: 'Quiet month? If you sell €50 or less, you don’t pay that month’s subscription. Automatically.',
       co4: 'One checkbox, no documents',
@@ -8481,7 +8488,7 @@ export default {
       autresApplis: 'Other apps',
       accTitre: 'The fair price, no hidden fees.',
       accSub: 'The places near you, with nothing added at checkout. Fairide takes 10 % from the business.',
-      profilTitre: 'Welcome to Fairide. You are…',
+      profilTitre: 'What brings you to Fairide?',
       profilSub: 'We’ll tailor the rest to what you’re here for.',
       rClient: 'I want to order',
       rClientS: 'Meals and groceries near me',
@@ -8490,7 +8497,7 @@ export default {
       rCommerce: 'I run a business',
       rCommerceS: 'Restaurant, snack bar, bakery, grocery…',
       butTitre: 'What matters to you?',
-      plusieurs: 'Pick as many as you like.',
+      plusieurs: 'Tick everything that applies to you.',
       bPrix: 'The shop\'s own prices',
       bPrixS: 'No menus inflated by a 30 % commission',
       bJuste: 'A fair, clear price',
@@ -8630,16 +8637,12 @@ export default {
       insFinCommerce: 'One box to tick and you’re done.',
       insFinLv1: 'What you earn',
       insFinLv2: 'Your location',
-      insRapports: 'Send the app’s error reports to help us fix crashes (optional).',
-      // Coquille de l’application : connexion (ConnexionAppli.jsx) et consentement (ConsentementAppli.jsx), 2026-10-15.
+      insRapports: 'If the app crashes, it sends us what happened so we can fix it faster. Optional, and you can change your mind in My account.',
+      // Coquille de l’application : connexion (ConnexionAppli.jsx), 2026-10-15 ; rapports de panne (inscription, Mon compte), 2026-10-16.
       connTitre: 'Welcome back',
       connSous: 'Sign in with your email and password.',
       connCreer: 'No account yet? Create one',
       connRetour: 'Back to sign in',
-      consTitre: 'Help us fix crashes?',
-      consSous: 'If you accept, the app sends us a report when an error happens, so we can fix it.',
-      consFait: 'No ads, no ad tracking',
-      consFaitS: 'You can change your mind anytime, at the bottom of My account.',
       // Phase 2 de l’app (2026-10-15) : envoyer sa carte (EnvoiCarteAppli), dossier livreur (DossierAppli), paiement (Checkout).
       fermer: 'Close',
       carteSourceTitre: 'Where is your menu?',

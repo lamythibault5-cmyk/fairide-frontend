@@ -38,6 +38,11 @@ inside a WebView) are loaded with `import()` from `natif.js` only, so the websit
 
 **The app has its own first-launch screens** (2026-10-11, [src/pages/app/Bienvenue.jsx](src/pages/app/Bienvenue.jsx),
 route `/bienvenue`, outside `<Layout>`; designed with the founder on [mockups/app-onboarding.html](mockups/app-onboarding.html)).
+**Look since 2026-10-16** (version D of [mockups/onboarding-chaleur.html](mockups/onboarding-chaleur.html)): every white screen of the
+welcome flow, the in-app sign-up and the in-app login has an **iris header** (back, progress, title) and the rest in a white
+**sheet** with rounded top corners — a screen puts what follows its title in `<Feuille>` (EcransBienvenue.jsx), the container
+carries `.bv-bandeau`. Progress is a dashed road the brand bicycle rides along (`Route`); main buttons are lime; ticked
+options show a lime check. Outside a `.bv-bandeau` screen (notifications primer, courier dossier) `.bv-feuille` is `display: contents`.
 In the app, `/` never shows the marketing landing: first launch → `/bienvenue`, afterwards → `/restaurants` (Home.jsx).
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](src/pages/app/InscriptionAppli.jsx)):
@@ -45,10 +50,14 @@ is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [In
 per screen, no scrolling at 375×667, same data and routes as Auth.jsx (change a field rule in both, and in the backend). Only
 **The app has no website chrome** (2026-10-15, [Layout.jsx](src/components/Layout.jsx), `APPLI`): when `experienceApp()`,
 no page shows the site header, footer, legal-links row or cookie card. Signed in, every page — help, legal, « C'est bon » —
-stays in the tab shell with a « ← Retour »; legal links and « Gérer mes cookies » live at the bottom of Mon compte. Signed
+stays in the tab shell with a « ← Retour »; legal links live at the bottom of Mon compte. Signed
 out, a slim app bar (brand or back, « Se connecter »). `/login` is [ConnexionAppli.jsx](src/pages/app/ConnexionAppli.jsx)
-(2FA, unconfirmed e-mail, forgotten password, Apple/Google), and consent is a full-screen
-[ConsentementAppli.jsx](src/components/ConsentementAppli.jsx) (or an unticked box at the end of the in-app signup). Stripe
+(2FA, unconfirmed e-mail, forgotten password, Apple/Google). **The app asks for one consent only, crash reports (Sentry), and never
+with a blocking screen** (2026-10-16; the full-screen ConsentementAppli was removed): an unticked box in its own card at the end of
+the in-app sign-up (never next to the opposite-direction « no news » box), a « Envoyer le rapport » offer on the crash screen
+([AppErrorBoundary](src/components/AppErrorBoundary.jsx), one report only: `envoyerCeRapport` in sentry.js), and an on/off row in Mon
+compte (`RapportsPanne`, Account.jsx). No answer = no reports. Sending without consent was researched (Belgian art. 10/2 loi
+30-07-2018, APD 85/2022): unclear, so it stays opt-in until the lawyer answers. Stripe
 (Connect, Identity, billing portal) always opens through `allerAuPaiement` (in-app browser, return path) — never
 `window.location.href`, which left the app.
 **First-day flows are app screens too** (phase 2, 2026-10-15), opened full-screen through [EcranPlein](src/components/EcranPlein.jsx)
@@ -219,10 +228,14 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
    you need "the accent, but on a light surface", the token is `--gold-deep` — which is iris.
 2. **Backgrounds are white or iris. No third background colour**, and no gradients, no blurred
    halos, no drop shadows. Elevation is expressed by a hairline border.
-   *One exception (2026-10-13, asked for):* in the **app only** (`html.natif`), the bottom tab bar is translucent white
-   with a backdrop blur, Revolut-style. On the website it stays solid white (tried, then reverted on request).
+   *One exception (asked for):* in the **app only** (`html.appli`: native app and home-screen site), the bottom tab bar is
+   **liquid glass** since 2026-10-16 (version 2 of [mockups/barre-onglets-verre.html](mockups/barre-onglets-verre.html), after
+   WhatsApp): near-transparent, short blur, highlights and a soft shadow; the active tab is a glass lens with iridescent edges
+   that grows when pressed and follows the finger ([src/barreVerre.js](src/barreVerre.js), loaded with `import()` in the app only;
+   on Chromium/Android it also refracts what passes under its edges). On the website it stays solid white.
 3. **One lime accent per view.** If a screen already has a `btn-gold`, its active tab / badge /
-   nav item uses white or iris instead.
+   nav item uses white or iris instead. *Exception (founder, 2026-10-16):* the app's welcome/sign-up screens pair the lime
+   button with the lime check of ticked options and the « Salut ! » chip.
 
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.

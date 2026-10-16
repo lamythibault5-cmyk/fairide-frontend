@@ -8454,6 +8454,13 @@ export default {
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
     // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
     appli: {
+      rapCouper: 'Uitzetten',
+      rapActiver: 'Aanzetten',
+      rapInactif: 'Niet verstuurd. Ze aanzetten helpt ons crashes op te lossen.',
+      rapActif: 'Verstuurd als de app crasht, zodat we het sneller oplossen.',
+      rapTitre: 'Crashrapporten',
+      insRapportsTitre: 'Crashrapporten versturen',
+      salut: 'Hoi!',
       co3: '€ 50 of minder verkocht = € 0 abonnement',
       co3S: 'Rustige maand? Verkoop je € 50 of minder, dan betaal je het abonnement van die maand niet. Automatisch.',
       co4: 'Eén vakje, geen documenten',
@@ -8490,7 +8497,7 @@ export default {
       autresApplis: 'Andere apps',
       accTitre: 'De eerlijke prijs, zonder verborgen kosten.',
       accSub: 'De zaken bij jou in de buurt, zonder extra kosten bij het afrekenen. Fairide neemt 10 % van de zaak.',
-      profilTitre: 'Welkom bij Fairide. Je bent…',
+      profilTitre: 'Wat brengt je naar Fairide?',
       profilSub: 'We passen de rest aan aan wat je komt doen.',
       rClient: 'Ik wil bestellen',
       rClientS: 'Maaltijden en boodschappen in de buurt',
@@ -8499,7 +8506,7 @@ export default {
       rCommerce: 'Ik heb een zaak',
       rCommerceS: 'Restaurant, snackbar, bakkerij, kruidenier…',
       butTitre: 'Wat vind jij belangrijk?',
-      plusieurs: 'Meerdere antwoorden mogelijk.',
+      plusieurs: 'Vink alles aan wat voor jou geldt.',
       bPrix: 'De prijzen van de zaak',
       bPrixS: 'Zonder menu’s die opgeblazen zijn door 30 % commissie',
       bJuste: 'Een eerlijke, duidelijke prijs',
@@ -8639,16 +8646,12 @@ export default {
       insFinCommerce: 'Eén vakje aanvinken en klaar.',
       insFinLv1: 'Wat je verdient',
       insFinLv2: 'Je locatie',
-      insRapports: 'Foutrapporten van de app versturen, zodat we storingen kunnen oplossen (optioneel).',
-      // Coquille de l’application : connexion (ConnexionAppli.jsx) et consentement (ConsentementAppli.jsx), 2026-10-15.
+      insRapports: 'Als de app crasht, stuurt ze ons wat er gebeurde, zodat we het sneller oplossen. Optioneel, en je kunt van gedachten veranderen in Mijn account.',
+      // Coquille de l’application : connexion (ConnexionAppli.jsx), 2026-10-15 ; rapports de panne (inscription, Mon compte), 2026-10-16.
       connTitre: 'Fijn dat je er weer bent',
       connSous: 'Log in met je e-mailadres en wachtwoord.',
       connCreer: 'Nog geen account? Maak er een aan',
       connRetour: 'Terug naar inloggen',
-      consTitre: 'Help je ons storingen oplossen?',
-      consSous: 'Als je akkoord gaat, stuurt de app ons een rapport wanneer er een fout optreedt, zodat we die kunnen oplossen.',
-      consFait: 'Geen advertenties, geen advertentietracking',
-      consFaitS: 'Je kunt altijd van gedachten veranderen, onderaan Mijn account.',
       // Phase 2 de l’app (2026-10-15) : envoyer sa carte (EnvoiCarteAppli), dossier livreur (DossierAppli), paiement (Checkout).
       fermer: 'Sluiten',
       carteSourceTitre: 'Waar staat je menukaart?',

@@ -262,7 +262,8 @@ export default function Bienvenue() {
   if (ecran === 'inscription') return <InscriptionAppli role={role} fed={fed} depuis={depuis} onQuitter={retour} onConnexion={dejaInscrit} />;
 
   return (
-    <div className={`bv${fondIris ? ' bv-iris' : ''}`}>
+    // Les écrans blancs ont un bandeau iris en haut et une feuille blanche dessous (EcransBienvenue.jsx, Feuille).
+    <div className={`bv${fondIris ? ' bv-iris' : ' bv-bandeau'}`}>
       <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={ecran}>
         {!sansHaut && <Haut onRetour={retour} progression={progression} onPasser={passerQuestions} />}
         {contenu}

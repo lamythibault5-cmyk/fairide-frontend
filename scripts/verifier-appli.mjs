@@ -176,15 +176,15 @@ try {
     }
     await ctx.close();
   }
-  // Premier lancement : l'accueil de l'app, puis le consentement en écran de l'app (jamais la carte du site).
+  // Premier lancement sans réponse sur les rapports de panne : ni la carte cookies du site, ni un écran plein qui bloque
+  // (fondateur, 2026-10-16 : la question se pose par une case à l'inscription, au moment d'une panne et dans Mon compte).
   {
     const { ctx, page } = await ouvrir(navigateur, base, { profil: 'visiteur', consentement: null });
     await page.goto(`${base}/bienvenue`);
     resultats.push({ profil: 'visiteur', page: '/bienvenue', ...(await examiner(page, { profil: 'visiteur', appli: true })) });
     await page.goto(`${base}/restaurants`);
     const r = await examiner(page, { profil: 'visiteur', appli: true });
-    const consentement = await page.locator('#consentement-titre').count();
-    if (!consentement) r.problemes.push("écran de consentement de l'app absent");
+    if (await page.locator('#consentement-titre').count()) r.problemes.push("écran plein de consentement revenu (il a été retiré le 2026-10-16)");
     resultats.push({ profil: 'visiteur', page: '/restaurants (sans consentement)', ...r });
     await ctx.close();
   }
