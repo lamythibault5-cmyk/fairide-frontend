@@ -900,7 +900,7 @@ export default function Auth() {
     try {
       fed = await connexionFournisseur(fournisseur);
     } catch (err) {
-      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) toast(t('appli.nativeLoginFailed'), 'erreur');
+      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) toast(err?.message ? `${t('appli.nativeLoginFailed')} (${err.message})` : t('appli.nativeLoginFailed'), 'erreur');
       return;
     }
     await handleGoogleCredential({ credential: fed.jeton }, fed);

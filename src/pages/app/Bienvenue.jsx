@@ -191,7 +191,7 @@ export default function Bienvenue() {
         toast(err.message, 'erreur');
       }
     } catch (err) {
-      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) toast(t('appli.nativeLoginFailed'), 'erreur');
+      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) toast(err?.message ? `${t('appli.nativeLoginFailed')} (${err.message})` : t('appli.nativeLoginFailed'), 'erreur');
     } finally {
       setAttente(false);
     }
