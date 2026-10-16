@@ -30,7 +30,9 @@ import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 import EtatVide from '../../components/EtatVide';
 import TeteListe from '../../components/TeteListe';
+import { useSiteLarge } from '../../hooks/useSiteLarge';
 import '../../ecran-liste.css';
+import '../../site-liste.css';
 import AvecMarque from '../../components/AvecMarque';
 
 // Bandes de prix, calculees sur le prix MEDIAN des plats de la carte : aucune colonne « niveau de
@@ -179,9 +181,24 @@ function CarteBientot({ r, t }) {
 
 // `cle` : la clé de la rangée (mises en avant / sponsors) — le logo partenaire de la rangée se glisse à côté du titre
 // (EmplacementSponsor : rien pour le public tant que l'admin n'a pas activé la rangée).
-function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, autoplay = false, cle }) {
+// `grille` (site, à partir de 900 px) : une grille qui suit la largeur, au lieu d'une rangée qui défile de côté — à la
+// souris, une rangée qui défile se manie mal, et un écran large montre trois ou quatre commerces de front sans rien cacher
+// (mockups/site-ordinateur.html, section « Liste »). Mêmes commerces, même ordre ; seule la disposition change.
+function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, autoplay = false, cle, grille = false }) {
   if (list.length === 0) return null;
   const titre = <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}{cle && <EmplacementSponsor cle={cle} />}</h3>;
+  if (grille) {
+    return (
+      <section className="liste-section">
+        {titre}
+        <div className="rest-grid sl-grille">
+          {list.map((r) => (
+            <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
+          ))}
+        </div>
+      </section>
+    );
+  }
   if (loop && list.length > 1) {
     return (
       <div className="liste-section">
@@ -259,6 +276,11 @@ export default function RestaurantList() {
   // Rangées ouvertes à la vente par l'admin en plus de celles d'origine : une par type de cuisine (« Pizza »…).
   const [rangeesAjoutees, setRangeesAjoutees] = useState([]);
   const toast = useToast();
+  // LE SITE SUR UN ORDINATEUR (mockups/site-ordinateur.html, « Liste ») — jamais dans l'app : à partir de 900 px, des
+  // grilles au lieu des rangées et Livraison / À emporter sur le bandeau ; à partir de 1 100 px, les filtres (Trier, Prix,
+  // Envies) passent dans une colonne à gauche. Mêmes états, mêmes règles de tri et de filtre qu'avant : rien d'autre ne bouge.
+  const grand = useSiteLarge(900);
+  const colonne = useSiteLarge(1100);
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch((e) => toast(e.message, 'erreur')).finally(() => setLoading(false));
@@ -463,8 +485,15 @@ export default function RestaurantList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurants, homeCommune, orderedRestaurantIds, user?.lat, user?.lng]);
 
+  const avecPosition = !!(user?.lat && user?.lng);
+  const libelleTri = (cle) => (cle === 'recommande' ? t('mapClient.sortRecommended') : cle === 'note' ? t('siteListe.triNote') : t('siteListe.triDistance'));
+  const localTexte = homeCommune && (dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : t('restaurantList.localAllTitle', { commune: homeCommune }));
+  // Le bandeau ne s'affiche qu'avec un compte : sans lui, « À emporter » reste une pastille au-dessus de la liste.
+  const modeSurBandeau = grand && !!user;
+  // La rangée de pastilles au-dessus de la liste : tout ce que la colonne et le bandeau ne portent pas déjà.
+  const pastillesFiltres = !colonne || !modeSurBandeau;
   return (
-    <div>
+    <div className={`sl-liste${grand ? ' sl-liste--grand' : ''}${colonne ? ' sl-liste--colonne' : ''}`}>
       {/* Le titre est MASQUÉ À L'ŒIL, pas supprimé (fondateur, 2026-09-17 : « retire-le de la page »).
           Il reste dans le document parce qu'il y avait été mis pour une raison précise : sans h1, le
           titre de niveau 1 de cette page redevient la marque de l'en-tête, et son sujet, pour un
@@ -487,14 +516,85 @@ export default function RestaurantList() {
         intituleAdresse={t('restaurantMenu.deliverTo')}
         libelleChanger={t('restaurantMenu.changeAddress')}
         onAdresse={() => setChoixAdresse(true)}
-        options={cuisineOptions}
+        // Avec la colonne, Bio / Vegan / Halal / Sans gluten y sont (« Envies ») : la bande ne garde que les cuisines.
+        options={colonne ? cuisineOptions.filter((o) => !o.regime) : cuisineOptions}
         estActive={chipActive}
         surPuce={surChip}
         cuisine={cuisine}
         choisirCuisine={setCuisine}
         libelleBande={t('ecranListe.cuisinesAria')}
+        mode={modeSurBandeau ? {
+          emporter,
+          choisir: setEmporter,
+          libelleLivraison: t('siteListe.modeLivraison'),
+          libelleEmporter: t('restaurantList.filterPickup'),
+          libelleGroupe: t('siteListe.modeAria')
+        } : null}
       />
       {choixAdresse && <ChoixAdresse onFermer={() => setChoixAdresse(false)} />}
+      <div className="sl-corps">
+      {/* LA COLONNE DES FILTRES (site, à partir de 1 100 px ; mockups/site-ordinateur.html, « Liste »). Les mêmes filtres que
+          les pastilles et leurs panneaux, ouverts d'un coup au lieu d'être repliés : Trier (mêmes trois tris), Prix (mêmes
+          bandes), Envies (les quatre bascules de régime qui terminent la bande des cuisines). Elle reste à l'écran quand on
+          descend (collante) ; « Manger local » passe en bas, comme dans la maquette. */}
+      {colonne && (
+        <aside className="sl-filtres" aria-label={t('siteListe.filtresAria')}>
+          {(commune || search) && (
+            <div className="sl-filtres-actifs">
+              {commune && (
+                <button type="button" className="cuisine-chip active" onClick={() => setCommune('')}>
+                  <Icone nom="position" taille={16} />{commune}<span aria-hidden="true"> ×</span>
+                </button>
+              )}
+              {search && (
+                <button type="button" className="cuisine-chip active" onClick={() => setSearch('')}>
+                  <Icone nom="recherche" taille={16} />{search}<span aria-hidden="true"> ×</span>
+                </button>
+              )}
+            </div>
+          )}
+          <fieldset className="sl-groupe">
+            <legend className="sl-groupe-titre">{t('mapClient.sort')}</legend>
+            {['recommande', 'note', 'distance'].map((cle) => {
+              const indisponible = cle === 'distance' && !avecPosition;
+              return (
+                <label key={cle} className={`sl-choix sl-choix--radio${tri === cle ? ' on' : ''}${indisponible ? ' sl-choix--off' : ''}`}
+                  title={indisponible ? t('mapClient.sortDistanceNeedsAddress') : undefined}>
+                  <input type="radio" name="sl-tri" value={cle} checked={tri === cle} disabled={indisponible} onChange={() => setTri(cle)} />
+                  <i aria-hidden="true" />{libelleTri(cle)}
+                </label>
+              );
+            })}
+          </fieldset>
+          <fieldset className="sl-groupe">
+            <legend className="sl-groupe-titre">{t('mapClient.filterPrice')}</legend>
+            <div className="sl-prix">
+              {[1, 2, 3].map((n) => (
+                <button key={n} type="button" className={`cuisine-chip${prix === n ? ' active' : ''}`} aria-pressed={prix === n}
+                  onClick={() => setPrix((p) => (p === n ? 0 : n))}>
+                  {'€'.repeat(n)}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset className="sl-groupe">
+            <legend className="sl-groupe-titre">{t('siteListe.envies')}</legend>
+            {cuisineOptions.filter((o) => o.regime).map((o) => {
+              const [actif, changer] = REGIMES[o.regime];
+              return (
+                <label key={o.value} className={`sl-choix sl-choix--case${actif ? ' on' : ''}`}>
+                  <input type="checkbox" checked={actif} onChange={() => changer((v) => !v)} />
+                  <i aria-hidden="true"><Icone nom="valider" taille={14} /></i>{o.label}
+                </label>
+              );
+            })}
+          </fieldset>
+          {!loading && !hasActiveFilter && localTexte && (
+            <p className="sl-local" role="status"><Icone nom="position" taille={18} /><span>{localTexte}</span></p>
+          )}
+        </aside>
+      )}
+      <div className="sl-contenu">
       {/* LE CHAMP DE RECHERCHE ET LE MENU DES COMMUNES ONT QUITTÉ CETTE PAGE (fondateur, 2026-09-17).
           Deux commandes de plus en haut du fil, alors que la recherche a déjà son propre écran — une
           pastille lui est dédiée dans la barre du bas — et que les communes se choisissent aussi
@@ -508,33 +608,37 @@ export default function RestaurantList() {
       {/* Les memes filtres que sur la page Carte, avec les memes noms et les memes seuils : on ne
           change pas de vocabulaire selon qu'on regarde une liste ou une carte. « Emporter » n'est
           pas sur la carte, il n'a de sens que devant une liste de commerces qu'on va chercher. */}
-      <div className="liste-filtres">
+      {pastillesFiltres && <div className="liste-filtres">
         {/* LA SORTIE D'UN FILTRE VENU D'AILLEURS. La page Recherche peut ouvrir cette liste déjà
             filtrée sur une commune ou un mot ; le menu déroulant était jusqu'ici la seule façon de
             revenir à tout, et il vient d'être retiré. Sans cette pastille, on serait resté enfermé
             dans le filtre sans rien pour l'enlever — il n'existe aucun bouton « réinitialiser »
             ailleurs sur la page. Elle n'apparaît QUE si un tel filtre est actif. */}
-        {commune && (
+        {!colonne && commune && (
           <button type="button" className="cuisine-chip active" onClick={() => setCommune('')}>
             <Icone nom="position" taille={16} />{commune}<span aria-hidden="true"> ×</span>
           </button>
         )}
-        {search && (
+        {!colonne && search && (
           <button type="button" className="cuisine-chip active" onClick={() => setSearch('')}>
             <Icone nom="recherche" taille={16} />{search}<span aria-hidden="true"> ×</span>
           </button>
         )}
-        <button type="button" className={`cuisine-chip${emporter ? ' active' : ''}`} aria-pressed={emporter} onClick={() => setEmporter((v) => !v)}>
-          <Icone nom="sac" taille={16} />{t('restaurantList.filterPickup')}
-        </button>
+        {!modeSurBandeau && (
+          <button type="button" className={`cuisine-chip${emporter ? ' active' : ''}`} aria-pressed={emporter} onClick={() => setEmporter((v) => !v)}>
+            <Icone nom="sac" taille={16} />{t('restaurantList.filterPickup')}
+          </button>
+        )}
+        {!colonne && <>
         <button type="button" className={`cuisine-chip${prix ? ' active' : ''}`} aria-expanded={panneau === 'prix'} onClick={() => setPanneau((x) => (x === 'prix' ? null : 'prix'))}>
           <Icone nom="euro" taille={16} />{prix ? '€'.repeat(prix) : t('mapClient.filterPrice')}
         </button>
         <button type="button" className={`cuisine-chip${tri !== 'recommande' ? ' active' : ''}`} aria-expanded={panneau === 'tri'} onClick={() => setPanneau((x) => (x === 'tri' ? null : 'tri'))}>
           <Icone nom="stats" taille={16} />{tri === 'recommande' ? t('mapClient.sort') : (tri === 'note' ? t('mapClient.sortRating') : t('mapClient.sortDistance'))}
         </button>
-      </div>
-      {panneau === 'prix' && (
+        </>}
+      </div>}
+      {!colonne && panneau === 'prix' && (
         <div className="carte-panneau liste-panneau">
           {[0, 1, 2, 3].map((n) => (
             <button key={n} type="button" className={`cuisine-chip${prix === n ? ' active' : ''}`} onClick={() => { setPrix(n); setPanneau(null); }}>
@@ -543,7 +647,7 @@ export default function RestaurantList() {
           ))}
         </div>
       )}
-      {panneau === 'tri' && (
+      {!colonne && panneau === 'tri' && (
         <div className="carte-panneau liste-panneau">
           {['recommande', 'note', 'distance'].map((cle) => (
             <button key={cle} type="button" className={`cuisine-chip${tri === cle ? ' active' : ''}`}
@@ -562,13 +666,13 @@ export default function RestaurantList() {
       {!loading && hasActiveFilter && <div className="small" style={{ marginBottom: 14 }}>{t('restaurantList.count', { count: list.length })}</div>}
       {loading && <SkeletonCards count={4} />}
       {!loading && hasActiveFilter && (
-        <div className="rest-grid">
+        <div className={`rest-grid${grand ? ' sl-grille' : ''}`}>
           {list.map((r) => (
             <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={toggleFavorite} t={t} />
           ))}
         </div>
       )}
-      {!loading && !hasActiveFilter && homeCommune && (
+      {!loading && !hasActiveFilter && homeCommune && !colonne && (
         <div className="local-bandeau" role="status">
           <Icone nom="position" taille={16} />
           <span>
@@ -581,7 +685,7 @@ export default function RestaurantList() {
           {inscrits.length > 0 && (
             <div className="liste-section">
               <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><AvecMarque>{inscrits.length === 1 ? t('restaurantList.sectionRegisteredOne') : t('restaurantList.sectionRegistered', { n: inscrits.length })}</AvecMarque></h3>
-              <div className="rest-grid rest-grid-scroll">
+              <div className={grand ? 'rest-grid sl-grille' : 'rest-grid rest-grid-scroll'}>
                 {inscrits.map((x) => {
                   // Publié : la carte complète de la liste (horaires, offres, favori) ; sinon, une carte « bientôt ».
                   const complet = restaurants.find((r) => r.id === x.id);
@@ -592,19 +696,19 @@ export default function RestaurantList() {
               </div>
             </div>
           )}
-          <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="nearby" />
-          <Section title={t('restaurantList.sectionCravings')} icon="favoris" list={enviesList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionFreeDelivery')} icon="scooter" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="free_delivery" />
-          <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="scooter" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="cheap_delivery" />
-          <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="offers" />
+          <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="nearby" />
+          <Section title={t('restaurantList.sectionCravings')} icon="favoris" list={enviesList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} />
+          <Section title={t('restaurantList.sectionFreeDelivery')} icon="scooter" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="free_delivery" />
+          <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="scooter" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="cheap_delivery" />
+          <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="offers" />
           {rangeesCuisine.map((s) => (
-            <Section key={s.key} title={titreRangee(t, s)} icon="restaurants" list={s.liste} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle={s.key} />
+            <Section key={s.key} title={titreRangee(t, s)} icon="restaurants" list={s.liste} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle={s.key} />
           ))}
-          <Section title={t('restaurantList.sectionHealthy')} icon="restaurants" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="healthy" />
-          <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="bio" />
-          <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="vegan" />
-          <Section title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop cle="grocery" />
-          <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epinglerOuMelanger(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay cle="discover" />
+          <Section title={t('restaurantList.sectionHealthy')} icon="restaurants" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="healthy" />
+          <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="bio" />
+          <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="vegan" />
+          <Section title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="grocery" />
+          <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epinglerOuMelanger(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay grille={grand} cle="discover" />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
           )}
@@ -622,6 +726,8 @@ export default function RestaurantList() {
       {!loading && restaurants.length === 0 && (
         <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
       )}
+      </div>
+      </div>
     </div>
   );
 }

@@ -9,7 +9,9 @@ import Icone from '../../components/Icone';
 import VisuelVide from '../../components/VisuelVide';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import { cacherImageCassee } from '../../images';
+import { useSiteLarge } from '../../hooks/useSiteLarge';
 import '../../ecran-liste.css';
+import '../../site-liste.css';
 
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 
@@ -65,6 +67,12 @@ export default function MapPage() {
   const [tri, setTri] = useState('recommande'); // 'recommande' | 'note' | 'distance'
   const [panneau, setPanneau] = useState(null); // 'cuisine' | 'prix' | 'tri' | null
   const [recherche, setRecherche] = useState('');
+  /* LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, lot « liste » de mockups/site-ordinateur.html) : à partir de 1 100 px,
+   * la recherche, les filtres et les commerces trouvés passent dans une colonne blanche à gauche, la carte prend le reste.
+   * Le tiroir « Commerces près de toi » a été retiré du téléphone parce qu'il RECOUVRAIT la carte (voir plus haut) ; sur un
+   * écran large, la colonne est À CÔTÉ : elle ne cache rien, et elle épargne de viser des épingles de huit pixels à la
+   * souris. Mêmes filtres, mêmes commerces, même ordre que les épingles. Jamais dans l'app, ni sur un téléphone. */
+  const colonne = useSiteLarge(1100);
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
@@ -75,7 +83,10 @@ export default function MapPage() {
   // route ». Les deux bandeaux sont partis : la carte n'a plus besoin de connaître les commandes,
   // et elle cesse d'interroger le serveur en boucle pour une bannière.
 
-  const position = user?.lat && user?.lng ? { lat: user.lat, lng: user.lng } : null;
+  // Mémorisée : un objet neuf à chaque rendu relançait le calcul de la liste (useMemo plus bas) pour rien.
+  const lat = user?.lat;
+  const lng = user?.lng;
+  const position = useMemo(() => (lat && lng ? { lat, lng } : null), [lat, lng]);
 
   const liste = useMemo(() => {
     const maintenant = new Date();
@@ -144,19 +155,7 @@ export default function MapPage() {
     </div>
   );
 
-  return (
-    <div className="carte-page carte-plein-ecran">
-      <div className="carte-plein">
-        <Suspense fallback={<div className="carte-attente" />}>
-          <RestaurantsMap
-            restaurants={liste}
-            height="100%"
-            userLocation={position ? { ...position, address: user.address } : null}
-            cadrerSurCommerces={!!recherche.trim()}
-            renderFiche={fiche}
-          />
-        </Suspense>
-
+  const controles = (
         <div className="carte-controles">
           {/* LA RECHERCHE EN PREMIER, comme sur la carte d'Uber : on cherche un nom bien plus souvent
               qu'on ne filtre par prix. Elle porte sur les commerces deja charges, donc elle repond
@@ -245,6 +244,52 @@ export default function MapPage() {
             )}
           </div>
         </div>
+  );
+
+  return (
+    <div className={`carte-page carte-plein-ecran${colonne ? ' sl-carte' : ''}`}>
+      {colonne && (
+        <aside className="sl-carte-colonne" aria-label={t('siteListe.carteColonneAria')}>
+          {controles}
+          {!chargement && liste.length > 0 && (
+            <ul className="sl-carte-liste">
+              {liste.map((r) => (
+                <li key={r.id}>
+                  <Link to={`/restaurants/${r.id}`} className="sl-carte-ligne">
+                    <span className="carte-fiche-photo">
+                      <VisuelVide nom={r.name} cuisine={r.cuisine} />
+                      {r.coverImageUrl && <img src={r.coverImageUrl} alt="" loading="lazy" onError={cacherImageCassee} />}
+                    </span>
+                    <span className="carte-fiche-texte">
+                      <b className="carte-fiche-nom"><span>{r.name}</span>{r.certified && <CertifiedBadge size={14} />}</b>
+                      <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ')}</small>
+                      <small>
+                        {/* Pas d'étoile sans avis (CDE VI.100), comme la fiche du commerce touché. */}
+                        {r.reviewCount > 0
+                          ? <span><span aria-hidden="true">★</span> {Number(r.rating).toFixed(1)} {t('map.reviewsCount', { count: r.reviewCount })}</span>
+                          : <span className="carte-fiche-nouveau">{t('restaurantList.newBadge')}</span>}
+                        {r.hasPromo && <span className="carte-fiche-promo">{t('restoMap.promo')}</span>}
+                      </small>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </aside>
+      )}
+      <div className="carte-plein">
+        <Suspense fallback={<div className="carte-attente" />}>
+          <RestaurantsMap
+            restaurants={liste}
+            height="100%"
+            userLocation={position ? { ...position, address: user.address } : null}
+            cadrerSurCommerces={!!recherche.trim()}
+            renderFiche={fiche}
+          />
+        </Suspense>
+
+        {!colonne && controles}
 
         {/* LES RESULTATS EN BAS, une pastille par commerce. Chercher un nom et ne voir qu'une epingle
             sur une carte oblige a viser un point de huit pixels pour savoir ce qu'on a trouve. Une
@@ -254,7 +299,7 @@ export default function MapPage() {
             Affichee seulement pendant une recherche : sans elle, ce serait une deuxieme liste de
             commerces posee sur la carte, c'est-a-dire ce que le tiroir « Commerces pres de toi »
             faisait avant d'etre retire. */}
-        {!!recherche.trim() && liste.length > 0 && (
+        {!colonne && !!recherche.trim() && liste.length > 0 && (
           <div className="carte-resultats" role="list">
             {liste.map((r) => (
               <Link key={r.id} to={`/restaurants/${r.id}`} className="carte-resultat" role="listitem">

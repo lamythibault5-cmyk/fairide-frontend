@@ -6744,6 +6744,15 @@ export default {
       chipHalal: 'Halal',
       chipGlutenFree: 'Glutenvrij'
     },
+    siteListe: {
+      modeLivraison: 'Levering',
+      modeAria: 'Levering of afhalen',
+      filtresAria: 'Filters',
+      triNote: 'Best beoordeeld',
+      triDistance: 'Dichtstbij',
+      envies: 'Voeding',
+      carteColonneAria: 'Zaken op de kaart'
+    },
     map: {
       home: 'Bij jou thuis',
       backToMapAria: 'Terug naar de kaart',
