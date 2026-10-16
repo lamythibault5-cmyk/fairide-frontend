@@ -33,8 +33,12 @@ import { euros } from '../prixPlat';
 import { defilement } from '../gestes';
 import { resetConsent, getConsent, setConsent, onConsentChange, rapportsPanneActifs } from '../consent';
 import EnteteCompte from '../components/EnteteCompte';
+import { NavCompte, RubriqueCompte } from '../components/RubriquesCompte';
+import { rubriqueDe } from '../rubriqueCompte';
 // Bandeau iris et feuille blanche de Mon compte (2026-10-16) : chargé avec la page, donc seulement quand on l'ouvre.
 import '../ecran-compte.css';
+// Le site sur ordinateur (2026-10-16) : rubriques à gauche, contenu à droite. Sans effet dans l'app (html.appli).
+import '../site-compte.css';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -160,6 +164,10 @@ export default function Account() {
   const { unread: nonLus } = useInbox();
   const retour = /^\/[a-z0-9/_-]*$/i.test(searchParams.get('retour') || '') ? searchParams.get('retour') : '';
   const [ouvertes, setOuvertes] = useState(() => new Set(sectionDemandee ? [sectionDemandee] : []));
+  // Sur ordinateur, la rubrique montrée à droite (RubriquesCompte.jsx) : celle de la rangée demandée par le lien, sinon
+  // Mon profil. Sur un téléphone et dans l'app, toutes les rubriques sont visibles et cet état ne change rien.
+  const [rubrique, setRubrique] = useState(() => rubriqueDe(sectionDemandee));
+  const contenuRef = useRef(null);
   // Le défilement doit ATTENDRE que la cible existe. Les trois ancres du restaurateur
   // (section-contrat, section-paiement, section-abonnement) ne sont rendues qu'une fois la fiche
   // du commerce chargée — deux appels enchaînés, /restaurants/mine/dashboard puis /restaurants/:id.
@@ -229,6 +237,7 @@ export default function Account() {
       toast(t('accountUi.toastSubActivating'));
       window.history.replaceState({}, '', '/account');
       setOuvertes((prev) => new Set(prev).add('abonnement'));
+      setRubrique('role');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
@@ -483,6 +492,29 @@ export default function Account() {
   // Mes casquettes (MesCasquettes.jsx) ne s'affiche pas quand elle n'a rien à dire : son titre de section non plus.
   const avecCasquettes = !(roles.length <= 1 && ['client', 'restaurant', 'driver'].every((r) => roles.includes(r)));
 
+  // Les rubriques de la colonne de gauche, sur ordinateur : les mêmes groupes que la feuille, aux mêmes conditions.
+  const rubriqueRole = role === 'client' ? { icone: 'commandes', titre: t('accountUi.ordersAndFairide') }
+    : role === 'restaurant' && restaurant ? { icone: 'commerce', titre: t('accountUi.myBusiness') }
+      : role === 'driver' ? { icone: 'scooter', titre: t('accountUi.myRides') } : null;
+  const rubriques = [
+    { cle: 'messages', icone: 'courrier', titre: t('inbox.rowTitle'), compteur: nonLus },
+    { cle: 'profil', icone: 'compte', titre: t('accountUi.myProfile') },
+    { cle: 'solde', icone: 'solde', titre: t('accountUi.balanceBenefits') },
+    rubriqueRole && { cle: 'role', ...rubriqueRole },
+    avecCasquettes && { cle: 'casquettes', icone: 'personnes', titre: t('casquettes.titre') },
+    { cle: 'assistance', icone: 'bouee', titre: t('accountUi.support') }
+  ].filter(Boolean);
+  // La fiche du commerce arrive après la page : tant qu'elle manque, « Mon commerce » n'existe pas encore et on montre Mon profil.
+  const rubriqueActive = rubriques.some((r) => r.cle === rubrique) ? rubrique : 'profil';
+  function choisirRubrique(cle) {
+    setRubrique(cle);
+    // Messages n'a qu'une rangée : on l'ouvre tout de suite, plutôt que de montrer une rubrique d'une ligne à recliquer.
+    if (cle === 'messages') setOuvertes((prev) => new Set(prev).add('messages'));
+    // Choisie depuis le bas d'une longue rubrique : on remonte au début de la nouvelle (la colonne de gauche est collante).
+    const haut = contenuRef.current?.getBoundingClientRect().top;
+    if (haut < 0) window.scrollTo({ top: window.scrollY + haut - 16, behavior: defilement() });
+  }
+
   return (
     <div className="compte-ecran">
       {/* LE BANDEAU IRIS (2026-10-16) : initiales, nom, e-mail et les trois raccourcis du rôle (EnteteCompte.jsx). « Mon
@@ -493,6 +525,12 @@ export default function Account() {
 
       {/* LA FEUILLE BLANCHE : toutes les rangées, dans le même ordre qu'avant, sous un titre de section par groupe. */}
       <div className="compte-feuille">
+      <div className="compte-reglages">
+      <NavCompte rubriques={rubriques} active={rubriqueActive} onChoisir={choisirRubrique} onDeconnexion={logout} />
+      <div className="compte-contenu" ref={contenuRef}>
+      <RubriqueCompte cle="messages" active={rubriqueActive}>
+      {/* Titre de la rubrique sur ordinateur seulement : dans la feuille du téléphone, la rangée Messages n'a pas de titre au-dessus. */}
+      <h2 className="compte-feuille-titre compte-titre-site">{t('inbox.rowTitle')}</h2>
 
       {/* ——— Messages : en tête, juste sous l'identité — c'est par là que Fairide parle aux comptes
           (annonces, réponses), avec le compteur de non-lus. /account?ouvrir=messages arrive dessus déplié. ——— */}
@@ -506,8 +544,10 @@ export default function Account() {
           </LigneCompte>
         </div>
       </div>
+      </RubriqueCompte>
 
       {/* ——— Mon profil : tout ce qui décrit la personne et son accès. ——— */}
+      <RubriqueCompte cle="profil" active={rubriqueActive}>
       <h2 className="compte-feuille-titre">{t('accountUi.myProfile')}</h2>
       <div className="card account-groupe" aria-label={t('accountUi.myProfile')}>
         <LigneCompte icone="compte" titre={t('accountUi.myInfo')} sous={adresseResume || t('accountUi.profileSub')} ouverte={ouvertes.has('infos')} onClick={() => basculer('infos')}>
@@ -678,8 +718,10 @@ export default function Account() {
           </LigneCompte>
         )}
       </div>
+      </RubriqueCompte>
 
       {/* ——— Solde et avantages. ——— */}
+      <RubriqueCompte cle="solde" active={rubriqueActive}>
       <h2 className="compte-feuille-titre">{t('accountUi.balanceBenefits')}</h2>
       <div className="card account-groupe" aria-label={t('accountUi.balanceBenefits')}>
         {role === 'client' && (
@@ -759,7 +801,9 @@ export default function Account() {
           )}
         </LigneCompte>
       </div>
+      </RubriqueCompte>
 
+      <RubriqueCompte cle="role" active={rubriqueActive}>
       {/* ——— Selon le rôle. Une rubrique ne figure qu'à UN endroit : ce qui est dans la barre du bas
           (restaurants, recherche, commandes, favoris, carte) n'est pas repris ici. ———
           Client : « Moyens de paiement » liste les cartes qu'il a enregistrées chez Stripe (et les retire) ; « Titres
@@ -1042,16 +1086,20 @@ export default function Account() {
           </LigneCompte>
         </div>
       )}
+      </RubriqueCompte>
 
       {/* Les casquettes du compte : commander, tenir un commerce, livrer. Placé juste avant
           l'assistance, donc après tout ce qui concerne le rôle en cours — on ne propose pas de
           changer de vue à quelqu'un qui n'a pas fini de lire la sienne. */}
+      <RubriqueCompte cle="casquettes" active={rubriqueActive}>
       {avecCasquettes && <h2 className="compte-feuille-titre">{t('casquettes.titre')}</h2>}
       <MesCasquettes />
+      </RubriqueCompte>
 
       {/* Assistance — commune à tous les rôles : un restaurateur ou un livreur a autant besoin de
           signaler un bug qu'un client. « Supprimer mon compte » n'y figure pas : il est au bout de
           « Mes infos », avec le reste de ce qui concerne la personne. */}
+      <RubriqueCompte cle="assistance" active={rubriqueActive}>
       <h2 className="compte-feuille-titre">{t('accountUi.support')}</h2>
       <div className="card account-groupe" aria-label={t('accountUi.support')}>
         <LigneCompte to="/aide" icone="bouee" titre={t('accountUi.needHelp')} sous={t('accountUi.needHelpSub')} />
@@ -1061,8 +1109,12 @@ export default function Account() {
         {role !== 'client' && <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />}
         {experienceApp() && <RapportsPanne />}
       </div>
+      </RubriqueCompte>
+      </div>
+      </div>
 
-      <button className="btn-danger-ghost" onClick={logout}>{t('nav.logout')}</button>
+      {/* Sur ordinateur, « Se déconnecter » est au bas de la colonne des rubriques (NavCompte) : celui-ci y est masqué. */}
+      <button className="btn-danger-ghost compte-deconnexion" onClick={logout}>{t('nav.logout')}</button>
 
       <p className="account-legal">
         <Link to="/confidentialite">{t('accountUi.privacy')}</Link>

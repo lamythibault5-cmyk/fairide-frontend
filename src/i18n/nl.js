@@ -6063,6 +6063,10 @@ export default {
       confirme_restaurant: 'Je zult je zaak kunnen aanmaken en haar kaart voorbereiden. Ze wordt pas zichtbaar voor klanten, en kan pas geld ontvangen, na goedkeuring door het team en verificatie van je betalingen.',
       confirme_driver: 'Je koeriersdossier wordt aangemaakt. Daarna laad je je documenten op en wacht je op de goedkeuring van het team voor je ritten kunt aannemen.'
     },
+    // Mon compte sur ordinateur (site, 2026-10-16) : la colonne des rubriques (RubriquesCompte.jsx).
+    siteCompte: {
+      navAria: 'Rubrieken van je account'
+    },
     savedCards: {
       rowSub: 'Kaarten opgeslagen bij Stripe',
       intro: 'Bij het betalen biedt de Stripe-pagina aan je kaart op te slaan. Vink je dat aan, dan bewaart Stripe ze en stelt ze de volgende keer opnieuw voor. Fairide ziet enkel het merk, de laatste 4 cijfers en de vervaldatum.',

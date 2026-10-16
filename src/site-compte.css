@@ -1,0 +1,119 @@
+/* MON COMPTE SUR LE SITE, SUR ORDINATEUR (fondateur, 2026-10-16 : « Proposition » de la section 7 de
+   mockups/site-ordinateur.html). Importé par pages/Account.jsx et par les sous-pages du compte client (Mes factures,
+   Mes documents). Complète ecran-compte.css, qui reste la règle du téléphone et de l'app.
+
+   Ce que la maquette demande : le bandeau garde l'avatar et les trois raccourcis (en pastilles, sur une ligne) ; dessous,
+   au lieu d'une longue colonne de rangées, deux colonnes — les rubriques à gauche (NavCompte, RubriquesCompte.jsx), le
+   contenu de la rubrique choisie à droite, 760 px au plus. Les rangées sont les mêmes et se déplient sur place.
+
+   Tout ce qui change la mise en page est sous html:not(.appli) ET au-dessus de 1100 px : l'app ne bouge pas d'un pixel
+   (ses rangées s'ouvrent toujours dans une feuille), et le site sur un téléphone garde bandeau + feuille sur une colonne.
+   1100 px : la barre latérale du site prend ~240 px ; en dessous, deux colonnes laisseraient moins de 550 px aux rangées.
+   Pas de requête de conteneur ici : `container-type` impose un confinement de mise en page, et les fenêtres de dialogue
+   en position: fixed de la page (confirmations, vérification du téléphone) se placeraient alors dans la page, pas à l'écran.
+   Pas de verre ni de flou : sur le site, bandeau iris plein et feuille blanche (CLAUDE.md, Styling). */
+
+/* ---------- Par défaut (téléphone, tablette, app) : la page d'avant ----------
+   Les enveloppes ajoutées pour l'ordinateur s'effacent (display: contents) : leurs enfants se rangent dans la feuille
+   comme s'ils en étaient les enfants directs. La colonne des rubriques et le titre « Messages » n'existent pas ici. */
+.compte-reglages, .compte-contenu, .compte-categorie { display: contents; }
+.compte-nav, .compte-titre-site { display: none; }
+
+@media (min-width: 1100px) {
+  html:not(.appli) .compte-ecran { max-width: 1120px; --compte-bord: 32px; }
+
+  /* ---------- Le bandeau : identité à gauche, raccourcis en pastilles à droite ---------- */
+  html:not(.appli) .compte-bandeau { display: flex; align-items: center; gap: 24px; padding: 30px 32px 58px; }
+  html:not(.appli) .compte-tete { flex: 1; min-width: 0; margin: 0; gap: 18px; }
+  html:not(.appli) .compte-avatar { width: 72px; height: 72px; font-size: 24px; }
+  html:not(.appli) .compte-nom { font-size: 34px; }
+  html:not(.appli) .compte-email { font-size: 15.5px; }
+  html:not(.appli) .compte-raccourcis { display: flex; flex: none; gap: 10px; }
+  html:not(.appli) .compte-raccourci {
+    flex-direction: row; gap: 9px; min-height: 44px; padding: 10px 18px; border-radius: var(--radius-pill);
+    font-size: 14.5px; line-height: 1.2; white-space: nowrap; transition: background .15s, border-color .15s;
+  }
+  html:not(.appli) .compte-raccourci:hover { background: rgba(255, 255, 255, .1); border-color: #fff; }
+  html:not(.appli) .compte-raccourci:active { transform: none; }
+  html:not(.appli) .compte-raccourci svg { width: 18px; height: 18px; }
+  html:not(.appli) .compte-velo { right: 32px; bottom: 28px; }
+
+  /* ---------- La feuille : rubriques | contenu ---------- */
+  html:not(.appli) .compte-feuille { margin-top: -26px; border-radius: 28px 28px 0 0; padding: 30px var(--compte-bord) 12px; }
+  html:not(.appli) .compte-reglages {
+    display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 40px; align-items: start;
+  }
+  html:not(.appli) .compte-contenu { display: block; min-width: 0; max-width: 760px; }
+  html:not(.appli) .compte-categorie { display: block; animation: compte-fondu .2s ease backwards; }
+  html:not(.appli) .compte-categorie:not([data-active]) { display: none; }
+
+  /* Le titre de la rubrique devient le titre du panneau (maquette : .panneau h2), plus le petit intertitre en capitales. */
+  html:not(.appli) .compte-contenu .compte-feuille-titre {
+    display: block; margin: 0 0 18px; font-family: var(--font-titre); font-size: 26px; font-weight: 700; line-height: 1.15;
+    color: var(--ink); letter-spacing: 0; text-transform: none;
+  }
+
+  /* Les cartes de rangées : un peu plus d'air qu'au téléphone, on a la place. */
+  html:not(.appli) .compte-feuille .account-link-row { padding: 14px 18px; gap: 14px; }
+  html:not(.appli) .compte-feuille .account-link-icon { width: 42px; height: 42px; border-radius: 12px; }
+  html:not(.appli) .compte-feuille .account-link-text b { font-size: 15px; }
+  html:not(.appli) .compte-feuille .account-link-text .small { font-size: 13px; }
+  html:not(.appli) .compte-feuille .account-panneau { padding: 16px 18px 20px; }
+  /* Messages : sur le téléphone, une rangée nue posée sur la feuille ; ici une carte comme les autres rubriques. */
+  html:not(.appli) .compte-feuille .card.compte-groupe-messages {
+    margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 18px;
+  }
+  html:not(.appli) .compte-feuille .card.compte-groupe-messages .account-link-row { padding: 14px 18px; }
+  html:not(.appli) .compte-feuille .card.compte-groupe-messages .account-link-row:hover { background: var(--cream-dim); }
+
+  /* ---------- La colonne des rubriques ---------- */
+  html:not(.appli) .compte-nav { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 2px; }
+  html:not(.appli) .compte-nav .compte-nav-bouton {
+    display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 10px 14px; border: 0;
+    border-radius: 12px; background: none; color: var(--ink); text-align: left; font-size: 14.5px; font-weight: 600;
+    line-height: 1.25; transition: background .15s, color .15s;
+  }
+  html:not(.appli) .compte-nav .compte-nav-bouton:hover:not(:disabled) { background: var(--cream-dim); filter: none; }
+  html:not(.appli) .compte-nav .compte-nav-bouton:active { transform: none; }
+  html:not(.appli) .compte-nav .compte-nav-bouton:focus-visible { outline: 3px solid var(--iris); outline-offset: 2px; }
+  html:not(.appli) .compte-nav .compte-nav-bouton svg { flex: none; color: var(--ink-soft); }
+  html:not(.appli) .compte-nav .compte-nav-bouton.on { background: rgba(59, 47, 181, .1); color: var(--iris); }
+  html:not(.appli) .compte-nav .compte-nav-bouton.on svg { color: var(--iris); }
+  /* La rubrique choisie garde sa teinte iris sous le pointeur (sinon le survol gris l'efface juste après le clic). */
+  html:not(.appli) .compte-nav .compte-nav-bouton.on:hover:not(:disabled) { background: rgba(59, 47, 181, .14); }
+  html:not(.appli) .compte-nav-texte { flex: 1; min-width: 0; }
+  html:not(.appli) .compte-nav-compteur {
+    flex: none; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--iris); color: #fff;
+    display: grid; place-items: center; font-size: 12px; font-weight: 700;
+  }
+  html:not(.appli) .compte-nav .compte-nav-sortie { margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--line); border-radius: 0 0 12px 12px; color: var(--red); }
+  html:not(.appli) .compte-nav .compte-nav-sortie svg { color: var(--red); }
+
+  /* « Se déconnecter » est dans la colonne de gauche ; les liens légaux passent sous le contenu, alignés sur lui. */
+  html:not(.appli) .compte-feuille > .compte-deconnexion { display: none; }
+  html:not(.appli) .compte-feuille > .account-legal { justify-content: flex-start; margin: 40px 0 6px 276px; max-width: 760px; }
+  html:not(.appli) .compte-feuille > .account-legal .account-build { text-align: left; }
+}
+
+@keyframes compte-fondu { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- Les sous-pages du compte client sur le site (Mes factures, Mes documents) ----------
+   Retouche légère, pour qu'elles soient de la même famille que Mon compte : titre en Inter Tight, largeur de lecture,
+   cartes à filet plus arrondies, rangées qui réagissent au survol. Rien dans l'app (html.appli), qui garde ses écrans. */
+html:not(.appli) .compte-sous-page { max-width: 760px; }
+html:not(.appli) .compte-sous-page .compte-sous-titre {
+  margin: 0 0 12px; font-family: var(--font-titre); font-size: 30px; font-weight: 700; line-height: 1.15; letter-spacing: 0;
+}
+html:not(.appli) .compte-sous-page .card { border-radius: 18px; }
+html:not(.appli) .compte-sous-page .facture-liste { padding: 0; overflow: hidden; }
+html:not(.appli) .compte-sous-page .facture-ligne { padding: 14px 18px; transition: background .15s; }
+html:not(.appli) .compte-sous-page .facture-ligne:hover { background: var(--cream-dim); }
+@media (min-width: 901px) {
+  html:not(.appli) .compte-sous-page .compte-sous-titre { font-size: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not(.appli) .compte-categorie { animation: none; }
+  html:not(.appli) .compte-nav .compte-nav-bouton, html:not(.appli) .compte-raccourci,
+  html:not(.appli) .compte-sous-page .facture-ligne { transition: none; }
+}
