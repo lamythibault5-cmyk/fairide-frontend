@@ -1,0 +1,126 @@
+/* MON COMPTE, BANDEAU IRIS ET FEUILLE BLANCHE (fondateur, 2026-10-16 : « Proposition » de Mon compte dans
+   mockups/tous-les-ecrans.html). Importé par pages/Account.jsx seulement : la feuille de style arrive avec la page.
+   En haut, le bandeau iris (EnteteCompte.jsx) : initiales dans un rond lime, nom et e-mail, trois raccourcis en tuiles
+   sur l'iris, le vélo garé au bord. Dessous, la feuille blanche aux coins ronds qui remonte sur le bandeau : les mêmes
+   rangées qu'avant (LigneCompte), dans le même ordre, sous un petit titre par groupe, l'icône iris dans sa tuile.
+   Tout est rangé sous .compte-ecran : LigneCompte sert aussi aux tableaux de bord, qui ne changent pas.
+   Le ressort (rond qui saute, feuille qui monte) ne joue que dans l'app (html.appli) ; le site reste immobile. */
+
+.compte-ecran { --compte-bord: 18px; }
+
+/* ---------- Le bandeau ---------- */
+.compte-bandeau { position: relative; background: var(--iris); color: #fff; padding: 20px 20px 48px; border-radius: var(--radius) var(--radius) 0 0; }
+.compte-tete { display: flex; align-items: center; gap: 14px; margin: 4px 0 18px; }
+.compte-avatar {
+  flex: none; width: 62px; height: 62px; border-radius: 50%; background: var(--lime); color: var(--ink);
+  display: grid; place-items: center; font-family: var(--font-ui); font-size: 21px; font-weight: 800; letter-spacing: .02em;
+}
+.compte-tete-texte { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.compte-nom { margin: 0; color: #fff; font-family: var(--font-titre); font-size: 29px; line-height: 1.1; font-weight: 700; letter-spacing: 0; overflow-wrap: anywhere; }
+.compte-email { color: rgba(255, 255, 255, .82); font-size: 14.5px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Les raccourcis : trois tuiles égales, filet blanc sur l'iris. */
+.compte-raccourcis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.compte-raccourci {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 84px;
+  padding: 14px 6px; border: 1px solid rgba(255, 255, 255, .3); border-radius: var(--radius); background: transparent;
+  color: #fff; text-decoration: none; text-align: center; font-size: 12.5px; font-weight: 600; line-height: 1.2;
+  transition: transform .12s, background .15s;
+}
+.compte-raccourci:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.compte-raccourci:active { transform: scale(.95); background: rgba(255, 255, 255, .1); }
+.compte-raccourci:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.compte-raccourci svg { flex: none; }
+
+/* Le vélo de la marque, garé au bord du bandeau, juste au-dessus de la feuille. */
+.compte-velo { position: absolute; right: 18px; bottom: 26px; color: var(--lime); opacity: .9; line-height: 0; }
+.compte-velo svg { display: block; }
+
+/* ---------- La feuille ---------- */
+.compte-feuille {
+  position: relative; background: #fff; color: var(--ink); border-radius: 26px 26px 0 0;
+  margin-top: -22px; padding: 22px var(--compte-bord) 8px;
+}
+.compte-feuille-titre {
+  margin: 20px 0 8px; font-family: var(--font-ui); font-size: 12px; font-weight: 700; line-height: 1.3;
+  color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase;
+}
+
+/* Les groupes : cartes à filet, plus arrondies ; le titre au-dessus porte l'espacement. */
+.compte-feuille .card.account-groupe { margin: 0; border-radius: 18px; }
+/* Un filet sous CHAQUE rangée du groupe. styles.css ne le donne qu'aux blocs « rangée + panneau » (.account-groupe > *)
+   et le retire aux rangées simples (lien, bouton) : dans un même groupe, certaines rangées étaient séparées, d'autres non.
+   Les ancres vides (#section-contrat) n'en portent pas, sinon le filet doublait. */
+.compte-feuille .account-groupe > .account-link-row { border-bottom: 1px solid var(--line); }
+.compte-feuille .account-groupe > :last-child { border-bottom: 0; }
+.compte-feuille .account-groupe > :empty { border-bottom: 0; }
+/* Messages, en tête et sans titre : une rangée posée sur la feuille, soulignée d'un filet. */
+.compte-feuille .card.compte-groupe-messages { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; margin: 0 calc(-1 * var(--compte-bord)); padding: 0 var(--compte-bord); }
+.compte-feuille .card.compte-groupe-messages .account-link-row { padding-left: 0; padding-right: 0; }
+.compte-feuille .card.compte-groupe-messages .account-link-row:hover { background: none; }
+/* Non lus : plus de dégradé jaune ni de liseré (inbox.css) sur la feuille ; la tuile et le tracé passent à l'orange de
+   l'avertissement (accent « warn ») et la ligne « n nouveaux messages » s'écrit en noir. */
+.compte-feuille .card.compte-groupe-messages.a-non-lus { background: #fff; }
+.compte-feuille .compte-groupe-messages.a-non-lus .account-link-icon { border-color: currentColor; }
+.compte-feuille .compte-groupe-messages.a-non-lus .account-link-text .small { color: var(--ink); font-weight: 600; }
+
+/* Les rangées : l'icône iris dans une tuile à filet, le chevron dessiné. */
+.compte-feuille .account-link-row { padding: 11px 14px; gap: 12px; border-radius: 0; transition: background .15s, transform .12s; }
+.compte-feuille .account-link-icon {
+  width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; color: var(--iris); background: #fff;
+}
+.compte-feuille .account-link-icon svg { width: 19px; height: 19px; }
+.compte-feuille .account-link-icon.account-link-icon--warn { color: var(--orange); }
+.compte-feuille .account-link-icon.account-link-icon--danger,
+.compte-feuille .account-link-danger .account-link-icon { color: var(--red); }
+.compte-feuille .account-link-text b { font-size: 14.5px; }
+.compte-feuille .account-link-text .small { font-size: 12.5px; }
+.compte-feuille .account-link-chevron {
+  width: 8px; height: 8px; margin-right: 4px; font-size: 0; color: transparent;
+  border-right: 2px solid var(--ink-faint); border-top: 2px solid var(--ink-faint); transform: rotate(45deg);
+}
+.compte-feuille .account-link-row.ouverte .account-link-chevron--pliable { transform: rotate(135deg); }
+/* Les rangées à bouton (casquettes, rapports de panne) : le bouton reste à droite, comme sur la maquette. Ailleurs il
+   passe sous le texte sous 600 px (styles.css) parce que ses libellés sont longs ; ici ils tiennent en un mot (« Activer »,
+   « Basculer », « Couper », « Vue actuelle ») et c'est le sous-titre qui passe à la ligne. */
+.compte-feuille .account-link-row { flex-wrap: nowrap; }
+.compte-feuille .account-link-action { flex-basis: auto; margin: 0; }
+.compte-feuille .account-link-action .btn-sm, .compte-feuille .account-link-action button { padding: 0 14px !important; font-size: 13.5px !important; white-space: nowrap; }
+.compte-feuille .account-link-action .pill { font-size: 12px; padding: 4px 10px; white-space: nowrap; }
+.compte-feuille .account-link-row:has(.account-link-action) .account-link-text .small { white-space: normal; }
+
+/* Le pied : « Se déconnecter » centré, puis les liens légaux et le numéro de build. */
+.compte-feuille > .btn-danger-ghost { display: block; margin: 22px auto 0; padding: 10px 16px; font-size: 15px; font-weight: 600; text-underline-offset: 3px; }
+
+/* ---------- Téléphone et tablette : bandeau et feuille d'un bord à l'autre ----------
+   .dashboard-main a 16 px de marge (--gouttiere) et 16 px en haut, plus l'encoche (styles.css, max-width: 900px) :
+   le bandeau les annule pour toucher le haut et les côtés de l'écran ; l'encoche passe dans sa marge intérieure. */
+@media (max-width: 900px) {
+  .compte-ecran { --compte-bord: 18px; }
+  .compte-bandeau {
+    border-radius: 0;
+    margin: calc(-16px - env(safe-area-inset-top)) calc(-1 * var(--gouttiere, 16px)) 0;
+    padding-top: calc(20px + env(safe-area-inset-top));
+  }
+  .compte-feuille { margin-left: calc(-1 * var(--gouttiere, 16px)); margin-right: calc(-1 * var(--gouttiere, 16px)); }
+  /* Dans l'app, la barre d'onglets flotte sur le bas de l'écran et le site n'y a pas son pied de page (qui, lui, lui
+     laisse sa hauteur) : la feuille la dégage elle-même, sinon les liens légaux et le build restent dessous. */
+  html.appli .compte-feuille { padding-bottom: calc(var(--hauteur-onglets) + 8px + env(safe-area-inset-bottom)); }
+}
+/* Ordinateur : la page garde une largeur de lecture ; le bandeau est le haut arrondi d'un « écran ». */
+@media (min-width: 901px) {
+  .compte-ecran { max-width: 760px; --compte-bord: 22px; }
+}
+
+/* ---------- Dans l'app seulement : le ressort ---------- */
+html.appli .compte-avatar { animation: compte-saute .45s cubic-bezier(.3, 1.8, .5, 1) backwards; }
+html.appli .compte-feuille { animation: compte-monte .45s cubic-bezier(.34, 1.45, .64, 1) backwards; }
+html.appli .compte-feuille .account-link-row:active { background: var(--cream-dim); transform: scale(.985); }
+@keyframes compte-saute { from { transform: scale(.3); } to { transform: none; } }
+@keyframes compte-monte { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  html.appli .compte-avatar, html.appli .compte-feuille { animation: none; }
+  .compte-raccourci, .compte-feuille .account-link-row { transition: none; }
+  .compte-raccourci:active, html.appli .compte-feuille .account-link-row:active { transform: none; }
+}

@@ -6054,6 +6054,10 @@ export default {
       sold: 'Sold',
       footnote: 'Orders received on Fairide (not cancelled or refused), Brussels time, test orders excluded. Revenue is the price of the dishes paid by customers, before the Fairide commission; your statements under “Invoices” are the reference.'
     },
+    // Mon compte, bandeau iris (2026-10-16, EnteteCompte.jsx).
+    ecranCompte: {
+      raccourcis: 'Shortcuts'
+    },
     accountUi: {
       simulationRow: 'Simulation: test orders',
       simulationSub: 'For 7 days after the terminal first connects: receive test orders, print, simulate a courier, take photos.',

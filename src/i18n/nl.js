@@ -6063,6 +6063,10 @@ export default {
       sold: 'Verkocht',
       footnote: 'Bestellingen ontvangen via Fairide (niet geannuleerd of geweigerd), Brusselse tijd, testbestellingen niet meegeteld. De omzet is de prijs van de gerechten die klanten betaalden, vóór de commissie van Fairide; je overzichten onder « Facturen » zijn de referentie.'
     },
+    // Mon compte, bandeau iris (2026-10-16, EnteteCompte.jsx).
+    ecranCompte: {
+      raccourcis: 'Snelkoppelingen'
+    },
     accountUi: {
       simulationRow: 'Simulatie: testbestellingen',
       simulationSub: 'Gedurende 7 dagen na de eerste verbinding van de terminal: ontvang testbestellingen, print, simuleer een koerier, fotografeer.',

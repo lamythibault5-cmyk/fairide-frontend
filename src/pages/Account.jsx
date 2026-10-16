@@ -32,6 +32,9 @@ import TerminalFairide from '../components/TerminalFairide';
 import { euros } from '../prixPlat';
 import { defilement } from '../gestes';
 import { resetConsent, getConsent, setConsent, onConsentChange, rapportsPanneActifs } from '../consent';
+import EnteteCompte from '../components/EnteteCompte';
+// Bandeau iris et feuille blanche de Mon compte (2026-10-16) : chargé avec la page, donc seulement quand on l'ouvre.
+import '../ecran-compte.css';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -73,7 +76,7 @@ export default function Account() {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
-  const { user, role, token, updateProfile, refreshUser, requestContactChange, confirmContactChange, requestDeletionCode, deleteAccount, logout } = useAuth();
+  const { user, role, roles, token, updateProfile, refreshUser, requestContactChange, confirmContactChange, requestDeletionCode, deleteAccount, logout } = useAuth();
   const toast = useToast();
 
   // Partage natif là où il existe (téléphones, Safari), presse-papiers ailleurs. Le refus de la
@@ -477,32 +480,23 @@ export default function Account() {
   const adresseResume = user.addressStreet && user.addressCity ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',') : null;
   const solde = Number(user.balance || 0).toFixed(2);
 
-  return (
-    <div>
-      {/* LE NOM EST LE TITRE DE LA PAGE. « Mon compte » au-dessus d'une carte qui répétait le nom,
-          l'e-mail et le rôle faisait deux en-têtes pour une seule page — et « Mon compte » ne dit
-          rien que l'onglet allumé en bas ne dise déjà. Le nom, lui, confirme d'un coup d'œil sous
-          quel compte on est, ce qui est la vraie question quand on ouvre cet écran. */}
-      <div className="account-entete">
-        <h1 className="page-title account-entete-nom">{nomComplet || user.email}</h1>
-        <span className="account-avatar account-avatar-grand" aria-hidden="true">{initiales}</span>
-      </div>
+  // Mes casquettes (MesCasquettes.jsx) ne s'affiche pas quand elle n'a rien à dire : son titre de section non plus.
+  const avecCasquettes = !(roles.length <= 1 && ['client', 'restaurant', 'driver'].every((r) => roles.includes(r)));
 
-      {/* Trois raccourcis vers ce qu'on vient chercher le plus souvent : le reste de la page est
-          une liste de réglages, qu'on ouvre rarement. Ils dépendent du rôle — un livreur n'a pas
-          de favoris, un restaurateur n'a pas de commandes à lui. */}
-      <div className="account-raccourcis">
-        {raccourcis.map((r) => (
-          <Link key={r.to} to={r.to} className="account-raccourci">
-            <Icone nom={r.icone} taille={24} />
-            <span>{r.libelle}</span>
-          </Link>
-        ))}
-      </div>
+  return (
+    <div className="compte-ecran">
+      {/* LE BANDEAU IRIS (2026-10-16) : initiales, nom, e-mail et les trois raccourcis du rôle (EnteteCompte.jsx). « Mon
+          compte » n'y figure pas : l'onglet allumé en bas le dit déjà ; le nom, lui, dit sous quel compte on est. Trois
+          raccourcis vers ce qu'on vient chercher le plus souvent ; ils dépendent du rôle — un livreur n'a pas de
+          favoris, un restaurateur n'a pas de commandes à lui. */}
+      <EnteteCompte nom={nomComplet} email={user.email} initiales={initiales} raccourcis={raccourcis} />
+
+      {/* LA FEUILLE BLANCHE : toutes les rangées, dans le même ordre qu'avant, sous un titre de section par groupe. */}
+      <div className="compte-feuille">
 
       {/* ——— Messages : en tête, juste sous l'identité — c'est par là que Fairide parle aux comptes
           (annonces, réponses), avec le compteur de non-lus. /account?ouvrir=messages arrive dessus déplié. ——— */}
-      <div className={`card account-groupe account-groupe-messages${nonLus > 0 ? ' a-non-lus' : ''}`} aria-label={t('inbox.rowTitle')}>
+      <div className={`card account-groupe compte-groupe-messages account-groupe-messages${nonLus > 0 ? ' a-non-lus' : ''}`} aria-label={t('inbox.rowTitle')}>
         <div id="section-messages">
           {/* Le sous-titre ne s'affiche QUE s'il y a des messages non lus : ça, c'est une
               information. « Les réponses de l'équipe » sous un titre « Messages » n'en était pas
@@ -514,6 +508,7 @@ export default function Account() {
       </div>
 
       {/* ——— Mon profil : tout ce qui décrit la personne et son accès. ——— */}
+      <h2 className="compte-feuille-titre">{t('accountUi.myProfile')}</h2>
       <div className="card account-groupe" aria-label={t('accountUi.myProfile')}>
         <LigneCompte icone="compte" titre={t('accountUi.myInfo')} sous={adresseResume || t('accountUi.profileSub')} ouverte={ouvertes.has('infos')} onClick={() => basculer('infos')}>
           <form onSubmit={saveInfo}>
@@ -685,6 +680,7 @@ export default function Account() {
       </div>
 
       {/* ——— Solde et avantages. ——— */}
+      <h2 className="compte-feuille-titre">{t('accountUi.balanceBenefits')}</h2>
       <div className="card account-groupe" aria-label={t('accountUi.balanceBenefits')}>
         {role === 'client' && (
           <LigneCompte icone="solde" titre={t('accountUi.myBalance')} sous={t('accountUi.balanceSub', { balance: solde })} ouverte={ouvertes.has('solde')} onClick={() => basculer('solde')}>
@@ -768,6 +764,7 @@ export default function Account() {
           (restaurants, recherche, commandes, favoris, carte) n'est pas repris ici. ———
           Client : « Moyens de paiement » liste les cartes qu'il a enregistrées chez Stripe (et les retire) ; « Titres
           restaurant » mène à une réponse écrite — Fairide n'accepte pas encore les titres-restaurant. */}
+      {role === 'client' && <h2 className="compte-feuille-titre">{t('accountUi.ordersAndFairide')}</h2>}
       {role === 'client' && (
         <div className="card account-groupe" aria-label={t('accountUi.ordersAndFairide')}>
           {/* Les favoris ont quitté la barre du bas, ramenée à cinq onglets pour que chaque cible
@@ -791,6 +788,7 @@ export default function Account() {
         </div>
       )}
 
+      {role === 'restaurant' && restaurant && <h2 className="compte-feuille-titre">{t('accountUi.myBusiness')}</h2>}
       {role === 'restaurant' && restaurant && (
         <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>
           {/* Plus de rangée « Carte » (2026-09-23) : la page promettait de suivre les livreurs en direct,
@@ -1027,6 +1025,7 @@ export default function Account() {
 
       {/* Rubriques du livreur qu'on ouvre de temps en temps, sorties de la barre du bas au profit de ce
           qu'il consulte en course : courses, carte, gains. */}
+      {role === 'driver' && <h2 className="compte-feuille-titre">{t('accountUi.myRides')}</h2>}
       {role === 'driver' && (
         <div className="card account-groupe" aria-label={t('accountUi.myRides')}>
           <LigneCompte icone="stats" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
@@ -1047,11 +1046,13 @@ export default function Account() {
       {/* Les casquettes du compte : commander, tenir un commerce, livrer. Placé juste avant
           l'assistance, donc après tout ce qui concerne le rôle en cours — on ne propose pas de
           changer de vue à quelqu'un qui n'a pas fini de lire la sienne. */}
+      {avecCasquettes && <h2 className="compte-feuille-titre">{t('casquettes.titre')}</h2>}
       <MesCasquettes />
 
       {/* Assistance — commune à tous les rôles : un restaurateur ou un livreur a autant besoin de
           signaler un bug qu'un client. « Supprimer mon compte » n'y figure pas : il est au bout de
           « Mes infos », avec le reste de ce qui concerne la personne. */}
+      <h2 className="compte-feuille-titre">{t('accountUi.support')}</h2>
       <div className="card account-groupe" aria-label={t('accountUi.support')}>
         <LigneCompte to="/aide" icone="bouee" titre={t('accountUi.needHelp')} sous={t('accountUi.needHelpSub')} />
         <LigneCompte to="/aide?sujet=avis" icone="etoile" titre={t('accountUi.feedback')} sous={t('accountUi.feedbackSub')} />
@@ -1073,6 +1074,7 @@ export default function Account() {
         {!experienceApp() && <button type="button" className="account-legal-bouton" onClick={resetConsent}>{t('footer.manageCookies')}</button>}
         <span className="account-build">Build {__BUILD_ID__}</span>
       </p>
+      </div>
     </div>
   );
 }

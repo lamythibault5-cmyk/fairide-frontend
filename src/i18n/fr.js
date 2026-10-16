@@ -6073,6 +6073,10 @@ export default {
       sold: 'Vendus',
       footnote: 'Commandes reçues sur Fairide (ni annulées, ni refusées), heure de Bruxelles, commandes d\'essai exclues. Le chiffre est le prix des plats payé par les clients, avant la commission de Fairide ; tes relevés dans « Factures » font foi.'
     },
+    // Mon compte, bandeau iris (2026-10-16, EnteteCompte.jsx).
+    ecranCompte: {
+      raccourcis: 'Raccourcis'
+    },
     accountUi: {
       simulationRow: 'Simulation : commandes d\'essai',
       simulationSub: 'Pendant 7 jours après la première connexion du terminal : reçois des commandes d\'essai, imprime, simule un livreur, photographie.',
