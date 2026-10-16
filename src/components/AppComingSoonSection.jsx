@@ -1,75 +1,26 @@
-import BrandMark from './BrandMark';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
 import AvecMarque from './AvecMarque';
 
-// Section "l'appli arrive bientôt" sur la page d'accueil — inspirée des bannières de téléchargement des
-// grandes plateformes (badges de store + mockup téléphone), mais honnête sur ce qui existe vraiment :
-// Fairide n'a pas encore d'appli mobile, donc les badges ne sont pas cliquables — aucune fausse redirection
-// vers un store qui n'a rien à proposer. Les badges eux-mêmes restent génériques (texte + icône maison, pas
-// de logo Apple/Google reproduit) plutôt qu'une copie du design des vraies plateformes.
-// Plus de date annoncée ni de badge AppGallery (2026-10-06) : le 6 octobre est passé sans application
-// publiée, et la version Huawei n'est pas préparée (notifications par Firebase, absent de ces téléphones).
-// L'application viendra quand le site sera au point — voir docs/application-mobile.md.
-const STORE_BADGES = [
-  { icon: 'mobile', line2: 'App Store' },
-  { icon: 'mobile', line2: 'Google Play' }
-];
-
-function PhoneMockup() {
-  const { t } = useLanguage();
-  return (
-    <div className="app-soon-phone">
-      <div className="app-soon-phone-notch" />
-      <div className="app-soon-phone-screen">
-        <div className="app-soon-phone-brand">
-          <BrandMark size={22} />
-          <span className="wordmark">Fairide</span>
-        </div>
-        <div className="app-soon-phone-search">{t('landing.mockSearchPlaceholder')}</div>
-        <div className="app-soon-phone-chips">
-          {/* Cinq pastilles vides, plus la rangee d'emojis de nourriture qui vivait ici. Le reste
-              de cette maquette est deja abstrait - les fiches en dessous sont des rectangles de
-              couleur et des traits gris - et cinq emojis en couleur au milieu etaient la seule
-              chose figurative de l'ecran, ce qui les faisait lire comme le sujet du dessin.
-              Les vider plutot que supprimer la rangee : la barre de categories existe dans la
-              vraie application, une maquette sans elle ne lui ressemblerait plus. */}
-          {[0, 1, 2, 3, 4].map((i) => <span key={i} />)}
-        </div>
-        <div className="app-soon-phone-cards">
-          <div className="app-soon-phone-card">
-            <div className="app-soon-phone-card-img" style={{ background: 'var(--gold)' }} />
-            <div className="app-soon-phone-card-lines"><span /><span style={{ width: '60%' }} /></div>
-          </div>
-          <div className="app-soon-phone-card">
-            <div className="app-soon-phone-card-img" style={{ background: 'var(--teal)' }} />
-            <div className="app-soon-phone-card-lines"><span /><span style={{ width: '45%' }} /></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+/* « FAIRIDE ARRIVE SUR MOBILE », en une carte blanche (version B de l'accueil, fondateur, 2026-10-16) : il était un grand
+   bloc iris avec un faux téléphone dessiné, le plus gros aplat de la page après la bannière. Honnête comme avant : les
+   badges des stores ne sont PAS des liens (l'application n'est pas encore publiée), juste des repères visuels. */
+const STORES = ['App Store', 'Google Play'];
 
 export default function AppComingSoonSection() {
   const { t } = useLanguage();
   return (
-    <div className="app-soon">
-      <div className="app-soon-text">
-        <span className="pill hero app-soon-badge">{t('landing.appSoonBadge')}</span>
-        <h2 className="app-soon-title"><AvecMarque>{t('landing.appSoonTitle')}</AvecMarque></h2>
-        <p className="app-soon-sub">{t('landing.appSoonSub')}</p>
-        <div className="app-soon-badges">
-          {STORE_BADGES.map((b) => (
-            <div key={b.line2} className="app-soon-store-badge" title={t('landing.appSoonNotYet')}>
-              <span className="app-soon-store-icon"><Icone nom={b.icon} taille={20} /></span>
-              <span className="app-soon-store-text"><small>{t('landing.appSoonOn')}</small>{b.line2}</span>
-            </div>
-          ))}
-        </div>
-        <p className="app-soon-note">{t('landing.appSoonNote')}</p>
+    <section className="sa-appli">
+      <span className="sa-tuile sa-tuile-pleine" aria-hidden="true"><Icone nom="mobile" taille={22} /></span>
+      <div className="sa-appli-texte">
+        <h2><AvecMarque>{t('landing.appSoonTitle')}</AvecMarque></h2>
+        <p>{t('landing.appSoonSub')}</p>
       </div>
-      <PhoneMockup />
-    </div>
+      <div className="sa-appli-stores">
+        {STORES.map((s) => (
+          <span key={s} className="sa-store" title={t('landing.appSoonNotYet')}><small>{t('landing.appSoonOn')}</small>{s}</span>
+        ))}
+      </div>
+    </section>
   );
 }

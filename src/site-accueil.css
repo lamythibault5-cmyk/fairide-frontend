@@ -1,0 +1,204 @@
+/* =====================================================================================================================
+   ACCUEIL DU SITE, VERSION « BANDEAU ET FEUILLE » (fondateur, 2026-10-16, version B de mockups/accueil-site.html, avec le
+   vélo belge gardé). Importé par Landing.jsx. L'application n'affiche jamais cette page (Home.jsx), mais tout reste sous
+   html:not(.appli) comme les autres fichiers site-*.css, et sous .sa-accueil : aucune autre page n'est touchée.
+
+   Le bandeau iris est plein (plus de vidéo derrière) et va d'un bord à l'autre de la fenêtre (::before en 100vw, rogné par
+   l'overflow-x: clip de html) ; la feuille blanche aux coins ronds remonte dessus de 32 px. Sur le site : pas de verre, pas
+   d'ombre ; survol = filet iris et la carte monte un peu. Contenu sur 1 120 px au plus, comme l'en-tête (.hero-inner).
+   ===================================================================================================================== */
+
+html:not(.appli) .wrap.wrap-accueil { max-width: calc(1120px + 2 * var(--gouttiere)); }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   1 · LE BANDEAU IRIS
+   --------------------------------------------------------------------------------------------------------------------- */
+html:not(.appli) .sa-accueil .sa-bandeau {
+  position: relative; isolation: isolate; color: #fff;
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); gap: 56px; align-items: end;
+  padding: 44px 0 88px;
+}
+html:not(.appli) .sa-accueil .sa-bandeau::before {
+  content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%);
+  background: var(--iris);
+}
+html:not(.appli) .sa-accueil .sa-bandeau-texte { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+
+/* Le vélo belge sur sa pastille blanche : sur l'iris nu, sa roue noire disparaîtrait (BelgianMark.jsx). */
+html:not(.appli) .sa-accueil .sa-belge {
+  display: inline-flex; align-items: center; gap: 10px; background: #fff; color: var(--ink);
+  border-radius: var(--radius-pill); padding: 7px 16px 7px 10px; font-size: 14px; font-weight: 600;
+  animation: sa-saute .5s var(--ressort-ui) .1s backwards;
+}
+/* !important : BelgianMark pose sa taille en style en ligne, et .be-mark (styles.css) la force à 150 px. */
+html:not(.appli) .sa-accueil .sa-belge .be-mark { width: 52px !important; height: 26px !important; margin: 0; }
+
+html:not(.appli) .sa-accueil .sa-titre {
+  font-size: clamp(40px, 5vw, 60px); line-height: 1.03; letter-spacing: -0.025em; color: #fff; margin: 22px 0 16px;
+  text-wrap: balance;
+}
+html:not(.appli) .sa-accueil .sa-sous { font-size: 17px; line-height: 1.5; color: rgba(255,255,255,.84); margin: 0 0 26px; max-width: 560px; }
+
+/* La barre d'adresse (HeroAdresse.jsx) : la flèche passe en lime, l'action qui fait avancer. */
+html:not(.appli) .sa-accueil .hero-adresse { width: 100%; max-width: 560px; margin: 0; }
+html:not(.appli) .sa-accueil .hero-adresse-go { background: var(--lime); color: var(--ink); }
+html:not(.appli) .sa-accueil .hero-adresse-go:hover { background: var(--lime); transform: translateX(2px); }
+html:not(.appli) .sa-accueil .hero-adresse-spin { border-color: rgba(20,18,31,.25); border-top-color: var(--ink); }
+
+html:not(.appli) .sa-accueil .sa-ouverture {
+  display: flex; gap: 8px; align-items: flex-start; max-width: 560px; margin: 16px 0 0;
+  font-size: 13.5px; line-height: 1.45; color: rgba(255,255,255,.84);
+}
+html:not(.appli) .sa-accueil .sa-ouverture svg { flex: none; margin-top: 1px; }
+html:not(.appli) .sa-accueil .sa-ouverture-court { display: none; }
+
+/* Le vélo de la marque arrive sur sa route, comme dans l'app (EcransBienvenue.jsx) et sur les écrans vides. */
+html:not(.appli) .sa-accueil .sa-scene { display: block; width: 100%; max-width: 520px; height: auto; overflow: visible; color: var(--lime); margin-top: 34px; }
+.sa-scene .sa-scene-route { stroke: rgba(255,255,255,.35); animation: sa-route .45s linear 4; }
+@keyframes sa-route { to { stroke-dashoffset: 16; } }
+.sa-scene .sa-scene-repere { color: rgba(255,255,255,.92); transform-box: fill-box; transform-origin: 50% 100%; animation: sa-saute .45s var(--ressort-ui) backwards; }
+.sa-scene .sa-scene-velo { animation: sa-arrive 1.7s cubic-bezier(.25, .8, .3, 1) backwards; }
+@keyframes sa-arrive { from { transform: translateX(-220px); } }
+.sa-scene .sa-scene-bob { transform-box: fill-box; transform-origin: 50% 100%; animation: sa-bonds .75s ease-in-out 2, sa-respire 2.4s ease-in-out 1.7s infinite; }
+@keyframes sa-bonds { 0%, 100% { transform: none; } 20%, 60% { transform: translateY(-2px) rotate(-3deg); } 40%, 80% { transform: translateY(0) rotate(1deg); } }
+@keyframes sa-respire { 50% { transform: translateY(-1.5px) rotate(-1deg); } }
+@keyframes sa-saute { from { transform: scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* « Pourquoi Fairide ? » (HeroPrix.jsx) : deux barres à l'échelle, sur une carte blanche. */
+html:not(.appli) .sa-accueil .sa-prix { background: #fff; color: var(--ink); border-radius: 22px; padding: 22px 24px; min-width: 0; }
+html:not(.appli) .sa-accueil .sa-prix-titre { font-size: 18px; margin: 0 0 16px; }
+html:not(.appli) .sa-accueil .sa-prix-ligne { display: grid; grid-template-columns: 128px minmax(0, 1fr) 54px; align-items: center; gap: 14px; font-size: 14px; }
+html:not(.appli) .sa-accueil .sa-prix-ligne + .sa-prix-ligne { margin-top: 12px; }
+html:not(.appli) .sa-accueil .sa-prix-ligne .wordmark { font-size: 17px; font-weight: 800; }
+html:not(.appli) .sa-accueil .sa-prix-ligne i { display: block; height: 10px; border-radius: 5px; background: var(--surface-soft); overflow: hidden; }
+html:not(.appli) .sa-accueil .sa-prix-ligne i b { display: block; height: 100%; border-radius: 5px; background: var(--ink-mute); animation: sa-pousse 1.1s cubic-bezier(.2, .8, .25, 1) .5s backwards; }
+html:not(.appli) .sa-accueil .sa-prix-nous i b { background: var(--iris); }
+@keyframes sa-pousse { from { width: 0; } }
+html:not(.appli) .sa-accueil .sa-prix-ligne strong { text-align: right; font-family: var(--font-titre); font-size: 17px; white-space: nowrap; }
+html:not(.appli) .sa-accueil .sa-prix-nous strong { color: var(--iris); font-size: 20px; }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   2 · LA FEUILLE BLANCHE
+   --------------------------------------------------------------------------------------------------------------------- */
+html:not(.appli) .sa-accueil .sa-feuille { position: relative; isolation: isolate; margin-top: -32px; padding-top: 44px; }
+html:not(.appli) .sa-accueil .sa-feuille::before {
+  content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%);
+  background: #fff; border-radius: 32px 32px 0 0;
+  animation: sa-monte .6s var(--ressort-ui) backwards;
+}
+@keyframes sa-monte { from { transform: translateX(-50%) translateY(36px); } }
+
+/* « Déjà sur Fairide » (HeroPreview.jsx) : sorti de sa carte, il devient la première section de la feuille. */
+html:not(.appli) .sa-accueil .hero-preview.hero-preview-rangee { background: none; padding: 0; border-radius: 0; gap: 16px; }
+html:not(.appli) .sa-accueil .hero-preview-head { gap: 16px; align-items: baseline; flex-wrap: wrap; font-family: var(--font-titre); font-size: 28px; font-weight: 700; letter-spacing: -0.015em; text-transform: none; color: var(--ink); }
+html:not(.appli) .sa-accueil .hero-preview-dot { display: none; }
+html:not(.appli) .sa-accueil .hero-preview-count { font-family: var(--font-ui); font-size: 14px; font-weight: 600; }
+html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-list { gap: 16px; }
+html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-card { padding: 0 0 14px; gap: 10px; border-radius: 18px; overflow: hidden; background: #fff; }
+html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-img { border-radius: 0; }
+html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-body,
+html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-side,
+html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-lines { padding-left: 14px; padding-right: 14px; }
+html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-body b { font-size: 15.5px; }
+html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-meta { font-size: 13px; }
+
+html:not(.appli) .sa-accueil .sa-section-titre { font-size: 28px; letter-spacing: -0.015em; margin: 64px 0 18px; }
+
+/* Les deux arguments. */
+html:not(.appli) .sa-accueil .sa-arguments { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 56px; }
+html:not(.appli) .sa-accueil .sa-argument { display: flex; gap: 16px; align-items: flex-start; border: 1px solid var(--line); border-radius: 20px; padding: 22px 24px; background: #fff; }
+html:not(.appli) .sa-accueil .sa-tuile { width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--line); color: var(--iris); display: grid; place-items: center; flex: none; }
+html:not(.appli) .sa-accueil .sa-tuile-pleine { background: var(--iris); color: var(--lime); border: 0; }
+html:not(.appli) .sa-accueil .sa-argument h3 { font-size: 19px; margin: 2px 0 6px; }
+html:not(.appli) .sa-accueil .sa-argument p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); }
+
+/* La vitrine « Découvre » (DiscoverSection.jsx) garde sa grille, mais sort de sa grande carte ombrée : sur la feuille, c'est
+   une section comme les autres. Le sur-titre n'est plus une pastille (elle chevauchait le titre). Pas d'ombre sur le site. */
+html:not(.appli) .sa-accueil .discover-section { margin: 64px 0 0; padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; }
+html:not(.appli) .sa-accueil .pill.hero.discover-eyebrow {
+  display: block; background: none; border: 0; padding: 0; min-height: 0; margin: 0 0 6px;
+  font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--iris);
+}
+html:not(.appli) .sa-accueil .discover-head .section-title { font-size: 28px; letter-spacing: -0.015em; margin: 0 !important; }
+html:not(.appli) .sa-accueil .discover-head { margin-bottom: 16px; }
+/* Une carte seule sur sa rangée ne s'étire plus à la hauteur du bloc iris voisin. */
+html:not(.appli) .sa-accueil .discover-grid { align-items: start; }
+html:not(.appli) .sa-accueil .discover-tile, html:not(.appli) .sa-accueil .discover-info { box-shadow: none; border-radius: 18px; }
+html:not(.appli) .sa-accueil .discover-tile { transition: border-color .2s, transform .2s; }
+html:not(.appli) .sa-accueil .discover-tile:hover { transform: translateY(-2px); border-color: var(--iris); box-shadow: none; }
+html:not(.appli) .sa-accueil .discover-tile:hover .discover-tile-img img { transform: none; }
+html:not(.appli) .sa-accueil .discover-tile-cuisine, html:not(.appli) .sa-accueil .discover-tile-rating { box-shadow: none; }
+
+/* Les trois portes d'entrée. */
+html:not(.appli) .sa-accueil .sa-portes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+html:not(.appli) .sa-accueil .sa-porte {
+  display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--line); border-radius: 20px; padding: 22px 24px;
+  background: #fff; color: var(--ink); text-decoration: none; transition: border-color .2s, transform .2s;
+}
+html:not(.appli) .sa-accueil .sa-porte:hover { border-color: var(--iris); transform: translateY(-2px); }
+html:not(.appli) .sa-accueil .sa-porte:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+html:not(.appli) .sa-accueil .sa-porte-role { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); }
+html:not(.appli) .sa-accueil .sa-porte h3 { font-size: 20px; line-height: 1.2; flex: 1; }
+html:not(.appli) .sa-accueil .sa-porte-lien { font-size: 14.5px; font-weight: 700; color: var(--iris); }
+
+/* L'application, en une carte. */
+html:not(.appli) .sa-accueil .sa-appli { display: flex; align-items: center; gap: 18px; border: 1px solid var(--line); border-radius: 20px; padding: 20px 24px; margin-top: 56px; background: #fff; }
+html:not(.appli) .sa-accueil .sa-appli-texte { flex: 1; min-width: 0; }
+html:not(.appli) .sa-accueil .sa-appli h2 { font-size: 18px; margin: 0; }
+html:not(.appli) .sa-accueil .sa-appli p { margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+html:not(.appli) .sa-accueil .sa-appli-stores { display: flex; gap: 8px; flex: none; }
+html:not(.appli) .sa-accueil .sa-store { display: flex; flex-direction: column; font-size: 13px; font-weight: 700; line-height: 1.2; border: 1px solid var(--line); border-radius: 12px; padding: 7px 12px; color: var(--ink); cursor: default; }
+html:not(.appli) .sa-accueil .sa-store small { font-size: 10.5px; font-weight: 500; color: var(--ink-faint); }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   3 · TABLETTE ET TÉLÉPHONE
+   --------------------------------------------------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  html:not(.appli) .sa-accueil .sa-bandeau { grid-template-columns: 1fr; gap: 28px; padding-bottom: 72px; }
+  html:not(.appli) .sa-accueil .sa-prix { max-width: 560px; }
+  html:not(.appli) .sa-accueil .sa-portes { grid-template-columns: 1fr; gap: 12px; }
+  html:not(.appli) .sa-accueil .sa-porte { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 16px; }
+  html:not(.appli) .sa-accueil .sa-porte-role { flex-basis: 100%; }
+  html:not(.appli) .sa-accueil .sa-appli { flex-wrap: wrap; }
+  html:not(.appli) .sa-accueil .sa-appli-stores { flex-basis: 100%; padding-left: 64px; }
+}
+@media (max-width: 640px) {
+  html:not(.appli) .sa-accueil .sa-bandeau { padding: 26px 0 60px; gap: 24px; }
+  html:not(.appli) .sa-accueil .sa-belge { font-size: 13px; padding: 6px 14px 6px 9px; }
+  html:not(.appli) .sa-accueil .sa-belge .be-mark { width: 44px !important; height: 22px !important; }
+  html:not(.appli) .sa-accueil .sa-titre { font-size: clamp(34px, 10vw, 40px); margin: 18px 0 12px; }
+  html:not(.appli) .sa-accueil .sa-sous { font-size: 15.5px; margin-bottom: 20px; }
+  html:not(.appli) .sa-accueil .sa-ouverture-long { display: none; }
+  html:not(.appli) .sa-accueil .sa-ouverture-court { display: flex; }
+  /* Sur un téléphone, le vélo belge ouvre déjà le bandeau : pas de second vélo plus bas. */
+  html:not(.appli) .sa-accueil .sa-scene { display: none; }
+  html:not(.appli) .sa-accueil .sa-prix { padding: 18px 18px 16px; border-radius: 20px; }
+  html:not(.appli) .sa-accueil .sa-prix-ligne { grid-template-columns: 104px minmax(0, 1fr) 46px; gap: 10px; font-size: 13.5px; }
+  html:not(.appli) .sa-accueil .sa-feuille { margin-top: -26px; padding-top: 30px; }
+  html:not(.appli) .sa-accueil .sa-feuille::before { border-radius: 26px 26px 0 0; }
+  html:not(.appli) .sa-accueil .hero-preview-head { font-size: 23px; }
+  /* Les trois commerces défilent de côté, chacun à sa vraie taille, au lieu de trois vignettes écrasées. */
+  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-list {
+    display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 76%; gap: 12px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gouttiere); scrollbar-width: none; margin: 0 calc(-1 * var(--gouttiere)); padding: 0 var(--gouttiere);
+  }
+  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-list::-webkit-scrollbar { display: none; }
+  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-card { scroll-snap-align: start; padding: 0 0 12px; gap: 8px; }
+  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-img { aspect-ratio: 16 / 9; }
+  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-body b { font-size: 15px; white-space: nowrap; }
+  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-meta { font-size: 12.5px; }
+  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-open { font-size: 11px; padding: 3px 8px; }
+  html:not(.appli) .sa-accueil .sa-arguments { grid-template-columns: 1fr; gap: 12px; margin-top: 40px; }
+  html:not(.appli) .sa-accueil .sa-argument { padding: 18px; gap: 14px; }
+  html:not(.appli) .sa-accueil .sa-section-titre { font-size: 23px; margin: 48px 0 14px; }
+  html:not(.appli) .sa-accueil .discover-section { margin-top: 48px; padding: 0; border-radius: 0; }
+  html:not(.appli) .sa-accueil .discover-head .section-title { font-size: 23px; }
+  html:not(.appli) .sa-accueil .sa-porte { padding: 18px; }
+  html:not(.appli) .sa-accueil .sa-porte h3 { font-size: 18px; flex-basis: 100%; }
+  html:not(.appli) .sa-accueil .sa-appli { padding: 18px; margin-top: 40px; }
+  html:not(.appli) .sa-accueil .sa-appli-stores { padding-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sa-accueil .sa-scene *, .sa-accueil .sa-belge, .sa-accueil .sa-feuille::before, .sa-accueil .sa-prix-ligne i b { animation: none !important; }
+  .sa-accueil .sa-porte { transition: none; }
+}
