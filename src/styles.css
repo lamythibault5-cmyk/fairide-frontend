@@ -4608,6 +4608,10 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 /* Dans l'application : pas de « rebond » de la page entière, pas de menu contextuel sur les boutons, et le
    texte des commandes ne se sélectionne pas quand on appuie un peu longtemps sur une pastille. */
 html.natif, html.natif body { overscroll-behavior: none; }
+/* Même chose pour le site ajouté à l'écran d'accueil (html.appli), et pour les écrans pleins de l'accueil (.bv) : sur
+   iPhone, un écran qui tient sans défiler se laissait quand même tirer vers le bas, avec un vide en dessous (retour du
+   fondateur, 2026-10-16). `none` coupe le rebond de l'élément lui-même ; `contain` ne coupait que la propagation. */
+html.appli, html.appli body, .bv { overscroll-behavior: none; }
 html.natif button, html.natif a, html.natif .dashboard-sidebar, html.natif .panier-pilule { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 /* Clavier ouvert (événement natif, voir natif.js) : les barres fixes du bas se rangent plutôt que de
    remonter au-dessus des touches et masquer le champ. */
@@ -4722,11 +4726,10 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-petit { font-size: 12px; color: var(--ink-faint); display: block; }
 .bv-iris .bv-petit { color: rgba(255,255,255,.7); }
 
-/* Le « 10 % » de l'accueil, en très grand, le « 30 % » barré à côté. */
+/* Le « 10 % » de l'accueil, en très grand, la fourchette des autres applis à côté. */
 .bv-gros { display: flex; align-items: flex-end; gap: 12px; }
-.bv-gros b { font-size: 88px; line-height: .85; letter-spacing: -0.04em; font-weight: 700; }
+.bv-gros b { font-size: 88px; line-height: .85; letter-spacing: -0.04em; font-weight: 700; white-space: nowrap; }
 .bv-gros span { font-size: 15px; line-height: 1.3; color: rgba(255,255,255,.8); padding-bottom: 4px; }
-.bv-gros s { color: #fff; font-weight: 700; }
 
 .bv-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; margin-top: 10px; font-size: 16px; font-weight: 700; border-radius: 999px; }
 .bv-btn:disabled, .btn-connexion:disabled { opacity: .5; cursor: default; }
@@ -4765,7 +4768,6 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-fait .bv-petit { margin-top: 3px; }
 .bv-fait.vedette { border: 2px solid var(--iris); }
 .bv-fait.vedette b { font-size: 19px; }
-.bv-barre { display: block; font-size: 13px; color: var(--ink-faint); text-decoration: line-through; }
 
 /* Barres à l'échelle : 32 % = toute la largeur ; la partie claire marque la fourchette 22-32 %. */
 .bv-barres { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; font-size: 13px; margin: 10px 0 8px; }
@@ -4834,6 +4836,16 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-champ .input-invalid, .bv-creneau .input-invalid { border-color: var(--red); }
 .bv-champ textarea { font-size: 16px; padding: 14px 16px; background: #fff; border: 1px solid var(--line); border-radius: 14px; resize: vertical; }
 .bv-option:disabled { opacity: .5; }
+/* Type de commerce : recherche, puis pastilles dans une boîte qui défile seule. Sa hauteur laisse à l'écran le titre, la
+   recherche et le bouton à 375×667 ; avec « Autre », le champ à préciser prend sa place sous la boîte. */
+.bv-types-recherche { width: 100%; font-size: 16px; padding: 13px 16px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill); margin-bottom: 12px; }
+.bv-types-recherche:focus { outline: 2px solid var(--iris); border-color: var(--iris); }
+.bv-types { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; max-height: max(120px, calc(100dvh - 340px)); overflow-y: auto; overscroll-behavior: contain; padding: 2px 2px 8px; margin-bottom: 12px; }
+.bv-types.avec-autre { max-height: max(110px, calc(100dvh - 452px)); }
+.bv-type { display: inline-flex; align-items: center; gap: 7px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 15px; font-weight: 500; transition: background .15s, color .15s, border-color .15s; }
+.bv-type svg { color: var(--iris); flex: none; }
+.bv-type.on { background: var(--iris); border-color: var(--iris); color: #fff; }
+.bv-type.on svg { color: #fff; }
 /* Fichier choisi (photo ou PDF de la carte, EnvoiCarteAppli.jsx) : une ligne, le nom coupé, la croix pour le retirer. */
 .bv-fichier { display: flex; align-items: center; gap: 10px; padding: 6px 0 6px 4px; font-size: 14px; }
 .bv-fichier > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

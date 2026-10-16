@@ -35,12 +35,11 @@ function Tuile({ nom, grande = false }) {
   return <span className={`bv-tuile${grande ? ' grande' : ''}`}><Icone nom={nom} taille={grande ? 34 : 20} /></span>;
 }
 
-export function Fait({ icone, titre, sous, barre, vedette, children }) {
+export function Fait({ icone, titre, sous, vedette, children }) {
   return (
     <div className={`bv-carte bv-fait${vedette ? ' vedette' : ''}`}>
       <Tuile nom={icone} />
       <div style={{ flex: 1 }}>
-        {barre && <span className="bv-barre">{barre}</span>}
         <b>{titre}</b>
         {children}
         {sous && <span className="bv-petit">{sous}</span>}
@@ -86,7 +85,8 @@ export function EcranAccueil({ onCommencer, onConnexion }) {
     <>
       <div className="bv-ligne-haut"><BrandMark size={72} /><Langues /></div>
       <div className="bv-grandit" />
-      <div className="bv-gros"><b>10 %</b><span><s>30 %</s> {t('appli.ailleurs')}<br />{t('appli.commission')}</span></div>
+      {/* Sans texte barré (fondateur, 2026-10-16) : la fourchette des autres applis est écrite en clair. */}
+      <div className="bv-gros"><b>10 %</b><span>{t('appli.commission')}<br />{t('appli.ailleurs')}</span></div>
       <h1 className="bv-titre bv-titre-accueil">{t('appli.accTitre')}</h1>
       <p className="bv-sous">{t('appli.accSub')}</p>
       <span className="bv-pastille"><Drapeau /> {t('appli.beChip')}</span>
@@ -179,21 +179,20 @@ export function EcranCartes({ onFini }) {
 }
 
 // Le prix d'abord (l'écart de commission, à l'échelle), puis rien d'ajouté, puis la justice ; le local en une ligne.
-export function EcranPourquoi({ freins, onSuite }) {
+export function EcranPourquoi({ onSuite }) {
   const { t } = useLanguage();
-  const barre = (f, k) => (freins.includes(f) ? t(`appli.${k}`) : null);
   return (
     <>
       <h1 className="bv-titre"><AvecMarque>{t('appli.pqTitre')}</AvecMarque></h1>
       <p className="bv-sous">{t('appli.pqSub')}</p>
-      <Fait vedette icone="euro" titre={t('appli.pq1')} sous={t('appli.pq1S')} barre={barre('gonfle', 'fGonfle')}>
+      <Fait vedette icone="euro" titre={t('appli.pq1')} sous={t('appli.pq1S')}>
         {/* Barres à l'échelle : 32 % = toute la largeur, la partie claire marque la fourchette 22-32 %. */}
         <div className="bv-barres" aria-hidden="true">
           <span>{t('appli.autresApplis')}</span><i className="autres"><em /></i><span>22–32 %</span>
           <span>Fairide</span><i className="fairide" /><span><b>10 %</b></span>
         </div>
       </Fait>
-      <Fait icone="ticket" titre={t('appli.pq2')} sous={t('appli.pq2S')} barre={barre('frais', 'fFrais')} />
+      <Fait icone="ticket" titre={t('appli.pq2')} sous={t('appli.pq2S')} />
       <Fait icone="balance" titre={t('appli.pq3')} sous={t('appli.pq3S')} />
       <p className="bv-petit bv-ligne-be"><Drapeau /> {t('appli.pqBe')}</p>
       <div className="bv-grandit" />
@@ -269,13 +268,14 @@ export function Cercle({ points, anime, petit }) {
   );
 }
 
-export function EcranRecherche({ commune, points, envies }) {
+// Les trois étapes se cochent au quart, à la moitié et aux trois quarts de `duree` : la dernière reste lisible avant le compte.
+export function EcranRecherche({ commune, points, envies, duree }) {
   const { t } = useLanguage();
   const [etape, setEtape] = useState(0);
   useEffect(() => {
-    const minuteurs = [1, 2, 3].map((n) => setTimeout(() => setEtape(n), 450 * n));
+    const minuteurs = [1, 2, 3].map((n) => setTimeout(() => setEtape(n), (duree / 4) * n));
     return () => minuteurs.forEach(clearTimeout);
-  }, []);
+  }, [duree]);
   return (
     <>
       <div className="bv-grandit" />

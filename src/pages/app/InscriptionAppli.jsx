@@ -53,6 +53,7 @@ const ETAPE_DU_CHAMP = {
 };
 const STATUTS = [['independent', 'document'], ['student_independent', 'guide']];
 const MDP_FORME = (v) => v.length >= 6 && /[A-Z]/.test(v) && /[a-z]/.test(v);
+const sansAccents = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 function decoderJwt(jeton) {
   try { const b = jeton.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(decodeURIComponent(escape(atob(b)))); } catch { return {}; }
@@ -115,6 +116,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   const [restoPhone, setRestoPhone] = useState('');
   const [cuisine, setCuisine] = useState('');
   const [customCuisine, setCustomCuisine] = useState('');
+  const [rechercheType, setRechercheType] = useState('');
   const [legalName, setLegalName] = useState('');
   const [vatNumber, setVatNumber] = useState('');
   const [responsable, setResponsable] = useState(null); // null : la personne qui s'inscrit
@@ -476,16 +478,27 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
         </>
       );
       break;
-    case 'type':
+    /* Des pastilles plutôt que la liste déroulante du téléphone, qui sortait de l'app (retour du fondateur, 2026-10-16).
+       35 types : un champ de recherche filtre, et seule la boîte des pastilles défile, pas l'écran. « Autre » reste
+       toujours visible, en dernier, pour un commerce que la recherche ne trouve pas ; le type déjà choisi aussi. */
+    case 'type': {
+      const cherche = sansAccents(rechercheType.trim());
+      const types = RESTAURANT_TYPES.filter((rt) => rt.value === 'Autre' || rt.value === cuisine || !cherche ||sansAccents(restaurantTypeLabel(rt.value, t)).includes(cherche));
       contenu = (
         <>
           {titre(t('appli.insTypeTitre'), t('auth.cuisineHelp'))}
-          <Champ id="bv-i-type" label={t('auth.cuisineLabel')} erreur={erreurs.cuisine}>
-            <select id="bv-i-type" className={erreurs.cuisine ? 'input-invalid' : undefined} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
-              <option value="">{t('auth.cuisinePlaceholder')}</option>
-              {RESTAURANT_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{restaurantTypeLabel(rt.value, t)}</option>)}
-            </select>
-          </Champ>
+          <label htmlFor="bv-i-type" className="sr-only">{t('appli.insTypeChercher')}</label>
+          <input id="bv-i-type" type="search" className="bv-types-recherche" autoComplete="off" enterKeyHint="search"
+            value={rechercheType} onChange={(e) => setRechercheType(e.target.value)} placeholder={t('appli.insTypeChercher')} />
+          <div className={`bv-types${cuisine === 'Autre' ? ' avec-autre' : ''}`} role="radiogroup" aria-label={t('auth.cuisineLabel')}>
+            {types.map((rt) => (
+              <button key={rt.value} type="button" role="radio" aria-checked={cuisine === rt.value}
+                className={`bv-type${cuisine === rt.value ? ' on' : ''}`} onClick={() => setCuisine(rt.value)}>
+                <Icone nom={rt.icone} taille={16} />{restaurantTypeLabel(rt.value, t)}
+              </button>
+            ))}
+          </div>
+          {erreurs.cuisine && <p className="field-error" role="alert">{erreurs.cuisine}</p>}
           {cuisine === 'Autre' && (
             <Champ id="bv-i-type-autre" label={t('dashResto.specifyType')}>
               <input id="bv-i-type-autre" value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} />
@@ -494,6 +507,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
         </>
       );
       break;
+    }
     case 'entreprise':
       contenu = (
         <>

@@ -50,7 +50,8 @@ const PARCOURS = {
   driver: ['lvPromesses', 'lvPosition', 'compte'],
   restaurant: ['coPromesses', 'compte']
 };
-const DUREE_RECHERCHE_MS = 1800; // le chargement que le fondateur aime : assez long pour se lire, jamais plus
+// Le chargement que le fondateur aime : assez long pour se lire (1,8 s, puis 3,8 s le 2026-10-16 : « 2 secondes de plus »).
+const DUREE_RECHERCHE_MS = 3800;
 
 // Commerces qui livrent à cette position (ou, sans position, rangés par proximité de commune), envies d'abord.
 function trierCommerces(liste, { position, commune, envies }) {
@@ -216,7 +217,7 @@ export default function Bienvenue() {
     case 'cartes':
       contenu = <EcranCartes onFini={() => aller('pourquoi')} />; break;
     case 'pourquoi':
-      contenu = <EcranPourquoi freins={freins} onSuite={suivant} />; break;
+      contenu = <EcranPourquoi onSuite={suivant} />; break;
     case 'envies':
       contenu = <EcranEnvies envies={envies} onBasculer={basculer(setEnvies)} onSuite={suivant} />; break;
     case 'position':
@@ -228,7 +229,7 @@ export default function Bienvenue() {
     case 'codePostal':
       contenu = <EcranCodePostal cp={cp} commune={communeCp} onCp={setCp} onSuite={() => { setPosition(null); aller('recherche'); }} />; break;
     case 'recherche':
-      contenu = <EcranRecherche commune={position ? '' : communeCp} points={liste ? points : []} envies={envies} />; break;
+      contenu = <EcranRecherche commune={position ? '' : communeCp} points={liste ? points : []} envies={envies} duree={DUREE_RECHERCHE_MS} />; break;
     case 'compte':
       contenu = (
         <EcranCompte role={role} resultats={resultats} avecPosition={!!position} commune={communeCp} attente={attente}

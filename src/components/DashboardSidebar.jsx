@@ -17,11 +17,6 @@ import { experienceApp } from '../natif';
 
 const NATIF = experienceApp();
 
-// Où mène le logo de la barre latérale, et où l'on atterrit après connexion (voir pages/Home.jsx).
-// Pour un client, c'est la liste des restaurants : la page /home qui s'y interposait n'affichait
-// qu'un titre de bienvenue et un bouton « Parcourir les restaurants », et son suivi de commande
-// était un sous-ensemble strict de /orders. Elle a été supprimée.
-const HOME_PATH_BY_ROLE = { client: '/restaurants', restaurant: '/dashboard', driver: '/driver' };
 
 // Items de nav par rôle : mêmes cibles que l'ancien .role-nav de Layout.jsx, juste redisposées
 // verticalement avec une icône — pas de nouvelle page/route inventée ici.
@@ -150,7 +145,6 @@ export default function DashboardSidebar() {
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
   const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user);
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
-  const brandHome = isAdminAccount ? '/admin' : (HOME_PATH_BY_ROLE[effectiveRole] || '/');
 
   function leavePreview() {
     exitPreview();
@@ -159,10 +153,12 @@ export default function DashboardSidebar() {
 
   return (
     <aside className={`dashboard-sidebar${compacte ? ' dashboard-sidebar--compacte' : ''}`}>
-      <Link className="dashboard-sidebar-brand" to={brandHome}>
+      {/* La marque n'est pas un lien (fondateur, 2026-10-16) : elle menait à la liste des commerces, ce qu'on ne
+          devine pas en la touchant. Les onglets juste en dessous y mènent déjà. */}
+      <div className="dashboard-sidebar-brand">
         <BrandMark size={30} />
         <span className="wordmark">fairide</span>
-      </Link>
+      </div>
       {previewMode && role === 'restaurant' && (
         <div className="preview-mode-sidebar-banner">
           <span>{t('nav.previewModeBanner')}</span>

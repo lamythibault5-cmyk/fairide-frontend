@@ -239,7 +239,8 @@ export default function Layout() {
       <>
         <div className="appli-barre">
           {accueilListe ? (
-            <Link to="/" className="appli-marque" aria-label="Fairide"><BrandMark size={30} /><span className="wordmark">fairide</span></Link>
+            // La marque n'est pas un lien (fondateur, 2026-10-16) : « / » ramenait sur cette même liste.
+            <span className="appli-marque"><BrandMark size={30} /><span className="wordmark">fairide</span></span>
           ) : (
             <button type="button" className="bv-rond" data-retour-natif onClick={retourAppli} aria-label={t('appli.retour')}><Icone nom="retour" taille={18} /></button>
           )}

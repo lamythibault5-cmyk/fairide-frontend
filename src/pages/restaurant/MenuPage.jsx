@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
-  categoryEmoji, categoryImage, categoryLabel, getStarterTemplate,
+  categoryEmoji, categoryLabel, getStarterTemplate,
   CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, resolveItemImage,
   groupBySubsection
 } from '../../menuCategories';
@@ -573,7 +573,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           const rawItems = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
           const order = localOrder[section.id];
           const items = order ? order.map((id) => rawItems.find((i) => i.id === id)).filter(Boolean) : rawItems;
-          const image = section.imageUrl || categoryImage(section.name);
           const sectionSubsections = [...new Set(rawItems.map((i) => i.subsection).filter(Boolean))];
           const inReorder = reorderSectionId === section.id;
           const subsectionGroups = inReorder ? null : groupBySubsection(items, section.name, t);
@@ -581,7 +580,8 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             <div key={section.id} style={{ marginBottom: 16 }}>
               <div className="category-header" style={{ justifyContent: 'space-between' }}>
                 <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                  {image && <img loading="lazy" src={image} alt={section.name} />}
+                  {/* Plus de vignette devant le nom de la section (fondateur, 2026-10-16) : une photo d'illustration que le
+                      client ne voit pas et que le commerce ne peut pas changer ne faisait que l'intriguer. */}
                   {editingSectionId === section.id ? (
                     <div className="row" style={{ gap: 6 }}>
                       <input style={{ width: 180 }} value={editSectionName} onChange={(e) => setEditSectionName(e.target.value)} />
