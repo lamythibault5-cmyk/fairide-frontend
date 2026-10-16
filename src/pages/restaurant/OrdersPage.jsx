@@ -25,6 +25,20 @@ import { euros } from '../../prixPlat';
 import EtatVide from '../../components/EtatVide';
 import { BandeauCommerce, FeuilleCommerce, SegmentGlisse } from '../../components/commerce/BandeauCommerce';
 import { vibrer } from '../../gestes';
+import { experienceApp } from '../../natif';
+import MiseEnLigne from '../../components/commerce/MiseEnLigne';
+import AlerteBandeau from '../../components/commerce/AlerteBandeau';
+
+// Le SITE (pas l'app) montre les commandes en tableau à trois colonnes (2026-10-16, mockups/site-ordinateur.html › Espace
+// commerce, lot « pro ») : Nouvelles, En préparation, Prêtes. L'app garde sa liste, inchangée.
+const SITE = !experienceApp();
+const COLONNES = [
+  { cle: 'nouv', etapes: ['nouveau'], icone: 'cloche', titre: 'sitePro.colNouvelles', vide: 'sitePro.videNouvelles' },
+  { cle: 'prep', etapes: ['attenteConfirmationLivreur', 'preparation'], icone: 'horloge', titre: 'sitePro.colPreparation', vide: 'sitePro.videColonne' },
+  { cle: 'pret', etapes: ['attenteLivreur', 'pretClient', 'enLivraison'], icone: 'valider', titre: 'sitePro.colPretes', vide: 'sitePro.videColonne' }
+];
+// La nouvelle commande la plus pressée d'abord : échéance d'acceptation la plus proche (à défaut, la plus ancienne).
+const echeance = (o) => Number(o.acceptDeadline ? new Date(o.acceptDeadline).getTime() : new Date(o.createdAt).getTime() + 15 * 60000) || 0;
 
 // Où en est le ticket de la commande sur le terminal Fairide (backend : GET /orders/restaurant/:id → print).
 // « #012 » : même forme que le ticket imprimé et la fenêtre « nouvelle commande » (NouvelleCommandeModale).
@@ -79,7 +93,7 @@ export default function OrdersPage() {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
-  const { orders, restaurant, restoId, loadDashboard, communs } = useOutletContext();
+  const { orders, restaurant, restoId, loadDashboard, communs, alerte, onConnect, connecting, lectureSeule } = useOutletContext();
 
   /* ÉCRAN ALLUMÉ PENDANT LE SERVICE (audit UX du 15/10/2026). Une tablette de comptoir qui se met en veille ne sonne plus
      et ne voit plus les commandes : après 15 minutes elles sont annulées (acceptation.js), et le commerce mis en pause.
@@ -435,6 +449,311 @@ export default function OrdersPage() {
     );
   };
 
+  // Les fenêtres (détail, refus avec motif, allergie, client pas venu, contrôle d'âge), communes au tableau du site et à la liste de l'app.
+  const fenetres = (
+    <>
+        {selectedOrder && createPortal(
+          <div className="modal-overlay no-print" onClick={() => setSelectedOrder(null)}>
+            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+              <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
+                <h3 style={{ margin: 0 }}>{t('ordersResto.orderOf', { name: selectedOrder.clientName })}</h3>
+                {selectedOrder.orderNumber ? <span className="commande-numero">{numeroCommande(selectedOrder)}</span> : <span className={`status-badge status-${selectedOrder.status}`}>{statusLabel(selectedOrder.status, selectedOrder.orderType, t)}</span>}
+              </div>
+              <div className={`order-type-badge order-type-badge-${orderTypeColor(selectedOrder)}`} style={{ marginBottom: 8 }}>{orderTypeLabel(selectedOrder, t)}</div>
+              {(() => {
+                const sk = orderStageKey(selectedOrder);
+                const stg = ORDER_STAGES.find((s) => s.key === sk);
+                const col = stageColors[sk];
+                return (
+                  <span className="etape-pastille" style={{ '--etape-couleur': col, marginBottom: 8 }}>
+                    <Icone nom={stg.icon} taille={16} className="icone-texte" /> {t(`orderStatus.stage_${stg.key}`)}
+                  </span>
+                );
+              })()}
+              <ProgressBar status={selectedOrder.status} orderType={selectedOrder.orderType} />
+              <DeliveryTiming order={selectedOrder} />
+              <div className="divider" />
+              <h4 style={{ margin: '0 0 6px' }}>{t('ordersResto.items')}</h4>
+              {selectedOrder.items.map((i) => (
+                <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', alignItems: 'flex-start' }}>
+                  <span>
+                    {i.qty}× {i.name}{i.discount > 0 ? <Icone nom="etiquette" taille={16} className="icone-texte" /> : ''}
+                    {i.options?.length > 0 && <span className="small" style={{ display: 'block' }}>{i.options.map((o) => o.name).join(', ')}</span>}
+                  </span>
+                  <span>{euros((i.price * i.qty - (i.discount || 0)))}</span>
+                </div>
+              ))}
+              <div className="divider" />
+              <div className="breakdown">
+                <div className="line"><span>{t('ordersResto.subtotal')}</span><span>{euros(selectedOrder.subtotal)}</span></div>
+                {selectedOrder.promoDiscount > 0 && <div className="line"><span>{t('ordersResto.promo', { label: selectedOrder.promoLabel })}</span><span>-{euros(selectedOrder.promoDiscount)}</span></div>}
+                {selectedOrder.orderType === 'delivery' && <div className="line"><span>{t('ordersResto.delivery')}</span><span>{euros(selectedOrder.deliveryFee)}</span></div>}
+                {selectedOrder.serviceFee > 0 && <div className="line"><span>{t('ordersResto.serviceFee')}</span><span>{euros((selectedOrder.serviceFee + (selectedOrder.serviceFeeVat || 0)))}</span></div>}
+                {selectedOrder.balanceUsed > 0 && <div className="line"><span>{t('ordersResto.balanceUsed')}</span><span>-{euros(selectedOrder.balanceUsed)}</span></div>}
+                <div className="line total"><span>{selectedOrder.paymentMode === 'on_site' ? `${t('ordersResto.toCollectOnSite')}` : t('ordersResto.totalPaid')}</span><span>{euros(selectedOrder.total)}</span></div>
+              </div>
+              <div className="divider" />
+              <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? t('ordersResto.takeaway') : t('ordersResto.delivery')}</h4>
+              {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{selectedOrder.address}</p>}
+              {selectedOrder.orderType === 'pickup' && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.pickupInfo')}</p>}
+              {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}><Icone nom="telephone" taille={16} className="icone-texte" />{' '}{selectedOrder.clientPhone}</p>}
+              <BandeauAllergie order={selectedOrder} />
+              <BadgeAlcool order={selectedOrder} />
+              {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}><Icone nom="cle" taille={16} className="icone-texte" />{' '}{deliveryInstructionLabel(selectedOrder.deliveryInstructions, t)}</p>}
+              {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}><Icone nom="document" taille={16} className="icone-texte" />{' '}{selectedOrder.deliveryNote}</p>}
+              {selectedOrder.orderType === 'delivery' && selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.driverLine', { name: selectedOrder.driverName, phone: selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : '' })}</p>}
+              {selectedOrder.status === 'pret' && selectedOrder.orderType === 'pickup' && (
+                <div className="row" style={{ marginTop: 10, gap: 8 }}>
+                  <input aria-label={t('ordersResto.phCustomerCode')}
+                    placeholder={t('ordersResto.phCustomerCode')}
+                    style={{ maxWidth: 140 }}
+                    value={pickupCodeInputs[selectedOrder.id] || ''}
+                    onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
+                  />
+                  <button className="btn-teal btn-sm" disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder)}>
+                    {confirmingPickup === selectedOrder.id ? '...' : t('ordersResto.validateOrder')}
+                  </button>
+                </div>
+              )}
+              <CodeRetrait order={selectedOrder} t={t} />
+              <div className="divider" />
+              {/* UN bouton d'impression (2026-09-23). Le terminal Fairide imprime les tickets de lui-même
+                  (fondateur, 2026-09-22) ; ici ne reste que le secours : l'imprimante Bluetooth si elle est
+                  connectée, sinon la boîte d'impression de l'appareil. « Modifier le ticket » et le texte
+                  d'explication qui précédaient les boutons sont partis. */}
+              {aTerminal ? (
+                <>
+                  <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+                    <b className="small">{t('ordersResto.ticketTitle')}</b>
+                    {selectedOrder.print ? <EtatImpression p={selectedOrder.print} t={t} /> : <span className="small" style={{ color: 'var(--ink-faint)' }}>{t('ordersResto.notPrintedYet')}</span>}
+                  </div>
+                  {selectedOrder.print?.printed > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--ink-soft)' }}>{t('ordersResto.reprintHelp')}</p>}
+                  <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />
+                    <button className="btn-teal" disabled={envoiTicket === selectedOrder.id} onClick={() => imprimerSurTerminal(selectedOrder, exemplaires)}>
+                      {envoiTicket === selectedOrder.id ? t('ordersResto.printing') : selectedOrder.print?.printed > 0 ? t('ordersResto.reprintTerminal') : t('ordersResto.printTerminal')}
+                    </button>
+                    <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
+                    <button className="btn-ghost" onClick={() => printReceipt(selectedOrder, exemplaires)}>{t('ordersResto.printFromDevice')}</button>
+                    <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {impressions[selectedOrder.id] > 0 && (
+                    <p className="small" style={{ margin: '0 0 8px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })}</p>
+                  )}
+                  <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />
+                    <button className="btn-teal" disabled={printing} onClick={() => (btName ? printBluetooth(selectedOrder, { copies: exemplaires }) : printReceipt(selectedOrder, exemplaires))}>
+                      {printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}
+                    </button>
+                    <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
+                    <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
+                  </div>
+                  <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-faint)' }}>{t('ordersResto.noTerminalHint')} <Link to="/dashboard/terminal">{t('ordersResto.terminalSettings')}</Link></p>
+                </>
+              )}
+              {apercu?.orderId === selectedOrder.id && <div style={{ marginTop: 12 }}><TicketPapier lines={apercu.lines} columns={apercu.columns} /></div>}
+            </div>
+          </div>,
+          document.body
+        )}
+        {/* Portail séparé du modal (lui-même marqué no-print) : c'est ce qui garantit que le reçu reste
+            visible à l'impression même si le modal et le reste de la page sont masqués (voir OrderReceipt.jsx
+            et .receipt-print dans styles.css — un enfant ne peut jamais annuler le display:none d'un ancêtre). */}
+        {selectedOrder && createPortal(<OrderReceipt order={selectedOrder} restaurant={restaurant} />, document.body)}
+        <ConfirmDialog open={!!pasVenu} danger
+          title={t('ordersResto.confirmNoShowTitle')}
+          message={t('ordersResto.confirmNoShowText', { name: pasVenu?.clientName || '' })}
+          confirmLabel={t('ordersResto.customerNoShow')}
+          loading={clotureEnCours}
+          onCancel={() => setPasVenu(null)}
+          onConfirm={signalerPasVenu} />
+        {/* Motif obligatoire : le serveur le refuse sans (MOTIF_REQUIS) et le transmet au client, dans son suivi et
+            dans l'e-mail de refus. Avant, le client apprenait le refus sans savoir pourquoi. */}
+        <ReasonDialog open={!!aRefuser} danger
+          title={t('ordersResto.confirmRefuseTitle')}
+          message={`${t('ordersResto.confirmRefuseText', { name: aRefuser?.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
+          label={t('ordersResto.refuseReasonLabel')}
+          placeholder={t('ordersResto.refuseReasonPlaceholder')}
+          confirmLabel={t('ordersResto.refuse')}
+          onCancel={() => setARefuser(null)}
+          onConfirm={(motif) => { const o = aRefuser; setARefuser(null); orderAction(o.id, 'refuse', { reason: motif }); }} />
+        {/* A1 : accepter une commande avec demande d'allergie, c'est s'engager à la respecter. */}
+        <ConfirmDialog open={!!allergieAConfirmer}
+          title={t('conformite.allergyConfirmTitle')}
+          message={t('conformite.allergyConfirmText', { request: allergieAConfirmer?.allergyRequest || '' })}
+          confirmLabel={t('conformite.allergyConfirmAccept')}
+          onCancel={() => setAllergieAConfirmer(null)}
+          onConfirm={() => { const o = allergieAConfirmer; setAllergieAConfirmer(null); orderAction(o.id, 'accept', { allergyAck: true, extraMinutes: tempsEnPlus[o.id] || 0 }); }} />
+        {/* B6 : pas de remise d'alcool sans pièce d'identité contrôlée. Refus → commande close, tâche admin. */}
+        <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
+          onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); confirmTakeaway(o, true); }}
+          onRefuse={() => refuserRemiseAge(ageAVerifier)} />
+    </>
+  );
+
+  /* LE TABLEAU DU SITE (2026-10-16, mockups/site-ordinateur.html › Espace commerce). Trois colonnes : Nouvelles (la plus
+     pressée en tête, bordure rouge qui bat, seule à porter « Accepter » en lime ; les suivantes en iris), En préparation,
+     Prêtes (prête, livreur en route). La colonne dit l'étape : la pastille ne reste que là où elle précise (livreur attendu,
+     client attendu, en route). Mêmes gestes que la liste de l'app : photo, ticket, temps en plus, allergie à confirmer,
+     refus avec motif (ReasonDialog), prête, client pas venu, code du client, code de retrait, contrôle d'âge. Toucher la
+     carte ouvre le détail. Quand la feuille est étroite (téléphone), les colonnes s'empilent (site-pro.css). */
+  const nouvellesTriees = enCours.filter((o) => orderStageKey(o) === 'nouveau').sort((a, b) => echeance(a) - echeance(b));
+  const plusPressee = nouvellesTriees.find((o) => o.status === 'nouveau')?.id;
+  const colonnes = COLONNES.map((c) => ({ ...c, liste: c.cle === 'nouv' ? nouvellesTriees : enCours.filter((o) => c.etapes.includes(orderStageKey(o))) }));
+  const carteTableau = (o) => {
+    const stageKey = orderStageKey(o);
+    const stage = ORDER_STAGES.find((s) => s.key === stageKey);
+    const nouvelle = o.status === 'nouveau';
+    const pressee = o.id === plusPressee;
+    const pastille = !['nouveau', 'preparation'].includes(stageKey);
+    return (
+      <article key={o.id} className={`sp-cmd${pressee ? ' sp-cmd--pressee' : ''}`} onClick={() => setSelectedOrder(o)}>
+        <div className="sp-cmd-l1">
+          <div className="sp-cmd-qui">
+            <div className="sp-cmd-tete">
+              {o.orderNumber ? <span className="sp-cmd-num">{numeroCommande(o)}</span> : <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>}
+              <span className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</span>
+            </div>
+            <b className="sp-cmd-client">{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6 }}>{t('ordersResto.trainingBadge')}</span>}</b>
+            {o.clientPhone && <span className="sp-cmd-tel"><Icone nom="telephone" taille={13} className="icone-texte" />{' '}{o.clientPhone}</span>}
+          </div>
+          <div className="sp-cmd-outils" onClick={(e) => e.stopPropagation()}>
+            {['nouveau', 'preparation', 'pret'].includes(o.status) && !o.preparedPhoto && (
+              <label className="sp-outil" title={t('ordersResto.photoHelp')} aria-label={t('ordersResto.photoBtn')}>
+                {photoEnCours === o.id ? '…' : <Icone nom="apercu" taille={16} />}
+                <input type="file" accept="image/*" capture="environment" hidden disabled={photoEnCours === o.id} onChange={(e) => { photographier(o, e.target.files?.[0]); e.target.value = ''; }} />
+              </label>
+            )}
+            {o.preparedPhoto && (
+              <a className="sp-outil" href={o.preparedPhoto.url} target="_blank" rel="noreferrer" title={t('ordersResto.photoDone', { time: new Date(o.preparedPhoto.at).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })}><Icone nom="apercu" taille={16} />✓</a>
+            )}
+            <button type="button" className="sp-outil" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
+              disabled={envoiTicket === o.id} onClick={() => { if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else setSelectedOrder(o); }}><Icone nom="imprimante" taille={16} /></button>
+            {nouvelle && o.acceptDeadline && <AnneauDelai order={o} t={t} />}
+          </div>
+        </div>
+        {pastille && (
+          <span className="etape-pastille sp-cmd-etape" style={{ '--etape-couleur': stageColors[stageKey] }}>
+            <Icone nom={stage.icon} taille={14} className="icone-texte" /> {t(`orderStatus.stage_${stage.key}`)}
+          </span>
+        )}
+        <p className="sp-cmd-art">{o.items.map(formatOrderItem).join(', ')}</p>
+        <div className="sp-cmd-paiement">
+          {o.paymentMode === 'on_site' ? (
+            <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
+              {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}
+            </span>
+          ) : (
+            <span className="small paiement-badge paiement-en-ligne" style={{ fontWeight: 700 }}><Icone nom="valider" taille={14} className="icone-texte" />{' '}{t('ordersResto.paidOnlineBadge')}</span>
+          )}
+          {o.print && <EtatImpression p={o.print} t={t} />}
+        </div>
+        {o.orderType === 'delivery' && o.address && <div className="small sp-cmd-info"><Icone nom="position" taille={14} className="icone-texte" />{' '}{o.address}</div>}
+        <DeliveryTiming order={o} />
+        <EcheanceAcceptation order={o} />
+        <BandeauAllergie order={o} />
+        <BadgeAlcool order={o} />
+        {o.orderType === 'delivery' && o.driverName && ['preparation', 'pret'].includes(o.status) && (
+          <div className="small" style={{ fontWeight: 600 }}>{t('ordersResto.driverAssigned', { name: o.driverName })}</div>
+        )}
+        {nouvelle && (
+          <div className="sp-cmd-actions" onClick={(e) => e.stopPropagation()}>
+            <SegmentGlisse libelle={t('ordersResto.extraPrepLabel')} valeur={tempsEnPlus[o.id] || 0}
+              onChange={(v) => setTempsEnPlus((p) => ({ ...p, [o.id]: v }))}
+              options={[{ value: 0, label: t('ordersResto.extraPrepNone') }, ...[10, 20, 30].map((m) => ({ value: m, label: t('ordersResto.extraPrepMinutes', { n: m }) }))]} />
+            <div className="sp-cmd-boutons">
+              <button type="button" className={`ec-bouton ${pressee ? 'ec-bouton--lime' : 'ec-bouton--iris'}`} disabled={actionEnCours === o.id}
+                onClick={() => { if (o.allergyRequest) setAllergieAConfirmer(o); else orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 }); }}>
+                {actionEnCours === o.id ? '…' : t('ordersResto.accept')}
+              </button>
+              <button type="button" className="ec-bouton sp-bouton-contour" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
+            </div>
+          </div>
+        )}
+        {o.status === 'preparation' && (
+          <div className="sp-cmd-boutons" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+          </div>
+        )}
+        {o.status === 'pret' && o.orderType === 'pickup' && (
+          <div className="sp-cmd-code" onClick={(e) => e.stopPropagation()}>
+            <input aria-label={t('ordersResto.phCustomerCode')} placeholder={t('ordersResto.phCustomerCode')} inputMode="numeric" autoComplete="off"
+              onKeyDown={(e) => { if (e.key === 'Enter') confirmTakeaway(o); }}
+              value={pickupCodeInputs[o.id] || ''}
+              onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))} />
+            <button type="button" className="btn-teal btn-sm" disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
+              {confirmingPickup === o.id ? '...' : t('ordersResto.validateOrder')}
+            </button>
+          </div>
+        )}
+        <CodeRetrait order={o} t={t} />
+        {o.courierWaitingSince && ['preparation', 'pret'].includes(o.status) && (
+          <p className="small" style={{ margin: '8px 0 0', fontWeight: 700 }}>{t('ordersResto.courierWaiting', { min: Math.max(0, Math.floor((Date.now() - o.courierWaitingSince) / 60000)) })}</p>
+        )}
+        {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
+          <p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.waitingDriver')}</p>
+        )}
+        {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="btn-ghost btn-sm sp-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={14} className="icone-texte" />{' '}{t('ordersResto.customerNoShow')}</button>
+          </div>
+        )}
+      </article>
+    );
+  };
+  const etatTerminal = terminaux ? (aTerminal ? (terminalEnLigne ? t('sitePro.terminalEnLigne') : t('sitePro.terminalHorsLigne')) : t('sitePro.terminalAucun')) : null;
+
+  if (SITE) return (
+    <div className="no-print sp-page">
+      {/* LE BANDEAU (site) : le nom et le résumé, « Commandes », les réglages du service en pastilles claires (son, terminal,
+          alarme, notifications), l'interrupteur ouvert / en pause, puis la prochaine étape avant la mise en ligne. */}
+      <BandeauCommerce>
+        <div className="sp-b-ligne">
+          <div className="sp-b-titres">
+            <div className="ec-b-haut"><span><b>{restaurant?.name}</b>{' · '}{t('ordersResto.summary', { current: enCours.length, today: duJour })}</span></div>
+            <h1 className="ec-b-titre">{t('sitePro.commandes')}</h1>
+          </div>
+          {alerte && <AlerteBandeau {...alerte} terminal={etatTerminal} />}
+        </div>
+        {restaurant && <InterrupteurService surBandeau restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />}
+        {restaurant && <MiseEnLigne surBandeau restaurant={restaurant} restoId={restoId} token={token} onConnect={onConnect} connecting={connecting}
+          onChange={() => loadDashboard(restoId)} lectureSeule={lectureSeule} />}
+      </BandeauCommerce>
+      <FeuilleCommerce>
+        {communs}
+        <div className="sp-cadre">
+        {enCours.length === 0 && <div className="sp-vide-etroit"><EtatVide icone="commandes" titre={orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} /></div>}
+        <div className={`sp-tableau${enCours.length === 0 ? ' sp-tableau--vide' : ''}`} role="group" aria-label={t('sitePro.tableau')}>
+          {colonnes.map((c) => (
+            <section key={c.cle} className={`sp-kol sp-kol--${c.cle}`} aria-labelledby={`sp-kol-${c.cle}`}>
+              <h2 className="sp-kol-t" id={`sp-kol-${c.cle}`}>
+                <span className={`sp-kol-ic${c.cle === 'nouv' && c.liste.length ? ' sp-sonne' : ''}`}><Icone nom={c.icone} taille={18} /></span>
+                {t(c.titre)} <span className="sp-kol-n">{c.liste.length}</span>
+              </h2>
+              {c.liste.length ? c.liste.map(carteTableau) : <p className="sp-kol-vide">{t(c.vide)}</p>}
+            </section>
+          ))}
+        </div>
+        {restaurant && (
+          <div className="ec-ruptures">
+            <RupturesDuJour restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
+          </div>
+        )}
+        {closes.length > 0 && (
+          <details className="service-historique sp-historique">
+            <summary>{t('ordersResto.history', { n: closes.length })}</summary>
+            <div className="sp-historique-grille">{closes.map(carteTableau)}</div>
+          </details>
+        )}
+        </div>
+      </FeuilleCommerce>
+      {fenetres}
+    </div>
+  );
+
   return (
     <div className="no-print">
       {/* LE BANDEAU (2026-10-16) : le nom, le résumé du service, l'interrupteur ouvert / en pause et l'état du terminal.
@@ -465,145 +784,7 @@ export default function OrdersPage() {
         )}
       </FeuilleCommerce>
 
-      {selectedOrder && createPortal(
-        <div className="modal-overlay no-print" onClick={() => setSelectedOrder(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
-              <h3 style={{ margin: 0 }}>{t('ordersResto.orderOf', { name: selectedOrder.clientName })}</h3>
-              {selectedOrder.orderNumber ? <span className="commande-numero">{numeroCommande(selectedOrder)}</span> : <span className={`status-badge status-${selectedOrder.status}`}>{statusLabel(selectedOrder.status, selectedOrder.orderType, t)}</span>}
-            </div>
-            <div className={`order-type-badge order-type-badge-${orderTypeColor(selectedOrder)}`} style={{ marginBottom: 8 }}>{orderTypeLabel(selectedOrder, t)}</div>
-            {(() => {
-              const sk = orderStageKey(selectedOrder);
-              const stg = ORDER_STAGES.find((s) => s.key === sk);
-              const col = stageColors[sk];
-              return (
-                <span className="etape-pastille" style={{ '--etape-couleur': col, marginBottom: 8 }}>
-                  <Icone nom={stg.icon} taille={16} className="icone-texte" /> {t(`orderStatus.stage_${stg.key}`)}
-                </span>
-              );
-            })()}
-            <ProgressBar status={selectedOrder.status} orderType={selectedOrder.orderType} />
-            <DeliveryTiming order={selectedOrder} />
-            <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>{t('ordersResto.items')}</h4>
-            {selectedOrder.items.map((i) => (
-              <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', alignItems: 'flex-start' }}>
-                <span>
-                  {i.qty}× {i.name}{i.discount > 0 ? <Icone nom="etiquette" taille={16} className="icone-texte" /> : ''}
-                  {i.options?.length > 0 && <span className="small" style={{ display: 'block' }}>{i.options.map((o) => o.name).join(', ')}</span>}
-                </span>
-                <span>{euros((i.price * i.qty - (i.discount || 0)))}</span>
-              </div>
-            ))}
-            <div className="divider" />
-            <div className="breakdown">
-              <div className="line"><span>{t('ordersResto.subtotal')}</span><span>{euros(selectedOrder.subtotal)}</span></div>
-              {selectedOrder.promoDiscount > 0 && <div className="line"><span>{t('ordersResto.promo', { label: selectedOrder.promoLabel })}</span><span>-{euros(selectedOrder.promoDiscount)}</span></div>}
-              {selectedOrder.orderType === 'delivery' && <div className="line"><span>{t('ordersResto.delivery')}</span><span>{euros(selectedOrder.deliveryFee)}</span></div>}
-              {selectedOrder.serviceFee > 0 && <div className="line"><span>{t('ordersResto.serviceFee')}</span><span>{euros((selectedOrder.serviceFee + (selectedOrder.serviceFeeVat || 0)))}</span></div>}
-              {selectedOrder.balanceUsed > 0 && <div className="line"><span>{t('ordersResto.balanceUsed')}</span><span>-{euros(selectedOrder.balanceUsed)}</span></div>}
-              <div className="line total"><span>{selectedOrder.paymentMode === 'on_site' ? `${t('ordersResto.toCollectOnSite')}` : t('ordersResto.totalPaid')}</span><span>{euros(selectedOrder.total)}</span></div>
-            </div>
-            <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? t('ordersResto.takeaway') : t('ordersResto.delivery')}</h4>
-            {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{selectedOrder.address}</p>}
-            {selectedOrder.orderType === 'pickup' && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.pickupInfo')}</p>}
-            {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}><Icone nom="telephone" taille={16} className="icone-texte" />{' '}{selectedOrder.clientPhone}</p>}
-            <BandeauAllergie order={selectedOrder} />
-            <BadgeAlcool order={selectedOrder} />
-            {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}><Icone nom="cle" taille={16} className="icone-texte" />{' '}{deliveryInstructionLabel(selectedOrder.deliveryInstructions, t)}</p>}
-            {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}><Icone nom="document" taille={16} className="icone-texte" />{' '}{selectedOrder.deliveryNote}</p>}
-            {selectedOrder.orderType === 'delivery' && selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.driverLine', { name: selectedOrder.driverName, phone: selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : '' })}</p>}
-            {selectedOrder.status === 'pret' && selectedOrder.orderType === 'pickup' && (
-              <div className="row" style={{ marginTop: 10, gap: 8 }}>
-                <input aria-label={t('ordersResto.phCustomerCode')}
-                  placeholder={t('ordersResto.phCustomerCode')}
-                  style={{ maxWidth: 140 }}
-                  value={pickupCodeInputs[selectedOrder.id] || ''}
-                  onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
-                />
-                <button className="btn-teal btn-sm" disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder)}>
-                  {confirmingPickup === selectedOrder.id ? '...' : t('ordersResto.validateOrder')}
-                </button>
-              </div>
-            )}
-            <CodeRetrait order={selectedOrder} t={t} />
-            <div className="divider" />
-            {/* UN bouton d'impression (2026-09-23). Le terminal Fairide imprime les tickets de lui-même
-                (fondateur, 2026-09-22) ; ici ne reste que le secours : l'imprimante Bluetooth si elle est
-                connectée, sinon la boîte d'impression de l'appareil. « Modifier le ticket » et le texte
-                d'explication qui précédaient les boutons sont partis. */}
-            {aTerminal ? (
-              <>
-                <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
-                  <b className="small">{t('ordersResto.ticketTitle')}</b>
-                  {selectedOrder.print ? <EtatImpression p={selectedOrder.print} t={t} /> : <span className="small" style={{ color: 'var(--ink-faint)' }}>{t('ordersResto.notPrintedYet')}</span>}
-                </div>
-                {selectedOrder.print?.printed > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--ink-soft)' }}>{t('ordersResto.reprintHelp')}</p>}
-                <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />
-                  <button className="btn-teal" disabled={envoiTicket === selectedOrder.id} onClick={() => imprimerSurTerminal(selectedOrder, exemplaires)}>
-                    {envoiTicket === selectedOrder.id ? t('ordersResto.printing') : selectedOrder.print?.printed > 0 ? t('ordersResto.reprintTerminal') : t('ordersResto.printTerminal')}
-                  </button>
-                  <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
-                  <button className="btn-ghost" onClick={() => printReceipt(selectedOrder, exemplaires)}>{t('ordersResto.printFromDevice')}</button>
-                  <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
-                </div>
-              </>
-            ) : (
-              <>
-                {impressions[selectedOrder.id] > 0 && (
-                  <p className="small" style={{ margin: '0 0 8px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })}</p>
-                )}
-                <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />
-                  <button className="btn-teal" disabled={printing} onClick={() => (btName ? printBluetooth(selectedOrder, { copies: exemplaires }) : printReceipt(selectedOrder, exemplaires))}>
-                    {printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}
-                  </button>
-                  <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
-                  <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
-                </div>
-                <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-faint)' }}>{t('ordersResto.noTerminalHint')} <Link to="/dashboard/terminal">{t('ordersResto.terminalSettings')}</Link></p>
-              </>
-            )}
-            {apercu?.orderId === selectedOrder.id && <div style={{ marginTop: 12 }}><TicketPapier lines={apercu.lines} columns={apercu.columns} /></div>}
-          </div>
-        </div>,
-        document.body
-      )}
-      {/* Portail séparé du modal (lui-même marqué no-print) : c'est ce qui garantit que le reçu reste
-          visible à l'impression même si le modal et le reste de la page sont masqués (voir OrderReceipt.jsx
-          et .receipt-print dans styles.css — un enfant ne peut jamais annuler le display:none d'un ancêtre). */}
-      {selectedOrder && createPortal(<OrderReceipt order={selectedOrder} restaurant={restaurant} />, document.body)}
-      <ConfirmDialog open={!!pasVenu} danger
-        title={t('ordersResto.confirmNoShowTitle')}
-        message={t('ordersResto.confirmNoShowText', { name: pasVenu?.clientName || '' })}
-        confirmLabel={t('ordersResto.customerNoShow')}
-        loading={clotureEnCours}
-        onCancel={() => setPasVenu(null)}
-        onConfirm={signalerPasVenu} />
-      {/* Motif obligatoire : le serveur le refuse sans (MOTIF_REQUIS) et le transmet au client, dans son suivi et
-          dans l'e-mail de refus. Avant, le client apprenait le refus sans savoir pourquoi. */}
-      <ReasonDialog open={!!aRefuser} danger
-        title={t('ordersResto.confirmRefuseTitle')}
-        message={`${t('ordersResto.confirmRefuseText', { name: aRefuser?.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
-        label={t('ordersResto.refuseReasonLabel')}
-        placeholder={t('ordersResto.refuseReasonPlaceholder')}
-        confirmLabel={t('ordersResto.refuse')}
-        onCancel={() => setARefuser(null)}
-        onConfirm={(motif) => { const o = aRefuser; setARefuser(null); orderAction(o.id, 'refuse', { reason: motif }); }} />
-      {/* A1 : accepter une commande avec demande d'allergie, c'est s'engager à la respecter. */}
-      <ConfirmDialog open={!!allergieAConfirmer}
-        title={t('conformite.allergyConfirmTitle')}
-        message={t('conformite.allergyConfirmText', { request: allergieAConfirmer?.allergyRequest || '' })}
-        confirmLabel={t('conformite.allergyConfirmAccept')}
-        onCancel={() => setAllergieAConfirmer(null)}
-        onConfirm={() => { const o = allergieAConfirmer; setAllergieAConfirmer(null); orderAction(o.id, 'accept', { allergyAck: true, extraMinutes: tempsEnPlus[o.id] || 0 }); }} />
-      {/* B6 : pas de remise d'alcool sans pièce d'identité contrôlée. Refus → commande close, tâche admin. */}
-      <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
-        onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); confirmTakeaway(o, true); }}
-        onRefuse={() => refuserRemiseAge(ageAVerifier)} />
+      {fenetres}
     </div>
   );
 }

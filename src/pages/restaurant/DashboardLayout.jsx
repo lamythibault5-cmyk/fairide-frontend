@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import { allerAuPaiement } from '../../natif';
+import { allerAuPaiement, experienceApp } from '../../natif';
 import { useAuth } from '../../context/AuthContext';
 import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
@@ -21,6 +21,7 @@ import { cuisineDepuisOsm } from '../../osmCuisine';
 import { demarrerTerminalNavigateur } from '../../terminalNavigateur';
 import { remonterEnHaut } from '../../remonter';
 import Icone from '../../components/Icone';
+import '../../site-pro.css';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
@@ -28,6 +29,10 @@ import { remonterEnHaut } from '../../remonter';
 // bannières (validation/abonnement/Stripe).
 const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
 const PAGES_BANDEAU = ['/dashboard', '/dashboard/edit', '/dashboard/orders', '/dashboard/menu', '/dashboard/stats'];
+// Sur le SITE (pas dans l'app), les autres pages du commerce ont aussi leur bandeau (2026-10-16, mockups/site-ordinateur.html,
+// lot « pro ») : elles reçoivent les blocs communs dans leur feuille, comme les pages ci-dessus.
+const SITE = !experienceApp();
+const PAGES_BANDEAU_SITE = ['/dashboard/promotions', '/dashboard/reviews', '/dashboard/invoices', '/dashboard/guide', '/dashboard/preview'];
 
 export default function DashboardLayout() {
   const { t } = useLanguage();
@@ -43,7 +48,10 @@ export default function DashboardLayout() {
   const surAccueil = ['/dashboard', '/dashboard/edit'].includes(chemin);
   // Pages au bandeau iris (2026-10-16, ecran-commerce.css) : elles portent elles-mêmes le nom du commerce et posent
   // les blocs communs (alertes, prochaine étape, alerte de commande) en tête de leur feuille blanche.
-  const avecBandeau = PAGES_BANDEAU.includes(chemin);
+  const avecBandeau = PAGES_BANDEAU.includes(chemin) || (SITE && PAGES_BANDEAU_SITE.includes(chemin));
+  // Commandes sur le site : le son, l'alarme et la prochaine étape montent dans le bandeau de la page (OrdersPage) ; la
+  // feuille ne garde que les deux alertes. Dans l'app, rien ne change.
+  const commandesSite = SITE && chemin === '/dashboard/orders';
   const [myRestos, setMyRestos] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
@@ -316,13 +324,13 @@ export default function DashboardLayout() {
           (CarteAValider) et la liste de MenuReadiness. Complète sur Mon commerce (la route du bandeau, EditPage), une
           rangée « Prochaine étape » ailleurs — y compris sur le terminal. En « agir pour », l'équipe voit la liste sans
           aucun bouton : elle ne signe ni ne valide rien à la place du commerce. */}
-      {!surAccueil && (
+      {!surAccueil && !commandesSite && (
         <MiseEnLigne restaurant={restaurant} restoId={restoId} token={token} onConnect={connectOnboard} connecting={connecting}
           onChange={() => loadDashboard(restoId)} lectureSeule={!!actingAs} />
       )}
       {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même
           s'il est en train de modifier son menu ou de consulter ses avis. */}
-      <NewOrderAlertBar {...orderAlert} push={push} />
+      {!commandesSite && <NewOrderAlertBar {...orderAlert} push={push} />}
     </>
   );
 
@@ -382,7 +390,8 @@ export default function DashboardLayout() {
       {restaurant && (
         <div className="page-fade" key={chemin}>
           <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard,
-            communs: bandeau ? communs : null, onConnect: connectOnboard, connecting, lectureSeule: !!actingAs }} />
+            communs: bandeau ? communs : null, onConnect: connectOnboard, connecting, lectureSeule: !!actingAs,
+            alerte: { ...orderAlert, push } }} />
         </div>
       )}
     </div>

@@ -5926,6 +5926,35 @@ export default {
       tapToPause: 'Touche pour te mettre en pause',
       tapToResume: 'Touche pour recevoir des courses'
     },
+    // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
+    sitePro: {
+      reglagesService: 'Réglages du service',
+      commandes: 'Commandes',
+      tableau: 'Commandes en cours',
+      colNouvelles: 'Nouvelles',
+      colPreparation: 'En préparation',
+      colPretes: 'Prêtes',
+      videNouvelles: 'Aucune nouvelle commande. Elle sonnera ici.',
+      videColonne: "Rien pour l'instant.",
+      terminalEnLigne: 'Terminal en ligne',
+      terminalHorsLigne: 'Terminal hors ligne',
+      terminalAucun: 'Associer un terminal',
+      ficheTitre: 'Ta fiche, comme les clients la verront',
+      photoAbsente: 'Pas encore de photo',
+      modifierFiche: 'Modifier la fiche',
+      voirCommeClient: 'Voir comme un client',
+      tuileCarte: 'Ta carte',
+      plat: '{n} plat',
+      plats: '{n} plats',
+      tuileHoraires: 'Horaires du jour',
+      modifier: 'Modifier',
+      etape_carte: 'Ta carte',
+      etape_valider: 'Carte validée',
+      etape_engagements: 'Engagements',
+      etape_paiements: 'Paiements',
+      etape_verification: 'Vérification',
+      etape_enLigne: 'En ligne'
+    },
     // Liste « Avant d'être en ligne » du commerce (components/commerce/MiseEnLigne.jsx, audit UX du 15/10/2026).
     miseEnLigne: {
       title: "Avant d'être en ligne",

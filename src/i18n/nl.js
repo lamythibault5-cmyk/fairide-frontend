@@ -5919,6 +5919,35 @@ export default {
       tapToPause: 'Tik om te pauzeren',
       tapToResume: 'Tik om ritten te ontvangen'
     },
+    // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
+    sitePro: {
+      reglagesService: 'Instellingen van de service',
+      commandes: 'Bestellingen',
+      tableau: 'Lopende bestellingen',
+      colNouvelles: 'Nieuw',
+      colPreparation: 'In bereiding',
+      colPretes: 'Klaar',
+      videNouvelles: 'Geen nieuwe bestellingen. Ze rinkelen hier.',
+      videColonne: 'Voorlopig niets.',
+      terminalEnLigne: 'Terminal online',
+      terminalHorsLigne: 'Terminal offline',
+      terminalAucun: 'Een terminal koppelen',
+      ficheTitre: 'Je fiche, zoals klanten ze zullen zien',
+      photoAbsente: 'Nog geen foto',
+      modifierFiche: 'Fiche aanpassen',
+      voirCommeClient: 'Bekijken als klant',
+      tuileCarte: 'Je kaart',
+      plat: '{n} gerecht',
+      plats: '{n} gerechten',
+      tuileHoraires: 'Openingsuren vandaag',
+      modifier: 'Aanpassen',
+      etape_carte: 'Je kaart',
+      etape_valider: 'Kaart goedgekeurd',
+      etape_engagements: 'Verbintenissen',
+      etape_paiements: 'Betalingen',
+      etape_verification: 'Controle',
+      etape_enLigne: 'Online'
+    },
     // Lijst « Voordat je online gaat » voor zaken (components/commerce/MiseEnLigne.jsx, UX-audit van 15/10/2026).
     miseEnLigne: {
       title: 'Voordat je online gaat',

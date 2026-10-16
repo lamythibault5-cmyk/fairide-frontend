@@ -7,6 +7,7 @@ const APPLI = experienceApp();
 import { api } from '../../api';
 import GiftVouchers from '../../components/GiftVouchers';
 import MiseEnAvant from '../../components/MiseEnAvant';
+import CadreSite, { SITE } from '../../components/commerce/CadreSite';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -246,12 +247,15 @@ export default function PromotionsPage() {
     </>
   );
 
+  // Sur le site, le titre et l'introduction sont sur le bandeau (CadreSite) ; dans l'app, en tête de page comme avant.
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('promosPage.title')}</h2>
-      <p className="small" style={{ margin: '0 0 14px' }}>
-        {t('promosPage.intro')}
-      </p>
+    <CadreSite titre={t('promosPage.title')} sous={t('promosPage.intro')} lecture>
+      {!SITE && <h2 className="section-title" style={{ marginTop: 0 }}>{t('promosPage.title')}</h2>}
+      {!SITE && (
+        <p className="small" style={{ margin: '0 0 14px' }}>
+          {t('promosPage.intro')}
+        </p>
+      )}
 
       <AvantageFairide restaurant={restaurant} restoId={restoId} token={token} toast={toast} t={t} loadDashboard={loadDashboard} onChanged={loadPromos} />
 
@@ -308,6 +312,6 @@ export default function PromotionsPage() {
           Réservations a été retiré, 2026-09-25). */}
       <div style={{ marginTop: 22 }}><MiseEnAvant restoId={restoId} token={token} toast={toast} /></div>
       <div style={{ marginTop: 22 }}><GiftVouchers restoId={restoId} token={token} toast={toast} restaurant={restaurant} /></div>
-    </div>
+    </CadreSite>
   );
 }
