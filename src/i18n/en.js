@@ -6670,7 +6670,6 @@ export default {
       inscriptionClient: 'Create your account.',
       inscriptionCommerce: 'Sign up your business.',
       inscriptionLivreur: 'Become a courier.',
-      etape: 'Step {n} of {total}',
       oubliTitre: 'No worries.',
       oubliSous: 'You’ll get a link by e-mail to choose a new password.',
       codeTitre: 'Almost there.',

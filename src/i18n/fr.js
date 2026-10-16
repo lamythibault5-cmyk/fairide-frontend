@@ -6704,7 +6704,6 @@ export default {
       inscriptionClient: 'Crée ton compte.',
       inscriptionCommerce: 'Inscris ton commerce.',
       inscriptionLivreur: 'Deviens livreur.',
-      etape: 'Étape {n} sur {total}',
       oubliTitre: 'Pas de souci.',
       oubliSous: 'Tu reçois un lien par e-mail pour choisir un nouveau mot de passe.',
       codeTitre: 'Presque fini.',

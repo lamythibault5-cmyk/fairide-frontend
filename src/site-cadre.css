@@ -190,8 +190,9 @@
 /* ---------------------------------------------------------------------------------------------------------------------
    6 · LA CONNEXION ET L'INSCRIPTION DU SITE (/login, pages/Auth.jsx — section 2 de la maquette)
    Sous l'en-tête des visiteurs (inchangé), deux moitiés : l'iris à gauche, qui prolonge l'en-tête (titre, vélo qui attend
-   sur sa route, ou la route des étapes de l'inscription), et la feuille blanche à droite avec le formulaire. Un seul
-   bouton lime : l'action du formulaire. Sur téléphone : le bandeau iris en haut, la feuille qui monte dessous.
+   sur sa route), et la feuille blanche à droite avec le formulaire. Un seul bouton lime : l'action du formulaire.
+   Sur téléphone, PAS de second bandeau iris sous l'en-tête iris (fondateur, 2026-10-16 : « double bannière, trop lourd ») :
+   tout est sur le blanc, le titre en encre, le formulaire juste dessous.
    La page sort de la colonne de 960 px de .wrap (elle va d'un bord à l'autre de la fenêtre) et remonte sur les 24 px
    qu'il laisse sous l'en-tête.
    --------------------------------------------------------------------------------------------------------------------- */
@@ -234,35 +235,21 @@
 .auth-segment button:hover { filter: none; color: var(--ink); }
 .auth-segment button[aria-selected="true"] { color: #fff; }
 
-/* La route des étapes de l'inscription, sur l'iris : arrêts, partie faite en lime, le vélo à l'étape en cours. */
-.auth-route { position: relative; height: 48px; margin-top: 26px; --auth-pos: 0%; }
-.auth-route-voie { position: absolute; left: 0; right: 0; top: 35px; border-top: 3px dashed rgba(255, 255, 255, .35); }
-.auth-route-fait { position: absolute; left: 0; top: 34px; height: 4px; width: var(--auth-pos); border-radius: 2px; background: var(--lime); transition: width .9s cubic-bezier(.3, .7, .4, 1); }
-.auth-route-arret {
-  position: absolute; top: 36px; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; box-sizing: border-box;
-  background: var(--iris); border: 2px solid rgba(255, 255, 255, .5); display: grid; place-items: center; color: var(--ink);
-}
-.auth-route-arret--actuel { background: #fff; border-color: #fff; }
-.auth-route-arret--fait { width: 22px; height: 22px; margin: -11px 0 0 -11px; background: var(--lime); border: 0; }
-.auth-route-velo { position: absolute; top: 2px; left: calc(var(--auth-pos) - 21px); line-height: 0; transition: left .9s cubic-bezier(.3, .7, .4, 1); }
-.auth-route-texte { margin: 10px 0 0; font-size: 13.5px; color: rgba(255, 255, 255, .78); }
-
 @media (max-width: 960px) {
-  .auth-site { grid-template-columns: minmax(0, 1fr); min-height: 0; margin-top: -24px; }
-  .auth-site-iris { padding: 22px 20px 48px; }
+  .auth-site { grid-template-columns: minmax(0, 1fr); min-height: 0; margin-top: -24px; background: #fff; }
+  .auth-site-iris { padding: 26px 20px 0; color: var(--ink); }
   .auth-site-titre { margin: 0; }
-  .auth-site-titre h1 { font-size: 28px; margin-bottom: 6px; }
-  .auth-site-titre p { font-size: 15px; }
+  .auth-site-titre h1 { font-size: 28px; margin-bottom: 6px; color: var(--ink); }
+  .auth-site-titre p { font-size: 15px; color: var(--ink-soft); }
   .auth-site-scene { display: none; }
-  .auth-route { margin-top: 14px; }
-  .auth-site-feuille { align-items: flex-start; border-radius: 26px 26px 0 0; margin-top: -26px; padding: 26px 20px 40px; animation-name: site-monte; }
+  .auth-site-feuille { align-items: flex-start; border-radius: 0; margin-top: 0; padding: 20px 20px 40px; animation: none; }
   .auth-site .auth-box { max-width: 480px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .site-feuille, .carte-cookies, .auth-site-feuille { animation: none; }
   .site-survol, .site-survol:hover { transition: none; transform: none; }
-  html:not(.appli) .dashboard-nav > .nav-curseur, .auth-segment-pouce, .auth-route-fait, .auth-route-velo { transition: none; }
+  html:not(.appli) .dashboard-nav > .nav-curseur, .auth-segment-pouce { transition: none; }
 }
 
 /* ---------- BANDEAUX D'UN BORD À L'AUTRE, PARTOUT SUR UN ORDINATEUR (2026-10-16, après la fusion des lots) ----------
