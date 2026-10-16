@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import { remonterEnHaut } from '../remonter';
 import ContactSection from '../components/ContactSection';
 import usePageMeta from '../hooks/usePageMeta';
 import RetourCompte from '../components/RetourCompte';
@@ -35,6 +36,18 @@ export default function HelpPage() {
   // Arrivée depuis « Moyens de paiement » ou « Titres restaurant » : on amène directement à la
   // bonne réponse. Le navigateur ne le fait pas seul, l'ancre étant rendue après la navigation.
   const ancre = params.get('sujet');
+
+  // UN LIEN VERS /aide QUAND ON Y EST DÉJÀ (« Aide » de l'en-tête depuis « Contact », fondateur, 2026-10-16) : même chemin,
+  // donc ScrollRestorer ne remonte pas, et le nouveau contenu s'affichait sous la position où l'on était resté, souvent tout
+  // en bas. Chaque nouvelle navigation remonte en haut — sauf vers une réponse précise (l'effet ci-dessous y amène).
+  const location = useLocation();
+  const derniereNavigation = useRef(location.key);
+  useEffect(() => {
+    if (derniereNavigation.current === location.key) return;
+    derniereNavigation.current = location.key;
+    if (!ancre || SUJETS.includes(ancre)) remonterEnHaut();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
   useEffect(() => {
     if (!ancre || SUJETS.includes(ancre)) return;
     const cible = document.getElementById(ancre);
@@ -66,7 +79,8 @@ export default function HelpPage() {
     ajuster();
     const minuteurs = [60, 200, 500, 900, 1300, 1600].map((d) => setTimeout(ajuster, d));
     return () => minuteurs.forEach(clearTimeout);
-  }, [ancre]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ancre, location.key]);
 
   // Le lien « Mes commandes » mène un client à ses commandes, tout autre visiteur à son compte.
   const lienCommandes = user?.role === 'client' ? '/orders' : '/account';
