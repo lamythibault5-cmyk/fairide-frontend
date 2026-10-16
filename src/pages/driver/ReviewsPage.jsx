@@ -1,4 +1,5 @@
 import { useLanguage } from '../../context/LanguageContext';
+import PageLivreur from '../../components/livreur/PageLivreur';
 
 // « Mes avis » (livreur). Depuis CODE-13 (8 oct. 2026, DEC-21), les clients ne notent plus la livraison : un livreur est
 // un indépendant, et laisser la plateforme évaluer sa prestation est l'un des critères de la présomption de salariat
@@ -7,9 +8,8 @@ import { useLanguage } from '../../context/LanguageContext';
 export default function ReviewsPage() {
   const { t } = useLanguage();
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('reviewsDriver.title')}</h2>
+    <PageLivreur titre={t('reviewsDriver.title')}>
       <div className="card"><p className="small" style={{ margin: 0 }}>{t('reviewsDriver.noRatings')}</p></div>
-    </div>
+    </PageLivreur>
   );
 }

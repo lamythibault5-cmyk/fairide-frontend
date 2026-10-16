@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -13,6 +13,7 @@ import RouteVelo from '../../components/livreur/RouteVelo';
 import { experienceApp, allerAuPaiement, suivrePositionCourse } from '../../natif';
 import { mouvementReduit, vibrer } from '../../gestes';
 import Icone from '../../components/Icone';
+import { euros } from '../../prixPlat';
 import { DeliveryTiming, DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
@@ -29,6 +30,29 @@ import PositionRequise from '../../components/livreur/PositionRequise';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 import EtatVide from '../../components/EtatVide';
 import '../../ecran-livreur.css';
+import '../../site-livreur.css';
+
+// La carte de la course choisie (site sur un ordinateur seulement) : Leaflet n'est téléchargé que là, jamais sur un
+// téléphone ni dans l'app (CarteCourse.jsx).
+const CarteCourse = lazy(() => import('../../components/livreur/CarteCourse'));
+
+/* LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, mockups/site-ordinateur.html, section « Livreur », « Proposition ») :
+   à partir de 1100 px, la liste des courses à gauche, la carte et le détail de la course choisie à droite ; une course
+   en main, son détail à gauche et sa carte à droite. Jamais dans l'app, qui garde son écran de téléphone, et pas sur un
+   téléphone non plus : la page y reste en une colonne, avec des boutons (la glissière est réservée à l'app). */
+const SITE_LARGE = '(min-width: 1100px)';
+function useSiteLarge(actif) {
+  const [large, setLarge] = useState(() => actif && window.matchMedia(SITE_LARGE).matches);
+  useEffect(() => {
+    if (!actif) return undefined;
+    const mq = window.matchMedia(SITE_LARGE);
+    const suivre = () => setLarge(mq.matches);
+    suivre();
+    mq.addEventListener('change', suivre);
+    return () => mq.removeEventListener('change', suivre);
+  }, [actif]);
+  return large;
+}
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
@@ -69,7 +93,7 @@ function CodeCases({ valeur, onChange, onValider, libelle }) {
   return (
     <label className="ecl-code-cases">
       <input aria-label={libelle} inputMode="numeric" autoComplete="off" maxLength={4} value={valeur}
-        onChange={(e) => onChange(e.target.value.replace(/D/g, '').slice(0, 4))}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 4))}
         onKeyDown={(e) => { if (e.key === 'Enter') onValider(); }} />
       {[0, 1, 2, 3].map((k) => (
         <span key={`${k}-${valeur[k] || ''}`} aria-hidden="true" className={`${valeur[k] ? 'plein' : ''}${k === Math.min(valeur.length, 3) ? ' actuel' : ''}`}>{valeur[k] || ''}</span>
@@ -97,6 +121,9 @@ export default function DriverDashboard() {
   const [connecting, setConnecting] = useState(false);
   const [togglingPause, setTogglingPause] = useState(false);
   const activeIdsRef = useRef([]);
+  // Site sur un ordinateur : mise en page en deux colonnes, et la course choisie dans la liste (son id).
+  const large = useSiteLarge(!experienceApp());
+  const [choisie, setChoisie] = useState(null);
 
   async function togglePause() {
     setTogglingPause(true);
@@ -418,7 +445,8 @@ export default function DriverDashboard() {
       onClick={() => { if (appli) vibrer(10); togglePause(); }}>
       <span className="ecl-service-txt">
         <b>{enPause ? t('dashDriver.accountPaused') : t('dashDriver.availableToDeliver')}</b>
-        <span>{togglingPause ? '…' : enPause ? t('dashDriver.tapToResume') : t('dashDriver.tapToPause')}</span>
+        {/* Sur un ordinateur, on clique : « Touche pour… » se lit mal à la souris. */}
+        <span>{togglingPause ? '…' : enPause ? t(large ? 'siteLivreur.cliqueReprendre' : 'dashDriver.tapToResume') : t(large ? 'siteLivreur.cliquePause' : 'dashDriver.tapToPause')}</span>
       </span>
       <span className="ecl-inter" aria-hidden="true" />
     </button>
@@ -494,10 +522,15 @@ export default function DriverDashboard() {
     </>
   );
 
+  // Distance et durée d'une course proposée (« 1,2 km · ~6 min »), sur sa carte comme dans le détail du site.
+  const voieOffre = (o) => {
+    const km = o.distanceKm != null ? (o.longDistance ? t('dashDriver.longDistance', { km: dec(o.distanceKm, 1) }) : t('dashDriver.shortDistance', { km: dec(o.distanceKm, 1) })) : null;
+    return [km, o.travelMinutes && t('ecranLivreur.minutes', { min: o.travelMinutes })].filter(Boolean).join(' · ');
+  };
+
   // Une course proposée : son trajet en pointillés, son prix dans une pastille iris, « Prendre la course » en lime.
   const carteOffre = (o) => {
-    const km = o.distanceKm != null ? (o.longDistance ? t('dashDriver.longDistance', { km: dec(o.distanceKm, 1) }) : t('dashDriver.shortDistance', { km: dec(o.distanceKm, 1) })) : null;
-    const voie = [km, o.travelMinutes && t('ecranLivreur.minutes', { min: o.travelMinutes })].filter(Boolean).join(' · ');
+    const voie = voieOffre(o);
     return (
       <article className={`ecl-offre${prise === o.id ? ' prise' : ''}${partantes.includes(o.id) ? ' part' : ''}`} key={o.id}>
         <div className="ecl-offre-tete">
@@ -531,42 +564,279 @@ export default function DriverDashboard() {
 
   const urgence = peutRouler && <span className="ecl-urgence"><BoutonUrgence token={token} toast={toast} /></span>;
 
+  /* ---------- Le site (jamais l'app) : le bandeau du tableau de bord, la liste et le détail d'une course ---------- */
+  const site = !appli;
+  // Les courses livrées aujourd'hui, pourboires compris (100 % au livreur) : ce qu'il a gagné dans la journée. Les mêmes
+  // montants que la liste « Livrées aujourd'hui » plus bas ; Gains reste la page qui fait foi (année, mois, relevés).
+  const gainsJour = livreesAujourdhui.reduce((s, o) => s + Number(o.driverFee ?? o.deliveryFee ?? 0) + Number(o.tipAmount || 0), 0);
+  const vehiculeNom = vehicule?.type ? t(`courierOnboarding.vehicle_${vehicule.type}`) : null;
+  const contexte = [user?.name, vehiculeNom].filter(Boolean).join(' · ');
+  const titreSite = titreBandeau || (peutRouler ? (enPause ? t('siteLivreur.enPause') : t('siteLivreur.disponible')) : t('nav.rides'));
+  const sousSite = sousBandeau || (!peutRouler ? null : enPause ? t('siteLivreur.pauseSous')
+    : available.length === 0 ? t('siteLivreur.aucuneProposee') : available.length === 1 ? t('siteLivreur.proposeeUne') : t('siteLivreur.proposees', { n: available.length }));
+
+  const trajetBandeau = course ? (
+    <div className="ecl-trajet" aria-label={t('ecranLivreur.ariaTrajet')} role="img">
+      <span className="ecl-pt"><Icone nom="commerce" taille={18} /></span>
+      <RouteVelo key={`course-${course.id}`} position={enRetrait ? 12 : principale ? 50 : 88} depart={enRetrait ? undefined : 12} roule={!!principale && !enRetrait} saut={!principale} />
+      <span className={`ecl-pt maison${principale ? '' : ' arrivee'}`}><Icone nom="maison" taille={18} /></span>
+    </div>
+  ) : (
+    <RouteVelo key="dispo" position={50} roule={peutRouler && !enPause} pause={peutRouler && enPause} />
+  );
+  // Partage de position pendant une livraison (c'était la rangée « Partage de position » de la page).
+  const partage = active.length > 0 && (
+    <p className={`ecl-partage ${partageOk ? 'ok' : 'attention'}`}>
+      <i aria-hidden="true" />
+      <span><b>{t('dashDriver.locationSharing')}</b> · {user?.locationSharingEnabled === false
+        ? t('dashDriver.sharingDisabledSub')
+        : sharingLocation
+          ? t('dashDriver.sharingOnSub', { last: lastPositionAt ? t('dashDriver.geoLastSentDot', { time: formatClock(lastPositionAt) }) : '' })
+          : t('dashDriver.sharingWaitingSub')}</span>
+    </p>
+  );
+
+  /* LE BANDEAU DU SITE (mockups/site-ordinateur.html, « Livreur ») : qui roule et sur quoi, « Tu es disponible » en titre,
+     les courses proposées en sous-titre, les gains du jour à droite ; dessous l'interrupteur et, à côté, Urgence ; puis la
+     route. Une course en main : son trajet, comme dans l'app. La disposition (deux colonnes sur un ordinateur, une
+     pile sur un téléphone) est dans site-livreur.css (.ecl-bandeau-site). */
+  const bandeauSite = (
+    <section className={`ecl-bandeau ecl-bandeau-site${course ? ' avec-course' : ''}`}>
+      <p className="ecl-b-ctx">
+        <span>{course ? <><b>{t('ecranLivreur.course')}</b> · {t('ecranLivreur.prixMontant', { fee: fraisCourse(course) })}</> : (contexte || t('nav.rides'))}</span>
+        {!principale && course && <span className="ecl-chip">{t('ecranLivreur.livree')}</span>}
+      </p>
+      {peutRouler && (
+        <p className="ecl-gains-j">
+          <small>{livreesAujourdhui.length === 0 ? t('siteLivreur.aujourdhui') : livreesAujourdhui.length === 1 ? t('siteLivreur.aujourdhuiUne') : t('siteLivreur.aujourdhuiCourses', { n: livreesAujourdhui.length })}</small>
+          <b>{euros(gainsJour)}</b>
+        </p>
+      )}
+      <h1 className="ecl-b-titre" key={titreSite}>{titreSite}</h1>
+      {sousSite && <p className="ecl-b-sous">{sousSite}</p>}
+      {!course && peutRouler && interrupteur(false)}
+      {urgence}
+      {trajetBandeau}
+      {partage}
+    </section>
+  );
+
+  const bandeauAppli = (
+    <section className="ecl-bandeau">
+      <div className="ecl-b-haut">
+        {course
+          ? <span><b>{t('ecranLivreur.course')}</b> · {t('ecranLivreur.prixMontant', { fee: fraisCourse(course) })}</span>
+          : <span><b>{t('nav.rides')}</b></span>}
+        {/* Urgence (accident, agression, malaise) : 112 d'abord, puis l'équipe Fairide avec la position (BoutonUrgence.jsx). */}
+        <span className="ecl-b-droite">{!principale && course && <span className="ecl-chip">{t('ecranLivreur.livree')}</span>}{urgence}</span>
+      </div>
+      {titreBandeau && <h1 className="ecl-b-titre" key={titreBandeau}>{titreBandeau}</h1>}
+      {sousBandeau && <p className="ecl-b-sous">{sousBandeau}</p>}
+      {/* L'INTERRUPTEUR EN TÊTE (2026-09-23), sur le bandeau depuis le 2026-10-16 : la première chose que le livreur voit,
+          c'est s'il reçoit des courses ou non, et le geste pour changer, sur toute la largeur. */}
+      {!course && peutRouler && interrupteur(false)}
+      {trajetBandeau}
+      {partage}
+    </section>
+  );
+
+  // La course en main d'abord (je livre → je vais chercher), puis les autres courses en main. Une section vide ne s'affiche pas.
+  const blocEnMain = (enCarte) => (
+    <>
+      {principale && (enCarte
+        ? <div className="ecl-course-carte ecl-en-main">{enRetrait ? detailRetrait(principale, true) : detailLivraison(principale, true)}</div>
+        : (enRetrait ? detailRetrait(principale, true) : detailLivraison(principale, true)))}
+
+      {autresActives.length > 0 && <h2 className="ecl-h2">{t('dashDriver.myOngoing')}</h2>}
+      {autresActives.map((o) => (
+        <div className="ecl-course-carte" key={o.id}>
+          <div className="ecl-course-tete"><span><b>{o.restaurantName}</b> → {o.clientName}</span><span className="ecl-badge doux">{t('dashDriver.rideFee', { fee: fraisCourse(o) })}</span></div>
+          {detailLivraison(o, false)}
+        </div>
+      ))}
+
+      {autresRetraits.length > 0 && <h2 className="ecl-h2">{t('dashDriver.awaitingPickup')}</h2>}
+      {autresRetraits.map((o) => (
+        <div className="ecl-course-carte" key={o.id}>
+          <div className="ecl-course-tete"><b>{o.restaurantName}</b><span className={`ecl-badge ${o.status === 'pret' ? 'lime' : 'doux'}`}>{etatRetrait(o)}</span></div>
+          <div className="small" style={{ marginBottom: 10 }}>{t('dashDriver.rideFee', { fee: fraisCourse(o) })}</div>
+          {detailRetrait(o, false)}
+        </div>
+      ))}
+    </>
+  );
+
+  // Paiements d'abord (validé mais Stripe pas actif) ou pause : ce qui remplace la liste des courses.
+  /* Validé mais paiements pas encore actifs : le serveur refuse toute prise de course (routes/orders.js, 403). La
+     liste montrait quand même les offres et leurs boutons « Prendre », qui échouaient un par un. On dit plutôt ce qui
+     manque, avec le seul bouton de l'écran. */
+  const blocSansListe = !peutRouler ? (
+    <EtatVide icone="carteBancaire" titre={t('dashDriver.paymentsFirstTitle')} texte={t('dashDriver.paymentsFirstText')}>
+      {user?.stripeConnectStatus === 'restricted' || paiementsOuverts() ? (
+        <button type="button" className="btn-gold" disabled={connecting} onClick={connectOnboard}>
+          {connecting ? '...' : user?.stripeConnectStatus === 'restricted' ? t('dashDriver.complete') : t('dashDriver.paymentsActivateBtn')}
+        </button>
+      ) : null}
+    </EtatVide>
+  ) : enPause ? (
+    <div className="empty" style={{ marginTop: 18 }}>{t('dashDriver.pausedText')}</div>
+  ) : null;
+
+  const blocSac = sac?.option === 'fairide' && sac.depositStatus !== 'refunded' && (
+    <div className="card sac-fairide" style={{ borderLeft: '4px solid var(--iris)' }}>
+      <b>{t('dashDriver.bagTitle')}</b>
+      <p className="small" style={{ margin: '4px 0 0' }}>{t(`dashDriver.bag_${sac.depositStatus}`, { amount: Number(sac.depositAmount || 40).toFixed(0) })}</p>
+    </div>
+  );
+  const titreOffres = <h2 className="ecl-h2">{t('dashDriver.availableOrders')}{available.length > 0 && <span className="ecl-badge doux">{available.length}</span>}</h2>;
+  const blocGrille = vehicule?.type && (
+    <details className="ecl-grille">
+      <summary><Icone nom="euro" taille={16} />{['velo', 'velo_electrique'].includes(vehicule.type) ? t('ecranLivreur.grilleVelo') : t('ecranLivreur.grilleMoteur')}</summary>
+      <p className="small">
+        {['velo', 'velo_electrique'].includes(vehicule.type) ? t('dashDriver.bikeRule', { km: vehicule.bikeMaxKm }) : t('dashDriver.motorRule', { km: vehicule.bikeMaxKm })}
+        {vehicule.rate !== undefined && <> {t('dashDriver.rateRule', { base: dec(vehicule.base || 0), baseKm: vehicule.baseKm, rate: dec(vehicule.rate || 0) })}</>}
+      </p>
+    </details>
+  );
+
+  // Les courses proposées, cartes complètes (app, téléphone, et la colonne de droite du site quand une course est en main).
+  const blocOffres = blocSansListe || (
+    <>
+      {blocSac}
+      {titreOffres}
+      {blocGrille}
+      <NotifCourses />
+      {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
+      <PositionRequise>
+        {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} />}
+        {available.map(carteOffre)}
+      </PositionRequise>
+      {/* Son, vibration, notifications : sous les offres depuis le 2026-10-16 (maquette), pour que la première course
+          proposée tienne dans le premier écran. */}
+      <AlerteLivreurBar {...alerte} />
+    </>
+  );
+
+  const blocLivrees = livreesAujourdhui.length > 0 && (<>
+    <h2 className="ecl-h2">{t('dashDriver.deliveredToday')}</h2>
+    <div className="ecl-groupe">
+      {livreesAujourdhui.map((o) => (
+        <div className="ecl-lc" key={o.id}>
+          <span className="ecl-tuile-ic" aria-hidden="true"><Icone nom="commandes" taille={18} /></span>
+          <span className="ecl-grow"><b>{o.restaurantName}</b>{o.commune ? ` → ${o.commune}` : ''}<small>{ligneGain(o)}</small></span>
+          {o.deliveredAt && <span className="ecl-badge neutre">{formatClock(new Date(o.deliveredAt))}</span>}
+        </div>
+      ))}
+    </div>
+  </>);
+
+  /* LA LISTE ET LE DÉTAIL (site, ordinateur). À gauche, chaque course est un bouton compact (le restaurant, le prix, le trajet) ;
+     la course choisie est cerclée d'iris et son détail, avec sa carte, est à droite, avec « Prendre la course » et
+     « Refuser ». Par défaut, la première de la liste. Refuser fait partir la carte comme dans l'app ; la suivante prend
+     sa place. */
+  const offreChoisie = available.find((o) => o.id === choisie) || available.find((o) => !partantes.includes(o.id)) || null;
+  const choixOffre = (o) => {
+    const on = offreChoisie?.id === o.id;
+    return (
+      <button type="button" key={o.id} className={`ecl-choix${on ? ' on' : ''}${partantes.includes(o.id) ? ' part' : ''}`} aria-pressed={on} onClick={() => setChoisie(o.id)}>
+        <span className="ecl-offre-tete">
+          <span className="ecl-offre-nom"><b>{o.restaurantName}</b><small>{[etatRetrait(o), o.commune].filter(Boolean).join(' · ')}</small></span>
+          <span className="ecl-prix"><small>{t('ecranLivreur.prixPropose')}</small>{t('ecranLivreur.prixMontant', { fee: fraisCourse(o) })}</span>
+        </span>
+        <span className="ecl-trajet-carte" aria-hidden="true">
+          <span className="ecl-tj-pt"><Icone nom="commerce" taille={16} /></span>
+          <span className="ecl-tj-voie">{voieOffre(o) && <b>{voieOffre(o)}</b>}</span>
+          <span className="ecl-tj-pt maison"><Icone nom="maison" taille={16} /></span>
+        </span>
+        <span className="ecl-tj-libs"><span>{o.restaurantAddress}</span><span>{o.address}</span></span>
+      </button>
+    );
+  };
+  // Le retrait et la livraison d'une course, avec la carte au-dessus : le détail d'une offre et la course en main.
+  const lieux = (o, approx) => (
+    <div className="ecl-lieux">
+      <div><Icone nom="commerce" taille={18} /><span><b>{t('siteLivreur.retrait')}</b><small>{[o.restaurantName, o.restaurantAddress].filter(Boolean).join(', ')}</small></span></div>
+      <div><Icone nom="maison" taille={18} /><span><b>{t('siteLivreur.livraison')}</b><small>{o.address}{approx && <><br /><span className="ecl-faint">{t('conformite.offerApproxAddress')}</span></>}</small></span></div>
+    </div>
+  );
+  const carte = (o) => (
+    <Suspense fallback={<div className="ecl-carte-course" style={{ height: 250 }} />}>
+      <CarteCourse depart={[o.restaurantLat, o.restaurantLng]} arrivee={[o.deliveryLat, o.deliveryLng]} hauteur={250} />
+    </Suspense>
+  );
+  const detailOffre = (o) => (
+    <article className="ecl-fiche-course" aria-labelledby="ecl-fc-titre">
+      {carte(o)}
+      <div className="ecl-fc-corps">
+        <div className="ecl-fc-tete">
+          <div>
+            <h2 id="ecl-fc-titre">{o.restaurantName} → {String(o.address || '').split(',')[0]}</h2>
+            <p className="small">{[voieOffre(o), etatRetrait(o)].filter(Boolean).join(' · ')}</p>
+          </div>
+          <span className="ecl-prix"><small>{t('ecranLivreur.prixPropose')}</small>{t('ecranLivreur.prixMontant', { fee: fraisCourse(o) })}</span>
+        </div>
+        {lieux(o, true)}
+        {articles(o)}
+        <DeliveryTiming order={o} />
+        {o.bonusCents > 0 && <p className="small" style={{ margin: '6px 0 0' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</p>}
+        <div className="ecl-fc-actions">
+          <button type="button" className="btn-gold" disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : t('dashDriver.takeRide')}</button>
+          {/* Refuser reste neutre : aucune conséquence pour le livreur. */}
+          <button type="button" className="btn-outline" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
+        </div>
+      </div>
+    </article>
+  );
+
+  let grilleSite = null;
+  if (large && approuve) {
+    let gauche;
+    let droite = null;
+    if (principale) {
+      // Une course en main : son détail (codes, itinéraire, boutons) à gauche ; sa carte, l'interrupteur et les éventuelles
+      // nouvelles offres à droite.
+      gauche = <>{blocEnMain(true)}{blocLivrees}</>;
+      droite = (
+        <>
+          <article className="ecl-fiche-course">
+            {carte(principale)}
+            <div className="ecl-fc-corps">{lieux(principale, false)}</div>
+          </article>
+          {peutRouler && interrupteur(true)}
+          {blocOffres}
+        </>
+      );
+    } else if (blocSansListe) {
+      gauche = <>{blocSansListe}{blocLivrees}</>;
+    } else {
+      gauche = (
+        <>
+          {blocSac}
+          {titreOffres}
+          {blocGrille}
+          <PositionRequise>
+            {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} />}
+            {available.length > 0 && <div className="ecl-choix-liste">{available.map(choixOffre)}</div>}
+          </PositionRequise>
+          {available.length > 0 && <p className="small ecl-astuce">{t('siteLivreur.astuceTelephone')}</p>}
+          <NotifCourses />
+          <AlerteLivreurBar {...alerte} />
+          {blocLivrees}
+        </>
+      );
+      if (offreChoisie) droite = <PositionRequise repli={null}>{detailOffre(offreChoisie)}</PositionRequise>;
+    }
+    grilleSite = (
+      <div className={`ecl-site-grille${droite ? '' : ' seule'}`}>
+        <div className="ecl-site-gauche">{gauche}</div>
+        {droite && <div className={`ecl-site-droite${principale ? '' : ' collante'}`}>{droite}</div>}
+      </div>
+    );
+  }
+
   return (
     <div className="ecl ecl-tableau">
-      <section className="ecl-bandeau">
-        <div className="ecl-b-haut">
-          {course
-            ? <span><b>{t('ecranLivreur.course')}</b> · {t('ecranLivreur.prixMontant', { fee: fraisCourse(course) })}</span>
-            : <span><b>{t('nav.rides')}</b></span>}
-          {/* Urgence (accident, agression, malaise) : 112 d'abord, puis l'équipe Fairide avec la position (BoutonUrgence.jsx). */}
-          <span className="ecl-b-droite">{!principale && course && <span className="ecl-chip">{t('ecranLivreur.livree')}</span>}{urgence}</span>
-        </div>
-        {titreBandeau && <h1 className="ecl-b-titre" key={titreBandeau}>{titreBandeau}</h1>}
-        {sousBandeau && <p className="ecl-b-sous">{sousBandeau}</p>}
-        {/* L'INTERRUPTEUR EN TÊTE (2026-09-23), sur le bandeau depuis le 2026-10-16 : la première chose que le livreur voit,
-            c'est s'il reçoit des courses ou non, et le geste pour changer, sur toute la largeur. */}
-        {!course && peutRouler && interrupteur(false)}
-        {course ? (
-          <div className="ecl-trajet" aria-label={t('ecranLivreur.ariaTrajet')} role="img">
-            <span className="ecl-pt"><Icone nom="commerce" taille={18} /></span>
-            <RouteVelo key={`course-${course.id}`} position={enRetrait ? 12 : principale ? 50 : 88} depart={enRetrait ? undefined : 12} roule={!!principale && !enRetrait} saut={!principale} />
-            <span className={`ecl-pt maison${principale ? '' : ' arrivee'}`}><Icone nom="maison" taille={18} /></span>
-          </div>
-        ) : (
-          <RouteVelo key="dispo" position={50} roule={peutRouler && !enPause} pause={peutRouler && enPause} />
-        )}
-        {/* Partage de position pendant une livraison (c'était la rangée « Partage de position » de la page). */}
-        {active.length > 0 && (
-          <p className={`ecl-partage ${partageOk ? 'ok' : 'attention'}`}>
-            <i aria-hidden="true" />
-            <span><b>{t('dashDriver.locationSharing')}</b> · {user?.locationSharingEnabled === false
-              ? t('dashDriver.sharingDisabledSub')
-              : sharingLocation
-                ? t('dashDriver.sharingOnSub', { last: lastPositionAt ? t('dashDriver.geoLastSentDot', { time: formatClock(lastPositionAt) }) : '' })
-                : t('dashDriver.sharingWaitingSub')}</span>
-          </p>
-        )}
-      </section>
+      {site ? bandeauSite : bandeauAppli}
 
       <div className="ecl-feuille">
         <BandeauOuverture role="driver" />
@@ -600,87 +870,18 @@ export default function DriverDashboard() {
               )}
             </div>
           );
-        })() : (<>
+        })() : grilleSite || (<>
           {/* LA COURSE EN MAIN D'ABORD. L'ordre suit l'urgence : je livre → je vais chercher → je pourrais prendre. La course
               du bandeau ouvre la feuille ; une section vide ne s'affiche pas. */}
-          {principale && (enRetrait ? detailRetrait(principale, true) : detailLivraison(principale, true))}
-
-          {autresActives.length > 0 && <h2 className="ecl-h2">{t('dashDriver.myOngoing')}</h2>}
-          {autresActives.map((o) => (
-            <div className="ecl-course-carte" key={o.id}>
-              <div className="ecl-course-tete"><span><b>{o.restaurantName}</b> → {o.clientName}</span><span className="ecl-badge doux">{t('dashDriver.rideFee', { fee: fraisCourse(o) })}</span></div>
-              {detailLivraison(o, false)}
-            </div>
-          ))}
-
-          {autresRetraits.length > 0 && <h2 className="ecl-h2">{t('dashDriver.awaitingPickup')}</h2>}
-          {autresRetraits.map((o) => (
-            <div className="ecl-course-carte" key={o.id}>
-              <div className="ecl-course-tete"><b>{o.restaurantName}</b><span className={`ecl-badge ${o.status === 'pret' ? 'lime' : 'doux'}`}>{etatRetrait(o)}</span></div>
-              <div className="small" style={{ marginBottom: 10 }}>{t('dashDriver.rideFee', { fee: fraisCourse(o) })}</div>
-              {detailRetrait(o, false)}
-            </div>
-          ))}
+          {blocEnMain(false)}
 
           {/* Une course en main : le bandeau montre son trajet, l'interrupteur descend ici. Se mettre en pause coupe les
               nouvelles offres, pas les courses déjà prises. */}
           {course && peutRouler && interrupteur(true)}
 
-          {/* Validé mais paiements pas encore actifs : le serveur refuse toute prise de course (routes/orders.js, 403). La
-              liste montrait quand même les offres et leurs boutons « Prendre », qui échouaient un par un. On dit plutôt ce qui
-              manque, avec le seul bouton de l'écran. */}
-          {!peutRouler ? (
-            <EtatVide icone="carteBancaire" titre={t('dashDriver.paymentsFirstTitle')} texte={t('dashDriver.paymentsFirstText')}>
-              {user?.stripeConnectStatus === 'restricted' || paiementsOuverts() ? (
-                <button type="button" className="btn-gold" disabled={connecting} onClick={connectOnboard}>
-                  {connecting ? '...' : user?.stripeConnectStatus === 'restricted' ? t('dashDriver.complete') : t('dashDriver.paymentsActivateBtn')}
-                </button>
-              ) : null}
-            </EtatVide>
-          ) : enPause ? (
-            <div className="empty" style={{ marginTop: 18 }}>{t('dashDriver.pausedText')}</div>
-          ) : (
-          <>
-            {sac?.option === 'fairide' && sac.depositStatus !== 'refunded' && (
-              <div className="card sac-fairide" style={{ borderLeft: '4px solid var(--iris)' }}>
-                <b>{t('dashDriver.bagTitle')}</b>
-                <p className="small" style={{ margin: '4px 0 0' }}>{t(`dashDriver.bag_${sac.depositStatus}`, { amount: Number(sac.depositAmount || 40).toFixed(0) })}</p>
-              </div>
-            )}
-            <h2 className="ecl-h2">{t('dashDriver.availableOrders')}{available.length > 0 && <span className="ecl-badge doux">{available.length}</span>}</h2>
-            {vehicule?.type && (
-              <details className="ecl-grille">
-                <summary><Icone nom="euro" taille={16} />{['velo', 'velo_electrique'].includes(vehicule.type) ? t('ecranLivreur.grilleVelo') : t('ecranLivreur.grilleMoteur')}</summary>
-                <p className="small">
-                  {['velo', 'velo_electrique'].includes(vehicule.type) ? t('dashDriver.bikeRule', { km: vehicule.bikeMaxKm }) : t('dashDriver.motorRule', { km: vehicule.bikeMaxKm })}
-                  {vehicule.rate !== undefined && <> {t('dashDriver.rateRule', { base: dec(vehicule.base || 0), baseKm: vehicule.baseKm, rate: dec(vehicule.rate || 0) })}</>}
-                </p>
-              </details>
-            )}
-            <NotifCourses />
-            {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
-            <PositionRequise>
-              {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} />}
-              {available.map(carteOffre)}
-            </PositionRequise>
-            {/* Son, vibration, notifications : sous les offres depuis le 2026-10-16 (maquette), pour que la première course
-                proposée tienne dans le premier écran. */}
-            <AlerteLivreurBar {...alerte} />
-          </>
-          )}
+          {blocOffres}
 
-          {livreesAujourdhui.length > 0 && (<>
-            <h2 className="ecl-h2">{t('dashDriver.deliveredToday')}</h2>
-            <div className="ecl-groupe">
-              {livreesAujourdhui.map((o) => (
-                <div className="ecl-lc" key={o.id}>
-                  <span className="ecl-tuile-ic" aria-hidden="true"><Icone nom="commandes" taille={18} /></span>
-                  <span className="ecl-grow"><b>{o.restaurantName}</b>{o.commune ? ` → ${o.commune}` : ''}<small>{ligneGain(o)}</small></span>
-                  {o.deliveredAt && <span className="ecl-badge neutre">{formatClock(new Date(o.deliveredAt))}</span>}
-                </div>
-              ))}
-            </div>
-          </>)}
+          {blocLivrees}
         </>)}
       </div>
       <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
