@@ -16,7 +16,8 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import Icone from '../../components/Icone';
 import ChoixPastilles from '../../components/ChoixPastilles';
-import EnteteFlux from '../../components/EnteteFlux';
+import ChiffresRoulants from '../../components/ChiffresRoulants';
+import { BandeauCommande, BarreCommande, FeuilleCommande, OptionCommande, RouteCommande } from '../../components/EcranCommande';
 import SousEcran from '../../components/SousEcran';
 import AddressSearch from '../../components/AddressSearch';
 import ChoixAdresse from '../../components/ChoixAdresse';
@@ -133,7 +134,7 @@ export default function Checkout() {
     let choisi = null;
     try { choisi = sessionStorage.getItem(`fairide_mode_${restaurantId}`); } catch { /* navigation privée */ }
     if (choisi === 'pickup' && restaurant.offersPickup) setFulfillmentType('pickup');
-  }, [restaurant]);
+  }, [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps -- une seule fois, au chargement du commerce (fulfillmentInitRef)
 
   useEffect(() => {
     if (pendingOrder && pendingOrderRef.current) {
@@ -421,12 +422,23 @@ export default function Checkout() {
   );
 
   return (
-    <div className="checkout-page">
+    <div className="checkout-page ec-page">
       {/* Le retour mène au PANIER, et non plus directement à la carte du commerce : c'est l'écran
           d'où l'on vient, donc celui qu'on s'attend à retrouver en reculant. Revenir à la carte pour
           ajouter un plat reste possible — c'est « Ajouter un plat », dans la barre de récapitulatif
-          plus bas, qui garde ce rôle. */}
-      <EnteteFlux vers="/panier" titre={t('checkout.headerTitle')} libelle={t('panier.title')} />
+          plus bas, qui garde ce rôle.
+          HABIT DU 2026-10-16 (« Proposition » de mockups/tous-les-ecrans.html) : bandeau iris où le vélo roule de
+          « Panier » à « Paiement », les choix en cartes iris à coche lime, le reste dans la feuille blanche ; dans l'app, le
+          total roule dans la pastille iris d'une barre de verre. Rien de la logique n'a bougé. */}
+      <BandeauCommande
+        vers="/panier" libelleRetour={t('panier.title')}
+        haut={<><b>{restaurant.name}</b> · {t(cart.count > 1 ? 'ecranCommande.articlesPluriel' : 'ecranCommande.articles', { count: cart.count })}</>}
+        titre={t('checkout.headerTitle')}
+      >
+        <RouteCommande position={50} depart={8} actuelle={1}
+          etapes={[t('ecranCommande.etapePanier'), t('checkout.headerTitle'), t('ecranCommande.etapeSuivi')]} />
+      </BandeauCommande>
+      <FeuilleCommande>
       {/* Simulation (Admin › Simulation) : le paiement est fictif (backend payments.js, commerce de simulation) — on le
           dit clairement, pour que l'équipe puisse aller jusqu'au bout du parcours sans craindre un débit. */}
       {user?.simulation && <div className="card" style={{ borderLeft: '4px solid var(--lime)', background: '#14121F', color: '#fff', margin: '0 0 12px' }}><b>{t('checkout.simulationTitle')}</b><p className="small" style={{ margin: '4px 0 0', color: '#D7D4E8' }}>{t('checkout.simulationText')}</p></div>}
@@ -442,23 +454,19 @@ export default function Checkout() {
               {/* Intitulé d'un GROUPE de boutons, pas d'un champ unique : un htmlFor n'aurait rien à
                   désigner. role="group" + aria-labelledby fait annoncer « Comment la recevoir » avant
                   les options, au lieu de trois boutons sans contexte. */}
-              <span className="titre-groupe co-etape" id="checkout-fulfillment-label">{t('checkout.howToGet')}</span>
+              <span className="titre-groupe ec-section" id="checkout-fulfillment-label">{t('checkout.howToGet')}</span>
               {/* Des CARTES sélectionnables, pas une rangée de pilules — c'est le motif
                   « Priority / Standard / Schedule » de la capture 3 : une icône, un titre, et
-                  l'option retenue cernée d'une arête iris. Trois pilules côte à côte se lisaient
+                  l'option retenue en aplat iris avec sa coche lime (2026-10-16). Trois pilules côte à côte se lisaient
                   comme trois boutons d'égale importance, alors qu'il s'agit d'un choix unique. */}
-              <div className="choix-cartes" role="group" aria-labelledby="checkout-fulfillment-label">
+              <div className="ec-options" role="group" aria-labelledby="checkout-fulfillment-label">
                 {cart.count > 0 && (
                   <>
                     {restaurant.offersDelivery && (
-                      <button type="button" className={`choix-carte${fulfillmentType === 'delivery' ? ' est-actif' : ''}`} aria-pressed={fulfillmentType === 'delivery'} onClick={() => selectFulfillment('delivery')}>
-                        <Icone nom="scooter" taille={20} /><span>{t('orderStatus.orderType.delivery')}</span>
-                      </button>
+                      <OptionCommande on={fulfillmentType === 'delivery'} icone="scooter" titre={t('orderStatus.orderType.delivery')} onClick={() => selectFulfillment('delivery')} />
                     )}
                     {restaurant.offersPickup && (
-                      <button type="button" className={`choix-carte${fulfillmentType === 'pickup' ? ' est-actif' : ''}`} aria-pressed={fulfillmentType === 'pickup'} onClick={() => selectFulfillment('pickup')}>
-                        <Icone nom="sac" taille={20} /><span>{t('orderStatus.orderType.pickup')}</span>
-                      </button>
+                      <OptionCommande on={fulfillmentType === 'pickup'} icone="sac" titre={t('orderStatus.orderType.pickup')} onClick={() => selectFulfillment('pickup')} />
                     )}
                   </>
                 )}
@@ -513,7 +521,7 @@ export default function Checkout() {
                 formulaire. */}
             {fulfillmentType === 'pickup' && modeEmporter === 'both' && (
               <div className="field">
-                <span className="field-intitule co-etape">{t('checkout.payWhen')}</span>
+                <span className="field-intitule ec-section">{t('checkout.payWhen')}</span>
                 <ChoixPastilles
                   libelle={t('checkout.payWhen')}
                   valeur={paiementSurPlace || enLigneFerme ? 'sur_place' : 'en_ligne'}
@@ -535,26 +543,12 @@ export default function Checkout() {
                 mais il ne sert qu'à l'heure estimée de la commande, pas à une livraison plus rapide.) */}
             {(
               <div className="field">
-                <span className="titre-groupe co-etape" id="checkout-quand-label">{t('checkout.whenLabel')}</span>
-                <div className="choix-cartes" role="group" aria-labelledby="checkout-quand-label">
-                  <button
-                    type="button"
-                    className={`choix-carte${!scheduleEnabled ? ' est-actif' : ''}`}
-                    aria-pressed={!scheduleEnabled}
-                    onClick={() => { setScheduleEnabled(false); setScheduleDate(''); setScheduleTime(''); }}
-                  >
-                    <Icone nom="scooter" taille={20} />
-                    <span>{t('checkout.whenAsap')}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`choix-carte${scheduleEnabled ? ' est-actif' : ''}`}
-                    aria-pressed={scheduleEnabled}
-                    onClick={() => { setScheduleEnabled(true); setScheduleDate(dateOptions[0]?.value || ''); setScheduleTime(''); }}
-                  >
-                    <Icone nom="horloge" taille={20} />
-                    <span>{t('checkout.scheduleLater')}</span>
-                  </button>
+                <span className="titre-groupe ec-section" id="checkout-quand-label">{t('checkout.whenLabel')}</span>
+                <div className="ec-options" role="group" aria-labelledby="checkout-quand-label">
+                  <OptionCommande on={!scheduleEnabled} icone="scooter" titre={t('checkout.whenAsap')}
+                    onClick={() => { setScheduleEnabled(false); setScheduleDate(''); setScheduleTime(''); }} />
+                  <OptionCommande on={scheduleEnabled} icone="horloge" titre={t('checkout.scheduleLater')}
+                    onClick={() => { setScheduleEnabled(true); setScheduleDate(dateOptions[0]?.value || ''); setScheduleTime(''); }} />
                 </div>
                 {scheduleEnabled && (
                   <>
@@ -590,12 +584,12 @@ export default function Checkout() {
 
           {(
           <aside className="checkout-recap">
-          <div className="cart-bar co-barre">
+          <BarreCommande montant={montantDebite}>
             {/* Dans la barre, au-dessus du montant : sur téléphone elle est fixée en bas de l'écran, un message placé après
                 elle s'afficherait ailleurs que près du bouton. */}
             {refusDevis && <p className="co-refus" role="alert"><Icone nom="alerte" taille={16} className="icone-texte" /> {refusDevis}</p>}
             <span className="co-barre-total">
-              <span className="co-barre-montant">{euros(montantDebite)}</span>
+              <span className="co-barre-montant"><ChiffresRoulants valeur={euros(montantDebite)} /></span>
               <span className="co-barre-detail">{t(`checkout.barCount${devisValide ? 'Exact' : ''}${cart.count > 1 ? 'Plural' : ''}`, { count: cart.count })}</span>
             </span>
             {serviceOuvert(fulfillmentType, user) && !paiementBloque && manqueMinimum > 0 ? (
@@ -614,9 +608,32 @@ export default function Checkout() {
                   ? t('checkout.deliveryOpenSoon', { date: dateOuverture('delivery', getLocale()) })
                   : t('checkout.ordersOpenSoon', { date: dateOuverture('pickup', getLocale()) })}</span>
             )}
-          </div>
+          </BarreCommande>
           {cart.count > 0 && (
           <div className="card">
+            {/* Le pourboire avant le récapitulatif (2026-10-16) : le choisir fait rouler le total de la barre. */}
+            {offrePourboire && (
+              <div className="field ec-pourboire">
+                <span className="field-intitule ec-section">{t('checkout.tipTitle')}</span>
+                <ChoixPastilles
+                  libelle={t('checkout.tipTitle')}
+                  valeur={pourboire}
+                  onChange={setPourboire}
+                  options={[
+                    { value: '0', label: t('review.tipNone') },
+                    { value: '1', label: euros(1) },
+                    { value: '2', label: euros(2) },
+                    { value: '3', label: euros(3) },
+                    { value: 'autre', label: t('checkout.tipOther') }
+                  ]}
+                />
+                {pourboire === 'autre' && (
+                  <input aria-label={t('checkout.tipOtherPh')} type="number" inputMode="decimal" min="0.5" step="0.5" placeholder={t('checkout.tipOtherPh')}
+                    value={pourboireAutre} onChange={(e) => setPourboireAutre(e.target.value)} style={{ marginTop: 6, maxWidth: 160 }} />
+                )}
+                <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('checkout.tipSub')}</p>
+              </div>
+            )}
             <div className="co-recap-tete">
               <h3>{t('checkout.yourOrder')}<span className="co-recap-resto">{restaurant.name}</span></h3>
               <Link to={`/restaurants/${restaurantId}`} className="co-ajouter">{t('checkout.addMore')}</Link>
@@ -672,28 +689,6 @@ export default function Checkout() {
               {pourboireChoisi > 0 && <div className="line"><span>{t('checkout.tipLine')}</span><span>{euros(pourboireChoisi)}</span></div>}
               <div className="line total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span>{euros(montantDebite)}</span></div>
             </div>
-            {offrePourboire && (
-              <div className="field" style={{ marginTop: 12 }}>
-                <span className="field-intitule">{t('checkout.tipTitle')}</span>
-                <ChoixPastilles
-                  libelle={t('checkout.tipTitle')}
-                  valeur={pourboire}
-                  onChange={setPourboire}
-                  options={[
-                    { value: '0', label: t('review.tipNone') },
-                    { value: '1', label: euros(1) },
-                    { value: '2', label: euros(2) },
-                    { value: '3', label: euros(3) },
-                    { value: 'autre', label: t('checkout.tipOther') }
-                  ]}
-                />
-                {pourboire === 'autre' && (
-                  <input aria-label={t('checkout.tipOtherPh')} type="number" inputMode="decimal" min="0.5" step="0.5" placeholder={t('checkout.tipOtherPh')}
-                    value={pourboireAutre} onChange={(e) => setPourboireAutre(e.target.value)} style={{ marginTop: 6, maxWidth: 160 }} />
-                )}
-                <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('checkout.tipSub')}</p>
-              </div>
-            )}
             {user.balance > 0 && (
               <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={useBalance} onChange={(e) => setUseBalance(e.target.checked)} />
@@ -944,6 +939,7 @@ export default function Checkout() {
           </div>
         </div>
       )}
+      </FeuilleCommande>
     </div>
   );
 }

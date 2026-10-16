@@ -6,6 +6,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
+import { BandeauCommande, FeuilleCommande, VeloMarque } from '../../components/EcranCommande';
+import { formatOrderItem, orderTypeLabel } from '../../orderStatus';
+import { euros } from '../../prixPlat';
 
 // Page d'arrivée après le retour du prestataire de paiement.
 //
@@ -34,6 +37,9 @@ export default function OrderResult({ success }) {
     if (!orderId) return success ? 'paid' : 'failed';
     return success ? 'checking' : 'failed';
   });
+
+  // La commande payée, telle que le serveur la renvoie : son récapitulatif monte dans la feuille de l'écran de succès.
+  const [commande, setCommande] = useState(null);
 
   const cartRef = useRef(cart);
   cartRef.current = cart;
@@ -76,6 +82,7 @@ export default function OrderResult({ success }) {
         if (cancelled) return;
         const order = orders.find((o) => o.id === orderId || String(o.id) === String(orderId));
         if (order?.paid) {
+          setCommande(order);
           setState('paid');
           // Statistiques (sans donnée personnelle) : la commande est finalisée, par mode.
           suivre('commande_finalisee', { mode: order.orderType === 'pickup' ? 'emporter' : 'livraison' });
@@ -123,11 +130,57 @@ export default function OrderResult({ success }) {
     }
   }[state];
 
+  /* COMMANDE PAYÉE : LE MOMENT DE L'APPLICATION. Depuis le 2026-10-16 (« Proposition » de mockups/tous-les-ecrans.html,
+     fondateur) : plein écran iris, le vélo de la marque roule jusqu'au commerce qui apparaît, la coche lime saute ; le
+     récapitulatif (commerce, plats, mode, total débité) monte dans la feuille blanche. Mêmes textes, mêmes deux actions ;
+     « Voir mes commandes » reste la seule action lime. Les autres états (vérification, attente, échec) restent sobres. */
+  if (state === 'paid') {
+    // Comme Mes commandes : le pourboire payé avec la commande est débité en plus du total (backend pourboireCommande.js).
+    const debite = commande ? Number(commande.total) + (commande.tipPaid && commande.tipAtCheckout > 0 ? Number(commande.tipAtCheckout) : 0) : null;
+    const lieu = commande?.orderType === 'pickup' ? commande.restaurantAddress : commande?.address;
+    return (
+      <div className="ec-page ec-merci">
+        <BandeauCommande className="ec-merci-bandeau">
+          <svg className="ec-merci-scene" viewBox="0 0 280 120" aria-hidden="true">
+            <line className="ec-merci-route" x1="10" y1="103" x2="270" y2="103" strokeWidth="3" strokeLinecap="round" strokeDasharray="8 8" />
+            <g transform="translate(222 52) scale(1.8)">
+              <g className="ec-merci-commerce" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 9h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9Z" /><path d="M3 9 5 4h14l2 5" /><path d="M9 21v-6h6v6" />
+              </g>
+            </g>
+            <g transform="translate(70 50) scale(1.2)">
+              <g className="ec-merci-velo"><g className="ec-merci-bob"><VeloMarque largeur={82} /></g></g>
+            </g>
+          </svg>
+          <span className="ec-coche-merci" aria-hidden="true"><Icone nom="valider" taille={30} /></span>
+          <h1 className="ec-titre">{view.title}</h1>
+          {orderId && <p className="ec-sous">{t('orderResult.orderNumber', { id: String(orderId).slice(0, 8) })}</p>}
+        </BandeauCommande>
+        <FeuilleCommande>
+          <p className="ec-merci-texte">{view.text}</p>
+          {commande && (
+            <div className="ec-recap">
+              <div className="ec-recap-ligne">
+                <Icone nom="commerce" taille={20} />
+                <span className="ec-recap-texte"><b>{commande.restaurantName}</b>
+                  {commande.items?.length > 0 && <small>{commande.items.map(formatOrderItem).join(' · ')}</small>}</span>
+              </div>
+              <div className="ec-recap-ligne">
+                <Icone nom={commande.orderType === 'pickup' ? 'sac' : 'maison'} taille={20} />
+                <span className="ec-recap-texte"><b>{orderTypeLabel(commande, t)}</b>{lieu && <small>{lieu}</small>}</span>
+                {debite != null && <b className="ec-recap-montant">{euros(debite)}</b>}
+              </div>
+            </div>
+          )}
+          <Link to="/orders" className="btn-gold ec-merci-bouton">{t('orderResult.viewOrders')}</Link>
+          <Link to="/restaurants" className="btn-ghost ec-merci-retour">{t('ecranCommande.retourCommerces')}</Link>
+        </FeuilleCommande>
+      </div>
+    );
+  }
+
   return (
-    /* COMMANDE PAYÉE : LE MOMENT DE L'APPLICATION (plan du 2026-10-13). Un écran iris plein, comme les promesses de
-       l'accueil de l'app — le seul de tout le parcours d'achat. La seule pointe de lime de la vue est l'action
-       « Voir mes commandes » (règle 3 de l'identité). Les autres états (vérification, attente, échec) restent sobres. */
-    <div className={`center-page${state === 'paid' ? ' resultat-paye' : ''}`}>
+    <div className="center-page">
       <span className="etat-vide-icone" aria-hidden="true"><Icone nom={view.icone} taille={34} /></span>
       <h2 className="etat-vide-titre">{view.title}</h2>
       <p className="small">
@@ -138,10 +191,10 @@ export default function OrderResult({ success }) {
           seconde où le webhook est sur le point d'arriver. */}
       {state !== 'checking' && (
         <div className="row" style={{ gap: 10, justifyContent: 'center' }}>
-          <Link to="/orders" className={state === 'paid' ? 'btn-gold' : 'btn-teal'} style={{ textDecoration: 'none', display: 'inline-block' }}>
+          <Link to="/orders" className="btn-teal" style={{ textDecoration: 'none', display: 'inline-block' }}>
             {t('orderResult.viewOrders')}
           </Link>
-          <Link to="/restaurants" className={state === 'paid' ? 'btn-hero-ghost' : 'btn-outline'} style={{ textDecoration: 'none', display: 'inline-block' }}>
+          <Link to="/restaurants" className="btn-outline" style={{ textDecoration: 'none', display: 'inline-block' }}>
             {t('orderResult.backToRestaurants')}
           </Link>
         </div>

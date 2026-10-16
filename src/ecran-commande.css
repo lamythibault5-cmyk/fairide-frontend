@@ -1,0 +1,205 @@
+/* LE PARCOURS DE COMMANDE EN BANDEAU IRIS : Panier, Paiement, Commande confirmée (fondateur, 2026-10-16, « Proposition » de
+   mockups/tous-les-ecrans.html ; composants dans components/EcranCommande.jsx, importé par les trois pages).
+   Même famille que l'accueil de l'app (.bv-bandeau, styles.css) et le suivi 1C (.suivi-bandeau, client-ui.css) : un bandeau
+   iris (retour, commerce, grand titre, la route où roule le vélo lime de la marque), puis une feuille blanche aux coins
+   ronds qui monte dessus. Bandeau et feuille valent pour le site comme pour l'app ; le verre (flou, reflets, ombre douce) de
+   la barre du bas est réservé à l'app (html.appli), comme la barre d'onglets et la barre du panier (2C). Sur le site, la
+   barre reste l'aplat iris d'avant.
+   Mouvement : animations CSS seulement ; la règle globale de styles.css (prefers-reduced-motion) les fait sauter à leur
+   état final, et le bloc du bas les coupe tout à fait. La feuille monte par `top` et non par `transform` : une transform
+   ferait d'elle le repère de la barre du bas (position: fixed) le temps de l'animation. */
+
+.ec-page { --ec-ressort: cubic-bezier(.34, 1.45, .64, 1); --ec-ressort-fort: cubic-bezier(.3, 1.8, .5, 1); }
+
+/* ---------- Le bandeau ---------- */
+.ec-bandeau { position: relative; background: var(--iris); color: #fff; padding: 20px 24px 46px; border-radius: var(--radius) var(--radius) 0 0; }
+.ec-haut { display: flex; align-items: center; gap: 12px; min-height: 38px; font-size: 13px; color: rgba(255, 255, 255, .78); }
+.ec-haut-texte { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ec-haut-texte b { color: #fff; font-weight: 600; }
+.ec-rond { flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .35); color: #fff; display: grid; place-items: center;
+  text-decoration: none; transition: background .15s, transform .12s; }
+@media (hover: hover) { .ec-rond:hover { background: rgba(255, 255, 255, .12); } }
+.ec-rond:active { transform: scale(.92); }
+.ec-rond:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.ec-titre { font-family: var(--font-titre); font-size: 29px; line-height: 1.1; font-weight: 700; letter-spacing: 0; margin: 12px 0 6px; color: #fff; }
+.ec-sous { margin: 0; color: rgba(255, 255, 255, .82); font-size: 14.5px; line-height: 1.4; }
+
+/* La route : pointillés blancs, le vélo lime qui arrive de --ec-depart jusqu'à sa place. */
+.ec-route-bloc { margin-top: 10px; }
+.ec-route { position: relative; height: 30px; }
+.ec-route-voie { position: absolute; left: 0; right: 0; bottom: 4px; height: 3px; border-radius: 2px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .4) 0 8px, transparent 8px 16px); }
+.ec-route-velo { position: absolute; bottom: 6px; width: 36px; margin-left: -18px; line-height: 0; color: var(--lime);
+  animation: ec-velo-arrive 1s cubic-bezier(.3, .7, .4, 1) .15s backwards; }
+.ec-route-velo svg { display: block; transform-origin: 50% 100%; animation: ec-pedale .5s ease-in-out .15s 2; }
+@keyframes ec-velo-arrive { from { left: var(--ec-depart, 0%); } }
+@keyframes ec-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
+.ec-route-libs { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 4px; font-size: 12px; color: rgba(255, 255, 255, .6); }
+.ec-route-libs span:nth-child(2) { text-align: center; }
+.ec-route-libs span:nth-child(3) { text-align: right; }
+.ec-route-libs .fait { color: rgba(255, 255, 255, .85); }
+.ec-route-libs .actuel { color: #fff; font-weight: 700; }
+
+/* ---------- La feuille ---------- */
+.ec-feuille { position: relative; top: 0; background: #fff; color: var(--ink); border-radius: 26px 26px 0 0; margin-top: -22px; padding: 22px 24px 24px;
+  animation: ec-monte .45s var(--ec-ressort) backwards; }
+@keyframes ec-monte { from { top: 40px; opacity: .4; } }
+.ec-feuille .ec-section, .ec-feuille .co-recap-tete h3 { font-size: 12px !important; font-weight: 700 !important; color: var(--ink-soft);
+  letter-spacing: .05em; text-transform: uppercase; margin: 22px 0 8px; }
+.ec-feuille .ec-section { display: block; }
+.ec-feuille .field:first-child > .ec-section, .ec-feuille .card > .field:first-child > .ec-section { margin-top: 0; }
+
+/* Téléphone : bandeau et feuille d'un bord à l'autre ; le bandeau passe sous la barre d'état (la marge de .dashboard-main
+   vaut 16px + l'encoche sous 900px, styles.css). */
+@media (max-width: 900px) {
+  .ec-bandeau { margin: calc(-16px - env(safe-area-inset-top)) calc(-1 * var(--gouttiere, 16px)) 0; padding: calc(16px + env(safe-area-inset-top)) 20px 42px; border-radius: 0; }
+  .ec-feuille { margin: -22px calc(-1 * var(--gouttiere, 16px)) 0; padding: 20px 18px 24px; }
+  /* Dans la feuille, les cartes du paiement ne sont plus des cadres : les titres de section suffisent à séparer. */
+  .ec-feuille .checkout-form .card, .ec-feuille .checkout-recap .card { border: 0; border-radius: 0; padding: 0; margin: 0; background: none; }
+  .ec-feuille .checkout-recap .card { margin-top: 22px; }
+}
+
+/* ---------- Panier ---------- */
+.ec-feuille .panier-lignes { padding: 0; }
+.ec-feuille .panier-ligne { animation: ec-entre .4s var(--ec-ressort) backwards; }
+.ec-feuille .panier-ligne:first-child { padding-top: 0; }
+.ec-feuille .panier-ligne-image { border-radius: 14px; }
+.ec-feuille .panier-ligne-texte { font-size: 14.5px; }
+.ec-feuille .panier-ligne-prix { font-size: 13px; }
+.ec-feuille .panier-vider { width: auto; padding: 8px 0; margin-top: 0; font-weight: 600; }
+.panier-ligne.ec-sort { animation: ec-sort .26s ease both; pointer-events: none; }
+@keyframes ec-entre { from { transform: translateY(24px); opacity: 0; } }
+@keyframes ec-sort { to { opacity: 0; transform: translateX(-30px); } }
+
+/* Le compteur d'une ligne (3C) : pilule iris, « − » et « + » blancs, le nombre dans un rond lime qui monte ou descend. */
+.ec-pas { position: relative; flex: none; width: 110px; height: 40px; border-radius: 20px; background: var(--iris); color: #fff; overflow: hidden; }
+/* min-height !important : la règle des 44 px tactiles (styles.css, button:not(...)) a une spécificité de (0,3,1). */
+.ec-pas button { position: absolute; top: 2px; width: 36px; height: 36px; min-height: 0 !important; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: inherit; display: grid; place-items: center; cursor: pointer; transition: transform .12s, background .15s; }
+@media (hover: hover) { .ec-pas button:hover { background: rgba(255, 255, 255, .12); } }
+.ec-pas button:active { transform: scale(.85); }
+.ec-pas button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
+.ec-pas .ec-pas-moins { left: 2px; }
+.ec-pas .ec-pas-plus { right: 2px; }
+.ec-pas-chiffre { position: absolute; left: 50%; top: 6px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; background: var(--lime); color: var(--ink);
+  display: grid; place-items: center; font-weight: 800; font-size: 14px; overflow: hidden; }
+.ec-pas-chiffre > span { display: block; }
+.ec-ch-monte { animation: ec-ch-monte .3s var(--ec-ressort); }
+.ec-ch-descend { animation: ec-ch-descend .3s var(--ec-ressort); }
+@keyframes ec-ch-monte { from { transform: translateY(80%); opacity: 0; } }
+@keyframes ec-ch-descend { from { transform: translateY(-80%); opacity: 0; } }
+
+/* Les suggestions (UpsellPanier) dans la feuille : un titre de section, des tuiles blanches et un « + » iris. */
+.ec-feuille .upsell-card { border: 0; padding: 0; margin: 22px 0 0; background: none; }
+.ec-feuille .upsell-card h3 { font-size: 12px !important; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; margin: 0 0 8px !important; }
+.ec-feuille .upsell-row { gap: 10px; margin: 0 -18px 8px; padding: 0 18px 4px; }
+.ec-feuille .upsell-item { position: relative; width: 116px; background: #fff; border-radius: 14px; align-items: flex-start; text-align: left; padding: 8px 8px 10px; }
+.ec-feuille .upsell-item img, .ec-feuille .upsell-item-emoji { width: 100%; height: 64px; border-radius: 10px; }
+.ec-feuille .upsell-item-emoji { background: var(--surface-soft); color: var(--ink-faint); }
+.ec-feuille .upsell-item-name { font-size: 12.5px; min-height: 31px; }
+.ec-feuille .upsell-item-price { font-size: 13px; color: var(--ink); }
+.ec-feuille .upsell-item::after { content: '+'; position: absolute; right: 8px; bottom: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--iris); color: #fff;
+  display: grid; place-items: center; font-size: 20px; font-weight: 500; line-height: 1; }
+.ec-feuille .upsell-item:active { transform: scale(.96); }
+
+/* ---------- Paiement ---------- */
+/* Un choix unique en cartes : l'option retenue en aplat iris, sa coche lime qui saute. */
+.ec-options { display: flex; flex-direction: column; gap: 8px; }
+.ec-option { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; text-align: left; border: 1px solid var(--line); background: #fff; color: var(--ink);
+  border-radius: 16px; padding: 11px 13px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .12s; }
+@media (hover: hover) { .ec-option:not(.on):hover { border-color: var(--iris); } }
+.ec-option:active { transform: scale(.98); }
+.ec-option-texte { min-width: 0; }
+.ec-option-texte small { display: block; font-weight: 400; color: var(--ink-soft); margin-top: 2px; font-size: 12.5px; }
+.ec-option-tuile { flex: none; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); color: var(--iris); display: grid; place-items: center; }
+.ec-case { flex: none; margin-left: auto; width: 22px; height: 22px; border-radius: 8px; border: 1px solid var(--line); display: grid; place-items: center; }
+.ec-option.on { background: var(--iris); border-color: var(--iris); color: #fff; }
+.ec-option.on .ec-option-texte small { color: rgba(255, 255, 255, .8); }
+.ec-option.on .ec-option-tuile { color: #fff; border-color: rgba(255, 255, 255, .4); animation: ec-saute .3s var(--ec-ressort); }
+.ec-option.on .ec-case { background: var(--lime); border-color: var(--lime); color: var(--ink); animation: ec-saute .3s var(--ec-ressort); }
+.ec-option:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+.ec-option.on:focus-visible { outline-color: var(--lime); }
+.ec-feuille .checkout-form .ec-options + .checkout-rangee { margin-top: 6px; }
+.ec-feuille .checkout-rangee { border-radius: 0; }
+.ec-feuille .checkout-rangee > svg { flex: none; color: var(--iris); }
+/* Le pourboire : la pastille choisie gélifie, et le total roule dans la barre. */
+.ec-pourboire { margin: 0 0 4px; }
+.ec-pourboire .choix-pastilles { gap: 6px; flex-wrap: nowrap; }
+.ec-pourboire .cuisine-chip { flex: 1 1 auto; min-width: 0; justify-content: center; padding: 8px 6px; }
+.ec-pourboire .cuisine-chip.active { animation: ec-gelee .45s var(--ec-ressort); }
+.ec-feuille .co-recap-tete { margin-top: 22px; align-items: baseline; }
+.ec-feuille .co-recap-tete h3 { display: flex; flex-direction: column; gap: 2px; margin: 0; }
+.ec-feuille .co-recap-resto { font-size: 13px; font-weight: 500; color: var(--ink); letter-spacing: 0; text-transform: none; }
+
+/* ---------- La barre du bas : le montant roule (ChiffresRoulants), la barre gélifie quand il change ---------- */
+.ec-barre .co-barre-montant { display: inline-flex; font-variant-numeric: tabular-nums; }
+.ec-rebond-a { animation: ec-gelee-a .5s var(--ec-ressort); }
+.ec-rebond-b { animation: ec-gelee-b .5s var(--ec-ressort); }
+@keyframes ec-gelee-a { 30% { transform: scale(1.04, .9); } 60% { transform: scale(.99, 1.04); } }
+@keyframes ec-gelee-b { 30% { transform: scale(1.04, .9); } 60% { transform: scale(.99, 1.04); } }
+@keyframes ec-gelee { 30% { transform: scale(1.06, .92); } 60% { transform: scale(.98, 1.04); } }
+@keyframes ec-saute { from { transform: scale(.3); } }
+
+/* Dans l'app (2C) : barre de verre détachée du bas, le montant et son détail dans une pastille iris, le bouton lime. */
+@media (max-width: 900px) {
+  html.appli .ec-page .cart-bar.ec-barre {
+    left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto;
+    min-height: 64px; padding: 8px; gap: 10px; border-radius: 32px; flex-direction: row; flex-wrap: wrap; align-items: center;
+    color: var(--ink); text-shadow: 0 0 8px rgba(255, 255, 255, .75);
+    background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .6);
+    -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
+      inset 5px 0 8px -4px rgba(255, 70, 170, .22), inset -5px 0 8px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .18), 0 1px 3px rgba(20, 18, 31, .08);
+  }
+  html.appli .ec-page .ec-barre .co-barre-total { flex: none; height: 48px; padding: 0 14px; border-radius: 24px; background: var(--iris); color: #fff; text-shadow: none;
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: center; line-height: 1.1; overflow: hidden; }
+  html.appli .ec-page .ec-barre .co-barre-montant { font-size: 17px; font-weight: 800; }
+  html.appli .ec-page .ec-barre .co-barre-detail { font-size: 10.5px; font-weight: 500; opacity: .8; white-space: nowrap; }
+  html.appli .ec-page .ec-barre .btn-gold { flex: 1 1 0; min-width: 0; min-height: 48px; padding: 0 16px; font-size: 15px; white-space: nowrap; text-shadow: none; border-radius: var(--radius-pill); }
+  html.appli .ec-page .ec-barre .co-barre-attente { flex: 1 1 0; color: var(--ink); font-size: 12.5px; text-align: right; justify-content: flex-end; }
+  html.appli .ec-page .ec-barre .co-refus { color: var(--ink); padding: 4px 10px 0; }
+  html.appli .ec-page .ec-pas { box-shadow: 0 2px 6px rgba(20, 18, 31, .14); }
+  /* La barre flotte : la fin de la page doit pouvoir passer au-dessus. */
+  html.appli .ec-page { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 900px) and (prefers-reduced-transparency: reduce) {
+  html.appli .ec-page .cart-bar.ec-barre { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); text-shadow: none; }
+}
+
+/* ---------- Commande confirmée ---------- */
+.ec-merci { max-width: 560px; margin: 0 auto; }
+.ec-merci-bandeau { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 24px; padding-bottom: 42px; }
+.ec-merci-bandeau .ec-titre { font-size: 27px; }
+@media (max-width: 900px) { .ec-page .ec-merci-bandeau { padding-top: calc(10px + env(safe-area-inset-top)); } }
+.ec-merci-bandeau .ec-titre { margin-top: 14px; }
+.ec-merci-scene { display: block; width: 100%; max-width: 260px; height: auto; overflow: hidden; color: #fff; }
+.ec-merci-route { stroke: rgba(255, 255, 255, .4); fill: none; animation: ec-merci-route .45s linear 3; }
+@keyframes ec-merci-route { to { stroke-dashoffset: 16; } }
+.ec-merci-velo { color: var(--lime); animation: ec-merci-arrive 1.8s cubic-bezier(.25, .8, .3, 1) .2s both; }
+@keyframes ec-merci-arrive { from { transform: translateX(-90px); } to { transform: translateX(28px); } }
+.ec-merci-bob { transform-box: fill-box; transform-origin: 50% 100%; animation: ec-bonds .75s ease-in-out 2, ec-respire 2.2s ease-in-out 1.6s 4; }
+@keyframes ec-bonds { 0%, 100% { transform: none; } 20%, 60% { transform: translateY(-2px) rotate(-3deg); } 40%, 80% { transform: translateY(0) rotate(1deg); } }
+@keyframes ec-respire { 50% { transform: translateY(-1.5px) rotate(-1deg); } }
+.ec-merci-commerce { transform-box: fill-box; transform-origin: 50% 100%; animation: ec-apparait .45s var(--ec-ressort) 1.25s both; }
+@keyframes ec-apparait { from { transform: scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
+.ec-coche-merci { width: 58px; height: 58px; margin-top: 0; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center;
+  animation: ec-apparait .5s var(--ec-ressort-fort) 1.7s both; }
+.ec-coche-merci svg { stroke-width: 2.8; }
+.ec-merci-texte { margin: 0 0 10px; line-height: 1.5; color: var(--ink-soft); font-size: 14.5px; }
+.ec-recap-ligne { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.ec-recap-ligne > svg { flex: none; color: var(--iris); }
+.ec-recap-texte { flex: 1; min-width: 0; }
+.ec-recap-texte b { font-weight: 600; }
+.ec-recap-texte small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.4; }
+.ec-recap-montant { flex: none; font-variant-numeric: tabular-nums; }
+.ec-merci-bouton, .ec-merci-retour { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; border-radius: var(--radius-pill);
+  font-size: 16px; font-weight: 700; text-decoration: none; }
+.ec-merci-bouton { margin-top: 16px; }
+.ec-feuille a.ec-merci-bouton { font-weight: 700; }
+.ec-merci-retour { margin-top: 4px; color: var(--ink-soft); font-weight: 600; }
+.ec-merci-retour:hover { color: var(--ink); text-decoration: underline; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ec-page *, .ec-page *::before, .ec-page *::after, .ec-feuille, .ec-barre { animation: none !important; transition: none !important; }
+  .ec-merci-velo { transform: translateX(28px); }
+}

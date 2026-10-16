@@ -7017,6 +7017,14 @@ export default {
       close: 'Close',
       back: 'Back'
     },
+    // Panier, paiement et commande confirmée en bandeau iris (2026-10-16, EcranCommande.jsx).
+    ecranCommande: {
+      articles: '{count} item',
+      articlesPluriel: '{count} items',
+      etapePanier: 'Cart',
+      etapeSuivi: 'Tracking',
+      retourCommerces: 'Back to restaurants'
+    },
     panier: {
       title: 'Your cart',
       viewCart: 'View cart',
