@@ -348,10 +348,12 @@ export function appleDisponible() { return estNatif() && plateforme() === 'ios';
 
 export async function connexionFournisseur(fournisseur) {
   const SocialLogin = await preparerConnexion();
-  const { result } = await SocialLogin.login({
-    provider: fournisseur,
-    options: fournisseur === 'apple' ? { scopes: ['email', 'name'] } : { scopes: ['email', 'profile'] }
-  });
+  // Google sur Android : AUCUNE liste « scopes ». Le greffon refuse toute liste (« You CANNOT use scopes without
+  // modifying the main activity ») tant que MainActivity n'est pas modifiée, et e-mail + profil + openid sont déjà
+  // demandés par défaut (GoogleProvider.java). La connexion échouait avant même d'ouvrir la feuille Google (16 oct. 2026).
+  const options = fournisseur === 'apple' ? { scopes: ['email', 'name'] }
+    : plateforme() === 'android' ? {} : { scopes: ['email', 'profile'] };
+  const { result } = await SocialLogin.login({ provider: fournisseur, options });
   const jeton = result?.idToken;
   if (!jeton) throw new Error('Connexion annulée.');
   const profil = result.profile || {};
