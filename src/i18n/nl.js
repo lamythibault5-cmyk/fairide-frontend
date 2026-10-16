@@ -6880,7 +6880,6 @@ export default {
       sectionNearby: 'Bij jou in de buurt',
       sectionCravings: 'Jouw goesting',
       localTitle: 'Alleen de zaken van {commune}. “Bij jou in de buurt” toont de dichtstbijzijnde bij jouw adres, ongeacht de gemeente.',
-      localAllTitle: 'Lokaal eten: eerst de zaken van {commune}, daarna de buurgemeenten.',
       localEmpty: 'Nog geen zaak in {commune}: hier zijn die van de andere gemeenten.',
       localSeeAll: 'Alle gemeenten bekijken',
       localBack: 'Alleen {commune}',

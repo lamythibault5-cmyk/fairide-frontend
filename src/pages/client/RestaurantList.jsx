@@ -487,7 +487,9 @@ export default function RestaurantList() {
 
   const avecPosition = !!(user?.lat && user?.lng);
   const libelleTri = (cle) => (cle === 'recommande' ? t('mapClient.sortRecommended') : cle === 'note' ? t('siteListe.triNote') : t('siteListe.triDistance'));
-  const localTexte = homeCommune && (dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : t('restaurantList.localAllTitle', { commune: homeCommune }));
+  // « Manger local : les commerces de … d'abord » retiré (fondateur, 2026-10-16) : on ne prévient plus que si la commune n'a
+  // encore aucun commerce, pour dire pourquoi la liste montre ceux d'à côté.
+  const localTexte = homeCommune && dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : null;
   // Le bandeau ne s'affiche qu'avec un compte : sans lui, « À emporter » reste une pastille au-dessus de la liste.
   const modeSurBandeau = grand && !!user;
   // La rangée de pastilles au-dessus de la liste : tout ce que la colonne et le bandeau ne portent pas déjà.
@@ -672,19 +674,17 @@ export default function RestaurantList() {
           ))}
         </div>
       )}
-      {!loading && !hasActiveFilter && homeCommune && !colonne && (
+      {!loading && !hasActiveFilter && localTexte && !colonne && (
         <div className="local-bandeau" role="status">
           <Icone nom="position" taille={16} />
-          <span>
-            {dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : t('restaurantList.localAllTitle', { commune: homeCommune })}
-          </span>
+          <span>{localTexte}</span>
         </div>
       )}
       {!loading && !hasActiveFilter && (
         <>
           {inscrits.length > 0 && (
             <div className="liste-section">
-              <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><AvecMarque>{inscrits.length === 1 ? t('restaurantList.sectionRegisteredOne') : t('restaurantList.sectionRegistered', { n: inscrits.length })}</AvecMarque></h3>
+              <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><span><AvecMarque>{inscrits.length === 1 ? t('restaurantList.sectionRegisteredOne') : t('restaurantList.sectionRegistered', { n: inscrits.length })}</AvecMarque></span></h3>
               <div className={grand ? 'rest-grid sl-grille' : 'rest-grid rest-grid-scroll'}>
                 {inscrits.map((x) => {
                   // Publié : la carte complète de la liste (horaires, offres, favori) ; sinon, une carte « bientôt ».
