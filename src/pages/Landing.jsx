@@ -46,23 +46,24 @@ function features(t) {
   ];
 }
 
-// Le vélo de la marque arrive sur sa route pointillée, passe devant un commerce et s'arrête avant l'adresse (même scène que
-// l'accueil de l'app et les écrans vides, EtatVide.jsx), en lime sur l'iris. Décoratif.
+// Le vélo de la marque roule sur sa route pointillée, EN BOUCLE (fondateur, 2026-10-16 : « on peut le faire bouger ? ») :
+// il arrive, s'arrête au commerce (qui sursaute : la commande est prise), repart jusqu'à l'adresse (l'épingle sursaute :
+// livré), s'efface et recommence. Une boucle de 9 s, réglée dans site-accueil.css. Décoratif.
 function SceneRoute() {
   return (
     <svg className="sa-scene" viewBox="0 0 520 110" aria-hidden="true">
       <line className="sa-scene-route" x1="4" y1="100" x2="516" y2="100" strokeWidth="3" strokeLinecap="round" strokeDasharray="8 8" />
-      <g transform="translate(300 54)"><g className="sa-scene-repere" style={{ animationDelay: '1.1s' }}>
+      <g transform="translate(300 54)"><g className="sa-scene-repere sa-scene-boutique">
         <g transform="scale(1.6)" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 9h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9Z" /><path d="M3 9 5 4h14l2 5" /><path d="M9 21v-6h6v6" />
         </g>
       </g></g>
-      <g transform="translate(460 54)"><g className="sa-scene-repere" style={{ animationDelay: '1.4s' }}>
+      <g transform="translate(460 54)"><g className="sa-scene-repere sa-scene-epingle">
         <g transform="scale(1.6)" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" /><circle cx="12" cy="10" r="2.6" />
         </g>
       </g></g>
-      <g transform="translate(40 45.6) scale(1.15)">
+      <g transform="translate(4 45.6) scale(1.15)">
         <g className="sa-scene-velo"><g className="sa-scene-bob">
           <g fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"><circle cx="15" cy="29" r="12.5" /><circle cx="61" cy="29" r="12.5" /></g>
           <g fill="currentColor"><rect x="16" y="8" width="44" height="5" rx="2.5" /><g transform="rotate(42 27 22.5)"><rect x="13" y="20" width="28" height="5" rx="2.5" /></g></g>
