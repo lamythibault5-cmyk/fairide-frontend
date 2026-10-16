@@ -12,6 +12,7 @@ import Icone from '../../components/Icone';
 import { experienceApp } from '../../natif';
 import { vibrer } from '../../gestes';
 import '../../ecran-livreur.css';
+import '../../site-livreur.css';
 
 // « Mes gains » (livreur) : ce que Fairide a versé sur l'année, brut / précompte / net, par mois et par
 // course (/couriers/me/earnings), avec la jauge du plafond pour l'économie collaborative et un rappel
@@ -22,6 +23,10 @@ import '../../ecran-livreur.css';
 // sur le bandeau iris, le net versé y roule (ChiffresRoulants), les mois sont des barres iris (toucher une barre montre son
 // net et ses courses), et deux tuiles disent les deux règles du livreur, déjà écrites partout ailleurs : 90 % de sa
 // grille, 100 % des pourboires. Le détail sépare d'un coup d'œil courses et pourboires. Mêmes données qu'avant.
+//
+// SUR LE SITE, SUR UN ORDINATEUR (mockups/site-ordinateur.html, 2026-10-16) : les règles et les mois à gauche, le détail à
+// droite (site-livreur.css). Les deux enveloppes .ecl-site-col n'ont pas de boîte ailleurs : l'app et le téléphone gardent
+// leur colonne unique.
 const PREMIERE_ANNEE = 2026;
 const euro = (n) => `${Number(n || 0).toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 const pctTexte = (x) => (x == null || x === '' ? '—' : `${(Number(x) * 100).toLocaleString(getLocale(), { maximumFractionDigits: 2 })} %`);
@@ -101,56 +106,60 @@ export default function EarningsPage() {
       </section>
 
       <div className="ecl-feuille">
-        <div className="ecl-regles" role="group" aria-label={t('ecranLivreur.ariaRegles')}>
-          <span className="ecl-regle"><Icone nom="scooter" taille={18} /><b>{t('ecranLivreur.regleGrilleChiffre')}</b>{t('ecranLivreur.regleGrille')}</span>
-          <span className="ecl-regle"><Icone nom="cadeau" taille={18} /><b>{t('ecranLivreur.reglePourboiresChiffre')}</b>{t('ecranLivreur.reglePourboires')}</span>
-        </div>
-        {aide && <p className="small ecl-aide">{aide}</p>}
+        <div className="ecl-site-cols">
+          <div className="ecl-site-col">
+            <div className="ecl-regles" role="group" aria-label={t('ecranLivreur.ariaRegles')}>
+              <span className="ecl-regle"><Icone nom="scooter" taille={18} /><b>{t('ecranLivreur.regleGrilleChiffre')}</b>{t('ecranLivreur.regleGrille')}</span>
+              <span className="ecl-regle"><Icone nom="cadeau" taille={18} /><b>{t('ecranLivreur.reglePourboiresChiffre')}</b>{t('ecranLivreur.reglePourboires')}</span>
+            </div>
+            {aide && <p className="small ecl-aide">{aide}</p>}
 
-        {!gains ? <div style={{ marginTop: 16 }}><SkeletonCards count={2} /></div> : (
-          <>
-            {mois.length === 0 && lignes.length === 0 && <EtatVide icone="euro" titre={t('driverPay.none')} />}
-
-            {mois.length > 0 && (
+            {!gains ? <div style={{ marginTop: 16 }}><SkeletonCards count={2} /></div> : (
               <>
-                <h2 className="ecl-titre-sec">{t('driverPay.byMonth')}</h2>
-                <div className="ecl-barres" style={{ '--n': mois.length }}>
-                  {mois.map((m, k) => {
-                    const net = Number(m.net || 0);
-                    const h = maxMois > 0 ? (Math.max(0, net) / maxMois) * 100 : 0;
-                    return (
-                      <button key={m.month} type="button" className={`ecl-barre-v${moisMontre === m.month ? ' montre' : ''}${net < 0 ? ' negatif' : ''}`}
-                        style={{ '--h': `${h}%`, '--i': k }} aria-label={`${nomMois(m.month)} : ${bulle(m)}`} aria-pressed={moisMontre === m.month}
-                        onClick={() => setMoisMontre(moisMontre === m.month ? null : m.month)}>
-                        <i />
-                        <span className="ecl-bv-lib" aria-hidden="true">{nomMois(m.month, 'short')}</span>
-                        <span className="ecl-bulle" aria-hidden="true">{bulle(m)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
+                {mois.length === 0 && lignes.length === 0 && <EtatVide icone="euro" titre={t('driverPay.none')} />}
 
-            {lignes.length > 0 && (
-              <>
-                <h2 className="ecl-titre-sec" style={{ marginTop: 30 }}>{t('driverPay.lines')}</h2>
-                {lignes.map((l) => {
-                  const quand = l.earnedAt ? new Date(l.earnedAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' }) : '-';
-                  const retenue = Number(l.withholding || 0) !== 0 ? `${t('driverPay.gross')} ${euro(l.gross)} · ${t('driverPay.withholding')} ${euro(l.withholding)}${l.withholdingRate != null ? ` (${pctTexte(l.withholdingRate)})` : ''}` : null;
-                  const sous = [quand, retenue, l.statusAtTime ? t(`courierOnboarding.status_${l.statusAtTime}`) : null].filter(Boolean).join(' · ');
-                  return (
-                    <div className="ecl-detail" key={l.id}>
-                      <span className={`ecl-badge ${BADGES[l.kind] || 'neutre'}`}>{['delivery', 'tip', 'reversal', 'correction'].includes(l.kind) ? t(`driverPay.kind_${l.kind}`) : l.kind}{l.reversesId ? ' ↩︎' : ''}</span>
-                      <span className="ecl-grow">{l.orderId ? `#${String(l.orderId).slice(0, 8)}` : '-'}<small>{sous}</small></span>
-                      <Montant v={l.net} strong />
+                {mois.length > 0 && (
+                  <>
+                    <h2 className="ecl-titre-sec">{t('driverPay.byMonth')}</h2>
+                    <div className="ecl-barres" style={{ '--n': mois.length }}>
+                      {mois.map((m, k) => {
+                        const net = Number(m.net || 0);
+                        const h = maxMois > 0 ? (Math.max(0, net) / maxMois) * 100 : 0;
+                        return (
+                          <button key={m.month} type="button" className={`ecl-barre-v${moisMontre === m.month ? ' montre' : ''}${net < 0 ? ' negatif' : ''}`}
+                            style={{ '--h': `${h}%`, '--i': k }} aria-label={`${nomMois(m.month)} : ${bulle(m)}`} aria-pressed={moisMontre === m.month}
+                            onClick={() => setMoisMontre(moisMontre === m.month ? null : m.month)}>
+                            <i />
+                            <span className="ecl-bv-lib" aria-hidden="true">{nomMois(m.month, 'short')}</span>
+                            <span className="ecl-bulle" aria-hidden="true">{bulle(m)}</span>
+                          </button>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </>
+                )}
               </>
             )}
-          </>
-        )}
+          </div>
+
+          {gains && lignes.length > 0 && (
+            <div className="ecl-site-col">
+              <h2 className="ecl-titre-sec" style={{ marginTop: 30 }}>{t('driverPay.lines')}</h2>
+              {lignes.map((l) => {
+                const quand = l.earnedAt ? new Date(l.earnedAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' }) : '-';
+                const retenue = Number(l.withholding || 0) !== 0 ? `${t('driverPay.gross')} ${euro(l.gross)} · ${t('driverPay.withholding')} ${euro(l.withholding)}${l.withholdingRate != null ? ` (${pctTexte(l.withholdingRate)})` : ''}` : null;
+                const sous = [quand, retenue, l.statusAtTime ? t(`courierOnboarding.status_${l.statusAtTime}`) : null].filter(Boolean).join(' · ');
+                return (
+                  <div className="ecl-detail" key={l.id}>
+                    <span className={`ecl-badge ${BADGES[l.kind] || 'neutre'}`}>{['delivery', 'tip', 'reversal', 'correction'].includes(l.kind) ? t(`driverPay.kind_${l.kind}`) : l.kind}{l.reversesId ? ' ↩︎' : ''}</span>
+                    <span className="ecl-grow">{l.orderId ? `#${String(l.orderId).slice(0, 8)}` : '-'}<small>{sous}</small></span>
+                    <Montant v={l.net} strong />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
         <p className="small ecl-liens"><Link to="/driver/invoices">{t('driverPay.invoicesLink')}</Link> · <Link to="/driver/onboarding">{t('driverPay.fileLink')}</Link></p>
       </div>
     </div>

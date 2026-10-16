@@ -4341,6 +4341,25 @@ export default {
       deliveriesWithTip: 'Deliveries with a tip',
       none: 'No tip received yet.'
     },
+    siteLivreur: {
+      // Courier area on the website (founder, 2026-10-16, mockups/site-ordinateur.html, "Livreur"): Dashboard.jsx, PageLivreur.jsx.
+      disponible: "You're available",
+      enPause: "You're on a break",
+      proposees: '{n} rides offered near you',
+      proposeeUne: '1 ride offered near you',
+      aucuneProposee: 'No ride offered right now',
+      pauseSous: 'No new rides until you resume',
+      aujourdhui: 'Today',
+      aujourdhuiCourses: 'Today · {n} rides',
+      aujourdhuiUne: 'Today · 1 ride',
+      cliquePause: 'Click to take a break',
+      cliqueReprendre: 'Click to receive rides',
+      retrait: 'Pickup',
+      livraison: 'Delivery',
+      astuceTelephone: 'On a computer you can get your shift ready; the ride itself is easier to follow on your phone.',
+      facturesSous: 'Your sales statements and your payments summary, month by month.',
+      dossierSous: 'Your status, your documents and your commitments, in one place.'
+    },
     invoicesDriver: {
       title: 'Invoices',
       paymentsSummary: 'Payments summary',

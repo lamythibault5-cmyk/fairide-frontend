@@ -4351,6 +4351,25 @@ export default {
       deliveriesWithTip: 'Livraisons avec pourboire',
       none: 'Pas encore de pourboire reçu.'
     },
+    siteLivreur: {
+      // Espace livreur sur le site (fondateur, 2026-10-16, mockups/site-ordinateur.html, « Livreur ») : Dashboard.jsx, PageLivreur.jsx.
+      disponible: 'Tu es disponible',
+      enPause: 'Tu es en pause',
+      proposees: '{n} courses proposées autour de toi',
+      proposeeUne: '1 course proposée autour de toi',
+      aucuneProposee: 'Aucune course proposée pour le moment',
+      pauseSous: "Pas de nouvelle course tant que tu n'as pas repris",
+      aujourdhui: "Aujourd'hui",
+      aujourdhuiCourses: "Aujourd'hui · {n} courses",
+      aujourdhuiUne: "Aujourd'hui · 1 course",
+      cliquePause: 'Clique pour te mettre en pause',
+      cliqueReprendre: 'Clique pour recevoir des courses',
+      retrait: 'Retrait',
+      livraison: 'Livraison',
+      astuceTelephone: 'Sur un ordinateur, tu peux préparer ton service ; la course elle-même se suit plus facilement sur ton téléphone.',
+      facturesSous: 'Tes relevés des ventes et le récap de tes paiements, mois par mois.',
+      dossierSous: 'Ton statut, tes documents et tes engagements, au même endroit.'
+    },
     invoicesDriver: {
       title: 'Factures',
       paymentsSummary: 'Récap de paiements',

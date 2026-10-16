@@ -6,6 +6,7 @@ import DriverNavigationMap from '../../components/DriverNavigationMap';
 import CarteSuivi from '../../components/CarteSuivi';
 import { useLanguage } from '../../context/LanguageContext';
 import { suivrePositionCourse } from '../../natif';
+import PageLivreur from '../../components/livreur/PageLivreur';
 
 // Cadence maximale d'envoi de la position au serveur — même valeur que Dashboard.jsx, un seul rythme
 // pour les deux pages qui partagent la position.
@@ -122,11 +123,9 @@ export default function MapPage() {
   if (!orders) return <div className="empty">{t('mapDriver.loading')}</div>;
 
   return (
-    <div className="carte-page">
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('mapDriver.title')}</h2>
-      <p className="small" style={{ marginBottom: 16 }}>
-        {t('mapDriver.intro')}
-      </p>
+    // Site : l'intro passe sur le bandeau iris (PageLivreur.jsx) ; app : titre et intro comme avant.
+    <PageLivreur classe="carte-page" large titre={t('mapDriver.title')} sous={t('mapDriver.intro')}
+      introApp={<p className="small" style={{ marginBottom: 16 }}>{t('mapDriver.intro')}</p>}>
       {!sharingLocation && (
         <div className="empty" style={{ marginBottom: 16 }}>{t('mapDriver.enableGeo')}</div>
       )}
@@ -179,6 +178,6 @@ export default function MapPage() {
           );
         })
       )}
-    </div>
+    </PageLivreur>
   );
 }

@@ -4350,6 +4350,25 @@ export default {
       deliveriesWithTip: 'Leveringen met fooi',
       none: 'Nog geen fooi ontvangen.'
     },
+    siteLivreur: {
+      // Koeriersruimte op de website (oprichter, 2026-10-16, mockups/site-ordinateur.html, « Livreur ») : Dashboard.jsx, PageLivreur.jsx.
+      disponible: 'Je bent beschikbaar',
+      enPause: 'Je bent in pauze',
+      proposees: '{n} ritten aangeboden in je buurt',
+      proposeeUne: '1 rit aangeboden in je buurt',
+      aucuneProposee: 'Momenteel geen rit aangeboden',
+      pauseSous: 'Geen nieuwe ritten tot je hervat',
+      aujourdhui: 'Vandaag',
+      aujourdhuiCourses: 'Vandaag · {n} ritten',
+      aujourdhuiUne: 'Vandaag · 1 rit',
+      cliquePause: 'Klik om te pauzeren',
+      cliqueReprendre: 'Klik om ritten te ontvangen',
+      retrait: 'Ophalen',
+      livraison: 'Levering',
+      astuceTelephone: 'Op een computer kun je je dienst voorbereiden; de rit zelf volg je makkelijker op je telefoon.',
+      facturesSous: 'Je verkoopoverzichten en het overzicht van je betalingen, maand per maand.',
+      dossierSous: 'Je statuut, je documenten en je engagementen, op één plek.'
+    },
     invoicesDriver: {
       title: 'Facturen',
       paymentsSummary: 'Betalingsoverzicht',
