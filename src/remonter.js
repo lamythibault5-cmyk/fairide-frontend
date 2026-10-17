@@ -8,24 +8,12 @@
 // dès que la page changeait de hauteur).
 //
 // Mêmes reprises échelonnées que ScrollRestorer : la nouvelle étape arrive parfois en plusieurs temps (données,
-// images, barre d'adresse de Safari). On lâche dès que la personne touche ou fait défiler.
-const DELAIS = [0, 50, 150, 300, 500];
+// images, barre d'adresse de Safari). On lâche dès que la personne touche, fait défiler, tape ou clique (defilementAuto.js).
+import { repeterTantQueLibre, enHaut } from './defilementAuto';
 
-function enHaut() {
-  window.scrollTo(0, 0);
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-}
+const DELAIS = [0, 50, 150, 300, 500];
 
 export function remonterEnHaut() {
   if (typeof window === 'undefined') return;
-  let annule = false;
-  const lacher = () => { annule = true; };
-  window.addEventListener('touchstart', lacher, { passive: true, once: true });
-  window.addEventListener('wheel', lacher, { passive: true, once: true });
-  DELAIS.forEach((d) => setTimeout(() => { if (!annule) enHaut(); }, d));
-  setTimeout(() => {
-    window.removeEventListener('touchstart', lacher);
-    window.removeEventListener('wheel', lacher);
-  }, DELAIS[DELAIS.length - 1] + 50);
+  repeterTantQueLibre(enHaut, DELAIS);
 }

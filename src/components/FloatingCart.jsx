@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
@@ -16,9 +16,20 @@ import ChiffresRoulants from './ChiffresRoulants';
 // Ce qui reste ici est ce qu'une barre de panier doit faire : dire qu'il y a quelque chose dedans,
 // combien, et y mener. Rien quand le panier est vide : un panier vide n'a rien a annoncer, et la
 // bulle « Panier vide » d'avant recouvrait le contenu des autres pages sans rien apprendre.
+/* LA BULLE, AILLEURS QUE DANS LES COMMERCES (fondateur, 2026-10-17 : « dans Mon compte je ne veux pas voir mon panier ;
+ * il cache le bouton Parcourir les commerces, la carte… pousse-le sur le côté »). La barre complète ne reste que là où
+ * l'on remplit son panier — la liste des commerces et la fiche d'un commerce. Partout ailleurs (Mon compte, Mes commandes,
+ * la Carte, la Recherche, Favoris…), le panier se range en une bulle ronde sur le côté droit : le sac et son compteur, un
+ * toucher mène au panier. Le total reste dit aux lecteurs d'écran (aria-label). */
+function pageDAchat(chemin) {
+  return chemin === '/restaurants' || chemin.startsWith('/restaurants/');
+}
+
 export default function FloatingCart() {
   const cart = useCart();
   const { t } = useLanguage();
+  const { pathname } = useLocation();
+  const bulle = !pageDAchat(pathname);
   const visible = cart.count > 0;
   // La pilule est fixe : sans place réservée en bas de page, elle recouvrait le dernier plat de la carte
   // (nom et prix illisibles sur une carte courte). La classe ajoute cette marge tant qu'elle est affichée.
@@ -39,7 +50,8 @@ export default function FloatingCart() {
   if (!visible) return null;
 
   return (
-    <Link to="/panier" className={`panier-pilule${rebond ? ' panier-pilule--rebond' : ''}`} key={`pilule-${rebond}`}>
+    <Link to="/panier" className={`panier-pilule${bulle ? ' panier-pilule--bulle' : ''}${rebond ? ' panier-pilule--rebond' : ''}`} key={`pilule-${rebond}`}
+      aria-label={`${t('panier.viewCart')} · ${euros(cart.rawTotal)}`}>
       <span className="panier-pilule-icone" aria-hidden="true">
         <Icone nom="sac" taille={20} />
         {/* Le compteur sur l'icone, comme sur une application de courses : on voit d'un coup d'oeil

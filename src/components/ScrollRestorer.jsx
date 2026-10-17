@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
+import { repeterTantQueLibre, enHaut } from '../defilementAuto';
 
 // Rendu une seule fois, en dehors de <Routes> (voir App.jsx), pour ne se remonter qu'à un vrai
 // rechargement de page (F5) — pas à chaque navigation interne, qui remonte les pages elles-mêmes mais
@@ -28,12 +29,11 @@ const RESTAURATION_DELAIS = [0, 100, 300, 600, 1000, 1500];
 // suite (avant l'affichage), puis encore pendant ~0,8 s — sauf si la personne touche l'écran ou fait défiler
 // entre-temps : on ne lui reprend jamais la main.
 const REMONTEE_DELAIS = [0, 50, 150, 300, 500, 800];
-function remonterEnHaut() {
-  window.scrollTo(0, 0);
-  // Safari iOS : selon l'état de la barre d'adresse, c'est l'un ou l'autre qui défile.
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-}
+
+// UNE SEULE MAIN SUR LE DÉFILEMENT : la restauration native du navigateur est coupée pour tout le site, dès le démarrage.
+// Elle replaçait la page au retour arrière à SON moment — souvent quand la page n'était encore qu'un squelette, donc en
+// haut — pendant que ce composant restaurait la vraie position : deux mains, et la page sautait (2026-10-17).
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
 
 export default function ScrollRestorer() {
   const location = useLocation();
@@ -66,27 +66,14 @@ export default function ScrollRestorer() {
       // section demandée, une fois ses données chargées. Les remontées ci-dessous la ramenaient en haut pendant ~0,8 s,
       // et le restaurateur atterrissait sur « Mes infos » (test au téléphone, 12 oct. 2026).
       if (new URLSearchParams(location.search).has('ouvrir')) return undefined;
-      remonterEnHaut();
-      let annule = false;
-      const lacher = () => { annule = true; };
-      window.addEventListener('touchstart', lacher, { passive: true, once: true });
-      window.addEventListener('wheel', lacher, { passive: true, once: true });
-      window.addEventListener('keydown', lacher, { once: true });
-      // Un clic (barre de défilement, lien dans la page) vaut reprise en main, comme le doigt ou la molette.
-      window.addEventListener('pointerdown', lacher, { passive: true, once: true });
-      const minuteurs = REMONTEE_DELAIS.map((delay) => setTimeout(() => { if (!annule) remonterEnHaut(); }, delay));
-      return () => {
-        minuteurs.forEach(clearTimeout);
-        window.removeEventListener('touchstart', lacher);
-        window.removeEventListener('wheel', lacher);
-        window.removeEventListener('keydown', lacher);
-        window.removeEventListener('pointerdown', lacher);
-      };
+      // En haut tout de suite (avant l'affichage), puis encore le temps que la page se construise — jusqu'au premier geste.
+      return repeterTantQueLibre(enHaut, REMONTEE_DELAIS, { immediat: true });
     }
     const saved = Number(sessionStorage.getItem(`fairide_scroll:${location.pathname}`) || 0);
     if (saved <= 0) return undefined;
-    const minuteurs = RESTAURATION_DELAIS.map((delay) => setTimeout(() => window.scrollTo(0, saved), delay));
-    return () => minuteurs.forEach(clearTimeout);
+    // Retour arrière ou rechargement : la position quittée, réappliquée pendant le chargement — et plus rien dès que la
+    // personne fait défiler (avant le 2026-10-17, ces reprises-ci n'avaient aucun arrêt : le saut « en revenant du panier »).
+    return repeterTantQueLibre(() => window.scrollTo(0, saved), RESTAURATION_DELAIS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
