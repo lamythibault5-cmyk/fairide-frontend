@@ -81,9 +81,13 @@ export default function SearchPage() {
   const [chargement, setChargement] = useState(true);
   const champ = useRef(null);
 
-  // Le curseur est dans le champ à l'arrivée : on vient ici pour taper, pas pour lire. Sur téléphone
-  // le clavier s'ouvre du même coup.
-  useEffect(() => { champ.current?.focus(); }, []);
+  // Le curseur est dans le champ à l'arrivée, mais SEULEMENT sur un ordinateur (souris, pas d'écran tactile) et hors de
+  // l'app. Sur téléphone, le clavier s'ouvrait d'office et cachait les pastilles « Par envie », « Par commune »… qui
+  // sont justement ce qu'on vient toucher (fondateur, 2026-10-17). Là, le clavier ne s'ouvre qu'en touchant le champ.
+  useEffect(() => {
+    const souris = window.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches;
+    if (souris && !experienceApp()) champ.current?.focus();
+  }, []);
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
