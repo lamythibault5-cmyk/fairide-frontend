@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { api } from '../../api';
 import { experienceApp, demanderPosition, connexionFournisseur } from '../../natif';
 import { communeDepuisCodePostal, communeRingDistance, haversineDistanceKm } from '../../menuCategories';
-import { ecrireBienvenue } from '../../bienvenue';
+import { ecrireBienvenue, ecrireReprise, lireReprise } from '../../bienvenue';
 import { repondAuxEnvies } from '../../envies';
 import {
   Haut, EcranAccueil, EcranProfil, EcranChoix, EcranCartes, EcranPourquoi, EcranEnvies, EcranPermission, EcranCodePostal,
@@ -86,19 +86,22 @@ export default function Bienvenue() {
 
   // Depuis la connexion de l'app (« Créer un compte », ConnexionAppli.jsx) : droit au choix du profil, présélectionné
   // quand un lien d'inscription le donnait ; `from` ramène là où l'on voulait aller (un commerce touché sans compte).
-  const depart = location.state?.depart === 'profil' ? 'profil' : 'accueil';
+  // Sinon, un accueil laissé en route sans compte reprend là où il s'était arrêté (lireReprise, bienvenue.js).
+  const [reprise] = useState(() => (location.state?.depart ? null : lireReprise()));
+  const depart = location.state?.depart === 'profil' ? 'profil' : reprise?.ecran || 'accueil';
   const depuis = location.state?.from || null;
   const [ecran, setEcran] = useState(depart);
-  const [historique, setHistorique] = useState([]);
+  const [historique, setHistorique] = useState(() => (Array.isArray(reprise?.historique) ? reprise.historique : []));
   // Sens du dernier passage d'écran : en reculant, l'écran revient par la gauche, d'où il était parti (cohérence
   // spatiale, plan du 2026-10-13). Avant, tout arrivait par la droite, retour compris.
   const [recule, setRecule] = useState(false);
-  const [role, setRole] = useState(() => (['client', 'driver', 'restaurant'].includes(location.state?.role) ? location.state.role : null));
-  const [buts, setButs] = useState([]);
-  const [freins, setFreins] = useState([]);
-  const [envies, setEnvies] = useState([]);
-  const [position, setPosition] = useState(null);
-  const [cp, setCp] = useState('');
+  const [role, setRole] = useState(() => (['client', 'driver', 'restaurant'].includes(location.state?.role) ? location.state.role
+    : ['client', 'driver', 'restaurant'].includes(reprise?.role) ? reprise.role : null));
+  const [buts, setButs] = useState(() => (Array.isArray(reprise?.buts) ? reprise.buts : []));
+  const [freins, setFreins] = useState(() => (Array.isArray(reprise?.freins) ? reprise.freins : []));
+  const [envies, setEnvies] = useState(() => (Array.isArray(reprise?.envies) ? reprise.envies : []));
+  const [position, setPosition] = useState(() => reprise?.position || null);
+  const [cp, setCp] = useState(() => reprise?.cp || '');
   const [liste, setListe] = useState(null);
   const [attente, setAttente] = useState(false);
   // Jeton Apple / Google d'une personne qui n'a pas encore de compte : l'inscription s'en sert au lieu d'un mot de passe.
@@ -111,9 +114,23 @@ export default function Bienvenue() {
 
   // La liste des commerces part dès l'écran « Pourquoi » : au chargement, elle est souvent déjà là.
   useEffect(() => {
-    if (role !== 'client' || liste || !['pourquoi', 'envies', 'position', 'codePostal', 'recherche'].includes(ecran)) return;
+    if (role !== 'client' || liste || !['pourquoi', 'envies', 'position', 'codePostal', 'recherche', 'compte', 'inscription'].includes(ecran)) return;
     api('/restaurants').then((r) => setListe(Array.isArray(r) ? r : [])).catch(() => setListe([]));
   }, [role, ecran, liste]);
+
+  // On retient où en est l'accueil, à chaque écran, pour le reprendre si l'application est fermée avant le compte
+  // (bienvenue.js, lireReprise). Le chargement repart toujours sur l'écran du compte (il ne fait qu'y mener) ; l'inscription
+  // par Apple ou Google aussi, son jeton n'étant pas gardé : la personne retouche simplement le bouton.
+  useEffect(() => {
+    if (user) return;
+    const etape = ecran === 'recherche' || (ecran === 'inscription' && fed) ? 'compte' : ecran;
+    const passe = historique.filter((e) => e !== 'recherche' && e !== 'inscription');
+    ecrireReprise({
+      ecran: etape, historique: passe[passe.length - 1] === etape ? passe.slice(0, -1) : passe,
+      role, buts, freins, envies, position, cp
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ecran, role, buts, freins, envies, position, cp, fed]);
 
   // Chargement : au moins DUREE_RECHERCHE_MS, et jusqu'à ce que la liste soit arrivée.
   useEffect(() => {
