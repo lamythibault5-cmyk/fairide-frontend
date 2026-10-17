@@ -330,8 +330,10 @@ export default function DriverDashboard() {
       await load();
     } catch (e) {
       toast(e.message, 'erreur');
-      // Notices à relire (B4) ou titre de séjour expiré (B2) : ça se règle dans l'espace livreur, on y va.
-      if (['NOTICES_A_ACCEPTER', 'TITRE_SEJOUR_EXPIRE'].includes(e.code)) navigate('/driver/onboarding');
+      // Notices à relire (B4), titre de séjour expiré (B2) ou dossier à compléter / pas encore vérifié — y compris l'ancien
+      // compte livreur sans dossier, qui y remplit statut et numéro d'entreprise (17/10/2026) : ça se règle dans l'espace
+      // livreur, on y va.
+      if (['NOTICES_A_ACCEPTER', 'TITRE_SEJOUR_EXPIRE', 'STATUS_NOT_VERIFIED'].includes(e.code)) navigate('/driver/onboarding');
     } finally {
       setPrise(null);
     }

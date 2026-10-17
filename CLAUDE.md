@@ -539,7 +539,8 @@ account page then shows « offert pendant le lancement » and the Stripe checkou
   no ×1.10 any more. Since 2026-10-01 the business can no longer edit dishes or prices itself
   (`MENU_LOCKED`) — it asks, and the team applies;
 - legal texts: contract `RESTO-2026.19` (in force 1 Nov 2026; 2026.18 widens the subscription guarantee, 2026.19 says Fairide charges no VAT and, revised before publication on 2026-10-13, the own-prices model; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-13-b` (commission = 10 % of the price paid; says the subscription is 20 € with no VAT and that Fairide's system fee carries none), privacy
-  `CONF-2026-10-15` (door-drop photo 30 days, courier position with the screen locked, courier SOS; they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
+  `CONF-2026-10-17` (since 10-15: door-drop photo 30 days, courier position with the screen locked, courier SOS; 10-16-b: business staff
+  accounts and group orders; 10-17: GatewayAPI as the SMS processor; they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
   restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).
 
 ## Corrections of 8 October 2026 (`docs/fairide-a-coder-2026-10-08.md`)
@@ -653,6 +654,11 @@ covered by `../fairide-backend/tests/correctifs-e2e.test.js`:
 - Commitments signed in « Ma carte » show an EN/NL translation; **the French text stays the one that is hashed and signed**.
 
 ## Known gaps
+
+**Pre-launch cleanup (2026-10-17).** Demo shops no longer come back on deploy: every demo seed in the backend's `server.js` runs only
+with `FAIRIDE_SEED_DEMO=on` (absent in production). SMS codes go through GatewayAPI, only to +32/+31/+33/+49/+352, the rest by
+e-mail. Stripe is still in test mode until Fairide SRL is verified live — see `../fairide-backend/docs/nettoyage-pre-lancement-2026-10-17.md`.
+
 
 Real, verified as absent on 2026-09-22 — not speculation.
 
