@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { remplissage } from '../../curseur';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -85,7 +86,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
                 <>
                   <label htmlFor="capacite-rayon" className="small" style={{ fontWeight: 700, display: 'block' }}>{t('editResto.capacityRadiusValue', { km: km(rayon) })}</label>
                   <input id="capacite-rayon" type="range" min="1" max={Math.min(etat.maxRadiusKm || 30, 15)} step="0.5" value={rayon}
-                    onChange={(e) => setRayon(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--teal, #1F8A70)' }} aria-valuetext={`${km(rayon)} km`} />
+                    onChange={(e) => setRayon(Number(e.target.value))} style={remplissage(rayon, 1, Math.min(etat.maxRadiusKm || 30, 15))} aria-valuetext={`${km(rayon)} km`} />
                   <div className="row small" style={{ justifyContent: 'space-between', opacity: 0.7 }}><span>1 km</span><span>15 km</span></div>
                 </>
               )}

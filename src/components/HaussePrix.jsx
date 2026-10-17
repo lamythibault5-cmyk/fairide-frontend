@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { remplissage } from '../curseur';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -79,7 +80,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
         {valeur === 0 ? t('menuPage.markupValueZero') : t('menuPage.markupValue', { p: pct(valeur) })}
       </label>
       <input id="hausse-prix-barre" type="range" min="0" max={etat.max} step="0.1" value={valeur}
-        onChange={(e) => setValeur(Math.round(Number(e.target.value) * 10) / 10)} style={{ width: '100%', accentColor: 'var(--teal, #1F8A70)' }}
+        onChange={(e) => setValeur(Math.round(Number(e.target.value) * 10) / 10)} style={remplissage(valeur, 0, etat.max)}
         aria-valuetext={`+${pct(valeur)} %`} />
       <div className="row small" style={{ justifyContent: 'space-between', opacity: 0.7, marginTop: -2 }}>
         <span>{t('menuPage.markupMin')}</span><span>+{pct(etat.max)} %</span>

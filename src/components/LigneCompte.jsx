@@ -50,11 +50,14 @@ export default function LigneCompte({ to, onClick, icone, titre, sous, danger = 
   // Favoris, Mes factures, Mes documents… s'ouvrent en feuille par-dessus Mon compte (feuilles.js).
   if (to) return <Link to={to} state={etatFeuille(to, location)} className={classe}>{contenu}</Link>;
   if (!pliable) return <button type="button" className={classe} onClick={onClick}>{contenu}</button>;
+  /* En feuille dans l'app, et sur le site au téléphone (fondateur, 2026-10-17 : « une pleine page avec le bouton retour, pas
+     un dépliage dans Mon compte ») ; sur un ordinateur, le contenu se déplie sous la rangée, comme avant. */
+  const enFeuille = APPLI || (typeof window !== 'undefined' && window.innerWidth <= 900);
   return (
     <div className={`account-pliable${ouverte ? ' ouverte' : ''}`}>
       <button type="button" className={classe} onClick={onClick} aria-expanded={ouverte}>{contenu}</button>
-      {ouverte && !APPLI && <div className="account-panneau">{children}</div>}
-      {ouverte && APPLI && (
+      {ouverte && !enFeuille && <div className="account-panneau">{children}</div>}
+      {ouverte && enFeuille && (
         <SousEcran titre={typeof titre === 'string' ? titre : ''} onFermer={onClick}>
           {/* « card » : tout ce que la CSS règle « dans une carte » (sélecteur de langue, tableaux…) vaut aussi dans la feuille. */}
           <div className="card account-panneau account-panneau--feuille">{children}</div>

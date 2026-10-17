@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { remplissage } from '../../curseur';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
@@ -74,7 +75,7 @@ export default function AlerteBandeau({ audioBloque, debloquerAudio, soundEnable
           {setVolume && (
             <label>
               <span>{t('alertBar.volume')}</span>
-              <input type="range" min="0" max="100" step="5" value={volume} onChange={(e) => setVolume(e.target.value)} onPointerUp={() => testerAlarme?.()}
+              <input type="range" min="0" max="100" step="5" value={volume} style={remplissage(volume, 0, 100)} onChange={(e) => setVolume(e.target.value)} onPointerUp={() => testerAlarme?.()}
                 onKeyUp={(e) => { if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) testerAlarme?.(); }} />
             </label>
           )}
