@@ -622,18 +622,18 @@ function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
 }
 
 // AVANT DE COMMENCER (fondateur, 2026-10-06) : ce que le livreur doit savoir — il commence après validation par Fairide ;
-// deux courses à la fois s'il ne livre que pour Fairide, une seule s'il livre aussi pour une autre plateforme ; comment il
+// jusqu'à trois courses à la fois s'il ne livre que pour Fairide (2026-10-17), une seule s'il livre aussi ailleurs ; comment il
 // est payé ; le fonds d'assurance Fairide (10 % des frais de livraison) ; sa responsabilité en cas d'accident ou d'infraction.
 function AvantDeCommencer({ c, t, pricing, replie = false }) {
   const autre = c?.otherPlatforms?.works === true;
   const eur = (v) => `${Number(v || 0).toFixed(2).replace('.', ',')} €`;
-  const p = { base: eur(pricing?.deliveryBaseFee ?? 5), km: Number(pricing?.deliveryBaseKm ?? 1), perKm: eur(pricing?.driverPerKmMotor ?? 0.8), radius: Number(pricing?.secondOrderRadiusKm ?? 2) };
+  const p = { base: eur(pricing?.deliveryBaseFee ?? 5), km: Number(pricing?.deliveryBaseKm ?? 1), perKm: eur(pricing?.driverPerKmMotor ?? 0.8), radius: String(pricing?.secondOrderRadiusKm ?? 2).replace('.', ','), delay: Number(pricing?.extraOrderMaxDelayMin ?? 10) };
   return (
     <div className={replie ? undefined : 'card'} style={{ marginBottom: replie ? 0 : 12, marginTop: replie ? 8 : 0 }}>
       {!replie && <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.beforeTitle')}</h3>}
       <ul className="small" style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
         <li>{t('courierOnboarding.beforeValidation')}</li>
-        <li>{autre ? t('courierOnboarding.beforeOneOrder') : t('courierOnboarding.beforeTwoOrders', { radius: p.radius })}</li>
+        <li>{autre ? t('courierOnboarding.beforeOneOrder') : t('courierOnboarding.beforeThreeOrders', { radius: p.radius, delay: p.delay })}</li>
         <li>{t('courierOnboarding.beforePayment', p)}</li>
         <li>{t('courierOnboarding.beforeInsurance')}</li>
         <li>{t('courierOnboarding.beforeLiability')}</li>

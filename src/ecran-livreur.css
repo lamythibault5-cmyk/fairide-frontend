@@ -93,6 +93,11 @@
 .ecl-grille summary { display: flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; color: var(--iris); font-weight: 600; list-style: none; }
 .ecl-grille summary::-webkit-details-marker { display: none; }
 .ecl-grille p { margin: 4px 0 6px; }
+/* La tournée : courses en main sur le maximum (points) et la règle des courses en plus, en clair. */
+.ecl-tournee { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 8px; padding: 10px 12px; border-radius: 14px; background: rgba(59, 47, 181, .07); color: var(--ink); font-size: 13px; line-height: 1.45; }
+.ecl-tournee-points { flex: none; display: inline-flex; gap: 4px; margin-top: 4px; }
+.ecl-tournee-points i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--iris); box-sizing: border-box; }
+.ecl-tournee-points i.plein { background: var(--iris); }
 
 /* Une course proposée. */
 .ecl-offre { border: 1px solid var(--line); border-radius: 20px; padding: 14px; margin-top: 12px; background: #fff; transition: transform .32s var(--ecl-ressort), opacity .32s, border-color .2s; }
