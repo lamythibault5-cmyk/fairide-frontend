@@ -54,7 +54,8 @@ self.addEventListener('push', (event) => {
       renotify: true,
       // La commande doit réveiller : sans cela Android peut l'afficher sans bruit ni écran allumé,
       // c'est-à-dire exactement le problème que le push est censé résoudre.
-      requireInteraction: donnees.tag === 'fairide-commande',
+      // Une étiquette par commande depuis le 2026-10-17 (« fairide-commande-<id> ») : deux commandes ne se remplacent plus.
+      requireInteraction: String(donnees.tag || '').startsWith('fairide-commande'),
       data: { url: donnees.url }
     })
   );

@@ -7006,6 +7006,8 @@ export default {
       ordersOpenSoon: 'Afhaalbestellingen kunnen vanaf {date} (levering vanaf {dateLivraison}): je winkelmandje wacht op je.'
     },
     driverAlert: {
+      notifCancelledBody: 'De bestelling is geannuleerd voor je ze ophaalde: je hoeft er niet meer heen.',
+      notifCancelled: 'Rit geannuleerd: {name}',
       none: 'Momenteel geen ritten beschikbaar',
       available: '{n} ritten beschikbaar',
       availableOne: '1 rit beschikbaar',

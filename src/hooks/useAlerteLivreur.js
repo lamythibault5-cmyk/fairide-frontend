@@ -17,19 +17,23 @@ import { vibrer } from '../gestes';
 const CLE_SON = 'fairide_driver_alert_sound';
 const NOTES_NOUVELLE = [784, 987.77, 1174.66, 1567.98];
 const NOTES_PRETE = [1046.5, 1318.51, 1046.5, 1318.51];
+// Course annulée : trois notes qui descendent, qu'on ne confond pas avec les deux bonnes nouvelles.
+const NOTES_ANNULEE = [1046.5, 783.99, 523.25];
 
 function sonActifMemorise() {
   try { return localStorage.getItem(CLE_SON) !== 'off'; } catch { return true; }
 }
 
 
-export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif }) {
+// `surAnnulee` (facultatif) : appelé avec la course annulée, pour l'écrire aussi à l'écran (Dashboard.jsx).
+export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif, surAnnulee }) {
   const { t } = useLanguage();
   const [sonActif, setSonActifEtat] = useState(sonActifMemorise);
   const [permission, setPermission] = useState(() => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission));
   const ctxRef = useRef(null);
   const vuesRef = useRef(null); // ids des courses disponibles déjà connues
   const pretesRef = useRef(null); // ids de mes courses déjà vues « prêtes »
+  const etatsRef = useRef(null); // statut de chacune de mes courses au relevé précédent
 
   const setSonActif = useCallback((v) => {
     setSonActifEtat(v);
@@ -104,6 +108,26 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif 
       'fairide-course-prete'
     );
   }, [mesCourses, pret, alerter, t]);
+
+  /* 3. UNE DE MES COURSES EST ANNULÉE AVANT QUE JE L'AIE RÉCUPÉRÉE (audit des notifications du 2026-10-17 : elle disparaissait
+   *    sans un bruit). Par le client, le commerce, l'équipe ou l'échéance : elle reste dans mes courses (driver_id inchangé)
+   *    avec le statut « annulée » — c'est ce passage qu'on guette. Si c'est le livreur qui rend la course, elle quitte sa
+   *    liste au lieu de changer de statut : pas d'alerte pour son propre geste. */
+  useEffect(() => {
+    if (!pret) return;
+    const avant = etatsRef.current;
+    etatsRef.current = new Map(mesCourses.map((o) => [o.id, o.status]));
+    if (!avant) return;
+    const annulees = mesCourses.filter((o) => ['annule', 'refuse'].includes(o.status) && ['preparation', 'pret'].includes(avant.get(o.id)));
+    if (!annulees.length) return;
+    alerter(
+      NOTES_ANNULEE, [300, 120, 300, 120, 300],
+      t('driverAlert.notifCancelled', { name: annulees[0].restaurantName || '' }),
+      t('driverAlert.notifCancelledBody'),
+      'fairide-course-annulee'
+    );
+    surAnnulee?.(annulees[0]);
+  }, [mesCourses, pret, alerter, t, surAnnulee]);
 
   // Rappel sonore toutes les 30 s tant qu'une course prête attend d'être récupérée : le livreur a pu rater le premier.
   const nbPretes = mesCourses.filter((o) => o.status === 'pret').length;
