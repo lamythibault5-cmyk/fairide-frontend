@@ -88,6 +88,31 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
 ## Mettre à jour l'application
 
 Chaque `git push` sur `main` met le site à jour, pas l'application : son `dist/` est figé à la compilation.
-Pour publier une nouvelle version : `npm run app:sync`, monter `versionCode`/`versionName`
-(`android/app/build.gradle`) ou le build number Xcode, puis envoyer aux magasins. Les corrections côté API
-(Railway) touchent immédiatement les deux.
+Les corrections côté API (Railway) et le contenu (cartes, commerces, prix) touchent immédiatement les deux.
+
+**Les deux applications Android** (17 oct. 2026) :
+
+| | Fairide Test (`be.fairide.app.test`) | Fairide (`be.fairide.app`, Play Store) |
+|---|---|---|
+| Serveur | staging | production |
+| Quand | **à chaque fusion sur `main`**, tout seul | **à la main** : GitHub › Actions › *App Android Play Store* › *Run workflow* |
+| Workflow | `.github/workflows/app-android-test.yml` | `.github/workflows/app-android-store.yml` |
+| Arrive | e-mail Firebase App Distribution aux testeurs | piste **Internal testing** de la Play Console, envoyée par le build lui-même |
+
+**Sortir une version Play Store.** Rien à modifier dans le code : le `versionCode` est le numéro du lancement du
+workflow (`VERSION_CODE`, `android/app/build.gradle`), il monte tout seul. Owen lance *Run workflow*, recharge la page
+d'abord (F5) pour voir la case **Notes de version** (français, 500 caractères au plus, lues par les testeurs), puis
+l'étape « Envoi dans Internal testing » dépose le bundle. Ne PAS faire télécharger le `.aab` à Owen : l'antivirus de son
+ordinateur (Defender, « Trojan:JS/Tisifi.A » sur les pages Factures) bloque le `.zip` — fausse alerte, l'envoi direct
+l'évite. Jamais vers la production depuis le workflow : le compte de service n'a que « View app information » et
+« Release apps to testing tracks ». La mise en production se fait dans la Play Console, à la main.
+
+**Pour un agent** : sans `gh` authentifié, il ne peut pas cliquer *Run workflow* ; il prépare les notes de version
+(à partir de `git log` depuis la dernière version) et donne le lien
+`https://github.com/lamythibault5-cmyk/fairide-frontend/actions/workflows/app-android-store.yml` à Owen. Un changement
+qui ne touche que l'API ou le contenu n'a pas besoin de nouvelle version.
+
+**Déboguer sur un vrai téléphone** : `adb logcat` par USB (débogage USB activé sur la Galaxy Tab S7+ d'Owen ; `adb` des
+platform-tools de Google, téléchargés dans un dossier temporaire). C'est le logcat qui a trouvé, le 17 oct. 2026, que la
+connexion Google attendait sans fin (greffon rendu par une fonction async, voir `natif.js`, `preparerConnexion`) —
+trois versions « à l'aveugle » avant lui. Commencer par là.

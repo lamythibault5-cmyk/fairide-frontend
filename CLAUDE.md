@@ -33,6 +33,9 @@ no react-leaflet wrapper), `@dnd-kit/*` (drag-and-drop for menu ordering).
 `@capacitor/*` wraps the same `dist/` into the iOS and Android apps (`npm run app:sync`, `app:android`,
 `app:ios`); everything native goes through `src/natif.js` and `src/pushNatif.js` — see
 [docs/application-mobile.md](docs/application-mobile.md) for what is in place and what still needs store accounts.
+**Releasing the Android app**: never bump `versionCode` by hand — see « Mettre à jour l'application » in that file
+(Fairide Test builds itself on every merge to `main`; the Play Store app is GitHub › Actions › *App Android Play
+Store* › *Run workflow*, which uploads to Internal testing itself).
 `@capacitor/geolocation` and `@capgo/capacitor-social-login` (Apple / Google sheet — the site's Google button is refused
 inside a WebView) are loaded with `import()` from `natif.js` only, so the website never downloads them.
 
