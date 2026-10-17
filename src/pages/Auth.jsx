@@ -6,7 +6,7 @@ import { chargerGoogleSignIn } from '../googleSignIn';
 import { estNatif, connexionFournisseur } from '../natif';
 import { lireBienvenue } from '../bienvenue';
 import BoutonsConnexionNative, { LogoGoogle } from '../components/BoutonsConnexionNative';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -505,7 +505,9 @@ export default function Auth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, valeursBrouillon);
 
-  const { login, register, verifyEmail, resendCode, forgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  const { user, login, register, verifyEmail, resendCode, forgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  // Déjà connecté EN ARRIVANT (et non pendant une connexion faite ici) : voir la redirection juste avant le rendu.
+  const [connecteALArrivee] = useState(() => !!user);
   // Google ou Apple selon d'où vient le jeton. Apple n'a pas le nom dans son jeton : on envoie celui du formulaire
   // (prérempli par la feuille Apple à la première autorisation, saisi sinon).
   function connexionFed(fournisseur, jeton, roleChoisi, extra) {
@@ -1100,6 +1102,12 @@ export default function Auth() {
   // Décor et en-tête suivent le rôle choisi, pas seulement l'adresse d'arrivée : changer de type de compte
   // change le contexte affiché.
   const decorClass = mode === 'register' ? (role === 'client' ? 'client' : 'partner') : (audience === 'partner' ? 'partner' : audience === 'client' ? 'client' : '');
+
+  // DÉJÀ CONNECTÉ QUAND ON OUVRE /login (fondateur, 2026-10-17) : la page montrait l'ancien en-tête des visiteurs avec
+  // « Se déconnecter » au-dessus d'un formulaire de connexion inutile. On va directement dans son espace (ou là où l'on
+  // voulait aller). Seulement si la session existait à l'arrivée : une connexion ou une inscription faite ICI garde sa
+  // propre suite (code de vérification, retour au commerce touché…).
+  if (connecteALArrivee && user) return <Navigate to={location.state?.from || espaceApresConnexion(user)} replace />;
 
   if (forgotMode) {
     return (

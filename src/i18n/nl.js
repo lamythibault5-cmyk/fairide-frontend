@@ -4263,6 +4263,8 @@ export default {
       submit: 'Mijn wachtwoord herstellen'
     },
     alertBar: {
+      voir: 'Bekijken',
+      activerSon: 'Bestelgeluid aanzetten',
       settings: 'Instellingen van het alarm',
       repeats: 'Herhalingen van het alarm',
       repeatsN: '{n} keer bellen',

@@ -338,7 +338,11 @@ async function preparerConnexion() {
         google: { webClientId, iOSClientId: import.meta.env.VITE_GOOGLE_IOS_CLIENT_ID || undefined, iOSServerClientId: webClientId, mode: 'online' },
         ...(plateforme() === 'ios' ? { apple: {} } : {})
       });
-      return SocialLogin;
+      // DANS UNE BOÎTE, JAMAIS SEUL. Un greffon Capacitor répond à N'IMPORTE QUEL nom de méthode, `then` compris : rendu
+      // tel quel par une fonction async, il passe pour une promesse, et JavaScript appelle SocialLogin.then(…) — une
+      // méthode que le greffon natif n'a pas et qui ne répond jamais. La connexion attendait sans fin, bouton grisé, sans
+      // erreur ni ligne dans le journal Android (trouvé au logcat sur une Galaxy Tab S7+, 17 oct. 2026).
+      return { SocialLogin };
     })().catch((e) => { connexionPrete = null; throw e; });
   }
   return connexionPrete;
@@ -347,10 +351,9 @@ async function preparerConnexion() {
 export function appleDisponible() { return estNatif() && plateforme() === 'ios'; }
 
 export async function connexionFournisseur(fournisseur) {
-  const SocialLogin = await preparerConnexion();
-  // Google sur Android : AUCUNE liste « scopes ». Le greffon refuse toute liste (« You CANNOT use scopes without
-  // modifying the main activity ») tant que MainActivity n'est pas modifiée, et e-mail + profil + openid sont déjà
-  // demandés par défaut (GoogleProvider.java). La connexion échouait avant même d'ouvrir la feuille Google (16 oct. 2026).
+  const { SocialLogin } = await preparerConnexion();
+  // Google sur Android : pas de liste « scopes ». E-mail + profil + openid sont déjà demandés par défaut
+  // (GoogleProvider.java), et le greffon refuse toute liste si MainActivity n'implémente pas son interface.
   const options = fournisseur === 'apple' ? { scopes: ['email', 'name'] }
     : plateforme() === 'android' ? {} : { scopes: ['email', 'profile'] };
   const { result } = await SocialLogin.login({ provider: fournisseur, options });

@@ -4254,6 +4254,8 @@ export default {
       submit: 'Reset my password'
     },
     alertBar: {
+      voir: 'View',
+      activerSon: 'Turn on order sound',
       settings: 'Alarm settings',
       repeats: 'Alarm repeats',
       repeatsN: 'Ring {n} times',
