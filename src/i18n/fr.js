@@ -1097,7 +1097,7 @@ export default {
       pdfFailed: 'Le PDF n\'a pas pu être ouvert.'
     },
     driverDocs: {
-      title: 'Mes documents',
+      title: 'Mes pièces',
       sub: 'Identité, attestation, autres pièces',
       intro: 'Les documents déposés à l\'inscription et pendant ton dossier livreur. Tu peux remplacer une face tant qu\'elle n\'est pas vérifiée par Fairide.',
       identityVerified: 'Identité vérifiée via {provider}',
@@ -1121,7 +1121,7 @@ export default {
       errFront: 'Ajoute la photo du recto.',
       errBack: 'Ajoute la photo du verso.',
       privacy: 'Documents stockés de façon sécurisée, visibles uniquement par toi et l\'équipe Fairide, jamais partagés avec les clients ni les restaurants.',
-      uploadFailed: 'Certains documents n\'ont pas pu être envoyés. Tu peux les ajouter dans Mon compte › Mes documents.',
+      uploadFailed: 'Certains documents n\'ont pas pu être envoyés. Tu peux les ajouter dans Mon compte › Mes pièces.',
       selfie: 'Selfie (visage découvert)',
       selfieHelp: 'Prends-le maintenant avec la caméra avant, sans lunettes de soleil ni casquette : Fairide le compare à ta pièce d\'identité.',
       errSelfie: 'Ajoute ton selfie.'
@@ -4750,7 +4750,7 @@ export default {
       vatRate: 'TVA ({rate}%)',
       pageIntro: 'Tes factures mensuelles de commission (pièces comptables, envoyées aussi par e-mail), tes relevés détaillés par semaine ou par mois, et tes factures d\'abonnement.',
       tabInvoices: 'Mes factures',
-      tabStatements: 'Relevés par semaine / mois',
+      tabStatements: 'Relevés',
       tabSubscription: 'Abonnement',
       archiveDesc2: 'Une facture par mois, émise automatiquement en début de mois pour le mois écoulé et envoyée par e-mail avec le PDF. Chaque PDF détaille toutes les commandes : date, type, montant, taux et commission (sans TVA : Fairide relève du régime de franchise). pour la recevoir à nouveau, UBL pour ton logiciel comptable (Peppol).'
     },

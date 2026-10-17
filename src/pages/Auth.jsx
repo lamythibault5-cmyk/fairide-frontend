@@ -476,9 +476,16 @@ export default function Auth() {
       const nav = performance.getEntriesByType?.('navigation')?.[0];
       const b = JSON.parse(localStorage.getItem(CLE_BROUILLON) || 'null');
       if (!b || Date.now() - (b.at || 0) > BROUILLON_MAX_MS) { localStorage.removeItem(CLE_BROUILLON); return; }
-      // Arrivée par un lien vers un AUTRE type de compte (« Devenir livreur » après un brouillon de commerce) : le lien
-      // l'emporte, le brouillon reste pour plus tard. Un rechargement reprend toujours.
-      if (nav?.type !== 'reload' && (roleHint || audience) && b.champs?.role && b.champs.role !== role) return;
+      // Hors rechargement, L'ADRESSE DIT CE QUE LA PERSONNE VIENT FAIRE, et elle l'emporte sur le brouillon (bug du
+      // 2026-10-17 : le brouillon est écrit à chaque visite, connexion comprise ; repris tel quel, il rouvrait la connexion
+      // quand on cliquait « Inscription », et le formulaire de connexion à la place de « Mot de passe oublié » (?oubli=1)).
+      // On ne reprend donc qu'une inscription en cours, et seulement quand on revient s'inscrire : pas par « Connexion »
+      // (/login seul), pas par « Mot de passe oublié », pas par un lien vers un AUTRE type de compte (« Devenir livreur »
+      // après un brouillon de commerce). Le brouillon reste pour plus tard. Un rechargement reprend toujours.
+      if (nav?.type !== 'reload') {
+        if (b.champs?.mode !== 'register' || !audience || searchParams.get('oubli') === '1') return;
+        if ((roleHint || audience) && b.champs?.role && b.champs.role !== role) return;
+      }
       if (nav?.type !== 'reload' && b.champs?.mode === 'register') setBrouillonRepris(true);
       attenteBrouillon.current = { role: b.champs?.role ?? role, mode: b.champs?.mode ?? mode };
       for (const [cle, valeur] of Object.entries(b.champs || {})) champsBrouillon[cle]?.[1](valeur);

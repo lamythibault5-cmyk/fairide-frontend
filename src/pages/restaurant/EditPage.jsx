@@ -21,7 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { RouteMiseEnLigne, EtapesMiseEnLigne } from '../../components/commerce/MiseEnLigne';
 import useMiseEnLigne from '../../components/commerce/useMiseEnLigne';
 import { experienceApp } from '../../natif';
-import { imgProps } from '../../images';
+import { imgProps, cacherImageCassee } from '../../images';
 import Icone from '../../components/Icone';
 
 // « Mon commerce » : une rangée par sujet, qui dit l'état actuel, et un sous-écran pour le changer.
@@ -92,7 +92,7 @@ export default function EditPage() {
       <div className="sp-fiche">
         <div className="sp-fiche-photo">
           {r.coverImageUrl
-            ? <img {...imgProps(r.coverImageUrl, 380, '380px')} alt="" />
+            ? <img {...imgProps(r.coverImageUrl, 380, '380px')} alt="" onError={cacherImageCassee} />
             : <span><Icone nom="apercu" taille={20} />{t('sitePro.photoAbsente')}</span>}
         </div>
         <div className="sp-fiche-corps">

@@ -1097,7 +1097,7 @@ export default {
       pdfFailed: 'De pdf kon niet geopend worden.'
     },
     driverDocs: {
-      title: 'Mijn documenten',
+      title: 'Mijn stukken',
       sub: 'Identiteitsbewijs voor- / achterkant, studentenattest, andere stukken',
       intro: 'De documenten toegevoegd bij de inschrijving en tijdens je koeriersdossier. Je kunt een kant vervangen zolang Fairide ze niet heeft geverifieerd.',
       identityVerified: 'Identiteit geverifieerd via {provider}',
@@ -1121,7 +1121,7 @@ export default {
       errFront: 'Voeg de foto van de voorkant toe.',
       errBack: 'Voeg de foto van de achterkant toe.',
       privacy: 'Documenten worden veilig bewaard, alleen zichtbaar voor jou en het Fairide-team, nooit gedeeld met klanten of restaurants.',
-      uploadFailed: 'Sommige documenten konden niet verstuurd worden. Je kunt ze toevoegen in Mijn account › Mijn documenten.',
+      uploadFailed: 'Sommige documenten konden niet verstuurd worden. Je kunt ze toevoegen in Mijn account › Mijn stukken.',
       selfie: 'Selfie (gezicht onbedekt)',
       selfieHelp: 'Neem hem nu met de frontcamera, zonder zonnebril of pet: Fairide vergelijkt hem met je identiteitsbewijs.',
       errSelfie: 'Voeg je selfie toe.'
@@ -4745,7 +4745,7 @@ export default {
       vatRate: 'Btw ({rate}%)',
       pageIntro: 'Je maandelijkse commissiefacturen (boekhoudkundige stukken, ook per e-mail), je gedetailleerde overzichten per week of maand, en je abonnementsfacturen.',
       tabInvoices: 'Mijn facturen',
-      tabStatements: 'Overzichten per week / maand',
+      tabStatements: 'Overzichten',
       tabSubscription: 'Abonnement',
       archiveDesc2: 'Eén factuur per maand, automatisch uitgegeven begin elke maand voor de voorbije maand en per e-mail verstuurd met de pdf. Elke pdf detailleert alle bestellingen: datum, type, bedrag, tarief en commissie (zonder btw: Fairide valt onder de vrijstellingsregeling voor kleine ondernemingen). om ze opnieuw te ontvangen, UBL voor je boekhoudsoftware (Peppol).'
     },
