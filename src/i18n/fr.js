@@ -4263,6 +4263,8 @@ export default {
       submit: 'Réinitialiser mon mot de passe'
     },
     alertBar: {
+      voir: 'Voir',
+      activerSon: 'Activer le son des commandes',
       settings: 'Réglages de l\'alarme',
       repeats: 'Répétitions de l\'alarme',
       repeatsN: 'Sonne {n} fois',

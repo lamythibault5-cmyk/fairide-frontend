@@ -331,13 +331,17 @@ export default function DashboardLayout() {
           (CarteAValider) et la liste de MenuReadiness. Complète sur Mon commerce (la route du bandeau, EditPage), une
           rangée « Prochaine étape » ailleurs — y compris sur le terminal. En « agir pour », l'équipe voit la liste sans
           aucun bouton : elle ne signe ni ne valide rien à la place du commerce. */}
-      {!surAccueil && !commandesSite && !membreEquipe && (
+      {/* Depuis le 2026-10-17 (fondateur : deux boutons lime au-dessus du titre de chaque page), la rangée « Prochaine étape »
+          ne vit plus que sur la page Commandes de l'app (le terminal) : l'accueil a la liste complète, et les autres pages
+          (menu, factures, promotions, avis…) n'ont pas à la répéter. */}
+      {chemin === '/dashboard/orders' && !commandesSite && !membreEquipe && (
         <MiseEnLigne restaurant={restaurant} restoId={restoId} token={token} onConnect={connectOnboard} connecting={connecting}
           onChange={() => loadDashboard(restoId)} lectureSeule={!!actingAs} />
       )}
       {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même
           s'il est en train de modifier son menu ou de consulter ses avis. */}
-      {!commandesSite && <NewOrderAlertBar {...orderAlert} push={push} />}
+      {/* Barre complète sur l'accueil et les commandes ; ailleurs, la version compacte (NewOrderAlertBar.jsx). */}
+      {!commandesSite && <NewOrderAlertBar {...orderAlert} push={push} compact={!surAccueil && chemin !== '/dashboard/orders'} />}
     </>
   );
 
