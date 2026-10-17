@@ -286,7 +286,9 @@ export default function Layout() {
               dernier, son bord droit est collé au bord de la rangée : sa position ne dépend plus
               de la largeur de quoi que ce soit. Voir .header-row dans styles.css. */}
           <div className="row header-row">
-            <Link className="brand" to="/">
+            {/* aria-label : sur la fiche d'un commerce (en-tête allégé), le lien ne porte que le vélo, sans le mot — il lui
+                fallait un nom pour les lecteurs d'écran (vérification automatique du 2026-10-17). */}
+            <Link className="brand" to="/" aria-label="Fairide">
               {/* Sans tuile : le vélo lime flotte sur l'iris, net à toute densité (SVG). 78px de LARGE : le
                   vélo est en paysage (82 × 42), il ne pèse donc qu'environ 40px de haut — la hauteur
                   du mot. Le bol carré, entre le 2026-09-18 et le 2026-09-27, tenait à 44. */}
