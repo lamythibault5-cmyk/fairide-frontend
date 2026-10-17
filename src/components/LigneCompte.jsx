@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { etatFeuille } from '../feuilles';
 import Icone from './Icone';
 import SousEcran from './SousEcran';
 import { experienceApp } from '../natif';
@@ -26,6 +27,7 @@ const APPLI = experienceApp();
 // est donc résolue en SVG ; tout autre nœud React est rendu tel quel, ce qui laisse passer le cas
 // où l'icône est du contenu et non de l'interface (un emoji de cuisine, par exemple).
 export default function LigneCompte({ to, onClick, icone, titre, sous, danger = false, ouverte = false, children, action, accent }) {
+  const location = useLocation();
   const pliable = children !== undefined;
   const contenu = (
     <>
@@ -45,7 +47,8 @@ export default function LigneCompte({ to, onClick, icone, titre, sous, danger = 
   if (action !== undefined && !pliable && !to && !onClick) {
     return <div className={`${classe} account-link-row--statique`}>{contenu}</div>;
   }
-  if (to) return <Link to={to} className={classe}>{contenu}</Link>;
+  // Favoris, Mes factures, Mes documents… s'ouvrent en feuille par-dessus Mon compte (feuilles.js).
+  if (to) return <Link to={to} state={etatFeuille(to, location)} className={classe}>{contenu}</Link>;
   if (!pliable) return <button type="button" className={classe} onClick={onClick}>{contenu}</button>;
   return (
     <div className={`account-pliable${ouverte ? ' ouverte' : ''}`}>

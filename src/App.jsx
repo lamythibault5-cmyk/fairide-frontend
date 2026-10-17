@@ -1,7 +1,10 @@
 import { Suspense, lazy } from 'react';
 import { lazyPage } from './lazyPage';
 import { experienceApp } from './natif';
-import { Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
+import PageFeuille from './components/PageFeuille';
+import { estPageEnFeuille } from './feuilles';
+import { useLanguage } from './context/LanguageContext';
 import Layout from './components/Layout';
 import ScrollRestorer from './components/ScrollRestorer';
 import NavigationFeedback from './components/NavigationFeedback';
@@ -136,6 +139,20 @@ function RedirectionFiche() {
 }
 
 export default function App() {
+  /* PAGES EN FEUILLE (feuilles.js) : ouverte depuis Mon compte avec `state.fond`, la page demandée monte en feuille et la
+     page d'où l'on vient reste rendue dessous, intacte (Routes avec `location={fond}`). Fermer la feuille = revenir d'un pas. */
+  const location = useLocation();
+  const { t } = useLanguage();
+  const fond = location.state?.fond && estPageEnFeuille(location.pathname) ? location.state.fond : null;
+  const pagesEnFeuille = [
+    ['/favorites', t('nav.favorites'), <ProtectedRoute role="client"><Favorites /></ProtectedRoute>],
+    ['/orders', t('nav.orders'), <ProtectedRoute role="client"><Orders /></ProtectedRoute>],
+    ['/invoices', t('accountUi.myInvoices'), <ProtectedRoute role="client"><ClientInvoicesPage /></ProtectedRoute>],
+    ['/documents', t('mesDocuments.rowTitle'), <ProtectedRoute><DocumentsPage /></ProtectedRoute>],
+    ['/driver/earnings', t('nav.earnings'), <ProtectedRoute role="driver"><DriverEarningsPage /></ProtectedRoute>],
+    ['/driver/invoices', t('accountUi.myInvoices'), <ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>],
+    ['/driver/reviews', t('accountUi.customerReviews'), <ProtectedRoute role="driver"><DriverReviewsPage /></ProtectedRoute>]
+  ];
   return (
     <>
       <ScrollRestorer />
@@ -145,7 +162,7 @@ export default function App() {
           au chargement des données, donc l'attente d'un module a la même apparence que l'attente d'une
           requête — pas un deuxième vocabulaire visuel à apprendre pour l'utilisateur. */}
       <Suspense fallback={<div className="wrap" style={{ paddingTop: 24 }}><SkeletonCards count={3} /></div>}>
-      <Routes>
+      <Routes location={fond || location}>
       {/* Hors de <Layout> : l'accueil de l'application est plein écran, sans en-tête ni pied de page du site. */}
       <Route path="/bienvenue" element={<Bienvenue />} />
       <Route element={<Layout />}>
@@ -270,6 +287,13 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
       </Routes>
+      {fond && (
+        <Routes>
+          {pagesEnFeuille.map(([chemin, titre, page]) => (
+            <Route key={chemin} path={chemin} element={<PageFeuille titre={titre}><Suspense fallback={<SkeletonCards count={3} />}>{page}</Suspense></PageFeuille>} />
+          ))}
+        </Routes>
+      )}
       </Suspense>
     </>
   );

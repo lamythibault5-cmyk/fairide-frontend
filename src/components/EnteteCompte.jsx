@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { etatFeuille } from '../feuilles';
 import Icone from './Icone';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -11,6 +12,7 @@ import { useLanguage } from '../context/LanguageContext';
  * Les raccourcis ne créent aucune destination : ce sont des pages qui existent déjà (voir Account.jsx, `raccourcis`). */
 export default function EnteteCompte({ nom, email, initiales, raccourcis }) {
   const { t } = useLanguage();
+  const location = useLocation();
   return (
     <div className="compte-bandeau">
       <div className="compte-tete">
@@ -24,7 +26,8 @@ export default function EnteteCompte({ nom, email, initiales, raccourcis }) {
       </div>
       <nav className="compte-raccourcis" aria-label={t('ecranCompte.raccourcis')}>
         {raccourcis.map((r) => (
-          <Link key={r.to} to={r.to} className="compte-raccourci">
+          // Favoris, Mes commandes, Mes factures… s'ouvrent en feuille par-dessus Mon compte (feuilles.js).
+          <Link key={r.to} to={r.to} state={etatFeuille(r.to, location)} className="compte-raccourci">
             <Icone nom={r.icone} taille={24} />
             <span>{r.libelle}</span>
           </Link>

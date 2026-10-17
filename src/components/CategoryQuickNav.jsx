@@ -33,6 +33,40 @@ const MARGE_SEUIL_PX = 8;
 // (appuyer, glisser la lentille) vit dans bandeSectionsVerre.js, chargé à la demande dans l'app seulement.
 // `pouce` (fiche d'un commerce sur le site, 2026-10-16, « Blanc plein » de mockups/site-ordinateur.html) : la même pastille
 // iris qui glisse d'une section à l'autre, sur une bande blanche pleine — sans verre ni geste au doigt (rien de plus à charger).
+/* LE SAUT VERS UNE SECTION, AU RYTHME DE LA BARRE D'ONGLETS (fondateur, 2026-10-17 : « l'animation est un peu trop longue ;
+ * même style et même durée que la barre des tâches »). Le défilement « smooth » du navigateur choisit sa propre durée —
+ * plus d'une seconde vers une section éloignée. Il est remplacé par un défilement à durée fixe : 0,42 s et la courbe
+ * --ressort-ui, celles de la pastille qui glisse sous les onglets (styles.css, .nav-curseur). Le doigt ou la molette
+ * l'interrompent. Sans mouvement (prefers-reduced-motion) : on y est tout de suite. */
+const DUREE_SAUT_MS = 420;
+// --ressort-ui (styles.css) : la même courbe, en points réguliers, interpolée entre deux points.
+const RESSORT_UI = [0, 0.158, 0.413, 0.626, 0.773, 0.868, 0.925, 0.958, 0.977, 0.987, 1];
+function ressortUi(t) {
+  const x = Math.min(1, Math.max(0, t)) * (RESSORT_UI.length - 1);
+  const i = Math.min(RESSORT_UI.length - 2, Math.floor(x));
+  return RESSORT_UI[i] + (RESSORT_UI[i + 1] - RESSORT_UI[i]) * (x - i);
+}
+function defilerVers(cible, fin) {
+  const depart = window.scrollY;
+  const ecart = cible - depart;
+  if (!window.matchMedia || window.matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(ecart) < 2) {
+    window.scrollTo(0, cible); fin(); return;
+  }
+  let arrete = false;
+  const arreter = () => { arrete = true; };
+  const gestes = ['touchstart', 'wheel', 'keydown'];
+  gestes.forEach((g) => window.addEventListener(g, arreter, { passive: true, once: true }));
+  const t0 = performance.now();
+  const pas = (maintenant) => {
+    if (arrete) { gestes.forEach((g) => window.removeEventListener(g, arreter)); fin(); return; }
+    const t = (maintenant - t0) / DUREE_SAUT_MS;
+    window.scrollTo(0, depart + ecart * ressortUi(t));
+    if (t < 1) requestAnimationFrame(pas);
+    else { gestes.forEach((g) => window.removeEventListener(g, arreter)); fin(); }
+  };
+  requestAnimationFrame(pas);
+}
+
 export default function CategoryQuickNav({ categories, verre = false, pouce = false }) {
   const avecLentille = verre || pouce;
   const { t, language } = useLanguage();
@@ -150,14 +184,13 @@ export default function CategoryQuickNav({ categories, verre = false, pouce = fa
   function jumpTo(id) {
     const el = document.getElementById(`menu-cat-${id}`);
     if (!el) return;
-    const doux = !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-    // La section demandée s'allume tout de suite ; le suivi reprend une fois le défilement fini (scrollend), ou
-    // au plus tard après 1,2 s pour les navigateurs qui n'ont pas cet événement.
+    // La section demandée s'allume tout de suite ; le suivi reprend une fois le saut fini (voir defilerVers).
     setActive(id);
-    verrou.current = Date.now() + 1200;
-    const liberer = () => { verrou.current = 0; window.removeEventListener('scrollend', liberer); };
-    window.addEventListener('scrollend', liberer);
-    el.scrollIntoView({ behavior: doux ? 'smooth' : 'auto', block: 'start' });
+    verrou.current = Date.now() + DUREE_SAUT_MS + 400;
+    // Même point d'arrivée que scrollIntoView : le haut de la section, moins sa marge d'ancrage (sous les ronds et la bande).
+    const marge = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+    const cible = Math.max(0, Math.min(el.getBoundingClientRect().top + window.scrollY - marge, document.documentElement.scrollHeight - window.innerHeight));
+    defilerVers(cible, () => { verrou.current = 0; });
   }
 
   if (categories.length < 2) return null;

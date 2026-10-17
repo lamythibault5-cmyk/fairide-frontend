@@ -306,9 +306,11 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .plat.plat-bistrot { gap: 12px; padding: 12px 0; min-height: 86px; align-items: flex-start; border-bottom-color: transparent; }
 .fiche-appli .plat-bistrot .plat-visuel { width: 56px; height: 56px; border-radius: 14px; }
 .fiche-appli .plat-bistrot .plat-texte { gap: 3px; }
-.fiche-appli .bistrot-l1 { display: flex; align-items: flex-end; gap: 6px; min-width: 0; }
+/* Le prix et ses points restent sur la PREMIÈRE ligne du nom (fondateur, 2026-10-17 : « Pizza Margherita napolitaine » sur deux
+   lignes poussait le prix sur la seconde, à la hauteur du « + », qui le recouvrait). Le nom s'enroule sous lui-même. */
+.fiche-appli .bistrot-l1 { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
 .fiche-appli .bistrot-l1 .plat-nom { flex: 0 1 auto; min-width: 0; }
-.fiche-appli .bistrot-points { flex: 1 1 12px; min-width: 12px; height: 0; border-bottom: 2px dotted #C9C4BA; transform: translateY(-5px); }
+.fiche-appli .bistrot-points { flex: 1 1 12px; min-width: 12px; height: 0; margin-top: 15px; border-bottom: 2px dotted #C9C4BA; }
 .fiche-appli .bistrot-l1 .plat-prix { flex: none; white-space: nowrap; font-size: 15px; }
 .fiche-appli .plat-bistrot .plat-desc, .fiche-appli .plat-bistrot .plat-allergenes, .fiche-appli .plat-bistrot .plat-prix-ligne { padding-right: 50px; }
 .fiche-appli .plat-bistrot .plat-prix-ligne { margin-top: 2px; }
