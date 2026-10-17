@@ -5194,3 +5194,23 @@ body:has(.carte-page .carte-fiche, .carte-page .map-detail-card) .panier-pilule-
 @media (min-width: 901px) { .panier-pilule.panier-pilule--bulle, html.appli .panier-pilule.panier-pilule--bulle { right: 24px; } }
 @keyframes bulle-arrive { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes bulle-rebond { 0%, 100% { transform: none; } 35% { transform: scale(1.12); } 65% { transform: scale(.95); } }
+
+/* PAGE EN FEUILLE (PageFeuille.jsx, feuilles.js ; fondateur, 2026-10-17). Favoris, Mes commandes, Mes factures… ouverts depuis Mon
+   compte montent en feuille par-dessus, comme « Mes infos » : la feuille de la fiche d'un plat (plat-feuille), sous les fenêtres
+   ordinaires (90 contre 100) pour qu'une confirmation ouverte depuis la page passe devant. Le contenu reçoit les marges de la
+   page (16 px) ; un bandeau iris (Favoris, Mes commandes vide) touche le haut de la feuille, sous le rond ‹ et la poignée. */
+.plat-feuille.page-feuille { z-index: 90; }
+.page-feuille .plat-panneau { position: relative; }
+.page-feuille-fermer {
+  position: absolute; z-index: 4; top: calc(12px + env(safe-area-inset-top)); left: 12px; width: 44px; height: 44px; min-height: 0; padding: 0;
+  display: grid; place-items: center; border-radius: 50%; border: 2px solid #fff; background: var(--iris); color: #fff; cursor: pointer;
+}
+html.appli .page-feuille-fermer { box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 0 1px 3px rgba(20, 18, 31, .18); }
+.page-feuille-fermer:active { transform: scale(.9); }
+.page-feuille-fermer:focus-visible { outline: 3px solid var(--lime); outline-offset: 1px; }
+.page-feuille .plat-poignee { display: block; }
+.page-feuille-corps { --eb-mh: 0px; --eb-mg: 16px; --lt-mg: 16px; padding: 0 16px calc(32px + env(safe-area-inset-bottom)); }
+/* Une page sans bandeau commence sous le rond ‹ ; une page à bandeau iris le laisse passer par-dessus son titre. */
+.page-feuille-corps > :first-child:not(.ecran-bandeau) { padding-top: calc(68px + env(safe-area-inset-top)); }
+.page-feuille-corps .eb-bandeau { padding-top: calc(70px + env(safe-area-inset-top)); }
+@media (min-width: 901px) { .page-feuille .plat-poignee { display: none; } }

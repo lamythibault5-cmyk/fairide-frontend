@@ -57,6 +57,8 @@ export default function ScrollRestorer() {
   useLayoutEffect(() => {
     const premierChargement = isFirstRun.current;
     isFirstRun.current = false;
+    // Une page qui s'ouvre en feuille (feuilles.js) défile dans sa feuille : la page de fond ne bouge pas.
+    if (location.state?.fond) return undefined;
     const retour = navigationType === 'POP' || location.state?.restaurerDefilement === true;
 
     if (!premierChargement && !retour) {
