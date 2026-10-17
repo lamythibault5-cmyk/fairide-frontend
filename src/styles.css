@@ -5165,8 +5165,8 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
     bottom: calc(var(--hauteur-onglets) - 2px + env(safe-area-inset-bottom));
   }
   /* La barre pleine largeur (app, et fiche d'un commerce sur le site) : elle se resserre au centre, le sac à gauche, le total à droite. */
-  html.appli.barre-compacte .panier-pilule,
-  html.barre-compacte:not(.appli) body:has(.fiche-site) .panier-pilule {
+  html.appli.barre-compacte .panier-pilule:not(.panier-pilule--bulle),
+  html.barre-compacte:not(.appli) body:has(.fiche-site) .panier-pilule:not(.panier-pilule--bulle) {
     max-width: 176px; height: 52px; padding: 4px 4px 4px 18px; justify-content: space-between;
   }
   html.appli.barre-compacte .panier-pilule-total,
@@ -5174,3 +5174,23 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
   .panier-pilule-total { transition: height .14s var(--ressort-ui); }
 }
 @media (prefers-reduced-motion: reduce) { .panier-pilule, .panier-pilule-texte { transition: none; } }
+
+/* LA BULLE DU PANIER (FloatingCart, hors de la liste et de la fiche d'un commerce ; fondateur, 2026-10-17). Un rond de 56 px
+   sur le côté droit, au-dessus des onglets (en bas à droite sur ordinateur) : le sac et son compteur lime, rien d'autre. Il
+   descend avec la barre d'onglets quand elle se réduit (règle html.barre-compacte plus haut). Dans l'app, le verre de la
+   barre du panier ; sur le site, l'iris plein. */
+.panier-pilule.panier-pilule--bulle,
+html.appli .panier-pilule.panier-pilule--bulle {
+  left: auto; right: 16px; margin: 0; width: 56px; max-width: none; height: 56px; padding: 0; gap: 0;
+  justify-content: center; border-radius: 50%; transform: none; animation-name: bulle-arrive;
+}
+html .panier-pilule--bulle .panier-pilule-texte, html .panier-pilule--bulle .panier-pilule-total,
+html.appli .panier-pilule--bulle .panier-pilule-texte, html.appli .panier-pilule--bulle .panier-pilule-total { display: none; }
+/* Sur la Carte, les boutons du zoom occupent le coin droit : la bulle passe à gauche, et s'efface quand la fiche d'un
+   commerce est ouverte en bas de la carte. */
+body:has(.carte-page) .panier-pilule.panier-pilule--bulle, html.appli body:has(.carte-page) .panier-pilule.panier-pilule--bulle { right: auto; left: 16px; }
+body:has(.carte-page .carte-fiche, .carte-page .map-detail-card) .panier-pilule--bulle { display: none; }
+.panier-pilule.panier-pilule--bulle.panier-pilule--rebond, html.appli .panier-pilule.panier-pilule--bulle.panier-pilule--rebond { animation-name: bulle-rebond; }
+@media (min-width: 901px) { .panier-pilule.panier-pilule--bulle, html.appli .panier-pilule.panier-pilule--bulle { right: 24px; } }
+@keyframes bulle-arrive { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes bulle-rebond { 0%, 100% { transform: none; } 35% { transform: scale(1.12); } 65% { transform: scale(.95); } }

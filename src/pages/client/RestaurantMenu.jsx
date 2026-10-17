@@ -39,6 +39,7 @@ import { resolveItemImage, restaurantTypeLabel } from '../../menuCategories';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
 import { experienceApp } from '../../natif';
 import PanierColonne from '../../components/PanierColonne';
+import { repeterTantQueLibre } from '../../defilementAuto';
 import '../../ecran-fiche.css';
 import '../../site-fiche.css';
 
@@ -237,9 +238,9 @@ export default function RestaurantMenu() {
 
   useEffect(() => {
     if (!isRefreshRef.current) {
-      // Vraie navigation vers un nouveau restaurant : on part du haut, et on oublie toute position de
-      // scroll sauvegardée pour cette page lors d'une visite précédente.
-      window.scrollTo(0, 0);
+      // Pas un rechargement : on oublie toute position sauvegardée lors d'une visite précédente. Le placement de la page
+      // (en haut pour une nouvelle visite, à la position quittée pour un retour arrière) est l'affaire de ScrollRestorer :
+      // le scrollTo(0, 0) qui était ici ramenait en haut au RETOUR du panier, contre la restauration (2026-10-17).
       sessionStorage.removeItem(`fairide_scroll_${id}`);
     }
     sessionStorage.setItem('fairide_last_restaurant_viewed', id);
@@ -263,11 +264,10 @@ export default function RestaurantMenu() {
 
   // Sauvegarde en continu la position de scroll pour pouvoir la restaurer après un rafraîchissement,
   // puisque le contenu (menu, avis...) se charge de façon asynchrone et décale la hauteur de la page.
+  // La restauration native du navigateur est coupée une fois pour toutes par ScrollRestorer (2026-10-17). Elle l'était
+  // ici, le temps de la fiche, puis RÉTABLIE en la quittant : après la visite d'un commerce, le navigateur se remettait à
+  // replacer lui-même les pages au retour arrière, en concurrence avec ScrollRestorer, sur tout le site.
   useEffect(() => {
-    const prevRestoration = 'scrollRestoration' in window.history ? window.history.scrollRestoration : null;
-    // Désactive la restauration native du navigateur au rechargement : elle déclenche ses propres
-    // événements "scroll" qui écraseraient notre position sauvegardée avant qu'on ait pu la restaurer.
-    if (prevRestoration) window.history.scrollRestoration = 'manual';
     function saveScroll() {
       sessionStorage.setItem(`fairide_scroll_${id}`, String(window.scrollY));
     }
@@ -277,7 +277,6 @@ export default function RestaurantMenu() {
       saveScroll();
       window.removeEventListener('scroll', saveScroll);
       window.removeEventListener('beforeunload', saveScroll);
-      if (prevRestoration) window.history.scrollRestoration = prevRestoration;
     };
   }, [id]);
 
@@ -294,13 +293,8 @@ export default function RestaurantMenu() {
           // Réapplique la position à plusieurs reprises : les images du menu se chargent de façon
           // asynchrone et augmentent la hauteur de la page après le premier rendu, ce qui peut faire
           // "clamper" un scrollTo trop précoce à une position plus basse que la cible.
-          // Le client reprend la main (doigt, molette, clavier, clic) : on arrête de le replacer.
-          let lache = false;
-          const lacher = () => { lache = true; };
-          const gestes = ['touchstart', 'wheel', 'keydown', 'pointerdown'];
-          gestes.forEach((g) => window.addEventListener(g, lacher, { passive: true, once: true }));
-          const timers = [0, 100, 300, 600, 1000].map((d) => setTimeout(() => { if (!lache) window.scrollTo(0, targetY); }, d));
-          return () => { timers.forEach(clearTimeout); gestes.forEach((g) => window.removeEventListener(g, lacher)); };
+          // Le client reprend la main (doigt, molette, clavier, clic) : on arrête de le replacer (defilementAuto.js).
+          return repeterTantQueLibre(() => window.scrollTo(0, targetY), [0, 100, 300, 600, 1000]);
         }
       }
     }
