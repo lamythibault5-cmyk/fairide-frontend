@@ -34,6 +34,7 @@ const SOUS_TRAITANTS = [
   ['maptiler', 'MapTiler'],
   ['osmTiles', 'OpenStreetMap'],
   ['plausible', 'Plausible'],
+  ['gatewayapi', 'GatewayAPI'],
   ['cloudinary', 'Cloudinary'],
   ['anthropic', 'Anthropic'],
   ['sentry', 'Sentry'],
