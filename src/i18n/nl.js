@@ -5837,6 +5837,10 @@ export default {
       reglePourboires: 'van je fooien'
     },
     dashDriver: {
+      pickupConfirmNo: 'Nog niet',
+      pickupConfirmYes: 'Ja, ik heb ze',
+      pickupConfirmText: 'Controleer of je alle artikelen ({n}) van {restaurant} hebt. Na bevestiging ziet de klant dat de bestelling onderweg is.',
+      pickupConfirmTitle: 'Heb je de hele bestelling?',
       // Staat van het dossier vóór goedkeuring (UX-audit van 15/10/2026, Dashboard.jsx).
       fileToCompleteTitle: 'Je dossier is nog niet verstuurd',
       fileToCompleteText: 'Er blijven nog enkele stappen over voordat het Fairide-team het kan controleren. Wat je al invulde, blijft bewaard.',

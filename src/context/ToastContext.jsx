@@ -54,7 +54,10 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={toast}>
       {children}
       <div className={`toast${show ? ' show' : ''}${ton === 'erreur' ? ' toast-erreur' : ''}${ton === 'succes' ? ' toast-succes' : ''}`} role={ton === 'erreur' ? 'alert' : 'status'}>
+        {/* Aux couleurs de Fairide (fondateur, 2026-10-17 : « pas fan des messages noirs ») : information en iris, confirmation
+            en iris avec la coche lime, erreur en rouge avec son triangle. */}
         {ton === 'succes' && <span className="toast-coche" aria-hidden="true"><Icone nom="valider" taille={16} /></span>}
+        {ton === 'erreur' && <span className="toast-coche toast-coche--erreur" aria-hidden="true"><Icone nom="alerte" taille={16} /></span>}
         <span>{message}</span>
         {(ton === 'erreur' || String(message || '').length > SEUIL_LONG) && <button type="button" className="toast-fermer" onClick={fermer} aria-label={t('common.close')}>×</button>}
       </div>

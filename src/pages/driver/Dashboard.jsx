@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -78,10 +79,18 @@ function BoutonsItineraire({ adresse, lat, lng, t }) {
   const google = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(point || adresse)}`;
   // CÔTE À CÔTE (fondateur, 2026-10-16, maquette « Course en cours ») : Waze garde le bouton plein, Google Maps passe d'un
   // lien discret à un bouton à contour de même taille, plus facile à toucher au guidon.
+  // AUX COULEURS DE CHAQUE APP (fondateur, 2026-10-17) : Waze dans son bleu clair, Google Maps en blanc avec l'épingle rouge de
+  // Google — on reconnaît l'app avant de lire. Seule exception au « blanc ou iris » de la marque : ces boutons ouvrent une autre app.
   return (
     <div className="ecl-itineraire">
-      <a href={waze} target="_blank" rel="noopener noreferrer" className="btn-teal">{t('dashDriver.openWaze')}</a>
-      <a href={google} target="_blank" rel="noopener noreferrer" className="btn-outline" aria-label={`${t('dashDriver.directions')} (Google Maps)`}>Google Maps ↗</a>
+      <a href={waze} target="_blank" rel="noopener noreferrer" className="btn-nav btn-nav--waze">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3c-4.6 0-8 3.2-8 7.3 0 1.9.7 3.5 1.9 4.8l-.6 2.4a.6.6 0 0 0 .8.7l2.5-1.1c1 .4 2.2.6 3.4.6 4.6 0 8-3.2 8-7.4S16.6 3 12 3Z" fill="#fff" stroke="#0B1F2E" strokeWidth="1.6" strokeLinejoin="round" /><circle cx="9.3" cy="9.6" r="1" fill="#0B1F2E" /><circle cx="14.7" cy="9.6" r="1" fill="#0B1F2E" /><path d="M9.2 12.6c1.5 1.3 4.1 1.3 5.6 0" fill="none" stroke="#0B1F2E" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        {t('dashDriver.openWaze')}
+      </a>
+      <a href={google} target="_blank" rel="noopener noreferrer" className="btn-nav btn-nav--google" aria-label={`${t('dashDriver.directions')} (Google Maps)`}>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2.5c-3.9 0-7 3-7 6.9 0 5 7 12.1 7 12.1s7-7.1 7-12.1c0-3.9-3.1-6.9-7-6.9Z" fill="#EA4335" /><circle cx="12" cy="9.4" r="2.6" fill="#B31412" /></svg>
+        Google Maps
+      </a>
     </div>
   );
 }
@@ -367,6 +376,10 @@ export default function DriverDashboard() {
   // RETRAIT CONFIRMÉ PAR LE LIVREUR (simulation du 10 oct. 2026) : le commerce n'a plus rien à taper. Il compare à l'œil
   // le code affiché ici avec le sien, remet la commande, et c'est ce bouton qui la fait passer « en livraison ».
   const [retraitEnCours, setRetraitEnCours] = useState(null);
+  /* DEUX TEMPS POUR « COMMANDE RÉCUPÉRÉE » (fondateur, 2026-10-17 : « une vérification en deux étapes : oui, puis confirmer »).
+   * Le glisser (app) ou le bouton (site) ouvre d'abord la question « Tu as bien la commande ? », avec le nombre d'articles et le
+   * commerce ; seul « Oui, j'ai la commande » la marque récupérée — le client voit alors qu'elle est en route. */
+  const [retraitAConfirmer, setRetraitAConfirmer] = useState(null);
   async function confirmerRetrait(order) {
     setRetraitEnCours(order.id);
     try {
@@ -480,13 +493,24 @@ export default function DriverDashboard() {
       <DeliveryTiming order={o} />
       {/* Dans l'application : glisser pour confirmer (un appui dans la poche ne valide rien). Sur le site : le bouton. */}
       <div className="ecl-glisser">
-        <GlisserPourConfirmer libelle={t('dashDriver.pickedUpButton')} disabled={retraitEnCours === o.id} onConfirmer={() => confirmerRetrait(o)}>
-          <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => confirmerRetrait(o)}>
+        <GlisserPourConfirmer libelle={t('dashDriver.pickedUpButton')} disabled={retraitEnCours === o.id} onConfirmer={() => setRetraitAConfirmer(o)}>
+          <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => setRetraitAConfirmer(o)}>
             {retraitEnCours === o.id ? '…' : t('dashDriver.pickedUpButton')}
           </button>
         </GlisserPourConfirmer>
       </div>
       <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
+      <ConfirmDialog
+        open={retraitAConfirmer?.id === o.id}
+        icone="sac"
+        title={t('dashDriver.pickupConfirmTitle')}
+        message={t('dashDriver.pickupConfirmText', { n: (o.items || []).reduce((n, i) => n + (Number(i.qty) || 1), 0), restaurant: o.restaurantName || '' })}
+        confirmLabel={t('dashDriver.pickupConfirmYes')}
+        cancelLabel={t('dashDriver.pickupConfirmNo')}
+        loading={retraitEnCours === o.id}
+        onConfirm={async () => { await confirmerRetrait(o); setRetraitAConfirmer(null); }}
+        onCancel={() => setRetraitAConfirmer(null)}
+      />
     </>
   );
 

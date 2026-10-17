@@ -5828,6 +5828,10 @@ export default {
       reglePourboires: 'of your tips'
     },
     dashDriver: {
+      pickupConfirmNo: 'Not yet',
+      pickupConfirmYes: 'Yes, I have it',
+      pickupConfirmText: 'Check you have all the items ({n}) from {restaurant}. Once confirmed, the customer sees their order is on its way.',
+      pickupConfirmTitle: 'Got the whole order?',
       // File state before approval (UX audit of 15/10/2026, Dashboard.jsx).
       fileToCompleteTitle: "Your file hasn't been sent yet",
       fileToCompleteText: 'A few steps are left before the Fairide team can check it. What you already filled in is kept.',

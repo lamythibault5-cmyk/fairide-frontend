@@ -131,6 +131,17 @@
 .ecl-qte { flex: none; min-width: 24px; height: 24px; padding: 0 4px; border: 1px solid var(--line); border-radius: 6px; display: grid; place-items: center; font-size: 12.5px; font-weight: 700; }
 .ecl-itineraire { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 10px; }
 .ecl-itineraire a { width: 100%; padding: 12px 10px; font-size: 14.5px; font-weight: 700; text-align: center; text-decoration: none; border-radius: var(--radius-pill); box-sizing: border-box; }
+/* Les boutons d'itinéraire aux couleurs de leur app (2026-10-17) : Waze bleu clair à texte marine (blanc sur ce bleu ne se lit
+   pas), Google Maps blanc à filet gris, texte gris foncé, épingle rouge. Seule exception au « blanc ou iris » : ils ouvrent une
+   autre app, on doit la reconnaître d'un coup d'œil. */
+.ecl-itineraire .btn-nav { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border: 1px solid transparent; transition: transform .12s ease, filter .15s ease; }
+.ecl-itineraire .btn-nav:active { transform: scale(.97); }
+.ecl-itineraire .btn-nav svg { flex: none; }
+.ecl-itineraire .btn-nav--waze { background: #33CCFF; color: #0B1F2E; }
+.ecl-itineraire .btn-nav--waze:hover { filter: brightness(.96); color: #0B1F2E; }
+.ecl-itineraire .btn-nav--google { background: #fff; color: #3C4043; border-color: #DADCE0; }
+.ecl-itineraire .btn-nav--google:hover { background: #F8F9FA; color: #3C4043; }
+.ecl-itineraire .btn-nav:focus-visible { outline: 3px solid var(--iris); outline-offset: 2px; }
 .ecl-ligne { display: flex; align-items: center; gap: 12px; padding: 2px 0 12px; margin-bottom: 4px; border-bottom: 1px solid var(--line); font-size: 15px; }
 .ecl-ligne > svg { flex: none; color: var(--iris); }
 .ecl-ligne .ecl-grow { flex: 1; min-width: 0; font-weight: 600; }
