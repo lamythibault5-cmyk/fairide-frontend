@@ -3,7 +3,10 @@
 # POURQUOI. Construire le bundle .aab que Google Play demande (Play Console › Test and release › Internal testing ›
 # Create new release), signé avec la clé d'ENVOI ; Google le re-signe avec la clé qu'il garde (Play App Signing).
 # Lancement à la main seulement (Actions › App Android Play Store › Run workflow) : rien ne part vers le magasin sans
-# qu'on l'ait voulu. Le .aab est dans les artefacts du build, à déposer soi-même dans la Play Console.
+# qu'on l'ait voulu. Le .aab est ENVOYÉ PAR LE BUILD dans Internal testing (testeurs internes, sans revue de Google),
+# avec les notes de version tapées au lancement ; il reste aussi dans les artefacts. Jamais vers la production.
+# Pourquoi l'envoi direct : l'antivirus de l'ordinateur d'Owen (Defender, « Trojan:JS/Tisifi.A ») bloquait le
+# téléchargement du .zip à cause des pages Factures — fausse alerte, voir le message du commit (17 oct. 2026).
 #
 # CONFIGURATION (Réglages du dépôt › Secrets and variables › Actions).
 #   Secrets :
@@ -11,6 +14,9 @@
 #     ANDROID_UPLOAD_KEYSTORE_PASSWORD   son mot de passe. Sans elle le build S'ARRÊTE : un .aab non signé est refusé.
 #     GOOGLE_SERVICES_JSON             facultatif — le même que pour l'app de test, re-téléchargé APRÈS avoir ajouté
 #                                      l'app Android be.fairide.app dans Firebase (sinon pas de notifications push).
+#     PLAY_SERVICE_ACCOUNT_JSON        facultatif — clé JSON du compte de service Google Cloud (projet « Fairide »)
+#                                      invité dans la Play Console avec « Release to testing tracks » pour Fairide.
+#                                      Sans lui, pas d'envoi : le .aab reste à déposer à la main depuis les artefacts.
 #   Variables (les mêmes que Vercel › Production) :
 #     VITE_GOOGLE_CLIENT_ID, VITE_SENTRY_DSN, VITE_PLAUSIBLE_DOMAIN — facultatives.
 #
@@ -19,6 +25,11 @@ name: App Android Play Store
 
 on:
   workflow_dispatch:
+    inputs:
+      notes:
+        description: 'Notes de version (en français, vues par les testeurs)'
+        required: true
+        default: 'Corrections et améliorations.'
 
 concurrency:
   group: app-android-store
@@ -99,3 +110,31 @@ jobs:
           name: fairide-${{ github.run_number }}
           path: ${{ runner.temp }}/fairide-${{ github.run_number }}.aab
           retention-days: 30
+
+      # Un secret ne se lit pas dans un `if:` : on le teste dans une étape, qui dit oui ou non à la suivante.
+      - name: Envoi à la Play Console configuré ?
+        id: play
+        env:
+          SA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          if [ -z "$SA" ]; then
+            echo "Pas de PLAY_SERVICE_ACCOUNT_JSON : le .aab est dans les artefacts, à déposer à la main."
+            exit 0
+          fi
+          mkdir -p "$RUNNER_TEMP/notes"
+          printf '%s' "$NOTES" | head -c 500 > "$RUNNER_TEMP/notes/whatsnew-fr-FR"
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+
+      - name: Envoi dans Internal testing
+        if: steps.play.outputs.ok == 'true'
+        # v1.1.5, épinglée par son commit : cette action reçoit la clé du compte de service.
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: be.fairide.app
+          releaseFiles: ${{ runner.temp }}/fairide-${{ github.run_number }}.aab
+          releaseName: ${{ github.run_number }} (1.0)
+          track: internal
+          status: completed
+          whatsNewDirectory: ${{ runner.temp }}/notes
