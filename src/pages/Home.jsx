@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { experienceApp } from '../natif';
-import { lireBienvenue } from '../bienvenue';
+import { lireBienvenue, lireReprise } from '../bienvenue';
 import Landing from './Landing';
 
 export default function Home() {
@@ -12,7 +12,8 @@ export default function Home() {
     // des commerces, rangée autour de la commune donnée à l'accueil (communeProche, comme HeroAdresse sur le site).
     if (experienceApp()) {
       const b = lireBienvenue();
-      if (!b.vu) return <Navigate to="/bienvenue" replace />;
+      // Un accueil commencé et laissé avant le compte se reprend là où il s'était arrêté (bienvenue.js, lireReprise).
+      if (!b.vu || lireReprise()) return <Navigate to="/bienvenue" replace />;
       return <Navigate to="/restaurants" replace state={b.commune ? { communeProche: b.commune } : undefined} />;
     }
     return <Landing />;

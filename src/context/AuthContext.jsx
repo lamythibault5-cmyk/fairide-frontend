@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { api, setSessionExpiredHandler } from '../api';
 import { useToast } from './ToastContext';
 import { useLanguage } from './LanguageContext';
+import { effacerReprise } from '../bienvenue';
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = 'fairide_session';
@@ -117,6 +118,9 @@ export function AuthProvider({ children }) {
       else sessionStorage.removeItem(SIMU_KEY);
     } catch { /* sans stockage */ }
   }, [simulation]);
+
+  // Une session ouverte (inscription, connexion) : l'accueil de l'application n'a plus rien à reprendre (bienvenue.js).
+  useEffect(() => { if (session?.user) effacerReprise(); }, [session?.user]);
 
   // La langue choisie suit le compte : le backend l'utilise pour les e-mails envoyés plus tard, hors de
   // toute requête de l'utilisateur (livreur en route, réservation confirmée par le restaurateur...).
