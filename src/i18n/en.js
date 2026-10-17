@@ -6145,6 +6145,7 @@ export default {
       navAria: 'Account sections'
     },
     groupOrder: {
+      startShort: 'Together',
       start: 'Group order',
       youHost: 'You are the host: you pay for everything',
       hostIs: 'Host: {name}, who pays for everything',
@@ -6927,6 +6928,10 @@ export default {
       minimumLabel: 'Minimum order'
     },
     restaurantMenu: {
+      menuPreview: 'A taste of the menu',
+      ticketFromYou: 'from you',
+      ticketNoReviews: 'no reviews yet',
+      ticketReviews: '{n} reviews',
       closedForToday: 'This business is no longer taking orders today. It reopens tomorrow at {time}.',
       deliveryUnavailableZone: 'Delivery unavailable in this area for now: only takeaway orders are possible at this business.',
       notFound: 'This business does not exist, or is no longer on Fairide.',

@@ -6164,6 +6164,7 @@ export default {
       navAria: 'Rubriques du compte'
     },
     groupOrder: {
+      startShort: 'À plusieurs',
       start: 'Commande groupée',
       youHost: 'Tu es l\'hôte : tu paies le tout',
       hostIs: 'Hôte : {name}, qui paie le tout',
@@ -6980,6 +6981,10 @@ export default {
       minimumLabel: 'Commande minimum'
     },
     restaurantMenu: {
+      menuPreview: 'Aperçu de la carte',
+      ticketFromYou: 'de chez toi',
+      ticketNoReviews: 'pas encore d’avis',
+      ticketReviews: '{n} avis',
       closedForToday: 'Ce commerce ne prend plus de commandes aujourd\'hui. Il rouvre demain à {time}.',
       deliveryUnavailableZone: 'Livraison indisponible pour le moment dans cette zone : seules les commandes à emporter sont possibles chez ce commerce.',
       notFound: 'Ce commerce n\'existe pas ou n\'est plus sur Fairide.',

@@ -3,7 +3,7 @@ import { imgProps, cacherImageCassee } from '../../images';
 import urlSure from '../../urlSure';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
-import { euros } from '../../prixPlat';
+import { euros, prixRemise } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { tarifLivraison } from '../../livraison';
@@ -35,7 +35,8 @@ import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 import { localizedItem } from '../../menuTranslation';
-import { resolveItemImage, restaurantTypeLabel } from '../../menuCategories';
+import { resolveItemImage, restaurantTypeLabel, haversineDistanceKm } from '../../menuCategories';
+import { VeloMarque } from '../../components/EcranCommande';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
 import { experienceApp } from '../../natif';
 import PanierColonne from '../../components/PanierColonne';
@@ -557,20 +558,78 @@ export default function RestaurantMenu() {
      l'adresse, inconnue ici — l'heure estimée n'existe qu'une fois la commande passée. La maquette du site
      montrait une « Estimation » en minutes : pas reprise, pour la même raison (et le délai de préparation
      n'est pas dans la fiche publique). */
-  const panneauFrais = onlineOrderingDisabled ? null : APPLI ? (
-    <div className="fiche-panneau">
-      <b>{fraisLivraison}</b>
-      <span className="fiche-panneau-cle">{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</span>
-      {/* Distance choisie par le commerce (Mon commerce › Commandes et capacité). */}
-      {modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
-        <span className="fiche-panneau-cle">{t('restoMenuUi.deliversUpTo', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</span>
-      )}
+  /* LE BOUTON « COMMANDE GROUPÉE » (pages/client/CommandeGroupee.jsx) : compte client exigé, comme pour commander. Sur le site,
+     une pastille à filet iris sous la description ; dans l'app (version B), un lien court sur la rangée de la bascule. */
+  const boutonGroupe = user && !onlineOrderingDisabled && !(String(groupeEnCours()?.restaurantId) === String(restaurant.id) && !groupeQuitte) && (
+    <button type="button" className={APPLI ? 'fiche-groupe-lien' : 'eg-bouton-iris eg-depart'} aria-label={t('groupOrder.start')} onClick={async () => {
+      try {
+        const g = await api('/group-orders', { method: 'POST', token, body: { restaurantId: restaurant.id } });
+        navigate(`/groupe/${g.code}`);
+      } catch (e) { toast(e.message, 'erreur'); }
+    }}>
+      <Icone nom="personnes" taille={17} />{APPLI ? t('groupOrder.startShort') : t('groupOrder.start')}
+    </button>
+  );
+  /* LE TICKET DE L'APP (fondateur, 2026-10-17, version B de « Fiche du commerce » dans mockups/commerces-marque.html) : la
+     note, la distance et le prix de la livraison, en trois cases séparées par des pointillés, sous le nom. La distance est
+     celle de chez toi quand l'adresse du compte est connue, sinon le rayon de livraison choisi par le commerce ; le prix est
+     le même « dès » qu'avant (estimation, le montant exact se calcule au serveur). Le minimum de commande reste dit dessous. */
+  const distanceKm = user?.lat && user?.lng && restaurant.lat && restaurant.lng ? haversineDistanceKm(user.lat, user.lng, restaurant.lat, restaurant.lng) : null;
+  const kmTexte = (v) => (v < 10 ? Number(v).toFixed(1) : String(Math.round(v))).replace('.', ',');
+  const ticket = APPLI && (
+    <>
+      <div className="fiche-ticket">
+        <div>
+          <b>{restaurant.reviewCount > 0 ? <><Icone nom="etoile" taille={14} />{Number(restaurant.rating).toFixed(1).replace('.', ',')}</> : t('restaurantList.newBadge')}</b>
+          <small>{restaurant.reviewCount > 0 ? t('restaurantMenu.ticketReviews', { n: restaurant.reviewCount }) : t('restaurantMenu.ticketNoReviews')}</small>
+        </div>
+        {distanceKm != null ? (
+          <div><b>{kmTexte(distanceKm)} km</b><small>{t('restaurantMenu.ticketFromYou')}</small></div>
+        ) : restaurant.deliveryRadiusKm != null && modeActif !== 'pickup' && !onlineOrderingDisabled ? (
+          <div><b>{t('siteFiche.radiusValue', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</b><small>{t('siteFiche.radiusLabel')}</small></div>
+        ) : null}
+        {!onlineOrderingDisabled && (
+          <div><b>{fraisLivraison}</b><small>{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</small></div>
+        )}
+      </div>
       {/* Montant minimum choisi par le commerce (PAN-3), annoncé avant de composer le panier. */}
-      {restaurant.minOrderAmount > 0 && (
-        <span className="fiche-panneau-cle">{t('restoMenuUi.minOrder', { amount: euros(restaurant.minOrderAmount) })}</span>
+      {!onlineOrderingDisabled && restaurant.minOrderAmount > 0 && (
+        <p className="fiche-ticket-note">{t('restoMenuUi.minOrder', { amount: euros(restaurant.minOrderAmount) })}</p>
       )}
-    </div>
-  ) : (
+    </>
+  );
+  /* APERÇU DE LA CARTE (app, version B) : une rangée des plats qui ont leur propre photo, dans l'ordre de la carte. La
+     maquette disait « Populaires » ; Fairide ne publie aucune donnée de ventes par plat, donc le titre ne promet rien de
+     tel. Toucher un plat ouvre sa fiche, le « + » l'ajoute comme sur la carte. Rien pendant une recherche dans la carte. */
+  const apercu = APPLI && !q ? restaurant.menu.filter((i) => i.imageUrl && i.available !== false).slice(0, 8) : [];
+  const apercuCarte = apercu.length >= 3 && (
+    <section className="fiche-apercu" aria-labelledby="fiche-apercu-titre">
+      <h2 className="fiche-apercu-titre" id="fiche-apercu-titre">{t('restaurantMenu.menuPreview')}</h2>
+      <div className="fiche-apercu-rangee">
+        {apercu.map((item) => {
+          const { name } = localizedItem(item, language);
+          const remise = prixRemise(item);
+          const prix = euros(remise !== null && remise < item.price ? remise : item.price);
+          return (
+            <div className="fiche-apercu-plat" key={item.id}>
+              <button type="button" className="fiche-apercu-bouton" onClick={() => addToCart(item)} disabled={onlineOrderingDisabled} aria-label={`${name}, ${prix}`}>
+                <span className="fiche-apercu-photo"><img loading="lazy" decoding="async" {...imgProps(item.imageUrl, 320)} alt="" onError={cacherImageCassee} /></span>
+                <b>{name}</b>
+                <span>{prix}</span>
+              </button>
+              {!onlineOrderingDisabled && (
+                <button type="button" className="fiche-apercu-plus" onClick={(e) => ajoutDirect(item, e.currentTarget.getBoundingClientRect(), item.imageUrl)} aria-label={t('menuCategories.quickAdd', { name })}>
+                  <span aria-hidden="true">+</span>
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+  // Dans l'app, les frais, la distance et le minimum sont dans le ticket (version B, ci-dessus).
+  const panneauFrais = onlineOrderingDisabled ? null : APPLI ? null : (
     <div className="fiche-frais">
       <span><b>{fraisLivraison}</b><small>{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</small></span>
       {modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
@@ -605,16 +664,17 @@ export default function RestaurantMenu() {
         {/* Pas d'étoiles quand personne n'a encore noté : cinq étoiles vides à côté du mot
             « Nouveau » se lisaient comme une note de zéro sur cinq, ce qui est le contraire de
             ce qu'on veut dire d'un commerce qui vient d'arriver. */}
-        {restaurant.reviewCount > 0 ? (
+        {/* Dans l'app, la note est dans le « ticket » sous le nom (version B) : pas deux fois. */}
+        {!APPLI && (restaurant.reviewCount > 0 ? (
           <>
             <span className="fiche-meta-note"><StarsDisplay value={restaurant.rating} size={13} /></span>
             <span>{t('restaurantMenu.ratingReviews', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount })}</span>
           </>
         ) : (
           <span>{t('restaurantList.newBadge')}</span>
-        )}
-        {/* Dans l'app, la cuisine sur le bandeau (« Pizza · Ixelles »), comme dans la maquette retenue. */}
-        {APPLI && restaurant.cuisine && <><span aria-hidden="true">·</span><span>{restaurantTypeLabel(restaurant.cuisine, t) || restaurant.cuisine}</span></>}
+        ))}
+        {/* Dans l'app, la cuisine en tête de ligne (« Pizza · Ixelles »), comme dans la maquette retenue. */}
+        {APPLI && restaurant.cuisine && <span>{restaurantTypeLabel(restaurant.cuisine, t) || restaurant.cuisine}</span>}
         {restaurant.commune && <><span aria-hidden="true">·</span><span>{restaurant.commune}</span></>}
         <span aria-hidden="true">·</span>
         <button type="button" className="fiche-infos-lien" onClick={() => setInfosOuvertes(true)}>
@@ -651,16 +711,7 @@ export default function RestaurantMenu() {
           pour en ouvrir une — compte client exigé, comme pour commander. Le bouton est secondaire (pastille à filet iris,
           ecran-equipe-groupe.css) : la lime de la fiche reste au panier. */}
       <BandeauGroupe restaurantId={restaurant.id} onQuitter={() => setGroupeQuitte(true)} />
-      {user && !onlineOrderingDisabled && !(String(groupeEnCours()?.restaurantId) === String(restaurant.id) && !groupeQuitte) && (
-        <button type="button" className="eg-bouton-iris eg-depart" onClick={async () => {
-          try {
-            const g = await api('/group-orders', { method: 'POST', token, body: { restaurantId: restaurant.id } });
-            navigate(`/groupe/${g.code}`);
-          } catch (e) { toast(e.message, 'erreur'); }
-        }}>
-          <Icone nom="personnes" taille={17} />{t('groupOrder.start')}
-        </button>
-      )}
+      {!APPLI && boutonGroupe}
 
       {/* La bascule et les frais sur une même rangée entre deux filets (.fiche-faits), dans l'app comme sur le site. */}
       <div className="fiche-faits">
@@ -678,6 +729,8 @@ export default function RestaurantMenu() {
         </div>
       )}
       {panneauFrais}
+      {/* App (version B) : « À plusieurs » à côté de la bascule. */}
+      {APPLI && boutonGroupe}
       </div>
 
       {/* UNE SEULE CARTE D'OFFRE, au lieu de deux bandeaux de deux couleurs.
@@ -726,7 +779,7 @@ export default function RestaurantMenu() {
           en ligne) attend. Rien n'est annoncé pour un commerce qui ne propose aucun service en ligne, et l'à emporter
           n'est promis que s'il se paie sur place (le paiement en ligne ouvre avec la livraison). */}
       {bandeauOuverture && (
-        <div className="ouverture-bandeau fiche-info" role="status">
+        <div className={`ouverture-bandeau fiche-info${APPLI ? ' fiche-info--route' : ''}`} role="status">
           <span className="fiche-info-icone" aria-hidden="true"><Icone nom="horloge" taille={18} /></span>
           <span>
           {!emporterSurPlace
@@ -737,6 +790,8 @@ export default function RestaurantMenu() {
                 ? t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureEmporter(getLocale()) })
                 : t('restaurantMenu.ordersOpenBannerPickupOnly', { date: dateOuvertureEmporter(getLocale()) })}
           </span>
+          {/* App (version B) : l'annonce roule sur la route du vélo. */}
+          {APPLI && <span className="fiche-info-route" aria-hidden="true"><span className="fiche-info-velo"><VeloMarque largeur={26} /></span></span>}
         </div>
       )}
       {/* Livraison Fairide coupée dans la zone par l'équipe (08/10) : le client sait que seul l'à emporter est possible ici. */}
@@ -890,27 +945,25 @@ export default function RestaurantMenu() {
 
   const decouvrir = discover.length > 0 && <DiscoverSection restaurants={discover} t={t} />;
 
-  /* LA CARTE DE BISTROT, DANS L'APP (fondateur, 2026-10-17, version C de « Fiche du commerce » dans
-     mockups/commerces-marque.html). Le bandeau iris revient : le nom en grand, la note, la cuisine et l'état d'ouverture en
-     blanc, la photo de couverture en pastille ronde à filet blanc dans le coin (le logo s'il n'y a pas de photo, le visuel de
-     marque s'il n'y a ni l'un ni l'autre). La feuille blanche monte dessus avec ce qu'on règle avant de commander, puis la
-     bande des sections et la carte, dont les plats se lisent comme une carte imprimée (MenuCategorySections `bistrot`).
-     Mêmes contenus, mêmes fonctions et même ordre qu'avant ; styles dans ecran-fiche.css. */
+  /* LA FICHE DANS L'APP, VERSION B « SCEAU ET TICKET » (fondateur, 2026-10-17, mockups/commerces-marque.html ; il avait
+     d'abord retenu C, puis précisé « B, mais je garde les pointillés de la carte »). La photo de couverture bord à bord ; la
+     feuille blanche monte dessus avec, à cheval sur son bord, le SCEAU du commerce — son logo, ou son initiale sur un carré
+     lime. Sous le nom : le ticket (note, distance, livraison), la bascule et « À plusieurs », l'annonce d'ouverture sur la
+     route du vélo, puis l'aperçu des plats en photo. La carte garde ses pointillés (MenuCategorySections `bistrot`).
+     Mêmes contenus et mêmes fonctions qu'avant ; styles dans ecran-fiche.css. */
   if (APPLI) {
-    const pastille = !restaurant.coverImageUrl && restaurant.logoImageUrl
-      ? <img {...imgProps(restaurant.logoImageUrl, 192)} alt="" className="fiche-pastille-logo" decoding="async" onError={cacherImageCassee} />
-      : couverture;
+    const sceau = restaurant.logoImageUrl
+      ? <span className="fiche-sceau fiche-sceau--logo" aria-hidden="true"><img {...imgProps(restaurant.logoImageUrl, 160)} alt="" decoding="async" onError={cacherImageCassee} /></span>
+      : <span className="fiche-sceau" aria-hidden="true">{String(restaurant.name || '').trim().charAt(0).toUpperCase()}</span>;
     return (
       <div className="fiche-page fiche-appli" ref={pageRef}>
         {entete}
-        <header className="fiche-entete fiche-entete--bande">
-          <div className="fiche-bande">
-            <div className="fiche-bande-texte">{identite}</div>
-            <span className="fiche-pastille" aria-hidden="true">{pastille}</span>
-          </div>
-          {/* La feuille blanche qui monte sur le bandeau. */}
-          <div className="fiche-feuille">{pratique}</div>
+        <header className="fiche-entete fiche-entete--sceau">
+          <div className="fiche-media">{couverture}</div>
+          {/* La feuille blanche qui monte sur la photo, le sceau à cheval sur son bord. */}
+          <div className="fiche-feuille">{sceau}{identite}{ticket}{pratique}</div>
         </header>
+        {apercuCarte}
         {sectionsEtResultat}
         {carte}
         {/* Vendeur (A8) : toujours affiché avant la commande, sans clic, sous la carte plutôt qu'entre l'en-tête et les plats. */}
