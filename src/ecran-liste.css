@@ -293,3 +293,70 @@
   .eb-feuille, .fav-carte .favorite-heart.fav-bat svg { animation: none; }
   .fav-carte { transition: none; }
 }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   À LA UNE PRÈS DE TOI (RestaurantList.jsx, ALaUne ; fondateur, 2026-10-17, haut de la version B de « Liste » dans
+   mockups/commerces-marque.html). Une grande carte photo par écran, le nom en blanc sur la photo ; un voile d'encre monte
+   du bas de la photo pour que le texte reste lisible sur n'importe quelle image (c'est un traitement de la photo, pas un
+   fond). Des points iris disent où l'on en est. Sur le site, à partir de 900 px, trois cartes de front et pas de points.
+   --------------------------------------------------------------------------------------------------------------------- */
+.une-rail {
+  display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  margin: 0 calc(-1 * var(--lt-mg, 16px)); padding: 0 var(--lt-mg, 16px); scroll-padding: 0 var(--lt-mg, 16px);
+}
+.une-rail::-webkit-scrollbar { display: none; }
+.une-carte {
+  position: relative; flex: 0 0 100%; height: 210px; border-radius: 24px; overflow: hidden; scroll-snap-align: start;
+  display: block; color: #fff; text-decoration: none; background: var(--iris); isolation: isolate;
+}
+.une-carte > .une-photo { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s ease; }
+.une-carte:hover > .une-photo { transform: scale(1.03); }
+.une-carte--fermee > .une-photo { filter: grayscale(.55) brightness(.92); }
+.une-voile { position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, rgba(20, 18, 31, 0) 38%, rgba(20, 18, 31, .78) 100%); pointer-events: none; }
+.une-surtitre, .une-etat {
+  position: absolute; top: 12px; z-index: 3; display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; line-height: 1.2;
+}
+.une-surtitre { left: 12px; background: #fff; color: var(--iris); }
+.une-etat { right: 12px; background: var(--ink); color: #fff; }
+.une-texte { position: absolute; left: 16px; right: 16px; bottom: 14px; z-index: 3; display: grid; gap: 4px; }
+.une-nom { display: flex; align-items: center; gap: 7px; font-family: var(--font-titre); font-size: 24px; font-weight: 700; line-height: 1.1; color: #fff; overflow-wrap: anywhere; }
+.une-nom .certified-badge { color: #fff; }
+.une-nom .certified-badge path { stroke: var(--iris); }
+.une-infos { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: 13px; color: rgba(255, 255, 255, .88); }
+.une-note { display: inline-flex; align-items: center; gap: 4px; color: #fff; font-weight: 700; }
+.une-note svg { color: var(--lime); }
+.une-note span { font-weight: 400; color: rgba(255, 255, 255, .8); }
+.une-carte:focus-visible { outline: 3px solid var(--iris); outline-offset: 2px; }
+.une-points { display: flex; justify-content: center; gap: 5px; margin-top: 10px; }
+.une-points i { width: 6px; height: 6px; border-radius: 3px; background: rgba(59, 47, 181, .2); transition: width .3s cubic-bezier(.34, 1.45, .64, 1), background .2s; }
+.une-points i.on { width: 18px; background: var(--iris); }
+html:not(.appli) .sl-liste--grand .une-rail { margin: 0; padding: 0; overflow: visible; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+html:not(.appli) .sl-liste--grand .une-rail > .une-carte:nth-child(n + 4) { display: none; }
+html:not(.appli) .sl-liste--grand .une-points { display: none; }
+@media (prefers-reduced-motion: reduce) { .une-carte > .une-photo, .une-points i { transition: none; } }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   RECHERCHE DANS L'APP (SearchPage.jsx ; fondateur, 2026-10-17, « Search » de mockups/commerces-marque.html). Le titre et le
+   champ sur le bandeau iris (champ blanc en pilule), les envies en tuiles dans la feuille. Le site garde son écran.
+   --------------------------------------------------------------------------------------------------------------------- */
+.recherche-app .eb-bandeau .recherche-champ { margin: 14px 0 0; border-color: #fff; border-radius: 999px; padding-left: 18px; }
+.recherche-app .eb-bandeau .recherche-loupe { color: var(--iris); }
+.recherche-titre-app { margin: 4px 0 10px; font-size: 17px; font-weight: 700; color: var(--ink); }
+.recherche-app .recherche-pastilles + .recherche-titre-app, .recherche-tuiles + .recherche-titre-app { margin-top: 24px; }
+.recherche-tuiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.recherche-tuile {
+  display: grid; justify-items: center; align-content: start; gap: 6px; padding: 12px 4px 10px; border-radius: 18px;
+  background: rgba(59, 47, 181, .07); color: var(--ink); font-size: 12.5px; font-weight: 600; line-height: 1.25; text-align: center;
+  text-decoration: none; transition: transform .12s ease, background .15s ease;
+}
+.recherche-tuile:hover { background: rgba(59, 47, 181, .12); }
+.recherche-tuile:active { transform: scale(.96); }
+.recherche-tuile:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+.recherche-tuile-icone { width: 42px; height: 42px; border-radius: 14px; background: #fff; color: var(--iris); display: grid; place-items: center; }
+.recherche-regimes { margin: 14px 0 0; }
+
+/* Le calendrier d'ouverture posé sur un bandeau (Mes commandes vide, 2026-10-17) : une note blanche translucide, l'icône dans
+   une tuile blanche, au lieu de l'encart gris à filet iris pensé pour une page blanche. */
+.eb-bandeau .bandeau-ouverture { align-items: center; margin: 16px 0 0; border-left: 0; border-radius: 16px; background: rgba(255, 255, 255, .14); color: #fff; font-size: 13.5px; }
+.eb-bandeau .bandeau-ouverture-icone { width: 30px; height: 30px; margin: 0; border-radius: 10px; background: #fff; color: var(--iris); display: grid; place-items: center; }

@@ -6828,6 +6828,7 @@ export default {
       discoverInfoJoin: 'Mijn zaak inschrijven'
     },
     menuCategories: {
+      priceBefore: 'voorheen {price}',
       inCart: '{n} in het mandje',
       oneLess: 'Eén {name} minder',
       quickAdd: '{name} aan winkelmand toevoegen',
@@ -6864,6 +6865,8 @@ export default {
       carteFermer: 'Sluiten'
     },
     restaurantList: {
+      newOnFairide: 'Nieuw op Fairide',
+      sectionFeatured: 'In de kijker bij jou',
       sectionFreeDelivery: 'Gratis levering',
       sectionDeliveryFrom: 'Levering vanaf {amount}',
       sectionRegistered: 'Al op Fairide · {n} zaken ingeschreven',
@@ -6973,6 +6976,7 @@ export default {
       clearSearch: 'Zoekopdracht wissen'
     },
     floatingCart: {
+      conflictDetail: 'De artikelen van {restaurant} worden uit je winkelmandje gehaald.',
       clearConfirmTitle: "Winkelmand leegmaken?",
       clearConfirmBody: "Alle gekozen gerechten worden verwijderd.",
       title: 'Jouw winkelmandje',
@@ -7262,6 +7266,7 @@ export default {
       retourCommerces: 'Terug naar restaurants'
     },
     panier: {
+      bandeauVide: 'Voorlopig leeg',
       title: 'Je winkelmandje',
       viewCart: 'Mandje bekijken',
       toCheckout: 'Naar de betaling',
@@ -7270,6 +7275,7 @@ export default {
       emptyText: 'Voeg gerechten toe vanaf de kaart van een zaak, ze verschijnen hier.'
     },
     orders: {
+      bandeauVide: 'Nog geen enkele',
       cancelConfirmTitle: "Je bestelling annuleren?",
       cancelConfirmPaid: "De zaak bereidt ze niet. Je wordt automatisch terugbetaald, binnen 5 tot 10 werkdagen afhankelijk van je bank.",
       cancelConfirmBody: "De zaak bereidt ze niet.",
@@ -8143,7 +8149,7 @@ export default {
       ranking_sortsTitle: 'Andere volgordes, en filters',
       ranking_sorts: 'U kunt kiezen voor „Best beoordeeld” (het gemiddelde van de werkelijk gegeven beoordelingen; een zaak zonder beoordelingen komt na de zaken die er wel hebben) of „Dichtstbij” (afstand in vogelvlucht vanaf uw adres). Filters (keuken, gemeente, bio, vegan, prijs, afhalen) halen zaken uit de lijst: ze veranderen de volgorde niet.',
       ranking_rowsTitle: 'De rijen op de startpagina',
-      ranking_rows: 'Bij u in de buurt: de zaken uit uw gemeente. Aanbiedingen: zaken met een promotie die ze zelf hebben aangemaakt. Healthy, bio, vegan: eerst de zaken met de meeste gerechten die ze zelf zo gemarkeerd hebben (of waarvan de naam het zegt). Boodschappen: supermarkten en voedingswinkels. Ontdekken: een willekeurige selectie van zaken binnen 10 km waar u nog niet besteld hebt. Een rij met minder dan zes zaken wordt aangevuld met de best beoordeelde. Jouw goesting: in de app, als u bij het welkomstscherm een voorkeur koos (pizza, burgers…), de zaken die daaraan beantwoorden, in dezelfde volgorde als "Bij u in de buurt"; die keuzes blijven op uw telefoon.',
+      ranking_rows: 'Bij u in de buurt: de zaken uit uw gemeente. Aanbiedingen: zaken met een promotie die ze zelf hebben aangemaakt. Healthy, bio, vegan: eerst de zaken met de meeste gerechten die ze zelf zo gemarkeerd hebben (of waarvan de naam het zegt). Boodschappen: supermarkten en voedingswinkels. Ontdekken: een willekeurige selectie van zaken binnen 10 km waar u nog niet besteld hebt. In de kijker bij jou: tot vijf zaken met een foto, de dichtstbijzijnde eerst (open zaken vóór gesloten zaken), zonder betaalde plaatsing. Een rij met minder dan zes zaken wordt aangevuld met de best beoordeelde. Jouw goesting: in de app, als u bij het welkomstscherm een voorkeur koos (pizza, burgers…), de zaken die daaraan beantwoorden, in dezelfde volgorde als "Bij u in de buurt"; die keuzes blijven op uw telefoon.',
       ranking_notPaidTitle: 'Betaalde posities („Gesponsord”)',
       ranking_notPaid: 'Een zaak kan betalen om op een van de eerste plaatsen van een rij op de pagina met zaken te verschijnen („In je buurt”, „Healthy”, „Vegan”…), voor een aantal weken. Haar kaart draagt dan het label „Gesponsord” in die rij. Fairide keurt elke aanvraag goed, en een zaak wordt alleen zo geplaatst als ze echt in de rij thuishoort: betalen brengt een zaak zonder veganistische gerechten niet in „Vegan”. Buiten deze aangeduide posities betaalt geen enkele zaak om hoger te staan: de commissie (hoogstens 10 %) en het abonnement zijn voor iedereen gelijk en hebben geen invloed op de volgorde.',
       ranking_reviewsTitle: 'Beoordelingen',

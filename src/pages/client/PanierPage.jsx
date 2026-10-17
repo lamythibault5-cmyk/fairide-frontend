@@ -78,12 +78,21 @@ export default function PanierPage() {
   const totaux = restaurant && cart.count > 0 ? cart.totals(restaurant.menu, restaurant.activeCartPromo) : null;
   const sousTotal = totaux ? totaux.subtotal : cart.rawTotal;
 
+  /* PANIER VIDE (fondateur, 2026-10-17, « Empty cart » de mockups/commerces-marque.html) : le même bandeau que le panier plein,
+     pour que l'écran ne change pas d'habit quand on retire le dernier article. */
   if (cart.count === 0) {
     return (
-      <EtatVide
-        icone="sac" scene="panier" titre={t('panier.emptyTitle')} texte={t('panier.emptyText')}
-        actionVers="/restaurants" actionTexte={t('orders.emptyAction')}
-      />
+      <div className="panier-page ec-page sc-page panier-vide">
+        <BandeauCommande vers="/restaurants" libelleRetour={t('restaurantMenu.backToRestaurants')} titre={t('panier.title')} sous={t('panier.bandeauVide')}>
+          {APPLI ? <RouteCommande position={8} /> : <RouteEtapes actuelle={0} />}
+        </BandeauCommande>
+        <FeuilleCommande>
+          <EtatVide
+            icone="sac" scene="panier" titre={t('panier.emptyTitle')} texte={t('panier.emptyText')}
+            actionVers="/restaurants" actionTexte={t('orders.emptyAction')}
+          />
+        </FeuilleCommande>
+      </div>
     );
   }
   if (chargement) return <SkeletonCards count={2} />;

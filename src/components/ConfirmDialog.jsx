@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 import useDialogue from '../hooks/useDialogue';
+import Icone from './Icone';
 
 // Confirmation générique avant toute action sensible ou irréversible — un seul composant réutilisé
 // partout plutôt qu'une modale par action.
@@ -14,7 +15,12 @@ import useDialogue from '../hooks/useDialogue';
 // Le corps est séparé pour que useDialogue ne soit monté QUE lorsque la fenêtre est ouverte : un
 // hook ne peut pas être appelé après le `if (!open) return null` ci-dessous, et le déplacer avant
 // poserait le verrou de défilement et volerait le focus alors que rien n'est affiché.
-function Corps({ title, message, confirmLabel = 'Confirmer', danger, loading, onConfirm, onCancel }) {
+//
+// LA FEUILLE DE CONFIRMATION DE L'APP (fondateur, 2026-10-17, « Confirmation sheets » de mockups/commerces-marque.html) :
+// dans l'app (html.appli), la fenêtre monte du bas en feuille — poignée, tuile d'icône (`icone`, nom d'Icone.jsx), titre,
+// message, ce qui va changer dans un encart (`detail`), le bouton d'action sur toute la largeur et l'annulation en texte
+// dessous. Le site garde sa fenêtre centrée. Styles dans client-ui.css (.confirm-feuille).
+function Corps({ title, message, detail, icone, confirmLabel = 'Confirmer', cancelLabel, danger, loading, onConfirm, onCancel }) {
   const { t } = useLanguage();
   const racine = useRef(null);
   /* Cette fenêtre garde la porte de toutes les actions irréversibles du dépôt — supprimer une
@@ -23,11 +29,14 @@ function Corps({ title, message, confirmLabel = 'Confirmer', danger, loading, on
      qu'au clavier on pouvait continuer à parcourir — et actionner — ce que la fenêtre recouvrait. */
   useDialogue(racine, onCancel);
   return (
-    <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}
+    <div className="modal-overlay confirm-voile" onClick={onCancel}>
+      <div className="modal-box confirm-feuille" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}
         role="dialog" aria-modal="true" aria-labelledby="confirm-titre" ref={racine} tabIndex={-1}>
+        <span className="confirm-poignee" aria-hidden="true" />
+        {icone && <span className={`confirm-icone${danger ? ' confirm-icone--danger' : ''}`} aria-hidden="true"><Icone nom={icone} taille={22} /></span>}
         <h3 className="modal-titre" id="confirm-titre">{title}</h3>
         {message && <p className="small" style={{ margin: '0 0 4px' }}>{message}</p>}
+        {detail && <p className="confirm-detail"><Icone nom="croix" taille={15} />{detail}</p>}
         {/* Pied collant : l'action décisive barre toute la largeur, l'annulation est un lien en
             dessous. Les deux boutons étaient auparavant alignés à droite, à la suite du message —
             dans une modale un peu longue, ils passaient sous la ligne de flottaison. */}
@@ -39,7 +48,7 @@ function Corps({ title, message, confirmLabel = 'Confirmer', danger, loading, on
           <button className={danger ? 'btn-outline' : 'btn-gold'} style={danger ? { borderColor: 'var(--red)', color: 'var(--red)' } : undefined} onClick={onConfirm} disabled={loading}>
             {loading ? '...' : confirmLabel}
           </button>
-          <button className="btn-ghost" onClick={onCancel} disabled={loading}>{t('common.cancel')}</button>
+          <button className="btn-ghost" onClick={onCancel} disabled={loading}>{cancelLabel || t('common.cancel')}</button>
         </div>
       </div>
     </div>

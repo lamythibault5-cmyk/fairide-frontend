@@ -6872,6 +6872,7 @@ export default {
       discoverInfoJoin: 'Inscrire mon commerce'
     },
     menuCategories: {
+      priceBefore: 'avant {price}',
       inCart: '{n} dans le panier',
       oneLess: 'Un {name} de moins',
       quickAdd: 'Ajouter {name} au panier',
@@ -6908,6 +6909,8 @@ export default {
       carteFermer: 'Fermer la fiche'
     },
     restaurantList: {
+      newOnFairide: 'Nouveau sur Fairide',
+      sectionFeatured: 'À la une près de toi',
       sectionFreeDelivery: 'Livraison offerte',
       sectionDeliveryFrom: 'Livraison dès {amount}',
       sectionRegistered: 'Déjà sur Fairide · {n} commerces inscrits',
@@ -7017,6 +7020,7 @@ export default {
       clearSearch: 'Effacer la recherche'
     },
     floatingCart: {
+      conflictDetail: 'Les articles de {restaurant} seront retirés de ton panier.',
       clearConfirmTitle: "Vider le panier ?",
       clearConfirmBody: "Tous les plats choisis seront retirés.",
       title: 'Ton panier',
@@ -7306,6 +7310,7 @@ export default {
       retourCommerces: 'Retour aux restaurants'
     },
     panier: {
+      bandeauVide: 'Vide pour l’instant',
       title: 'Ton panier',
       viewCart: 'Voir le panier',
       toCheckout: 'Aller au paiement',
@@ -7314,6 +7319,7 @@ export default {
       emptyText: "Ajoute des plats depuis la carte d'un commerce, ils apparaîtront ici."
     },
     orders: {
+      bandeauVide: 'Aucune pour l’instant',
       cancelConfirmTitle: "Annuler ta commande ?",
       cancelConfirmPaid: "Le commerce ne la préparera pas. Tu es remboursé automatiquement, sous 5 à 10 jours ouvrables selon ta banque.",
       cancelConfirmBody: "Le commerce ne la préparera pas.",
@@ -8189,7 +8195,7 @@ export default {
       ranking_sortsTitle: 'Les autres ordres, et les filtres',
       ranking_sorts: 'Vous pouvez choisir « Mieux notés » (la moyenne des avis réellement donnés ; un commerce sans avis passe après ceux qui en ont) ou « Plus proches » (distance à vol d\'oiseau depuis votre adresse). Les filtres (type de cuisine, commune, bio, vegan, prix, à emporter) retirent des commerces de la liste : ils ne la réordonnent pas.',
       ranking_rowsTitle: 'Les rangées de la page d\'accueil',
-      ranking_rows: "Près de chez vous : les commerces de votre commune. Offres : les commerces qui proposent une promotion qu'ils ont eux-mêmes créée. Healthy, bio, vegan : d'abord les commerces qui ont le plus de plats marqués ainsi par eux-mêmes (ou dont le nom le dit). Courses : les supermarchés et commerces d'alimentation. À découvrir : une sélection tirée au hasard parmi les commerces à moins de 10 km où vous n'avez pas encore commandé. Une rangée de moins de six commerces est complétée par les mieux notés. « Tes envies » : dans l'application, si vous avez choisi des envies à l'accueil (pizza, burgers…), les commerces qui y répondent, dans le même ordre que « Près de chez vous » ; ces choix restent dans votre téléphone.",
+      ranking_rows: "Près de chez vous : les commerces de votre commune. Offres : les commerces qui proposent une promotion qu'ils ont eux-mêmes créée. Healthy, bio, vegan : d'abord les commerces qui ont le plus de plats marqués ainsi par eux-mêmes (ou dont le nom le dit). Courses : les supermarchés et commerces d'alimentation. À découvrir : une sélection tirée au hasard parmi les commerces à moins de 10 km où vous n'avez pas encore commandé. À la une près de toi : jusqu'à cinq commerces qui ont une photo, les plus proches de chez vous d'abord (ceux qui sont ouverts avant ceux qui sont fermés), sans mise en avant payante. Une rangée de moins de six commerces est complétée par les mieux notés. « Tes envies » : dans l'application, si vous avez choisi des envies à l'accueil (pizza, burgers…), les commerces qui y répondent, dans le même ordre que « Près de chez vous » ; ces choix restent dans votre téléphone.",
       ranking_notPaidTitle: 'Les positions payées (« Sponsorisé »)',
       ranking_notPaid: "Un commerce peut payer pour apparaître à l'une des premières places d'une rangée de la page des commerces (« Autour de toi », « Healthy », « Vegan »…), pour un nombre de semaines. Sa carte porte alors la mention « Sponsorisé » dans cette rangée. Fairide valide chaque demande, et le commerce n'est placé ainsi que s'il appartient vraiment à la rangée : payer ne fait pas entrer un commerce sans plat vegan dans « Vegan ». En dehors de ces positions signalées, aucun commerce ne paie pour être mieux placé : la commission (10 % au plus) et l'abonnement sont les mêmes pour tous et n'influencent pas l'ordre d'affichage.",
       ranking_reviewsTitle: 'Les avis',

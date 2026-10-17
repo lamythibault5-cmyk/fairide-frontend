@@ -502,3 +502,18 @@
 .discover-card .info .small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Le titre « Découvrir aussi » respire au-dessus de ses vignettes. */
 .auto-scroll-row.discover-track { margin-top: 12px; }
+
+/* LA FEUILLE DE CONFIRMATION (ConfirmDialog ; fondateur, 2026-10-17, « Confirmation sheets » de mockups/commerces-marque.html).
+   Partout : la tuile d'icône et l'encart de ce qui va changer, quand l'appelant les donne. Dans l'app seulement : une poignée
+   en tête de la feuille, le titre plus grand, l'annulation en texte sous le bouton d'action (qui barre déjà la largeur). */
+.confirm-poignee { display: none; }
+.confirm-icone { width: 46px; height: 46px; border-radius: 15px; display: grid; place-items: center; margin: 0 0 12px;
+  background: rgba(59, 47, 181, .08); color: var(--iris); }
+.confirm-icone--danger { background: rgba(200, 56, 43, .08); color: var(--red); }
+.confirm-detail { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; padding: 10px 12px; border-radius: 12px;
+  background: var(--cream-dim); font-size: 13px; line-height: 1.4; color: var(--ink); }
+.confirm-detail svg { flex: none; color: var(--ink-soft); }
+html.appli .confirm-feuille { padding-top: 10px; }
+html.appli .confirm-poignee { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 14px; }
+html.appli .confirm-feuille .modal-titre { font-size: 22px; line-height: 1.15; margin: 0 0 6px; }
+html.appli .confirm-feuille .modal-pied > .btn-ghost { width: 100%; color: var(--ink-soft); font-weight: 600; }

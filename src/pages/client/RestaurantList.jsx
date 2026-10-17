@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
@@ -179,6 +179,68 @@ function CarteBientot({ r, t }) {
   );
 }
 
+/* À LA UNE PRÈS DE TOI (fondateur, 2026-10-17, haut de la version B de « Liste » dans mockups/commerces-marque.html ; les
+ * rangées d'aujourd'hui restent dessous, telles quelles). Une grande carte photo par écran, le nom écrit sur la photo, et des
+ * points qui disent où l'on en est ; on passe de l'une à l'autre au doigt (défilement aimanté). Sur un ordinateur, trois de
+ * front. Le CHOIX n'est pas payant : jusqu'à UNE_MAX commerces avec une photo de couverture, les plus proches d'abord (même
+ * ordre que « Autour de toi », sans mise en avant), ceux qui sont ouverts avant ceux qui sont fermés — /classement le décrit
+ * (conformite.ranking_rows). « Nouveau sur Fairide » : seulement pour un commerce inscrit depuis moins de NOUVEAU_JOURS
+ * jours (date de /restaurants/landing) ; sans date connue, rien. */
+const UNE_MAX = 5;
+const NOUVEAU_JOURS = 30;
+function ALaUne({ list, inscritLe, t }) {
+  const { user } = useAuth();
+  const rail = useRef(null);
+  const [actif, setActif] = useState(0);
+  const surDefilement = () => {
+    const el = rail.current;
+    if (!el || !el.firstElementChild) return;
+    const pas = el.firstElementChild.getBoundingClientRect().width + 12;
+    setActif(Math.min(list.length - 1, Math.max(0, Math.round(el.scrollLeft / pas))));
+  };
+  const maintenant = Date.now();
+  return (
+    <section className="liste-section une-section">
+      <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="eclair" taille={18} />{t('restaurantList.sectionFeatured')}</h3>
+      <div className="une-rail" ref={rail} onScroll={surDefilement}>
+        {list.map((r) => {
+          const fiche = `/restaurants/${r.id}`;
+          const etat = r.hours ? getOpenStatus(r.hours, new Date(), r.closures) : null;
+          const ferme = !!etat && !etat.isOpen;
+          const depuis = inscritLe.get(r.id);
+          const nouveau = depuis != null && maintenant - depuis < NOUVEAU_JOURS * 86400000;
+          const sous = [[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 1).map((c) => restaurantTypeLabel(c, t) || c).join(''), r.neighborhood || r.commune,
+            r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ');
+          return (
+            // Même règle que les cartes dessous : sans compte, le clic mène à la connexion, puis à la fiche.
+            <Link key={r.id} to={user ? fiche : '/login?audience=client'} state={user ? undefined : { from: fiche }} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`}>
+              <VisuelVide nom={r.name} cuisine={r.cuisine} />
+              <img {...imgProps(r.coverImageUrl, 800, '(max-width: 640px) 92vw, 380px')} alt="" className="une-photo" decoding="async" onError={cacherImageCassee} />
+              <span className="une-voile" aria-hidden="true" />
+              {nouveau && <span className="une-surtitre"><Icone nom="eclair" taille={13} />{t('restaurantList.newOnFairide')}</span>}
+              {ferme && <span className="une-etat">{t('restoListUi.closed')}</span>}
+              <span className="une-texte">
+                <span className="une-nom">{r.name}{r.certified && <CertifiedBadge size={18} />}</span>
+                <span className="une-infos">
+                  {r.reviewCount > 0
+                    ? <span className="une-note"><Icone nom="etoile" taille={13} />{Number(r.rating).toFixed(1).replace('.', ',')} <span>({r.reviewCount})</span></span>
+                    : <span>{t('restaurantList.newBadge')}</span>}
+                  {sous && <span>{sous}</span>}
+                </span>
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+      {list.length > 1 && (
+        <div className="une-points" aria-hidden="true">
+          {list.map((r, i) => <i key={r.id} className={i === actif ? 'on' : undefined} />)}
+        </div>
+      )}
+    </section>
+  );
+}
+
 // `cle` : la clé de la rangée (mises en avant / sponsors) — le logo partenaire de la rangée se glisse à côté du titre
 // (EmplacementSponsor : rien pour le public tant que l'admin n'a pas activé la rangée).
 // `grille` (site, à partir de 900 px) : une grille qui suit la largeur, au lieu d'une rangée qui défile de côté — à la
@@ -272,6 +334,8 @@ export default function RestaurantList() {
   // Les VRAIS commerces déjà inscrits (fondateur, 2026-09-30) : rangée en tête de liste, carte complète seulement ;
   // les démos restent dessous, pour montrer l'étendue de l'offre.
   const [inscrits, setInscrits] = useState([]);
+  // Date d'inscription de chaque commerce (ms), pour « Nouveau sur Fairide » sur les cartes « À la une ».
+  const [inscritLe, setInscritLe] = useState(() => new Map());
   const [placementsTous, setPlacementsTous] = useState([]);
   // Rangées ouvertes à la vente par l'admin en plus de celles d'origine : une par type de cuisine (« Pizza »…).
   const [rangeesAjoutees, setRangeesAjoutees] = useState([]);
@@ -284,7 +348,10 @@ export default function RestaurantList() {
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch((e) => toast(e.message, 'erreur')).finally(() => setLoading(false));
-    api('/restaurants/landing').then((l) => setInscrits((l || []).filter((r) => r.menuComplete))).catch(() => {});
+    api('/restaurants/landing').then((l) => {
+      setInscrits((l || []).filter((r) => r.menuComplete));
+      setInscritLe(new Map((l || []).filter((r) => r.createdAt).map((r) => [r.id, Number(r.createdAt)])));
+    }).catch(() => {});
     // Mises en avant payantes du jour (routes/placements.js) : sans réponse, la liste reste dans son ordre naturel.
     api('/placements/active').then((r) => { setPlacementsTous(r.placements || []); setRangeesAjoutees(r.sections || []); }).catch(() => {});
     // Page publique (consultable sans compte, voir App.jsx) — ces deux appels ne concernent que les
@@ -431,6 +498,14 @@ export default function RestaurantList() {
     ? (parDistance.length ? parDistance : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous)
       .filter((r) => repondAuxEnvies(r, envies)).slice(0, PROCHES_MAX)
     : [];
+  // À la une : voir ALaUne. Même ordre que « Autour de toi », mais SANS épinglage payant, avec photo, ouverts d'abord.
+  const ouvert = (r) => !r.hours || getOpenStatus(r.hours, new Date(), r.closures).isOpen;
+  const aLaUne = (parDistance.length ? parDistance : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous)
+    .filter((r) => r.coverImageUrl)
+    .map((r, i) => ({ r, i, o: ouvert(r) ? 0 : 1 }))
+    .sort((a, b) => a.o - b.o || a.i - b.i)
+    .slice(0, UNE_MAX)
+    .map(({ r }) => r);
   // LIVRAISON DÈS 3 € et LIVRAISON OFFERTE (fondateur, 2026-10-01) : seulement les commerces concernés, jamais complétées.
   const SEUIL_PAS_CHER = 3;
   const livrables = nonGrocery.filter((r) => r.offersDelivery !== false);
@@ -682,6 +757,7 @@ export default function RestaurantList() {
       )}
       {!loading && !hasActiveFilter && (
         <>
+          {aLaUne.length > 0 && <ALaUne list={aLaUne} inscritLe={inscritLe} t={t} />}
           {inscrits.length > 0 && (
             <div className="liste-section">
               <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><span><AvecMarque>{inscrits.length === 1 ? t('restaurantList.sectionRegisteredOne') : t('restaurantList.sectionRegistered', { n: inscrits.length })}</AvecMarque></span></h3>

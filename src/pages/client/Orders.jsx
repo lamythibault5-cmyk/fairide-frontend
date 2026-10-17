@@ -32,6 +32,7 @@ import Icone from '../../components/Icone';
 import VendeurLivraison from '../../components/conformite/VendeurLivraison';
 import { euros } from '../../prixPlat';
 import { BandeauCommande, FeuilleCommande } from '../../components/EcranCommande';
+import '../../ecran-liste.css';
 
 // `pourboireSeul` : l'avis est déjà envoyé, il ne reste que le pourboire. Sans ce mode, un client qui
 // abandonnait le paiement du pourboire (ou dont l'envoi échouait après l'avis) ne pouvait plus jamais le
@@ -262,11 +263,17 @@ export default function Orders() {
   const quand = (ms) => new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   if (loading) return <div><h1 className="page-title">{titre}</h1><SkeletonCards count={3} /></div>;
+  /* AUCUNE COMMANDE (fondateur, 2026-10-17, « My orders » de mockups/commerces-marque.html) : le même bandeau que Mes favoris,
+     le calendrier d'ouverture posé dessus en note translucide, le vélo qui attend dans la feuille blanche. */
   if (listeAffichee.length === 0) {
     return (
-      <div>
-        <h1 className="page-title">{titre}</h1>
-        <BandeauOuverture role="client" />
+      <div className="ecran-bandeau commandes-vide">
+        <div className="eb-bandeau">
+          <h1 className="eb-titre">{titre}</h1>
+          <p className="eb-sous">{t('orders.bandeauVide')}</p>
+          <BandeauOuverture role="client" />
+        </div>
+        <div className="eb-feuille">
         {/* Le vide occupe toute la page ici : une ligne grise dans un cadre en pointillés y
             ressemblait à une panne. On nomme ce qui manque, et on donne le seul geste qui le
             remplit — parcourir les commerces. */}
@@ -278,6 +285,7 @@ export default function Orders() {
           actionVers="/restaurants"
           actionTexte={t('orders.emptyAction')}
         />
+        </div>
       </div>
     );
   }

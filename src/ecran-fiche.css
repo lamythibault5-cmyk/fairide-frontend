@@ -205,3 +205,94 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
   .fiche-appli .fiche-feuille, .fiche-appli .fiche-media > .fiche-logo, .fiche-appli .quicknav-lentille--etire { animation: none; }
   .fiche-appli .category-quicknav--verre .quicknav-lentille, .fiche-appli .fiche-modes-pouce { transition: none; }
 }
+
+/* =====================================================================================================================
+   VERSION C, « LA CARTE DE BISTROT » (fondateur, 2026-10-17, mockups/commerces-marque.html). Dans l'app seulement.
+   - Le bandeau iris remplace la photo bord à bord : le nom en grand, la note, la cuisine, la commune et « Infos » en
+     pastilles blanches translucides, l'état d'ouverture dessous, la description. La photo de couverture devient une
+     PASTILLE ronde à filet blanc dans le coin (le logo sans photo, le visuel de marque sans l'un ni l'autre). Les ronds
+     flottants (croix, loupe, cœur) restent iris à filet blanc : sur le bandeau, le filet les dessine.
+   - La feuille blanche monte sur le bandeau avec ce qu'on règle avant de commander (inchangé, voir plus haut).
+   - La carte se lit comme une carte imprimée : le nom de la section en iris entre deux traits en pointillés (la route du
+     vélo), puis chaque plat sur une ligne — petite photo carrée, nom, points de conduite, prix — et le « + » à droite.
+   Pas de Bricolage ici : la police du mot « fairide » ne passe pas aux titres (CLAUDE.md, « Styling »). Pas d'ombre : la
+   pastille se détache par son filet blanc. Le lime de l'écran reste la barre du panier (et le chiffre du compteur).
+   ===================================================================================================================== */
+.fiche-appli .fiche-entete--bande .fiche-bande {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 104px; column-gap: 14px; align-items: start;
+  margin: 0 calc(-1 * var(--fiche-g)); padding: calc(var(--fiche-statut) + 68px) var(--fiche-g) 46px;
+  background: var(--iris); color: #fff;
+}
+.fiche-appli .fiche-bande-texte { display: contents; }
+.fiche-appli .fiche-bande .fiche-titre-ligne { grid-column: 1; grid-row: 1; align-self: end; }
+.fiche-appli .fiche-bande .fiche-meta { grid-column: 1; grid-row: 2; }
+.fiche-appli .fiche-bande .fiche-statut, .fiche-appli .fiche-bande .fiche-desc { grid-column: 1 / -1; }
+.fiche-appli .fiche-pastille {
+  grid-column: 2; grid-row: 1 / span 2; position: relative; width: 104px; height: 104px; margin-top: -6px;
+  border-radius: 50%; overflow: hidden; border: 4px solid #fff; background: var(--iris-deep);
+  transform: rotate(6deg); animation: fiche-pastille-pose .5s var(--ressort-ui) .1s backwards;
+}
+@keyframes fiche-pastille-pose { from { transform: rotate(-14deg) scale(.4); } to { transform: rotate(6deg); } }
+.fiche-appli .fiche-pastille > .fiche-couverture, .fiche-appli .fiche-pastille > .fiche-pastille-logo {
+  position: relative; z-index: 1; display: block; width: 100%; height: 100%; margin: 0; border-radius: 0; object-fit: cover; background: none;
+}
+.fiche-appli .fiche-pastille > .visuel-vide { border-radius: 0; }
+.fiche-appli .fiche-pastille .visuel-vide-initiale { font-size: 46px; top: 50%; }
+.fiche-appli .fiche-pastille .visuel-vide-emoji { display: none; }
+
+.fiche-appli .fiche-bande .fiche-nom { color: #fff; font-size: 32px; line-height: 1.05; letter-spacing: 0; margin: 0 0 10px; overflow-wrap: anywhere; }
+.fiche-appli .fiche-bande .certified-badge { color: #fff; }
+.fiche-appli .fiche-bande .certified-badge path { stroke: var(--iris); }
+.fiche-appli .fiche-bande .fiche-meta { margin: 0 0 12px; }
+.fiche-appli .fiche-bande .fiche-meta > span:not([aria-hidden]):not(.fiche-meta-note),
+.fiche-appli .fiche-bande .fiche-meta > span:first-child:not(.fiche-meta-note),
+.fiche-appli .fiche-bande .fiche-meta > .fiche-meta-note + span { background: rgba(255, 255, 255, .14); color: #fff; }
+/* Les étoiles en lime : lime sur iris, la seule place où la règle 1 l'admet en petit. */
+.fiche-appli .fiche-bande .fiche-meta-note > span { color: var(--lime) !important; } /* StarsDisplay pose la couleur en ligne */
+.fiche-appli .fiche-bande .fiche-meta > .fiche-infos-lien { background: transparent; border-color: rgba(255, 255, 255, .55); color: #fff; }
+.fiche-appli .fiche-bande .fiche-meta > .fiche-infos-lien::after { color: #fff; }
+.fiche-appli .fiche-bande .fiche-meta > .fiche-infos-lien:hover { border-color: #fff; color: #fff; }
+.fiche-appli .fiche-bande .fiche-statut { background: rgba(255, 255, 255, .14); color: #fff; margin: 0 0 12px; }
+.fiche-appli .fiche-bande .fiche-statut b { color: #fff; }
+.fiche-appli .fiche-bande .fiche-statut-detail { color: rgba(255, 255, 255, .82); }
+.fiche-appli .fiche-bande .fiche-statut.est-ouvert .fiche-statut-point { background: var(--lime); animation: none; }
+.fiche-appli .fiche-bande .fiche-statut.est-ferme .fiche-statut-point { background: #FF9B8F; }
+.fiche-appli .fiche-bande .fiche-desc { color: rgba(255, 255, 255, .84); font-size: 13.5px; line-height: 1.45; margin: 0; }
+.fiche-appli .fiche-bande > :last-child:not(.fiche-pastille), .fiche-appli .fiche-bande .fiche-statut:last-child { margin-bottom: 0; }
+
+/* Les annonces de la feuille (ouverture des commandes, livraison coupée, commande en ligne fermée) : un aplat iris très
+   clair, l'icône dans une tuile iris. */
+.fiche-appli .fiche-info { align-items: center; background: rgba(59, 47, 181, .07); border-radius: 16px; padding: 11px 12px; }
+.fiche-appli .fiche-info-icone { width: 32px; height: 32px; margin: 0; border-radius: 10px; background: var(--iris); color: #fff; align-items: center; justify-content: center; }
+
+/* Les sections : le nom en iris entre deux traits en pointillés ; le nombre de plats se lit dans la carte. */
+.fiche-appli .plats-section-titre {
+  justify-content: center; gap: 12px; padding-left: 0; margin: 28px 0 4px; color: var(--iris); font-size: 20px; text-align: center;
+}
+.fiche-appli .fiche-carte-plats > div:first-of-type .plats-section-titre { margin-top: 10px; }
+.fiche-appli .plats-section-titre::before, .fiche-appli .plats-section-titre::after {
+  content: ''; position: static; flex: 1 1 24px; width: auto; height: 0; min-width: 24px; border-radius: 0;
+  background: none; border-top: 3px dashed rgba(59, 47, 181, .22);
+}
+.fiche-appli .plats-section-compte { display: none; }
+.fiche-appli .sub-category-header { margin: 14px 0 2px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); }
+
+/* Un plat : petite photo carrée à gauche, « nom ····· prix », la description dessous, le « + » à droite sous le prix. */
+.fiche-appli .plat.plat-bistrot { gap: 12px; padding: 12px 0; min-height: 86px; align-items: flex-start; border-bottom-color: transparent; }
+.fiche-appli .plat-bistrot .plat-visuel { width: 56px; height: 56px; border-radius: 14px; }
+.fiche-appli .plat-bistrot .plat-texte { gap: 3px; }
+.fiche-appli .bistrot-l1 { display: flex; align-items: flex-end; gap: 6px; min-width: 0; }
+.fiche-appli .bistrot-l1 .plat-nom { flex: 0 1 auto; min-width: 0; }
+.fiche-appli .bistrot-points { flex: 1 1 12px; min-width: 12px; height: 0; border-bottom: 2px dotted #C9C4BA; transform: translateY(-5px); }
+.fiche-appli .bistrot-l1 .plat-prix { flex: none; white-space: nowrap; font-size: 15px; }
+.fiche-appli .plat-bistrot .plat-desc, .fiche-appli .plat-bistrot .plat-allergenes, .fiche-appli .plat-bistrot .plat-prix-ligne { padding-right: 50px; }
+.fiche-appli .plat-bistrot .plat-prix-ligne { margin-top: 2px; }
+/* .plat-desc porte 18 px de marge basse pour la fiche du plat (styles.css) : dans la ligne, elle creusait un trou avant les allergènes. */
+.fiche-appli .plat-bistrot .plat-desc { margin: 0; }
+.fiche-appli .plat-ligne.plat-ligne-bistrot > .plat-pas { top: 40px; bottom: auto; right: 0; translate: none; }
+.fiche-appli .plat-ligne-bistrot > .plat { padding-right: 0; }
+.fiche-appli .plat-cliquable.plat-bistrot:active { border-radius: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fiche-appli .fiche-pastille { animation: none; }
+}
