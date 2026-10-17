@@ -1575,7 +1575,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    puis recentré par translateX(-50%) : un élément fixe ainsi placé ne peut pas dépasser la MOITIÉ droite de l'écran, donc
    une phrase longue s'enroulait dans une pastille étroite et haute. Il s'étend maintenant entre deux marges de 16 px,
    jusqu'à 560 px, centré (margin auto) ; coins de 18 px au lieu d'une pilule, qui se déformait en ovale sur trois lignes. */
-.toast { position: fixed; left: 16px; right: 16px; bottom: 24px; width: fit-content; max-width: min(560px, calc(100% - 32px)); margin: 0 auto; transform: translateY(20px); background: var(--ink); color: var(--cream); padding: 14px 18px; border-radius: 18px; font-size: 14.5px; font-weight: 600; line-height: 1.4; box-shadow: none; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 600; text-align: left; }
+.toast { position: fixed; left: 16px; right: 16px; bottom: 24px; width: fit-content; max-width: min(560px, calc(100% - 32px)); margin: 0 auto; transform: translateY(20px); background: var(--iris); color: #fff; padding: 14px 18px; border-radius: 18px; font-size: 14.5px; font-weight: 600; line-height: 1.4; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .32); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 600; text-align: left; }
 /* z-index 600, et non 50 : le toast est le SEUL canal de retour de l'application, il ne doit
    jamais passer derrière quoi que ce soit. À 50 il se glissait sous la fiche d'un plat et sous
    les sous-écrans du paiement (z 300) — un message d'erreur envoyé depuis là était donc affiché
@@ -1588,13 +1588,19 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    d'un toast (le reste laisse passer les touchers vers la page). */
 .toast { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .toast > span:not(.toast-coche) { min-width: 0; }
-.toast-coche { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; flex: none; }
+/* La coche d'une confirmation : lime sur l'iris (règle 1), l'icône à l'encre. Une erreur : triangle blanc sur le rouge. */
+.toast-coche { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--lime); color: var(--ink); flex: none; }
+.toast-coche--erreur { background: rgba(255, 255, 255, .2); color: #fff; }
 .toast-fermer { pointer-events: auto; background: none; border: 0; color: inherit; font-size: 20px; line-height: 1; padding: 0 0 0 6px; min-width: 32px; min-height: 32px; cursor: pointer; flex: none; }
 .toast:not(.show) .toast-fermer { pointer-events: none; }
 /* Bandeau hors ligne (BandeauHorsLigne.jsx) : en haut, au-dessus de tout sauf le toast ; fond encre comme le toast,
    pas de troisième couleur de fond. */
 .bandeau-hors-ligne { position: fixed; top: 0; left: 0; right: 0; z-index: 590; background: var(--chip); color: #fff; text-align: center; font-size: 14px; font-weight: 600; padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
 .toast.show { opacity: 1; transform: translateY(0); }
+/* Une fenêtre ou une feuille est ouverte (confirmation, fiche d'un plat, sous-écran) : le message passe en HAUT de l'écran au lieu
+   de recouvrir le texte et les boutons de la feuille, qui montent du bas (relevé le 2026-10-17). */
+body:has(.modal-overlay, .plat-feuille) .toast { top: calc(16px + env(safe-area-inset-top)); bottom: auto !important; transform: translateY(-20px); }
+body:has(.modal-overlay, .plat-feuille) .toast.show { transform: translateY(0); }
 /* LE MESSAGE PASSE AU-DESSUS DU MOBILIER FLOTTANT.
    Relevé au pixel : sous 900px les onglets ronds occupent de 12 à 68px du bas, et le message se
    posait à 24px — c'est-à-dire DERRIÈRE eux. Le toast est le seul canal de retour de

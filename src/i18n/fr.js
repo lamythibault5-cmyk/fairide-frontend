@@ -5844,6 +5844,10 @@ export default {
       reglePourboires: 'de tes pourboires'
     },
     dashDriver: {
+      pickupConfirmNo: 'Pas encore',
+      pickupConfirmYes: 'Oui, j’ai la commande',
+      pickupConfirmText: 'Vérifie que tu as tous les articles ({n}) de {restaurant}. Une fois confirmé, le client voit que sa commande est en route.',
+      pickupConfirmTitle: 'Tu as bien la commande ?',
       // État du dossier avant validation (audit UX du 15/10/2026, Dashboard.jsx).
       fileToCompleteTitle: "Ton dossier n'est pas encore envoyé",
       fileToCompleteText: "Il te reste quelques étapes avant que l'équipe Fairide puisse le vérifier. Ce qui est déjà rempli est gardé.",
