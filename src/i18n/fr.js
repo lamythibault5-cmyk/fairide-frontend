@@ -1900,6 +1900,7 @@ export default {
       kpi_driversAvailable: 'Livreurs disponibles',
       kpi_driversOnline: 'Livreurs en ligne',
       kpi_restaurants: 'Commerces actifs',
+      console: 'Console Fairide',
     },
     adminHome: {
       apps: 'Applications',

@@ -235,7 +235,7 @@ function KpiCard({ label, kpi, format = (v) => v, highlight, invert }) {
 
 function RealtimeCard({ num, label, to, warn }) {
   return (
-    <Link to={to} className="stat-card" style={{ textDecoration: 'none', color: 'inherit', border: warn ? '1px solid var(--red)' : 'none' }}>
+    <Link to={to} className="stat-card" style={{ textDecoration: 'none', color: 'inherit', borderColor: warn ? 'var(--red)' : undefined }}>
       <div className="num" style={{ color: warn ? 'var(--red)' : undefined }}>{num}</div>
       <div className="label">{label}</div>
     </Link>

@@ -1900,6 +1900,7 @@ export default {
       kpi_driversAvailable: 'Couriers available',
       kpi_driversOnline: 'Couriers online',
       kpi_restaurants: 'Active businesses',
+      console: 'Fairide console',
     },
     adminHome: {
       apps: 'Apps',
