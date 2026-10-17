@@ -29,6 +29,18 @@ html:not(.appli) .sl-liste .liste-tete--bandeau .lt-puces { margin: 0; border: 0
 html:not(.appli) .sl-liste .liste-tete--bandeau .lt-defile { border-radius: 0; }
 html:not(.appli) .sl-liste .liste-tete--bandeau .lt-piste { padding: 6px 12px; }
 html:not(.appli) .sl-liste .sl-corps { margin-top: 16px; }
+/* AU TÉLÉPHONE, LA BANDE DES CUISINES REMONTE SUR LA LÈVRE (fondateur, 2026-10-17, capture d'iPhone : un blanc entre « Livrer
+   à » et « Tous · Pizza · Burgers »). Elle mord de 12 px sur la lèvre blanche du bandeau, coins du haut arrondis comme la
+   lèvre pour ne rien recouvrir de l'iris, et la pastille « Tous » garde ~17 px d'air sous le bandeau. Repliée (on descend),
+   elle reste au bord de l'écran comme avant : l'en-tête remonte de 12 px de moins, et la lèvre devient un simple aplat blanc. */
+@media (max-width: 899px) {
+  html:not(.appli) .sl-liste .liste-tete--bandeau .lt-puces { margin-top: -12px; border-radius: 24px 24px 0 0; }
+  html:not(.appli) .sl-liste .liste-tete--bandeau .lt-defile { border-radius: 24px 24px 0 0; }
+  html:not(.appli) .sl-liste .liste-tete--bandeau.liste-tete--replie { transform: translateY(calc(12px - var(--lt-hb))); }
+  html:not(.appli) .sl-liste .liste-tete--replie .lt-puces,
+  html:not(.appli) .sl-liste .liste-tete--replie .lt-defile,
+  html:not(.appli) .sl-liste .liste-tete--replie .lt-bandeau::after { border-radius: 0; }
+}
 /* « Manger local » sur le site : le texte et l'icône sur un filet, sans fond gris (fonds blancs ou iris seulement). */
 html:not(.appli) .sl-liste .local-bandeau { flex-wrap: nowrap; align-items: flex-start; padding: 10px 12px; background: #fff; border: 1px solid var(--line); line-height: 1.4; }
 html:not(.appli) .sl-liste .local-bandeau svg { flex: none; margin-top: 1px; color: var(--iris); }

@@ -223,7 +223,7 @@ div.admin-console .admin-selection-bar b { color: #fff; }
 div.admin-console .admin-selection-bar :focus-visible { outline-color: var(--lime); }
 div.admin-console .admin-selection-bar :is(.btn-outline, .btn-ghost, .btn-danger-ghost) { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, .4); border-radius: var(--radius-pill); }
 div.admin-console .admin-selection-bar :is(.btn-outline, .btn-ghost, .btn-danger-ghost):hover:not(:disabled) { border-color: #fff; background: rgba(255, 255, 255, .08); }
-div.admin-console .admin-selection-bar select { background: #fff; border: 0; border-radius: var(--radius-pill); padding: 8px 14px; font-size: 13.5px; }
+div.admin-console .admin-selection-bar select { background-color: #fff; border: 0; border-radius: var(--radius-pill); padding: 8px 36px 8px 14px; font-size: 13.5px; }
 
 /* ---------------------------------------------------------------------------------------------------------------------
    4 · LE TIROIR D'UNE FICHE (RecordDrawer) : tête iris, onglets en pastilles, corps en feuille blanche

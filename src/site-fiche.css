@@ -317,6 +317,15 @@ html:not(.appli) .plat-fermer:focus-visible { outline: none; box-shadow: 0 0 0 2
   /* Sans photo, la croix est à droite : le nom garde sa ligne, il lui laisse simplement la place. */
   html:not(.appli) body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { padding-top: 26px; padding-right: 72px; }
 }
+/* LES SOUS-ÉCRANS DE MON COMPTE ET LES PAGES EN FEUILLE, PLEINE PAGE SUR LE SITE AU TÉLÉPHONE (fondateur, 2026-10-17 : « Mes
+   infos, Coordonnées de connexion, Favoris… s'ouvrent à mi-hauteur sur le site ; je veux une pleine page avec le bouton
+   retour, comme dans l'app »). La règle ci-dessus fait de toute feuille une demi-feuille à la hauteur de son contenu : c'est
+   voulu pour la fiche d'un plat, pas pour ces écrans-ci, qui prennent tout l'écran, sans fond assombri ni poignée. */
+@media (max-width: 900px) {
+  html:not(.appli) .plat-feuille.sous-ecran-feuille, html:not(.appli) .plat-feuille.page-feuille { justify-content: stretch; background: #fff; animation: none; }
+  html:not(.appli) .sous-ecran-feuille .plat-panneau, html:not(.appli) .page-feuille .plat-panneau { flex: 1 1 auto; max-height: none; border-radius: 0; }
+  html:not(.appli) .page-feuille .plat-poignee { display: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .fiche-site-feuille, .fiche-site .fiche-entete > .fiche-logo, .fiche-panier-ligne, .fiche-panier-pas b,

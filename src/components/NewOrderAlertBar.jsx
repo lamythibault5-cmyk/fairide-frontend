@@ -1,4 +1,5 @@
 import { experienceApp } from '../natif';
+import { remplissage } from '../curseur';
 // Barre d'état de l'alerte "nouvelle commande", affichée en haut du tableau de bord restaurateur.
 //
 // Deux rôles distincts :
@@ -121,32 +122,40 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
             <Icone nom="reglages" taille={16} className="icone-texte" />{' '}{t('alertBar.settings')}
           </button>
         )}
-        {reglagesOuverts && setSonnerie && (
-          <select aria-label={t('alertBar.ringtone')} value={sonnerie} style={{ width: 'auto', padding: '6px 10px', fontSize: 13 }}
-            onChange={(e) => { setSonnerie(e.target.value); testerAlarme?.(e.target.value); }}>
-            {SONNERIES.map((s) => <option key={s} value={s}>{t(`alertBar.ringtone_${s}`)}</option>)}
-          </select>
-        )}
-        {/* Combien de fois l'alarme sonne par commande (fondateur, 2026-10-01), et un bouton pour la couper tout de suite. */}
-        {reglagesOuverts && setRepetitions && (
-          <select aria-label={t('alertBar.repeats')} value={repetitions} style={{ width: 'auto', padding: '6px 10px', fontSize: 13 }} onChange={(e) => setRepetitions(e.target.value)}>
-            {REPETITIONS.map((n) => <option key={n} value={n}>{n === 0 ? t('alertBar.repeatsForever') : t('alertBar.repeatsN', { n })}</option>)}
-          </select>
-        )}
         {alarmeEnCours && couperAlarme && (
           <button type="button" className={`${PRESSANT} btn-sm`} onClick={couperAlarme}><Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.stopAlarm')}</button>
         )}
-        {reglagesOuverts && setVolume && (
-          <label className="alerte-volume" title={t('alertBar.volume')}>
-            <span aria-hidden="true">{volume === 0 ? <Icone nom="sonCoupe" taille={16} className="icone-texte" /> : volume < 50 ? <Icone nom="son" taille={16} className="icone-texte" /> : <Icone nom="son" taille={16} className="icone-texte" />}</span>
-            <input type="range" min="0" max="100" step="5" value={volume} aria-label={t('alertBar.volume')} onChange={(e) => setVolume(e.target.value)} onPointerUp={() => testerAlarme?.()} onKeyUp={(e) => { if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) testerAlarme?.(); }} />
-          </label>
-        )}
-        {reglagesOuverts && testerAlarme && (
-          <button type="button" className="btn-outline btn-sm"
-            onClick={async () => { if (!(await testerAlarme())) toast(t('alertBar.testFailed'), 'erreur'); }}>
-            <Icone nom="cloche" taille={16} className="icone-texte" />{' '}{t('alertBar.testAlarm')}
-          </button>
+        {/* LES RÉGLAGES EN GRILLE (fondateur, 2026-10-17, capture d'iPhone : « ça n'a pas l'air propre »). Ils s'enroulaient au
+            fil de la barre — deux menus de largeurs différentes, le curseur coincé à côté d'un bouton. Ici : la sonnerie et le
+            nombre de sonneries côte à côte, à largeur égale ; puis le volume sur toute la largeur restante et « Tester l'alarme ».
+            Pensé pour le terminal du commerce (grand téléphone) comme pour l'ordinateur. */}
+        {reglagesOuverts && (setSonnerie || setVolume || testerAlarme) && (
+          <div className="alerte-reglages">
+            {setSonnerie && (
+              <select className="alerte-choix" aria-label={t('alertBar.ringtone')} value={sonnerie}
+                onChange={(e) => { setSonnerie(e.target.value); testerAlarme?.(e.target.value); }}>
+                {SONNERIES.map((s) => <option key={s} value={s}>{t(`alertBar.ringtone_${s}`)}</option>)}
+              </select>
+            )}
+            {/* Combien de fois l'alarme sonne par commande (fondateur, 2026-10-01). */}
+            {setRepetitions && (
+              <select className="alerte-choix" aria-label={t('alertBar.repeats')} value={repetitions} onChange={(e) => setRepetitions(e.target.value)}>
+                {REPETITIONS.map((n) => <option key={n} value={n}>{n === 0 ? t('alertBar.repeatsForever') : t('alertBar.repeatsN', { n })}</option>)}
+              </select>
+            )}
+            {setVolume && (
+              <label className="alerte-volume" title={t('alertBar.volume')}>
+                <span aria-hidden="true">{volume === 0 ? <Icone nom="sonCoupe" taille={18} className="icone-texte" /> : <Icone nom="son" taille={18} className="icone-texte" />}</span>
+                <input type="range" min="0" max="100" step="5" value={volume} style={remplissage(volume, 0, 100)} aria-label={t('alertBar.volume')} onChange={(e) => setVolume(e.target.value)} onPointerUp={() => testerAlarme?.()} onKeyUp={(e) => { if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) testerAlarme?.(); }} />
+              </label>
+            )}
+            {testerAlarme && (
+              <button type="button" className="btn-outline btn-sm alerte-tester"
+                onClick={async () => { if (!(await testerAlarme())) toast(t('alertBar.testFailed'), 'erreur'); }}>
+                <Icone nom="cloche" taille={16} className="icone-texte" />{' '}{t('alertBar.testAlarm')}
+              </button>
+            )}
+          </div>
         )}
 
         {/* Le bouton du push ne s'affiche que là où il peut tenir sa promesse : navigateur capable
