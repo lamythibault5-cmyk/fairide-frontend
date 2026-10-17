@@ -12,6 +12,7 @@ import { experienceApp } from '../natif';
 // dans Safari ordinaire il n'existe pas du tout. La phrase affichée suit donc l'état réel de CE
 // navigateur — abonné, abonnable, ou hors de portée — plutôt que de promettre partout la même chose.
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 
@@ -22,13 +23,40 @@ import { SONNERIES, REPETITIONS } from '../hooks/useNewOrderAlert';
 // boutons pressants de la barre passent en iris. Dans l'app, ils restent lime, comme avant.
 const PRESSANT = experienceApp() ? 'btn-gold' : 'btn-teal';
 
-export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme }) {
+export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme, compact = false }) {
   const { t } = useLanguage();
   const toast = useToast();
   const active = newCount > 0;
-  // Les réglages (sonnerie, répétitions, volume, test) sont repliés : dépliés, ils prenaient tout l'écran d'un téléphone
-  // et poussaient la commande à traiter sous la ligne de flottaison (simulation du 2026-10-01).
+  // Hooks avant tout retour anticipé (règle de React) : la version compacte n'en a pas besoin, mais la complète si.
   const [reglagesOuverts, setReglagesOuverts] = useState(false);
+
+  /* VERSION COMPACTE, sur les pages du commerce autres que l'accueil et les commandes (fondateur, 2026-10-17 : la barre
+     complète, avec son grand bouton lime, se répétait au-dessus du titre de chaque page). Le son se débloque de toute façon
+     au premier geste, n'importe où (useNewOrderAlert.js, unlock) : ici on garde seulement ce qui doit suivre partout —
+     les commandes qui attendent, avec un lien vers elles et de quoi couper l'alarme — et, tant que le navigateur bloque
+     encore le son sans qu'on ait rien touché, un petit bouton pour l'activer. Le reste (réglages, notifications) vit sur
+     l'accueil et la page Commandes. Rien à dire : rien d'affiché. */
+  if (compact) {
+    if (active) {
+      return (
+        <div className="alerte-compacte est-active" role="status">
+          <strong>{newCount === 1 ? t('alertBar.toHandleOne') : t('alertBar.toHandle', { n: newCount })}</strong>
+          {alarmeEnCours && <button type="button" className="btn-ghost btn-sm" onClick={couperAlarme}><Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.stopAlarm')}</button>}
+          <Link to="/dashboard/orders" className="alerte-compacte-lien">{t('alertBar.voir')} <span aria-hidden="true">→</span></Link>
+        </div>
+      );
+    }
+    if (soundEnabled && audioBloque) {
+      return (
+        <button type="button" className="alerte-compacte-son" onClick={debloquerAudio}>
+          <Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.activerSon')}
+        </button>
+      );
+    }
+    return null;
+  }
+  // Les réglages (sonnerie, répétitions, volume, test) sont repliés : dépliés, ils prenaient tout l'écran d'un téléphone
+  // et poussaient la commande à traiter sous la ligne de flottaison (simulation du 2026-10-01). État déclaré plus haut.
 
   async function basculerPush() {
     if (push.abonne) {
