@@ -354,9 +354,24 @@ html:not(.appli) .sl-liste--grand .une-points { display: none; }
 .recherche-tuile:active { transform: scale(.96); }
 .recherche-tuile:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
 .recherche-tuile-icone { width: 42px; height: 42px; border-radius: 14px; background: #fff; color: var(--iris); display: grid; place-items: center; }
-.recherche-regimes { margin: 14px 0 0; }
+.recherche-regimes-app { margin: 14px 0 0; }
 
 /* Le calendrier d'ouverture posé sur un bandeau (Mes commandes vide, 2026-10-17) : une note blanche translucide, l'icône dans
    une tuile blanche, au lieu de l'encart gris à filet iris pensé pour une page blanche. */
 .eb-bandeau .bandeau-ouverture { align-items: center; margin: 16px 0 0; border-left: 0; border-radius: 16px; background: rgba(255, 255, 255, .14); color: #fff; font-size: 13.5px; }
 .eb-bandeau .bandeau-ouverture-icone { width: 30px; height: 30px; margin: 0; border-radius: 10px; background: #fff; color: var(--iris); display: grid; place-items: center; }
+
+/* Récemment (SearchPage.jsx, app ; 2026-10-17) : les cinq derniers mots, une ligne chacun, « Effacer » en face du titre. */
+.recherche-recentes { margin-top: 24px; }
+.recherche-recentes-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.recherche-recentes-effacer { min-height: 0; padding: 4px 0; border: 0; background: none; color: var(--iris); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.recherche-recente {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none;
+  background: none; color: var(--ink); font: inherit; font-size: 15px; text-align: left; cursor: pointer;
+}
+.recherche-recente:last-child { border-bottom: 0; }
+.recherche-recente svg { flex: none; color: var(--ink-faint); }
+.recherche-recente span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recherche-recente:active { background: var(--cream-dim); }
+.recherche-recente:focus-visible, .recherche-recentes-effacer:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+.recherche-recentes + .recherche-titre-app { margin-top: 24px; }

@@ -4028,13 +4028,13 @@ export default {
     cookiesPolicy: {
       pageTitle: 'Politique des cookies · Fairide',
       title: 'Politique des cookies',
-      updated: 'Dernière mise à jour : 15 octobre 2026.',
+      updated: 'Dernière mise à jour : 17 octobre 2026.',
       whatTitle: 'Qu\'est-ce qu\'un cookie ?',
       what: 'Un cookie est un petit fichier déposé par un site dans votre navigateur. Fairide utilise aussi le « stockage local » du navigateur (localStorage et sessionStorage), qui joue le même rôle : retenir des informations d\'une page à l\'autre. Cette politique couvre les deux. Elle s\'applique au site fairide.be et à l\'application Fairide installée depuis le navigateur.',
       technicalTitle: 'Cookies et stockages strictement nécessaires',
       technical: 'Ils sont indispensables au fonctionnement du service et ne demandent pas votre consentement : **votre session** (jeton de connexion, conservé jusqu\'à 30 jours ou jusqu\'à votre déconnexion), **votre panier** (contenu et commerce choisi, 24 heures au plus, vidé à la déconnexion), **votre inscription commencée** (48 heures au plus, effacée dès que le compte est créé), **votre choix concernant la bannière cookies**, et les **protections techniques** (limitation des abus, sécurité des formulaires). Sans eux, impossible de se connecter ou de commander.',
       preferencesTitle: 'Préférences',
-      preferences: 'Pour vous faciliter la vie, Fairide retient dans votre navigateur : la **langue** choisie (français, anglais, néerlandais), le **thème** d\'affichage, la **musique** choisie dans les mini-jeux et vos meilleurs scores, l\'imprimante de tickets et le papier choisis par un commerce, les onglets et filtres ouverts dans le tableau de bord. Ces informations ne quittent pas votre appareil et ne servent à aucun suivi.',
+      preferences: 'Pour vous faciliter la vie, Fairide retient dans votre navigateur : la **langue** choisie (français, anglais, néerlandais), le **thème** d\'affichage, vos **dernières recherches** dans l\'application (cinq au plus, effacées à la déconnexion), la **musique** choisie dans les mini-jeux et vos meilleurs scores, l\'imprimante de tickets et le papier choisis par un commerce, les onglets et filtres ouverts dans le tableau de bord. Ces informations ne quittent pas votre appareil et ne servent à aucun suivi.',
       thirdPartyTitle: 'Services tiers',
       thirdParty: 'Certaines fonctions font appel à des services extérieurs qui peuvent déposer leurs propres cookies, uniquement lorsque vous les utilisez : **Stripe** (paiement sécurisé et vérification d\'identité, [politique de Stripe](https://stripe.com/fr-be/privacy)), **Google** (connexion « Se connecter avec Google », seulement si vous cliquez dessus), les fonds de **carte OpenStreetMap** et les **photos** hébergées par Unsplash (chargement d\'images, sans cookie de suivi de notre part). Fairide ne partage aucune donnée de navigation avec ces services au-delà de ce qui est nécessaire à la fonction demandée.',
       noTrackingTitle: 'Pas de publicité, pas de traceurs',
@@ -4042,7 +4042,7 @@ export default {
       manageTitle: 'Gérer ou supprimer les cookies',
       manage: 'Vous pouvez à tout moment refuser ou supprimer les cookies et le stockage local dans les réglages de votre navigateur (Chrome, Safari, Firefox, Edge : « Confidentialité » puis « Données de site »). Supprimer ces données vous déconnecte et vide votre panier ; le site continue de fonctionner. La bannière affichée à la première visite vous permet de refuser tout ce qui n\'est pas strictement nécessaire ; votre choix est conservé un an et peut être modifié en supprimant les données du site.',
       durationTitle: 'Durées de conservation',
-      duration: 'Session de connexion : 30 jours au plus. Panier : le temps de la visite. Préférences (langue, thème, musique, scores, imprimante) : jusqu\'à suppression par vous. Choix de la bannière : 12 mois. Cookies Stripe et Google : selon leurs propres politiques, uniquement sur leurs pages ou lors de leur utilisation.',
+      duration: 'Session de connexion : 30 jours au plus. Panier : le temps de la visite. Préférences (langue, thème, dernières recherches, musique, scores, imprimante) : jusqu\'à suppression par vous. Choix de la bannière : 12 mois. Cookies Stripe et Google : selon leurs propres politiques, uniquement sur leurs pages ou lors de leur utilisation.',
       contactTitle: 'Questions',
       contact: 'Pour toute question sur les cookies ou vos données : [contact@fairide.be](mailto:contact@fairide.be). Responsable du traitement : Fairide SRL, BCE 1042.169.780.',
       seePrivacy: 'Politique de confidentialité',
@@ -4562,6 +4562,8 @@ export default {
       closedForNow: 'le commerce ne prend pas de commandes pour le moment'
     },
     search: {
+      recentClear: 'Effacer',
+      recentTitle: 'Récemment',
       title: 'Recherche',
       byCraving: 'Par envie',
       byMunicipality: 'Par commune',

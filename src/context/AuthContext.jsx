@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { effacerRecherches } from '../recherchesRecentes';
 import { api, setSessionExpiredHandler } from '../api';
 import { useToast } from './ToastContext';
 import { useLanguage } from './LanguageContext';
@@ -264,6 +265,8 @@ export function AuthProvider({ children }) {
     // la revalidation le corrige).
     setRoleMemorise(null);
     try { localStorage.removeItem(ROLE_ACTIF_KEY); } catch { /* sans stockage */ }
+    // Les dernières recherches de la page Recherche partent aussi : le compte suivant sur ce téléphone ne les lit pas.
+    effacerRecherches();
     // Le panier de cet onglet part avec la session (CartContext écoute cet événement — plan de test PAN-1).
     window.dispatchEvent(new Event('fairide:deconnexion'));
   }

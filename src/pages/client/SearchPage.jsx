@@ -9,6 +9,7 @@ import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 import { experienceApp } from '../../natif';
+import { lireRecherches, retenirRecherche, effacerRecherches } from '../../recherchesRecentes';
 import { RouteVelo } from '../../components/TeteListe';
 import VisuelVide from '../../components/VisuelVide';
 import CertifiedBadge from '../../components/CertifiedBadge';
@@ -136,9 +137,14 @@ export default function SearchPage() {
     return { commerces, plats, cuisines, communes, aide, rubriques, mesCommandes, total };
   }, [actif, q, restaurants, commandes, user, bio, vegan, halal, sansGluten]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Récemment (app seulement, voir recherchesRecentes.js) : le mot est retenu quand il a servi — Entrée, ou un résultat touché.
+  const [recentes, setRecentes] = useState(() => (experienceApp() ? lireRecherches() : []));
+  const retenir = () => { if (experienceApp() && q.length >= 2) setRecentes(retenirRecherche(requete)); };
+
   // Entrée sur un texte qui n'a qu'un résultat : on y va. Sur plusieurs, on ne devine pas.
   function soumettre(e) {
     e.preventDefault();
+    retenir();
     if (!resultats || resultats.total !== 1) return;
     const r = resultats;
     if (r.commerces[0]) return navigate(`/restaurants/${r.commerces[0].id}`);
@@ -203,12 +209,26 @@ export default function SearchPage() {
               </Link>
             ))}
           </div>
-          <div className="recherche-pastilles recherche-regimes" role="group" aria-label={t('search.dietFilters')}>
+          <div className="recherche-pastilles recherche-regimes-app" role="group" aria-label={t('search.dietFilters')}>
             <button type="button" className={`pill recherche-pastille${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('search.filterBio')}</button>
             <button type="button" className={`pill recherche-pastille${vegan ? ' active' : ''}`} aria-pressed={vegan} onClick={() => setVegan((v) => !v)}>{t('search.filterVegan')}</button>
             <button type="button" className={`pill recherche-pastille${halal ? ' active' : ''}`} aria-pressed={halal} onClick={() => setHalal((v) => !v)}>{t('search.filterHalal')}</button>
             <button type="button" className={`pill recherche-pastille${sansGluten ? ' active' : ''}`} aria-pressed={sansGluten} onClick={() => setSansGluten((v) => !v)}>{t('search.filterGlutenFree')}</button>
           </div>
+          {recentes.length > 0 && (
+            <section className="recherche-recentes" aria-labelledby="recherche-recentes-titre">
+              <div className="recherche-recentes-tete">
+                <h3 className="recherche-titre-app" id="recherche-recentes-titre">{t('search.recentTitle')}</h3>
+                <button type="button" className="recherche-recentes-effacer" onClick={() => { effacerRecherches(); setRecentes([]); }}>{t('search.recentClear')}</button>
+              </div>
+              {recentes.map((mot) => (
+                // Toucher un mot le remet dans le champ : les résultats s'affichent comme si on venait de le taper.
+                <button key={mot} type="button" className="recherche-recente" onClick={() => setRequete(mot)}>
+                  <Icone nom="horloge" taille={17} /><span>{mot}</span>
+                </button>
+              ))}
+            </section>
+          )}
           <h3 className="recherche-titre-app">{t('search.byMunicipality')}</h3>
           <div className="recherche-pastilles">
             {COMMUNES.map((c) => (
@@ -330,7 +350,8 @@ export default function SearchPage() {
           <h1 className="eb-titre">{t('search.title')}</h1>
           {champRecherche}
         </div>
-        <div className="eb-feuille">
+        {/* Un résultat touché après avoir tapé : le mot rejoint « Récemment ». */}
+        <div className="eb-feuille" onClickCapture={(e) => { if (e.target.closest('a')) retenir(); }}>
           {pastillesRegime}
           {corps}
         </div>
