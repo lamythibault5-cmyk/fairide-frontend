@@ -72,12 +72,15 @@ export default function ScrollRestorer() {
       window.addEventListener('touchstart', lacher, { passive: true, once: true });
       window.addEventListener('wheel', lacher, { passive: true, once: true });
       window.addEventListener('keydown', lacher, { once: true });
+      // Un clic (barre de défilement, lien dans la page) vaut reprise en main, comme le doigt ou la molette.
+      window.addEventListener('pointerdown', lacher, { passive: true, once: true });
       const minuteurs = REMONTEE_DELAIS.map((delay) => setTimeout(() => { if (!annule) remonterEnHaut(); }, delay));
       return () => {
         minuteurs.forEach(clearTimeout);
         window.removeEventListener('touchstart', lacher);
         window.removeEventListener('wheel', lacher);
         window.removeEventListener('keydown', lacher);
+        window.removeEventListener('pointerdown', lacher);
       };
     }
     const saved = Number(sessionStorage.getItem(`fairide_scroll:${location.pathname}`) || 0);
