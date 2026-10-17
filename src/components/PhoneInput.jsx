@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 
 // Numéro de téléphone en deux parties : le pays (liste déroulante des 27 pays de l'UE et du Royaume-Uni, Belgique par
@@ -39,18 +39,24 @@ export function composer(iso, local) {
 
 export default function PhoneInput({ id, value, onChange, invalid = false, placeholder, autoComplete = 'tel-national' }) {
   const { t } = useLanguage();
-  const { iso, local } = useMemo(() => decouper(value), [value]);
+  const lu = useMemo(() => decouper(value), [value]);
+  // LE PAYS CHOISI SE GARDE ICI tant que le numéro est vide. La valeur remontée réunit pays et numéro ; sans numéro,
+  // composer() rend '' et le pays tiré de cette valeur retombait sur la Belgique : choisir +44 avant de taper ne
+  // changeait rien à l'écran (signalé par Owen, 17 oct. 2026). Dès qu'un numéro existe, c'est lui qui dit le pays.
+  const [paysChoisi, setPaysChoisi] = useState(lu.iso);
+  const iso = lu.local ? lu.iso : paysChoisi;
+  const local = lu.local;
   const noms = useMemo(() => { try { return new Intl.DisplayNames([getLocale()], { type: 'region' }); } catch { return null; } }, []);
   const liste = useMemo(() => PAYS.map(([i, d]) => ({ iso: i, dial: d, nom: noms?.of(i) || i })).sort((a, b) => (a.iso === DEFAUT ? -1 : b.iso === DEFAUT ? 1 : a.nom.localeCompare(b.nom))), [noms]);
   const [, dial] = PAYS.find(([i]) => i === iso) || ['BE', '32'];
   return (
     <div className={`phone-input${invalid ? ' input-invalid' : ''}`}>
-      <select className="phone-input-pays" aria-label={t('phoneInput.country')} value={iso} onChange={(e) => onChange(composer(e.target.value, local))}>
+      <select className="phone-input-pays" aria-label={t('phoneInput.country')} value={iso} onChange={(e) => { setPaysChoisi(e.target.value); onChange(composer(e.target.value, local)); }}>
         {liste.map((p) => <option key={p.iso} value={p.iso}>{drapeau(p.iso)} {p.nom} (+{p.dial})</option>)}
       </select>
       <span className="phone-input-indicatif" aria-hidden="true">{drapeau(iso)} +{dial}</span>
       <input id={id} type="tel" inputMode="tel" autoComplete={autoComplete} value={local} placeholder={placeholder || (iso === 'BE' ? '470 00 00 00' : '')}
-        onChange={(e) => onChange(composer(iso, e.target.value))} />
+        onChange={(e) => { setPaysChoisi(iso); onChange(composer(iso, e.target.value)); }} />
     </div>
   );
 }
