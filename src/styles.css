@@ -3419,7 +3419,7 @@ button.dashboard-retour { background: none; border: 0; border-radius: 0; font-fa
 .recherche-vignette { flex-shrink: 0; width: 44px; height: 44px; border-radius: var(--radius-chip); object-fit: cover; background: var(--cream-dim); }
 
 .recherche-pastilles { display: flex; flex-wrap: wrap; gap: 8px; }
-.recherche-pastille { text-decoration: none; background: #fff; border: 1px solid var(--line); color: var(--ink); cursor: pointer; }
+.recherche-pastille { text-decoration: none; background: #fff; border: 1px solid var(--line); color: var(--ink); cursor: pointer; gap: 6px; }
 .recherche-pastille:hover { border-color: var(--iris); color: var(--iris); }
 
 @media (max-width: 700px) {
@@ -3583,7 +3583,9 @@ button.dashboard-retour { background: none; border: 0; border-radius: 0; font-fa
 /* Filtres alimentaires de la barre de recherche (Bio, Vegan) : des interrupteurs, cumulables avec la
    recherche, la commune et le type de commerce. */
 .diet-filters { display: flex; gap: 6px; flex: none; }
-button.recherche-pastille { font: inherit; cursor: pointer; }
+/* Les pastilles-boutons (Bio, Vegan, Halal, Sans gluten) gardent la taille des pastilles-liens (.pill, 13 px) : avec
+   `font: inherit` seul, elles prenaient celle du conteneur et paraissaient plus grosses (vu dans l'app, 2026-10-17). */
+button.recherche-pastille { font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
 .recherche-pastille.active { background: var(--iris); border-color: var(--iris); color: #fff; }
 .diet-chip { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: var(--radius-pill); padding: 9px 12px; font-weight: 600; font-size: 13px; white-space: nowrap; }
 .diet-chip:hover { border-color: var(--iris); }

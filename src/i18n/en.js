@@ -1097,7 +1097,7 @@ export default {
       pdfFailed: 'The PDF could not be opened.'
     },
     driverDocs: {
-      title: 'My documents',
+      title: 'My papers',
       sub: 'ID, student certificate, other papers',
       intro: 'The documents added at sign-up and during your courier file. You can replace a side as long as Fairide has not verified it.',
       identityVerified: 'Identity verified via {provider}',
@@ -1121,7 +1121,7 @@ export default {
       errFront: 'Add the photo of the front.',
       errBack: 'Add the photo of the back.',
       privacy: 'Documents are stored securely, visible only to you and the Fairide team, never shared with customers or restaurants.',
-      uploadFailed: 'Some documents could not be sent. You can add them in My account › My documents.',
+      uploadFailed: 'Some documents could not be sent. You can add them in My account › My papers.',
       selfie: 'Selfie (face uncovered)',
       selfieHelp: 'Take it now with the front camera, no sunglasses or cap: Fairide compares it with your ID.',
       errSelfie: 'Add your selfie.'
@@ -4736,7 +4736,7 @@ export default {
       vatRate: 'VAT ({rate}%)',
       pageIntro: 'Your monthly commission invoices (accounting documents, also e-mailed), your detailed statements by week or month, and your subscription invoices.',
       tabInvoices: 'My invoices',
-      tabStatements: 'Weekly / monthly statements',
+      tabStatements: 'Statements',
       tabSubscription: 'Subscription',
       archiveDesc2: 'One invoice per month, issued automatically at the start of the month for the past month and e-mailed with the PDF. Each PDF details every order: date, type, amount, rate and commission (no VAT: Fairide falls under the small-business VAT exemption scheme). to receive it again, UBL for your accounting software (Peppol).'
     },
