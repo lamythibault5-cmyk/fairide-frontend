@@ -72,6 +72,21 @@ function statutOuverture(restaurant, now) {
   return s;
 }
 
+/* Le document a-t-il été RECHARGÉ (F5, tirer pour rafraîchir) sur la fiche de ce commerce ? L'adresse est relevée au
+   chargement du module, c'est-à-dire au démarrage de l'app (import statique dans App.jsx) ; la première fiche montée
+   consomme la réponse, les suivantes sont des navigations. */
+const CHEMIN_AU_CHARGEMENT = typeof window !== 'undefined' ? window.location.pathname : '';
+let premiereFicheMontee = false;
+function rechargementDeCettePage(id) {
+  const premiere = !premiereFicheMontee;
+  premiereFicheMontee = true;
+  let recharge = false;
+  try { recharge = performance.getEntriesByType('navigation')[0]?.type === 'reload'; } catch { /* API absente */ }
+  let dernier = null;
+  try { dernier = sessionStorage.getItem('fairide_last_restaurant_viewed'); } catch { /* sans stockage */ }
+  return premiere && recharge && CHEMIN_AU_CHARGEMENT === `/restaurants/${id}` && dernier === id;
+}
+
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
@@ -208,7 +223,13 @@ export default function RestaurantMenu() {
   }, [rechercheOuverte]);
   // Calculé une seule fois, avant que l'effet ci-dessous ne mette sessionStorage à jour : distingue un
   // rafraîchissement de cette même page (F5) d'une vraie navigation vers un autre restaurant.
-  const isRefreshRef = useRef(sessionStorage.getItem('fairide_last_restaurant_viewed') === id);
+  /* UN VRAI RAFRAÎCHISSEMENT, PAS UNE SECONDE VISITE (fondateur, 2026-10-17 : « je descends, ça recharge très vite et ça
+     me ramène en haut »). Le test était seulement « dernier commerce vu = celui-ci » : rouvrir le même commerce depuis la
+     liste passait pour un F5, et la position mémorisée (souvent 0, le haut) était réappliquée pendant une seconde, par-dessus
+     le défilement du client. Avec un seul commerce publié, c'était chaque visite après la première. (Invisible en
+     développement : le double passage des effets de React StrictMode annulait les minuteurs.) Il faut maintenant que le
+     navigateur ait réellement rechargé le document, sur cette adresse-ci, et que ce soit la première fiche montée. */
+  const isRefreshRef = useRef(rechargementDeCettePage(id));
   const scrollRestoredRef = useRef(false);
   // Capturé une seule fois au montage, avant que l'effet de suivi du scroll ci-dessous ne puisse
   // écraser cette valeur (ex. suite à la restauration native du navigateur au rechargement).
@@ -273,8 +294,13 @@ export default function RestaurantMenu() {
           // Réapplique la position à plusieurs reprises : les images du menu se chargent de façon
           // asynchrone et augmentent la hauteur de la page après le premier rendu, ce qui peut faire
           // "clamper" un scrollTo trop précoce à une position plus basse que la cible.
-          const timers = [0, 100, 300, 600, 1000].map((d) => setTimeout(() => window.scrollTo(0, targetY), d));
-          return () => timers.forEach(clearTimeout);
+          // Le client reprend la main (doigt, molette, clavier, clic) : on arrête de le replacer.
+          let lache = false;
+          const lacher = () => { lache = true; };
+          const gestes = ['touchstart', 'wheel', 'keydown', 'pointerdown'];
+          gestes.forEach((g) => window.addEventListener(g, lacher, { passive: true, once: true }));
+          const timers = [0, 100, 300, 600, 1000].map((d) => setTimeout(() => { if (!lache) window.scrollTo(0, targetY); }, d));
+          return () => { timers.forEach(clearTimeout); gestes.forEach((g) => window.removeEventListener(g, lacher)); };
         }
       }
     }

@@ -3,6 +3,8 @@ import { useLanguage } from './LanguageContext';
 import Icone from '../components/Icone';
 
 const ToastContext = createContext(null);
+// Au-delà, le message reste plusieurs secondes : il reçoit aussi la croix pour le fermer soi-même.
+const SEUIL_LONG = 70;
 
 export function ToastProvider({ children }) {
   const { t } = useLanguage();
@@ -38,12 +40,12 @@ export function ToastProvider({ children }) {
     setTon(tonDemande === 'erreur' || tonDemande === 'succes' ? tonDemande : '');
     setShow(true);
     clearTimeout(timer.current);
-    /* PLUS COURT QU'AVANT (demande du fondateur, 2026-09-21) : 5,2 à 9 s, c'est devenu 3,2 à 5,5 s.
-     * Le calcul reste proportionnel à la longueur du texte — une phrase de quinze mots ne se lit pas
-     * dans le temps de « Plat ajouté » — mais les deux bornes descendent d'environ deux secondes.
-     * Réserve honnête : un toast est un canal éphémère, et raccourcir une ERREUR joue contre celui qui lit lentement. Une
-     * erreur garde donc 2 s de plus, et se ferme aussi à la croix (audit du 15/10/2026). */
-    const duree = Math.max(3200, Math.min(5500, 1400 + String(msg || '').length * 32)) + (tonDemande === 'erreur' ? 2000 : 0);
+    /* LE TEMPS DE LIRE (fondateur, 2026-10-17 : « c'est très long et ça ne reste pas longtemps »). Le 2026-09-21 les bornes
+     * étaient descendues à 3,2–5,5 s : une phrase de 150 signes (« Ce commerce est fermé pour le moment : compose ton
+     * panier… ») disparaissait avant d'être lue. La durée suit maintenant la vitesse de lecture — environ 65 ms par signe
+     * en plus d'1,5 s pour poser les yeux —, entre 3,2 s pour « Plat ajouté » et 12 s au plus ; une erreur garde 2 s de
+     * plus. Un message long ou une erreur se ferme aussi à la croix (audit du 15/10/2026). */
+    const duree = Math.max(3200, Math.min(12000, 1500 + String(msg || '').length * 65)) + (tonDemande === 'erreur' ? 2000 : 0);
     timer.current = setTimeout(() => setShow(false), duree);
   }, []);
   const fermer = () => { clearTimeout(timer.current); setShow(false); };
@@ -54,7 +56,7 @@ export function ToastProvider({ children }) {
       <div className={`toast${show ? ' show' : ''}${ton === 'erreur' ? ' toast-erreur' : ''}${ton === 'succes' ? ' toast-succes' : ''}`} role={ton === 'erreur' ? 'alert' : 'status'}>
         {ton === 'succes' && <span className="toast-coche" aria-hidden="true"><Icone nom="valider" taille={16} /></span>}
         <span>{message}</span>
-        {ton === 'erreur' && <button type="button" className="toast-fermer" onClick={fermer} aria-label={t('common.close')}>×</button>}
+        {(ton === 'erreur' || String(message || '').length > SEUIL_LONG) && <button type="button" className="toast-fermer" onClick={fermer} aria-label={t('common.close')}>×</button>}
       </div>
     </ToastContext.Provider>
   );
