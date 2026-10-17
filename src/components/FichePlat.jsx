@@ -159,11 +159,12 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
               c'est ici, avant l'ajout, que le client les lit en entier. */}
           <div className="plat-prix-ligne">
             {remise !== null && remise < item.price
-              ? <><span className="plat-prix est-remise">{euros(remise)}</span><s className="plat-prix-avant">{euros(item.price)}</s></>
+              ? <><span className="plat-prix est-remise">{euros(remise)}</span><span className="plat-prix-avant">{t('menuCategories.priceBefore', { price: euros(item.price) })}</span></>
               : <span className="plat-prix">{euros(item.price)}</span>}
           </div>
           {item.desc && <p className="plat-desc">{item.desc}</p>}
-          {item.allergens?.length > 0 && <p className="small plat-allergenes">{t('conformite.allergensLine', { list: libellesAllergenes(item.allergens, t).join(', ') })}</p>}
+          {/* Seulement s'il reste un libellé reconnu : un code inconnu laissait « Allergènes : » seul sur sa ligne. */}
+          {libellesAllergenes(item.allergens, t).length > 0 && <p className="small plat-allergenes">{t('conformite.allergensLine', { list: libellesAllergenes(item.allergens, t).join(', ') })}</p>}
           {!item.allergens?.length && item.allergensDeclaredNone && <p className="small plat-allergenes">{t('conformite.allergensNone')}</p>}
 
           {groups.map((g) => {

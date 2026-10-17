@@ -4029,13 +4029,13 @@ export default {
     cookiesPolicy: {
       pageTitle: 'Politique des cookies · Fairide',
       title: 'Politique des cookies',
-      updated: 'Dernière mise à jour : 15 octobre 2026.',
+      updated: 'Dernière mise à jour : 17 octobre 2026.',
       whatTitle: 'Qu\'est-ce qu\'un cookie ?',
       what: 'Un cookie est un petit fichier déposé par un site dans votre navigateur. Fairide utilise aussi le « stockage local » du navigateur (localStorage et sessionStorage), qui joue le même rôle : retenir des informations d\'une page à l\'autre. Cette politique couvre les deux. Elle s\'applique au site fairide.be et à l\'application Fairide installée depuis le navigateur.',
       technicalTitle: 'Cookies et stockages strictement nécessaires',
       technical: 'Ils sont indispensables au fonctionnement du service et ne demandent pas votre consentement : **votre session** (jeton de connexion, conservé jusqu\'à 30 jours ou jusqu\'à votre déconnexion), **votre panier** (contenu et commerce choisi, 24 heures au plus, vidé à la déconnexion), **votre inscription commencée** (48 heures au plus, effacée dès que le compte est créé), **votre choix concernant la bannière cookies**, et les **protections techniques** (limitation des abus, sécurité des formulaires). Sans eux, impossible de se connecter ou de commander.',
       preferencesTitle: 'Préférences',
-      preferences: 'Pour vous faciliter la vie, Fairide retient dans votre navigateur : la **langue** choisie (français, anglais, néerlandais), le **thème** d\'affichage, la **musique** choisie dans les mini-jeux et vos meilleurs scores, l\'imprimante de tickets et le papier choisis par un commerce, les onglets et filtres ouverts dans le tableau de bord. Ces informations ne quittent pas votre appareil et ne servent à aucun suivi.',
+      preferences: 'Pour vous faciliter la vie, Fairide retient dans votre navigateur : la **langue** choisie (français, anglais, néerlandais), le **thème** d\'affichage, vos **dernières recherches** dans l\'application (cinq au plus, effacées à la déconnexion), la **musique** choisie dans les mini-jeux et vos meilleurs scores, l\'imprimante de tickets et le papier choisis par un commerce, les onglets et filtres ouverts dans le tableau de bord. Ces informations ne quittent pas votre appareil et ne servent à aucun suivi.',
       thirdPartyTitle: 'Services tiers',
       thirdParty: 'Certaines fonctions font appel à des services extérieurs qui peuvent déposer leurs propres cookies, uniquement lorsque vous les utilisez : **Stripe** (paiement sécurisé et vérification d\'identité, [politique de Stripe](https://stripe.com/fr-be/privacy)), **Google** (connexion « Se connecter avec Google », seulement si vous cliquez dessus), les fonds de **carte OpenStreetMap** et les **photos** hébergées par Unsplash (chargement d\'images, sans cookie de suivi de notre part). Fairide ne partage aucune donnée de navigation avec ces services au-delà de ce qui est nécessaire à la fonction demandée.',
       noTrackingTitle: 'Pas de publicité, pas de traceurs',
@@ -4043,7 +4043,7 @@ export default {
       manageTitle: 'Gérer ou supprimer les cookies',
       manage: 'Vous pouvez à tout moment refuser ou supprimer les cookies et le stockage local dans les réglages de votre navigateur (Chrome, Safari, Firefox, Edge : « Confidentialité » puis « Données de site »). Supprimer ces données vous déconnecte et vide votre panier ; le site continue de fonctionner. La bannière affichée à la première visite vous permet de refuser tout ce qui n\'est pas strictement nécessaire ; votre choix est conservé un an et peut être modifié en supprimant les données du site.',
       durationTitle: 'Durées de conservation',
-      duration: 'Session de connexion : 30 jours au plus. Panier : le temps de la visite. Préférences (langue, thème, musique, scores, imprimante) : jusqu\'à suppression par vous. Choix de la bannière : 12 mois. Cookies Stripe et Google : selon leurs propres politiques, uniquement sur leurs pages ou lors de leur utilisation.',
+      duration: 'Session de connexion : 30 jours au plus. Panier : le temps de la visite. Préférences (langue, thème, dernières recherches, musique, scores, imprimante) : jusqu\'à suppression par vous. Choix de la bannière : 12 mois. Cookies Stripe et Google : selon leurs propres politiques, uniquement sur leurs pages ou lors de leur utilisation.',
       contactTitle: 'Questions',
       contact: 'Pour toute question sur les cookies ou vos données : [contact@fairide.be](mailto:contact@fairide.be). Responsable du traitement : Fairide SRL, BCE 1042.169.780.',
       seePrivacy: 'Politique de confidentialité',
@@ -4563,6 +4563,8 @@ export default {
       closedForNow: 'le commerce ne prend pas de commandes pour le moment'
     },
     search: {
+      recentClear: 'Effacer',
+      recentTitle: 'Récemment',
       title: 'Recherche',
       byCraving: 'Par envie',
       byMunicipality: 'Par commune',
@@ -6873,6 +6875,7 @@ export default {
       discoverInfoJoin: 'Inscrire mon commerce'
     },
     menuCategories: {
+      priceBefore: 'avant {price}',
       inCart: '{n} dans le panier',
       oneLess: 'Un {name} de moins',
       quickAdd: 'Ajouter {name} au panier',
@@ -6909,6 +6912,8 @@ export default {
       carteFermer: 'Fermer la fiche'
     },
     restaurantList: {
+      newOnFairide: 'Nouveau sur Fairide',
+      sectionFeatured: 'À la une près de toi',
       sectionFreeDelivery: 'Livraison offerte',
       sectionDeliveryFrom: 'Livraison dès {amount}',
       sectionRegistered: 'Déjà sur Fairide · {n} commerces inscrits',
@@ -7018,6 +7023,7 @@ export default {
       clearSearch: 'Effacer la recherche'
     },
     floatingCart: {
+      conflictDetail: 'Les articles de {restaurant} seront retirés de ton panier.',
       clearConfirmTitle: "Vider le panier ?",
       clearConfirmBody: "Tous les plats choisis seront retirés.",
       title: 'Ton panier',
@@ -7307,6 +7313,7 @@ export default {
       retourCommerces: 'Retour aux restaurants'
     },
     panier: {
+      bandeauVide: 'Vide pour l’instant',
       title: 'Ton panier',
       viewCart: 'Voir le panier',
       toCheckout: 'Aller au paiement',
@@ -7315,6 +7322,7 @@ export default {
       emptyText: "Ajoute des plats depuis la carte d'un commerce, ils apparaîtront ici."
     },
     orders: {
+      bandeauVide: 'Aucune pour l’instant',
       cancelConfirmTitle: "Annuler ta commande ?",
       cancelConfirmPaid: "Le commerce ne la préparera pas. Tu es remboursé automatiquement, sous 5 à 10 jours ouvrables selon ta banque.",
       cancelConfirmBody: "Le commerce ne la préparera pas.",
@@ -8190,7 +8198,7 @@ export default {
       ranking_sortsTitle: 'Les autres ordres, et les filtres',
       ranking_sorts: 'Vous pouvez choisir « Mieux notés » (la moyenne des avis réellement donnés ; un commerce sans avis passe après ceux qui en ont) ou « Plus proches » (distance à vol d\'oiseau depuis votre adresse). Les filtres (type de cuisine, commune, bio, vegan, prix, à emporter) retirent des commerces de la liste : ils ne la réordonnent pas.',
       ranking_rowsTitle: 'Les rangées de la page d\'accueil',
-      ranking_rows: "Près de chez vous : les commerces de votre commune. Offres : les commerces qui proposent une promotion qu'ils ont eux-mêmes créée. Healthy, bio, vegan : d'abord les commerces qui ont le plus de plats marqués ainsi par eux-mêmes (ou dont le nom le dit). Courses : les supermarchés et commerces d'alimentation. À découvrir : une sélection tirée au hasard parmi les commerces à moins de 10 km où vous n'avez pas encore commandé. Une rangée de moins de six commerces est complétée par les mieux notés. « Tes envies » : dans l'application, si vous avez choisi des envies à l'accueil (pizza, burgers…), les commerces qui y répondent, dans le même ordre que « Près de chez vous » ; ces choix restent dans votre téléphone.",
+      ranking_rows: "Près de chez vous : les commerces de votre commune. Offres : les commerces qui proposent une promotion qu'ils ont eux-mêmes créée. Healthy, bio, vegan : d'abord les commerces qui ont le plus de plats marqués ainsi par eux-mêmes (ou dont le nom le dit). Courses : les supermarchés et commerces d'alimentation. À découvrir : une sélection tirée au hasard parmi les commerces à moins de 10 km où vous n'avez pas encore commandé. À la une près de toi : jusqu'à cinq commerces qui ont une photo, les plus proches de chez vous d'abord (ceux qui sont ouverts avant ceux qui sont fermés), sans mise en avant payante. Une rangée de moins de six commerces est complétée par les mieux notés. « Tes envies » : dans l'application, si vous avez choisi des envies à l'accueil (pizza, burgers…), les commerces qui y répondent, dans le même ordre que « Près de chez vous » ; ces choix restent dans votre téléphone.",
       ranking_notPaidTitle: 'Les positions payées (« Sponsorisé »)',
       ranking_notPaid: "Un commerce peut payer pour apparaître à l'une des premières places d'une rangée de la page des commerces (« Autour de toi », « Healthy », « Vegan »…), pour un nombre de semaines. Sa carte porte alors la mention « Sponsorisé » dans cette rangée. Fairide valide chaque demande, et le commerce n'est placé ainsi que s'il appartient vraiment à la rangée : payer ne fait pas entrer un commerce sans plat vegan dans « Vegan ». En dehors de ces positions signalées, aucun commerce ne paie pour être mieux placé : la commission (10 % au plus) et l'abonnement sont les mêmes pour tous et n'influencent pas l'ordre d'affichage.",
       ranking_reviewsTitle: 'Les avis',

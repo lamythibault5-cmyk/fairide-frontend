@@ -16,6 +16,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import Modale from '../../components/Modale';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { StarsDisplay } from '../../components/Stars';
 // Chargée à la demande, même raison que dans RestaurantList.jsx : Leaflet ne doit pas retarder
 // l'affichage d'une fiche de commerce, qui est une page publique et indexable.
@@ -561,8 +562,10 @@ export default function RestaurantMenu() {
     </div>
   );
 
-  // Tout ce qui suit la photo jusqu'à la carte : dans la feuille de l'app, dans l'en-tête de la colonne de gauche sur le site.
-  const infos = (
+  /* Tout ce qui suit la photo jusqu'à la carte, en deux morceaux : `identite` (nom, note, état d'ouverture, description) et
+     `pratique` (commande groupée, mode, frais, offres, annonces). Le site les met l'un après l'autre dans l'en-tête de sa
+     colonne de gauche ; l'app (version C, 2026-10-17) pose l'identité sur le bandeau iris et la pratique dans la feuille. */
+  const identite = (
     <>
       <div className="fiche-titre-ligne">
         {/* h1 et non h2 : la fiche est la page la plus importante du site pour le
@@ -590,6 +593,8 @@ export default function RestaurantMenu() {
         ) : (
           <span>{t('restaurantList.newBadge')}</span>
         )}
+        {/* Dans l'app, la cuisine sur le bandeau (« Pizza · Ixelles »), comme dans la maquette retenue. */}
+        {APPLI && restaurant.cuisine && <><span aria-hidden="true">·</span><span>{restaurantTypeLabel(restaurant.cuisine, t) || restaurant.cuisine}</span></>}
         {restaurant.commune && <><span aria-hidden="true">·</span><span>{restaurant.commune}</span></>}
         <span aria-hidden="true">·</span>
         <button type="button" className="fiche-infos-lien" onClick={() => setInfosOuvertes(true)}>
@@ -618,7 +623,10 @@ export default function RestaurantMenu() {
       )}
 
       {restaurant.desc && <p className="fiche-desc">{restaurant.desc}</p>}
-
+    </>
+  );
+  const pratique = (
+    <>
       {/* Commande groupée (pages/client/CommandeGroupee.jsx) : le bandeau quand on compose sa part, sinon le bouton
           pour en ouvrir une — compte client exigé, comme pour commander. Le bouton est secondaire (pastille à filet iris,
           ecran-equipe-groupe.css) : la lime de la fiche reste au panier. */}
@@ -720,6 +728,7 @@ export default function RestaurantMenu() {
       )}
     </>
   );
+  const infos = <>{identite}{pratique}</>;
 
   /* LA CARTE. La recherche vit dans les ronds flottants, derrière la loupe : elle occupait ici une ligne entière et partait
      au défilement comme le reste — or c'est en descendant dans une longue carte qu'on se met à chercher, pas en arrivant.
@@ -737,7 +746,7 @@ export default function RestaurantMenu() {
         {restaurant.menu.length > 0 && menuFiltre.length === 0 && (
           <p className="small" style={{ margin: 0 }}>{t('restaurantMenu.noDishMatch', { q: requete })}</p>
         )}
-        <MenuCategorySections menu={menuFiltre} sections={sectionsFiltrees} onAdd={addToCart} onQuickAdd={ajoutDirect} hideAdd={onlineOrderingDisabled} />
+        <MenuCategorySections menu={menuFiltre} sections={sectionsFiltrees} onAdd={addToCart} onQuickAdd={ajoutDirect} hideAdd={onlineOrderingDisabled} bistrot={APPLI} />
       </div>
     </>
   );
@@ -843,37 +852,44 @@ export default function RestaurantMenu() {
         </Modale>
       )}
 
-      {/* Le titre garde sa taille propre (16px) plutôt que .modal-titre : c'est une question posée,
-          pas l'en-tête d'un panneau d'informations. D'où `ariaLabel` — sans lui, la fenêtre
-          s'annoncerait « dialogue » et rien de plus. */}
-      {conflictItem && (
-        <Modale ariaLabel={t('floatingCart.conflictTitle')} onFermer={() => setConflictItem(null)}>
-          <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('floatingCart.conflictTitle')}</h3>
-          <p className="small" style={{ margin: '0 0 16px' }}>
-            {t('floatingCart.conflictMessage', { restaurant: cart.restaurantName })}
-          </p>
-          <div className="row" style={{ gap: 8 }}>
-            <button className="btn-teal" onClick={confirmSwitchRestaurant}>{t('floatingCart.conflictConfirm')}</button>
-            <button className="btn-ghost" onClick={() => setConflictItem(null)}>{t('floatingCart.conflictCancel')}</button>
-          </div>
-        </Modale>
-      )}
+      {/* Panier d'un autre commerce : la feuille de confirmation commune (ConfirmDialog), qui dit en clair ce qui sera
+          retiré. C'était une Modale montée à la main, avec un bouton `btn-teal` sans style sur un <button>. */}
+      <ConfirmDialog
+        open={!!conflictItem}
+        icone="commandes"
+        title={t('floatingCart.conflictTitle')}
+        message={t('floatingCart.conflictMessage', { restaurant: cart.restaurantName })}
+        detail={t('floatingCart.conflictDetail', { restaurant: cart.restaurantName })}
+        confirmLabel={t('floatingCart.conflictConfirm')}
+        cancelLabel={t('floatingCart.conflictCancel')}
+        onConfirm={confirmSwitchRestaurant}
+        onCancel={() => setConflictItem(null)}
+      />
     </>
   );
 
   const decouvrir = discover.length > 0 && <DiscoverSection restaurants={discover} t={t} />;
 
+  /* LA CARTE DE BISTROT, DANS L'APP (fondateur, 2026-10-17, version C de « Fiche du commerce » dans
+     mockups/commerces-marque.html). Le bandeau iris revient : le nom en grand, la note, la cuisine et l'état d'ouverture en
+     blanc, la photo de couverture en pastille ronde à filet blanc dans le coin (le logo s'il n'y a pas de photo, le visuel de
+     marque s'il n'y a ni l'un ni l'autre). La feuille blanche monte dessus avec ce qu'on règle avant de commander, puis la
+     bande des sections et la carte, dont les plats se lisent comme une carte imprimée (MenuCategorySections `bistrot`).
+     Mêmes contenus, mêmes fonctions et même ordre qu'avant ; styles dans ecran-fiche.css. */
   if (APPLI) {
+    const pastille = !restaurant.coverImageUrl && restaurant.logoImageUrl
+      ? <img {...imgProps(restaurant.logoImageUrl, 192)} alt="" className="fiche-pastille-logo" decoding="async" onError={cacherImageCassee} />
+      : couverture;
     return (
       <div className="fiche-page fiche-appli" ref={pageRef}>
         {entete}
-        <header className={`fiche-entete${restaurant.logoImageUrl ? ' fiche-entete--logo' : ''}`}>
-          <div className="fiche-media">
-            {couverture}
-            {logo}
+        <header className="fiche-entete fiche-entete--bande">
+          <div className="fiche-bande">
+            <div className="fiche-bande-texte">{identite}</div>
+            <span className="fiche-pastille" aria-hidden="true">{pastille}</span>
           </div>
-          {/* La feuille blanche qui monte sur la photo. */}
-          <div className="fiche-feuille">{infos}</div>
+          {/* La feuille blanche qui monte sur le bandeau. */}
+          <div className="fiche-feuille">{pratique}</div>
         </header>
         {sectionsEtResultat}
         {carte}

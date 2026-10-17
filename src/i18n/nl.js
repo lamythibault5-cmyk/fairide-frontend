@@ -4038,13 +4038,13 @@ export default {
     cookiesPolicy: {
       pageTitle: 'Cookiebeleid · Fairide',
       title: 'Cookiebeleid',
-      updated: 'Laatste update: 15 oktober 2026.',
+      updated: 'Laatste update: 17 oktober 2026.',
       whatTitle: 'Wat is een cookie?',
       what: 'Een cookie is een klein bestand dat een website in je browser plaatst. Fairide gebruikt ook de “lokale opslag” van de browser (localStorage en sessionStorage), die dezelfde rol speelt: informatie onthouden van pagina tot pagina. Dit beleid dekt beide. Het geldt voor de website fairide.be en voor de Fairide-app die vanuit de browser wordt geïnstalleerd.',
       technicalTitle: 'Strikt noodzakelijke cookies en opslag',
       technical: 'Ze zijn onmisbaar voor de dienst en vereisen geen toestemming: **je sessie** (inlogtoken, tot 30 dagen of tot je uitlogt), **je winkelmandje** (inhoud en gekozen zaak, hoogstens 24 uur, leeggemaakt bij het uitloggen), **je begonnen inschrijving** (hoogstens 48 uur, gewist zodra het account is aangemaakt), **je keuze over de cookiebanner**, en **technische beveiligingen** (misbruikbeperking, formulierbeveiliging). Zonder deze kun je niet inloggen of bestellen.',
       preferencesTitle: 'Voorkeuren',
-      preferences: 'Om het je gemakkelijk te maken onthoudt Fairide in je browser: de gekozen **taal** (Frans, Engels, Nederlands), het **weergavethema**, de **muziek** gekozen in de minigames en je beste scores, de ticketprinter en het papier gekozen door een zaak, de geopende tabbladen en filters in het dashboard. Deze informatie verlaat je toestel niet en dient niet om je te volgen.',
+      preferences: 'Om het je gemakkelijk te maken onthoudt Fairide in je browser: de gekozen **taal** (Frans, Engels, Nederlands), het **weergavethema**, je **laatste zoekopdrachten** in de app (maximaal vijf, gewist bij het afmelden), de **muziek** gekozen in de minigames en je beste scores, de ticketprinter en het papier gekozen door een zaak, de geopende tabbladen en filters in het dashboard. Deze informatie verlaat je toestel niet en dient niet om je te volgen.',
       thirdPartyTitle: 'Diensten van derden',
       thirdParty: 'Sommige functies gebruiken externe diensten die eigen cookies kunnen plaatsen, alleen wanneer je ze gebruikt: **Stripe** (veilige betaling en identiteitscontrole, [beleid van Stripe](https://stripe.com/nl-be/privacy)), **Google** (“Inloggen met Google”, alleen als je erop klikt), **OpenStreetMap**-kaartlagen en **foto\'s** gehost door Unsplash (laden van afbeeldingen, geen volgcookie van onze kant). Fairide deelt geen surfgegevens met deze diensten buiten wat de gevraagde functie nodig heeft.',
       noTrackingTitle: 'Geen reclame, geen trackers',
@@ -4052,7 +4052,7 @@ export default {
       manageTitle: 'Cookies beheren of verwijderen',
       manage: 'Je kunt cookies en lokale opslag altijd weigeren of verwijderen in de instellingen van je browser (Chrome, Safari, Firefox, Edge: “Privacy” en dan “Sitegegevens”). Deze gegevens verwijderen logt je uit en maakt je winkelmandje leeg; de site blijft werken. De banner bij het eerste bezoek laat je alles weigeren wat niet strikt noodzakelijk is; je keuze wordt een jaar bewaard en kan worden gewijzigd door de sitegegevens te verwijderen.',
       durationTitle: 'Bewaartermijnen',
-      duration: 'Inlogsessie: maximaal 30 dagen. Winkelmandje: de duur van het bezoek. Voorkeuren (taal, thema, muziek, scores, printer): tot je ze verwijdert. Bannerkeuze: 12 maanden. Cookies van Stripe en Google: volgens hun eigen beleid, alleen op hun pagina\'s of bij gebruik.',
+      duration: 'Inlogsessie: maximaal 30 dagen. Winkelmandje: de duur van het bezoek. Voorkeuren (taal, thema, laatste zoekopdrachten, muziek, scores, printer): tot je ze verwijdert. Bannerkeuze: 12 maanden. Cookies van Stripe en Google: volgens hun eigen beleid, alleen op hun pagina\'s of bij gebruik.',
       contactTitle: 'Vragen',
       contact: 'Voor vragen over cookies of je gegevens: [contact@fairide.be](mailto:contact@fairide.be). Verwerkingsverantwoordelijke: Fairide SRL, KBO 1042.169.780.',
       seePrivacy: 'Privacybeleid',
@@ -4558,6 +4558,8 @@ export default {
       closedForNow: 'deze zaak neemt momenteel geen bestellingen aan'
     },
     search: {
+      recentClear: 'Wissen',
+      recentTitle: 'Recent',
       title: 'Zoeken',
       byCraving: 'Op zin',
       byMunicipality: 'Per gemeente',
@@ -6829,6 +6831,7 @@ export default {
       discoverInfoJoin: 'Mijn zaak inschrijven'
     },
     menuCategories: {
+      priceBefore: 'voorheen {price}',
       inCart: '{n} in het mandje',
       oneLess: 'Eén {name} minder',
       quickAdd: '{name} aan winkelmand toevoegen',
@@ -6865,6 +6868,8 @@ export default {
       carteFermer: 'Sluiten'
     },
     restaurantList: {
+      newOnFairide: 'Nieuw op Fairide',
+      sectionFeatured: 'In de kijker bij jou',
       sectionFreeDelivery: 'Gratis levering',
       sectionDeliveryFrom: 'Levering vanaf {amount}',
       sectionRegistered: 'Al op Fairide · {n} zaken ingeschreven',
@@ -6974,6 +6979,7 @@ export default {
       clearSearch: 'Zoekopdracht wissen'
     },
     floatingCart: {
+      conflictDetail: 'De artikelen van {restaurant} worden uit je winkelmandje gehaald.',
       clearConfirmTitle: "Winkelmand leegmaken?",
       clearConfirmBody: "Alle gekozen gerechten worden verwijderd.",
       title: 'Jouw winkelmandje',
@@ -7263,6 +7269,7 @@ export default {
       retourCommerces: 'Terug naar restaurants'
     },
     panier: {
+      bandeauVide: 'Voorlopig leeg',
       title: 'Je winkelmandje',
       viewCart: 'Mandje bekijken',
       toCheckout: 'Naar de betaling',
@@ -7271,6 +7278,7 @@ export default {
       emptyText: 'Voeg gerechten toe vanaf de kaart van een zaak, ze verschijnen hier.'
     },
     orders: {
+      bandeauVide: 'Nog geen enkele',
       cancelConfirmTitle: "Je bestelling annuleren?",
       cancelConfirmPaid: "De zaak bereidt ze niet. Je wordt automatisch terugbetaald, binnen 5 tot 10 werkdagen afhankelijk van je bank.",
       cancelConfirmBody: "De zaak bereidt ze niet.",
@@ -8144,7 +8152,7 @@ export default {
       ranking_sortsTitle: 'Andere volgordes, en filters',
       ranking_sorts: 'U kunt kiezen voor „Best beoordeeld” (het gemiddelde van de werkelijk gegeven beoordelingen; een zaak zonder beoordelingen komt na de zaken die er wel hebben) of „Dichtstbij” (afstand in vogelvlucht vanaf uw adres). Filters (keuken, gemeente, bio, vegan, prijs, afhalen) halen zaken uit de lijst: ze veranderen de volgorde niet.',
       ranking_rowsTitle: 'De rijen op de startpagina',
-      ranking_rows: 'Bij u in de buurt: de zaken uit uw gemeente. Aanbiedingen: zaken met een promotie die ze zelf hebben aangemaakt. Healthy, bio, vegan: eerst de zaken met de meeste gerechten die ze zelf zo gemarkeerd hebben (of waarvan de naam het zegt). Boodschappen: supermarkten en voedingswinkels. Ontdekken: een willekeurige selectie van zaken binnen 10 km waar u nog niet besteld hebt. Een rij met minder dan zes zaken wordt aangevuld met de best beoordeelde. Jouw goesting: in de app, als u bij het welkomstscherm een voorkeur koos (pizza, burgers…), de zaken die daaraan beantwoorden, in dezelfde volgorde als "Bij u in de buurt"; die keuzes blijven op uw telefoon.',
+      ranking_rows: 'Bij u in de buurt: de zaken uit uw gemeente. Aanbiedingen: zaken met een promotie die ze zelf hebben aangemaakt. Healthy, bio, vegan: eerst de zaken met de meeste gerechten die ze zelf zo gemarkeerd hebben (of waarvan de naam het zegt). Boodschappen: supermarkten en voedingswinkels. Ontdekken: een willekeurige selectie van zaken binnen 10 km waar u nog niet besteld hebt. In de kijker bij jou: tot vijf zaken met een foto, de dichtstbijzijnde eerst (open zaken vóór gesloten zaken), zonder betaalde plaatsing. Een rij met minder dan zes zaken wordt aangevuld met de best beoordeelde. Jouw goesting: in de app, als u bij het welkomstscherm een voorkeur koos (pizza, burgers…), de zaken die daaraan beantwoorden, in dezelfde volgorde als "Bij u in de buurt"; die keuzes blijven op uw telefoon.',
       ranking_notPaidTitle: 'Betaalde posities („Gesponsord”)',
       ranking_notPaid: 'Een zaak kan betalen om op een van de eerste plaatsen van een rij op de pagina met zaken te verschijnen („In je buurt”, „Healthy”, „Vegan”…), voor een aantal weken. Haar kaart draagt dan het label „Gesponsord” in die rij. Fairide keurt elke aanvraag goed, en een zaak wordt alleen zo geplaatst als ze echt in de rij thuishoort: betalen brengt een zaak zonder veganistische gerechten niet in „Vegan”. Buiten deze aangeduide posities betaalt geen enkele zaak om hoger te staan: de commissie (hoogstens 10 %) en het abonnement zijn voor iedereen gelijk en hebben geen invloed op de volgorde.',
       ranking_reviewsTitle: 'Beoordelingen',

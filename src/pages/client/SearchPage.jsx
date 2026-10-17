@@ -9,6 +9,7 @@ import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 import { experienceApp } from '../../natif';
+import { lireRecherches, retenirRecherche, effacerRecherches } from '../../recherchesRecentes';
 import { RouteVelo } from '../../components/TeteListe';
 import VisuelVide from '../../components/VisuelVide';
 import CertifiedBadge from '../../components/CertifiedBadge';
@@ -136,9 +137,14 @@ export default function SearchPage() {
     return { commerces, plats, cuisines, communes, aide, rubriques, mesCommandes, total };
   }, [actif, q, restaurants, commandes, user, bio, vegan, halal, sansGluten]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Récemment (app seulement, voir recherchesRecentes.js) : le mot est retenu quand il a servi — Entrée, ou un résultat touché.
+  const [recentes, setRecentes] = useState(() => (experienceApp() ? lireRecherches() : []));
+  const retenir = () => { if (experienceApp() && q.length >= 2) setRecentes(retenirRecherche(requete)); };
+
   // Entrée sur un texte qui n'a qu'un résultat : on y va. Sur plusieurs, on ne devine pas.
   function soumettre(e) {
     e.preventDefault();
+    retenir();
     if (!resultats || resultats.total !== 1) return;
     const r = resultats;
     if (r.commerces[0]) return navigate(`/restaurants/${r.commerces[0].id}`);
@@ -189,7 +195,55 @@ export default function SearchPage() {
       {/* Avant la première lettre, on montre par où commencer : les cuisines et les communes, qui sont
           ce qu'on cherche le plus, plus le chemin vers l'aide. Une page vide avec un champ ne dit
           rien de ce qu'il accepte. */}
-      {!actif && (
+      {/* DANS L'APP (fondateur, 2026-10-17, « Search » de mockups/commerces-marque.html) : les envies en tuiles — l'icône de
+          la cuisine dans un carré blanc, sur un aplat iris très clair —, les régimes en pastilles dessous, puis les communes
+          et l'aide comme avant. Le site garde ses pastilles. */}
+      {!actif && !site && (
+        <>
+          <h3 className="recherche-titre-app">{t('search.byCraving')}</h3>
+          <div className="recherche-tuiles">
+            {RESTAURANT_TYPES.slice(0, 14).map((c) => (
+              <Link key={c.value} to="/restaurants" state={{ cuisine: c.value }} className="recherche-tuile">
+                <span className="recherche-tuile-icone" aria-hidden="true"><Icone nom={c.icone} taille={22} /></span>
+                <span>{restaurantTypeLabel(c.value, t) || c.value}</span>
+              </Link>
+            ))}
+          </div>
+          <div className="recherche-pastilles recherche-regimes-app" role="group" aria-label={t('search.dietFilters')}>
+            <button type="button" className={`pill recherche-pastille${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('search.filterBio')}</button>
+            <button type="button" className={`pill recherche-pastille${vegan ? ' active' : ''}`} aria-pressed={vegan} onClick={() => setVegan((v) => !v)}>{t('search.filterVegan')}</button>
+            <button type="button" className={`pill recherche-pastille${halal ? ' active' : ''}`} aria-pressed={halal} onClick={() => setHalal((v) => !v)}>{t('search.filterHalal')}</button>
+            <button type="button" className={`pill recherche-pastille${sansGluten ? ' active' : ''}`} aria-pressed={sansGluten} onClick={() => setSansGluten((v) => !v)}>{t('search.filterGlutenFree')}</button>
+          </div>
+          {recentes.length > 0 && (
+            <section className="recherche-recentes" aria-labelledby="recherche-recentes-titre">
+              <div className="recherche-recentes-tete">
+                <h3 className="recherche-titre-app" id="recherche-recentes-titre">{t('search.recentTitle')}</h3>
+                <button type="button" className="recherche-recentes-effacer" onClick={() => { effacerRecherches(); setRecentes([]); }}>{t('search.recentClear')}</button>
+              </div>
+              {recentes.map((mot) => (
+                // Toucher un mot le remet dans le champ : les résultats s'affichent comme si on venait de le taper.
+                <button key={mot} type="button" className="recherche-recente" onClick={() => setRequete(mot)}>
+                  <Icone nom="horloge" taille={17} /><span>{mot}</span>
+                </button>
+              ))}
+            </section>
+          )}
+          <h3 className="recherche-titre-app">{t('search.byMunicipality')}</h3>
+          <div className="recherche-pastilles">
+            {COMMUNES.map((c) => (
+              <Link key={c} to="/restaurants" state={{ commune: c }} className="pill recherche-pastille">{c}</Link>
+            ))}
+          </div>
+          <h3 className="recherche-titre-app">{t('search.aQuestion')}</h3>
+          <div className="recherche-pastilles">
+            {sujetsAide(t).slice(0, 4).map((s) => (
+              <Link key={s.to + s.titre} to={s.to} className="pill recherche-pastille">{s.titre}</Link>
+            ))}
+          </div>
+        </>
+      )}
+      {!actif && site && (
         <>
           <div className="card">
             <h3 className="recherche-titre-groupe">{t('search.byCraving')}</h3>
@@ -286,13 +340,21 @@ export default function SearchPage() {
     </>
   );
 
+  /* L'APP (fondateur, 2026-10-17, « Search » de mockups/commerces-marque.html) : le titre et le champ sur le bandeau iris,
+     comme Favoris et Mon compte, le reste dans la feuille blanche. Pas de « bleu sur bleu » : dans l'app, aucun en-tête iris
+     ne se pose au-dessus (le site, lui, garde son écran ci-dessous). */
   if (!site) {
     return (
-      <div>
-        <h2 className="section-title" style={{ marginTop: 0 }}>{t('search.title')}</h2>
-        {champRecherche}
-        {pastillesRegime}
-        {corps}
+      <div className="ecran-bandeau recherche-app">
+        <div className="eb-bandeau">
+          <h1 className="eb-titre">{t('search.title')}</h1>
+          {champRecherche}
+        </div>
+        {/* Un résultat touché après avoir tapé : le mot rejoint « Récemment ». */}
+        <div className="eb-feuille" onClickCapture={(e) => { if (e.target.closest('a')) retenir(); }}>
+          {pastillesRegime}
+          {corps}
+        </div>
       </div>
     );
   }

@@ -4029,13 +4029,13 @@ export default {
     cookiesPolicy: {
       pageTitle: 'Cookie policy · Fairide',
       title: 'Cookie policy',
-      updated: 'Last updated: 15 October 2026.',
+      updated: 'Last updated: 17 October 2026.',
       whatTitle: 'What is a cookie?',
       what: 'A cookie is a small file placed by a website in your browser. Fairide also uses the browser\'s “local storage” (localStorage and sessionStorage), which plays the same role: remembering information from one page to the next. This policy covers both. It applies to the fairide.be website and to the Fairide app installed from the browser.',
       technicalTitle: 'Strictly necessary cookies and storage',
       technical: 'They are essential to the service and do not require your consent: **your session** (login token, kept up to 30 days or until you log out), **your cart** (contents and chosen business, 24 hours at most, emptied when you log out), **your sign-up in progress** (48 hours at most, erased as soon as the account is created), **your choice about the cookie banner**, and **technical protections** (abuse limits, form security). Without them you cannot log in or order.',
       preferencesTitle: 'Preferences',
-      preferences: 'To make things easier, Fairide remembers in your browser: the chosen **language** (French, English, Dutch), the display **theme**, the **music** chosen in the mini-games and your best scores, the ticket printer and paper chosen by a business, the tabs and filters open in the dashboard. This information never leaves your device and is not used for tracking.',
+      preferences: 'To make things easier, Fairide remembers in your browser: the chosen **language** (French, English, Dutch), the display **theme**, your **latest searches** in the app (five at most, cleared when you log out), the **music** chosen in the mini-games and your best scores, the ticket printer and paper chosen by a business, the tabs and filters open in the dashboard. This information never leaves your device and is not used for tracking.',
       thirdPartyTitle: 'Third-party services',
       thirdParty: 'Some features rely on external services that may set their own cookies, only when you use them: **Stripe** (secure payment and identity verification, [Stripe\'s policy](https://stripe.com/privacy)), **Google** (“Sign in with Google”, only if you click it), **OpenStreetMap** map tiles and **photos** hosted by Unsplash (image loading, no tracking cookie on our side). Fairide shares no browsing data with these services beyond what the requested feature needs.',
       noTrackingTitle: 'No advertising, no trackers',
@@ -4043,7 +4043,7 @@ export default {
       manageTitle: 'Managing or deleting cookies',
       manage: 'You can refuse or delete cookies and local storage at any time in your browser settings (Chrome, Safari, Firefox, Edge: “Privacy” then “Site data”). Deleting this data logs you out and empties your cart; the site keeps working. The banner shown on the first visit lets you refuse everything that is not strictly necessary; your choice is kept for one year and can be changed by deleting the site data.',
       durationTitle: 'Retention periods',
-      duration: 'Login session: 30 days at most. Cart: the duration of the visit. Preferences (language, theme, music, scores, printer): until you delete them. Banner choice: 12 months. Stripe and Google cookies: according to their own policies, only on their pages or when you use them.',
+      duration: 'Login session: 30 days at most. Cart: the duration of the visit. Preferences (language, theme, latest searches, music, scores, printer): until you delete them. Banner choice: 12 months. Stripe and Google cookies: according to their own policies, only on their pages or when you use them.',
       contactTitle: 'Questions',
       contact: 'For any question about cookies or your data: [contact@fairide.be](mailto:contact@fairide.be). Data controller: Fairide SRL, CBE 1042.169.780.',
       seePrivacy: 'Privacy policy',
@@ -4549,6 +4549,8 @@ export default {
       closedForNow: 'this shop isn\'t taking orders right now'
     },
     search: {
+      recentClear: 'Clear',
+      recentTitle: 'Recent',
       title: 'Search',
       byCraving: 'By craving',
       byMunicipality: 'By municipality',
@@ -6820,6 +6822,7 @@ export default {
       discoverInfoJoin: 'List my business'
     },
     menuCategories: {
+      priceBefore: 'was {price}',
       inCart: '{n} in the basket',
       oneLess: 'One less {name}',
       quickAdd: 'Add {name} to cart',
@@ -6856,6 +6859,8 @@ export default {
       carteFermer: 'Close'
     },
     restaurantList: {
+      newOnFairide: 'New on Fairide',
+      sectionFeatured: 'Featured near you',
       sectionFreeDelivery: 'Free delivery',
       sectionDeliveryFrom: 'Delivery from {amount}',
       sectionRegistered: 'Already on Fairide · {n} businesses signed up',
@@ -6965,6 +6970,7 @@ export default {
       clearSearch: 'Clear search'
     },
     floatingCart: {
+      conflictDetail: 'The items from {restaurant} will be removed from your cart.',
       clearConfirmTitle: "Empty the cart?",
       clearConfirmBody: "All the dishes you chose will be removed.",
       title: 'Your cart',
@@ -7254,6 +7260,7 @@ export default {
       retourCommerces: 'Back to restaurants'
     },
     panier: {
+      bandeauVide: 'Empty for now',
       title: 'Your cart',
       viewCart: 'View cart',
       toCheckout: 'Go to checkout',
@@ -7262,6 +7269,7 @@ export default {
       emptyText: 'Add dishes from a shop menu and they will show up here.'
     },
     orders: {
+      bandeauVide: 'None yet',
       cancelConfirmTitle: "Cancel your order?",
       cancelConfirmPaid: "The business will not prepare it. You are refunded automatically, within 5 to 10 working days depending on your bank.",
       cancelConfirmBody: "The business will not prepare it.",
@@ -8135,7 +8143,7 @@ export default {
       ranking_sortsTitle: 'Other orders, and filters',
       ranking_sorts: 'You can choose "Best rated" (the average of reviews actually given; a business without reviews comes after those that have some) or "Nearest" (straight-line distance from your address). Filters (cuisine, municipality, organic, vegan, price, takeaway) remove businesses from the list: they don\'t reorder it.',
       ranking_rowsTitle: 'Home page rows',
-      ranking_rows: 'Near you: businesses in your municipality. Offers: businesses running a promotion they created themselves. Healthy, organic, vegan: first the businesses with the most dishes they marked as such (or whose name says so). Groceries: supermarkets and food shops. To discover: a random selection among businesses within 10 km where you haven\'t ordered yet. A row with fewer than six businesses is completed with the best rated. Your cravings: in the app, if you picked cravings on the welcome screens (pizza, burgers…), the businesses that match them, in the same order as "Near you"; these choices stay on your phone.',
+      ranking_rows: 'Near you: businesses in your municipality. Offers: businesses running a promotion they created themselves. Healthy, organic, vegan: first the businesses with the most dishes they marked as such (or whose name says so). Groceries: supermarkets and food shops. To discover: a random selection among businesses within 10 km where you haven\'t ordered yet. Featured near you: up to five businesses that have a photo, closest to you first (open ones before closed ones), with no paid placement. A row with fewer than six businesses is completed with the best rated. Your cravings: in the app, if you picked cravings on the welcome screens (pizza, burgers…), the businesses that match them, in the same order as "Near you"; these choices stay on your phone.',
       ranking_notPaidTitle: 'Paid positions (“Sponsored”)',
       ranking_notPaid: 'A business can pay to appear in one of the first places of a row on the businesses page (“Near you”, “Healthy”, “Vegan”…), for a number of weeks. Its card then shows the label “Sponsored” in that row. Fairide approves each request, and a business is only placed this way if it really belongs to the row: paying does not put a business without vegan dishes into “Vegan”. Apart from these labelled positions, no business pays to be placed higher: the commission (10% at most) and the subscription are the same for everyone and don\'t influence the display order.',
       ranking_reviewsTitle: 'Reviews',

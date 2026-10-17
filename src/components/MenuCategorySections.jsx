@@ -73,7 +73,11 @@ function PasPlat({ item, name, image, onAjout, t }) {
   );
 }
 
-function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
+/* LA CARTE DE BISTROT (fondateur, 2026-10-17, version C de « Fiche du commerce » dans mockups/commerces-marque.html), dans
+ * l'app seulement (`bistrot`, posé par RestaurantMenu quand experienceApp()). Le plat se lit comme sur la carte imprimée
+ * du commerce : une petite photo carrée à gauche, le nom, des points de conduite, le prix sur la même ligne, la description
+ * dessous ; le compteur « − n + » (PasPlat) se pose à droite, sous le prix. Mêmes données, mêmes gestes que la ligne du site. */
+function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language, bistrot = false }) {
   const image = resolveItemImage(item, sections);
   // Nom et description dans la langue affichée, avec repli sur le texte du restaurateur (localizedItem).
   const { name, desc } = localizedItem(item, language);
@@ -81,47 +85,72 @@ function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
   const cliquable = !hideAdd && !indisponible;
   const remise = prixRemise(item);
   const etiquette = item.activePromo && !item.activePromo.fairide && remise === null ? libellePromo(item.activePromo, t) : null;
-  const contenu = (
+  // Un code d'allergène inconnu (donnée ancienne ou mal saisie) donnait une ligne « Allergènes : » sans rien derrière.
+  const allergenes = libellesAllergenes(item.allergens, t);
+  const remisee = remise !== null && remise < item.price;
+  /* PAS DE PRIX BARRÉ (fondateur, 2026-10-17 : il n'aime pas le texte barré). Le prix d'avant reste dit — il le faut pour
+   * une réduction (art. VI.18 CDE) — en clair : « avant 13,50 € ». */
+  const prixAvant = remisee && <span className="plat-prix-avant">{t('menuCategories.priceBefore', { price: euros(item.price) })}</span>;
+  const badges = (
+    <>
+      {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
+      {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}</span>}
+      {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}</span>}
+      {/* Halal, sans gluten : déclarés par le commerce (backend migration 042), dits en toutes lettres — un client qui
+          cherche l'un ou l'autre doit le lire, pas deviner une icône. */}
+      {item.halal && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.halal')}</span>}
+      {item.glutenFree && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.glutenFree')}</span>}
+      {/* Alcool : l'âge exigé à la remise, annoncé avant l'ajout au panier (backlog C3). */}
+      {item.isAlcohol && <span className="plat-age" title={t('conformite.alcoholBadgeTitle', { age: Math.max(18, item.minAge || 18) })}> {Math.max(18, item.minAge || 18)}+</span>}
+    </>
+  );
+  const ligneDesc = (indisponible || desc) && <span className="plat-desc">{indisponible ? (item.outOfStockToday ? t('menuCategories.soldOutToday') : t('menuCategories.unavailable')) : desc}</span>;
+  const ligneAllergenes = allergenes.length > 0 && <span className="plat-allergenes">{t('conformite.allergensLine', { list: allergenes.join(', ') })}</span>;
+  const vignette = image && (
+    /* imgProps : la vignette fait 112 px (client-ui.css) ; sans lui chaque plat chargeait l'original
+       Cloudinary, 50 à 70 Ko pièce (Lighthouse du 5 oct. 2026 : ~940 Ko de trop sur une carte). */
+    <span className="plat-visuel">
+      <img loading="lazy" decoding="async" width="112" height="112" {...imgProps(image, 112)} alt="" className="plat-photo" />
+    </span>
+  );
+  const contenu = bistrot ? (
+    <>
+      {vignette}
+      <span className="plat-texte">
+        <span className="bistrot-l1">
+          <span className="plat-nom">{name}{badges}</span>
+          <span className="bistrot-points" aria-hidden="true" />
+          <span className={`plat-prix${remisee ? ' est-remise' : ''}`}>{euros(remisee ? remise : item.price)}</span>
+        </span>
+        {ligneDesc}
+        {ligneAllergenes}
+        {(prixAvant || etiquette) && <span className="plat-prix-ligne">{prixAvant}{etiquette && <span className="plat-promo">{etiquette}</span>}</span>}
+      </span>
+    </>
+  ) : (
     <>
       <span className="plat-texte">
-        <span className="plat-nom">
-          {name}
-          {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
-          {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}</span>}
-          {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}</span>}
-          {/* Halal, sans gluten : d\u00E9clar\u00E9s par le commerce (backend migration 042), dits en toutes lettres \u2014 un client qui
-              cherche l'un ou l'autre doit le lire, pas deviner une ic\u00F4ne. */}
-          {item.halal && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.halal')}</span>}
-          {item.glutenFree && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.glutenFree')}</span>}
-          {/* Alcool : l'âge exigé à la remise, annoncé avant l'ajout au panier (backlog C3). */}
-          {item.isAlcohol && <span className="plat-age" title={t('conformite.alcoholBadgeTitle', { age: Math.max(18, item.minAge || 18) })}> {Math.max(18, item.minAge || 18)}+</span>}
-        </span>
-        {(indisponible || desc) && <span className="plat-desc">{indisponible ? (item.outOfStockToday ? t('menuCategories.soldOutToday') : t('menuCategories.unavailable')) : desc}</span>}
+        <span className="plat-nom">{name}{badges}</span>
+        {ligneDesc}
         {/* Allergènes déclarés (A1, palier 2) : listés sur la ligne quand il y en a ; « aucun des 14 » reste dans la fiche du plat. */}
-        {item.allergens?.length > 0 && <span className="plat-allergenes">{t('conformite.allergensLine', { list: libellesAllergenes(item.allergens, t).join(', ') })}</span>}
+        {ligneAllergenes}
         <span className="plat-prix-ligne">
-          {remise !== null && remise < item.price
-            ? <><span className="plat-prix est-remise">{euros(remise)}</span><s className="plat-prix-avant">{euros(item.price)}</s></>
+          {remisee
+            ? <><span className="plat-prix est-remise">{euros(remise)}</span>{prixAvant}</>
             : <span className="plat-prix">{euros(item.price)}</span>}
           {etiquette && <span className="plat-promo">{etiquette}</span>}
         </span>
       </span>
-      {image ? (
-        <span className="plat-visuel">
-          {/* imgProps : la vignette fait 112 px (client-ui.css) ; sans lui chaque plat chargeait l'original
-              Cloudinary, 50 à 70 Ko pièce (Lighthouse du 5 oct. 2026 : ~940 Ko de trop sur une carte). */}
-          <img loading="lazy" decoding="async" width="112" height="112" {...imgProps(image, 112)} alt="" className="plat-photo" />
-        </span>
-      ) : null}
+      {vignette}
     </>
   );
-  const classes = `plat${image ? '' : ' plat-sans-photo'}${indisponible ? ' plat-indisponible' : ''}`;
+  const classes = `plat${image ? '' : ' plat-sans-photo'}${indisponible ? ' plat-indisponible' : ''}${bistrot ? ' plat-bistrot' : ''}`;
   if (!cliquable) return <div className={classes}>{contenu}</div>;
   // DEUX GESTES, DEUX BOUTONS (fondateur, 2026-10-01) : toucher le plat ouvre sa fiche (photo, description,
   // options) ; toucher le « + » l'ajoute tout de suite au panier. Deux boutons frères et non imbriqués : un bouton
   // dans un bouton n'est pas du HTML valide, et le second toucher déclenchait aussi le premier.
   return (
-    <div className={`plat-ligne${image ? '' : ' plat-ligne-sans-photo'}`}>
+    <div className={`plat-ligne${image ? '' : ' plat-ligne-sans-photo'}${bistrot ? ' plat-ligne-bistrot' : ''}`}>
       <button type="button" className={`${classes} plat-cliquable`} onClick={() => onAdd(item)} aria-label={`${name}, ${euros(remise ?? item.price)}`}>
         {contenu}
       </button>
@@ -138,7 +167,7 @@ function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
 // manuelle retombe sur l'ancienne déduction automatique (chaudes/alcool/froides) par nom, pour ne
 // pas casser les menus déjà en place. Partagé entre la page client (RestaurantMenu) et l'aperçu
 // restaurateur (RestaurantPreview) pour que les deux restent strictement identiques.
-export default function MenuCategorySections({ menu, sections, onAdd, onQuickAdd, hideAdd }) {
+export default function MenuCategorySections({ menu, sections, onAdd, onQuickAdd, hideAdd, bistrot = false }) {
   const { t, language } = useLanguage();
   return (
     <>
@@ -157,7 +186,7 @@ export default function MenuCategorySections({ menu, sections, onAdd, onQuickAdd
               <div key={group.key || '__none'}>
                 {group.label && <div className="sub-category-header"><span>{group.label}</span></div>}
                 <div className="plats-liste">
-                  {group.items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} onQuickAdd={onQuickAdd} hideAdd={hideAdd} t={t} sections={sections} language={language} />)}
+                  {group.items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} onQuickAdd={onQuickAdd} hideAdd={hideAdd} t={t} sections={sections} language={language} bistrot={bistrot} />)}
                 </div>
               </div>
             ))}
