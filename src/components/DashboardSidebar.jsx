@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -154,6 +154,13 @@ export default function DashboardSidebar() {
   // avant la première réduction, c'était près d'un écran de pouce. Dans l'application, 24px et 3px de marge — dès que le
   // doigt descend ; sur le site, 60px et 6px, un peu plus de tolérance au tremblement d'un trackpad.
   const compacte = useEnteteDefilement(NATIF ? { seuil: 24, marge: 3 } : { seuil: 60, marge: 6 });
+  /* LA BARRE DU PANIER SUIT (fondateur, 2026-10-17 : « que le panier se réduise en même temps que la barre, avec la même
+   * animation »). L'état est publié sur <html> (`barre-compacte`) : la pilule du panier (FloatingCart, styles.css) se
+   * réduit au même instant, avec les mêmes durées — un seul calcul de défilement pour les deux, donc jamais de décalage. */
+  useEffect(() => {
+    document.documentElement.classList.toggle('barre-compacte', compacte);
+    return () => document.documentElement.classList.remove('barre-compacte');
+  }, [compacte]);
   // Le compte admin (fairide.entreprise@gmail.com, voir middleware/auth.js isAdminEmail) sert
   // exclusivement à l'ERP interne : peu importe le rôle "métier" sous-jacent du compte ou la page visitée,
   // la sidebar ne montre jamais la nav client/restaurateur/livreur pour ce compte — seulement les 7

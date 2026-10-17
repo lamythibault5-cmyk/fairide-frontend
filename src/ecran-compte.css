@@ -9,7 +9,7 @@
 .compte-ecran { --compte-bord: 18px; }
 
 /* ---------- Le bandeau ---------- */
-.compte-bandeau { position: relative; background: var(--iris); color: #fff; padding: 20px 20px 48px; border-radius: var(--radius) var(--radius) 0 0; }
+.compte-bandeau { position: relative; background: var(--iris); color: #fff; padding: 20px 20px 58px; border-radius: var(--radius) var(--radius) 0 0; }
 .compte-tete { display: flex; align-items: center; gap: 14px; margin: 4px 0 18px; }
 .compte-avatar {
   flex: none; width: 62px; height: 62px; border-radius: 50%; background: var(--lime); color: var(--ink);
@@ -32,8 +32,10 @@
 .compte-raccourci:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .compte-raccourci svg { flex: none; }
 
-/* Le vélo de la marque, garé au bord du bandeau, juste au-dessus de la feuille. */
-.compte-velo { position: absolute; right: 18px; bottom: 26px; color: var(--lime); opacity: .9; line-height: 0; }
+/* Le vélo de la marque, garé au bord du bandeau, juste au-dessus de la feuille. Plus petit (32 px) et 10 px de bandeau en
+   plus sous les tuiles (fondateur, 2026-10-17 : il touchait le filet des raccourcis) : il se pose maintenant à mi-chemin
+   entre les tuiles et la feuille, sans toucher ni l'un ni l'autre. */
+.compte-velo { position: absolute; right: 20px; bottom: 30px; color: var(--lime); opacity: .9; line-height: 0; }
 .compte-velo svg { display: block; }
 
 /* ---------- La feuille ---------- */

@@ -38,7 +38,7 @@ export default function EnteteCompte({ nom, email, initiales, raccourcis }) {
 // Le vélo de la marque (BrandMark.jsx, sans tuile), lime sur l'iris : même tracé que la route de l'accueil (EcransBienvenue.jsx).
 function VeloGare() {
   return (
-    <svg viewBox="-3 5 82 42" width="40" height="21">
+    <svg viewBox="-3 5 82 42" width="32" height="17">
       <g fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"><circle cx="15" cy="29" r="12.5" /><circle cx="61" cy="29" r="12.5" /></g>
       <g fill="currentColor"><rect x="16" y="8" width="44" height="5" rx="2.5" /><g transform="rotate(42 27 22.5)"><rect x="13" y="20" width="28" height="5" rx="2.5" /></g></g>
     </svg>

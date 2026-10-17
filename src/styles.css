@@ -5148,3 +5148,29 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 }
 .recherche-valider:active { transform: scale(.92); }
 .fiche-recherche-resultat { margin: -4px 0 10px; font-size: 13px; font-weight: 500; color: var(--iris); }
+
+/* LA BARRE DU PANIER SE RÉDUIT AVEC LES ONGLETS (fondateur, 2026-10-17 : « le panier gêne parfois ; qu'il se réduise en même
+   temps que la barre, et qu'en remontant on revoie le détail »). Sous 900 px seulement, là où la barre d'onglets se réduit :
+   quand elle passe en compacte (html.barre-compacte, posée par DashboardSidebar), « Voir le panier » s'efface comme ses
+   libellés, la barre du panier se resserre autour du sac et du total, et descend des 14 px que perdent les onglets. Mêmes
+   durées et même ressort que la barre (.14 s, --ressort-ui), au même instant. En remontant, tout revient. Dans le parcours
+   de commande (fiche d'un commerce), les onglets sont masqués mais l'état suit le défilement de la même façon. */
+.panier-pilule-texte { display: inline-block; max-width: 360px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom;
+  transition: opacity .12s, max-width .14s var(--ressort-ui); }
+.panier-pilule { transition: bottom .14s var(--ressort-ui), max-width .14s var(--ressort-ui), height .14s var(--ressort-ui), gap .14s var(--ressort-ui), padding .14s var(--ressort-ui); }
+@media (max-width: 900px) {
+  html.barre-compacte .panier-pilule-texte { opacity: 0; max-width: 0; }
+  html.barre-compacte .panier-pilule { gap: 6px; padding-left: 16px; padding-right: 16px; }
+  html.barre-compacte body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .panier-pilule {
+    bottom: calc(var(--hauteur-onglets) - 2px + env(safe-area-inset-bottom));
+  }
+  /* La barre pleine largeur (app, et fiche d'un commerce sur le site) : elle se resserre au centre, le sac à gauche, le total à droite. */
+  html.appli.barre-compacte .panier-pilule,
+  html.barre-compacte:not(.appli) body:has(.fiche-site) .panier-pilule {
+    max-width: 176px; height: 52px; padding: 4px 4px 4px 18px; justify-content: space-between;
+  }
+  html.appli.barre-compacte .panier-pilule-total,
+  html.barre-compacte:not(.appli) body:has(.fiche-site) .panier-pilule-total { height: 42px; }
+  .panier-pilule-total { transition: height .14s var(--ressort-ui); }
+}
+@media (prefers-reduced-motion: reduce) { .panier-pilule, .panier-pilule-texte { transition: none; } }
