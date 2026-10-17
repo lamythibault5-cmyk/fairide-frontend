@@ -19,7 +19,8 @@
 // aria-label sur les onglets). Elle n'est jamais la seule chose qui nomme une destination, donc
 // l'annoncer une seconde fois ne ferait que bavarder.
 
-const TRACES = {
+// Exporté pour iconeHtml.jsx, qui écrit les mêmes tracés en texte SVG pour les marqueurs de carte.
+export const TRACES = {
   // — Navigation —
   restaurants: <><path d="M4 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3" /><path d="M6 12v9" /><path d="M17 3c-1.7 0-3 2.2-3 5s1.3 4 3 4 3 0 3 0V3Z" /><path d="M17 12v9" /></>,
   recherche: <><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>,

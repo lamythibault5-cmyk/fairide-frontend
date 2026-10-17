@@ -26,8 +26,7 @@ function rond(nom, fond, encre) {
   });
 }
 
-// Créés au chargement du module, hors du rendu : iconeHtml rend l'icône avec flushSync, sans effet dans un useEffect
-// (la pastille restait vide). Même choix que DriverNavigationMap.
+// Créés au chargement du module, une fois pour toutes (iconeHtml écrit le SVG en texte, sans React, depuis le 2026-10-17).
 const ICONE_COMMERCE = rond('commerce', '#3B2FB5', '#fff');
 const ICONE_CLIENT = rond('maison', '#C8F03C', '#14121F');
 

@@ -13,9 +13,8 @@ import { iconeHtml } from '../iconeHtml';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
-// Les icônes des épingles, rendues ICI, au chargement du module : iconeHtml rend avec flushSync, que React refuse quand on
-// l'appelle depuis un effet en cours de validation (« flushSync was called from inside a lifecycle method ») — l'icône
-// sortait vide, et restait vide (gardée en cache). Les épingles s'affichaient sans leur dessin (relevé le 2026-10-16).
+// Les icônes des épingles, préparées au chargement du module (mises en cache). Depuis le 2026-10-17, iconeHtml écrit le SVG
+// en texte sans React : l'appeler depuis un effet ne pose plus de problème ; ce préchargement reste, sans danger.
 for (const nom of new Set(['restaurants', ...RESTAURANT_TYPES.map((t) => t.icone)])) iconeHtml(nom, 16);
 iconeHtml('maison', 15);
 
@@ -94,7 +93,8 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
 
     const withCoords = (restaurants || []).filter((r) => r.lat && r.lng);
     withCoords.forEach((r) => {
-      const marker = L.marker([r.lat, r.lng], { icon: pinIcon(r.cuisine, selected?.id === r.id) }).addTo(mapRef.current);
+      // `title` : le nom du commerce, lu par les lecteurs d'écran sur l'épingle (qui se touche comme un bouton) et affiché au survol.
+      const marker = L.marker([r.lat, r.lng], { icon: pinIcon(r.cuisine, selected?.id === r.id), title: r.name }).addTo(mapRef.current);
       if (!singleMarker) {
         marker.on('click', () => setSelected(r));
       }
