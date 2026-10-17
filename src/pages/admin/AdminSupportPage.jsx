@@ -179,7 +179,7 @@ export default function AdminSupportPage() {
           <div className="stat-card"><div className="num">{stats.resolved}</div><div className="label">{tr('adminSupport.ticketsResolved')}</div></div>
           <div className="stat-card"><div className="num">{pct(stats.resolutionRate, 0)}</div><div className="label">{tr('adminSupport.resolutionRate')}</div></div>
           <div className="stat-card"><div className="num">{stats.avgResolutionHours !== null ? `${stats.avgResolutionHours} h` : '-'}</div><div className="label">{tr('adminSupport.avgResolutionTime')}</div></div>
-          <button type="button" className={`stat-card${slaOnly ? ' highlight' : ''}`} style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setSlaOnly((v) => !v)}><div className="num" style={{ color: stats.slaBreached > 0 ? 'var(--red)' : 'inherit' }}>{stats.slaBreached}</div><div className="label">{tr('adminSupport.slaBreached')}</div></button>
+          <button type="button" className={`stat-card${slaOnly ? ' highlight' : ''}`} style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setSlaOnly((v) => !v)}><div className="num" style={{ color: stats.slaBreached > 0 ? 'var(--red)' : 'inherit' }}>{stats.slaBreached}</div><div className="label">{tr('adminSupport.slaBreached')}</div></button>
         </div>
       )}
       {stats && stats.byCategory.length > 0 && (

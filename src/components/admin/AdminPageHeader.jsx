@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import useAdminOverview from '../../hooks/useAdminOverview';
 import useAdminRole from '../../hooks/useAdminRole';
+import Icone from '../Icone';
 import { hubByKey, hubModules, moduleBadge, moduleByKey } from '../../pages/admin/adminModules';
 
 // En-tête commun des applications de l'ERP : le nom du pôle en grand avec les actions de l'écran à
@@ -16,6 +17,10 @@ import { hubByKey, hubModules, moduleBadge, moduleByKey } from '../../pages/admi
 //
 // L'icône et la phrase de description sous le titre sont parties : le nom du pôle et l'onglet allumé
 // suffisent à dire où l'on est. La description et l'aide restent derrière « En savoir plus ».
+//
+// LE BANDEAU IRIS (2026-10-17, « refais l'admin comme les autres écrans ») : l'en-tête est le bandeau iris du site
+// (site-cadre.css) — petite ligne de contexte, grand titre, actions en pastilles claires à droite, onglets du pôle en
+// pastilles (l'allumé en blanc), et le bord de la feuille blanche qui monte dessous. Styles : admin-cadre.css.
 export default function AdminPageHeader({ module, title, actions, children }) {
   const { t: tr } = useLanguage();
   const [aide, setAide] = useState(false);
@@ -35,9 +40,16 @@ export default function AdminPageHeader({ module, title, actions, children }) {
   const conseils = mod ? tr(cleAide) : '';
   const aAide = !!conseils && conseils !== cleAide;
   return (
-    <header className="admin-page-header">
+    <header className="admin-page-header admin-bande">
       <div className="admin-page-header-row">
-        <h2 className="admin-page-title">{grandTitre}</h2>
+        <div className="admin-bande-titres">
+          <p className="admin-bande-ctx">
+            {hub && <Icone nom={hub.icon} taille={16} />}
+            <b>{tr('adminHubs.console')}</b>
+            {avecOnglets && <span>· {nomModule}</span>}
+          </p>
+          <h1 className="admin-page-title">{grandTitre}</h1>
+        </div>
         {actions && <div className="admin-page-header-actions">{actions}</div>}
       </div>
       {avecOnglets && (
@@ -57,7 +69,7 @@ export default function AdminPageHeader({ module, title, actions, children }) {
       )}
       {(sousTitre || aAide) && (
         <div className="admin-page-subline">
-          {sousTitre && <h3>{sousTitre}</h3>}
+          {sousTitre && <h2>{sousTitre}</h2>}
           {aAide && (
             <button type="button" className="admin-help-toggle" onClick={() => setAide((v) => !v)} aria-expanded={aide}>{aide ? tr('adminHome.helpLess') : tr('adminHome.helpMore')}</button>
           )}

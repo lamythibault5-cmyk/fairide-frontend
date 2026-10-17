@@ -98,7 +98,7 @@ export default function AdminCouriersPage() {
               <div className="stat-card highlight"><div className="num">{(data.rows ?? []).length}</div><div className="label">{tr('adminCouriers.kpiAll')}</div></div>
               <div className="stat-card"><div className="num">{nbReels}</div><div className="label">{tr('adminCouriers.kpiReal')}</div></div>
               {['pending_review', 'approved', 'blocked_threshold', 'rejected', 'draft'].map((s) => (
-                <button key={s} type="button" className={`stat-card${filtre === s ? ' highlight' : ''}`} style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setFiltre(filtre === s ? 'all' : s)}>
+                <button key={s} type="button" className={`stat-card${filtre === s ? ' highlight' : ''}`} style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setFiltre(filtre === s ? 'all' : s)}>
                   <div className="num">{data.counts?.[s] || 0}</div><div className="label">{lifecycle(s)}</div>
                 </button>
               ))}

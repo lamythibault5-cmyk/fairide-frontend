@@ -2,9 +2,10 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AccountsTable from '../../components/admin/AccountsTable';
 import { ErrorCard } from '../../components/admin/AdminListTools';
-import { useLanguage } from '../../context/LanguageContext';
+import { getLocale, useLanguage } from '../../context/LanguageContext';
 import useAdminOverview from '../../hooks/useAdminOverview';
 import DeletionRequestsPanel from '../../components/admin/DeletionRequestsPanel';
+import Icone from '../../components/Icone';
 import { money } from './adminUtils';
 import { attentionItems } from './adminModules';
 
@@ -18,6 +19,10 @@ import { attentionItems } from './adminModules';
 // latérale, ramenée à sept pôles (adminModules.js), suffit désormais pour naviguer. Des six raccourcis
 // du haut, restent les trois du quotidien ; « + Prospect », « + Dépense » et « + Écriture » vivent
 // dans leur application, à un onglet de là.
+//
+// LE BANDEAU (2026-10-17, même famille que le reste du site) : le salut, les raccourcis en pastilles claires et les
+// chiffres en direct vivent sur le bandeau iris ; le point lime « en direct » est le seul lime de l'écran. La liste
+// « à traiter », les comptes et les suppressions sont sur la feuille blanche dessous.
 export default function AdminHomePage() {
   const { t: tr } = useLanguage();
   const { user } = useAuth();
@@ -41,35 +46,42 @@ export default function AdminHomePage() {
 
   return (
     <div className="admin-home">
-      <header className="admin-home-hero">
-        <div>
-          <h2>{salut}{prenom ? `, ${prenom}` : ''}</h2>
-          <p className="small">{tr('adminHubs.todayIntro')}</p>
+      <header className="admin-bande admin-home-bande">
+        <div className="admin-page-header-row">
+          <div className="admin-bande-titres">
+            <p className="admin-bande-ctx">
+              <Icone nom="maison" taille={16} />
+              <b>{tr('adminHubs.console')}</b>
+              <span>· {new Date().toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+            </p>
+            <h1 className="admin-page-title">{salut}{prenom ? `, ${prenom}` : ''}</h1>
+            <p className="admin-bande-sous">{tr('adminHubs.todayIntro')}</p>
+          </div>
+          <div className="admin-page-header-actions">
+            <Link className="btn-outline" to="/admin/orders?today=1">{tr('adminHome.quickTodayOrders')}</Link>
+            <Link className="btn-outline" to="/admin/tasks?new=1">{tr('adminHome.quickTask')}</Link>
+            <Link className="btn-teal" to="/admin/support?new=1">{tr('adminHome.quickTicket')}</Link>
+          </div>
         </div>
-        <div className="admin-home-quick">
-          <Link className="btn-outline" to="/admin/orders?today=1">{tr('adminHome.quickTodayOrders')}</Link>
-          <Link className="btn-outline" to="/admin/tasks?new=1">{tr('adminHome.quickTask')}</Link>
-          <Link className="btn-teal" to="/admin/support?new=1">{tr('adminHome.quickTicket')}</Link>
-        </div>
+
+        {direct.length > 0 && (
+          <section className="admin-direct" aria-labelledby="admin-direct-titre">
+            <h2 id="admin-direct-titre" className="admin-direct-titre"><span className="admin-direct-point" aria-hidden="true" />{tr('adminHubs.liveTitle')}</h2>
+            <div className="admin-direct-chiffres">
+              {direct.map((d) => (
+                <Link key={d.key} to={d.to} className="admin-direct-chiffre">
+                  <span className="admin-direct-valeur">{d.value}</span>
+                  <span className="admin-direct-libelle">{tr(`adminHubs.kpi_${d.key}`)}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </header>
 
       {!overview && !error && <p className="small">{tr('adminCommon.loading')}</p>}
       {error && !overview && <ErrorCard message={error} onRetry={refresh} />}
       {error && overview && <p className="small admin-home-stale">{tr('adminHome.staleCounts')} <button type="button" className="btn-ghost" onClick={refresh}>{tr('adminCommon.retry')}</button></p>}
-
-      {direct.length > 0 && (
-        <section className="admin-home-section">
-          <h3 className="admin-section-label">{tr('adminHubs.liveTitle')}</h3>
-          <div className="admin-kpis">
-            {direct.map((d) => (
-              <Link key={d.key} to={d.to} className="admin-kpi">
-                <span className="admin-kpi-value">{d.value}</span>
-                <span className="admin-kpi-label">{tr(`adminHubs.kpi_${d.key}`)}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       {overview && (
         <section className="admin-home-section" aria-live="polite">

@@ -1900,6 +1900,7 @@ export default {
       kpi_driversAvailable: 'Beschikbare koeriers',
       kpi_driversOnline: 'Koeriers online',
       kpi_restaurants: 'Actieve zaken',
+      console: 'Fairide-console',
     },
     adminHome: {
       apps: 'Apps',

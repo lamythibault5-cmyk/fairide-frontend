@@ -77,8 +77,8 @@ function ThreadsTab({ token, tr, toast, broadcastFilter, onClearBroadcast, refre
     <>
       {stats && (
         <div className="stat-grid msg-kpis">
-          <button type="button" className={`stat-card${stats.unread > 0 ? ' is-alert' : ''}`} style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setUnreadOnly(true)}><div className="num">{stats.unread}</div><div className="label">{tr('adminMessages.kpiUnread')}</div></button>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => { setUnreadOnly(false); setStatus('open'); }}><div className="num">{stats.open}</div><div className="label">{tr('adminMessages.kpiOpen')}</div></button>
+          <button type="button" className={`stat-card${stats.unread > 0 ? ' is-alert' : ''}`} style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setUnreadOnly(true)}><div className="num">{stats.unread}</div><div className="label">{tr('adminMessages.kpiUnread')}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => { setUnreadOnly(false); setStatus('open'); }}><div className="num">{stats.open}</div><div className="label">{tr('adminMessages.kpiOpen')}</div></button>
           <div className="stat-card"><div className="num">{stats.repliesWeek}</div><div className="label">{tr('adminMessages.kpiRepliesWeek')}</div></div>
           <div className="stat-card"><div className="num">{stats.broadcasts}</div><div className="label">{tr('adminMessages.kpiBroadcasts')}</div></div>
         </div>

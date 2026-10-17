@@ -122,9 +122,9 @@ export default function AdminDocumentsPage() {
       {overview && (
         <div className="stat-grid" style={{ marginBottom: 16 }}>
           <div className="stat-card highlight"><div className="num">{overview.total}</div><div className="label">{tr('adminCommon.documents')}</div></div>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setExpiry('expired')}><div className="num" style={{ color: overview.expired > 0 ? 'var(--red)' : 'inherit' }}>{overview.expired}</div><div className="label">{tr('adminDocs.expired')}</div></button>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setExpiry('expiring_soon')}><div className="num" style={{ color: overview.expiringSoon > 0 ? 'var(--gold-deep)' : 'inherit' }}>{overview.expiringSoon}</div><div className="label">{tr('adminDocs.expiringWithin', { n: overview.expiryWarningDays })}</div></button>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setVerificationStatus('en_attente')}><div className="num">{overview.pendingVerification}</div><div className="label">{tr('adminDocs.pendingVerification')}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setExpiry('expired')}><div className="num" style={{ color: overview.expired > 0 ? 'var(--red)' : 'inherit' }}>{overview.expired}</div><div className="label">{tr('adminDocs.expired')}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setExpiry('expiring_soon')}><div className="num" style={{ color: overview.expiringSoon > 0 ? 'var(--gold-deep)' : 'inherit' }}>{overview.expiringSoon}</div><div className="label">{tr('adminDocs.expiringWithin', { n: overview.expiryWarningDays })}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setVerificationStatus('en_attente')}><div className="num">{overview.pendingVerification}</div><div className="label">{tr('adminDocs.pendingVerification')}</div></button>
         </div>
       )}
 

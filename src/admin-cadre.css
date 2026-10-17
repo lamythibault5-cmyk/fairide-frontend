@@ -1,0 +1,304 @@
+/* =====================================================================================================================
+   LA CONSOLE ADMIN DANS LA FAMILLE DU SITE (fondateur, 2026-10-17 : « refais complètement le design de l'admin, comme les
+   autres écrans du site »). Importé par AdminLayout.jsx, après admin-erp.css.
+
+   Le cadre est celui du site (site-cadre.css) : barre latérale blanche, bandeau iris d'un bord à l'autre de la zone de
+   contenu, feuille blanche aux coins ronds qui monte dessus, filets à la place des ombres, une seule action lime au plus.
+     - L'en-tête de chaque application (AdminPageHeader.jsx) EST le bandeau : ligne de contexte, grand titre, actions en
+       pastilles claires à droite, onglets du pôle en pastilles (l'allumé en blanc), aide. Son ::after dessine le bord de
+       la feuille : la page continue dessous sur le blanc, sans qu'aucune des trente applications n'ait à se ré-envelopper.
+     - L'accueil (AdminHomePage.jsx) pose en plus les chiffres en direct sur le bandeau (.admin-direct).
+     - Le tiroir d'une fiche (RecordDrawer.jsx) reprend la même idée : tête iris, onglets en pastilles, corps en feuille.
+   Tout le reste (chiffres, filtres, cartes, tableaux, kanban) est retouché ici, sous div.admin-console (un cran plus
+   précis que les feuilles propres à chaque application, chargées après celle-ci avec leur page), sans toucher aux
+   mêmes classes ailleurs (espace commerce, livreur), qui gardent leur style.
+
+   Largeur : la console va jusqu'à --admin-large (1 280 px, un peu plus que les 1 120 px du site : des tableaux de dix
+   colonnes y vivent), centrée. Les marges sont calculées en unités de conteneur (cqi) sur .admin-console, si bien que
+   le bandeau peut annuler exactement la marge de la page pour aller d'un bord à l'autre.
+   ===================================================================================================================== */
+
+.admin-console {
+  --admin-large: 1280px;
+  --admin-marge: max(0px, (100cqi - var(--admin-large)) / 2);
+  container: admin-console / inline-size;
+}
+.admin-console > * { padding-left: var(--admin-marge); padding-right: var(--admin-marge); }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   1 · LE BANDEAU
+   --------------------------------------------------------------------------------------------------------------------- */
+.admin-bande {
+  position: relative; background: var(--iris); color: #fff;
+  /* .dashboard-main met 24 px en haut et 28 px sur les côtés au-dessus de 900 px. */
+  margin: -24px calc(-28px - var(--admin-marge)) 4px;
+  padding: 28px calc(28px + var(--admin-marge)) 56px;
+}
+/* Le bord de la feuille blanche qui monte sur le bandeau. */
+.admin-bande::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 28px;
+  background: #fff; border-radius: 28px 28px 0 0; pointer-events: none;
+}
+.admin-bande :focus-visible { outline-color: var(--lime); }
+.admin-bande :is(input, select, textarea):focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+.admin-bande .admin-page-header-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; margin: 0; }
+.admin-bande-titres { min-width: 0; flex: 1 1 320px; }
+.admin-bande-ctx { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; color: rgba(255, 255, 255, .75); }
+.admin-bande-ctx b { color: #fff; font-weight: 600; }
+.admin-bande-ctx svg { flex: none; }
+.admin-bande .admin-page-title { font-family: var(--font-titre); font-size: 36px; font-weight: 700; line-height: 1.1; letter-spacing: 0; color: #fff; margin: 10px 0 0; }
+.admin-bande-sous { margin: 6px 0 0; font-size: 15.5px; line-height: 1.45; color: rgba(255, 255, 255, .82); max-width: 640px; }
+
+/* Les actions de l'écran, en pastilles claires (comme .sp-puce de l'espace commerce). */
+.admin-bande .admin-page-header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.admin-bande :is(.btn-outline, .btn-ghost, .btn-danger-ghost) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 0 16px;
+  border-radius: var(--radius-pill); border: 1px solid rgba(255, 255, 255, .34); background: transparent; color: #fff;
+  font-size: 13.5px; font-weight: 600; text-decoration: none; white-space: nowrap; box-shadow: none;
+  transition: border-color .15s, background .15s;
+}
+.admin-bande :is(.btn-outline, .btn-ghost, .btn-danger-ghost):hover:not(:disabled) { border-color: #fff; background: rgba(255, 255, 255, .08); color: #fff; }
+.admin-bande :is(.btn-teal, .btn-primary) {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 18px;
+  border-radius: var(--radius-pill); border: 1px solid #fff; background: #fff; color: var(--iris);
+  font-size: 13.5px; font-weight: 700; text-decoration: none; white-space: nowrap;
+}
+.admin-bande :is(.btn-teal, .btn-primary):hover:not(:disabled) { background: rgba(255, 255, 255, .88); color: var(--iris); }
+.admin-bande .btn-gold { min-height: 40px; padding: 0 18px; border-radius: var(--radius-pill); font-size: 13.5px; }
+.admin-bande :is(.btn-outline, .btn-ghost, .btn-teal, .btn-primary, .btn-gold):disabled { opacity: .6; }
+/* Sélecteur Fiches / Tableau / Kanban : un segment clair, l'allumé en blanc. */
+.admin-bande .view-switcher { border: 1px solid rgba(255, 255, 255, .34); border-radius: var(--radius-pill); padding: 3px; gap: 2px; overflow: visible; }
+.admin-bande .view-switcher button { background: transparent; color: rgba(255, 255, 255, .85); border-radius: var(--radius-pill); padding: 7px 13px; font-weight: 600; }
+.admin-bande .view-switcher button:hover { color: #fff; }
+.admin-bande .view-switcher button.active { background: #fff; color: var(--iris); }
+/* Champs posés dans les actions (période, mois…) : blancs, en pastille. */
+.admin-bande .admin-page-header-actions :is(input:not([type="checkbox"]):not([type="radio"]), select) {
+  width: auto; background: #fff; border: 0; border-radius: var(--radius-pill); padding: 9px 14px; font-size: 13.5px; color: var(--ink);
+}
+.admin-bande .admin-page-header-actions label { color: rgba(255, 255, 255, .85); margin: 0; }
+.admin-bande .admin-page-header-actions :is(.small, .rep-toggle) { color: rgba(255, 255, 255, .8); }
+.admin-bande .admin-freshness { margin: 0; }
+/* Sélecteur de période (PeriodPicker, Rapports) posé sur le bandeau : pastilles claires, le mois en pastille blanche. */
+.admin-bande .fin-period { margin: 0; }
+div.admin-console .admin-bande .chip { background: transparent; border-color: rgba(255, 255, 255, .34); color: rgba(255, 255, 255, .85); }
+div.admin-console .admin-bande .chip:hover:not(.active) { border-color: #fff; color: #fff; }
+div.admin-console .admin-bande .chip.active { background: #fff; border-color: #fff; color: var(--iris); }
+.admin-bande .fin-period-nav { border: 0; border-radius: var(--radius-pill); }
+.admin-bande .fin-period-arrow { padding: 8px 14px; }
+
+/* Les onglets du pôle : des pastilles. */
+.admin-bande .admin-hub-tabs { display: flex; gap: 8px; border: 0; margin: 20px 0 0; padding: 2px; overflow-x: auto; scrollbar-width: none; }
+.admin-bande .admin-hub-tab {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 38px; margin: 0; padding: 0 15px;
+  border: 1px solid rgba(255, 255, 255, .34); border-radius: var(--radius-pill); color: rgba(255, 255, 255, .85);
+  font-size: 13.5px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: border-color .15s, background .15s, color .15s;
+}
+.admin-bande .admin-hub-tab:hover { border-color: #fff; color: #fff; }
+.admin-bande .admin-hub-tab.active { background: #fff; border-color: #fff; color: var(--iris); }
+.admin-bande .admin-hub-tab-count {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, .16); color: #fff; font-size: 11.5px; font-weight: 700;
+}
+.admin-bande .admin-hub-tab.active .admin-hub-tab-count { background: rgba(59, 47, 181, .1); color: var(--iris); }
+.admin-bande .admin-hub-tab-count.tone-danger, .admin-bande .admin-hub-tab.active .admin-hub-tab-count.tone-danger { background: var(--red); color: #fff; }
+
+/* Titre propre à l'écran (la carte d'un restaurant) et « En savoir plus ». */
+.admin-bande .admin-page-subline { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 14px 0 0; }
+.admin-bande .admin-page-subline h2 { margin: 0; font-size: 18px; color: #fff; }
+.admin-bande .admin-help-toggle { color: rgba(255, 255, 255, .8); font-size: 13px; }
+.admin-bande .admin-help-toggle:hover { color: #fff; }
+.admin-bande .admin-help-box { margin: 12px 0 0; border: 1px solid rgba(255, 255, 255, .3); border-radius: 18px; padding: 14px 16px; color: rgba(255, 255, 255, .88); font-size: 13.5px; line-height: 1.5; }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   2 · L'ACCUEIL : les chiffres en direct sur le bandeau
+   --------------------------------------------------------------------------------------------------------------------- */
+div.admin-console .admin-home { max-width: none; }
+.admin-direct { margin-top: 24px; }
+.admin-direct-titre { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .75); }
+/* Le seul lime de l'écran : le point « en direct », qui bat doucement. */
+.admin-direct-point { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); animation: admin-bat 2s ease-in-out infinite; }
+@keyframes admin-bat { 50% { opacity: .35; } }
+.admin-direct-chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 1px solid rgba(255, 255, 255, .26); border-radius: 20px; overflow: hidden; }
+.admin-direct-chiffre {
+  display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; color: #fff; text-decoration: none;
+  box-shadow: -1px 0 0 rgba(255, 255, 255, .2), 0 -1px 0 rgba(255, 255, 255, .2); transition: background .15s;
+}
+.admin-direct-chiffre:hover { background: rgba(255, 255, 255, .08); }
+.admin-direct-valeur { font-family: var(--font-titre); font-size: 30px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.admin-direct-libelle { font-size: 13px; color: rgba(255, 255, 255, .78); }
+
+div.admin-console .admin-home-section { margin-bottom: 32px; }
+div.admin-console .admin-section-label { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-family: var(--font-titre); font-size: 20px; font-weight: 700; color: var(--ink); }
+div.admin-console .admin-section-count { min-width: 24px; height: 24px; padding: 0 8px; border-radius: var(--radius-pill); display: inline-flex; align-items: center; justify-content: center; background: rgba(59, 47, 181, .1); color: var(--iris); font-family: var(--font-ui); font-size: 12.5px; font-weight: 700; }
+div.admin-console .admin-list { border-radius: 20px; }
+div.admin-console .admin-list-row { padding: 15px 18px; }
+div.admin-console .admin-list-text { font-size: 14.5px; }
+div.admin-console .admin-list-row:hover .admin-list-chevron { color: var(--iris); }
+div.admin-console .admin-home-clear { border-radius: 20px; padding: 20px; }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   3 · SUR LA FEUILLE : chiffres, filtres, cartes, tableaux, kanban
+   --------------------------------------------------------------------------------------------------------------------- */
+/* Les tuiles de chiffres : blanches à filet ; la tuile mise en avant est iris (le fond iris est l'autre fond permis). */
+div.admin-console .stat-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+div.admin-console .stat-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; min-width: 0; font: inherit; color: var(--ink); }
+div.admin-console :is(button, a).stat-card { transition: border-color .15s; }
+div.admin-console :is(button, a).stat-card:hover { border-color: var(--iris); }
+div.admin-console .stat-card .num { font-family: var(--font-titre); font-size: 24px; line-height: 1.15; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+div.admin-console .stat-card .label { margin-top: 4px; font-size: 13px; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--ink-soft); }
+div.admin-console .stat-card.highlight { background: var(--iris); border-color: var(--iris); }
+div.admin-console .stat-card.highlight > * { color: rgba(255, 255, 255, .8); }
+div.admin-console .stat-card.highlight .num { color: #fff; }
+/* Une tuile en alerte (pièces expirées, non lus) : filet rouge, fond blanc, le chiffre garde sa couleur. */
+div.admin-console .stat-card.is-alert, div.admin-console .stat-card.inc-danger { background: #fff; border-color: var(--red); }
+/* « Aujourd'hui vs hier » (tableau de bord) : même tuile que les autres chiffres. */
+div.admin-console .admin-today-grid { gap: 12px; margin-bottom: 20px; }
+div.admin-console .admin-today-tile { padding: 16px 18px; }
+div.admin-console .admin-today-tile .label { font-size: 13px; font-weight: 500; text-transform: none; letter-spacing: 0; }
+div.admin-console .admin-today-tile .num { font-family: var(--font-titre); font-size: 24px; }
+
+/* Recherche et filtres : champs blancs à filet, en pastille, comme la recherche du site. */
+div.admin-console .admin-control-panel { gap: 10px; margin-bottom: 14px; }
+div.admin-console .admin-control-panel :is(input:not([type="checkbox"]):not([type="radio"]):not([type="date"]), select),
+div.admin-console .admin-inline-field input[type="date"] {
+  background-color: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 10px 16px; font-size: 14px;
+}
+div.admin-console .admin-control-panel :is(input, select):hover:not(:focus) { border-color: var(--ink-faint); }
+div.admin-console .admin-control-panel select { padding-right: 34px; }
+/* Le premier champ texte d'une rangée de filtres est la recherche : une loupe au trait (Icone « recherche »). */
+div.admin-console .admin-control-panel > input:first-child:not([type="date"]):not([type="number"]) {
+  padding-left: 42px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%238A8377' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 16px 50%;
+}
+div.admin-console .admin-inline-field { font-size: 13.5px; color: var(--ink-soft); }
+
+/* Pastilles de filtre et sous-onglets (.role-pick, .team-tabs…) : blanches à filet, l'allumée en iris. */
+div.admin-console .role-pick { gap: 8px; }
+div.admin-console .chip { padding: 8px 14px; border-radius: var(--radius-pill); font-size: 13px; color: var(--ink); border-color: var(--line); transition: border-color .15s, background .15s, color .15s; }
+div.admin-console .chip:hover:not(.active) { border-color: var(--iris); color: var(--iris); }
+div.admin-console .chip.active { background: var(--iris); border-color: var(--iris); color: #fff; }
+div.admin-console .chip .pill { background: rgba(59, 47, 181, .1); color: var(--iris); border: 0; }
+div.admin-console .chip.active .pill { background: rgba(255, 255, 255, .2); color: #fff; }
+
+/* Cartes : filet, coins de 16 px ; une carte qu'on ouvre se comporte comme .site-survol (filet iris, monte de 3 px). */
+div.admin-console .card { border-radius: var(--radius); padding: 20px 22px; margin-bottom: 12px; }
+div.admin-console .card.order-card-clickable { cursor: pointer; transition: border-color .2s, transform .3s var(--site-ressort, ease); }
+div.admin-console .card.order-card-clickable:hover { border-color: var(--iris); }
+@media (hover: hover) { div.admin-console .card.order-card-clickable:hover { transform: translateY(-3px); } }
+div.admin-console .card.is-selected { box-shadow: none; border-color: var(--iris); }
+div.admin-console .card > h3:first-child, div.admin-console .card > .row:first-child > h3 { font-size: 17px; }
+div.admin-console .empty { border-style: solid; border-radius: 20px; padding: 40px 20px; }
+
+/* Étiquettes de statut : en minuscules, comme les pastilles du site (« Livraison », « Prête »). */
+div.admin-console .status-badge, .record-drawer .status-badge { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; padding: 4px 10px; }
+
+/* Tableaux : un cadre à filet aux coins ronds, en-têtes en minuscules, rangée grisée au survol. */
+div.admin-console .table-scroll { border: 1px solid var(--line); border-radius: var(--radius); background: #fff; overflow-x: auto; }
+div.admin-console .admin-table-sortable th { padding: 0; }
+div.admin-console .admin-th-sort { padding: 12px 14px; font-size: 12.5px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--ink-soft); }
+div.admin-console .admin-th-sort:hover { color: var(--ink); }
+div.admin-console .admin-th-sort.active { color: var(--iris); }
+div.admin-console .table-scroll > .admin-table { border: 0; }
+div.admin-console .admin-table { font-size: 13.5px; }
+div.admin-console .admin-table th { background: #fff; text-transform: none; letter-spacing: 0; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); padding: 12px 14px; }
+div.admin-console .admin-table td { padding: 11px 14px; }
+div.admin-console .admin-table tbody tr.clickable { cursor: pointer; transition: background .15s; }
+div.admin-console .admin-table tbody tr.clickable:hover { background: var(--cream-dim); }
+div.admin-console .admin-table tbody tr.is-selected { background: rgba(59, 47, 181, .06); }
+div.admin-console .admin-table tfoot td { background: var(--cream-dim); }
+
+/* Kanban : colonnes en aplat clair aux grands coins (comme le tableau des commandes du commerce), cartes blanches. */
+div.admin-console .kanban { gap: 14px; }
+div.admin-console .kanban-col { background: var(--cream-dim); border-radius: 20px; padding: 12px; border: 1px solid transparent; }
+div.admin-console .kanban-col.drop { border-color: var(--iris); background: rgba(59, 47, 181, .06); }
+div.admin-console .kanban-col-head { margin: 2px 4px 10px; }
+div.admin-console .kanban-col-head b { text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 700; color: var(--ink); }
+div.admin-console .kanban-card { border-radius: 14px; padding: 12px 14px; transition: border-color .15s; }
+
+/* Barre d'actions groupées : une bande iris, comme la barre du panier du site sur téléphone. */
+div.admin-console .admin-selection-bar { top: 10px; padding: 10px 12px 10px 18px; background: var(--iris); border-color: var(--iris); border-radius: 20px; color: #fff; }
+div.admin-console .admin-selection-bar b { color: #fff; }
+div.admin-console .admin-selection-bar :focus-visible { outline-color: var(--lime); }
+div.admin-console .admin-selection-bar :is(.btn-outline, .btn-ghost, .btn-danger-ghost) { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, .4); border-radius: var(--radius-pill); }
+div.admin-console .admin-selection-bar :is(.btn-outline, .btn-ghost, .btn-danger-ghost):hover:not(:disabled) { border-color: #fff; background: rgba(255, 255, 255, .08); }
+div.admin-console .admin-selection-bar select { background: #fff; border: 0; border-radius: var(--radius-pill); padding: 8px 14px; font-size: 13.5px; }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   4 · LE TIROIR D'UNE FICHE (RecordDrawer) : tête iris, onglets en pastilles, corps en feuille blanche
+   --------------------------------------------------------------------------------------------------------------------- */
+.record-drawer { background: var(--iris); border-left: 0; }
+.record-drawer :focus-visible { outline-color: var(--iris); }
+.record-drawer-head { background: var(--iris); color: #fff; border-bottom: 0; padding: 22px 22px 16px; }
+.record-drawer-head:has(+ .record-drawer-body) { padding-bottom: 38px; }
+.record-drawer-head :focus-visible, .record-drawer-tabs :focus-visible { outline-color: var(--lime); }
+.record-drawer-title h3 { font-family: var(--font-titre); font-size: 22px; font-weight: 700; line-height: 1.15; color: #fff; }
+.record-drawer-title .small { margin-top: 4px; color: rgba(255, 255, 255, .78); }
+.record-drawer-close { background: transparent; border-color: rgba(255, 255, 255, .4); color: #fff; width: 38px; height: 38px; transition: border-color .15s, background .15s; }
+.record-drawer-close:hover { border-color: #fff; background: rgba(255, 255, 255, .08); }
+.record-drawer-tools .status-badge:not(.status-preparation) { background: #fff; }
+.record-drawer-tools :is(.btn-outline, .btn-ghost) { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, .4); border-radius: var(--radius-pill); }
+.record-drawer-tools :is(.btn-teal, .btn-primary) { background: #fff; color: var(--iris); border-color: #fff; border-radius: var(--radius-pill); }
+.record-drawer-tabs { background: var(--iris); border-bottom: 0; gap: 8px; padding: 0 22px 40px; }
+.record-drawer-tabs button {
+  border: 1px solid rgba(255, 255, 255, .34); border-radius: var(--radius-pill); padding: 7px 14px; margin: 2px 0;
+  color: rgba(255, 255, 255, .85); background: transparent; transition: border-color .15s, background .15s, color .15s;
+}
+.record-drawer-tabs button:hover { border-color: #fff; color: #fff; }
+.record-drawer-tabs button.active { background: #fff; border-color: #fff; color: var(--iris); }
+.record-drawer-tabs button .pill { background: rgba(255, 255, 255, .16); color: #fff; border: 0; }
+.record-drawer-tabs button.active .pill { background: rgba(59, 47, 181, .1); color: var(--iris); }
+.record-drawer-body { position: relative; background: #fff; border-radius: 26px 26px 0 0; margin-top: -26px; padding: 24px 22px 28px; }
+.record-drawer-foot { background: #fff; }
+.record-drawer .drawer-section-title { margin: 4px 0 10px; font-size: 15px; font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--ink); }
+.record-drawer .drawer-row { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.record-drawer .drawer-row:last-child { border-bottom: 0; }
+.record-drawer .divider { margin: 16px 0; }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   5 · LA BARRE LATÉRALE DE LA CONSOLE (site, ≥ 901 px)
+   --------------------------------------------------------------------------------------------------------------------- */
+/* Recherche globale (AdminGlobalSearch) : champ blanc à filet en pastille, loupe à gauche. */
+.admin-recherche input {
+  background-color: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 10px 56px 10px 38px; font-size: 13.5px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238A8377' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 14px 50%;
+}
+.admin-recherche input:hover:not(:focus) { border-color: var(--ink-faint); }
+.admin-recherche .admin-search-hint { top: 50%; transform: translateY(calc(-50% - 6px)); right: 30px; }
+/* Un compteur « à faire » sur l'onglet allumé : iris sur la pastille blanche (il était blanc sur blanc). */
+html:not(.appli) .dashboard-nav.admin .dashboard-nav-link.active .nav-badge.tone-warn { color: var(--iris); }
+
+/* ---------------------------------------------------------------------------------------------------------------------
+   6 · TÉLÉPHONE ET TABLETTE (≤ 900 px) : le bandeau colle aux bords, encoche comprise, comme .site-bande
+   --------------------------------------------------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .admin-console > * { padding-left: 0; padding-right: 0; }
+  .admin-bande {
+    margin: calc(-18px - env(safe-area-inset-top)) calc(-1 * var(--gouttiere, 16px)) 4px;
+    padding: calc(20px + env(safe-area-inset-top)) var(--gouttiere, 16px) 48px;
+  }
+  .admin-bande::after { height: 24px; border-radius: 24px 24px 0 0; }
+  .admin-bande .admin-page-title { font-size: 28px; margin-top: 8px; }
+  .admin-bande-sous { font-size: 14.5px; }
+  .admin-bande .admin-page-header-row { align-items: flex-start; }
+  .admin-bande .admin-page-header-actions { width: 100%; }
+  /* Les onglets défilent de côté, jusqu'aux bords de l'écran. */
+  .admin-bande .admin-hub-tabs { margin: 16px calc(-1 * var(--gouttiere, 16px)) 0; padding: 2px var(--gouttiere, 16px); }
+  .admin-bande .admin-hub-tab { flex: none; }
+  /* Pas de clavier sur un téléphone : le raccourci « Ctrl K » n'y veut rien dire. */
+  .admin-recherche .admin-search-hint { display: none; }
+  .admin-recherche input { padding-right: 16px; }
+  .admin-direct-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-direct-valeur { font-size: 24px; }
+  .admin-direct-chiffre { padding: 14px; }
+  .record-drawer-head { padding: calc(18px + env(safe-area-inset-top)) 18px 16px; }
+  .record-drawer-tabs { padding: 0 18px 38px; }
+  .record-drawer-body { padding: 22px 18px 26px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-direct-point { animation: none; }
+  div.admin-console .card.order-card-clickable:hover { transform: none; }
+}

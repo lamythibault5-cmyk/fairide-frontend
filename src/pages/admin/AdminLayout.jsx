@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import AdminErrorBoundary from '../../components/admin/AdminErrorBoundary';
 import '../../admin-erp.css';
+import '../../admin-cadre.css';
 
 // Coquille légère : chaque page admin charge ses propres données de façon indépendante (pas de
 // pré-requis partagé comme restoId côté restaurateur), donc pas de state à faire descendre ici — la

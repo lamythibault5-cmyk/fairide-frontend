@@ -121,9 +121,9 @@ function RequestsTab({ refreshKey }) {
       {!data && !erreur && <SkeletonCards count={1} />}
       {kpis && (
         <div className="stat-grid compliance-kpis">
-          <button type="button" className="stat-card highlight" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setStatus('open')}><div className="num">{kpis.open}</div><div className="label">{tr('adminCompliance.kpiOpen')}</div></button>
-          <button type="button" className={`stat-card${kpis.overdue > 0 ? ' is-alert' : ''}`} style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setStatus('overdue')}><div className="num">{kpis.overdue}</div><div className="label">{tr('adminCompliance.kpiOverdue')}</div></button>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setStatus('done')}><div className="num">{kpis.done30d}</div><div className="label">{tr('adminCompliance.kpiDone30d')}</div></button>
+          <button type="button" className="stat-card highlight" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setStatus('open')}><div className="num">{kpis.open}</div><div className="label">{tr('adminCompliance.kpiOpen')}</div></button>
+          <button type="button" className={`stat-card${kpis.overdue > 0 ? ' is-alert' : ''}`} style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setStatus('overdue')}><div className="num">{kpis.overdue}</div><div className="label">{tr('adminCompliance.kpiOverdue')}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setStatus('done')}><div className="num">{kpis.done30d}</div><div className="label">{tr('adminCompliance.kpiDone30d')}</div></button>
           <div className="stat-card"><div className="num">{kpis.avgDays === null || kpis.avgDays === undefined ? '-' : kpis.avgDays}</div><div className="label">{tr('adminCompliance.kpiAvgDays')}</div></div>
         </div>
       )}

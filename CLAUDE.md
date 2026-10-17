@@ -260,6 +260,16 @@ one iris button; `/equipe/:token` (EquipeInvitation.jsx) is a centred band + she
 three ticks of what the member can do, one padlock line for what they can't, one lime action). A member's Mon compte has a
 « Mon équipe » group (restaurant + `team.memberCard` + the Commandes row) and calls `definirModeEquipe` itself, so the tab bar
 is right even before the orders page has loaded; on the orders page a member sees neither the « next step » nor terminal links.
+**The admin console in the same family (2026-10-17, [src/admin-cadre.css](src/admin-cadre.css), imported by AdminLayout).** Every
+app's [AdminPageHeader](src/components/admin/AdminPageHeader.jsx) is the iris band (`.admin-bande`): context line (hub icon,
+« Console Fairide », tab name), the hub as title, the screen's actions as light pills on the right (view switcher = light segment,
+`btn-teal` = white pill), the hub's apps as pill tabs (active one white), « En savoir plus »; its `::after` draws the top edge of the
+white sheet, so no page had to be re-wrapped. « Aujourd'hui » puts the greeting, shortcuts and live figures on the band (the pulsing
+« en direct » dot is the only lime). On the sheet, under `div.admin-console` (one notch above the per-app CSS files, which load
+later): white stat tiles with a hairline (`.highlight` = iris tile), white pill search with a magnifier, pill chips, sentence-case
+table headers and status badges, kanban columns on a light tint, an iris bulk-action bar. RecordDrawer: iris head, pill tabs, white
+body rising over it. Width 1,280 px max, centred with container units (`cqi`) so the band still cancels the page padding. A
+clickable stat tile must not set `border: 0` inline (white tile without its hairline is invisible).
 
 At this size, **find the neighbouring rule before adding one.** Selectors of equal specificity are
 resolved by order, and several blocks near the bottom (the 520px media query especially) override

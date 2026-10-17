@@ -64,14 +64,14 @@ export default function AdminGlobalSearch() {
   const hasResults = results && groups(tr).some((g) => results[g.key]?.length > 0);
 
   return (
-    <div ref={boxRef} style={{ position: 'relative', padding: '0 16px 12px' }}>
+    <div ref={boxRef} className="admin-recherche" style={{ position: 'relative', padding: '0 16px 12px' }}>
       <input
         ref={inputRef}
         value={q}
         onChange={(e) => { setQ(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder={tr('adminSearch.phSearch')}
-        style={{ fontSize: 13, paddingRight: 56 }}
+        aria-label={tr('adminSearch.phSearch')}
       />
       {!q && <span className="admin-search-hint" aria-hidden="true">Ctrl K</span>}
       {open && q.trim().length >= 2 && (

@@ -139,10 +139,10 @@ export default function AdminTasksPage() {
       {overview && (
         <div className="stat-grid" style={{ marginBottom: 16 }}>
           <div className="stat-card highlight"><div className="num">{overview.total}</div><div className="label">{tr('adminCommon.tasks')}</div></div>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setDue('overdue')}><div className="num" style={{ color: overview.overdue > 0 ? 'var(--red)' : 'inherit' }}>{overview.overdue}</div><div className="label">{tr('adminCommon.late')}</div></button>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setDue('due_soon')}><div className="num" style={{ color: overview.dueSoon > 0 ? 'var(--gold-deep)' : 'inherit' }}>{overview.dueSoon}</div><div className="label">{tr('adminTasks.dueWithin', { n: overview.dueSoonHours })}</div></button>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setStatus('a_faire')}><div className="num">{overview.todo}</div><div className="label">{tr('adminTasks.todo')}</div></button>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setStatus('en_cours')}><div className="num">{overview.inProgress}</div><div className="label">{tr('adminTasks.inProgress')}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setDue('overdue')}><div className="num" style={{ color: overview.overdue > 0 ? 'var(--red)' : 'inherit' }}>{overview.overdue}</div><div className="label">{tr('adminCommon.late')}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setDue('due_soon')}><div className="num" style={{ color: overview.dueSoon > 0 ? 'var(--gold-deep)' : 'inherit' }}>{overview.dueSoon}</div><div className="label">{tr('adminTasks.dueWithin', { n: overview.dueSoonHours })}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setStatus('a_faire')}><div className="num">{overview.todo}</div><div className="label">{tr('adminTasks.todo')}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setStatus('en_cours')}><div className="num">{overview.inProgress}</div><div className="label">{tr('adminTasks.inProgress')}</div></button>
         </div>
       )}
 
