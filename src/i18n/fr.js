@@ -7050,6 +7050,8 @@ export default {
       ordersOpenSoon: 'Les commandes à emporter ouvrent le {date} (livraison dès le {dateLivraison}) : ton panier t\'attend.'
     },
     driverAlert: {
+      notifCancelledBody: 'La commande a été annulée avant que tu la récupères : tu n’as plus à y aller.',
+      notifCancelled: 'Course annulée : {name}',
       none: 'Aucune course disponible pour le moment',
       available: '{n} courses disponibles',
       availableOne: '1 course disponible',

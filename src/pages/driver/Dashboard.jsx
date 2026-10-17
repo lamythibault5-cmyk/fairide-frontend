@@ -237,7 +237,9 @@ export default function DriverDashboard() {
   // Son, vibration, notification et compteur d'onglet : nouvelle course disponible, course prise devenue prête.
   const alerte = useAlerteLivreur({
     disponibles: available, mesCourses: mine, pret: !loading,
-    actif: user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && !user?.driverPaused
+    actif: user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && !user?.driverPaused,
+    // Course annulée avant le retrait : dite aussi à l'écran, en rouge (audit des notifications du 2026-10-17).
+    surAnnulee: (o) => toast(t('driverAlert.notifCancelled', { name: o.restaurantName || '' }), 'erreur')
   });
 
   // Partage de position : watchPosition plutôt qu'un getCurrentPosition relancé toutes les 12 s.

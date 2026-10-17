@@ -6997,6 +6997,8 @@ export default {
       ordersOpenSoon: 'Takeaway orders open on {date} (delivery from {dateLivraison}): your cart is waiting for you.'
     },
     driverAlert: {
+      notifCancelledBody: 'The order was cancelled before you picked it up: you no longer need to go.',
+      notifCancelled: 'Delivery cancelled: {name}',
       none: 'No deliveries available right now',
       available: '{n} deliveries available',
       availableOne: '1 delivery available',
