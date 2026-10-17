@@ -24,6 +24,7 @@ const pricingFields = (tr) => [
   // Plus de tarif livreur par véhicule (fondateur, 2026-10-14) : le livreur a le tarif au km du client, donc 90 % de la
   // livraison à vélo comme motorisé (pricing.tauxKmLivreur). driverPerKmMotor / driverPerKmBike ne sont plus lus.
   { key: 'secondOrderRadiusKm', label: tr('adminSettings.secondOrderRadius'), suffix: 'km', hint: tr('adminSettings.secondOrderRadiusHint') },
+  { key: 'extraOrderMaxDelayMin', label: tr('adminSettings.extraOrderMaxDelay'), suffix: 'min', hint: tr('adminSettings.extraOrderMaxDelayHint') },
   { key: 'tipFairideRate', label: tr('adminSettings.tipFairideRate'), suffix: '%', isRate: true, hint: tr('adminSettings.tipFairideRateHint') },
   { key: 'vatRateCommission', label: tr('adminSettings.vatCommission'), suffix: '%', isRate: true, hint: tr('adminSettings.vatCommissionHint') },
   { key: 'vatRateServiceFee', label: tr('adminSettings.vatServiceFees'), suffix: '%', isRate: true, hint: tr('adminSettings.vatServiceHint') }

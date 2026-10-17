@@ -182,11 +182,18 @@ export default function DriverDashboard() {
   // Un seul appel au dossier (il y en avait deux, identiques) : sac, véhicule, et l'état du dossier — qui décide du message
   // affiché avant la validation (pas encore envoyé, à corriger, ou en cours de vérification).
   const [dossier, setDossier] = useState(null);
+  const [tournee, setTournee] = useState(null);
   useEffect(() => {
     api('/couriers/me', { token }).then((d) => {
       setSac(d.courier?.bag || null);
       setVehicule({ type: d.courier?.vehicleType || '', bikeMaxKm: d.pricing?.bikeMaxKm || 4, rate: ['velo', 'velo_electrique'].includes(d.courier?.vehicleType || '') ? d.pricing?.driverPerKmBike : d.pricing?.driverPerKmMotor, base: d.pricing?.deliveryBaseFee, baseKm: d.pricing?.deliveryBaseKm });
       setDossier({ statut: d.courier?.lifecycleStatus || null, motif: d.courier?.reviewReason || '' });
+      // Règles de la tournée (routes/couriers.js tarifsLivreur, tournee.js côté serveur), rappelées dès qu'une course est en main.
+      setTournee({
+        max: d.courier?.otherPlatforms?.works === true ? 1 : (d.pricing?.maxOrdersFairideOnly || 3),
+        radius: String(d.pricing?.secondOrderRadiusKm ?? 2).replace('.', ','),
+        delay: d.pricing?.extraOrderMaxDelayMin ?? 10
+      });
     }).catch(() => {});
   }, [token]);
 
@@ -717,6 +724,20 @@ export default function DriverDashboard() {
     </div>
   );
   const titreOffres = <h2 className="ecl-h2">{t('dashDriver.availableOrders')}{available.length > 0 && <span className="ecl-badge doux">{available.length}</span>}</h2>;
+  /* LA TOURNÉE (fondateur, 2026-10-17) : jusqu'à trois courses à la fois. Dès qu'une course est en main, la liste ne montre
+     que les courses sur son chemin : la règle est dite ici, avec ses chiffres, pour que le livreur sache pourquoi la liste
+     est plus courte. Les mêmes pour tous (notice d'information, section 2). */
+  const nEnMain = awaitingPickup.length + active.length;
+  const blocTournee = tournee && nEnMain > 0 && (
+    <p className="ecl-tournee">
+      <span className="ecl-tournee-points" aria-hidden="true">
+        {Array.from({ length: tournee.max }, (_, i) => <i key={i} className={i < nEnMain ? 'plein' : ''} />)}
+      </span>
+      <span>{tournee.max === 1 ? t('dashDriver.tourneeUne')
+        : nEnMain >= tournee.max ? t('dashDriver.tourneePleine', { max: tournee.max })
+          : t('dashDriver.tourneeRegle', { n: nEnMain, max: tournee.max, radius: tournee.radius, delay: tournee.delay })}</span>
+    </p>
+  );
   const blocGrille = vehicule?.type && (
     <details className="ecl-grille">
       <summary><Icone nom="euro" taille={16} />{['velo', 'velo_electrique'].includes(vehicule.type) ? t('ecranLivreur.grilleVelo') : t('ecranLivreur.grilleMoteur')}</summary>
@@ -732,6 +753,7 @@ export default function DriverDashboard() {
     <>
       {blocSac}
       {titreOffres}
+      {blocTournee}
       {blocGrille}
       <NotifCourses />
       {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
