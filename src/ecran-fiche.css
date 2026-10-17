@@ -207,58 +207,83 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 }
 
 /* =====================================================================================================================
-   VERSION C, « LA CARTE DE BISTROT » (fondateur, 2026-10-17, mockups/commerces-marque.html). Dans l'app seulement.
-   - Le bandeau iris remplace la photo bord à bord : le nom en grand, la note, la cuisine, la commune et « Infos » en
-     pastilles blanches translucides, l'état d'ouverture dessous, la description. La photo de couverture devient une
-     PASTILLE ronde à filet blanc dans le coin (le logo sans photo, le visuel de marque sans l'un ni l'autre). Les ronds
-     flottants (croix, loupe, cœur) restent iris à filet blanc : sur le bandeau, le filet les dessine.
-   - La feuille blanche monte sur le bandeau avec ce qu'on règle avant de commander (inchangé, voir plus haut).
-   - La carte se lit comme une carte imprimée : le nom de la section en iris entre deux traits en pointillés (la route du
-     vélo), puis chaque plat sur une ligne — petite photo carrée, nom, points de conduite, prix — et le « + » à droite.
-   Pas de Bricolage ici : la police du mot « fairide » ne passe pas aux titres (CLAUDE.md, « Styling »). Pas d'ombre : la
-   pastille se détache par son filet blanc. Le lime de l'écran reste la barre du panier (et le chiffre du compteur).
+   VERSION B, « SCEAU ET TICKET » (fondateur, 2026-10-17, mockups/commerces-marque.html), avec la carte en pointillés de la
+   version C (« je garde les pointillés »). Dans l'app seulement.
+   - La photo de couverture bord à bord (règles « La photo, bord à bord » plus haut) ; la feuille blanche monte dessus.
+   - LE SCEAU, à cheval sur le bord de la feuille : le logo du commerce, ou son initiale sur un carré lime (aplat lime,
+     texte encre : règle 1), filet blanc de 4 px. Pas de Bricolage : la police du mot « fairide » ne passe pas aux titres.
+   - LE TICKET sous le nom : note, distance, prix de la livraison, en cases séparées par des pointillés, sur un aplat iris
+     très clair. La bascule Livraison / À emporter et « À plusieurs » sur une rangée, sans filets.
+   - L'annonce d'ouverture en bloc iris où roule le vélo ; l'aperçu des plats en photo, en rangée qui défile.
+   La carte (sections entre deux traits en pointillés, plats « nom ····· prix ») reste celle de la version C, plus bas.
    ===================================================================================================================== */
-.fiche-appli .fiche-entete--bande .fiche-bande {
-  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 104px; column-gap: 14px; align-items: start;
-  margin: 0 calc(-1 * var(--fiche-g)); padding: calc(var(--fiche-statut) + 68px) var(--fiche-g) 46px;
-  background: var(--iris); color: #fff;
+.fiche-appli .fiche-entete--sceau .fiche-feuille { padding-top: 46px; }
+.fiche-appli .fiche-sceau {
+  position: absolute; z-index: 3; left: calc(var(--fiche-g) + 2px); top: -34px; width: 68px; height: 68px; overflow: hidden;
+  display: grid; place-items: center; border-radius: 20px; border: 4px solid #fff; background: var(--lime); color: var(--ink);
+  font-family: var(--font-titre); font-size: 32px; font-weight: 700; line-height: 1;
+  animation: fiche-logo-saute .45s var(--ressort-ui) .15s backwards;
 }
-.fiche-appli .fiche-bande-texte { display: contents; }
-.fiche-appli .fiche-bande .fiche-titre-ligne { grid-column: 1; grid-row: 1; align-self: end; }
-.fiche-appli .fiche-bande .fiche-meta { grid-column: 1; grid-row: 2; }
-.fiche-appli .fiche-bande .fiche-statut, .fiche-appli .fiche-bande .fiche-desc { grid-column: 1 / -1; }
-.fiche-appli .fiche-pastille {
-  grid-column: 2; grid-row: 1 / span 2; position: relative; width: 104px; height: 104px; margin-top: -6px;
-  border-radius: 50%; overflow: hidden; border: 4px solid #fff; background: var(--iris-deep);
-  transform: rotate(6deg); animation: fiche-pastille-pose .5s var(--ressort-ui) .1s backwards;
-}
-@keyframes fiche-pastille-pose { from { transform: rotate(-14deg) scale(.4); } to { transform: rotate(6deg); } }
-.fiche-appli .fiche-pastille > .fiche-couverture, .fiche-appli .fiche-pastille > .fiche-pastille-logo {
-  position: relative; z-index: 1; display: block; width: 100%; height: 100%; margin: 0; border-radius: 0; object-fit: cover; background: none;
-}
-.fiche-appli .fiche-pastille > .visuel-vide { border-radius: 0; }
-.fiche-appli .fiche-pastille .visuel-vide-initiale { font-size: 46px; top: 50%; }
-.fiche-appli .fiche-pastille .visuel-vide-emoji { display: none; }
+.fiche-appli .fiche-sceau--logo { background: #fff; }
+.fiche-appli .fiche-sceau img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Sur la photo, la ligne de méta n'a plus la note (elle est dans le ticket) : la cuisine, la commune, « Infos ». */
+.fiche-appli .fiche-entete--sceau .fiche-meta { margin: 0 0 10px; }
 
-.fiche-appli .fiche-bande .fiche-nom { color: #fff; font-size: 32px; line-height: 1.05; letter-spacing: 0; margin: 0 0 10px; overflow-wrap: anywhere; }
-.fiche-appli .fiche-bande .certified-badge { color: #fff; }
-.fiche-appli .fiche-bande .certified-badge path { stroke: var(--iris); }
-.fiche-appli .fiche-bande .fiche-meta { margin: 0 0 12px; }
-.fiche-appli .fiche-bande .fiche-meta > span:not([aria-hidden]):not(.fiche-meta-note),
-.fiche-appli .fiche-bande .fiche-meta > span:first-child:not(.fiche-meta-note),
-.fiche-appli .fiche-bande .fiche-meta > .fiche-meta-note + span { background: rgba(255, 255, 255, .14); color: #fff; }
-/* Les étoiles en lime : lime sur iris, la seule place où la règle 1 l'admet en petit. */
-.fiche-appli .fiche-bande .fiche-meta-note > span { color: var(--lime) !important; } /* StarsDisplay pose la couleur en ligne */
-.fiche-appli .fiche-bande .fiche-meta > .fiche-infos-lien { background: transparent; border-color: rgba(255, 255, 255, .55); color: #fff; }
-.fiche-appli .fiche-bande .fiche-meta > .fiche-infos-lien::after { color: #fff; }
-.fiche-appli .fiche-bande .fiche-meta > .fiche-infos-lien:hover { border-color: #fff; color: #fff; }
-.fiche-appli .fiche-bande .fiche-statut { background: rgba(255, 255, 255, .14); color: #fff; margin: 0 0 12px; }
-.fiche-appli .fiche-bande .fiche-statut b { color: #fff; }
-.fiche-appli .fiche-bande .fiche-statut-detail { color: rgba(255, 255, 255, .82); }
-.fiche-appli .fiche-bande .fiche-statut.est-ouvert .fiche-statut-point { background: var(--lime); animation: none; }
-.fiche-appli .fiche-bande .fiche-statut.est-ferme .fiche-statut-point { background: #FF9B8F; }
-.fiche-appli .fiche-bande .fiche-desc { color: rgba(255, 255, 255, .84); font-size: 13.5px; line-height: 1.45; margin: 0; }
-.fiche-appli .fiche-bande > :last-child:not(.fiche-pastille), .fiche-appli .fiche-bande .fiche-statut:last-child { margin-bottom: 0; }
+.fiche-appli .fiche-ticket {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); margin: 2px 0 6px;
+  border-radius: 16px; background: rgba(59, 47, 181, .07);
+}
+.fiche-appli .fiche-ticket > div { display: grid; justify-items: center; gap: 1px; padding: 11px 6px; text-align: center; min-width: 0; }
+.fiche-appli .fiche-ticket > div + div { background: linear-gradient(rgba(59, 47, 181, .22) 50%, transparent 0) left / 2px 8px repeat-y; }
+.fiche-appli .fiche-ticket b { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.fiche-appli .fiche-ticket b svg { color: var(--iris); }
+.fiche-appli .fiche-ticket small { font-size: 11.5px; line-height: 1.25; color: var(--ink-soft); }
+.fiche-appli .fiche-ticket-note { margin: 0 0 4px; font-size: 12.5px; color: var(--ink-soft); text-align: center; }
+
+/* La bascule et « À plusieurs » sur une rangée, sans les deux filets de la version d'avant. */
+.fiche-appli .fiche-entete--sceau .fiche-faits { border: 0; padding: 0; margin: 14px 0 12px; flex-wrap: wrap; }
+.fiche-appli .fiche-groupe-lien {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 4px; border: 0; background: none;
+  color: var(--iris); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.fiche-appli .fiche-groupe-lien:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; border-radius: 8px; }
+
+/* L'annonce d'ouverture, en bloc iris : le texte en blanc, et le vélo lime qui roule sur la route en pointillés. */
+.fiche-appli .fiche-info.fiche-info--route {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: center;
+  background: var(--iris); color: #fff; border-radius: 18px; padding: 12px 14px 8px;
+}
+.fiche-appli .fiche-info--route .fiche-info-icone { background: rgba(255, 255, 255, .16); color: #fff; }
+.fiche-appli .fiche-info-route { grid-column: 1 / -1; position: relative; height: 18px; }
+.fiche-appli .fiche-info-route::before { content: ''; position: absolute; left: 0; right: 0; bottom: 3px; border-top: 3px dashed rgba(255, 255, 255, .4); }
+.fiche-appli .fiche-info-velo { position: absolute; bottom: 5px; left: 62%; color: var(--lime); line-height: 0; animation: fiche-velo-roule 1.4s cubic-bezier(.3, .7, .4, 1) .3s backwards; }
+@keyframes fiche-velo-roule { from { left: 4%; } }
+
+/* L'aperçu de la carte : des plats en photo, en rangée qui défile, avant la bande des sections. */
+.fiche-appli .fiche-apercu { margin: 4px 0 6px; }
+.fiche-appli .fiche-apercu-titre { margin: 8px 0 10px; font-size: 19px; font-weight: 700; }
+.fiche-appli .fiche-apercu-rangee {
+  display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
+  margin: 0 calc(-1 * var(--fiche-g)); padding: 0 var(--fiche-g) 4px; scroll-padding: 0 var(--fiche-g);
+}
+.fiche-appli .fiche-apercu-rangee::-webkit-scrollbar { display: none; }
+.fiche-appli .fiche-apercu-plat { position: relative; flex: none; width: 148px; scroll-snap-align: start; }
+.fiche-appli .fiche-apercu-bouton {
+  display: grid; gap: 4px; width: 100%; min-height: 0; padding: 0; border: 0; background: none; color: var(--ink);
+  font: inherit; text-align: left; cursor: pointer; box-shadow: none; border-radius: 0;
+}
+.fiche-appli .fiche-apercu-bouton:disabled { cursor: default; opacity: 1; }
+.fiche-appli .fiche-apercu-photo { display: block; height: 112px; border-radius: 18px; overflow: hidden; background: var(--cream-dim); }
+.fiche-appli .fiche-apercu-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+.fiche-appli .fiche-apercu-bouton:active .fiche-apercu-photo img { transform: scale(1.05); }
+.fiche-appli .fiche-apercu-bouton b { font-size: 13.5px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fiche-appli .fiche-apercu-bouton > span:last-child { font-size: 12.5px; color: var(--ink-soft); }
+.fiche-appli .fiche-apercu-bouton:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; border-radius: 18px; }
+.fiche-appli .fiche-apercu-plus {
+  position: absolute; top: 72px; right: 6px; width: 34px; height: 34px; min-height: 0 !important; padding: 0; border-radius: 50%;
+  display: grid; place-items: center; border: 2px solid #fff; background: var(--iris); color: #fff; font-size: 20px; font-weight: 600; line-height: 1; cursor: pointer;
+}
+.fiche-appli .fiche-apercu-plus:active { transform: scale(.88); }
 
 /* Les annonces de la feuille (ouverture des commandes, livraison coupée, commande en ligne fermée) : un aplat iris très
    clair, l'icône dans une tuile iris. */
@@ -294,5 +319,5 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .plat-cliquable.plat-bistrot:active { border-radius: 12px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .fiche-appli .fiche-pastille { animation: none; }
+  .fiche-appli .fiche-sceau, .fiche-appli .fiche-info-velo { animation: none; }
 }

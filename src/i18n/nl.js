@@ -6154,6 +6154,7 @@ export default {
       navAria: 'Rubrieken van je account'
     },
     groupOrder: {
+      startShort: 'Samen',
       start: 'Groepsbestelling',
       youHost: 'Jij bent de gastheer: jij betaalt alles',
       hostIs: 'Gastheer: {name}, die alles betaalt',
@@ -6936,6 +6937,10 @@ export default {
       minimumLabel: 'Minimale bestelling'
     },
     restaurantMenu: {
+      menuPreview: 'Een voorproefje van de kaart',
+      ticketFromYou: 'van bij jou',
+      ticketNoReviews: 'nog geen beoordelingen',
+      ticketReviews: '{n} beoordelingen',
       closedForToday: 'Deze zaak neemt vandaag geen bestellingen meer aan. Ze gaat morgen om {time} weer open.',
       deliveryUnavailableZone: 'Levering momenteel niet beschikbaar in deze zone: alleen afhaalbestellingen zijn mogelijk bij deze zaak.',
       notFound: 'Deze zaak bestaat niet of staat niet meer op Fairide.',
