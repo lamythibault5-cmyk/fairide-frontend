@@ -53,6 +53,9 @@ export const TRACES = {
   courrier: <><rect x="2" y="5" width="20" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></>,
   cadenas: <><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>,
   cle: <><circle cx="8" cy="15" r="4" /><path d="m11 12 9-9" /><path d="m17 6 2 2" /><path d="m14.5 8.5 2 2" /></>,
+  // Instagram et Facebook (réseaux du commerce, « Infos » de la fiche) : au trait, comme le reste du jeu, pas le logo plein.
+  instagram: <><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" /></>,
+  facebook: <><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><path d="M13.5 20.5v-7.3h2.4l.4-2.8h-2.8V8.8c0-.8.3-1.4 1.4-1.4h1.5V5" /><path d="M10.5 13.2h3" /></>,
   globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3a15 15 0 0 1 0 18" /><path d="M12 3a15 15 0 0 0 0 18" /></>,
   bouclier: <><path d="M12 3 5 6v5.5c0 4.3 3 7.6 7 9.5 4-1.9 7-5.2 7-9.5V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></>,
   antenne: <><circle cx="12" cy="12" r="2" /><path d="M8.4 8.4a5 5 0 0 0 0 7.2" /><path d="M15.6 15.6a5 5 0 0 0 0-7.2" /><path d="M5.6 5.6a9 9 0 0 0 0 12.8" /><path d="M18.4 18.4a9 9 0 0 0 0-12.8" /></>,

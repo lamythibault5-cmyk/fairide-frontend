@@ -5411,6 +5411,12 @@ export default {
       stepMoreHelp: 'Facultatif : traduire ta carte pour les clients anglophones et néerlandophones, ou faire un geste sur tes prix.'
     },
     editResto: {
+      socialTitle: 'Réseaux sociaux',
+      socialHelp: 'Facultatif. Les clients les retrouvent dans « Infos » sur ta fiche.',
+      instagram: 'Instagram',
+      instagramPh: '@moncommerce',
+      facebook: 'Facebook',
+      facebookPh: 'facebook.com/moncommerce',
       hidePhonePublic: 'Masquer ce numéro au public',
       hidePhoneHelp: 'Masqué : les clients ne voient pas ce numéro sur ta fiche. L\'équipe Fairide le voit toujours pour te joindre. Modifiable à tout moment.',
       toastCommuneRequired: 'Indique la commune du commerce (par exemple Ixelles ou Tervuren).',
@@ -6292,6 +6298,8 @@ export default {
       raccourcis: 'Raccourcis'
     },
     accountUi: {
+      payOnSiteMethodsTitle: 'Ce que tu acceptes sur place',
+      payOnSiteMethodsHelp: 'Affiché aux clients dans « Infos » sur ta fiche.',
       simulationRow: 'Simulation : commandes d\'essai',
       simulationSub: 'Pendant 7 jours après la première connexion du terminal : reçois des commandes d\'essai, imprime, simule un livreur, photographie.',
       noCommitmentShort: 'sans engagement',
@@ -6990,6 +6998,15 @@ export default {
       minimumLabel: 'Commande minimum'
     },
     restaurantMenu: {
+      socialLabel: 'Réseaux sociaux',
+      paymentLabel: 'Paiement',
+      paymentOnline: 'En ligne : Bancontact ou carte bancaire',
+      paymentOnSite: 'Sur place, à emporter : {list}',
+      payEspeces: 'espèces',
+      payBancontact: 'Bancontact',
+      payCarte: 'carte bancaire',
+      payPayconiq: 'Payconiq',
+      payTitresRepas: 'titres-repas',
       menuPreview: 'Aperçu de la carte',
       ticketFromYou: 'de chez toi',
       ticketNoReviews: 'pas encore d’avis',

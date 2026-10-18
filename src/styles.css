@@ -1486,6 +1486,14 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .role-pick { display: flex; gap: 6px; margin-bottom: 12px; }
 .role-pick .chip { flex: 1; text-align: center; padding: 10px 4px; border-radius: var(--radius-pill); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; }
 .role-pick .chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+/* Moyens de paiement au retrait (Account.jsx) : cinq pastilles à leur largeur, qui passent à la ligne. */
+.role-pick.paiements-sur-place { flex-wrap: wrap; }
+.role-pick.paiements-sur-place .chip { flex: none; padding: 8px 14px; }
+/* Les libellés servent aussi au milieu d'une phrase (« espèces, Bancontact ») : majuscule seulement sur la pastille. */
+.role-pick.paiements-sur-place .chip::first-letter { text-transform: uppercase; }
+/* « Infos » de la fiche : les réseaux du commerce, deux liens discrets sur une ligne. */
+.fiche-infos-reseaux { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; }
+.fiche-infos-reseaux a { display: inline-flex; align-items: center; gap: 6px; }
 
 /* En-tête d'étape de l'inscription (voir Auth.jsx). La barre de progression dit à elle seule que
    le formulaire est court et qu'il se termine ; le compteur écrit « Étape 2 sur 3 » qui
