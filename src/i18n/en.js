@@ -5395,6 +5395,12 @@ export default {
       stepMoreHelp: 'Optional: translate your menu for English- and Dutch-speaking customers, or make a gesture on your prices.'
     },
     editResto: {
+      socialTitle: 'Social media',
+      socialHelp: 'Optional. Customers find them under « Info » on your page.',
+      instagram: 'Instagram',
+      instagramPh: '@mybusiness',
+      facebook: 'Facebook',
+      facebookPh: 'facebook.com/mybusiness',
       hidePhonePublic: 'Hide this number from the public',
       hidePhoneHelp: 'Hidden: customers do not see this number on your page. The Fairide team always sees it to reach you. Changeable at any time.',
       toastCommuneRequired: 'Enter the municipality of the business (e.g. Ixelles or Tervuren).',
@@ -6273,6 +6279,8 @@ export default {
       raccourcis: 'Shortcuts'
     },
     accountUi: {
+      payOnSiteMethodsTitle: 'What you accept on site',
+      payOnSiteMethodsHelp: 'Shown to customers under « Info » on your page.',
       simulationRow: 'Simulation: test orders',
       simulationSub: 'For 7 days after the terminal first connects: receive test orders, print, simulate a courier, take photos.',
       noCommitmentShort: 'no commitment',
@@ -6937,6 +6945,15 @@ export default {
       minimumLabel: 'Minimum order'
     },
     restaurantMenu: {
+      socialLabel: 'Social media',
+      paymentLabel: 'Payment',
+      paymentOnline: 'Online: Bancontact or card',
+      paymentOnSite: 'On site, for takeaway: {list}',
+      payEspeces: 'cash',
+      payBancontact: 'Bancontact',
+      payCarte: 'card',
+      payPayconiq: 'Payconiq',
+      payTitresRepas: 'meal vouchers',
       menuPreview: 'A taste of the menu',
       ticketFromYou: 'from you',
       ticketNoReviews: 'no reviews yet',

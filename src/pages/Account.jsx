@@ -79,6 +79,9 @@ const ABONNEMENT_RESUME = {
   trialing: 'subTrialing', active: 'subActive', past_due: 'subPastDueShort', paused: 'subPausedShort', canceled: 'subCanceledShort', inactive: 'subNotVisible'
 };
 
+// Moyens de paiement au retrait, dans l'ordre du serveur (reseauxCommerce.js, PAIEMENTS_SUR_PLACE) et leur libellé.
+const MOYENS_SUR_PLACE = [['especes', 'payEspeces'], ['bancontact', 'payBancontact'], ['carte', 'payCarte'], ['payconiq', 'payPayconiq'], ['titres_repas', 'payTitresRepas']];
+
 export default function Account() {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
@@ -132,6 +135,8 @@ export default function Account() {
   const [offersPickup, setOffersPickup] = useState(true);
   // À emporter : 'online' (en ligne seulement), 'on_site' (sur place seulement) ou 'both' (le client choisit).
   const [pickupPaymentMode, setPickupPaymentMode] = useState('online');
+  // Ce que le commerce accepte au retrait quand on peut payer sur place (migration 048) : montré dans « Infos » de la fiche.
+  const [paiementsSurPlace, setPaiementsSurPlace] = useState([]);
   const [savingServices, setSavingServices] = useState(false);
   const servicesInitRef = useRef(false);
   const [generatedCodes, setGeneratedCodes] = useState(null);
@@ -278,6 +283,7 @@ export default function Account() {
     setOffersDelivery(restaurant.wantsDelivery ?? restaurant.offersDelivery);
     setOffersPickup(restaurant.wantsPickup ?? restaurant.offersPickup);
     setPickupPaymentMode(restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online'));
+    setPaiementsSurPlace(Array.isArray(restaurant.paiementsSurPlace) ? restaurant.paiementsSurPlace : []);
   }, [restaurant]);
 
   async function saveServices() {
@@ -288,6 +294,7 @@ export default function Account() {
     setSavingServices(true);
     try {
       await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, pickupPaymentMode } });
+      if (offersPickup && pickupPaymentMode !== 'online') await api(`/restaurants/${restoId}`, { method: 'PATCH', token, body: { paiementsSurPlace } });
       refreshRestaurant();
       toast(t('accountUi.toastServicesUpdated'), 'succes');
     } catch (err) {
@@ -1072,6 +1079,24 @@ export default function Account() {
                   </label>
                 ))}
                 {pickupPaymentMode !== 'online' && <p className="small" style={{ margin: '4px 0 0' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('accountUi.pickupPayNoShowWarn')}</p>}
+                {/* Ce que le commerce accepte au comptoir : des pastilles à cocher, comme les choix de rôle de l'inscription. */}
+                {pickupPaymentMode !== 'online' && (
+                  <div style={{ marginTop: 12 }}>
+                    <b className="small" style={{ display: 'block' }}>{t('accountUi.payOnSiteMethodsTitle')}</b>
+                    <p className="small" style={{ margin: '2px 0 8px' }}>{t('accountUi.payOnSiteMethodsHelp')}</p>
+                    <div className="role-pick paiements-sur-place">
+                      {MOYENS_SUR_PLACE.map(([v, cle]) => {
+                        const on = paiementsSurPlace.includes(v);
+                        return (
+                          <button type="button" key={v} aria-pressed={on} className={`chip${on ? ' active' : ''}`} disabled={savingServices}
+                            onClick={() => setPaiementsSurPlace((l) => (on ? l.filter((x) => x !== v) : [...l, v]))}>
+                            {t(`restaurantMenu.${cle}`)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </fieldset>
             )}
             {/* Récapitulatif vivant : le restaurateur voit la conséquence de sa combinaison avant

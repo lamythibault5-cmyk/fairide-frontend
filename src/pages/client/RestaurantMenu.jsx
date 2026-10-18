@@ -89,6 +89,9 @@ function rechargementDeCettePage(id) {
   return premiere && recharge && CHEMIN_AU_CHARGEMENT === `/restaurants/${id}` && dernier === id;
 }
 
+// Moyens de paiement au retrait (serveur : reseauxCommerce.js) → clé de leur libellé.
+const LIBELLES_PAIEMENT = { especes: 'payEspeces', bancontact: 'payBancontact', carte: 'payCarte', payconiq: 'payPayconiq', titres_repas: 'payTitresRepas' };
+
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
@@ -893,7 +896,8 @@ export default function RestaurantMenu() {
             {(restaurant.address || restaurant.commune) && (
               <section className="fiche-infos-bloc">
                 <h4><Icone nom="position" taille={16} />{t('restaurantMenu.addressLabel')}</h4>
-                <p className="small">{[restaurant.address, restaurant.commune].filter(Boolean).join(', ')}</p>
+                {/* La commune seulement si l'adresse ne la contient pas déjà (« …, 1060 Saint-Gilles, Saint-Gilles »). */}
+                <p className="small">{[restaurant.address, restaurant.address && restaurant.commune && restaurant.address.toLowerCase().includes(restaurant.commune.toLowerCase()) ? '' : restaurant.commune].filter(Boolean).join(', ')}</p>
                 {restaurant.lat && restaurant.lng && (
                   <Suspense fallback={<div style={{ height: 180 }} />}>
                     <RestaurantsMap restaurants={[restaurant]} height={180} singleMarker />
@@ -917,6 +921,29 @@ export default function RestaurantMenu() {
                     {restaurant.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
                   </a>
                 </p>
+              </section>
+            )}
+
+            {/* Réseaux du commerce (2026-10-18, facultatifs, Mon commerce › Contact) : deux liens sur une ligne, rien s'il n'y en a pas. */}
+            {(restaurant.instagram || restaurant.facebook) && (
+              <section className="fiche-infos-bloc">
+                <h4><Icone nom="personnes" taille={16} />{t('restaurantMenu.socialLabel')}</h4>
+                <p className="small fiche-infos-reseaux">
+                  {restaurant.instagram && <a href={urlSure(restaurant.instagram)} target="_blank" rel="noreferrer"><Icone nom="instagram" taille={16} />Instagram</a>}
+                  {restaurant.facebook && <a href={urlSure(restaurant.facebook)} target="_blank" rel="noreferrer"><Icone nom="facebook" taille={16} />Facebook</a>}
+                </p>
+              </section>
+            )}
+
+            {/* Paiement (2026-10-18). En ligne : celui de Fairide (Bancontact et carte, routes/payments.js côté serveur). Sur
+                place : seulement quand le commerce permet de payer au retrait et a dit ce qu'il accepte (Mon compte › Services). */}
+            {(restaurant.offersDelivery || restaurant.offersPickup) && (
+              <section className="fiche-infos-bloc">
+                <h4><Icone nom="euro" taille={16} />{t('restaurantMenu.paymentLabel')}</h4>
+                <p className="small">{t('restaurantMenu.paymentOnline')}</p>
+                {restaurant.offersPickup && restaurant.pickupPaymentMode && restaurant.pickupPaymentMode !== 'online' && (restaurant.paiementsSurPlace || []).length > 0 && (
+                  <p className="small">{t('restaurantMenu.paymentOnSite', { list: restaurant.paiementsSurPlace.map((p) => t(`restaurantMenu.${LIBELLES_PAIEMENT[p] || 'payCarte'}`)).join(', ') })}</p>
+                )}
               </section>
             )}
 

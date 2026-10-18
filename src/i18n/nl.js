@@ -5404,6 +5404,12 @@ export default {
       stepMoreHelp: 'Optioneel: je kaart vertalen voor Engels- en Nederlandstalige klanten, of een gebaar op je prijzen doen.'
     },
     editResto: {
+      socialTitle: 'Sociale media',
+      socialHelp: 'Optioneel. Klanten vinden ze onder « Info » op je pagina.',
+      instagram: 'Instagram',
+      instagramPh: '@mijnzaak',
+      facebook: 'Facebook',
+      facebookPh: 'facebook.com/mijnzaak',
       hidePhonePublic: 'Dit nummer verbergen voor het publiek',
       hidePhoneHelp: 'Verborgen: klanten zien dit nummer niet op je pagina. Het Fairide-team ziet het altijd om je te bereiken. Altijd aanpasbaar.',
       toastCommuneRequired: 'Vul de gemeente van de zaak in (bv. Elsene of Tervuren).',
@@ -6282,6 +6288,8 @@ export default {
       raccourcis: 'Snelkoppelingen'
     },
     accountUi: {
+      payOnSiteMethodsTitle: 'Wat je ter plaatse aanvaardt',
+      payOnSiteMethodsHelp: 'Getoond aan klanten onder « Info » op je pagina.',
       simulationRow: 'Simulatie: testbestellingen',
       simulationSub: 'Gedurende 7 dagen na de eerste verbinding van de terminal: ontvang testbestellingen, print, simuleer een koerier, fotografeer.',
       noCommitmentShort: 'zonder verbintenis',
@@ -6946,6 +6954,15 @@ export default {
       minimumLabel: 'Minimale bestelling'
     },
     restaurantMenu: {
+      socialLabel: 'Sociale media',
+      paymentLabel: 'Betalen',
+      paymentOnline: 'Online: Bancontact of bankkaart',
+      paymentOnSite: 'Ter plaatse, bij afhalen: {list}',
+      payEspeces: 'cash',
+      payBancontact: 'Bancontact',
+      payCarte: 'bankkaart',
+      payPayconiq: 'Payconiq',
+      payTitresRepas: 'maaltijdcheques',
       menuPreview: 'Een voorproefje van de kaart',
       ticketFromYou: 'van bij jou',
       ticketNoReviews: 'nog geen beoordelingen',

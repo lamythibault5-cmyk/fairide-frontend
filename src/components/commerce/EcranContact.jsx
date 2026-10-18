@@ -8,7 +8,7 @@ import PhoneInput from '../PhoneInput';
 import BoutonEnregistrer from './BoutonEnregistrer';
 import useEnregistrerCommerce from './useEnregistrerCommerce';
 
-// Mon commerce › Contact : téléphone, e-mail, site web. Les deuxièmes numéro et e-mail restent repliés
+// Mon commerce › Contact : téléphone, e-mail, site web, et (2026-10-18) Instagram et Facebook, facultatifs. Les deuxièmes numéro et e-mail restent repliés
 // derrière un « ＋ » tant qu'ils sont vides — la plupart des commerces n'en ont pas.
 //
 // Les phrases d'aide sous chaque champ sont parties (2026-09-23) : le libellé dit déjà ce qu'on attend
@@ -26,6 +26,9 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
   const [mail2, setMail2] = useState(restaurant.emailSecondary || '');
   const [mail2Ouvert, setMail2Ouvert] = useState(!!restaurant.emailSecondary);
   const [site, setSite] = useState(restaurant.website || '');
+  // Le serveur range l'adresse propre de la page (reseauxCommerce.js) ; on la remontre telle quelle.
+  const [instagram, setInstagram] = useState(restaurant.instagram || '');
+  const [facebook, setFacebook] = useState(restaurant.facebook || '');
   const { enregistrer, enCours } = useEnregistrerCommerce({ restoId, loadDashboard, onFermer });
   const { token } = useAuth();
   const toast = useToast();
@@ -51,7 +54,7 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
     phone: tel.trim(), phoneSecondary: tel2Ouvert ? tel2.trim() : '',
     phonePublic: telPublic, phoneSecondaryPublic: tel2Ouvert ? tel2Public : true,
     email: mail.trim(), emailSecondary: mail2Ouvert ? mail2.trim() : '',
-    website: site.trim()
+    website: site.trim(), instagram: instagram.trim(), facebook: facebook.trim()
   });
 
   return (
@@ -117,6 +120,14 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
       <div className="field">
         <label htmlFor="commerce-site">{t('editResto.website')}</label>
         <input id="commerce-site" inputMode="url" value={site} onChange={(e) => setSite(e.target.value)} placeholder="https://www.mon-commerce.be" />
+      </div>
+      <div className="field" role="group" aria-labelledby="commerce-reseaux-titre">
+        <span className="titre-groupe" id="commerce-reseaux-titre">{t('editResto.socialTitle')}</span>
+        <p className="small" style={{ margin: '0 0 8px' }}>{t('editResto.socialHelp')}</p>
+        <label htmlFor="commerce-instagram" className="small">{t('editResto.instagram')}</label>
+        <input id="commerce-instagram" inputMode="url" autoCapitalize="none" autoCorrect="off" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder={t('editResto.instagramPh')} />
+        <label htmlFor="commerce-facebook" className="small" style={{ display: 'block', marginTop: 10 }}>{t('editResto.facebook')}</label>
+        <input id="commerce-facebook" inputMode="url" autoCapitalize="none" autoCorrect="off" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder={t('editResto.facebookPh')} />
       </div>
     </SousEcran>
   );
