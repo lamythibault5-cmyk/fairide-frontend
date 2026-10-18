@@ -34,9 +34,14 @@ export default function ConnexionAppli() {
   const from = location.state?.from || '/';
   // Jeton Apple / Google d'un compte à second facteur, venu de l'accueil (Bienvenue.jsx) : on demande le code tout de suite.
   const [fed, setFed] = useState(location.state?.fed || null);
-  const [ecran, setEcran] = useState(() => (location.state?.fed ? 'totp' : params.get('oubli') === '1' ? 'oubli' : 'connexion'));
+  // Inscription qui attend son code (Bienvenue.jsx, Apple / Google) : on arrive directement sur l'écran du code.
+  const attenteCode = location.state?.attenteCode || null;
+  const [ecran, setEcran] = useState(() => (attenteCode?.email ? 'code' : location.state?.fed ? 'totp' : params.get('oubli') === '1' ? 'oubli' : 'connexion'));
+  // Canal du code d'activation (depuis le 18/10/2026, le SMS pour tout le monde) et numéro masqué, pour le dire à l'écran.
+  const [canalCode, setCanalCode] = useState(attenteCode?.canal || 'email');
+  const [telMasque, setTelMasque] = useState(attenteCode?.telephone || '');
   const [recule, setRecule] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(attenteCode?.email || '');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [erreurs, setErreurs] = useState({});
@@ -67,10 +72,13 @@ export default function ConnexionAppli() {
   // Erreurs communes au mot de passe et au code : ce que le serveur répond, rangé sous le bon champ.
   async function traiter(err) {
     if (err.message === 'EMAIL_NOT_VERIFIED') {
-      // Le code de l'inscription a sans doute expiré : on en envoie un neuf (comme Auth.jsx).
-      try { await resendCode(email.trim()); } catch { /* plafond atteint : « Renvoyer » reste là */ }
+      // Le code de l'inscription a sans doute expiré : on en envoie un neuf (comme Auth.jsx), par SMS ou par e-mail.
+      let r = null;
+      try { r = await resendCode(email.trim()); } catch { /* plafond atteint : « Renvoyer » reste là */ }
+      const canal = (r?.channel || err.data?.channel) === 'sms' ? 'sms' : 'email';
+      setCanalCode(canal); setTelMasque(r?.phoneMasked || err.data?.phoneMasked || '');
       setCode(''); aller('code');
-      toast(t('auth.errVerificationSent'));
+      toast(t(canal === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
     } else if (err.code === 'TOTP_REQUIRED') {
       setCode(''); aller('totp');
     } else if (err.code === 'TOTP_INVALID' || err.code === 'TOTP_REPLAY') {
@@ -133,6 +141,11 @@ export default function ConnexionAppli() {
         // retoucher « Continuer avec… » à la fin de l'accueil).
         if (err.message === 'INCOMPLETE_PROFILE') { toast(t('auth.errNoAccount')); navigate('/bienvenue', { state: { depart: 'profil', from, fed: jeton } }); return; }
         if (err.code === 'TOTP_REQUIRED') { setFed(jeton); setCode(''); aller('totp'); return; }
+        // Inscription Apple / Google faite, code SMS jamais saisi : l'écran du code (« Renvoyer » y est).
+        if (err.message === 'PHONE_NOT_VERIFIED') {
+          setEmail(err.data?.email || ''); setCanalCode('sms'); setTelMasque(err.data?.phoneMasked || '');
+          setCode(''); aller('code'); return;
+        }
         toast(err.message, 'erreur');
       }
     } catch (err) {
@@ -144,7 +157,11 @@ export default function ConnexionAppli() {
 
   async function renvoyer() {
     setAttente(true);
-    try { await resendCode(email.trim()); setCode(''); toast(t('auth.newCodeSent')); }
+    try {
+      const r = await resendCode(email.trim());
+      if (r?.channel) { setCanalCode(r.channel === 'sms' ? 'sms' : 'email'); if (r.phoneMasked) setTelMasque(r.phoneMasked); }
+      setCode(''); toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.newCodeSent'));
+    }
     catch (err) { toast(err.message, 'erreur'); }
     finally { setAttente(false); }
   }
@@ -171,7 +188,7 @@ export default function ConnexionAppli() {
       break;
     case 'code':
       bouton = t('auth.confirm');
-      entete = titre(t('auth.verifyTitle'), t('auth.verifyText', { email: email.trim() }));
+      entete = titre(t('auth.verifyTitle'), canalCode === 'sms' ? t('auth.verifyTextSms', { phone: telMasque }) : t('auth.verifyText', { email: email.trim() }));
       contenu = (
         <>
           {champCode}

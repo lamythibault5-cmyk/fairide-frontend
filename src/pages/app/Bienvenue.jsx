@@ -222,6 +222,8 @@ export default function Bienvenue() {
         else await loginWithGoogle(jeton.jeton, role, {});
       } catch (err) {
         if (err.message === 'INCOMPLETE_PROFILE') { setFed(jeton); aller('inscription'); return; }
+        // Inscription déjà faite, code SMS jamais saisi : on le demande (connexion, écran du code ; « Renvoyer » y est).
+        if (err.message === 'PHONE_NOT_VERIFIED') { navigate('/login', { state: { attenteCode: { email: err.data?.email, canal: 'sms', telephone: err.data?.phoneMasked } } }); return; }
         if (err.code === 'TOTP_REQUIRED') { navigate('/login', { state: { fed: jeton } }); return; }
         toast(err.message, 'erreur');
       }
