@@ -25,7 +25,7 @@ const AUDIENCE_ROLE = { partner: 'restaurant', client: 'client' };
 
 export default function ConnexionAppli() {
   const { t } = useLanguage();
-  const { login, verifyEmail, resendCode, forgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  const { login, verifyEmail, resendCode, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,6 +59,7 @@ export default function ConnexionAppli() {
   function aller(suivant, { arriere = false } = {}) { setErreurs({}); setRecule(arriere); setEcran(suivant); }
   function retour() {
     if (ecran === 'connexion') { navigate('/', { replace: true }); return; }
+    if (ecran === 'oubliCode') { setCode(''); aller('oubli', { arriere: true }); return; }
     setCode(''); setFed(null);
     aller('connexion', { arriere: true });
   }
@@ -101,7 +102,7 @@ export default function ConnexionAppli() {
       if (ecran === 'connexion' && !password) e.password = requis;
       if (Object.keys(e).length) { setErreurs(e); return; }
     }
-    if ((ecran === 'totp' || ecran === 'code') && !code.trim()) { setErreurs({ code: requis }); return; }
+    if ((ecran === 'totp' || ecran === 'code' || ecran === 'oubliCode') && !code.trim()) { setErreurs({ code: requis }); return; }
     if (ecran === 'envoye') { aller('connexion', { arriere: true }); return; }
     setAttente(true); setErreurs({}); setPasDeCompte(false);
     let reussi = false;
@@ -114,7 +115,12 @@ export default function ConnexionAppli() {
           : await loginWithGoogle(fed.jeton, 'client', { totpCode: code.trim() });
       } else if (ecran === 'totp') data = await login(email.trim(), password, code.trim());
       else if (ecran === 'code') data = await verifyEmail(email.trim(), code.trim());
-      else if (ecran === 'oubli') { await forgotPassword(email.trim()); aller('envoye'); return; }
+      else if (ecran === 'oubli') {
+        // Adresse jamais confirmée : d'abord le code reçu à l'adresse, puis le lien (fondateur, 18/10/2026).
+        const r = await forgotPassword(email.trim());
+        if (r?.confirmationRequired) { setCode(''); aller('oubliCode'); return; }
+        aller('envoye'); return;
+      } else if (ecran === 'oubliCode') { await confirmForgotPassword(email.trim(), code.trim()); aller('envoye'); return; }
       reussi = true;
       await arriver(data.user);
     } catch (err) {
@@ -155,6 +161,14 @@ export default function ConnexionAppli() {
     }
   }
 
+  // « Renvoyer le code » sur l'écran de confirmation d'adresse du mot de passe oublié : la même demande, un code neuf.
+  async function renvoyerOubli() {
+    setAttente(true);
+    try { await forgotPassword(email.trim()); setCode(''); toast(t('auth.newCodeSent')); }
+    catch (err) { toast(err.message, 'erreur'); }
+    finally { setAttente(false); }
+  }
+
   async function renvoyer() {
     setAttente(true);
     try {
@@ -193,6 +207,16 @@ export default function ConnexionAppli() {
         <>
           {champCode}
           <button type="button" className="bv-lien" disabled={attente} onClick={renvoyer}>{t('auth.resendCode')}</button>
+        </>
+      );
+      break;
+    case 'oubliCode':
+      bouton = t('auth.forgotConfirmBtn');
+      entete = titre(t('auth.forgotConfirmTitle'), t('auth.forgotConfirmText', { email: email.trim() }));
+      contenu = (
+        <>
+          {champCode}
+          <button type="button" className="bv-lien" disabled={attente} onClick={renvoyerOubli}>{t('auth.resendCode')}</button>
         </>
       );
       break;
