@@ -835,7 +835,10 @@ export default function Auth() {
       toast(t('auth.welcome', { name: data.user.name }), 'succes');
       await allerApresConnexion(data.user);
     } catch (err) {
-      if (err.message === 'INCOMPLETE_PROFILE') {
+      if (err.message === 'PHONE_NOT_VERIFIED') {
+        // Inscription Google / Apple faite, code SMS jamais saisi : l'écran du code (« Renvoyer » y est).
+        setPendingEmail(err.data?.email || ''); setPendingChannel('sms'); setPendingPhone(err.data?.phoneMasked || '');
+      } else if (err.message === 'INCOMPLETE_PROFILE') {
         // Pas encore de compte pour cette adresse Google : on enchaîne sur l'inscription, profil prérempli.
         retenirGoogle(response.credential, fed);
         setMode('register');
@@ -871,6 +874,13 @@ export default function Auth() {
       ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {})
     });
     suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
+    // Le téléphone se prouve par SMS, Google et Apple compris (fondateur, 18/10/2026) : le même écran du code qu'au mot de passe.
+    if (data.needsVerification) {
+      setPendingEmail(data.email);
+      setPendingChannel(data.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(data.phoneMasked || phone.trim());
+      toast(t(data.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
+      return false;
+    }
     toast(t('auth.welcome', { name: data.user.name }), 'succes');
     // Une inscription, même par Google, arrive dans son espace (tableau de bord, dossier livreur) — pas sur l'accueil.
     await allerApresInscription(data.user);

@@ -204,7 +204,8 @@ export function AuthProvider({ children }) {
 
   async function loginWithGoogle(credential, role, extra) {
     const data = await api('/auth/google', { method: 'POST', body: { credential, role, ...extra } });
-    setSession(data);
+    // Nouveau compte : le téléphone se prouve par SMS d'abord (needsVerification), la session vient avec le code.
+    if (!data.needsVerification) setSession(data);
     return data;
   }
 
@@ -212,7 +213,7 @@ export function AuthProvider({ children }) {
   // ouverte, ou INCOMPLETE_PROFILE pour enchaîner sur le formulaire d'inscription.
   async function loginWithApple(idToken, role, extra) {
     const data = await api('/auth/apple', { method: 'POST', body: { idToken, role, ...extra } });
-    setSession(data);
+    if (!data.needsVerification) setSession(data);
     return data;
   }
 

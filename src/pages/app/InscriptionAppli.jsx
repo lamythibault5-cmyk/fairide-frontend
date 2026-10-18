@@ -365,6 +365,12 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
           ? await loginWithApple(fed.jeton, role, { givenName: firstName.trim() || undefined, familyName: lastName.trim() || undefined, ...extra })
           : await loginWithGoogle(fed.jeton, role, extra);
         suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
+        // Le téléphone se prouve par SMS, Apple et Google compris (fondateur, 18/10/2026) : écran du code, comme au mot de passe.
+        if (data.needsVerification) {
+          setRecule(false);
+          setEnAttente({ email: data.email, canal: data.channel === 'sms' ? 'sms' : 'email', telephone: data.phoneMasked || phone.trim() });
+          return;
+        }
         reussi = true;
         await arriver(data.user);
         return;

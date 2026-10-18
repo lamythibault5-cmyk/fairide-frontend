@@ -8,6 +8,7 @@ import { useToast } from '../context/ToastContext';
 import Icone from '../components/Icone';
 import PasswordInput from '../components/PasswordInput';
 import PhoneVerification from '../components/PhoneVerification';
+import EmailConfirmation from '../components/EmailConfirmation';
 import DriverDocuments from '../components/DriverDocuments';
 import DriverContractTerms from '../components/DriverContractTerms';
 import RestaurantContract from '../components/RestaurantContract';
@@ -674,7 +675,7 @@ export default function Account() {
             tronqué à l'ellipse sur un téléphone, il finissait par cacher l'avertissement même qu'il
             portait. L'e-mail suffit à identifier la rangée, et l'alerte de vérification passe seule
             quand elle a lieu d'être — c'est la seule des trois informations qui appelle une action. */}
-        <LigneCompte icone="cadenas" titre={t('accountUi.loginDetails')} sous={user.phone && !user.phoneVerified ? t('accountUi.phoneNotVerifiedShort') : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
+        <LigneCompte icone="cadenas" titre={t('accountUi.loginDetails')} sous={user.phone && !user.phoneVerified ? t('accountUi.phoneNotVerifiedShort') : user.emailConfirmed === false ? t('accountUi.emailNotConfirmedShort') : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
           <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>
             {t('accountUi.contactCodeInfo')}
           </p>
@@ -682,6 +683,7 @@ export default function Account() {
             field="email" label={t('accountUi.emailAddress')} currentValue={user.email} type="email" placeholder={t('accountUi.phNewEmail')}
             requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
           />
+          <EmailConfirmation />
           <div className="divider" style={{ margin: '4px 0' }} />
           <ContactChangeField
             field="phone" label={t('accountUi.phoneNumber')} currentValue={user.phone} type="tel" placeholder={t('accountUi.phPhone')}
