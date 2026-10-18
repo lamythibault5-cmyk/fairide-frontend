@@ -12,14 +12,14 @@ const LIME = '#C8F03C';
 mkdirSync('assets', { recursive: true });
 
 // Le vélo seul, dans une boîte 82 × 42 (viewBox de BrandMark.jsx), au centre d'un carré `cote`, largeur `largeur`.
-function velo(cote, largeur, fond = null) {
+function velo(cote, largeur, fond = null, trait = 5) {
   const echelle = largeur / 82;
   const x = (cote - 82 * echelle) / 2;
   const y = (cote - 42 * echelle) / 2;
   return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${cote}" height="${cote}" viewBox="0 0 ${cote} ${cote}">
   ${fond ? `<rect width="${cote}" height="${cote}" fill="${fond}"/>` : ''}
   <g transform="translate(${x} ${y}) scale(${echelle}) translate(3 -5)">
-    <g fill="none" stroke="${LIME}" stroke-width="5" stroke-linecap="round">
+    <g fill="none" stroke="${LIME}" stroke-width="${trait}" stroke-linecap="round">
       <circle cx="15" cy="29" r="12.5"/><circle cx="61" cy="29" r="12.5"/>
     </g>
     <g fill="${LIME}">
@@ -30,10 +30,19 @@ function velo(cote, largeur, fond = null) {
 </svg>`);
 }
 
-// Icône pleine : même proportion que icon.svg (vélo à 76/132 de la largeur ≈ 58 %). Les magasins arrondissent eux-mêmes.
-await sharp(velo(1024, 1024 * 0.58, IRIS)).png().toFile('assets/icon.png');
-// Icône adaptative Android : le système masque les 2/3 centraux → le vélo reste dans la zone sûre (≈ 42 % de large).
-await sharp(velo(1024, 1024 * 0.42)).png().toFile('assets/icon-foreground.png');
+// LE VÉLO « TRÈS GRAND » (fondateur, 2026-10-18, version D de mockups/play-store/index.html) : 88 % de la largeur de
+// l'icône, au lieu de 58 % (icône pleine) et 42 % (icône adaptative Android) — il ressortait trop peu à côté des autres
+// applis. Le site garde un vélo un peu moins grand (public/icons/icon.svg, scripts/icones-site.mjs) : son icône est
+// souvent découpée en cercle. Trait 4,65 : à cette taille, le trait de 5 paraissait lourd.
+const LARGEUR_VELO = 0.88;
+const TRAIT_VELO = 4.65;
+// Icône pleine (iPhone, et l'icône 512 du Play Store en est une copie) : les magasins arrondissent eux-mêmes.
+await sharp(velo(1024, 1024 * LARGEUR_VELO, IRIS, TRAIT_VELO)).png().toFile('assets/icon.png');
+// Icône adaptative Android : ic_launcher.xml insère l'avant-plan à 16,7 % de chaque bord, donc cette image couvre la zone
+// visible (72 dp sur 108). Le téléphone la découpe à sa forme (cercle sur Pixel, « squircle » chez Samsung, carré arrondi
+// ailleurs) ; seul le cercle de 66 dp au centre est garanti. Le vélo à 88 % y tient : le point le plus éloigné du centre
+// (le bas de la roue avant) est à 83 % du rayon, la limite à 92 %. Vérifié sur les trois formes le 2026-10-18.
+await sharp(velo(1024, 1024 * LARGEUR_VELO, null, TRAIT_VELO)).png().toFile('assets/icon-foreground.png');
 await sharp({ create: { width: 1024, height: 1024, channels: 4, background: IRIS } }).png().toFile('assets/icon-background.png');
 // Écran de lancement : iris uni, vélo à 22 % de large (même rendu que le #splash de index.html, sans le mot).
 await sharp(velo(2732, 2732 * 0.22, IRIS)).png().toFile('assets/splash.png');
