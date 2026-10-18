@@ -198,6 +198,11 @@ export function AuthProvider({ children }) {
     return api('/auth/forgot-password', { method: 'POST', body: { email } });
   }
 
+  // Mot de passe oublié sur une adresse jamais confirmée : le code reçu la confirme, puis le lien part (routes/auth.js).
+  async function confirmForgotPassword(email, code) {
+    return api('/auth/forgot-password/confirm', { method: 'POST', body: { email, code } });
+  }
+
   async function resetPassword(token, password) {
     return api('/auth/reset-password', { method: 'POST', body: { token, password } });
   }
@@ -355,6 +360,7 @@ export function AuthProvider({ children }) {
     verifyEmail,
     resendCode,
     forgotPassword,
+    confirmForgotPassword,
     resetPassword,
     loginWithGoogle,
     loginWithApple,

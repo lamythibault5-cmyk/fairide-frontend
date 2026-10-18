@@ -438,6 +438,9 @@ export default function Auth() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSubmitted, setForgotSubmitted] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  // Adresse jamais confirmée : l'écran du code d'adresse, avant le lien (forgotCodeStep).
+  const [forgotCodeStep, setForgotCodeStep] = useState(false);
+  const [forgotCode, setForgotCode] = useState('');
 
   // BROUILLON DE L'INSCRIPTION. Un rafraîchissement (geste réflexe sur téléphone, onglet rechargé par le système)
   // effaçait tout : type de compte, étape, identité, commerce trouvé, horaires, services. On garde un instantané
@@ -508,7 +511,7 @@ export default function Auth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, valeursBrouillon);
 
-  const { user, login, register, verifyEmail, resendCode, forgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  const { user, login, register, verifyEmail, resendCode, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
   // Déjà connecté EN ARRIVANT (et non pendant une connexion faite ici) : voir la redirection juste avant le rendu.
   const [connecteALArrivee] = useState(() => !!user);
   // Google ou Apple selon d'où vient le jeton. Apple n'a pas le nom dans son jeton : on envoie celui du formulaire
@@ -1102,13 +1105,36 @@ export default function Auth() {
     if (!forgotEmail.trim()) { toast(t('auth.errEmailRequired'), 'erreur'); return; }
     setForgotLoading(true);
     try {
-      await forgotPassword(forgotEmail.trim());
+      const r = await forgotPassword(forgotEmail.trim());
+      // Adresse jamais confirmée : d'abord le code reçu à l'adresse, puis le lien (fondateur, 18/10/2026).
+      if (r?.confirmationRequired) { setForgotCode(''); setForgotCodeStep(true); return; }
       setForgotSubmitted(true);
     } catch (err) {
       toast(err.message, 'erreur');
     } finally {
       setForgotLoading(false);
     }
+  }
+
+  async function submitForgotCode(e) {
+    e.preventDefault();
+    if (!forgotCode.trim()) { toast(t('auth.errCodeRequired'), 'erreur'); return; }
+    setForgotLoading(true);
+    try {
+      await confirmForgotPassword(forgotEmail.trim(), forgotCode.trim());
+      setForgotCodeStep(false); setForgotCode(''); setForgotSubmitted(true);
+    } catch (err) {
+      toast(err.message, 'erreur');
+    } finally {
+      setForgotLoading(false);
+    }
+  }
+
+  async function renvoyerCodeOubli() {
+    setResending(true);
+    try { await forgotPassword(forgotEmail.trim()); setForgotCode(''); toast(t('auth.newCodeSent')); }
+    catch (err) { toast(err.message, 'erreur'); }
+    finally { setResending(false); }
   }
 
   async function handleResend() {
@@ -1139,8 +1165,32 @@ export default function Auth() {
     return (
       <CadreConnexion decorClass={decorClass} titre={t('siteCadre.oubliTitre')} sous={t('siteCadre.oubliSous')}>
         <div className="auth-site-form">
-          <h2 style={{ marginTop: 0 }}>{t('auth.forgotTitle')}</h2>
-          {forgotSubmitted ? (
+          {forgotCodeStep ? (
+            <>
+              <h2 style={{ marginTop: 0 }}>{t('auth.forgotConfirmTitle')}</h2>
+              <p className="small" style={{ marginBottom: 14 }}>{t('auth.forgotConfirmText', { email: forgotEmail.trim() })}</p>
+              <form onSubmit={submitForgotCode}>
+                <div className="field">
+                  <label htmlFor="auth-f-oubli-code">{t('auth.verifyCodeLabel')}</label>
+                  <input id="auth-f-oubli-code"
+                    value={forgotCode} onChange={(e) => setForgotCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456"
+                    inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*"
+                    maxLength={6} style={{ textAlign: 'center', fontSize: 22, letterSpacing: 6 }}
+                  />
+                </div>
+                <button type="submit" className="btn-gold btn-block" disabled={forgotLoading}>
+                  {forgotLoading ? t('common.loading') : t('auth.forgotConfirmBtn')}
+                </button>
+              </form>
+              <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending} onClick={renvoyerCodeOubli}>
+                {resending ? t('common.loading') : t('auth.resendCode')}
+              </button>
+              <button className="btn-ghost" style={{ marginTop: 4 }} onClick={() => { setForgotCodeStep(false); setForgotCode(''); }}>
+                {t('auth.back')}
+              </button>
+            </>
+          ) : <h2 style={{ marginTop: 0 }}>{t('auth.forgotTitle')}</h2>}
+          {forgotCodeStep ? null : forgotSubmitted ? (
             <>
               <p className="small" style={{ marginBottom: 14 }}>
                 {t('auth.forgotSubmittedText', { email: forgotEmail })}
