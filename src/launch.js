@@ -1,47 +1,91 @@
-// Calendrier de lancement côté client (miroir des verrous serveur, voir routes/orders.js et routes/restaurants.js).
-// Décision du fondateur (2026-09-15) : première campagne sur les réseaux sociaux le 16 octobre 2026 (fondateur, 2026-09-30) ;
-// commandes à emporter à partir du 1er novembre ; livraison (livreurs) à partir du 10 novembre. Tout le reste
-// est visible et utilisable avant. Les administrateurs passent (essais). L'application native (App Store / Google
-// Play) arrive le 6 octobre 2026.
+// Calendrier de lancement côté client (miroir des verrous serveur, voir routes/orders.js, routes/restaurants.js et
+// lancement.js côté backend). Première campagne sur les réseaux sociaux le 16 octobre 2026 (fondateur, 2026-09-30) ;
+// commandes à emporter PAYÉES SUR PLACE à partir du 1er novembre (une date) ; livraison et paiement en ligne quand
+// l'équipe appuie sur GO (fondateur, 2026-10-18 : plus de date, ouvrir seulement quand assez de livreurs roulent).
+// Tout le reste est visible et utilisable avant. Les administrateurs, comptes de test et simulations passent (essais).
+import { useSyncExternalStore } from 'react';
+import { API_BASE } from './api';
+
 export const CAMPAGNE_RESEAUX = new Date('2026-10-16T00:00:00+02:00');
 export const APP_STORES = new Date('2026-10-06T00:00:00+02:00');
-// Les trois dates se surchargent à la construction (VITE_PICKUP_OPEN_AT, VITE_DELIVERY_OPEN_AT, VITE_ONLINE_PAYMENT_OPEN_AT) :
-// l'application de test et l'environnement de staging ouvrent tout de suite, comme le serveur de staging
-// (FAIRIDE_*_OPEN_AT). Sans variable, les dates du lancement.
-const dateEnv = (v, defaut) => new Date(v || defaut);
-export const OUVERTURE_EMPORTER = dateEnv(import.meta.env.VITE_PICKUP_OPEN_AT, '2026-11-01T00:00:00+01:00');
-export const OUVERTURE_LIVRAISON = dateEnv(import.meta.env.VITE_DELIVERY_OPEN_AT, '2026-11-10T00:00:00+01:00');
-// Paiement en ligne (à emporter payé en ligne) : ouvre avec la livraison, le 10 novembre 2026 (fondateur, 2026-09-19).
-// Avant cette date, l'à emporter n'est possible que payé sur place. Miroir de FAIRIDE_ONLINE_PAYMENT_OPEN_AT.
-export const OUVERTURE_PAIEMENT_EN_LIGNE = dateEnv(import.meta.env.VITE_ONLINE_PAYMENT_OPEN_AT, '2026-11-10T00:00:00+01:00');
-export function paiementEnLigneOuvert(user) { return Date.now() >= OUVERTURE_PAIEMENT_EN_LIGNE.getTime() || !!user?.isAdmin || !!user?.isTest || !!user?.simulation; }
-export function dateOuverturePaiementEnLigne(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENT_EN_LIGNE, locale); }
-// Premières commandes payées en ligne : c'est cette date qui fait courir le mois offert de l'abonnement.
-export const OUVERTURE_COMMANDES = OUVERTURE_PAIEMENT_EN_LIGNE;
-const OUVERTURES = { pickup: OUVERTURE_EMPORTER, delivery: OUVERTURE_LIVRAISON };
+// L'à emporter payé sur place se surcharge à la construction (VITE_PICKUP_OPEN_AT) : l'application de test ouvre tout de
+// suite. La livraison et le paiement en ligne n'ont plus de date : le serveur de staging les ouvre par FAIRIDE_GO=on, et
+// ce fichier le lit (VITE_DELIVERY_OPEN_AT et VITE_ONLINE_PAYMENT_OPEN_AT ne servent plus).
+export const OUVERTURE_EMPORTER = new Date(import.meta.env.VITE_PICKUP_OPEN_AT || '2026-11-01T00:00:00+01:00');
+
+/* L'ÉTAT DU BOUTON GO, LU SUR LE SERVEUR (GET /orders/launch).
+ *
+ * Le site ne décide rien : il affiche ce que le serveur appliquera. Au démarrage, la dernière réponse connue (gardée sur
+ * l'appareil, pour ne pas montrer « bientôt » une seconde à quelqu'un qui revient après le GO), sinon « fermé » ; puis
+ * l'état du serveur, relu toutes les minutes tant que la page est visible et au retour sur la page. Un serveur
+ * injoignable laisse l'état tel quel : le serveur refuse de toute façon ce qui n'est pas ouvert.
+ * Les composants qui en dépendent appellent useLancement() pour se redessiner au changement. */
+const CLE = 'fairide_lancement';
+let etat = { go: false, goAt: null };
+try { const c = JSON.parse(localStorage.getItem(CLE) || 'null'); if (c && typeof c.go === 'boolean') etat = { go: c.go, goAt: c.goAt || null }; } catch { /* stockage indisponible */ }
+const abonnes = new Set();
+function poser(suivant) {
+  if (suivant.go === etat.go && suivant.goAt === etat.goAt) return;
+  etat = suivant;
+  try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch { /* stockage indisponible */ }
+  abonnes.forEach((f) => f());
+}
+export async function chargerLancement() {
+  try {
+    const r = await fetch(`${API_BASE}/orders/launch`, { cache: 'no-store' });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (typeof d?.go === 'boolean') poser({ go: d.go, goAt: d.goAt || null });
+  } catch { /* hors ligne : on garde l'état connu */ }
+}
+let suivi = null;
+function suivre() {
+  if (suivi || typeof window === 'undefined') return;
+  suivi = setInterval(() => { if (document.visibilityState === 'visible') chargerLancement(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') chargerLancement(); });
+  chargerLancement();
+}
+function abonner(f) { abonnes.add(f); suivre(); return () => abonnes.delete(f); }
+export function useLancement() { return useSyncExternalStore(abonner, () => etat, () => etat); }
+export function lancementGo() { return etat.go; }
 
 function formater(date, locale) {
   const texte = date.toLocaleDateString(locale, { day: 'numeric', month: 'long', timeZone: 'Europe/Brussels' });
   // En français, le premier du mois s'écrit « 1er novembre », pas « 1 novembre ».
   return String(locale).startsWith('fr') ? texte.replace(/^1 /, '1er ') : texte;
 }
+// Admin, compte de test posé par l'équipe (users.is_test) et simulation : mêmes exemptions que le serveur (compteExempte).
+const exempte = (user) => !!user?.isAdmin || !!user?.isTest || !!user?.simulation;
+export const exempteLancement = exempte;
+
+// Paiement en ligne (à emporter payé en ligne) : ouvre avec la livraison, au GO (fondateur, 2026-09-19 puis 2026-10-18).
+// Avant, l'à emporter n'est possible que payé sur place.
+export function paiementEnLigneOuvert(user) { return etat.go || exempte(user); }
 
 // type : 'pickup' | 'delivery'.
 export function serviceOuvert(type, user) {
-  // Admin, compte de test posé par l'équipe (users.is_test) et simulation : mêmes exemptions que le serveur (compteExempte).
-  return Date.now() >= (OUVERTURES[type] || OUVERTURE_LIVRAISON).getTime() || !!user?.isAdmin || !!user?.isTest || !!user?.simulation;
+  if (exempte(user)) return true;
+  return type === 'pickup' ? Date.now() >= OUVERTURE_EMPORTER.getTime() : etat.go;
 }
-export function dateOuverture(type, locale = 'fr-BE') {
-  return formater(OUVERTURES[type] || OUVERTURE_LIVRAISON, locale);
-}
-
-// Fairide : à emporter et livraison.
-export function dateOuvertureEmporter(locale = 'fr-BE') { return dateOuverture('pickup', locale); }
-// Une commande en ligne est possible (à emporter) ; la livraison peut encore attendre, voir livraisonOuverte.
+// Seule date encore annoncée : celle de l'à emporter payé sur place.
+export function dateOuvertureEmporter(locale = 'fr-BE') { return formater(OUVERTURE_EMPORTER, locale); }
 export function commandesOuvertes(user) { return serviceOuvert('pickup', user); }
-export function dateOuvertureCommandes(locale = 'fr-BE') { return dateOuverture('pickup', locale); }
 export function livraisonOuverte(user) { return serviceOuvert('delivery', user); }
-export function dateOuvertureLivraison(locale = 'fr-BE') { return dateOuverture('delivery', locale); }
+
+/* LA LIVRAISON EST-ELLE POSSIBLE CHEZ CE COMMERCE, MAINTENANT ? (GET /orders/delivery-available/:id)
+ * Après GO, une livraison demande un livreur disponible à l'instant (lancement.js) : sinon le commerce ne propose que
+ * l'à emporter. Renvoie null tant qu'on ne sait pas (pas de bandeau qui clignote), true ou false ensuite. `km` écarte les
+ * vélos trop loin quand la distance est connue. Une erreur réseau répond null : le serveur tranche à la commande. */
+export async function livraisonDisponible(restaurantId, km = null) {
+  if (!restaurantId) return null;
+  try {
+    const q = km !== null && km !== undefined && Number.isFinite(Number(km)) ? `?km=${Number(km)}` : '';
+    const r = await fetch(`${API_BASE}/orders/delivery-available/${encodeURIComponent(restaurantId)}${q}`, { cache: 'no-store' });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return typeof d?.available === 'boolean' ? d : null;
+  } catch { return null; }
+}
 
 // Activation des paiements (Stripe Connect), commerces et livreurs. Cette date vivait en double, écrite
 // en dur dans PaiementRestaurant.jsx ET PaiementLivreur.jsx, hors de ce calendrier — d'où une
@@ -52,7 +96,7 @@ export function paiementsOuverts() { return Date.now() >= OUVERTURE_PAIEMENTS.ge
 export function dateOuverturePaiements(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENTS, locale); }
 
 // Abonnement des commerces (version complète : livraison et paiement en ligne) : activable dès le 6 octobre 2026 (date d'abord liée à la sortie de l'application, qui n'a pas eu lieu),
-// pour être prêt à l'ouverture des commandes le 10. Miroir de FAIRIDE_SUBSCRIPTION_OPEN_AT (routes/restaurants.js).
+// pour être prêt à l'ouverture des commandes. Miroir de FAIRIDE_SUBSCRIPTION_OPEN_AT (routes/restaurants.js).
 export const OUVERTURE_ABONNEMENT = new Date('2026-10-06T00:00:00+02:00');
 export function abonnementOuvert() {
   return Date.now() >= OUVERTURE_ABONNEMENT.getTime();
@@ -64,9 +108,12 @@ export function dateOuvertureAbonnement(locale = 'fr-BE') {
 }
 
 // Premier prélèvement de la formule complète si le commerce l'active à la date donnée : le mois offert (30 jours)
-// court à partir de l'ouverture des commandes payées en ligne (10 novembre 2026), ou de l'activation si elle est postérieure. Miroir
-// exact de routes/restaurants.js (subscription_data.trial_end) : la date annoncée est celle que Stripe appliquera.
+// court à partir de l'ouverture des commandes payées en ligne (le GO), ou de l'activation si elle est postérieure. Miroir
+// de routes/restaurants.js et de lancement.prolongerEssais côté serveur. Avant GO, la date n'est pas connue : null, et
+// l'écran le dit en mots (« 30 jours après l'ouverture »).
 export const MOIS_OFFERT_JOURS = 30;
 export function datePremierPrelevement(activation = new Date()) {
-  return new Date(Math.max(activation.getTime(), OUVERTURE_COMMANDES.getTime()) + MOIS_OFFERT_JOURS * 86400000);
+  if (!etat.go) return null;
+  const go = etat.goAt ? new Date(etat.goAt).getTime() : 0;
+  return new Date(Math.max(activation.getTime(), go) + MOIS_OFFERT_JOURS * 86400000);
 }

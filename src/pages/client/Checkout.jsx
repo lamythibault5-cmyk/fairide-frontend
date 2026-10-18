@@ -23,7 +23,7 @@ import AddressSearch from '../../components/AddressSearch';
 import ChoixAdresse from '../../components/ChoixAdresse';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { serviceOuvert, dateOuverture, paiementEnLigneOuvert, dateOuverturePaiementEnLigne } from '../../launch';
+import { serviceOuvert, dateOuvertureEmporter, paiementEnLigneOuvert, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
 import CodePromoCheckout from '../../components/client/CodePromoCheckout';
 import CheckoutConformite from '../../components/conformite/CheckoutConformite';
 import { manqueConformite } from '../../conformite';
@@ -128,7 +128,7 @@ export default function Checkout() {
       navigate(`/restaurants/${restaurantId}`);
       return;
     }
-    // Livraison pas encore ouverte (avant le 10 novembre) : l'à emporter est proposé d'abord.
+    // Livraison pas encore ouverte (avant le GO) : l'à emporter est proposé d'abord.
     if (!restaurant.offersDelivery || (!serviceOuvert('delivery', user) && restaurant.offersPickup)) { setFulfillmentType('pickup'); return; }
     // Sinon, le mode choisi sur la fiche du commerce (RestaurantMenu, sessionStorage) est repris.
     let choisi = null;
@@ -168,6 +168,24 @@ export default function Checkout() {
     return () => { actif = false; clearTimeout(id); };
   });
 
+  // BOUTON GO (lancement.js côté serveur) : useLancement redessine la page au GO ou à la fermeture. Après GO, une livraison
+  // demande un livreur libre à l'instant : relu toutes les minutes (null tant qu'on ne sait pas). Sans livreur, l'à emporter
+  // est choisi pour le client s'il est proposé, et la livraison ne peut pas être commandée (le serveur la refuserait).
+  useLancement();
+  const [livraisonDispo, setLivraisonDispo] = useState(null);
+  const verifierLivraison = !!restaurant?.offersDelivery && serviceOuvert('delivery', user) && !exempteLancement(user);
+  useEffect(() => {
+    if (!verifierLivraison) { setLivraisonDispo(null); return undefined; }
+    let fini = false;
+    const lire = () => livraisonDisponible(restaurantId).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
+    lire();
+    const id = setInterval(() => { if (document.visibilityState === 'visible') lire(); }, 60000);
+    return () => { fini = true; clearInterval(id); };
+  }, [verifierLivraison, restaurantId]);
+  useEffect(() => {
+    if (livraisonDispo === false && fulfillmentType === 'delivery' && restaurant?.offersPickup) selectFulfillment('pickup');
+  }, [livraisonDispo]); // eslint-disable-line react-hooks/exhaustive-deps -- seulement quand la disponibilité change
+
   // L'etape « dessert/boisson » a quitte le paiement : elle est maintenant sur la page Panier, avant
   // d'y entrer. On arrive donc directement sur la confirmation des informations de commande.
 
@@ -179,9 +197,11 @@ export default function Checkout() {
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder, deliveryMode: restaurant.deliveryMode, ownDeliveryFee: restaurant.ownDeliveryFee });
   // Mode choisi par le commerce : en ligne seulement, sur place seulement, ou au choix du client.
   const modeEmporter = restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online');
-  // Avant le 10 novembre, l'à emporter ne se paie que sur place : si le commerce laisse le choix, « sur place » est
+  // Avant le GO, l'à emporter ne se paie que sur place : si le commerce laisse le choix, « sur place » est
   // imposé ; s'il n'accepte que le paiement en ligne, la commande attend l'ouverture.
   const enLigneFerme = fulfillmentType === 'pickup' && !paiementEnLigneOuvert(user);
+  // Livraison choisie alors qu'aucun livreur n'est libre (commerce sans à emporter) : pas de bouton de paiement.
+  const sansLivreur = fulfillmentType === 'delivery' && livraisonDispo === false;
   const surPlaceChoisi = fulfillmentType === 'pickup' && (modeEmporter === 'on_site' || (modeEmporter === 'both' && (paiementSurPlace || enLigneFerme)));
   // Frais de système (10 % de la livraison, compris dedans, voir src/fraisService.js) : en livraison seulement. La part de Fairide
   // sur les plats est déjà dans les prix affichés.
@@ -554,7 +574,7 @@ export default function Checkout() {
                   valeur={paiementSurPlace || enLigneFerme ? 'sur_place' : 'en_ligne'}
                   onChange={(v) => { if (!(enLigneFerme && v === 'en_ligne')) setPaiementSurPlace(v === 'sur_place'); }}
                   options={[
-                    { value: 'en_ligne', label: enLigneFerme ? t('checkout.payOnlineFrom', { date: dateOuverturePaiementEnLigne(getLocale()) }) : t('checkout.payOnline'), icone: <Icone nom="carteBancaire" taille={16} /> },
+                    { value: 'en_ligne', label: enLigneFerme ? t('checkout.payOnlineFrom') : t('checkout.payOnline'), icone: <Icone nom="carteBancaire" taille={16} /> },
                     { value: 'sur_place', label: t('checkout.payOnSite'), icone: <Icone nom="billet" taille={16} /> }
                   ]}
                 />
@@ -636,7 +656,9 @@ export default function Checkout() {
               <span className="co-barre-montant"><ChiffresRoulants valeur={euros(montantDebite)} /></span>
               <span className="co-barre-detail">{t(`checkout.barCount${devisValide ? 'Exact' : ''}${cart.count > 1 ? 'Plural' : ''}`, { count: cart.count })}</span>
             </span>
-            {serviceOuvert(fulfillmentType, user) && !paiementBloque && manqueMinimum > 0 ? (
+            {sansLivreur ? (
+              <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {t('checkout.noCourierNow')}</span>
+            ) : serviceOuvert(fulfillmentType, user) && !paiementBloque && manqueMinimum > 0 ? (
               // Montant minimum du commerce (PAN-3) : le bouton laisse place à ce qui manque, comme le serveur le refuserait.
               <span className="small co-barre-attente">{t('checkout.minOrderMissing', { min: euros(restaurant.minOrderAmount), missing: euros(manqueMinimum) })}</span>
             ) : serviceOuvert(fulfillmentType, user) && !paiementBloque ? (
@@ -647,10 +669,10 @@ export default function Checkout() {
               </button>
             ) : (
               <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {paiementBloque
-                ? t('checkout.onlinePaymentOpenSoon', { date: dateOuverturePaiementEnLigne(getLocale()) })
+                ? t('checkout.onlinePaymentOpenSoon')
                 : fulfillmentType === 'delivery'
-                  ? t('checkout.deliveryOpenSoon', { date: dateOuverture('delivery', getLocale()) })
-                  : t('checkout.ordersOpenSoon', { date: dateOuverture('pickup', getLocale()) })}</span>
+                  ? t('checkout.deliveryOpenSoon')
+                  : t('checkout.ordersOpenSoon', { date: dateOuvertureEmporter(getLocale()) })}</span>
             )}
             {/* Site, sous le bouton du récapitulatif (ordinateur seulement, site-commande.css) : qui encaisse. Pas pour un
                 paiement sur place, que Stripe ne traite pas. */}

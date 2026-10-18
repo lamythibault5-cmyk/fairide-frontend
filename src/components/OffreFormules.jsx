@@ -1,6 +1,6 @@
 import GarantieAbonnement from './GarantieAbonnement';
 import { useLanguage, getLocale } from '../context/LanguageContext';
-import { datePremierPrelevement } from '../launch';
+import { datePremierPrelevement, useLancement } from '../launch';
 import TerminalFairide from './TerminalFairide';
 import Icone from './Icone';
 
@@ -16,6 +16,8 @@ import TerminalFairide from './TerminalFairide';
 // date de fin du mois offert ou du prochain prélèvement. onActiver : bouton d'activation (Mon compte).
 export default function OffreFormules({ payant = false, statut = null, finEssai = null, onActiver = null, inscription = false }) {
   const { t } = useLanguage();
+  useLancement(); // redessine au GO : la date du premier prélèvement devient connue
+  const premier = datePremierPrelevement();
   const fmt = (d) => new Date(d).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
   const essai = statut === 'trialing';
   const actif = statut === 'active';
@@ -35,7 +37,7 @@ export default function OffreFormules({ payant = false, statut = null, finEssai 
           <li>{t('accountUi.offre_when2')}</li>
           <li>{essai && finEssai ? t('accountUi.offre_when3Trial', { date: fmt(finEssai) })
             : actif && finEssai ? t('accountUi.offre_when3Active', { date: fmt(finEssai) })
-              : t('accountUi.offre_when3', { date: fmt(datePremierPrelevement()) })}</li>
+              : premier ? t('accountUi.offre_when3', { date: fmt(premier) }) : t('accountUi.offre_when3AvantGo')}</li>
         </ol>
         <p className="small" style={{ margin: '6px 0 0' }}>{t('accountUi.offre_noCommitment')}</p>
       </div>

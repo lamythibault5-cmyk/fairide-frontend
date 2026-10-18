@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import ConfirmDialog from './ConfirmDialog';
 import { useLanguage, getLocale } from '../context/LanguageContext';
-import { dateOuverturePaiementEnLigne } from '../launch';
 import './bons.css';
 
 // Utilitaires repris de l'ancien module Réservations (retiré le 2026-09-25) : les bons cadeaux, eux, restent — ils
@@ -47,7 +46,7 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
   return (
     <>
       <div className="card" style={{ borderColor: 'var(--iris)' }}>
-        <p className="small" style={{ margin: 0 }}><b>{t('bons.gvOnlineSoonTitle')}</b> {t('bons.gvOnlineSoon', { date: dateOuverturePaiementEnLigne(getLocale()) })}</p>
+        <p className="small" style={{ margin: 0 }}><b>{t('bons.gvOnlineSoonTitle')}</b> {t('bons.gvOnlineSoon')}</p>
       </div>
 
       <div className="card">
