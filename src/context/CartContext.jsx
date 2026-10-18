@@ -53,6 +53,10 @@ export function CartProvider({ children }) {
   // FloatingCart.jsx) doit pouvoir s'afficher sans avoir sous la main le menu complet du restaurant.
   const [lines, setLines] = useState(() => loadPersisted().lines);
   const [requestId, setRequestId] = useState(() => loadPersisted().requestId);
+  // La commande de ce panier a été annulée (carte « le total a changé » › Annuler, Checkout.jsx) : le même panier doit
+  // pouvoir donner une NOUVELLE commande. Sans nouvel identifiant, le serveur retrouvait la commande annulée et répondait
+  // « déjà passée » : le panier était vidé et le client renvoyé vers Mes commandes (audit du 18/10/2026).
+  function nouvelleDemande() { setRequestId(nouvelIdDemande()); }
   // Nouvel identifiant quand le CONTENU du panier change — comparé à une empreinte, pas au « premier rendu » : en
   // développement, StrictMode rejoue les effets au montage, et un garde « premier rendu » laissait passer ce second
   // passage, si bien que l'onglet dupliqué recevait un nouvel identifiant et pouvait payer une seconde fois.
@@ -300,7 +304,7 @@ export function CartProvider({ children }) {
   const rawTotal = useMemo(() => +Object.values(lines).reduce((a, l) => a + l.unitPrice * l.qty, 0).toFixed(2), [lines]);
 
   return (
-    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, requestId, rawTotal, hasConflict, switchRestaurant, addOne, addMany, changeLineQty, removeLine, clear, clearLines, stashForPayment, hasStashed, restoreStashed, discardStashed, totals }}>
+    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, requestId, rawTotal, nouvelleDemande, hasConflict, switchRestaurant, addOne, addMany, changeLineQty, removeLine, clear, clearLines, stashForPayment, hasStashed, restoreStashed, discardStashed, totals }}>
       {children}
     </CartContext.Provider>
   );

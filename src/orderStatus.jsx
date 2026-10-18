@@ -256,7 +256,8 @@ export function ProchaineEtape({ order }) {
   // commandes affiche à la place « Paiement non terminé » et ses deux choix (Orders.jsx, impayeeEnLigne).
   if (status === 'nouveau' && order.paid === false && order.paymentMode !== 'on_site') return null;
   if (status === 'nouveau' && order.acceptDeadline) {
-    return <div className="small order-next">{t('orderStatus.next_nouveau_deadline', { time: formatTime(order.acceptDeadline) })}</div>;
+    // Payée sur place : rien n'a été débité, il n'y a rien à rembourser (audit du 18/10/2026).
+    return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_nouveau_deadline_on_site' : 'orderStatus.next_nouveau_deadline', { time: formatTime(order.acceptDeadline) })}</div>;
   }
   if (status === 'annule' && order.expiredUnaccepted) {
     return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_expired_on_site' : 'orderStatus.next_expired')}</div>;

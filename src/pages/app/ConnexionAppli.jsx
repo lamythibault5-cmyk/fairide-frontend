@@ -129,7 +129,9 @@ export default function ConnexionAppli() {
         reussi = true;
         await arriver(data.user);
       } catch (err) {
-        if (err.message === 'INCOMPLETE_PROFILE') { toast(t('auth.errNoAccount')); creerCompte(); return; }
+        // Pas encore de compte : l'inscription de l'app, AVEC ce jeton (avant, il était jeté et la personne devait
+        // retoucher « Continuer avec… » à la fin de l'accueil).
+        if (err.message === 'INCOMPLETE_PROFILE') { toast(t('auth.errNoAccount')); navigate('/bienvenue', { state: { depart: 'profil', from, fed: jeton } }); return; }
         if (err.code === 'TOTP_REQUIRED') { setFed(jeton); setCode(''); aller('totp'); return; }
         toast(err.message, 'erreur');
       }

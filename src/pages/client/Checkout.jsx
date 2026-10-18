@@ -408,6 +408,8 @@ export default function Checkout() {
     try {
       await api(`/orders/${pendingOrder.id}/cancel`, { method: 'PATCH', token });
       toast(t('checkout.toastOrderCancelled'), 'succes');
+      // Le panier reste : il doit pouvoir repartir en une nouvelle commande (CartContext.nouvelleDemande).
+      cart.nouvelleDemande();
       setPendingOrder(null);
       if (pendingOrder.balanceUsed > 0) refreshUser().catch(() => {});
     } catch (e) {
@@ -509,7 +511,8 @@ export default function Checkout() {
               <div className="ec-options" role="group" aria-labelledby="checkout-fulfillment-label">
                 {cart.count > 0 && (
                   <>
-                    {restaurant.offersDelivery && (
+                    {/* Avant le GO, pas de carte « Livraison » qui mènerait à « bientôt » : l'à emporter seul (audit du 18/10/2026). */}
+                    {restaurant.offersDelivery && (serviceOuvert('delivery', user) || !restaurant.offersPickup) && (
                       <OptionCommande on={fulfillmentType === 'delivery'} icone="scooter" titre={t('orderStatus.orderType.delivery')} onClick={() => selectFulfillment('delivery')} />
                     )}
                     {restaurant.offersPickup && (
@@ -590,9 +593,9 @@ export default function Checkout() {
                 mais il ne sert qu'à l'heure estimée de la commande, pas à une livraison plus rapide.) */}
             {(
               <div className="field">
-                <span className="titre-groupe ec-section" id="checkout-quand-label">{t('checkout.whenLabel')}</span>
+                <span className="titre-groupe ec-section" id="checkout-quand-label">{t(fulfillmentType === 'pickup' ? 'checkout.whenLabelPickup' : 'checkout.whenLabel')}</span>
                 <div className="ec-options" role="group" aria-labelledby="checkout-quand-label">
-                  <OptionCommande on={!scheduleEnabled} icone="scooter" titre={t('checkout.whenAsap')}
+                  <OptionCommande on={!scheduleEnabled} icone={fulfillmentType === 'pickup' ? 'sac' : 'scooter'} titre={t('checkout.whenAsap')}
                     onClick={() => { setScheduleEnabled(false); setScheduleDate(''); setScheduleTime(''); }} />
                   <OptionCommande on={scheduleEnabled} icone="horloge" titre={t('checkout.scheduleLater')}
                     onClick={() => { setScheduleEnabled(true); setScheduleDate(dateOptions[0]?.value || ''); setScheduleTime(''); }} />

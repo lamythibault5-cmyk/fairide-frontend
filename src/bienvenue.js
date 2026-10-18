@@ -37,5 +37,34 @@ export function ecrireReprise(reprise) {
 }
 
 export function effacerReprise() {
-  if (lireBienvenue().reprise) ecrireBienvenue({ reprise: null });
+  const b = lireBienvenue();
+  if (b.reprise || b.codeEnAttente) ecrireBienvenue({ reprise: null, codeEnAttente: null });
+}
+
+/* L'ACCUEIL DÉJÀ FAIT (fondateur, 2026-10-18). Les écrans de l'accueil restent pour qui ne les a pas vus : ils retiennent
+ * les gens. Mais quelqu'un qui les a déjà parcourus sur ce téléphone et revient par « Créer un compte » (la connexion, un
+ * commerce touché sans compte) ne les refait pas : il reprend à l'écran du compte, avec son profil et ses réponses.
+ * Retenu en arrivant à l'écran du compte (Bienvenue.jsx). Mêmes données que l'accueil garde déjà, rien d'autre. */
+export function lireParcoursFait() {
+  const p = lireBienvenue().parcoursFait;
+  return p && p.role ? p : null;
+}
+
+export function ecrireParcoursFait(parcours) {
+  ecrireBienvenue({ parcoursFait: parcours });
+}
+
+/* LE CODE ATTENDU (audit du 18/10/2026). Après « Créer mon compte », le code part par e-mail : on quitte l'application
+ * pour le lire, et Android la ferme parfois entre-temps. Rouverte, elle repartait d'une inscription VIDE. On retient donc
+ * l'adresse à confirmer (jamais le mot de passe), pour rouvrir l'écran du code (InscriptionAppli.jsx). 24 heures au plus ;
+ * effacé dès qu'une session est ouverte (effacerReprise). */
+const CODE_MAX_MS = 24 * 3600 * 1000;
+
+export function lireCodeEnAttente() {
+  const c = lireBienvenue().codeEnAttente;
+  return c && c.email && Date.now() - (c.at || 0) < CODE_MAX_MS ? c : null;
+}
+
+export function ecrireCodeEnAttente(attente) {
+  ecrireBienvenue({ codeEnAttente: attente ? { ...attente, at: Date.now() } : null });
 }

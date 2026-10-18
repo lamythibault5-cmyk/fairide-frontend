@@ -28,6 +28,7 @@ import VisuelVide from '../../components/VisuelVide';
 import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
+import { livraisonOuverte, paiementEnLigneOuvert } from '../../launch';
 import EtatVide from '../../components/EtatVide';
 import TeteListe from '../../components/TeteListe';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
@@ -80,8 +81,9 @@ function offerLabelFor(r, t) {
 // badge promo (🏷️ en haut de la photo) qui porte sur le contenu du panier, pas la livraison.
 // Le prix de la livraison sur la carte du commerce (livraison.js) : offerte, offerte dès X €, ou « dès X € » quand il
 // est plus bas que le forfait (le commerce en offre une part, ou livre lui-même à ses frais).
-function deliveryOfferLabelFor(r, t) {
-  if (r.offersDelivery === false) return null;
+function deliveryOfferLabelFor(r, t, user) {
+  // Avant le GO, pas d'offre de livraison sur les cartes : seul l'à emporter est ouvert (audit du 18/10/2026).
+  if (r.offersDelivery === false || !livraisonOuverte(user)) return null;
   const tarif = tarifLivraison(r);
   if (tarif.offerte) return t('restoListUi.freeDeliveryPill');
   if (tarif.offerteDes != null) return t('restoListUi.freeFrom', { min: eurosCourts(tarif.offerteDes) });
@@ -96,7 +98,7 @@ function deliveryOfferLabelFor(r, t) {
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const { user } = useAuth();
   const offerLabel = offerLabelFor(r, t);
-  const deliveryOfferLabel = deliveryOfferLabelFor(r, t);
+  const deliveryOfferLabel = deliveryOfferLabelFor(r, t, user);
   const etat = r.hours ? getOpenStatus(r.hours, new Date(), r.closures) : null;
   const isClosed = !!etat && !etat.isOpen;
   const etatTexte = !isClosed ? null
@@ -104,7 +106,11 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
       ? t('restoListUi.closedOpensAt', { time: etat.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
       : t('restoListUi.closed');
   const bande = bandePrix(r);
-  const services = [r.offersPickup && t('restoListUi.servicePickup'), r.offersDelivery && t('restoListUi.serviceDelivery'), r.fairideDeliveryDisabled && r.offersPickup && t('restoListUi.pickupOnlyZone')].filter(Boolean);
+  // Avant le GO, l'à emporter payé en ligne seulement n'est pas encore commandable : « Commande en ligne bientôt » plutôt
+  // que « À emporter », découvert seulement au paiement (audit du 18/10/2026).
+  const emporterPossible = r.offersPickup && (r.pickupPaymentMode !== 'online' || paiementEnLigneOuvert(user));
+  const livraisonPossible = r.offersDelivery && livraisonOuverte(user);
+  const services = [emporterPossible && t('restoListUi.servicePickup'), livraisonPossible && t('restoListUi.serviceDelivery'), !emporterPossible && !livraisonPossible && (r.offersPickup || r.offersDelivery) && t('restoListUi.serviceSoon'), r.fairideDeliveryDisabled && r.offersPickup && t('restoListUi.pickupOnlyZone')].filter(Boolean);
   // VISITEUR NON CONNECTÉ : la liste se parcourt librement (on y arrive depuis la barre d'adresse de
   // l'accueil), mais ouvrir un commerce demande un compte (fondateur, 2026-09-27). Le lien part vers
   // la connexion avec la fiche en `from`, et Auth.jsx y ramène une fois connecté ou inscrit.
@@ -508,7 +514,8 @@ export default function RestaurantList() {
     .map(({ r }) => r);
   // LIVRAISON DÈS 3 € et LIVRAISON OFFERTE (fondateur, 2026-10-01) : seulement les commerces concernés, jamais complétées.
   const SEUIL_PAS_CHER = 3;
-  const livrables = nonGrocery.filter((r) => r.offersDelivery !== false);
+  // Rangées « Livraison offerte » et « Livraison dès 3 € » : seulement après le GO (avant, seul l'à emporter est ouvert).
+  const livrables = livraisonOuverte(user) ? nonGrocery.filter((r) => r.offersDelivery !== false) : [];
   const livraisonPasCher = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
     .filter(({ tarif }) => !tarif.offerte && tarif.offerteDes == null && tarif.depart > 0 && tarif.depart <= SEUIL_PAS_CHER)
     .sort((a, b) => a.tarif.depart - b.tarif.depart).map(({ r }) => r);

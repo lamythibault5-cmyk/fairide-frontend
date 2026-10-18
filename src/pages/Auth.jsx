@@ -393,6 +393,9 @@ export default function Auth() {
   // E-mails marketing en opt-out : la loi belge exige de pouvoir refuser dès la collecte de l'adresse (AR 4 avril 2003,
   // art. 1). Case NON cochée par défaut ; cochée, le compte est créé désinscrit (routes/auth.js, enregistrerRefusNouvelles).
   const [refusNouvelles, setRefusNouvelles] = useState(false);
+  // Client : les nouvelles demandent un OUI, case non cochée (recherche du 18/10/2026 : un compte gratuit sans commande
+  // n'ouvre pas l'exception « client » de l'AR du 4 avril 2003). Commerces et livreurs gardent la case de refus.
+  const [nouvellesOui, setNouvellesOui] = useState(false);
   const [versionCgu, setVersionCgu] = useState('');
   useEffect(() => { api('/auth/terms/current').then((r) => setVersionCgu(r.version)).catch(() => {}); }, []);
   const [googleProfile, setGoogleProfile] = useState(null);
@@ -512,7 +515,7 @@ export default function Auth() {
   // (prérempli par la feuille Apple à la première autorisation, saisi sinon).
   function connexionFed(fournisseur, jeton, roleChoisi, extra) {
     if (fournisseur === 'apple') return loginWithApple(jeton, roleChoisi, { givenName: firstName.trim() || undefined, familyName: lastName.trim() || undefined, ...extra });
-    return loginWithGoogle(jeton, roleChoisi, extra);
+    return loginWithGoogle(jeton, roleChoisi, { firstName: firstName.trim() || undefined, lastName: lastName.trim() || undefined, ...extra });
   }
   const toast = useToast();
   const navigate = useNavigate();
@@ -696,7 +699,8 @@ export default function Auth() {
     if (key === 'account' && googleCredential) return e;
     if (key === 'account') {
       if (!email.trim()) e.email = required;
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = t('auth.errEmailInvalid');
+      // Même forme que le serveur (routes/auth.js, EMAIL_RE) : au moins deux lettres après le dernier point.
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) e.email = t('auth.errEmailInvalid');
       if (!password) e.password = required;
       else if (password.length < 6 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
         e.password = t('auth.errPasswordStrength');
@@ -752,7 +756,9 @@ export default function Auth() {
       const r = await api('/auth/check-availability', { method: 'POST', body: corps });
       if (r.phoneValid === false) e.phone = t('auth.errPhoneInvalid');
       if (r.phoneTaken) e.phone = t('auth.errPhoneTaken');
-      if (r.emailTaken) e.email = t('auth.errEmailTaken');
+      if (r.emailValid === false) e.email = t('auth.errEmailInvalid');
+      else if (r.emailReserved) e.email = t('auth.errEmailReserved');
+      else if (r.emailTaken) e.email = t('auth.errEmailTaken');
       return e;
     } catch { return e; }
   }
@@ -806,6 +812,9 @@ export default function Auth() {
   // Le script Google ne part qu'au clic sur « Continuer avec Google » (politique des cookies : « seulement si vous cliquez
   // dessus », fondateur 2026-10-14) ; le bouton officiel de Google, qui seul peut ouvrir sa fenêtre, prend alors sa place.
   const [googleDemande, setGoogleDemande] = useState(false);
+  // Le choix du compte Google s'ouvre UNE fois, au clic qui charge le script — pas à chaque nouveau rendu du bouton.
+  const googleInvite = useRef(false);
+  const demanderGoogle = () => { googleInvite.current = true; setGoogleDemande(true); };
   const stateRef = useRef({ mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName });
   useEffect(() => { stateRef.current = { mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName }; });
 
@@ -859,7 +868,7 @@ export default function Auth() {
       } : {}),
       ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees.length ? zonesPreferees : communeDeLAdresse() } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
-      ...(refusNouvelles ? { marketingOptOut: true } : {})
+      ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {})
     });
     suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
     toast(t('auth.welcome', { name: data.user.name }), 'succes');
@@ -884,12 +893,16 @@ export default function Auth() {
       .then((gsi) => {
         if (cancelled || !googleBtnRef.current) return;
         googleBtnRef.current.innerHTML = '';
-        gsi.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+        gsi.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential, use_fedcm_for_prompt: true });
         // `locale` : sans lui, Google écrit le bouton dans la langue du NAVIGATEUR, pas celle choisie sur le site
         // (« Inloggen met Google » sur la page française — test du 6 oct. 2026).
         gsi.renderButton(googleBtnRef.current, {
           theme: 'outline', size: 'large', width: 320, text: mode === 'register' ? 'signup_with' : 'signin_with', locale: language
         });
+        // UN CLIC AU LIEU DE DEUX (audit du 18/10/2026) : notre bouton ne faisait que charger le script, puis il fallait
+        // toucher celui de Google. Le même clic ouvre maintenant le choix du compte (FedCM / One Tap) ; si le navigateur
+        // ne l'affiche pas (cookies tiers bloqués, refus récent), le bouton officiel ci-dessus reste là.
+        if (googleInvite.current) { googleInvite.current = false; try { gsi.prompt(); } catch { /* le bouton suffit */ } }
       })
       .catch(() => { /* bouton Google absent, le reste de la page fonctionne */ });
     return () => { cancelled = true; };
@@ -984,7 +997,7 @@ export default function Auth() {
           } : {}),
           ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees.length ? zonesPreferees : communeDeLAdresse() } : {}),
           ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
-          ...(refusNouvelles ? { marketingOptOut: true } : {}),
+          ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {}),
           website: siteWeb
         });
         // Statistiques (sans donnée personnelle) : une inscription par type de compte.
@@ -1040,7 +1053,10 @@ export default function Auth() {
         toast(t('auth.errPasswordRetry'), 'erreur');
         montrerPremiereErreur();
       } else if (err.field === 'phone' || err.field === 'email') {
-        const message = err.field === 'phone' ? (/invalide/i.test(err.message) ? t('auth.errPhoneInvalid') : t('auth.errPhoneTaken')) : t('auth.errEmailTaken');
+        // Le code dit ce qui ne va pas (routes/auth.js) ; sans code connu, le message du serveur, déjà traduit. Avant,
+        // toute erreur d'e-mail s'affichait « déjà pris », et le téléphone se reconnaissait au mot français « invalide ».
+        const MESSAGES = { EMAIL_TAKEN: 'auth.errEmailTaken', EMAIL_INVALID: 'auth.errEmailInvalid', EMAIL_RESERVED: 'auth.errEmailReserved', PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid' };
+        const message = MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message;
         setErrors({ [err.field]: message });
         const i = steps.indexOf(err.field === 'phone' ? 'identity' : 'account');
         if (i >= 0) setStep(i);
@@ -1640,7 +1656,7 @@ export default function Auth() {
                 {GOOGLE_CLIENT_ID && (
                   <>
                     <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 10px' }}>
-                      {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={() => setGoogleDemande(true)}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
+                      {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={demanderGoogle}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
                     </div>
                     <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
                       <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
@@ -1711,12 +1727,20 @@ export default function Auth() {
               <EngagementsInscription checked={accepteEngagements} onChange={setAccepteEngagements} />
             )}
             {/* Refus des nouvelles de Fairide (voir refusNouvelles) : discret, sous les cases obligatoires, tous rôles. */}
-            {isLastStep && (
+            {isLastStep && role === 'client' && (
+              <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '0 0 12px' }}>
+                <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={nouvellesOui} onChange={(e) => setNouvellesOui(e.target.checked)} />
+                <span className="small">{t('nouvelles.signupOptIn')}</span>
+              </label>
+            )}
+            {isLastStep && role !== 'client' && (
               <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '0 0 12px', opacity: 0.8 }}>
                 <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={refusNouvelles} onChange={(e) => setRefusNouvelles(e.target.checked)} />
                 <span className="small">{t('nouvelles.signupOptOut')}</span>
               </label>
             )}
+            {/* Comment les données sont utilisées, là où on les demande (RGPD art. 13). */}
+            {isLastStep && <p className="small" style={{ margin: '0 0 12px' }}>{t('nouvelles.privacyPrefix')} <Link to="/confidentialite" target="_blank" rel="noopener">{t('nouvelles.privacyLink')}</Link>.</p>}
             {incomplet && incomplet.step === step && Object.keys(errors).length > 0 && (
               <p className="auth-incomplet" role="alert"><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('auth.checkIncomplete', { n: incomplet.n, step: stepCopy?.title || '' })}</p>
             )}
@@ -1734,7 +1758,7 @@ export default function Auth() {
             {GOOGLE_CLIENT_ID && (
               <>
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0 10px' }}>
-                  {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={() => setGoogleDemande(true)}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
+                  {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={demanderGoogle}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
                 </div>
                 <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
                   <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />

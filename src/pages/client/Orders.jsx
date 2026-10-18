@@ -407,7 +407,7 @@ export default function Orders() {
           >
             {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
           </button>
-          <div className="small" style={{ marginTop: 4 }}>{t('orders.cancelHint')}</div>
+          <div className="small" style={{ marginTop: 4 }}>{t(o.paymentMode === 'on_site' ? 'orders.cancelHintOnSite' : 'orders.cancelHint')}</div>
         </>
       )}
       {['preparation', 'pret', 'livraison'].includes(o.status) && (
@@ -448,7 +448,7 @@ export default function Orders() {
       <ConfirmDialog
         open={!!aAnnuler}
         title={t('orders.cancelConfirmTitle')}
-        message={t(aAnnuler?.paid ? 'orders.cancelConfirmPaid' : 'orders.cancelConfirmBody')}
+        message={t(aAnnuler?.paymentMode === 'on_site' ? 'orders.cancelConfirmOnSite' : aAnnuler?.paid ? 'orders.cancelConfirmPaid' : 'orders.cancelConfirmBody')}
         confirmLabel={t('orders.cancelOrder')}
         danger
         onCancel={() => setAAnnuler(null)}

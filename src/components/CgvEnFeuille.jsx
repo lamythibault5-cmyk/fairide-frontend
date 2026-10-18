@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { experienceApp } from '../natif';
 import SousEcran from './SousEcran';
 import { TexteCgv } from '../pages/legal/Terms';
+import { TexteConfidentialite } from '../pages/legal/Privacy';
 
 /* LE LIEN « CONDITIONS GÉNÉRALES » AU MOMENT D'ACCEPTER (2026-10-15).
  *
@@ -18,6 +19,20 @@ export default function LienCgv({ children, cible = '_blank' }) {
     <>
       <button type="button" className="lien-bouton" onClick={() => setOuvert(true)}>{children}</button>
       {ouvert && <SousEcran titre={t('terms.pageTitle')} onFermer={() => setOuvert(false)}><TexteCgv /></SousEcran>}
+    </>
+  );
+}
+
+// Même chose pour la politique de confidentialité, montrée là où les données sont demandées (inscription, RGPD art. 13 ;
+// audit du 18/10/2026).
+export function LienConfidentialite({ children }) {
+  const { t } = useLanguage();
+  const [ouvert, setOuvert] = useState(false);
+  if (!experienceApp()) return <Link to="/confidentialite" target="_blank" rel="noopener">{children}</Link>;
+  return (
+    <>
+      <button type="button" className="lien-bouton" onClick={() => setOuvert(true)}>{children}</button>
+      {ouvert && <SousEcran titre={t('privacy.title')} onFermer={() => setOuvert(false)}><TexteConfidentialite /></SousEcran>}
     </>
   );
 }

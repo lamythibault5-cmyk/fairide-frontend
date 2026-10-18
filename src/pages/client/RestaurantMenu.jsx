@@ -11,7 +11,7 @@ import Icone from '../../components/Icone';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
 import { groupeEnCours } from '../../commandeGroupee';
 import VisuelVide from '../../components/VisuelVide';
-import { commandesOuvertes, livraisonOuverte, dateOuvertureEmporter, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
+import { commandesOuvertes, livraisonOuverte, paiementEnLigneOuvert, dateOuvertureEmporter, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
@@ -383,9 +383,13 @@ export default function RestaurantMenu() {
   const emporterSurPlace = !!restaurant.offersPickup && (restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online')) !== 'online';
   const bandeauOuverture = (restaurant.offersDelivery || restaurant.offersPickup) && !livraisonOuverte(user)
     && (!commandesOuvertes(user) || restaurant.offersDelivery || !emporterSurPlace);
-  // Aucun livreur libre (après GO) : la bascule ne propose plus que l'à emporter, quand le commerce le propose.
+  // Aucun livreur libre (après GO), ou livraison pas encore ouverte (avant le GO) : la bascule ne propose plus que l'à
+  // emporter, quand le commerce le propose — la fiche s'ouvre alors sur « À emporter », pas sur une livraison impossible.
   const sansLivreur = livraisonDispo === false;
-  const modesPossibles = [restaurant.offersDelivery && !(sansLivreur && restaurant.offersPickup) && 'delivery', restaurant.offersPickup && 'pickup'].filter(Boolean);
+  const modesPossibles = [restaurant.offersDelivery && !((sansLivreur || !livraisonOuverte(user)) && restaurant.offersPickup) && 'delivery', restaurant.offersPickup && 'pickup'].filter(Boolean);
+  // Infos › Paiement : en ligne seulement après le GO ; sur place, ce que le commerce a dit accepter.
+  const paiementEnLigne = paiementEnLigneOuvert(user);
+  const paiementsSurPlace = restaurant.offersPickup && restaurant.pickupPaymentMode && restaurant.pickupPaymentMode !== 'online' ? (restaurant.paiementsSurPlace || []) : [];
   const modeActif = mode && modesPossibles.includes(mode) ? mode : modesPossibles[0];
 
   // Le choix est déposé pour le paiement, qui le relit au montage. sessionStorage et non un état
@@ -961,12 +965,12 @@ export default function RestaurantMenu() {
 
             {/* Paiement (2026-10-18). En ligne : celui de Fairide (Bancontact et carte, routes/payments.js côté serveur). Sur
                 place : seulement quand le commerce permet de payer au retrait et a dit ce qu'il accepte (Mon compte › Services). */}
-            {(restaurant.offersDelivery || restaurant.offersPickup) && (
+            {(restaurant.offersDelivery || restaurant.offersPickup) && (paiementEnLigne || paiementsSurPlace.length > 0) && (
               <section className="fiche-infos-bloc">
                 <h4><Icone nom="euro" taille={16} />{t('restaurantMenu.paymentLabel')}</h4>
-                <p className="small">{t('restaurantMenu.paymentOnline')}</p>
-                {restaurant.offersPickup && restaurant.pickupPaymentMode && restaurant.pickupPaymentMode !== 'online' && (restaurant.paiementsSurPlace || []).length > 0 && (
-                  <p className="small">{t('restaurantMenu.paymentOnSite', { list: restaurant.paiementsSurPlace.map((p) => t(`restaurantMenu.${LIBELLES_PAIEMENT[p] || 'payCarte'}`)).join(', ') })}</p>
+                {paiementEnLigne && <p className="small">{t('restaurantMenu.paymentOnline')}</p>}
+                {paiementsSurPlace.length > 0 && (
+                  <p className="small">{t('restaurantMenu.paymentOnSite', { list: paiementsSurPlace.map((p) => t(`restaurantMenu.${LIBELLES_PAIEMENT[p] || 'payCarte'}`)).join(', ') })}</p>
                 )}
               </section>
             )}
