@@ -11,7 +11,7 @@ import Icone from '../../components/Icone';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
 import { groupeEnCours } from '../../commandeGroupee';
 import VisuelVide from '../../components/VisuelVide';
-import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, dateOuvertureEmporter } from '../../launch';
+import { commandesOuvertes, livraisonOuverte, dateOuvertureEmporter, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
@@ -304,6 +304,21 @@ export default function RestaurantMenu() {
     }
   }, [restaurant, id]);
 
+  // BOUTON GO (lancement.js côté serveur) : useLancement redessine la fiche au GO ou à la fermeture. Après GO, la livraison
+  // n'est proposée que si un livreur est libre à l'instant (relu toutes les minutes) : sinon un bandeau le dit et
+  // l'à emporter est choisi. Les comptes exemptés (équipe, test, simulation) ne sont pas concernés, comme côté serveur.
+  useLancement();
+  const [livraisonDispo, setLivraisonDispo] = useState(null);
+  const verifierLivraison = !!restaurant?.offersDelivery && livraisonOuverte(user) && !exempteLancement(user);
+  useEffect(() => {
+    if (!verifierLivraison) { setLivraisonDispo(null); return undefined; }
+    let fini = false;
+    const lire = () => livraisonDisponible(id).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
+    lire();
+    const minuteur = setInterval(() => { if (document.visibilityState === 'visible') lire(); }, 60000);
+    return () => { fini = true; clearInterval(minuteur); };
+  }, [verifierLivraison, id]);
+
   /* Deux échecs distincts, deux sorties distinctes : une fiche retirée ne se recharge pas, donc
      proposer « Réessayer » dessus serait une fausse piste — on renvoie vers la liste. Tout le
      reste (réseau coupé, serveur en panne) est temporaire et mérite un vrai bouton.
@@ -368,7 +383,9 @@ export default function RestaurantMenu() {
   const emporterSurPlace = !!restaurant.offersPickup && (restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online')) !== 'online';
   const bandeauOuverture = (restaurant.offersDelivery || restaurant.offersPickup) && !livraisonOuverte(user)
     && (!commandesOuvertes(user) || restaurant.offersDelivery || !emporterSurPlace);
-  const modesPossibles = [restaurant.offersDelivery && 'delivery', restaurant.offersPickup && 'pickup'].filter(Boolean);
+  // Aucun livreur libre (après GO) : la bascule ne propose plus que l'à emporter, quand le commerce le propose.
+  const sansLivreur = livraisonDispo === false;
+  const modesPossibles = [restaurant.offersDelivery && !(sansLivreur && restaurant.offersPickup) && 'delivery', restaurant.offersPickup && 'pickup'].filter(Boolean);
   const modeActif = mode && modesPossibles.includes(mode) ? mode : modesPossibles[0];
 
   // Le choix est déposé pour le paiement, qui le relit au montage. sessionStorage et non un état
@@ -778,7 +795,7 @@ export default function RestaurantMenu() {
           </p>
         </div>
       )}
-      {/* Avant le 1er novembre : à emporter et livraison à venir ; du 1er au 10 novembre : seule la livraison (et l'à emporter payé
+      {/* Avant le 1er novembre : à emporter et livraison à venir ; du 1er novembre au GO : seule la livraison (et l'à emporter payé
           en ligne) attend. Rien n'est annoncé pour un commerce qui ne propose aucun service en ligne, et l'à emporter
           n'est promis que s'il se paie sur place (le paiement en ligne ouvre avec la livraison). */}
       {bandeauOuverture && (
@@ -786,15 +803,22 @@ export default function RestaurantMenu() {
           <span className="fiche-info-icone" aria-hidden="true"><Icone nom="horloge" taille={18} /></span>
           <span>
           {!emporterSurPlace
-            ? t('restaurantMenu.ordersOpenBannerOnlineOnly', { date: dateOuvertureLivraison(getLocale()) })
+            ? t('restaurantMenu.ordersOpenBannerOnlineOnly')
             : commandesOuvertes(user)
-              ? t('restaurantMenu.ordersOpenBannerResaOpen', { date: dateOuvertureLivraison(getLocale()) })
+              ? t('restaurantMenu.ordersOpenBannerResaOpen')
               : restaurant.offersDelivery
-                ? t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureEmporter(getLocale()) })
+                ? t('restaurantMenu.ordersOpenBanner', { dateResa: dateOuvertureEmporter(getLocale()) })
                 : t('restaurantMenu.ordersOpenBannerPickupOnly', { date: dateOuvertureEmporter(getLocale()) })}
           </span>
           {/* App (version B) : l'annonce roule sur la route du vélo. */}
           {APPLI && <span className="fiche-info-route" aria-hidden="true"><span className="fiche-info-velo"><VeloMarque largeur={26} /></span></span>}
+        </div>
+      )}
+      {/* Après GO, aucun livreur libre à l'instant : seul l'à emporter est possible (relu toutes les minutes). */}
+      {sansLivreur && !bandeauOuverture && (
+        <div className="ouverture-bandeau fiche-info" role="status">
+          <span className="fiche-info-icone" aria-hidden="true"><Icone nom="scooter" taille={18} /></span>
+          <span>{t('restaurantMenu.noCourierBanner')}</span>
         </div>
       )}
       {/* Livraison Fairide coupée dans la zone par l'équipe (08/10) : le client sait que seul l'à emporter est possible ici. */}

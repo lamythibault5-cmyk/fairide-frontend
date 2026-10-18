@@ -28,7 +28,7 @@ import InboxSection from '../components/InboxSection';
 import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
-import { abonnementOuvert, datePremierPrelevement } from '../launch';
+import { abonnementOuvert, datePremierPrelevement, useLancement } from '../launch';
 import AbonnementOffert from '../components/commerce/AbonnementOffert';
 import OffreFormules from '../components/OffreFormules';
 import TerminalFairide from '../components/TerminalFairide';
@@ -111,6 +111,7 @@ export default function Account() {
     }
   }
   const { t, language, locale } = useLanguage();
+  useLancement(); // redessine au GO : la date du premier prélèvement de l'abonnement devient connue
   const DELETION_REASONS = deletionReasons(t);
   const GENDERS = genders(t);
   const [driverDeliveries, setDriverDeliveries] = useState(null);
@@ -937,7 +938,9 @@ export default function Account() {
             {restaurant.subscriptionStatus === 'inactive' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 {t('accountUi.subInactiveIntro')}
-                {' '}{t('accountUi.subPendingValidation', { date: datePremierPrelevement().toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) })}
+                {' '}{datePremierPrelevement()
+                  ? t('accountUi.subPendingValidation', { date: datePremierPrelevement().toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) })
+                  : t('accountUi.subPendingValidationAvantGo')}
               </p>
             )}
 

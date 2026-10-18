@@ -5,6 +5,7 @@ import { ErrorCard } from '../../components/admin/AdminListTools';
 import { getLocale, useLanguage } from '../../context/LanguageContext';
 import useAdminOverview from '../../hooks/useAdminOverview';
 import DeletionRequestsPanel from '../../components/admin/DeletionRequestsPanel';
+import BoutonGo from '../../components/admin/BoutonGo';
 import Icone from '../../components/Icone';
 import { money } from './adminUtils';
 import { attentionItems } from './adminModules';
@@ -78,6 +79,9 @@ export default function AdminHomePage() {
           </section>
         )}
       </header>
+
+      {/* Bouton GO : la livraison et le paiement en ligne s'ouvrent ici (lancement.js côté serveur). */}
+      <BoutonGo />
 
       {!overview && !error && <p className="small">{tr('adminCommon.loading')}</p>}
       {error && !overview && <ErrorCard message={error} onRetry={refresh} />}
