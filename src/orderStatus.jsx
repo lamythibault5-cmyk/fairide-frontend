@@ -198,6 +198,8 @@ export function titreSuivi(order, t) {
   const { status, orderType } = order;
   // Paiement en ligne pas terminé : le commerce ne voit pas encore la commande (même règle que ProchaineEtape).
   if (status === 'nouveau' && order.paid === false && order.paymentMode !== 'on_site') return statusLabel(status, orderType, t, true);
+  // À payer sur place mais jamais partie au commerce : « le commerce regarde ta commande » serait faux.
+  if (status === 'nouveau' && order.paid === false) return t('orders.notSentTitle');
   if (status === 'pret') return t(orderType === 'delivery' ? 'orderStatus.grand.pretDelivery' : 'orderStatus.grand.pretPickup');
   if (['nouveau', 'preparation', 'livraison'].includes(status)) return t(`orderStatus.grand.${status}`);
   return statusLabel(status, orderType, t, true);
@@ -254,10 +256,15 @@ export function ProchaineEtape({ order }) {
   let cle = null;
   // Paiement en ligne pas terminé : le commerce ne voit pas encore la commande, « il doit la confirmer » serait faux. Mes
   // commandes affiche à la place « Paiement non terminé » et ses deux choix (Orders.jsx, impayeeEnLigne).
-  if (status === 'nouveau' && order.paid === false && order.paymentMode !== 'on_site') return null;
+  // Pas encore payée en ligne, ou jamais envoyée au commerce (sur place) : la carte de la commande propose ses deux choix.
+  if (status === 'nouveau' && order.paid === false) return null;
   if (status === 'nouveau' && order.acceptDeadline) {
     // Payée sur place : rien n'a été débité, il n'y a rien à rembourser (audit du 18/10/2026).
     return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_nouveau_deadline_on_site' : 'orderStatus.next_nouveau_deadline', { time: formatTime(order.acceptDeadline) })}</div>;
+  }
+  // Jamais envoyée ni payée, puis close par le ménage des commandes impayées (45 min) : le commerce n'y est pour rien.
+  if (status === 'annule' && order.expiredUnaccepted && order.paid === false) {
+    return <div className="small order-next">{t('orderStatus.next_never_sent')}</div>;
   }
   if (status === 'annule' && order.expiredUnaccepted) {
     return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_expired_on_site' : 'orderStatus.next_expired')}</div>;

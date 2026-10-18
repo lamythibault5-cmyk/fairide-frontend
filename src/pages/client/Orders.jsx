@@ -8,6 +8,8 @@ const APPLI = experienceApp();
 import { Fragment, useEffect, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
+import ErreurChargement from '../../components/ErreurChargement';
+import InfosRetrait, { AideCommande } from '../../components/client/InfosRetrait';
 import BandeauOuverture from '../../components/BandeauOuverture';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
@@ -132,6 +134,7 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
+  const [echec, setEchec] = useState(false);
   const [reviewingId, setReviewingId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
   // Annuler une commande passe par une confirmation (audit du 15/10/2026) : un toucher l'annulait aussitôt.
@@ -148,6 +151,7 @@ export default function Orders() {
         {o.orderType === 'delivery' && t('orders.codeGiveDriver')}
       </div>
       <div className="suivi-code-valeur">{o.deliveryCode}</div>
+      {o.orderType === 'pickup' && o.orderNumber != null && <div className="suivi-code-numero">{t('retrait.orderNumber', { n: `#${String(o.orderNumber).padStart(3, '0')}` })}</div>}
     </div>
   ) : null);
   const cart = useCart();
@@ -189,9 +193,9 @@ export default function Orders() {
     // Un restaurateur en mode aperçu n'a pas de vraies commandes client (403 côté API) — liste vide
     // silencieuse plutôt qu'un message d'erreur trompeur, voir MapPage.jsx pour le même filet.
     const isPreviewingRestaurant = previewMode && role === 'restaurant';
-    api('/orders/mine', { token }).then(setOrders).catch((e) => { if (!isPreviewingRestaurant) toast(e.message, 'erreur'); }).finally(() => setLoading(false));
+    api('/orders/mine', { token }).then(setOrders).catch(() => { if (!isPreviewingRestaurant) setEchec(true); }).finally(() => setLoading(false));
     const interval = setInterval(() => {
-      api('/orders/mine', { token }).then(setOrders).catch(() => {});
+      api('/orders/mine', { token }).then((l) => { setOrders(l); setEchec(false); }).catch(() => {});
     }, 15000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -216,6 +220,20 @@ export default function Orders() {
 
   // Commande en ligne créée mais jamais payée : le commerce ne la voit pas (il ne reçoit que les commandes payées).
   const impayeeEnLigne = (o) => o.status === 'nouveau' && !o.paid && o.paymentMode !== 'on_site';
+  // À payer sur place, mais jamais partie au commerce (carte « le total a changé » laissée en plan) : rien n'est en cours.
+  const nonEnvoyee = (o) => o.status === 'nouveau' && !o.paid && o.paymentMode === 'on_site';
+  async function envoyerAuCommerce(o) {
+    setPayingId(o.id);
+    try {
+      await api(`/orders/${o.id}/confirm-on-site`, { method: 'POST', token });
+      setOrders(await api('/orders/mine', { token }));
+      toast(t('checkout.toastOnSiteConfirmed'), 'succes');
+    } catch (e) {
+      toast(e.message, 'erreur');
+    } finally {
+      setPayingId(null);
+    }
+  }
   const [payingId, setPayingId] = useState(null);
   // Même chemin que « Commander et payer » au checkout : une nouvelle session Stripe pour CETTE commande.
   async function payerMaintenant(o) {
@@ -263,6 +281,15 @@ export default function Orders() {
   const quand = (ms) => new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   if (loading) return <div><h1 className="page-title">{titre}</h1><SkeletonCards count={3} /></div>;
+  // Pas lues (réseau, serveur) : jamais « Rien en route pour l'instant », qui ferait croire la commande perdue.
+  if (echec && orders.length === 0) {
+    return (
+      <div>
+        <h1 className="page-title">{titre}</h1>
+        <ErreurChargement onReessayer={() => { setEchec(false); setLoading(true); api('/orders/mine', { token }).then(setOrders).catch(() => setEchec(true)).finally(() => setLoading(false)); }} />
+      </div>
+    );
+  }
   /* AUCUNE COMMANDE (fondateur, 2026-10-17, « My orders » de mockups/commerces-marque.html) : le même bandeau que Mes favoris,
      le calendrier d'ouverture posé dessus en note translucide, le vélo qui attend dans la feuille blanche. */
   if (listeAffichee.length === 0) {
@@ -397,7 +424,22 @@ export default function Orders() {
           </div>
         </div>
       )}
-      {o.status === 'nouveau' && !impayeeEnLigne(o) && (
+      {nonEnvoyee(o) && (
+        <div className="paiement-non-termine">
+          <p className="small" style={{ margin: '0 0 10px' }}>{t('orders.notSentText')}</p>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn-gold" disabled={payingId === o.id || cancellingId === o.id} onClick={() => envoyerAuCommerce(o)}>
+              {payingId === o.id ? '…' : t('orders.sendToShop')}
+            </button>
+            <button type="button" className="btn-outline" disabled={payingId === o.id || cancellingId === o.id} onClick={() => revenirAuPanier(o)}>
+              {cancellingId === o.id ? '…' : t('orders.backToCart')}
+            </button>
+          </div>
+        </div>
+      )}
+      {/* À emporter : quand, où, itinéraire, appel, ce qu'on paie au comptoir. */}
+      <InfosRetrait order={o} compact />
+      {o.status === 'nouveau' && !impayeeEnLigne(o) && !nonEnvoyee(o) && (
         <>
           <button
             className="btn-ghost"
@@ -437,6 +479,8 @@ export default function Orders() {
         <SignalerProbleme order={o} token={token} toast={toast} signalement={signalements[o.id]}
           onSignale={(s) => setSignalements((prev) => ({ ...prev, [o.id]: s }))} />
       )}
+      {/* « Un souci ? » à chaque étape — sauf là où « Signaler un problème » est déjà proposé. */}
+      {!(o.paid && ['livre', 'livraison'].includes(o.status)) && <AideCommande order={o} />}
       {/* Commander à nouveau (USR-9) : une commande close, refaite avec la carte d'aujourd'hui. */}
       {avecRecommander && ['livre', 'annule', 'refuse'].includes(o.status) && (o.items || []).length > 0 && (
         <button type="button" className="btn-outline" style={{ marginTop: 8, marginLeft: 8 }} onClick={() => recommander(o)}>{t('orders.reorder')}</button>
@@ -477,7 +521,8 @@ export default function Orders() {
       <div className="suivi-bandeau-haut"><span><b>{o.restaurantName}</b> · {orderTypeLabel(o, t)}</span><span>{quand(o.createdAt)}</span></div>
       <h2 className="suivi-bandeau-titre" key={o.status}>{titreSuivi(o, t)}</h2>
       <DeliveryTiming order={o} />
-      <RouteSuivi status={o.status} orderType={o.orderType} />
+      {/* Pas encore reçue par le commerce (paiement non terminé, ou sur place jamais envoyée) : pas de route qui dirait « Envoyée ». */}
+      {!(o.status === 'nouveau' && !o.paid) && <RouteSuivi status={o.status} orderType={o.orderType} />}
     </div>
   );
 
@@ -557,7 +602,7 @@ export default function Orders() {
             <div className="ec-haut"><span className="ec-haut-texte"><b>{vedette.restaurantName}</b> · {orderTypeLabel(vedette, t)} · {quand(vedette.createdAt)}</span></div>
             <h2 className="ec-titre sc-titre-suivi" key={vedette.status}>{titreSuivi(vedette, t)}</h2>
             <DeliveryTiming order={vedette} />
-            <RouteSuivi status={vedette.status} orderType={vedette.orderType} />
+            {!(vedette.status === 'nouveau' && !vedette.paid) && <RouteSuivi status={vedette.status} orderType={vedette.orderType} />}
           </div>
         </header>
       ) : <BandeauCommande titre={titre} />}

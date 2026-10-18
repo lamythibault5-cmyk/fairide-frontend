@@ -222,6 +222,29 @@
 .suivi-code { margin: 12px 0; padding: 12px 14px; border: 2px dashed var(--iris); border-radius: 14px; text-align: center; background: rgba(59, 47, 181, .04); }
 .suivi-code-lib { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 4px; }
 .suivi-code-valeur { font-size: 32px; font-weight: 800; letter-spacing: 8px; color: var(--iris); line-height: 1.1; }
+/* Le numéro du jour du commerce (#042), sous le code de retrait : ce que le comptoir appelle (InfosRetrait, 18/10/2026). */
+.suivi-code-numero { margin-top: 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
+
+/* LE RETRAIT (components/client/InfosRetrait.jsx) : les rangées du récapitulatif, deux petits boutons sous l'adresse. */
+.retrait { margin-top: 6px; }
+.retrait-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.retrait-actions .btn-sm { display: inline-flex; align-items: center; gap: 6px; }
+.retrait-note { margin: 10px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--ink-soft); }
+.retrait--compact { margin: 10px 0 4px; }
+.retrait--compact .retrait-actions { margin-top: 0; }
+.retrait--compact .retrait-note { margin-top: 8px; }
+/* « Un souci ? » sous chaque commande : une ligne discrète, deux liens iris. */
+.aide-commande { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+.aide-commande-titre { font-size: 13px; font-weight: 700; color: var(--ink); }
+.aide-commande-lien { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 13px; font-weight: 600; color: var(--iris); text-decoration: none; }
+/* Plat qui ne se commande plus (panierDisponible.js) : dit en rouge, photo grisée — jamais barré. */
+.ligne-indispo { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 600; color: var(--red); }
+.panier-ligne--indispo .panier-ligne-image { opacity: .5; filter: grayscale(1); }
+.panier-ligne--indispo b, .co-ligne--indispo .co-ligne-nom { color: var(--ink-soft); }
+.co-ligne--indispo { align-items: center; }
+/* Paiement, à emporter : l'heure estimée et la règle du non-retrait. */
+.checkout-pret-vers { margin: 0 0 10px; font-weight: 600; color: var(--ink); }
+.checkout-regle-retrait { margin: 6px 0 0; color: var(--ink-soft); }
 .suivi-total { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
 .suivi-total b { font-size: 17px; }
 /* Paiement en ligne pas terminé (Orders.jsx) : encadré en filet iris, comme tout ce qui attend un geste du client. */

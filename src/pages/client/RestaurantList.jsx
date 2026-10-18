@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
@@ -30,6 +30,7 @@ import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 import { livraisonOuverte, paiementEnLigneOuvert } from '../../launch';
 import EtatVide from '../../components/EtatVide';
+import ErreurChargement from '../../components/ErreurChargement';
 import TeteListe from '../../components/TeteListe';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import '../../ecran-liste.css';
@@ -323,6 +324,12 @@ export default function RestaurantList() {
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  // La liste n'a pas pu être lue (réseau, serveur) : « Impossible de charger » et Réessayer, pas « Aucun commerce ».
+  const [echecListe, setEchecListe] = useState(false);
+  const chargerListe = useCallback(() => {
+    setEchecListe(false); setLoading(true);
+    api('/restaurants').then(setRestaurants).catch(() => setEchecListe(true)).finally(() => setLoading(false));
+  }, []);
   const [search, setSearch] = useState(filtresInitiaux.search || '');
   const [commune, setCommune] = useState(filtresInitiaux.commune || '');
   const [cuisine, setCuisine] = useState(filtresInitiaux.cuisine || '');
@@ -353,7 +360,7 @@ export default function RestaurantList() {
   const colonne = useSiteLarge(1100);
 
   useEffect(() => {
-    api('/restaurants').then(setRestaurants).catch((e) => toast(e.message, 'erreur')).finally(() => setLoading(false));
+    chargerListe();
     api('/restaurants/landing').then((l) => {
       setInscrits((l || []).filter((r) => r.menuComplete));
       setInscritLe(new Map((l || []).filter((r) => r.createdAt).map((r) => [r.id, Number(r.createdAt)])));
@@ -806,7 +813,8 @@ export default function RestaurantList() {
           </button>
         </EtatVide>
       )}
-      {!loading && restaurants.length === 0 && (
+      {!loading && echecListe && restaurants.length === 0 && <ErreurChargement onReessayer={chargerListe} />}
+      {!loading && !echecListe && restaurants.length === 0 && (
         <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
       )}
       </div>

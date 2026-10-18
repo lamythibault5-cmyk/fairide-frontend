@@ -13,6 +13,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import ErreurChargement from '../../components/ErreurChargement';
+import { ligneIndisponible, lignesIndisponibles } from '../../panierDisponible';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import Icone from '../../components/Icone';
 import ChoixPastilles from '../../components/ChoixPastilles';
@@ -49,6 +51,9 @@ export default function Checkout() {
 
   const [restaurant, setRestaurant] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  // Commerce pas lu (réseau, serveur) : Réessayer — « Ce restaurant n'est plus disponible » n'est dit que pour un vrai 404.
+  const [echecChargement, setEchecChargement] = useState(false);
+  const [essai, setEssai] = useState(0);
   const [addressStreet, setAddressStreet] = useState(user.addressStreet || '');
   const [addressNumber, setAddressNumber] = useState(user.addressNumber || '');
   const [addressPostalCode, setAddressPostalCode] = useState(user.addressPostalCode || '');
@@ -112,9 +117,9 @@ export default function Checkout() {
       return;
     }
     // Avec la session : un commerce que le public ne voit pas encore (le sien, celui de la simulation) reste commandable.
-    api(`/restaurants/${restaurantId}`, { token }).then(setRestaurant).catch(() => setNotFound(true));
+    api(`/restaurants/${restaurantId}`, { token }).then(setRestaurant).catch((e) => (e.status === 404 ? setNotFound(true) : setEchecChargement(true)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurantId]);
+  }, [restaurantId, essai]);
 
   // Corrige le type de commande par défaut (initialisé à 'delivery' avant même de savoir ce que ce
   // restaurant propose) une fois ses services chargés — une seule fois, pour ne pas écraser un choix
@@ -190,6 +195,7 @@ export default function Checkout() {
   // d'y entrer. On arrive donc directement sur la confirmation des informations de commande.
 
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
+  if (echecChargement && !restaurant) return <ErreurChargement onReessayer={() => { setEchecChargement(false); setEssai((n) => n + 1); }} />;
   if (!restaurant) return <SkeletonCards count={2} />;
 
   // Ce qui manque pour atteindre le minimum du commerce (PAN-3), sur la valeur des plats avant remises, comme le serveur.
@@ -197,6 +203,15 @@ export default function Checkout() {
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder, deliveryMode: restaurant.deliveryMode, ownDeliveryFee: restaurant.ownDeliveryFee });
   // Mode choisi par le commerce : en ligne seulement, sur place seulement, ou au choix du client.
   const modeEmporter = restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online');
+  // Payée sur place : ce que le commerce accepte au comptoir, et ce qui arrive si l'on ne vient pas (fondateur, 18/10/2026).
+  const LIBELLES_PAIEMENT = { especes: 'payEspeces', bancontact: 'payBancontact', carte: 'payCarte', payconiq: 'payPayconiq', titres_repas: 'payTitresRepas' };
+  const moyensSurPlace = (restaurant.paiementsSurPlace || []).map((p) => t(`restaurantMenu.${LIBELLES_PAIEMENT[p] || 'payCarte'}`)).join(', ');
+  const notesSurPlace = (
+    <>
+      {moyensSurPlace && <p className="small" style={{ margin: '4px 0 0' }}>{t('retrait.accepted', { list: moyensSurPlace })}</p>}
+      <p className="small checkout-regle-retrait"><Icone nom="alerte" taille={14} className="icone-texte" />{' '}{t('retrait.noShowRule')}</p>
+    </>
+  );
   // Avant le GO, l'à emporter ne se paie que sur place : si le commerce laisse le choix, « sur place » est
   // imposé ; s'il n'accepte que le paiement en ligne, la commande attend l'ouverture.
   const enLigneFerme = fulfillmentType === 'pickup' && !paiementEnLigneOuvert(user);
@@ -292,6 +307,14 @@ export default function Checkout() {
   const refusDevis = erreurDevis && erreurDevis.status >= 400 && erreurDevis.status < 500 && erreurDevis.status !== 429
     && !REFUS_REGLES_ICI.includes(erreurDevis.code) ? erreurDevis.message : null;
 
+  // Commande payée sur place, partie au commerce : l'écran de confirmation (OrderResult.jsx) avec tout le retrait — numéro,
+  // code, heure, adresse, itinéraire, appel, moyens de paiement. Avant : un message de trois secondes, puis Mes commandes.
+  function terminerSurPlace(order) {
+    commandeTermineeRef.current = true;
+    cart.clear();
+    navigate(`/order-success?order=${order.id}`, { replace: true });
+  }
+
   async function placeOrder() {
     if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
       toast(t('checkout.toastAddressRequired'), 'erreur');
@@ -315,6 +338,7 @@ export default function Checkout() {
       if (caseManquante) { caseManquante.closest('.co-case').scrollIntoView({ behavior: defilement(), block: 'center' }); caseManquante.focus({ preventScroll: true }); }
       return;
     }
+    if (lignesIndisponibles(cart.lines, restaurant?.menu).length) { toast(t('checkout.removeUnavailable'), 'erreur'); return; }
     setPlacing(true);
     try {
       // Les frais de livraison dépendent de la distance réelle et ne sont connus qu'une fois la commande
@@ -323,8 +347,11 @@ export default function Checkout() {
       const order = await api('/orders', {
         method: 'POST', token,
         // Même panier = même commande, même depuis un onglet dupliqué (plan de test CMD-19, voir CartContext).
-        body: { ...corpsCommande(), clientRequestId: cart.requestId }
+        // Payée sur place : le total vu part avec la commande ; s'il tombe juste, le serveur l'envoie au commerce dans le même
+        // appel (plus de commande « fantôme » quand un second appel échouait). Sinon, la carte « le total a changé », comme avant.
+        body: { ...corpsCommande(), clientRequestId: cart.requestId, ...(surPlace ? { confirmOnSite: true, expectedTotal: montantAnnonce } : {}) }
       });
+      if (order.paymentMode === 'on_site' && order.paid) { terminerSurPlace(order); return; }
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
       /* UN SEUL BOUTON QUAND RIEN N'A BOUGÉ (2026-10-13).
        * Avant : « Valider mes informations », puis une carte « Confirme ta commande » avec une case à cocher, puis
@@ -367,11 +394,7 @@ export default function Checkout() {
     try {
       // Paiement sur place : rien à encaisser en ligne, la commande part au commerce.
       if (order.paymentMode === 'on_site') {
-        await api(`/orders/${order.id}/confirm-on-site`, { method: 'POST', token });
-        commandeTermineeRef.current = true;
-        cart.clear();
-        toast(t('checkout.toastOnSiteConfirmed'), 'succes');
-        navigate('/orders');
+        terminerSurPlace(await api(`/orders/${order.id}/confirm-on-site`, { method: 'POST', token }));
         return;
       }
       // Le pourboire choisi part avec la demande de paiement (0 = aucun) ; sans objet hors livraison ou à total nul.
@@ -556,6 +579,10 @@ export default function Checkout() {
             {fulfillmentType === 'pickup' && (
               <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.pickupSelf', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
             )}
+            {/* L'heure de retrait estimée par le serveur (temps de préparation du commerce, ou l'heure programmée), dès le devis. */}
+            {fulfillmentType === 'pickup' && devisValide?.estimatedDeliveryAt && (
+              <p className="small checkout-pret-vers"><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('retrait.readyAt', { time: new Date(devisValide.estimatedDeliveryAt).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })}</p>
+            )}
             {/* LE COMMERCE CHOISIT LE MODE DE PAIEMENT A EMPORTER (modeEmporter, pose par main) :
                 en ligne seulement, sur place seulement, ou au choix du client. Quand il n'y a pas de
                 choix a faire, on l'annonce au lieu d'afficher une bascule a une seule option — c'est
@@ -564,6 +591,7 @@ export default function Checkout() {
               <div className="paiement-encart" style={{ marginBottom: 10 }}>
                 <p className="small" style={{ margin: 0 }}><b><Icone nom="billet" taille={16} /> {t('checkout.payOnSiteOnly')}</b></p>
                 <p className="small" style={{ margin: '4px 0 0' }}>{t('checkout.payOnSiteNote')}</p>
+                {notesSurPlace}
               </div>
             )}
             {/* C'etaient deux boutons radio natifs, dont la cible utile etait la pastille de 13px
@@ -581,7 +609,7 @@ export default function Checkout() {
                     { value: 'sur_place', label: t('checkout.payOnSite'), icone: <Icone nom="billet" taille={16} /> }
                   ]}
                 />
-                {(paiementSurPlace || enLigneFerme) && <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.payOnSiteNote')}</p>}
+                {(paiementSurPlace || enLigneFerme) && <><p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.payOnSiteNote')}</p>{notesSurPlace}</>}
               </div>
             )}
             {/* QUAND LA RECEVOIR — deux cartes, comme le bloc « Delivery options » des captures.
@@ -690,8 +718,16 @@ export default function Checkout() {
               <Link to={`/restaurants/${restaurantId}`} className="co-ajouter">{t('checkout.addMore')}</Link>
             </div>
             {Object.entries(cart.lines).map(([lineKey, line]) => {
-              const item = restaurant.menu.find((m) => m.id === line.itemId);
-              if (!item) return null;
+              const item = restaurant.menu.find((m) => m.id === line.itemId) || { name: line.name };
+              // Plat retiré de la carte ou en rupture : la ligne le dit (avant, elle disparaissait et le serveur refusait).
+              if (ligneIndisponible(line, restaurant.menu)) {
+                return (
+                  <div key={lineKey} className="co-ligne co-ligne--indispo">
+                    <span className="co-ligne-nom">{item.name}<span className="ligne-indispo">{t('checkout.unavailableToday')}</span></span>
+                    <button type="button" className="btn-outline btn-sm" onClick={() => cart.removeLine(lineKey)}>{t('checkout.removeLine')}</button>
+                  </div>
+                );
+              }
               return (
                 <div key={lineKey} className="co-ligne">
                   <span className="co-ligne-nom">
