@@ -10,7 +10,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const tuile = readFileSync('public/icons/icon.svg', 'utf8');
 const carre = tuile.replace('rx="32"', 'rx="0"');
-const rendre = (svg, cote) => sharp(Buffer.from(svg), { density: 72 * (cote / 132) * 4 }).resize(cote, cote).png().toBuffer();
+// sharp redessine le SVG à la taille demandée ; « mitchell » au cas où une réduction resterait : pas de liseré (app-assets.mjs).
+const rendre = (svg, cote) => sharp(Buffer.from(svg), { density: 72 * (cote / 132) * 4 }).resize(cote, cote, { kernel: 'mitchell' }).png().toBuffer();
 
 writeFileSync('public/favicon-32.png', await rendre(tuile, 32));
 writeFileSync('public/apple-touch-icon.png', await rendre(carre, 180));

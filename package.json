@@ -13,7 +13,7 @@
     "app:android": "npm run app:sync && npx cap open android",
     "app:ios": "npm run app:sync && npx cap open ios",
     "icones:site": "node scripts/icones-site.mjs",
-    "app:assets": "node scripts/app-assets.mjs && npx @capacitor/assets generate --android --iconBackgroundColor \"#3B2FB5\" --iconBackgroundColorDark \"#3B2FB5\" --splashBackgroundColor \"#3B2FB5\" --splashBackgroundColorDark \"#3B2FB5\"",
+    "app:assets": "node scripts/app-assets.mjs && npx @capacitor/assets generate --android --iconBackgroundColor \"#3B2FB5\" --iconBackgroundColorDark \"#3B2FB5\" --splashBackgroundColor \"#3B2FB5\" --splashBackgroundColorDark \"#3B2FB5\" && node scripts/app-assets.mjs --icones-android",
     "check:app": "node scripts/verifier-appli.mjs"
   },
   "dependencies": {
