@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useId, useRef, useState } from 'react';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
@@ -72,6 +72,41 @@ function formatClock(date) {
 // texte se ratait d'un pouce ganté. D'où un bouton iris pleine largeur, le geste évident de la carte, et Google Maps
 // gardé en lien discret pour qui ne l'a pas. Les coordonnées passent avant l'adresse quand le serveur les donne : Waze
 // géocode mal certaines adresses bruxelloises bilingues (« Rue … / …straat »), un point GPS ne se trompe pas.
+// LES VRAIS LOGOS (fondateur, 2026-10-18) : la bulle générique et l'épingle rouge unie ressemblaient à n'importe quelle app.
+// Le « Wazer » (bulle blanche à roues, visage souriant) et l'épingle quatre couleurs de Google se reconnaissent d'un coup
+// d'œil, au guidon. Dessins simplifiés à 24 px, pas les fichiers officiels. useId : le clipPath de l'épingle doit avoir un
+// identifiant par carte, plusieurs cartes de course étant à l'écran en même temps.
+function LogoWaze() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path d="M13 3.2c4.3 0 7.6 3 7.6 6.9 0 2.6-1.4 4.6-3.7 5.8H8.6c-1 0-1.9-.3-2.6-.9-.6.5-1.5.8-2.4.7.7-.7 1-1.6 1-2.6v-3c0-3.9 3.8-6.9 8.4-6.9Z" fill="#fff" stroke="#0B1F2E" strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx="10.7" cy="8.7" r="1" fill="#0B1F2E" />
+      <circle cx="15.5" cy="8.7" r="1" fill="#0B1F2E" />
+      <path d="M10.3 11.3c1.5 1.5 4 1.5 5.5 0" fill="none" stroke="#0B1F2E" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="9.4" cy="17.8" r="2.1" fill="#0B1F2E" />
+      <circle cx="16.3" cy="17.8" r="2.1" fill="#0B1F2E" />
+    </svg>
+  );
+}
+
+function LogoGoogleMaps() {
+  const id = useId();
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <defs>
+        <clipPath id={id}><path d="M12 1.5c-4.1 0-7.4 3.3-7.4 7.4 0 5.3 7.4 13.6 7.4 13.6s7.4-8.3 7.4-13.6c0-4.1-3.3-7.4-7.4-7.4Z" /></clipPath>
+      </defs>
+      <g clipPath={`url(#${id})`}>
+        <path d="M9 0h15v5L12 8.9Z" fill="#EA4335" />
+        <path d="M0 0h9l3 8.9L0 12Z" fill="#4285F4" />
+        <path d="M0 12l12-3.1L5 24H0Z" fill="#FBBC04" />
+        <path d="M12 8.9 24 5v19H5Z" fill="#34A853" />
+      </g>
+      <circle cx="12" cy="8.9" r="2.7" fill="#fff" />
+    </svg>
+  );
+}
+
 function BoutonsItineraire({ adresse, lat, lng, t }) {
   if (!adresse && (lat == null || lng == null)) return null;
   const point = lat != null && lng != null ? `${lat},${lng}` : null;
@@ -79,16 +114,16 @@ function BoutonsItineraire({ adresse, lat, lng, t }) {
   const google = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(point || adresse)}`;
   // CÔTE À CÔTE (fondateur, 2026-10-16, maquette « Course en cours ») : Waze garde le bouton plein, Google Maps passe d'un
   // lien discret à un bouton à contour de même taille, plus facile à toucher au guidon.
-  // AUX COULEURS DE CHAQUE APP (fondateur, 2026-10-17) : Waze dans son bleu clair, Google Maps en blanc avec l'épingle rouge de
+  // AUX COULEURS DE CHAQUE APP (fondateur, 2026-10-17) : Waze dans son bleu clair, Google Maps en blanc avec l'épingle de
   // Google — on reconnaît l'app avant de lire. Seule exception au « blanc ou iris » de la marque : ces boutons ouvrent une autre app.
   return (
     <div className="ecl-itineraire">
       <a href={waze} target="_blank" rel="noopener noreferrer" className="btn-nav btn-nav--waze">
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3c-4.6 0-8 3.2-8 7.3 0 1.9.7 3.5 1.9 4.8l-.6 2.4a.6.6 0 0 0 .8.7l2.5-1.1c1 .4 2.2.6 3.4.6 4.6 0 8-3.2 8-7.4S16.6 3 12 3Z" fill="#fff" stroke="#0B1F2E" strokeWidth="1.6" strokeLinejoin="round" /><circle cx="9.3" cy="9.6" r="1" fill="#0B1F2E" /><circle cx="14.7" cy="9.6" r="1" fill="#0B1F2E" /><path d="M9.2 12.6c1.5 1.3 4.1 1.3 5.6 0" fill="none" stroke="#0B1F2E" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        <LogoWaze />
         {t('dashDriver.openWaze')}
       </a>
       <a href={google} target="_blank" rel="noopener noreferrer" className="btn-nav btn-nav--google" aria-label={`${t('dashDriver.directions')} (Google Maps)`}>
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2.5c-3.9 0-7 3-7 6.9 0 5 7 12.1 7 12.1s7-7.1 7-12.1c0-3.9-3.1-6.9-7-6.9Z" fill="#EA4335" /><circle cx="12" cy="9.4" r="2.6" fill="#B31412" /></svg>
+        <LogoGoogleMaps />
         Google Maps
       </a>
     </div>
