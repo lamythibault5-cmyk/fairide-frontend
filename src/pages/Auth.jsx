@@ -393,6 +393,9 @@ export default function Auth() {
   // E-mails marketing en opt-out : la loi belge exige de pouvoir refuser dès la collecte de l'adresse (AR 4 avril 2003,
   // art. 1). Case NON cochée par défaut ; cochée, le compte est créé désinscrit (routes/auth.js, enregistrerRefusNouvelles).
   const [refusNouvelles, setRefusNouvelles] = useState(false);
+  // Client : les nouvelles demandent un OUI, case non cochée (recherche du 18/10/2026 : un compte gratuit sans commande
+  // n'ouvre pas l'exception « client » de l'AR du 4 avril 2003). Commerces et livreurs gardent la case de refus.
+  const [nouvellesOui, setNouvellesOui] = useState(false);
   const [versionCgu, setVersionCgu] = useState('');
   useEffect(() => { api('/auth/terms/current').then((r) => setVersionCgu(r.version)).catch(() => {}); }, []);
   const [googleProfile, setGoogleProfile] = useState(null);
@@ -859,7 +862,7 @@ export default function Auth() {
       } : {}),
       ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees.length ? zonesPreferees : communeDeLAdresse() } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
-      ...(refusNouvelles ? { marketingOptOut: true } : {})
+      ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {})
     });
     suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
     toast(t('auth.welcome', { name: data.user.name }), 'succes');
@@ -984,7 +987,7 @@ export default function Auth() {
           } : {}),
           ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees.length ? zonesPreferees : communeDeLAdresse() } : {}),
           ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
-          ...(refusNouvelles ? { marketingOptOut: true } : {}),
+          ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {}),
           website: siteWeb
         });
         // Statistiques (sans donnée personnelle) : une inscription par type de compte.
@@ -1711,12 +1714,20 @@ export default function Auth() {
               <EngagementsInscription checked={accepteEngagements} onChange={setAccepteEngagements} />
             )}
             {/* Refus des nouvelles de Fairide (voir refusNouvelles) : discret, sous les cases obligatoires, tous rôles. */}
-            {isLastStep && (
+            {isLastStep && role === 'client' && (
+              <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '0 0 12px' }}>
+                <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={nouvellesOui} onChange={(e) => setNouvellesOui(e.target.checked)} />
+                <span className="small">{t('nouvelles.signupOptIn')}</span>
+              </label>
+            )}
+            {isLastStep && role !== 'client' && (
               <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '0 0 12px', opacity: 0.8 }}>
                 <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={refusNouvelles} onChange={(e) => setRefusNouvelles(e.target.checked)} />
                 <span className="small">{t('nouvelles.signupOptOut')}</span>
               </label>
             )}
+            {/* Comment les données sont utilisées, là où on les demande (RGPD art. 13). */}
+            {isLastStep && <p className="small" style={{ margin: '0 0 12px' }}>{t('nouvelles.privacyPrefix')} <Link to="/confidentialite" target="_blank" rel="noopener">{t('nouvelles.privacyLink')}</Link>.</p>}
             {incomplet && incomplet.step === step && Object.keys(errors).length > 0 && (
               <p className="auth-incomplet" role="alert"><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('auth.checkIncomplete', { n: incomplet.n, step: stepCopy?.title || '' })}</p>
             )}

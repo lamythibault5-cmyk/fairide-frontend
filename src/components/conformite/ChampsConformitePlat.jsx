@@ -7,8 +7,9 @@ import { CODES_ALLERGENES } from '../../allergenes';
  *   A1 — les 14 allergènes réglementaires, OU « aucun des 14 » : les deux sont exclusifs, et un plat
  *        sans l'un ni l'autre est « non déclaré » (masqué aux clients passé la date bascule).
  *   A2 — le taux de TVA appliqué : la signature de la carte l'exige pour chaque plat.
- *   A4 — alcool et âge minimum : sans autorisation accises vérifiée, le serveur refuse de marquer un
- *        plat « alcool » (ALCOOL_SANS_AUTORISATION) — l'erreur s'affiche à l'enregistrement.
+ *   A4 — PAS D'ALCOOL SUR FAIRIDE (fondateur, 17 et 18/10/2026) : la règle est dite ici, en clair. La case « Contient de
+ *        l'alcool » ne s'affiche que sur un plat déjà marqué (souvent d'office, sur son nom : « coq au vin ») pour pouvoir
+ *        la décocher ; le serveur refuse de marquer un nouveau plat (ALCOOL_FERME, alcool.js).
  * `valeur` : { allergens: number[], allergensDeclaredNone, vatRate, isAlcohol, minAge }. */
 export default function ChampsConformitePlat({ valeur, onChange }) {
   const { t } = useLanguage();
@@ -49,21 +50,14 @@ export default function ChampsConformitePlat({ valeur, onChange }) {
               décider plat par plat. On le dit, sinon le champ ressemble à une question (simulation du 10 oct. 2026). */}
           <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)', maxWidth: 280 }}>{t('conformite.dishVatAuto')}</p>
         </div>
-        <label className="row" style={{ gap: 6, cursor: 'pointer' }}>
-          <input type="checkbox" style={{ width: 'auto' }} checked={!!valeur.isAlcohol} onChange={(e) => maj({ isAlcohol: e.target.checked, minAge: e.target.checked ? (valeur.minAge || 18) : null })} />
-          <span className="small">{t('conformite.dishAlcohol')}</span>
-        </label>
         {valeur.isAlcohol && (
-          <div>
-            <label htmlFor={`${id}-age`} className="small">{t('conformite.dishMinAge')}</label>
-            <select id={`${id}-age`} value={valeur.minAge || 18} onChange={(e) => maj({ minAge: Number(e.target.value) })}>
-              <option value={18}>18</option>
-              <option value={16}>16</option>
-            </select>
-          </div>
+          <label className="row" style={{ gap: 6, cursor: 'pointer' }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked onChange={() => maj({ isAlcohol: false, minAge: null })} />
+            <span className="small">{t('conformite.dishAlcohol')}</span>
+          </label>
         )}
       </div>
-      {valeur.isAlcohol && <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t('conformite.dishAlcoholHelp')}</p>}
+      <p className="small" style={{ margin: '6px 0 0', color: valeur.isAlcohol ? 'var(--red)' : 'var(--ink-soft)' }}>{t(valeur.isAlcohol ? 'conformite.dishAlcoholHelp' : 'conformite.noAlcoholRule')}</p>
     </fieldset>
   );
 }

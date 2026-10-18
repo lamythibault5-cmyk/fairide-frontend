@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LienCgv from '../../components/CgvEnFeuille';
+import LienCgv, { LienConfidentialite } from '../../components/CgvEnFeuille';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -127,6 +127,10 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   const [accepteCgu, setAccepteCgu] = useState(false);
   const [accepteEngagements, setAccepteEngagements] = useState(false);
   const [refusNouvelles, setRefusNouvelles] = useState(false);
+  // Client : les nouvelles de Fairide demandent un OUI (case non cochée). Un compte gratuit sans commande n'est pas un
+  // « client » au sens de l'AR du 4 avril 2003 : l'opt-out ne vaut pas pour lui (SPF Économie ; CJUE Planet49). Commerces et
+  // livreurs gardent la case de refus ci-dessus. Serveur : routes/auth.js, enregistrerChoixNouvelles.
+  const [nouvellesOui, setNouvellesOui] = useState(false);
   const [referralCode, setReferralCode] = useState('');
   const [referralOuvert, setReferralOuvert] = useState(false);
   const [versionCgu, setVersionCgu] = useState('');
@@ -331,7 +335,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
         otherPlatforms: [], otherPlatformNote: '', preferredZones: communeDeLAdresse()
       } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
-      ...(refusNouvelles ? { marketingOptOut: true } : {})
+      ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {})
     };
     setConsent(rapports ? 'accepted' : 'refused');
     setAttente(true);
@@ -699,10 +703,19 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
             <input type="checkbox" checked={rapports} onChange={(e) => setRapports(e.target.checked)} />
             <span><b>{t('appli.insRapportsTitre')}</b>{t('appli.insRapports')}</span>
           </label>
-          <label className="bv-case-ligne bv-case-discrete">
-            <input type="checkbox" checked={refusNouvelles} onChange={(e) => setRefusNouvelles(e.target.checked)} />
-            <span>{t('nouvelles.signupOptOut')}</span>
-          </label>
+          {role === 'client' ? (
+            <label className="bv-case-ligne">
+              <input type="checkbox" checked={nouvellesOui} onChange={(e) => setNouvellesOui(e.target.checked)} />
+              <span>{t('nouvelles.signupOptIn')}</span>
+            </label>
+          ) : (
+            <label className="bv-case-ligne bv-case-discrete">
+              <input type="checkbox" checked={refusNouvelles} onChange={(e) => setRefusNouvelles(e.target.checked)} />
+              <span>{t('nouvelles.signupOptOut')}</span>
+            </label>
+          )}
+          {/* Où l'on dit comment les données sont utilisées, là où on les demande (RGPD art. 13). */}
+          <p className="small" style={{ margin: '4px 0 0' }}>{t('nouvelles.privacyPrefix')} <LienConfidentialite>{t('nouvelles.privacyLink')}</LienConfidentialite>.</p>
           {referralOuvert ? (
             <Champ id="bv-i-code-promo" label={t('auth.promoCode')}>
               <input id="bv-i-code-promo" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />

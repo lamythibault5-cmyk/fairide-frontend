@@ -48,6 +48,18 @@ export default function Privacy() {
   usePageMeta({ title: t('privacy.pageTitle'), description: t('seo.privacyDescription'), path: '/confidentialite' });
   return (
     <div className="card">
+      <TexteConfidentialite />
+      <PrivacyRequestForm />
+    </div>
+  );
+}
+
+// Le texte seul : la page /confidentialite, et la feuille qui l'ouvre dans l'application depuis l'inscription sans quitter
+// l'écran (CgvEnFeuille.jsx, LienConfidentialite).
+export function TexteConfidentialite() {
+  const { t } = useLanguage();
+  return (
+    <>
       <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
         {t('privacy.draftWarning')}
       </div>
@@ -61,8 +73,7 @@ export default function Privacy() {
           {s === 'sharing' && <SousTraitants />}
         </div>
       ))}
-      <PrivacyRequestForm />
-    </div>
+    </>
   );
 }
 

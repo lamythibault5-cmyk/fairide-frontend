@@ -20,8 +20,9 @@ export default function EcranLegal({ restaurant, restoId, loadDashboard, onFerme
   const [tva, setTva] = useState(restaurant.vatNumber || '');
   const [responsable, setResponsable] = useState(restaurant.responsibleName || '');
   const [afsca, setAfsca] = useState(restaurant.afscaNumber || '');
-  const [alcool, setAlcool] = useState(!!restaurant.sellsAlcohol);
-  const [engagementAge, setEngagementAge] = useState(!!restaurant.alcoholAgeAckAt);
+  // Plus modifiables ici (pas d'alcool sur Fairide) : renvoyées telles quelles à l'enregistrement.
+  const alcool = !!restaurant.sellsAlcohol;
+  const engagementAge = !!restaurant.alcoholAgeAckAt;
   const { enregistrer, enCours } = useEnregistrerCommerce({ restoId, loadDashboard, onFermer });
 
   function valider() {
@@ -53,21 +54,11 @@ export default function EcranLegal({ restaurant, restoId, loadDashboard, onFerme
         <input id={ids + '-afsca'} value={afsca} onChange={(e) => setAfsca(e.target.value)} placeholder="2123.456.789" inputMode="numeric" />
         <span className="small">{t('editResto.afscaHelp')}</span>
       </div>
+      {/* Pas d'alcool sur Fairide (fondateur, 17 et 18/10/2026) : plus de case « Ma carte contient des boissons alcoolisées »
+          ni d'engagement d'âge à cocher, la règle est dite. Les valeurs déjà enregistrées repartent telles quelles. */}
       <div className="field">
-        <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
-          <input type="checkbox" checked={alcool} onChange={(e) => setAlcool(e.target.checked)} style={{ marginTop: 3 }} />
-          <span>{t('editResto.sellsAlcohol')}</span>
-        </label>
+        <span className="small">{t('editResto.noAlcoholRule')}</span>
       </div>
-      {alcool && (
-        <div className="field" style={{ paddingLeft: 24 }}>
-          <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
-            <input type="checkbox" checked={engagementAge} onChange={(e) => setEngagementAge(e.target.checked)} style={{ marginTop: 3 }} />
-            <span>{t('editResto.alcoholAgeAck')}</span>
-          </label>
-          <span className="small">{t('editResto.alcoholHelp')}</span>
-        </div>
-      )}
     </SousEcran>
   );
 }
