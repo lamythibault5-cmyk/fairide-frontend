@@ -1,13 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 132" width="512" height="512">
-  <!-- Icône d'application Fairide — le vélo « 5a » lime sur tuile iris, rayon 32/132 = 24 % du côté.
-       Identique au fichier du fondateur fairide-5a-tile-lime.svg (retour au vélo le 2026-09-27). -->
+  <!-- Icône du site Fairide — le vélo « 5a » lime sur tuile iris, rayon 32/132. Depuis le 2026-10-18 (fondateur) le vélo est
+       1,25 fois plus grand (« grand, mais pas très grand » : Google et les écrans d'accueil découpent souvent l'icône d'un
+       site en cercle). L'application et le Play Store ont le vélo très grand (scripts/app-assets.mjs). Même géométrie que
+       BrandMark.jsx ; les PNG se refont avec npm run icones:site. -->
   <rect width="132" height="132" rx="32" fill="#3B2FB5"/>
-  <g transform="translate(28 44)" fill="none" stroke="#C8F03C" stroke-width="5">
-    <circle cx="15" cy="29" r="12.5"/>
-    <circle cx="61" cy="29" r="12.5"/>
-  </g>
-  <g transform="translate(28 44)" fill="#C8F03C">
-    <rect x="16" y="8" width="44" height="5" rx="2.5"/>
-    <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)"/>
+  <g transform="translate(66 68) scale(1.25) translate(-38 -25)">
+    <g fill="none" stroke="#C8F03C" stroke-width="4.8" stroke-linecap="round">
+      <circle cx="15" cy="29" r="12.5"/>
+      <circle cx="61" cy="29" r="12.5"/>
+    </g>
+    <g fill="#C8F03C">
+      <rect x="16" y="8" width="44" height="5" rx="2.5"/>
+      <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)"/>
+    </g>
   </g>
 </svg>

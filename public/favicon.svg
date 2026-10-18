@@ -1,13 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 132" width="32" height="32">
-  <!-- Favicon Fairide : le vélo « 5a » entier, lime sur tuile iris — fichier du fondateur favicon-lime.svg
-       (« Fairide Logo & Color Brainstorm », 2026-09-27). Pas de version simplifiée en petit. -->
-  <rect width="132" height="132" rx="32" fill="#3B2FB5"></rect>
-  <g transform="translate(28 44)" fill="none" stroke="#C8F03C" stroke-width="5">
-    <circle cx="15" cy="29" r="12.5"></circle>
-    <circle cx="61" cy="29" r="12.5"></circle>
-  </g>
-  <g transform="translate(28 44)" fill="#C8F03C">
-    <rect x="16" y="8" width="44" height="5" rx="2.5"></rect>
-    <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)"></rect>
+  <!-- Favicon Fairide : le vélo « 5a » entier, lime sur tuile iris, en grand (2026-10-18, comme public/icons/icon.svg). -->
+  <rect width="132" height="132" rx="32" fill="#3B2FB5"/>
+  <g transform="translate(66 68) scale(1.25) translate(-38 -25)">
+    <g fill="none" stroke="#C8F03C" stroke-width="4.8" stroke-linecap="round">
+      <circle cx="15" cy="29" r="12.5"/>
+      <circle cx="61" cy="29" r="12.5"/>
+    </g>
+    <g fill="#C8F03C">
+      <rect x="16" y="8" width="44" height="5" rx="2.5"/>
+      <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)"/>
+    </g>
   </g>
 </svg>
