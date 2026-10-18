@@ -7871,6 +7871,7 @@ export default {
       hidePassword: 'Verbergen',
       errFieldRequired: 'Dit veld is verplicht.',
       errEmailInvalid: 'Dit e-mailadres lijkt niet geldig.',
+      errEmailReserved: "Dit adres is voorbehouden aan het Fairide-team. Gebruik je persoonlijke adres.",
       errPostalCode: 'Een Belgische postcode heeft 4 cijfers (bv. 1050).',
       errCompanyNumber: 'Ongeldig ondernemingsnummer: 10 cijfers (bv. 0123.456.789).',
       or: 'of',

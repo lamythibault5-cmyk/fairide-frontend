@@ -132,6 +132,26 @@ export function AuthProvider({ children }) {
       .catch(() => {});
   }, [language, session?.token]);
 
+  /* LA SESSION SE PROLONGE QUAND ON S'EN SERT (audit du 18/10/2026). Elle dure 30 jours depuis la connexion : ouverte
+   * chaque jour, l'application déconnectait quand même le 31e. Au plus une fois par jour (à l'ouverture, au retour au
+   * premier plan), une session de plus d'un jour est échangée contre une neuve (POST /auth/session/renew). Le serveur
+   * refuse pour un administrateur (12 h fermes), « Fairide agit comme… » et la simulation : il rend alors token: null. */
+  useEffect(() => {
+    if (!session?.token || session.actingAs || simuRef.current) return undefined;
+    let fini = false;
+    const emisA = (() => { try { return JSON.parse(atob(session.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).iat || 0; } catch { return 0; } })();
+    const renouveler = () => {
+      if (fini || document.visibilityState === 'hidden' || Date.now() / 1000 - emisA < 24 * 3600) return;
+      fini = true;
+      api('/auth/session/renew', { method: 'POST', token: session.token, logoutOn401: false })
+        .then((r) => { if (r?.token) setSession((prev) => (prev && prev.token === session.token ? { ...prev, token: r.token } : prev)); })
+        .catch(() => { /* on réessaiera à la prochaine ouverture */ });
+    };
+    renouveler();
+    document.addEventListener('visibilitychange', renouveler);
+    return () => { fini = true; document.removeEventListener('visibilitychange', renouveler); };
+  }, [session?.token, session?.actingAs]);
+
   // Session expirée (401 sur une requête authentifiée, voir api.js) : on vide la session, ce qui
   // suffit à renvoyer vers /login puisque ProtectedRoute redirige dès que `user` est nul — pas de
   // navigation impérative ici, qui ferait sortir à tort un visiteur d'une page publique.

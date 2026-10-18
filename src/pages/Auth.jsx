@@ -515,7 +515,7 @@ export default function Auth() {
   // (prérempli par la feuille Apple à la première autorisation, saisi sinon).
   function connexionFed(fournisseur, jeton, roleChoisi, extra) {
     if (fournisseur === 'apple') return loginWithApple(jeton, roleChoisi, { givenName: firstName.trim() || undefined, familyName: lastName.trim() || undefined, ...extra });
-    return loginWithGoogle(jeton, roleChoisi, extra);
+    return loginWithGoogle(jeton, roleChoisi, { firstName: firstName.trim() || undefined, lastName: lastName.trim() || undefined, ...extra });
   }
   const toast = useToast();
   const navigate = useNavigate();
@@ -699,7 +699,8 @@ export default function Auth() {
     if (key === 'account' && googleCredential) return e;
     if (key === 'account') {
       if (!email.trim()) e.email = required;
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = t('auth.errEmailInvalid');
+      // Même forme que le serveur (routes/auth.js, EMAIL_RE) : au moins deux lettres après le dernier point.
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) e.email = t('auth.errEmailInvalid');
       if (!password) e.password = required;
       else if (password.length < 6 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
         e.password = t('auth.errPasswordStrength');
@@ -755,7 +756,9 @@ export default function Auth() {
       const r = await api('/auth/check-availability', { method: 'POST', body: corps });
       if (r.phoneValid === false) e.phone = t('auth.errPhoneInvalid');
       if (r.phoneTaken) e.phone = t('auth.errPhoneTaken');
-      if (r.emailTaken) e.email = t('auth.errEmailTaken');
+      if (r.emailValid === false) e.email = t('auth.errEmailInvalid');
+      else if (r.emailReserved) e.email = t('auth.errEmailReserved');
+      else if (r.emailTaken) e.email = t('auth.errEmailTaken');
       return e;
     } catch { return e; }
   }
@@ -809,6 +812,9 @@ export default function Auth() {
   // Le script Google ne part qu'au clic sur « Continuer avec Google » (politique des cookies : « seulement si vous cliquez
   // dessus », fondateur 2026-10-14) ; le bouton officiel de Google, qui seul peut ouvrir sa fenêtre, prend alors sa place.
   const [googleDemande, setGoogleDemande] = useState(false);
+  // Le choix du compte Google s'ouvre UNE fois, au clic qui charge le script — pas à chaque nouveau rendu du bouton.
+  const googleInvite = useRef(false);
+  const demanderGoogle = () => { googleInvite.current = true; setGoogleDemande(true); };
   const stateRef = useRef({ mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName });
   useEffect(() => { stateRef.current = { mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName }; });
 
@@ -887,12 +893,16 @@ export default function Auth() {
       .then((gsi) => {
         if (cancelled || !googleBtnRef.current) return;
         googleBtnRef.current.innerHTML = '';
-        gsi.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+        gsi.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential, use_fedcm_for_prompt: true });
         // `locale` : sans lui, Google écrit le bouton dans la langue du NAVIGATEUR, pas celle choisie sur le site
         // (« Inloggen met Google » sur la page française — test du 6 oct. 2026).
         gsi.renderButton(googleBtnRef.current, {
           theme: 'outline', size: 'large', width: 320, text: mode === 'register' ? 'signup_with' : 'signin_with', locale: language
         });
+        // UN CLIC AU LIEU DE DEUX (audit du 18/10/2026) : notre bouton ne faisait que charger le script, puis il fallait
+        // toucher celui de Google. Le même clic ouvre maintenant le choix du compte (FedCM / One Tap) ; si le navigateur
+        // ne l'affiche pas (cookies tiers bloqués, refus récent), le bouton officiel ci-dessus reste là.
+        if (googleInvite.current) { googleInvite.current = false; try { gsi.prompt(); } catch { /* le bouton suffit */ } }
       })
       .catch(() => { /* bouton Google absent, le reste de la page fonctionne */ });
     return () => { cancelled = true; };
@@ -1043,7 +1053,10 @@ export default function Auth() {
         toast(t('auth.errPasswordRetry'), 'erreur');
         montrerPremiereErreur();
       } else if (err.field === 'phone' || err.field === 'email') {
-        const message = err.field === 'phone' ? (/invalide/i.test(err.message) ? t('auth.errPhoneInvalid') : t('auth.errPhoneTaken')) : t('auth.errEmailTaken');
+        // Le code dit ce qui ne va pas (routes/auth.js) ; sans code connu, le message du serveur, déjà traduit. Avant,
+        // toute erreur d'e-mail s'affichait « déjà pris », et le téléphone se reconnaissait au mot français « invalide ».
+        const MESSAGES = { EMAIL_TAKEN: 'auth.errEmailTaken', EMAIL_INVALID: 'auth.errEmailInvalid', EMAIL_RESERVED: 'auth.errEmailReserved', PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid' };
+        const message = MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message;
         setErrors({ [err.field]: message });
         const i = steps.indexOf(err.field === 'phone' ? 'identity' : 'account');
         if (i >= 0) setStep(i);
@@ -1643,7 +1656,7 @@ export default function Auth() {
                 {GOOGLE_CLIENT_ID && (
                   <>
                     <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 10px' }}>
-                      {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={() => setGoogleDemande(true)}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
+                      {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={demanderGoogle}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
                     </div>
                     <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
                       <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
@@ -1745,7 +1758,7 @@ export default function Auth() {
             {GOOGLE_CLIENT_ID && (
               <>
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0 10px' }}>
-                  {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={() => setGoogleDemande(true)}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
+                  {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={demanderGoogle}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
                 </div>
                 <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
                   <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />

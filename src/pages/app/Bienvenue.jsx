@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { api } from '../../api';
 import { experienceApp, demanderPosition, connexionFournisseur } from '../../natif';
 import { communeDepuisCodePostal, communeRingDistance, haversineDistanceKm } from '../../menuCategories';
-import { ecrireBienvenue, ecrireReprise, lireReprise } from '../../bienvenue';
+import { ecrireBienvenue, ecrireReprise, lireReprise, lireParcoursFait, ecrireParcoursFait } from '../../bienvenue';
 import { repondAuxEnvies } from '../../envies';
 import {
   Haut, EcranAccueil, EcranProfil, EcranChoix, EcranCartes, EcranPourquoi, EcranEnvies, EcranPermission, EcranCodePostal,
@@ -88,24 +88,34 @@ export default function Bienvenue() {
   // quand un lien d'inscription le donnait ; `from` ramène là où l'on voulait aller (un commerce touché sans compte).
   // Sinon, un accueil laissé en route sans compte reprend là où il s'était arrêté (lireReprise, bienvenue.js).
   const [reprise] = useState(() => (location.state?.depart ? null : lireReprise()));
-  const depart = location.state?.depart === 'profil' ? 'profil' : reprise?.ecran || 'accueil';
+  // « Créer un compte » quand l'accueil a DÉJÀ été fait sur ce téléphone (bienvenue.js, lireParcoursFait) : on reprend à
+  // l'écran du compte, avec le profil et les réponses d'alors — sauf si un autre profil est demandé (lien d'inscription).
+  const [dejaFait] = useState(() => {
+    if (location.state?.depart !== 'profil') return null;
+    const fait = lireParcoursFait();
+    const voulu = location.state?.role;
+    return fait && (!voulu || voulu === fait.role) ? fait : null;
+  });
+  // Apple / Google sans compte, depuis la connexion (ConnexionAppli.jsx) : le jeton est gardé, l'accueil ne le jette plus.
+  const fedRecu = location.state?.fed || null;
+  const depart = dejaFait ? (fedRecu ? 'inscription' : 'compte') : location.state?.depart === 'profil' ? 'profil' : reprise?.ecran || 'accueil';
   const depuis = location.state?.from || null;
   const [ecran, setEcran] = useState(depart);
-  const [historique, setHistorique] = useState(() => (Array.isArray(reprise?.historique) ? reprise.historique : []));
+  const [historique, setHistorique] = useState(() => (dejaFait ? ['accueil', 'profil'] : Array.isArray(reprise?.historique) ? reprise.historique : []));
   // Sens du dernier passage d'écran : en reculant, l'écran revient par la gauche, d'où il était parti (cohérence
   // spatiale, plan du 2026-10-13). Avant, tout arrivait par la droite, retour compris.
   const [recule, setRecule] = useState(false);
-  const [role, setRole] = useState(() => (['client', 'driver', 'restaurant'].includes(location.state?.role) ? location.state.role
+  const [role, setRole] = useState(() => (dejaFait ? dejaFait.role : ['client', 'driver', 'restaurant'].includes(location.state?.role) ? location.state.role
     : ['client', 'driver', 'restaurant'].includes(reprise?.role) ? reprise.role : null));
   const [buts, setButs] = useState(() => (Array.isArray(reprise?.buts) ? reprise.buts : []));
   const [freins, setFreins] = useState(() => (Array.isArray(reprise?.freins) ? reprise.freins : []));
-  const [envies, setEnvies] = useState(() => (Array.isArray(reprise?.envies) ? reprise.envies : []));
-  const [position, setPosition] = useState(() => reprise?.position || null);
-  const [cp, setCp] = useState(() => reprise?.cp || '');
+  const [envies, setEnvies] = useState(() => (Array.isArray(dejaFait?.envies) ? dejaFait.envies : Array.isArray(reprise?.envies) ? reprise.envies : []));
+  const [position, setPosition] = useState(() => dejaFait?.position || reprise?.position || null);
+  const [cp, setCp] = useState(() => dejaFait?.cp || reprise?.cp || '');
   const [liste, setListe] = useState(null);
   const [attente, setAttente] = useState(false);
   // Jeton Apple / Google d'une personne qui n'a pas encore de compte : l'inscription s'en sert au lieu d'un mot de passe.
-  const [fed, setFed] = useState(null);
+  const [fed, setFed] = useState(fedRecu);
 
   const communeCp = cp.length === 4 ? communeDepuisCodePostal(cp) : '';
   const parcours = useMemo(() => ['accueil', 'profil', ...(role ? PARCOURS[role] : [])], [role]);
@@ -132,6 +142,12 @@ export default function Bienvenue() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ecran, role, buts, freins, envies, position, cp, fed]);
 
+  // Arrivé à l'écran du compte (ou à l'inscription par Apple / Google) : l'accueil est fait, il ne sera pas rejoué.
+  useEffect(() => {
+    if ((ecran === 'compte' || ecran === 'inscription') && role) ecrireParcoursFait({ role, envies, position, cp });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ecran, role]);
+
   // Chargement : au moins DUREE_RECHERCHE_MS, et jusqu'à ce que la liste soit arrivée.
   useEffect(() => {
     if (ecran !== 'recherche') return undefined;
@@ -151,7 +167,9 @@ export default function Bienvenue() {
   if (user && ecran !== 'inscription') return <Navigate to="/" replace />;
   if (!experienceApp() && !apercu) return <Navigate to="/" replace />;
 
-  function aller(suivant, { sansHistorique = false } = {}) {
+  function aller(vers, { sansHistorique = false } = {}) {
+    // Jeton Apple / Google déjà en main (venu de la connexion) : l'écran du compte ne redemanderait que lui.
+    const suivant = vers === 'compte' && fed ? 'inscription' : vers;
     if (!sansHistorique) setHistorique((h) => [...h, ecran]);
     setRecule(false);
     setEcran(suivant);

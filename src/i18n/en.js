@@ -7862,6 +7862,7 @@ export default {
       hidePassword: 'Hide',
       errFieldRequired: 'This field is required.',
       errEmailInvalid: 'That email address does not look valid.',
+      errEmailReserved: "This address is reserved for the Fairide team. Use your personal address.",
       errPostalCode: 'A Belgian postal code has 4 digits (e.g. 1050).',
       errCompanyNumber: 'Invalid company number: 10 digits (e.g. 0123.456.789).',
       or: 'or',

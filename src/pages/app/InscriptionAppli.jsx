@@ -14,7 +14,7 @@ import EngagementsInscription from '../../components/commerce/EngagementsInscrip
 import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES } from '../../menuCategories';
 import { DAY_ORDER, dayLabel } from '../../openingHours';
 import { bceValide, raisonBce, codePostalValide } from '../../validation';
-import { lireBienvenue } from '../../bienvenue';
+import { lireBienvenue, lireCodeEnAttente, ecrireCodeEnAttente } from '../../bienvenue';
 import { attendrePage } from '../../routePrefetch';
 import { suivre } from '../../analytics';
 import { setConsent } from '../../consent';
@@ -145,8 +145,20 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   const [recule, setRecule] = useState(false);
   const [erreurs, setErreurs] = useState({});
   const [attente, setAttente] = useState(false);
-  // Après l'inscription par e-mail : { email, canal: 'email' | 'sms', telephone } → écran du code.
-  const [enAttente, setEnAttente] = useState(null);
+  // Après l'inscription par e-mail : { email, canal: 'email' | 'sms', telephone } → écran du code. Repris si l'application
+  // a été fermée pendant qu'on allait lire l'e-mail (bienvenue.js, lireCodeEnAttente) : on rouvre sur le code, pas sur un
+  // formulaire vide.
+  const [repriseCode] = useState(() => {
+    const c = fed ? null : lireCodeEnAttente();
+    return c && c.role === role ? c : null;
+  });
+  const [enAttente, setEnAttente] = useState(() => (repriseCode ? { email: repriseCode.email, canal: repriseCode.canal, telephone: repriseCode.telephone } : null));
+  const retourApres = depuis || repriseCode?.depuis || null;
+  useEffect(() => {
+    if (enAttente) ecrireCodeEnAttente({ ...enAttente, role, depuis: retourApres });
+    else if (lireCodeEnAttente()?.role === role) ecrireCodeEnAttente(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enAttente]);
   const [code, setCode] = useState('');
 
   const etapes = useMemo(() => ETAPES[role].filter((e) => !(e === 'email' && fed) && !(e === 'nom' && nomConnu)
@@ -189,7 +201,8 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
     const e = {};
     if (cle === 'email') {
       if (!email.trim()) e.email = requis;
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = t('auth.errEmailInvalid');
+      // Même forme que le serveur (routes/auth.js, EMAIL_RE) : au moins deux lettres après le dernier point.
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) e.email = t('auth.errEmailInvalid');
       if (!password) e.password = requis;
       else if (!MDP_FORME(password)) e.password = t('auth.errPasswordStrength');
     }
@@ -248,7 +261,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       const r = await api('/auth/check-availability', { method: 'POST', body: corps });
       if (r.phoneValid === false) e.phone = t('auth.errPhoneInvalid');
       if (r.phoneTaken) e.phone = t('auth.errPhoneTaken');
-      if (r.emailTaken) e.email = t('auth.errEmailTaken');
+      if (r.emailValid === false) e.email = t('auth.errEmailInvalid');
+      else if (r.emailReserved) e.email = t('auth.errEmailReserved');
+      else if (r.emailTaken) e.email = t('auth.errEmailTaken');
     } catch { /* l'inscription tranchera */ }
     return e;
   }
@@ -274,7 +289,8 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   function reculer() {
     setErreurs({});
     setRecule(true);
-    if (enAttente) { setEnAttente(null); setCode(''); return; }
+    // Depuis l'écran du code repris après fermeture : le formulaire n'est plus là, on repart de l'accueil du compte.
+    if (enAttente) { setEnAttente(null); setCode(''); if (repriseCode) onQuitter(); return; }
     if (index === 0) { onQuitter(); return; }
     setIndex((i) => i - 1);
   }
@@ -289,7 +305,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   async function arriver(user) {
     toast(t('auth.welcome', { name: user.name }), 'succes');
     // Un client venu d'un commerce touché sans compte y retourne (comme sur le site, Auth.jsx).
-    const cible = user?.role === 'restaurant' ? '/dashboard' : user?.role === 'driver' ? '/driver/onboarding' : depuis && depuis !== '/' ? depuis : '/restaurants';
+    const cible = user?.role === 'restaurant' ? '/dashboard' : user?.role === 'driver' ? '/driver/onboarding' : retourApres && retourApres !== '/' ? retourApres : '/restaurants';
     await attendrePage(cible);
     navigate(cible, { replace: true });
   }
@@ -335,7 +351,10 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
         otherPlatforms: [], otherPlatformNote: '', preferredZones: communeDeLAdresse()
       } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
-      ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {})
+      ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {}),
+      // Apple / Google : le prénom et le nom de l'écran « nom » (ou ceux du fournisseur, préremplis) font foi. Avant, le
+      // serveur gardait le nom de Google, coupé au premier espace, et ce qu'on avait corrigé ici était perdu.
+      ...(fed ? { firstName: firstName.trim() || undefined, lastName: lastName.trim() || undefined } : {})
     };
     setConsent(rapports ? 'accepted' : 'refused');
     setAttente(true);
@@ -369,7 +388,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
         setPassword('');
         allerA('email', { password: t(err.code === 'PASSWORD_BREACHED' ? 'auth.errPasswordBreached' : 'auth.errPasswordStrength') });
       } else if (champ === 'phone' || champ === 'email') {
-        allerA(champ === 'phone' ? 'tel' : 'email', { [champ]: champ === 'phone' ? (/invalide/i.test(err.message) ? t('auth.errPhoneInvalid') : t('auth.errPhoneTaken')) : t('auth.errEmailTaken') });
+        // Le code dit ce qui ne va pas (routes/auth.js) ; sans code connu, le message du serveur, déjà traduit.
+        const MESSAGES = { EMAIL_TAKEN: 'auth.errEmailTaken', EMAIL_INVALID: 'auth.errEmailInvalid', EMAIL_RESERVED: 'auth.errEmailReserved', PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid' };
+        allerA(champ === 'phone' ? 'tel' : 'email', { [champ]: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
       } else if (champ === 'companyNumber') {
         allerA(role === 'restaurant' ? 'entreprise' : 'bce', { companyNumber: err.data?.detail || err.message });
       } else if (ETAPE_DU_CHAMP[champ]) {

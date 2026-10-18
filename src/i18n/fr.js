@@ -7915,6 +7915,7 @@ export default {
       hidePassword: 'Masquer',
       errFieldRequired: 'Ce champ est requis.',
       errEmailInvalid: 'Cette adresse email ne semble pas valide.',
+      errEmailReserved: "Cette adresse est réservée à l'équipe Fairide. Utilise ton adresse personnelle.",
       errPostalCode: 'Un code postal belge comporte 4 chiffres (ex. 1050).',
       errCompanyNumber: 'Numéro d\'entreprise invalide : 10 chiffres (ex. 0123.456.789).',
       or: 'ou',
