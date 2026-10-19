@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { useLanguage } from './LanguageContext';
 import Icone from '../components/Icone';
+import { vibrer } from '../gestes';
 
 const ToastContext = createContext(null);
 // Au-delà, le message reste plusieurs secondes : il reçoit aussi la croix pour le fermer soi-même.
@@ -39,6 +40,8 @@ export function ToastProvider({ children }) {
     setMessage(msg);
     setTon(tonDemande === 'erreur' || tonDemande === 'succes' ? tonDemande : '');
     setShow(true);
+    // Une erreur se sent aussi sous le doigt (audit « Look and feel » 6a, 2026-10-19) : la sensation « erreur » du téléphone.
+    if (tonDemande === 'erreur') vibrer('erreur');
     clearTimeout(timer.current);
     /* LE TEMPS DE LIRE (fondateur, 2026-10-17 : « c'est très long et ça ne reste pas longtemps »). Le 2026-09-21 les bornes
      * étaient descendues à 3,2–5,5 s : une phrase de 150 signes (« Ce commerce est fermé pour le moment : compose ton

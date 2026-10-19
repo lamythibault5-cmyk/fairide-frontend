@@ -5,6 +5,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import TirerPourActualiser from '../../components/TirerPourActualiser';
 import { platBio, platVegan, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 // Chargée à la demande : la carte tire Leaflet (~150 Ko) avec elle, et cette page fait partie des
 // rares gardées en import statique pour le référencement. Sans ce découpage, tout visiteur d'une fiche
@@ -352,8 +353,10 @@ export default function RestaurantList() {
   const grand = useSiteLarge(900);
   const colonne = useSiteLarge(1100);
 
-  useEffect(() => {
-    api('/restaurants').then(setRestaurants).catch((e) => toast(e.message, 'erreur')).finally(() => setLoading(false));
+  // Une seule lecture de la liste, au chargement et quand on tire pour actualiser (app). Elle rend la promesse des commerces :
+  // le vélo roule jusqu'à leur arrivée.
+  function charger() {
+    const commerces = api('/restaurants').then(setRestaurants).catch((e) => toast(e.message, 'erreur')).finally(() => setLoading(false));
     api('/restaurants/landing').then((l) => {
       setInscrits((l || []).filter((r) => r.menuComplete));
       setInscritLe(new Map((l || []).filter((r) => r.createdAt).map((r) => [r.id, Number(r.createdAt)])));
@@ -366,6 +369,10 @@ export default function RestaurantList() {
       api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
       api('/orders/mine', { token }).then((orders) => setOrderedRestaurantIds(new Set(orders.map((o) => o.restaurantId)))).catch(() => {});
     }
+    return commerces;
+  }
+  useEffect(() => {
+    charger();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -578,6 +585,7 @@ export default function RestaurantList() {
   const pastillesFiltres = !colonne || !modeSurBandeau;
   return (
     <div className={`sl-liste${grand ? ' sl-liste--grand' : ''}${colonne ? ' sl-liste--colonne' : ''}`}>
+      <TirerPourActualiser onActualiser={charger} />
       {/* Le titre est MASQUÉ À L'ŒIL, pas supprimé (fondateur, 2026-09-17 : « retire-le de la page »).
           Il reste dans le document parce qu'il y avait été mis pour une raison précise : sans h1, le
           titre de niveau 1 de cette page redevient la marque de l'en-tête, et son sujet, pour un

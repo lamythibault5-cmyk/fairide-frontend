@@ -12,7 +12,7 @@ import { euros, libellePromo } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
-import { SkeletonCards } from '../../components/Skeleton';
+import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import Icone from '../../components/Icone';
 import ChoixPastilles from '../../components/ChoixPastilles';
@@ -27,7 +27,7 @@ import { serviceOuvert, dateOuvertureEmporter, paiementEnLigneOuvert, useLanceme
 import CodePromoCheckout from '../../components/client/CodePromoCheckout';
 import CheckoutConformite from '../../components/conformite/CheckoutConformite';
 import { manqueConformite } from '../../conformite';
-import { defilement } from '../../gestes';
+import { defilement, vibrer } from '../../gestes';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
@@ -190,7 +190,8 @@ export default function Checkout() {
   // d'y entrer. On arrive donc directement sur la confirmation des informations de commande.
 
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
-  if (!restaurant) return <SkeletonCards count={2} />;
+  // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
+  if (!restaurant) return experienceApp() ? <SqueletteEcran titre={t('checkout.headerTitle')} lignes={3} /> : <SkeletonCards count={2} />;
 
   // Ce qui manque pour atteindre le minimum du commerce (PAN-3), sur la valeur des plats avant remises, comme le serveur.
   const manqueMinimum = restaurant.minOrderAmount ? Math.max(0, +(restaurant.minOrderAmount - cart.rawTotal).toFixed(2)) : 0;
@@ -370,6 +371,7 @@ export default function Checkout() {
         await api(`/orders/${order.id}/confirm-on-site`, { method: 'POST', token });
         commandeTermineeRef.current = true;
         cart.clear();
+        vibrer('succes');
         toast(t('checkout.toastOnSiteConfirmed'), 'succes');
         navigate('/orders');
         return;
@@ -381,6 +383,7 @@ export default function Checkout() {
         // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
         commandeTermineeRef.current = true;
         cart.clear();
+        vibrer('succes');
         toast(t('checkout.toastOrderPaid'), 'succes');
         navigate('/orders');
       } else {

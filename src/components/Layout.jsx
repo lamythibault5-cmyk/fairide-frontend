@@ -13,7 +13,7 @@ import Icone from './Icone';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
-import { SkeletonCards } from './Skeleton';
+import { SkeletonCards, SqueletteEcran } from './Skeleton';
 import { estNatif, experienceApp, plateforme } from '../natif';
 import { lireBienvenue } from '../bienvenue';
 // Le cadre du site (barre latérale blanche, largeurs, bandeau et feuille, carte des cookies, connexion) : voir son en-tête.
@@ -58,7 +58,12 @@ const COQUILLES = ['/dashboard', '/admin'];
 function cleTransition(pathname) {
   return COQUILLES.find((p) => pathname === p || pathname.startsWith(`${p}/`)) || pathname;
 }
-const attentePage = <div style={{ paddingTop: 8 }}><SkeletonCards count={3} /></div>;
+// Le module d'une page arrive : dans l'app, le bandeau iris et la feuille sont déjà là, titre en barres translucides et vélo
+// qui roule (Skeleton.jsx, audit « Look and feel », 2026-10-19) ; sur le site, des lignes iris pâle.
+function AttentePage() {
+  return experienceApp() ? <SqueletteEcran /> : <div style={{ paddingTop: 8 }}><SkeletonCards count={3} /></div>;
+}
+const attentePage = <AttentePage />;
 function isDashboardPath(pathname) {
   return DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }

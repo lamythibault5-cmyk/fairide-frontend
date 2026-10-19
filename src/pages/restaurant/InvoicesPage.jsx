@@ -10,9 +10,9 @@ import CommissionStatements from '../../components/CommissionStatements';
 import InvoicePreferences from '../../components/InvoicePreferences';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
-import CadreSite, { SITE } from '../../components/commerce/CadreSite';
+import CadreSite from '../../components/commerce/CadreSite';
+import { SegmentGlisse } from '../../components/commerce/BandeauCommerce';
 import EtatVide from '../../components/EtatVide';
-import AvecMarque from '../../components/AvecMarque';
 
 // Facture sans TVA : Fairide est sous le régime de la franchise depuis le 7/9/2026 (lettre du SPF Finances du 12/10/2026).
 // Jugé par facture : une facture émise avec TVA garde ses colonnes.
@@ -33,6 +33,12 @@ function lastDayOfMonth(month) {
 // au sens légal (mentions obligatoires belges, Code TVA art. 5 AR n°1 ; numérotée séquentiellement et
 // figée côté backend, voir POST /restaurants/:id/commission-invoice) puisque Fairide facture un
 // service (la commission) au restaurant.
+//
+// BANDEAU ET FEUILLE, DANS L'APP AUSSI (fondateur, 2026-10-19, section 4 de finitions-appli.html) : le titre et sa phrase
+// sur le bandeau iris ; les trois onglets deviennent le curseur à pouce iris (SegmentGlisse, comme le temps de préparation) ;
+// chaque bloc est une section à titre en capitales, sans cadre. Les blocs partagés avec le livreur (InvoiceArchive,
+// InvoicePreferences, CommissionStatements) ne changent pas : c'est .ec-bloc (ecran-commerce.css) qui efface leur cadre ici.
+// L'aperçu de la facture reste un document, imprimé seul : le bandeau ne s'imprime pas (même fichier CSS).
 export default function InvoicesPage() {
   const { t } = useLanguage();
   const { token } = useAuth();
@@ -89,40 +95,35 @@ export default function InvoicesPage() {
   const periodRange = `01/${month.split('-')[1]}/${month.split('-')[0]}, ${lastDayOfMonth(month)}/${month.split('-')[1]}/${month.split('-')[0]}`;
 
   return (
-    <CadreSite titre={t('invoicesResto.title')} sous={t('invoicesResto.pageIntro')}>
-      {!SITE && <h2 className="section-title" style={{ marginTop: 0 }}>{t('invoicesResto.title')}</h2>}
-      {!SITE && <p className="small no-print" style={{ margin: '-6px 0 12px' }}>{t('invoicesResto.pageIntro')}</p>}
-
-      <div className="auth-tabs no-print" role="tablist" style={{ marginBottom: 14 }}>
-        {[['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ['abonnement', t('invoicesResto.tabSubscription')]].map(([cle, label]) => (
-          <div key={cle} role="tab" tabIndex={0} aria-selected={onglet === cle} className={`chip${onglet === cle ? ' active' : ''}`} onClick={() => choisirOnglet(cle)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') choisirOnglet(cle); }}>{label}</div>
-        ))}
+    <CadreSite appli classe="ec-factures" titre={t('invoicesResto.title')} sous={t('invoicesResto.pageIntro')}>
+      <div className="no-print ec-factures-onglets">
+        <SegmentGlisse libelle={t('invoicesResto.title')} valeur={onglet} onChange={choisirOnglet}
+          options={[['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ['abonnement', t('invoicesResto.tabSubscription')]].map(([value, label]) => ({ value, label }))} />
       </div>
 
       {onglet === 'releves' && (
         <>
-          <CommissionStatements />
+          <div className="ec-bloc ec-bloc--releves"><CommissionStatements /></div>
           {/* Copie DAC7 annuelle (A10) : ce que Fairide a déclaré au SPF Finances sur les ventes du commerce. */}
-          <div className="card no-print"><CopieDac7 chemin={(a) => `/restaurants/${restoId}/dac7/${a}.pdf`} token={token} /></div>
+          <div className="no-print"><CopieDac7 chemin={(a) => `/restaurants/${restoId}/dac7/${a}.pdf`} token={token} /></div>
         </>
       )}
 
       {onglet === 'abonnement' && (
-        <div className="card no-print">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}><AvecMarque>{t('invoicesResto.subscription')}</AvecMarque></h3>
-          <p className="small" style={{ margin: '0 0 12px' }}>
-            {t('invoicesResto.subscriptionHelp')}
-          </p>
-          <button className="btn-ghost" disabled={openingPortal} onClick={openPortal}>
+        <section className="no-print">
+          {/* Titre en capitales, donc sans AvecMarque : le mot-logo reste toujours en minuscules. */}
+          <p className="ec-feuille-titre">{t('invoicesResto.subscription')}</p>
+          <p className="ec-aide">{t('invoicesResto.subscriptionHelp')}</p>
+          <button type="button" className="ec-bouton ec-bouton--iris ec-bouton--court" disabled={openingPortal} onClick={openPortal}>
             {openingPortal ? '...' : t('invoicesResto.viewSubInvoices')}
           </button>
-        </div>
+        </section>
       )}
 
       {onglet === 'factures' && (<>
       {/* Archive de tout ce qui a déjà été émis, en plus de la vue mois par mois plus bas qui sert, elle,
           à préparer et émettre la facture d'une période donnée. */}
-      <InvoiceArchive
+      <div className="ec-bloc"><InvoiceArchive
         endpoint="/invoices/restaurant"
         pdfPath={(inv) => `/invoices/restaurant/${inv.id}/pdf`}
         ublPath={(inv) => `/invoices/restaurant/${inv.id}/ubl`}
@@ -133,35 +134,31 @@ export default function InvoicesPage() {
         // et « TTC » laisserait croire le contraire ; une facture plus ancienne, avec TVA, garde son total juste. Même libellé
         // que les factures livreur (driver/InvoicesPage.jsx).
         colonneMontant="Total"
-      />
+      /></div>
 
-      <InvoicePreferences />
+      <div className="ec-bloc"><InvoicePreferences /></div>
 
-      <div className="card no-print">
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('invoicesResto.commissionInvoice')}</h3>
-        <p className="small" style={{ margin: '0 0 12px' }}>
-          {t('invoicesResto.commissionHelp')}
-        </p>
+      <section className="no-print">
+        <p className="ec-feuille-titre">{t('invoicesResto.commissionInvoice')}</p>
+        <p className="ec-aide">{t('invoicesResto.commissionHelp')}</p>
         <div className="row" style={{ gap: 8, alignItems: 'center' }}>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 180 }} />
           {/* Imprimer n'existe pas dans l'application (WebView) : le bouton n'y faisait rien. */}
           {invoice?.items?.length > 0 && !experienceApp() && <button className="btn-teal" onClick={() => window.print()}>{t('invoicesResto.print')}</button>}
         </div>
-      </div>
+      </section>
 
-      {loading && <div className="card">{t('invoicesResto.loading')}</div>}
+      {loading && <p className="ec-aide">{t('invoicesResto.loading')}</p>}
 
       {!loading && fairide && !fairide.configured && (
-        <div className="card no-print" style={{ border: '2px solid var(--red)' }}>
-          <h3 style={{ margin: '0 0 6px', fontSize: 15, color: 'var(--red)' }}>{t('invoicesResto.incompleteConfig')}</h3>
-          <p className="small" style={{ margin: 0 }}>
-            {t('invoicesResto.incompleteConfigHelp')}
-          </p>
+        <div className="ec-alerte no-print" role="alert">
+          <b>{t('invoicesResto.incompleteConfig')}</b>
+          <p>{t('invoicesResto.incompleteConfigHelp')}</p>
         </div>
       )}
 
       {!loading && invoice && (
-        <div className="card" id="commission-recap">
+        <div className="ec-document" id="commission-recap">
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
             <div>
               <h3 style={{ margin: '0 0 4px', fontSize: 20 }}>FACTURE</h3>

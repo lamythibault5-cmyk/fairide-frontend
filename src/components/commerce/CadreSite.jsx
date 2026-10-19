@@ -10,20 +10,25 @@ export const SITE = !experienceApp();
  * Promotions, Avis, Factures, Guide et Aperçu client prennent la même famille que Mon commerce et Commandes — « ← Mon
  * compte » et le nom sur le bandeau iris, le titre et sa phrase d'introduction, puis la feuille blanche avec les blocs
  * communs du tableau de bord (DashboardLayout les lui passe, `communs`) et la page elle-même. `lecture` : largeur de
- * lecture (760 px) plutôt que large (1 120 px). Dans l'app rien ne change : un simple <div>, la page garde son titre. */
-export default function CadreSite({ titre, sous, lecture = false, children }) {
+ * lecture (760 px) plutôt que large (1 120 px). Dans l'app rien ne change : un simple <div>, la page garde son titre.
+ *
+ * `appli` (fondateur, 2026-10-19, section 4 de finitions-appli.html) : Promotions, Avis et Factures prennent le bandeau et
+ * la feuille DANS L'APP aussi. DashboardLayout les compte alors parmi ses pages au bandeau (PAGES_BANDEAU), pour que les
+ * blocs communs arrivent dans la feuille et non au-dessus de l'iris. `sous` peut être un nœud (les étoiles des avis) ;
+ * `classe` vise une page dans ecran-commerce.css (l'impression des factures, par exemple). */
+export default function CadreSite({ titre, sous, lecture = false, appli = false, classe = '', children }) {
   const { t } = useLanguage();
   const { restaurant, communs } = useOutletContext() || {};
-  if (!SITE) return <div>{children}</div>;
+  if (!SITE && !appli) return <div className={classe || undefined}>{children}</div>;
   return (
-    <div className={`sp-page${lecture ? ' sp-page--lecture' : ''}`}>
+    <div className={`sp-page${lecture ? ' sp-page--lecture' : ''}${classe ? ` ${classe}` : ''}`}>
       <BandeauCommerce retour>
         <div className="ec-b-haut">
           <Link to="/account" state={{ restaurerDefilement: true }} className="ec-b-retour">{t('nav.backToAccount')}</Link>
           {restaurant?.name && <span><b>{restaurant.name}</b></span>}
         </div>
         <h1 className="ec-b-titre">{titre}</h1>
-        {sous && <p className="ec-b-sous">{sous}</p>}
+        {sous && <div className="ec-b-sous">{sous}</div>}
       </BandeauCommerce>
       <FeuilleCommerce>
         {communs}

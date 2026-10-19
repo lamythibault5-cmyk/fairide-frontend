@@ -1,0 +1,130 @@
+/* LES ÉCRANS GÉNÉRAUX EN BANDEAU IRIS ET FEUILLE BLANCHE : Nouveau mot de passe, Valider ma carte, Aide (fondateur,
+   2026-10-19, section 4 de finitions-appli.html ; composants dans components/EcranGeneral.jsx). Classes `gn-`.
+   Le bandeau et la feuille sont les outils du site (.site-bande, .site-feuille, .site-col--lecture : site-cadre.css), qui
+   valent aussi dans l'app connectée (même marge de .dashboard-main). Ce fichier règle les trois autres cas :
+     1. l'app sans compte (.appli-wrap, sous la barre d'app blanche) : la barre gère déjà l'encoche ;
+     2. le site connecté : ces pages sont des « pages génériques » (760 px, centrées, Layout.jsx) — le bandeau y va quand
+        même d'un bord à l'autre de la zone de contenu, comme partout ailleurs sur ordinateur, le texte restant à 760 px ;
+     3. le site pour un visiteur (.wrap sous l'en-tête iris) : pas de second bandeau iris, le titre en encre sur le blanc.
+   Lime : seulement le bouton décisif de chaque écran, et le vélo sur l'iris. Pas d'ombre : des filets. */
+
+/* ---------- Le bandeau ---------- */
+.gn-haut { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.gn-tuile { flex: none; width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, .12); color: #fff; display: grid; place-items: center; }
+.gn-tuile--marque { color: var(--lime); }
+/* Le retour : le rond du parcours de commande (.ec-rond, ecran-commande.css), recopié pour ne pas tirer ce fichier-là.
+   min-height !important : la règle des 44 px tactiles de styles.css (button:not(...)) pèse plus lourd. */
+.gn-rond { flex: none; width: 38px; height: 38px; min-height: 0 !important; padding: 0; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .35); background: none;
+  color: #fff; display: grid; place-items: center; text-decoration: none; font: inherit; cursor: pointer; transition: background .15s, transform .12s; }
+@media (hover: hover) { .gn-rond:hover { background: rgba(255, 255, 255, .12); filter: none; } }
+.gn-rond:active { transform: scale(.92); }
+.gn-bandeau .gn-titre { overflow-wrap: anywhere; }
+.gn-bandeau .gn-titre:first-child { margin-top: 4px; }
+.gn-sous b { color: #fff; font-weight: 600; }
+/* Le « Retour » que Layout pose au-dessus de la page : il est dans le bandeau (EcranGeneral.jsx). Il reste dans la page,
+   caché, pour le bouton Retour d'Android (natif.js cherche [data-retour-natif]). */
+.dashboard-main:has(.gn-page) > .dashboard-retour { display: none; }
+
+/* ---------- La feuille ---------- */
+.gn-feuille { padding-bottom: 32px; }
+.gn-section { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; margin: 26px 0 6px; }
+.gn-feuille .site-col > .gn-section:first-child { margin-top: 0; }
+.gn-texte { margin: 0 0 14px; font-size: 14.5px; line-height: 1.5; color: var(--ink-soft); }
+.gn-texte--encre { color: var(--ink); }
+.gn-feuille .field label { font-size: 13.5px; font-weight: 600; }
+/* Les boutons pleins de ces écrans : pleine largeur, 52 px, ronds (ec-bouton de Mon commerce, au poids du lien). */
+.gn-action { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; font-size: 16px; font-weight: 700; text-decoration: none; border-radius: var(--radius-pill); }
+a.btn-gold.gn-action { font-weight: 700; }
+/* Une remarque (lien périmé, carte déjà validée) : filet iris, icône iris, texte encre — jamais de rouge plein. */
+.gn-note { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--iris); border-radius: 16px; color: var(--ink); font-size: 14px; line-height: 1.45; }
+.gn-note > svg { flex: none; color: var(--iris); margin-top: 1px; }
+/* Fini : la coche dans un rond iris, au-dessus du texte. */
+.gn-coche { width: 52px; height: 52px; border-radius: 50%; background: var(--iris); color: #fff; display: grid; place-items: center; margin: 4px 0 14px; }
+
+/* ---------- Nouveau mot de passe : les règles cochées au fil de la frappe ---------- */
+/* .mdp-criteres (styles.css, inscription) en liste : un rond vide, puis plein d'iris avec sa coche quand la règle est tenue. */
+.mdp-criteres.gn-regles { display: grid; gap: 7px; margin: 10px 0 18px; font-size: 13.5px; color: var(--ink-soft); }
+.gn-regles li { gap: 8px; }
+.gn-regles .gn-regle-rond { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid rgba(59, 47, 181, .35); display: grid; place-items: center; box-sizing: border-box;
+  transition: background .15s, border-color .15s; }
+.gn-regles li.ok .gn-regle-rond { background: var(--iris); border-color: var(--iris); color: #fff; animation: gn-saute .3s cubic-bezier(.34, 1.45, .64, 1); }
+.gn-regles .gn-regle-rond svg { stroke-width: 3; }
+@keyframes gn-saute { from { transform: scale(.4); } }
+
+/* ---------- Valider ma carte ---------- */
+.gn-carte-plats { list-style: none; margin: 0; padding: 0; }
+.gn-plat { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.gn-plat:last-child { border-bottom: 0; }
+.gn-plat-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.gn-plat-nom { font-size: 15px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.gn-plat-prix { flex: none; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gn-plat-avant { display: block; text-align: right; font-size: 12.5px; color: var(--ink-soft); }
+.gn-plat-desc, .gn-plat-tva { margin: 2px 0 0; font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
+.gn-plat-tva { color: var(--ink-faint); font-size: 12.5px; }
+/* Le choix du taux : les cases du paiement (OptionCommande, ecran-commande.css). Leur coche lime sur l'iris passe au blanc
+   ici : le lime de l'écran, c'est « C'est bon » (règle 3 de l'identité). */
+.gn-page .ec-options { margin: 4px 0 10px; }
+.gn-page .ec-option.on .ec-case { background: #fff; border-color: #fff; color: var(--iris); }
+.gn-taux-aide { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+.gn-valider { margin-top: 26px; padding-top: 4px; }
+.gn-valider .gn-action { font-size: 19px; min-height: 58px; }
+
+/* ---------- Aide : les questions en rangées qui s'ouvrent ---------- */
+.gn-questions { margin: 0 0 8px; }
+.gn-question { border-bottom: 1px solid var(--line); scroll-margin-top: 96px; }
+.gn-question > summary { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 54px; padding: 12px 0; cursor: pointer; list-style: none;
+  font-size: 15.5px; font-weight: 600; color: var(--ink); }
+.gn-question > summary::-webkit-details-marker { display: none; }
+/* Le chevron : deux traits, qui pivotent à l'ouverture. */
+.gn-question > summary::after { content: ''; flex: none; width: 8px; height: 8px; margin-right: 4px; border-right: 2px solid var(--ink-soft); border-bottom: 2px solid var(--ink-soft);
+  transform: translateY(-2px) rotate(45deg); transition: transform .2s; }
+.gn-question[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
+@media (hover: hover) { .gn-question > summary:hover { color: var(--iris); } }
+.gn-question > summary:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; border-radius: 6px; }
+.gn-reponse { padding: 0 0 16px; }
+.gn-reponse p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); }
+.gn-reponse p:last-child { margin-bottom: 0; }
+.gn-reponse b, .gn-reponse strong { color: var(--ink); }
+/* Le formulaire de contact (ContactSection.jsx) dans la feuille : plus de cadres, des filets. */
+.gn-contact { margin-top: 30px; }
+.gn-contact .contact-grid { margin-bottom: 0; gap: 28px; }
+.gn-contact .contact-grid > .card { border: 0; border-radius: 0; padding: 0; margin: 0; background: none; }
+.gn-contact .contact-info-col { gap: 0; }
+.gn-contact .contact-info-card { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 12px 0; margin: 0; background: none; }
+.gn-contact .contact-info-card:last-child { border-bottom: 0; }
+/* Ordinateur : les coordonnées commencent sous le titre du formulaire, pas en face de la petite ligne au-dessus. */
+@media (min-width: 721px) { .gn-contact .contact-info-col { padding-top: 6px; } }
+
+/* ---------- 1 · L'app sans compte : sous la barre d'app (.appli-wrap, styles.css) ---------- */
+/* La barre blanche du haut gère déjà l'encoche : le bandeau ne remonte que des 16 px de .appli-wrap, et la gouttière est
+   celle de .wrap (20 px). */
+@media (max-width: 900px) {
+  .appli-wrap .gn-bandeau { margin: -16px calc(-1 * var(--gouttiere, 20px)) 0; padding-top: 22px; }
+  .appli-wrap .gn-feuille { margin-left: calc(-1 * var(--gouttiere, 20px)); margin-right: calc(-1 * var(--gouttiere, 20px)); }
+  .appli-wrap:has(.gn-page) { padding-bottom: 0; }
+}
+
+/* ---------- 2 · Le site connecté : bandeau d'un bord à l'autre, texte à 760 px ---------- */
+@media (min-width: 901px) {
+  html:not(.appli) .site-page-generique:has(> .gn-page) { max-width: none; padding-top: 0; }
+  html:not(.appli) .dashboard-main .gn-bandeau { padding-left: max(28px, calc((100% - var(--site-lecture)) / 2)); padding-right: max(28px, calc((100% - var(--site-lecture)) / 2)); }
+  html:not(.appli) .dashboard-main .gn-feuille { padding-left: max(28px, calc((100% - var(--site-lecture)) / 2)); padding-right: max(28px, calc((100% - var(--site-lecture)) / 2)); }
+}
+
+/* ---------- 3 · Le site pour un visiteur : sous l'en-tête iris, tout sur le blanc ---------- */
+/* Comme la connexion sur téléphone et l'invitation dans l'équipe (ecran-equipe-groupe.css) : le titre en encre, le vélo et
+   le retour retirés (vélo lime sur blanc : illisible), la feuille sans coins ni montée. */
+html:not(.appli) .wrap .gn-bandeau { margin: 0; padding: 28px 0 0; background: #fff; color: var(--ink); }
+html:not(.appli) .wrap .gn-bandeau .gn-titre { color: var(--ink); }
+html:not(.appli) .wrap .gn-bandeau .gn-sous, html:not(.appli) .wrap .gn-sous b { color: var(--ink-soft); }
+html:not(.appli) .wrap .gn-bandeau .gn-haut { display: none; }
+html:not(.appli) .wrap .gn-feuille { margin: 0; padding: 22px 0 8px; border-radius: 0; animation: none; }
+@media (min-width: 901px) {
+  html:not(.appli) .wrap .gn-bandeau { padding-top: 40px; }
+  html:not(.appli) .wrap .gn-bandeau .gn-titre { font-size: 36px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gn-regles .gn-regle-rond, .gn-question > summary::after { transition: none; }
+  .gn-regles li.ok .gn-regle-rond { animation: none; }
+}

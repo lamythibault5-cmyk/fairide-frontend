@@ -219,6 +219,78 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-top-plat-chiffres { display: flex; flex-direction: column; align-items: flex-end; font-size: 14px; font-variant-numeric: tabular-nums; }
 .ec-top-plat-chiffres small { font-size: 12px; color: var(--ink-soft); }
 
+/* ---------- Promotions, Avis, Factures (fondateur, 2026-10-19, section 4 de finitions-appli.html) ----------
+   Les trois écrans secondaires du commerce prennent le bandeau et la feuille dans l'app aussi (CadreSite `appli`). Dans la
+   feuille : des RANGÉES à filet plutôt que des cartes encadrées — une tuile d'icône teintée d'iris, un titre, une petite
+   ligne, et au bout un interrupteur (.ec-interrupteur) ou rien. Supprimer une promotion : LigneGlissante.jsx (glisser dans
+   l'app native, × sur le site). Les composants partagés avec le livreur (InvoiceArchive, InvoicePreferences,
+   CommissionStatements, MiseEnAvant, GiftVouchers) ne sont pas touchés : .ec-bloc efface ici leur cadre et met leur titre
+   au format des titres de section ; les !important ne battent que leurs styles en ligne (taille du titre). */
+.ec-lignes { margin: 0; }
+.ec-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.ec-lignes > .ec-ligne:last-child, .ec-lignes > .ec-glisse:last-child { border-bottom: 0; }
+.ec-ligne--haut { align-items: flex-start; }
+.ec-ligne-tuile { width: 40px; height: 40px; border-radius: 12px; background: rgba(59, 47, 181, .1); color: var(--iris); display: grid; place-items: center; flex: none; }
+.ec-ligne-tuile--initiale { font-family: var(--font-titre); font-size: 17px; font-weight: 700; }
+.ec-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ec-ligne-texte > b { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.ec-ligne-texte > small { font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
+.ec-ligne--pause .ec-ligne-texte > b { color: var(--ink-soft); }
+.ec-ligne--pause .ec-ligne-tuile { background: var(--cream-dim); color: var(--ink-soft); }
+.ec-ligne--note { border-bottom: 0; align-items: flex-start; margin-top: 8px; }
+.ec-ligne--note .ec-ligne-texte > small + small { margin-top: 4px; }
+/* Le × du site : discret, mais un vrai bouton de 36 px. */
+.ec-ligne-suppr { flex: none; width: 36px; height: 36px; min-height: 0 !important; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink-soft);
+  display: grid; place-items: center; cursor: pointer; transition: color .15s, border-color .15s; }
+.ec-ligne-suppr:hover:not(:disabled) { color: var(--red); border-color: var(--red); }
+.ec-ligne-suppr:disabled { opacity: .5; cursor: default; }
+/* L'app native : la rangée glisse et découvre « Supprimer » (aplat iris, texte blanc : les fonds restent blanc ou iris ;
+   le rouge reste à la confirmation). */
+.ec-glisse { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+.ec-glisse > .ec-glisse-contenu { position: relative; z-index: 1; border-bottom: 0; background: #fff; touch-action: pan-y; }
+.ec-glisse-action { position: absolute; top: 0; bottom: 0; right: 0; width: 112px; border: 0; border-radius: 0; background: var(--iris); color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ec-glisse-action:focus-visible { outline: 2px solid var(--lime); outline-offset: -4px; }
+
+.ec-aide { margin: 0 0 4px; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
+.ec-aide--details { margin: 6px 0 4px; }
+.ec-aide--details p { margin: 0 0 8px; }
+.ec-lien--enligne { display: inline; align-self: auto; min-height: 0 !important; padding: 0; font-size: inherit; font-weight: 600; }
+.ec-avantage { margin-top: 26px; }
+.ec-choix-montant { padding: 4px 0 14px 52px; border-bottom: 1px solid var(--line); }
+.ec-montants { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ec-formulaire { margin-top: 18px; padding-top: 4px; }
+@media (min-width: 901px) { .ec-formulaire .ec-bouton, .ec-bouton--court { max-width: 360px; } }
+
+.ec-bloc { margin-top: 26px; }
+.ec-bloc > .card, .ec-bloc--releves > div > .card:not(.statements-group) { border: 0; border-radius: 0; padding: 0; margin: 0 0 22px; background: none; }
+.ec-bloc > .card > h3:first-child, .ec-bloc > .card > .row:first-child > h3, .ec-bloc > .card > .row:first-child > div > h3, .ec-bloc--releves > div > .card > h3:first-child {
+  font-family: var(--font-ui); font-size: 12px !important; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; }
+
+/* Avis : la note sur le bandeau (étoiles blanches : Stars.jsx les écrit en encre, en ligne), puis une rangée par avis. */
+.ec-avis-note { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ec-avis-etoiles > span { color: #fff !important; }
+.ec-avis-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.ec-avis-tete > b { font-size: 15px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.ec-avis-tete > span { flex: none; }
+.ec-avis-commentaire { margin: 2px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink); }
+.ec-avis-reponse { margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--iris); display: flex; flex-direction: column; }
+.ec-avis-reponse > small { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+.ec-avis-reponse > p { margin: 2px 0 0; font-size: 13.5px; line-height: 1.5; }
+.ec-avis-edition { margin-top: 8px; }
+
+/* Factures : les onglets au pouce iris, l'alerte de configuration, la facture comme document. */
+.ec-factures-onglets { margin-bottom: 18px; }
+@media (min-width: 600px) { .ec-factures-onglets { max-width: 480px; } }
+.ec-alerte { margin: 14px 0 0; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--red); }
+.ec-alerte > b { color: var(--red); font-size: 14.5px; }
+.ec-alerte > p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-soft); }
+.ec-document { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); overflow-x: auto; }
+@media print {
+  .ec-factures .ec-bandeau { display: none; }
+  .ec-factures .ec-feuille { margin: 0; padding: 0; border-radius: 0; animation: none; }
+  .ec-document { margin: 0; padding: 0; border: 0; }
+}
+
 /* ---------- Mouvements ---------- */
 @keyframes ec-monte { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
 @keyframes ec-saute { from { transform: scale(.3); } to { transform: none; } }

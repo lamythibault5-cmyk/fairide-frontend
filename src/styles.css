@@ -154,6 +154,10 @@
    débordement horizontal exactement pareil, sans jamais créer ce conteneur de scroll implicite. */
 html {
   overflow-x: clip;
+  /* Clair uniquement, partout (fondateur, 2026-10-19 ; aussi la balise color-scheme d'index.html et le thème Android
+     Light de styles.xml) : en mode sombre, le téléphone ne doit rien assombrir de lui-même. Un vrai thème sombre se
+     dessinera à part. */
+  color-scheme: light only;
 }
 
 body {
@@ -2343,9 +2347,61 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 
 .status-badge { transition: background .2s ease, color .2s ease; }
 
-.skeleton { background: linear-gradient(90deg, var(--cream-dim) 25%, #fff 37%, var(--cream-dim) 63%); background-size: 400px 100%; animation: shimmer 1.4s ease infinite; border-radius: var(--radius-chip); }
+/* CHARGEMENT EN BANDEAU ET FEUILLE (fondateur, 2026-10-19, audit « Look and feel » ; components/Skeleton.jsx). Le miroitement
+   passe du gris crème à l'iris pâle (le même que les pastilles iris pâle de l'app) ; sur le bandeau, des barres blanches
+   translucides. Les squelettes ont la forme des vraies lignes : vignette arrondie, deux traits. */
+.skeleton { background: linear-gradient(90deg, #EFEDFB 25%, #fff 40%, #EFEDFB 60%); background-size: 420px 100%; animation: sq-miroite 1.3s linear infinite; border-radius: var(--radius-chip); }
+.skeleton--iris { display: block; height: 12px; background: linear-gradient(90deg, rgba(255,255,255,.14) 25%, rgba(255,255,255,.3) 40%, rgba(255,255,255,.14) 60%); background-size: 420px 100%; }
+@keyframes sq-miroite { from { background-position: -420px 0; } to { background-position: 420px 0; } }
 .skeleton-line { height: 14px; margin-bottom: 8px; }
 .skeleton-card { height: 96px; border-radius: var(--radius); margin-bottom: 14px; }
+.sq-lignes { display: grid; }
+.sq-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.sq-ligne:last-child { border-bottom: 0; }
+.sq-vignette { width: 52px; height: 52px; border-radius: 14px; flex: none; }
+.sq-traits { flex: 1; display: grid; gap: 8px; }
+.sq-traits i { display: block; height: 12px; width: 62%; }
+.sq-traits i + i { width: 40%; }
+.sq-bandeau { position: relative; background: var(--iris); color: #fff; padding: 20px 24px 46px; border-radius: var(--radius) var(--radius) 0 0; }
+.sq-haut { display: flex; align-items: center; min-height: 38px; font-size: 13px; color: rgba(255, 255, 255, .78); }
+.sq-titre { font-family: var(--font-titre); font-size: 29px; line-height: 1.1; font-weight: 700; margin: 12px 0 6px; color: #fff; }
+.sq-titre-barre { width: 58%; height: 26px; margin: 14px 0 10px; }
+.sq-sous-barre { width: 38%; height: 13px; }
+.sq-route { position: relative; height: 30px; margin-top: 10px; }
+.sq-route::before { content: ''; position: absolute; left: 0; right: 0; bottom: 4px; height: 3px; border-radius: 2px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .4) 0 8px, transparent 8px 16px); }
+.sq-velo { position: absolute; bottom: 6px; left: 50%; width: 36px; margin-left: -18px; line-height: 0; color: var(--lime); animation: sq-roule 1.25s linear infinite; }
+.sq-photo { position: relative; height: 230px; border-radius: 0; overflow: hidden; }
+.sq-photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* LA PHOTO QUI VOYAGE (transitionPhoto.js, app) : la photo de la carte grandit jusqu'en haut de la fiche. Les deux images
+   gardent leurs proportions (object-fit: cover) pendant que le cadre change de taille ; le reste de la page se fond. */
+::view-transition-group(photo-commerce) { animation-duration: .45s; animation-timing-function: cubic-bezier(.3, .75, .2, 1); overflow: clip; }
+::view-transition-old(photo-commerce), ::view-transition-new(photo-commerce) { height: 100%; width: 100%; object-fit: cover; overflow: clip; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+.sq-feuille { position: relative; background: #fff; border-radius: 26px 26px 0 0; margin-top: -22px; padding: 22px 24px 24px; }
+/* Le vélo roule tant que ça charge : celui du squelette, et celui d'un bandeau déjà affiché dont la feuille attend encore ses
+   données (proposition A). Quand le squelette s'en va, :has ne vaut plus et le vélo reprend sa place. */
+@keyframes sq-roule { from { left: -6%; } to { left: 106%; } }
+.ec-bandeau:has(~ .ec-feuille .skeleton) .ec-route-velo { animation: sq-roule 1.25s linear infinite; }
+@media (max-width: 900px) {
+  .sq-bandeau { margin: calc(-16px - env(safe-area-inset-top)) calc(-1 * var(--gouttiere, 16px)) 0; padding: calc(16px + env(safe-area-inset-top)) 20px 42px; border-radius: 0; }
+  .sq-photo { margin: calc(-16px - env(safe-area-inset-top)) calc(-1 * var(--gouttiere, 16px)) 0; height: calc(230px + env(safe-area-inset-top)); }
+  .sq-feuille { margin: -22px calc(-1 * var(--gouttiere, 16px)) 0; padding: 20px 18px 24px; }
+}
+@media (prefers-reduced-motion: reduce) { .sq-velo, .ec-bandeau:has(~ .ec-feuille .skeleton) .ec-route-velo { animation: none; } }
+
+/* TIRER POUR ACTUALISER (components/TirerPourActualiser.jsx, app seulement). La zone iris fixe en haut grandit avec le doigt
+   (--tirer-p) pendant que le <main> descend d'autant : le bandeau de la page a l'air de s'étirer. Le vélo avance jusqu'à
+   --tirer-velo, puis roule en boucle pendant l'actualisation. Sous la barre d'état (iPhone : la vue web passe dessous). */
+.tirer-zone { position: fixed; top: 0; left: 0; right: 0; z-index: 70; height: calc(env(safe-area-inset-top) + var(--tirer-p, 0px)); overflow: hidden;
+  background: var(--iris); pointer-events: none; }
+.tirer-route { position: absolute; left: 24px; right: 24px; bottom: 30px; height: 22px; opacity: var(--tirer-o, 0); }
+.tirer-route::before { content: ''; position: absolute; left: 0; right: 0; bottom: 3px; height: 3px; border-radius: 2px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .4) 0 8px, transparent 8px 16px); }
+.tirer-velo { position: absolute; bottom: 5px; left: var(--tirer-velo, 0%); width: 34px; margin-left: -17px; line-height: 0; color: var(--lime); }
+.tirer-zone--roule .tirer-velo { animation: sq-roule 1.1s linear infinite; }
+.tirer-libelle { position: absolute; left: 0; right: 0; bottom: 8px; margin: 0; text-align: center; color: rgba(255, 255, 255, .88);
+  font-size: 13px; font-weight: 600; opacity: var(--tirer-o, 0); }
 
 .cart-bar { animation: fadeInUp .25s ease both; }
 
@@ -2883,48 +2939,58 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   position: absolute; top: 8px; right: 8px; z-index: 500;
   display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
 }
-.tracking-map-recenter, .tracking-map-follow-driver {
-  border-radius: var(--radius-field); padding: 5px 11px; font-size: 11px; font-weight: 700;
-  box-shadow: none; cursor: pointer; white-space: nowrap;
+/* LES BOUTONS DE LA CARTE EN RONDS IRIS (fondateur, 2026-10-19, audit « Look and feel ») : iris plein, anneau blanc — la règle
+   des boutons posés sur une image (jamais blanc sur verre). 44 px : la taille d'un doigt. « Suivre le livreur » porte le vélo
+   lime de la marque (la lime sur l'iris), « Vue d'ensemble » la cible ; leur nom est en aria-label et en infobulle.
+   Autrefois deux étiquettes de 11 px, l'une en presque-noir, l'ancienne couleur de la marque. */
+.tracking-map-controls { gap: 10px; }
+.tracking-map-rond {
+  width: 44px; height: 44px; min-height: 0 !important; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; background: var(--iris); color: #fff;
+  box-shadow: 0 0 0 2.5px #fff, 0 3px 10px rgba(20, 18, 31, .22); transition: transform .12s, background .15s;
 }
-.tracking-map-recenter {
-  background: rgba(255,255,255,0.94); color: var(--ink); border: 1px solid var(--line);
-}
-.tracking-map-recenter:hover { background: #fff; border-color: var(--iris); }
-/* Action principale : recadre sur le livreur + l'adresse de livraison (le trajet qu'il reste à
-   parcourir) — mise en avant en sombre, assortie à l'icône du livreur sur la carte, pour se distinguer
-   de "Vue d'ensemble" qui revient au trajet complet depuis le restaurant. */
-.tracking-map-follow-driver {
-  background: #14121F; color: #fff; border: 1px solid #14121F;
-}
-.tracking-map-follow-driver:hover { background: #2A2185; }
-.tracking-map-legend { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; font-size: 11px; color: var(--ink-soft); }
-.tracking-map-legend span { display: inline-flex; align-items: center; gap: 4px; }
-.tracking-map-legend-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 9px; flex-shrink: 0; }
+@media (hover: hover) { .tracking-map-rond:hover { background: var(--iris-deep); } }
+.tracking-map-rond:active { transform: scale(.92); }
+.tracking-map-rond:focus-visible { outline: 2px solid var(--lime); outline-offset: 4px; }
+.tracking-map-rond-velo { color: var(--lime); line-height: 0; }
+/* Le zoom de Leaflet (+ / −) dans la même famille : deux ronds iris à anneau blanc, au lieu des carrés blancs par défaut. */
+.tracking-map-cadre .leaflet-control-zoom.leaflet-bar { border: 0; box-shadow: none; display: grid; gap: 10px; margin: 0 10px 10px 0; }
+/* Spécificité relevée : leaflet.css (chargé après, avec la carte) arrondit seulement les coins du haut et du bas. */
+.tracking-map-cadre .leaflet-control-zoom.leaflet-bar a, .tracking-map-cadre .leaflet-control-zoom.leaflet-bar a:first-child, .tracking-map-cadre .leaflet-control-zoom.leaflet-bar a:last-child {
+  width: 40px; height: 40px; line-height: 38px; border: 0; border-radius: 50%; background: var(--iris); color: #fff; font-size: 20px;
+  box-shadow: 0 0 0 2.5px #fff, 0 3px 10px rgba(20, 18, 31, .22); }
+@media (hover: hover) { .tracking-map-cadre .leaflet-bar a:hover { background: var(--iris-deep); color: #fff; } }
+.tracking-map-cadre .leaflet-bar a.leaflet-disabled { background: var(--iris); color: rgba(255, 255, 255, .45); }
+.tracking-map-legend { display: flex; gap: 8px 14px; flex-wrap: wrap; justify-content: center; margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+.tracking-map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.tracking-map-legend-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; line-height: 0; }
+.tracking-map-legend-icon--commerce { background: #fff; color: var(--iris); box-shadow: inset 0 0 0 1.5px var(--iris); }
+.tracking-map-legend-icon--livreur { background: var(--iris); color: var(--lime); }
+.tracking-map-legend-icon--maison { background: var(--lime); color: var(--ink); }
 /* Trace du trajet déjà parcouru par le livreur (voir DeliveryTrackingMap.jsx) : une ligne, pas un point
    — repère visuel différent des icônes rondes ci-dessus pour ne pas laisser croire à un 4e lieu fixe. */
-.tracking-map-legend-line { display: inline-block; width: 16px; height: 3px; border-radius: var(--radius-pill); flex-shrink: 0; }
+.tracking-map-legend-line { display: inline-block; width: 22px; height: 5px; border-radius: var(--radius-pill); flex-shrink: 0; background: var(--iris); }
 
 /* Fraîcheur de la position du livreur (DeliveryTrackingMap.jsx). Discrète tant que la position avance,
    franchement visible dès qu'elle est figée : le partage s'arrête quand le téléphone du livreur se
    verrouille, et une carte immobile ne doit jamais se faire passer pour un suivi en direct. */
-.tracking-map-freshness { margin-top: 8px; text-align: center; font-size: 11px; color: var(--ink-soft); }
+.tracking-map-freshness { margin-top: 8px; text-align: center; font-size: 13px; color: var(--ink-soft); }
 .tracking-map-freshness.stale { color: var(--red); font-weight: 500; }
 
 /* Anneau qui pulse autour du livreur (DeliveryTrackingMap.jsx) — signale "en mouvement, en direct" d'un
    coup d'œil, dans l'esprit des apps de livraison grand public. Transform/opacity uniquement : léger
    pour le GPU, ne redéclenche jamais de layout. */
-.tracking-driver-pulse {
-  position: absolute; inset: 0; border-radius: 50%; background: rgba(20, 18, 31, 0.55);
-  animation: trackingDriverPulse 2s ease-out infinite;
-}
-@keyframes trackingDriverPulse {
-  0% { transform: scale(1); opacity: 0.55; }
-  100% { transform: scale(2.2); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .tracking-driver-pulse { animation: none; display: none; }
-}
+/* PASTILLES DES CARTES (marqueursCarte.js) : le livreur iris au vélo lime, la maison lime, le commerce cerclé d'iris, chacun
+   avec un anneau blanc qui le détache des tuiles. L'onde lente autour du livreur dit « en direct » d'un coup d'œil :
+   transform/opacity seulement, léger pour le GPU, coupée quand on demande moins de mouvement. */
+.carte-pastille { position: relative; width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; line-height: 0; }
+.carte-pastille--livreur { background: var(--iris); color: var(--lime); box-shadow: 0 0 0 3px #fff, 0 3px 10px rgba(42, 33, 133, .35); }
+.carte-pastille--maison { background: var(--lime); color: var(--ink); box-shadow: 0 0 0 3px #fff, 0 2px 6px rgba(20, 18, 31, .25); }
+.carte-pastille--commerce { background: #fff; color: var(--iris); box-shadow: 0 0 0 2px var(--iris), 0 2px 6px rgba(20, 18, 31, .2); }
+.carte-pastille svg { position: relative; }
+.carte-pastille-onde { position: absolute; inset: -3px; border-radius: 50%; border: 3px solid var(--iris); opacity: 0; animation: carte-onde 2s ease-out infinite; }
+@keyframes carte-onde { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(1.9); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .carte-pastille-onde { animation: none; display: none; } }
 
 /* Compact (140px de large), le tableau de bord tient sur deux lignes : record + 📖, puis score et niveau. */
 /* Les trois cœurs (GameFrame, VIES). Chaque cœur est remonté quand il change d'état (clé React) : un cœur qui se

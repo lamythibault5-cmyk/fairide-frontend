@@ -121,9 +121,20 @@ export async function telechargerPdfBlob(blob, nom = 'fairide.pdf') {
   await Share.share({ title: nom, url: uri });
 }
 
-// Vibration haptique native. `motif` suit la convention de navigator.vibrate : un nombre (ms) ou un tableau.
+// Vibration haptique native. `motif` suit la convention de navigator.vibrate : un nombre (ms) ou un tableau ; ou l'une
+// des sensations nommées du téléphone (gestes.js, HAPTIQUES) : 'succes', 'erreur', 'selection', 'moyen'.
+let selectionOuverte = false;
 export async function vibrerNatif(motif) {
   const { Haptics, ImpactStyle, NotificationType } = await import('@capacitor/haptics');
+  if (motif === 'succes') { await Haptics.notification({ type: NotificationType.Success }); return; }
+  if (motif === 'erreur') { await Haptics.notification({ type: NotificationType.Error }); return; }
+  if (motif === 'moyen') { await Haptics.impact({ style: ImpactStyle.Medium }); return; }
+  if (motif === 'selection') {
+    // Le « cran » d'une molette. Sans selectionStart, iOS comme Android ignorent selectionChanged : on l'ouvre une fois.
+    if (!selectionOuverte) { await Haptics.selectionStart(); selectionOuverte = true; }
+    await Haptics.selectionChanged();
+    return;
+  }
   if (Array.isArray(motif)) { await Haptics.notification({ type: NotificationType.Success }); return; }
   await Haptics.impact({ style: Number(motif) > 20 ? ImpactStyle.Medium : ImpactStyle.Light });
 }
@@ -141,6 +152,8 @@ export async function demarrerNatif(historique) {
   if (!estNatif()) return;
   const html = document.documentElement;
   html.classList.add('natif', `natif-${plateforme()}`);
+  // La photo d'un commerce voyage de sa carte à sa fiche (transitionPhoto.js, audit « Look and feel » 6b).
+  import('./transitionPhoto').then(({ installerTransitionPhoto }) => installerTransitionPhoto(historique)).catch(() => {});
 
   try {
     const { App } = await import('@capacitor/app');
@@ -206,6 +219,9 @@ export async function demarrerNatif(historique) {
     // Fond iris, texte clair — la couleur de `theme-color` et de l'écran de lancement.
     await StatusBar.setStyle({ style: Style.Dark });
     if (plateforme() === 'android') await StatusBar.setBackgroundColor({ color: '#3B2FB5' });
+    // Puis elle suit l'écran : iris sous un bandeau, blanche quand il s'est replié (barreEtat.js).
+    const { suivreBarreEtat } = await import('./barreEtat');
+    suivreBarreEtat({ StatusBar, Style, android: plateforme() === 'android' });
   } catch { /* greffon StatusBar absent */ }
 
   try {

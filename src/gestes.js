@@ -13,14 +13,24 @@ export function defilement() {
   return mouvementReduit() ? 'auto' : 'smooth';
 }
 
-// Un « tic » sous le doigt, comme un bouton physique. Android seulement ; muet ailleurs.
+// Un « tic » sous le doigt, comme un bouton physique. Dans l'app : le moteur haptique ; sur le site : navigator.vibrate
+// (Android seulement, muet ailleurs).
 import { estNatif, vibrerNatif } from './natif';
+
+/* LES SENSATIONS NOMMÉES (fondateur, 2026-10-19, audit « Look and feel » 6a). Un tic léger partout, c'était la même chose
+ * pour un + et pour un paiement accepté. On se sert maintenant de celles que le téléphone connaît :
+ *   'succes'    deux tapes, la seconde plus forte : paiement confirmé, commande acceptée par le commerce ;
+ *   'erreur'    trois tapes fermes : tout message d'erreur (le toast rouge, ToastContext.jsx) ;
+ *   'selection' le cran d'une molette : les lentilles (onglets, puces, sections) qui passent sur un élément ;
+ *   'moyen'     une tape franche : la lentille qui se pose, le seuil du « tirer pour actualiser ».
+ * Sur le site, chacune a son équivalent en millisecondes pour navigator.vibrate. */
+const HAPTIQUES = { succes: [10, 40, 18], erreur: [14, 40, 14, 40, 14], selection: 4, moyen: 16 };
 
 export function vibrer(motif = 12) {
   if (mouvementReduit()) return;
   // Application native : le moteur haptique (Taptic Engine sur iPhone, où navigator.vibrate n'existe pas).
   if (estNatif()) { vibrerNatif(motif).catch(() => {}); return; }
-  try { navigator.vibrate?.(motif); } catch { /* non pris en charge */ }
+  try { navigator.vibrate?.(HAPTIQUES[motif] ?? motif); } catch { /* non pris en charge */ }
 }
 
 // Où atterrit un ajout : la pilule du panier si elle est affichée, sinon l'endroit où elle va apparaître

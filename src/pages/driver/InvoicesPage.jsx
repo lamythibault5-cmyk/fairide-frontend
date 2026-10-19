@@ -41,11 +41,22 @@ export default function InvoicesPage() {
     tips: monthOrders.reduce((a, o) => a + o.tipAmount, 0)
   }), [monthOrders]);
 
-  if (!orders) return <SkeletonCards count={3} />;
-
-  // Sur le site, le bandeau iris de l'espace livreur (PageLivreur.jsx) ; dans l'app, le titre de section, comme avant.
+  // BANDEAU ET FEUILLE, DANS L'APP AUSSI (fondateur, 2026-10-19, finitions-appli.html, section 4) : « ← Mon compte » et le
+  // titre sur le bandeau iris ; dans la feuille, des titres de section en petites capitales et des lignes à filet au lieu des
+  // cartes encadrées. Le tableau des relevés (InvoiceArchive, partagé avec le commerce) n'est pas touché : sur un téléphone,
+  // ecran-livreur.css en fait une ligne par relevé, et ses colonnes sans en-tête y reprennent leur libellé par les variables
+  // ci-dessous (--ecl-lib-*), traduites ici. Mêmes actions qu'avant : PDF, mois, Imprimer (site).
+  const libelles = {
+    '--ecl-lib-numero': JSON.stringify(`${t('invoiceArchive.number')} `),
+    '--ecl-lib-emise': JSON.stringify(`${t('invoiceArchive.issuedOn')} `),
+    '--ecl-lib-ht': JSON.stringify(`${t('invoiceArchive.amountExVat')} `),
+    '--ecl-lib-tva': JSON.stringify('TVA ')
+  };
   return (
-    <PageLivreur titre={t('invoicesDriver.title')} sous={t('siteLivreur.facturesSous')}>
+    <PageLivreur classe="ecl-factures" bandeauApp retourCompte titre={t('invoicesDriver.title')} sous={t('siteLivreur.facturesSous')}>
+      <div style={libelles}>
+      {!orders ? <SkeletonCards count={3} /> : (
+      <>
 
       {/* Relevés mensuels des ventes encaissées pour son compte (fondateur, 2026-10-14 : plus des autofacturations,
           art. 53 §2 C.TVA) : pièce de son journal des recettes (AR n°1 art. 14), pas une facture — ni UBL ni Peppol.
@@ -59,54 +70,56 @@ export default function InvoicesPage() {
         colonneMontant="Total"
       />
 
-      <div className="card no-print">
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('invoicesDriver.paymentsSummary')}</h3>
-        <p className="small" style={{ margin: '0 0 12px' }}>
-          {t('invoicesDriver.intro')}
-        </p>
-        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 180 }} />
+      <section className="no-print">
+        <h2 className="ecl-titre-sec">{t('invoicesDriver.paymentsSummary')}</h2>
+        <p className="small ecl-factures-intro">{t('invoicesDriver.intro')}</p>
+        <div className="ecl-factures-mois">
+          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} aria-label={t('invoicesDriver.paymentsSummary')} />
           {/* Imprimer n'existe pas dans l'application (WebView) : le bouton n'y faisait rien. */}
-          {!experienceApp() && <button className="btn-teal" onClick={() => window.print()}>{t('invoicesDriver.print')}</button>}
+          {!experienceApp() && <button type="button" className="btn-teal" onClick={() => window.print()}>{t('invoicesDriver.print')}</button>}
         </div>
-      </div>
+      </section>
 
-      <div className="card">
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>{user?.name}</div>
-          {user?.email && <div className="small">{user.email}</div>}
+      {/* Le récap imprimable : le nom, le mois, puis une ligne à filet par course livrée (date, commerce, frais, pourboire). */}
+      <section className="ecl-recap">
+        <div className="ecl-recap-qui">
+          <b>{user?.name}</b>
+          {user?.email && <span className="small">{user.email}</span>}
         </div>
-        <h4 style={{ margin: '0 0 10px' }}>{t('invoicesDriver.paymentsReceived', { month: new Date(`${month}-01`).toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' }) })}</h4>
+        <h3 className="ecl-recap-mois">{t('invoicesDriver.paymentsReceived', { month: new Date(`${month}-01`).toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' }) })}</h3>
         {monthOrders.length === 0 && <EtatVide icone="document" titre={t('invoicesDriver.none')} />}
         {monthOrders.length > 0 && (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table className="ecl-recap-table">
             <thead>
-              <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left' }}>
-                <th style={{ padding: '6px 4px' }}>{t('invoicesDriver.date')}</th>
-                <th style={{ padding: '6px 4px' }}>{t('invoicesDriver.restaurant')}</th>
-                <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t('invoicesDriver.deliveryFee')}</th>
-                <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t('invoicesDriver.tip')}</th>
+              <tr>
+                <th>{t('invoicesDriver.date')}</th>
+                <th>{t('invoicesDriver.restaurant')}</th>
+                <th className="num">{t('invoicesDriver.deliveryFee')}</th>
+                <th className="num">{t('invoicesDriver.tip')}</th>
               </tr>
             </thead>
             <tbody>
               {monthOrders.map((o) => (
-                <tr key={o.id} style={{ borderBottom: '1px solid var(--line)' }}>
-                  <td style={{ padding: '6px 4px' }}>{new Date(o.createdAt).toLocaleDateString(getLocale())}</td>
-                  <td style={{ padding: '6px 4px' }}>{o.restaurantName}</td>
-                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{euros(Number(o.driverFee ?? o.deliveryFee))}</td>
-                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.tipAmount > 0 ? `${euros(o.tipAmount)}` : '-'}</td>
+                <tr key={o.id}>
+                  <td>{new Date(o.createdAt).toLocaleDateString(getLocale())}</td>
+                  <td>{o.restaurantName}</td>
+                  <td className="num">{euros(Number(o.driverFee ?? o.deliveryFee))}</td>
+                  <td className="num">{o.tipAmount > 0 ? euros(o.tipAmount) : '-'}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
-              <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
-                <td style={{ padding: '8px 4px' }} colSpan={2}>{t('invoicesDriver.total')}</td>
-                <td style={{ padding: '8px 4px', textAlign: 'right' }}>{euros(totals.deliveryFees)}</td>
-                <td style={{ padding: '8px 4px', textAlign: 'right' }}>{euros(totals.tips)}</td>
+              <tr>
+                <td colSpan={2}>{t('invoicesDriver.total')}</td>
+                <td className="num">{euros(totals.deliveryFees)}</td>
+                <td className="num">{euros(totals.tips)}</td>
               </tr>
             </tfoot>
           </table>
         )}
+      </section>
+      </>
+      )}
       </div>
     </PageLivreur>
   );
