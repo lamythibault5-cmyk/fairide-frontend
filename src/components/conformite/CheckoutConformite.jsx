@@ -47,7 +47,7 @@ export default function CheckoutConformite({ restaurant, lignes, valeur, onChang
   const allergie = (
     <>
         <div className="field" style={{ marginTop: 6 }}>
-          <label htmlFor={`${id}-allergie`} className="small">{t('conformite.allergyLabel')}</label>
+          <label htmlFor={`${id}-allergie`} className="small etiquette-dessus">{t('conformite.allergyLabel')}</label>
           <textarea id={`${id}-allergie`} rows={2} maxLength={500} value={valeur.allergyRequest || ''}
             onChange={(e) => maj({ allergyRequest: e.target.value })} placeholder={t('conformite.allergyPlaceholder')} />
         </div>

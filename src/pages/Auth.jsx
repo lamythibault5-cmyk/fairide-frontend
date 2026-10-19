@@ -1286,13 +1286,13 @@ export default function Auth() {
                   <div className="field" style={{ flex: 1 }}>
                     <label htmlFor="auth-f-3">{t('auth.firstName')}</label>
                     <input id="auth-f-3" className={errors.firstName ? 'input-invalid' : undefined}
-                      value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t('auth.firstName')} autoComplete="given-name" />
+                      value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="given-name" />
                     {fieldError('firstName')}
                   </div>
                   <div className="field" style={{ flex: 1 }}>
                     <label htmlFor="auth-f-4">{t('auth.lastName')}</label>
                     <input id="auth-f-4" className={errors.lastName ? 'input-invalid' : undefined}
-                      value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t('auth.lastName')} autoComplete="family-name" />
+                      value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="family-name" />
                     {fieldError('lastName')}
                   </div>
                 </div>

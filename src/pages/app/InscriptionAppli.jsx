@@ -61,10 +61,13 @@ function decoderJwt(jeton) {
 
 // Un champ de l'accueil : libellé, saisie, puis l'erreur à la place de l'aide.
 // `labelMasque` : le titre de l'écran sert déjà de libellé à l'œil, celui-ci est pour les lecteurs d'écran.
+// L'étiquette se pose DANS le champ (style B, étiquette flottante : voir styles.css, « L'ÉTIQUETTE FLOTTANTE ») ; au-delà de
+// 45 caractères elle ne tiendrait pas sur une ligne et reste au-dessus (.etiquette-dessus).
 export function Champ({ id, label, labelMasque, erreur, aide, children }) {
+  const classe = labelMasque ? 'sr-only' : typeof label === 'string' && label.length > 45 ? 'etiquette-dessus' : undefined;
   return (
     <div className="bv-champ">
-      {label && <label htmlFor={id} className={labelMasque ? 'sr-only' : undefined}>{label}</label>}
+      {label && <label htmlFor={id} className={classe}>{label}</label>}
       {children}
       {erreur ? <p className="field-error" role="alert">{erreur}</p> : aide ? <p className="bv-aide">{aide}</p> : null}
     </div>

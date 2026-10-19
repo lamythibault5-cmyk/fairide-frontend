@@ -68,7 +68,7 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
       {!gratuite && (
         <>
           <div className="field" style={{ maxWidth: 240 }}>
-            <label htmlFor={ids + '-remise'}>{t('editResto.fixedDiscount')}</label>
+            <label htmlFor={ids + '-remise'} className="etiquette-dessus">{t('editResto.fixedDiscount')}</label>
             <input id={ids + '-remise'} type="number" inputMode="decimal" min="0" max="50" step="0.5" value={remise} onChange={(e) => setRemise(e.target.value)} placeholder={t('editResto.phEx2')} />
           </div>
           <label className="row" style={{ gap: 8, margin: '12px 0', cursor: 'pointer' }}>

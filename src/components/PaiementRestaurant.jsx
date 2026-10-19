@@ -76,8 +76,8 @@ function CoordonneesLegales({ restaurant, onSaved, enchainer = false }) {
           <p className="small" style={{ margin: '4px 0 10px' }}>{t('paiementResto.legalIntro')}</p>
           <div className="field"><label htmlFor="legal-nom">{t('paiementResto.legalNameLabel')}</label><input id="legal-nom" value={legalName} onChange={(e) => setLegalName(e.target.value)} /></div>
           <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}><label htmlFor="legal-bce">{t('paiementResto.companyNumberLabel')}</label><input id="legal-bce" inputMode="numeric" value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" /></div>
-            <div className="field" style={{ flex: 1 }}><label htmlFor="legal-tva">{t('paiementResto.vatNumberLabel')}</label><input id="legal-tva" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="BE0123.456.789" /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor="legal-bce" className="etiquette-dessus">{t('paiementResto.companyNumberLabel')}</label><input id="legal-bce" inputMode="numeric" value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor="legal-tva" className="etiquette-dessus">{t('paiementResto.vatNumberLabel')}</label><input id="legal-tva" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="BE0123.456.789" /></div>
           </div>
           {verif && verif.valid === true && <p className="small" style={{ margin: '-4px 0 8px' }}>{t('paiementResto.companyVerified', { name: verif.legalName || '' })}</p>}
           {verif && verif.valid === false && <p className="small" style={{ margin: '-4px 0 8px' }}>{t('paiementResto.companyNotFound')}</p>}

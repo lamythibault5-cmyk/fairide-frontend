@@ -16,6 +16,7 @@ import FloatingCart from './FloatingCart';
 import { SkeletonCards, SqueletteEcran } from './Skeleton';
 import { estNatif, experienceApp, plateforme } from '../natif';
 import { lireBienvenue } from '../bienvenue';
+import useBarreSurIris from '../hooks/useBarreSurIris';
 // Le cadre du site (barre latérale blanche, largeurs, bandeau et feuille, carte des cookies, connexion) : voir son en-tête.
 import '../site-cadre.css';
 
@@ -139,6 +140,9 @@ export default function Layout() {
   // rechargement complet, au plus une fois toutes les deux minutes pour ne jamais boucler.
   const [remontage, setRemontage] = useState(0);
   const zone = useRef(null);
+  // La barre d'app sans compte devient iris au-dessus d'un bandeau iris (useBarreSurIris.js, fondateur 2026-10-19).
+  const barreAppli = useRef(null);
+  useBarreSurIris(barreAppli, APPLI);
   // Le retour en haut à chaque changement de page est fait par ScrollRestorer (une seule règle, répétée le temps que
   // la page se charge) : il y en avait deux ici, qui se marchaient dessus au retour arrière.
   useEffect(() => {
@@ -257,7 +261,7 @@ export default function Layout() {
     const accueilListe = location.pathname === '/restaurants' || location.key === 'default';
     return (
       <>
-        <div className="appli-barre">
+        <div className="appli-barre" ref={barreAppli}>
           {accueilListe ? (
             // La marque n'est pas un lien (fondateur, 2026-10-16) : « / » ramenait sur cette même liste.
             <span className="appli-marque"><BrandMark size={30} /><span className="wordmark">fairide</span></span>

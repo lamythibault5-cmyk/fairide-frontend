@@ -41,10 +41,9 @@
   --line: #E2E2E2;       /* filets 1px */
   --chip: #1E1A17;       /* petits badges sombres à texte blanc */
 
-  /* Surfaces grises — ce qui remplace les filets pour délimiter un champ ou une sous-zone.
-     C'est le geste le plus visible emprunté à Uber : un champ n'est plus un rectangle blanc
-     cerné d'un trait, c'est un aplat gris posé sur le blanc. */
-  --surface-soft: #EFEFEF;   /* champs de saisie, puces, sous-zones */
+  /* Surfaces grises — puces, sous-zones. Plus les champs de saisie depuis le 2026-10-19 : ils sont blancs à filet (style B,
+     voir « CHAMPS DE SAISIE » plus bas). */
+  --surface-soft: #EFEFEF;   /* puces, sous-zones (jamais un champ de saisie) */
   --surface-softer: #F3F3F3; /* champ imbriqué dans une carte déjà grise */
 
   /* Alias historiques (voir l'en-tête ci-dessus) */
@@ -74,7 +73,8 @@
      complètement rond, contenant franchement carré — remplace l'ancien couple 20px/6px : il dit
      au premier coup d'œil ce qui répond au doigt et ce qui ne répond pas. */
   --radius: 16px;         /* cartes et conteneurs */
-  --radius-field: 8px;    /* champs de saisie */
+  --radius-field: 8px;    /* petits contenants (les champs de saisie ont le leur, --radius-saisie) */
+  --radius-saisie: 16px;  /* champs de saisie (style B, 2026-10-19) */
   --radius-pill: 999px;   /* tout ce qui se clique */
   /* --radius-chip a d'abord été basculé à 999px pour transformer d'un coup toutes les puces en
      pilules. C'était faux : sur ses quarante appels, la moitié ne sont pas des puces mais des
@@ -125,6 +125,11 @@
      à 0,12 et 0,15 d'opacité — pour un seul et même message. */
   --ring: 0 0 0 3px rgba(59, 47, 181, 0.15);        /* focus clavier, sélection */
   --ring-erreur: 0 0 0 3px rgba(217, 45, 60, 0.15); /* champ refusé */
+  /* Champ de saisie qui a le focus (style B) : l'arête iris passe à 1,5 px (le demi-pixel est une ombre intérieure, donc
+     rien ne bouge dans le champ) et un halo iris pâle de 4 px l'entoure. Même chose en rouge pour un champ refusé. */
+  --iris-tint: #EFEDFB;
+  --anneau-champ: inset 0 0 0 .5px var(--iris), 0 0 0 4px var(--iris-tint);
+  --anneau-champ-erreur: inset 0 0 0 .5px var(--red), 0 0 0 4px #FBE9EA;
 
   /* Échelle typographique (DESIGN.md § Typography). Posée ici en jetons pour que les surfaces
      reprises une à une s'y accrochent au lieu de réinventer une taille à chaque fois. */
@@ -444,25 +449,26 @@ label.row > span { min-width: 0; }
 .promo-badge { position: absolute; top: 10px; left: 10px; right: 10px; background: var(--lime); color: var(--ink); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-pill); z-index: 1; width: fit-content; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 
-/* CHAMP GRIS, PAS RECTANGLE CERNÉ (DESIGN.md § Inputs). Un champ est maintenant un aplat gris
-   sur le blanc : la zone où l'on écrit se voit à la couleur, pas à un trait. C'est ce qui donne
-   aux formulaires d'Uber leur air posé — quinze champs cernés font quinze cadres, quinze aplats
-   gris font une seule zone de saisie.
-   La hauteur monte (14px de padding contre 10) et le texte à 15px : sous 16px, Safari iOS zoome
-   automatiquement à la mise au point du champ, ce qui décale la page. 15px reste sous ce seuil
-   mais reste confortable ; les champs qu'on veut vraiment gros passeront à 16px un par un. */
+/* CHAMPS DE SAISIE, STYLE B (fondateur, 2026-10-19, maquette « champs » : « B · étiquette flottante »). Un champ est un
+   rectangle BLANC à filet de 1 px, rayon 16 px — plus l'aplat gris d'avant, le dernier troisième fond de l'app. Texte à
+   16 px : en dessous, Safari iOS zoome à la mise au point. 52 px de haut ; 56 avec une étiquette flottante (plus bas).
+   Focus : arête iris 1,5 px + halo iris pâle de 4 px (--anneau-champ), sans rien décaler. L'étiquette qui flotte dans le
+   champ est réglée plus bas, après `.field` (« L'ÉTIQUETTE FLOTTANTE »). */
 input, select, textarea {
-  font-family: inherit; font-size: 15px; padding: 14px 16px;
-  border: 1px solid transparent; border-radius: var(--radius-field); background: var(--surface-soft); color: var(--ink); width: 100%;
-  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+  font-family: inherit; font-size: 16px; line-height: 1.25; padding: 15px 16px;
+  border: 1px solid var(--line); border-radius: var(--radius-saisie); background: #fff; color: var(--ink); width: 100%;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
-/* À la mise au point, le champ devient blanc et prend une arête iris : le gris dit « ici on peut
-   écrire », le blanc dit « ici on écrit maintenant ». L'anneau est conservé, contrairement à Uber
-   qui n'en met pas : c'est le seul repère d'un visiteur qui navigue au clavier. */
 input:focus, select:focus, textarea:focus {
-  outline: none; background-color: #fff; border-color: var(--iris); box-shadow: var(--ring);
+  outline: none; background-color: #fff; border-color: var(--iris); box-shadow: var(--anneau-champ);
 }
 input::placeholder, textarea::placeholder { color: var(--ink-mute); }
+/* Désactivé ou en lecture seule : toujours blanc et lisible comme un champ, mais le filet passe en pointillés et le texte
+   en encre douce — « ici on ne peut pas écrire », sans nouveau gris. */
+input:disabled, select:disabled, textarea:disabled, input[readonly], textarea[readonly] {
+  background-color: #fff; border-style: dashed; color: var(--ink-soft); -webkit-text-fill-color: var(--ink-soft); opacity: 1;
+}
+input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; }
 /* Une case à cocher n'est pas un champ de saisie : sans ceci, elle héritait du width: 100% ci-dessus et, dans un
    <label> en flex, prenait toute la ligne et poussait son texte hors de l'écran (« Ma carte contient des boissons
    alcoolisées », fiche du commerce, au téléphone). 42 des 85 cases le corrigeaient une à une ; celles-ci plus. */
@@ -472,7 +478,7 @@ input[type="checkbox"], input[type="radio"] { width: auto; flex: none; padding: 
    Safari sur iPhone dessine lui-même ce qu'on ne redessine pas : le bouton blanc du curseur posé sur notre piste iris,
    ses menus déroulants et ses champs de date à lui, centrés, à la hauteur qui varie. L'aperçu « téléphone » d'un
    navigateur d'ordinateur ne le montre pas (moteur de Chrome). Ici, une fois pour tout le site : les champs perdent le
-   dessin du système ; les menus gardent l'aplat gris des champs et reçoivent un chevron ; les dates et heures s'alignent à
+   dessin du système ; les menus ont le blanc à filet des champs et reçoivent un chevron ; les dates et heures s'alignent à
    gauche à la hauteur des autres champs ; les cases et les ronds prennent l'iris ; le curseur a une piste fine et un rond
    blanc cerclé d'iris, rempli jusqu'au rond (--pct, voir curseur.js). Même rendu sur l'iPhone, sur Android, sur le
    terminal des commerces et sur ordinateur. */
@@ -485,7 +491,7 @@ select {
   background-repeat: no-repeat; background-position: right 15px center; background-size: 14px 14px;
 }
 select[multiple], select[size]:not([size="1"]) { background-image: none; padding-right: 16px !important; }
-input[type="date"], input[type="time"], input[type="datetime-local"], input[type="month"] { display: block; min-width: 0; min-height: 50px; text-align: left; line-height: 1.3; }
+input[type="date"], input[type="time"], input[type="datetime-local"], input[type="month"] { display: block; min-width: 0; min-height: 52px; text-align: left; line-height: 1.25; }
 input::-webkit-date-and-time-value { text-align: left; margin: 0; }
 input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator { opacity: .55; cursor: pointer; }
 input[type="range"] {
@@ -516,6 +522,56 @@ label { font-size: 14px; font-weight: 500; color: var(--ink); display: block; ma
    la règle devient utile. Elle s'efface quand une vraie erreur s'affiche à sa place. */
 .champ-aide { margin: 6px 0 0; font-size: 13px; color: var(--ink-faint); line-height: 1.4; }
 .field { margin-bottom: 12px; }
+
+/* L'ÉTIQUETTE FLOTTANTE (style B, fondateur 2026-10-19). Sans toucher aux ~400 formulaires : partout où un conteneur
+   `.field` (ou `.bv-champ` de l'accueil de l'app, ou `.address-search`) commence par un <label> suivi directement du champ,
+   l'étiquette se pose DANS le champ, en haut à gauche (12 px, demi-gras). Champ vide et sans focus : elle descend au
+   milieu et tient lieu de texte d'exemple (16 px, encre pâle) — le vrai texte d'exemple est alors caché, il réapparaît au
+   focus. L'étiquette reste un vrai <label for> ; pointer-events: none laisse le toucher passer au champ.
+   « Vide » se lit en CSS : `:placeholder-shown` quand le champ a un texte d'exemple, sinon `[value=""]` (React recopie la
+   valeur d'un champ contrôlé dans l'attribut). Un champ qu'on ne peut pas lire vide garde l'étiquette en haut : jamais
+   d'étiquette posée sur une valeur.
+   Toujours en haut : menus, dates et heures, zones de texte, téléphone avec indicatif.
+   Restent AU-DESSUS du champ (le champ garde le style B) : une étiquette qui porte un lien, un bouton ou une case
+   (`.field-label-row`, « Mot de passe oublié ? », bulle d'aide), une étiquette qui n'est pas le premier enfant, les
+   étiquettes masquées (.sr-only), une étiquette trop longue pour tenir sur une ligne (classe .etiquette-dessus, posée à la
+   main, ou par les composants Champ au-delà de 45 caractères) et toute la console admin (formulaires denses).
+   Les sélecteurs sont longs parce que :has() ne s'imbrique pas ; ils se lisent tous « conteneur > label + champ ». */
+:is(.field, .bv-champ, .address-search):has(> label:first-child + :is(input, select, textarea, .password-input, .phone-input)) { position: relative; }
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *):has(+ :is(input:not([type]), input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="number"], input[type="search"], input[type="url"], input[type="date"], input[type="time"], input[type="datetime-local"], input[type="month"], select, textarea, .password-input, .phone-input)) {
+  position: absolute; z-index: 1; top: 9px; left: 17px; max-width: calc(100% - 34px); margin: 0; padding: 0;
+  font-size: 12px; line-height: 16px; font-weight: 600; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
+  transition: top .15s ease, font-size .15s ease, line-height .15s ease, color .15s ease;
+}
+/* Place pour l'œil du mot de passe et le chevron du menu : l'étiquette s'arrête avant (points de suspension). */
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *):has(+ :is(.password-input, select)) { max-width: calc(100% - 64px); }
+/* Une zone de texte défile sous son étiquette : un fond blanc pour qu'elles ne se mélangent pas. */
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *):has(+ textarea) { background: #fff; padding-right: 4px; }
+/* Le champ fait de la place à l'étiquette : 26 px au-dessus du texte, 8 dessous (56 px en tout). */
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *) + :is(input:not([type]), input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="number"], input[type="search"], input[type="url"], input[type="date"], input[type="time"], input[type="datetime-local"], input[type="month"], select),
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *) + :is(.password-input, .phone-input) > input {
+  padding-top: 26px; padding-bottom: 8px; min-height: 56px;
+}
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *) + textarea { padding-top: 30px; }
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *) + .phone-input > .phone-input-indicatif { padding-top: 18px; }
+/* Au repos (vide, sans focus) : l'étiquette au milieu, comme un texte d'exemple, et le vrai texte d'exemple caché. */
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *):has(+ :is(input:not([type]), input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="number"], input[type="search"], input[type="url"]):not(:focus):is(:placeholder-shown, [value=""]):not(:-webkit-autofill)),
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *):has(+ .password-input > input:not(:focus):is(:placeholder-shown, [value=""]):not(:-webkit-autofill)) {
+  top: 18px; font-size: 16px; line-height: 20px; font-weight: 400; color: var(--ink-faint);
+}
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *) + input:not(:focus)::placeholder,
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *) + .password-input > input:not(:focus)::placeholder { color: transparent; }
+/* Focus : l'étiquette passe à l'iris. Désactivé : encre pâle. Erreur (après, et prioritaire) : rouge, comme le filet. */
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *):has(+ :is(input, select, textarea):focus),
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *):has(+ :is(.password-input, .phone-input):focus-within) { color: var(--iris); }
+:is(.field, .bv-champ, .address-search) > label:first-child:not(.sr-only, .etiquette-dessus):not(:has(a, button, input, select, textarea, [role="button"])):not(:is(.admin-console, .record-drawer) *):has(+ :is(input, select, textarea):disabled) { color: var(--ink-faint); }
+:is(.field, .bv-champ) > label:first-child:has(+ :is(.input-invalid, [aria-invalid="true"])),
+:is(.field, .bv-champ) > label:first-child:has(+ .password-input > :is(.input-invalid, [aria-invalid="true"])),
+:is(.field, .bv-champ):has(> .field-error) > label:first-child { color: var(--red) !important; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.field, .bv-champ, .address-search) > label:first-child { transition: none; }
+}
 
 /* TOUS LES BOUTONS SONT DES PILULES (DESIGN.md § Buttons). 15px plutôt que les 16px d'Uber :
    leurs pages portent trois boutons, nos tableaux de bord en portent trente par écran, et un saut
@@ -1523,7 +1579,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    daltoniens — d'où le message écrit sous le champ, qui dit aussi lequel des quatre champs
    d'adresse est en cause, ce qu'un toast « adresse requise » ne disait pas. */
 .input-invalid { border-color: var(--red); }
-.input-invalid:focus { border-color: var(--red); box-shadow: var(--ring-erreur); }
+.input-invalid:focus { border-color: var(--red); box-shadow: var(--anneau-champ-erreur); }
 .field-error { margin: 5px 0 0; font-size: 12px; color: var(--red); }
 /* Pot de miel des formulaires publics : hors écran (jamais display:none, certains robots l'ignorent alors). */
 .hp-champ { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
@@ -3514,11 +3570,11 @@ button.dashboard-retour { background: none; border: 0; border-radius: 0; font-fa
    Le champ est le sujet de la page : grand, seul sur sa ligne, curseur dedans à l'arrivée. */
 .recherche-champ {
   display: flex; align-items: center; gap: 10px;
-  background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius);
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-saisie);
   padding: 4px 8px 4px 16px; margin: 0 0 16px;
-  transition: border-color .15s ease;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
-.recherche-champ:focus-within { border-color: var(--iris); }
+.recherche-champ:focus-within { border-color: var(--iris); box-shadow: var(--anneau-champ); }
 .recherche-loupe { display: flex; align-items: center; flex-shrink: 0; color: var(--ink-soft); }
 .recherche-champ input {
   flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
@@ -3836,11 +3892,11 @@ button.recherche-pastille { font: inherit; font-size: 13px; font-weight: 500; cu
 
 /* Champ mot de passe avec œil (PasswordInput.jsx). */
 .password-input { position: relative; }
-.password-input input { width: 100%; padding-right: 44px; }
+.password-input input { width: 100%; padding-right: 52px; }
 /* Centré SANS transform : la règle générale button:active (scale, ou transform: none sur tactile) remplaçait le
    translateY(-50%). À l'appui, l'œil sautait d'une demi-hauteur, le doigt ou la souris se relâchait à côté, et le
    clic était perdu — d'où un œil qui « ne marche pas toujours ». Zone de toucher de 40 px de large. */
-.password-eye { position: absolute; right: 2px; top: 0; bottom: 0; margin: auto 0; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0 6px; cursor: pointer; color: var(--ink-soft); line-height: 1; border-radius: 8px; touch-action: manipulation; }
+.password-eye { position: absolute; right: 6px; top: 0; bottom: 0; margin: auto 0; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0 6px; cursor: pointer; color: var(--ink-soft); line-height: 1; border-radius: 50%; touch-action: manipulation; }
 .password-eye:active, .password-eye:hover:active { transform: none; filter: none; background: rgba(59,47,181,0.12); }
 .password-eye:hover, .password-eye:focus-visible { background: rgba(59,47,181,0.08); }
 
@@ -3938,15 +3994,17 @@ button.doc-slot-vide { border: 0; cursor: pointer; font-family: inherit; }
 
 /* Téléphone pays + numéro (components/PhoneInput.jsx) : un seul cadre, le sélecteur de pays réduit à son
    drapeau + indicatif (la liste complète s'ouvre au clic), le numéro local à droite. */
-.phone-input { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: var(--radius-chip); background: #fff; overflow: hidden; }
-.phone-input:focus-within { border-color: var(--iris); box-shadow: var(--ring); }
+.phone-input { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: var(--radius-saisie); background: #fff; overflow: hidden; transition: border-color .15s ease, box-shadow .15s ease; }
+.phone-input:focus-within { border-color: var(--iris); box-shadow: var(--anneau-champ); }
+.phone-input.input-invalid:focus-within { border-color: var(--red); box-shadow: var(--anneau-champ-erreur); }
 .phone-input.input-invalid { border-color: var(--red); }
 .phone-input .phone-input-pays { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .phone-input { position: relative; }
-.phone-input .phone-input-indicatif { display: inline-flex; align-items: center; gap: 4px; padding: 0 10px; font-size: 14px; font-weight: 600; background: var(--cream-dim); border-right: 1px solid var(--line); white-space: nowrap; cursor: pointer; }
+/* Indicatif : sur le blanc du champ, sans aplat ni filet vertical (style B) — l'étiquette flottante passe au-dessus. */
+.phone-input .phone-input-indicatif { display: inline-flex; align-items: center; gap: 4px; padding: 0 0 0 16px; font-size: 16px; font-weight: 600; background: none; white-space: nowrap; cursor: pointer; }
 .phone-input .phone-input-indicatif::after { content: '▾'; font-size: 11px; opacity: 0.7; }
 .phone-input select.phone-input-pays { position: absolute; left: 0; top: 0; height: 100%; width: 96px; opacity: 0; cursor: pointer; }
-.phone-input input { border: none !important; border-radius: 0 !important; box-shadow: none !important; flex: 1; min-width: 0; }
+.phone-input input { border: none !important; border-radius: 0 !important; box-shadow: none !important; flex: 1; min-width: 0; padding-left: 8px; background: none; }
 .field .phone-input input:focus { outline: none; }
 
 /* Inscription : compte Google retenu (Auth.jsx) — résumé du profil connu, bouton pour en changer. */
@@ -4764,7 +4822,7 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .bandeau-ouverture-icone { color: var(--iris); flex: 0 0 auto; margin-top: 1px; }
 
 /* Demande de modification de carte (DemandeModifCarte.jsx). */
-.modif-carte textarea { font: inherit; padding: 10px 12px; border-radius: var(--radius-field, 12px); border: 1px solid var(--line); min-height: 76px; }
+.modif-carte textarea { font: inherit; padding: 12px 16px; min-height: 76px; }
 .modif-carte-liste { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
 .modif-carte-liste li { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; align-items: start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
 .modif-carte-texte { font-size: 13px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -5104,7 +5162,7 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 
 .bv-saisie { width: 100%; font-size: 22px; font-weight: 500; letter-spacing: .1em; padding: 16px; border: 1px solid var(--line); border-radius: 16px; text-align: center; background: #fff; }
 .bv-saisie.input-invalid { border-color: var(--red); }
-.bv-saisie:focus { outline: 2px solid var(--iris); border-color: var(--iris); }
+.bv-saisie:focus { outline: none; border-color: var(--iris); box-shadow: var(--anneau-champ); }
 
 /* Le cercle de livraison : toi au centre (lime sur iris), un point par commerce qui livre chez toi. */
 .bv-cercle { width: 190px; height: 190px; display: block; margin: 0 auto 22px; overflow: visible; }
@@ -5148,14 +5206,14 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-titre-form { font-size: 28px; }
 .bv-champ { margin-bottom: 14px; }
 .bv-champ > label { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
-.bv-champ input, .bv-champ select, .bv-creneau input { font-size: 16px; padding: 15px 16px; background-color: #fff; border: 1px solid var(--line); border-radius: 14px; }
+/* Les champs eux-mêmes : le style B commun (blanc, filet, 16 px de rayon, étiquette flottante), rien de plus ici. */
 .bv-champ .input-invalid, .bv-creneau .input-invalid { border-color: var(--red); }
-.bv-champ textarea { font-size: 16px; padding: 14px 16px; background: #fff; border: 1px solid var(--line); border-radius: 14px; resize: vertical; }
+.bv-champ textarea { resize: vertical; }
 .bv-option:disabled { opacity: .5; }
 /* Type de commerce : recherche, puis pastilles dans une boîte qui défile seule. Sa hauteur laisse à l'écran le titre, la
    recherche et le bouton à 375×667 ; avec « Autre », le champ à préciser prend sa place sous la boîte. */
 .bv-types-recherche { width: 100%; font-size: 16px; padding: 13px 16px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill); margin-bottom: 12px; }
-.bv-types-recherche:focus { outline: 2px solid var(--iris); border-color: var(--iris); }
+.bv-types-recherche:focus { outline: none; border-color: var(--iris); box-shadow: var(--anneau-champ); }
 .bv-types { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; max-height: max(120px, calc(100dvh - 385px)); overflow-y: auto; overscroll-behavior: contain; padding: 2px 2px 8px; margin-bottom: 12px; }
 .bv-types.avec-autre { max-height: max(110px, calc(100dvh - 490px)); }
 .bv-type { display: inline-flex; align-items: center; gap: 7px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 15px; font-weight: 500; transition: background .15s, color .15s, border-color .15s; }
@@ -5180,15 +5238,13 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-manques button { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 13px 0; background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; color: var(--ink); font-size: 15px; text-align: left; }
 .bv-manques button:last-child { border-bottom: 0; }
 .bv-chevron { transform: scaleX(-1); color: var(--ink-faint); flex: none; }
-.bv-champ .password-input input { padding-right: 48px; }
-.bv-champ .phone-input { border-radius: 14px; }
-.bv-champ .phone-input .phone-input-indicatif { padding: 0 12px; font-size: 15px; }
 .bv-champ .address-search { margin-bottom: 0; }
 .bv-champ .email-chips { margin-top: 8px; }
 .bv-form > .field-error { margin: -6px 0 12px; }
 .bv-aide { font-size: 13px; line-height: 1.4; color: var(--ink-faint); margin: 6px 0 0; }
 .bv-rangee { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
-.bv-rangee-inverse { grid-template-columns: 1fr 2fr; }
+/* 2fr / 3fr plutôt que 1fr / 2fr : « Code postal » tient en entier dans son étiquette flottante à 375 px. */
+.bv-rangee-inverse { grid-template-columns: 2fr 3fr; }
 .bv-rangee > .bv-champ { min-width: 0; }
 .bv-etiquette { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); margin: 4px 0 8px; }
 .bv-ajout { align-self: flex-start; background: none; border: 0; padding: 8px 0; color: var(--iris); font-size: 14px; font-weight: 600; }
@@ -5229,6 +5285,13 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .appli-marque .wordmark { font-size: 22px; }
 .appli-connexion { padding: 9px 16px; border-radius: var(--radius-pill); background: var(--iris); color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
 .appli-wrap { padding-top: 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+/* Au-dessus d'un bandeau iris, la barre prend l'iris (useBarreSurIris.js) : plus de bande blanche entre la barre d'état et le
+   bandeau. « Connexion » passe en blanc à texte iris, le retour rond en contour blanc ; la marque garde son vélo lime. */
+.appli-barre { transition: background .2s, border-color .2s; }
+.appli-barre.sur-iris { background: var(--iris); border-bottom-color: var(--iris); }
+.appli-barre.sur-iris .appli-marque { color: #fff; }
+.appli-barre.sur-iris .appli-connexion { background: #fff; color: var(--iris); }
+.appli-barre.sur-iris .bv-rond { color: #fff; border-color: rgba(255, 255, 255, .35); background: transparent; }
 
 /* Boutons « Continuer avec Apple / Google » de l'application (BoutonsConnexionNative.jsx) — aussi sur /login. */
 .connexion-native { display: flex; flex-direction: column; gap: 10px; width: 100%; }
