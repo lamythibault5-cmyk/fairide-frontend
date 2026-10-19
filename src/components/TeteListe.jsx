@@ -169,7 +169,7 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
             <div className={`lt-mode${mode.emporter ? ' lt-mode--emporter' : ''}`} role="group" aria-label={mode.libelleGroupe}>
               <span className="lt-mode-pouce" aria-hidden="true" />
               <button type="button" className={mode.emporter ? '' : 'on'} aria-pressed={!mode.emporter} onClick={() => mode.choisir(false)}>
-                <Icone nom="scooter" taille={18} />{mode.libelleLivraison}
+                <Icone nom="velo" taille={18} />{mode.libelleLivraison}
               </button>
               <button type="button" className={mode.emporter ? 'on' : ''} aria-pressed={mode.emporter} onClick={() => mode.choisir(true)}>
                 <Icone nom="sac" taille={18} />{mode.libelleEmporter}

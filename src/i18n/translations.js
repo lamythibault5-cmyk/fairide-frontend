@@ -22,7 +22,8 @@
  * revenir exactement à l'état d'avant, sans que rien ne le signale. */
 import fr from './fr.js';
 
-export const SUPPORTED_LANGUAGES = ['fr', 'en', 'nl'];
+// Ordre d'affichage des sélecteurs de langue : les deux langues de Bruxelles d'abord, comme le site (audit design, 2026-10-19).
+export const SUPPORTED_LANGUAGES = ['fr', 'nl', 'en'];
 export const DEFAULT_LANGUAGE = 'fr';
 
 // Tables chargées. Le français est là dès le départ ; les autres s'ajoutent après chargerLangue().

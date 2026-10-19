@@ -16,6 +16,20 @@ function resolve(dict, path) {
   return path.split('.').reduce((node, key) => (node == null ? undefined : node[key]), dict);
 }
 
+/* LES PLURIELS « (s) » S'ACCORDENT TOUT SEULS (audit design, 2026-10-19 : « 1 refusée(s) », « 1 actif(s) » à l'écran). Quand
+ * une phrase reçoit un compte ({n} ou {count}), ses marques de pluriel entre parenthèses deviennent le vrai mot : « (s) »,
+ * « (x) », « (es) », et en néerlandais « (en) » et « (e) » (« nieuw(e) bericht(en) »). En français 0 et 1 sont au singulier,
+ * en anglais et en néerlandais seul 1 l'est. Le « (e) » français est un accord de genre, pas un pluriel : il reste tel quel.
+ * Une phrase sans compte (« restaurant(s) » au milieu d'un texte) ne change pas. */
+const MARQUES_PLURIEL = { fr: /\((s|x|es)\)/g, en: /\((s|es)\)/g, nl: /\((en|s|e)\)/g };
+function accorder(texte, vars, langue) {
+  const brut = vars.n ?? vars.count;
+  const n = typeof brut === 'number' ? brut : Number(String(brut ?? '').replace(',', '.'));
+  if (brut === undefined || brut === null || brut === '' || !Number.isFinite(n) || !texte.includes('(')) return texte;
+  const singulier = langue === 'fr' ? Math.abs(n) < 2 : Math.abs(n) === 1;
+  return texte.replace(MARQUES_PLURIEL[langue] || MARQUES_PLURIEL.fr, (_, fin) => (singulier ? '' : fin));
+}
+
 // Traduction hors composant (api.js) : même règle que t() — langue active, puis français, puis la clé. Sans variables.
 // Les messages d'erreur du réseau et de session expirée y passaient en français quelle que soit la langue choisie.
 export function traduire(key) {
@@ -76,7 +90,7 @@ export function LanguageProvider({ children, initial = DEFAULT_LANGUAGE }) {
     if (value === undefined) value = resolve(translations[DEFAULT_LANGUAGE], key);
     if (value === undefined) return key;
     if (typeof value === 'string' && vars) {
-      return Object.entries(vars).reduce((s, [k, v]) => s.split(`{${k}}`).join(v), value);
+      return accorder(Object.entries(vars).reduce((s, [k, v]) => s.split(`{${k}}`).join(v), value), vars, language);
     }
     return value;
     // `tablesChargees` n'est pas lu dans le corps, mais il DOIT rester ici : il change quand la table

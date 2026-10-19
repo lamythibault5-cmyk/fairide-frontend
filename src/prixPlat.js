@@ -10,6 +10,29 @@ export function prixRemise(item) {
   return null;
 }
 
+// Remise d'une ligne du panier (`qty` fois ce plat), la règle du serveur : « −X % » et « −X € » sur le prix de base du plat
+// (pas sur les suppléments), « −X € » plafonné au prix du plat, « N achetés = 1 offert » par paquet de N + 1. Partagée par
+// CartContext.totals (panier, paiement) et la commande groupée, pour que chaque écran montre le même prix payé.
+export function remiseLigne(item, qty) {
+  const p = item?.activePromo;
+  if (!p || !(qty > 0)) return 0;
+  const prix = Number(item.price) || 0;
+  if (p.type === 'percent') return prix * qty * (Number(p.value) / 100);
+  if (p.type === 'amount') return Math.min(Number(p.value) || 0, prix) * qty;
+  if (p.type === 'bogo') return Math.floor(qty / ((Number(p.value) || 1) + 1)) * prix;
+  return 0;
+}
+
+// L'offre en deux ou trois signes, pour « −5 % inclus » sous une ligne du panier et « Offre Maestro −5 % » sur le ticket
+// du paiement : « −5 % » (espace insécable : « −5 » ne se sépare jamais de « % »), « −1 € », sinon le libellé complet.
+export function remiseCourte(p, t) {
+  if (!p) return null;
+  const v = Number(p.value);
+  if (p.type === 'percent' && Number.isFinite(v)) return getLocale().startsWith('en') ? `−${v}%` : `−${String(v).replace('.', ',')} %`;
+  if (p.type === 'amount' && Number.isFinite(v)) return `−${eurosCourt(v)}`;
+  return libellePromo(p, t);
+}
+
 // Montant en euros dans la langue affichée : 15,11 € (fr-BE), €15.11 (en-GB), € 15,11 (nl-BE).
 export function euros(v) {
   return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR' }).format(Number(v) || 0);

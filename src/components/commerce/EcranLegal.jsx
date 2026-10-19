@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import SousEcran from '../SousEcran';
 import BoutonEnregistrer from './BoutonEnregistrer';
 import useEnregistrerCommerce from './useEnregistrerCommerce';
+import Icone from '../Icone';
 
 // Mon commerce › Infos légales : l'entreprise (nom légal, BCE, TVA, responsable) et la sécurité
 // alimentaire (AFSCA, vente d'alcool). Ces numéros partent vers le contrat, les factures de commission
@@ -11,7 +12,7 @@ import useEnregistrerCommerce from './useEnregistrerCommerce';
 //
 // L'engagement de vérifier l'âge ne se décoche pas une fois donné : le serveur l'horodate et ne le
 // retire que si le commerce cesse de vendre de l'alcool.
-export default function EcranLegal({ restaurant, restoId, loadDashboard, onFermer }) {
+export default function EcranLegal({ restaurant, restoId, loadDashboard, onFermer, onSupprimer }) {
   const { t } = useLanguage();
   const toast = useToast();
   const ids = useId();
@@ -59,6 +60,16 @@ export default function EcranLegal({ restaurant, restoId, loadDashboard, onFerme
       <div className="field">
         <span className="small">{t('editResto.noAlcoholRule')}</span>
       </div>
+      {/* Supprimer le commerce : ici, au fond des infos légales, plutôt qu'en rouge sur l'accueil (audit design 2, 2026-10-19).
+          Ouvre le même écran qu'avant (EcranSuppression : motif, code envoyé par l'équipe). */}
+      {onSupprimer && (
+        <>
+          <div className="divider" />
+          <button type="button" className="btn-ghost" style={{ color: 'var(--red)', paddingLeft: 0 }} onClick={onSupprimer}>
+            <Icone nom="interdit" taille={16} className="icone-texte" />{' '}{t('editResto.deleteTitle')}
+          </button>
+        </>
+      )}
     </SousEcran>
   );
 }

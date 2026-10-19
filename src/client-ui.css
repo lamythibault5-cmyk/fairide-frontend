@@ -262,6 +262,52 @@
 .checkout-regle-retrait { margin: 6px 0 0; color: var(--ink-soft); }
 .suivi-total { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
 .suivi-total b { font-size: 17px; }
+/* UNE COMMANDE EN COURS SUIT SON MOMENT (Orders.jsx, audit design 2 du 2026-10-19). */
+/* Le livreur en une rangée : sa photo ou son initiale (iris, plus d'anneau lime sur le blanc), son prénom, « Appeler » en pilule iris. */
+.suivi-livreur { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; }
+.suivi-carte .driver-badge-photo, .sc-commandes .driver-badge-photo { box-shadow: none; }
+.suivi-carte .driver-badge-initiales, .sc-commandes .driver-badge-initiales { background: var(--iris); color: #fff; }
+.suivi-appeler { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 16px; border-radius: var(--radius-pill);
+  background: var(--iris); color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
+.suivi-appeler:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+/* Le code de remise : le libellé à gauche, les chiffres à droite, sur une ligne (la maquette). */
+.suivi-carte--bandeau .suivi-code { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; text-align: left; padding: 10px 14px; }
+.suivi-carte--bandeau .suivi-code-lib { margin: 0; }
+.suivi-carte--bandeau .suivi-code-valeur { font-size: 28px; letter-spacing: 6px; }
+.suivi-carte--bandeau .suivi-code-numero { grid-column: 1 / -1; margin-top: 4px; }
+/* La photo de la commande par le commerce : une vignette et une phrase ; toucher l'ouvre en grand. */
+.suivi-photo { display: flex; align-items: center; gap: 10px; width: 100%; margin: 12px 0; padding: 0; border: 0; background: none; text-align: left;
+  font: inherit; font-size: 13px; line-height: 1.4; color: var(--ink-soft); cursor: pointer; min-height: 0 !important; }
+.suivi-photo img { flex: none; width: 56px; height: 56px; border-radius: 14px; object-fit: cover; background: var(--cream-dim); }
+.suivi-photo b { color: var(--ink); font-weight: 700; }
+.suivi-photo-grande { display: block; width: 100%; height: auto; border-radius: var(--radius); }
+.suivi-carte .suivi-carte-trajet { margin-top: 0 !important; }
+/* « Détails » : articles, adresse, consignes, vendeur de la livraison, montant — repliés sous un filet. */
+.suivi-details { margin-top: 12px; border-top: 1px solid var(--line); }
+.suivi-details > summary { display: flex; align-items: center; gap: 10px; padding: 12px 0 4px; list-style: none; cursor: pointer; }
+.suivi-details > summary::-webkit-details-marker { display: none; }
+.suivi-details-texte { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.suivi-details-texte b { font-size: 14px; color: var(--ink); }
+.suivi-details-texte span { font-size: 12.5px; color: var(--ink-soft); }
+.suivi-details-chevron { flex: none; width: 9px; height: 9px; margin-right: 4px; border-right: 2px solid var(--ink-faint); border-bottom: 2px solid var(--ink-faint);
+  transform: rotate(45deg); transition: transform .2s; }
+.suivi-details[open] .suivi-details-chevron { transform: rotate(-135deg); }
+.suivi-details-corps { padding: 4px 0 2px; }
+.suivi-consignes { color: var(--ink-soft); margin: 2px 0 6px; }
+.vendeur-livraison { margin: 8px 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-chip); }
+.vendeur-livraison-attente { margin: 6px 0; color: var(--ink-soft); }
+.suivi-annuler { display: inline-block; width: auto; margin-top: 4px; padding: 8px 0; color: var(--red); font-weight: 600; }
+/* Commande refusée : le motif et le remboursement, rien d'autre. */
+.suivi-refus { margin: 4px 0 2px; font-size: 13px; line-height: 1.45; color: var(--ink); }
+.suivi-refus p { margin: 0 0 4px; }
+/* LE PIED : avis, pourboire, « Signaler un problème » en liens iris alignés sur le texte, puis « Commander à nouveau ». Les
+   deux étaient décalés (le lien fantôme gardait son retrait, le bouton sa marge à gauche). */
+.suivi-pied { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; margin-top: 10px; }
+.suivi-pied:empty { display: none; }
+.suivi-pied .suivi-lien, .suivi-pied > .btn-ghost { width: auto; min-height: 40px; margin: 0 !important; padding: 0 !important; border: 0; background: none;
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--iris); cursor: pointer; }
+.suivi-pied > p.small, .suivi-pied > form { margin: 0 !important; flex-basis: 100%; }
+.suivi-pied .suivi-recommander { margin: 2px 0 0; width: auto; }
 /* Paiement en ligne pas terminé (Orders.jsx) : encadré en filet iris, comme tout ce qui attend un geste du client. */
 .paiement-non-termine { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--iris); border-radius: var(--radius); }
 .suivi-carte.est-passee { padding-top: 16px; padding-bottom: 16px; }
@@ -293,6 +339,12 @@
 .route-suivi.en-route .rs-velo svg { animation: rs-pedale .5s ease-in-out infinite; }
 @keyframes rs-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
 .rs-libs { list-style: none; display: grid; padding: 0; margin: 0; text-align: center; font-size: 11.5px; line-height: 1.2; color: rgba(255, 255, 255, .6); }
+/* 375 px : « Envoyée » et « Préparation » se touchaient (audit design 2). Un écart entre les colonnes, une taille un cran plus
+   petite sur un petit écran, et « En cuisine » au lieu de « Préparation » (le mot du titre, « C’est en cuisine ») : deux mots
+   passent à la ligne entre eux, un seul mot trop long débordait sur son voisin. */
+.rs-libs { column-gap: 4px; }
+.rs-libs li { min-width: 0; }
+@media (max-width: 400px) { .rs-libs { font-size: 10.5px; letter-spacing: -.01em; } }
 .rs-libs .fait { color: rgba(255, 255, 255, .82); }
 .rs-libs .actuel { color: #fff; font-weight: 800; }
 @media (prefers-reduced-motion: reduce) { .route-suivi *, .suivi-bandeau-titre { animation: none !important; transition: none !important; } }

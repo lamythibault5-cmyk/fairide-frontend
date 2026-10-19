@@ -45,6 +45,8 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
   const panneau = useRef(null);
   const defile = useRef(null);
   const boutonAjouter = useRef(null);
+  // Le bloc de chaque groupe d'options, pour y amener le client quand il touche « Choisis d'abord … ».
+  const blocsGroupes = useRef({});
   const [ferme, setFerme] = useState(false);
 
   // SORTIE ANIMÉE : la feuille redescend avant de disparaître (et s'efface sur ordinateur), au lieu de s'éteindre
@@ -100,6 +102,11 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
     });
   }
 
+  // LES CHOIX OBLIGATOIRES D'ABORD (audit design 2, 2026-10-19) : chez Maestro, « Taille pizza » était le dernier groupe des
+  // données, et la fiche disait « Choisis d'abord « Taille pizza » » sans que le groupe soit à l'écran. L'ordre des
+  // données est gardé à l'intérieur des obligatoires et des facultatifs ; le panier et le ticket gardent l'ordre des données.
+  const groupesAffiches = [...groups.filter((g) => g.required), ...groups.filter((g) => !g.required)];
+
   let delta = 0;
   const snapshot = [];
   const optionItemIds = [];
@@ -124,8 +131,18 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
   // Total affiché = ce que le panier comptera : la remise du plat (Avantage Fairide, promo) s'applique au prix de base,
   // pas aux suppléments (même règle que CartContext.totals et le serveur).
   const total = +((prixUnite - (remise !== null ? Math.max(0, item.price - remise) : 0)) * qty).toFixed(2);
-  const manquants = groups.filter((g) => g.required && selections[g.id].size === 0);
+  const manquants = groupesAffiches.filter((g) => g.required && selections[g.id].size === 0);
   const bloque = manquants.length > 0;
+  // « Choisis d'abord … » se touche : la fiche défile jusqu'au groupe, qui clignote une fois (audit design 2, 2026-10-19).
+  function allerAuGroupe(g) {
+    const bloc = blocsGroupes.current[g.id];
+    if (!bloc) return;
+    vibrer('selection');
+    bloc.scrollIntoView({ behavior: mouvementReduit() ? 'auto' : 'smooth', block: 'start' });
+    bloc.classList.remove('plat-groupe--signale');
+    void bloc.offsetWidth; // relance l'animation si l'on touche deux fois
+    bloc.classList.add('plat-groupe--signale');
+  }
 
   return createPortal(
     <div className={`plat-feuille${ferme ? ' plat-feuille--ferme' : ''}`} role="dialog" aria-modal="true" aria-label={item.name} ref={racine} tabIndex={-1}>
@@ -167,11 +184,11 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
           {libellesAllergenes(item.allergens, t).length > 0 && <p className="small plat-allergenes">{t('conformite.allergensLine', { list: libellesAllergenes(item.allergens, t).join(', ') })}</p>}
           {!item.allergens?.length && item.allergensDeclaredNone && <p className="small plat-allergenes">{t('conformite.allergensNone')}</p>}
 
-          {groups.map((g) => {
+          {groupesAffiches.map((g) => {
             const choisis = selections[g.id];
             const requisNonRempli = g.required && choisis.size === 0;
             return (
-              <div key={g.id} className="plat-groupe">
+              <div key={g.id} className="plat-groupe" ref={(el) => { blocsGroupes.current[g.id] = el; }}>
                 <div className="plat-groupe-tete">
                   <b>{g.name}</b>
                   {g.required && (
@@ -226,7 +243,11 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
         {/* Pourquoi on ne peut pas ajouter — DANS le pied, au-dessus du bouton. Placée après, elle
             serait tombée sous la barre collante, donc hors de l'écran : un bouton grisé sans la
             moindre explication, exactement ce qu'on cherchait à éviter. */}
-        {bloque && <p className="plat-bloque">{t('platSheet.chooseRequired', { groupe: manquants[0].name })}</p>}
+        {bloque && (
+          <button type="button" className="plat-bloque" onClick={() => allerAuGroupe(manquants[0])}>
+            {t('platSheet.chooseRequired', { groupe: manquants[0].name })}
+          </button>
+        )}
         <div className="plat-quantite" role="group" aria-label={t('platSheet.quantity')}>
           <button type="button" onClick={() => { vibrer(6); setQty((q) => Math.max(1, q - 1)); }} disabled={qty <= 1} aria-label={t('platSheet.less')}>−</button>
           <span aria-live="polite" key={qty} className="plat-quantite-chiffre">{qty}</span>

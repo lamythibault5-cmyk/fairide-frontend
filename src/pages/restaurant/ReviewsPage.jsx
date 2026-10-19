@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -7,6 +7,7 @@ import { StarsDisplay } from '../../components/Stars';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import EtatVide from '../../components/EtatVide';
 import CadreSite from '../../components/commerce/CadreSite';
+import { ContexteAvis, SignatureReponse } from '../../components/AvisSignes';
 
 // La réponse du restaurateur est publique (visible aux clients sur la fiche resto, voir
 // RestaurantMenu.jsx) — pensée pour se justifier publiquement en cas d'avis contestable, pas comme
@@ -24,6 +25,23 @@ export default function ReviewsPage() {
   const [editingId, setEditingId] = useState(null);
   const [replyDrafts, setReplyDrafts] = useState({});
   const [saving, setSaving] = useState(false);
+  /* « SIGNER MES RÉPONSES » (audit design 2, idée 11f, 2026-10-19) : le prénom qui signe toutes les réponses publiques du
+     commerce (« — Marco »), sur sa fiche et ici. Facultatif, enregistré côté serveur (migration 051,
+     PATCH /restaurants/:id/review-signature) ; vide = réponses non signées. */
+  const idSignature = useId();
+  const signature = reviews?.signature || '';
+  const [brouillonSignature, setBrouillonSignature] = useState(signature);
+  const [signatureEnCours, setSignatureEnCours] = useState(false);
+  useEffect(() => { setBrouillonSignature(signature); }, [signature]);
+  async function enregistrerSignature(e) {
+    e.preventDefault();
+    setSignatureEnCours(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/review-signature`, { method: 'PATCH', token, body: { signature: brouillonSignature } });
+      toast(r.signature ? t('serviceCommerce.signerToast', { name: r.signature }) : t('serviceCommerce.signerToastVide'), 'succes');
+      await loadDashboard(restoId);
+    } catch (err) { toast(err.message, 'erreur'); } finally { setSignatureEnCours(false); }
+  }
 
   function startReply(review) {
     setEditingId(review.id);
@@ -67,12 +85,14 @@ export default function ReviewsPage() {
                   <b>{r.clientName}</b>
                   <StarsDisplay value={r.foodRating} size={13} />
                 </div>
+                <ContexteAvis avis={r} className="ec-avis-contexte" />
                 {r.foodComment && <p className="ec-avis-commentaire">{r.foodComment}</p>}
 
                 {r.restaurantReply && editingId !== r.id && (
                   <div className="ec-avis-reponse">
                     <small>{t('reviewsResto.yourReply')}</small>
                     <p>{r.restaurantReply}</p>
+                    <SignatureReponse signature={signature} />
                     <button type="button" className="ec-lien" onClick={() => startReply(r)}>{t('reviewsResto.edit')}</button>
                   </div>
                 )}
@@ -99,6 +119,17 @@ export default function ReviewsPage() {
           ))}
         </div>
       )}
+      <section className="ec-bloc" aria-labelledby={idSignature}>
+        <p className="ec-feuille-titre" id={idSignature}>{t('serviceCommerce.signerTitre')}</p>
+        <p className="ec-aide">{t('serviceCommerce.signerAide')}</p>
+        <form className="ec-signature" onSubmit={enregistrerSignature}>
+          <input aria-labelledby={idSignature} maxLength={30} autoComplete="given-name" value={brouillonSignature}
+            placeholder={t('serviceCommerce.signerPh')} onChange={(e) => setBrouillonSignature(e.target.value)} />
+          <button type="submit" className="ec-bouton ec-bouton--iris" disabled={signatureEnCours || brouillonSignature.trim() === signature}>
+            {signatureEnCours ? '…' : t('serviceCommerce.signerEnregistrer')}
+          </button>
+        </form>
+      </section>
     </CadreSite>
   );
 }

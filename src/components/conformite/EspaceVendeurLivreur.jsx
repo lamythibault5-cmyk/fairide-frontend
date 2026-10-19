@@ -62,7 +62,8 @@ export function DocumentsVente({ token }) {
           <button type="button" className="btn-ghost" style={{ padding: '2px 8px' }} onClick={() => ouvrir(d)}>{t('conformite.saleDocsOpen')}</button>
         </div>
       ))}
-      <CopieDac7 chemin={(a) => `/couriers/me/dac7/${a}.pdf`} token={token} />
+      {/* L'année en cours d'abord, puis la précédente si Fairide existait déjà (première année d'activité : 2026). */}
+      <CopieDac7 chemin={(a) => `/couriers/me/dac7/${a}.pdf`} token={token} annees={[new Date().getFullYear(), new Date().getFullYear() - 1].filter((a) => a >= 2026)} />
     </div>
   );
 }

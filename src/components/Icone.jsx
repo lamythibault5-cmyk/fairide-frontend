@@ -31,8 +31,13 @@ export const TRACES = {
   commerce: <><path d="M4 9h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9Z" /><path d="M3 9 5 4h14l2 5" /><path d="M9 21v-6h6v6" /></>,
   reservations: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18" /><path d="M8 3v4" /><path d="M16 3v4" /></>,
   apercu: <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></>,
+  // Appareil photo : « Photographier la commande » (c'était l'œil d'« apercu », qui se lisait « voir »).
+  photo: <><path d="M4 8h3l1.5-2.5h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" /><circle cx="12" cy="13.5" r="3.5" /></>,
   masque: <><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a18.3 18.3 0 0 1-2.9 3.8M6.6 6.6A18.3 18.3 0 0 0 2 12s3.6 7 10 7a10.8 10.8 0 0 0 4.2-.8" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /><path d="m3 3 18 18" /></>,
   dossier: <><rect x="2" y="5" width="20" height="14" rx="2" /><circle cx="8.5" cy="11" r="2" /><path d="M5 16c.6-1.5 2-2.2 3.5-2.2S11.4 14.5 12 16" /><path d="M15 10h4" /><path d="M15 14h4" /></>,
+  // Le vélo « 5a » de la marque en traits (BrandMark.jsx ramené à la grille de 24) : LE symbole de la livraison chez Fairide
+  // (fondateur, 2026-10-19 : « on peut mettre un vélo Fairide »). « scooter » reste pour le véhicule d'un livreur en scooter.
+  velo: <><circle cx="4.7" cy="14.7" r="3.7" /><circle cx="18.3" cy="14.7" r="3.7" /><path d="M5.2 9.2h11.5" /><path d="M5.2 10 11.3 15.6" /></>,
   scooter: <><circle cx="5.5" cy="17.5" r="2.5" /><circle cx="18.5" cy="17.5" r="2.5" /><path d="M8 17.5h8" /><path d="M18.5 17.5 16 7h-3" /><path d="M5.5 15V12h6l3.5 5.5" /></>,
   sac: <><path d="M5 8h14l-1 12a1 1 0 0 1-1 .9H7a1 1 0 0 1-1-.9L5 8Z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></>,
 

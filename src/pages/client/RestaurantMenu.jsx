@@ -18,6 +18,7 @@ import EtatVide from '../../components/EtatVide';
 import Modale from '../../components/Modale';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { StarsDisplay } from '../../components/Stars';
+import { ContexteAvis, SignatureReponse } from '../../components/AvisSignes';
 // Chargée à la demande, même raison que dans RestaurantList.jsx : Leaflet ne doit pas retarder
 // l'affichage d'une fiche de commerce, qui est une page publique et indexable.
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
@@ -769,7 +770,7 @@ export default function RestaurantMenu() {
           <div className="fiche-offres-texte">
             {restaurant.fairideAdvantage && (
               <span>{restaurant.fairideAdvantage.mode === 'amount'
-                ? t('restaurantMenu.fairideAdvantageAmount', { name: restaurant.name, v: `${Number(restaurant.fairideAdvantage.value).toFixed(2).replace('.', ',').replace(/,00$/, '')} €` })
+                ? t('restaurantMenu.fairideAdvantageAmount', { name: restaurant.name, v: `${Number(restaurant.fairideAdvantage.value).toFixed(2).replace('.', ',').replace(/,00$/, '')} €` })
                 : t('restaurantMenu.fairideAdvantagePercent', { name: restaurant.name, v: restaurant.fairideAdvantage.value })}</span>
             )}
             {restaurant.hasPromo && !restaurant.fairideAdvantage && <span>{t('restaurantMenu.promoBanner')}</span>}
@@ -777,8 +778,8 @@ export default function RestaurantMenu() {
               <span>{restaurant.freeDelivery
                 ? t('restoMenuUi.freeDeliveryBy', { name: restaurant.name })
                 : restaurant.freeDeliveryMinOrder != null
-                  ? t('restoMenuUi.freeDeliveryFrom', { name: restaurant.name, min: restaurant.freeDeliveryMinOrder.toFixed(2) })
-                  : t('restoMenuUi.deliveryDiscountBy', { name: restaurant.name, amount: restaurant.deliveryFeeDiscount.toFixed(2) })}</span>
+                  ? t('restoMenuUi.freeDeliveryFrom', { name: restaurant.name, min: euros(restaurant.freeDeliveryMinOrder) })
+                  : t('restoMenuUi.deliveryDiscountBy', { name: restaurant.name, amount: euros(restaurant.deliveryFeeDiscount) })}</span>
             )}
           </div>
         </div>
@@ -823,14 +824,14 @@ export default function RestaurantMenu() {
       {/* Après GO, aucun livreur libre à l'instant : seul l'à emporter est possible (relu toutes les minutes). */}
       {sansLivreur && !bandeauOuverture && (
         <div className="ouverture-bandeau fiche-info" role="status">
-          <span className="fiche-info-icone" aria-hidden="true"><Icone nom="scooter" taille={18} /></span>
+          <span className="fiche-info-icone" aria-hidden="true"><Icone nom="velo" taille={18} /></span>
           <span>{t('restaurantMenu.noCourierBanner')}</span>
         </div>
       )}
       {/* Livraison Fairide coupée dans la zone par l'équipe (08/10) : le client sait que seul l'à emporter est possible ici. */}
       {restaurant.fairideDeliveryDisabled && restaurant.offersPickup && (
         <div className="ouverture-bandeau fiche-info" role="status">
-          <span className="fiche-info-icone" aria-hidden="true"><Icone nom="scooter" taille={18} /></span>
+          <span className="fiche-info-icone" aria-hidden="true"><Icone nom="velo" taille={18} /></span>
           <span>{t('restaurantMenu.deliveryUnavailableZone')}</span>
         </div>
       )}
@@ -868,11 +869,14 @@ export default function RestaurantMenu() {
             <b style={{ fontSize: 13 }}>{r.clientName}</b>
             <StarsDisplay value={r.foodRating} />
           </div>
+          {/* De quoi parle l'avis (plats, commune de livraison) et qui a répondu (audit design 2, idée 11f). */}
+          <ContexteAvis avis={r} />
           {r.foodComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.foodComment}</p>}
           {r.restaurantReply && (
             <div style={{ marginTop: 6, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
               <div className="small" style={{ fontWeight: 700 }}>{t('restaurantMenu.reviewReplyFrom', { name: restaurant.name })}</div>
               <p className="small" style={{ margin: '2px 0 0' }}>{r.restaurantReply}</p>
+              <SignatureReponse signature={reviews.signature} />
             </div>
           )}
         </div>

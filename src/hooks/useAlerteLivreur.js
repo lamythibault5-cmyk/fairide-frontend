@@ -14,13 +14,14 @@ import { vibrer } from '../gestes';
 // `actif` : compte validé, paiements actifs, pas en pause. Un livreur en pause ne doit pas être dérangé.
 // `pret` : au moins un chargement terminé — sans ce drapeau, les courses déjà présentes à l'ouverture de la page
 // sonneraient comme si elles venaient d'arriver.
-const CLE_SON = 'fairide_driver_alert_sound';
+export const CLE_SON = 'fairide_driver_alert_sound';
 const NOTES_NOUVELLE = [784, 987.77, 1174.66, 1567.98];
 const NOTES_PRETE = [1046.5, 1318.51, 1046.5, 1318.51];
 // Course annulée : trois notes qui descendent, qu'on ne confond pas avec les deux bonnes nouvelles.
 const NOTES_ANNULEE = [1046.5, 783.99, 523.25];
 
-function sonActifMemorise() {
+// Exporté pour le réglage du son dans Mon compte, dans l'app (SonAlertesLivreur.jsx) : même clé, même lecture.
+export function sonActifMemorise() {
   try { return localStorage.getItem(CLE_SON) !== 'off'; } catch { return true; }
 }
 

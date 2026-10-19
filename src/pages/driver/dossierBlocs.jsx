@@ -1,0 +1,197 @@
+import { useEffect, useId, useRef, useState } from 'react';
+import { api, apiUpload } from '../../api';
+import { useToast } from '../../context/ToastContext';
+import { getLocale } from '../../context/LanguageContext';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import Icone from '../../components/Icone';
+import { euros } from '../../prixPlat';
+import { AVEC_ECHEANCE, ECHEANCE_REQUISE, STATUTS } from './dossierCommun';
+
+// LES BLOCS DU DOSSIER LIVREUR UNE FOIS ENVOYÉ (sortis d'Onboarding.jsx le 2026-10-19, deuxième audit design) : le dossier du
+// site (Onboarding.jsx) et celui de l'application, envoyé ou validé (DossierSuivi.jsx), montrent les mêmes blocs avec les mêmes
+// routes. `enFeuille` : rendu sans carte ni bouton « Ouvrir », pour une feuille de l'app (SousEcran) ou une remarque à filet.
+
+const euro = (n) => euros(Number(n || 0));
+
+// AVANT DE COMMENCER (fondateur, 2026-10-06) : ce que le livreur doit savoir — il commence après validation par Fairide ;
+// jusqu'à trois courses à la fois s'il ne livre que pour Fairide (2026-10-17), une seule s'il livre aussi ailleurs ; comment il
+// est payé ; le fonds d'assurance Fairide (10 % des frais de livraison) ; sa responsabilité en cas d'accident ou d'infraction.
+export function AvantDeCommencer({ c, t, pricing, replie = false }) {
+  const autre = c?.otherPlatforms?.works === true;
+  const eur = (v) => `${Number(v || 0).toFixed(2).replace('.', ',')} €`;
+  const p = { base: eur(pricing?.deliveryBaseFee ?? 5), km: Number(pricing?.deliveryBaseKm ?? 1), perKm: eur(pricing?.driverPerKmMotor ?? 0.8), radius: String(pricing?.secondOrderRadiusKm ?? 2).replace('.', ','), delay: Number(pricing?.extraOrderMaxDelayMin ?? 10) };
+  return (
+    <div className={replie ? undefined : 'card'} style={{ marginBottom: replie ? 0 : 12, marginTop: replie ? 8 : 0 }}>
+      {!replie && <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.beforeTitle')}</h3>}
+      <ul className="small" style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
+        <li>{t('courierOnboarding.beforeValidation')}</li>
+        <li>{autre ? t('courierOnboarding.beforeOneOrder') : t('courierOnboarding.beforeThreeOrders', { radius: p.radius, delay: p.delay })}</li>
+        <li>{t('courierOnboarding.beforePayment', p)}</li>
+        <li>{t('courierOnboarding.beforeInsurance')}</li>
+        <li>{t('courierOnboarding.beforeLiability')}</li>
+      </ul>
+    </div>
+  );
+}
+
+// Notifications non lues du livreur (alertes de plafond, blocage, changement de statut), avec « lu ».
+export function Notifications({ t, token, enFeuille = false }) {
+  const [liste, setListe] = useState([]);
+  const charger = () => api('/couriers/me/notifications', { token }).then((r) => setListe((Array.isArray(r) ? r : r?.notifications ?? []).filter((n) => !n.readAt))).catch(() => {});
+  useEffect(() => { charger(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  async function lire(ids) {
+    try { await api('/couriers/me/notifications/read', { method: 'PATCH', token, body: ids ? { ids } : {} }); } catch { /* silencieux : la liste est rechargée */ }
+    charger();
+  }
+  if (!liste.length) return null;
+  const texte = (n) => {
+    const p = n.payload ?? {};
+    const v = { level: p.level ?? '', year: p.year ?? '', used: euro(p.used), max: euro(p.max), remaining: euro(p.remaining) };
+    if (n.kind === 'threshold_alert') return t('courierOnboarding.notif_threshold_alert', v);
+    if (n.kind === 'threshold_blocked') return t('courierOnboarding.notif_threshold_blocked', v);
+    if (n.kind === 'status_changed') return t('courierOnboarding.notif_status_changed');
+    return p.message || n.kind || t('courierOnboarding.notif_other');
+  };
+  // Dans la feuille de l'app : une remarque à filet (ecran-livreur.css, .ecl-note), pas la carte au gros trait.
+  if (enFeuille) {
+    return (
+      <div className="ecl-note ecl-note-liste">
+        <Icone nom="cloche" taille={18} />
+        <div className="ecl-grow">
+          {liste.map((n) => (
+            <p key={n.id}>{n.createdAt ? `${new Date(n.createdAt).toLocaleDateString(getLocale())} · ` : ''}{texte(n)}</p>
+          ))}
+          <button type="button" className="lien-bouton" onClick={() => lire(null)}>{t(liste.length > 1 ? 'courierOnboarding.markAllRead' : 'courierOnboarding.markRead')}</button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="card courier-state warn">
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <b><Icone nom="cloche" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.notificationsTitle')} ({liste.length})</b>
+        <button type="button" className="btn-ghost btn-sm" onClick={() => lire(null)}>{t('courierOnboarding.markAllRead')}</button>
+      </div>
+      {liste.map((n) => (
+        <div key={n.id} className="row small" style={{ justifyContent: 'space-between', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+          <span>{n.createdAt ? `${new Date(n.createdAt).toLocaleDateString(getLocale())} · ` : ''}{texte(n)}</span>
+          <button type="button" className="btn-ghost btn-sm" onClick={() => lire([n.id])}>{t('courierOnboarding.markRead')}</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Changement de statut en libre-service : le dossier repasse en vérification (documents du nouveau
+// statut, nouveau contrat), d'où la confirmation.
+export function ChangementStatut({ d, t, token, action, busy, onChanged, enFeuille = false }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
+  const c = d.courier;
+  const choix = STATUTS.filter((x) => x !== c.statusType);
+  const [cible, setCible] = useState(choix.includes('independent') ? 'independent' : choix[0] || '');
+  const [ouvert, setOuvert] = useState(c.lifecycleStatus === 'blocked_threshold');
+  const [confirm, setConfirm] = useState(false);
+  async function changer() {
+    setConfirm(false);
+    const ok = await action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType: cible } }), t('courierOnboarding.toastStatusChanged'));
+    if (ok) onChanged?.();
+  }
+  const confirmation = <ConfirmDialog open={confirm} title={t('courierOnboarding.changeStatusConfirmTitle')} message={t('courierOnboarding.changeStatusConfirmBody', { status: cible ? t(`courierOnboarding.status_${cible}`) : '' })} confirmLabel={t('courierOnboarding.changeStatusBtn')} loading={busy} onConfirm={changer} onCancel={() => setConfirm(false)} />;
+  // Dans une feuille de l'app (DossierSuivi.jsx) : le texte, le choix et le bouton, sans la carte ni « Ouvrir ».
+  if (enFeuille) {
+    return (
+      <div className="ecl-statut-feuille">
+        <p className="ecl-texte">{c.lifecycleStatus === 'blocked_threshold' ? t('courierOnboarding.changeStatusBlocked') : t('courierOnboarding.changeStatusHelp')}</p>
+        <div className="field">
+          <label htmlFor={idsA11y + '-newstatus'}>{t('courierOnboarding.newStatus')}</label>
+          <select id={idsA11y + '-newstatus'} value={cible} onChange={(e) => setCible(e.target.value)}>{choix.map((x) => <option key={x} value={x}>{t(`courierOnboarding.status_${x}`)}</option>)}</select>
+        </div>
+        <button type="button" className="btn-teal ecl-bouton-dossier" disabled={busy || !cible} onClick={() => setConfirm(true)}>{t('courierOnboarding.changeStatusBtn')}</button>
+        {confirmation}
+      </div>
+    );
+  }
+  return (
+    <div className="card" id="changement-statut">
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3 style={{ margin: 0, fontSize: 15 }}><Icone nom="melanger" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.changeStatusTitle')}</h3>
+        <button type="button" className="btn-ghost" onClick={() => setOuvert((v) => !v)}>{ouvert ? t('courierOnboarding.hide') : t('courierOnboarding.open')}</button>
+      </div>
+      {ouvert && (
+        <div style={{ marginTop: 10 }}>
+          <p className="small" style={{ margin: '0 0 8px' }}>{c.lifecycleStatus === 'blocked_threshold' ? t('courierOnboarding.changeStatusBlocked') : t('courierOnboarding.changeStatusHelp')}</p>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div className="field" style={{ margin: 0 }}>
+              <label htmlFor={idsA11y + '-newstatus'}>{t('courierOnboarding.newStatus')}</label>
+              <select id={idsA11y + '-newstatus'} value={cible} onChange={(e) => setCible(e.target.value)}>{choix.map((x) => <option key={x} value={x}>{t(`courierOnboarding.status_${x}`)}</option>)}</select>
+            </div>
+            <button type="button" className="btn-outline" disabled={busy || !cible} onClick={() => setConfirm(true)}>{t('courierOnboarding.changeStatusBtn')}</button>
+          </div>
+        </div>
+      )}
+      {confirmation}
+    </div>
+  );
+}
+
+// Pièces refusées sans remplacement déposé depuis, hors brouillon (voir l'appel plus haut).
+/* LE NUMÉRO D'ENTREPRISE, APRÈS L'ENVOI (fondateur, 18/10/2026). Le dossier est parti sans lui (MANQUES_APRES_ENVOI) ; les
+ * étapes sont masquées une fois le dossier envoyé, donc on le demande ici, seul. Dès qu'il est là, l'équipe peut valider. */
+export function NumeroEntrepriseEnAttente({ t, token, busy, action }) {
+  const [bce, setBce] = useState('');
+  return (
+    <div className="card">
+      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.bcePendingTitle')}</h3>
+      <p className="small" style={{ margin: '0 0 10px' }}>{t('courierOnboarding.bcePendingText')}</p>
+      <form className="row" style={{ gap: 8, flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); action(() => api('/couriers/me', { method: 'PATCH', token, body: { companyNumber: bce.trim() } }), t('courierOnboarding.bceSaved')); }}>
+        <input aria-label={t('courierOnboarding.fBce')} value={bce} onChange={(e) => setBce(e.target.value)} placeholder="0123.456.789" inputMode="numeric" style={{ flex: '1 1 180px' }} />
+        <button type="submit" className="btn-gold" disabled={busy || !bce.trim()}>{busy ? '…' : t('common.save')}</button>
+      </form>
+    </div>
+  );
+}
+
+export function PiecesARemplacer({ d, t, token, busy, action }) {
+  const toast = useToast();
+  const [echeances, setEcheances] = useState({});
+  const fichiers = useRef({});
+  const docs = d.documents ?? [];
+  const types = [...new Set(docs.filter((x) => x.rejectedReason).map((x) => x.docType))]
+    .filter((type) => !docs.some((x) => x.docType === type && !x.rejectedReason));
+  if (!types.length) return null;
+  async function deposer(type, e) {
+    const file = e.target.files?.[0]; e.target.value = ''; if (!file) return;
+    await action(() => apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType: type, expiresAt: AVEC_ECHEANCE.includes(type) ? echeances[type] || undefined : undefined } }), t('courierOnboarding.toastDocUploaded'));
+  }
+  return (
+    <div className="card" role="alert" style={{ borderColor: 'var(--red)' }}>
+      <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('courierOnboarding.docsToReplaceTitle')}</h3>
+      {types.map((type) => {
+        const refus = docs.filter((x) => x.docType === type && x.rejectedReason).at(-1);
+        return (
+          <div key={type} className="courier-doc">
+            <div>
+              <b>{t(`courierOnboarding.doc_${type}`)}</b>
+              <p className="small texte-erreur" style={{ margin: '2px 0 0' }}>{refus?.rejectedReason}</p>
+            </div>
+            <div className="courier-doc-actions">
+              {AVEC_ECHEANCE.includes(type) && (
+                <label className="courier-doc-echeance small">
+                  {t(ECHEANCE_REQUISE.includes(type) ? 'courierOnboarding.docExpiryRequiredLabel' : 'courierOnboarding.docExpiryLabel')}
+                  <input type="date" value={echeances[type] || ''} onChange={(e) => setEcheances((x) => ({ ...x, [type]: e.target.value }))} />
+                </label>
+              )}
+              <input ref={(el) => { fichiers.current[type] = el; }} type="file" accept={['profile_photo', 'selfie'].includes(type) ? 'image/*' : 'application/pdf,image/*'} capture={type === 'selfie' ? 'user' : undefined} style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
+              <button type="button" className="btn-gold" disabled={busy} onClick={() => {
+                if (ECHEANCE_REQUISE.includes(type) && !echeances[type]) { toast(t('courierOnboarding.docExpiryFirst'), 'erreur'); return; }
+                fichiers.current[type]?.click();
+              }}>{t('courierOnboarding.docReplace')}</button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

@@ -100,7 +100,7 @@ export default function DocumentsPage() {
           {/* Contrats de livreur */}
           {d.courier && (
             <div className="card" style={{ marginBottom: 12 }}>
-              <b><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('mesDocuments.courierTitle')}</b>
+              <b><Icone nom="velo" taille={16} className="icone-texte" />{' '}{t('mesDocuments.courierTitle')}</b>
               {d.courier.title && <p className="small" style={{ margin: '4px 0 0' }}>{d.courier.title} · {d.courier.currentVersion}</p>}
               {!d.courier.signed && (
                 <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>

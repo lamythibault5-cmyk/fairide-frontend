@@ -193,13 +193,11 @@ html.appli .glisser-velo .glisser-confirmer-pouce { box-shadow: 0 3px 10px rgba(
 html .ecl .ecl-annees button.ecl-an { min-height: 32px; border: 0; background: transparent; font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px;
   border-radius: var(--radius-pill); color: rgba(255, 255, 255, .85); cursor: pointer; white-space: nowrap; transition: background .25s, color .2s; }
 html .ecl .ecl-annees button.ecl-an.on { background: var(--lime); color: var(--ink); }
-.ecl-net-lib { margin: 18px 0 0; }
 .ecl-gros { font-family: var(--font-titre); font-size: 42px; font-weight: 700; letter-spacing: 0; line-height: 1.1; overflow: hidden; white-space: nowrap; font-variant-numeric: tabular-nums; margin: 2px 0 4px; color: #fff; }
 .ecl-regles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .ecl-regle { display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid var(--line); border-radius: 16px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.35; }
 .ecl-regle svg { color: var(--iris); }
 .ecl-regle b { font-family: var(--font-titre); font-size: 22px; color: var(--ink); }
-.ecl-aide { margin: 10px 0 0; }
 .ecl-barres { position: relative; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: max(2px, calc(24px - var(--n) * 1px)); align-items: end;
   height: 150px; padding-bottom: 18px; margin-top: 34px; border-bottom: 1px solid var(--line); }
 html .ecl .ecl-barres button.ecl-barre-v { position: relative; height: 100%; min-height: 0; display: flex; align-items: flex-end; justify-content: center; border: 0; background: none; padding: 0; cursor: pointer; font: inherit; color: inherit; }
@@ -208,18 +206,45 @@ html .ecl .ecl-barres button.ecl-barre-v { position: relative; height: 100%; min
 @keyframes ecl-pousse { from { transform: scaleY(0); } to { transform: none; } }
 .ecl-barre-v:hover i, .ecl-barre-v.montre i { background: var(--iris-deep); }
 .ecl-barre-v.negatif i { background: var(--red); }
-.ecl-bv-lib { position: absolute; bottom: -18px; left: 50%; translate: -50% 0; font-size: 10px; color: var(--ink-faint); white-space: nowrap; }
-.ecl-bulle { position: absolute; bottom: calc(var(--h) + 6px); left: 50%; translate: -50% 0; z-index: 2; white-space: nowrap; font-size: 12px; font-weight: 600; background: var(--ink); color: #fff;
-  padding: 4px 8px; border-radius: 8px; opacity: 0; pointer-events: none; transition: opacity .15s; }
-.ecl-barre-v:first-child .ecl-bulle { left: 0; translate: 0 0; }
-.ecl-barre-v:last-child:not(:first-child) .ecl-bulle { left: auto; right: 0; translate: 0 0; }
-.ecl-barre-v:hover .ecl-bulle, .ecl-barre-v.montre .ecl-bulle { opacity: 1; }
-.ecl-detail { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
-.ecl-detail:last-child { border-bottom: 0; }
-.ecl-detail .ecl-badge { min-width: 86px; justify-content: center; }
-.ecl-detail .ecl-grow { flex: 1; min-width: 0; }
-.ecl-detail .ecl-grow small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-soft); }
-.ecl-liens { margin: 16px 0 0; }
+.ecl-bv-lib { position: absolute; bottom: -18px; left: 50%; translate: -50% 0; font-size: 10.5px; color: var(--ink-faint); white-space: nowrap; }
+/* LA BULLE D'UNE BARRE TOUCHÉE (deuxième audit design, 2026-10-19). Seules la première et la dernière barre étaient retenues au
+   bord : la bulle des autres, centrée, dépassait de 12 px hors de l'écran — et même invisible (opacité 0) elle élargissait la
+   page de 12 px (capture « -long » de 387 px de large). Désormais : un tiers des barres de chaque côté part de son bord vers
+   l'intérieur (.g / .d, posées par EarningsPage), celles du milieu sont centrées ; la bulle n'existe dans la mise en page que
+   montrée (display), et sa largeur est bornée. Même règle pour le libellé sous la barre. */
+.ecl-bulle { position: absolute; bottom: calc(var(--h) + 6px); left: 50%; translate: -50% 0; z-index: 2; width: max-content; max-width: min(300px, calc(100vw - 48px));
+  white-space: normal; text-align: left; font-size: 12px; font-weight: 600; line-height: 1.35; background: var(--ink); color: #fff; padding: 5px 9px; border-radius: 8px;
+  pointer-events: none; display: none; }
+.ecl-barre-v.g .ecl-bulle, .ecl-barre-v:first-child .ecl-bv-lib { left: 0; translate: 0 0; }
+.ecl-barre-v.d .ecl-bulle, .ecl-barre-v:last-child:not(:first-child) .ecl-bv-lib { left: auto; right: 0; translate: 0 0; }
+/* La barre montrée passe devant ses voisines : sa bulle ne se glisse plus sous les barres suivantes. */
+html .ecl .ecl-barres button.ecl-barre-v:hover, html .ecl .ecl-barres button.ecl-barre-v.montre { z-index: 3; }
+.ecl-barre-v:hover .ecl-bulle, .ecl-barre-v.montre .ecl-bulle { display: block; animation: ecl-bulle .15s ease-out; }
+@keyframes ecl-bulle { from { opacity: 0; } to { opacity: 1; } }
+.ecl-barre-v.vide i { background: var(--line); }
+/* Le bandeau des gains : « Gains · année », le total, ce qu'il veut dire. */
+.ecl-b-ctx { margin: 0; font: inherit; font-size: 14px; color: rgba(255, 255, 255, .82); }
+.ecl-b-ctx b { color: #fff; font-weight: 600; }
+.ecl-gains .ecl-gros { margin-top: 14px; }
+.ecl-b-explique { margin-top: 6px; font-size: 13px; color: rgba(255, 255, 255, .72); }
+/* Une ligne par course : « commerce → commune », heure · distance ; le montant, le pourboire en gris dessous. */
+/* Au-dessus de la règle « premier titre de la feuille » (0,4,0, plus bas dans ce fichier). */
+.ecl-feuille .ecl-site-col > .ecl-jour > .ecl-titre-sec:first-child { margin-top: 30px; }
+.ecl-gain { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.ecl-jour .ecl-gain:last-child { border-bottom: 0; }
+.ecl-gain .ecl-grow { flex: 1; min-width: 0; }
+.ecl-gain .ecl-grow b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.ecl-gain .ecl-grow small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-soft); }
+.ecl-gain-montant { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ecl-gain-montant b { font-weight: 700; }
+.ecl-gain-montant b.negatif { color: var(--red); }
+.ecl-gain-montant small { font-size: 12.5px; font-weight: 500; color: var(--ink-soft); }
+.ecl-gains-rangees { margin-top: 18px; border-top: 1px solid var(--line); }
+/* « Ta fiscalité », en feuille : le texte du statut, les deux règles, la copie DAC7, les relevés et le dossier. */
+.ecl-fiscalite .ecl-texte { margin: 0 0 14px; font-size: 14.5px; color: var(--ink); }
+.ecl-fiscalite .ecl-regles { margin-bottom: 4px; }
+.ecl-fiscalite .ecl-etapes { margin-top: 8px; }
+.ecl-fiscalite a.ecl-etape { text-decoration: none; }
 
 /* ---------- Carte, Factures et Mon dossier, dans l'app aussi (fondateur, 2026-10-19, finitions-appli.html, section 4) ----------
    Les trois pages secondaires du livreur restées dans l'ancien style (titre noir, cartes encadrées) prennent dans l'app le
@@ -256,6 +281,16 @@ html .ecl .ecl-barres button.ecl-barre-v { position: relative; height: 100%; min
 .ecl-carte .tracking-expand-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 6px; padding: 10px 20px; font-size: 14.5px; font-weight: 700;
   background: #fff; color: var(--iris); border: 1.5px solid var(--iris); border-radius: var(--radius-pill); }
 .ecl-carte .tracking-expand-btn:hover { filter: none; background: rgba(59, 47, 181, .06); }
+/* LE ZOOM DE LA CARTE DU LIVREUR EN RONDS IRIS (deuxième audit design, 2026-10-19). La page garde la classe .carte-page (largeur,
+   boutons centrés : styles.css) et récupérait donc le verre dépoli du zoom de la carte des commerces (ecran-liste.css, app) ou
+   son filet gris (site-liste.css) : deux ronds blancs flous. Ici, la règle des boutons de carte (.tracking-map-rond) : iris
+   plein, anneau blanc. Spécificité au-dessus des deux règles (0,4,1 / 0,4,2), quel que soit l'ordre de chargement des fichiers. */
+html .ecl.ecl-carte .tracking-map-cadre .leaflet-control-zoom.leaflet-bar {
+  background: transparent; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; text-shadow: none; }
+html .ecl.ecl-carte .tracking-map-cadre .leaflet-control-zoom.leaflet-bar a {
+  background: var(--iris); color: #fff; border: 0; text-shadow: none; box-shadow: 0 0 0 2.5px #fff, 0 3px 10px rgba(20, 18, 31, .22); }
+html .ecl.ecl-carte .tracking-map-cadre .leaflet-control-zoom.leaflet-bar a.leaflet-disabled { background: var(--iris); color: rgba(255, 255, 255, .45); }
+@media (hover: hover) { html .ecl.ecl-carte .tracking-map-cadre .leaflet-control-zoom.leaflet-bar a:hover { background: var(--iris-deep); color: #fff; } }
 
 /* Factures : les relevés (InvoiceArchive, partagé avec le commerce) sans leur carte, le titre en petites capitales. */
 .ecl-factures .ecl-feuille .card { border: 0; border-radius: 0; padding: 0; margin: 0 0 8px; background: none; }
@@ -319,6 +354,38 @@ html .ecl-factures table.ecl-recap-table, html.appli .dashboard-main .ecl-factur
 .ecl-bouton-dossier { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; margin: 14px 0 6px; padding: 13px 16px;
   font-size: 16px; font-weight: 700; border-radius: var(--radius-pill); }
 .ecl-bouton-dossier + .ecl-titre-sec { margin-top: 24px; }
+
+/* ---------- Le dossier envoyé ou validé, dans l'app (DossierSuivi.jsx, deuxième audit design, section 9, 2026-10-19) ----------
+   Bandeau : « Livreur · prénom » et le statut en pastille claire ; feuille : un seul lime (« Voir les courses », validé
+   seulement), les compteurs en tuiles blanches à filet, une ligne pour le plafond, puis les lignes à filet du dossier. */
+.ecl-b-pilule { flex: none; font-size: 12.5px; font-weight: 600; color: #fff; padding: 4px 11px; border-radius: var(--radius-pill); border: 1px solid rgba(255, 255, 255, .4); white-space: nowrap; }
+.ecl-texte { margin: 8px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); }
+.ecl-dossier-suivi .ecl-bouton-dossier { margin-top: 2px; text-decoration: none; }
+.ecl-dossier-suivi .ecl-bouton-dossier + .ecl-titre-sec, .ecl-dossier-suivi .ecl-bouton-dossier + .ecl-note { margin-top: 22px; }
+.ecl-dossier-suivi a.ecl-etape { text-decoration: none; }
+.ecl-dossier-suivi a.ecl-etape:hover { color: var(--ink); }
+.ecl-a-faire { margin-bottom: 8px; }
+.ecl-tuiles { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 8px; }
+.ecl-tuile { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+.ecl-tuile b { font-family: var(--font-titre); font-size: 22px; font-weight: 700; line-height: 1.15; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecl-tuile span { font-size: 12.5px; color: var(--ink-soft); line-height: 1.3; }
+.ecl-plafond { margin-top: 10px; }
+/* La jauge de l'étudiant-indépendant : brut Fairide de l'année sur le plafond, le seuil sans cotisations marqué d'un trait. */
+.ecl-jauge { margin-top: 12px; }
+.ecl-jauge-barre { position: relative; height: 8px; border-radius: var(--radius-pill); background: rgba(59, 47, 181, .1); }
+.ecl-jauge-barre i { display: block; height: 100%; min-width: 8px; border-radius: inherit; background: var(--iris); }
+.ecl-jauge-seuil { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--ink); }
+.ecl-jauge-libs { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; font-size: 12.5px; color: var(--ink-soft); }
+.ecl-envoye-le { margin: -2px 0 2px; }
+.ecl-pied-legal { margin: 18px 0 4px; font-size: 12px; line-height: 1.45; color: var(--ink-faint); }
+.ecl-note-liste .ecl-grow { flex: 1; min-width: 0; }
+.ecl-note-liste p { margin: 0 0 4px; }
+/* Une feuille ouverte depuis une ligne (SousEcran) : les blocs du site sans leur carte, le titre étant celui de la feuille. */
+.ecl-dans-feuille > .card { border: 0; border-radius: 0; padding: 0; margin: 0; background: none; }
+.ecl-dans-feuille > .card > h3:first-child { display: none; }
+.ecl-dans-feuille ul.small { font-size: 14.5px; line-height: 1.5; color: var(--ink); }
+.ecl-statut-feuille .field { margin: 14px 0 6px; }
+.ecl-statut-feuille .ecl-texte { margin: 0; font-size: 14.5px; color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) {
   .ecl, .ecl *, .glisser-velo, .glisser-velo * { animation: none !important; transition: none !important; }

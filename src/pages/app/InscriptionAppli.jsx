@@ -604,7 +604,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       entete = titre(t('auth.stepServicesTitle'), t('auth.servicesHelp'));
       contenu = (
         <>
-          <Option multi on={services.delivery} icone="scooter" titre={t('auth.serviceDelivery')} onClick={() => setServices((s) => ({ ...s, delivery: !s.delivery }))} />
+          <Option multi on={services.delivery} icone="velo" titre={t('auth.serviceDelivery')} onClick={() => setServices((s) => ({ ...s, delivery: !s.delivery }))} />
           {services.delivery && (
             <Segments label={t('auth.serviceDelivery')} valeur={services.deliveryMode} onChoix={(v) => setServices((s) => ({ ...s, deliveryMode: v }))}
               options={[['fairide', t('appli.insLivFairide')], ['own', t('appli.insLivPropres')]]} />

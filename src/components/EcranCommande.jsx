@@ -121,7 +121,8 @@ export function BarreCommande({ montant, className = '', children }) {
   return <div className={`cart-bar co-barre ec-barre ${className}${rebond}`}>{children}</div>;
 }
 
-/* La case d'un choix unique, en carte : icône dans sa tuile, libellé, et la coche lime qui saute sur le choix retenu. */
+/* La case d'un choix unique, en carte : icône dans sa tuile, libellé, et la coche qui saute sur le choix retenu (blanche sur
+   l'iris depuis le 2026-10-19 : le lime reste au bouton de l'écran). */
 export function OptionCommande({ on, icone, titre, sous, onClick }) {
   return (
     <button type="button" className={`ec-option${on ? ' on' : ''}`} aria-pressed={on} onClick={onClick}>

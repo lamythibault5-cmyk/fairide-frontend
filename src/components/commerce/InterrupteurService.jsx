@@ -12,7 +12,7 @@ const DUREES = [15, 30, 60];
 
 // `surBandeau` (2026-10-16, Commandes au bandeau iris) : même geste, dessiné pour le bandeau — un cadre clair et un
 // interrupteur lime qui rebondit (ecran-commerce.css).
-export default function InterrupteurService({ restaurant, restoId, token, toast, loadDashboard, surBandeau = false }) {
+export default function InterrupteurService({ restaurant, restoId, token, toast, loadDashboard, surBandeau = false, compact = false }) {
   const { t } = useLanguage();
   const [choix, setChoix] = useState(false);
   const [enCours, setEnCours] = useState(false);
@@ -48,7 +48,17 @@ export default function InterrupteurService({ restaurant, restoId, token, toast,
   );
   return (
     <>
-      {surBandeau ? (
+      {/* `compact` (audit design 2, 2026-10-19, écran Commandes de l'app) : l'interrupteur seul dans la ligne du haut du
+          bandeau, avec un mot d'état (Ouvert, En pause jusqu'à 20:15…) — la grande carte prenait la place de la commande.
+          Même geste, même feuille de pause. */}
+      {compact ? (
+        <button type="button" className="ec-service-compact" aria-pressed={!!ouvert} disabled={enCours} onClick={toucher}
+          title={ouvert ? t('ordersResto.openSub') : undefined} aria-label={ouvert ? t('ordersResto.openTitle') : undefined}>
+          {/* Ouvert : l'interrupteur allumé suffit (la place va au résumé du service) ; sinon on dit pourquoi on ne reçoit rien. */}
+          <span>{enCours ? '…' : ouvert ? '' : stoppeJour ? t('ordersResto.stoppedTodayTitle') : enPause ? t('ordersResto.pauseUntil', { time: reprise }) : t('ordersResto.pausedTitle')}</span>
+          <span className={`ec-interrupteur ec-interrupteur--lime${ouvert ? ' on' : ''}`} aria-hidden="true" />
+        </button>
+      ) : surBandeau ? (
         <button type="button" className={`ec-service${ouvert ? ' on' : ''}`} aria-pressed={!!ouvert} disabled={enCours} onClick={toucher}>
           <span className="ec-service-texte">{texte}</span>
           <span className={`ec-interrupteur ec-interrupteur--lime${ouvert ? ' on' : ''}`} aria-hidden="true" />

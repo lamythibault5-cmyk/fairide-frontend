@@ -4541,6 +4541,12 @@ html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(
 .plat-pied:has(.plat-ajouter:disabled) .plat-quantite { background: var(--line); }
 .plat-ajouter-prix { display: inline-flex; overflow: hidden; vertical-align: bottom; }
 .plat-bloque { flex: 1 0 100%; order: -1; margin: 0 0 4px; font-size: 13px; color: var(--red); }
+/* Le rappel se touche et amène au groupe (FichePlat, audit design 2) : un bouton qui garde l'air d'une phrase, souligné. */
+button.plat-bloque { display: block; width: 100%; min-height: 0 !important; padding: 2px 0; border: 0; background: none; font: inherit; font-size: 13px;
+  font-weight: 600; text-align: left; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.plat-groupe--signale .plat-groupe-tete { animation: plat-signale 1.2s ease; border-radius: 8px; }
+@keyframes plat-signale { 0%, 60% { background: rgba(178, 58, 42, .1); box-shadow: 0 0 0 6px rgba(178, 58, 42, .1); } 100% { background: transparent; box-shadow: 0 0 0 6px transparent; } }
+@media (prefers-reduced-motion: reduce) { .plat-groupe--signale .plat-groupe-tete { animation: none; } }
 /* Au-delà du téléphone, la feuille reste plein écran mais son contenu se recentre : une photo
    étirée sur 1400px et une ligne d'option large comme l'écran seraient illisibles. */
 /* Sur ordinateur, la fiche devient un PANNEAU CENTRE et non un plein ecran : occuper 1400px de

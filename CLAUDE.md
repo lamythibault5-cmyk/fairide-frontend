@@ -85,7 +85,10 @@ privacy policy (CONF-2026-10-16) says so. On the website nothing changes: Sentry
 (a portal into `<body>` — inside the shell, `.page-fade` broke `position: fixed`): a business's « Envoyer ma carte »
 ([EnvoiCarteAppli](src/components/commerce/EnvoiCarteAppli.jsx)), the courier's draft dossier
 ([DossierAppli](src/pages/driver/DossierAppli.jsx), one topic or one document per screen; rules shared with Onboarding.jsx in
-[dossierCommun.js](src/pages/driver/dossierCommun.js)), and in checkout the codes, allergy request and the age / T&Cs boxes
+[dossierCommun.js](src/pages/driver/dossierCommun.js)); once sent, validated or suspended the app shows
+[DossierSuivi](src/pages/driver/DossierSuivi.jsx) instead of the website page (2026-10-19, second design audit: band « Dossier
+envoyé » / « C'est bon, tu peux rouler », one lime « Voir les courses », counters as white tiles, rows opening sheets; the blocks
+both versions share live in [dossierBlocs.jsx](src/pages/driver/dossierBlocs.jsx)), and in checkout the codes, allergy request and the age / T&Cs boxes
 as sheets (the last one opened by the pay button). In the app, the T&Cs link opens a sheet ([CgvEnFeuille](src/components/CgvEnFeuille.jsx)),
 never a tab. The website keeps its pages unchanged.
 **App-wide rules (final phase, 2026-10-15)**: a folding [LigneCompte](src/components/LigneCompte.jsx) row opens its content
@@ -373,13 +376,30 @@ Android has it in the system), and swipe-to-confirm for the courier's « récup�
   `photo` for the restaurant page). App only at call sites (`experienceApp()`); the bike rides while a skeleton shows.
 - **Maps** — markers and route styles live in [marqueursCarte.js](src/marqueursCarte.js) (courier iris + lime bike,
   home lime, shop ringed iris; ridden route solid iris with a white edge, the rest iris dots). Map buttons are
-  `.tracking-map-rond` (solid iris, white ring). Never reintroduce the near-black courier or the lime trail.
+  `.tracking-map-rond` (solid iris, white ring). Never reintroduce the near-black courier or the lime trail. The courier's
+  `/driver/map` keeps the class `.carte-page`, so the customer map's glass / hairline zoom rules reached it: ecran-livreur.css
+  puts its Leaflet zoom back to iris rounds with a higher specificity.
+- **Courier earnings** (2026-10-19) — `/driver/earnings` reads `byWeek` and `rides` (backend `gainsLivreur.js`: one bar per
+  week since the first week earned, one row per ride « shop → commune » with its tip folded in); the status text, the 90 % /
+  100 % rules, DAC7 and statements sit behind « Ta fiscalité ». In the app, the website alert card (`AlerteLivreurBar`) is
+  gone from the rides screen; the alert sound is a row in Mon compte ([SonAlertesLivreur](src/components/livreur/SonAlertesLivreur.jsx)).
 - **Pull to refresh** — `<TirerPourActualiser onActualiser={promise} />` ([component](src/components/TirerPourActualiser.jsx)),
   native only, on Mes commandes, the restaurant list, the courier's Courses and the shop's Commandes.
 - **Status bar** follows the band in the app ([barreEtat.js](src/barreEtat.js)): iris over an iris band, white otherwise.
 - **Photo transition** card → restaurant page with the View Transitions API ([transitionPhoto.js](src/transitionPhoto.js)).
 - **Light only**: `color-scheme: light only` (index.html + styles.css) and a Light Android theme. No dark mode until one is
   designed; iOS needs `UIUserInterfaceStyle = Light` (docs/application-mobile.md).
+
+**Shop screens, design audit 2 (founder, 2026-10-19).** The new-order sheet ([NouvelleCommandeModale](src/components/NouvelleCommandeModale.jsx))
+accepts in one tap (prep time + lime « Accepter · prête vers HH:MM », Refuser with reason, Imprimer, Plus tard; no « Tu gardes »); the home's
+« 1 commande à traiter » opens it (`onOuvrir`, state in DashboardLayout). Customer line, ready time and the shop's share are computed from the
+orders already loaded ([clientCommande.js](src/components/commerce/clientCommande.js); `order.commune` is the SHOP's commune, the customer's
+comes from the postal code). App orders screen: alarm as one band line ([LigneAlarme](src/components/commerce/LigneAlarme.jsx), white
+« Couper », never lime), sections À traiter / En préparation / Prêtes, glass « Accepter #058 » bar above the tabs (portal; the website board keeps
+Accepter on the card), courier as a person ([LivreurCommande](src/components/commerce/LivreurCommande.jsx): no ETA, no vehicle — neither reaches the
+shop). Shop home: « Ce soir chez … » band and four tool tiles ([CeSoir.jsx](src/components/commerce/CeSoir.jsx)) once setup is done; the setup pill says
+« Visible · paiement au comptoir » while Stripe is not active; « Supprimer ce restaurant » lives in Infos légales. Review replies are signed with a
+first name (backend migration 051, `PATCH /restaurants/:id/review-signature`; shown via [AvisSignes](src/components/AvisSignes.jsx)).
 
 Note the two heavily-commented rules near the top of the file — `overflow-x: clip` on
 `html`/`body` and `-webkit-tap-highlight-color: transparent`. Both encode a bug that was

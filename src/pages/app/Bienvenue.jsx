@@ -276,7 +276,7 @@ export default function Bienvenue() {
       ); break;
     case 'lvPromesses':
       contenu = (
-        <EcranPromesses chip={t('appli.lvChip')} chipIcone="scooter" titre={t('appli.lvTitre')} bouton={t('appli.lvBtn')} onSuite={suivant}
+        <EcranPromesses chip={t('appli.lvChip')} chipIcone="velo" titre={t('appli.lvTitre')} bouton={t('appli.lvBtn')} onSuite={suivant}
           faits={[['euro', t('appli.lv1'), t('appli.lv1S')], ['interdit', t('appli.lv2'), t('appli.lv2S')], ['cadeau', t('appli.lv3'), t('appli.lv3S')], ['document', t('appli.lv4'), t('appli.lv4S')]]} />
       ); break;
     case 'lvPosition':

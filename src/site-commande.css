@@ -125,18 +125,12 @@ html:not(.appli) .sc-page .sc-codes { margin-top: 22px; padding-top: 6px; border
   html:not(.appli) .sc-page .checkout-form .checkout-rangee { padding-left: 4px; padding-right: 4px; }
   html:not(.appli) .sc-page .checkout-form .ec-pourboire .choix-pastilles { flex-wrap: wrap; }
   html:not(.appli) .sc-page .checkout-form .ec-pourboire .cuisine-chip { flex: 0 0 auto; padding: 8px 16px; }
-  /* À droite : « Ta commande », les lignes modifiables (compteur iris, nombre dans un rond lime), le détail, le total. */
+  /* À droite : « Ton ticket » (audit design 2, 2026-10-19) — les plats sont dans la rangée « N articles · Modifier » à gauche. */
   html:not(.appli) .sc-page .checkout-recap .card { border: 0; border-radius: 0; padding: 0; margin: 0; background: none; }
-  html:not(.appli) .sc-page .ec-feuille .co-recap-tete { margin-top: 0; }
-  html:not(.appli) .sc-page .ec-feuille .co-recap-tete h3 { font-family: var(--font-titre); font-size: 18px !important; font-weight: 700 !important; color: var(--ink);
-    letter-spacing: 0; text-transform: none; }
-  html:not(.appli) .sc-page .ec-feuille .co-recap-resto { color: var(--ink-soft); }
+  html:not(.appli) .sc-page .ec-feuille .co-ticket-titre { margin-top: 0 !important; font-family: var(--font-titre); font-size: 18px !important; font-weight: 700 !important;
+    color: var(--ink); letter-spacing: 0; text-transform: none; }
   html:not(.appli) .sc-page .co-ligne { padding: 10px 0; }
-  html:not(.appli) .sc-page .co-qte { height: 32px; border: 0; background: var(--iris); color: #fff; }
-  html:not(.appli) .sc-page .co-qte button { width: 30px; height: 30px; min-height: 0; color: #fff; font-size: 17px; }
-  html:not(.appli) .sc-page .co-qte button:hover { background: rgba(255, 255, 255, .14); }
-  html:not(.appli) .sc-page .co-qte button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
-  html:not(.appli) .sc-page .co-qte span { min-width: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center; font-size: 12.5px; }
+  html:not(.appli) .sc-page .co-t-total { font-size: 20px; }
   html:not(.appli) .sc-page .checkout-recap .divider { margin: 6px 0; }
   html:not(.appli) .sc-page .checkout-recap .breakdown { font-size: 14px; }
   html:not(.appli) .sc-page .checkout-recap .breakdown .line { gap: 10px; padding: 4px 0; }

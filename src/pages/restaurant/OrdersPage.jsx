@@ -17,7 +17,7 @@ import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/
 import { buildTicketBytes, COLUMNS_58MM } from '../../escposTicket';
 import * as btPrinter from '../../bluetoothPrinter';
 import {
-  DeliveryTiming, EcheanceAcceptation, ProgressBar, RouteSuivi, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
+  DeliveryTiming, ProgressBar, RouteSuivi, statusLabel, deliveryInstructionLabel, orderTypeColor, orderTypeLabel,
   ORDER_STAGES, orderStageKey, orderStagePriority, stageColors as couleursEtapes
 } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -30,6 +30,12 @@ import { experienceApp } from '../../natif';
 import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import AlerteBandeau from '../../components/commerce/AlerteBandeau';
 import { useModeEquipe } from '../../modeEquipe';
+import AnneauDelai from '../../components/commerce/AnneauDelai';
+import LigneAlarme from '../../components/commerce/LigneAlarme';
+import ListePlats from '../../components/commerce/ListePlats';
+import LivreurCommande from '../../components/commerce/LivreurCommande';
+import { heurePrete, ouEstLeClient } from '../../components/commerce/clientCommande';
+import { telephoneLisible } from '../../validation';
 
 // Le SITE (pas l'app) montre les commandes en tableau à trois colonnes (2026-10-16, mockups/site-ordinateur.html › Espace
 // commerce, lot « pro ») : Nouvelles, En préparation, Prêtes. L'app garde sa liste, inchangée.
@@ -70,26 +76,8 @@ function CodeRetrait({ order, t }) {
   );
 }
 
-// LE TEMPS QUI RESTE POUR ACCEPTER, EN ANNEAU (2026-10-16, mockups/tous-les-ecrans.html › Commandes) : il se vide de
-// l'arrivée de la commande jusqu'à son échéance (acceptDeadline, la même que EcheanceAcceptation), rouge sous 5 minutes.
-function AnneauDelai({ order, t }) {
-  const [maintenant, setMaintenant] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setMaintenant(Date.now()), 10000);
-    return () => clearInterval(id);
-  }, []);
-  const fin = new Date(order.acceptDeadline).getTime();
-  const debut = new Date(order.createdAt).getTime();
-  const reste = Math.max(0, fin - maintenant);
-  const total = Math.max(60000, Number.isFinite(debut) ? fin - debut : 15 * 60000);
-  const min = Math.ceil(reste / 60000);
-  return (
-    <span className={`ec-anneau${min <= 5 ? ' ec-anneau--presse' : ''}`} style={{ '--ec-p': Math.min(1, reste / total) }}
-      role="img" aria-label={t('ecranCommerce.resteAccepter', { n: min })}>
-      <b>{min}</b><small>{t('ecranCommerce.min')}</small>
-    </span>
-  );
-}
+// L'anneau du temps qui reste pour accepter vit dans components/commerce/AnneauDelai.jsx (partagé avec la feuille
+// « Nouvelle commande » depuis l'audit design 2, 2026-10-19).
 
 export default function OrdersPage() {
   const { t } = useLanguage();
@@ -247,6 +235,8 @@ export default function OrdersPage() {
     setActionEnCours(orderId);
     try {
       await api(`/orders/${orderId}/${action}`, { method: 'PATCH', token, body });
+      // Commande acceptée : le retour « succès » du téléphone (gestes.js, App polish du 2026-10-19).
+      if (action === 'accept') vibrer('succes');
       await loadDashboard(restoId);
     } catch (e) {
       toast(e.message, 'erreur');
@@ -331,85 +321,111 @@ export default function OrdersPage() {
       await loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
     } catch (e) { toast(e.message, 'erreur'); } finally { setPhotoEnCours(null); }
   }
-  /* UNE COMMANDE (nouveau style, 2026-10-16, « La commande qui sonne ») : l'étape en pastille (la cloche bouge tant
-     qu'elle attend), l'anneau du temps pour accepter, le client et le numéro en grand, la route où le vélo passe d'étape
-     en étape (RouteSuivi : une fois acceptée, il roule jusqu'à « Préparation »), les articles ; puis le temps de
-     préparation à faire glisser et « Accepter ». Lime pour la plus urgente des nouvelles commandes seulement (une couleur
-     décisive par écran), iris pour les suivantes. Toucher la carte ouvre le détail, comme avant. */
-  const premiereNouvelle = enCours.find((o) => o.status === 'nouveau')?.id;
-  const carteCommande = (o) => {
+  /* UNE COMMANDE (nouveau style, 2026-10-16, « La commande qui sonne » ; revue à l'audit design 2, 2026-10-19).
+     La pastille porte l'étape et SA couleur (plus de liseré coloré à gauche : la couleur reste sur la pastille, et seule une
+     commande qui attend est bordée de rouge). En tête : le client et le numéro qu'on annonce en cuisine, puis une ligne
+     « Livraison · Molenbeek, 1,2 km · payée en ligne » (et « prête vers 19:52 » une fois acceptée), les plats (quantité en
+     iris, notes du client visibles). Une commande qui attend n'a ni route ni phrase d'échéance : l'anneau dit le temps qui
+     reste. Le temps de préparation reste sur la carte ; « Accepter » et « Refuser » de la plus pressée sont dans la barre
+     au-dessus des onglets (app), les suivantes gardent les leurs, en iris. Une fois le livreur trouvé, il apparaît comme une
+     personne (LivreurCommande). À emporter prête : le code du client sur toute la largeur, le bouton dessous, « Client pas
+     venu » encore dessous. Toucher la carte ouvre le détail, comme avant. */
+  const nouvellesTriees = enCours.filter((o) => orderStageKey(o) === 'nouveau').sort((a, b) => echeance(a) - echeance(b));
+  const plusPressee = nouvellesTriees.find((o) => o.status === 'nouveau')?.id;
+  const boutonPhoto = (o, classe, taille) => (
+    <>
+      {['nouveau', 'preparation', 'pret'].includes(o.status) && !o.preparedPhoto && (
+        <label className={classe} title={t('ordersResto.photoHelp')} aria-label={t('ordersResto.photoBtn')} onClick={(e) => e.stopPropagation()}>
+          {photoEnCours === o.id ? '…' : <Icone nom="photo" taille={taille} className="icone-texte" />}
+          <input type="file" accept="image/*" capture="environment" hidden disabled={photoEnCours === o.id} onChange={(e) => { photographier(o, e.target.files?.[0]); e.target.value = ''; }} />
+        </label>
+      )}
+      {o.preparedPhoto && (
+        <a className={classe} href={o.preparedPhoto.url} target="_blank" rel="noreferrer" title={t('ordersResto.photoDone', { time: new Date(o.preparedPhoto.at).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })} onClick={(e) => e.stopPropagation()}><Icone nom="photo" taille={taille} className="icone-texte" />✓</a>
+      )}
+    </>
+  );
+  // « Livraison · Molenbeek, 1,2 km · payée en ligne · prête vers 19:52 » : ce qu'il faut savoir d'un coup d'œil.
+  const sousTitre = (o) => {
+    const pret = ['preparation'].includes(o.status) ? heurePrete(o) : null;
+    return [orderTypeLabel(o, t), ouEstLeClient(o), o.paymentMode !== 'on_site' && o.paid ? t('serviceCommerce.payeeEnLigne') : '', pret ? t('serviceCommerce.preteVers', { time: pret }) : '']
+      .filter(Boolean).join(' · ');
+  };
+  // Le code du client (à emporter, prête) : champ et bouton sur toute la largeur, « Client pas venu » dessous.
+  const codeClient = (o) => (
+    <div className="ec-code-client" onClick={(e) => e.stopPropagation()}>
+      <input aria-label={t('ordersResto.phCustomerCode')} placeholder={t('ordersResto.phCustomerCode')}
+        // Codes à chiffres : pavé numérique sur téléphone, Entrée valide (simulation du 30/09).
+        inputMode="numeric" autoComplete="off"
+        onKeyDown={(e) => { if (e.key === 'Enter') confirmTakeaway(o); }}
+        value={pickupCodeInputs[o.id] || ''}
+        onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))} />
+      <button type="button" className="ec-bouton ec-bouton--iris" disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
+        {confirmingPickup === o.id ? '…' : t('ordersResto.validateOrder')}
+      </button>
+      {o.paymentMode === 'on_site' && (
+        <button type="button" className="ec-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} />{t('ordersResto.customerNoShow')}</button>
+      )}
+    </div>
+  );
+  const carteCommande = (o, { barre = false } = {}) => {
     const stageKey = orderStageKey(o);
     const stage = ORDER_STAGES.find((s) => s.key === stageKey);
     const stageColor = stageColors[stageKey];
     const nouvelle = o.status === 'nouveau';
+    const close = ['terminee', 'annulee'].includes(stageKey);
+    // La plus pressée a ses boutons dans la barre au-dessus des onglets (app) : la carte garde le temps de préparation.
+    const dansLaBarre = barre && o.id === plusPressee;
     return (
-    <div
-      className={`ec-commande order-type-${orderTypeColor(o)}${nouvelle ? ' ec-commande--nouvelle' : ''}`}
-      key={o.id}
-      style={{ borderLeft: `5px solid ${stageColor}` }}
-      onClick={() => setSelectedOrder(o)}
-    >
+    <div className={`ec-commande${nouvelle ? ' ec-commande--nouvelle' : ''}`} key={o.id} onClick={() => setSelectedOrder(o)}>
       <div className="ec-cmd-l1">
-        {/* Étape en texte foncé, la couleur sur la pastille seule (audit du 15/10/2026) : le libellé était écrit dans la couleur
-            de l'étape sur un fond de cette même couleur, en 11 px (« En préparation » lime sur lime : contraste 1,3:1). */}
+        {/* Étape en texte foncé, la couleur sur la pastille seule (audit du 15/10/2026). */}
         <span key={stageKey} className={`etape-pastille ec-saute${nouvelle ? ' ec-sonne' : ''}`} style={{ '--etape-couleur': stageColor }}>
           <Icone nom={stage.icon} taille={16} className="icone-texte" /> {t(`orderStatus.stage_${stage.key}`)}
         </span>
-        {['nouveau', 'preparation', 'pret'].includes(o.status) && !o.preparedPhoto && (
-          <label className="btn-ghost order-print-btn" title={t('ordersResto.photoHelp')} aria-label={t('ordersResto.photoBtn')} onClick={(e) => e.stopPropagation()}>
-            {photoEnCours === o.id ? '…' : <Icone nom="apercu" taille={16} className="icone-texte" />}
-            <input type="file" accept="image/*" capture="environment" hidden disabled={photoEnCours === o.id} onChange={(e) => { photographier(o, e.target.files?.[0]); e.target.value = ''; }} />
-          </label>
-        )}
-        {o.preparedPhoto && (
-          <a className="btn-ghost order-print-btn" href={o.preparedPhoto.url} target="_blank" rel="noreferrer" title={t('ordersResto.photoDone', { time: new Date(o.preparedPhoto.at).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })} onClick={(e) => e.stopPropagation()}><Icone nom="apercu" taille={16} className="icone-texte" />✓</a>
-        )}
+        {boutonPhoto(o, 'btn-ghost order-print-btn', 18)}
         <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
           disabled={envoiTicket === o.id} onClick={(e) => { e.stopPropagation(); if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}><Icone nom="imprimante" taille={16} className="icone-texte" /></button>
-        {nouvelle && o.acceptDeadline && <AnneauDelai order={o} t={t} />}
+        {nouvelle && o.acceptDeadline && <AnneauDelai order={o} />}
       </div>
       <div className="ec-cmd-l2">
         <span className="ec-cmd-client">
           <b>{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6 }}>{t('ordersResto.trainingBadge')}</span>}</b>
-          {o.clientPhone && <span><Icone nom="telephone" taille={14} className="icone-texte" />{' '}{o.clientPhone}</span>}
+          {o.clientPhone && <span><Icone nom="telephone" taille={14} className="icone-texte" />{' '}{telephoneLisible(o.clientPhone)}</span>}
         </span>
         {/* Le numéro du ticket imprimé et de la fenêtre « nouvelle commande », en grand : c'est lui qu'on annonce en cuisine. */}
         {o.orderNumber ? <span className="commande-numero">{numeroCommande(o)}</span> : <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>}
       </div>
-      <div className="row" style={{ gap: 6 }}>
-        <span className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</span>
-        {/* Paiement bien distinct (fondateur, 2026-10-07) : à payer sur place (encadré orange) ou déjà payé en ligne (vert). */}
-        {o.paymentMode === 'on_site' ? (
-          <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
-            {o.pickupNoShow ? t('ordersResto.noShowBadge') : `${t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}`}
-          </span>
-        ) : (
-          <span className="small paiement-badge paiement-en-ligne" style={{ fontWeight: 700 }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('ordersResto.paidOnlineBadge')}</span>
-        )}
-      </div>
+      <p className="ec-cmd-sous">{sousTitre(o)}</p>
+      {/* Paiement sur place : encadré, c'est de l'argent à encaisser (fondateur, 2026-10-07). */}
+      {o.paymentMode === 'on_site' && (
+        <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
+          {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}
+        </span>
+      )}
       {o.print && <div style={{ margin: '4px 0' }}><EtatImpression p={o.print} t={t} /></div>}
-      <div className="ec-route-blanc"><RouteSuivi status={o.status} orderType={o.orderType} /></div>
-      <p className="ec-cmd-articles">{o.items.map(formatOrderItem).join(', ')}</p>
-      {o.orderType === 'delivery' && <div className="small"><Icone nom="position" taille={16} className="icone-texte" />{' '}{o.address}</div>}
-      <DeliveryTiming order={o} />
-      <EcheanceAcceptation order={o} />
+      {!nouvelle && !close && <div className="ec-route-blanc"><RouteSuivi status={o.status} orderType={o.orderType} /></div>}
+      <ListePlats items={o.items} />
+      {close && <DeliveryTiming order={o} />}
       <BandeauAllergie order={o} />
       <BadgeAlcool order={o} />
-      {o.orderType === 'delivery' && o.driverName && ['preparation', 'pret'].includes(o.status) && (
-        <div className="small" style={{ fontWeight: 600 }}>{t('ordersResto.driverAssigned', { name: o.driverName })}</div>
-      )}
       {nouvelle && (
         <div className="ec-cmd-actions" onClick={(e) => e.stopPropagation()}>
           {/* Temps de préparation en plus, annoncé à l'acceptation (RES-10) : l'heure estimée du client recule d'autant. */}
           <p className="ec-feuille-titre">{t('ordersResto.extraPrepLabel')}</p>
           <SegmentGlisse libelle={t('ordersResto.extraPrepLabel')} valeur={tempsEnPlus[o.id] || 0}
-            onChange={(v) => { vibrer(8); setTempsEnPlus((p) => ({ ...p, [o.id]: v })); }}
+            onChange={(v) => { vibrer('selection'); setTempsEnPlus((p) => ({ ...p, [o.id]: v })); }}
             options={[{ value: 0, label: t('ordersResto.extraPrepNone') }, ...[10, 20, 30].map((m) => ({ value: m, label: t('ordersResto.extraPrepMinutes', { n: m }) }))]} />
-          <button type="button" className={`ec-bouton ${o.id === premiereNouvelle ? 'ec-bouton--lime' : 'ec-bouton--iris'}`} disabled={actionEnCours === o.id}
-            onClick={() => { vibrer(14); if (o.allergyRequest) setAllergieAConfirmer(o); else orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 }); }}>
-            {actionEnCours === o.id ? '…' : t('ordersResto.accept')}
-          </button>
-          <button type="button" className="ec-bouton ec-bouton--texte" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
+          {/* Sur un téléphone, ceux de la plus pressée sont dans la barre du bas : cachés ici par le CSS (.ec-cmd-boutons-barre),
+              mais gardés pour une tablette plus large, où la barre ne s'affiche pas. */}
+          {(
+            <div className={dansLaBarre ? 'ec-cmd-boutons-barre' : undefined}>
+              <button type="button" className={`ec-bouton ${o.id === plusPressee ? 'ec-bouton--lime' : 'ec-bouton--iris'}`} disabled={actionEnCours === o.id} onClick={() => accepter(o)}>
+                {actionEnCours === o.id ? '…' : t('ordersResto.accept')}
+              </button>
+              <button type="button" className="ec-bouton ec-bouton--texte" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
+            </div>
+          )}
         </div>
       )}
       {/* Iris et non lime : avec plusieurs commandes en préparation, l'écran alignait autant de boutons lime. */}
@@ -418,40 +434,29 @@ export default function OrdersPage() {
           <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
         </div>
       )}
-      {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
-        <div className="row" style={{ marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
-          <button className="btn-ghost btn-sm" style={{ color: 'var(--red)' }} onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{t('ordersResto.customerNoShow')}</button>
-        </div>
-      )}
-      {o.status === 'pret' && o.orderType === 'pickup' && (
-        <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
-          <input aria-label={t('ordersResto.phCustomerCode')}
-            placeholder={t('ordersResto.phCustomerCode')}
-            // Codes à chiffres : pavé numérique sur téléphone, Entrée valide (simulation du 30/09).
-            inputMode="numeric" autoComplete="off"
-            onKeyDown={(e) => { if (e.key === 'Enter') confirmTakeaway(o); }}
-            style={{ maxWidth: 140 }}
-            value={pickupCodeInputs[o.id] || ''}
-            onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
-          />
-          <button className="btn-teal btn-sm" disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
-            {confirmingPickup === o.id ? '...' : t('ordersResto.validateOrder')}
-          </button>
+      {o.status === 'pret' && o.orderType === 'pickup' && codeClient(o)}
+      {o.paymentMode === 'on_site' && o.status === 'preparation' && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="ec-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} />{t('ordersResto.customerNoShow')}</button>
         </div>
       )}
       {/* RETRAIT SANS RIEN TAPER (simulation du 10 oct. 2026) : le commerce compare à l'œil le code que le livreur lui
           montre avec celui-ci ; c'est le livreur qui confirme le retrait de son côté (PATCH /orders/:id/picked-up). */}
       <CodeRetrait order={o} t={t} />
-      {/* Le livreur est arrivé et attend (LIV-8) : le commerce le voit, avec depuis quand. */}
-      {o.courierWaitingSince && ['preparation', 'pret'].includes(o.status) && (
-        <p className="small" style={{ marginTop: 8, marginBottom: 0, fontWeight: 700 }}>{t('ordersResto.courierWaiting', { min: Math.max(0, Math.floor((Date.now() - o.courierWaitingSince) / 60000)) })}</p>
-      )}
+      {/* Le livreur, une personne : qui vient, s'il est là (et depuis quand), son pourboire. */}
+      <LivreurCommande order={o} />
       {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
         <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>{t('ordersResto.waitingDriver')}</p>
       )}
     </div>
     );
   };
+  // Accepter : une demande d'allergie se confirme d'abord (A1), comme dans la feuille « Nouvelle commande ».
+  function accepter(o) {
+    vibrer(14);
+    if (o.allergyRequest) setAllergieAConfirmer(o);
+    else orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 });
+  }
 
   // Les fenêtres (détail, refus avec motif, allergie, client pas venu, contrôle d'âge), communes au tableau du site et à la liste de l'app.
   const fenetres = (
@@ -604,8 +609,6 @@ export default function OrdersPage() {
      client attendu, en route). Mêmes gestes que la liste de l'app : photo, ticket, temps en plus, allergie à confirmer,
      refus avec motif (ReasonDialog), prête, client pas venu, code du client, code de retrait, contrôle d'âge. Toucher la
      carte ouvre le détail. Quand la feuille est étroite (téléphone), les colonnes s'empilent (site-pro.css). */
-  const nouvellesTriees = enCours.filter((o) => orderStageKey(o) === 'nouveau').sort((a, b) => echeance(a) - echeance(b));
-  const plusPressee = nouvellesTriees.find((o) => o.status === 'nouveau')?.id;
   const colonnes = COLONNES.map((c) => ({ ...c, liste: c.cle === 'nouv' ? nouvellesTriees : enCours.filter((o) => c.etapes.includes(orderStageKey(o))) }));
   const carteTableau = (o) => {
     const stageKey = orderStageKey(o);
@@ -622,21 +625,13 @@ export default function OrdersPage() {
               <span className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</span>
             </div>
             <b className="sp-cmd-client">{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6 }}>{t('ordersResto.trainingBadge')}</span>}</b>
-            {o.clientPhone && <span className="sp-cmd-tel"><Icone nom="telephone" taille={13} className="icone-texte" />{' '}{o.clientPhone}</span>}
+            {o.clientPhone && <span className="sp-cmd-tel"><Icone nom="telephone" taille={13} className="icone-texte" />{' '}{telephoneLisible(o.clientPhone)}</span>}
           </div>
           <div className="sp-cmd-outils" onClick={(e) => e.stopPropagation()}>
-            {['nouveau', 'preparation', 'pret'].includes(o.status) && !o.preparedPhoto && (
-              <label className="sp-outil" title={t('ordersResto.photoHelp')} aria-label={t('ordersResto.photoBtn')}>
-                {photoEnCours === o.id ? '…' : <Icone nom="apercu" taille={16} />}
-                <input type="file" accept="image/*" capture="environment" hidden disabled={photoEnCours === o.id} onChange={(e) => { photographier(o, e.target.files?.[0]); e.target.value = ''; }} />
-              </label>
-            )}
-            {o.preparedPhoto && (
-              <a className="sp-outil" href={o.preparedPhoto.url} target="_blank" rel="noreferrer" title={t('ordersResto.photoDone', { time: new Date(o.preparedPhoto.at).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })}><Icone nom="apercu" taille={16} />✓</a>
-            )}
+            {boutonPhoto(o, 'sp-outil', 16)}
             <button type="button" className="sp-outil" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
               disabled={envoiTicket === o.id} onClick={() => { if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else setSelectedOrder(o); }}><Icone nom="imprimante" taille={16} /></button>
-            {nouvelle && o.acceptDeadline && <AnneauDelai order={o} t={t} />}
+            {nouvelle && o.acceptDeadline && <AnneauDelai order={o} />}
           </div>
         </div>
         {pastille && (
@@ -644,7 +639,7 @@ export default function OrdersPage() {
             <Icone nom={stage.icon} taille={14} className="icone-texte" /> {t(`orderStatus.stage_${stage.key}`)}
           </span>
         )}
-        <p className="sp-cmd-art">{o.items.map(formatOrderItem).join(', ')}</p>
+        <ListePlats items={o.items} />
         <div className="sp-cmd-paiement">
           {o.paymentMode === 'on_site' ? (
             <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
@@ -656,13 +651,10 @@ export default function OrdersPage() {
           {o.print && <EtatImpression p={o.print} t={t} />}
         </div>
         {o.orderType === 'delivery' && o.address && <div className="small sp-cmd-info"><Icone nom="position" taille={14} className="icone-texte" />{' '}{o.address}</div>}
-        <DeliveryTiming order={o} />
-        <EcheanceAcceptation order={o} />
+        {/* Une commande qui attend : ni heure estimée ni phrase d'échéance, l'anneau dit le temps qui reste (audit design 2). */}
+        {!nouvelle && <DeliveryTiming order={o} />}
         <BandeauAllergie order={o} />
         <BadgeAlcool order={o} />
-        {o.orderType === 'delivery' && o.driverName && ['preparation', 'pret'].includes(o.status) && (
-          <div className="small" style={{ fontWeight: 600 }}>{t('ordersResto.driverAssigned', { name: o.driverName })}</div>
-        )}
         {nouvelle && (
           <div className="sp-cmd-actions" onClick={(e) => e.stopPropagation()}>
             <SegmentGlisse libelle={t('ordersResto.extraPrepLabel')} valeur={tempsEnPlus[o.id] || 0}
@@ -670,7 +662,7 @@ export default function OrdersPage() {
               options={[{ value: 0, label: t('ordersResto.extraPrepNone') }, ...[10, 20, 30].map((m) => ({ value: m, label: t('ordersResto.extraPrepMinutes', { n: m }) }))]} />
             <div className="sp-cmd-boutons">
               <button type="button" className={`ec-bouton ${pressee ? 'ec-bouton--lime' : 'ec-bouton--iris'}`} disabled={actionEnCours === o.id}
-                onClick={() => { if (o.allergyRequest) setAllergieAConfirmer(o); else orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 }); }}>
+                onClick={() => accepter(o)}>
                 {actionEnCours === o.id ? '…' : t('ordersResto.accept')}
               </button>
               <button type="button" className="ec-bouton sp-bouton-contour" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
@@ -682,25 +674,13 @@ export default function OrdersPage() {
             <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
           </div>
         )}
-        {o.status === 'pret' && o.orderType === 'pickup' && (
-          <div className="sp-cmd-code" onClick={(e) => e.stopPropagation()}>
-            <input aria-label={t('ordersResto.phCustomerCode')} placeholder={t('ordersResto.phCustomerCode')} inputMode="numeric" autoComplete="off"
-              onKeyDown={(e) => { if (e.key === 'Enter') confirmTakeaway(o); }}
-              value={pickupCodeInputs[o.id] || ''}
-              onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))} />
-            <button type="button" className="btn-teal btn-sm" disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
-              {confirmingPickup === o.id ? '...' : t('ordersResto.validateOrder')}
-            </button>
-          </div>
-        )}
+        {o.status === 'pret' && o.orderType === 'pickup' && codeClient(o)}
         <CodeRetrait order={o} t={t} />
-        {o.courierWaitingSince && ['preparation', 'pret'].includes(o.status) && (
-          <p className="small" style={{ margin: '8px 0 0', fontWeight: 700 }}>{t('ordersResto.courierWaiting', { min: Math.max(0, Math.floor((Date.now() - o.courierWaitingSince) / 60000)) })}</p>
-        )}
+        <LivreurCommande order={o} />
         {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
           <p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.waitingDriver')}</p>
         )}
-        {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
+        {o.paymentMode === 'on_site' && o.status === 'preparation' && (
           <div onClick={(e) => e.stopPropagation()}>
             <button type="button" className="btn-ghost btn-sm sp-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={14} className="icone-texte" />{' '}{t('ordersResto.customerNoShow')}</button>
           </div>
@@ -759,23 +739,31 @@ export default function OrdersPage() {
     </div>
   );
 
+  /* L'APP (audit design 2, section 2, 2026-10-19) : le premier écran est à la commande. Sur le bandeau, une ligne : le nom,
+     le résumé du service et l'interrupteur ouvert / en pause ; puis l'alarme en une ligne (LigneAlarme, « Couper » blanc) ;
+     l'état du terminal. Dans la feuille : « À traiter » d'abord (la plus pressée en tête), puis les blocs communs (prochaine
+     étape…), « En préparation », « Prêtes ». Tant qu'une commande attend, « Accepter #058 » et « Refuser » flottent dans une
+     barre au-dessus des onglets (portail dans <body> : la feuille et .page-fade s'animent avec transform, qui casse fixed). */
+  const sections = COLONNES.map((c) => ({ ...c, liste: c.cle === 'nouv' ? nouvellesTriees : enCours.filter((o) => c.etapes.includes(orderStageKey(o))) }));
+  const titresSections = { nouv: 'serviceCommerce.aTraiter', prep: 'serviceCommerce.enPreparation', pret: 'serviceCommerce.pretes' };
+  const enTete = (c) => <p className="ec-section" key={`t-${c.cle}`}>{t(titresSections[c.cle])} <span className="ec-section-n">{c.liste.length}</span></p>;
+  const pressee = nouvellesTriees.find((o) => o.id === plusPressee);
   return (
     <div className="no-print">
       <TirerPourActualiser onActualiser={() => loadDashboard(restoId, { silencieux: true })} />
-      {/* LE BANDEAU (2026-10-16) : le nom, le résumé du service, l'interrupteur ouvert / en pause et l'état du terminal.
-          Plus de carte de présentation du terminal ici : elle reste dans Mon compte › Terminal Fairide. */}
       <BandeauCommerce>
         <div className="ec-b-haut">
-          <span><b>{restaurant?.name}</b></span>
-          <span>{t('ordersResto.summary', { current: enCours.length, today: duJour })}</span>
+          <span><b>{restaurant?.name}</b>{' · '}{t('ordersResto.summary', { current: enCours.length, today: duJour })}</span>
+          {restaurant && <InterrupteurService compact restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />}
         </div>
-        {restaurant && <InterrupteurService surBandeau restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />}
+        <LigneAlarme alerte={alerte} />
         {terminaux && !membreEquipe && <span className="ec-terminal"><Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></span>}
       </BandeauCommerce>
       <FeuilleCommerce>
+        {nouvellesTriees.length > 0 && <>{enTete(sections[0])}{nouvellesTriees.map((o) => carteCommande(o, { barre: true }))}</>}
         {communs}
         {enCours.length === 0 && <EtatVide icone="commandes" titre={orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} />}
-        {enCours.map(carteCommande)}
+        {sections.slice(1).filter((c) => c.liste.length > 0).map((c) => <div key={c.cle}>{enTete(c)}{c.liste.map((o) => carteCommande(o))}</div>)}
         {/* Rupture du jour, sous les commandes (le geste reste à portée pendant le service). */}
         {restaurant && (
           <div className="ec-ruptures">
@@ -785,10 +773,20 @@ export default function OrdersPage() {
         {closes.length > 0 && (
           <details className="service-historique">
             <summary>{t('ordersResto.history', { n: closes.length })}</summary>
-            {closes.map(carteCommande)}
+            {closes.map((o) => carteCommande(o))}
           </details>
         )}
+        {pressee && <div className="ec-espace-barre" aria-hidden="true" />}
       </FeuilleCommerce>
+      {pressee && createPortal(
+        <div className="ec-barre-accepter no-print" role="group" aria-label={t('serviceCommerce.aTraiter')}>
+          <button type="button" className="ec-bouton ec-bouton--lime" disabled={actionEnCours === pressee.id} onClick={() => accepter(pressee)}>
+            {actionEnCours === pressee.id ? '…' : t('serviceCommerce.accepterNum', { num: numeroCommande(pressee) || '' }).trim()}
+          </button>
+          <button type="button" className="ec-bouton ec-bouton--contour" disabled={actionEnCours === pressee.id} onClick={() => setARefuser(pressee)}>{t('ordersResto.refuse')}</button>
+        </div>,
+        document.body
+      )}
 
       {fenetres}
     </div>

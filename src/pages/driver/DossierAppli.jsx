@@ -28,8 +28,8 @@ import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AV
  *
  * MÊMES ROUTES, MÊMES RÈGLES que le dossier du site (Onboarding.jsx), les listes communes dans dossierCommun.js :
  * POST /couriers/me/status, /identity/start, /documents, PATCH /couriers/me, POST /engagements, Stripe Connect, /submit.
- * Ce qui n'est pas ici reste sur la page normale, une fois le dossier envoyé : compteurs, changement de statut, documents
- * de vente. Le guide « comment devenir indépendant » (liens vers les sites publics) reste sur la version du site. */
+ * Une fois le dossier envoyé, l'app passe à DossierSuivi.jsx (compteurs, changement de statut, documents de vente, en bandeau
+ * et feuille depuis le 2026-10-19). Le guide « comment devenir indépendant » (liens vers les sites publics) reste sur le site. */
 const STATUTS = [['independent', 'mallette'], ['student_independent', 'guide']];
 const VEHICULES = ['velo', 'velo_electrique', 'scooter', 'voiture'];
 const AVANT_COURSE = ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur'];

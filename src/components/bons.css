@@ -2,10 +2,11 @@
 .resa-outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
 .resa-outils .resa-recherche { flex: 1 1 200px; min-width: 0; position: relative; }
 .resa-outils .resa-recherche input { padding-left: 32px; }
-.resa-outils .resa-recherche::before { content: '🔎'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
+/* La loupe : un trait (Icone « recherche »), plus l'émoji 🔎 (audit design 2). */
+.resa-outils .resa-loupe { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--ink-soft); pointer-events: none; }
 .resa-filtres { display: flex; flex-wrap: wrap; gap: 6px; }
 .resa-filtres button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: var(--radius-pill); padding: 5px 11px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
-.resa-filtres button.actif { background: var(--ink); border-color: var(--ink); color: #fff; }
+.resa-filtres button.actif { background: var(--iris); border-color: var(--iris); color: #fff; }
 .resa-filtres button b { font-weight: 800; margin-left: 4px; }
 .bon-liste { display: flex; flex-direction: column; gap: 8px; }
 .bon-ligne { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); background: #fff; cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; }
@@ -18,7 +19,7 @@
 .bon-statut-used { background: var(--cream-dim); color: var(--ink-soft); }
 .bon-statut-expired, .bon-statut-cancelled { background: rgba(217,45,60,0.10); color: var(--red); }
 .bon-carte { border: 2px solid #14121F; border-radius: var(--radius); padding: 22px 24px; background: #fff; max-width: 460px; position: relative; overflow: hidden; }
-.bon-carte::after { content: '🎁'; position: absolute; right: 18px; top: 14px; font-size: 34px; opacity: .9; }
+.bon-carte-icone { position: absolute; right: 18px; top: 14px; color: var(--iris); line-height: 0; }
 .bon-carte .bon-carte-resto { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-soft); }
 .bon-carte .bon-carte-titre { font-size: 22px; font-weight: 800; margin: 4px 0 10px; }
 .bon-carte .bon-carte-montant { font-size: 40px; font-weight: 900; line-height: 1; color: #3B2FB5; }

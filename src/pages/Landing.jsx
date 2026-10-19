@@ -34,7 +34,7 @@ function joinCards(t) {
   return [
     { key: 'client', icon: 'sac', eyebrow: t('landing.joinClientRole'), title: t('landing.joinClientTitle'), link: t('landing.joinClientLink'), to: '/login?audience=client' },
     { key: 'restaurant', icon: 'commerce', eyebrow: t('landing.joinRestaurantRole'), title: t('landing.joinRestaurantTitle'), link: t('landing.joinRestaurantLink'), to: '/login?audience=partner&role=restaurant' },
-    { key: 'driver', icon: 'scooter', eyebrow: t('landing.joinDriverRole'), title: t('landing.joinDriverTitle'), link: t('landing.joinDriverLink'), to: '/login?audience=partner&role=driver' }
+    { key: 'driver', icon: 'velo', eyebrow: t('landing.joinDriverRole'), title: t('landing.joinDriverTitle'), link: t('landing.joinDriverLink'), to: '/login?audience=partner&role=driver' }
   ];
 }
 

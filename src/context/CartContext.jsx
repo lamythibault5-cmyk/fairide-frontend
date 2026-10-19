@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { fraisService } from '../fraisService';
 import { FORFAIT_LIVRAISON, tarifLivraison } from '../livraison';
+import { remiseLigne } from '../prixPlat';
 
 const CartContext = createContext(null);
 // Exporté depuis que la fiche d'un commerce l'annonce elle aussi (« Livraison dès 4,50 € ») :
@@ -252,21 +253,19 @@ export function CartProvider({ children }) {
     let rawSubtotal = 0;
     let promoDiscount = 0;
     const discountedItems = [];
-    Object.values(lines).forEach((line) => {
+    // Remise de chaque ligne, par clé : le panier et le paiement affichent le prix PAYÉ de la ligne (audit design 2 du
+    // 2026-10-19, « un seul récit du prix »), avec « −5 % inclus » quand une offre s'applique.
+    const lineDiscounts = {};
+    Object.entries(lines).forEach(([cle, line]) => {
       const item = menu?.find((m) => m.id === line.itemId);
       if (!item) return;
       rawSubtotal += line.unitPrice * line.qty;
       const promo = item.activePromo;
-      let discount = 0;
-      if (promo) {
-        if (promo.type === 'percent') discount = item.price * line.qty * (promo.value / 100);
-        // Avantage Fairide : -X € par unité, plafonné au prix du produit (même règle que le serveur).
-        else if (promo.type === 'amount') discount = Math.min(promo.value, item.price) * line.qty;
-        // value = N, le nombre d'articles achetés pour en obtenir 1 offert (défaut 1 = "1 acheté = 1 offert").
-        else if (promo.type === 'bogo') discount = Math.floor(line.qty / ((promo.value || 1) + 1)) * item.price;
-      }
+      // −X % / −X € (plafonné au prix du produit) / N achetés = 1 offert : même règle que le serveur (prixPlat.js).
+      const discount = remiseLigne(item, line.qty);
       if (discount > 0) {
         promoDiscount += discount;
+        lineDiscounts[cle] = { discount: +discount.toFixed(2), promo };
         // `promo` voyage avec la ligne : l'affichage recompose le libellé dans la langue du client (libellePromo).
         discountedItems.push({ name: item.name, label: promo.label, promo, discount });
       }
@@ -296,7 +295,7 @@ export function CartProvider({ children }) {
     // d'information : ils ne s'ajoutent pas au total. À emporter : aucun.
     const serviceFee = fraisService(baseLivraison);
     const total = +(subtotal + clientDeliveryFee).toFixed(2);
-    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: baseLivraison, deliveryDiscount: +deliveryDiscount.toFixed(2), serviceFee, total };
+    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, lineDiscounts, subtotal, deliveryFee: baseLivraison, deliveryDiscount: +deliveryDiscount.toFixed(2), serviceFee, total };
   }
 
   // Estimation sans remises, utilisable sans connaître le menu complet du restaurant (le panier flottant

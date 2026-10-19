@@ -1378,7 +1378,7 @@ export default function Auth() {
                         {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
                           <div key={v} role="radio" aria-checked={vehicleType === v} tabIndex={0} className={`chip${vehicleType === v ? ' active' : ''}`}
                             onClick={() => setVehicleType(v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setVehicleType(v); }}>
-                            {v === 'velo' ? <Icone nom="scooter" taille={16} className="icone-texte" /> : v === 'velo_electrique' ? null : v === 'scooter' ? <Icone nom="scooter" taille={16} className="icone-texte" /> : <Icone nom="scooter" taille={16} className="icone-texte" />}{t(`courierOnboarding.vehicle_${v}`)}
+                            {v === 'velo' ? <Icone nom="velo" taille={16} className="icone-texte" /> : v === 'velo_electrique' ? null : v === 'scooter' ? <Icone nom="scooter" taille={16} className="icone-texte" /> : <Icone nom="scooter" taille={16} className="icone-texte" />}{t(`courierOnboarding.vehicle_${v}`)}
                           </div>
                         ))}
                       </div>
@@ -1580,7 +1580,7 @@ export default function Auth() {
                 <div className="field services-choice" role="group" aria-labelledby="auth-services-titre">
                   <span className="titre-groupe" id="auth-services-titre">{t('auth.servicesTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.servicesHelp')}</p>
-                  <label className="service-option"><input type="checkbox" checked={services.delivery} onChange={(e) => setServices((s) => ({ ...s, delivery: e.target.checked }))} /> <span><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('auth.serviceDelivery')}</span></label>
+                  <label className="service-option"><input type="checkbox" checked={services.delivery} onChange={(e) => setServices((s) => ({ ...s, delivery: e.target.checked }))} /> <span><Icone nom="velo" taille={16} className="icone-texte" />{' '}{t('auth.serviceDelivery')}</span></label>
                   {services.delivery && (
                     <div className="service-suboptions">
                       <label className="service-option"><input type="radio" name="deliveryMode" checked={services.deliveryMode === 'fairide'} onChange={() => setServices((s) => ({ ...s, deliveryMode: 'fairide' }))} /> <span>{t('auth.serviceDeliveryFairide')}</span></label>

@@ -133,7 +133,7 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
       )}
 
       <div className="ec-ligne">
-        <span className="ec-ligne-tuile" aria-hidden="true"><Icone nom="scooter" taille={20} /></span>
+        <span className="ec-ligne-tuile" aria-hidden="true"><Icone nom="velo" taille={20} /></span>
         <span className="ec-ligne-texte"><b>{t('promosPage.fairideDeliveryTitle')}</b><small>{etatLivraison}</small></span>
         {interrupteur('livraison', livraisonActive, t('promosPage.fairideDeliveryTitle'))}
       </div>

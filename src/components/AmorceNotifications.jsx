@@ -38,9 +38,9 @@ export default function AmorceNotifications() {
   }
 
   const textes = {
-    restaurant: { titre: t('appli.coNotifTitre'), sous: t('appli.coNotifSub'), faits: [['commandes', t('appli.coN1'), t('appli.coN1S')], ['scooter', t('appli.coN2'), t('appli.coN2S')]] },
+    restaurant: { titre: t('appli.coNotifTitre'), sous: t('appli.coNotifSub'), faits: [['commandes', t('appli.coN1'), t('appli.coN1S')], ['velo', t('appli.coN2'), t('appli.coN2S')]] },
     driver: { titre: t('appli.lvNotifTitre'), sous: t('appli.lvNotifSub'), faits: [['euro', t('appli.lvN1'), t('appli.lvN1S')], ['personnes', t('appli.lvN2'), t('appli.lvN2S')], ['coche', t('appli.lvN3'), t('appli.lvN3S')]] },
-    client: { titre: t('appli.notifTitre'), sous: t('appli.notifSub'), faits: [['coche', t('appli.nAccept'), t('appli.nAcceptS')], ['scooter', t('appli.nRoute'), t('appli.nRouteS')], ['porte', t('appli.n1'), t('appli.n1S')]] }
+    client: { titre: t('appli.notifTitre'), sous: t('appli.notifSub'), faits: [['coche', t('appli.nAccept'), t('appli.nAcceptS')], ['velo', t('appli.nRoute'), t('appli.nRouteS')], ['porte', t('appli.n1'), t('appli.n1S')]] }
   }[role];
   return (
     <div className="bv bv-par-dessus" role="dialog" aria-modal="true" aria-label={textes.titre}>

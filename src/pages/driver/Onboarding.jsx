@@ -1,6 +1,8 @@
 import { allerAuPaiement, experienceApp } from '../../natif';
 import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 import DossierAppli from './DossierAppli';
+import DossierSuivi from './DossierSuivi';
+import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer } from './dossierBlocs';
 import PageLivreur from '../../components/livreur/PageLivreur';
 import SacLivraison from '../../components/SacLivraison';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
@@ -11,7 +13,6 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
 import { SkeletonCards } from '../../components/Skeleton';
-import ConfirmDialog from '../../components/ConfirmDialog';
 import { euros } from '../../prixPlat';
 import GuideIndependant from '../../components/livreur/GuideIndependant';
 import ouvrirDocument from '../../ouvrirDocument';
@@ -38,8 +39,6 @@ const MANQUES_PAR_ETAPE = {
   engagements: ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur', 'contrat'],
   paiement: [], envoi: ['statut_non_verifie']
 };
-// Deux statuts (CODE-12, DEC-19 : plus d'économie collaborative, régime fermé aux livreurs de plateformes).
-const STATUTS = ['student_independent', 'independent'];
 const EMOJI_STATUT = { student_independent: 'guide', independent: 'mallette' }; // noms d'icônes (Icone.jsx)
 const euro = (n) => euros(Number(n || 0));
 // Taux stocké en fraction (0.107) affiché en pourcentage (« 10,7 ») ; « — » si la configuration ne le donne pas.
@@ -110,10 +109,17 @@ export default function Onboarding() {
   if (experienceApp() && enDossier) {
     return <DossierAppli d={d} charger={charger} token={token} user={user} busy={busy} action={action} refreshUser={refreshUser} etapeDemandee={etape} />;
   }
+  /* ENVOYÉ, VALIDÉ, SUSPENDU : AUSSI EN BANDEAU ET FEUILLE DANS L'APP (deuxième audit design, section 9, approuvé le 2026-10-19).
+   * Jusqu'ici l'app retombait sur la page du site (lien texte, carte au gros trait, triangle du navigateur, tuiles grises).
+   * Mêmes blocs et mêmes routes que plus bas (dossierBlocs.jsx). */
+  if (experienceApp()) {
+    return <DossierSuivi d={d} token={token} user={user} busy={busy} action={action} charger={charger}
+      onStatutChange={() => { setEtape('statut'); refreshUser?.(); }} />;
+  }
   const allerAuChangement = () => { document.getElementById('changement-statut')?.scrollIntoView({ behavior: defilement(), block: 'start' }); };
 
   return (
-    // Site : le bandeau iris de l'espace livreur (PageLivreur.jsx) ; app (dossier validé ou envoyé) : comme avant.
+    // Site seulement : le bandeau iris de l'espace livreur (PageLivreur.jsx). L'app a DossierAppli (brouillon) et DossierSuivi.
     <PageLivreur classe="courier-onboarding" titre={t('courierOnboarding.title')} sous={t('siteLivreur.dossierSous')}>
 
       {/* État du dossier */}
@@ -631,27 +637,6 @@ function EtapePaiement({ d, t, busy, token, user, action, onNext }) {
   );
 }
 
-// AVANT DE COMMENCER (fondateur, 2026-10-06) : ce que le livreur doit savoir — il commence après validation par Fairide ;
-// jusqu'à trois courses à la fois s'il ne livre que pour Fairide (2026-10-17), une seule s'il livre aussi ailleurs ; comment il
-// est payé ; le fonds d'assurance Fairide (10 % des frais de livraison) ; sa responsabilité en cas d'accident ou d'infraction.
-function AvantDeCommencer({ c, t, pricing, replie = false }) {
-  const autre = c?.otherPlatforms?.works === true;
-  const eur = (v) => `${Number(v || 0).toFixed(2).replace('.', ',')} €`;
-  const p = { base: eur(pricing?.deliveryBaseFee ?? 5), km: Number(pricing?.deliveryBaseKm ?? 1), perKm: eur(pricing?.driverPerKmMotor ?? 0.8), radius: String(pricing?.secondOrderRadiusKm ?? 2).replace('.', ','), delay: Number(pricing?.extraOrderMaxDelayMin ?? 10) };
-  return (
-    <div className={replie ? undefined : 'card'} style={{ marginBottom: replie ? 0 : 12, marginTop: replie ? 8 : 0 }}>
-      {!replie && <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.beforeTitle')}</h3>}
-      <ul className="small" style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
-        <li>{t('courierOnboarding.beforeValidation')}</li>
-        <li>{autre ? t('courierOnboarding.beforeOneOrder') : t('courierOnboarding.beforeThreeOrders', { radius: p.radius, delay: p.delay })}</li>
-        <li>{t('courierOnboarding.beforePayment', p)}</li>
-        <li>{t('courierOnboarding.beforeInsurance')}</li>
-        <li>{t('courierOnboarding.beforeLiability')}</li>
-      </ul>
-    </div>
-  );
-}
-
 function EtapeEnvoi({ d, t, busy, onSubmit, onGoTo }) {
   // Le numéro d'entreprise peut arriver après l'envoi (MANQUES_APRES_ENVOI) : il ne retient pas le bouton.
   const manque = (d.missing ?? []).filter((m) => !MANQUES_INFORMATIFS.includes(m) && !MANQUES_APRES_ENVOI.includes(m));
@@ -700,135 +685,3 @@ function Compteurs({ d, t }) {
   );
 }
 
-// Notifications non lues du livreur (alertes de plafond, blocage, changement de statut), avec « lu ».
-function Notifications({ t, token }) {
-  const [liste, setListe] = useState([]);
-  const charger = () => api('/couriers/me/notifications', { token }).then((r) => setListe((Array.isArray(r) ? r : r?.notifications ?? []).filter((n) => !n.readAt))).catch(() => {});
-  useEffect(() => { charger(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
-  async function lire(ids) {
-    try { await api('/couriers/me/notifications/read', { method: 'PATCH', token, body: ids ? { ids } : {} }); } catch { /* silencieux : la liste est rechargée */ }
-    charger();
-  }
-  if (!liste.length) return null;
-  const texte = (n) => {
-    const p = n.payload ?? {};
-    const v = { level: p.level ?? '', year: p.year ?? '', used: euro(p.used), max: euro(p.max), remaining: euro(p.remaining) };
-    if (n.kind === 'threshold_alert') return t('courierOnboarding.notif_threshold_alert', v);
-    if (n.kind === 'threshold_blocked') return t('courierOnboarding.notif_threshold_blocked', v);
-    if (n.kind === 'status_changed') return t('courierOnboarding.notif_status_changed');
-    return p.message || n.kind || t('courierOnboarding.notif_other');
-  };
-  return (
-    <div className="card courier-state warn">
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <b><Icone nom="cloche" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.notificationsTitle')} ({liste.length})</b>
-        <button type="button" className="btn-ghost btn-sm" onClick={() => lire(null)}>{t('courierOnboarding.markAllRead')}</button>
-      </div>
-      {liste.map((n) => (
-        <div key={n.id} className="row small" style={{ justifyContent: 'space-between', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-          <span>{n.createdAt ? `${new Date(n.createdAt).toLocaleDateString(getLocale())} · ` : ''}{texte(n)}</span>
-          <button type="button" className="btn-ghost btn-sm" onClick={() => lire([n.id])}>{t('courierOnboarding.markRead')}</button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Changement de statut en libre-service : le dossier repasse en vérification (documents du nouveau
-// statut, nouveau contrat), d'où la confirmation.
-function ChangementStatut({ d, t, token, action, busy, onChanged }) {
-  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
-  // quand ce composant est rendu plusieurs fois sur la meme page.
-  const idsA11y = useId();
-  const c = d.courier;
-  const choix = STATUTS.filter((x) => x !== c.statusType);
-  const [cible, setCible] = useState(choix.includes('independent') ? 'independent' : choix[0] || '');
-  const [ouvert, setOuvert] = useState(c.lifecycleStatus === 'blocked_threshold');
-  const [confirm, setConfirm] = useState(false);
-  async function changer() {
-    setConfirm(false);
-    const ok = await action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType: cible } }), t('courierOnboarding.toastStatusChanged'));
-    if (ok) onChanged?.();
-  }
-  return (
-    <div className="card" id="changement-statut">
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ margin: 0, fontSize: 15 }}><Icone nom="melanger" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.changeStatusTitle')}</h3>
-        <button type="button" className="btn-ghost" onClick={() => setOuvert((v) => !v)}>{ouvert ? t('courierOnboarding.hide') : t('courierOnboarding.open')}</button>
-      </div>
-      {ouvert && (
-        <div style={{ marginTop: 10 }}>
-          <p className="small" style={{ margin: '0 0 8px' }}>{c.lifecycleStatus === 'blocked_threshold' ? t('courierOnboarding.changeStatusBlocked') : t('courierOnboarding.changeStatusHelp')}</p>
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <div className="field" style={{ margin: 0 }}>
-              <label htmlFor={idsA11y + '-newstatus'}>{t('courierOnboarding.newStatus')}</label>
-              <select id={idsA11y + '-newstatus'} value={cible} onChange={(e) => setCible(e.target.value)}>{choix.map((x) => <option key={x} value={x}>{t(`courierOnboarding.status_${x}`)}</option>)}</select>
-            </div>
-            <button type="button" className="btn-outline" disabled={busy || !cible} onClick={() => setConfirm(true)}>{t('courierOnboarding.changeStatusBtn')}</button>
-          </div>
-        </div>
-      )}
-      <ConfirmDialog open={confirm} title={t('courierOnboarding.changeStatusConfirmTitle')} message={t('courierOnboarding.changeStatusConfirmBody', { status: cible ? t(`courierOnboarding.status_${cible}`) : '' })} confirmLabel={t('courierOnboarding.changeStatusBtn')} loading={busy} onConfirm={changer} onCancel={() => setConfirm(false)} />
-    </div>
-  );
-}
-
-// Pièces refusées sans remplacement déposé depuis, hors brouillon (voir l'appel plus haut).
-/* LE NUMÉRO D'ENTREPRISE, APRÈS L'ENVOI (fondateur, 18/10/2026). Le dossier est parti sans lui (MANQUES_APRES_ENVOI) ; les
- * étapes sont masquées une fois le dossier envoyé, donc on le demande ici, seul. Dès qu'il est là, l'équipe peut valider. */
-function NumeroEntrepriseEnAttente({ t, token, busy, action }) {
-  const [bce, setBce] = useState('');
-  return (
-    <div className="card">
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.bcePendingTitle')}</h3>
-      <p className="small" style={{ margin: '0 0 10px' }}>{t('courierOnboarding.bcePendingText')}</p>
-      <form className="row" style={{ gap: 8, flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); action(() => api('/couriers/me', { method: 'PATCH', token, body: { companyNumber: bce.trim() } }), t('courierOnboarding.bceSaved')); }}>
-        <input aria-label={t('courierOnboarding.fBce')} value={bce} onChange={(e) => setBce(e.target.value)} placeholder="0123.456.789" inputMode="numeric" style={{ flex: '1 1 180px' }} />
-        <button type="submit" className="btn-gold" disabled={busy || !bce.trim()}>{busy ? '…' : t('common.save')}</button>
-      </form>
-    </div>
-  );
-}
-
-function PiecesARemplacer({ d, t, token, busy, action }) {
-  const toast = useToast();
-  const [echeances, setEcheances] = useState({});
-  const fichiers = useRef({});
-  const docs = d.documents ?? [];
-  const types = [...new Set(docs.filter((x) => x.rejectedReason).map((x) => x.docType))]
-    .filter((type) => !docs.some((x) => x.docType === type && !x.rejectedReason));
-  if (!types.length) return null;
-  async function deposer(type, e) {
-    const file = e.target.files?.[0]; e.target.value = ''; if (!file) return;
-    await action(() => apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType: type, expiresAt: AVEC_ECHEANCE.includes(type) ? echeances[type] || undefined : undefined } }), t('courierOnboarding.toastDocUploaded'));
-  }
-  return (
-    <div className="card" role="alert" style={{ borderColor: 'var(--red)' }}>
-      <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('courierOnboarding.docsToReplaceTitle')}</h3>
-      {types.map((type) => {
-        const refus = docs.filter((x) => x.docType === type && x.rejectedReason).at(-1);
-        return (
-          <div key={type} className="courier-doc">
-            <div>
-              <b>{t(`courierOnboarding.doc_${type}`)}</b>
-              <p className="small texte-erreur" style={{ margin: '2px 0 0' }}>{refus?.rejectedReason}</p>
-            </div>
-            <div className="courier-doc-actions">
-              {AVEC_ECHEANCE.includes(type) && (
-                <label className="courier-doc-echeance small">
-                  {t(ECHEANCE_REQUISE.includes(type) ? 'courierOnboarding.docExpiryRequiredLabel' : 'courierOnboarding.docExpiryLabel')}
-                  <input type="date" value={echeances[type] || ''} onChange={(e) => setEcheances((x) => ({ ...x, [type]: e.target.value }))} />
-                </label>
-              )}
-              <input ref={(el) => { fichiers.current[type] = el; }} type="file" accept={['profile_photo', 'selfie'].includes(type) ? 'image/*' : 'application/pdf,image/*'} capture={type === 'selfie' ? 'user' : undefined} style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
-              <button type="button" className="btn-gold" disabled={busy} onClick={() => {
-                if (ECHEANCE_REQUISE.includes(type) && !echeances[type]) { toast(t('courierOnboarding.docExpiryFirst'), 'erreur'); return; }
-                fichiers.current[type]?.click();
-              }}>{t('courierOnboarding.docReplace')}</button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
