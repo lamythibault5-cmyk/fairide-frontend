@@ -1,5 +1,5 @@
 import { allerAuPaiement, experienceApp } from '../../natif';
-import { MANQUES_INFORMATIFS, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
+import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 import DossierAppli from './DossierAppli';
 import PageLivreur from '../../components/livreur/PageLivreur';
 import SacLivraison from '../../components/SacLivraison';
@@ -145,6 +145,7 @@ export default function Onboarding() {
           n'avait aucun moyen de la remplacer (audit UX du 15/10/2026). Il est prévenu par e-mail et notification ; ici, la
           pièce, le motif, et le bouton pour en déposer une autre. */}
       {!enDossier && <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />}
+      {!enDossier && manques.includes('bce') && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} />}
 
       {/* Livreur déjà validé : les notices (B4, B8) doivent être relues quand leur texte change, sinon le
           serveur refuse la prochaine course (NOTICES_A_ACCEPTER). Les étapes ci-dessous ne s'affichent
@@ -308,7 +309,9 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
     for (const f of files) { const ok = await action(() => apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType: 'identity_card' } }), null); if (!ok) break; }
     toast(files.length > 1 ? t('courierOnboarding.toastDocsUploaded', { n: files.length }) : t('courierOnboarding.toastDocUploaded'));
   }
-  const carte = (d.documents ?? []).filter((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType));
+  // Une pièce refusée par l'équipe ne compte pas (avant : coche verte « reçue, rien à refaire » sur une pièce refusée).
+  const carte = (d.documents ?? []).filter((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && !x.rejectedReason);
+  const refusee = carte.length === 0 ? (d.documents ?? []).find((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && x.rejectedReason) : null;
   const [autreMoyen, setAutreMoyen] = useState(false);
   const recue = id.status !== 'verified' && carte.length > 0 && !autreMoyen;
   return (
@@ -330,20 +333,23 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
         </div>
       ) : (
         <div className="courier-providers">
+          {refusee && <p className="small texte-erreur" role="alert"><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityRejected', { reason: refusee.rejectedReason })}</p>}
           <div className="courier-provider">
             <b><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.provider_stripe_identity')}</b>
             <p className="small">{t('courierOnboarding.stripeIdentityHelp')}</p>
             <button type="button" className="btn-teal" disabled={busy || !prov.stripe_identity} onClick={() => demarrer('stripe_identity')}>{id.status === 'pending' && id.provider === 'stripe_identity' ? t('courierOnboarding.identityResume') : t('courierOnboarding.identityStart')}</button>
             {id.status === 'processing' && <p className="small"><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityProcessing')}</p>}
-            {id.status === 'failed' && <p className="small texte-erreur">{t('courierOnboarding.identityFailed')}</p>}
+            {id.status === 'failed' && <p className="small texte-erreur">{t('courierOnboarding.identityFailed')}{ERREURS_IDENTITE.includes(id.error) && <> {t(`courierOnboarding.identityError_${id.error}`)}</>}</p>}
           </div>
-          <div className="courier-provider">
+          {/* STRIPE D'ABORD (fondateur, 19/10/2026 : « Stripe, le chemin de 99 % des livreurs »). Le dépôt d'une photo de la pièce,
+              que l'équipe devait juger à l'œil, n'est proposé que si Stripe Identity est coupé (identityProviders du serveur). */}
+          {!prov.stripe_identity && <div className="courier-provider">
             <b><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.provider_manual')}</b>
             <p className="small">{t('courierOnboarding.manualHelp')}</p>
             <input ref={fichier} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={deposer} />
             <button type="button" className="btn-outline" disabled={busy} onClick={async () => { if (id.provider !== 'manual') await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click(); }}>{t('courierOnboarding.manualUpload')}</button>
             {carte.length > 0 && <p className="small" style={{ margin: '6px 0 0' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.manualUploaded', { n: carte.length })}</p>}
-          </div>
+          </div>}
           {/* Contrôle en personne (CODE-14) : pour qui refuse la vérification biométrique — l'équipe fixe un rendez-vous. */}
           <div className="courier-provider">
             <b><Icone nom="contrat" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.provider_in_person')}</b>
@@ -359,7 +365,11 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
       <div className="row" style={{ marginTop: 12 }}><button type="button" className={id.status === 'verified' || id.status === 'processing' || (id.provider === 'manual' && carte.length > 0) || (id.provider === 'in_person' && id.status === 'pending') ? 'btn-gold' : 'btn-outline'} onClick={onNext}>{t('courierOnboarding.next')}</button></div>
       <ConsentementBiometrique consent={consentement} token={token} onFermer={() => setConsentement(null)}
         onAccepte={() => { setConsentement(null); demarrer('stripe_identity'); }}
-        onManuel={async () => { setConsentement(null); await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click(); }} />
+        onManuel={async () => {
+          setConsentement(null);
+          if (prov.stripe_identity) { await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'in_person' } }), t('courierOnboarding.inPersonRequested')); return; }
+          await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click();
+        }} />
     </div>
   );
 }
@@ -643,7 +653,9 @@ function AvantDeCommencer({ c, t, pricing, replie = false }) {
 }
 
 function EtapeEnvoi({ d, t, busy, onSubmit, onGoTo }) {
-  const manque = (d.missing ?? []).filter((m) => !MANQUES_INFORMATIFS.includes(m));
+  // Le numéro d'entreprise peut arriver après l'envoi (MANQUES_APRES_ENVOI) : il ne retient pas le bouton.
+  const manque = (d.missing ?? []).filter((m) => !MANQUES_INFORMATIFS.includes(m) && !MANQUES_APRES_ENVOI.includes(m));
+  const entrepriseEnAttente = (d.missing ?? []).some((m) => MANQUES_APRES_ENVOI.includes(m));
   const infos = (d.missing ?? []).filter((m) => MANQUES_INFORMATIFS.includes(m));
   const etapeDe = (m) => Object.keys(MANQUES_PAR_ETAPE).find((e) => MANQUES_PAR_ETAPE[e].includes(m)) || 'infos';
   return (
@@ -652,6 +664,7 @@ function EtapeEnvoi({ d, t, busy, onSubmit, onGoTo }) {
       {manque.length === 0 ? (
         <>
           <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.submitReady')}</p>
+          {entrepriseEnAttente && <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.bceLater')}</p>}
           <button type="button" className="btn-gold" disabled={busy} onClick={onSubmit}>{busy ? '…' : t('courierOnboarding.submit')}</button>
         </>
       ) : (
@@ -761,6 +774,22 @@ function ChangementStatut({ d, t, token, action, busy, onChanged }) {
 }
 
 // Pièces refusées sans remplacement déposé depuis, hors brouillon (voir l'appel plus haut).
+/* LE NUMÉRO D'ENTREPRISE, APRÈS L'ENVOI (fondateur, 18/10/2026). Le dossier est parti sans lui (MANQUES_APRES_ENVOI) ; les
+ * étapes sont masquées une fois le dossier envoyé, donc on le demande ici, seul. Dès qu'il est là, l'équipe peut valider. */
+function NumeroEntrepriseEnAttente({ t, token, busy, action }) {
+  const [bce, setBce] = useState('');
+  return (
+    <div className="card">
+      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.bcePendingTitle')}</h3>
+      <p className="small" style={{ margin: '0 0 10px' }}>{t('courierOnboarding.bcePendingText')}</p>
+      <form className="row" style={{ gap: 8, flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); action(() => api('/couriers/me', { method: 'PATCH', token, body: { companyNumber: bce.trim() } }), t('courierOnboarding.bceSaved')); }}>
+        <input aria-label={t('courierOnboarding.fBce')} value={bce} onChange={(e) => setBce(e.target.value)} placeholder="0123.456.789" inputMode="numeric" style={{ flex: '1 1 180px' }} />
+        <button type="submit" className="btn-gold" disabled={busy || !bce.trim()}>{busy ? '…' : t('common.save')}</button>
+      </form>
+    </div>
+  );
+}
+
 function PiecesARemplacer({ d, t, token, busy, action }) {
   const toast = useToast();
   const [echeances, setEcheances] = useState({});

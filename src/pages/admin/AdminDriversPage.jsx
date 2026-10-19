@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
@@ -48,6 +48,7 @@ export default function AdminDriversPage() {
   const { token } = useAuth();
   const toast = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useEtatPage('recherche', location.state?.presetSearch || searchParams.get('q') || '', { forcer: !!(location.state?.presetSearch || searchParams.get('q') || '') });
   const q = useDebouncedValue(search, 350);
@@ -118,8 +119,10 @@ export default function AdminDriversPage() {
   function askReactivate(d) {
     setConfirmAction({ title: tr('adminDrivers.confirmReactivate', { name: d.name }), run: () => setStatus(d.id, 'approved') });
   }
+  // VALIDER = LE DOSSIER (audit du 18/10/2026). L'ancien « Approuver » disait « validé » au livreur sans que son dossier soit
+  // vérifié : il ne pouvait pas rouler. La validation se fait dans Livreurs › Dossiers ; ce bouton y mène, sur ce livreur.
   function askApprove(d) {
-    setConfirmAction({ title: tr('adminDrivers.confirmApprove', { name: d.name }), message: tr('adminDrivers.approveBody'), run: () => setStatus(d.id, 'approved') });
+    navigate('/admin/couriers', { state: { presetSearch: d.email || d.name } });
   }
   // Suppression définitive (DELETE /admin/drivers/:id) : refusée par le serveur si une course est en cours.
   async function deleteDriver(d) {
@@ -269,7 +272,7 @@ export default function AdminDriversPage() {
               {tr('adminDrivers.statsLine', { n: d.deliveriesCount, revenue: money(d.revenue) })}
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
-              {d.adminStatus !== 'approved' && <button className="btn-teal btn-sm" onClick={() => askApprove(d)}>{tr('adminCommon.approve')}</button>}
+              {d.adminStatus !== 'approved' && <button className="btn-teal btn-sm" onClick={() => askApprove(d)}>{tr('adminDrivers.openFile')}</button>}
               {d.adminStatus !== 'blocked' && <button className="btn-danger-ghost btn-sm" onClick={() => askSuspend(d)}>{tr('adminCommon.suspend')}</button>}
               {d.adminStatus === 'blocked' && <button className="btn-teal btn-sm" onClick={() => askReactivate(d)}>{tr('adminCommon.reactivate')}</button>}
               <button className="btn-danger-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => askDelete(d)}>{tr('adminDrivers.deleteAccount')}</button>
@@ -309,7 +312,7 @@ export default function AdminDriversPage() {
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.companyNumber')} : {detail.companyNumber || '-'}</p>
               <p className="small" style={{ margin: '2px 0', opacity: 0.7 }}>{tr('adminCommon.privacyNote')}</p>
               <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={() => askApprove(detail)}>{tr('adminCommon.approve')}</button>}
+                {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={() => askApprove(detail)}>{tr('adminDrivers.openFile')}</button>}
                 <TestToggleButton userId={detail.id} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={() => { refreshDetail(); load(); }} />
                 {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
                 {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}

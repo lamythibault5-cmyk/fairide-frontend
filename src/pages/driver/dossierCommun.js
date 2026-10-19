@@ -6,6 +6,12 @@ import { ouvrirPdfBlob } from '../../natif';
 // « statut_non_verifie » n'est pas une action du livreur : c'est Fairide qui vérifie. Il n'empêche
 // donc pas d'envoyer le dossier, il est simplement affiché à titre d'information.
 export const MANQUES_INFORMATIFS = ['statut_non_verifie'];
+// Peuvent manquer à l'envoi du dossier (fondateur, 18/10/2026) : le numéro d'entreprise, et le n° de TVA qui en découle.
+// L'inscription à la BCE prend des jours ; l'équipe vérifie le reste pendant ce temps, et le numéro reste exigé avant la
+// validation (serveur : routes/couriers.js, MANQUES_APRES_ENVOI).
+export const MANQUES_APRES_ENVOI = ['bce', 'tva_numero'];
+// Échecs de Stripe Identity que l'on sait expliquer (code renvoyé par le serveur, courier.identity.error).
+export const ERREURS_IDENTITE = ['document_expired', 'document_unverified_other', 'document_type_not_supported', 'selfie_face_mismatch', 'selfie_document_missing_photo', 'selfie_unverified_other', 'under_supported_age', 'consent_declined'];
 // Caisses d'assurances sociales agréées en Belgique (noms propres, pas de traduction).
 export const CAISSES = ['Liantis', 'Acerta', 'Xerius', 'Partena', 'Securex', 'UCM', 'Group S', 'Caisse nationale auxiliaire'];
 // Attestations d'assurance, permis, titre de séjour : date d'échéance demandée, Fairide rappelle le renouvellement.

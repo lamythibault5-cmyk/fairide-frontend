@@ -6,6 +6,8 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
+import { useToast } from '../../context/ToastContext';
+import { ligneIndisponible, lignesIndisponibles } from '../../panierDisponible';
 import Icone from '../../components/Icone';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import ChiffresRoulants from '../../components/ChiffresRoulants';
@@ -58,6 +60,7 @@ function PasPanier({ qty, nom, onMoins, onPlus, libelleMoins, libellePlus }) {
 
 export default function PanierPage() {
   const cart = useCart();
+  const toast = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { token } = useAuth();
@@ -110,13 +113,15 @@ export default function PanierPage() {
     }, 260);
   }
 
+  // Plats qui ne se commandent plus (rupture, retirés) : marqués, « Retirer », et le paiement attend qu'ils soient partis.
+  const indisponibles = lignesIndisponibles(cart.lines, restaurant?.menu);
   const barre = (
     <BarreCommande montant={sousTotal} className="panier-barre">
       <span className="co-barre-total">
         <span className="co-barre-montant"><ChiffresRoulants valeur={euros(sousTotal)} /></span>
         <span className="co-barre-detail">{t('common.subtotal')}</span>
       </span>
-      <button type="button" className="btn-gold" onClick={() => navigate('/checkout')}>{t('panier.toCheckout')}</button>
+      <button type="button" className="btn-gold" onClick={() => (indisponibles.length ? toast(t('checkout.removeUnavailable'), 'erreur') : navigate('/checkout'))}>{t('panier.toCheckout')}</button>
     </BarreCommande>
   );
 
@@ -141,7 +146,7 @@ export default function PanierPage() {
         <div className="sc-principal">
         <div className="panier-lignes">
           {Object.entries(cart.lines).map(([cle, ligne]) => (
-            <div key={cle} className={`panier-ligne${sortantes.has(cle) ? ' ec-sort' : ''}`}>
+            <div key={cle} className={`panier-ligne${sortantes.has(cle) ? ' ec-sort' : ''}${indisponibles.includes(cle) ? ' panier-ligne--indispo' : ''}`}>
               {ligne.imageUrl
                 ? <img className="panier-ligne-image" src={ligne.imageUrl} alt="" loading="lazy" />
                 : <span className="panier-ligne-image panier-ligne-image-vide" aria-hidden="true"><Icone nom="restaurants" taille={20} /></span>}
@@ -151,14 +156,20 @@ export default function PanierPage() {
                   <span className="small">{ligne.optionsSnapshot.map((o) => o.name).join(', ')}</span>
                 )}
                 {ligne.note && <span className="small">« {ligne.note} »</span>}
-                <span className="panier-ligne-prix">{euros(ligne.unitPrice * ligne.qty)}</span>
+                {ligneIndisponible(ligne, restaurant?.menu)
+                  ? <span className="ligne-indispo">{t('checkout.unavailableToday')}</span>
+                  : <span className="panier-ligne-prix">{euros(ligne.unitPrice * ligne.qty)}</span>}
               </div>
+              {indisponibles.includes(cle) ? (
+                <button type="button" className="btn-outline btn-sm" onClick={() => cart.removeLine(cle)}>{t('checkout.removeLine')}</button>
+              ) : (
               <PasPanier
                 qty={ligne.qty} nom={ligne.name}
                 onMoins={() => moins(cle, ligne)}
                 onPlus={() => { vibrer(8); cart.changeLineQty(cle, 1); }}
                 libelleMoins={t('checkout.qtyLess')} libellePlus={t('checkout.qtyMore')}
               />
+              )}
             </div>
           ))}
           <button type="button" className="btn-ghost panier-vider" onClick={() => setViderOuvert(true)}>{t('floatingCart.clear')}</button>

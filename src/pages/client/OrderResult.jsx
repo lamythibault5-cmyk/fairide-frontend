@@ -8,6 +8,7 @@ import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
 import { BandeauCommande, FeuilleCommande, VeloMarque } from '../../components/EcranCommande';
+import InfosRetrait from '../../components/client/InfosRetrait';
 import { formatOrderItem, orderTypeLabel } from '../../orderStatus';
 import { euros } from '../../prixPlat';
 
@@ -140,7 +141,10 @@ export default function OrderResult({ success }) {
      — le récapitulatif à gauche, les deux actions dans un cadre à droite. */
   if (state === 'paid') {
     // Comme Mes commandes : le pourboire payé avec la commande est débité en plus du total (backend pourboireCommande.js).
-    const debite = commande ? Number(commande.total) + (commande.tipPaid && commande.tipAtCheckout > 0 ? Number(commande.tipAtCheckout) : 0) : null;
+    // Payée sur place : rien n'est débité — le montant à payer au comptoir est dit dans le bloc du retrait (InfosRetrait).
+    const surPlace = commande?.paymentMode === 'on_site';
+    const debite = commande && !surPlace ? Number(commande.total) + (commande.tipPaid && commande.tipAtCheckout > 0 ? Number(commande.tipAtCheckout) : 0) : null;
+    const numero = commande?.orderNumber != null ? `#${String(commande.orderNumber).padStart(3, '0')}` : null;
     const lieu = commande?.orderType === 'pickup' ? commande.restaurantAddress : commande?.address;
     return (
       <div className="ec-page ec-merci sc-page">
@@ -158,14 +162,22 @@ export default function OrderResult({ success }) {
           </svg>
           <span className="ec-coche-merci" aria-hidden="true"><Icone nom="valider" taille={30} /></span>
           <h1 className="ec-titre">{view.title}</h1>
-          {orderId && <p className="ec-sous">{t('orderResult.orderNumber', { id: String(orderId).slice(0, 8) })}</p>}
+          {orderId && <p className="ec-sous">{t('orderResult.orderNumber', { id: numero ? numero.slice(1) : String(orderId).slice(0, 8) })}</p>}
         </BandeauCommande>
         <FeuilleCommande>
           {/* Site sur ordinateur (site-commande.css) : le récapitulatif à gauche, les deux actions à droite. Ailleurs, ces deux
               enveloppes sont en `display: contents` : la feuille reste une colonne. */}
           <div className="sc-merci-grille">
           <div className="sc-merci-texte">
-          <p className="ec-merci-texte">{view.text}</p>
+          <p className="ec-merci-texte">{surPlace ? t('orderResult.successTextOnSite') : view.text}</p>
+          {/* À emporter : le code à montrer au comptoir, avec le numéro du commerce, puis tout le retrait. */}
+          {commande?.orderType === 'pickup' && commande.deliveryCode && (
+            <div className="suivi-code">
+              <div className="suivi-code-lib">{t('retrait.codeLabel')}</div>
+              <div className="suivi-code-valeur">{commande.deliveryCode}</div>
+              {numero && <div className="suivi-code-numero">{t('retrait.orderNumber', { n: numero })}</div>}
+            </div>
+          )}
           {commande && (
             <div className="ec-recap">
               <div className="ec-recap-ligne">
@@ -173,13 +185,14 @@ export default function OrderResult({ success }) {
                 <span className="ec-recap-texte"><b>{commande.restaurantName}</b>
                   {commande.items?.length > 0 && <small>{commande.items.map(formatOrderItem).join(' · ')}</small>}</span>
               </div>
-              <div className="ec-recap-ligne">
+              {commande.orderType !== 'pickup' && <div className="ec-recap-ligne">
                 <Icone nom={commande.orderType === 'pickup' ? 'sac' : 'maison'} taille={20} />
                 <span className="ec-recap-texte"><b>{orderTypeLabel(commande, t)}</b>{lieu && <small>{lieu}</small>}</span>
                 {debite != null && <b className="ec-recap-montant">{euros(debite)}</b>}
-              </div>
+              </div>}
             </div>
           )}
+          <InfosRetrait order={commande} />
           </div>
           <div className="sc-merci-actions">
           <Link to="/orders" className="btn-gold ec-merci-bouton">{t('orderResult.viewOrders')}</Link>

@@ -63,11 +63,19 @@ export async function api(path, { method = 'GET', body, token, logoutOn401 = tru
   // (code de vérification, bienvenue...) — voir userLang.js côté serveur.
   const headers = { 'Content-Type': 'application/json', 'X-Fairide-Lang': getLanguage() };
   if (token) headers.Authorization = 'Bearer ' + token;
+  /* UNE LECTURE ABANDONNE APRÈS 20 SECONDES (audit du 18/10/2026). Sans limite, un serveur qui ne répond pas laissait un
+   * chargement tourner pour toujours. Seulement les lectures (GET) : une commande ou un paiement lent mais abouti ne doit
+   * jamais être annoncé comme raté — l'écriture garde son attente. L'écran affiche alors « Impossible de charger ». */
+  const lecture = method === 'GET';
+  const controle = lecture && typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const minuteur = controle ? setTimeout(() => controle.abort(), 20000) : null;
   let res;
   try {
-    res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal: controle?.signal });
   } catch {
     throw new ApiError(traduire('common.serverUnreachable'), 0);
+  } finally {
+    if (minuteur) clearTimeout(minuteur);
   }
   const data = await res.json().catch(() => ({}));
   const corps = handleResponse(res, data, !!token, logoutOn401);

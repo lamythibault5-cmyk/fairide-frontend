@@ -15,7 +15,7 @@ import { Haut, Option, Fait } from '../app/EcransBienvenue';
 import { Champ } from '../app/InscriptionAppli';
 import RouteVelo from '../../components/livreur/RouteVelo';
 import '../../ecran-livreur.css';
-import { MANQUES_INFORMATIFS, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
+import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 
 /* LE DOSSIER LIVREUR DANS L'APPLICATION (2026-10-15) — /driver/onboarding tant que le dossier est en brouillon.
  *
@@ -362,7 +362,9 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
   const [consentement, setConsentement] = useState(null);
   const [choix, setChoix] = useState(prov.stripe_identity ? 'stripe_identity' : 'manual');
   const [autreMoyen, setAutreMoyen] = useState(false);
-  const pieces = (d.documents ?? []).filter((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType));
+  // Une pièce refusée par l'équipe ne compte pas : le livreur lit le motif et en dépose une autre.
+  const pieces = (d.documents ?? []).filter((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && !x.rejectedReason);
+  const refusee = pieces.length === 0 ? (d.documents ?? []).find((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && x.rejectedReason) : null;
   async function stripe() {
     await action(async () => {
       try {
@@ -414,16 +416,18 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
   return (
     <>
       {[['stripe_identity', 'document', 'stripeIdentityHelp'], ['manual', 'apercu', 'manualHelp'], ['in_person', 'personnes', 'inPersonHelp']]
-        .filter(([p]) => p === 'manual' || prov[p])
+        // Stripe d'abord (fondateur, 19/10/2026) : le dépôt d'une photo seulement quand Stripe Identity est coupé.
+        .filter(([p]) => (p === 'manual' ? !prov.stripe_identity : prov[p]))
         .map(([p, icone, aide]) => <Option key={p} on={choix === p} icone={icone} titre={t(`courierOnboarding.provider_${p}`)} sous={t(`courierOnboarding.${aide}`)} onClick={() => setChoix(p)} />)}
-      {id.status === 'failed' && <p className="field-error" role="alert">{t('courierOnboarding.identityFailed')}</p>}
+      {refusee && <p className="field-error" role="alert">{t('courierOnboarding.identityRejected', { reason: refusee.rejectedReason })}</p>}
+      {id.status === 'failed' && <p className="field-error" role="alert">{t('courierOnboarding.identityFailed')}{ERREURS_IDENTITE.includes(id.error) && <> {t(`courierOnboarding.identityError_${id.error}`)}</>}</p>}
       {entree}
       <div className="bv-grandit" />
       <button type="button" className="bv-btn btn-gold" disabled={busy} onClick={actions[choix][0]}>{busy ? t('common.loading') : actions[choix][1]}</button>
       <button type="button" className="bv-lien" onClick={onSuivant}>{t('appli.pasMaintenant')}</button>
       <ConsentementBiometrique consent={consentement} token={token} onFermer={() => setConsentement(null)}
         onAccepte={() => { setConsentement(null); stripe(); }}
-        onManuel={() => { setConsentement(null); setChoix('manual'); manuel(); }} />
+        onManuel={() => { setConsentement(null); if (prov.stripe_identity) { setChoix('in_person'); actions.in_person[0](); } else { setChoix('manual'); manuel(); } }} />
     </>
   );
 }
@@ -580,12 +584,16 @@ function EcranTarif({ c, t, token, busy, action, onSuivant }) {
 }
 
 // L'envoi : ce qui manque encore, chaque ligne ramène à son écran ; sinon « Envoyer mon dossier ».
-function EcranEnvoi({ d, t, busy, manques, statusType, onAller, onEnvoyer }) {
+function EcranEnvoi({ d, t, busy, manques: tousManques, statusType, onAller, onEnvoyer }) {
   const infos = (d.missing ?? []).filter((m) => MANQUES_INFORMATIFS.includes(m));
+  // Le numéro d'entreprise peut arriver après l'envoi (MANQUES_APRES_ENVOI) : il ne retient pas le bouton.
+  const manques = tousManques.filter((m) => !MANQUES_APRES_ENVOI.includes(m));
+  const entrepriseEnAttente = tousManques.some((m) => MANQUES_APRES_ENVOI.includes(m));
   if (!manques.length) {
     return (
       <>
         <p className="bv-sous">{t('courierOnboarding.submitReady')}</p>
+        {entrepriseEnAttente && <p className="bv-aide">{t('courierOnboarding.bceLater')}</p>}
         {infos.map((m) => <p key={m} className="bv-aide">{t(`courierOnboarding.missing_${m}`)}</p>)}
         <div className="bv-grandit" />
         <button type="button" className="bv-btn btn-gold" disabled={busy} onClick={onEnvoyer}>{busy ? t('common.loading') : t('courierOnboarding.submit')}</button>

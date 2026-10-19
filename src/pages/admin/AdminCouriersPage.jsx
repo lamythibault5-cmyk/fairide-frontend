@@ -45,7 +45,8 @@ export default function AdminCouriersPage() {
   const location = useLocation();
   const [data, setData] = useState(null);
   const [erreur, setErreur] = useState(null);
-  const [filtre, setFiltre] = useEtatPage('filtre', 'pending_review');
+  // Arrivé d'un livreur (« Ouvrir le dossier ») : tous les dossiers, sinon un brouillon serait caché par le filtre « à valider ».
+  const [filtre, setFiltre] = useEtatPage('filtre', location.state?.presetSearch ? 'all' : 'pending_review', { forcer: !!location.state?.presetSearch });
   const [typeFiltre, setTypeFiltre] = useEtatPage('type', 'all');
   const [nature, setNature] = useEtatPage('nature', 'all');
   const [search, setSearch] = useState(location.state?.presetSearch || '');
@@ -54,13 +55,28 @@ export default function AdminCouriersPage() {
   const [mode, setMode] = useViewMode('couriers', 'table');
   const { sort, toggle } = useTableSort('updatedAt');
 
-  const load = () => { setErreur(null); return api('/admin/couriers', { token }).then(setData).catch((e) => setErreur(e.message)); };
+  const load = () => {
+    setErreur(null);
+    // PRÊT À ROULER, OU CE QUI MANQUE (règle du bouton GO, pretLancement.js) : à côté de chaque nom.
+    api('/admin/launch/readiness', { token }).then((r) => setPrets(new Map((r.livreurs || []).map((l) => [l.userId, l])))).catch(() => {});
+    return api('/admin/couriers', { token }).then(setData).catch((e) => setErreur(e.message));
+  };
+  const [prets, setPrets] = useState(() => new Map());
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const lifecycle = (s) => tr(`courierOnboarding.lifecycle_${s}`);
   const statut = (s) => (s && STATUTS.includes(s) ? tr(`courierOnboarding.status_${s}`) : s || '-');
+  const pretDe = (r) => prets.get(r.userId);
   const colonnes = [
     { key: 'name', label: tr('adminCommon.name'), get: (r) => <><b>{r.name}</b>{estCompteTest(r) && <TestBadge />}<div className="small">{r.email}</div></>, sortValue: (r) => r.name },
+    { key: 'pret', label: tr('adminCouriers.colReady'), get: (r) => {
+      const p = pretDe(r);
+      if (!p) return '-';
+      const bloquant = (p.manques || []).find((m) => m.niveau === 'bloquant');
+      return p.pret
+        ? <span className="pill" style={{ color: 'var(--green)' }}><Icone nom="valider" taille={14} className="icone-texte" />{' '}{tr('adminCouriers.ready')}</span>
+        : <span className="small" title={(p.manques || []).filter((m) => m.niveau === 'bloquant').map((m) => m.label).join(' · ')}>{tr('adminCouriers.missingFirst', { what: bloquant?.label || '' })}</span>;
+    }, sortValue: (r) => (pretDe(r)?.pret ? 0 : 1) },
     { key: 'statusType', label: tr('adminCouriers.colStatus'), get: (r) => <>{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''}</>, sortValue: (r) => r.statusType || '' },
     { key: 'lifecycleStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{lifecycle(r.lifecycleStatus)}</span>, sortValue: (r) => r.lifecycleStatus },
     { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className="pill"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? <Icone nom="horloge" taille={16} className="icone-texte" /> : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? 1 : 0) },
@@ -253,6 +269,14 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
               <button className="btn-danger-ghost" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markIdentityKo'), message: tr('adminCouriers.identityKoBody'), danger: true, run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: false } })) })}>{tr('adminCouriers.markIdentityKo')}</button>
             </div>
           )}
+          {identite.status !== 'verified' && (
+            <details className="small" style={{ marginTop: 8 }}>
+              <summary>{tr('adminCouriers.howCheckIdentity')}</summary>
+              <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                {['checkFace', 'checkName', 'checkExpiry', 'checkDocType'].map((k) => <li key={k}>{tr(`adminCouriers.${k}`)}</li>)}
+              </ul>
+            </details>
+          )}
           {['student_independent', 'independent'].includes(c.statusType) && !entreprise.companyVerified && <button className="btn-outline" style={{ marginTop: 6 }} disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markCompanyOk'), run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { companyVerified: true } }), tr('adminCouriers.toastCompanyOk')) })}>{tr('adminCouriers.markCompanyOk')}</button>}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secContracts', { n: contracts.length })}</h4>
@@ -264,6 +288,15 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secDocs', { n: documents.length })}</h4>
           {documents.length === 0 && <p className="small">-</p>}
+          {/* Hors UE/EEE : ce que Stripe ne vérifie pas — le titre de séjour et le droit d'exercer comme indépendant. */}
+          {documents.some((x) => ['residence_permit', 'professional_card'].includes(x.docType)) && (
+            <details className="small" style={{ margin: '0 0 8px' }}>
+              <summary>{tr('adminCouriers.howCheckNonEu')}</summary>
+              <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                {['checkPermitName', 'checkPermitExpiry', 'checkProCard', 'checkInDoubt'].map((k) => <li key={k}>{tr(`adminCouriers.${k}`)}</li>)}
+              </ul>
+            </details>
+          )}
           {documents.map((x) => (
             <div key={x.id} className="row" style={{ justifyContent: 'space-between', gap: 8, padding: '3px 0', flexWrap: 'wrap' }}>
               <span className="small">{x.verifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : x.rejectedReason ? <Icone nom="croix" taille={16} className="icone-texte" /> : <Icone nom="horloge" taille={16} className="icone-texte" />} <button type="button" className="lien-bouton" onClick={() => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/admin/couriers/${id}/documents/${x.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') })}>{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</button>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` · ${x.rejectedReason}` : ''}</span>
