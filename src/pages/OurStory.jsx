@@ -28,7 +28,9 @@ const TITRE = { margin: '0 0 6px', fontSize: 13, textTransform: 'uppercase', let
 const BLOCS = [
   ['alternative', 'p'], ['constat', 'p'], ['mission', 'p'], ['demarche', 'ul', 4], ['identite', 'p'], ['valeurs', 'ul', 4], ['objectifs', 'ul', 4]
 ];
-const QUESTIONS = [1, 2, 3, 4, 6, 5]; // 6 (2026-10-02) : la garantie d’abonnement (50 € de commandes ou moins depuis le 2026-10-11), à la suite de l'inscription
+// 6 (2026-10-02) : la garantie d’abonnement (50 € de commandes ou moins depuis le 2026-10-11), à la suite de l'inscription.
+// 7 (2026-10-19) : « Les prix sont-ils les mêmes qu'au restaurant ? », en tête, comme dans l'aide.
+const QUESTIONS = [7, 1, 2, 3, 4, 6, 5];
 
 export default function OurStory() {
   const { t } = useLanguage();

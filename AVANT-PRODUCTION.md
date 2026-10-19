@@ -44,6 +44,10 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
 - [ ] 🔴 **F — Un vrai commerce prêt à recevoir une commande.** *Vérifié le 15/10 : 91 commerces en ligne, 1 seul
       réel (Maestro pizza).* Conditions dans l'ordre du code : AVANT-MISE-EN-LIGNE.md §1 ; l'outil
       Admin › Prêt au lancement (`pretLancement.js`) dit ce qui manque, commerce par commerce.
+- [ ] 🔴 **F — Prix vérifiés en magasin sur chaque carte publiée** (2026-10-19). L'accueil, l'app et l'aide disent
+      maintenant « le restaurant ne doit plus gonfler ses prix » : une carte reprise d'Uber Eats et encore aux prix de la
+      plateforme (pastille orange « prix plateforme » dans Admin › Restaurants) contredirait la phrase. Relever les prix au
+      comptoir et cocher « prix vérifiés en magasin » — c'est aussi ce qui donne le badge « Prix du comptoir ».
 - [ ] 🔴 **F — Une vraie commande de bout en bout sur le staging** (voir « Le staging » en bas) : commande, acceptation,
       remise, puis les cas difficiles — refus, annulation, commande non récupérée.
 - [ ] 🟡 **F — L'abonnement des commerces reste éteint** (décision du 14/10). Le jour où on l'allume : prévenir
@@ -84,6 +88,12 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       défauts) est-elle "strictement nécessaire" au service de livraison demandé par l'utilisateur ? Sinon, une
       demande à chaque panne ("envoyer ce rapport ?") suffit-elle, sachant qu'un plantage natif est gardé sur l'appareil
       jusqu'au lancement suivant ? »
+- [ ] 🟠 **J — « Le restaurant ne doit plus gonfler ses prix »** (accueil, app, aide, e-mail de bienvenue, depuis le
+      19/10). Garde-fous en place : aucun « moins cher » ni « mêmes prix qu'au restaurant » ; les montants (17,10 € avec
+      30 % de commission, 13,20 € au plus sur Fairide, pour un plat à 12 €) sont présentés comme un calcul, jamais comme
+      un prix relevé chez un concurrent ; concurrents génériques (« grandes plateformes ») dans le visuel ; calcul complet
+      dans l'aide ; badge « Prix du comptoir » seulement sur des prix vérifiés en magasin. Question : « Au regard des art.
+      VI.17 (publicité comparative) et VI.97 (pratique trompeuse) CDE, ces formulations et ce calcul sont-ils licites ? »
 - [ ] 🟠 **F — DPA (RGPD art. 28)** à signer et archiver : Stripe, Resend, Cloudinary, Sentry, Vercel, Railway,
       Anthropic, MapTiler, Google/Firebase. La plupart se signent en ligne.
 - [ ] 🟠 **F — Politique de confidentialité, prestataires manquants** : Geoapify / Google Places / fournisseur Peppol /

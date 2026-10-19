@@ -29,6 +29,7 @@ import EnteteFlux from '../../components/EnteteFlux';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
+import PrixComptoir from '../../components/PrixComptoir';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, dayLabel } from '../../openingHours';
@@ -703,6 +704,8 @@ export default function RestaurantMenu() {
         {/* Dans l'app, la cuisine en tête de ligne (« Pizza · Ixelles »), comme dans la maquette retenue. */}
         {APPLI && restaurant.cuisine && <span>{restaurantTypeLabel(restaurant.cuisine, t) || restaurant.cuisine}</span>}
         {restaurant.commune && <><span aria-hidden="true">·</span><span>{restaurant.commune}</span></>}
+        {/* Prix vérifiés en magasin, sans hausse (PrixComptoir.jsx) : un fait sur ce commerce, jamais la commission. */}
+        {restaurant.prixComptoir && <><span aria-hidden="true">·</span><PrixComptoir /></>}
         <span aria-hidden="true">·</span>
         <button type="button" className="fiche-infos-lien" onClick={() => setInfosOuvertes(true)}>
           {t('restaurantMenu.infoButton')}
