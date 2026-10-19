@@ -298,7 +298,8 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
 | `--chip` | `#1E1A17` | Dark badge background, white text |
 | `--cream` / `--cream-dim` | `#FFFFFF` / `#F4F2ED` | Page background / surface tint |
 | `--red` `--blue` `--orange` `--purple` `--green` | | Status colours only, never brand (`--green` since 2026-10-13: « validé », « signé ») |
-| `--radius` / `--radius-field` / `--radius-pill` | `16px` / `8px` / `999px` | Cards / fields and small containers (`--radius-chip` is an alias of `--radius-field`) / everything clickable. Re-checked against styles.css on 2026-10-13 — this row said 20px / 6px, which the code no longer used |
+| `--radius` / `--radius-field` / `--radius-pill` | `16px` / `8px` / `999px` | Cards / small containers (`--radius-chip` is an alias of `--radius-field`) / everything clickable. Re-checked against styles.css on 2026-10-13 — this row said 20px / 6px, which the code no longer used |
+| `--radius-saisie` / `--iris-tint` / `--anneau-champ` | `16px` / `#EFEDFB` / iris 1.5 px + 4 px halo | Text fields (style B, 2026-10-19, below). `--anneau-champ-erreur` is the red twin |
 | `--shadow` | `none` | Kept as a token so old call sites resolve to nothing |
 
 **Three rules that are not negotiable, all inherited from the spec:**
@@ -345,6 +346,30 @@ direction closed when it dropped Fraunces.
 Buttons: `.btn-gold` (lime) is **the** decisive action of a screen — pay, confirm, sign in.
 `.btn-teal` (iris) is the ordinary primary action, and the default in dashboards. `.btn-outline`
 is secondary, `.btn-hero-ghost` is the secondary button on an iris ground.
+
+**Champs de saisie (B, étiquette flottante) — founder, 2026-10-19** (option B of the « champs » mockup). Every text field,
+website and app: **white**, 1 px `--line` hairline, `--radius-saisie` (16 px), 16 px text, 52 px high (56 with a floating
+label); focus = iris edge 1.5 px + pale-iris 4 px halo (`--anneau-champ`, the extra half pixel is an inset shadow so nothing
+moves); error = red edge, red label, red `.field-error` line under; disabled / read-only = still white, dashed hairline, soft
+ink. Never give a field the grey `--surface-soft` again. All of it is CSS in styles.css (« CHAMPS DE SAISIE, STYLE B » and
+« L'ÉTIQUETTE FLOTTANTE » right after `.field`), no per-page work:
+- **The floating label is automatic**: in `.field`, `.bv-champ` (app onboarding `Champ`) or `.address-search`, a `<label>`
+  that is the **first child** and is **directly followed** by the control (input, select, textarea, `.password-input`,
+  `.phone-input`) sits inside the field. Empty and unfocused, it shows like a placeholder (16 px, faint) and the real
+  placeholder is hidden; on focus or with a value it slides to the top-left (12 px semibold, iris while focused). « Empty »
+  is read by `:placeholder-shown`, or `[value=""]` (React mirrors a controlled input's value into the attribute) — a field
+  CSS can't read stays floated, so a label never covers a value. Selects, dates/times, textareas and the phone field
+  (country prefix) are always floated.
+- **To write a new field**: `<div className="field"><label htmlFor="x">Label</label><input id="x" value={v} onChange={…} /></div>`
+  — controlled, label first, nothing between label and control, keep `htmlFor` (accessibility). Error: `className="input-invalid"`
+  on the control + `<p className="field-error">`. A placeholder is an example (« Ex : Rue du Midi »), never the label repeated.
+- **Labels that stay above** (the field keeps the B look): a label holding a link/button/input (`.field-label-row`,
+  « Mot de passe oublié ? », help bubbles), a label that isn't the first child, `.sr-only` labels, the whole admin console
+  (`.admin-console`, `.record-drawer`: dense forms), and labels too long for one line — add `className="etiquette-dessus"`
+  (the `Champ` components of InscriptionAppli.jsx and driver/Onboarding.jsx do it themselves above 45 characters). Put
+  side-by-side fields either both inside or both above, or the row goes out of line.
+- Search bars (`.recherche-champ`), the code boxes (`.bv-saisie`) and pills on iris keep their own shapes; only their focus
+  moved to the halo.
 
 Confirmation modals use [ConfirmDialog](src/components/ConfirmDialog.jsx) — never `window.confirm`,
 which is suppressed in installed PWAs and webviews. The five `window.confirm` hits you'll find in

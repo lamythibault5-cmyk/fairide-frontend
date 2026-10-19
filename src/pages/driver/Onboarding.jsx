@@ -395,7 +395,8 @@ function Champ({ label, children, help }) {
   const champ = enfantUnique ? cloneElement(children, { id }) : children;
   return (
     <div className="field">
-      {enfantUnique ? <label htmlFor={id}>{label}</label> : <span className="titre-groupe">{label}</span>}
+      {/* Étiquette flottante dans le champ (styles.css) ; trop longue pour une ligne, elle reste au-dessus. */}
+      {enfantUnique ? <label htmlFor={id} className={typeof label === 'string' && label.length > 45 ? 'etiquette-dessus' : undefined}>{label}</label> : <span className="titre-groupe">{label}</span>}
       {champ}
       {help && <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{help}</p>}
     </div>

@@ -199,7 +199,7 @@ html:not(.appli) .recherche-champ.sl-cherche {
   margin: 0; min-height: 56px; padding: 0 8px 0 20px; border: 0; border-radius: 999px; background: #fff;
 }
 /* Sur l'iris, l'anneau de focus est lime (maquette, « Le cadre »). */
-html:not(.appli) .recherche-champ.sl-cherche:focus-within { outline: 3px solid var(--lime); outline-offset: 3px; }
+html:not(.appli) .recherche-champ.sl-cherche:focus-within { outline: 3px solid var(--lime); outline-offset: 3px; box-shadow: none; }
 html:not(.appli) .sl-cherche .recherche-loupe { color: var(--iris); }
 html:not(.appli) .sl-cherche input { font-size: 17px; }
 .sl-bande-route { margin-top: 18px; }
@@ -209,7 +209,7 @@ html:not(.appli) .sl-recherche .eb-feuille > .recherche-pastilles { margin-botto
    remonte plus. Connecté, le site n'a pas cet en-tête : le bandeau iris y reste. */
 html:not(.appli) .wrap .sl-recherche .eb-bandeau { background: #fff; color: var(--ink); padding-bottom: 6px; }
 html:not(.appli) .wrap .sl-recherche .sl-bande-ctx { color: var(--ink-soft); }
-html:not(.appli) .wrap .sl-recherche .recherche-champ.sl-cherche { border: 1px solid var(--line); background: var(--surface-soft); }
+html:not(.appli) .wrap .sl-recherche .recherche-champ.sl-cherche { border: 1px solid var(--line); background: #fff; }
 html:not(.appli) .wrap .sl-recherche .recherche-champ.sl-cherche:focus-within { outline-color: var(--iris); }
 html:not(.appli) .wrap .sl-recherche .sl-bande-route { display: none; }
 html:not(.appli) .wrap .sl-recherche .eb-feuille { margin-top: 0; border-radius: 0; padding-top: 18px; animation: none; }

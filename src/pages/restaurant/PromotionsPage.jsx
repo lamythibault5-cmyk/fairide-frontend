@@ -273,7 +273,7 @@ export default function PromotionsPage() {
 
         {type === 'bogo' && (
           <div className="field">
-            <label htmlFor={idsA11y + '-buyn'}>{t('promosPage.buyN')}</label>
+            <label htmlFor={idsA11y + '-buyn'} className="etiquette-dessus">{t('promosPage.buyN')}</label>
             <select id={idsA11y + '-buyn'} value={bogoN} onChange={(e) => setBogoN(e.target.value)}>
               {[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>{t('promosPage.bogoOption', { n: v })}</option>)}
             </select>

@@ -161,7 +161,7 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
               {traduit(d.allergens.attestation) && noteFoi(d.allergens.attestation.text)}
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
                 <div className="field" style={{ margin: 0 }}>
-                  <label htmlFor={`${id}-tel`} className="small">{t('conformite.allergenPhone')}</label>
+                  <label htmlFor={`${id}-tel`} className="small etiquette-dessus">{t('conformite.allergenPhone')}</label>
                   <input id={`${id}-tel`} value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" />
                 </div>
                 <div className="field" style={{ margin: 0 }}>
