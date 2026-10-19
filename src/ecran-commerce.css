@@ -304,3 +304,129 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 @media (prefers-reduced-motion: reduce) {
   .ec-bandeau *, .ec-feuille, .ec-feuille * { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Audit design 2 (fondateur, 2026-10-19) : le service d'abord ----------
+   Feuille « Nouvelle commande » qui accepte en un geste (NouvelleCommandeModale), alarme en une ligne sur le bandeau
+   (LigneAlarme), cartes de commande sans liseré de couleur (la couleur de l'étape reste sur la pastille, le rouge ne borde
+   que ce qui attend), le livreur comme une personne (LivreurCommande), barre « Accepter » au-dessus des onglets dans l'app,
+   la soirée du commerce sur le bandeau de l'accueil et ses quatre outils en tuiles (CeSoir.jsx). */
+
+/* L'alarme, une ligne sur l'iris. « Couper » est une pastille BLANCHE : le lime de l'écran est à « Accepter ». */
+.ec-alarme { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 7px 6px 7px 12px; border-radius: 16px; background: rgba(255, 255, 255, .12); color: #fff; font-size: 13.5px; min-height: 48px; }
+.ec-alarme > span:first-child { display: grid; place-items: center; flex: none; }
+.ec-alarme-texte { flex: 1; min-width: 0; color: rgba(255, 255, 255, .85); line-height: 1.3; }
+.ec-alarme-texte b { color: #fff; font-weight: 600; }
+.ec-pilule-blanche { flex: none; min-height: 36px !important; padding: 0 14px; border: 0; border-radius: var(--radius-pill); background: #fff; color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.ec-pilule-blanche:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.ec-alarme-reglages { flex: none; width: 40px; height: 40px; min-height: 0 !important; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #fff; display: grid; place-items: center; cursor: pointer; }
+.ec-alarme-reglages:hover { background: rgba(255, 255, 255, .12); }
+.ec-alarme-reglages:focus-visible { outline: 2px solid var(--lime); outline-offset: 1px; }
+/* Ouvert / en pause, réduit à l'interrupteur dans la ligne du haut (InterrupteurService `compact`). */
+.ec-service-compact { flex: none; display: inline-flex; align-items: center; gap: 8px; min-height: 36px !important; padding: 0 0 0 10px; border: 0; background: none; color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ec-service-compact:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 18px; }
+.ec-service-compact:disabled { cursor: default; opacity: .7; }
+
+/* Les cartes : un filet, la couleur de l'étape sur la pastille seule ; bordure rouge pour une commande qui attend. */
+.ec-commande.ec-commande--nouvelle { border: 2px solid var(--red); padding: 13px; }
+.ec-cmd-sous { margin: 0 0 6px; font-size: 13.5px; color: var(--ink-soft); line-height: 1.4; }
+.ec-cmd-sous b { color: var(--ink); font-weight: 600; }
+.ec-cmd-sous-ligne { display: block; }
+.ec-cmd-items { list-style: none; margin: 8px 0 6px; padding: 0; display: grid; gap: 4px; font-size: 15px; }
+.ec-cmd-items li { display: flex; gap: 8px; align-items: baseline; }
+.ec-cmd-items li > b { flex: none; min-width: 24px; color: var(--iris); font-weight: 700; }
+.ec-cmd-items em { font-style: normal; font-weight: 600; color: var(--ink); background: rgba(59, 47, 181, .08); border-radius: 6px; padding: 0 5px; }
+.ec-cmd-items small { color: var(--ink-soft); font-size: 13px; }
+.ec-section { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin: 18px 0 8px; letter-spacing: .05em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+.ec-section:first-child { margin-top: 2px; }
+.ec-section-n { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--ink-soft); background: var(--cream-dim); border-radius: var(--radius-pill); padding: 1px 8px; letter-spacing: 0; }
+/* Le code du client (à emporter) : champ et bouton sur toute la largeur, « Client pas venu » dessous. */
+.ec-code-client { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; cursor: default; }
+.ec-code-client input { width: 100%; min-height: 48px; font-size: 18px; letter-spacing: .08em; }
+.ec-code-client .ec-bouton { margin-top: 0; }
+.ec-pas-venu { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 40px !important; padding: 4px 0; border: 0; background: none; color: var(--red); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+/* Le paiement sur place reste encadré (fondateur, 2026-10-07 : de l'argent à encaisser se voit) ; payé en ligne, une ligne. */
+.ec-commande .paiement-badge { display: inline-block; margin: 2px 0 6px; }
+
+/* Le livreur, une personne : photo ou initiale, où il en est, son pourboire. */
+.ec-livreur { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 14px; }
+.ec-livreur-avatar { width: 40px; height: 40px; flex: none; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: rgba(59, 47, 181, .1); color: var(--iris); font-family: var(--font-titre); font-weight: 700; font-size: 17px; }
+.ec-livreur-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ec-livreur-texte { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ec-livreur-texte > span { font-weight: 600; }
+.ec-livreur-texte > small { font-size: 12.5px; color: var(--ink-soft); }
+.ec-livreur-la { color: var(--ink); }
+
+/* Dans l'app : « Accepter #058 » et « Refuser » dans une barre de verre au-dessus des onglets, tant qu'une commande attend. */
+.ec-barre-accepter { display: none; }
+@media (max-width: 900px) {
+  html.appli .ec-barre-accepter {
+    display: flex; gap: 8px; align-items: center; position: fixed; z-index: 46; left: 12px; right: 12px; max-width: 560px; margin: 0 auto;
+    bottom: calc(var(--hauteur-onglets) + 10px + env(safe-area-inset-bottom)); padding: 7px; border-radius: 32px;
+    background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .6);
+    -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 5px 0 8px -4px rgba(255, 70, 170, .22),
+      inset -5px 0 8px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .18), 0 1px 3px rgba(20, 18, 31, .08);
+    animation: ec-arrive .4s var(--ec-ressort, ease) both;
+  }
+  html.appli .ec-barre-accepter .ec-bouton { margin: 0; min-height: 50px; }
+  html.appli .ec-barre-accepter .ec-bouton--lime { flex: 1 1 auto; }
+  html.appli .ec-barre-accepter .ec-bouton--contour { flex: none; width: auto; padding: 0 18px; background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  html.appli .ec-espace-barre { height: 76px; }
+  html.appli .ec-cmd-boutons-barre { display: none; }
+}
+@media (max-width: 900px) and (prefers-reduced-transparency: reduce) {
+  html.appli .ec-barre-accepter { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); }
+}
+
+/* La feuille « Nouvelle commande » : tout pour décider, et accepter d'un geste. */
+.nc { display: flex; flex-direction: column; gap: 12px; }
+.nc-tete { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.nc-tete .modal-titre { margin: 0; }
+.nc-sous { margin: 2px 0 0; font-size: 14px; color: var(--ink-soft); }
+.nc-sous b { color: var(--ink); }
+.nc-client { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.nc-client small { display: block; font-size: 12.5px; color: var(--ink-soft); }
+.nc-avatar { width: 38px; height: 38px; flex: none; border-radius: 50%; display: grid; place-items: center; background: rgba(59, 47, 181, .1); color: var(--iris); font-family: var(--font-titre); font-weight: 700; }
+.nc .ec-cmd-items { margin: 0; padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.nc-note { margin: 0; display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--ink); }
+.nc-note svg { flex: none; color: var(--iris); margin-top: 2px; }
+.nc .ec-feuille-titre { margin: 2px 0 -4px; }
+.nc .ec-bouton { margin-top: 0; }
+.nc-liens { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.nc-lien { min-height: 44px !important; padding: 0 6px; border: 0; background: none; font: inherit; font-size: 15px; font-weight: 600; color: var(--ink-soft); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.nc-lien:hover:not(:disabled) { color: var(--ink); }
+.nc-lien--iris { color: var(--iris); }
+.nc-imprimer { display: inline-flex; align-items: center; gap: 2px; }
+.nc-imprimer .exemplaires { margin: 0; gap: 0; padding: 0 2px; }
+.nc-imprimer .exemplaires button { min-width: 32px; }
+/* Sur un téléphone, l'imprimante seule (le mot reste dans aria-label) : Refuser, Imprimer et Plus tard tiennent sur une ligne. */
+@media (max-width: 420px) { .nc-imprimer-mot { display: none; } }
+
+/* L'accueil : la route du service sur le bandeau, puis les quatre outils en tuiles. */
+.ec-soir { margin-top: 14px; }
+.ec-soir-route { position: relative; height: 34px; }
+.ec-soir-route::before { content: ''; position: absolute; left: 0; right: 0; top: 27px; border-top: 3px dashed rgba(255, 255, 255, .35); }
+.ec-soir-fait { position: absolute; left: 0; top: 27px; height: 3px; border-radius: 2px; background: var(--lime); }
+.ec-soir-velo { position: absolute; top: 0; width: 34px; margin-left: -17px; line-height: 0; color: var(--lime); }
+.ec-soir-velo.roule svg { animation: ec-pedale .4s ease-in-out infinite; transform-origin: 50% 100%; }
+.ec-soir-heures { position: relative; display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: rgba(255, 255, 255, .78); font-variant-numeric: tabular-nums; }
+.ec-soir-maintenant { position: absolute; top: 0; transform: translateX(-50%); color: #fff; font-weight: 700; }
+.ec-outils { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 6px; }
+@media (min-width: 1100px) { .ec-outils { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.ec-outil { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: #fff; color: var(--ink); text-decoration: none; min-width: 0; transition: border-color .15s, transform .12s; }
+.ec-outil:hover { border-color: var(--iris); }
+.ec-outil:active { transform: scale(.98); }
+.ec-outil .ec-ligne-tuile { margin-bottom: 6px; }
+.ec-outil b { font-size: 15.5px; font-weight: 700; }
+.ec-outil small { font-size: 13px; color: var(--ink-soft); line-height: 1.35; overflow-wrap: anywhere; }
+
+/* Avis : de quoi parle l'avis, et le prénom qui signe les réponses. */
+.ec-avis-contexte { font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
+.ec-signature { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.ec-signature input { flex: 1 1 auto; min-width: 0; min-height: 44px; }
+.ec-signature .ec-bouton { margin: 0; width: auto; min-height: 44px; padding: 0 18px; }
+/* « 1 commande à traiter » sur l'accueil : un bouton qui ouvre la feuille de la commande (NewOrderAlertBar `onOuvrir`). */
+.alerte-ouvrir { flex: 1 1 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px !important; padding: 0; border: 0; background: none;
+  font: inherit; font-size: 16px; font-weight: 700; color: var(--ink); text-align: left; cursor: pointer; }
+.alerte-ouvrir-voir { flex: none; font-size: 13.5px; font-weight: 700; color: #fff; background: var(--iris); border-radius: var(--radius-pill); padding: 8px 14px; }
+.alerte-ouvrir:hover .alerte-ouvrir-voir { background: var(--iris-deep); }

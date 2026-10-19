@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { euros } from '../../prixPlat';
+import { euros, remiseLigne } from '../../prixPlat';
 import { experienceApp } from '../../natif';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import EtatVide from '../../components/EtatVide';
@@ -40,11 +40,19 @@ export default function CommandeGroupee() {
   const [erreur, setErreur] = useState(null);
   const [occupe, setOccupe] = useState(false);
   const [confirmerRemplacement, setConfirmerRemplacement] = useState(null);
+  // La carte du commerce, pour montrer le prix PAYÉ de chaque ligne (offre du commerce comprise), comme le panier et le
+  // paiement (audit design 2 du 2026-10-19) : le groupe enregistre le prix plein, la remise s'applique à la commande.
+  const [menu, setMenu] = useState(null);
 
   const charger = () => api(`/group-orders/${encodeURIComponent(code)}`, { token })
     .then((r) => { if (r && r.code) { setG(r); setErreur(null); } else setErreur(t('groupOrder.notFound')); })
     .catch((e) => setErreur(e.message));
   useEffect(() => { charger(); }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
+  const restoId = g?.restaurant?.id;
+  useEffect(() => {
+    if (!restoId) return;
+    api(`/restaurants/${restoId}`, { token }).then((r) => setMenu(r?.menu || null)).catch(() => {});
+  }, [restoId, token]);
 
   if (erreur) return <EtatVide icone="personnes" titre={erreur} actionVers="/restaurants" actionTexte={t('orders.emptyAction')} />;
   // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
@@ -99,6 +107,9 @@ export default function CommandeGroupee() {
     try { await api(`/group-orders/${g.code}/${action}`, { method: 'POST', token }); if (action === 'cancel') quitterGroupe(); charger(); } catch (e) { toast(e.message, 'erreur'); }
   }
 
+  // Prix payé d'une ligne : son prix plein moins la remise du plat (même règle que le panier, prixPlat.js remiseLigne).
+  const prixPaye = (l) => Math.max(0, l.unitPrice * l.qty - remiseLigne(menu?.find((m) => m.id === l.itemId), l.qty));
+  const totalPaye = +g.lines.reduce((a, l) => a + prixPaye(l), 0).toFixed(2);
   const parInvite = g.lines.reduce((acc, l) => { (acc[l.guestName] ||= []).push(l); return acc; }, {});
   const ouvert = g.status === 'open';
   const peutCommander = g.isHost && ['open', 'locked'].includes(g.status) && g.lines.length > 0;
@@ -113,7 +124,7 @@ export default function CommandeGroupee() {
         <b>{l.name}</b>
         {l.optionsSnapshot?.length > 0 && <small>{l.optionsSnapshot.map((o) => o.name).join(', ')}</small>}
       </span>
-      <span className="eg-prix">{euros(l.unitPrice * l.qty)}</span>
+      <span className="eg-prix">{euros(prixPaye(l))}</span>
       {ouvert && (
         <button type="button" className="eg-retirer" onClick={() => retirer(l)} aria-label={`${t('groupOrder.remove')} : ${l.name}`} title={t('groupOrder.remove')}>
           <Icone nom="croix" taille={16} />
@@ -135,7 +146,7 @@ export default function CommandeGroupee() {
   const total = g.isHost && g.lines.length > 0 && (
     <div className="eg-total">
       <span>{t('groupOrder.estimateLabel')}</span>
-      <b>{euros(g.total)}</b>
+      <b>{euros(totalPaye)}</b>
     </div>
   );
 
@@ -197,7 +208,7 @@ export default function CommandeGroupee() {
                   <div className="eg-personne-tete">
                     <span className="eg-initiale" aria-hidden="true">{nom.trim().charAt(0).toUpperCase()}</span>
                     <b>{nom}</b>
-                    <span className="eg-prix">{euros(lignes.reduce((a, l) => a + l.unitPrice * l.qty, 0))}</span>
+                    <span className="eg-prix">{euros(lignes.reduce((a, l) => a + prixPaye(l), 0))}</span>
                   </div>
                   <ul className="eg-lignes">{lignes.map(ligneDePart)}</ul>
                 </div>

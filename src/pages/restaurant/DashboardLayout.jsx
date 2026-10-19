@@ -71,6 +71,9 @@ export default function DashboardLayout() {
   const [erreurChargement, setErreurChargement] = useState(null);
   const tentatives = useRef(0);
   const orderAlert = useNewOrderAlert(orders, ordersLoaded);
+  // La feuille « Nouvelle commande » (NouvelleCommandeModale) : l'identifiant de la commande qu'elle montre. Elle s'ouvre
+  // d'elle-même à l'arrivée d'une commande, ou quand on touche « 1 commande à traiter » sur l'accueil (audit design 2).
+  const [feuilleCommande, setFeuilleCommande] = useState(null);
   // Notifications push : la seule alerte qui survive a l'onglet ferme (voir src/push.js).
   const push = usePushNotifications(token);
 
@@ -309,6 +312,9 @@ export default function DashboardLayout() {
   // d'ouverture (accueil) ou la prochaine étape (ailleurs), l'alerte de nouvelle commande. Les pages au bandeau les
   // posent en tête de leur feuille (`communs` du contexte) ; les autres les reçoivent ici, comme avant.
   const bandeau = avecBandeau && !!restaurant;
+  // La commande qui attend depuis le plus longtemps (échéance la plus proche) : celle que « 1 commande à traiter » ouvre.
+  const premiereNouvelle = orders.filter((o) => o.status === 'nouveau' && o.paid)
+    .sort((a, b) => new Date(a.acceptDeadline || a.createdAt).getTime() - new Date(b.acceptDeadline || b.createdAt).getTime())[0] || null;
   const communs = restaurant && (
     <>
       {/* Deux alertes qui ne sont pas des étapes : le blocage par l'équipe, la livraison coupée dans la zone. */}
@@ -323,7 +329,7 @@ export default function DashboardLayout() {
           )}
           {/* Livraison Fairide coupée par l'équipe : commerce seul dans sa zone, aucun livreur à proximité (2026-10-08). */}
           {restaurant.fairideDeliveryDisabled && (
-            <LigneCompte accent="warn" icone="scooter" titre={t('dashResto.zoneDeliveryOffTitle')}
+            <LigneCompte accent="warn" icone="velo" titre={t('dashResto.zoneDeliveryOffTitle')}
               sous={t('dashResto.zoneDeliveryOffText') + (restaurant.fairideDeliveryDisabledReason ? ` (${restaurant.fairideDeliveryDisabledReason})` : '')} />
           )}
         </div>
@@ -345,7 +351,10 @@ export default function DashboardLayout() {
       {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même
           s'il est en train de modifier son menu ou de consulter ses avis. */}
       {/* Barre complète sur l'accueil et les commandes ; ailleurs, la version compacte (NewOrderAlertBar.jsx). */}
-      {!commandesSite && <NewOrderAlertBar {...orderAlert} push={push} compact={!surAccueil && chemin !== '/dashboard/orders'} />}
+      {/* Sur Commandes, l'alarme est une ligne du bandeau iris (LigneAlarme dans l'app, AlerteBandeau sur le site — audit
+          design 2, 2026-10-19) : la carte ne se répète pas dans la feuille, la commande qui attend passe en premier. */}
+      {chemin !== '/dashboard/orders' && <NewOrderAlertBar {...orderAlert} push={push} compact={!surAccueil}
+        onOuvrir={premiereNouvelle ? () => setFeuilleCommande(premiereNouvelle.id) : null} />}
     </>
   );
 
@@ -386,7 +395,8 @@ export default function DashboardLayout() {
       {newRestoOpen && surAccueil && <CreationCommerce fondateur={fondateur} onCree={commerceCree} ouvrirDemandeCarte={ouvrirDemandeCarte} />}
       {!bandeau && communs}
       {/* La commande qui vient d'arriver, affichée d'elle-même (fondateur, 2026-10-01). */}
-      {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} />}
+      {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} loadDashboard={loadDashboard}
+        ouverte={feuilleCommande} setOuverte={setFeuilleCommande} />}
 
       {!restaurant && myRestos.length > 0 && (
         /* La carte d'échec est celle de components/ErrorCard.jsx, commune aux quatre espaces :

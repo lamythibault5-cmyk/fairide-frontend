@@ -8,7 +8,7 @@ const APPLI = experienceApp();
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import { euros, libellePromo } from '../../prixPlat';
+import { euros, remiseCourte } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
@@ -40,6 +40,11 @@ import { defilement, vibrer } from '../../gestes';
 
 // Page dédiée affichée après le clic sur "Commander" depuis le panier : le client y choisit
 // livraison/à emporter, vérifie ses informations, puis valide avant de passer au paiement.
+// Une ligne du ticket : libellé, pointillés (ceux de la carte du commerce), montant.
+function LigneTicket({ libelle, montant }) {
+  return <div className="co-t-ligne"><span>{libelle}</span><span className="co-t-points" aria-hidden="true" /><span className="co-t-montant">{montant}</span></div>;
+}
+
 export default function Checkout() {
   const { token, user, refreshUser } = useAuth();
   const cart = useCart();
@@ -94,6 +99,8 @@ export default function Checkout() {
   const [totalAnnonce, setTotalAnnonce] = useState(null);
   // Dernier devis du serveur : { cle (le corps de commande qui l'a produit), order } — voir l'effet « DEVIS » plus bas.
   const [devis, setDevis] = useState(null);
+  // « détails » sous le ticket : le vendeur de chaque ligne, replié (audit design 2, 2026-10-19).
+  const [vendeursOuverts, setVendeursOuverts] = useState(false);
   // Allergie, âge, CGU (backlog de conformité C1, C3, A1) — voir components/conformite/CheckoutConformite.jsx.
   const [conformite, setConformite] = useState({ allergyRequest: '', ageDeclaration: false, acceptTerms: false, termsNeeded: false, termsVersion: '' });
   const pendingOrderRef = useRef(null);
@@ -227,6 +234,12 @@ export default function Checkout() {
   const soldeUtilise = useBalance && !surPlaceChoisi;
   const apresCodePromo = Math.max(0, +(estimatedTotalBeforeBalance - (codePromo?.discount || 0)).toFixed(2));
   const estimatedTotal = Math.max(0, apresCodePromo - (soldeUtilise ? Math.min(user.balance || 0, apresCodePromo) : 0));
+  // Le ticket : l'offre du commerce sur une ligne par offre (« Offre Maestro −5 % »), et non plus plat par plat.
+  const offresTicket = Object.values(totals.discountedItems.reduce((acc, d) => {
+    const remise = remiseCourte(d.promo, t) || d.label || '';
+    (acc[remise] ||= { remise, montant: 0 }).montant += d.discount;
+    return acc;
+  }, {})).map((o) => ({ ...o, montant: +o.montant.toFixed(2) }));
   const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate, ouverture) : [];
   const scheduledPreview = scheduleDate && scheduleTime
     ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
@@ -288,6 +301,16 @@ export default function Checkout() {
   // Le devis ne vaut que s'il a été calculé sur le panier affiché ; sinon on retombe sur l'estimation du navigateur.
   const corpsActuel = corpsCommande();
   const devisValide = corpsActuel && devis && devis.cle === JSON.stringify(corpsActuel) ? devis.order : null;
+  // Code promo de commande : la ligne du ticket (la somme des lignes doit tomber sur le total ; elle manquait).
+  const codePromoMontant = Number(devisValide?.promoCodeDiscount ?? codePromo?.discount ?? 0);
+  // Avec le devis du serveur, ses chiffres : Plats et offre doivent tomber sur SON total (le navigateur n'estime la remise
+  // qu'à partir de la carte). Une seule offre : son montant est celui du devis ; plusieurs : une ligne au libellé du serveur.
+  const remiseLivraison = devisValide ? Number(devisValide.deliveryDiscount || 0) : totals.deliveryDiscount;
+  const platsTicket = devisValide ? Number(devisValide.subtotal) : totals.rawSubtotal;
+  const lignesOffre = !devisValide ? offresTicket
+    : Number(devisValide.promoDiscount) > 0
+      ? [{ remise: offresTicket.length === 1 ? offresTicket[0].remise : (devisValide.promoLabel || ''), montant: Number(devisValide.promoDiscount) }]
+      : [];
   const montantAnnonce = devisValide ? Number(devisValide.total) : estimatedTotal;
   /* LE POURBOIRE S'AJOUTE À CE QUI EST DÉBITÉ, PAS AU TOTAL DE LA COMMANDE. Le serveur ne le met pas dans orders.total
    * (commission, remboursements, reçu restent ceux de la commande) : il l'ajoute comme une ligne de plus sur la page
@@ -487,7 +510,7 @@ export default function Checkout() {
       </div>
       {giftCheck && giftCheck !== 'loading' && (
         <p className="small" style={{ margin: '6px 0 0', color: giftCheck.valid ? 'var(--teal-deep)' : 'var(--red)' }}>
-          {giftCheck.valid ? t('checkout.giftVoucherOk', { amount: Number(giftCheck.remaining).toFixed(2) }) : t(`checkout.giftVoucherKo_${giftCheck.reason || 'introuvable'}`)}
+          {giftCheck.valid ? t('checkout.giftVoucherOk', { amount: euros(giftCheck.remaining) }) : t(`checkout.giftVoucherKo_${giftCheck.reason || 'introuvable'}`)}
         </p>
       )}
     </>
@@ -524,6 +547,25 @@ export default function Checkout() {
         <div className="checkout-grille">
           <div className="checkout-form">
           <div className="card">
+            {/* CE QU'ON COMMANDE, EN UNE RANGÉE (audit design 2 du 2026-10-19) : « N articles », leurs noms, et « Modifier » qui
+                ramène au panier, où sont les compteurs. Avant, les plats se relistaient ici avec leurs propres compteurs, au
+                prix plein, sous le récapitulatif. Un plat qui ne se commande plus reste dit ici, avec « Retirer ». */}
+            {cart.count > 0 && (
+              <div className="co-articles">
+                <span className="co-articles-texte">
+                  <b>{t(cart.count > 1 ? 'ecranCommande.articlesPluriel' : 'ecranCommande.articles', { count: cart.count })}</b>
+                  <span>{Object.values(cart.lines).map((l) => (l.qty > 1 ? `${l.qty} ${l.name}` : l.name)).join(', ')}</span>
+                </span>
+                <Link to="/panier" className="co-modifier">{t('checkout.modifier')}</Link>
+              </div>
+            )}
+            {Object.entries(cart.lines).filter(([, line]) => ligneIndisponible(line, restaurant.menu)).map(([lineKey, line]) => (
+              // Plat retiré de la carte ou en rupture : la ligne le dit (avant, elle disparaissait et le serveur refusait).
+              <div key={lineKey} className="co-ligne co-ligne--indispo">
+                <span className="co-ligne-nom">{line.name}<span className="ligne-indispo">{t('checkout.unavailableToday')}</span></span>
+                <button type="button" className="btn-outline btn-sm" onClick={() => cart.removeLine(lineKey)}>{t('checkout.removeLine')}</button>
+              </div>
+            ))}
             {(
             <div className="field">
               {/* Intitulé d'un GROUPE de boutons, pas d'un champ unique : un htmlFor n'aurait rien à
@@ -532,14 +574,14 @@ export default function Checkout() {
               <span className="titre-groupe ec-section" id="checkout-fulfillment-label">{t('checkout.howToGet')}</span>
               {/* Des CARTES sélectionnables, pas une rangée de pilules — c'est le motif
                   « Priority / Standard / Schedule » de la capture 3 : une icône, un titre, et
-                  l'option retenue en aplat iris avec sa coche lime (2026-10-16). Trois pilules côte à côte se lisaient
+                  l'option retenue en aplat iris avec sa coche (2026-10-16 ; blanche depuis le 2026-10-19, le lime reste au bouton de paiement). Trois pilules côte à côte se lisaient
                   comme trois boutons d'égale importance, alors qu'il s'agit d'un choix unique. */}
               <div className="ec-options" role="group" aria-labelledby="checkout-fulfillment-label">
                 {cart.count > 0 && (
                   <>
                     {/* Avant le GO, pas de carte « Livraison » qui mènerait à « bientôt » : l'à emporter seul (audit du 18/10/2026). */}
                     {restaurant.offersDelivery && (serviceOuvert('delivery', user) || !restaurant.offersPickup) && (
-                      <OptionCommande on={fulfillmentType === 'delivery'} icone="scooter" titre={t('orderStatus.orderType.delivery')} onClick={() => selectFulfillment('delivery')} />
+                      <OptionCommande on={fulfillmentType === 'delivery'} icone="velo" titre={t('orderStatus.orderType.delivery')} onClick={() => selectFulfillment('delivery')} />
                     )}
                     {restaurant.offersPickup && (
                       <OptionCommande on={fulfillmentType === 'pickup'} icone="sac" titre={t('orderStatus.orderType.pickup')} onClick={() => selectFulfillment('pickup')} />
@@ -626,7 +668,7 @@ export default function Checkout() {
               <div className="field">
                 <span className="titre-groupe ec-section" id="checkout-quand-label">{t(fulfillmentType === 'pickup' ? 'checkout.whenLabelPickup' : 'checkout.whenLabel')}</span>
                 <div className="ec-options" role="group" aria-labelledby="checkout-quand-label">
-                  <OptionCommande on={!scheduleEnabled} icone={fulfillmentType === 'pickup' ? 'sac' : 'scooter'} titre={t('checkout.whenAsap')}
+                  <OptionCommande on={!scheduleEnabled} icone={fulfillmentType === 'pickup' ? 'sac' : 'velo'} titre={t('checkout.whenAsap')}
                     onClick={() => { setScheduleEnabled(false); setScheduleDate(''); setScheduleTime(''); }} />
                   <OptionCommande on={scheduleEnabled} icone="horloge" titre={t('checkout.scheduleLater')}
                     onClick={() => { setScheduleEnabled(true); setScheduleDate(dateOptions[0]?.value || ''); setScheduleTime(''); }} />
@@ -716,74 +758,52 @@ export default function Checkout() {
           <div className="card">
             {/* Le pourboire avant le récapitulatif (2026-10-16) : le choisir fait rouler le total de la barre. */}
             {APPLI && blocPourboire}
-            <div className="co-recap-tete">
-              <h3>{t('checkout.yourOrder')}<span className="co-recap-resto">{restaurant.name}</span></h3>
-              <Link to={`/restaurants/${restaurantId}`} className="co-ajouter">{t('checkout.addMore')}</Link>
-            </div>
-            {Object.entries(cart.lines).map(([lineKey, line]) => {
-              const item = restaurant.menu.find((m) => m.id === line.itemId) || { name: line.name };
-              // Plat retiré de la carte ou en rupture : la ligne le dit (avant, elle disparaissait et le serveur refusait).
-              if (ligneIndisponible(line, restaurant.menu)) {
-                return (
-                  <div key={lineKey} className="co-ligne co-ligne--indispo">
-                    <span className="co-ligne-nom">{item.name}<span className="ligne-indispo">{t('checkout.unavailableToday')}</span></span>
-                    <button type="button" className="btn-outline btn-sm" onClick={() => cart.removeLine(lineKey)}>{t('checkout.removeLine')}</button>
-                  </div>
-                );
-              }
-              return (
-                <div key={lineKey} className="co-ligne">
-                  <span className="co-ligne-nom">
-                    {item.name}
-                    <span className="co-ligne-prix">{euros(line.unitPrice * line.qty)}</span>
-                    {line.optionsSnapshot?.length > 0 && (
-                      <span className="small" style={{ display: 'block' }}>{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
-                    )}
-                    {line.note && <span className="small" style={{ display: 'block' }}>« {line.note} »</span>}
-                  </span>
-                  <div className="co-qte" role="group" aria-label={item.name}>
-                    <button type="button" onClick={() => cart.changeLineQty(lineKey, -1)} aria-label={t('checkout.qtyLess')}>−</button>
-                    <span aria-live="polite">{line.qty}</span>
-                    <button type="button" onClick={() => cart.changeLineQty(lineKey, 1)} aria-label={t('checkout.qtyMore')}>+</button>
-                  </div>
-                </div>
-              );
-            })}
-            <div className="divider" />
-            <div className="breakdown">
-              {/* Le vendeur de chaque ligne (trois vendeurs, C2) : ce récapitulatif est maintenant le dernier que le client
-                  voit avant de payer quand le total ne bouge pas — il doit donc dire à qui il achète, comme la carte. */}
-              <div className="line"><span>{t('common.subtotal')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerFood', { name: restaurant.name })}</span></span><span>{euros(totals.rawSubtotal)}</span></div>
-              {totals.discountedItems.map((d, i) => (
-                <div className="line" key={i}><span><Icone nom="etiquette" taille={14} /> {d.name ? `${d.name} (${libellePromo(d.promo, t) || d.label})` : (libellePromo(d.promo, t) || d.label)}</span><span>-{euros(d.discount)}</span></div>
+            {/* LE TICKET (audit design 2 du 2026-10-19, « un seul récit du prix ») : les plats ne se relistent plus ici avec
+                leurs compteurs — ils sont dans la rangée « N articles · Modifier » en haut de la page — et le récapitulatif se
+                lit comme un ticket, avec les pointillés de la carte : Plats, l'offre du commerce sur UNE ligne (et non plus
+                plat par plat), la livraison, les autres lignes réelles, le total. Jamais la part de Fairide ni celle du
+                livreur (règle du fondateur) ; les vendeurs restent, en petit sous le ticket, détaillés sous « détails ». */}
+            <h3 className="co-ticket-titre ec-section">{t('checkout.ticketTitle')}</h3>
+            <div className="co-ticket">
+              <LigneTicket libelle={t('checkout.ticketPlats')} montant={euros(platsTicket)} />
+              {lignesOffre.map((o) => (
+                <LigneTicket key={o.remise} libelle={t('checkout.ticketOffre', { name: restaurant.name, remise: o.remise })} montant={`−${euros(o.montant)}`} />
               ))}
               {fulfillmentType === 'delivery' && (
                 <>
-                  <div className="line"><span>{t('checkout.deliveryFeeLine')}{devisValide ? '' : ` (${t('checkout.fromPrefix')})`}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerDelivery')}</span></span><span>{euros(devisValide ? devisValide.deliveryFee : totals.deliveryFee)}</span></div>
-                  {totals.deliveryDiscount > 0 && (
-                    <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(totals.deliveryDiscount)}</span></div>
-                  )}
+                  {/* « dès » seulement sans devis, quand la distance réelle peut encore faire monter la base. */}
+                  <LigneTicket libelle={`${t('checkout.deliveryFeeLine')}${devisValide ? '' : ` (${t('checkout.fromPrefix')})`}`} montant={euros(devisValide ? devisValide.deliveryFee : totals.deliveryFee)} />
+                  {remiseLivraison > 0 && <LigneTicket libelle={t('checkout.deliveryDiscountLine', { name: restaurant.name })} montant={`−${euros(remiseLivraison)}`} />}
                 </>
               )}
-              {/* TVA comprise, comme le total : la somme des lignes doit tomber sur le total affiché juste en dessous.
-                  « dès » seulement en livraison, où la distance réelle peut encore faire monter la base. */}
-              {fraisServiceEstimes > 0 && (
-                <div className="line"><span className="small">{t('checkout.serviceFeeLine')}<span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span className="small">{euros(devisValide ? Number(devisValide.serviceFee || 0) + Number(devisValide.serviceFeeVat || 0) : fraisServiceEstimes)}</span></div>
-              )}
-              {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}
-              {soldeUtilise && user.balance > 0 && (
-                <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(Math.min(user.balance, estimatedTotalBeforeBalance))}</span></div>
-              )}
-              {/* Avec le devis du serveur, les remises qu'il a appliquées (bon cadeau, code promo) sont listées : la somme des lignes doit tomber sur le total. */}
-              {devisValide?.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: devisValide.giftVoucherCode })}</span><span>-{euros(devisValide.giftVoucherDiscount)}</span></div>}
-              {pourboireChoisi > 0 && <div className="line"><span>{t('checkout.tipLine')}</span><span>{euros(pourboireChoisi)}</span></div>}
+              {codePromoMontant > 0 && <LigneTicket libelle={t('checkout.promoCodeRecap', { label: codePromo?.code || devisValide?.promoCode || '' })} montant={`−${euros(codePromoMontant)}`} />}
+              {devisValide?.giftVoucherDiscount > 0 && <LigneTicket libelle={t('checkout.giftVoucherLine', { code: devisValide.giftVoucherCode })} montant={`−${euros(devisValide.giftVoucherDiscount)}`} />}
+              {soldeUtilise && user.balance > 0 && <LigneTicket libelle={t('checkout.balanceUsedLine')} montant={`−${euros(Math.min(user.balance, apresCodePromo))}`} />}
+              {pourboireChoisi > 0 && <LigneTicket libelle={t('checkout.tipLine')} montant={euros(pourboireChoisi)} />}
               {/* Sur le site, ce total est celui que l'on regarde (la barre n'y garde que le bouton) : ses chiffres roulent. */}
-              <div className="line total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span className="sc-roulant">{APPLI ? euros(montantDebite) : <ChiffresRoulants valeur={euros(montantDebite)} />}</span></div>
+              <div className="co-t-ligne co-t-total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span className="sc-roulant">{APPLI ? euros(montantDebite) : <ChiffresRoulants valeur={euros(montantDebite)} />}</span></div>
             </div>
+            {/* Les vendeurs (trois vendeurs, C2) : ce ticket est le dernier écran avant de payer quand le total ne bouge pas, il
+                dit donc à qui le client achète. En une ligne ; le détail (et les frais de système de Fairide, compris dans la
+                livraison, montant seulement) sous « détails ». */}
+            <p className="co-vendeurs">
+              {t(fulfillmentType === 'delivery' ? 'checkout.vendeursLivraison' : 'checkout.vendeursEmporter', { name: restaurant.name })}
+              {' · '}
+              <button type="button" className="co-vendeurs-lien" aria-expanded={vendeursOuverts} onClick={() => setVendeursOuverts((v) => !v)}>{t('checkout.vendeursDetails')}</button>
+            </p>
+            {vendeursOuverts && (
+              <ul className="co-vendeurs-detail">
+                <li>{t('checkout.ticketPlats')} {t('conformite.sellerFood', { name: restaurant.name })}</li>
+                {fulfillmentType === 'delivery' && <li>{t('checkout.deliveryFeeLine')} {t('conformite.sellerDelivery')}</li>}
+                {fraisServiceEstimes > 0 && (
+                  <li>{t('checkout.fraisSystemeDetail', { amount: euros(devisValide ? Number(devisValide.serviceFee || 0) + Number(devisValide.serviceFeeVat || 0) : fraisServiceEstimes) })}</li>
+                )}
+              </ul>
+            )}
             {user.balance > 0 && (
               <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={useBalance} onChange={(e) => setUseBalance(e.target.checked)} />
-                <span className="small">{t('checkout.useBalance', { amount: Number(user.balance).toFixed(2) })}</span>
+                <span className="small">{t('checkout.useBalance', { amount: euros(user.balance) })}</span>
               </label>
             )}
             {APPLI ? (
@@ -983,7 +1003,7 @@ export default function Checkout() {
                 <>
                   <div className="line"><span>{t('checkout.deliveryFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerDelivery')}</span></span><span>{euros(pendingOrder.deliveryFee)}</span></div>
                   {pendingOrder.deliveryDiscount > 0 && (
-                    <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(pendingOrder.deliveryDiscount)}</span></div>
+                    <div className="line"><span><Icone nom="velo" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(pendingOrder.deliveryDiscount)}</span></div>
                   )}
                   <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{euros(pendingOrder.serviceFee + (pendingOrder.serviceFeeVat || 0))}</span></div>
                 </>

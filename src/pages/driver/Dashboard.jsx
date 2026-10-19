@@ -33,6 +33,7 @@ import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/
 import EtatVide from '../../components/EtatVide';
 import '../../ecran-livreur.css';
 import '../../site-livreur.css';
+import { telephoneLisible } from '../../validation';
 
 // La carte de la course choisie (site sur un ordinateur seulement) : Leaflet n'est téléchargé que là, jamais sur un
 // téléphone ni dans l'app (CarteCourse.jsx).
@@ -571,7 +572,7 @@ export default function DriverDashboard() {
           <span className="ecl-grow">
             {o.deliveryInstructions ? deliveryInstructionLabel(o.deliveryInstructions) : null}
             {o.deliveryNote && <small>{o.deliveryNote}</small>}
-            {o.clientPhone && <small><a href={`tel:${o.clientPhone}`}>{o.clientPhone}</a></small>}
+            {o.clientPhone && <small><a href={`tel:${o.clientPhone}`}>{telephoneLisible(o.clientPhone)}</a></small>}
           </span>
           {o.clientPhone && <a className="ecl-rond" href={`tel:${o.clientPhone}`} aria-label={o.clientPhone}><Icone nom="telephone" taille={18} /></a>}
         </div>
@@ -799,8 +800,11 @@ export default function DriverDashboard() {
         {available.map(carteOffre)}
       </PositionRequise>
       {/* Son, vibration, notifications : sous les offres depuis le 2026-10-16 (maquette), pour que la première course
-          proposée tienne dans le premier écran. */}
-      <AlerteLivreurBar {...alerte} />
+          proposée tienne dans le premier écran. Site seulement (deuxième audit design, 2026-10-19) : la carte promettait
+          l'alerte « tant que cette page reste ouverte, sinon un e-mail », phrase du site ; l'app a les notifications push
+          (NotifCourses juste au-dessus), « Prête à récupérer » est écrit sur la carte de la course, et le son des alertes se
+          règle dans Mon compte (SonAlertesLivreur.jsx). L'alerte elle-même (useAlerteLivreur) sonne toujours. */}
+      {!appli && <AlerteLivreurBar {...alerte} />}
     </>
   );
 

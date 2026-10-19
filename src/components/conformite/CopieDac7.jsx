@@ -9,12 +9,15 @@ import { useToast } from '../../context/ToastContext';
  * `chemin(annee)` rend l'adresse. L'année proposée par défaut est la dernière close — celle que Fairide
  * déclare avant le 31/01. Pas d'activité cette année-là : le serveur répond 404 avec un message clair,
  * affiché tel quel. */
-export default function CopieDac7({ chemin, token }) {
+// `annees` (facultatif) : les années proposées, la première choisie par défaut. Le livreur (DocumentsVente) part de l'année
+// en cours (deuxième audit design, 2026-10-19) : Fairide ouvre en 2026, « 2025 » et « 2024 » ne pouvaient que répondre 404.
+export default function CopieDac7({ chemin, token, annees = null }) {
   const { t } = useLanguage();
   const toast = useToast();
   const id = useId();
   const derniere = new Date().getFullYear() - 1;
-  const [annee, setAnnee] = useState(derniere);
+  const choix = annees?.length ? annees : [derniere, derniere - 1];
+  const [annee, setAnnee] = useState(choix[0]);
   const [occupe, setOccupe] = useState(false);
   async function telecharger() {
     setOccupe(true);
@@ -26,7 +29,7 @@ export default function CopieDac7({ chemin, token }) {
     <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', paddingTop: 10, marginTop: 10, borderTop: '1px solid var(--line)' }}>
       <span className="small" style={{ flex: '1 1 180px' }}>{t('conformite.dac7CopyLabel')}</span>
       <select aria-label={t('conformite.dac7Year')} id={`${id}-an`} value={annee} onChange={(e) => setAnnee(Number(e.target.value))} style={{ width: 'auto' }}>
-        {[derniere, derniere - 1].map((a) => <option key={a} value={a}>{a}</option>)}
+        {choix.map((a) => <option key={a} value={a}>{a}</option>)}
       </select>
       <button type="button" className="btn-ghost" style={{ padding: '2px 8px' }} disabled={occupe} onClick={telecharger}>{occupe ? '…' : t('conformite.saleDocsOpen')}</button>
     </div>

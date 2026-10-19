@@ -43,14 +43,29 @@ const COMMUNES = ['/aide', '/cgv', '/confidentialite', '/mentions-legales', '/co
 const PAGES = {
   visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', '/equipe/essai', ...COMMUNES],
   client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', '/groupe/essai1234', '/equipe/essai', ...COMMUNES],
-  driver: ['/', '/driver', '/driver/onboarding', '/driver/map', '/driver/earnings', '/driver/invoices', '/driver/reviews', '/documents', '/account', ...COMMUNES],
+  // ?dossier= : le même dossier simulé, envoyé ou validé (DossierSuivi.jsx) ; sans lui, le brouillon réel (DossierAppli.jsx).
+  driver: ['/', '/driver', '/driver/onboarding', '/driver/onboarding?dossier=pending_review', '/driver/onboarding?dossier=approved', '/driver/map', '/driver/earnings', '/driver/invoices', '/driver/reviews', '/documents', '/account', ...COMMUNES],
   restaurant: ['/', '/dashboard', '/dashboard/menu', '/dashboard/orders', '/dashboard/preview', '/dashboard/promotions', '/dashboard/reviews', '/dashboard/stats', '/dashboard/invoices', '/dashboard/guide', '/sales', '/account', '/carte/valider/essai', ...COMMUNES]
 };
 
 // Le serveur simulé. Par défaut une liste vide (sans danger : .map, .length, .filter marchent ; une propriété lue
 // donne undefined comme sur un objet vide). Les réponses qui doivent être un objet sont écrites ici.
+// État du dossier livreur simulé pour la page en cours (paramètre ?dossier= de PAGES), lu par simuler().
+let etatDossier = null;
 function simuler(chemin, methode, profil) {
   const u = UTILISATEURS[profil];
+  if (methode === 'GET' && chemin === '/couriers/me' && etatDossier) {
+    const d = structuredClone(REELLES['/couriers/me']);
+    Object.assign(d.courier, { lifecycleStatus: etatDossier, submittedAt: '2026-10-23T08:00:00Z', reviewedAt: etatDossier === 'approved' ? '2026-10-24T09:00:00Z' : null, statusVerifiedAt: etatDossier === 'approved' ? '2026-10-24T09:00:00Z' : null });
+    d.missing = []; d.thresholds = { year: 2026, grossTotal: 214.6, withholdingTotal: 0, netTotal: 214.6, deliveries: 38 };
+    return d;
+  }
+  // Gains (backend gainsLivreur.js) : semaines et courses, pourboire replié.
+  if (methode === 'GET' && chemin === '/couriers/me/earnings') return {
+    year: 2026, totals: { gross: 12.9, withholding: 0, net: 12.9, deliveries: 2 }, byMonth: [], ceiling: null,
+    byWeek: [{ week: '2026-10-05', gross: 5.6, withholding: 0, net: 5.6, deliveries: 1 }, { week: '2026-10-12', gross: 0, withholding: 0, net: 0, deliveries: 0 }, { week: '2026-10-19', gross: 7.3, withholding: 0, net: 7.3, deliveries: 1 }],
+    lines: [], rides: [{ id: 'e1', orderId: 'o1', kind: 'delivery', earnedAt: '2026-10-20T18:05:00Z', gross: 5.8, withholding: 0, net: 5.8, tip: 1.5, restaurantName: COMMERCE.name, commune: 'Ixelles', distanceKm: 1.2 }, { id: 'e2', orderId: 'o2', kind: 'delivery', earnedAt: '2026-10-06T19:10:00Z', gross: 5.6, withholding: 0, net: 5.6, tip: 0, restaurantName: COMMERCE.name, commune: 'Etterbeek', distanceKm: 2.1 }]
+  };
   if (/^\/auth\/me$/.test(chemin)) return methode === 'GET' ? u : { ...u, user: u };
   if (/^\/auth\/terms\/current$/.test(chemin)) return { version: '2026-10-12' };
   if (methode === 'GET' && REELLES[chemin]) return REELLES[chemin];
@@ -188,6 +203,7 @@ try {
   for (const [profil, chemins] of Object.entries(PAGES)) {
     const { ctx, page } = await ouvrir(navigateur, base, { profil });
     for (const chemin of chemins) {
+      etatDossier = new URL(base + chemin).searchParams.get('dossier');
       await page.goto(base + chemin);
       resultats.push({ profil, page: chemin, ...(await examiner(page, { profil, appli: true })) });
     }

@@ -38,13 +38,13 @@ function Illustration({ t }) {
       <text x="123" y="77.5" fontSize="8" fontWeight="800" fill="#fff" fontFamily="'Bricolage Grotesque', system-ui, sans-serif">Fairide</text>
       <text x="208" y="77.5" fontSize="7" fill="#fff" textAnchor="end" fontFamily="system-ui, sans-serif">11:23</text>
       <rect x="111" y="88" width="98" height="40" rx="6" fill="#fff" stroke="#E6E2D6" />
-      <text x="116" y="99" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalScreenOrder')}</text>
+      <text x="116" y="99" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif"><Icone nom="velo" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalScreenOrder')}</text>
       <text x="116" y="109" fontSize="6.5" fill="#666" fontFamily="system-ui, sans-serif">2 × Dürüm poulet</text>
       <text x="116" y="117" fontSize="6.5" fill="#666" fontFamily="system-ui, sans-serif">1 × Frites · 24,50 €</text>
       <rect x="160" y="105" width="44" height="16" rx="8" fill="#C6F06B" />
       <text x="182" y="116" fontSize="7" fontWeight="700" fill="#1F1F24" textAnchor="middle" fontFamily="system-ui, sans-serif">{t('accountUi.terminalScreenAccept')}</text>
       <rect x="111" y="133" width="98" height="20" rx="6" fill="#fff" stroke="#E6E2D6" />
-      <text x="116" y="146" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalScreenBooking')}</text>
+      <text x="116" y="146" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif"><Icone nom="velo" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalScreenBooking')}</text>
       <text x="204" y="146" fontSize="6.5" fill="#666" textAnchor="end" fontFamily="system-ui, sans-serif">18 min</text>
       <rect x="111" y="158" width="98" height="20" rx="6" fill="#fff" stroke="#E6E2D6" />
       <text x="116" y="171" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif"><Icone nom="sac" taille={16} className="icone-texte" />{' '}{t('accountUi.terminalScreenPickup')}</text>

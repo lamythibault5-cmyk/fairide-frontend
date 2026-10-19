@@ -23,6 +23,7 @@ import useMiseEnLigne from '../../components/commerce/useMiseEnLigne';
 import { experienceApp } from '../../natif';
 import { imgProps, cacherImageCassee } from '../../images';
 import Icone from '../../components/Icone';
+import { BandeauSoir, TuilesCommerce } from '../../components/commerce/CeSoir';
 
 // « Mon commerce » : une rangée par sujet, qui dit l'état actuel, et un sous-écran pour le changer.
 //
@@ -60,7 +61,7 @@ function aujourdhuiIso() {
 
 export default function EditPage() {
   const { t } = useLanguage();
-  const { restaurant, drivers, restoId, loadDashboard, communs, onConnect, connecting, lectureSeule } = useOutletContext();
+  const { restaurant, orders, reviews, drivers, restoId, loadDashboard, communs, onConnect, connecting, lectureSeule } = useOutletContext();
   const { token } = useAuth();
   const [ouvert, setOuvert] = useState(null);
   const etapes = useMiseEnLigne({ restaurant, restoId, token, onConnect, connecting, onChange: () => loadDashboard(restoId), lectureSeule });
@@ -81,6 +82,17 @@ export default function EditPage() {
     : t('editResto.offerNone');
 
   const Ecran = ouvert ? ECRANS[ouvert] : null;
+  /* CE QUI EST VRAIMENT EN LIGNE (audit design 2, 2026-10-19 : la vraie fiche de Maestro disait « En ligne » à côté de
+     « 3 étapes faites sur 6 », contrat et paiements encore ouverts). Visible dans la liste ne veut pas dire tout vendre :
+     sans paiements Stripe actifs, rien ne se paie en ligne (routes/orders.js) — il ne reste que l'à emporter payé au
+     comptoir, si le commerce l'accepte. On dit donc ce qui marche aujourd'hui. */
+  const paiementsActifs = r.stripeConnectStatus === 'active' || r.onboarding?.paymentsRequired === false;
+  const comptoir = (r.offersPickup ?? r.wantsPickup) && r.pickupPaymentMode !== 'online';
+  const etatEnLigne = !r.publicListed ? t('ecranCommerce.pasEnLigne')
+    : paiementsActifs ? t('ecranCommerce.enLigne')
+      : comptoir ? t('serviceCommerce.visibleComptoir') : t('serviceCommerce.visibleFerme');
+  // Les quatre outils du quotidien (Statistiques, Avis, Promotions, Factures), en tuiles sous la mise en ligne.
+  const tuiles = <TuilesCommerce restaurant={r} orders={orders} reviews={reviews} restoId={restoId} token={token} />;
   const ligne = (cle, props) => <LigneCompte {...props} onClick={() => setOuvert(cle)} />;
 
   const type = restaurantTypeLabel(r.cuisine, t) || r.cuisine;
@@ -123,8 +135,9 @@ export default function EditPage() {
     <>
     {communs}
 
-    <p className="ec-feuille-titre">{t('editResto.groupShop')}</p>
-    <div className="card account-groupe" aria-label={t('editResto.groupShop')}>
+    {/* « Ta fiche » (audit design 2) : ce que les clients voient du commerce, sous les outils du quotidien. */}
+    <p className="ec-feuille-titre">{t('serviceCommerce.taFiche')}</p>
+    <div className="card account-groupe" aria-label={t('serviceCommerce.taFiche')}>
       {ligne('identite', { icone: 'commerce', titre: t('editResto.rowIdentity'), sous: r.name })}
       {ligne('adresse', { icone: 'position', titre: t('editResto.address'), sous: adresse || aCompleter, accent: adresse ? undefined : 'warn' })}
       {ligne('horaires', { icone: 'horloge', titre: t('editResto.openingHours'), sous: horairesDuJour ? t('editResto.todayHours', { hours: horairesDuJour }) : aCompleter, accent: r.hours ? undefined : 'warn' })}
@@ -134,7 +147,7 @@ export default function EditPage() {
 
     <p className="ec-feuille-titre">{t('editResto.delivery')}</p>
     <div className="card account-groupe" aria-label={t('editResto.delivery')}>
-      {ligne('livraison', { icone: 'scooter', titre: t('editResto.delivery'), sous: r.deliveryMode === 'own' ? t('editResto.deliveryOwn', { n: drivers.length }) : t('editResto.deliveryPool') })}
+      {ligne('livraison', { icone: 'velo', titre: t('editResto.delivery'), sous: r.deliveryMode === 'own' ? t('editResto.deliveryOwn', { n: drivers.length }) : t('editResto.deliveryPool') })}
       {ligne('offre', { icone: 'etiquette', titre: t('editResto.rowDeliveryOffer'), sous: offre })}
       {/* Distance de livraison et plafond de commandes par jour (fondateur, 2026-10-01) : pas de limite par défaut. */}
       {ligne('capacite', { icone: 'reglages', titre: t('editResto.rowCapacity'), sous: r.deliveryRadiusKm == null && r.maxOrdersPerDay == null ? t('editResto.capacitySubNone', { km: 6 }) : [r.deliveryRadiusKm != null && t('editResto.capacitySubRadius', { km: String(r.deliveryRadiusKm).replace('.', ',') }), r.maxOrdersPerDay != null && t('editResto.capacitySubCap', { n: r.maxOrdersPerDay })].filter(Boolean).join(' · ') })}
@@ -145,38 +158,43 @@ export default function EditPage() {
       {ligne('legal', { icone: 'document', titre: t('editResto.rowLegal'), sous: legalManquant ? aCompleter : `BCE ${r.companyNumber}`, accent: legalManquant ? 'warn' : undefined })}
       {ligne('type', { icone: 'restaurants', titre: t('editResto.rowType'), sous: r.cuisine })}
       {ligne('cuisines', { icone: 'restaurants', titre: t('editResto.rowCuisines'), sous: (r.extraCuisines || []).length ? (r.extraCuisines || []).map((c) => restaurantTypeLabel(c, t) || c).join(', ') : t('editResto.cuisinesNone') })}
-      {ligne('suppression', { icone: 'interdit', titre: t('editResto.deleteTitle'), danger: true })}
     </div>
     </>
   );
   return (
     <div>
       <BandeauCommerce>
-        <div className="ec-b-haut">
-          {/* Sans étape restante, le nom devient le titre : il n'est pas répété au-dessus. */}
-          <span>{etapes && <><b>{r.name}</b>{type || r.commune ? ' · ' : ''}</>}{[type, r.commune].filter(Boolean).join(' · ')}</span>
-          <span className="ec-chip">{r.publicListed ? t('ecranCommerce.enLigne') : t('ecranCommerce.pasEnLigne')}</span>
-        </div>
-        <h1 className="ec-b-titre">{etapes ? t('miseEnLigne.title') : r.name}</h1>
-        {etapes && <p className="ec-b-sous">{t('miseEnLigne.progress', { done: etapes.faites, total: etapes.etapes.length })}</p>}
-        {etapes && <RouteMiseEnLigne etapes={etapes.etapes} libelles={SITE} />}
+        {etapes ? (
+          <>
+            <div className="ec-b-haut">
+              <span><b>{r.name}</b>{type || r.commune ? ' · ' : ''}{[type, r.commune].filter(Boolean).join(' · ')}</span>
+              <span className="ec-chip">{etatEnLigne}</span>
+            </div>
+            <h1 className="ec-b-titre">{t('miseEnLigne.title')}</h1>
+            <p className="ec-b-sous">{t('miseEnLigne.progress', { done: etapes.faites, total: etapes.etapes.length })}</p>
+            <RouteMiseEnLigne etapes={etapes.etapes} libelles={SITE} />
+          </>
+        ) : <BandeauSoir restaurant={r} orders={orders} />}
       </BandeauCommerce>
       <FeuilleCommerce>
       {SITE ? (
         <div className="sp-cadre"><div className="sp-ensemble">
-          <div className="sp-ensemble-etapes">{etapes && <EtapesMiseEnLigne etat={etapes} boutonDansCarte />}</div>
+          <div className="sp-ensemble-etapes">{etapes && <EtapesMiseEnLigne etat={etapes} boutonDansCarte />}{tuiles}</div>
           {apercu}
           <div className="sp-ensemble-reste">{rangees}</div>
         </div></div>
       ) : (
         <>
           {etapes && <EtapesMiseEnLigne etat={etapes} />}
+          {tuiles}
           {rangees}
         </>
       )}
       </FeuilleCommerce>
 
-      {Ecran && <Ecran restaurant={r} drivers={drivers} restoId={restoId} loadDashboard={loadDashboard} onFermer={() => setOuvert(null)} />}
+      {/* « Supprimer ce restaurant » vit dans Infos légales (audit design 2) : jamais en vue sur l'écran du service. */}
+      {Ecran && <Ecran restaurant={r} drivers={drivers} restoId={restoId} loadDashboard={loadDashboard} onFermer={() => setOuvert(null)}
+        onSupprimer={ouvert === 'legal' ? () => setOuvert('suppression') : undefined} />}
     </div>
   );
 }

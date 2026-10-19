@@ -1,6 +1,7 @@
 import { orderTypeLabel, deliveryInstructionLabel } from '../orderStatus';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { euros } from '../prixPlat';
+import { telephoneLisible } from '../validation';
 
 function formatDateTime(ms) {
   return new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -35,7 +36,7 @@ export default function OrderReceipt({ order, restaurant }) {
       <div className="receipt-divider" />
       <p style={{ margin: '4px 0' }}>
         <b>{order.clientName}</b>
-        {order.clientPhone && <> · {order.clientPhone}</>}
+        {order.clientPhone && <> · {telephoneLisible(order.clientPhone)}</>}
       </p>
       {order.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>{t('receipt.instruction', { label: deliveryInstructionLabel(order.deliveryInstructions, t) })}</p>}
       {order.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>{t('receipt.note', { note: order.deliveryNote })}</p>}

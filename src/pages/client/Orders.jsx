@@ -35,9 +35,17 @@ import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import Icone from '../../components/Icone';
 import VendeurLivraison from '../../components/conformite/VendeurLivraison';
+import Modale from '../../components/Modale';
 import { euros } from '../../prixPlat';
 import { BandeauCommande, FeuilleCommande } from '../../components/EcranCommande';
 import '../../ecran-liste.css';
+
+// La photo de la commande (Cloudinary) : une vignette carrée légère, ou la photo entière ajustée à l'écran.
+function vignettePhoto(url, taille, carre = true) {
+  if (!url || !url.includes('/image/upload/')) return url;
+  return url.replace('/image/upload/', carre ? `/image/upload/c_fill,w_${taille},h_${taille},f_auto,q_auto/` : `/image/upload/c_limit,w_${taille},f_auto,q_auto/`);
+}
+const heureCourte = (ms) => new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 
 // `pourboireSeul` : l'avis est déjà envoyé, il ne reste que le pourboire. Sans ce mode, un client qui
 // abandonnait le paiement du pourboire (ou dont l'envoi échouait après l'avis) ne pouvait plus jamais le
@@ -147,11 +155,13 @@ export default function Orders() {
   const { previewMode } = usePreviewMode();
   const { t } = useLanguage();
   // Le code à donner au livreur ou à montrer au commerce : sous la progression dans l'app, plus bas sur le site.
-  const codeDeRemise = (o) => (o.paid && o.deliveryCode && o.status !== 'livre' && o.status !== 'refuse' ? (
+  // Pas avant que le commerce accepte (audit design 2, 2026-10-19) : le code ne sert qu'à la remise — au comptoir ou à la
+  // porte —, et une commande encore « envoyée » peut être refusée. Il reste dans l'e-mail de confirmation.
+  const codeDeRemise = (o) => (o.paid && o.deliveryCode && !['nouveau', 'livre', 'refuse', 'annule'].includes(o.status) ? (
     <div className="suivi-code">
       <div className="suivi-code-lib">
         {o.orderType === 'pickup' && t('orders.codeShowRestaurant')}
-        {o.orderType === 'delivery' && t('orders.codeGiveDriver')}
+        {o.orderType === 'delivery' && (o.driverName ? t('orders.codeGiveDriverName', { name: String(o.driverName).split(' ')[0] }) : t('orders.codeGiveDriver'))}
       </div>
       <div className="suivi-code-valeur">{o.deliveryCode}</div>
       {o.orderType === 'pickup' && o.orderNumber != null && <div className="suivi-code-numero">{t('retrait.orderNumber', { n: `#${String(o.orderNumber).padStart(3, '0')}` })}</div>}
@@ -165,6 +175,8 @@ export default function Orders() {
   const [aRecommander, setARecommander] = useState(null);
   // Site : les commandes passées dont le détail est ouvert sous leur ligne du tableau.
   const [ouvertes, setOuvertes] = useState(() => new Set());
+  // La photo de la commande par le commerce, ouverte en grand (audit design 2).
+  const [photoOuverte, setPhotoOuverte] = useState(null);
   const basculerDetails = (id) => setOuvertes((avant) => { const n = new Set(avant); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   useEffect(() => {
@@ -334,8 +346,8 @@ export default function Orders() {
     );
   }
 
-  /* LES MORCEAUX D'UNE COMMANDE. Ils étaient écrits d'un seul tenant dans la carte ; la carte de l'app les remet dans le même
-   * ordre qu'avant (rien n'y change), le site les range autrement (2026-10-16, mockups/site-ordinateur.html, section 6). */
+  /* LES MORCEAUX D'UNE COMMANDE. Ils étaient écrits d'un seul tenant dans la carte ; le site les range à sa façon (2026-10-16,
+   * mockups/site-ordinateur.html, section 6), la carte de l'app suit le moment de la commande (audit design 2, plus bas). */
   // UN ARTICLE PAR LIGNE, avec sa quantité dans une case.
   // Les articles étaient aplatis en une seule chaîne par .join(', ') : « 2× Maxi Frites
   // (Sauce andalouse), 1× L'Ardenne Menu (L'Ardenne, Maxi Frites, Coca Cola 33cl) ». Sur
@@ -361,7 +373,8 @@ export default function Orders() {
       )}
     </>
   );
-  const blocDetails = (o) => (
+  // Où, et les consignes à la porte : seulement tant que la commande est en cours (une commande passée ne les répète plus).
+  const blocLieu = (o) => (
     <>
       {o.orderType === 'pickup' && !estPassee(o) && (
         <div className="small suivi-lieu">{t('orders.pickupAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '' })}</div>
@@ -369,25 +382,49 @@ export default function Orders() {
       {o.orderType === 'delivery' && !estPassee(o) && (
         <div className="small suivi-lieu"><Icone nom="position" taille={14} /> {o.address}</div>
       )}
-      {/* Motif donné par le commerce quand il refuse la commande (obligatoire depuis le 2026-10-02). */}
-      {o.status === 'refuse' && o.refusalReason && (
-        <div className="small">{t('orders.refusalReason', { reason: o.refusalReason })}</div>
+      {o.deliveryInstructions && !estPassee(o) && (
+        <div className="small suivi-consignes">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
       )}
-      {o.deliveryInstructions && (
-        <div className="small">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
+    </>
+  );
+  // Commande refusée par le commerce : le motif qu'il a donné (obligatoire depuis le 2026-10-02), et ce qui revient au client.
+  // Rien d'autre (audit design 2) : ni « Payée … », ni « le livreur sera nommé ici ».
+  const blocRefus = (o) => (o.status === 'refuse' ? (
+    <div className="suivi-refus">
+      {o.refusalReason && <p>{t('orders.refusalReason', { reason: o.refusalReason })}</p>}
+      <p>{o.paid && o.paymentMode !== 'on_site'
+        ? t('orders.refundLine', { amount: euros(debite(o)) })
+        : t('orders.refundNothing')}</p>
+    </div>
+  ) : null);
+  // Le livreur en une rangée : sa photo (ou son initiale), son prénom, et « Appeler » — un vrai appel, son numéro n'étant donné
+  // que pendant la course (backend mapOrder).
+  const rangeeLivreur = (o) => (o.driverName && !estPassee(o) ? (
+    <div className="suivi-livreur">
+      <DriverBadge name={o.driverName} photoUrl={o.driverPhotoUrl} size={40} />
+      {o.driverPhone && (
+        <a className="suivi-appeler" href={`tel:${String(o.driverPhone).replace(/[^+\d]/g, '')}`}>
+          <Icone nom="telephone" taille={16} />{t('retrait.call')}
+        </a>
       )}
+    </div>
+  ) : null);
+  const blocDetails = (o) => (
+    <>
+      {blocLieu(o)}
+      {blocRefus(o)}
       <LivreurALaPorte order={o} />
-      {o.driverName && (
+      {o.driverName && !(o.status === 'refuse') && (
         <div style={{ margin: '6px 0' }}><DriverBadge name={o.driverName} phone={o.driverPhone} photoUrl={o.driverPhotoUrl} size={40} /></div>
       )}
-      <VendeurLivraison order={o} token={token} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
+      <VendeurLivraison order={o} />
       <SansLivreur order={o} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
       {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
     </>
   );
   // La carte du trajet, pendant la livraison seulement. Plus haute sur le site, où elle tient sa propre colonne.
   const blocCarte = (o) => (o.status === 'livraison' && o.restaurantLat && o.deliveryLat ? (
-    <div style={{ margin: '10px 0' }}>
+    <div className="suivi-carte-trajet" style={{ margin: '10px 0' }}>
       <DeliveryTrackingMap
         restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
         deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
@@ -400,10 +437,23 @@ export default function Orders() {
       </div>
     </div>
   ) : null);
+  /* LA PHOTO DE LA COMMANDE PAR LE COMMERCE (audit design 2, 2026-10-19). Le commerce la prend avant la remise (ticket et
+   * produits dans le cadre, routes/entrainement.js POST /orders/:id/photo) ; le serveur l'envoyait déjà au client
+   * (mapOrder.preparedPhoto), aucun écran ne la montrait. Une fois la commande prête et pendant la livraison : « ce qui
+   * arrive chez toi ». Toucher la vignette l'ouvre en grand. */
+  const blocPhoto = (o) => (o.preparedPhoto?.url && ['pret', 'livraison'].includes(o.status) ? (
+    <button type="button" className="suivi-photo" onClick={() => setPhotoOuverte(o)}>
+      <img src={vignettePhoto(o.preparedPhoto.url, 112)} alt="" width={56} height={56} loading="lazy" />
+      <span><b>{t('orders.photoTitle')}</b>{o.preparedPhoto.at
+        ? `, ${t('orders.photoBy', { name: o.restaurantName, time: heureCourte(o.preparedPhoto.at) })}`
+        : `, ${t('orders.photoByNoTime', { name: o.restaurantName })}`}</span>
+    </button>
+  ) : null);
   // Pourboire payé avec la commande : débité en plus du total (backend pourboireCommande.js).
   const debite = (o) => o.total + (o.tipPaid && o.tipAtCheckout > 0 ? o.tipAtCheckout : 0);
-  // `avecMontant` : le tableau des commandes passées du site a déjà sa colonne Total.
-  const blocTotal = (o, avecMontant = true) => (
+  // `avecMontant` : le tableau des commandes passées du site a déjà sa colonne Total. Commande refusée : pas de « Payée … »,
+  // le remboursement est dit par blocRefus.
+  const blocTotal = (o, avecMontant = true) => (o.status === 'refuse' ? null : (
     <>
       {avecMontant && (
         <div className="suivi-total">
@@ -420,14 +470,13 @@ export default function Orders() {
         </a>
       )}
     </>
-  );
-  // `avecRecommander` : sur le site, « Commander à nouveau » est déjà sur la ligne du tableau.
-  const blocActions = (o, avecRecommander = true) => (
+  ));
+  // PAIEMENT NON TERMINÉ (audit du 15/10/2026). Revenu de Stripe sans payer (bouton Retour, navigateur de l'appli fermé), le
+  // client trouvait ici « le commerce doit encore confirmer » et un seul bouton Annuler, et son panier avait disparu. Deux
+  // choix, faits par lui et non devinés : payer cette commande-ci, ou l'annuler et retrouver son panier. Rien n'est annulé
+  // tout seul : Stripe peut confirmer un paiement quelques secondes après la fermeture.
+  const blocNonTermine = (o) => (
     <>
-      {/* PAIEMENT NON TERMINÉ (audit du 15/10/2026). Revenu de Stripe sans payer (bouton Retour, navigateur de l'appli
-          fermé), le client trouvait ici « le commerce doit encore confirmer » et un seul bouton Annuler, et son panier
-          avait disparu. Deux choix, faits par lui et non devinés : payer cette commande-ci, ou l'annuler et retrouver son
-          panier. Rien n'est annulé tout seul : Stripe peut confirmer un paiement quelques secondes après la fermeture. */}
       {impayeeEnLigne(o) && (
         <div className="paiement-non-termine">
           <p className="small" style={{ margin: '0 0 10px' }}>{t('orders.unpaidText')}</p>
@@ -454,34 +503,21 @@ export default function Orders() {
           </div>
         </div>
       )}
-      {/* À emporter : quand, où, itinéraire, appel, ce qu'on paie au comptoir. */}
-      <InfosRetrait order={o} compact />
-      {o.status === 'nouveau' && !impayeeEnLigne(o) && !nonEnvoyee(o) && (
-        <>
-          <button
-            className="btn-ghost"
-            style={{ marginTop: 8, color: 'var(--red)' }}
-            disabled={cancellingId === o.id}
-            onClick={() => setAAnnuler(o)}
-          >
-            {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
-          </button>
-          <div className="small" style={{ marginTop: 4 }}>{t(o.paymentMode === 'on_site' ? 'orders.cancelHintOnSite' : 'orders.cancelHint')}</div>
-        </>
-      )}
-      {['preparation', 'pret', 'livraison'].includes(o.status) && (
-        <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelLocked')}</div>
-      )}
-
-      {o.status === 'livre' && !o.reviewed && reviewingId !== o.id && (
-        <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => setReviewingId(o.id)}>{t('orders.leaveReview')}</button>
-      )}
-      {o.status === 'livre' && o.reviewed && (
-        <div className="small" style={{ marginTop: 8, color: 'var(--teal-deep)' }}>{t('orders.reviewSent')}</div>
-      )}
-      {o.status === 'livre' && o.reviewed && o.driverName && !o.tipPaid && reviewingId !== o.id && (
-        <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => setReviewingId(o.id)}>{t('orders.leaveTip')}</button>
-      )}
+    </>
+  );
+  // Annuler, tant que le commerce n'a pas accepté. La règle est dite UNE fois, dans la note au-dessus (ProchaineEtape : « tu peux
+  // aussi l'annuler toi-même d'ici là ») ; la phrase qui la répétait sous le bouton est partie (audit design 2).
+  const boutonAnnuler = (o) => (o.status === 'nouveau' && !impayeeEnLigne(o) && !nonEnvoyee(o) ? (
+    <button type="button" className="btn-ghost suivi-annuler" disabled={cancellingId === o.id} onClick={() => setAAnnuler(o)}>
+      {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
+    </button>
+  ) : null);
+  const noteVerrou = (o) => (['preparation', 'pret', 'livraison'].includes(o.status) ? <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelLocked')}</div> : null);
+  // LE PIED D'UNE COMMANDE : avis, pourboire, « Signaler un problème » ou « Un souci ? », « Commander à nouveau ». Une rangée
+  // alignée sur le texte de la carte (audit design 2 : les deux liens étaient décalés l'un par rapport à l'autre).
+  // `avecRecommander` : sur le site, « Commander à nouveau » est déjà sur la ligne du tableau.
+  const blocPied = (o, avecRecommander = true) => (
+    <>
       {reviewingId === o.id && (() => {
         const formulaire = (
           <ReviewForm
@@ -491,17 +527,39 @@ export default function Orders() {
         );
         return APPLI ? <SousEcran titre={o.reviewed ? t('orders.leaveTip') : t('orders.leaveReview')} onFermer={() => setReviewingId(null)}>{formulaire}</SousEcran> : formulaire;
       })()}
-      {/* Signaler un problème (USR-10) : commande payée et terminée ; « jamais reçue » aussi pendant la livraison. */}
-      {o.paid && ['livre', 'livraison'].includes(o.status) && (
-        <SignalerProbleme order={o} token={token} toast={toast} signalement={signalements[o.id]}
-          onSignale={(s) => setSignalements((prev) => ({ ...prev, [o.id]: s }))} />
+      {o.status === 'livre' && o.reviewed && (
+        <div className="small" style={{ marginTop: 8, color: 'var(--teal-deep)' }}>{t('orders.reviewSent')}</div>
       )}
       {/* « Un souci ? » à chaque étape — sauf là où « Signaler un problème » est déjà proposé. */}
       {!(o.paid && ['livre', 'livraison'].includes(o.status)) && <AideCommande order={o} />}
-      {/* Commander à nouveau (USR-9) : une commande close, refaite avec la carte d'aujourd'hui. */}
-      {avecRecommander && ['livre', 'annule', 'refuse'].includes(o.status) && (o.items || []).length > 0 && (
-        <button type="button" className="btn-outline" style={{ marginTop: 8, marginLeft: 8 }} onClick={() => recommander(o)}>{t('orders.reorder')}</button>
-      )}
+      <div className="suivi-pied">
+        {o.status === 'livre' && !o.reviewed && reviewingId !== o.id && (
+          <button type="button" className="suivi-lien" onClick={() => setReviewingId(o.id)}>{t('orders.leaveReview')}</button>
+        )}
+        {o.status === 'livre' && o.reviewed && o.driverName && !o.tipPaid && reviewingId !== o.id && (
+          <button type="button" className="suivi-lien" onClick={() => setReviewingId(o.id)}>{t('orders.leaveTip')}</button>
+        )}
+        {/* Signaler un problème (USR-10) : commande payée et terminée ; « jamais reçue » aussi pendant la livraison. */}
+        {o.paid && ['livre', 'livraison'].includes(o.status) && (
+          <SignalerProbleme order={o} token={token} toast={toast} signalement={signalements[o.id]}
+            onSignale={(s) => setSignalements((prev) => ({ ...prev, [o.id]: s }))} />
+        )}
+        {/* Commander à nouveau (USR-9) : une commande close, refaite avec la carte d'aujourd'hui. */}
+        {avecRecommander && ['livre', 'annule', 'refuse'].includes(o.status) && (o.items || []).length > 0 && (
+          <button type="button" className="btn-outline suivi-recommander" onClick={() => recommander(o)}>{t('orders.reorder')}</button>
+        )}
+      </div>
+    </>
+  );
+  // Le site : les mêmes morceaux qu'avant, dans le même ordre.
+  const blocActions = (o, avecRecommander = true) => (
+    <>
+      {blocNonTermine(o)}
+      {/* À emporter : quand, où, itinéraire, appel, ce qu'on paie au comptoir. */}
+      <InfosRetrait order={o} compact />
+      {boutonAnnuler(o)}
+      {noteVerrou(o)}
+      {blocPied(o, avecRecommander)}
     </>
   );
   const dialogues = (
@@ -523,6 +581,18 @@ export default function Orders() {
         onCancel={() => setARecommander(null)}
         onConfirm={() => { const o = aRecommander; setARecommander(null); recommander(o, true); }}
       />
+      {photoOuverte && (
+        APPLI ? (
+          <SousEcran titre={t('orders.photoTitle')} onFermer={() => setPhotoOuverte(null)}>
+            <img className="suivi-photo-grande" src={vignettePhoto(photoOuverte.preparedPhoto.url, 1200, false)} alt={t('orders.photoAlt', { name: photoOuverte.restaurantName })} />
+            {photoOuverte.preparedPhoto.at && <p className="small" style={{ marginTop: 8 }}>{t('orders.photoBy', { name: photoOuverte.restaurantName, time: heureCourte(photoOuverte.preparedPhoto.at) })}</p>}
+          </SousEcran>
+        ) : (
+          <Modale onFermer={() => setPhotoOuverte(null)} titre={t('orders.photoTitle')}>
+            <img className="suivi-photo-grande" src={vignettePhoto(photoOuverte.preparedPhoto.url, 1200, false)} alt={t('orders.photoAlt', { name: photoOuverte.restaurantName })} />
+          </Modale>
+        )
+      )}
     </>
   );
   const notifications = (
@@ -545,7 +615,79 @@ export default function Orders() {
     </div>
   );
 
-  // L'APPLICATION : la page d'avant, telle quelle — chaque commande dans sa carte, les morceaux dans leur ordre d'origine.
+  /* L'APPLICATION : UNE COMMANDE EN COURS SUIT SON MOMENT (audit design 2, « Proposition » de la section 6, fondateur, 2026-10-19).
+   * Pendant « En route », la carte du trajet était à un écran et demi sous le code, une note grise, les articles, l'adresse,
+   * les consignes, le livreur et un encadré légal. Maintenant, sous le bandeau iris, seulement ce qui sert à ce moment-là :
+   *   - envoyée : une note courte, « Annuler » (pas encore de code : il ne sert qu'à la remise) ;
+   *   - en préparation : la note, puis le livreur dès qu'il est nommé, le code ;
+   *   - prête : la photo de la commande par le commerce, le livreur, le code ;
+   *   - en route : la carte, le livreur avec « Appeler », le code, la photo.
+   * Le reste (articles, adresse, consignes, vendeur de la livraison, montant) se replie dans « Détails ». */
+  const resumeDetails = (o) => {
+    const n = (o.items || []).reduce((s, i) => s + (Number(i.qty) || 1), 0);
+    const lieu = o.orderType === 'delivery' ? String(o.address || '').split(',')[0] : '';
+    return [n > 0 ? t(n > 1 ? 'ecranCommande.articlesPluriel' : 'ecranCommande.articles', { count: n }) : null, lieu || null, euros(debite(o))].filter(Boolean).join(' · ');
+  };
+  const carteEnCours = (o) => {
+    const livraison = o.orderType === 'delivery';
+    const enRoute = o.status === 'livraison';
+    // La note « et maintenant ? » : utile tant que la carte n'a rien d'autre à montrer. En route, le code et le livreur disent
+    // tout ; en préparation ou prête, la note s'efface dès que le livreur est nommé (sa rangée la remplace).
+    const note = !enRoute && !(livraison && o.driverName && ['preparation', 'pret'].includes(o.status)) && <ProchaineEtape order={o} />;
+    return (
+      <>
+        <LivreurALaPorte order={o} />
+        {blocNonTermine(o)}
+        {enRoute && blocCarte(o)}
+        {note}
+        {boutonAnnuler(o)}
+        {!enRoute && blocPhoto(o)}
+        {rangeeLivreur(o)}
+        <SansLivreur order={o} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
+        {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
+        {codeDeRemise(o)}
+        {enRoute && blocPhoto(o)}
+        <InfosRetrait order={o} compact />
+        <details className="suivi-details">
+          <summary>
+            <span className="suivi-details-texte"><b>{t('siteCommande.details')}</b><span>{resumeDetails(o)}</span></span>
+            <span className="suivi-details-chevron" aria-hidden="true" />
+          </summary>
+          <div className="suivi-details-corps">
+            {blocArticles(o)}
+            {blocLieu(o)}
+            <VendeurLivraison order={o} />
+            {blocTotal(o)}
+            {noteVerrou(o)}
+          </div>
+        </details>
+        {blocPied(o)}
+      </>
+    );
+  };
+  // Une commande passée : ce qu'elle était, comment elle s'est terminée, ce qu'on peut encore faire. Sans les consignes à la
+  // porte ni l'adresse (audit design 2) ; refusée, le motif et le remboursement seulement.
+  const cartePassee = (o) => (
+    <>
+      <div className="suivi-tete">
+        <span className="suivi-tete-texte">
+          <b className="suivi-resto">{o.restaurantName}</b>
+          <span className="suivi-sous">{orderTypeLabel(o, t)} · {quand(o.createdAt)}</span>
+        </span>
+        <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span>
+      </div>
+      {!['livre', 'refuse'].includes(o.status) && <ProchaineEtape order={o} />}
+      {blocArticles(o)}
+      {blocRefus(o)}
+      {o.status === 'livre' && o.driverName && (
+        <div style={{ margin: '6px 0' }}><DriverBadge name={o.driverName} photoUrl={o.driverPhotoUrl} size={40} /></div>
+      )}
+      {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
+      {blocTotal(o)}
+      {blocPied(o)}
+    </>
+  );
+
   if (APPLI) {
     return (
       <div>
@@ -557,22 +699,12 @@ export default function Orders() {
           <Fragment key={o.id}>
           {rang === enCours.length && passees.length > 0 && <h2 className="suivi-section">{t('orders.sectionPast')}</h2>}
           <div className={`card suivi-carte${estPassee(o) ? ' est-passee' : ' suivi-carte--bandeau'}`}>
-            {estPassee(o) ? (
-              <div className="suivi-tete">
-                <span className="suivi-tete-texte">
-                  <b className="suivi-resto">{o.restaurantName}</b>
-                  <span className="suivi-sous">{orderTypeLabel(o, t)} · {quand(o.createdAt)}</span>
-                </span>
-                <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span>
-              </div>
-            ) : enteteSuivi(o)}
-            {codeDeRemise(o)}
-            {o.status !== 'livre' && <ProchaineEtape order={o} />}
-            {blocArticles(o)}
-            {blocDetails(o)}
-            {blocCarte(o)}
-            {blocTotal(o)}
-            {blocActions(o)}
+            {estPassee(o) ? cartePassee(o) : (
+              <>
+                {enteteSuivi(o)}
+                {carteEnCours(o)}
+              </>
+            )}
           </div>
           </Fragment>
         ))}
@@ -603,7 +735,7 @@ export default function Orders() {
       <div className={`sc-suivi${carte ? ' avec-carte' : ''}`}>
         <div className="sc-suivi-g">{carte ? <div className="sc-suivi-carte">{carte}</div> : suivi}</div>
         <div className="sc-suivi-d">
-          <div className="sc-suivi-code">{codeDeRemise(o)}</div>
+          <div className="sc-suivi-code">{codeDeRemise(o)}{blocPhoto(o)}</div>
           {carte && suivi}
           <div className="sc-suivi-total">{blocTotal(o)}</div>
           <div className="sc-suivi-actions">{blocActions(o)}</div>
@@ -658,7 +790,7 @@ export default function Orders() {
                       <tr className={`sc-passee${ouvert ? ' ouverte' : ''}`}>
                         <td className="sc-c-nom">
                           <span className="sc-nom-c">
-                            <span className="sc-tuile" aria-hidden="true"><Icone nom={o.orderType === 'pickup' ? 'sac' : 'scooter'} taille={18} /></span>
+                            <span className="sc-tuile" aria-hidden="true"><Icone nom={o.orderType === 'pickup' ? 'sac' : 'velo'} taille={18} /></span>
                             <span className="sc-nom-texte"><b>{o.restaurantName}</b><small>{orderTypeLabel(o, t)}<span className="sc-tel-seul"> · {quand(o.createdAt)}</span></small></span>
                           </span>
                         </td>

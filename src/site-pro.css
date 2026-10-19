@@ -197,3 +197,5 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
 @media (prefers-reduced-motion: reduce) {
   .sp-cmd--pressee, .sp-sonne svg { animation: none !important; }
 }
+/* Au doigt, les outils font 44 px : deux par ligne sous l'anneau, plutôt qu'une colonne qui creusait la carte (audit design 2). */
+@media (pointer: coarse) { .sp-cmd-outils { max-width: 96px; } }

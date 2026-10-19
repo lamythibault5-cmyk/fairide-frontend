@@ -25,7 +25,7 @@ export default function OffreFormules({ payant = false, statut = null, finEssai 
     <div className="offre-formules">
       <div className="offre-colonnes">
         <div className="offre-col offre-col-choisie">
-          <b><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('accountUi.offre_completeTitle')}</b>
+          <b><Icone nom="velo" taille={16} className="icone-texte" />{' '}{t('accountUi.offre_completeTitle')}</b>
           <span className="offre-prix">{t('accountUi.offre_completePrice')}</span>
           <span className="small">{t('accountUi.offre_completeDetail')}</span>
         </div>

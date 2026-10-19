@@ -66,12 +66,16 @@
 .ec-feuille .panier-ligne-image { border-radius: 14px; }
 .ec-feuille .panier-ligne-texte { font-size: 14.5px; }
 .ec-feuille .panier-ligne-prix { font-size: 13px; }
+/* Le prix PAYÉ de la ligne, en encre, puis « · −5 % inclus » en gris (audit design 2, 2026-10-19). */
+.panier-ligne-paye { font-size: 14px; font-weight: 700; color: var(--ink); }
+.panier-economie { margin: 12px 0 0; font-size: 13px; color: var(--ink-soft); }
 .ec-feuille .panier-vider { width: auto; padding: 8px 0; margin-top: 0; font-weight: 600; }
 .panier-ligne.ec-sort { animation: ec-sort .26s ease both; pointer-events: none; }
 @keyframes ec-entre { from { transform: translateY(24px); opacity: 0; } }
 @keyframes ec-sort { to { opacity: 0; transform: translateX(-30px); } }
 
-/* Le compteur d'une ligne (3C) : pilule iris, « − » et « + » blancs, le nombre dans un rond lime qui monte ou descend. */
+/* Le compteur d'une ligne (3C) : pilule iris, « − » et « + » blancs, le nombre dans un rond BLANC qui monte ou descend. Lime
+   jusqu'au 2026-10-19 (audit design 2) : trois lignes faisaient trois marques lime de plus que le bouton de paiement. */
 .ec-pas { position: relative; flex: none; width: 110px; height: 40px; border-radius: 20px; background: var(--iris); color: #fff; overflow: hidden; }
 /* min-height !important : la règle des 44 px tactiles (styles.css, button:not(...)) a une spécificité de (0,3,1). */
 .ec-pas button { position: absolute; top: 2px; width: 36px; height: 36px; min-height: 0 !important; padding: 0; border: 0; border-radius: 50%;
@@ -81,7 +85,7 @@
 .ec-pas button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
 .ec-pas .ec-pas-moins { left: 2px; }
 .ec-pas .ec-pas-plus { right: 2px; }
-.ec-pas-chiffre { position: absolute; left: 50%; top: 6px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; background: var(--lime); color: var(--ink);
+.ec-pas-chiffre { position: absolute; left: 50%; top: 6px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; background: #fff; color: var(--iris);
   display: grid; place-items: center; font-weight: 800; font-size: 14px; overflow: hidden; }
 .ec-pas-chiffre > span { display: block; }
 .ec-ch-monte { animation: ec-ch-monte .3s var(--ec-ressort); }
@@ -103,7 +107,8 @@
 .ec-feuille .upsell-item:active { transform: scale(.96); }
 
 /* ---------- Paiement ---------- */
-/* Un choix unique en cartes : l'option retenue en aplat iris, sa coche lime qui saute. */
+/* Un choix unique en cartes : l'option retenue en aplat iris, sa coche BLANCHE qui saute (lime jusqu'au 2026-10-19 : avec
+   « Livraison » et « Dès que possible » cochés, le paiement montrait deux lime de plus que « Commander et payer »). */
 .ec-options { display: flex; flex-direction: column; gap: 8px; }
 .ec-option { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; text-align: left; border: 1px solid var(--line); background: #fff; color: var(--ink);
   border-radius: 16px; padding: 11px 13px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .12s; }
@@ -116,7 +121,7 @@
 .ec-option.on { background: var(--iris); border-color: var(--iris); color: #fff; }
 .ec-option.on .ec-option-texte small { color: rgba(255, 255, 255, .8); }
 .ec-option.on .ec-option-tuile { color: #fff; border-color: rgba(255, 255, 255, .4); animation: ec-saute .3s var(--ec-ressort); }
-.ec-option.on .ec-case { background: var(--lime); border-color: var(--lime); color: var(--ink); animation: ec-saute .3s var(--ec-ressort); }
+.ec-option.on .ec-case { background: #fff; border-color: #fff; color: var(--iris); animation: ec-saute .3s var(--ec-ressort); }
 .ec-option:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
 .ec-option.on:focus-visible { outline-color: var(--lime); }
 .ec-feuille .checkout-form .ec-options + .checkout-rangee { margin-top: 6px; }
@@ -130,6 +135,27 @@
 .ec-feuille .co-recap-tete { margin-top: 22px; align-items: baseline; }
 .ec-feuille .co-recap-tete h3 { display: flex; flex-direction: column; gap: 2px; margin: 0; }
 .ec-feuille .co-recap-resto { font-size: 13px; font-weight: 500; color: var(--ink); letter-spacing: 0; text-transform: none; }
+
+/* LE PAIEMENT, AUDIT DESIGN 2 (2026-10-19). En haut, ce qu'on commande en une rangée : « N articles », les noms, « Modifier ». */
+.co-articles { display: flex; align-items: center; gap: 12px; padding: 0 0 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+.co-articles-texte { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.co-articles-texte b { font-size: 15px; font-weight: 700; color: var(--ink); }
+.co-articles-texte span { font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
+.co-modifier { flex: none; font-size: 14px; font-weight: 700; color: var(--iris); text-decoration: none; padding: 8px 0; }
+.co-modifier:hover { text-decoration: underline; }
+/* Le ticket : filet iris en tirets, lignes à pointillés (ceux de la carte, .bistrot-points), le total sous un filet. */
+.co-ticket-titre { margin: 22px 0 8px !important; }
+.co-ticket { border: 1px dashed var(--iris); border-radius: 14px; padding: 12px 14px; display: grid; gap: 7px; font-size: 14px; color: var(--ink); }
+.co-t-ligne { display: flex; align-items: baseline; gap: 6px; }
+.co-t-ligne > span:first-child { min-width: 0; }
+.co-t-points { flex: 1 1 12px; min-width: 12px; border-bottom: 2px dotted var(--line); transform: translateY(-4px); }
+.co-t-montant { flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.co-t-total { justify-content: space-between; font-weight: 800; font-size: 16px; border-top: 1px solid var(--line); padding-top: 9px; margin-top: 2px; }
+.co-t-total > span:last-child { white-space: nowrap; }
+/* Les vendeurs en petit sous le ticket, et leur détail. */
+.co-vendeurs { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--ink-soft); }
+.co-vendeurs-lien { display: inline; min-height: 0 !important; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.co-vendeurs-detail { margin: 6px 0 0; padding: 0 0 0 16px; font-size: 12px; line-height: 1.45; color: var(--ink-soft); display: grid; gap: 3px; }
 
 /* ---------- La barre du bas : le montant roule (ChiffresRoulants), la barre gélifie quand il change ---------- */
 .ec-barre .co-barre-montant { display: inline-flex; font-variant-numeric: tabular-nums; }

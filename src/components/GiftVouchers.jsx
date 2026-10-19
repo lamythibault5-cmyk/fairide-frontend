@@ -3,6 +3,7 @@ import { api } from '../api';
 import ConfirmDialog from './ConfirmDialog';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import './bons.css';
+import Icone from './Icone';
 
 // Utilitaires repris de l'ancien module Réservations (retiré le 2026-09-25) : les bons cadeaux, eux, restent — ils
 // servent aussi à payer les commandes à emporter et en livraison.
@@ -45,9 +46,9 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
 
   return (
     <>
-      <div className="card" style={{ borderColor: 'var(--iris)' }}>
-        <p className="small" style={{ margin: 0 }}><b>{t('bons.gvOnlineSoonTitle')}</b> {t('bons.gvOnlineSoon')}</p>
-      </div>
+      {/* Comment se vendent les bons. Plus de « vente en ligne : bientôt » (fondateur, 2026-10-19) : l'achat en ligne n'existe
+          pas encore, on ne le promet pas tant qu'il n'existe pas. Les clés gardent leur nom d'origine. */}
+      <p className="small" style={{ margin: '0 0 12px' }}><b>{t('bons.gvOnlineSoonTitle')}</b> {t('bons.gvOnlineSoon')}</p>
 
       <div className="card">
         <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -57,7 +58,7 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
         </div>
         {creation && <CreationBon restoId={restoId} token={token} toast={toast} restaurant={restaurant} onDone={(v) => { setCreation(false); rafraichir(); setOuvert(v); }} />}
         <div className="resa-outils">
-          <div className="resa-recherche"><input aria-label={t('bons.gvSearchPh')} value={q} placeholder={t('bons.gvSearchPh')} onChange={(e) => setQ(e.target.value)} /></div>
+          <div className="resa-recherche"><Icone nom="recherche" taille={16} className="resa-loupe" /><input aria-label={t('bons.gvSearchPh')} value={q} placeholder={t('bons.gvSearchPh')} onChange={(e) => setQ(e.target.value)} /></div>
           <div className="resa-filtres" role="group" aria-label={t('bons.filtersAria')}>
             {STATUTS.map((s) => <button key={s} type="button" className={statut === s ? 'actif' : ''} onClick={() => setStatut(s)}>{t(`bons.gvFilter_${s}`)}</button>)}
           </div>
@@ -187,7 +188,7 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
     if (!zone) return;
     const w = window.open('', '_blank', 'width=700,height=600');
     if (!w) { toast(t('bons.gvPopupBlocked')); return; }
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${t('bons.gvPrintTitle')}</title><style>body{font-family:sans-serif;padding:24px;color:#14121F}.bon-carte{border:2px solid #14121F;border-radius:16px;padding:22px 24px;max-width:460px;position:relative}.bon-carte-resto{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#6B655D}.bon-carte-titre{font-size:22px;font-weight:800;margin:4px 0 10px}.bon-carte-montant{font-size:40px;font-weight:900;line-height:1;color:#3B2FB5}.bon-carte-code{margin:14px 0 8px;font-family:monospace;font-size:20px;font-weight:800;letter-spacing:.12em;padding:8px 12px;border:1px dashed #14121F;border-radius:10px;display:inline-block}.bon-carte-message{font-style:italic;margin:8px 0}.bon-carte-pied{font-size:12px;color:#6B655D;margin-top:8px}</style></head><body>${zone.innerHTML}</body></html>`);
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${t('bons.gvPrintTitle')}</title><style>body{font-family:sans-serif;padding:24px;color:#14121F}.bon-carte{border:2px solid #14121F;border-radius:16px;padding:22px 24px;max-width:460px;position:relative}.bon-carte-resto{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#6B655D}.bon-carte-titre{font-size:22px;font-weight:800;margin:4px 0 10px}.bon-carte-montant{font-size:40px;font-weight:900;line-height:1;color:#3B2FB5}.bon-carte-code{margin:14px 0 8px;font-family:monospace;font-size:20px;font-weight:800;letter-spacing:.12em;padding:8px 12px;border:1px dashed #14121F;border-radius:10px;display:inline-block}.bon-carte-message{font-style:italic;margin:8px 0}.bon-carte-pied{font-size:12px;color:#6B655D;margin-top:8px}.bon-carte-icone{position:absolute;right:18px;top:14px;color:#3B2FB5}</style></head><body>${zone.innerHTML}</body></html>`);
     w.document.close(); w.focus(); setTimeout(() => { w.print(); }, 250);
   }
   const actif = v.status === 'active';
@@ -202,6 +203,7 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
 
       <div id={`bon-print-${bon.id}`}>
         <div className="bon-carte">
+          <span className="bon-carte-icone" aria-hidden="true"><Icone nom="cadeau" taille={32} /></span>
           <div className="bon-carte-resto">{restaurant?.name}</div>
           <div className="bon-carte-titre">{t('bons.gvCardTitle')}</div>
           <div className="bon-carte-montant">{euros(v.amount)}</div>

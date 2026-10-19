@@ -76,7 +76,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
         <>
           {restaurant.offersDelivery !== false && (
             <div className="field" role="group" aria-labelledby="capacite-rayon-titre">
-              <span className="titre-groupe" id="capacite-rayon-titre"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('editResto.capacityRadiusTitle')}</span>
+              <span className="titre-groupe" id="capacite-rayon-titre"><Icone nom="velo" taille={16} className="icone-texte" />{' '}{t('editResto.capacityRadiusTitle')}</span>
               <p className="small" style={{ margin: '0 0 8px' }}>{t('editResto.capacityRadiusHelp')}</p>
               <label className="row small" style={{ gap: 8, alignItems: 'center', marginBottom: 8 }}>
                 <input type="checkbox" checked={rayonLibre} onChange={(e) => { setRayonLibre(e.target.checked); if (e.target.checked) setRayon(etat.defaultRadiusKm || RAYON_DEFAUT); }} />

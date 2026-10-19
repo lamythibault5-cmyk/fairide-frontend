@@ -5,6 +5,9 @@ import { ouvrirPdfBlob } from '../../natif';
 
 // « statut_non_verifie » n'est pas une action du livreur : c'est Fairide qui vérifie. Il n'empêche
 // donc pas d'envoyer le dossier, il est simplement affiché à titre d'information.
+// Deux statuts (CODE-12, DEC-19 : plus d'économie collaborative, régime fermé aux livreurs de plateformes).
+export const STATUTS = ['student_independent', 'independent'];
+
 export const MANQUES_INFORMATIFS = ['statut_non_verifie'];
 // Peuvent manquer à l'envoi du dossier (fondateur, 18/10/2026) : le numéro d'entreprise, et le n° de TVA qui en découle.
 // L'inscription à la BCE prend des jours ; l'équipe vérifie le reste pendant ce temps, et le numéro reste exigé avant la

@@ -11,7 +11,7 @@ import '../simulation.css';
 // Barre flottante d'un onglet de simulation (Admin › Simulation) : elle dit quel profil l'onglet affiche, passe
 // de l'un à l'autre, liste les points à vérifier pour ce profil et enregistre une note d'amélioration liée à la
 // page en cours. Elle n'existe que dans un onglet de simulation — jamais pour un vrai utilisateur.
-const ICONES = { visitor: 'globe', client: 'compte', restaurant: 'commerce', driver: 'scooter' };
+const ICONES = { visitor: 'globe', client: 'compte', restaurant: 'commerce', driver: 'velo' };
 const ACCUEIL = { visitor: '/', client: '/', restaurant: '/dashboard', driver: '/driver' };
 const CATEGORIES = ['affichage', 'texte', 'parcours', 'bug', 'idee'];
 const CLE_ETAPES = 'fairide_simulation_etapes';

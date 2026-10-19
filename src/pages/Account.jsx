@@ -29,6 +29,7 @@ import InboxSection from '../components/InboxSection';
 import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
+import SonAlertesLivreur from '../components/livreur/SonAlertesLivreur';
 import { abonnementOuvert, datePremierPrelevement, useLancement } from '../launch';
 import AbonnementOffert from '../components/commerce/AbonnementOffert';
 import OffreFormules from '../components/OffreFormules';
@@ -43,6 +44,7 @@ import { rubriqueDe } from '../rubriqueCompte';
 import '../ecran-compte.css';
 // Le site sur ordinateur (2026-10-16) : rubriques à gauche, contenu à droite. Sans effet dans l'app (html.appli).
 import '../site-compte.css';
+import { telephoneLisible } from '../validation';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -382,7 +384,7 @@ export default function Account() {
     setRedeeming(true);
     try {
       const result = await api('/auth/balance/redeem', { method: 'POST', token, body: { code: redeemCode.trim() } });
-      toast(t('account.redeemSuccess', { amount: Number(result.amount).toFixed(2) }));
+      toast(t('account.redeemSuccess', { amount: euros(result.amount) }));
       setRedeemCode('');
       await refreshUser();
     } catch (err) {
@@ -507,7 +509,7 @@ export default function Account() {
            { to: '/dashboard/preview', icone: 'apercu', libelle: t('nav.customerPreview') },
            { to: '/dashboard/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }];
   const adresseResume = user.addressStreet && user.addressCity ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',') : null;
-  const solde = Number(user.balance || 0).toFixed(2);
+  const solde = euros(user.balance || 0);
 
   // Mes casquettes (MesCasquettes.jsx) ne s'affiche pas quand elle n'a rien à dire : son titre de section non plus.
   const avecCasquettes = !(roles.length <= 1 && ['client', 'restaurant', 'driver'].every((r) => roles.includes(r)));
@@ -515,7 +517,7 @@ export default function Account() {
   // Les rubriques de la colonne de gauche, sur ordinateur : les mêmes groupes que la feuille, aux mêmes conditions.
   const rubriqueRole = role === 'client' ? { icone: 'commandes', titre: t('accountUi.ordersAndFairide') }
     : role === 'restaurant' && restaurant ? { icone: 'commerce', titre: membreEquipe ? t('team.rowTitle') : t('accountUi.myBusiness') }
-      : role === 'driver' ? { icone: 'scooter', titre: t('accountUi.myRides') } : null;
+      : role === 'driver' ? { icone: 'velo', titre: t('accountUi.myRides') } : null;
   const rubriques = [
     { cle: 'messages', icone: 'courrier', titre: t('inbox.rowTitle'), compteur: nonLus },
     { cle: 'profil', icone: 'compte', titre: t('accountUi.myProfile') },
@@ -738,6 +740,8 @@ export default function Account() {
             </label>
           </LigneCompte>
         )}
+        {/* Le son des alertes des courses : dans l'app, ici plutôt que sur l'écran des courses (SonAlertesLivreur.jsx). */}
+        {role === 'driver' && experienceApp() && <SonAlertesLivreur />}
       </div>
       </RubriqueCompte>
 
@@ -748,7 +752,7 @@ export default function Account() {
         {role === 'client' && (
           <LigneCompte icone="solde" titre={t('accountUi.myBalance')} sous={t('accountUi.balanceSub', { balance: solde })} ouverte={ouvertes.has('solde')} onClick={() => basculer('solde')}>
             <div className="stat-card highlight" style={{ marginBottom: 14 }}>
-              <div className="num">{solde}€</div>
+              <div className="num">{solde}</div>
               <div className="label">{t('account.balance')}</div>
             </div>
             <form onSubmit={handleRedeemCode} className="row" style={{ gap: 8 }}>
@@ -766,7 +770,7 @@ export default function Account() {
           <LigneCompte icone="banque" titre={t('account.convert.title')} sous={t('accountUi.balanceAvailable', { amount: solde })} ouverte={ouvertes.has('convertir')} onClick={() => basculer('convertir')}>
             <p className="small" style={{ margin: '0 0 12px' }}>{t('account.convert.explain')}</p>
             <div className="stat-card highlight" style={{ marginBottom: 14 }}>
-              <div className="num">{solde}€</div>
+              <div className="num">{solde}</div>
               <div className="label">{t('account.convert.balanceLabel')}</div>
             </div>
             <form onSubmit={handleConvert} className="row" style={{ gap: 8, marginBottom: generatedCodes?.length ? 14 : 0 }}>
@@ -794,7 +798,7 @@ export default function Account() {
             démonstration), le résumé s'affichait « Ton code : · 0.00€ gagnés » — un deux-points
             suivi d'un point médian, sans rien entre les deux. On retombe alors sur la phrase
             d'invitation, qui reste vraie quoi qu'il arrive. */}
-        <LigneCompte icone="cadeau" titre={t('account.referral.title')} sous={referralStats && referralStats.code ? t('accountUi.referralSummary', { code: referralStats.code, earned: referralStats.earnedTotal.toFixed(2) }) : t('accountUi.referralSub')} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
+        <LigneCompte icone="cadeau" titre={t('account.referral.title')} sous={referralStats && referralStats.code ? t('accountUi.referralSummary', { code: referralStats.code, earned: euros(referralStats.earnedTotal) }) : t('accountUi.referralSub')} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
           <p className="small" style={{ margin: '0 0 12px' }}>{t(`account.referral.how.${role}`)}</p>
           {referralStats && (
             <>
@@ -1049,7 +1053,7 @@ export default function Account() {
                 </thead>
                 <tbody>
                   {[
-                    { cle: 'delivery', icone: 'scooter', nom: t('accountUi.delivery'), valeur: offersDelivery, set: setOffersDelivery,
+                    { cle: 'delivery', icone: 'velo', nom: t('accountUi.delivery'), valeur: offersDelivery, set: setOffersDelivery,
                       effet: t('accountUi.svcDeliveryDesc') },
                     { cle: 'pickup', icone: 'sac', nom: t('accountUi.pickup'), valeur: offersPickup, set: setOffersPickup,
                       effet: t('accountUi.svcPickupDesc') }
@@ -1262,7 +1266,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
         <div>
           <div className="small" style={{ opacity: 0.7 }}>{label}</div>
-          <div>{currentValue || '-'}</div>
+          <div>{(type === 'tel' ? telephoneLisible(currentValue) : currentValue) || '-'}</div>
         </div>
         <button type="button" className="btn-outline btn-sm" onClick={() => setEditing(true)}>{t('accountUi.change')}</button>
       </div>

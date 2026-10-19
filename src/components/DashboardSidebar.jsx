@@ -21,7 +21,7 @@ const NATIF = experienceApp();
 
 // Items de nav par rôle : mêmes cibles que l'ancien .role-nav de Layout.jsx, juste redisposées
 // verticalement avec une icône — pas de nouvelle page/route inventée ici.
-function navItemsForRole(role, t, user, membreEquipe = false) {
+function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
   // Membre de l'équipe d'un commerce (modeEquipe.js) : le service seulement, ses commandes et son compte.
   if (role === 'restaurant' && membreEquipe) {
     return [
@@ -67,7 +67,9 @@ function navItemsForRole(role, t, user, membreEquipe = false) {
     // termine une fois ; ensuite il se rouvre depuis Mon compte.
     return [
       { to: '/driver', end: true, icon: 'commandes', label: t('nav.rides') },
-      ...(user?.adminStatus === 'approved' ? [] : [{ to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile'), court: t('nav.court.courierFile') }]),
+      // Validé et dossier rouvert depuis Mon compte : l'onglet revient le temps d'y être, allumé (deuxième audit design,
+      // 2026-10-19 : la page « C'est bon, tu peux rouler » n'avait aucun onglet actif).
+      ...(user?.adminStatus === 'approved' && !pathname.startsWith('/driver/onboarding') ? [] : [{ to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile'), court: t('nav.court.courierFile') }]),
       { to: '/driver/map', icon: 'carte', label: t('nav.map') },
       { to: '/driver/earnings', icon: 'euro', label: t('nav.earnings') },
       { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
@@ -175,7 +177,7 @@ export default function DashboardSidebar() {
   // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
   // correspondantes, toujours réservées aux vrais clients côté API.
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
-  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe);
+  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe, pathname);
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
 
   function leavePreview() {

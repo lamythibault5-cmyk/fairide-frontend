@@ -244,7 +244,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
 
       {cle === 'services' && (
         <div className="field services-choice">
-          <label className="service-option"><input type="checkbox" checked={offersDelivery} onChange={(e) => setOffersDelivery(e.target.checked)} /> <span><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('auth.serviceDelivery')}</span></label>
+          <label className="service-option"><input type="checkbox" checked={offersDelivery} onChange={(e) => setOffersDelivery(e.target.checked)} /> <span><Icone nom="velo" taille={16} className="icone-texte" />{' '}{t('auth.serviceDelivery')}</span></label>
           {offersDelivery && (
             <div className="service-suboptions">
               <label htmlFor={ids + '-qui'}>{t('dashResto.whoDelivers')}</label>

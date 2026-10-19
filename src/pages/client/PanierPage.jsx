@@ -14,7 +14,7 @@ import ChiffresRoulants from '../../components/ChiffresRoulants';
 import { BandeauCommande, BarreCommande, FeuilleCommande, RouteCommande, RouteEtapes } from '../../components/EcranCommande';
 import { experienceApp } from '../../natif';
 import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/UpsellPanier';
-import { euros, libellePromo } from '../../prixPlat';
+import { euros, remiseCourte } from '../../prixPlat';
 import { mouvementReduit, vibrer } from '../../gestes';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
 
@@ -44,7 +44,8 @@ const APPLI = experienceApp();
 const TRAIT_MOINS = <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 12h12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>;
 const TRAIT_PLUS = <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 6v12M6 12h12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>;
 
-// Le compteur d'une ligne : − et + sur une pilule iris, le nombre dans un rond lime, qui monte ou descend quand il change.
+// Le compteur d'une ligne : − et + sur une pilule iris, le nombre dans un rond blanc (lime jusqu'au 2026-10-19 : avec trois
+// lignes, quatre marques lime à l'écran ; le bouton de paiement est désormais le seul lime), qui monte ou descend quand il change.
 function PasPanier({ qty, nom, onMoins, onPlus, libelleMoins, libellePlus }) {
   const avant = useRef(qty);
   const sens = qty > avant.current ? ' ec-ch-monte' : qty < avant.current ? ' ec-ch-descend' : '';
@@ -54,6 +55,18 @@ function PasPanier({ qty, nom, onMoins, onPlus, libelleMoins, libellePlus }) {
       <button type="button" className="ec-pas-moins" onClick={onMoins} aria-label={libelleMoins}>{TRAIT_MOINS}</button>
       <span className="ec-pas-chiffre" aria-live="polite"><span key={qty} className={sens.trim() || undefined}>{qty}</span></span>
       <button type="button" className="ec-pas-plus" onClick={onPlus} aria-label={libellePlus}>{TRAIT_PLUS}</button>
+    </span>
+  );
+}
+
+// Le prix d'une ligne = ce qu'on paie (audit design 2 du 2026-10-19, « un seul récit du prix ») : le même prix remisé que
+// sur la carte, et « −5 % inclus » quand une offre s'applique. Jamais l'ancien prix barré (règle du fondateur).
+function PrixLigne({ ligne, remise, t }) {
+  const paye = Math.max(0, ligne.unitPrice * ligne.qty - (remise?.discount || 0));
+  return (
+    <span className="panier-ligne-prix">
+      <b className="panier-ligne-paye">{euros(paye)}</b>
+      {remise?.discount > 0 && remiseCourte(remise.promo, t) && <> · {t('panier.remiseIncluse', { remise: remiseCourte(remise.promo, t) })}</>}
     </span>
   );
 }
@@ -158,7 +171,7 @@ export default function PanierPage() {
                 {ligne.note && <span className="small">« {ligne.note} »</span>}
                 {ligneIndisponible(ligne, restaurant?.menu)
                   ? <span className="ligne-indispo">{t('checkout.unavailableToday')}</span>
-                  : <span className="panier-ligne-prix">{euros(ligne.unitPrice * ligne.qty)}</span>}
+                  : <PrixLigne ligne={ligne} remise={totaux?.lineDiscounts?.[cle]} t={t} />}
               </div>
               {indisponibles.includes(cle) ? (
                 <button type="button" className="btn-outline btn-sm" onClick={() => cart.removeLine(cle)}>{t('checkout.removeLine')}</button>
@@ -172,18 +185,17 @@ export default function PanierPage() {
               )}
             </div>
           ))}
+          {/* Une phrase, et non plus une liste de remises sans titre sous les suggestions (audit design 2, 2026-10-19) : les
+              lignes montrent déjà le prix payé, on dit seulement combien l'offre fait gagner et qui l'offre. */}
+          {totaux?.promoDiscount > 0 && (
+            <p className="panier-economie">{t('panier.economie', { amount: euros(totaux.promoDiscount), name: cart.restaurantName || restaurant?.name || '' })}</p>
+          )}
           <button type="button" className="btn-ghost panier-vider" onClick={() => setViderOuvert(true)}>{t('floatingCart.clear')}</button>
           <ConfirmDialog open={viderOuvert} title={t('floatingCart.clearConfirmTitle')} message={t('floatingCart.clearConfirmBody')}
             confirmLabel={t('floatingCart.clear')} danger onConfirm={() => { setViderOuvert(false); cart.clearLines(); }} onCancel={() => setViderOuvert(false)} />
         </div>
 
         {restaurant && <LastChanceUpsell desserts={desserts} drinks={drinks} restaurant={restaurant} cart={cart} t={t} />}
-
-        {totaux && totaux.discountedItems.map((d, i) => (
-          <div className="row panier-remise" key={i}>
-            <span className="small">{d.name || libellePromo(d.promo, t) || d.label}</span><span className="small">-{euros(d.discount)}</span>
-          </div>
-        ))}
         </div>
         {/* Site : le récapitulatif à droite (sur un téléphone, seule la barre en reste, collée en bas de l'écran). */}
         {!APPLI && (

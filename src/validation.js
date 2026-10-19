@@ -33,6 +33,21 @@ export function bceValide(v) {
   return 97 - (Number(c.slice(0, 8)) % 97) === Number(c.slice(8));
 }
 
+// Téléphone lisible à l'écran (audit design, 2026-10-19 : « +32470123456 » ici, « +32 471 23 45 67 » là). Le serveur stocke
+// +32… sans espace ; on l'affiche comme on le dicte : mobile belge « +32 470 12 34 56 », Bruxelles « +32 2 123 45 67 », autre
+// fixe belge « +32 71 12 34 56 ». Un numéro étranger ou inattendu reste tel quel. Le lien tel: garde la forme brute.
+export function telephoneLisible(v) {
+  const brut = String(v || '').trim();
+  const c = brut.replace(/[^\d+]/g, '').replace(/^00/, '+').replace(/^0(?=\d{8,9}$)/, '+32');
+  const m = c.match(/^\+32(\d+)$/);
+  if (!m) return brut;
+  const n = m[1];
+  if (/^4\d{8}$/.test(n)) return `+32 ${n.slice(0, 3)} ${n.slice(3, 5)} ${n.slice(5, 7)} ${n.slice(7)}`;
+  if (/^2\d{7}$/.test(n)) return `+32 2 ${n.slice(1, 4)} ${n.slice(4, 6)} ${n.slice(6)}`;
+  if (/^\d{8}$/.test(n)) return `+32 ${n.slice(0, 2)} ${n.slice(2, 4)} ${n.slice(4, 6)} ${n.slice(6)}`;
+  return brut;
+}
+
 // Téléphone : au moins 8 chiffres une fois les séparateurs retirés (le serveur normalise en +32…).
 export function telephonePlausible(v) {
   const c = String(v || '').replace(/\D/g, '');

@@ -111,7 +111,8 @@
   html:not(.appli) .ecl-gains .ecl-site-col { display: block; min-width: 0; }
   html:not(.appli) .ecl-gains .ecl-site-col:first-child { position: sticky; top: 20px; }
   html:not(.appli) .ecl-gains .ecl-site-col:only-child { position: static; grid-column: 1 / -1; }
-  html:not(.appli) .ecl-gains .ecl-site-col > .ecl-titre-sec:first-child { margin-top: 0 !important; }
+  html:not(.appli) .ecl-gains .ecl-site-col > .ecl-titre-sec:first-child,
+  html:not(.appli) .ecl-gains .ecl-site-col > .ecl-jour:first-child > .ecl-titre-sec:first-child { margin-top: 0 !important; }
   html:not(.appli) .ecl-gains .ecl-barres { height: 190px; }
 }
 @media (min-width: 901px) {

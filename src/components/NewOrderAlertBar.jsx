@@ -24,7 +24,7 @@ import { SONNERIES, REPETITIONS } from '../hooks/useNewOrderAlert';
 // boutons pressants de la barre passent en iris. Dans l'app, ils restent lime, comme avant.
 const PRESSANT = experienceApp() ? 'btn-gold' : 'btn-teal';
 
-export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme, compact = false }) {
+export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme, compact = false, onOuvrir = null }) {
   const { t } = useLanguage();
   const toast = useToast();
   const active = newCount > 0;
@@ -88,11 +88,20 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
         marginBottom: 14
       }}
     >
-      <strong style={{ fontSize: 15 }}>
-        {active
-          ? (newCount === 1 ? t('alertBar.toHandleOne') : t('alertBar.toHandle', { n: newCount }))
-          : t('alertBar.nonePending')}
-      </strong>
+      {/* « 1 commande à traiter » se touche (audit design 2, 2026-10-19) : il ouvre la feuille de la commande qui attend, où elle
+          s'accepte d'un geste (NouvelleCommandeModale) — plus besoin d'aller la chercher dans Commandes. */}
+      {active && onOuvrir ? (
+        <button type="button" className="alerte-ouvrir" onClick={onOuvrir}>
+          <span>{newCount === 1 ? t('alertBar.toHandleOne') : t('alertBar.toHandle', { n: newCount })}</span>
+          <span className="alerte-ouvrir-voir">{t('serviceCommerce.ouvrirCommande')}</span>
+        </button>
+      ) : (
+        <strong style={{ fontSize: 15 }}>
+          {active
+            ? (newCount === 1 ? t('alertBar.toHandleOne') : t('alertBar.toHandle', { n: newCount }))
+            : t('alertBar.nonePending')}
+        </strong>
+      )}
 
       <span className="small alerte-aide" style={{ flex: 1, minWidth: 220 }}>{aide}</span>
 
@@ -122,8 +131,9 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
             <Icone nom="reglages" taille={16} className="icone-texte" />{' '}{t('alertBar.settings')}
           </button>
         )}
+        {/* Jamais lime (audit design 2, 2026-10-19) : le lime de l'écran est à « Accepter ». */}
         {alarmeEnCours && couperAlarme && (
-          <button type="button" className={`${PRESSANT} btn-sm`} onClick={couperAlarme}><Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.stopAlarm')}</button>
+          <button type="button" className="btn-outline btn-sm" onClick={couperAlarme}><Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.stopAlarm')}</button>
         )}
         {/* LES RÉGLAGES EN GRILLE (fondateur, 2026-10-17, capture d'iPhone : « ça n'a pas l'air propre »). Ils s'enroulaient au
             fil de la barre — deux menus de largeurs différentes, le curseur coincé à côté d'un bouton. Ici : la sonnerie et le

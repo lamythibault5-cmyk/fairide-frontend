@@ -82,7 +82,8 @@ function Route({ progression }) {
     <div className="bv-route" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progression * 100)}>
       <i style={{ width: pct }} />
       {/* Les petits bonds ne jouent que pendant un vrai trajet. */}
-      <span className={`bv-velo${p !== depart ? ' roule' : ''}`} style={{ left: pct }}><Velo /></span>
+      {/* Le vélo reste SUR la route : à 100 % il touchait le sélecteur de langue (audit design, 2026-10-19). */}
+      <span className={`bv-velo${p !== depart ? ' roule' : ''}`} style={{ left: `calc(17px + (100% - 34px) * ${p})` }}><Velo /></span>
     </div>
   );
 }
@@ -169,7 +170,7 @@ export function EcranAccueil({ onCommencer, onConnexion }) {
   );
 }
 
-const PROFILS = [['client', 'sac', 'rClient'], ['driver', 'scooter', 'rLivreur'], ['restaurant', 'commerce', 'rCommerce']];
+const PROFILS = [['client', 'sac', 'rClient'], ['driver', 'velo', 'rLivreur'], ['restaurant', 'commerce', 'rCommerce']];
 export function EcranProfil({ role, onChoix, onSuite }) {
   const { t } = useLanguage();
   return (
