@@ -182,6 +182,7 @@ export default function AdminRestaurantsPage() {
   const [decision, setDecision] = useState(null); // suspension / résiliation motivée (D6)
   // Validation refusée pour non-conformité : { id, conformite } tant que l'équipe n'a pas tranché.
   const [derogation, setDerogation] = useState(null);
+  const [demandeInfo, setDemandeInfo] = useState(null);
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useViewMode('restaurants', 'cards');
   const filtre = searchParams.get('status') || 'all'; // all | pending | carte | approved | blocked
@@ -451,6 +452,7 @@ export default function AdminRestaurantsPage() {
               <Link to={`/admin/restaurants/${r.id}/menu`} className={r.menuItemCount === 0 ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
               {!estTest(r) && <button className={r.publicListed ? 'btn-outline' : 'btn-gold'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askListing(r)}>{r.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
               {r.adminStatus !== 'approved' && <button className="btn-teal btn-sm" onClick={() => askApprove(r)}>{tr('adminCommon.approve')}</button>}
+              {r.adminStatus !== 'approved' && r.ownerId && <button className="btn-outline btn-sm" onClick={() => setDemandeInfo(r)}>{tr('adminRestos.askInfo')}</button>}
               {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost btn-sm" onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
               {r.adminStatus === 'blocked' && <button className="btn-teal btn-sm" onClick={() => askReactivate(r)}>{tr('adminCommon.reactivate')}</button>}
               <button className="btn-danger-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => askDelete(r)}>{tr('adminRestos.deleteRestaurant')}</button>
@@ -487,6 +489,27 @@ export default function AdminRestaurantsPage() {
         loading={busy}
         onConfirm={runConfirmed}
         onCancel={() => setConfirmAction(null)}
+      />
+      {/* « DEMANDER UNE INFO » (fondateur, 18/10/2026) : le commerce attendait sans savoir pourquoi. Un message dans sa
+          messagerie Fairide, et par e-mail (POST /admin/messages/threads) : ce qu'il manque, en clair. */}
+      <ReasonDialog
+        open={!!demandeInfo}
+        title={tr('adminRestos.askInfoTitle', { name: demandeInfo?.name || '' })}
+        message={tr('adminRestos.askInfoBody')}
+        label={tr('adminRestos.askInfoLabel')}
+        placeholder={tr('adminRestos.askInfoPh')}
+        confirmLabel={tr('adminRestos.askInfoSend')}
+        multiline
+        loading={busy}
+        onConfirm={async (texte) => {
+          const r = demandeInfo;
+          setDemandeInfo(null);
+          try {
+            await api('/admin/messages/threads', { method: 'POST', token, body: { userId: r.ownerId, subject: tr('adminRestos.askInfoSubject'), body: texte, notifyByEmail: true } });
+            toast(tr('adminRestos.askInfoSent'), 'succes');
+          } catch (e) { toast(e.message, 'erreur'); }
+        }}
+        onCancel={() => setDemandeInfo(null)}
       />
       {/* Dérogation : s'ouvre quand le serveur a refusé la validation faute de conformité. Liste
           d'abord ce qui manque, puis demande le motif — dans cet ordre, pour qu'on ne tape pas un

@@ -45,7 +45,8 @@ export default function AdminCouriersPage() {
   const location = useLocation();
   const [data, setData] = useState(null);
   const [erreur, setErreur] = useState(null);
-  const [filtre, setFiltre] = useEtatPage('filtre', 'pending_review');
+  // Arrivé d'un livreur (« Ouvrir le dossier ») : tous les dossiers, sinon un brouillon serait caché par le filtre « à valider ».
+  const [filtre, setFiltre] = useEtatPage('filtre', location.state?.presetSearch ? 'all' : 'pending_review', { forcer: !!location.state?.presetSearch });
   const [typeFiltre, setTypeFiltre] = useEtatPage('type', 'all');
   const [nature, setNature] = useEtatPage('nature', 'all');
   const [search, setSearch] = useState(location.state?.presetSearch || '');
@@ -54,13 +55,28 @@ export default function AdminCouriersPage() {
   const [mode, setMode] = useViewMode('couriers', 'table');
   const { sort, toggle } = useTableSort('updatedAt');
 
-  const load = () => { setErreur(null); return api('/admin/couriers', { token }).then(setData).catch((e) => setErreur(e.message)); };
+  const load = () => {
+    setErreur(null);
+    // PRÊT À ROULER, OU CE QUI MANQUE (règle du bouton GO, pretLancement.js) : à côté de chaque nom.
+    api('/admin/launch/readiness', { token }).then((r) => setPrets(new Map((r.livreurs || []).map((l) => [l.userId, l])))).catch(() => {});
+    return api('/admin/couriers', { token }).then(setData).catch((e) => setErreur(e.message));
+  };
+  const [prets, setPrets] = useState(() => new Map());
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const lifecycle = (s) => tr(`courierOnboarding.lifecycle_${s}`);
   const statut = (s) => (s && STATUTS.includes(s) ? tr(`courierOnboarding.status_${s}`) : s || '-');
+  const pretDe = (r) => prets.get(r.userId);
   const colonnes = [
     { key: 'name', label: tr('adminCommon.name'), get: (r) => <><b>{r.name}</b>{estCompteTest(r) && <TestBadge />}<div className="small">{r.email}</div></>, sortValue: (r) => r.name },
+    { key: 'pret', label: tr('adminCouriers.colReady'), get: (r) => {
+      const p = pretDe(r);
+      if (!p) return '-';
+      const bloquant = (p.manques || []).find((m) => m.niveau === 'bloquant');
+      return p.pret
+        ? <span className="pill" style={{ color: 'var(--green)' }}><Icone nom="valider" taille={14} className="icone-texte" />{' '}{tr('adminCouriers.ready')}</span>
+        : <span className="small" title={(p.manques || []).filter((m) => m.niveau === 'bloquant').map((m) => m.label).join(' · ')}>{tr('adminCouriers.missingFirst', { what: bloquant?.label || '' })}</span>;
+    }, sortValue: (r) => (pretDe(r)?.pret ? 0 : 1) },
     { key: 'statusType', label: tr('adminCouriers.colStatus'), get: (r) => <>{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''}</>, sortValue: (r) => r.statusType || '' },
     { key: 'lifecycleStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{lifecycle(r.lifecycleStatus)}</span>, sortValue: (r) => r.lifecycleStatus },
     { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className="pill"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? <Icone nom="horloge" taille={16} className="icone-texte" /> : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? 1 : 0) },
