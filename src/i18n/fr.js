@@ -4090,7 +4090,7 @@ export default {
     },
     privacy: {
       pageTitle: 'Politique de confidentialité · fairide.be',
-      draftWarning: "Version du 17 octobre 2026.",
+      draftWarning: "Version du 19 octobre 2026.",
       title: 'Politique de confidentialité',
       controllerTitle: 'Responsable du traitement',
       controller: 'FAIRIDE SRL, société à responsabilité limitée de droit belge, BCE 1042.169.780, TVA BE 1042.169.780, RPM Bruxelles, siège social Avenue du Castel 30, 1200 Woluwe-Saint-Lambert (Belgique), contact@fairide.be. Pour toute question sur vos données ou pour exercer vos droits : contact@fairide.be (ou le formulaire en bas de cette page). Fairide n\'a pas désigné de délégué à la protection des données, sa taille ne l\'y obligeant pas.',
@@ -4138,7 +4138,7 @@ export default {
       sub_osmTiles: "Votre adresse IP, comme tout serveur qui vous envoie une image : en secours seulement, si les fonds de carte de MapTiler ne sont pas disponibles, ils sont chargés depuis OpenStreetMap.",
       sub_maptiler: "Votre adresse IP, comme tout serveur qui vous envoie une image : les fonds de carte (suivi de livraison, choix d'adresse) sont chargés depuis MapTiler (Suisse).",
       sub_plausible: "Les pages vues, sans cookie ni identifiant personnel : votre adresse IP n'est pas conservée, elle sert seulement à un comptage anonyme renouvelé chaque jour (Union européenne).",
-      sub_gatewayapi: "Votre numéro de téléphone et le texte du code : les codes de vérification par SMS (livreurs, commerces, changement de numéro) sont envoyés par GatewayAPI, depuis l'Union européenne. Les clients reçoivent le leur par e-mail.",
+      sub_gatewayapi: "Votre numéro de téléphone et le texte du code : les codes de vérification par SMS (création de compte, y compris avec Google ou Apple, et changement de numéro) sont envoyés par GatewayAPI, depuis l'Union européenne.",
       sub_cloudinary: 'Les photos envoyées par les commerçants (plats, devanture, logo), les documents justificatifs des livreurs, et les photos de dépôt devant la porte (stockage privé).',
       sub_anthropic: "Les photos de devantures prises par l'équipe commerciale de Fairide, pour y lire le nom du commerce (Anthropic, États-Unis, clauses contractuelles types). Aucune donnée de compte n'est envoyée.",
       sub_sentry: 'En cas d\'erreur technique : depuis le site, votre adresse IP et les pages visitées, uniquement après votre acceptation de la bannière ; sur nos serveurs, la requête en erreur (identifiant de compte, adresse de la page), sans cookie.',
