@@ -269,6 +269,14 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
               <button className="btn-danger-ghost" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markIdentityKo'), message: tr('adminCouriers.identityKoBody'), danger: true, run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: false } })) })}>{tr('adminCouriers.markIdentityKo')}</button>
             </div>
           )}
+          {identite.status !== 'verified' && (
+            <details className="small" style={{ marginTop: 8 }}>
+              <summary>{tr('adminCouriers.howCheckIdentity')}</summary>
+              <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                {['checkFace', 'checkName', 'checkExpiry', 'checkDocType'].map((k) => <li key={k}>{tr(`adminCouriers.${k}`)}</li>)}
+              </ul>
+            </details>
+          )}
           {['student_independent', 'independent'].includes(c.statusType) && !entreprise.companyVerified && <button className="btn-outline" style={{ marginTop: 6 }} disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markCompanyOk'), run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { companyVerified: true } }), tr('adminCouriers.toastCompanyOk')) })}>{tr('adminCouriers.markCompanyOk')}</button>}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secContracts', { n: contracts.length })}</h4>
@@ -280,6 +288,15 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secDocs', { n: documents.length })}</h4>
           {documents.length === 0 && <p className="small">-</p>}
+          {/* Hors UE/EEE : ce que Stripe ne vérifie pas — le titre de séjour et le droit d'exercer comme indépendant. */}
+          {documents.some((x) => ['residence_permit', 'professional_card'].includes(x.docType)) && (
+            <details className="small" style={{ margin: '0 0 8px' }}>
+              <summary>{tr('adminCouriers.howCheckNonEu')}</summary>
+              <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                {['checkPermitName', 'checkPermitExpiry', 'checkProCard', 'checkInDoubt'].map((k) => <li key={k}>{tr(`adminCouriers.${k}`)}</li>)}
+              </ul>
+            </details>
+          )}
           {documents.map((x) => (
             <div key={x.id} className="row" style={{ justifyContent: 'space-between', gap: 8, padding: '3px 0', flexWrap: 'wrap' }}>
               <span className="small">{x.verifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : x.rejectedReason ? <Icone nom="croix" taille={16} className="icone-texte" /> : <Icone nom="horloge" taille={16} className="icone-texte" />} <button type="button" className="lien-bouton" onClick={() => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/admin/couriers/${id}/documents/${x.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') })}>{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</button>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` · ${x.rejectedReason}` : ''}</span>
