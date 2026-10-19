@@ -81,7 +81,16 @@ function simuler(chemin, methode, profil) {
   };
   // Invitation dans l'équipe d'un commerce (backend equipeCommerce.js).
   if (methode === 'GET' && /^\/restaurants\/team\/invitation\/[^/]+$/.test(chemin)) return { restaurantName: COMMERCE.name, emailHint: 'sa…@exemple.be', expired: false };
-  if (/^\/menu-validation\/[^/]+$/.test(chemin)) return { restaurant: { name: COMMERCE.name, responsibleName: 'Rémi Resto' }, items: [], sha256: 'essai', alreadyValidated: false, fairideRateChoice: null };
+  // « C'est bon » (backend routes/validationCarte.js) : une petite carte aux prix magasin, avec le choix du taux offert.
+  if (/^\/menu-validation\/[^/]+$/.test(chemin)) return methode === 'GET' ? {
+    restaurant: { name: COMMERCE.name, responsibleName: 'Rémi Resto' }, sha256: 'essai', alreadyValidated: false,
+    fairideRateChoice: { offered: true, rate: 0.1, markup: 11.1 },
+    items: [
+      { id: 'p1', category: 'Pizzas', name: 'Margherita', desc: 'Tomate, mozzarella, basilic', price: 11, priceWithFairideRate: 12.2, vatRate: 6 },
+      { id: 'p2', category: 'Pizzas', name: 'Diavola', desc: null, price: 13, priceWithFairideRate: 14.4, vatRate: null },
+      { id: 'b1', category: 'Boissons', name: 'Eau pétillante 50 cl', desc: null, price: 2.5, priceWithFairideRate: 2.8, vatRate: 21 }
+    ]
+  } : { version: 1 };
   if (/^\/couriers\/options$/.test(chemin)) return { statuses: ['independent', 'student_independent'], vehicles: ['velo', 'velo_electrique', 'scooter', 'voiture'], bikeMaxKm: 4, legal: {} };
   if (methode !== 'GET') return {};
   return [];

@@ -8,7 +8,7 @@ import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
 import { RESTAURANT_TYPES } from '../../menuCategories';
 import CreationCommerce from '../../components/commerce/CreationCommerce';
-import { SkeletonCards } from '../../components/Skeleton';
+import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import NouvelleCommandeModale from '../../components/NouvelleCommandeModale';
@@ -29,11 +29,14 @@ import '../../site-pro.css';
 // commun à toutes les sous-pages : création du commerce (components/commerce/CreationCommerce.jsx) et
 // bannières (validation/abonnement/Stripe).
 const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
-const PAGES_BANDEAU = ['/dashboard', '/dashboard/edit', '/dashboard/orders', '/dashboard/menu', '/dashboard/stats'];
+// Promotions, Avis et Factures les ont rejointes dans l'app aussi le 2026-10-19 (fondateur, finitions-appli.html, section 4 :
+// CadreSite `appli`).
+const PAGES_BANDEAU = ['/dashboard', '/dashboard/edit', '/dashboard/orders', '/dashboard/menu', '/dashboard/stats',
+  '/dashboard/promotions', '/dashboard/reviews', '/dashboard/invoices'];
 // Sur le SITE (pas dans l'app), les autres pages du commerce ont aussi leur bandeau (2026-10-16, mockups/site-ordinateur.html,
 // lot « pro ») : elles reçoivent les blocs communs dans leur feuille, comme les pages ci-dessus.
 const SITE = !experienceApp();
-const PAGES_BANDEAU_SITE = ['/dashboard/promotions', '/dashboard/reviews', '/dashboard/invoices', '/dashboard/guide', '/dashboard/preview'];
+const PAGES_BANDEAU_SITE = ['/dashboard/guide', '/dashboard/preview'];
 
 export default function DashboardLayout() {
   const { t } = useLanguage();
@@ -295,7 +298,8 @@ export default function DashboardLayout() {
     }
   }
 
-  if (!myRestos) return <SkeletonCards count={2} />;
+  // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
+  if (!myRestos) return experienceApp() ? <SqueletteEcran /> : <SkeletonCards count={2} />;
 
   // MEMBRE DE L'ÉQUIPE (backend equipeCommerce.js) : le commerce ouvert n'est pas le sien, il y fait le service. Il ne
   // voit que les commandes — les autres écrans appellent des routes du propriétaire, que le serveur lui refuse.

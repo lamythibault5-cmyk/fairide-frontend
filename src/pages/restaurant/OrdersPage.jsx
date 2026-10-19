@@ -3,6 +3,7 @@ import RupturesDuJour from '../../components/commerce/RupturesDuJour';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
+import TirerPourActualiser from '../../components/TirerPourActualiser';
 import { api, apiUpload } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -760,6 +761,7 @@ export default function OrdersPage() {
 
   return (
     <div className="no-print">
+      <TirerPourActualiser onActualiser={() => loadDashboard(restoId, { silencieux: true })} />
       {/* LE BANDEAU (2026-10-16) : le nom, le résumé du service, l'interrupteur ouvert / en pause et l'état du terminal.
           Plus de carte de présentation du terminal ici : elle reste dans Mon compte › Terminal Fairide. */}
       <BandeauCommerce>

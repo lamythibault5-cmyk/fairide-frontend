@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
+import { vibrer } from '../../gestes';
 import { suivre } from '../../analytics';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -84,6 +85,7 @@ export default function OrderResult({ success }) {
         if (order?.paid) {
           setCommande(order);
           setState('paid');
+          vibrer('succes'); // paiement confirmé : la sensation « succès » du téléphone (audit « Look and feel » 6a)
           // Statistiques (sans donnée personnelle) : la commande est finalisée, par mode.
           suivre('commande_finalisee', { mode: order.orderType === 'pickup' ? 'emporter' : 'livraison' });
           if (order.orderType === 'pickup') suivre('commande_emporter');

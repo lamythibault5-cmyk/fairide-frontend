@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { SkeletonCards } from '../../components/Skeleton';
+import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
+import TirerPourActualiser from '../../components/TirerPourActualiser';
 import ErrorCard from '../../components/ErrorCard';
 import IncidentsCourse from '../../components/livreur/IncidentsCourse';
 import PhotoDepot from '../../components/livreur/PhotoDepot';
@@ -452,7 +453,8 @@ export default function DriverDashboard() {
   // téléphone la colonne passe SOUS le contenu — le livreur ne la voyait qu'en bas de page. L'état du
   // partage de position qu'elle portait aussi est dans la rangée « Partage de position ».
 
-  if (loading) return <SkeletonCards count={3} />;
+  // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
+  if (loading) return experienceApp() ? <SqueletteEcran /> : <SkeletonCards count={3} />;
   // Voir load() : seulement tant que rien n'a jamais chargé, sinon on garderait les courses en main.
   if (erreur && !chargeReussieRef.current) {
     return <ErrorCard titre={t('dashDriver.loadError')} message={erreur.message} onRetry={() => { setLoading(true); load(); }} />;
@@ -921,6 +923,7 @@ export default function DriverDashboard() {
 
   return (
     <div className="ecl ecl-tableau">
+      <TirerPourActualiser onActualiser={load} />
       {site ? bandeauSite : bandeauAppli}
 
       <div className="ecl-feuille">

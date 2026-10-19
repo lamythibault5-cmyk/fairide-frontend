@@ -10,7 +10,7 @@ import { experienceApp } from '../../natif';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import EtatVide from '../../components/EtatVide';
 import Icone from '../../components/Icone';
-import { SkeletonCards } from '../../components/Skeleton';
+import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import { BandeauCommande, FeuilleCommande, BarreCommande, RouteCommande } from '../../components/EcranCommande';
 import { entrerDansGroupe, quitterGroupe } from '../../commandeGroupee';
 import '../../ecran-equipe-groupe.css';
@@ -47,7 +47,8 @@ export default function CommandeGroupee() {
   useEffect(() => { charger(); }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (erreur) return <EtatVide icone="personnes" titre={erreur} actionVers="/restaurants" actionTexte={t('orders.emptyAction')} />;
-  if (!g) return <SkeletonCards count={2} />;
+  // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
+  if (!g) return experienceApp() ? <SqueletteEcran lignes={3} /> : <SkeletonCards count={2} />;
 
   const lien = `${window.location.origin}/groupe/${g.code}`;
   const mesLignes = g.lines.filter((l) => l.mine);

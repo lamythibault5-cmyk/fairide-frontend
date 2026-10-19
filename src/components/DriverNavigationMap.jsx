@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { escapeHtml } from '../escapeHtml';
 import Icone from './Icone';
-import { iconeHtml } from '../iconeHtml';
+import { LIME, pastilleLivreur, pastilleSelonCouleur, veloHtml, TRACE_FAIT, TRACE_RESTE } from '../marqueursCarte';
 
 // Variante de DeliveryTrackingMap orientée navigation pour le livreur lui-même : au lieu de montrer le
 // trajet fixe restaurant → client avec un livreur observé de l'extérieur, celle-ci trace le trajet depuis
@@ -19,18 +19,8 @@ import { iconeHtml } from '../iconeHtml';
 // qui l'affiche même quand la carte est masquée.
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
-// Pastille de couleur avec une icône en traits (Icone.jsx), blanche sur fond foncé, encre sur la lime.
-function emojiIcon(nom, bg) {
-  return L.divIcon({
-    className: '',
-    html: `<div style="color:${bg === '#C8F03C' ? '#14121F' : '#fff'};background:${bg};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;">${iconeHtml(nom, 16)}</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
-  });
-}
-
-const ORIGIN_ICON = emojiIcon('scooter', '#14121F');
-const ORIGIN_ICON_VELO = emojiIcon('scooter', '#14121F');
+// Pastilles et tracés en iris, comme la carte de suivi du client : marqueursCarte.js (audit « Look and feel », 2026-10-19).
+// Le livreur : rond iris au vélo lime ; l'arrêt : lime pour un client, cerclé d'iris pour un commerce.
 
 
 // `velo` : le livreur roule à vélo — l'itinéraire et le temps d'arrivée sont demandés pour un cycliste (le serveur
@@ -48,7 +38,6 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
   // Suivi automatique : la carte se recadre à chaque position. Un glissement du livreur le coupe (il
   // regarde plus loin sur le trajet) ; « Recentrer » le relance.
   const autoSuiviRef = useRef(true);
-  const targetIconRef = useRef(emojiIcon(targetEmoji, targetColor));
   const [eta, setEta] = useState(null);
   const [recentrable, setRecentrable] = useState(false);
 
@@ -78,9 +67,10 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
         // l'adresse du client — deux chaînes saisies par quelqu'un d'autre, et jamais échappées côté
         // serveur. Sans ça, un nom de commerce contenant du balisage s'exécutait ici, dans le
         // navigateur du livreur, qui y garde son jeton de session.
-        targetMarkerRef.current = L.marker([targetLat, targetLng], { icon: targetIconRef.current }).addTo(mapRef.current).bindPopup(escapeHtml(targetLabel));
+        targetMarkerRef.current = L.marker([targetLat, targetLng], { icon: pastilleSelonCouleur(targetEmoji, targetColor) }).addTo(mapRef.current).bindPopup(escapeHtml(targetLabel));
       } else {
-        targetMarkerRef.current.setLatLng([targetLat, targetLng]);
+        // L'arrêt change (le commerce, puis le client) : la pastille suit, pas seulement sa position.
+        targetMarkerRef.current.setLatLng([targetLat, targetLng]).setIcon(pastilleSelonCouleur(targetEmoji, targetColor));
       }
     } else {
       // Plus d'arrêt à atteindre : on retire la cible, le trajet et l'estimation.
@@ -90,12 +80,12 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       setEta(null); onEta?.(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetLat, targetLng, targetLabel]);
+  }, [targetLat, targetLng, targetLabel, targetEmoji, targetColor]);
 
   useEffect(() => {
     if (!mapRef.current || !originLat || !originLng) return undefined;
     if (!originMarkerRef.current) {
-      originMarkerRef.current = L.marker([originLat, originLng], { icon: velo ? ORIGIN_ICON_VELO : ORIGIN_ICON }).addTo(mapRef.current).bindPopup(t('navMap.you'));
+      originMarkerRef.current = L.marker([originLat, originLng], { icon: pastilleLivreur() }).addTo(mapRef.current).bindPopup(t('navMap.you'));
     } else {
       const marker = originMarkerRef.current;
       const start = marker.getLatLng();
@@ -120,7 +110,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
     }
     const straightLine = [[originLat, originLng], [targetLat, targetLng]];
     if (!lineRef.current) {
-      lineRef.current = L.polyline(straightLine, { color: targetColor, weight: 4, dashArray: '6, 8', opacity: 0.7 }).addTo(mapRef.current);
+      lineRef.current = L.polyline(straightLine, TRACE_RESTE).addTo(mapRef.current);
     } else {
       lineRef.current.setLatLngs(straightLine);
     }
@@ -132,7 +122,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       .then(({ latLngs, duration, distance }) => {
         if (cancelled || !lineRef.current) return;
         lineRef.current.setLatLngs(latLngs);
-        lineRef.current.setStyle({ dashArray: null, opacity: 0.85 });
+        lineRef.current.setStyle(TRACE_FAIT);
         boundsRef.current = L.latLngBounds(latLngs);
         if (autoSuiviRef.current) mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
         // Jamais moins d'une minute : « 0 min » alors qu'on n'est pas arrivé est un mensonge.
@@ -164,13 +154,13 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       )}
       {recentrable && (
         <div className="tracking-map-controls">
-          <button type="button" className="tracking-map-follow-driver" onClick={recentrer}>{t('navMap.recenter')}</button>
+          <button type="button" className="tracking-map-rond" onClick={recentrer} aria-label={t('navMap.recenter')} title={t('navMap.recenter')}><Icone nom="cible" taille={20} /></button>
         </div>
       )}
       </div>
       <div className="tracking-map-legend">
-        <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>{velo ? <Icone nom="scooter" taille={16} className="icone-texte" /> : <Icone nom="scooter" taille={16} className="icone-texte" />}</span> {t('navMap.you')}</span>
-        {targetLat && targetLng && <span><span className="tracking-map-legend-icon" style={{ background: targetColor, color: targetColor === '#C8F03C' ? '#14121F' : '#fff' }}><Icone nom={targetEmoji} taille={16} className="icone-texte" /></span> {targetLabel || t('navMap.nextStop')}</span>}
+        <span><span className="tracking-map-legend-icon tracking-map-legend-icon--livreur" dangerouslySetInnerHTML={{ __html: veloHtml(14) }} /> {t('navMap.you')}</span>
+        {targetLat && targetLng && <span><span className={`tracking-map-legend-icon tracking-map-legend-icon--${targetColor === LIME ? 'maison' : 'commerce'}`}><Icone nom={targetEmoji} taille={12} /></span> {targetLabel || t('navMap.nextStop')}</span>}
       </div>
     </div>
   );

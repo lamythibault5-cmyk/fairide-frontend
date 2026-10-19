@@ -3,7 +3,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import { remonterEnHaut } from '../remonter';
 import ContactSection from '../components/ContactSection';
 import usePageMeta from '../hooks/usePageMeta';
-import RetourCompte from '../components/RetourCompte';
+import { BandeauGeneral, FeuilleGenerale, SectionGenerale } from '../components/EcranGeneral';
 import Rich from '../components/Rich';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -85,36 +85,51 @@ export default function HelpPage() {
   // Le lien « Mes commandes » mène un client à ses commandes, tout autre visiteur à son compte.
   const lienCommandes = user?.role === 'client' ? '/orders' : '/account';
 
+  /* LE DESSIN (fondateur, 2026-10-19, section 4 de finitions-appli.html) : bandeau iris et feuille blanche (EcranGeneral.jsx),
+     tout sur le blanc sous l'en-tête du site pour un visiteur. Le « ← Mon compte » (RetourCompte.jsx, connecté seulement)
+     devient le rond du bandeau. Les réponses sont des rangées à filet qui s'ouvrent (<details> : clavier, lecteur d'écran et
+     recherche dans la page sans une ligne de code) ; celle qu'un lien de Mon compte désigne arrive ouverte. */
+  const retourCompte = user
+    ? { vers: '/account', etat: { restaurerDefilement: true }, libelle: t('nav.backToAccount').replace(/^←\s*/, '') }
+    : null;
   return (
-    <div>
-      <RetourCompte />
-      <h2 className="section-title" style={{ marginTop: 0 }}>{sujet ? t(`help.${sujet}Title`) : t('help.title')}</h2>
+    <div className="gn-page">
+      <BandeauGeneral icone="bouee" retour={retourCompte}
+        titre={sujet ? t(`help.${sujet}Title`) : t('help.title')}
+        sous={sujet ? t(`help.${sujet}Intro`) : t('help.sous')} />
+      <FeuilleGenerale>
+        {!sujet && (
+          <>
+            <SectionGenerale>{t('help.questionsTitle')}</SectionGenerale>
+            <div className="gn-questions">
+              {REPONSES.map(([id, n]) => (
+                // La clé suit l'ancre : arriver sur une autre réponse (même page, autre lien) remonte la rangée, ouverte.
+                <details className="gn-question" id={id} key={`${id}-${ancre === id}`} open={ancre === id}>
+                  <summary>{t(`help.${CLE_REPONSE[id]}Title`)}</summary>
+                  <div className="gn-reponse">
+                    {Array.from({ length: n }, (_, i) => (
+                      <p key={i}><Rich text={t(`help.${CLE_REPONSE[id]}${i + 1}`).replace('{ordersLink}', lienCommandes)} /></p>
+                    ))}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </>
+        )}
 
-      {sujet && <p className="small" style={{ margin: '-6px 0 16px' }}>{t(`help.${sujet}Intro`)}</p>}
+        {sujet && (
+          <p className="gn-texte" style={{ margin: 0 }}>
+            <Rich text={`[${t('help.seeAllAnswers')}](/aide)`} />
+          </p>
+        )}
 
-      {!sujet && REPONSES.map(([id, n]) => (
-        <div className="card" id={id} key={id}>
-          <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>{t(`help.${CLE_REPONSE[id]}Title`)}</h3>
-          {Array.from({ length: n }, (_, i) => (
-            <p key={i} className="small" style={{ margin: i === n - 1 ? 0 : '0 0 10px' }}>
-              <Rich text={t(`help.${CLE_REPONSE[id]}${i + 1}`).replace('{ordersLink}', lienCommandes)} />
-            </p>
-          ))}
+        {/* La clé force le remontage en changeant de sujet : sans elle, passer de « bug » à « avis »
+            garderait la trame précédente, puisqu'un état initial ne se relit pas. */}
+        {/* id="contact" : cible du lien « Contact » de l'en-tête (/aide?sujet=contact, voir l'effet plus haut). */}
+        <div id="contact" className="gn-contact">
+          <ContactSection key={ancre || 'general'} messageInitial={sujet ? t(`help.${sujet}Message`) : undefined} />
         </div>
-      ))}
-
-      {sujet && (
-        <p className="small" style={{ margin: '0 0 16px' }}>
-          <Rich text={`[${t('help.seeAllAnswers')}](/aide)`} />
-        </p>
-      )}
-
-      {/* La clé force le remontage en changeant de sujet : sans elle, passer de « bug » à « avis »
-          garderait la trame précédente, puisqu'un état initial ne se relit pas. */}
-      {/* id="contact" : cible du lien « Contact » de l'en-tête (/aide?sujet=contact, voir l'effet plus haut). */}
-      <div id="contact">
-        <ContactSection key={ancre || 'general'} messageInitial={sujet ? t(`help.${sujet}Message`) : undefined} />
-      </div>
+      </FeuilleGenerale>
     </div>
   );
 }

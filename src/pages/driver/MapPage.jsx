@@ -7,6 +7,7 @@ import CarteSuivi from '../../components/CarteSuivi';
 import { useLanguage } from '../../context/LanguageContext';
 import { suivrePositionCourse } from '../../natif';
 import PageLivreur from '../../components/livreur/PageLivreur';
+import Icone from '../../components/Icone';
 
 // Cadence maximale d'envoi de la position au serveur — même valeur que Dashboard.jsx, un seul rythme
 // pour les deux pages qui partagent la position.
@@ -120,25 +121,27 @@ export default function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.locationSharingEnabled, enLivraison]);
 
-  if (!orders) return <div className="empty">{t('mapDriver.loading')}</div>;
-
+  // BANDEAU ET FEUILLE, DANS L'APP AUSSI (fondateur, 2026-10-19, finitions-appli.html, section 4) : l'intro sur le bandeau
+  // iris, et dans la feuille, sans cartes encadrées, une section par course (« Vers le restaurant » en petites capitales,
+  // l'arrêt sur une ligne à filet, puis la carte et « Agrandir la carte »). Mêmes cartes, mêmes boutons qu'avant.
+  // Le chargement garde déjà le bandeau : seule la feuille attend.
   return (
-    // Site : l'intro passe sur le bandeau iris (PageLivreur.jsx) ; app : titre et intro comme avant.
-    <PageLivreur classe="carte-page" large titre={t('mapDriver.title')} sous={t('mapDriver.intro')}
-      introApp={<p className="small" style={{ marginBottom: 16 }}>{t('mapDriver.intro')}</p>}>
+    <PageLivreur classe="carte-page ecl-carte" large bandeauApp titre={t('mapDriver.title')} sous={t('mapDriver.intro')}>
+      {!orders ? <p className="ecl-note">{t('mapDriver.loading')}</p> : (
+      <>
       {!sharingLocation && (
-        <div className="empty" style={{ marginBottom: 16 }}>{t('mapDriver.enableGeo')}</div>
+        <p className="ecl-note"><Icone nom="position" taille={18} />{t('mapDriver.enableGeo')}</p>
       )}
       {active.length === 0 ? (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="empty" style={{ marginBottom: 10 }}>{t('mapDriver.noneOngoing')}</div>
+        <section className="ecl-guidage">
+          <p className="ecl-guidage-vide">{t('mapDriver.noneOngoing')}</p>
           <CarteSuivi
             role="driver" hauteur={hauteurCourse}
             legende={position ? t('mapDriver.hereYouAre') : t('mapDriver.whenStarts')}
             etaSansEstimation={t('mapDriver.noRide')}
             rendreCarte={({ height, onEta }) => <DriverNavigationMap originLat={position?.lat} originLng={position?.lng} height={height} onEta={onEta} velo={velo} />}
           />
-        </div>
+        </section>
       ) : (
         active.map((o) => {
           const pickedUp = o.status === 'livraison';
@@ -154,13 +157,14 @@ export default function MapPage() {
             />
           );
           return (
-            <div className="card" key={o.id} style={{ marginBottom: 16 }}>
-              <div className="row" style={{ justifyContent: 'space-between' }}>
-                <b>{pickedUp ? t('mapDriver.toCustomer') : t('mapDriver.toRestaurant')}</b>
-                <span className="small">{pickedUp ? `${o.address}` : `${o.restaurantName}`}</span>
+            <section className="ecl-guidage" key={o.id}>
+              <h2 className="ecl-titre-sec">{pickedUp ? t('mapDriver.toCustomer') : t('mapDriver.toRestaurant')}</h2>
+              <div className="ecl-ligne">
+                <span className="ecl-tuile-ic" aria-hidden="true"><Icone nom={pickedUp ? 'maison' : 'commerce'} taille={18} /></span>
+                <span className="ecl-grow">{pickedUp ? o.address : o.restaurantName}</span>
               </div>
               {!target.lat || !target.lng ? (
-                <div className="empty" style={{ margin: '10px 0' }}>{t('mapDriver.addressNotLocated')}</div>
+                <p className="ecl-note">{t('mapDriver.addressNotLocated')}</p>
               ) : pickedUp ? (
                 // En course : le livreur roule, la carte seule, en grand.
                 <div style={{ margin: '10px 0' }}>{carte({ height: hauteurCourse })}</div>
@@ -174,9 +178,11 @@ export default function MapPage() {
                   rendreCarte={carte}
                 />
               )}
-            </div>
+            </section>
           );
         })
+      )}
+      </>
       )}
     </PageLivreur>
   );

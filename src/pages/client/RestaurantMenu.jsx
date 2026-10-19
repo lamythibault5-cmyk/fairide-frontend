@@ -13,7 +13,7 @@ import { groupeEnCours } from '../../commandeGroupee';
 import VisuelVide from '../../components/VisuelVide';
 import { commandesOuvertes, livraisonOuverte, paiementEnLigneOuvert, dateOuvertureEmporter, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
 import { useToast } from '../../context/ToastContext';
-import { SkeletonCards } from '../../components/Skeleton';
+import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import Modale from '../../components/Modale';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -39,6 +39,7 @@ import { resolveItemImage, restaurantTypeLabel, haversineDistanceKm } from '../.
 import { VeloMarque } from '../../components/EcranCommande';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
 import { experienceApp } from '../../natif';
+import { photoEnVol } from '../../transitionPhoto';
 import PanierColonne from '../../components/PanierColonne';
 import { repeterTantQueLibre } from '../../defilementAuto';
 import '../../ecran-fiche.css';
@@ -347,7 +348,8 @@ export default function RestaurantMenu() {
       </EtatVide>
     );
   }
-  if (!restaurant) return <SkeletonCards count={3} />;
+  // Chargement dans l'app : la fiche commence par sa photo, un aplat iris pâle la remplace en attendant (Skeleton.jsx).
+  if (!restaurant) return experienceApp() ? <SqueletteEcran photo src={photoEnVol(id)} /> : <SkeletonCards count={3} />;
 
   const isFavorite = favoriteIds.has(id);
   const openStatus = statutOuverture(restaurant, now);

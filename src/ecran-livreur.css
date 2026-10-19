@@ -221,6 +221,105 @@ html .ecl .ecl-barres button.ecl-barre-v { position: relative; height: 100%; min
 .ecl-detail .ecl-grow small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-soft); }
 .ecl-liens { margin: 16px 0 0; }
 
+/* ---------- Carte, Factures et Mon dossier, dans l'app aussi (fondateur, 2026-10-19, finitions-appli.html, section 4) ----------
+   Les trois pages secondaires du livreur restées dans l'ancien style (titre noir, cartes encadrées) prennent dans l'app le
+   bandeau iris et la feuille blanche qu'elles avaient déjà sur le site : PageLivreur.jsx (`bandeauApp`) pour la Carte
+   (MapPage.jsx) et les Factures (InvoicesPage.jsx), SommaireDossier (DossierAppli.jsx) pour le dossier. Dans la feuille, des
+   titres de section en petites capitales (.ecl-titre-sec) et des lignes à filet au lieu des cartes. Mêmes contenus, mêmes
+   boutons. Un seul aplat lime par écran : « Compléter mon dossier » ; Carte et Factures n'en ont pas. */
+
+/* « ← Mon compte » sur le bandeau (Factures) ; celui que Layout pose au-dessus de la page s'efface, comme pour les Statistiques
+   du commerce. Le sommaire du dossier n'en a pas : « Dossier » est un onglet de la barre du bas. */
+.dashboard-main:has(.ecl-bandeau--retour, .ecl-dossier) > .dashboard-retour { display: none; }
+.ecl-b-retour { font-size: 14px; font-weight: 600; color: #fff; text-decoration: none; padding: 4px 0; }
+.ecl-b-retour:hover { color: #fff; text-decoration: underline; }
+/* Ouverte en feuille depuis Mon compte (PageFeuille.jsx) : le bandeau monte jusqu'en haut, sous le rond ‹ de la feuille, qui
+   remplace « ← Mon compte ». */
+.page-feuille .ecl-bandeau--retour .ecl-b-haut { display: none; }
+@media (max-width: 900px) {
+  .page-feuille-corps > .ecl.ecl-page:first-child { padding-top: 0; }
+  .page-feuille-corps > .ecl.ecl-page > .ecl-bandeau { margin-top: 0; padding-top: calc(70px + env(safe-area-inset-top)); }
+}
+.ecl-feuille > :first-child .ecl-titre-sec:first-child, .ecl-feuille > .ecl-titre-sec:first-child { margin-top: 2px; }
+
+/* Une remarque dans la feuille (position coupée, adresse introuvable, motif d'un refus) : filet et icône iris, pas de fond. */
+.ecl-note { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; line-height: 1.45; color: var(--ink); }
+.ecl-note > svg { flex: none; color: var(--iris); margin-top: 1px; }
+
+/* Carte : une section par course (« Vers le restaurant », l'arrêt sur une ligne, la carte), séparées par un filet. */
+.ecl-guidage + .ecl-guidage { margin-top: 18px; padding-top: 4px; border-top: 1px solid var(--line); }
+.ecl-guidage .ecl-ligne { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
+.ecl-guidage .ecl-ligne .ecl-grow { overflow-wrap: anywhere; }
+.ecl-guidage-vide { margin: 2px 0 6px; font-size: 14.5px; line-height: 1.45; color: var(--ink-soft); }
+/* « Agrandir la carte » : une pastille à contour iris, comme les boutons secondaires des autres écrans. */
+.ecl-carte .tracking-actions { justify-content: center; }
+.ecl-carte .tracking-expand-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 6px; padding: 10px 20px; font-size: 14.5px; font-weight: 700;
+  background: #fff; color: var(--iris); border: 1.5px solid var(--iris); border-radius: var(--radius-pill); }
+.ecl-carte .tracking-expand-btn:hover { filter: none; background: rgba(59, 47, 181, .06); }
+
+/* Factures : les relevés (InvoiceArchive, partagé avec le commerce) sans leur carte, le titre en petites capitales. */
+.ecl-factures .ecl-feuille .card { border: 0; border-radius: 0; padding: 0; margin: 0 0 8px; background: none; }
+.ecl-factures .ecl-feuille .card > h3:first-child { font-size: 12px !important; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; margin: 2px 0 8px !important; }
+.ecl-factures-intro { margin: 0 0 12px; }
+.ecl-factures .ecl-feuille .invoice-table th { font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+.ecl-factures .ecl-feuille .invoice-table .btn-ghost { min-height: 36px; padding: 6px 14px; border: 1.5px solid var(--iris); border-radius: var(--radius-pill); color: var(--iris); font-weight: 700; font-size: 13px; background: #fff; }
+/* Sur un téléphone, une ligne à filet par relevé au lieu d'un tableau qui défile de côté : le mois et le total en gros, le
+   statut dessous, puis le numéro, la date et les montants en petit — leurs libellés viennent d'InvoicesPage (--ecl-lib-*). */
+@media (max-width: 640px) {
+  .ecl-factures .invoice-table-wrap { overflow: visible; }
+  .ecl-factures .invoice-table, .ecl-factures .invoice-table tbody { display: block; }
+  .ecl-factures .invoice-table thead { display: none; }
+  .ecl-factures .invoice-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 2px; align-items: start; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .ecl-factures .invoice-table tbody tr:hover { background: none; }
+  .ecl-factures .invoice-table td { display: block; padding: 0; border: 0; font-size: 12.5px; color: var(--ink-soft); text-align: left; }
+  .ecl-factures .invoice-table td .small { display: inline; font-size: inherit; }
+  .ecl-factures .invoice-table td:nth-child(2) { grid-area: 1 / 1; font-size: 13px; }
+  .ecl-factures .invoice-table td:nth-child(2) > div:first-child { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .ecl-factures .invoice-table td:nth-child(6) { grid-area: 1 / 2; text-align: right; font-size: 16px; color: var(--ink); }
+  .ecl-factures .invoice-table td:nth-child(7) { grid-area: 2 / 2; text-align: right; }
+  .ecl-factures .invoice-table td:nth-child(1) { grid-area: 2 / 1; margin-top: 6px; }
+  .ecl-factures .invoice-table td:nth-child(1) b { font-weight: 600; color: var(--ink); }
+  .ecl-factures .invoice-table td:nth-child(3) { grid-area: 3 / 1; }
+  .ecl-factures .invoice-table td:nth-child(4) { grid-area: 4 / 1; }
+  .ecl-factures .invoice-table td:nth-child(5) { grid-area: 5 / 1; }
+  .ecl-factures .invoice-table td:nth-child(5) .small::before { content: ' · '; }
+  .ecl-factures .invoice-table td:nth-child(8) { grid-area: 3 / 2 / 6 / 3; align-self: end; text-align: right; }
+  .ecl-factures .invoice-table td:nth-child(1)::before { content: var(--ecl-lib-numero); }
+  .ecl-factures .invoice-table td:nth-child(3)::before { content: var(--ecl-lib-emise); }
+  .ecl-factures .invoice-table td:nth-child(4)::before { content: var(--ecl-lib-ht); }
+  .ecl-factures .invoice-table td:nth-child(5)::before { content: var(--ecl-lib-tva); }
+  .ecl-factures .invoice-table td.num { white-space: normal; }
+}
+/* Le récap des paiements : le mois, puis le récap imprimable en lignes à filet. Spécificité au-dessus de la règle de l'app qui
+   fait défiler les tableaux de côté (html.appli .dashboard-main table, styles.css) : quatre colonnes tiennent sur un téléphone. */
+.ecl-factures-mois { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ecl-factures-mois input { max-width: 200px; }
+.ecl-factures-mois .btn-teal { border-radius: var(--radius-pill); }
+.ecl-recap { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.ecl-recap-qui { display: flex; flex-direction: column; gap: 2px; }
+.ecl-recap-qui b { font-size: 16px; }
+.ecl-recap-mois { font-size: 16px; font-weight: 700; margin: 16px 0 6px; }
+html .ecl-factures table.ecl-recap-table, html.appli .dashboard-main .ecl-factures table.ecl-recap-table { display: table; width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.ecl-recap-table th { padding: 8px 4px; text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-soft); border-bottom: 1px solid var(--line); vertical-align: bottom; }
+.ecl-recap-table td { padding: 11px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ecl-recap-table .num { text-align: right; white-space: nowrap; }
+.ecl-recap-table tfoot td { font-weight: 700; border-bottom: 0; padding-top: 12px; }
+
+/* Mon dossier : les étapes en lignes à filet, rond vide cerclé d'iris (à faire) ou rond iris coché (fait), chevron. */
+.ecl-etapes { list-style: none; margin: 0; padding: 0; }
+.ecl-etape { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+  background: none; font: inherit; color: var(--ink); text-align: left; cursor: pointer; }
+.ecl-etapes li:last-child .ecl-etape { border-bottom: 0; }
+.ecl-etape:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; border-radius: 8px; }
+.ecl-etape .ecl-grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ecl-etape .ecl-grow b { font-size: 15.5px; font-weight: 600; }
+.ecl-etape .ecl-grow small { font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
+.ecl-rond-etape { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--iris); display: grid; place-items: center; box-sizing: border-box; }
+.ecl-rond-etape.fait { background: var(--iris); color: #fff; animation: ecl-saute .35s var(--ecl-ressort) both; }
+.ecl-bouton-dossier { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; margin: 14px 0 6px; padding: 13px 16px;
+  font-size: 16px; font-weight: 700; border-radius: var(--radius-pill); }
+.ecl-bouton-dossier + .ecl-titre-sec { margin-top: 24px; }
+
 @media (prefers-reduced-motion: reduce) {
   .ecl, .ecl *, .glisser-velo, .glisser-velo * { animation: none !important; transition: none !important; }
 }

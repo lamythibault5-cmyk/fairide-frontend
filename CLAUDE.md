@@ -364,6 +364,23 @@ Android has it in the system), and swipe-to-confirm for the courier's « récup�
 ([GlisserPourConfirmer](src/components/livreur/GlisserPourConfirmer.jsx); the site keeps the buttons). An animation with
 `fill-mode: both` overrides inline transforms — the sheet's entry animation is `backwards` for that reason.
 
+**App polish (founder, 2026-10-19, audit « Look and feel »).** Reuse these instead of re-inventing them:
+- **Haptics** — `vibrer('succes' | 'erreur' | 'selection' | 'moyen')` in [gestes.js](src/gestes.js) (named phone feelings; a
+  number still means a light tap). Success = payment confirmed / order accepted; error = every `toast(…, 'erreur')`
+  (wired in ToastContext); selection = a lens sliding over items; medium = a lens landing, pull-to-refresh threshold.
+- **Loading** — [Skeleton.jsx](src/components/Skeleton.jsx): `SkeletonCards` are row-shaped light-iris skeletons;
+  `SqueletteEcran` is a whole loading screen in band + sheet (`titre` when the screen is known, shimmer bars otherwise,
+  `photo` for the restaurant page). App only at call sites (`experienceApp()`); the bike rides while a skeleton shows.
+- **Maps** — markers and route styles live in [marqueursCarte.js](src/marqueursCarte.js) (courier iris + lime bike,
+  home lime, shop ringed iris; ridden route solid iris with a white edge, the rest iris dots). Map buttons are
+  `.tracking-map-rond` (solid iris, white ring). Never reintroduce the near-black courier or the lime trail.
+- **Pull to refresh** — `<TirerPourActualiser onActualiser={promise} />` ([component](src/components/TirerPourActualiser.jsx)),
+  native only, on Mes commandes, the restaurant list, the courier's Courses and the shop's Commandes.
+- **Status bar** follows the band in the app ([barreEtat.js](src/barreEtat.js)): iris over an iris band, white otherwise.
+- **Photo transition** card → restaurant page with the View Transitions API ([transitionPhoto.js](src/transitionPhoto.js)).
+- **Light only**: `color-scheme: light only` (index.html + styles.css) and a Light Android theme. No dark mode until one is
+  designed; iOS needs `UIUserInterfaceStyle = Light` (docs/application-mobile.md).
+
 Note the two heavily-commented rules near the top of the file — `overflow-x: clip` on
 `html`/`body` and `-webkit-tap-highlight-color: transparent`. Both encode a bug that was
 already fixed once (`clip` rather than `hidden`, because `hidden` silently breaks
