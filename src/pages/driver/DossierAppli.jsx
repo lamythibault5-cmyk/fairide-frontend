@@ -416,7 +416,8 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
   return (
     <>
       {[['stripe_identity', 'document', 'stripeIdentityHelp'], ['manual', 'apercu', 'manualHelp'], ['in_person', 'personnes', 'inPersonHelp']]
-        .filter(([p]) => p === 'manual' || prov[p])
+        // Stripe d'abord (fondateur, 19/10/2026) : le dépôt d'une photo seulement quand Stripe Identity est coupé.
+        .filter(([p]) => (p === 'manual' ? !prov.stripe_identity : prov[p]))
         .map(([p, icone, aide]) => <Option key={p} on={choix === p} icone={icone} titre={t(`courierOnboarding.provider_${p}`)} sous={t(`courierOnboarding.${aide}`)} onClick={() => setChoix(p)} />)}
       {refusee && <p className="field-error" role="alert">{t('courierOnboarding.identityRejected', { reason: refusee.rejectedReason })}</p>}
       {id.status === 'failed' && <p className="field-error" role="alert">{t('courierOnboarding.identityFailed')}{ERREURS_IDENTITE.includes(id.error) && <> {t(`courierOnboarding.identityError_${id.error}`)}</>}</p>}
@@ -426,7 +427,7 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
       <button type="button" className="bv-lien" onClick={onSuivant}>{t('appli.pasMaintenant')}</button>
       <ConsentementBiometrique consent={consentement} token={token} onFermer={() => setConsentement(null)}
         onAccepte={() => { setConsentement(null); stripe(); }}
-        onManuel={() => { setConsentement(null); setChoix('manual'); manuel(); }} />
+        onManuel={() => { setConsentement(null); if (prov.stripe_identity) { setChoix('in_person'); actions.in_person[0](); } else { setChoix('manual'); manuel(); } }} />
     </>
   );
 }

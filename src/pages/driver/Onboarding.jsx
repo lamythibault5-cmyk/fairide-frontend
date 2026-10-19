@@ -341,13 +341,15 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
             {id.status === 'processing' && <p className="small"><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityProcessing')}</p>}
             {id.status === 'failed' && <p className="small texte-erreur">{t('courierOnboarding.identityFailed')}{ERREURS_IDENTITE.includes(id.error) && <> {t(`courierOnboarding.identityError_${id.error}`)}</>}</p>}
           </div>
-          <div className="courier-provider">
+          {/* STRIPE D'ABORD (fondateur, 19/10/2026 : « Stripe, le chemin de 99 % des livreurs »). Le dépôt d'une photo de la pièce,
+              que l'équipe devait juger à l'œil, n'est proposé que si Stripe Identity est coupé (identityProviders du serveur). */}
+          {!prov.stripe_identity && <div className="courier-provider">
             <b><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.provider_manual')}</b>
             <p className="small">{t('courierOnboarding.manualHelp')}</p>
             <input ref={fichier} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={deposer} />
             <button type="button" className="btn-outline" disabled={busy} onClick={async () => { if (id.provider !== 'manual') await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click(); }}>{t('courierOnboarding.manualUpload')}</button>
             {carte.length > 0 && <p className="small" style={{ margin: '6px 0 0' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.manualUploaded', { n: carte.length })}</p>}
-          </div>
+          </div>}
           {/* Contrôle en personne (CODE-14) : pour qui refuse la vérification biométrique — l'équipe fixe un rendez-vous. */}
           <div className="courier-provider">
             <b><Icone nom="contrat" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.provider_in_person')}</b>
@@ -363,7 +365,11 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
       <div className="row" style={{ marginTop: 12 }}><button type="button" className={id.status === 'verified' || id.status === 'processing' || (id.provider === 'manual' && carte.length > 0) || (id.provider === 'in_person' && id.status === 'pending') ? 'btn-gold' : 'btn-outline'} onClick={onNext}>{t('courierOnboarding.next')}</button></div>
       <ConsentementBiometrique consent={consentement} token={token} onFermer={() => setConsentement(null)}
         onAccepte={() => { setConsentement(null); demarrer('stripe_identity'); }}
-        onManuel={async () => { setConsentement(null); await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click(); }} />
+        onManuel={async () => {
+          setConsentement(null);
+          if (prov.stripe_identity) { await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'in_person' } }), t('courierOnboarding.inPersonRequested')); return; }
+          await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click();
+        }} />
     </div>
   );
 }
