@@ -20,6 +20,7 @@ import SansLivreur from '../../components/client/SansLivreur';
 import LivreurALaPorte from '../../components/client/LivreurALaPorte';
 import ClocheNotifications from '../../components/client/ClocheNotifications';
 import ReglageNotifications from '../../components/ReglageNotifications';
+import { RappelEmail } from '../../components/EmailConfirmation';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -315,6 +316,8 @@ export default function Orders() {
           <BandeauOuverture role="client" />
         </div>
         <div className="eb-feuille">
+        {/* Juste inscrit, rien commandé : c'est ici qu'on arrive le plus souvent, donc ici que le rappel sert le plus. */}
+        <RappelEmail />
         {/* Le vide occupe toute la page ici : une ligne grise dans un cadre en pointillés y
             ressemblait à une panne. On nomme ce qui manque, et on donne le seul geste qui le
             remplit — parcourir les commerces. */}
@@ -524,6 +527,8 @@ export default function Orders() {
   );
   const notifications = (
     <>
+      {/* Adresse e-mail pas encore confirmée : le rappel, le plus tôt possible après l'inscription (EmailConfirmation.jsx). */}
+      <RappelEmail />
       <ClocheNotifications />
       {/* Le suivi sur le téléphone, même page fermée : acceptée, en route, à la porte… (ReglageNotifications.jsx). */}
       <ReglageNotifications textes={{ aide: t('orders.notifHelp'), actif: t('orders.notifOn') }} />
