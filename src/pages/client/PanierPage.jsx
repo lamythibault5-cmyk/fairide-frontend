@@ -4,7 +4,7 @@ import { api } from '../../api';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { SkeletonCards } from '../../components/Skeleton';
+import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import { useToast } from '../../context/ToastContext';
 import { ligneIndisponible, lignesIndisponibles } from '../../panierDisponible';
@@ -98,7 +98,8 @@ export default function PanierPage() {
       </div>
     );
   }
-  if (chargement) return <SkeletonCards count={2} />;
+  // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
+  if (chargement) return experienceApp() ? <SqueletteEcran titre={t('panier.title')} lignes={2} /> : <SkeletonCards count={2} />;
 
   const { desserts, drinks } = restaurant ? computeUpsellSuggestions(restaurant, cart) : { desserts: [], drinks: [] };
 

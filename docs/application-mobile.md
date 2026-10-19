@@ -84,6 +84,11 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
       « location », avec une courte vidéo de la notification pendant une course. L'application ne demande PAS la position
       « en arrière-plan » (`ACCESS_BACKGROUND_LOCATION`) : le service au premier plan suffit, ce qui évite le formulaire
       le plus lourd de Google.
+12. **Clair uniquement** (19 oct. 2026, audit « Look and feel ») : Fairide n'a pas de thème sombre. Le site et Android
+    sont déjà forcés en clair (balise `color-scheme` d'index.html, `color-scheme: light only` dans styles.css, thème
+    `Theme.AppCompat.Light.NoActionBar` + `forceDarkAllowed=false` dans `android/app/src/main/res/values/styles.xml`).
+    **iOS** : dans `Info.plist`, ajouter `UIUserInterfaceStyle` = `Light` ; sans elle, un iPhone en mode sombre affiche le
+    clavier, les sélecteurs de date et les fenêtres du système en noir sur nos écrans blancs.
 
 ## Mettre à jour l'application
 

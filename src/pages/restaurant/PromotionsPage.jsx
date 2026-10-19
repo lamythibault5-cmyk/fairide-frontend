@@ -7,19 +7,32 @@ const APPLI = experienceApp();
 import { api } from '../../api';
 import GiftVouchers from '../../components/GiftVouchers';
 import MiseEnAvant from '../../components/MiseEnAvant';
-import CadreSite, { SITE } from '../../components/commerce/CadreSite';
+import CadreSite from '../../components/commerce/CadreSite';
+import { SegmentGlisse } from '../../components/commerce/BandeauCommerce';
+import LigneGlissante from '../../components/commerce/LigneGlissante';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
-import Icone from '../../components/Icone';
+import Icone from '../../components/Icone';
 import EtatVide from '../../components/EtatVide';
-import AvecMarque from '../../components/AvecMarque';
+
+/* PROMOTIONS — BANDEAU IRIS ET FEUILLE BLANCHE, DANS L'APP COMME SUR LE SITE (fondateur, 2026-10-19, « Proposal » de la
+ * section 4 de finitions-appli.html). Sur le bandeau, le titre et le compte (« 1 active · 1 en pause ») ; dans la feuille,
+ * les promotions en rangées à filet (tuile d'icône, titre, « Sur un plat · active ») avec un interrupteur iris à la place
+ * de « Activer / Désactiver ». Supprimer : un glissement vers la gauche dans l'app native, un petit × sur le site
+ * (LigneGlissante.jsx), puis la même ConfirmDialog — avant, le bouton supprimait sans rien demander. Mêmes appels au
+ * serveur, mêmes champs de création, mêmes contrôles qu'avant ; les styles sont dans ecran-commerce.css (bloc « Promotions,
+ * Avis, Factures »). */
 
 const TYPES = [
   { value: 'percent', label: 'typePercent' },
   { value: 'bogo', label: 'typeBuyN' },
   { value: 'cart_threshold', label: 'typeCart' }
 ];
+// La tuile de chaque rangée : l'étiquette pour un pourcentage, le cadeau pour « N achetés = 1 offert », le sac pour une
+// offre sur toute la commande.
+const ICONES = { percent: 'etiquette', bogo: 'cadeau', cart_threshold: 'sac' };
 
 // « Avantage Fairide » : le commerce garde 90 % du prix (contre ~70 % sur les grandes plateformes). S'il le
 // souhaite — et seulement s'il le souhaite — il en fait profiter ses clients : -X € (ou -X %) sur chaque produit,
@@ -29,9 +42,15 @@ const POURCENTS_PRODUIT = [5, 10, 15];
 const MONTANTS_LIVRAISON = [1, 1.5, 2, 3];
 const eur = (v) => `${Number(v).toFixed(2).replace('.', ',').replace(/,00$/, '')} €`;
 
+/* Les deux options deviennent des rangées à interrupteur (2026-10-19). Allumer n'enregistre rien encore : il faut un
+ * montant, donc l'interrupteur ouvre le choix sous la rangée (euros ou pourcentage, puis le montant) et c'est le montant
+ * touché qui enregistre, comme les boutons d'avant. Éteindre retire l'avantage tout de suite (« Retirer » d'avant). Le
+ * long texte d'explication passe derrière « En savoir plus » ; la phrase courte reste visible. */
 function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, onChanged }) {
   const [busy, setBusy] = useState('');
   const [modeProduit, setModeProduit] = useState('amount');
+  const [choix, setChoix] = useState(null); // 'produits' | 'livraison' : le choix du montant est ouvert
+  const [details, setDetails] = useState(false);
   const avantage = restaurant?.fairideAdvantage || null;
   const livraisonOfferte = !!restaurant?.freeDelivery;
   const remiseLivraison = Number(restaurant?.deliveryFeeDiscount || 0);
@@ -44,6 +63,7 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
     try {
       await api(`/restaurants/${restoId}/promotions/fairide`, { method: 'PUT', token, body: value === null ? { off: true } : { mode, value } });
       await loadDashboard(restoId); onChanged?.();
+      setChoix(null);
       toast(value === null ? t('promosPage.fairideRemoved') : t('promosPage.fairideSaved'));
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(''); }
   }
@@ -52,64 +72,82 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
     try {
       await api(`/restaurants/${restoId}/delivery-discount`, { method: 'PATCH', token, body: { freeDelivery: false, deliveryFeeDiscount: value, freeDeliveryMinOrder: null } });
       await loadDashboard(restoId);
+      setChoix(null);
       toast(value === 0 ? t('promosPage.fairideRemoved') : t('promosPage.fairideSaved'));
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(''); }
   }
 
+  const etatProduits = avantage
+    ? (avantage.mode === 'amount' ? t('promosPage.fairideItemsActiveAmount', { v: eur(avantage.value) }) : t('promosPage.fairideItemsActivePercent', { v: avantage.value }))
+    : t('promosPage.fairideItemsShort');
+  const etatLivraison = livraisonActive
+    ? (minimumOffert != null ? `${t('promosPage.fairideDeliveryFree')} · ${t('editResto.offerFromMin', { amount: minimumOffert })}` : livraisonOfferte ? t('promosPage.fairideDeliveryFree') : t('promosPage.fairideDeliveryActive', { v: eur(remiseLivraison) }))
+    : t('promosPage.fairideDeliveryShort');
+
+  // L'interrupteur : allumé si l'avantage est en place, ou pendant qu'on choisit son montant.
+  const interrupteur = (cle, actif, titre) => (
+    <button type="button" role="switch" aria-checked={actif} aria-expanded={!actif ? choix === cle : undefined}
+      className={`ec-interrupteur${actif || choix === cle ? ' on' : ''}`} aria-label={titre} disabled={busy === cle}
+      onClick={() => {
+        if (actif) { if (cle === 'produits') reglerProduits(null, null); else reglerLivraison(0); }
+        else setChoix(choix === cle ? null : cle);
+      }} />
+  );
+
   return (
-    <div className="card avantage-fairide">
-      <div className="avantage-tete">
-        <span className="avantage-icone"></span>
-        <div>
-          <h3 style={{ margin: 0, fontSize: 16 }}><AvecMarque>{t('promosPage.fairideTitle')}</AvecMarque></h3>
-          <p className="small" style={{ margin: '4px 0 0' }}>{t('promosPage.fairideIntro')}</p>
+    <section className="ec-avantage" aria-labelledby="avantage-titre">
+      {/* Pas d'AvecMarque ici : le mot-logo est toujours en minuscules, et ce titre de section est en capitales. */}
+      <p className="ec-feuille-titre" id="avantage-titre">{t('promosPage.fairideTitle')}</p>
+      <p className="ec-aide">
+        {t('promosPage.fairideShort')}{' '}
+        <button type="button" className="ec-lien ec-lien--enligne" aria-expanded={details} onClick={() => setDetails((d) => !d)}>
+          {details ? t('promosPage.learnLess') : t('promosPage.learnMore')}
+        </button>
+      </p>
+      {details && (
+        <div className="ec-aide ec-aide--details">
+          <p>{t('promosPage.fairideIntro')}</p>
+          <p>{t('promosPage.fairideOptional')} <Link to="/dashboard/menu#menu-geste-prix">{t('promosPage.fairidePricesLink')}</Link></p>
+          <p>{t('promosPage.fairideItemsHelp')}</p>
+          <p>{t('promosPage.fairideDeliveryHelp')}</p>
         </div>
+      )}
+
+      <div className="ec-ligne">
+        <span className="ec-ligne-tuile" aria-hidden="true"><Icone nom="restaurants" taille={20} /></span>
+        <span className="ec-ligne-texte"><b>{t('promosPage.fairideItemsTitle')}</b><small>{etatProduits}</small></span>
+        {interrupteur('produits', !!avantage, t('promosPage.fairideItemsTitle'))}
       </div>
-      <p className="small avantage-note">{t('promosPage.fairideOptional')} <Link to="/dashboard/menu#menu-geste-prix">{t('promosPage.fairidePricesLink')}</Link></p>
-      <div className="avantage-options">
-        <div className={`avantage-option ${avantage ? 'est-actif' : ''}`}>
-          <b><Icone nom="restaurants" taille={16} className="icone-texte" />{' '}{t('promosPage.fairideItemsTitle')}</b>
-          <p className="small" style={{ margin: '4px 0 8px' }}>{t('promosPage.fairideItemsHelp')}</p>
-          {avantage ? (
-            <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span className="pill teal"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{avantage.mode === 'amount' ? t('promosPage.fairideItemsActiveAmount', { v: eur(avantage.value) }) : t('promosPage.fairideItemsActivePercent', { v: avantage.value })}</span>
-              <button type="button" className="btn-ghost btn-sm" disabled={busy === 'produits'} onClick={() => reglerProduits(null, null)}>{t('promosPage.fairideRemove')}</button>
-            </div>
-          ) : (
-            <>
-              <div className="row" style={{ gap: 6, marginBottom: 6 }}>
-                <button type="button" className={`chip ${modeProduit === 'amount' ? 'chip-on' : ''}`} onClick={() => setModeProduit('amount')}>{t('promosPage.fairideModeAmount')}</button>
-                <button type="button" className={`chip ${modeProduit === 'percent' ? 'chip-on' : ''}`} onClick={() => setModeProduit('percent')}>{t('promosPage.fairideModePercent')}</button>
-              </div>
-              <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-                {(modeProduit === 'amount' ? MONTANTS_PRODUIT : POURCENTS_PRODUIT).map((v) => (
-                  <button key={v} type="button" className="btn-outline btn-sm" disabled={busy === 'produits'} onClick={() => reglerProduits(modeProduit, v)}>
-                    −{modeProduit === 'amount' ? eur(v) : `${v} %`}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+      {choix === 'produits' && !avantage && (
+        <div className="ec-choix-montant">
+          <SegmentGlisse libelle={t('promosPage.fairideItemsTitle')} valeur={modeProduit} onChange={setModeProduit}
+            options={[{ value: 'amount', label: t('promosPage.fairideModeAmount') }, { value: 'percent', label: t('promosPage.fairideModePercent') }]} />
+          <div className="ec-montants">
+            {(modeProduit === 'amount' ? MONTANTS_PRODUIT : POURCENTS_PRODUIT).map((v) => (
+              <button key={v} type="button" className="ec-puce" disabled={busy === 'produits'} onClick={() => reglerProduits(modeProduit, v)}>
+                −{modeProduit === 'amount' ? eur(v) : `${v} %`}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className={`avantage-option ${livraisonActive ? 'est-actif' : ''}`}>
-          <b><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{t('promosPage.fairideDeliveryTitle')}</b>
-          <p className="small" style={{ margin: '4px 0 8px' }}>{t('promosPage.fairideDeliveryHelp')}</p>
-          {livraisonActive ? (
-            <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span className="pill teal"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{minimumOffert != null ? `${t('promosPage.fairideDeliveryFree')} · ${t('editResto.offerFromMin', { amount: minimumOffert })}` : livraisonOfferte ? t('promosPage.fairideDeliveryFree') : t('promosPage.fairideDeliveryActive', { v: eur(remiseLivraison) })}</span>
-              <button type="button" className="btn-ghost btn-sm" disabled={busy === 'livraison'} onClick={() => reglerLivraison(0)}>{t('promosPage.fairideRemove')}</button>
-            </div>
-          ) : (
-            <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-              {MONTANTS_LIVRAISON.map((v) => (
-                <button key={v} type="button" className="btn-outline btn-sm" disabled={busy === 'livraison'} onClick={() => reglerLivraison(v)}>−{eur(v)}</button>
-              ))}
-            </div>
-          )}
-          <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{t('promosPage.fairideDeliveryMore')}</p>
-        </div>
+      )}
+
+      <div className="ec-ligne">
+        <span className="ec-ligne-tuile" aria-hidden="true"><Icone nom="scooter" taille={20} /></span>
+        <span className="ec-ligne-texte"><b>{t('promosPage.fairideDeliveryTitle')}</b><small>{etatLivraison}</small></span>
+        {interrupteur('livraison', livraisonActive, t('promosPage.fairideDeliveryTitle'))}
       </div>
-    </div>
+      {choix === 'livraison' && !livraisonActive && (
+        <div className="ec-choix-montant">
+          <div className="ec-montants">
+            {MONTANTS_LIVRAISON.map((v) => (
+              <button key={v} type="button" className="ec-puce" disabled={busy === 'livraison'} onClick={() => reglerLivraison(v)}>−{eur(v)}</button>
+            ))}
+          </div>
+        </div>
+      )}
+      <p className="ec-aide" style={{ marginTop: 8 }}>{t('promosPage.fairideDeliveryMore')}</p>
+    </section>
   );
 }
 
@@ -133,6 +171,7 @@ export default function PromotionsPage() {
   const [minCartTotal, setMinCartTotal] = useState('');
   const [togglingId, setTogglingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [aSupprimer, setASupprimer] = useState(null);
 
   function loadPromos() {
     api(`/restaurants/${restoId}/promotions/mine`, { token }).then(setPromos).catch((e) => toast(e.message, 'erreur'));
@@ -190,10 +229,20 @@ export default function PromotionsPage() {
       toast(e.message, 'erreur');
     } finally {
       setDeletingId(null);
+      setASupprimer(null);
     }
   }
 
-  // Les champs d'une nouvelle promotion : dans une carte sur le site, dans une feuille dans l'app.
+  // Les promotions « all_items » sont l'Avantage Fairide sur chaque produit : elles ont leur propre rangée plus bas.
+  const propres = promos === null ? null : promos.filter((p) => !String(p.type).startsWith('all_items'));
+  const actives = (propres || []).filter((p) => p.active).length;
+  const enPause = (propres || []).length - actives;
+  const compte = propres === null ? null : propres.length === 0 ? t('promosPage.none')
+    : [actives > 0 && t(actives > 1 ? 'promosPage.countActive_other' : 'promosPage.countActive_one', { n: actives }),
+      enPause > 0 && t('promosPage.countPaused', { n: enPause })].filter(Boolean).join(' · ');
+  const titrePromo = (p) => (p.itemName ? `${p.label} · ${p.itemName}` : p.label);
+
+  // Les champs d'une nouvelle promotion : dans la feuille sur le site, dans une feuille par-dessus dans l'app.
   const champsPromo = (
     <>
         <div className="field">
@@ -247,49 +296,31 @@ export default function PromotionsPage() {
     </>
   );
 
-  // Sur le site, le titre et l'introduction sont sur le bandeau (CadreSite) ; dans l'app, en tête de page comme avant.
   return (
-    <CadreSite titre={t('promosPage.title')} sous={t('promosPage.intro')} lecture>
-      {!SITE && <h2 className="section-title" style={{ marginTop: 0 }}>{t('promosPage.title')}</h2>}
-      {!SITE && (
-        <p className="small" style={{ margin: '0 0 14px' }}>
-          {t('promosPage.intro')}
-        </p>
+    <CadreSite appli lecture classe="ec-promos" titre={t('promosPage.title')} sous={compte ?? '…'}>
+      <p className="ec-feuille-titre">{t('promosPage.ownPromosTitle')}</p>
+      {propres === null && <p className="ec-aide">{t('promosPage.loading')}</p>}
+      {propres !== null && propres.length === 0 && !formOpen && <EtatVide icone="etiquette" titre={t('promosPage.none')} />}
+      {propres !== null && propres.length > 0 && (
+        <div className="ec-lignes">
+          {propres.map((p) => (
+            <LigneGlissante key={p.id} libelle={t('promosPage.deletePromo')} disabled={deletingId === p.id} onSupprimer={() => setASupprimer(p)}
+              className={p.active ? '' : 'ec-ligne--pause'}>
+              <span className="ec-ligne-tuile" aria-hidden="true"><Icone nom={ICONES[p.type] || 'etiquette'} taille={20} /></span>
+              <span className="ec-ligne-texte">
+                <b>{titrePromo(p)}</b>
+                <small>{p.itemName ? t('promosPage.onDish') : t('promosPage.wholeOrder')} · {p.active ? t('promosPage.stateActive') : t('promosPage.statePaused')}</small>
+              </span>
+              <button type="button" role="switch" aria-checked={!!p.active} className={`ec-interrupteur${p.active ? ' on' : ''}`}
+                aria-label={`${t('promosPage.switchAria')} : ${titrePromo(p)}`} aria-busy={togglingId === p.id} disabled={togglingId === p.id}
+                onClick={() => toggleActive(p)} />
+            </LigneGlissante>
+          ))}
+        </div>
       )}
 
-      <AvantageFairide restaurant={restaurant} restoId={restoId} token={token} toast={toast} t={t} loadDashboard={loadDashboard} onChanged={loadPromos} />
-
-      <h3 style={{ margin: '18px 0 8px', fontSize: 15 }}>{t('promosPage.ownPromosTitle')}</h3>
-      {/* Fondateur, 2026-10-07 : aucune commission supplémentaire sur une promotion — 10 % du total payé par le client, c'est tout
-          (la commission est calculée sur le sous-total net des remises, routes/orders.js). */}
-      <div className="card promo-commission-note" role="note">
-        <b>{t('promosPage.noExtraCommissionTitle')}</b>
-        <p className="small" style={{ margin: '4px 0 0' }}>{t('promosPage.noExtraCommissionText')}</p>
-        <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('promosPage.noExtraCommissionExample')}</p>
-      </div>
-      {promos === null && <div className="empty">{t('promosPage.loading')}</div>}
-      {promos !== null && promos.filter((p) => !String(p.type).startsWith('all_items')).length === 0 && !formOpen && <EtatVide icone="etiquette" titre={t('promosPage.none')} />}
-      {promos !== null && promos.filter((p) => !String(p.type).startsWith('all_items')).map((p) => (
-        <div className="card" key={p.id} style={{ opacity: p.active ? 1 : 0.55 }}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <div>
-              <span className="pill teal"><Icone nom="etiquette" taille={16} className="icone-texte" />{' '}{p.label}</span>
-              <div className="small" style={{ marginTop: 6 }}>{p.itemName || t('promosPage.wholeOrder')}{!p.active ? t('promosPage.inactiveSuffix') : ''}</div>
-            </div>
-            <div className="row" style={{ gap: 6 }}>
-              <button className="btn-ghost btn-sm" disabled={togglingId === p.id} onClick={() => toggleActive(p)}>
-                {togglingId === p.id ? '...' : p.active ? t('promosPage.disable') : t('promosPage.enable')}
-              </button>
-              <button className="btn-danger-ghost btn-sm" disabled={deletingId === p.id} onClick={() => deletePromo(p)}>
-                {deletingId === p.id ? '...' : t('promosPage.deletePromo')}
-              </button>
-            </div>
-          </div>
-        </div>
-      ))}
-
       {!formOpen ? (
-        <button type="button" className="btn-teal" onClick={() => setFormOpen(true)}>{t('promosPage.addPromo')}</button>
+        <button type="button" className="ec-bouton ec-bouton--iris" style={{ marginTop: 14 }} onClick={() => setFormOpen(true)}>{t('promosPage.addPromo')}</button>
       ) : APPLI ? (
         // Application : le formulaire dans une feuille, « Créer » épinglé en bas (il était au bout d'une carte, sous la page).
         <SousEcran titre={t('promosPage.newPromo')} onFermer={() => setFormOpen(false)} pied={
@@ -298,20 +329,39 @@ export default function PromotionsPage() {
           {champsPromo}
         </SousEcran>
       ) : (
-        <div className="card">
-          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('promosPage.newPromo')}</h3>
+        <div className="ec-formulaire">
+          <p className="ec-feuille-titre">{t('promosPage.newPromo')}</p>
           {champsPromo}
-          <div className="row" style={{ gap: 8 }}>
-            <button className="btn-teal" disabled={saving} onClick={createPromo}>{saving ? '...' : t('promosPage.createPromo')}</button>
-            <button className="btn-ghost" onClick={() => setFormOpen(false)}>{t('promosPage.cancel')}</button>
-          </div>
+          <button type="button" className="ec-bouton ec-bouton--iris" disabled={saving} onClick={createPromo}>{saving ? '...' : t('promosPage.createPromo')}</button>
+          <button type="button" className="ec-bouton ec-bouton--texte" onClick={() => setFormOpen(false)}>{t('promosPage.cancel')}</button>
         </div>
       )}
+      <p className="ec-aide" style={{ marginTop: 10 }}>{t('promosPage.intro')}</p>
+
+      {/* Fondateur, 2026-10-07 : aucune commission supplémentaire sur une promotion — 10 % du total payé par le client, c'est tout
+          (la commission est calculée sur le sous-total net des remises, routes/orders.js). L'encart avait un filet lime sur
+          fond clair (interdit, règle 1 du CLAUDE.md) : c'est maintenant une rangée à tuile, sans cadre. */}
+      <div className="ec-ligne ec-ligne--note" role="note">
+        <span className="ec-ligne-tuile" aria-hidden="true"><Icone nom="euro" taille={20} /></span>
+        <span className="ec-ligne-texte">
+          <b>{t('promosPage.noExtraCommissionTitle')}</b>
+          <small>{t('promosPage.noExtraCommissionText')}</small>
+          <small>{t('promosPage.noExtraCommissionExample')}</small>
+        </span>
+      </div>
+
+      <AvantageFairide restaurant={restaurant} restoId={restoId} token={token} toast={toast} t={t} loadDashboard={loadDashboard} onChanged={loadPromos} />
 
       {/* Bons cadeaux : vendus au comptoir, utilisables sur les commandes Fairide (déplacés ici quand le module
-          Réservations a été retiré, 2026-09-25). */}
-      <div style={{ marginTop: 22 }}><MiseEnAvant restoId={restoId} token={token} toast={toast} /></div>
-      <div style={{ marginTop: 22 }}><GiftVouchers restoId={restoId} token={token} toast={toast} restaurant={restaurant} /></div>
+          Réservations a été retiré, 2026-09-25). Les deux blocs partagés gardent leur contenu ; leur cadre s'efface dans
+          la feuille (.ec-bloc, ecran-commerce.css). */}
+      <div className="ec-bloc"><MiseEnAvant restoId={restoId} token={token} toast={toast} /></div>
+      <div className="ec-bloc"><GiftVouchers restoId={restoId} token={token} toast={toast} restaurant={restaurant} /></div>
+
+      <ConfirmDialog open={!!aSupprimer} icone="etiquette" danger title={t('promosPage.deleteConfirmTitle')}
+        message={aSupprimer ? titrePromo(aSupprimer) : ''} detail={t('promosPage.deleteConfirmDetail')}
+        confirmLabel={t('promosPage.deletePromo')} loading={!!deletingId}
+        onConfirm={() => deletePromo(aSupprimer)} onCancel={() => setASupprimer(null)} />
     </CadreSite>
   );
 }

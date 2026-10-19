@@ -5,7 +5,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { euros } from '../prixPlat';
 import usePageMeta from '../hooks/usePageMeta';
-import AvecMarque from '../components/AvecMarque';
+import Icone from '../components/Icone';
+import { OptionCommande } from '../components/EcranCommande';
+import { BandeauGeneral, FeuilleGenerale, SectionGenerale } from '../components/EcranGeneral';
 
 /* « C'est bon » en un geste (CODE-3, 8 octobre 2026, DEC-25) — /carte/valider/:token.
  *
@@ -17,7 +19,14 @@ import AvecMarque from '../components/AvecMarque';
  *
  * Carte aux prix MAGASIN vérifiés (prixMagasin.js côté serveur) : un choix avant de valider — garder ses prix, ou ajouter
  * la commission de Fairide sur toute la carte. La liste montre alors les prix qui seront signés (calculés par le serveur,
- * priceWithFairideRate), et le choix part avec « C'est bon ». Par défaut : garder — on ne monte pas ses prix sans un geste. */
+ * priceWithFairideRate), et le choix part avec « C'est bon ». Par défaut : garder — on ne monte pas ses prix sans un geste.
+ *
+ * Le dessin (fondateur, 2026-10-19, section 4 de finitions-appli.html) : bandeau iris (« Valider ma carte », le commerce)
+ * et feuille blanche (EcranGeneral.jsx) — sur le site pour un visiteur, tout sur le blanc sous l'en-tête. Dans la feuille :
+ * le choix du taux en deux cases (celles du paiement, OptionCommande), les plats en rangées à filet, puis l'engagement, le
+ * nom et « C'est bon ». Le bloc de validation n'est plus collé en bas de l'écran : sur un téléphone il en couvrait la
+ * moitié, et dans l'app connectée il passait sous la barre d'onglets. On le trouve après la carte — c'est-à-dire après
+ * l'avoir parcourue, ce qu'on demande justement de faire. */
 export default function ValiderCarte() {
   const { token } = useParams();
   // Commerçant connecté (arrivé par la liste « Avant d'être en ligne ») : la page finie le ramène à son tableau de bord au
@@ -58,21 +67,28 @@ export default function ValiderCarte() {
     } finally { setEnvoi(false); }
   }
 
+  const nomCommerce = carte?.restaurant?.name || '';
   if (fait) {
     return (
-      <main className="container" style={{ maxWidth: 640, padding: '32px 16px' }}>
-        <h1>{t('validerCarte.doneTitle')}</h1>
-        <p>{t(commercant ? 'validerCarte.doneTextConnected' : 'validerCarte.doneText', { name: carte?.restaurant?.name || '' })}</p>
-        {commercant && <Link to="/dashboard" className="btn-gold" style={{ display: 'inline-block', marginTop: 8 }}>{t('validerCarte.backToDashboard')}</Link>}
-      </main>
+      <div className="gn-page">
+        <BandeauGeneral icone="valider" titre={t('validerCarte.doneTitle')} sous={nomCommerce} />
+        <FeuilleGenerale>
+          <p className="gn-texte gn-texte--encre" role="status">{t(commercant ? 'validerCarte.doneTextConnected' : 'validerCarte.doneText', { name: nomCommerce })}</p>
+          {commercant && <Link to="/dashboard" className="btn-gold gn-action">{t('validerCarte.backToDashboard')}</Link>}
+        </FeuilleGenerale>
+      </div>
     );
   }
   if (!carte) {
     return (
-      <main className="container" style={{ maxWidth: 640, padding: '32px 16px' }}>
-        <h1>{t('validerCarte.pageTitle')}</h1>
-        <p>{erreur || t('validerCarte.loading')}</p>
-      </main>
+      <div className="gn-page">
+        <BandeauGeneral icone="document" titre={t('validerCarte.pageTitle')} />
+        <FeuilleGenerale>
+          {erreur
+            ? <p className="gn-note" role="alert"><Icone nom="alerte" taille={18} />{erreur}</p>
+            : <p className="gn-texte" role="status">{t('validerCarte.loading')}</p>}
+        </FeuilleGenerale>
+      </div>
     );
   }
 
@@ -82,65 +98,64 @@ export default function ValiderCarte() {
     if (s) s.items.push(it); else sections.push({ nom: it.category || '', items: [it] });
   }
   return (
-    <main className="container" style={{ maxWidth: 640, padding: '24px 16px 120px' }}>
-      <h1 style={{ marginBottom: 4 }}>{carte.restaurant.name}</h1>
-      <p style={{ marginTop: 0 }}>{t('validerCarte.intro')}</p>
-      {carte.alreadyValidated && <p className="small" role="note">{t('validerCarte.alreadyValidated')}</p>}
-      {erreur && <p className="texte-erreur" role="alert">{erreur}</p>}
+    <div className="gn-page">
+      <BandeauGeneral icone="document" titre={t('validerCarte.pageTitle')} sous={<b>{nomCommerce}</b>} />
+      <FeuilleGenerale>
+        <p className="gn-texte">{t('validerCarte.intro')}</p>
+        {carte.alreadyValidated && <p className="gn-note" role="note"><Icone nom="valider" taille={18} />{t('validerCarte.alreadyValidated')}</p>}
+        {erreur && <p className="gn-note" role="alert"><Icone nom="alerte" taille={18} />{erreur}</p>}
 
-      {choixOffert && (
-        <section className="card" style={{ marginBottom: 12 }} aria-labelledby={`${id}-taux`}>
-          <h2 id={`${id}-taux`} style={{ fontSize: 16, margin: '0 0 4px' }}><AvecMarque>{t('validerCarte.rateTitle')}</AvecMarque></h2>
-          <p className="small" style={{ margin: '0 0 10px' }}>{t('validerCarte.rateIntro')}</p>
-          <div className="row" role="radiogroup" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <button type="button" role="radio" aria-checked={!ajouter} className={!ajouter ? 'btn-teal' : 'btn-outline'} style={{ flex: '1 1 200px' }} onClick={() => setAjouter(false)}>
-              {t('validerCarte.rateKeep')}
-            </button>
-            <button type="button" role="radio" aria-checked={ajouter} className={ajouter ? 'btn-teal' : 'btn-outline'} style={{ flex: '1 1 200px' }} onClick={() => setAjouter(true)}>
-              {t('validerCarte.rateAdd', { markup: pctLocal(hausse) })}
-            </button>
+        {choixOffert && (
+          <section aria-labelledby={`${id}-taux`}>
+            <SectionGenerale id={`${id}-taux`}>{t('validerCarte.rateTitle')}</SectionGenerale>
+            <p className="gn-taux-aide" style={{ marginBottom: 10 }}>{t('validerCarte.rateIntro')}</p>
+            {/* Un choix unique : les cases du paiement (aria-pressed), la retenue en aplat iris. */}
+            <div className="ec-options" role="group" aria-labelledby={`${id}-taux`}>
+              <OptionCommande on={!ajouter} icone="commerce" titre={t('validerCarte.rateKeep')} onClick={() => setAjouter(false)} />
+              <OptionCommande on={ajouter} icone="tendance" titre={t('validerCarte.rateAdd', { markup: pctLocal(hausse) })} onClick={() => setAjouter(true)} />
+            </div>
+            <p className="gn-taux-aide">
+              {ajouter
+                ? t('validerCarte.rateAddHelp', { markup: pctLocal(hausse) })
+                : t('validerCarte.rateKeepHelp', { pct: pctLocal(rate * 100) })}
+            </p>
+          </section>
+        )}
+
+        {sections.map((s) => (
+          <section key={s.nom}>
+            {s.nom && <SectionGenerale>{s.nom}</SectionGenerale>}
+            <ul className="gn-carte-plats">
+              {s.items.map((it) => (
+                <li key={it.id} className="gn-plat">
+                  <div className="gn-plat-tete">
+                    <span className="gn-plat-nom">{it.name}</span>
+                    <span className="gn-plat-prix">
+                      {euros(avecCommission ? it.priceWithFairideRate : it.price)}
+                      {/* L'ancien prix en clair, jamais barré (fondateur, 2026-10-15). */}
+                      {avecCommission && <small className="gn-plat-avant">{t('validerCarte.rateWas', { price: euros(it.price) })}</small>}
+                    </span>
+                  </div>
+                  {it.desc && <p className="gn-plat-desc">{it.desc}</p>}
+                  <p className="gn-plat-tva">{it.vatRate == null ? t('validerCarte.vatProposed') : t('validerCarte.vat', { rate: it.vatRate })}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+
+        <div className="gn-valider">
+          <p className="gn-texte gn-texte--encre">{t('validerCarte.commitment')}</p>
+          <div className="field">
+            <label htmlFor={`${id}-nom`}>{t('validerCarte.yourName')}</label>
+            <input id={`${id}-nom`} value={nom} onChange={(e) => setNom(e.target.value)} autoComplete="name" />
           </div>
-          <p className="small" style={{ margin: '10px 0 0' }}>
-            {ajouter
-              ? t('validerCarte.rateAddHelp', { markup: pctLocal(hausse) })
-              : t('validerCarte.rateKeepHelp', { pct: pctLocal(rate * 100) })}
-          </p>
-        </section>
-      )}
-
-      {sections.map((s) => (
-        <section key={s.nom} className="card" style={{ marginBottom: 12 }}>
-          {s.nom && <h2 style={{ fontSize: 16, margin: '0 0 6px' }}>{s.nom}</h2>}
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {s.items.map((it, k) => (
-              <li key={it.id} style={{ padding: '8px 0', borderTop: k ? '1px solid var(--line)' : 'none' }}>
-                <div className="row" style={{ justifyContent: 'space-between', gap: 12 }}>
-                  <b>{it.name}</b>
-                  <b style={{ whiteSpace: 'nowrap' }}>{euros(avecCommission ? it.priceWithFairideRate : it.price)}</b>
-                </div>
-                {avecCommission && <div className="small" style={{ color: 'var(--ink-soft)', textAlign: 'right' }}>{t('validerCarte.rateWas', { price: euros(it.price) })}</div>}
-                {it.desc && <div className="small" style={{ color: 'var(--ink-soft)' }}>{it.desc}</div>}
-                <div className="small" style={{ color: 'var(--ink-soft)' }}>
-                  {it.vatRate == null ? t('validerCarte.vatProposed') : t('validerCarte.vat', { rate: it.vatRate })}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-
-      <div className="card" style={{ position: 'sticky', bottom: 12 }}>
-        <p className="small" style={{ margin: '0 0 8px' }}>{t('validerCarte.commitment')}</p>
-        <div className="field">
-          <label htmlFor={`${id}-nom`} className="small">{t('validerCarte.yourName')}</label>
-          <input id={`${id}-nom`} value={nom} onChange={(e) => setNom(e.target.value)} autoComplete="name" />
+          <button type="button" className="btn-gold gn-action" disabled={envoi || nom.trim().length < 3} onClick={valider}>
+            {envoi ? '…' : t('validerCarte.cestBon')}
+          </button>
+          <p className="gn-texte" style={{ margin: '12px 0 0', fontSize: 13.5 }}>{t('validerCarte.notRight')}</p>
         </div>
-        <button type="button" className="btn-gold" style={{ width: '100%', fontSize: 20, padding: '16px 20px' }}
-          disabled={envoi || nom.trim().length < 3} onClick={valider}>
-          {envoi ? '…' : t('validerCarte.cestBon')}
-        </button>
-        <p className="small" style={{ margin: '8px 0 0' }}>{t('validerCarte.notRight')}</p>
-      </div>
-    </main>
+      </FeuilleGenerale>
+    </div>
   );
 }

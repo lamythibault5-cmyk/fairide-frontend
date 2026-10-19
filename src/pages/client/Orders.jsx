@@ -5,7 +5,8 @@ import SousEcran from '../../components/SousEcran';
  * donner au livreur (ou à montrer au commerce) juste sous la progression, plus en bas sous la carte ; l'avis et le
  * pourboire, et « Signaler un problème », s'ouvrent dans une feuille au lieu de s'insérer dans la carte. */
 const APPLI = experienceApp();
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { vibrer } from '../../gestes';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
 import ErreurChargement from '../../components/ErreurChargement';
@@ -27,6 +28,7 @@ import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { DeliveryTiming, ProchaineEtape, RouteSuivi, titreSuivi, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
+import TirerPourActualiser from '../../components/TirerPourActualiser';
 import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
@@ -200,6 +202,14 @@ export default function Orders() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // Commande acceptée par le commerce sous les yeux du client (« nouveau » → la suite) : la sensation « succès » du
+  // téléphone (audit « Look and feel » 6a, 2026-10-19). Le premier chargement ne vibre pas : rien n'a changé sous ses yeux.
+  const statutsVus = useRef(null);
+  useEffect(() => {
+    const avant = statutsVus.current;
+    statutsVus.current = new Map(orders.map((o) => [o.id, o.status]));
+    if (avant && orders.some((o) => avant.get(o.id) === 'nouveau' && !['nouveau', 'refuse', 'annule'].includes(o.status))) vibrer('succes');
+  }, [orders]);
   // Retour sur l'onglet après une absence : relecture immédiate des commandes.
   useRevalidation(() => api('/orders/mine', { token }).then(setOrders), { actif: !(previewMode && role === 'restaurant') });
 
@@ -280,6 +290,7 @@ export default function Orders() {
   const passees = listeAffichee.filter(estPassee);
   const quand = (ms) => new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
+  // Mes commandes n'a pas de bandeau dans l'app (le titre, puis les cartes) : le titre, puis des lignes iris pâle (Skeleton.jsx).
   if (loading) return <div><h1 className="page-title">{titre}</h1><SkeletonCards count={3} /></div>;
   // Pas lues (réseau, serveur) : jamais « Rien en route pour l'instant », qui ferait croire la commande perdue.
   if (echec && orders.length === 0) {
@@ -292,9 +303,12 @@ export default function Orders() {
   }
   /* AUCUNE COMMANDE (fondateur, 2026-10-17, « My orders » de mockups/commerces-marque.html) : le même bandeau que Mes favoris,
      le calendrier d'ouverture posé dessus en note translucide, le vélo qui attend dans la feuille blanche. */
+  // Tirer pour actualiser (app) : la même relecture que le sondage des 15 s.
+  const tirer = <TirerPourActualiser onActualiser={() => api('/orders/mine', { token }).then(setOrders)} />;
   if (listeAffichee.length === 0) {
     return (
       <div className="ecran-bandeau commandes-vide">
+        {tirer}
         <div className="eb-bandeau">
           <h1 className="eb-titre">{titre}</h1>
           <p className="eb-sous">{t('orders.bandeauVide')}</p>
@@ -530,6 +544,7 @@ export default function Orders() {
   if (APPLI) {
     return (
       <div>
+        {tirer}
         <h1 className="page-title">{titre}</h1>
         {notifications}
         {enCours.length > 0 && passees.length > 0 && <h2 className="suivi-section">{t('orders.sectionCurrent')}</h2>}

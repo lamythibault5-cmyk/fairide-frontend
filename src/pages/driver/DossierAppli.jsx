@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
@@ -14,6 +13,8 @@ import SousEcran from '../../components/SousEcran';
 import { ConsentementBiometrique } from '../../components/conformite/LivreurConformite';
 import { Haut, Option, Fait } from '../app/EcransBienvenue';
 import { Champ } from '../app/InscriptionAppli';
+import RouteVelo from '../../components/livreur/RouteVelo';
+import '../../ecran-livreur.css';
 import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 
 /* LE DOSSIER LIVREUR DANS L'APPLICATION (2026-10-15) — /driver/onboarding tant que le dossier est en brouillon.
@@ -21,8 +22,9 @@ import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AV
  * C'est la première page d'un livreur qui vient de s'inscrire. Sur le site, elle empile le titre, l'état du dossier, la
  * carte « Prochaine étape », « Avant de commencer », l'en-tête des étapes, puis l'étape — dont certaines (Infos, Mes
  * engagements) poussent leur bouton un à deux écrans plus bas. Ici, les écrans de l'accueil : un sujet par écran (un
- * document = un écran), le bouton en bas, la progression en haut, une croix pour sortir. Le parcours commence au premier
- * écran qui manque encore quelque chose.
+ * document = un écran), le bouton en bas, la progression en haut, une croix pour sortir. Depuis le 2026-10-19, la page
+ * s'ouvre sur le sommaire (SommaireDossier : bandeau iris, « À faire », « Fait ») ; son bouton lime mène au premier écran qui
+ * manque encore quelque chose, et la croix d'un écran y ramène.
  *
  * MÊMES ROUTES, MÊMES RÈGLES que le dossier du site (Onboarding.jsx), les listes communes dans dossierCommun.js :
  * POST /couriers/me/status, /identity/start, /documents, PATCH /couriers/me, POST /engagements, Stripe Connect, /submit.
@@ -50,7 +52,6 @@ function ecranDuManque(m, statusType) {
 
 export default function DossierAppli({ d, charger, token, user, busy, action, refreshUser, etapeDemandee }) {
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const c = d.courier; const legal = d.legal ?? {};
   const manques = (d.missing ?? []).filter((m) => !MANQUES_INFORMATIFS.includes(m));
   const stripeActif = (d.user?.stripeConnectStatus || user?.stripeConnectStatus) === 'active';
@@ -65,19 +66,28 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     ...docs.map((x) => `doc:${x}`), 'engagements', 'paiement', 'tarif', 'envoi'];
   const aFaire = (e) => manques.some((m) => ecranDuManque(m, c.statusType) === e);
 
-  const [ecran, setEcran] = useState(() => ECRAN_DE_ETAPE[etapeDemandee]
-    || ecrans.find(aFaire) || (stripeActif ? 'envoi' : 'paiement'));
+  // Le premier écran qui manque encore quelque chose : là où mène « Compléter mon dossier ».
+  const premierEcran = ecrans.find(aFaire) || (stripeActif ? 'envoi' : 'paiement');
+
+  // `ecran` vide : le sommaire du dossier (SommaireDossier, plus bas). Une étape demandée (retour de Stripe) s'ouvre directement.
+  const [ecran, setEcran] = useState(() => ECRAN_DE_ETAPE[etapeDemandee] || null);
   const [recule, setRecule] = useState(false);
   const rang = Math.max(0, ecrans.indexOf(ecran));
   const aller = (e, arriere = false) => { setRecule(arriere); setEcran(e); };
   const suivant = () => aller(ecrans[Math.min(rang + 1, ecrans.length - 1)]);
-  const fermer = () => navigate('/driver');
+  // La croix (et le retour depuis le premier écran) ramène au sommaire, plus au tableau de bord : on y voit ce qui reste.
+  const fermer = () => aller(null, true);
   const retour = () => (rang > 0 ? aller(ecrans[rang - 1], true) : fermer());
 
   // Les écrans « Infos » enregistrent le formulaire entier, comme « Continuer » sur le site (silencieux : l'écran suivant suffit).
   async function enregistrerPuisSuivant() {
     const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: corpsInfos(f) }));
     if (ok) { setF((x) => ({ ...x, nationalNumber: '' })); suivant(); }
+  }
+
+  if (!ecran) {
+    return <SommaireDossier d={d} t={t} user={user} ecrans={ecrans} docs={docs} manques={manques} aFaire={aFaire} stripeActif={stripeActif}
+      premierEcran={premierEcran} onOuvrir={(e) => aller(e)} />;
   }
 
   let titre = ''; let sous = null; let contenu = null; let pied = null;
@@ -231,6 +241,104 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
         </div>
       </main>
     </EcranPlein>
+  );
+}
+
+/* LE SOMMAIRE DU DOSSIER (fondateur, 2026-10-19, finitions-appli.html, section 4 « Courier › Mon dossier ») : ce que voit le
+ * livreur en ouvrant son dossier, avant les écrans. Sur le bandeau iris : « Livreur · prénom », « Mon dossier », combien
+ * d'étapes sont faites, et le vélo posé sur la route à cette hauteur (comme la route de l'inscription). Dans la feuille :
+ * « À faire » d'abord (rond vide cerclé d'iris, l'étape, ce qui y manque, chevron ; toucher la ligne ouvre son premier écran
+ * incomplet), UN bouton lime qui ouvre le premier écran qui manque (celui où s'ouvrait le dossier jusqu'ici), puis « Fait »
+ * (ronds iris cochés ; toucher la ligne rouvre l'étape pour la corriger). Tout fait : le bandeau le dit, pas de bouton lime.
+ *
+ * Une étape regroupe des écrans de `ecrans` ; elle est faite quand aucun d'eux n'a de manque — paiements : compte Stripe
+ * actif ; envoi : dossier envoyé. Les écrans et leurs règles ne changent pas (le BCE reste exigé à l'envoi, pas à
+ * l'inscription : c'est un manque comme un autre, sous « Ton activité »). */
+const ETAPES_SOMMAIRE = [
+  ['statut', ['statut']],
+  ['identite', ['identite']],
+  ['infos', ['perso', 'course', 'autres']],
+  ['activite', ['etudes', 'entreprise', 'caisse', 'societe']],
+  ['documents', null], // les écrans doc:… du statut choisi
+  ['engagements', ['engagements']],
+  ['paiement', ['paiement', 'tarif']],
+  ['envoi', ['envoi']]
+];
+
+function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActif, premierEcran, onOuvrir }) {
+  const c = d.courier;
+  const etapes = ETAPES_SOMMAIRE.map(([cle, liste]) => {
+    const siens = (liste ?? docs.map((x) => `doc:${x}`)).filter((e) => ecrans.includes(e));
+    const fait = cle === 'paiement' ? stripeActif : cle === 'envoi' ? !['draft', 'rejected'].includes(c.lifecycleStatus) : !siens.some(aFaire);
+    return { cle, siens, fait, manquants: manques.filter((m) => siens.includes(ecranDuManque(m, c.statusType))) };
+  }).filter((e) => e.siens.length);
+  const restantes = etapes.filter((e) => !e.fait);
+  const faites = etapes.filter((e) => e.fait);
+  const total = etapes.length;
+  const prenom = c.identity?.firstName || (d.user?.name || user?.name || '').trim().split(/\s+/)[0];
+  const sousBandeau = !restantes.length ? t('appli.dosToutFait', { total })
+    : t(restantes.length === 1 ? 'appli.dosEtapesUne' : 'appli.dosEtapes', { fait: faites.length, total, reste: restantes.length });
+
+  // Sous une étape à faire : ce qui y manque s'il n'y a qu'une chose, combien s'il y en a plusieurs (les libellés des manques
+  // viennent de deux familles de textes, mis bout à bout ils se lisaient mal), sinon sa ligne d'aide ; sous une étape faite, ce
+  // qui a été choisi.
+  const detail = (e) => {
+    if (!e.fait) {
+      if (!e.manquants.length) return t(`appli.dosAide_${e.cle}`);
+      if (e.manquants.length > 1) return t('appli.dosAManquer', { n: e.manquants.length });
+      const txt = libelleManque(e.manquants[0], t);
+      return txt.charAt(0).toUpperCase() + txt.slice(1);
+    }
+    if (e.cle === 'statut' && c.statusType) return t(`courierOnboarding.status_${c.statusType}`);
+    if (e.cle === 'infos') return [c.vehicleType && t(`courierOnboarding.vehicle_${c.vehicleType}`), c.zone].filter(Boolean).join(' · ') || null;
+    if (e.cle === 'activite') return c.independent?.companyNumber || null;
+    if (e.cle === 'paiement') return t('courierOnboarding.paymentActive');
+    return null;
+  };
+  const ligne = (e) => {
+    const sous = detail(e);
+    return (
+      <li key={e.cle}>
+        <button type="button" className="ecl-etape" onClick={() => onOuvrir(e.siens.find(aFaire) || e.siens[0])}>
+          <span className={`ecl-rond-etape${e.fait ? ' fait' : ''}`} aria-hidden="true">{e.fait && <Icone nom="valider" taille={14} />}</span>
+          <span className="ecl-grow"><b>{t(`appli.dosEtape_${e.cle}`)}</b>{sous && <small>{sous}</small>}</span>
+          {!e.fait && <Icone nom="retour" taille={16} className="bv-chevron" />}
+        </button>
+      </li>
+    );
+  };
+  // Il ne reste que l'envoi : le bouton le dit (il ouvre l'écran d'envoi, qui montre ce qui sera envoyé).
+  const seulEnvoi = restantes.length === 1 && restantes[0].cle === 'envoi';
+
+  return (
+    <div className="ecl ecl-page ecl-dossier">
+      <section className="ecl-bandeau">
+        <div className="ecl-b-haut"><span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span></div>
+        <h1 className="ecl-b-titre">{t('appli.dosTitre')}</h1>
+        <p className="ecl-b-sous">{sousBandeau}</p>
+        <RouteVelo position={Math.round(6 + (88 * faites.length) / Math.max(1, total))} depart={6} />
+      </section>
+      <div className="ecl-feuille">
+        {c.lifecycleStatus === 'rejected' && c.reviewReason && (
+          <p className="ecl-note"><Icone nom="alerte" taille={18} />{t('courierOnboarding.rejectedReason', { reason: c.reviewReason })}</p>
+        )}
+        {restantes.length > 0 && (
+          <>
+            <h2 className="ecl-titre-sec">{t('appli.dosAFaire')}</h2>
+            <ul className="ecl-etapes">{restantes.map(ligne)}</ul>
+            <button type="button" className="btn-gold ecl-bouton-dossier" onClick={() => onOuvrir(premierEcran)}>
+              {seulEnvoi ? t('appli.dosVerifierEnvoyer') : t('appli.dosCompleter')}
+            </button>
+          </>
+        )}
+        {faites.length > 0 && (
+          <>
+            <h2 className="ecl-titre-sec">{t('appli.dosFait')}</h2>
+            <ul className="ecl-etapes">{faites.map(ligne)}</ul>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 

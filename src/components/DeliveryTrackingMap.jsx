@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { escapeHtml } from '../escapeHtml';
 import Icone from './Icone';
-import { iconeHtml } from '../iconeHtml';
+import { LIME, pastilleCommerce, pastilleLivreur, pastilleMaison, pastilleSelonCouleur, veloHtml, TRACE_BORD, TRACE_FAIT, TRACE_RESTE, TRACE_PREVU } from '../marqueursCarte';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
@@ -31,32 +31,9 @@ function distanceM(a, b) {
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
-// Pastille de couleur avec une icône en traits (Icone.jsx), blanche sur fond foncé, encre sur la lime.
-function emojiIcon(nom, bg) {
-  return L.divIcon({
-    className: '',
-    html: `<div style="color:${bg === '#C8F03C' ? '#14121F' : '#fff'};background:${bg};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;">${iconeHtml(nom, 16)}</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
-  });
-}
-
-// Icône du livreur avec un anneau qui pulse autour, pour que "en mouvement, en direct" se lise d'un
-// coup d'œil (même codage visuel que les apps de livraison grand public).
-const DRIVER_ICON = L.divIcon({
-  className: '',
-  html: `
-    <div style="position:relative;width:32px;height:32px;">
-      <div class="tracking-driver-pulse"></div>
-      <div style="position:relative;background:#14121F;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;"></div>
-    </div>
-  `,
-  iconSize: [32, 32],
-  iconAnchor: [16, 16]
-});
-
-const RESTAURANT_ICON = emojiIcon('commerce', '#3B2FB5');
-const DELIVERY_ICON = emojiIcon('maison', '#C8F03C');
+// Pastilles et tracés en iris : marqueursCarte.js (audit « Look and feel », 2026-10-19).
+const RESTAURANT_ICON = pastilleCommerce();
+const DELIVERY_ICON = pastilleMaison();
 
 // Itinéraire routier ET durée estimée, d'un seul appel. `duration` est en secondes, `distance` en mètres.
 
@@ -85,6 +62,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
   const animRef = useRef(null);
   const driverTrailRef = useRef([]);
   const driverTrailLineRef = useRef(null);
+  const driverTrailBordRef = useRef(null);
   const boundsRef = useRef(null);
   const driverBoundsRef = useRef(null);
   // Suivi automatique : la carte se recadre sur le livreur à chaque position. Un glissement de
@@ -139,7 +117,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       restaurantMarkerRef.current = null; deliveryMarkerRef.current = null; homeMarkerRef.current = null;
       driverMarkerRef.current = null; lineRef.current = null; remainingLineRef.current = null;
       boundsRef.current = null; driverBoundsRef.current = null;
-      driverTrailLineRef.current = null; driverTrailRef.current = [];
+      driverTrailLineRef.current = null; driverTrailBordRef.current = null; driverTrailRef.current = [];
     };
   }, []);
 
@@ -155,7 +133,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       // `homeLabel` est aujourd'hui alimenté par une clé de traduction, donc sans danger — mais c'est
       // une propriété publique du composant, et rien n'empêcherait un prochain appelant d'y passer le
       // nom d'un commerce. On échappe maintenant, tant que la question est encore théorique.
-      homeMarkerRef.current = L.marker([homeLat, homeLng], { icon: emojiIcon(homeEmoji, homeColor) }).addTo(mapRef.current).bindPopup(escapeHtml(homeLabel));
+      homeMarkerRef.current = L.marker([homeLat, homeLng], { icon: pastilleSelonCouleur(homeEmoji, homeColor) }).addTo(mapRef.current).bindPopup(escapeHtml(homeLabel));
     } else {
       homeMarkerRef.current.setLatLng([homeLat, homeLng]);
     }
@@ -180,7 +158,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     if (hasResto && hasDelivery) {
       const straightLine = [[restaurantLat, restaurantLng], [deliveryLat, deliveryLng]];
       if (!lineRef.current) {
-        lineRef.current = L.polyline(straightLine, { color: '#3B2FB5', weight: 4, dashArray: '2, 10', lineCap: 'round', opacity: 0.55 }).addTo(mapRef.current);
+        lineRef.current = L.polyline(straightLine, TRACE_RESTE).addTo(mapRef.current);
       } else lineRef.current.setLatLngs(straightLine);
       const straightBounds = L.latLngBounds(straightLine);
       boundsRef.current = straightBounds;
@@ -192,7 +170,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
         .then(({ latLngs }) => {
           if (cancelled || !lineRef.current) return;
           lineRef.current.setLatLngs(latLngs);
-          lineRef.current.setStyle({ dashArray: null, opacity: 0.45 });
+          lineRef.current.setStyle(TRACE_PREVU);
           const routeBounds = L.latLngBounds(latLngs);
           boundsRef.current = routeBounds;
           if (autoSuiviRef.current && !driverMarkerRef.current) mapRef.current.fitBounds(routeBounds, { padding: [40, 40] });
@@ -220,13 +198,15 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       if (trail.length > 200) trail.shift();
     }
     if (trail.length > 1) {
+      // Le trajet fait : iris plein bordé de blanc (deux traits, le bord dessous), sous la pastille du livreur.
       if (!driverTrailLineRef.current) {
-        driverTrailLineRef.current = L.polyline(trail, { color: '#C8F03C', weight: 3, opacity: 0.8, lineCap: 'round' }).addTo(mapRef.current);
-      } else driverTrailLineRef.current.setLatLngs(trail);
+        driverTrailBordRef.current = L.polyline(trail, TRACE_BORD).addTo(mapRef.current);
+        driverTrailLineRef.current = L.polyline(trail, TRACE_FAIT).addTo(mapRef.current);
+      } else { driverTrailBordRef.current.setLatLngs(trail); driverTrailLineRef.current.setLatLngs(trail); }
       setHasTrail(true);
     }
     if (!driverMarkerRef.current) {
-      driverMarkerRef.current = L.marker([driverLat, driverLng], { icon: DRIVER_ICON }).addTo(mapRef.current).bindPopup(t('trackingMap.yourCourier'));
+      driverMarkerRef.current = L.marker([driverLat, driverLng], { icon: pastilleLivreur() }).addTo(mapRef.current).bindPopup(t('trackingMap.yourCourier'));
     } else {
       const marker = driverMarkerRef.current;
       const start = marker.getLatLng();
@@ -260,7 +240,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
           .then(({ latLngs, duration, distance }) => {
             if (cancelled || !mapRef.current) return;
             if (!remainingLineRef.current) {
-              remainingLineRef.current = L.polyline(latLngs, { color: '#3B2FB5', weight: 5, opacity: 0.9, lineCap: 'round' }).addTo(mapRef.current);
+              remainingLineRef.current = L.polyline(latLngs, TRACE_RESTE).addTo(mapRef.current);
             } else remainingLineRef.current.setLatLngs(latLngs);
             // Un scooter en ville ne roule pas comme la voiture d'OSRM : on majore de 15 %, et jamais
             // moins d'une minute — « arrive dans 0 min » alors qu'il n'est pas là est un mensonge.
@@ -281,7 +261,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     if (driverLat != null && driverLng != null) return;
     setEta(null); onEta?.(null);
     if (animRef.current) cancelAnimationFrame(animRef.current);
-    for (const ref of [driverMarkerRef, driverTrailLineRef, remainingLineRef]) {
+    for (const ref of [driverMarkerRef, driverTrailLineRef, driverTrailBordRef, remainingLineRef]) {
       if (ref.current) { ref.current.remove(); ref.current = null; }
     }
     driverTrailRef.current = []; driverBoundsRef.current = null; etaDernierRef.current = { pos: null, at: 0 };
@@ -313,8 +293,10 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       )}
       {(showRecenter || showFollowDriver) && (
         <div className="tracking-map-controls">
-          {showFollowDriver && <button type="button" className="tracking-map-follow-driver" onClick={followDriver}>{t('trackingMap.followCourier')}</button>}
-          {showRecenter && <button type="button" className="tracking-map-recenter" onClick={recenter}>{t('trackingMap.overview')}</button>}
+          {/* Ronds iris pleins, anneau blanc (règle des boutons posés sur une image) : le vélo suit le livreur, la cible
+              revient au trajet entier. Le nom en aria-label et en infobulle. */}
+          {showFollowDriver && <button type="button" className="tracking-map-rond" onClick={followDriver} aria-label={t('trackingMap.followCourier')} title={t('trackingMap.followCourier')}><span className="tracking-map-rond-velo" dangerouslySetInnerHTML={{ __html: veloHtml(24) }} /></button>}
+          {showRecenter && <button type="button" className="tracking-map-rond" onClick={recenter} aria-label={t('trackingMap.overview')} title={t('trackingMap.overview')}><Icone nom="cible" taille={20} /></button>}
         </div>
       )}
       </div>
@@ -324,12 +306,14 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
         </div>
       )}
       <div className="tracking-map-legend">
-        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#3B2FB5' }}><Icone nom="commerce" taille={16} className="icone-texte" /></span> {t('trackingMap.restaurant')}</span>}
-        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}><Icone nom="scooter" taille={16} className="icone-texte" /></span> {t('trackingMap.courier')}</span>}
+        {/* Les mêmes ronds que sur la carte (marqueursCarte.js) : le commerce cerclé d'iris, le livreur iris au vélo lime,
+            la maison lime ; le trajet fait en trait iris. */}
+        {enLivraison && <span><span className="tracking-map-legend-icon tracking-map-legend-icon--commerce"><Icone nom="commerce" taille={12} /></span> {t('trackingMap.restaurant')}</span>}
+        {enLivraison && <span><span className="tracking-map-legend-icon tracking-map-legend-icon--livreur" dangerouslySetInnerHTML={{ __html: veloHtml(14) }} /> {t('trackingMap.courier')}</span>}
         {enLivraison
-          ? <span><span className="tracking-map-legend-icon" style={{ background: '#C8F03C' }}><Icone nom="maison" taille={16} className="icone-texte" /></span> {legendeDestination}</span>
-          : <span><span className="tracking-map-legend-icon" style={{ background: homeColor }}><Icone nom={homeEmoji} taille={16} className="icone-texte" /></span> {homeLabel}</span>}
-        {hasTrail && <span><span className="tracking-map-legend-line" style={{ background: '#C8F03C' }} /> {t('trackingMap.routeDone')}</span>}
+          ? <span><span className="tracking-map-legend-icon tracking-map-legend-icon--maison"><Icone nom="maison" taille={12} /></span> {legendeDestination}</span>
+          : <span><span className={`tracking-map-legend-icon tracking-map-legend-icon--${homeColor === LIME ? 'maison' : 'commerce'}`}><Icone nom={homeEmoji} taille={12} /></span> {homeLabel}</span>}
+        {hasTrail && <span><span className="tracking-map-legend-line" /> {t('trackingMap.routeDone')}</span>}
       </div>
     </div>
   );
