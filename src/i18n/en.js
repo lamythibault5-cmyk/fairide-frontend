@@ -3761,6 +3761,7 @@ export default {
       confirmCancelBody: 'The status will become "Cancelled". Remember to refund separately if needed.',
       toastCancelled: 'Order cancelled.',
       confirmReassign: 'Reassign the courier?',
+      reassignConfirmTitle: 'Reassign anyway?',
       toastReassigned: 'Courier reassigned.',
       confirmRefund: 'Refund this order?',
       confirmRefundBody: '€{amount} charged to: {who}. This action triggers a real Stripe refund.',
@@ -5980,7 +5981,9 @@ export default {
       gainsFiscaliteSous: "{status}, DAC7, statements",
       gainsFiscaliteSousSans: "DAC7, statements",
       gainsFactures: "My invoices and statements",
-      gainsFacturesSous: "The monthly statement of your sales"
+      gainsFacturesSous: "The monthly statement of your sales",
+      gainsEnAttente: "{amount} waiting to be paid out",
+      gainsEnAttenteSous: "Your payment account is not active: these rides are paid out as soon as it is. Finish it in My account › Payment."
     },
     dashDriver: {
       pickupConfirmNo: 'Not yet',
@@ -7235,6 +7238,7 @@ export default {
       next_livre_pickup: 'Collected. You can rate the meal.',
       next_refuse: 'The shop could not accept this order. If you had paid, the refund is on its way to your payment method (5 to 10 working days depending on your bank).',
       next_annule: 'Order cancelled. Any payment is refunded to your payment method.',
+      next_refund_pending: 'Your refund is in progress: it could not go out automatically, and the Fairide team is taking care of it.',
       next_no_show: 'Order not collected: the shop cancelled it. Nothing was charged to you.',
       deliveryInstruction: {
         sonner: 'Ring and wait',

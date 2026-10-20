@@ -392,8 +392,9 @@ export default function Orders() {
   const blocRefus = (o) => (o.status === 'refuse' ? (
     <div className="suivi-refus">
       {o.refusalReason && <p>{t('orders.refusalReason', { reason: o.refusalReason })}</p>}
+      {/* Remboursement automatique en échec (audit du 19/10, AO-02) : « en cours », pas « en route ». */}
       <p>{o.paid && o.paymentMode !== 'on_site'
-        ? t('orders.refundLine', { amount: euros(debite(o)) })
+        ? (o.refundPending ? t('orderStatus.next_refund_pending') : t('orders.refundLine', { amount: euros(debite(o)) }))
         : t('orders.refundNothing')}</p>
     </div>
   ) : null);

@@ -3770,6 +3770,7 @@ export default {
       confirmCancelBody: 'De status wordt "Geannuleerd". Denk eraan apart terug te betalen indien nodig.',
       toastCancelled: 'Bestelling geannuleerd.',
       confirmReassign: 'De koerier opnieuw toewijzen?',
+      reassignConfirmTitle: 'Toch opnieuw toewijzen?',
       toastReassigned: 'Koerier opnieuw toegewezen.',
       confirmRefund: 'Deze bestelling terugbetalen?',
       confirmRefundBody: '€{amount} ten laste van: {who}. Deze actie start een echte Stripe-terugbetaling.',
@@ -5989,7 +5990,9 @@ export default {
       gainsFiscaliteSous: "{status}, DAC7, overzichten",
       gainsFiscaliteSousSans: "DAC7, overzichten",
       gainsFactures: "Mijn facturen en overzichten",
-      gainsFacturesSous: "Het maandoverzicht van je verkopen"
+      gainsFacturesSous: "Het maandoverzicht van je verkopen",
+      gainsEnAttente: "{amount} wacht op uitbetaling",
+      gainsEnAttenteSous: "Je betaalaccount is niet actief: deze ritten worden uitbetaald zodra het dat is. Rond het af in Mijn account › Betaling."
     },
     dashDriver: {
       pickupConfirmNo: 'Nog niet',
@@ -7244,6 +7247,7 @@ export default {
       next_livre_pickup: 'Afgehaald. Je kan het eten beoordelen.',
       next_refuse: 'De zaak kon deze bestelling niet aanvaarden. Had je betaald, dan is de terugbetaling onderweg naar je betaalmiddel (5 tot 10 werkdagen, afhankelijk van je bank).',
       next_annule: 'Bestelling geannuleerd. Een eventuele betaling wordt teruggestort op je betaalmiddel.',
+      next_refund_pending: 'Je terugbetaling wordt verwerkt: ze kon niet automatisch vertrekken, en het Fairide-team regelt het.',
       next_no_show: 'Bestelling niet afgehaald: de zaak heeft ze geannuleerd. Er werd niets aangerekend.',
       deliveryInstruction: {
         sonner: 'Aanbellen en wachten',

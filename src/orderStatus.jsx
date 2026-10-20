@@ -262,6 +262,11 @@ export function ProchaineEtape({ order }) {
     // Payée sur place : rien n'a été débité, il n'y a rien à rembourser (audit du 18/10/2026).
     return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_nouveau_deadline_on_site' : 'orderStatus.next_nouveau_deadline', { time: formatTime(order.acceptDeadline) })}</div>;
   }
+  // Remboursement automatique refusé par Stripe (audit du 19/10/2026, AO-02, backend refundPending) : on ne dit pas
+  // « remboursée » tant que l'équipe ne l'a pas refait.
+  if (['annule', 'refuse'].includes(status) && order.refundPending) {
+    return <div className="small order-next">{t('orderStatus.next_refund_pending')}</div>;
+  }
   // Jamais envoyée ni payée, puis close par le ménage des commandes impayées (45 min) : le commerce n'y est pour rien.
   if (status === 'annule' && order.expiredUnaccepted && order.paid === false) {
     return <div className="small order-next">{t('orderStatus.next_never_sent')}</div>;

@@ -3761,6 +3761,7 @@ export default {
       confirmCancelBody: 'Le statut passera à "Annulée". Pense à faire un remboursement séparément si nécessaire.',
       toastCancelled: 'Commande annulée.',
       confirmReassign: 'Réassigner le livreur ?',
+      reassignConfirmTitle: 'Réassigner quand même ?',
       toastReassigned: 'Livreur réassigné.',
       confirmRefund: 'Rembourser cette commande ?',
       confirmRefundBody: '{amount}€ à la charge de : {who}. Cette action déclenche un vrai remboursement Stripe.',
@@ -5996,7 +5997,9 @@ export default {
       gainsFiscaliteSous: "{status}, DAC7, relevés",
       gainsFiscaliteSousSans: "DAC7, relevés",
       gainsFactures: "Mes factures et relevés",
-      gainsFacturesSous: "Le relevé mensuel de tes ventes"
+      gainsFacturesSous: "Le relevé mensuel de tes ventes",
+      gainsEnAttente: "{amount} en attente de virement",
+      gainsEnAttenteSous: "Ton compte de paiement n'est pas actif : ces courses te sont virées dès qu'il l'est. Termine-le dans Mon compte › Paiement."
     },
     dashDriver: {
       pickupConfirmNo: 'Pas encore',
@@ -7288,6 +7291,7 @@ export default {
       next_livre_pickup: 'Récupérée. Tu peux laisser un avis sur le repas.',
       next_refuse: 'Le commerce n\'a pas pu accepter cette commande. Si tu avais payé, le remboursement est parti vers ton moyen de paiement (5 à 10 jours ouvrables selon ta banque).',
       next_annule: 'Commande annulée. Un paiement éventuel est remboursé sur ton moyen de paiement.',
+      next_refund_pending: "Ton remboursement est en cours : il n'a pas pu partir automatiquement, et l'équipe Fairide s'en occupe.",
       next_no_show: 'Commande non récupérée : elle a été annulée par le commerce. Rien ne t\'a été débité.',
       deliveryInstruction: {
         sonner: 'Sonner et attendre',
