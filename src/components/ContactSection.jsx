@@ -17,7 +17,7 @@ export default function ContactSection({ messageInitial = '' }) {
     // du systeme, donc bleus et bombes sur Windows, plats ailleurs, a cote d'une interface au trait.
     { icon: 'courrier', title: t('contact.emailLabel'), lines: ['contact@fairide.be'] },
     { icon: 'position', title: t('contact.locationLabel'), lines: [t('contact.locationValue')] },
-    { icon: 'telephone', title: t('contact.phoneLabel'), lines: ['+32 491 97 99 80'] }
+    { icon: 'telephone', title: t('contact.phoneLabel'), lines: ['+32 474 20 07 13'] }
   ];
   const ROLES = [
     { value: 'client', label: t('contact.roleClient') },

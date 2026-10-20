@@ -37,7 +37,7 @@ import { loadEnv } from 'vite';
 import { translations, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, chargerLangue } from '../src/i18n/translations.js';
 import { cheminLocalise, HREFLANG } from '../src/i18n/routing.js';
 import {
-  SITE_URL, organizationJsonLd, restaurantJsonLd, restaurantListJsonLd, breadcrumbJsonLd, faqJsonLd
+  SITE_URL, organizationJsonLd, websiteJsonLd, restaurantJsonLd, restaurantListJsonLd, breadcrumbJsonLd, faqJsonLd
 } from '../src/seo/jsonLd.js';
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -91,7 +91,7 @@ const PAGES = [
     chemin: '/',
     titre: null,
     description: 'seo.homeDescription',
-    jsonLd: () => [{ id: 'ld-organization', donnees: organizationJsonLd() }]
+    jsonLd: () => [{ id: 'ld-organization', donnees: organizationJsonLd() }, { id: 'ld-website', donnees: websiteJsonLd() }]
   },
   {
     chemin: '/restaurants',

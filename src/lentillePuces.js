@@ -7,9 +7,10 @@
 //   - GLISSER la promène sous le doigt, d'une cuisine à l'autre, et au lâcher on choisit la plus proche. On ne capture
 //     le pointeur qu'après 6 px : un simple toucher reste le clic du bouton, et la bande défile toujours de côté quand on
 //     part d'une autre pastille (touch-action: pan-x sur les autres, none sur la choisie) ;
-//   - la RÉFRACTION des bords sur Chromium (Android), avec les filtres de barreVerre.js.
+//   - la RÉFRACTION des bords sur Chromium, avec les filtres de barreVerre.js — plus sur Android depuis le 2026-10-20
+//     (trop coûteuse sur un téléphone moyen, voir refractionPossible), où la bande garde le flou simple.
 import { vibrer } from './gestes';
-import { poserFiltre, refractionPossible } from './barreVerre';
+import { poserFiltre, refractionPossible, suivreTaille } from './barreVerre';
 
 const SEUIL_GLISSE = 6;
 
@@ -74,16 +75,10 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
   piste.addEventListener('pointercancel', annule);
   piste.addEventListener('lostpointercapture', annule);
 
-  let observateur = null;
+  let debrancherTaille = null;
   if (refractionPossible()) {
     bande.classList.add('lt-puces--refraction');
-    const filtrer = () => { poserFiltre(bande, '--verre-bande', 18, false); poserFiltre(lentille, '--verre-lentille', 22, true); };
-    filtrer();
-    if (typeof ResizeObserver !== 'undefined') {
-      observateur = new ResizeObserver(filtrer);
-      observateur.observe(bande);
-      observateur.observe(lentille);
-    }
+    debrancherTaille = suivreTaille([bande, lentille], () => { poserFiltre(bande, '--verre-bande', 18, false); poserFiltre(lentille, '--verre-lentille', 22, true); });
   }
 
   return () => {
@@ -92,6 +87,6 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
     piste.removeEventListener('pointerup', lache);
     piste.removeEventListener('pointercancel', annule);
     piste.removeEventListener('lostpointercapture', annule);
-    observateur?.disconnect();
+    debrancherTaille?.();
   };
 }

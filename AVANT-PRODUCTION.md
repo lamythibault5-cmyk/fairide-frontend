@@ -35,8 +35,8 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       Vercel › fairide-frontend › Settings › Environment Variables › Production : `VITE_STOCK_DISH_PHOTOS=off`
       (exactement), puis Redeploy. Un vrai commerce (Maestro pizza) est public : une photo de stock présentée
       comme son plat est une pratique trompeuse.
-- [ ] ⚪️ **F — Trancher le numéro de téléphone** : 0491 97 99 80 (mentions légales, contact, `fairideCompanyInfo.js`)
-      ou 0474 20 07 13 (données structurées Google `src/seo/jsonLd.js`, flyer). Un seul partout.
+- [x] **F — Numéro de téléphone tranché** (Owen, 2026-10-20) : 0474 20 07 13 partout (mentions légales, contact, guide
+      du commerce, `fairideCompanyInfo.js`, `src/seo/jsonLd.js`). L'ancien 0491 97 99 80 est retiré.
 
 ## 2. Avant le 1er novembre (à emporter payé sur place)
 

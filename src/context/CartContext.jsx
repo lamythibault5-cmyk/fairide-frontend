@@ -302,8 +302,19 @@ export function CartProvider({ children }) {
   // global, voir FloatingCart.jsx, l'affiche tant que les totaux exacts avec promos n'ont pas été chargés).
   const rawTotal = useMemo(() => +Object.values(lines).reduce((a, l) => a + l.unitPrice * l.qty, 0).toFixed(2), [lines]);
 
+  /* UNE VALEUR STABLE (2026-10-20, test de l'app Android : « pas fluide »). L'objet était refait à chaque rendu du
+     fournisseur, donc tous les composants qui lisent le panier se redessinaient même quand rien n'y avait changé. Toutes
+     les fonctions ci-dessus ne lisent que ces six valeurs (et des setters, stables) : tant qu'elles ne bougent pas, les
+     fonctions de l'ancien rendu sont exactement aussi justes que les nouvelles. Une fonction qui lirait un autre état
+     devrait l'ajouter ici. */
+  const valeur = useMemo(
+    () => ({ restaurantId, restaurantName, lines, count, requestId, rawTotal, nouvelleDemande, hasConflict, switchRestaurant, addOne, addMany, changeLineQty, removeLine, clear, clearLines, stashForPayment, hasStashed, restoreStashed, discardStashed, totals }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [restaurantId, restaurantName, lines, count, requestId, rawTotal]
+  );
+
   return (
-    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, requestId, rawTotal, nouvelleDemande, hasConflict, switchRestaurant, addOne, addMany, changeLineQty, removeLine, clear, clearLines, stashForPayment, hasStashed, restoreStashed, discardStashed, totals }}>
+    <CartContext.Provider value={valeur}>
       {children}
     </CartContext.Provider>
   );

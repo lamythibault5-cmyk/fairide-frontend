@@ -2426,13 +2426,34 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 .sq-route { position: relative; height: 30px; margin-top: 10px; }
 .sq-route::before { content: ''; position: absolute; left: 0; right: 0; bottom: 4px; height: 3px; border-radius: 2px;
   background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .4) 0 8px, transparent 8px 16px); }
-.sq-velo { position: absolute; bottom: 6px; left: 50%; width: 36px; margin-left: -18px; line-height: 0; color: var(--lime); animation: sq-roule 1.25s linear infinite; }
+/* Le vélo du squelette roule par `transform` (2026-10-20, test de l'app Android) : il animait `left`, ce qui recalcule la mise
+   en page à chaque image pendant tout le chargement — sur un téléphone moyen, autant de temps pris à l'écran qui arrive. La
+   route est un conteneur de taille : 1cqw = 1 % de sa largeur, les mêmes -6 % → 106 % qu'avant. */
+.sq-route { container-type: inline-size; }
+.sq-velo { position: absolute; bottom: 6px; left: 0; width: 36px; margin-left: -18px; line-height: 0; color: var(--lime); animation: sq-roule-x 1.25s linear infinite; }
+@keyframes sq-roule-x { from { transform: translateX(-6cqw); } to { transform: translateX(106cqw); } }
+/* L'attente du paiement (EcranAttente, Skeleton.jsx ; app) : le même écran de chargement, fixé par-dessus tout, bandeau bord
+   à bord sous la barre d'état. Au-dessus de la barre d'onglets et des feuilles. */
+.sq-attente { position: fixed; inset: 0; z-index: 3000; background: #fff; overflow: hidden; animation: sq-attente-entre .16s ease-out backwards; }
+.sq-attente .sq-bandeau { margin: 0; border-radius: 0; padding: calc(20px + env(safe-area-inset-top)) 24px 46px; }
+.sq-attente .sq-feuille { margin: -22px 0 0; }
+@keyframes sq-attente-entre { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sq-attente { animation: none; } }
 .sq-photo { position: relative; height: 230px; border-radius: 0; overflow: hidden; }
 .sq-photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 /* LA PHOTO QUI VOYAGE (transitionPhoto.js, app) : la photo de la carte grandit jusqu'en haut de la fiche. Les deux images
    gardent leurs proportions (object-fit: cover) pendant que le cadre change de taille ; le reste de la page se fond. */
 ::view-transition-group(photo-commerce) { animation-duration: .45s; animation-timing-function: cubic-bezier(.3, .75, .2, 1); overflow: clip; }
 ::view-transition-old(photo-commerce), ::view-transition-new(photo-commerce) { height: 100%; width: 100%; object-fit: cover; overflow: clip; }
+/* L'ARRONDI VOYAGE AVEC LA PHOTO (2026-10-20, retour du test Android : « la photo devient rectangulaire »). La capture d'une
+   photo ne voit pas la carte qui la coupait : le cadre de la transition passe lui-même de l'arrondi de départ à celui
+   d'arrivée (carte → fiche : arrondi → carré ; croix : carré → arrondi). Les deux valeurs sont posées par transitionPhoto.js.
+   Sur la paire d'images et non sur le groupe : le groupe porte déjà l'animation du navigateur (position et taille). */
+::view-transition-image-pair(photo-commerce) {
+  overflow: clip; border-radius: var(--photo-rayon-arrivee, 0);
+  animation: photo-rayon .45s cubic-bezier(.3, .75, .2, 1) both;
+}
+@keyframes photo-rayon { from { border-radius: var(--photo-rayon-depart, 0); } to { border-radius: var(--photo-rayon-arrivee, 0); } }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
 .sq-feuille { position: relative; background: #fff; border-radius: 26px 26px 0 0; margin-top: -22px; padding: 22px 24px 24px; }
 /* Le vélo roule tant que ça charge : celui du squelette, et celui d'un bandeau déjà affiché dont la feuille attend encore ses
@@ -2444,7 +2465,11 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   .sq-photo { margin: calc(-16px - env(safe-area-inset-top)) calc(-1 * var(--gouttiere, 16px)) 0; height: calc(230px + env(safe-area-inset-top)); }
   .sq-feuille { margin: -22px calc(-1 * var(--gouttiere, 16px)) 0; padding: 20px 18px 24px; }
 }
-@media (prefers-reduced-motion: reduce) { .sq-velo, .ec-bandeau:has(~ .ec-feuille .skeleton) .ec-route-velo { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .sq-velo, .ec-bandeau:has(~ .ec-feuille .skeleton) .ec-route-velo { animation: none; }
+  /* Immobile, le vélo du squelette reste au milieu de sa route, comme avant (left: 50 %). */
+  .sq-velo { transform: translateX(50cqw); }
+}
 
 /* TIRER POUR ACTUALISER (components/TirerPourActualiser.jsx, app seulement). La zone iris fixe en haut grandit avec le doigt
    (--tirer-p) pendant que le <main> descend d'autant : le bandeau de la page a l'air de s'étirer. Le vélo avance jusqu'à
@@ -2736,6 +2761,14 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     box-shadow: none; z-index: 50; pointer-events: none;
     overflow: visible;
   }
+  /* DANS L'APP NATIVE, LA BARRE DESCEND DE 12 PX (fondateur, 2026-10-20, test sur un vrai Android : « la barre n'est pas
+     assez basse »). Sur Android 15+ l'app est bord à bord : la zone du système (trait de geste ou boutons) est déjà dans
+     env(safe-area-inset-bottom), et les 12 px de plus faisaient flotter la barre bien au-dessus. Elle se pose maintenant
+     juste sur cette zone (6 px du bord au minimum si le système n'en déclare aucune). --hauteur-onglets perd les mêmes
+     12 px : tout ce qui se cale au-dessus (pilule du panier, barre « Accepter », toast, fiche de la carte) descend avec
+     elle. Le site et l'app ajoutée à l'écran d'accueil ne changent pas. */
+  html.natif { --hauteur-onglets: 74px; }
+  html.natif .dashboard-sidebar { bottom: max(6px, env(safe-area-inset-bottom)); }
   /* Le conteneur laisse passer les clics (il couvre toute la largeur), les pastilles les prennent. */
   .dashboard-sidebar > * { pointer-events: auto; }
   .dashboard-sidebar::-webkit-scrollbar { display: none; }
@@ -4904,6 +4937,9 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 /* Fondu d'apparition des photos (cartes, plats, fiche) : une image qui surgit d'un bloc gris saute à l'œil. */
 @keyframes photo-apparait { from { opacity: 0; } to { opacity: 1; } }
 .rc-photo, .plat-photo img, .dish-thumb-lg, .plat-visuel .plat-photo { animation: photo-apparait .35s ease-out both; }
+/* Une photo de carte déjà affichée pendant la visite (images.js, photoVue) ne refait pas son fondu au retour sur la liste :
+   elle sort du cache, et un fondu depuis le transparent laissait la carte vide quand la photo de la fiche y revenait. */
+.rc-photo.rc-photo--vue { animation: none; }
 @media (prefers-reduced-motion: reduce) { .rc-photo, .plat-photo img, .dish-thumb-lg, .plat-visuel .plat-photo { animation: none; } }
 
 /* ---------- Application installée / coque native (Capacitor, voir src/natif.js) ----------
@@ -5423,4 +5459,9 @@ html.appli .page-feuille-fermer { box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 
 /* Une page sans bandeau commence sous le rond ‹ ; une page à bandeau iris le laisse passer par-dessus son titre. */
 .page-feuille-corps > :first-child:not(.ecran-bandeau) { padding-top: calc(68px + env(safe-area-inset-top)); }
 .page-feuille-corps .eb-bandeau { padding-top: calc(70px + env(safe-area-inset-top)); }
+/* Le bandeau ne remonte pas dans la feuille. Sous 900 px, .ecran-bandeau redéclare --eb-mh = 16 px + la barre d'état
+   (ecran-liste.css), ce qui l'emportait sur le 0 de .page-feuille-corps : le bandeau remontait de toute la barre d'état
+   pendant que le rond ‹ descendait d'autant — sur un vrai téléphone, le rond se posait sur « Mes favoris » / « Mes
+   commandes » (fondateur, 2026-10-20). À 0, le titre passe toujours 18 px sous le rond, quelle que soit la barre d'état. */
+.page-feuille-corps .ecran-bandeau { --eb-mh: 0px; }
 @media (min-width: 901px) { .page-feuille .plat-poignee { display: none; } }

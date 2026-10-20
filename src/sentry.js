@@ -35,7 +35,7 @@ function reglages(S, dsn) {
 }
 
 export async function demarrerSentry(dsn) {
-  const S = await import('@sentry/react');
+  const S = await import('./sentryNoyau');
   S.init(reglages(S, dsn));
   sentry = S;
 }
@@ -61,7 +61,7 @@ export async function arreterSentry() {
  * fil d'Ariane, sessions) et le module ne le garde pas : signalerErreur reste muet pour la suite. */
 export async function envoyerCeRapport(dsn, error, extra) {
   if (sentry) { sentry.captureException(error, { extra }); return; }
-  const S = await import('@sentry/react');
+  const S = await import('./sentryNoyau');
   S.init({ ...reglages(S, dsn), integrations: [], defaultIntegrations: false });
   S.captureException(error, { extra });
   await S.flush(4000);

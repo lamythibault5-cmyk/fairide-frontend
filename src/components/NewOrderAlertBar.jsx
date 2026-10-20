@@ -119,9 +119,10 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
           className="btn-outline btn-sm"
          
           aria-pressed={soundEnabled}
-          onClick={() => setSoundEnabled(!soundEnabled)}
+          // Bloqué par le navigateur, ce bouton débloque au lieu de couper (même piège que dans AlerteBandeau.jsx, 2026-10-20).
+          onClick={() => (soundEnabled && audioBloque ? debloquerAudio() : setSoundEnabled(!soundEnabled))}
         >
-          {soundEnabled && !audioBloque ? t('alertBar.soundOn') : t('alertBar.soundOff')}
+          {soundEnabled && !audioBloque ? t('alertBar.soundOn') : soundEnabled ? t('alertBar.soundBlocked') : t('alertBar.soundOff')}
         </button>
 
         {/* Sonnerie au choix (3) et test de l'alarme (fondateur, 2026-10-01) : on entend tout de suite ce qui sonnera

@@ -96,6 +96,10 @@
 }
 .fiche-appli .fiche-entete--logo .fiche-feuille { padding-top: 48px; }
 @keyframes fiche-feuille-monte { from { transform: translateY(36px); } to { transform: none; } }
+/* Ouverte par la photo qui grandit depuis sa carte (transitionPhoto.js), la fiche est déjà entrée : ni la feuille ni le
+   sceau ne rejouent leur entrée 0,45 s plus tard (RestaurantMenu.jsx, `parPhoto` ; retour du test Android, 2026-10-20). */
+.fiche-appli.fiche-appli--sans-entree .fiche-feuille, .fiche-appli.fiche-appli--sans-entree .fiche-sceau,
+.fiche-appli.fiche-appli--sans-entree .fiche-media > .fiche-logo { animation: none; }
 .fiche-appli .fiche-nom { font-size: 27px; line-height: 1.15; margin: 0 0 8px; }
 .fiche-appli .fiche-meta { margin: 0 0 10px; }
 .fiche-appli .fiche-statut { margin-bottom: 10px; }

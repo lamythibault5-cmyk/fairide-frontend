@@ -9,8 +9,9 @@
 //    navigateur tombe sur la barre (ancêtre commun), pas sur l'onglet de départ — c'est nous qui cliquons le bon.
 //
 // 2. LA RÉFRACTION. Le texte qui passe sous les bords de la barre et de la lentille se courbe, comme à travers un verre
-//    bombé : un filtre SVG (carte de déplacement) dans `backdrop-filter`. Seul Chromium sait le faire (Android, donc
-//    l'app Android) ; Safari (iPhone) garde le flou, les reflets et l'irisation, sans la courbure.
+//    bombé : un filtre SVG (carte de déplacement) dans `backdrop-filter`. Seul Chromium sait le faire ; Safari (iPhone)
+//    garde le flou, les reflets et l'irisation, sans la courbure — et Android aussi depuis le 2026-10-20 (trop coûteux
+//    sur un téléphone moyen, voir refractionPossible).
 import { vibrer } from './gestes';
 
 const SEUIL_GLISSE = 6;
@@ -83,8 +84,25 @@ export function poserFiltre(el, variable, echelle, irise) {
   el.style.setProperty(variable, `url(#${id})`);
 }
 
-// Chromium (Android, WebView Android) : la réfraction marche. Safari / WKWebView : non, on s'en passe.
-export const refractionPossible = () => /Chrome\/|Chromium/.test(navigator.userAgent) && !/Edg\/|Firefox/.test(navigator.userAgent);
+// Chromium : la réfraction marche. Safari / WKWebView : non, on s'en passe.
+// PAS SUR ANDROID (fondateur, 2026-10-20, test de l'app sur un Android de milieu de gamme : « l'app n'est pas fluide »). La
+// carte de déplacement est recalculée pixel par pixel à chaque changement de taille, et le filtre SVG dans backdrop-filter
+// est refait par le GPU à chaque image où quelque chose passe dessous — c'est-à-dire pendant tout défilement. Android garde
+// le verre au flou simple (reflets, irisation, lentille qui suit le doigt), comme l'iPhone. Reste : Chromium sur ordinateur
+// (site ajouté à l'écran d'accueil).
+export const refractionPossible = () => /Chrome\/|Chromium/.test(navigator.userAgent) && !/Edg\/|Firefox|Android/.test(navigator.userAgent);
+
+/* La carte d'un élément qui change de taille n'est refaite qu'une fois la taille posée : la barre d'onglets passe en
+   compacte à chaque changement de sens du défilement (styles.css, .dashboard-sidebar--compacte), et la refaire à chaque
+   image de cette transition, c'était une carte calculée pixel par pixel par image. Rend la fonction qui débranche. */
+export function suivreTaille(elements, filtrer) {
+  filtrer();
+  if (typeof ResizeObserver === 'undefined') return () => {};
+  let minuteur = 0;
+  const observateur = new ResizeObserver(() => { clearTimeout(minuteur); minuteur = setTimeout(filtrer, 220); });
+  elements.forEach((el) => observateur.observe(el));
+  return () => { clearTimeout(minuteur); observateur.disconnect(); };
+}
 
 /* Branche la barre. Rend la fonction qui débranche. `nav` : .dashboard-nav ; `curseur` : sa .nav-curseur. */
 export function brancherBarreVerre(nav, curseur) {
@@ -154,16 +172,10 @@ export function brancherBarreVerre(nav, curseur) {
   nav.addEventListener('pointercancel', annule);
   nav.addEventListener('lostpointercapture', annule);
 
-  let observateur = null;
+  let debrancherTaille = null;
   if (refractionPossible()) {
     nav.classList.add('dashboard-nav--refraction');
-    const filtrer = () => { poserFiltre(nav, '--verre-barre', 18, false); poserFiltre(curseur, '--verre-lentille', 26, true); };
-    filtrer();
-    if (typeof ResizeObserver !== 'undefined') {
-      observateur = new ResizeObserver(filtrer);
-      observateur.observe(nav);
-      observateur.observe(curseur);
-    }
+    debrancherTaille = suivreTaille([nav, curseur], () => { poserFiltre(nav, '--verre-barre', 18, false); poserFiltre(curseur, '--verre-lentille', 26, true); });
   }
 
   return () => {
@@ -173,6 +185,6 @@ export function brancherBarreVerre(nav, curseur) {
     nav.removeEventListener('pointerup', lache);
     nav.removeEventListener('pointercancel', annule);
     nav.removeEventListener('lostpointercapture', annule);
-    observateur?.disconnect();
+    debrancherTaille?.();
   };
 }

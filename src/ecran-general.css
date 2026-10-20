@@ -68,6 +68,18 @@ a.btn-gold.gn-action { font-weight: 700; }
 .gn-taux-aide { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
 .gn-valider { margin-top: 26px; padding-top: 4px; }
 .gn-valider .gn-action { font-size: 19px; min-height: 58px; }
+/* Le raccourci vers « C'est bon » (ValiderCarte.jsx, 2026-10-20) : la pilule du panier, en iris, centrée en bas.
+   Collante plutôt que fixe — dans la coquille, .page-fade casse position: fixed — et posée sur un support de hauteur
+   nulle : elle flotte sans réserver de place dans la feuille. Au-dessus des onglets là où ils sont (900 px et moins). */
+.gn-raccourci { position: sticky; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 40; height: 0;
+  display: flex; justify-content: center; }
+.gn-raccourci-pilule { transform: translateY(-100%); display: inline-flex; align-items: center; gap: 8px; min-height: 48px;
+  padding: 0 22px; border: 0; border-radius: var(--radius-pill); background: var(--iris); color: #fff;
+  font: 600 15px/1 var(--font-ui); box-shadow: var(--shadow-2); cursor: pointer; white-space: nowrap; }
+@media (max-width: 900px) {
+  body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .gn-raccourci {
+    bottom: calc(var(--hauteur-onglets) + 12px + env(safe-area-inset-bottom)); }
+}
 
 /* ---------- Aide : les questions en rangées qui s'ouvrent ---------- */
 .gn-questions { margin: 0 0 8px; }

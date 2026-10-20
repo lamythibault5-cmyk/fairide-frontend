@@ -17,14 +17,21 @@ import { useToast } from '../context/ToastContext';
 // Ce qu'il ne couvre PAS : l'onglet fermé ou l'appareil en veille. Cela demande un service worker et
 // du Web Push (donc des clés VAPID et un stockage des abonnements côté serveur) — voir le TODO n°1
 // en tête de GuidePage.jsx.
-const SOUND_KEY = 'fairide_new_order_sound';
-const SONNERIE_KEY = 'fairide_new_order_ringtone';
-const VOLUME_KEY = 'fairide_new_order_volume';
+// FORT ET ACTIF PAR DÉFAUT (fondateur, 2026-10-20, après un vrai test avec Maestro Pizza : « aucune sonnerie n'a marché sur
+// le site », « le son des commandes devrait être mis de base », « Uber Eats sonne très fort »). Les clés passent en _v2 :
+// un appareil qui avait enregistré « off » — souvent sans le vouloir, la pastille « Son coupé » coupait le son quand on la
+// touchait pour le débloquer (AlerteBandeau.jsx) — repart son ACTIF, sonnerie « urgente », volume 100. Chacun peut ensuite
+// rechoisir dans les réglages ; ce choix-là est gardé.
+const SOUND_KEY = 'fairide_new_order_sound_v2';
+const SONNERIE_KEY = 'fairide_new_order_ringtone_v2';
+const VOLUME_KEY = 'fairide_new_order_volume_v2';
 // Nombre de sonneries par commande (fondateur, 2026-10-01) : 1, 2, 3, 5, 10, ou 0 = tant que la commande n'est pas
 // traitée (ou que l'alarme n'est pas coupée à la main). Une sonnerie toutes les REPEAT_MS.
 const REPETITIONS_KEY = 'fairide_new_order_repeats';
 export const REPETITIONS = [1, 2, 3, 5, 10, 0];
-const REPEAT_MS = 15000;
+// Toutes les 4 s, et plus 15 : la sonnerie urgente dure 2 s, l'alarme sonne donc la moitié du temps jusqu'à l'acceptation,
+// comme une tablette Uber Eats. 15 s de silence entre deux carillons d'une demi-seconde, c'était rater la commande.
+const REPEAT_MS = 4000;
 
 function loadSoundPref() {
   try {
@@ -63,7 +70,24 @@ export function playChime(ctx, notes = [880, 1108.73, 1318.51], dest = ctx.desti
 //   - marimba  : arpège en bois, chaleureux, cinq notes qui montent puis redescendent ;
 //   - velo     : la sonnette d'un vélo, deux « dring » — c'est le son de Fairide ;
 //   - melodie  : une petite ritournelle de quatre notes, comme un jingle de bonne nouvelle.
-export const SONNERIES = ['carillon', 'cloche', 'marimba', 'velo', 'melodie', 'alarme'];
+//   - urgent   : (2026-10-20, celle par défaut) deux tons aigus alternés, 2 s, en onde carrée presque à pleine échelle. Les
+//                petits haut-parleurs (terminal Goodcom, téléphone) rendent le mieux entre 1,5 et 3 kHz : c'est là que
+//                l'oreille entend le plus fort à puissance égale. Les autres sonneries plafonnaient vers -17 dB.
+export const SONNERIES = ['urgent', 'carillon', 'cloche', 'marimba', 'velo', 'melodie', 'alarme'];
+// Un bip tenu (attaque et relâche de 10 ms contre les clics), là où note() décroît comme une cloche.
+function bip(ctx, { freq, start, duree, volume, dest }) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(volume, start + 0.01);
+  gain.gain.setValueAtTime(volume, start + duree - 0.01);
+  gain.gain.linearRampToValueAtTime(0, start + duree);
+  osc.connect(gain).connect(dest);
+  osc.start(start);
+  osc.stop(start + duree + 0.02);
+}
 function note(ctx, { freq, start, duree, type = 'sine', volume = 0.22, dest = ctx.destination }) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -78,6 +102,10 @@ function note(ctx, { freq, start, duree, type = 'sine', volume = 0.22, dest = ct
 }
 export function jouerSonnerie(ctx, nom = 'carillon', dest = ctx.destination) {
   const t0 = ctx.currentTime;
+  if (nom === 'urgent') {
+    for (let i = 0; i < 8; i++) bip(ctx, { freq: i % 2 ? 2217 : 1760, start: t0 + i * 0.25, duree: 0.22, volume: 0.9, dest });
+    return;
+  }
   if (nom === 'marimba') {
     [523.25, 659.25, 783.99, 1046.5, 783.99, 659.25].forEach((f, i) => {
       note(ctx, { freq: f, start: t0 + i * 0.11, duree: 0.28, type: 'triangle', volume: 0.3, dest });
@@ -111,7 +139,7 @@ export function jouerSonnerie(ctx, nom = 'carillon', dest = ctx.destination) {
   playChime(ctx, undefined, dest);
 }
 function loadVolume() {
-  try { const v = Number(localStorage.getItem(VOLUME_KEY)); return Number.isFinite(v) && v >= 0 && v <= 100 && localStorage.getItem(VOLUME_KEY) !== null ? v : 80; } catch { return 80; }
+  try { const v = Number(localStorage.getItem(VOLUME_KEY)); return Number.isFinite(v) && v >= 0 && v <= 100 && localStorage.getItem(VOLUME_KEY) !== null ? v : 100; } catch { return 100; }
 }
 function loadRepetitions() {
   // Par défaut, l'alarme sonne TANT QUE LA COMMANDE N'EST PAS ACCEPTÉE (fondateur, 2026-10-10, après la simulation : une
@@ -121,7 +149,19 @@ function loadRepetitions() {
   try { const v = Number(localStorage.getItem(REPETITIONS_KEY)); return localStorage.getItem(REPETITIONS_KEY) !== null && REPETITIONS.includes(v) ? v : 0; } catch { return 0; }
 }
 function loadSonnerie() {
-  try { const v = localStorage.getItem(SONNERIE_KEY); return SONNERIES.includes(v) ? v : 'carillon'; } catch { return 'carillon'; }
+  try { const v = localStorage.getItem(SONNERIE_KEY); return SONNERIES.includes(v) ? v : 'urgent'; } catch { return 'urgent'; }
+}
+
+// Notification système. Par le service worker d'abord : Chrome sur Android refuse `new Notification()` (« Illegal
+// constructor ») — sur un téléphone ou un terminal Goodcom, aucune notification ne partait (2026-10-20). Le constructeur
+// reste en repli pour les navigateurs d'ordinateur sans service worker.
+export function notifier(titre, options) {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const direct = () => { try { new Notification(titre, options); } catch { /* refusé entre-temps */ } };
+  if (!navigator.serviceWorker?.getRegistration) { direct(); return; }
+  navigator.serviceWorker.getRegistration()
+    .then((reg) => (reg?.showNotification ? reg.showNotification(titre, options) : direct()))
+    .catch(direct);
 }
 
 // `ready` : le tableau de bord a-t-il terminé au moins un chargement ? Indispensable et pas cosmétique.
@@ -205,7 +245,15 @@ export default function useNewOrderAlert(orders, ready) {
     // Étage de volume : courbe quadratique, plus naturelle à l'oreille qu'une droite.
     const gain = ctx.createGain();
     gain.gain.value = (loadVolume() / 100) ** 2;
-    gain.connect(ctx.destination);
+    // Un limiteur en sortie : la sonnerie urgente est à 0,9 de la pleine échelle, et une annulation qui tombe pendant
+    // qu'elle joue s'y ajouterait — sans lui, le haut-parleur saturerait en grésillant au lieu de sonner plus fort.
+    const limiteur = ctx.createDynamicsCompressor();
+    limiteur.threshold.value = -2;
+    limiteur.knee.value = 0;
+    limiteur.ratio.value = 20;
+    limiteur.attack.value = 0.002;
+    limiteur.release.value = 0.1;
+    gain.connect(limiteur).connect(ctx.destination);
     gainRef.current = gain;
 
     // Les navigateurs interdisent de produire du son avant une interaction : on lève la suspension au
@@ -256,20 +304,10 @@ export default function useNewOrderAlert(orders, ready) {
     setCoupee(false);
     ring();
 
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      const arrived = newCount - prev;
-      try {
-        new Notification(
-          arrived > 1 ? t('alertBar.notifTitleMany', { n: arrived }) : t('alertBar.notifTitleOne'),
-          {
-            body: t('alertBar.notifBody'),
-            icon: '/icons/icon.svg',
-            // Un tag constant remplace la notification précédente au lieu d'en empiler une par sondage.
-            tag: 'fairide-new-order'
-          }
-        );
-      } catch { /* notifications refusées entre-temps */ }
-    }
+    const arrived = newCount - prev;
+    // Un tag constant remplace la notification précédente au lieu d'en empiler une par sondage.
+    notifier(arrived > 1 ? t('alertBar.notifTitleMany', { n: arrived }) : t('alertBar.notifTitleOne'),
+      { body: t('alertBar.notifBody'), icon: '/icons/icon.svg', tag: 'fairide-new-order' });
     // `ready` fait partie des dépendances, ce n'est pas une formalité : sans lui, un restaurant sans
     // commande en attente au chargement ne rejouait jamais cet effet au passage de ready à true (le
     // compteur restant à 0), la référence n'était donc jamais posée — et la toute première commande
@@ -291,11 +329,7 @@ export default function useNewOrderAlert(orders, ready) {
     const ctx = ctxRef.current;
     if (soundEnabled && ctx && ctx.state === 'running') { try { playChime(ctx, [660, 440], gainRef.current || ctx.destination); } catch { /* contexte fermé */ } }
     toast(annulees.length > 1 ? t('alertBar.cancelToastMany', { n: annulees.length }) : t('alertBar.cancelToastOne', { client: annulees[0].clientName || '' }));
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      try {
-        new Notification(t('alertBar.cancelNotifTitle'), { body: t('alertBar.cancelNotifBody'), icon: '/icons/icon.svg', tag: 'fairide-order-cancelled' });
-      } catch { /* notifications refusées entre-temps */ }
-    }
+    notifier(t('alertBar.cancelNotifTitle'), { body: t('alertBar.cancelNotifBody'), icon: '/icons/icon.svg', tag: 'fairide-order-cancelled' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders, ready]);
 

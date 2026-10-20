@@ -119,6 +119,8 @@ export async function traiterFile() {
   } catch (e) { sessionPerdue(e); } finally { enCours = false; }
 }
 
+export const EVENEMENT_COMMANDE = 'fairide:commande-arrivee';
+
 // Flux SSE lu avec fetch (EventSource ne sait pas envoyer l'en-tête Authorization).
 async function ecouter() {
   let attente = 1000;
@@ -144,6 +146,9 @@ async function ecouter() {
         while ((i = tampon.indexOf('\n\n')) >= 0) {
           const bloc = tampon.slice(0, i); tampon = tampon.slice(i + 2);
           if (/^event: /m.test(bloc)) traiterFile();
+          // Une commande arrive : le tableau de bord se relit tout de suite (DashboardLayout.jsx) au lieu d'attendre son
+          // tour de 15 s — c'est ce qui fait sonner l'alarme (fondateur, 2026-10-20 : « il faut que ça sonne d'un coup »).
+          if (/^event: order/m.test(bloc)) window.dispatchEvent(new Event(EVENEMENT_COMMANDE));
         }
       }
     } catch (e) {

@@ -8,6 +8,7 @@
  *     charge. `photo` : l'écran commence par une photo (la fiche d'un commerce) — un aplat iris pâle à sa place.
  * Styles : « Chargement en bandeau et feuille » dans styles.css. Le vélo roule aussi sur la route des bandeaux déjà affichés
  * tant que leur feuille contient un squelette (même bloc, :has). */
+import { createPortal } from 'react-dom';
 
 export function SkeletonCards({ count = 3 }) {
   return (
@@ -46,5 +47,20 @@ export function SqueletteEcran({ titre, haut, lignes = 4, photo = false, src = n
       )}
       <div className="sq-feuille"><SkeletonCards count={lignes} /></div>
     </div>
+  );
+}
+
+/* UNE ATTENTE QUI DIT CE QUI SE PASSE, PAR-DESSUS TOUT L'ÉCRAN (fondateur, 2026-10-20, test de l'app Android : « très lent
+ * après avoir appuyé sur payer »). Entre l'appui et la page de paiement, il y a la commande à créer, le paiement à
+ * préparer, puis le navigateur intégré à ouvrir : deux à quatre secondes sur un téléphone moyen, pendant lesquelles le
+ * bouton ne montrait que « … ». L'écran de chargement de l'app (bandeau iris, vélo lime qui roule, feuille blanche) le
+ * remplace aussitôt, avec le titre `titre`. Rendu dans <body> (comme EcranPlein) : posé dans la page, `.page-fade` en
+ * faisait le repère de son `position: fixed`. */
+export function EcranAttente({ titre }) {
+  return createPortal(
+    <div className="sq-attente" role="status" aria-live="polite">
+      <SqueletteEcran titre={titre} lignes={3} />
+    </div>,
+    document.body
   );
 }

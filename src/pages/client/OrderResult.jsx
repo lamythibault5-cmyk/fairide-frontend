@@ -170,12 +170,18 @@ export default function OrderResult({ success }) {
           <div className="sc-merci-grille">
           <div className="sc-merci-texte">
           <p className="ec-merci-texte">{surPlace ? t('orderResult.successTextOnSite') : view.text}</p>
-          {/* À emporter : le code à montrer au comptoir, avec le numéro du commerce, puis tout le retrait. */}
-          {commande?.orderType === 'pickup' && commande.deliveryCode && (
+          {/* À emporter : le NUMÉRO de commande à montrer au comptoir, puis tout le retrait. Plus de code depuis le 2026-10-20
+              (fondateur, après le test chez Maestro Pizza) : le commerce touche « Remis au client » à côté de ce numéro et du
+              prénom du client. Le numéro est posé à la réception par le commerce ; tant qu'il manque, le nom suffit. */}
+          {commande?.orderType === 'pickup' && (
             <div className="suivi-code">
-              <div className="suivi-code-lib">{t('retrait.codeLabel')}</div>
-              <div className="suivi-code-valeur">{commande.deliveryCode}</div>
-              {numero && <div className="suivi-code-numero">{t('retrait.orderNumber', { n: numero })}</div>}
+              {numero ? (
+                <>
+                  <div className="suivi-code-lib">{t('retrait.numberLabel')}</div>
+                  <div className="suivi-code-valeur">{numero}</div>
+                  <div className="suivi-code-numero">{t('retrait.nameHint')}</div>
+                </>
+              ) : <div className="suivi-code-numero">{t('retrait.nameOnly')}</div>}
             </div>
           )}
           {commande && (

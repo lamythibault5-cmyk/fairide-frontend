@@ -27,6 +27,15 @@ export function imgProps(url, largeurAffichee, sizes) {
   return { src: imageUrl(url, largeurAffichee * 2), srcSet: imageSrcSet(url, largeurAffichee), sizes: sizes || `${largeurAffichee}px` };
 }
 
+/* PHOTOS DÉJÀ VUES PENDANT CETTE VISITE (2026-10-20, test de l'app Android). Les photos des cartes apparaissent en fondu
+   (photo-apparait, styles.css) pour ne pas surgir d'un bloc gris au premier chargement. Mais au RETOUR sur la liste, la
+   même photo, déjà dans le cache du navigateur, refaisait son fondu depuis le transparent : la carte vers laquelle la
+   photo de la fiche revient (transitionPhoto.js) était vide le temps du fondu. Une photo déjà affichée une fois ne fond
+   plus. Mémoire de la page seulement (un Set), rien d'écrit. */
+const photosVues = new Set();
+export function photoVue(url) { return !!url && photosVues.has(url); }
+export function retenirPhotoVue(url) { if (url) photosVues.add(url); }
+
 // Image qui ne charge pas (photo retirée d'Unsplash, lien mort) : on retire la balise plutôt que de laisser l'icône
 // cassée et le texte de remplacement au milieu de la carte — le fond (dégradé, couleur) reste, la fiche se lit.
 export function cacherImageCassee(e) {
