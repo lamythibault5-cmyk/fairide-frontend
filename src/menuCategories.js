@@ -239,48 +239,61 @@ export function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// `illustration` et `fond` (fondateur, 2026-10-21, piste A de maquettes/recherche-couleurs/recherche-et-categories.html) :
+// dans l'app, la bande des cuisines de l'accueil et « Par envie » de la recherche montrent une illustration en couleur
+// (public/cuisines/<illustration>.webp, Fluent Emoji 3D de Microsoft sous licence MIT, voir public/cuisines/LICENCE.txt)
+// sur le fond pastel de la cuisine. Des images livrées avec l'app, pas des emojis du système : le même dessin sur iPhone,
+// Android et ordinateur (c'est ce qui avait fait retirer les emojis, voir Icone.jsx). Une illustration par type, aucune
+// en double. Exception voulue à la règle des deux couleurs, limitée à ces deux endroits de l'app ; `icone` (le tracé
+// monochrome) sert partout ailleurs et sur le site.
+export const ILLUSTRATION_TOUTES_CUISINES = 'tous';
 export const RESTAURANT_TYPES = [
-  { value: 'Pizza', icone: 'pizza' },
-  { value: 'Burgers', icone: 'burger' },
-  { value: 'Sushi', icone: 'poisson' },
-  { value: 'Italien', icone: 'bol' },
-  { value: 'Belge', icone: 'frites' },
-  { value: 'Asiatique', icone: 'bol' },
-  { value: 'Healthy', icone: 'feuille' },
-  { value: 'Végétarien', icone: 'feuille' },
-  { value: 'Kebab & Grill', icone: 'restaurants' },
-  { value: 'Mexicain', icone: 'restaurants' },
-  { value: 'Libanais', icone: 'restaurants' },
-  { value: 'Espagnol', icone: 'bol' },
-  { value: 'Fried Chicken', icone: 'burger' },
-  { value: 'Coffee Shop', icone: 'tasse' },
-  { value: 'Boulangerie', icone: 'commerce' },
-  { value: 'Boucherie', icone: 'commerce' },
-  { value: 'Supermarché', icone: 'sac' },
-  { value: 'Night Shop', icone: 'sac' },
-  { value: 'Poke Bowl', icone: 'bol' },
-  { value: 'Thaïlandais', icone: 'bol' },
-  { value: 'Indien', icone: 'bol' },
-  { value: 'Vietnamien', icone: 'bol' },
-  { value: 'Chinois', icone: 'bol' },
-  { value: 'Desserts & Glaces', icone: 'tasse' },
-  { value: 'Petit-déjeuner & Brunch', icone: 'tasse' },
-  { value: 'Sandwichs & Salades', icone: 'restaurants' },
-  { value: 'Africain', icone: 'bol' },
-  { value: 'Poisson & Fruits de mer', icone: 'poisson' },
-  { value: 'Friterie', icone: 'frites' },
-  { value: 'Coréen', icone: 'bol' },
-  { value: 'Marocain', icone: 'bol' },
-  { value: 'Bubble Tea', icone: 'tasse' },
-  { value: 'Ramen', icone: 'bol' },
+  { value: 'Pizza', icone: 'pizza', illustration: 'pizza', fond: '#FFE6D8' },
+  { value: 'Burgers', icone: 'burger', illustration: 'burger', fond: '#FFF0D2' },
+  { value: 'Sushi', icone: 'poisson', illustration: 'sushi', fond: '#FFE3E3' },
+  { value: 'Italien', icone: 'bol', illustration: 'italien', fond: '#FFF4D6' },
+  { value: 'Belge', icone: 'frites', illustration: 'belge', fond: '#FFF0CC' },
+  { value: 'Asiatique', icone: 'bol', illustration: 'asiatique', fond: '#FDE6E1' },
+  { value: 'Healthy', icone: 'feuille', illustration: 'healthy', fond: '#E3F5DD' },
+  { value: 'Végétarien', icone: 'feuille', illustration: 'vegetarien', fond: '#DDF3E6' },
+  { value: 'Kebab & Grill', icone: 'restaurants', illustration: 'kebab', fond: '#F7E7DA' },
+  { value: 'Mexicain', icone: 'restaurants', illustration: 'mexicain', fond: '#FFF0CF' },
+  { value: 'Libanais', icone: 'restaurants', illustration: 'libanais', fond: '#ECF4D8' },
+  { value: 'Espagnol', icone: 'bol', illustration: 'espagnol', fond: '#FFE8D1' },
+  { value: 'Fried Chicken', icone: 'burger', illustration: 'poulet', fond: '#FBEBDB' },
+  { value: 'Coffee Shop', icone: 'tasse', illustration: 'cafe', fond: '#F1E8E1' },
+  { value: 'Boulangerie', icone: 'commerce', illustration: 'boulangerie', fond: '#FBEEDB' },
+  { value: 'Boucherie', icone: 'commerce', illustration: 'boucherie', fond: '#FCE4E4' },
+  { value: 'Supermarché', icone: 'sac', illustration: 'supermarche', fond: '#E4EEFB' },
+  { value: 'Night Shop', icone: 'sac', illustration: 'nightshop', fond: '#E9E6FA' },
+  { value: 'Poke Bowl', icone: 'bol', illustration: 'poke', fond: '#E2F4EF' },
+  { value: 'Thaïlandais', icone: 'bol', illustration: 'thai', fond: '#FFE5E0' },
+  { value: 'Indien', icone: 'bol', illustration: 'indien', fond: '#FFF0D6' },
+  { value: 'Vietnamien', icone: 'bol', illustration: 'vietnamien', fond: '#F0F2E4' },
+  { value: 'Chinois', icone: 'bol', illustration: 'chinois', fond: '#FBEDE2' },
+  { value: 'Desserts & Glaces', icone: 'tasse', illustration: 'desserts', fond: '#FDE7F1' },
+  { value: 'Petit-déjeuner & Brunch', icone: 'tasse', illustration: 'brunch', fond: '#FFF1D9' },
+  { value: 'Sandwichs & Salades', icone: 'restaurants', illustration: 'sandwichs', fond: '#F4F0DC' },
+  { value: 'Africain', icone: 'bol', illustration: 'africain', fond: '#F8E6D6' },
+  { value: 'Poisson & Fruits de mer', icone: 'poisson', illustration: 'poisson', fond: '#E1EEFA' },
+  { value: 'Friterie', icone: 'frites', illustration: 'friterie', fond: '#FFF5CF' },
+  { value: 'Coréen', icone: 'bol', illustration: 'coreen', fond: '#FDE9E3' },
+  { value: 'Marocain', icone: 'bol', illustration: 'marocain', fond: '#E6F2EE' },
+  { value: 'Bubble Tea', icone: 'tasse', illustration: 'bubbletea', fond: '#F2E8F8' },
+  { value: 'Ramen', icone: 'bol', illustration: 'ramen', fond: '#FFEEDC' },
   // Cuisine saine "vrai restaurant" (plats à l'assiette, service à table) — distincte de Healthy
   // ci-dessus qui reste le format rapide bowls/wraps/smoothies à emporter.
-  { value: 'Cuisine Saine', icone: 'feuille' },
+  { value: 'Cuisine Saine', icone: 'feuille', illustration: 'saine', fond: '#E2F3E2' },
   // Grandes portions à partager, pensées pour toute la famille (4-6 pers.) — distinct des menus
   // individuels des autres types.
-  { value: 'Cuisine Familiale', icone: 'personnes' },
-  { value: 'Autre', icone: 'restaurants' }
+  { value: 'Cuisine Familiale', icone: 'personnes', illustration: 'familiale', fond: '#FFF0DB' },
+  { value: 'Autre', icone: 'restaurants', illustration: 'autre', fond: '#EFEDFB' }
 ];
+
+// Adresse de l'illustration d'une cuisine (null si elle n'en a pas : bascules Bio, Vegan…).
+export function illustrationCuisine(nom) {
+  return nom ? `/cuisines/${nom}.webp` : null;
+}
 
 export function restaurantTypeLabel(value, t) {
   if (!t || !value) return value;
