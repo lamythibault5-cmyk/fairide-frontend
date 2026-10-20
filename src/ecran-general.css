@@ -124,6 +124,25 @@ html:not(.appli) .wrap .gn-feuille { margin: 0; padding: 22px 0 8px; border-radi
   html:not(.appli) .wrap .gn-bandeau .gn-titre { font-size: 36px; }
 }
 
+/* Questions de Fairide sur la carte (components/commerce/QuestionsCarte.jsx, 2026-10-20) : une carte par question, des
+   pastilles à une touche (iris quand choisies), « Autre… » / « Non… » en pointillé parce qu'elles ouvrent un champ. */
+.qc-question { margin: 0 0 12px; padding: 14px 14px 12px; border: 1px solid var(--line); border-radius: 18px; min-width: 0; }
+.qc-question legend { display: contents; }
+.qc-num { display: block; font-size: 12px; font-weight: 600; color: var(--ink-faint); }
+.qc-titre { display: block; margin: 3px 0 4px; font-family: var(--font-titre); font-size: 15.5px; font-weight: 700; line-height: 1.35; color: var(--ink); }
+.qc-contexte { margin: 0 0 10px; font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
+.qc-choix { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.qc-pastille { min-height: 40px; padding: 8px 14px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+.qc-pastille--ouvre { border-style: dashed; color: var(--iris); }
+.qc-pastille.on { background: var(--iris); border: 1px solid var(--iris); color: #fff; }
+.qc-champ { width: 100%; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--iris); border-radius: 12px; font: inherit; font-size: 14.5px; }
+.qc-pied { margin-top: 18px; }
+.qc-compte { margin: 0 0 8px; text-align: center; font-size: 12.5px; color: var(--ink-faint); }
+.qc-appel { display: block; margin-top: 12px; text-align: center; font-size: 13.5px; color: var(--iris); }
+.qc-merci-titre { margin: 4px 0 8px; font-size: 20px; color: var(--ink); }
+.qc-recap { margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--surface-soft); font-size: 13.5px; line-height: 1.55; color: var(--ink); }
+.qc-recap ol { margin: 4px 0 0; padding-left: 18px; }
+
 @media (prefers-reduced-motion: reduce) {
   .gn-regles .gn-regle-rond, .gn-question > summary::after { transition: none; }
   .gn-regles li.ok .gn-regle-rond { animation: none; }

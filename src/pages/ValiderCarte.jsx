@@ -8,6 +8,7 @@ import usePageMeta from '../hooks/usePageMeta';
 import Icone from '../components/Icone';
 import { OptionCommande } from '../components/EcranCommande';
 import { BandeauGeneral, FeuilleGenerale, SectionGenerale } from '../components/EcranGeneral';
+import QuestionsCarte, { reponseAffichee } from '../components/commerce/QuestionsCarte';
 
 /* « C'est bon » en un geste (CODE-3, 8 octobre 2026, DEC-25) — /carte/valider/:token.
  *
@@ -26,7 +27,12 @@ import { BandeauGeneral, FeuilleGenerale, SectionGenerale } from '../components/
  * le choix du taux en deux cases (celles du paiement, OptionCommande), les plats en rangées à filet, puis l'engagement, le
  * nom et « C'est bon ». Le bloc de validation n'est plus collé en bas de l'écran : sur un téléphone il en couvrait la
  * moitié, et dans l'app connectée il passait sous la barre d'onglets. On le trouve après la carte — c'est-à-dire après
- * l'avoir parcourue, ce qu'on demande justement de faire. */
+ * l'avoir parcourue, ce qu'on demande justement de faire.
+ *
+ * QUESTIONS AVANT LA CARTE (fondateur, 2026-10-20 ; questionsCarte.js côté serveur). Le lien arrive par e-mail ; s'il reste
+ * des questions de Fairide sur la carte, la page les pose d'abord, à une touche (QuestionsCarte.jsx). Répondre ne
+ * consomme pas le lien. Tant que les réponses ne sont pas reportées dans la carte, le même lien dit « on met ta carte à
+ * jour » au lieu de « C'est bon » : signer une carte qui va encore changer bloquerait la commande ensuite. */
 export default function ValiderCarte() {
   const { token } = useParams();
   // Commerçant connecté (arrivé par la liste « Avant d'être en ligne ») : la page finie le ramène à son tableau de bord au
@@ -43,6 +49,9 @@ export default function ValiderCarte() {
   const [envoi, setEnvoi] = useState(false);
   const [fait, setFait] = useState(null);
   const [ajouter, setAjouter] = useState(false);
+  const [envoiQuestions, setEnvoiQuestions] = useState(false);
+  // Les réponses qu'on vient d'envoyer, rappelées sur l'écran de remerciement (la page rechargée ne les a plus).
+  const [rappel, setRappel] = useState(null);
   const choixOffert = !!carte?.fairideRateChoice?.offered;
   const rate = carte?.fairideRateChoice?.rate || 0;
   // Hausse qui rend au commerce son prix entier après la commission (11,1 % en franchise TVA), calculée par le serveur.
@@ -54,6 +63,16 @@ export default function ValiderCarte() {
     .then((c) => { setCarte(c); setNom((n) => n || c.restaurant.responsibleName || ''); setErreur(''); })
     .catch((e) => setErreur(e.message));
   useEffect(() => { charger(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function repondre(answers) {
+    setEnvoiQuestions(true);
+    try {
+      const qs = carte.questions.open;
+      await api(`/menu-validation/${encodeURIComponent(token)}/answers`, { method: 'POST', body: { answers, name: carte.restaurant.responsibleName || undefined } });
+      setRappel(qs.map((q) => ({ id: q.id, question: q.question, reponse: reponseAffichee(q, answers.find((a) => a.id === q.id), t) })));
+      await charger();
+    } catch (e) { setErreur(e.message); } finally { setEnvoiQuestions(false); }
+  }
 
   async function valider() {
     setEnvoi(true);
@@ -92,6 +111,37 @@ export default function ValiderCarte() {
     );
   }
 
+  const q = carte.questions || { open: [], waiting: 0, applied: 0 };
+  if (q.open.length) {
+    return (
+      <div className="gn-page">
+        <BandeauGeneral icone="bulle" titre={t('questionsCarte.title', { n: q.open.length })} sous={<b>{nomCommerce}</b>} />
+        <FeuilleGenerale>
+          <p className="gn-texte">{t('questionsCarte.intro', { n: q.open.length })}</p>
+          {erreur && <p className="gn-note" role="alert"><Icone nom="alerte" taille={18} />{erreur}</p>}
+          <QuestionsCarte questions={q.open} onEnvoyer={repondre} envoi={envoiQuestions} />
+        </FeuilleGenerale>
+      </div>
+    );
+  }
+  if (q.waiting) {
+    return (
+      <div className="gn-page">
+        <BandeauGeneral icone="valider" titre={t('questionsCarte.thanksTitle')} sous={<b>{nomCommerce}</b>} />
+        <FeuilleGenerale>
+          <h2 className="qc-merci-titre">{t('questionsCarte.updatingTitle')}</h2>
+          <p className="gn-texte" role="status">{t('questionsCarte.updatingText')}</p>
+          {rappel && (
+            <div className="qc-recap"><b>{t('questionsCarte.yourAnswers')}</b>
+              <ol>{rappel.map((r) => <li key={r.id}>{r.reponse}</li>)}</ol>
+            </div>
+          )}
+          {commercant && <Link to="/dashboard" className="btn-gold gn-action" style={{ marginTop: 18 }}>{t('validerCarte.backToDashboard')}</Link>}
+        </FeuilleGenerale>
+      </div>
+    );
+  }
+
   const sections = [];
   for (const it of carte.items) {
     const s = sections.find((x) => x.nom === (it.category || ''));
@@ -103,6 +153,7 @@ export default function ValiderCarte() {
       <FeuilleGenerale>
         <p className="gn-texte">{t('validerCarte.intro')}</p>
         {carte.alreadyValidated && <p className="gn-note" role="note"><Icone nom="valider" taille={18} />{t('validerCarte.alreadyValidated')}</p>}
+        {!carte.alreadyValidated && q.applied > 0 && <p className="gn-note" role="note"><Icone nom="valider" taille={18} />{t('questionsCarte.applied', { n: q.applied })}</p>}
         {erreur && <p className="gn-note" role="alert"><Icone nom="alerte" taille={18} />{erreur}</p>}
 
         {choixOffert && (
