@@ -101,24 +101,33 @@ if (preferee && preferee !== 'fr' && PREFIXES[preferee]) {
 // Écran de chargement (index.html, #splash) : il ne fait que COUVRIR le chargement, jamais le prolonger
 // (fondateur, 2026-09-17 : « le plus smooth possible, pas d'attente longue »). Il s'efface dès que la page
 // est réellement là — l'application montée ET la section demandée rendue (plus de squelette de chargement
-// à l'écran), pour ne pas découvrir un écran gris qui se remplit ensuite. Plafond de 2,5 s : si la section
-// tarde (réseau lent), on montre ce qu'on a plutôt que de faire attendre. Le logo se dessine pendant ce
-// temps ; si la page arrive avant la fin, il s'efface en cours de tracé — le logo de l'en-tête, lui,
-// rejoue la séquence entière. Sondage par setTimeout et non requestAnimationFrame : dans un onglet ouvert
-// en arrière-plan, rAF ne se déclenche pas et l'écran resterait affiché.
+// à l'écran), pour ne pas découvrir un écran gris qui se remplit ensuite. Le vélo roule tant que ça charge (fondateur,
+// 2026-10-21 : l'écran doit durer « jusqu'à ce que l'app ou le site soit chargé ») ; le plafond, 2,5 s jusque-là, passe à
+// 7,5 s depuis l'ouverture de la page, juste avant le message de secours en CSS (8 s, index.html) : au-delà, on montre ce
+// qu'on a. Si la page arrive avant la fin du tracé, il s'efface en cours de route — le logo de l'en-tête, lui, rejoue la
+// séquence entière. Sondage par setTimeout et non requestAnimationFrame : dans un onglet ouvert en arrière-plan, rAF ne se
+// déclenche pas et l'écran resterait affiché.
+//
+// DANS L'APPLICATION, l'écran de lancement natif (le vélo seul, immobile) restait PAR-DESSUS jusqu'à la fin : le vélo qui
+// roule n'était jamais vu. On le retire dès que ce script tourne — notre écran est déjà peint dessous, le vélo déjà
+// complet (classe splash-natif, voir index.html) — et c'est le nôtre qui couvre la suite.
 function retirerEcranChargement() {
   const splash = document.getElementById('splash');
   if (!splash) return;
-  const debut = performance.now();
+  if (estNatif()) {
+    splash.classList.add('splash-natif');
+    retirerEcranLancementNatif();
+  }
   const prete = () => {
     const root = document.getElementById('root');
     if (!root || !root.children.length) return false;
     return !root.querySelector('.skeleton');
   };
   const sonder = () => {
-    if (prete() || performance.now() - debut > 2500) {
+    if (prete() || performance.now() > 7500) {
+      // 450 ms : le vélo part (0,4 s) pendant que l'écran s'efface (0,25 s après 0,12 s) ; la page est déjà là dessous.
       splash.classList.add('splash-fin');
-      setTimeout(() => splash.remove(), 220);
+      setTimeout(() => splash.remove(), 450);
       retirerEcranLancementNatif();
       return;
     }
