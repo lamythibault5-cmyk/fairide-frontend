@@ -47,6 +47,7 @@ const Account = lazyPage(() => import('./pages/Account'));
 // --- Espace restaurateur ---
 const RestaurantDashboardLayout = lazyPage(() => import('./pages/restaurant/DashboardLayout'));
 const RestaurantMenuPage = lazyPage(() => import('./pages/restaurant/MenuPage'));
+const RestaurantQuestionsPage = lazyPage(() => import('./pages/restaurant/QuestionsPage'));
 const RestaurantOrdersPage = lazyPage(() => import('./pages/restaurant/OrdersPage'));
 const RestaurantPreviewPage = lazyPage(() => import('./pages/restaurant/PreviewPage'));
 const RestaurantEditPage = lazyPage(() => import('./pages/restaurant/EditPage'));
@@ -202,6 +203,7 @@ export default function App() {
               redirige : elle portait les infos, qui vivent maintenant à la racine. */}
           <Route index element={<RestaurantEditPage />} />
           <Route path="menu" element={<RestaurantMenuPage />} />
+          <Route path="questions" element={<RestaurantQuestionsPage />} />
           <Route path="orders" element={<RestaurantOrdersPage />} />
           <Route path="preview" element={<RestaurantPreviewPage />} />
           <Route path="edit" element={<Navigate to="/dashboard" replace />} />

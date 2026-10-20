@@ -10,6 +10,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import MenuPage from '../restaurant/MenuPage';
 import { BoutonGererCommerce } from './AdminRestaurantsPage';
 import Icone from '../../components/Icone';
+import QuestionsCommerce from '../../components/admin/QuestionsCommerce';
 
 // Carte d'un commerce vue par l'admin : exactement l'éditeur du restaurateur (Mes produits), branché sur
 // son restaurant — sections, plats, options, import PDF / photo / site, modèles, traduction. En tête, la
@@ -103,6 +104,9 @@ export default function AdminMenuPage() {
         )}
       </div>
       )}
+
+      {/* Questions au commerce (2026-10-20) : toujours visibles — c'est là qu'on pose les points à confirmer d'une carte. */}
+      <QuestionsCommerce restoId={id} token={token} toast={toast} />
 
       {erreur && <div className="card"><p className="small" style={{ margin: 0 }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{erreur}</p></div>}
       {!restaurant && !erreur && <SkeletonCards count={3} />}

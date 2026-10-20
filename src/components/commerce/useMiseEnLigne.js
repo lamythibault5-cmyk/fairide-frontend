@@ -16,6 +16,8 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
   const navigate = useNavigate();
   const [conformite, setConformite] = useState(null);
   const [demandeCarte, setDemandeCarte] = useState(null);
+  // Questions de Fairide sur la carte (questionsCarte.js) : { open, waiting }. Relues avec la fiche.
+  const [questions, setQuestions] = useState(null);
   const [occupe, setOccupe] = useState(false);
   const o = restaurant?.onboarding;
   const nbPlats = (restaurant?.menu || []).length;
@@ -26,6 +28,10 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
     if (!restoId || restaurant?.isDemo) return;
     api(`/restaurants/${restoId}/compliance`, { token }).then(setConformite).catch(() => setConformite(null));
   }, [restoId, token, restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!restoId || restaurant?.isDemo || nbPlats === 0) return;
+    api(`/restaurants/${restoId}/menu-questions`, { token }).then(setQuestions).catch(() => setQuestions(null));
+  }, [restoId, token, restaurant, nbPlats]); // eslint-disable-line react-hooks/exhaustive-deps
   // Carte vide : une demande « Fairide s'en occupe » déjà envoyée change l'étape 1 d'« à faire » en « on attend ».
   useEffect(() => {
     if (!restoId || nbPlats > 0) return;
@@ -62,11 +68,21 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
     : demandeCarte
       ? { cle: 'carte', attente: true, icone: 'horloge', titre: t('miseEnLigne.menuPreparing'), sous: t('miseEnLigne.menuPreparingSub') }
       : { cle: 'carte', icone: 'carte', titre: t('miseEnLigne.menuSend'), sous: t('miseEnLigne.menuSendSub'), action: { libelle: t('miseEnLigne.menuSendBtn'), to: experienceApp() ? '/dashboard/menu?envoyer=1' : '/dashboard/menu' } });
+  // Questions de Fairide sur la carte (2026-10-20) : AVANT la validation — une réponse peut changer la carte, et la valider
+  // d'abord obligerait à la re-signer. Tant que les réponses attendent d'être reportées, la validation attend aussi.
+  const nbQuestions = questions?.open?.length || 0;
+  const reponsesEnAttente = !nbQuestions && (questions?.waiting || 0) > 0;
+  if (nbPlats > 0 && nbQuestions) {
+    etapes.push({ cle: 'questions', icone: 'bulle', titre: t('miseEnLigne.questions', { n: nbQuestions }), sous: t('miseEnLigne.questionsSub'),
+      action: { libelle: t('miseEnLigne.questionsBtn'), to: '/dashboard/questions' } });
+  }
   // Un commerce vitrine ne vend pas : rien à signer (même règle que l'ancien bandeau CarteAValider).
   if (!restaurant.vitrine && nbPlats > 0) {
     const carteValidee = restaurant.menuSigned && !o.menuPending;
     etapes.push(carteValidee
       ? { cle: 'valider', fait: true, icone: 'valider', titre: t('miseEnLigne.validateDone') }
+      : (nbQuestions || reponsesEnAttente)
+        ? { cle: 'valider', attente: true, icone: 'valider', titre: t('miseEnLigne.validate'), sous: t(reponsesEnAttente ? 'miseEnLigne.validateAfterUpdate' : 'miseEnLigne.validateAfterQuestions') }
       : { cle: 'valider', icone: 'valider', titre: t('miseEnLigne.validate'), sous: t('miseEnLigne.validateSub'),
           action: { libelle: occupe ? '…' : t('miseEnLigne.validateBtn'), onClick: validerCarte, disabled: occupe } });
   }
