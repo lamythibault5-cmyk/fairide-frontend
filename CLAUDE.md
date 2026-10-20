@@ -108,7 +108,8 @@ business), only the 10 % vs 22-32 % commission gap; and notifications are only p
 found, on the way, delivered, ready for pickup, cancelled; business — order cancelled after receipt, courier waiting,
 order still waiting for acceptance; courier — his job ready, cancelled before pickup, withdrawn by the client. Plus, sent
 directly: new order to the business (payment), courier at the door to the client, and **new job to every courier who
-would see it** (`notifLivreurs.js`, same eligibility as `GET /orders/available`, everyone at once, no rating read). Nobody
+would see it** (`notifLivreurs.js`, same eligibility as `GET /orders/available`, everyone at once, no rating read; a scheduled
+delivery reaches couriers, and this push, only at its slot minus prep, travel and 15 min: `ouvertureLivreurs.js`). Nobody
 is notified of their own action (`oublierPush` in the routes). Toggles: `ReglageNotifications.jsx` (client in Mes
 commandes, courier via `NotifCourses.jsx`), `NewOrderAlertBar` (business), and once after sign-up in the app
 (`AmorceNotifications.jsx`). A new status worth a push goes in the trigger and in `pushFile.js` texts, not in a route.
@@ -638,7 +639,11 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   `signerEngagementsInscription`), together with the allergen procedure; no AFSCA number or document is asked. The
   team's AFSCA check (Admin › Commerces › Conformité, [VerificationAfsca](src/components/admin/VerificationAfsca.jsx):
   four points on the establishment unit + screenshot) is an **optional spot check** — alerts only, never blocks
-  publication, except a « Introuvable » result (no override). Procedure: `../fairide-backend/docs/verification-afsca.md`.
+  publication, except a « Introuvable » result (no override; it also blocks auto-publication and new orders, and takes an
+  online business off the site with an e-mail). Procedure: `../fairide-backend/docs/verification-afsca.md`.
+- **Dedicated couriers need their consent** (audit 2026-10-19, shop-301): Mon commerce › Livraison sends an invitation; the
+  courier accepts or declines it on his dashboard ([LivreurDedie](src/components/livreur/LivreurDedie.jsx), backend
+  `livreurDedie.js`) and can leave at any time. Nothing changes for him, and the business sees no name or phone, until he accepts.
 - **Pickup without a restaurant click** (2026-10-10): the restaurant sees the pickup code and compares it by eye; the
   **courier** confirms (`PATCH /orders/:id/picked-up`, accepted from `preparation` too). `/confirm-pickup` still exists.
   « Ma carte et mes engagements » ([ConformiteCarte](src/components/conformite/ConformiteCarte.jsx)) is one checkbox,
