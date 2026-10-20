@@ -8180,6 +8180,7 @@ export default {
       errEmailTaken: 'An account already exists with this e-mail address. Log in or use “Forgot password”.',
       errPhoneTaken: 'An account already exists with this phone number. Each number can be linked to only one account.',
       errPhoneInvalid: 'Invalid phone number (e.g. +32 470 00 00 00 or 0470 00 00 00).',
+      errPhoneDoublePrefix: 'This number contains the country code twice (for example +32 +32…). Keep it only once.',
       stepDocsTitle: 'Your ID document',
       stepDocsSub: 'One photo of the front and one of the back of your ID card or driving licence. They are kept with your courier file and visible in “My account”.',
       stepAccountSubFirst: 'We will not ask for these again.',

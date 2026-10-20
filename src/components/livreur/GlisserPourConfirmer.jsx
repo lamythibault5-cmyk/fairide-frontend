@@ -27,6 +27,7 @@ export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = 
   const geste = useRef(null);
   const ressortMod = useRef(null);
   const [fait, setFait] = useState(false);
+  const dernierContact = useRef(0); // dernier contact du doigt sur le pouce (voir activer)
 
   useEffect(() => {
     if (natif && !mouvementReduit()) import('../../ressort').then((m) => { ressortMod.current = m; }).catch(() => {});
@@ -49,7 +50,22 @@ export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = 
     if (piste.current) piste.current.style.setProperty('--avance', String(course() ? x / course() : 0));
   }
 
+  // AIDES TECHNIQUES (audit du 19/10, CROSS-80) : TalkBack, VoiceOver, Switch Access et Voice Access « appuient » sur le
+  // pouce par un clic, sans glissement ni touche Entrée : le livreur qui s'en sert ne pouvait pas confirmer le retrait.
+  // Un clic confirme donc, SAUF s'il suit un contact du doigt (ou d'un stylet) sur le pouce : pour la personne qui voit
+  // l'écran, seul le glissement valide, et un appui par mégarde ne fait que ramener le pouce au départ. Le clavier
+  // (Entrée, Espace) passe aussi par ce clic.
+  function noterContact(e) { if (e.pointerType === 'touch' || e.pointerType === 'pen') dernierContact.current = Date.now(); }
+  function activer() {
+    if (disabled || fait || Date.now() - dernierContact.current < 1000) return;
+    setFait(true);
+    vibrer([10, 30, 10]);
+    poser(course());
+    onConfirmer();
+  }
+
   function debut(e) {
+    noterContact(e);
     if (disabled || fait) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     geste.current = { x0: e.clientX, x: 0, suivi: ressortMod.current?.suiviVitesse() };
@@ -61,7 +77,8 @@ export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = 
     g.suivi?.ajouter(e.clientX);
     poser(g.x);
   }
-  function finir() {
+  function finir(e) {
+    noterContact(e);
     const g = geste.current; geste.current = null; if (!g) return;
     const m = ressortMod.current;
     const v = g.suivi ? g.suivi.vitesse() : 0;
@@ -81,10 +98,10 @@ export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = 
   return (
     <div ref={piste} className={`glisser-confirmer glisser-velo${fait ? ' est-fait' : ''}${disabled ? ' est-inactif' : ''}`} role="group" aria-label={libelle}>
       <span className="glisser-confirmer-texte">{fait ? '…' : libelle}</span>
-      {/* Le pouce est aussi un vrai bouton : au clavier ou au lecteur d'écran, Entrée confirme sans glisser. */}
+      {/* Le pouce est aussi un vrai bouton : au clavier, au lecteur d'écran ou à l'accès par contacteur, l'activer confirme
+          sans glisser (activer, plus haut). */}
       <button type="button" ref={pouce} className="glisser-confirmer-pouce" aria-label={libelle} disabled={disabled || fait}
-        onPointerDown={debut} onPointerMove={suite} onPointerUp={finir} onPointerCancel={finir}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFait(true); onConfirmer(); } }}>
+        onPointerDown={debut} onPointerMove={suite} onPointerUp={finir} onPointerCancel={finir} onClick={activer}>
         {fait ? <Icone nom="valider" taille={24} /> : <VeloMarque largeur={32} />}
       </button>
     </div>

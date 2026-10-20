@@ -138,6 +138,8 @@ export default function AdminCouriersPage() {
           {data && mode === 'table' && lignes.length > 0 && (
             <AdminDataTable rows={lignes} sort={sort} onSort={toggle} onRowClick={(r) => setSelection(r.id)} columns={colonnes} rowClassName={(r) => (estCompteTest(r) ? 'row-test-account' : '')} emptyLabel={tr('adminCouriers.none')} />
           )}
+          {/* Plus de pourcentage de plafond sur les fiches (audit du 19/10, admin-07) : pctPlafond avait disparu avec le régime
+              P2P (CODE-12) mais restait appelé ici, et la vue Fiches, mémorisée, plantait toute la page à chaque ouverture. */}
           {data && mode === 'cards' && lignes.map((r) => (
             <div key={r.id} className={`card order-card-clickable${estCompteTest(r) ? ' card-test-account' : ''}`} onClick={() => setSelection(r.id)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -148,7 +150,7 @@ export default function AdminCouriersPage() {
                 </div>
               </div>
               <div className="small">{r.email}</div>
-              <div className="small"><Icone nom="document" taille={16} className="icone-texte" />{' '}{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''} · {r.identity?.status === 'verified' ? `${tr('adminCouriers.colIdentity')}` : r.identity?.status === 'pending' ? `${tr('adminCouriers.colIdentity')}` : `· ${tr('adminCouriers.colIdentity')}`}{pctPlafond(r) != null ? ` · ${tr('adminCouriers.colCap')} ${pctPlafond(r)} %` : ''} · {tr('adminCouriers.colGross')} {euro(r.grossTotal ?? 0)}</div>
+              <div className="small"><Icone nom="document" taille={16} className="icone-texte" />{' '}{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''} · {r.identity?.status === 'verified' ? `${tr('adminCouriers.colIdentity')}` : r.identity?.status === 'pending' ? `${tr('adminCouriers.colIdentity')}` : `· ${tr('adminCouriers.colIdentity')}`} · {tr('adminCouriers.colGross')} {euro(r.grossTotal ?? 0)}</div>
               <div className="small"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{r.zone || '-'} · {r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}</div>
               <div className="small" style={{ opacity: 0.6 }}>{tr('adminCouriers.colUpdated')} {fmt(r.updatedAt)}</div>
             </div>

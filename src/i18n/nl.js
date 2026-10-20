@@ -8189,6 +8189,7 @@ export default {
       errEmailTaken: 'Er bestaat al een account met dit e-mailadres. Log in of gebruik “Wachtwoord vergeten”.',
       errPhoneTaken: 'Er bestaat al een account met dit telefoonnummer. Elk nummer kan maar aan één account gekoppeld zijn.',
       errPhoneInvalid: 'Ongeldig telefoonnummer (bv. +32 470 00 00 00 of 0470 00 00 00).',
+      errPhoneDoublePrefix: 'Dit nummer bevat de landcode twee keer (bijvoorbeeld +32 +32…). Houd er maar één.',
       stepDocsTitle: 'Je identiteitsbewijs',
       stepDocsSub: 'Eén foto van de voorkant en één van de achterkant van je identiteitskaart of rijbewijs. Ze worden bij je koeriersdossier bewaard en zijn zichtbaar in “Mijn account”.',
       stepAccountSubFirst: 'We vragen dit daarna niet opnieuw.',

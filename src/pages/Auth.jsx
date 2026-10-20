@@ -717,7 +717,7 @@ export default function Auth() {
     }
     try {
       const r = await api('/auth/check-availability', { method: 'POST', body: corps });
-      if (r.phoneValid === false) e.phone = t('auth.errPhoneInvalid');
+      if (r.phoneValid === false) e.phone = t(r.phoneDoublePrefix ? 'auth.errPhoneDoublePrefix' : 'auth.errPhoneInvalid'); // audit du 19/10, auth-01
       if (r.phoneTaken) e.phone = t('auth.errPhoneTaken');
       if (r.emailValid === false) e.email = t('auth.errEmailInvalid');
       else if (r.emailReserved) e.email = t('auth.errEmailReserved');
