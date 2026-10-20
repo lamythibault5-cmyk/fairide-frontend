@@ -168,7 +168,9 @@ export default function DashboardSidebar() {
   // la sidebar ne montre jamais la nav client/restaurateur/livreur pour ce compte — seulement les 7
   // sections ERP. Un vrai utilisateur (non-admin) garde sa propre nav, avec juste un lien "Admin" en plus
   // s'il a aussi ce statut.
-  const isAdminAccount = !!user?.isAdmin;
+  // Sur le SITE seulement (Owen, 2026-10-20) : dans l'application, la console n'existe pas (App.jsx, AdminSurLeSite), donc
+  // un compte admin y garde la navigation de son rôle — sinon la barre d'onglets menait vers des pôles qui n'existent pas.
+  const isAdminAccount = !!user?.isAdmin && !NATIF;
   // Messages de Fairide non lus : pastille sur « Mon compte » (0 pour l'admin, le hook se désactive).
   const { unread: nonLus } = useInbox();
   // Événements de commande non lus (cloche du client, NOT-9) : pastille sur « Mes commandes ».

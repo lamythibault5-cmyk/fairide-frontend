@@ -76,6 +76,8 @@ const AdminReviewsPage = lazyPage(() => import('./pages/admin/AdminReviewsPage')
 const AdminOrdersPage = lazyPage(() => import('./pages/admin/AdminOrdersPage'));
 const AdminCrmPage = lazyPage(() => import('./pages/admin/AdminCrmPage'));
 const AdminRestaurantsPage = lazyPage(() => import('./pages/admin/AdminRestaurantsPage'));
+const AdminCartesPage = lazyPage(() => import('./pages/admin/AdminCartesPage'));
+const AdminSurLeSite = lazyPage(() => import('./pages/admin/AdminSurLeSite'));
 const AdminMenuPage = lazyPage(() => import('./pages/admin/AdminMenuPage'));
 const AdminDriversPage = lazyPage(() => import('./pages/admin/AdminDriversPage'));
 const AdminCouriersPage = lazyPage(() => import('./pages/admin/AdminCouriersPage'));
@@ -236,7 +238,9 @@ export default function App() {
         {/* Sales : page des commerciaux (accès donné par l'admin ; le serveur refuse les autres). /crm est l'ancien chemin. */}
         <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />
         <Route path="/crm" element={<Navigate to="/sales" replace />} />
-        <Route path="/admin" element={<ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
+        {/* Console d'administration : sur le SITE seulement (Owen, 2026-10-20). Dans l'application, toute adresse /admin…
+            montre AdminSurLeSite, qui renvoie vers fairide.be/admin ; AdminLayout et ses pages ne sont jamais montés. */}
+        <Route path="/admin" element={experienceApp() ? <AdminSurLeSite /> : <ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<AdminHomePage />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="promotions" element={<AdminPromotionsPage />} />
@@ -245,6 +249,7 @@ export default function App() {
           <Route path="crm" element={<AdminCrmPage />} />
           <Route path="restaurants" element={<AdminRestaurantsPage />} />
           <Route path="restaurants/:id/menu" element={<AdminMenuPage />} />
+          <Route path="cartes" element={<AdminCartesPage />} />
           <Route path="drivers" element={<AdminDriversPage />} />
           <Route path="couriers" element={<AdminCouriersPage />} />
           <Route path="clients" element={<AdminClientsPage />} />
