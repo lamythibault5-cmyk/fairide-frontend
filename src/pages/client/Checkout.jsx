@@ -378,12 +378,18 @@ export default function Checkout() {
       // Les frais de livraison dépendent de la distance réelle et ne sont connus qu'une fois la commande
       // créée côté serveur — on affiche donc le total exact avant de rediriger vers le paiement.
       const surPlace = surPlaceChoisi;
+      const corps = corpsCommande();
+      /* PAYÉE EN LIGNE, LA PAGE STRIPE VIENT AVEC LA COMMANDE (fondateur, 2026-10-21 : « très lent quand je clique sur
+       * Stripe »). Même idée que le sur-place : le total vu et le pourboire partent avec la commande ; s'il tombe juste, le
+       * serveur ouvre le paiement dans le même appel (order.paiement) — un aller-retour de moins avant Stripe. Sinon, rien
+       * ne change : la carte « le total a changé », puis /payments/checkout. */
+      const payerEnLigne = surPlace ? null : { expectedTotal: montantAnnonce, tip: corps?.orderType === 'delivery' ? pourboireChoisi : 0 };
       const order = await api('/orders', {
         method: 'POST', token,
         // Même panier = même commande, même depuis un onglet dupliqué (plan de test CMD-19, voir CartContext).
         // Payée sur place : le total vu part avec la commande ; s'il tombe juste, le serveur l'envoie au commerce dans le même
         // appel (plus de commande « fantôme » quand un second appel échouait). Sinon, la carte « le total a changé », comme avant.
-        body: { ...corpsCommande(), clientRequestId: cart.requestId, ...(surPlace ? { confirmOnSite: true, expectedTotal: montantAnnonce } : {}) }
+        body: { ...corps, clientRequestId: cart.requestId, ...(surPlace ? { confirmOnSite: true, expectedTotal: montantAnnonce } : { payerEnLigne }) }
       });
       if (order.paymentMode === 'on_site' && order.paid) { terminerSurPlace(order); return; }
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
@@ -436,7 +442,8 @@ export default function Checkout() {
       }
       // Le pourboire choisi part avec la demande de paiement (0 = aucun) ; sans objet hors livraison ou à total nul.
       const tip = order.orderType === 'delivery' && Number(order.total) > 0 ? pourboireChoisi : 0;
-      const pay = await api(`/payments/checkout/${order.id}`, { method: 'POST', token, body: { tip } });
+      // Déjà ouvert par POST /orders quand le total tombait juste (voir placeOrder) ; sinon, la demande séparée.
+      const pay = order.paiement || await api(`/payments/checkout/${order.id}`, { method: 'POST', token, body: { tip } });
       if (pay.simulated) {
         // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
         commandeTermineeRef.current = true;
