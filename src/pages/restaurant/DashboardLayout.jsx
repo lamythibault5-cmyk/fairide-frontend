@@ -121,13 +121,12 @@ export default function DashboardLayout() {
           else setNewRestoOpen(true);
         });
       }
-      // Le commerce a été créé automatiquement à l'inscription : l'indice local ne sert plus qu'à retenir le
-      // site web pour lire la carte (Mes produits → import depuis le web).
+      // Le commerce a été créé automatiquement à l'inscription : l'indice local ne sert plus qu'à ouvrir la
+      // demande de carte. Le site web n'est plus gardé dans le navigateur : MenuPage.jsx lit celui de la fiche.
       if (list.length > 0) {
         try {
           const h = JSON.parse(localStorage.getItem('fairide_resto_hint') || 'null');
           if (h) {
-            if (h.website) localStorage.setItem('fairide_menu_source_url', h.website);
             ouvrirDemandeCarte(list[0]?.id, h);
             localStorage.removeItem('fairide_resto_hint');
           }
@@ -281,7 +280,6 @@ export default function DashboardLayout() {
         }
       });
       try {
-        if (h.website) localStorage.setItem('fairide_menu_source_url', h.website);
         ouvrirDemandeCarte(r?.id, h);
         localStorage.removeItem('fairide_resto_hint');
       } catch { /* rien */ }

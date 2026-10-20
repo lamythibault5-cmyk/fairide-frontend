@@ -798,6 +798,7 @@ export default {
       seeTask: 'Voir la tâche',
       platform: 'Plateforme de référence',
       page: 'Page',
+      urlMismatch: "Ce lien n'est pas une page {platform} : il venait d'un autre commerce (bug corrigé le 20/10/2026). Cherche le commerce sur {platform} ou demande-lui son lien.",
       notes: 'Précisions du restaurateur',
       noNotes: 'aucune précision',
       attachments: 'Carte envoyée par le restaurateur',

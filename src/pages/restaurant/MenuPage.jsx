@@ -60,10 +60,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const [addingClassicDesserts, setAddingClassicDesserts] = useState(false);
   const [addItemGalleryOpen, setAddItemGalleryOpen] = useState(false);
 
-  // Adresse du site du commerce, relevée à son inscription (DashboardLayout.jsx l'y dépose). Elle sert
-  // à proposer d'office la page de référence dans la demande « Fairide s'en occupe ». Lue seulement :
-  // plus rien ne l'écrit depuis cette page, l'import par lien ayant disparu.
-  const importUrl = (() => { try { return localStorage.getItem('fairide_menu_source_url') || ''; } catch { return ''; } })();
+  // Site de CE commerce (fiche serveur), proposé d'office comme page de référence dans la demande « Fairide s'en occupe ».
+  // Il était gardé dans le navigateur (localStorage fairide_menu_source_url) pour tout l'appareil : un téléphone qui avait
+  // inscrit Le Laakam proposait laakam.be à chaque commerce suivant, et des demandes « Uber Eats » arrivaient avec ce
+  // lien (2026-10-20, voir lienPlateforme.js côté backend).
+  const importUrl = restaurant.website || '';
   // Une fois la carte créée, les méthodes de création se replient : la page commence par ce qui compte
   // (la carte telle qu'elle est en ligne) et les outils de modification. Un clic les rouvre pour ajouter des plats.
   const [methodesOuvertes, setMethodesOuvertes] = useState(false);

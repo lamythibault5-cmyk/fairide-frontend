@@ -81,6 +81,7 @@ export default function AdminMenuPage() {
             </div>
             <p className="small" style={{ margin: '8px 0 2px' }}><b>{tr('adminMenu.platform')}</b> : {d.platformLabel}</p>
             {d.url && <p className="small" style={{ margin: '2px 0', overflowWrap: 'anywhere' }}><b>{tr('adminMenu.page')}</b> : <a href={urlSure(d.url)} target="_blank" rel="noreferrer">{d.url}</a></p>}
+            {d.urlMismatch && <p className="small" role="alert" style={{ margin: '2px 0', color: 'var(--red)' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{tr('adminMenu.urlMismatch', { platform: d.platformLabel })}</p>}
             {d.attachments?.length > 0 && (
               <p className="small" style={{ margin: '2px 0' }}><b>{tr('adminMenu.attachments')}</b> : {d.attachments.map((f, i) => <span key={f.url}>{i > 0 ? ' · ' : ''}<a href={f.url} target="_blank" rel="noreferrer">{f.name || `${i + 1}`}</a></span>)}</p>
             )}

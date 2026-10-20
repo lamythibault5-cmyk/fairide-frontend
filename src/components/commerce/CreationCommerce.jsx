@@ -152,10 +152,8 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           openingHours: openingHoursTexte, offersDelivery, offersPickup, phone: telephoneCommerce.trim(), website: siteWeb.trim()
         }
       });
-      // Le site web relevé à l'inscription sert ensuite à lire la carte (Mes produits → import depuis le web).
       try {
         const h = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
-        if (h.website) localStorage.setItem('fairide_menu_source_url', h.website);
         ouvrirDemandeCarte(r?.id, h);
         localStorage.removeItem('fairide_resto_hint');
       } catch { /* rien */ }
