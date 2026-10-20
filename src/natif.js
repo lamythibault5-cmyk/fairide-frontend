@@ -28,6 +28,17 @@ export function estNatif() {
   try { return Capacitor.isNativePlatform(); } catch { return false; }
 }
 
+// Ce qu'un COMMERCE achète à Fairide (abonnement, portail de facturation Stripe, mise en avant payante) ne s'achète pas
+// dans l'application des magasins (fondateur, 2026-10-17, confirmé le 2026-10-20). Les règles de Google Play (« Payments »)
+// imposent la facturation Google Play pour un abonnement ou un service numérique vendu dans l'app, et interdisent d'y
+// renvoyer vers un autre moyen de paiement ; Apple dit la même chose (App Store 3.1.1). Les commandes des clients (repas,
+// livraison) sont des biens et services physiques : elles restent payables dans l'app. Dans l'app, ces achats n'ont donc
+// ni bouton, ni prix à payer, ni phrase qui envoie ailleurs ; le site, lui, ne change pas. L'écran d'accueil (PWA) n'est
+// pas un magasin d'applications : il garde le comportement du site.
+export function achatsCommerceAutorises() {
+  return !estNatif();
+}
+
 // L'EXPÉRIENCE « APPLICATION » : la vraie application (Capacitor) OU le site ajouté à l'écran d'accueil, qui s'ouvre en plein
 // écran comme une app (fondateur, 2026-10-15 : sur iPhone, avant TestFlight, c'est l'application). Pour CE QU'ON MONTRE
 // seulement : accueil de l'app au premier lancement, pas de page vitrine, feuilles et gestes. Les fonctions natives

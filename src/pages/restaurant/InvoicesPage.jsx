@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
-import { allerAuPaiement, experienceApp } from '../../natif';
+import { achatsCommerceAutorises, allerAuPaiement, experienceApp } from '../../natif';
 import { useAuth } from '../../context/AuthContext';
 import CopieDac7 from '../../components/conformite/CopieDac7';
 import { useToast } from '../../context/ToastContext';
@@ -51,7 +51,9 @@ export default function InvoicesPage() {
   const [generating, setGenerating] = useState(false);
   // Trois onglets : les factures (pièces comptables, mensuelles), les relevés détaillés (suivi libre par
   // semaine / mois / trimestre), l'abonnement (factures Stripe). L'onglet ouvert survit à un rechargement.
-  const [onglet, setOnglet] = useState(() => { try { return sessionStorage.getItem('fairide_factures_onglet') || 'factures'; } catch { return 'factures'; } });
+  const [onglet, setOnglet] = useState(() => {
+    try { const o = sessionStorage.getItem('fairide_factures_onglet') || 'factures'; return o === 'abonnement' && !achatsCommerceAutorises() ? 'factures' : o; } catch { return 'factures'; }
+  });
   function choisirOnglet(o) { setOnglet(o); try { sessionStorage.setItem('fairide_factures_onglet', o); } catch { /* sans stockage */ } }
 
   useEffect(() => {
@@ -98,7 +100,7 @@ export default function InvoicesPage() {
     <CadreSite appli classe="ec-factures" titre={t('invoicesResto.title')} sous={t('invoicesResto.pageIntro')}>
       <div className="no-print ec-factures-onglets">
         <SegmentGlisse libelle={t('invoicesResto.title')} valeur={onglet} onChange={choisirOnglet}
-          options={[['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ['abonnement', t('invoicesResto.tabSubscription')]].map(([value, label]) => ({ value, label }))} />
+          options={[['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ...(achatsCommerceAutorises() ? [['abonnement', t('invoicesResto.tabSubscription')]] : [])].map(([value, label]) => ({ value, label }))} />
       </div>
 
       {onglet === 'releves' && (
@@ -109,7 +111,8 @@ export default function InvoicesPage() {
         </>
       )}
 
-      {onglet === 'abonnement' && (
+      {/* L'onglet Abonnement n'ouvre que le portail Stripe, où l'on paie : absent de l'app des magasins (natif.js). */}
+      {onglet === 'abonnement' && achatsCommerceAutorises() && (
         <section className="no-print">
           {/* Titre en capitales, donc sans AvecMarque : le mot-logo reste toujours en minuscules. */}
           <p className="ec-feuille-titre">{t('invoicesResto.subscription')}</p>

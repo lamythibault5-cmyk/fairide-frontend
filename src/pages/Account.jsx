@@ -1,5 +1,5 @@
 import GarantieAbonnement from '../components/GarantieAbonnement';
-import { allerAuPaiement, experienceApp } from '../natif';
+import { achatsCommerceAutorises, allerAuPaiement, experienceApp } from '../natif';
 import { useEffect, useRef, useState, useId } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
@@ -975,8 +975,9 @@ export default function Account() {
                 <p className="small" style={{ margin: '4px 0 0' }}>{t(restaurant.adminStatus === 'blocked' ? 'accountUi.subBlockedText' : 'accountUi.subPendingApprovalText')}</p>
               </div>
             )}
-            {/* Bouton d'abonnement : impayé à régulariser, ou, dès le 6 octobre, formule complète pas encore abonnée (contrat accepté). */}
-            {(restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && abonnementOuvert() && (restaurant.isDemo || !restaurant.onboarding || restaurant.onboarding.contractAccepted))) && restaurant.adminStatus === 'approved' && (
+            {/* Bouton d'abonnement : impayé à régulariser, ou, dès le 6 octobre, formule complète pas encore abonnée (contrat accepté).
+                Jamais dans l'app des magasins (achatsCommerceAutorises, natif.js) : l'abonnement se prend sur le site. */}
+            {achatsCommerceAutorises() && (restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && abonnementOuvert() && (restaurant.isDemo || !restaurant.onboarding || restaurant.onboarding.contractAccepted))) && restaurant.adminStatus === 'approved' && (
               <div>
                 <div className="field" style={{ maxWidth: 260 }}>
                   <label htmlFor={idsA11y + '-promocode'}>{t('auth.promoCode')}</label>
@@ -997,7 +998,8 @@ export default function Account() {
             )}
             {restaurant.subscriptionStatus === 'paused' && (
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <button className="btn-teal" disabled={resumingSub} onClick={resumeSubscription}>{resumingSub ? '...' : t('accountUi.resumeSub')}</button>
+                {/* Reprendre, c'est relancer un abonnement payant : sur le site seulement. Mettre en pause ou résilier restent possibles partout. */}
+                {achatsCommerceAutorises() && <button className="btn-teal" disabled={resumingSub} onClick={resumeSubscription}>{resumingSub ? '...' : t('accountUi.resumeSub')}</button>}
                 {!confirmCancelSub && (
                   <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>{t('accountUi.cancelSub')}</button>
                 )}
@@ -1032,7 +1034,9 @@ export default function Account() {
                 choix est gardé et s'ouvrira à son activation (même règle que formules.js côté serveur). */}
             {(() => {
               const complete = offersDelivery || offersPickup;
-              const abonne = restaurant.isDemo || ['trialing', 'active'].includes(restaurant.subscriptionStatus);
+              // Abonnement offert pendant le lancement (subscriptionWaived) : les services sont ouverts sans abonnement, la phrase
+              // « dès que tu auras activé l'abonnement » était fausse pour lui (audit du 19/10, shop-107).
+              const abonne = restaurant.isDemo || restaurant.subscriptionWaived || ['trialing', 'active'].includes(restaurant.subscriptionStatus);
               return (
                 <div className="paiement-encart" style={{ marginBottom: 12 }}>
                   <b>{t('accountUi.planCompleteTitle')}</b>
@@ -1042,7 +1046,7 @@ export default function Account() {
                       {t('accountUi.planNeedsSubText')}
                     </p>
                   )}
-                  <OffreFormules payant={complete} statut={restaurant.isDemo ? null : restaurant.subscriptionStatus} finEssai={restaurant.subscriptionCurrentPeriodEnd} onActiver={complete && !abonne ? voirAbonnement : null} />
+                  <OffreFormules payant={complete} statut={restaurant.isDemo ? null : restaurant.subscriptionStatus} finEssai={restaurant.subscriptionCurrentPeriodEnd} onActiver={complete && !abonne && achatsCommerceAutorises() ? voirAbonnement : null} />
                 </div>
               );
             })()}

@@ -7914,6 +7914,7 @@ export default {
       paidThanks: 'Paiement reçu : ta mise en avant est confirmée.',
       payLater: 'Paiement non terminé : tu peux le reprendre depuis « Mes mises en avant » tant que le délai court.',
       status_awaiting_payment: 'À payer',
+      status_awaiting_payment_app: 'En attente',
       paidOnline: 'payée en ligne',
       refund_rembourse: 'Aucune commande pendant la période : remboursée.',
       refund_a_rembourser: 'Aucune commande pendant la période : remboursement en cours.',

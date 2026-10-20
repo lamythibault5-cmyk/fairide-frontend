@@ -7861,6 +7861,7 @@ export default {
       paidThanks: 'Payment received: your placement is confirmed.',
       payLater: 'Payment not completed: you can resume it from “My placements” while the deadline runs.',
       status_awaiting_payment: 'To pay',
+      status_awaiting_payment_app: 'Pending',
       paidOnline: 'paid online',
       refund_rembourse: 'No order during the period: refunded.',
       refund_a_rembourser: 'No order during the period: refund in progress.',

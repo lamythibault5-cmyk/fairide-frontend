@@ -7870,6 +7870,7 @@ export default {
       paidThanks: 'Betaling ontvangen: je promotie is bevestigd.',
       payLater: 'Betaling niet afgerond: je kunt ze hervatten vanuit “Mijn promoties” zolang de termijn loopt.',
       status_awaiting_payment: 'Te betalen',
+      status_awaiting_payment_app: 'In afwachting',
       paidOnline: 'online betaald',
       refund_rembourse: 'Geen bestelling tijdens de periode: terugbetaald.',
       refund_a_rembourser: 'Geen bestelling tijdens de periode: terugbetaling bezig.',

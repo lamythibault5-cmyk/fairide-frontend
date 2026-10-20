@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { titreRangee, libellePosition, euros, jourCourt } from '../misesEnAvant';
+import { achatsCommerceAutorises } from '../natif';
 
 // Promotions › Mise en avant (fondateur, 2026-10-02). Le commerçant choisit une rangée de la liste (« Healthy », « Autour
 // de vous »…), la 1re, 2e ou 3e position et une durée ; le prix par semaine est celui réglé par Fairide. Comme pour les
@@ -66,14 +67,18 @@ export default function MiseEnAvant({ restoId, token, toast }) {
 
   // Commune pas encore ouverte à la vente par Fairide (ou réponse pas encore là) : la section n'apparaît pas.
   if (!etat || etat.enabled === false) return null;
+  // Dans l'app des magasins, une mise en avant ne s'achète pas (achatsCommerceAutorises, natif.js) : ni grille de prix, ni
+  // demande, ni « Payer maintenant ». Le commerce y retrouve seulement celles qu'il a déjà, et peut retirer une demande.
+  const achats = achatsCommerceAutorises();
+  if (!achats && !etat.bookings?.length) return null;
   return (
     <div className="card mise-en-avant" id="mise-en-avant">
       <h3 style={{ margin: 0, fontSize: 16 }}>{t('placements.title')}</h3>
-      <p className="small" style={{ margin: '4px 0 6px' }}>{t('placements.intro')} {t('placements.communeNote', { commune: etat.commune })}</p>
-      <p className="small" style={{ margin: '0 0 12px' }}>
+      {achats && <p className="small" style={{ margin: '4px 0 6px' }}>{t('placements.intro')} {t('placements.communeNote', { commune: etat.commune })}</p>}
+      {achats && <p className="small" style={{ margin: '0 0 12px' }}>
         {etat.auto ? t('placements.autoIntro', { minutes: etat.paymentMinutes || 10, days: etat.maxAdvanceDays || 30 }) : t('placements.manualIntro', { days: etat.maxAdvanceDays || 30 })} {t('placements.refundNote')} {t('placements.randomNote')}
-      </p>
-      {decision && (
+      </p>}
+      {achats && decision && (
         <div className="mea-demande mea-paiement" role="status">
           <b>{t('placements.autoAcceptedTitle')}</b>
           <p className="small" style={{ margin: '4px 0 8px' }}>{decision.note || t('placements.autoAccepted', { minutes: etat.paymentMinutes || 10 })}</p>
@@ -84,7 +89,7 @@ export default function MiseEnAvant({ restoId, token, toast }) {
       {!etat && <p className="small">…</p>}
       {etat && (
         <>
-          <div className={`mea-grille${nbPositions > 3 ? ' mea-grille--large' : ''}`} role="table" aria-label={t('placements.title')}>
+          {achats && <div className={`mea-grille${nbPositions > 3 ? ' mea-grille--large' : ''}`} role="table" aria-label={t('placements.title')}>
             <div className="mea-ligne mea-entete" role="row" style={colonnes}>
               <span role="columnheader">{t('placements.row')}</span>
               {etat.sections[0]?.prices.map((p) => <span key={p.slot} role="columnheader">{libellePosition(t, p.slot)}</span>)}
@@ -106,9 +111,9 @@ export default function MiseEnAvant({ restoId, token, toast }) {
                 })}
               </div>
             ))}
-          </div>
+          </div>}
 
-          {choix && section && (
+          {achats && choix && section && (
             <div className="mea-demande">
               <b>{t('placements.summary', { row: titre(section.key, section.label), pos: libellePosition(t, choix.slot) })}</b>
               <div className="row" style={{ gap: 8, alignItems: 'center', margin: '8px 0', flexWrap: 'wrap' }}>
@@ -145,10 +150,10 @@ export default function MiseEnAvant({ restoId, token, toast }) {
                     {b.refundStatus === 'prorata' && <span className="small" style={{ display: 'block', color: 'var(--iris)' }}>{t('placements.refund_prorata')}</span>}
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span className={`modif-statut mea-statut--${b.status}`}>{t(`placements.status_${b.status}`)}</span>
+                    <span className={`modif-statut mea-statut--${b.status}`}>{t(!achats && b.status === 'awaiting_payment' ? 'placements.status_awaiting_payment_app' : `placements.status_${b.status}`)}</span>
                     {['pending', 'awaiting_payment'].includes(b.status) && <button type="button" className="btn-link small" style={{ display: 'block', marginTop: 4 }} disabled={occupe} onClick={() => retirer(b)}>{t('placements.withdraw')}</button>}
-                    {b.status === 'awaiting_payment' && b.checkoutUrl && <a className="btn-teal small" style={{ display: 'inline-block', marginTop: 6, minHeight: 40, lineHeight: '40px', padding: '0 14px' }} href={b.checkoutUrl}>{t('placements.payNow')} · {resteTexte(b.paymentDueAt)}</a>}
-                    {b.status === 'awaiting_payment' && <span className="small" style={{ display: 'block', marginTop: 2, color: 'var(--ink-soft)' }}>{t('placements.payWithin', { minutes: resteMinutes(b.paymentDueAt) })}</span>}
+                    {achats && b.status === 'awaiting_payment' && b.checkoutUrl && <a className="btn-teal small" style={{ display: 'inline-block', marginTop: 6, minHeight: 40, lineHeight: '40px', padding: '0 14px' }} href={b.checkoutUrl}>{t('placements.payNow')} · {resteTexte(b.paymentDueAt)}</a>}
+                    {achats && b.status === 'awaiting_payment' && <span className="small" style={{ display: 'block', marginTop: 2, color: 'var(--ink-soft)' }}>{t('placements.payWithin', { minutes: resteMinutes(b.paymentDueAt) })}</span>}
                   </div>
                 </div>
               ))}
