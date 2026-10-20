@@ -48,7 +48,14 @@ function startSentryIfAllowed() {
   demarrerSentry(import.meta.env.VITE_SENTRY_DSN).catch(() => { sentryStarted = false; });
 }
 
-startSentryIfAllowed();
+/* AU DÉMARRAGE, SENTRY ATTEND QUE L'APP SOIT AFFICHÉE (2026-10-20, test de l'app Android : démarrage lent). Le charger et
+   l'initialiser tout de suite prenait le processeur pendant le premier rendu, sur un téléphone moyen. Il part quand le
+   navigateur n'a plus rien à faire (requestIdleCallback, au plus 3 s), ou après 3 s là où cette fonction n'existe pas
+   (Safari). Même règle de consentement, mêmes réglages : seul le moment change. Une panne dans ces premières secondes n'est
+   pas rapportée — c'était déjà le cas le temps que le fichier arrive. Une acceptation en cours de visite le démarre tout de
+   suite (onConsentChange, plus bas). */
+if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(() => startSentryIfAllowed(), { timeout: 3000 });
+else setTimeout(startSentryIfAllowed, 3000);
 // Statistiques sans cookie (Plausible) : inactif tant que VITE_PLAUSIBLE_DOMAIN n'est pas défini.
 demarrerAnalytics();
 

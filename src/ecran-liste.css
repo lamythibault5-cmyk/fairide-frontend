@@ -70,7 +70,10 @@
   content: ''; position: absolute; left: 0; right: 0; bottom: 4px; height: 3px; border-radius: 2px;
   background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .4) 0 8px, transparent 8px 16px);
 }
-.lt-velo { position: absolute; bottom: 7px; left: 8%; width: 30px; margin-left: -15px; line-height: 0; color: var(--lime); transition: left .3s ease-out; }
+/* Le vélo du bandeau avance par `transform` (TeteListe.jsx, 2026-10-20, test de l'app Android) : il glissait par `left`,
+   à chaque image de défilement — une mise en page par image, pendant qu'on fait défiler la liste. `left` reste la place
+   de départ (et la place fixe de RouteVelo, posée en ligne). */
+.lt-velo { position: absolute; bottom: 7px; left: 8%; width: 30px; margin-left: -15px; line-height: 0; color: var(--lime); transition: transform .3s ease-out; }
 .lt-velo svg { display: block; transform-origin: 50% 100%; }
 .lt-velo.roule svg { animation: lt-pedale .5s ease-in-out infinite; }
 @keyframes lt-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
@@ -310,6 +313,9 @@
   display: block; color: #fff; text-decoration: none; background: var(--iris); isolation: isolate;
 }
 .une-carte > .une-photo { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s ease; }
+/* La photo porte elle-même l'arrondi de la carte : la capture de la transition photo (transitionPhoto.js) ne voit pas la
+   carte qui la coupe, et la faisait voyager en rectangle. */
+.une-carte > .une-photo { border-radius: inherit; }
 .une-carte:hover > .une-photo { transform: scale(1.03); }
 .une-carte--fermee > .une-photo { filter: grayscale(.55) brightness(.92); }
 .une-voile { position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, rgba(20, 18, 31, 0) 38%, rgba(20, 18, 31, .78) 100%); pointer-events: none; }

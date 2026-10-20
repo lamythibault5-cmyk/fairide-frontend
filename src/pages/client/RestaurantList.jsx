@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { imgProps, cacherImageCassee } from '../../images';
+import { imgProps, cacherImageCassee, photoVue, retenirPhotoVue } from '../../images';
+import { chargerAvecCache, lireCache, modifierCache, prechargerFiche } from '../../cacheDonnees';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +40,11 @@ import '../../ecran-liste.css';
 import '../../site-liste.css';
 import AvecMarque from '../../components/AvecMarque';
 import { lienFiche } from '../../murCompte';
+
+// « TRIER » ET « PRIX » RETIRÉS POUR LE MOMENT (fondateur, 2026-10-20, après le test avec Maestro Pizza) : avec une
+// poignée de commerces, trier ou filtrer par prix ne sert à rien et charge la bande. Les états et les règles restent
+// (le tri « Recommandé » est celui que décrit /classement) : repasser à true ici et dans pages/client/MapPage.jsx.
+const TRI_ET_PRIX = false;
 
 // Bandes de prix, calculees sur le prix MEDIAN des plats de la carte : aucune colonne « niveau de
 // prix » n'existe en base, et un euro affiche au juge serait faux pour la moitie des commerces.
@@ -100,7 +106,7 @@ function deliveryOfferLabelFor(r, t, user) {
 // photo, puis le nom, « cuisine · commune », et une ligne d'infos (note ou « Nouveau », prix, services, offre de
 // livraison). Avant : quatre pastilles empilées (commune, quartier, fermé…) et un grand blanc sous le texte.
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const offerLabel = offerLabelFor(r, t);
   const deliveryOfferLabel = deliveryOfferLabelFor(r, t, user);
   const etat = r.hours ? getOpenStatus(r.hours, new Date(), r.closures) : null;
@@ -124,10 +130,13 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
     <Link
       {...lienFiche(user, r.id)}
       className={`rest-card rc${isClosed ? ' rc-est-ferme' : ''}`}
+      // La fiche part dès que le doigt se pose (cacheDonnees.js) — seulement si le lien y mène (connecté, murCompte.js).
+      onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}
     >
       <div className="rc-media">
         <VisuelVide nom={r.name} cuisine={r.cuisine} />
-        {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className="rc-photo" onError={cacherImageCassee} />}
+        {/* Déjà vue pendant la visite : pas de second fondu (images.js, photoVue). */}
+        {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className={`rc-photo${photoVue(r.coverImageUrl) ? ' rc-photo--vue' : ''}`} onLoad={() => retenirPhotoVue(r.coverImageUrl)} onError={cacherImageCassee} />}
         <FavoriteHeart
           active={isFavorite}
           onClick={(e) => onToggleFavorite(e, r.id)}
@@ -199,7 +208,7 @@ function CarteBientot({ r, t }) {
 const UNE_MAX = 5;
 const NOUVEAU_JOURS = 30;
 function ALaUne({ list, inscritLe, t }) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const rail = useRef(null);
   const [actif, setActif] = useState(0);
   const surDefilement = () => {
@@ -222,7 +231,7 @@ function ALaUne({ list, inscritLe, t }) {
             r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ');
           return (
             // Même règle que les cartes dessous : sans compte, le clic mène à la connexion, puis à la fiche.
-            <Link key={r.id} {...lienFiche(user, r.id)} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`}>
+            <Link key={r.id} {...lienFiche(user, r.id)} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`} onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}>
               <VisuelVide nom={r.name} cuisine={r.cuisine} />
               <img {...imgProps(r.coverImageUrl, 800, '(max-width: 640px) 92vw, 380px')} alt="" className="une-photo" decoding="async" onError={cacherImageCassee} />
               <span className="une-voile" aria-hidden="true" />
@@ -319,19 +328,23 @@ export default function RestaurantList() {
   // L'accueil envoyait un filtre de commune strict ; le fondateur a demandé de tout montrer tant
   // qu'il y a peu de commerces (2026-09-27).
   const homeCommune = matchCommune(user?.addressCity) || filtresInitiaux.communeProche || null;
-  const [restaurants, setRestaurants] = useState([]);
+  /* AU RETOUR SUR LA LISTE, ELLE EST DÉJÀ LÀ (2026-10-20, test de l'app Android) : la dernière liste lue s'affiche dès la
+     première image, sans squelette, et se relit en arrière-plan (cacheDonnees.js). C'est aussi ce qui permet à la photo
+     d'une fiche fermée par sa croix de retrouver sa carte (transitionPhoto.js) au lieu de tomber sur des cartes grises. */
+  const [restaurants, setRestaurants] = useState(() => lireCache('/restaurants') || []);
   /* Apres la declaration de `restaurants`, jamais avant : lu plus haut, le tableau serait dans
      sa zone morte temporelle et la page planterait au montage. */
   useJsonLd(restaurantListJsonLd(restaurants, { url: `${SITE_URL}/restaurants` }), 'ld-list');
-  const [favoriteIds, setFavoriteIds] = useState(new Set());
-  const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(new Set());
-  const [loading, setLoading] = useState(true);
+  const [favoriteIds, setFavoriteIds] = useState(() => new Set(token ? lireCache('/restaurants/favorites/ids', token) || [] : []));
+  const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(() => new Set(token ? (lireCache('/orders/mine', token) || []).map((o) => o.restaurantId) : []));
+  const [loading, setLoading] = useState(() => !lireCache('/restaurants'));
   // La liste n'a pas pu être lue (réseau, serveur) : « Impossible de charger » et Réessayer, pas « Aucun commerce ».
   const [echecListe, setEchecListe] = useState(false);
-  // `silencieux` : tirer pour actualiser ne remet pas les cartes grises ; « Réessayer », si.
-  const chargerListe = useCallback(({ silencieux = false } = {}) => {
+  // `silencieux` : tirer pour actualiser ne remet pas les cartes grises ; « Réessayer », si. `forcer` : relire même une
+  // liste lue à l'instant (cacheDonnees.js). Une réponse identique rend le même tableau : React ne redessine rien.
+  const chargerListe = useCallback(({ silencieux = false, forcer = false } = {}) => {
     setEchecListe(false); if (!silencieux) setLoading(true);
-    return api('/restaurants').then((l) => { setRestaurants(l); setEchecListe(false); }).catch(() => setEchecListe(true)).finally(() => setLoading(false));
+    return chargerAvecCache('/restaurants', { forcer }).then((l) => { setRestaurants(l); setEchecListe(false); }).catch(() => setEchecListe(true)).finally(() => setLoading(false));
   }, []);
   const [search, setSearch] = useState(filtresInitiaux.search || '');
   const [commune, setCommune] = useState(filtresInitiaux.commune || '');
@@ -349,12 +362,12 @@ export default function RestaurantList() {
   const [panneau, setPanneau] = useState(null);
   // Les VRAIS commerces déjà inscrits (fondateur, 2026-09-30) : rangée en tête de liste, carte complète seulement ;
   // les démos restent dessous, pour montrer l'étendue de l'offre.
-  const [inscrits, setInscrits] = useState([]);
+  const [inscrits, setInscrits] = useState(() => (lireCache('/restaurants/landing') || []).filter((r) => r.menuComplete));
   // Date d'inscription de chaque commerce (ms), pour « Nouveau sur Fairide » sur les cartes « À la une ».
-  const [inscritLe, setInscritLe] = useState(() => new Map());
-  const [placementsTous, setPlacementsTous] = useState([]);
+  const [inscritLe, setInscritLe] = useState(() => new Map((lireCache('/restaurants/landing') || []).filter((r) => r.createdAt).map((r) => [r.id, Number(r.createdAt)])));
+  const [placementsTous, setPlacementsTous] = useState(() => lireCache('/placements/active')?.placements || []);
   // Rangées ouvertes à la vente par l'admin en plus de celles d'origine : une par type de cuisine (« Pizza »…).
-  const [rangeesAjoutees, setRangeesAjoutees] = useState([]);
+  const [rangeesAjoutees, setRangeesAjoutees] = useState(() => lireCache('/placements/active')?.sections || []);
   const toast = useToast();
   // LE SITE SUR UN ORDINATEUR (mockups/site-ordinateur.html, « Liste ») — jamais dans l'app : à partir de 900 px, des
   // grilles au lieu des rangées et Livraison / À emporter sur le bandeau ; à partir de 1 100 px, les filtres (Trier, Prix,
@@ -364,19 +377,25 @@ export default function RestaurantList() {
 
   // Une seule lecture de la liste, au chargement et quand on tire pour actualiser (app). Elle rend la promesse des commerces :
   // le vélo roule jusqu'à leur arrivée. Échec : « Impossible de charger » et Réessayer (chargerListe), pas « Aucun commerce ».
-  function charger() {
-    const commerces = chargerListe({ silencieux: true });
-    api('/restaurants/landing').then((l) => {
+  // Chaque lecture passe par cacheDonnees.js : une réponse identique à celle déjà affichée rend le même objet, et l'on ne
+  // reconstruit alors ni les Map ni les Set (sinon chaque retour sur la liste redessinait toutes les rangées).
+  function charger({ forcer = false } = {}) {
+    const commerces = chargerListe({ silencieux: true, forcer });
+    const deja = { landing: lireCache('/restaurants/landing'), placements: lireCache('/placements/active') };
+    chargerAvecCache('/restaurants/landing', { forcer }).then((l) => {
+      if (l === deja.landing) return;
       setInscrits((l || []).filter((r) => r.menuComplete));
       setInscritLe(new Map((l || []).filter((r) => r.createdAt).map((r) => [r.id, Number(r.createdAt)])));
     }).catch(() => {});
     // Mises en avant payantes du jour (routes/placements.js) : sans réponse, la liste reste dans son ordre naturel.
-    api('/placements/active').then((r) => { setPlacementsTous(r.placements || []); setRangeesAjoutees(r.sections || []); }).catch(() => {});
+    chargerAvecCache('/placements/active', { forcer }).then((r) => { if (r === deja.placements) return; setPlacementsTous(r.placements || []); setRangeesAjoutees(r.sections || []); }).catch(() => {});
     // Page publique (consultable sans compte, voir App.jsx) — ces deux appels ne concernent que les
     // clients connectés, inutile de les tenter (et de récolter un 401 silencieux) pour un visiteur anonyme.
     if (token) {
-      api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
-      api('/orders/mine', { token }).then((orders) => setOrderedRestaurantIds(new Set(orders.map((o) => o.restaurantId)))).catch(() => {});
+      const favoris = lireCache('/restaurants/favorites/ids', token);
+      const commandes = lireCache('/orders/mine', token);
+      chargerAvecCache('/restaurants/favorites/ids', { token, forcer }).then((ids) => { if (ids !== favoris) setFavoriteIds(new Set(ids)); }).catch(() => {});
+      chargerAvecCache('/orders/mine', { token, forcer }).then((orders) => { if (orders !== commandes) setOrderedRestaurantIds(new Set(orders.map((o) => o.restaurantId))); }).catch(() => {});
     }
     return commerces;
   }
@@ -401,6 +420,8 @@ export default function RestaurantList() {
         await api(`/restaurants/${id}/favorite`, { method: 'POST', token });
         setFavoriteIds((prev) => new Set(prev).add(id));
       }
+      // La copie gardée suit (cacheDonnees.js) : la fiche, puis la liste au retour, montrent le bon cœur dès l'ouverture.
+      modifierCache('/restaurants/favorites/ids', token, (ids) => (isFav ? ids.filter((x) => x !== id) : [...ids, id]));
     } catch (err) {
       toast(err.message, 'erreur');
     }
@@ -594,7 +615,7 @@ export default function RestaurantList() {
   const pastillesFiltres = !colonne || !modeSurBandeau;
   return (
     <div className={`sl-liste${grand ? ' sl-liste--grand' : ''}${colonne ? ' sl-liste--colonne' : ''}`}>
-      <TirerPourActualiser onActualiser={charger} />
+      <TirerPourActualiser onActualiser={() => charger({ forcer: true })} />
       {/* Le titre est MASQUÉ À L'ŒIL, pas supprimé (fondateur, 2026-09-17 : « retire-le de la page »).
           Il reste dans le document parce qu'il y avait été mis pour une raison précise : sans h1, le
           titre de niveau 1 de cette page redevient la marque de l'en-tête, et son sujet, pour un
@@ -654,6 +675,7 @@ export default function RestaurantList() {
               )}
             </div>
           )}
+          {TRI_ET_PRIX && <>
           <fieldset className="sl-groupe">
             <legend className="sl-groupe-titre">{t('mapClient.sort')}</legend>
             {['recommande', 'note', 'distance'].map((cle) => {
@@ -678,6 +700,7 @@ export default function RestaurantList() {
               ))}
             </div>
           </fieldset>
+          </>}
           <fieldset className="sl-groupe">
             <legend className="sl-groupe-titre">{t('siteListe.envies')}</legend>
             {cuisineOptions.filter((o) => o.regime).map((o) => {
@@ -730,7 +753,7 @@ export default function RestaurantList() {
             <Icone nom="sac" taille={16} />{t('restaurantList.filterPickup')}
           </button>
         )}
-        {!colonne && <>
+        {!colonne && TRI_ET_PRIX && <>
         <button type="button" className={`cuisine-chip${prix ? ' active' : ''}`} aria-expanded={panneau === 'prix'} onClick={() => setPanneau((x) => (x === 'prix' ? null : 'prix'))}>
           <Icone nom="euro" taille={16} />{prix ? '€'.repeat(prix) : t('mapClient.filterPrice')}
         </button>

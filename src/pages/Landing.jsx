@@ -6,7 +6,7 @@ import Reveal from '../components/Reveal';
 import BelgianMark from '../components/BelgianMark';
 import usePageMeta from '../hooks/usePageMeta';
 import useJsonLd from '../seo/useJsonLd';
-import { organizationJsonLd } from '../seo/jsonLd';
+import { organizationJsonLd, websiteJsonLd } from '../seo/jsonLd';
 import HeroPreview, { useCommercesReels, vitrineAccueil } from '../components/landing/HeroPreview';
 import HeroAdresse from '../components/landing/HeroAdresse';
 import HeroPrix from '../components/landing/HeroPrix';
@@ -78,6 +78,7 @@ export default function Landing() {
   const { t } = useLanguage();
   usePageMeta({ description: t('seo.homeDescription'), path: '/' });
   useJsonLd(organizationJsonLd(), 'ld-organization');
+  useJsonLd(websiteJsonLd(), 'ld-website');
   // Lus une fois pour toute la page : « Déjà sur Fairide » et la vitrine « Découvre ».
   const reels = useCommercesReels();
   // Vrais commerces seulement (fondateur, 22/09 puis 11/10 : jamais de démo, même s'ils sont peu nombreux).

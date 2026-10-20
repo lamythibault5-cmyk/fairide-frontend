@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage, getLocale } from '../context/LanguageContext';
-import { playChime } from './useNewOrderAlert';
+import { playChime, notifier } from './useNewOrderAlert';
 import { vibrer } from '../gestes';
 
 // Alertes du livreur. Jusqu'ici, une course disponible n'était signalée par RIEN : ni son, ni notification — le
@@ -14,7 +14,12 @@ import { vibrer } from '../gestes';
 // `actif` : compte validé, paiements actifs, pas en pause. Un livreur en pause ne doit pas être dérangé.
 // `pret` : au moins un chargement terminé — sans ce drapeau, les courses déjà présentes à l'ouverture de la page
 // sonneraient comme si elles venaient d'arriver.
-export const CLE_SON = 'fairide_driver_alert_sound';
+// _v2 depuis le 2026-10-20 (fondateur : « le son des alertes devrait être mis de base ») : un appareil resté sur « off »
+// repart son actif, comme celui du commerce (useNewOrderAlert.js).
+export const CLE_SON = 'fairide_driver_alert_sound_v2';
+// Le carillon plafonne à 0,22 de la pleine échelle (≈ -13 dB) : à peine audible dans une poche, dans la rue. ×3,5 le
+// porte vers 0,77, sous un limiteur qui empêche le haut-parleur de saturer.
+const RENFORT = 3.5;
 const NOTES_NOUVELLE = [784, 987.77, 1174.66, 1567.98];
 const NOTES_PRETE = [1046.5, 1318.51, 1046.5, 1318.51];
 // Course annulée : trois notes qui descendent, qu'on ne confond pas avec les deux bonnes nouvelles.
@@ -32,6 +37,7 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
   const [sonActif, setSonActifEtat] = useState(sonActifMemorise);
   const [permission, setPermission] = useState(() => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission));
   const ctxRef = useRef(null);
+  const sortieRef = useRef(null); // le renfort de volume, entre les sons et le haut-parleur
   const vuesRef = useRef(null); // ids des courses disponibles déjà connues
   const pretesRef = useRef(null); // ids de mes courses déjà vues « prêtes »
   const etatsRef = useRef(null); // statut de chacune de mes courses au relevé précédent
@@ -54,6 +60,12 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
     if (!Ctor) return undefined;
     const ctx = new Ctor();
     ctxRef.current = ctx;
+    const renfort = ctx.createGain();
+    renfort.gain.value = RENFORT;
+    const limiteur = ctx.createDynamicsCompressor();
+    limiteur.threshold.value = -2; limiteur.knee.value = 0; limiteur.ratio.value = 20; limiteur.attack.value = 0.002; limiteur.release.value = 0.1;
+    renfort.connect(limiteur).connect(ctx.destination);
+    sortieRef.current = renfort;
     const debloquer = () => { if (ctx.state === 'suspended') ctx.resume().catch(() => {}); };
     const evts = ['pointerdown', 'keydown', 'touchstart'];
     evts.forEach((e) => window.addEventListener(e, debloquer, { passive: true }));
@@ -66,11 +78,9 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
 
   const alerter = useCallback((notes, motifVibration, titre, corps, tag) => {
     const ctx = ctxRef.current;
-    if (sonActif && ctx && ctx.state === 'running') { try { playChime(ctx, notes); } catch { /* contexte fermé */ } }
+    if (sonActif && ctx && ctx.state === 'running') { try { playChime(ctx, notes, sortieRef.current || ctx.destination); } catch { /* contexte fermé */ } }
     vibrer(motifVibration);
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      try { new Notification(titre, { body: corps, icon: '/icons/icon.svg', tag }); } catch { /* refusées entre-temps */ }
-    }
+    notifier(titre, { body: corps, icon: '/icons/icon.svg', tag });
   }, [sonActif]);
 
   // 1. Nouvelles courses disponibles.
@@ -136,7 +146,7 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
     if (!nbPretes) return undefined;
     const id = setInterval(() => {
       const ctx = ctxRef.current;
-      if (sonActif && ctx && ctx.state === 'running') { try { playChime(ctx, NOTES_PRETE); } catch { /* contexte fermé */ } }
+      if (sonActif && ctx && ctx.state === 'running') { try { playChime(ctx, NOTES_PRETE, sortieRef.current || ctx.destination); } catch { /* contexte fermé */ } }
     }, 30000);
     return () => clearInterval(id);
   }, [nbPretes, sonActif]);

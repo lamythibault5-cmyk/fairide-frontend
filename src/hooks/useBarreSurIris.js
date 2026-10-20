@@ -7,46 +7,17 @@ import { useEffect } from 'react';
  * est remonté en défilant — comme la barre d'état (barreEtat.js), même façon de regarder.
  *
  * On lit ce qui est peint 2 px sous la barre (elementFromPoint au milieu de l'écran) et on remonte jusqu'au premier fond
- * opaque. Une fois par image au plus, et la classe ne change que si la couleur change. */
-const IRIS = new Set(['59,47,181', '42,33,133']);
-
-function fondSous(y) {
-  let el = document.elementFromPoint(window.innerWidth / 2, y);
-  while (el && el !== document.documentElement) {
-    const m = getComputedStyle(el).backgroundColor.match(/rgba?\(([^)]+)\)/);
-    if (m) {
-      const [r, v, b, a = 1] = m[1].split(',').map((x) => Number(x.trim()));
-      if (a >= 0.9) return `${r},${v},${b}`;
-    }
-    el = el.parentElement;
-  }
-  return null;
-}
+ * opaque. Toutes les 120 ms au plus pendant un défilement (regardSousBarre.js, 2026-10-20 : c'était à chaque image), et la
+ * classe ne change que si la couleur change. */
+import { IRIS, fondSous, surveillerSousBarre } from '../regardSousBarre';
 
 export default function useBarreSurIris(barre, actif = true) {
   useEffect(() => {
     const el = barre.current;
     if (!actif || !el) return undefined;
-    let image = 0;
-    let retard = 0;
-    const appliquer = () => {
-      image = 0;
+    return surveillerSousBarre(() => {
       const fond = fondSous(el.getBoundingClientRect().bottom + 2);
       el.classList.toggle('sur-iris', fond !== null && IRIS.has(fond));
-    };
-    const demander = () => { if (!image) image = requestAnimationFrame(appliquer); };
-    // Changement d'écran, données arrivées : la page change sans défilement ; un second regard après les animations.
-    const demanderApres = () => { demander(); clearTimeout(retard); retard = setTimeout(demander, 450); };
-    window.addEventListener('scroll', demander, { capture: true, passive: true });
-    window.addEventListener('resize', demanderApres);
-    const obs = new MutationObserver(demanderApres);
-    obs.observe(document.body, { childList: true, subtree: true });
-    demanderApres();
-    return () => {
-      cancelAnimationFrame(image); clearTimeout(retard);
-      window.removeEventListener('scroll', demander, { capture: true });
-      window.removeEventListener('resize', demanderApres);
-      obs.disconnect();
-    };
+    });
   }, [barre, actif]);
 }

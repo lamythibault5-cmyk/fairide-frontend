@@ -12,7 +12,7 @@ import { euros, remiseCourte } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
-import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
+import { SkeletonCards, SqueletteEcran, EcranAttente } from '../../components/Skeleton';
 import ErreurChargement from '../../components/ErreurChargement';
 import { ligneIndisponible, lignesIndisponibles } from '../../panierDisponible';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
@@ -94,6 +94,14 @@ export default function Checkout() {
   const [placing, setPlacing] = useState(false);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [paying, setPaying] = useState(false);
+  /* L'ÉCRAN « OUVERTURE DU PAIEMENT SÉCURISÉ… » (app, EcranAttente ; fondateur, 2026-10-20, test Android : « très lent après
+     avoir appuyé sur payer »). Affiché dès l'appui sur « Commander et payer » quand le paiement est en ligne, gardé jusqu'à
+     l'ouverture du navigateur de paiement ou une erreur. `versPaiementRef` : le panier vient d'être mis de côté
+     (stashForPayment) et le navigateur s'ouvre — l'effet « panier vide » ci-dessous ne doit pas changer de page pendant ce
+     temps (il le faisait aussitôt, et l'écran d'attente partait avec la page) ; on va à Mes commandes une fois le
+     navigateur ouvert, comme avant. */
+  const [ouverturePaiement, setOuverturePaiement] = useState(false);
+  const versPaiementRef = useRef(false);
   const [cancelling, setCancelling] = useState(false);
   // Total affiché au moment du clic, pour dire au client de combien il a bougé quand la carte de confirmation s'affiche.
   const [totalAnnonce, setTotalAnnonce] = useState(null);
@@ -112,7 +120,7 @@ export default function Checkout() {
   const restaurantId = cart.restaurantId;
 
   useEffect(() => {
-    if (commandeTermineeRef.current) return;
+    if (commandeTermineeRef.current || versPaiementRef.current) return;
     if (!restaurantId || cart.count === 0) {
       // Retour arrière depuis la page de paiement : le panier est mis de côté (stashForPayment), pas perdu. « Ton panier
       // est vide » était faux ; Mes commandes montre la commande au paiement non terminé, avec « Payer » et « Revenir au
@@ -365,6 +373,7 @@ export default function Checkout() {
     }
     if (lignesIndisponibles(cart.lines, restaurant?.menu).length) { toast(t('checkout.removeUnavailable'), 'erreur'); return; }
     setPlacing(true);
+    if (!surPlaceChoisi) setOuverturePaiement(true);
     try {
       // Les frais de livraison dépendent de la distance réelle et ne sont connus qu'une fois la commande
       // créée côté serveur — on affiche donc le total exact avant de rediriger vers le paiement.
@@ -399,6 +408,7 @@ export default function Checkout() {
       }
       setTotalAnnonce(montantAnnonce);
       setPendingOrder(order);
+      setOuverturePaiement(false);
     } catch (e) {
       // CGU passées à une nouvelle version entre l'ouverture de la page et le clic : on affiche la case.
       if (e.code === 'CGU_A_ACCEPTER') setConformite((c) => ({ ...c, termsNeeded: true, acceptTerms: false, termsVersion: e.data?.termsVersion || c.termsVersion }));
@@ -409,6 +419,7 @@ export default function Checkout() {
       toast(e.message, 'erreur');
     } finally {
       setPlacing(false);
+      setOuverturePaiement(false);
     }
   }
 
@@ -416,6 +427,7 @@ export default function Checkout() {
   // confirmation), sinon celle de la carte.
   async function confirmAndPay(order = pendingOrder) {
     setPaying(true);
+    if (order.paymentMode !== 'on_site') setOuverturePaiement(true);
     try {
       // Paiement sur place : rien à encaisser en ligne, la commande part au commerce.
       if (order.paymentMode === 'on_site') {
@@ -439,11 +451,18 @@ export default function Checkout() {
         // le laisser en place lui laissait un panier d'articles déjà payés s'il ne revenait jamais
         // sur la page de retour. La copie mise de côté est restaurée ou supprimée par OrderResult.jsx,
         // une fois l'issue réellement connue.
+        versPaiementRef.current = true;
         cart.stashForPayment(order.id);
-        await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
+        try {
+          await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
+        } finally {
+          versPaiementRef.current = false;
+          navigate('/orders', { replace: true });
+        }
       }
     } catch (e) {
       toast(e.message, 'erreur');
+      setOuverturePaiement(false);
       setPaying(false);
       // Échec sur le chemin direct : la commande existe déjà côté serveur, non payée. On montre la carte, qui permet
       // de réessayer ou d'annuler (un nouveau clic sur la barre renverrait d'ailleurs cette même commande, voir
@@ -523,6 +542,7 @@ export default function Checkout() {
 
   return (
     <div className="checkout-page ec-page sc-page">
+      {APPLI && ouverturePaiement && <EcranAttente titre={t('checkout.openingSecurePayment')} />}
       {/* Le retour mène au PANIER, et non plus directement à la carte du commerce : c'est l'écran
           d'où l'on vient, donc celui qu'on s'attend à retrouver en reculant. Revenir à la carte pour
           ajouter un plat reste possible — c'est « Ajouter un plat », dans la barre de récapitulatif

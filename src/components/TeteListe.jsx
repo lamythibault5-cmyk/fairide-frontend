@@ -125,15 +125,21 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
 
   // LE VÉLO ROULE QUAND ON DÉFILE : sa place sur la route suit la page (8 % en haut, 88 % après ~1 400 px), et il pédale
   // tant que ça bouge. Une écriture de style par image (requestAnimationFrame), aucun rendu React.
+  // Par `transform` depuis sa place de départ (left: 8 %, ecran-liste.css), en pixels de la route mesurée une fois puis à
+  // chaque changement de taille (2026-10-20, test de l'app Android) : `left` refaisait la mise en page à chaque image.
   useEffect(() => {
     if (!bandeau || !velo.current) return undefined;
     let attente = false;
     let arret = null;
+    const route = velo.current.parentElement;
+    let largeur = route ? route.clientWidth : 0;
     const poser = () => {
       attente = false;
       const y = Math.max(0, window.scrollY);
-      if (velo.current) velo.current.style.left = `${Math.min(88, 8 + y / 18)}%`;
+      if (velo.current) velo.current.style.transform = `translateX(${Math.round(((Math.min(88, 8 + y / 18) - 8) / 100) * largeur)}px)`;
     };
+    const mesure = typeof ResizeObserver === 'undefined' || !route ? null : new ResizeObserver(() => { largeur = route.clientWidth; poser(); });
+    mesure?.observe(route);
     const surDefilement = () => {
       velo.current?.classList.add('roule');
       clearTimeout(arret);
@@ -144,7 +150,7 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
     };
     poser();
     window.addEventListener('scroll', surDefilement, { passive: true });
-    return () => { window.removeEventListener('scroll', surDefilement); clearTimeout(arret); };
+    return () => { window.removeEventListener('scroll', surDefilement); clearTimeout(arret); mesure?.disconnect(); };
   }, [bandeau]);
 
   const premiereBascule = options.findIndex((o) => o.regime);

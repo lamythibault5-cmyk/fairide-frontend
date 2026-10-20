@@ -1,6 +1,7 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api';
+import { defilement } from '../gestes';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { euros } from '../prixPlat';
@@ -32,7 +33,13 @@ import QuestionsCarte, { reponseAffichee } from '../components/commerce/Question
  * QUESTIONS AVANT LA CARTE (fondateur, 2026-10-20 ; questionsCarte.js côté serveur). Le lien arrive par e-mail ; s'il reste
  * des questions de Fairide sur la carte, la page les pose d'abord, à une touche (QuestionsCarte.jsx). Répondre ne
  * consomme pas le lien. Tant que les réponses ne sont pas reportées dans la carte, le même lien dit « on met ta carte à
- * jour » au lieu de « C'est bon » : signer une carte qui va encore changer bloquerait la commande ensuite. */
+ * jour » au lieu de « C'est bon » : signer une carte qui va encore changer bloquerait la commande ensuite.
+ *
+ * LE RACCOURCI VERS « C'EST BON » (fondateur, 2026-10-20, test avec Maestro Pizza : « le bouton est au bout d'une longue
+ * liste, très pénible »). Le bloc de validation reste à sa place, après la carte (voir plus haut pourquoi il n'est plus
+ * collé en bas). Tant qu'il est plus bas que l'écran, une pilule iris flotte en bas, au-dessus des onglets, comme celle
+ * du panier : une touche descend jusqu'au bloc, où l'engagement, le nom et le vrai bouton se lisent ensemble. Elle ne
+ * signe rien elle-même — on signe en voyant ce qu'on signe — et elle s'efface dès que le bloc entre à l'écran. */
 export default function ValiderCarte() {
   const { token } = useParams();
   // Commerçant connecté (arrivé par la liste « Avant d'être en ligne ») : la page finie le ramène à son tableau de bord au
@@ -52,6 +59,9 @@ export default function ValiderCarte() {
   const [envoiQuestions, setEnvoiQuestions] = useState(false);
   // Les réponses qu'on vient d'envoyer, rappelées sur l'écran de remerciement (la page rechargée ne les a plus).
   const [rappel, setRappel] = useState(null);
+  // Le bloc « C'est bon » et sa visibilité : la pilule-raccourci ne se montre que tant qu'il est encore sous l'écran.
+  const blocValider = useRef(null);
+  const [blocPlusBas, setBlocPlusBas] = useState(false);
   const choixOffert = !!carte?.fairideRateChoice?.offered;
   const rate = carte?.fairideRateChoice?.rate || 0;
   // Hausse qui rend au commerce son prix entier après la commission (11,1 % en franchise TVA), calculée par le serveur.
@@ -85,6 +95,16 @@ export default function ValiderCarte() {
       if (e.status === 409) charger();
     } finally { setEnvoi(false); }
   }
+
+  const avecCarte = !!carte && !fait && !carte.questions?.open?.length && !carte.questions?.waiting;
+  useEffect(() => {
+    const el = blocValider.current;
+    if (!avecCarte || !el || typeof IntersectionObserver === 'undefined') return undefined;
+    const obs = new IntersectionObserver(([e]) => setBlocPlusBas(!e.isIntersecting && e.boundingClientRect.top > 0));
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [avecCarte]);
+  const allerAuBloc = () => blocValider.current?.scrollIntoView({ behavior: defilement(), block: 'end' });
 
   const nomCommerce = carte?.restaurant?.name || '';
   if (fait) {
@@ -198,7 +218,14 @@ export default function ValiderCarte() {
           </section>
         ))}
 
-        <div className="gn-valider">
+        {blocPlusBas && (
+          <div className="gn-raccourci">
+            <button type="button" className="gn-raccourci-pilule" onClick={allerAuBloc}>
+              <Icone nom="bas" taille={18} />{t('validerCarte.goToCestBon')}
+            </button>
+          </div>
+        )}
+        <div className="gn-valider" ref={blocValider}>
           <p className="gn-texte gn-texte--encre">{t('validerCarte.commitment')}</p>
           <div className="field">
             <label htmlFor={`${id}-nom`}>{t('validerCarte.yourName')}</label>

@@ -41,7 +41,8 @@ import { resolveItemImage, restaurantTypeLabel, haversineDistanceKm } from '../.
 import { VeloMarque } from '../../components/EcranCommande';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
 import { experienceApp } from '../../natif';
-import { photoEnVol } from '../../transitionPhoto';
+import { photoEnVol, entreeParPhoto } from '../../transitionPhoto';
+import { chargerAvecCache, lireCache, modifierCache } from '../../cacheDonnees';
 import PanierColonne from '../../components/PanierColonne';
 import { repeterTantQueLibre } from '../../defilementAuto';
 import { lienFiche } from '../../murCompte';
@@ -96,9 +97,21 @@ function rechargementDeCettePage(id) {
 // Moyens de paiement au retrait (serveur : reseauxCommerce.js) → clé de leur libellé.
 const LIBELLES_PAIEMENT = { especes: 'payEspeces', bancontact: 'payBancontact', carte: 'payCarte', payconiq: 'payPayconiq', titres_repas: 'payTitresRepas' };
 
+// Huit commerces au hasard pour « À découvrir », sans celui-ci.
+const tirerDecouvertes = (tous, id) => (tous || []).filter((r) => r.id !== id).sort(() => Math.random() - 0.5).slice(0, 8);
+
 export default function RestaurantMenu() {
   const { id } = useParams();
-  const [restaurant, setRestaurant] = useState(null);
+  const { token, user, role } = useAuth();
+  /* DÉJÀ LUE, LA FICHE S'OUVRE TOUT DE SUITE (2026-10-20, test de l'app Android avec Maestro Pizza : « lent à s'ouvrir »).
+     Ce qui a été lu pendant la visite — au toucher de la carte dans la liste (prechargerFiche), ou lors d'un passage
+     précédent — s'affiche dès la première image ; la relecture part quand même, et la fiche ne change que si la réponse
+     diffère (cacheDonnees.js). Le jeton fait partie de la clé : une fiche lue connecté n'est pas resservie à un visiteur. */
+  const [restaurant, setRestaurant] = useState(() => lireCache(`/restaurants/${id}`, token) || null);
+  /* ENTRÉE PAR LA PHOTO (transitionPhoto.js) : la photo de la carte vient de grandir jusqu'en haut de l'écran, c'est déjà
+     l'entrée de la fiche. La feuille qui remonte et le sceau qui saute (ecran-fiche.css) en faisaient une seconde, 0,45 s
+     plus tard : deux entrées de suite, la fiche paraissait lente. Ouverte ainsi, la fiche est posée sans animation. */
+  const [parPhoto] = useState(() => entreeParPhoto(id));
   // Commande groupée quittée depuis le bandeau : le bouton « Commande groupée » revient tout de suite.
   const [groupeQuitte, setGroupeQuitte] = useState(false);
   // Plafond de commandes du jour atteint (réglé par le commerce) : on le dit avant le panier, pas au paiement.
@@ -106,9 +119,11 @@ export default function RestaurantMenu() {
   const [erreur, setErreur] = useState(null);
   // Incrémenté par « Réessayer » : il suffit qu'il change pour que l'effet de chargement reparte.
   const [essai, setEssai] = useState(0);
-  const [reviews, setReviews] = useState(null);
-  const [discover, setDiscover] = useState([]);
-  const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [reviews, setReviews] = useState(() => lireCache(`/restaurants/${id}/reviews`) || null);
+  const [discover, setDiscover] = useState(() => tirerDecouvertes(lireCache('/restaurants'), id));
+  // Le commerce pour lequel « À découvrir » a été tiré (null : pas encore tiré, la liste n'était pas gardée).
+  const decouvertesPour = useRef(lireCache('/restaurants') ? id : null);
+  const [favoriteIds, setFavoriteIds] = useState(() => new Set(token ? lireCache('/restaurants/favorites/ids', token) || [] : []));
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   // Les horaires, l'adresse, le téléphone et le site vivaient en clair sous le titre, soit six
   // lignes de métadonnées avant le premier plat. Ils passent derrière « Infos », comme sur la
@@ -133,7 +148,6 @@ export default function RestaurantMenu() {
   // App sans compte : la barre d'app (Layout.jsx) colle en haut de l'écran, les ronds flottants et la bande des sections
   // collent juste dessous. Sa hauteur dépend du bouton qu'elle porte (marque ou Retour) : on la mesure.
   const pageRef = useRef(null);
-  const { token, user, role } = useAuth();
   const [pickerItem, setPickerItem] = useState(null);
   // Article qu'on essayait d'ajouter quand le panier contenait déjà un autre commerce (voir addToCart) —
   // conservé le temps que l'utilisateur confirme ou annule le remplacement du panier.
@@ -259,13 +273,26 @@ export default function RestaurantMenu() {
        page miroitait indéfiniment, sans rien à toucher. Sur une page PUBLIQUE, indexée, qui est
        souvent la première de Fairide qu'un client voit. */
     setErreur(null);
-    api(`/restaurants/${id}`, { token }).then(setRestaurant).catch(setErreur);
+    // Fiche déjà gardée (cacheDonnees.js) : elle est à l'écran, la relecture se fait derrière. Si la relecture échoue, on
+    // garde ce qu'on montre — sauf un 404 : le commerce a été retiré, la fiche ne doit plus s'afficher.
+    const gardee = lireCache(`/restaurants/${id}`, token);
+    if (gardee) setRestaurant(gardee);
+    chargerAvecCache(`/restaurants/${id}`, { token }).then(setRestaurant).catch((e) => { if (!gardee || e.status === 404) setErreur(e); });
+    // La capacité du jour (« complet ») change d'une commande à l'autre : toujours relue, jamais gardée.
     api(`/restaurants/${id}/capacity`).then((c) => setComplet(!!c.full)).catch(() => {});
-    api(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
-    api('/restaurants').then((all) => setDiscover(all.filter((r) => r.id !== id).sort(() => Math.random() - 0.5).slice(0, 8))).catch(() => {});
+    chargerAvecCache(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
+    // « À découvrir » est tiré une fois par fiche : une relecture identique ne rebat pas la rangée sous les yeux.
+    const tous = lireCache('/restaurants');
+    if (tous && decouvertesPour.current !== id) { decouvertesPour.current = id; setDiscover(tirerDecouvertes(tous, id)); }
+    chargerAvecCache('/restaurants').then((all) => {
+      if (all === tous && decouvertesPour.current === id) return;
+      decouvertesPour.current = id;
+      setDiscover(tirerDecouvertes(all, id));
+    }).catch(() => {});
     // Page publique (consultable sans compte, voir App.jsx) — inutile pour un visiteur anonyme.
     if (token) {
-      api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
+      const favoris = lireCache('/restaurants/favorites/ids', token);
+      chargerAvecCache('/restaurants/favorites/ids', { token }).then((ids) => { if (ids !== favoris) setFavoriteIds(new Set(ids)); }).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, essai]);
@@ -275,15 +302,26 @@ export default function RestaurantMenu() {
   // La restauration native du navigateur est coupée une fois pour toutes par ScrollRestorer (2026-10-17). Elle l'était
   // ici, le temps de la fiche, puis RÉTABLIE en la quittant : après la visite d'un commerce, le navigateur se remettait à
   // replacer lui-même les pages au retour arrière, en concurrence avec ScrollRestorer, sur tout le site.
+  // Écrite au plus toutes les 200 ms (2026-10-20, test de l'app Android) : elle partait à CHAQUE événement de défilement,
+  // une écriture synchrone dans sessionStorage par image pendant qu'on parcourt la carte. La dernière position est de toute
+  // façon écrite en quittant (pagehide, beforeunload, démontage).
   useEffect(() => {
+    let minuteur = 0;
     function saveScroll() {
-      sessionStorage.setItem(`fairide_scroll_${id}`, String(window.scrollY));
+      clearTimeout(minuteur);
+      minuteur = 0;
+      try { sessionStorage.setItem(`fairide_scroll_${id}`, String(window.scrollY)); } catch { /* sans stockage */ }
     }
-    window.addEventListener('scroll', saveScroll, { passive: true });
+    function surDefilement() {
+      if (!minuteur) minuteur = setTimeout(saveScroll, 200);
+    }
+    window.addEventListener('scroll', surDefilement, { passive: true });
+    window.addEventListener('pagehide', saveScroll);
     window.addEventListener('beforeunload', saveScroll);
     return () => {
       saveScroll();
-      window.removeEventListener('scroll', saveScroll);
+      window.removeEventListener('scroll', surDefilement);
+      window.removeEventListener('pagehide', saveScroll);
       window.removeEventListener('beforeunload', saveScroll);
     };
   }, [id]);
@@ -373,6 +411,8 @@ export default function RestaurantMenu() {
         await api(`/restaurants/${id}/favorite`, { method: 'POST', token });
         setFavoriteIds((prev) => new Set(prev).add(id));
       }
+      // La copie gardée suit (cacheDonnees.js) : la liste montre le bon cœur dès le retour.
+      modifierCache('/restaurants/favorites/ids', token, (ids) => (isFavorite ? ids.filter((x) => x !== id) : [...ids, id]));
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -568,7 +608,9 @@ export default function RestaurantMenu() {
   const couverture = (
     <>
       <VisuelVide nom={restaurant.name} cuisine={restaurant.cuisine} taille="bandeau" className="fiche-couverture-vide" />
-      {restaurant.coverImageUrl && <img {...(APPLI ? imgProps(restaurant.coverImageUrl, 960, '(max-width: 960px) 100vw, 960px') : imgProps(restaurant.coverImageUrl, 1200, '100vw'))} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" onError={cacherImageCassee} />}
+      {restaurant.coverImageUrl && (APPLI
+        ? <CouvertureAppli url={restaurant.coverImageUrl} petite={photoEnVol(id)} alt={restaurant.name} />
+        : <img {...imgProps(restaurant.coverImageUrl, 1200, '100vw')} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" onError={cacherImageCassee} />)}
     </>
   );
   const logo = restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" onError={cacherImageCassee} />;
@@ -1021,7 +1063,7 @@ export default function RestaurantMenu() {
       ? <span className="fiche-sceau fiche-sceau--logo" aria-hidden="true"><img {...imgProps(restaurant.logoImageUrl, 160)} alt="" decoding="async" onError={cacherImageCassee} /></span>
       : <span className="fiche-sceau" aria-hidden="true">{String(restaurant.name || '').trim().charAt(0).toUpperCase()}</span>;
     return (
-      <div className="fiche-page fiche-appli" ref={pageRef}>
+      <div className={`fiche-page fiche-appli${parPhoto ? ' fiche-appli--sans-entree' : ''}`} ref={pageRef}>
         {entete}
         <header className="fiche-entete fiche-entete--sceau">
           <div className="fiche-media">{couverture}</div>
@@ -1072,6 +1114,31 @@ export default function RestaurantMenu() {
       {fenetres}
     </div>
   );
+}
+
+/* LA COUVERTURE DE L'APP, SANS SECOND TÉLÉCHARGEMENT VISIBLE (2026-10-20, test de l'app Android). La carte de la liste
+   avait déjà sa photo (480 à 800 px, dans le cache du navigateur) ; la fiche demandait la même en 960 à 1 920 px et montrait
+   le visuel de marque le temps qu'elle arrive. Ouverte depuis la carte (`petite`, transitionPhoto.js), la fiche montre
+   d'abord la photo de la carte, tout de suite, et passe à la grande une fois celle-ci chargée ET décodée — l'échange de
+   `src` se fait sans trou : le navigateur garde l'ancienne image jusqu'à ce que la nouvelle soit prête. Sans `petite` (lien
+   direct, retour arrière), la grande seule, comme avant. */
+function CouvertureAppli({ url, petite, alt }) {
+  const grande = imgProps(url, 960, '(max-width: 960px) 100vw, 960px');
+  const [src, setSrc] = useState(petite);
+  useEffect(() => {
+    if (!petite) return undefined;
+    let fini = false;
+    const img = new Image();
+    img.decoding = 'async';
+    img.sizes = grande.sizes;
+    if (grande.srcSet) img.srcset = grande.srcSet;
+    img.src = grande.src;
+    img.decode().then(() => { if (!fini) setSrc(img.currentSrc || img.src); }).catch(() => { /* la petite reste */ });
+    return () => { fini = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, petite]);
+  if (!petite) return <img {...grande} alt={alt} className="fiche-couverture" fetchPriority="high" decoding="async" onError={cacherImageCassee} />;
+  return <img src={src} alt={alt} className="fiche-couverture" decoding="async" onError={cacherImageCassee} />;
 }
 
 // Un visiteur arrivé par un lien partagé voit cette rangée, mais ouvrir un AUTRE commerce depuis Fairide demande un compte

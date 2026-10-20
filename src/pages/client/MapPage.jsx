@@ -55,6 +55,9 @@ function bandePrix(resto) {
   return m < SEUIL_MOYEN ? 1 : m < SEUIL_CHER ? 2 : 3;
 }
 
+// « Trier » et « Prix » retirés pour le moment (fondateur, 2026-10-20) — même interrupteur que pages/client/RestaurantList.jsx.
+const TRI_ET_PRIX = false;
+
 export default function MapPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -180,18 +183,22 @@ export default function MapPage() {
             <button type="button" className={`cuisine-chip${ouvertsSeuls ? ' active' : ''}`} aria-pressed={ouvertsSeuls} onClick={() => setOuvertsSeuls((v) => !v)}>
               <Icone nom="horloge" taille={16} />{t('mapClient.filterOpen')}
             </button>
+            {TRI_ET_PRIX && (
             <button type="button" className={`cuisine-chip${prix ? ' active' : ''}`} aria-expanded={panneau === 'prix'} onClick={() => basculer('prix')}>
               <Icone nom="euro" taille={16} />{prix ? '€'.repeat(prix) : t('mapClient.filterPrice')}
             </button>
+            )}
             {/* Un panneau de pastilles, plus un <select> natif : le menu du système s'ouvre au
                 milieu de l'écran dans le style du navigateur, une liste grise sans rapport avec la
                 page, posée par-dessus la carte. */}
             <button type="button" className={`cuisine-chip${cuisine ? ' active' : ''}`} aria-expanded={panneau === 'cuisine'} onClick={() => basculer('cuisine')}>
               <Icone nom="restaurants" taille={16} />{cuisine ? restaurantTypeLabel(cuisine, t) : t('mapClient.filterCuisine')}
             </button>
+            {TRI_ET_PRIX && (
             <button type="button" className={`cuisine-chip${tri !== 'recommande' ? ' active' : ''}`} aria-expanded={panneau === 'tri'} onClick={() => basculer('tri')}>
               <Icone nom="stats" taille={16} />{tri === 'recommande' ? t('mapClient.sort') : LIBELLE_TRI[tri]}
             </button>
+            )}
           </div>
 
           {panneau === 'prix' && (

@@ -314,7 +314,8 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
    **liquid glass** since 2026-10-16 (version 2 of [mockups/barre-onglets-verre.html](mockups/barre-onglets-verre.html), after
    WhatsApp): near-transparent, short blur, highlights and a soft shadow; the active tab is a glass lens with iridescent edges
    that grows when pressed and follows the finger ([src/barreVerre.js](src/barreVerre.js), loaded with `import()` in the app only;
-   on Chromium/Android it also refracts what passes under its edges). On the website it stays solid white.
+   on desktop Chromium it also refracts what passes under its edges; not on Android since 2026-10-20, too heavy on a mid-range
+   phone). On the website it stays solid white.
 3. **One lime accent per view.** If a screen already has a `btn-gold`, its active tab / badge /
    nav item uses white or iris instead. *Exception (founder, 2026-10-16):* the app's welcome/sign-up screens pair the lime
    button with the lime check of ticked options and the « Salut ! » chip.
@@ -413,6 +414,9 @@ Android has it in the system), and swipe-to-confirm for the courier's « récup�
   native only, on Mes commandes, the restaurant list, the courier's Courses and the shop's Commandes.
 - **Status bar** follows the band in the app ([barreEtat.js](src/barreEtat.js)): iris over an iris band, white otherwise.
 - **Photo transition** card → restaurant page with the View Transitions API ([transitionPhoto.js](src/transitionPhoto.js)).
+- **Data already read stays in memory** (2026-10-20, [cacheDonnees.js](src/cacheDonnees.js)): the restaurant list and pages show
+  what was read during the visit at once and re-read in the background (same answer = same object, no re-render); a card
+  prefetches its page on touch. A plain Map, never localStorage (nothing to declare), emptied on logout, keyed by token.
 - **Light only**: `color-scheme: light only` (index.html + styles.css) and a Light Android theme. No dark mode until one is
   designed; iOS needs `UIUserInterfaceStyle = Light` (docs/application-mobile.md).
 

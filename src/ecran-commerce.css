@@ -339,10 +339,13 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-section { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin: 18px 0 8px; letter-spacing: .05em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
 .ec-section:first-child { margin-top: 2px; }
 .ec-section-n { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--ink-soft); background: var(--cream-dim); border-radius: var(--radius-pill); padding: 1px 8px; letter-spacing: 0; }
-/* Le code du client (à emporter) : champ et bouton sur toute la largeur, « Client pas venu » dessous. */
-.ec-code-client { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; cursor: default; }
-.ec-code-client input { width: 100%; min-height: 48px; font-size: 18px; letter-spacing: .08em; }
-.ec-code-client .ec-bouton { margin-top: 0; }
+/* La remise au comptoir (à emporter, prête ; plus de code à taper depuis le 2026-10-20) : le numéro et le prénom du client
+   à gauche, « Remis au client » à côté sur le reste de la ligne, « Client pas venu » dessous. */
+.ec-remise-client { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; cursor: default; }
+.ec-remise-ligne { display: flex; align-items: center; gap: 12px; }
+.ec-remise-qui { display: inline-flex; align-items: baseline; gap: 8px; flex: none; max-width: 45%; min-width: 0; }
+.ec-remise-qui b { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ec-remise-ligne .ec-bouton { flex: 1 1 auto; width: auto; margin-top: 0; }
 .ec-pas-venu { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 40px !important; padding: 4px 0; border: 0; background: none; color: var(--red); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 /* Le paiement sur place reste encadré (fondateur, 2026-10-07 : de l'argent à encaisser se voit) ; payé en ligne, une ligne. */
 .ec-commande .paiement-badge { display: inline-block; margin: 2px 0 6px; }

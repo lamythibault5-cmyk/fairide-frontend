@@ -19,7 +19,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import BandeauOuverture from '../../components/BandeauOuverture';
 import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import { cuisineDepuisOsm } from '../../osmCuisine';
-import { demarrerTerminalNavigateur } from '../../terminalNavigateur';
+import { demarrerTerminalNavigateur, EVENEMENT_COMMANDE } from '../../terminalNavigateur';
 import { remonterEnHaut } from '../../remonter';
 import Icone from '../../components/Icone';
 import '../../site-pro.css';
@@ -160,7 +160,11 @@ export default function DashboardLayout() {
       if (tour.current % 4 === 0 && document.visibilityState === 'visible') loadDashboard(restoId, { silencieux: true });
       else loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
     }, 15000);
-    return () => clearInterval(interval);
+    // Sur un appareil associé comme terminal, le flux du serveur annonce chaque commande (terminalNavigateur.js) : relecture
+    // immédiate, l'alarme part dans la seconde au lieu de jusqu'à 15 s plus tard.
+    const tout = () => loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
+    window.addEventListener(EVENEMENT_COMMANDE, tout);
+    return () => { clearInterval(interval); window.removeEventListener(EVENEMENT_COMMANDE, tout); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId]);
   // STATUT STRIPE « EN ATTENTE » RELU UNE FOIS PAR PAGE (test réel, 12 oct. 2026). Il n'était relu qu'au retour du lien

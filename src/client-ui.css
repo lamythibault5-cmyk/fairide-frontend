@@ -386,6 +386,9 @@
 }
 .visuel-vide-emoji { position: absolute; right: 12px; bottom: 10px; font-size: 26px; line-height: 1; }
 .rc-media > .rc-photo { position: relative; z-index: 1; }
+/* La photo porte l'arrondi du haut de sa carte (rayon de la carte moins son filet) : la carte la coupait déjà ainsi, mais la
+   capture de la transition photo (transitionPhoto.js) ne voit que l'image — sans ceci, elle voyageait en rectangle. */
+.rest-card.rc .rc-media > .rc-photo { border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0; }
 .rc-media > .rc-fav, .rc-media > .rc-offre, .rc-media > .rc-etat { z-index: 2; }
 .rc-est-ferme .visuel-vide { filter: saturate(.6) brightness(.95); }
 /* Bandeau de la fiche : le visuel tient la hauteur quand il n'y a pas de couverture. */

@@ -154,19 +154,37 @@ export default function Orders() {
   const toast = useToast();
   const { previewMode } = usePreviewMode();
   const { t } = useLanguage();
-  // Le code à donner au livreur ou à montrer au commerce : sous la progression dans l'app, plus bas sur le site.
-  // Pas avant que le commerce accepte (audit design 2, 2026-10-19) : le code ne sert qu'à la remise — au comptoir ou à la
-  // porte —, et une commande encore « envoyée » peut être refusée. Il reste dans l'e-mail de confirmation.
-  const codeDeRemise = (o) => (o.paid && o.deliveryCode && !['nouveau', 'livre', 'refuse', 'annule'].includes(o.status) ? (
-    <div className="suivi-code">
-      <div className="suivi-code-lib">
-        {o.orderType === 'pickup' && t('orders.codeShowRestaurant')}
-        {o.orderType === 'delivery' && (o.driverName ? t('orders.codeGiveDriverName', { name: String(o.driverName).split(' ')[0] }) : t('orders.codeGiveDriver'))}
+  // Ce qui sert à la remise (code à donner au livreur, numéro à montrer au commerce) : sous la progression dans l'app, plus
+  // bas sur le site. Pas avant que le commerce accepte (audit design 2, 2026-10-19) : il ne sert qu'à la remise — au comptoir
+  // ou à la porte —, et une commande encore « envoyée » peut être refusée.
+  // À EMPORTER (fondateur, 2026-10-20, après le test chez Maestro Pizza) : plus de code au comptoir. Le commerce touche
+  // « Remis au client » à côté du numéro de commande et du prénom du client : on montre donc le NUMÉRO en grand, et on dit
+  // que le nom suffit aussi. La LIVRAISON garde son code à donner au livreur, que lui tape à la porte.
+  const codeDeRemise = (o) => {
+    if (!o.paid || ['nouveau', 'livre', 'refuse', 'annule'].includes(o.status)) return null;
+    if (o.orderType === 'pickup') {
+      return (
+        <div className="suivi-code">
+          {o.orderNumber != null ? (
+            <>
+              <div className="suivi-code-lib">{t('retrait.numberLabel')}</div>
+              <div className="suivi-code-valeur">{`#${String(o.orderNumber).padStart(3, '0')}`}</div>
+              <div className="suivi-code-numero">{t('retrait.nameHint')}</div>
+            </>
+          ) : <div className="suivi-code-numero">{t('retrait.nameOnly')}</div>}
+        </div>
+      );
+    }
+    if (o.orderType !== 'delivery' || !o.deliveryCode) return null;
+    return (
+      <div className="suivi-code">
+        <div className="suivi-code-lib">
+          {o.driverName ? t('orders.codeGiveDriverName', { name: String(o.driverName).split(' ')[0] }) : t('orders.codeGiveDriver')}
+        </div>
+        <div className="suivi-code-valeur">{o.deliveryCode}</div>
       </div>
-      <div className="suivi-code-valeur">{o.deliveryCode}</div>
-      {o.orderType === 'pickup' && o.orderNumber != null && <div className="suivi-code-numero">{t('retrait.orderNumber', { n: `#${String(o.orderNumber).padStart(3, '0')}` })}</div>}
-    </div>
-  ) : null);
+    );
+  };
   const cart = useCart();
   const navigate = useNavigate();
   // Signalements déjà envoyés, par commande (plan de test USR-10) — affichés à la place du bouton.

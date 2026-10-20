@@ -5,7 +5,7 @@ import { libellesAllergenes } from '../allergenes';
 import { prixRemise, euros, libellePromo } from '../prixPlat';
 import { imgProps } from '../images';
 import Icone from './Icone';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { vibrer } from '../gestes';
 
@@ -77,8 +77,10 @@ function PasPlat({ item, name, image, onAjout, t }) {
  * l'app seulement (`bistrot`, posé par RestaurantMenu quand experienceApp()). Le plat se lit comme sur la carte imprimée
  * du commerce : une petite photo carrée à gauche, le nom, des points de conduite, le prix sur la même ligne, la description
  * dessous ; le compteur « − n + » (PasPlat) se pose à droite, sous le prix. Mêmes données, mêmes gestes que la ligne du site. */
-function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language, bistrot = false }) {
-  const image = resolveItemImage(item, sections);
+/* Mémorisée (2026-10-20, test de l'app Android) : chaque « + » change le panier, donc redessinait la fiche entière et ses
+ * centaines de plats. La ligne ne dépend que du plat, de son image et de réglages stables ; seul son compteur (PasPlat), qui
+ * lit le panier lui-même, se redessine. */
+const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAdd, t, language, bistrot = false }) {
   // Nom et description dans la langue affichée, avec repli sur le texte du restaurateur (localizedItem).
   const { name, desc } = localizedItem(item, language);
   const indisponible = item.available === false;
@@ -154,10 +156,10 @@ function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language, bis
       <button type="button" className={`${classes} plat-cliquable`} onClick={() => onAdd(item)} aria-label={`${name}, ${euros(remise ?? item.price)}`}>
         {contenu}
       </button>
-      <PasPlat item={item} name={name} image={image} onAjout={onQuickAdd || onAdd} t={t} />
+      <PasPlat item={item} name={name} image={image} onAjout={onQuickAdd} t={t} />
     </div>
   );
-}
+});
 
 // Rendu du menu groupé par section — les sections sont définies par le restaurateur (nom + ordre,
 // voir restaurant.sections / restaurant_sections en base), plus les 4 par défaut Entrées/Plats/
@@ -169,6 +171,12 @@ function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language, bis
 // restaurateur (RestaurantPreview) pour que les deux restent strictement identiques.
 export default function MenuCategorySections({ menu, sections, onAdd, onQuickAdd, hideAdd, bistrot = false }) {
   const { t, language } = useLanguage();
+  // Les gestes de la page changent à chaque rendu (fonctions refaites) : on passe aux lignes mémorisées des fonctions
+  // stables qui appellent toujours les dernières, sinon memo ne servirait à rien.
+  const gestes = useRef({ onAdd, onQuickAdd });
+  useLayoutEffect(() => { gestes.current = { onAdd, onQuickAdd }; });
+  const surAjout = useCallback((...a) => gestes.current.onAdd(...a), []);
+  const surAjoutDirect = useCallback((...a) => (gestes.current.onQuickAdd || gestes.current.onAdd)(...a), []);
   return (
     <>
       {sections.map((section) => {
@@ -186,7 +194,7 @@ export default function MenuCategorySections({ menu, sections, onAdd, onQuickAdd
               <div key={group.key || '__none'}>
                 {group.label && <div className="sub-category-header"><span>{group.label}</span></div>}
                 <div className="plats-liste">
-                  {group.items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} onQuickAdd={onQuickAdd} hideAdd={hideAdd} t={t} sections={sections} language={language} bistrot={bistrot} />)}
+                  {group.items.map((item) => <ItemCard key={item.id} item={item} image={resolveItemImage(item, sections)} onAdd={surAjout} onQuickAdd={surAjoutDirect} hideAdd={hideAdd} t={t} language={language} bistrot={bistrot} />)}
                 </div>
               </div>
             ))}

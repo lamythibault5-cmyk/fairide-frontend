@@ -36,8 +36,13 @@ export default function AlerteBandeau({ audioBloque, debloquerAudio, soundEnable
   return (
     <div className="sp-alerte">
       <div className="sp-puces" role="group" aria-label={t('sitePro.reglagesService')}>
-        <button type="button" className="sp-puce" aria-pressed={soundEnabled} onClick={() => setSoundEnabled(!soundEnabled)}>
-          <Icone nom={sonActif ? 'son' : 'sonCoupe'} taille={16} />{sonActif ? t('alertBar.soundOn') : t('alertBar.soundOff')}
+        {/* SON BLOQUÉ ≠ SON COUPÉ (fondateur, 2026-10-20 : « aucune sonnerie n'a marché sur le site »). Tant que le navigateur
+            bloquait le son, cette pastille disait « Son coupé » — et la toucher COUPAIT le son pour de bon sur l'appareil, au
+            lieu de le débloquer. Bloqué, elle débloque maintenant ; elle ne coupe que du son qui joue vraiment. */}
+        <button type="button" className="sp-puce" aria-pressed={soundEnabled}
+          onClick={() => (soundEnabled && audioBloque ? debloquerAudio() : setSoundEnabled(!soundEnabled))}>
+          <Icone nom={sonActif ? 'son' : 'sonCoupe'} taille={16} />
+          {sonActif ? t('alertBar.soundOn') : soundEnabled ? t('alertBar.soundBlocked') : t('alertBar.soundOff')}
         </button>
         {terminal && (
           <Link to="/dashboard/terminal" className="sp-puce"><Icone nom="imprimante" taille={16} />{terminal}</Link>

@@ -34,7 +34,7 @@ import AnneauDelai from '../../components/commerce/AnneauDelai';
 import LigneAlarme from '../../components/commerce/LigneAlarme';
 import ListePlats from '../../components/commerce/ListePlats';
 import LivreurCommande from '../../components/commerce/LivreurCommande';
-import { heurePrete, ouEstLeClient } from '../../components/commerce/clientCommande';
+import { heurePrete, ouEstLeClient, prenom } from '../../components/commerce/clientCommande';
 import { telephoneLisible } from '../../validation';
 
 // Le SITE (pas l'app) montre les commandes en tableau à trois colonnes (2026-10-16, mockups/site-ordinateur.html › Espace
@@ -128,7 +128,6 @@ export default function OrdersPage() {
   // Commande à emporter payée sur place que le client n'est pas venu chercher (confirmation avant de la clore).
   const [pasVenu, setPasVenu] = useState(null);
   const [clotureEnCours, setClotureEnCours] = useState(false);
-  const [pickupCodeInputs, setPickupCodeInputs] = useState({});
   const [confirmingPickup, setConfirmingPickup] = useState(null);
   // Conformité : commande avec demande d'allergie à confirmer (A1), remise d'alcool à contrôler (B6).
   const [allergieAConfirmer, setAllergieAConfirmer] = useState(null);
@@ -263,15 +262,14 @@ export default function OrdersPage() {
 
   // `ageVerifie` : la pièce d'identité a été contrôlée (commande avec alcool, backlog B6). Sans elle, on
   // ouvre d'abord la vérification — le serveur refuserait de toute façon (AGE_A_VERIFIER).
+  // Plus de code client à taper (fondateur, 2026-10-20, après le test chez Maestro Pizza) : « Remis au client » envoie la
+  // remise sans `code`, le serveur l'accepte (routes/orders.js confirm-takeaway, qui dit le prix de ce choix).
   async function confirmTakeaway(order, ageVerifie = false) {
     const orderId = order.id;
-    const code = (pickupCodeInputs[orderId] || '').trim();
-    if (!code) { toast(t('ordersResto.toastAskCustomerCode')); return; }
     if (order.containsAlcohol && order.orderType === 'pickup' && !ageVerifie) { setAgeAVerifier(order); return; }
     setConfirmingPickup(orderId);
     try {
-      await api(`/orders/${orderId}/confirm-takeaway`, { method: 'PATCH', token, body: { code, ...(ageVerifie ? { ageCheck: 'verified' } : {}) } });
-      setPickupCodeInputs((prev) => { const next = { ...prev }; delete next[orderId]; return next; });
+      await api(`/orders/${orderId}/confirm-takeaway`, { method: 'PATCH', token, body: ageVerifie ? { ageCheck: 'verified' } : {} });
       toast(t('ordersResto.toastTakeawayDone'), 'succes');
       loadDashboard(restoId);
     } catch (e) {
@@ -328,8 +326,8 @@ export default function OrdersPage() {
      iris, notes du client visibles). Une commande qui attend n'a ni route ni phrase d'échéance : l'anneau dit le temps qui
      reste. Le temps de préparation reste sur la carte ; « Accepter » et « Refuser » de la plus pressée sont dans la barre
      au-dessus des onglets (app), les suivantes gardent les leurs, en iris. Une fois le livreur trouvé, il apparaît comme une
-     personne (LivreurCommande). À emporter prête : le code du client sur toute la largeur, le bouton dessous, « Client pas
-     venu » encore dessous. Toucher la carte ouvre le détail, comme avant. */
+     personne (LivreurCommande). À emporter prête : le numéro et le prénom du client à côté de « Remis au client » (plus de
+     code à taper depuis le 2026-10-20), « Client pas venu » dessous. Toucher la carte ouvre le détail, comme avant. */
   const nouvellesTriees = enCours.filter((o) => orderStageKey(o) === 'nouveau').sort((a, b) => echeance(a) - echeance(b));
   const plusPressee = nouvellesTriees.find((o) => o.status === 'nouveau')?.id;
   const boutonPhoto = (o, classe, taille) => (
@@ -351,18 +349,25 @@ export default function OrdersPage() {
     return [orderTypeLabel(o, t), ouEstLeClient(o), o.paymentMode !== 'on_site' && o.paid ? t('serviceCommerce.payeeEnLigne') : '', pret ? t('serviceCommerce.preteVers', { time: pret }) : '']
       .filter(Boolean).join(' · ');
   };
-  // Le code du client (à emporter, prête) : champ et bouton sur toute la largeur, « Client pas venu » dessous.
-  const codeClient = (o) => (
-    <div className="ec-code-client" onClick={(e) => e.stopPropagation()}>
-      <input aria-label={t('ordersResto.phCustomerCode')} placeholder={t('ordersResto.phCustomerCode')}
-        // Codes à chiffres : pavé numérique sur téléphone, Entrée valide (simulation du 30/09).
-        inputMode="numeric" autoComplete="off"
-        onKeyDown={(e) => { if (e.key === 'Enter') confirmTakeaway(o); }}
-        value={pickupCodeInputs[o.id] || ''}
-        onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))} />
-      <button type="button" className="ec-bouton ec-bouton--iris" disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
-        {confirmingPickup === o.id ? '…' : t('ordersResto.validateOrder')}
-      </button>
+  /* LA REMISE AU COMPTOIR (à emporter, prête). Jusqu'au 2026-10-20, un champ où taper le code du client, puis « Valider la
+     commande ». Au vrai test chez Maestro Pizza, c'était un geste de trop en plein service (fondateur) : il ne reste qu'un
+     bouton, « Remis au client », et juste à côté le numéro de commande et le prénom du client — ce que le client annonce au
+     comptoir (son numéro ou son nom) et ce que porte le ticket du sac, pour remettre le bon sac à la bonne personne. Le
+     contrôle d'âge de l'alcool ne change pas (confirmTakeaway ouvre VerificationAge). « Client pas venu » reste dessous. */
+  const qui = (o) => (
+    <span className="ec-remise-qui">
+      {o.orderNumber ? <span className="commande-numero">{numeroCommande(o)}</span> : null}
+      <b>{prenom(o.clientName)}</b>
+    </span>
+  );
+  const remiseClient = (o) => (
+    <div className="ec-remise-client" onClick={(e) => e.stopPropagation()}>
+      <div className="ec-remise-ligne">
+        {qui(o)}
+        <button type="button" className="ec-bouton ec-bouton--iris" disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
+          {confirmingPickup === o.id ? '…' : t('ordersResto.handedToCustomer')}
+        </button>
+      </div>
       {o.paymentMode === 'on_site' && (
         <button type="button" className="ec-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} />{t('ordersResto.customerNoShow')}</button>
       )}
@@ -434,7 +439,7 @@ export default function OrdersPage() {
           <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
         </div>
       )}
-      {o.status === 'pret' && o.orderType === 'pickup' && codeClient(o)}
+      {o.status === 'pret' && o.orderType === 'pickup' && remiseClient(o)}
       {o.paymentMode === 'on_site' && o.status === 'preparation' && (
         <div onClick={(e) => e.stopPropagation()}>
           <button type="button" className="ec-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} />{t('ordersResto.customerNoShow')}</button>
@@ -512,15 +517,11 @@ export default function OrdersPage() {
               {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}><Icone nom="document" taille={16} className="icone-texte" />{' '}{selectedOrder.deliveryNote}</p>}
               {selectedOrder.orderType === 'delivery' && selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.driverLine', { name: selectedOrder.driverName, phone: selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : '' })}</p>}
               {selectedOrder.status === 'pret' && selectedOrder.orderType === 'pickup' && (
-                <div className="row" style={{ marginTop: 10, gap: 8 }}>
-                  <input aria-label={t('ordersResto.phCustomerCode')}
-                    placeholder={t('ordersResto.phCustomerCode')}
-                    style={{ maxWidth: 140 }}
-                    value={pickupCodeInputs[selectedOrder.id] || ''}
-                    onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
-                  />
+                <div className="row" style={{ marginTop: 10, gap: 12, alignItems: 'center' }}>
+                  {/* Même remise que sur la carte : plus de code à taper (2026-10-20), le numéro et le prénom à côté. */}
+                  {qui(selectedOrder)}
                   <button className="btn-teal btn-sm" disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder)}>
-                    {confirmingPickup === selectedOrder.id ? '...' : t('ordersResto.validateOrder')}
+                    {confirmingPickup === selectedOrder.id ? '...' : t('ordersResto.handedToCustomer')}
                   </button>
                 </div>
               )}
@@ -607,7 +608,7 @@ export default function OrdersPage() {
      pressée en tête, bordure rouge qui bat, seule à porter « Accepter » en lime ; les suivantes en iris), En préparation,
      Prêtes (prête, livreur en route). La colonne dit l'étape : la pastille ne reste que là où elle précise (livreur attendu,
      client attendu, en route). Mêmes gestes que la liste de l'app : photo, ticket, temps en plus, allergie à confirmer,
-     refus avec motif (ReasonDialog), prête, client pas venu, code du client, code de retrait, contrôle d'âge. Toucher la
+     refus avec motif (ReasonDialog), prête, client pas venu, « Remis au client », code de retrait, contrôle d'âge. Toucher la
      carte ouvre le détail. Quand la feuille est étroite (téléphone), les colonnes s'empilent (site-pro.css). */
   const colonnes = COLONNES.map((c) => ({ ...c, liste: c.cle === 'nouv' ? nouvellesTriees : enCours.filter((o) => c.etapes.includes(orderStageKey(o))) }));
   const carteTableau = (o) => {
@@ -674,7 +675,7 @@ export default function OrdersPage() {
             <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
           </div>
         )}
-        {o.status === 'pret' && o.orderType === 'pickup' && codeClient(o)}
+        {o.status === 'pret' && o.orderType === 'pickup' && remiseClient(o)}
         <CodeRetrait order={o} t={t} />
         <LivreurCommande order={o} />
         {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
