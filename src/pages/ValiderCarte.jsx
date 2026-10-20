@@ -119,6 +119,9 @@ export default function ValiderCarte() {
                 ? t('validerCarte.rateAddHelp', { markup: pctLocal(hausse) })
                 : t('validerCarte.rateKeepHelp', { pct: pctLocal(rate * 100) })}
             </p>
+            {/* Le badge « Prix du comptoir » (fondateur, 2026-10-19 : faire fortement envie de garder les prix magasin). Le choix
+                n'est proposé que sur une carte aux prix magasin vérifiés : garder ses prix donne le badge tout de suite. */}
+            <p className="gn-note" role="note"><Icone nom="etiquette" taille={18} />{ajouter ? t('validerCarte.rateAddNoBadge') : t('validerCarte.rateKeepBadge')}</p>
           </section>
         )}
 

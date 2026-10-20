@@ -6,6 +6,7 @@ import BoutonsConnexionNative from '../../components/BoutonsConnexionNative';
 import { estNatif } from '../../natif';
 import { restaurantTypeLabel } from '../../menuCategories';
 import AvecMarque from '../../components/AvecMarque';
+import { euros } from '../../prixPlat';
 
 /* Les écrans de l'accueil de l'application — l'enchaînement, la mémoire et la recherche des commerces vivent dans
  * Bienvenue.jsx. Ces composants ne font qu'afficher et remonter des gestes.
@@ -259,19 +260,29 @@ export function EcranCartes({ onFini }) {
   );
 }
 
-// Le prix d'abord (l'écart de commission, à l'échelle), puis rien d'ajouté, puis la justice ; le local en une ligne.
-export function EcranPourquoi({ onSuite }) {
+// Des prix qui ne sont pas gonflés d'abord (fondateur, 2026-10-19, version F de mockups/prix-pas-gonfles.html : c'est la
+// première raison de passer à Fairide), puis rien d'ajouté, puis la justice ; le local en une ligne.
+// LES BARRES EN EUROS : ce qu'un restaurant ajoute AU PLUS à un plat de 12 € pour couvrir la commission. 30 % : 12 € ÷ 0,70
+// = 17,14 €, soit +5,10 € (arrondi aux 10 cents inférieurs) ; Fairide : la hausse est plafonnée à 10 % (hausseMaxPourcent du
+// backend), soit +1,20 €. Un calcul, pas un relevé des prix d'une autre application (voir HeroPrix.jsx).
+// `echo` : la personne a dit, juste avant, que payer plus cher qu'au restaurant l'agace (Bienvenue.jsx) ; on le lui rappelle.
+const PLAT = 12;
+const AJOUT_EUX = Math.floor((PLAT / 0.7 - PLAT) * 10 + 1e-6) / 10; // 5,10 €
+const AJOUT_NOUS = Math.floor(PLAT * 0.1 * 10 + 1e-6) / 10; // 1,20 €
+export function EcranPourquoi({ onSuite, echo = false }) {
   const { t } = useLanguage();
+  const plat = euros(PLAT).replace(/[,.]00(?=\D|$)/, '');
   return (
     <>
       <h1 className="bv-titre"><AvecMarque>{t('appli.pqTitre')}</AvecMarque></h1>
       <p className="bv-sous">{t('appli.pqSub')}</p>
       <Feuille>
-        <Fait vedette icone="euro" titre={t('appli.pq1')} sous={t('appli.pq1S')}>
-          {/* Barres à l'échelle : 32 % = toute la largeur, la partie claire marque la fourchette 22-32 %. */}
+        {echo && <p className="bv-echo"><Icone nom="bulle" taille={18} />{t('appli.pqEcho')}</p>}
+        <Fait vedette icone="euro" titre={t('appli.pq1')} sous={t('appli.pq1S', { prix: plat })}>
+          {/* Barres à l'échelle : l'ajout des autres applis = toute la largeur, celui de Fairide en proportion. */}
           <div className="bv-barres" aria-hidden="true">
-            <span>{t('appli.autresApplis')}</span><i className="autres"><em /></i><span>22–32 %</span>
-            <span>Fairide</span><i className="fairide" /><span><b>10 %</b></span>
+            <span>{t('appli.autresApplis')}</span><i className="autres-euros" /><span>+{euros(AJOUT_EUX)}</span>
+            <span>Fairide</span><i className="fairide" style={{ width: `${(AJOUT_NOUS / AJOUT_EUX) * 100}%` }} /><span><b>+{euros(AJOUT_NOUS)}</b></span>
           </div>
         </Fait>
         <Fait icone="ticket" titre={t('appli.pq2')} sous={t('appli.pq2S')} />

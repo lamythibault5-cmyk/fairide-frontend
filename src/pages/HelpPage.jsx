@@ -23,8 +23,10 @@ import { useLanguage } from '../context/LanguageContext';
 // et l'utilisateur devrait réexpliquer ce sur quoi il vient pourtant de cliquer.
 const SUJETS = ['bug', 'avis'];
 // Les réponses, dans l'ordre : identifiant d'ancre (cible des liens de Mon compte) et nombre de paragraphes.
-const REPONSES = [['paiement', 3], ['titres-restaurant', 2], ['adresse', 1], ['commande', 1]];
-const CLE_REPONSE = { paiement: 'payment', 'titres-restaurant': 'vouchers', adresse: 'address', commande: 'order' };
+// « Les prix sont-ils les mêmes qu'au restaurant ? » en premier (fondateur, 2026-10-19) : c'est la première raison de choisir
+// Fairide, et la réponse porte le calcul complet que l'accueil du site montre sans note (HeroPrix.jsx).
+const REPONSES = [['prix', 3], ['paiement', 3], ['titres-restaurant', 2], ['adresse', 1], ['commande', 1]];
+const CLE_REPONSE = { prix: 'prices', paiement: 'payment', 'titres-restaurant': 'vouchers', adresse: 'address', commande: 'order' };
 
 export default function HelpPage() {
   const [params] = useSearchParams();

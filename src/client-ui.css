@@ -42,6 +42,11 @@
 .rc-nouveau { background: rgba(59, 47, 181, .10); color: var(--iris); font-weight: 700; font-size: 12px; padding: 2px 8px; border-radius: var(--radius-pill); }
 .rc-livraison { color: var(--iris); font-weight: 700; font-size: 12px; }
 .rc-vitrine { color: var(--red); font-weight: 700; font-size: 12px; }
+/* Badge « Prix du comptoir » (PrixComptoir.jsx) : la même pastille iris pâle que « Nouveau », avec l'étiquette de prix. */
+.prix-comptoir { display: inline-flex; align-items: center; gap: 4px; background: rgba(59, 47, 181, .10); color: var(--iris); font-weight: 700; font-size: 12px; line-height: 1.3; padding: 2px 8px; border-radius: var(--radius-pill); white-space: nowrap; }
+.prix-comptoir svg { flex: none; }
+/* Plus fort que les pastilles grises de .fiche-meta (plus bas dans ce fichier, 0-3-1). */
+.fiche-meta > span.prix-comptoir.prix-comptoir:not([aria-hidden]) { background: rgba(59, 47, 181, 0.09); color: var(--iris); gap: 5px; }
 /* Rangées défilantes et grilles : les anciens réglages compacts (padding 8px, photo 92px, pastilles 9,5px)
    ne s'appliquent plus à la nouvelle carte. */
 .rest-grid .rest-card.rc, .rest-grid-loop .rest-card.rc { padding: 0; }

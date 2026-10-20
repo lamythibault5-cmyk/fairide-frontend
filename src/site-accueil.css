@@ -89,6 +89,17 @@ html:not(.appli) .sa-accueil .sa-prix-nous i b { background: var(--iris); }
 @keyframes sa-pousse { from { width: 0; } }
 html:not(.appli) .sa-accueil .sa-prix-ligne strong { text-align: right; font-family: var(--font-titre); font-size: 24px; letter-spacing: -0.02em; white-space: nowrap; }
 html:not(.appli) .sa-accueil .sa-prix-nous strong { color: var(--iris); font-size: 34px; }
+/* « Le restaurant ne doit plus gonfler ses prix » (2026-10-19) : la phrase ouvre la carte, avant les barres ; la fin en iris. */
+html:not(.appli) .sa-accueil .sa-prix-accroche { font-family: var(--font-titre); font-weight: 700; font-size: 21px; line-height: 1.25; letter-spacing: -0.01em; margin: -12px 0 26px; }
+html:not(.appli) .sa-accueil .sa-prix-accroche b { color: var(--iris); }
+html:not(.appli) .sa-accueil .sa-prix-exemple { font-size: 15px; line-height: 1.5; color: var(--ink-soft); margin: 26px 0 14px; padding-top: 22px; border-top: 1px solid var(--line); }
+html:not(.appli) .sa-accueil .sa-prix-etiquettes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+html:not(.appli) .sa-accueil .sa-prix-etiquette { border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; min-width: 0; }
+html:not(.appli) .sa-accueil .sa-prix-etiquette > span { display: block; font-size: 13px; color: var(--ink-soft); }
+html:not(.appli) .sa-accueil .sa-prix-etiquette strong { display: block; font-family: var(--font-titre); font-size: 28px; letter-spacing: -0.02em; margin-top: 6px; }
+html:not(.appli) .sa-accueil .sa-prix-etiquette small { display: block; font-size: 12.5px; line-height: 1.35; color: var(--ink-faint); margin-top: 2px; }
+html:not(.appli) .sa-accueil .sa-prix-etiquette-nous { border: 2px solid var(--iris); }
+html:not(.appli) .sa-accueil .sa-prix-etiquette-nous strong { color: var(--iris); }
 
 /* ---------------------------------------------------------------------------------------------------------------------
    2 · LA FEUILLE BLANCHE
@@ -193,6 +204,11 @@ html:not(.appli) .sa-accueil .sa-store small { font-size: 10.5px; font-weight: 5
   html:not(.appli) .sa-accueil .sa-prix-ligne i { height: 10px; }
   html:not(.appli) .sa-accueil .sa-prix-ligne strong { font-size: 18px; }
   html:not(.appli) .sa-accueil .sa-prix-nous strong { font-size: 24px; }
+  html:not(.appli) .sa-accueil .sa-prix-accroche { font-size: 17px; margin: -6px 0 18px; }
+  html:not(.appli) .sa-accueil .sa-prix-exemple { font-size: 14px; margin: 18px 0 12px; padding-top: 16px; }
+  html:not(.appli) .sa-accueil .sa-prix-etiquettes { gap: 8px; }
+  html:not(.appli) .sa-accueil .sa-prix-etiquette { padding: 12px; border-radius: 14px; }
+  html:not(.appli) .sa-accueil .sa-prix-etiquette strong { font-size: 21px; }
   html:not(.appli) .sa-accueil .sa-feuille { margin-top: -26px; padding-top: 30px; }
   html:not(.appli) .sa-accueil .sa-feuille::before { border-radius: 26px 26px 0 0; }
   html:not(.appli) .sa-accueil .hero-preview-head { font-size: 23px; }

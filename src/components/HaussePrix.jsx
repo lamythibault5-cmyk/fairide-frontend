@@ -85,6 +85,10 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
       <div className="row small" style={{ justifyContent: 'space-between', opacity: 0.7, marginTop: -2 }}>
         <span>{t('menuPage.markupMin')}</span><span>+{pct(etat.max)} %</span>
       </div>
+      {/* Le badge « Prix du comptoir » se garde à 0 % (prixMagasin.prixDuComptoir) : le dire avant que le commerce monte ses prix. */}
+      <p className="small" style={{ margin: '8px 0 0', fontWeight: 600, color: 'var(--iris)' }}>
+        <Icone nom="etiquette" taille={16} className="icone-texte" />{' '}{valeur === 0 ? t('menuPage.markupBadgeKeep') : t('menuPage.markupBadgeLost')}
+      </p>
       <div className="hausse-prix-exemple small" style={{ margin: '10px 0', padding: 10, borderRadius: 10, background: 'var(--surface-soft)' }}>
         <div>{t('menuPage.markupExample', { base: euros(EXEMPLE_SUR_PLACE, locale) })}</div>
         <div><Icone nom="apercu" taille={16} className="icone-texte" />{' '}{t('menuPage.markupShown')} <b>{euros(affiche, locale)}</b></div>

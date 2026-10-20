@@ -4013,6 +4013,10 @@ export default {
       avisTitle: 'Donner mon avis sur Fairide',
       avisIntro: 'Ce qui te plaît, ce qui t\'agace, ce qui manque. On lit tout, c\'est comme ça que la plateforme avance.',
       avisMessage: 'Bonjour,\n\nVoici mon avis sur Fairide :\n\n',
+      pricesTitle: "Les prix sont-ils les mêmes qu’au restaurant ?",
+      prices1: "La carte affiche les prix du restaurant. Fairide ne prend que 10 % de commission, là où les grandes plateformes annoncent 22 à 32 % : **le restaurant ne doit donc plus gonfler sa carte**. Il peut monter ses prix de 10 % au plus pour couvrir la commission, jamais plus.",
+      prices2: "Un exemple, pour un plat à 12 € au comptoir. Pour couvrir 30 % de commission, sa carte devrait afficher 12 € ÷ 0,70 ≈ 17,10 €. Sur Fairide, la hausse est plafonnée à 10 % : 13,20 € au plus, arrondi aux 10 cents inférieurs. C'est un calcul, pas un relevé des prix d'une autre plateforme.",
+      prices3: "Les restaurants qui gardent leurs prix du comptoir, vérifiés par notre équipe, portent le badge **Prix du comptoir**. Et rien n'est ajouté au paiement : tu paies les plats et la livraison.",
       paymentTitle: 'Moyens de paiement',
       payment1: '**Fairide ne voit jamais ta carte bancaire.** À chaque commande, tu es redirigé vers une page de paiement **Stripe**, qui traite seule tes coordonnées bancaires. Tu peux y cocher « enregistrer ma carte » : c\'est Stripe qui la garde et te la repropose la fois suivante. Fairide n\'en connaît que la marque, les 4 derniers chiffres et l\'échéance, et tu la retires quand tu veux dans Mon compte › Moyens de paiement.',
       payment2: 'Si ton navigateur ou ton téléphone propose d\'enregistrer ta carte au moment de payer, c\'est Stripe, Apple Pay ou Google Pay qui la conserve, pas Fairide.',
@@ -4176,6 +4180,8 @@ export default {
     story: {
       faqQ6: 'Que se passe-t-il si mon commerce reçoit peu de commandes ?',
       faqA6: 'Si ses commandes ne dépassent pas 50 € sur un mois (prix des produits, TVA comprise, sans la livraison ni les pourboires), il ne paie pas l\'abonnement de ce mois. Pendant le premier mois (offert), le deuxième est alors offert aussi. Ensuite, un tel mois est remboursé automatiquement : les 20 € reviennent sur le moyen de paiement utilisé. Au-delà de 50 € de commandes dans le mois, l\'abonnement de ce mois est dû. Les 10 % sur les commandes payées en ligne, eux, ne concernent que les commandes réellement passées.',
+      faqQ7: "Les prix sont-ils les mêmes qu’au restaurant ?",
+      faqA7: "La carte affiche les prix du restaurant. Fairide ne prend que 10 % de commission, là où les grandes plateformes annoncent 22 à 32 % : le restaurant ne doit donc plus gonfler sa carte. Il peut monter ses prix de 10 % au plus pour couvrir la commission, jamais plus. Pour un plat à 12 € au comptoir : 12 € ÷ 0,70 ≈ 17,10 € pour couvrir 30 % de commission, 13,20 € au plus sur Fairide. C'est un calcul, pas un relevé des prix d'une autre plateforme. Les restaurants qui gardent leurs prix, vérifiés par notre équipe, portent le badge « Prix du comptoir ».",
       /* Le titre de la page et sa description visent les recherches réelles : « alternative Uber
          Eats », « alternative Deliveroo Bruxelles », « livraison commission réduite ». Un titre
          qui ne dit que « Notre histoire » ne peut se placer sur aucune d'elles — personne ne
@@ -5161,10 +5167,12 @@ export default {
       notRight: "Quelque chose ne va pas ? Ne valide pas : réponds au message de Fairide ou écris à contact@fairide.be.",
       rateTitle: "Tes prix et la commission de Fairide",
       rateIntro: "Ces prix sont ceux de ton magasin. Sur chaque commande payée en ligne, Fairide garde 10 % du prix payé. Choisis, une fois pour toute la carte :",
-      rateKeep: "Garder mes prix",
+      rateKeep: "Garder mes prix du comptoir",
       rateKeepHelp: "Le client paie ton prix magasin et Fairide garde {pct} % du prix payé : tu reçois {pct} % de moins que ton prix magasin.",
       rateAdd: "Monter mes prix de {markup} %",
       rateAddHelp: "Tous les prix montent de {markup} % (arrondis au 0,10 € inférieur, pour ne jamais dépasser {markup} %) : après les 10 % de Fairide, tu reçois ton prix magasin, à quelques centimes près.",
+      rateKeepBadge: "Recommandé : ton restaurant affiche le badge « Prix du comptoir » sur Fairide. Tes clients voient que ta carte n'est pas gonflée.",
+      rateAddNoBadge: "Avec la hausse, ton restaurant n'affiche pas le badge « Prix du comptoir ».",
       rateWas: "au lieu de {price}",
       doneTitle: "Merci, ta carte est validée",
       doneText: "La carte de {name} est validée. Tu peux fermer cette page.",
@@ -5276,6 +5284,8 @@ export default {
       markupTitle: 'Tes prix sur Fairide',
       markupIntro: "Par défaut, tes clients paient tes prix sur place et Fairide garde {rate} % du prix payé (sans TVA). Si tu veux, monte tes prix avec la barre, jusqu'à {max} % : c'est la hausse qui te rend ton prix sur place en entier, jamais plus.",
       markupValueZero: 'Hausse : 0 % · tes prix sur place (par défaut)',
+      markupBadgeKeep: "À 0 %, et une fois tes prix vérifiés par notre équipe, ton restaurant affiche le badge « Prix du comptoir » : tes clients voient que ta carte n'est pas gonflée.",
+      markupBadgeLost: "Avec une hausse, ton restaurant n'affiche plus le badge « Prix du comptoir ».",
       markupValue: "Hausse : +{p} %",
       markupYouGetFull: "ton prix sur place en entier",
       markupYouGetLess: "{amount} de moins que ton prix sur place",
@@ -6755,6 +6765,8 @@ export default {
       slogan: 'Paie ton repas, pas la plateforme.',
       subtotal: 'Sous-total',
       verifiedByFairide: 'Restaurant vérifié par Fairide',
+      prixComptoir: "Prix du comptoir",
+      prixComptoirTitre: "Ce restaurant affiche sur Fairide les prix de son comptoir, vérifiés par l'équipe Fairide.",
       verifiedShort: 'resto vérifié',
       close: 'Fermer'
     },
@@ -6775,7 +6787,7 @@ export default {
          (22 à 32 %), vérifiables : c'est ce qui rend la comparaison licite (publicité comparative,
          CDE art. VI.17). Sous ~155 caractères. */
       defaultTitle: "Livraison de repas à Bruxelles · L'alternative à Uber Eats | Fairide",
-      homeDescription: 'Tes restos de Bruxelles livrés, l\'alternative à Uber Eats. 10 % de commission au plus pour les restos, là où les grandes plateformes annoncent 22 à 32 %.',
+      homeDescription: "Le restaurant ne doit plus gonfler ses prix : Fairide, l'alternative bruxelloise à Uber Eats, prend 10 % de commission au plus, là où les grandes plateformes annoncent 22 à 32 %.",
       listDescription: "Livraison de repas à Bruxelles : restaurants, boulangeries, supermarchés et night shops, livrés ou à emporter. L'alternative bruxelloise à Uber Eats, à 10 % de commission au plus.",
       restaurantTitle: "{name}, {cuisine} à {commune} · Fairide",
       restaurantDescription: "Commande chez {name} à {commune}, en livraison ou à emporter, sur Fairide.",
@@ -6893,7 +6905,7 @@ export default {
       /* Bannière à barre d'adresse (2026-09-27, voir HeroAdresse.jsx et HeroPrix.jsx). `subAdresse` est plus
          court que `sub` : les chiffres de la commission sont passés dans le ticket de comparaison à côté.
          `sub` reste en place, lu par le référencement et par un éventuel retour en arrière. */
-      subAdresse: "L'alternative bruxelloise à Uber Eats et Deliveroo : Fairide ne prend que 10 %. Le restaurant gagne plus, le livreur gagne plus, tu paies moins, et ton argent reste à Bruxelles.",
+      subAdresse: "L'alternative bruxelloise à Uber Eats et Deliveroo : Fairide ne prend que 10 %. Le restaurant ne doit plus gonfler ses prix, le livreur gagne plus, et ton argent reste à Bruxelles.",
       addrLabel: 'Adresse de livraison',
       addrPlaceholder: 'Ton adresse de livraison',
       addrGo: 'Voir les commerces qui livrent ici',
@@ -6907,7 +6919,13 @@ export default {
          de la maquette qu'on n'a PAS reprises : « pas de frais de service », « le livreur garde 100 % ».
          `priceAria`, `priceTitle` ci-dessus : plus lus par la bannière, gardés pour un retour en arrière. */
       priceWhy: 'Pourquoi Fairide ?',
-      priceWhyAria: 'Ce que garde le resto : grandes plateformes contre Fairide',
+      priceWhyAria: "Pourquoi le restaurant ne doit plus gonfler ses prix : grandes plateformes contre Fairide",
+      prixAccroche: "Avec 10 %, le restaurant **ne doit plus gonfler ses prix.**",
+      prixExemple: "Un plat à {prix} au comptoir. Pour couvrir la commission, sa carte doit afficher :",
+      prixEux: "Avec 30 % de commission",
+      prixEuxSous: "grandes plateformes",
+      prixNous: "Avec Fairide",
+      prixNousSous: "au plus, ou {prix} s'il garde son prix",
       sub: "L'alternative belge à Uber Eats et Deliveroo. 10 % de commission au lieu de 22 à 32 % : le restaurant garde plus, le livreur touche 90 % des frais de livraison, et l'argent reste ici.",
       /* Les clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on
@@ -6921,8 +6939,8 @@ export default {
       becomePartner: 'Devenir partenaire',
       featureLocalTitle: '100% commerces locaux',
       featureLocalText: 'Restaurants, supermarchés, night shops, boulangeries… découvrir et soutenir les commerces du quartier, accessibles à tous.',
-      featureFairTitle: 'Juste pour tout le monde',
-      featureFairText: "10% de commission au lieu des 22-32% des grandes plateformes : les restaurants gardent plus, et les livreurs touchent plus. Gagnant, gagnant, gagnant.",
+      featureFairTitle: "Des prix qui ne sont pas gonflés",
+      featureFairText: "10 % de commission au lieu des 22 à 32 % des grandes plateformes : le restaurant ne doit plus gonfler sa carte, et le livreur touche plus.",
       howItWorks: 'Comment ça marche',
       step1Title: 'Choisir un commerce',
       step1Text: 'Parcourir les restaurants et commerces locaux du quartier.',
@@ -6933,7 +6951,7 @@ export default {
       joinTitle: 'Rejoindre Fairide',
       joinClientTitle: 'Commande chez les commerces de ton quartier',
       joinClientLink: 'Commander maintenant',
-      joinRestaurantTitle: 'Vends tes plats sans te faire dévorer par les commissions',
+      joinRestaurantTitle: "Vends à tes prix du comptoir, sans te faire dévorer par les commissions",
       joinRestaurantLink: 'Ajouter mon commerce',
       joinDriverTitle: 'Roule et sois payé plus justement à chaque course',
       joinDriverLink: 'Devenir livreur',
@@ -9128,8 +9146,9 @@ export default {
       c3: 'Je préfère que mon argent aille au restaurant plutôt qu’à une plateforme.',
       pqTitre: 'Pourquoi passer à Fairide ?',
       pqSub: 'Trois différences avec les autres applis.',
-      pq1: '10 % de commission',
-      pq1S: 'Les autres applis prennent 22 à 32 % au commerce. Avec 10 %, il n’a pas besoin de gonfler sa carte.',
+      pq1: "Des prix qui ne sont pas gonflés",
+      pq1S: "Ce qu'un restaurant ajoute au plus à un plat de {prix} pour couvrir la commission : les autres applis prennent 22 à 32 %, Fairide 10 %.",
+      pqEcho: "Tu nous l'as dit : payer plus cher qu'au restaurant, ça t'agace. Voici pourquoi, ici, le restaurant ne doit plus gonfler ses prix.",
       pq2: 'Aucun frais ajouté au paiement',
       pq2S: 'Tu paies les plats et la livraison, rien d’autre.',
       pq3: 'Le commerce et le livreur gardent l’essentiel',
@@ -9204,8 +9223,8 @@ export default {
       coChip: 'Pour les commerces',
       coTitre: '10 %, pas 30.',
       coSub: 'Une startup belge qui veut que la livraison aide le commerce du coin.',
-      co1: 'Tu choisis tes prix',
-      co1S: 'Ton prix en magasin : Fairide prend 10 % dessus. Ou ton prix + 10 % : tu touches presque la même chose qu’au comptoir.',
+      co1: "Garde tes prix du comptoir",
+      co1S: "Avec 10 %, tu ne dois plus gonfler ta carte. Garde tes prix : une fois vérifiés par notre équipe, ton restaurant affiche le badge « Prix du comptoir ». Tu peux aussi les monter de 10 % au plus, sans le badge.",
       co2: 'Abonnement offert pendant le lancement',
       co2S: 'Ensuite 20 € par mois, et le premier mois est offert.',
       coBtn: 'Inscrire mon commerce',

@@ -5149,6 +5149,13 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-barres .autres { background: var(--chip); position: relative; }
 .bv-barres .autres em { position: absolute; left: 68.75%; right: 0; top: 0; bottom: 0; background: var(--ink-faint); border-radius: 0 5px 5px 0; }
 .bv-barres .fairide { background: var(--iris); width: 31.25%; }
+/* « Pourquoi passer à Fairide ? » en euros (2026-10-19) : l'ajout des autres applis fait toute la largeur ; celui de Fairide
+   reçoit sa largeur en ligne (EcranPourquoi). */
+.bv-barres .autres-euros { background: var(--ink-faint); }
+/* « Tu nous l'as dit… » : la personne a dit que payer plus cher qu'au restaurant l'agace (EcranPourquoi, `echo`). */
+.bv-echo { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 10px; padding: 10px 12px; border-radius: 14px;
+  background: rgba(59, 47, 181, .08); color: var(--iris); font-size: 13.5px; line-height: 1.4; font-weight: 600; }
+.bv-echo svg { flex: none; margin-top: 1px; }
 
 /* Cartes à glisser. */
 .bv-paquet { position: relative; height: 290px; margin: 6px 0 18px; }

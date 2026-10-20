@@ -109,6 +109,9 @@ export default function Bienvenue() {
     : ['client', 'driver', 'restaurant'].includes(reprise?.role) ? reprise.role : null));
   const [buts, setButs] = useState(() => (Array.isArray(reprise?.buts) ? reprise.buts : []));
   const [freins, setFreins] = useState(() => (Array.isArray(reprise?.freins) ? reprise.freins : []));
+  // « oui » sur la première carte (« J'ai déjà payé plus cher sur une appli qu'au restaurant… ») : avec le frein « gonfle »,
+  // c'est ce qui fait afficher « Tu nous l'as dit… » sur l'écran « Pourquoi » (2026-10-19).
+  const [prixVecu, setPrixVecu] = useState(() => reprise?.prixVecu === true);
   const [envies, setEnvies] = useState(() => (Array.isArray(dejaFait?.envies) ? dejaFait.envies : Array.isArray(reprise?.envies) ? reprise.envies : []));
   const [position, setPosition] = useState(() => dejaFait?.position || reprise?.position || null);
   const [cp, setCp] = useState(() => dejaFait?.cp || reprise?.cp || '');
@@ -137,10 +140,10 @@ export default function Bienvenue() {
     const passe = historique.filter((e) => e !== 'recherche' && e !== 'inscription');
     ecrireReprise({
       ecran: etape, historique: passe[passe.length - 1] === etape ? passe.slice(0, -1) : passe,
-      role, buts, freins, envies, position, cp
+      role, buts, freins, prixVecu, envies, position, cp
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ecran, role, buts, freins, envies, position, cp, fed]);
+  }, [ecran, role, buts, freins, prixVecu, envies, position, cp, fed]);
 
   // Arrivé à l'écran du compte (ou à l'inscription par Apple / Google) : l'accueil est fait, il ne sera pas rejoué.
   useEffect(() => {
@@ -254,9 +257,9 @@ export default function Bienvenue() {
     case 'freins':
       contenu = <EcranChoix titre={t('appli.freinsTitre')} liste={FREINS} choisis={freins} onBasculer={basculer(setFreins)} onSuite={suivant} libelleVide={t('appli.rien')} />; break;
     case 'cartes':
-      contenu = <EcranCartes onFini={() => aller('pourquoi')} />; break;
+      contenu = <EcranCartes onFini={(votes) => { setPrixVecu(votes[0] === true); aller('pourquoi'); }} />; break;
     case 'pourquoi':
-      contenu = <EcranPourquoi onSuite={suivant} />; break;
+      contenu = <EcranPourquoi onSuite={suivant} echo={prixVecu || freins.includes('gonfle')} />; break;
     case 'envies':
       contenu = <EcranEnvies envies={envies} onBasculer={basculer(setEnvies)} onSuite={suivant} />; break;
     case 'position':

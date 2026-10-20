@@ -15,6 +15,7 @@ import Icone from '../../components/Icone';
 import ChoixAdresse from '../../components/ChoixAdresse';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
+import PrixComptoir from '../../components/PrixComptoir';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { epingler, titreRangee } from '../../misesEnAvant';
 import { lireBienvenue } from '../../bienvenue';
@@ -151,11 +152,13 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
             : <span className="rc-nouveau">{t('restaurantList.newBadge')}</span>}
           {/* Position payée par le commerce : toujours dite au client (classement payant, CDE VI.99). */}
           {r.sponsorise && <span className="rc-sponsorise" title={t('restoListUi.sponsoredTitle')}>{t('restoListUi.sponsored')}</span>}
-          {bande && <span className="rc-discret" title={t('restoListUi.priceBandTitle')}>{'€'.repeat(bande)}</span>}
+          {bande &&<span className="rc-discret" title={t('restoListUi.priceBandTitle')}>{'€'.repeat(bande)}</span>}
           {services.map((s) => <span key={s} className="rc-discret">{s}</span>)}
         </p>
-        {(deliveryOfferLabel || r.vitrine) && (
+        {/* Le badge « Prix du comptoir » sur la seconde ligne : sur la première (note, services), il était coupé dans l'app. */}
+        {(deliveryOfferLabel || r.vitrine || r.prixComptoir) && (
           <p className="rc-infos">
+            {r.prixComptoir && <PrixComptoir />}
             {deliveryOfferLabel && <span className="rc-livraison">{deliveryOfferLabel}</span>}
             {/* COMMERCE VITRINE : carte listée, commande impossible — dit ICI, avant de composer un panier. */}
             {r.vitrine && <span className="rc-vitrine">{t('restoListUi.showcaseOnly')}</span>}

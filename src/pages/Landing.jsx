@@ -39,10 +39,11 @@ function joinCards(t) {
 }
 
 // Deux arguments (demande du fondateur, 2026-09-21 : les chiffres « 10 % · 19 · 100 % » disaient la même chose, en moins clair).
+// Les prix pas gonflés EN PREMIER (fondateur, 2026-10-19 : c'est la première raison de choisir Fairide), le local ensuite.
 function features(t) {
   return [
-    { icon: 'commerce', title: t('landing.featureLocalTitle'), text: t('landing.featureLocalText') },
-    { icon: 'balance', title: t('landing.featureFairTitle'), text: t('landing.featureFairText') }
+    { icon: 'euro', title: t('landing.featureFairTitle'), text: t('landing.featureFairText') },
+    { icon: 'commerce', title: t('landing.featureLocalTitle'), text: t('landing.featureLocalText') }
   ];
 }
 
