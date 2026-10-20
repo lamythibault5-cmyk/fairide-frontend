@@ -7934,6 +7934,8 @@ export default {
       sonCoupe: 'sound off',
       sonBloque: 'sound blocked',
       activerSon: 'Turn sound on',
+      sonTerminalTitre: 'Tap the screen to turn the sound on',
+      sonTerminalTexte: 'Without this tap, the terminal will not ring when an order comes in. The browser mutes sound every time it restarts.',
       couper: 'Stop',
       reglagesAlarme: 'Alarm settings',
       aTraiter: 'To handle',

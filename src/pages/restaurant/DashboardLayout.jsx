@@ -12,6 +12,7 @@ import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import NouvelleCommandeModale from '../../components/NouvelleCommandeModale';
+import SonTerminal from '../../components/commerce/SonTerminal';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
@@ -419,6 +420,8 @@ export default function DashboardLayout() {
       )}
       {newRestoOpen && surAccueil && <CreationCommerce fondateur={fondateur} onCree={commerceCree} ouvrirDemandeCarte={ouvrirDemandeCarte} />}
       {!bandeau && communs}
+      {/* Terminal Goodcom au son bloqué par le navigateur : l'écran plein qui le débloque d'un toucher (SonTerminal.jsx). */}
+      <SonTerminal alerte={orderAlert} />
       {/* La commande qui vient d'arriver, affichée d'elle-même (fondateur, 2026-10-01). */}
       {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} loadDashboard={loadDashboard}
         ouverte={feuilleCommande} setOuverte={setFeuilleCommande} />}
