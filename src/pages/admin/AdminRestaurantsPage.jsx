@@ -107,24 +107,29 @@ export function BoutonFermerSoir({ detail, token, api, toast, tr, onChanged }) {
 
 // Abonnement offert ou facturé (fondateur, 7 oct. 2026) : offert à tous pendant le lancement, facturé commerce par commerce
 // quand il commence à profiter de Fairide. Activer la facturation lui demande de souscrire (premier mois offert) ; le geste
-// passe par une confirmation, le retour à « offert » est immédiat.
+// passe par une confirmation. Le retour à « offert » aussi (audit du 19/10, admin-06) : un commerce déjà abonné voit son
+// abonnement Stripe résilié par le serveur (plus aucun prélèvement, rien de remboursé), et la confirmation le dit.
+const ABONNEMENT_STRIPE_VIVANT = ['trialing', 'active', 'past_due', 'paused'];
 export function BoutonFacturationAbonnement({ detail, token, api, toast, tr, onChanged }) {
   const [busy, setBusy] = useState(false);
   const [confirmer, setConfirmer] = useState(false);
   const facture = !!detail.subscriptionBillingEnabled;
+  const abonne = ABONNEMENT_STRIPE_VIVANT.includes(detail.subscriptionStatus);
   async function basculer() {
     setConfirmer(false);
     setBusy(true);
     try {
-      await api(`/admin/restaurants/${detail.id}/subscription-billing`, { method: 'PATCH', token, body: { enabled: !facture } });
-      toast(facture ? tr('adminRestos.subBillingOffToast') : tr('adminRestos.subBillingOnToast'));
+      const rep = await api(`/admin/restaurants/${detail.id}/subscription-billing`, { method: 'PATCH', token, body: { enabled: !facture } });
+      toast(facture ? tr(rep?.stripeSubscriptionCanceled ? 'adminRestos.subBillingOffCanceledToast' : 'adminRestos.subBillingOffToast') : tr('adminRestos.subBillingOnToast'));
       onChanged?.();
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   return (
     <>
-      <button type="button" className="btn-outline" disabled={busy} onClick={() => (facture ? basculer() : setConfirmer(true))} title={tr('adminRestos.subBillingHelp')}>{busy ? '…' : facture ? tr('adminRestos.subBillingOff') : tr('adminRestos.subBillingOn')}</button>
-      <ConfirmDialog open={confirmer} title={tr('adminRestos.subBillingOn')} message={tr('adminRestos.subBillingConfirm', { name: detail.name })} loading={busy} onConfirm={basculer} onCancel={() => setConfirmer(false)} />
+      <button type="button" className="btn-outline" disabled={busy} onClick={() => setConfirmer(true)} title={tr('adminRestos.subBillingHelp')}>{busy ? '…' : facture ? tr('adminRestos.subBillingOff') : tr('adminRestos.subBillingOn')}</button>
+      <ConfirmDialog open={confirmer} title={facture ? tr('adminRestos.subBillingOff') : tr('adminRestos.subBillingOn')}
+        message={facture ? tr(abonne ? 'adminRestos.subBillingOffConfirmStripe' : 'adminRestos.subBillingOffConfirm', { name: detail.name }) : tr('adminRestos.subBillingConfirm', { name: detail.name })}
+        loading={busy} onConfirm={basculer} onCancel={() => setConfirmer(false)} />
     </>
   );
 }
