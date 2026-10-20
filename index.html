@@ -144,14 +144,34 @@
            bloqué, et quand les deux sont là, ce sont les mêmes glyphes. */
         @font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 700 800; font-display: swap; src: url("/fonts/bricolage-grotesque-latin.woff2") format("woff2"); }
         #splash { position: fixed; inset: 0; z-index: 1000; background: #3B2FB5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity .2s ease; will-change: opacity; }
-        #splash.splash-fin { opacity: 0; pointer-events: none; }
+        /* LE VÉLO PART LIVRER (fondateur, 2026-10-21, option B de maquettes/verre-et-chargement/ecran-chargement.html) :
+           la page prête, le vélo file vers la droite pendant que l'écran s'efface (main.jsx retire l'élément après). */
+        #splash.splash-fin { opacity: 0; pointer-events: none; transition: opacity .25s .12s ease; }
+        #splash.splash-fin .splash-velo { animation: splash-part .4s cubic-bezier(.5, 0, .9, .4) forwards; }
+        @keyframes splash-part { to { transform: translateX(min(70vw, 300px)); } }
         /* 220px : le vélo est en paysage (82 × 42, soit 220 × 113 ici). Le bol carré, du 2026-09-18
            au 2026-09-27, tenait à 160 ; retour au vélo, retour à 220. */
-        #splash svg { width: min(52vw, 220px); height: auto; display: block; shape-rendering: geometricPrecision; }
+        #splash .splash-velo-boite { display: flex; flex-direction: column; align-items: center; }
+        #splash .splash-velo { width: min(52vw, 220px); height: auto; display: block; overflow: visible; shape-rendering: geometricPrecision; animation: splash-sautille .26s .9s ease-in-out infinite alternate; }
+        @keyframes splash-sautille { to { transform: translateY(-1.5px); } }
+        /* IL ROULE TANT QUE ÇA CHARGE (fondateur, 2026-10-20 : « le chargement s'arrête quand le vélo est formé »). La route en
+           pointillés des bandeaux de l'app défile sous les roues, et deux encoches iris tournent dans chaque roue. */
+        #splash .splash-route { width: min(78vw, 300px); height: 6px; margin-top: -6px; display: block; opacity: 0; animation: splash-nom .3s .55s forwards; }
+        #splash .splash-route line { stroke-dasharray: 16 14; animation: splash-roule .5s linear infinite; }
+        @keyframes splash-roule { to { stroke-dashoffset: 30; } }
+        #splash .splash-encoche { stroke-dasharray: 4 35.27; opacity: 0; transform-box: fill-box; transform-origin: center; animation: splash-nom .2s .62s forwards, splash-tourne .8s .62s linear infinite; }
+        @keyframes splash-tourne { to { transform: rotate(360deg); } }
         /* Le nom arrive une fois la marque posée — pendant que les tubes finissent de s'allonger.
            Bricolage Grotesque comme partout où le mot « fairide » est écrit ; la pile de repli sert
-           le temps que le fichier arrive, et le fondu de 0,66 s lui laisse justement le temps. */
-        #splash .splash-nom { font: 800 34px/1 "Bricolage Grotesque", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.04em; color: #fff; opacity: 0; animation: splash-nom .3s .66s ease forwards; }
+           le temps que le fichier arrive, et le fondu de 0,66 s lui laisse justement le temps.
+           Graisse 700 et lettres à -0,02em, comme le logo partout ailleurs (c'était 800 et -0,04em : le mot ne ressemblait pas
+           à celui de l'en-tête, signalé le 2026-10-20). */
+        #splash .splash-nom { font: 700 34px/1 "Bricolage Grotesque", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.02em; color: #fff; opacity: 0; animation: splash-nom .3s .66s ease forwards; }
+        /* DANS L'APPLICATION, le vélo est déjà là : l'écran de lancement natif (le vélo seul, immobile) le montrait pendant que
+           la WebView démarrait. main.jsx pose cette classe au moment où il retire l'écran natif : on ne redessine pas le vélo
+           depuis rien, il se met simplement à rouler. */
+        #splash.splash-natif .bm-roue, #splash.splash-natif .bm-tube { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
+        #splash.splash-natif .splash-nom { animation: none; opacity: 1; }
         /* Même séquence que BrandMark.jsx (voir « Logo animé » dans styles.css) : roues, puis tubes. */
         #splash .bm-roue { stroke-dasharray: 79; stroke-dashoffset: 79; animation: bm-roue .5s cubic-bezier(.4, 0, .2, 1) forwards; }
         #splash .bm-roue-avant { animation-delay: .08s; }
@@ -162,7 +182,7 @@
         @keyframes bm-tube { to { opacity: 1; transform: scaleX(1); } }
         @keyframes splash-nom { to { opacity: 1; } }
         /* PORTE DE SORTIE, EN CSS SEUL — parce que tout le reste du filet est en JavaScript.
-           L'écran est retiré par main.jsx, avec un plafond de 2,5 s ; lazyPage.js rattrape un
+           L'écran est retiré par main.jsx, avec un plafond de 7,5 s ; lazyPage.js rattrape un
            morceau de code manquant. Les deux supposent que le JavaScript s'exécute. S'il ne
            s'exécute pas — script d'entrée absent après une mise en ligne alors qu'un onglet était
            resté ouvert, coupure au mauvais moment, connexion trop lente, extension qui bloque —
@@ -179,18 +199,29 @@
         @media (prefers-reduced-motion: reduce) {
           #splash .bm-roue, #splash .bm-tube { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
           #splash .splash-nom { animation: none; opacity: 1; }
+          #splash .splash-velo, #splash .splash-route line, #splash .splash-encoche, #splash.splash-fin .splash-velo { animation: none; }
+          #splash .splash-route { animation: none; opacity: 1; }
+          #splash .splash-encoche { display: none; }
+          #splash.splash-fin { transition-delay: 0s; }
         }
       </style>
-      <svg viewBox="-3 5 82 42" xmlns="http://www.w3.org/2000/svg">
-        <g fill="none" stroke="#C8F03C" stroke-width="5" stroke-linecap="round">
-          <circle class="bm-roue" cx="15" cy="29" r="12.5" />
-          <circle class="bm-roue bm-roue-avant" cx="61" cy="29" r="12.5" />
-        </g>
-        <g fill="#C8F03C">
-          <rect class="bm-tube bm-tube-haut" x="16" y="8" width="44" height="5" rx="2.5" />
-          <g transform="rotate(42 27 22.5)"><rect class="bm-tube bm-tube-selle" x="13" y="20" width="28" height="5" rx="2.5" /></g>
-        </g>
-      </svg>
+      <div class="splash-velo-boite">
+        <svg class="splash-velo" viewBox="-3 5 82 42" xmlns="http://www.w3.org/2000/svg">
+          <g fill="none" stroke="#C8F03C" stroke-width="5" stroke-linecap="round">
+            <circle class="bm-roue" cx="15" cy="29" r="12.5" />
+            <circle class="bm-roue bm-roue-avant" cx="61" cy="29" r="12.5" />
+          </g>
+          <g fill="none" stroke="#3B2FB5" stroke-width="7">
+            <circle class="splash-encoche" cx="15" cy="29" r="12.5" />
+            <circle class="splash-encoche" cx="61" cy="29" r="12.5" />
+          </g>
+          <g fill="#C8F03C">
+            <rect class="bm-tube bm-tube-haut" x="16" y="8" width="44" height="5" rx="2.5" />
+            <g transform="rotate(42 27 22.5)"><rect class="bm-tube bm-tube-selle" x="13" y="20" width="28" height="5" rx="2.5" /></g>
+          </g>
+        </svg>
+        <svg class="splash-route" viewBox="0 0 300 6" xmlns="http://www.w3.org/2000/svg"><line x1="0" y1="3" x2="300" y2="3" stroke="rgba(255,255,255,.45)" stroke-width="4" /></svg>
+      </div>
       <span class="splash-nom wordmark">fairide</span>
       <!-- Invisible pendant 8 s, puis affiché sans que rien n'ait à s'exécuter. `?r=` casse le cache
            du navigateur ET celui des intermédiaires : un simple rechargement resservirait la page

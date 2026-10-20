@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
-import { COMMUNES, COMMUNES_SUGGEREES, RESTAURANT_TYPES, restaurantTypeLabel } from '../../menuCategories';
+import { COMMUNES, COMMUNES_SUGGEREES, RESTAURANT_TYPES, illustrationCuisine, restaurantTypeLabel } from '../../menuCategories';
 import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
@@ -197,16 +197,18 @@ export default function SearchPage() {
       {/* Avant la première lettre, on montre par où commencer : les cuisines et les communes, qui sont
           ce qu'on cherche le plus, plus le chemin vers l'aide. Une page vide avec un champ ne dit
           rien de ce qu'il accepte. */}
-      {/* DANS L'APP (fondateur, 2026-10-17, « Search » de mockups/commerces-marque.html) : les envies en tuiles — l'icône de
-          la cuisine dans un carré blanc, sur un aplat iris très clair —, les régimes en pastilles dessous, puis les communes
-          et l'aide comme avant. Le site garde ses pastilles. */}
+      {/* DANS L'APP (fondateur, 2026-10-17, « Search » de mockups/commerces-marque.html) : les envies en tuiles, les régimes en
+          pastilles dessous, puis les communes et l'aide comme avant. Le site garde ses pastilles. Depuis le 2026-10-21 (piste A
+          de maquettes/recherche-couleurs), chaque tuile montre l'illustration en couleur de la cuisine sur son fond pastel, au
+          lieu de l'icône iris dans un carré blanc sur lavande : la grille paraissait sans vie, et dix cuisines partageaient la
+          même icône. */}
       {!actif && !site && (
         <>
           <h3 className="recherche-titre-app">{t('search.byCraving')}</h3>
           <div className="recherche-tuiles">
             {RESTAURANT_TYPES.slice(0, 14).map((c) => (
-              <Link key={c.value} to="/restaurants" state={{ cuisine: c.value }} className="recherche-tuile">
-                <span className="recherche-tuile-icone" aria-hidden="true"><Icone nom={c.icone} taille={22} /></span>
+              <Link key={c.value} to="/restaurants" state={{ cuisine: c.value }} className="recherche-tuile" style={{ '--tuile-fond': c.fond }}>
+                <img className="recherche-tuile-illu" src={illustrationCuisine(c.illustration)} alt="" width="52" height="52" decoding="async" draggable="false" />
                 <span>{restaurantTypeLabel(c.value, t) || c.value}</span>
               </Link>
             ))}

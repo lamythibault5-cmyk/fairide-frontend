@@ -3,6 +3,7 @@ import Icone from './Icone';
 import { experienceApp } from '../natif';
 import { defilement } from '../gestes';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
+import { illustrationCuisine } from '../menuCategories';
 
 /* LE HAUT DE LA LISTE DES COMMERCES (fondateur, 2026-10-16, proposition A de « Le haut de la liste des commerces »,
  * mockups/tous-les-ecrans.html). Deux étages, collés en haut de l'écran :
@@ -187,7 +188,10 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
           </div>
         </div>
       )}
-      <div className="lt-puces" ref={bande}>
+      {/* Dans l'app, l'illustration en couleur de chaque cuisine au-dessus de son nom (fondateur, 2026-10-21, version A2 de
+          maquettes/recherche-couleurs : 72 px de haut au lieu de 56, la version à 100 px était trop épaisse). Bio, Vegan,
+          Halal et Sans gluten n'ont pas d'illustration : leur tracé prend la même place. Le site garde la bande d'icônes. */}
+      <div className={`lt-puces${app ? ' lt-puces--illustrees' : ''}`} ref={bande}>
         {/* Les pastilles sont des <button> avec aria-pressed : joignables au clavier (voir l'historique de RestaurantList). */}
         <div className="lt-defile" ref={defile} role="group" aria-label={libelleBande}>
           <div className="lt-piste" ref={piste}>
@@ -205,7 +209,9 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
                   aria-pressed={on}
                   onClick={() => surPuce(opt)}
                 >
-                  <Icone nom={opt.emoji} taille={18} />
+                  {!app ? <Icone nom={opt.emoji} taille={18} />
+                    : opt.illustration ? <img className="lt-illu" src={illustrationCuisine(opt.illustration)} alt="" width="32" height="32" decoding="async" draggable="false" />
+                      : <span className="lt-illu lt-illu--trace"><Icone nom={opt.emoji} taille={20} /></span>}
                   <span>{opt.label}</span>
                 </button>
               ];

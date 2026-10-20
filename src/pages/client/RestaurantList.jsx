@@ -21,7 +21,7 @@ import AutoScrollRow from '../../components/AutoScrollRow';
 import { epingler, titreRangee } from '../../misesEnAvant';
 import { lireBienvenue } from '../../bienvenue';
 import { repondAuxEnvies } from '../../envies';
-import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
+import { COMMUNES, ILLUSTRATION_TOUTES_CUISINES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
 import { tarifLivraison, eurosCourts } from '../../livraison';
@@ -430,8 +430,8 @@ export default function RestaurantList() {
   // Bio et Vegan sont dans la même rangée que les types de commerce, en fin de liste : des filtres comme les
   // autres (cumulables entre eux et avec un type), sans mise en avant.
   const cuisineOptions = [
-    { value: '', emoji: 'restaurants', label: t('restaurantList.allCuisines') },
-    ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.icone, label: restaurantTypeLabel(rt.value, t) })),
+    { value: '', emoji: 'restaurants', illustration: ILLUSTRATION_TOUTES_CUISINES, label: t('restaurantList.allCuisines') },
+    ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.icone, illustration: rt.illustration, label: restaurantTypeLabel(rt.value, t) })),
     { value: '__bio', emoji: 'feuille', label: t('restaurantList.chipBio'), regime: 'bio' },
     { value: '__vegan', emoji: 'feuille', label: t('restaurantList.chipVegan'), regime: 'vegan' },
     { value: '__halal', emoji: 'coche', label: t('restaurantList.chipHalal'), regime: 'halal' },

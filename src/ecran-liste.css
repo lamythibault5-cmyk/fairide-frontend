@@ -101,6 +101,12 @@
 /* Bio, Vegan, Halal, Sans gluten : des bascules, allumées en iris plein — la lentille, elle, dit la cuisine. */
 .lt-puce[data-regime].on { background: var(--iris); color: #fff; }
 .lt-trait { flex: none; width: 1px; height: 22px; margin: 0 6px; background: var(--line); }
+/* DANS L'APP, L'ILLUSTRATION AU-DESSUS DU NOM (TeteListe.jsx, version A2 du 2026-10-21) : une colonne de 64 px, l'illustration
+   de 32 px, le nom en 11 px. La bande fait 72 px. La lentille prend la taille de la pastille (TeteListe.jsx la mesure). */
+.lt-puces--illustrees .lt-puce { flex-direction: column; justify-content: center; gap: 3px; min-width: 64px; min-height: 0; padding: 6px 7px 5px; font-size: 11px; line-height: 1.15; }
+.lt-illu { display: block; flex: none; width: 32px; height: 32px; -webkit-user-drag: none; user-select: none; }
+.lt-illu--trace { display: grid; place-items: center; }
+.lt-puces--illustrees .lt-trait { height: 40px; }
 
 /* Dans l'app : le verre de la barre d'onglets (styles.css, html.appli .dashboard-nav), version 2 de
    mockups/barre-onglets-verre.html. Exception voulue à la règle 2 (flou, reflets, ombre), limitée à l'app. */
@@ -353,13 +359,15 @@ html:not(.appli) .sl-liste--grand .une-points { display: none; }
 .recherche-tuiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .recherche-tuile {
   display: grid; justify-items: center; align-content: start; gap: 6px; padding: 12px 4px 10px; border-radius: 18px;
-  background: rgba(59, 47, 181, .07); color: var(--ink); font-size: 12.5px; font-weight: 600; line-height: 1.25; text-align: center;
-  text-decoration: none; transition: transform .12s ease, background .15s ease;
+  background: var(--tuile-fond, rgba(59, 47, 181, .07)); color: var(--ink); font-size: 12.5px; font-weight: 600; line-height: 1.25; text-align: center;
+  text-decoration: none; transition: transform .12s ease, filter .15s ease;
 }
-.recherche-tuile:hover { background: rgba(59, 47, 181, .12); }
+.recherche-tuile:hover { filter: brightness(.97); }
+/* L'illustration de la cuisine sur son fond pastel (fondateur, 2026-10-21, piste A de maquettes/recherche-couleurs ;
+   `illustration` et `fond` dans menuCategories.js). Elle remplace le carré blanc et l'icône iris. */
+.recherche-tuile-illu { display: block; width: 52px; height: 52px; -webkit-user-drag: none; }
 .recherche-tuile:active { transform: scale(.96); }
 .recherche-tuile:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
-.recherche-tuile-icone { width: 42px; height: 42px; border-radius: 14px; background: #fff; color: var(--iris); display: grid; place-items: center; }
 .recherche-regimes-app { margin: 14px 0 0; }
 
 /* Le calendrier d'ouverture posé sur un bandeau (Mes commandes vide, 2026-10-17) : une note blanche translucide, l'icône dans
