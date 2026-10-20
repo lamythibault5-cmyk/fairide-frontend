@@ -798,6 +798,7 @@ export default {
       seeTask: 'See the task',
       platform: 'Reference platform',
       page: 'Page',
+      urlMismatch: 'This link is not a {platform} page: it came from another shop (bug fixed on 20/10/2026). Look the shop up on {platform} or ask for its link.',
       notes: 'Owner\'s details',
       noNotes: 'none',
       attachments: 'Menu sent by the restaurateur',

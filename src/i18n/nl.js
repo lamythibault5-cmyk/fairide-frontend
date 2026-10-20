@@ -798,6 +798,7 @@ export default {
       seeTask: 'Taak bekijken',
       platform: 'Referentieplatform',
       page: 'Pagina',
+      urlMismatch: 'Deze link is geen {platform}-pagina: hij kwam van een andere zaak (bug opgelost op 20/10/2026). Zoek de zaak op {platform} of vraag haar link.',
       notes: 'Toelichting van de uitbater',
       noNotes: 'geen',
       attachments: 'Kaart verzonden door de uitbater',

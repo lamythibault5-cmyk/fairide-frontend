@@ -46,6 +46,8 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
   const libelle = (p) => LIBELLES[p] || t(`menuConcierge.source_${p}`);
   // Une source en ligne → ses photos sont reprises telles quelles ; « autre » → on demande s'il en veut.
   const sourceEnLigne = platform !== 'other';
+  // Le site du commerce n'est proposé que pour « Site web » : choisir Uber Eats ne doit pas garder ce lien d'office.
+  const choisirPlateforme = (p) => { setPlatform(p); setUrl((u) => (u === urlSuggeree ? (p === 'website' ? urlSuggeree : '') : u)); };
   const placeholderUrl = { website: 'https://www.mon-restaurant.be/carte', uber_eats: 'https://www.ubereats.com/be/store/…', deliveroo: 'https://deliveroo.be/fr/menu/…', takeaway: 'https://www.takeaway.com/be/…', other: 'https://…' }[platform];
 
   function ajouterFichiers(liste) {
@@ -150,7 +152,7 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
         <p className="small" style={{ margin: '2px 0 8px' }}>{t('menuConcierge.sourceHelp')}</p>
         <div className="role-pick concierge-sources" role="radiogroup" aria-label={t('menuConcierge.sourceTitle')}>
           {PLATEFORMES.map((p) => (
-            <button key={p} type="button" role="radio" aria-checked={platform === p} className={`chip${platform === p ? ' active' : ''}`} onClick={() => setPlatform(p)}><Icone nom={ICONES[p]} taille={16} className="icone-texte" /> {libelle(p)}</button>
+            <button key={p} type="button" role="radio" aria-checked={platform === p} className={`chip${platform === p ? ' active' : ''}`} onClick={() => choisirPlateforme(p)}><Icone nom={ICONES[p]} taille={16} className="icone-texte" /> {libelle(p)}</button>
           ))}
         </div>
         <div className="field" style={{ marginTop: 8 }}>

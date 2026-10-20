@@ -39,6 +39,8 @@ export default function EnvoiCarteAppli({ restoId, urlSuggeree = '', onEnvoyee, 
 
   const libelle = (p) => NOMS[p] || t(`menuConcierge.source_${p}`);
   const enLigne = platform !== 'other';
+  // Même règle que MenuConciergeRequest.jsx : le site du commerce n'accompagne que le choix « Site web ».
+  const choisirPlateforme = (p) => { setPlatform(p); setUrl((u) => (u === urlSuggeree ? (p === 'website' ? urlSuggeree : '') : u)); };
 
   function ajouterFichiers(liste) {
     const nouveaux = Array.from(liste || []);
@@ -78,7 +80,7 @@ export default function EnvoiCarteAppli({ restoId, urlSuggeree = '', onEnvoyee, 
       <>
         <h1 className="bv-titre bv-titre-form">{t('appli.carteSourceTitre')}</h1>
         <p className="bv-sous">{t('menuConcierge.sourceHelp')}</p>
-        {SOURCES.map(([p, icone]) => <Option key={p} icone={icone} on={platform === p} titre={libelle(p)} onClick={() => setPlatform(p)} />)}
+        {SOURCES.map(([p, icone]) => <Option key={p} icone={icone} on={platform === p} titre={libelle(p)} onClick={() => choisirPlateforme(p)} />)}
       </>
     );
     bouton = <button type="button" className="bv-btn btn-teal" disabled={!platform} onClick={() => { setRecule(false); setEcran('details'); }}>{t('appli.continuer')}</button>;
