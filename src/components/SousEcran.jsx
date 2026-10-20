@@ -54,6 +54,7 @@ export default function SousEcran({ titre, onFermer, children, pied = null }) {
   return createPortal(
     <div className={`plat-feuille sous-ecran-feuille${ferme ? ' plat-feuille--ferme' : ''}`} role="dialog" aria-modal="true" aria-label={titre} ref={racine} tabIndex={-1}>
       <div className="plat-panneau" ref={panneau} {...glisser}>
+        <span className="sous-ecran-poignee" aria-hidden="true" />
         <div className="sous-ecran-tete">
           <button type="button" className="flux-bouton" onClick={fermerAnime} aria-label={t('common.close')} title={t('common.close')}>
             <span aria-hidden="true">‹</span>

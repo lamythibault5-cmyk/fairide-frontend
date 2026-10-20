@@ -3926,6 +3926,9 @@ button.recherche-pastille { font: inherit; font-size: 13px; font-weight: 500; cu
 /* Champ mot de passe avec œil (PasswordInput.jsx). */
 .password-input { position: relative; }
 .password-input input { width: 100%; padding-right: 52px; }
+/* Edge (Windows) ajoute son propre œil dans tout champ mot de passe : il s'affichait à côté du nôtre, deux yeux pour un
+   seul geste (fondateur, 2026-10-20). Le nôtre suffit ; ailleurs (TwoFactorSetup, sans œil à nous) celui d'Edge reste. */
+.password-input input::-ms-reveal, .password-input input::-ms-clear { display: none; }
 /* Centré SANS transform : la règle générale button:active (scale, ou transform: none sur tactile) remplaçait le
    translateY(-50%). À l'appui, l'œil sautait d'une demi-hauteur, le doigt ou la souris se relâchait à côté, et le
    clic était perdu — d'où un œil qui « ne marche pas toujours ». Zone de toucher de 40 px de large. */
@@ -4737,6 +4740,20 @@ button.plat-bloque { display: block; width: 100%; min-height: 0 !important; padd
   display: flex; align-items: center; gap: 12px; flex: 0 0 auto;
   padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
   border-bottom: 1px solid var(--line);
+}
+/* LA POIGNÉE DES SOUS-ÉCRANS (fondateur, 2026-10-20 : « propre, et pas dans le chemin du design »). Ils se ferment déjà en
+   tirant vers le bas (useFeuilleGlissable) ; la poignée le montre. Dans l'app sur téléphone seulement, là où le geste existe et
+   comme celle des confirmations ; sur le site au téléphone ces écrans sont des pleines pages sans poignée (site-fiche.css).
+   Grise et non blanche comme celle de la fiche d'un plat : elle se pose sur l'en-tête blanc, pas sur une photo. Un peu plus
+   foncée que le filet (#E2E2E2, invisible sur blanc à cette taille). L'en-tête descend de 6 px pour qu'elle ne touche ni le ‹
+   ni le titre ; elle ne reçoit aucun toucher (tout le panneau est déjà la zone du geste). */
+.sous-ecran-poignee { display: none; }
+@media (max-width: 900px) {
+  html.appli .sous-ecran-poignee {
+    display: block; position: absolute; z-index: 3; top: calc(6px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+    width: 36px; height: 5px; border-radius: 99px; background: rgba(0, 0, 0, .16); pointer-events: none;
+  }
+  html.appli .sous-ecran-tete { padding-top: calc(16px + env(safe-area-inset-top)); }
 }
 
 /* ── LE CARNET D'ADRESSES ──────────────────────────────────────────────────────────────────────
