@@ -38,6 +38,18 @@ export default function AdminMenuPage() {
     api(`/admin/restaurants/${id}`, { token }).then((d) => { setFiche(d); setNote(d.concierge?.adminNote || ''); }).catch((e) => toast(e.message, 'erreur'));
   }, [id, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Une pièce jointe s'ouvre par le serveur : un PDF rangé en image n'est pas livré tel quel par Cloudinary (401), le
+  // serveur rend une adresse signée de cinq minutes (GET /admin/fichier-carte). L'onglet est ouvert PENDANT le clic,
+  // sinon le navigateur bloque la fenêtre ouverte après la réponse.
+  async function ouvrirPiece(e, url) {
+    e.preventDefault();
+    const onglet = window.open('', '_blank');
+    try {
+      const r = await api(`/admin/fichier-carte?url=${encodeURIComponent(url)}`, { token });
+      if (onglet) onglet.location.href = r.url; else window.location.assign(r.url);
+    } catch (err) { onglet?.close(); toast(err.message, 'erreur'); }
+  }
+
   async function traiter(status) {
     if (!fiche?.concierge) return;
     setBusy(true);
@@ -83,7 +95,7 @@ export default function AdminMenuPage() {
             {d.url && <p className="small" style={{ margin: '2px 0', overflowWrap: 'anywhere' }}><b>{tr('adminMenu.page')}</b> : <a href={urlSure(d.url)} target="_blank" rel="noreferrer">{d.url}</a></p>}
             {d.urlMismatch && <p className="small" role="alert" style={{ margin: '2px 0', color: 'var(--red)' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{tr('adminMenu.urlMismatch', { platform: d.platformLabel })}</p>}
             {d.attachments?.length > 0 && (
-              <p className="small" style={{ margin: '2px 0' }}><b>{tr('adminMenu.attachments')}</b> : {d.attachments.map((f, i) => <span key={f.url}>{i > 0 ? ' · ' : ''}<a href={f.url} target="_blank" rel="noreferrer">{f.name || `${i + 1}`}</a></span>)}</p>
+              <p className="small" style={{ margin: '2px 0' }}><b>{tr('adminMenu.attachments')}</b> : {d.attachments.map((f, i) => <span key={f.url}>{i > 0 ? ' · ' : ''}<a href={f.url} target="_blank" rel="noreferrer" onClick={(e) => ouvrirPiece(e, f.url)}>{f.name || `${i + 1}`}</a></span>)}</p>
             )}
             <p className="small" style={{ margin: '2px 0' }}><b>{tr('adminMenu.wantsPhotos')}</b> : {d.platform !== 'other' ? tr('adminMenu.wantsPhotosSource', { source: d.platformLabel }) : d.wantsPhotos ? <b>{tr('adminMenu.wantsPhotosYes')}</b> : tr('adminMenu.wantsPhotosNo')}</p>
             <p className="small" style={{ margin: '2px 0', whiteSpace: 'pre-wrap' }}><b>{tr('adminMenu.notes')}</b> : {d.notes || <i>{tr('adminMenu.noNotes')}</i>}</p>
