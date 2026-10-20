@@ -71,15 +71,17 @@ export default function QuestionsCommerce({ restoId, token, toast }) {
         {t('adminQuestions.intro')}{derniere ? ` ${t('adminQuestions.lastAnswer', { date: new Date(derniere).toLocaleString() })}` : ''}
       </p>
 
+      {/* .admin-table met toutes ses cellules sur une ligne (styles.css) : une question longue élargissait le tableau au-delà
+          de la carte et coupait « Modifier / Supprimer ». Question et réponse reviennent à la ligne, les boutons restent groupés. */}
       {qs.length > 0 && (
         <table className="admin-table" style={{ width: '100%', marginBottom: 10 }}>
           <thead><tr><th>{t('adminQuestions.question')}</th><th>{t('adminQuestions.answer')}</th><th>{t('adminQuestions.status')}</th><th /></tr></thead>
           <tbody>
             {qs.map((q) => (
               <tr key={q.id}>
-                <td>{q.question}{q.context && <small style={{ display: 'block', opacity: 0.7 }}>{q.context}</small>}
+                <td style={{ whiteSpace: 'normal', overflowWrap: 'anywhere', width: '55%' }}>{q.question}{q.context && <small style={{ display: 'block', opacity: 0.7 }}>{q.context}</small>}
                   {q.kind === 'choice' && <small style={{ display: 'block', opacity: 0.7 }}>{q.options.join(' · ')}</small>}</td>
-                <td>{reponse(q)}</td>
+                <td style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{reponse(q)}</td>
                 <td>{pastille(q.status)}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   {q.status === 'open' && <button type="button" className="btn-ghost btn-sm" disabled={busy} onClick={() => modifier(q)}>{t('adminQuestions.edit')}</button>}
