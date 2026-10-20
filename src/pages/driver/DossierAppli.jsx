@@ -56,7 +56,7 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
   const manques = (d.missing ?? []).filter((m) => !MANQUES_INFORMATIFS.includes(m));
   const stripeActif = (d.user?.stripeConnectStatus || user?.stripeConnectStatus) === 'active';
 
-  const [f, setF] = useState(() => infosDepuisDossier(c));
+  const [f, setF] = useState(() => infosDepuisDossier(c, d.zones));
   const val = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const motorise = ['scooter', 'voiture'].includes(f.vehicleType);
   const horsEee = f.nationalityGroup === 'THIRD';

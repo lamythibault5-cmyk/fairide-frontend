@@ -533,7 +533,8 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   dossier's identity step does it), and no location prompt (PositionRequise asks above the job list). The selfie document
   is not required once Stripe Identity or an in-person check verified the face (`couriers.documentsRequis`). A non-EEA
   courier can *claim* the professional-card exemption (`self_employment_claimed_at`): it unblocks submission only; approval
-  and rides still need the team's `self_employment_by_residence`. The signup draft is kept 48 h in localStorage (declared
+  and rides still need the team's `self_employment_by_residence`, granted or withdrawn with a reason in Admin › Livreurs ›
+  dossier › Documents (audit 2026-10-19, admin-08). The signup draft is kept 48 h in localStorage (declared
   in `cookies.technical`).
 - **Merchant**: card signature, allergen attestation and professional declaration in
   [ConformiteCarte](src/components/conformite/ConformiteCarte.jsx) (menu page); allergens / VAT / alcohol
