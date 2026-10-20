@@ -452,14 +452,19 @@ export default function Checkout() {
     }
   }
 
-  async function cancelOrder() {
+  // `modifier` : bouton « Modifier » de la carte (audit du 19/10, checkout-03). Sans lui, le client revenait en arrière
+  // pour changer d'adresse, de mode ou d'allergie, et la commande restée en attente était celle qu'il payait ensuite. La
+  // commande non payée est annulée (solde et bon cadeau rendus) et le formulaire revient, avec un nouvel identifiant de
+  // panier : la prochaine commande est celle de l'écran.
+  async function cancelOrder({ modifier = false } = {}) {
     setCancelling(true);
     try {
       await api(`/orders/${pendingOrder.id}/cancel`, { method: 'PATCH', token });
-      toast(t('checkout.toastOrderCancelled'), 'succes');
+      if (!modifier) toast(t('checkout.toastOrderCancelled'), 'succes');
       // Le panier reste : il doit pouvoir repartir en une nouvelle commande (CartContext.nouvelleDemande).
       cart.nouvelleDemande();
       setPendingOrder(null);
+      if (modifier) window.scrollTo({ top: 0, behavior: defilement() });
       if (pendingOrder.balanceUsed > 0) refreshUser().catch(() => {});
     } catch (e) {
       toast(e.message, 'erreur');
@@ -1036,7 +1041,8 @@ export default function Checkout() {
                 : pendingOrder.paymentMode === 'on_site' ? t('checkout.confirmOnSite')
                 : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}
             </button>
-            <button className="btn-ghost" disabled={paying || cancelling} onClick={cancelOrder}>{cancelling ? '...' : t('common.cancel')}</button>
+            <button className="btn-ghost" disabled={paying || cancelling} onClick={() => cancelOrder({ modifier: true })}>{t('checkout.modifier')}</button>
+            <button className="btn-ghost" disabled={paying || cancelling} onClick={() => cancelOrder()}>{cancelling ? '...' : t('common.cancel')}</button>
           </div>
         </div>
       )}
