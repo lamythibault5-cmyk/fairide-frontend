@@ -2404,6 +2404,12 @@ export default {
       open: "fairide.be/admin openen"
     },
     adminCartes: {
+      importedOn: "Geïmporteerd op {date}",
+      live: "Online",
+      liveUnverified: "Online · prijzen niet gecontroleerd",
+      liveUnverifiedCount: "waarvan {n} met ongecontroleerde prijzen",
+      filter_en_ligne_nv: "Online, prijzen niet gecontroleerd",
+      requestClosed: "Aanvraag gesloten",
       refresh: "Vernieuwen",
       colRestaurant: "Zaak",
       colTodo: "Te doen",

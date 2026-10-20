@@ -2404,6 +2404,12 @@ export default {
       open: "Ouvrir fairide.be/admin"
     },
     adminCartes: {
+      importedOn: "Importée le {date}",
+      live: "En ligne",
+      liveUnverified: "En ligne · prix non vérifiés",
+      liveUnverifiedCount: "dont {n} avec prix non vérifiés",
+      filter_en_ligne_nv: "En ligne, prix non vérifiés",
+      requestClosed: "Demande close",
       refresh: "Actualiser",
       colRestaurant: "Commerce",
       colTodo: "À faire",
