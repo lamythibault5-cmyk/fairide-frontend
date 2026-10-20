@@ -27,6 +27,7 @@ import useRevalidation from '../../useRevalidation';
 import useAlerteLivreur from '../../hooks/useAlerteLivreur';
 import AlerteLivreurBar from '../../components/AlerteLivreurBar';
 import SelfieControle from '../../components/livreur/SelfieControle';
+import LivreurDedie from '../../components/livreur/LivreurDedie';
 import NotifCourses from '../../components/livreur/NotifCourses';
 import PositionRequise from '../../components/livreur/PositionRequise';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
@@ -934,6 +935,8 @@ export default function DriverDashboard() {
         <BandeauOuverture role="driver" />
         {/* Selfie de contrôle au hasard à la prise de service (CODE-14) : sans lui, aucune course n'est proposée. */}
         {peutRouler && <SelfieControle token={token} onDepose={load} />}
+        {/* Invitation d'un commerce à devenir son livreur dédié, à accepter ou refuser (audit du 19/10, shop-301). */}
+        <LivreurDedie token={token} toast={toast} onChange={load} />
 
         {!approuve ? (() => {
           /* LE MESSAGE SUIT L'ÉTAT DU DOSSIER (audit du 15/10/2026). « L'équipe vérifie ton dossier » s'affichait aussi à un

@@ -147,7 +147,7 @@ export default function EditPage() {
 
     <p className="ec-feuille-titre">{t('editResto.delivery')}</p>
     <div className="card account-groupe" aria-label={t('editResto.delivery')}>
-      {ligne('livraison', { icone: 'velo', titre: t('editResto.delivery'), sous: r.deliveryMode === 'own' ? t('editResto.deliveryOwn', { n: drivers.length }) : t('editResto.deliveryPool') })}
+      {ligne('livraison', { icone: 'velo', titre: t('editResto.delivery'), sous: r.deliveryMode === 'own' ? t('editResto.deliveryOwn', { n: drivers.filter((d) => d.status !== 'invited').length }) : t('editResto.deliveryPool') })}
       {ligne('offre', { icone: 'etiquette', titre: t('editResto.rowDeliveryOffer'), sous: offre })}
       {/* Distance de livraison et plafond de commandes par jour (fondateur, 2026-10-01) : pas de limite par défaut. */}
       {ligne('capacite', { icone: 'reglages', titre: t('editResto.rowCapacity'), sous: r.deliveryRadiusKm == null && r.maxOrdersPerDay == null ? t('editResto.capacitySubNone', { km: 6 }) : [r.deliveryRadiusKm != null && t('editResto.capacitySubRadius', { km: String(r.deliveryRadiusKm).replace('.', ',') }), r.maxOrdersPerDay != null && t('editResto.capacitySubCap', { n: r.maxOrdersPerDay })].filter(Boolean).join(' · ') })}
