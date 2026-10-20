@@ -97,8 +97,18 @@ export default function DashboardLayout() {
   useEffect(() => { demarrerTerminalNavigateur(); }, []);
   // Membre de l'équipe (staffRole) : partagé avec la barre de navigation et Mon compte (modeEquipe.js).
   useEffect(() => { definirModeEquipe(myRestos?.find((r) => r.id === restoId)?.staffRole === 'service'); }, [myRestos, restoId]);
-  useEffect(() => {
+  // PREMIÈRE REQUÊTE EN ÉCHEC (audit du 19/10, CROSS-30) : la liste des commerces ne venait pas (coupure réseau, serveur
+  // en redéploiement) → un toast, puis le squelette pour toujours : ni son de nouvelle commande, ni bouton, il fallait
+  // tuer l'app. Même règle que loadDashboard : deux reprises automatiques (2,5 s puis 5 s), puis la carte d'échec avec
+  // « Réessayer ». Une fois la liste reçue, tout repart comme au premier chargement (pickResto, relecture toutes les 15 s,
+  // alerte de nouvelle commande).
+  const [erreurListe, setErreurListe] = useState(null);
+  const tentativesListe = useRef(0);
+  const repriseListe = useRef(null);
+  useEffect(() => () => clearTimeout(repriseListe.current), []);
+  function chargerCommerces() {
     api('/restaurants/mine/dashboard', { token }).then((list) => {
+      setErreurListe(null); tentativesListe.current = 0;
       setMyRestos(list);
       // Un seul restaurant possible par compte -> pas besoin de le faire choisir dans une liste, on l'ouvre direct.
       if (list.length === 1) pickResto(list[0].id, list[0]);
@@ -123,7 +133,14 @@ export default function DashboardLayout() {
           }
         } catch { /* rien */ }
       }
-    }).catch((e) => toast(e.message, 'erreur'));
+    }).catch((e) => {
+      // Objet neuf à chaque échec, comme erreurChargement : un message identique ne déclencherait pas de nouveau rendu.
+      setErreurListe({ message: e.message, n: tentativesListe.current });
+      if (tentativesListe.current < 2) { tentativesListe.current += 1; repriseListe.current = setTimeout(chargerCommerces, 2500 * tentativesListe.current); }
+    });
+  }
+  useEffect(() => {
+    chargerCommerces();
     if (new URLSearchParams(window.location.search).get('connect')) {
       toast(t('dashResto.toastPaymentsValidating'));
       window.history.replaceState({}, '', '/dashboard');
@@ -302,7 +319,13 @@ export default function DashboardLayout() {
   }
 
   // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
-  if (!myRestos) return experienceApp() ? <SqueletteEcran /> : <SkeletonCards count={2} />;
+  if (!myRestos) {
+    if (erreurListe && erreurListe.n >= 2) {
+      return <ErrorCard titre={t('dashResto.loadFailedTitle')} message={erreurListe.message}
+        onRetry={() => { clearTimeout(repriseListe.current); tentativesListe.current = 0; setErreurListe(null); chargerCommerces(); }} />;
+    }
+    return experienceApp() ? <SqueletteEcran /> : <SkeletonCards count={2} />;
+  }
 
   // MEMBRE DE L'ÉQUIPE (backend equipeCommerce.js) : le commerce ouvert n'est pas le sien, il y fait le service. Il ne
   // voit que les commandes — les autres écrans appellent des routes du propriétaire, que le serveur lui refuse.

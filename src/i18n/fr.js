@@ -8230,6 +8230,7 @@ export default {
       errEmailTaken: 'Un compte existe déjà avec cette adresse e-mail. Connecte-toi ou utilise « Mot de passe oublié ».',
       errPhoneTaken: 'Un compte existe déjà avec ce numéro de téléphone. Chaque numéro ne peut être lié qu\'à un seul compte.',
       errPhoneInvalid: 'Numéro de téléphone invalide (ex. +32 470 00 00 00 ou 0470 00 00 00).',
+      errPhoneDoublePrefix: "Ce numéro contient deux fois l'indicatif du pays (par exemple +32 +32…). Garde-le une seule fois.",
       stepDocsTitle: 'Ta pièce d\'identité',
       stepDocsSub: 'Une photo du recto et une du verso de ta carte d\'identité ou de ton permis. Elles sont conservées avec ton dossier livreur, visibles dans « Mon compte ».',
       stepAccountSubFirst: 'On ne te les redemandera plus ensuite.',
