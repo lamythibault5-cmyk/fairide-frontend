@@ -191,7 +191,7 @@ export default function AdminOrdersPage() {
     { key: 'clientName', label: tr('adminCommon.client'), get: (o) => o.clientName },
     { key: 'driverName', label: tr('adminCommon.driver'), get: (o) => o.driverName || '-' },
     { key: 'orderType', label: tr('adminCommon.type'), get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType },
-    { key: 'status', label: tr('adminCommon.status'), get: (o) => <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>, sortValue: (o) => o.status },
+    { key: 'status', label: tr('adminCommon.status'), get: (o) => <>{o.pickupNoShow && <span className="pill texte-erreur" style={{ marginRight: 4 }}>{tr('adminOrders.pickupNoShowBadge')}</span>}<span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span></>, sortValue: (o) => o.status },
     { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? '✓' : '…'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
     { key: 'total', label: tr('adminCommon.total'), get: (o) => money(o.total), sortValue: (o) => o.total, align: 'right', sum: true },
     { key: 'fairideTotalRevenue', label: tr('adminOrders.colFairide'), get: (o) => money(o.fairideTotalRevenue), sortValue: (o) => o.fairideTotalRevenue, align: 'right', sum: true }
@@ -280,7 +280,11 @@ export default function AdminOrdersPage() {
         <div className={`card order-card-clickable${sel.isSelected(o.id) ? ' is-selected' : ''}`} key={o.id} onClick={() => openOrder(o)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <span className="admin-card-select"><SelectBox sel={sel} id={o.id} label={tr('adminCommon.select')} /><b>{o.restaurantName}</b></span>
-            <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>
+            <span className="row" style={{ gap: 4 }}>
+              {/* Non récupérée (audit du 19/10, admin-03) : ce client ne peut plus payer sur place ; levée dans sa fiche client. */}
+              {o.pickupNoShow && <span className="pill texte-erreur">{tr('adminOrders.pickupNoShowBadge')}</span>}
+              <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>
+            </span>
           </div>
           <div className="small">
             {o.clientName} → {o.driverName ? tr('adminOrders.deliveredBy', { name: o.driverName }) : (o.orderType === 'delivery' ? tr('adminOrders.noDriverAssigned') : tr('adminOrders.takeaway'))}

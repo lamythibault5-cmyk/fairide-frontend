@@ -37,8 +37,12 @@ export function documentsRequis(d, { statusType, motorise, horsEee }) {
 }
 
 // Le formulaire « Infos » tel que le serveur l'attend (PATCH /couriers/me) : oui / non en booléen, rien de vide.
+// Chaque « Continuer » envoie tout le formulaire : une zone, une date de naissance ou un véhicule encore vides (leur
+// écran vient plus loin) étaient refusés par le serveur et bloquaient l'écran en cours sur un champ invisible (audit du
+// 19/10, courier-1 : « Zone hors lancement. » dès « Tes informations »). Vide = pas encore répondu, rien n'est envoyé.
 export function corpsInfos(f) {
   const body = { ...f };
+  for (const k of ['zone', 'birthDate', 'vehicleType']) if (!body[k]) delete body[k];
   if (!body.nationalNumber) delete body.nationalNumber;
   if (!body.bagOption) delete body.bagOption;
   if (body.worksOtherPlatforms === 'yes' || body.worksOtherPlatforms === 'no') body.worksOtherPlatforms = body.worksOtherPlatforms === 'yes'; else delete body.worksOtherPlatforms;
@@ -47,10 +51,12 @@ export function corpsInfos(f) {
   return body;
 }
 
-// Valeurs de départ du formulaire « Infos », reprises du dossier.
-export function infosDepuisDossier(c) {
+// Valeurs de départ du formulaire « Infos », reprises du dossier. `zones` : celles que propose le serveur (d.zones). Une
+// commune de préférence n'est reprise comme zone que si elle en est une (audit du 19/10, courier-1) : « Vilvoorde »,
+// pré-rempli tel quel, partait avec le premier écran et le faisait refuser.
+export function infosDepuisDossier(c, zones = []) {
   return {
-    birthDate: c.birthDate ?? '', nationalNumber: '', zone: c.zone || c.preferredZones?.[0] || '',
+    birthDate: c.birthDate ?? '', nationalNumber: '', zone: c.zone || (c.preferredZones ?? []).find((z) => zones.includes(z)) || '',
     worksOtherPlatforms: c.otherPlatforms?.works === true ? 'yes' : c.otherPlatforms?.works === false ? 'no' : '', vehicleType: c.vehicleType ?? '', licenceNumber: c.licenceNumber ?? '', licencePlate: c.licencePlate ?? '', bagOption: c.bag?.option || '',
     schoolName: c.student?.school ?? '', academicYear: c.student?.academicYear ?? '',
     socialInsuranceFund: c.socialInsuranceFund ?? c.student?.socialInsuranceFund ?? '',

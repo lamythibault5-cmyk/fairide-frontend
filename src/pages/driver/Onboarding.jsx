@@ -432,7 +432,7 @@ function ChampCaisse({ f, set, t }) {
 function EtapeInfos({ d, t, busy, token, action, onNext }) {
   const toast = useToast();
   const c = d.courier; const legal = d.legal ?? {};
-  const [f, setF] = useState(() => infosDepuisDossier(c));
+  const [f, setF] = useState(() => infosDepuisDossier(c, d.zones));
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   // Une date par pièce (elle était partagée : la date d'un permis partait avec l'assurance déposée ensuite).
   const [echeances, setEcheances] = useState({});
