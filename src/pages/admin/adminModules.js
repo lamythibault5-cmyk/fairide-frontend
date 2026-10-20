@@ -19,7 +19,7 @@ export const ADMIN_HUBS = [
   { key: 'orders', icon: 'commandes', modules: ['orders', 'incidents', 'reviews'] },
   // Fondateur, 2026-09-23 : la pastille « Commerces » montre le NOMBRE DE VRAIS COMMERCES inscrits (ni démo, ni test), pas
   // ce qui attend une action ; les restaurants à valider gardent leur propre pastille sur l'onglet Restaurants.
-  { key: 'partners', icon: 'commerce', modules: ['restaurants', 'placements', 'terminals', 'sales', 'crm'], badge: (o) => pastille(n(o.accounts?.restaurants?.real), 'info') },
+  { key: 'partners', icon: 'commerce', modules: ['restaurants', 'cartes', 'placements', 'terminals', 'sales', 'crm'], badge: (o) => pastille(n(o.accounts?.restaurants?.real), 'info') },
   { key: 'couriers', icon: 'scooter', modules: ['drivers', 'couriers', 'logistics'] },
   { key: 'customers', icon: 'personnes', modules: ['clients', 'promotions', 'marketing'] },
   { key: 'inbox', icon: 'bulle', modules: ['support', 'messages', 'tasks'] },
@@ -43,6 +43,8 @@ export const ADMIN_MODULES = [
   { key: 'orders', path: '/admin/orders', icon: 'commandes', hub: 'orders',
     badge: (o) => pastille(n(o.orders?.pending) + n(o.orders?.noDriver) + n(o.orders?.late), n(o.orders?.late) + n(o.orders?.noDriver) > 0 ? 'danger' : 'warn') },
   { key: 'restaurants', path: '/admin/restaurants', icon: 'commerce', hub: 'partners', badge: (o) => pastille(n(o.restaurants?.pending)) },
+  // Cartes (Owen, 2026-10-20) : qui n'a pas de carte, d'où vient chacune, prix vérifiés ou non (routes/adminCartes.js).
+  { key: 'cartes', path: '/admin/cartes', icon: 'restaurants', hub: 'partners', badge: aucun },
   { key: 'drivers', path: '/admin/drivers', icon: 'scooter', hub: 'couriers', badge: (o) => pastille(n(o.drivers?.pending)) },
   { key: 'couriers', path: '/admin/couriers', icon: 'dossier', hub: 'couriers', badge: (o) => pastille(n(o.couriers?.pending)) },
   { key: 'clients', path: '/admin/clients', icon: 'personnes', hub: 'customers', badge: (o) => pastille(n(o.clients?.newWeek), 'info') },

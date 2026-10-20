@@ -174,7 +174,8 @@ export default function Layout() {
   // moment de payer. Ailleurs, elle est le seul acces au panier.
   // La commande groupée non plus : elle porte déjà « Envoyer mon panier au groupe » dans sa barre du bas.
   const pageDuPanier = location.pathname === '/panier' || location.pathname.startsWith('/checkout') || location.pathname.startsWith('/groupe/');
-  const seesClientCart = !user?.isAdmin && !pageDuPanier && (role === 'client' || (previewMode && role === 'restaurant'));
+  // Dans l'application, un compte admin est traité selon son rôle (pas de console dans l'app, voir AdminSurLeSite).
+  const seesClientCart = !(user?.isAdmin && !APPLI) && !pageDuPanier && (role === 'client' || (previewMode && role === 'restaurant'));
   const leanHeader = !user && RESTAURANT_DETAIL_PATH.test(location.pathname);
   // Le fond de cuisine ne vit que sur l accueil PUBLIC : c est la seule page dont le rôle est de
   // donner envie. Ailleurs on vient faire quelque chose, et un fond animé gênerait.
@@ -353,7 +354,7 @@ export default function Layout() {
                     {nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
                   </NavLink>
                 )}
-                {user.isAdmin && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.admin')}</NavLink>}
+                {user.isAdmin && !APPLI && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.admin')}</NavLink>}
               </nav>
             )}
             {!leanHeader && user && (
