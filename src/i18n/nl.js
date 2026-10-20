@@ -7943,6 +7943,8 @@ export default {
       sonCoupe: 'geluid uit',
       sonBloque: 'geluid geblokkeerd',
       activerSon: 'Geluid aanzetten',
+      sonTerminalTitre: 'Tik op het scherm om het geluid aan te zetten',
+      sonTerminalTexte: 'Zonder deze tik gaat de terminal niet af als er een bestelling binnenkomt. De browser zet het geluid uit bij elke herstart.',
       couper: 'Stoppen',
       reglagesAlarme: 'Alarminstellingen',
       aTraiter: 'Te behandelen',

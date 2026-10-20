@@ -7988,6 +7988,8 @@ export default {
       sonCoupe: 'son coupé',
       sonBloque: 'son bloqué',
       activerSon: 'Activer le son',
+      sonTerminalTitre: 'Touche l\'écran pour activer le son',
+      sonTerminalTexte: 'Sans ce toucher, le terminal ne sonnera pas quand une commande arrive. Le navigateur coupe le son à chaque redémarrage.',
       couper: 'Couper',
       reglagesAlarme: 'Réglages de l\'alarme',
       aTraiter: 'À traiter',
