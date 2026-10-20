@@ -38,6 +38,7 @@ import { useSiteLarge } from '../../hooks/useSiteLarge';
 import '../../ecran-liste.css';
 import '../../site-liste.css';
 import AvecMarque from '../../components/AvecMarque';
+import { lienFiche } from '../../murCompte';
 
 // Bandes de prix, calculees sur le prix MEDIAN des plats de la carte : aucune colonne « niveau de
 // prix » n'existe en base, et un euro affiche au juge serait faux pour la moitie des commerces.
@@ -119,11 +120,9 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   // la connexion avec la fiche en `from`, et Auth.jsx y ramène une fois connecté ou inscrit.
   // La ROUTE /restaurants/:id, elle, reste publique (App.jsx) : un lien partagé, un moteur de
   // recherche ou la page prérendue y mènent toujours directement. Seul ce clic-ci est filtré.
-  const fiche = `/restaurants/${r.id}`;
   return (
     <Link
-      to={user ? fiche : '/login?audience=client'}
-      state={user ? undefined : { from: fiche }}
+      {...lienFiche(user, r.id)}
       className={`rest-card rc${isClosed ? ' rc-est-ferme' : ''}`}
     >
       <div className="rc-media">
@@ -215,7 +214,6 @@ function ALaUne({ list, inscritLe, t }) {
       <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="eclair" taille={18} />{t('restaurantList.sectionFeatured')}</h3>
       <div className="une-rail" ref={rail} onScroll={surDefilement}>
         {list.map((r) => {
-          const fiche = `/restaurants/${r.id}`;
           const etat = r.hours ? getOpenStatus(r.hours, new Date(), r.closures) : null;
           const ferme = !!etat && !etat.isOpen;
           const depuis = inscritLe.get(r.id);
@@ -224,7 +222,7 @@ function ALaUne({ list, inscritLe, t }) {
             r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ');
           return (
             // Même règle que les cartes dessous : sans compte, le clic mène à la connexion, puis à la fiche.
-            <Link key={r.id} to={user ? fiche : '/login?audience=client'} state={user ? undefined : { from: fiche }} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`}>
+            <Link key={r.id} {...lienFiche(user, r.id)} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`}>
               <VisuelVide nom={r.name} cuisine={r.cuisine} />
               <img {...imgProps(r.coverImageUrl, 800, '(max-width: 640px) 92vw, 380px')} alt="" className="une-photo" decoding="async" onError={cacherImageCassee} />
               <span className="une-voile" aria-hidden="true" />
