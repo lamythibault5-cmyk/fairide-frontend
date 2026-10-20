@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { fmtDate } from '../../pages/admin/adminUtils';
+import ConfirmDialog from '../ConfirmDialog';
 
 // Outil public de l'AFSCA où l'équipe cherche l'établissement (Food Hygiene Rating, volet professionnel).
 const OUTIL_AFSCA = 'https://fhr.favv-afsca.be/';
@@ -17,7 +18,9 @@ const OUTIL_AFSCA = 'https://fhr.favv-afsca.be/';
  * FACULTATIF DEPUIS LE 12 OCT. 2026 (fondateur : « faire confiance à leur parole »). Le commerce certifie son
  * enregistrement d'une case à l'inscription ; ce relevé est un CONTRÔLE PAR SONDAGE, il ne bloque jamais la publication
  * — sauf « Introuvable » : quand l'équipe a cherché et n'a rien trouvé, publier serait vendre en connaissance de cause
- * (conformiteCommerce.js, afsca_introuvable). Écran interne : textes en fr/en/nl comme le reste de la fiche. */
+ * (conformiteCommerce.js, afsca_introuvable). Écran interne : textes en fr/en/nl comme le reste de la fiche.
+ * Depuis l'audit du 19/10 (admin-05), « Introuvable » retire aussi du site un commerce en ligne et le prévient par e-mail
+ * (backend routes/admin.js) : d'où la confirmation avant de l'enregistrer. */
 const POINTS = ['linkedToCompany', 'addressIsKitchen', 'activityFood', 'statusActive'];
 
 export default function VerificationAfsca({ detail, onChanged }) {
@@ -30,16 +33,17 @@ export default function VerificationAfsca({ detail, onChanged }) {
   const [capture, setCapture] = useState(null);
   const [source, setSource] = useState('');
   const [busy, setBusy] = useState(false);
+  const [confirmerIntrouvable, setConfirmerIntrouvable] = useState(false);
 
   async function envoyer(result) {
     setBusy(true);
     try {
       const fields = { result, establishmentNumber: numero.trim(), sourceUrl: source.trim(), ...Object.fromEntries(POINTS.map((p) => [p, points[p] ? 'true' : 'false'])) };
-      await apiUpload(`/admin/restaurants/${detail.id}/afsca-check`, { file: capture, token, fieldName: 'screenshot', fields });
-      toast(result === 'trouve' ? t('adminRestos.afscaCheckSaved') : t('adminRestos.afscaNotFoundSaved'));
+      const r = await apiUpload(`/admin/restaurants/${detail.id}/afsca-check`, { file: capture, token, fieldName: 'screenshot', fields });
+      toast(result === 'trouve' ? t('adminRestos.afscaCheckSaved') : r?.unpublished ? t('adminRestos.afscaNotFoundUnpublished') : t('adminRestos.afscaNotFoundSaved'));
       setPoints({}); setCapture(null);
       onChanged?.();
-    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirmerIntrouvable(false); }
   }
 
   const tousLesPoints = POINTS.every((p) => points[p]);
@@ -79,8 +83,10 @@ export default function VerificationAfsca({ detail, onChanged }) {
       </div>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         <button type="button" className="btn-teal" disabled={busy || !tousLesPoints || !capture || !numero.trim()} onClick={() => envoyer('trouve')}>{busy ? '…' : t('adminRestos.afscaVerifiedButton')}</button>
-        <button type="button" className="btn-outline" disabled={busy} onClick={() => envoyer('introuvable')}>{t('adminRestos.afscaNotFoundButton')}</button>
+        <button type="button" className="btn-outline" disabled={busy} onClick={() => setConfirmerIntrouvable(true)}>{t('adminRestos.afscaNotFoundButton')}</button>
       </div>
+      <ConfirmDialog open={confirmerIntrouvable} danger title={t('adminRestos.afscaNotFoundConfirmTitle')} message={t('adminRestos.afscaNotFoundConfirmText')}
+        confirmLabel={t('adminRestos.afscaNotFoundButton')} loading={busy} onCancel={() => setConfirmerIntrouvable(false)} onConfirm={() => envoyer('introuvable')} />
     </div>
   );
 }

@@ -191,7 +191,7 @@ export default function AdminOrdersPage() {
     { key: 'clientName', label: tr('adminCommon.client'), get: (o) => o.clientName },
     { key: 'driverName', label: tr('adminCommon.driver'), get: (o) => o.driverName || '-' },
     { key: 'orderType', label: tr('adminCommon.type'), get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType },
-    { key: 'status', label: tr('adminCommon.status'), get: (o) => <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>, sortValue: (o) => o.status },
+    { key: 'status', label: tr('adminCommon.status'), get: (o) => <>{o.pickupNoShow && <span className="pill texte-erreur" style={{ marginRight: 4 }}>{tr('adminOrders.pickupNoShowBadge')}</span>}<span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span></>, sortValue: (o) => o.status },
     { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? '✓' : '…'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
     { key: 'total', label: tr('adminCommon.total'), get: (o) => money(o.total), sortValue: (o) => o.total, align: 'right', sum: true },
     { key: 'fairideTotalRevenue', label: tr('adminOrders.colFairide'), get: (o) => money(o.fairideTotalRevenue), sortValue: (o) => o.fairideTotalRevenue, align: 'right', sum: true }
@@ -280,7 +280,11 @@ export default function AdminOrdersPage() {
         <div className={`card order-card-clickable${sel.isSelected(o.id) ? ' is-selected' : ''}`} key={o.id} onClick={() => openOrder(o)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <span className="admin-card-select"><SelectBox sel={sel} id={o.id} label={tr('adminCommon.select')} /><b>{o.restaurantName}</b></span>
-            <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>
+            <span className="row" style={{ gap: 4 }}>
+              {/* Non récupérée (audit du 19/10, admin-03) : ce client ne peut plus payer sur place ; levée dans sa fiche client. */}
+              {o.pickupNoShow && <span className="pill texte-erreur">{tr('adminOrders.pickupNoShowBadge')}</span>}
+              <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>
+            </span>
           </div>
           <div className="small">
             {o.clientName} → {o.driverName ? tr('adminOrders.deliveredBy', { name: o.driverName }) : (o.orderType === 'delivery' ? tr('adminOrders.noDriverAssigned') : tr('adminOrders.takeaway'))}
@@ -381,15 +385,20 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
   async function runConfirmed(motif) {
     if (!confirmAction) return;
     setBusy(true);
+    let suite = null;
     try {
       await confirmAction.run(motif);
       toast(confirmAction.successMessage || tr('adminCommon.doneToast'));
       onChanged();
     } catch (e) {
-      toast(e.message, 'erreur');
+      // Réattribution qui demande une confirmation (audit du 19/10/2026, admin-01) : le serveur dit quels contrôles de la
+      // prise ne passent pas (vélo trop loin, prix sous le minimum du livreur…) ; l'équipe les lit, puis confirme ou renonce.
+      if (e.code === 'CONFIRMATION_REQUISE' && confirmAction.siAConfirmer) suite = () => confirmAction.siAConfirmer(e.message);
+      else toast(e.message, 'erreur');
     } finally {
       setBusy(false);
       setConfirmAction(null);
+      if (suite) suite();
     }
   }
 
@@ -414,14 +423,17 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
     });
   }
 
-  function askReassign() {
+  // `aConfirmer` : le texte des contrôles à confirmer renvoyé par le serveur ; le second envoi porte alors confirm: true.
+  function askReassign(aConfirmer = null) {
     const driver = drivers?.find((d) => d.id === newDriverId);
     if (!driver) { toast(tr('adminCommon.toastChooseDriver')); return; }
     setConfirmAction({
-      title: tr('adminOrders.confirmReassign'),
-      message: tr('adminOrders.newDriverMsg', { name: driver.name }),
+      title: tr(aConfirmer ? 'adminOrders.reassignConfirmTitle' : 'adminOrders.confirmReassign'),
+      message: aConfirmer || tr('adminOrders.newDriverMsg', { name: driver.name }),
+      danger: !!aConfirmer,
       successMessage: tr('adminOrders.toastReassigned'),
-      run: () => api(`/admin/orders/${selected.id}/driver`, { method: 'PATCH', token, body: { driverId: driver.id } })
+      run: () => api(`/admin/orders/${selected.id}/driver`, { method: 'PATCH', token, body: { driverId: driver.id, ...(aConfirmer ? { confirm: true } : {}) } }),
+      siAConfirmer: aConfirmer ? null : (texte) => askReassign(texte)
     });
   }
 
@@ -517,7 +529,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
               <option value="">{tr('adminOrders.reassignTo')}</option>
               {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name} ({d.activityStatus})</option>)}
             </select>
-            <button className="btn-outline" disabled={!newDriverId} onClick={askReassign}>{tr('adminOrders.reassign')}</button>
+            <button className="btn-outline" disabled={!newDriverId} onClick={() => askReassign()}>{tr('adminOrders.reassign')}</button>
           </div>
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminOrders.refund')}</h4>

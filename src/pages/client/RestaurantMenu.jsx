@@ -44,6 +44,7 @@ import { experienceApp } from '../../natif';
 import { photoEnVol } from '../../transitionPhoto';
 import PanierColonne from '../../components/PanierColonne';
 import { repeterTantQueLibre } from '../../defilementAuto';
+import { lienFiche } from '../../murCompte';
 import '../../ecran-fiche.css';
 import '../../site-fiche.css';
 
@@ -1007,7 +1008,7 @@ export default function RestaurantMenu() {
     </>
   );
 
-  const decouvrir = discover.length > 0 && <DiscoverSection restaurants={discover} t={t} />;
+  const decouvrir = discover.length > 0 && <DiscoverSection restaurants={discover} t={t} user={user} />;
 
   /* LA FICHE DANS L'APP, VERSION B « SCEAU ET TICKET » (fondateur, 2026-10-17, mockups/commerces-marque.html ; il avait
      d'abord retenu C, puis précisé « B, mais je garde les pointillés de la carte »). La photo de couverture bord à bord ; la
@@ -1073,7 +1074,9 @@ export default function RestaurantMenu() {
   );
 }
 
-function DiscoverSection({ restaurants, t }) {
+// Un visiteur arrivé par un lien partagé voit cette rangée, mais ouvrir un AUTRE commerce depuis Fairide demande un compte
+// (murCompte.js) : la fiche partagée reste publique, la suivante non.
+function DiscoverSection({ restaurants, t, user }) {
   return (
     <div className="fiche-decouvrir" style={{ marginTop: 18, marginBottom: 18 }}>
       <h3 className="section-title" style={{ fontSize: 16 }}>{t('restaurantMenu.discoverTitle')}</h3>
@@ -1082,7 +1085,7 @@ function DiscoverSection({ restaurants, t }) {
         keyFor={(r) => r.id}
         className="discover-track"
         renderItem={(r, i, key) => (
-          <Link key={key} to={`/restaurants/${r.id}`} className="discover-card">
+          <Link key={key} {...lienFiche(user, r.id)} className="discover-card">
             {/* Le visuel de marque sous la photo : un commerce sans photo (ou dont la photo casse) garde une vignette. */}
             <span className="discover-card-media">
               <VisuelVide nom={r.name} cuisine={r.cuisine} />

@@ -11,6 +11,7 @@ import { euros } from '../../prixPlat';
 import { experienceApp } from '../../natif';
 import { lireRecherches, retenirRecherche, effacerRecherches } from '../../recherchesRecentes';
 import { RouteVelo } from '../../components/TeteListe';
+import { lienFiche } from '../../murCompte';
 import VisuelVide from '../../components/VisuelVide';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import { imgProps, cacherImageCassee } from '../../images';
@@ -147,8 +148,9 @@ export default function SearchPage() {
     retenir();
     if (!resultats || resultats.total !== 1) return;
     const r = resultats;
-    if (r.commerces[0]) return navigate(`/restaurants/${r.commerces[0].id}`);
-    if (r.plats[0]) return navigate(`/restaurants/${r.plats[0].restaurant.id}`);
+    const versFiche = (id) => { const l = lienFiche(user, id); return navigate(l.to, { state: l.state }); };
+    if (r.commerces[0]) return versFiche(r.commerces[0].id);
+    if (r.plats[0]) return versFiche(r.plats[0].restaurant.id);
     if (r.cuisines[0]) return navigate('/restaurants', { state: { cuisine: r.cuisines[0].value } });
     if (r.communes[0]) return navigate('/restaurants', { state: { commune: r.communes[0] } });
     if (r.aide[0]) return navigate(r.aide[0].to);
@@ -295,21 +297,21 @@ export default function SearchPage() {
             <section className="sl-res-commerces">
               <h3 className="recherche-titre-groupe">{t('search.businesses')}</h3>
               <div className="rest-grid sl-grille">
-                {resultats.commerces.map((r) => <CarteCommerce key={r.id} r={r} t={t} />)}
+                {resultats.commerces.map((r) => <CarteCommerce key={r.id} r={r} t={t} lien={lienFiche(user, r.id)} />)}
               </div>
             </section>
           )}
           {!site && (
             <Groupe titre={t('search.businesses')} quand={resultats.commerces.length}>
               {resultats.commerces.map((r) => (
-                <Ligne key={r.id} to={`/restaurants/${r.id}`} image={r.coverImageUrl} icone="commerce" titre={r.name}
+                <Ligne key={r.id} {...lienFiche(user, r.id)} image={r.coverImageUrl} icone="commerce" titre={r.name}
                   sous={[r.cuisine, r.commune].filter(Boolean).join(' · ')} />
               ))}
             </Groupe>
           )}
           <Groupe titre={t('search.dishes')} quand={resultats.plats.length}>
             {resultats.plats.map(({ restaurant, plat }) => (
-              <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} to={`/restaurants/${restaurant.id}`} image={plat.imageUrl} icone="restaurants"
+              <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} {...lienFiche(user, restaurant.id)} image={plat.imageUrl} icone="restaurants"
                 titre={plat.name} sous={`${restaurant.name}${prix(plat) ? ` · ${prix(plat)}` : ''}`} />
             ))}
           </Groupe>
@@ -375,9 +377,9 @@ export default function SearchPage() {
 
 // Un commerce trouvé, sur le site : la carte de la liste des commerces (photo, nom, cuisine · quartier), sans le cœur — la
 // recherche ne charge pas les favoris. Même destination que la ligne de l'app : la fiche du commerce.
-function CarteCommerce({ r, t }) {
+function CarteCommerce({ r, t, lien }) {
   return (
-    <Link to={`/restaurants/${r.id}`} className="rest-card rc">
+    <Link to={lien.to} state={lien.state} className="rest-card rc">
       <div className="rc-media">
         <VisuelVide nom={r.name} cuisine={r.cuisine} />
         {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 50vw, 280px')} alt="" className="rc-photo" onError={cacherImageCassee} />}

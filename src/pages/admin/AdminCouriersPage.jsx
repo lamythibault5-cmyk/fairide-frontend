@@ -138,6 +138,8 @@ export default function AdminCouriersPage() {
           {data && mode === 'table' && lignes.length > 0 && (
             <AdminDataTable rows={lignes} sort={sort} onSort={toggle} onRowClick={(r) => setSelection(r.id)} columns={colonnes} rowClassName={(r) => (estCompteTest(r) ? 'row-test-account' : '')} emptyLabel={tr('adminCouriers.none')} />
           )}
+          {/* Plus de pourcentage de plafond sur les fiches (audit du 19/10, admin-07) : pctPlafond avait disparu avec le régime
+              P2P (CODE-12) mais restait appelé ici, et la vue Fiches, mémorisée, plantait toute la page à chaque ouverture. */}
           {data && mode === 'cards' && lignes.map((r) => (
             <div key={r.id} className={`card order-card-clickable${estCompteTest(r) ? ' card-test-account' : ''}`} onClick={() => setSelection(r.id)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -148,7 +150,7 @@ export default function AdminCouriersPage() {
                 </div>
               </div>
               <div className="small">{r.email}</div>
-              <div className="small"><Icone nom="document" taille={16} className="icone-texte" />{' '}{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''} · {r.identity?.status === 'verified' ? `${tr('adminCouriers.colIdentity')}` : r.identity?.status === 'pending' ? `${tr('adminCouriers.colIdentity')}` : `· ${tr('adminCouriers.colIdentity')}`}{pctPlafond(r) != null ? ` · ${tr('adminCouriers.colCap')} ${pctPlafond(r)} %` : ''} · {tr('adminCouriers.colGross')} {euro(r.grossTotal ?? 0)}</div>
+              <div className="small"><Icone nom="document" taille={16} className="icone-texte" />{' '}{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''} · {r.identity?.status === 'verified' ? `${tr('adminCouriers.colIdentity')}` : r.identity?.status === 'pending' ? `${tr('adminCouriers.colIdentity')}` : `· ${tr('adminCouriers.colIdentity')}`} · {tr('adminCouriers.colGross')} {euro(r.grossTotal ?? 0)}</div>
               <div className="small"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{r.zone || '-'} · {r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}</div>
               <div className="small" style={{ opacity: 0.6 }}>{tr('adminCouriers.colUpdated')} {fmt(r.updatedAt)}</div>
             </div>
@@ -220,7 +222,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
       {contenu}
       <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} danger={confirm?.danger} loading={busy}
         onConfirm={async () => { const c2 = confirm; setConfirm(null); await c2.run(); }} onCancel={() => setConfirm(null)} />
-      <ReasonDialog open={!!motifDialog} title={motifDialog?.title} message={motifDialog?.message} label={motifDialog?.label} required={motifDialog?.required !== false} danger={motifDialog?.danger} confirmLabel={motifDialog?.confirmLabel} loading={busy}
+      <ReasonDialog open={!!motifDialog} title={motifDialog?.title} message={motifDialog?.message} label={motifDialog?.label} placeholder={motifDialog?.placeholder} required={motifDialog?.required !== false} danger={motifDialog?.danger} confirmLabel={motifDialog?.confirmLabel} loading={busy}
         onConfirm={async (reason) => { const m = motifDialog; setMotifDialog(null); await m.run(reason); }} onCancel={() => setMotifDialog(null)} />
     </RecordDrawer>,
     document.body
@@ -286,6 +288,22 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
       )}
       {onglet === 'documents' && (
         <>
+          {/* DISPENSE DE CARTE PROFESSIONNELLE (audit du 19/10, admin-08). Hors EEE, un titre de séjour qui autorise
+              l'activité indépendante dispense de la carte ; le livreur peut la DEMANDER, seule l'équipe l'ACCORDE (avec
+              motif). Ce contrôle manquait : l'approbation renvoyait vers une case absente, et le livreur ne pouvait jamais
+              rouler. Accordée, elle débloque l'approbation et les courses ; retirée, la carte redevient exigée. */}
+          {c.nationalityGroup === 'THIRD' && (
+            <>
+              <h4 className="drawer-section-title">{tr('adminCouriers.secExemption')}</h4>
+              <DrawerRow label={tr('adminCouriers.exemptionClaim')} value={c.selfEmploymentClaimedAt ? tr('adminCouriers.exemptionClaimedOn', { date: fmt(c.selfEmploymentClaimedAt) }) : tr('adminCouriers.exemptionNotClaimed')} />
+              <DrawerRow label={tr('adminCouriers.exemptionDecision')} strong
+                value={c.selfEmploymentByResidence ? tr('adminCouriers.exemptionGranted', { by: c.selfEmploymentByResidenceBy || '-', reason: c.selfEmploymentByResidenceReason || '-' }) : tr('adminCouriers.exemptionNotGranted')} />
+              <div className="row" style={{ gap: 6, flexWrap: 'wrap', margin: '6px 0 12px' }}>
+                {!c.selfEmploymentByResidence && <button className="btn-outline" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.grantExemption'), message: tr('adminCouriers.grantExemptionBody'), label: tr('adminCouriers.grantExemptionReason'), placeholder: tr('adminCouriers.phGrantExemptionReason'), confirmLabel: tr('adminCouriers.grantExemption'), run: (reason) => agir(() => api(`/admin/couriers/${id}/self-employment-residence`, { method: 'PATCH', token, body: { value: true, reason } }), tr('adminCouriers.toastExemptionGranted')) })}>{tr('adminCouriers.grantExemption')}</button>}
+                {c.selfEmploymentByResidence && <button className="btn-danger-ghost" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.withdrawExemption'), message: tr('adminCouriers.withdrawExemptionBody'), label: tr('adminCouriers.withdrawExemptionReason'), danger: true, confirmLabel: tr('adminCouriers.withdrawExemption'), run: (reason) => agir(() => api(`/admin/couriers/${id}/self-employment-residence`, { method: 'PATCH', token, body: { value: false, reason } }), tr('adminCouriers.toastExemptionWithdrawn')) })}>{tr('adminCouriers.withdrawExemption')}</button>}
+              </div>
+            </>
+          )}
           <h4 className="drawer-section-title">{tr('adminCouriers.secDocs', { n: documents.length })}</h4>
           {documents.length === 0 && <p className="small">-</p>}
           {/* Hors UE/EEE : ce que Stripe ne vérifie pas — le titre de séjour et le droit d'exercer comme indépendant. */}

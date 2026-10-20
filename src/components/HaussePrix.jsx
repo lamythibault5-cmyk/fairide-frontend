@@ -46,10 +46,12 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
   const change = valeur !== etat.percent;
   const demande = etat.requested !== null && etat.requested !== undefined ? etat.requested : null;
 
-  async function appliquer() {
+  // Pourcentage passé en argument (audit du 19/10, admin-04) : « Appliquer +X % » faisait setValeur(demande) puis
+  // setTimeout(appliquer), et cet appliquer-là lisait encore l'ancienne valeur (0 %) : la demande était effacée, rien ne montait.
+  async function appliquer(v = valeur) {
     setEnCours(true);
     try {
-      const res = await api(`/restaurants/${restoId}/price-markup`, { method: 'PUT', token, body: { percent: valeur } });
+      const res = await api(`/restaurants/${restoId}/price-markup`, { method: 'PUT', token, body: { percent: v } });
       // Le commerce DEMANDE (202, pending) ; l'équipe applique. Ses prix ne changent jamais sans validation.
       if (res.pending) {
         setEtat((e) => ({ ...e, percent: res.percent, requested: res.requested }));
@@ -99,13 +101,13 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
         <div className="hausse-prix-demande" role="status">
           <b>{modeAdmin ? t('menuPage.markupRequestedAdmin', { p: pct(demande) }) : t('menuPage.markupRequestedPending', { p: pct(demande) })}</b>
           <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-            {modeAdmin && <button type="button" className="btn-teal" disabled={enCours} onClick={() => { setValeur(demande); setTimeout(appliquer, 0); }}>{t('menuPage.markupApplyRequest', { p: pct(demande) })}</button>}
+            {modeAdmin && <button type="button" className="btn-teal" disabled={enCours} onClick={() => { setValeur(demande); appliquer(demande); }}>{t('menuPage.markupApplyRequest', { p: pct(demande) })}</button>}
             <button type="button" className="btn-outline" disabled={enCours} onClick={retirerDemande}>{modeAdmin ? t('menuPage.markupRefuseRequest') : t('menuPage.markupWithdraw')}</button>
           </div>
         </div>
       )}
       {change && (
-        <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 44 }} disabled={enCours} onClick={appliquer}>
+        <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 44 }} disabled={enCours} onClick={() => appliquer()}>
           {enCours ? '…' : modeAdmin ? t('menuPage.markupApply', { n: nbPlats }) : t('menuPage.markupRequestButton', { p: pct(valeur) })}
         </button>
       )}

@@ -233,6 +233,18 @@ export default function EarningsPage() {
             </div>
 
             <div className="ecl-site-col">
+              {/* Courses livrées pas encore virées : compte de paiement Stripe pas actif (audit du 19/10/2026, courier-2 ;
+                  backend `pending`). Dues quand même, virées dès que le compte l'est : Mon compte › Paiement. */}
+              {Number(gains.pending?.amount) > 0 && (
+                <ul className="ecl-etapes">
+                  <li>
+                    <Link to="/account" className="ecl-etape">
+                      <span className="ecl-grow"><b>{t('ecranLivreur.gainsEnAttente', { amount: euro(gains.pending.amount) })}</b><small>{t('ecranLivreur.gainsEnAttenteSous')}</small></span>
+                      <Icone nom="retour" taille={16} className="bv-chevron" />
+                    </Link>
+                  </li>
+                </ul>
+              )}
               {jours.map((j) => (
                 <section key={j.cle} className="ecl-jour">
                   <h2 className="ecl-titre-sec">{titreJour(j.quand)}</h2>

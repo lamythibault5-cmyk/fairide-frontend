@@ -21,6 +21,7 @@ import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, money, fmtDate, downloadCsv, useDebouncedValue, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
+import { numeroCommande } from '../../components/commerce/clientCommande';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const PAGE_SIZE = 100;
@@ -56,6 +57,8 @@ export default function AdminClientsPage() {
   const [solde, setSolde] = useState(null);
   const [soldeMontant, setSoldeMontant] = useState('');
   const [soldeBusy, setSoldeBusy] = useState(false);
+  // Levée du blocage du paiement sur place (audit du 19/10, admin-03) : le client concerné, le temps du dialogue.
+  const [leverBlocage, setLeverBlocage] = useState(null);
 
   const liste = useServerList('/admin/clients', { q, sort: triServeur, pageSize: PAGE_SIZE, extra: { adminStatus: filtre === 'blocked' ? 'blocked' : '' } });
   const { rows: clients, setRows: setClients, total, loading, error, reload: load, loadMore } = liste;
@@ -118,6 +121,17 @@ export default function AdminClientsPage() {
       refreshDetail();
       setSolde(null);
     } catch (e) { toast(e.message, 'erreur'); } finally { setSoldeBusy(false); }
+  }
+
+  // PATCH /admin/clients/:id/pickup-block { reason } : le client peut de nouveau payer sur place ; motif journalisé.
+  async function leverBlocageSurPlace(reason) {
+    setBusy(true);
+    try {
+      await api(`/admin/clients/${leverBlocage.id}/pickup-block`, { method: 'PATCH', token, body: { reason } });
+      toast(tr('adminClients.toastPickupBlockLifted', { name: leverBlocage.name }));
+      setLeverBlocage(null);
+      refreshDetail();
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   function refreshDetail() {
@@ -279,6 +293,21 @@ export default function AdminClientsPage() {
                 {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
                 <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={() => askDelete(detail)}>{tr('adminClients.deleteAccount')}</button>
               </div>
+              {/* PAIEMENT SUR PLACE BLOQUÉ (audit du 19/10, admin-03) : une commande signalée « non récupérée » par un commerce
+                  interdit au client de payer sur place, partout. Le support ne le voyait pas et personne ne pouvait le lever. */}
+              {detail.pickupBlock && (
+                <>
+                  <div className="divider" />
+                  <h4 className="drawer-section-title texte-erreur">{tr('adminClients.pickupBlockTitle')}</h4>
+                  {detail.pickupBlock.orders.map((o) => (
+                    <p key={o.orderId} className="small" style={{ margin: '2px 0' }}>
+                      {tr('adminClients.pickupBlockLine', { date: fmtDate(o.flaggedAt), order: numeroCommande(o) || o.orderId.slice(0, 8), restaurant: o.restaurantName })}
+                    </p>
+                  ))}
+                  <p className="small" style={{ margin: '2px 0 8px', opacity: 0.7 }}>{tr('adminClients.pickupBlockHelp')}</p>
+                  <button className="btn-outline" onClick={() => setLeverBlocage(detail)}>{tr('adminClients.liftPickupBlock')}</button>
+                </>
+              )}
               <div className="divider" />
               <h4 className="drawer-section-title">{tr('adminRestos.keyFigures')}</h4>
               <DrawerRow label={tr('adminCommon.orders')} value={detail.orderCount} strong />
@@ -331,6 +360,17 @@ export default function AdminClientsPage() {
         loading={busy}
         onConfirm={runConfirmed}
         onCancel={() => setConfirmAction(null)}
+      />
+      <ReasonDialog
+        open={!!leverBlocage}
+        title={tr('adminClients.liftPickupBlockTitle', { name: leverBlocage?.name || '' })}
+        message={tr('adminClients.liftPickupBlockBody')}
+        label={tr('adminClients.liftPickupBlockReason')}
+        placeholder={tr('adminClients.phLiftPickupBlockReason')}
+        confirmLabel={tr('adminClients.liftPickupBlock')}
+        loading={busy}
+        onConfirm={leverBlocageSurPlace}
+        onCancel={() => setLeverBlocage(null)}
       />
       <ReasonDialog
         open={!!solde}

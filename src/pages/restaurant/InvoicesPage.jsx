@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
-import { allerAuPaiement, experienceApp } from '../../natif';
+import { achatsCommerceAutorises, allerAuPaiement, experienceApp } from '../../natif';
 import { useAuth } from '../../context/AuthContext';
 import CopieDac7 from '../../components/conformite/CopieDac7';
 import { useToast } from '../../context/ToastContext';
@@ -18,9 +18,15 @@ import EtatVide from '../../components/EtatVide';
 // Jugé par facture : une facture émise avec TVA garde ses colonnes.
 const sansTva = (inv) => !(Number(inv?.vatAmount) > 0) && !(Number(inv?.vatRate) > 0);
 
-function currentMonthValue() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+// Dernier mois TERMINÉ à Bruxelles, 'YYYY-MM' (audit du 19/10, shop-102). Le mois en cours était présélectionné avec son
+// bouton « Générer la facture » : émise en cours de mois, la facture numérotée laissait les commandes des jours suivants
+// hors de toute facture. Le serveur refuse désormais un mois pas terminé ; ici on ne le propose plus. Intl avec fuseau
+// explicite : getMonth() suit l'appareil (fuseauBruxelles.js).
+function lastFinishedMonthValue() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels', year: 'numeric', month: '2-digit' })
+    .formatToParts(new Date()).map((x) => [x.type, x.value]));
+  const d = new Date(Date.UTC(Number(p.year), Number(p.month) - 2, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
 function lastDayOfMonth(month) {
@@ -45,13 +51,18 @@ export default function InvoicesPage() {
   const toast = useToast();
   const { restaurant, restoId } = useOutletContext();
   const [openingPortal, setOpeningPortal] = useState(false);
-  const [month, setMonth] = useState(currentMonthValue());
+  const dernierMois = lastFinishedMonthValue();
+  const [month, setMonth] = useState(dernierMois);
+  // Saisi à la main au-delà du maximum : aperçu seulement, sans bouton d'émission.
+  const moisTermine = month <= dernierMois;
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   // Trois onglets : les factures (pièces comptables, mensuelles), les relevés détaillés (suivi libre par
   // semaine / mois / trimestre), l'abonnement (factures Stripe). L'onglet ouvert survit à un rechargement.
-  const [onglet, setOnglet] = useState(() => { try { return sessionStorage.getItem('fairide_factures_onglet') || 'factures'; } catch { return 'factures'; } });
+  const [onglet, setOnglet] = useState(() => {
+    try { const o = sessionStorage.getItem('fairide_factures_onglet') || 'factures'; return o === 'abonnement' && !achatsCommerceAutorises() ? 'factures' : o; } catch { return 'factures'; }
+  });
   function choisirOnglet(o) { setOnglet(o); try { sessionStorage.setItem('fairide_factures_onglet', o); } catch { /* sans stockage */ } }
 
   useEffect(() => {
@@ -98,7 +109,7 @@ export default function InvoicesPage() {
     <CadreSite appli classe="ec-factures" titre={t('invoicesResto.title')} sous={t('invoicesResto.pageIntro')}>
       <div className="no-print ec-factures-onglets">
         <SegmentGlisse libelle={t('invoicesResto.title')} valeur={onglet} onChange={choisirOnglet}
-          options={[['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ['abonnement', t('invoicesResto.tabSubscription')]].map(([value, label]) => ({ value, label }))} />
+          options={[['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ...(achatsCommerceAutorises() ? [['abonnement', t('invoicesResto.tabSubscription')]] : [])].map(([value, label]) => ({ value, label }))} />
       </div>
 
       {onglet === 'releves' && (
@@ -109,7 +120,8 @@ export default function InvoicesPage() {
         </>
       )}
 
-      {onglet === 'abonnement' && (
+      {/* L'onglet Abonnement n'ouvre que le portail Stripe, où l'on paie : absent de l'app des magasins (natif.js). */}
+      {onglet === 'abonnement' && achatsCommerceAutorises() && (
         <section className="no-print">
           {/* Titre en capitales, donc sans AvecMarque : le mot-logo reste toujours en minuscules. */}
           <p className="ec-feuille-titre">{t('invoicesResto.subscription')}</p>
@@ -142,7 +154,7 @@ export default function InvoicesPage() {
         <p className="ec-feuille-titre">{t('invoicesResto.commissionInvoice')}</p>
         <p className="ec-aide">{t('invoicesResto.commissionHelp')}</p>
         <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 180 }} />
+          <input type="month" value={month} max={dernierMois} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 180 }} />
           {/* Imprimer n'existe pas dans l'application (WebView) : le bouton n'y faisait rien. */}
           {invoice?.items?.length > 0 && !experienceApp() && <button className="btn-teal" onClick={() => window.print()}>{t('invoicesResto.print')}</button>}
         </div>
@@ -169,9 +181,10 @@ export default function InvoicesPage() {
               )}
               <div className="small">{t('invoicesResto.servicePeriod', { range: periodRange })}</div>
             </div>
-            {!invoice.issued && !generating && invoice.items?.length > 0 && fairide?.configured && (
+            {!invoice.issued && !generating && invoice.items?.length > 0 && fairide?.configured && moisTermine && (
               <button className="btn-gold no-print" onClick={generateInvoice}>{t('invoicesResto.generate')}</button>
             )}
+            {!invoice.issued && !moisTermine && <span className="small no-print">{t('invoicesResto.monthNotOver')}</span>}
             {generating && <span className="small">{t('invoicesResto.generating')}</span>}
           </div>
 

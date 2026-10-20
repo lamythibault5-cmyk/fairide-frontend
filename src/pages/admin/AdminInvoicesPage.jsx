@@ -279,7 +279,8 @@ function GenerateInvoiceModal({ onClose, onGenerated }) {
   const toast = useToast();
   const [restaurants, setRestaurants] = useState(null);
   const [restaurantId, setRestaurantId] = useState('');
-  const [month, setMonth] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; });
+  // Mois précédent par défaut : le serveur refuse la facture d'un mois pas terminé (audit du 19/10, shop-102).
+  const [month, setMonth] = useState(() => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; });
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => { api('/admin/restaurants', { token }).then(setRestaurants).catch((e) => toast(e.message, 'erreur')); }, []); // eslint-disable-line react-hooks/exhaustive-deps

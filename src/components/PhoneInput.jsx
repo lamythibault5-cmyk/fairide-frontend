@@ -29,10 +29,34 @@ export function decouper(valeur) {
   return { iso: DEFAUT, local: v };
 }
 
+// INDICATIF TAPÉ OU COLLÉ DANS LA CASE DU NUMÉRO (audit du 19/10/2026, auth-01). Un contact copié (« +32470123456 »), un
+// remplissage automatique ou « 0032 470… », « +32 (0)470… » partaient en « +32 +32470123456 », que le serveur lisait
+// +3232470123456 : un faux numéro, alors que la case affichait le bon. L'indicatif en tête de la case est donc retiré et
+// devient le pays (le même, ou un autre : « +33 6… » avec la Belgique choisie passe en France). Tant que l'indicatif
+// n'est pas complet (« +3 », « 00 »), la saisie reste telle quelle.
+function indicatifEnTete(n) {
+  const m = n.match(/^(?:\+|00)\s*(.*)$/);
+  if (!m) return null;
+  const chiffres = m[1].replace(/\D/g, '');
+  const pays = PAYS.filter(([, d]) => chiffres.startsWith(d)).sort((a, b) => b[1].length - a[1].length)[0];
+  if (!pays) return null;
+  // Retire les chiffres de l'indicatif en gardant la mise en forme du reste (« 470 12 34 56 »).
+  let i = 0;
+  for (let vus = 0; vus < pays[1].length; i++) if (/\d/.test(m[1][i])) vus++;
+  return { iso: pays[0], dial: pays[1], reste: m[1].slice(i).replace(/^[\s./-]*/, '').replace(/^\(\s*0\s*\)\s*/, '') };
+}
+
 export function composer(iso, local) {
-  const [, dial] = PAYS.find(([i]) => i === iso) || ['BE', '32'];
+  let [, dial] = PAYS.find(([i]) => i === iso) || ['BE', '32'];
   let n = String(local || '').trim();
   if (!n) return '';
+  const tete = indicatifEnTete(n);
+  if (tete) {
+    ({ iso, dial } = tete);
+    n = tete.reste;
+  } else if (/^(?:\+|00)/.test(n)) {
+    return `+${dial} ${n}`;
+  }
   if (iso !== 'IT') n = n.replace(/^0(?=\d)/, '');
   return `+${dial} ${n}`.trim();
 }
@@ -56,7 +80,7 @@ export default function PhoneInput({ id, value, onChange, invalid = false, place
       </select>
       <span className="phone-input-indicatif" aria-hidden="true">{drapeau(iso)} +{dial}</span>
       <input id={id} type="tel" inputMode="tel" autoComplete={autoComplete} value={local} placeholder={placeholder || (iso === 'BE' ? '470 00 00 00' : '')}
-        onChange={(e) => { setPaysChoisi(iso); onChange(composer(iso, e.target.value)); }} />
+        onChange={(e) => { const v = composer(iso, e.target.value); setPaysChoisi(v ? decouper(v).iso : iso); onChange(v); }} />
     </div>
   );
 }
