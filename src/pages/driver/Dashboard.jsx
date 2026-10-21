@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useId, useRef, useState } from 'react';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -203,7 +203,23 @@ export default function DriverDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /* RETOUR DE STRIPE CONNECT DANS L'APPLICATION (audit du 19/10, courier-3). Le navigateur intégré qui se ferme ramène à
+   * /driver, la page déjà ouverte : la relecture du lancement (?connect, au-dessus) ne repassait pas, et « Active tes
+   * paiements » restait jusqu'au redémarrage de l'application. Au retour au premier plan (ou sur cette page), un compte
+   * lancé ici ou resté « en attente » est relu chez Stripe. */
+  const connectLance = useRef(false);
+  const location = useLocation();
+  function relireConnect() {
+    if (!connectLance.current && user?.stripeConnectStatus !== 'pending') return undefined;
+    connectLance.current = false;
+    return api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {}).finally(() => refreshUser().catch(() => {}));
+  }
+  // Pas au premier affichage : l'effet de lancement, au-dessus, s'en charge déjà.
+  const premierAffichage = useRef(true);
+  useEffect(() => { if (premierAffichage.current) { premierAffichage.current = false; return; } relireConnect(); }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function connectOnboard() {
+    connectLance.current = true;
     setConnecting(true);
     try {
       const r = await api('/auth/me/connect/onboard', { method: 'POST', token });
@@ -276,8 +292,8 @@ export default function DriverDashboard() {
     const interval = setInterval(() => { load(); refreshUser().catch(() => {}); }, 15000);
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  // Retour sur l'onglet après une absence : relecture immédiate, sans attendre le prochain cycle.
-  useRevalidation(() => { load(); return refreshUser(); });
+  // Retour sur l'onglet après une absence : relecture immédiate, sans attendre le prochain cycle (compte Stripe compris : courier-3).
+  useRevalidation(() => { load(); return relireConnect() || refreshUser(); });
 
   useEffect(() => {
     activeIdsRef.current = mine.filter((o) => o.status === 'livraison').map((o) => o.id);
@@ -304,8 +320,14 @@ export default function DriverDashboard() {
   // 15/10/2026 (natif.js suivrePositionCourse, service au premier plan avec sa notification) : le suivi reprend quand
   // `enLivraison` change. L'horodatage renvoyé au client reste : une carte figée doit se lire comme telle.
   const enLivraison = mine.some((o) => o.status === 'livraison');
+  /* LA POSITION N'EST DEMANDÉE QUE QUAND ELLE SERT (audit du 19/10, courier-14). Le suivi démarrait à l'ouverture de
+   * « Courses » pour tout livreur : le navigateur demandait la position à un nouvel inscrit dont le dossier n'était même pas
+   * envoyé, contre la promesse de l'inscription (driverGeoNotice : « que lorsque tu voudras recevoir des courses »). Il
+   * démarre désormais pour un livreur qui peut rouler et n'est pas en pause, ou qui a une course en main ; avant,
+   * PositionRequise demande l'autorisation au-dessus de la liste des courses, au moment où elle sert. */
+  const suiviUtile = mine.length > 0 || (user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && !user?.driverPaused);
   useEffect(() => {
-    if (user?.locationSharingEnabled === false) {
+    if (user?.locationSharingEnabled === false || !suiviUtile) {
       setSharingLocation(false);
       return undefined;
     }
@@ -362,7 +384,7 @@ export default function DriverDashboard() {
       clearInterval(heartbeat);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, user?.locationSharingEnabled, enLivraison]);
+  }, [token, user?.locationSharingEnabled, enLivraison, suiviUtile]);
 
   // Refuser une course (B23bis) : elle quitte SA liste, et rien d'autre — le refus n'est relu par aucune
   // autre décision (docs/dispatch.md côté serveur). Retrait local immédiat, sans attendre le rechargement.

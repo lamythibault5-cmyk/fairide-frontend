@@ -21,7 +21,7 @@ import { UploadDocumentModal } from './AdminDocumentsPage';
 import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, money, fmtDate, downloadCsv, useDebouncedValue, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
-import urlSure from '../../urlSure';
+import ouvrirDocument from '../../ouvrirDocument';
 import FicheLivreur from '../../components/admin/FicheLivreur';
 import { DossierDrawer } from './AdminCouriersPage';
 import Icone from '../../components/Icone';
@@ -355,7 +355,8 @@ export default function AdminDriversPage() {
               {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
               {documents && documents.map((doc) => (
                 <div key={doc.id} className="drawer-row">
-                  <a href={urlSure(doc.fileUrl)} target="_blank" rel="noreferrer" className="small"><Icone nom="lien" taille={16} className="icone-texte" />{' '}{doc.title}</a>
+                  {/* Document privé : adresse signée demandée à l'ouverture (audit du 19/10, admin-45 ; le lien était mort). */}
+                  <button type="button" className="lien-bouton small" onClick={() => ouvrirDocument({ url: doc.prive ? null : doc.fileUrl, lien: `/admin/documents/${doc.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') })}><Icone nom="lien" taille={16} className="icone-texte" />{' '}{doc.title}</button>
                   <span className="small">
                     {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
                     {DOCUMENT_TYPE_LABELS[doc.documentType]}

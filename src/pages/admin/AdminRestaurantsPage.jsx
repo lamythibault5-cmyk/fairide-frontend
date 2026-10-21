@@ -25,7 +25,7 @@ import { UploadDocumentModal } from './AdminDocumentsPage';
 import { estCompteTest, estCompteSupprime, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, NatureChips, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
-import urlSure from '../../urlSure';
+import ouvrirDocument from '../../ouvrirDocument';
 import Icone from '../../components/Icone';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
@@ -943,7 +943,8 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
           {documents && documents.map((doc) => (
             <div key={doc.id} className="drawer-row">
-              <a href={urlSure(doc.fileUrl)} target="_blank" rel="noreferrer" className="small"><Icone nom="lien" taille={16} className="icone-texte" />{' '}{doc.title}</a>
+              {/* Document privé : adresse signée demandée à l'ouverture (audit du 19/10, admin-45 ; le lien était mort). */}
+              <button type="button" className="lien-bouton small" onClick={() => ouvrirDocument({ url: doc.prive ? null : doc.fileUrl, lien: `/admin/documents/${doc.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') })}><Icone nom="lien" taille={16} className="icone-texte" />{' '}{doc.title}</button>
               <span className="small">
                 {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
                 {DOCUMENT_TYPE_LABELS[doc.documentType]}

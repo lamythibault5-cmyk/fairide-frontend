@@ -41,11 +41,13 @@ export function documentsRequis(d, { statusType, motorise, horsEee }) {
 // Chaque « Continuer » envoie tout le formulaire : une zone, une date de naissance ou un véhicule encore vides (leur
 // écran vient plus loin) étaient refusés par le serveur et bloquaient l'écran en cours sur un champ invisible (audit du
 // 19/10, courier-1 : « Zone hors lancement. » dès « Tes informations »). Vide = pas encore répondu, rien n'est envoyé.
-export function corpsInfos(f) {
+// `c` (le dossier) : un sac Fairide déjà remis ne se change plus ici, son choix grisé n'est donc pas envoyé ; il faisait
+// refuser chaque enregistrement de l'écran (audit du 19/10, courier-12 ; le serveur ignore aussi un choix inchangé).
+export function corpsInfos(f, c = null) {
   const body = { ...f };
   for (const k of ['zone', 'birthDate', 'vehicleType']) if (!body[k]) delete body[k];
   if (!body.nationalNumber) delete body.nationalNumber;
-  if (!body.bagOption) delete body.bagOption;
+  if (!body.bagOption || (c && !['none', 'due'].includes(c.bag?.depositStatus || 'none'))) delete body.bagOption;
   if (body.worksOtherPlatforms === 'yes' || body.worksOtherPlatforms === 'no') body.worksOtherPlatforms = body.worksOtherPlatforms === 'yes'; else delete body.worksOtherPlatforms;
   if (!body.nationalityGroup) delete body.nationalityGroup;
   for (const k of Object.keys(body)) if (body[k] === null) delete body[k];

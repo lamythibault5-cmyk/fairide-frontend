@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useId } from 'react';
+import { useEffect, useMemo, useRef, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { api, apiDownload } from '../../api';
@@ -17,6 +17,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { estCompteReel, estCompteSupprime, estCompteTest, TestBadge, DeletedBadge, NatureChips, natureOk, filterBySearch, downloadCsv } from './adminUtils';
 import useEtatPage from '../../hooks/useEtatPage';
+import useDialogue from '../../hooks/useDialogue';
 import urlSure from '../../urlSure';
 import ouvrirDocument from '../../ouvrirDocument';
 import { euros } from '../../prixPlat';
@@ -181,6 +182,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   const [confirm, setConfirm] = useState(null); // { title, message, danger, run }
   const [motifDialog, setMotifDialog] = useState(null); // { title, message, label, danger, confirmLabel, required, run(reason) }
   const [decisionLivreur, setDecisionLivreur] = useState(false); // suspension motivée (B7, D6)
+  const [identiteOk, setIdentiteOk] = useState(false); // identité vérifiée par l'équipe : comment, et le nom de la pièce (admin-42)
   const load = () => { setErreur(null); return api(`/admin/couriers/${id}`, { token }).then(setD).catch((e) => setErreur(e.message)); };
   useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   async function agir(fn, ok) { setBusy(true); try { await fn(); if (ok) toast(ok); await load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); } }
@@ -263,13 +265,23 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secIdentity')}</h4>
           <DrawerRow label={tr('adminCommon.status')} value={identite.status === 'verified' ? `${tr(`adminCouriers.provider_${identite.provider || 'manual'}`)}` : `${identite.status || '-'}${identite.provider ? ` (${identite.provider})` : ''}`} />
+          {identite.rejectedReason && <DrawerRow label={tr('adminCouriers.identityKoReason')} value={identite.rejectedReason} />}
           <DrawerRow label={tr('adminCouriers.verifiedName')} value={`${identite.firstName || ''} ${identite.lastName || ''}`.trim() || '-'} />
           <DrawerRow label={tr('adminCouriers.nameMatch')} value={`${tr('adminCouriers.account')} ${identite.nameMatchAccount == null ? '-' : identite.nameMatchAccount ? '✓' : '✗'} · Stripe ${identite.nameMatchStripe == null ? '-' : identite.nameMatchStripe ? '✓' : '✗'}`} />
           {identite.status !== 'verified' && (
             <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-              <button className="btn-outline" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markIdentityOk'), message: tr('adminCouriers.identityOkBody'), run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: true, firstName: d.user?.name?.split(' ')[0], lastName: d.user?.name?.split(' ').slice(1).join(' ') } }), tr('adminCouriers.toastIdentityOk')) })}>{tr('adminCouriers.markIdentityOk')}</button>
-              <button className="btn-danger-ghost" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markIdentityKo'), message: tr('adminCouriers.identityKoBody'), danger: true, run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: false } })) })}>{tr('adminCouriers.markIdentityKo')}</button>
+              {/* Comment (en personne / sur la pièce déposée) et le nom tel qu'il figure sur la pièce (audit du 19/10, admin-42) :
+                  c'était le nom du compte, et « manuel » même après un rendez-vous, si bien que le selfie restait demandé. */}
+              <button className="btn-outline" disabled={busy} onClick={() => setIdentiteOk(true)}>{tr('adminCouriers.markIdentityOk')}</button>
+              {/* Refus motivé : le motif part au livreur par e-mail et notification, et s'affiche dans son dossier (admin-43). */}
+              <button className="btn-danger-ghost" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.markIdentityKo'), message: tr('adminCouriers.identityKoBody'), label: tr('adminCouriers.identityKoReason'), danger: true, confirmLabel: tr('adminCouriers.markIdentityKo'), run: (reason) => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: false, reason } }), tr('adminCouriers.toastIdentityRefused')) })}>{tr('adminCouriers.markIdentityKo')}</button>
             </div>
+          )}
+          {identiteOk && (
+            <IdentiteVerifieeDialog tr={tr} busy={busy} identite={identite} nomCompte={d.user?.name || ''}
+              aDesPieces={documents.some((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && !x.rejectedReason)}
+              onCancel={() => setIdentiteOk(false)}
+              onConfirm={(corps) => { setIdentiteOk(false); agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: true, ...corps } }), tr('adminCouriers.toastIdentityOk')); }} />
           )}
           {identite.status !== 'verified' && (
             <details className="small" style={{ marginTop: 8 }}>
@@ -387,6 +399,53 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
         </>
       )}
     </>
+  );
+}
+
+/* IDENTITÉ VÉRIFIÉE PAR L'ÉQUIPE (audit du 19/10, admin-42, LIVE-06). Deux questions avant d'enregistrer :
+ *   - comment : « En personne » (rendez-vous, pièce comparée au visage → provider 'in_person' : le selfie n'est plus
+ *     demandé, comme après Stripe Identity) ou « Sur la pièce déposée » ('manual' : le selfie reste demandé pour comparer) ;
+ *     choisi d'avance selon ce que le livreur a demandé (rendez-vous) ou déposé ;
+ *   - le prénom et le nom tels qu'ils figurent sur la pièce, préremplis depuis le compte, à corriger : c'est ce nom que
+ *     la concordance compare au compte et à Stripe (avant : le nom du compte coupé au premier espace, toujours concordant). */
+function IdentiteVerifieeDialog({ tr, busy, identite, nomCompte, aDesPieces, onConfirm, onCancel }) {
+  const ids = useId();
+  const racine = useRef(null);
+  useDialogue(racine, onCancel); // Échap, focus dans la fenêtre, fond figé
+  const mots = nomCompte.trim().split(/\s+/).filter(Boolean);
+  const [fournisseur, setFournisseur] = useState(identite.provider === 'manual' || (identite.provider !== 'in_person' && aDesPieces) ? 'manual' : 'in_person');
+  const [prenom, setPrenom] = useState(identite.firstName || mots[0] || '');
+  const [nom, setNom] = useState(identite.lastName || mots.slice(1).join(' '));
+  const pret = prenom.trim() && nom.trim();
+  return createPortal(
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-box admin-reason-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }} role="dialog" aria-modal="true" aria-labelledby={`${ids}-titre`} ref={racine} tabIndex={-1}>
+        <h3 id={`${ids}-titre`} style={{ margin: '0 0 8px' }}>{tr('adminCouriers.markIdentityOk')}</h3>
+        <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminCouriers.identityOkBody')}</p>
+        <fieldset style={{ border: 0, padding: 0, margin: '0 0 12px' }}>
+          <legend className="small" style={{ marginBottom: 6 }}><b>{tr('adminCouriers.identityHow')}</b></legend>
+          {[['in_person', 'identityHowInPerson'], ['manual', 'identityHowDocument']].map(([v, cle]) => (
+            <label key={v} className="row small" style={{ gap: 8, alignItems: 'center', cursor: 'pointer', margin: '0 0 4px' }}>
+              <input type="radio" name={`${ids}-comment`} style={{ width: 'auto' }} checked={fournisseur === v} onChange={() => setFournisseur(v)} />
+              <span>{tr(`adminCouriers.${cle}`)}</span>
+            </label>
+          ))}
+        </fieldset>
+        <div className="field">
+          <label htmlFor={`${ids}-prenom`}>{tr('adminCouriers.identityFirstName')}</label>
+          <input id={`${ids}-prenom`} value={prenom} onChange={(e) => setPrenom(e.target.value)} />
+        </div>
+        <div className="field">
+          <label htmlFor={`${ids}-nom`}>{tr('adminCouriers.identityLastName')}</label>
+          <input id={`${ids}-nom`} value={nom} onChange={(e) => setNom(e.target.value)} />
+        </div>
+        <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>
+          <button type="button" className="btn-ghost" onClick={onCancel} disabled={busy}>{tr('adminCommon.cancel')}</button>
+          <button type="button" className="btn-gold" disabled={busy || !pret} onClick={() => onConfirm({ provider: fournisseur, firstName: prenom.trim(), lastName: nom.trim() })}>{busy ? '...' : tr('adminCouriers.markIdentityOk')}</button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
