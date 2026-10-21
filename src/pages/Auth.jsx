@@ -16,14 +16,17 @@ import PhoneInput from '../components/PhoneInput';
 import EmailDomainChips from '../components/EmailDomainChips';
 import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
-import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES } from '../menuCategories';
+import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES, communeDepuisCodePostal } from '../menuCategories';
 import { MAX_CUISINES } from '../components/commerce/EcranCuisines';
 import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
 import { attendrePage, espaceApresConnexion, prechargerPage } from '../routePrefetch';
 import usePageMeta from '../hooks/usePageMeta';
 import { suivre } from '../analytics';
-import { bceValide, raisonBce, codePostalValide } from '../validation';
+import { bceValide, raisonBce, codePostalValide, CHAMP_CODE_SECOURS, formaterAnneeAcademique } from '../validation';
+import { lireAdresseAccueil } from '../adresseAccueil';
+import useDecompte, { DELAI_RENVOI_S } from '../hooks/useDecompte';
+import RedirectionRole from '../components/RedirectionRole';
 import Icone from '../components/Icone';
 import CadreConnexion from '../components/CadreConnexion';
 import AvecMarque from '../components/AvecMarque';
@@ -341,6 +344,13 @@ export default function Auth() {
     const b = lireBienvenue();
     if (b.codePostal) setAddressPostalCode((v) => v || b.codePostal);
     if (b.commune) setAddressCity((v) => v || b.commune);
+    // L'adresse choisie sur l'accueil du site (audit du 19/10, auth-27 / LIVE-12, voir adresseAccueil.js) : mêmes règles,
+    // seulement des champs vides.
+    const a = lireAdresseAccueil();
+    if (a?.street) setAddressStreet((v) => v || a.street);
+    if (a?.number) setAddressNumber((v) => v || a.number);
+    if (a?.postalCode) setAddressPostalCode((v) => v || a.postalCode);
+    if (a?.city) setAddressCity((v) => v || a.city);
   }, [mode, role]);
   // Chaque nouvelle étape s'ouvre en haut de l'écran, pas là où l'on a touché « Continuer » (voir src/remonter.js).
   const etapeAffichee = useRef(step);
@@ -404,6 +414,24 @@ export default function Auth() {
   // avec lui par le même bouton « Se connecter » — il reste valable une heure.
   const [googleEnAttente2fa, setGoogleEnAttente2fa] = useState(null);
   const [resending, setResending] = useState(false);
+  // « Renvoyer le code » attend 30 s après chaque envoi (audit du 19/10, auth-12, voir hooks/useDecompte.js).
+  const [attenteRenvoi, lancerAttenteRenvoi] = useDecompte();
+  useEffect(() => { if (pendingEmail) lancerAttenteRenvoi(DELAI_RENVOI_S); }, [pendingEmail, lancerAttenteRenvoi]);
+  // Code SMS lu par Chrome sur Android (WebOTP, audit du 19/10, auth-35) : le SMS finit par « @fairide.be #123456 »
+  // (routes/auth.js, smsCode) ; le navigateur propose alors de remplir le champ. Ailleurs (iPhone, ordinateur, application),
+  // rien ne change : autocomplete="one-time-code" fait le reste.
+  useEffect(() => {
+    if (!pendingEmail || pendingChannel !== 'sms' || estNatif() || !('OTPCredential' in window)) return undefined;
+    const arret = new AbortController();
+    navigator.credentials.get({ otp: { transport: ['sms'] }, signal: arret.signal })
+      .then((otp) => { if (otp?.code) setCode(String(otp.code).replace(/\D/g, '').slice(0, 6)); })
+      .catch(() => { /* refusé, expiré ou abandonné : la saisie à la main reste */ });
+    return () => arret.abort();
+  }, [pendingEmail, pendingChannel]);
+  // Erreurs de connexion et du code SOUS le champ (audit du 19/10, auth-10) : le toast de 3 s passait sous le clavier du
+  // téléphone, et le formulaire semblait n'avoir rien fait. Le toast reste en plus.
+  const [erreurConnexion, setErreurConnexion] = useState('');
+  const [erreurCode, setErreurCode] = useState('');
   // « Changer de numéro » sur l'écran du code (audit du 19/10, auth-03) : le champ du bon numéro, et la preuve que le compte
   // est à soi — le mot de passe tapé (gardé en mémoire, jamais dans le brouillon), ou le jeton Apple / Google.
   const [changerNumero, setChangerNumero] = useState(false);
@@ -485,6 +513,10 @@ export default function Auth() {
   const valeursBrouillon = Object.values(champsBrouillon).map((c) => c[0]);
   useEffect(() => {
     if (!brouillonRepris.current) return undefined;
+    // Seulement une INSCRIPTION en cours (audit du 19/10, auth-31) : l'e-mail tapé pour se connecter sur un ordinateur
+    // partagé restait 48 h dans le navigateur. Exception : un code d'activation attendu (pendingEmail), pour qu'un
+    // rechargement rouvre l'écran du code.
+    if (mode !== 'register' && !pendingEmail) return undefined;
     const minuteur = setTimeout(() => {
       try {
         const champs = Object.fromEntries(Object.entries(champsBrouillon).map(([cle, [valeur]]) => [cle, valeur]));
@@ -953,7 +985,11 @@ export default function Auth() {
     e.preventDefault();
     // À l'inscription, ce sont les étapes qui valident (ci-dessous) : un e-mail ou un mot de passe manquant
     // ramène à l'étape « compte » avec le champ en rouge, au lieu d'un simple message générique.
-    if (mode === 'login' && (!email || !password)) { toast(t('auth.errEmailPassword'), 'erreur'); return; }
+    // Connexion Google d'un compte à double authentification (googleEnAttente2fa) : ni e-mail ni mot de passe à exiger, seul
+    // le code compte. Sans cette exception, « Se connecter » répondait « Email et mot de passe requis » à chaque fois
+    // (audit du 19/10, auth-19).
+    setErreurConnexion('');
+    if (mode === 'login' && !googleEnAttente2fa && (!email || !password)) { setErreurConnexion(t('auth.errEmailPassword')); toast(t('auth.errEmailPassword'), 'erreur'); return; }
     setLoading(true);
     let reussi = false;
     try {
@@ -1068,6 +1104,7 @@ export default function Auth() {
         // Le champ reste ouvert, on vide la saisie : un code périmé se retape, il ne se corrige pas.
         setTotpAttendu(true);
         setTotpCode('');
+        setErreurConnexion(err.message);
         toast(err.message, 'erreur');
       } else if (err.code === 'ACCOUNT_DELETED' || err.code === 'NO_ACCOUNT') {
         // Compte supprimé ou inexistant : on le dit, et on ouvre directement la création de compte (e-mail conservé).
@@ -1093,6 +1130,7 @@ export default function Auth() {
         if (i >= 0) setStep(i);
         toast(message);
       } else {
+        if (mode === 'login') setErreurConnexion(err.message);
         toast(err.message, 'erreur');
       }
     } finally {
@@ -1102,6 +1140,7 @@ export default function Auth() {
 
   async function submitCode(e) {
     e.preventDefault();
+    setErreurCode('');
     if (!code.trim()) { toast(t('auth.errCodeRequired'), 'erreur'); return; }
     setLoading(true);
     let reussi = false;
@@ -1111,6 +1150,7 @@ export default function Auth() {
       toast(t('auth.welcome', { name: data.user.name }), 'succes');
       await allerApresInscription(data.user);
     } catch (err) {
+      setErreurCode(err.message);
       toast(err.message, 'erreur');
       reussi = false;
     } finally {
@@ -1160,7 +1200,8 @@ export default function Auth() {
     try {
       const r = await resendCode(pendingEmail);
       if (r?.channel) { setPendingChannel(r.channel === 'sms' ? 'sms' : 'email'); if (r.phoneMasked) setPendingPhone(r.phoneMasked); }
-      setCode('');
+      setCode(''); setErreurCode('');
+      lancerAttenteRenvoi(DELAI_RENVOI_S);
       toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : r?.channel === 'email' ? 'auth.errVerificationSent' : 'auth.newCodeSent'));
     } catch (err) {
       toast(err.message, 'erreur');
@@ -1186,7 +1227,8 @@ export default function Auth() {
       setPendingChannel(r?.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(r?.phoneMasked || nouveauNumero.trim());
       // Le formulaire garde le bon numéro : une nouvelle inscription repartirait avec lui.
       setPhone(nouveauNumero.trim());
-      setCode(''); setChangerNumero(false);
+      setCode(''); setErreurCode(''); setChangerNumero(false);
+      lancerAttenteRenvoi(DELAI_RENVOI_S);
       toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
     } catch (err) {
       const MESSAGES = { PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid', PHONE_DOUBLE_PREFIX: 'auth.errPhoneDoublePrefix' };
@@ -1206,7 +1248,14 @@ export default function Auth() {
   // « Se déconnecter » au-dessus d'un formulaire de connexion inutile. On va directement dans son espace (ou là où l'on
   // voulait aller). Seulement si la session existait à l'arrivée : une connexion ou une inscription faite ICI garde sa
   // propre suite (code de vérification, retour au commerce touché…).
-  if (connecteALArrivee && user) return <Navigate to={location.state?.from || espaceApresConnexion(user)} replace />;
+  if (connecteALArrivee && user) {
+    // « Devenir livreur » / « Ajouter mon commerce » ouvert connecté (audit du 19/10, auth-17) : si le compte n'a pas encore ce
+    // rôle, on le dit et on mène à « Mes casquettes » (Mon compte), au lieu de son espace sans un mot.
+    const voulu = audience === 'partner' ? (roleHint === 'driver' ? 'driver' : 'restaurant') : null;
+    const sesRoles = user.roles?.length ? user.roles : [user.role];
+    if (voulu && !sesRoles.includes(voulu)) return <RedirectionRole role={voulu} />;
+    return <Navigate to={location.state?.from || espaceApresConnexion(user)} replace />;
+  }
 
   if (forgotMode) {
     return (
@@ -1225,7 +1274,7 @@ export default function Auth() {
                     maxLength={6} style={{ textAlign: 'center', fontSize: 22, letterSpacing: 6 }}
                   />
                 </div>
-                <button type="submit" className="btn-gold btn-block" disabled={forgotLoading}>
+                <button type="submit" className="btn-gold btn-block" disabled={forgotLoading || forgotCode.length !== 6}>
                   {forgotLoading ? t('common.loading') : t('auth.forgotConfirmBtn')}
                 </button>
               </form>
@@ -1282,17 +1331,20 @@ export default function Auth() {
             <div className="field">
               <label htmlFor="auth-f-2">{t('auth.verifyCodeLabel')}</label>
               <input id="auth-f-2"
-                value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456"
-                inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*"
+                value={code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setErreurCode(''); }} placeholder="123456"
+                inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" className={erreurCode ? 'input-invalid' : undefined}
                 maxLength={6} style={{ textAlign: 'center', fontSize: 22, letterSpacing: 6 }}
               />
+              {/* Chiffres seulement (audit du 19/10, auth-16) : « 123 456 » collé gardait l'espace et perdait le dernier chiffre. */}
+              {erreurCode && <p className="field-error" role="alert">{erreurCode}</p>}
             </div>
-            <button type="submit" className="btn-gold btn-block" disabled={loading}>
+            {/* Six chiffres avant d'envoyer (audit du 19/10, LIVE-28) : un code incomplet partait au serveur pour « Code incorrect ». */}
+            <button type="submit" className="btn-gold btn-block" disabled={loading || code.length !== 6}>
               {loading ? t('common.loading') : t('auth.confirm')}
             </button>
           </form>
-          <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending} onClick={handleResend}>
-            {resending ? t('common.loading') : t('auth.resendCode')}
+          <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending || attenteRenvoi > 0} onClick={handleResend}>
+            {resending ? t('common.loading') : attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}
           </button>
           {/* Un numéro mal tapé : on le corrige ici, depuis l'inscription comme depuis la connexion (audit du 19/10, auth-03). */}
           {changerNumero ? (
@@ -1338,7 +1390,9 @@ export default function Auth() {
     <CadreConnexion
       decorClass={decorClass}
       titre={titreIris}
-      sous={mode === 'login' && !audience ? t('siteCadre.connexionSous') : null}
+      // Mur de compte d'un commerce (audit du 19/10, LIVE-23) : on dit pourquoi on est là, avec le nom du commerce touché
+      // (murCompte.js, lienFiche). Sinon, comme avant.
+      sous={location.state?.commerce ? t('auth.wallShop', { name: location.state.commerce }) : mode === 'login' && !audience ? t('siteCadre.connexionSous') : null}
       long={mode === 'register'}
     >
       <div className="auth-site-form">
@@ -1479,7 +1533,7 @@ export default function Auth() {
                         </div>
                         <div className="field">
                           <label htmlFor="auth-f-annee">{t('auth.academicYear')}</label>
-                          <input id="auth-f-annee" className={errors.academicYear ? 'input-invalid' : undefined} value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} placeholder="2026-2027" inputMode="numeric" />
+                          <input id="auth-f-annee" className={errors.academicYear ? 'input-invalid' : undefined} value={academicYear} onChange={(e) => setAcademicYear(formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" inputMode="numeric" />
                           {fieldError('academicYear')}
                           <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.studentCertificateNote')}</p>
                         </div>
@@ -1491,8 +1545,8 @@ export default function Auth() {
                         {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
                           <div key={v} role="radio" aria-checked={vehicleType === v} tabIndex={0} className={`chip${vehicleType === v ? ' active' : ''}`}
                             onClick={() => setVehicleType(v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setVehicleType(v); }}>
-                            {/* Le vélo électrique avait une puce sans icône (audit du 19/10, courier-40) : le vélo, comme le vélo classique. */}
-                            {['velo', 'velo_electrique'].includes(v) ? <Icone nom="velo" taille={16} className="icone-texte" /> : v === 'scooter' ? <Icone nom="scooter" taille={16} className="icone-texte" /> : <Icone nom="scooter" taille={16} className="icone-texte" />}{t(`courierOnboarding.vehicle_${v}`)}
+                            {/* Vélo (électrique ou non) : le vélo ; scooter : le scooter ; voiture : pas d'icône, il n'en existe pas (audit du 19/10, auth-38 : tout portait le scooter). */}
+                            {['velo', 'velo_electrique'].includes(v) ? <Icone nom="velo" taille={16} className="icone-texte" /> : v === 'scooter' ? <Icone nom="scooter" taille={16} className="icone-texte" /> : null}{t(`courierOnboarding.vehicle_${v}`)}
                           </div>
                         ))}
                       </div>
@@ -1542,7 +1596,8 @@ export default function Auth() {
                   <label htmlFor="auth-f-cuisine">{t('auth.cuisineLabel')}</label>
                   <select id="auth-f-cuisine" className={errors.cuisine ? 'input-invalid' : undefined} value={cuisine} onChange={(e) => { setCuisine(e.target.value); setTypeDepuisSite(false); }}>
                     <option value="">{t('auth.cuisinePlaceholder')}</option>
-                    {RESTAURANT_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{rt.value}</option>)}
+                    {/* Libellé traduit (audit du 19/10, auth-29) : la liste restait en français en néerlandais et en anglais. */}
+                    {RESTAURANT_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{restaurantTypeLabel(rt.value, t)}</option>)}
                   </select>
                   {cuisine === 'Autre' && (
                     <input style={{ marginTop: 6 }} value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} aria-label={t('dashResto.specifyType')} />
@@ -1752,6 +1807,11 @@ export default function Auth() {
                     {fieldError('addressCity')}
                   </div>
                 </div>
+                {/* Code postal hors de Bruxelles et de sa périphérie (audit du 19/10, auth-09) : on le dit dès ici, sans bloquer,
+                    au lieu de le découvrir au paiement. */}
+                {role === 'client' && codePostalValide(addressPostalCode) && !communeDepuisCodePostal(addressPostalCode) && (
+                  <p className="small" role="status" style={{ margin: '0 0 10px' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{t('auth.outOfZoneInfo')}</p>
+                )}
                 {role === 'restaurant' && (
                   <AddressRecognition
                     street={addressStreet} number={addressNumber} postalCode={addressPostalCode} city={addressCity}
@@ -1919,20 +1979,22 @@ export default function Auth() {
               </div>
               <div className="field">
                 <label htmlFor="auth-f-18">{t('auth.password')}</label>
-                <PasswordInput id="auth-f-18" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('auth.password')} autoComplete="current-password" />
+                <PasswordInput id="auth-f-18" value={password} onChange={(e) => { setPassword(e.target.value); setErreurConnexion(''); }} placeholder={t('auth.password')} autoComplete="current-password" invalid={!!erreurConnexion && !totpAttendu} />
+                {erreurConnexion && !totpAttendu && <p className="field-error" role="alert">{erreurConnexion}</p>}
               </div>
               {/* Second facteur : n'apparaît qu'après que le serveur l'a réclamé, donc jamais pour un
-                  compte qui ne l'a pas activé. inputMode numeric + autoComplete one-time-code : le
-                  téléphone ouvre le pavé numérique et propose le code copié. */}
+                  compte qui ne l'a pas activé. autoComplete one-time-code : le téléphone propose le code copié.
+                  Clavier TEXTE (audit du 19/10, CROSS-60) : un code de secours a des lettres et un tiret. */}
               {totpAttendu && (
                 <div className="field">
                   <label htmlFor="auth-f-totp">{t('auth.totpLabel')}</label>
                   <input
-                    id="auth-f-totp" type="text" inputMode="numeric" autoComplete="one-time-code"
+                    id="auth-f-totp" type="text" {...CHAMP_CODE_SECOURS} autoComplete="one-time-code"
                     pattern="[0-9A-Za-z-]*" maxLength={11} autoFocus
                     value={totpCode} onChange={(e) => setTotpCode(e.target.value)}
                     placeholder={t('auth.totpPlaceholder')}
                   />
+                  {erreurConnexion && <p className="field-error" role="alert">{erreurConnexion}</p>}
                   <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('auth.totpHelp')}</p>
                 </div>
               )}

@@ -77,6 +77,12 @@ export function AuthProvider({ children }) {
 
   // Garde-fou anti-répétition de la déconnexion pour expiration (voir l'effet plus bas).
   const expiredRef = useRef(false);
+  /* DÉCONNEXION VOULUE (audit du 19/10, auth-14). Après « Se déconnecter », ProtectedRoute renvoyait vers /login avec la page
+   * quittée en `from` : la personne suivante sur l'appareil (un commerce après un client) arrivait dans « Mon compte » au lieu
+   * de son espace, et le site montrait le formulaire de connexion au lieu de l'accueil. Ce drapeau dit à ProtectedRoute
+   * d'aller à l'accueil, sans `from` ; il retombe dès qu'une session s'ouvre. Une session EXPIRÉE garde le `from` (USR-6). */
+  const [deconnexionVoulue, setDeconnexionVoulue] = useState(false);
+  useEffect(() => { if (session?.user) setDeconnexionVoulue(false); }, [session?.user]);
 
   useEffect(() => {
     if (simuRef.current) {
@@ -152,6 +158,39 @@ export function AuthProvider({ children }) {
     return () => { fini = true; document.removeEventListener('visibilitychange', renouveler); };
   }, [session?.token, session?.actingAs]);
 
+  /* LES DROITS DE LA SESSION SE METTENT À JOUR (audit du 19/10, LIVE-19). Le compte gardé dans le téléphone n'était relu
+   * qu'à la connexion : un membre ajouté à l'équipe restait renvoyé hors de /admin (isAdmin faux), un compte passé « test »
+   * ne l'était pas, jusqu'à se déconnecter. On relit /auth/me à l'ouverture et au retour au premier plan (au plus une fois
+   * toutes les cinq minutes). Pas pendant « Fairide agit comme… » ni en simulation : leur session n'est pas celle du
+   * compte lu. Une session révoquée répond 401, et la déconnexion centrale (api.js) fait le reste. */
+  useEffect(() => {
+    if (!session?.token || session.actingAs || simuRef.current) return undefined;
+    let derniere = 0;
+    const relire = () => {
+      if (document.visibilityState === 'hidden' || Date.now() - derniere < 5 * 60 * 1000) return;
+      derniere = Date.now();
+      api('/auth/me', { token: session.token })
+        .then((user) => setSession((prev) => (prev && prev.token === session.token && JSON.stringify(prev.user) !== JSON.stringify(user) ? { ...prev, user } : prev)))
+        .catch(() => { /* réseau : on réessaiera au prochain retour */ });
+    };
+    relire();
+    document.addEventListener('visibilitychange', relire);
+    return () => document.removeEventListener('visibilitychange', relire);
+  }, [session?.token, session?.actingAs]);
+
+  /* DÉCONNEXION DANS UN AUTRE ONGLET (audit du 19/10, auth-14). Se déconnecter dans un onglet laissait les autres travailler
+   * avec la même session jusqu'au rechargement. L'événement « storage » dit quand un autre onglet a vidé la session : on la
+   * vide ici aussi. Pas dans un onglet « Fairide agit comme… » ni de simulation, qui ont leur propre session. */
+  useEffect(() => {
+    function ailleurs(e) {
+      if (e.key !== STORAGE_KEY || e.newValue || simuRef.current || actingRef.current) return;
+      setSession(null);
+      setDeconnexionVoulue(true);
+    }
+    window.addEventListener('storage', ailleurs);
+    return () => window.removeEventListener('storage', ailleurs);
+  }, []);
+
   // Session expirée (401 sur une requête authentifiée, voir api.js) : on vide la session, ce qui
   // suffit à renvoyer vers /login puisque ProtectedRoute redirige dès que `user` est nul — pas de
   // navigation impérative ici, qui ferait sortir à tort un visiteur d'une page publique.
@@ -163,11 +202,13 @@ export function AuthProvider({ children }) {
       if (expiredRef.current) return;
       expiredRef.current = true;
       setSession(null);
-      // Compte supprimé (par son titulaire ou par Fairide) : on le dit tel quel, pas « session expirée ».
-      toast(code === 'ACCOUNT_DELETED' ? t('auth.accountDeletedLogout') : t('auth.sessionExpired'));
+      // Compte supprimé (par son titulaire ou par Fairide) : on le dit tel quel, pas « session expirée ». Session révoquée
+      // (mot de passe changé, « déconnecter tous mes appareils ») : sa propre phrase (audit du 19/10, auth-37).
+      toast(code === 'ACCOUNT_DELETED' ? t('auth.accountDeletedLogout') : code === 'SESSION_REVOKED' ? t('auth.sessionRevoked') : t('auth.sessionExpired'));
     });
     return () => setSessionExpiredHandler(null);
-  }, [toast]);
+    // `t` aussi (audit du 19/10, auth-33) : sans lui, le message gardait la langue dans laquelle la page s'était ouverte.
+  }, [toast, t]);
 
   /* `totpCode` n'est envoyé qu'au second passage : le serveur répond d'abord 401 TOTP_REQUIRED, ce que
    * Auth.jsx transforme en champ « code à 6 chiffres ». On ne le demande jamais d'avance — demander un
@@ -291,6 +332,7 @@ export function AuthProvider({ children }) {
   function logout() {
     // En simulation, « Se déconnecter » ramène au profil visiteur sans perdre les sessions de test.
     if (simuRef.current) { changerProfilSimulation('visitor', '/'); return; }
+    setDeconnexionVoulue(true);
     setSession(null);
     // La casquette active appartient à la session qui s'en va : sans cet oubli, le compte suivant
     // ouvrirait sur la vue du précédent (ou sur une vue à laquelle il n'a pas droit, le temps que
@@ -348,6 +390,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     user: session?.user || null,
+    deconnexionVoulue,
     token: session?.token || null,
     role: roleActif,
     roles,

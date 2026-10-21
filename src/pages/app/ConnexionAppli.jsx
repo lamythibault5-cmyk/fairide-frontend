@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -11,6 +11,8 @@ import { attendrePage, espaceApresConnexion } from '../../routePrefetch';
 import { lireBienvenue } from '../../bienvenue';
 import { Haut } from './EcransBienvenue';
 import { Champ } from './InscriptionAppli';
+import { CHAMP_CODE_SECOURS } from '../../validation';
+import useDecompte, { DELAI_RENVOI_S } from '../../hooks/useDecompte';
 
 /* LA CONNEXION DANS L'APPLICATION (2026-10-15) — /login quand experienceApp(), à la place d'Auth.jsx.
  *
@@ -28,7 +30,10 @@ const AUDIENCE_ROLE = { partner: 'restaurant', client: 'client' };
 
 export default function ConnexionAppli() {
   const { t } = useLanguage();
-  const { login, verifyEmail, resendCode, changePendingPhone, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  const { user, login, verifyEmail, resendCode, changePendingPhone, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  // Déjà connecté EN ARRIVANT (audit du 19/10, auth-13) : un lien fairide.be/login ouvert dans l'app montrait le formulaire.
+  // Comme sur le site (Auth.jsx) : on va dans son espace, ou là où l'on voulait aller. Une connexion faite ICI garde sa suite.
+  const [connecteALArrivee] = useState(() => !!user);
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,6 +59,11 @@ export default function ConnexionAppli() {
   // code (il prouve le compte à la place du mot de passe, qu'un compte Apple / Google n'a pas).
   const [nouveauNumero, setNouveauNumero] = useState('');
   const [preuve, setPreuve] = useState(attenteCode?.preuve || null);
+  // « Renvoyer le code » attend 30 s après chaque envoi (audit du 19/10, auth-12) : chaque toucher était un SMS payé.
+  const [attenteRenvoi, lancerAttenteRenvoi] = useDecompte();
+  useEffect(() => { if (ecran === 'code') lancerAttenteRenvoi(DELAI_RENVOI_S); }, [ecran, lancerAttenteRenvoi]);
+
+  if (connecteALArrivee && user) return <Navigate to={location.state?.from || espaceApresConnexion(user)} replace />;
 
   // Lien d'inscription du site ouvert dans l'app : l'inscription de l'app, profil choisi.
   const audience = params.get('audience');
@@ -66,7 +76,8 @@ export default function ConnexionAppli() {
   const murCompte = audience === 'client' && !params.get('role') && !params.get('ref') && !!location.state?.from && !!lireBienvenue().vu;
   if ((audience || params.get('ref')) && !murCompte) {
     const role = params.get('role') || AUDIENCE_ROLE[audience] || null;
-    return <Navigate to="/bienvenue" replace state={{ depart: 'profil', role, from }} />;
+    // Le code de parrainage du lien (?ref=) suit jusqu'à l'inscription de l'app (audit du 19/10, auth-28) : il s'y perdait.
+    return <Navigate to="/bienvenue" replace state={{ depart: 'profil', role, from, ref: params.get('ref') || undefined }} />;
   }
 
   const creerCompte = () => navigate('/bienvenue', { state: { depart: 'profil', from } });
@@ -97,11 +108,14 @@ export default function ConnexionAppli() {
       }
       // Code expiré : on en envoie un neuf (comme Auth.jsx), par SMS ou par e-mail.
       let r = null;
-      try { r = await resendCode(email.trim()); } catch { /* plafond atteint : « Renvoyer » reste là */ }
+      let refus = null;
+      try { r = await resendCode(email.trim()); } catch (e) { refus = e; /* plafond atteint : « Renvoyer » reste là */ }
       const canal = (r?.channel || err.data?.channel) === 'sms' ? 'sms' : 'email';
       setCanalCode(canal); setTelMasque(r?.phoneMasked || err.data?.phoneMasked || '');
       setCode(''); aller('code');
-      toast(t(canal === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
+      // « Code envoyé » seulement s'il est vraiment parti (audit du 19/10, auth-24) ; sinon la raison du serveur.
+      if (r) toast(t(canal === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
+      else toast(refus?.message || t('auth.errEmailNotVerified'), 'erreur');
     } else if (err.code === 'TOTP_REQUIRED') {
       setCode(''); aller('totp');
     } else if (err.code === 'TOTP_INVALID' || err.code === 'TOTP_REPLAY') {
@@ -222,6 +236,7 @@ export default function ConnexionAppli() {
       const r = await resendCode(email.trim());
       if (r?.channel) { setCanalCode(r.channel === 'sms' ? 'sms' : 'email'); if (r.phoneMasked) setTelMasque(r.phoneMasked); }
       setCode(''); toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.newCodeSent'));
+      lancerAttenteRenvoi(DELAI_RENVOI_S);
     }
     catch (err) { toast(err.message, 'erreur'); }
     finally { setAttente(false); }
@@ -230,7 +245,10 @@ export default function ConnexionAppli() {
   const champCode = (
     <>
       <label htmlFor="bv-c-code" className="sr-only">{t('auth.verifyCodeLabel')}</label>
-      <input id="bv-c-code" className={`bv-saisie${erreurs.code ? ' input-invalid' : ''}`} inputMode="numeric" autoComplete="one-time-code" maxLength={ecran === 'totp' ? 11 : 6}
+      {/* Second facteur : clavier TEXTE (audit du 19/10, CROSS-60). Un code de secours (« A1B2C-3D4E5 ») a des lettres et un
+          tiret, que le pavé numérique n'a pas : sans application d'authentification, on restait dehors sur téléphone. */}
+      <input id="bv-c-code" className={`bv-saisie${erreurs.code ? ' input-invalid' : ''}`} autoComplete="one-time-code" maxLength={ecran === 'totp' ? 11 : 6}
+        {...(ecran === 'totp' ? CHAMP_CODE_SECOURS : { inputMode: 'numeric' })}
         placeholder="123456" value={code} onChange={(e) => setCode(ecran === 'totp' ? e.target.value : e.target.value.replace(/\D/g, '').slice(0, 6))} />
       {erreurs.code && <p className="field-error bv-centre" role="alert">{erreurs.code}</p>}
     </>
@@ -249,11 +267,12 @@ export default function ConnexionAppli() {
       break;
     case 'code':
       bouton = t('auth.confirm');
-      entete = titre(t('auth.verifyTitle'), canalCode === 'sms' ? t('auth.verifyTextSms', { phone: telMasque }) : t('auth.verifyText', { email: email.trim() }));
+      // Titre selon le canal (audit du 19/10, auth-23) : « Confirme ton email » au-dessus d'un code parti par SMS.
+      entete = titre(t(canalCode === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle'), canalCode === 'sms' ? t('auth.verifyTextSms', { phone: telMasque }) : t('auth.verifyText', { email: email.trim() }));
       contenu = (
         <>
           {champCode}
-          <button type="button" className="bv-lien" disabled={attente} onClick={renvoyer}>{t('auth.resendCode')}</button>
+          <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={renvoyer}>{attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}</button>
           <button type="button" className="bv-lien" disabled={attente} onClick={() => { setNouveauNumero(''); aller('numero'); }}>{t('auth.changePhone')}</button>
         </>
       );
@@ -329,7 +348,8 @@ export default function ConnexionAppli() {
           <div className="bv-grandit" />
           {/* Apple / Google : dans la vraie application seulement, au-dessus du bouton (comme l'écran du compte). */}
           {ecran === 'connexion' && estNatif() && <BoutonsConnexionNative onChoix={viaFournisseur} disabled={attente} />}
-          <button type="submit" className="bv-btn btn-gold" disabled={attente}>{attente ? t('common.loading') : bouton}</button>
+          {/* Un code SMS / e-mail incomplet ne part plus au serveur (audit du 19/10, LIVE-28) : six chiffres d'abord. */}
+          <button type="submit" className="bv-btn btn-gold" disabled={attente || ((ecran === 'code' || ecran === 'oubliCode') && code.length !== 6)}>{attente ? t('common.loading') : bouton}</button>
           {/* Pas en double : après « aucun compte », le lien est déjà sous le champ e-mail. */}
           {ecran === 'connexion' && !pasDeCompte && <button type="button" className="bv-lien" onClick={creerCompte}>{t('appli.connCreer')}</button>}
         </form>

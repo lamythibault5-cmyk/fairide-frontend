@@ -53,3 +53,16 @@ export function telephonePlausible(v) {
   const c = String(v || '').replace(/\D/g, '');
   return c.length >= 8 && c.length <= 15;
 }
+
+// CHAMP DU SECOND FACTEUR (audit du 19/10, CROSS-60). Un code de secours (« A1B2C-3D4E5 », totp.js côté serveur) a des
+// lettres et un tiret : le pavé numérique (inputMode numeric) ne permettait pas de le taper sur téléphone. Clavier texte,
+// majuscules d'office, sans correction automatique. Les codes SMS / e-mail, eux, gardent le pavé numérique.
+export const CHAMP_CODE_SECOURS = { inputMode: 'text', autoCapitalize: 'characters', autoCorrect: 'off', spellCheck: false };
+
+// ANNÉE ACADÉMIQUE SUR LE PAVÉ NUMÉRIQUE (audit du 19/10, CROSS-64). Le champ ouvre le pavé numérique, qui n'a pas de tiret sur
+// iPhone : « 2026-2027 » ne pouvait pas s'écrire. Dès le cinquième chiffre tapé à la suite, le tiret se pose tout seul
+// (« 20262 » devient « 2026-2 »). Le serveur accepte aussi huit chiffres collés (couriers.js, normaliserAnneeAcademique).
+export function formaterAnneeAcademique(v) {
+  const s = String(v ?? '');
+  return /^\d{5,8}$/.test(s) ? `${s.slice(0, 4)}-${s.slice(4)}` : s;
+}

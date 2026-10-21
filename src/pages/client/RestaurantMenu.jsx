@@ -1149,7 +1149,7 @@ function DiscoverSection({ restaurants, t, user }) {
         keyFor={(r) => r.id}
         className="discover-track"
         renderItem={(r, i, key) => (
-          <Link key={key} {...lienFiche(user, r.id)} className="discover-card">
+          <Link key={key} {...lienFiche(user, r.id, r.name)} className="discover-card">
             {/* Le visuel de marque sous la photo : un commerce sans photo (ou dont la photo casse) garde une vignette. */}
             <span className="discover-card-media">
               <VisuelVide nom={r.name} cuisine={r.cuisine} />

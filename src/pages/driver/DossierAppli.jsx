@@ -14,6 +14,7 @@ import { ConsentementBiometrique, RetraitConsentementBiometrique } from '../../c
 import { Haut, Option, Fait } from '../app/EcransBienvenue';
 import { Champ } from '../app/InscriptionAppli';
 import RouteVelo from '../../components/livreur/RouteVelo';
+import { formaterAnneeAcademique } from '../../validation';
 import '../../ecran-livreur.css';
 import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 
@@ -168,7 +169,8 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
       <>
         <Champ id="dos-ecole" label={t('courierOnboarding.fSchool')}><input id="dos-ecole" value={f.schoolName} onChange={(e) => val('schoolName', e.target.value)} /></Champ>
         <Champ id="dos-annee" label={t('courierOnboarding.fAcademicYear')} aide={legal.studentParentsCeiling != null ? t('courierOnboarding.studentParentsInfo', { amount: euros(legal.studentParentsCeiling) }) : null}>
-          <input id="dos-annee" inputMode="numeric" value={f.academicYear} onChange={(e) => val('academicYear', e.target.value)} placeholder="2026-2027" />
+          {/* Tiret posé tout seul : le pavé numérique de l'iPhone n'en a pas (audit du 19/10, CROSS-64). */}
+          <input id="dos-annee" inputMode="numeric" value={f.academicYear} onChange={(e) => val('academicYear', formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" />
         </Champ>
       </>
     );

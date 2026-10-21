@@ -25,6 +25,7 @@ import { definirModeEquipe } from '../modeEquipe';
 import '../ecran-equipe-groupe.css';
 import NouvellesFairide from '../components/NouvellesFairide';
 import MesCasquettes from '../components/MesCasquettes';
+import MotDePasseFedere from '../components/MotDePasseFedere';
 import InboxSection from '../components/InboxSection';
 import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
@@ -695,6 +696,8 @@ export default function Account() {
         </LigneCompte>
 
         <LigneCompte icone="cle" titre={t('account.passwordTitle')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
+          {/* Compte Google / Apple : pas de mot de passe actuel à donner (audit du 19/10, auth-18). */}
+          <MotDePasseFedere />
           <form onSubmit={savePassword}>
             <div className="field">
               <label htmlFor="mdp-actuel">{t('account.currentPassword')}</label>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LienCgv, { LienConfidentialite } from '../../components/CgvEnFeuille';
 import { useLanguage } from '../../context/LanguageContext';
@@ -13,7 +13,8 @@ import AddressSearch from '../../components/AddressSearch';
 import EngagementsInscription from '../../components/commerce/EngagementsInscription';
 import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES } from '../../menuCategories';
 import { DAY_ORDER, dayLabel } from '../../openingHours';
-import { bceValide, raisonBce, codePostalValide } from '../../validation';
+import { bceValide, raisonBce, codePostalValide, formaterAnneeAcademique } from '../../validation';
+import useDecompte, { DELAI_RENVOI_S } from '../../hooks/useDecompte';
 import { lireBienvenue, lireCodeEnAttente, ecrireCodeEnAttente } from '../../bienvenue';
 import { attendrePage } from '../../routePrefetch';
 import { connexionFournisseur } from '../../natif';
@@ -37,8 +38,27 @@ import { Haut, Option, Fait } from './EcransBienvenue';
  *   - ce qui est facultatif n'est pas demandé : autres cuisines, autres responsables, second numéro ou e-mail du
  *     commerce, numéro masqué au public — tout se règle dans Mon commerce ;
  *   - pas de recherche automatique des horaires sur le web, donc pas de case « j'ai vérifié le préremplissage » ;
- *   - pas de brouillon gardé 48 h : l'application reste ouverte pendant l'inscription, et l'accueil lui-même n'en
- *     garde pas non plus. */
+ *   - le brouillon gardé 48 h est arrivé ici aussi (audit du 19/10, CROSS-63, voir CLE_BROUILLON plus bas) : on ne
+ *     pensait pas que l'application se fermerait pendant l'inscription, mais un commerce qui va chercher son numéro
+ *     d'entreprise dans une autre application voit souvent la sienne fermée par le téléphone, et tout était perdu. */
+
+/* LE BROUILLON DE L'INSCRIPTION DANS L'APPLICATION (audit du 19/10, CROSS-63). Mêmes règles que celui du site (Auth.jsx) :
+ * localStorage, 48 h au plus, effacé quand le compte est créé ; jamais le mot de passe ni le jeton Apple / Google (une
+ * inscription Apple / Google n'en garde donc pas). Repris seulement pour le même type de compte. Le mot de passe, qui ne
+ * se garde pas, est redemandé au dernier écran plutôt que de renvoyer au premier (comme le site, LIVE-13). Déclaré dans
+ * la politique des cookies (« ton inscription commencée », cookiesPolicy.technical). */
+const CLE_BROUILLON = 'fairide_inscription_appli';
+const BROUILLON_MAX_MS = 48 * 3600 * 1000;
+function lireBrouillon(role) {
+  try {
+    const b = JSON.parse(localStorage.getItem(CLE_BROUILLON) || 'null');
+    if (!b || b.role !== role || Date.now() - (b.at || 0) > BROUILLON_MAX_MS) return null;
+    return b;
+  } catch { return null; }
+}
+function oublierBrouillon() {
+  try { localStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
+}
 
 const ETAPES = {
   client: ['email', 'nom', 'tel', 'adresse', 'fin'],
@@ -86,7 +106,7 @@ function Segments({ label, valeur, options, onChoix }) {
   );
 }
 
-export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConnexion }) {
+export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQuitter, onConnexion }) {
   const { t } = useLanguage();
   const { register, verifyEmail, resendCode, changePendingPhone, loginWithGoogle, loginWithApple } = useAuth();
   const toast = useToast();
@@ -137,8 +157,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   // « client » au sens de l'AR du 4 avril 2003 : l'opt-out ne vaut pas pour lui (SPF Économie ; CJUE Planet49). Commerces et
   // livreurs gardent la case de refus ci-dessus. Serveur : routes/auth.js, enregistrerChoixNouvelles.
   const [nouvellesOui, setNouvellesOui] = useState(false);
-  const [referralCode, setReferralCode] = useState('');
-  const [referralOuvert, setReferralOuvert] = useState(false);
+  // Code d'un lien de parrainage ouvert dans l'app (?ref=, audit du 19/10, auth-28) : prérempli et visible, comme sur le site.
+  const [referralCode, setReferralCode] = useState(codeParrain || '');
+  const [referralOuvert, setReferralOuvert] = useState(!!codeParrain);
   const [versionCgu, setVersionCgu] = useState('');
   const [siteWeb, setSiteWeb] = useState(''); // pot de miel, comme sur le site
   /* Rapports de panne (Sentry) : dans l'app ils sont ACTIFS SAUF REFUS (fondateur, 2026-10-16 ; rapportsPanneActifs,
@@ -169,6 +190,43 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   // « Changer de numéro » depuis l'écran du code (auth-03) : un écran de plus, le temps de taper le bon numéro.
   const [changerNumero, setChangerNumero] = useState(false);
   const [nouveauNumero, setNouveauNumero] = useState('');
+  // « Renvoyer le code » attend 30 s après chaque envoi (audit du 19/10, auth-12, voir hooks/useDecompte.js).
+  const [attenteRenvoi, lancerAttenteRenvoi] = useDecompte();
+  const codeAffiche = !!enAttente && !changerNumero;
+  useEffect(() => { if (codeAffiche) lancerAttenteRenvoi(DELAI_RENVOI_S); }, [codeAffiche, lancerAttenteRenvoi]);
+
+  // Brouillon (voir CLE_BROUILLON) : les réponses de chaque écran, le mot de passe jamais.
+  const champsBrouillon = {
+    index: [index, setIndex], email: [email, setEmail], firstName: [firstName, setFirstName], lastName: [lastName, setLastName], phone: [phone, setPhone],
+    addressStreet: [addressStreet, setAddressStreet], addressNumber: [addressNumber, setAddressNumber], addressPostalCode: [addressPostalCode, setAddressPostalCode], addressCity: [addressCity, setAddressCity],
+    courierStatus: [courierStatus, setCourierStatus], schoolName: [schoolName, setSchoolName], academicYear: [academicYear, setAcademicYear], companyNumber: [companyNumber, setCompanyNumber], vehicleType: [vehicleType, setVehicleType],
+    nomCommerce: [nomCommerce, setNomCommerce], restoPhone: [restoPhone, setRestoPhone], cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine],
+    legalName: [legalName, setLegalName], vatNumber: [vatNumber, setVatNumber], responsable: [responsable, setResponsable], jours: [jours, setJours], creneaux: [creneaux, setCreneaux], services: [services, setServices],
+    referralCode: [referralCode, setReferralCode], referralOuvert: [referralOuvert, setReferralOuvert]
+  };
+  const brouillonActif = useRef(false);
+  // Repris au-delà du premier écran : le mot de passe (jamais gardé) est redemandé au dernier écran.
+  const [mdpARetaper, setMdpARetaper] = useState(false);
+  useLayoutEffect(() => {
+    if (fed) return; // Apple / Google : rien de gardé (le jeton ne se garde pas, voir plus haut)
+    brouillonActif.current = true;
+    const b = repriseCode ? null : lireBrouillon(role);
+    if (!b) return;
+    for (const [cle, valeur] of Object.entries(b.champs || {})) if (cle !== 'referralCode' || !codeParrain) champsBrouillon[cle]?.[1](valeur);
+    if (Number(b.champs?.index) > 0) setMdpARetaper(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const valeursBrouillon = Object.values(champsBrouillon).map((c) => c[0]);
+  useEffect(() => {
+    if (!brouillonActif.current || enAttente) return undefined;
+    const minuteur = setTimeout(() => {
+      try { localStorage.setItem(CLE_BROUILLON, JSON.stringify({ at: Date.now(), role, champs: Object.fromEntries(Object.entries(champsBrouillon).map(([cle, [valeur]]) => [cle, valeur])) })); } catch { /* stockage plein ou indisponible */ }
+    }, 250);
+    return () => clearTimeout(minuteur);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...valeursBrouillon, enAttente]);
+  // Compte créé (le code attendu prend le relais, bienvenue.js) : le brouillon n'a plus rien à reprendre.
+  useEffect(() => { if (enAttente) oublierBrouillon(); }, [enAttente]);
 
   const etapes = useMemo(() => ETAPES[role].filter((e) => !(e === 'email' && fed) && !(e === 'nom' && nomConnu)
     && !(e === 'etudes' && courierStatus !== 'student_independent')), [role, fed, nomConnu, courierStatus]);
@@ -250,6 +308,10 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       else if (!codePostalValide(addressPostalCode)) e.addressPostalCode = t('auth.errPostalCode');
       if (!addressCity.trim()) e.addressCity = requis;
     }
+    if (cle === 'fin' && mdpARetaper && !fed) {
+      if (!password) e.password = requis;
+      else if (!MDP_FORME(password)) e.password = t('auth.errPasswordStrength');
+    }
     if (cle === 'fin' && role === 'client' && !accepteCgu) e.cgu = t('conformite.toastTermsRequired');
     if (cle === 'fin' && role === 'restaurant' && !accepteEngagements) e.engagements = t('auth.engagementsRequired');
     if (cle === 'code' && !code.trim()) e.code = t('auth.errCodeRequired');
@@ -318,6 +380,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
 
   // Compte ouvert : droit dans son espace, comme après l'inscription du site (allerApresInscription d'Auth.jsx).
   async function arriver(user) {
+    oublierBrouillon();
     toast(t('auth.welcome', { name: user.name }), 'succes');
     // Un client venu d'un commerce touché sans compte y retourne (comme sur le site, Auth.jsx).
     const cible = user?.role === 'restaurant' ? '/dashboard' : user?.role === 'driver' ? '/driver/onboarding' : retourApres && retourApres !== '/' ? retourApres : '/restaurants';
@@ -474,6 +537,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       const r = await resendCode(enAttente.email);
       if (r?.channel) setEnAttente((p) => ({ ...p, canal: r.channel === 'sms' ? 'sms' : 'email', telephone: r.phoneMasked || p.telephone }));
       setCode(''); setErreurs({});
+      lancerAttenteRenvoi(DELAI_RENVOI_S);
       toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : r?.channel === 'email' ? 'auth.errVerificationSent' : 'auth.newCodeSent'));
     } catch (err) {
       toast(err.message, 'erreur');
@@ -539,6 +603,8 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
           <Champ id="bv-i-tel" label={t('auth.phone')} labelMasque erreur={erreurs.phone}>
             <PhoneInput id="bv-i-tel" value={phone} onChange={setPhone} invalid={!!erreurs.phone} />
           </Champ>
+          {/* Numéro déjà lié à un compte (audit du 19/10, auth-30) : le même lien que pour l'e-mail déjà pris. */}
+          {erreurs.phone === t('auth.errPhoneTaken') && <button type="button" className="bv-lien bv-lien-serre" onClick={onConnexion}>{t('appli.dejaCompte')}</button>}
         </>
       );
       break;
@@ -689,7 +755,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
           </Champ>
           <Champ id="bv-i-annee" label={t('auth.academicYear')} erreur={erreurs.academicYear}>
             <input id="bv-i-annee" inputMode="numeric" className={erreurs.academicYear ? 'input-invalid' : undefined} value={academicYear}
-              onChange={(e) => setAcademicYear(e.target.value)} placeholder="2026-2027" />
+              onChange={(e) => setAcademicYear(formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" />
           </Champ>
         </>
       );
@@ -758,6 +824,13 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
       entete = titre(t('appli.insFinTitre'), t(role === 'restaurant' ? 'appli.insFinCommerce' : role === 'driver' ? 'appli.insFinLivreur' : 'appli.insFinClient'));
       contenu = (
         <>
+          {/* Brouillon repris : le mot de passe, jamais gardé, se retape ici (CROSS-63). */}
+          {mdpARetaper && !fed && (
+            <Champ id="bv-i-mdp-reprise" label={t('auth.password')} erreur={erreurs.password} aide={t('auth.draftPasswordAgain')}>
+              <PasswordInput id="bv-i-mdp-reprise" value={password} invalid={!!erreurs.password}
+                onChange={(e) => { setPassword(e.target.value); if (erreurs.password) setErreurs(({ password: _p, ...reste }) => reste); }} />
+            </Champ>
+          )}
           {role === 'driver' && (
             <>
               <Fait icone="euro" titre={t('appli.insFinLv1')} sous={t('auth.driverFeeNotice')} />
@@ -810,7 +883,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
           <input id="bv-i-code" className={`bv-saisie${erreurs.code ? ' input-invalid' : ''}`} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6}
             placeholder="123456" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
           {erreurs.code && <p className="field-error bv-centre" role="alert">{erreurs.code}</p>}
-          <button type="button" className="bv-lien" disabled={attente} onClick={renvoyer}>{t('auth.resendCode')}</button>
+          <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={renvoyer}>{attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}</button>
           <button type="button" className="bv-lien" disabled={attente}
             onClick={() => { setNouveauNumero(phone); setErreurs({}); setRecule(false); setChangerNumero(true); }}>{t('auth.changePhone')}</button>
         </>
@@ -844,7 +917,8 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
         <form className="bv-form bv-feuille" onSubmit={avancer} noValidate>
           {contenu}
           <div className="bv-grandit" />
-          <button type="submit" className="bv-btn btn-gold" disabled={attente}>
+          {/* Six chiffres avant d'envoyer le code (audit du 19/10, LIVE-28). */}
+          <button type="submit" className="bv-btn btn-gold" disabled={attente || (etape === 'code' && code.length !== 6)}>
             {attente ? t('common.loading') : bouton}
           </button>
         </form>

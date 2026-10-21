@@ -4,7 +4,8 @@
 // Auth.jsx (ou ConnexionAppli) y ramène une fois connecté ou inscrit.
 // La ROUTE /restaurants/:id reste publique (App.jsx) : un lien partagé, un moteur de recherche ou une page prérendue y
 // mènent toujours directement. Seuls les clics faits DANS Fairide passent par ici.
-export function lienFiche(user, restaurantId) {
+// `nom` : le nom du commerce, dit sur la page de connexion (« Pour voir la carte de … », audit du 19/10, LIVE-23).
+export function lienFiche(user, restaurantId, nom) {
   const fiche = `/restaurants/${restaurantId}`;
-  return user ? { to: fiche, state: undefined } : { to: '/login?audience=client', state: { from: fiche } };
+  return user ? { to: fiche, state: undefined } : { to: '/login?audience=client', state: { from: fiche, ...(nom ? { commerce: nom } : {}) } };
 }
