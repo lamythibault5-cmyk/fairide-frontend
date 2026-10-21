@@ -271,6 +271,9 @@ export function ProchaineEtape({ order }) {
   if (status === 'annule' && order.expiredUnaccepted && order.paid === false) {
     return <div className="small order-next">{t('orderStatus.next_never_sent')}</div>;
   }
+  // Close après une attente sans client (livraison « client absent », à emporter non récupérée, audit du 19/10, shop-206) :
+  // la ligne de l'incident dit déjà que la commande reste due (Orders.jsx) ; « un paiement éventuel est remboursé » serait faux.
+  if (status === 'annule' && ['client_absent', 'pickup_not_collected'].includes(order.deliveryIncident)) return null;
   if (status === 'annule' && order.expiredUnaccepted) {
     return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_expired_on_site' : 'orderStatus.next_expired')}</div>;
   }

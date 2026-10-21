@@ -338,6 +338,7 @@ export default function Checkout() {
   const erreurDevis = corpsActuel && devis?.erreur && devis.cle === JSON.stringify(corpsActuel) ? devis.erreur : null;
   const refusDevis = erreurDevis && erreurDevis.status >= 400 && erreurDevis.status < 500 && erreurDevis.status !== 429
     && !REFUS_REGLES_ICI.includes(erreurDevis.code) ? erreurDevis.message : null;
+  const bloqueSurPlace = !!refusDevis && erreurDevis.code === 'SUR_PLACE_BLOQUE' && surPlaceChoisi && (enLigneFerme || modeEmporter === 'on_site');
 
   // Commande payée sur place, partie au commerce : l'écran de confirmation (OrderResult.jsx) avec tout le retrait — numéro,
   // code, heure, adresse, itinéraire, appel, moyens de paiement. Avant : un message de trois secondes, puis Mes commandes.
@@ -766,6 +767,11 @@ export default function Checkout() {
             </span>
             {sansLivreur ? (
               <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {t('checkout.noCourierNow')}</span>
+            ) : bloqueSurPlace ? (
+              // Client bloqué après une commande non récupérée, sans paiement en ligne possible (avant le GO, ou commerce « sur
+              // place seulement ») : le message du serveur, juste au-dessus, dit quoi faire ; un bouton n'y mènerait qu'à une
+              // erreur (audit du 19/10, checkout-05).
+              null
             ) : serviceOuvert(fulfillmentType, user) && !paiementBloque && manqueMinimum > 0 ? (
               // Montant minimum du commerce (PAN-3) : le bouton laisse place à ce qui manque, comme le serveur le refuserait.
               <span className="small co-barre-attente">{t('checkout.minOrderMissing', { min: euros(restaurant.minOrderAmount), missing: euros(manqueMinimum) })}</span>

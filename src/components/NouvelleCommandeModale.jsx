@@ -148,10 +148,11 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
           </div>
         </div>
       </Modale>
-      {/* Motif obligatoire : le serveur le refuse sans (MOTIF_REQUIS) et le transmet au client. */}
+      {/* Motif obligatoire : le serveur le refuse sans (MOTIF_REQUIS) et le transmet au client. Payée sur place, rien n'est à
+          rembourser : le texte ne promet plus de remboursement (audit du 19/10, shop-205). */}
       <ReasonDialog open={aRefuser} danger
         title={t('ordersResto.confirmRefuseTitle')}
-        message={`${t('ordersResto.confirmRefuseText', { name: o.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
+        message={`${t(o.paymentMode === 'on_site' ? 'ordersResto.confirmRefuseTextOnSite' : 'ordersResto.confirmRefuseText', { name: o.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
         label={t('ordersResto.refuseReasonLabel')}
         placeholder={t('ordersResto.refuseReasonPlaceholder')}
         confirmLabel={t('ordersResto.refuse')}

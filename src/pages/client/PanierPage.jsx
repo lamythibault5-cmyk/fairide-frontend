@@ -17,6 +17,7 @@ import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/Ups
 import { euros, remiseCourte } from '../../prixPlat';
 import { mouvementReduit, vibrer } from '../../gestes';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
+import { paiementEnLigneOuvert, useLancement } from '../../launch';
 
 // Le panier, sur sa propre page.
 //
@@ -76,7 +77,8 @@ export default function PanierPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  useLancement(); // redessine au GO (paiement en ligne ouvert)
   // « Vider » demande confirmation (audit du 15/10/2026) : un toucher effaçait tout le panier, sans retour possible.
   const [viderOuvert, setViderOuvert] = useState(false);
   const [restaurant, setRestaurant] = useState(null);
@@ -128,13 +130,21 @@ export default function PanierPage() {
 
   // Plats qui ne se commandent plus (rupture, retirés) : marqués, « Retirer », et le paiement attend qu'ils soient partis.
   const indisponibles = lignesIndisponibles(cart.lines, restaurant?.menu);
+  /* AVANT LE GO, UN COMMERCE « PAIEMENT EN LIGNE SEULEMENT » NE PREND RIEN (audit du 19/10, LIVE-09). Le panier menait à un
+     paiement sans bouton, avec un message flou (« seulement s'il le propose »). Sans paiement en ligne, seul l'à emporter payé
+     sur place peut se commander : un commerce qui ne le propose pas (ou qui ne fait que livrer) attend le GO. On le dit ici,
+     à la place de « Aller au paiement ». Même règle que Checkout.jsx (paiementBloque) et le serveur (ONLINE_PAYMENT_NOT_OPEN). */
+  const modeEmporter = restaurant ? (restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online')) : null;
+  const pasEncore = !!restaurant && !paiementEnLigneOuvert(user) && !(restaurant.offersPickup && modeEmporter !== 'online');
   const barre = (
     <BarreCommande montant={sousTotal} className="panier-barre">
       <span className="co-barre-total">
         <span className="co-barre-montant"><ChiffresRoulants valeur={euros(sousTotal)} /></span>
         <span className="co-barre-detail">{t('common.subtotal')}</span>
       </span>
-      <button type="button" className="btn-gold" onClick={() => (indisponibles.length ? toast(t('checkout.removeUnavailable'), 'erreur') : navigate('/checkout'))}>{t('panier.toCheckout')}</button>
+      {pasEncore
+        ? <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {t('checkout.onlinePaymentOpenSoon')}</span>
+        : <button type="button" className="btn-gold" onClick={() => (indisponibles.length ? toast(t('checkout.removeUnavailable'), 'erreur') : navigate('/checkout'))}>{t('panier.toCheckout')}</button>}
     </BarreCommande>
   );
 

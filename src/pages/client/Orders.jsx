@@ -474,7 +474,11 @@ export default function Orders() {
   // le remboursement est dit par blocRefus.
   const blocTotal = (o, avecMontant = true) => (o.status === 'refuse' ? null : (
     <>
-      {avecMontant && (
+      {/* Payée sur place puis annulée : « À payer sur place 4,50 € » restait affiché sous une commande close (audit du 19/10,
+          LIVE-11). Rien n'a été payé, rien n'est à payer : on le dit, sans montant. */}
+      {avecMontant && o.paymentMode === 'on_site' && o.status === 'annule' && !o.pickupNoShow ? (
+        <div className="suivi-total"><span className="small">{t('orders.payNothing')}</span></div>
+      ) : avecMontant && (
         <div className="suivi-total">
           <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
           <b>{euros(debite(o))}</b>
