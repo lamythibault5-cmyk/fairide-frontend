@@ -274,6 +274,10 @@ export function ProchaineEtape({ order }) {
   if (status === 'annule' && order.expiredUnaccepted) {
     return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_expired_on_site' : 'orderStatus.next_expired')}</div>;
   }
+  // Client absent à la porte (audit du 19/10, AO-04) : la carte disait à la fois « Un paiement éventuel est remboursé » et,
+  // juste dessous, « une commande non réceptionnée reste due » (orders.noCourier_incident_client_absent, conforme aux CGU).
+  // Le texte de l'incident, affiché partout où la commande l'est (Orders.jsx), suffit : pas de note « remboursé ».
+  if (status === 'annule' && order.deliveryIncident === 'client_absent') return null;
   if (status === 'nouveau') cle = 'next_nouveau';
   else if (status === 'preparation') cle = livraison ? 'next_preparation_delivery' : 'next_preparation_pickup';
   else if (status === 'pret') cle = livraison ? 'next_pret_delivery' : 'next_pret_pickup';

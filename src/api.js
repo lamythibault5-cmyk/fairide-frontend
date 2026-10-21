@@ -131,7 +131,8 @@ export async function apiDownload(path, { token, filename, method = 'GET', body,
       if (onSessionExpired) onSessionExpired(data.code);
       throw error;
     }
-    throw new ApiError(data.error || 'Téléchargement impossible.', res.status);
+    // Repli traduit (audit du 19/10, CROSS-45) : le texte était écrit en dur en français.
+    throw new ApiError(data.error || traduire('common.downloadError'), res.status);
   }
   const blob = await res.blob();
   if (rendreBlob) return blob;
