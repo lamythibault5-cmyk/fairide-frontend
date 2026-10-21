@@ -4176,7 +4176,7 @@ export default {
     },
     privacy: {
       pageTitle: 'Privacy policy · fairide.be',
-      draftWarning: "Version of 19 October 2026.",
+      draftWarning: "Version of 21 October 2026.",
       title: 'Privacy policy',
       controllerTitle: 'Data controller',
       controller: 'FAIRIDE SRL, a private limited company under Belgian law, CBE 1042.169.780, VAT BE 1042.169.780, RLE Brussels, registered office Avenue du Castel 30, 1200 Woluwe-Saint-Lambert (Belgium), contact@fairide.be. For any question about your data or to exercise your rights: contact@fairide.be (or the form at the bottom of this page). Fairide has not appointed a data protection officer, as its size does not require one.',
@@ -4224,7 +4224,7 @@ export default {
       sub_osmTiles: "Your IP address, like any server that sends you an image: only as a fallback, if MapTiler's map tiles are unavailable, they are loaded from OpenStreetMap.",
       sub_maptiler: "Your IP address, like any server that sends you an image: map tiles (delivery tracking, address selection) are loaded from MapTiler (Switzerland).",
       sub_plausible: "Page views, without cookies or personal identifiers: your IP address is not stored, it is only used for an anonymous count renewed every day (European Union).",
-      sub_gatewayapi: "Your phone number and the text of the code: SMS verification codes (account creation, including with Google or Apple, and change of number) are sent by GatewayAPI, from the European Union.",
+      sub_gatewayapi: "Your phone number and the text of the message: SMS verification codes (account creation, including with Google or Apple, and change of number) and, for shops, the reminder of an order waiting to be accepted are sent by GatewayAPI, from the European Union.",
       sub_cloudinary: 'Photos uploaded by merchants (dishes, storefront, logo), couriers\' supporting documents, and photos of door drop-offs (private storage).',
       sub_anthropic: "Storefront photos taken by Fairide's sales team, to read the business name on them (Anthropic, United States, standard contractual clauses). No account data is sent.",
       sub_sentry: 'In case of a technical error: from the website, your IP address and the pages visited, only after you accept the banner; on our servers, the failing request (account identifier, page address), without cookies.',
