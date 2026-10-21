@@ -4185,7 +4185,7 @@ export default {
     },
     privacy: {
       pageTitle: 'Privacybeleid · fairide.be',
-      draftWarning: "Versie van 19 oktober 2026.",
+      draftWarning: "Versie van 21 oktober 2026.",
       title: 'Privacybeleid',
       controllerTitle: 'Verwerkingsverantwoordelijke',
       controller: 'FAIRIDE SRL (BV), besloten vennootschap naar Belgisch recht, KBO 1042.169.780, btw BE 1042.169.780, RPR Brussel, maatschappelijke zetel Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe (België), contact@fairide.be. Voor elke vraag over je gegevens of om je rechten uit te oefenen: contact@fairide.be (of het formulier onderaan deze pagina). Fairide heeft geen functionaris voor gegevensbescherming aangesteld; zijn omvang verplicht daar niet toe.',
@@ -4233,7 +4233,7 @@ export default {
       sub_osmTiles: "Je IP-adres, zoals elke server die je een afbeelding stuurt: alleen als reserve, als de kaartachtergronden van MapTiler niet beschikbaar zijn, komen ze van OpenStreetMap.",
       sub_maptiler: "Je IP-adres, zoals elke server die je een afbeelding stuurt: de kaartachtergronden (volgen van de bezorging, adreskeuze) komen van MapTiler (Zwitserland).",
       sub_plausible: "De bekeken pagina's, zonder cookies of persoonlijke identificator: je IP-adres wordt niet bewaard, het dient alleen voor een anonieme telling die elke dag wordt vernieuwd (Europese Unie).",
-      sub_gatewayapi: "Je telefoonnummer en de tekst van de code: verificatiecodes per sms (aanmaak van een account, ook met Google of Apple, en wijziging van nummer) worden verstuurd door GatewayAPI, vanuit de Europese Unie.",
+      sub_gatewayapi: "Je telefoonnummer en de tekst van het bericht: verificatiecodes per sms (aanmaak van een account, ook met Google of Apple, en wijziging van nummer) en, voor handelaars, de herinnering aan een bestelling die nog aanvaard moet worden, worden verstuurd door GatewayAPI, vanuit de Europese Unie.",
       sub_cloudinary: 'De foto\'s die handelaars uploaden (gerechten, gevel, logo), de bewijsstukken van koeriers, en de foto\'s van afgiftes aan de deur (privéopslag).',
       sub_anthropic: "Foto's van gevels die het verkoopteam van Fairide neemt, om er de naam van de zaak op te lezen (Anthropic, Verenigde Staten, modelcontractbepalingen). Er worden geen accountgegevens verstuurd.",
       sub_sentry: 'Bij een technische fout: vanaf de website, je IP-adres en de bezochte pagina\'s, enkel na je aanvaarding van de banner; op onze servers, het mislukte verzoek (account-ID, paginaadres), zonder cookie.',
