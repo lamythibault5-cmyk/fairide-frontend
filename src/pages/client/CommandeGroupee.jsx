@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
+import useRevalidation from '../../useRevalidation';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -45,23 +47,36 @@ export default function CommandeGroupee() {
   // paiement (audit design 2 du 2026-10-19) : le groupe enregistre le prix plein, la remise s'applique à la commande.
   const [menu, setMenu] = useState(null);
 
+  // Le groupe déjà affiché : une relecture qui échoue (réseau) le garde à l'écran au lieu de le remplacer par l'erreur.
+  const gRef = useRef(null);
   const charger = () => api(`/group-orders/${encodeURIComponent(code)}`, { token })
     .then((r) => {
       if (r && r.code) {
+        gRef.current = r;
         setG(r); setErreur(null);
         // Commandé, annulé ou expiré : le code ne doit plus partir avec une prochaine commande (audit du 19/10, checkout-08).
         if (!['open', 'locked'].includes(r.status) && groupeACommander(r.restaurant?.id) === r.code) oublierGroupeACommander();
       } else setErreur(t('groupOrder.notFound'));
     })
-    .catch((e) => setErreur(e.message));
+    .catch((e) => { if (!gRef.current) setErreur(e.message); });
   useEffect(() => { charger(); }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
+  // L'ÉCRAN SE TIENT À JOUR (audit du 19/10, CROSS-42) : lu une seule fois, il ne montrait pas à l'hôte les parts qui
+  // arrivaient, ni aux invités que le groupe était fermé ou commandé. Relu toutes les 10 s (onglet visible) et au retour
+  // sur l'onglet ou l'application.
+  useAutoRefresh(charger, 10000);
+  useRevalidation(charger);
   const restoId = g?.restaurant?.id;
   useEffect(() => {
     if (!restoId) return;
     api(`/restaurants/${restoId}`, { token }).then((r) => setMenu(r?.menu || null)).catch(() => {});
   }, [restoId, token]);
 
-  if (erreur) return <EtatVide icone="personnes" titre={erreur} actionVers="/restaurants" actionTexte={t('orders.emptyAction')} />;
+  // Premier chargement en échec : de quoi réessayer, en plus du retour aux commerces (CROSS-42).
+  if (erreur && !g) return (
+    <EtatVide icone="personnes" titre={erreur} actionVers="/restaurants" actionTexte={t('orders.emptyAction')}>
+      <button type="button" className="btn-outline" onClick={() => { setErreur(null); charger(); }}>{t('restaurantMenu.retry')}</button>
+    </EtatVide>
+  );
   // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
   if (!g) return experienceApp() ? <SqueletteEcran lignes={3} /> : <SkeletonCards count={2} />;
 

@@ -51,7 +51,7 @@ export default function FloatingCart() {
 
   return (
     <Link to="/panier" className={`panier-pilule${bulle ? ' panier-pilule--bulle' : ''}${rebond ? ' panier-pilule--rebond' : ''}`} key={`pilule-${rebond}`}
-      aria-label={`${t('panier.viewCart')} · ${euros(cart.rawTotal)}`}>
+      aria-label={`${t('panier.viewCart')} · ${euros(cart.sousTotal)}`}>
       <span className="panier-pilule-icone" aria-hidden="true">
         <Icone nom="sac" taille={20} />
         {/* Le compteur sur l'icone, comme sur une application de courses : on voit d'un coup d'oeil
@@ -59,7 +59,8 @@ export default function FloatingCart() {
         <span className="panier-pilule-compte" key={cart.count}>{cart.count}</span>
       </span>
       <span className="panier-pilule-texte">{t('panier.viewCart')}</span>
-      <b className="panier-pilule-total"><ChiffresRoulants valeur={euros(cart.rawTotal)} /></b>
+      {/* Le même sous-total que la colonne et la page Panier, offres comprises (audit du 19/10, discovery-16). */}
+      <b className="panier-pilule-total"><ChiffresRoulants valeur={euros(cart.sousTotal)} /></b>
     </Link>
   );
 }

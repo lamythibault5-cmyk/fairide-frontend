@@ -16,6 +16,9 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards, SqueletteEcran, EcranAttente } from '../../components/Skeleton';
 import ErreurChargement from '../../components/ErreurChargement';
+import EtatVide from '../../components/EtatVide';
+import { lireCache } from '../../cacheDonnees';
+import { distanceLivraisonKm } from '../../livraison';
 import { ligneIndisponible, lignesIndisponibles } from '../../panierDisponible';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import Icone from '../../components/Icone';
@@ -72,11 +75,17 @@ export default function Checkout() {
   const [addressNumber, setAddressNumber] = useState(user.addressNumber || '');
   const [addressPostalCode, setAddressPostalCode] = useState(user.addressPostalCode || '');
   const [addressCity, setAddressCity] = useState(user.addressCity || '');
+  // Adresse choisie dans le carnet : son identifiant part avec la commande, et le serveur reprend ses coordonnées déjà
+  // vérifiées au lieu de regéocoder le texte (audit du 19/10, checkout-21). Le serveur ne s'en sert que si la rue, le
+  // numéro et le code postal envoyés sont bien les siens : une adresse retouchée à la main est géocodée comme avant.
+  const [addressId, setAddressId] = useState(null);
   const [deliveryInstructions, setDeliveryInstructions] = useState('sonner');
   // De l'alcool ne se dépose pas devant une porte : le livreur contrôle l'âge en main propre (plan de test LEG-9 /
   // PAN-8, le serveur refuse aussi : DEPOT_ALCOOL_INTERDIT). L'option disparaît, et un choix déjà fait repasse à « Sonner ».
   const panierAlcool = Object.values(cart.lines).some((l) => restaurant?.menu?.find((m) => m.id === l.itemId)?.isAlcohol);
   useEffect(() => { if (panierAlcool && deliveryInstructions === 'deposer') setDeliveryInstructions('sonner'); }, [panierAlcool, deliveryInstructions]);
+  // Prix d'aujourd'hui sur chaque ligne, une fois la carte lue (CartContext.actualiserPrix, audit du 19/10, discovery-15).
+  useEffect(() => { if (restaurant) cart.actualiserPrix(restaurant); }, [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
   const [deliveryNote, setDeliveryNote] = useState('');
   const [useBalance, setUseBalance] = useState(true);
   // À emporter chez un commerce qui l'accepte : payer au retrait plutôt qu'en ligne.
@@ -131,6 +140,20 @@ export default function Checkout() {
   const [totalAnnonce, setTotalAnnonce] = useState(null);
   // Dernier devis du serveur : { cle (le corps de commande qui l'a produit), order } — voir l'effet « DEVIS » plus bas.
   const [devis, setDevis] = useState(null);
+  // Une minute de plus sur la page (onglet visible) : le devis est redemandé et un créneau déjà passé est retiré
+  // (audit du 19/10, checkout-27 et checkout-17).
+  const [minute, setMinute] = useState(0);
+  // Retour arrière depuis Stripe : le navigateur peut rendre la page gardée en mémoire (bfcache), bouton bloqué sur « … »
+  // (audit du 19/10, CROSS-40). On libère les boutons ; l'effet « panier vide » renvoie vers Mes commandes s'il le faut.
+  useEffect(() => {
+    const surRetour = (e) => { if (e.persisted) { setPaying(false); setPlacing(false); setOuverturePaiement(false); } };
+    window.addEventListener('pageshow', surRetour);
+    return () => window.removeEventListener('pageshow', surRetour);
+  }, []);
+  useEffect(() => {
+    const id = setInterval(() => { if (document.visibilityState === 'visible') setMinute((n) => n + 1); }, 60000);
+    return () => clearInterval(id);
+  }, []);
   // « détails » sous le ticket : le vendeur de chaque ligne, replié (audit design 2, 2026-10-19).
   const [vendeursOuverts, setVendeursOuverts] = useState(false);
   // Allergie, âge, CGU (backlog de conformité C1, C3, A1) — voir components/conformite/CheckoutConformite.jsx.
@@ -200,14 +223,16 @@ export default function Checkout() {
     const corps = corpsCommande();
     if (!corps) return undefined;
     const cle = JSON.stringify(corps);
-    if (devis?.cle === cle) return undefined;
+    // Même panier, mais une minute de plus : le devis est relu (commerce mis en pause, fermé, livreurs) — checkout-27.
+    // L'ancien reste affiché pendant ce temps (devisValide ne compare que `cle`).
+    if (devis?.cle === cle && devis.minute === minute) return undefined;
     let actif = true;
     const id = setTimeout(() => {
       api('/orders/devis', { method: 'POST', token, body: corps })
-        .then((o) => { if (actif) setDevis({ cle, order: o }); })
+        .then((o) => { if (actif) setDevis({ cle, minute, order: o }); })
         // Le refus est gardé (et non plus effacé) : s'il vient du commerce ou de l'adresse, il s'affiche sous le bouton
         // AVANT le clic, au lieu d'un toast qui disparaît après (audit du 15/10/2026, voir refusDevis plus bas).
-        .catch((e) => { if (actif) setDevis({ cle, erreur: { message: e.message, code: e.code, status: e.status } }); });
+        .catch((e) => { if (actif) setDevis({ cle, minute, erreur: { message: e.message, code: e.code, status: e.status } }); });
     }, 450);
     return () => { actif = false; clearTimeout(id); };
   });
@@ -218,14 +243,16 @@ export default function Checkout() {
   useLancement();
   const [livraisonDispo, setLivraisonDispo] = useState(null);
   const verifierLivraison = !!restaurant?.offersDelivery && serviceOuvert('delivery', user) && !exempteLancement(user);
+  // Distance à vol d'oiseau : le serveur écarte les vélos trop loin (audit du 19/10, discovery-09).
+  const kmLivraison = distanceLivraisonKm(restaurant, user);
   useEffect(() => {
     if (!verifierLivraison) { setLivraisonDispo(null); return undefined; }
     let fini = false;
-    const lire = () => livraisonDisponible(restaurantId).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
+    const lire = () => livraisonDisponible(restaurantId, kmLivraison).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
     lire();
     const id = setInterval(() => { if (document.visibilityState === 'visible') lire(); }, 60000);
     return () => { fini = true; clearInterval(id); };
-  }, [verifierLivraison, restaurantId]);
+  }, [verifierLivraison, restaurantId, kmLivraison]);
   /* PLUS DE BASCULE SILENCIEUSE (audit du 19/10, checkout-02). Le contrôle de chaque minute passait la commande en « À emporter »
    * sans un mot, en plein paiement : un client qui ne relisait pas payait un retrait qu'il ne ferait pas. Le mode choisi reste ;
    * la barre dit qu'aucun livreur n'est libre et propose « Passer à l'emporter » (le client décide), et un message le signale
@@ -233,11 +260,41 @@ export default function Checkout() {
   useEffect(() => {
     if (livraisonDispo === false && fulfillmentType === 'delivery' && restaurant?.offersPickup) toast(t('checkout.noCourierSwitch'), 'erreur');
   }, [livraisonDispo]); // eslint-disable-line react-hooks/exhaustive-deps -- seulement quand la disponibilité change
+  /* CRÉNEAU PASSÉ, RETIRÉ (audit du 19/10, checkout-17). Le premier créneau du jour disparaissait des pastilles au bout de
+   * quelques minutes mais restait choisi et envoyé, et le serveur répondait « au moins 30 minutes dans le futur ». */
+  useEffect(() => {
+    if (!restaurant || !scheduleEnabled || !scheduleDate || !scheduleTime) return;
+    if (!getScheduleTimeOptions(scheduleDate, { hours: restaurant.hours, closures: restaurant.closures }).includes(scheduleTime)) {
+      setScheduleTime('');
+      toast(t('checkout.slotExpired'), 'erreur');
+    }
+  }, [minute, restaurant, scheduleEnabled, scheduleDate, scheduleTime]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* MÊMES CONSIGNES QUE LA DERNIÈRE FOIS (audit du 19/10, checkout-22). Boîte, étage et code de porte étaient retapés à
+   * chaque commande : la consigne et la note de la dernière commande livrée à CETTE adresse sont reprises, tant que le
+   * client n'a rien changé (il peut toujours les modifier). Lu dans « Mes commandes » déjà en mémoire, sans appel. */
+  const consignesReprises = useRef(false);
+  useEffect(() => {
+    if (consignesReprises.current || !token) return;
+    const commandes = lireCache('/orders/mine', token);
+    if (!Array.isArray(commandes)) return;
+    consignesReprises.current = true;
+    const meme = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+    const derniere = commandes.find((o) => o.orderType === 'delivery' && meme(o.addressStreet, addressStreet) && meme(o.addressNumber, addressNumber) && meme(o.addressPostalCode, addressPostalCode));
+    if (!derniere) return;
+    if (deliveryInstructions === 'sonner' && derniere.deliveryInstructions && derniere.deliveryInstructions !== 'deposer') setDeliveryInstructions(derniere.deliveryInstructions);
+    if (!deliveryNote && derniere.deliveryNote) setDeliveryNote(String(derniere.deliveryNote));
+  }, [token, addressStreet, addressNumber, addressPostalCode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // L'etape « dessert/boisson » a quitte le paiement : elle est maintenant sur la page Panier, avant
   // d'y entrer. On arrive donc directement sur la confirmation des informations de commande.
 
-  if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
+  // Commerce retiré de Fairide : plus une phrase seule dans une boîte vide, mais de quoi en sortir (audit du 19/10,
+  // checkout-24 et discovery-18) — vider ce panier, ou repartir vers les commerces.
+  if (notFound) return (
+    <EtatVide icone="restaurants" titre={t('checkout.notAvailable')} actionVers="/restaurants" actionTexte={t('restaurantMenu.backToRestaurants')}>
+      <button type="button" className="btn-outline" onClick={() => { cart.clear(); navigate('/restaurants'); }}>{t('panier.clearShopGone')}</button>
+    </EtatVide>
+  );
   if (echecChargement && !restaurant) return <ErreurChargement onReessayer={() => { setEchecChargement(false); setEssai((n) => n + 1); }} />;
   // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
   if (!restaurant) return experienceApp() ? <SqueletteEcran titre={t('checkout.headerTitle')} lignes={3} /> : <SkeletonCards count={2} />;
@@ -268,7 +325,9 @@ export default function Checkout() {
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
   const paiementBloque = enLigneFerme && modeEmporter === 'online';
   const soldeUtilise = useBalance && !surPlaceChoisi;
-  const apresCodePromo = Math.max(0, +(estimatedTotalBeforeBalance - (codePromo?.discount || 0)).toFixed(2));
+  // Un code promo ne s'applique qu'en ligne : sur place, il est gardé mais ni déduit ni envoyé (audit du 19/10, checkout-11).
+  const remiseCode = surPlaceChoisi ? 0 : (codePromo?.discount || 0);
+  const apresCodePromo = Math.max(0, +(estimatedTotalBeforeBalance - remiseCode).toFixed(2));
   const estimatedTotal = Math.max(0, apresCodePromo - (soldeUtilise ? Math.min(user.balance || 0, apresCodePromo) : 0));
   // Le ticket : l'offre du commerce sur une ligne par offre (« Offre Maestro −5 % »), et non plus plat par plat.
   const offresTicket = Object.values(totals.discountedItems.reduce((acc, d) => {
@@ -325,11 +384,12 @@ export default function Checkout() {
       ...(fulfillmentType === 'delivery' ? {
         addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
         addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
+        addressId: addressId || undefined,
         deliveryInstructions, deliveryNote: deliveryNote.trim()
       } : {}),
       useBalance: useBalance && !surPlace,
       giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined,
-      promoCode: codePromo?.code || undefined,
+      promoCode: (!surPlace && codePromo?.code) || undefined,
       // Commande groupée fermée par l'hôte (audit du 19/10, checkout-08) : le serveur relie la commande au groupe, qui
       // passe « commandé » une fois payée (invités prévenus, plus de seconde importation des parts).
       groupCode: groupeACommander(restaurantId) || undefined,
@@ -341,7 +401,7 @@ export default function Checkout() {
   const corpsActuel = corpsCommande();
   const devisValide = corpsActuel && devis && devis.cle === JSON.stringify(corpsActuel) ? devis.order : null;
   // Code promo de commande : la ligne du ticket (la somme des lignes doit tomber sur le total ; elle manquait).
-  const codePromoMontant = Number(devisValide?.promoCodeDiscount ?? codePromo?.discount ?? 0);
+  const codePromoMontant = Number(devisValide?.promoCodeDiscount ?? remiseCode);
   // Avec le devis du serveur, ses chiffres : Plats et offre doivent tomber sur SON total (le navigateur n'estime la remise
   // qu'à partir de la carte). Une seule offre : son montant est celui du devis ; plusieurs : une ligne au libellé du serveur.
   const remiseLivraison = devisValide ? Number(devisValide.deliveryDiscount || 0) : totals.deliveryDiscount;
@@ -399,6 +459,13 @@ export default function Checkout() {
     // Stripe n'encaisse rien sous 0,50 € : refusé ici plutôt qu'après la création de la commande.
     if (pourboireChoisi > 0 && pourboireChoisi < 0.5) {
       signalerChamp('pourboire', t('checkout.tipTooSmall'), 'checkout-pourboire-autre');
+      return;
+    }
+    // Même plafond que le serveur (pourboireCommande.js : 50 € ou deux fois la commande) : un « Autre » trop grand créait la
+    // commande, puis bloquait le paiement sans moyen de changer le pourboire (audit du 19/10, checkout-18).
+    const plafondPourboire = Math.max(50, +(montantAnnonce * 2).toFixed(2));
+    if (pourboireChoisi > plafondPourboire) {
+      toast(t('checkout.tipTooLarge', { max: euros(plafondPourboire) }), 'erreur');
       return;
     }
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
@@ -895,12 +962,14 @@ export default function Checkout() {
               <ul className="co-vendeurs-detail">
                 <li>{t('checkout.ticketPlats')} {t('conformite.sellerFood', { name: restaurant.name })}</li>
                 {fulfillmentType === 'delivery' && <li>{t('checkout.deliveryFeeLine')} {t('conformite.sellerDelivery')}</li>}
-                {fraisServiceEstimes > 0 && (
+                {/* Pas de « dont frais de système » sous une livraison offerte : le client n'en paie rien (checkout-25). */}
+                {fraisServiceEstimes > 0 && (devisValide ? Number(devisValide.deliveryFee || 0) : totals.deliveryFee) - remiseLivraison > 0 && (
                   <li>{t('checkout.fraisSystemeDetail', { amount: euros(devisValide ? Number(devisValide.serviceFee || 0) + Number(devisValide.serviceFeeVat || 0) : fraisServiceEstimes) })}</li>
                 )}
               </ul>
             )}
-            {user.balance > 0 && (
+            {/* Le solde ne sert qu'à un paiement en ligne : pas de case sous un paiement sur place (checkout-25). */}
+            {user.balance > 0 && !surPlaceChoisi && (
               <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={useBalance} onChange={(e) => setUseBalance(e.target.checked)} />
                 <span className="small">{t('checkout.useBalance', { amount: euros(user.balance) })}</span>
@@ -948,6 +1017,7 @@ export default function Checkout() {
           onChoisie={(a) => {
             setAddressStreet(a.street); setAddressNumber(a.number);
             setAddressPostalCode(a.postalCode); setAddressCity(a.city);
+            setAddressId(a.id || null);
           }}
         />
       )}

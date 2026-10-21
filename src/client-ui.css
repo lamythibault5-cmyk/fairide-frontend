@@ -259,6 +259,8 @@
 .aide-commande-lien { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 13px; font-weight: 600; color: var(--iris); text-decoration: none; }
 /* Plat qui ne se commande plus (panierDisponible.js) : dit en rouge, photo grisée — jamais barré. */
 .ligne-indispo { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 600; color: var(--red); }
+/* Minimum pas atteint, commerce fermé : dit dès le panier (audit du 19/10, discovery-17). */
+.panier-avertissement { margin: 10px 0 0; font-weight: 600; color: var(--ink); }
 .panier-ligne--indispo .panier-ligne-image { opacity: .5; filter: grayscale(1); }
 .panier-ligne--indispo b, .co-ligne--indispo .co-ligne-nom { color: var(--ink-soft); }
 .co-ligne--indispo { align-items: center; }

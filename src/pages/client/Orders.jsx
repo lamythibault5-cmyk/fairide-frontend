@@ -270,6 +270,10 @@ export default function Orders() {
 
   // Commande en ligne créée mais jamais payée : le commerce ne la voit pas (il ne reçoit que les commandes payées).
   const impayeeEnLigne = (o) => o.status === 'nouveau' && !o.paid && o.paymentMode !== 'on_site';
+  // Créée il y a moins de deux minutes : le paiement peut être en route (navigateur de l'app fermé aussitôt après avoir
+  // payé, webhook pas encore arrivé). « Revenir au panier » annulerait la commande et ferait rembourser le paiement : il
+  // n'est proposé qu'ensuite ; la liste se relit toute seule toutes les 15 s (audit du 19/10, checkout-19).
+  const paiementPeutEtreEnRoute = (o) => Date.now() - Number(o.createdAt || 0) < 2 * 60 * 1000;
   // À payer sur place, mais jamais partie au commerce (carte « le total a changé » laissée en plan) : rien n'est en cours.
   const nonEnvoyee = (o) => o.status === 'nouveau' && !o.paid && o.paymentMode === 'on_site';
   async function envoyerAuCommerce(o) {
@@ -296,12 +300,22 @@ export default function Orders() {
         navigate(`/order-success?order=${o.id}`);
       } else {
         await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
+        // Dans l'app, la page reste /orders sous le navigateur de paiement : rien ne la remonte, et « Payer maintenant »
+        // restait grisé sur « … » après l'avoir fermé sans payer (audit du 19/10, CROSS-39).
+        setPayingId(null);
       }
     } catch (e) {
       toast(e.message, 'erreur');
       setPayingId(null);
     }
   }
+  // Retour arrière depuis Stripe sur le site : le navigateur peut rendre la page telle qu'il l'avait gardée (bfcache),
+  // bouton encore sur « … » (audit du 19/10, CROSS-40).
+  useEffect(() => {
+    const surRetour = (e) => { if (e.persisted) setPayingId(null); };
+    window.addEventListener('pageshow', surRetour);
+    return () => window.removeEventListener('pageshow', surRetour);
+  }, []);
   // Annule la commande impayée (le solde et le bon cadeau retenus sont rendus par le serveur) et rend le panier mis de côté
   // pour elle, s'il est encore là — sinon on renvoie au commerce, où le client recompose sa commande.
   async function revenirAuPanier(o) {
@@ -533,14 +547,16 @@ export default function Orders() {
     <>
       {impayeeEnLigne(o) && (
         <div className="paiement-non-termine">
-          <p className="small" style={{ margin: '0 0 10px' }}>{t('orders.unpaidText')}</p>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t(paiementPeutEtreEnRoute(o) ? 'orders.checkingPayment' : 'orders.unpaidText')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <button type="button" className="btn-gold" disabled={payingId === o.id || cancellingId === o.id} onClick={() => payerMaintenant(o)}>
               {payingId === o.id ? '…' : t('orders.payNow')}
             </button>
-            <button type="button" className="btn-outline" disabled={payingId === o.id || cancellingId === o.id} onClick={() => revenirAuPanier(o)}>
-              {cancellingId === o.id ? '…' : t('orders.backToCart')}
-            </button>
+            {!paiementPeutEtreEnRoute(o) && (
+              <button type="button" className="btn-outline" disabled={payingId === o.id || cancellingId === o.id} onClick={() => revenirAuPanier(o)}>
+                {cancellingId === o.id ? '…' : t('orders.backToCart')}
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -24,7 +24,8 @@ export default function Favorites() {
   const { token, role } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
-  // Liste pas lue (réseau, serveur) : « Aucun favori » ferait croire les favoris perdus (audit du 19/10, CROSS-34).
+  // Liste pas lue (réseau, serveur) : « Impossible de charger » et Réessayer, jamais « Aucun favori » (audit du 19/10,
+  // discovery-19 : un toast, puis l'écran vide, faisait croire les favoris perdus).
   const [echec, setEchec] = useState(false);
   // Les cartes en train de partir (cœur touché) : elles s'effacent avant d'être retirées de la liste.
   const [sortantes, setSortantes] = useState(() => new Set());
@@ -33,16 +34,15 @@ export default function Favorites() {
   const { previewMode } = usePreviewMode();
   const { t } = useLanguage();
 
-  // Un restaurateur en mode aperçu n'a pas de vrais favoris (403 côté API) — liste vide silencieuse
-  // plutôt qu'un message d'erreur trompeur, voir MapPage.jsx pour le même filet.
-  const charger = () => {
-    const isPreviewingRestaurant = previewMode && role === 'restaurant';
-    setEchec(false);
-    setLoading(true);
-    api('/restaurants/favorites/mine', { token }).then(setRestaurants).catch(() => { if (!isPreviewingRestaurant) setEchec(true); }).finally(() => setLoading(false));
+  const charger = (silencieux = false) => {
+    setEchec(false); setLoading(true);
+    return api('/restaurants/favorites/mine', { token }).then(setRestaurants).catch(() => { if (!silencieux) setEchec(true); }).finally(() => setLoading(false));
   };
   useEffect(() => {
-    charger();
+    // Un restaurateur en mode aperçu n'a pas de vrais favoris (403 côté API) — liste vide silencieuse
+    // plutôt qu'un message d'erreur trompeur, voir MapPage.jsx pour le même filet.
+    const isPreviewingRestaurant = previewMode && role === 'restaurant';
+    charger(isPreviewingRestaurant);
     const enCours = minuteurs.current;
     return () => enCours.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,7 +79,7 @@ export default function Favorites() {
         {loading && <SkeletonCards count={4} />}
         {/* Un écran vide, pas une phrase dans un cadre en pointillés : quand le vide occupe toute la
             page, le rectangle hachuré se lit comme une panne. Voir le commentaire d'EtatVide. */}
-        {!loading && echec && <ErreurChargement onReessayer={charger} />}
+        {!loading && echec && <ErreurChargement onReessayer={() => charger()} />}
         {!loading && !echec && n === 0 && (
           <EtatVide
             icone="favoris" scene="favoris" titre={t('favorites.emptyTitle')} texte={t('favorites.empty')}
@@ -104,6 +104,8 @@ export default function Favorites() {
                   </span>
                   <b className="fav-nom">{r.name}</b>
                   <span className="fav-ligne">{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune].filter(Boolean).join(' · ')}</span>
+                  {/* Commerce « Carte seule » : on ne peut pas y commander, dit ici aussi (audit du 19/10, discovery-34). */}
+                  {r.vitrine && <span className="fav-ligne"><span className="rc-vitrine">{t('restoListUi.showcaseOnly')}</span></span>}
                   <span className="fav-ligne fav-discret">{[r.neighborhood, t('restaurantList.dishesCount', { count: (r.menu || []).length })].filter(Boolean).join(' · ')}</span>
                   {r.desc && <span className="fav-desc">{r.desc}</span>}
                 </Link>

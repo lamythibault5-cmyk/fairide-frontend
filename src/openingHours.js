@@ -53,6 +53,11 @@ function activeClosureFor(closures, dateStr) {
   return closures.find((c) => c.startDate <= dateStr && (!c.endDate || c.endDate >= dateStr)) || null;
 }
 
+// Le lendemain d'une date pure "YYYY-MM-DD" (calcul à midi UTC : aucun changement d'heure ne fait sauter un jour).
+function lendemain(dateStr) {
+  return new Date(new Date(`${dateStr}T12:00:00Z`).getTime() + 86400000).toISOString().slice(0, 10);
+}
+
 // "DD/MM/YYYY" à partir d'un "YYYY-MM-DD" — pas de conversion de fuseau, c'est une date pure (pas un instant).
 export function formatDateFr(dateStr) {
   if (!dateStr) return '';
@@ -71,7 +76,9 @@ export function getOpenStatus(hours, now = new Date(), closures = []) {
   if (closure) {
     return {
       isOpen: false, opensToday: false, opensAt: null, todayKey,
-      isExceptionalClosure: true, closedReason: closure.reason || '', reopensDate: closure.endDate || null
+      // La fermeture COMPREND sa date de fin : on rouvre le lendemain. « Réouverture prévue le 25/10 » pour une fermeture
+      // jusqu'au 25 inclus avançait d'un jour (audit du 19/10, discovery-10 ; même calcul côté serveur).
+      isExceptionalClosure: true, closedReason: closure.reason || '', reopensDate: closure.endDate ? lendemain(closure.endDate) : null
     };
   }
   const base = getRegularOpenStatus(hours, now, todayKey, nowMinutes);

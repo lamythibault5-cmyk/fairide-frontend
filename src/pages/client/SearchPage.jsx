@@ -16,6 +16,8 @@ import VisuelVide from '../../components/VisuelVide';
 import ErreurChargement from '../../components/ErreurChargement';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import { imgProps, cacherImageCassee } from '../../images';
+import ErreurChargement from '../../components/ErreurChargement';
+import { normaliserRecherche } from '../../normaliserRecherche';
 import '../../ecran-liste.css';
 import '../../site-liste.css';
 
@@ -33,10 +35,10 @@ import '../../site-liste.css';
 // serveur), et les autres sources sont statiques ou déjà chargées pour l'utilisateur. Un aller-retour
 // par frappe n'apporterait rien ici et rendrait la saisie poisseuse.
 
-// Les accents ne comptent pas : « creme » trouve « crème », « ixelles » trouve « Ixelles ».
-function normaliser(texte) {
-  return (texte || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-}
+// Les accents ne comptent pas : « creme » trouve « crème », « ixelles » trouve « Ixelles ». Ni l'apostrophe d'un iPhone, ni
+// les ligatures (« boeuf » trouve « bœuf ») : normaliserRecherche.js, partagé avec la liste et la carte d'un commerce
+// (audit du 19/10, discovery-21).
+const normaliser = normaliserRecherche;
 function contient(texte, requete) {
   return normaliser(texte).includes(requete);
 }
@@ -82,6 +84,8 @@ export default function SearchPage() {
   const [restaurants, setRestaurants] = useState([]);
   const [commandes, setCommandes] = useState([]);
   const [chargement, setChargement] = useState(true);
+  // Commerces pas lus (réseau, serveur) : « Impossible de charger », pas « Rien trouvé pour … » (audit du 19/10, discovery-19).
+  const [echec, setEchec] = useState(false);
   const champ = useRef(null);
 
   // Le curseur est dans le champ à l'arrivée, mais SEULEMENT sur un ordinateur (souris, pas d'écran tactile) et hors de
@@ -92,13 +96,9 @@ export default function SearchPage() {
     if (souris && !experienceApp()) champ.current?.focus();
   }, []);
 
-  // Commerces pas lus (réseau, serveur) : « Rien pour … » était faux (audit du 19/10, CROSS-34). On dit que le chargement a
-  // échoué, avec « Réessayer ».
-  const [echec, setEchec] = useState(false);
   const chargerCommerces = () => {
-    setEchec(false);
-    setChargement(true);
-    api('/restaurants').then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
+    setEchec(false); setChargement(true);
+    return api('/restaurants').then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
   };
   useEffect(() => {
     chargerCommerces();
@@ -114,7 +114,8 @@ export default function SearchPage() {
 
   const resultats = useMemo(() => {
     if (!actif) return null;
-    const texteOk = (r) => q.length < 2 || contient(r.name, q) || contient(r.cuisine, q) || contient(r.desc, q) || contient(r.neighborhood, q);
+    // Le type de cuisine se cherche aussi dans la langue affichée (« Italian », « Italiaans ») : audit du 19/10, discovery-22.
+    const texteOk = (r) => q.length < 2 || contient(r.name, q) || contient(r.cuisine, q) || contient(restaurantTypeLabel(r.cuisine, t), q) || contient(r.desc, q) || contient(r.neighborhood, q);
     const commerces = restaurants
       .filter((r) => restoOk(r) && texteOk(r))
       .slice(0, filtreRegime && q.length < 2 ? 30 : MAX_PAR_GROUPE);
@@ -133,7 +134,7 @@ export default function SearchPage() {
       if (plats.length >= MAX_PAR_GROUPE) break;
     }
 
-    const cuisines = q.length < 2 ? [] : RESTAURANT_TYPES.filter((c) => contient(c.value, q)).slice(0, MAX_PAR_GROUPE);
+    const cuisines = q.length < 2 ? [] : RESTAURANT_TYPES.filter((c) => contient(c.value, q) || contient(restaurantTypeLabel(c.value, t), q)).slice(0, MAX_PAR_GROUPE);
     // La recherche trouve aussi la périphérie (Tervuren…) ; les puces « Par commune » restent les 19.
     const communes = q.length < 2 ? [] : COMMUNES_SUGGEREES.filter((c) => contient(c, q)).slice(0, MAX_PAR_GROUPE);
     const aide = q.length < 2 ? [] : sujetsAide(t).filter((s) => contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)).slice(0, MAX_PAR_GROUPE);
@@ -264,7 +265,7 @@ export default function SearchPage() {
             <div className="recherche-pastilles">
               {RESTAURANT_TYPES.slice(0, 14).map((c) => (
                 <Link key={c.value} to="/restaurants" state={{ cuisine: c.value }} className="pill recherche-pastille">
-                  <Icone nom={c.icone} taille={16} className="icone-texte" /> {c.value}
+                  <Icone nom={c.icone} taille={16} className="icone-texte" /> {restaurantTypeLabel(c.value, t) || c.value}
                 </Link>
               ))}
               <button type="button" className={`pill recherche-pastille${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('search.filterBio')}</button>
@@ -294,9 +295,8 @@ export default function SearchPage() {
 
       {actif && chargement && <p className="small">{t('search.searching')}</p>}
 
-      {actif && !chargement && echec && <ErreurChargement onReessayer={chargerCommerces} />}
-
-      {actif && !chargement && !echec && resultats.total === 0 && (
+      {actif && !chargement && echec && restaurants.length === 0 && <ErreurChargement onReessayer={chargerCommerces} />}
+      {actif && !chargement && resultats.total === 0 && !(echec && restaurants.length === 0) && (
         <div className="card">
           <p style={{ margin: '0 0 6px', fontWeight: 600 }}>{t('search.nothingFor', { q: requete })}</p>
           <p className="small" style={{ margin: 0 }}>
@@ -319,7 +319,7 @@ export default function SearchPage() {
             <Groupe titre={t('search.businesses')} quand={resultats.commerces.length}>
               {resultats.commerces.map((r) => (
                 <Ligne key={r.id} {...lienFiche(user, r.id, r.name)} image={r.coverImageUrl} icone="commerce" titre={r.name}
-                  sous={[r.cuisine, r.commune].filter(Boolean).join(' · ')} />
+                  sous={[r.cuisine && (restaurantTypeLabel(r.cuisine, t) || r.cuisine), r.commune].filter(Boolean).join(' · ')} />
               ))}
             </Groupe>
           )}
@@ -331,7 +331,7 @@ export default function SearchPage() {
           </Groupe>
           <Groupe titre={t('search.cuisineTypes')} quand={resultats.cuisines.length}>
             {resultats.cuisines.map((c) => (
-              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={<Icone nom={c.icone} taille={20} />} titre={c.value} sous={t('search.seeTypeBusinesses')} />
+              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={<Icone nom={c.icone} taille={20} />} titre={restaurantTypeLabel(c.value, t) || c.value} sous={t('search.seeTypeBusinesses')} />
             ))}
           </Groupe>
           <Groupe titre={t('search.municipalities')} quand={resultats.communes.length}>

@@ -5,8 +5,10 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { euros, prixRemise } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
+import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useCart } from '../../context/CartContext';
-import { horsZoneLivraison, distanceLivraisonKm, tarifLivraison } from '../../livraison';
+import { horsZoneLivraison, distanceLivraisonKm, tarifLivraison, eurosCourts } from '../../livraison';
+import { normaliserRecherche } from '../../normaliserRecherche';
 import Icone from '../../components/Icone';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
 import { groupeEnCours } from '../../commandeGroupee';
@@ -88,6 +90,7 @@ const tirerDecouvertes = (tous, id) => (tous || []).filter((r) => r.id !== id).s
 export default function RestaurantMenu() {
   const { id } = useParams();
   const { token, user, role } = useAuth();
+  const { previewMode } = usePreviewMode();
   /* DÉJÀ LUE, LA FICHE S'OUVRE TOUT DE SUITE (2026-10-20, test de l'app Android avec Maestro Pizza : « lent à s'ouvrir »).
      Ce qui a été lu pendant la visite — au toucher de la carte dans la liste (prechargerFiche), ou lors d'un passage
      précédent — s'affiche dès la première image ; la relecture part quand même, et la fiche ne change que si la réponse
@@ -147,6 +150,9 @@ export default function RestaurantMenu() {
   const [remplacerPanier, setRemplacerPanier] = useState(false);
   // Un seul avis « commerce fermé, ton panier est gardé » par visite de la fiche.
   const avertiFerme = useRef(false);
+  // Le « + » qui a buté sur le panier d'un autre commerce : après « Vider et continuer », l'ajout se fait directement au lieu
+  // d'ouvrir la fiche du plat (audit du 19/10, discovery-36).
+  const ajoutDirectEnAttente = useRef(null);
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
@@ -348,14 +354,19 @@ export default function RestaurantMenu() {
   useLancement();
   const [livraisonDispo, setLivraisonDispo] = useState(null);
   const verifierLivraison = !!restaurant?.offersDelivery && livraisonOuverte(user) && !exempteLancement(user);
+  // Distance à vol d'oiseau depuis l'adresse du compte : le serveur écarte les vélos au-delà de leur portée (audit du 19/10,
+  // discovery-09). Sans elle, « Livraison possible » s'affichait alors que seul un vélo était libre à 5 km, et le devis refusait.
+  const kmLivraison = distanceLivraisonKm(restaurant, user);
   useEffect(() => {
     if (!verifierLivraison) { setLivraisonDispo(null); return undefined; }
     let fini = false;
-    const lire = () => livraisonDisponible(id).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
+    const lire = () => livraisonDisponible(id, kmLivraison).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
     lire();
     const minuteur = setInterval(() => { if (document.visibilityState === 'visible') lire(); }, 60000);
     return () => { fini = true; clearInterval(minuteur); };
-  }, [verifierLivraison, id]);
+  }, [verifierLivraison, id, kmLivraison]);
+  // Prix d'aujourd'hui sur les lignes du panier de ce commerce, une fois la fiche lue (CartContext.actualiserPrix, discovery-15).
+  useEffect(() => { if (restaurant) cart.actualiserPrix(restaurant); }, [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Deux échecs distincts, deux sorties distinctes : une fiche retirée ne se recharge pas, donc
      proposer « Réessayer » dessus serait une fausse piste — on renvoie vers la liste. Tout le
@@ -398,6 +409,9 @@ export default function RestaurantMenu() {
       navigate('/login?audience=client', { state: { from: location.pathname } });
       return;
     }
+    // « Essayer comme client » depuis son commerce : le serveur réserve les favoris aux comptes client et répondait par une
+    // erreur de rôle brute ; l'aperçu le dit simplement (audit du 19/10, discovery-26).
+    if (previewMode && role === 'restaurant') { toast(t('restoPreview.favoriteInPreview')); return; }
     setFavoriteBusy(true);
     try {
       if (isFavorite) {
@@ -446,11 +460,13 @@ export default function RestaurantMenu() {
 
   // Frais annoncés sur la fiche : le prix de DÉPART (livraison.js) — forfait ou frais propres du commerce, moins ce
   // qu'il offre. Le montant réel dépend de la distance et se calcule au serveur — d'où le « dès ».
-  const q = requete.trim().toLowerCase();
+  // Accents, apostrophe typographique et ligatures ne comptent pas (audit du 19/10, discovery-21) : « creme brulee » trouve
+  // « Crème brûlée », comme dans la page Recherche.
+  const q = normaliserRecherche(requete);
   const menuFiltre = q
     ? restaurant.menu.filter((i) => {
         const loc = localizedItem(i, language);
-        return `${loc.name} ${loc.desc || ''}`.toLowerCase().includes(q);
+        return normaliserRecherche(`${loc.name} ${loc.desc || ''}`).includes(q);
       })
     : restaurant.menu;
   const sectionsFiltrees = (restaurant.sections || []).filter((s) => menuFiltre.some((i) => (i.category || 'plat') === s.name));
@@ -497,7 +513,9 @@ export default function RestaurantMenu() {
   // panier. Seule exception : un plat avec un choix OBLIGATOIRE (taille, sauce…) ouvre sa fiche — l'ajouter sans
   // ce choix donnerait une commande que le commerce ne peut pas préparer (le serveur la refuserait).
   function ajoutDirect(item, depuis, image) {
+    ajoutDirectEnAttente.current = item;
     if (!peutAjouter(item)) return;
+    ajoutDirectEnAttente.current = null;
     if ((item.optionGroups || []).some((g) => g.required)) { setPickerItem(item); return; }
     vibrer(14);
     envolerVersPanier({ depuis, image });
@@ -511,6 +529,15 @@ export default function RestaurantMenu() {
   function confirmSwitchRestaurant() {
     const item = conflictItem;
     setConflictItem(null);
+    // Venu du « + » d'un plat sans choix obligatoire : on vide et on ajoute en une fois (force), comme le « + » le fait
+    // d'habitude — la fiche du plat ne s'ouvre plus en plus (audit du 19/10, discovery-36).
+    const direct = ajoutDirectEnAttente.current === item;
+    ajoutDirectEnAttente.current = null;
+    if (direct && !(item.optionGroups || []).some((g) => g.required)) {
+      vibrer(14);
+      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: localizedItem(item, language).name, imageUrl: resolveItemImage(item, restaurant.sections), unitPrice: item.price, optionItemIds: [], optionsSnapshot: [], qty: 1, force: true });
+      return;
+    }
     // Plus de branche selon les options : tout plat passe maintenant par sa fiche, donc l'ajout réel
     // n'a lieu qu'après un second aller-retour. C'est précisément le cas que l'ancien code traitait
     // déjà à part, et la raison qu'il en donnait vaut désormais pour tous les plats — pas de closure
@@ -622,7 +649,8 @@ export default function RestaurantMenu() {
     ? t('restaurantMenu.feePickup')
     : restaurant.freeDelivery
       ? t('restaurantMenu.feeFree')
-      : t('restaurantMenu.feeFrom', { amount: euros(tarifLivraison(restaurant).depart) }); // « from €5.00 » en anglais (LIVE-14)
+      // Montant au format de la langue (« from €5 », pas « from 5,00 € ») : audit du 19/10, discovery-22.
+      : t('restaurantMenu.feeFrom', { amount: eurosCourts(tarifLivraison(restaurant).depart) });
   /* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
      forfaitaire côté client : le montant exact dépend de la distance et se calcule au
      serveur, exactement comme l'annonce déjà le paiement. Aucun délai d'arrivée n'y figure : le
@@ -819,7 +847,7 @@ export default function RestaurantMenu() {
           <div className="fiche-offres-texte">
             {restaurant.fairideAdvantage && (
               <span>{restaurant.fairideAdvantage.mode === 'amount'
-                ? t('restaurantMenu.fairideAdvantageAmount', { name: restaurant.name, v: `${Number(restaurant.fairideAdvantage.value).toFixed(2).replace('.', ',').replace(/,00$/, '')} €` })
+                ? t('restaurantMenu.fairideAdvantageAmount', { name: restaurant.name, v: eurosCourts(restaurant.fairideAdvantage.value) })
                 : t('restaurantMenu.fairideAdvantagePercent', { name: restaurant.name, v: restaurant.fairideAdvantage.value })}</span>
             )}
             {restaurant.hasPromo && !restaurant.fairideAdvantage && <span>{t('restaurantMenu.promoBanner')}</span>}
@@ -874,7 +902,8 @@ export default function RestaurantMenu() {
       {sansLivreur && !bandeauOuverture && (
         <div className="ouverture-bandeau fiche-info" role="status">
           <span className="fiche-info-icone" aria-hidden="true"><Icone nom="velo" taille={18} /></span>
-          <span>{t('restaurantMenu.noCourierBanner')}</span>
+          {/* Un commerce sans à emporter ne peut pas renvoyer vers l'à emporter (audit du 19/10, discovery-08). */}
+          <span>{t(restaurant.offersPickup ? 'restaurantMenu.noCourierBanner' : 'restaurantMenu.noCourierBannerNoPickup')}</span>
         </div>
       )}
       {/* Hors zone de livraison (audit du 19/10, discovery-03) : la distance du commerce et celle de l'adresse du compte. */}
