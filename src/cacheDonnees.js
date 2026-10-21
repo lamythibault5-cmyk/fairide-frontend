@@ -14,6 +14,7 @@
  * La clé contient le jeton : une fiche lue connecté (un commerce encore caché, visible de son propriétaire) n'est jamais
  * resservie à une autre session. Le service worker, lui, ne met toujours rien en cache (public/sw.js). */
 import { api } from './api';
+import { estNatif } from './natif';
 
 // Au-delà, une donnée gardée ne s'affiche plus d'avance (squelette, comme avant) : un menu ou des horaires d'il y a une
 // demi-heure, même corrigés une seconde après, seraient une fausse information le temps de la relecture.
@@ -24,9 +25,44 @@ const FRAIS_MS = 3000;
 // Une fiche avec sa carte complète pèse quelques dizaines de Ko : on en garde une quarantaine, les plus anciennes partent.
 const ENTREES_MAX = 40;
 
-const memoire = new Map(); // clé → { donnees, signature, at, enCours }
+const memoire = new Map(); // clé → { donnees, signature, at, enCours, gardee }
 
 const cle = (chemin, token) => `${token || ''}|${chemin}`;
+
+/* UNE EXCEPTION : LA LISTE PUBLIQUE DES COMMERCES, GARDÉE SUR LE TÉLÉPHONE (fondateur, 2026-10-21, latence de l'app). Au
+ * lancement, la mémoire ci-dessus est vide : l'écran de lancement attendait la liste (main.jsx, plus de squelette), un
+ * aller-retour réseau de 0,3 à 0,8 s en 4G à chaque ouverture. Dans l'APPLICATION seulement, la dernière liste lue SANS
+ * compte (`/restaurants`, la même pour tout le monde, aucune donnée personnelle) est écrite dans localStorage et s'affiche
+ * dès l'ouverture ; la relecture part aussitôt et remplace ce qui a changé (horaires, ouvert / fermé) une fraction de
+ * seconde plus tard. Déclarée dans la politique des cookies (cookiesPolicy.technical). Gardée une semaine au plus, et
+ * jamais au-delà de ~2 Mo (la réponse contient les cartes : elle grossit avec chaque commerce). Le site n'écrit rien. */
+const CLE_LISTE = 'fairide_liste_commerces';
+const CHEMIN_LISTE = '/restaurants';
+const LISTE_AGE_MAX_MS = 7 * 24 * 60 * 60 * 1000;
+const LISTE_TAILLE_MAX = 2000000;
+const listeGardable = (chemin, token) => chemin === CHEMIN_LISTE && !token && estNatif();
+
+function garderListe(signature) {
+  try {
+    if (!signature || signature.length > LISTE_TAILLE_MAX) { localStorage.removeItem(CLE_LISTE); return; }
+    localStorage.setItem(CLE_LISTE, JSON.stringify({ at: Date.now(), liste: signature }));
+  } catch { /* stockage plein ou indisponible : la liste se relira au prochain lancement */ }
+}
+
+// Au chargement du module, avant le premier rendu de la liste : la copie gardée entre en mémoire, marquée « gardée » (elle
+// passe outre AGE_MAX_MS dans lireCache) et datée de loin, pour que chargerAvecCache la relise aussitôt.
+(function reprendreListe() {
+  if (typeof window === 'undefined' || !estNatif()) return;
+  try {
+    const brut = localStorage.getItem(CLE_LISTE);
+    if (!brut) return;
+    const { at, liste } = JSON.parse(brut);
+    if (!at || Date.now() - at > LISTE_AGE_MAX_MS) { localStorage.removeItem(CLE_LISTE); return; }
+    const donnees = JSON.parse(liste);
+    if (!Array.isArray(donnees)) return;
+    memoire.set(cle(CHEMIN_LISTE, null), { donnees, signature: liste, at: 1, enCours: null, gardee: true });
+  } catch { /* copie illisible : ignorée */ }
+}());
 
 function ranger(k, entree) {
   memoire.delete(k);
@@ -37,7 +73,7 @@ function ranger(k, entree) {
 // La donnée gardée pour ce chemin et cette session, ou undefined (jamais lue, ou trop vieille pour être montrée).
 export function lireCache(chemin, token) {
   const e = memoire.get(cle(chemin, token));
-  if (!e || e.at === 0 || Date.now() - e.at > AGE_MAX_MS) return undefined;
+  if (!e || e.at === 0 || (!e.gardee && Date.now() - e.at > AGE_MAX_MS)) return undefined;
   return e.donnees;
 }
 
@@ -56,13 +92,15 @@ export function chargerAvecCache(chemin, { token, forcer = false } = {}) {
     const memes = actuelle && signature !== null && actuelle.signature === signature;
     const gardee = memes ? actuelle.donnees : donnees;
     ranger(k, { donnees: gardee, signature, at: Date.now(), enCours: null });
+    // Réécrite seulement si elle a changé, ou une fois par lancement pour dater la copie reprise du téléphone.
+    if (listeGardable(chemin, token) && (!memes || actuelle?.gardee)) garderListe(signature);
     return gardee;
   }, (erreur) => {
     const actuelle = memoire.get(k);
     if (actuelle) actuelle.enCours = null;
     throw erreur;
   });
-  ranger(k, { donnees: e?.donnees, signature: e?.signature ?? null, at: e?.at ?? 0, enCours });
+  ranger(k, { donnees: e?.donnees, signature: e?.signature ?? null, at: e?.at ?? 0, enCours, gardee: e?.gardee });
   return enCours;
 }
 

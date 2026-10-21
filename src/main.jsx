@@ -20,7 +20,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { PreviewModeProvider } from './context/PreviewModeContext';
 import { rapportsPanneActifs, onConsentChange } from './consent';
 import { langueDepuisChemin, PREFIXES, languePreferee } from './i18n/routing';
-import { historiqueLangue } from './i18n/historiqueLangue';
+import { historiqueLangue, changerLangue } from './i18n/historiqueLangue';
 import './styles.css';
 // Parcours client (liste, fiche, panier, paiement, suivi) — après styles.css pour l'emporter sur les anciens réglages.
 import './client-ui.css';
@@ -86,16 +86,26 @@ if ('serviceWorker' in navigator && !estNatif()) {
 // racine (voir src/i18n/routing.js). L'historique du routeur ajoute le préfixe devant chaque lien et le
 // retire de ce que lisent les composants, comme le ferait `basename` — mais il peut en changer sans
 // recharger la page quand le visiteur change de langue (voir src/i18n/historiqueLangue.js).
-const { langue } = langueDepuisChemin(window.location.pathname);
+let { langue } = langueDepuisChemin(window.location.pathname);
 
 // Visiteur qui revient par une adresse sans préfixe alors qu'il avait choisi une autre langue : on
 // l'emmène vers la même page dans SA langue, une seule fois (l'adresse d'arrivée porte un préfixe,
 // la condition ne peut donc pas se redéclencher). `replace` et non `assign` : ce détour n'a pas à
 // occuper une entrée dans l'historique, sans quoi le bouton Retour y reviendrait en boucle.
+//
+// DANS L'APPLICATION, sans rechargement (2026-10-21, latence de l'app) : elle s'ouvre toujours sur « / », donc un utilisateur
+// néerlandophone ou anglophone rechargeait TOUTE l'app à chaque lancement, après avoir déjà lu et exécuté 1,3 Mo de JavaScript.
+// Rien n'est encore rendu à ce stade : changerLangue réécrit l'adresse en place (replaceState), comme le bouton de langue.
+// Le site garde le rechargement : ses pages sont pré-rendues en français, et un moteur de recherche doit suivre l'adresse.
 const preferee = langue === 'fr' ? languePreferee() : null;
 if (preferee && preferee !== 'fr' && PREFIXES[preferee]) {
-  const { pathname, search, hash } = window.location;
-  window.location.replace(`${PREFIXES[preferee]}${pathname === '/' ? '' : pathname}${search}${hash}`);
+  if (estNatif()) {
+    changerLangue(preferee);
+    langue = preferee;
+  } else {
+    const { pathname, search, hash } = window.location;
+    window.location.replace(`${PREFIXES[preferee]}${pathname === '/' ? '' : pathname}${search}${hash}`);
+  }
 }
 
 // Écran de chargement (index.html, #splash) : il ne fait que COUVRIR le chargement, jamais le prolonger
@@ -125,9 +135,10 @@ function retirerEcranChargement() {
   };
   const sonder = () => {
     if (prete() || performance.now() > 7500) {
-      // 450 ms : le vélo part (0,4 s) pendant que l'écran s'efface (0,25 s après 0,12 s) ; la page est déjà là dessous.
+      // 220 ms : le vélo part (0,25 s) pendant que l'écran s'efface (0,18 s) ; la page est déjà là dessous. C'était 450 ms
+      // (0,4 s puis 0,25 s après 0,12 s) : raccourci le 2026-10-21 (latence de l'app, « ok » du fondateur).
       splash.classList.add('splash-fin');
-      setTimeout(() => splash.remove(), 450);
+      setTimeout(() => splash.remove(), 220);
       retirerEcranLancementNatif();
       return;
     }

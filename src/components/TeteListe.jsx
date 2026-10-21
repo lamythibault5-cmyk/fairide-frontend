@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import Icone from './Icone';
 import { experienceApp } from '../natif';
 import { defilement } from '../gestes';
-import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import { illustrationCuisine } from '../menuCategories';
 
 /* LE HAUT DE LA LISTE DES COMMERCES (fondateur, 2026-10-16, proposition A de « Le haut de la liste des commerces »,
@@ -15,8 +14,10 @@ import { illustrationCuisine } from '../menuCategories';
  *      la bande est du verre de la barre d'onglets, la lentille grossit à l'appui et suit le doigt (lentillePuces.js,
  *      chargé à part) ; sur le site, bande blanche à filet et pastille iris pleine, sans geste (règle 2 de l'identité).
  *
- * En descendant, le bandeau s'efface et la bande des cuisines reste seule en haut ; en remontant, il revient
- * (useEnteteDefilement : un seuil et une marge, pas de clignotement). Pas de barre de recherche : elle a son onglet.
+ * LE BANDEAU NE PART PLUS (fondateur, 2026-10-21, maquettes/bandeau-velo/bandeau-velo.html : « A, à la taille de C »). Il
+ * faisait 118 px et s'effaçait dès qu'on descendait : on ne voyait jamais le vélo rouler. Il fait maintenant 88 px, la hauteur
+ * de la version C dépliée, avec la version A — la maison, « Livrer à » au-dessus de l'adresse, la route dessous — et il ne se
+ * replie jamais : il reste collé en haut, sur l'app comme sur le site. Pas de barre de recherche : elle a son onglet.
  *
  * Sans compte (pas d'adresse à montrer), pas de bandeau : la bande seule, collée sous la barre d'app dans l'app, et
  * dans le fil de la page sur le site public (son en-tête collant passerait par-dessus).
@@ -49,7 +50,6 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
   const bandeau = adresse != null;
   // Collée en haut quand on est connecté (coquille à onglets) ou dans l'app ; dans le fil de la page sur le site public.
   const collante = bandeau || app;
-  const replie = useEnteteDefilement({ seuil: 60, marge: 6 }) && bandeau;
 
   const tete = useRef(null);
   const bande = useRef(null);
@@ -158,13 +158,13 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
   return (
     <div
       ref={tete}
-      className={`liste-tete${collante ? ' liste-tete--collante' : ''}${bandeau ? ' liste-tete--bandeau' : ''}${replie ? ' liste-tete--replie' : ''}`}
+      className={`liste-tete${collante ? ' liste-tete--collante' : ''}${bandeau ? ' liste-tete--bandeau' : ''}`}
     >
       {bandeau && (
         <div className={`lt-bandeau${mode ? ' lt-bandeau--mode' : ''}`}>
           {/* aria-label : le mot « Modifier » a quitté l'écran au profit d'un chevron (capture du fondateur, 2026-09-17), et
               un chevron seul ne dit rien à un lecteur d'écran — le libellé porte l'action, le chevron est aria-hidden. */}
-          <button type="button" className="lt-adresse" onClick={onAdresse} aria-label={libelleChanger} tabIndex={replie ? -1 : undefined}>
+          <button type="button" className="lt-adresse" onClick={onAdresse} aria-label={libelleChanger}>
             <span className="lt-adresse-icone"><Icone nom="maison" taille={20} /></span>
             <span className="lt-adresse-texte">
               <span className="lt-adresse-intitule">{intituleAdresse}</span>

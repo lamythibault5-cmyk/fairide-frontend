@@ -181,6 +181,13 @@ export default function DashboardLayout() {
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId, stripeStatut]);
+  // RETOUR DE STRIPE DANS L'APP (2026-10-21, vérification Stripe site / app). Dans l'app, la page reste montée pendant que
+  // Stripe s'ouvre par-dessus : l'effet ci-dessus, une fois par page, ne revoyait jamais le compte s'activer, et
+  // « Paiements à configurer » restait jusqu'au redémarrage (Stripe Connect n'a pas de webhook ici). Tant que le statut est
+  // « en attente », chaque retour au premier plan le relit.
+  useRevalidation(() => api(`/restaurants/${restoId}/connect/refresh`, { method: 'POST', token })
+    .then((r) => { if (r?.stripeConnectStatus && r.stripeConnectStatus !== 'pending') setRestaurant((x) => (x ? { ...x, stripeConnectStatus: r.stripeConnectStatus } : x)); }),
+  { actif: !!restoId && stripeStatut === 'pending', absenceMin: 0 });
   // Retour sur l'onglet, focus, connexion retrouvée : relecture silencieuse (voir useRevalidation.js).
   useRevalidation(() => { if (restoId) return loadDashboard(restoId); return undefined; }, { actif: !!restoId });
   // Changement d'onglet : on relit les données en arrière-plan (sans squelette — l'ancien état reste

@@ -4151,6 +4151,13 @@ export default {
       lawTitle: 'Governing law, disputes and mediation',
       law: 'These terms are governed by Belgian law. In case of dispute, contact us first at contact@fairide.be: we reply within 5 working days. Failing agreement, consumers may turn to the Consumer Mediation Service (North Gate II, Boulevard du Roi Albert II 8 bte 1, 1000 Brussels, [mediationconsommateur.be](https://mediationconsommateur.be)). The courts of the judicial district of Brussels have jurisdiction, without prejudice to mandatory rules of jurisdiction applicable to consumers. You can also file your complaint online on Belmed, the FPS Economy\'s out-of-court dispute resolution platform ([belmed.economie.fgov.be](https://belmed.economie.fgov.be)).'
     },
+    // Page de retour de Stripe dans l'app (pages/app/RetourAppli.jsx).
+    retourAppli: {
+      titre: 'Back to the Fairide app',
+      texte: 'Stripe is done. Tap the button to go back to the Fairide app.',
+      bouton: 'Open the Fairide app',
+      site: 'Continue on the website'
+    },
     cookiesPolicy: {
       pageTitle: 'Cookie policy · Fairide',
       title: 'Cookie policy',
@@ -4158,7 +4165,7 @@ export default {
       whatTitle: 'What is a cookie?',
       what: 'A cookie is a small file placed by a website in your browser. Fairide also uses the browser\'s “local storage” (localStorage and sessionStorage), which plays the same role: remembering information from one page to the next. This policy covers both. It applies to the fairide.be website and to the Fairide app installed from the browser.',
       technicalTitle: 'Strictly necessary cookies and storage',
-      technical: 'They are essential to the service and do not require your consent: **your session** (login token, kept up to 30 days or until you log out), **your cart** (contents and chosen business, 24 hours at most, emptied when you log out), **your sign-up in progress** (48 hours at most, erased as soon as the account is created), **your choice about the cookie banner**, and **technical protections** (abuse limits, form security). Without them you cannot log in or order.',
+      technical: 'They are essential to the service and do not require your consent: **your session** (login token, kept up to 30 days or until you log out), **your cart** (contents and chosen business, 24 hours at most, emptied when you log out), **your sign-up in progress** (48 hours at most, erased as soon as the account is created), **the last list of businesses**, in the app only (to show it as soon as the app opens; public, with no data about you), **your choice about the cookie banner**, and **technical protections** (abuse limits, form security). Without them you cannot log in or order.',
       preferencesTitle: 'Preferences',
       preferences: 'To make things easier, Fairide remembers in your browser: the chosen **language** (French, English, Dutch), the display **theme**, your **latest searches** in the app (five at most, cleared when you log out), the **music** chosen in the mini-games and your best scores, the ticket printer and paper chosen by a business, the tabs and filters open in the dashboard. This information never leaves your device and is not used for tracking.',
       thirdPartyTitle: 'Third-party services',
@@ -9225,6 +9232,7 @@ export default {
       lvN2S: 'No rating, no ranking: nobody is notified before you.',
       continueApple: 'Continue with Apple',
       continueGoogle: 'Continue with Google',
+      connexionEnCours: 'Signing in…',
       continueEmail: 'Continue with e-mail',
       appleLinked: 'Apple account saved',
       nativeLoginFailed: 'Sign-in didn’t go through. Try again, or continue with your e-mail.',

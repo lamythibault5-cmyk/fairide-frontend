@@ -14,7 +14,8 @@ export default function ClocheNotifications() {
   function basculer() {
     const suivante = !ouverte;
     setOuverte(suivante);
-    if (suivante && unread > 0) marquerLues(items.filter((n) => !n.read).map((n) => n.id));
+    // Tout, pas seulement les 50 listées : le serveur compte toutes les non-lues (voir useNotificationsClient).
+    if (suivante && unread > 0) marquerLues();
   }
 
   return (

@@ -274,6 +274,9 @@ export default function DriverDashboard() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Retour sur l'onglet après une absence : relecture immédiate, sans attendre le prochain cycle.
   useRevalidation(() => { load(); return refreshUser(); });
+  // Retour de Stripe dans l'app, compte encore « en attente » : relu à chaque retour (même raison que DashboardLayout.jsx).
+  useRevalidation(() => api('/auth/me/connect/refresh', { method: 'POST', token }).then(() => refreshUser()),
+    { actif: user?.stripeConnectStatus === 'pending', absenceMin: 0 });
 
   useEffect(() => {
     activeIdsRef.current = mine.filter((o) => o.status === 'livraison').map((o) => o.id);

@@ -14,8 +14,9 @@
   /* Ce que .dashboard-main met autour de la page : le bandeau l'annule pour aller bord à bord, jusque sous l'encoche. */
   --lt-mh: 24px;
   --lt-mg: 28px;
-  /* Hauteur du bandeau sans l'encoche : fixe, pour que le repli soit une constante (voir --replie). */
-  --lt-hb: 118px;
+  /* Hauteur du bandeau sans l'encoche : 88 px, la version C dépliée de maquettes/bandeau-velo (fondateur, 2026-10-21 :
+     « A, qui ne se replie pas, à la hauteur de C déplié »). */
+  --lt-hb: 88px;
   margin-bottom: 14px;
 }
 @media (max-width: 900px) {
@@ -28,38 +29,34 @@
   transition: transform .45s cubic-bezier(.34, 1.25, .64, 1);
 }
 .liste-tete--bandeau > * { pointer-events: auto; }
-/* Replié : tout l'en-tête remonte de la hauteur du bandeau ; la bande des cuisines s'arrête à 10 px du haut (sous
-   l'encoche). 22 = 10 px de marge + les 12 px dont la bande mord sur la lèvre du bandeau. */
-.liste-tete--bandeau.liste-tete--replie { transform: translateY(calc(22px - var(--lt-hb))); }
-/* …et le bandeau, lui, part un peu plus haut : sa lèvre (et les coins iris autour) ne dépasse plus au-dessus de la bande. */
-.lt-bandeau { transition: transform .45s cubic-bezier(.34, 1.25, .64, 1); }
-.liste-tete--replie .lt-bandeau { transform: translateY(calc(-40px - env(safe-area-inset-top))); }
+/* Le bandeau ne se replie plus (2026-10-21) : il reste à l'écran pour qu'on voie le vélo rouler. */
 
 .lt-bandeau {
   position: relative; box-sizing: border-box;
   height: calc(var(--lt-hb) + env(safe-area-inset-top));
-  padding: calc(12px + env(safe-area-inset-top)) 16px 0;
+  padding: calc(8px + env(safe-area-inset-top)) 16px 0;
   background: var(--iris); color: #fff;
 }
 /* La lèvre de la feuille blanche, comme le suivi de commande et les écrans de bienvenue. */
 .lt-bandeau::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 23px;
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 16px;
   background: #fff; border-radius: 24px 24px 0 0;
 }
 .lt-adresse {
-  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 2px;
+  /* 40 px à l'œil ; la cible de 44 px que styles.css donne à tout bouton déborde de 2 px en haut et en bas (marges négatives). */
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; margin: -2px 0; padding: 0;
   background: none; border: 0; border-radius: 14px; color: #fff; text-align: left; font: inherit;
 }
 .lt-adresse:hover:not(:disabled) { filter: none; background: rgba(255, 255, 255, .06); }
 .lt-adresse:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .lt-adresse-icone {
-  flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
   border: 1px solid rgba(255, 255, 255, .35);
 }
 .lt-adresse-texte { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; line-height: 1.25; }
-.lt-adresse-intitule { font-size: 12.5px; color: rgba(255, 255, 255, .75); }
+.lt-adresse-intitule { font-size: 12px; color: rgba(255, 255, 255, .75); }
 /* Une adresse longue se coupe : elle ne pousse pas le chevron hors de l'écran, et le bandeau garde sa hauteur. */
-.lt-adresse-valeur { font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-adresse-valeur { font-size: 15.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lt-chevron {
   flex: none; width: 9px; height: 9px; margin: -4px 6px 0 0;
   border-right: 2.5px solid #fff; border-bottom: 2.5px solid #fff; transform: rotate(45deg);
@@ -76,6 +73,8 @@
 .lt-velo { position: absolute; bottom: 7px; left: 8%; width: 30px; margin-left: -15px; line-height: 0; color: var(--lime); transition: transform .3s ease-out; }
 .lt-velo svg { display: block; transform-origin: 50% 100%; }
 .lt-velo.roule svg { animation: lt-pedale .5s ease-in-out infinite; }
+/* Dans le bandeau, la route à la hauteur de la maquette (la route de la Recherche, RouteVelo, garde la sienne). */
+.lt-bandeau .lt-route { height: 22px; margin-top: 0; }
 @keyframes lt-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
 
 /* La bande des cuisines. Sur le site : blanche à filet, la lentille est une pastille iris pleine. */
