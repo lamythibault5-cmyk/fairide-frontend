@@ -1,4 +1,5 @@
-import { ouvrirPdfBlob } from '../../natif';
+// Même ouverture que partout ailleurs (audit du 19/10, CROSS-08) : onglet ouvert pendant le geste (Safari), toast et non alert().
+export { ouvrirPdf } from '../../pdf';
 
 // Ce que le dossier livreur du site (Onboarding.jsx) et celui de l'application (DossierAppli.jsx) partagent : les listes
 // et règles du dossier, écrites une seule fois pour que les deux ne divergent jamais.
@@ -63,13 +64,4 @@ export function infosDepuisDossier(c, zones = []) {
     companyNumber: c.independent?.companyNumber ?? '', vatStatus: c.independent?.vatStatus ?? '', vatNumber: c.independent?.vatNumber ?? '', legalName: c.independent?.legalName ?? '', seatAddress: c.independent?.seatAddress ?? '',
     nationalityGroup: c.nationalityGroup ?? ''
   };
-}
-
-// Un PDF protégé par le jeton ne peut pas être un simple lien : on le télécharge puis on l'ouvre.
-export async function ouvrirPdf(url, token, messageErreur) {
-  try {
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) throw new Error(messageErreur);
-    const blob = await res.blob(); await ouvrirPdfBlob(blob);
-  } catch (e) { alert(e.message); }
 }

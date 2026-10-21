@@ -1,5 +1,5 @@
 import GarantieAbonnement from '../components/GarantieAbonnement';
-import { achatsCommerceAutorises, allerAuPaiement, experienceApp } from '../natif';
+import { achatsCommerceAutorises, allerAuPaiement, experienceApp, lienPublic } from '../natif';
 import { useEffect, useRef, useState, useId } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
@@ -96,7 +96,7 @@ export default function Account() {
   // feuille de partage lève AbortError : ce n'est pas une panne, c'est un utilisateur qui a changé
   // d'avis — lui afficher une erreur serait lui reprocher son geste.
   async function partagerFairide() {
-    const lien = window.location.origin;
+    const lien = lienPublic();
     try {
       if (navigator.share) {
         await navigator.share({
@@ -1226,7 +1226,19 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
   const [editing, setEditing] = useState(false);
   const [newValue, setNewValue] = useState('');
   const [codeSent, setCodeSent] = useState(false);
+  const [canal, setCanal] = useState('email');
   const [code, setCode] = useState('');
+  const { user } = useAuth();
+  /* OÙ LE CODE EST VRAIMENT PARTI (audit du 19/10, AO-03). L'écran disait « par email à ton adresse actuelle (pas encore de
+   * SMS chez Fairide) », alors que le serveur l'envoie à la NOUVELLE adresse e-mail, et par SMS au NOUVEAU numéro (canal
+   * 'sms' de la réponse) ; à l'adresse actuelle seulement pour un numéro que nos SMS n'atteignent pas (canal 'email'). Celui
+   * qui corrigeait une adresse mal tapée attendait le code dans la mauvaise boîte. */
+  const ouEnvoye = (c) => {
+    const valeur = newValue.trim();
+    if (field === 'email') return t('accountUi.contactCodeSentNewEmail', { email: valeur });
+    return c === 'sms' ? t('accountUi.contactCodeSentSms', { phone: telephoneLisible(valeur) })
+      : t('accountUi.contactCodeSentCurrentEmail', { email: user?.email || '', phone: telephoneLisible(valeur) });
+  };
   const [sending, setSending] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
@@ -1241,9 +1253,11 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
     if (!newValue.trim()) { toast(t('accountUi.toastNewValue')); return; }
     setSending(true);
     try {
-      await requestContactChange(field, newValue.trim());
+      const r = await requestContactChange(field, newValue.trim());
+      const c = r?.canal === 'sms' ? 'sms' : 'email';
+      setCanal(c);
       setCodeSent(true);
-      toast(t('accountUi.toastCodeSent'), 'succes');
+      toast(ouEnvoye(c), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -1291,7 +1305,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
       ) : (
         <div>
           <p className="small" style={{ margin: '0 0 8px' }}>
-            {t('accountUi.codeSentConfirmSwitch', { sms: field === 'phone' ? t('accountUi.noSmsYet') : '' })} <b>{newValue}</b>.
+            {ouEnvoye(canal)}
           </p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <div className="field" style={{ flex: 1, margin: 0, minWidth: 140 }}>

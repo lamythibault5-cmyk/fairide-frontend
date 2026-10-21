@@ -6,7 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros, remiseLigne } from '../../prixPlat';
-import { experienceApp } from '../../natif';
+import { experienceApp, lienPublic } from '../../natif';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import EtatVide from '../../components/EtatVide';
 import Icone from '../../components/Icone';
@@ -58,7 +58,7 @@ export default function CommandeGroupee() {
   // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
   if (!g) return experienceApp() ? <SqueletteEcran lignes={3} /> : <SkeletonCards count={2} />;
 
-  const lien = `${window.location.origin}/groupe/${g.code}`;
+  const lien = lienPublic(`/groupe/${g.code}`);
   const mesLignes = g.lines.filter((l) => l.mine);
   const panierIci = cart.restaurantId && String(cart.restaurantId) === String(g.restaurant.id) && cart.count > 0;
 

@@ -48,6 +48,14 @@ export default function InvoicesPage() {
   }, []);
 
   const aUnRecu = (o) => o.paymentMode !== 'on_site' && !o.isTraining;
+  // Ce qui a été rendu (audit du 19/10, AO-05) : une commande annulée et remboursée s'affichait à son total, comme payée.
+  // Le reçu dit la même chose (recuClient.js) ; refundedAmount vient d'order_refunds, refundPending d'un remboursement en échec.
+  const etatRemboursement = (o) => {
+    if (o.refundPending) return t('invoicesClient.refundPending');
+    const rendu = Number(o.refundedAmount || 0);
+    if (rendu <= 0) return null;
+    return rendu >= Number(o.total) - 0.005 ? t('invoicesClient.refunded') : t('invoicesClient.partlyRefunded', { amount: euros(rendu) });
+  };
   const downloadable = useMemo(() => (orders || []).filter(aUnRecu), [orders]);
 
   function toggle(id) {
@@ -120,7 +128,7 @@ export default function InvoicesPage() {
               )}
               <div className="facture-ligne-texte">
                 <b>{o.restaurantName}</b>
-                <span className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {euros(o.total)}</span>
+                <span className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {euros(o.total)}{etatRemboursement(o) ? ` · ${etatRemboursement(o)}` : ''}</span>
               </div>
               {aUnRecu(o) ? (
                 <button type="button" className="btn-ghost" onClick={() => ouvrirPdf(`${API_BASE}/orders/${o.id}/receipt`, token, t('invoicesClient.downloadFailed'))}>{t('invoicesClient.viewInvoice')}</button>

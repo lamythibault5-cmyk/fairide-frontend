@@ -59,6 +59,13 @@ export function plateforme() {
 const ORIGINE_SITE = 'https://fairide.be';
 const CLE_RETOUR = 'fairide_retour_navigateur';
 
+// Lien à partager vers une page de Fairide (audit du 19/10, CROSS-02 et CROSS-03). Dans l'application, l'origine de la page
+// est https://localhost (Android) ou capacitor://localhost (iPhone) : l'invitation à une commande groupée et « Partager
+// Fairide » envoyaient un lien qui ne menait nulle part. Sur le site, l'adresse du site lui-même (préproduction comprise).
+export function lienPublic(chemin = '') {
+  return `${estNatif() ? ORIGINE_SITE : window.location.origin}${chemin}`;
+}
+
 // Lien vers un autre site (document signé Cloudinary, PDF, aide externe).
 export async function ouvrirLienExterne(url) {
   if (!url) return;
@@ -174,10 +181,15 @@ export async function demarrerNatif(historique) {
       // Fenêtre, fiche ou tiroir ouvert : le refermer d'abord (Échap), comme le ferait un geste de retour.
       // La bannière cookies est un dialogue sans aria-modal : elle n'est pas concernée.
       const dialogues = document.querySelectorAll('[role="dialog"][aria-modal="true"]');
-      const dialogue = dialogues[dialogues.length - 1];
+      // L'amorce des notifications (.bv-par-dessus) passe AU-DESSUS du dossier livreur, rendu pourtant après elle dans la page.
+      const dialogue = document.querySelector('.bv-par-dessus[role="dialog"][aria-modal="true"]') || dialogues[dialogues.length - 1];
       if (dialogue) {
-        // Dans l'ordre : son bouton de fermeture, sinon le fond cliquable qui l'entoure, sinon Échap.
-        const bouton = dialogue.querySelector('.flux-bouton[aria-label], .tracking-fullscreen-close, .modal-close, [data-fermer]');
+        // Dans l'ordre : son bouton de fermeture, sinon son bouton Retour (‹), sinon le fond cliquable qui l'entoure, sinon Échap.
+        // Le ‹ des écrans pleins (EcranPlein.jsx : dossier livreur, « Envoyer ma carte ») recule d'une étape, ou ferme à la
+        // première, comme à l'écran. Sans lui, le Retour d'Android y envoyait Échap, que personne n'écoute : rien ne se passait
+        // (audit du 19/10, CROSS-05).
+        const bouton = dialogue.querySelector('.flux-bouton[aria-label], .tracking-fullscreen-close, .modal-close, [data-fermer]')
+          || dialogue.querySelector('[data-retour-natif]');
         const fond = dialogue.closest('.modal-overlay');
         if (bouton) bouton.click();
         else if (fond) fond.click();

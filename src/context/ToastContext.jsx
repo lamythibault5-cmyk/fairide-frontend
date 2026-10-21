@@ -1,7 +1,8 @@
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useLanguage } from './LanguageContext';
 import Icone from '../components/Icone';
 import { vibrer } from '../gestes';
+import { inscrireToastGlobal } from '../toastGlobal';
 
 const ToastContext = createContext(null);
 // Au-delà, le message reste plusieurs secondes : il reçoit aussi la croix pour le fermer soi-même.
@@ -52,6 +53,8 @@ export function ToastProvider({ children }) {
     timer.current = setTimeout(() => setShow(false), duree);
   }, []);
   const fermer = () => { clearTimeout(timer.current); setShow(false); };
+  // Le code hors composant (pdf.js) affiche aussi ses erreurs ici (audit du 19/10, CROSS-08).
+  useEffect(() => inscrireToastGlobal(toast), [toast]);
 
   return (
     <ToastContext.Provider value={toast}>
