@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
+import { MENTIONS_ALIMENTAIRES, RANGEES_MENTIONS } from '../dietary';
 import { useLanguage } from '../context/LanguageContext';
 import { titreRangee, libellePosition, euros, jourCourt } from '../misesEnAvant';
 import { achatsCommerceAutorises, allerAuPaiement } from '../natif';
@@ -31,7 +32,10 @@ export default function MiseEnAvant({ restoId, token, toast }) {
   const resteTexte = (iso) => { const s = Math.max(0, Math.round((new Date(iso).getTime() - maintenant) / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
   const charger = useCallback(() => {
-    api(`/restaurants/${restoId}/placements`, { token }).then(setEtat).catch((e) => toast(e.message, 'erreur'));
+    // Les rangées « Bio » et « Vegan » ne s'affichent plus tant que les mentions sont masquées (dietary.js) : on ne les vend pas.
+    api(`/restaurants/${restoId}/placements`, { token })
+      .then((e) => setEtat(MENTIONS_ALIMENTAIRES || !e?.sections ? e : { ...e, sections: e.sections.filter((s) => !RANGEES_MENTIONS.includes(s.key)) }))
+      .catch((e) => toast(e.message, 'erreur'));
   }, [restoId, token, toast]);
   useEffect(() => { charger(); }, [charger]);
 

@@ -290,9 +290,11 @@ export const RESTAURANT_TYPES = [
   { value: 'Autre', icone: 'restaurants', illustration: 'autre', fond: '#EFEDFB' }
 ];
 
-// Adresse de l'illustration d'une cuisine (null si elle n'en a pas : bascules Bio, Vegan…).
-export function illustrationCuisine(nom) {
-  return nom ? `/cuisines/${nom}.webp` : null;
+// Adresse de l'illustration d'une cuisine (null si elle n'en a pas : bascules Bio, Vegan…). `plat` : la version 2D, sans
+// relief (public/cuisines-2d, mêmes dessins Fluent Emoji en aplat), celle du SITE (fondateur, 2026-10-21,
+// maquettes/site-illustrations : A sur la bande des cuisines, B sur « Par envie ») ; la 3D reste celle de l'app.
+export function illustrationCuisine(nom, { plat = false } = {}) {
+  return nom ? `/cuisines${plat ? '-2d' : ''}/${nom}.webp` : null;
 }
 
 export function restaurantTypeLabel(value, t) {

@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
-import { platBio, platVegan, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
+import { MENTIONS_ALIMENTAIRES, platBio, platVegan, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 // Chargée à la demande : la carte tire Leaflet (~150 Ko) avec elle, et cette page fait partie des
 // rares gardées en import statique pour le référencement. Sans ce découpage, tout visiteur d'une fiche
 // de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
@@ -42,28 +42,18 @@ import AvecMarque from '../../components/AvecMarque';
 import { lienFiche } from '../../murCompte';
 import { normaliserRecherche } from '../../normaliserRecherche';
 
-// « TRIER » ET « PRIX » RETIRÉS POUR LE MOMENT (fondateur, 2026-10-20, après le test avec Maestro Pizza) : avec une
-// poignée de commerces, trier ou filtrer par prix ne sert à rien et charge la bande. Les états et les règles restent
-// (le tri « Recommandé » est celui que décrit /classement) : repasser à true ici et dans pages/client/MapPage.jsx.
-const TRI_ET_PRIX = false;
+// « TRIER » RETIRÉ POUR LE MOMENT (fondateur, 2026-10-20, après le test avec Maestro Pizza) : avec une poignée de commerces,
+// trier ne sert à rien et charge la bande. L'état et les règles restent (le tri « Recommandé » est celui que décrit
+// /classement) : repasser à true ici et dans pages/client/MapPage.jsx.
+// LE PRIX, LUI, EST RETIRÉ POUR DE BON (fondateur, 2026-10-21 : « retirer ça totalement partout ») : plus de « €€ » sur
+// les cartes des commerces, plus de filtre par prix, ni ici ni sur la page Carte. Les bandes étaient calculées sur le prix
+// médian de la carte ; rien n'est stocké, il n'y a rien à effacer côté serveur.
+const TRI = false;
 
 // « À EMPORTER » RETIRÉ POUR LE MOMENT (fondateur, 2026-10-21).
 // La pastille au-dessus de la liste et Livraison / À emporter sur le bandeau (site, 900 px)
 // disparaissent ; l'état `emporter` reste à false. Repasser à true pour les remettre.
 const FILTRE_EMPORTER = false;
-
-// Bandes de prix, calculees sur le prix MEDIAN des plats de la carte : aucune colonne « niveau de
-// prix » n'existe en base, et un euro affiche au juge serait faux pour la moitie des commerces.
-// Memes seuils que la page Carte (pages/client/MapPage.jsx) — les deux doivent classer pareil.
-const SEUIL_MOYEN = 7;
-const SEUIL_CHER = 11;
-function bandePrix(resto) {
-  const prix = (resto.menu || []).map((p) => Number(p.price)).filter((n) => Number.isFinite(n) && n > 0).sort((a, b) => a - b);
-  if (!prix.length) return null;
-  const milieu = Math.floor(prix.length / 2);
-  const m = prix.length % 2 ? prix[milieu] : (prix[milieu - 1] + prix[milieu]) / 2;
-  return m < SEUIL_MOYEN ? 1 : m < SEUIL_CHER ? 2 : 3;
-}
 
 // Types "courses alimentaires" plutôt que "repas à commander" — regroupés dans leur propre section
 // (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
@@ -124,7 +114,7 @@ function deliveryOfferLabelFor(r, t, user) {
 
 // CARTE D'UN COMMERCE (refonte du 2026-09-29, fondateur : « trop simpliste, rends-le vraiment user-friendly »).
 // Tout ce qui décide d'un clic tient sur la photo et deux lignes : l'offre et l'état (fermé, ouvre à…) posés SUR la
-// photo, puis le nom, « cuisine · commune », et une ligne d'infos (note ou « Nouveau », prix, services, offre de
+// photo, puis le nom, « cuisine · commune », et une ligne d'infos (note ou « Nouveau », services, offre de
 // livraison). Avant : quatre pastilles empilées (commune, quartier, fermé…) et un grand blanc sous le texte.
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const { user, token } = useAuth();
@@ -137,7 +127,6 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
     : etat.opensToday && etat.opensAt
       ? t('restoListUi.closedOpensAt', { time: etat.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
       : t('restoListUi.closed');
-  const bande = bandePrix(r);
   // Avant le GO, l'à emporter payé en ligne seulement n'est pas encore commandable : « Commande en ligne bientôt » plutôt
   // que « À emporter », découvert seulement au paiement (audit du 18/10/2026).
   const emporterPossible = emporterPossibleIci(r, user);
@@ -185,7 +174,6 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
             : <span className="rc-nouveau">{t('restaurantList.newBadge')}</span>}
           {/* Position payée par le commerce : toujours dite au client (classement payant, CDE VI.99). */}
           {r.sponsorise && <span className="rc-sponsorise" title={t('restoListUi.sponsoredTitle')}>{t('restoListUi.sponsored')}</span>}
-          {bande &&<span className="rc-discret" title={t('restoListUi.priceBandTitle')}>{'€'.repeat(bande)}</span>}
           {services.map((s) => <span key={s} className="rc-discret">{s}</span>)}
         </p>
         {/* Le badge « Prix du comptoir » sur la seconde ligne : sur la première (note, services), il était coupé dans l'app. */}
@@ -381,14 +369,15 @@ export default function RestaurantList() {
   const [search, setSearch] = useState(filtresInitiaux.search || '');
   const [commune, setCommune] = useState(filtresInitiaux.commune || '');
   const [cuisine, setCuisine] = useState(filtresInitiaux.cuisine || '');
-  const [bio, setBio] = useState(!!filtresInitiaux.bio);
-  const [vegan, setVegan] = useState(!!filtresInitiaux.vegan);
+  // Masqués pour le moment (MENTIONS_ALIMENTAIRES) : jamais allumés à l'ouverture, sinon la liste serait filtrée sans
+  // aucune pastille pour retirer le filtre.
+  const [bio, setBio] = useState(MENTIONS_ALIMENTAIRES && !!filtresInitiaux.bio);
+  const [vegan, setVegan] = useState(MENTIONS_ALIMENTAIRES && !!filtresInitiaux.vegan);
   // Halal et sans gluten (backend migration 042) : déclarés par le commerce, voir dietary.js.
-  const [halal, setHalal] = useState(!!filtresInitiaux.halal);
-  const [sansGluten, setSansGluten] = useState(!!filtresInitiaux.sansGluten);
-  // Les memes filtres que sur la carte, avec les memes noms : prix, emporter, et un tri.
+  const [halal, setHalal] = useState(MENTIONS_ALIMENTAIRES && !!filtresInitiaux.halal);
+  const [sansGluten, setSansGluten] = useState(MENTIONS_ALIMENTAIRES && !!filtresInitiaux.sansGluten);
+  // Les memes filtres que sur la carte, avec les memes noms : emporter, et un tri.
   // Les avoir des deux cotes evite d'avoir a changer de vue pour affiner une recherche.
-  const [prix, setPrix] = useState(0);
   const [emporter, setEmporter] = useState(false);
   const [tri, setTri] = useState('recommande');
   const [panneau, setPanneau] = useState(null);
@@ -404,8 +393,11 @@ export default function RestaurantList() {
   // LE SITE SUR UN ORDINATEUR (mockups/site-ordinateur.html, « Liste ») — jamais dans l'app : à partir de 900 px, des
   // grilles au lieu des rangées et Livraison / À emporter sur le bandeau ; à partir de 1 100 px, les filtres (Trier, Prix,
   // Envies) passent dans une colonne à gauche. Mêmes états, mêmes règles de tri et de filtre qu'avant : rien d'autre ne bouge.
+  // Trier et Envies masqués (TRI, MENTIONS_ALIMENTAIRES) : la colonne n'aurait plus rien à porter et laissait un grand blanc à
+  // gauche (2026-10-21). Sans elle, la commune ou le mot cherchés et « Manger local » s'affichent au-dessus de la liste.
   const grand = useSiteLarge(900);
-  const colonne = useSiteLarge(1100);
+  const ecranColonne = useSiteLarge(1100);
+  const colonne = ecranColonne && (TRI || MENTIONS_ALIMENTAIRES);
 
   // Une seule lecture de la liste, au chargement et quand on tire pour actualiser (app). Elle rend la promesse des commerces :
   // le vélo roule jusqu'à leur arrivée. Échec : « Impossible de charger » et Réessayer (chargerListe), pas « Aucun commerce ».
@@ -475,10 +467,13 @@ export default function RestaurantList() {
   const cuisineOptions = [
     { value: '', emoji: 'restaurants', illustration: ILLUSTRATION_TOUTES_CUISINES, label: t('restaurantList.allCuisines') },
     ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.icone, illustration: rt.illustration, label: restaurantTypeLabel(rt.value, t) })),
+    // Bio, Vegan, Halal, Sans gluten : masqués pour le moment (MENTIONS_ALIMENTAIRES, dietary.js).
+    ...(MENTIONS_ALIMENTAIRES ? [
     { value: '__bio', emoji: 'feuille', label: t('restaurantList.chipBio'), regime: 'bio' },
     { value: '__vegan', emoji: 'feuille', label: t('restaurantList.chipVegan'), regime: 'vegan' },
     { value: '__halal', emoji: 'coche', label: t('restaurantList.chipHalal'), regime: 'halal' },
     { value: '__sansGluten', emoji: 'coche', label: t('restaurantList.chipGlutenFree'), regime: 'sansGluten' }
+    ] : [])
   ];
   const REGIMES = { bio: [bio, setBio], vegan: [vegan, setVegan], halal: [halal, setHalal], sansGluten: [sansGluten, setSansGluten] };
   const chipActive = (opt) => (opt.regime ? REGIMES[opt.regime][0] : cuisine === opt.value);
@@ -507,7 +502,7 @@ export default function RestaurantList() {
   const base = homeCommune ? [...restaurants].sort((a, b) => rang(a) - rang(b)) : restaurants;
   const communeEpingles = commune || homeCommune;
   const placements = communeEpingles ? placementsTous.filter((p) => !p.commune || p.commune === communeEpingles) : [];
-  const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || halal || sansGluten || prix || emporter || tri !== 'recommande');
+  const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || halal || sansGluten || emporter || tri !== 'recommande');
 
   // Distance a vol d'oiseau depuis l'adresse du compte, quand elle est connue.
   const distanceDe = (r) => (user?.lat && user?.lng && r.lat && r.lng ? haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) : null);
@@ -521,7 +516,6 @@ export default function RestaurantList() {
       if (halal && !restoHalal(r)) return false;
       if (sansGluten && !restoSansGluten(r)) return false;
       if (search && !normaliserRecherche(`${r.name} ${r.desc} ${r.cuisine}`).includes(normaliserRecherche(search))) return false;
-      if (prix && bandePrix(r) !== prix) return false;
       if (emporter && !emporterPossibleIci(r, user)) return false;
       return true;
     })
@@ -664,8 +658,8 @@ export default function RestaurantList() {
   // pastille « À emporter » reste au-dessus de la liste.
   const modeSurBandeau = FILTRE_EMPORTER && grand && !!user && livraisonOuverte(user);
   // La rangée de pastilles au-dessus de la liste : tout ce que la colonne et le bandeau ne portent pas déjà.
-  // Seulement s'il y a quelque chose dedans : sans « À emporter », ni tri ni prix, la rangée vide laissait un blanc.
-  const pastillesFiltres = (!colonne || !modeSurBandeau) && (FILTRE_EMPORTER || (!colonne && (TRI_ET_PRIX || !!commune || !!search)));
+  // Seulement s'il y a quelque chose dedans : sans « À emporter » ni tri, la rangée vide laissait un blanc.
+  const pastillesFiltres = (!colonne || !modeSurBandeau) && (FILTRE_EMPORTER || (!colonne && (TRI || !!commune || !!search)));
   return (
     <div className={`sl-liste${grand ? ' sl-liste--grand' : ''}${colonne ? ' sl-liste--colonne' : ''}`}>
       <TirerPourActualiser onActualiser={actualiser} />
@@ -709,8 +703,8 @@ export default function RestaurantList() {
       {choixAdresse && <ChoixAdresse onFermer={() => setChoixAdresse(false)} />}
       <div className="sl-corps">
       {/* LA COLONNE DES FILTRES (site, à partir de 1 100 px ; mockups/site-ordinateur.html, « Liste »). Les mêmes filtres que
-          les pastilles et leurs panneaux, ouverts d'un coup au lieu d'être repliés : Trier (mêmes trois tris), Prix (mêmes
-          bandes), Envies (les quatre bascules de régime qui terminent la bande des cuisines). Elle reste à l'écran quand on
+          les pastilles et leurs panneaux, ouverts d'un coup au lieu d'être repliés : Trier (mêmes trois tris) et Envies (les
+          quatre bascules de régime qui terminent la bande des cuisines), tous deux masqués pour le moment. Elle reste à l'écran quand on
           descend (collante) ; « Manger local » passe en bas, comme dans la maquette. */}
       {colonne && (
         <aside className="sl-filtres" aria-label={t('siteListe.filtresAria')}>
@@ -728,7 +722,7 @@ export default function RestaurantList() {
               )}
             </div>
           )}
-          {TRI_ET_PRIX && <>
+          {TRI && (
           <fieldset className="sl-groupe">
             <legend className="sl-groupe-titre">{t('mapClient.sort')}</legend>
             {['recommande', 'note', 'distance'].map((cle) => {
@@ -742,18 +736,8 @@ export default function RestaurantList() {
               );
             })}
           </fieldset>
-          <fieldset className="sl-groupe">
-            <legend className="sl-groupe-titre">{t('mapClient.filterPrice')}</legend>
-            <div className="sl-prix">
-              {[1, 2, 3].map((n) => (
-                <button key={n} type="button" className={`cuisine-chip${prix === n ? ' active' : ''}`} aria-pressed={prix === n}
-                  onClick={() => setPrix((p) => (p === n ? 0 : n))}>
-                  {'€'.repeat(n)}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          </>}
+          )}
+          {MENTIONS_ALIMENTAIRES && (
           <fieldset className="sl-groupe">
             <legend className="sl-groupe-titre">{t('siteListe.envies')}</legend>
             {cuisineOptions.filter((o) => o.regime).map((o) => {
@@ -766,6 +750,7 @@ export default function RestaurantList() {
               );
             })}
           </fieldset>
+          )}
           {!loading && !hasActiveFilter && localTexte && (
             <p className="sl-local" role="status"><Icone nom="position" taille={18} /><span>{localTexte}</span></p>
           )}
@@ -806,24 +791,12 @@ export default function RestaurantList() {
             <Icone nom="sac" taille={16} />{t('restaurantList.filterPickup')}
           </button>
         )}
-        {!colonne && TRI_ET_PRIX && <>
-        <button type="button" className={`cuisine-chip${prix ? ' active' : ''}`} aria-expanded={panneau === 'prix'} onClick={() => setPanneau((x) => (x === 'prix' ? null : 'prix'))}>
-          <Icone nom="euro" taille={16} />{prix ? '€'.repeat(prix) : t('mapClient.filterPrice')}
-        </button>
+        {!colonne && TRI && <>
         <button type="button" className={`cuisine-chip${tri !== 'recommande' ? ' active' : ''}`} aria-expanded={panneau === 'tri'} onClick={() => setPanneau((x) => (x === 'tri' ? null : 'tri'))}>
           <Icone nom="stats" taille={16} />{tri === 'recommande' ? t('mapClient.sort') : (tri === 'note' ? t('mapClient.sortRating') : t('mapClient.sortDistance'))}
         </button>
         </>}
       </div>}
-      {!colonne && panneau === 'prix' && (
-        <div className="carte-panneau liste-panneau">
-          {[0, 1, 2, 3].map((n) => (
-            <button key={n} type="button" className={`cuisine-chip${prix === n ? ' active' : ''}`} onClick={() => { setPrix(n); setPanneau(null); }}>
-              {n === 0 ? t('mapClient.filterAllPrices') : '€'.repeat(n)}
-            </button>
-          ))}
-        </div>
-      )}
       {!colonne && panneau === 'tri' && (
         <div className="carte-panneau liste-panneau">
           {['recommande', 'note', 'distance'].map((cle) => (
@@ -881,8 +854,10 @@ export default function RestaurantList() {
             <Section key={s.key} title={titreRangee(t, s)} icon="restaurants" list={s.liste} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle={s.key} />
           ))}
           <Section title={t('restaurantList.sectionHealthy')} icon="restaurants" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="healthy" />
+          {MENTIONS_ALIMENTAIRES && <>
           <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="bio" />
           <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="vegan" />
+          </>}
           <Section title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="grocery" />
           <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epinglerOuMelanger(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay grille={grand} cle="discover" />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
@@ -894,7 +869,7 @@ export default function RestaurantList() {
           sortir (audit du 15/10/2026). On dit que c'est le filtre, et on l'efface en un geste. */}
       {!loading && hasActiveFilter && list.length === 0 && (
         <EtatVide icone="recherche" titre={t('restaurantList.emptyFiltered')}>
-          <button type="button" className="btn-teal" onClick={() => { setSearch(''); setCuisine(''); setCommune(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false); setPrix(0); setEmporter(false); setTri('recommande'); }}>
+          <button type="button" className="btn-teal" onClick={() => { setSearch(''); setCuisine(''); setCommune(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false); setEmporter(false); setTri('recommande'); }}>
             {t('restaurantList.clearFilters')}
           </button>
         </EtatVide>

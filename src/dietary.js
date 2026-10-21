@@ -9,6 +9,17 @@
 // sans gluten sur demande » pour un plat sans gluten ; décision fondateur : halal et sans gluten sont DÉCLARÉS par le
 // commerce, jamais déduits). Un commerce sort sous le filtre s'il est « tout halal » ou s'il a coché au moins un plat ;
 // la recherche par plat ne garde que les plats cochés. Rien n'est déduit des allergènes non plus.
+//
+// MASQUÉES POUR LE MOMENT, APP ET SITE (fondateur, 2026-10-21 : « c'est très chiant pour le restaurant de le faire, on remettra
+// ça bien quand on aura une bonne base de données ») : cocher bio, vegan, halal et sans gluten plat par plat pèse sur le
+// commerce, et sans ces cases les filtres ne trouvent presque rien. Tant que c'est false : ni filtres (bande des cuisines,
+// colonne « Envies » du site, pastilles de la recherche), ni rangées « Bio » et « Vegan » de l'accueil, ni mentions sur la
+// carte des plats, ni cases côté commerce (MentionsAlimentaires, fiche d'un plat), et ces deux rangées ne se vendent plus
+// en mise en avant (MiseEnAvant). Les données en base et les règles ci-dessous restent : repasser à true remet tout.
+// Les allergènes ne sont PAS concernés : ils restent partout (obligation d'information, règlement UE 1169/2011).
+export const MENTIONS_ALIMENTAIRES = false;
+export const RANGEES_MENTIONS = ['bio', 'vegan'];
+
 const texteDuPlat = (m) => `${m.name || ''} ${m.desc || m.description || ''}`.toLowerCase();
 
 export const platBio = (m) => !!m.organic || /(^|[^a-zà-ÿ])bio(logique)?s?($|[^a-zà-ÿ])|organic/i.test(texteDuPlat(m));

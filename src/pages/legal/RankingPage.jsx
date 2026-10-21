@@ -11,7 +11,9 @@ import { useLanguage } from '../../context/LanguageContext';
  *   - liste filtrée : pages/client/RestaurantList.jsx `list` (anneaux de communes autour de `homeCommune` : ville du compte,
  *     sinon son code postal, sinon `communeProche` de l'accueil ; puis ordre du serveur, routes/restaurants.js calculerListe,
  *     ORDER BY is_demo ASC, created_at DESC). Recherche (SearchPage.jsx) et carte (MapPage.jsx) : ordre du serveur tel quel ;
- *   - tris « mieux notés » / « plus proches » et prix : masqués (TRI_ET_PRIX = false), d'où « pas d'autre tri » ;
+ *   - tris « mieux notés » / « plus proches » : masqués (TRI = false), d'où « pas d'autre tri » ; filtre par prix retiré, filtres
+ *     bio, vegan, halal, sans gluten et rangées Bio et Vegan masqués (MENTIONS_ALIMENTAIRES = false, dietary.js), « à emporter »
+ *     aussi (FILTRE_EMPORTER = false) : ni la liste des filtres ni celle des rangées ne les citent plus (21/10/2026) ;
  *   - rangées : même fichier (aLaUne + ownCover, inscrits = GET /restaurants/landing et son score, nearbyList + completer,
  *     enviesList, livraisonOfferte / livraisonPasCher, offersList, rangeesCuisine, parMention, groceryList, discoverList) ;
  *     `epinglerOuMelanger` : hasard par commune sans position payée, ordre propre de la rangée sinon ;

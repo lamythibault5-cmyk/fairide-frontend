@@ -190,7 +190,8 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
       )}
       {/* Dans l'app, l'illustration en couleur de chaque cuisine au-dessus de son nom (fondateur, 2026-10-21, version A2 de
           maquettes/recherche-couleurs : 72 px de haut au lieu de 56, la version à 100 px était trop épaisse). Bio, Vegan,
-          Halal et Sans gluten n'ont pas d'illustration : leur tracé prend la même place. Le site garde la bande d'icônes. */}
+          Halal et Sans gluten n'ont pas d'illustration : leur tracé prend la même place. Sur le site, l'illustration 2D à côté
+          du nom, à la place de l'icône (version A de maquettes/site-illustrations, même hauteur de bande). */}
       <div className={`lt-puces${app ? ' lt-puces--illustrees' : ''}`} ref={bande}>
         {/* Les pastilles sont des <button> avec aria-pressed : joignables au clavier (voir l'historique de RestaurantList). */}
         <div className="lt-defile" ref={defile} role="group" aria-label={libelleBande}>
@@ -209,7 +210,7 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
                   aria-pressed={on}
                   onClick={() => surPuce(opt)}
                 >
-                  {!app ? <Icone nom={opt.emoji} taille={18} />
+                  {!app ? (opt.illustration ? <img className="lt-illu-plat" src={illustrationCuisine(opt.illustration, { plat: true })} alt="" width="22" height="22" decoding="async" draggable="false" /> : <Icone nom={opt.emoji} taille={18} />)
                     : opt.illustration ? <img className="lt-illu" src={illustrationCuisine(opt.illustration)} alt="" width="32" height="32" decoding="async" draggable="false" />
                       : <span className="lt-illu lt-illu--trace"><Icone nom={opt.emoji} taille={20} /></span>}
                   <span>{opt.label}</span>

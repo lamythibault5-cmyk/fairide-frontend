@@ -9,6 +9,7 @@ import { defilement, vibrer } from '../../gestes';
 import MenuConciergeRequest from '../MenuConciergeRequest';
 import ConformiteCarte from '../conformite/ConformiteCarte';
 import MentionsAlimentaires from './MentionsAlimentaires';
+import { MENTIONS_ALIMENTAIRES } from '../../dietary';
 import HaussePrix from '../HaussePrix';
 import DemandeModifCarte from '../DemandeModifCarte';
 import TvaCarte from './TvaCarte';
@@ -134,8 +135,9 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
         <p className="ec-feuille-titre">{t('ecranCommerce.reglagesTitre')}</p>
         {/* Carte signée, allergènes, vendeur professionnel (backlog de conformité A1, A2, A8). */}
         <ConformiteCarte restoId={restoId} rafraichir={restaurant} onChange={() => loadDashboard(restoId)} />
-        {/* Halal, sans gluten, vegan, bio : déclarés par le commerce lui-même, malgré le verrou de la carte. */}
-        <MentionsAlimentaires restaurant={restaurant} restoId={restoId} token={token} onChange={() => loadDashboard(restoId)} />
+        {/* Halal, sans gluten, vegan, bio : déclarés par le commerce lui-même, malgré le verrou de la carte. Masqués pour le
+            moment (MENTIONS_ALIMENTAIRES, dietary.js) : trop lourd à remplir plat par plat. */}
+        {MENTIONS_ALIMENTAIRES && <MentionsAlimentaires restaurant={restaurant} restoId={restoId} token={token} onChange={() => loadDashboard(restoId)} />}
         {/* Hausse de prix gardée par le commerce (fondateur, 2026-09-30). */}
         {!carteVide && <HaussePrix restoId={restoId} nbPlats={menu.length} onChange={() => loadDashboard(restoId)} />}
         <TvaCarte restoId={restoId} token={token} menu={menu} toast={toast} onChange={() => loadDashboard(restoId)} />
