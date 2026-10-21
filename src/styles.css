@@ -5358,6 +5358,11 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .btn-connexion { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; font-size: 16px; font-weight: 600; border-radius: 999px; }
 .btn-connexion-apple { background: #000; color: #fff; }
 .btn-connexion-google { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+/* Le bouton touché, pendant la connexion (BoutonsConnexionNative) : plein, avec une roue ; l'autre reste grisé. */
+.btn-connexion.en-cours:disabled { opacity: 1; }
+.btn-connexion-roue { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: btn-connexion-tourne .7s linear infinite; }
+@keyframes btn-connexion-tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .btn-connexion-roue { animation-duration: 2s; } }
 
 /* Carte « Active ta position » qui remplace les courses disponibles tant que la position du livreur manque
    (components/livreur/PositionRequise.jsx) : un filet iris de 2 px pour qu elle se lise comme une étape à faire. */

@@ -4322,6 +4322,13 @@ export default {
       lawTitle: 'Toepasselijk recht, geschillen en bemiddeling',
       law: 'Deze voorwaarden vallen onder het Belgische recht. Bij een geschil contacteer je ons eerst op contact@fairide.be: we antwoorden binnen 5 werkdagen. Zonder akkoord kan de consument terecht bij de Consumentenombudsdienst (North Gate II, Koning Albert II-laan 8 bus 1, 1000 Brussel, [consumentenombudsdienst.be](https://consumentenombudsdienst.be)). De rechtbanken van het gerechtelijk arrondissement Brussel zijn bevoegd, onverminderd de dwingende bevoegdheidsregels voor consumenten. U kunt uw klacht ook online indienen via Belmed, het platform voor buitengerechtelijke geschillenbeslechting van de FOD Economie ([belmed.economie.fgov.be](https://belmed.economie.fgov.be)).'
     },
+    // Page de retour de Stripe dans l'app (pages/app/RetourAppli.jsx).
+    retourAppli: {
+      titre: 'Terug naar de Fairide-app',
+      texte: 'Stripe is klaar. Tik op de knop om terug te gaan naar de Fairide-app.',
+      bouton: 'Fairide-app openen',
+      site: 'Verder op de website'
+    },
     cookiesPolicy: {
       pageTitle: 'Cookiebeleid · Fairide',
       title: 'Cookiebeleid',
@@ -4329,7 +4336,7 @@ export default {
       whatTitle: 'Wat is een cookie?',
       what: 'Een cookie is een klein bestand dat een website in je browser plaatst. Fairide gebruikt ook de “lokale opslag” van de browser (localStorage en sessionStorage), die dezelfde rol speelt: informatie onthouden van pagina tot pagina. Dit beleid dekt beide. Het geldt voor de website fairide.be en voor de Fairide-app die vanuit de browser wordt geïnstalleerd.',
       technicalTitle: 'Strikt noodzakelijke cookies en opslag',
-      technical: 'Ze zijn onmisbaar voor de dienst en vereisen geen toestemming: **je sessie** (inlogtoken, tot 30 dagen of tot je uitlogt), **je winkelmandje** (inhoud en gekozen zaak, hoogstens 24 uur, leeggemaakt bij het uitloggen), **je begonnen inschrijving** (hoogstens 48 uur, gewist zodra het account is aangemaakt), **je keuze over de cookiebanner**, en **technische beveiligingen** (misbruikbeperking, formulierbeveiliging). Zonder deze kun je niet inloggen of bestellen.',
+      technical: 'Ze zijn onmisbaar voor de dienst en vereisen geen toestemming: **je sessie** (inlogtoken, tot 30 dagen of tot je uitlogt), **je winkelmandje** (inhoud en gekozen zaak, hoogstens 24 uur, leeggemaakt bij het uitloggen), **je begonnen inschrijving** (hoogstens 48 uur, gewist zodra het account is aangemaakt), **de laatste lijst van zaken**, alleen in de app (om ze meteen bij het openen te tonen; openbaar, zonder gegevens over jou), **je keuze over de cookiebanner**, en **technische beveiligingen** (misbruikbeperking, formulierbeveiliging). Zonder deze kun je niet inloggen of bestellen.',
       preferencesTitle: 'Voorkeuren',
       preferences: 'Om het je gemakkelijk te maken onthoudt Fairide in je browser: de gekozen **taal** (Frans, Engels, Nederlands), het **weergavethema**, je **laatste zoekopdrachten** in de app (maximaal vijf, gewist bij het afmelden), de **muziek** gekozen in de minigames en je beste scores, de ticketprinter en het papier gekozen door een zaak, de geopende tabbladen en filters in het dashboard. Deze informatie verlaat je toestel niet en dient niet om je te volgen.',
       thirdPartyTitle: 'Diensten van derden',
@@ -9703,6 +9710,7 @@ export default {
       lvN2S: 'Geen score of rangschikking: niemand wordt vóór jou verwittigd.',
       continueApple: 'Doorgaan met Apple',
       continueGoogle: 'Doorgaan met Google',
+      connexionEnCours: 'Inloggen…',
       continueEmail: 'Doorgaan met mijn e-mail',
       appleLinked: 'Apple-account onthouden',
       nativeLoginFailed: 'Inloggen is niet gelukt. Probeer opnieuw, of ga verder met je e-mail.',

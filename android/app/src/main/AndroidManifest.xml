@@ -26,8 +26,9 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <!-- fairide.be seul (2026-10-21) : www.fairide.be redirige (308), Android refuse alors de le vérifier, et
+                     jusqu'à Android 11 un seul hôte refusé annule la vérification de tous. Stripe ne renvoie que vers fairide.be. -->
                 <data android:scheme="https" android:host="fairide.be" />
-                <data android:scheme="https" android:host="www.fairide.be" />
             </intent-filter>
         </activity>
 

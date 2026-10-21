@@ -398,14 +398,27 @@ async function preparerConnexion() {
   return connexionPrete;
 }
 
+/* PRÉCHAUFFER LA CONNEXION (2026-10-21, latence de l'app) : le greffon était chargé et initialisé au premier toucher de
+ * « Continuer avec Google », pendant que la personne attendait. Les écrans qui montrent ces boutons l'appellent à
+ * l'ouverture (BoutonsConnexionNative) : au toucher, il ne reste que la feuille de Google. Sans effet sur le site. */
+export function prechaufferConnexion() {
+  if (!estNatif()) return;
+  preparerConnexion().catch(() => { /* réessayé au toucher, qui affichera l'erreur */ });
+}
+
 export function appleDisponible() { return estNatif() && plateforme() === 'ios'; }
 
 export async function connexionFournisseur(fournisseur) {
   const { SocialLogin } = await preparerConnexion();
   // Google sur Android : pas de liste « scopes ». E-mail + profil + openid sont déjà demandés par défaut
   // (GoogleProvider.java), et le greffon refuse toute liste si MainActivity n'implémente pas son interface.
+  // PLUS RAPIDE (2026-10-21, latence de l'app) : `style: 'bottom'`, la feuille des comptes en bas de l'écran au lieu de
+  // l'écran « Se connecter avec Google » (sans compte Google sur le téléphone, le greffon repasse seul à l'écran complet) ;
+  // `idTokenOnly`, ajouté au greffon par scripts/corriger-connexion-google.mjs : il rend le jeton d'identité tout de suite,
+  // sans la seconde étape de Google (authorize, un aller-retour et parfois un second écran) qui ne servait qu'à un jeton
+  // d'accès que Fairide n'utilise pas — POST /auth/google ne lit que le jeton d'identité.
   const options = fournisseur === 'apple' ? { scopes: ['email', 'name'] }
-    : plateforme() === 'android' ? {} : { scopes: ['email', 'profile'] };
+    : plateforme() === 'android' ? { style: 'bottom', idTokenOnly: true } : { scopes: ['email', 'profile'] };
   const { result } = await SocialLogin.login({ provider: fournisseur, options });
   const jeton = result?.idToken;
   if (!jeton) throw new Error('Connexion annulée.');

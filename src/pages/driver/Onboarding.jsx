@@ -5,6 +5,7 @@ import DossierSuivi from './DossierSuivi';
 import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer, MesCourses, PiecesSejour, ConfirmerEcole } from './dossierBlocs';
 import PageLivreur from '../../components/livreur/PageLivreur';
 import SacLivraison from '../../components/SacLivraison';
+import useRevalidation from '../../useRevalidation';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import useRevalidation from '../../useRevalidation';
@@ -112,6 +113,21 @@ export default function Onboarding() {
   }, [location.key]);
   // LIVE-07 (audit du 19/10) : les réponses de « Infos & documents » gardées ici, hors de l'étape (voir EtapeInfos).
   const [brouillonInfos, setBrouillonInfos] = useState(null);
+
+  // RETOUR DE STRIPE DANS L'APP (2026-10-21, vérification Stripe site / app). L'effet ci-dessus ne tourne qu'à l'ouverture :
+  // dans l'app, le dossier reste ouvert pendant la vérification d'identité ou Stripe Connect (par-dessus), et le livreur
+  // revoyait « Commencer » au retour — de quoi lancer une seconde vérification. Chaque retour au premier plan relit donc
+  // l'identité (sans effet si elle n'est pas en cours chez Stripe) et, s'il est en attente, le compte de paiement.
+  // Le formulaire du dossier garde ce qui est tapé (DossierAppli lit `d` une seule fois).
+  useRevalidation(async () => {
+    const r = await api('/couriers/me/identity/refresh', { method: 'POST', token });
+    if (r?.courier) setD(r);
+    if ((r?.user?.stripeConnectStatus || user?.stripeConnectStatus) === 'pending') {
+      await api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {});
+      await refreshUser?.().catch(() => {});
+      await charger();
+    }
+  }, { actif: !!d, absenceMin: 0 });
 
   const manques = d?.missing ?? [];
   const premiereIncomplete = useMemo(() => {

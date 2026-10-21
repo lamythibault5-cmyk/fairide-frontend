@@ -47,6 +47,11 @@ import { normaliserRecherche } from '../../normaliserRecherche';
 // (le tri « Recommandé » est celui que décrit /classement) : repasser à true ici et dans pages/client/MapPage.jsx.
 const TRI_ET_PRIX = false;
 
+// « À EMPORTER » RETIRÉ POUR LE MOMENT (fondateur, 2026-10-21).
+// La pastille au-dessus de la liste et Livraison / À emporter sur le bandeau (site, 900 px)
+// disparaissent ; l'état `emporter` reste à false. Repasser à true pour les remettre.
+const FILTRE_EMPORTER = false;
+
 // Bandes de prix, calculees sur le prix MEDIAN des plats de la carte : aucune colonne « niveau de
 // prix » n'existe en base, et un euro affiche au juge serait faux pour la moitie des commerces.
 // Memes seuils que la page Carte (pages/client/MapPage.jsx) — les deux doivent classer pareil.
@@ -657,9 +662,10 @@ export default function RestaurantList() {
   // Le bandeau ne s'affiche qu'avec un compte : sans lui, « À emporter » reste une pastille au-dessus de la liste.
   // Avant le GO, seul l'à emporter est ouvert : pas de bascule « Livraison / À emporter » (audit du 19/10, discovery-25) ; la
   // pastille « À emporter » reste au-dessus de la liste.
-  const modeSurBandeau = grand && !!user && livraisonOuverte(user);
+  const modeSurBandeau = FILTRE_EMPORTER && grand && !!user && livraisonOuverte(user);
   // La rangée de pastilles au-dessus de la liste : tout ce que la colonne et le bandeau ne portent pas déjà.
-  const pastillesFiltres = !colonne || !modeSurBandeau;
+  // Seulement s'il y a quelque chose dedans : sans « À emporter », ni tri ni prix, la rangée vide laissait un blanc.
+  const pastillesFiltres = (!colonne || !modeSurBandeau) && (FILTRE_EMPORTER || (!colonne && (TRI_ET_PRIX || !!commune || !!search)));
   return (
     <div className={`sl-liste${grand ? ' sl-liste--grand' : ''}${colonne ? ' sl-liste--colonne' : ''}`}>
       <TirerPourActualiser onActualiser={actualiser} />
@@ -795,7 +801,7 @@ export default function RestaurantList() {
             <Icone nom="recherche" taille={16} />{search}<span aria-hidden="true"> ×</span>
           </button>
         )}
-        {!modeSurBandeau && (
+        {FILTRE_EMPORTER && !modeSurBandeau && (
           <button type="button" className={`cuisine-chip${emporter ? ' active' : ''}`} aria-pressed={emporter} onClick={() => setEmporter((v) => !v)}>
             <Icone nom="sac" taille={16} />{t('restaurantList.filterPickup')}
           </button>

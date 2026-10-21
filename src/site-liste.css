@@ -17,51 +17,44 @@
    1 · LA LISTE DES COMMERCES (RestaurantList.jsx, TeteListe.jsx)
    --------------------------------------------------------------------------------------------------------------------- */
 
-/* SUR LE SITE, À TOUTES LES LARGEURS : comme dans l'app, le bandeau « Livrer à » s'efface quand on descend et REVIENT dès
-   qu'on remonte (useEnteteDefilement, TeteListe.jsx ; fondateur, 2026-10-16). L'en-tête entier est collant en haut ; replié,
-   il remonte exactement de la hauteur du bandeau et la bande des cuisines reste seule au bord, en barre blanche à filet d'un
-   bord à l'autre (pas la pilule flottante de l'app : sur le site, pas de verre). */
+/* SUR LE SITE, À TOUTES LES LARGEURS : comme dans l'app, le bandeau « Livrer à » reste collé en haut avec la
+   bande des cuisines dessous (fondateur, 2026-10-21, maquettes/bandeau-velo : « Site : pareil que l'app »). Il s'effaçait
+   en descendant depuis le 2026-10-16. La bande des cuisines est une barre blanche à filet d'un bord à l'autre (pas la pilule
+   flottante de l'app : sur le site, pas de verre). Hauteur : 88 px, comme l'app (ecran-liste.css). */
 html:not(.appli) .sl-liste .liste-tete--bandeau { top: 0; margin-bottom: 0; }
-html:not(.appli) .sl-liste .liste-tete--bandeau.liste-tete--replie { transform: translateY(calc(-1 * var(--lt-hb))); }
-html:not(.appli) .sl-liste .lt-bandeau,
-html:not(.appli) .sl-liste .liste-tete--replie .lt-bandeau { transform: none; }
 html:not(.appli) .sl-liste .liste-tete--bandeau .lt-puces { margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: #fff; }
 html:not(.appli) .sl-liste .liste-tete--bandeau .lt-defile { border-radius: 0; }
 html:not(.appli) .sl-liste .liste-tete--bandeau .lt-piste { padding: 6px 12px; }
 html:not(.appli) .sl-liste .sl-corps { margin-top: 16px; }
 /* AU TÉLÉPHONE, LA BANDE DES CUISINES REMONTE SUR LA LÈVRE (fondateur, 2026-10-17, capture d'iPhone : un blanc entre « Livrer
-   à » et « Tous · Pizza · Burgers »). Elle mord de 12 px sur la lèvre blanche du bandeau, coins du haut arrondis comme la
-   lèvre pour ne rien recouvrir de l'iris, et la pastille « Tous » garde ~17 px d'air sous le bandeau. Repliée (on descend),
-   elle reste au bord de l'écran comme avant : l'en-tête remonte de 12 px de moins, et la lèvre devient un simple aplat blanc. */
+   à » et « Tous · Pizza · Burgers »). Elle mord de 12 px sur la lèvre blanche du bandeau (16 px), coins du haut arrondis
+   comme la lèvre pour ne rien recouvrir de l'iris. */
 @media (max-width: 899px) {
   html:not(.appli) .sl-liste .liste-tete--bandeau .lt-puces { margin-top: -12px; border-radius: 24px 24px 0 0; }
   html:not(.appli) .sl-liste .liste-tete--bandeau .lt-defile { border-radius: 24px 24px 0 0; }
-  html:not(.appli) .sl-liste .liste-tete--bandeau.liste-tete--replie { transform: translateY(calc(12px - var(--lt-hb))); }
-  html:not(.appli) .sl-liste .liste-tete--replie .lt-puces,
-  html:not(.appli) .sl-liste .liste-tete--replie .lt-defile,
-  html:not(.appli) .sl-liste .liste-tete--replie .lt-bandeau::after { border-radius: 0; }
 }
 /* « Manger local » sur le site : le texte et l'icône sur un filet, sans fond gris (fonds blancs ou iris seulement). */
 html:not(.appli) .sl-liste .local-bandeau { flex-wrap: nowrap; align-items: flex-start; padding: 10px 12px; background: #fff; border: 1px solid var(--line); line-height: 1.4; }
 html:not(.appli) .sl-liste .local-bandeau svg { flex: none; margin-top: 1px; color: var(--iris); }
 
-/* À partir de 900 px : le bandeau de la maquette (plus haut, l'adresse en grand, Livraison / À emporter à droite). */
-html:not(.appli) .sl-liste--grand .liste-tete--bandeau { --lt-hb: 140px; }
+/* À partir de 900 px : le même bandeau, un peu plus haut (96 px) pour une adresse un peu plus grande. Livraison / À emporter
+   à droite n'est plus affiché (FILTRE_EMPORTER, RestaurantList.jsx) ; il tient à droite de l'adresse s'il revient. */
+html:not(.appli) .sl-liste--grand .liste-tete--bandeau { --lt-hb: 96px; }
 /* Le contenu du bandeau s'aligne sur la colonne de 1 120 px (100 % = la largeur du haut, marges négatives comprises). */
-html:not(.appli) .sl-liste--grand .lt-bandeau { padding: 24px max(28px, calc((100% - 1120px) / 2)) 0; }
+html:not(.appli) .sl-liste--grand .lt-bandeau { padding: 10px max(28px, calc((100% - 1120px) / 2)) 0; }
 html:not(.appli) .sl-liste--grand .lt-bandeau--mode {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; align-content: start; column-gap: 24px;
 }
 html:not(.appli) .sl-liste--grand .lt-bandeau--mode .lt-route { grid-column: 1 / -1; }
-html:not(.appli) .sl-liste--grand .lt-adresse { width: auto; max-width: 100%; justify-self: start; gap: 14px; padding: 2px 10px 2px 0; border-radius: 999px; }
+html:not(.appli) .sl-liste--grand .lt-adresse { width: auto; max-width: 100%; justify-self: start; gap: 14px; margin: -2px 0; padding: 0 10px 0 0; border-radius: 999px; }
 html:not(.appli) .sl-liste--grand .lt-adresse:hover:not(:disabled) { background: none; }
 html:not(.appli) .sl-liste--grand .lt-adresse:hover .lt-adresse-icone { border-color: #fff; }
-html:not(.appli) .sl-liste--grand .lt-adresse-icone { width: 48px; height: 48px; border-color: rgba(255, 255, 255, .4); transition: border-color .15s; }
+html:not(.appli) .sl-liste--grand .lt-adresse-icone { width: 40px; height: 40px; border-color: rgba(255, 255, 255, .4); transition: border-color .15s; }
 html:not(.appli) .sl-liste--grand .lt-adresse-texte { flex: 0 1 auto; }
 html:not(.appli) .sl-liste--grand .lt-adresse-intitule { font-size: 13px; }
-html:not(.appli) .sl-liste--grand .lt-adresse-valeur { font-size: 20px; font-weight: 700; }
+html:not(.appli) .sl-liste--grand .lt-adresse-valeur { font-size: 18px; font-weight: 700; }
 html:not(.appli) .sl-liste--grand .lt-chevron { margin-left: 4px; }
-html:not(.appli) .sl-liste--grand .lt-route { margin-top: 14px; }
+html:not(.appli) .sl-liste--grand .lt-route { margin-top: 2px; }
 
 /* Livraison / À emporter : un sélecteur à pouce blanc sur l'iris (maquette : .seg-iris). */
 .lt-mode { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, .12); }
@@ -105,8 +98,9 @@ html:not(.appli) .sl-liste--grand .liste-section > .section-title { font-size: 2
 
 /* La colonne des filtres : collée sous la bande des cuisines quand on descend. */
 .sl-filtres { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; transition: top .45s cubic-bezier(.34, 1.25, .64, 1); }
-/* Le bandeau revient quand on remonte : la colonne des filtres se pose alors sous lui, plus seulement sous la bande. */
-.sl-liste:has(.liste-tete--bandeau:not(.liste-tete--replie)) .sl-filtres { top: calc(var(--lt-hb, 140px) + 84px); }
+/* Avec le bandeau (toujours là depuis le 2026-10-21), la colonne se pose sous lui : 96 px (--lt-hb de .sl-liste--grand,
+   écrit ici en clair : la variable vit sur .liste-tete, pas sur la colonne) + les 84 px de la bande. */
+.sl-liste:has(.liste-tete--bandeau) .sl-filtres { top: calc(96px + 84px); }
 .sl-filtres-actifs { display: flex; flex-wrap: wrap; gap: 6px; }
 .sl-groupe { display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 0; border: 0; }
 .sl-groupe-titre { padding: 0; margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); }

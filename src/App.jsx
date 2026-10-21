@@ -101,6 +101,8 @@ const AdminMessagesPage = lazyPage(() => import('./pages/admin/AdminMessagesPage
 
 // --- Accueil de l'application iOS / Android (premier lancement, voir pages/app/Bienvenue.jsx) ---
 const Bienvenue = lazyPage(() => import('./pages/app/Bienvenue'));
+// Retour de Stripe pour une commande passée dans l'app : rouvre l'application (voir pages/app/RetourAppli.jsx).
+const RetourAppli = lazyPage(() => import('./pages/app/RetourAppli'));
 // La connexion dans l'application : un écran de l'accueil, pas la page du site (voir ConnexionAppli.jsx).
 const ConnexionAppli = lazyPage(() => import('./pages/app/ConnexionAppli'));
 
@@ -168,6 +170,7 @@ export default function App() {
       <Routes location={fond || location}>
       {/* Hors de <Layout> : l'accueil de l'application est plein écran, sans en-tête ni pied de page du site. */}
       <Route path="/bienvenue" element={<Bienvenue />} />
+      <Route path="/retour-appli" element={<RetourAppli />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={experienceApp() ? <ConnexionAppli /> : <Auth />} />
