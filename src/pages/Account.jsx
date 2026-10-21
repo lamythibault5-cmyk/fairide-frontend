@@ -21,6 +21,7 @@ import LigneCompte from '../components/LigneCompte';
 import MesDonnees from '../components/MesDonnees';
 import CartesEnregistrees from '../components/client/CartesEnregistrees';
 import EquipeCommerce from '../components/commerce/EquipeCommerce';
+import QuitterEquipe from '../components/commerce/QuitterEquipe';
 import { definirModeEquipe } from '../modeEquipe';
 import '../ecran-equipe-groupe.css';
 import NouvellesFairide from '../components/NouvellesFairide';
@@ -871,6 +872,8 @@ export default function Account() {
             </div>
           </div>
           <LigneCompte to="/dashboard/orders" icone="commandes" titre={t('nav.orders')} />
+          {/* Partir de soi-même (audit du 19/10, shop-410). */}
+          <QuitterEquipe restaurant={restaurant} />
         </div>
       )}
       {role === 'restaurant' && restaurant && !membreEquipe && <h2 className="compte-feuille-titre">{t('accountUi.myBusiness')}</h2>}

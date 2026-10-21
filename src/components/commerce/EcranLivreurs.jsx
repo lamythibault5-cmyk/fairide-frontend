@@ -31,7 +31,7 @@ export default function EcranLivreurs({ restaurant, drivers, restoId, loadDashbo
   }
 
   async function lier() {
-    if (!email.trim()) { toast(t('editResto.toastDriverEmail')); return; }
+    if (!email.trim()) { toast(t('editResto.toastDriverEmail'), 'erreur'); return; } // style erreur (shop-329)
     setLiaison(true);
     await geste(() => api(`/restaurants/${restoId}/drivers`, { method: 'POST', token, body: { email: email.trim() } }),
       (d) => t('editResto.toastDriverInvited', { email: d.email }), () => setEmail(''));

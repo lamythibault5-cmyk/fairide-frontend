@@ -16,7 +16,8 @@ import { useLanguage } from '../context/LanguageContext';
 //
 // `titre` : le texte par défaut ("Impossible de charger ces données.") convient à une liste ; un
 // appelant qui sait mieux ce qui manque peut le dire à sa place.
-export default function ErrorCard({ message, onRetry, titre }) {
+// `libelle` : le texte du bouton, quand ce n'est pas « Réessayer » (accès perdu à un commerce : « Revenir à l'accueil »).
+export default function ErrorCard({ message, onRetry, titre, libelle }) {
   const { t: tr } = useLanguage();
   return (
     <div className="error-card" role="alert">
@@ -24,7 +25,7 @@ export default function ErrorCard({ message, onRetry, titre }) {
       <div className="error-card-corps">
         <h3>{titre || tr('adminCommon.loadError')}</h3>
         {message && <p className="small">{message}</p>}
-        {onRetry && <button type="button" className="btn-outline" onClick={onRetry}>{tr('adminCommon.retry')}</button>}
+        {onRetry && <button type="button" className="btn-outline" onClick={onRetry}>{libelle || tr('adminCommon.retry')}</button>}
       </div>
     </div>
   );

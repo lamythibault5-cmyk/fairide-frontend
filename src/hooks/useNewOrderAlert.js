@@ -190,7 +190,11 @@ export default function useNewOrderAlert(orders, ready) {
   const newCount = newOrders.length;
 
   const ctxRef = useRef(null);
-  const prevCountRef = useRef(null);
+  // Les commandes « nouvelle » déjà vues (audit du 19/10, shop-215) : comparer les NOMBRES ratait une arrivée quand, dans le
+  // même sondage, une autre commande sortait (expirée, annulée par le client) — compte inchangé, ni son ni notification,
+  // alors que la feuille « Nouvelle commande », qui compare les identifiants, s'ouvrait. Même règle ici.
+  const prevIdsRef = useRef(null);
+  const cleNouvelles = newOrders.map((o) => o.id).sort().join(',');
 
   const setSoundEnabled = useCallback((value) => {
     setSoundEnabledState(value);
@@ -290,22 +294,24 @@ export default function useNewOrderAlert(orders, ready) {
     try { jouerSonnerie(ctx, sonnerie, gainRef.current || ctx.destination); } catch { /* contexte audio fermé par le navigateur */ }
   }, [soundEnabled, sonnerie]);
 
-  // Sonne + notifie à chaque NOUVELLE commande, pas à chaque rafraîchissement. prevCountRef démarre à
+  // Sonne + notifie à chaque NOUVELLE commande, pas à chaque rafraîchissement. prevIdsRef démarre à
   // null pour distinguer le tout premier chargement (où l'on ne veut pas sonner pour des commandes
   // déjà présentes avant l'ouverture de la page) d'une vraie arrivée.
   useEffect(() => {
     // Tant que les données ne sont pas chargées, on n'établit aucune référence : le premier VRAI
     // chargement sert de point de départ, et seules les commandes arrivées après déclenchent l'alerte.
     if (!ready) return;
-    const prev = prevCountRef.current;
-    prevCountRef.current = newCount;
-    if (prev === null || newCount <= prev) return;
+    const ids = cleNouvelles ? cleNouvelles.split(',') : [];
+    const prev = prevIdsRef.current;
+    prevIdsRef.current = new Set([...(prev || []), ...ids]);
+    if (prev === null) return;
+    const arrived = ids.filter((id) => !prev.has(id)).length;
+    if (!arrived) return;
     // Nouvelle arrivée : le compte des sonneries repart, et une alarme coupée se rallume.
     setJouees(1);
     setCoupee(false);
     ring();
 
-    const arrived = newCount - prev;
     // Un tag constant remplace la notification précédente au lieu d'en empiler une par sondage.
     notifier(arrived > 1 ? t('alertBar.notifTitleMany', { n: arrived }) : t('alertBar.notifTitleOne'),
       { body: t('alertBar.notifBody'), icon: '/icons/icon.svg', tag: 'fairide-new-order' });
@@ -313,7 +319,7 @@ export default function useNewOrderAlert(orders, ready) {
     // commande en attente au chargement ne rejouait jamais cet effet au passage de ready à true (le
     // compteur restant à 0), la référence n'était donc jamais posée — et la toute première commande
     // reçue repartait par la branche `prev === null`, sans un son.
-  }, [newCount, ring, ready]);
+  }, [cleNouvelles, ring, ready]);
 
   // Annulation (client, délai dépassé, faute de livreur, client absent…) : on compare les statuts d'un sondage à l'autre.
   // Une commande vue en cours et revue « annule » déclenche un son descendant (distinct du carillon d'arrivée), un toast et
@@ -361,11 +367,12 @@ export default function useNewOrderAlert(orders, ready) {
 
   useEffect(() => {
     const base = baseTitleRef.current || 'Fairide';
+    // Dans la langue du commerce : le compteur était écrit en dur en français (audit du 19/10, shop-220).
     document.title = newCount > 0
-      ? `(${newCount}) Nouvelle${newCount > 1 ? 's' : ''} commande${newCount > 1 ? 's' : ''}, ${base}`
+      ? t(newCount > 1 ? 'alertBar.tabTitleMany' : 'alertBar.tabTitleOne', { n: newCount, base })
       : base;
     return () => { document.title = base; };
-  }, [newCount]);
+  }, [newCount, t]);
 
   return { audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme };
 }

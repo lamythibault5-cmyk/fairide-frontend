@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import useDialogue from '../hooks/useDialogue';
 import useFeuilleGlissable from '../hooks/useFeuilleGlissable';
 import { mouvementReduit } from '../gestes';
+import ConfirmDialog from './ConfirmDialog';
 
 // Un sous-écran du paiement : l'adresse, les options de remise.
 //
@@ -18,7 +19,10 @@ import { mouvementReduit } from '../gestes';
 //
 // Reprend la géométrie de la fiche d'un plat (FichePlat) : plein écran sur téléphone, panneau centré
 // sur ordinateur, fermeture par la croix ou par Échap. Un seul geste à apprendre pour tout le site.
-export default function SousEcran({ titre, onFermer, children, pied = null }) {
+// `modifie` (facultatif) : l'écran a une saisie pas encore enregistrée. Le fermer (‹, Échap, tirer vers le bas) demande alors
+// « Quitter sans enregistrer ? » au lieu de tout perdre (audit du 19/10, shop-321 : sept jours d'horaires saisis, la feuille
+// tirée vers le bas en remontant, tout parti). « Enregistrer » ferme toujours sans rien demander : il passe par onFermer.
+export default function SousEcran({ titre, onFermer, children, pied = null, modifie = false }) {
   const { t } = useLanguage();
   const racine = useRef(null);
 
@@ -44,19 +48,26 @@ export default function SousEcran({ titre, onFermer, children, pied = null }) {
     setFerme(true);
     setTimeout(onFermer, 230);
   }
-  useDialogue(racine, fermerAnime);
+  const panneau = useRef(null);
+  const [aConfirmer, setAConfirmer] = useState(false);
+  // Saisie en cours : on remet la feuille en place (elle a pu partir sous le doigt) et on demande, au lieu de fermer.
+  function demander(fermeture) {
+    if (!modifie) { fermeture(); return; }
+    if (panneau.current) { panneau.current.style.transition = ''; panneau.current.style.transform = ''; }
+    setAConfirmer(true);
+  }
+  useDialogue(racine, () => { if (!aConfirmer) demander(fermerAnime); });
   // Même geste que la fiche d'un plat : tirer vers le bas ferme (physique dans l'application, voir le hook). Fermé par le
   // ressort, le panneau est déjà hors de l'écran : on ferme sans rejouer la sortie (fermerTout).
-  const panneau = useRef(null);
   const defile = useRef(null);
-  const glisser = useFeuilleGlissable({ panneau, defile, fermerAnime, fermerTout: onFermer });
+  const glisser = useFeuilleGlissable({ panneau, defile, fermerAnime: () => demander(fermerAnime), fermerTout: () => demander(onFermer) });
 
   return createPortal(
     <div className={`plat-feuille sous-ecran-feuille${ferme ? ' plat-feuille--ferme' : ''}`} role="dialog" aria-modal="true" aria-label={titre} ref={racine} tabIndex={-1}>
       <div className="plat-panneau" ref={panneau} {...glisser}>
         <span className="sous-ecran-poignee" aria-hidden="true" />
         <div className="sous-ecran-tete">
-          <button type="button" className="flux-bouton" onClick={fermerAnime} aria-label={t('common.close')} title={t('common.close')}>
+          <button type="button" className="flux-bouton" onClick={() => demander(fermerAnime)} aria-label={t('common.close')} title={t('common.close')}>
             <span aria-hidden="true">‹</span>
           </button>
           <span className="flux-titre">{titre}</span>
@@ -68,6 +79,9 @@ export default function SousEcran({ titre, onFermer, children, pied = null }) {
             mêmes au choix (les options de remise), d'autres ont besoin d'un « Enregistrer ». */}
         {pied && <div className="plat-pied">{pied}</div>}
       </div>
+      <ConfirmDialog open={aConfirmer} danger title={t('common.leaveUnsavedTitle')} message={t('common.leaveUnsavedText')}
+        confirmLabel={t('common.leaveUnsavedConfirm')} cancelLabel={t('common.leaveUnsavedCancel')}
+        onCancel={() => setAConfirmer(false)} onConfirm={() => { setAConfirmer(false); fermerAnime(); }} />
     </div>,
     document.body
   );

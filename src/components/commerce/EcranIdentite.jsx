@@ -60,8 +60,10 @@ export default function EcranIdentite({ restaurant, restoId, loadDashboard, onFe
   }
 
   return (
-    <SousEcran titre={t('editResto.rowIdentity')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />}>
-      <div className="field"><label htmlFor={ids + '-nom'}>{t('editResto.nameLabel')}</label><input id={ids + '-nom'} value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('editResto.phName')} /></div>
+    <SousEcran titre={t('editResto.rowIdentity')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />}
+      modifie={nom !== (restaurant.name || '') || desc !== (restaurant.desc || '') || couverture !== (restaurant.coverImageUrl || '') || logo !== (restaurant.logoImageUrl || '')}>
+      {/* 120 caractères, comme à l'inscription et côté serveur (audit du 19/10, shop-327). */}
+      <div className="field"><label htmlFor={ids + '-nom'}>{t('editResto.nameLabel')}</label><input id={ids + '-nom'} maxLength={120} value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('editResto.phName')} /></div>
       <div className="field"><label htmlFor={ids + '-desc'}>{t('editResto.description')}</label><textarea id={ids + '-desc'} rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
       <div className="field" role="group" aria-labelledby={ids + '-couv'}>
         <span className="titre-groupe" id={ids + '-couv'}>{t('editResto.coverTitle')}</span>

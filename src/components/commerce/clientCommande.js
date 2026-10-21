@@ -54,6 +54,8 @@ const finie = (o) => o.status === 'refuse' || o.status === 'annule';
    comptent pas (le client n'a rien reçu). null quand le serveur n'envoie pas le client (commande d'essai, par exemple). */
 export function rangClient(o, orders) {
   if (!o?.clientId) return null;
+  // Le tableau ne reçoit plus tout l'historique (vue « service », audit du 19/10, shop-213) : le serveur compte le rang lui-même.
+  if (o.clientRank) return o.clientRank;
   const t0 = Number(o.createdAt) || 0;
   return (orders || []).filter((x) => x.clientId === o.clientId && !x.isTraining && (x.id === o.id || (!finie(x) && (Number(x.createdAt) || 0) <= t0))).length || 1;
 }

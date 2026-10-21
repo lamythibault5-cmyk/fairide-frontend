@@ -21,20 +21,25 @@ export default function EquipeCommerce({ restoId }) {
   const [nom, setNom] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [aRetirer, setARetirer] = useState(null);
+  // Échec du chargement (audit du 19/10, shop-416) : il affichait « Personne dans ton équipe », ce qui était faux.
+  const [erreur, setErreur] = useState(null);
 
-  const charger = () => api(`/restaurants/${restoId}/team`, { token }).then((r) => setMembres(Array.isArray(r?.members) ? r.members : [])).catch((e) => { setMembres([]); toast(e.message, 'erreur'); });
+  const charger = () => { setErreur(null); return api(`/restaurants/${restoId}/team`, { token }).then((r) => setMembres(Array.isArray(r?.members) ? r.members : [])).catch((e) => { setMembres(null); setErreur(e.message); }); };
   useEffect(() => { charger(); }, [restoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  async function envoyerInvitation(adresse, prenom) {
+    setEnvoi(true);
+    try {
+      await api(`/restaurants/${restoId}/team`, { method: 'POST', token, body: { email: adresse, name: prenom } });
+      toast(t('team.invited', { email: adresse }), 'succes');
+      charger();
+      return true;
+    } catch (err) { toast(err.message, 'erreur'); return false; } finally { setEnvoi(false); }
+  }
   async function inviter(e) {
     e.preventDefault();
     if (!email.trim()) return;
-    setEnvoi(true);
-    try {
-      await api(`/restaurants/${restoId}/team`, { method: 'POST', token, body: { email: email.trim(), name: nom.trim() } });
-      toast(t('team.invited', { email: email.trim() }), 'succes');
-      setEmail(''); setNom('');
-      charger();
-    } catch (err) { toast(err.message, 'erreur'); } finally { setEnvoi(false); }
+    if (await envoyerInvitation(email.trim(), nom.trim())) { setEmail(''); setNom(''); }
   }
   async function retirer(m) {
     try {
@@ -47,7 +52,9 @@ export default function EquipeCommerce({ restoId }) {
   return (
     <div className="eg-equipe">
       <p className="eg-texte">{t('team.intro')}</p>
-      {membres === null ? <p className="eg-texte">…</p> : membres.length === 0 ? (
+      {erreur ? (
+        <p className="eg-note" role="alert"><Icone nom="alerte" taille={18} />{erreur}{' '}<button type="button" className="eg-bouton-iris" onClick={charger}>{t('team.retry')}</button></p>
+      ) : membres === null ? <p className="eg-texte">…</p> : membres.length === 0 ? (
         <p className="eg-equipe-vide">{t('team.none')}</p>
       ) : (
         <ul className="eg-membres">
@@ -62,6 +69,10 @@ export default function EquipeCommerce({ restoId }) {
                   {['invited', 'expired'].includes(m.status) ? t(`team.pill_${m.status}`) : t(`team.status_${m.status}`)}
                 </span>
               </span>
+              {/* Invitation expirée : la renvoyer d'un geste, sans retaper l'adresse (shop-416). */}
+              {m.status === 'expired' && (
+                <button type="button" className="eg-bouton-iris" disabled={envoi} onClick={() => envoyerInvitation(m.email, m.name || '')}>{t('team.resend')}</button>
+              )}
               <button type="button" className="eg-retirer" onClick={() => setARetirer(m)} aria-label={`${t('team.remove')} : ${m.name || m.email}`} title={t('team.remove')}>
                 <Icone nom="croix" taille={16} />
               </button>
@@ -85,8 +96,8 @@ export default function EquipeCommerce({ restoId }) {
       </form>
       <ConfirmDialog
         open={!!aRetirer}
-        title={t('team.removeTitle')}
-        message={aRetirer ? t('team.removeText', { name: aRetirer.name || aRetirer.email }) : ''}
+        title={aRetirer && aRetirer.status !== 'active' ? t('team.removeInviteTitle') : t('team.removeTitle')}
+        message={aRetirer ? t(aRetirer.status !== 'active' ? 'team.removeInviteText' : 'team.removeText', { name: aRetirer.name || aRetirer.email }) : ''}
         confirmLabel={t('team.remove')}
         danger
         onCancel={() => setARetirer(null)}

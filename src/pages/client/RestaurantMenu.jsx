@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { euros, prixRemise } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
+import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useCart } from '../../context/CartContext';
 import { horsZoneLivraison, distanceLivraisonKm, tarifLivraison } from '../../livraison';
 import Icone from '../../components/Icone';
@@ -88,6 +89,7 @@ const tirerDecouvertes = (tous, id) => (tous || []).filter((r) => r.id !== id).s
 export default function RestaurantMenu() {
   const { id } = useParams();
   const { token, user, role } = useAuth();
+  const previewMode = usePreviewMode()?.previewMode;
   /* DÉJÀ LUE, LA FICHE S'OUVRE TOUT DE SUITE (2026-10-20, test de l'app Android avec Maestro Pizza : « lent à s'ouvrir »).
      Ce qui a été lu pendant la visite — au toucher de la carte dans la liste (prechargerFiche), ou lors d'un passage
      précédent — s'affiche dès la première image ; la relecture part quand même, et la fiche ne change que si la réponse
@@ -449,6 +451,12 @@ export default function RestaurantMenu() {
     if (!user) {
       toast(t('restoMenuUi.toastLogin'));
       navigate('/login?audience=client', { state: { from: location.pathname } });
+      return;
+    }
+    // Casquette commerce ou livreur, hors aperçu (audit du 19/10, shop-414) : le panier n'est affiché qu'à un client, le plat
+    // « s'envolait » vers un panier invisible qui ressortait plus tard. On dit comment commander, sans rien ajouter.
+    if (role !== 'client' && !previewMode) {
+      toast(t('restoMenuUi.toastClientHatNeeded'));
       return;
     }
     if (onlineOrderingDisabled) {

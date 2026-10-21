@@ -24,6 +24,7 @@ import { experienceApp } from '../../natif';
 import { imgProps, cacherImageCassee } from '../../images';
 import Icone from '../../components/Icone';
 import { BandeauSoir, TuilesCommerce } from '../../components/commerce/CeSoir';
+import { euros } from '../../prixPlat';
 
 // « Mon commerce » : une rangée par sujet, qui dit l'état actuel, et un sous-écran pour le changer.
 //
@@ -88,7 +89,10 @@ export default function EditPage() {
      comptoir, si le commerce l'accepte. On dit donc ce qui marche aujourd'hui. */
   const paiementsActifs = r.stripeConnectStatus === 'active' || r.onboarding?.paymentsRequired === false;
   const comptoir = (r.offersPickup ?? r.wantsPickup) && r.pickupPaymentMode !== 'online';
+  // Visible mais commandes fermées par l'interrupteur (« Fermer jusqu'à réouverture », ou commerce créé fermé à
+  // l'inscription faute d'horaires) : il n'est PAS dans la liste des clients (audit du 19/10, shop-304), on ne dit plus « En ligne ».
   const etatEnLigne = !r.publicListed ? t('ecranCommerce.pasEnLigne')
+    : r.open === false ? t('ecranCommerce.enLigneFerme')
     : paiementsActifs ? t('ecranCommerce.enLigne')
       : comptoir ? t('serviceCommerce.visibleComptoir') : t('serviceCommerce.visibleFerme');
   // Les quatre outils du quotidien (Statistiques, Avis, Promotions, Factures), en tuiles sous la mise en ligne.
@@ -150,13 +154,20 @@ export default function EditPage() {
       {ligne('livraison', { icone: 'velo', titre: t('editResto.delivery'), sous: r.deliveryMode === 'own' ? t('editResto.deliveryOwn', { n: drivers.filter((d) => d.status !== 'invited').length }) : t('editResto.deliveryPool') })}
       {ligne('offre', { icone: 'etiquette', titre: t('editResto.rowDeliveryOffer'), sous: offre })}
       {/* Distance de livraison et plafond de commandes par jour (fondateur, 2026-10-01) : pas de limite par défaut. */}
-      {ligne('capacite', { icone: 'reglages', titre: t('editResto.rowCapacity'), sous: r.deliveryRadiusKm == null && r.maxOrdersPerDay == null ? t('editResto.capacitySubNone', { km: 6 }) : [r.deliveryRadiusKm != null && t('editResto.capacitySubRadius', { km: String(r.deliveryRadiusKm).replace('.', ',') }), r.maxOrdersPerDay != null && t('editResto.capacitySubCap', { n: r.maxOrdersPerDay })].filter(Boolean).join(' · ') })}
+      {/* Le temps de préparation et le minimum de commande, réglés sur le même écran, s'ajoutent au résumé quand ils sont
+          posés (audit du 19/10, shop-331). */}
+      {ligne('capacite', { icone: 'reglages', titre: t('editResto.rowCapacity'), sous: [
+        r.deliveryRadiusKm == null && r.maxOrdersPerDay == null ? t('editResto.capacitySubNone', { km: 6 }) : [r.deliveryRadiusKm != null && t('editResto.capacitySubRadius', { km: String(r.deliveryRadiusKm).replace('.', ',') }), r.maxOrdersPerDay != null && t('editResto.capacitySubCap', { n: r.maxOrdersPerDay })].filter(Boolean).join(' · '),
+        r.prepMinutes != null && t('editResto.capacitySubPrep', { n: r.prepMinutes }),
+        r.minOrderAmount != null && t('editResto.capacitySubMin', { amount: euros(r.minOrderAmount) })
+      ].filter(Boolean).join(' · ') })}
     </div>
 
     <p className="ec-feuille-titre">{t('editResto.rowLegal')}</p>
     <div className="card account-groupe" aria-label={t('editResto.rowLegal')}>
       {ligne('legal', { icone: 'document', titre: t('editResto.rowLegal'), sous: legalManquant ? aCompleter : `BCE ${r.companyNumber}`, accent: legalManquant ? 'warn' : undefined })}
-      {ligne('type', { icone: 'restaurants', titre: t('editResto.rowType'), sous: r.cuisine })}
+      {/* Le libellé dans la langue choisie, plus la valeur française brute (audit du 19/10, shop-317). */}
+      {ligne('type', { icone: 'restaurants', titre: t('editResto.rowType'), sous: type })}
       {ligne('cuisines', { icone: 'restaurants', titre: t('editResto.rowCuisines'), sous: (r.extraCuisines || []).length ? (r.extraCuisines || []).map((c) => restaurantTypeLabel(c, t) || c).join(', ') : t('editResto.cuisinesNone') })}
     </div>
     </>

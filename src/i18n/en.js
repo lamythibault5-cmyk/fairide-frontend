@@ -4336,6 +4336,8 @@ export default {
       objectifs4: 'Stay true, in the long run, to the commitment of reduced-commission delivery.'
     },
     guide: {
+      s4p2App: "Allow Fairide notifications: you are alerted of an order even with the app closed or the phone locked.",
+      s3p1App: "In the app, there is nothing to install: it already opens full screen. Allow its notifications when asked, to be alerted of an order even with the app closed.",
       title: 'User guide',
       intro: 'This guide explains how to receive and handle Fairide orders day to day, on the Fairide terminal or in the app.',
       s1Title: 'What you need to get started',
@@ -4343,13 +4345,13 @@ export default {
       s1p2: 'A stable internet connection is needed to see orders come in and to handle them.',
       s1p3: 'It is recommended to keep one device at the counter, dedicated to receiving orders, so it is never out of sight during service.',
       s2Title: 'Editing the restaurant\'s details and menu',
-      s2p1: '**Restaurant details** (name, address, description, cover photo, logo, hours, exceptional closures, cuisine type, delivery fees...): “My business” section in the left menu.',
+      s2p1: "**Business details** (name, address, description, cover photo, logo, hours, exceptional closures, cuisine type, delivery...): “My business” section.",
       s2p2: 'A change of hours or an exceptional closure is visible to customers immediately, no need to wait for validation.',
       s2p3: "**Menu**: the « My menu » section. Your menu and prices are managed with Fairide: nothing changes without your agreement and ours.",
       s2l1: "Out of a dish? Mark it out of stock in one tap in « My menu »: it disappears for today and comes back tomorrow.",
       s2l2: "A price, a dish or a photo to change? Write the request under your menu: the Fairide team applies it and lets you know.",
       s2l3: "Before the first sale, you review your menu and sign it (prices, VAT, allergens). Every change needs a new signature.",
-      s2p4: "Business details (opening hours, closures, photos) change right away for customers. Changing the cuisine type requires a code sent by e-mail.",
+      s2p4: "Business details (opening hours, closures, photos, type of business) change right away for customers.",
       s3Title: 'Installing Fairide on the device',
       s3p1: 'Installing it on the home screen opens the restaurateur area directly in full screen, without going through the browser each time.',
       s3p2: '**On Android (Chrome):** open the Fairide site, tap the menu (the three dots at the top right), then choose “Add to Home screen”.',
@@ -4365,16 +4367,16 @@ export default {
       s5l1: "« Accept » moves the order into preparation. Right next to it, « Preparation time » adds 10, 20 or 30 minutes if the kitchen is busy: the customer sees the updated time.",
       s5l2: 'Refuse cancels the order and automatically refunds the customer. You are asked for a reason (dish sold out, kitchen overwhelmed…), which is passed on to the customer.',
       s6Title: 'Following the order to the end',
-      s6p1: 'The statuses follow in this order: New, Being prepared, Ready, and for a delivery order, Out for delivery, then Delivered (Picked up for a takeaway order, Completed for a dine-in order).',
+      s6p1: "The statuses follow in this order: New, Being prepared, Ready, and for a delivery order, Out for delivery, then Delivered (Picked up for a takeaway order).",
       s6p2: 'For a delivery order, once accepted, the app shows whether a courier has already confirmed taking it or whether it is still waiting for a courier.',
-      s6p3: "Once the dish is ready, tap « Mark ready »: the order moves to that status and becomes visible to available couriers.",
-      s6p4: 'For a takeaway or dine-in order, there is no code to type: the customer gives their order number or name, you compare it with the number and first name shown next to « Handed to customer », then tap that button. For a delivery order, a code given by the courier confirms they have picked up the order.',
+      s6p3: "Couriers see a delivery as soon as you accept it (a scheduled delivery, shortly before its time). Once the dish is ready, tap « Mark ready »: the order moves to that status, and the courier knows it is waiting.",
+      s6p4: "For a takeaway order, there is no code to type: the customer gives their order number or name, you compare it with the number and first name shown next to « Handed to customer », then tap that button. For a delivery order, the pickup code is shown in large print on the order: compare it with the one the courier shows you, hand over the order, and the courier confirms the pickup.",
       s6p5: "An order that is not accepted does not wait forever: after 5 minutes a reminder is sent by e-mail; after 15 minutes without an answer, it is cancelled and the customer refunded.",
       s7Title: 'Printing an order ticket',
-      s7p1: 'Open an order in the Orders tab: at the bottom of the card, the “Order ticket” section offers two ways to print the summary to slip in the bag or stick on it.',
-      s7p2: '**On a Bluetooth thermal printer.** First choose your paper width (58 or 80 mm), then “Connect the printer”: your browser lists the devices in range. Once the printer is chosen, the next tickets print in one click, as long as the tab stays open.',
-      s7p3: '**Two conditions to know.** This button only appears on Chrome, Edge or Opera, on iPhone and iPad, no browser allows Bluetooth from a web page, Chrome included. And the printer must be a *Bluetooth Low Energy* model: classic Bluetooth models stay invisible from a browser.',
-      s7p4: '**On any other printer.** “Print the delivery note” uses your device\'s print dialog: it works everywhere, including AirPrint on iPhone and iPad.',
+      s7p1: "Open an order in the Orders tab: at the bottom of the card are the buttons to print the ticket to slip in the bag or stick on it.",
+      s7p2: "**With a Fairide terminal.** Tickets print on their own. « Print the ticket » (or « Reprint the ticket ») sends one again to the terminal, with the number of copies chosen right next to it; a delivery always prints at least two.",
+      s7p3: "**Without a terminal, from a computer.** « Print the ticket » uses the device's print dialog: it works with any printer, AirPrint included.",
+      s7p4: "**In the app, without a terminal.** A phone does not print: the ticket comes out on a Fairide terminal, or from a computer. With a terminal, « Print from this device » also gives a copy on another printer.",
       s8Title: 'Fallback: the order slip by e-mail',
       s8p1: 'For each paid order, a summary e-mail is sent automatically to the restaurant\'s e-mail address. It contains the list of items with their price, the subtotal, the delivery address if applicable, the delivery instruction chosen by the customer, their comment if any and their phone number.',
       s8p2: 'This e-mail can be opened and printed from any mail client, without opening Fairide or needing a specific printer. Sending by WhatsApp is not yet available.',
@@ -4384,9 +4386,9 @@ export default {
       s9q2: 'The device was off or the connection lost',
       s9q2a: 'The order e-mail is sent automatically from Fairide\'s servers, independently of the device: it remains available as soon as the device (or another) is connected again.',
       s9q3: 'The customer wants to change their order after placing it',
-      s9q3a: 'Once the order is paid, it can no longer be changed or cancelled by the customer themselves. They must then contact the restaurant directly (number shown on the order card) or Fairide support.',
+      s9q3a: "Until you accept the order, the customer can cancel it themselves: they are refunded. Once accepted, they can no longer change or cancel it: they must contact the business directly (number shown on their order) or Fairide support.",
       s9q4: 'Where to find history and statements',
-      s9q4a: 'The order history is in the Orders section of the dashboard. Invoices and statements are in the Invoices section.',
+      s9q4a: "The order history is at the bottom of the Orders page. Invoices and statements are in My account › Invoices.",
       s10Title: 'Help',
       s10p1: "A question about using Fairide (editing the menu, understanding an order status, an invoice...)? The help centre gathers the answers to the most common questions.",
       s10p2: 'For any other question, Fairide support can be reached by e-mail at [contact@fairide.be](mailto:contact@fairide.be) or by phone on [+32 474 20 07 13](tel:+32474200713).',
@@ -4394,7 +4396,7 @@ export default {
       s11p1: "**Pause and closing.** On the orders page, the « Open for orders » switch closes your business until you reopen. Overwhelmed? A 15, 30 or 60-minute pause blocks new orders, lets current ones finish, then reopens by itself.",
       s11p2: "**Orders and capacity** (in « My business »): a minimum order amount, a maximum number of orders per day, the delivery distance (6 km without a setting) and your usual preparation time (12 minutes without a setting), used for the arrival time shown to the customer. Fairide also shows you the time you actually take, measured over your last 30 days.",
       s11p3: "**The courier is waiting.** Once the courier has arrived, the order shows how many minutes they have been waiting. They cannot leave without the order: prepare it first.",
-      s11p4: "**Alcohol.** An order with alcohol requires checking an ID at handover. Tap « Age checked: hand over », or « Refuse handover » if the customer is underage or has no ID: the order is closed and the Fairide team handles the refund.",
+      s11p4: "**Alcohol.** An order with alcohol requires checking an ID at handover. Tap « Age checked: hand over », or « Refuse handover » if the customer is underage or has no ID: the alcohol is removed from the order, you hand over the rest, and Fairide still pays you for the alcohol.",
       s11p5: "**Customer didn’t show** (takeaway): once the order is ready, and 30 minutes after the time given to the customer, « Customer didn’t show » closes the order. Paid at the shop: Fairide does not step in (no refund, no compensation), and this customer can no longer pay at the shop. Paid online: it remains due, you keep your payment."
     },
     resetPassword: {
@@ -4413,6 +4415,8 @@ export default {
       submit: 'Reset my password'
     },
     alertBar: {
+      tabTitleMany: "({n}) New orders, {base}",
+      tabTitleOne: "(1) New order, {base}",
       voir: 'View',
       activerSon: 'Turn on order sound',
       settings: 'Alarm settings',
@@ -4699,6 +4703,7 @@ export default {
       deliveryDiscountPill: '-€{amount} delivery'
     },
     restoMenuUi: {
+      toastClientHatNeeded: "To order, switch to your customer role: My account › My roles.",
       toastFullToday: 'This business has received all the orders it can prepare today. Come back tomorrow!',
       fullTodayTitle: 'Fully booked today',
       fullTodayText: '{name} has reached its number of orders for today. You can browse the menu and come back tomorrow.',
@@ -4810,6 +4815,11 @@ export default {
       emailedOn: 'E-mailed on {date} · click to send again'
     },
     hoursEditor: {
+      nextDay: "Closes the next day at {time}",
+      allDay: "Open 24 hours a day? (same opening and closing time)",
+      overlap: "This slot overlaps another one",
+      missingTime: "Time missing",
+      to: "to",
       closed: 'Closed',
       applyAllDays: 'Apply to every day',
       addService: '+ Add a service',
@@ -4839,6 +4849,8 @@ export default {
       addN: 'Add {n} dish(es) to the menu'
     },
     restoPreview: {
+      hiddenText: "Your customers don't see these dishes: allergens not declared yet, or alcohol not allowed yet. Complete them in My menu.",
+      hiddenTitle: "Hidden from customers",
       banner: 'Preview, this is exactly what your customers see. You can test adding to cart, but no real order will be placed.',
       promosBanner: 'Promos are running on some dishes, look for the red badge!',
       emptyMenu: 'Your menu is still empty, your customers won\'t see anything until you add dishes.',
@@ -5677,6 +5689,23 @@ export default {
       stepMoreHelp: 'Optional: translate your menu for English- and Dutch-speaking customers, or make a gesture on your prices.'
     },
     editResto: {
+      typeKeepsMenu: "Your menu does not change. To change it, send a request from My menu.",
+      toastDeactivated: "Your business has been removed from the site and closed. Your invoices stay in My documents.",
+      offerBelowMinimum: "Your minimum order is already €{amount}: delivery would be free on every order. Choose a higher threshold, or free delivery for everyone.",
+      capMore: "5 more orders",
+      capLess: "5 fewer orders",
+      prepMore: "5 minutes more",
+      prepLess: "5 minutes less",
+      closureScheduledLink: "See them in Orders, to cancel them or let the customers know",
+      closureScheduledMany: "{n} scheduled orders fall during this closure:",
+      closureScheduledOne: "1 scheduled order falls during this closure:",
+      toastAddressImprecise: "Address saved, but not found on the map: the Fairide team will place your business by hand.",
+      toastStreetNumberRequired: "Enter the street and number: couriers need them to collect the orders.",
+      legalChangeNotice: "Your contract and payments are set up with these details: if you change them, the Fairide team checks them, and contacts you if the company has changed.",
+      managersSavedRestFailed: "Managers saved, but not the rest:",
+      toastHoursMissingTime: "A time is missing in your hours: complete the slot marked in red.",
+      capacitySubMin: "minimum {amount}",
+      capacitySubPrep: "prep {n} min",
       socialTitle: 'Social media',
       socialHelp: 'Optional. Customers find them under « Info » on your page.',
       instagram: 'Instagram',
@@ -5797,7 +5826,7 @@ export default {
       codeByEmail: 'Code received by e-mail',
       resendCode: 'Resend the code',
       deleteTitle: 'Delete this restaurant',
-      deleteConfirm: 'Are you sure? This action is irreversible (dishes deleted too). Impossible if orders already exist.',
+      deleteConfirm: "Your business is deleted if it has no invoice yet; otherwise it is removed from the site and closed, and its invoices stay in My documents. Not possible while an order is in progress or an amount is still due.",
       deleteWhy: 'Why are you deleting this restaurant?',
       commentOptional: 'A comment (optional)',
       deleteRequestSent: 'Your request has been sent to the Fairide team. They will get back to you by e-mail with your confirmation code, enter it below as soon as you receive it to finalise the deletion.',
@@ -5825,7 +5854,7 @@ export default {
       phEx25: 'E.g.: 25',
       toastNameRequired: 'The restaurant name is required.',
       toastLegalRequired: 'The business\'s legal information is required (legal name, company number, VAT number, manager).',
-      toastHoursRequired: 'Enter your opening hours: your business is only visible during these slots.',
+      toastHoursRequired: "Enter your opening hours: customers can only order during these slots.",
       toastUpdated: 'Restaurant updated.',
       toastStartDate: 'Enter a start date.',
       toastEndAfterStart: 'The end date must be after the start date.',
@@ -5922,6 +5951,8 @@ export default {
       photoText: 'On every order (test or real), the button in My orders lets you photograph the order BEFORE handing it over: put the ticket with the order number and all the products in the frame. Time, number and product list are stored with the photo: your proof if a customer complains. Your customer also sees it when tracking their order.'
     },
     ecranCommerce: {
+      aAccepterAvant: "Accept before {time}",
+      enLigneFerme: "Online · orders closed",
       verrouAide: 'The switch marks a dish as sold out for today; it comes back on its own tomorrow. Anything else is changed through a request to Fairide.',
       prochaineEtape: 'Next step',
       rienAFaire: 'Nothing to do on your side: Fairide takes it from here',
@@ -5940,6 +5971,17 @@ export default {
       enVenteAujourdhui: 'On sale today'
     },
     ordersResto: {
+      staleList: "List from {time}: the connection to the server is down, reconnecting. A new order will not ring until the list updates.",
+      loadFailedTitle: "Orders are not loading",
+      historyMore: "Show older orders",
+      retry: "Try again",
+      refuseReason3: "Unexpected closure",
+      refuseReason2: "Kitchen overwhelmed",
+      refuseReason1: "Dish sold out",
+      openButHoursShort: "Outside hours",
+      openButHoursNone: "Closed according to your hours",
+      openButHours: "Closed according to your hours · reopens at {time}",
+      openButClosure: "Exceptional closure today: no orders come in",
       stopTodayBtn: 'Stop orders for today',
       stopTodayHelp: 'Nothing left to prepare today? Customers can no longer order, orders already received carry on. Orders reopen BY THEMSELVES at the next 6 am: nothing to do on your side. You can also reopen earlier with one tap.',
       stoppedTodayTitle: 'Orders stopped for today',
@@ -6330,6 +6372,7 @@ export default {
     },
     // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
     sitePro: {
+      etape_ouvrir: "Orders",
       reglagesService: 'Service settings',
       commandes: 'Orders',
       tableau: 'Current orders',
@@ -6360,6 +6403,10 @@ export default {
     },
     // "Before going live" checklist for businesses (components/commerce/MiseEnLigne.jsx, UX audit of 15/10/2026).
     miseEnLigne: {
+      openOrdersDone: "Orders open: your page now appears to customers.",
+      openOrdersBtn: "Open orders",
+      openOrdersSub: "Your page is published, but your orders are closed: customers do not see you while they stay closed. Check your hours, then open.",
+      openOrders: "Open your orders",
       title: 'Before going live',
       progress: '{done} of {total} steps done',
       nextStep: 'Next step: {step}',
@@ -6408,6 +6455,9 @@ export default {
       removedSub: 'Customers no longer see you and cannot order. The details were sent to you by e-mail: reply to it if you disagree or once it is sorted out.'
     },
     dashResto: {
+      accessLostCta: "Back to home",
+      accessLostText: "You were removed from its team, or the business closed. Its orders no longer show here.",
+      accessLostTitle: "You no longer have access to this business",
       zoneDeliveryOffTitle: 'Fairide delivery paused in your area',
       zoneDeliveryOffText: 'No Fairide courier covers your area for now: delivery is closed on your page, takeaway stays open. As soon as a courier covers your area we switch it back on. If you deliver with your own couriers, tell us from My business.',
       today: 'Today',
@@ -6456,7 +6506,7 @@ export default {
       toastPaymentsValidating: 'Payment setup being validated (a few seconds).',
       toastNameRequired: 'Give your restaurant a name.',
       toastAddressRequired: 'Give the restaurant\'s full address (street, number, postal code) for couriers and the map.',
-      toastHoursRequired: 'Enter your opening hours: your business is only visible during these slots.',
+      toastHoursRequired: "Enter your opening hours: customers can only order during these slots.",
       toastCreatedOwnDriver: 'Restaurant created! Now add your courier\'s e-mail in the Delivery section to activate your own courier.',
       toastCreated: 'Restaurant created!',
       noReviewsYet: 'No reviews yet',
@@ -6560,6 +6610,19 @@ export default {
       bannerLeave: 'Leave the group'
     },
     team: {
+      profileRole: "team",
+      removeInviteText: "The link sent to {name} will no longer work.",
+      removeInviteTitle: "Withdraw the invitation?",
+      resend: "Resend",
+      leftToast: "You left {name}'s team.",
+      leaveText: "You will no longer have access to {name}'s orders. To come back, you will need a new invitation.",
+      leaveTitle: "Leave the team?",
+      leave: "Leave the team",
+      switchAccount: "Switch account",
+      otherAccount: "You're signed in as {me}. This invitation is for {email}: sign in with that account.",
+      openOrders: "Open the orders",
+      alreadyMember: "You're already part of {name}'s team.",
+      retry: "Try again",
       rowTitle: 'My team',
       rowSub: 'Accounts for the till, the counter, the kitchen',
       intro: 'Invite the people who run the service. They sign in with their own account and can only handle orders: accept, refuse, mark ready, hand over, mark a dish as sold out, pause the business. They do not see your payments, your invoices or your menu.',
@@ -6585,7 +6648,7 @@ export default {
       can1: 'Accept its orders and mark them ready',
       can2: 'Mark a dish as sold out',
       can3: 'Pause the business',
-      cannot: 'No access to payments, invoices or the menu',
+      cannot: "No payments, no invoices, no menu changes (only today's sold-out items)",
       inviteFor: 'Invitation sent to {email}: sign in with that account.',
       inviteExpired: 'This invitation has expired: ask the business to send you a new one.',
       inviteNotFoundTitle: 'Invitation not found',
@@ -6980,6 +7043,10 @@ export default {
       removed: 'Two-factor authentication disabled.'
     },
     common: {
+      leaveUnsavedCancel: "Keep editing",
+      leaveUnsavedConfirm: "Leave",
+      leaveUnsavedText: "Your changes will be lost.",
+      leaveUnsavedTitle: "Leave without saving?",
       genericError: 'Something went wrong.',
       downloadError: 'Download failed. Try again in a moment.',
       serverUnreachable: 'Cannot reach the Fairide server. Try again in a moment.',
@@ -7429,6 +7496,7 @@ export default {
       titleReadyOne: 'order ready'
     },
     orderStatus: {
+      acceptBeforeLater: "Accept before {time}: without an answer, the order is cancelled.",
       // Titres du bandeau de suivi d'une commande en cours (orderStatus.jsx, titreSuivi ; 2026-10-16).
       grand: {
         nouveau: 'The shop is checking your order',
@@ -8729,7 +8797,7 @@ export default {
       ageCheckText: 'This order contains alcohol. Check on the ID that the customer is {age} or older before handing over the order.',
       ageCheckVerified: 'Age checked: hand over',
       ageCheckRefuse: 'Refuse handover',
-      ageRefusedDone: 'Handover refused: the order is closed, the Fairide team handles the refund.',
+      ageRefusedDone: "Alcohol removed from the order: hand the rest to the customer. Fairide still pays you for the alcohol.",
       ageRefusedDriverDone: 'Handover refused: the order is closed and your ride is paid. Bring the products back to the business.',
       allergyConfirmTitle: 'Allergy-related request',
       allergyConfirmText: 'The customer asks: "{request}". By accepting, you confirm you can prepare this order respecting this request. Otherwise, refuse it: the customer is fully refunded.',

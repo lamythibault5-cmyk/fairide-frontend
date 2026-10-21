@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { DAY_KEYS } from '../../openingHours';
@@ -85,6 +85,7 @@ export function BandeauSoir({ restaurant: r, orders }) {
  * facture sont lues une fois à l'ouverture de l'accueil (deux petites lectures) ; le reste vient du tableau de bord. */
 export function TuilesCommerce({ restaurant: r, orders, reviews, restoId, token }) {
   const { t } = useLanguage();
+  const statsService = useOutletContext()?.statsService;
   const [promos, setPromos] = useState(null);
   const [facture, setFacture] = useState(undefined);
   useEffect(() => {
@@ -97,7 +98,9 @@ export function TuilesCommerce({ restaurant: r, orders, reviews, restoId, token 
   }, [restoId, token]);
 
   const debutMois = new Date(); debutMois.setDate(1); debutMois.setHours(0, 0, 0, 0);
-  const ceMois = (orders || []).filter((o) => !finie(o) && !o.isTraining && Number(o.createdAt) >= debutMois.getTime()).length;
+  // Compté par le serveur quand le tableau ne reçoit que les commandes en cours et des dernières 24 h (vue « service »,
+  // audit du 19/10, shop-213) ; la liste complète reste le repli.
+  const ceMois = statsService?.monthCount ?? (orders || []).filter((o) => !finie(o) && !o.isTraining && Number(o.createdAt) >= debutMois.getTime()).length;
   const note = Number(r.rating || 0).toLocaleString(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const sansReponse = (reviews?.reviews || []).filter((x) => !x.restaurantReply).length;
   const actives = promos === null ? null : promos.filter((x) => x.active).length + (r.fairideAdvantage ? 1 : 0);

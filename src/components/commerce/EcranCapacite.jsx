@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import SousEcran from '../SousEcran';
 import Icone from '../Icone';
+import ErreurChargement from '../ErreurChargement';
 
 // Mon commerce › Commandes et capacité (fondateur, 2026-10-01) : jusqu'où le commerce livre, et combien de
 // commandes il accepte par jour. Le plafond de commandes est « pas de limite » par défaut ; le restaurateur ajuste
@@ -33,19 +34,24 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
   const [prepaDefaut, setPrepaDefaut] = useState(true);
   const [prepa, setPrepa] = useState(15);
   const [enCours, setEnCours] = useState(false);
+  // Premier chargement en échec : l'écran restait sur « … » pour toujours, « Enregistrer » grisé (audit du 19/10, shop-320).
+  // Il le dit, avec « Réessayer » (ErreurChargement).
+  const [erreur, setErreur] = useState(false);
+  const [essai, setEssai] = useState(0);
 
   useEffect(() => {
     let annule = false;
     api(`/restaurants/${restoId}/order-limits`, { token }).then((r) => {
       if (annule) return;
+      setErreur(false);
       setEtat(r);
       setRayonLibre(r.deliveryRadiusIsDefault !== false); if (r.deliveryRadiusKm != null) setRayon(r.deliveryRadiusKm);
       setPlafondLibre(r.maxOrdersPerDay === null); if (r.maxOrdersPerDay !== null) setPlafond(r.maxOrdersPerDay);
       setMinimum(r.minOrderAmount ? String(r.minOrderAmount).replace('.', ',') : '');
       setPrepaDefaut(r.prepMinutes == null); setPrepa(r.prepMinutes ?? r.measuredPrepMinutes ?? r.defaultPrepMinutes ?? 15);
-    }).catch((e) => toast(e.message, 'erreur'));
+    }).catch(() => { if (!annule) setErreur(true); });
     return () => { annule = true; };
-  }, [restoId, token, toast]);
+  }, [restoId, token, essai]);
 
   async function enregistrer() {
     const n = Number(plafond);
@@ -72,7 +78,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
 
   return (
     <SousEcran titre={t('editResto.rowCapacity')} onFermer={onFermer} pied={pied}>
-      {!etat ? <p className="small">…</p> : (
+      {!etat ? (erreur ? <ErreurChargement onReessayer={() => { setErreur(false); setEssai((n) => n + 1); }} /> : <p className="small">…</p>) : (
         <>
           {restaurant.offersDelivery !== false && (
             <div className="field" role="group" aria-labelledby="capacite-rayon-titre">
@@ -85,9 +91,11 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
               {!rayonLibre && (
                 <>
                   <label htmlFor="capacite-rayon" className="small" style={{ fontWeight: 700, display: 'block' }}>{t('editResto.capacityRadiusValue', { km: km(rayon) })}</label>
-                  <input id="capacite-rayon" type="range" min="1" max={Math.min(etat.maxRadiusKm || 30, 15)} step="0.5" value={rayon}
-                    onChange={(e) => setRayon(Number(e.target.value))} style={remplissage(rayon, 1, Math.min(etat.maxRadiusKm || 30, 15))} aria-valuetext={`${km(rayon)} km`} />
-                  <div className="row small" style={{ justifyContent: 'space-between', opacity: 0.7 }}><span>1 km</span><span>15 km</span></div>
+                  {/* Jusqu'à la limite du serveur (rayonLivraison.js, 30 km), plus 15 : un rayon de 20 km était impossible à
+                      choisir, et un réglage de l'équipe au-delà de 15 laissait le curseur bloqué au bout (audit du 19/10, shop-319). */}
+                  <input id="capacite-rayon" type="range" min="1" max={etat.maxRadiusKm || 30} step="0.5" value={rayon}
+                    onChange={(e) => setRayon(Number(e.target.value))} style={remplissage(rayon, 1, etat.maxRadiusKm || 30)} aria-valuetext={`${km(rayon)} km`} />
+                  <div className="row small" style={{ justifyContent: 'space-between', opacity: 0.7 }}><span>1 km</span><span>{etat.maxRadiusKm || 30} km</span></div>
                 </>
               )}
             </div>
@@ -102,9 +110,10 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
             </label>
             {!prepaDefaut && (
               <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                <button type="button" className="btn-ghost" aria-label="−" style={{ minWidth: 44, minHeight: 44 }} onClick={() => setPrepa((v) => Math.max(5, Number(v) - 5))}>−5</button>
+                {/* Des libellés que le lecteur d'écran peut dire (audit du 19/10, shop-329) : « − » ne disait rien. */}
+                <button type="button" className="btn-ghost" aria-label={t('editResto.prepLess')} style={{ minWidth: 44, minHeight: 44 }} onClick={() => setPrepa((v) => Math.max(5, Number(v) - 5))}>−5</button>
                 <input type="number" inputMode="numeric" min="5" max="90" value={prepa} onChange={(e) => setPrepa(e.target.value)} style={{ width: 90, textAlign: 'center' }} aria-label={t('editResto.prepTitle')} />
-                <button type="button" className="btn-ghost" aria-label="+" style={{ minWidth: 44, minHeight: 44 }} onClick={() => setPrepa((v) => Math.min(90, Number(v) + 5))}>+5</button>
+                <button type="button" className="btn-ghost" aria-label={t('editResto.prepMore')} style={{ minWidth: 44, minHeight: 44 }} onClick={() => setPrepa((v) => Math.min(90, Number(v) + 5))}>+5</button>
                 <span className="small">{t('editResto.prepUnit')}</span>
               </div>
             )}
@@ -127,9 +136,9 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
             </label>
             {!plafondLibre && (
               <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                <button type="button" className="btn-ghost" aria-label="−" style={{ minWidth: 44, minHeight: 44 }} onClick={() => setPlafond((v) => Math.max(1, Number(v) - 5))}>−5</button>
+                <button type="button" className="btn-ghost" aria-label={t('editResto.capLess')} style={{ minWidth: 44, minHeight: 44 }} onClick={() => setPlafond((v) => Math.max(1, Number(v) - 5))}>−5</button>
                 <input type="number" inputMode="numeric" min="1" max="1000" value={plafond} onChange={(e) => setPlafond(e.target.value)} style={{ width: 90, textAlign: 'center' }} aria-label={t('editResto.capacityCapTitle')} />
-                <button type="button" className="btn-ghost" aria-label="+" style={{ minWidth: 44, minHeight: 44 }} onClick={() => setPlafond((v) => Math.min(1000, Number(v) + 5))}>+5</button>
+                <button type="button" className="btn-ghost" aria-label={t('editResto.capMore')} style={{ minWidth: 44, minHeight: 44 }} onClick={() => setPlafond((v) => Math.min(1000, Number(v) + 5))}>+5</button>
                 <span className="small">{t('editResto.capacityPerDay')}</span>
               </div>
             )}

@@ -27,15 +27,21 @@ export default function EcranAdresse({ restaurant, restoId, loadDashboard, onFer
 
   function valider() {
     if (!commune.trim()) { toast(t('editResto.toastCommuneRequired'), 'erreur'); return; }
-    if ((recoEtat === 'none' || recoEtat === 'error') && !confirmee) { toast(t('editResto.toastAddressConfirm')); return; }
+    // En ligne, la rue et le numéro ne se vident plus : c'est là que les livreurs viennent (audit du 19/10, shop-316).
+    if (restaurant.publicListed && (!rue.trim() || !numero.trim())) { toast(t('editResto.toastStreetNumberRequired'), 'erreur'); return; }
+    if ((recoEtat === 'none' || recoEtat === 'error') && !confirmee) { toast(t('editResto.toastAddressConfirm'), 'erreur'); return; }
     enregistrer({
       commune, addressCity: commune, neighborhood: quartier.trim(),
       addressStreet: rue.trim(), addressNumber: numero.trim(), addressPostalCode: cp.trim()
+    }, {
+      // Adresse introuvable pour le géocodeur : le point est posé au centre de la commune (ou gardé), l'équipe le placera.
+      succes: (r) => (r?.geocodeImprecise ? t('editResto.toastAddressImprecise') : null)
     });
   }
 
   return (
-    <SousEcran titre={t('editResto.address')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />}>
+    <SousEcran titre={t('editResto.address')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />}
+      modifie={rue !== (restaurant.addressStreet || '') || numero !== (restaurant.addressNumber || '') || cp !== (restaurant.addressPostalCode || '')}>
       <AddressSearch compact onSelect={(a) => { setRue(a.street); if (a.number) setNumero(a.number); if (a.postalCode) setCp(a.postalCode); if (a.city && communeAcceptee(a.city)) setCommune(a.city); }} />
       <div className="field"><label htmlFor={ids + '-rue'}>{t('editResto.streetForDrivers')}</label><input id={ids + '-rue'} value={rue} onChange={(e) => setRue(e.target.value)} placeholder={t('editResto.phStreet')} /></div>
       <div className="row" style={{ gap: 8 }}>

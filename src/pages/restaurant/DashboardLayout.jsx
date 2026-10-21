@@ -38,10 +38,12 @@ const PAGES_BANDEAU = ['/dashboard', '/dashboard/edit', '/dashboard/orders', '/d
 // lot « pro ») : elles reçoivent les blocs communs dans leur feuille, comme les pages ci-dessus.
 const SITE = !experienceApp();
 const PAGES_BANDEAU_SITE = ['/dashboard/guide', '/dashboard/preview'];
+// Dernier commerce ouvert sur cet appareil, pour un compte qui en a plusieurs (shop-411). Un identifiant, rien de plus.
+const CLE_DERNIER_COMMERCE = 'fairide_dernier_commerce';
 
 export default function DashboardLayout() {
   const { t } = useLanguage();
-  const { token, user, actingAs, actingAdminEmail, quitterAction } = useAuth();
+  const { token, user, actingAs, actingAdminEmail, quitterAction, refreshUser, changerRole } = useAuth();
   const navigate = useNavigate();
   // Comptes fondateurs (admin, ou l'un des e-mails ci-dessous, la même liste que FAIRIDE_FOUNDER_EMAILS côté
   // serveur) : leur restaurant de test se crée même incomplet, le serveur complète ce qui manque.
@@ -61,6 +63,14 @@ export default function DashboardLayout() {
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
   const [orders, setOrders] = useState([]);
+  // Ce que la vue « service » calcule côté serveur (audit du 19/10, shop-213) : le nombre de commandes closes (titre de
+  // l'historique, chargé à la demande) et celles du mois (accueil), puisque le tableau ne reçoit plus tout l'historique.
+  const [statsService, setStatsService] = useState(null);
+  /* LA LISTE EST-ELLE À JOUR ? (audit du 19/10, CROSS-31 et shop-217). Les relectures de fond sont silencieuses : un
+     serveur en panne, un Wi-Fi sans Internet ou un membre retiré laissaient la vieille liste à l'écran sans un mot, et
+     « Pas encore de commande » quand rien n'était jamais arrivé. « echecs » compte les relectures ratées d'affilée,
+     « derniereMaj » l'heure de la dernière réussie, « accesPerdu » un 403 (membre retiré, commerce fermé). */
+  const [etatCommandes, setEtatCommandes] = useState({ echecs: 0, derniereMaj: null, erreur: null, accesPerdu: false });
   const [reviews, setReviews] = useState(null);
   const [drivers, setDrivers] = useState([]);
 
@@ -113,6 +123,15 @@ export default function DashboardLayout() {
       setMyRestos(list);
       // Un seul restaurant possible par compte -> pas besoin de le faire choisir dans une liste, on l'ouvre direct.
       if (list.length === 1) pickResto(list[0].id, list[0]);
+      /* PLUSIEURS COMMERCES (le sien et celui d'une équipe, audit du 19/10, shop-411) : rien n'était choisi, et la page
+         restait sur un squelette sans fin. On ouvre celui que l'adresse demande (?resto=, depuis l'invitation), sinon le
+         dernier choisi sur cet appareil ; à défaut, la liste de choix reste seule, sans squelette. */
+      else if (list.length > 1) {
+        let voulu = new URLSearchParams(window.location.search).get('resto');
+        if (!voulu) { try { voulu = localStorage.getItem(CLE_DERNIER_COMMERCE); } catch { /* sans stockage */ } }
+        const r = list.find((x) => x.id === voulu);
+        if (r) pickResto(r.id, r);
+      }
       // Pas encore de restaurant (compte ouvert avant la création automatique, ou création échouée à
       // l'inscription) : on le crée tout de suite depuis ce que l'inscription a retenu, sans rien demander ;
       // le formulaire ne s'ouvre qu'en dernier recours, déjà prérempli.
@@ -154,7 +173,7 @@ export default function DashboardLayout() {
   // recharge toute la carte, soit une quinzaine de requêtes en base à chaque tour et par tablette.
   const tour = useRef(0);
   useEffect(() => {
-    if (!restoId) return;
+    if (!restoId || etatCommandes.accesPerdu) return;
     const interval = setInterval(() => {
       tour.current += 1;
       // Rafraîchissement en arrière-plan : une coupure réseau passagère ne doit pas afficher une erreur toutes les 15 s.
@@ -167,7 +186,7 @@ export default function DashboardLayout() {
     window.addEventListener(EVENEMENT_COMMANDE, tout);
     return () => { clearInterval(interval); window.removeEventListener(EVENEMENT_COMMANDE, tout); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restoId]);
+  }, [restoId, etatCommandes.accesPerdu]);
   // STATUT STRIPE « EN ATTENTE » RELU UNE FOIS PAR PAGE (test réel, 12 oct. 2026). Il n'était relu qu'au retour du lien
   // Stripe : un restaurateur qui fermait l'onglet au lieu de « Revenir sur Fairide », ou dont le compte s'activait quelques
   // secondes après, restait « Paiements à configurer » alors que Stripe le disait actif. Un effet sur la fiche (et non dans
@@ -182,7 +201,7 @@ export default function DashboardLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId, stripeStatut]);
   // Retour sur l'onglet, focus, connexion retrouvée : relecture silencieuse (voir useRevalidation.js).
-  useRevalidation(() => { if (restoId) return loadDashboard(restoId); return undefined; }, { actif: !!restoId });
+  useRevalidation(() => { if (restoId) return loadDashboard(restoId); return undefined; }, { actif: !!restoId && !etatCommandes.accesPerdu });
   // Changement d'onglet : on relit les données en arrière-plan (sans squelette — l'ancien état reste
   // affiché jusqu'à la réponse) pour que la page ouverte soit à jour sans attendre le prochain cycle.
   const premierChemin = useRef(chemin);
@@ -203,14 +222,17 @@ export default function DashboardLayout() {
         await api(`/restaurants/${id}/connect/refresh`, { method: 'POST', token }).catch(() => {});
       }
       const [ordersData, restoData, reviewsData, driversData] = await Promise.all([
-        api(`/orders/restaurant/${id}`, { token }),
+        // Vue « service » (shop-213) : en cours + closes depuis 24 h, au lieu de tout l'historique toutes les 15 s.
+        api(`/orders/restaurant/${id}?vue=service`, { token }),
         fiche ? api(`/restaurants/${id}`, { token }) : null,
         // Annexes (avis, livreurs) : un échec ne doit jamais vider la liste des commandes (banc du 9 oct. 2026 : un 404 sur les
         // avis laissait « Pas encore de commande » alors que le serveur en renvoyait).
         annexes ? api(`/restaurants/${id}/reviews`).catch(() => null) : null,
         annexes ? api(`/restaurants/${id}/drivers`, { token }).catch(() => null) : null
       ]);
-      setOrders(ordersData);
+      setOrders(Array.isArray(ordersData) ? ordersData : (ordersData?.orders || []));
+      if (!Array.isArray(ordersData) && ordersData) setStatsService({ historyCount: ordersData.historyCount || 0, monthCount: ordersData.monthCount || 0 });
+      setEtatCommandes({ echecs: 0, derniereMaj: Date.now(), erreur: null, accesPerdu: false });
       if (restoData) setRestaurant(restoData);
       if (reviewsData) setReviews(reviewsData);
       if (driversData) setDrivers(driversData);
@@ -220,6 +242,9 @@ export default function DashboardLayout() {
       setOrdersLoaded(true);
       setErreurChargement(null); tentatives.current = 0;
     } catch (e) {
+      // 403 : membre retiré de l'équipe (STAFF_REMOVED), casquette reprise (ROLE_REQUIRED), commerce fermé. Le dire une fois
+      // et arrêter de relire (shop-403), au lieu de garder une liste figée qui ne sonnera plus.
+      setEtatCommandes((x) => ({ ...x, echecs: x.echecs + 1, erreur: e.message, accesPerdu: x.accesPerdu || e.status === 403 }));
       if (!restaurant) {
         // Objet neuf à chaque échec : un message identique ne suffirait pas à déclencher un nouveau rendu.
         setErreurChargement({ message: e.message, n: tentatives.current });
@@ -230,9 +255,23 @@ export default function DashboardLayout() {
     }
   }
 
+  /* Après « Tu n'as plus accès à ce commerce » (shop-403) : les rôles sont relus. Sans la casquette « Commerce » (membre
+     retiré qui ne sert plus nulle part), retour à la vue client — avant, il tombait sur « Crée ton commerce ». S'il la garde
+     (son propre commerce, une autre équipe), la liste de ses commerces est relue. */
+  async function apresAccesPerdu() {
+    let u = null;
+    try { u = await refreshUser?.(); } catch { /* session encore valable : on relit au moins la liste */ }
+    try { localStorage.removeItem(CLE_DERNIER_COMMERCE); } catch { /* sans stockage */ }
+    if (u && !(u.roles || []).includes('restaurant')) { changerRole?.('client', u.roles); navigate('/', { replace: true }); return; }
+    setEtatCommandes({ echecs: 0, derniereMaj: null, erreur: null, accesPerdu: false });
+    setRestoId(null); setRestaurant(null); setOrders([]); setMyRestos(null);
+    chargerCommerces();
+  }
+
   // `fiche` : la fiche déjà reçue (liste /mine/dashboard) — affichée tout de suite, sans second chargement.
   function pickResto(id, fiche = null) {
     setRestoId(id);
+    try { localStorage.setItem(CLE_DERNIER_COMMERCE, id); } catch { /* sans stockage */ }
     if (fiche) setRestaurant(fiche);
     loadDashboard(id, { fiche: !fiche });
   }
@@ -426,7 +465,12 @@ export default function DashboardLayout() {
       {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} loadDashboard={loadDashboard}
         ouverte={feuilleCommande} setOuverte={setFeuilleCommande} />}
 
-      {!restaurant && myRestos.length > 0 && (
+      {/* Accès perdu (membre retiré, commerce fermé, shop-403) : un seul message, et le chemin vers la vue client. */}
+      {etatCommandes.accesPerdu && (
+        <ErrorCard titre={t('dashResto.accessLostTitle')} message={t('dashResto.accessLostText')}
+          onRetry={apresAccesPerdu} libelle={t('dashResto.accessLostCta')} />
+      )}
+      {!restaurant && restoId && !etatCommandes.accesPerdu && (
         /* La carte d'échec est celle de components/ErrorCard.jsx, commune aux quatre espaces :
            elle était écrite à la main ici, avec un émoji 📡 que le reste de l'interface a abandonné
            (voir l'en-tête de Icone.jsx). Le seuil de deux tentatives ne bouge pas : un échec isolé
@@ -440,9 +484,9 @@ export default function DashboardLayout() {
           />
         ) : <SkeletonCards count={3} />
       )}
-      {restaurant && (
+      {restaurant && !etatCommandes.accesPerdu && (
         <div className="page-fade" key={chemin}>
-          <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard,
+          <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard, ordersLoaded, etatCommandes, statsService,
             communs: bandeau ? communs : null, onConnect: connectOnboard, connecting, lectureSeule: !!actingAs,
             alerte: { ...orderAlert, push } }} />
         </div>

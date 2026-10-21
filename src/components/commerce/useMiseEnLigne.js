@@ -133,6 +133,22 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
           titre: retrait.at ? t('miseEnLigne.removedOn', { date: new Date(retrait.at).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long' }) }) : t('miseEnLigne.removed'),
           sous: `${retrait.reason ? `${t('miseEnLigne.removedReason', { reason: retrait.reason })} ` : ''}${t('miseEnLigne.removedSub')}` }
       : { cle: 'enLigne', attente: true, icone: 'globe', titre: t('miseEnLigne.listed'), sous: t('miseEnLigne.listedSub') });
+  /* PUBLIÉ MAIS COMMANDES FERMÉES (audit du 19/10, shop-304). Un commerce inscrit sans horaires est créé fermé (le serveur
+   * pose des horaires 11:00–22:00 et open = false), tout comme celui qui a touché « Fermer jusqu'à ce que je rouvre » : une
+   * fois publié, toutes ses étapes étaient cochées et la puce disait « En ligne », alors qu'il n'apparaît pas aux clients
+   * tant que l'interrupteur des commandes reste fermé. Une dernière étape le dit, avec le geste qui ouvre. */
+  if (restaurant.publicListed && restaurant.open === false) {
+    const ouvrir = async () => {
+      setOccupe(true);
+      try {
+        await api(`/restaurants/${restoId}`, { method: 'PATCH', token, body: { open: true } });
+        await onChange?.();
+        toast(t('miseEnLigne.openOrdersDone'), 'succes');
+      } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
+    };
+    etapes.push({ cle: 'ouvrir', icone: 'horloge', titre: t('miseEnLigne.openOrders'), sous: t('miseEnLigne.openOrdersSub'),
+      action: { libelle: occupe ? '…' : t('miseEnLigne.openOrdersBtn'), onClick: ouvrir, disabled: occupe } });
+  }
 
   // « Agir pour » (console admin) : l'équipe voit la liste, mais ne signe ni ne valide rien à la place du commerce.
   if (lectureSeule) etapes.forEach((e) => { delete e.action; });

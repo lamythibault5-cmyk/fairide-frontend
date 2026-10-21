@@ -65,20 +65,38 @@ export function formatDateFr(dateStr) {
 // compris quand isOpen=true, pour afficher l'horaire du jour. `closures` (optionnel) = fermetures
 // exceptionnelles en cours, qui priment sur l'horaire hebdomadaire habituel — même logique que côté
 // backend (voir openingHours.js), dupliquée ici pour l'affichage instantané sans aller-retour serveur.
+// LA NUIT APPARTIENT À LA VEILLE (audit du 19/10, shop-315 ; même règle que le backend, openingHours.js) : l'après-minuit
+// d'une plage « 18:00 → 02:00 » suit la fermeture exceptionnelle de la veille, pas celle du jour.
+function veilleDe(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
+}
+function dansNuitDeLaVeille(hours, todayKey, nowMinutes) {
+  if (!hours || typeof hours !== 'object') return false;
+  const veilleKey = DAY_KEYS[(DAY_KEYS.indexOf(todayKey) + 6) % 7];
+  return (Array.isArray(hours[veilleKey]) ? hours[veilleKey] : []).some((shift) => {
+    const { closeM } = shiftToMinutes(shift);
+    return closeM > 24 * 60 && nowMinutes < closeM - 24 * 60;
+  });
+}
+
 export function getOpenStatus(hours, now = new Date(), closures = []) {
   const { dayKey: todayKey, minutes: nowMinutes } = brusselsParts(now);
-  const closure = activeClosureFor(closures, brusselsDateStr(now));
+  const jour = brusselsDateStr(now);
+  const closure = activeClosureFor(closures, jour);
+  const veilleFermee = !!activeClosureFor(closures, veilleDe(jour));
   if (closure) {
+    if (!veilleFermee && dansNuitDeLaVeille(hours, todayKey, nowMinutes)) return { isOpen: true, opensToday: false, opensAt: null, todayKey, isExceptionalClosure: false, closedReason: null, reopensDate: null };
     return {
       isOpen: false, opensToday: false, opensAt: null, todayKey,
       isExceptionalClosure: true, closedReason: closure.reason || '', reopensDate: closure.endDate || null
     };
   }
-  const base = getRegularOpenStatus(hours, now, todayKey, nowMinutes);
+  const base = getRegularOpenStatus(hours, now, todayKey, nowMinutes, veilleFermee);
   return { ...base, isExceptionalClosure: false, closedReason: null, reopensDate: null };
 }
 
-function getRegularOpenStatus(hours, now, todayKey, nowMinutes) {
+function getRegularOpenStatus(hours, now, todayKey, nowMinutes, sansVeille = false) {
   if (!hours || typeof hours !== 'object') return { isOpen: true, opensToday: false, opensAt: null, todayKey };
   const todayShifts = Array.isArray(hours[todayKey]) ? hours[todayKey] : [];
   for (const shift of todayShifts) {
@@ -87,11 +105,8 @@ function getRegularOpenStatus(hours, now, todayKey, nowMinutes) {
   }
   // La plage de la veille qui déborde après minuit (« 18:00 → 01:00 ») compte aussi : sans ce tour, un commerce
   // ouvert jusqu'à 1 h s'affichait fermé de minuit à la fermeture. Même correctif que le backend (openingHours.js).
-  const veilleKey = DAY_KEYS[(DAY_KEYS.indexOf(todayKey) + 6) % 7];
-  for (const shift of (Array.isArray(hours[veilleKey]) ? hours[veilleKey] : [])) {
-    const { closeM } = shiftToMinutes(shift);
-    if (closeM > 24 * 60 && nowMinutes < closeM - 24 * 60) return { isOpen: true, opensToday: false, opensAt: null, todayKey };
-  }
+  // Veille en fermeture exceptionnelle : sa nuit ne compte pas (shop-315).
+  if (!sansVeille && dansNuitDeLaVeille(hours, todayKey, nowMinutes)) return { isOpen: true, opensToday: false, opensAt: null, todayKey };
   const upcomingToday = todayShifts
     .map(shiftToMinutes)
     .filter((s) => s.openM > nowMinutes)
@@ -122,8 +137,11 @@ export function statutOuverture(restaurant, now = new Date()) {
   const s = getOpenStatus(restaurant.hours, now, restaurant.closures);
   if (!s.isOpen) return s;
   if (restaurant.pausedUntil && restaurant.pausedUntil > now.getTime()) {
-    // Stoppé pour la journée (fondateur, 2026-10-10) : la reprise tombe demain — on le dit tel quel au client.
-    const demain = new Date(restaurant.pausedUntil).toDateString() !== now.toDateString();
+    // Stoppé pour la journée (fondateur, 2026-10-10) : la reprise tombe demain — on le dit tel quel au client. Reconnu à sa
+    // durée (plus d'une heure : les pauses font 15 à 60 min) ET au changement de date, comme l'interrupteur du commerce
+    // (audit du 19/10, shop-312) : une pause de 60 min prise à 23:30 n'est pas « fermé aujourd'hui, rouvre demain à 00:30 ».
+    const longue = restaurant.pausedUntil - now.getTime() > 61 * 60000;
+    const demain = longue && new Date(restaurant.pausedUntil).toDateString() !== now.toDateString();
     return { ...s, isOpen: false, opensToday: !demain, opensAt: new Date(restaurant.pausedUntil), fermePourLaJournee: demain };
   }
   if (restaurant.open === false) return { ...s, isOpen: false, opensToday: false, fermeParLeCommerce: true };

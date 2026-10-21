@@ -20,7 +20,7 @@
 .ec-b-haut a { color: #fff; }
 .ec-b-retour { font-size: 14px; font-weight: 600; color: #fff; text-decoration: none; padding: 4px 0; }
 .ec-b-retour:hover { text-decoration: underline; }
-.ec-bandeau .ec-b-titre { font-family: var(--font-titre); font-size: 29px; line-height: 1.1; font-weight: 700; margin: 12px 0 6px; color: #fff; }
+.ec-bandeau .ec-b-titre { font-family: var(--font-titre); font-size: 29px; line-height: 1.1; font-weight: 700; margin: 12px 0 6px; color: #fff; overflow-wrap: anywhere; }
 .ec-b-sous { margin: 0; color: rgba(255, 255, 255, .82); font-size: 14.5px; line-height: 1.4; }
 .ec-chip { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .14); color: #fff; white-space: nowrap; }
 .ec-feuille { position: relative; background: #fff; color: var(--ink); border-radius: 26px 26px 0 0; margin-top: -22px; padding: 22px 24px 8px; animation: ec-monte .45s var(--ec-ressort) both; }
@@ -144,6 +144,10 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-anneau small { font-size: 10px; color: var(--ink-soft); }
 .ec-anneau--presse { background: conic-gradient(var(--red) calc(var(--ec-p) * 360deg), var(--cream-dim) 0); }
 .ec-anneau--presse b { color: var(--red); }
+/* Commande programmée (shop-221) : à la place de l'anneau, « À accepter avant jeu. 11:30 », sur deux lignes au plus. */
+.ec-anneau-date { flex: none; max-width: 120px; font-size: 12px; line-height: 1.25; color: var(--ink-soft); text-align: right; }
+/* Liste des commandes plus à jour (CROSS-31, shop-217) : une ligne rouge pâle, sur le tableau du site comme dans l'app. */
+.ec-liste-ancienne { margin: 0 0 12px; padding: 8px 12px; border-radius: var(--radius-card-sm); background: #FBE9EA; color: var(--red); font-weight: 600; }
 
 /* RouteSuivi (orderStatus.jsx) est dessinée pour un fond iris ; sur la feuille blanche : route iris, arrêts gris, coches lime. */
 .ec-route-blanc .route-suivi { color: var(--iris); margin: 6px 0 4px; }
@@ -433,3 +437,7 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
   font: inherit; font-size: 16px; font-weight: 700; color: var(--ink); text-align: left; cursor: pointer; }
 .alerte-ouvrir-voir { flex: none; font-size: 13.5px; font-weight: 700; color: #fff; background: var(--iris); border-radius: var(--radius-pill); padding: 8px 14px; }
 .alerte-ouvrir:hover .alerte-ouvrir-voir { background: var(--iris-deep); }
+/* Un nom très long sans espace débordait du bandeau à 430 px (audit du 19/10, shop-327) : overflow-wrap ci-dessus. */
+/* « Quitter sans enregistrer ? » (SousEcran, audit du 19/10, shop-321) : la confirmation passe AU-DESSUS du sous-écran ouvert
+   (feuille à 300, fenêtres à 100 dans styles.css), sinon elle s'ouvrait cachée derrière. */
+body:has(> .sous-ecran-feuille) > .confirm-voile { z-index: 310; }

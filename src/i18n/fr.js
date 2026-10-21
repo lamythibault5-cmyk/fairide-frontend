@@ -4346,6 +4346,8 @@ export default {
       objectifs4: 'Rester fidèle, sur le long terme, à l\'engagement d\'une livraison à commission réduite.'
     },
     guide: {
+      s4p2App: "Autorise les notifications de Fairide : tu es prévenu d'une commande même app fermée ou téléphone verrouillé.",
+      s3p1App: "Dans l'app, rien à installer : elle s'ouvre déjà en plein écran. Autorise ses notifications quand elle te le demande, pour être prévenu d'une commande même app fermée.",
       title: 'Mode d\'emploi',
       intro: 'Ce guide explique comment recevoir et traiter les commandes Fairide au quotidien, sur le terminal Fairide ou dans l\'app.',
       s1Title: 'Ce qu\'il faut pour commencer',
@@ -4353,13 +4355,13 @@ export default {
       s1p2: 'Une connexion internet stable est nécessaire pour voir les commandes arriver et pour les traiter.',
       s1p3: 'Il est recommandé de réserver un appareil au comptoir, dédié à la réception des commandes, pour ne jamais le perdre de vue pendant le service.',
       s2Title: 'Modifier les informations et le menu du restaurant',
-      s2p1: '**Infos du restaurant** (nom, adresse, description, photo d\'accueil, logo, horaires, fermetures exceptionnelles, type de cuisine, frais de livraison...) : section « Mon commerce » dans le menu de gauche.',
+      s2p1: "**Infos du commerce** (nom, adresse, description, photo d'accueil, logo, horaires, fermetures exceptionnelles, type de cuisine, livraison...) : rubrique « Mon commerce ».",
       s2p2: 'Un changement d\'horaires ou de fermeture exceptionnelle est visible immédiatement par les clients, pas besoin d\'attendre une validation.',
       s2p3: "**Menu** : section « Mon menu ». Ta carte et tes prix sont gérés avec Fairide : rien ne change sans ton accord ni le nôtre.",
       s2l1: "Un plat épuisé ? Mets-le en rupture d'un geste dans « Mon menu » : il disparaît pour aujourd'hui et revient demain.",
       s2l2: "Un prix, un plat, une photo à changer ? Écris la demande sous ta carte : l'équipe Fairide l'applique et te prévient.",
       s2l3: "Avant la première vente, tu relis ta carte et tu la signes (prix, TVA, allergènes). Toute modification demande une nouvelle signature.",
-      s2p4: "Les infos du commerce (horaires, fermetures, photos) changent tout de suite côté client. Le changement de type de cuisine demande un code reçu par e-mail.",
+      s2p4: "Les infos du commerce (horaires, fermetures, photos, type de commerce) changent tout de suite côté client.",
       s3Title: 'Installer Fairide sur l\'appareil',
       s3p1: 'L\'installation sur l\'écran d\'accueil permet d\'ouvrir directement l\'espace restaurateur en plein écran, sans passer par le navigateur à chaque fois.',
       s3p2: '**Sur Android (Chrome) :** ouvrir le site Fairide, appuyer sur le menu (les trois points en haut à droite), puis choisir « Ajouter à l\'écran d\'accueil ».',
@@ -4375,16 +4377,16 @@ export default {
       s5l1: "« Accepter » fait passer la commande en préparation. Juste à côté, « Temps de préparation » ajoute 10, 20 ou 30 minutes si la cuisine est chargée : le client voit l'heure mise à jour.",
       s5l2: 'Refuser annule la commande et rembourse automatiquement le client. Un motif est demandé (plat épuisé, cuisine débordée…) : il est transmis au client.',
       s6Title: 'Suivre la commande jusqu\'à la fin',
-      s6p1: 'Les statuts se suivent dans cet ordre : Nouvelle, En préparation, Prête, et pour une commande à livrer, En livraison, puis Livrée (Récupérée pour une commande à emporter, Terminée pour une commande sur place).',
+      s6p1: "Les statuts se suivent dans cet ordre : Nouvelle, En préparation, Prête, et pour une commande à livrer, En livraison, puis Livrée (Récupérée pour une commande à emporter).",
       s6p2: 'Pour une commande à livrer, une fois acceptée, l\'application indique si un livreur a déjà confirmé la prise en charge ou si elle est encore en attente d\'un livreur.',
-      s6p3: "Une fois le plat prêt, touche « Marquer prêt » : la commande passe à ce statut et devient visible pour les livreurs disponibles.",
-      s6p4: 'Pour une commande à emporter ou sur place, pas de code à taper : le client donne son numéro de commande ou son nom, tu le compares au numéro et au prénom affichés à côté de « Remis au client », puis tu touches ce bouton. Pour une commande à livrer, un code donné par le livreur permet de confirmer qu\'il a bien récupéré la commande.',
+      s6p3: "Les livreurs voient une livraison dès que tu l'acceptes (une livraison programmée, peu avant son heure). Une fois le plat prêt, touche « Marquer prêt » : la commande passe à ce statut, et le livreur sait qu'elle l'attend.",
+      s6p4: "Pour une commande à emporter, pas de code à taper : le client donne son numéro de commande ou son nom, tu le compares au numéro et au prénom affichés à côté de « Remis au client », puis tu touches ce bouton. Pour une commande à livrer, le code de retrait s'affiche en grand sur la commande : compare-le à celui que le livreur te montre, remets-lui la commande, et c'est lui qui confirme le retrait.",
       s6p5: "Une commande non acceptée ne reste pas en attente indéfiniment : après 5 minutes, un rappel part par e-mail ; après 15 minutes sans réponse, elle est annulée et le client remboursé.",
       s7Title: 'Imprimer le ticket d\'une commande',
-      s7p1: 'Ouvre une commande dans l\'onglet Commandes : en bas de la fiche, la section « Ticket de la commande » propose deux façons d\'imprimer le récapitulatif à glisser dans le sac ou à coller dessus.',
-      s7p2: '**Sur imprimante thermique Bluetooth.** Choisis d\'abord la largeur de ton papier (58 ou 80 mm), puis « Connecter l\'imprimante » : ton navigateur affiche la liste des appareils à portée. Une fois l\'imprimante choisie, les tickets suivants partent d\'un seul clic, tant que l\'onglet reste ouvert.',
-      s7p3: '**Deux conditions à connaître.** Ce bouton n\'apparaît que sur Chrome, Edge ou Opera, sur iPhone et iPad, aucun navigateur n\'autorise le Bluetooth depuis une page web, y compris Chrome. Et l\'imprimante doit être un modèle *Bluetooth Low Energy* : les modèles en Bluetooth classique restent invisibles depuis un navigateur.',
-      s7p4: '**Sur n\'importe quelle autre imprimante.** « Imprimer le bon de livraison » passe par la boîte d\'impression de ton appareil : elle fonctionne partout, y compris avec AirPrint sur iPhone et iPad.',
+      s7p1: "Ouvre une commande dans l'onglet Commandes : en bas de la fiche, les boutons d'impression du ticket à glisser dans le sac ou à coller dessus.",
+      s7p2: "**Avec un terminal Fairide.** Les tickets sortent tout seuls. « Imprimer le ticket » (ou « Réimprimer le ticket ») en renvoie un sur le terminal, avec le nombre d'exemplaires choisi juste à côté ; une livraison en sort toujours au moins deux.",
+      s7p3: "**Sans terminal, depuis un ordinateur.** « Imprimer le ticket » passe par la boîte d'impression de l'appareil : elle fonctionne avec n'importe quelle imprimante, y compris AirPrint.",
+      s7p4: "**Dans l'app, sans terminal.** Un téléphone n'imprime pas : le ticket sort sur un terminal Fairide, ou depuis un ordinateur. Avec un terminal, « Imprimer depuis cet appareil » donne aussi un double sur une autre imprimante.",
       s8Title: 'Solution de repli : le bon de commande par e-mail',
       s8p1: 'À chaque commande payée, un e-mail récapitulatif est envoyé automatiquement à l\'adresse e-mail du restaurant. Il contient la liste des articles avec leur prix, le sous-total, l\'adresse de livraison si applicable, la consigne de livraison choisie par le client, son commentaire éventuel et son numéro de téléphone.',
       s8p2: 'Cet e-mail peut être ouvert et imprimé depuis n\'importe quelle messagerie, sans avoir besoin d\'ouvrir Fairide ni d\'imprimante spécifique. L\'envoi par WhatsApp n\'est pas encore disponible.',
@@ -4394,9 +4396,9 @@ export default {
       s9q2: 'L\'appareil était éteint ou la connexion coupée',
       s9q2a: 'L\'e-mail de commande part automatiquement depuis les serveurs de Fairide, indépendamment de l\'appareil : il reste consultable dès que l\'appareil (ou un autre) est de nouveau connecté.',
       s9q3: 'Le client veut modifier sa commande après l\'avoir passée',
-      s9q3a: 'Une fois la commande payée, elle ne peut plus être modifiée ni annulée par le client lui-même. Il doit alors contacter directement le restaurant (numéro affiché sur la fiche de commande) ou le support Fairide.',
+      s9q3a: "Tant que tu n'as pas accepté la commande, le client peut l'annuler lui-même : il est remboursé. Une fois acceptée, il ne peut plus la modifier ni l'annuler : il doit contacter directement le commerce (numéro affiché sur sa commande) ou le support Fairide.",
       s9q4: 'Où retrouver l\'historique et les relevés',
-      s9q4a: 'L\'historique des commandes se trouve dans la section Commandes du tableau de bord. Les factures et relevés se trouvent dans la section Factures.',
+      s9q4a: "L'historique des commandes est au bas de la page Commandes. Les factures et relevés sont dans Mon compte › Factures.",
       s10Title: 'Aide',
       s10p1: "Une question sur l'utilisation de Fairide (modifier le menu, comprendre un statut de commande, une facture...) ? Le centre d'aide rassemble les réponses aux questions les plus fréquentes.",
       s10p2: 'Pour toute autre question, le support Fairide est joignable par e-mail à [contact@fairide.be](mailto:contact@fairide.be) ou par téléphone au [+32 474 20 07 13](tel:+32474200713).',
@@ -4404,7 +4406,7 @@ export default {
       s11p1: "**Pause et fermeture.** Sur la page des commandes, l'interrupteur « Ouvert aux commandes » ferme ton commerce jusqu'à ce que tu rouvres. Débordé ? Une pause de 15, 30 ou 60 minutes bloque les nouvelles commandes, laisse finir celles en cours, puis rouvre toute seule.",
       s11p2: "**Commandes et capacité** (dans « Mon commerce ») : un montant minimum de commande, un nombre maximum de commandes par jour, la distance de livraison (sans réglage, 6 km) et ton temps de préparation habituel (sans réglage, 12 minutes), qui sert à l'heure d'arrivée annoncée au client. Fairide t'y montre aussi le temps que tu mets réellement, mesuré sur tes 30 derniers jours.",
       s11p3: "**Le livreur attend.** Quand le livreur est arrivé, la commande affiche depuis combien de minutes il attend. Il ne peut pas repartir sans la commande : prépare-la en priorité.",
-      s11p4: "**Alcool.** Une commande avec de l'alcool demande de vérifier la pièce d'identité à la remise. Touche « Âge vérifié : remettre », ou « Refuser la remise » si le client n'a pas l'âge ou pas de pièce : la commande est close et l'équipe Fairide gère le remboursement.",
+      s11p4: "**Alcool.** Une commande avec de l'alcool demande de vérifier la pièce d'identité à la remise. Touche « Âge vérifié : remettre », ou « Refuser la remise » si le client n'a pas l'âge ou pas de pièce : l'alcool est retiré de la commande, tu remets le reste, et Fairide te paie l'alcool quand même.",
       s11p5: "**Client pas venu** (à emporter) : une fois la commande prête, et 30 minutes après l'heure annoncée au client, « Client pas venu » clôt la commande. Payée sur place : Fairide n'intervient pas (ni remboursement, ni indemnisation), et ce client ne pourra plus payer sur place. Payée en ligne : elle reste due, tu gardes ton paiement."
     },
     resetPassword: {
@@ -4423,6 +4425,8 @@ export default {
       submit: 'Réinitialiser mon mot de passe'
     },
     alertBar: {
+      tabTitleMany: "({n}) Nouvelles commandes, {base}",
+      tabTitleOne: "(1) Nouvelle commande, {base}",
       voir: 'Voir',
       activerSon: 'Activer le son des commandes',
       settings: 'Réglages de l\'alarme',
@@ -4710,6 +4714,7 @@ export default {
       deliveryDiscountPill: '-{amount}€ livraison'
     },
     restoMenuUi: {
+      toastClientHatNeeded: "Pour commander, passe sur ta casquette client : Mon compte › Mes casquettes.",
       toastFullToday: 'Ce commerce a reçu toutes les commandes qu\'il peut préparer aujourd\'hui. Reviens demain !',
       fullTodayTitle: 'Complet pour aujourd\'hui',
       fullTodayText: '{name} a atteint son nombre de commandes du jour. Tu peux regarder la carte et revenir demain.',
@@ -4824,6 +4829,11 @@ export default {
       emailedOn: 'Envoyée par e-mail le {date} · cliquer pour la renvoyer'
     },
     hoursEditor: {
+      nextDay: "Ferme le lendemain à {time}",
+      allDay: "Ouvert 24 h sur 24 ? (même heure d'ouverture et de fermeture)",
+      overlap: "Ce créneau chevauche un autre service",
+      missingTime: "Heure manquante",
+      to: "à",
       closed: 'Fermé',
       applyAllDays: 'Appliquer à tous les jours',
       addService: '+ Ajouter un service',
@@ -4853,6 +4863,8 @@ export default {
       addN: 'Ajouter {n} plat(s) au menu'
     },
     restoPreview: {
+      hiddenText: "Tes clients ne voient pas ces plats : allergènes pas encore déclarés, ou alcool pas encore autorisé. Complète-les dans Ma carte.",
+      hiddenTitle: "Masqués aux clients",
       banner: 'Aperçu, c\'est exactement ce que voient tes clients. Tu peux tester l\'ajout au panier, mais aucune commande réelle ne sera passée.',
       promosBanner: 'Des promos sont en cours sur certains plats, repère le badge rouge !',
       emptyMenu: 'Ton menu est encore vide, tes clients ne verront rien tant que tu n\'as pas ajouté de plats.',
@@ -5695,6 +5707,23 @@ export default {
       stepMoreHelp: 'Facultatif : traduire ta carte pour les clients anglophones et néerlandophones, ou faire un geste sur tes prix.'
     },
     editResto: {
+      typeKeepsMenu: "Ta carte ne change pas. Pour la modifier, envoie une demande depuis Ma carte.",
+      toastDeactivated: "Ton commerce est retiré du site et fermé. Tes factures restent dans Mes documents.",
+      offerBelowMinimum: "Ton minimum de commande est déjà de {amount} € : la livraison serait offerte sur toutes les commandes. Choisis un seuil plus haut, ou la livraison offerte pour tous.",
+      capMore: "5 commandes de plus",
+      capLess: "5 commandes de moins",
+      prepMore: "5 minutes de plus",
+      prepLess: "5 minutes de moins",
+      closureScheduledLink: "Les voir dans Commandes, pour les annuler ou prévenir les clients",
+      closureScheduledMany: "{n} commandes programmées tombent pendant cette fermeture :",
+      closureScheduledOne: "1 commande programmée tombe pendant cette fermeture :",
+      toastAddressImprecise: "Adresse enregistrée, mais introuvable sur la carte : l'équipe Fairide va placer ton commerce à la main.",
+      toastStreetNumberRequired: "Indique la rue et le numéro : les livreurs en ont besoin pour venir chercher les commandes.",
+      legalChangeNotice: "Ton contrat et tes paiements sont établis avec ces informations : si tu les changes, l'équipe Fairide vérifie, et te recontacte si la société a changé.",
+      managersSavedRestFailed: "Responsables enregistrés, mais pas le reste :",
+      toastHoursMissingTime: "Une heure manque dans tes horaires : complète le créneau marqué en rouge.",
+      capacitySubMin: "minimum {amount}",
+      capacitySubPrep: "prépa {n} min",
       socialTitle: 'Réseaux sociaux',
       socialHelp: 'Facultatif. Les clients les retrouvent dans « Infos » sur ta fiche.',
       instagram: 'Instagram',
@@ -5815,7 +5844,7 @@ export default {
       codeByEmail: 'Code reçu par email',
       resendCode: 'Renvoyer le code',
       deleteTitle: 'Supprimer ce restaurant',
-      deleteConfirm: 'Es-tu sûr ? Cette action est irréversible (plats supprimés aussi). Impossible si des commandes existent déjà.',
+      deleteConfirm: "Ton commerce est supprimé s'il n'a encore aucune facture ; sinon il est retiré du site et fermé, et ses factures restent dans Mes documents. Impossible tant qu'une commande est en cours ou qu'une somme reste due.",
       deleteWhy: 'Pourquoi supprimes-tu ce restaurant ?',
       commentOptional: 'Un commentaire (optionnel)',
       deleteRequestSent: 'Ta demande a été transmise à l\'équipe Fairide. Elle va te recontacter par email avec ton code de confirmation, entre-le ci-dessous dès que tu l\'as reçu pour finaliser la suppression.',
@@ -5843,7 +5872,7 @@ export default {
       phEx25: 'Ex: 25',
       toastNameRequired: 'Le nom du restaurant est requis.',
       toastLegalRequired: 'Les informations légales du commerce sont requises (nom légal, n° d\'entreprise, n° TVA, responsable).',
-      toastHoursRequired: 'Indique tes horaires d\'ouverture : ton commerce ne sera visible que pendant ces créneaux.',
+      toastHoursRequired: "Indique tes horaires d'ouverture : les clients ne pourront commander que pendant ces créneaux.",
       toastUpdated: 'Restaurant mis à jour.',
       toastStartDate: 'Indique une date de début.',
       toastEndAfterStart: 'La date de fin doit être après la date de début.',
@@ -5940,6 +5969,8 @@ export default {
       photoText: 'Sur chaque commande (essai ou vraie), le bouton dans Mes commandes te permet de photographier la commande AVANT de la remettre : mets le ticket avec le numéro de commande et tous les produits dans le cadre. L\'heure, le numéro et la liste des produits sont enregistrés avec la photo : c\'est ta preuve si un client se plaint. Ton client la voit aussi dans le suivi de sa commande.'
     },
     ecranCommerce: {
+      aAccepterAvant: "À accepter avant {time}",
+      enLigneFerme: "En ligne · commandes fermées",
       verrouAide: "L'interrupteur met un plat en rupture pour aujourd'hui, il revient tout seul demain. Tout le reste se change par une demande à Fairide.",
       prochaineEtape: 'Prochaine étape',
       rienAFaire: "Rien à faire de ton côté : Fairide s'occupe de la suite",
@@ -5958,6 +5989,17 @@ export default {
       enVenteAujourdhui: "En vente aujourd'hui"
     },
     ordersResto: {
+      staleList: "Liste du {time} : la connexion au serveur ne passe plus, reconnexion en cours. Une nouvelle commande ne sonnera pas tant que la liste ne se met pas à jour.",
+      loadFailedTitle: "Les commandes ne se chargent pas",
+      historyMore: "Voir les commandes plus anciennes",
+      retry: "Réessayer",
+      refuseReason3: "Fermeture imprévue",
+      refuseReason2: "Cuisine débordée",
+      refuseReason1: "Plat épuisé",
+      openButHoursShort: "Hors horaires",
+      openButHoursNone: "Fermé selon tes horaires",
+      openButHours: "Fermé selon tes horaires · rouvre à {time}",
+      openButClosure: "Fermeture exceptionnelle aujourd'hui : aucune commande n'arrive",
       stopTodayBtn: 'Stopper les commandes pour aujourd\'hui',
       stopTodayHelp: 'Plus rien à préparer aujourd\'hui ? Les clients ne peuvent plus commander, les commandes déjà reçues continuent. Les commandes rouvrent TOUTES SEULES au prochain 6 h du matin : tu n\'as rien à faire. Tu peux aussi rouvrir plus tôt d\'un simple geste.',
       stoppedTodayTitle: 'Commandes stoppées pour aujourd\'hui',
@@ -6349,6 +6391,7 @@ export default {
     },
     // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
     sitePro: {
+      etape_ouvrir: "Commandes",
       reglagesService: 'Réglages du service',
       commandes: 'Commandes',
       tableau: 'Commandes en cours',
@@ -6379,6 +6422,10 @@ export default {
     },
     // Liste « Avant d'être en ligne » du commerce (components/commerce/MiseEnLigne.jsx, audit UX du 15/10/2026).
     miseEnLigne: {
+      openOrdersDone: "Commandes ouvertes : ta fiche apparaît aux clients.",
+      openOrdersBtn: "Ouvrir les commandes",
+      openOrdersSub: "Ta fiche est publiée, mais tes commandes sont fermées : les clients ne te voient pas tant qu'elles le restent. Vérifie tes horaires, puis ouvre.",
+      openOrders: "Ouvre tes commandes",
       title: "Avant d'être en ligne",
       progress: '{done} étapes faites sur {total}',
       nextStep: 'Prochaine étape : {step}',
@@ -6427,6 +6474,9 @@ export default {
       removedSub: "Tes clients ne te voient plus et ne peuvent plus commander. Le détail t'a été envoyé par e-mail : réponds-y si tu n'es pas d'accord ou quand c'est réglé."
     },
     dashResto: {
+      accessLostCta: "Revenir à l'accueil",
+      accessLostText: "Tu as été retiré de son équipe, ou le commerce a fermé. Ses commandes ne s'affichent plus ici.",
+      accessLostTitle: "Tu n'as plus accès à ce commerce",
       zoneDeliveryOffTitle: 'Livraison Fairide suspendue dans ta zone',
       zoneDeliveryOffText: 'Aucun livreur Fairide ne couvre ta zone pour le moment : la livraison est fermée sur ta fiche, l\'à emporter reste ouvert. Dès qu\'un livreur couvre ta zone, nous la réactivons. Si tu livres avec tes propres livreurs, dis-le-nous depuis Mon commerce.',
       today: 'Aujourd\'hui',
@@ -6475,7 +6525,7 @@ export default {
       toastPaymentsValidating: 'Configuration des paiements en cours de validation (quelques secondes).',
       toastNameRequired: 'Donne un nom à ton restaurant.',
       toastAddressRequired: 'Donne l\'adresse complète du restaurant (rue, numéro, code postal) pour les livreurs et la carte.',
-      toastHoursRequired: 'Indique tes horaires d\'ouverture : ton commerce ne sera visible que pendant ces créneaux.',
+      toastHoursRequired: "Indique tes horaires d'ouverture : les clients ne pourront commander que pendant ces créneaux.",
       toastCreatedOwnDriver: 'Restaurant créé ! Ajoute maintenant l\'email de ton livreur dans la section Livraison pour activer ton propre livreur.',
       toastCreated: 'Restaurant créé !',
       noReviewsYet: 'Pas encore d\'avis',
@@ -6582,6 +6632,19 @@ export default {
       bannerLeave: 'Quitter le groupe'
     },
     team: {
+      profileRole: "équipe",
+      removeInviteText: "Le lien envoyé à {name} ne fonctionnera plus.",
+      removeInviteTitle: "Retirer l'invitation ?",
+      resend: "Renvoyer",
+      leftToast: "Tu as quitté l'équipe de {name}.",
+      leaveText: "Tu n'auras plus accès aux commandes de {name}. Pour revenir, il faudra une nouvelle invitation.",
+      leaveTitle: "Quitter l'équipe ?",
+      leave: "Quitter l'équipe",
+      switchAccount: "Changer de compte",
+      otherAccount: "Tu es connecté avec {me}. Cette invitation est pour {email} : connecte-toi avec ce compte-là.",
+      openOrders: "Ouvrir les commandes",
+      alreadyMember: "Tu fais déjà partie de l'équipe de {name}.",
+      retry: "Réessayer",
       rowTitle: 'Mon équipe',
       rowSub: 'Des comptes pour la caisse, le comptoir, la cuisine',
       intro: "Invite les personnes qui font le service. Elles se connectent avec leur propre compte et peuvent seulement gérer les commandes : accepter, refuser, marquer prête, remettre, mettre un plat en rupture, mettre le commerce en pause. Elles ne voient ni tes paiements, ni tes factures, ni ta carte.",
@@ -6607,7 +6670,7 @@ export default {
       can1: 'Accepter ses commandes et les marquer prêtes',
       can2: 'Mettre un plat en rupture',
       can3: 'Mettre le commerce en pause',
-      cannot: "Pas d'accès aux paiements, aux factures ni à la carte",
+      cannot: "Ni paiements, ni factures, ni changements de la carte (seulement les ruptures du jour)",
       inviteFor: 'Invitation envoyée à {email} : connecte-toi avec ce compte.',
       inviteExpired: "Cette invitation a expiré : demande au commerce de t'en envoyer une nouvelle.",
       inviteNotFoundTitle: 'Invitation introuvable',
@@ -7002,6 +7065,10 @@ export default {
       removed: 'Double authentification désactivée.'
     },
     common: {
+      leaveUnsavedCancel: "Continuer à modifier",
+      leaveUnsavedConfirm: "Quitter",
+      leaveUnsavedText: "Tes modifications seront perdues.",
+      leaveUnsavedTitle: "Quitter sans enregistrer ?",
       genericError: 'Une erreur est survenue.',
       downloadError: 'Téléchargement impossible. Réessaie dans un instant.',
       serverUnreachable: 'Impossible de joindre le serveur Fairide. Réessaie dans un instant.',
@@ -7485,6 +7552,7 @@ export default {
       titleReadyOne: 'commande prête'
     },
     orderStatus: {
+      acceptBeforeLater: "À accepter avant {time} : sans réponse, la commande est annulée.",
       // Titres du bandeau de suivi d'une commande en cours (orderStatus.jsx, titreSuivi ; 2026-10-16).
       grand: {
         nouveau: 'Le commerce regarde ta commande',
@@ -8787,7 +8855,7 @@ export default {
       ageCheckText: 'Cette commande contient de l\'alcool. Vérifie sur la pièce d\'identité que le client a {age} ans ou plus avant de remettre la commande.',
       ageCheckVerified: 'Âge vérifié : remettre',
       ageCheckRefuse: 'Refuser la remise',
-      ageRefusedDone: 'Remise refusée : la commande est close, l\'équipe Fairide gère le remboursement.',
+      ageRefusedDone: "Alcool retiré de la commande : remets le reste au client. Fairide te paie l'alcool quand même.",
       ageRefusedDriverDone: 'Remise refusée : la commande est close et ta course t\'est payée. Rapporte les produits au commerce.',
       allergyConfirmTitle: 'Demande liée à une allergie',
       allergyConfirmText: "Le client demande : « {request} ». En acceptant, tu confirmes pouvoir préparer cette commande en respectant cette demande. Sinon, refuse-la : le client est remboursé intégralement.",

@@ -27,11 +27,15 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
   async function valider() {
     // Virgule acceptée (« 2,50 ») : les champs sont en texte + clavier décimal (audit du 19/10, CROSS-62).
     const montant = Number(String(remise).replace(',', '.'));
-    if (!gratuite && (Number.isNaN(montant) || montant < 0 || montant > 50)) { toast(t('editResto.toastAmount0_50')); return; }
+    // Refus de saisie en style « erreur » (audit du 19/10, shop-329).
+    if (!gratuite && (Number.isNaN(montant) || montant < 0 || montant > 50)) { toast(t('editResto.toastAmount0_50'), 'erreur'); return; }
     let min = null;
     if (!gratuite && aPartirDe) {
       min = Number(String(minimum).replace(',', '.'));
-      if (Number.isNaN(min) || min < 5 || min > 200) { toast(t('editResto.toastAmount5_200')); return; }
+      if (Number.isNaN(min) || min < 5 || min > 200) { toast(t('editResto.toastAmount5_200'), 'erreur'); return; }
+      // « Offerte dès 20 € » sous un minimum de commande de 30 € ne voulait rien dire : toutes les commandes y ont droit
+      // (audit du 19/10, shop-330). On le dit plutôt que d'afficher une offre trompeuse.
+      if (restaurant.minOrderAmount != null && min <= Number(restaurant.minOrderAmount)) { toast(t('editResto.offerBelowMinimum', { amount: String(restaurant.minOrderAmount).replace('.', ',') }), 'erreur'); return; }
     }
     const propre = fraisPropres.trim() === '' ? null : Number(fraisPropres.replace(',', '.'));
     if (livreLuiMeme && propre !== null && (Number.isNaN(propre) || propre < 0 || propre > 20)) { toast(t('editResto.ownFeeInvalid'), 'erreur'); return; }
