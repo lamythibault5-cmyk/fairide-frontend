@@ -138,15 +138,19 @@ export function ChangementStatut({ d, t, token, action, busy, onChanged, enFeuil
 
 // Pièces refusées sans remplacement déposé depuis, hors brouillon (voir l'appel plus haut).
 /* LE NUMÉRO D'ENTREPRISE, APRÈS L'ENVOI (fondateur, 18/10/2026). Le dossier est parti sans lui (MANQUES_APRES_ENVOI) ; les
- * étapes sont masquées une fois le dossier envoyé, donc on le demande ici, seul. Dès qu'il est là, l'équipe peut valider. */
-export function NumeroEntrepriseEnAttente({ t, token, busy, action }) {
+ * étapes sont masquées une fois le dossier envoyé, donc on le demande ici, seul. Dès qu'il est là, l'équipe peut valider.
+ * LE N° DE TVA AUSSI (audit du 19/10, courier-11) : un assujetti sans n° de TVA ne pouvait plus l'ajouter nulle part, et la
+ * carte disparaissait dès le BCE saisi. Le serveur déduit désormais le n° de TVA du BCE (BE + numéro) ; s'il manque encore
+ * (BCE déjà connu), la carte le demande, lui. `manques` : d.missing. */
+export function NumeroEntrepriseEnAttente({ t, token, busy, action, manques = [] }) {
+  const tva = !manques.includes('bce') && manques.includes('tva_numero');
   const [bce, setBce] = useState('');
   return (
     <div className="card">
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.bcePendingTitle')}</h3>
-      <p className="small" style={{ margin: '0 0 10px' }}>{t('courierOnboarding.bcePendingText')}</p>
-      <form className="row" style={{ gap: 8, flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); action(() => api('/couriers/me', { method: 'PATCH', token, body: { companyNumber: bce.trim() } }), t('courierOnboarding.bceSaved')); }}>
-        <input aria-label={t('courierOnboarding.fBce')} value={bce} onChange={(e) => setBce(e.target.value)} placeholder="0123.456.789" inputMode="numeric" style={{ flex: '1 1 180px' }} />
+      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t(tva ? 'courierOnboarding.vatPendingTitle' : 'courierOnboarding.bcePendingTitle')}</h3>
+      <p className="small" style={{ margin: '0 0 10px' }}>{t(tva ? 'courierOnboarding.vatPendingText' : 'courierOnboarding.bcePendingText')}</p>
+      <form className="row" style={{ gap: 8, flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); action(() => api('/couriers/me', { method: 'PATCH', token, body: tva ? { vatNumber: bce.trim() } : { companyNumber: bce.trim() } }), t(tva ? 'courierOnboarding.vatSaved' : 'courierOnboarding.bceSaved')); }}>
+        <input aria-label={t(tva ? 'courierOnboarding.fVatNumber' : 'courierOnboarding.fBce')} value={bce} onChange={(e) => setBce(e.target.value)} placeholder={tva ? 'BE0123456789' : '0123.456.789'} inputMode={tva ? 'text' : 'numeric'} style={{ flex: '1 1 180px' }} />
         <button type="submit" className="btn-gold" disabled={busy || !bce.trim()}>{busy ? '…' : t('common.save')}</button>
       </form>
     </div>

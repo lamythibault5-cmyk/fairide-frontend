@@ -55,7 +55,8 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
   const docs = d.documents ?? [];
   const piecesRefusees = docs.some((x) => x.rejectedReason && !docs.some((y) => y.docType === x.docType && !y.rejectedReason));
   const textesARelire = AVANT_COURSE.some((m) => manques.includes(m));
-  const bceAttendu = manques.includes('bce');
+  // Numéro d'entreprise ou n° de TVA encore attendu après l'envoi (audit du 19/10, courier-11 : le n° de TVA aussi).
+  const bceAttendu = manques.includes('bce') || manques.includes('tva_numero');
   const aAgir = piecesRefusees || textesARelire || bceAttendu || etat === 'blocked_threshold';
 
   const autreStatut = STATUTS.find((x) => x !== c.statusType);
@@ -118,7 +119,7 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
           </ul>
         )}
         <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />
-        {bceAttendu && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} />}
+        {bceAttendu && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} manques={manques} />}
 
         {(roule || Number(th.deliveries || 0) > 0) && <Compteurs d={d} t={t} />}
 

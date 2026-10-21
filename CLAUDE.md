@@ -549,8 +549,11 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   on the other dashboard pages, read-only in « agir pour ». It replaced the status card, the CarteAValider banner and
   MenuReadiness's merchant list — add a new go-live step there, not in a new banner. Signing the menu now also confirms a
   menu handed over by the team (`carteSignee.signer` sets `menu_confirmed_at`; backend migration 037 repaired shops left hidden).
-- **Courier**: notices to accept before the first ride, biometric consent before Stripe Identity,
-  nationality and residence permit (onboarding); ID check at the door (dashboard).
+- **Courier**: notices to accept before the first ride, biometric consent before Stripe Identity (withdrawable from the
+  identity step and Mon compte › Mes pièces: an open Stripe check is cancelled and the identity goes to an in-person check),
+  nationality and residence permit (onboarding); ID check at the door (dashboard). The team records an identity check in
+  Admin › Livreurs › dossier as « en personne » or « sur la pièce déposée », with the name as printed on the ID; a refusal
+  needs a reason, sent to the courier (audit 2026-10-19, admin-42/43).
 - **Admin**: suspending anyone goes through [DecisionDialog](src/components/admin/DecisionDialog.jsx)
   (facts + contractual basis) — the API refuses a bare `{ status: 'blocked' }`. New compliance tabs
   (decisions, DSA reports, breaches, processors, prohibited products, parameters) are in

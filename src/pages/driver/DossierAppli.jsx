@@ -10,7 +10,7 @@ import ouvrirDocument from '../../ouvrirDocument';
 import Icone from '../../components/Icone';
 import EcranPlein from '../../components/EcranPlein';
 import SousEcran from '../../components/SousEcran';
-import { ConsentementBiometrique } from '../../components/conformite/LivreurConformite';
+import { ConsentementBiometrique, RetraitConsentementBiometrique } from '../../components/conformite/LivreurConformite';
 import { Haut, Option, Fait } from '../app/EcransBienvenue';
 import { Champ } from '../app/InscriptionAppli';
 import RouteVelo from '../../components/livreur/RouteVelo';
@@ -81,7 +81,7 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
 
   // Les écrans « Infos » enregistrent le formulaire entier, comme « Continuer » sur le site (silencieux : l'écran suivant suffit).
   async function enregistrerPuisSuivant() {
-    const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: corpsInfos(f) }));
+    const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: corpsInfos(f, c) }));
     if (ok) { setF((x) => ({ ...x, nationalNumber: '' })); suivant(); }
   }
 
@@ -373,6 +373,8 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
       } catch (e) {
         // B1 : le selfie exige un consentement biométrique séparé — on l'affiche au lieu de l'erreur.
         if (e.code === 'CONSENTEMENT_BIOMETRIQUE_REQUIS') { setConsentement(e.data?.consent || null); return null; }
+        // Déjà vérifiée entre-temps (webhook) : rien à relancer, le dossier relu le montre (audit du 19/10, courier-3).
+        if (e.code === 'IDENTITE_DEJA_VERIFIEE') return null;
         throw e;
       }
       return null;
@@ -382,14 +384,23 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
     if (id.provider !== 'manual') await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } }));
     fichier.current?.click();
   }
+  // Un envoi raté garde son message d'erreur (action) : « Document déposé. » s'affichait par-dessus, et le livreur attendait
+  // une vérification qui ne viendrait pas (audit du 19/10, LIVE-04). L'écran reste là, le bouton permet de réessayer.
   async function deposer(e) {
     const files = [...(e.target.files || [])].slice(0, 4); e.target.value = ''; if (!files.length) return;
-    for (const f of files) { const ok = await action(() => apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType: 'identity_card' } }), null); if (!ok) break; }
+    for (const f of files) { const ok = await action(() => apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType: 'identity_card' } }), null); if (!ok) return; }
     setAutreMoyen(false);
     toast(files.length > 1 ? t('courierOnboarding.toastDocsUploaded', { n: files.length }) : t('courierOnboarding.toastDocUploaded'));
   }
+  // Consentement biométrique donné : il se retire depuis cet écran (audit du 19/10, courier-9).
+  const retrait = d.biometricConsent && (
+    <p className="bv-aide" style={{ marginTop: 12 }}>
+      <RetraitConsentementBiometrique busy={busy} onRetirer={() => action(() => api('/couriers/me/consents/biometric_identity/withdraw', { method: 'POST', token }), t('conformite.biometricWithdrawn'))} />
+    </p>
+  );
   const entree = <input ref={fichier} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={deposer} />;
-  const lance = id.status === 'verified' || id.status === 'processing' || (id.provider === 'in_person' && id.status === 'pending') || (pieces.length > 0 && !autreMoyen);
+  // Refusée par l'équipe : on revient aux façons de la vérifier, motif en tête, même si une pièce est encore déposée (admin-43).
+  const lance = id.status === 'verified' || id.status === 'processing' || (id.provider === 'in_person' && id.status === 'pending') || (pieces.length > 0 && !autreMoyen && !id.rejectedReason);
 
   if (lance) {
     const [icone, txt, s] = id.status === 'verified'
@@ -407,6 +418,7 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
           </>
         )}
         {entree}
+        {retrait}
         <div className="bv-grandit" />
         <button type="button" className="bv-btn btn-teal" onClick={onSuivant}>{t('appli.continuer')}</button>
       </>
@@ -420,8 +432,12 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
         .filter(([p]) => (p === 'manual' ? !prov.stripe_identity : prov[p]))
         .map(([p, icone, aide]) => <Option key={p} on={choix === p} icone={icone} titre={t(`courierOnboarding.provider_${p}`)} sous={t(`courierOnboarding.${aide}`)} onClick={() => setChoix(p)} />)}
       {refusee && <p className="field-error" role="alert">{t('courierOnboarding.identityRejected', { reason: refusee.rejectedReason })}</p>}
-      {id.status === 'failed' && <p className="field-error" role="alert">{t('courierOnboarding.identityFailed')}{ERREURS_IDENTITE.includes(id.error) && <> {t(`courierOnboarding.identityError_${id.error}`)}</>}</p>}
+      {/* Identité refusée par l'équipe : son motif plutôt que l'échec générique (audit du 19/10, admin-43). */}
+      {id.status === 'failed' && (id.rejectedReason
+        ? <p className="field-error" role="alert">{t('courierOnboarding.identityRejectedByTeam', { reason: id.rejectedReason })}</p>
+        : <p className="field-error" role="alert">{t('courierOnboarding.identityFailed')}{ERREURS_IDENTITE.includes(id.error) && <> {t(`courierOnboarding.identityError_${id.error}`)}</>}</p>)}
       {entree}
+      {retrait}
       <div className="bv-grandit" />
       <button type="button" className="bv-btn btn-gold" disabled={busy} onClick={actions[choix][0]}>{busy ? t('common.loading') : actions[choix][1]}</button>
       <button type="button" className="bv-lien" onClick={onSuivant}>{t('appli.pasMaintenant')}</button>

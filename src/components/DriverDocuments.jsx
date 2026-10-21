@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import ouvrirDocument from '../ouvrirDocument';
 import Icone from './Icone';
+import { RetraitConsentementBiometrique } from './conformite/LivreurConformite';
 
 // « Mes documents » dans Mon compte (livreur) : la pièce d'identité recto / verso déposée à l'inscription
 // (voir IdentityDocsPicker.jsx), l'attestation étudiant, et les autres pièces du dossier coursier, avec leur
@@ -92,6 +93,15 @@ export default function DriverDocuments() {
     <div>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('driverDocs.intro')}</p>
       {idv && idv.status === 'verified' && <p className="small" style={{ margin: '0 0 10px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('driverDocs.identityVerified', { provider: idv.provider === 'stripe_identity' ? 'Stripe Identity' : 'Fairide' })}</p>}
+      {/* Consentement biométrique donné : il se retire ici aussi (audit du 19/10, courier-9). */}
+      {dossier.biometricConsent && (
+        <p className="small" style={{ margin: '0 0 10px' }}>
+          <RetraitConsentementBiometrique busy={busy} onRetirer={async () => {
+            setBusy(true);
+            try { setDossier(await api('/couriers/me/consents/biometric_identity/withdraw', { method: 'POST', token })); toast(t('conformite.biometricWithdrawn'), 'succes'); } catch (err) { toast(err.message, 'erreur'); } finally { setBusy(false); }
+          }} />
+        </p>
+      )}
       <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
         <b>{t(`courierOnboarding.doc_${kind}`)}</b>
         {identite.length === 0 && (

@@ -19,7 +19,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import useEtatPage from '../../hooks/useEtatPage';
-import urlSure from '../../urlSure';
+import ouvrirDocument from '../../ouvrirDocument';
 
 const PAGE_SIZE = 25;
 const TARGET_TYPES_WITH_PICKER = { restaurant: '/admin/restaurants', driver: '/admin/drivers', client: '/admin/clients' };
@@ -363,7 +363,12 @@ function DocumentDrawer({ id, onClose, onChanged }) {
       title={d?.title || '…'}
       subtitle={d ? `${DOCUMENT_TYPE_LABELS[d.documentType]} · ${DOCUMENT_TARGET_TYPE_LABELS[d.targetType]} ${d.targetName || ''}` : ''}
       badge={d ? <span className="pill" style={{ color: DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.color }}>{DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.label}</span> : null}
-      actions={d ? <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminDocs.viewFile')}</a> : null}
+      actions={d ? (
+        // Documents privés (audit du 19/10, admin-45) : le serveur ne rend plus leur adresse (fileUrl vide), le lien était
+        // donc mort pour tout fichier déposé depuis. Une adresse signée de quelques minutes est demandée à l'ouverture
+        // (GET /admin/documents/:id/lien, ouvrirDocument.js), comme pour les pièces des livreurs.
+        <button type="button" className="btn-outline btn-sm" onClick={() => ouvrirDocument({ url: d.prive ? null : d.fileUrl, lien: `/admin/documents/${d.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') })}>{tr('adminDocs.viewFile')}</button>
+      ) : null}
       onClose={onClose} width={560}
     >
       {erreur && <ErrorCard message={erreur} onRetry={load} />}
