@@ -63,9 +63,12 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
   // `action` : ce que le commerce peut faire maintenant ({ libelle, to } ou { libelle, onClick }) ; `attente` : étape de
   // Fairide, sans bouton. Une étape faite n'a ni l'un ni l'autre.
   const etapes = [];
+  // « Fairide prépare ta carte » seulement pour une demande encore ouverte : annulée, refusée ou close sans plat, le
+  // commerce attendait pour rien (audit du 19/10, shop-8). Il retrouve « Envoie-nous ta carte ».
+  const demandeOuverte = demandeCarte && ['en_attente', 'en_cours'].includes(demandeCarte.status);
   etapes.push(nbPlats > 0
     ? { cle: 'carte', fait: true, icone: 'carte', titre: t('miseEnLigne.menuDone', { n: nbPlats }) }
-    : demandeCarte
+    : demandeOuverte
       ? { cle: 'carte', attente: true, icone: 'horloge', titre: t('miseEnLigne.menuPreparing'), sous: t('miseEnLigne.menuPreparingSub') }
       : { cle: 'carte', icone: 'carte', titre: t('miseEnLigne.menuSend'), sous: t('miseEnLigne.menuSendSub'), action: { libelle: t('miseEnLigne.menuSendBtn'), to: experienceApp() ? '/dashboard/menu?envoyer=1' : '/dashboard/menu' } });
   // Questions de Fairide sur la carte (2026-10-20) : AVANT la validation — une réponse peut changer la carte, et la valider
@@ -79,11 +82,15 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
   // Un commerce vitrine ne vend pas : rien à signer (même règle que l'ancien bandeau CarteAValider).
   if (!restaurant.vitrine && nbPlats > 0) {
     const carteValidee = restaurant.menuSigned && !o.menuPending;
+    // Carte déjà signée une fois, puis changée (TVA, allergènes, modification faite par l'équipe…) sur un commerce en ligne :
+    // TOUTES ses commandes sont refusées jusqu'à la nouvelle validation (routes/orders.js). On le dit en ces mots (audit du
+    // 19/10, shop-11 et shop-12), pas « Relis et valide ta carte » comme à la première mise en ligne.
+    const commandesArretees = !restaurant.menuSigned && restaurant.menuEverSigned && restaurant.publicListed;
     etapes.push(carteValidee
       ? { cle: 'valider', fait: true, icone: 'valider', titre: t('miseEnLigne.validateDone') }
       : (nbQuestions || reponsesEnAttente)
         ? { cle: 'valider', attente: true, icone: 'valider', titre: t('miseEnLigne.validate'), sous: t(reponsesEnAttente ? 'miseEnLigne.validateAfterUpdate' : 'miseEnLigne.validateAfterQuestions') }
-      : { cle: 'valider', icone: 'valider', titre: t('miseEnLigne.validate'), sous: t('miseEnLigne.validateSub'),
+      : { cle: 'valider', icone: 'valider', titre: t(commandesArretees ? 'miseEnLigne.validateStopped' : 'miseEnLigne.validate'), sous: t(commandesArretees ? 'miseEnLigne.validateStoppedSub' : 'miseEnLigne.validateSub'),
           action: { libelle: occupe ? '…' : t('miseEnLigne.validateBtn'), onClick: validerCarte, disabled: occupe } });
   }
   etapes.push(engagementsOk
@@ -93,8 +100,18 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
   // À emporter payé sur place seulement : rien ne transite par Fairide, pas d'étape paiements (formules.paiementsRequis).
   if (o.paymentsRequired !== false) {
     const actif = restaurant.stripeConnectStatus === 'active';
+    /* QUATRE ÉTATS STRIPE (audit du 19/10, shop-5). « pending » (formulaire envoyé, Stripe vérifie : relu une fois par page,
+     * DashboardLayout.jsx) ressemblait à « pas commencé », bouton lime compris : le commerce refaisait tout ou croyait à un
+     * échec. Refusé par Stripe (« rejected », migration 063 côté serveur) n'avait pas d'état. Les deux sont des étapes
+     * d'attente, sans bouton ; « restricted » (Stripe veut une pièce de plus) garde « Compléter ». */
+    const stripeEnVerification = restaurant.stripeConnectStatus === 'pending';
+    const stripeRefuse = restaurant.stripeConnectStatus === 'rejected';
     etapes.push(actif
       ? { cle: 'paiements', fait: true, icone: 'carteBancaire', titre: t('miseEnLigne.paymentsDone') }
+      : stripeEnVerification
+        ? { cle: 'paiements', attente: true, icone: 'carteBancaire', titre: t('miseEnLigne.paymentsPending'), sous: t('miseEnLigne.paymentsPendingSub') }
+      : stripeRefuse
+        ? { cle: 'paiements', attente: true, icone: 'carteBancaire', titre: t('miseEnLigne.paymentsRejected'), sous: t('miseEnLigne.paymentsRejectedSub') }
       : (stripeRestreint || paiementsOuverts())
         ? { cle: 'paiements', icone: 'carteBancaire', titre: stripeRestreint ? t('dashResto.paymentInfoTitle') : t('miseEnLigne.payments'),
             sous: stripeRestreint ? t('dashResto.stripeNeedsInfoResto') : t('miseEnLigne.paymentsSub'),
@@ -106,9 +123,16 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
   etapes.push(restaurant.adminStatus === 'approved'
     ? { cle: 'verification', fait: true, icone: 'bouclier', titre: t('miseEnLigne.checkDone') }
     : { cle: 'verification', attente: true, icone: 'bouclier', titre: t('miseEnLigne.check'), sous: t('miseEnLigne.checkSub') });
+  // Retiré du site par l'équipe : la date et le motif, plus « automatique » (audit du 19/10, shop-13 ; P2B art. 4). Il ne
+  // revient pas tout seul (publicationAuto.js) : l'équipe le republie, il répond à l'e-mail qui lui a donné le motif.
+  const retrait = restaurant.removedByTeam;
   etapes.push(restaurant.publicListed
     ? { cle: 'enLigne', fait: true, icone: 'globe', titre: t('miseEnLigne.listedDone') }
-    : { cle: 'enLigne', attente: true, icone: 'globe', titre: t('miseEnLigne.listed'), sous: t('miseEnLigne.listedSub') });
+    : retrait
+      ? { cle: 'enLigne', attente: true, icone: 'globe',
+          titre: retrait.at ? t('miseEnLigne.removedOn', { date: new Date(retrait.at).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long' }) }) : t('miseEnLigne.removed'),
+          sous: `${retrait.reason ? `${t('miseEnLigne.removedReason', { reason: retrait.reason })} ` : ''}${t('miseEnLigne.removedSub')}` }
+      : { cle: 'enLigne', attente: true, icone: 'globe', titre: t('miseEnLigne.listed'), sous: t('miseEnLigne.listedSub') });
 
   // « Agir pour » (console admin) : l'équipe voit la liste, mais ne signe ni ne valide rien à la place du commerce.
   if (lectureSeule) etapes.forEach((e) => { delete e.action; });
@@ -117,5 +141,8 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
   const prochaine = restantes.find((e) => e.action);
   const faites = etapes.length - restantes.length;
 
-  return { etapes, restantes, prochaine, faites };
+  // `alerte` : l'étape à montrer en tête quand il n'y a pas de prochaine action (le retrait du site, shop-13), à la place
+  // de « rien à faire de ton côté ».
+  const alerte = retrait && !restaurant.publicListed ? etapes.find((e) => e.cle === 'enLigne') : null;
+  return { etapes, restantes, prochaine, faites, alerte };
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
@@ -80,19 +81,38 @@ function ChangementTaux({ c, restoId, token, toast, onDone }) {
 function TauxDesPlats({ restoId, token, menu, toast, onChange }) {
   const { t } = useLanguage();
   const id = useId();
+  const navigate = useNavigate();
   const [enCours, setEnCours] = useState(null);
+  // Un taux changé remet la carte à signer : TOUTES les commandes s'arrêtent jusqu'à la validation (audit du 19/10, shop-11).
+  // On le dit avant (ratesHelp) et après, avec « Valider maintenant » ici même : la page « C'est bon », la même signature.
+  const [aValider, setAValider] = useState(false);
+  const [ouvreLien, setOuvreLien] = useState(false);
   async function changer(item, vatRate) {
     setEnCours(item.id);
     try {
       await api(`/restaurants/${restoId}/menu/${item.id}/vat`, { method: 'PATCH', token, body: { vatRate } });
       toast?.(t('tvaCarte.savedToast', { name: item.name, rate: vatRate }));
+      setAValider(true);
       onChange?.();
     } catch (err) { toast?.(err.message, 'erreur'); } finally { setEnCours(null); }
+  }
+  async function validerMaintenant() {
+    setOuvreLien(true);
+    try {
+      const l = await api(`/restaurants/${restoId}/menu-validation-link`, { method: 'POST', token });
+      navigate(`/carte/valider/${l.token}`);
+    } catch (err) { toast?.(err.message, 'erreur'); setOuvreLien(false); }
   }
   return (
     <details className="card" style={{ marginBottom: 12 }}>
       <summary><b>{t('tvaCarte.ratesTitle')}</b></summary>
       <p className="small" style={{ margin: '6px 0 10px' }}>{t('tvaCarte.ratesHelp')}</p>
+      {aValider && (
+        <div className="row" role="status" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '0 0 10px' }}>
+          <span className="small" style={{ flex: '1 1 200px' }}><b>{t('tvaCarte.ordersStopped')}</b></span>
+          <button type="button" className="btn-gold btn-sm" disabled={ouvreLien} onClick={validerMaintenant}>{ouvreLien ? '…' : t('tvaCarte.validateNow')}</button>
+        </div>
+      )}
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {menu.map((item, k) => (
           <li key={item.id} className="row" style={{ justifyContent: 'space-between', gap: 8, padding: '6px 0', borderTop: k ? '1px solid var(--line)' : 'none' }}>

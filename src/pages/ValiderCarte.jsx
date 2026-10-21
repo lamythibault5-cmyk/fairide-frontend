@@ -5,6 +5,7 @@ import { defilement } from '../gestes';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { euros } from '../prixPlat';
+import { libellesAllergenes } from '../allergenes';
 import usePageMeta from '../hooks/usePageMeta';
 import Icone from '../components/Icone';
 import { OptionCommande } from '../components/EcranCommande';
@@ -211,7 +212,26 @@ export default function ValiderCarte() {
                     </span>
                   </div>
                   {it.desc && <p className="gn-plat-desc">{it.desc}</p>}
-                  <p className="gn-plat-tva">{it.vatRate == null ? t('validerCarte.vatProposed') : t('validerCarte.vat', { rate: it.vatRate })}</p>
+                  {/* CE QUI EST SIGNÉ, MONTRÉ (audit du 19/10, shop-9) : le taux proposé EN CHIFFRES (celui que la signature
+                      posera), les allergènes (le texte signé dit qu'ils sont exacts) et les suppléments payants, que « Monter
+                      mes prix » monte aussi. Deux petites lignes et un repli : lisible à 430 px. */}
+                  <p className="gn-plat-tva">
+                    {it.vatRate == null ? t('validerCarte.vatProposed', { rate: it.vatProposed ?? '?' }) : t('validerCarte.vat', { rate: it.vatRate })}
+                    {' · '}
+                    {libellesAllergenes(it.allergens, t).length
+                      ? t('conformite.allergensLine', { list: libellesAllergenes(it.allergens, t).join(', ') })
+                      : it.allergensDeclaredNone ? t('conformite.allergensNone') : t('validerCarte.allergensMissing')}
+                  </p>
+                  {it.paidAddOns?.length > 0 && (
+                    <details className="gn-plat-tva">
+                      <summary>{t('validerCarte.addOns', { n: it.paidAddOns.length })}</summary>
+                      <ul style={{ margin: '2px 0 0', paddingLeft: 18 }}>
+                        {it.paidAddOns.map((s, k) => (
+                          <li key={k}>{s.name} ({s.group}) : + {euros(avecCommission && s.priceWithFairideRate != null ? s.priceWithFairideRate : s.price)}</li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
                 </li>
               ))}
             </ul>

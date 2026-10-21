@@ -184,7 +184,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   }
 
   async function addMenuItem() {
-    const price = parseFloat(itemPrice);
+    const price = parseFloat(String(itemPrice).replace(',', '.')); // « 12,50 » accepté (audit du 19/10, CROSS-62)
     if (!itemName.trim() || !price) { toast(t('menuPage.toastNamePrice')); return; }
     try {
       await api(`/restaurants/${restoId}/menu`, { method: 'POST', token, body: { name: itemName.trim(), price, category: itemCategory, imageUrl: itemImageUrl.trim() } });
@@ -675,7 +675,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                 {reorderSectionId !== section.id && selectSectionId !== section.id && (addSectionId === section.id ? (
                   <div className="card" id={`ajout-plat-${section.id}`} style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
                     <div className="field"><label htmlFor={`plat-nom-${section.id}`}>{t('menuPage.name')}</label><input id={`plat-nom-${section.id}`} value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder={t('menuPage.phDishName')} /></div>
-                    <div className="field"><label htmlFor={`plat-prix-${section.id}`}>{t('menuPage.price')}</label><input id={`plat-prix-${section.id}`} type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
+                    <div className="field"><label htmlFor={`plat-prix-${section.id}`}>{t('menuPage.price')}</label><input id={`plat-prix-${section.id}`} inputMode="decimal" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
                     <div className="field">
                       <span className="titre-groupe">{t('menuPage.imageOptional')}</span>
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>

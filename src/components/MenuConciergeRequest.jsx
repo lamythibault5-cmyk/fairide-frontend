@@ -132,9 +132,16 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
     );
   }
 
+  // Demande refusée par l'équipe, avec un mot : il est montré au-dessus du formulaire, sinon le commerce renvoyait la même
+  // chose sans savoir pourquoi (audit du 19/10, shop-8). Annulée par le commerce lui-même : pas de mot, rien à montrer.
+  const motRefus = demande?.status === 'refusee' && demande.adminNote
+    ? <p className="small" role="note" style={{ margin: '0 0 12px', whiteSpace: 'pre-wrap' }}><Icone nom="bulle" taille={16} className="icone-texte" />{' '}<b>{t('menuConcierge.refusedNote')}</b> {demande.adminNote}</p>
+    : null;
+
   if (experienceApp()) {
     return (
       <div className="menu-concierge-form">
+        {motRefus}
         <p className="small" style={{ margin: '0 0 12px' }}>{t('menuConcierge.delay')}</p>
         <button type="button" className="btn-gold" onClick={() => setEnvoiOuvert(true)}>{t('appli.carteEnvoyer')}</button>
         {envoiOuvert && <EnvoiCarteAppli restoId={restoId} urlSuggeree={urlSuggeree} onFermer={fermerEnvoi} onEnvoyee={(r) => { if (r) setDemande(r); fermerEnvoi(); }} />}
@@ -144,6 +151,7 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
 
   return (
     <div className="menu-concierge-form">
+      {motRefus}
       <p className="small" style={{ margin: '0 0 12px' }}>{t('menuConcierge.intro')}</p>
 
       {/* 1. Sur quoi se baser */}

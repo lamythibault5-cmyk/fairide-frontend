@@ -168,9 +168,9 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
   async function utiliser() {
     setEnCours('usage');
     try {
-      const maj = await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}/redeem`, { method: 'POST', token, body: { amount: Number(montant), note } });
+      const maj = await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}/redeem`, { method: 'POST', token, body: { amount: Number(String(montant).replace(',', '.')), note } });
       setDetail(maj); onChange(maj); setMontant(''); setNote('');
-      toast(t('bons.gvRedeemed', { amount: euros(Number(montant)) }));
+      toast(t('bons.gvRedeemed', { amount: euros(Number(String(montant).replace(',', '.'))) }));
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   async function changerStatut(status) {
@@ -234,7 +234,7 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 6 }}>
             <div style={{ flex: '0 0 130px' }}>
               <label htmlFor={`gv-use-${bon.id}`}>{t('bons.gvRedeemAmount')}</label>
-              <input id={`gv-use-${bon.id}`} type="number" min="0.5" max={v.remaining} step="0.5" value={montant} onChange={(e) => setMontant(e.target.value)} />
+              <input id={`gv-use-${bon.id}`} inputMode="decimal" value={montant} onChange={(e) => setMontant(e.target.value)} />
             </div>
             <div style={{ flex: '1 1 160px' }}>
               <label htmlFor={`gv-note-${bon.id}`}>{t('bons.gvRedeemNote')}</label>

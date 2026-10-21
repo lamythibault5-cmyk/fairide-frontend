@@ -184,6 +184,7 @@ export default function AdminRestaurantsPage() {
   const [detail, setDetail] = useState(null);
   const [orders, setOrders] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [retrait, setRetrait] = useState(null); // « Retirer du site » en attente de son motif (shop-13)
   const [decision, setDecision] = useState(null); // suspension / résiliation motivée (D6)
   // Validation refusée pour non-conformité : { id, conformite } tant que l'équipe n'a pas tranché.
   const [derogation, setDerogation] = useState(null);
@@ -243,9 +244,9 @@ export default function AdminRestaurantsPage() {
       toast(disabled ? tr('adminRestos.zoneDeliveryOffToast') : tr('adminRestos.zoneDeliveryOnToast'));
     } catch (e) { toast(e.message, 'erreur'); }
   }
-  async function setListing(id, publicListed) {
+  async function setListing(id, publicListed, reason) {
     try {
-      await api(`/admin/restaurants/${id}/listing`, { method: 'PATCH', token, body: { publicListed } });
+      await api(`/admin/restaurants/${id}/listing`, { method: 'PATCH', token, body: { publicListed, ...(reason ? { reason } : {}) } });
       setRestaurants((prev) => (prev || []).map((r) => (r.id === id ? { ...r, publicListed } : r)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, publicListed }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, publicListed }));
@@ -307,6 +308,9 @@ export default function AdminRestaurantsPage() {
   }
   function askListing(r) {
     const publier = !r.publicListed;
+    // Retirer du site : motif obligatoire, envoyé au commerce et montré sur son tableau de bord (audit du 19/10, shop-13 ;
+    // P2B art. 4). Le serveur le refuse sans motif (MOTIF_REQUIS).
+    if (!publier && !r.isDemo) { setRetrait({ id: r.id, name: r.name }); return; }
     setConfirmAction({ title: publier ? tr('adminRestos.confirmPublish', { name: r.name }) : tr('adminRestos.confirmUnpublish', { name: r.name }), message: publier ? tr('adminRestos.publishBody') : tr('adminRestos.unpublishBody'), danger: !publier, run: () => setListing(r.id, publier) });
   }
   async function deleteRestaurant(r) {
@@ -494,6 +498,24 @@ export default function AdminRestaurantsPage() {
         loading={busy}
         onConfirm={runConfirmed}
         onCancel={() => setConfirmAction(null)}
+      />
+      <ReasonDialog
+        open={!!retrait}
+        title={tr('adminRestos.confirmUnpublish', { name: retrait?.name || '' })}
+        message={`${tr('adminRestos.unpublishBody')} ${tr('adminRestos.unpublishReasonHelp')}`}
+        label={tr('adminRestos.unpublishReasonLabel')}
+        placeholder={tr('adminRestos.unpublishReasonPh')}
+        confirmLabel={tr('adminRestos.unpublish')}
+        multiline danger
+        loading={busy}
+        onConfirm={async (motif) => {
+          if (motif.length < 10) { toast(tr('adminRestos.unpublishReasonShort'), 'erreur'); return; }
+          const r = retrait;
+          setRetrait(null);
+          setBusy(true);
+          try { await setListing(r.id, false, motif); } finally { setBusy(false); }
+        }}
+        onCancel={() => setRetrait(null)}
       />
       {/* « DEMANDER UNE INFO » (fondateur, 18/10/2026) : le commerce attendait sans savoir pourquoi. Un message dans sa
           messagerie Fairide, et par e-mail (POST /admin/messages/threads) : ce qu'il manque, en clair. */}

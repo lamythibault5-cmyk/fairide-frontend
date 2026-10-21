@@ -105,8 +105,9 @@ export function RouteMiseEnLigne({ etapes, libelles = false }) {
 // `boutonDansCarte` (site) : le bouton lime dans la carte de la prochaine étape, à droite, au lieu de pleine largeur dessous.
 export function EtapesMiseEnLigne({ etat, boutonDansCarte = false }) {
   const { t } = useLanguage();
-  const { etapes, prochaine } = etat;
-  const p = prochaine;
+  const { etapes, prochaine, alerte } = etat;
+  // Sans action possible, l'alerte (retiré du site par Fairide, shop-13) prend la carte de tête, sans bouton.
+  const p = prochaine || alerte;
   const boutonLime = p?.action && (p.action.to
     ? <Link to={p.action.to} className="ec-bouton ec-bouton--lime">{p.action.libelle}</Link>
     : <button type="button" className="ec-bouton ec-bouton--lime" onClick={p.action.onClick} disabled={p.action.disabled}>{p.action.libelle}</button>);

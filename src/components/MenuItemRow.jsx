@@ -78,7 +78,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
   async function save() {
     setSaving(true);
     try {
-      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy, organic, vegan, ...conformite, ...(requestedBy.trim() ? { requestedBy: requestedBy.trim() } : {}) });
+      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(String(price).replace(',', '.')), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy, organic, vegan, ...conformite, ...(requestedBy.trim() ? { requestedBy: requestedBy.trim() } : {}) });
       setRequestedBy('');
       if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       // Les traductions partent APRÈS le plat lui-même : le serveur recalcule l'empreinte du texte
@@ -136,7 +136,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
       <div className="card" style={{ marginBottom: 10, gridColumn: '1 / -1' }}>
         <div className="field"><label htmlFor={idsA11y + '-name'}>{t('menuItem.name')}</label><input id={idsA11y + '-name'} value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div className="field"><label htmlFor={idsA11y + '-description'}>{t('menuItem.description')}</label><input id={idsA11y + '-description'} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('menuItem.phDescription')} /></div>
-        <div className="field"><label htmlFor={idsA11y + '-price'}>{t('menuItem.price')}</label><input id={idsA11y + '-price'} type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-price'}>{t('menuItem.price')}</label><input id={idsA11y + '-price'} inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
         <div className="field"><label htmlFor={idsA11y + '-demande'}>{t('menuItem.requestedBy')}</label><input id={idsA11y + '-demande'} value={requestedBy} onChange={(e) => setRequestedBy(e.target.value)} placeholder={t('menuItem.requestedByPlaceholder')} /></div>
 
         {/* Traductions : repliées par défaut, et volontairement placées APRÈS le prix. Le
