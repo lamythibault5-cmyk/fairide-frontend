@@ -82,7 +82,8 @@ privacy policy (CONF-2026-10-16) says so. On the website nothing changes: Sentry
 (Connect, Identity, billing portal) always opens through `allerAuPaiement` (in-app browser, return path) — never
 `window.location.href`, which left the app.
 **First-day flows are app screens too** (phase 2, 2026-10-15), opened full-screen through [EcranPlein](src/components/EcranPlein.jsx)
-(a portal into `<body>` — inside the shell, `.page-fade` broke `position: fixed`): a business's « Envoyer ma carte »
+(a portal into `<body>` — inside the shell, `.page-fade` broke `position: fixed`; a Modale / ConfirmDialog opened from inside it
+stacks above it through one rule, `.bv-plein ~ .modal-overlay` in styles.css, checked by `check:app`): a business's « Envoyer ma carte »
 ([EnvoiCarteAppli](src/components/commerce/EnvoiCarteAppli.jsx)), the courier's draft dossier
 ([DossierAppli](src/pages/driver/DossierAppli.jsx), one topic or one document per screen; rules shared with Onboarding.jsx in
 [dossierCommun.js](src/pages/driver/dossierCommun.js)); once sent, validated or suspended the app shows

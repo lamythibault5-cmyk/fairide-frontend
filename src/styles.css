@@ -5065,6 +5065,14 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-par-dessus { z-index: 200; }
 /* Parcours en écran plein lancé depuis une page (EcranPlein.jsx) : au-dessus de la coquille, sous l'amorce des notifications. */
 .bv-plein { z-index: 150; }
+/* UNE FENÊTRE OUVERTE DEPUIS UN ÉCRAN PLEIN PASSE PAR-DESSUS LUI (2026-10-21). Les fenêtres (Modale, ConfirmDialog,
+   ReasonDialog : .modal-overlay) sont à 100, l'écran plein à 150 : dans le dossier livreur de l'app, « Vérifier mon identité »
+   ouvrait le consentement biométrique DESSOUS — rien ne semblait se passer, Stripe Identity ne pouvait pas démarrer ; le
+   retrait du consentement (ConfirmDialog) avait le même défaut. Toutes sont rendues dans <body> (createPortal), dans l'ordre
+   d'ouverture : celle qui suit l'écran plein a été ouverte depuis lui, elle monte juste au-dessus (sous l'amorce des
+   notifications, 200, et les sous-écrans, 300, qui y étaient déjà). Une seule règle, pour toutes les fenêtres et tous les
+   écrans pleins (dossier livreur, « Envoyer ma carte »). Vérifié par npm run check:app (scénario du consentement). */
+.bv-plein ~ .modal-overlay { z-index: 160; }
 .bv-ecran { min-height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column;
   padding: calc(18px + env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom)); animation: bv-entre .28s ease; }
 @keyframes bv-entre { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
