@@ -13,6 +13,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import DecisionDialog from '../../components/admin/DecisionDialog';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import ReasonDialog from '../../components/admin/ReasonDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
@@ -55,6 +56,7 @@ export default function AdminDriversPage() {
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [aReactiver, setAReactiver] = useState(null); // réactivation avec motif (admin-37)
   // Suspension : décision motivée (faits, base contractuelle), voir components/admin/DecisionDialog.jsx.
   const [decision, setDecision] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -107,7 +109,7 @@ export default function AdminDriversPage() {
       setDrivers((prev) => (prev || []).map((d) => (d.id === id ? { ...d, adminStatus: status } : d)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
-      toast(status === 'approved' ? tr('adminDrivers.toastApproved') : status === 'blocked' ? tr('adminDrivers.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
+      toast(r.reinstated ? tr('adminDrivers.toastReinstated') : status === 'approved' ? tr('adminDrivers.toastApproved') : status === 'blocked' ? tr('adminDrivers.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
     } catch (e) {
       toast(e.message, 'erreur');
     }
@@ -116,8 +118,10 @@ export default function AdminDriversPage() {
   function askSuspend(d) {
     setDecision({ id: d.id, name: d.name });
   }
+  // RÉACTIVER = RÉTABLIR LA DÉCISION (audit du 19/10, admin-37) : le serveur lève la suspension dans le registre des
+  // décisions, remet le dossier en route et envoie « ton compte est rétabli » avec ce motif, obligatoire.
   function askReactivate(d) {
-    setConfirmAction({ title: tr('adminDrivers.confirmReactivate', { name: d.name }), run: () => setStatus(d.id, 'approved') });
+    setAReactiver(d);
   }
   // VALIDER = LE DOSSIER (audit du 18/10/2026). L'ancien « Approuver » disait « validé » au livreur sans que son dossier soit
   // vérifié : il ne pouvait pas rouler. La validation se fait dans Livreurs › Dossiers ; ce bouton y mène, sur ce livreur.
@@ -189,7 +193,8 @@ export default function AdminDriversPage() {
   // Vue fiches : découpe en sections quand un regroupement est choisi (l'ordre des types est fixe : étudiants, P2P, indépendants, non choisi).
   function sectionsCartes(liste, groupe) {
     if (!groupe) return [[null, liste]];
-    const ordre = (d) => (groupBy === 'courierType' ? ['student', 'p2p', 'independent', 'none'].indexOf(typeDe(d)) : 0);
+    // Les statuts d'aujourd'hui (CODE-12) : « student », « p2p » n'existent plus, l'étudiant-indépendant tombait à -1 (admin-87).
+    const ordre = (d) => (groupBy === 'courierType' ? ['student_independent', 'independent', 'none'].indexOf(typeDe(d)) : 0);
     const m = new Map();
     [...liste].sort((a, b) => ordre(a) - ordre(b)).forEach((d) => { const k = groupe.get(d); if (!m.has(k)) m.set(k, []); m.get(k).push(d); });
     return [...m.entries()];
@@ -393,6 +398,10 @@ export default function AdminDriversPage() {
       <DecisionDialog open={!!decision} cible={decision?.name} targetType="user" livreur loading={busy}
         onCancel={() => setDecision(null)}
         onConfirm={async (payload) => { setBusy(true); try { await setStatus(decision.id, 'blocked', payload); } finally { setBusy(false); setDecision(null); } }} />
+      <ReasonDialog open={!!aReactiver} title={tr('adminDrivers.confirmReactivate', { name: aReactiver?.name || '' })} message={tr('adminCouriers.reactivateBody')}
+        label={tr('adminCouriers.reactivateReason')} multiline confirmLabel={tr('adminCommon.reactivate')} loading={busy}
+        onCancel={() => setAReactiver(null)}
+        onConfirm={async (reason) => { const d = aReactiver; setBusy(true); try { await setStatus(d.id, 'approved', { reason }); } finally { setBusy(false); setAReactiver(null); } }} />
       <ConfirmDialog
         open={!!confirmAction}
         title={confirmAction?.title}

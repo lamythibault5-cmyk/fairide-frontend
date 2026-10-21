@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from '../components/Icone';
 import { SkeletonCards } from '../components/Skeleton';
+import ErreurChargement from '../components/ErreurChargement';
 import { RouteCommande } from '../components/EcranCommande';
 import '../ecran-equipe-groupe.css';
 
@@ -25,13 +26,18 @@ export default function EquipeInvitation() {
   const location = useLocation();
   const [invitation, setInvitation] = useState(null);
   const [introuvable, setIntrouvable] = useState(false);
+  const [echec, setEchec] = useState(false);
   const [envoi, setEnvoi] = useState(false);
 
-  useEffect(() => {
+  // « Introuvable » seulement quand le serveur le dit (404) : une coupure réseau affichait « invitation introuvable » et
+  // l'invité abandonnait un lien valable (audit du 19/10, CROSS-37). Sinon, l'écran d'erreur de chargement et Réessayer.
+  const charger = () => {
+    setEchec(false);
     api(`/restaurants/team/invitation/${encodeURIComponent(lien)}`)
       .then((r) => { if (r && r.restaurantName) setInvitation(r); else setIntrouvable(true); })
-      .catch(() => setIntrouvable(true));
-  }, [lien]);
+      .catch((e) => { if ([400, 404, 410].includes(e?.status)) setIntrouvable(true); else setEchec(true); });
+  };
+  useEffect(() => { charger(); }, [lien]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function rejoindre() {
     setEnvoi(true);
@@ -45,6 +51,7 @@ export default function EquipeInvitation() {
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); }
   }
 
+  if (echec && !invitation) return <ErreurChargement onReessayer={charger} />;
   if (!introuvable && !invitation) return <SkeletonCards count={1} />;
 
   const retour = { from: location.pathname };
@@ -58,7 +65,10 @@ export default function EquipeInvitation() {
       </div>
       <div className="eg-invit-feuille">
         {introuvable ? (
-          <p className="eg-texte" style={{ margin: 0 }}>{t('team.inviteNotFoundText')}</p>
+          <>
+            <p className="eg-texte" style={{ margin: 0 }}>{t('team.inviteNotFoundText')}</p>
+            <div className="eg-invit-actions"><Link to="/" className="eg-bouton-iris">{t('notFound.backHome')}</Link></div>
+          </>
         ) : (
           <>
             <h2>{t('team.canTitle')}</h2>

@@ -4,6 +4,7 @@ import AccountsTable from '../../components/admin/AccountsTable';
 import { ErrorCard } from '../../components/admin/AdminListTools';
 import { getLocale, useLanguage } from '../../context/LanguageContext';
 import useAdminOverview from '../../hooks/useAdminOverview';
+import useAdminRole from '../../hooks/useAdminRole';
 import DeletionRequestsPanel from '../../components/admin/DeletionRequestsPanel';
 import BoutonGo from '../../components/admin/BoutonGo';
 import Icone from '../../components/Icone';
@@ -28,7 +29,8 @@ export default function AdminHomePage() {
   const { t: tr } = useLanguage();
   const { user } = useAuth();
   const { overview, error, refresh } = useAdminOverview();
-  const attention = attentionItems(overview);
+  const { role } = useAdminRole();
+  const attention = attentionItems(overview, role);
   const heure = new Date().getHours();
   const salut = heure < 12 ? tr('adminHome.morning') : heure < 18 ? tr('adminHome.afternoon') : tr('adminHome.evening');
   const prenom = (user?.firstName || user?.name || '').split(' ')[0];

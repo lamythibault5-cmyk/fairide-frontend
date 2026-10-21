@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { api, apiDownload } from '../../../api';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
-import { useLanguage } from '../../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../../context/LanguageContext';
 import { SkeletonCards } from '../../../components/Skeleton';
 import { ErrorCard } from '../../../components/admin/AdminListTools';
 import ConfirmDialog from '../../../components/ConfirmDialog';
@@ -43,7 +43,8 @@ export default function DeclarationsTab() {
   const exporter = (population) => apiDownload(`/admin/compliance/dac7/export.csv?year=${annee}&population=${population}`, { token, filename: `dac7-${population}-${annee}.csv` }).catch((e) => toast(e.message, 'erreur'));
   async function envoyerCopies() {
     setOccupe(true);
-    try { const r = await api('/admin/compliance/dac7/send-copies', { method: 'POST', token, body: { year: annee } }); toast(t('conformite.dac7CopiesSent', { sent: r.sent, failed: r.failed })); }
+    // Second envoi d'une même année : voulu, puisque la confirmation a montré la date du premier (audit du 19/10, admin-73).
+    try { const r = await api('/admin/compliance/dac7/send-copies', { method: 'POST', token, body: { year: annee, again: dac7?.copiesSentAt ? true : undefined } }); toast(t('conformite.dac7CopiesSent', { sent: r.sent, failed: r.failed })); setEssai((n) => n + 1); }
     catch (e) { toast(e.message, 'erreur'); }
     finally { setOccupe(false); setEnvoi(false); }
   }
@@ -96,7 +97,12 @@ export default function DeclarationsTab() {
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
             <button type="button" className="btn-outline" onClick={() => exporter('restaurants')}>{t('conformite.dac7ExportRestaurants')}</button>
             <button type="button" className="btn-outline" onClick={() => exporter('couriers')}>{t('conformite.dac7ExportCouriers')}</button>
-            <button type="button" className="btn-teal" disabled={occupe} onClick={() => setEnvoi(true)}>{t('conformite.dac7SendCopies')}</button>
+            {/* Seulement pour une année close (audit du 19/10, admin-73) : l'année en cours n'est pas encore déclarée, et
+                chaque vendeur aurait reçu « ce qui a été déclaré » sur une année partielle. Le serveur le refuse aussi. */}
+            {annee < new Date().getFullYear()
+              ? <button type="button" className="btn-teal" disabled={occupe} onClick={() => setEnvoi(true)}>{t('conformite.dac7SendCopies')}</button>
+              : <span className="small">{t('conformite.dac7YearNotClosed')}</span>}
+            {dac7.copiesSentAt && <span className="small">{t('conformite.dac7AlreadySent', { date: new Date(dac7.copiesSentAt).toLocaleDateString(getLocale()) })}</span>}
           </div>
           <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-soft)' }}>{t('conformite.dac7XmlNote')}</p>
         </>
@@ -123,7 +129,7 @@ export default function DeclarationsTab() {
                 <thead><tr><th>{t('conformite.art17ColStatus')}</th><th>{t('conformite.art17ColCouriers')}</th><th>{t('conformite.art17ColDeliveries')}</th><th>{t('conformite.art17ColWeeks')}</th><th>{t('conformite.art17ColSpan')}</th><th>{t('conformite.art17ColIncome')}</th></tr></thead>
                 <tbody>
                   {registre.byStatus.map((s) => (
-                    <tr key={s.status}><td>{s.status}</td><td>{s.activeCouriers}</td><td>{s.deliveries}</td><td>{s.avgActiveWeeks}</td><td>{s.avgActivitySpanDays}</td><td>{euros(s.avgWeeklyGrossIncome)}</td></tr>
+                    <tr key={s.status}><td>{['student_independent', 'independent'].includes(s.status) ? t(`courierOnboarding.status_${s.status}`) : s.status}</td><td>{s.activeCouriers}</td><td>{s.deliveries}</td><td>{s.avgActiveWeeks}</td><td>{s.avgActivitySpanDays}</td><td>{euros(s.avgWeeklyGrossIncome)}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -133,7 +139,7 @@ export default function DeclarationsTab() {
         </>
       )}
 
-      <ConfirmDialog open={envoi} title={t('conformite.dac7SendCopies')} message={t('conformite.dac7SendConfirm', { year: annee })}
+      <ConfirmDialog open={envoi} title={t('conformite.dac7SendCopies')} message={dac7?.copiesSentAt ? `${t('conformite.dac7AlreadySent', { date: new Date(dac7.copiesSentAt).toLocaleDateString(getLocale()) })} ${t('conformite.dac7SendConfirm', { year: annee })}` : t('conformite.dac7SendConfirm', { year: annee })}
         confirmLabel={t('conformite.dac7SendCopies')} loading={occupe} onConfirm={envoyerCopies} onCancel={() => setEnvoi(false)} />
     </div>
   );

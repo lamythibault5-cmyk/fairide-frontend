@@ -558,6 +558,13 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   (facts + contractual basis) — the API refuses a bare `{ status: 'blocked' }`. New compliance tabs
   (decisions, DSA reports, breaches, processors, prohibited products, parameters) are in
   [pages/admin/compliance/](src/pages/admin/compliance/).
+  « Résiliation » is recorded and announced as a termination; a case opened by a report or a check can be closed « aucune
+  mesure ». Lifting goes through the decisions register only: « Réactiver » (Livreurs, Dossiers) and « Rétablir »
+  (Décisions) call `decisionMotivee.retablir` with a reason sent to the person; a status change or an approval never lifts
+  a suspension. People see their decisions and « Contester cette décision » in Mon compte
+  ([MesDecisions](src/components/conformite/MesDecisions.jsx)); the team records an appeal received by e-mail in Décisions
+  (audit 2026-10-19, admin-37 to 40). DSA reports open a task and e-mail the team; « contenu retiré » really hides the dish
+  or deletes the review and sends the statement of reasons to whoever published it (admin-41).
 - **Filings** (admin › Conformité › *Déclarations*, [DeclarationsTab](src/pages/admin/compliance/DeclarationsTab.jsx)):
   DAC7 for both couriers and businesses, CSV exports, the yearly copy sent to each seller, and the art. 17
   platform-work register. Sellers download their own DAC7 copy ([CopieDac7](src/components/conformite/CopieDac7.jsx))
@@ -686,7 +693,10 @@ the job, and the system fee (inside the delivery fee) from Fairide. The backend 
   destination (the server strips the client's name, phone and house number before the job is taken);
 - [EspaceVendeurLivreur](src/components/conformite/EspaceVendeurLivreur.jsx) — minimum fee and the
   courier's sale documents (self-billing mandate, accepted in the notices step);
-- admin › Conformité › *Attribution des courses* ([DispatchTab](src/pages/admin/compliance/DispatchTab.jsx)).
+- admin › Conformité › *Attribution des courses* ([DispatchTab](src/pages/admin/compliance/DispatchTab.jsx)): delivery settings, and the
+  evidence that refusing costs nothing as **aggregates only** — couriers grouped by refusal-rate band, average offers
+  received per band, shown only when a band has at least 5 couriers (backend `statsAttribution.js`). No per-courier row,
+  no « # » rank, on screen or in the CRT ZIP (founder, 2026-10-21: « if it's a driver classement let's not have any »).
 
 Never add anything that ranks, rates or penalises couriers for refusing: the backend's
 `tests/trois-vendeurs.test.js` fails if dispatch starts reading such data, and the courier notice promises it.

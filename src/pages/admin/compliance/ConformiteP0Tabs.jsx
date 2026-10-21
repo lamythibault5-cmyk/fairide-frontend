@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../../api';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
@@ -8,6 +9,7 @@ import { ErrorCard } from '../../../components/admin/AdminListTools';
 import DecisionDialog from '../../../components/admin/DecisionDialog';
 import Modale from '../../../components/Modale';
 import ConfirmDialog from '../../../components/ConfirmDialog';
+import ReasonDialog from '../../../components/admin/ReasonDialog';
 import { fmtDate, fmtDateTime, downloadPdf } from '../adminUtils';
 
 /* Onglets de conformité du backlog du 23/09/2026, dans l'application « Conformité & RGPD ».
@@ -46,6 +48,9 @@ export function DecisionsTab() {
   const [issue, setIssue] = useState('upheld');
   const [motif, setMotif] = useState('');
   const [busy, setBusy] = useState(false);
+  // « Rétablir » avec un motif envoyé à la personne (audit du 19/10, admin-78) ; recours reçu par e-mail (admin-39).
+  const [aRetablir, setARetablir] = useState(null);
+  const [recoursEmail, setRecoursEmail] = useState(null);
   async function agir(fn, ok) {
     setBusy(true);
     try { await fn(); toast(ok); await charger(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
@@ -75,12 +80,23 @@ export function DecisionsTab() {
           <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
             {!c.decidedAt && <button type="button" className="btn-outline" disabled={busy} onClick={() => setADecider(c)}>{t('conformite.decDecide')}</button>}
             {c.appealReceivedAt && !c.appealDecidedAt && <button type="button" className="btn-teal" disabled={busy} onClick={() => { setRecours(c); setIssue('upheld'); setMotif(''); }}>{t('conformite.decReview')}</button>}
-            {c.appliedAt && !c.reinstatedAt && <button type="button" className="btn-ghost" disabled={busy} onClick={() => agir(() => api(`/admin/decisions/${c.id}/reinstate`, { method: 'POST', token, body: { reason: 'Rétablissement manuel' } }), t('conformite.decReinstated'))}>{t('conformite.decReinstate')}</button>}
+            {c.decidedAt && c.measure !== 'none' && !c.appealDecidedAt && <button type="button" className="btn-ghost" disabled={busy} onClick={() => setRecoursEmail(c)}>{t('conformite.decAppealEmail')}</button>}
+            {c.appliedAt && !c.reinstatedAt && <button type="button" className="btn-ghost" disabled={busy} onClick={() => setARetablir(c)}>{t('conformite.decReinstate')}</button>}
           </div>
         </div>
       ))}
-      <DecisionDialog open={!!aDecider} cible={aDecider?.targetName} targetType={aDecider?.targetType} loading={busy} onCancel={() => setADecider(null)}
+      {/* Un dossier ouvert par un signalement ou un contrôle se clôt aussi « aucune mesure » (audit du 19/10, admin-40) :
+          seules la suspension et la résiliation étaient proposées, et un signalement infondé restait « à décider ». */}
+      <DecisionDialog open={!!aDecider} aucuneMesure cible={aDecider?.targetName} targetType={aDecider?.targetType} loading={busy} onCancel={() => setADecider(null)}
         onConfirm={(payload) => { const c = aDecider; setADecider(null); agir(() => api(`/admin/decisions/${c.id}/decide`, { method: 'POST', token, body: payload }), t('conformite.decDone')); }} />
+      <ReasonDialog open={!!aRetablir} title={t('conformite.decReinstateTitle', { name: aRetablir?.targetName || '' })} message={t('conformite.decReinstateBody')}
+        label={t('conformite.decReinstateReason')} multiline confirmLabel={t('conformite.decReinstate')} loading={busy}
+        onCancel={() => setARetablir(null)}
+        onConfirm={(reason) => { const c = aRetablir; setARetablir(null); agir(() => api(`/admin/decisions/${c.id}/reinstate`, { method: 'POST', token, body: { reason } }), t('conformite.decReinstated')); }} />
+      <ReasonDialog open={!!recoursEmail} title={t('conformite.decAppealEmailTitle', { name: recoursEmail?.targetName || '' })} message={t('conformite.decAppealEmailBody')}
+        label={t('conformite.decAppealEmailLabel')} multiline confirmLabel={t('conformite.decAppealEmailSave')} loading={busy}
+        onCancel={() => setRecoursEmail(null)}
+        onConfirm={(text) => { const c = recoursEmail; setRecoursEmail(null); agir(() => api(`/admin/decisions/${c.id}/appeal`, { method: 'POST', token, body: { text } }), t('conformite.decAppealEmailDone')); }} />
       {recours && (
         <Modale titre={t('conformite.decReviewTitle')} largeur={480} onFermer={() => setRecours(null)}>
           <p className="small">« {recours.appealText} »</p>
@@ -131,7 +147,9 @@ export function DsaTab() {
       {data && data.reports.map((r) => (
         <div key={r.id} className="conformite-ligne">
           <div>
-            <b>{t(`conformite.reportCat_${r.category}`)}</b> <span className="small">· {t(`conformite.target_${r.targetType}`)} {r.targetId.slice(0, 8)} · {r.reporterEmail} · {fmtDateTime(r.createdAt)}</span>
+            {/* L'élément signalé, nommé, et son commerce à ouvrir (audit du 19/10, admin-41) : c'était « plat · 3f2a9c1b ». */}
+            <b>{t(`conformite.reportCat_${r.category}`)}</b> <span className="small">· {t(`conformite.target_${r.targetType}`)} « {r.targetName || t('conformite.dsaTargetGone')} » · {r.reporterEmail} · {fmtDateTime(r.createdAt)}</span>
+            {r.targetRestaurantName && <div className="small"><Link to={`/admin/restaurants?q=${encodeURIComponent(r.targetRestaurantName)}`}>{t('conformite.dsaOpenShop', { name: r.targetRestaurantName })}</Link></div>}
             <p className="small" style={{ margin: '4px 0 0' }}>{r.explanation}</p>
             {r.status !== 'decided'
               ? <p className="small" style={{ margin: '4px 0 0', color: enRetard(r.dueAt) ? 'var(--red)' : 'inherit' }}>{t('conformite.dsaDue', { date: fmtDateTime(r.dueAt) })}</p>
@@ -145,8 +163,10 @@ export function DsaTab() {
           <div className="field">
             <label htmlFor={`${id}-d`}>{t('conformite.dsaDecisionLabel')}</label>
             <select id={`${id}-d`} value={decision} onChange={(e) => setDecision(e.target.value)}>
-              {['no_action', 'content_removed', 'account_case_opened'].map((d) => <option key={d} value={d}>{t(`conformite.dsaDecision_${d}`)}</option>)}
+              {['no_action', ...(enCours.canRemoveContent ? ['content_removed'] : []), 'account_case_opened'].map((d) => <option key={d} value={d}>{t(`conformite.dsaDecision_${d}`)}</option>)}
             </select>
+            {/* « Contenu retiré » retire vraiment (plat hors carte, avis supprimé) et envoie l'exposé à qui l'a publié. */}
+            {decision === 'content_removed' && <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t('conformite.dsaRemoveNote')}</p>}
           </div>
           <div className="field">
             <label htmlFor={`${id}-m`}>{t('conformite.dsaReasonLabel')}</label>
@@ -178,6 +198,8 @@ export function BreachesTab() {
     } catch (e) { toast(e.message, 'erreur'); }
   }
   const marquer = (b, champ) => api(`/admin/compliance/breaches/${b.id}`, { method: 'PATCH', token, body: { [champ]: new Date().toISOString() } }).then(charger).catch((e) => toast(e.message, 'erreur'));
+  // Ces marques ne se défont pas et un contrôle de l'APD les lira : une confirmation (audit du 19/10, admin-77).
+  const [aMarquer, setAMarquer] = useState(null); // { b, champ }
   return (
     <div className="card" style={{ marginTop: 0 }}>
       <div className="row" style={{ gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
@@ -197,11 +219,16 @@ export function BreachesTab() {
             {!b.notifyApd && <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.breachNoApd')} {b.decisionReason}</p>}
           </div>
           <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-            {b.notifyApd && !b.notifiedAt && <button type="button" className="btn-outline" onClick={() => marquer(b, 'notifiedAt')}>{t('conformite.breachMarkNotified')}</button>}
-            {!b.closedAt && <button type="button" className="btn-ghost" onClick={() => marquer(b, 'closedAt')}>{t('conformite.breachClose')}</button>}
+            {b.notifyApd && !b.notifiedAt && <button type="button" className="btn-outline" onClick={() => setAMarquer({ b, champ: 'notifiedAt' })}>{t('conformite.breachMarkNotified')}</button>}
+            {/* Risque élevé : les personnes concernées doivent être informées (RGPD art. 34) ; la date se note ici. */}
+            {b.riskLevel === 'high' && !b.personsNotifiedAt && <button type="button" className="btn-outline" onClick={() => setAMarquer({ b, champ: 'personsNotifiedAt' })}>{t('conformite.breachMarkPersons')}</button>}
+            {b.personsNotifiedAt && <span className="small">{t('conformite.breachPersonsDone', { date: fmtDateTime(b.personsNotifiedAt) })}</span>}
+            {!b.closedAt && <button type="button" className="btn-ghost" onClick={() => setAMarquer({ b, champ: 'closedAt' })}>{t('conformite.breachClose')}</button>}
           </div>
         </div>
       ))}
+      <ConfirmDialog open={!!aMarquer} title={aMarquer ? t(`conformite.breachConfirm_${aMarquer.champ}`) : ''} message={t('conformite.breachConfirmBody')}
+        onCancel={() => setAMarquer(null)} onConfirm={() => { const m = aMarquer; setAMarquer(null); marquer(m.b, m.champ); }} />
       {nouvelle && (
         <Modale titre={t('conformite.breachNew')} largeur={520} onFermer={() => setNouvelle(null)}>
           <div className="field"><label htmlFor={`${id}-a`}>{t('conformite.breachDetected')}</label><input id={`${id}-a`} type="datetime-local" value={nouvelle.detectedAt} onChange={(e) => setNouvelle({ ...nouvelle, detectedAt: e.target.value })} /></div>
@@ -330,6 +357,7 @@ export function ParametersTab() {
     } catch (e) { toast(e.message, 'erreur'); }
   }
   const champ = (cle) => (autres[cle] !== undefined ? autres[cle] : lire(cle));
+  const libelleDrapeau = (k) => { const v = t(`conformite.flag_${k}`); return v === `conformite.flag_${k}` ? k : v; };
   const changer = (cle) => (e) => setAutres((x) => ({ ...x, [cle]: e.target.value }));
   return (
     <div className="card" style={{ marginTop: 0 }}>
@@ -364,14 +392,16 @@ export function ParametersTab() {
           </div>
           <button type="button" className="btn-teal" disabled={!age && date === null && !Object.keys(autres).length} onClick={enregistrer}>{t('conformite.save')}</button>
           <h4 style={{ marginTop: 16 }}>{t('conformite.paramFlags')}</h4>
-          {Object.entries(data.flags).filter(([k]) => k !== 'p2p_enabled').map(([k, v]) => (
+          {/* Ni le GO (il a son bouton dans Aujourd'hui, et la route des drapeaux le refuse ; audit du 19/10, admin-75), ni
+              l'ancien statut P2P (retiré, CODE-12). Un nom lisible plutôt que la clé technique. */}
+          {Object.entries(data.flags).filter(([k]) => !['p2p_enabled', 'launch_go'].includes(k)).map(([k, v]) => (
             <p key={k} className="small" style={{ margin: '4px 0' }}>
-              {k} : <b>{v ? t('conformite.on') : t('conformite.off')}</b>{' '}
+              {libelleDrapeau(k)} : <b>{v ? t('conformite.on') : t('conformite.off')}</b>{' '}
               <button type="button" className="btn-ghost btn-sm" onClick={() => setBascule(k)}>{t('conformite.paramFlagToggle')}</button>
             </p>
           ))}
           <p className="small" style={{ color: 'var(--ink-soft)' }}>{t('conformite.paramFlagsHelp')}</p>
-          <ConfirmDialog open={!!bascule} title={bascule || ''} message={t('conformite.paramFlagsHelp')} danger
+          <ConfirmDialog open={!!bascule} title={bascule ? libelleDrapeau(bascule) : ''} message={t('conformite.paramFlagsHelp')} danger
             onCancel={() => setBascule(null)}
             onConfirm={async () => { const k = bascule; setBascule(null); try { await api('/admin/flags', { method: 'PATCH', token, body: { [k]: !data.flags[k] } }); charger(); } catch (e) { toast(e.message, 'erreur'); } }} />
         </>

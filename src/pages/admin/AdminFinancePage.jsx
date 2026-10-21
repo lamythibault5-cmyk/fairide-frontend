@@ -11,6 +11,8 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useApiData, LoadState, Pagination, RestaurantLink, DriverLink, OrderLink } from './accounting/common';
 import '../../admin-finance.css';
 import useEtatPage from '../../hooks/useEtatPage';
+import { Link } from 'react-router-dom';
+import FranchiseTva from './accounting/FranchiseTva';
 
 // Finance — vue économique : ce que Fairide gagne sur la période, ce qu'elle doit reverser, détail par
 // restaurant, par livreur, par transaction et par remboursement. Même sélecteur de période que la
@@ -85,6 +87,10 @@ export default function AdminFinancePage() {
   return (
     <div>
       <AdminPageHeader module="finance" />
+      {/* Le compteur de la franchise TVA (seuil de 25 000 €) vivait seulement dans Comptabilité, application masquée : on ne
+          le trouvait pas depuis Finances (audit du 19/10, admin-52). Le même compteur ici, avec le lien vers les exports TVA. */}
+      <FranchiseTva token={token} />
+      <p className="small" style={{ margin: '6px 0 14px' }}><Link to="/admin/accounting?tab=obligations">{tr('adminFinance.vatObligationsLink')}</Link></p>
       <PeriodPicker period={period} onChange={setPeriod} allowAll />
 
       <LoadState state={data} skeleton={3}>
