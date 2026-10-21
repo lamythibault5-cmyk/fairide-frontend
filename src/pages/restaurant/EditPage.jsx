@@ -171,7 +171,7 @@ export default function EditPage() {
               <span className="ec-chip">{etatEnLigne}</span>
             </div>
             <h1 className="ec-b-titre">{t('miseEnLigne.title')}</h1>
-            <p className="ec-b-sous">{t('miseEnLigne.progress', { done: etapes.faites, total: etapes.etapes.length })}</p>
+            <p className="ec-b-sous">{t('miseEnLigne.progress', { n: etapes.faites, total: etapes.etapes.length })}</p>
             <RouteMiseEnLigne etapes={etapes.etapes} libelles={SITE} />
           </>
         ) : <BandeauSoir restaurant={r} orders={orders} />}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
+import ErrorCard from '../ErrorCard';
 
 /* LA CASE UNIQUE DE L'INSCRIPTION (fondateur, 12 oct. 2026 : « que des cases à cocher à l'inscription, et tout est
  * fait »). Une seule case signe trois textes : le contrat de partenariat, la déclaration professionnelle (vendeur,
@@ -15,16 +16,27 @@ export default function EngagementsInscription({ checked, onChange }) {
   const { t, language } = useLanguage();
   const [textes, setTextes] = useState(null);
   const [contrat, setContrat] = useState(null);
+  const [erreur, setErreur] = useState(false);
+  const [essai, setEssai] = useState(0);
   useEffect(() => {
-    api('/restaurants/engagements').then(setTextes).catch(() => setTextes(null));
-    api('/restaurants/contract-terms').then(setContrat).catch(() => setContrat(null));
-  }, []);
+    setErreur(false);
+    api('/restaurants/engagements').then(setTextes).catch(() => setErreur(true));
+    api('/restaurants/contract-terms').then(setContrat).catch(() => setErreur(true));
+  }, [essai]);
   const lignes = (bloc) => (language !== 'fr' && bloc?.translations?.[language]) || bloc?.text || [];
+  // La case signe le contrat ET les engagements : elle reste grisée tant que les deux textes ne sont pas arrivés.
+  // Avant, un réseau lent ou en panne cachait les deux « Lire… » et laissait cocher un contrat que la personne ne pouvait
+  // pas ouvrir (audit du 19/10, shop-3). Même texte signé, même case unique.
+  const prets = Boolean(textes && contrat);
+  useEffect(() => { if (!prets && checked) onChange(false); }, [prets, checked, onChange]);
 
   return (
     <div className="engagements-inscription">
-      <label className="row" style={{ gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
-        <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {erreur && !prets && (
+        <ErrorCard titre={t('auth.engagementsLoadError')} onRetry={() => setEssai((n) => n + 1)} />
+      )}
+      <label className="row" style={{ gap: 10, alignItems: 'flex-start', cursor: prets ? 'pointer' : 'default', opacity: prets ? 1 : 0.6 }}>
+        <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={checked && prets} disabled={!prets} onChange={(e) => onChange(e.target.checked)} />
         <span className="small">{t('auth.engagementsCheck')}</span>
       </label>
       <div className="engagements-liens small">
@@ -35,6 +47,8 @@ export default function EngagementsInscription({ checked, onChange }) {
               <p key={`${c.partie}-${c.titre}`} style={{ margin: '6px 0' }}><b>{c.titre}.</b> {c.corps}</p>
             ))}
             <p style={{ margin: '6px 0 0', opacity: 0.8 }}>{contrat.version}</p>
+            {/* Les clauses ne sont qu'en français : le dire aussi ici, pas seulement sous les engagements (shop-3). */}
+            {language !== 'fr' && <p style={{ margin: '6px 0 0', opacity: 0.8 }}>{t('conformite.frenchPrevails')}</p>}
           </details>
         )}
         {textes && (

@@ -15,16 +15,18 @@ import { useEffect, useRef, useState } from 'react';
 const HAUTEUR_AXE_X = 22;
 const MARGE_GAUCHE = 34;
 
-function graduations(max) {
+// `entier` : un compte (commandes) n'a pas de graduation « 0,5 » — le pas vaut au moins 1 (audit du 19/10, shop-125).
+function graduations(max, entier = false) {
   if (max <= 0) return [0, 1];
-  const pas = [1, 2, 5].map((m) => m * 10 ** Math.floor(Math.log10(max / 2))).find((p) => max / p <= 3) || 10 ** Math.ceil(Math.log10(max));
+  const brut = [1, 2, 5].map((m) => m * 10 ** Math.floor(Math.log10(max / 2))).find((p) => max / p <= 3) || 10 ** Math.ceil(Math.log10(max));
+  const pas = entier ? Math.max(1, brut) : brut;
   const haut = Math.ceil(max / pas) * pas;
   const t = [];
   for (let v = 0; v <= haut + 1e-9; v += pas) t.push(+v.toFixed(6));
   return t;
 }
 
-export default function GraphiqueBarres({ titre, donnees, formatValeur = (v) => String(v), formatAxe = formatValeur, hauteur = 180, libelleTableau, colonneValeur }) {
+export default function GraphiqueBarres({ titre, donnees, formatValeur = (v) => String(v), formatAxe = formatValeur, hauteur = 180, libelleTableau, colonneValeur, entier = false }) {
   const boite = useRef(null);
   const [largeur, setLargeur] = useState(0);
   const [survol, setSurvol] = useState(null);
@@ -38,7 +40,7 @@ export default function GraphiqueBarres({ titre, donnees, formatValeur = (v) => 
   }, []);
 
   const max = Math.max(0, ...donnees.map((d) => d.valeur));
-  const ticks = graduations(max);
+  const ticks = graduations(max, entier);
   const haut = ticks[ticks.length - 1] || 1;
   const zone = Math.max(0, largeur - MARGE_GAUCHE);
   const fente = donnees.length ? zone / donnees.length : 0;

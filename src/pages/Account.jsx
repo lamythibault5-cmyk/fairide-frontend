@@ -45,6 +45,7 @@ import '../ecran-compte.css';
 // Le site sur ordinateur (2026-10-16) : rubriques à gauche, contenu à droite. Sans effet dans l'app (html.appli).
 import '../site-compte.css';
 import { telephoneLisible } from '../validation';
+import ErrorCard from '../components/ErrorCard';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -120,6 +121,9 @@ export default function Account() {
   const [driverDeliveries, setDriverDeliveries] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
+  // Fiche du commerce pas chargée (réseau) : contrat, paiements, abonnement et services disparaissaient sans un mot ; une
+  // carte « Réessayer » prend leur place (audit du 19/10, CROSS-44).
+  const [erreurCommerce, setErreurCommerce] = useState('');
   const [membreEquipe, setMembreEquipe] = useState(false);
   // Reçus de la sous-section Paiement : toutes les commandes du restaurant, filtrées sur « payées » à l'affichage.
   const [commandesResto, setCommandesResto] = useState([]);
@@ -234,6 +238,7 @@ export default function Account() {
   // Commerce du compte (id, commandes) ; rappelé après un enregistrement depuis la sous-section Paiement.
   function rechargerRestaurant() {
     if (role !== 'restaurant') return;
+    setErreurCommerce('');
     api('/restaurants/mine/dashboard', { token }).then((list) => {
       // Membre de l'équipe d'un commerce (backend equipeCommerce.js) : pas les rubriques du propriétaire.
       setMembreEquipe(list[0]?.staffRole === 'service');
@@ -244,9 +249,9 @@ export default function Account() {
         setRestoId(list[0].id);
         api(`/orders/restaurant/${list[0].id}`, { token }).then((rows) => setCommandesResto(Array.isArray(rows) ? rows : [])).catch(() => {});
         // Fiche à jour (numéros légaux, Stripe) même quand l'id n'a pas changé.
-        api(`/restaurants/${list[0].id}`, { token }).then(setRestaurant).catch(() => {});
+        api(`/restaurants/${list[0].id}`, { token }).then(setRestaurant).catch((e) => setErreurCommerce(e.message));
       }
-    }).catch((e) => toast(e.message, 'erreur'));
+    }).catch((e) => setErreurCommerce(e.message));
   }
   useEffect(() => {
     if (role !== 'restaurant') return;
@@ -873,6 +878,7 @@ export default function Account() {
           <LigneCompte to="/dashboard/orders" icone="commandes" titre={t('nav.orders')} />
         </div>
       )}
+      {role === 'restaurant' && !restaurant && erreurCommerce && <ErrorCard titre={t('accountUi.myBusiness')} message={erreurCommerce} onRetry={rechargerRestaurant} />}
       {role === 'restaurant' && restaurant && !membreEquipe && <h2 className="compte-feuille-titre">{t('accountUi.myBusiness')}</h2>}
       {role === 'restaurant' && restaurant && !membreEquipe && (
         <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>

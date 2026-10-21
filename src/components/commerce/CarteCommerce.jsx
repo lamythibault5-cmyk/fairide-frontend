@@ -129,7 +129,9 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
           </>
         )}
 
-        <p className="ec-feuille-titre">{t('menuPage.stepMore')}</p>
+        {/* Ce qui suit se signe ou se règle soi-même (engagements, mentions, hausse, TVA) : plus « Aller plus loin », qui le
+            faisait passer pour du facultatif (audit du 19/10, shop-16). */}
+        <p className="ec-feuille-titre">{t('ecranCommerce.reglagesTitre')}</p>
         {/* Carte signée, allergènes, vendeur professionnel (backlog de conformité A1, A2, A8). */}
         <ConformiteCarte restoId={restoId} rafraichir={restaurant} onChange={() => loadDashboard(restoId)} />
         {/* Halal, sans gluten, vegan, bio : déclarés par le commerce lui-même, malgré le verrou de la carte. */}

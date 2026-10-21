@@ -32,6 +32,23 @@ function periodePreset(cle) {
 
 const euro = (n) => euros(Number(n || 0));
 
+// Libellés dans la langue du commerce (audit du 19/10, shop-115) : le serveur les écrivait en français (« Semaine 42 · … »,
+// « 3e trimestre », « À emporter »). Il envoie maintenant de quoi les recomposer ; à défaut (ancien serveur), son libellé.
+const jourLocal = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString(getLocale(), { timeZone: 'UTC' });
+function libelleGroupe(g, t) {
+  if (!g.group || !g.start) return g.label;
+  if (g.group === 'week' && g.week) return t('statements.groupWeek', { n: g.week, from: jourLocal(g.start), to: jourLocal(g.end) });
+  const d = new Date(`${g.start}T12:00:00Z`);
+  if (g.group === 'quarter') return t('statements.groupQuarter', { n: Math.floor(d.getUTCMonth() / 3) + 1, year: d.getUTCFullYear() });
+  const mois = d.toLocaleDateString(getLocale(), { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return mois.charAt(0).toUpperCase() + mois.slice(1);
+}
+function libelleType(o, t) {
+  if (o.orderType === 'delivery') return t('orderStatus.orderType.delivery');
+  if (o.orderType === 'pickup' || o.orderType === 'takeaway') return t('orderStatus.orderType.pickup');
+  return o.typeLabel;
+}
+
 export default function CommissionStatements() {
   const { t } = useLanguage();
   const { token } = useAuth();
@@ -49,12 +66,15 @@ export default function CommissionStatements() {
     ? `/invoices/restaurant/statement?from=${periode.from}&to=${periode.to}&group=${group}` : null;
 
   useEffect(() => {
-    if (!requete) return;
+    if (!requete) return undefined;
+    // Réponse arrivée après un changement de période : ignorée, elle n'écrase plus la plus récente (audit du 19/10, shop-118).
+    let actif = true;
     setChargement(true);
     api(requete, { token })
-      .then((d) => { setData(d); setOuverts(new Set(d.groups.slice(0, 1).map((g) => g.key))); })
-      .catch((e) => { toast(e.message, 'erreur'); setData({ groups: [], totals: { count: 0, sales: 0, commissionHt: 0, vat: 0, ttc: 0, avgRate: 0 } }); })
-      .finally(() => setChargement(false));
+      .then((d) => { if (!actif) return; setData(d); setOuverts(new Set(d.groups.slice(0, 1).map((g) => g.key))); })
+      .catch((e) => { if (!actif) return; toast(e.message, 'erreur'); setData({ groups: [], totals: { count: 0, sales: 0, commissionHt: 0, vat: 0, ttc: 0, avgRate: 0 } }); })
+      .finally(() => { if (actif) setChargement(false); });
+    return () => { actif = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requete]);
 
@@ -141,7 +161,7 @@ export default function CommissionStatements() {
               <div className="card statements-group" key={g.key} style={{ padding: 0, overflow: 'hidden' }}>
                 <button type="button" className="statements-group-head" onClick={() => basculer(g.key)} aria-expanded={ouvert}>
                   <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                    <div style={{ fontWeight: 700 }}>{g.label}</div>
+                    <div style={{ fontWeight: 700 }}>{libelleGroupe(g, t)}</div>
                     <div className="small">
                       {t('statements.groupSub', { n: g.totals.count, sales: euro(g.totals.sales) })}
                       {group === 'month' && facture && <span className="pill teal" style={{ marginLeft: 8 }}>{t('statements.invoiceIssued', { number: facture.invoiceNumber })}</span>}
@@ -173,7 +193,7 @@ export default function CommissionStatements() {
                         {g.orders.map((o) => (
                           <tr key={o.id}>
                             <td>{new Date(o.createdAt).toLocaleDateString(getLocale())}<div className="small">{new Date(o.createdAt).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}</div></td>
-                            <td><b>#{String(o.id).slice(0, 8)}</b><div className="small">{o.typeLabel}{o.promoDiscount > 0 ? ` · ${t('statements.discount', { n: euro(o.promoDiscount) })}` : ''}</div></td>
+                            <td><b>#{String(o.id).slice(0, 8)}</b><div className="small">{libelleType(o, t)}{o.promoDiscount > 0 ? ` · ${t('statements.discount', { n: euro(o.promoDiscount) })}` : ''}</div></td>
                             <td className="num">{euro(o.subtotal)}</td>
                             <td className="num">{(o.rate * 100).toFixed(1)} %</td>
                             {!sansTva && <td className="num">{euro(o.commission)}</td>}

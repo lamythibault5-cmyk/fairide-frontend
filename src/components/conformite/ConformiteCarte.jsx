@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { api, API_BASE } from '../../api';
+import { api, apiDownload, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -198,9 +198,9 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
       {m.lastSigned && <p className="small" style={{ margin: '10px 0 0' }}><a href={`${API_BASE}/restaurants/${restoId}/menu/versions?download=1`} onClick={async (e) => {
         e.preventDefault();
         try {
-          const r = await api(`/restaurants/${restoId}/menu/versions`, { token });
-          const url = URL.createObjectURL(new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' }));
-          const a = document.createElement('a'); a.href = url; a.download = `cartes-signees-${restoId}.json`; a.click(); URL.revokeObjectURL(url);
+          // apiDownload, pas un <a download> sur un Blob : dans l'app la WebView l'ignorait, rien ne se passait (audit du 19/10,
+          // shop-17). Le fichier part dans la feuille de partage du téléphone, comme les relevés.
+          await apiDownload(`/restaurants/${restoId}/menu/versions`, { token, filename: `cartes-signees-${restoId}.json` });
         } catch (err) { toast(err.message, 'erreur'); }
       }}>{t('conformite.menuVersionsExport')}</a></p>}
 

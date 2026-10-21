@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { achatsCommerceAutorises, allerAuPaiement, experienceApp } from '../../natif';
@@ -13,6 +13,9 @@ import { euros } from '../../prixPlat';
 import CadreSite from '../../components/commerce/CadreSite';
 import { SegmentGlisse } from '../../components/commerce/BandeauCommerce';
 import EtatVide from '../../components/EtatVide';
+import ErrorCard from '../../components/ErrorCard';
+import AbonnementOffert from '../../components/commerce/AbonnementOffert';
+import NotesCredit from '../../components/commerce/NotesCredit';
 
 // Facture sans TVA : Fairide est sous le régime de la franchise depuis le 7/9/2026 (lettre du SPF Finances du 12/10/2026).
 // Jugé par facture : une facture émise avec TVA garde ses colonnes.
@@ -27,6 +30,18 @@ function lastFinishedMonthValue() {
     .formatToParts(new Date()).map((x) => [x.type, x.value]));
   const d = new Date(Date.UTC(Number(p.year), Number(p.month) - 2, 1));
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+// Les 24 derniers mois terminés, du plus récent au plus ancien (audit du 19/10, shop-117). Un <input type="month"> est une
+// simple case de texte sur Firefox et Safari ordinateur : « octobre » partait au serveur (« Mois invalide. ») et l'aperçu
+// affichait « Invalid Date ». Une liste ne laisse choisir qu'un mois qui existe, et jamais le mois en cours (shop-102).
+function moisProposes(dernier, locale) {
+  const [y, m] = dernier.split('-').map(Number);
+  return Array.from({ length: 24 }, (_, k) => {
+    const d = new Date(Date.UTC(y, m - 1 - k, 1));
+    const valeur = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+    return { valeur, libelle: d.toLocaleDateString(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }) };
+  });
 }
 
 function lastDayOfMonth(month) {
@@ -57,6 +72,10 @@ export default function InvoicesPage() {
   const moisTermine = month <= dernierMois;
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [erreurApercu, setErreurApercu] = useState('');
+  const [essai, setEssai] = useState(0);
+  // Le mois affiché maintenant : « Générer » n'applique sa réponse que s'il n'a pas changé entre-temps (shop-118).
+  const moisCourant = useRef(month);
   const [generating, setGenerating] = useState(false);
   // Trois onglets : les factures (pièces comptables, mensuelles), les relevés détaillés (suivi libre par
   // semaine / mois / trimestre), l'abonnement (factures Stripe). L'onglet ouvert survit à un rechargement.
@@ -65,14 +84,22 @@ export default function InvoicesPage() {
   });
   function choisirOnglet(o) { setOnglet(o); try { sessionStorage.setItem('fairide_factures_onglet', o); } catch { /* sans stockage */ } }
 
+  // L'aperçu du mois choisi. Vidé avant chaque chargement : un échec laissait la facture du mois précédent sous le nouveau
+  // mois (audit du 19/10, CROSS-38) ; un échec s'affiche avec « Réessayer » au lieu d'une page vide (shop-113) ; une réponse
+  // arrivée après un changement de mois est ignorée (shop-118), comme dans StatsPage.
   useEffect(() => {
+    let actif = true;
+    moisCourant.current = month;
+    setInvoice(null);
+    setErreurApercu('');
     setLoading(true);
     api(`/restaurants/${restoId}/commission-invoice?month=${month}`, { token })
-      .then(setInvoice)
-      .catch((e) => toast(e.message, 'erreur'))
-      .finally(() => setLoading(false));
+      .then((r) => { if (actif) setInvoice(r); })
+      .catch((e) => { if (actif) setErreurApercu(e.message); })
+      .finally(() => { if (actif) setLoading(false); });
+    return () => { actif = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [month, restoId]);
+  }, [month, restoId, essai]);
 
   async function openPortal() {
     setOpeningPortal(true);
@@ -90,9 +117,10 @@ export default function InvoicesPage() {
 
   async function generateInvoice() {
     setGenerating(true);
+    const moisEmis = month;
     try {
-      const r = await api(`/restaurants/${restoId}/commission-invoice`, { method: 'POST', token, body: { month } });
-      setInvoice((prev) => ({ ...prev, ...r }));
+      const r = await api(`/restaurants/${restoId}/commission-invoice`, { method: 'POST', token, body: { month: moisEmis } });
+      if (moisCourant.current === moisEmis) setInvoice((prev) => ({ ...prev, ...r }));
       toast(t('invoicesResto.toastIssued', { number: r.invoiceNumber }));
     } catch (e) {
       toast(e.message, 'erreur');
@@ -102,6 +130,8 @@ export default function InvoicesPage() {
   }
 
   const fairide = invoice?.fairide;
+  // Un abonnement déjà entamé une fois (client Stripe posé) : seul cas où le portail Stripe a des factures à montrer.
+  const dejaAbonne = ['active', 'trialing', 'past_due', 'paused', 'canceled', 'unpaid'].includes(restaurant.subscriptionStatus);
   const periodLabel = new Date(`${month}-01`).toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' });
   const periodRange = `01/${month.split('-')[1]}/${month.split('-')[0]}, ${lastDayOfMonth(month)}/${month.split('-')[1]}/${month.split('-')[0]}`;
 
@@ -116,7 +146,10 @@ export default function InvoicesPage() {
         <>
           <div className="ec-bloc ec-bloc--releves"><CommissionStatements /></div>
           {/* Copie DAC7 annuelle (A10) : ce que Fairide a déclaré au SPF Finances sur les ventes du commerce. */}
-          <div className="no-print"><CopieDac7 chemin={(a) => `/restaurants/${restoId}/dac7/${a}.pdf`} token={token} /></div>
+          {/* Années 2026 et suivantes seulement : Fairide n'a rien vendu avant, « 2025 » et « 2024 » ne répondaient que « Aucune
+              vente déclarée » (audit du 19/10, shop-127 ; même choix que pour le livreur). */}
+          <div className="no-print"><CopieDac7 chemin={(a) => `/restaurants/${restoId}/dac7/${a}.pdf`} token={token}
+            annees={[new Date().getFullYear(), new Date().getFullYear() - 1].filter((an) => an >= 2026)} /></div>
         </>
       )}
 
@@ -125,10 +158,16 @@ export default function InvoicesPage() {
         <section className="no-print">
           {/* Titre en capitales, donc sans AvecMarque : le mot-logo reste toujours en minuscules. */}
           <p className="ec-feuille-titre">{t('invoicesResto.subscription')}</p>
-          <p className="ec-aide">{t('invoicesResto.subscriptionHelp')}</p>
-          <button type="button" className="ec-bouton ec-bouton--iris ec-bouton--court" disabled={openingPortal} onClick={openPortal}>
-            {openingPortal ? '...' : t('invoicesResto.viewSubInvoices')}
-          </button>
+          {/* Abonnement offert (le cas de tous les commerces au lancement) : pas de « 20 €/mois » ni de bouton qui répondait
+              « abonne-toi d'abord » ; jamais abonné : rien à montrer non plus (audit du 19/10, shop-105). */}
+          {restaurant.subscriptionWaived ? <AbonnementOffert />
+            : !dejaAbonne ? <p className="ec-aide">{t('invoicesResto.subscriptionNone')}</p>
+            : (<>
+              <p className="ec-aide">{t('invoicesResto.subscriptionHelp')}</p>
+              <button type="button" className="ec-bouton ec-bouton--iris ec-bouton--court" disabled={openingPortal} onClick={openPortal}>
+                {openingPortal ? '...' : t('invoicesResto.viewSubInvoices')}
+              </button>
+            </>)}
         </section>
       )}
 
@@ -147,6 +186,7 @@ export default function InvoicesPage() {
         // que les factures livreur (driver/InvoicesPage.jsx).
         colonneMontant="Total"
       /></div>
+      <div className="ec-bloc"><NotesCredit /></div>
 
       <div className="ec-bloc"><InvoicePreferences /></div>
 
@@ -154,13 +194,16 @@ export default function InvoicesPage() {
         <p className="ec-feuille-titre">{t('invoicesResto.commissionInvoice')}</p>
         <p className="ec-aide">{t('invoicesResto.commissionHelp')}</p>
         <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-          <input type="month" value={month} max={dernierMois} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 180 }} />
+          <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 220 }} aria-label={t('invoicesResto.commissionInvoice')}>
+            {moisProposes(dernierMois, getLocale()).map((m) => <option key={m.valeur} value={m.valeur}>{m.libelle}</option>)}
+          </select>
           {/* Imprimer n'existe pas dans l'application (WebView) : le bouton n'y faisait rien. */}
           {invoice?.items?.length > 0 && !experienceApp() && <button className="btn-teal" onClick={() => window.print()}>{t('invoicesResto.print')}</button>}
         </div>
       </section>
 
       {loading && <p className="ec-aide">{t('invoicesResto.loading')}</p>}
+      {!loading && erreurApercu && <ErrorCard message={erreurApercu} onRetry={() => setEssai((n) => n + 1)} />}
 
       {!loading && fairide && !fairide.configured && (
         <div className="ec-alerte no-print" role="alert">
@@ -173,7 +216,7 @@ export default function InvoicesPage() {
         <div className="ec-document" id="commission-recap">
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <h3 style={{ margin: '0 0 4px', fontSize: 20 }}>FACTURE</h3>
+              <h3 style={{ margin: '0 0 4px', fontSize: 20 }}>{t('invoicesResto.invoiceHeading')}</h3>
               {invoice.issued ? (
                 <div className="small">N° <b>{invoice.invoiceNumber}</b> {t('invoicesResto.issuedOn', { date: new Date(invoice.issuedAt).toLocaleDateString(getLocale()) })}</div>
               ) : (
@@ -181,9 +224,12 @@ export default function InvoicesPage() {
               )}
               <div className="small">{t('invoicesResto.servicePeriod', { range: periodRange })}</div>
             </div>
-            {!invoice.issued && !generating && invoice.items?.length > 0 && fairide?.configured && moisTermine && (
+            {/* Rien à facturer quand toutes les commandes du mois ont 0 € de commission : pas de bouton qui finissait en
+                « Erreur serveur. » (audit du 19/10, shop-109). */}
+            {!invoice.issued && !generating && invoice.items?.length > 0 && fairide?.configured && moisTermine && Number(invoice.totalTtc) > 0 && (
               <button className="btn-gold no-print" onClick={generateInvoice}>{t('invoicesResto.generate')}</button>
             )}
+            {!invoice.issued && invoice.items?.length > 0 && !(Number(invoice.totalTtc) > 0) && <span className="small no-print">{t('invoicesResto.nothingToInvoice')}</span>}
             {!invoice.issued && !moisTermine && <span className="small no-print">{t('invoicesResto.monthNotOver')}</span>}
             {generating && <span className="small">{t('invoicesResto.generating')}</span>}
           </div>
@@ -222,7 +268,7 @@ export default function InvoicesPage() {
                   <th style={{ padding: '6px 4px' }}>{t('invoicesResto.description')}</th>
                   <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t('statements.colOrderAmount')}</th>
                   <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t(sansTva(invoice) ? 'invoicesResto.priceNoVat' : 'invoicesResto.priceExVat')}</th>
-                  {!sansTva(invoice) && <th style={{ padding: '6px 4px', textAlign: 'right' }}>TVA</th>}
+                  {!sansTva(invoice) && <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t('invoiceArchive.vat')}</th>}
                 </tr>
               </thead>
               <tbody>

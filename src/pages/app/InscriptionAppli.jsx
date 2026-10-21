@@ -20,6 +20,7 @@ import { connexionFournisseur } from '../../natif';
 import { suivre } from '../../analytics';
 import { setConsent } from '../../consent';
 import { Haut, Option, Fait } from './EcransBienvenue';
+import VerifSociete from '../../components/commerce/VerifSociete';
 
 /* L'INSCRIPTION DANS L'ACCUEIL DE L'APPLICATION (fondateur, 2026-10-15).
  *
@@ -115,6 +116,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   const [schoolName, setSchoolName] = useState('');
   const [academicYear, setAcademicYear] = useState('');
   const [companyNumber, setCompanyNumber] = useState('');
+  const [verifSociete, setVerifSociete] = useState(null); // réponse VIES affichée sous le numéro du commerce (shop-2)
   const [vehicleType, setVehicleType] = useState('');
   const [courierOptions, setCourierOptions] = useState(null);
   // Commerce
@@ -185,14 +187,16 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   // Numéro d'entreprise du commerce : la BCE donne la raison sociale et la TVA (même appel qu'Auth.jsx).
   useEffect(() => {
     const chiffres = companyNumber.replace(/\D/g, '');
+    setVerifSociete(null);
     if (role !== 'restaurant' || chiffres.length !== 10) return undefined;
     let annule = false;
     const minuteur = setTimeout(() => {
       api(`/restaurants/lookup/company?number=${chiffres}`).then((r) => {
         if (annule) return;
+        setVerifSociete(r);
         if (r.vatNumber) setVatNumber(r.vatNumber);
         if (r.valid && r.legalName) setLegalName((v) => v || r.legalName);
-      }).catch(() => {});
+      }).catch(() => { if (!annule) setVerifSociete({ valid: null, error: 'indisponible' }); });
     }, 600);
     return () => { annule = true; clearTimeout(minuteur); };
   }, [companyNumber, role]);
@@ -596,6 +600,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
           <Champ id="bv-i-bce" label={t('auth.companyNumberResto')} erreur={erreurs.companyNumber} aide={t('auth.companyNumberRestoHelp')}>
             <input id="bv-i-bce" inputMode="numeric" className={erreurs.companyNumber ? 'input-invalid' : undefined} value={companyNumber}
               onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+            {!erreurs.companyNumber && <VerifSociete verif={verifSociete} className="bv-aide" />}
           </Champ>
           <Champ id="bv-i-raison" label={t('auth.legalName')} erreur={erreurs.legalName}>
             <input id="bv-i-raison" className={erreurs.legalName ? 'input-invalid' : undefined} value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder={t('auth.phLegalName')} />
