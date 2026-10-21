@@ -194,6 +194,12 @@ export function AuthProvider({ children }) {
     return api('/auth/resend-code', { method: 'POST', body: { email } });
   }
 
+  // « Changer de numéro » sur l'écran du code (audit du 19/10, auth-03) : le compte en attente se prouve par son mot de
+  // passe, ou par le jeton Apple / Google (preuve = { fournisseur, jeton }), et un code part au nouveau numéro.
+  async function changePendingPhone(email, phone, { password, preuve } = {}) {
+    return api('/auth/pending/phone', { method: 'POST', body: { email, phone, ...(preuve?.jeton ? { fournisseur: preuve.fournisseur, jeton: preuve.jeton } : { password }) } });
+  }
+
   async function forgotPassword(email) {
     return api('/auth/forgot-password', { method: 'POST', body: { email } });
   }
@@ -359,6 +365,7 @@ export function AuthProvider({ children }) {
     register,
     verifyEmail,
     resendCode,
+    changePendingPhone,
     forgotPassword,
     confirmForgotPassword,
     resetPassword,

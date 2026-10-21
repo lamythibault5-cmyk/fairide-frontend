@@ -16,6 +16,7 @@ import { DAY_ORDER, dayLabel } from '../../openingHours';
 import { bceValide, raisonBce, codePostalValide } from '../../validation';
 import { lireBienvenue, lireCodeEnAttente, ecrireCodeEnAttente } from '../../bienvenue';
 import { attendrePage } from '../../routePrefetch';
+import { connexionFournisseur } from '../../natif';
 import { suivre } from '../../analytics';
 import { setConsent } from '../../consent';
 import { Haut, Option, Fait } from './EcransBienvenue';
@@ -87,13 +88,15 @@ function Segments({ label, valeur, options, onChoix }) {
 
 export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConnexion }) {
   const { t } = useLanguage();
-  const { register, verifyEmail, resendCode, loginWithGoogle, loginWithApple } = useAuth();
+  const { register, verifyEmail, resendCode, changePendingPhone, loginWithGoogle, loginWithApple } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const fond = useRef(null);
 
   // Apple / Google : le jeton porte l'e-mail, et souvent le nom (Apple le donne à côté, à la première autorisation).
   const profilFed = useMemo(() => (fed?.jeton ? decoderJwt(fed.jeton) : {}), [fed]);
+  // Le jeton en cours : celui reçu, ou un neuf redemandé quand il a expiré en route (audit du 19/10, auth-08).
+  const [jetonFed, setJetonFed] = useState(fed);
   const [email, setEmail] = useState(profilFed.email || '');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState(profilFed.given_name || fed?.prenom || '');
@@ -163,10 +166,13 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enAttente]);
   const [code, setCode] = useState('');
+  // « Changer de numéro » depuis l'écran du code (auth-03) : un écran de plus, le temps de taper le bon numéro.
+  const [changerNumero, setChangerNumero] = useState(false);
+  const [nouveauNumero, setNouveauNumero] = useState('');
 
   const etapes = useMemo(() => ETAPES[role].filter((e) => !(e === 'email' && fed) && !(e === 'nom' && nomConnu)
     && !(e === 'etudes' && courierStatus !== 'student_independent')), [role, fed, nomConnu, courierStatus]);
-  const etape = enAttente ? 'code' : etapes[Math.min(index, etapes.length - 1)];
+  const etape = enAttente ? (changerNumero ? 'numero' : 'code') : etapes[Math.min(index, etapes.length - 1)];
   const derniere = index >= etapes.length - 1;
   const progression = enAttente ? 1 : (index + 1) / (etapes.length + 1);
   const nomResponsable = responsable ?? `${firstName} ${lastName}`.trim();
@@ -247,6 +253,10 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
     if (cle === 'fin' && role === 'client' && !accepteCgu) e.cgu = t('conformite.toastTermsRequired');
     if (cle === 'fin' && role === 'restaurant' && !accepteEngagements) e.engagements = t('auth.engagementsRequired');
     if (cle === 'code' && !code.trim()) e.code = t('auth.errCodeRequired');
+    if (cle === 'numero') {
+      if (!nouveauNumero.trim()) e.phone = requis;
+      if (!fed && !password) e.password = requis;
+    }
     return e;
   }
 
@@ -278,6 +288,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
     setErreurs(e);
     if (Object.keys(e).length) return;
     if (etape === 'code') { confirmerCode(); return; }
+    if (etape === 'numero') { envoyerNumero(); return; }
     if (derniere) { creerCompte(); return; }
     if (etape === 'email' || etape === 'tel') {
       setAttente(true);
@@ -292,6 +303,7 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
   function reculer() {
     setErreurs({});
     setRecule(true);
+    if (changerNumero) { setChangerNumero(false); return; }
     // Depuis l'écran du code repris après fermeture : le formulaire n'est plus là, on repart de l'accueil du compte.
     if (enAttente) { setEnAttente(null); setCode(''); if (repriseCode) onQuitter(); return; }
     if (index === 0) { onQuitter(); return; }
@@ -364,9 +376,9 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
     let reussi = false;
     try {
       if (fed) {
-        const data = fed.fournisseur === 'apple'
-          ? await loginWithApple(fed.jeton, role, { givenName: firstName.trim() || undefined, familyName: lastName.trim() || undefined, ...extra })
-          : await loginWithGoogle(fed.jeton, role, extra);
+        const data = jetonFed.fournisseur === 'apple'
+          ? await loginWithApple(jetonFed.jeton, role, { givenName: firstName.trim() || undefined, familyName: lastName.trim() || undefined, ...extra })
+          : await loginWithGoogle(jetonFed.jeton, role, extra);
         suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
         // Le téléphone se prouve par SMS, Apple et Google compris (fondateur, 18/10/2026) : écran du code, comme au mot de passe.
         if (data.needsVerification) {
@@ -390,9 +402,11 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
     } catch (err) {
       const champ = err.field || err.data?.field;
       if (fed && err.message !== 'INCOMPLETE_PROFILE' && /google|apple|token|jeton|expir/i.test(err.message || '')) {
-        // Le jeton vit une heure : on repart de l'écran du compte, où « Continuer avec… » en redonne un.
-        toast(t('auth.googleExpired'), 'erreur');
-        onQuitter();
+        /* JETON APPLE / GOOGLE EXPIRÉ AVANT LA FIN (audit du 19/10, auth-08). On repartait de l'écran du compte (onQuitter) :
+         * tout ce qui avait été tapé était perdu, et un utilisateur Apple lisait « reclique sur Continuer avec Google ». On
+         * reste ici, réponses gardées, on nomme le bon fournisseur et on rouvre sa feuille ; un nouveau « Créer mon compte »
+         * part avec le jeton neuf. */
+        await rafraichirJetonFed();
       } else if (champ === 'password' || err.code === 'PASSWORD_BREACHED' || err.code === 'PASSWORD_WEAK') {
         setPassword('');
         allerA('email', { password: t(err.code === 'PASSWORD_BREACHED' ? 'auth.errPasswordBreached' : 'auth.errPasswordStrength') });
@@ -410,6 +424,36 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
     } finally {
       // Compte ouvert : on reste en « Chargement… » jusqu'au changement de page.
       if (!reussi) setAttente(false);
+    }
+  }
+
+  // Jeton Apple / Google refusé (expiré) : on le dit avec le bon nom et on en redemande un, sans quitter l'écran (auth-08).
+  async function rafraichirJetonFed() {
+    toast(t('appli.fedExpire', { fournisseur: fed?.fournisseur === 'apple' ? 'Apple' : 'Google' }), 'erreur');
+    try { setJetonFed(await connexionFournisseur(fed.fournisseur)); } catch { /* feuille fermée : le bouton la rouvre au prochain essai */ }
+  }
+
+  // « Changer de numéro » sur l'écran du code (audit du 19/10, auth-03) : un code part au bon numéro, l'ancien ne vaut plus.
+  // Preuve du compte : le mot de passe tapé, ou le jeton Apple / Google ; après une réouverture de l'application, ni l'un ni
+  // l'autre n'est en mémoire et le mot de passe est demandé.
+  async function envoyerNumero() {
+    setAttente(true);
+    const preuve = fed ? { fournisseur: jetonFed.fournisseur, jeton: jetonFed.jeton } : null;
+    try {
+      const r = await changePendingPhone(enAttente.email, nouveauNumero.trim(), { password, preuve });
+      const canal = r?.channel === 'sms' ? 'sms' : 'email';
+      setEnAttente((p) => ({ ...p, canal, telephone: r?.phoneMasked || nouveauNumero.trim() }));
+      setPhone(nouveauNumero.trim());
+      setCode(''); setErreurs({}); setRecule(true); setChangerNumero(false);
+      toast(t(canal === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
+    } catch (err) {
+      const MESSAGES = { PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid', PHONE_DOUBLE_PREFIX: 'auth.errPhoneDoublePrefix' };
+      if (err.field === 'phone') setErreurs({ phone: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
+      else if (err.code === 'BAD_CREDENTIALS' && !preuve) setErreurs({ password: err.message });
+      else if (preuve && /google|apple|jeton|token/i.test(err.message || '')) await rafraichirJetonFed();
+      else toast(err.message, 'erreur');
+    } finally {
+      setAttente(false);
     }
   }
 
@@ -767,6 +811,25 @@ export default function InscriptionAppli({ role, fed, depuis, onQuitter, onConne
             placeholder="123456" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
           {erreurs.code && <p className="field-error bv-centre" role="alert">{erreurs.code}</p>}
           <button type="button" className="bv-lien" disabled={attente} onClick={renvoyer}>{t('auth.resendCode')}</button>
+          <button type="button" className="bv-lien" disabled={attente}
+            onClick={() => { setNouveauNumero(phone); setErreurs({}); setRecule(false); setChangerNumero(true); }}>{t('auth.changePhone')}</button>
+        </>
+      );
+      break;
+    case 'numero':
+      bouton = t('auth.changePhoneSend');
+      entete = titre(t('auth.changePhoneTitle'), t('auth.changePhoneText'));
+      contenu = (
+        <>
+          <Champ id="bv-i-nouveau-tel" label={t('auth.phone')} erreur={erreurs.phone}>
+            <PhoneInput id="bv-i-nouveau-tel" value={nouveauNumero} onChange={setNouveauNumero} invalid={!!erreurs.phone} />
+          </Champ>
+          {/* Prérempli quand il vient d'être tapé ; vide après une réouverture de l'application. */}
+          {!fed && (
+            <Champ id="bv-i-tel-mdp" label={t('auth.changePhonePassword')} erreur={erreurs.password}>
+              <PasswordInput id="bv-i-tel-mdp" value={password} invalid={!!erreurs.password} autoComplete="current-password" onChange={(e) => setPassword(e.target.value)} />
+            </Champ>
+          )}
         </>
       );
       break;

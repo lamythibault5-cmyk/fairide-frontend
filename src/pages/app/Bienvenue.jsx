@@ -167,7 +167,8 @@ export default function Bienvenue() {
   }, [ecran, liste]);
 
   // Pendant l'inscription, c'est elle qui choisit où arriver une fois le compte ouvert (son espace, pas l'accueil).
-  if (user && ecran !== 'inscription') return <Navigate to="/" replace />;
+  // Venu d'un commerce touché sans compte : Apple / Google qui ouvre un compte existant y ramène (audit du 19/10, auth-07).
+  if (user && ecran !== 'inscription') return <Navigate to={depuis || '/'} replace />;
   if (!experienceApp() && !apercu) return <Navigate to="/" replace />;
 
   function aller(vers, { sansHistorique = false } = {}) {
@@ -226,8 +227,9 @@ export default function Bienvenue() {
       } catch (err) {
         if (err.message === 'INCOMPLETE_PROFILE') { setFed(jeton); aller('inscription'); return; }
         // Inscription déjà faite, code SMS jamais saisi : on le demande (connexion, écran du code ; « Renvoyer » y est).
-        if (err.message === 'PHONE_NOT_VERIFIED') { navigate('/login', { state: { attenteCode: { email: err.data?.email, canal: 'sms', telephone: err.data?.phoneMasked } } }); return; }
-        if (err.code === 'TOTP_REQUIRED') { navigate('/login', { state: { fed: jeton } }); return; }
+        // Le jeton suit (preuve) : il prouve le compte si le numéro est à changer (auth-03) ; `from` aussi (auth-07).
+        if (err.message === 'PHONE_NOT_VERIFIED') { navigate('/login', { state: { from: depuis || undefined, attenteCode: { email: err.data?.email, canal: 'sms', telephone: err.data?.phoneMasked, preuve: { fournisseur: jeton.fournisseur, jeton: jeton.jeton } } } }); return; }
+        if (err.code === 'TOTP_REQUIRED') { navigate('/login', { state: { from: depuis || undefined, fed: jeton } }); return; }
         toast(err.message, 'erreur');
       }
     } catch (err) {
@@ -237,7 +239,8 @@ export default function Bienvenue() {
     }
   }
   const viaEmail = () => { memoriser(); setFed(null); aller('inscription'); };
-  const dejaInscrit = () => { ecrireBienvenue({ vu: true, amorceNotifs: 'a-faire' }); navigate('/login'); };
+  // « J'ai déjà un compte » garde le commerce touché sans compte (`from`) : la connexion y ramène (audit du 19/10, auth-07).
+  const dejaInscrit = () => { ecrireBienvenue({ vu: true, amorceNotifs: 'a-faire' }); navigate('/login', depuis ? { state: { from: depuis } } : undefined); };
 
   // L'accueil a rejoint le bandeau iris le 2026-10-16 (version B2 de mockups/accueil-appli.html) : slogan sur l'iris, le
   // reste dans la feuille blanche, comme les écrans suivants.
