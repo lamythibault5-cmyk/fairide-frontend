@@ -177,9 +177,6 @@ export default function PromotionsPage() {
   const [aSupprimer, setASupprimer] = useState(null);
   // Échec du chargement : « Chargement... » restait affiché pour toujours (audit du 19/10, shop-113).
   const [erreurPromos, setErreurPromos] = useState('');
-
-  // Un premier chargement raté ne laisse plus « … » pour toujours : « Impossible de charger » + Réessayer (audit du 19/10, CROSS-33).
-  const [erreurPromos, setErreurPromos] = useState(null);
   function loadPromos() {
     setErreurPromos('');
     api(`/restaurants/${restoId}/promotions/mine`, { token }).then(setPromos).catch((e) => setErreurPromos(e.message));
