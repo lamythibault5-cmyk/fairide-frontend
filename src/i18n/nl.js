@@ -1876,6 +1876,12 @@ export default {
       confirmedOk: 'Adres bevestigd: het wordt opgeslagen zoals je het schreef.'
     },
     adminReviews: {
+      statsAllHint: "Gemiddelde en lage scores: over alle beoordelingen van de gekozen filter, niet alleen deze pagina.",
+      deleteNoticeHint: "De auteur krijgt een e-mail: wat er verwijderd is, je reden, en hoe hij kan betwisten.",
+      deleteReasonLabel: "Reden van verwijdering (naar de auteur gestuurd)",
+      deleteReasonPh: "Bv. beledigende woorden over het personeel",
+      deleteConfirm: "Beoordeling verwijderen",
+      deleteReasonShort: "Schrijf een reden (minstens 5 tekens): ze wordt naar de auteur gestuurd.",
       foodRating: 'Score eten',
       foodComment: 'Opmerking eten',
       statFood: 'Gemiddelde eten',
@@ -2654,6 +2660,9 @@ export default {
       toastDisabled: 'Regel uitgeschakeld.'
     },
     adminFinance: {
+      totalRevenueOrders: "Fairide-inkomsten (bestellingen)",
+      onSiteSales: "Betaald bij de zaak, niet via Fairide ({n})",
+      definitionsHint: "Alleen geld dat via Fairide loopt: verkopen betaald bij de zaak staan apart, test-, simulatie- en proefbestellingen tellen niet mee, en een volledig terugbetaalde bestelling brengt niets op. Dagen en maanden in Brusselse tijd. De boekhouding telt er abonnementen en uitgelichte plaatsen bij.",
       title: 'Financiën',
       restoRevenue: 'Omzet restaurants',
       totalDeliveryFees: 'Totaal leveringskosten',
@@ -2751,6 +2760,8 @@ export default {
       balancePill: 'Saldo {balance}'
     },
     adminPayments: {
+      onSiteApart: "Betaald bij de zaak, apart ({n}): niets ontvangen door Fairide",
+      componentDriverShare: "Aandeel koerier (rit)",
       title: 'Betalingen',
       restoPayoutsDone: 'Uitbetalingen restaurants uitgevoerd',
       restoPayoutsPending: 'Uitbetalingen restaurants in wacht',
@@ -3357,7 +3368,7 @@ export default {
       franchiseLevel_depasse: "Drempel overschreden: de vrijstelling eindigde bij de handeling die hem overschreed. Meld het aan het btw-kantoor, zet FAIRIDE_VAT_REGIME=assujetti en spreek meteen met de boekhouder.",
       franchiseProrated: "Drempel naar rato van het startjaar ({annual} voor een volledig jaar) — voorzichtige lezing, te bevestigen met de boekhouder.",
       franchiseAccount_700_COMM: "Commissies",
-      franchiseAccount_701_LIVR: "Leveringsmarge (fiets)",
+      franchiseAccount_701_LIVR: "Leveringsmarge",
       franchiseAccount_702_SERV: "Systeemkosten",
       franchiseAccount_703_ABO: "Abonnementen",
       franchiseAccount_704_MEA: "Uitlichtingen",
@@ -3561,6 +3572,33 @@ export default {
       unlock: 'Ontgrendelen'
     },
     adminRestos: {
+      subBillingConfirmNotify: "Facturatie van het abonnement inschakelen voor {name}? Zolang de zaak niet intekent, ontvangt ze geen bestellingen meer, niet om af te halen en niet om te leveren. Ze krijgt een e-mail die dat uitlegt en zegt waar ze kan intekenen.",
+      subBillingOnNotifiedToast: "Facturatie ingeschakeld: de zaak is per e-mail verwittigd. Ze ontvangt geen bestellingen tot ze intekent.",
+      subscriptionLineWords: "Abonnement: {offer} · Stripe: {sub} · Levering: {mode}",
+      subOffered: "aangeboden (lancering)",
+      subBilled: "gefactureerd",
+      subDemo: "demo, nooit gefactureerd",
+      subBilledNoOrders: "Gefactureerd zonder actief abonnement: deze zaak ontvangt geen bestellingen tot ze intekent.",
+      inStoreMarkConfirm: "Het menu van {name} markeren als \"winkelprijzen gecontroleerd\"? De pagina \"In orde\" stelt dan voor om de commissie van Fairide toe te voegen (+10 %). Alleen doen als de prijzen aan de toonbank zijn nagekeken, nooit bij een menu van een platform.",
+      inStoreUnmarkConfirm: "\"Prijzen gecontroleerd\" weghalen? De pagina \"In orde\" stelt dan niet meer voor om de commissie toe te voegen.",
+      inStoreUnmarkAddedWarn: "De zaak had gekozen om de commissie toe te voegen: haar prijzen blijven verhoogd; pas ze aan in het menu als dat een vergissing was.",
+      zoneDeliveryOffConfirm: "Fairide-levering uitschakelen voor {name}? Alleen afhalen blijft open, en de zaak wordt per e-mail verwittigd.",
+      zoneDeliveryOnConfirm: "Fairide-levering opnieuw inschakelen voor {name}? De zaak wordt per e-mail verwittigd.",
+      toastApprovedOnline: "Zaak goedgekeurd en online: ze is per e-mail verwittigd.",
+      toastApprovedNotOnline: "Zaak goedgekeurd. Nog niet online: {reason} Ze gaat vanzelf online zodra dat geregeld is.",
+      approveBodyOneStep: "Eén goedkeuring: is de zaak klaar, dan gaat ze meteen online; anders vanzelf zodra ze klaar is.",
+      listingHintOneStep: "Een echte zaak gaat vanzelf online zodra ze goedgekeurd en klaar is (menu bevestigd, contract aanvaard). \"Van de site halen\" houdt ze offline tot het team ze opnieuw publiceert. Demozaken blijven altijd zichtbaar.",
+      refusalTitle: "Goedkeuring voorlopig niet mogelijk",
+      refusalList: "Te verhelpen: {list}.",
+      refusalOk: "Begrepen",
+      deleteBodyKept: "{name} wordt meteen van de site gehaald. Zonder bestellingen of boekhoudstukken wordt de zaak met haar menu verwijderd; anders wordt ze gedeactiveerd en blijven bestellingen en facturen bewaard (boekhoudplicht). Ze komt niet vanzelf terug online. Het account van de uitbater ({email}) wordt ook verwijderd als het geen andere zaak heeft. Onomkeerbaar.",
+      toastDeletedFully: "Zaak verwijderd (geen bestellingen of facturen te bewaren).",
+      noReviewsYet: "nog geen beoordelingen",
+      readyPill: "Klaar",
+      missingPill: "Ontbreekt: {n}",
+      readyTitle: "Klaar voor de lancering",
+      missingTitle: "Niet klaar: {n} punt(en) te regelen",
+      readyHint: "Zelfde regel als de GO-kaart: wat een bestelling zou weigeren, en daarna wat na te kijken is.",
       phoneHiddenPublic: 'verborgen voor het publiek',
       zoneDeliveryOwn: 'Levert met eigen koeriers: Fairide-levering is niet van toepassing.',
       zoneDeliveryOffBadge: 'Fairide-levering uit (geen koerier in de zone)',
@@ -3797,6 +3835,21 @@ export default {
       unpublishReasonShort: 'Schrijf een reden van minstens 10 tekens: ze wordt naar de zaak gestuurd.'
     },
     adminOrders: {
+      paidAtShopShort: "bij de zaak",
+      paidAtShop: "betaald bij de zaak (niet via Fairide)",
+      trainingOrder: "testbestelling",
+      onSiteNothingDue: "niets (ter plaatse betaald)",
+      callClient: "Klant bellen:",
+      paymentLine: "Betaling: {mode}",
+      refundRemainingLine: "Betaald met kaart: {paid} · al terugbetaald: {done} · nog terug te betalen: {left}",
+      refundNothingLeft: "Alles is al terugbetaald op deze bestelling.",
+      refundNotCard: "Geen terugbetaling hier: deze bestelling is niet met kaart betaald (bij de zaak, met het saldo, of nog niet betaald).",
+      refundOverRemaining: "Hoogstens {max}: wat nog terug te betalen is op deze bestelling.",
+      refundWho_restaurant: "Ingehouden op de overschrijving aan de zaak voor deze bestelling; de zaak wordt verwittigd.",
+      refundWho_driver: "Ingehouden op de overschrijving van de rit van de koerier, nooit op de fooi; de koerier wordt verwittigd.",
+      refundWho_fairide: "Betaald door Fairide: niets wordt ingehouden bij de zaak of de koerier.",
+      confirmRefundWords: "{amount} terugbetalen aan de klant, {who}. Dit start een echte terugbetaling via Stripe.",
+      refundNothingReclaimed: "Klant terugbetaald. Er kon niets ingehouden worden: er was geen overschrijving gedaan voor deze bestelling. Regel het zo nodig manueel.",
       noneForFilter: 'Geen bestelling voor deze filter.',
       refundedSuffix: '· terugbetaald',
       pickupNoShowBadge: 'Niet afgehaald',
@@ -3928,6 +3981,8 @@ export default {
       documentsExpiringSoon: 'Documenten die binnenkort verlopen'
     },
     adminCommon: {
+      markTestConfirm: "Dit account als testaccount markeren? Het kan dan vóór GO levering bestellen en online betalen, en al zijn bestellingen, ook de vorige, verdwijnen uit de geldcijfers (dashboard, Financiën, Rapporten). De wijziging staat in de opvolging.",
+      markRealConfirm: "Dit account opnieuw als echt account markeren? Zijn bestellingen komen terug in de geldcijfers, en het heeft vóór GO geen toegang meer tot levering en online betalen.",
       close: 'Sluiten',
       cancel: 'Annuleren',
       loading: 'Laden...',
@@ -5252,6 +5307,9 @@ export default {
       origin_script: "Fairide (import van de kaart)",
     },
     adminTva: {
+      cancelTitle: "Deze btw-wijziging annuleren?",
+      cancelText: "{scope}: {from} % → {to} %. De {n} verwittigde zaak/zaken krijgen een e-mail: de wijziging gaat niet door, hun gerechten behouden hun tarief.",
+      cancelledToast: "Wijziging geannuleerd: {n} zaak/zaken per e-mail verwittigd.",
       title: "Een btw-tarief wijzigen voor alle zaken",
       help: "Voor een hervorming (afhaalmaaltijden 6% → 12%…): elke betrokken zaak krijgt een e-mail, kan minstens 7 dagen weigeren, en zonder antwoord wordt het tarief toegepast op de ingangsdatum. De kaart blijft gevalideerd, onder het prijsmandaat. Controleer het tarief op de website van de FOD Financiën voor je het aankondigt.",
       defaults: "Tarieven voorgesteld voor nieuwe gerechten: gerechten {food}%, frisdranken {soft}%, alcohol {alcohol}%.",
@@ -5342,6 +5400,11 @@ export default {
       cancel: "Annuleren"
     },
     validerCarte: {
+      adminPhoneShop: "Lijn van de zaak",
+      adminPhoneOwner: "Uitbater",
+      adminPhoneManager: "Verantwoordelijke",
+      adminPhoneChoice: "Nummer om de link naar te sturen",
+      adminNoMobile: "Geen gsm-nummer bekend: stuur de link per e-mail of kopieer hem.",
       pageTitle: "Mijn kaart valideren",
       loading: "Je kaart wordt geladen…",
       intro: "Hier is je kaart zoals Fairide ze voorbereidde, met je prijzen. Klopt alles, tik dan op “In orde”: er wordt niets gepubliceerd vóór je validatie.",
@@ -5459,6 +5522,12 @@ export default {
       alreadyArchived: "De afgesloten maand is al gearchiveerd.",
     },
     menuPage: {
+      adjustTitleTeam: "Alle prijzen van het menu aanpassen",
+      adjustIntroTeam: "Hulpmiddel van het team. Het menu toont de prijzen van de zaak; een verhoging is beperkt tot 10%. Komt het menu van een ander platform, breng het dan terug naar de prijzen in de zaak. Elke prijs wordt naar beneden afgerond op € 0,10, en de wijziging staat in de geschiedenis van de gerechten.",
+      adjustConfirmTeam: "{p} toepassen op de {n} producten van het menu? Elke prijs wordt naar beneden afgerond op € 0,10. Was het menu ondertekend, dan moet de zaak het opnieuw bevestigen: ze wordt per e-mail verwittigd, en haar bestellingen wachten op die bevestiging.",
+      adjustRequestedBy: "Op vraag van (optioneel)",
+      adjustRequestedByPh: "Bv. de uitbater, telefonisch op 21/10",
+      adjustRevalidate: "De zaak moet het menu opnieuw bevestigen: ze kreeg de link per e-mail.",
       lockedTitle: 'Je kaart en je prijzen worden samen met Fairide beheerd',
       lockedText: 'Niets verandert zonder jouw akkoord en het onze: je getoonde prijzen zijn je prijzen ter plaatse (met de verhoging die je vroeg, als die er is). Een gerecht uitverkocht? Zet het hieronder op uitverkocht, het komt morgen terug. Een prijs, een gerecht, een foto te veranderen? Laat het ons net hieronder weten, wij doen het. Een prijsverhoging? Vraag ze verderop aan, ze geldt zodra we ze gevalideerd hebben.',
       afterCreateHelpLocked: 'Je kaart zoals klanten ze zien. De knop "Uitverkocht" haalt een gerecht weg voor vandaag; al de rest verandert via een aanvraag.',
@@ -6417,6 +6486,9 @@ export default {
       removedSub: 'Klanten zien je niet meer en kunnen niet bestellen. De details kreeg je per e-mail: antwoord erop als je het niet eens bent of zodra het opgelost is.'
     },
     dashResto: {
+      subRequiredTitle: "Je ontvangt geen bestellingen meer",
+      subRequiredWeb: "Fairide heeft de facturatie van je abonnement ingeschakeld. Sluit het af via Mijn account › Abonnement (eerste maand gratis): je bestellingen lopen weer zodra het actief is.",
+      subRequiredApp: "Fairide heeft de facturatie van je abonnement ingeschakeld: je bestellingen lopen weer zodra het actief is. Je kreeg er een e-mail over.",
       zoneDeliveryOffTitle: 'Fairide-levering gepauzeerd in jouw zone',
       zoneDeliveryOffText: 'Voorlopig dekt geen enkele Fairide-koerier jouw zone: levering is gesloten op je pagina, afhalen blijft open. Zodra een koerier je zone dekt, schakelen we ze weer in. Lever je met eigen koeriers, laat het ons weten via Mijn zaak.',
       today: 'Vandaag',
@@ -8143,6 +8215,13 @@ export default {
       periods_month: '{n} maand(en)'
     },
     adminPlacements: {
+      refuseTitle: "De aanvraag van {name} weigeren?",
+      refuseBody: "De zaak krijgt een e-mail met je reden. Had ze al betaald, dan wordt ze terugbetaald.",
+      stopTitle: "De uitgelichte plaats van {name} stopzetten?",
+      stopBody: "Ze stopt vandaag, en alleen de dagen die al getoond zijn, worden aangerekend. De zaak krijgt een e-mail met je reden. Onomkeerbaar.",
+      stopBodyPaid: "Ze stopt vandaag. Online betaald ({amount} excl. btw): het ongebruikte deel wordt meteen via Stripe terugbetaald. De zaak krijgt een e-mail met je reden. Onomkeerbaar.",
+      reasonLabel: "Reden (naar de zaak gestuurd)",
+      reasonPh: "Bv. plaats gereserveerd voor een evenement",
       addPosition: 'Positie toevoegen',
       removePosition: 'Positie {n} verwijderen',
       positionsSaved: '{n} positie(s) te koop per rij.',
@@ -8959,6 +9038,7 @@ export default {
       joinDriverP2NoP2p: 'Student-zelfstandige of zelfstandige: jij kiest je statuut'
     },
     simulation: {
+      plusDelivery: "+ levering",
       benchTakeoverConfirm: 'Dit toestel is de terminal van “{name}”. Koppelen aan de simulatie koppelt het los van die zaak, die het opnieuw moet koppelen. Doorgaan?',
       tk_category_d: '{n} product(en) in deze categorie',
       tk_category: 'Kaart: {name}',

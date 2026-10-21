@@ -74,7 +74,8 @@ export default function CommandeTestAdmin({ pret, onCree }) {
       </div>
       <div className="row" style={{ gap: 8, alignItems: 'center', marginTop: 10, flexWrap: 'wrap' }}>
         <button type="button" className="btn-gold" disabled={enCours || !lignes.length} onClick={creer}>
-          {enCours ? '…' : tr('simulation.orderCreateAndPrint', { total: euros(total) })}
+          {/* En livraison, le total affiché est celui des plats : la livraison (tarif réel à 1,2 km) s'ajoute (admin-84). */}
+          {enCours ? '…' : tr('simulation.orderCreateAndPrint', { total: type === 'delivery' ? `${euros(total)} ${tr('simulation.plusDelivery')}` : euros(total) })}
         </button>
         <button type="button" className="btn-ghost" onClick={() => setOuvert(false)}>{tr('simulation.orderClose')}</button>
       </div>

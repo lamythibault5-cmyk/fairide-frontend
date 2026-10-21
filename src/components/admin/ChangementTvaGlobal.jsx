@@ -27,6 +27,7 @@ export default function ChangementTvaGlobal({ token, toast }) {
   const [apercu, setApercu] = useState(null);
   const [confirmer, setConfirmer] = useState(false);
   const [enCours, setEnCours] = useState(false);
+  const [aAnnuler, setAAnnuler] = useState(null); // changement dont l'annulation attend sa confirmation (admin-32)
   // Écrire à tous les commerces et changer leurs taux : propriétaire et admins, comme le serveur (audit du 19/10, admin-16).
   const { role } = useAdminRole();
   const autorise = !role || role === 'owner' || role === 'admin';
@@ -48,8 +49,16 @@ export default function ChangementTvaGlobal({ token, toast }) {
       setConfirmer(false); setReason(''); setApercu(null); charger();
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(false); }
   }
-  async function annuler(changeId) {
-    try { await api(`/admin/vat-rate-changes/${changeId}/cancel`, { method: 'POST', token }); charger(); } catch (e) { toast(e.message, 'erreur'); }
+  /* Annuler : confirmé, et les commerces prévenus le sont aussi (audit du 19/10, admin-32 : un tap annulait sans rien dire
+   * aux 50 commerces déjà avertis). */
+  async function annuler() {
+    const c = aAnnuler;
+    setEnCours(true);
+    try {
+      const r = await api(`/admin/vat-rate-changes/${c.id}/cancel`, { method: 'POST', token });
+      toast(t('adminTva.cancelledToast', { n: r?.notified ?? 0 }));
+      charger();
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(false); setAAnnuler(null); }
   }
 
   const date = (ms) => new Date(ms).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
@@ -100,7 +109,7 @@ export default function ChangementTvaGlobal({ token, toast }) {
             <li key={c.id} className="small" style={{ borderTop: '1px solid var(--line)', padding: '8px 0' }}>
               <b>{t(`adminTva.scope_${c.scope}`)} : {c.from} % → {c.to} %</b> · {t('adminTva.on', { date: date(c.effectiveAt) })}
               {' · '}{c.cancelledAt ? t('adminTva.cancelled') : c.appliedAt ? t('adminTva.applied', { n: c.appliedItems }) : t('adminTva.pending', { notified: c.notified, objections: c.objections })}
-              {!c.appliedAt && !c.cancelledAt && <button type="button" className="btn-ghost" style={{ marginLeft: 8 }} onClick={() => annuler(c.id)}>{t('adminTva.cancel')}</button>}
+              {!c.appliedAt && !c.cancelledAt && <button type="button" className="btn-ghost" style={{ marginLeft: 8 }} onClick={() => setAAnnuler(c)}>{t('adminTva.cancel')}</button>}
               <div style={{ color: 'var(--ink-soft)' }}>{c.reason}</div>
             </li>
           ))}
@@ -111,6 +120,12 @@ export default function ChangementTvaGlobal({ token, toast }) {
         title={t('adminTva.confirmTitle')}
         message={t('adminTva.confirmText', { scope: t(`adminTva.scope_${scope}`), from, to, restaurants: apercu?.restaurants || 0, items: apercu?.items || 0 })}
         confirmLabel={t('adminTva.announce')}
+      />
+      <ConfirmDialog
+        open={!!aAnnuler} loading={enCours} danger onCancel={() => setAAnnuler(null)} onConfirm={annuler}
+        title={t('adminTva.cancelTitle')}
+        message={aAnnuler ? t('adminTva.cancelText', { scope: t(`adminTva.scope_${aAnnuler.scope}`), from: aAnnuler.from, to: aAnnuler.to, n: aAnnuler.notified || 0 }) : ''}
+        confirmLabel={t('adminTva.cancel')}
       />
     </details>
   );

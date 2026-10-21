@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiDownload } from '../../api';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { getLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 import Icone from '../../components/Icone';
@@ -27,12 +28,24 @@ export function estCompteTest(u) {
 // Bouton « marquer comme test / comme vrai compte » (fiches client, livreur, restaurant). Les fiches lui passent le drapeau
 // posé par l'équipe (testFlag, users.is_test), seul à ouvrir les commandes avant l'ouverture : avec le motif d'e-mail, une
 // adresse « audit+c1@example.com » ne proposait que « vrai compte » et ne pouvait jamais être marquée (audit du 19/10, LIVE-05).
+// Confirmation qui dit les effets (audit du 19/10, admin-57) : un compte test commande la livraison et paie en ligne avant
+// le GO, et ses commandes, passées comprises, sortent des chiffres d'argent. Un tap de travers ne passe plus.
 export function TestToggleButton({ userId, isTest, token, api, toast, onChanged, tr, small = false }) {
+  const [confirmer, setConfirmer] = useState(false);
+  const [busy, setBusy] = useState(false);
+  async function basculer() {
+    setBusy(true);
+    try { await api(`/admin/users/${userId}/test`, { method: 'PATCH', token, body: { isTest: !isTest } }); toast(tr(isTest ? 'adminCommon.markedReal' : 'adminCommon.markedTest')); onChanged?.(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirmer(false); }
+  }
   return (
-    <button type="button" className="btn-ghost" style={small ? { padding: '6px 10px', fontSize: 12 } : undefined}
-      onClick={async () => { try { await api(`/admin/users/${userId}/test`, { method: 'PATCH', token, body: { isTest: !isTest } }); toast(tr(isTest ? 'adminCommon.markedReal' : 'adminCommon.markedTest')); onChanged?.(); } catch (e) { toast(e.message, 'erreur'); } }}>
-      {isTest ? tr('adminCommon.markReal') : tr('adminCommon.markTest')}
-    </button>
+    <>
+      <button type="button" className="btn-ghost" style={small ? { padding: '6px 10px', fontSize: 12 } : undefined} onClick={() => setConfirmer(true)}>
+        {isTest ? tr('adminCommon.markReal') : tr('adminCommon.markTest')}
+      </button>
+      <ConfirmDialog open={confirmer} title={isTest ? tr('adminCommon.markReal') : tr('adminCommon.markTest')}
+        message={tr(isTest ? 'adminCommon.markRealConfirm' : 'adminCommon.markTestConfirm')} loading={busy}
+        onConfirm={basculer} onCancel={() => setConfirmer(false)} />
+    </>
   );
 }
 
@@ -153,9 +166,9 @@ export const BUSINESS_STATUS_LABELS = avecCouleurs(
 );
 
 export const ACCOUNTING_ENTRY_TYPE_LABELS = parLangue({
-  fr: { order_commission: 'Commission restaurant (HT)', order_commission_vat: 'TVA sur commission', order_delivery_share: 'Frais de service Fairide (HT)', order_delivery_share_vat: 'TVA sur frais de service', order_delivery_margin: 'Marge Fairide livraison', order_restaurant_due: 'Dû restaurant', order_driver_due: 'Dû livreur', order_payment: 'Paiement client', refund: 'Remboursement', payout_restaurant: 'Virement restaurant', payout_driver: 'Virement livreur', stripe_fee: 'Frais Stripe', manual: 'Écriture manuelle', reversal: 'Extourne', expense: 'Achat / frais', expense_payment: 'Paiement de dépense' },
-  en: { order_commission: 'Restaurant commission (excl. VAT)', order_commission_vat: 'VAT on commission', order_delivery_share: 'Fairide service fee (excl. VAT)', order_delivery_share_vat: 'VAT on service fee', order_delivery_margin: 'Fairide delivery margin', order_restaurant_due: 'Due to restaurant', order_driver_due: 'Due to courier', order_payment: 'Customer payment', refund: 'Refund', payout_restaurant: 'Restaurant transfer', payout_driver: 'Courier transfer', stripe_fee: 'Stripe fee', manual: 'Manual entry', reversal: 'Reversal', expense: 'Purchase / expense', expense_payment: 'Expense payment' },
-  nl: { order_commission: 'Restaurantcommissie (excl. btw)', order_commission_vat: 'Btw op commissie', order_delivery_share: 'Servicekosten Fairide (excl. btw)', order_delivery_share_vat: 'Btw op servicekosten', order_delivery_margin: 'Fairide-marge levering', order_restaurant_due: 'Verschuldigd restaurant', order_driver_due: 'Verschuldigd koerier', order_payment: 'Klantbetaling', refund: 'Terugbetaling', payout_restaurant: 'Overschrijving restaurant', payout_driver: 'Overschrijving koerier', stripe_fee: 'Stripe-kosten', manual: 'Manuele boeking', reversal: 'Tegenboeking', expense: 'Aankoop / kosten', expense_payment: 'Betaling van uitgave' }
+  fr: { order_commission: 'Commission restaurant (HT)', order_commission_vat: 'TVA sur commission', order_delivery_share: 'Frais de système Fairide (HT)', order_delivery_share_vat: 'TVA sur frais de système', order_delivery_bonus: 'Hausse de course payée par Fairide', order_commission_reversal: 'Commission annulée (remboursement intégral)', order_cancellation: 'Annulation', order_promo_code: 'Code promo payé par Fairide', order_balance_used: 'Solde Fairide utilisé', tip_payment: 'Pourboire payé', tip_refund: 'Pourboire rendu', payout_restaurant_reversal: 'Reprise sur virement restaurant', payout_driver_reversal: 'Reprise sur virement livreur', balance_grant: 'Solde offert', payout_restaurant_commission_refund: 'Commission rendue au commerce', subscription_sale: 'Abonnement', placement_sale: 'Mise en avant', order_delivery_margin: 'Marge Fairide livraison', order_restaurant_due: 'Dû restaurant', order_driver_due: 'Dû livreur', order_payment: 'Paiement client', refund: 'Remboursement', payout_restaurant: 'Virement restaurant', payout_driver: 'Virement livreur', stripe_fee: 'Frais Stripe', manual: 'Écriture manuelle', reversal: 'Extourne', expense: 'Achat / frais', expense_payment: 'Paiement de dépense' },
+  en: { order_commission: 'Restaurant commission (excl. VAT)', order_commission_vat: 'VAT on commission', order_delivery_share: 'Fairide system fee (excl. VAT)', order_delivery_share_vat: 'VAT on system fee', order_delivery_bonus: 'Courier fee increase paid by Fairide', order_commission_reversal: 'Commission cancelled (full refund)', order_cancellation: 'Cancellation', order_promo_code: 'Promo code paid by Fairide', order_balance_used: 'Fairide balance used', tip_payment: 'Tip paid', tip_refund: 'Tip returned', payout_restaurant_reversal: 'Reversal on restaurant transfer', payout_driver_reversal: 'Reversal on courier transfer', balance_grant: 'Balance granted', payout_restaurant_commission_refund: 'Commission returned to the business', subscription_sale: 'Subscription', placement_sale: 'Featured placement', order_delivery_margin: 'Fairide delivery margin', order_restaurant_due: 'Due to restaurant', order_driver_due: 'Due to courier', order_payment: 'Customer payment', refund: 'Refund', payout_restaurant: 'Restaurant transfer', payout_driver: 'Courier transfer', stripe_fee: 'Stripe fee', manual: 'Manual entry', reversal: 'Reversal', expense: 'Purchase / expense', expense_payment: 'Expense payment' },
+  nl: { order_commission: 'Restaurantcommissie (excl. btw)', order_commission_vat: 'Btw op commissie', order_delivery_share: 'Systeemkosten Fairide (excl. btw)', order_delivery_share_vat: 'Btw op systeemkosten', order_delivery_bonus: 'Ritverhoging betaald door Fairide', order_commission_reversal: 'Commissie geannuleerd (volledige terugbetaling)', order_cancellation: 'Annulering', order_promo_code: 'Promocode betaald door Fairide', order_balance_used: 'Fairide-saldo gebruikt', tip_payment: 'Fooi betaald', tip_refund: 'Fooi teruggegeven', payout_restaurant_reversal: 'Inhouding op overschrijving restaurant', payout_driver_reversal: 'Inhouding op overschrijving koerier', balance_grant: 'Saldo toegekend', payout_restaurant_commission_refund: 'Commissie terug aan de zaak', subscription_sale: 'Abonnement', placement_sale: 'Uitgelichte plaats', order_delivery_margin: 'Fairide-marge levering', order_restaurant_due: 'Verschuldigd restaurant', order_driver_due: 'Verschuldigd koerier', order_payment: 'Klantbetaling', refund: 'Terugbetaling', payout_restaurant: 'Overschrijving restaurant', payout_driver: 'Overschrijving koerier', stripe_fee: 'Stripe-kosten', manual: 'Manuele boeking', reversal: 'Tegenboeking', expense: 'Aankoop / kosten', expense_payment: 'Betaling van uitgave' }
 });
 
 export const INVOICE_STATUS_LABELS = avecCouleurs(

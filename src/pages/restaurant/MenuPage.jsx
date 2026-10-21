@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useOutletContext, Link } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { api } from '../../api';
@@ -463,8 +463,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // il faisait défiler vers #menu-concierge, qui n'existe que côté restaurateur — en console, le bouton
   // ne faisait que refermer la carte de démarrage.
 
-  // « Geste prix » sur la carte déjà en ligne : tous les prix ± X % (arrondi au demi-euro supérieur), après confirmation.
+  // « Geste prix » sur la carte déjà en ligne : tous les prix ± X %, après confirmation. Outil de l'équipe (audit du 19/10,
+  // admin-31) : au plus +10 %, arrondi au 0,10 € inférieur comme la hausse, « à la demande de » noté dans l'historique des
+  // plats ; si la carte signée ne l'est plus, le commerce est invité à la revalider (le serveur s'en charge et le dit).
   const [ajustPct, setAjustPct] = useState('');
+  const [ajustDemandePar, setAjustDemandePar] = useState('');
   const [ajustConfirm, setAjustConfirm] = useState(false);
   const [ajusting, setAjusting] = useState(false);
   async function ajusterTousLesPrix() {
@@ -472,10 +475,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     if (!Number.isFinite(percent) || percent === 0) { toast(t('menuPage.adjustInvalid'), 'erreur'); return; }
     setAjusting(true);
     try {
-      const r = await api(`/restaurants/${restoId}/menu/adjust-prices`, { method: 'POST', token, body: { percent } });
+      const r = await api(`/restaurants/${restoId}/menu/adjust-prices`, { method: 'POST', token, body: { percent, requestedBy: ajustDemandePar.trim() || undefined } });
       await loadDashboard(restoId);
-      setAjustConfirm(false); setAjustPct('');
-      toast(t('menuPage.adjustDone', { n: r.updated, p: `${percent > 0 ? '+' : ''}${percent} %` }), 'succes');
+      setAjustConfirm(false); setAjustPct(''); setAjustDemandePar('');
+      toast(`${t('menuPage.adjustDone', { n: r.updated, p: `${percent > 0 ? '+' : ''}${percent} %` })}${r.cardToRevalidate ? ` ${t('menuPage.adjustRevalidate')}` : ''}`, 'succes');
     } catch (e) { toast(e.message, 'erreur'); } finally { setAjusting(false); }
   }
 
@@ -846,25 +849,28 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
 
       {restaurant.menu.length > 0 && modeAdmin && (
         <div className="card geste-prix-carte" id="menu-geste-prix">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.adjustTitle')}</h3>
-          <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.adjustIntro')}</p>
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.adjustTitleTeam')}</h3>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.adjustIntroTeam')}</p>
           <div className="row" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             {[-20, -15, -10, -5, 5, 10].map((v) => (
               <button key={v} type="button" className={`chip${Number(ajustPct) === v ? ' active' : ''}`} onClick={() => setAjustPct(String(v))}>{v > 0 ? '+' : ''}{v} %</button>
             ))}
-            <input type="number" step="1" min="-50" max="50" value={ajustPct} onChange={(e) => setAjustPct(e.target.value)} placeholder="%" style={{ width: 90 }} aria-label={t('menuPage.adjustCustom')} />
+            <input type="number" step="1" min="-50" max="10" value={ajustPct} onChange={(e) => setAjustPct(e.target.value)} placeholder="%" style={{ width: 90 }} aria-label={t('menuPage.adjustCustom')} />
             <button type="button" className="btn-teal btn-sm" disabled={!ajustPct || Number(ajustPct) === 0} onClick={() => setAjustConfirm(true)}>{t('menuPage.adjustButton')}</button>
           </div>
           {ajustConfirm && (
             <div className="card" style={{ marginTop: 10, padding: 12, border: '1px solid var(--line)' }}>
-              <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.adjustConfirm', { n: restaurant.menu.length, p: `${Number(ajustPct) > 0 ? '+' : ''}${Number(ajustPct)} %` })}</p>
+              <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.adjustConfirmTeam', { n: restaurant.menu.length, p: `${Number(ajustPct) > 0 ? '+' : ''}${Number(ajustPct)} %` })}</p>
+              <div className="field" style={{ margin: '0 0 8px' }}>
+                <label htmlFor="ajust-demande-par">{t('menuPage.adjustRequestedBy')}</label>
+                <input id="ajust-demande-par" value={ajustDemandePar} onChange={(e) => setAjustDemandePar(e.target.value)} placeholder={t('menuPage.adjustRequestedByPh')} maxLength={160} />
+              </div>
               <div className="row" style={{ gap: 8 }}>
                 <button type="button" className="btn-teal" disabled={ajusting} onClick={ajusterTousLesPrix}>{ajusting ? '…' : t('menuPage.adjustYes')}</button>
                 <button type="button" className="btn-ghost" onClick={() => setAjustConfirm(false)}>{t('menuPage.adjustNo')}</button>
               </div>
             </div>
           )}
-          <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{t('menuPage.adjustAlt')} <Link to="/dashboard/promotions">{t('menuPage.adjustAltLink')}</Link></p>
         </div>
       )}
 

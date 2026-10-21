@@ -1876,6 +1876,12 @@ export default {
       confirmedOk: 'Address confirmed: it will be saved exactly as you wrote it.'
     },
     adminReviews: {
+      statsAllHint: "Average and low ratings: over all reviews of the chosen filter, not just this page.",
+      deleteNoticeHint: "Its author gets an e-mail: what is removed, your reason, and how to contest it.",
+      deleteReasonLabel: "Reason for removal (sent to the author)",
+      deleteReasonPh: "E.g. insulting remarks about the staff",
+      deleteConfirm: "Remove the review",
+      deleteReasonShort: "Write a reason (at least 5 characters): it is sent to the author.",
       foodRating: 'Food rating',
       foodComment: 'Food comment',
       statFood: 'Food average',
@@ -2652,6 +2658,9 @@ export default {
       toastDisabled: 'Rule disabled.'
     },
     adminFinance: {
+      totalRevenueOrders: "Fairide revenue (orders)",
+      onSiteSales: "Paid at the business, not through Fairide ({n})",
+      definitionsHint: "Money that goes through Fairide only: sales paid at the business are shown apart, training, simulation and test orders are left out, and a fully refunded order earns nothing. Days and months in Brussels time. Accounting adds subscriptions and featured placements.",
       title: 'Finance',
       restoRevenue: 'Restaurant revenue',
       totalDeliveryFees: 'Total delivery fees',
@@ -2749,6 +2758,8 @@ export default {
       balancePill: 'Balance {balance}'
     },
     adminPayments: {
+      onSiteApart: "Paid at the business, apart ({n}): nothing received by Fairide",
+      componentDriverShare: "Courier share (delivery)",
       title: 'Payments',
       restoPayoutsDone: 'Restaurant payouts done',
       restoPayoutsPending: 'Restaurant payouts pending',
@@ -3355,7 +3366,7 @@ export default {
       franchiseLevel_depasse: "Threshold exceeded: the exemption ended with the transaction that exceeded it. Declare it to the VAT office, set FAIRIDE_VAT_REGIME=assujetti and see the accountant right away.",
       franchiseProrated: "Threshold prorated for the year activity started ({annual} for a full year) — a cautious reading, to be confirmed with the accountant.",
       franchiseAccount_700_COMM: "Commissions",
-      franchiseAccount_701_LIVR: "Delivery margin (bike)",
+      franchiseAccount_701_LIVR: "Delivery margin",
       franchiseAccount_702_SERV: "System fees",
       franchiseAccount_703_ABO: "Subscriptions",
       franchiseAccount_704_MEA: "Placements",
@@ -3559,6 +3570,33 @@ export default {
       unlock: 'Unlock'
     },
     adminRestos: {
+      subBillingConfirmNotify: "Turn subscription billing on for {name}? Until it subscribes, it no longer receives orders, neither takeaway nor delivery. It gets an e-mail explaining this and where to subscribe.",
+      subBillingOnNotifiedToast: "Billing turned on: the business has been told by e-mail. It receives no orders until it subscribes.",
+      subscriptionLineWords: "Subscription: {offer} · Stripe: {sub} · Delivery: {mode}",
+      subOffered: "offered (launch)",
+      subBilled: "billed",
+      subDemo: "demo, never billed",
+      subBilledNoOrders: "Billed without an active subscription: this business receives no orders until it subscribes.",
+      inStoreMarkConfirm: "Mark the menu of {name} as \"in-store prices checked\"? Its \"All good\" page will then offer to add Fairide's commission (+10 %). Only do this if the prices were checked at the counter, never on a menu imported from a platform.",
+      inStoreUnmarkConfirm: "Remove \"prices checked\"? The \"All good\" page will no longer offer to add the commission.",
+      inStoreUnmarkAddedWarn: "It had chosen to add the commission: its prices stay raised; fix them in its menu if this was a mistake.",
+      zoneDeliveryOffConfirm: "Turn Fairide delivery off for {name}? Only takeaway stays open, and the business is told by e-mail.",
+      zoneDeliveryOnConfirm: "Turn Fairide delivery back on for {name}? The business is told by e-mail.",
+      toastApprovedOnline: "Business approved and online: it has been told by e-mail.",
+      toastApprovedNotOnline: "Business approved. Not online yet: {reason} It goes online by itself as soon as this is settled.",
+      approveBodyOneStep: "One approval only: if it is ready, it goes online at once; otherwise by itself as soon as it is.",
+      listingHintOneStep: "A real business goes online by itself once approved and ready (menu validated, contract accepted). \"Remove from site\" keeps it offline until the team publishes it again. Demo businesses always stay visible.",
+      refusalTitle: "Approval not possible for now",
+      refusalList: "To fix: {list}.",
+      refusalOk: "Understood",
+      deleteBodyKept: "{name} is removed from the site at once. With no orders and no accounting documents, it is deleted with its menu; otherwise it is deactivated, and its orders and invoices are kept (accounting obligation). It does not come back online by itself. The owner account ({email}) is deleted too if it has no other business. Irreversible.",
+      toastDeletedFully: "Business deleted (no orders or invoices to keep).",
+      noReviewsYet: "no reviews yet",
+      readyPill: "Ready",
+      missingPill: "Missing: {n}",
+      readyTitle: "Ready for launch",
+      missingTitle: "Not ready: {n} point(s) to settle",
+      readyHint: "Same rule as the GO card: what would refuse an order, then what to check.",
       phoneHiddenPublic: 'hidden from the public',
       zoneDeliveryOwn: 'Delivers with its own couriers: Fairide delivery does not apply.',
       zoneDeliveryOffBadge: 'Fairide delivery off (no courier in the area)',
@@ -3788,6 +3826,21 @@ export default {
       unpublishReasonShort: 'Write a reason of at least 10 characters: it is sent to the business.'
     },
     adminOrders: {
+      paidAtShopShort: "at the shop",
+      paidAtShop: "paid at the business (not through Fairide)",
+      trainingOrder: "training order",
+      onSiteNothingDue: "nothing (paid on site)",
+      callClient: "Call the customer:",
+      paymentLine: "Payment: {mode}",
+      refundRemainingLine: "Paid by card: {paid} · already refunded: {done} · still refundable: {left}",
+      refundNothingLeft: "Everything has already been refunded on this order.",
+      refundNotCard: "No refund here: this order was not paid by card (paid at the business, with the balance, or not paid yet).",
+      refundOverRemaining: "At most {max}: what is left to refund on this order.",
+      refundWho_restaurant: "Taken back from the business transfer for this order; the business is told.",
+      refundWho_driver: "Taken back from the courier's delivery transfer, never from the tip; the courier is told.",
+      refundWho_fairide: "Paid by Fairide: nothing is taken back from the business or the courier.",
+      confirmRefundWords: "Refund {amount} to the customer, {who}. This triggers a real Stripe refund.",
+      refundNothingReclaimed: "Customer refunded. Nothing could be taken back: no transfer had been made for this order. Settle it by hand if needed.",
       noneForFilter: 'No order for this filter.',
       refundedSuffix: '· refunded',
       pickupNoShowBadge: 'Not collected',
@@ -3919,6 +3972,8 @@ export default {
       documentsExpiringSoon: 'Documents expiring soon'
     },
     adminCommon: {
+      markTestConfirm: "Mark this account as a test account? It will be able to order delivery and pay online before GO, and all its orders, past ones included, leave the money figures (dashboard, Finance, Reports). The change is logged in its follow-up.",
+      markRealConfirm: "Make this a real account again? Its orders come back into the money figures, and it loses access to delivery and online payment before GO.",
       close: 'Close',
       cancel: 'Cancel',
       loading: 'Loading...',
@@ -5243,6 +5298,9 @@ export default {
       origin_script: "Fairide (menu import)",
     },
     adminTva: {
+      cancelTitle: "Cancel this VAT change?",
+      cancelText: "{scope}: {from} % → {to} %. The {n} business(es) that were told get an e-mail: the change will not happen, their dishes keep their rate.",
+      cancelledToast: "Change cancelled: {n} business(es) told by e-mail.",
       title: "Change a VAT rate for all businesses",
       help: "For a reform (takeaway meals 6% → 12%…): every business concerned gets an email, can refuse for at least 7 days, and without a reply the rate is applied on the effective date. Its menu stays validated, under the pricing mandate. Check the rate on the FPS Finance website before announcing.",
       defaults: "Rates proposed for new dishes: dishes {food}%, soft drinks {soft}%, alcohol {alcohol}%.",
@@ -5333,6 +5391,11 @@ export default {
       cancel: "Cancel"
     },
     validerCarte: {
+      adminPhoneShop: "Business line",
+      adminPhoneOwner: "Owner",
+      adminPhoneManager: "Manager",
+      adminPhoneChoice: "Number to send the link to",
+      adminNoMobile: "No known mobile: send the link by e-mail or copy it.",
       pageTitle: "Validate my menu",
       loading: "Loading your menu…",
       intro: "Here is your menu as Fairide prepared it, with your prices. If everything is right, tap “Looks good”: nothing is published before you validate.",
@@ -5450,6 +5513,12 @@ export default {
       alreadyArchived: "The closed month is already archived.",
     },
     menuPage: {
+      adjustTitleTeam: "Adjust all prices on the menu",
+      adjustIntroTeam: "Team tool. The menu shows the business's in-store prices; an increase is capped at 10%. If the menu comes from another platform, bring it back to the in-store prices. Each price is rounded down to €0.10, and the change is logged in the dish history.",
+      adjustConfirmTeam: "Apply {p} to the {n} products on the menu? Each price is rounded down to €0.10. If the menu was signed, the business will have to validate it again: it is told by e-mail, and its orders wait for that validation.",
+      adjustRequestedBy: "Requested by (optional)",
+      adjustRequestedByPh: "E.g. the owner, on the phone on 21/10",
+      adjustRevalidate: "The business must validate the menu again: it received the link by e-mail.",
       lockedTitle: 'Your menu and prices are managed with Fairide',
       lockedText: 'Nothing changes without your agreement and ours: your displayed prices are your in-store prices (with the increase you asked for, if any). A dish sold out? Mark it out of stock below, it comes back tomorrow. A price, a dish, a photo to change? Tell us just below, we handle it. A price increase? Request it further down, it applies once we have validated it.',
       afterCreateHelpLocked: 'Your menu as customers see it. The "Sold out" button removes a dish for today; everything else changes through a request.',
@@ -6408,6 +6477,9 @@ export default {
       removedSub: 'Customers no longer see you and cannot order. The details were sent to you by e-mail: reply to it if you disagree or once it is sorted out.'
     },
     dashResto: {
+      subRequiredTitle: "You no longer receive orders",
+      subRequiredWeb: "Fairide has turned billing on for your subscription. Take it out in My account › Subscription (first month free): your orders resume as soon as it is active.",
+      subRequiredApp: "Fairide has turned billing on for your subscription: your orders resume as soon as it is active. You received an e-mail about it.",
       zoneDeliveryOffTitle: 'Fairide delivery paused in your area',
       zoneDeliveryOffText: 'No Fairide courier covers your area for now: delivery is closed on your page, takeaway stays open. As soon as a courier covers your area we switch it back on. If you deliver with your own couriers, tell us from My business.',
       today: 'Today',
@@ -8134,6 +8206,13 @@ export default {
       periods_month: '{n} month(s)'
     },
     adminPlacements: {
+      refuseTitle: "Refuse the request from {name}?",
+      refuseBody: "The business gets an e-mail with your reason. If it had already paid, it is refunded.",
+      stopTitle: "Stop the featured placement of {name}?",
+      stopBody: "It stops today, and only the days already shown are charged. The business gets an e-mail with your reason. Irreversible.",
+      stopBodyPaid: "It stops today. Paid online ({amount} excl. VAT): the unused part is refunded at once through Stripe. The business gets an e-mail with your reason. Irreversible.",
+      reasonLabel: "Reason (sent to the business)",
+      reasonPh: "E.g. slot reserved for an event",
       addPosition: 'Add a position',
       removePosition: 'Remove position {n}',
       positionsSaved: '{n} position(s) on sale per row.',
@@ -8950,6 +9029,7 @@ export default {
       joinDriverP2NoP2p: 'Student-self-employed or self-employed: you choose your status'
     },
     simulation: {
+      plusDelivery: "+ delivery",
       benchTakeoverConfirm: 'This device is the terminal of “{name}”. Connecting it to the simulation disconnects it from that shop, which will have to reconnect it. Continue?',
       tk_category_d: '{n} product(s) in this category',
       tk_category: 'Menu: {name}',

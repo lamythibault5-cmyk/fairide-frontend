@@ -586,9 +586,9 @@ and the courier's delivery VAT are **not** affected.
 On an order paid online Fairide keeps **10% of the price paid** (`commissionFairide(subtotal, pricing)` = subtotal × r, plus
 Fairide's VAT if it ever becomes VAT-registered; `commission_vat` = 0 under the franchise): a €10 burger gives €1.00 to Fairide,
 €9.00 to the business. The business may raise its prices (`restaurants.price_markup_percent`, requested by the business,
-applied by the team) **up to `hausseMaxPourcent` = r / (1 − r) = 11.1%**, the increase that gives it its full in-store price
-back (€10 → €11.10 → €9.99 for it); never more. One function applies it everywhere (`appliquerHausse` in
-`../fairide-backend/prixMagasin.js`): own price kept in `price_base`/`delta_base`, paid add-ons follow, rounded up to €0.10.
+applied by the team) **up to `hausseMaxPourcent` = 10 %** (founder, 2026-10-16, whatever the VAT regime: €10 → €11.00 → €9.90 for
+it; it was r / (1 − r) = 11.1 % from 10-13 to 10-16); never more. One function applies it everywhere (`appliquerHausse` in
+`../fairide-backend/prixMagasin.js`): own price kept in `price_base`/`delta_base`, paid add-ons follow, rounded DOWN to €0.10 (`pricing.js`, `prixMagasin.js`; the team's « adjust all prices » tool rounds the same way, audit admin-31).
 The « C'est bon » page offers the max increase in one tap, only on cards with checked in-store prices.
 The customer additionally pays the **delivery fee only — nothing is added on top** (model of 2026-10-08 evening):
 €5 excl. VAT for the first km, then €0.80 excl. VAT per started km, 21% VAT added (€6.05 incl. VAT minimum). **10% of it

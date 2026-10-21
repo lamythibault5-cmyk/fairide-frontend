@@ -4,18 +4,19 @@ import { api, totalDepuisEntetes } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import ReasonDialog from '../../components/admin/ReasonDialog';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { ErrorCard, Pager, ResultCount } from '../../components/admin/AdminListTools';
-import { fmtDateTime, filterBySearch, downloadCsv } from './adminUtils';
+import { fmtDateTime, downloadCsv, useDebouncedValue } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 
 // Application Avis : modération des avis clients sur les commerces, avec recherche, filtre par note,
-// note moyenne, et suppression d'un avis abusif. Pagination côté serveur (limit/offset + X-Total-Count) ;
-// les filtres par note et la recherche affinent la page affichée. Aucune note de livraison : le livreur n'est
+// note moyenne, et retrait d'un avis abusif. Pagination côté serveur (limit/offset + X-Total-Count). Filtres, recherche et
+// moyenne sont calculés par le serveur sur TOUS les avis (audit du 19/10, admin-35 : ils ne portaient que sur la page
+// chargée). Retirer un avis demande un motif, envoyé à son auteur avec ses recours (DSA, art. 17). Aucune note de livraison : le livreur n'est
 // pas noté (contrat livreur, présomption de salariat), le serveur ne la renvoie plus.
 const PAGE_SIZE = 50;
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
@@ -48,6 +49,8 @@ export default function AdminReviewsPage() {
   const [page, setPage] = useState(0);
   const [erreur, setErreur] = useState(null);
   const [search, setSearch] = useState('');
+  const q = useDebouncedValue(search, 350);
+  const [statsServeur, setStatsServeur] = useState(null);
   const [filtre, setFiltre] = useEtatPage('filtre', searchParams.get('low') ? 'low' : 'all', { forcer: !!searchParams.get('low') }); // all | low | high | comments
   const [aSupprimer, setASupprimer] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -56,34 +59,29 @@ export default function AdminReviewsPage() {
 
   function load() {
     setReviews(null); setErreur(null);
-    api(`/admin/reviews?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`, { token, withHeaders: true })
-      .then(({ data, headers }) => { const l = Array.isArray(data) ? data : (data?.rows || []); setReviews(l); setTotal(totalDepuisEntetes(headers, l)); })
+    const p = new URLSearchParams({ limit: PAGE_SIZE, offset: page * PAGE_SIZE, stats: '1' });
+    if (filtre === 'low') p.set('low', '1');
+    if (filtre === 'high') p.set('high', '1');
+    if (filtre === 'comments') p.set('comments', '1');
+    if (q.trim()) p.set('q', q.trim());
+    api(`/admin/reviews?${p.toString()}`, { token, withHeaders: true })
+      .then(({ data, headers }) => { const l = Array.isArray(data) ? data : (data?.rows || []); setReviews(l); setTotal(data?.total ?? totalDepuisEntetes(headers, l)); setStatsServeur(data?.stats || null); })
       .catch((e) => setErreur(e.message));
   }
-  useEffect(() => { load(); }, [token, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [token, page, filtre, q]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setPage(0); }, [filtre, q]);
 
-  const filtres = useMemo(() => {
-    let l = filterBySearch(reviews || [], search, (r) => [r.clientName, r.restaurantName, r.foodComment]);
-    if (filtre === 'low') l = l.filter(estBas);
-    if (filtre === 'high') l = l.filter((r) => r.foodRating >= 4);
-    if (filtre === 'comments') l = l.filter((r) => r.foodComment && r.foodComment.trim());
-    return l;
-  }, [reviews, search, filtre]);
+  const filtres = reviews || [];
+  const stats = useMemo(() => ({
+    food: statsServeur?.avgFood !== null && statsServeur?.avgFood !== undefined ? Number(statsServeur.avgFood).toFixed(1) : '-',
+    low: statsServeur ? statsServeur.low : (reviews || []).filter(estBas).length
+  }), [statsServeur, reviews]);
 
-  const stats = useMemo(() => {
-    const l = reviews || [];
-    const moy = (arr) => (arr.length ? (arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1) : '-');
-    return {
-      food: moy(l.map((r) => r.foodRating).filter(Boolean)),
-      low: l.filter(estBas).length
-    };
-  }, [reviews]);
-
-  async function supprimer() {
+  async function supprimer(motif) {
     if (!aSupprimer) return;
     setBusy(true);
     try {
-      await api(`/admin/reviews/${aSupprimer.id}`, { method: 'DELETE', token });
+      await api(`/admin/reviews/${aSupprimer.id}`, { method: 'DELETE', token, body: { reason: motif } });
       setReviews((prev) => prev.filter((r) => r.id !== aSupprimer.id));
       setTotal((t) => Math.max(0, t - 1));
       toast(tr('adminSettings.toastReviewDeleted'));
@@ -116,7 +114,7 @@ export default function AdminReviewsPage() {
         <div className="stat-card"><div className="num">{total}</div><div className="label">{tr('adminReviews.statTotal')}</div></div>
         <div className="stat-card"><div className="num" style={{ color: stats.low > 0 ? 'var(--red)' : undefined }}>{stats.low}</div><div className="label">{tr('adminReviews.statLow')}</div></div>
       </div>
-      {total > PAGE_SIZE && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: (reviews || []).length, total })}</p>}
+      <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminReviews.statsAllHint')}</p>
 
       <div className="admin-control-panel">
         <input aria-label={tr('adminReviews.phSearch')} placeholder={tr('adminReviews.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
@@ -151,13 +149,16 @@ export default function AdminReviewsPage() {
       ))}
       <Pager page={page} pageSize={PAGE_SIZE} total={total} onPage={setPage} />
 
-      <ConfirmDialog
+      <ReasonDialog
         open={!!aSupprimer}
         title={tr('adminReviews.confirmDelete')}
-        message={aSupprimer ? tr('adminReviews.confirmDeleteBody', { client: aSupprimer.clientName, resto: aSupprimer.restaurantName }) : ''}
-        danger
+        message={aSupprimer ? `${tr('adminReviews.confirmDeleteBody', { client: aSupprimer.clientName, resto: aSupprimer.restaurantName })} ${tr('adminReviews.deleteNoticeHint')}` : ''}
+        label={tr('adminReviews.deleteReasonLabel')}
+        placeholder={tr('adminReviews.deleteReasonPh')}
+        confirmLabel={tr('adminReviews.deleteConfirm')}
+        multiline danger
         loading={busy}
-        onConfirm={supprimer}
+        onConfirm={(motif) => { if (motif.length < 5) { toast(tr('adminReviews.deleteReasonShort'), 'erreur'); return; } supprimer(motif); }}
         onCancel={() => setASupprimer(null)}
       />
     </div>

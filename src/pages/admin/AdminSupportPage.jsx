@@ -101,14 +101,16 @@ export default function AdminSupportPage() {
     if (category) params.set('category', category);
     if (tag) params.set('tag', tag);
     if (escalatedOnly) params.set('escalated', '1');
+    // « SLA dépassés » filtré par le serveur sur tous les tickets, pas sur les 50 chargés (audit du 19/10, admin-58).
+    if (slaOnly) params.set('sla', '1');
     if (mine && user?.email) params.set('assignedToEmail', user.email);
     if (q) params.set('q', q);
     params.set('limit', PAGE_SIZE);
     params.set('offset', page * PAGE_SIZE);
     api(`/admin/support/tickets?${params.toString()}`, { token }).then(setData).catch((e) => setErreur(e.message));
   }
-  useEffect(() => { load(); }, [status, priority, category, tag, escalatedOnly, mine, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setPage(0); }, [status, priority, category, tag, escalatedOnly, mine, q]);
+  useEffect(() => { load(); }, [status, priority, category, tag, escalatedOnly, slaOnly, mine, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setPage(0); }, [status, priority, category, tag, escalatedOnly, slaOnly, mine, q]);
   // Ouverture directe par l'adresse (?id=…) consommée une seule fois.
   // Relu à chaque nouvel ?id= : la recherche globale y mène aussi quand Support est déjà ouvert (audit du 19/10, admin-09).
   const idParam = searchParams.get('id');

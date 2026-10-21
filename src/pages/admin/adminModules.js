@@ -176,7 +176,7 @@ export function attentionItems(o) {
     { key: 'ordersPending', count: n(o.orders?.pending), to: '/admin/orders?status=nouveau', tone: 'warn' },
     { key: 'supportSla', count: n(o.support?.slaBreached), to: '/admin/support?sla=1', tone: 'danger' },
     { key: 'tasksOverdue', count: n(o.tasks?.overdue), to: '/admin/tasks?due=overdue', tone: 'danger' },
-    { key: 'restaurantsPending', count: n(o.restaurants?.pending), to: '/admin/restaurants?status=pending', tone: 'warn' },
+    { key: 'restaurantsPending', count: n(o.restaurants?.pending), to: '/admin/restaurants?status=pending&nature=real', tone: 'warn' },
     { key: 'driversPending', count: n(o.drivers?.pending), to: '/admin/drivers?status=pending', tone: 'warn' },
     { key: 'couriersPending', count: n(o.couriers?.pending), to: '/admin/couriers', tone: 'warn' },
     { key: 'documentsExpired', count: n(o.documents?.expired), to: '/admin/documents?expiry=expired', tone: 'danger' },

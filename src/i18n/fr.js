@@ -1876,6 +1876,12 @@ export default {
       confirmedOk: 'Adresse confirmée : elle sera enregistrée telle que tu l\'as écrite.'
     },
     adminReviews: {
+      statsAllHint: "Moyenne et notes basses : sur tous les avis du filtre choisi, pas seulement sur cette page.",
+      deleteNoticeHint: "Son auteur reçoit un e-mail : ce qui est retiré, ton motif, et comment contester.",
+      deleteReasonLabel: "Motif du retrait (envoyé à l'auteur)",
+      deleteReasonPh: "Ex. propos injurieux envers le personnel",
+      deleteConfirm: "Retirer l'avis",
+      deleteReasonShort: "Écris un motif (5 caractères au moins) : il est envoyé à l'auteur.",
       foodRating: 'Note plats',
       foodComment: 'Commentaire plats',
       statFood: 'Moyenne plats',
@@ -2652,6 +2658,9 @@ export default {
       toastDisabled: 'Règle désactivée.'
     },
     adminFinance: {
+      totalRevenueOrders: "Revenu Fairide (commandes)",
+      onSiteSales: "Payé au commerce, hors Fairide ({n})",
+      definitionsHint: "Argent qui passe par Fairide seulement : les ventes payées au commerce sont à part, les commandes d'essai, de simulation et de test n'y sont pas, une commande intégralement remboursée ne rapporte rien. Jours et mois à l'heure de Bruxelles. La Comptabilité ajoute abonnements et mises en avant.",
       title: 'Finance',
       restoRevenue: 'CA restaurants',
       totalDeliveryFees: 'Total frais de livraison',
@@ -2749,6 +2758,8 @@ export default {
       balancePill: 'Solde {balance}'
     },
     adminPayments: {
+      onSiteApart: "Payé au commerce, à part ({n}) : rien reçu par Fairide",
+      componentDriverShare: "Part du livreur (course)",
       title: 'Paiements',
       restoPayoutsDone: 'Payouts restaurants effectués',
       restoPayoutsPending: 'Payouts restaurants en attente',
@@ -3355,7 +3366,7 @@ export default {
       franchiseLevel_depasse: "Seuil dépassé : la franchise a pris fin à l'opération qui l'a fait dépasser. Le déclarer au bureau de gestion TVA, poser FAIRIDE_VAT_REGIME=assujetti et voir le comptable sans attendre.",
       franchiseProrated: "Seuil ramené au prorata de l'année du début d'activité ({annual} sur une année complète) — lecture prudente, à confirmer avec le comptable.",
       franchiseAccount_700_COMM: "Commissions",
-      franchiseAccount_701_LIVR: "Marge de livraison (vélo)",
+      franchiseAccount_701_LIVR: "Marge de livraison",
       franchiseAccount_702_SERV: "Frais de système",
       franchiseAccount_703_ABO: "Abonnements",
       franchiseAccount_704_MEA: "Mises en avant",
@@ -3559,6 +3570,33 @@ export default {
       unlock: 'Déverrouiller'
     },
     adminRestos: {
+      subBillingConfirmNotify: "Activer la facturation de l'abonnement pour {name} ? Tant qu'il n'a pas souscrit, il ne reçoit plus de commandes, ni à emporter ni en livraison. Il reçoit un e-mail qui le lui explique et lui dit où souscrire.",
+      subBillingOnNotifiedToast: "Facturation activée : le commerce est prévenu par e-mail. Il ne reçoit plus de commandes tant qu'il n'a pas souscrit.",
+      subscriptionLineWords: "Abonnement : {offer} · Stripe : {sub} · Livraison : {mode}",
+      subOffered: "offert (lancement)",
+      subBilled: "facturé",
+      subDemo: "démo, jamais facturé",
+      subBilledNoOrders: "Facturé sans abonnement actif : ce commerce ne reçoit pas de commandes tant qu'il n'a pas souscrit.",
+      inStoreMarkConfirm: "Marquer la carte de {name} « prix magasin vérifiés » ? Sa page « C'est bon » lui proposera alors d'ajouter la commission de Fairide (+10 %). À faire seulement si les prix ont été relevés au comptoir, jamais sur une carte importée d'une plateforme.",
+      inStoreUnmarkConfirm: "Retirer « prix vérifiés » ? La page « C'est bon » ne lui proposera plus d'ajouter la commission.",
+      inStoreUnmarkAddedWarn: "Il avait choisi d'ajouter la commission : ses prix restent augmentés, à corriger dans sa carte si c'était une erreur.",
+      zoneDeliveryOffConfirm: "Couper la livraison Fairide pour {name} ? Seul l'à emporter reste ouvert, et le commerce est prévenu par e-mail.",
+      zoneDeliveryOnConfirm: "Réactiver la livraison Fairide pour {name} ? Le commerce est prévenu par e-mail.",
+      toastApprovedOnline: "Commerce approuvé et en ligne : il est prévenu par e-mail.",
+      toastApprovedNotOnline: "Commerce approuvé. Pas encore en ligne : {reason} Il passe en ligne de lui-même dès que c'est réglé.",
+      approveBodyOneStep: "Une seule validation : s'il est prêt, il passe en ligne aussitôt ; sinon, de lui-même dès qu'il l'est.",
+      listingHintOneStep: "Un vrai commerce passe en ligne de lui-même une fois approuvé et prêt (carte validée, contrat accepté). « Retirer du site » le garde hors ligne jusqu'à ce que l'équipe le republie. Les commerces de démo restent toujours visibles.",
+      refusalTitle: "Validation impossible pour le moment",
+      refusalList: "À corriger : {list}.",
+      refusalOk: "Compris",
+      deleteBodyKept: "{name} est retiré du site tout de suite. S'il n'a ni commande ni pièce comptable, il est supprimé avec sa carte ; sinon il est désactivé, et ses commandes et factures sont conservées (obligation comptable). Il ne revient pas en ligne tout seul. Le compte du restaurateur ({email}) est supprimé aussi s'il n'a pas d'autre commerce. Irréversible.",
+      toastDeletedFully: "Commerce supprimé (aucune commande ni facture à garder).",
+      noReviewsYet: "pas encore d'avis",
+      readyPill: "Prêt",
+      missingPill: "Manque : {n}",
+      readyTitle: "Prêt pour le lancement",
+      missingTitle: "Pas prêt : {n} point(s) à régler",
+      readyHint: "Même règle que la carte GO : ce qui refuserait une commande, puis ce qui est à vérifier.",
       phoneHiddenPublic: 'masqué au public',
       zoneDeliveryOwn: 'Livre avec ses propres livreurs : la livraison Fairide ne le concerne pas.',
       zoneDeliveryOffBadge: 'Livraison Fairide coupée (zone sans livreur)',
@@ -3788,6 +3826,21 @@ export default {
       unpublishReasonShort: 'Écris un motif d\'au moins 10 caractères : il est envoyé au commerce.'
     },
     adminOrders: {
+      paidAtShopShort: "au commerce",
+      paidAtShop: "payée au commerce (hors Fairide)",
+      trainingOrder: "commande d'essai",
+      onSiteNothingDue: "rien (payé sur place)",
+      callClient: "Appeler le client :",
+      paymentLine: "Paiement : {mode}",
+      refundRemainingLine: "Payé par carte : {paid} · déjà remboursé : {done} · reste remboursable : {left}",
+      refundNothingLeft: "Tout a déjà été remboursé sur cette commande.",
+      refundNotCard: "Pas de remboursement ici : cette commande n'a pas été payée par carte (payée au commerce, par le solde, ou pas encore payée).",
+      refundOverRemaining: "Au plus {max} : le reste remboursable de la commande.",
+      refundWho_restaurant: "Repris sur le virement du commerce pour cette commande ; le commerce est prévenu.",
+      refundWho_driver: "Repris sur le virement de la course du livreur, jamais sur son pourboire ; le livreur est prévenu.",
+      refundWho_fairide: "Payé par Fairide : rien n'est repris au commerce ni au livreur.",
+      confirmRefundWords: "Rembourser {amount} au client, {who}. Cette action déclenche un vrai remboursement Stripe.",
+      refundNothingReclaimed: "Client remboursé. Rien n'a pu être repris : aucun virement n'avait été fait pour cette commande. À régler à la main si besoin.",
       noneForFilter: 'Aucune commande pour ce filtre.',
       refundedSuffix: '· remboursée',
       pickupNoShowBadge: 'Non récupérée',
@@ -3919,6 +3972,8 @@ export default {
       documentsExpiringSoon: 'Documents expirant bientôt'
     },
     adminCommon: {
+      markTestConfirm: "Marquer ce compte comme test ? Il pourra commander en livraison et payer en ligne avant le GO, et toutes ses commandes, passées comprises, sortent des chiffres d'argent (tableau de bord, Finances, Rapports). Le changement est noté dans son suivi.",
+      markRealConfirm: "Remettre ce compte en vrai compte ? Ses commandes reviennent dans les chiffres d'argent, et il n'a plus accès à la livraison ni au paiement en ligne avant le GO.",
       close: 'Fermer',
       cancel: 'Annuler',
       loading: 'Chargement...',
@@ -5257,6 +5312,9 @@ export default {
       origin_script: "Fairide (import de la carte)",
     },
     adminTva: {
+      cancelTitle: "Annuler ce changement de TVA ?",
+      cancelText: "{scope} : {from} % → {to} %. Les {n} commerce(s) prévenu(s) reçoivent un e-mail : le changement n'aura pas lieu, leurs plats gardent leur taux.",
+      cancelledToast: "Changement annulé : {n} commerce(s) prévenu(s) par e-mail.",
       title: "Changer un taux de TVA pour tous les commerces",
       help: "Pour une réforme (plats à emporter 6 % → 12 %…) : chaque commerce concerné reçoit un e-mail, peut refuser pendant au moins 7 jours, et sans réponse le taux est appliqué à la date d'effet. Sa carte reste validée, au nom du mandat de tarification. Vérifie le taux sur le site du SPF Finances avant d'annoncer.",
       defaults: "Taux proposés aux nouveaux plats : plats {food} %, boissons sans alcool {soft} %, alcool {alcohol} %.",
@@ -5347,6 +5405,11 @@ export default {
       cancel: "Annuler"
     },
     validerCarte: {
+      adminPhoneShop: "Ligne du commerce",
+      adminPhoneOwner: "Patron",
+      adminPhoneManager: "Responsable",
+      adminPhoneChoice: "Numéro à qui envoyer le lien",
+      adminNoMobile: "Pas de portable connu : envoie le lien par e-mail ou copie-le.",
       pageTitle: "Valider ma carte",
       loading: "Chargement de ta carte…",
       intro: "Voici ta carte telle que Fairide l'a préparée, avec tes prix. Si tout est juste, touche « C'est bon » : rien n'est publié avant ta validation.",
@@ -5466,6 +5529,12 @@ export default {
       alreadyArchived: "Le mois clos est déjà archivé.",
     },
     menuPage: {
+      adjustTitleTeam: "Ajuster tous les prix de la carte",
+      adjustIntroTeam: "Outil de l'équipe. La carte affiche les prix de salle du commerce ; une hausse est plafonnée à 10 %. Si la carte vient d'une autre plateforme, ramène-la à ses prix de salle. Chaque prix est arrondi au 0,10 € inférieur, et le changement est noté dans l'historique des plats.",
+      adjustConfirmTeam: "Appliquer {p} aux {n} produits de la carte ? Chaque prix est arrondi au 0,10 € inférieur. Si la carte était signée, le commerce devra la revalider : il est prévenu par e-mail, et ses commandes attendent sa validation.",
+      adjustRequestedBy: "À la demande de (facultatif)",
+      adjustRequestedByPh: "Ex. le patron, au téléphone le 21/10",
+      adjustRevalidate: "La carte est à revalider par le commerce : il a reçu le lien par e-mail.",
       lockedTitle: 'Ta carte et tes prix sont gérés avec Fairide',
       lockedText: 'Rien ne change sans ton accord ni le nôtre : tes prix affichés sont tes prix sur place (avec la hausse que tu as demandée, s\'il y en a une). Un plat épuisé ? Mets-le en rupture d\'un geste ci-dessous, il revient demain. Un prix, un plat, une photo à changer ? Écris-le-nous juste en dessous, on s\'en occupe. Une hausse de tes prix ? Demande-la plus bas, elle s\'applique dès qu\'on l\'a validée.',
       afterCreateHelpLocked: 'Ta carte telle que les clients la voient. Le bouton « Rupture » retire un plat pour aujourd\'hui ; tout le reste se change via une demande.',
@@ -6427,6 +6496,9 @@ export default {
       removedSub: "Tes clients ne te voient plus et ne peuvent plus commander. Le détail t'a été envoyé par e-mail : réponds-y si tu n'es pas d'accord ou quand c'est réglé."
     },
     dashResto: {
+      subRequiredTitle: "Tu ne reçois plus de commandes",
+      subRequiredWeb: "Fairide a activé la facturation de ton abonnement. Souscris-le dans Mon compte › Abonnement (premier mois offert) : tes commandes reprennent dès qu'il est actif.",
+      subRequiredApp: "Fairide a activé la facturation de ton abonnement : tes commandes reprennent dès qu'il est actif. Tu as reçu un e-mail à ce sujet.",
       zoneDeliveryOffTitle: 'Livraison Fairide suspendue dans ta zone',
       zoneDeliveryOffText: 'Aucun livreur Fairide ne couvre ta zone pour le moment : la livraison est fermée sur ta fiche, l\'à emporter reste ouvert. Dès qu\'un livreur couvre ta zone, nous la réactivons. Si tu livres avec tes propres livreurs, dis-le-nous depuis Mon commerce.',
       today: 'Aujourd\'hui',
@@ -8190,6 +8262,13 @@ export default {
       periods_month: '{n} mois'
     },
     adminPlacements: {
+      refuseTitle: "Refuser la demande de {name} ?",
+      refuseBody: "Le commerce reçoit un e-mail avec ton motif. S'il avait déjà payé, il est remboursé.",
+      stopTitle: "Arrêter la mise en avant de {name} ?",
+      stopBody: "Elle s'arrête aujourd'hui, et ne coûte que les jours déjà affichés. Le commerce reçoit un e-mail avec ton motif. Irréversible.",
+      stopBodyPaid: "Elle s'arrête aujourd'hui. Payée en ligne ({amount} HTVA) : la part non utilisée est remboursée tout de suite par Stripe. Le commerce reçoit un e-mail avec ton motif. Irréversible.",
+      reasonLabel: "Motif (envoyé au commerce)",
+      reasonPh: "Ex. place réservée à un événement",
       addPosition: 'Ajouter une position',
       removePosition: 'Retirer la position {n}',
       positionsSaved: '{n} position(s) en vente par rangée.',
@@ -9008,6 +9087,7 @@ export default {
       joinDriverP2NoP2p: 'Étudiant-indépendant ou indépendant : tu choisis ton statut'
     },
     simulation: {
+      plusDelivery: "+ livraison",
       benchTakeoverConfirm: 'Cet appareil est le terminal de « {name} ». Le connecter à la simulation le déconnecte de ce commerce, qui devra le reconnecter. Continuer ?',
       tk_category_d: '{n} produit(s) de cette catégorie',
       tk_category: 'Carte : {name}',
