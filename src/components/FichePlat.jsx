@@ -180,6 +180,15 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
               : <span className="plat-prix">{euros(item.price)}</span>}
           </div>
           {item.desc && <p className="plat-desc">{item.desc}</p>}
+          {/* Bio, vegan, halal, sans gluten : dits aussi sur la fiche du plat, comme sur la carte (audit du 19/10, discovery-06). */}
+          {(item.organic || item.vegan || item.halal || item.glutenFree) && (
+            <p className="small" style={{ margin: '4px 0 0' }}>
+              {item.organic && <span className="plat-age">{t('menuCategories.organic')}</span>}
+              {item.vegan && <span className="plat-age">{t('menuCategories.vegan')}</span>}
+              {item.halal && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.halal')}</span>}
+              {item.glutenFree && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.glutenFree')}</span>}
+            </p>
+          )}
           {/* Seulement s'il reste un libellé reconnu : un code inconnu laissait « Allergènes : » seul sur sa ligne. */}
           {libellesAllergenes(item.allergens, t).length > 0 && <p className="small plat-allergenes">{t('conformite.allergensLine', { list: libellesAllergenes(item.allergens, t).join(', ') })}</p>}
           {!item.allergens?.length && item.allergensDeclaredNone && <p className="small plat-allergenes">{t('conformite.allergensNone')}</p>}

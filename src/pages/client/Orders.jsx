@@ -282,10 +282,9 @@ export default function Orders() {
     try {
       const pay = await api(`/payments/checkout/${o.id}`, { method: 'POST', token });
       if (pay.simulated) {
+        // Entièrement couverte (solde, bon, code) : l'écran de confirmation habituel (audit du 19/10, checkout-06).
         cart.discardStashed();
-        setOrders(await api('/orders/mine', { token }));
-        toast(t('checkout.toastOrderPaid'), 'succes');
-        setPayingId(null);
+        navigate(`/order-success?order=${o.id}`);
       } else {
         await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
       }

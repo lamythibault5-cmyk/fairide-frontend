@@ -6,7 +6,7 @@ import { api } from '../../api';
 import { euros, prixRemise } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { tarifLivraison } from '../../livraison';
+import { horsZoneLivraison, distanceLivraisonKm, tarifLivraison } from '../../livraison';
 import Icone from '../../components/Icone';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
 import { groupeEnCours } from '../../commandeGroupee';
@@ -32,7 +32,7 @@ import CertifiedBadge from '../../components/CertifiedBadge';
 import PrixComptoir from '../../components/PrixComptoir';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, dayLabel } from '../../openingHours';
+import { statutOuverture, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, dayLabel } from '../../openingHours';
 import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
@@ -61,23 +61,8 @@ const APPLI = experienceApp();
 
 // Clé du jour (openingHours) → clé de traduction du nom du jour (resa.monday…).
 
-/* OUVERT OU FERMÉ, SELON LE COMMERCE ET PAS SEULEMENT SES HORAIRES.
- *
- * La fiche recalculait l'état à partir des horaires seuls : un commerce passé « fermé » par son interrupteur, ou en
- * pause minutée (RES-9), restait affiché « Ouvert » à qui ouvrait sa page par un lien direct — le client remplissait
- * son panier et n'apprenait qu'au paiement « Ce restaurant est actuellement fermé » (test de bout en bout du 5 oct.
- * 2026). Même règle que le serveur (routes/orders.js refuse `open = false`, la pause ferme jusqu'à paused_until). */
-function statutOuverture(restaurant, now) {
-  const s = getOpenStatus(restaurant.hours, now, restaurant.closures);
-  if (!s.isOpen) return s;
-  if (restaurant.pausedUntil && restaurant.pausedUntil > now.getTime()) {
-    // Stoppé pour la journée (fondateur, 2026-10-10) : la reprise tombe demain — on le dit tel quel au client.
-    const demain = new Date(restaurant.pausedUntil).toDateString() !== now.toDateString();
-    return { ...s, isOpen: false, opensToday: !demain, opensAt: new Date(restaurant.pausedUntil), fermePourLaJournee: demain };
-  }
-  if (restaurant.open === false) return { ...s, isOpen: false, opensToday: false, fermeParLeCommerce: true };
-  return s;
-}
+// OUVERT OU FERMÉ, SELON LE COMMERCE ET PAS SEULEMENT SES HORAIRES : statutOuverture (openingHours.js), partagé avec la
+// liste depuis l'audit du 19/10 (discovery-04).
 
 /* Le document a-t-il été RECHARGÉ (F5, tirer pour rafraîchir) sur la fiche de ce commerce ? L'adresse est relevée au
    chargement du module, c'est-à-dire au démarrage de l'app (import statique dans App.jsx) ; la première fiche montée
@@ -431,7 +416,10 @@ export default function RestaurantMenu() {
   // Aucun livreur libre (après GO), ou livraison pas encore ouverte (avant le GO) : la bascule ne propose plus que l'à
   // emporter, quand le commerce le propose — la fiche s'ouvre alors sur « À emporter », pas sur une livraison impossible.
   const sansLivreur = livraisonDispo === false;
-  const modesPossibles = [restaurant.offersDelivery && !((sansLivreur || !livraisonOuverte(user)) && restaurant.offersPickup) && 'delivery', restaurant.offersPickup && 'pickup'].filter(Boolean);
+  // Adresse du compte au-delà de la distance de livraison du commerce (audit du 19/10, discovery-03) : même calcul que le
+  // serveur (livraison.js) ; la fiche s'ouvre sur l'à emporter et le dit, au lieu du refus au devis.
+  const horsZone = !!restaurant.offersDelivery && livraisonOuverte(user) && horsZoneLivraison(restaurant, user);
+  const modesPossibles = [restaurant.offersDelivery && !((sansLivreur || horsZone || !livraisonOuverte(user)) && restaurant.offersPickup) && 'delivery', restaurant.offersPickup && 'pickup'].filter(Boolean);
   // Infos › Paiement : en ligne seulement après le GO ; sur place, ce que le commerce a dit accepter.
   const paiementEnLigne = paiementEnLigneOuvert(user);
   const paiementsSurPlace = restaurant.offersPickup && restaurant.pickupPaymentMode && restaurant.pickupPaymentMode !== 'online' ? (restaurant.paiementsSurPlace || []) : [];
@@ -470,9 +458,11 @@ export default function RestaurantMenu() {
     // Commerce fermé en ce moment : on laisse composer le panier (une commande programmée reste possible, et la
     // fiche promet « compose ton panier ») — avant, l'ajout était refusé sous un bandeau qui disait le contraire
     // (plan de test). Le checkout et le serveur refusent toujours une commande immédiate à un commerce fermé.
+    // Fermé par son interrupteur (« Fermer jusqu'à ce que je rouvre ») : le serveur refuse aussi une commande programmée,
+    // le toast ne la propose donc pas (audit du 19/10, checkout-04).
     if (!statutOuverture(restaurant, now).isOpen && !avertiFerme.current) {
       avertiFerme.current = true;
-      toast(t('restoMenuUi.toastClosedCartKept'));
+      toast(t(restaurant.open === false ? 'restoMenuUi.toastClosedByShopCartKept' : 'restoMenuUi.toastClosedCartKept'));
     }
     if (complet) {
       toast(t('restoMenuUi.toastFullToday'));
@@ -872,6 +862,13 @@ export default function RestaurantMenu() {
         <div className="ouverture-bandeau fiche-info" role="status">
           <span className="fiche-info-icone" aria-hidden="true"><Icone nom="velo" taille={18} /></span>
           <span>{t('restaurantMenu.noCourierBanner')}</span>
+        </div>
+      )}
+      {/* Hors zone de livraison (audit du 19/10, discovery-03) : la distance du commerce et celle de l'adresse du compte. */}
+      {horsZone && !bandeauOuverture && (
+        <div className="ouverture-bandeau fiche-info" role="status">
+          <span className="fiche-info-icone" aria-hidden="true"><Icone nom="velo" taille={18} /></span>
+          <span>{t('restaurantMenu.outOfZoneBanner', { radius: String(restaurant.deliveryRadiusKm).replace('.', ','), distance: String(distanceLivraisonKm(restaurant, user)).replace('.', ',') })}</span>
         </div>
       )}
       {/* Livraison Fairide coupée dans la zone par l'équipe (08/10) : le client sait que seul l'à emporter est possible ici. */}
