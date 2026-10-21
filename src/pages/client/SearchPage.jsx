@@ -16,7 +16,6 @@ import VisuelVide from '../../components/VisuelVide';
 import ErreurChargement from '../../components/ErreurChargement';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import { imgProps, cacherImageCassee } from '../../images';
-import ErreurChargement from '../../components/ErreurChargement';
 import { normaliserRecherche } from '../../normaliserRecherche';
 import '../../ecran-liste.css';
 import '../../site-liste.css';
