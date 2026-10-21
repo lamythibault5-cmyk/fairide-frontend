@@ -24,7 +24,7 @@ import useEtatPage from '../../hooks/useEtatPage';
 import Icone from '../../components/Icone';
 import useAdminRole from '../../hooks/useAdminRole';
 import ChoixRemboursement from '../../components/admin/ChoixRemboursement';
-import { REMBOURSEMENT_DEFAUT, corpsRemboursement } from '../../components/admin/remboursementAnnulation';
+import { REMBOURSEMENT_DEFAUT, corpsRemboursement, motifManquant } from '../../components/admin/remboursementAnnulation';
 
 // Qui peut quoi (audit du 19/10, admin-16 ; même règle que le serveur, middleware/auth.js ROLE_PREFIXES_METHODE) : forcer un
 // statut, annuler, réattribuer = owner/admin/ops ; rembourser = owner/admin/finance. Rôle pas encore connu : tout est
@@ -88,6 +88,9 @@ export default function AdminOrdersPage() {
   const [detail, setDetail] = useState(null);
   const [mode, setMode] = useViewMode('orders');
   const [kanbanMove, setKanbanMove] = useState(null); // { order, status }
+  // Glisser une commande payée en ligne vers « annulée » : même choix de remboursement et de motif que la fenêtre de la
+  // commande (fondateur, 2026-10-21 : le motif dit qui porte le remboursement). null = rien à rembourser par carte.
+  const [kanbanRemb, setKanbanRemb] = useState(null);
   const [groupBy, setGroupBy] = useEtatPage('groupBy', '');
   const { sort, toggle } = useTableSort('createdAt');
   const [exporting, setExporting] = useState(false);
@@ -280,7 +283,7 @@ export default function AdminOrdersPage() {
           items={orders}
           columnOf={(o) => o.status}
           onOpen={openOrder}
-          onMove={peutForcer(role) ? (o, st) => setKanbanMove({ order: o, status: st }) : undefined}
+          onMove={peutForcer(role) ? (o, st) => { setKanbanRemb(['annule', 'refuse'].includes(st) && o.paid && o.paymentMode === 'stripe' ? REMBOURSEMENT_DEFAUT : null); setKanbanMove({ order: o, status: st }); } : undefined}
           emptyLabel={tr('adminKanban.empty')}
           renderCard={(o) => (
             <>
@@ -329,16 +332,19 @@ export default function AdminOrdersPage() {
       <ReasonDialog
         open={!!kanbanMove}
         title={tr('adminOrders.confirmChangeStatus')}
-        message={kanbanMove ? `${tr('adminOrders.confirmChangeStatusBody', { from: ORDER_STATUS_LABELS[kanbanMove.order.status] || kanbanMove.order.status, to: ORDER_STATUS_LABELS[kanbanMove.status] || kanbanMove.status })}${['annule', 'refuse'].includes(kanbanMove.status) ? ` ${tr('adminOrders.cancelRefundDefaultNote')}` : ''}` : ''}
+        message={kanbanMove ? `${tr('adminOrders.confirmChangeStatusBody', { from: ORDER_STATUS_LABELS[kanbanMove.order.status] || kanbanMove.order.status, to: ORDER_STATUS_LABELS[kanbanMove.status] || kanbanMove.status })}` : ''}
         label={tr('adminOrders.forceReasonLabel')}
         placeholder={tr('adminOrders.forceReasonPlaceholder')}
         danger={kanbanMove?.status === 'annule'}
         onConfirm={async (motif) => {
-          try { await api(`/admin/orders/${kanbanMove.order.id}/status`, { method: 'PATCH', token, body: { status: kanbanMove.status, reason: motif } }); toast(tr('adminOrders.toastStatusChanged')); load(); }
+          try { await api(`/admin/orders/${kanbanMove.order.id}/status`, { method: 'PATCH', token, body: { status: kanbanMove.status, reason: motif, ...(kanbanRemb ? { refund: corpsRemboursement(kanbanRemb) } : {}) } }); toast(tr('adminOrders.toastStatusChanged')); load(); }
           catch (e) { toast(e.message, 'erreur'); } finally { setKanbanMove(null); }
         }}
         onCancel={() => setKanbanMove(null)}
-      />
+        confirmDisabled={motifManquant(kanbanRemb)}
+      >
+        {kanbanRemb && <ChoixRemboursement valeur={kanbanRemb} onChange={setKanbanRemb} />}
+      </ReasonDialog>
       {/* Annulation groupée : c'est un forçage de statut, le motif est obligatoire (décision DEC-3) ; il vaut pour toute la
           sélection. La réaffectation d'un livreur garde la simple confirmation. */}
       <ReasonDialog
@@ -351,6 +357,7 @@ export default function AdminOrdersPage() {
         loading={bulkBusy}
         onConfirm={runBulk}
         onCancel={() => setBulk(null)}
+        confirmDisabled={motifManquant(bulkRemb)}
       >
         <ChoixRemboursement valeur={bulkRemb} onChange={setBulkRemb} />
       </ReasonDialog>
@@ -552,7 +559,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
             <>
               <div className="divider" />
               <h4 className="drawer-section-title texte-erreur">{tr('adminCommon.refunds')}</h4>
-              {detail.refunds.map((r) => <DrawerRow key={r.id} label={`${r.reason ? `${r.reason}, ` : ''}${libelle(REFUND_RESPONSIBILITY_LABELS, r.responsibility)}`} value={money(r.amount)} />)}
+              {detail.refunds.map((r) => <DrawerRow key={r.id} label={`${r.reasonCode ? `${tr(`adminOrders.cancelReason_${r.reasonCode}`)} · ` : ''}${r.reason ? `${r.reason}, ` : ''}${libelle(REFUND_RESPONSIBILITY_LABELS, r.responsibility)}`} value={money(r.amount)} />)}
             </>
           )}
         </>
@@ -632,6 +639,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
         loading={busy}
         onConfirm={runConfirmed}
         onCancel={() => setConfirmAction(null)}
+        confirmDisabled={confirmAction?.type === 'cancel' && motifManquant(rembAnnul)}
       >
         {confirmAction?.type === 'cancel' && rembAnnul && <ChoixRemboursement valeur={rembAnnul} onChange={setRembAnnul} reste={resteRemboursable} />}
       </ReasonDialog>

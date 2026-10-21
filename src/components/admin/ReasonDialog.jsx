@@ -12,7 +12,7 @@ import ChoixPastilles from '../ChoixPastilles';
 // `suggestions` : des motifs tout faits, en pastilles, qui remplissent le champ (toujours modifiable, toujours obligatoire si
 // `required`) — sur un téléphone en plein service, taper « plat épuisé » au pouce était le geste de trop (audit du 19/10,
 // shop-222).
-export default function ReasonDialog({ open, title, message, label, placeholder, required = true, multiline = false, confirmLabel, danger, loading, initialValue = '', suggestions, children, onConfirm, onCancel }) {
+export default function ReasonDialog({ open, title, message, label, placeholder, required = true, multiline = false, confirmLabel, danger, loading, initialValue = '', suggestions, children, confirmDisabled = false, onConfirm, onCancel }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -26,7 +26,8 @@ export default function ReasonDialog({ open, title, message, label, placeholder,
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onCancel]);
   if (!open) return null;
-  const bloque = loading || (required && !motif.trim());
+  // confirmDisabled : un champ de children encore à remplir (motif d'annulation, admin › Commandes).
+  const bloque = loading || confirmDisabled || (required && !motif.trim());
   return createPortal(
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-box admin-reason-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }} role="dialog" aria-modal="true" aria-label={title}>

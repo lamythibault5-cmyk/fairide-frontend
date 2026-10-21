@@ -91,11 +91,12 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
               {!rayonLibre && (
                 <>
                   <label htmlFor="capacite-rayon" className="small" style={{ fontWeight: 700, display: 'block' }}>{t('editResto.capacityRadiusValue', { km: km(rayon) })}</label>
-                  {/* Jusqu'à la limite du serveur (rayonLivraison.js, 30 km), plus 15 : un rayon de 20 km était impossible à
-                      choisir, et un réglage de l'équipe au-delà de 15 laissait le curseur bloqué au bout (audit du 19/10, shop-319). */}
-                  <input id="capacite-rayon" type="range" min="1" max={etat.maxRadiusKm || 30} step="0.5" value={rayon}
-                    onChange={(e) => setRayon(Number(e.target.value))} style={remplissage(rayon, 1, etat.maxRadiusKm || 30)} aria-valuetext={`${km(rayon)} km`} />
-                  <div className="row small" style={{ justifyContent: 'space-between', opacity: 0.7 }}><span>1 km</span><span>{etat.maxRadiusKm || 30} km</span></div>
+                  {/* Jusqu'à la limite du serveur (rayonLivraison.js, maxRadiusKm) : 15 km depuis le 21/10/2026 (décision du
+                      fondateur ; 30 km avant). Le maximum vient du serveur pour que le curseur et la règle ne divergent plus
+                      (audit du 19/10, shop-319). */}
+                  <input id="capacite-rayon" type="range" min="1" max={etat.maxRadiusKm || 15} step="0.5" value={rayon}
+                    onChange={(e) => setRayon(Number(e.target.value))} style={remplissage(rayon, 1, etat.maxRadiusKm || 15)} aria-valuetext={`${km(rayon)} km`} />
+                  <div className="row small" style={{ justifyContent: 'space-between', opacity: 0.7 }}><span>1 km</span><span>{etat.maxRadiusKm || 15} km</span></div>
                 </>
               )}
             </div>
