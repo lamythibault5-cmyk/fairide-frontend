@@ -299,21 +299,21 @@ export default function SearchPage() {
             <section className="sl-res-commerces">
               <h3 className="recherche-titre-groupe">{t('search.businesses')}</h3>
               <div className="rest-grid sl-grille">
-                {resultats.commerces.map((r) => <CarteCommerce key={r.id} r={r} t={t} lien={lienFiche(user, r.id)} />)}
+                {resultats.commerces.map((r) => <CarteCommerce key={r.id} r={r} t={t} lien={lienFiche(user, r.id, r.name)} />)}
               </div>
             </section>
           )}
           {!site && (
             <Groupe titre={t('search.businesses')} quand={resultats.commerces.length}>
               {resultats.commerces.map((r) => (
-                <Ligne key={r.id} {...lienFiche(user, r.id)} image={r.coverImageUrl} icone="commerce" titre={r.name}
+                <Ligne key={r.id} {...lienFiche(user, r.id, r.name)} image={r.coverImageUrl} icone="commerce" titre={r.name}
                   sous={[r.cuisine, r.commune].filter(Boolean).join(' · ')} />
               ))}
             </Groupe>
           )}
           <Groupe titre={t('search.dishes')} quand={resultats.plats.length}>
             {resultats.plats.map(({ restaurant, plat }) => (
-              <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} {...lienFiche(user, restaurant.id)} image={plat.imageUrl} icone="restaurants"
+              <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} {...lienFiche(user, restaurant.id, restaurant.name)} image={plat.imageUrl} icone="restaurants"
                 titre={plat.name} sous={`${restaurant.name}${prix(plat) ? ` · ${prix(plat)}` : ''}`} />
             ))}
           </Groupe>

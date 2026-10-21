@@ -397,17 +397,18 @@ const km = (d, locale) => `${d.toLocaleString(locale, { maximumFractionDigits: 1
  * UN SEUL ÉCRAN, SANS DÉFILER (fondateur, 2026-10-15). Il empilait le petit cercle, quatre cartes de commerce, la note
  * sur le rayon et jusqu'à trois boutons : au téléphone, « Continuer avec mon e-mail » était sous le pli. Le cercle a déjà
  * été montré au chargement juste avant ; ici, trois commerces en lignes serrées, dans une seule carte, et le compte. */
-export function EcranCompte({ role, resultats, avecPosition, commune, onFournisseur, onEmail, onConnexion, attente }) {
+export function EcranCompte({ role, resultats, listeEchec = false, avecPosition, commune, onFournisseur, onEmail, onConnexion, attente }) {
   const { t, locale } = useLanguage();
   let haut;
   let liste = null; // les commerces trouvés : en tête de la feuille, sous le bandeau
   if (role === 'client') {
     const n = resultats.length;
     const titre = !avecPosition && commune ? t('appli.trouvesCommune', { c: commune }) : n === 1 ? t('appli.trouvesUn') : t('appli.trouves', { n });
+    // Liste qui n'a pas pu se charger (audit du 19/10, auth-22) : un titre neutre, jamais « pas encore de commerce ici ».
     haut = (
       <>
-        <h1 className="bv-titre">{n || !avecPosition ? titre : t('appli.aucun')}</h1>
-        {!n && avecPosition && <p className="bv-sous">{t('appli.aucunSub')}</p>}
+        <h1 className="bv-titre">{listeEchec ? t('appli.trouvesSansListe') : n || !avecPosition ? titre : t('appli.aucun')}</h1>
+        {!n && avecPosition && !listeEchec && <p className="bv-sous">{t('appli.aucunSub')}</p>}
       </>
     );
     liste = (

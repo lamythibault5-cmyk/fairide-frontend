@@ -14,7 +14,8 @@ export const PAYS = [
   ['SK', '421'], ['SI', '386'], ['SE', '46'], ['GB', '44']
 ];
 const DEFAUT = 'BE';
-const drapeau = (iso) => String.fromCodePoint(...[...iso].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+// PLUS DE DRAPEAUX (audit du 19/10, auth-26 et LIVE-22) : ils étaient des émojis (lettres régionales), contraires à la règle
+// « aucun émoji » du fondateur, et Windows les affichait en paires de lettres. Le code du pays (« BE +32 ») dit la même chose.
 
 // Découpe une valeur existante (« +33 6 12… », « 0470 00 00 00 », vide) en pays + numéro local.
 export function decouper(valeur) {
@@ -76,9 +77,9 @@ export default function PhoneInput({ id, value, onChange, invalid = false, place
   return (
     <div className={`phone-input${invalid ? ' input-invalid' : ''}`}>
       <select className="phone-input-pays" aria-label={t('phoneInput.country')} value={iso} onChange={(e) => { setPaysChoisi(e.target.value); onChange(composer(e.target.value, local)); }}>
-        {liste.map((p) => <option key={p.iso} value={p.iso}>{drapeau(p.iso)} {p.nom} (+{p.dial})</option>)}
+        {liste.map((p) => <option key={p.iso} value={p.iso}>{p.nom} (+{p.dial})</option>)}
       </select>
-      <span className="phone-input-indicatif" aria-hidden="true">{drapeau(iso)} +{dial}</span>
+      <span className="phone-input-indicatif" aria-hidden="true">{iso} +{dial}</span>
       <input id={id} type="tel" inputMode="tel" autoComplete={autoComplete} value={local} placeholder={placeholder || (iso === 'BE' ? '470 00 00 00' : '')}
         onChange={(e) => { const v = composer(iso, e.target.value); setPaysChoisi(v ? decouper(v).iso : iso); onChange(v); }} />
     </div>

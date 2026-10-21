@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { COMMUNES, communeDepuisCodePostal } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../Icone';
+import { retenirAdresseAccueil } from '../../adresseAccueil';
 
 // LA BARRE D'ADRESSE DE L'ACCUEIL — « Où livrer ? », comme DoorDash ou Uber Eats (capture du
 // fondateur, 2026-09-27).
@@ -20,6 +21,8 @@ import Icone from '../Icone';
 // liste presque vide tant que Fairide a peu de commerces (fondateur, 2026-09-27). Elle n'enregistre
 // AUCUNE adresse : un visiteur n'a pas de compte où la ranger, et c'est le carnet d'adresses
 // (ChoixAdresse.jsx) qui la vérifie et l'enregistre une fois connecté.
+// Seule exception (audit du 19/10, auth-27 / LIVE-12) : l'adresse choisie reste dans l'onglet (sessionStorage, jamais envoyée)
+// pour préremplir l'inscription qui suit, au lieu de la faire retaper (adresseAccueil.js).
 //
 // Pourquoi le code postal plutôt que la ville renvoyée : Photon renvoie « Bruxelles » pour Laeken
 // comme pour le centre, parfois le nom néerlandais, parfois le quartier. Le code postal, lui, désigne
@@ -89,6 +92,7 @@ export default function HeroAdresse() {
     // de parler des 19 communes. Seule une adresse vraiment hors zone reçoit le message « pas encore ».
     const commune = communeDe(s) || communeDepuisCodePostal(s.postalCode);
     if (!commune) { setHorsZone(s.city || s.label); return; }
+    retenirAdresseAccueil(s);
     navigate('/restaurants', { state: { communeProche: commune } });
   }
 

@@ -9,10 +9,11 @@
  * comprises), ou une extension mal tapée (.con, .cmo, .bee). Une adresse d'entreprise (@monresto.be) ou une vraie autre
  * extension d'un fournisseur (hotmail.fr, live.be) ne déclenche rien. */
 
+// Proton : .ch existe aussi (audit du 19/10, auth-36 : une vraie adresse @protonmail.ch se voyait proposer « .com »).
 // Fournisseur → ses extensions réelles. La première sert de correction quand l'extension tapée n'existe pas chez lui.
 const FOURNISSEURS = {
   gmail: ['com'], googlemail: ['com'], hotmail: ['com', 'be', 'fr', 'nl'], outlook: ['com', 'be', 'fr'], live: ['com', 'be', 'fr', 'nl'],
-  icloud: ['com'], me: ['com'], yahoo: ['com', 'fr'], proton: ['me'], protonmail: ['com'], skynet: ['be'], telenet: ['be'],
+  icloud: ['com'], me: ['com'], yahoo: ['com', 'fr'], proton: ['me', 'ch'], protonmail: ['com', 'ch'], skynet: ['be'], telenet: ['be'],
   msn: ['com'], gmx: ['com', 'fr', 'de'], orange: ['fr'], free: ['fr'], scarlet: ['be'], voo: ['be'], proximus: ['be']
 };
 // Extensions mal tapées, et ce qu'elles voulaient dire.

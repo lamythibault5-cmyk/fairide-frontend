@@ -116,6 +116,10 @@ export default function Bienvenue() {
   const [position, setPosition] = useState(() => dejaFait?.position || reprise?.position || null);
   const [cp, setCp] = useState(() => dejaFait?.cp || reprise?.cp || '');
   const [liste, setListe] = useState(null);
+  // La liste n'a pas pu se charger (réseau) : à ne pas confondre avec une liste vide (audit du 19/10, auth-22).
+  const [listeEchec, setListeEchec] = useState(false);
+  // Code d'un lien de parrainage (?ref=), transmis par la connexion de l'app (audit du 19/10, auth-28).
+  const [codeParrain] = useState(() => location.state?.ref || null);
   const [attente, setAttente] = useState(false);
   // Jeton Apple / Google d'une personne qui n'a pas encore de compte : l'inscription s'en sert au lieu d'un mot de passe.
   const [fed, setFed] = useState(fedRecu);
@@ -128,7 +132,7 @@ export default function Bienvenue() {
   // La liste des commerces part dès l'écran « Pourquoi » : au chargement, elle est souvent déjà là.
   useEffect(() => {
     if (role !== 'client' || liste || !['pourquoi', 'envies', 'position', 'codePostal', 'recherche', 'compte', 'inscription'].includes(ecran)) return;
-    api('/restaurants').then((r) => setListe(Array.isArray(r) ? r : [])).catch(() => setListe([]));
+    api('/restaurants').then((r) => setListe(Array.isArray(r) ? r : [])).catch(() => { setListeEchec(true); setListe([]); });
   }, [role, ecran, liste]);
 
   // On retient où en est l'accueil, à chaque écran, pour le reprendre si l'application est fermée avant le compte
@@ -277,7 +281,7 @@ export default function Bienvenue() {
       contenu = <EcranRecherche commune={position ? '' : communeCp} points={liste ? points : []} envies={envies} duree={DUREE_RECHERCHE_MS} />; break;
     case 'compte':
       contenu = (
-        <EcranCompte role={role} resultats={resultats} avecPosition={!!position} commune={communeCp} attente={attente}
+        <EcranCompte role={role} resultats={resultats} listeEchec={listeEchec} avecPosition={!!position} commune={communeCp} attente={attente}
           onFournisseur={viaFournisseur} onEmail={viaEmail} onConnexion={dejaInscrit} />
       ); break;
     case 'lvPromesses':
@@ -304,7 +308,7 @@ export default function Bienvenue() {
   }
 
   // L'inscription a ses propres écrans (en-tête, progression, animation) : elle rend tout le plein écran.
-  if (ecran === 'inscription') return <InscriptionAppli role={role} fed={fed} depuis={depuis} onQuitter={retour} onConnexion={dejaInscrit} />;
+  if (ecran === 'inscription') return <InscriptionAppli role={role} fed={fed} depuis={depuis} codeParrain={codeParrain} onQuitter={retour} onConnexion={dejaInscrit} />;
 
   return (
     // Les écrans blancs ont un bandeau iris en haut et une feuille blanche dessous (EcransBienvenue.jsx, Feuille).
