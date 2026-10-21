@@ -26,6 +26,12 @@ export default function EcranLegal({ restaurant, restoId, loadDashboard, onFerme
   const engagementAge = !!restaurant.alcoholAgeAckAt;
   const { enregistrer, enCours } = useEnregistrerCommerce({ restoId, loadDashboard, onFermer });
 
+  // Contrat signé ou paiements Stripe actifs : ces numéros y sont inscrits. Un changement reste possible, mais l'équipe en est
+  // avertie (tâche côté serveur) et le commerce le sait avant d'enregistrer (audit du 19/10, shop-305).
+  const identiteEngagee = !!restaurant.onboarding?.contractAccepted || restaurant.stripeConnectStatus === 'active';
+  const modifie = nomLegal !== (restaurant.legalName || '') || bce !== (restaurant.companyNumber || '') || tva !== (restaurant.vatNumber || '')
+    || responsable !== (restaurant.responsibleName || '') || afsca !== (restaurant.afscaNumber || '');
+
   function valider() {
     if (!nomLegal.trim() || !bce.trim() || !tva.trim() || !responsable.trim()) { toast(t('editResto.toastLegalRequired'), 'erreur'); return; }
     enregistrer({
@@ -35,7 +41,8 @@ export default function EcranLegal({ restaurant, restoId, loadDashboard, onFerme
   }
 
   return (
-    <SousEcran titre={t('editResto.rowLegal')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />}>
+    <SousEcran titre={t('editResto.rowLegal')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />} modifie={modifie}>
+      {identiteEngagee && <p className="small" style={{ margin: '0 0 12px', color: 'var(--ink-soft)' }}>{t('editResto.legalChangeNotice')}</p>}
       <div className="field"><label htmlFor={ids + '-nl'}>{t('editResto.legalName')}</label><input id={ids + '-nl'} value={nomLegal} onChange={(e) => setNomLegal(e.target.value)} placeholder={t('editResto.phLegalName')} /></div>
       <div className="row" style={{ gap: 8 }}>
         <div className="field" style={{ flex: 1 }}>

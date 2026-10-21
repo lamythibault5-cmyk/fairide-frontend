@@ -28,8 +28,12 @@ export async function ecouterNotificationsNatives(historique) {
     });
     // Reçue alors que l'application est au premier plan : les listes se rafraîchissent tout de suite
     // (useNewOrderAlert sonne et affiche la commande dès qu'elle apparaît).
+    // Le faux « visibilitychange » ne suffisait pas : useRevalidation ne relit qu'après 20 s de page cachée, et la commande
+    // n'apparaissait qu'au sondage suivant, jusqu'à 15 s plus tard (audit du 19/10, shop-216). Le tableau du commerce écoute
+    // aussi l'événement du flux du terminal (terminalNavigateur.js, même nom) : il relit les commandes tout de suite.
     PushNotifications.addListener('pushNotificationReceived', () => {
       document.dispatchEvent(new Event('visibilitychange'));
+      window.dispatchEvent(new Event('fairide:commande-arrivee'));
     });
   } catch { /* greffon absent */ }
 }

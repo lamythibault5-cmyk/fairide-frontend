@@ -478,6 +478,12 @@ export default function RestaurantMenu() {
       navigate('/login?audience=client', { state: { from: location.pathname } });
       return;
     }
+    // Casquette commerce ou livreur, hors aperçu (audit du 19/10, shop-414) : le panier n'est affiché qu'à un client, le plat
+    // « s'envolait » vers un panier invisible qui ressortait plus tard. On dit comment commander, sans rien ajouter.
+    if (role !== 'client' && !previewMode) {
+      toast(t('restoMenuUi.toastClientHatNeeded'));
+      return;
+    }
     if (onlineOrderingDisabled) {
       toast(t('restoMenuUi.toastNoOnline'));
       return;

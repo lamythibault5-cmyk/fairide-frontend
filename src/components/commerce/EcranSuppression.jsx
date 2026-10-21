@@ -18,7 +18,7 @@ const CLES_RAISONS = ['reasonClosing', 'reasonSwitching', 'reasonFewOrders', 're
 
 // Mon commerce › Supprimer. Deux temps : (1) pourquoi, puis demande du code ; (2) le code envoyé par
 // l'équipe, et la suppression définitive. Rangée rouge tout en bas de la liste, jamais en vue au service.
-export default function EcranSuppression({ restoId, onFermer }) {
+export default function EcranSuppression({ restoId, loadDashboard, onFermer }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -43,10 +43,19 @@ export default function EcranSuppression({ restoId, onFermer }) {
   }
 
   async function supprimer() {
-    if (!code) { toast(t('editResto.toastEnterCode')); return; }
+    if (!code) { toast(t('editResto.toastEnterCode'), 'erreur'); return; } // style erreur (shop-329)
     setEnCours(true);
     try {
-      await api(`/restaurants/${restoId}`, { method: 'DELETE', token, body: { code, reason: raison, comment: commentaire.trim() } });
+      const r = await api(`/restaurants/${restoId}`, { method: 'DELETE', token, body: { code, reason: raison, comment: commentaire.trim() } });
+      /* CE QUI S'EST VRAIMENT PASSÉ (audit du 19/10, shop-308). Un commerce qui a déjà des factures n'est pas supprimé : il est
+       * retiré du site et fermé (accountDeletion.js), ses pièces gardées. L'écran disait « Restaurant supprimé » puis
+       * rechargeait… sur le même commerce. Il le dit maintenant ; seul un commerce vraiment supprimé recharge la page. */
+      if (r?.deactivated) {
+        toast(t('editResto.toastDeactivated'), 'succes');
+        await loadDashboard?.(restoId);
+        onFermer();
+        return;
+      }
       toast(t('editResto.toastDeleted'), 'succes');
       window.location.href = '/dashboard';
     } catch (e) {

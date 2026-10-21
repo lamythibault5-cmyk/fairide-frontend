@@ -134,12 +134,13 @@ export function EcheanceAcceptation({ order }) {
     return () => clearInterval(id);
   }, [order.acceptDeadline]);
   if (!order.acceptDeadline || order.status !== 'nouveau') return null;
+  // Échéance d'une commande programmée : un autre jour, avec sa date (audit du 19/10, shop-221 : « avant 11:30 (encore 2850 min) »).
   const minutes = Math.max(0, Math.ceil((order.acceptDeadline - maintenant) / 60000));
   const urgent = minutes <= 5;
   return (
     <div className={`small echeance-acceptation${urgent ? ' urgente' : ''}`} role={urgent ? 'alert' : undefined}>
       <Icone nom="horloge" taille={16} className="icone-texte" />{' '}{minutes > 0
-        ? t('orderStatus.acceptBefore', { time: formatTime(order.acceptDeadline), min: minutes })
+        ? t(minutes > 60 ? 'orderStatus.acceptBeforeLater' : 'orderStatus.acceptBefore', { time: formatDateTime(order.acceptDeadline), min: minutes })
         : t('orderStatus.acceptNow')}
     </div>
   );
@@ -262,7 +263,7 @@ export function ProchaineEtape({ order }) {
   if (status === 'nouveau' && order.paid === false) return null;
   if (status === 'nouveau' && order.acceptDeadline) {
     // Payée sur place : rien n'a été débité, il n'y a rien à rembourser (audit du 18/10/2026).
-    return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_nouveau_deadline_on_site' : 'orderStatus.next_nouveau_deadline', { time: formatTime(order.acceptDeadline) })}</div>;
+    return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_nouveau_deadline_on_site' : 'orderStatus.next_nouveau_deadline', { time: formatDateTime(order.acceptDeadline) })}</div>;
   }
   // Remboursement automatique refusé par Stripe (audit du 19/10/2026, AO-02, backend refundPending) : on ne dit pas
   // « remboursée » tant que l'équipe ne l'a pas refait.

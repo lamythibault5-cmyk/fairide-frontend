@@ -15,6 +15,24 @@ const ACT_KEY = 'fairide_session_agir';
 // Casquette active d'un compte qui en porte plusieurs (voir plus bas). Mémorisée pour que l'onglet
 // rouvre sur la même vue, jamais crue sur parole : elle est revalidée contre les rôles du compte.
 const ROLE_ACTIF_KEY = 'fairide_role_actif';
+/* LA CASQUETTE RETENUE PAR COMPTE (audit du 19/10, shop-402). La déconnexion oublie la casquette active (le compte suivant
+ * sur la tablette ne doit pas ouvrir sur la vue du précédent) : un membre de l'équipe, dont le rôle d'origine est « client »,
+ * se reconnectait à chaque service sur la vue client — mauvaise barre d'onglets, pas de « Mon équipe ». On retient donc
+ * aussi le dernier choix PAR COMPTE (identifiant → casquette), relu à la connexion de ce même compte, et toujours revalidé
+ * contre ses rôles. Rien de personnel : un identifiant opaque et un nom de rôle. */
+const ROLE_PAR_COMPTE_KEY = 'fairide_role_par_compte';
+function roleRetenuPour(userId) {
+  if (!userId) return null;
+  try { return JSON.parse(localStorage.getItem(ROLE_PAR_COMPTE_KEY) || '{}')[userId] || null; } catch { return null; }
+}
+function retenirRolePour(userId, role) {
+  if (!userId) return;
+  try {
+    const m = JSON.parse(localStorage.getItem(ROLE_PAR_COMPTE_KEY) || '{}');
+    m[userId] = role;
+    localStorage.setItem(ROLE_PAR_COMPTE_KEY, JSON.stringify(m));
+  } catch { /* sans stockage */ }
+}
 /* SIMULATION (Admin › Simulation). La console ouvre un onglet avec les sessions de trois comptes de test (client,
  * restaurateur, livreur) plus le profil « visiteur » (aucune session). Tout vit dans sessionStorage, propre à
  * l'onglet, et arrive par le fragment #simuler=… : comme pour « Fairide agit comme… », la session admin
@@ -373,8 +391,9 @@ export function AuthProvider({ children }) {
     ? session.user.roles
     : (session?.user?.role ? [session.user.role] : []);
   // (En simulation, la casquette mémorisée est celle de l'admin, dans localStorage : elle ne vaut pas ici.)
-  const roleActif = !session?.actingAs && !simuRef.current && roleMemorise && roles.includes(roleMemorise)
-    ? roleMemorise
+  const roleRetenu = roleMemorise || (!session?.actingAs && !simuRef.current ? roleRetenuPour(session?.user?.id) : null);
+  const roleActif = !session?.actingAs && !simuRef.current && roleRetenu && roles.includes(roleRetenu)
+    ? roleRetenu
     : (session?.user?.role || null);
 
   // Ajoute une casquette au compte courant (POST /auth/roles) et met la session à jour sans
@@ -386,11 +405,14 @@ export function AuthProvider({ children }) {
   }
 
   // Changer de casquette ne touche ni au compte ni au jeton : c'est un changement de vue.
-  function changerRole(cible) {
-    if (!roles.includes(cible)) return false;
+  // `rolesConnus` : les rôles que l'appelant vient de relire (refreshUser). Juste après avoir rejoint une équipe, `roles`
+  // est encore celui du rendu d'avant (['client']) : sans eux, la casquette « commerce » était refusée (shop-402).
+  function changerRole(cible, rolesConnus) {
+    if (!(rolesConnus || roles).includes(cible)) return false;
     setRoleMemorise(cible);
     if (simuRef.current) return true; // localStorage appartient à la session admin des autres onglets
     try { localStorage.setItem(ROLE_ACTIF_KEY, cible); } catch { /* sans stockage */ }
+    if (!session?.actingAs) retenirRolePour(session?.user?.id, cible);
     return true;
   }
 

@@ -18,7 +18,10 @@ export default function MentionsAlimentaires({ restaurant, restoId, token, onCha
   const toast = useToast();
   const [toutHalal, setToutHalal] = useState(!!restaurant.halalAll);
   // Valeurs locales par plat, pour que la case réponde tout de suite ; la carte du tableau de bord est rechargée ensuite.
-  const [plats, setPlats] = useState(() => Object.fromEntries((restaurant.menu || []).map((m) => [m.id, { halal: !!m.halal && !restaurant.halalAll, glutenFree: !!m.glutenFree, vegan: !!m.vegan, organic: !!m.organic }])));
+  // `halalDeclared` : la case du plat lui-même (audit du 19/10, shop-322). `halal` vaut aussi « tout l'établissement » : sous
+  // une case générale, chaque plat paraissait décoché, et décocher le tout montrait des plats décochés que les clients
+  // voyaient encore halal. Repli sur l'ancien calcul pour une fiche qui n'aurait pas encore le champ.
+  const [plats, setPlats] = useState(() => Object.fromEntries((restaurant.menu || []).map((m) => [m.id, { halal: m.halalDeclared ?? (!!m.halal && !restaurant.halalAll), glutenFree: !!m.glutenFree, vegan: !!m.vegan, organic: !!m.organic }])));
   const [occupe, setOccupe] = useState(null);
 
   async function basculerTout(valeur) {

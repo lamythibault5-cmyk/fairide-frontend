@@ -22,7 +22,8 @@ import CadreSite, { SITE } from '../../components/commerce/CadreSite';
 // et rappel à 5 min dans acceptation.js côté backend, carte verrouillée MENU_LOCKED depuis le 2026-10-01). Section 11
 // ajoutée : pause et interrupteur (InterrupteurService), Commandes et capacité (EcranCapacite), livreur qui attend,
 // contrôle d'âge, client pas venu. Si l'un de ces délais change côté backend, ce texte change avec.
-//   3. (Fait) Impression du ticket depuis la fiche commande (escposTicket.js, bluetoothPrinter.js)
+//   3. (Fait) Impression du ticket depuis la fiche commande : terminal Fairide, ou boîte d'impression de l'appareil (plus de
+//      Bluetooth depuis le 2026-10-21 : rien ne le connectait plus ; section 7 réécrite, audit du 19/10, shop-407).
 //   4. Envoi du bon de commande par WhatsApp
 //   5. (Fait) Délai d'acceptation automatique avec annulation si dépassé (acceptation.js côté backend)
 
@@ -31,8 +32,10 @@ import CadreSite, { SITE } from '../../components/commerce/CadreSite';
 const SECTIONS = [
   { n: 1, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3']] },
   { n: 2, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3'], ['ul', ['l1', 'l2', 'l3']], ['p', 'p4']] },
-  { n: 3, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3']] },
-  { n: 4, accent: true, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3']] },
+  // Dans l'app (audit du 19/10, shop-407) : pas d'écran d'accueil à installer ni de Safari ; les notifications y sont natives.
+  // Même numéro de section (le texte renvoie à « section 3 » et « section 4 »), un autre texte.
+  { n: 3, blocs: SITE ? [['p', 'p1'], ['p', 'p2'], ['p', 'p3']] : [['p', 'p1App']] },
+  { n: 4, accent: true, blocs: [['p', 'p1'], ['p', SITE ? 'p2' : 'p2App'], ['p', 'p3']] },
   { n: 5, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3'], ['ul', ['l1', 'l2']]] },
   { n: 6, blocs: [['p', 'p1'], ['p', 'p2'], ['p', 'p3'], ['p', 'p4'], ['p', 'p5']] },
   // Ajoutée après coup : sa clé reste « s11 » (ne pas renuméroter les clés des trois langues), elle s'affiche en 7e.

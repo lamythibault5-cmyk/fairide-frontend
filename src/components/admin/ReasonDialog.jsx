@@ -1,6 +1,7 @@
 import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import ChoixPastilles from '../ChoixPastilles';
 
 // Confirmation AVEC motif (et champs supplémentaires via `children`) : refus d'un document, perte d'un
 // prospect, crédit / débit d'un solde, rejet d'un dossier… ConfirmDialog ne prend pas de contenu ; ce
@@ -8,7 +9,10 @@ import { useLanguage } from '../../context/LanguageContext';
 // pareil dans tout l'ERP, avec en plus un champ de motif (obligatoire ou non) rendu à onConfirm(reason).
 //
 // Remplace window.prompt / window.confirm, supprimés ou muets dans une PWA installée.
-export default function ReasonDialog({ open, title, message, label, placeholder, required = true, multiline = false, confirmLabel, danger, loading, initialValue = '', children, onConfirm, onCancel }) {
+// `suggestions` : des motifs tout faits, en pastilles, qui remplissent le champ (toujours modifiable, toujours obligatoire si
+// `required`) — sur un téléphone en plein service, taper « plat épuisé » au pouce était le geste de trop (audit du 19/10,
+// shop-222).
+export default function ReasonDialog({ open, title, message, label, placeholder, required = true, multiline = false, confirmLabel, danger, loading, initialValue = '', suggestions, children, onConfirm, onCancel }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -29,11 +33,17 @@ export default function ReasonDialog({ open, title, message, label, placeholder,
         <h3 style={{ margin: '0 0 8px' }}>{title}</h3>
         {message && <p className="small" style={{ margin: '0 0 12px' }}>{message}</p>}
         {children}
+        {suggestions?.length > 0 && (
+          <div style={{ marginBottom: 10 }}>
+            <ChoixPastilles libelle={label || tr('adminCommon.reasonLabel')} valeur={suggestions.includes(motif) ? motif : null}
+              options={suggestions.map((s) => ({ value: s, label: s }))} onChange={setMotif} />
+          </div>
+        )}
         <div className="field">
           <label htmlFor={idsA11y + '-reasonlabel'}>{label || tr('adminCommon.reasonLabel')}{required ? '' : ` (${tr('adminCommon.optional')})`}</label>
           {multiline
             ? <textarea id={idsA11y + '-reasonlabel'} rows={3} value={motif} onChange={(e) => setMotif(e.target.value)} placeholder={placeholder} autoFocus />
-            : <input value={motif} onChange={(e) => setMotif(e.target.value)} placeholder={placeholder} autoFocus onKeyDown={(e) => { if (e.key === 'Enter' && !bloque) onConfirm(motif.trim()); }} />}
+            : <input id={idsA11y + '-reasonlabel'} value={motif} onChange={(e) => setMotif(e.target.value)} placeholder={placeholder} autoFocus onKeyDown={(e) => { if (e.key === 'Enter' && !bloque) onConfirm(motif.trim()); }} />}
         </div>
         <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>
           <button type="button" className="btn-ghost" onClick={onCancel} disabled={loading}>{tr('adminCommon.cancel')}</button>

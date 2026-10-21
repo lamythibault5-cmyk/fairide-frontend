@@ -3,12 +3,17 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { RESTAURANT_TYPES, fullTemplateItems } from '../../menuCategories';
+import { RESTAURANT_TYPES, restaurantTypeLabel } from '../../menuCategories';
 import SousEcran from '../SousEcran';
 
-// Mon commerce › Type de commerce. Deux temps, comme l'inscription : (1) le nouveau type et le sort de
-// la carte actuelle, puis « Recevoir un code » ; (2) le code reçu par e-mail. Le serveur exige ce code
-// (POST /request-cuisine-change puis PATCH /cuisine) parce que « remplacer la carte » efface tous les plats.
+/* Mon commerce › Type de commerce. UN SEUL TEMPS DEPUIS L'AUDIT DU 19/10 (shop-317).
+ *
+ * Avant : le nouveau type, puis « que faire de ta carte » (garder, ou remplacer par les plats types), puis un code reçu par
+ * e-mail. Mais depuis le verrou de la carte (2026-10-01), « remplacer » ne faisait plus rien pour un commerce (MENU_LOCKED,
+ * avalé) alors que l'écran disait « Type mis à jour » ; et le code, envoyé au commerce lui-même, ne protégeait plus rien :
+ * changer de type ne touche qu'à l'affichage, comme « Autres types de cuisine ». Le serveur ne demande plus de code pour ce
+ * geste (PATCH /cuisine). Pour changer de carte, le commerce passe par Ma carte › demande de modification. Les types sont
+ * affichés dans la langue choisie (restaurantTypeLabel) ; la valeur envoyée reste la valeur française de la table. */
 export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, onFermer }) {
   const { t } = useLanguage();
   const { token } = useAuth();
@@ -17,37 +22,14 @@ export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, 
   const connu = RESTAURANT_TYPES.some((c) => c.value === restaurant.cuisine);
   const [type, setType] = useState(connu ? restaurant.cuisine : 'Autre');
   const [autre, setAutre] = useState(connu ? '' : (restaurant.cuisine || ''));
-  const [carte, setCarte] = useState('keep');
-  const [etape, setEtape] = useState(1);
-  const [code, setCode] = useState('');
   const [enCours, setEnCours] = useState(false);
 
-  async function envoyerCode() {
-    setEnCours(true);
-    try {
-      await api(`/restaurants/${restoId}/request-cuisine-change`, { method: 'POST', token });
-      setEtape(2);
-      toast(t('editResto.toastCodeSent'), 'succes');
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setEnCours(false);
-    }
-  }
-
   async function confirmer() {
-    if (enCours) return; // un double appui rejouerait tout le flux (effacement puis réinsertion des plats)
-    if (!code) { toast(t('editResto.toastEnterCode')); return; }
+    if (enCours) return;
     const final = type === 'Autre' ? autre.trim() || 'Autre' : type;
     setEnCours(true);
     try {
-      await api(`/restaurants/${restoId}/cuisine`, { method: 'PATCH', token, body: { cuisine: final, code, wipeMenu: carte === 'replace' } });
-      if (carte === 'replace') {
-        const items = fullTemplateItems(final);
-        // La carte est gérée avec Fairide (verrou, 2026-10-01) : les plats types ne s'ajoutent plus d'eux-mêmes pour le
-        // commerce (MENU_LOCKED ignoré) ; l'équipe les ajoute depuis la console si le commerce le demande.
-        if (items.length) await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } }).catch((e) => { if (e.code !== 'MENU_LOCKED') throw e; });
-      }
+      await api(`/restaurants/${restoId}/cuisine`, { method: 'PATCH', token, body: { cuisine: final } });
       await loadDashboard(restoId);
       toast(t('editResto.toastTypeUpdated'), 'succes');
       onFermer();
@@ -57,43 +39,22 @@ export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, 
     }
   }
 
-  const pied = etape === 1 ? (
-    <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 48 }} disabled={enCours} onClick={envoyerCode}>{enCours ? '…' : t('editResto.getConfirmCode')}</button>
-  ) : (
+  const pied = (
     <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 48 }} disabled={enCours} onClick={confirmer}>{enCours ? '…' : t('editResto.confirmChange')}</button>
   );
 
   return (
     <SousEcran titre={t('editResto.rowType')} onFermer={onFermer} pied={pied}>
-      {etape === 1 ? (
-        <>
-          <div className="field">
-            <label htmlFor={ids + '-type'}>{t('editResto.newType')}</label>
-            <select id={ids + '-type'} value={type} onChange={(e) => setType(e.target.value)}>
-              {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.value}</option>)}
-            </select>
-          </div>
-          {type === 'Autre' && (
-            <div className="field"><label htmlFor={ids + '-autre'}>{t('editResto.specifyType')}</label><input id={ids + '-autre'} value={autre} onChange={(e) => setAutre(e.target.value)} placeholder={t('editResto.phType')} /></div>
-          )}
-          <div className="field">
-            <label htmlFor={ids + '-carte'}>{t('editResto.whatAboutMenu')}</label>
-            <select id={ids + '-carte'} value={carte} onChange={(e) => setCarte(e.target.value)}>
-              <option value="keep">{t('editResto.keepDishes')}</option>
-              <option value="replace">{t('editResto.replaceDishes')}</option>
-            </select>
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="small" style={{ margin: '0 0 12px' }}>{t('editResto.codeSentShort')}</p>
-          <div className="field">
-            <label htmlFor={ids + '-code'}>{t('editResto.codeByEmail')}</label>
-            <input id={ids + '-code'} inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" maxLength={6} />
-          </div>
-          <button type="button" className="btn-ghost" disabled={enCours} onClick={envoyerCode}>{t('editResto.resendCode')}</button>
-        </>
+      <div className="field">
+        <label htmlFor={ids + '-type'}>{t('editResto.newType')}</label>
+        <select id={ids + '-type'} value={type} onChange={(e) => setType(e.target.value)}>
+          {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{restaurantTypeLabel(c.value, t)}</option>)}
+        </select>
+      </div>
+      {type === 'Autre' && (
+        <div className="field"><label htmlFor={ids + '-autre'}>{t('editResto.specifyType')}</label><input id={ids + '-autre'} value={autre} onChange={(e) => setAutre(e.target.value)} placeholder={t('editResto.phType')} /></div>
       )}
+      <p className="small" style={{ margin: 0, color: 'var(--ink-soft)' }}>{t('editResto.typeKeepsMenu')}</p>
     </SousEcran>
   );
 }

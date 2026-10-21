@@ -124,6 +124,7 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
 .sp-outil:hover { border-color: var(--iris); color: var(--iris); }
 .sp-outil:disabled { opacity: .5; cursor: default; }
 .sp-cmd-outils .ec-anneau { order: -1; margin: 0 0 2px auto; }
+.sp-cmd-outils .ec-anneau-date { order: -1; flex-basis: 100%; max-width: none; margin-bottom: 2px; } /* programmée (shop-221) */
 .sp-cmd-etape { margin-top: 8px; }
 .sp-cmd-art { margin: 8px 0 6px; font-size: 14px; font-weight: 600; line-height: 1.45; }
 .sp-cmd-paiement { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }

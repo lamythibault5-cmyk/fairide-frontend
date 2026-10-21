@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { titreRangee, libellePosition, euros, jourCourt } from '../misesEnAvant';
-import { achatsCommerceAutorises } from '../natif';
+import { achatsCommerceAutorises, allerAuPaiement } from '../natif';
 
 // Promotions › Mise en avant (fondateur, 2026-10-02). Le commerçant choisit une rangée de la liste (« Healthy », « Autour
 // de vous »…), la 1re, 2e ou 3e position et une durée ; le prix par semaine est celui réglé par Fairide. Comme pour les
@@ -82,7 +82,8 @@ export default function MiseEnAvant({ restoId, token, toast }) {
         <div className="mea-demande mea-paiement" role="status">
           <b>{t('placements.autoAcceptedTitle')}</b>
           <p className="small" style={{ margin: '4px 0 8px' }}>{decision.note || t('placements.autoAccepted', { minutes: etat.paymentMinutes || 10 })}</p>
-          <a className="btn-teal" style={{ display: 'inline-block', minHeight: 44, lineHeight: '44px', padding: '0 18px' }} href={decision.checkoutUrl}>{t('placements.payNow')} · {resteTexte(decision.paymentDueAt)}</a>
+          {/* Par allerAuPaiement, comme tout passage par Stripe (audit du 19/10, shop-408) : un simple lien quittait l'app sans retour. */}
+          <button type="button" className="btn-teal" style={{ minHeight: 44, padding: '0 18px' }} onClick={() => allerAuPaiement(decision.checkoutUrl, { retour: '/dashboard/promotions' })}>{t('placements.payNow')} · {resteTexte(decision.paymentDueAt)}</button>
           <button type="button" className="btn-ghost" style={{ marginLeft: 8 }} onClick={() => setDecision(null)}>{t('placements.payLaterBtn')}</button>
         </div>
       )}
@@ -152,7 +153,7 @@ export default function MiseEnAvant({ restoId, token, toast }) {
                   <div style={{ textAlign: 'right' }}>
                     <span className={`modif-statut mea-statut--${b.status}`}>{t(!achats && b.status === 'awaiting_payment' ? 'placements.status_awaiting_payment_app' : `placements.status_${b.status}`)}</span>
                     {['pending', 'awaiting_payment'].includes(b.status) && <button type="button" className="btn-link small" style={{ display: 'block', marginTop: 4 }} disabled={occupe} onClick={() => retirer(b)}>{t('placements.withdraw')}</button>}
-                    {achats && b.status === 'awaiting_payment' && b.checkoutUrl && <a className="btn-teal small" style={{ display: 'inline-block', marginTop: 6, minHeight: 40, lineHeight: '40px', padding: '0 14px' }} href={b.checkoutUrl}>{t('placements.payNow')} · {resteTexte(b.paymentDueAt)}</a>}
+                    {achats && b.status === 'awaiting_payment' && b.checkoutUrl && <button type="button" className="btn-teal small" style={{ display: 'block', marginTop: 6, marginLeft: 'auto', minHeight: 40, padding: '0 14px' }} onClick={() => allerAuPaiement(b.checkoutUrl, { retour: '/dashboard/promotions' })}>{t('placements.payNow')} · {resteTexte(b.paymentDueAt)}</button>}
                     {achats && b.status === 'awaiting_payment' && <span className="small" style={{ display: 'block', marginTop: 2, color: 'var(--ink-soft)' }}>{t('placements.payWithin', { minutes: resteMinutes(b.paymentDueAt) })}</span>}
                   </div>
                 </div>
