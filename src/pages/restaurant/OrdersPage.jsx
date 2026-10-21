@@ -26,7 +26,8 @@ import { euros } from '../../prixPlat';
 import EtatVide from '../../components/EtatVide';
 import { BandeauCommerce, FeuilleCommerce, SegmentGlisse } from '../../components/commerce/BandeauCommerce';
 import { vibrer } from '../../gestes';
-import { experienceApp } from '../../natif';
+import { experienceApp, estNatif } from '../../natif';
+import { raisonFermeture } from '../../components/commerce/raisonFermeture';
 import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import AlerteBandeau from '../../components/commerce/AlerteBandeau';
 import { useModeEquipe } from '../../modeEquipe';
@@ -125,7 +126,9 @@ export default function OrdersPage() {
   // Commande dont une action (accepter, refuser, prête) est en cours : pas de double envoi sur un double appui.
   const [actionEnCours, setActionEnCours] = useState(null);
   const [aRefuser, setARefuser] = useState(null);
-  // Commande à emporter payée sur place que le client n'est pas venu chercher (confirmation avant de la clore).
+  // Commande déjà acceptée que le commerce doit annuler (friteuse en panne, dernier plat parti) : audit du 19/10, shop-207.
+  const [aAnnuler, setAAnnuler] = useState(null);
+  // Commande à emporter que le client n'est pas venu chercher (confirmation avant de la clore).
   const [pasVenu, setPasVenu] = useState(null);
   const [clotureEnCours, setClotureEnCours] = useState(false);
   const [confirmingPickup, setConfirmingPickup] = useState(null);
@@ -303,6 +306,9 @@ export default function OrdersPage() {
         toast(n > 1 ? t('ordersResto.toastTicketSentN', { n }) : t('ordersResto.ticketSentTerminal'));
         return;
       }
+      // Dans l'appli (iPhone, Android) sans terminal Goodcom : la WebView n'a pas de boîte d'impression, print() ne fait
+      // rien, et l'écran comptait quand même « Ticket déjà imprimé 1 fois » (audit du 19/10, shop-211). On le dit, sans compter.
+      if (estNatif()) { toast(t('ordersResto.printNoPrinterApp'), 'erreur'); return; }
       imprimerTicketPapier(r.lines, r.columns, `Fairide ${order.orderNumber ? `#${String(order.orderNumber).padStart(3, '0')}` : String(order.id).slice(0, 8)}`);
       setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + 1 }));
     } catch (e) { toast(e.message, 'erreur'); }
@@ -353,7 +359,29 @@ export default function OrdersPage() {
      commande ». Au vrai test chez Maestro Pizza, c'était un geste de trop en plein service (fondateur) : il ne reste qu'un
      bouton, « Remis au client », et juste à côté le numéro de commande et le prénom du client — ce que le client annonce au
      comptoir (son numéro ou son nom) et ce que porte le ticket du sac, pour remettre le bon sac à la bonne personne. Le
-     contrôle d'âge de l'alcool ne change pas (confirmTakeaway ouvre VerificationAge). « Client pas venu » reste dessous. */
+     contrôle d'âge de l'alcool ne change pas (confirmTakeaway ouvre VerificationAge). « Client pas venu » reste dessous.
+     « CLIENT PAS VENU » (audit du 19/10, shop-204 / LIVE-03 et shop-206) : il était offert dès l'acceptation, juste sous
+     « Marquer prêt », et un appui de travers fermait au client le paiement sur place partout. Il n'apparaît plus qu'une fois
+     la commande prête et l'heure noShowFrom passée (le serveur la calcule : 30 min après « prête » ou l'heure annoncée au
+     client) ; avant, une ligne dit à partir de quand. Il vaut aussi pour une commande payée en ligne (close sans
+     remboursement, elle reste due), qui n'avait aucune issue. */
+  const boutonPasVenu = (o) => {
+    if (o.status !== 'pret' || o.orderType !== 'pickup' || !o.noShowFrom) return null;
+    if (Date.now() < o.noShowFrom) {
+      const heure = new Date(o.noShowFrom).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
+      return <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('ordersResto.noShowFromHint', { time: heure })}</p>;
+    }
+    return <button type="button" className="ec-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} />{t('ordersResto.customerNoShow')}</button>;
+  };
+  // Payée sur place puis refusée ou annulée : plus rien « à encaisser » (audit du 19/10, LIVE-10, côté commerce). La ligne de
+  // raison (ligneRaison) dit ce qui s'est passé ; « Client pas venu » garde son badge rouge.
+  const rienAEncaisser = (o) => ['refuse', 'annule'].includes(o.status);
+  // Pourquoi une commande de l'historique s'est fermée (audit du 19/10, shop-203) : motif du refus, délai dépassé, faute de
+  // livreur… Le badge « Client pas venu » dit déjà le sien.
+  const ligneRaison = (o) => {
+    const r = o.pickupNoShow ? null : raisonFermeture(o);
+    return r?.cle ? <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t(r.cle, { client: o.clientName || '', ...r.valeurs })}</p> : null;
+  };
   const qui = (o) => (
     <span className="ec-remise-qui">
       {o.orderNumber ? <span className="commande-numero">{numeroCommande(o)}</span> : null}
@@ -368,9 +396,7 @@ export default function OrdersPage() {
           {confirmingPickup === o.id ? '…' : t('ordersResto.handedToCustomer')}
         </button>
       </div>
-      {o.paymentMode === 'on_site' && (
-        <button type="button" className="ec-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} />{t('ordersResto.customerNoShow')}</button>
-      )}
+      {boutonPasVenu(o)}
     </div>
   );
   const carteCommande = (o, { barre = false } = {}) => {
@@ -403,7 +429,7 @@ export default function OrdersPage() {
       </div>
       <p className="ec-cmd-sous">{sousTitre(o)}</p>
       {/* Paiement sur place : encadré, c'est de l'argent à encaisser (fondateur, 2026-10-07). */}
-      {o.paymentMode === 'on_site' && (
+      {o.paymentMode === 'on_site' && (!rienAEncaisser(o) || o.pickupNoShow) && (
         <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
           {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}
         </span>
@@ -440,11 +466,7 @@ export default function OrdersPage() {
         </div>
       )}
       {o.status === 'pret' && o.orderType === 'pickup' && remiseClient(o)}
-      {o.paymentMode === 'on_site' && o.status === 'preparation' && (
-        <div onClick={(e) => e.stopPropagation()}>
-          <button type="button" className="ec-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} />{t('ordersResto.customerNoShow')}</button>
-        </div>
-      )}
+      {close && ligneRaison(o)}
       {/* RETRAIT SANS RIEN TAPER (simulation du 10 oct. 2026) : le commerce compare à l'œil le code que le livreur lui
           montre avec celui-ci ; c'est le livreur qui confirme le retrait de son côté (PATCH /orders/:id/picked-up). */}
       <CodeRetrait order={o} t={t} />
@@ -525,7 +547,26 @@ export default function OrdersPage() {
                   </button>
                 </div>
               )}
+              {boutonPasVenu(selectedOrder)}
               <CodeRetrait order={selectedOrder} t={t} />
+              {/* Le détail d'une commande qui attend n'avait ni « Accepter » ni « Refuser » (audit du 19/10, shop-202) : il fallait
+                  le fermer et retrouver la carte. Mêmes gestes que la carte (temps en plus choisi sur la carte, allergie à confirmer). */}
+              {selectedOrder.status === 'nouveau' && (
+                <div className="row" style={{ marginTop: 12, gap: 8, flexWrap: 'wrap' }}>
+                  <button type="button" className="btn-teal" disabled={actionEnCours === selectedOrder.id} onClick={() => accepter(selectedOrder)}>
+                    {actionEnCours === selectedOrder.id ? '…' : t('ordersResto.accept')}
+                  </button>
+                  <button type="button" className="btn-outline" disabled={actionEnCours === selectedOrder.id} onClick={() => setARefuser(selectedOrder)}>{t('ordersResto.refuse')}</button>
+                </div>
+              )}
+              {/* ANNULER UNE COMMANDE DÉJÀ ACCEPTÉE (audit du 19/10, shop-207) : le serveur le permettait (PATCH /refuse depuis
+                  « en préparation » ou « prête », motif obligatoire, remboursement, livreur prévenu), aucun écran ne l'offrait.
+                  Ici seulement, dans le détail, pas sur la carte : c'est un geste rare, à ne pas toucher par erreur en service. */}
+              {['preparation', 'pret'].includes(selectedOrder.status) && (
+                <button type="button" className="btn-danger-ghost" style={{ marginTop: 12 }} disabled={actionEnCours === selectedOrder.id} onClick={() => setAAnnuler(selectedOrder)}>
+                  {t('ordersResto.cancelAccepted')}
+                </button>
+              )}
               <div className="divider" />
               {/* UN bouton d'impression (2026-09-23). Le terminal Fairide imprime les tickets de lui-même
                   (fondateur, 2026-09-22) ; ici ne reste que le secours : l'imprimante Bluetooth si elle est
@@ -561,7 +602,7 @@ export default function OrdersPage() {
                     <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
                     <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
                   </div>
-                  <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-faint)' }}>{t('ordersResto.noTerminalHint')}{!membreEquipe && <> <Link to="/dashboard/terminal">{t('ordersResto.terminalSettings')}</Link></>}</p>
+                  <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-faint)' }}>{t(estNatif() ? 'ordersResto.noTerminalHintApp' : 'ordersResto.noTerminalHint')}{!membreEquipe && <> <Link to="/dashboard/terminal">{t('ordersResto.terminalSettings')}</Link></>}</p>
                 </>
               )}
               {apercu?.orderId === selectedOrder.id && <div style={{ marginTop: 12 }}><TicketPapier lines={apercu.lines} columns={apercu.columns} /></div>}
@@ -575,7 +616,7 @@ export default function OrdersPage() {
         {selectedOrder && createPortal(<OrderReceipt order={selectedOrder} restaurant={restaurant} />, document.body)}
         <ConfirmDialog open={!!pasVenu} danger
           title={t('ordersResto.confirmNoShowTitle')}
-          message={t('ordersResto.confirmNoShowText', { name: pasVenu?.clientName || '' })}
+          message={t(pasVenu?.paymentMode === 'on_site' ? 'ordersResto.confirmNoShowText' : 'ordersResto.confirmNoShowTextOnline', { name: pasVenu?.clientName || '' })}
           confirmLabel={t('ordersResto.customerNoShow')}
           loading={clotureEnCours}
           onCancel={() => setPasVenu(null)}
@@ -584,12 +625,26 @@ export default function OrdersPage() {
             dans l'e-mail de refus. Avant, le client apprenait le refus sans savoir pourquoi. */}
         <ReasonDialog open={!!aRefuser} danger
           title={t('ordersResto.confirmRefuseTitle')}
-          message={`${t('ordersResto.confirmRefuseText', { name: aRefuser?.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
+          message={`${t(aRefuser?.paymentMode === 'on_site' ? 'ordersResto.confirmRefuseTextOnSite' : 'ordersResto.confirmRefuseText', { name: aRefuser?.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
           label={t('ordersResto.refuseReasonLabel')}
           placeholder={t('ordersResto.refuseReasonPlaceholder')}
           confirmLabel={t('ordersResto.refuse')}
           onCancel={() => setARefuser(null)}
           onConfirm={(motif) => { const o = aRefuser; setARefuser(null); orderAction(o.id, 'refuse', { reason: motif }); }} />
+        {/* Annulation après acceptation (shop-207) : même route et même motif obligatoire que le refus ; le client reçoit
+            « a dû annuler ta commande » avec le motif, remboursé s'il avait payé en ligne, et le livreur déjà en route est prévenu. */}
+        <ReasonDialog open={!!aAnnuler} danger
+          title={t('ordersResto.confirmCancelTitle')}
+          message={[
+            t(aAnnuler?.paymentMode === 'on_site' ? 'ordersResto.confirmCancelTextOnSite' : 'ordersResto.confirmCancelText', { name: aAnnuler?.clientName || '' }),
+            aAnnuler?.driverId ? t('ordersResto.confirmCancelDriver') : '',
+            t('ordersResto.refuseReasonHint')
+          ].filter(Boolean).join(' ')}
+          label={t('ordersResto.refuseReasonLabel')}
+          placeholder={t('ordersResto.refuseReasonPlaceholder')}
+          confirmLabel={t('ordersResto.cancelAccepted')}
+          onCancel={() => setAAnnuler(null)}
+          onConfirm={(motif) => { const o = aAnnuler; setAAnnuler(null); setSelectedOrder(null); orderAction(o.id, 'refuse', { reason: motif }); }} />
         {/* A1 : accepter une commande avec demande d'allergie, c'est s'engager à la respecter. */}
         <ConfirmDialog open={!!allergieAConfirmer}
           title={t('conformite.allergyConfirmTitle')}
@@ -642,7 +697,7 @@ export default function OrdersPage() {
         )}
         <ListePlats items={o.items} />
         <div className="sp-cmd-paiement">
-          {o.paymentMode === 'on_site' ? (
+          {o.paymentMode === 'on_site' && rienAEncaisser(o) && !o.pickupNoShow ? null : o.paymentMode === 'on_site' ? (
             <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
               {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}
             </span>
@@ -681,11 +736,7 @@ export default function OrdersPage() {
         {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
           <p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.waitingDriver')}</p>
         )}
-        {o.paymentMode === 'on_site' && o.status === 'preparation' && (
-          <div onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="btn-ghost btn-sm sp-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={14} className="icone-texte" />{' '}{t('ordersResto.customerNoShow')}</button>
-          </div>
-        )}
+        {['terminee', 'annulee'].includes(stageKey) && ligneRaison(o)}
       </article>
     );
   };

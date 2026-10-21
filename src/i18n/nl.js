@@ -3714,7 +3714,7 @@ export default {
 
       reopenNow: "Nu heropenen (gesloten tot {time})",
 
-      closeTonightHelp: "Zaak zonder verwittiging gesloten: ze blijft zichtbaar maar staat als gesloten, neemt geen bestellingen meer aan en gaat morgen om 6 u vanzelf weer open.",
+      closeTonightHelp: "Zaak zonder verwittiging gesloten: ze blijft zichtbaar maar staat als gesloten, neemt geen bestellingen meer aan en gaat om de eerstvolgende 6 u 's ochtends vanzelf weer open.",
 
       closedTonightToast: "Zaak gesloten tot morgen 6 u.",
 
@@ -4386,7 +4386,7 @@ export default {
       s11p2: "**Bestellingen en capaciteit** (in « Mijn zaak »): een minimaal bestelbedrag, een maximaal aantal bestellingen per dag, de leverafstand (zonder instelling 6 km) en je gebruikelijke bereidingstijd (zonder instelling 12 minuten), die het aankomstuur voor de klant bepaalt. Fairide toont je er ook hoeveel tijd je echt nodig hebt, gemeten over je laatste 30 dagen.",
       s11p3: "**De koerier wacht.** Zodra de koerier er is, toont de bestelling hoeveel minuten hij al wacht. Hij kan niet vertrekken zonder de bestelling: maak ze eerst klaar.",
       s11p4: "**Alcohol.** Bij een bestelling met alcohol controleer je bij de overhandiging een identiteitsbewijs. Tik op « Leeftijd gecontroleerd: overhandigen », of op « Overhandiging weigeren » als de klant te jong is of geen bewijs heeft: de bestelling wordt afgesloten en het Fairide-team regelt de terugbetaling.",
-      s11p5: "**Klant niet gekomen** (afhalen, ter plaatse betaald): « Klant niet gekomen » sluit de bestelling af. Fairide komt niet tussen: geen terugbetaling, geen vergoeding."
+      s11p5: "**Klant niet gekomen** (afhalen): zodra de bestelling klaar is, en 30 minuten na het tijdstip dat de klant kreeg, sluit « Klant niet gekomen » de bestelling af. Ter plaatse betaald: Fairide komt niet tussen (geen terugbetaling, geen vergoeding), en deze klant kan niet meer ter plaatse betalen. Online betaald: ze blijft verschuldigd, je houdt je betaling."
     },
     resetPassword: {
       title: 'Nieuw wachtwoord',
@@ -4443,10 +4443,16 @@ export default {
       notifTitleMany: '{n} nieuwe Fairide-bestellingen',
       notifTitleOne: 'Nieuwe Fairide-bestelling',
       notifBody: 'Te aanvaarden of te weigeren in je dashboard.',
-      cancelToastOne: '{client} heeft zijn bestelling geannuleerd vóór aanvaarding.',
-      cancelToastMany: '{n} bestellingen geannuleerd door klanten.',
+      cancelToastOne: '{client} heeft zijn bestelling geannuleerd vóór aanvaarding. Niets te bereiden.',
+      cancelToastMany: '{n} bestellingen geannuleerd: de reden van elk staat in de geschiedenis.',
       cancelNotifTitle: 'Bestelling geannuleerd · Fairide',
-      cancelNotifBody: 'Een klant heeft een bestelling geannuleerd vóór je ze aanvaardde. Niets te bereiden.'
+      closedExpired: 'Bestelling van {client} geannuleerd: ze werd niet op tijd aanvaard. De klant is verwittigd, en je bestellingen staan 30 minuten op pauze.',
+      closedNoCourier: '{client} heeft geannuleerd: geen enkele koerier nam de bestelling. Je had ze klaargemaakt: je houdt wat je toekomt.',
+      closedClientAbsent: 'Bestelling van {client} niet geleverd: de klant was afwezig.',
+      closedAfterAccept: 'Bestelling van {client} geannuleerd: stop met klaarmaken.',
+      closedRefused: 'Geweigerd: {reason}',
+      closedNoShow: 'Klant niet gekomen: bestelling niet opgehaald.',
+      closedAgeAbsent: 'Overhandiging geweigerd: leeftijd niet gecontroleerd.'
     },
     errorPage: {
       title: 'Deze pagina kon niet worden weergegeven',
@@ -5762,7 +5768,8 @@ export default {
       closuresTitle: 'Uitzonderlijke sluitingen (vakantie, werken...)',
       closuresIntro: 'Buiten je gewone uren hierboven, de zaak verschijnt de hele periode als gesloten voor klanten, met de reden die je opgeeft.',
       from: 'Van',
-      toOptional: 'Tot (optioneel)',
+      toOptional: 'Tot (leeg: één dag)',
+      untilFurtherNotice: 'Tot nader bericht (heropeningsdatum onbekend)',
       reasonVisible: 'Reden (zichtbaar voor klanten)',
       businessTypeColon: 'Type zaak:',
       changeType: 'Type wijzigen',
@@ -5921,9 +5928,9 @@ export default {
     },
     ordersResto: {
       stopTodayBtn: 'Bestellingen stoppen voor vandaag',
-      stopTodayHelp: 'Niets meer te bereiden vandaag? Klanten kunnen niet meer bestellen, al ontvangen bestellingen gaan door. Morgen om 6 u gaan de bestellingen VANZELF weer open: jij hoeft niets te doen. Je kunt ook vroeger heropenen met één tik.',
+      stopTodayHelp: 'Niets meer te bereiden vandaag? Klanten kunnen niet meer bestellen, al ontvangen bestellingen gaan door. Om de eerstvolgende 6 u \'s ochtends gaan de bestellingen VANZELF weer open: jij hoeft niets te doen. Je kunt ook vroeger heropenen met één tik.',
       stoppedTodayTitle: 'Bestellingen gestopt voor vandaag',
-      stoppedTodaySub: 'Gaat morgen om {time} vanzelf weer open · tik om nu te heropenen',
+      stoppedTodaySub: 'Gaat {day} om {time} vanzelf weer open · tik om nu te heropenen',
       stockPanelTitle: 'Vandaag uitverkocht',
       stockPanelCount: '{n} uitverkocht',
       stockPanelHelp: 'Kun je een gerecht niet meer bereiden? Tik op “Vandaag uitverkocht”: het verdwijnt meteen van de kaart van de klanten en komt morgen VANZELF terug. Niets te heractiveren.',
@@ -5960,6 +5967,14 @@ export default {
       terminalSettings: 'Terminal en afdrukken',
       confirmRefuseTitle: 'Deze bestelling weigeren?',
       confirmRefuseText: 'De bestelling van {name} wordt geweigerd en de klant automatisch terugbetaald.',
+      confirmRefuseTextOnSite: 'De bestelling van {name} wordt geweigerd. Ze zou ter plaatse betaald worden: de klant heeft niets betaald.',
+      cancelAccepted: 'Bestelling annuleren',
+      confirmCancelTitle: 'Een aanvaarde bestelling annuleren?',
+      confirmCancelText: 'De bestelling van {name} wordt geannuleerd en de klant verwittigd, met je reden. Hij wordt volledig terugbetaald.',
+      confirmCancelTextOnSite: 'De bestelling van {name} wordt geannuleerd en de klant verwittigd, met je reden. Ze zou ter plaatse betaald worden: hij heeft niets betaald.',
+      confirmCancelDriver: 'De koerier krijgt bericht dat hij niet meer hoeft te komen.',
+      noTerminalHintApp: 'Geen Fairide-terminal gekoppeld: vanuit de app wordt het ticket alleen op een Fairide-terminal afgedrukt. Op een computer komt het uit de printer van de computer.',
+      printNoPrinterApp: 'Er werd niets afgedrukt: deze telefoon heeft geen printer. Vanuit de app komt het ticket uit een Fairide-terminal; druk het anders af vanaf een computer.',
       refuseReasonHint: 'De reden wordt naar de klant gestuurd.',
       refuseReasonLabel: 'Reden van weigering',
       refuseReasonPlaceholder: 'Bv. gerecht uitverkocht, keuken overbevraagd, onverwachte sluiting',
@@ -6070,7 +6085,9 @@ export default {
       noShowBadge: 'Klant niet gekomen — bestelling niet opgehaald',
       customerNoShow: 'Klant niet gekomen',
       confirmNoShowTitle: 'Is de klant niet gekomen?',
-      confirmNoShowText: 'De bestelling van {name} wordt afgesloten als niet opgehaald. Bij een betaling ter plaatse komt Fairide niet tussen: geen terugbetaling en geen vergoeding.',
+      confirmNoShowText: 'De bestelling van {name} wordt afgesloten als niet opgehaald. Deze klant kan op Fairide nergens meer ter plaatse betalen: zijn volgende bestellingen betaalt hij online. Fairide komt niet tussen: geen terugbetaling en geen vergoeding.',
+      confirmNoShowTextOnline: 'De bestelling van {name} wordt afgesloten als niet opgehaald. Ze werd online betaald: zoals de voorwaarden bepalen, blijft ze verschuldigd en houd je je betaling.',
+      noShowFromHint: '“Klant niet gekomen” mogelijk vanaf {time}.',
       toastNoShow: 'Bestelling afgesloten: klant niet gekomen.',
       toCollectOnSite: 'Ter plaatse te betalen',
       paidOnlineBadge: 'Al online betaald'
@@ -7503,7 +7520,7 @@ export default {
       qtyLess: 'Eén minder',
       qtyMore: 'Eén meer',
       payOnlineFrom: 'Online (binnenkort)',
-      onlinePaymentOpenSoon: 'Online betalen komt binnenkort. Tot dan aanvaardt deze zaak enkel afhaal met betaling ter plaatse, als ze dat aanbiedt.',
+      onlinePaymentOpenSoon: 'Deze zaak aanvaardt alleen online betalen, dat binnenkort opent op Fairide: je kunt hier nog niet bestellen. Andere zaken aanvaarden al afhalen met betaling ter plaatse.',
       whenLabel: 'Wanneer wil je het?',
       unavailableToday: "Vandaag niet meer beschikbaar",
       removeLine: "Verwijderen",
@@ -7713,6 +7730,9 @@ export default {
       bell_status_livre: "Bestelling bij {name} geleverd. Smakelijk!",
       bell_status_annule: "Je bestelling bij {name} is geannuleerd.",
       bell_status_refuse: "{name} kon je bestelling niet aanvaarden: je wordt terugbetaald.",
+      bell_order_paid_surPlace: "Bestelling verstuurd naar {name}: je betaalt bij het ophalen.",
+      bell_status_refuse_surPlace: "{name} kon je bestelling niet aanvaarden. Je had niets betaald.",
+      bell_status_livre_emporter: "Bestelling bij {name} opgehaald. Smakelijk!",
       noCourier_searching: "We zoeken nog een koerier. Is er tegen {time} geen beschikbaar, dan kun je annuleren en word je volledig terugbetaald.",
       noCourier_stillNone: "Er is nu geen koerier beschikbaar. Je kunt nog wachten, of annuleren: je wordt volledig terugbetaald.",
       noCourier_cancelButton: "Annuleren, terugbetaald",
@@ -7725,6 +7745,7 @@ export default {
       courierAtDoorLate: "De wachttijd is voorbij: zonder nieuws van jou mag de koerier de rit afsluiten.",
       courierAtDoorCall: 'Mijn koerier bellen',
       noCourier_incident_client_absent: "Niet geleverd: de koerier wachtte aan je deur en belde je, zonder antwoord. Zoals onze voorwaarden bepalen, blijft een niet in ontvangst genomen bestelling verschuldigd.",
+      noCourier_incident_pickup_not_collected: "Niet opgehaald: de zaak heeft op je gewacht. Zoals onze voorwaarden bepalen, blijft een niet-afgehaalde bestelling verschuldigd.",
       noCourier_incident_courier_stuck_after_pickup: "Je koerier had onderweg een probleem: het Fairide-team regelt het en houdt je op de hoogte.",
       reorder: "Opnieuw bestellen",
       reorderDone: "Winkelmandje opnieuw samengesteld met de kaart van vandaag: controleer de prijzen voor je bestelt.",
@@ -7762,7 +7783,8 @@ export default {
       photoByNoTime: 'gefotografeerd door {name}',
       photoAlt: 'Je bestelling, gefotografeerd door {name} vóór de overhandiging',
       refundLine: 'Terugbetaling van {amount} onderweg naar je betaalmiddel (5 tot 10 werkdagen, afhankelijk van je bank).',
-      refundNothing: 'Er werd niets aangerekend.'
+      refundNothing: 'Er werd niets aangerekend.',
+      payNothing: 'Niets te betalen'
     },
     review: {
       foodRatingLabel: 'Beoordeling voor het eten',

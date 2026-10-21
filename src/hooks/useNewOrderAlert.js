@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { raisonFermeture } from '../components/commerce/raisonFermeture';
 
 // Alerte du restaurateur à l'arrivée d'une commande.
 //
@@ -314,9 +315,11 @@ export default function useNewOrderAlert(orders, ready) {
     // reçue repartait par la branche `prev === null`, sans un son.
   }, [newCount, ring, ready]);
 
-  // Annulation par le client (possible tant que la commande n'est pas acceptée) : on compare les
-  // statuts d'un sondage à l'autre. Une commande vue « nouveau » et revue « annule » déclenche un son
-  // descendant (distinct du carillon d'arrivée), un toast et une notification système.
+  // Annulation (client, délai dépassé, faute de livreur, client absent…) : on compare les statuts d'un sondage à l'autre.
+  // Une commande vue en cours et revue « annule » déclenche un son descendant (distinct du carillon d'arrivée), un toast et
+  // une notification système, avec SA raison (audit du 19/10, shop-203 : tout s'annonçait « annulée par le client avant
+  // acceptation »). Le geste du commerce lui-même (client pas venu, contrôle d'âge au comptoir) ne sonne pas : son propre
+  // toast reste affiché (raisonFermeture.js).
   const prevStatusRef = useRef(null);
   useEffect(() => {
     if (!ready) return;
@@ -324,12 +327,15 @@ export default function useNewOrderAlert(orders, ready) {
     const actuel = new Map(orders.map((o) => [o.id, o.status]));
     prevStatusRef.current = actuel;
     if (!prev) return;
-    const annulees = orders.filter((o) => o.status === 'annule' && prev.has(o.id) && !['annule', 'refuse'].includes(prev.get(o.id)));
+    const annulees = orders.filter((o) => o.status === 'annule' && prev.has(o.id) && !['annule', 'refuse'].includes(prev.get(o.id)))
+      .map((o) => ({ o, raison: raisonFermeture(o, prev.get(o.id)) }))
+      .filter((x) => x.raison && !x.raison.propre);
     if (!annulees.length) return;
     const ctx = ctxRef.current;
     if (soundEnabled && ctx && ctx.state === 'running') { try { playChime(ctx, [660, 440], gainRef.current || ctx.destination); } catch { /* contexte fermé */ } }
-    toast(annulees.length > 1 ? t('alertBar.cancelToastMany', { n: annulees.length }) : t('alertBar.cancelToastOne', { client: annulees[0].clientName || '' }));
-    notifier(t('alertBar.cancelNotifTitle'), { body: t('alertBar.cancelNotifBody'), icon: '/icons/icon.svg', tag: 'fairide-order-cancelled' });
+    const texte = annulees.length > 1 ? t('alertBar.cancelToastMany', { n: annulees.length }) : t(annulees[0].raison.cle, { client: annulees[0].o.clientName || '' });
+    toast(texte);
+    notifier(t('alertBar.cancelNotifTitle'), { body: texte, icon: '/icons/icon.svg', tag: 'fairide-order-cancelled' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders, ready]);
 
