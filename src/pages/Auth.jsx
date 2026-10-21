@@ -404,6 +404,13 @@ export default function Auth() {
   // avec lui par le même bouton « Se connecter » — il reste valable une heure.
   const [googleEnAttente2fa, setGoogleEnAttente2fa] = useState(null);
   const [resending, setResending] = useState(false);
+  // « Changer de numéro » sur l'écran du code (audit du 19/10, auth-03) : le champ du bon numéro, et la preuve que le compte
+  // est à soi — le mot de passe tapé (gardé en mémoire, jamais dans le brouillon), ou le jeton Apple / Google.
+  const [changerNumero, setChangerNumero] = useState(false);
+  const [nouveauNumero, setNouveauNumero] = useState('');
+  const [erreursNumero, setErreursNumero] = useState({});
+  // Jeton Apple / Google d'une CONNEXION sur un compte qui attend son code (PHONE_NOT_VERIFIED) : la preuve du compte.
+  const [preuveCode, setPreuveCode] = useState(null);
   // ?oubli=1 : arrivée depuis un lien de réinitialisation périmé (ResetPassword.jsx), directement sur « mot de passe oublié ».
   const [forgotMode, setForgotMode] = useState(() => searchParams.get('oubli') === '1');
   const [forgotEmail, setForgotEmail] = useState('');
@@ -447,6 +454,11 @@ export default function Auth() {
     window.location.reload();
   }
   const attenteBrouillon = useRef(null); // { role, mode } restaurés, tant qu'ils ne sont pas encore appliqués
+  /* LE MOT DE PASSE D'UN BROUILLON REPRIS (audit du 19/10, LIVE-13). Le brouillon ne le garde jamais, et c'est voulu. Mais
+     repris au-delà de la première étape (celle du compte), il manquait au moment de « Créer mon compte » : retour à l'étape
+     1, « Ce champ est requis », et tout le parcours à refaire. On le redemande donc à la DERNIÈRE étape, juste au-dessus du
+     bouton : la personne reste où elle en était. */
+  const [mdpARetaper, setMdpARetaper] = useState(false);
   useLayoutEffect(() => {
     brouillonRepris.current = true;
     try {
@@ -466,6 +478,7 @@ export default function Auth() {
       if (nav?.type !== 'reload' && b.champs?.mode === 'register') setBrouillonRepris(true);
       attenteBrouillon.current = { role: b.champs?.role ?? role, mode: b.champs?.mode ?? mode };
       for (const [cle, valeur] of Object.entries(b.champs || {})) champsBrouillon[cle]?.[1](valeur);
+      if (b.champs?.mode === 'register' && Number(b.champs?.step) > 0) setMdpARetaper(true);
     } catch { /* stockage indisponible ou brouillon illisible : formulaire vierge */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -482,7 +495,7 @@ export default function Auth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, valeursBrouillon);
 
-  const { user, login, register, verifyEmail, resendCode, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  const { user, login, register, verifyEmail, resendCode, changePendingPhone, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
   // Déjà connecté EN ARRIVANT (et non pendant une connexion faite ici) : voir la redirection juste avant le rendu.
   const [connecteALArrivee] = useState(() => !!user);
   // Google ou Apple selon d'où vient le jeton. Apple n'a pas le nom dans son jeton : on envoie celui du formulaire
@@ -795,6 +808,23 @@ export default function Auth() {
   async function handleGoogleCredential(response, fed = { fournisseur: 'google' }) {
     const { mode, role } = stateRef.current;
     if (mode === 'register') {
+      /* ADRESSE GOOGLE DÉJÀ INSCRITE (audit du 19/10, auth-06). Le jeton n'était que gardé : on remplissait tout le
+       * formulaire (commerce, horaires, adresse…), puis le serveur, trouvant le compte, ouvrait simplement l'ancien et
+       * laissait tomber le nouveau rôle et tout ce qui avait été tapé, sans un mot. On le dit maintenant DÈS le clic,
+       * avant le formulaire : la connexion s'ouvre, l'adresse remplie. Rien de ce qui a été tapé n'est effacé (il reste
+       * dans l'onglet « Inscription »). Un ajout de rôle se fait ensuite dans Mon compte. Réseau indisponible : on laisse
+       * continuer, comme les autres vérifications de disponibilité. */
+      const adresse = decoderJwt(response.credential).email;
+      if (adresse) {
+        try {
+          const r = await api('/auth/check-availability', { method: 'POST', body: { email: adresse } });
+          if (r?.emailTaken) {
+            setEmail(adresse); setMode('login');
+            toast(t('auth.googleAccountExists'));
+            return;
+          }
+        } catch { /* l'inscription tranchera */ }
+      }
       retenirGoogle(response.credential, fed);
       setStep((s) => (s === 0 ? 1 : s));
       return;
@@ -810,7 +840,9 @@ export default function Auth() {
       await allerApresConnexion(data.user);
     } catch (err) {
       if (err.message === 'PHONE_NOT_VERIFIED') {
-        // Inscription Google / Apple faite, code SMS jamais saisi : l'écran du code (« Renvoyer » y est).
+        // Inscription Google / Apple faite, code SMS jamais saisi : l'écran du code (« Renvoyer » y est). Le jeton est gardé
+        // en mémoire : il prouve le compte si le numéro est à changer (auth-03).
+        setPreuveCode({ fournisseur: fed.fournisseur || 'google', jeton: response.credential });
         setPendingEmail(err.data?.email || ''); setPendingChannel('sms'); setPendingPhone(err.data?.phoneMasked || '');
       } else if (err.message === 'INCOMPLETE_PROFILE') {
         // Pas encore de compte pour cette adresse Google : on enchaîne sur l'inscription, profil prérempli.
@@ -933,6 +965,13 @@ export default function Auth() {
            en faute, on y ramène la personne plutôt que d'afficher une erreur hors contexte. */
         for (let i = 0; i < steps.length; i++) {
           const e = validateStep(steps[i]);
+          // Brouillon repris : seul le mot de passe manque, et son champ est sur cette dernière étape (LIVE-13). On y reste.
+          if (steps[i] === 'account' && mdpARetaper && step > 0 && !googleCredential && Object.keys(e).length === 1 && e.password) {
+            setErrors(e);
+            montrerPremiereErreur();
+            setLoading(false);
+            return;
+          }
           if (Object.keys(e).length > 0) {
             setStep(i);
             setErrors(e);
@@ -1008,8 +1047,15 @@ export default function Auth() {
       }
     } catch (err) {
       if (err.message === 'EMAIL_NOT_VERIFIED') {
-        // Le code de l'inscription a sans doute expiré (15 minutes) : on en envoie un neuf plutôt que d'ouvrir un
-        // écran qui attend un code que la personne n'a plus. Le canal (SMS ou e-mail) vient de la réponse.
+        // Code de l'inscription ENCORE VALABLE (codeActif, audit du 19/10, auth-02) : l'écran du code, sans SMS de plus —
+        // celui que la personne a reçu marche. Expiré : on en envoie un neuf plutôt que d'ouvrir un écran qui attend un code
+        // que la personne n'a plus. Le canal (SMS ou e-mail) vient de la réponse.
+        if (err.data?.codeActif) {
+          setPendingChannel(err.data.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(err.data.phoneMasked || '');
+          setPendingEmail(email.trim());
+          toast(t('auth.codeStillValid'));
+          return;
+        }
         let canal = null;
         try { canal = await resendCode(email.trim()); } catch { /* plafond atteint ou réseau : le bouton « Renvoyer » reste là */ }
         setPendingChannel(canal?.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(canal?.phoneMasked || '');
@@ -1033,7 +1079,8 @@ export default function Auth() {
         setPassword(''); verifMdp.current = { valeur: null, promesse: null };
         setErrors({ password: message });
         const i = steps.indexOf('account');
-        if (i >= 0) setStep(i);
+        // Brouillon repris : le champ du mot de passe est sur la dernière étape, on y reste (LIVE-13).
+        if (i >= 0 && !(mdpARetaper && step > 0)) setStep(i);
         toast(t('auth.errPasswordRetry'), 'erreur');
         montrerPremiereErreur();
       } else if (err.field === 'phone' || err.field === 'email') {
@@ -1117,6 +1164,35 @@ export default function Auth() {
       toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : r?.channel === 'email' ? 'auth.errVerificationSent' : 'auth.newCodeSent'));
     } catch (err) {
       toast(err.message, 'erreur');
+    } finally {
+      setResending(false);
+    }
+  }
+
+  // « Changer de numéro » (audit du 19/10, auth-03) : un code part au bon numéro, l'ancien ne vaut plus. Sans mot de passe en
+  // mémoire ni jeton (page rechargée), on le demande.
+  const preuveNumero = preuveCode || (googleCredential ? { fournisseur: fournisseurFed, jeton: googleCredential } : null);
+  async function envoyerNouveauNumero(e) {
+    e.preventDefault();
+    const requis = t('auth.errFieldRequired');
+    const manque = {};
+    if (!nouveauNumero.trim()) manque.phone = requis;
+    if (!preuveNumero && !password) manque.password = requis;
+    setErreursNumero(manque);
+    if (Object.keys(manque).length) return;
+    setResending(true);
+    try {
+      const r = await changePendingPhone(pendingEmail, nouveauNumero.trim(), { password, preuve: preuveNumero });
+      setPendingChannel(r?.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(r?.phoneMasked || nouveauNumero.trim());
+      // Le formulaire garde le bon numéro : une nouvelle inscription repartirait avec lui.
+      setPhone(nouveauNumero.trim());
+      setCode(''); setChangerNumero(false);
+      toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
+    } catch (err) {
+      const MESSAGES = { PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid', PHONE_DOUBLE_PREFIX: 'auth.errPhoneDoublePrefix' };
+      if (err.field === 'phone') setErreursNumero({ phone: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
+      else if (err.code === 'BAD_CREDENTIALS' && !preuveNumero) setErreursNumero({ password: err.message });
+      else toast(err.message, 'erreur');
     } finally {
       setResending(false);
     }
@@ -1218,7 +1294,33 @@ export default function Auth() {
           <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending} onClick={handleResend}>
             {resending ? t('common.loading') : t('auth.resendCode')}
           </button>
-          <button className="btn-ghost" style={{ marginTop: 4 }} onClick={() => { setPendingEmail(''); setCode(''); }}>
+          {/* Un numéro mal tapé : on le corrige ici, depuis l'inscription comme depuis la connexion (audit du 19/10, auth-03). */}
+          {changerNumero ? (
+            <form onSubmit={envoyerNouveauNumero} style={{ marginTop: 14 }} noValidate>
+              <h3 style={{ margin: '0 0 4px' }}>{t('auth.changePhoneTitle')}</h3>
+              <p className="small" style={{ marginBottom: 10 }}>{t('auth.changePhoneText')}</p>
+              <div className="field">
+                <label htmlFor="auth-f-nouveau-tel">{t('auth.phone')}</label>
+                <PhoneInput id="auth-f-nouveau-tel" value={nouveauNumero} onChange={setNouveauNumero} invalid={!!erreursNumero.phone} />
+                {erreursNumero.phone && <p className="field-error" role="alert">{erreursNumero.phone}</p>}
+              </div>
+              {!preuveNumero && (
+                <div className="field">
+                  <label htmlFor="auth-f-tel-mdp">{t('auth.changePhonePassword')}</label>
+                  <PasswordInput id="auth-f-tel-mdp" value={password} invalid={!!erreursNumero.password} autoComplete="current-password" onChange={(e) => setPassword(e.target.value)} />
+                  {erreursNumero.password && <p className="field-error" role="alert">{erreursNumero.password}</p>}
+                </div>
+              )}
+              <button type="submit" className="btn-gold btn-block" disabled={resending}>
+                {resending ? t('common.loading') : t('auth.changePhoneSend')}
+              </button>
+            </form>
+          ) : (
+            <button className="btn-ghost" style={{ marginTop: 4 }} onClick={() => { setNouveauNumero(phone); setErreursNumero({}); setChangerNumero(true); }}>
+              {t('auth.changePhone')}
+            </button>
+          )}
+          <button className="btn-ghost" style={{ marginTop: 4 }} onClick={() => { setPendingEmail(''); setCode(''); setChangerNumero(false); setPreuveCode(null); }}>
             {t('auth.back')}
           </button>
         </div>
@@ -1745,6 +1847,17 @@ export default function Auth() {
                 {t('auth.haveReferral')}
               </button>
             ))}
+
+            {/* Brouillon repris : le mot de passe, jamais gardé, se retape ici plutôt qu'à l'étape 1 (LIVE-13). */}
+            {isLastStep && step > 0 && mdpARetaper && !googleCredential && (
+              <div className="field">
+                <label htmlFor="auth-f-mdp-reprise">{t('auth.password')}</label>
+                <PasswordInput id="auth-f-mdp-reprise" value={password}
+                  onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors((prev) => { const { password: _p, ...reste } = prev; return reste; }); }}
+                  onBlur={controlerMotDePasseEnQuittant} invalid={!!errors.password} />
+                {errors.password ? fieldError('password') : <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.draftPasswordAgain')}</p>}
+              </div>
+            )}
 
             {isLastStep && role === 'client' && (
               <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '4px 0 12px' }}>
