@@ -85,7 +85,7 @@ export default function AdminCouriersPage() {
     { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '-'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}`, sortValue: (r) => r.zone || '' },
     { key: 'updatedAt', label: tr('adminCouriers.colUpdated'), get: (r) => fmt(r.updatedAt), sortValue: (r) => r.updatedAt }
   ];
-  const lignes = useMemo(() => sortRows(filterBySearch((data?.rows ?? []).filter((r) => (filtre === 'all' || r.lifecycleStatus === filtre) && (typeFiltre === 'all' || r.statusType === typeFiltre) && natureOk(nature, r)), search, (r) => [r.name, r.email, r.zone, r.statusType]), colonnes, sort), [data, filtre, typeFiltre, nature, search, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lignes = useMemo(() => sortRows(filterBySearch((data?.rows ?? []).filter((r) => (filtre === 'all' || r.lifecycleStatus === filtre) && (typeFiltre === 'all' || r.statusType === typeFiltre) && natureOk(nature, r)), rechercheTel(search), (r) => [r.name, r.email, r.zone, r.statusType, telNational(r.phone)]), colonnes, sort), [data, filtre, typeFiltre, nature, search, sort]); // eslint-disable-line react-hooks/exhaustive-deps
   const nbReels = useMemo(() => (data?.rows ?? []).filter((r) => estCompteReel(r)).length, [data]);
   const nbSupprimes = useMemo(() => (data?.rows ?? []).filter((r) => estCompteSupprime(r)).length, [data]);
 
@@ -551,10 +551,17 @@ function Exports({ tr, token, toast }) {
   );
 }
 
+// Un livreur au téléphone (audit du 19/10, admin-11 / C16) : son numéro, comparé sans indicatif ni 0 de tête ni
+// séparateurs, pour que « 0470 12 34 56 », « +32470123456 » et « 470123456 » le retrouvent tous.
+function telNational(v) { return String(v || '').replace(/\D/g, '').replace(/^(00)?32/, '').replace(/^0/, ''); }
+function rechercheTel(q) { return /^[\d\s+()./-]{6,}$/.test(String(q || '').trim()) ? telNational(q) : q; }
+
 // Journal d'audit des actions sensibles (/admin/audit-log) : qui, quoi, sur quoi, avant → après.
+// Le serveur répond { entries } avec actorEmail (routes/couriers.js) : la page lisait rows et actorName, et restait vide
+// — GO, approbations forcées, drapeaux invisibles (audit du 19/10, admin-36).
 function JournalAudit({ tr, token }) {
   const [lignes, setLignes] = useState(null); const [erreur, setErreur] = useState(null);
-  const charger = () => { setErreur(null); api('/admin/audit-log?limit=200', { token }).then((r) => setLignes(Array.isArray(r) ? r : (r?.rows ?? []))).catch((e) => setErreur(e.message)); };
+  const charger = () => { setErreur(null); api('/admin/audit-log?limit=200', { token }).then((r) => setLignes(Array.isArray(r) ? r : (r?.entries ?? r?.rows ?? []))).catch((e) => setErreur(e.message)); };
   useEffect(() => { charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const court = (v) => (v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v));
   return (
@@ -572,7 +579,7 @@ function JournalAudit({ tr, token }) {
               {lignes.map((l) => (
                 <tr key={l.id}>
                   <td className="small" style={{ whiteSpace: 'nowrap' }}>{l.createdAt ? new Date(l.createdAt).toLocaleString(getLocale()) : '-'}</td>
-                  <td className="small">{l.actorName || l.actorId || '-'}</td>
+                  <td className="small">{l.actorEmail || l.actorName || l.actorId || '-'}</td>
                   <td><b>{l.action}</b></td>
                   <td className="small">{court(l.target)}</td>
                   <td className="small" style={{ maxWidth: 380, overflowWrap: 'anywhere', opacity: 0.8 }}>{court(l.before).slice(0, 160)}{l.before != null || l.after != null ? ' → ' : ''}{court(l.after).slice(0, 160)}</td>

@@ -49,15 +49,14 @@ export default function AdminGlobalSearch() {
     return () => { document.removeEventListener('mousedown', onClickOutside); document.removeEventListener('keydown', onKey); };
   }, []);
 
-  // Pas de fiche pré-ouverte automatiquement : navigue vers la page et pré-remplit sa recherche locale
-  // avec le libellé du résultat cliqué (ex: nom du restaurant), déjà assez précis pour retrouver la bonne
-  // ligne en un clic depuis là — évite de dupliquer une logique d'ouverture directe de fiche par id sur
-  // 4 pages différentes.
+  // Une commande ou un ticket s'ouvre directement par son identifiant (?id=, déjà lu par Commandes et Support) : leur
+  // libellé (« #042 · Commerce — Client ») ne correspond à aucune colonne, et la liste s'ouvrait vide (audit du 19/10,
+  // admin-09). Les autres pages reçoivent le nom en recherche pré-remplie, qui suffit à retrouver la ligne.
   function goTo(groupKey, item) {
     setOpen(false);
     setQ('');
     setResults(null);
-    if (groupKey === 'orders') navigate(`/admin/orders?q=${encodeURIComponent(item.label)}`);
+    if (groupKey === 'orders' || groupKey === 'tickets') navigate(`/admin/${GROUP_ROUTES[groupKey]}?id=${encodeURIComponent(item.id)}`);
     else navigate(`/admin/${GROUP_ROUTES[groupKey]}`, { state: { presetSearch: item.label } });
   }
 
@@ -75,7 +74,7 @@ export default function AdminGlobalSearch() {
       />
       {!q && <span className="admin-search-hint" aria-hidden="true">Ctrl K</span>}
       {open && q.trim().length >= 2 && (
-        <div className="card" style={{ position: 'absolute', top: '100%', left: 16, right: 16, zIndex: 50, maxHeight: 320, overflowY: 'auto', boxShadow: 'var(--shadow)' }}>
+        <div className="card admin-recherche-resultats">
           {!results && <div className="small" style={{ padding: 8 }}>{tr('adminSearch.searching')}</div>}
           {results && !hasResults && <div className="small" style={{ padding: 8, opacity: 0.6 }}>{tr('adminCommon.noResults')}</div>}
           {results && groups(tr).map((g) => {

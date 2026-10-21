@@ -267,6 +267,7 @@ div.admin-console .admin-selection-bar select { background-color: #fff; border: 
 }
 .admin-recherche input:hover:not(:focus) { border-color: var(--ink-faint); }
 .admin-recherche .admin-search-hint { top: 50%; transform: translateY(calc(-50% - 6px)); right: 30px; }
+.admin-recherche-resultats { position: absolute; top: 100%; left: 16px; right: 16px; z-index: 50; max-height: 320px; overflow-y: auto; box-shadow: var(--shadow); }
 /* Un compteur « à faire » sur l'onglet allumé : iris sur la pastille blanche (il était blanc sur blanc). */
 html:not(.appli) .dashboard-nav.admin .dashboard-nav-link.active .nav-badge.tone-warn { color: var(--iris); }
 
@@ -290,6 +291,11 @@ html:not(.appli) .dashboard-nav.admin .dashboard-nav-link.active .nav-badge.tone
   /* Pas de clavier sur un téléphone : le raccourci « Ctrl K » n'y veut rien dire. */
   .admin-recherche .admin-search-hint { display: none; }
   .admin-recherche input { padding-right: 16px; }
+  /* Le champ est dans la barre du bas : les résultats s'ouvraient sous l'écran (audit du 19/10, admin-12). Ils se posent
+     en haut de l'écran, toute la largeur, au-dessus du clavier. */
+  .admin-recherche-resultats {
+    position: fixed; top: calc(12px + env(safe-area-inset-top)); bottom: auto; left: 12px; right: 12px; max-height: 45vh; z-index: 1000;
+  }
   .admin-direct-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-direct-valeur { font-size: 24px; }
   .admin-direct-chiffre { padding: 14px; }
