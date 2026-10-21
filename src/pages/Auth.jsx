@@ -151,6 +151,7 @@ export default function Auth() {
   // « Horaires », le type à l'étape « Ton commerce en détail » : plus aucun préremplissage venu du web.
   const [nomCommerce, setNomCommerce] = useState('');
   const [commerceTrouve, setCommerceTrouve] = useState(null);
+  const raisonSocialeBce = useRef(''); // dernière raison sociale remplie par la BCE, remplaçable par la suivante (shop-1)
   const [, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null — gardé pour la vérification BCE, lu nulle part encore
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
   // pickupPaymentMode : 'on_site' (0 % de commission) | 'online' | 'both' — l'à emporter relève toujours de la version complète, voir OffreFormules.
@@ -235,10 +236,12 @@ export default function Auth() {
   // Tout ce que l'inscription sait du commerce : le serveur le crée dès que le compte est ouvert
   // (POST /auth/register → creerRestaurant), sans second formulaire dans le tableau de bord.
   // En Belgique, le numéro de TVA est « BE » + le numéro d'entreprise : déduit s'il n'a été ni trouvé ni tapé.
+  // Pour un commerce, TOUJOURS déduit du numéro envoyé (audit du 19/10, shop-1) : la TVA trouvée pour un premier numéro
+  // mal tapé restait collée après correction, et « Configurer mes paiements » refusait plus tard la discordance.
   function tvaInscription() {
-    if (vatNumber.trim()) return vatNumber.trim();
     const chiffres = companyNumber.replace(/\D/g, '');
-    return role === 'restaurant' && chiffres.length === 10 ? `BE${chiffres}` : '';
+    if (role === 'restaurant' && chiffres.length === 10) return `BE${chiffres}`;
+    return vatNumber.trim();
   }
 
   // Commune du livreur prise de son adresse, quand elle est l'une des 19 (sinon rien : il la choisit dans son dossier).
@@ -278,7 +281,7 @@ export default function Auth() {
   }, [cuisine, customCuisine, hours, role]);
   useEffect(() => {
     if (role !== 'restaurant') return undefined;
-    const chiffres = (companyNumber || vatNumber).replace(/\D/g, '');
+    const chiffres = companyNumber.replace(/\D/g, '');
     if (chiffres.length !== 10) { setVerifSociete(null); return undefined; }
     let annule = false;
     const timer = setTimeout(async () => {
@@ -287,13 +290,21 @@ export default function Auth() {
         if (annule) return;
         setVerifSociete(r);
         if (r.companyNumber && !companyNumber.trim()) setCompanyNumber(r.companyNumber);
-        if (r.vatNumber && !vatNumber.trim()) setVatNumber(r.vatNumber);
-        if (r.valid && r.legalName && !legalName.trim()) setLegalName(r.legalName);
+        // TVA et raison sociale suivent CHAQUE numéro trouvé, plus seulement le premier (audit du 19/10, shop-1). La
+        // raison sociale tapée à la main reste : on ne remplace que celle que la BCE avait mise elle-même.
+        setVatNumber(r.vatNumber || '');
+        if (r.valid && r.legalName) {
+          setLegalName((v) => {
+            if (v.trim() && v !== raisonSocialeBce.current) return v;
+            raisonSocialeBce.current = r.legalName;
+            return r.legalName;
+          });
+        }
       } catch { if (!annule) setVerifSociete({ valid: null, error: 'indisponible' }); }
     }, 700);
     return () => { annule = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyNumber, vatNumber, role]);
+  }, [companyNumber, role]);
 
   // appliquerCommerce (une fiche trouvée sur le web préremplissait l'adresse, le téléphone, la cuisine, les horaires) est
   // retiré avec la recherche du commerce par code postal (fondateur, 2026-10-13, voir nomCommerce) : il n'était plus appelé.

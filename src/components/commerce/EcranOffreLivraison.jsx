@@ -25,11 +25,12 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
   const [fraisPropres, setFraisPropres] = useState(restaurant.ownDeliveryFee != null ? String(restaurant.ownDeliveryFee) : '');
 
   async function valider() {
-    const montant = Number(remise);
+    // Virgule acceptée (« 2,50 ») : les champs sont en texte + clavier décimal (audit du 19/10, CROSS-62).
+    const montant = Number(String(remise).replace(',', '.'));
     if (!gratuite && (Number.isNaN(montant) || montant < 0 || montant > 50)) { toast(t('editResto.toastAmount0_50')); return; }
     let min = null;
     if (!gratuite && aPartirDe) {
-      min = Number(minimum);
+      min = Number(String(minimum).replace(',', '.'));
       if (Number.isNaN(min) || min < 5 || min > 200) { toast(t('editResto.toastAmount5_200')); return; }
     }
     const propre = fraisPropres.trim() === '' ? null : Number(fraisPropres.replace(',', '.'));
@@ -55,7 +56,7 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
       {livreLuiMeme ? (
         <div className="field" style={{ maxWidth: 280 }}>
           <label htmlFor={ids + '-propres'}>{t('editResto.ownFeeLabel')}</label>
-          <input id={ids + '-propres'} type="number" inputMode="decimal" min="0" max="20" step="0.5" value={fraisPropres} onChange={(e) => setFraisPropres(e.target.value)} placeholder="4,50" />
+          <input id={ids + '-propres'} inputMode="decimal" value={fraisPropres} onChange={(e) => setFraisPropres(e.target.value)} placeholder="4,50" />
           <p className="small" style={{ margin: '4px 0 0' }}>{t('editResto.ownFeeHelp')}</p>
         </div>
       ) : (
@@ -69,7 +70,7 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
         <>
           <div className="field" style={{ maxWidth: 240 }}>
             <label htmlFor={ids + '-remise'} className="etiquette-dessus">{t('editResto.fixedDiscount')}</label>
-            <input id={ids + '-remise'} type="number" inputMode="decimal" min="0" max="50" step="0.5" value={remise} onChange={(e) => setRemise(e.target.value)} placeholder={t('editResto.phEx2')} />
+            <input id={ids + '-remise'} inputMode="decimal" value={remise} onChange={(e) => setRemise(e.target.value)} placeholder={t('editResto.phEx2')} />
           </div>
           <label className="row" style={{ gap: 8, margin: '12px 0', cursor: 'pointer' }}>
             <input type="checkbox" style={{ width: 'auto' }} checked={aPartirDe} onChange={(e) => setAPartirDe(e.target.checked)} />
@@ -78,7 +79,7 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
           {aPartirDe && (
             <div className="field" style={{ maxWidth: 240 }}>
               <label htmlFor={ids + '-min'}>{t('editResto.minOrderAmount')}</label>
-              <input id={ids + '-min'} type="number" inputMode="decimal" min="5" max="200" step="1" value={minimum} onChange={(e) => setMinimum(e.target.value)} placeholder={t('editResto.phEx25')} />
+              <input id={ids + '-min'} inputMode="decimal" value={minimum} onChange={(e) => setMinimum(e.target.value)} placeholder={t('editResto.phEx25')} />
             </div>
           )}
         </>

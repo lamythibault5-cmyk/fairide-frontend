@@ -186,8 +186,9 @@ export default function PromotionsPage() {
     setSaving(true);
     try {
       if (type === 'cart_threshold') {
-        const x = Number(discountValue);
-        const y = Number(minCartTotal);
+        // Virgule acceptée (audit du 19/10, CROSS-62).
+        const x = Number(String(discountValue).replace(',', '.'));
+        const y = Number(String(minCartTotal).replace(',', '.'));
         if (!x || x <= 0) { toast(t('promosPage.toastAmount')); setSaving(false); return; }
         if (!y || y <= x) { toast(t('promosPage.toastThreshold')); setSaving(false); return; }
         await api(`/restaurants/${restoId}/promotions`, { method: 'POST', token, body: { discountValue: x, minCartTotal: y } });
@@ -284,11 +285,11 @@ export default function PromotionsPage() {
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor={idsA11y + '-amountoff'}>{t('promosPage.amountOff')}</label>
-              <input id={idsA11y + '-amountoff'} type="number" step="0.5" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="5" />
+              <input id={idsA11y + '-amountoff'} inputMode="decimal" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="5" />
             </div>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor={idsA11y + '-threshold'}>{t('promosPage.threshold')}</label>
-              <input id={idsA11y + '-threshold'} type="number" step="0.5" value={minCartTotal} onChange={(e) => setMinCartTotal(e.target.value)} placeholder="30" />
+              <input id={idsA11y + '-threshold'} inputMode="decimal" value={minCartTotal} onChange={(e) => setMinCartTotal(e.target.value)} placeholder="30" />
             </div>
           </div>
         )}

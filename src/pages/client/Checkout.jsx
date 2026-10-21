@@ -10,6 +10,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { euros, remiseCourte } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
+import { usePreviewMode } from '../../context/PreviewModeContext';
+import Modale from '../../components/Modale';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards, SqueletteEcran, EcranAttente } from '../../components/Skeleton';
@@ -46,7 +48,13 @@ function LigneTicket({ libelle, montant }) {
 }
 
 export default function Checkout() {
-  const { token, user, refreshUser } = useAuth();
+  const { token, user, refreshUser, role } = useAuth();
+  // « Essayer en tant que client » (aperçu du commerce) : promet qu'aucune vraie commande ne part. Un restaurateur qui porte
+  // aussi la casquette client passait pourtant une vraie commande, et sans elle le devis échouait en « réservée aux comptes
+  // client ». En aperçu : pas de devis, et le bouton ouvre « Aperçu uniquement » au lieu de commander (audit du 19/10, shop-405).
+  const { previewMode } = usePreviewMode();
+  const apercu = previewMode && role === 'restaurant';
+  const [apercuOuvert, setApercuOuvert] = useState(false);
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
@@ -172,7 +180,7 @@ export default function Checkout() {
    * L'effet est placé avant les retours anticipés (règle des hooks) ; il ne lit les valeurs calculées plus bas qu'une
    * fois le commerce chargé, donc après un rendu complet. */
   useEffect(() => {
-    if (!restaurant || pendingOrder || placing || paying) return undefined;
+    if (apercu || !restaurant || pendingOrder || placing || paying) return undefined;
     const corps = corpsCommande();
     if (!corps) return undefined;
     const cle = JSON.stringify(corps);
@@ -349,6 +357,7 @@ export default function Checkout() {
   }
 
   async function placeOrder() {
+    if (apercu) { setApercuOuvert(true); return; }
     if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
       toast(t('checkout.toastAddressRequired'), 'erreur');
       return;
@@ -1074,6 +1083,12 @@ export default function Checkout() {
         </div>
       )}
       </FeuilleCommande>
+      {apercuOuvert && (
+        <Modale titre={t('restoPreview.previewOnlyTitle')} largeur={420} onFermer={() => setApercuOuvert(false)}>
+          <p className="small" style={{ margin: '0 0 16px' }}>{t('restoPreview.previewOnlyBody')}</p>
+          <button type="button" className="btn-gold" onClick={() => setApercuOuvert(false)}>{t('restoPreview.gotIt')}</button>
+        </Modale>
+      )}
     </div>
   );
 }

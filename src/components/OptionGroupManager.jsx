@@ -43,7 +43,7 @@ export function OptionGroupForm({ initial, onSave, onCancel, saving }) {
   function save() {
     const cleanItems = items
       .filter((it) => it.name.trim())
-      .map((it) => ({ name: it.name.trim(), priceDelta: parseFloat(it.priceDelta) || 0 }));
+      .map((it) => ({ name: it.name.trim(), priceDelta: parseFloat(String(it.priceDelta).replace(',', '.')) || 0 }));
     if (!name.trim() || !cleanItems.length) return;
     const maxSel = type === 'multiple' ? parseInt(maxSelections, 10) || null : null;
     onSave({ name: name.trim(), type, required, maxSelections: maxSel, items: cleanItems });
@@ -81,7 +81,7 @@ export function OptionGroupForm({ initial, onSave, onCancel, saving }) {
       {items.map((it, idx) => (
         <div className="row" key={idx} style={{ gap: 8, marginBottom: 6 }}>
           <input id={idsA11y + '-options'} style={{ flex: 2 }} value={it.name} onChange={(e) => setItemField(idx, 'name', e.target.value)} placeholder={t('optionGroups.phOption')} />
-          <input style={{ flex: 1 }} type="number" step="0.5" value={it.priceDelta} onChange={(e) => setItemField(idx, 'priceDelta', e.target.value)} placeholder="+1.00" />
+          <input style={{ flex: 1 }} inputMode="decimal" value={it.priceDelta} onChange={(e) => setItemField(idx, 'priceDelta', e.target.value)} placeholder="+1.00" />
           <button type="button" className="btn-danger-ghost" style={{ padding: '4px 10px' }} onClick={() => removeRow(idx)} disabled={items.length <= 1}>✕</button>
         </div>
       ))}

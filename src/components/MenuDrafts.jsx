@@ -25,7 +25,7 @@ function normaliser(items) {
 function pourLApi(lignes) {
   return lignes
     .filter((l) => l.name.trim())
-    .map((l) => ({ name: l.name.trim(), price: Number(l.price) || 0, desc: l.desc, category: l.category.trim() || 'plat', subsection: l.subsection, imageUrl: l.imageUrl }));
+    .map((l) => ({ name: l.name.trim(), price: Number(String(l.price).replace(',', '.')) || 0, desc: l.desc, category: l.category.trim() || 'plat', subsection: l.subsection, imageUrl: l.imageUrl }));
 }
 
 export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished }) {
@@ -207,7 +207,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
               <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div className="row" style={{ gap: 6 }}>
                   <input style={{ flex: 2 }} value={l.name} onChange={(e) => majLigne(l.cle, 'name', e.target.value)} placeholder={t('menuPage.draftsItemName')} />
-                  <input style={{ flex: 1, maxWidth: 110 }} type="number" step="0.1" min="0" value={l.price} onChange={(e) => majLigne(l.cle, 'price', e.target.value)} placeholder={t('menuPage.draftsItemPrice')} />
+                  <input style={{ flex: 1, maxWidth: 110 }} inputMode="decimal" value={l.price} onChange={(e) => majLigne(l.cle, 'price', e.target.value)} placeholder={t('menuPage.draftsItemPrice')} />
                 </div>
                 <div className="row" style={{ gap: 6 }}>
                   <input style={{ flex: 1 }} value={l.category} onChange={(e) => majLigne(l.cle, 'category', e.target.value)} placeholder={t('menuPage.draftsItemSection')} />

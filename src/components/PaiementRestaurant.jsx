@@ -96,6 +96,8 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
   const totaux = payees.reduce((a, o) => ({ total: a.total + Number(o.total || 0), produits: a.produits + Number(o.subtotal || 0), livraison: a.livraison + Number(o.deliveryFee || 0), commission: a.commission + Number(o.commission || 0), net: a.net + net(o) }), { total: 0, produits: 0, livraison: 0, commission: 0, net: 0 });
   const ouvert = paiementsOuverts();
   const stripeActif = restaurant?.stripeConnectStatus === 'active';
+  const stripeEnVerif = restaurant?.stripeConnectStatus === 'pending';
+  const stripeRefuse = restaurant?.stripeConnectStatus === 'rejected';
   const legalComplet = !!String(restaurant?.companyNumber || '').replace(/\D/g, '') && !!String(restaurant?.vatNumber || '').trim();
   // Fondateur, 2026-10-09 : configurer ses paiements dès l'inscription — le bouton lance l'inscription Stripe (identité, IBAN) ;
   // numéros d'entreprise / TVA manquants : on le dit et on reste sur ce panneau, qui les demande juste au-dessus.
@@ -126,12 +128,14 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
       {/* Numéros pas encore enregistrés et paiements ouverts : le seul bouton est « Enregistrer et activer », juste au-dessus. */}
       {(stripeActif || legalComplet || !ouvert) && (
         <div className={`paiement-activation${ouvert ? '' : ' fermee'}`}>
+          {/* Formulaire Stripe envoyé (« pending ») ou refusé (« rejected ») : dit tel quel, comme sur Mon commerce (audit du
+              19/10, shop-5). En vérification, le bouton reste, discret, pour qui n'aurait pas fini le formulaire ; refusé, aucun. */}
           <div>
-            <b>{stripeActif ? t('paiementResto.activationDone') : ouvert ? t('paiementResto.activationOpen') : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}</b>
-            <p className="small" style={{ margin: '4px 0 0' }}>{stripeActif ? t('paiementResto.activationDoneText') : ouvert ? t('paiementResto.activationOpenText') : t('paiementResto.activationClosedText', { date: dateOuverturePaiements(getLocale()) })}</p>
+            <b>{stripeActif ? t('paiementResto.activationDone') : stripeEnVerif ? t('miseEnLigne.paymentsPending') : stripeRefuse ? t('miseEnLigne.paymentsRejected') : ouvert ? t('paiementResto.activationOpen') : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}</b>
+            <p className="small" style={{ margin: '4px 0 0' }}>{stripeActif ? t('paiementResto.activationDoneText') : stripeEnVerif ? t('miseEnLigne.paymentsPendingSub') : stripeRefuse ? t('miseEnLigne.paymentsRejectedSub') : ouvert ? t('paiementResto.activationOpenText') : t('paiementResto.activationClosedText', { date: dateOuverturePaiements(getLocale()) })}</p>
           </div>
-          {!stripeActif && (
-            <button type="button" className="btn-gold" disabled={!ouvert || connecting} onClick={activer} title={ouvert ? undefined : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}>
+          {!stripeActif && !stripeRefuse && (
+            <button type="button" className={stripeEnVerif ? 'btn-outline' : 'btn-gold'} disabled={!ouvert || connecting} onClick={activer} title={ouvert ? undefined : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}>
               {connecting ? '…' : ouvert ? t('paiementResto.activateBtn') : t('paiementResto.activateSoonBtn')}
             </button>
           )}
