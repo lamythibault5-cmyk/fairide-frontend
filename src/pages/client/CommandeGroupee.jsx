@@ -39,6 +39,7 @@ export default function CommandeGroupee() {
   const [g, setG] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [occupe, setOccupe] = useState(false);
+  const [aAnnuler, setAAnnuler] = useState(false); // confirmation de « Annuler le groupe » (CROSS-48)
   const [confirmerRemplacement, setConfirmerRemplacement] = useState(null);
   // La carte du commerce, pour montrer le prix PAYÉ de chaque ligne (offre du commerce comprise), comme le panier et le
   // paiement (audit design 2 du 2026-10-19) : le groupe enregistre le prix plein, la remise s'applique à la commande.
@@ -116,14 +117,17 @@ export default function CommandeGroupee() {
       navigate('/panier');
     } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
+  // Annuler / Rouvrir : occupé pendant l'envoi, et « Annuler le groupe » demande confirmation (audit du 19/10, CROSS-48).
   async function hote(action) {
+    if (occupe) return;
+    setOccupe(true);
     try {
       await api(`/group-orders/${g.code}/${action}`, { method: 'POST', token });
       if (action === 'cancel') quitterGroupe();
       // Rouvert ou annulé : la prochaine commande de l'hôte ne vaut plus pour ce groupe.
       oublierGroupeACommander();
       charger();
-    } catch (e) { toast(e.message, 'erreur'); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); setAAnnuler(false); }
   }
 
   // Prix payé d'une ligne : son prix plein moins la remise du plat (même règle que le panier, prixPlat.js remiseLigne).
@@ -244,8 +248,8 @@ export default function CommandeGroupee() {
             <div className="eg-hote">
               <p className="eg-petit">{t('groupOrder.hostPays')}</p>
               <div className="eg-actions">
-                {g.status === 'locked' && <button type="button" className="eg-bouton-iris" onClick={() => hote('reopen')}>{t('groupOrder.reopen')}</button>}
-                <button type="button" className="eg-discret" onClick={() => hote('cancel')}>{t('groupOrder.cancel')}</button>
+                {g.status === 'locked' && <button type="button" className="eg-bouton-iris" disabled={occupe} onClick={() => hote('reopen')}>{t('groupOrder.reopen')}</button>}
+                <button type="button" className="eg-discret" disabled={occupe} onClick={() => setAAnnuler(true)}>{t('groupOrder.cancel')}</button>
               </div>
             </div>
           )}
@@ -264,6 +268,16 @@ export default function CommandeGroupee() {
       </FeuilleCommande>
 
       {APPLI && barre}
+      <ConfirmDialog
+        open={aAnnuler}
+        title={t('groupOrder.cancel')}
+        message={t('groupOrder.cancelConfirm')}
+        confirmLabel={t('groupOrder.cancel')}
+        danger
+        loading={occupe}
+        onCancel={() => setAAnnuler(false)}
+        onConfirm={() => hote('cancel')}
+      />
       <ConfirmDialog
         open={!!confirmerRemplacement}
         title={t('groupOrder.replaceTitle')}

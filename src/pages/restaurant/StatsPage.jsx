@@ -50,6 +50,8 @@ export default function StatsPage() {
   const [erreur, setErreur] = useState(null);
   // Retour du curseur après un échec : les chiffres de cette période sont déjà là, pas de nouvel appel (shop-111).
   const retourSansAppel = useRef(false);
+  // « Réessayer » sous le message d'échec (audit du 19/10, CROSS-33) : il fallait changer de période pour relancer.
+  const [relance, setRelance] = useState(0);
 
   useEffect(() => {
     if (!restoId) return undefined;
@@ -67,7 +69,7 @@ export default function StatsPage() {
     return () => { actif = false; };
     // `t` sert seulement au message d'erreur : le changer ne doit pas recharger les chiffres.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restoId, token, jours]);
+  }, [restoId, token, jours, relance]);
 
   const locale = getLocale();
   const jourCourt = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString(locale, { day: 'numeric', month: 'short' });
@@ -108,7 +110,12 @@ export default function StatsPage() {
       </BandeauCommerce>
       <FeuilleCommerce>
         {communs}
-        {erreur && <p className="small" role="alert">{erreur}</p>}
+        {erreur && (
+          <div>
+            <p className="small" role="alert">{erreur}</p>
+            {!d && <button type="button" className="btn-outline btn-sm" disabled={charge} onClick={() => setRelance((n) => n + 1)}>{t('common.retry')}</button>}
+          </div>
+        )}
         {!d && !erreur && <p className="small">…</p>}
         {d && (
           <div style={{ opacity: charge ? 0.5 : 1, transition: 'opacity .15s' }}>

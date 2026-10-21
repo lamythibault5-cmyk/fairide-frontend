@@ -32,7 +32,7 @@ export default function OrderResult({ success }) {
   const cart = useCart();
   const { t } = useLanguage();
 
-  // 'checking' | 'paid' | 'pending' | 'failed'
+  // 'checking' | 'paid' | 'pending' | 'failed' | 'introuvable'
   // Sans identifiant de commande dans l'URL, il n'y a rien à vérifier : on retombe sur l'annonce
   // portée par la route elle-même (/order-success vs /order-cancelled), comme avant.
   const [state, setState] = useState(() => {
@@ -95,6 +95,10 @@ export default function OrderResult({ success }) {
           cartRef.current.discardStashed();
           return;
         }
+        /* Commande absente de MES commandes (lien d'un autre compte, identifiant abîmé) : on le dit tout de suite, au lieu de
+           vingt secondes de « Confirmation… » sans bouton puis « elle apparaît dans Mes commandes » (audit du 19/10, CROSS-47).
+           Une commande à moi apparaît dès sa création, avant le paiement : son absence n'est pas un retard du webhook. */
+        if (!order) { setState('introuvable'); return; }
         if (order && (order.status === 'annule' || order.status === 'refuse')) {
           setState('failed');
           // Commande annulée ou refusée : on rend au client son panier tel qu'il l'avait composé,
@@ -124,6 +128,7 @@ export default function OrderResult({ success }) {
     checking: { icone: 'horloge', title: t('orderResult.checkingTitle'), text: t('orderResult.checkingText') },
     paid: { icone: 'bouclier', title: t('orderResult.successTitle'), text: t('orderResult.successText') },
     pending: { icone: 'horloge', title: t('orderResult.pendingTitle'), text: t('orderResult.pendingText') },
+    introuvable: { icone: 'interdit', title: t('orderResult.notFoundTitle'), text: t('orderResult.notFoundText') },
     failed: {
       icone: 'interdit',
       // /order-cancelled est une annulation volontaire du client, pas un échec technique : on garde le

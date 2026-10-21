@@ -23,7 +23,10 @@ export default function DriverDocuments() {
   const [busy, setBusy] = useState(false);
   const entrees = useRef({});
 
-  useEffect(() => { api('/couriers/me', { token }).then(setDossier).catch((e) => toast(e.message, 'erreur')); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Échec du chargement : un message et Réessayer, plus « Chargement… » pour toujours (audit du 19/10, CROSS-33).
+  const [erreur, setErreur] = useState(null);
+  const charger = () => api('/couriers/me', { token }).then((r) => { setDossier(r); setErreur(null); }).catch((e) => { setErreur(e); toast(e.message, 'erreur'); });
+  useEffect(() => { charger(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Les pièces sont désormais en livraison restreinte : le serveur ne rend plus leur adresse
      Cloudinary, il produit à la demande une adresse signée de quelques minutes (voir
@@ -50,6 +53,14 @@ export default function DriverDocuments() {
     try { setDossier(await api(`/couriers/me/documents/${id}`, { method: 'DELETE', token })); } catch (err) { toast(err.message, 'erreur'); } finally { setBusy(false); }
   }
 
+  if (!dossier && erreur) {
+    return (
+      <div>
+        <p className="small" role="alert">{erreur.message}</p>
+        <button type="button" className="btn-outline btn-sm" onClick={charger}>{t('common.retry')}</button>
+      </div>
+    );
+  }
   if (!dossier) return <p className="small">{t('accountUi.loading')}</p>;
   const docs = dossier.documents || [];
   const identite = docs.filter((d) => IDENTITE.includes(d.docType));

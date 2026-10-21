@@ -6,6 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
 import { RESTAURANT_TYPES, restaurantTypeLabel, haversineDistanceKm } from '../../menuCategories';
 import Icone from '../../components/Icone';
+import { kmLisible } from '../../prixPlat';
 import VisuelVide from '../../components/VisuelVide';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import { cacherImageCassee } from '../../images';
@@ -143,7 +144,7 @@ export default function MapPage() {
       </span>
       <span className="carte-fiche-texte">
         <b className="carte-fiche-nom"><span>{r.name}</span>{r.certified && <CertifiedBadge size={14} />}</b>
-        <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.neighborhood, r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ')}</small>
+        <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.neighborhood, r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ')}</small>
         <small className="carte-fiche-infos">
           {/* Pas d'étoile sans avis : une note que personne n'a donnée n'est pas un avis (CDE VI.100). */}
           {r.reviewCount > 0
@@ -269,7 +270,7 @@ export default function MapPage() {
                     </span>
                     <span className="carte-fiche-texte">
                       <b className="carte-fiche-nom"><span>{r.name}</span>{r.certified && <CertifiedBadge size={14} />}</b>
-                      <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ')}</small>
+                      <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ')}</small>
                       <small>
                         {/* Pas d'étoile sans avis (CDE VI.100), comme la fiche du commerce touché. */}
                         {r.reviewCount > 0

@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import InvoiceArchive from '../../components/InvoiceArchive';
 import { euros } from '../../prixPlat';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import EtatVide from '../../components/EtatVide';
+import ErreurChargement from '../../components/ErreurChargement';
 import { experienceApp } from '../../natif';
 import PageLivreur from '../../components/livreur/PageLivreur';
 
@@ -29,14 +29,16 @@ function currentMonthValue() {
 export default function InvoicesPage() {
   const { t } = useLanguage();
   const { user, token } = useAuth();
-  const toast = useToast();
   const [orders, setOrders] = useState(null);
   const [month, setMonth] = useState(currentMonthValue());
+  // Un premier chargement raté ne laisse plus le squelette pour toujours : « Impossible de charger » + Réessayer (audit du 19/10, CROSS-33).
+  const [erreur, setErreur] = useState(null);
+  const charger = useCallback(() => {
+    setErreur(null);
+    api('/orders/mine/deliveries', { token }).then(setOrders).catch(setErreur);
+  }, [token]);
 
-  useEffect(() => {
-    api('/orders/mine/deliveries', { token }).then(setOrders).catch((e) => toast(e.message, 'erreur'));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => { charger(); }, [charger]);
 
   const monthOrders = useMemo(() => {
     if (!orders) return [];
@@ -63,7 +65,7 @@ export default function InvoicesPage() {
   return (
     <PageLivreur classe="ecl-factures" bandeauApp retourCompte titre={t('invoicesDriver.title')} sous={t('siteLivreur.facturesSous')}>
       <div style={libelles}>
-      {!orders ? <SkeletonCards count={3} /> : (
+      {!orders && erreur ? <ErreurChargement erreur={erreur} onReessayer={charger} /> : !orders ? <SkeletonCards count={3} /> : (
       <>
 
       {/* Relevés mensuels des ventes encaissées pour son compte (fondateur, 2026-10-14 : plus des autofacturations,

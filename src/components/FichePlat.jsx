@@ -197,8 +197,19 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
             const choisis = selections[g.id];
             const requisNonRempli = g.required && choisis.size === 0;
             return (
-              <div key={g.id} className="plat-groupe" ref={(el) => { blocsGroupes.current[g.id] = el; }}>
-                <div className="plat-groupe-tete">
+              /* Un groupe nommé (audit du 19/10, CROSS-82) : sans lui, un lecteur d'écran disait « Petit, bouton radio » sans dire
+                 s'il s'agissait de la taille ou de la boisson, ni que le choix est obligatoire. Le titre du groupe, mention
+                 « Obligatoire » comprise, devient le nom du groupe ; la limite de choix sa description. */
+              <div
+                key={g.id}
+                className="plat-groupe"
+                ref={(el) => { blocsGroupes.current[g.id] = el; }}
+                role={g.type === 'single' ? 'radiogroup' : 'group'}
+                aria-labelledby={`plat-groupe-${g.id}`}
+                aria-describedby={g.type === 'multiple' && g.maxSelections ? `plat-groupe-aide-${g.id}` : undefined}
+                aria-required={g.type === 'single' && g.required ? 'true' : undefined}
+              >
+                <div className="plat-groupe-tete" id={`plat-groupe-${g.id}`}>
                   <b>{g.name}</b>
                   {g.required && (
                     <span className={`plat-requis${requisNonRempli ? ' plat-requis--manquant' : ''}`}>
@@ -207,7 +218,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
                   )}
                 </div>
                 {g.type === 'multiple' && g.maxSelections && (
-                  <p className="plat-groupe-aide">{t('optionsPicker.maxChoices', { max: g.maxSelections, plural: g.maxSelections > 1 ? 's' : '' })}</p>
+                  <p className="plat-groupe-aide" id={`plat-groupe-aide-${g.id}`}>{t('optionsPicker.maxChoices', { max: g.maxSelections, plural: g.maxSelections > 1 ? 's' : '' })}</p>
                 )}
                 {toutesCrudites(g) && (
                   <label className="plat-option plat-option--tout">
@@ -259,7 +270,10 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
         )}
         <div className="plat-quantite" role="group" aria-label={t('platSheet.quantity')}>
           <button type="button" onClick={() => { vibrer(6); setQty((q) => Math.max(1, q - 1)); }} disabled={qty <= 1} aria-label={t('platSheet.less')}>−</button>
-          <span aria-live="polite" key={qty} className="plat-quantite-chiffre">{qty}</span>
+          {/* Le chiffre visible est recréé à chaque changement (key, pour son animation) : une région vivante recréée n'est pas
+              annoncée. La quantité est donc dite par une région stable à côté (audit du 19/10, CROSS-94). */}
+          <span aria-hidden="true" key={qty} className="plat-quantite-chiffre">{qty}</span>
+          <span className="sr-only" aria-live="polite">{qty}</span>
           <button type="button" onClick={() => { vibrer(6); setQty((q) => Math.min(99, q + 1)); }} disabled={qty >= 99} aria-label={t('platSheet.more')}>+</button>
         </div>
         <button

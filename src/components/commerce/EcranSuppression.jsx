@@ -81,7 +81,7 @@ export default function EcranSuppression({ restoId, onFermer }) {
           <p className="small" style={{ margin: '0 0 12px' }}>{t('editResto.deleteRequestSent')}</p>
           <div className="field">
             <label htmlFor={ids + '-code'}>{t('editResto.codeByEmail')}</label>
-            <input id={ids + '-code'} inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" maxLength={6} />
+            <input id={ids + '-code'} inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" maxLength={6} />
           </div>
           <button type="button" className="btn-ghost" disabled={enCours} onClick={demanderCode}>{t('editResto.resendCode')}</button>
         </>

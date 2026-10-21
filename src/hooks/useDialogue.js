@@ -17,6 +17,15 @@ import { useEffect } from 'react';
 //
 // `racine` doit porter tabIndex={-1} pour pouvoir recevoir le focus sans entrer dans l'ordre de
 // tabulation, et role="dialog" aria-modal="true" pour que le lecteur d'écran annonce une fenêtre.
+/* LA FENÊTRE DU DESSUS SEULEMENT (audit du 19/10, CROSS-06/102). Deux fenêtres peuvent s'empiler — un ConfirmDialog
+ * par-dessus une feuille, la fenêtre de refus par-dessus le détail d'une commande. Les écouteurs étant posés sur document,
+ * Échap fermait les deux d'un coup et les deux pièges à focus se disputaient la touche Tab. Seule la dernière fenêtre
+ * modale du document (les portails s'ajoutent à la fin de <body>, dans l'ordre d'ouverture) réagit. */
+function estAuDessus(el) {
+  const fenetres = document.querySelectorAll('[role="dialog"][aria-modal="true"]');
+  return !fenetres.length || fenetres[fenetres.length - 1] === el;
+}
+
 export default function useDialogue(racine, onFermer) {
   // 1. Ouverture : on gèle le fond, on prend le focus, on retient d'où l'on vient. Dépendances
   //    vides — tout ceci n'arrive qu'une fois, à l'ouverture, et se défait à la fermeture.
@@ -40,10 +49,10 @@ export default function useDialogue(racine, onFermer) {
 
   // 2. Échap. Seul effet qui dépend d'`onFermer`, et il ne touche pas au focus.
   useEffect(() => {
-    const surTouche = (e) => { if (e.key === 'Escape') onFermer(); };
+    const surTouche = (e) => { if (e.key === 'Escape' && estAuDessus(racine.current)) onFermer(); };
     document.addEventListener('keydown', surTouche);
     return () => document.removeEventListener('keydown', surTouche);
-  }, [onFermer]);
+  }, [onFermer, racine]);
 
   // 3. Piège à focus. Posé sur `document` et non sur la racine : si le focus s'est échappé pour une
   //    raison quelconque, un écouteur posé sur la racine ne recevrait plus rien et le piège serait
@@ -52,7 +61,7 @@ export default function useDialogue(racine, onFermer) {
     function surTab(e) {
       if (e.key !== 'Tab') return;
       const el = racine.current;
-      if (!el) return;
+      if (!el || !estAuDessus(el)) return;
       const cibles = el.querySelectorAll(
         'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
       );

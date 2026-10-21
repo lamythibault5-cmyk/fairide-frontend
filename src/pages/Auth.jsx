@@ -970,7 +970,12 @@ export default function Auth() {
     try {
       fed = await connexionFournisseur(fournisseur);
     } catch (err) {
-      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) toast(err?.message ? `${t('appli.nativeLoginFailed')} (${err.message})` : t('appli.nativeLoginFailed'), 'erreur');
+      // Le texte brut du greffon (« com.google.android.gms…: 10: ») n'est plus collé au message (audit du 19/10, CROSS-13) : il
+      // part dans la console (adb logcat) ; un refus du serveur (ApiError, avec un statut) garde son propre texte, traduit.
+      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) {
+        if (!err?.status) console.error('Connexion native :', err);
+        toast(err?.status && err?.message ? err.message : t('appli.nativeLoginFailed'), 'erreur');
+      }
       return;
     }
     await handleGoogleCredential({ credential: fed.jeton }, fed);
@@ -1309,7 +1314,7 @@ export default function Auth() {
               <form onSubmit={submitForgotPassword}>
                 <div className="field">
                   <label htmlFor="auth-f-1">{t('auth.email')}</label>
-                  <input id="auth-f-1" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder={t('auth.phEmail')} />
+                  <input id="auth-f-1" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder={t('auth.phEmail')} />
                 </div>
                 <button type="submit" className="btn-gold btn-block" disabled={forgotLoading}>
                   {forgotLoading ? t('common.loading') : t('auth.sendLink')}
@@ -1486,8 +1491,10 @@ export default function Auth() {
                         <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                           <input style={{ flex: 1 }} aria-label={t('auth.managerName')} placeholder={t('auth.managerNamePh')} value={r.name}
                             onChange={(e) => setResponsables((l) => l.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
-                          <button type="button" className="btn-ghost btn-sm" onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))}>{t('auth.removeSecond')}</button>
+                          <button type="button" className="btn-ghost btn-sm" onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))} aria-label={t('auth.managerRemoveA11y', { n: i + 1 })}>{t('auth.removeSecond')}</button>
                         </div>
+                        {/* Le téléphone du responsable a un nom, et « Retirer » dit qui il retire (audit du 19/10, CROSS-89/109). */}
+                        <label className="sr-only" htmlFor={`auth-f-resp-${i}`}>{t('auth.managerPhoneA11y', { n: i + 1 })}</label>
                         <div style={{ marginTop: 6 }}><PhoneInput id={`auth-f-resp-${i}`} value={r.phone} onChange={(v) => setResponsables((l) => l.map((x, j) => (j === i ? { ...x, phone: v } : x)))} invalid={!!errors[`resp${i}`]} /></div>
                         {fieldError(`resp${i}`)}
                       </div>

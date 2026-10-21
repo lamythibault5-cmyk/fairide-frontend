@@ -216,7 +216,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           <div className="field">
             <label htmlFor={ids + '-commune'}>{t('dashResto.municipality')}</label>
             {/* Champ libre avec suggestions (19 communes + périphérie) : Tervuren n'est plus enregistré comme Anderlecht. */}
-            <input id={ids + '-commune'} list={ids + '-communes'} value={commune} onChange={(e) => setCommune(e.target.value)} placeholder="Ixelles, Tervuren…" autoComplete="address-level2" />
+            <input id={ids + '-commune'} list={ids + '-communes'} value={commune} onChange={(e) => setCommune(e.target.value)} placeholder="Ixelles, Tervuren…" autoComplete="off" />
             <datalist id={ids + '-communes'}>
               {COMMUNES_SUGGEREES.map((c) => <option key={c} value={c} />)}
             </datalist>

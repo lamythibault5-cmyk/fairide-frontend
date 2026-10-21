@@ -67,7 +67,7 @@ function GroupeForm({ groupe, onChange, onRemove, t }) {
         {groupe.choices.map((c, i) => (
           <div key={i} className="row" style={{ gap: 6 }}>
             <input style={{ flex: 2 }} value={c.name} onChange={(e) => setChoix(i, 'name', e.target.value)} placeholder={t('menuOptions.choiceName')} aria-label={t('menuOptions.choices')} />
-            <input style={{ flex: '0 0 110px' }} type="number" step="0.5" value={c.priceDelta} onChange={(e) => setChoix(i, 'priceDelta', e.target.value)} placeholder={t('menuOptions.delta')} aria-label={t('menuOptions.delta')} />
+            <input style={{ flex: '0 0 110px' }} type="text" inputMode="decimal" value={c.priceDelta} onChange={(e) => setChoix(i, 'priceDelta', e.target.value.replace(',', '.'))} placeholder={t('menuOptions.delta')} aria-label={t('menuOptions.delta')} />
             <button type="button" className="btn-ghost" style={{ padding: '2px 8px' }} onClick={() => onChange({ ...groupe, choices: groupe.choices.filter((_, k) => k !== i) })} aria-label={t('menuOptions.removeChoice')}>✕</button>
           </div>
         ))}

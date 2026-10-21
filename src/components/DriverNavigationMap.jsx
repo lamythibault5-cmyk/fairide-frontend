@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { mouvementReduit } from '../gestes';
 import L from 'leaflet';
 import { coucheTuiles, itineraireRue } from '../carte';
 import { useAuth } from '../context/AuthContext';
@@ -92,7 +93,8 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       const end = L.latLng(originLat, originLng);
       if (!start.equals(end)) {
         if (animRef.current) cancelAnimationFrame(animRef.current);
-        const duration = 1200;
+        // Mouvements réduits demandés : pas de glissement de 1,2 s (audit du 19/10, CROSS-107).
+        const duration = mouvementReduit() ? 1 : 1200;
         const startTime = performance.now();
         function step(now) {
           const t = Math.min(1, (now - startTime) / duration);

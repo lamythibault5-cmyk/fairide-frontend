@@ -155,7 +155,7 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
   // dans un bouton n'est pas du HTML valide, et le second toucher déclenchait aussi le premier.
   return (
     <div className={`plat-ligne${image ? '' : ' plat-ligne-sans-photo'}${bistrot ? ' plat-ligne-bistrot' : ''}`}>
-      <button type="button" className={`${classes} plat-cliquable`} onClick={() => onAdd(item)} aria-label={`${name}, ${euros(remise ?? item.price)}`}>
+      <button type="button" className={`${classes} plat-cliquable`} onClick={() => onAdd(item)}>
         {contenu}
       </button>
       <PasPlat item={item} name={name} image={image} onAjout={onQuickAdd} t={t} />

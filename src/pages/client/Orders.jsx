@@ -75,7 +75,8 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
           if (e.status !== 409) throw e;
         }
       }
-      const tip = tipInput.trim() ? +Number(tipInput).toFixed(2) : tipChoice;
+      // « 2,50 » est lu comme 2,50 € (audit du 19/10, CROSS-62) : Number('2,50') donnait NaN, et le pourboire tombait sans un mot.
+      const tip = tipInput.trim() ? +(Number(tipInput.trim().replace(',', '.')) || 0).toFixed(2) : tipChoice;
       if (order.driverName && tip > 0) {
         await api(`/orders/${order.id}/tip`, { method: 'PATCH', token, body: { tip } });
         const pay = await api(`/payments/tip-checkout/${order.id}`, { method: 'POST', token });
@@ -101,9 +102,9 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
     <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: 14, marginTop: 8 }}>
       {!pourboireSeul && <div style={{ marginBottom: 10 }}>
         <div className="small" style={{ marginBottom: 4 }}>{t('review.foodRatingLabel')}</div>
-        <StarsInput value={foodRating} onChange={setFoodRating} />
-        {/* 1 000 caractères : la même limite que le serveur (routes/reviews.js LONGUEUR_MAX_AVIS). */}
-        <input maxLength={1000} value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder={t('review.foodCommentPlaceholder')} style={{ marginTop: 6 }} />
+        <StarsInput value={foodRating} onChange={setFoodRating} ariaLabel={t('review.foodRatingLabel')} />
+        {/* 1 000 caractères : la même limite que le serveur (routes/reviews.js LONGUEUR_MAX_AVIS). Nommé (audit du 19/10, CROSS-88). */}
+        <input maxLength={1000} value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder={t('review.foodCommentPlaceholder')} aria-label={t('review.foodCommentPlaceholder')} style={{ marginTop: 6 }} />
       </div>}
       {/* Pourboire déjà laissé en payant la commande : on ne le redemande pas. */}
       {order.driverName && order.tipPaid && (
@@ -118,6 +119,7 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
                 key={amount}
                 type="button"
                 className={tipChoice === amount && !tipInput.trim() ? 'btn-teal' : 'btn-ghost'}
+                aria-pressed={tipChoice === amount && !tipInput.trim()}
                 onClick={() => { setTipChoice(amount); setTipInput(''); }}
                 style={{ padding: '6px 12px', fontSize: 13 }}
               >
@@ -125,9 +127,9 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
               </button>
             ))}
             <input aria-label={t('review.tipOtherPlaceholder')}
-              type="number"
-              min="0.5"
-              step="0.5"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
               placeholder={t('review.tipOtherPlaceholder')}
               value={tipInput}
               onChange={(e) => setTipInput(e.target.value)}

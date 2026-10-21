@@ -29,7 +29,8 @@ export function ListeLangues() {
     <div role="radiogroup" aria-label="Langue / Taal / Language">
       {languages.map((l) => (
         <button key={l} type="button" role="radio" aria-checked={l === language} className={`bv-option${l === language ? ' on' : ''}`} onClick={() => setLanguage(l)}>
-          <span>{NOMS[l] || l}</span>
+          {/* Chaque nom dans sa langue, prononcé comme tel (audit du 19/10, CROSS-108). */}
+          <span lang={l}>{NOMS[l] || l}</span>
         </button>
       ))}
     </div>

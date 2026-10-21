@@ -646,7 +646,8 @@ export default function DriverDashboard() {
         <div className="ecl-ligne">
           <Icone nom={DELIVERY_INSTRUCTION_OPTIONS.find((x) => x.value === o.deliveryInstructions)?.icon || (o.deliveryInstructions ? 'sonnette' : 'telephone')} taille={20} />
           <span className="ecl-grow">
-            {o.deliveryInstructions ? deliveryInstructionLabel(o.deliveryInstructions) : null}
+            {/* Dans la langue du livreur (audit du 19/10, CROSS-12) : sans t, la consigne retombait sur le français. */}
+            {o.deliveryInstructions ? deliveryInstructionLabel(o.deliveryInstructions, t) : null}
             {o.deliveryNote && <small>{o.deliveryNote}</small>}
             {o.clientPhone && <small><a href={`tel:${o.clientPhone}`}>{telephoneLisible(o.clientPhone)}</a></small>}
           </span>

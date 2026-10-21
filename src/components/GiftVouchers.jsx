@@ -4,6 +4,7 @@ import ConfirmDialog from './ConfirmDialog';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import './bons.css';
 import Icone from './Icone';
+import { experienceApp } from '../natif';
 
 // Utilitaires repris de l'ancien module Réservations (retiré le 2026-09-25) : les bons cadeaux, eux, restent — ils
 // servent aussi à payer les commandes à emporter et en livraison.
@@ -96,7 +97,7 @@ function CreationBon({ restoId, token, toast, onDone }) {
     e.preventDefault();
     setEnvoi(true);
     try {
-      const v = await api(`/restaurants/${restoId}/gift-vouchers`, { method: 'POST', token, body: { ...f, amount: Number(f.amount), expiresAt: f.expiresAt || null } });
+      const v = await api(`/restaurants/${restoId}/gift-vouchers`, { method: 'POST', token, body: { ...f, amount: Number(String(f.amount).replace(',', '.')), expiresAt: f.expiresAt || null } });
       toast(v.emailSent ? t('bons.gvCreatedSent', { email: f.buyerEmail }) : t('bons.gvCreated'));
       onDone(v);
     } catch (err) { toast(err.message, 'erreur'); } finally { setEnvoi(false); }
@@ -107,7 +108,9 @@ function CreationBon({ restoId, token, toast, onDone }) {
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div style={{ flex: '0 0 120px' }}>
           <label htmlFor="gv-montant">{t('bons.gvAmount')}</label>
-          <input id="gv-montant" type="number" min="5" max="2000" step="5" value={f.amount} onChange={champ('amount')} required />
+          {/* Texte + clavier décimal (audit du 19/10, CROSS-72) : step="5" faisait refuser 12 € par le navigateur, alors que le
+              serveur accepte tout montant de 5 à 2 000 €. */}
+          <input id="gv-montant" type="text" inputMode="decimal" value={f.amount} onChange={champ('amount')} required />
         </div>
         <div className="pill-row" style={{ flex: '1 1 200px', alignSelf: 'flex-end' }}>
           {[25, 50, 75, 100, 150].map((m) => <button key={m} type="button" className={`pill${Number(f.amount) === m ? ' gold' : ''}`} style={{ cursor: 'pointer', border: '1px solid var(--line)' }} onClick={() => setF((s) => ({ ...s, amount: m }))}>{m} €</button>)}
@@ -218,7 +221,9 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
       </div>
 
       <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-        <button type="button" className="btn-outline" onClick={imprimer}>{t('bons.gvPrint')}</button>
+        {/* Pas d'« Imprimer » dans l'application (audit du 19/10, CROSS-23) : la WebView n'ouvre pas de fenêtre d'impression,
+            le bouton finissait sur « fenêtre bloquée ». L'envoi par e-mail, lui, reste. */}
+        {!experienceApp() && <button type="button" className="btn-outline" onClick={imprimer}>{t('bons.gvPrint')}</button>}
         <input aria-label={t('bons.gvBuyerEmail')} type="email" value={email} placeholder={t('bons.gvBuyerEmail')} maxLength={160} onChange={(e) => setEmail(e.target.value)} style={{ flex: '1 1 180px', maxWidth: 260 }} />
         <button type="button" className="btn-outline" disabled={!email || enCours === 'email'} onClick={envoyer}>{enCours === 'email' ? '…' : t('bons.gvSendByEmail')}</button>
       </div>

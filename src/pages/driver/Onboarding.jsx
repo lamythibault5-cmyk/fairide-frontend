@@ -14,6 +14,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
 import { SkeletonCards } from '../../components/Skeleton';
+import ErreurChargement from '../../components/ErreurChargement';
 import { euros } from '../../prixPlat';
 import GuideIndependant from '../../components/livreur/GuideIndependant';
 import ouvrirDocument from '../../ouvrirDocument';
@@ -53,8 +54,10 @@ export default function Onboarding() {
   const [d, setD] = useState(null);
   const [etape, setEtape] = useState(null);
   const [busy, setBusy] = useState(false);
+  // Un premier chargement raté ne laisse plus le squelette pour toujours : « Impossible de charger » + Réessayer (audit du 19/10, CROSS-33).
+  const [erreurChargement, setErreurChargement] = useState(null);
 
-  const charger = async () => { const r = await api('/couriers/me', { token }); setD(r); return r; };
+  const charger = async () => { const r = await api('/couriers/me', { token }); setD(r); setErreurChargement(null); return r; };
   /* RETOUR DE STRIPE DANS L'APPLICATION (audit du 19/10, courier-3). Le navigateur intégré qui se ferme ramène à la MÊME
    * adresse (natif.js : browserFinished, lien universel) : la page n'est pas remontée, et la relecture, faite une seule fois
    * à l'ouverture, ne repassait pas. Le dossier restait sur « Identité à faire » et « Reprendre la vérification » ; toucher
@@ -103,7 +106,7 @@ export default function Onboarding() {
           params.delete('connect'); setParams(params, { replace: true, state: { relu: true } });
           setEtape('envoi');
         }
-      } catch (e) { toast(e.message, 'erreur'); }
+      } catch (e) { toast(e.message, 'erreur'); setErreurChargement(e); }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key]);
@@ -121,9 +124,17 @@ export default function Onboarding() {
 
   async function action(fn, ok) {
     setBusy(true);
-    try { const r = await fn(); if (r && r.courier) setD(r); else await charger(); if (ok) toast(ok); return true; } catch (e) { toast(e.message, 'erreur'); return false; } finally { setBusy(false); }
+    // Enregistré, mais la relecture du dossier échoue : ce n'est pas un échec de l'enregistrement. Le dire comme tel poussait
+    // le livreur à renvoyer ses pièces (audit du 19/10, CROSS-49) ; la relecture se refait au prochain retour sur la page.
+    try {
+      const r = await fn();
+      if (r && r.courier) setD(r); else await charger().catch(() => {});
+      if (ok) toast(ok);
+      return true;
+    } catch (e) { toast(e.message, 'erreur'); return false; } finally { setBusy(false); }
   }
 
+  if (!d && erreurChargement) return <ErreurChargement erreur={erreurChargement} onReessayer={() => { setErreurChargement(null); charger().catch(setErreurChargement); }} />;
   if (!d) return <SkeletonCards count={3} />;
   const c = d.courier; const legal = d.legal ?? {};
   const valide = c.lifecycleStatus === 'approved';
@@ -466,11 +477,11 @@ function Champ({ label, children, help }) {
 function ChampsEntreprise({ c, f, set, t, legal }) {
   return (
     <>
-      <Champ label={t('courierOnboarding.fBce')} help={c.independent?.companyVerified ? `${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input aria-label="0123.456.789" value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
+      <Champ label={t('courierOnboarding.fBce')} help={c.independent?.companyVerified ? `${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
       <Champ label={t('courierOnboarding.fVatStatus')}>
         <select value={f.vatStatus} onChange={set('vatStatus')}><option value="">-</option><option value="franchise">{t('courierOnboarding.vatFranchise', { max: euroOuTiret(legal.franchiseMaxTurnover) })}</option><option value="assujetti">{t('courierOnboarding.vatNormal')}</option></select>
       </Champ>
-      {f.vatStatus === 'assujetti' && <Champ label={t('courierOnboarding.fVatNumber')}><input aria-label="BE0123456789" value={f.vatNumber} onChange={set('vatNumber')} placeholder="BE0123456789" /></Champ>}
+      {f.vatStatus === 'assujetti' && <Champ label={t('courierOnboarding.fVatNumber')}><input value={f.vatNumber} onChange={set('vatNumber')} placeholder="BE0123456789" /></Champ>}
     </>
   );
 }
@@ -560,7 +571,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext, brouillon = null, onBro
           </Champ>
           <Champ label={t('courierOnboarding.fBirthDate')}><input type="date" value={f.birthDate} onChange={set('birthDate')} /></Champ>
           <Champ label={t('courierOnboarding.fNrn')} help={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('courierOnboarding.nrnHelp')}>
-            <input aria-label="85.07.30-033.28" inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
+            <input inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
           </Champ>
           {/* Plus d'IBAN ici (12 oct. 2026) : il se donne une seule fois, à Stripe, à l'étape « Paiements ». */}
         </div>
@@ -575,7 +586,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext, brouillon = null, onBro
           </Champ>
           {motorise && (<>
             <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
-            <Champ label={t('courierOnboarding.fPlate')}><input aria-label="1-ABC-123" value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
+            <Champ label={t('courierOnboarding.fPlate')}><input value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
           </>)}
           {/* Venu de l'inscription (12 oct. 2026) : décide d'une ou deux courses à la fois (routes/orders.js). */}
           <Champ label={t('auth.platformsTitle')} help={t('auth.platformsHelp')}>
@@ -603,7 +614,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext, brouillon = null, onBro
         {c.statusType === 'student_independent' && (<>
           <div className="courier-grid">
             <Champ label={t('courierOnboarding.fSchool')}><input value={f.schoolName} onChange={set('schoolName')} /></Champ>
-            <Champ label={t('courierOnboarding.fAcademicYear')}><input aria-label="2026-2027" value={f.academicYear} onChange={set('academicYear')} placeholder="2026-2027" /></Champ>
+            <Champ label={t('courierOnboarding.fAcademicYear')}><input value={f.academicYear} onChange={set('academicYear')} placeholder="2026-2027" /></Champ>
             <ChampCaisse f={f} set={set} t={t} />
             <ChampsEntreprise c={c} f={f} set={set} t={t} legal={legal} />
           </div>

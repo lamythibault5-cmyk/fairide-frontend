@@ -32,7 +32,11 @@ export default function MesDonnees() {
     }
   }
 
+  // Un second appui pendant l'envoi relançait la demande (audit du 19/10, CROSS-48) : le bouton attend la réponse.
+  const [deconnexionEnCours, setDeconnexionEnCours] = useState(false);
   async function deconnecterPartout() {
+    if (deconnexionEnCours) return;
+    setDeconnexionEnCours(true);
     try {
       await api('/me/logout-everywhere', { method: 'POST', token });
       toast(t('accountUi.myData_loggedOutEverywhere'));
@@ -41,6 +45,7 @@ export default function MesDonnees() {
       toast(e.message, 'erreur');
     } finally {
       setConfirmer(false);
+      setDeconnexionEnCours(false);
     }
   }
 
@@ -57,6 +62,7 @@ export default function MesDonnees() {
         confirmLabel={t('accountUi.myData_logoutAllButton')}
         onCancel={() => setConfirmer(false)}
         onConfirm={deconnecterPartout}
+        loading={deconnexionEnCours}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -8,6 +8,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { suivrePositionCourse } from '../../natif';
 import PageLivreur from '../../components/livreur/PageLivreur';
 import Icone from '../../components/Icone';
+import ErreurChargement from '../../components/ErreurChargement';
 
 // Cadence maximale d'envoi de la position au serveur — même valeur que Dashboard.jsx, un seul rythme
 // pour les deux pages qui partagent la position.
@@ -50,15 +51,21 @@ export default function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Un premier chargement raté ne laisse plus le squelette pour toujours : « Impossible de charger » + Réessayer (audit du 19/10, CROSS-33).
+  // Le toast n'est dit qu'au premier échec d'une série : la carte relit toutes les 15 s, et un serveur injoignable
+  // faisait sonner une erreur à chaque tour.
+  const [erreur, setErreur] = useState(null);
+  const echecEnCours = useRef(false);
+  const chargerCourses = useCallback(() => {
+    api('/orders/mine/deliveries?recent=1', { token })
+      .then((r) => { setOrders(r); setErreur(null); echecEnCours.current = false; })
+      .catch((e) => { setErreur(e); if (!echecEnCours.current) toast(e.message, 'erreur'); echecEnCours.current = true; });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
   useEffect(() => {
-    /* Courses en main et récentes seulement (audit du 19/10, courier-21 : l'historique entier, toutes les 15 s), et une seule
-     * alerte par coupure (CROSS-35 : un toast rouge et une vibration à chaque relevé raté, dans une zone sans réseau). */
-    let enEchec = false;
-    function load() {
-      if (document.hidden) return;
-      api('/orders/mine/deliveries?recent=1', { token }).then((r) => { enEchec = false; setOrders(r); })
-        .catch((e) => { if (!enEchec) toast(e.message, 'erreur'); enEchec = true; });
-    }
+    // Courses en main et récentes seulement (courier-21), une seule alerte par coupure (CROSS-35, dans chargerCourses) ;
+    // rien pendant que l'écran est caché.
+    const load = () => { if (!document.hidden) chargerCourses(); };
     load();
     const interval = setInterval(load, 15000);
     return () => clearInterval(interval);
@@ -132,7 +139,7 @@ export default function MapPage() {
   // Le chargement garde déjà le bandeau : seule la feuille attend.
   return (
     <PageLivreur classe="carte-page ecl-carte" large bandeauApp titre={t('mapDriver.title')} sous={t('mapDriver.intro')}>
-      {!orders ? <p className="ecl-note">{t('mapDriver.loading')}</p> : (
+      {!orders && erreur ? <ErreurChargement erreur={erreur} onReessayer={chargerCourses} /> : !orders ? <p className="ecl-note">{t('mapDriver.loading')}</p> : (
       <>
       {!sharingLocation && (
         <p className="ecl-note"><Icone nom="position" taille={18} />{t('mapDriver.enableGeo')}</p>

@@ -4639,7 +4639,7 @@ export default {
       serviceFee: 'dont frais de système Fairide',
       balanceUsed: 'Solde client utilisé',
       totalPaid: 'Total payé',
-      disclaimer: 'Récapitulatif de commande fourni par Fairide, ne remplace pas le ticket de caisse de votre propre système d\'encaissement si vous y êtes soumis légalement.',
+      disclaimer: 'Récapitulatif de commande fourni par Fairide : il ne remplace pas le ticket de caisse du commerce, s\'il est tenu d\'en délivrer un.',
       thanks: 'Merci et bonne dégustation !',
       paidVia: 'Payé via Fairide ✓',
       unpaid: 'Non payé',
@@ -4851,7 +4851,12 @@ export default {
       closed: 'Fermé',
       applyAllDays: 'Appliquer à tous les jours',
       addService: '+ Ajouter un service',
-      removeService: 'Retirer ce service'
+      removeService: 'Retirer ce service',
+      to: 'à',
+      openTime: '{day}, ouverture du service {n}',
+      closeTime: '{day}, fermeture du service {n}',
+      closedDay: '{day} : fermé',
+      removeServiceDay: '{day} : retirer le service {n}'
     },
     gallery: {
       keepOldTitle: 'Garder l\'ancienne photo ?',
@@ -4974,7 +4979,7 @@ export default {
       tabInvoices: 'Mes factures',
       tabStatements: 'Relevés',
       tabSubscription: 'Abonnement',
-      archiveDesc2: "Une facture par mois, émise au début du mois suivant (ou plus tôt avec « Générer la facture », plus bas) et envoyée par e-mail avec le PDF. Chaque PDF détaille toutes les commandes : date, type, montant, taux et commission (sans TVA : Fairide relève du régime de franchise). Le bouton enveloppe te la renvoie par e-mail, UBL sert à ton logiciel comptable (Peppol)."
+      archiveDesc2: "Une facture par mois, émise automatiquement en début de mois pour le mois écoulé et envoyée par e-mail avec le PDF. Chaque PDF détaille toutes les commandes : date, type, montant, taux et commission (sans TVA : Fairide relève du régime de franchise). Le bouton enveloppe te la renvoie par e-mail, UBL sert à ton logiciel comptable (Peppol).",
     },
     promosPage: {
       inactiveSuffix: ' · inactive',
@@ -5164,7 +5169,11 @@ export default {
       singleShort: 'un seul choix',
       multipleShort: 'plusieurs choix',
       maxShort: 'max {n} choix',
-      requiredShort: ', obligatoire'
+      requiredShort: ', obligatoire',
+      optionNameA11y: 'Option {n} : nom',
+      optionPriceA11y: 'Option {n} : supplément en euros',
+      removeOptionA11y: 'Retirer l\'option {n}',
+      editGroupA11y: 'Modifier le groupe {name}'
     },
     menuItem: {
       save: 'Enregistrer',
@@ -6628,7 +6637,8 @@ export default {
       replaceText: 'Ton panier contient des plats de {name}. Les parts du groupe vont le remplacer.',
       bannerText: 'Tu choisis ta part de la commande groupée de {name}. Quand c\'est prêt, envoie ton panier au groupe : c\'est {name} qui paie.',
       bannerSend: 'Envoyer au groupe',
-      bannerLeave: 'Quitter le groupe'
+      bannerLeave: 'Quitter le groupe',
+      cancelConfirm: 'Le groupe est annulé pour tout le monde, et il ne pourra plus être rouvert.'
     },
     team: {
       rowTitle: 'Mon équipe',
@@ -6954,7 +6964,12 @@ export default {
       guestReviewsCount: '{n} avis',
       guestReviewsContest: 'Un avis te semble injuste ou contraire aux règles ? Écris-nous à contact@fairide.be : nous le vérifions et le retirons s\'il ne les respecte pas.',
       earningsRow: 'Mes gains',
-      earningsRowSub: 'Brut, retenue, net versé · par mois et par course'
+      earningsRowSub: 'Brut, retenue, net versé · par mois et par course',
+      redeemCodeA11y: 'Code à valider',
+      convertAmountA11y: 'Montant à convertir, en euros',
+      referralCodeA11y: 'Ton code de parrainage',
+      newValueA11y: 'Nouvelle valeur : {label}',
+      codeA11y: 'Code reçu, 6 chiffres'
     },
     bons: {
       loading: 'Chargement…',
@@ -7068,7 +7083,19 @@ export default {
       prixComptoir: "Prix du comptoir",
       prixComptoirTitre: "Ce restaurant affiche sur Fairide les prix de son comptoir, vérifiés par l'équipe Fairide.",
       verifiedShort: 'resto vérifié',
-      close: 'Fermer'
+      close: 'Fermer',
+      loadFailedServer: 'Le serveur ne répond pas pour le moment. Réessaie dans un instant.',
+      wrongRole_client: 'Ce lien s\'ouvre avec la casquette client. Tu peux la prendre dans Mon compte, puis rouvrir le lien.',
+      wrongRole_restaurant: 'Ce lien s\'ouvre avec la casquette commerce. Tu peux la prendre dans Mon compte, puis rouvrir le lien.',
+      wrongRole_driver: 'Ce lien s\'ouvre avec la casquette livreur. Tu peux la prendre dans Mon compte, puis rouvrir le lien.',
+      docUnavailable: 'Ce document n\'est pas disponible pour le moment.',
+      docReadFailed: 'Impossible de lire le document.',
+      btNeedsHttps: 'L\'impression Bluetooth exige une connexion sécurisée (https).',
+      btNoIos: 'Sur iPhone et iPad, aucun navigateur n\'autorise le Bluetooth depuis une page web. Utilise « Imprimer le bon de livraison », qui fonctionne avec AirPrint.',
+      btUnsupportedBrowser: 'Ce navigateur ne gère pas le Bluetooth. Chrome ou Edge le permettent ; sinon, utilise « Imprimer le bon de livraison ».',
+      btUnavailable: 'Bluetooth indisponible.',
+      btNotAPrinter: 'Cet appareil ne semble pas être une imprimante : aucun canal d\'écriture trouvé.',
+      btNotConnected: 'Aucune imprimante connectée.'
     },
     seo: {
       /* Titre servi aux pages qui n'en posent pas un à elles (l'accueil, et tout ce qui appelle
@@ -7479,7 +7506,7 @@ export default {
       modeDelivery: 'Livraison',
       modePickup: 'À emporter',
       feeLabel: 'Frais de livraison',
-      feeFrom: 'dès {amount} €',
+      feeFrom: 'dès {amount}',
       feeFree: 'Offerte',
       feePickup: 'Gratuit',
       feePickupLabel: 'Retrait sur place',
@@ -8080,7 +8107,9 @@ export default {
       pendingTitle: 'Paiement en cours de vérification',
       pendingText: "Ton paiement n'est pas encore confirmé de notre côté. Cela peut prendre une minute. Ta commande apparaît dans « Mes commandes » et son statut s'y mettra à jour tout seul.",
       failedTitle: "Ce paiement n'a pas abouti",
-      failedText: "Nous n'avons pas reçu ce paiement. Ta commande n'a pas été transmise au restaurant, et rien ne t'a été débité. Tu peux réessayer depuis « Mes commandes »."
+      failedText: "Nous n'avons pas reçu ce paiement. Ta commande n'a pas été transmise au restaurant, et rien ne t'a été débité. Tu peux réessayer depuis « Mes commandes ».",
+      notFoundTitle: 'Commande introuvable',
+      notFoundText: 'Cette commande n\'est pas sur ton compte. Vérifie que tu es connecté avec le compte qui l\'a passée.'
     },
     adminGo: {
       title: "Bouton GO : livraison et paiement en ligne",
@@ -8495,7 +8524,7 @@ export default {
       errPasswordRetry: 'Ton mot de passe n\'a pas été accepté. Choisis-en un autre : tout le reste de ton inscription est gardé.',
       errVerificationSent: "Un code de vérification t'a été envoyé par email.",
       errEmailNotVerified: "Confirme d’abord ton compte avec le code qu’on t’a envoyé (par SMS ou par e-mail).",
-      errCodeRequired: 'Entre le code reçu par email.',
+      errCodeRequired: 'Entre le code reçu.',
       errEmailRequired: 'Entre ton adresse email.',
       newCodeSent: 'Nouveau code envoyé.',
       changePhone: "Ce n'est pas ton numéro ? Change-le",
@@ -8661,7 +8690,9 @@ export default {
       errCompanyNumberLength: 'Un numéro d\'entreprise compte 10 chiffres : tu en as tapé {n}. Il ressemble à 0123.456.789 (avec ou sans points, « BE » devant est accepté).',
       errCompanyNumberPrefix: 'Un numéro d\'entreprise belge commence par 0 ou 1 (ex. 0123.456.789). Vérifie le premier chiffre.',
       errCompanyNumberKey: 'Ces 10 chiffres ne forment pas un numéro d\'entreprise valable : les deux derniers sont une clé de contrôle qui ne correspond pas aux huit premiers. Il y a sans doute une faute de frappe — recopie-le depuis un document officiel (BCE, facture).',
-      bagDrawing: 'Le sac dont on parle : un sac à dos isotherme, carré et rigide, qui garde les plats chauds (ou froids) et droits pendant le trajet — comme ceux des plateformes de livraison.'
+      bagDrawing: 'Le sac dont on parle : un sac à dos isotherme, carré et rigide, qui garde les plats chauds (ou froids) et droits pendant le trajet — comme ceux des plateformes de livraison.',
+      managerPhoneA11y: 'Téléphone du responsable {n}',
+      managerRemoveA11y: 'Retirer le responsable {n}'
     },
     // Conformité (backlog du 23/09/2026) : panier, fiche vendeur, allergènes, alcool, signalement,
     // livreurs, décisions motivées, registres. Même clé dans les trois langues.
@@ -8760,7 +8791,7 @@ export default {
       allergyLabel: 'Précisez l\'allergie ou l\'intolérance (le commerce doit confirmer qu\'il peut la respecter)',
       allergyPlaceholder: 'Ex. : allergie sévère aux arachides, sans gluten…',
       allergyHow: "Ta commande n'est préparée qu'une fois que le commerce a confirmé pouvoir respecter ta demande. S'il ne le peut pas, il la refuse et tu es intégralement remboursé.",
-      allergyCallFirst: 'Allergie sévère : appelez le commerce avant de commander, au {phone}.',
+      allergyCallFirst: 'Allergie sévère : appelle le commerce avant de commander, au {phone}.',
       ageDeclaration: 'J\'ai {age} ans ou plus. Une pièce d\'identité me sera demandée à la remise ; sans preuve, les produits alcoolisés ne me seront pas remis.',
       termsAcceptPrefix: 'J\'accepte les',
       termsLink: 'conditions générales',
@@ -9063,7 +9094,8 @@ export default {
       paramFlagsHelp: 'Chaque changement est journalisé. À ne basculer qu\'une fois la position de l\'avocat connue. Le statut économie collaborative (P2P) s\'ouvre dans Livreurs › Paramètres.',
       paramFlagToggle: 'Basculer',
       paramsSaved: 'Paramètres enregistrés.',
-      joinDriverP2NoP2p: 'Étudiant-indépendant ou indépendant : tu choisis ton statut'
+      joinDriverP2NoP2p: 'Étudiant-indépendant ou indépendant : tu choisis ton statut',
+      reportMinChars: '{n} caractère(s) sur 20 minimum'
     },
     simulation: {
       benchTakeoverConfirm: 'Cet appareil est le terminal de « {name} ». Le connecter à la simulation le déconnecte de ce commerce, qui devra le reconnecter. Continuer ?',

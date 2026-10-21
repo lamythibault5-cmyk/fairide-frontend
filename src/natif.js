@@ -23,6 +23,7 @@
 //     pour l'accueil de l'application (pages/app/Bienvenue.jsx) et la page de connexion.
 
 import { Capacitor } from '@capacitor/core';
+import { traduire } from './context/LanguageContext';
 
 export function estNatif() {
   try { return Capacitor.isNativePlatform(); } catch { return false; }
@@ -119,7 +120,7 @@ export async function ouvrirPdfBlob(blob, nom = 'fairide.pdf') {
   const base64 = await new Promise((resolve, reject) => {
     const lecteur = new FileReader();
     lecteur.onload = () => resolve(String(lecteur.result).split(',')[1] || '');
-    lecteur.onerror = () => reject(new Error('Lecture du document impossible.'));
+    lecteur.onerror = () => reject(new Error(traduire('common.docReadFailed'))); // dans la langue choisie (audit du 19/10, CROSS-13)
     lecteur.readAsDataURL(blob);
   });
   const { uri } = await Filesystem.writeFile({ path: nom, data: base64, directory: Directory.Cache });
@@ -134,7 +135,7 @@ export async function telechargerPdfBlob(blob, nom = 'fairide.pdf') {
     setTimeout(() => URL.revokeObjectURL(url), 60000); return;
   }
   const [{ Filesystem, Directory }, { Share }] = await Promise.all([import('@capacitor/filesystem'), import('@capacitor/share')]);
-  const base64 = await new Promise((resolve, reject) => { const l = new FileReader(); l.onload = () => resolve(String(l.result).split(',')[1] || ''); l.onerror = () => reject(new Error('Lecture du document impossible.')); l.readAsDataURL(blob); });
+  const base64 = await new Promise((resolve, reject) => { const l = new FileReader(); l.onload = () => resolve(String(l.result).split(',')[1] || ''); l.onerror = () => reject(new Error(traduire('common.docReadFailed'))); l.readAsDataURL(blob); });
   const { uri } = await Filesystem.writeFile({ path: nom, data: base64, directory: Directory.Documents });
   await Share.share({ title: nom, url: uri });
 }
@@ -159,7 +160,16 @@ export async function vibrerNatif(motif) {
 
 // Les routes d'entrée : un Retour Android depuis l'une d'elles réduit l'application (comme l'accueil du
 // téléphone) au lieu de remonter un historique qui n'existe plus.
-const RACINES = new Set(['/', '/bienvenue', '/restaurants', '/dashboard', '/driver', '/admin', '/orders', '/login']);
+// /dashboard/orders : la page de service d'un membre d'équipe, qui n'a qu'elle et son compte (DashboardSidebar.jsx ; audit du
+// 19/10, CROSS-06). /account n'en est pas une : on y arrive aussi depuis le paiement, où Retour doit y ramener.
+const RACINES = new Set(['/', '/bienvenue', '/restaurants', '/dashboard', '/driver', '/admin', '/orders', '/login', '/dashboard/orders']);
+// Les autres onglets de la barre du bas : le Retour y ramène à l'onglet d'accueil du rôle, puis réduit l'application. Avant,
+// il remontait tous les onglets visités un par un (audit du 19/10, CROSS-20).
+const ONGLETS = {
+  '/map': '/restaurants', '/recherche': '/restaurants',
+  '/dashboard/menu': '/dashboard',
+  '/driver/map': '/driver', '/driver/earnings': '/driver', '/driver/onboarding': '/driver'
+};
 function cheminSansLangue(pathname) {
   return pathname.replace(/^\/(nl|en)(?=\/|$)/, '') || '/';
 }
@@ -201,6 +211,7 @@ export async function demarrerNatif(historique) {
       const retourEtape = document.querySelector('[data-retour-natif]');
       if (retourEtape) { retourEtape.click(); return; }
       if (RACINES.has(chemin) || window.history.length <= 1) { App.minimizeApp().catch(() => {}); return; }
+      if (ONGLETS[chemin]) { historique.replace(ONGLETS[chemin]); return; }
       historique.back();
     });
 

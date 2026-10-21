@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { mouvementReduit } from '../gestes';
 import L from 'leaflet';
 import { coucheTuiles, itineraireRue } from '../carte';
 import { useAuth } from '../context/AuthContext';
@@ -213,7 +214,8 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       const end = L.latLng(driverLat, driverLng);
       if (!start.equals(end)) {
         if (animRef.current) cancelAnimationFrame(animRef.current);
-        const duration = 1200; const startTime = performance.now();
+        // Mouvements réduits demandés : le livreur saute à sa nouvelle place au lieu de glisser (audit du 19/10, CROSS-107).
+        const duration = mouvementReduit() ? 1 : 1200; const startTime = performance.now();
         const step = (t0) => {
           const t = Math.min(1, (t0 - startTime) / duration);
           marker.setLatLng([start.lat + (end.lat - start.lat) * t, start.lng + (end.lng - start.lng) * t]);

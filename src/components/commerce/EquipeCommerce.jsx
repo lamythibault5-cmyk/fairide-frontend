@@ -78,7 +78,7 @@ export default function EquipeCommerce({ restoId }) {
           </div>
           <div className="field">
             <label htmlFor="equipe-nom">{t('team.name')}</label>
-            <input id="equipe-nom" value={nom} maxLength={80} onChange={(e) => setNom(e.target.value)} />
+            <input id="equipe-nom" value={nom} maxLength={80} onChange={(e) => setNom(e.target.value)} autoComplete="off" />
           </div>
         </div>
         <button type="submit" className="btn-teal" disabled={envoi || !email.trim()}>{envoi ? '…' : t('team.invite')}</button>

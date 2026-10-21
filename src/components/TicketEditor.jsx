@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
+import Modale from './Modale';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
 
@@ -47,12 +47,12 @@ export default function TicketEditor({ initial, btName, printing, onPrintBluetoo
     if (ok) setImprimes((n) => n + copies);
   }
 
-  return createPortal(
-    <div className="modal-overlay no-print" onClick={onClose}>
-      <div className="modal-box ticket-editor" onClick={(e) => e.stopPropagation()}>
+  // Une Modale plutôt qu'un fond fait main (audit du 19/10, CROSS-06) : Échap, focus, Retour d'Android.
+  return (
+    <Modale classe="no-print" classeBoite="ticket-editor" ariaLabel={initial ? t('ticketEditor.titleEdit', { id: String(initial.id).slice(0, 8) }) : t('ticketEditor.titleNew')} onFermer={onClose}>
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
           <h3 style={{ margin: 0 }}>{initial ? t('ticketEditor.titleEdit', { id: String(initial.id).slice(0, 8) }) : t('ticketEditor.titleNew')}</h3>
-          <button type="button" className="btn-ghost" onClick={onClose}>✕</button>
+          <button type="button" className="btn-ghost" onClick={onClose} aria-label={t('common.close')}>✕</button>
         </div>
         <p className="small" style={{ margin: '0 0 12px' }}>{initial ? t('ticketEditor.introEdit') : t('ticketEditor.introNew')}</p>
 
@@ -108,8 +108,6 @@ export default function TicketEditor({ initial, btName, printing, onPrintBluetoo
           {imprimes > 0 && <span className="small" style={{ marginLeft: 'auto' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('ticketEditor.printedCount', { n: imprimes })}</span>}
         </div>
         {!btName && <p className="small" style={{ margin: '8px 0 0' }}>{t('ticketEditor.noPrinter')}</p>}
-      </div>
-    </div>,
-    document.body
+    </Modale>
   );
 }

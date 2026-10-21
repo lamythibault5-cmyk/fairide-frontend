@@ -53,8 +53,10 @@ export default function OpeningHoursEditor({ value, onChange }) {
           <div key={day} className="opening-hours-day-row">
             <div className="opening-hours-day-header">
               <span className="opening-hours-day-label">{dayLabel(day, t)}</span>
+              {/* Chaque champ dit son jour (audit du 19/10, CROSS-87) : un lecteur d'écran lisait sept « Fermé » et quatorze champs
+                  d'heure sans nom, sans savoir de quel jour il s'agissait. */}
               <label className="opening-hours-closed-toggle">
-                <input type="checkbox" checked={closed} onChange={(e) => toggleClosed(day, e.target.checked)} />
+                <input type="checkbox" checked={closed} onChange={(e) => toggleClosed(day, e.target.checked)} aria-label={t('hoursEditor.closedDay', { day: dayLabel(day, t) })} />
                 {t('hoursEditor.closed')}
               </label>
               {day === 'mon' && (
@@ -67,11 +69,11 @@ export default function OpeningHoursEditor({ value, onChange }) {
               <div className="opening-hours-shifts">
                 {shifts.map((shift, index) => (
                   <div key={index} className="opening-hours-shift">
-                    <input type="time" value={shift.open} onChange={(e) => updateShift(day, index, 'open', e.target.value)} />
-                    <span>à</span>
-                    <input type="time" value={shift.close} onChange={(e) => updateShift(day, index, 'close', e.target.value)} />
+                    <input type="time" value={shift.open} onChange={(e) => updateShift(day, index, 'open', e.target.value)} aria-label={t('hoursEditor.openTime', { day: dayLabel(day, t), n: index + 1 })} />
+                    <span>{t('hoursEditor.to')}</span>
+                    <input type="time" value={shift.close} onChange={(e) => updateShift(day, index, 'close', e.target.value)} aria-label={t('hoursEditor.closeTime', { day: dayLabel(day, t), n: index + 1 })} />
                     {shifts.length > 1 && (
-                      <button type="button" className="opening-hours-remove-shift" onClick={() => removeShift(day, index)} aria-label={t('hoursEditor.removeService')}>✕</button>
+                      <button type="button" className="opening-hours-remove-shift" onClick={() => removeShift(day, index)} aria-label={t('hoursEditor.removeServiceDay', { day: dayLabel(day, t), n: index + 1 })}>✕</button>
                     )}
                   </div>
                 ))}
