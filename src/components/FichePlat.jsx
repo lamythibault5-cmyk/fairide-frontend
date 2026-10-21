@@ -228,6 +228,10 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
                           checked={choisis.has(i.id)}
                           disabled={auMax}
                           onChange={() => (g.type === 'single' ? choisirUnique(g.id, i.id) : basculerMultiple(g.id, i.id, g.maxSelections))}
+                          // Choix unique FACULTATIF (« Sauce ») : toucher l'option déjà choisie la retire. Un bouton radio coché ne
+                          // se décoche pas tout seul (onChange ne part pas) : seule la fermeture de la fiche ramenait à « sans
+                          // sauce » (audit du 19/10, discovery-28). Choix obligatoire : inchangé.
+                          onClick={g.type === 'single' && !g.required && choisis.has(i.id) ? () => setSelections((prev) => ({ ...prev, [g.id]: new Set() })) : undefined}
                         />
                         <span>{i.name}</span>
                       </span>

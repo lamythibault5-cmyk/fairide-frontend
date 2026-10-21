@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import ProtectedRoute from '../../components/ProtectedRoute';
 import { api } from '../../api';
 import { vibrer } from '../../gestes';
 import { suivre } from '../../analytics';
@@ -25,7 +26,40 @@ import { euros } from '../../prixPlat';
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLLS = 10; // ~20 s, au-delà on affiche « en cours de vérification » plutôt que de mentir
 
+/* RETOUR DE STRIPE SANS SESSION (audit du 19/10, checkout-07). Dans l'application, Stripe s'ouvre dans le navigateur
+ * intégré ; à la fin du paiement il revient sur https://fairide.be/order-success. Quand le téléphone ne rend pas ce lien à
+ * l'application (iOS tant que le fichier d'association n'a pas l'identifiant d'équipe Apple ; Android quand la redirection
+ * arrive sans geste de l'utilisateur), la page se chargeait DANS ce navigateur, où il n'y a pas de session : l'écran de
+ * connexion s'affichait juste après avoir payé. Désormais ces deux adresses s'ouvrent sans compte : elles disent de
+ * retourner dans l'application, avec un bouton qui l'ouvre sur Android (lien « intent », geste de l'utilisateur, même
+ * adresse, que l'application lit dans appUrlOpen — natif.js). Fermer le navigateur ramène aussi à « Mes commandes ».
+ * Sur le site, un client dont la session a expiré peut se reconnecter et revenir ici (state.from). */
+function RetourSansSession({ success }) {
+  const { t } = useLanguage();
+  const location = useLocation();
+  const android = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent || '');
+  const lienAppli = `intent://fairide.be${location.pathname}${location.search}#Intent;scheme=https;package=be.fairide.app;end`;
+  return (
+    <div className="center-page">
+      <span className="etat-vide-icone" aria-hidden="true"><Icone nom={success ? 'bouclier' : 'interdit'} taille={34} /></span>
+      <h2 className="etat-vide-titre">{t('orderResult.noSessionTitle')}</h2>
+      <p className="small">{t(success ? 'orderResult.noSessionTextSuccess' : 'orderResult.noSessionTextCancel')}</p>
+      <div className="row" style={{ gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+        {android && <a href={lienAppli} className="btn-teal" style={{ textDecoration: 'none', display: 'inline-block' }}>{t('orderResult.openApp')}</a>}
+        <Link to="/login" state={{ from: location.pathname + location.search }} className="btn-outline" style={{ textDecoration: 'none', display: 'inline-block' }}>{t('orderResult.loginToSee')}</Link>
+      </div>
+    </div>
+  );
+}
+
+// La route n'est plus protégée (App.jsx) : sans session, l'écran ci-dessus ; avec, la règle habituelle des pages client.
 export default function OrderResult({ success }) {
+  const { user } = useAuth();
+  if (!user) return <RetourSansSession success={success} />;
+  return <ProtectedRoute role="client"><ResultatCommande success={success} /></ProtectedRoute>;
+}
+
+function ResultatCommande({ success }) {
   const [params] = useSearchParams();
   const orderId = params.get('order');
   const { token } = useAuth();
@@ -190,6 +224,9 @@ export default function OrderResult({ success }) {
                 <Icone nom="commerce" taille={20} />
                 <span className="ec-recap-texte"><b>{commande.restaurantName}</b>
                   {commande.items?.length > 0 && <small>{commande.items.map(formatOrderItem).join(' · ')}</small>}</span>
+                {/* À emporter payé en ligne : le montant débité est dit aussi (audit du 19/10, checkout-14) ; en livraison, il
+                    est sur la ligne du mode, juste dessous. */}
+                {commande.orderType === 'pickup' && debite != null && <b className="ec-recap-montant">{euros(debite)}</b>}
               </div>
               {commande.orderType !== 'pickup' && <div className="ec-recap-ligne">
                 <Icone nom={commande.orderType === 'pickup' ? 'sac' : 'maison'} taille={20} />
@@ -221,8 +258,15 @@ export default function OrderResult({ success }) {
       {/* Pendant la vérification, aucun bouton : on ne veut pas qu'un client quitte la page à la
           seconde où le webhook est sur le point d'arriver. */}
       {state !== 'checking' && (
-        <div className="row" style={{ gap: 10, justifyContent: 'center' }}>
-          <Link to="/orders" className="btn-teal" style={{ textDecoration: 'none', display: 'inline-block' }}>
+        <div className="row" style={{ gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {/* Paiement annulé ou refusé : la commande n'est pas passée et le panier est rendu — l'action principale y ramène
+              (audit du 19/10, checkout-15). */}
+          {state === 'failed' && cart.count > 0 && (
+            <Link to="/panier" className="btn-teal" style={{ textDecoration: 'none', display: 'inline-block' }}>
+              {t('orderResult.backToCart')}
+            </Link>
+          )}
+          <Link to="/orders" className={state === 'failed' && cart.count > 0 ? 'btn-outline' : 'btn-teal'} style={{ textDecoration: 'none', display: 'inline-block' }}>
             {t('orderResult.viewOrders')}
           </Link>
           <Link to="/restaurants" className="btn-outline" style={{ textDecoration: 'none', display: 'inline-block' }}>

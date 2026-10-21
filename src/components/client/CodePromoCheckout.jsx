@@ -11,15 +11,23 @@ export default function CodePromoCheckout({ token, toast, subtotal, deliveryFee,
   const { t } = useLanguage();
   const [code, setCode] = useState(applique?.code || '');
   const [enCours, setEnCours] = useState(false);
-  // Le panier ou le mode a changé : l'aperçu ne vaut plus, on le retire (la commande le recalculerait de toute façon).
+  // Le panier ou le mode a changé : le code est REVÉRIFIÉ sur le nouveau montant (audit du 19/10, checkout-11). Avant, il
+  // était retiré sans un mot : le champ gardait le texte, la remise disparaissait, et le client payait plein tarif. Il ne
+  // part que s'il ne s'applique vraiment plus, et on le dit. Paiement sur place : le code reste, gardé pour un paiement en
+  // ligne (le paiement ne l'envoie pas et ne le déduit pas, voir Checkout.jsx).
   // Pas au montage : dans l'app, ce champ vit dans une feuille qu'on rouvre — le code déjà appliqué doit y rester.
   // On compare aux valeurs précédentes plutôt que de sauter « le premier passage » : en développement, React joue deux fois.
   const precedent = useRef(`${subtotal}|${deliveryFee}|${payOnSite}`);
   useEffect(() => {
     const cle = `${subtotal}|${deliveryFee}|${payOnSite}`;
-    if (cle === precedent.current) return;
+    if (cle === precedent.current) return undefined;
     precedent.current = cle;
-    if (applique) onChange(null);
+    if (!applique || payOnSite) return undefined;
+    let actif = true;
+    api('/promo-codes/check', { method: 'POST', token, body: { code: applique.code, subtotal, deliveryFee, payOnSite } })
+      .then((r) => { if (actif && (r.discount !== applique.discount || r.label !== applique.label)) onChange({ code: r.code, discount: r.discount, label: r.label }); })
+      .catch((e) => { if (!actif) return; onChange(null); toast(t('checkout.promoCodeDropped', { reason: e.message }), 'erreur'); });
+    return () => { actif = false; };
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [subtotal, deliveryFee, payOnSite]);
 
@@ -47,7 +55,8 @@ export default function CodePromoCheckout({ token, toast, subtotal, deliveryFee,
           ? <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} onClick={() => { onChange(null); setCode(''); }}>{t('checkout.promoCodeRemove')}</button>
           : <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={code.trim().length < 3 || enCours} onClick={appliquer}>{enCours ? '…' : t('checkout.promoCodeApply')}</button>}
       </div>
-      {applique && <p className="small" style={{ margin: '6px 0 0', color: 'var(--teal-deep)' }}>{t('checkout.promoCodeLine', { label: applique.label, amount: euros(applique.discount) })}</p>}
+      {applique && !payOnSite && <p className="small" style={{ margin: '6px 0 0', color: 'var(--teal-deep)' }}>{t('checkout.promoCodeLine', { label: applique.label, amount: euros(applique.discount) })}</p>}
+      {applique && payOnSite && <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.promoCodeKeptOnline')}</p>}
     </details>
   );
 }

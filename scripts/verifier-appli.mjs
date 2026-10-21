@@ -31,6 +31,13 @@ const COMMERCE = {
   address: 'Rue du Midi 12, 1000 Bruxelles', hours: { mon: [{ open: '11:00', close: '22:00' }] }, menu: [], sections: [], offersDelivery: true, offersPickup: true,
   reviewCount: 0, rating: 4.5
 };
+// LE PAIEMENT AVEC UN PANIER (audit du 19/10, checkout-26) : /checkout sans panier renvoyait vers la liste, et le paiement de
+// l'app (feuilles Codes, Allergie, Avant de commander, barre de verre) n'était jamais dessiné. Un second commerce, avec un plat,
+// sert au panier posé plus bas ; le premier garde sa carte vide pour les autres pages.
+const COMMERCE_PANIER = {
+  ...COMMERCE, id: 2, name: 'Chez Simone 2', hours: null,
+  menu: [{ id: 'p1', name: 'Margherita', price: 11, category: 'Pizzas', available: true, allergens: [], optionGroups: [] }]
+};
 const UTILISATEURS = {
   client: { id: 11, name: 'Cléa Client', firstName: 'Cléa', lastName: 'Client', email: 'client@exemple.be', role: 'client', roles: ['client'], phone: '+32 470 00 00 01' },
   driver: { id: 12, name: 'Lou Livreur', firstName: 'Lou', lastName: 'Livreur', email: 'livreur@exemple.be', role: 'driver', roles: ['driver'], phone: '+32 470 00 00 02' },
@@ -90,6 +97,9 @@ function simuler(chemin, methode, profil) {
   }
   // Mises en avant payantes : un objet ; commune pas encore ouverte à la vente, comme pour un commerce qui démarre.
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/placements$/.test(chemin)) return { enabled: false, commune: 'Ixelles', sections: [], bookings: [] };
+  if (chemin === '/restaurants/2') return COMMERCE_PANIER;
+  // Devis du paiement (POST /orders/devis) : le total exact d'un panier de deux Margherita à emporter.
+  if (methode === 'POST' && chemin === '/orders/devis') return { total: 22, subtotal: 22, promoDiscount: 0, deliveryFee: 0, deliveryDiscount: 0, balanceUsed: 0, serviceFee: 0 };
   if (/^\/restaurants\/[^/]+$/.test(chemin) && !/^\/restaurants\/(favorites|lookup)/.test(chemin)) return profil === 'restaurant' ? REELLES['/restaurants/mine/dashboard'][0] : COMMERCE;
   // Commande groupée (backend routes/commandesGroupees.js) : un groupe ouvert, vu par son hôte, avec deux parts.
   if (methode === 'GET' && /^\/group-orders\/[^/]+$/.test(chemin)) return {
@@ -209,6 +219,22 @@ try {
       etatDossier = new URL(base + chemin).searchParams.get('dossier');
       await page.goto(base + chemin);
       resultats.push({ profil, page: chemin, ...(await examiner(page, { profil, appli: true })) });
+    }
+    await ctx.close();
+  }
+  // Le panier et le paiement AVEC un panier (checkout-26) : posé dans le stockage comme CartContext l'écrit, puis relu.
+  {
+    const { ctx, page } = await ouvrir(navigateur, base, { profil: 'client' });
+    // La page doit avoir fini d'écrire son propre panier (vide) avant qu'on pose le nôtre, sinon elle l'écrase.
+    await page.goto(`${base}/restaurants`);
+    await page.waitForTimeout(1500);
+    await page.evaluate(() => localStorage.setItem('fairide_cart', JSON.stringify({
+      restaurantId: 2, restaurantName: 'Chez Simone 2', requestId: 'verif-panier', at: Date.now(), userId: 11,
+      lines: { 'p1::': { itemId: 'p1', name: 'Margherita', imageUrl: null, optionItemIds: [], optionsSnapshot: [], unitPrice: 11, qty: 2 } }
+    })));
+    for (const chemin of ['/panier', '/checkout']) {
+      await page.goto(base + chemin);
+      resultats.push({ profil: 'client', page: `${chemin} (avec panier)`, ...(await examiner(page, { profil: 'client', appli: true })) });
     }
     await ctx.close();
   }

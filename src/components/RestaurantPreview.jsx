@@ -51,6 +51,12 @@ export default function RestaurantPreview({ restaurant }) {
     else addOne(item.id, item.price);
   }
 
+  // CE QUE LE CLIENT VOIT VRAIMENT (audit du 19/10, discovery-26). La fiche lue par le commerce contient toute sa carte ; le
+  // public ne reçoit pas les plats aux allergènes non déclarés, l'alcool qu'il ne peut pas vendre, ni les plats retirés
+  // (routes/restaurants.js, ficheDeListe). L'aperçu montrait ces plats comme si les clients les voyaient : il applique le même
+  // filtre et dit combien sont masqués.
+  const menuPublic = restaurant.menu.filter((m) => !m.allergensMissing && !m.alcoholUnavailable && !m.withdrawn);
+  const masques = restaurant.menu.length - menuPublic.length;
   const count = Object.values(lines).reduce((a, l) => a + l.qty, 0);
   let subtotal = 0;
   Object.values(lines).forEach((l) => { subtotal += l.unitPrice * l.qty; });
@@ -87,7 +93,8 @@ export default function RestaurantPreview({ restaurant }) {
           </div>
         )}
         {restaurant.menu.length === 0 && <div className="empty">{t('restoPreview.emptyMenu')}</div>}
-        <MenuCategorySections menu={restaurant.menu} sections={restaurant.sections || []} onAdd={addToCart} />
+        {masques > 0 && <p className="small" role="status" style={{ margin: '0 0 10px', fontWeight: 600 }}>{t(masques === 1 ? 'restoPreview.hiddenDishesOne' : 'restoPreview.hiddenDishes', { count: masques })}</p>}
+        <MenuCategorySections menu={menuPublic} sections={restaurant.sections || []} onAdd={addToCart} />
       </div>
 
       {count > 0 && (

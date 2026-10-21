@@ -2,6 +2,10 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { fraisService } from '../fraisService';
 import { FORFAIT_LIVRAISON, tarifLivraison } from '../livraison';
 import { remiseLigne } from '../prixPlat';
+import { prixActuelLigne } from '../panierDisponible';
+import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
+import { useLanguage } from './LanguageContext';
 
 const CartContext = createContext(null);
 // Exporté depuis que la fiche d'un commerce l'annonce elle aussi (« Livraison dès 4,50 € ») :
@@ -32,17 +36,23 @@ function nouvelIdDemande() {
    la politique des cookies (cookiesPolicy.technical). La copie mise de côté pendant un paiement reste, elle, propre à
    l'onglet (PENDING_KEY, sessionStorage). */
 const PANIER_MAX_MS = 24 * 3600 * 1000;
+// Le panier tel qu'il est enregistré (localStorage) : le même format à la lecture au démarrage et à la réception d'un autre
+// onglet (discovery-13). `at` = dernière modification du CONTENU, `userId` = le compte qui l'a rempli (discovery-14).
+function lirePanier(raw) {
+  const vide = { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande(), at: null, userId: null };
+  if (!raw) return vide;
+  const parsed = JSON.parse(raw);
+  if (parsed.at && Date.now() - parsed.at > PANIER_MAX_MS) return vide;
+  return { restaurantId: parsed.restaurantId ?? null, restaurantName: parsed.restaurantName ?? '', lines: parsed.lines ?? {}, requestId: parsed.requestId || nouvelIdDemande(), at: parsed.at || null, userId: parsed.userId || null };
+}
 function loadPersisted() {
   try {
     let raw = localStorage.getItem(STORAGE_KEY);
     // Panier d'avant ce changement, encore dans l'onglet : repris une fois.
     if (!raw) raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande() };
-    const parsed = JSON.parse(raw);
-    if (parsed.at && Date.now() - parsed.at > PANIER_MAX_MS) return { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande() };
-    return { restaurantId: parsed.restaurantId ?? null, restaurantName: parsed.restaurantName ?? '', lines: parsed.lines ?? {}, requestId: parsed.requestId || nouvelIdDemande() };
+    return lirePanier(raw);
   } catch {
-    return { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande() };
+    return lirePanier(null);
   }
 }
 
@@ -54,6 +64,19 @@ export function CartProvider({ children }) {
   // FloatingCart.jsx) doit pouvoir s'afficher sans avoir sous la main le menu complet du restaurant.
   const [lines, setLines] = useState(() => loadPersisted().lines);
   const [requestId, setRequestId] = useState(() => loadPersisted().requestId);
+  /* 24 HEURES APRÈS LA DERNIÈRE MODIFICATION, PAS APRÈS LA DERNIÈRE OUVERTURE (audit du 19/10, discovery-12). La date était
+     réécrite à chaque montage : ouvrir l'appli une fois par jour gardait le panier indéfiniment, contre ce que dit la
+     politique des cookies (« 24 heures au plus »). Elle ne bouge plus qu'avec le contenu (effet `signature` plus bas). */
+  const [miseAJour, setMiseAJour] = useState(() => loadPersisted().at || Date.now());
+  /* LE COMPTE QUI A REMPLI CE PANIER (audit du 19/10, discovery-14). Une session expirée garde le panier (USR-6), mais si
+     c'est un AUTRE compte qui se connecte ensuite sur l'appareil, il ne doit pas hériter du panier du précédent. */
+  const { user } = useAuth() || {};
+  const [proprietaire, setProprietaire] = useState(() => loadPersisted().userId);
+  useEffect(() => {
+    if (!user?.id) return;
+    if (proprietaire && proprietaire !== user.id) { setLines({}); setRestaurantId(null); setRestaurantName(''); }
+    if (proprietaire !== user.id) setProprietaire(user.id);
+  }, [user?.id, proprietaire]);
   // La commande de ce panier a été annulée (carte « le total a changé » › Annuler, Checkout.jsx) : le même panier doit
   // pouvoir donner une NOUVELLE commande. Sans nouvel identifiant, le serveur retrouvait la commande annulée et répondait
   // « déjà passée » : le panier était vidé et le client renvoyé vers Mes commandes (audit du 18/10/2026).
@@ -67,23 +90,47 @@ export function CartProvider({ children }) {
     if (derniereSignature.current === signature) return;
     derniereSignature.current = signature;
     setRequestId(nouvelIdDemande());
+    setMiseAJour(Date.now());
   }, [signature]);
+  /* DEUX ONGLETS, UN PANIER (audit du 19/10, discovery-13). Chaque onglet lisait le panier une fois et réécrivait le sien :
+     le dernier qui écrivait effaçait les ajouts de l'autre, et une déconnexion dans un onglet laissait le panier dans
+     l'autre. L'événement `storage` (émis dans les AUTRES onglets) recharge l'état. L'empreinte est recalée d'abord : la
+     même commande garde le même identifiant de demande dans les deux onglets (règle CMD-19 ci-dessus). */
+  useEffect(() => {
+    const surStockage = (e) => {
+      if (e.key !== STORAGE_KEY) return;
+      let p;
+      try { p = lirePanier(e.newValue); } catch { return; }
+      derniereSignature.current = JSON.stringify([p.restaurantId, p.lines]);
+      setRestaurantId(p.restaurantId); setRestaurantName(p.restaurantName); setLines(p.lines); setRequestId(p.requestId);
+      if (p.at) setMiseAJour(p.at);
+      if (p.userId) setProprietaire(p.userId);
+    };
+    window.addEventListener('storage', surStockage);
+    return () => window.removeEventListener('storage', surStockage);
+  }, []);
   // Déconnexion VOLONTAIRE (AuthContext.logout) : le panier part avec la session — sur un appareil partagé, la
   // personne suivante ne doit pas le trouver (plan de test PAN-1). Une session EXPIRÉE, elle, garde le panier (USR-6).
+  // Panier non vide au moment de se déconnecter : on dit qu'il est parti avec la session (audit du 19/10, LIVE-29 ; il
+  // partait sans un mot).
+  const toast = useToast();
+  const { t } = useLanguage();
+  const avertirVidage = useRef(null);
+  avertirVidage.current = Object.keys(lines).length > 0 ? () => toast(t('panier.clearedOnLogout')) : null;
   useEffect(() => {
-    const vider = () => { setLines({}); setRestaurantId(null); setRestaurantName(''); };
+    const vider = () => { avertirVidage.current?.(); setLines({}); setRestaurantId(null); setRestaurantName(''); };
     window.addEventListener('fairide:deconnexion', vider);
     return () => window.removeEventListener('fairide:deconnexion', vider);
   }, []);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ restaurantId, restaurantName, lines, requestId, at: Date.now() }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ restaurantId, restaurantName, lines, requestId, at: miseAJour, userId: proprietaire || undefined }));
       sessionStorage.removeItem(STORAGE_KEY);
     } catch {
       // stockage indisponible (navigation privée stricte, etc.) — le panier reste fonctionnel en mémoire
     }
-  }, [restaurantId, restaurantName, lines, requestId]);
+  }, [restaurantId, restaurantName, lines, requestId, miseAJour, proprietaire]);
 
   const count = useMemo(() => Object.values(lines).reduce((a, l) => a + l.qty, 0), [lines]);
 
@@ -133,6 +180,25 @@ export function CartProvider({ children }) {
       return { ...base, [key]: { itemId, name, imageUrl, optionItemIds, optionsSnapshot, unitPrice, note: consigne || undefined, qty: Math.min(99, (existing?.qty || 0) + n) } };
     });
     return 'ok';
+  }
+
+  /* PRIX À JOUR (audit du 19/10, discovery-15 et 16). Appelé par la fiche, le panier et le paiement quand la carte complète
+   * du commerce est lue (GET /restaurants/:id, options comprises) : chaque ligne reprend le prix d'aujourd'hui, comme le
+   * serveur le facturera, et la carte retenue sert au sous-total de la pastille du panier (`sousTotal`), pour que la pastille,
+   * la colonne et la page Panier disent le même montant. */
+  const [carteConnue, setCarteConnue] = useState(null);
+  function actualiserPrix(restaurant) {
+    if (!restaurant?.id || !Array.isArray(restaurant.menu) || restaurant.id !== restaurantId) return;
+    setCarteConnue({ restaurantId: restaurant.id, menu: restaurant.menu, cartPromo: restaurant.activeCartPromo || null });
+    setLines((prev) => {
+      let change = false;
+      const next = {};
+      for (const [cle, l] of Object.entries(prev)) {
+        const p = prixActuelLigne(l, restaurant.menu.find((m) => m.id === l.itemId));
+        if (typeof p === 'number' && Math.abs(p - Number(l.unitPrice)) > 0.004) { next[cle] = { ...l, unitPrice: p }; change = true; } else next[cle] = l;
+      }
+      return change ? next : prev;
+    });
   }
 
   // Plusieurs plats d'un coup (« Commander à nouveau », recommander.js). Une seule mise à jour : appeler addOne en boucle
@@ -301,6 +367,9 @@ export function CartProvider({ children }) {
   // Estimation sans remises, utilisable sans connaître le menu complet du restaurant (le panier flottant
   // global, voir FloatingCart.jsx, l'affiche tant que les totaux exacts avec promos n'ont pas été chargés).
   const rawTotal = useMemo(() => +Object.values(lines).reduce((a, l) => a + l.unitPrice * l.qty, 0).toFixed(2), [lines]);
+  // Le sous-total remisé (offres des plats et du panier) dès que la carte du commerce est connue ; sinon l'estimation brute.
+  const sousTotal = carteConnue && carteConnue.restaurantId === restaurantId && count > 0
+    ? totals(carteConnue.menu, carteConnue.cartPromo).subtotal : rawTotal;
 
   /* UNE VALEUR STABLE (2026-10-20, test de l'app Android : « pas fluide »). L'objet était refait à chaque rendu du
      fournisseur, donc tous les composants qui lisent le panier se redessinaient même quand rien n'y avait changé. Toutes
@@ -308,9 +377,9 @@ export function CartProvider({ children }) {
      fonctions de l'ancien rendu sont exactement aussi justes que les nouvelles. Une fonction qui lirait un autre état
      devrait l'ajouter ici. */
   const valeur = useMemo(
-    () => ({ restaurantId, restaurantName, lines, count, requestId, rawTotal, nouvelleDemande, hasConflict, switchRestaurant, addOne, addMany, changeLineQty, removeLine, clear, clearLines, stashForPayment, hasStashed, restoreStashed, discardStashed, totals }),
+    () => ({ restaurantId, restaurantName, lines, count, requestId, rawTotal, sousTotal, nouvelleDemande, hasConflict, switchRestaurant, addOne, addMany, changeLineQty, removeLine, clear, clearLines, stashForPayment, hasStashed, restoreStashed, discardStashed, totals, actualiserPrix }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [restaurantId, restaurantName, lines, count, requestId, rawTotal]
+    [restaurantId, restaurantName, lines, count, requestId, rawTotal, sousTotal]
   );
 
   return (
