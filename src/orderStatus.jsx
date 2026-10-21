@@ -200,6 +200,8 @@ export function titreSuivi(order, t) {
   if (status === 'nouveau' && order.paid === false && order.paymentMode !== 'on_site') return statusLabel(status, orderType, t, true);
   // À payer sur place mais jamais partie au commerce : « le commerce regarde ta commande » serait faux.
   if (status === 'nouveau' && order.paid === false) return t('orders.notSentTitle');
+  // Un livreur nommé est déjà en route vers le commerce : plus « on attend un livreur » (audit du 19/10, AO-14).
+  if (status === 'pret' && orderType === 'delivery' && order.driverName) return t('orderStatus.grand.pretDeliveryDriver', { name: prenomLivreur(order) });
   if (status === 'pret') return t(orderType === 'delivery' ? 'orderStatus.grand.pretDelivery' : 'orderStatus.grand.pretPickup');
   if (['nouveau', 'preparation', 'livraison'].includes(status)) return t(`orderStatus.grand.${status}`);
   return statusLabel(status, orderType, t, true);
@@ -289,7 +291,16 @@ export function ProchaineEtape({ order }) {
   else if (status === 'refuse') cle = 'next_refuse';
   else if (status === 'annule') cle = order.pickupNoShow ? 'next_no_show' : 'next_annule';
   if (!cle) return null;
+  // Livreur déjà nommé (audit du 19/10, AO-14) : « un livreur viendra… tu recevras son nom » était faux, on dit lequel.
+  if (livraison && order.driverName && ['next_preparation_delivery', 'next_pret_delivery'].includes(cle)) {
+    return <div className="small order-next">{t(`orderStatus.${cle}_driver`, { name: prenomLivreur(order) })}</div>;
+  }
   return <div className="small order-next">{t(`orderStatus.${cle}`)}</div>;
+}
+
+// Le prénom du livreur, tel que le client le lit ailleurs (Orders.jsx, codeGiveDriverName).
+function prenomLivreur(order) {
+  return String(order.driverName || '').split(' ')[0];
 }
 
 export function ProgressBar({ status, orderType }) {

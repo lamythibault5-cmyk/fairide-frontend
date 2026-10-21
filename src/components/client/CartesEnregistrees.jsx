@@ -16,10 +16,16 @@ export default function CartesEnregistrees() {
   const { t } = useLanguage();
   const [cartes, setCartes] = useState(null);
   const [aRetirer, setARetirer] = useState(null);
+  // Liste pas lue : « aucune carte enregistrée » serait faux (audit du 19/10, CROSS-34). On le dit, avec « Réessayer ».
+  const [echec, setEchec] = useState(false);
 
-  useEffect(() => {
-    api('/payments/saved-cards', { token }).then((c) => setCartes(Array.isArray(c) ? c : [])).catch((e) => { setCartes([]); toast(e.message, 'erreur'); });
-  }, [token, toast]);
+  const charger = () => {
+    setEchec(false);
+    setCartes(null);
+    api('/payments/saved-cards', { token }).then((c) => setCartes(Array.isArray(c) ? c : [])).catch(() => { setCartes([]); setEchec(true); });
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(charger, [token]);
 
   async function retirer(carte) {
     try {
@@ -33,7 +39,9 @@ export default function CartesEnregistrees() {
   return (
     <div>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('savedCards.intro')}</p>
-      {cartes === null ? <p className="small">…</p> : cartes.length === 0 ? (
+      {echec ? (
+        <p className="small" style={{ margin: 0 }}>{t('common.loadFailedTitle')}. <button type="button" className="suivi-lien" onClick={charger}>{t('common.retry')}</button></p>
+      ) : cartes === null ? <p className="small">…</p> : cartes.length === 0 ? (
         <p className="small" style={{ margin: 0 }}>{t('savedCards.none')}</p>
       ) : cartes.map((c) => (
         <div key={c.id} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--line)' }}>

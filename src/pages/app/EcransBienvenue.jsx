@@ -397,11 +397,15 @@ const km = (d, locale) => `${d.toLocaleString(locale, { maximumFractionDigits: 1
  * UN SEUL ÉCRAN, SANS DÉFILER (fondateur, 2026-10-15). Il empilait le petit cercle, quatre cartes de commerce, la note
  * sur le rayon et jusqu'à trois boutons : au téléphone, « Continuer avec mon e-mail » était sous le pli. Le cercle a déjà
  * été montré au chargement juste avant ; ici, trois commerces en lignes serrées, dans une seule carte, et le compte. */
-export function EcranCompte({ role, resultats, avecPosition, commune, onFournisseur, onEmail, onConnexion, attente }) {
+export function EcranCompte({ role, resultats, avecPosition, commune, onFournisseur, onEmail, onConnexion, attente, echec = false }) {
   const { t, locale } = useLanguage();
   let haut;
   let liste = null; // les commerces trouvés : en tête de la feuille, sous le bandeau
-  if (role === 'client') {
+  // Liste des commerces pas lue (réseau, serveur) : « Pas encore de commerce qui livre jusqu'ici » était faux (audit du
+  // 19/10, CROSS-34). On le dit, sans bloquer le compte.
+  if (role === 'client' && echec) {
+    haut = <><h1 className="bv-titre">{t('appli.listeEchec')}</h1><p className="bv-sous">{t('appli.listeEchecSub')}</p></>;
+  } else if (role === 'client') {
     const n = resultats.length;
     const titre = !avecPosition && commune ? t('appli.trouvesCommune', { c: commune }) : n === 1 ? t('appli.trouvesUn') : t('appli.trouves', { n });
     haut = (

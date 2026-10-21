@@ -77,9 +77,16 @@ export default function MapPage() {
    * souris. Mêmes filtres, mêmes commerces, même ordre que les épingles. Jamais dans l'app, ni sur un téléphone. */
   const colonne = useSiteLarge(1100);
 
-  useEffect(() => {
-    api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
-  }, []);
+  // Liste pas lue (réseau, serveur) : « Aucun commerce avec ces filtres » était faux (audit du 19/10, CROSS-34). On dit que
+  // le chargement a échoué, avec « Réessayer ».
+  const [echec, setEchec] = useState(false);
+  const charger = () => {
+    setEchec(false);
+    setChargement(true);
+    api('/restaurants').then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { charger(); }, []);
 
   // Plus aucun appel périodique ici. Cette page interrogeait /orders/mine toutes les trente
   // secondes, uniquement pour savoir s'il fallait afficher le bandeau « ta livraison est en
@@ -241,7 +248,12 @@ export default function MapPage() {
               qu'à fermer un panneau déjà fermé. « Tout réinitialiser » n'apparaît, lui, que
               lorsqu'il y a vraiment quelque chose à remettre à zéro. */}
           <div className="carte-ligne-etat">
-            {!chargement && (
+            {!chargement && echec && (
+              <p className="carte-compte">
+                {t('common.loadFailedTitle')}. <button type="button" className="carte-reinit" onClick={charger}>{t('common.retry')}</button>
+              </p>
+            )}
+            {!chargement && !echec && (
               <p className="carte-compte">
                 {liste.length === 0 ? t('mapClient.noneMatch') : t('mapClient.count', { n: liste.length })}
               </p>

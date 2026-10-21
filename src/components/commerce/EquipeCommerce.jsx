@@ -22,7 +22,9 @@ export default function EquipeCommerce({ restoId }) {
   const [envoi, setEnvoi] = useState(false);
   const [aRetirer, setARetirer] = useState(null);
 
-  const charger = () => api(`/restaurants/${restoId}/team`, { token }).then((r) => setMembres(Array.isArray(r?.members) ? r.members : [])).catch((e) => { setMembres([]); toast(e.message, 'erreur'); });
+  // Liste pas lue : « personne dans ton équipe » serait faux (audit du 19/10, CROSS-34). On le dit, avec « Réessayer ».
+  const [echec, setEchec] = useState(false);
+  const charger = () => api(`/restaurants/${restoId}/team`, { token }).then((r) => { setEchec(false); setMembres(Array.isArray(r?.members) ? r.members : []); }).catch(() => { setMembres([]); setEchec(true); });
   useEffect(() => { charger(); }, [restoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function inviter(e) {
@@ -47,7 +49,9 @@ export default function EquipeCommerce({ restoId }) {
   return (
     <div className="eg-equipe">
       <p className="eg-texte">{t('team.intro')}</p>
-      {membres === null ? <p className="eg-texte">…</p> : membres.length === 0 ? (
+      {echec ? (
+        <p className="eg-texte">{t('common.loadFailedTitle')}. <button type="button" className="suivi-lien" onClick={() => { setMembres(null); charger(); }}>{t('common.retry')}</button></p>
+      ) : membres === null ? <p className="eg-texte">…</p> : membres.length === 0 ? (
         <p className="eg-equipe-vide">{t('team.none')}</p>
       ) : (
         <ul className="eg-membres">

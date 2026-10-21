@@ -3,6 +3,7 @@ import { effacerRecherches } from '../recherchesRecentes';
 import { api, setSessionExpiredHandler } from '../api';
 import { useToast } from './ToastContext';
 import { useLanguage } from './LanguageContext';
+import { languePreferee, SUPPORTED_LANGUAGES } from '../i18n/routing';
 import { effacerReprise } from '../bienvenue';
 
 const AuthContext = createContext(null);
@@ -51,7 +52,7 @@ function sessionDepuisFragment() {
 }
 
 export function AuthProvider({ children }) {
-  const { t, language } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const toast = useToast();
   const [simulation, setSimulation] = useState(simulationInitiale);
   // Onglet de simulation : ni localStorage, ni session d'action — seulement les profils de la simulation.
@@ -127,10 +128,15 @@ export function AuthProvider({ children }) {
   // toute requête de l'utilisateur (livreur en route, réservation confirmée par le restaurateur...).
   useEffect(() => {
     if (!session?.token || !session.user || session.user.language === language || session.actingAs) return;
+    /* UN NOUVEL APPAREIL N'IMPOSE PAS SA LANGUE AU COMPTE (audit du 19/10, AO-23). La langue de la page vient de l'adresse
+     * (le français à la racine) : un client néerlandophone qui se connectait pour la première fois sur fairide.be/login
+     * repassait son compte en français, et ses e-mails et notifications suivaient. Sans choix mémorisé sur cet appareil
+     * (routing.js, posé par un vrai changement de langue), c'est la langue du compte qui l'emporte : la page s'y met. */
+    if (!languePreferee() && SUPPORTED_LANGUAGES.includes(session.user.language)) { setLanguage(session.user.language); return; }
     api('/auth/me', { method: 'PATCH', token: session.token, body: { language }, logoutOn401: false })
       .then((user) => setSession((prev) => (prev ? { ...prev, user } : prev)))
       .catch(() => {});
-  }, [language, session?.token]);
+  }, [language, session?.token, setLanguage]);
 
   /* LA SESSION SE PROLONGE QUAND ON S'EN SERT (audit du 18/10/2026). Elle dure 30 jours depuis la connexion : ouverte
    * chaque jour, l'application déconnectait quand même le 31e. Au plus une fois par jour (à l'ouverture, au retour au

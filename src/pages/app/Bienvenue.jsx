@@ -116,6 +116,8 @@ export default function Bienvenue() {
   const [position, setPosition] = useState(() => dejaFait?.position || reprise?.position || null);
   const [cp, setCp] = useState(() => dejaFait?.cp || reprise?.cp || '');
   const [liste, setListe] = useState(null);
+  // La liste n'a pas pu être lue : l'écran du compte le dit au lieu de « personne ne livre ici » (CROSS-34).
+  const [echecListe, setEchecListe] = useState(false);
   const [attente, setAttente] = useState(false);
   // Jeton Apple / Google d'une personne qui n'a pas encore de compte : l'inscription s'en sert au lieu d'un mot de passe.
   const [fed, setFed] = useState(fedRecu);
@@ -128,7 +130,7 @@ export default function Bienvenue() {
   // La liste des commerces part dès l'écran « Pourquoi » : au chargement, elle est souvent déjà là.
   useEffect(() => {
     if (role !== 'client' || liste || !['pourquoi', 'envies', 'position', 'codePostal', 'recherche', 'compte', 'inscription'].includes(ecran)) return;
-    api('/restaurants').then((r) => setListe(Array.isArray(r) ? r : [])).catch(() => setListe([]));
+    api('/restaurants').then((r) => setListe(Array.isArray(r) ? r : [])).catch(() => { setEchecListe(true); setListe([]); });
   }, [role, ecran, liste]);
 
   // On retient où en est l'accueil, à chaque écran, pour le reprendre si l'application est fermée avant le compte
@@ -277,7 +279,7 @@ export default function Bienvenue() {
       contenu = <EcranRecherche commune={position ? '' : communeCp} points={liste ? points : []} envies={envies} duree={DUREE_RECHERCHE_MS} />; break;
     case 'compte':
       contenu = (
-        <EcranCompte role={role} resultats={resultats} avecPosition={!!position} commune={communeCp} attente={attente}
+        <EcranCompte role={role} resultats={resultats} avecPosition={!!position} commune={communeCp} attente={attente} echec={echecListe}
           onFournisseur={viaFournisseur} onEmail={viaEmail} onConnexion={dejaInscrit} />
       ); break;
     case 'lvPromesses':

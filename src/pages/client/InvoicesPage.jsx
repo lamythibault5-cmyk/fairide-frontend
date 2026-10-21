@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, apiDownload, API_BASE } from '../../api';
-import { ouvrirPdf } from '../../pdf';
+import { ouvrirPdf, nomRecu } from '../../pdf';
 import { euros } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
+import ErreurChargement from '../../components/ErreurChargement';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 // Même famille que Mon compte sur le site (titre, largeur de lecture, rangées) ; sans effet dans l'app.
 import '../../site-compte.css';
@@ -35,15 +36,22 @@ export default function InvoicesPage() {
   const [orders, setOrders] = useState(null);
   const [selected, setSelected] = useState(() => new Set());
   const [downloading, setDownloading] = useState(false);
+  // Liste pas lue (réseau, serveur) : « aucune facture » ferait croire les reçus perdus (audit du 19/10, CROSS-34).
+  const [echec, setEchec] = useState(false);
 
-  useEffect(() => {
-    // Voir MapPage.jsx : un restaurateur en mode aperçu n'a pas de vraies factures (403 côté API) —
-    // repli sur une liste vide plutôt qu'un message d'erreur trompeur ou un chargement bloqué à vie.
+  // Voir MapPage.jsx : un restaurateur en mode aperçu n'a pas de vraies factures (403 côté API) —
+  // repli sur une liste vide plutôt qu'un message d'erreur trompeur ou un chargement bloqué à vie.
+  const charger = () => {
     const isPreviewingRestaurant = previewMode && role === 'restaurant';
-    api('/orders/mine', { token }).then((data) => setOrders(data.filter((o) => o.paid))).catch((e) => {
-      if (!isPreviewingRestaurant) toast(e.message, 'erreur');
+    setEchec(false);
+    setOrders(null);
+    api('/orders/mine', { token }).then((data) => setOrders(data.filter((o) => o.paid))).catch(() => {
+      if (!isPreviewingRestaurant) setEchec(true);
       setOrders([]);
     });
+  };
+  useEffect(() => {
+    charger();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -87,6 +95,7 @@ export default function InvoicesPage() {
   }
 
   if (!orders) return <SkeletonCards count={3} />;
+  if (echec) return <div className="compte-sous-page"><ErreurChargement onReessayer={charger} /></div>;
 
   return (
     <div className="compte-sous-page">
@@ -131,7 +140,7 @@ export default function InvoicesPage() {
                 <span className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {euros(o.total)}{etatRemboursement(o) ? ` · ${etatRemboursement(o)}` : ''}</span>
               </div>
               {aUnRecu(o) ? (
-                <button type="button" className="btn-ghost" onClick={() => ouvrirPdf(`${API_BASE}/orders/${o.id}/receipt`, token, t('invoicesClient.downloadFailed'))}>{t('invoicesClient.viewInvoice')}</button>
+                <button type="button" className="btn-ghost" onClick={() => ouvrirPdf(`${API_BASE}/orders/${o.id}/receipt`, token, t('invoicesClient.downloadFailed'), nomRecu(o))}>{t('invoicesClient.viewInvoice')}</button>
               ) : (
                 <span className="small" style={{ opacity: 0.6 }}>{t('invoicesClient.unavailable')}</span>
               )}

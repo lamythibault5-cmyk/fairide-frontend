@@ -22,7 +22,8 @@ import ClocheNotifications from '../../components/client/ClocheNotifications';
 import ReglageNotifications from '../../components/ReglageNotifications';
 import { RappelEmail } from '../../components/EmailConfirmation';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import { api } from '../../api';
+import { api, API_BASE } from '../../api';
+import { ouvrirPdf, nomRecu } from '../../pdf';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
@@ -30,7 +31,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { DeliveryTiming, ProchaineEtape, RouteSuivi, titreSuivi, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
-import { StarsInput } from '../../components/Stars';
+import { StarsInput, StarsDisplay } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import Icone from '../../components/Icone';
@@ -52,7 +53,9 @@ const heureCourte = (ms) => new Date(ms).toLocaleTimeString(getLocale(), { hour:
 // laisser : le formulaire ne se rouvre pas sur une commande notée, et le renvoyer butait sur « avis déjà
 // envoyé » avant d'atteindre le pourboire.
 function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
-  const [foodRating, setFoodRating] = useState(5);
+  // Aucune étoile au départ (audit du 19/10, AO-21) : un seul toucher sur « Envoyer » publiait un 5 étoiles que le client
+  // n'avait pas choisi. L'envoi attend une note (bouton désactivé tant qu'il n'y en a pas).
+  const [foodRating, setFoodRating] = useState(0);
   const [foodComment, setFoodComment] = useState('');
   const [tipChoice, setTipChoice] = useState(0);
   const [tipInput, setTipInput] = useState('');
@@ -76,20 +79,22 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
         }
       }
       const tip = tipInput.trim() ? +Number(tipInput).toFixed(2) : tipChoice;
+      // L'avis envoyé se lit tout de suite sous la commande (AO-22), sans attendre la relecture des 15 s.
+      const avis = pourboireSeul ? {} : { myReview: { foodRating, foodComment: foodComment.trim(), restaurantReply: '' } };
       if (order.driverName && tip > 0) {
         await api(`/orders/${order.id}/tip`, { method: 'PATCH', token, body: { tip } });
         const pay = await api(`/payments/tip-checkout/${order.id}`, { method: 'POST', token });
         if (pay.simulated) {
           toast(t('review.toastThanksTip'));
           // Pourboire acquis : le bouton « Laisser un pourboire » ne doit pas rester affiché (plan de test SIM-9).
-          onDone({ tipPaid: true });
+          onDone({ tipPaid: true, ...avis });
         } else {
           await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
         }
         return;
       }
       toast(t('review.toastThanks'), 'succes');
-      onDone();
+      onDone(avis);
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -136,7 +141,7 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
           </div>
         </div>
       )}
-      <button className="btn-teal" disabled={saving} onClick={submit}>{saving ? '...' : t('review.send')}</button>
+      <button className="btn-teal" disabled={saving || (!pourboireSeul && foodRating < 1)} onClick={submit}>{saving ? '...' : t('review.send')}</button>
     </div>
   );
 }
@@ -251,7 +256,9 @@ export default function Orders() {
     try {
       const updated = await api(`/orders/${orderId}/cancel`, { method: 'PATCH', token });
       setOrders((prev) => prev.map((x) => (x.id === orderId ? updated : x)));
-      toast(t('orders.toastCancelled'), 'succes');
+      // Payée en ligne : on dit aussi que l'argent revient, et qu'un e-mail le confirme (audit du 19/10, AO-10).
+      const rendu = updated?.paid && updated.paymentMode !== 'on_site' && !updated.refundPending;
+      toast(t(rendu ? 'orders.toastCancelledRefund' : 'orders.toastCancelled'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -451,7 +458,10 @@ export default function Orders() {
         {...(APPLI ? {} : { height: 320 })}
       />
       <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
-        {o.driverLat ? t('orders.driverLiveLocation') : t('orders.driverWaitingLocation')}
+        {/* Plus de 2 min sans nouvelle position (même seuil que la carte) : pas « en direct » (audit du 19/10, AO-17). */}
+        {o.driverLat
+          ? t(o.driverLocationUpdatedAt && Date.now() - new Date(o.driverLocationUpdatedAt).getTime() > 120000 ? 'orders.driverLastLocation' : 'orders.driverLiveLocation')
+          : t('orders.driverWaitingLocation')}
       </div>
     </div>
   ) : null);
@@ -469,6 +479,23 @@ export default function Orders() {
   ) : null);
   // Pourboire payé avec la commande : débité en plus du total (backend pourboireCommande.js).
   const debite = (o) => o.total + (o.tipPaid && o.tipAtCheckout > 0 ? o.tipAtCheckout : 0);
+  /* CE QUI A ÉTÉ RENDU (audit du 19/10, AO-11). « Payée 25,00 € » restait sous une commande annulée et remboursée, et un
+   * remboursement partiel ne se voyait nulle part. Même lecture que « Mes factures » (InvoicesPage.jsx) et que le reçu :
+   * refundedAmount = somme d'order_refunds (remboursements automatiques compris, inscrits par le webhook Stripe),
+   * refundPending = remboursement automatique en échec. Le statut seul ne suffit pas : une commande annulée n'est pas
+   * toujours remboursée (client absent, non récupérée, décision de l'équipe). */
+  const etatRemboursement = (o) => {
+    if (o.refundPending) return 'en_cours';
+    const rendu = Number(o.refundedAmount || 0);
+    if (rendu <= 0) return null;
+    return rendu >= Number(o.total) - 0.005 ? 'total' : 'partiel';
+  };
+  const libellePaye = (o) => {
+    const etat = etatRemboursement(o);
+    if (etat === 'en_cours') return t('invoicesClient.refundPending');
+    if (etat === 'total') return t('invoicesClient.refunded');
+    return t('orders.paid');
+  };
   // `avecMontant` : le tableau des commandes passées du site a déjà sa colonne Total. Commande refusée : pas de « Payée … »,
   // le remboursement est dit par blocRefus.
   const blocTotal = (o, avecMontant = true) => (o.status === 'refuse' ? null : (
@@ -479,9 +506,12 @@ export default function Orders() {
         <div className="suivi-total"><span className="small">{t('orders.payNothing')}</span></div>
       ) : avecMontant && (
         <div className="suivi-total">
-          <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
+          <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? libellePaye(o) : t('orders.paymentPending')}</span>
           <b>{euros(debite(o))}</b>
         </div>
+      )}
+      {o.paid && o.paymentMode !== 'on_site' && etatRemboursement(o) === 'partiel' && (
+        <div className="small" style={{ textAlign: avecMontant ? 'right' : undefined }}>{t('orders.refundedPart', { amount: euros(o.refundedAmount) })}</div>
       )}
       {o.tipPaid && o.tipAtCheckout > 0 && <div className="small" style={{ textAlign: avecMontant ? 'right' : undefined }}>{t('orders.tipIncluded', { amount: euros(o.tipAtCheckout) })}</div>}
       {o.tipRefunded && o.tipAtCheckout > 0 && <div className="small" style={{ textAlign: avecMontant ? 'right' : undefined }}>{t('orders.tipRefunded', { amount: euros(o.tipAtCheckout) })}</div>}
@@ -534,7 +564,8 @@ export default function Orders() {
       {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
     </button>
   ) : null);
-  const noteVerrou = (o) => (['preparation', 'pret', 'livraison'].includes(o.status) ? <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelLocked')}</div> : null);
+  // En route, « le commerce la prépare » était faux (audit du 19/10, AO-15) : une phrase pour la livraison.
+  const noteVerrou = (o) => (['preparation', 'pret', 'livraison'].includes(o.status) ? <div className="small" style={{ marginTop: 6 }}>{t(o.status === 'livraison' ? 'orders.cancelLockedOnTheWay' : 'orders.cancelLocked')}</div> : null);
   // LE PIED D'UNE COMMANDE : avis, pourboire, « Signaler un problème » ou « Un souci ? », « Commander à nouveau ». Une rangée
   // alignée sur le texte de la carte (audit design 2 : les deux liens étaient décalés l'un par rapport à l'autre).
   // `avecRecommander` : sur le site, « Commander à nouveau » est déjà sur la ligne du tableau.
@@ -552,6 +583,20 @@ export default function Orders() {
       {o.status === 'livre' && o.reviewed && (
         <div className="small" style={{ marginTop: 8, color: 'var(--teal-deep)' }}>{t('orders.reviewSent')}</div>
       )}
+      {/* Ce que le client a écrit, et la réponse publique du commerce (audit du 19/10, AO-22) — la même mise en forme que sur
+          la page du commerce (RestaurantMenu.jsx). Lecture seule : modifier ou retirer un avis reste à décider. */}
+      {o.status === 'livre' && o.myReview && (
+        <div className="small" style={{ marginTop: 4 }}>
+          <StarsDisplay value={o.myReview.foodRating} />
+          {o.myReview.foodComment && <p className="small" style={{ margin: '2px 0 0' }}>{o.myReview.foodComment}</p>}
+          {o.myReview.restaurantReply && (
+            <div style={{ marginTop: 6, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
+              <div className="small" style={{ fontWeight: 700 }}>{t('restaurantMenu.reviewReplyFrom', { name: o.restaurantName })}</div>
+              <p className="small" style={{ margin: '2px 0 0' }}>{o.myReview.restaurantReply}</p>
+            </div>
+          )}
+        </div>
+      )}
       {/* « Un souci ? » à chaque étape — sauf là où « Signaler un problème » est déjà proposé. */}
       {!(o.paid && ['livre', 'livraison'].includes(o.status)) && <AideCommande order={o} />}
       <div className="suivi-pied">
@@ -565,6 +610,11 @@ export default function Orders() {
         {o.paid && ['livre', 'livraison'].includes(o.status) && (
           <SignalerProbleme order={o} token={token} toast={toast} signalement={signalements[o.id]}
             onSignale={(s) => setSignalements((prev) => ({ ...prev, [o.id]: s }))} />
+        )}
+        {/* Le reçu, sur la commande même (audit du 19/10, AO-31) : il n'était que dans « Mes factures ». Commande payée en
+            ligne et close, la même règle que Mes factures (InvoicesPage.jsx, aUnRecu). */}
+        {o.paid && o.paymentMode !== 'on_site' && !o.isTraining && estPassee(o) && (
+          <button type="button" className="suivi-lien" onClick={() => ouvrirPdf(`${API_BASE}/orders/${o.id}/receipt`, token, t('invoicesClient.downloadFailed'), nomRecu(o))}>{t('invoicesClient.viewInvoice')}</button>
         )}
         {/* Commander à nouveau (USR-9) : une commande close, refaite avec la carte d'aujourd'hui. */}
         {avecRecommander && ['livre', 'annule', 'refuse'].includes(o.status) && (o.items || []).length > 0 && (
