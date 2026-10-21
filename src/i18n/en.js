@@ -5465,7 +5465,7 @@ export default {
       markupNoteLocked: 'Your prices never change without your request and our validation. Once applied, your whole menu follows, each price rounded down to €0.10 so it never exceeds the chosen increase (€1.48 becomes €1.40, €1.77 becomes €1.70); you can ask for 0 % again at any time and your previous prices come back exactly.',
       markupFairideDetail: '({ht} excl. VAT + {tva} VAT)',
       modifTitle: 'A change? Tell us, we\'ll handle it',
-      modifIntro: 'Simply write what you want to change on your menu (a price, a dish to remove, a new menu…), attach a photo if you like: the Fairide team does it for you. You can also edit everything yourself just below.',
+      modifIntro: 'Simply write what you want to change on your menu (a price, a dish to remove, a new menu…), attach a photo if you like: the Fairide team does it for you.',
       modifPlaceholder: 'E.g. "Lunch menu is now €12.50", "Remove the tiramisu", "Add the pizza of the month: burrata, pesto, €14"',
       modifExample1: 'Change the price of…',
       modifExample2: 'Remove from the menu…',

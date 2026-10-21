@@ -5481,7 +5481,7 @@ export default {
       markupNoteLocked: 'Tes prix ne changent jamais sans ta demande et notre validation. Une fois appliquée, toute ta carte suit, chaque prix arrondi au 0,10 € inférieur pour ne jamais dépasser la hausse choisie (1,48 € devient 1,40 €, 1,77 € devient 1,70 €) ; tu peux redemander 0 % à tout moment, tes prix d\'avant reviennent exactement.',
       markupFairideDetail: '({ht} HTVA + {tva} de TVA)',
       modifTitle: 'Une modification ? Dis-le-nous, on s\'en occupe',
-      modifIntro: 'Écris simplement ce que tu veux changer sur ta carte (un prix, un plat à retirer, un nouveau menu…), joins une photo si tu veux : l\'équipe Fairide le fait pour toi. Tu peux aussi tout modifier toi-même juste en dessous.',
+      modifIntro: 'Écris simplement ce que tu veux changer sur ta carte (un prix, un plat à retirer, un nouveau menu…), joins une photo si tu veux : l\'équipe Fairide le fait pour toi.',
       modifPlaceholder: 'Ex. : « Le menu midi passe à 12,50 € », « Retirer le tiramisu », « Ajouter la pizza du mois : burrata, pesto, 14 € »',
       modifExample1: 'Changer le prix de…',
       modifExample2: 'Retirer de la carte…',

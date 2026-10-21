@@ -5474,7 +5474,7 @@ export default {
       markupNoteLocked: 'Je prijzen veranderen nooit zonder jouw aanvraag en onze validatie. Eens toegepast volgt je hele kaart, elke prijs naar beneden afgerond op € 0,10 zodat het nooit boven de gekozen verhoging gaat (€ 1,48 wordt € 1,40, € 1,77 wordt € 1,70); je kunt altijd opnieuw 0 % vragen en je vorige prijzen komen exact terug.',
       markupFairideDetail: '({ht} excl. btw + {tva} btw)',
       modifTitle: 'Een wijziging? Laat het ons weten, wij doen het',
-      modifIntro: 'Schrijf gewoon wat je op je kaart wilt veranderen (een prijs, een gerecht dat weg moet, een nieuw menu…), voeg een foto toe als je wilt: het Fairide-team doet het voor je. Je kunt ook alles zelf aanpassen hieronder.',
+      modifIntro: 'Schrijf gewoon wat je op je kaart wilt veranderen (een prijs, een gerecht dat weg moet, een nieuw menu…), voeg een foto toe als je wilt: het Fairide-team doet het voor je.',
       modifPlaceholder: 'Bv. "Het middagmenu kost nu € 12,50", "Tiramisu weghalen", "Pizza van de maand toevoegen: burrata, pesto, € 14"',
       modifExample1: 'De prijs veranderen van…',
       modifExample2: 'Van de kaart halen…',
