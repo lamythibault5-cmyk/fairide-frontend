@@ -18,7 +18,11 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
   const [envoi, setEnvoi] = useState(false);
 
   if (signalement) {
-    return <p className="small" style={{ margin: '8px 0 0' }}>{t('orders.problem_sent', { ticket: signalement.ticketNumber, hours: signalement.responseWithinHours || 24 })}</p>;
+    // Une fois l'équipe passée (audit du 19/10, AO-20) : « réponse sous 24 heures » restait affiché pour toujours. Le serveur
+    // dit si le ticket est clos (status) ou si l'équipe a répondu (answered, GET /me/problems).
+    const clos = ['resolu', 'ferme'].includes(signalement.status);
+    const cle = clos ? 'orders.problem_closed' : signalement.answered ? 'orders.problem_answered' : 'orders.problem_sent';
+    return <p className="small" style={{ margin: '8px 0 0' }}>{t(cle, { ticket: signalement.ticketNumber, hours: signalement.responseWithinHours || 24 })}</p>;
   }
   if (!ouvert) {
     return <button type="button" className="btn-ghost" style={{ marginTop: 8 }} onClick={() => setOuvert(true)}>{t('orders.problem_button')}</button>;
@@ -66,10 +70,14 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
       </div>
       <div className="field">
         <label htmlFor={`${idBase}-message`}>{t('orders.problem_messageLabel')}</label>
-        <textarea id={`${idBase}-message`} rows={3} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('orders.problem_messagePlaceholder')} />
+        <textarea id={`${idBase}-message`} rows={3} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('orders.problem_messagePlaceholder')} aria-describedby={`${idBase}-message-aide`} />
+        {/* Le minimum se lit avant l'envoi, pas seulement dans le toast d'erreur (audit du 19/10, AO-19). */}
+        <small id={`${idBase}-message-aide`} className="small">{t('orders.problem_messageHint')}</small>
       </div>
       <div className="field">
         <label htmlFor={`${idBase}-photo`}>{t('orders.problem_photoLabel')}</label>
+        {/* Sans `capture` (audit du 19/10, AO-19) : le téléphone propose l'appareil photo OU la galerie ; avec, il ouvrait
+            directement l'appareil, et une photo prise plus tôt ne pouvait pas être choisie. */}
         <input id={`${idBase}-photo`} type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)} />
       </div>
       <p className="small" style={{ margin: '0 0 8px' }}>{t('orders.problem_responseTime', { hours: 24 })}</p>

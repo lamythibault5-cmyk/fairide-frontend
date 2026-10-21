@@ -24,6 +24,7 @@ import EquipeCommerce from '../components/commerce/EquipeCommerce';
 import { definirModeEquipe } from '../modeEquipe';
 import '../ecran-equipe-groupe.css';
 import NouvellesFairide from '../components/NouvellesFairide';
+import LigneNotifications from '../components/client/LigneNotifications';
 import MesCasquettes from '../components/MesCasquettes';
 import MotDePasseFedere from '../components/MotDePasseFedere';
 import InboxSection from '../components/InboxSection';
@@ -642,6 +643,8 @@ export default function Account() {
             {confirmDeleteOpen && (
               <div>
                 <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>{t('account.deleteWarning')}</p>
+                {/* Le solde Fairide est perdu à la suppression (accountDeletion.js) : on le dit avant (audit du 19/10, AO-27b). */}
+                {Number(user.balance) > 0 && <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>{t('account.deleteBalanceLost', { amount: solde })}</p>}
                 {!deleteCodeSent && (
                   <>
                     <div className="field">
@@ -733,6 +736,7 @@ export default function Account() {
           <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
           {experienceApp() ? <ListeLangues /> : <LanguageSwitcher />}
         </LigneCompte>
+        {role === 'client' && <LigneNotifications ouverte={ouvertes.has('notifs')} onClick={() => basculer('notifs')} />}
         <NouvellesFairide ouverte={ouvertes.has('nouvelles')} onClick={() => basculer('nouvelles')} />
         <LigneCompte icone="dossier" titre={t('accountUi.myData_rowTitle')} sous={t('accountUi.myData_rowSub')} ouverte={ouvertes.has('donnees')} onClick={() => basculer('donnees')}>
           {ouvertes.has('donnees') && <MesDonnees />}

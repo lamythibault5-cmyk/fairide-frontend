@@ -11,10 +11,12 @@ import { useLanguage } from '../../context/LanguageContext';
  * La livraison reste vendue par le livreur au client ; seul le refus est parti (PATCH /orders/:id/decline-courier répond
  * 410 aux anciennes versions de l'application, et la notice de transparence des livreurs ne le promet plus).
  *
- * Commande refusée par le commerce ou annulée : plus personne ne sera nommé, la phrase « il sera nommé ici » serait fausse. */
+ * Commande refusée par le commerce ou annulée : plus personne ne sera nommé, la phrase « il sera nommé ici » serait fausse.
+ * De même tant qu'elle n'est ni payée ni envoyée au commerce (audit du 19/10, AO-13) : aucun livreur ne la verra avant. */
 export default function VendeurLivraison({ order }) {
   const { t } = useLanguage();
   if (order.orderType !== 'delivery' || ['livre', 'annule', 'refuse'].includes(order.status)) return null;
+  if (order.status === 'nouveau' && !order.paid) return null;
   const v = order.courierSeller;
 
   if (!v) {

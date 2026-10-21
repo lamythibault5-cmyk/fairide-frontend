@@ -38,7 +38,8 @@ export async function preparerNouvelleCommande(order, token) {
     const groupes = plat.optionGroups || [];
     const optionsSnapshot = groupes.flatMap((g) => (g.items || []).filter((i) => optionItemIds.includes(i.id)).map((i) => ({ groupName: g.name, name: i.name, priceDelta: Number(i.priceDelta || 0) })));
     const unitPrice = +(Number(plat.price) + optionsSnapshot.reduce((a, o) => a + o.priceDelta, 0)).toFixed(2);
-    lignes.push({ itemId: plat.id, name: plat.name, imageUrl: plat.imageUrl || '', unitPrice, optionItemIds, optionsSnapshot, qty: it.qty });
+    // La consigne du plat (« sans oignon ») suit aussi (audit du 19/10, AO-18) : elle se perdait en refaisant le panier.
+    lignes.push({ itemId: plat.id, name: plat.name, imageUrl: plat.imageUrl || '', unitPrice, optionItemIds, optionsSnapshot, qty: it.qty, note: it.note || '' });
   }
   return { restaurant, lignes, manquants };
 }

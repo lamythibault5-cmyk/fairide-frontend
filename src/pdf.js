@@ -22,7 +22,12 @@ function signalerEchec(e, messageErreur) {
 // Feuille de partage fermée sans rien choisir : ce n'est pas une erreur.
 const annule = (e) => /cancel/i.test(String(e?.message || ''));
 
-export async function ouvrirPdf(url, token, messageErreur) {
+// Le nom du reçu d'une commande (le serveur l'appelle recu-fairide-<numéro>.pdf, mais ce nom n'arrive pas jusqu'ici).
+export const nomRecu = (order) => `recu-fairide-${String(order.id).slice(0, 8)}.pdf`;
+
+// `nom` : le nom du fichier dans la feuille de partage de l'application, et du téléchargement de repli (« fairide.pdf »
+// sinon). Les reçus s'appellent « recu-fairide-… » (audit du 19/10, AO-31).
+export async function ouvrirPdf(url, token, messageErreur, nom) {
   // Sans noopener : avec, window.open rend null et l'onglet ne peut plus recevoir le PDF. Le PDF vient de notre propre
   // serveur, et le lien vers cette page est coupé juste après.
   const onglet = estNatif() ? null : window.open('', '_blank');
@@ -39,8 +44,8 @@ export async function ouvrirPdf(url, token, messageErreur) {
       const lien = URL.createObjectURL(blob);
       onglet.location.href = lien;
       setTimeout(() => URL.revokeObjectURL(lien), 60000);
-    } else if (estNatif()) await ouvrirPdfBlob(blob);
-    else await telechargerPdfBlob(blob); // onglet bloqué : le PDF est enregistré plutôt que perdu
+    } else if (estNatif()) await ouvrirPdfBlob(blob, nom);
+    else await telechargerPdfBlob(blob, nom); // onglet bloqué : le PDF est enregistré plutôt que perdu
   } catch (e) {
     if (!annule(e)) toastHorsComposant(messageErreur || e.message, 'erreur');
   }

@@ -13,6 +13,7 @@ import { lireRecherches, retenirRecherche, effacerRecherches } from '../../reche
 import { RouteVelo } from '../../components/TeteListe';
 import { lienFiche } from '../../murCompte';
 import VisuelVide from '../../components/VisuelVide';
+import ErreurChargement from '../../components/ErreurChargement';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import { imgProps, cacherImageCassee } from '../../images';
 import '../../ecran-liste.css';
@@ -91,9 +92,18 @@ export default function SearchPage() {
     if (souris && !experienceApp()) champ.current?.focus();
   }, []);
 
+  // Commerces pas lus (réseau, serveur) : « Rien pour … » était faux (audit du 19/10, CROSS-34). On dit que le chargement a
+  // échoué, avec « Réessayer ».
+  const [echec, setEchec] = useState(false);
+  const chargerCommerces = () => {
+    setEchec(false);
+    setChargement(true);
+    api('/restaurants').then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
+  };
   useEffect(() => {
-    api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
+    chargerCommerces();
     if (token) api('/orders/mine', { token }).then(setCommandes).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const q = normaliser(requete);
@@ -284,7 +294,9 @@ export default function SearchPage() {
 
       {actif && chargement && <p className="small">{t('search.searching')}</p>}
 
-      {actif && !chargement && resultats.total === 0 && (
+      {actif && !chargement && echec && <ErreurChargement onReessayer={chargerCommerces} />}
+
+      {actif && !chargement && !echec && resultats.total === 0 && (
         <div className="card">
           <p style={{ margin: '0 0 6px', fontWeight: 600 }}>{t('search.nothingFor', { q: requete })}</p>
           <p className="small" style={{ margin: 0 }}>
