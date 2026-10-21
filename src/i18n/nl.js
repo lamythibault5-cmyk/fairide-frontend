@@ -6445,6 +6445,7 @@ export default {
       posReqToujours: 'De locatie is nog steeds niet toegestaan.',
       posReqPartage: 'Je hebt het delen van je locatie uitgezet in Mijn account. Zet het weer aan om ritten te ontvangen.',
       posReqCompte: 'Mijn account openen',
+      posReqPlusTard: 'Niet nu',
       notifHelp: 'Op deze telefoon verwittigd worden zodra er een rit boven je minimum beschikbaar is.',
       notifOn: 'Je wordt op dit toestel verwittigd van nieuwe ritten.',
       loadError: 'Je ritten konden niet worden geladen.',

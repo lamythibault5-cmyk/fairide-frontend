@@ -6455,6 +6455,7 @@ export default {
       posReqToujours: 'La position n’est toujours pas autorisée.',
       posReqPartage: 'Tu as coupé le partage de position dans Mon compte. Réactive-le pour recevoir des courses.',
       posReqCompte: 'Ouvrir Mon compte',
+      posReqPlusTard: 'Pas maintenant',
       notifHelp: 'Être prévenu sur ce téléphone dès qu’une course au-dessus de ton minimum est disponible.',
       notifOn: 'Tu es prévenu des nouvelles courses sur cet appareil.',
       loadError: 'Impossible de charger tes courses.',

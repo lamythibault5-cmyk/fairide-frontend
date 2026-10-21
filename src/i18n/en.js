@@ -6436,6 +6436,7 @@ export default {
       posReqToujours: 'Location is still not allowed.',
       posReqPartage: 'You turned off location sharing in My account. Turn it back on to get deliveries.',
       posReqCompte: 'Open My account',
+      posReqPlusTard: 'Not now',
       notifHelp: 'Get notified on this phone as soon as a delivery above your minimum is available.',
       notifOn: 'You get notified of new deliveries on this device.',
       loadError: 'Your deliveries could not be loaded.',
