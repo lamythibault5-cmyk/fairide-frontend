@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { api, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -43,9 +43,13 @@ export default function TerminalPage() {
   useEffect(() => { if (!dansTerminal()) detecter(); }, [detecter]);
   useEffect(() => abonnerTerminalNavigateur(setWeb), []);
 
+  /* Une seule alerte par coupure (audit du 19/10, CROSS-35) : le relevé de 30 s affichait un toast rouge, avec sa vibration,
+   * à chaque échec tant que le serveur restait injoignable. La suivante attend qu'un relevé ait réussi. */
+  const enEchec = useRef(false);
   const charger = useCallback(() => {
     if (!restoId) return;
-    api(`/restaurants/${restoId}/terminals`, { token }).then(setDonnees).catch((e) => toast(e.message, 'erreur'));
+    api(`/restaurants/${restoId}/terminals`, { token }).then((d) => { enEchec.current = false; setDonnees(d); })
+      .catch((e) => { if (!enEchec.current) toast(e.message, 'erreur'); enEchec.current = true; });
   }, [restoId, token, toast]);
   useEffect(() => { charger(); }, [charger]);
   // L'état des terminaux (batterie, papier) change : on le relit toutes les 30 s tant que la page est ouverte.

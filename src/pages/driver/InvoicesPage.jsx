@@ -10,6 +10,14 @@ import EtatVide from '../../components/EtatVide';
 import { experienceApp } from '../../natif';
 import PageLivreur from '../../components/livreur/PageLivreur';
 
+/* LA COURSE COMPTE AU MOIS OÙ ELLE A ÉTÉ REMISE, À BRUXELLES (audit du 19/10, courier-20). Le récap lisait l'heure de création
+ * en UTC (`toISOString`) : une course créée le 31 à 23:50 et livrée le 1er à 00:20 tombait le mauvais mois. Et il ne gardait
+ * que le statut « livrée » : une course close « client absent » ou remise refusée, payée pourtant, manquait aux sommes reçues
+ * (`driverPaidRide`, serveur). */
+const quandRemise = (o) => o.deliveredAt || o.createdAt;
+const moisBruxelles = (ts) => new Date(ts).toLocaleDateString('sv-SE', { timeZone: 'Europe/Brussels' }).slice(0, 7);
+const coursePayee = (o) => (o.driverPaidRide !== undefined ? o.driverPaidRide : o.status === 'livre');
+
 function currentMonthValue() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -33,8 +41,8 @@ export default function InvoicesPage() {
   const monthOrders = useMemo(() => {
     if (!orders) return [];
     return orders
-      .filter((o) => o.status === 'livre' && new Date(o.createdAt).toISOString().slice(0, 7) === month)
-      .sort((a, b) => a.createdAt - b.createdAt);
+      .filter((o) => coursePayee(o) && moisBruxelles(quandRemise(o)) === month)
+      .sort((a, b) => quandRemise(a) - quandRemise(b));
   }, [orders, month]);
   const totals = useMemo(() => ({
     deliveryFees: monthOrders.reduce((a, o) => a + Number(o.driverFee ?? o.deliveryFee), 0),
@@ -101,7 +109,7 @@ export default function InvoicesPage() {
             <tbody>
               {monthOrders.map((o) => (
                 <tr key={o.id}>
-                  <td>{new Date(o.createdAt).toLocaleDateString(getLocale())}</td>
+                  <td>{new Date(quandRemise(o)).toLocaleDateString(getLocale())}</td>
                   <td>{o.restaurantName}</td>
                   <td className="num">{euros(Number(o.driverFee ?? o.deliveryFee))}</td>
                   <td className="num">{o.tipAmount > 0 ? euros(o.tipAmount) : '-'}</td>

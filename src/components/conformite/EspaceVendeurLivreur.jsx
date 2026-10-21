@@ -3,6 +3,7 @@ import { api, apiDownload } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
 import CopieDac7 from './CopieDac7';
+import { euros } from '../../prixPlat';
 
 /* Le livreur vend la livraison (décision du 23/09/2026) : ce qui va avec, dans son espace.
  *
@@ -58,7 +59,7 @@ export function DocumentsVente({ token }) {
       {liste.length === 0 && <p className="small" style={{ margin: 0, color: 'var(--ink-soft)' }}>{t('conformite.saleDocsEmpty')}</p>}
       {liste.map((d) => (
         <div key={d.id} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
-          <span className="small"><b>{d.number}</b> · {new Date(d.issuedAt).toLocaleDateString(getLocale())} · {(d.deliveryAmount + d.tipAmount).toFixed(2)} €</span>
+          <span className="small"><b>{d.number}</b> · {new Date(d.issuedAt).toLocaleDateString(getLocale())} · {euros(d.deliveryAmount + d.tipAmount)}</span>
           <button type="button" className="btn-ghost" style={{ padding: '2px 8px' }} onClick={() => ouvrir(d)}>{t('conformite.saleDocsOpen')}</button>
         </div>
       ))}

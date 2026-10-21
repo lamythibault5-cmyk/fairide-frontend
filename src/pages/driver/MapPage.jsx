@@ -51,8 +51,13 @@ export default function MapPage() {
   }, []);
 
   useEffect(() => {
+    /* Courses en main et récentes seulement (audit du 19/10, courier-21 : l'historique entier, toutes les 15 s), et une seule
+     * alerte par coupure (CROSS-35 : un toast rouge et une vibration à chaque relevé raté, dans une zone sans réseau). */
+    let enEchec = false;
     function load() {
-      api('/orders/mine/deliveries', { token }).then(setOrders).catch((e) => toast(e.message, 'erreur'));
+      if (document.hidden) return;
+      api('/orders/mine/deliveries?recent=1', { token }).then((r) => { enEchec = false; setOrders(r); })
+        .catch((e) => { if (!enEchec) toast(e.message, 'erreur'); enEchec = true; });
     }
     load();
     const interval = setInterval(load, 15000);

@@ -1491,7 +1491,8 @@ export default function Auth() {
                         {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
                           <div key={v} role="radio" aria-checked={vehicleType === v} tabIndex={0} className={`chip${vehicleType === v ? ' active' : ''}`}
                             onClick={() => setVehicleType(v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setVehicleType(v); }}>
-                            {v === 'velo' ? <Icone nom="velo" taille={16} className="icone-texte" /> : v === 'velo_electrique' ? null : v === 'scooter' ? <Icone nom="scooter" taille={16} className="icone-texte" /> : <Icone nom="scooter" taille={16} className="icone-texte" />}{t(`courierOnboarding.vehicle_${v}`)}
+                            {/* Le vélo électrique avait une puce sans icône (audit du 19/10, courier-40) : le vélo, comme le vélo classique. */}
+                            {['velo', 'velo_electrique'].includes(v) ? <Icone nom="velo" taille={16} className="icone-texte" /> : v === 'scooter' ? <Icone nom="scooter" taille={16} className="icone-texte" /> : <Icone nom="scooter" taille={16} className="icone-texte" />}{t(`courierOnboarding.vehicle_${v}`)}
                           </div>
                         ))}
                       </div>

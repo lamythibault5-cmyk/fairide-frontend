@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
 import ErrorCard from '../../components/ErrorCard';
+import ErreurChargement from '../../components/ErreurChargement';
 import IncidentsCourse from '../../components/livreur/IncidentsCourse';
 import PhotoDepot from '../../components/livreur/PhotoDepot';
 import BoutonUrgence from '../../components/livreur/BoutonUrgence';
@@ -160,6 +161,12 @@ export default function DriverDashboard() {
   const [erreur, setErreur] = useState(null);
   // Un ref et non un state : sa valeur est lue dans load(), qui n'est pas re-créée à chaque rendu.
   const chargeReussieRef = useRef(false);
+  /* UNE ALERTE PAR COUPURE (audit du 19/10, CROSS-35). Dans une zone sans réseau, chaque relevé raté (toutes les 15 s) posait
+   * un toast rouge, avec la vibration d'erreur, et écrasait le « Livrée » qui venait de s'afficher. Désormais : le premier
+   * échec d'une série seulement, puis une ligne discrète « liste de HH:MM » jusqu'au prochain relevé réussi. */
+  const enEchecRef = useRef(false);
+  const [listeDu, setListeDu] = useState(null);
+  const [horsLigne, setHorsLigne] = useState(false);
   const [codeInputs, setCodeInputs] = useState({});
   // Remise d'une commande avec alcool : pièce d'identité à contrôler d'abord (backlog B6).
   const [ageAVerifier, setAgeAVerifier] = useState(null);
@@ -241,30 +248,37 @@ export default function DriverDashboard() {
   // affiché avant la validation (pas encore envoyé, à corriger, ou en cours de vérification).
   const [dossier, setDossier] = useState(null);
   const [tournee, setTournee] = useState(null);
+  /* Dossier illisible (audit du 19/10, CROSS-41) : l'échec était avalé, et un livreur dont le dossier était un brouillon ou à
+   * corriger lisait « L'équipe vérifie ton dossier ». Un échec reste un échec : { erreur: true }, avec « Réessayer ». */
+  const [essaiDossier, setEssaiDossier] = useState(0);
   useEffect(() => {
     api('/couriers/me', { token }).then((d) => {
       setSac(d.courier?.bag || null);
       setVehicule({ type: d.courier?.vehicleType || '', bikeMaxKm: d.pricing?.bikeMaxKm || 4, rate: ['velo', 'velo_electrique'].includes(d.courier?.vehicleType || '') ? d.pricing?.driverPerKmBike : d.pricing?.driverPerKmMotor, base: d.pricing?.deliveryBaseFee, baseKm: d.pricing?.deliveryBaseKm });
-      setDossier({ statut: d.courier?.lifecycleStatus || null, motif: d.courier?.reviewReason || '' });
+      setDossier({ statut: d.courier?.lifecycleStatus || null, motif: d.courier?.reviewReason || '', minFeeCents: d.courier?.minFeeCents ?? null });
       // Règles de la tournée (routes/couriers.js tarifsLivreur, tournee.js côté serveur), rappelées dès qu'une course est en main.
       setTournee({
         max: d.courier?.otherPlatforms?.works === true ? 1 : (d.pricing?.maxOrdersFairideOnly || 3),
         radius: String(d.pricing?.secondOrderRadiusKm ?? 2).replace('.', ','),
         delay: d.pricing?.extraOrderMaxDelayMin ?? 10
       });
-    }).catch(() => {});
-  }, [token]);
+    }).catch(() => setDossier({ erreur: true }));
+  }, [token, essaiDossier]);
 
   async function load() {
     try {
       const [availableData, mineData] = await Promise.all([
         api('/orders/available', { token }),
-        api('/orders/mine/deliveries', { token })
+        // Courses en main et récentes seulement (audit du 19/10, courier-21 : tout l'historique, toutes les 15 s).
+        api('/orders/mine/deliveries?recent=1', { token })
       ]);
       setAvailable(availableData);
       setMine(mineData);
       setErreur(null);
       chargeReussieRef.current = true;
+      enEchecRef.current = false;
+      setHorsLigne(false);
+      setListeDu(new Date());
     } catch (e) {
       /* UN ÉCHEC NE DOIT PAS SE LIRE COMME « AUCUNE COURSE ».
          Jusqu'ici l'échec ne posait qu'un toast : `loading` passait à false, la page s'affichait
@@ -276,7 +290,9 @@ export default function DriverDashboard() {
          toutes les 15 secondes, et sur un réseau qui clignote (un livreur est en mouvement, c'est
          le cas normal) la faire basculer en écran d'erreur lui retirerait ses courses des mains. */
       setErreur(e);
-      if (chargeReussieRef.current) toast(e.message, 'erreur');
+      if (chargeReussieRef.current && !enEchecRef.current) toast(e.message, 'erreur');
+      enEchecRef.current = true;
+      if (chargeReussieRef.current) setHorsLigne(true);
     } finally {
       setLoading(false);
     }
@@ -388,7 +404,11 @@ export default function DriverDashboard() {
 
   // Refuser une course (B23bis) : elle quitte SA liste, et rien d'autre — le refus n'est relu par aucune
   // autre décision (docs/dispatch.md côté serveur). Retrait local immédiat, sans attendre le rechargement.
+  // Un seul envoi à la fois (audit du 19/10, CROSS-36) : un deuxième appui, réseau lent, renvoyait la demande.
+  const refusEnCours = useRef(null);
   async function refuserOffre(id) {
+    if (refusEnCours.current === id) return;
+    refusEnCours.current = id;
     try {
       await api(`/orders/${id}/refuse-offer`, { method: 'PATCH', token });
       // La carte glisse vers la gauche, puis quitte la liste (ecran-livreur.css, .ecl-offre.part).
@@ -398,7 +418,7 @@ export default function DriverDashboard() {
         setPartantes((p) => p.filter((x) => x !== id));
       }, mouvementReduit() ? 0 : 300);
       toast(t('conformite.offerRefused'));
-    } catch (e) { toast(e.message, 'erreur'); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { refusEnCours.current = null; }
   }
 
   // Course en train d'être prise (bordure iris le temps de la réponse) et cartes refusées qui s'en vont.
@@ -415,17 +435,28 @@ export default function DriverDashboard() {
       // Notices à relire (B4), titre de séjour expiré (B2) ou dossier à compléter / pas encore vérifié — y compris l'ancien
       // compte livreur sans dossier, qui y remplit statut et numéro d'entreprise (17/10/2026) : ça se règle dans l'espace
       // livreur, on y va.
-      if (['NOTICES_A_ACCEPTER', 'TITRE_SEJOUR_EXPIRE', 'STATUS_NOT_VERIFIED'].includes(e.code)) navigate('/driver/onboarding');
+      // Carte professionnelle manquante ou expirée aussi (audit du 19/10, courier-7) : le dossier validé permet de déposer la nouvelle.
+      if (['NOTICES_A_ACCEPTER', 'TITRE_SEJOUR_EXPIRE', 'CARTE_PRO_REQUISE', 'STATUS_NOT_VERIFIED'].includes(e.code)) navigate('/driver/onboarding');
+      // Course prise par un autre livreur entre-temps (audit du 19/10, courier-15) : sa carte restait là jusqu'au relevé
+      // suivant, et « Prendre la course » échouait encore. La liste est relue tout de suite.
+      else load();
     } finally {
       setPrise(null);
     }
   }
 
+  /* « CONFIRMER LA REMISE » UNE SEULE FOIS (audit du 19/10, CROSS-36). Devant la porte, réseau faible : rien ne bougeait, le
+   * livreur touchait de nouveau, la deuxième demande échouait sur une livraison déjà passée (toast rouge). Comme `prise` et
+   * `retraitEnCours` : la course en cours d'envoi bloque le bouton, la glissière et Entrée jusqu'à la réponse. */
+  const [livraisonEnCours, setLivraisonEnCours] = useState(null);
+  const livraisonRef = useRef(null);
   async function deliver(order, ageVerifie = false) {
     const id = order.id;
+    if (livraisonRef.current) return;
     const code = (codeInputs[id] || '').trim();
     if (!code) { toast(t('dashDriver.toastAskCode')); return; }
     if (order.containsAlcohol && !ageVerifie) { setAgeAVerifier(order); return; }
+    livraisonRef.current = id; setLivraisonEnCours(id);
     try {
       await api(`/orders/${id}/deliver`, { method: 'PATCH', token, body: { code, ...(ageVerifie ? { ageCheck: 'verified' } : {}) } });
       setCodeInputs((prev) => { const next = { ...prev }; delete next[id]; return next; });
@@ -434,6 +465,8 @@ export default function DriverDashboard() {
       load();
     } catch (e) {
       toast(e.message, 'erreur');
+    } finally {
+      livraisonRef.current = null; setLivraisonEnCours(null);
     }
   }
 
@@ -467,13 +500,17 @@ export default function DriverDashboard() {
   }
 
   // Âge non prouvé à la porte : la commande est close, la course t'est payée, l'équipe décide du reste.
+  const refusAgeEnCours = useRef(false);
   async function refuserRemiseAge(order) {
+    // Un seul envoi (audit du 19/10, CROSS-36).
+    if (refusAgeEnCours.current) return;
+    refusAgeEnCours.current = true;
     try {
       await api(`/orders/${order.id}/age-refused`, { method: 'PATCH', token, body: { reason: 'refused_age' } });
       setAgeAVerifier(null);
       toast(t('conformite.ageRefusedDriverDone'));
       load();
-    } catch (e) { toast(e.message, 'erreur'); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { refusAgeEnCours.current = false; }
   }
 
   // Plus de carte « Aujourd'hui » dans la colonne de droite (2026-09-23) : ses trois compteurs
@@ -492,13 +529,20 @@ export default function DriverDashboard() {
   const active = mine.filter((o) => o.status === 'livraison');
   // Courses livrées aujourd'hui : brut · retenue · net quand le serveur joint `driverEarning` à la
   // commande (précompte de l'économie collaborative), sinon le tarif livreur tel quel.
-  const aujourdhui = new Date().toDateString();
-  const livreesAujourdhui = mine.filter((o) => o.status === 'livre' && new Date(o.deliveredAt || o.updatedAt || o.createdAt).toDateString() === aujourdhui);
+  /* Le jour de la REMISE, à Bruxelles, et les courses payées closes « client absent » ou remise refusée (audit du 19/10,
+   * courier-20 : l'heure de création, et le seul statut « livrée »). `driverPaidRide` vient du serveur. */
+  const jourBxl = (ts) => new Date(ts).toLocaleDateString('sv-SE', { timeZone: 'Europe/Brussels' });
+  const aujourdhui = jourBxl(Date.now());
+  const livreesAujourdhui = mine.filter((o) => (o.driverPaidRide !== undefined ? o.driverPaidRide : o.status === 'livre') && jourBxl(o.deliveredAt || o.createdAt) === aujourdhui);
   const ligneGain = (o) => (o.driverEarning && o.driverEarning.gross != null
     ? t('dashDriver.earningLine', { gross: dec(o.driverEarning.gross), withholding: dec(o.driverEarning.withholding ?? 0), net: dec(o.driverEarning.net ?? (o.driverEarning.gross - (o.driverEarning.withholding || 0))) })
     : t('dashDriver.rideFee', { fee: dec(o.driverFee ?? o.deliveryFee) }));
 
-  const approuve = user?.adminStatus === 'approved';
+  /* STATUT À REVÉRIFIER (audit du 19/10, courier-4). Après un changement de statut, le compte reste « approuvé » mais le dossier
+   * repasse en brouillon ou en vérification : aucune course n'est proposée (serveur) et la prise est refusée. Sans course en
+   * main, l'écran dit ce qui se passe (dossier à compléter, ou en vérification) au lieu d'une liste vide. */
+  const dossierARevoir = ['draft', 'rejected', 'pending_review'].includes(dossier?.statut) && mine.length === 0;
+  const approuve = user?.adminStatus === 'approved' && !dossierARevoir;
   const peutRouler = approuve && user?.stripeConnectStatus === 'active';
   const enPause = !!user?.driverPaused;
   const appli = experienceApp();
@@ -619,9 +663,9 @@ export default function DriverDashboard() {
       <CodeCases libelle={t('dashDriver.phCustomerCode')} valeur={codeInputs[o.id] || ''} onValider={() => deliver(o)}
         onChange={(v) => setCodeInputs((prev) => ({ ...prev, [o.id]: v }))} />
       {/* Taille normale (audit du 15/10/2026) : c'est le geste qui clôt la course, fait d'une main, souvent dehors. */}
-      {!appli && <button type="button" className="btn-teal ecl-code-envoi" onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>}
+      {!appli && <button type="button" className="btn-teal ecl-code-envoi" disabled={livraisonEnCours === o.id} onClick={() => deliver(o)}>{livraisonEnCours === o.id ? '…' : t('dashDriver.confirmDelivery')}</button>}
       {/* Application : le code du client tapé, on glisse pour livrer (même raison que pour la récupération). */}
-      {appli && <div className="ecl-glisser"><GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} onConfirmer={() => deliver(o)} /></div>}
+      {appli && <div className="ecl-glisser"><GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} disabled={livraisonEnCours === o.id} onConfirmer={() => deliver(o)} /></div>}
       <PhotoDepot order={o} token={token} toast={toast} onLivree={() => { setTerminee({ id: o.id, fee: o.driverFee ?? o.deliveryFee }); load(); }} />
       <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
     </>
@@ -793,6 +837,8 @@ export default function DriverDashboard() {
       <p className="small" style={{ margin: '4px 0 0' }}>{t(`dashDriver.bag_${sac.depositStatus}`, { amount: Number(sac.depositAmount || 40).toFixed(0) })}</p>
     </div>
   );
+  // Liste vide et minimum fixé (audit du 19/10, courier-37) : il ne voit que les courses à son minimum ou plus.
+  const texteMinimum = dossier?.minFeeCents > 0 ? t('dashDriver.noneAvailableMin', { amount: euros(dossier.minFeeCents / 100) }) : undefined;
   const titreOffres = <h2 className="ecl-h2">{t('dashDriver.availableOrders')}{available.length > 0 && <span className="ecl-badge doux">{available.length}</span>}</h2>;
   /* LA TOURNÉE (fondateur, 2026-10-17) : jusqu'à trois courses à la fois. Dès qu'une course est en main, la liste ne montre
      que les courses sur son chemin : la règle est dite ici, avec ses chiffres, pour que le livreur sache pourquoi la liste
@@ -828,7 +874,7 @@ export default function DriverDashboard() {
       <NotifCourses />
       {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
       <PositionRequise>
-        {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} />}
+        {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} texte={texteMinimum} />}
         {available.map(carteOffre)}
       </PositionRequise>
       {/* Son, vibration, notifications : sous les offres depuis le 2026-10-16 (maquette), pour que la première course
@@ -938,7 +984,7 @@ export default function DriverDashboard() {
           {titreOffres}
           {blocGrille}
           <PositionRequise>
-            {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} />}
+            {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} texte={texteMinimum} />}
             {available.length > 0 && <div className="ecl-choix-liste">{available.map(choixOffre)}</div>}
           </PositionRequise>
           {available.length > 0 && <p className="small ecl-astuce">{t('siteLivreur.astuceTelephone')}</p>}
@@ -964,6 +1010,7 @@ export default function DriverDashboard() {
 
       <div className="ecl-feuille">
         <BandeauOuverture role="driver" />
+        {horsLigne && listeDu && <p className="small ecl-hors-ligne" role="status"><Icone nom="antenne" taille={16} className="icone-texte" />{' '}{t('dashDriver.offlineList', { time: formatClock(listeDu) })}</p>}
         {/* Selfie de contrôle au hasard à la prise de service (CODE-14) : 60 minutes pour le prendre, ensuite plus de nouvelle
             course tant qu'il n'est pas envoyé (controleSelfie.js côté serveur). */}
         {peutRouler && <SelfieControle token={token} onDepose={load} onEtat={setSelfie} />}
@@ -976,6 +1023,9 @@ export default function DriverDashboard() {
              vérification qui n'avait pas commencé. Brouillon ou refusé : un seul bouton vers le dossier. Envoyé : on attend,
              avec le dossier consultable. Bloqué : inchangé. */
           const bloque = user?.adminStatus === 'blocked';
+          // Dossier pas encore lu, ou illisible (CROSS-41) : jamais « l'équipe vérifie ton dossier » par défaut.
+          if (!bloque && !dossier) return <SkeletonCards count={1} />;
+          if (!bloque && dossier.erreur) return <ErreurChargement onReessayer={() => { setDossier(null); setEssaiDossier((n) => n + 1); }} />;
           const statut = dossier?.statut;
           const aCompleter = !bloque && statut === 'draft';
           const aCorriger = !bloque && statut === 'rejected';

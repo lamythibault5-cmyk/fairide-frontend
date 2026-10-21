@@ -252,8 +252,9 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
  * (ronds iris cochés ; toucher la ligne rouvre l'étape pour la corriger). Tout fait : le bandeau le dit, pas de bouton lime.
  *
  * Une étape regroupe des écrans de `ecrans` ; elle est faite quand aucun d'eux n'a de manque — paiements : compte Stripe
- * actif ; envoi : dossier envoyé. Les écrans et leurs règles ne changent pas (le BCE reste exigé à l'envoi, pas à
- * l'inscription : c'est un manque comme un autre, sous « Ton activité »). */
+ * actif ; envoi : dossier envoyé. Les écrans et leurs règles ne changent pas. Le BCE est un manque sous « Ton activité »,
+ * mais il peut arriver APRÈS l'envoi (fondateur, 18/10/2026 : MANQUES_APRES_ENVOI) ; il reste exigé avant la validation par
+ * l'équipe (audit du 19/10, courier-35 : ce commentaire disait « exigé à l'envoi »). */
 const ETAPES_SOMMAIRE = [
   ['statut', ['statut']],
   ['identite', ['identite']],
@@ -515,8 +516,10 @@ function EcranEngagements({ t, token, busy, action, onSuivant, contrat }) {
   const reste = liste.filter((x) => AVANT_COURSE.includes(x.kind) && !x.accepted);
   const toutAccepte = !reste.length && !contrat.aSigner;
   async function accepter() {
-    const ok = await action(() => api('/couriers/me/engagements', { method: 'POST', token, body: { accepted: true, typedName: nom.trim() } }), t('conformite.engagementsAcceptedToast'));
-    if (ok) { await charger(); onSuivant(); }
+    // Les versions AFFICHÉES (audit du 19/10, courier-27) : un texte changé entre-temps est refusé (409) et la liste rechargée.
+    const versions = Object.fromEntries(liste.filter((x) => AVANT_COURSE.includes(x.kind)).map((x) => [x.kind, x.version]));
+    const ok = await action(() => api('/couriers/me/engagements', { method: 'POST', token, body: { accepted: true, typedName: nom.trim(), versions } }), t('conformite.engagementsAcceptedToast'));
+    if (ok) { await charger(); onSuivant(); } else { setCoche(false); charger(); }
   }
   if (toutAccepte) {
     return (<><Fait icone="valider" titre={t('conformite.engagementsDone')} /><div className="bv-grandit" /><button type="button" className="bv-btn btn-teal" onClick={onSuivant}>{t('appli.continuer')}</button></>);

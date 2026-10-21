@@ -40,8 +40,10 @@ export function EtapeNotices({ token, busy, action, onNext, contrat = null }) {
   const toutAccepte = !reste.length && !contratASigner;
 
   async function accepter() {
-    const ok = await action(() => api('/couriers/me/engagements', { method: 'POST', token, body: { accepted: true, typedName: nom.trim() } }), t('conformite.engagementsAcceptedToast'));
-    if (ok) { await charger(); onNext?.(); }
+    // Les versions AFFICHÉES (audit du 19/10, courier-27) : un texte changé entre-temps est refusé (409) et la liste rechargée.
+    const versions = Object.fromEntries(liste.filter((c) => AVANT_COURSE.includes(c.kind)).map((c) => [c.kind, c.version]));
+    const ok = await action(() => api('/couriers/me/engagements', { method: 'POST', token, body: { accepted: true, typedName: nom.trim(), versions } }), t('conformite.engagementsAcceptedToast'));
+    if (ok) { await charger(); onNext?.(); } else { setCoche(false); charger(); }
   }
 
   return (

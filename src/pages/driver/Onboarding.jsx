@@ -2,7 +2,7 @@ import { allerAuPaiement, experienceApp } from '../../natif';
 import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 import DossierAppli from './DossierAppli';
 import DossierSuivi from './DossierSuivi';
-import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer } from './dossierBlocs';
+import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer, MesCourses, PiecesSejour, ConfirmerEcole } from './dossierBlocs';
 import PageLivreur from '../../components/livreur/PageLivreur';
 import SacLivraison from '../../components/SacLivraison';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
@@ -135,6 +135,7 @@ export default function Onboarding() {
     return !MANQUES_PAR_ETAPE[e].some((m) => manques.includes(m) && !MANQUES_INFORMATIFS.includes(m));
   };
   const enDossier = c.lifecycleStatus === 'draft' || c.lifecycleStatus === 'rejected';
+  const roule = valide || c.lifecycleStatus === 'suspended' || c.lifecycleStatus === 'blocked_threshold';
   if (experienceApp() && enDossier) {
     return <DossierAppli d={d} charger={charger} token={token} user={user} busy={busy} action={action} refreshUser={refreshUser} etapeDemandee={etape} />;
   }
@@ -160,6 +161,10 @@ export default function Onboarding() {
         const restantes = ETAPES.filter((e) => !etapeOk(e));
         const prochaine = restantes[0];
         if (!prochaine) return null;
+        /* Sur l'écran d'envoi, dossier prêt à partir (audit du 19/10, LIVE-18) : la carte disait « Encore 2 étape(s) · Prochaine
+         * étape : Paiements », avec son bouton lime, à côté de « Tout est complet » et du lime « Envoyer ». Les paiements
+         * peuvent s'activer après la validation (e-mail d'approbation) : sur cet écran, le seul geste est l'envoi. */
+        if (courante === 'envoi' && !manques.some((m) => !MANQUES_INFORMATIFS.includes(m) && !MANQUES_APRES_ENVOI.includes(m))) return null;
         const nom = (prochaine === 'engagements' ? t('conformite.engagementsStep') : t(`courierOnboarding.step_${prochaine}`)).replace(/^\d+\.\s*/, '');
         return (
           <div className="card prochaine-etape">
@@ -181,6 +186,10 @@ export default function Onboarding() {
           pièce, le motif, et le bouton pour en déposer une autre. */}
       {!enDossier && <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />}
       {!enDossier && (manques.includes('bce') || manques.includes('tva_numero')) && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} manques={manques} />}
+      {/* Livreur validé (audit du 19/10, courier-7, courier-30) : renouvellement de l'école, titre de séjour et carte
+          professionnelle à renouveler avant l'échéance. */}
+      {roule && <ConfirmerEcole key={`ecole-${c.needsRenewal}`} d={d} t={t} token={token} busy={busy} action={action} />}
+      {roule && <PiecesSejour d={d} t={t} token={token} busy={busy} action={action} />}
 
       {/* Livreur déjà validé : les notices (B4, B8) doivent être relues quand leur texte change, sinon le
           serveur refuse la prochaine course (NOTICES_A_ACCEPTER). Les étapes ci-dessous ne s'affichent
@@ -236,9 +245,13 @@ export default function Onboarding() {
       {(valide || c.lifecycleStatus === 'blocked_threshold' || c.lifecycleStatus === 'pending_review' || c.lifecycleStatus === 'suspended') && (
         <Compteurs d={d} t={t} />
       )}
-      {/* Le tarif minimum se règle dans l'étape « Paiements » (fondateur, 2026-10-06 : il s'affichait sous chaque étape) ;
-          ses documents de vente, une fois qu'il a pu livrer. */}
-      {(valide || c.lifecycleStatus === 'suspended' || c.lifecycleStatus === 'blocked_threshold') && <DocumentsVente token={token} />}
+      {/* Le tarif minimum se règle dans l'étape « Paiements » du brouillon (fondateur, 2026-10-06 : il s'affichait sous chaque
+          étape) ; ses documents de vente, une fois qu'il a pu livrer. */}
+      {/* Ses courses (zone, véhicule, autres plateformes, sac) et son minimum restent à sa main après la validation (audit du 19/10,
+          courier-5 et courier-6 : rien ne les montrait plus une fois le dossier validé). */}
+      {roule && <MesCourses key={`courses-${c.updatedAt}`} d={d} t={t} token={token} busy={busy} action={action} />}
+      {roule && <TarifMinimum key={`min-${c.minFeeCents ?? 'aucun'}-${c.minFeePerKmCents ?? 'aucun'}`} courier={c} token={token} action={action} busy={busy} />}
+      {roule && <DocumentsVente token={token} />}
       {!enDossier && <ChangementStatut d={d} t={t} token={token} action={action} busy={busy} onChanged={() => { setEtape('statut'); refreshUser?.(); }} />}
       <p className="small" style={{ marginTop: 16, opacity: 0.75 }}>{t('courierOnboarding.legalFooter', { year: legal.year ?? new Date().getFullYear() })} · <Link to="/driver">{t('courierOnboarding.backToDashboard')}</Link></p>
     </PageLivreur>
@@ -352,6 +365,14 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
   const carte = (d.documents ?? []).filter((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && !x.rejectedReason);
   const refusee = carte.length === 0 ? (d.documents ?? []).find((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && x.rejectedReason) : null;
   const [autreMoyen, setAutreMoyen] = useState(false);
+  /* ANALYSE EN COURS : RELUE TOUTE SEULE (audit du 19/10, courier-28). « En cours d'analyse » ne bougeait qu'en rechargeant la
+   * page ; toutes les 20 s, la vérification est relue chez Stripe (même route qu'au retour de Stripe), le temps de l'écran. */
+  const enAnalyse = id.provider === 'stripe_identity' && id.status === 'processing';
+  useEffect(() => {
+    if (!enAnalyse) return undefined;
+    const minuteur = setInterval(() => { api('/couriers/me/identity/refresh', { method: 'POST', token }).then((r) => action(async () => r)).catch(() => {}); }, 20000);
+    return () => clearInterval(minuteur);
+  }, [enAnalyse]); // eslint-disable-line react-hooks/exhaustive-deps
   // Refusée par l'équipe : on revient aux façons de la vérifier, motif en tête, même si une pièce est encore déposée (admin-43).
   const recue = id.status !== 'verified' && carte.length > 0 && !autreMoyen && !id.rejectedReason;
   return (

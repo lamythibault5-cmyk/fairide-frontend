@@ -6,8 +6,8 @@ import Icone from '../../components/Icone';
 import SousEcran from '../../components/SousEcran';
 import RouteVelo from '../../components/livreur/RouteVelo';
 import { EtapeNotices } from '../../components/conformite/LivreurConformite';
-import { DocumentsVente } from '../../components/conformite/EspaceVendeurLivreur';
-import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer } from './dossierBlocs';
+import { DocumentsVente, TarifMinimum } from '../../components/conformite/EspaceVendeurLivreur';
+import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer, MesCourses, PiecesSejour, ConfirmerEcole } from './dossierBlocs';
 import { STATUTS } from './dossierCommun';
 import '../../ecran-livreur.css';
 
@@ -60,7 +60,13 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
   const aAgir = piecesRefusees || textesARelire || bceAttendu || etat === 'blocked_threshold';
 
   const autreStatut = STATUTS.find((x) => x !== c.statusType);
+  /* APRÈS LA VALIDATION, ENCORE À SA MAIN (audit du 19/10, courier-5, courier-6, courier-7) : ses courses (zone, véhicule, autres
+   * plateformes, sac), son minimum et, hors EEE, son titre de séjour et sa carte professionnelle, chacun dans sa feuille. */
+  const sousCourses = [c.vehicleType && t(`courierOnboarding.vehicle_${c.vehicleType}`), c.zone].filter(Boolean).join(' · ');
   const lignes = [
+    roule && { cle: 'courses', titre: t('courierOnboarding.ridesTitle'), sous: sousCourses || null },
+    roule && { cle: 'minimum', titre: t('conformite.minFeeTitle'), sous: c.minFeeCents > 0 ? t('ecranLivreur.dosMinimumSous', { amount: euro(c.minFeeCents / 100) }) : t('ecranLivreur.dosMinimumAucun') },
+    roule && c.nationalityGroup === 'THIRD' && { cle: 'sejour', titre: t('courierOnboarding.permitsTitle'), sous: null },
     { cle: 'avant', titre: t('courierOnboarding.beforeTitle'), sous: t('ecranLivreur.dosAvantSous') },
     autreStatut && { cle: 'statut', titre: t('courierOnboarding.changeStatusTitle'), sous: t('ecranLivreur.dosChangerSous', { status: t(`courierOnboarding.status_${autreStatut}`) }) },
     roule && { cle: 'ventes', titre: t('conformite.saleDocsTitle'), sous: t('ecranLivreur.dosVentesSous') },
@@ -97,6 +103,8 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
 
       <div className="ecl-feuille">
         {c.needsRenewal && <p className="ecl-note"><Icone nom="alerte" taille={18} />{t('courierOnboarding.renewalNeeded')}</p>}
+        {/* Le geste qui lève le renouvellement (audit du 19/10, courier-30) : confirmer l'école et l'année académique. */}
+        {roule && <ConfirmerEcole key={`ecole-${c.needsRenewal}`} d={d} t={t} token={token} busy={busy} action={action} />}
         <Notifications t={t} token={token} enFeuille />
 
         {valide && (
@@ -137,6 +145,21 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
       {feuille === 'statut' && (
         <SousEcran titre={t('courierOnboarding.changeStatusTitle')} onFermer={() => setFeuille(null)}>
           <ChangementStatut d={d} t={t} token={token} action={action} busy={busy} enFeuille onChanged={() => { setFeuille(null); onStatutChange?.(); }} />
+        </SousEcran>
+      )}
+      {feuille === 'courses' && (
+        <SousEcran titre={t('courierOnboarding.ridesTitle')} onFermer={() => setFeuille(null)}>
+          <div className="ecl-dans-feuille"><MesCourses key={`courses-${c.updatedAt}`} d={d} t={t} token={token} busy={busy} action={action} /></div>
+        </SousEcran>
+      )}
+      {feuille === 'minimum' && (
+        <SousEcran titre={t('conformite.minFeeTitle')} onFermer={() => setFeuille(null)}>
+          <div className="ecl-dans-feuille"><TarifMinimum key={`min-${c.minFeeCents ?? 'aucun'}-${c.minFeePerKmCents ?? 'aucun'}`} courier={c} token={token} action={action} busy={busy} /></div>
+        </SousEcran>
+      )}
+      {feuille === 'sejour' && (
+        <SousEcran titre={t('courierOnboarding.permitsTitle')} onFermer={() => setFeuille(null)}>
+          <div className="ecl-dans-feuille"><PiecesSejour d={d} t={t} token={token} busy={busy} action={action} /></div>
         </SousEcran>
       )}
       {feuille === 'ventes' && (

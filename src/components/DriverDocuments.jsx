@@ -56,7 +56,11 @@ export default function DriverDocuments() {
   const kind = identite[0]?.docType || 'identity_card';
   const face = (side) => identite.find((d) => d.docType === kind && d.side === side) || (side === 'recto' ? identite.find((d) => !d.side) : null);
   const etudiant = docs.filter((d) => d.docType === 'school_certificate');
-  const autres = docs.filter((d) => !IDENTITE.includes(d.docType) && d.docType !== 'school_certificate');
+  /* STRIPE D'ABORD, ICI AUSSI (audit du 19/10, courier-29). Le dépôt recto / verso d'une pièce d'identité faisait passer un
+   * brouillon en vérification « manuelle » (serveur) et contournait l'étape d'identité du dossier, alors que le dossier ne propose
+   * ce dépôt que si Stripe Identity est coupé. Même règle ici : sinon, les pièces déjà déposées restent lisibles plus bas. */
+  const depotIdentite = !dossier.identityProviders?.stripe_identity;
+  const autres = docs.filter((d) => (!depotIdentite || !IDENTITE.includes(d.docType)) && d.docType !== 'school_certificate');
   const etat = (d) => (d.verifiedAt ? { ic: <Icone nom="valider" taille={14} className="icone-texte" />, txt: t('driverDocs.verified'), cls: 'pill teal' } : d.rejectedReason ? { ic: <Icone nom="croix" taille={14} className="icone-texte" />, txt: d.rejectedReason, cls: 'pill' } : { ic: <Icone nom="horloge" taille={14} className="icone-texte" />, txt: t('driverDocs.pending'), cls: 'pill' });
   const idv = dossier.courier?.identity;
 
@@ -102,6 +106,7 @@ export default function DriverDocuments() {
           }} />
         </p>
       )}
+      {depotIdentite && <>
       <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
         <b>{t(`courierOnboarding.doc_${kind}`)}</b>
         {identite.length === 0 && (
@@ -115,6 +120,7 @@ export default function DriverDocuments() {
       {identite.length === 0 && IDENTITE.filter((k) => k !== kind).map((k) => (
         <input key={k} ref={(el) => { entrees.current[`${k}-recto`] = el; }} type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => deposer(k, 'recto', e)} />
       ))}
+      </>}
 
       <div style={{ marginTop: 14 }}>
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>

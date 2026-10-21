@@ -534,13 +534,21 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   is status + company number + vehicle only; bag and « another platform? » are in the profile's Infos step, the
   municipality comes from the address. The courier profile opens on a « Prochaine étape » card.
   **Since 2026-10-15 (UX audit)** courier signup is three screens (account, identity, address): the company number is
-  optional there (the dossier still requires it before submission, missing item `bce`), there is no ID / selfie step (the
+  optional there (missing item `bce`; since 2026-10-18 the dossier can be SENT without it and the team cannot APPROVE it
+  without it: `MANQUES_APRES_ENVOI`), there is no ID / selfie step (the
   dossier's identity step does it), and no location prompt (PositionRequise asks above the job list). The selfie document
   is not required once Stripe Identity or an in-person check verified the face (`couriers.documentsRequis`). A non-EEA
   courier can *claim* the professional-card exemption (`self_employment_claimed_at`): it unblocks submission only; approval
   and rides still need the team's `self_employment_by_residence`, granted or withdrawn with a reason in Admin › Livreurs ›
   dossier › Documents (audit 2026-10-19, admin-08). The signup draft is kept 48 h in localStorage (declared
-  in `cookies.technical`).
+  in `cookies.technical`). **After approval the dossier is not frozen** (audit 2026-10-19, courier-4 to -7, -30): the
+  approved page (Onboarding.jsx on the site, DossierSuivi.jsx in the app, blocks in dossierBlocs.jsx) lets the courier change
+  zone, vehicle (+ licence and plate when motorised), « other platforms » (1 vs 3 jobs at a time), bag and minimum, upload a
+  renewed residence permit / professional card (date first) and confirm school + year for the yearly student renewal —
+  none of it re-opens the review; the team gets a task (vehicle changed, permit to check). A STATUS change sends the
+  dossier back to draft when the new status needs something (siège, école, contract), else to the team; no offers until
+  re-verified. The daily job also e-mails / pushes 30 and 7 days before a dated document expires
+  (`couriers.rappelerEcheancesPieces`).
 - **Merchant**: card signature, allergen attestation and professional declaration in
   [ConformiteCarte](src/components/conformite/ConformiteCarte.jsx) (menu page); allergens / VAT / alcohol
   per dish in the dish editor; allergy confirmation and ID check at the counter in the orders page.
