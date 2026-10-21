@@ -167,6 +167,8 @@ export default function DriverDashboard() {
   const [lastPositionAt, setLastPositionAt] = useState(null);
   const [connecting, setConnecting] = useState(false);
   const [togglingPause, setTogglingPause] = useState(false);
+  // Selfie de contrôle demandé (SelfieControle.jsx) : null, ou { dueAt, blocking }. Sert au bandeau (LIVE-25).
+  const [selfie, setSelfie] = useState(null);
   const activeIdsRef = useRef([]);
   // Site sur un ordinateur : mise en page en deux colonnes, et la course choisie dans la liste (son id).
   const large = useSiteLarge(!experienceApp());
@@ -177,6 +179,8 @@ export default function DriverDashboard() {
     try {
       await api('/auth/me', { method: 'PATCH', token, body: { driverPaused: !user?.driverPaused } });
       await refreshUser();
+      // Reprise : les courses tout de suite, sans attendre le prochain relevé de 15 secondes (audit du 19/10, LIVE-26).
+      load();
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -500,6 +504,11 @@ export default function DriverDashboard() {
   } else if (course) {
     titreBandeau = t('ecranLivreur.terminee');
     sousBandeau = `${t('dashDriver.rideFee', { fee: fraisCourse(course) })} · ${t('ecranLivreur.termineeSous')}`;
+  } else if (peutRouler && !enPause && selfie?.blocking) {
+    // Délai du selfie de contrôle écoulé : aucune offre n'arrive. Le bandeau ne dit plus « Tu es disponible » (audit du
+    // 19/10, LIVE-25) ; la carte du selfie, juste dessous, porte le bouton.
+    titreBandeau = t('selfieControle.headerTitle');
+    sousBandeau = t('selfieControle.headerSub');
   }
   const partageOk = user?.locationSharingEnabled !== false && sharingLocation;
 
@@ -933,8 +942,9 @@ export default function DriverDashboard() {
 
       <div className="ecl-feuille">
         <BandeauOuverture role="driver" />
-        {/* Selfie de contrôle au hasard à la prise de service (CODE-14) : sans lui, aucune course n'est proposée. */}
-        {peutRouler && <SelfieControle token={token} onDepose={load} />}
+        {/* Selfie de contrôle au hasard à la prise de service (CODE-14) : 60 minutes pour le prendre, ensuite plus de nouvelle
+            course tant qu'il n'est pas envoyé (controleSelfie.js côté serveur). */}
+        {peutRouler && <SelfieControle token={token} onDepose={load} onEtat={setSelfie} />}
         {/* Invitation d'un commerce à devenir son livreur dédié, à accepter ou refuser (audit du 19/10, shop-301). */}
         <LivreurDedie token={token} toast={toast} onChange={load} />
 
