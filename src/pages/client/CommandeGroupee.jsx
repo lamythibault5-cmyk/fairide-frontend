@@ -12,7 +12,7 @@ import EtatVide from '../../components/EtatVide';
 import Icone from '../../components/Icone';
 import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import { BandeauCommande, FeuilleCommande, BarreCommande, RouteCommande } from '../../components/EcranCommande';
-import { entrerDansGroupe, quitterGroupe } from '../../commandeGroupee';
+import { entrerDansGroupe, quitterGroupe, retenirGroupeACommander, groupeACommander, oublierGroupeACommander } from '../../commandeGroupee';
 import '../../ecran-equipe-groupe.css';
 
 const APPLI = experienceApp();
@@ -45,7 +45,13 @@ export default function CommandeGroupee() {
   const [menu, setMenu] = useState(null);
 
   const charger = () => api(`/group-orders/${encodeURIComponent(code)}`, { token })
-    .then((r) => { if (r && r.code) { setG(r); setErreur(null); } else setErreur(t('groupOrder.notFound')); })
+    .then((r) => {
+      if (r && r.code) {
+        setG(r); setErreur(null);
+        // Commandé, annulé ou expiré : le code ne doit plus partir avec une prochaine commande (audit du 19/10, checkout-08).
+        if (!['open', 'locked'].includes(r.status) && groupeACommander(r.restaurant?.id) === r.code) oublierGroupeACommander();
+      } else setErreur(t('groupOrder.notFound'));
+    })
     .catch((e) => setErreur(e.message));
   useEffect(() => { charger(); }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
   const restoId = g?.restaurant?.id;
@@ -91,9 +97,16 @@ export default function CommandeGroupee() {
   // L'hôte ferme le groupe : toutes les parts passent dans son panier, puis le panier s'ouvre.
   async function commander(force = false) {
     if (!force && cart.count > 0 && String(cart.restaurantId) !== String(g.restaurant.id)) { setConfirmerRemplacement(true); return; }
+    // Déjà fermé et ses parts déjà dans le panier : on y retourne sans les ajouter une seconde fois (audit du 19/10,
+    // checkout-08 : un second appui doublait chaque plat).
+    if (g.status === 'locked' && groupeACommander(g.restaurant.id) === g.code && String(cart.restaurantId) === String(g.restaurant.id) && cart.count > 0) {
+      navigate('/panier');
+      return;
+    }
     setOccupe(true);
     try {
       const r = await api(`/group-orders/${g.code}/lock`, { method: 'POST', token });
+      retenirGroupeACommander({ code: g.code, restaurantId: r.restaurant.id });
       cart.addMany({
         restaurantId: r.restaurant.id, restaurantName: r.restaurant.name,
         lignes: r.lines.map((l) => ({ itemId: l.itemId, name: l.name, qty: l.qty, optionItemIds: l.optionItemIds, optionsSnapshot: l.optionsSnapshot, unitPrice: l.unitPrice,
@@ -104,7 +117,13 @@ export default function CommandeGroupee() {
     } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
   async function hote(action) {
-    try { await api(`/group-orders/${g.code}/${action}`, { method: 'POST', token }); if (action === 'cancel') quitterGroupe(); charger(); } catch (e) { toast(e.message, 'erreur'); }
+    try {
+      await api(`/group-orders/${g.code}/${action}`, { method: 'POST', token });
+      if (action === 'cancel') quitterGroupe();
+      // Rouvert ou annulé : la prochaine commande de l'hôte ne vaut plus pour ce groupe.
+      oublierGroupeACommander();
+      charger();
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
   // Prix payé d'une ligne : son prix plein moins la remise du plat (même règle que le panier, prixPlat.js remiseLigne).
@@ -159,12 +178,16 @@ export default function CommandeGroupee() {
         titre={t('groupOrder.start')}
         sous={`${g.isHost ? t('groupOrder.youHost') : t('groupOrder.hostIs', { name: g.hostFirstName })} · ${t('groupOrder.participants', { n: g.participants })}`}
       >
-        <RouteCommande position={g.status === 'open' ? 46 : 78} depart={8} />
+        <RouteCommande position={g.status === 'open' ? 46 : g.status === 'ordered' ? 92 : 78} depart={8} />
       </BandeauCommande>
 
       <FeuilleCommande>
         {g.status === 'locked' && (
           <p className="eg-note" role="status"><Icone nom="cadenas" taille={18} />{g.isHost ? t('groupOrder.lockedHost') : t('groupOrder.lockedGuest', { name: g.hostFirstName })}</p>
+        )}
+        {/* Commandé et payé par l'hôte (audit du 19/10, checkout-08) : dit à tous, au lieu de « en train de commander » 24 h. */}
+        {g.status === 'ordered' && (
+          <p className="eg-note" role="status"><Icone nom="coche" taille={18} />{g.isHost ? t('groupOrder.orderedHost') : t('groupOrder.orderedGuest', { name: g.hostFirstName })}</p>
         )}
         {['expired', 'cancelled'].includes(g.status) && (
           <p className="eg-note" role="status"><Icone nom="horloge" taille={18} />{t('groupOrder.ended')}</p>

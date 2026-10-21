@@ -30,6 +30,7 @@ import CodePromoCheckout from '../../components/client/CodePromoCheckout';
 import CheckoutConformite from '../../components/conformite/CheckoutConformite';
 import { manqueConformite } from '../../conformite';
 import { defilement, vibrer } from '../../gestes';
+import { groupeACommander } from '../../commandeGroupee';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
@@ -202,8 +203,12 @@ export default function Checkout() {
     const id = setInterval(() => { if (document.visibilityState === 'visible') lire(); }, 60000);
     return () => { fini = true; clearInterval(id); };
   }, [verifierLivraison, restaurantId]);
+  /* PLUS DE BASCULE SILENCIEUSE (audit du 19/10, checkout-02). Le contrôle de chaque minute passait la commande en « À emporter »
+   * sans un mot, en plein paiement : un client qui ne relisait pas payait un retrait qu'il ne ferait pas. Le mode choisi reste ;
+   * la barre dit qu'aucun livreur n'est libre et propose « Passer à l'emporter » (le client décide), et un message le signale
+   * au moment où ça arrive. */
   useEffect(() => {
-    if (livraisonDispo === false && fulfillmentType === 'delivery' && restaurant?.offersPickup) selectFulfillment('pickup');
+    if (livraisonDispo === false && fulfillmentType === 'delivery' && restaurant?.offersPickup) toast(t('checkout.noCourierSwitch'), 'erreur');
   }, [livraisonDispo]); // eslint-disable-line react-hooks/exhaustive-deps -- seulement quand la disponibilité change
 
   // L'etape « dessert/boisson » a quitte le paiement : elle est maintenant sur la page Panier, avant
@@ -302,6 +307,9 @@ export default function Checkout() {
       useBalance: useBalance && !surPlace,
       giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined,
       promoCode: codePromo?.code || undefined,
+      // Commande groupée fermée par l'hôte (audit du 19/10, checkout-08) : le serveur relie la commande au groupe, qui
+      // passe « commandé » une fois payée (invités prévenus, plus de seconde importation des parts).
+      groupCode: groupeACommander(restaurantId) || undefined,
       allergyRequest: conformite.allergyRequest.trim() || undefined, ageDeclaration: conformite.ageDeclaration || undefined,
       ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {})
     };
@@ -314,7 +322,12 @@ export default function Checkout() {
   // Avec le devis du serveur, ses chiffres : Plats et offre doivent tomber sur SON total (le navigateur n'estime la remise
   // qu'à partir de la carte). Une seule offre : son montant est celui du devis ; plusieurs : une ligne au libellé du serveur.
   const remiseLivraison = devisValide ? Number(devisValide.deliveryDiscount || 0) : totals.deliveryDiscount;
-  const platsTicket = devisValide ? Number(devisValide.subtotal) : totals.rawSubtotal;
+  // Le sous-total du serveur est APRÈS l'offre du commerce (routes/orders.js) : « Plats » la rajoute, sinon la ligne « Offre »
+  // la retranchait une seconde fois et le ticket ne tombait pas sur le total (audit du 19/10, checkout-01).
+  const platsTicket = devisValide ? +(Number(devisValide.subtotal) + Number(devisValide.promoDiscount || 0)).toFixed(2) : totals.rawSubtotal;
+  // Le solde réellement pris par le serveur (après bon cadeau et code, et rendu en partie sous le minimum Stripe), pas
+  // l'estimation du navigateur (audit du 19/10, checkout-01).
+  const soldeTicket = devisValide ? Number(devisValide.balanceUsed || 0) : (soldeUtilise && user.balance > 0 ? Math.min(user.balance, apresCodePromo) : 0);
   const lignesOffre = !devisValide ? offresTicket
     : Number(devisValide.promoDiscount) > 0
       ? [{ remise: offresTicket.length === 1 ? offresTicket[0].remise : (devisValide.promoLabel || ''), montant: Number(devisValide.promoDiscount) }]
@@ -446,11 +459,14 @@ export default function Checkout() {
       const pay = order.paiement || await api(`/payments/checkout/${order.id}`, { method: 'POST', token, body: { tip } });
       if (pay.simulated) {
         // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
+        // Commande entièrement couverte (solde, bon cadeau, code) : le même écran « Merci pour ta commande ! » qu'après un
+        // paiement par carte, avec le code de retrait — plus « paiement simulé », réservé aux comptes de simulation
+        // (audit du 19/10, checkout-06).
         commandeTermineeRef.current = true;
         cart.clear();
         vibrer('succes');
-        toast(t('checkout.toastOrderPaid'), 'succes');
-        navigate('/orders');
+        if (user?.simulation) toast(t('checkout.toastOrderPaid'), 'succes');
+        navigate(`/order-success?order=${order.id}`, { replace: true });
       } else {
         // Le panier est mis de côté, pas vidé et pas laissé en place — voir stashForPayment() dans
         // CartContext.jsx pour le raisonnement complet. En résumé : le vider ici faisait perdre son
@@ -702,8 +718,13 @@ export default function Checkout() {
                 <div className="ec-options" role="group" aria-labelledby="checkout-quand-label">
                   <OptionCommande on={!scheduleEnabled} icone={fulfillmentType === 'pickup' ? 'sac' : 'velo'} titre={t('checkout.whenAsap')}
                     onClick={() => { setScheduleEnabled(false); setScheduleDate(''); setScheduleTime(''); }} />
-                  <OptionCommande on={scheduleEnabled} icone="horloge" titre={t('checkout.scheduleLater')}
-                    onClick={() => { setScheduleEnabled(true); setScheduleDate(dateOptions[0]?.value || ''); setScheduleTime(''); }} />
+                  {/* Commerce fermé par son interrupteur (« Fermer jusqu'à ce que je rouvre », invisible des clients) : le serveur
+                      refuse toute commande, programmée comprise (routes/orders.js) ; « Programmer » n'est donc pas proposé
+                      (audit du 19/10, checkout-04). La pause, elle, laisse programmer après la reprise. */}
+                  {restaurant.open !== false && (
+                    <OptionCommande on={scheduleEnabled} icone="horloge" titre={t('checkout.scheduleLater')}
+                      onClick={() => { setScheduleEnabled(true); setScheduleDate(dateOptions[0]?.value || ''); setScheduleTime(''); }} />
+                  )}
                 </div>
                 {scheduleEnabled && (
                   <>
@@ -764,7 +785,12 @@ export default function Checkout() {
               <span className="co-barre-montant"><ChiffresRoulants valeur={euros(montantDebite)} /></span>
               <span className="co-barre-detail">{t(`checkout.barCount${devisValide ? 'Exact' : ''}${cart.count > 1 ? 'Plural' : ''}`, { count: cart.count })}</span>
             </span>
-            {sansLivreur ? (
+            {sansLivreur && restaurant.offersPickup ? (
+              <>
+                <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {t('checkout.noCourierSwitch')}</span>
+                <button type="button" className="btn-gold" onClick={() => selectFulfillment('pickup')}>{t('checkout.switchToPickup')}</button>
+              </>
+            ) : sansLivreur ? (
               <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {t('checkout.noCourierNow')}</span>
             ) : serviceOuvert(fulfillmentType, user) && !paiementBloque && manqueMinimum > 0 ? (
               // Montant minimum du commerce (PAN-3) : le bouton laisse place à ce qui manque, comme le serveur le refuserait.
@@ -810,7 +836,7 @@ export default function Checkout() {
               )}
               {codePromoMontant > 0 && <LigneTicket libelle={t('checkout.promoCodeRecap', { label: codePromo?.code || devisValide?.promoCode || '' })} montant={`−${euros(codePromoMontant)}`} />}
               {devisValide?.giftVoucherDiscount > 0 && <LigneTicket libelle={t('checkout.giftVoucherLine', { code: devisValide.giftVoucherCode })} montant={`−${euros(devisValide.giftVoucherDiscount)}`} />}
-              {soldeUtilise && user.balance > 0 && <LigneTicket libelle={t('checkout.balanceUsedLine')} montant={`−${euros(Math.min(user.balance, apresCodePromo))}`} />}
+              {soldeTicket > 0 && <LigneTicket libelle={t('checkout.balanceUsedLine')} montant={`−${euros(soldeTicket)}`} />}
               {pourboireChoisi > 0 && <LigneTicket libelle={t('checkout.tipLine')} montant={euros(pourboireChoisi)} />}
               {/* Sur le site, ce total est celui que l'on regarde (la barre n'y garde que le bouton) : ses chiffres roulent. */}
               <div className="co-t-ligne co-t-total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span className="sc-roulant">{APPLI ? euros(montantDebite) : <ChiffresRoulants valeur={euros(montantDebite)} />}</span></div>
@@ -1029,7 +1055,8 @@ export default function Checkout() {
             <div className="breakdown">
               {/* Trois contrats, trois vendeurs (décision du 23/09/2026, C2) : chaque ligne dit à qui le client
                   achète. Le livreur n'est pas encore connu ici — il sera nommé dès qu'il accepte la course. */}
-              <div className="line"><span>{t('common.subtotal')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerFood', { name: restaurant.name })}</span></span><span>{euros(pendingOrder.subtotal)}</span></div>
+              <div className="line"><span>{t('common.subtotal')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerFood', { name: restaurant.name })}</span></span><span>{euros(+(Number(pendingOrder.subtotal) + Number(pendingOrder.promoDiscount || 0)).toFixed(2))}</span></div>
+              {/* Sous-total d'avant l'offre : la ligne suivante la retranche (audit du 19/10, checkout-01). */}
               {pendingOrder.promoDiscount > 0 && <div className="line"><span>{t('checkout.promoLine', { label: pendingOrder.promoLabel })}</span><span>-{euros(pendingOrder.promoDiscount)}</span></div>}
               {pendingOrder.orderType === 'delivery' && (
                 <>

@@ -110,6 +110,26 @@ function getRegularOpenStatus(hours, now, todayKey, nowMinutes) {
   return { isOpen: false, opensToday: false, opensAt: null, todayKey };
 }
 
+/* OUVERT OU FERMÉ, SELON LE COMMERCE ET PAS SEULEMENT SES HORAIRES.
+ *
+ * La fiche recalculait l'état à partir des horaires seuls : un commerce passé « fermé » par son interrupteur, ou en
+ * pause minutée (RES-9), restait affiché « Ouvert » à qui ouvrait sa page par un lien direct — le client remplissait
+ * son panier et n'apprenait qu'au paiement « Ce restaurant est actuellement fermé » (test de bout en bout du 5 oct.
+ * 2026). Même règle que le serveur (routes/orders.js refuse `open = false`, la pause ferme jusqu'à paused_until).
+ * Sortie de RestaurantMenu.jsx pour la liste (audit du 19/10, discovery-04) : un commerce en pause ou « fermé pour
+ * aujourd'hui » y paraissait ouvert, et « À la une » le rangeait parmi les ouverts. */
+export function statutOuverture(restaurant, now = new Date()) {
+  const s = getOpenStatus(restaurant.hours, now, restaurant.closures);
+  if (!s.isOpen) return s;
+  if (restaurant.pausedUntil && restaurant.pausedUntil > now.getTime()) {
+    // Stoppé pour la journée (fondateur, 2026-10-10) : la reprise tombe demain — on le dit tel quel au client.
+    const demain = new Date(restaurant.pausedUntil).toDateString() !== now.toDateString();
+    return { ...s, isOpen: false, opensToday: !demain, opensAt: new Date(restaurant.pausedUntil), fermePourLaJournee: demain };
+  }
+  if (restaurant.open === false) return { ...s, isOpen: false, opensToday: false, fermeParLeCommerce: true };
+  return s;
+}
+
 // "2h 15min" / "45min" / "moins d'une minute"
 export function formatCountdown(ms, t) {
   const totalMinutes = Math.max(0, Math.round(ms / 60000));

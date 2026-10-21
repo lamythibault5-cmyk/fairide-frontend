@@ -8,6 +8,7 @@
 //     (freeDelivery), ou la totalité dès un montant de commande (freeDeliveryMinOrder). Ce qu'il offre, il le reçoit
 //     en moins sur son virement, et le livreur touche sa part complète.
 import { getLocale } from './context/LanguageContext';
+import { haversineDistanceKm } from './menuCategories';
 // Miroir de pricing.js DEFAULTS.deliveryBaseFee (réglable par l'admin) : aucune route publique ne l'expose, à garder alignés.
 export const FORFAIT_LIVRAISON = 5;
 
@@ -31,3 +32,16 @@ export const eurosCourts = (v) => {
   const n = Number(v) || 0;
   return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
 };
+
+/* HORS ZONE DE LIVRAISON (audit du 19/10, discovery-03). Le serveur refuse une livraison au-delà de la distance du commerce
+ * (routes/orders.js, OUT_OF_DELIVERY_RADIUS) : vol d'oiseau arrondi au dixième (geocode.estimateDeliveryMinutes), comparé
+ * à deliveryRadiusKm. Même calcul ici, depuis l'adresse du compte, pour la liste et la fiche : le client l'apprenait au
+ * devis, panier rempli. Sans position connue, on ne sait pas : rien n'est retiré (le serveur tranche à la commande). */
+export function distanceLivraisonKm(r, user) {
+  if (!user?.lat || !user?.lng || !r?.lat || !r?.lng) return null;
+  return Math.round(haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) * 10) / 10;
+}
+export function horsZoneLivraison(r, user) {
+  const km = distanceLivraisonKm(r, user);
+  return km !== null && r?.deliveryRadiusKm != null && km > Number(r.deliveryRadiusKm);
+}

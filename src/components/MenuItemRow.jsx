@@ -330,8 +330,9 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
       <div className="name">
         {item.name}
         {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
-        {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}</span>}
-        {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}</span>}
+        {/* En toutes lettres, comme sur la carte du client (audit du 19/10, discovery-06). */}
+        {item.organic && <span className="plat-age">{t('menuCategories.organic')}</span>}
+        {item.vegan && <span className="plat-age">{t('menuCategories.vegan')}</span>}
       </div>
       <div className="small desc">
         {item.outOfStockToday ? t('menuItem.stockOutToday') : item.available === false ? t('menuItem.unavailable') : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}

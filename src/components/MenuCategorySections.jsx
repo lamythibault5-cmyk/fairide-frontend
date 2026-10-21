@@ -96,8 +96,10 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
   const badges = (
     <>
       {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
-      {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}</span>}
-      {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}</span>}
+      {/* Bio et vegan en toutes lettres, comme halal (audit du 19/10, discovery-06) : leur emoji avait été retiré sans rien à la
+          place, et le badge n'était plus qu'une espace vide. */}
+      {item.organic && <span className="plat-age">{t('menuCategories.organic')}</span>}
+      {item.vegan && <span className="plat-age">{t('menuCategories.vegan')}</span>}
       {/* Halal, sans gluten : déclarés par le commerce (backend migration 042), dits en toutes lettres — un client qui
           cherche l'un ou l'autre doit le lire, pas deviner une icône. */}
       {item.halal && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.halal')}</span>}
