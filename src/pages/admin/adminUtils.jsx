@@ -24,7 +24,9 @@ export function estCompteTest(u) {
   if (u.isTest) return true;
   return isTestAccount(u.email || u.ownerEmail, u.name || u.responsibleName);
 }
-// Bouton « marquer comme test / comme vrai compte » (fiches client, livreur, restaurant).
+// Bouton « marquer comme test / comme vrai compte » (fiches client, livreur, restaurant). Les fiches lui passent le drapeau
+// posé par l'équipe (testFlag, users.is_test), seul à ouvrir les commandes avant l'ouverture : avec le motif d'e-mail, une
+// adresse « audit+c1@example.com » ne proposait que « vrai compte » et ne pouvait jamais être marquée (audit du 19/10, LIVE-05).
 export function TestToggleButton({ userId, isTest, token, api, toast, onChanged, tr, small = false }) {
   return (
     <button type="button" className="btn-ghost" style={small ? { padding: '6px 10px', fontSize: 12 } : undefined}

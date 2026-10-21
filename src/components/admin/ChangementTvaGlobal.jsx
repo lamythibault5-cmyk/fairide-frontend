@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import ConfirmDialog from '../ConfirmDialog';
+import useAdminRole from '../../hooks/useAdminRole';
 
 /* Admin › Commerces › « Changer un taux de TVA pour tous les commerces » (CODE-2, DEC-25, 8 octobre 2026).
  *
@@ -26,6 +27,9 @@ export default function ChangementTvaGlobal({ token, toast }) {
   const [apercu, setApercu] = useState(null);
   const [confirmer, setConfirmer] = useState(false);
   const [enCours, setEnCours] = useState(false);
+  // Écrire à tous les commerces et changer leurs taux : propriétaire et admins, comme le serveur (audit du 19/10, admin-16).
+  const { role } = useAdminRole();
+  const autorise = !role || role === 'owner' || role === 'admin';
 
   const charger = useCallback(() => {
     api('/admin/vat-rate-changes', { token }).then(setDonnees).catch(() => setDonnees(null));
@@ -49,6 +53,7 @@ export default function ChangementTvaGlobal({ token, toast }) {
   }
 
   const date = (ms) => new Date(ms).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
+  if (!autorise) return null;
   return (
     <details className="card" style={{ marginBottom: 16 }}>
       <summary><b>{t('adminTva.title')}</b></summary>

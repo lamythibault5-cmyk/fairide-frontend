@@ -848,7 +848,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
             <BoutonGererCommerce id={detail.id} token={token} api={api} toast={toast} tr={tr} className={detail.conciergeStatus ? 'btn-gold' : 'btn-teal'} />
             <button className="btn-outline" onClick={startEdit}>{tr('adminRestos.editInfo')}</button>
-            {!detail.isDemo && detail.ownerId && <TestToggleButton userId={detail.ownerId} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={onToggleTest} />}
+            {!detail.isDemo && detail.ownerId && <TestToggleButton userId={detail.ownerId} isTest={detail.testFlag ?? estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={onToggleTest} />}
             {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={onApprove}>{tr('adminCommon.approve')}</button>}
             {!estTest(detail) && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
             {!detail.isDemo && <BoutonFermerSoir detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}

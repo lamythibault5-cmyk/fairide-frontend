@@ -20,6 +20,11 @@ import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTa
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import useEtatPage from '../../hooks/useEtatPage';
 import urlSure from '../../urlSure';
+import useAdminRole from '../../hooks/useAdminRole';
+
+// Valider ou rejeter un document (une pièce d'identité de livreur vaut validation de son dossier) : owner/admin/ops, comme
+// le serveur (audit du 19/10, admin-16). Rôle pas encore connu : tout est montré, le serveur reste le garde-fou.
+const peutVerifier = (role) => !role || ['owner', 'admin', 'ops'].includes(role);
 
 const PAGE_SIZE = 25;
 const TARGET_TYPES_WITH_PICKER = { restaurant: '/admin/restaurants', driver: '/admin/drivers', client: '/admin/clients' };
@@ -52,6 +57,7 @@ export default function AdminDocumentsPage() {
   const { sort, toggle } = useTableSort('createdAt');
   const sel = useSelection(data?.rows);
   const [bulk, setBulk] = useState(null); // 'valide' | 'rejete'
+  const { role } = useAdminRole();
   const [bulkBusy, setBulkBusy] = useState(false);
 
   function loadOverview() {
@@ -153,8 +159,8 @@ export default function AdminDocumentsPage() {
       </div>
 
       <SelectionBar sel={sel}>
-        <button type="button" className="btn-outline" onClick={() => setBulk('valide')}>{tr('adminDocs.bulkValidate')}</button>
-        <button type="button" className="btn-danger-ghost" onClick={() => setBulk('rejete')}>{tr('adminDocs.bulkReject')}</button>
+        {peutVerifier(role) && <button type="button" className="btn-outline" onClick={() => setBulk('valide')}>{tr('adminDocs.bulkValidate')}</button>}
+        {peutVerifier(role) && <button type="button" className="btn-danger-ghost" onClick={() => setBulk('rejete')}>{tr('adminDocs.bulkReject')}</button>}
       </SelectionBar>
 
       {erreur && <ErrorCard message={erreur} onRetry={load} />}
@@ -298,6 +304,7 @@ function DocumentDrawer({ id, onClose, onChanged }) {
   const [saving, setSaving] = useState(false);
   const [confirm, setConfirm] = useState(null); // { title, message, danger, run }
   const [rejet, setRejet] = useState(false);
+  const { role } = useAdminRole();
   const [busy, setBusy] = useState(false);
 
   function load() {
@@ -377,17 +384,17 @@ function DocumentDrawer({ id, onClose, onChanged }) {
 
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminDocs.verification')}</h4>
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          {peutVerifier(role) && <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             {Object.entries(DOCUMENT_VERIFICATION_LABELS).map(([k, v]) => (
               <button key={k} className={d.verificationStatus === k ? 'btn-teal' : 'btn-outline'} style={{ padding: '4px 10px', fontSize: 12, borderColor: v.color !== 'inherit' && d.verificationStatus !== k ? v.color : undefined }} disabled={busy || d.verificationStatus === k} onClick={() => askVerification(k)}>
                 {v.label}
               </button>
             ))}
-          </div>
+          </div>}
 
           <div className="divider" />
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <button className="btn-outline" onClick={startEdit}>{tr('adminCommon.edit')}</button>
+            {peutVerifier(role) && <button className="btn-outline" onClick={startEdit}>{tr('adminCommon.edit')}</button>}
             <CreateTaskButton targetType="document" targetId={id} label={d.title} />
             <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={() => setConfirm({ title: tr('adminCommon.confirmDeleteDocument'), message: tr('adminCommon.irreversible'), danger: true, run: remove })}>{tr('adminCommon.delete')}</button>
           </div>
