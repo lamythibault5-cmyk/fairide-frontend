@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { definirModeEquipe } from '../../modeEquipe';
 import { api } from '../../api';
-import { allerAuPaiement, experienceApp } from '../../natif';
+import { allerAuPaiement, experienceApp, achatsCommerceAutorises } from '../../natif';
 import { useAuth } from '../../context/AuthContext';
 import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
@@ -395,9 +395,20 @@ export default function DashboardLayout() {
   // La commande qui attend depuis le plus longtemps (échéance la plus proche) : celle que « 1 commande à traiter » ouvre.
   const premiereNouvelle = orders.filter((o) => o.status === 'nouveau' && o.paid)
     .sort((a, b) => new Date(a.acceptDeadline || a.createdAt).getTime() - new Date(b.acceptDeadline || b.createdAt).getTime())[0] || null;
+  const abonnementBloque = !!restaurant && !restaurant.isDemo && !!restaurant.subscriptionRequired && (!!restaurant.wantsDelivery || !!restaurant.wantsPickup);
   const communs = restaurant && (
     <>
       {/* Deux alertes qui ne sont pas des étapes : le blocage par l'équipe, la livraison coupée dans la zone. */}
+      {/* Abonnement facturé mais pas souscrit (audit du 19/10, admin-26) : plus aucune commande, et le commerce ne le voyait
+          nulle part. Sur le site, la ligne dit où souscrire ; dans l'app (achats interdits par les magasins d'applications,
+          natif.js), elle dit seulement ce qui se passe, sans bouton ni renvoi vers un paiement. */}
+      {abonnementBloque && (
+        <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
+          <LigneCompte accent="danger" icone="carteBancaire" titre={t('dashResto.subRequiredTitle')}
+            sous={achatsCommerceAutorises() ? t('dashResto.subRequiredWeb') : t('dashResto.subRequiredApp')}
+            to={achatsCommerceAutorises() ? '/account?ouvrir=abonnement' : undefined} />
+        </div>
+      )}
       {(restaurant.adminStatus === 'blocked' || restaurant.fairideDeliveryDisabled) && (
         <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
           {restaurant.adminStatus === 'blocked' && (

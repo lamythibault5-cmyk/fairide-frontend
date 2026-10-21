@@ -145,11 +145,11 @@ export default function AdminDashboardPage() {
       <div className="row" style={{ gap: 16, flexWrap: 'wrap', marginTop: 20 }}>
         <div className="card" style={{ flex: '1 1 300px' }}>
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{tr('adminDash.ordersPerDay')}</h3>
-          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(d.day).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: d.orders }))} color="var(--blue)" />
+          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(`${String(d.day).slice(0, 10)}T12:00:00Z`).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: d.orders }))} color="var(--blue)" />
         </div>
         <div className="card" style={{ flex: '1 1 300px' }}>
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{tr('adminDash.revenuePerDay')}</h3>
-          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(d.day).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: d.revenue }))} formatValue={money} color="var(--teal)" />
+          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(`${String(d.day).slice(0, 10)}T12:00:00Z`).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: d.revenue }))} formatValue={money} color="var(--teal)" />
         </div>
       </div>
 

@@ -17,6 +17,8 @@ import KanbanBoard, { useViewMode, ViewSwitcher } from '../../components/admin/K
 import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { ErrorCard, Pager, ResultCount, SelectBox, SelectionBar, runForEach, selectionColumn, useSelection } from '../../components/admin/AdminListTools';
 import { money, fmtDateTime, downloadCsv, useDebouncedValue, ORDER_STATUS_LABELS, ORDER_STATUSES, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
+import { PAYMENT_MODE_LABELS, REFUND_RESPONSIBILITY_LABELS, libelle } from './libellesCodes';
+import { telephoneLisible } from '../../validation';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import Icone from '../../components/Icone';
@@ -211,7 +213,8 @@ export default function AdminOrdersPage() {
     { key: 'driverName', label: tr('adminCommon.driver'), get: (o) => o.driverName || '-' },
     { key: 'orderType', label: tr('adminCommon.type'), get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType },
     { key: 'status', label: tr('adminCommon.status'), get: (o) => <>{o.pickupNoShow && <span className="pill texte-erreur" style={{ marginRight: 4 }}>{tr('adminOrders.pickupNoShowBadge')}</span>}<span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span></>, sortValue: (o) => o.status },
-    { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? '✓' : '…'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
+    // Payée au commerce (audit du 19/10, admin-19) : Fairide n'a rien encaissé, la colonne ne dit pas « payée ✓ ».
+    { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paymentMode === 'on_site' ? tr('adminOrders.paidAtShopShort') : o.paid ? '✓' : '…'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
     { key: 'total', label: tr('adminCommon.total'), get: (o) => money(o.total), sortValue: (o) => o.total, align: 'right', sum: true },
     { key: 'fairideTotalRevenue', label: tr('adminOrders.colFairide'), get: (o) => money(o.fairideTotalRevenue), sortValue: (o) => o.fairideTotalRevenue, align: 'right', sum: true }
   ];
@@ -312,7 +315,8 @@ export default function AdminOrdersPage() {
           </div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6, flexWrap: 'wrap', gap: 4 }}>
             <span className="small">
-              {tr('adminOrders.moneyLine', { paid: o.paid ? tr('adminCommon.paidBadge') : tr('adminCommon.unpaidBadge'), commission: money(o.commission), share: money(o.deliveryFairideShare), revenue: money(o.fairideTotalRevenue) })}
+              {tr('adminOrders.moneyLine', { paid: o.paymentMode === 'on_site' ? tr('adminOrders.paidAtShop') : o.paid ? tr('adminCommon.paidBadge') : tr('adminCommon.unpaidBadge'), commission: money(o.commission), share: money(o.deliveryFairideShare), revenue: money(o.fairideTotalRevenue) })}
+              {o.isTraining && <span> · {tr('adminOrders.trainingOrder')}</span>}
               {o.hasRefund && <span className="texte-erreur"> {tr('adminOrders.refundedSuffix')}</span>}
             </span>
             <b>{money(o.total)}</b>
@@ -384,7 +388,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
   const [drivers, setDrivers] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [newDriverId, setNewDriverId] = useState('');
-  const [refundAmount, setRefundAmount] = useState('');
+  const [refundAmount, setRefundAmount] = useState(null); // null = pas encore touché : prérempli avec le reste remboursable
   const [refundResponsibility, setRefundResponsibility] = useState('restaurant');
   const [refundReason, setRefundReason] = useState('');
   const [confirmAction, setConfirmAction] = useState(null); // { type, run }
@@ -395,6 +399,9 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
   // Ce qui reste remboursable : payée par carte, total moins les remboursements déjà faits.
   const resteRemboursable = detail && detail.paid && detail.paymentMode === 'stripe'
     ? Math.max(0, +(detail.total - (detail.refunds || []).reduce((s, r) => s + r.amount, 0)).toFixed(2)) : 0;
+
+  const dejaRembourse = detail ? +((detail.refunds || []).reduce((s, x) => s + x.amount, 0)).toFixed(2) : 0;
+  const montantRemb = refundAmount === null ? (resteRemboursable > 0 ? String(resteRemboursable) : '') : refundAmount;
 
   const [entries, setEntries] = useState(null);
   const [onglet, setOnglet] = useState('apercu');
@@ -420,7 +427,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       // Annulation : dire ce qui est arrivé à l'argent (remboursé, ou remboursement refusé à refaire).
       if (r?.refundError) toast(tr('adminOrders.toastCancelRefundFailed', { error: r.refundError }), 'erreur');
       else if (r?.refund) toast(tr('adminOrders.toastCancelledRefunded', { amount: money(r.refund.amount) }));
-      else toast(confirmAction.successMessage || tr('adminCommon.doneToast'));
+      else toast((confirmAction.messageApres && confirmAction.messageApres(r)) || confirmAction.successMessage || tr('adminCommon.doneToast'));
       onChanged();
     } catch (e) {
       // Réattribution qui demande une confirmation (audit du 19/10/2026, admin-01) : le serveur dit quels contrôles de la
@@ -473,14 +480,20 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
     });
   }
 
+  /* Même confort que le remboursement d'un incident (audit du 19/10, admin-56) : le reste remboursable est dit et prérempli,
+   * le formulaire n'apparaît que pour une commande payée par carte, et la confirmation parle en mots (« à la charge du
+   * livreur », montant en euros), pas en codes. Rien de repris au commerce ou au livreur (aucun virement fait) : l'écran le
+   * dit au lieu de « remboursé » seul (admin-60). */
   function askRefund() {
-    const amount = Number(refundAmount);
+    const amount = Number(String(montantRemb).replace(',', '.'));
     if (!amount || amount <= 0) { toast(tr('adminOrders.toastInvalidAmount')); return; }
+    if (amount > resteRemboursable + 0.005) { toast(tr('adminOrders.refundOverRemaining', { max: money(resteRemboursable) }), 'erreur'); return; }
     setConfirmAction({
       title: tr('adminOrders.confirmRefund'),
-      message: tr('adminOrders.confirmRefundBody', { amount: amount.toFixed(2), who: refundResponsibility }),
+      message: tr('adminOrders.confirmRefundWords', { amount: money(amount), who: libelle(REFUND_RESPONSIBILITY_LABELS, refundResponsibility) }),
       danger: true,
       successMessage: tr('adminOrders.toastRefunded'),
+      messageApres: (rep) => (rep && rep.reprisSurVirement === 0 ? tr('adminOrders.refundNothingReclaimed') : null),
       run: () => api(`/admin/orders/${selected.id}/refund`, { method: 'POST', token, body: { amount, responsibility: refundResponsibility, reason: refundReason.trim() || undefined } })
     });
   }
@@ -507,7 +520,14 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
             <LienFiche to="/admin/drivers" name={detail.driverName} label={tr('adminOrders.linkDriver')} />
             <Link to={`/admin/orders?restaurantId=${detail.restaurantId || selected.restaurantId || ''}`} className="admin-record-link">→ {tr('adminOrders.linkRestaurantOrders')}</Link>
           </div>
-          {detail.driverName && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.driverLine', { name: detail.driverName, phone: detail.driverPhone ? ` · ${detail.driverPhone}` : '' })}</p>}
+          {/* Numéros en liens tel: (audit du 19/10, admin-59 ; fondateur : numéros visibles avec tel:) : au téléphone, un tap. */}
+          {detail.clientPhone && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.callClient')} <a href={`tel:${detail.clientPhone}`}>{telephoneLisible(detail.clientPhone)}</a></p>}
+          {detail.driverName && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.driverLine', { name: detail.driverName, phone: '' })}{detail.driverPhone && <> · <a href={`tel:${detail.driverPhone}`}>{telephoneLisible(detail.driverPhone)}</a></>}</p>}
+          <p className="small" style={{ margin: '2px 0' }}>
+            {tr('adminOrders.paymentLine', { mode: libelle(PAYMENT_MODE_LABELS, detail.paymentMode || 'inconnu') })}
+            {detail.isTraining ? ` · ${tr('adminOrders.trainingOrder')}` : ''}
+            {detail.pickupNoShow ? ` · ${tr('adminOrders.pickupNoShowBadge')}` : ''}
+          </p>
           {detail.address && <p className="small" style={{ margin: '2px 0' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{detail.address}{detail.commune ? `, ${detail.commune}` : ''}</p>}
           <p className="small" style={{ margin: '2px 0' }}>{TYPE_LABELS(tr)[detail.orderType] || detail.orderType} · {fmtDateTime(detail.createdAt)}</p>
           <div className="divider" />
@@ -525,13 +545,14 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
           <DrawerRow label={tr('adminOrders.restoCommission')} value={money(detail.commission)} />
           <DrawerRow label={tr('adminOrders.deliveryShare')} value={money(detail.deliveryFairideShare)} />
           <DrawerRow label={tr('adminOrders.totalRevenue')} value={money(detail.fairideTotalRevenue)} strong />
-          <DrawerRow label={tr('adminOrders.dueRestaurant')} value={money(detail.restaurantDue)} />
+          {/* Payée au commerce : Fairide ne lui doit rien, le client l'a payé sur place (admin-19). */}
+          <DrawerRow label={tr('adminOrders.dueRestaurant')} value={detail.paymentMode === 'on_site' ? tr('adminOrders.onSiteNothingDue') : money(detail.restaurantDue)} />
           <DrawerRow label={tr('adminOrders.dueDriver')} value={money(detail.driverDue)} />
           {(detail.refunds || []).length > 0 && (
             <>
               <div className="divider" />
               <h4 className="drawer-section-title texte-erreur">{tr('adminCommon.refunds')}</h4>
-              {detail.refunds.map((r) => <DrawerRow key={r.id} label={r.reason || r.responsibility} value={money(r.amount)} />)}
+              {detail.refunds.map((r) => <DrawerRow key={r.id} label={`${r.reason ? `${r.reason}, ` : ''}${libelle(REFUND_RESPONSIBILITY_LABELS, r.responsibility)}`} value={money(r.amount)} />)}
             </>
           )}
         </>
@@ -573,8 +594,11 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
           {peutRembourser(role) && <>
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminOrders.refund')}</h4>
-          <div className="row" style={{ gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-            <input aria-label={tr('adminOrders.refundedAmount')} type="number" step="0.01" placeholder={tr('adminOrders.refundedAmount')} value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} style={{ maxWidth: 140 }} />
+          {resteRemboursable <= 0 && <p className="small">{detail.paymentMode === 'stripe' && detail.paid ? tr('adminOrders.refundNothingLeft') : tr('adminOrders.refundNotCard')}</p>}
+          {resteRemboursable > 0 && <p className="small" style={{ margin: '0 0 6px' }}>{tr('adminOrders.refundRemainingLine', { paid: money(detail.total), done: money(dejaRembourse), left: money(resteRemboursable) })}</p>}
+          {resteRemboursable > 0 && <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>{tr(`adminOrders.refundWho_${refundResponsibility}`)}</p>}
+          {resteRemboursable > 0 && <div className="row" style={{ gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+            <input aria-label={tr('adminOrders.refundedAmount')} type="number" step="0.01" placeholder={tr('adminOrders.refundedAmount')} value={montantRemb} onChange={(e) => setRefundAmount(e.target.value)} style={{ maxWidth: 140 }} />
             <select value={refundResponsibility} onChange={(e) => setRefundResponsibility(e.target.value)} style={{ maxWidth: 140 }}>
               <option value="restaurant">{tr('adminCommon.resto')}</option>
               <option value="driver">{tr('adminCommon.driver')}</option>
@@ -582,7 +606,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
             </select>
             <input aria-label={tr('adminOrders.phReason')} placeholder={tr('adminOrders.phReason')} value={refundReason} onChange={(e) => setRefundReason(e.target.value)} style={{ flex: 1, minWidth: 140 }} />
             <button className="btn-danger-ghost" onClick={askRefund}>{tr('adminOrders.refund')}</button>
-          </div>
+          </div>}
           </>}
         </>
       )}

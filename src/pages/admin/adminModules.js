@@ -178,7 +178,7 @@ export function attentionItems(o, role) {
     { key: 'ordersPending', count: n(o.orders?.pending), to: '/admin/orders?status=nouveau', tone: 'warn' },
     { key: 'supportSla', count: n(o.support?.slaBreached), to: '/admin/support?sla=1', tone: 'danger' },
     { key: 'tasksOverdue', count: n(o.tasks?.overdue), to: '/admin/tasks?due=overdue', tone: 'danger' },
-    { key: 'restaurantsPending', count: n(o.restaurants?.pending), to: '/admin/restaurants?status=pending', tone: 'warn' },
+    { key: 'restaurantsPending', count: n(o.restaurants?.pending), to: '/admin/restaurants?status=pending&nature=real', tone: 'warn' },
     // Un seul compte des dossiers à valider (audit du 19/10, admin-72) : « livreurs en attente » comptait aussi les
     // inscriptions jamais envoyées et les comptes de test, et menait à une page où l'on ne valide plus.
     { key: 'couriersPending', count: n(o.couriers?.pending), to: '/admin/couriers', tone: 'warn' },

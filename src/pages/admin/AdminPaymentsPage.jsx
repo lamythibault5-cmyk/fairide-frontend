@@ -7,6 +7,7 @@ import PeriodPicker, { usePeriod } from '../../components/admin/PeriodPicker';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { money, fmtDate, fmtDateTime, downloadCsv, useDebouncedValue } from './adminUtils';
+import { PAYMENT_MODE_LABELS, libelle } from './libellesCodes';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApiData, LoadState, Pagination, RestaurantLink, DriverLink, OrderLink } from './accounting/common';
 import { StripeBalanceCard } from './accounting/OtherTabs';
@@ -52,9 +53,11 @@ function OverviewTab({ token, periodQuery }) {
         <>
           <div className="stat-grid">
             <div className="stat-card highlight"><div className="num">{money(data.successful.total)}</div><div className="label">{tr('adminPayments.successfulPayments', { n: data.successful.count })}</div></div>
-            {Object.entries(data.successful.byMode).map(([mode, v]) => (
-              <div className="stat-card" key={mode}><div className="num">{money(v.total)}</div><div className="label">{tr('adminPayments.ofWhichMode', { mode, n: v.count })}</div></div>
+            {/* Modes en mots (audit du 19/10, admin-85) ; le payé au commerce n'est pas dans les paiements reçus (admin-19). */}
+            {Object.entries(data.successful.byMode).filter(([mode]) => mode !== 'on_site').map(([mode, v]) => (
+              <div className="stat-card" key={mode}><div className="num">{money(v.total)}</div><div className="label">{tr('adminPayments.ofWhichMode', { mode: libelle(PAYMENT_MODE_LABELS, mode), n: v.count })}</div></div>
             ))}
+            {data.onSite && data.onSite.count > 0 && <div className="stat-card"><div className="num">{money(data.onSite.total)}</div><div className="label">{tr('adminPayments.onSiteApart', { n: data.onSite.count })}</div></div>}
             <div className="stat-card"><div className="num">{data.unpaid.pendingCount}</div><div className="label">{tr('adminPayments.recentUnpaid', { n: data.unpaid.pendingThresholdMinutes })}</div></div>
             <div className="stat-card"><div className="num fin-neg">{data.unpaid.likelyAbandonedCount}</div><div className="label">{tr('adminPayments.likelyAbandonedAmount', { amount: money(data.unpaid.likelyAbandonedTotal) })}</div></div>
             <div className="stat-card"><div className="num fin-neg">{money(data.refunds.total)}</div><div className="label">{tr('adminPayments.refundsN', { n: data.refunds.count })}</div></div>
@@ -98,7 +101,7 @@ function PaymentsListTab({ token, toast }) {
     if (!rows.length) { toast(tr('adminCommon.nothingToExport')); return; }
     downloadCsv(`paiements-${Date.now()}.csv`, rows, [
       { label: tr('adminFinance.colOrder'), get: (r) => r.id }, { label: tr('adminCommon.restaurant'), get: (r) => r.restaurantName }, { label: tr('adminCommon.client'), get: (r) => r.clientName },
-      { label: tr('adminCommon.amount'), get: (r) => r.total }, { label: tr('adminPayments.colMode'), get: (r) => r.paymentMode || '' }, { label: tr('adminCommon.paidF'), get: (r) => r.paid },
+      { label: tr('adminCommon.amount'), get: (r) => r.total }, { label: tr('adminPayments.colMode'), get: (r) => libelle(PAYMENT_MODE_LABELS, r.paymentMode || 'inconnu') }, { label: tr('adminCommon.paidF'), get: (r) => r.paid },
       { label: tr('adminPayments.colPaidAt'), get: (r) => (r.paidAt ? fmtDateTime(r.paidAt) : '') }, { label: tr('adminPayments.colCreatedAt'), get: (r) => fmtDateTime(r.createdAt) }, { label: tr('adminPayments.colRefunded'), get: (r) => r.refundTotal }
     ]);
   }
@@ -130,7 +133,7 @@ function PaymentsListTab({ token, toast }) {
                   { key: 'createdAt', label: tr('adminCommon.date'), get: (r) => <span className="small">{fmtDateTime(r.paidAt || r.createdAt)} · <OrderLink id={r.id} /></span>, sortValue: (r) => r.paidAt || r.createdAt },
                   { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (r) => <b><RestaurantLink id={r.restaurantId} name={r.restaurantName} /></b>, sortValue: (r) => r.restaurantName },
                   { key: 'clientName', label: tr('adminCommon.client'), get: (r) => r.clientName },
-                  { key: 'paymentMode', label: tr('adminPayments.colMode'), get: (r) => r.paymentMode || tr('adminPayments.unknownMode') },
+                  { key: 'paymentMode', label: tr('adminPayments.colMode'), get: (r) => (r.paymentMode ? libelle(PAYMENT_MODE_LABELS, r.paymentMode) : tr('adminPayments.unknownMode')) },
                   { key: 'paid', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: r.paid ? 'var(--teal-deep)' : 'var(--gold-deep)' }}>{r.paid ? tr('adminCommon.paidBadge') : tr('adminCommon.unpaidBadge')}</span>, sortValue: (r) => (r.paid ? 1 : 0) },
                   { key: 'refundTotal', label: tr('adminPayments.colRefunded'), get: (r) => (r.refundTotal > 0 ? <span className="fin-neg">{money(r.refundTotal)}</span> : '-'), sortValue: (r) => r.refundTotal || 0, align: 'right', sum: true },
                   { key: 'total', label: tr('adminCommon.amount'), get: (r) => money(r.total), sortValue: (r) => r.total, align: 'right', sum: true }
@@ -145,7 +148,7 @@ function PaymentsListTab({ token, toast }) {
   );
 }
 
-const payoutComponentLabels = (tr) => ({ restaurant_share: tr('adminPayments.componentRestaurant'), driver_delivery_fee: tr('adminCommon.deliveryFees'), driver_tip: tr('adminCommon.tip') });
+const payoutComponentLabels = (tr) => ({ restaurant_share: tr('adminPayments.componentRestaurant'), driver_delivery_fee: tr('adminPayments.componentDriverShare'), driver_tip: tr('adminCommon.tip') });
 
 function PayoutsTab({ token, toast, periodQuery }) {
   const { t: tr } = useLanguage();

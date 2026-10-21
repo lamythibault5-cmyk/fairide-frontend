@@ -48,6 +48,17 @@ export function telephoneLisible(v) {
   return brut;
 }
 
+// Téléphone au format international « +32470123456 » (même règle que telephoneLisible et que phone.js du serveur) : pour
+// les liens WhatsApp et SMS, qui refusent « 0470 12 34 56 » (audit du 19/10, admin-67). '' si ce n'est pas un numéro.
+export function telephoneE164(v) {
+  const c = String(v || '').trim().replace(/[^\d+]/g, '').replace(/^00/, '+').replace(/^0(?=\d{8,9}$)/, '+32');
+  return /^\+\d{8,15}$/.test(c) ? c : '';
+}
+// Mobile belge (+324…) : le seul à qui un WhatsApp ou un SMS a un sens.
+export function estMobileBelge(e164) {
+  return /^\+324\d{8}$/.test(String(e164 || ''));
+}
+
 // Téléphone : au moins 8 chiffres une fois les séparateurs retirés (le serveur normalise en +32…).
 export function telephonePlausible(v) {
   const c = String(v || '').replace(/\D/g, '');

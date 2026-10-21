@@ -46,7 +46,9 @@ export default function AdminFinancePage() {
 
   const data = useApiData(() => api(`/admin/finance?${rangeParams().toString()}`, { token }), [from, to]);
   // Série journalière du revenu : uniquement quand une période est choisie (le dashboard exige des bornes).
-  const daily = useApiData(() => (from ? api(`/admin/dashboard?period=custom&from=${from.slice(0, 10)}&to=${to.slice(0, 10)}`, { token }).then((d) => d.dailySeries || []) : Promise.resolve(null)), [from, to]);
+  // Bornes envoyées entières (instants de Bruxelles) : coupées à 10 caractères, elles devenaient des jours UTC et la courbe
+  // commençait la veille (audit du 19/10, admin-20). Le serveur rend des jours de Bruxelles (« AAAA-MM-JJ »).
+  const daily = useApiData(() => (from ? api(`/admin/dashboard?period=custom&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { token }).then((d) => d.dailySeries || []) : Promise.resolve(null)), [from, to]);
 
   useEffect(() => { setPage(0); }, [tableTab, from, to]);
 
@@ -104,17 +106,20 @@ export default function AdminFinancePage() {
               <div className="stat-card"><div className="num">{money(d.deliveryFairideShare)}</div><div className="label">{tr('adminFinance.deliveryShare', { rate: ((d.deliveryFairideRate ?? 0.1) * 100).toFixed(0) })}</div></div>
               <div className="stat-card"><div className="num">{money(d.driverShare)}</div><div className="label">{tr('adminFinance.driversShare')}</div></div>
               <div className="stat-card"><div className="num">{money(d.otherFees)}</div><div className="label">{tr('adminFinance.otherServiceFees')}</div></div>
-              <div className="stat-card highlight"><div className="num">{money(d.fairideRevenue)}</div><div className="label">{tr('adminFinance.totalRevenue')}</div></div>
+              <div className="stat-card highlight"><div className="num">{money(d.fairideRevenue)}</div><div className="label">{tr('adminFinance.totalRevenueOrders')}</div></div>
               <div className="stat-card"><div className="num">{money(d.avgFairideRevenuePerOrder)}</div><div className="label">{tr('adminFinance.avgRevenuePerOrder')}</div></div>
               <div className="stat-card"><div className="num">{money(d.restaurantDue)}</div><div className="label">{tr('adminFinance.dueRestaurants')}</div></div>
               <div className="stat-card"><div className="num">{money(d.driverDue)}</div><div className="label">{tr('adminFinance.dueDrivers')}</div></div>
               <div className="stat-card"><div className="num">{d.paidOrderCount}</div><div className="label">{tr('adminCommon.paidOrders')}</div></div>
+              {/* Payé au commerce : listé à part, jamais dans le GMV ni dans « dû aux commerces » (audit du 19/10, admin-19). */}
+              {d.onSite && <div className="stat-card"><div className="num">{money(d.onSite.total)}</div><div className="label">{tr('adminFinance.onSiteSales', { n: d.onSite.count })}</div></div>}
             </div>
+            <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{tr('adminFinance.definitionsHint')}</p>
 
             {daily.data && daily.data.length > 0 && (
               <div className="card" style={{ marginTop: 16 }}>
                 <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{tr('adminFinance.revenuePerDay')}</h3>
-                <AdminBarChart data={daily.data.map((x) => ({ label: new Date(x.day).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: x.revenue }))} formatValue={money} color="var(--teal)" />
+                <AdminBarChart data={daily.data.map((x) => ({ label: new Date(`${String(x.day).slice(0, 10)}T12:00:00Z`).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: x.revenue }))} formatValue={money} color="var(--teal)" />
               </div>
             )}
 
