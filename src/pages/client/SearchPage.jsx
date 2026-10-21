@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Icone from '../../components/Icone';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import { platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
+import { MENTIONS_ALIMENTAIRES, platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
 import { COMMUNES, COMMUNES_SUGGEREES, RESTAURANT_TYPES, illustrationCuisine, restaurantTypeLabel } from '../../menuCategories';
 import usePageMeta from '../../hooks/usePageMeta';
@@ -223,12 +223,15 @@ export default function SearchPage() {
               </Link>
             ))}
           </div>
+          {/* Bio, Vegan, Halal, Sans gluten : masqués pour le moment (MENTIONS_ALIMENTAIRES, dietary.js). */}
+          {MENTIONS_ALIMENTAIRES && (
           <div className="recherche-pastilles recherche-regimes-app" role="group" aria-label={t('search.dietFilters')}>
             <button type="button" className={`pill recherche-pastille${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('search.filterBio')}</button>
             <button type="button" className={`pill recherche-pastille${vegan ? ' active' : ''}`} aria-pressed={vegan} onClick={() => setVegan((v) => !v)}>{t('search.filterVegan')}</button>
             <button type="button" className={`pill recherche-pastille${halal ? ' active' : ''}`} aria-pressed={halal} onClick={() => setHalal((v) => !v)}>{t('search.filterHalal')}</button>
             <button type="button" className={`pill recherche-pastille${sansGluten ? ' active' : ''}`} aria-pressed={sansGluten} onClick={() => setSansGluten((v) => !v)}>{t('search.filterGlutenFree')}</button>
           </div>
+          )}
           {recentes.length > 0 && (
             <section className="recherche-recentes" aria-labelledby="recherche-recentes-titre">
               <div className="recherche-recentes-tete">
@@ -261,17 +264,24 @@ export default function SearchPage() {
         <>
           <div className="card">
             <h3 className="recherche-titre-groupe">{t('search.byCraving')}</h3>
-            <div className="recherche-pastilles">
+            {/* SUR LE SITE AUSSI, LES TUILES PASTEL (fondateur, 2026-10-21, version B de maquettes/site-illustrations) : les
+                mêmes que dans l'app, avec l'illustration 2D (sans relief) au lieu de la 3D. */}
+            <div className="recherche-tuiles recherche-tuiles--site">
               {RESTAURANT_TYPES.slice(0, 14).map((c) => (
-                <Link key={c.value} to="/restaurants" state={{ cuisine: c.value }} className="pill recherche-pastille">
-                  <Icone nom={c.icone} taille={16} className="icone-texte" /> {restaurantTypeLabel(c.value, t) || c.value}
+                <Link key={c.value} to="/restaurants" state={{ cuisine: c.value }} className="recherche-tuile" style={{ '--tuile-fond': c.fond }}>
+                  <img className="recherche-tuile-illu" src={illustrationCuisine(c.illustration, { plat: true })} alt="" width="40" height="40" decoding="async" draggable="false" />
+                  <span>{restaurantTypeLabel(c.value, t) || c.value}</span>
                 </Link>
               ))}
+            </div>
+            {MENTIONS_ALIMENTAIRES && (
+            <div className="recherche-pastilles recherche-regimes-site">
               <button type="button" className={`pill recherche-pastille${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('search.filterBio')}</button>
               <button type="button" className={`pill recherche-pastille${vegan ? ' active' : ''}`} aria-pressed={vegan} onClick={() => setVegan((v) => !v)}>{t('search.filterVegan')}</button>
               <button type="button" className={`pill recherche-pastille${halal ? ' active' : ''}`} aria-pressed={halal} onClick={() => setHalal((v) => !v)}>{t('search.filterHalal')}</button>
               <button type="button" className={`pill recherche-pastille${sansGluten ? ' active' : ''}`} aria-pressed={sansGluten} onClick={() => setSansGluten((v) => !v)}>{t('search.filterGlutenFree')}</button>
             </div>
+            )}
           </div>
           <div className="card">
             <h3 className="recherche-titre-groupe">{t('search.byMunicipality')}</h3>

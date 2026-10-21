@@ -1,4 +1,5 @@
 import { sectionLabel, resolveItemImage, groupBySubsection } from '../menuCategories';
+import { MENTIONS_ALIMENTAIRES } from '../dietary';
 import { useLanguage } from '../context/LanguageContext';
 import { localizedItem } from '../menuTranslation';
 import { libellesAllergenes } from '../allergenes';
@@ -96,14 +97,16 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
   const badges = (
     <>
       {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
-      {/* Bio et vegan en toutes lettres, comme halal (audit du 19/10, discovery-06) : leur emoji avait été retiré sans rien à la
-          place, et le badge n'était plus qu'une espace vide. */}
+      {/* Bio, vegan, halal, sans gluten : masqués pour le moment (MENTIONS_ALIMENTAIRES, dietary.js). Bio et vegan en toutes
+          lettres, comme halal (audit du 19/10, discovery-06). */}
+      {MENTIONS_ALIMENTAIRES && <>
       {item.organic && <span className="plat-age">{t('menuCategories.organic')}</span>}
       {item.vegan && <span className="plat-age">{t('menuCategories.vegan')}</span>}
       {/* Halal, sans gluten : déclarés par le commerce (backend migration 042), dits en toutes lettres — un client qui
           cherche l'un ou l'autre doit le lire, pas deviner une icône. */}
       {item.halal && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.halal')}</span>}
       {item.glutenFree && <span className="plat-age" title={t('menuCategories.declaredByBusiness')}>{t('menuCategories.glutenFree')}</span>}
+      </>}
       {/* Alcool : l'âge exigé à la remise, annoncé avant l'ajout au panier (backlog C3). */}
       {item.isAlcohol && <span className="plat-age" title={t('conformite.alcoholBadgeTitle', { age: Math.max(18, item.minAge || 18) })}> {Math.max(18, item.minAge || 18)}+</span>}
     </>

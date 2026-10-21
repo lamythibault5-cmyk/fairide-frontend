@@ -33,31 +33,10 @@ const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 // page faite pour ça. Deux listes des mêmes commerces à deux endroits, c'est une de trop, et
 // c'est celle qui recouvrait la carte qui part. Ici il reste une carte, et ce qui flotte dessus.
 
-// Bandes de prix, calculées sur le prix MÉDIAN des plats de la carte.
-//
-// Aucune colonne « niveau de prix » n'existe en base, et il n'était pas question d'en inventer une :
-// un € affiché au jugé serait faux pour la moitié des commerces. La médiane des prix réellement
-// pratiqués, elle, est une mesure — et les cartes complètes arrivent déjà avec la liste
-// (GET /restaurants), donc ça ne coûte aucun appel de plus. Les seuils sont posés sur la
-// distribution observée : friteries et cafés autour de 4-6 €, restaurants complets au-delà de 10 €.
-const SEUIL_MOYEN = 7;
-const SEUIL_CHER = 11;
-
-function medianePrix(resto) {
-  const prix = (resto.menu || []).map((p) => Number(p.price)).filter((n) => Number.isFinite(n) && n > 0).sort((a, b) => a - b);
-  if (!prix.length) return null;
-  const milieu = Math.floor(prix.length / 2);
-  return prix.length % 2 ? prix[milieu] : (prix[milieu - 1] + prix[milieu]) / 2;
-}
-
-function bandePrix(resto) {
-  const m = medianePrix(resto);
-  if (m == null) return null;
-  return m < SEUIL_MOYEN ? 1 : m < SEUIL_CHER ? 2 : 3;
-}
-
-// « Trier » et « Prix » retirés pour le moment (fondateur, 2026-10-20) — même interrupteur que pages/client/RestaurantList.jsx.
-const TRI_ET_PRIX = false;
+// « Trier » retiré pour le moment (fondateur, 2026-10-20), même interrupteur que pages/client/RestaurantList.jsx. Le filtre
+// « Prix » (bandes €, € €, € € € calculées sur le prix médian de la carte), lui, est retiré pour de bon (fondateur,
+// 2026-10-21 : « retirer ça totalement partout »).
+const TRI = false;
 
 export default function MapPage() {
   const { t } = useLanguage();
@@ -67,9 +46,8 @@ export default function MapPage() {
   const [promosSeules, setPromosSeules] = useState(false);
   const [ouvertsSeuls, setOuvertsSeuls] = useState(false);
   const [cuisine, setCuisine] = useState('');
-  const [prix, setPrix] = useState(0); // 0 = tous, sinon 1 / 2 / 3
   const [tri, setTri] = useState('recommande'); // 'recommande' | 'note' | 'distance'
-  const [panneau, setPanneau] = useState(null); // 'cuisine' | 'prix' | 'tri' | null
+  const [panneau, setPanneau] = useState(null); // 'cuisine' | 'tri' | null
   const [recherche, setRecherche] = useState('');
   /* LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, lot « liste » de mockups/site-ordinateur.html) : à partir de 1 100 px,
    * la recherche, les filtres et les commerces trouvés passent dans une colonne blanche à gauche, la carte prend le reste.
@@ -105,7 +83,6 @@ export default function MapPage() {
     const filtres = restaurants.filter((r) => {
       if (promosSeules && !r.hasPromo) return false;
       if (cuisine && r.cuisine !== cuisine && !(r.extraCuisines || []).includes(cuisine)) return false; // type principal ou secondaire
-      if (prix && bandePrix(r) !== prix) return false;
       if (ouvertsSeuls && r.hours && !getOpenStatus(r.hours, maintenant, r.closures).isOpen) return false;
       if (nom && !(r.name || '').toLowerCase().includes(nom)) return false;
       return true;
@@ -122,7 +99,7 @@ export default function MapPage() {
     if (tri === 'note') return [...avecDistance].sort((a, b) => (b.reviewCount > 0 ? b.rating || 0 : 0) - (a.reviewCount > 0 ? a.rating || 0 : 0));
     if (tri === 'distance') return [...avecDistance].sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
     return avecDistance;
-  }, [restaurants, promosSeules, ouvertsSeuls, cuisine, prix, tri, position, recherche]);
+  }, [restaurants, promosSeules, ouvertsSeuls, cuisine, tri, position, recherche]);
 
   // Les types de cuisine réellement représentés : proposer « Sushi » quand aucun commerce n'en fait
   // donne un filtre qui ne renvoie jamais rien.
@@ -131,9 +108,9 @@ export default function MapPage() {
     return RESTAURANT_TYPES.filter((c) => vus.has(c.value));
   }, [restaurants]);
 
-  const filtreActif = promosSeules || ouvertsSeuls || !!cuisine || !!prix || tri !== 'recommande' || !!recherche.trim();
+  const filtreActif = promosSeules || ouvertsSeuls || !!cuisine || tri !== 'recommande' || !!recherche.trim();
   function toutReinitialiser() {
-    setPromosSeules(false); setOuvertsSeuls(false); setCuisine(''); setPrix(0); setTri('recommande'); setPanneau(null); setRecherche('');
+    setPromosSeules(false); setOuvertsSeuls(false); setCuisine(''); setTri('recommande'); setPanneau(null); setRecherche('');
   }
   const basculer = (nom) => setPanneau((p) => (p === nom ? null : nom));
   const LIBELLE_TRI = { recommande: t('mapClient.sortRecommended'), note: t('mapClient.sortRating'), distance: t('mapClient.sortDistance') };
@@ -169,7 +146,7 @@ export default function MapPage() {
   const controles = (
         <div className="carte-controles">
           {/* LA RECHERCHE EN PREMIER, comme sur la carte d'Uber : on cherche un nom bien plus souvent
-              qu'on ne filtre par prix. Elle porte sur les commerces deja charges, donc elle repond
+              qu'on ne filtre par cuisine. Elle porte sur les commerces deja charges, donc elle repond
               sans aller au serveur et sans recadrer la carte sous les doigts. */}
           <div className="carte-recherche">
             <Icone nom="recherche" taille={17} />
@@ -191,33 +168,19 @@ export default function MapPage() {
             <button type="button" className={`cuisine-chip${ouvertsSeuls ? ' active' : ''}`} aria-pressed={ouvertsSeuls} onClick={() => setOuvertsSeuls((v) => !v)}>
               <Icone nom="horloge" taille={16} />{t('mapClient.filterOpen')}
             </button>
-            {TRI_ET_PRIX && (
-            <button type="button" className={`cuisine-chip${prix ? ' active' : ''}`} aria-expanded={panneau === 'prix'} onClick={() => basculer('prix')}>
-              <Icone nom="euro" taille={16} />{prix ? '€'.repeat(prix) : t('mapClient.filterPrice')}
-            </button>
-            )}
             {/* Un panneau de pastilles, plus un <select> natif : le menu du système s'ouvre au
                 milieu de l'écran dans le style du navigateur, une liste grise sans rapport avec la
                 page, posée par-dessus la carte. */}
             <button type="button" className={`cuisine-chip${cuisine ? ' active' : ''}`} aria-expanded={panneau === 'cuisine'} onClick={() => basculer('cuisine')}>
               <Icone nom="restaurants" taille={16} />{cuisine ? restaurantTypeLabel(cuisine, t) : t('mapClient.filterCuisine')}
             </button>
-            {TRI_ET_PRIX && (
+            {TRI && (
             <button type="button" className={`cuisine-chip${tri !== 'recommande' ? ' active' : ''}`} aria-expanded={panneau === 'tri'} onClick={() => basculer('tri')}>
               <Icone nom="stats" taille={16} />{tri === 'recommande' ? t('mapClient.sort') : LIBELLE_TRI[tri]}
             </button>
             )}
           </div>
 
-          {panneau === 'prix' && (
-            <div className="carte-panneau">
-              {[0, 1, 2, 3].map((n) => (
-                <button key={n} type="button" className={`cuisine-chip${prix === n ? ' active' : ''}`} onClick={() => { setPrix(n); setPanneau(null); }}>
-                  {n === 0 ? t('mapClient.filterAllPrices') : '€'.repeat(n)}
-                </button>
-              ))}
-            </div>
-          )}
           {panneau === 'cuisine' && (
             <div className="carte-panneau carte-panneau-cuisines">
               <button type="button" className={`cuisine-chip${cuisine ? '' : ' active'}`} onClick={() => { setCuisine(''); setPanneau(null); }}>

@@ -157,7 +157,6 @@ export function restaurantJsonLd(restaurant, { url }) {
     description: restaurant.desc || undefined,
     image: [restaurant.coverImageUrl, restaurant.logoImageUrl].filter(Boolean),
     servesCuisine: restaurant.cuisine || undefined,
-    priceRange: '€€',
     currenciesAccepted: 'EUR',
     address: postalAddress(restaurant),
     geo: (restaurant.lat && restaurant.lng)

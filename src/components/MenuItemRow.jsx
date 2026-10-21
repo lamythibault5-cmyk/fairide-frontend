@@ -1,5 +1,6 @@
 import ChampsConformitePlat from './conformite/ChampsConformitePlat';
 import { useState, useId } from 'react';
+import { MENTIONS_ALIMENTAIRES } from '../dietary';
 import { imgProps } from '../images';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -233,6 +234,8 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
             <input type="checkbox" style={{ width: 'auto' }} checked={healthy} onChange={(e) => setHealthy(e.target.checked)} />
             <span className="small">{t('menuItem.healthyLabel')}</span>
           </label>
+          {/* Bio et vegan : masqués pour le moment (MENTIONS_ALIMENTAIRES, dietary.js) ; la valeur enregistrée ne change pas. */}
+          {MENTIONS_ALIMENTAIRES && <>
           <label className="row" style={{ gap: 8, cursor: 'pointer', marginTop: 6 }}>
             <input type="checkbox" style={{ width: 'auto' }} checked={organic} onChange={(e) => setOrganic(e.target.checked)} />
             <span className="small">{t('menuItem.organicLabel')}</span>
@@ -241,6 +244,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
             <input type="checkbox" style={{ width: 'auto' }} checked={vegan} onChange={(e) => setVegan(e.target.checked)} />
             <span className="small">{t('menuItem.veganLabel')}</span>
           </label>
+          </>}
         </div>
         <ChampsConformitePlat valeur={conformite} onChange={setConformite} />
         {categoryKind(category) && (
@@ -345,8 +349,8 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
         {item.name}
         {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
         {/* En toutes lettres, comme sur la carte du client (audit du 19/10, discovery-06). */}
-        {item.organic && <span className="plat-age">{t('menuCategories.organic')}</span>}
-        {item.vegan && <span className="plat-age">{t('menuCategories.vegan')}</span>}
+        {MENTIONS_ALIMENTAIRES && item.organic && <span className="plat-age">{t('menuCategories.organic')}</span>}
+        {MENTIONS_ALIMENTAIRES && item.vegan && <span className="plat-age">{t('menuCategories.vegan')}</span>}
       </div>
       <div className="small desc">
         {item.outOfStockToday ? t('menuItem.stockOutToday') : item.available === false ? t('menuItem.unavailable') : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}
