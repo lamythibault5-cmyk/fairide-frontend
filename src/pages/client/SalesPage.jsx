@@ -716,7 +716,8 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
               </div>
               <div>
                 <b className="crm-bloc-titre">{t('sales.nextActionTitle')}</b>
-                <input type="datetime-local" value={versLocal(p.nextActionAt)} disabled={envoi} onChange={(e) => patch({ nextActionAt: e.target.value ? new Date(e.target.value).toISOString() : null })} />
+                {/* Champs de l'outil commercial nommés (audit du 19/10, CROSS-89). */}
+                <input type="datetime-local" aria-label={t('sales.nextActionTitle')} value={versLocal(p.nextActionAt)} disabled={envoi} onChange={(e) => patch({ nextActionAt: e.target.value ? new Date(e.target.value).toISOString() : null })} />
                 {p.nextActionAt && <button type="button" className="btn-ghost" style={{ padding: '4px 0', fontSize: 13 }} onClick={() => patch({ nextActionAt: null })}>{t('sales.clearNextAction')}</button>}
               </div>
             </div>
@@ -735,7 +736,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
                 {[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" role="radio" aria-checked={p.behaviourRating === n} className={`crm-etoile${p.behaviourRating >= n ? ' pleine' : ''}`} disabled={envoi} onClick={() => patch({ behaviourRating: p.behaviourRating === n ? null : n })}>★</button>)}
                 <span className="small">{p.behaviourRating ? t(`sales.behaviour_${p.behaviourRating}`) : t('sales.behaviourNone')}</span>
               </div>
-              <textarea rows={2} defaultValue={p.feedback} key={`fb-${p.updatedAt}`} placeholder={t('sales.feedbackPh')} onBlur={(e) => e.target.value !== p.feedback && patch({ feedback: e.target.value })} />
+              <textarea rows={2} defaultValue={p.feedback} key={`fb-${p.updatedAt}`} placeholder={t('sales.feedbackPh')} aria-label={t('sales.feedbackPh')} onBlur={(e) => e.target.value !== p.feedback && patch({ feedback: e.target.value })} />
             </div>
 
             {/* Lier au commerce inscrit sur Fairide, pour voir s'il est validé et en ligne. */}
@@ -747,7 +748,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
                 <p className="small" style={{ margin: 0 }}><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{p.restaurantName} · {t(`sales.restoStatus_${p.restaurantStatus || 'pending'}`)} <button type="button" className="btn-ghost btn-sm" onClick={() => patch({ restaurantId: null })}>{t('sales.unlink')}</button></p>
               ) : (
                 <div>
-                  <input type="search" value={lien.q} onChange={(e) => chercherResto(e.target.value)} placeholder={t('sales.linkPlaceholder')} />
+                  <input type="search" value={lien.q} onChange={(e) => chercherResto(e.target.value)} placeholder={t('sales.linkPlaceholder')} aria-label={t('sales.linkPlaceholder')} />
                   {lien.resultats.length > 0 && (
                     <div className="crm-resultats">
                       {lien.resultats.map((r) => <button key={r.id} type="button" className="btn-ghost" onClick={() => { patch({ restaurantId: r.id }, t('sales.toastLinked')); setLien({ q: '', resultats: [] }); }}><Icone nom="commerce" taille={16} className="icone-texte" />{' '}{r.name} · {r.commune} · {t(`sales.restoStatus_${r.adminStatus}`)}</button>)}
@@ -765,13 +766,13 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
                   {KINDS.map((k) => <button key={k} type="button" className={`chip${ev.kind === k ? ' active' : ''}`} onClick={() => setEv((s) => ({ ...s, kind: k }))}><Icone nom={KIND_ICONES[k]} taille={14} className="icone-texte" /> {t(`sales.kind_${k}`)}</button>)}
                 </div>
                 <div className="row" style={{ gap: 8 }}>
-                  <input type="datetime-local" value={ev.at} onChange={(e) => setEv((s) => ({ ...s, at: e.target.value }))} required style={{ flex: 1 }} />
+                  <input type="datetime-local" value={ev.at} onChange={(e) => setEv((s) => ({ ...s, at: e.target.value }))} required style={{ flex: 1 }} aria-label={t('sales.historyTitle')} />
                   <select value={ev.stage} onChange={(e) => setEv((s) => ({ ...s, stage: e.target.value }))} style={{ flex: 1 }} aria-label={t('sales.eventStage')}>
                     <option value="">{t('sales.eventStageKeep')}</option>
                     {STAGES.map((s) => <option key={s} value={s}>{t(`sales.stage_${s}`)}</option>)}
                   </select>
                 </div>
-                <textarea rows={2} value={ev.note} onChange={(e) => setEv((s) => ({ ...s, note: e.target.value }))} placeholder={t('sales.eventNotePh')} />
+                <textarea rows={2} value={ev.note} onChange={(e) => setEv((s) => ({ ...s, note: e.target.value }))} placeholder={t('sales.eventNotePh')} aria-label={t('sales.eventNotePh')} />
                 <button type="submit" className="btn-teal" disabled={envoi}>{envoi ? '…' : t('sales.addEvent')}</button>
               </form>
               {evenements.length === 0 ? <p className="small" style={{ margin: '8px 0 0' }}>{t('sales.noEvents')}</p> : (
@@ -792,7 +793,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
 
             <div className="crm-bloc">
               <b className="crm-bloc-titre">{t('sales.notesTitle')}</b>
-              <textarea rows={3} defaultValue={p.notes} key={`notes-${p.updatedAt}`} placeholder={t('sales.notesPh')} onBlur={(e) => e.target.value !== p.notes && patch({ notes: e.target.value })} />
+              <textarea rows={3} defaultValue={p.notes} key={`notes-${p.updatedAt}`} placeholder={t('sales.notesPh')} aria-label={t('sales.notesTitle')} onBlur={(e) => e.target.value !== p.notes && patch({ notes: e.target.value })} />
             </div>
 
             <div className="row" style={{ justifyContent: 'space-between', marginTop: 8 }}>

@@ -25,7 +25,7 @@ import { COMMUNES, ILLUSTRATION_TOUTES_CUISINES, RESTAURANT_TYPES, communeRingDi
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { statutOuverture } from '../../openingHours';
 import { tarifLivraison, eurosCourts, horsZoneLivraison } from '../../livraison';
-import { libellePromo } from '../../prixPlat';
+import { kmLisible, libellePromo } from '../../prixPlat';
 import EmplacementSponsor from '../../components/EmplacementSponsor';
 import VisuelVide from '../../components/VisuelVide';
 import usePageMeta from '../../hooks/usePageMeta';
@@ -164,7 +164,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
           {r.certified && <CertifiedBadge />}
         </h3>
         {/* Type principal + le premier type secondaire (7 types possibles, voir EcranCuisines) : deux, pour rester lisible. */}
-        <p className="rc-sous">{[[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 2).map((c) => restaurantTypeLabel(c, t) || c).join(', '), r.neighborhood || r.commune, r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ')}</p>
+        <p className="rc-sous">{[[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 2).map((c) => restaurantTypeLabel(c, t) || c).join(', '), r.neighborhood || r.commune, r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ')}</p>
         <p className="rc-infos">
           {/* Pas d'étoiles sans avis : une note que personne n'a donnée n'est pas un avis (CDE VI.100). */}
           {r.reviewCount > 0
@@ -240,7 +240,7 @@ function ALaUne({ list, inscritLe, t }) {
           const depuis = inscritLe.get(r.id);
           const nouveau = depuis != null && maintenant - depuis < NOUVEAU_JOURS * 86400000;
           const sous = [[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 1).map((c) => restaurantTypeLabel(c, t) || c).join(''), r.neighborhood || r.commune,
-            r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ');
+            r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ');
           return (
             // Même règle que les cartes dessous : sans compte, le clic mène à la connexion, puis à la fiche.
             <Link key={r.id} {...lienFiche(user, r.id)} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`} onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}>

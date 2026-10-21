@@ -74,11 +74,13 @@ export default function ReportPage() {
       </div>
       <div className="field">
         <label htmlFor={`${id}-exp`}>{t('conformite.reportExplanation')}</label>
-        <textarea id={`${id}-exp`} rows={5} minLength={20} maxLength={4000} required value={explanation} onChange={(e) => setExplanation(e.target.value)} />
+        <textarea id={`${id}-exp`} rows={5} minLength={20} maxLength={4000} required value={explanation} onChange={(e) => setExplanation(e.target.value)} aria-describedby={`${id}-exp-min`} />
+        {/* Le bouton restait grisé sous 20 caractères sans dire pourquoi (audit du 19/10, CROSS-71). */}
+        <p className="small" id={`${id}-exp-min`} style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t('conformite.reportMinChars', { n: explanation.trim().length })}</p>
       </div>
       <div className="field">
         <label htmlFor={`${id}-mail`}>{t('conformite.reportEmail')}</label>
-        <input id={`${id}-mail`} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={!!user} />
+        <input id={`${id}-mail`} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={!!user} />
       </div>
       <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '4px 0 12px' }}>
         <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={goodFaith} onChange={(e) => setGoodFaith(e.target.checked)} />

@@ -45,13 +45,13 @@ export default function EcranAdresse({ restaurant, restoId, loadDashboard, onFer
         </div>
         <div className="field" style={{ flex: 1 }}>
           <label htmlFor={ids + '-cp'}>{t('editResto.postalCode')}</label>
-          <input id={ids + '-cp'} inputMode="numeric" value={cp} onChange={(e) => { setCp(e.target.value); const c = communeDepuisCodePostal(e.target.value); if (c) setCommune((v) => v || c); }} placeholder="1000" />
+          <input id={ids + '-cp'} inputMode="numeric" maxLength={4} value={cp} onChange={(e) => { setCp(e.target.value); const c = communeDepuisCodePostal(e.target.value); if (c) setCommune((v) => v || c); }} placeholder="1000" />
         </div>
       </div>
       <div className="field">
         <label htmlFor={ids + '-commune'}>{t('editResto.municipality')}</label>
         {/* Champ libre avec suggestions (les 19 communes puis la périphérie) : une liste fermée transformait Tervuren en Anderlecht. */}
-        <input id={ids + '-commune'} list={ids + '-communes'} value={commune} onChange={(e) => setCommune(e.target.value)} placeholder="Ixelles, Tervuren…" autoComplete="address-level2" />
+        <input id={ids + '-commune'} list={ids + '-communes'} value={commune} onChange={(e) => setCommune(e.target.value)} placeholder="Ixelles, Tervuren…" autoComplete="off" />
         <datalist id={ids + '-communes'}>
           {COMMUNES_SUGGEREES.map((c) => <option key={c} value={c} />)}
         </datalist>

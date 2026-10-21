@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StarsDisplay } from './Stars';
 import FichePlat from './FichePlat';
+import Modale from './Modale';
 import MenuCategorySections from './MenuCategorySections';
 import { resolveItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
@@ -109,9 +110,10 @@ export default function RestaurantPreview({ restaurant }) {
                   )}
                 </span>
                 <div className="row" style={{ gap: 8 }}>
-                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => changeLineQty(lineKey, -1)}>−</button>
+                  {/* − et + nommés (audit du 19/10, CROSS-90). */}
+                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => changeLineQty(lineKey, -1)} aria-label={`${t('platSheet.less')} · ${item.name}`}>−</button>
                   <span>{line.qty}</span>
-                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => changeLineQty(lineKey, 1)}>+</button>
+                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => changeLineQty(lineKey, 1)} aria-label={`${t('platSheet.more')} · ${item.name}`}>+</button>
                 </div>
               </div>
             );
@@ -135,15 +137,13 @@ export default function RestaurantPreview({ restaurant }) {
       )}
 
       {confirmOpen && (
-        <div className="modal-overlay" onClick={() => setConfirmOpen(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <Modale ariaLabel={t('restoPreview.previewOnlyTitle')} onFermer={() => setConfirmOpen(false)}>
             <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('restoPreview.previewOnlyTitle')}</h3>
             <p className="small" style={{ margin: '0 0 16px' }}>
               {t('restoPreview.previewOnlyBody')}
             </p>
             <button className="btn-teal" onClick={() => setConfirmOpen(false)}>{t('restoPreview.gotIt')}</button>
-          </div>
-        </div>
+        </Modale>
       )}
 
       {pickerItem && (

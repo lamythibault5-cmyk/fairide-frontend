@@ -233,7 +233,12 @@ export default function Bienvenue() {
         toast(err.message, 'erreur');
       }
     } catch (err) {
-      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) toast(err?.message ? `${t('appli.nativeLoginFailed')} (${err.message})` : t('appli.nativeLoginFailed'), 'erreur');
+      // Le texte brut du greffon (« com.google.android.gms…: 10: ») n'est plus collé au message (audit du 19/10, CROSS-13) : il
+      // part dans la console (adb logcat) ; un refus du serveur (ApiError, avec un statut) garde son propre texte, traduit.
+      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) {
+        if (!err?.status) console.error('Connexion native :', err);
+        toast(err?.status && err?.message ? err.message : t('appli.nativeLoginFailed'), 'erreur');
+      }
     } finally {
       setAttente(false);
     }

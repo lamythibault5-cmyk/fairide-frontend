@@ -17,14 +17,16 @@ import useDialogue from '../hooks/useDialogue';
 // `titre` est facultatif : quelques appelants composent leur propre en-tête. Quand il est fourni, il
 // devient le nom accessible de la fenêtre (aria-labelledby) — sinon il faut passer `ariaLabel`, pour
 // qu'un lecteur d'écran annonce autre chose que « dialogue ».
-export default function Modale({ titre, ariaLabel, largeur, onFermer, children }) {
+// `classe` s'ajoute au fond (ex. « no-print » pour le détail d'une commande, qu'on ne veut pas sur le ticket imprimé),
+// `classeBoite` à la boîte (ex. « ticket-editor », plus large).
+export default function Modale({ titre, ariaLabel, largeur, classe, classeBoite, onFermer, children }) {
   const racine = useRef(null);
   const idTitre = useId();
   useDialogue(racine, onFermer);
   return createPortal(
-    <div className="modal-overlay" onClick={onFermer}>
+    <div className={`modal-overlay${classe ? ` ${classe}` : ''}`} onClick={onFermer}>
       <div
-        className="modal-box"
+        className={`modal-box${classeBoite ? ` ${classeBoite}` : ''}`}
         onClick={(e) => e.stopPropagation()}
         style={largeur ? { maxWidth: largeur } : undefined}
         role="dialog"

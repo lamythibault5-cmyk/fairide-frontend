@@ -73,7 +73,8 @@ export default function InboxSection() {
   function retourListe() { setVue('list'); setCourant(null); charger(); }
 
   async function envoyer(payload) {
-    if (!courant) return;
+    // Ctrl+Entrée pendant un envoi en cours envoyait le message deux fois (audit du 19/10, CROSS-48).
+    if (!courant || envoi) return;
     setEnvoi(true);
     try {
       const r = await api(`/inbox/threads/${courant.thread.id}/messages`, { method: 'POST', token, body: payload });
@@ -89,6 +90,7 @@ export default function InboxSection() {
 
   async function creer(e) {
     e.preventDefault();
+    if (envoi) return;
     if (!sujet.trim() || !corps.trim()) { toast(t('inbox.subjectBodyRequired'), 'erreur'); return; }
     setEnvoi(true);
     try {

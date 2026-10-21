@@ -118,6 +118,9 @@ export default function Account() {
   const DELETION_REASONS = deletionReasons(t);
   const GENDERS = genders(t);
   const [driverDeliveries, setDriverDeliveries] = useState(null);
+  // Échec du chargement de l'activité : « Chargement… » restait pour toujours ; un message et Réessayer (audit du 19/10, CROSS-33).
+  const [erreurActivite, setErreurActivite] = useState(null);
+  const [relanceActivite, setRelanceActivite] = useState(0);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
   const [membreEquipe, setMembreEquipe] = useState(false);
@@ -215,10 +218,10 @@ export default function Account() {
     if (role !== 'driver') return;
     // Plus d'appel à /reviews/driver/mine : le livreur n'est pas noté (contrat livreur, présomption de salariat).
     api('/orders/mine/deliveries', { token })
-      .then(setDriverDeliveries)
-      .catch((e) => toast(e.message, 'erreur'));
+      .then((r) => { setDriverDeliveries(r); setErreurActivite(null); })
+      .catch((e) => { toast(e.message, 'erreur'); setErreurActivite(e); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role]);
+  }, [role, relanceActivite]);
 
   // Commercial Fairide ? (accès donné par l'admin dans Admin › Sales) : décide si la rubrique Sales apparaît. Clients seulement.
   const [salesEtat, setSalesEtat] = useState(null);
@@ -396,7 +399,7 @@ export default function Account() {
 
   async function handleConvert(e) {
     e.preventDefault();
-    const amount = Number(convertAmount);
+    const amount = Number(String(convertAmount).replace(',', '.'));
     if (!amount || amount <= 0) return;
     setConverting(true);
     try {
@@ -577,11 +580,11 @@ export default function Account() {
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
                 <label htmlFor={idsA11y + '-firstname'}>{t('auth.firstName')}</label>
-                <input id={idsA11y + '-firstname'} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                <input id={idsA11y + '-firstname'} value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="given-name" />
               </div>
               <div className="field" style={{ flex: 1 }}>
                 <label htmlFor={idsA11y + '-lastname'}>{t('auth.lastName')}</label>
-                <input id={idsA11y + '-lastname'} value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                <input id={idsA11y + '-lastname'} value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="family-name" />
               </div>
             </div>
             <div className="row" style={{ gap: 8 }}>
@@ -609,11 +612,11 @@ export default function Account() {
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
                 <label htmlFor={idsA11y + '-postalcode'}>{t('auth.postalCode')}</label>
-                <input id={idsA11y + '-postalcode'} value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} />
+                <input id={idsA11y + '-postalcode'} value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" maxLength={4} autoComplete="postal-code" />
               </div>
               <div className="field" style={{ flex: 2 }}>
                 <label htmlFor={idsA11y + '-city'}>{t('auth.city')}</label>
-                <input id={idsA11y + '-city'} value={addressCity} onChange={(e) => setAddressCity(e.target.value)} />
+                <input id={idsA11y + '-city'} value={addressCity} onChange={(e) => setAddressCity(e.target.value)} autoComplete="address-level2" />
               </div>
             </div>
             <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
@@ -757,7 +760,9 @@ export default function Account() {
             </div>
             <form onSubmit={handleRedeemCode} className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1, margin: 0 }}>
-                <input value={redeemCode} onChange={(e) => setRedeemCode(e.target.value.toUpperCase())} placeholder={t('account.redeemPlaceholder')} />
+                {/* Champs nommés (audit du 19/10, CROSS-88) : le texte d'exemple seul disparaît dès qu'on tape, et n'est pas un nom. */}
+                <input value={redeemCode} onChange={(e) => setRedeemCode(e.target.value.toUpperCase())} placeholder={t('account.redeemPlaceholder')}
+                  aria-label={t('accountUi.redeemCodeA11y')} autoComplete="off" autoCorrect="off" spellCheck={false} />
               </div>
               <button type="submit" className="btn-teal" disabled={redeeming}>{redeeming ? '...' : t('account.redeemButton')}</button>
             </form>
@@ -775,7 +780,9 @@ export default function Account() {
             </div>
             <form onSubmit={handleConvert} className="row" style={{ gap: 8, marginBottom: generatedCodes?.length ? 14 : 0 }}>
               <div className="field" style={{ flex: 1, margin: 0 }}>
-                <input type="number" step="0.01" min="5" value={convertAmount} onChange={(e) => setConvertAmount(e.target.value)} placeholder={t('account.convert.amountPlaceholder')} />
+                {/* Texte + clavier décimal (audit du 19/10, CROSS-62/72) : « 12,50 » est lu, la molette ne change plus le montant. */}
+                <input type="text" inputMode="decimal" value={convertAmount} onChange={(e) => setConvertAmount(e.target.value)} placeholder={t('account.convert.amountPlaceholder')}
+                  aria-label={t('accountUi.convertAmountA11y')} autoComplete="off" />
               </div>
               <button type="submit" className="btn-teal" disabled={converting}>{converting ? '...' : t('account.convert.button')}</button>
             </form>
@@ -804,7 +811,7 @@ export default function Account() {
             <>
               <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 12 }}>
                 <div className="field" style={{ flex: 1, margin: 0 }}>
-                  <input readOnly value={referralStats.code} style={{ fontWeight: 700, letterSpacing: 1 }} />
+                  <input readOnly value={referralStats.code} style={{ fontWeight: 700, letterSpacing: 1 }} aria-label={t('accountUi.referralCodeA11y')} />
                 </div>
                 <button type="button" className="btn-teal" onClick={copyReferralCode}>{t('account.referral.copy')}</button>
               </div>
@@ -1142,7 +1149,7 @@ export default function Account() {
       {role === 'driver' && (
         <div className="card account-groupe" aria-label={t('accountUi.myRides')}>
           <LigneCompte icone="stats" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
-            <DriverActivity deliveries={driverDeliveries} t={t} />
+            <DriverActivity deliveries={driverDeliveries} t={t} erreur={erreurActivite} onReessayer={() => setRelanceActivite((n) => n + 1)} />
           </LigneCompte>
           <LigneCompte icone="contrat" titre={t('driverTerms.rowTitle')} sous={t('driverTerms.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <DriverContractTerms />}
@@ -1187,7 +1194,7 @@ export default function Account() {
 
       <p className="account-legal">
         <Link to="/confidentialite">{t('accountUi.privacy')}</Link>
-        <Link to="/cgv">CGV</Link>
+        <Link to="/cgv">{t('footer.terms')}</Link>
         <Link to="/mentions-legales">{t('accountUi.legalNotice')}</Link>
         <Link to="/cookies">{t('footer.cookies')}</Link>
         {/* Sur le site : revoir son choix de cookies. Dans l'app, il n'y a qu'un choix, les rapports de panne, et il a sa
@@ -1297,7 +1304,13 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
       {!codeSent ? (
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <div className="field" style={{ flex: 1, margin: 0, minWidth: 180 }}>
-            {type === 'tel' ? <PhoneInput value={newValue} onChange={setNewValue} /> : <input type={type} value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder={placeholder} />}
+            {/* Nommé (CROSS-88), rempli par le navigateur (CROSS-69), envoyé par Entrée (CROSS-74). */}
+            <label className="sr-only" htmlFor={`contact-nouveau-${field}`}>{t('accountUi.newValueA11y', { label })}</label>
+            {type === 'tel'
+              ? <PhoneInput id={`contact-nouveau-${field}`} value={newValue} onChange={setNewValue} />
+              : <input id={`contact-nouveau-${field}`} type={type} value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder={placeholder}
+                  autoComplete={type === 'email' ? 'email' : undefined}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !sending) { e.preventDefault(); sendCode(); } }} />}
           </div>
           <button type="button" className="btn-teal" disabled={sending} onClick={sendCode}>{sending ? '...' : t('accountUi.sendCode')}</button>
           <button type="button" className="btn-ghost" onClick={cancel}>{t('accountUi.cancel')}</button>
@@ -1309,7 +1322,9 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
           </p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <div className="field" style={{ flex: 1, margin: 0, minWidth: 140 }}>
-              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" maxLength={6} />
+              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" maxLength={6}
+                aria-label={t('accountUi.codeA11y')} inputMode="numeric" autoComplete="one-time-code"
+                onKeyDown={(e) => { if (e.key === 'Enter' && !confirming) { e.preventDefault(); confirm(); } }} />
             </div>
             <button type="button" className="btn-teal" disabled={confirming} onClick={confirm}>{confirming ? '...' : t('accountUi.confirmCode')}</button>
             <button type="button" className="btn-ghost" disabled={sending} onClick={sendCode}>{t('accountUi.resend')}</button>
@@ -1324,7 +1339,15 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
 // Résumé compact de l'activité du livreur, dans sa rangée dépliable de la page Mon compte — les détails
 // (historique de livraisons, pourboires) vivent chacun sur leur propre page dédiée. Pas d'étoiles : le
 // livreur n'est pas noté (contrat livreur, présomption de salariat).
-function DriverActivity({ deliveries, t }) {
+function DriverActivity({ deliveries, t, erreur, onReessayer }) {
+  if (!deliveries && erreur) {
+    return (
+      <div>
+        <p className="small" role="alert">{erreur.message}</p>
+        <button type="button" className="btn-outline btn-sm" onClick={onReessayer}>{t('common.retry')}</button>
+      </div>
+    );
+  }
   if (!deliveries) return <p className="small">{t('accountUi.loading')}</p>;
 
   const delivered = deliveries.filter((o) => o.status === 'livre');

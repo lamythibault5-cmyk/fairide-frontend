@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import ErreurChargement from '../../components/ErreurChargement';
 import Icone from '../../components/Icone';
 
 // ENTRAÎNEMENT (fondateur, 2026-10-08) : pendant 7 jours après la première connexion de son terminal, le commerce se fait envoyer
@@ -19,9 +20,13 @@ export default function SimulationPage() {
   const [etat, setEtat] = useState(null);
   const [occupe, setOccupe] = useState(null);
 
+  // Un premier chargement raté ne laisse plus « … » pour toujours : « Impossible de charger » + Réessayer (audit du 19/10, CROSS-33).
+  const [erreur, setErreur] = useState(null);
   const charger = useCallback(() => {
     if (!restoId) return;
-    api(`/restaurants/${restoId}/training`, { token }).then(setEtat).catch((e) => toast(e.message, 'erreur'));
+    api(`/restaurants/${restoId}/training`, { token })
+      .then((r) => { setEtat(r); setErreur(null); })
+      .catch((e) => { setErreur(e); toast(e.message, 'erreur'); });
   }, [restoId, token, toast]);
   useEffect(() => { charger(); }, [charger]);
 
@@ -57,7 +62,8 @@ export default function SimulationPage() {
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('simResto.title')}</h2>
       <p className="small" style={{ margin: '0 0 14px', maxWidth: 760 }}>{t('simResto.intro')}</p>
 
-      {!etat && <p className="small">…</p>}
+      {!etat && erreur && <ErreurChargement erreur={erreur} onReessayer={charger} />}
+      {!etat && !erreur && <p className="small">…</p>}
       {etat && !etat.available && etat.reason === 'NO_TERMINAL' && (
         <div className="card"><b>{t('simResto.noTerminalTitle')}</b><p className="small" style={{ margin: '6px 0 0' }}>{t('simResto.noTerminalText')} <Link to="/dashboard/terminal">{t('simResto.terminalLink')}</Link></p></div>
       )}

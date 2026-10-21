@@ -91,6 +91,21 @@ export default function Checkout() {
   // par défaut : un pourboire présélectionné serait payé par des clients qui ne l'ont pas choisi.
   const [pourboire, setPourboire] = useState('0');
   const [pourboireAutre, setPourboireAutre] = useState('');
+  /* LE CHAMP EN FAUTE (audit du 19/10, CROSS-83) : l'erreur n'était qu'un toast, le champ n'était ni marqué ni atteint, et un
+   * lecteur d'écran restait sur le bouton « Payer ». On retient lequel est en faute ('adresse', 'horaire', 'pourboire') ; la
+   * marque disparaît d'elle-même dès que la valeur devient correcte (voir les conditions à l'affichage). */
+  const [champEnFaute, setChampEnFaute] = useState(null);
+  function signalerChamp(champ, message, idCible) {
+    toast(message, 'erreur');
+    setChampEnFaute(champ);
+    // Après le rendu qui pose aria-invalid, pour que le lecteur d'écran lise le champ déjà marqué.
+    setTimeout(() => {
+      const el = document.getElementById(idCible);
+      if (!el) return;
+      el.scrollIntoView({ behavior: defilement(), block: 'center' });
+      el.focus({ preventScroll: true });
+    }, 0);
+  }
   const [fulfillmentType, setFulfillmentType] = useState('delivery');
   // Sous-ecran ouvert par-dessus le paiement : 'adresse', 'remise', ou null.
   const [sousEcran, setSousEcran] = useState(null);
@@ -351,6 +366,7 @@ export default function Checkout() {
     : pourboire === 'autre' ? Math.max(0, +(Number(String(pourboireAutre).replace(',', '.')) || 0).toFixed(2))
     : Number(pourboire);
   const montantDebite = +(montantAnnonce + pourboireChoisi).toFixed(2);
+  const pourboireEnFaute = champEnFaute === 'pourboire' && pourboireChoisi > 0 && pourboireChoisi < 0.5;
   // Refus du serveur sur le panier affiché : commerce fermé ou en pause, adresse introuvable ou trop loin, commerce pas
   // encore actif… Sauf ce que le client règle sur cette page même (CGU, âge, téléphone, dépôt devant la porte avec de
   // l'alcool) : ces cases sont sous ses yeux, les annoncer avant qu'il ait pu les cocher serait du bruit. Ni les erreurs
@@ -373,16 +389,16 @@ export default function Checkout() {
   async function placeOrder() {
     if (apercu) { setApercuOuvert(true); return; }
     if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
-      toast(t('checkout.toastAddressRequired'), 'erreur');
+      signalerChamp('adresse', t('checkout.toastAddressRequired'), 'checkout-rangee-adresse');
       return;
     }
     if (scheduleEnabled && (!scheduleDate || !scheduleTime)) {
-      toast(t('checkout.toastScheduledDateTimeRequired'), 'erreur');
+      signalerChamp('horaire', t('checkout.toastScheduledDateTimeRequired'), 'checkout-horaire');
       return;
     }
     // Stripe n'encaisse rien sous 0,50 € : refusé ici plutôt qu'après la création de la commande.
     if (pourboireChoisi > 0 && pourboireChoisi < 0.5) {
-      toast(t('checkout.tipTooSmall'), 'erreur');
+      signalerChamp('pourboire', t('checkout.tipTooSmall'), 'checkout-pourboire-autre');
       return;
     }
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
@@ -541,10 +557,16 @@ export default function Checkout() {
           { value: 'autre', label: t('checkout.tipOther') }
         ]}
       />
+      {/* Texte + clavier décimal plutôt que type="number" (audit du 19/10, CROSS-62) : sur iPhone, « 2,50 » tapé dans un champ
+          numérique pouvait remonter vide, et le pourboire tombait à 0 sans un mot. La virgule est lue plus haut (pourboireChoisi). */}
       {pourboire === 'autre' && (
-        <input aria-label={t('checkout.tipOtherPh')} type="number" inputMode="decimal" min="0.5" step="0.5" placeholder={t('checkout.tipOtherPh')}
-          value={pourboireAutre} onChange={(e) => setPourboireAutre(e.target.value)} style={{ marginTop: 6, maxWidth: 160 }} />
+        <input id="checkout-pourboire-autre" aria-label={t('checkout.tipOtherPh')} type="text" inputMode="decimal" autoComplete="off" placeholder={t('checkout.tipOtherPh')}
+          value={pourboireAutre} onChange={(e) => setPourboireAutre(e.target.value)} style={{ marginTop: 6, maxWidth: 160 }}
+          className={pourboireEnFaute ? 'input-invalid' : undefined}
+          aria-invalid={pourboireEnFaute ? 'true' : undefined}
+          aria-describedby={pourboireEnFaute ? 'checkout-pourboire-erreur' : undefined} />
       )}
+      {pourboireEnFaute && <p className="small" id="checkout-pourboire-erreur" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('checkout.tipTooSmall')}</p>}
       <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('checkout.tipSub')}</p>
     </div>
   );
@@ -653,7 +675,7 @@ export default function Checkout() {
                 c'est la forme des captures d'Uber, et elle convient parce qu'ici presque tout est
                 déjà connu : l'adresse vient du compte, la remise a un défaut. */}
             {fulfillmentType === 'delivery' && (
-              <button type="button" className="checkout-rangee" onClick={() => setSousEcran('adresse')}>
+              <button type="button" id="checkout-rangee-adresse" className="checkout-rangee" onClick={() => setSousEcran('adresse')}>
                 <Icone nom="maison" taille={20} />
                 <span className="checkout-rangee-texte">
                   <span className="checkout-rangee-titre">{adresseIncomplete ? t('checkout.addressMissing') : adresseResume}</span>
@@ -738,7 +760,9 @@ export default function Checkout() {
                 </div>
                 {scheduleEnabled && (
                   <>
-                    <div style={{ marginTop: 8 }}>
+                    {/* Cible du focus quand le jour ou l'heure manque au paiement (CROSS-83) ; le message est dit juste dessous. */}
+                    <div style={{ marginTop: 8 }} id="checkout-horaire" tabIndex={-1}
+                      aria-describedby={champEnFaute === 'horaire' && (!scheduleDate || !scheduleTime) ? 'checkout-horaire-erreur' : undefined}>
                       <ChoixPastilles
                         libelle={t('checkout.scheduleLater')}
                         valeur={scheduleDate}
@@ -752,6 +776,9 @@ export default function Checkout() {
                         options={scheduleTimeOptions.map((tm) => ({ value: tm, label: tm }))}
                       />
                     </div>
+                    {champEnFaute === 'horaire' && (!scheduleDate || !scheduleTime) && scheduleTimeOptions.length > 0 && (
+                      <p className="small" id="checkout-horaire-erreur" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('checkout.toastScheduledDateTimeRequired')}</p>
+                    )}
                     {scheduleTimeOptions.length === 0 && (
                       <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('checkout.noSlotsToday')}</p>
                     )}
@@ -929,7 +956,12 @@ export default function Checkout() {
       {sousEcran === 'adresse-manuelle' && (
         <SousEcran titre={t('checkout.addressTitle')} onFermer={() => setSousEcran(null)} pied={
           <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} onClick={() => {
-            if (adresseIncomplete) { toast(t('checkout.toastAddressRequired'), 'erreur'); return; }
+            if (adresseIncomplete) {
+              // Le premier champ vide est marqué et reçoit le focus (CROSS-83), au lieu d'un toast seul.
+              const vide = [['checkout-f-1', addressStreet], ['checkout-f-2', addressNumber], ['checkout-f-3', addressPostalCode], ['checkout-f-4', addressCity]].find(([, v]) => !v.trim());
+              signalerChamp('adresse', t('checkout.toastAddressRequired'), vide[0]);
+              return;
+            }
             setSousEcran(null);
           }}>{t('checkout.addressSave')}</button>
         }>
@@ -950,21 +982,27 @@ export default function Checkout() {
                 }} />
                 <div className="field">
                   <label htmlFor="checkout-f-1">{t('auth.street')}</label>
-                  <input id="checkout-f-1" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('checkout.streetPlaceholder')} />
+                  <input id="checkout-f-1" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('checkout.streetPlaceholder')}
+                    aria-invalid={champEnFaute === 'adresse' && !addressStreet.trim() ? 'true' : undefined} />
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 1 }}>
                     <label htmlFor="checkout-f-2">{t('auth.number')}</label>
-                    <input id="checkout-f-2" value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder={t('checkout.numberPlaceholder')} />
+                    <input id="checkout-f-2" value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder={t('checkout.numberPlaceholder')}
+                      aria-invalid={champEnFaute === 'adresse' && !addressNumber.trim() ? 'true' : undefined} />
                   </div>
                   <div className="field" style={{ flex: 1 }}>
                     <label htmlFor="checkout-f-3">{t('auth.postalCode')}</label>
-                    <input id="checkout-f-3" value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder={t('checkout.postalPlaceholder')} />
+                    {/* Code postal belge : quatre chiffres, clavier numérique et remplissage automatique (audit du 19/10, CROSS-68/69). */}
+                    <input id="checkout-f-3" value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder={t('checkout.postalPlaceholder')}
+                      inputMode="numeric" maxLength={4} autoComplete="postal-code"
+                      aria-invalid={champEnFaute === 'adresse' && !addressPostalCode.trim() ? 'true' : undefined} />
                   </div>
                 </div>
                 <div className="field">
                   <label htmlFor="checkout-f-4">{t('auth.city')}</label>
-                  <input id="checkout-f-4" value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('checkout.cityPlaceholder')} />
+                  <input id="checkout-f-4" value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('checkout.cityPlaceholder')} autoComplete="address-level2"
+                    aria-invalid={champEnFaute === 'adresse' && !addressCity.trim() ? 'true' : undefined} />
                 </div>
         </SousEcran>
       )}
@@ -991,7 +1029,8 @@ export default function Checkout() {
                 </div>
                 <div className="field">
                   <label htmlFor="checkout-f-6">{t('checkout.driverNote')}</label>
-                  <input id="checkout-f-6" value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder={t('checkout.driverNotePlaceholder')} />
+                  {/* Une limite (audit du 19/10, CROSS-73) : rien ne bornait la consigne, ni ici ni au serveur. */}
+                  <input id="checkout-f-6" maxLength={500} value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder={t('checkout.driverNotePlaceholder')} />
                 </div>
         </SousEcran>
       )}

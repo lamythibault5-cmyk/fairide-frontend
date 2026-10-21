@@ -4606,7 +4606,7 @@ export default {
       serviceFee: 'incl. Fairide system fee',
       balanceUsed: 'Customer balance used',
       totalPaid: 'Total paid',
-      disclaimer: 'Order summary provided by Fairide, does not replace the receipt of your own cash register system if you are legally subject to it.',
+      disclaimer: 'Order summary provided by Fairide: it does not replace the business\'s till receipt, if it is required to issue one.',
       thanks: 'Thank you and enjoy your meal!',
       paidVia: 'Paid via Fairide ✓',
       unpaid: 'Unpaid',
@@ -4813,7 +4813,12 @@ export default {
       closed: 'Closed',
       applyAllDays: 'Apply to every day',
       addService: '+ Add a service',
-      removeService: 'Remove this service'
+      removeService: 'Remove this service',
+      to: 'to',
+      openTime: '{day}, service {n} opens',
+      closeTime: '{day}, service {n} closes',
+      closedDay: '{day}: closed',
+      removeServiceDay: '{day}: remove service {n}'
     },
     gallery: {
       keepOldTitle: 'Keep the old photo?',
@@ -4923,7 +4928,8 @@ export default {
       tabInvoices: 'My invoices',
       tabStatements: 'Statements',
       tabSubscription: 'Subscription',
-      archiveDesc2: 'One invoice per month, issued automatically at the start of the month for the past month and e-mailed with the PDF. Each PDF details every order: date, type, amount, rate and commission (no VAT: Fairide falls under the small-business VAT exemption scheme). to receive it again, UBL for your accounting software (Peppol).'
+      archiveDesc2: 'One invoice per month, issued automatically at the start of the month for the past month and e-mailed with the PDF. Each PDF details every order: date, type, amount, rate and commission (no VAT: Fairide falls under the small-business VAT exemption scheme). to receive it again, UBL for your accounting software (Peppol).',
+      monthA11y: 'Invoice month'
     },
     promosPage: {
       inactiveSuffix: ' · inactive',
@@ -5113,7 +5119,11 @@ export default {
       singleShort: 'single choice',
       multipleShort: 'several choices',
       maxShort: 'max {n} choices',
-      requiredShort: ', required'
+      requiredShort: ', required',
+      optionNameA11y: 'Option {n}: name',
+      optionPriceA11y: 'Option {n}: extra price in euros',
+      removeOptionA11y: 'Remove option {n}',
+      editGroupA11y: 'Edit the group {name}'
     },
     menuItem: {
       save: 'Save',
@@ -6557,7 +6567,8 @@ export default {
       replaceText: 'Your cart holds dishes from {name}. The group’s shares will replace it.',
       bannerText: 'You are picking your share of {name}’s group order. When you are ready, send your cart to the group: {name} pays.',
       bannerSend: 'Send to the group',
-      bannerLeave: 'Leave the group'
+      bannerLeave: 'Leave the group',
+      cancelConfirm: 'The group is cancelled for everyone, and it cannot be reopened.'
     },
     team: {
       rowTitle: 'My team',
@@ -6883,7 +6894,12 @@ export default {
       guestReviewsCount: '{n} review(s)',
       guestReviewsContest: 'Does a review seem unfair or against the rules? Write to contact@fairide.be: we check it and remove it if it breaks them.',
       earningsRow: 'My earnings',
-      earningsRowSub: 'Gross, withholding, net paid · per month and per ride'
+      earningsRowSub: 'Gross, withholding, net paid · per month and per ride',
+      redeemCodeA11y: 'Code to redeem',
+      convertAmountA11y: 'Amount to convert, in euros',
+      referralCodeA11y: 'Your referral code',
+      newValueA11y: 'New value: {label}',
+      codeA11y: 'Code received, 6 digits'
     },
     bons: {
       loading: 'Loading…',
@@ -6997,7 +7013,19 @@ export default {
       prixComptoir: "In-store prices",
       prixComptoirTitre: "This restaurant shows its in-store prices on Fairide, checked by the Fairide team.",
       verifiedShort: 'verified',
-      close: 'Close'
+      close: 'Close',
+      loadFailedServer: 'The server is not responding right now. Try again in a moment.',
+      wrongRole_client: 'This link opens with the customer role. You can add it in My account, then open the link again.',
+      wrongRole_restaurant: 'This link opens with the business role. You can add it in My account, then open the link again.',
+      wrongRole_driver: 'This link opens with the courier role. You can add it in My account, then open the link again.',
+      docUnavailable: 'This document is not available right now.',
+      docReadFailed: 'The document could not be read.',
+      btNeedsHttps: 'Bluetooth printing needs a secure connection (https).',
+      btNoIos: 'On iPhone and iPad, no browser allows Bluetooth from a web page. Use "Print the delivery note", which works with AirPrint.',
+      btUnsupportedBrowser: 'This browser does not support Bluetooth. Chrome or Edge do; otherwise, use "Print the delivery note".',
+      btUnavailable: 'Bluetooth unavailable.',
+      btNotAPrinter: 'This device does not seem to be a printer: no writable channel found.',
+      btNotConnected: 'No printer connected.'
     },
     seo: {
       defaultTitle: 'Food delivery in Brussels · The Uber Eats alternative | Fairide',
@@ -7082,7 +7110,7 @@ export default {
       join: 'Join',
       orderNow: 'Order now',
       addBusiness: 'Add my business',
-      becomeDriver: 'Become a driver',
+      becomeDriver: 'Become a courier',
       legalHeading: 'Fairide',
       legalNotice: 'Legal notice',
       privacy: 'Privacy',
@@ -7149,7 +7177,7 @@ export default {
       joinRestaurantTitle: "Sell at your in-store prices, without commissions eating you alive",
       joinRestaurantLink: 'Add my business',
       joinDriverTitle: 'Ride and get paid more fairly on every delivery',
-      joinDriverLink: 'Become a driver',
+      joinDriverLink: 'Become a courier',
       communesTitle: 'Communes covered in Brussels',
       trustTitle: 'They trust us',
       appSoonBadge: 'Coming soon',
@@ -7159,12 +7187,12 @@ export default {
       appSoonOn: "Coming soon on",
       appSoonNote: 'Always the same commission capped at 10% to support the neighbourhood\'s businesses and couriers.',
       ctaTitle: 'Want to support the neighbourhood?',
-      ctaText: 'Join Fairide as a customer, business or driver, free to sign up.',
+      ctaText: 'Join Fairide as a customer, business or courier, free to sign up.',
       ctaButton: 'Create my account',
       contactTitle: 'Contact',
       joinClientRole: 'Customer',
       joinRestaurantRole: 'Business',
-      joinDriverRole: 'Driver',
+      joinDriverRole: 'Courier',
       euroEyebrow: 'Where every euro goes',
       euroTitle: 'On €1 of order value, this is what the platform takes.',
       euroUsCut: '€0.10 taken',
@@ -7374,7 +7402,7 @@ export default {
       modeDelivery: 'Delivery',
       modePickup: 'Pickup',
       feeLabel: 'Delivery fee',
-      feeFrom: 'from {amount} €',
+      feeFrom: 'from {amount}',
       feeFree: 'Free',
       feePickup: 'Free',
       feePickupLabel: 'Pickup in store',
@@ -7831,7 +7859,7 @@ export default {
       languageHelp: 'Choose the interface language. Your choice is remembered on this device.',
       roleClient: 'Customer',
       roleRestaurant: 'Business',
-      roleDriver: 'Driver',
+      roleDriver: 'Courier',
       balance: 'Your Fairide balance',
       redeemPlaceholder: 'Got a code to redeem?',
       redeemButton: 'Redeem',
@@ -7860,7 +7888,7 @@ export default {
         how: {
           client: 'Share your code with a friend. Once they create a customer account and place their first order of €20 or more, you get €5 of Fairide credit.',
           restaurant: 'Share your code with another restaurant owner. Once their restaurant receives its first order of €20 or more, you get €5 of Fairide credit.',
-          driver: 'Share your code with another driver. Once they deliver their first order of €20 or more, you get €5 of Fairide credit.'
+          driver: 'Share your code with another courier. Once they deliver their first order of €20 or more, you get €5 of Fairide credit.'
         },
         copy: 'Copy',
         toastCopied: 'Code copied!',
@@ -7879,7 +7907,7 @@ export default {
       changePassword: 'Change password',
       deleteTitle: 'Delete my account',
       deleteButton: 'Delete my account',
-      deleteWarning: 'This action is irreversible. If you already have orders, your personal data will be erased but your order history will remain visible (anonymised) to the relevant businesses/drivers.',
+      deleteWarning: 'This action is irreversible. If you already have orders, your personal data will be erased but your order history will remain visible (anonymised) to the relevant businesses/couriers.',
       deleteWhy: 'Why do you want to leave us?',
       deleteComment: 'A comment (optional)',
       deleteCommentPlaceholder: 'Help us improve...',
@@ -7892,7 +7920,7 @@ export default {
         notUsing: "I no longer use the service",
         tooExpensive: 'Prices or fees too high',
         badExperience: 'Bad experience with an order',
-        restaurantDriverIssue: 'Issue with a restaurant or driver',
+        restaurantDriverIssue: 'Issue with a restaurant or courier',
         otherApp: 'I prefer another app',
         privacySecurity: 'Privacy or security concern',
         other: 'Other reason'
@@ -7907,7 +7935,7 @@ export default {
       toastAccountDeleted: 'Account deleted.',
       toastPasswordTooShort: 'The new password must be at least 6 characters and contain an uppercase and a lowercase letter.',
       toastPasswordChanged: 'Password changed.',
-      driverActivityTitle: 'My driver activity',
+      driverActivityTitle: 'My courier activity',
       deliveriesDone: 'Deliveries completed',
       estimatedEarnings: 'Estimated earnings (tips included)',
       tipsTitle: 'My tips',
@@ -7944,7 +7972,7 @@ export default {
       sentMessage: 'Message sent, thank you! We\'ll reply very soon.',
       roleLabel: 'You are...',
       roleClient: 'Client',
-      roleDriver: 'Driver',
+      roleDriver: 'Courier',
       roleRestaurant: 'Merchant',
       roleOther: 'Other',
       fullName: 'Full name',
@@ -7973,7 +8001,9 @@ export default {
       pendingTitle: 'Payment still being verified',
       pendingText: 'Your payment is not confirmed on our side yet. This can take a minute. Your order is listed under "My orders" and its status will update there on its own.',
       failedTitle: 'This payment did not go through',
-      failedText: 'We did not receive this payment. Your order was not sent to the restaurant and you have not been charged. You can try again from "My orders".'
+      failedText: 'We did not receive this payment. Your order was not sent to the restaurant and you have not been charged. You can try again from "My orders".',
+      notFoundTitle: 'Order not found',
+      notFoundText: 'This order is not on your account. Check that you are signed in with the account that placed it.'
     },
     adminGo: {
       title: "GO button: delivery and online payment",
@@ -8284,10 +8314,10 @@ export default {
       clientSpace: 'Customer area',
       partnerSpace: 'Partner area',
       clientHeading: 'Order from the shops in your neighbourhood',
-      partnerHeading: 'Join Fairide as a business or driver',
+      partnerHeading: 'Join Fairide as a business or courier',
       roleClient: 'Customer',
       roleRestaurant: 'Business',
-      roleDriver: 'Driver',
+      roleDriver: 'Courier',
       genderPlaceholder: 'Gender (optional)',
       genderWoman: 'Woman',
       genderMan: 'Man',
@@ -8387,7 +8417,7 @@ export default {
       errPasswordRetry: 'Your password was not accepted. Choose another one: everything else you entered is kept.',
       errVerificationSent: 'A verification code has been sent to your email.',
       errEmailNotVerified: 'First confirm your email with the code we sent you.',
-      errCodeRequired: 'Enter the code you received by email.',
+      errCodeRequired: 'Enter the code you received.',
       errEmailRequired: 'Enter your email address.',
       newCodeSent: 'New code sent.',
       changePhone: "Not your number? Change it",
@@ -8545,7 +8575,9 @@ export default {
       errCompanyNumberLength: 'A company number has 10 digits: you typed {n}. It looks like 0123.456.789 (with or without dots; a leading “BE” is fine).',
       errCompanyNumberPrefix: 'A Belgian company number starts with 0 or 1 (e.g. 0123.456.789). Check the first digit.',
       errCompanyNumberKey: 'These 10 digits are not a valid company number: the last two are a check key that does not match the first eight. There is probably a typo — copy it from an official document (CBE, invoice).',
-      bagDrawing: 'The bag we mean: an insulated, square, rigid backpack that keeps dishes hot (or cold) and upright on the way — like the ones delivery platforms use.'
+      bagDrawing: 'The bag we mean: an insulated, square, rigid backpack that keeps dishes hot (or cold) and upright on the way — like the ones delivery platforms use.',
+      managerPhoneA11y: 'Phone of manager {n}',
+      managerRemoveA11y: 'Remove manager {n}'
     },
     // Conformité (backlog du 23/09/2026) : panier, fiche vendeur, allergènes, alcool, signalement,
     // livreurs, décisions motivées, registres. Même clé dans les trois langues.
@@ -8947,7 +8979,8 @@ export default {
       paramFlagsHelp: 'Every change is logged. Only switch once the lawyer\'s position is known. The sharing-economy (P2P) status is opened in Couriers › Parameters.',
       paramFlagToggle: 'Switch',
       paramsSaved: 'Parameters saved.',
-      joinDriverP2NoP2p: 'Student-self-employed or self-employed: you choose your status'
+      joinDriverP2NoP2p: 'Student-self-employed or self-employed: you choose your status',
+      reportMinChars: '{n} of at least 20 characters'
     },
     simulation: {
       benchTakeoverConfirm: 'This device is the terminal of “{name}”. Connecting it to the simulation disconnects it from that shop, which will have to reconnect it. Continue?',

@@ -154,7 +154,7 @@ export default function InvoicesPage() {
         <p className="ec-feuille-titre">{t('invoicesResto.commissionInvoice')}</p>
         <p className="ec-aide">{t('invoicesResto.commissionHelp')}</p>
         <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-          <input type="month" value={month} max={dernierMois} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 180 }} />
+          <input type="month" value={month} max={dernierMois} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 180 }} aria-label={t('invoicesResto.monthA11y')} />
           {/* Imprimer n'existe pas dans l'application (WebView) : le bouton n'y faisait rien. */}
           {invoice?.items?.length > 0 && !experienceApp() && <button className="btn-teal" onClick={() => window.print()}>{t('invoicesResto.print')}</button>}
         </div>

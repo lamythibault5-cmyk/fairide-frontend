@@ -12,6 +12,7 @@ import TicketPapier from '../../components/TicketPapier';
 import { imprimerTicketPapier } from '../../impressionPapier';
 import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPrinter';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import Modale from '../../components/Modale';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 import { buildTicketBytes, COLUMNS_58MM } from '../../escposTicket';
@@ -336,12 +337,28 @@ export default function OrdersPage() {
      code à taper depuis le 2026-10-20), « Client pas venu » dessous. Toucher la carte ouvre le détail, comme avant. */
   const nouvellesTriees = enCours.filter((o) => orderStageKey(o) === 'nouveau').sort((a, b) => echeance(a) - echeance(b));
   const plusPressee = nouvellesTriees.find((o) => o.status === 'nouveau')?.id;
+  /* LA CARTE AU CLAVIER (audit du 19/10, CROSS-85) : toucher la carte ouvre le détail, mais une div n'est ni atteignable à la
+     tabulation ni activable par Entrée. Elle entre dans l'ordre de tabulation et s'ouvre par Entrée ou Espace — seulement
+     quand c'est la carte elle-même qui a le focus, pas l'un de ses boutons (Accepter, imprimer…). Un groupe nommé, pas role="button" :
+     la carte contient des boutons, et un bouton dans un bouton n'est pas permis. */
+  const ouvrirAuClavier = (o) => ({
+    tabIndex: 0,
+    role: 'group',
+    'aria-label': t('ordersResto.orderOf', { name: o.clientName }),
+    onKeyDown: (e) => {
+      if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+      e.preventDefault();
+      setSelectedOrder(o);
+    }
+  });
   const boutonPhoto = (o, classe, taille) => (
     <>
       {['nouveau', 'preparation', 'pret'].includes(o.status) && !o.preparedPhoto && (
         <label className={classe} title={t('ordersResto.photoHelp')} aria-label={t('ordersResto.photoBtn')} onClick={(e) => e.stopPropagation()}>
           {photoEnCours === o.id ? '…' : <Icone nom="photo" taille={taille} className="icone-texte" />}
-          <input type="file" accept="image/*" capture="environment" hidden disabled={photoEnCours === o.id} onChange={(e) => { photographier(o, e.target.files?.[0]); e.target.value = ''; }} />
+          {/* sr-only plutôt que hidden (audit du 19/10, CROSS-95) : un champ caché n'entrait pas dans la tabulation, la photo
+              de la commande prête n'était pas atteignable au clavier. */}
+          <input type="file" accept="image/*" capture="environment" className="sr-only" aria-label={t('ordersResto.photoBtn')} disabled={photoEnCours === o.id} onChange={(e) => { photographier(o, e.target.files?.[0]); e.target.value = ''; }} />
         </label>
       )}
       {o.preparedPhoto && (
@@ -408,7 +425,7 @@ export default function OrdersPage() {
     // La plus pressée a ses boutons dans la barre au-dessus des onglets (app) : la carte garde le temps de préparation.
     const dansLaBarre = barre && o.id === plusPressee;
     return (
-    <div className={`ec-commande${nouvelle ? ' ec-commande--nouvelle' : ''}`} key={o.id} onClick={() => setSelectedOrder(o)}>
+    <div className={`ec-commande${nouvelle ? ' ec-commande--nouvelle' : ''}`} key={o.id} onClick={() => setSelectedOrder(o)} {...ouvrirAuClavier(o)}>
       <div className="ec-cmd-l1">
         {/* Étape en texte foncé, la couleur sur la pastille seule (audit du 15/10/2026). */}
         <span key={stageKey} className={`etape-pastille ec-saute${nouvelle ? ' ec-sonne' : ''}`} style={{ '--etape-couleur': stageColor }}>
@@ -488,9 +505,10 @@ export default function OrdersPage() {
   // Les fenêtres (détail, refus avec motif, allergie, client pas venu, contrôle d'âge), communes au tableau du site et à la liste de l'app.
   const fenetres = (
     <>
-        {selectedOrder && createPortal(
-          <div className="modal-overlay no-print" onClick={() => setSelectedOrder(null)}>
-            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        {/* Une vraie fenêtre (Modale) et non plus un fond fait main (audit du 19/10, CROSS-06) : Échap la ferme, le focus y
+            entre et revient à la carte, et le Retour d'Android ferme le détail au lieu de quitter la page des commandes. */}
+        {selectedOrder && (
+          <Modale classe="no-print" ariaLabel={t('ordersResto.orderOf', { name: selectedOrder.clientName })} onFermer={() => setSelectedOrder(null)}>
               <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
                 <h3 style={{ margin: 0 }}>{t('ordersResto.orderOf', { name: selectedOrder.clientName })}</h3>
                 {selectedOrder.orderNumber ? <span className="commande-numero">{numeroCommande(selectedOrder)}</span> : <span className={`status-badge status-${selectedOrder.status}`}>{statusLabel(selectedOrder.status, selectedOrder.orderType, t)}</span>}
@@ -606,9 +624,7 @@ export default function OrdersPage() {
                 </>
               )}
               {apercu?.orderId === selectedOrder.id && <div style={{ marginTop: 12 }}><TicketPapier lines={apercu.lines} columns={apercu.columns} /></div>}
-            </div>
-          </div>,
-          document.body
+          </Modale>
         )}
         {/* Portail séparé du modal (lui-même marqué no-print) : c'est ce qui garantit que le reçu reste
             visible à l'impression même si le modal et le reste de la page sont masqués (voir OrderReceipt.jsx
@@ -673,7 +689,7 @@ export default function OrdersPage() {
     const pressee = o.id === plusPressee;
     const pastille = !['nouveau', 'preparation'].includes(stageKey);
     return (
-      <article key={o.id} className={`sp-cmd${pressee ? ' sp-cmd--pressee' : ''}`} onClick={() => setSelectedOrder(o)}>
+      <article key={o.id} className={`sp-cmd${pressee ? ' sp-cmd--pressee' : ''}`} onClick={() => setSelectedOrder(o)} {...ouvrirAuClavier(o)}>
         <div className="sp-cmd-l1">
           <div className="sp-cmd-qui">
             <div className="sp-cmd-tete">

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { api, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -11,6 +11,7 @@ import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPr
 import { abonnerTerminalNavigateur, associerTerminalNavigateur, deconnecterTerminalNavigateur } from '../../terminalNavigateur';
 import Icone from '../../components/Icone';
 import AvecMarque from '../../components/AvecMarque';
+import ErreurChargement from '../../components/ErreurChargement';
 
 // Ticket de test fabriqué ici, sans passer par le serveur : il vérifie seulement le canal page → service Goodcom →
 // imprimante (installation). Le test « complet », par la file d'impression, reste le bouton plus bas.
@@ -43,9 +44,16 @@ export default function TerminalPage() {
   useEffect(() => { if (!dansTerminal()) detecter(); }, [detecter]);
   useEffect(() => abonnerTerminalNavigateur(setWeb), []);
 
+  // Un premier chargement raté ne laisse plus « … » pour toujours : « Impossible de charger » + Réessayer (audit du 19/10, CROSS-33).
+  // Le toast ne sonne qu'au premier échec d'une série : la page relit toutes les 30 s, et un serveur injoignable faisait
+  // apparaître la même erreur à chaque tour.
+  const [erreur, setErreur] = useState(null);
+  const echecEnCours = useRef(false);
   const charger = useCallback(() => {
     if (!restoId) return;
-    api(`/restaurants/${restoId}/terminals`, { token }).then(setDonnees).catch((e) => toast(e.message, 'erreur'));
+    api(`/restaurants/${restoId}/terminals`, { token })
+      .then((r) => { setDonnees(r); setErreur(null); echecEnCours.current = false; })
+      .catch((e) => { setErreur(e); if (!echecEnCours.current) toast(e.message, 'erreur'); echecEnCours.current = true; });
   }, [restoId, token, toast]);
   useEffect(() => { charger(); }, [charger]);
   // L'état des terminaux (batterie, papier) change : on le relit toutes les 30 s tant que la page est ouverte.
@@ -192,7 +200,8 @@ export default function TerminalPage() {
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>{t('terminal.devicesTitle')}</h3>
-        {!donnees && <p className="small">…</p>}
+        {!donnees && erreur && <ErreurChargement erreur={erreur} onReessayer={charger} />}
+        {!donnees && !erreur && <p className="small">…</p>}
         {donnees && actifs.length === 0 && <p className="small" style={{ margin: 0 }}>{t('terminal.noDevice')}</p>}
         <div className="terminal-liste">
           {actifs.map((x) => (

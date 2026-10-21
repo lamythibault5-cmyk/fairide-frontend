@@ -107,8 +107,10 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
               <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                 <input style={{ flex: 1 }} aria-label={t('auth.managerName')} placeholder={t('auth.managerNamePh')} value={r.name} onChange={(e) => majResponsable(i, 'name', e.target.value)} />
                 {r.role === 'owner' && <span className="pill">{t('editResto.managerOwner')}</span>}
-                <button type="button" className="btn-ghost btn-sm" onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))}>{t('editResto.removeSecond')}</button>
+                <button type="button" className="btn-ghost btn-sm" onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))} aria-label={t('auth.managerRemoveA11y', { n: i + 1 })}>{t('editResto.removeSecond')}</button>
               </div>
+              {/* Nommé, et « Retirer » dit qui il retire (audit du 19/10, CROSS-89/109). */}
+              <label className="sr-only" htmlFor={`commerce-resp-${i}`}>{t('auth.managerPhoneA11y', { n: i + 1 })}</label>
               <div style={{ marginTop: 6 }}><PhoneInput id={`commerce-resp-${i}`} value={r.phone} onChange={(v) => majResponsable(i, 'phone', v)} autoComplete="off" /></div>
             </div>
           ))}

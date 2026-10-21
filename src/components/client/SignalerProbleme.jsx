@@ -70,7 +70,7 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
       </div>
       <div className="field">
         <label htmlFor={`${idBase}-photo`}>{t('orders.problem_photoLabel')}</label>
-        <input id={`${idBase}-photo`} type="file" accept="image/*" capture="environment" onChange={(e) => setPhoto(e.target.files?.[0] || null)} />
+        <input id={`${idBase}-photo`} type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)} />
       </div>
       <p className="small" style={{ margin: '0 0 8px' }}>{t('orders.problem_responseTime', { hours: 24 })}</p>
       <div className="row" style={{ gap: 8 }}>

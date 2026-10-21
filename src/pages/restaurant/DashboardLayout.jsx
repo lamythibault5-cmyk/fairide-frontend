@@ -399,7 +399,7 @@ export default function DashboardLayout() {
           <h2 style={{ marginTop: 0 }}>{t('dashResto.myRestaurant')}</h2>
           {myRestos.length > 1 && (
             <div className="row" style={{ marginBottom: 10 }}>
-              <select style={{ flex: 1 }} value={restoId || ''} onChange={(e) => e.target.value && pickResto(e.target.value)}>
+              <select style={{ flex: 1 }} value={restoId || ''} onChange={(e) => e.target.value && pickResto(e.target.value)} aria-label={t('dashResto.myRestaurant')}>
                 <option value="">{t('dashResto.chooseRestaurant')}</option>
                 {myRestos.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>

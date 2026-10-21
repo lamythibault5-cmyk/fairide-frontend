@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import Modale from './Modale';
 import Icone from './Icone';
 
 // Brouillons de carte : un menu préparé à côté (carte d'été, nouvelle formule, changement de saison)
@@ -186,7 +187,8 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
       )}
 
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 10 }}>
-        <input value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('menuPage.draftsNamePlaceholder')} style={{ flex: '1 1 200px', minWidth: 160 }} disabled={creation} />
+        {/* Champs nommés (audit du 19/10, CROSS-89) : l'exemple seul s'efface à la première lettre. */}
+        <input value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('menuPage.draftsNamePlaceholder')} aria-label={t('menuPage.draftsNamePlaceholder')} style={{ flex: '1 1 200px', minWidth: 160 }} disabled={creation} />
         <button type="button" className="btn-outline" disabled={creation} onClick={() => creer(false)}>{creation ? '…' : t('menuPage.draftsNew')}</button>
         {menuCount > 0 && (
           <button type="button" className="btn-outline" disabled={creation} onClick={() => creer(true)}>{t('menuPage.draftsFromCurrent', { n: menuCount })}</button>
@@ -206,14 +208,14 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
             <div key={l.cle} className="row" style={{ gap: 6, alignItems: 'flex-start', marginTop: 8, flexWrap: 'wrap' }}>
               <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div className="row" style={{ gap: 6 }}>
-                  <input style={{ flex: 2 }} value={l.name} onChange={(e) => majLigne(l.cle, 'name', e.target.value)} placeholder={t('menuPage.draftsItemName')} />
-                  <input style={{ flex: 1, maxWidth: 110 }} inputMode="decimal" value={l.price} onChange={(e) => majLigne(l.cle, 'price', e.target.value)} placeholder={t('menuPage.draftsItemPrice')} />
+                  <input style={{ flex: 2 }} value={l.name} onChange={(e) => majLigne(l.cle, 'name', e.target.value)} placeholder={t('menuPage.draftsItemName')} aria-label={t('menuPage.draftsItemName')} />
+                  <input style={{ flex: 1, maxWidth: 110 }} inputMode="decimal" value={l.price} onChange={(e) => majLigne(l.cle, 'price', e.target.value)} placeholder={t('menuPage.draftsItemPrice')} aria-label={t('menuPage.draftsItemPrice')} />
                 </div>
                 <div className="row" style={{ gap: 6 }}>
-                  <input style={{ flex: 1 }} value={l.category} onChange={(e) => majLigne(l.cle, 'category', e.target.value)} placeholder={t('menuPage.draftsItemSection')} />
-                  <input style={{ flex: 1 }} value={l.subsection} onChange={(e) => majLigne(l.cle, 'subsection', e.target.value)} placeholder={t('menuPage.draftsItemSubsection')} />
+                  <input style={{ flex: 1 }} value={l.category} onChange={(e) => majLigne(l.cle, 'category', e.target.value)} placeholder={t('menuPage.draftsItemSection')} aria-label={t('menuPage.draftsItemSection')} />
+                  <input style={{ flex: 1 }} value={l.subsection} onChange={(e) => majLigne(l.cle, 'subsection', e.target.value)} placeholder={t('menuPage.draftsItemSubsection')} aria-label={t('menuPage.draftsItemSubsection')} />
                 </div>
-                <input value={l.desc} onChange={(e) => majLigne(l.cle, 'desc', e.target.value)} placeholder={t('menuPage.draftsItemDesc')} />
+                <input value={l.desc} onChange={(e) => majLigne(l.cle, 'desc', e.target.value)} placeholder={t('menuPage.draftsItemDesc')} aria-label={t('menuPage.draftsItemDesc')} />
               </div>
               <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => retirerLigne(l.cle)} title={t('menuPage.draftsRemoveItem')} aria-label={t('menuPage.draftsRemoveItem')}><Icone nom="croix" taille={16} className="icone-texte" /></button>
             </div>
@@ -228,9 +230,9 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
         </div>
       )}
 
+      {/* Des Modale plutôt que des fonds faits main (audit du 19/10, CROSS-06) : Échap, focus, Retour d'Android. */}
       {publication && (
-        <div className="modal-overlay" onClick={() => !publieEnCours && setPublication(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <Modale ariaLabel={t('menuPage.draftsPublishTitle', { name: publication.name })} onFermer={() => !publieEnCours && setPublication(null)}>
             <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('menuPage.draftsPublishTitle', { name: publication.name })}</h3>
             <p className="small" style={{ margin: '0 0 16px' }}>{t('menuPage.draftsPublishChoice')}</p>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
@@ -238,21 +240,18 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
               <button type="button" className="btn-danger" disabled={publieEnCours} onClick={() => publier(true)}>{t('menuPage.draftsPublishReplace', { n: menuCount })}</button>
               <button type="button" className="btn-ghost" disabled={publieEnCours} onClick={() => setPublication(null)}>{t('menuPage.cancel')}</button>
             </div>
-          </div>
-        </div>
+        </Modale>
       )}
 
       {suppression && (
-        <div className="modal-overlay" onClick={() => setSuppression(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <Modale ariaLabel={t('menuPage.draftsDelete')} onFermer={() => setSuppression(null)}>
             <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('menuPage.draftsDelete')}</h3>
             <p className="small" style={{ margin: '0 0 16px' }}>{t('menuPage.draftsDeleteConfirm', { name: suppression.name })}</p>
             <div className="row" style={{ gap: 8 }}>
               <button type="button" className="btn-danger" onClick={supprimer}>{t('menuPage.draftsDelete')}</button>
               <button type="button" className="btn-ghost" onClick={() => setSuppression(null)}>{t('menuPage.cancel')}</button>
             </div>
-          </div>
-        </div>
+        </Modale>
       )}
     </div>
   );

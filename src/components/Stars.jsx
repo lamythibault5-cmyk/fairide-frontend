@@ -12,11 +12,22 @@ export function StarsDisplay({ value, size = 14 }) {
 }
 
 // Vrais boutons, zone de toucher d'au moins 40 px : de simples caractères de 24 px se ratent au doigt.
-export function StarsInput({ value, onChange }) {
+// Un groupe nommé (`ariaLabel`) et les flèches du clavier, comme tout groupe de boutons radio (audit du 19/10, CROSS-88 et
+// CROSS-105) : une seule étoile dans la tabulation, les flèches changent la note et y déplacent le focus.
+export function StarsInput({ value, onChange, ariaLabel }) {
+  function surTouche(e, i) {
+    const pas = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : 0;
+    if (!pas) return;
+    e.preventDefault();
+    const suivante = Math.min(5, Math.max(1, i + pas));
+    onChange(suivante);
+    e.currentTarget.parentElement?.children[suivante - 1]?.focus();
+  }
   return (
-    <span className="stars-input" role="radiogroup">
+    <span className="stars-input" role="radiogroup" aria-label={ariaLabel}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <button key={i} type="button" role="radio" aria-checked={value === i} aria-label={`${i}/5`} onClick={() => onChange(i)} style={{ color: i <= value ? 'var(--iris)' : 'var(--line)' }}>
+        <button key={i} type="button" role="radio" aria-checked={value === i} aria-label={`${i}/5`} onClick={() => onChange(i)} onKeyDown={(e) => surTouche(e, i)}
+          tabIndex={value === i || (!value && i === 1) ? 0 : -1} style={{ color: i <= value ? 'var(--iris)' : 'var(--line)' }}>
           ★
         </button>
       ))}

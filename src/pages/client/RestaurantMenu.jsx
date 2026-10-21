@@ -108,6 +108,10 @@ export default function RestaurantMenu() {
   const [discover, setDiscover] = useState(() => tirerDecouvertes(lireCache('/restaurants'), id));
   // Le commerce pour lequel « À découvrir » a été tiré (null : pas encore tiré, la liste n'était pas gardée).
   const decouvertesPour = useRef(lireCache('/restaurants') ? id : null);
+  // Le commerce affiché en ce moment : une réponse arrivée après un changement de fiche (« À découvrir ») est ignorée.
+  const ficheCourante = useRef(id);
+  // Un double appui sur « Commande groupée » créait deux groupes (audit du 19/10, CROSS-48).
+  const groupeEnCreation = useRef(false);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(token ? lireCache('/restaurants/favorites/ids', token) || [] : []));
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   // Les horaires, l'adresse, le téléphone et le site vivaient en clair sous le titre, soit six
@@ -260,12 +264,19 @@ export default function RestaurantMenu() {
     setErreur(null);
     // Fiche déjà gardée (cacheDonnees.js) : elle est à l'écran, la relecture se fait derrière. Si la relecture échoue, on
     // garde ce qu'on montre — sauf un 404 : le commerce a été retiré, la fiche ne doit plus s'afficher.
+    /* CHANGER DE FICHE SANS GARDER L'ANCIENNE (audit du 19/10, CROSS-46). Une carte « À découvrir » ouvrait B alors que la
+       carte de A restait affichée jusqu'à la réponse — un plat ajouté pendant ce temps était celui de A. On repart de ce
+       qu'on sait de B (ou des squelettes), et une réponse tardive pour A ne remplace plus B. */
+    ficheCourante.current = id;
+    const pourCetteFiche = (fn) => (v) => { if (ficheCourante.current === id) fn(v); };
     const gardee = lireCache(`/restaurants/${id}`, token);
-    if (gardee) setRestaurant(gardee);
-    chargerAvecCache(`/restaurants/${id}`, { token }).then(setRestaurant).catch((e) => { if (!gardee || e.status === 404) setErreur(e); });
+    setRestaurant(gardee || null);
+    setReviews(lireCache(`/restaurants/${id}/reviews`) || null);
+    setComplet(false);
+    chargerAvecCache(`/restaurants/${id}`, { token }).then(pourCetteFiche(setRestaurant)).catch(pourCetteFiche((e) => { if (!gardee || e.status === 404) setErreur(e); }));
     // La capacité du jour (« complet ») change d'une commande à l'autre : toujours relue, jamais gardée.
-    api(`/restaurants/${id}/capacity`).then((c) => setComplet(!!c.full)).catch(() => {});
-    chargerAvecCache(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
+    api(`/restaurants/${id}/capacity`).then(pourCetteFiche((c) => setComplet(!!c.full))).catch(() => {});
+    chargerAvecCache(`/restaurants/${id}/reviews`).then(pourCetteFiche(setReviews)).catch(() => {});
     // « À découvrir » est tiré une fois par fiche : une relecture identique ne rebat pas la rangée sous les yeux.
     const tous = lireCache('/restaurants');
     if (tous && decouvertesPour.current !== id) { decouvertesPour.current = id; setDiscover(tirerDecouvertes(tous, id)); }
@@ -611,7 +622,7 @@ export default function RestaurantMenu() {
     ? t('restaurantMenu.feePickup')
     : restaurant.freeDelivery
       ? t('restaurantMenu.feeFree')
-      : t('restaurantMenu.feeFrom', { amount: tarifLivraison(restaurant).depart.toFixed(2).replace('.', ',') });
+      : t('restaurantMenu.feeFrom', { amount: euros(tarifLivraison(restaurant).depart) }); // « from €5.00 » en anglais (LIVE-14)
   /* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
      forfaitaire côté client : le montant exact dépend de la distance et se calcule au
      serveur, exactement comme l'annonce déjà le paiement. Aucun délai d'arrivée n'y figure : le
@@ -623,10 +634,12 @@ export default function RestaurantMenu() {
      une pastille à filet iris sous la description ; dans l'app (version B), un lien court sur la rangée de la bascule. */
   const boutonGroupe = user && !onlineOrderingDisabled && !(String(groupeEnCours()?.restaurantId) === String(restaurant.id) && !groupeQuitte) && (
     <button type="button" className={APPLI ? 'fiche-groupe-lien' : 'eg-bouton-iris eg-depart'} aria-label={t('groupOrder.start')} onClick={async () => {
+      if (groupeEnCreation.current) return;
+      groupeEnCreation.current = true;
       try {
         const g = await api('/group-orders', { method: 'POST', token, body: { restaurantId: restaurant.id } });
         navigate(`/groupe/${g.code}`);
-      } catch (e) { toast(e.message, 'erreur'); }
+      } catch (e) { toast(e.message, 'erreur'); } finally { groupeEnCreation.current = false; }
     }}>
       <Icone nom="personnes" taille={17} />{APPLI ? t('groupOrder.startShort') : t('groupOrder.start')}
     </button>

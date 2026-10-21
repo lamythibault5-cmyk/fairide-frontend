@@ -165,6 +165,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
                       style={{ marginBottom: 6 }}
                     />
                     <input
+                      aria-label={`${lang.toUpperCase()} · ${t('menuItem.description')}`}
                       value={translationDrafts[lang]?.desc ?? tr.desc ?? ''}
                       onChange={(e) => setTranslationDrafts((d) => ({ ...d, [lang]: { ...(d[lang] || tr), desc: e.target.value } }))}
                       placeholder={t('menuItem.description')}
@@ -305,6 +306,19 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
       }}
       onClick={reorderMode || lectureSeule ? undefined : selectMode ? () => onToggleSelect(item.id) : () => setEditing(true)}
       title={reorderMode || lectureSeule ? '' : selectMode ? t('menuItem.clickSelect') : t('menuItem.clickEdit')}
+      /* AU CLAVIER (audit du 19/10, CROSS-85) : toucher la carte était le seul moyen de modifier un plat. Elle entre dans la
+         tabulation et s'ouvre par Entrée ou Espace quand elle a elle-même le focus (pas ses boutons de stock). Un groupe
+         nommé plutôt qu'un bouton : la carte contient des boutons. */
+      {...(reorderMode || lectureSeule ? {} : {
+        tabIndex: 0,
+        role: 'group',
+        'aria-label': `${item.name} · ${selectMode ? t('menuItem.clickSelect') : t('menuItem.clickEdit')}`,
+        onKeyDown: (e) => {
+          if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+          e.preventDefault();
+          if (selectMode) onToggleSelect(item.id); else setEditing(true);
+        }
+      })}
     >
       {reorderMode && (
         <button

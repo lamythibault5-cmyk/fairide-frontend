@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import Modale from './Modale';
 import { api, apiUpload } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -87,9 +87,9 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
   }
 
   if (pendingUrl) {
-    return createPortal(
-      <div className="modal-overlay" onClick={onCancel}>
-        <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+    // Des Modale plutôt que des fonds faits main (audit du 19/10, CROSS-06) : Échap, focus, Retour d'Android.
+    return (
+      <Modale ariaLabel={t('gallery.keepOldTitle')} onFermer={onCancel}>
           <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('gallery.keepOldTitle')}</h3>
           <p className="small" style={{ margin: '0 0 14px' }}>
             {t('gallery.keepOldBody')}
@@ -105,15 +105,12 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
             </button>
             <button type="button" className="btn-ghost" disabled={keeping} onClick={discardOldAndSwitch}>{t('gallery.noThanks')}</button>
           </div>
-        </div>
-      </div>,
-      document.body
+      </Modale>
     );
   }
 
-  return createPortal(
-    <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+  return (
+    <Modale ariaLabel={title} onFermer={onCancel}>
         <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{title}</h3>
 
         {suggestions.length > 0 && (
@@ -174,8 +171,6 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
         <div className="row" style={{ gap: 8, marginTop: 14 }}>
           <button type="button" className="btn-ghost" onClick={onCancel}>{t('gallery.close')}</button>
         </div>
-      </div>
-    </div>,
-    document.body
+    </Modale>
   );
 }

@@ -15,10 +15,13 @@ export default function NouvellesFairide({ ouverte, onClick }) {
   const [abonne, setAbonne] = useState(null); // null tant que le serveur n'a pas répondu
   const [enCours, setEnCours] = useState(false);
 
+  // Échec silencieux : la case restait grisée pour toujours. Le message et Réessayer, maintenant (audit du 19/10, CROSS-33).
+  const [erreur, setErreur] = useState(null);
+  const [relance, setRelance] = useState(0);
   useEffect(() => {
     if (!token) return;
-    api('/auth/me/marketing', { token }).then((r) => setAbonne(r.marketingEmails)).catch(() => {});
-  }, [token]);
+    api('/auth/me/marketing', { token }).then((r) => { setAbonne(r.marketingEmails); setErreur(null); }).catch(setErreur);
+  }, [token, relance]);
 
   async function basculer(e) {
     const voulu = e.target.checked;
@@ -42,6 +45,12 @@ export default function NouvellesFairide({ ouverte, onClick }) {
         <input type="checkbox" style={{ width: 'auto' }} checked={!!abonne} disabled={abonne === null || enCours} onChange={basculer} />
         <span className="small">{t('nouvelles.toggleLabel')}</span>
       </label>
+      {abonne === null && erreur && (
+        <p className="small" role="alert" style={{ margin: '8px 0 0' }}>
+          {erreur.message}{' '}
+          <button type="button" className="btn-outline btn-sm" onClick={() => setRelance((n) => n + 1)}>{t('common.retry')}</button>
+        </p>
+      )}
     </LigneCompte>
   );
 }

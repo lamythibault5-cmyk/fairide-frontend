@@ -20,6 +20,8 @@
 // Services GATT connus des imprimantes thermiques BLE. Aucun standard n'existe : chaque fabricant
 // choisit son identifiant, ceux-ci couvrent les puces les plus répandues. Ils doivent être déclarés à
 // l'appairage, sinon le navigateur refuse d'y accéder ensuite, même si l'appareil les expose.
+import { traduire } from './context/LanguageContext';
+
 const SERVICES_IMPRIMANTES = [
   0x18f0,                                    // Puce répandue (Goojprt, Xprinter, Munbyn...)
   0xff00,                                    // Variante fréquente
@@ -51,13 +53,14 @@ export function unsupportedReason() {
   if (typeof navigator === 'undefined') return null;
   if (navigator.bluetooth) return null;
   if (typeof window !== 'undefined' && !window.isSecureContext) {
-    return "L'impression Bluetooth exige une connexion securisee (https).";
+    // Messages traduits, et accentués (audit du 19/10, CROSS-13) : ils étaient en français sans accents, quelle que soit la langue.
+    return traduire('common.btNeedsHttps');
   }
   const ua = navigator.userAgent || '';
   if (/iPhone|iPad|iPod/i.test(ua)) {
-    return "Sur iPhone et iPad, aucun navigateur n'autorise le Bluetooth depuis une page web. Utilise « Imprimer le bon de livraison », qui fonctionne avec AirPrint.";
+    return traduire('common.btNoIos');
   }
-  return "Ce navigateur ne gere pas le Bluetooth. Chrome ou Edge le permettent ; sinon, utilise « Imprimer le bon de livraison ».";
+  return traduire('common.btUnsupportedBrowser');
 }
 
 export function connectedDeviceName() {
@@ -80,7 +83,7 @@ async function trouverCaracteristique(serveur) {
 }
 
 export async function connect() {
-  if (!isSupported()) throw new Error(unsupportedReason() || 'Bluetooth indisponible.');
+  if (!isSupported()) throw new Error(unsupportedReason() || traduire('common.btUnavailable'));
 
   // acceptAllDevices plutôt qu'un filtre sur les services : beaucoup d'imprimantes n'annoncent pas
   // leur service dans la trame de découverte, et un filtre les rendrait tout simplement absentes de
@@ -96,7 +99,7 @@ export async function connect() {
   if (!caracteristique) {
     appareil.gatt.disconnect();
     appareil = null;
-    throw new Error("Cet appareil ne semble pas etre une imprimante : aucun canal d'ecriture trouve.");
+    throw new Error(traduire('common.btNotAPrinter'));
   }
   return appareil.name || 'Imprimante';
 }
@@ -114,7 +117,7 @@ export async function printBytes(bytes) {
     const serveur = await appareil.gatt.connect();
     caracteristique = await trouverCaracteristique(serveur);
   }
-  if (!caracteristique) throw new Error('Aucune imprimante connectee.');
+  if (!caracteristique) throw new Error(traduire('common.btNotConnected'));
 
   const sansReponse = caracteristique.properties.writeWithoutResponse;
   for (let i = 0; i < bytes.length; i += TAILLE_MORCEAU) {

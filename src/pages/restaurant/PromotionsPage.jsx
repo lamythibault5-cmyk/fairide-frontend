@@ -16,6 +16,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
 import EtatVide from '../../components/EtatVide';
+import ErreurChargement from '../../components/ErreurChargement';
 
 /* PROMOTIONS — BANDEAU IRIS ET FEUILLE BLANCHE, DANS L'APP COMME SUR LE SITE (fondateur, 2026-10-19, « Proposal » de la
  * section 4 de finitions-appli.html). Sur le bandeau, le titre et le compte (« 1 active · 1 en pause ») ; dans la feuille,
@@ -173,8 +174,12 @@ export default function PromotionsPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [aSupprimer, setASupprimer] = useState(null);
 
+  // Un premier chargement raté ne laisse plus « … » pour toujours : « Impossible de charger » + Réessayer (audit du 19/10, CROSS-33).
+  const [erreurPromos, setErreurPromos] = useState(null);
   function loadPromos() {
-    api(`/restaurants/${restoId}/promotions/mine`, { token }).then(setPromos).catch((e) => toast(e.message, 'erreur'));
+    api(`/restaurants/${restoId}/promotions/mine`, { token })
+      .then((r) => { setPromos(r); setErreurPromos(null); })
+      .catch((e) => { setErreurPromos(e); toast(e.message, 'erreur'); });
   }
 
   useEffect(() => {
@@ -300,7 +305,8 @@ export default function PromotionsPage() {
   return (
     <CadreSite appli lecture classe="ec-promos" titre={t('promosPage.title')} sous={compte ?? '…'}>
       <p className="ec-feuille-titre">{t('promosPage.ownPromosTitle')}</p>
-      {propres === null && <p className="ec-aide">{t('promosPage.loading')}</p>}
+      {propres === null && erreurPromos && <ErreurChargement erreur={erreurPromos} onReessayer={loadPromos} enLigne={false} />}
+      {propres === null && !erreurPromos && <p className="ec-aide">{t('promosPage.loading')}</p>}
       {propres !== null && propres.length === 0 && !formOpen && <EtatVide icone="etiquette" titre={t('promosPage.none')} />}
       {propres !== null && propres.length > 0 && (
         <div className="ec-lignes">
