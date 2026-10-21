@@ -6,7 +6,9 @@ import { useEffect, useRef } from 'react';
 // Complète les rafraîchissements périodiques (toutes les 15 s) déjà en place sur les pages « vivantes ».
 const ABSENCE_MIN_MS = 20000;
 
-export default function useRevalidation(rafraichir, { actif = true } = {}) {
+// `absenceMin` : 0 pour relire à CHAQUE retour (retour de Stripe dans l'app : la page de Stripe s'ouvre par-dessus, et
+// l'app redevient visible quand on la ferme — voir natif.js, appStateChange).
+export default function useRevalidation(rafraichir, { actif = true, absenceMin = ABSENCE_MIN_MS } = {}) {
   const fn = useRef(rafraichir);
   fn.current = rafraichir;
   useEffect(() => {
@@ -16,10 +18,10 @@ export default function useRevalidation(rafraichir, { actif = true } = {}) {
     const lancer = () => { if (Date.now() - dernier < 3000) return; dernier = Date.now(); try { const r = fn.current?.(); if (r && typeof r.catch === 'function') r.catch(() => {}); } catch { /* best effort */ } };
     const onVisibilite = () => {
       if (document.visibilityState === 'hidden') { cacheDepuis = Date.now(); return; }
-      if (cacheDepuis && Date.now() - cacheDepuis >= ABSENCE_MIN_MS) lancer();
+      if (cacheDepuis && Date.now() - cacheDepuis >= absenceMin) lancer();
       cacheDepuis = null;
     };
-    const onFocus = () => { if (Date.now() - dernier >= ABSENCE_MIN_MS) lancer(); };
+    const onFocus = () => { if (Date.now() - dernier >= absenceMin) lancer(); };
     document.addEventListener('visibilitychange', onVisibilite);
     window.addEventListener('focus', onFocus);
     window.addEventListener('online', lancer);
@@ -28,5 +30,5 @@ export default function useRevalidation(rafraichir, { actif = true } = {}) {
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('online', lancer);
     };
-  }, [actif]);
+  }, [actif, absenceMin]);
 }

@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { appleDisponible } from '../natif';
+import { appleDisponible, prechaufferConnexion } from '../natif';
 
 /* « Continuer avec Apple » / « Continuer avec Google », DANS L'APPLICATION seulement (estNatif()).
  *
@@ -33,17 +34,35 @@ export function LogoGoogle({ taille = 18 }) {
 }
 
 // `onChoix('apple' | 'google')` : à l'appelant d'ouvrir la feuille native et de traiter le jeton.
+//
+// LE BOUTON TOUCHÉ DIT QU'IL TRAVAILLE (2026-10-21, latence de l'app). Avant, les deux boutons grisaient, puis plus rien
+// pendant la feuille de Google, la vérification du serveur et l'arrivée sur la page : on retouchait, ou on croyait l'app
+// figée. Tant que l'appelant garde `disabled`, le bouton choisi reste plein, avec une roue et « Connexion… ».
 export default function BoutonsConnexionNative({ onChoix, disabled = false }) {
   const { t } = useLanguage();
+  const [choisi, setChoisi] = useState(null);
+  // Fin de l'attente (annulé, erreur) : on oublie le choix — sans effet, à la manière recommandée par React.
+  const [attenteVue, setAttenteVue] = useState(disabled);
+  if (attenteVue !== disabled) {
+    setAttenteVue(disabled);
+    if (!disabled) setChoisi(null);
+  }
+  useEffect(() => { prechaufferConnexion(); }, []);
+  const choisir = (fournisseur) => { setChoisi(fournisseur); onChoix(fournisseur); };
+  const contenu = (fournisseur, logo, libelle) => (disabled && choisi === fournisseur
+    ? <><span className="btn-connexion-roue" aria-hidden="true" />{t('appli.connexionEnCours')}</>
+    : <>{logo} {libelle}</>);
   return (
     <div className="connexion-native">
       {appleDisponible() && (
-        <button type="button" className="btn-connexion btn-connexion-apple" disabled={disabled} onClick={() => onChoix('apple')}>
-          <LogoApple /> {t('appli.continueApple')}
+        <button type="button" className={`btn-connexion btn-connexion-apple${disabled && choisi === 'apple' ? ' en-cours' : ''}`} disabled={disabled}
+          aria-busy={disabled && choisi === 'apple'} onClick={() => choisir('apple')}>
+          {contenu('apple', <LogoApple />, t('appli.continueApple'))}
         </button>
       )}
-      <button type="button" className="btn-connexion btn-connexion-google" disabled={disabled} onClick={() => onChoix('google')}>
-        <LogoGoogle /> {t('appli.continueGoogle')}
+      <button type="button" className={`btn-connexion btn-connexion-google${disabled && choisi === 'google' ? ' en-cours' : ''}`} disabled={disabled}
+        aria-busy={disabled && choisi === 'google'} onClick={() => choisir('google')}>
+        {contenu('google', <LogoGoogle />, t('appli.continueGoogle'))}
       </button>
     </div>
   );

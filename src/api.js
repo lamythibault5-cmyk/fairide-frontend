@@ -62,6 +62,9 @@ export async function api(path, { method = 'GET', body, token, logoutOn401 = tru
   // Langue de l'interface : le backend en fait la langue des e-mails déclenchés par cette requête
   // (code de vérification, bienvenue...) — voir userLang.js côté serveur.
   const headers = { 'Content-Type': 'application/json', 'X-Fairide-Lang': getLanguage() };
+  // Requête de l'application native : le serveur fait alors revenir Stripe sur /retour-appli, qui rouvre l'app à coup sûr
+  // (pages/app/RetourAppli.jsx). Le site n'envoie rien : ses retours de Stripe ne changent pas.
+  if (estNatif()) headers['X-Fairide-Appli'] = '1';
   if (token) headers.Authorization = 'Bearer ' + token;
   /* UNE LECTURE ABANDONNE APRÈS 20 SECONDES (audit du 18/10/2026). Sans limite, un serveur qui ne répond pas laissait un
    * chargement tourner pour toujours. Seulement les lectures (GET) : une commande ou un paiement lent mais abouti ne doit

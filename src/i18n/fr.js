@@ -4151,6 +4151,13 @@ export default {
       lawTitle: 'Droit applicable, litiges et médiation',
       law: 'Les présentes conditions sont soumises au droit belge. En cas de litige, contactez-nous d\'abord à contact@fairide.be : nous répondons sous 5 jours ouvrables. À défaut d\'accord, le consommateur peut s\'adresser au Service de Médiation pour le Consommateur (North Gate II, Boulevard du Roi Albert II 8 bte 1, 1000 Bruxelles, [mediationconsommateur.be](https://mediationconsommateur.be)). Les tribunaux de l\'arrondissement judiciaire de Bruxelles sont compétents, sans préjudice des règles impératives de compétence applicables aux consommateurs. Vous pouvez aussi déposer votre plainte en ligne sur Belmed, la plateforme de règlement extrajudiciaire des litiges du SPF Économie ([belmed.economie.fgov.be](https://belmed.economie.fgov.be)).'
     },
+    // Page de retour de Stripe dans l'app (pages/app/RetourAppli.jsx).
+    retourAppli: {
+      titre: 'Retourne dans l\'app Fairide',
+      texte: 'Stripe a terminé. Touche le bouton pour revenir dans l\'app Fairide.',
+      bouton: 'Ouvrir l\'app Fairide',
+      site: 'Continuer sur le site'
+    },
     cookiesPolicy: {
       pageTitle: 'Politique des cookies · Fairide',
       title: 'Politique des cookies',
@@ -4158,7 +4165,7 @@ export default {
       whatTitle: 'Qu\'est-ce qu\'un cookie ?',
       what: 'Un cookie est un petit fichier déposé par un site dans votre navigateur. Fairide utilise aussi le « stockage local » du navigateur (localStorage et sessionStorage), qui joue le même rôle : retenir des informations d\'une page à l\'autre. Cette politique couvre les deux. Elle s\'applique au site fairide.be et à l\'application Fairide installée depuis le navigateur.',
       technicalTitle: 'Cookies et stockages strictement nécessaires',
-      technical: 'Ils sont indispensables au fonctionnement du service et ne demandent pas votre consentement : **votre session** (jeton de connexion, conservé jusqu\'à 30 jours ou jusqu\'à votre déconnexion), **votre panier** (contenu et commerce choisi, 24 heures au plus, vidé à la déconnexion), **votre inscription commencée** (48 heures au plus, effacée dès que le compte est créé), **votre choix concernant la bannière cookies**, et les **protections techniques** (limitation des abus, sécurité des formulaires). Sans eux, impossible de se connecter ou de commander.',
+      technical: 'Ils sont indispensables au fonctionnement du service et ne demandent pas votre consentement : **votre session** (jeton de connexion, conservé jusqu\'à 30 jours ou jusqu\'à votre déconnexion), **votre panier** (contenu et commerce choisi, 24 heures au plus, vidé à la déconnexion), **votre inscription commencée** (48 heures au plus, effacée dès que le compte est créé), **la dernière liste des commerces**, dans l\'application seulement (pour l\'afficher dès l\'ouverture ; publique, sans aucune donnée vous concernant), **votre choix concernant la bannière cookies**, et les **protections techniques** (limitation des abus, sécurité des formulaires). Sans eux, impossible de se connecter ou de commander.',
       preferencesTitle: 'Préférences',
       preferences: 'Pour vous faciliter la vie, Fairide retient dans votre navigateur : la **langue** choisie (français, anglais, néerlandais), le **thème** d\'affichage, vos **dernières recherches** dans l\'application (cinq au plus, effacées à la déconnexion), la **musique** choisie dans les mini-jeux et vos meilleurs scores, l\'imprimante de tickets et le papier choisis par un commerce, les onglets et filtres ouverts dans le tableau de bord. Ces informations ne quittent pas votre appareil et ne servent à aucun suivi.',
       thirdPartyTitle: 'Services tiers',
@@ -9281,6 +9288,7 @@ export default {
       lvN2S: 'Pas de note ni de classement : personne n’est prévenu avant toi.',
       continueApple: 'Continuer avec Apple',
       continueGoogle: 'Continuer avec Google',
+      connexionEnCours: 'Connexion…',
       continueEmail: 'Continuer avec mon e-mail',
       appleLinked: 'Compte Apple retenu',
       nativeLoginFailed: 'La connexion n’a pas abouti. Réessaie, ou continue avec ton e-mail.',
