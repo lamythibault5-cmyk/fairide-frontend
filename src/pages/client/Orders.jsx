@@ -22,7 +22,8 @@ import ClocheNotifications from '../../components/client/ClocheNotifications';
 import ReglageNotifications from '../../components/ReglageNotifications';
 import { RappelEmail } from '../../components/EmailConfirmation';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import { api } from '../../api';
+import { api, API_BASE } from '../../api';
+import { ouvrirPdf, nomRecu } from '../../pdf';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
@@ -30,7 +31,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { DeliveryTiming, ProchaineEtape, RouteSuivi, titreSuivi, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
-import { StarsInput } from '../../components/Stars';
+import { StarsInput, StarsDisplay } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import Icone from '../../components/Icone';
@@ -52,7 +53,9 @@ const heureCourte = (ms) => new Date(ms).toLocaleTimeString(getLocale(), { hour:
 // laisser : le formulaire ne se rouvre pas sur une commande notée, et le renvoyer butait sur « avis déjà
 // envoyé » avant d'atteindre le pourboire.
 function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
-  const [foodRating, setFoodRating] = useState(5);
+  // Aucune étoile au départ (audit du 19/10, AO-21) : un seul toucher sur « Envoyer » publiait un 5 étoiles que le client
+  // n'avait pas choisi. L'envoi attend une note (bouton désactivé tant qu'il n'y en a pas).
+  const [foodRating, setFoodRating] = useState(0);
   const [foodComment, setFoodComment] = useState('');
   const [tipChoice, setTipChoice] = useState(0);
   const [tipInput, setTipInput] = useState('');
@@ -75,21 +78,24 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
           if (e.status !== 409) throw e;
         }
       }
-      const tip = tipInput.trim() ? +Number(tipInput).toFixed(2) : tipChoice;
+      // « 2,50 » est lu comme 2,50 € (audit du 19/10, CROSS-62) : Number('2,50') donnait NaN, et le pourboire tombait sans un mot.
+      const tip = tipInput.trim() ? +(Number(tipInput.trim().replace(',', '.')) || 0).toFixed(2) : tipChoice;
+      // L'avis envoyé se lit tout de suite sous la commande (AO-22), sans attendre la relecture des 15 s.
+      const avis = pourboireSeul ? {} : { myReview: { foodRating, foodComment: foodComment.trim(), restaurantReply: '' } };
       if (order.driverName && tip > 0) {
         await api(`/orders/${order.id}/tip`, { method: 'PATCH', token, body: { tip } });
         const pay = await api(`/payments/tip-checkout/${order.id}`, { method: 'POST', token });
         if (pay.simulated) {
           toast(t('review.toastThanksTip'));
           // Pourboire acquis : le bouton « Laisser un pourboire » ne doit pas rester affiché (plan de test SIM-9).
-          onDone({ tipPaid: true });
+          onDone({ tipPaid: true, ...avis });
         } else {
           await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
         }
         return;
       }
       toast(t('review.toastThanks'), 'succes');
-      onDone();
+      onDone(avis);
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -101,9 +107,9 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
     <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: 14, marginTop: 8 }}>
       {!pourboireSeul && <div style={{ marginBottom: 10 }}>
         <div className="small" style={{ marginBottom: 4 }}>{t('review.foodRatingLabel')}</div>
-        <StarsInput value={foodRating} onChange={setFoodRating} />
-        {/* 1 000 caractères : la même limite que le serveur (routes/reviews.js LONGUEUR_MAX_AVIS). */}
-        <input maxLength={1000} value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder={t('review.foodCommentPlaceholder')} style={{ marginTop: 6 }} />
+        <StarsInput value={foodRating} onChange={setFoodRating} ariaLabel={t('review.foodRatingLabel')} />
+        {/* 1 000 caractères : la même limite que le serveur (routes/reviews.js LONGUEUR_MAX_AVIS). Nommé (audit du 19/10, CROSS-88). */}
+        <input maxLength={1000} value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder={t('review.foodCommentPlaceholder')} aria-label={t('review.foodCommentPlaceholder')} style={{ marginTop: 6 }} />
       </div>}
       {/* Pourboire déjà laissé en payant la commande : on ne le redemande pas. */}
       {order.driverName && order.tipPaid && (
@@ -118,6 +124,7 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
                 key={amount}
                 type="button"
                 className={tipChoice === amount && !tipInput.trim() ? 'btn-teal' : 'btn-ghost'}
+                aria-pressed={tipChoice === amount && !tipInput.trim()}
                 onClick={() => { setTipChoice(amount); setTipInput(''); }}
                 style={{ padding: '6px 12px', fontSize: 13 }}
               >
@@ -125,9 +132,9 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
               </button>
             ))}
             <input aria-label={t('review.tipOtherPlaceholder')}
-              type="number"
-              min="0.5"
-              step="0.5"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
               placeholder={t('review.tipOtherPlaceholder')}
               value={tipInput}
               onChange={(e) => setTipInput(e.target.value)}
@@ -136,7 +143,7 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
           </div>
         </div>
       )}
-      <button className="btn-teal" disabled={saving} onClick={submit}>{saving ? '...' : t('review.send')}</button>
+      <button className="btn-teal" disabled={saving || (!pourboireSeul && foodRating < 1)} onClick={submit}>{saving ? '...' : t('review.send')}</button>
     </div>
   );
 }
@@ -251,7 +258,9 @@ export default function Orders() {
     try {
       const updated = await api(`/orders/${orderId}/cancel`, { method: 'PATCH', token });
       setOrders((prev) => prev.map((x) => (x.id === orderId ? updated : x)));
-      toast(t('orders.toastCancelled'), 'succes');
+      // Payée en ligne : on dit aussi que l'argent revient, et qu'un e-mail le confirme (audit du 19/10, AO-10).
+      const rendu = updated?.paid && updated.paymentMode !== 'on_site' && !updated.refundPending;
+      toast(t(rendu ? 'orders.toastCancelledRefund' : 'orders.toastCancelled'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -261,6 +270,10 @@ export default function Orders() {
 
   // Commande en ligne créée mais jamais payée : le commerce ne la voit pas (il ne reçoit que les commandes payées).
   const impayeeEnLigne = (o) => o.status === 'nouveau' && !o.paid && o.paymentMode !== 'on_site';
+  // Créée il y a moins de deux minutes : le paiement peut être en route (navigateur de l'app fermé aussitôt après avoir
+  // payé, webhook pas encore arrivé). « Revenir au panier » annulerait la commande et ferait rembourser le paiement : il
+  // n'est proposé qu'ensuite ; la liste se relit toute seule toutes les 15 s (audit du 19/10, checkout-19).
+  const paiementPeutEtreEnRoute = (o) => Date.now() - Number(o.createdAt || 0) < 2 * 60 * 1000;
   // À payer sur place, mais jamais partie au commerce (carte « le total a changé » laissée en plan) : rien n'est en cours.
   const nonEnvoyee = (o) => o.status === 'nouveau' && !o.paid && o.paymentMode === 'on_site';
   async function envoyerAuCommerce(o) {
@@ -282,18 +295,27 @@ export default function Orders() {
     try {
       const pay = await api(`/payments/checkout/${o.id}`, { method: 'POST', token });
       if (pay.simulated) {
+        // Entièrement couverte (solde, bon, code) : l'écran de confirmation habituel (audit du 19/10, checkout-06).
         cart.discardStashed();
-        setOrders(await api('/orders/mine', { token }));
-        toast(t('checkout.toastOrderPaid'), 'succes');
-        setPayingId(null);
+        navigate(`/order-success?order=${o.id}`);
       } else {
         await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
+        // Dans l'app, la page reste /orders sous le navigateur de paiement : rien ne la remonte, et « Payer maintenant »
+        // restait grisé sur « … » après l'avoir fermé sans payer (audit du 19/10, CROSS-39).
+        setPayingId(null);
       }
     } catch (e) {
       toast(e.message, 'erreur');
       setPayingId(null);
     }
   }
+  // Retour arrière depuis Stripe sur le site : le navigateur peut rendre la page telle qu'il l'avait gardée (bfcache),
+  // bouton encore sur « … » (audit du 19/10, CROSS-40).
+  useEffect(() => {
+    const surRetour = (e) => { if (e.persisted) setPayingId(null); };
+    window.addEventListener('pageshow', surRetour);
+    return () => window.removeEventListener('pageshow', surRetour);
+  }, []);
   // Annule la commande impayée (le solde et le bon cadeau retenus sont rendus par le serveur) et rend le panier mis de côté
   // pour elle, s'il est encore là — sinon on renvoie au commerce, où le client recompose sa commande.
   async function revenirAuPanier(o) {
@@ -452,7 +474,10 @@ export default function Orders() {
         {...(APPLI ? {} : { height: 320 })}
       />
       <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
-        {o.driverLat ? t('orders.driverLiveLocation') : t('orders.driverWaitingLocation')}
+        {/* Plus de 2 min sans nouvelle position (même seuil que la carte) : pas « en direct » (audit du 19/10, AO-17). */}
+        {o.driverLat
+          ? t(o.driverLocationUpdatedAt && Date.now() - new Date(o.driverLocationUpdatedAt).getTime() > 120000 ? 'orders.driverLastLocation' : 'orders.driverLiveLocation')
+          : t('orders.driverWaitingLocation')}
       </div>
     </div>
   ) : null);
@@ -470,15 +495,39 @@ export default function Orders() {
   ) : null);
   // Pourboire payé avec la commande : débité en plus du total (backend pourboireCommande.js).
   const debite = (o) => o.total + (o.tipPaid && o.tipAtCheckout > 0 ? o.tipAtCheckout : 0);
+  /* CE QUI A ÉTÉ RENDU (audit du 19/10, AO-11). « Payée 25,00 € » restait sous une commande annulée et remboursée, et un
+   * remboursement partiel ne se voyait nulle part. Même lecture que « Mes factures » (InvoicesPage.jsx) et que le reçu :
+   * refundedAmount = somme d'order_refunds (remboursements automatiques compris, inscrits par le webhook Stripe),
+   * refundPending = remboursement automatique en échec. Le statut seul ne suffit pas : une commande annulée n'est pas
+   * toujours remboursée (client absent, non récupérée, décision de l'équipe). */
+  const etatRemboursement = (o) => {
+    if (o.refundPending) return 'en_cours';
+    const rendu = Number(o.refundedAmount || 0);
+    if (rendu <= 0) return null;
+    return rendu >= Number(o.total) - 0.005 ? 'total' : 'partiel';
+  };
+  const libellePaye = (o) => {
+    const etat = etatRemboursement(o);
+    if (etat === 'en_cours') return t('invoicesClient.refundPending');
+    if (etat === 'total') return t('invoicesClient.refunded');
+    return t('orders.paid');
+  };
   // `avecMontant` : le tableau des commandes passées du site a déjà sa colonne Total. Commande refusée : pas de « Payée … »,
   // le remboursement est dit par blocRefus.
   const blocTotal = (o, avecMontant = true) => (o.status === 'refuse' ? null : (
     <>
-      {avecMontant && (
+      {/* Payée sur place puis annulée : « À payer sur place 4,50 € » restait affiché sous une commande close (audit du 19/10,
+          LIVE-11). Rien n'a été payé, rien n'est à payer : on le dit, sans montant. */}
+      {avecMontant && o.paymentMode === 'on_site' && o.status === 'annule' && !o.pickupNoShow ? (
+        <div className="suivi-total"><span className="small">{t('orders.payNothing')}</span></div>
+      ) : avecMontant && (
         <div className="suivi-total">
-          <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
+          <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? libellePaye(o) : t('orders.paymentPending')}</span>
           <b>{euros(debite(o))}</b>
         </div>
+      )}
+      {o.paid && o.paymentMode !== 'on_site' && etatRemboursement(o) === 'partiel' && (
+        <div className="small" style={{ textAlign: avecMontant ? 'right' : undefined }}>{t('orders.refundedPart', { amount: euros(o.refundedAmount) })}</div>
       )}
       {o.tipPaid && o.tipAtCheckout > 0 && <div className="small" style={{ textAlign: avecMontant ? 'right' : undefined }}>{t('orders.tipIncluded', { amount: euros(o.tipAtCheckout) })}</div>}
       {o.tipRefunded && o.tipAtCheckout > 0 && <div className="small" style={{ textAlign: avecMontant ? 'right' : undefined }}>{t('orders.tipRefunded', { amount: euros(o.tipAtCheckout) })}</div>}
@@ -498,14 +547,16 @@ export default function Orders() {
     <>
       {impayeeEnLigne(o) && (
         <div className="paiement-non-termine">
-          <p className="small" style={{ margin: '0 0 10px' }}>{t('orders.unpaidText')}</p>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t(paiementPeutEtreEnRoute(o) ? 'orders.checkingPayment' : 'orders.unpaidText')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <button type="button" className="btn-gold" disabled={payingId === o.id || cancellingId === o.id} onClick={() => payerMaintenant(o)}>
               {payingId === o.id ? '…' : t('orders.payNow')}
             </button>
-            <button type="button" className="btn-outline" disabled={payingId === o.id || cancellingId === o.id} onClick={() => revenirAuPanier(o)}>
-              {cancellingId === o.id ? '…' : t('orders.backToCart')}
-            </button>
+            {!paiementPeutEtreEnRoute(o) && (
+              <button type="button" className="btn-outline" disabled={payingId === o.id || cancellingId === o.id} onClick={() => revenirAuPanier(o)}>
+                {cancellingId === o.id ? '…' : t('orders.backToCart')}
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -531,7 +582,8 @@ export default function Orders() {
       {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
     </button>
   ) : null);
-  const noteVerrou = (o) => (['preparation', 'pret', 'livraison'].includes(o.status) ? <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelLocked')}</div> : null);
+  // En route, « le commerce la prépare » était faux (audit du 19/10, AO-15) : une phrase pour la livraison.
+  const noteVerrou = (o) => (['preparation', 'pret', 'livraison'].includes(o.status) ? <div className="small" style={{ marginTop: 6 }}>{t(o.status === 'livraison' ? 'orders.cancelLockedOnTheWay' : 'orders.cancelLocked')}</div> : null);
   // LE PIED D'UNE COMMANDE : avis, pourboire, « Signaler un problème » ou « Un souci ? », « Commander à nouveau ». Une rangée
   // alignée sur le texte de la carte (audit design 2 : les deux liens étaient décalés l'un par rapport à l'autre).
   // `avecRecommander` : sur le site, « Commander à nouveau » est déjà sur la ligne du tableau.
@@ -549,6 +601,20 @@ export default function Orders() {
       {o.status === 'livre' && o.reviewed && (
         <div className="small" style={{ marginTop: 8, color: 'var(--teal-deep)' }}>{t('orders.reviewSent')}</div>
       )}
+      {/* Ce que le client a écrit, et la réponse publique du commerce (audit du 19/10, AO-22) — la même mise en forme que sur
+          la page du commerce (RestaurantMenu.jsx). Lecture seule : modifier ou retirer un avis reste à décider. */}
+      {o.status === 'livre' && o.myReview && (
+        <div className="small" style={{ marginTop: 4 }}>
+          <StarsDisplay value={o.myReview.foodRating} />
+          {o.myReview.foodComment && <p className="small" style={{ margin: '2px 0 0' }}>{o.myReview.foodComment}</p>}
+          {o.myReview.restaurantReply && (
+            <div style={{ marginTop: 6, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
+              <div className="small" style={{ fontWeight: 700 }}>{t('restaurantMenu.reviewReplyFrom', { name: o.restaurantName })}</div>
+              <p className="small" style={{ margin: '2px 0 0' }}>{o.myReview.restaurantReply}</p>
+            </div>
+          )}
+        </div>
+      )}
       {/* « Un souci ? » à chaque étape — sauf là où « Signaler un problème » est déjà proposé. */}
       {!(o.paid && ['livre', 'livraison'].includes(o.status)) && <AideCommande order={o} />}
       <div className="suivi-pied">
@@ -562,6 +628,11 @@ export default function Orders() {
         {o.paid && ['livre', 'livraison'].includes(o.status) && (
           <SignalerProbleme order={o} token={token} toast={toast} signalement={signalements[o.id]}
             onSignale={(s) => setSignalements((prev) => ({ ...prev, [o.id]: s }))} />
+        )}
+        {/* Le reçu, sur la commande même (audit du 19/10, AO-31) : il n'était que dans « Mes factures ». Commande payée en
+            ligne et close, la même règle que Mes factures (InvoicesPage.jsx, aUnRecu). */}
+        {o.paid && o.paymentMode !== 'on_site' && !o.isTraining && estPassee(o) && (
+          <button type="button" className="suivi-lien" onClick={() => ouvrirPdf(`${API_BASE}/orders/${o.id}/receipt`, token, t('invoicesClient.downloadFailed'), nomRecu(o))}>{t('invoicesClient.viewInvoice')}</button>
         )}
         {/* Commander à nouveau (USR-9) : une commande close, refaite avec la carte d'aujourd'hui. */}
         {avecRecommander && ['livre', 'annule', 'refuse'].includes(o.status) && (o.items || []).length > 0 && (

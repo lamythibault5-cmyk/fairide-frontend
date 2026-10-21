@@ -199,8 +199,10 @@ export default function App() {
         {/* Commande groupée (backend routes/commandesGroupees.js) : un compte client, comme pour commander. */}
         <Route path="/groupe/:code" element={<ProtectedRoute role="client"><CommandeGroupee /></ProtectedRoute>} />
         <Route path="/invoices" element={<ProtectedRoute role="client"><ClientInvoicesPage /></ProtectedRoute>} />
-        <Route path="/order-success" element={<ProtectedRoute role="client"><OrderResult success /></ProtectedRoute>} />
-        <Route path="/order-cancelled" element={<ProtectedRoute role="client"><OrderResult success={false} /></ProtectedRoute>} />
+        {/* Sans ProtectedRoute : le retour de Stripe dans le navigateur intégré de l'application n'a pas de session (audit du
+            19/10, checkout-07). OrderResult applique lui-même la règle des pages client quand il y a une session. */}
+        <Route path="/order-success" element={<OrderResult success />} />
+        <Route path="/order-cancelled" element={<OrderResult success={false} />} />
 
         <Route path="/dashboard" element={<ProtectedRoute role="restaurant"><RestaurantDashboardLayout /></ProtectedRoute>}>
           {/* « Mon commerce » : les infos du restaurant (création puis modification). « Ma carte » : les produits,

@@ -6,6 +6,7 @@ import { euros } from '../prixPlat';
 import { vibrer } from '../gestes';
 import ChiffresRoulants from './ChiffresRoulants';
 import EtatVide from './EtatVide';
+import { ligneIndisponible } from '../panierDisponible';
 
 /* LE PANIER EN COLONNE, À DROITE DE LA CARTE (fondateur, 2026-10-16, « Page d'un commerce » de mockups/site-ordinateur.html).
  * Sur un ordinateur, la place ne manque pas : au lieu d'une pilule posée sur la carte, le panier vit dans une colonne collante
@@ -43,7 +44,8 @@ export default function PanierColonne({ restaurant, mode }) {
   const ici = cart.restaurantId === restaurant.id;
   const lignes = ici ? Object.entries(cart.lines) : [];
   const nb = ici ? cart.count : 0;
-  const sousTotal = ici ? cart.totals(restaurant.menu).subtotal : 0;
+  // Offre du panier comprise, comme la page Panier et la pastille (audit du 19/10, discovery-16).
+  const sousTotal = ici ? cart.totals(restaurant.menu, restaurant.activeCartPromo).subtotal : 0;
   // Un panier pris chez un autre commerce n'est pas affiché comme s'il était d'ici : on le dit, avec le chemin pour le voir.
   const ailleurs = !ici && cart.count > 0;
 
@@ -72,7 +74,11 @@ export default function PanierColonne({ restaurant, mode }) {
                   <span className="fiche-panier-ligne-texte">
                     <b>{l.name}</b>
                     {(options || l.note) && <small>{[options, l.note].filter(Boolean).join(' · ')}</small>}
-                    <small className="fiche-panier-ligne-prix">{euros(l.unitPrice * l.qty)}</small>
+                    {/* Plat en rupture, retiré ou dont une option n'existe plus : dit ici aussi, pas seulement au paiement
+                        (audit du 19/10, discovery-17). */}
+                    {ligneIndisponible(l, restaurant.menu)
+                      ? <small className="ligne-indispo">{t('checkout.unavailableToday')}</small>
+                      : <small className="fiche-panier-ligne-prix">{euros(l.unitPrice * l.qty)}</small>}
                   </span>
                   <span className="fiche-panier-pas" role="group" aria-label={l.name}>
                     <button type="button" onClick={() => { vibrer(6); cart.changeLineQty(cle, -1); }} aria-label={t('menuCategories.oneLess', { name: l.name })}>−</button>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { getOpenStatus } from '../../openingHours';
 import SousEcran from '../SousEcran';
 import Icone from '../Icone';
 
@@ -22,8 +23,20 @@ export default function InterrupteurService({ restaurant, restoId, token, toast,
   const enPause = restaurant.pausedUntil && restaurant.pausedUntil > maintenant;
   const ouvert = restaurant.open && !enPause;
   const reprise = enPause ? new Date(restaurant.pausedUntil).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '';
-  // Stoppé pour la journée (fondateur, 2026-10-10) : la reprise tombe un autre jour — rouvre tout seul demain à 6 h.
-  const stoppeJour = enPause && new Date(restaurant.pausedUntil).toDateString() !== new Date(maintenant).toDateString();
+  // Stoppé pour la journée (fondateur, 2026-10-10) : rouvre tout seul au prochain 6 h. Reconnu à sa durée (plus d'une heure :
+  // les pauses font 15 à 60 minutes, 30 après une commande expirée) et non plus au changement de date : stoppé à 00:30, il
+  // rouvre le jour même à 6 h (audit du 19/10, shop-302). Le jour est écrit en toutes lettres, « samedi », jamais « demain ».
+  const stoppeJour = enPause && restaurant.pausedUntil - maintenant > 61 * 60000;
+  const jourReprise = enPause ? new Date(restaurant.pausedUntil).toLocaleDateString(getLocale(), { weekday: 'long' }) : '';
+  /* OUVERT… MAIS PAS SELON SES HORAIRES (audit du 19/10, shop-311). L'interrupteur disait « Ouvert aux commandes » à 3 h du
+   * matin ou un jour de fermeture exceptionnelle, pendant que les clients lisaient « Fermé ». Le geste ne change pas : la
+   * ligne dit seulement pourquoi rien n'arrive, et quand ça rouvre. */
+  const selonHoraires = ouvert ? getOpenStatus(restaurant.hours, new Date(maintenant), restaurant.closures || []) : null;
+  const horsHoraires = !!selonHoraires && !selonHoraires.isOpen;
+  const sousOuvert = !horsHoraires ? t('ordersResto.openSub')
+    : selonHoraires.isExceptionalClosure ? t('ordersResto.openButClosure')
+      : selonHoraires.opensAt ? t('ordersResto.openButHours', { time: selonHoraires.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
+        : t('ordersResto.openButHoursNone');
 
   async function agir(appel) {
     setEnCours(true);
@@ -43,7 +56,7 @@ export default function InterrupteurService({ restaurant, restoId, token, toast,
   const texte = (
     <>
       <b>{ouvert ? t('ordersResto.openTitle') : stoppeJour ? t('ordersResto.stoppedTodayTitle') : enPause ? t('ordersResto.pauseUntil', { time: reprise }) : t('ordersResto.pausedTitle')}</b>
-      <span>{enCours ? '…' : ouvert ? t('ordersResto.openSub') : stoppeJour ? t('ordersResto.stoppedTodaySub', { time: reprise }) : enPause ? t('ordersResto.pauseResumeNow') : t('ordersResto.pausedSub')}</span>
+      <span>{enCours ? '…' : ouvert ? sousOuvert : stoppeJour ? t('ordersResto.stoppedTodaySub', { day: jourReprise, time: reprise }) : enPause ? t('ordersResto.pauseResumeNow') : t('ordersResto.pausedSub')}</span>
     </>
   );
   return (
@@ -55,7 +68,7 @@ export default function InterrupteurService({ restaurant, restoId, token, toast,
         <button type="button" className="ec-service-compact" aria-pressed={!!ouvert} disabled={enCours} onClick={toucher}
           title={ouvert ? t('ordersResto.openSub') : undefined} aria-label={ouvert ? t('ordersResto.openTitle') : undefined}>
           {/* Ouvert : l'interrupteur allumé suffit (la place va au résumé du service) ; sinon on dit pourquoi on ne reçoit rien. */}
-          <span>{enCours ? '…' : ouvert ? '' : stoppeJour ? t('ordersResto.stoppedTodayTitle') : enPause ? t('ordersResto.pauseUntil', { time: reprise }) : t('ordersResto.pausedTitle')}</span>
+          <span>{enCours ? '…' : ouvert ? (horsHoraires ? t('ordersResto.openButHoursShort') : '') : stoppeJour ? t('ordersResto.stoppedTodayTitle') : enPause ? t('ordersResto.pauseUntil', { time: reprise }) : t('ordersResto.pausedTitle')}</span>
           <span className={`ec-interrupteur ec-interrupteur--lime${ouvert ? ' on' : ''}`} aria-hidden="true" />
         </button>
       ) : surBandeau ? (

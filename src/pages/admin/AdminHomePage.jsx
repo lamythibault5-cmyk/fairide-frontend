@@ -4,8 +4,10 @@ import AccountsTable from '../../components/admin/AccountsTable';
 import { ErrorCard } from '../../components/admin/AdminListTools';
 import { getLocale, useLanguage } from '../../context/LanguageContext';
 import useAdminOverview from '../../hooks/useAdminOverview';
+import useAdminRole from '../../hooks/useAdminRole';
 import DeletionRequestsPanel from '../../components/admin/DeletionRequestsPanel';
 import BoutonGo from '../../components/admin/BoutonGo';
+import RappelDoubleAuth from '../../components/admin/RappelDoubleAuth';
 import Icone from '../../components/Icone';
 import { money } from './adminUtils';
 import { attentionItems } from './adminModules';
@@ -28,7 +30,8 @@ export default function AdminHomePage() {
   const { t: tr } = useLanguage();
   const { user } = useAuth();
   const { overview, error, refresh } = useAdminOverview();
-  const attention = attentionItems(overview);
+  const { role } = useAdminRole();
+  const attention = attentionItems(overview, role);
   const heure = new Date().getHours();
   const salut = heure < 12 ? tr('adminHome.morning') : heure < 18 ? tr('adminHome.afternoon') : tr('adminHome.evening');
   const prenom = (user?.firstName || user?.name || '').split(' ')[0];
@@ -82,6 +85,9 @@ export default function AdminHomePage() {
 
       {/* Bouton GO : la livraison et le paiement en ligne s'ouvrent ici (lancement.js côté serveur). */}
       <BoutonGo />
+
+      {/* Double authentification : rappel et activation pour chaque membre, tous rôles (audit du 19/10, admin-14). */}
+      <RappelDoubleAuth />
 
       {!overview && !error && <p className="small">{tr('adminCommon.loading')}</p>}
       {error && !overview && <ErrorCard message={error} onRetry={refresh} />}

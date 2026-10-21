@@ -222,6 +222,8 @@ function MembresTab({ membres, erreur, recharger, monRole, isOwner, moi, token, 
                   {m.isOwnerFixed && <span className="role-pill">{tr('adminTeam.fixedOwner')}</span>}
                   <span className={`team-status${m.active ? '' : ' off'}`}>{m.active ? tr('adminTeam.active') : tr('adminTeam.inactive')}</span>
                   {!m.hasAccount && <span className="team-status noaccount" title={tr('adminTeam.noAccountHint')}>{tr('adminTeam.noAccount')}</span>}
+                  {/* Qui a activé la double authentification (audit du 19/10, admin-14). */}
+                  {m.hasAccount && <span className={`team-status${m.totpEnabled ? '' : ' off'}`}>{tr(m.totpEnabled ? 'adminTeam.twofaOn' : 'adminTeam.twofaOff')}</span>}
                 </div>
                 <div className="small" style={{ opacity: 0.7 }}>
                   {tr('adminTeam.lastSeen')} : {m.lastSeenAt ? fmtDateTime(m.lastSeenAt) : tr('adminTeam.never')}

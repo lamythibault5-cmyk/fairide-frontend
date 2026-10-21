@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import { qrSvgPath } from './qr';
+import { CHAMP_CODE_SECOURS } from '../validation';
 
 /* Double authentification (TOTP) — enrôlement et retrait, depuis son propre compte.
  *
@@ -148,7 +149,8 @@ export default function TwoFactorSetup() {
           </div>
           <div className="field">
             <label htmlFor="twofa-code-off">{t('twofa.codeLabel')}</label>
-            <input id="twofa-code-off" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={11}
+            {/* Code de secours accepté ici : clavier texte (audit du 19/10, CROSS-60). */}
+            <input id="twofa-code-off" type="text" {...CHAMP_CODE_SECOURS} autoComplete="one-time-code" maxLength={11}
               value={code} onChange={(ev) => setCode(ev.target.value)} placeholder="123456" />
           </div>
           <button type="submit" className="btn-outline" disabled={occupe || !motDePasse || !code.trim()}>

@@ -195,7 +195,7 @@ export default function PlatformPhotosImport({ restoId, token, items = [], secti
                 <tbody>
                   {resultat.matches.map((m) => (
                     <tr key={String(m.key)} style={{ opacity: m.checked ? 1 : 0.55 }}>
-                      <td><input type="checkbox" style={{ width: 'auto' }} checked={m.checked} onChange={(e) => cocher(m.key, e.target.checked)} /></td>
+                      <td><input type="checkbox" style={{ width: 'auto' }} checked={m.checked} onChange={(e) => cocher(m.key, e.target.checked)} aria-label={m.productName} /></td>
                       <td><img loading="lazy" src={m.imageUrl} alt="" className="dish-thumb" /></td>
                       <td style={{ whiteSpace: 'normal' }}>{m.productName}</td>
                       <td style={{ whiteSpace: 'normal' }}>

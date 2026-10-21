@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 import Modale from '../Modale';
+import ConfirmDialog from '../ConfirmDialog';
 import Icone from '../Icone';
 
 /* Informations et consentements du livreur (backlog de conformité du 23/09/2026).
@@ -39,8 +40,10 @@ export function EtapeNotices({ token, busy, action, onNext, contrat = null }) {
   const toutAccepte = !reste.length && !contratASigner;
 
   async function accepter() {
-    const ok = await action(() => api('/couriers/me/engagements', { method: 'POST', token, body: { accepted: true, typedName: nom.trim() } }), t('conformite.engagementsAcceptedToast'));
-    if (ok) { await charger(); onNext?.(); }
+    // Les versions AFFICHÉES (audit du 19/10, courier-27) : un texte changé entre-temps est refusé (409) et la liste rechargée.
+    const versions = Object.fromEntries(liste.filter((c) => AVANT_COURSE.includes(c.kind)).map((c) => [c.kind, c.version]));
+    const ok = await action(() => api('/couriers/me/engagements', { method: 'POST', token, body: { accepted: true, typedName: nom.trim(), versions } }), t('conformite.engagementsAcceptedToast'));
+    if (ok) { await charger(); onNext?.(); } else { setCoche(false); charger(); }
   }
 
   return (
@@ -80,6 +83,24 @@ export function EtapeNotices({ token, busy, action, onNext, contrat = null }) {
       )}
       {toutAccepte && onNext && <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-gold" onClick={onNext}>{t('courierOnboarding.next')}</button></div>}
     </div>
+  );
+}
+
+/* RETIRER SON CONSENTEMENT BIOMÉTRIQUE (audit du 19/10, courier-9). Le texte accepté promet « Je peux le retirer à tout
+ * moment » (RGPD art. 7.3 : aussi simple que de le donner), et aucun écran ne le permettait ; la route existait sans appelant.
+ * Une confirmation dit ce qui suit (serveur, POST /couriers/me/consents/biometric_identity/withdraw) : plus aucune vérification
+ * par Stripe Identity ; une identité pas encore vérifiée passe au contrôle en personne ; une identité vérifiée le reste.
+ * `onRetirer` : l'appel, par le `action` de la page appelante (busy, toast d'erreur, dossier rechargé). */
+export function RetraitConsentementBiometrique({ busy, onRetirer }) {
+  const { t } = useLanguage();
+  const [ouvert, setOuvert] = useState(false);
+  return (
+    <>
+      <button type="button" className="lien-bouton small" disabled={busy} onClick={() => setOuvert(true)}>{t('conformite.biometricWithdraw')}</button>
+      <ConfirmDialog open={ouvert} title={t('conformite.biometricWithdrawTitle')} message={t('conformite.biometricWithdrawBody')}
+        confirmLabel={t('conformite.biometricWithdrawConfirm')} danger loading={busy}
+        onConfirm={async () => { setOuvert(false); await onRetirer(); }} onCancel={() => setOuvert(false)} />
+    </>
   );
 }
 

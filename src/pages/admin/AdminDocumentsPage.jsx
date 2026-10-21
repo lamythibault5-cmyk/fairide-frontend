@@ -1,6 +1,6 @@
 import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api, apiUpload } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -19,7 +19,13 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import useEtatPage from '../../hooks/useEtatPage';
-import urlSure from '../../urlSure';
+import ouvrirDocument from '../../ouvrirDocument';
+import useAdminRole from '../../hooks/useAdminRole';
+import useAdminOverview from '../../hooks/useAdminOverview';
+
+// Valider ou rejeter un document (une pièce d'identité de livreur vaut validation de son dossier) : owner/admin/ops, comme
+// le serveur (audit du 19/10, admin-16). Rôle pas encore connu : tout est montré, le serveur reste le garde-fou.
+const peutVerifier = (role) => !role || ['owner', 'admin', 'ops'].includes(role);
 
 const PAGE_SIZE = 25;
 const TARGET_TYPES_WITH_PICKER = { restaurant: '/admin/restaurants', driver: '/admin/drivers', client: '/admin/clients' };
@@ -37,6 +43,9 @@ export default function AdminDocumentsPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [overview, setOverview] = useState(null);
+  // Pièces des dossiers livreurs (courier_documents) : ce compteur-ci ne les voit pas (audit du 19/10, admin-80) ; une
+  // tuile à part les compte et mène là où on les vérifie, Livreurs › Dossiers.
+  const { overview: apercu } = useAdminOverview();
   const [targetType, setTargetType] = useState(searchParams.get('targetType') || '');
   const [documentType, setDocumentType] = useState('');
   const [verificationStatus, setVerificationStatus] = useState(searchParams.get('verification') || '');
@@ -52,6 +61,7 @@ export default function AdminDocumentsPage() {
   const { sort, toggle } = useTableSort('createdAt');
   const sel = useSelection(data?.rows);
   const [bulk, setBulk] = useState(null); // 'valide' | 'rejete'
+  const { role } = useAdminRole();
   const [bulkBusy, setBulkBusy] = useState(false);
 
   function loadOverview() {
@@ -124,7 +134,8 @@ export default function AdminDocumentsPage() {
           <div className="stat-card highlight"><div className="num">{overview.total}</div><div className="label">{tr('adminCommon.documents')}</div></div>
           <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setExpiry('expired')}><div className="num" style={{ color: overview.expired > 0 ? 'var(--red)' : 'inherit' }}>{overview.expired}</div><div className="label">{tr('adminDocs.expired')}</div></button>
           <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setExpiry('expiring_soon')}><div className="num" style={{ color: overview.expiringSoon > 0 ? 'var(--gold-deep)' : 'inherit' }}>{overview.expiringSoon}</div><div className="label">{tr('adminDocs.expiringWithin', { n: overview.expiryWarningDays })}</div></button>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setVerificationStatus('en_attente')}><div className="num">{overview.pendingVerification}</div><div className="label">{tr('adminDocs.pendingVerification')}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setVerificationStatus('en_attente')}><div className="num">{overview.pendingVerification}</div><div className="label">{tr('adminDocs.pendingVerificationNoCourier')}</div></button>
+          <Link to="/admin/couriers" className="stat-card" style={{ textAlign: 'left', textDecoration: 'none', color: 'inherit' }}><div className="num">{apercu?.couriers?.piecesToCheck ?? '-'}</div><div className="label">{tr('adminDocs.courierPiecesPending')}</div></Link>
         </div>
       )}
 
@@ -153,8 +164,8 @@ export default function AdminDocumentsPage() {
       </div>
 
       <SelectionBar sel={sel}>
-        <button type="button" className="btn-outline" onClick={() => setBulk('valide')}>{tr('adminDocs.bulkValidate')}</button>
-        <button type="button" className="btn-danger-ghost" onClick={() => setBulk('rejete')}>{tr('adminDocs.bulkReject')}</button>
+        {peutVerifier(role) && <button type="button" className="btn-outline" onClick={() => setBulk('valide')}>{tr('adminDocs.bulkValidate')}</button>}
+        {peutVerifier(role) && <button type="button" className="btn-danger-ghost" onClick={() => setBulk('rejete')}>{tr('adminDocs.bulkReject')}</button>}
       </SelectionBar>
 
       {erreur && <ErrorCard message={erreur} onRetry={load} />}
@@ -298,6 +309,7 @@ function DocumentDrawer({ id, onClose, onChanged }) {
   const [saving, setSaving] = useState(false);
   const [confirm, setConfirm] = useState(null); // { title, message, danger, run }
   const [rejet, setRejet] = useState(false);
+  const { role } = useAdminRole();
   const [busy, setBusy] = useState(false);
 
   function load() {
@@ -363,7 +375,12 @@ function DocumentDrawer({ id, onClose, onChanged }) {
       title={d?.title || '…'}
       subtitle={d ? `${DOCUMENT_TYPE_LABELS[d.documentType]} · ${DOCUMENT_TARGET_TYPE_LABELS[d.targetType]} ${d.targetName || ''}` : ''}
       badge={d ? <span className="pill" style={{ color: DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.color }}>{DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.label}</span> : null}
-      actions={d ? <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminDocs.viewFile')}</a> : null}
+      actions={d ? (
+        // Documents privés (audit du 19/10, admin-45) : le serveur ne rend plus leur adresse (fileUrl vide), le lien était
+        // donc mort pour tout fichier déposé depuis. Une adresse signée de quelques minutes est demandée à l'ouverture
+        // (GET /admin/documents/:id/lien, ouvrirDocument.js), comme pour les pièces des livreurs.
+        <button type="button" className="btn-outline btn-sm" onClick={() => ouvrirDocument({ url: d.prive ? null : d.fileUrl, lien: `/admin/documents/${d.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') })}>{tr('adminDocs.viewFile')}</button>
+      ) : null}
       onClose={onClose} width={560}
     >
       {erreur && <ErrorCard message={erreur} onRetry={load} />}
@@ -377,17 +394,17 @@ function DocumentDrawer({ id, onClose, onChanged }) {
 
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminDocs.verification')}</h4>
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          {peutVerifier(role) && <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             {Object.entries(DOCUMENT_VERIFICATION_LABELS).map(([k, v]) => (
               <button key={k} className={d.verificationStatus === k ? 'btn-teal' : 'btn-outline'} style={{ padding: '4px 10px', fontSize: 12, borderColor: v.color !== 'inherit' && d.verificationStatus !== k ? v.color : undefined }} disabled={busy || d.verificationStatus === k} onClick={() => askVerification(k)}>
                 {v.label}
               </button>
             ))}
-          </div>
+          </div>}
 
           <div className="divider" />
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <button className="btn-outline" onClick={startEdit}>{tr('adminCommon.edit')}</button>
+            {peutVerifier(role) && <button className="btn-outline" onClick={startEdit}>{tr('adminCommon.edit')}</button>}
             <CreateTaskButton targetType="document" targetId={id} label={d.title} />
             <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={() => setConfirm({ title: tr('adminCommon.confirmDeleteDocument'), message: tr('adminCommon.irreversible'), danger: true, run: remove })}>{tr('adminCommon.delete')}</button>
           </div>

@@ -48,8 +48,32 @@ export function telephoneLisible(v) {
   return brut;
 }
 
+// Téléphone au format international « +32470123456 » (même règle que telephoneLisible et que phone.js du serveur) : pour
+// les liens WhatsApp et SMS, qui refusent « 0470 12 34 56 » (audit du 19/10, admin-67). '' si ce n'est pas un numéro.
+export function telephoneE164(v) {
+  const c = String(v || '').trim().replace(/[^\d+]/g, '').replace(/^00/, '+').replace(/^0(?=\d{8,9}$)/, '+32');
+  return /^\+\d{8,15}$/.test(c) ? c : '';
+}
+// Mobile belge (+324…) : le seul à qui un WhatsApp ou un SMS a un sens.
+export function estMobileBelge(e164) {
+  return /^\+324\d{8}$/.test(String(e164 || ''));
+}
+
 // Téléphone : au moins 8 chiffres une fois les séparateurs retirés (le serveur normalise en +32…).
 export function telephonePlausible(v) {
   const c = String(v || '').replace(/\D/g, '');
   return c.length >= 8 && c.length <= 15;
+}
+
+// CHAMP DU SECOND FACTEUR (audit du 19/10, CROSS-60). Un code de secours (« A1B2C-3D4E5 », totp.js côté serveur) a des
+// lettres et un tiret : le pavé numérique (inputMode numeric) ne permettait pas de le taper sur téléphone. Clavier texte,
+// majuscules d'office, sans correction automatique. Les codes SMS / e-mail, eux, gardent le pavé numérique.
+export const CHAMP_CODE_SECOURS = { inputMode: 'text', autoCapitalize: 'characters', autoCorrect: 'off', spellCheck: false };
+
+// ANNÉE ACADÉMIQUE SUR LE PAVÉ NUMÉRIQUE (audit du 19/10, CROSS-64). Le champ ouvre le pavé numérique, qui n'a pas de tiret sur
+// iPhone : « 2026-2027 » ne pouvait pas s'écrire. Dès le cinquième chiffre tapé à la suite, le tiret se pose tout seul
+// (« 20262 » devient « 2026-2 »). Le serveur accepte aussi huit chiffres collés (couriers.js, normaliserAnneeAcademique).
+export function formaterAnneeAcademique(v) {
+  const s = String(v ?? '');
+  return /^\d{5,8}$/.test(s) ? `${s.slice(0, 4)}-${s.slice(4)}` : s;
 }

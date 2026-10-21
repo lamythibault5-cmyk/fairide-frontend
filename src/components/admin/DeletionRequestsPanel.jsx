@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
 import Icone from '../Icone';
+import ErrorCard from '../ErrorCard';
 
 // Demandes de suppression de compte des livreurs et restaurateurs (fondateur, 2026-09-19) : leur code de
 // confirmation n'arrive pas dans leur boîte mais ici, dans le tableau de bord, en plus de l'e-mail à l'équipe.
@@ -15,9 +16,12 @@ export default function DeletionRequestsPanel({ onHandled }) {
   const toast = useToast();
   const [rows, setRows] = useState(null);
   const [busy, setBusy] = useState(null);
+  // Une erreur de chargement se montre (audit du 19/10, admin-55 / D23) : le panneau disparaissait, alors que la ligne
+  // « demande(s) de suppression » de l'accueil pointe ici et qu'un code de 24 h attendait d'être transmis.
+  const [erreur, setErreur] = useState(null);
 
   async function charger() {
-    try { setRows(await api('/admin/deletion-requests', { token })); } catch { setRows([]); }
+    try { setRows(await api('/admin/deletion-requests', { token })); setErreur(null); } catch (e) { setErreur(e.message); }
   }
   useEffect(() => { charger(); }, []);
 
@@ -32,6 +36,14 @@ export default function DeletionRequestsPanel({ onHandled }) {
 
   const enAttente = (rows || []).filter((r) => r.pending);
   const traitees = (rows || []).filter((r) => !r.pending);
+  if (erreur && !rows) {
+    return (
+      <section className="card" id="suppressions" style={{ marginTop: 12 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}><Icone nom="croix" taille={16} className="icone-texte" />{' '}{t('adminHome.deletionsTitle')}</h3>
+        <ErrorCard message={erreur} onRetry={charger} />
+      </section>
+    );
+  }
   if (!rows || (!enAttente.length && !traitees.length)) return null;
   const fmt = (d) => new Date(d).toLocaleString(locale || 'fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   const role = (r) => t(r === 'driver' ? 'adminHome.deletionRoleDriver' : r === 'restaurant' ? 'adminHome.deletionRoleRestaurant' : 'adminHome.deletionRoleOther');

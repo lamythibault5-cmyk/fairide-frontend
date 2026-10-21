@@ -17,9 +17,22 @@ import KanbanBoard, { useViewMode, ViewSwitcher } from '../../components/admin/K
 import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { ErrorCard, Pager, ResultCount, SelectBox, SelectionBar, runForEach, selectionColumn, useSelection } from '../../components/admin/AdminListTools';
 import { money, fmtDateTime, downloadCsv, useDebouncedValue, ORDER_STATUS_LABELS, ORDER_STATUSES, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
+import { PAYMENT_MODE_LABELS, REFUND_RESPONSIBILITY_LABELS, libelle } from './libellesCodes';
+import { telephoneLisible } from '../../validation';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import Icone from '../../components/Icone';
+import useAdminRole from '../../hooks/useAdminRole';
+import ChoixRemboursement from '../../components/admin/ChoixRemboursement';
+import { REMBOURSEMENT_DEFAUT, corpsRemboursement } from '../../components/admin/remboursementAnnulation';
+
+// Qui peut quoi (audit du 19/10, admin-16 ; même règle que le serveur, middleware/auth.js ROLE_PREFIXES_METHODE) : forcer un
+// statut, annuler, réattribuer = owner/admin/ops ; rembourser = owner/admin/finance. Rôle pas encore connu : tout est
+// montré, le serveur reste le garde-fou.
+const peutForcer = (role) => !role || ['owner', 'admin', 'ops'].includes(role);
+const peutRembourser = (role) => !role || ['owner', 'admin', 'finance'].includes(role);
+// « #042 », le numéro que voient le client et le commerce (audit du 19/10, admin-10).
+const numero = (o) => (o?.orderNumber ? `#${String(o.orderNumber).padStart(3, '0')}` : '');
 
 const filters = (tr) => [
   { key: '', label: tr('adminCommon.allF') },
@@ -39,7 +52,6 @@ const KANBAN_COLORS = { nouveau: 'var(--orange)', preparation: 'var(--blue)', pr
 // Colonnes dont le tri est fait par le serveur (GET /admin/orders?sort=…) : le tri porte alors sur
 // TOUTES les commandes filtrées, pas seulement la page affichée. Les autres colonnes trient la page.
 const TRI_SERVEUR = { createdAt: (dir) => (dir === 'asc' ? 'created_asc' : 'created_desc'), total: (dir) => (dir === 'asc' ? 'total_asc' : 'total_desc'), status: () => 'status', restaurantName: () => 'restaurant', clientName: () => 'client' };
-const aujourdHui = () => new Date().toISOString().slice(0, 10);
 
 // Colonnes du CSV (liste et export complet).
 const colonnesCsv = (tr) => [
@@ -84,6 +96,8 @@ export default function AdminOrdersPage() {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [drivers, setDrivers] = useState(null);
   const [bulkDriverId, setBulkDriverId] = useState('');
+  const [bulkRemb, setBulkRemb] = useState(REMBOURSEMENT_DEFAUT);
+  const { role } = useAdminRole();
   const EXTRA = ['type', 'from', 'to', 'min', 'max', 'today'];
   function setParam(k, v) { const next = Object.fromEntries([...searchParams.entries()]); if (v) next[k] = v; else delete next[k]; setSearchParams(next); }
 
@@ -100,8 +114,9 @@ export default function AdminOrdersPage() {
     if (searchParams.get('driverId')) params.set('driverId', searchParams.get('driverId'));
     if (searchParams.get('clientId')) params.set('clientId', searchParams.get('clientId'));
     if (searchParams.get('type')) params.set('orderType', searchParams.get('type'));
-    // « Commandes du jour » (accueil, tableau de bord) = du jour même, sans autre borne.
-    if (searchParams.get('today')) { params.set('dateFrom', aujourdHui()); params.set('dateTo', aujourdHui()); }
+    // « Commandes du jour » (accueil, tableau de bord) : today=1 tel quel, le serveur prend le jour de Bruxelles (audit du
+    // 19/10, admin-17 : la date UTC du navigateur, envoyée en « du X au X », ne ramenait rien).
+    if (searchParams.get('today')) params.set('today', '1');
     if (searchParams.get('from')) params.set('dateFrom', searchParams.get('from'));
     if (searchParams.get('to')) params.set('dateTo', searchParams.get('to'));
     if (searchParams.get('min')) params.set('minAmount', searchParams.get('min'));
@@ -123,12 +138,14 @@ export default function AdminOrdersPage() {
   useEffect(() => { setPage(0); }, [searchParams.toString(), q, triServeur]);
   // `?id=` (lien depuis un ticket, une tâche, un document…) : ouvre directement cette commande, puis
   // retire le paramètre pour qu'un rechargement ne la rouvre pas.
+  const idParam = searchParams.get('id');
   useEffect(() => {
-    const id = searchParams.get('id');
+    const id = idParam;
     if (!id) return;
     api(`/admin/orders/${id}`, { token }).then((d) => { setSelected({ id, restaurantName: d.restaurantName, status: d.status, restaurantId: d.restaurantId }); setDetail(d); }).catch((e) => toast(e.message, 'erreur'));
     const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Relu à chaque nouvel ?id= : la recherche globale y mène aussi quand Commandes est déjà ouverte (admin-09).
+  }, [idParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function setFilter(key) {
     const next = {};
@@ -177,7 +194,10 @@ export default function AdminOrdersPage() {
     setBulkBusy(true);
     try {
       const { ok, erreurs } = bulk.type === 'cancel'
-        ? await runForEach(sel.ids, (id) => api(`/admin/orders/${id}/status`, { method: 'PATCH', token, body: { status: 'annule', reason: motif } }))
+        // Chaque commande payée en ligne est remboursée avec son annulation (audit du 19/10, admin-18) ; un remboursement
+        // refusé compte comme un échec, pour que le compte rendu le dise.
+        ? await runForEach(sel.ids, (id) => api(`/admin/orders/${id}/status`, { method: 'PATCH', token, body: { status: 'annule', reason: motif, refund: corpsRemboursement(bulkRemb) } })
+          .then((r) => { if (r?.refundError) throw new Error(tr('adminOrders.toastCancelRefundFailed', { error: r.refundError })); return r; }))
         : await runForEach(sel.ids, (id) => api(`/admin/orders/${id}/driver`, { method: 'PATCH', token, body: { driverId: bulk.driver.id } }));
       toast(erreurs.length ? tr('adminCommon.bulkPartial', { ok, failed: erreurs.length, error: erreurs[0] }) : tr('adminCommon.bulkDone', { n: ok }));
       sel.clear(); load();
@@ -187,12 +207,14 @@ export default function AdminOrdersPage() {
   const colonnes = [
     selectionColumn(sel, tr('adminCommon.select')),
     { key: 'createdAt', label: tr('adminCommon.date'), get: (o) => fmtDateTime(o.createdAt), sortValue: (o) => o.createdAt },
+    { key: 'orderNumber', label: tr('adminOrders.colNumber'), get: (o) => numero(o) || '-', sortValue: (o) => o.orderNumber || 0 },
     { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (o) => <b>{o.restaurantName}</b>, sortValue: (o) => o.restaurantName },
     { key: 'clientName', label: tr('adminCommon.client'), get: (o) => o.clientName },
     { key: 'driverName', label: tr('adminCommon.driver'), get: (o) => o.driverName || '-' },
     { key: 'orderType', label: tr('adminCommon.type'), get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType },
     { key: 'status', label: tr('adminCommon.status'), get: (o) => <>{o.pickupNoShow && <span className="pill texte-erreur" style={{ marginRight: 4 }}>{tr('adminOrders.pickupNoShowBadge')}</span>}<span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span></>, sortValue: (o) => o.status },
-    { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? '✓' : '…'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
+    // Payée au commerce (audit du 19/10, admin-19) : Fairide n'a rien encaissé, la colonne ne dit pas « payée ✓ ».
+    { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paymentMode === 'on_site' ? tr('adminOrders.paidAtShopShort') : o.paid ? '✓' : '…'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
     { key: 'total', label: tr('adminCommon.total'), get: (o) => money(o.total), sortValue: (o) => o.total, align: 'right', sum: true },
     { key: 'fairideTotalRevenue', label: tr('adminOrders.colFairide'), get: (o) => money(o.fairideTotalRevenue), sortValue: (o) => o.fairideTotalRevenue, align: 'right', sum: true }
   ];
@@ -239,12 +261,14 @@ export default function AdminOrdersPage() {
       </div>
 
       <SelectionBar sel={sel}>
+        {peutForcer(role) && <>
         <select value={bulkDriverId} onChange={(e) => setBulkDriverId(e.target.value)} onFocus={loadDrivers} style={{ maxWidth: 220 }}>
           <option value="">{tr('adminOrders.reassignTo')}</option>
           {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name} ({d.activityStatus})</option>)}
         </select>
         <button type="button" className="btn-outline" disabled={!bulkDriverId} onClick={() => { const driver = drivers?.find((d) => d.id === bulkDriverId); if (driver) setBulk({ type: 'assign', driver }); }}>{tr('adminOrders.bulkAssign')}</button>
-        <button type="button" className="btn-danger-ghost" onClick={() => setBulk({ type: 'cancel' })}>{tr('adminOrders.bulkCancel')}</button>
+        <button type="button" className="btn-danger-ghost" onClick={() => { setBulkRemb(REMBOURSEMENT_DEFAUT); setBulk({ type: 'cancel' }); }}>{tr('adminOrders.bulkCancel')}</button>
+        </>}
       </SelectionBar>
 
       {erreur && <ErrorCard message={erreur} onRetry={load} />}
@@ -256,11 +280,11 @@ export default function AdminOrdersPage() {
           items={orders}
           columnOf={(o) => o.status}
           onOpen={openOrder}
-          onMove={(o, st) => setKanbanMove({ order: o, status: st })}
+          onMove={peutForcer(role) ? (o, st) => setKanbanMove({ order: o, status: st }) : undefined}
           emptyLabel={tr('adminKanban.empty')}
           renderCard={(o) => (
             <>
-              <b>{o.restaurantName}</b>
+              <b>{numero(o) ? `${numero(o)} · ` : ''}{o.restaurantName}</b>
               <div className="small">{o.clientName}{o.driverName ? ` · ${o.driverName}` : ''}</div>
               <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">{fmtDateTime(o.createdAt)}</span><b style={{ display: 'inline' }}>{money(o.total)}</b></div>
             </>
@@ -279,7 +303,7 @@ export default function AdminOrdersPage() {
       {orders && mode === 'list' && orders.map((o) => (
         <div className={`card order-card-clickable${sel.isSelected(o.id) ? ' is-selected' : ''}`} key={o.id} onClick={() => openOrder(o)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <span className="admin-card-select"><SelectBox sel={sel} id={o.id} label={tr('adminCommon.select')} /><b>{o.restaurantName}</b></span>
+            <span className="admin-card-select"><SelectBox sel={sel} id={o.id} label={tr('adminCommon.select')} /><b>{numero(o) ? `${numero(o)} · ` : ''}{o.restaurantName}</b></span>
             <span className="row" style={{ gap: 4 }}>
               {/* Non récupérée (audit du 19/10, admin-03) : ce client ne peut plus payer sur place ; levée dans sa fiche client. */}
               {o.pickupNoShow && <span className="pill texte-erreur">{tr('adminOrders.pickupNoShowBadge')}</span>}
@@ -291,7 +315,8 @@ export default function AdminOrdersPage() {
           </div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6, flexWrap: 'wrap', gap: 4 }}>
             <span className="small">
-              {tr('adminOrders.moneyLine', { paid: o.paid ? tr('adminCommon.paidBadge') : tr('adminCommon.unpaidBadge'), commission: money(o.commission), share: money(o.deliveryFairideShare), revenue: money(o.fairideTotalRevenue) })}
+              {tr('adminOrders.moneyLine', { paid: o.paymentMode === 'on_site' ? tr('adminOrders.paidAtShop') : o.paid ? tr('adminCommon.paidBadge') : tr('adminCommon.unpaidBadge'), commission: money(o.commission), share: money(o.deliveryFairideShare), revenue: money(o.fairideTotalRevenue) })}
+              {o.isTraining && <span> · {tr('adminOrders.trainingOrder')}</span>}
               {o.hasRefund && <span className="texte-erreur"> {tr('adminOrders.refundedSuffix')}</span>}
             </span>
             <b>{money(o.total)}</b>
@@ -304,7 +329,7 @@ export default function AdminOrdersPage() {
       <ReasonDialog
         open={!!kanbanMove}
         title={tr('adminOrders.confirmChangeStatus')}
-        message={kanbanMove ? tr('adminOrders.confirmChangeStatusBody', { from: ORDER_STATUS_LABELS[kanbanMove.order.status] || kanbanMove.order.status, to: ORDER_STATUS_LABELS[kanbanMove.status] || kanbanMove.status }) : ''}
+        message={kanbanMove ? `${tr('adminOrders.confirmChangeStatusBody', { from: ORDER_STATUS_LABELS[kanbanMove.order.status] || kanbanMove.order.status, to: ORDER_STATUS_LABELS[kanbanMove.status] || kanbanMove.status })}${['annule', 'refuse'].includes(kanbanMove.status) ? ` ${tr('adminOrders.cancelRefundDefaultNote')}` : ''}` : ''}
         label={tr('adminOrders.forceReasonLabel')}
         placeholder={tr('adminOrders.forceReasonPlaceholder')}
         danger={kanbanMove?.status === 'annule'}
@@ -326,7 +351,9 @@ export default function AdminOrdersPage() {
         loading={bulkBusy}
         onConfirm={runBulk}
         onCancel={() => setBulk(null)}
-      />
+      >
+        <ChoixRemboursement valeur={bulkRemb} onChange={setBulkRemb} />
+      </ReasonDialog>
       <ConfirmDialog
         open={!!bulk && bulk.type !== 'cancel'}
         title={tr('adminOrders.bulkAssignTitle', { n: sel.count })}
@@ -361,11 +388,20 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
   const [drivers, setDrivers] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [newDriverId, setNewDriverId] = useState('');
-  const [refundAmount, setRefundAmount] = useState('');
+  const [refundAmount, setRefundAmount] = useState(null); // null = pas encore touché : prérempli avec le reste remboursable
   const [refundResponsibility, setRefundResponsibility] = useState('restaurant');
   const [refundReason, setRefundReason] = useState('');
   const [confirmAction, setConfirmAction] = useState(null); // { type, run }
   const [busy, setBusy] = useState(false);
+  // Remboursement choisi dans la fenêtre d'annulation (admin-18) ; null = rien à rembourser sur cette commande.
+  const [rembAnnul, setRembAnnul] = useState(null);
+  const { role } = useAdminRole();
+  // Ce qui reste remboursable : payée par carte, total moins les remboursements déjà faits.
+  const resteRemboursable = detail && detail.paid && detail.paymentMode === 'stripe'
+    ? Math.max(0, +(detail.total - (detail.refunds || []).reduce((s, r) => s + r.amount, 0)).toFixed(2)) : 0;
+
+  const dejaRembourse = detail ? +((detail.refunds || []).reduce((s, x) => s + x.amount, 0)).toFixed(2) : 0;
+  const montantRemb = refundAmount === null ? (resteRemboursable > 0 ? String(resteRemboursable) : '') : refundAmount;
 
   const [entries, setEntries] = useState(null);
   const [onglet, setOnglet] = useState('apercu');
@@ -387,8 +423,11 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
     setBusy(true);
     let suite = null;
     try {
-      await confirmAction.run(motif);
-      toast(confirmAction.successMessage || tr('adminCommon.doneToast'));
+      const r = await confirmAction.run(motif, rembAnnul);
+      // Annulation : dire ce qui est arrivé à l'argent (remboursé, ou remboursement refusé à refaire).
+      if (r?.refundError) toast(tr('adminOrders.toastCancelRefundFailed', { error: r.refundError }), 'erreur');
+      else if (r?.refund) toast(tr('adminOrders.toastCancelledRefunded', { amount: money(r.refund.amount) }));
+      else toast((confirmAction.messageApres && confirmAction.messageApres(r)) || confirmAction.successMessage || tr('adminCommon.doneToast'));
       onChanged();
     } catch (e) {
       // Réattribution qui demande une confirmation (audit du 19/10/2026, admin-01) : le serveur dit quels contrôles de la
@@ -403,6 +442,8 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
   }
 
   function askStatusChange() {
+    // Vers « annulée » ou « refusée » : la fenêtre d'annulation, avec son choix de remboursement (admin-18).
+    if (['annule', 'refuse'].includes(newStatus)) { askCancel(newStatus); return; }
     setConfirmAction({
       title: tr('adminOrders.confirmChangeStatus'),
       message: tr('adminOrders.confirmChangeStatusBody', { from: ORDER_STATUS_LABELS[detail.status] || detail.status, to: ORDER_STATUS_LABELS[newStatus] || newStatus }),
@@ -412,14 +453,16 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
     });
   }
 
-  function askCancel() {
+  function askCancel(statut = 'annule') {
+    setRembAnnul(resteRemboursable > 0 ? REMBOURSEMENT_DEFAUT : null);
     setConfirmAction({
+      type: 'cancel',
       title: tr('adminOrders.confirmCancel'),
       message: tr('adminOrders.confirmCancelBody'),
       danger: true,
       successMessage: tr('adminOrders.toastCancelled'),
       needsReason: true,
-      run: (motif) => api(`/admin/orders/${selected.id}/status`, { method: 'PATCH', token, body: { status: 'annule', reason: motif } })
+      run: (motif, remb) => api(`/admin/orders/${selected.id}/status`, { method: 'PATCH', token, body: { status: statut, reason: motif, refund: remb ? corpsRemboursement(remb) : { mode: 'none' } } })
     });
   }
 
@@ -437,21 +480,27 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
     });
   }
 
+  /* Même confort que le remboursement d'un incident (audit du 19/10, admin-56) : le reste remboursable est dit et prérempli,
+   * le formulaire n'apparaît que pour une commande payée par carte, et la confirmation parle en mots (« à la charge du
+   * livreur », montant en euros), pas en codes. Rien de repris au commerce ou au livreur (aucun virement fait) : l'écran le
+   * dit au lieu de « remboursé » seul (admin-60). */
   function askRefund() {
-    const amount = Number(refundAmount);
+    const amount = Number(String(montantRemb).replace(',', '.'));
     if (!amount || amount <= 0) { toast(tr('adminOrders.toastInvalidAmount')); return; }
+    if (amount > resteRemboursable + 0.005) { toast(tr('adminOrders.refundOverRemaining', { max: money(resteRemboursable) }), 'erreur'); return; }
     setConfirmAction({
       title: tr('adminOrders.confirmRefund'),
-      message: tr('adminOrders.confirmRefundBody', { amount: amount.toFixed(2), who: refundResponsibility }),
+      message: tr('adminOrders.confirmRefundWords', { amount: money(amount), who: libelle(REFUND_RESPONSIBILITY_LABELS, refundResponsibility) }),
       danger: true,
       successMessage: tr('adminOrders.toastRefunded'),
+      messageApres: (rep) => (rep && rep.reprisSurVirement === 0 ? tr('adminOrders.refundNothingReclaimed') : null),
       run: () => api(`/admin/orders/${selected.id}/refund`, { method: 'POST', token, body: { amount, responsibility: refundResponsibility, reason: refundReason.trim() || undefined } })
     });
   }
 
   return createPortal(
     <RecordDrawer
-      title={selected.restaurantName}
+      title={numero(detail) ? `${numero(detail)} · ${selected.restaurantName}` : selected.restaurantName}
       subtitle={detail ? tr('adminOrders.clientLine', { name: detail.clientName, phone: detail.clientPhone ? ` · ${detail.clientPhone}` : '' }) : ''}
       badge={<span className={`status-badge status-${selected.status}`}>{ORDER_STATUS_LABELS[selected.status] || selected.status}</span>}
       tabs={[
@@ -471,7 +520,14 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
             <LienFiche to="/admin/drivers" name={detail.driverName} label={tr('adminOrders.linkDriver')} />
             <Link to={`/admin/orders?restaurantId=${detail.restaurantId || selected.restaurantId || ''}`} className="admin-record-link">→ {tr('adminOrders.linkRestaurantOrders')}</Link>
           </div>
-          {detail.driverName && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.driverLine', { name: detail.driverName, phone: detail.driverPhone ? ` · ${detail.driverPhone}` : '' })}</p>}
+          {/* Numéros en liens tel: (audit du 19/10, admin-59 ; fondateur : numéros visibles avec tel:) : au téléphone, un tap. */}
+          {detail.clientPhone && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.callClient')} <a href={`tel:${detail.clientPhone}`}>{telephoneLisible(detail.clientPhone)}</a></p>}
+          {detail.driverName && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.driverLine', { name: detail.driverName, phone: '' })}{detail.driverPhone && <> · <a href={`tel:${detail.driverPhone}`}>{telephoneLisible(detail.driverPhone)}</a></>}</p>}
+          <p className="small" style={{ margin: '2px 0' }}>
+            {tr('adminOrders.paymentLine', { mode: libelle(PAYMENT_MODE_LABELS, detail.paymentMode || 'inconnu') })}
+            {detail.isTraining ? ` · ${tr('adminOrders.trainingOrder')}` : ''}
+            {detail.pickupNoShow ? ` · ${tr('adminOrders.pickupNoShowBadge')}` : ''}
+          </p>
           {detail.address && <p className="small" style={{ margin: '2px 0' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{detail.address}{detail.commune ? `, ${detail.commune}` : ''}</p>}
           <p className="small" style={{ margin: '2px 0' }}>{TYPE_LABELS(tr)[detail.orderType] || detail.orderType} · {fmtDateTime(detail.createdAt)}</p>
           <div className="divider" />
@@ -489,13 +545,14 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
           <DrawerRow label={tr('adminOrders.restoCommission')} value={money(detail.commission)} />
           <DrawerRow label={tr('adminOrders.deliveryShare')} value={money(detail.deliveryFairideShare)} />
           <DrawerRow label={tr('adminOrders.totalRevenue')} value={money(detail.fairideTotalRevenue)} strong />
-          <DrawerRow label={tr('adminOrders.dueRestaurant')} value={money(detail.restaurantDue)} />
+          {/* Payée au commerce : Fairide ne lui doit rien, le client l'a payé sur place (admin-19). */}
+          <DrawerRow label={tr('adminOrders.dueRestaurant')} value={detail.paymentMode === 'on_site' ? tr('adminOrders.onSiteNothingDue') : money(detail.restaurantDue)} />
           <DrawerRow label={tr('adminOrders.dueDriver')} value={money(detail.driverDue)} />
           {(detail.refunds || []).length > 0 && (
             <>
               <div className="divider" />
               <h4 className="drawer-section-title texte-erreur">{tr('adminCommon.refunds')}</h4>
-              {detail.refunds.map((r) => <DrawerRow key={r.id} label={r.reason || r.responsibility} value={money(r.amount)} />)}
+              {detail.refunds.map((r) => <DrawerRow key={r.id} label={`${r.reason ? `${r.reason}, ` : ''}${libelle(REFUND_RESPONSIBILITY_LABELS, r.responsibility)}`} value={money(r.amount)} />)}
             </>
           )}
         </>
@@ -517,12 +574,14 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       {detail && onglet === 'actions' && (
         <>
           <h4 className="drawer-section-title">{tr('adminOrders.adminActions')}</h4>
+          {!peutForcer(role) && !peutRembourser(role) && <p className="small">{tr('adminOrders.actionsRoleOnly')}</p>}
+          {peutForcer(role) && <>
           <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
             <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} style={{ maxWidth: 180 }}>
               {ORDER_STATUSES.map((s) => <option key={s} value={s}>{ORDER_STATUS_LABELS[s]}</option>)}
             </select>
             <button className="btn-outline" disabled={newStatus === detail.status} onClick={askStatusChange}>{tr('adminOrders.changeStatus')}</button>
-            <button className="btn-danger-ghost" onClick={askCancel}>{tr('adminOrders.cancelOrder')}</button>
+            <button className="btn-danger-ghost" onClick={() => askCancel()}>{tr('adminOrders.cancelOrder')}</button>
           </div>
           <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
             <select value={newDriverId} onChange={(e) => setNewDriverId(e.target.value)} onFocus={loadDrivers} style={{ maxWidth: 220 }}>
@@ -531,10 +590,15 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
             </select>
             <button className="btn-outline" disabled={!newDriverId} onClick={() => askReassign()}>{tr('adminOrders.reassign')}</button>
           </div>
+          </>}
+          {peutRembourser(role) && <>
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminOrders.refund')}</h4>
-          <div className="row" style={{ gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-            <input aria-label={tr('adminOrders.refundedAmount')} type="number" step="0.01" placeholder={tr('adminOrders.refundedAmount')} value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} style={{ maxWidth: 140 }} />
+          {resteRemboursable <= 0 && <p className="small">{detail.paymentMode === 'stripe' && detail.paid ? tr('adminOrders.refundNothingLeft') : tr('adminOrders.refundNotCard')}</p>}
+          {resteRemboursable > 0 && <p className="small" style={{ margin: '0 0 6px' }}>{tr('adminOrders.refundRemainingLine', { paid: money(detail.total), done: money(dejaRembourse), left: money(resteRemboursable) })}</p>}
+          {resteRemboursable > 0 && <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>{tr(`adminOrders.refundWho_${refundResponsibility}`)}</p>}
+          {resteRemboursable > 0 && <div className="row" style={{ gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+            <input aria-label={tr('adminOrders.refundedAmount')} type="number" step="0.01" placeholder={tr('adminOrders.refundedAmount')} value={montantRemb} onChange={(e) => setRefundAmount(e.target.value)} style={{ maxWidth: 140 }} />
             <select value={refundResponsibility} onChange={(e) => setRefundResponsibility(e.target.value)} style={{ maxWidth: 140 }}>
               <option value="restaurant">{tr('adminCommon.resto')}</option>
               <option value="driver">{tr('adminCommon.driver')}</option>
@@ -542,7 +606,8 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
             </select>
             <input aria-label={tr('adminOrders.phReason')} placeholder={tr('adminOrders.phReason')} value={refundReason} onChange={(e) => setRefundReason(e.target.value)} style={{ flex: 1, minWidth: 140 }} />
             <button className="btn-danger-ghost" onClick={askRefund}>{tr('adminOrders.refund')}</button>
-          </div>
+          </div>}
+          </>}
         </>
       )}
       {detail && onglet === 'suivi' && (
@@ -567,7 +632,9 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
         loading={busy}
         onConfirm={runConfirmed}
         onCancel={() => setConfirmAction(null)}
-      />
+      >
+        {confirmAction?.type === 'cancel' && rembAnnul && <ChoixRemboursement valeur={rembAnnul} onChange={setRembAnnul} reste={resteRemboursable} />}
+      </ReasonDialog>
       <ConfirmDialog
         open={!!confirmAction && !confirmAction.needsReason}
         title={confirmAction?.title}

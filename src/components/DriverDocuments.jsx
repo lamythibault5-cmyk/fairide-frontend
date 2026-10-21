@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import ouvrirDocument from '../ouvrirDocument';
 import Icone from './Icone';
+import { RetraitConsentementBiometrique } from './conformite/LivreurConformite';
 
 // « Mes documents » dans Mon compte (livreur) : la pièce d'identité recto / verso déposée à l'inscription
 // (voir IdentityDocsPicker.jsx), l'attestation étudiant, et les autres pièces du dossier coursier, avec leur
@@ -22,7 +23,10 @@ export default function DriverDocuments() {
   const [busy, setBusy] = useState(false);
   const entrees = useRef({});
 
-  useEffect(() => { api('/couriers/me', { token }).then(setDossier).catch((e) => toast(e.message, 'erreur')); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Échec du chargement : un message et Réessayer, plus « Chargement… » pour toujours (audit du 19/10, CROSS-33).
+  const [erreur, setErreur] = useState(null);
+  const charger = () => api('/couriers/me', { token }).then((r) => { setDossier(r); setErreur(null); }).catch((e) => { setErreur(e); toast(e.message, 'erreur'); });
+  useEffect(() => { charger(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Les pièces sont désormais en livraison restreinte : le serveur ne rend plus leur adresse
      Cloudinary, il produit à la demande une adresse signée de quelques minutes (voir
@@ -49,13 +53,25 @@ export default function DriverDocuments() {
     try { setDossier(await api(`/couriers/me/documents/${id}`, { method: 'DELETE', token })); } catch (err) { toast(err.message, 'erreur'); } finally { setBusy(false); }
   }
 
+  if (!dossier && erreur) {
+    return (
+      <div>
+        <p className="small" role="alert">{erreur.message}</p>
+        <button type="button" className="btn-outline btn-sm" onClick={charger}>{t('common.retry')}</button>
+      </div>
+    );
+  }
   if (!dossier) return <p className="small">{t('accountUi.loading')}</p>;
   const docs = dossier.documents || [];
   const identite = docs.filter((d) => IDENTITE.includes(d.docType));
   const kind = identite[0]?.docType || 'identity_card';
   const face = (side) => identite.find((d) => d.docType === kind && d.side === side) || (side === 'recto' ? identite.find((d) => !d.side) : null);
   const etudiant = docs.filter((d) => d.docType === 'school_certificate');
-  const autres = docs.filter((d) => !IDENTITE.includes(d.docType) && d.docType !== 'school_certificate');
+  /* STRIPE D'ABORD, ICI AUSSI (audit du 19/10, courier-29). Le dépôt recto / verso d'une pièce d'identité faisait passer un
+   * brouillon en vérification « manuelle » (serveur) et contournait l'étape d'identité du dossier, alors que le dossier ne propose
+   * ce dépôt que si Stripe Identity est coupé. Même règle ici : sinon, les pièces déjà déposées restent lisibles plus bas. */
+  const depotIdentite = !dossier.identityProviders?.stripe_identity;
+  const autres = docs.filter((d) => (!depotIdentite || !IDENTITE.includes(d.docType)) && d.docType !== 'school_certificate');
   const etat = (d) => (d.verifiedAt ? { ic: <Icone nom="valider" taille={14} className="icone-texte" />, txt: t('driverDocs.verified'), cls: 'pill teal' } : d.rejectedReason ? { ic: <Icone nom="croix" taille={14} className="icone-texte" />, txt: d.rejectedReason, cls: 'pill' } : { ic: <Icone nom="horloge" taille={14} className="icone-texte" />, txt: t('driverDocs.pending'), cls: 'pill' });
   const idv = dossier.courier?.identity;
 
@@ -92,6 +108,16 @@ export default function DriverDocuments() {
     <div>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('driverDocs.intro')}</p>
       {idv && idv.status === 'verified' && <p className="small" style={{ margin: '0 0 10px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('driverDocs.identityVerified', { provider: idv.provider === 'stripe_identity' ? 'Stripe Identity' : 'Fairide' })}</p>}
+      {/* Consentement biométrique donné : il se retire ici aussi (audit du 19/10, courier-9). */}
+      {dossier.biometricConsent && (
+        <p className="small" style={{ margin: '0 0 10px' }}>
+          <RetraitConsentementBiometrique busy={busy} onRetirer={async () => {
+            setBusy(true);
+            try { setDossier(await api('/couriers/me/consents/biometric_identity/withdraw', { method: 'POST', token })); toast(t('conformite.biometricWithdrawn'), 'succes'); } catch (err) { toast(err.message, 'erreur'); } finally { setBusy(false); }
+          }} />
+        </p>
+      )}
+      {depotIdentite && <>
       <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
         <b>{t(`courierOnboarding.doc_${kind}`)}</b>
         {identite.length === 0 && (
@@ -105,6 +131,7 @@ export default function DriverDocuments() {
       {identite.length === 0 && IDENTITE.filter((k) => k !== kind).map((k) => (
         <input key={k} ref={(el) => { entrees.current[`${k}-recto`] = el; }} type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => deposer(k, 'recto', e)} />
       ))}
+      </>}
 
       <div style={{ marginTop: 14 }}>
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>

@@ -17,6 +17,8 @@ import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/Ups
 import { euros, remiseCourte } from '../../prixPlat';
 import { mouvementReduit, vibrer } from '../../gestes';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
+import { paiementEnLigneOuvert, useLancement } from '../../launch';
+import { statutOuverture } from '../../openingHours';
 
 // Le panier, sur sa propre page.
 //
@@ -76,18 +78,23 @@ export default function PanierPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  useLancement(); // redessine au GO (paiement en ligne ouvert)
   // « Vider » demande confirmation (audit du 15/10/2026) : un toucher effaçait tout le panier, sans retour possible.
   const [viderOuvert, setViderOuvert] = useState(false);
   const [restaurant, setRestaurant] = useState(null);
   const [chargement, setChargement] = useState(true);
+  // Commerce retiré de Fairide (404) : le panier le dit et propose de le vider (audit du 19/10, discovery-18).
+  const [introuvable, setIntrouvable] = useState(false);
   // Lignes qui glissent hors de la feuille avant d'être retirées du panier (dernier « − »).
   const [sortantes, setSortantes] = useState(() => new Set());
 
   useEffect(() => {
     if (!cart.restaurantId) { setChargement(false); return; }
-    api(`/restaurants/${cart.restaurantId}`, { token }).then(setRestaurant).catch(() => {}).finally(() => setChargement(false));
+    api(`/restaurants/${cart.restaurantId}`, { token }).then(setRestaurant).catch((e) => { if (e.status === 404) setIntrouvable(true); }).finally(() => setChargement(false));
   }, [cart.restaurantId, token]);
+  // Prix d'aujourd'hui sur chaque ligne, une fois la carte lue (CartContext.actualiserPrix, discovery-15).
+  useEffect(() => { if (restaurant) cart.actualiserPrix(restaurant); }, [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Les totaux précis demandent le menu du restaurant (promotions, prix à jour) ; sans lui, on
   // affiche la somme des prix mémorisés dans le panier plutôt que de ne rien afficher.
@@ -113,6 +120,20 @@ export default function PanierPage() {
   }
   // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
   if (chargement) return experienceApp() ? <SqueletteEcran titre={t('panier.title')} lignes={2} /> : <SkeletonCards count={2} />;
+  if (introuvable) {
+    return (
+      <div className="panier-page ec-page sc-page panier-vide">
+        <BandeauCommande vers="/restaurants" libelleRetour={t('restaurantMenu.backToRestaurants')} titre={t('panier.title')} sous={cart.restaurantName || ''}>
+          {APPLI ? <RouteCommande position={8} /> : <RouteEtapes actuelle={0} />}
+        </BandeauCommande>
+        <FeuilleCommande>
+          <EtatVide icone="restaurants" titre={t('panier.shopGoneTitle')} actionVers="/restaurants" actionTexte={t('orders.emptyAction')}>
+            <button type="button" className="btn-outline" onClick={() => cart.clear()}>{t('panier.clearShopGone')}</button>
+          </EtatVide>
+        </FeuilleCommande>
+      </div>
+    );
+  }
 
   const { desserts, drinks } = restaurant ? computeUpsellSuggestions(restaurant, cart) : { desserts: [], drinks: [] };
 
@@ -128,13 +149,25 @@ export default function PanierPage() {
 
   // Plats qui ne se commandent plus (rupture, retirés) : marqués, « Retirer », et le paiement attend qu'ils soient partis.
   const indisponibles = lignesIndisponibles(cart.lines, restaurant?.menu);
+  /* AVANT LE GO, UN COMMERCE « PAIEMENT EN LIGNE SEULEMENT » NE PREND RIEN (audit du 19/10, LIVE-09). Le panier menait à un
+     paiement sans bouton, avec un message flou (« seulement s'il le propose »). Sans paiement en ligne, seul l'à emporter payé
+     sur place peut se commander : un commerce qui ne le propose pas (ou qui ne fait que livrer) attend le GO. On le dit ici,
+     à la place de « Aller au paiement ». Même règle que Checkout.jsx (paiementBloque) et le serveur (ONLINE_PAYMENT_NOT_OPEN). */
+  const modeEmporter = restaurant ? (restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online')) : null;
+  const pasEncore = !!restaurant && !paiementEnLigneOuvert(user) && !(restaurant.offersPickup && modeEmporter !== 'online');
+  // Ce que le paiement dirait plus tard, dit dès le panier (audit du 19/10, discovery-17) : le minimum du commerce pas atteint
+  // (même calcul que Checkout.jsx, sur la valeur des plats avant remises, comme le serveur), et le commerce fermé ou en pause.
+  const manqueMinimum = restaurant?.minOrderAmount ? Math.max(0, +(restaurant.minOrderAmount - cart.rawTotal).toFixed(2)) : 0;
+  const fermeMaintenant = !!restaurant && !statutOuverture(restaurant, new Date()).isOpen;
   const barre = (
     <BarreCommande montant={sousTotal} className="panier-barre">
       <span className="co-barre-total">
         <span className="co-barre-montant"><ChiffresRoulants valeur={euros(sousTotal)} /></span>
         <span className="co-barre-detail">{t('common.subtotal')}</span>
       </span>
-      <button type="button" className="btn-gold" onClick={() => (indisponibles.length ? toast(t('checkout.removeUnavailable'), 'erreur') : navigate('/checkout'))}>{t('panier.toCheckout')}</button>
+      {pasEncore
+        ? <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {t('checkout.onlinePaymentOpenSoon')}</span>
+        : <button type="button" className="btn-gold" onClick={() => (indisponibles.length ? toast(t('checkout.removeUnavailable'), 'erreur') : navigate('/checkout'))}>{t('panier.toCheckout')}</button>}
     </BarreCommande>
   );
 
@@ -187,6 +220,10 @@ export default function PanierPage() {
           ))}
           {/* Une phrase, et non plus une liste de remises sans titre sous les suggestions (audit design 2, 2026-10-19) : les
               lignes montrent déjà le prix payé, on dit seulement combien l'offre fait gagner et qui l'offre. */}
+          {manqueMinimum > 0 && (
+            <p className="small panier-avertissement" role="status">{t('checkout.minOrderMissing', { min: euros(restaurant.minOrderAmount), missing: euros(manqueMinimum) })}</p>
+          )}
+          {fermeMaintenant && <p className="small panier-avertissement" role="status">{t('panier.closedNow')}</p>}
           {totaux?.promoDiscount > 0 && (
             <p className="panier-economie">{t('panier.economie', { amount: euros(totaux.promoDiscount), name: cart.restaurantName || restaurant?.name || '' })}</p>
           )}

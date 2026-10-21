@@ -2,22 +2,23 @@ import { allerAuPaiement, experienceApp } from '../../natif';
 import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 import DossierAppli from './DossierAppli';
 import DossierSuivi from './DossierSuivi';
-import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer } from './dossierBlocs';
+import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer, MesCourses, PiecesSejour, ConfirmerEcole } from './dossierBlocs';
 import PageLivreur from '../../components/livreur/PageLivreur';
 import SacLivraison from '../../components/SacLivraison';
 import useRevalidation from '../../useRevalidation';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
 import { SkeletonCards } from '../../components/Skeleton';
+import ErreurChargement from '../../components/ErreurChargement';
 import { euros } from '../../prixPlat';
 import GuideIndependant from '../../components/livreur/GuideIndependant';
 import ouvrirDocument from '../../ouvrirDocument';
-import { EtapeNotices, ConsentementBiometrique } from '../../components/conformite/LivreurConformite';
+import { EtapeNotices, ConsentementBiometrique, RetraitConsentementBiometrique } from '../../components/conformite/LivreurConformite';
 import { TarifMinimum, DocumentsVente } from '../../components/conformite/EspaceVendeurLivreur';
 import { libelleManque } from '../../conformite';
 import { defilement } from '../../gestes';
@@ -53,15 +54,43 @@ export default function Onboarding() {
   const [d, setD] = useState(null);
   const [etape, setEtape] = useState(null);
   const [busy, setBusy] = useState(false);
+  // Un premier chargement raté ne laisse plus le squelette pour toujours : « Impossible de charger » + Réessayer (audit du 19/10, CROSS-33).
+  const [erreurChargement, setErreurChargement] = useState(null);
 
-  const charger = async () => { const r = await api('/couriers/me', { token }); setD(r); return r; };
+  const charger = async () => { const r = await api('/couriers/me', { token }); setD(r); setErreurChargement(null); return r; };
+  /* RETOUR DE STRIPE DANS L'APPLICATION (audit du 19/10, courier-3). Le navigateur intégré qui se ferme ramène à la MÊME
+   * adresse (natif.js : browserFinished, lien universel) : la page n'est pas remontée, et la relecture, faite une seule fois
+   * à l'ouverture, ne repassait pas. Le dossier restait sur « Identité à faire » et « Reprendre la vérification » ; toucher
+   * ce bouton relançait une session qui remettait l'identité « en attente » (le serveur le refuse désormais). On relit donc
+   * à chaque arrivée sur cette adresse (location.key change à chaque navigation), et au retour de l'application au premier
+   * plan (useRevalidation) ; une vérification Stripe Identity encore en attente est relue chez Stripe, comme le compte de
+   * paiement « en attente » plus bas. `relu` : nos propres nettoyages de l'adresse, qui n'ont pas à relancer tout ça. */
+  const location = useLocation();
+  async function relireDossier(retourIdentite = false) {
+    let r = await charger();
+    const id = r?.courier?.identity;
+    if (retourIdentite || (id?.provider === 'stripe_identity' && ['pending', 'processing'].includes(id?.status))) {
+      const relu = await api('/couriers/me/identity/refresh', { method: 'POST', token }).catch((e) => { if (retourIdentite) throw e; return null; });
+      if (relu) { r = relu; setD(relu); }
+    }
+    return r;
+  }
+  useRevalidation(async () => {
+    const r = await relireDossier();
+    if ((r?.user?.stripeConnectStatus || user?.stripeConnectStatus) === 'pending') {
+      await api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {});
+      await refreshUser?.().catch(() => {});
+      await charger();
+    }
+  });
   useEffect(() => {
+    if (location.state?.relu) return;
     (async () => {
       try {
-        let r = await charger();
-        if (params.get('identity') === 'retour') { r = await api('/couriers/me/identity/refresh', { method: 'POST', token }); setD(r); params.delete('identity'); setParams(params, { replace: true }); }
-        if (params.get('identity') === 'ok') { toast(t('courierOnboarding.identityOk'), 'succes'); params.delete('identity'); setParams(params, { replace: true }); }
-        if (params.get('identity') === 'erreur') { toast(t('courierOnboarding.identityFailed'), 'erreur'); params.delete('identity'); setParams(params, { replace: true }); }
+        let r = await relireDossier(params.get('identity') === 'retour');
+        if (params.get('identity') === 'retour') { params.delete('identity'); setParams(params, { replace: true, state: { relu: true } }); }
+        if (params.get('identity') === 'ok') { toast(t('courierOnboarding.identityOk'), 'succes'); params.delete('identity'); setParams(params, { replace: true, state: { relu: true } }); }
+        if (params.get('identity') === 'erreur') { toast(t('courierOnboarding.identityFailed'), 'erreur'); params.delete('identity'); setParams(params, { replace: true, state: { relu: true } }); }
         // Retour de Stripe lancé depuis le dossier (EtapePaiement) : on relit le statut du compte de paiement et on
         // reprend à l'envoi du dossier, au lieu de laisser le livreur chercher où il en était.
         if (params.get('connect') !== 'return' && (r?.user?.stripeConnectStatus || user?.stripeConnectStatus) === 'pending') {
@@ -74,13 +103,15 @@ export default function Onboarding() {
           await api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {});
           await refreshUser?.().catch(() => {});
           r = await charger();
-          params.delete('connect'); setParams(params, { replace: true });
+          params.delete('connect'); setParams(params, { replace: true, state: { relu: true } });
           setEtape('envoi');
         }
-      } catch (e) { toast(e.message, 'erreur'); }
+      } catch (e) { toast(e.message, 'erreur'); setErreurChargement(e); }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [location.key]);
+  // LIVE-07 (audit du 19/10) : les réponses de « Infos & documents » gardées ici, hors de l'étape (voir EtapeInfos).
+  const [brouillonInfos, setBrouillonInfos] = useState(null);
 
   // RETOUR DE STRIPE DANS L'APP (2026-10-21, vérification Stripe site / app). L'effet ci-dessus ne tourne qu'à l'ouverture :
   // dans l'app, le dossier reste ouvert pendant la vérification d'identité ou Stripe Connect (par-dessus), et le livreur
@@ -108,9 +139,17 @@ export default function Onboarding() {
 
   async function action(fn, ok) {
     setBusy(true);
-    try { const r = await fn(); if (r && r.courier) setD(r); else await charger(); if (ok) toast(ok); return true; } catch (e) { toast(e.message, 'erreur'); return false; } finally { setBusy(false); }
+    // Enregistré, mais la relecture du dossier échoue : ce n'est pas un échec de l'enregistrement. Le dire comme tel poussait
+    // le livreur à renvoyer ses pièces (audit du 19/10, CROSS-49) ; la relecture se refait au prochain retour sur la page.
+    try {
+      const r = await fn();
+      if (r && r.courier) setD(r); else await charger().catch(() => {});
+      if (ok) toast(ok);
+      return true;
+    } catch (e) { toast(e.message, 'erreur'); return false; } finally { setBusy(false); }
   }
 
+  if (!d && erreurChargement) return <ErreurChargement erreur={erreurChargement} onReessayer={() => { setErreurChargement(null); charger().catch(setErreurChargement); }} />;
   if (!d) return <SkeletonCards count={3} />;
   const c = d.courier; const legal = d.legal ?? {};
   const valide = c.lifecycleStatus === 'approved';
@@ -122,6 +161,7 @@ export default function Onboarding() {
     return !MANQUES_PAR_ETAPE[e].some((m) => manques.includes(m) && !MANQUES_INFORMATIFS.includes(m));
   };
   const enDossier = c.lifecycleStatus === 'draft' || c.lifecycleStatus === 'rejected';
+  const roule = valide || c.lifecycleStatus === 'suspended' || c.lifecycleStatus === 'blocked_threshold';
   if (experienceApp() && enDossier) {
     return <DossierAppli d={d} charger={charger} token={token} user={user} busy={busy} action={action} refreshUser={refreshUser} etapeDemandee={etape} />;
   }
@@ -147,6 +187,10 @@ export default function Onboarding() {
         const restantes = ETAPES.filter((e) => !etapeOk(e));
         const prochaine = restantes[0];
         if (!prochaine) return null;
+        /* Sur l'écran d'envoi, dossier prêt à partir (audit du 19/10, LIVE-18) : la carte disait « Encore 2 étape(s) · Prochaine
+         * étape : Paiements », avec son bouton lime, à côté de « Tout est complet » et du lime « Envoyer ». Les paiements
+         * peuvent s'activer après la validation (e-mail d'approbation) : sur cet écran, le seul geste est l'envoi. */
+        if (courante === 'envoi' && !manques.some((m) => !MANQUES_INFORMATIFS.includes(m) && !MANQUES_APRES_ENVOI.includes(m))) return null;
         const nom = (prochaine === 'engagements' ? t('conformite.engagementsStep') : t(`courierOnboarding.step_${prochaine}`)).replace(/^\d+\.\s*/, '');
         return (
           <div className="card prochaine-etape">
@@ -167,7 +211,11 @@ export default function Onboarding() {
           n'avait aucun moyen de la remplacer (audit UX du 15/10/2026). Il est prévenu par e-mail et notification ; ici, la
           pièce, le motif, et le bouton pour en déposer une autre. */}
       {!enDossier && <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />}
-      {!enDossier && manques.includes('bce') && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} />}
+      {!enDossier && (manques.includes('bce') || manques.includes('tva_numero')) && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} manques={manques} />}
+      {/* Livreur validé (audit du 19/10, courier-7, courier-30) : renouvellement de l'école, titre de séjour et carte
+          professionnelle à renouveler avant l'échéance. */}
+      {roule && <ConfirmerEcole key={`ecole-${c.needsRenewal}`} d={d} t={t} token={token} busy={busy} action={action} />}
+      {roule && <PiecesSejour d={d} t={t} token={token} busy={busy} action={action} />}
 
       {/* Livreur déjà validé : les notices (B4, B8) doivent être relues quand leur texte change, sinon le
           serveur refuse la prochaine course (NOTICES_A_ACCEPTER). Les étapes ci-dessous ne s'affichent
@@ -206,7 +254,7 @@ export default function Onboarding() {
 
           {courante === 'statut' && <EtapeStatut d={d} t={t} busy={busy} onChoose={(statusType) => action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType } }), t('courierOnboarding.toastStatusSaved')).then((ok) => ok && setEtape('identite'))} />}
           {courante === 'identite' && <EtapeIdentite d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('infos')} />}
-          {courante === 'infos' && <EtapeInfos d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('engagements')} />}
+          {courante === 'infos' && <EtapeInfos d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('engagements')} brouillon={brouillonInfos} onBrouillon={setBrouillonInfos} />}
           {courante === 'engagements' && (
             <EtapeNotices token={token} busy={busy} action={action} onNext={() => { charger(); setEtape('paiement'); }}
               contrat={{
@@ -223,9 +271,13 @@ export default function Onboarding() {
       {(valide || c.lifecycleStatus === 'blocked_threshold' || c.lifecycleStatus === 'pending_review' || c.lifecycleStatus === 'suspended') && (
         <Compteurs d={d} t={t} />
       )}
-      {/* Le tarif minimum se règle dans l'étape « Paiements » (fondateur, 2026-10-06 : il s'affichait sous chaque étape) ;
-          ses documents de vente, une fois qu'il a pu livrer. */}
-      {(valide || c.lifecycleStatus === 'suspended' || c.lifecycleStatus === 'blocked_threshold') && <DocumentsVente token={token} />}
+      {/* Le tarif minimum se règle dans l'étape « Paiements » du brouillon (fondateur, 2026-10-06 : il s'affichait sous chaque
+          étape) ; ses documents de vente, une fois qu'il a pu livrer. */}
+      {/* Ses courses (zone, véhicule, autres plateformes, sac) et son minimum restent à sa main après la validation (audit du 19/10,
+          courier-5 et courier-6 : rien ne les montrait plus une fois le dossier validé). */}
+      {roule && <MesCourses key={`courses-${c.updatedAt}`} d={d} t={t} token={token} busy={busy} action={action} />}
+      {roule && <TarifMinimum key={`min-${c.minFeeCents ?? 'aucun'}-${c.minFeePerKmCents ?? 'aucun'}`} courier={c} token={token} action={action} busy={busy} />}
+      {roule && <DocumentsVente token={token} />}
       {!enDossier && <ChangementStatut d={d} t={t} token={token} action={action} busy={busy} onChanged={() => { setEtape('statut'); refreshUser?.(); }} />}
       <p className="small" style={{ marginTop: 16, opacity: 0.75 }}>{t('courierOnboarding.legalFooter', { year: legal.year ?? new Date().getFullYear() })} · <Link to="/driver">{t('courierOnboarding.backToDashboard')}</Link></p>
     </PageLivreur>
@@ -321,21 +373,34 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
       } catch (e) {
         // B1 : le selfie exige un consentement biométrique séparé — on l'affiche au lieu de l'erreur.
         if (e.code === 'CONSENTEMENT_BIOMETRIQUE_REQUIS') { setConsentement(e.data?.consent || null); return null; }
+        // Déjà vérifiée entre-temps (webhook) : rien à relancer, le dossier relu le montre (audit du 19/10, courier-3).
+        if (e.code === 'IDENTITE_DEJA_VERIFIEE') return null;
         throw e;
       }
       return null;
     });
   }
+  // Un envoi raté garde son message d'erreur (action) : « Document déposé » s'affichait par-dessus, et le livreur attendait
+  // une vérification qui ne viendrait pas (audit du 19/10, LIVE-04). Le bouton reste là pour réessayer.
   async function deposer(e) {
     const files = [...(e.target.files || [])].slice(0, 4); e.target.value = ''; if (!files.length) return;
-    for (const f of files) { const ok = await action(() => apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType: 'identity_card' } }), null); if (!ok) break; }
+    for (const f of files) { const ok = await action(() => apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType: 'identity_card' } }), null); if (!ok) return; }
     toast(files.length > 1 ? t('courierOnboarding.toastDocsUploaded', { n: files.length }) : t('courierOnboarding.toastDocUploaded'));
   }
   // Une pièce refusée par l'équipe ne compte pas (avant : coche verte « reçue, rien à refaire » sur une pièce refusée).
   const carte = (d.documents ?? []).filter((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && !x.rejectedReason);
   const refusee = carte.length === 0 ? (d.documents ?? []).find((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && x.rejectedReason) : null;
   const [autreMoyen, setAutreMoyen] = useState(false);
-  const recue = id.status !== 'verified' && carte.length > 0 && !autreMoyen;
+  /* ANALYSE EN COURS : RELUE TOUTE SEULE (audit du 19/10, courier-28). « En cours d'analyse » ne bougeait qu'en rechargeant la
+   * page ; toutes les 20 s, la vérification est relue chez Stripe (même route qu'au retour de Stripe), le temps de l'écran. */
+  const enAnalyse = id.provider === 'stripe_identity' && id.status === 'processing';
+  useEffect(() => {
+    if (!enAnalyse) return undefined;
+    const minuteur = setInterval(() => { api('/couriers/me/identity/refresh', { method: 'POST', token }).then((r) => action(async () => r)).catch(() => {}); }, 20000);
+    return () => clearInterval(minuteur);
+  }, [enAnalyse]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Refusée par l'équipe : on revient aux façons de la vérifier, motif en tête, même si une pièce est encore déposée (admin-43).
+  const recue = id.status !== 'verified' && carte.length > 0 && !autreMoyen && !id.rejectedReason;
   return (
     <div className="card">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.identityTitle')}</h3>
@@ -356,12 +421,14 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
       ) : (
         <div className="courier-providers">
           {refusee && <p className="small texte-erreur" role="alert"><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityRejected', { reason: refusee.rejectedReason })}</p>}
+          {/* Identité refusée par l'équipe : son motif (audit du 19/10, admin-43 ; e-mail et notification partent aussi). */}
+          {id.rejectedReason && <p className="small texte-erreur" role="alert"><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityRejectedByTeam', { reason: id.rejectedReason })}</p>}
           <div className="courier-provider">
             <b><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.provider_stripe_identity')}</b>
             <p className="small">{t('courierOnboarding.stripeIdentityHelp')}</p>
             <button type="button" className="btn-teal" disabled={busy || !prov.stripe_identity} onClick={() => demarrer('stripe_identity')}>{id.status === 'pending' && id.provider === 'stripe_identity' ? t('courierOnboarding.identityResume') : t('courierOnboarding.identityStart')}</button>
             {id.status === 'processing' && <p className="small"><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.identityProcessing')}</p>}
-            {id.status === 'failed' && <p className="small texte-erreur">{t('courierOnboarding.identityFailed')}{ERREURS_IDENTITE.includes(id.error) && <> {t(`courierOnboarding.identityError_${id.error}`)}</>}</p>}
+            {id.status === 'failed' && !id.rejectedReason && <p className="small texte-erreur">{t('courierOnboarding.identityFailed')}{ERREURS_IDENTITE.includes(id.error) && <> {t(`courierOnboarding.identityError_${id.error}`)}</>}</p>}
           </div>
           {/* STRIPE D'ABORD (fondateur, 19/10/2026 : « Stripe, le chemin de 99 % des livreurs »). Le dépôt d'une photo de la pièce,
               que l'équipe devait juger à l'œil, n'est proposé que si Stripe Identity est coupé (identityProviders du serveur). */}
@@ -382,6 +449,8 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
           </div>
         </div>
       )}
+      {/* Consentement biométrique donné : il se retire ici (audit du 19/10, courier-9). */}
+      {d.biometricConsent && <p className="small" style={{ margin: '10px 0 0' }}><RetraitConsentementBiometrique busy={busy} onRetirer={() => action(() => api('/couriers/me/consents/biometric_identity/withdraw', { method: 'POST', token }), t('conformite.biometricWithdrawn'))} /></p>}
       {/* « Suivant » n'est le bouton lime qu'une fois l'identité lancée : avant, c'étaient les trois façons de la vérifier qu'il
           fallait voir, et le lime poussait à passer l'étape sans rien faire (audit du 15/10/2026). */}
       <div className="row" style={{ marginTop: 12 }}><button type="button" className={id.status === 'verified' || id.status === 'processing' || (id.provider === 'manual' && carte.length > 0) || (id.provider === 'in_person' && id.status === 'pending') ? 'btn-gold' : 'btn-outline'} onClick={onNext}>{t('courierOnboarding.next')}</button></div>
@@ -423,11 +492,11 @@ function Champ({ label, children, help }) {
 function ChampsEntreprise({ c, f, set, t, legal }) {
   return (
     <>
-      <Champ label={t('courierOnboarding.fBce')} help={c.independent?.companyVerified ? `${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input aria-label="0123.456.789" value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
+      <Champ label={t('courierOnboarding.fBce')} help={c.independent?.companyVerified ? `${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
       <Champ label={t('courierOnboarding.fVatStatus')}>
         <select value={f.vatStatus} onChange={set('vatStatus')}><option value="">-</option><option value="franchise">{t('courierOnboarding.vatFranchise', { max: euroOuTiret(legal.franchiseMaxTurnover) })}</option><option value="assujetti">{t('courierOnboarding.vatNormal')}</option></select>
       </Champ>
-      {f.vatStatus === 'assujetti' && <Champ label={t('courierOnboarding.fVatNumber')}><input aria-label="BE0123456789" value={f.vatNumber} onChange={set('vatNumber')} placeholder="BE0123456789" /></Champ>}
+      {f.vatStatus === 'assujetti' && <Champ label={t('courierOnboarding.fVatNumber')}><input value={f.vatNumber} onChange={set('vatNumber')} placeholder="BE0123456789" /></Champ>}
     </>
   );
 }
@@ -445,10 +514,16 @@ function ChampCaisse({ f, set, t }) {
   );
 }
 
-function EtapeInfos({ d, t, busy, token, action, onNext }) {
+function EtapeInfos({ d, t, busy, token, action, onNext, brouillon = null, onBrouillon }) {
   const toast = useToast();
   const c = d.courier; const legal = d.legal ?? {};
-  const [f, setF] = useState(() => infosDepuisDossier(c, d.zones));
+  /* RÉPONSES GARDÉES EN CHANGEANT D'ÉTAPE (audit du 19/10, LIVE-07). La carte « Prochaine étape » en tête de page a son propre
+   * bouton « Continuer », qui mène à l'étape à faire (souvent l'identité) : le livreur qui le touchait après avoir rempli
+   * nationalité, date de naissance et registre national quittait cette étape sans l'enregistrer, et tout était à retaper.
+   * Le formulaire vit désormais aussi dans la page (`brouillon`) et revient tel quel ; rien n'est enregistré sans
+   * « Continuer » ici, comme avant. */
+  const [f, setF] = useState(() => brouillon || infosDepuisDossier(c, d.zones));
+  useEffect(() => { onBrouillon?.(f); }, [f]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   // Une date par pièce (elle était partagée : la date d'un permis partait avec l'assurance déposée ensuite).
   const [echeances, setEcheances] = useState({});
@@ -460,7 +535,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
   // que le passage à l'écran suivant. Une erreur, elle, s'affiche toujours (voir action()).
   async function enregistrer() {
     // Oui / non en texte dans le formulaire, booléen pour le serveur ; vide = pas encore répondu, rien n'est envoyé.
-    const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: corpsInfos(f) }));
+    const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: corpsInfos(f, c) }));
     if (ok) setF((x) => ({ ...x, nationalNumber: '' }));
     return ok;
   }
@@ -511,7 +586,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
           </Champ>
           <Champ label={t('courierOnboarding.fBirthDate')}><input type="date" value={f.birthDate} onChange={set('birthDate')} /></Champ>
           <Champ label={t('courierOnboarding.fNrn')} help={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('courierOnboarding.nrnHelp')}>
-            <input aria-label="85.07.30-033.28" inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
+            <input inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
           </Champ>
           {/* Plus d'IBAN ici (12 oct. 2026) : il se donne une seule fois, à Stripe, à l'étape « Paiements ». */}
         </div>
@@ -526,7 +601,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
           </Champ>
           {motorise && (<>
             <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
-            <Champ label={t('courierOnboarding.fPlate')}><input aria-label="1-ABC-123" value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
+            <Champ label={t('courierOnboarding.fPlate')}><input value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
           </>)}
           {/* Venu de l'inscription (12 oct. 2026) : décide d'une ou deux courses à la fois (routes/orders.js). */}
           <Champ label={t('auth.platformsTitle')} help={t('auth.platformsHelp')}>
@@ -554,7 +629,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
         {c.statusType === 'student_independent' && (<>
           <div className="courier-grid">
             <Champ label={t('courierOnboarding.fSchool')}><input value={f.schoolName} onChange={set('schoolName')} /></Champ>
-            <Champ label={t('courierOnboarding.fAcademicYear')}><input aria-label="2026-2027" value={f.academicYear} onChange={set('academicYear')} placeholder="2026-2027" /></Champ>
+            <Champ label={t('courierOnboarding.fAcademicYear')}><input value={f.academicYear} onChange={set('academicYear')} placeholder="2026-2027" /></Champ>
             <ChampCaisse f={f} set={set} t={t} />
             <ChampsEntreprise c={c} f={f} set={set} t={t} legal={legal} />
           </div>

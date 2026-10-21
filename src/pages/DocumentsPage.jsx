@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { SkeletonCards } from '../components/Skeleton';
+import ErreurChargement from '../components/ErreurChargement';
 import Icone from '../components/Icone';
 // Même famille que Mon compte sur le site (titre, largeur de lecture, cartes) ; sans effet dans l'app.
 import '../site-compte.css';
@@ -21,7 +22,9 @@ export default function DocumentsPage() {
   const [d, setD] = useState(null);
   const [busy, setBusy] = useState(false);
   const fmt = (x) => (x ? new Date(x).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) : '—');
-  const charger = () => api('/me/documents', { token }).then(setD).catch((e) => toast(e.message, 'erreur'));
+  // Un premier chargement raté ne laisse plus le squelette pour toujours : « Impossible de charger » + Réessayer (audit du 19/10, CROSS-33).
+  const [erreur, setErreur] = useState(null);
+  const charger = () => api('/me/documents', { token }).then((r) => { setD(r); setErreur(null); }).catch((e) => { setErreur(e); toast(e.message, 'erreur'); });
   useEffect(() => { charger(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function accepterCgu() {
@@ -41,7 +44,7 @@ export default function DocumentsPage() {
     <div className="container compte-sous-page" style={{ paddingBottom: 40 }}>
       <h1 className="compte-sous-titre" style={{ margin: '0 0 4px' }}>{t('mesDocuments.title')}</h1>
       <p className="small" style={{ margin: '0 0 16px', opacity: 0.8 }}>{t('mesDocuments.intro')}</p>
-      {!d ? <SkeletonCards count={2} /> : (
+      {!d && erreur ? <ErreurChargement erreur={erreur} onReessayer={charger} /> : !d ? <SkeletonCards count={2} /> : (
         <>
           {/* Conditions générales */}
           <div className="card" style={{ marginBottom: 12 }}>

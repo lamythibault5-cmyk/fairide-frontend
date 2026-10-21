@@ -21,17 +21,17 @@ import AutoScrollRow from '../../components/AutoScrollRow';
 import { epingler, titreRangee } from '../../misesEnAvant';
 import { lireBienvenue } from '../../bienvenue';
 import { repondAuxEnvies } from '../../envies';
-import { COMMUNES, ILLUSTRATION_TOUTES_CUISINES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
+import { COMMUNES, ILLUSTRATION_TOUTES_CUISINES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel, communeDepuisCodePostal } from '../../menuCategories';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { getOpenStatus } from '../../openingHours';
-import { tarifLivraison, eurosCourts } from '../../livraison';
-import { libellePromo } from '../../prixPlat';
+import { statutOuverture } from '../../openingHours';
+import { tarifLivraison, eurosCourts, horsZoneLivraison } from '../../livraison';
+import { kmLisible, libellePromo } from '../../prixPlat';
 import EmplacementSponsor from '../../components/EmplacementSponsor';
 import VisuelVide from '../../components/VisuelVide';
 import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
-import { livraisonOuverte, paiementEnLigneOuvert } from '../../launch';
+import { livraisonOuverte, paiementEnLigneOuvert, useLancement, chargerLancement, livreurFairideLibre, commandesOuvertes } from '../../launch';
 import EtatVide from '../../components/EtatVide';
 import ErreurChargement from '../../components/ErreurChargement';
 import TeteListe from '../../components/TeteListe';
@@ -40,6 +40,7 @@ import '../../ecran-liste.css';
 import '../../site-liste.css';
 import AvecMarque from '../../components/AvecMarque';
 import { lienFiche } from '../../murCompte';
+import { normaliserRecherche } from '../../normaliserRecherche';
 
 // « TRIER » ET « PRIX » RETIRÉS POUR LE MOMENT (fondateur, 2026-10-20, après le test avec Maestro Pizza) : avec une
 // poignée de commerces, trier ou filtrer par prix ne sert à rien et charge la bande. Les états et les règles restent
@@ -91,14 +92,29 @@ function offerLabelFor(r, t) {
   return libellePromo((r.menu || []).find((i) => i.activePromo)?.activePromo, t);
 }
 
+// Livraison réellement possible ici et maintenant : ouverte (GO), dans la zone, et un livreur libre dans le pool Fairide
+// (audit du 19/10, discovery-02 ; un commerce qui livre lui-même garde sa vérification sur sa fiche).
+function livraisonPossibleIci(r, user) {
+  return !!r.offersDelivery && livraisonOuverte(user) && !horsZoneLivraison(r, user)
+    && (r.deliveryMode === 'own' || livreurFairideLibre(user));
+}
+
 // Le restaurant peut prendre à sa charge tout ou partie des frais de livraison (voir "🏷️ Frais de
 // livraison" dans son dashboard) — affiché comme un pill à côté de la commune, pas confondu avec le
 // badge promo (🏷️ en haut de la photo) qui porte sur le contenu du panier, pas la livraison.
 // Le prix de la livraison sur la carte du commerce (livraison.js) : offerte, offerte dès X €, ou « dès X € » quand il
 // est plus bas que le forfait (le commerce en offre une part, ou livre lui-même à ses frais).
+// L'à emporter réellement commandable aujourd'hui : ouvert (1er novembre, payé sur place) et, s'il ne se paie qu'en ligne,
+// après le GO. Avant le 1er novembre, la carte disait « À emporter » et le filtre gardait le commerce, alors que le serveur
+// refuse (PICKUP_NOT_OPEN) — audit du 19/10, discovery-25.
+function emporterPossibleIci(r, user) {
+  return !!r.offersPickup && commandesOuvertes(user) && (r.pickupPaymentMode !== 'online' || paiementEnLigneOuvert(user));
+}
+
 function deliveryOfferLabelFor(r, t, user) {
-  // Avant le GO, pas d'offre de livraison sur les cartes : seul l'à emporter est ouvert (audit du 18/10/2026).
-  if (r.offersDelivery === false || !livraisonOuverte(user)) return null;
+  // Avant le GO, pas d'offre de livraison sur les cartes : seul l'à emporter est ouvert (audit du 18/10/2026). Hors zone ou
+  // sans livreur libre non plus (audit du 19/10, discovery-02 et 03).
+  if (!livraisonPossibleIci(r, user)) return null;
   const tarif = tarifLivraison(r);
   if (tarif.offerte) return t('restoListUi.freeDeliveryPill');
   if (tarif.offerteDes != null) return t('restoListUi.freeFrom', { min: eurosCourts(tarif.offerteDes) });
@@ -114,8 +130,9 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const { user, token } = useAuth();
   const offerLabel = offerLabelFor(r, t);
   const deliveryOfferLabel = deliveryOfferLabelFor(r, t, user);
-  const etat = r.hours ? getOpenStatus(r.hours, new Date(), r.closures) : null;
-  const isClosed = !!etat && !etat.isOpen;
+  // Pause, « fermé pour aujourd'hui » et interrupteur du commerce comptent, comme sur sa fiche (audit du 19/10, discovery-04).
+  const etat = statutOuverture(r, new Date());
+  const isClosed = !etat.isOpen;
   const etatTexte = !isClosed ? null
     : etat.opensToday && etat.opensAt
       ? t('restoListUi.closedOpensAt', { time: etat.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
@@ -123,9 +140,12 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const bande = bandePrix(r);
   // Avant le GO, l'à emporter payé en ligne seulement n'est pas encore commandable : « Commande en ligne bientôt » plutôt
   // que « À emporter », découvert seulement au paiement (audit du 18/10/2026).
-  const emporterPossible = r.offersPickup && (r.pickupPaymentMode !== 'online' || paiementEnLigneOuvert(user));
-  const livraisonPossible = r.offersDelivery && livraisonOuverte(user);
-  const services = [emporterPossible && t('restoListUi.servicePickup'), livraisonPossible && t('restoListUi.serviceDelivery'), !emporterPossible && !livraisonPossible && (r.offersPickup || r.offersDelivery) && t('restoListUi.serviceSoon'), r.fairideDeliveryDisabled && r.offersPickup && t('restoListUi.pickupOnlyZone')].filter(Boolean);
+  const emporterPossible = emporterPossibleIci(r, user);
+  const livraisonOuverteIci = r.offersDelivery && livraisonOuverte(user);
+  const livraisonPossible = livraisonPossibleIci(r, user);
+  // Hors zone : dit sur la carte, avant de composer un panier (audit du 19/10, discovery-03) ; l'à emporter reste dit à côté.
+  const horsZone = livraisonOuverteIci && horsZoneLivraison(r, user);
+  const services = [emporterPossible && t('restoListUi.servicePickup'), livraisonPossible && t('restoListUi.serviceDelivery'), horsZone && t('restoListUi.outOfZone'), !emporterPossible && !livraisonOuverteIci && (r.offersPickup || r.offersDelivery) && t('restoListUi.serviceSoon'), r.fairideDeliveryDisabled && emporterPossible && t('restoListUi.pickupOnlyZone')].filter(Boolean);
   // VISITEUR NON CONNECTÉ : la liste se parcourt librement (on y arrive depuis la barre d'adresse de
   // l'accueil), mais ouvrir un commerce demande un compte (fondateur, 2026-09-27). Le lien part vers
   // la connexion avec la fiche en `from`, et Auth.jsx y ramène une fois connecté ou inscrit.
@@ -133,7 +153,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   // recherche ou la page prérendue y mènent toujours directement. Seul ce clic-ci est filtré.
   return (
     <Link
-      {...lienFiche(user, r.id)}
+      {...lienFiche(user, r.id, r.name)}
       className={`rest-card rc${isClosed ? ' rc-est-ferme' : ''}`}
       // La fiche part dès que le doigt se pose (cacheDonnees.js) — seulement si le lien y mène (connecté, murCompte.js).
       onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}
@@ -157,7 +177,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
           {r.certified && <CertifiedBadge />}
         </h3>
         {/* Type principal + le premier type secondaire (7 types possibles, voir EcranCuisines) : deux, pour rester lisible. */}
-        <p className="rc-sous">{[[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 2).map((c) => restaurantTypeLabel(c, t) || c).join(', '), r.neighborhood || r.commune, r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ')}</p>
+        <p className="rc-sous">{[[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 2).map((c) => restaurantTypeLabel(c, t) || c).join(', '), r.neighborhood || r.commune, r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ')}</p>
         <p className="rc-infos">
           {/* Pas d'étoiles sans avis : une note que personne n'a donnée n'est pas un avis (CDE VI.100). */}
           {r.reviewCount > 0
@@ -228,15 +248,15 @@ function ALaUne({ list, inscritLe, t }) {
       <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="eclair" taille={18} />{t('restaurantList.sectionFeatured')}</h3>
       <div className="une-rail" ref={rail} onScroll={surDefilement}>
         {list.map((r) => {
-          const etat = r.hours ? getOpenStatus(r.hours, new Date(), r.closures) : null;
-          const ferme = !!etat && !etat.isOpen;
+          // Même état que la fiche : pause et « fermé pour aujourd'hui » compris (audit du 19/10, discovery-04).
+          const ferme = !statutOuverture(r, new Date()).isOpen;
           const depuis = inscritLe.get(r.id);
           const nouveau = depuis != null && maintenant - depuis < NOUVEAU_JOURS * 86400000;
           const sous = [[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 1).map((c) => restaurantTypeLabel(c, t) || c).join(''), r.neighborhood || r.commune,
-            r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ');
+            r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ');
           return (
             // Même règle que les cartes dessous : sans compte, le clic mène à la connexion, puis à la fiche.
-            <Link key={r.id} {...lienFiche(user, r.id)} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`} onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}>
+            <Link key={r.id} {...lienFiche(user, r.id, r.name)} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`} onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}>
               <VisuelVide nom={r.name} cuisine={r.cuisine} />
               <img {...imgProps(r.coverImageUrl, 800, '(max-width: 640px) 92vw, 380px')} alt="" className="une-photo" decoding="async" onError={cacherImageCassee} />
               <span className="une-voile" aria-hidden="true" />
@@ -314,6 +334,10 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, au
 
 export default function RestaurantList() {
   const { token, user } = useAuth();
+  // BOUTON GO (audit du 19/10, discovery-01) : la liste suit l'état du serveur comme la fiche (src/launch.js). Sans cet
+  // abonnement, un téléphone neuf après GO voyait « Commande en ligne bientôt » jusqu'à ouvrir une fiche, et un téléphone
+  // resté sur « GO » promettait la livraison après la fermeture.
+  useLancement();
   // Carnet d'adresses, ouvert depuis la rangee « Livrer a » en tete de page.
   const [choixAdresse, setChoixAdresse] = useState(false);
   const { t } = useLanguage();
@@ -332,7 +356,9 @@ export default function RestaurantList() {
   // sa commune d'abord puis les communes voisines, et nourrit la rangée « près de chez toi ».
   // L'accueil envoyait un filtre de commune strict ; le fondateur a demandé de tout montrer tant
   // qu'il y a peu de commerces (2026-09-27).
-  const homeCommune = matchCommune(user?.addressCity) || filtresInitiaux.communeProche || null;
+  // Ville du compte en néerlandais (« Elsene », « Schaarbeek ») ou en quartier (« Laeken ») : la commune se retrouve par le
+  // code postal (audit du 19/10, discovery-23), sinon le « manger local » ne s'appliquait pas du tout.
+  const homeCommune = matchCommune(user?.addressCity) || communeDepuisCodePostal(user?.addressPostalCode) || filtresInitiaux.communeProche || null;
   /* AU RETOUR SUR LA LISTE, ELLE EST DÉJÀ LÀ (2026-10-20, test de l'app Android) : la dernière liste lue s'affiche dès la
      première image, sans squelette, et se relit en arrière-plan (cacheDonnees.js). C'est aussi ce qui permet à la photo
      d'une fiche fermée par sa croix de retrouver sa carte (transitionPhoto.js) au lieu de tomber sur des cartes grises. */
@@ -349,7 +375,8 @@ export default function RestaurantList() {
   // liste lue à l'instant (cacheDonnees.js). Une réponse identique rend le même tableau : React ne redessine rien.
   const chargerListe = useCallback(({ silencieux = false, forcer = false } = {}) => {
     setEchecListe(false); if (!silencieux) setLoading(true);
-    return chargerAvecCache('/restaurants', { forcer }).then((l) => { setRestaurants(l); setEchecListe(false); }).catch(() => setEchecListe(true)).finally(() => setLoading(false));
+    // Rend true / false : tirer pour actualiser le dit quand la lecture échoue alors que des cartes sont déjà là (discovery-32).
+    return chargerAvecCache('/restaurants', { forcer }).then((l) => { setRestaurants(l); setEchecListe(false); return true; }).catch(() => { setEchecListe(true); return false; }).finally(() => setLoading(false));
   }, []);
   const [search, setSearch] = useState(filtresInitiaux.search || '');
   const [commune, setCommune] = useState(filtresInitiaux.commune || '');
@@ -386,6 +413,8 @@ export default function RestaurantList() {
   // reconstruit alors ni les Map ni les Set (sinon chaque retour sur la liste redessinait toutes les rangées).
   function charger({ forcer = false } = {}) {
     const commerces = chargerListe({ silencieux: true, forcer });
+    // Tirer pour actualiser relit aussi le bouton GO (et la disponibilité des livreurs).
+    if (forcer) chargerLancement();
     const deja = { landing: lireCache('/restaurants/landing'), placements: lireCache('/placements/active') };
     chargerAvecCache('/restaurants/landing', { forcer }).then((l) => {
       if (l === deja.landing) return;
@@ -408,6 +437,15 @@ export default function RestaurantList() {
     charger();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // « Fermé » / « Ouvre à 18:00 » se recalculent chaque minute tant que la page reste ouverte, comme sur la fiche
+  // (RestaurantMenu.jsx) : sinon une carte restait « Fermé » après l'heure d'ouverture (audit du 19/10, discovery-32).
+  const [, setMinute] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setMinute((n) => n + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+  // Tirer pour actualiser : sans réseau, la liste restait telle quelle sans rien dire (discovery-32).
+  const actualiser = () => charger({ forcer: true }).then((ok) => { if (!ok && restaurants.length) toast(t('restoListUi.refreshFailed'), 'erreur'); });
 
   async function toggleFavorite(e, id) {
     e.preventDefault();
@@ -482,9 +520,9 @@ export default function RestaurantList() {
       if (vegan && !restoVegan(r)) return false;
       if (halal && !restoHalal(r)) return false;
       if (sansGluten && !restoSansGluten(r)) return false;
-      if (search && !`${r.name} ${r.desc} ${r.cuisine}`.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search && !normaliserRecherche(`${r.name} ${r.desc} ${r.cuisine}`).includes(normaliserRecherche(search))) return false;
       if (prix && bandePrix(r) !== prix) return false;
-      if (emporter && !r.offersPickup) return false;
+      if (emporter && !emporterPossibleIci(r, user)) return false;
       return true;
     })
     // Le tri choisi passe AVANT le rangement par anneaux de communes ci-dessous : demander « les
@@ -512,6 +550,9 @@ export default function RestaurantList() {
   // Une rangée trop courte tourne mal en boucle (2 cartes qui se répètent) : en dessous de MIN_PAR_RANGEE
   // commerces, on la complète avec d'autres commerces de la liste, les mieux notés d'abord, sans doublon.
   // Une rangée vide reste vide : on ne fabrique pas une section « Bio » sans le moindre produit bio.
+  // SEULE « AUTOUR DE TOI » EST COMPLÉTÉE (audit du 19/10, discovery-07) : une rangée « Vegan » d'un commerce vegan et de
+  // cinq commerces qui ne le sont pas mentait sur son titre. Les rangées à thème restent courtes ; une rangée d'une seule
+  // carte ne tourne pas en boucle (Section, loop && list.length > 1). /classement le dit (conformite.ranking_rows).
   const completer = (liste) => {
     if (liste.length === 0 || liste.length >= MIN_PAR_RANGEE) return liste;
     const dejaLa = new Set(liste.map((r) => r.id));
@@ -525,7 +566,7 @@ export default function RestaurantList() {
   const nonGroceryTous = restaurants.filter((r) => !GROCERY_TYPES.includes(r.cuisine)); // « Autour de vous » : toutes les communes
   // MISES EN AVANT (fondateur, 2026-10-02) : un commerce qui a payé la 1re, 2e ou 3e position d'une rangée y remonte,
   // marqué « Sponsorisé » — seulement s'il a sa place dans la rangée (voir misesEnAvant.js).
-  const groceryList = completer(epinglerOuMelanger(base.filter((r) => GROCERY_TYPES.includes(r.cuisine)), placements, 'grocery'));
+  const groceryList = epinglerOuMelanger(base.filter((r) => GROCERY_TYPES.includes(r.cuisine)), placements, 'grocery');
   // AUTOUR DE VOUS, DU PLUS PROCHE AU PLUS LOIN (fondateur, 2026-10-01). Adresse géolocalisée : les commerces triés
   // par distance réelle, la distance affichée sur la carte. Sans position : sa commune d'abord, puis les communes
   // voisines de proche en proche (communeRingDistance). Les commerces sans coordonnées passent après.
@@ -547,9 +588,12 @@ export default function RestaurantList() {
       .filter((r) => repondAuxEnvies(r, envies)).slice(0, PROCHES_MAX)
     : [];
   // À la une : voir ALaUne. Même ordre que « Autour de toi », mais SANS épinglage payant, avec photo, ouverts d'abord.
-  const ouvert = (r) => !r.hours || getOpenStatus(r.hours, new Date(), r.closures).isOpen;
+  const ouvert = (r) => statutOuverture(r, new Date()).isOpen;
   const aLaUne = (parDistance.length ? parDistance : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous)
-    .filter((r) => r.coverImageUrl)
+    // SA PROPRE PHOTO (audit du 19/10, discovery-05) : le serveur remplit toujours coverImageUrl, avec une photo d'illustration
+    // quand le commerce n'en a pas ; `ownCover` dit si c'est la sienne. Une liste lue avant ce champ (undefined) garde l'ancien
+    // comportement. Pas de commerce « Carte seule » (vitrine) en tête : on ne peut pas y commander (discovery-34).
+    .filter((r) => r.coverImageUrl && r.ownCover !== false && !r.vitrine)
     .map((r, i) => ({ r, i, o: ouvert(r) ? 0 : 1 }))
     .sort((a, b) => a.o - b.o || a.i - b.i)
     .slice(0, UNE_MAX)
@@ -557,7 +601,8 @@ export default function RestaurantList() {
   // LIVRAISON DÈS 3 € et LIVRAISON OFFERTE (fondateur, 2026-10-01) : seulement les commerces concernés, jamais complétées.
   const SEUIL_PAS_CHER = 3;
   // Rangées « Livraison offerte » et « Livraison dès 3 € » : seulement après le GO (avant, seul l'à emporter est ouvert).
-  const livrables = livraisonOuverte(user) ? nonGrocery.filter((r) => r.offersDelivery !== false) : [];
+  // Ni hors zone, ni sans livreur libre (audit du 19/10, discovery-02 et 03).
+  const livrables = livraisonOuverte(user) ? nonGrocery.filter((r) => livraisonPossibleIci(r, user)) : [];
   const livraisonPasCher = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
     .filter(({ tarif }) => !tarif.offerte && tarif.offerteDes == null && tarif.depart > 0 && tarif.depart <= SEUIL_PAS_CHER)
     .sort((a, b) => a.tarif.depart - b.tarif.depart).map(({ r }) => r);
@@ -572,7 +617,7 @@ export default function RestaurantList() {
     ...s,
     liste: epinglerOuMelanger(base.filter((r) => r.cuisine === s.cuisine || (r.extraCuisines || []).includes(s.cuisine)), placements, s.key)
   })).filter((s) => s.liste.length > 0);
-  const offersList = completer(epinglerOuMelanger(base.filter((r) => r.hasPromo), placements, 'offers'));
+  const offersList = epinglerOuMelanger(base.filter((r) => r.hasPromo), placements, 'offers');
   // Un seul plat marqué healthy par le restaurateur suffit à faire entrer le commerce ici (menu_items.healthy,
   // voir la case à cocher dans la fiche d'un plat côté restaurateur). Trié par nombre de plats healthy
   // décroissant plutôt que dans l'ordre du serveur : sans ça, une pizzeria qui propose une salade verte
@@ -586,13 +631,13 @@ export default function RestaurantList() {
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
     .map(({ r }) => r);
-  const bioList = completer(epinglerOuMelanger(parMention(platBio), placements, 'bio'));
-  const veganList = completer(epinglerOuMelanger(parMention(platVegan), placements, 'vegan'));
-  const healthyList = completer(epinglerOuMelanger(nonGrocery
+  const bioList = epinglerOuMelanger(parMention(platBio), placements, 'bio');
+  const veganList = epinglerOuMelanger(parMention(platVegan), placements, 'vegan');
+  const healthyList = epinglerOuMelanger(nonGrocery
     .map((r) => ({ r, n: (r.menu || []).filter((m) => m.healthy).length }))
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
-    .map(({ r }) => r), placements, 'healthy'));
+    .map(({ r }) => r), placements, 'healthy');
   // Sans lat/lng sur le compte (adresse pas encore renseignée/géocodée), la section restait vide en
   // permanence — pas juste lente, jamais affichée du tout, ce qui donnait l'impression d'un chargement
   // sans fin. Avec position connue : restos à moins de DISCOVER_RADIUS_KM, comme avant. Sans position :
@@ -615,13 +660,15 @@ export default function RestaurantList() {
   // encore aucun commerce, pour dire pourquoi la liste montre ceux d'à côté.
   const localTexte = homeCommune && dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : null;
   // Le bandeau ne s'affiche qu'avec un compte : sans lui, « À emporter » reste une pastille au-dessus de la liste.
-  const modeSurBandeau = FILTRE_EMPORTER && grand && !!user;
+  // Avant le GO, seul l'à emporter est ouvert : pas de bascule « Livraison / À emporter » (audit du 19/10, discovery-25) ; la
+  // pastille « À emporter » reste au-dessus de la liste.
+  const modeSurBandeau = FILTRE_EMPORTER && grand && !!user && livraisonOuverte(user);
   // La rangée de pastilles au-dessus de la liste : tout ce que la colonne et le bandeau ne portent pas déjà.
   // Seulement s'il y a quelque chose dedans : sans « À emporter », ni tri ni prix, la rangée vide laissait un blanc.
   const pastillesFiltres = (!colonne || !modeSurBandeau) && (FILTRE_EMPORTER || (!colonne && (TRI_ET_PRIX || !!commune || !!search)));
   return (
     <div className={`sl-liste${grand ? ' sl-liste--grand' : ''}${colonne ? ' sl-liste--colonne' : ''}`}>
-      <TirerPourActualiser onActualiser={() => charger({ forcer: true })} />
+      <TirerPourActualiser onActualiser={actualiser} />
       {/* Le titre est MASQUÉ À L'ŒIL, pas supprimé (fondateur, 2026-09-17 : « retire-le de la page »).
           Il reste dans le document parce qu'il y avait été mis pour une raison précise : sans h1, le
           titre de niveau 1 de cette page redevient la marque de l'en-tête, et son sujet, pour un
@@ -813,7 +860,7 @@ export default function RestaurantList() {
           {aLaUne.length > 0 && <ALaUne list={aLaUne} inscritLe={inscritLe} t={t} />}
           {inscrits.length > 0 && (
             <div className="liste-section">
-              <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><span><AvecMarque>{inscrits.length === 1 ? t('restaurantList.sectionRegisteredOne') : t('restaurantList.sectionRegistered', { n: inscrits.length })}</AvecMarque></span></h3>
+              <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><span><AvecMarque>{t('restaurantList.sectionRegistered')}</AvecMarque></span></h3>
               <div className={grand ? 'rest-grid sl-grille' : 'rest-grid rest-grid-scroll'}>
                 {inscrits.map((x) => {
                   // Publié : la carte complète de la liste (horaires, offres, favori) ; sinon, une carte « bientôt ».

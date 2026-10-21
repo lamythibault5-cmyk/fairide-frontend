@@ -38,8 +38,17 @@ export function euros(v) {
   return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR' }).format(Number(v) || 0);
 }
 
+// Une distance dans le format de la langue : « 0,3 km » en français et en néerlandais, « 0.3 km » en anglais (audit du 19/10,
+// LIVE-14 : la virgule était écrite en dur, la liste anglaise disait « 0,3 km »). Une décimale sous 10 km, aucune au-delà.
+export function kmLisible(v) {
+  const n = Number(v) || 0;
+  const dec = n < 10 ? 1 : 0;
+  return `${new Intl.NumberFormat(getLocale(), { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n)} km`;
+}
+
 // Même chose sans « ,00 » pour un montant rond : un badge « -4 € dès 25 € » se lit mieux que « -4,00 € dès 25,00 € ».
-function eurosCourt(v) {
+// Exportée pour la page Promotions du commerce (audit du 19/10, shop-119 : elle avait son propre format, français partout).
+export function eurosCourt(v) {
   const n = Number(v) || 0;
   return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
 }

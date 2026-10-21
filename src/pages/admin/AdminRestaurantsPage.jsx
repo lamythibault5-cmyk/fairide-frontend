@@ -22,10 +22,11 @@ import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
-import { estCompteTest, estCompteSupprime, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, NatureChips, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
+import { estCompteTest, estCompteSupprime, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, NatureChips, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, ORDER_STATUS_LABELS } from './adminUtils';
+import { REFUND_RESPONSIBILITY_LABELS, SUBSCRIPTION_STATUS_LABELS, DELIVERY_MODE_LABELS, libelle } from './libellesCodes';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
-import urlSure from '../../urlSure';
+import ouvrirDocument from '../../ouvrirDocument';
 import Icone from '../../components/Icone';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
@@ -120,7 +121,7 @@ export function BoutonFacturationAbonnement({ detail, token, api, toast, tr, onC
     setBusy(true);
     try {
       const rep = await api(`/admin/restaurants/${detail.id}/subscription-billing`, { method: 'PATCH', token, body: { enabled: !facture } });
-      toast(facture ? tr(rep?.stripeSubscriptionCanceled ? 'adminRestos.subBillingOffCanceledToast' : 'adminRestos.subBillingOffToast') : tr('adminRestos.subBillingOnToast'));
+      toast(facture ? tr(rep?.stripeSubscriptionCanceled ? 'adminRestos.subBillingOffCanceledToast' : 'adminRestos.subBillingOffToast') : tr(rep?.shopNotified ? 'adminRestos.subBillingOnNotifiedToast' : 'adminRestos.subBillingOnToast'));
       onChanged?.();
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
@@ -128,9 +129,41 @@ export function BoutonFacturationAbonnement({ detail, token, api, toast, tr, onC
     <>
       <button type="button" className="btn-outline" disabled={busy} onClick={() => setConfirmer(true)} title={tr('adminRestos.subBillingHelp')}>{busy ? '…' : facture ? tr('adminRestos.subBillingOff') : tr('adminRestos.subBillingOn')}</button>
       <ConfirmDialog open={confirmer} title={facture ? tr('adminRestos.subBillingOff') : tr('adminRestos.subBillingOn')}
-        message={facture ? tr(abonne ? 'adminRestos.subBillingOffConfirmStripe' : 'adminRestos.subBillingOffConfirm', { name: detail.name }) : tr('adminRestos.subBillingConfirm', { name: detail.name })}
+        message={facture ? tr(abonne ? 'adminRestos.subBillingOffConfirmStripe' : 'adminRestos.subBillingOffConfirm', { name: detail.name }) : tr('adminRestos.subBillingConfirmNotify', { name: detail.name })}
         loading={busy} onConfirm={basculer} onCancel={() => setConfirmer(false)} />
     </>
+  );
+}
+
+// Note tirée des avis réels (audit du 19/10, admin-65 / LIVE-20) : « — » tant que personne n'a laissé d'avis, au lieu du
+// « 4.5★ » par défaut de la base.
+function noteAvis(r, tr) {
+  if (r.rating === null || r.rating === undefined || !r.reviewCount) return tr('adminRestos.noReviewsYet');
+  return `${Number(r.rating).toFixed(1)}★ (${r.reviewCount})`;
+}
+// « Prêt » ou « Manque : n » : la règle de la carte GO (pretLancement.js), commerce par commerce (admin-28).
+function PastillePret({ pret, tr }) {
+  const n = (pret.manques || []).filter((m) => m.niveau === 'bloquant').length;
+  return <span className="pill" style={{ color: pret.pret ? 'var(--teal-deep)' : 'var(--orange)' }}>{pret.pret ? tr('adminRestos.readyPill') : tr('adminRestos.missingPill', { n })}</span>;
+}
+function PretLancement({ pret, tr }) {
+  const bloquants = (pret.manques || []).filter((m) => m.niveau === 'bloquant');
+  const aVerifier = (pret.manques || []).filter((m) => m.niveau !== 'bloquant');
+  return (
+    <div className="card" style={{ margin: '0 0 14px' }}>
+      <h4 style={{ margin: '0 0 6px' }}>{pret.pret ? tr('adminRestos.readyTitle') : tr('adminRestos.missingTitle', { n: bloquants.length })}</h4>
+      <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>{tr('adminRestos.readyHint')}</p>
+      {bloquants.length > 0 && (
+        <ul className="small" style={{ paddingLeft: 18, margin: 0 }}>
+          {bloquants.map((m) => <li key={m.label} style={{ marginBottom: 4, color: 'var(--red)' }}><b>{m.label}</b> <span style={{ opacity: 0.75 }}>{m.action}</span></li>)}
+        </ul>
+      )}
+      {aVerifier.length > 0 && (
+        <ul className="small" style={{ paddingLeft: 18, margin: '4px 0 0' }}>
+          {aVerifier.map((m) => <li key={m.label} style={{ marginBottom: 4 }}>{m.label} <span style={{ opacity: 0.75 }}>{m.action}</span></li>)}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -151,8 +184,12 @@ function PastilleCarte({ r, tr }) {
 // Une carte marquée propose au commerce, sur sa page « C'est bon », de garder ses prix ou d'ajouter la commission de Fairide.
 export function PrixMagasin({ detail, token, api, toast, tr, onChanged }) {
   const [busy, setBusy] = useState(false);
+  // Un tap marquait une carte d'Uber Eats « prix magasin » : sa page « C'est bon » proposait alors +10 % sur des prix déjà
+  // gonflés. Confirmation d'abord, qui dit l'effet (audit du 19/10, admin-64).
+  const [confirmer, setConfirmer] = useState(false);
   const verifies = !!detail.inStorePricesCheckedAt;
   async function basculer() {
+    setConfirmer(false);
     setBusy(true);
     try {
       await api(`/admin/restaurants/${detail.id}/in-store-prices`, { method: 'PATCH', token, body: { checked: !verifies } });
@@ -165,9 +202,12 @@ export function PrixMagasin({ detail, token, api, toast, tr, onChanged }) {
     <div style={{ marginTop: 8 }}>
       <p className="small" style={{ margin: 0 }}>{verifies ? tr('adminRestos.inStorePricesLine', { date: fmtDate(detail.inStorePricesCheckedAt) }) : tr('adminRestos.platformPricesLine')}</p>
       {verifies && <p className="small" style={{ margin: '2px 0 0' }}>{choix}</p>}
-      <button type="button" className="btn-outline" style={{ marginTop: 6, padding: '6px 14px', fontSize: 13 }} disabled={busy} onClick={basculer}>
+      <button type="button" className="btn-outline" style={{ marginTop: 6, padding: '6px 14px', fontSize: 13 }} disabled={busy} onClick={() => setConfirmer(true)}>
         {busy ? '…' : verifies ? tr('adminRestos.inStorePricesUnmark') : tr('adminRestos.inStorePricesMark')}
       </button>
+      <ConfirmDialog open={confirmer} title={verifies ? tr('adminRestos.inStorePricesUnmark') : tr('adminRestos.inStorePricesMark')}
+        message={verifies ? `${tr('adminRestos.inStoreUnmarkConfirm')}${detail.fairideRateChoice === 'added' ? ` ${tr('adminRestos.inStoreUnmarkAddedWarn')}` : ''}` : tr('adminRestos.inStoreMarkConfirm', { name: detail.name })}
+        loading={busy} onConfirm={basculer} onCancel={() => setConfirmer(false)} />
     </div>
   );
 }
@@ -184,14 +224,17 @@ export default function AdminRestaurantsPage() {
   const [detail, setDetail] = useState(null);
   const [orders, setOrders] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [retrait, setRetrait] = useState(null); // « Retirer du site » en attente de son motif (shop-13)
   const [decision, setDecision] = useState(null); // suspension / résiliation motivée (D6)
   // Validation refusée pour non-conformité : { id, conformite } tant que l'équipe n'a pas tranché.
   const [derogation, setDerogation] = useState(null);
+  const [refusNet, setRefusNet] = useState(null); // validation refusée sans dérogation possible : ce qu'il faut corriger (admin-66)
   const [demandeInfo, setDemandeInfo] = useState(null);
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useViewMode('restaurants', 'cards');
   const filtre = searchParams.get('status') || 'all'; // all | pending | carte | approved | blocked
-  const [nature, setNature] = useEtatPage('nature', 'all'); // all | real | test | deleted
+  // ?nature=real (liens des pastilles « à valider ») : la liste montre le même nombre que la pastille (admin-62).
+  const [nature, setNature] = useEtatPage('nature', searchParams.get('nature') || 'all', { forcer: !!searchParams.get('nature') }); // all | real | test | deleted
   const [groupBy, setGroupBy] = useEtatPage('groupBy', '');
   // Allègement de la console (fondateur, 23/09/2026) : plus de listes « toutes les communes / toutes les
   // cuisines / trier par » — personne ne s'en servait, la recherche et les pastilles suffisent. La liste
@@ -212,6 +255,13 @@ export default function AdminRestaurantsPage() {
     api('/admin/restaurants/stats', { token }).then(setStats).catch(() => setStats(null));
   }, [token]);
   useEffect(() => { chargerStats(); }, [chargerStats]);
+  // PRÊT / MANQUE (audit du 19/10, admin-28) : la carte GO disait « 3 commerces prêts sur 11 » sans dire lesquels. Même liste
+  // que la carte GO (pretLancement.js), par commerce : pastille sur la carte, détail dans la fiche.
+  const [pretParId, setPretParId] = useState({});
+  const chargerPret = useCallback(() => {
+    api('/admin/launch/readiness', { token }).then((r) => setPretParId(Object.fromEntries((r.commerces || []).map((c) => [c.restaurantId, c])))).catch(() => setPretParId({}));
+  }, [token]);
+  useEffect(() => { chargerPret(); }, [chargerPret]);
 
   function openRestaurant(r) {
     setSelected(r);
@@ -243,9 +293,13 @@ export default function AdminRestaurantsPage() {
       toast(disabled ? tr('adminRestos.zoneDeliveryOffToast') : tr('adminRestos.zoneDeliveryOnToast'));
     } catch (e) { toast(e.message, 'erreur'); }
   }
-  async function setListing(id, publicListed) {
+  // Le commerce est prévenu par e-mail à chaque bascule : une confirmation d'abord, et runConfirmed bloque le second tap.
+  function askZoneDelivery(id, disabled, reason, name) {
+    setConfirmAction({ title: disabled ? tr('adminRestos.zoneDeliveryOff') : tr('adminRestos.zoneDeliveryOn'), message: tr(disabled ? 'adminRestos.zoneDeliveryOffConfirm' : 'adminRestos.zoneDeliveryOnConfirm', { name: name || '' }), danger: disabled, run: () => setFairideDelivery(id, disabled, reason) });
+  }
+  async function setListing(id, publicListed, reason) {
     try {
-      await api(`/admin/restaurants/${id}/listing`, { method: 'PATCH', token, body: { publicListed } });
+      await api(`/admin/restaurants/${id}/listing`, { method: 'PATCH', token, body: { publicListed, ...(reason ? { reason } : {}) } });
       setRestaurants((prev) => (prev || []).map((r) => (r.id === id ? { ...r, publicListed } : r)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, publicListed }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, publicListed }));
@@ -265,14 +319,23 @@ export default function AdminRestaurantsPage() {
       const rep = await api(`/admin/restaurants/${id}/status`, { method: 'PATCH', token, body: { status, ...(force ? { force: true, reason } : {}), ...decision } });
       // Résiliation avec préavis : décidée et notifiée, mais le commerce reste actif jusqu'à la date d'effet.
       if (status === 'blocked' && !rep.adminStatus) { toast(tr('conformite.decisionScheduledToast')); return; }
-      setRestaurants((prev) => (prev || []).map((r) => (r.id === id ? { ...r, adminStatus: status } : r)));
-      if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
-      if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
-      toast(status === 'approved' ? tr('adminRestos.toastApproved') : status === 'blocked' ? tr('adminRestos.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
-      chargerStats();
+      // Approuvé ET mis en ligne par le serveur (une seule validation) : la ligne le dit tout de suite, sans recharger.
+      const maj = { adminStatus: status, ...(rep.publicListed ? { publicListed: true } : {}) };
+      setRestaurants((prev) => (prev || []).map((r) => (r.id === id ? { ...r, ...maj } : r)));
+      if (selected?.id === id) setSelected((prev) => ({ ...prev, ...maj }));
+      if (detail?.id === id) setDetail((prev) => ({ ...prev, ...maj }));
+      if (status === 'approved') toast(rep.publicListed ? tr('adminRestos.toastApprovedOnline') : rep.notOnlineReason ? tr('adminRestos.toastApprovedNotOnline', { reason: rep.notOnlineReason }) : tr('adminRestos.toastApproved'));
+      else toast(status === 'blocked' ? tr('adminRestos.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
+      chargerStats(); chargerPret();
     } catch (e) {
       if (e.code === 'CONFORMITE_INCOMPLETE' && e.data?.conformite) {
         setDerogation({ id, conformite: e.data.conformite });
+        return;
+      }
+      // Refus sans dérogation possible : la liste de ce qu'il faut corriger, au lieu d'un toast muet (audit du 19/10, admin-66).
+      if (['CONFORMITE_NON_FORCABLE', 'SECOND_ADMIN_REQUIS'].includes(e.code) && e.data?.conformite) {
+        const manques = (e.data.conformite.anomalies || []).filter((a) => a.niveau === 'bloquant' && (e.code !== 'SECOND_ADMIN_REQUIS' || a.escalade || a.forcable === false));
+        setRefusNet({ message: e.message, manques: (manques.length ? manques : (e.data.conformite.anomalies || []).filter((a) => a.niveau === 'bloquant')).map((a) => a.label) });
         return;
       }
       toast(e.message, 'erreur');
@@ -303,20 +366,23 @@ export default function AdminRestaurantsPage() {
     setConfirmAction({ title: tr('adminRestos.confirmReactivate', { name: r.name }), run: () => setStatus(r.id, 'approved') });
   }
   function askApprove(r) {
-    setConfirmAction({ title: tr('adminRestos.confirmApprove', { name: r.name }), message: tr('adminRestos.approveBody'), run: () => setStatus(r.id, 'approved') });
+    setConfirmAction({ title: tr('adminRestos.confirmApprove', { name: r.name }), message: `${tr('adminRestos.approveBody')} ${tr('adminRestos.approveBodyOneStep')}`, run: () => setStatus(r.id, 'approved') });
   }
   function askListing(r) {
     const publier = !r.publicListed;
+    // Retirer du site : motif obligatoire, envoyé au commerce et montré sur son tableau de bord (audit du 19/10, shop-13 ;
+    // P2B art. 4). Le serveur le refuse sans motif (MOTIF_REQUIS).
+    if (!publier && !r.isDemo) { setRetrait({ id: r.id, name: r.name }); return; }
     setConfirmAction({ title: publier ? tr('adminRestos.confirmPublish', { name: r.name }) : tr('adminRestos.confirmUnpublish', { name: r.name }), message: publier ? tr('adminRestos.publishBody') : tr('adminRestos.unpublishBody'), danger: !publier, run: () => setListing(r.id, publier) });
   }
   async function deleteRestaurant(r) {
     const res = await api(`/admin/restaurants/${r.id}`, { method: 'DELETE', token, body: { deleteOwner: true } });
     setRestaurants((prev) => (prev || []).filter((x) => x.id !== r.id));
     if (selected?.id === r.id) { setSelected(null); setDetail(null); }
-    toast(res.ownerDeleted ? tr('adminRestos.toastDeletedWithOwner', { n: res.deletedOrders, email: res.ownerEmail || '' }) : tr('adminRestos.toastDeleted', { n: res.deletedOrders }));
+    toast(res.ownerDeleted ? tr('adminRestos.toastDeletedWithOwner', { n: res.deletedOrders, email: res.ownerEmail || '' }) : res.restaurantKept === false ? tr('adminRestos.toastDeletedFully') : tr('adminRestos.toastDeleted', { n: res.deletedOrders }));
   }
   function askDelete(r) {
-    setConfirmAction({ title: tr('adminRestos.confirmDelete', { name: r.name }), message: tr('adminRestos.deleteBody', { email: r.ownerEmail || '' }), danger: true, run: () => deleteRestaurant(r).catch((e) => toast(e.message, 'erreur')) });
+    setConfirmAction({ title: tr('adminRestos.confirmDelete', { name: r.name }), message: tr('adminRestos.deleteBodyKept', { name: r.name, email: r.ownerEmail || '' }), danger: true, run: () => deleteRestaurant(r).catch((e) => toast(e.message, 'erreur')) });
   }
 
   async function runConfirmed() {
@@ -361,7 +427,7 @@ export default function AdminRestaurantsPage() {
     { key: 'phone', label: tr('adminCommon.phone'), get: (r) => (r.restaurantPhone || r.ownerPhone ? <a href={`tel:${String(r.restaurantPhone || r.ownerPhone).replace(/[^+\d]/g, '')}`} onClick={(e) => e.stopPropagation()}>{r.restaurantPhone || r.ownerPhone}</a> : '-'), sortValue: (r) => r.restaurantPhone || r.ownerPhone || '' },
     { key: 'fullAddress', label: tr('adminRestos.addressCol'), get: (r) => r.fullAddress || '-', sortValue: (r) => r.fullAddress || '' },
     { key: 'businessStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: BUSINESS_STATUS_LABELS[r.businessStatus]?.color }}>{BUSINESS_STATUS_LABELS[r.businessStatus]?.label}</span>, sortValue: (r) => r.businessStatus },
-    { key: 'rating', label: tr('adminCommon.rating'), get: (r) => `${Number(r.rating || 0).toFixed(1)}★`, sortValue: (r) => r.rating, align: 'right' },
+    { key: 'rating', label: tr('adminCommon.rating'), get: (r) => noteAvis(r, tr), sortValue: (r) => r.rating ?? -1, align: 'right' },
     { key: 'orderCount', label: tr('adminCommon.orders'), get: (r) => r.orderCount, align: 'right', sum: true },
     { key: 'revenue', label: 'CA', get: (r) => money(r.revenue), sortValue: (r) => r.revenue, align: 'right', sum: true },
     { key: 'commissionGenerated', label: tr('adminCommon.commission'), get: (r) => money(r.commissionGenerated), sortValue: (r) => r.commissionGenerated, align: 'right', sum: true },
@@ -382,7 +448,7 @@ export default function AdminRestaurantsPage() {
     : kpi;
   const compteurStatut = (k) => {
     if (!stats) return k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : k === 'carte' && kpi.carte > 0 ? ` (${kpi.carte})` : '';
-    const n = { all: stats.total, pending: stats.pending, carte: stats.menuToImport ?? stats.menuRequests, approved: stats.approved, blocked: stats.blocked }[k];
+    const n = { all: stats.total, pending: nature === 'real' && Number.isFinite(stats.pendingReal) ? stats.pendingReal : stats.pending, carte: stats.menuToImport ?? stats.menuRequests, approved: stats.approved, blocked: stats.blocked }[k];
     return Number.isFinite(n) ? ` (${n})` : '';
   };
   const tousCharges = restaurants && restaurants.length >= total;
@@ -421,7 +487,7 @@ export default function AdminRestaurantsPage() {
         )}
         <ResultCount n={visibles.length} total={total} />
       </div>
-      {restaurants && nature !== 'test' && <p className="small" style={{ margin: '-4px 0 12px' }}>{tr('adminRestos.listingHint')}</p>}
+      {restaurants && nature !== 'test' && <p className="small" style={{ margin: '-4px 0 12px' }}>{tr('adminRestos.listingHintOneStep')}</p>}
       {error && <ErrorCard message={error} onRetry={load} />}
       {!restaurants && !error && <SkeletonCards count={3} />}
       {restaurants && visibles.length === 0 && !error && <div className="empty">{tr('adminCommon.noResults')}</div>}
@@ -440,9 +506,10 @@ export default function AdminRestaurantsPage() {
                 {!estTest(r) && <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>}
                 <span className="pill" style={{ color: biz?.color }}>{biz?.label}</span>
                 {!estTest(r) && <PastilleCarte r={r} tr={tr} />}
+                {!estTest(r) && pretParId[r.id] && <PastillePret pret={pretParId[r.id]} tr={tr} />}
               </div>
             </div>
-            <div className="small">{r.commune} · {r.cuisine} · {Number(r.rating || 0).toFixed(1)}★</div>
+            <div className="small">{r.commune} · {r.cuisine} · {noteAvis(r, tr)}</div>
             <ContactCommerce r={r} tr={tr} />
             <div className="small">{tr('adminRestos.ownerLine', { name: r.responsibleName || '-', phone: r.ownerEmail ? ` · ${r.ownerEmail}` : '' })}</div>
             {r.menuItemCount !== null && r.menuItemCount !== undefined && <div className="small"><Icone nom="restaurants" taille={16} className="icone-texte" />{' '}{tr('adminRestos.menuLine', { n: r.menuItemCount })}</div>}
@@ -455,8 +522,10 @@ export default function AdminRestaurantsPage() {
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
               <Link to={`/admin/restaurants/${r.id}/menu`} className={r.menuItemCount === 0 ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
-              {!estTest(r) && <button className={r.publicListed ? 'btn-outline' : 'btn-gold'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askListing(r)}>{r.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
-              {r.adminStatus !== 'approved' && <button className="btn-teal btn-sm" onClick={() => askApprove(r)}>{tr('adminCommon.approve')}</button>}
+              {/* Publier n'a de sens qu'approuvé (le public ne voit que les commerces approuvés, admin-27) ; un commerce
+                  suspendu se réactive, il ne s'« approuve » pas une seconde fois (admin-86). */}
+              {!estTest(r) && (r.publicListed || r.adminStatus === 'approved') && <button className={r.publicListed ? 'btn-outline' : 'btn-gold'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askListing(r)}>{r.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
+              {r.adminStatus === 'pending' && <button className="btn-teal btn-sm" onClick={() => askApprove(r)}>{tr('adminCommon.approve')}</button>}
               {r.adminStatus !== 'approved' && r.ownerId && <button className="btn-outline btn-sm" onClick={() => setDemandeInfo(r)}>{tr('adminRestos.askInfo')}</button>}
               {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost btn-sm" onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
               {r.adminStatus === 'blocked' && <button className="btn-teal btn-sm" onClick={() => askReactivate(r)}>{tr('adminCommon.reactivate')}</button>}
@@ -470,7 +539,8 @@ export default function AdminRestaurantsPage() {
       {selected && (
         <RestaurantDetailModal
           selected={selected} detail={detail} orders={orders}
-          onZoneDelivery={setFairideDelivery}
+          onZoneDelivery={(id, disabled, reason) => askZoneDelivery(id, disabled, reason, detail?.name)}
+          pret={pretParId[selected.id]}
           onClose={() => setSelected(null)}
           onSuspend={() => askSuspend(detail)}
           onApprove={() => askApprove(detail)}
@@ -487,6 +557,14 @@ export default function AdminRestaurantsPage() {
         onCancel={() => setDecision(null)}
         onConfirm={async (payload) => { setBusy(true); try { await setStatus(decision.id, 'blocked', { decision: payload }); } finally { setBusy(false); setDecision(null); } }} />
       <ConfirmDialog
+        open={!!refusNet}
+        title={tr('adminRestos.refusalTitle')}
+        message={refusNet ? `${refusNet.message} ${refusNet.manques.length ? tr('adminRestos.refusalList', { list: refusNet.manques.join(' · ') }) : ''}` : ''}
+        confirmLabel={tr('adminRestos.refusalOk')}
+        onConfirm={() => setRefusNet(null)}
+        onCancel={() => setRefusNet(null)}
+      />
+      <ConfirmDialog
         open={!!confirmAction}
         title={confirmAction?.title}
         message={confirmAction?.message}
@@ -494,6 +572,24 @@ export default function AdminRestaurantsPage() {
         loading={busy}
         onConfirm={runConfirmed}
         onCancel={() => setConfirmAction(null)}
+      />
+      <ReasonDialog
+        open={!!retrait}
+        title={tr('adminRestos.confirmUnpublish', { name: retrait?.name || '' })}
+        message={`${tr('adminRestos.unpublishBody')} ${tr('adminRestos.unpublishReasonHelp')}`}
+        label={tr('adminRestos.unpublishReasonLabel')}
+        placeholder={tr('adminRestos.unpublishReasonPh')}
+        confirmLabel={tr('adminRestos.unpublish')}
+        multiline danger
+        loading={busy}
+        onConfirm={async (motif) => {
+          if (motif.length < 10) { toast(tr('adminRestos.unpublishReasonShort'), 'erreur'); return; }
+          const r = retrait;
+          setRetrait(null);
+          setBusy(true);
+          try { await setListing(r.id, false, motif); } finally { setBusy(false); }
+        }}
+        onCancel={() => setRetrait(null)}
       />
       {/* « DEMANDER UNE INFO » (fondateur, 18/10/2026) : le commerce attendait sans savoir pourquoi. Un message dans sa
           messagerie Fairide, et par e-mail (POST /admin/messages/threads) : ce qu'il manque, en clair. */}
@@ -655,7 +751,7 @@ function CommandesDuCommerce({ restaurantId, orders, token, tr, toast }) {
                 {o.isTraining ? ` · ${tr('adminRestos.orderTraining')}` : ''}
                 {o.hasRefund ? ' · ↩︎' : ''}
               </span>
-              <span className="row" style={{ gap: 8 }}><b className="small">{money(o.total)}</b><span className={`status-badge status-${o.status}`}>{o.status}</span></span>
+              <span className="row" style={{ gap: 8 }}><b className="small">{money(o.total)}</b><span className={`status-badge status-${o.status}`}>{libelle(ORDER_STATUS_LABELS, o.status)}</span></span>
             </button>
             {estOuverte && !d && <div className="small" style={{ padding: '4px 0 10px' }}>{tr('adminCommon.loading')}</div>}
             {estOuverte && d && (
@@ -684,7 +780,7 @@ function CommandesDuCommerce({ restaurantId, orders, token, tr, toast }) {
                 {d.clientPhone && <div className="small">{d.clientPhone}</div>}
                 {d.refunds.length > 0 && (
                   <div style={{ marginTop: 6 }}>
-                    {d.refunds.map((r) => <div key={r.id} className="small">↩︎ {money(r.amount)} · {r.responsibility}{r.reason ? ` · ${r.reason}` : ''}</div>)}
+                    {d.refunds.map((r) => <div key={r.id} className="small">↩︎ {money(r.amount)} · {libelle(REFUND_RESPONSIBILITY_LABELS, r.responsibility)}{r.reason ? ` · ${r.reason}` : ''}</div>)}
                   </div>
                 )}
                 <div style={{ marginTop: 6 }}>
@@ -699,7 +795,7 @@ function CommandesDuCommerce({ restaurantId, orders, token, tr, toast }) {
   );
 }
 
-function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest, onTerminal, onLandingRank, onZoneDelivery }) {
+function RestaurantDetailModal({ selected, detail, orders, pret, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest, onTerminal, onLandingRank, onZoneDelivery }) {
   // Motif de coupure de la livraison Fairide (zone sans livreur), saisi dans la modale.
   const [zoneMotif, setZoneMotif] = useState('');
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
@@ -759,7 +855,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
   return createPortal(
     <RecordDrawer
       title={selected.name}
-      subtitle={detail ? `${detail.commune}${detail.neighborhood ? ` (${detail.neighborhood})` : ''} · ${detail.cuisine} · ${Number(detail.rating || 0).toFixed(1)}★` : ''}
+      subtitle={detail ? `${detail.commune}${detail.neighborhood ? ` (${detail.neighborhood})` : ''} · ${detail.cuisine} · ${noteAvis(detail, tr)}` : ''}
       badge={biz ? <span className="pill" style={{ color: biz.color }}>{biz.label}</span> : null}
       actions={<a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
       tabs={[
@@ -776,6 +872,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
         <>
           {/* Avant les coordonnées et les chiffres : un commerce qui n'a pas le droit de vendre de la
               nourriture prime sur son panier moyen. */}
+          {!estTest(detail) && pret && <PretLancement pret={pret} tr={tr} />}
           <ConformitePanel detail={detail} onChanged={onChanged} />
           <ContactCommerce r={detail} tr={tr} fiche />
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.ownerEmailLine', { name: detail.responsibleName || '-', email: detail.email, phone: '' })}</p>
@@ -788,7 +885,11 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           {detail.signupBusinessSource === 'recherche' && (
             <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.sourceFound')}</p>
           )}
-          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLine', { sub: detail.subscriptionStatus, mode: detail.deliveryMode })}</p>
+          {/* Offert ou facturé, et l'état Stripe, en mots (audit du 19/10, admin-26 / admin-86 : « Abonnement : none »). */}
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLineWords', { offer: detail.isDemo ? tr('adminRestos.subDemo') : detail.subscriptionBillingEnabled ? tr('adminRestos.subBilled') : tr('adminRestos.subOffered'), sub: libelle(SUBSCRIPTION_STATUS_LABELS, detail.subscriptionStatus || 'none'), mode: libelle(DELIVERY_MODE_LABELS, detail.deliveryMode) })}</p>
+          {detail.subscriptionBillingEnabled && !detail.isDemo && !['active', 'trialing'].includes(detail.subscriptionStatus) && (
+            <p className="small" style={{ margin: '2px 0', color: 'var(--red)' }}>{tr('adminRestos.subBilledNoOrders')}</p>
+          )}
           {/* Livraison Fairide dans la zone : coupée pour un commerce seul (pas de livreur) ; sans objet s'il livre lui-même. */}
           <div className="small zone-livraison" style={{ margin: '6px 0' }}>
             {detail.deliveryMode === 'own' ? (
@@ -848,9 +949,9 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
             <BoutonGererCommerce id={detail.id} token={token} api={api} toast={toast} tr={tr} className={detail.conciergeStatus ? 'btn-gold' : 'btn-teal'} />
             <button className="btn-outline" onClick={startEdit}>{tr('adminRestos.editInfo')}</button>
-            {!detail.isDemo && detail.ownerId && <TestToggleButton userId={detail.ownerId} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={onToggleTest} />}
-            {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={onApprove}>{tr('adminCommon.approve')}</button>}
-            {!estTest(detail) && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
+            {!detail.isDemo && detail.ownerId && <TestToggleButton userId={detail.ownerId} isTest={detail.testFlag ?? estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={onToggleTest} />}
+            {detail.adminStatus === 'pending' && <button className="btn-teal" onClick={onApprove}>{tr('adminCommon.approve')}</button>}
+            {!estTest(detail) && (detail.publicListed || detail.adminStatus === 'approved') && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
             {!detail.isDemo && <BoutonFermerSoir detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}
             {!detail.isDemo && <BoutonFacturationAbonnement detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}
             {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
@@ -858,7 +959,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={onDelete}>{tr('adminRestos.deleteRestaurant')}</button>
           </div>
           {/* CODE-3 : la carte se valide par le commerce, d'un geste, depuis un lien que l'équipe lui envoie. */}
-          {!detail.isDemo && <LienValidationCarte restaurantId={detail.id} phone={detail.restaurantPhone} token={token} toast={toast} />}
+          {!detail.isDemo && <LienValidationCarte restaurantId={detail.id} phone={detail.restaurantPhone} ownerPhone={detail.ownerPhone} managers={detail.managerContacts} token={token} toast={toast} />}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminRestos.keyFigures')}</h4>
           <DrawerRow label={tr('adminCommon.paidOrders')} value={detail.orderCount} strong />
@@ -943,7 +1044,8 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
           {documents && documents.map((doc) => (
             <div key={doc.id} className="drawer-row">
-              <a href={urlSure(doc.fileUrl)} target="_blank" rel="noreferrer" className="small"><Icone nom="lien" taille={16} className="icone-texte" />{' '}{doc.title}</a>
+              {/* Document privé : adresse signée demandée à l'ouverture (audit du 19/10, admin-45 ; le lien était mort). */}
+              <button type="button" className="lien-bouton small" onClick={() => ouvrirDocument({ url: doc.prive ? null : doc.fileUrl, lien: `/admin/documents/${doc.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') })}><Icone nom="lien" taille={16} className="icone-texte" />{' '}{doc.title}</button>
               <span className="small">
                 {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
                 {DOCUMENT_TYPE_LABELS[doc.documentType]}

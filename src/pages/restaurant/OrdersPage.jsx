@@ -1,6 +1,6 @@
 import InterrupteurService from '../../components/commerce/InterrupteurService';
 import RupturesDuJour from '../../components/commerce/RupturesDuJour';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
@@ -12,10 +12,9 @@ import TicketPapier from '../../components/TicketPapier';
 import { imprimerTicketPapier } from '../../impressionPapier';
 import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPrinter';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import Modale from '../../components/Modale';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
-import { buildTicketBytes, COLUMNS_58MM } from '../../escposTicket';
-import * as btPrinter from '../../bluetoothPrinter';
 import {
   DeliveryTiming, ProgressBar, RouteSuivi, statusLabel, deliveryInstructionLabel, orderTypeColor, orderTypeLabel,
   ORDER_STAGES, orderStageKey, orderStagePriority, stageColors as couleursEtapes
@@ -24,9 +23,12 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 import Icone from '../../components/Icone';
 import EtatVide from '../../components/EtatVide';
+import ErrorCard from '../../components/ErrorCard';
+import { SkeletonCards } from '../../components/Skeleton';
 import { BandeauCommerce, FeuilleCommerce, SegmentGlisse } from '../../components/commerce/BandeauCommerce';
 import { vibrer } from '../../gestes';
-import { experienceApp } from '../../natif';
+import { experienceApp, estNatif } from '../../natif';
+import { raisonFermeture } from '../../components/commerce/raisonFermeture';
 import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import AlerteBandeau from '../../components/commerce/AlerteBandeau';
 import { useModeEquipe } from '../../modeEquipe';
@@ -83,7 +85,7 @@ export default function OrdersPage() {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
-  const { orders, restaurant, restoId, loadDashboard, communs, alerte, onConnect, connecting, lectureSeule } = useOutletContext();
+  const { orders, restaurant, restoId, loadDashboard, communs, alerte, onConnect, connecting, lectureSeule, ordersLoaded, etatCommandes, statsService } = useOutletContext();
   // Membre de l'équipe (modeEquipe.js) : la mise en ligne du commerce et le terminal sont l'affaire du propriétaire.
   const membreEquipe = useModeEquipe();
 
@@ -122,10 +124,18 @@ export default function OrdersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commandeDemandee, orders.length]);
   const selectedOrder = commandeChoisie ? (orders.find((o) => o.id === commandeChoisie.id) || commandeChoisie) : null;
-  // Commande dont une action (accepter, refuser, prête) est en cours : pas de double envoi sur un double appui.
-  const [actionEnCours, setActionEnCours] = useState(null);
+  // Commandes dont une action (accepter, refuser, prête) est en cours : pas de double envoi sur un double appui. UN VERROU PAR
+  // COMMANDE (audit du 19/10, shop-214) : le verrou global ignorait en silence « Accepter » sur une autre commande pendant
+  // l'envoi de la première. La référence bloque les doubles appuis avant le rendu suivant, l'état désactive les boutons.
+  const verrous = useRef(new Set());
+  const [actionsEnCours, setActionsEnCours] = useState(() => new Set());
   const [aRefuser, setARefuser] = useState(null);
-  // Commande à emporter payée sur place que le client n'est pas venu chercher (confirmation avant de la clore).
+  // Refus ou annulation en cours d'envoi : la fenêtre du motif reste ouverte jusqu'à la réponse, le motif tapé n'est plus
+  // perdu sur une coupure (shop-222).
+  const [motifEnvoi, setMotifEnvoi] = useState(false);
+  // Commande déjà acceptée que le commerce doit annuler (friteuse en panne, dernier plat parti) : audit du 19/10, shop-207.
+  const [aAnnuler, setAAnnuler] = useState(null);
+  // Commande à emporter que le client n'est pas venu chercher (confirmation avant de la clore).
   const [pasVenu, setPasVenu] = useState(null);
   const [clotureEnCours, setClotureEnCours] = useState(false);
   const [confirmingPickup, setConfirmingPickup] = useState(null);
@@ -140,9 +150,8 @@ export default function OrdersPage() {
   // Fondateur (2026-09-22) : les commandes se voient, s'acceptent et s'impriment sur le TERMINAL Fairide (tout-en-un,
   // configuré par l'équipe). Plus de réglages Bluetooth / iOS / Android ici : la page garde les commandes et, en
   // secours, l'impression par la boîte d'impression de l'appareil (« Imprimer le bon de livraison »).
-  const [paperColumns] = useState(() => Number(localStorage.getItem('fairide.paperColumns')) || COLUMNS_58MM);
-  const [btName, setBtName] = useState(btPrinter.connectedDeviceName());
-  const [printing, setPrinting] = useState(false);
+  // L'imprimante Bluetooth (escposTicket.js) n'est plus branchée ici (audit du 19/10, shop-226) : plus rien ne la connectait
+  // depuis le terminal Fairide, et son ticket imprimait le nom complet et le téléphone du client, sans l'allergie.
 
   // Nombre d'impressions déjà faites par commande (session) : affiché dans le détail, pour savoir si le
   // ticket est déjà sorti et pouvoir le réimprimer sans hésiter quand la première sortie a raté.
@@ -166,11 +175,17 @@ export default function OrdersPage() {
   // Nombre d'exemplaires d'une (ré)impression (fondateur, 2026-10-01) : un pour la cuisine, un pour le comptoir, un pour
   // le livreur… 1 à 5, choisi juste à côté du bouton.
   const [exemplaires, setExemplaires] = useState(1);
+  // Une livraison sort toujours au moins deux tickets (sac du client + cuisine, backend impressions.js) : le sélecteur part
+  // de 2, et le message compte les tickets vraiment envoyés (audit du 19/10, shop-228 : « Ticket envoyé » pour deux).
+  const minExemplaires = (o) => (o?.orderType === 'delivery' ? 2 : 1);
+  const idChoisi = commandeChoisie?.id;
+  useEffect(() => { setExemplaires(minExemplaires(commandeChoisie)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [idChoisi]);
   async function imprimerSurTerminal(order, copies = 1) {
     setEnvoiTicket(order.id);
     try {
-      await api(`/orders/${order.id}/print`, { method: 'POST', token, body: { copies } });
-      toast(copies > 1 ? t('ordersResto.toastTicketSentN', { n: copies }) : terminalEnLigne ? t('ordersResto.ticketSentTerminal') : t('ordersResto.ticketQueuedOffline'));
+      const r = await api(`/orders/${order.id}/print`, { method: 'POST', token, body: { copies } });
+      const n = r?.jobIds?.length || copies;
+      toast(n > 1 ? t('ordersResto.toastTicketSentN', { n }) : terminalEnLigne ? t('ordersResto.ticketSentTerminal') : t('ordersResto.ticketQueuedOffline'));
       loadDashboard(restoId);
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoiTicket(null); }
   }
@@ -188,29 +203,6 @@ export default function OrdersPage() {
   // Uber Eats (« Mettre en pause les commandes ») : un appui, effet immédiat. Même champ `open` côté
   // serveur — fermé, le commerce refuse les nouvelles commandes (routes/orders.js) et sort de la liste
   // publique ; les commandes déjà reçues continuent normalement.
-  async function printBluetooth(order, { silencieux = false, copies = 1 } = {}) {
-    setPrinting(true);
-    try {
-      if (!btPrinter.connectedDeviceName()) setBtName(await btPrinter.connect());
-      const octets = buildTicketBytes(order, restaurant, { columns: paperColumns });
-      for (let i = 0; i < Math.max(1, copies); i++) {
-        if (i > 0) await new Promise((r) => setTimeout(r, 600));
-        await btPrinter.printBytes(octets);
-      }
-      setBtName(btPrinter.connectedDeviceName());
-      setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + Math.max(1, copies) }));
-      if (!silencieux) toast(copies > 1 ? t('ordersResto.toastTicketSentN', { n: copies }) : t('ordersResto.toastTicketSent'));
-      return true;
-    } catch (e) {
-      // Refuser le sélecteur d'appareils lève une NotFoundError : ce n'est pas une panne, inutile
-      // d'alarmer le restaurateur qui vient simplement de fermer la fenêtre.
-      if (e?.name !== 'NotFoundError') toast(e.message || t('ordersResto.printFailed'));
-      setBtName(btPrinter.connectedDeviceName());
-      return false;
-    } finally {
-      setPrinting(false);
-    }
-  }
 
   // Ce qui demande une action ou une surveillance en premier, ce qui est déjà réglé en dernier —
   // pour que le restaurateur voie toujours ce qui compte sans avoir à chercher dans la liste.
@@ -218,6 +210,20 @@ export default function OrdersPage() {
   // Les commandes closes (terminées, refusées, annulées) passent dans un historique replié : le serveur
   // renvoie TOUT l'historique du commerce, et au bout de quelques semaines la liste de service n'était plus
   // qu'une longue traîne de commandes livrées sous les deux qui comptaient.
+  /* L'HISTORIQUE À LA DEMANDE (audit du 19/10, shop-213). Le tableau ne reçoit plus que les commandes en cours et celles
+     closes depuis 24 h ; les plus anciennes arrivent 20 par 20 quand on ouvre l'historique (GET ?vue=historique), et rien
+     n'est dessiné tant qu'il est replié — avant, des milliers de cartes se reconstruisaient à chaque sondage de 15 s. */
+  const [histOuvert, setHistOuvert] = useState(false);
+  const [hist, setHist] = useState({ liste: [], plus: false, charge: false, enCours: false, erreur: null });
+  async function chargerHistorique(suite = false) {
+    if (!restoId) return;
+    setHist((h) => ({ ...h, enCours: true, erreur: null }));
+    const avant = suite && hist.liste.length ? hist.liste[hist.liste.length - 1].createdAt : null;
+    try {
+      const r = await api(`/orders/restaurant/${restoId}?vue=historique${avant ? `&avant=${avant}` : ''}`, { token });
+      setHist((h) => ({ liste: suite ? [...h.liste, ...(r?.orders || [])] : (r?.orders || []), plus: !!r?.more, charge: true, enCours: false, erreur: null }));
+    } catch (e) { setHist((h) => ({ ...h, enCours: false, erreur: e.message })); }
+  }
   const { enCours, closes, duJour } = useMemo(() => {
     const finies = ['terminee', 'annulee'];
     const tri = [...orders].sort((a, b) => orderStagePriority(a) - orderStagePriority(b));
@@ -229,20 +235,39 @@ export default function OrdersPage() {
     };
   }, [orders]);
 
+  // Rend { ok, code } : les fenêtres de motif ne se ferment qu'en cas de succès (shop-222).
   async function orderAction(orderId, action, body) {
-    if (actionEnCours) return;
-    setActionEnCours(orderId);
+    if (verrous.current.has(orderId)) return { ok: false };
+    verrous.current.add(orderId);
+    setActionsEnCours(new Set(verrous.current));
     try {
       await api(`/orders/${orderId}/${action}`, { method: 'PATCH', token, body });
       // Commande acceptée : le retour « succès » du téléphone (gestes.js, App polish du 2026-10-19).
       if (action === 'accept') vibrer('succes');
       await loadDashboard(restoId);
+      return { ok: true };
     } catch (e) {
       toast(e.message, 'erreur');
+      // La carte n'attendait plus (acceptée sur un autre appareil, statut changé) : on relit tout de suite au lieu de laisser
+      // jusqu'à 15 s un bouton qui répondra la même erreur (shop-214).
+      loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
+      return { ok: false, code: e.code };
     } finally {
-      setActionEnCours(null);
+      verrous.current.delete(orderId);
+      setActionsEnCours(new Set(verrous.current));
     }
   }
+  // Refus d'une commande qui attend : il dit le statut qu'il voyait (shop-208), le serveur refuse si elle vient d'être
+  // acceptée ailleurs. Annulation d'une commande acceptée (shop-207) : sans statut attendu.
+  async function envoyerMotif(o, motif, { annulation = false } = {}) {
+    setMotifEnvoi(true);
+    const r = await orderAction(o.id, 'refuse', annulation ? { reason: motif } : { reason: motif, expectedStatus: 'nouveau' });
+    setMotifEnvoi(false);
+    if (r.ok || r.code === 'STATUS_CHANGED') {
+      if (annulation) { setAAnnuler(null); setSelectedOrder(null); } else setARefuser(null);
+    }
+  }
+  const motifsRefus = [t('ordersResto.refuseReason1'), t('ordersResto.refuseReason2'), t('ordersResto.refuseReason3')];
 
   async function signalerPasVenu() {
     if (!pasVenu) return;
@@ -303,6 +328,9 @@ export default function OrdersPage() {
         toast(n > 1 ? t('ordersResto.toastTicketSentN', { n }) : t('ordersResto.ticketSentTerminal'));
         return;
       }
+      // Dans l'appli (iPhone, Android) sans terminal Goodcom : la WebView n'a pas de boîte d'impression, print() ne fait
+      // rien, et l'écran comptait quand même « Ticket déjà imprimé 1 fois » (audit du 19/10, shop-211). On le dit, sans compter.
+      if (estNatif()) { toast(t('ordersResto.printNoPrinterApp'), 'erreur'); return; }
       imprimerTicketPapier(r.lines, r.columns, `Fairide ${order.orderNumber ? `#${String(order.orderNumber).padStart(3, '0')}` : String(order.id).slice(0, 8)}`);
       setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + 1 }));
     } catch (e) { toast(e.message, 'erreur'); }
@@ -330,12 +358,28 @@ export default function OrdersPage() {
      code à taper depuis le 2026-10-20), « Client pas venu » dessous. Toucher la carte ouvre le détail, comme avant. */
   const nouvellesTriees = enCours.filter((o) => orderStageKey(o) === 'nouveau').sort((a, b) => echeance(a) - echeance(b));
   const plusPressee = nouvellesTriees.find((o) => o.status === 'nouveau')?.id;
+  /* LA CARTE AU CLAVIER (audit du 19/10, CROSS-85) : toucher la carte ouvre le détail, mais une div n'est ni atteignable à la
+     tabulation ni activable par Entrée. Elle entre dans l'ordre de tabulation et s'ouvre par Entrée ou Espace — seulement
+     quand c'est la carte elle-même qui a le focus, pas l'un de ses boutons (Accepter, imprimer…). Un groupe nommé, pas role="button" :
+     la carte contient des boutons, et un bouton dans un bouton n'est pas permis. */
+  const ouvrirAuClavier = (o) => ({
+    tabIndex: 0,
+    role: 'group',
+    'aria-label': t('ordersResto.orderOf', { name: o.clientName }),
+    onKeyDown: (e) => {
+      if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+      e.preventDefault();
+      setSelectedOrder(o);
+    }
+  });
   const boutonPhoto = (o, classe, taille) => (
     <>
       {['nouveau', 'preparation', 'pret'].includes(o.status) && !o.preparedPhoto && (
         <label className={classe} title={t('ordersResto.photoHelp')} aria-label={t('ordersResto.photoBtn')} onClick={(e) => e.stopPropagation()}>
           {photoEnCours === o.id ? '…' : <Icone nom="photo" taille={taille} className="icone-texte" />}
-          <input type="file" accept="image/*" capture="environment" hidden disabled={photoEnCours === o.id} onChange={(e) => { photographier(o, e.target.files?.[0]); e.target.value = ''; }} />
+          {/* sr-only plutôt que hidden (audit du 19/10, CROSS-95) : un champ caché n'entrait pas dans la tabulation, la photo
+              de la commande prête n'était pas atteignable au clavier. */}
+          <input type="file" accept="image/*" capture="environment" className="sr-only" aria-label={t('ordersResto.photoBtn')} disabled={photoEnCours === o.id} onChange={(e) => { photographier(o, e.target.files?.[0]); e.target.value = ''; }} />
         </label>
       )}
       {o.preparedPhoto && (
@@ -353,7 +397,29 @@ export default function OrdersPage() {
      commande ». Au vrai test chez Maestro Pizza, c'était un geste de trop en plein service (fondateur) : il ne reste qu'un
      bouton, « Remis au client », et juste à côté le numéro de commande et le prénom du client — ce que le client annonce au
      comptoir (son numéro ou son nom) et ce que porte le ticket du sac, pour remettre le bon sac à la bonne personne. Le
-     contrôle d'âge de l'alcool ne change pas (confirmTakeaway ouvre VerificationAge). « Client pas venu » reste dessous. */
+     contrôle d'âge de l'alcool ne change pas (confirmTakeaway ouvre VerificationAge). « Client pas venu » reste dessous.
+     « CLIENT PAS VENU » (audit du 19/10, shop-204 / LIVE-03 et shop-206) : il était offert dès l'acceptation, juste sous
+     « Marquer prêt », et un appui de travers fermait au client le paiement sur place partout. Il n'apparaît plus qu'une fois
+     la commande prête et l'heure noShowFrom passée (le serveur la calcule : 30 min après « prête » ou l'heure annoncée au
+     client) ; avant, une ligne dit à partir de quand. Il vaut aussi pour une commande payée en ligne (close sans
+     remboursement, elle reste due), qui n'avait aucune issue. */
+  const boutonPasVenu = (o) => {
+    if (o.status !== 'pret' || o.orderType !== 'pickup' || !o.noShowFrom) return null;
+    if (Date.now() < o.noShowFrom) {
+      const heure = new Date(o.noShowFrom).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
+      return <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('ordersResto.noShowFromHint', { time: heure })}</p>;
+    }
+    return <button type="button" className="ec-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} />{t('ordersResto.customerNoShow')}</button>;
+  };
+  // Payée sur place puis refusée ou annulée : plus rien « à encaisser » (audit du 19/10, LIVE-10, côté commerce). La ligne de
+  // raison (ligneRaison) dit ce qui s'est passé ; « Client pas venu » garde son badge rouge.
+  const rienAEncaisser = (o) => ['refuse', 'annule'].includes(o.status);
+  // Pourquoi une commande de l'historique s'est fermée (audit du 19/10, shop-203) : motif du refus, délai dépassé, faute de
+  // livreur… Le badge « Client pas venu » dit déjà le sien.
+  const ligneRaison = (o) => {
+    const r = o.pickupNoShow ? null : raisonFermeture(o);
+    return r?.cle ? <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t(r.cle, { client: o.clientName || '', ...r.valeurs })}</p> : null;
+  };
   const qui = (o) => (
     <span className="ec-remise-qui">
       {o.orderNumber ? <span className="commande-numero">{numeroCommande(o)}</span> : null}
@@ -368,9 +434,7 @@ export default function OrdersPage() {
           {confirmingPickup === o.id ? '…' : t('ordersResto.handedToCustomer')}
         </button>
       </div>
-      {o.paymentMode === 'on_site' && (
-        <button type="button" className="ec-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} />{t('ordersResto.customerNoShow')}</button>
-      )}
+      {boutonPasVenu(o)}
     </div>
   );
   const carteCommande = (o, { barre = false } = {}) => {
@@ -382,28 +446,29 @@ export default function OrdersPage() {
     // La plus pressée a ses boutons dans la barre au-dessus des onglets (app) : la carte garde le temps de préparation.
     const dansLaBarre = barre && o.id === plusPressee;
     return (
-    <div className={`ec-commande${nouvelle ? ' ec-commande--nouvelle' : ''}`} key={o.id} onClick={() => setSelectedOrder(o)}>
+    <div className={`ec-commande${nouvelle ? ' ec-commande--nouvelle' : ''}`} key={o.id} onClick={() => setSelectedOrder(o)} {...ouvrirAuClavier(o)}>
       <div className="ec-cmd-l1">
         {/* Étape en texte foncé, la couleur sur la pastille seule (audit du 15/10/2026). */}
         <span key={stageKey} className={`etape-pastille ec-saute${nouvelle ? ' ec-sonne' : ''}`} style={{ '--etape-couleur': stageColor }}>
           <Icone nom={stage.icon} taille={16} className="icone-texte" /> {t(`orderStatus.stage_${stage.key}`)}
         </span>
         {boutonPhoto(o, 'btn-ghost order-print-btn', 18)}
-        <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
-          disabled={envoiTicket === o.id} onClick={(e) => { e.stopPropagation(); if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}><Icone nom="imprimante" taille={16} className="icone-texte" /></button>
+        <button type="button" className="btn-ghost order-print-btn" title={t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
+          disabled={envoiTicket === o.id} onClick={(e) => { e.stopPropagation(); if (aTerminal) imprimerSurTerminal(o); else { setSelectedOrder(o); } }}><Icone nom="imprimante" taille={16} className="icone-texte" /></button>
         {nouvelle && o.acceptDeadline && <AnneauDelai order={o} />}
       </div>
       <div className="ec-cmd-l2">
         <span className="ec-cmd-client">
           <b>{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6 }}>{t('ordersResto.trainingBadge')}</span>}</b>
-          {o.clientPhone && <span><Icone nom="telephone" taille={14} className="icone-texte" />{' '}{telephoneLisible(o.clientPhone)}</span>}
+          {/* Le serveur n'envoie le numéro que pendant le service (shop-224) : un appui l'appelle. */}
+          {o.clientPhone && <a href={`tel:${o.clientPhone}`} onClick={(e) => e.stopPropagation()}><Icone nom="telephone" taille={14} className="icone-texte" />{' '}{telephoneLisible(o.clientPhone)}</a>}
         </span>
         {/* Le numéro du ticket imprimé et de la fenêtre « nouvelle commande », en grand : c'est lui qu'on annonce en cuisine. */}
         {o.orderNumber ? <span className="commande-numero">{numeroCommande(o)}</span> : <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>}
       </div>
       <p className="ec-cmd-sous">{sousTitre(o)}</p>
       {/* Paiement sur place : encadré, c'est de l'argent à encaisser (fondateur, 2026-10-07). */}
-      {o.paymentMode === 'on_site' && (
+      {o.paymentMode === 'on_site' && (!rienAEncaisser(o) || o.pickupNoShow) && (
         <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
           {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}
         </span>
@@ -425,10 +490,10 @@ export default function OrdersPage() {
               mais gardés pour une tablette plus large, où la barre ne s'affiche pas. */}
           {(
             <div className={dansLaBarre ? 'ec-cmd-boutons-barre' : undefined}>
-              <button type="button" className={`ec-bouton ${o.id === plusPressee ? 'ec-bouton--lime' : 'ec-bouton--iris'}`} disabled={actionEnCours === o.id} onClick={() => accepter(o)}>
-                {actionEnCours === o.id ? '…' : t('ordersResto.accept')}
+              <button type="button" className={`ec-bouton ${o.id === plusPressee ? 'ec-bouton--lime' : 'ec-bouton--iris'}`} disabled={actionsEnCours.has(o.id)} onClick={() => accepter(o)}>
+                {actionsEnCours.has(o.id) ? '…' : t('ordersResto.accept')}
               </button>
-              <button type="button" className="ec-bouton ec-bouton--texte" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
+              <button type="button" className="ec-bouton ec-bouton--texte" disabled={actionsEnCours.has(o.id)} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
             </div>
           )}
         </div>
@@ -436,15 +501,11 @@ export default function OrdersPage() {
       {/* Iris et non lime : avec plusieurs commandes en préparation, l'écran alignait autant de boutons lime. */}
       {o.status === 'preparation' && (
         <div onClick={(e) => e.stopPropagation()}>
-          <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+          <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionsEnCours.has(o.id)} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
         </div>
       )}
       {o.status === 'pret' && o.orderType === 'pickup' && remiseClient(o)}
-      {o.paymentMode === 'on_site' && o.status === 'preparation' && (
-        <div onClick={(e) => e.stopPropagation()}>
-          <button type="button" className="ec-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={16} />{t('ordersResto.customerNoShow')}</button>
-        </div>
-      )}
+      {close && ligneRaison(o)}
       {/* RETRAIT SANS RIEN TAPER (simulation du 10 oct. 2026) : le commerce compare à l'œil le code que le livreur lui
           montre avec celui-ci ; c'est le livreur qui confirme le retrait de son côté (PATCH /orders/:id/picked-up). */}
       <CodeRetrait order={o} t={t} />
@@ -466,9 +527,10 @@ export default function OrdersPage() {
   // Les fenêtres (détail, refus avec motif, allergie, client pas venu, contrôle d'âge), communes au tableau du site et à la liste de l'app.
   const fenetres = (
     <>
-        {selectedOrder && createPortal(
-          <div className="modal-overlay no-print" onClick={() => setSelectedOrder(null)}>
-            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        {/* Une vraie fenêtre (Modale) et non plus un fond fait main (audit du 19/10, CROSS-06) : Échap la ferme, le focus y
+            entre et revient à la carte, et le Retour d'Android ferme le détail au lieu de quitter la page des commandes. */}
+        {selectedOrder && (
+          <Modale classe="no-print" ariaLabel={t('ordersResto.orderOf', { name: selectedOrder.clientName })} onFermer={() => setSelectedOrder(null)}>
               <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
                 <h3 style={{ margin: 0 }}>{t('ordersResto.orderOf', { name: selectedOrder.clientName })}</h3>
                 {selectedOrder.orderNumber ? <span className="commande-numero">{numeroCommande(selectedOrder)}</span> : <span className={`status-badge status-${selectedOrder.status}`}>{statusLabel(selectedOrder.status, selectedOrder.orderType, t)}</span>}
@@ -488,11 +550,14 @@ export default function OrdersPage() {
               <DeliveryTiming order={selectedOrder} />
               <div className="divider" />
               <h4 style={{ margin: '0 0 6px' }}>{t('ordersResto.items')}</h4>
-              {selectedOrder.items.map((i) => (
-                <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', alignItems: 'flex-start' }}>
+              {/* Clé par position : le même plat deux fois (options différentes) faisait une clé en double. La note du client
+                  sur un plat (« sans oignon ») manquait ici, alors que la carte et le ticket la portent (shop-219). */}
+              {selectedOrder.items.map((i, n) => (
+                <div key={`${i.itemId}-${n}`} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', alignItems: 'flex-start' }}>
                   <span>
                     {i.qty}× {i.name}{i.discount > 0 ? <Icone nom="etiquette" taille={16} className="icone-texte" /> : ''}
                     {i.options?.length > 0 && <span className="small" style={{ display: 'block' }}>{i.options.map((o) => o.name).join(', ')}</span>}
+                    {i.note && <span className="small" style={{ display: 'block', fontStyle: 'italic' }}>« {i.note} »</span>}
                   </span>
                   <span>{euros((i.price * i.qty - (i.discount || 0)))}</span>
                 </div>
@@ -510,7 +575,7 @@ export default function OrdersPage() {
               <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? t('ordersResto.takeaway') : t('ordersResto.delivery')}</h4>
               {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{selectedOrder.address}</p>}
               {selectedOrder.orderType === 'pickup' && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.pickupInfo')}</p>}
-              {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}><Icone nom="telephone" taille={16} className="icone-texte" />{' '}{selectedOrder.clientPhone}</p>}
+              {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}><a href={`tel:${selectedOrder.clientPhone}`}><Icone nom="telephone" taille={16} className="icone-texte" />{' '}{telephoneLisible(selectedOrder.clientPhone)}</a></p>}
               <BandeauAllergie order={selectedOrder} />
               <BadgeAlcool order={selectedOrder} />
               {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}><Icone nom="cle" taille={16} className="icone-texte" />{' '}{deliveryInstructionLabel(selectedOrder.deliveryInstructions, t)}</p>}
@@ -525,7 +590,26 @@ export default function OrdersPage() {
                   </button>
                 </div>
               )}
+              {boutonPasVenu(selectedOrder)}
               <CodeRetrait order={selectedOrder} t={t} />
+              {/* Le détail d'une commande qui attend n'avait ni « Accepter » ni « Refuser » (audit du 19/10, shop-202) : il fallait
+                  le fermer et retrouver la carte. Mêmes gestes que la carte (temps en plus choisi sur la carte, allergie à confirmer). */}
+              {selectedOrder.status === 'nouveau' && (
+                <div className="row" style={{ marginTop: 12, gap: 8, flexWrap: 'wrap' }}>
+                  <button type="button" className="btn-teal" disabled={actionsEnCours.has(selectedOrder.id)} onClick={() => accepter(selectedOrder)}>
+                    {actionsEnCours.has(selectedOrder.id) ? '…' : t('ordersResto.accept')}
+                  </button>
+                  <button type="button" className="btn-outline" disabled={actionsEnCours.has(selectedOrder.id)} onClick={() => setARefuser(selectedOrder)}>{t('ordersResto.refuse')}</button>
+                </div>
+              )}
+              {/* ANNULER UNE COMMANDE DÉJÀ ACCEPTÉE (audit du 19/10, shop-207) : le serveur le permettait (PATCH /refuse depuis
+                  « en préparation » ou « prête », motif obligatoire, remboursement, livreur prévenu), aucun écran ne l'offrait.
+                  Ici seulement, dans le détail, pas sur la carte : c'est un geste rare, à ne pas toucher par erreur en service. */}
+              {['preparation', 'pret'].includes(selectedOrder.status) && (
+                <button type="button" className="btn-danger-ghost" style={{ marginTop: 12 }} disabled={actionsEnCours.has(selectedOrder.id)} onClick={() => setAAnnuler(selectedOrder)}>
+                  {t('ordersResto.cancelAccepted')}
+                </button>
+              )}
               <div className="divider" />
               {/* UN bouton d'impression (2026-09-23). Le terminal Fairide imprime les tickets de lui-même
                   (fondateur, 2026-09-22) ; ici ne reste que le secours : l'imprimante Bluetooth si elle est
@@ -539,7 +623,7 @@ export default function OrdersPage() {
                   </div>
                   {selectedOrder.print?.printed > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--ink-soft)' }}>{t('ordersResto.reprintHelp')}</p>}
                   <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />
+                    <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} min={minExemplaires(selectedOrder)} />
                     <button className="btn-teal" disabled={envoiTicket === selectedOrder.id} onClick={() => imprimerSurTerminal(selectedOrder, exemplaires)}>
                       {envoiTicket === selectedOrder.id ? t('ordersResto.printing') : selectedOrder.print?.printed > 0 ? t('ordersResto.reprintTerminal') : t('ordersResto.printTerminal')}
                     </button>
@@ -555,19 +639,17 @@ export default function OrdersPage() {
                   )}
                   <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                     <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />
-                    <button className="btn-teal" disabled={printing} onClick={() => (btName ? printBluetooth(selectedOrder, { copies: exemplaires }) : printReceipt(selectedOrder, exemplaires))}>
-                      {printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}
+                    <button className="btn-teal" onClick={() => printReceipt(selectedOrder, exemplaires)}>
+                      {impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}
                     </button>
                     <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
                     <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
                   </div>
-                  <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-faint)' }}>{t('ordersResto.noTerminalHint')}{!membreEquipe && <> <Link to="/dashboard/terminal">{t('ordersResto.terminalSettings')}</Link></>}</p>
+                  <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-faint)' }}>{t(estNatif() ? 'ordersResto.noTerminalHintApp' : 'ordersResto.noTerminalHint')}{!membreEquipe && <> <Link to="/dashboard/terminal">{t('ordersResto.terminalSettings')}</Link></>}</p>
                 </>
               )}
               {apercu?.orderId === selectedOrder.id && <div style={{ marginTop: 12 }}><TicketPapier lines={apercu.lines} columns={apercu.columns} /></div>}
-            </div>
-          </div>,
-          document.body
+          </Modale>
         )}
         {/* Portail séparé du modal (lui-même marqué no-print) : c'est ce qui garantit que le reçu reste
             visible à l'impression même si le modal et le reste de la page sont masqués (voir OrderReceipt.jsx
@@ -575,7 +657,7 @@ export default function OrdersPage() {
         {selectedOrder && createPortal(<OrderReceipt order={selectedOrder} restaurant={restaurant} />, document.body)}
         <ConfirmDialog open={!!pasVenu} danger
           title={t('ordersResto.confirmNoShowTitle')}
-          message={t('ordersResto.confirmNoShowText', { name: pasVenu?.clientName || '' })}
+          message={t(pasVenu?.paymentMode === 'on_site' ? 'ordersResto.confirmNoShowText' : 'ordersResto.confirmNoShowTextOnline', { name: pasVenu?.clientName || '' })}
           confirmLabel={t('ordersResto.customerNoShow')}
           loading={clotureEnCours}
           onCancel={() => setPasVenu(null)}
@@ -584,12 +666,28 @@ export default function OrdersPage() {
             dans l'e-mail de refus. Avant, le client apprenait le refus sans savoir pourquoi. */}
         <ReasonDialog open={!!aRefuser} danger
           title={t('ordersResto.confirmRefuseTitle')}
-          message={`${t('ordersResto.confirmRefuseText', { name: aRefuser?.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
+          message={`${t(aRefuser?.paymentMode === 'on_site' ? 'ordersResto.confirmRefuseTextOnSite' : 'ordersResto.confirmRefuseText', { name: aRefuser?.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
           label={t('ordersResto.refuseReasonLabel')}
           placeholder={t('ordersResto.refuseReasonPlaceholder')}
           confirmLabel={t('ordersResto.refuse')}
+          suggestions={motifsRefus} loading={motifEnvoi}
           onCancel={() => setARefuser(null)}
-          onConfirm={(motif) => { const o = aRefuser; setARefuser(null); orderAction(o.id, 'refuse', { reason: motif }); }} />
+          onConfirm={(motif) => envoyerMotif(aRefuser, motif)} />
+        {/* Annulation après acceptation (shop-207) : même route et même motif obligatoire que le refus ; le client reçoit
+            « a dû annuler ta commande » avec le motif, remboursé s'il avait payé en ligne, et le livreur déjà en route est prévenu. */}
+        <ReasonDialog open={!!aAnnuler} danger
+          title={t('ordersResto.confirmCancelTitle')}
+          message={[
+            t(aAnnuler?.paymentMode === 'on_site' ? 'ordersResto.confirmCancelTextOnSite' : 'ordersResto.confirmCancelText', { name: aAnnuler?.clientName || '' }),
+            aAnnuler?.driverId ? t('ordersResto.confirmCancelDriver') : '',
+            t('ordersResto.refuseReasonHint')
+          ].filter(Boolean).join(' ')}
+          label={t('ordersResto.refuseReasonLabel')}
+          placeholder={t('ordersResto.refuseReasonPlaceholder')}
+          confirmLabel={t('ordersResto.cancelAccepted')}
+          suggestions={motifsRefus} loading={motifEnvoi}
+          onCancel={() => setAAnnuler(null)}
+          onConfirm={(motif) => envoyerMotif(aAnnuler, motif, { annulation: true })} />
         {/* A1 : accepter une commande avec demande d'allergie, c'est s'engager à la respecter. */}
         <ConfirmDialog open={!!allergieAConfirmer}
           title={t('conformite.allergyConfirmTitle')}
@@ -618,7 +716,7 @@ export default function OrdersPage() {
     const pressee = o.id === plusPressee;
     const pastille = !['nouveau', 'preparation'].includes(stageKey);
     return (
-      <article key={o.id} className={`sp-cmd${pressee ? ' sp-cmd--pressee' : ''}`} onClick={() => setSelectedOrder(o)}>
+      <article key={o.id} className={`sp-cmd${pressee ? ' sp-cmd--pressee' : ''}`} onClick={() => setSelectedOrder(o)} {...ouvrirAuClavier(o)}>
         <div className="sp-cmd-l1">
           <div className="sp-cmd-qui">
             <div className="sp-cmd-tete">
@@ -626,12 +724,12 @@ export default function OrdersPage() {
               <span className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</span>
             </div>
             <b className="sp-cmd-client">{o.clientName}{o.isTraining && <span className="pill" style={{ marginLeft: 6 }}>{t('ordersResto.trainingBadge')}</span>}</b>
-            {o.clientPhone && <span className="sp-cmd-tel"><Icone nom="telephone" taille={13} className="icone-texte" />{' '}{telephoneLisible(o.clientPhone)}</span>}
+            {o.clientPhone && <a className="sp-cmd-tel" href={`tel:${o.clientPhone}`} onClick={(e) => e.stopPropagation()}><Icone nom="telephone" taille={13} className="icone-texte" />{' '}{telephoneLisible(o.clientPhone)}</a>}
           </div>
           <div className="sp-cmd-outils" onClick={(e) => e.stopPropagation()}>
             {boutonPhoto(o, 'sp-outil', 16)}
-            <button type="button" className="sp-outil" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
-              disabled={envoiTicket === o.id} onClick={() => { if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else setSelectedOrder(o); }}><Icone nom="imprimante" taille={16} /></button>
+            <button type="button" className="sp-outil" title={t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
+              disabled={envoiTicket === o.id} onClick={() => { if (aTerminal) imprimerSurTerminal(o); else setSelectedOrder(o); }}><Icone nom="imprimante" taille={16} /></button>
             {nouvelle && o.acceptDeadline && <AnneauDelai order={o} />}
           </div>
         </div>
@@ -642,7 +740,7 @@ export default function OrdersPage() {
         )}
         <ListePlats items={o.items} />
         <div className="sp-cmd-paiement">
-          {o.paymentMode === 'on_site' ? (
+          {o.paymentMode === 'on_site' && rienAEncaisser(o) && !o.pickupNoShow ? null : o.paymentMode === 'on_site' ? (
             <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
               {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}
             </span>
@@ -662,17 +760,17 @@ export default function OrdersPage() {
               onChange={(v) => setTempsEnPlus((p) => ({ ...p, [o.id]: v }))}
               options={[{ value: 0, label: t('ordersResto.extraPrepNone') }, ...[10, 20, 30].map((m) => ({ value: m, label: t('ordersResto.extraPrepMinutes', { n: m }) }))]} />
             <div className="sp-cmd-boutons">
-              <button type="button" className={`ec-bouton ${pressee ? 'ec-bouton--lime' : 'ec-bouton--iris'}`} disabled={actionEnCours === o.id}
+              <button type="button" className={`ec-bouton ${pressee ? 'ec-bouton--lime' : 'ec-bouton--iris'}`} disabled={actionsEnCours.has(o.id)}
                 onClick={() => accepter(o)}>
-                {actionEnCours === o.id ? '…' : t('ordersResto.accept')}
+                {actionsEnCours.has(o.id) ? '…' : t('ordersResto.accept')}
               </button>
-              <button type="button" className="ec-bouton sp-bouton-contour" disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
+              <button type="button" className="ec-bouton sp-bouton-contour" disabled={actionsEnCours.has(o.id)} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
             </div>
           </div>
         )}
         {o.status === 'preparation' && (
           <div className="sp-cmd-boutons" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+            <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionsEnCours.has(o.id)} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
           </div>
         )}
         {o.status === 'pret' && o.orderType === 'pickup' && remiseClient(o)}
@@ -681,14 +779,39 @@ export default function OrdersPage() {
         {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
           <p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.waitingDriver')}</p>
         )}
-        {o.paymentMode === 'on_site' && o.status === 'preparation' && (
-          <div onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="btn-ghost btn-sm sp-pas-venu" onClick={() => setPasVenu(o)}><Icone nom="interdit" taille={14} className="icone-texte" />{' '}{t('ordersResto.customerNoShow')}</button>
-          </div>
-        )}
+        {['terminee', 'annulee'].includes(stageKey) && ligneRaison(o)}
       </article>
     );
   };
+  // L'historique affiché : les closes des dernières 24 h (déjà là, à jour à chaque sondage) puis les pages plus anciennes.
+  const historique = (() => {
+    const vus = new Set();
+    return [...closes, ...hist.liste].filter((o) => (vus.has(o.id) ? false : vus.add(o.id))).sort((a, b) => b.createdAt - a.createdAt);
+  })();
+  const nbHistorique = Math.max(statsService?.historyCount || 0, closes.length);
+  const basculerHistorique = (e) => {
+    const ouvert = e.currentTarget.open;
+    setHistOuvert(ouvert);
+    if (ouvert && !hist.charge && !hist.enCours) chargerHistorique();
+  };
+  const suiteHistorique = (
+    <>
+      {hist.erreur && <p className="small" role="alert" style={{ color: 'var(--red)' }}>{hist.erreur} <button type="button" className="btn-ghost btn-sm" onClick={() => chargerHistorique(hist.liste.length > 0)}>{t('ordersResto.retry')}</button></p>}
+      {hist.enCours && <p className="small" style={{ color: 'var(--ink-soft)' }}>…</p>}
+      {!hist.enCours && hist.plus && <button type="button" className="btn-outline btn-sm" style={{ marginTop: 8 }} onClick={() => chargerHistorique(true)}>{t('ordersResto.historyMore')}</button>}
+    </>
+  );
+  /* LA LISTE EST-ELLE À JOUR ? (audit du 19/10, CROSS-31 et shop-217). Jamais reçue après deux essais : la carte d'échec avec « Réessayer »,
+     plus « Pas encore de commande » ; pas encore reçue : un squelette. Deux relectures ratées d'affilée : une ligne dit de
+     quand date la liste — l'alarme ne peut pas sonner pour une commande que l'écran ne reçoit pas. */
+  const heureMaj = etatCommandes?.derniereMaj ? new Date(etatCommandes.derniereMaj).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '';
+  const etatListe = !ordersLoaded
+    ? (etatCommandes?.erreur && etatCommandes.echecs >= 2
+      ? <ErrorCard titre={t('ordersResto.loadFailedTitle')} message={etatCommandes.erreur} onRetry={() => loadDashboard(restoId)} />
+      : <SkeletonCards count={2} />)
+    : etatCommandes?.echecs >= 2
+      ? <p className="small ec-liste-ancienne" role="status"><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('ordersResto.staleList', { time: heureMaj })}</p>
+      : null;
   const etatTerminal = terminaux ? (aTerminal ? (terminalEnLigne ? t('sitePro.terminalEnLigne') : t('sitePro.terminalHorsLigne')) : t('sitePro.terminalAucun')) : null;
 
   if (SITE) return (
@@ -711,7 +834,8 @@ export default function OrdersPage() {
       <FeuilleCommerce>
         {communs}
         <div className="sp-cadre">
-        {enCours.length === 0 && <div className="sp-vide-etroit"><EtatVide icone="commandes" titre={orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} /></div>}
+        {etatListe}
+        {ordersLoaded && enCours.length === 0 && <div className="sp-vide-etroit"><EtatVide icone="commandes" titre={orders.length === 0 && !nbHistorique ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} /></div>}
         <div className={`sp-tableau${enCours.length === 0 ? ' sp-tableau--vide' : ''}`} role="group" aria-label={t('sitePro.tableau')}>
           {colonnes.map((c) => (
             <section key={c.cle} className={`sp-kol sp-kol--${c.cle}`} aria-labelledby={`sp-kol-${c.cle}`}>
@@ -728,10 +852,10 @@ export default function OrdersPage() {
             <RupturesDuJour restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
           </div>
         )}
-        {closes.length > 0 && (
-          <details className="service-historique sp-historique">
-            <summary>{t('ordersResto.history', { n: closes.length })}</summary>
-            <div className="sp-historique-grille">{closes.map(carteTableau)}</div>
+        {nbHistorique > 0 && (
+          <details className="service-historique sp-historique" onToggle={basculerHistorique}>
+            <summary>{t('ordersResto.history', { n: nbHistorique })}</summary>
+            {histOuvert && <><div className="sp-historique-grille">{historique.map(carteTableau)}</div>{suiteHistorique}</>}
           </details>
         )}
         </div>
@@ -763,7 +887,8 @@ export default function OrdersPage() {
       <FeuilleCommerce>
         {nouvellesTriees.length > 0 && <>{enTete(sections[0])}{nouvellesTriees.map((o) => carteCommande(o, { barre: true }))}</>}
         {communs}
-        {enCours.length === 0 && <EtatVide icone="commandes" titre={orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} />}
+        {etatListe}
+        {ordersLoaded && enCours.length === 0 && <EtatVide icone="commandes" titre={orders.length === 0 && !nbHistorique ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} />}
         {sections.slice(1).filter((c) => c.liste.length > 0).map((c) => <div key={c.cle}>{enTete(c)}{c.liste.map((o) => carteCommande(o))}</div>)}
         {/* Rupture du jour, sous les commandes (le geste reste à portée pendant le service). */}
         {restaurant && (
@@ -771,20 +896,20 @@ export default function OrdersPage() {
             <RupturesDuJour restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
           </div>
         )}
-        {closes.length > 0 && (
-          <details className="service-historique">
-            <summary>{t('ordersResto.history', { n: closes.length })}</summary>
-            {closes.map((o) => carteCommande(o))}
+        {nbHistorique > 0 && (
+          <details className="service-historique" onToggle={basculerHistorique}>
+            <summary>{t('ordersResto.history', { n: nbHistorique })}</summary>
+            {histOuvert && <>{historique.map((o) => carteCommande(o))}{suiteHistorique}</>}
           </details>
         )}
         {pressee && <div className="ec-espace-barre" aria-hidden="true" />}
       </FeuilleCommerce>
       {pressee && createPortal(
         <div className="ec-barre-accepter no-print" role="group" aria-label={t('serviceCommerce.aTraiter')}>
-          <button type="button" className="ec-bouton ec-bouton--lime" disabled={actionEnCours === pressee.id} onClick={() => accepter(pressee)}>
-            {actionEnCours === pressee.id ? '…' : t('serviceCommerce.accepterNum', { num: numeroCommande(pressee) || '' }).trim()}
+          <button type="button" className="ec-bouton ec-bouton--lime" disabled={actionsEnCours.has(pressee.id)} onClick={() => accepter(pressee)}>
+            {actionsEnCours.has(pressee.id) ? '…' : t('serviceCommerce.accepterNum', { num: numeroCommande(pressee) || '' }).trim()}
           </button>
-          <button type="button" className="ec-bouton ec-bouton--contour" disabled={actionEnCours === pressee.id} onClick={() => setARefuser(pressee)}>{t('ordersResto.refuse')}</button>
+          <button type="button" className="ec-bouton ec-bouton--contour" disabled={actionsEnCours.has(pressee.id)} onClick={() => setARefuser(pressee)}>{t('ordersResto.refuse')}</button>
         </div>,
         document.body
       )}
@@ -795,11 +920,11 @@ export default function OrdersPage() {
 }
 
 // Sélecteur du nombre d'exemplaires d'un ticket (1 à 5) : « − 2 + », assez grand pour le doigt.
-function Exemplaires({ valeur, onChange, t }) {
+function Exemplaires({ valeur, onChange, t, min = 1 }) {
   return (
     <span className="exemplaires" role="group" aria-label={t('ordersResto.copiesLabel')}>
       <span className="small">{t('ordersResto.copiesLabel')}</span>
-      <button type="button" className="btn-ghost" disabled={valeur <= 1} onClick={() => onChange(Math.max(1, valeur - 1))} aria-label="−">−</button>
+      <button type="button" className="btn-ghost" disabled={valeur <= min} onClick={() => onChange(Math.max(min, valeur - 1))} aria-label="−">−</button>
       <b aria-live="polite">{valeur}</b>
       <button type="button" className="btn-ghost" disabled={valeur >= 5} onClick={() => onChange(Math.min(5, valeur + 1))} aria-label="+">+</button>
     </span>

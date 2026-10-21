@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
+import useRevalidation from '../../useRevalidation';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -6,13 +8,13 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros, remiseLigne } from '../../prixPlat';
-import { experienceApp } from '../../natif';
+import { experienceApp, lienPublic } from '../../natif';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import EtatVide from '../../components/EtatVide';
 import Icone from '../../components/Icone';
 import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import { BandeauCommande, FeuilleCommande, BarreCommande, RouteCommande } from '../../components/EcranCommande';
-import { entrerDansGroupe, quitterGroupe } from '../../commandeGroupee';
+import { entrerDansGroupe, quitterGroupe, retenirGroupeACommander, groupeACommander, oublierGroupeACommander } from '../../commandeGroupee';
 import '../../ecran-equipe-groupe.css';
 
 const APPLI = experienceApp();
@@ -39,26 +41,46 @@ export default function CommandeGroupee() {
   const [g, setG] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [occupe, setOccupe] = useState(false);
+  const [aAnnuler, setAAnnuler] = useState(false); // confirmation de « Annuler le groupe » (CROSS-48)
   const [confirmerRemplacement, setConfirmerRemplacement] = useState(null);
   // La carte du commerce, pour montrer le prix PAYÉ de chaque ligne (offre du commerce comprise), comme le panier et le
   // paiement (audit design 2 du 2026-10-19) : le groupe enregistre le prix plein, la remise s'applique à la commande.
   const [menu, setMenu] = useState(null);
 
+  // Le groupe déjà affiché : une relecture qui échoue (réseau) le garde à l'écran au lieu de le remplacer par l'erreur.
+  const gRef = useRef(null);
   const charger = () => api(`/group-orders/${encodeURIComponent(code)}`, { token })
-    .then((r) => { if (r && r.code) { setG(r); setErreur(null); } else setErreur(t('groupOrder.notFound')); })
-    .catch((e) => setErreur(e.message));
+    .then((r) => {
+      if (r && r.code) {
+        gRef.current = r;
+        setG(r); setErreur(null);
+        // Commandé, annulé ou expiré : le code ne doit plus partir avec une prochaine commande (audit du 19/10, checkout-08).
+        if (!['open', 'locked'].includes(r.status) && groupeACommander(r.restaurant?.id) === r.code) oublierGroupeACommander();
+      } else setErreur(t('groupOrder.notFound'));
+    })
+    .catch((e) => { if (!gRef.current) setErreur(e.message); });
   useEffect(() => { charger(); }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
+  // L'ÉCRAN SE TIENT À JOUR (audit du 19/10, CROSS-42) : lu une seule fois, il ne montrait pas à l'hôte les parts qui
+  // arrivaient, ni aux invités que le groupe était fermé ou commandé. Relu toutes les 10 s (onglet visible) et au retour
+  // sur l'onglet ou l'application.
+  useAutoRefresh(charger, 10000);
+  useRevalidation(charger);
   const restoId = g?.restaurant?.id;
   useEffect(() => {
     if (!restoId) return;
     api(`/restaurants/${restoId}`, { token }).then((r) => setMenu(r?.menu || null)).catch(() => {});
   }, [restoId, token]);
 
-  if (erreur) return <EtatVide icone="personnes" titre={erreur} actionVers="/restaurants" actionTexte={t('orders.emptyAction')} />;
+  // Premier chargement en échec : de quoi réessayer, en plus du retour aux commerces (CROSS-42).
+  if (erreur && !g) return (
+    <EtatVide icone="personnes" titre={erreur} actionVers="/restaurants" actionTexte={t('orders.emptyAction')}>
+      <button type="button" className="btn-outline" onClick={() => { setErreur(null); charger(); }}>{t('restaurantMenu.retry')}</button>
+    </EtatVide>
+  );
   // Chargement dans l'app : le bandeau et la feuille dès la première image (Skeleton.jsx, audit « Look and feel »).
   if (!g) return experienceApp() ? <SqueletteEcran lignes={3} /> : <SkeletonCards count={2} />;
 
-  const lien = `${window.location.origin}/groupe/${g.code}`;
+  const lien = lienPublic(`/groupe/${g.code}`);
   const mesLignes = g.lines.filter((l) => l.mine);
   const panierIci = cart.restaurantId && String(cart.restaurantId) === String(g.restaurant.id) && cart.count > 0;
 
@@ -91,9 +113,16 @@ export default function CommandeGroupee() {
   // L'hôte ferme le groupe : toutes les parts passent dans son panier, puis le panier s'ouvre.
   async function commander(force = false) {
     if (!force && cart.count > 0 && String(cart.restaurantId) !== String(g.restaurant.id)) { setConfirmerRemplacement(true); return; }
+    // Déjà fermé et ses parts déjà dans le panier : on y retourne sans les ajouter une seconde fois (audit du 19/10,
+    // checkout-08 : un second appui doublait chaque plat).
+    if (g.status === 'locked' && groupeACommander(g.restaurant.id) === g.code && String(cart.restaurantId) === String(g.restaurant.id) && cart.count > 0) {
+      navigate('/panier');
+      return;
+    }
     setOccupe(true);
     try {
       const r = await api(`/group-orders/${g.code}/lock`, { method: 'POST', token });
+      retenirGroupeACommander({ code: g.code, restaurantId: r.restaurant.id });
       cart.addMany({
         restaurantId: r.restaurant.id, restaurantName: r.restaurant.name,
         lignes: r.lines.map((l) => ({ itemId: l.itemId, name: l.name, qty: l.qty, optionItemIds: l.optionItemIds, optionsSnapshot: l.optionsSnapshot, unitPrice: l.unitPrice,
@@ -103,8 +132,17 @@ export default function CommandeGroupee() {
       navigate('/panier');
     } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
+  // Annuler / Rouvrir : occupé pendant l'envoi, et « Annuler le groupe » demande confirmation (audit du 19/10, CROSS-48).
   async function hote(action) {
-    try { await api(`/group-orders/${g.code}/${action}`, { method: 'POST', token }); if (action === 'cancel') quitterGroupe(); charger(); } catch (e) { toast(e.message, 'erreur'); }
+    if (occupe) return;
+    setOccupe(true);
+    try {
+      await api(`/group-orders/${g.code}/${action}`, { method: 'POST', token });
+      if (action === 'cancel') quitterGroupe();
+      // Rouvert ou annulé : la prochaine commande de l'hôte ne vaut plus pour ce groupe.
+      oublierGroupeACommander();
+      charger();
+    } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); setAAnnuler(false); }
   }
 
   // Prix payé d'une ligne : son prix plein moins la remise du plat (même règle que le panier, prixPlat.js remiseLigne).
@@ -159,12 +197,16 @@ export default function CommandeGroupee() {
         titre={t('groupOrder.start')}
         sous={`${g.isHost ? t('groupOrder.youHost') : t('groupOrder.hostIs', { name: g.hostFirstName })} · ${t('groupOrder.participants', { n: g.participants })}`}
       >
-        <RouteCommande position={g.status === 'open' ? 46 : 78} depart={8} />
+        <RouteCommande position={g.status === 'open' ? 46 : g.status === 'ordered' ? 92 : 78} depart={8} />
       </BandeauCommande>
 
       <FeuilleCommande>
         {g.status === 'locked' && (
           <p className="eg-note" role="status"><Icone nom="cadenas" taille={18} />{g.isHost ? t('groupOrder.lockedHost') : t('groupOrder.lockedGuest', { name: g.hostFirstName })}</p>
+        )}
+        {/* Commandé et payé par l'hôte (audit du 19/10, checkout-08) : dit à tous, au lieu de « en train de commander » 24 h. */}
+        {g.status === 'ordered' && (
+          <p className="eg-note" role="status"><Icone nom="coche" taille={18} />{g.isHost ? t('groupOrder.orderedHost') : t('groupOrder.orderedGuest', { name: g.hostFirstName })}</p>
         )}
         {['expired', 'cancelled'].includes(g.status) && (
           <p className="eg-note" role="status"><Icone nom="horloge" taille={18} />{t('groupOrder.ended')}</p>
@@ -221,8 +263,8 @@ export default function CommandeGroupee() {
             <div className="eg-hote">
               <p className="eg-petit">{t('groupOrder.hostPays')}</p>
               <div className="eg-actions">
-                {g.status === 'locked' && <button type="button" className="eg-bouton-iris" onClick={() => hote('reopen')}>{t('groupOrder.reopen')}</button>}
-                <button type="button" className="eg-discret" onClick={() => hote('cancel')}>{t('groupOrder.cancel')}</button>
+                {g.status === 'locked' && <button type="button" className="eg-bouton-iris" disabled={occupe} onClick={() => hote('reopen')}>{t('groupOrder.reopen')}</button>}
+                <button type="button" className="eg-discret" disabled={occupe} onClick={() => setAAnnuler(true)}>{t('groupOrder.cancel')}</button>
               </div>
             </div>
           )}
@@ -241,6 +283,16 @@ export default function CommandeGroupee() {
       </FeuilleCommande>
 
       {APPLI && barre}
+      <ConfirmDialog
+        open={aAnnuler}
+        title={t('groupOrder.cancel')}
+        message={t('groupOrder.cancelConfirm')}
+        confirmLabel={t('groupOrder.cancel')}
+        danger
+        loading={occupe}
+        onCancel={() => setAAnnuler(false)}
+        onConfirm={() => hote('cancel')}
+      />
       <ConfirmDialog
         open={!!confirmerRemplacement}
         title={t('groupOrder.replaceTitle')}

@@ -21,11 +21,13 @@ export const OUVERTURE_EMPORTER = new Date(import.meta.env.VITE_PICKUP_OPEN_AT |
  * injoignable laisse l'état tel quel : le serveur refuse de toute façon ce qui n'est pas ouvert.
  * Les composants qui en dépendent appellent useLancement() pour se redessiner au changement. */
 const CLE = 'fairide_lancement';
-let etat = { go: false, goAt: null };
-try { const c = JSON.parse(localStorage.getItem(CLE) || 'null'); if (c && typeof c.go === 'boolean') etat = { go: c.go, goAt: c.goAt || null }; } catch { /* stockage indisponible */ }
+// livraisonMaintenant (audit du 19/10, discovery-02) : après GO, un livreur du pool Fairide est-il libre à l'instant ?
+// Oui/non seulement, jamais un nombre ; null tant qu'on ne sait pas (rien n'est alors retiré de la liste).
+let etat = { go: false, goAt: null, livraisonMaintenant: null };
+try { const c = JSON.parse(localStorage.getItem(CLE) || 'null'); if (c && typeof c.go === 'boolean') etat = { go: c.go, goAt: c.goAt || null, livraisonMaintenant: typeof c.livraisonMaintenant === 'boolean' ? c.livraisonMaintenant : null }; } catch { /* stockage indisponible */ }
 const abonnes = new Set();
 function poser(suivant) {
-  if (suivant.go === etat.go && suivant.goAt === etat.goAt) return;
+  if (suivant.go === etat.go && suivant.goAt === etat.goAt && suivant.livraisonMaintenant === etat.livraisonMaintenant) return;
   etat = suivant;
   try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch { /* stockage indisponible */ }
   abonnes.forEach((f) => f());
@@ -35,7 +37,7 @@ export async function chargerLancement() {
     const r = await fetch(`${API_BASE}/orders/launch`, { cache: 'no-store' });
     if (!r.ok) return;
     const d = await r.json();
-    if (typeof d?.go === 'boolean') poser({ go: d.go, goAt: d.goAt || null });
+    if (typeof d?.go === 'boolean') poser({ go: d.go, goAt: d.goAt || null, livraisonMaintenant: typeof d.livraisonMaintenant === 'boolean' ? d.livraisonMaintenant : null });
   } catch { /* hors ligne : on garde l'état connu */ }
 }
 let suivi = null;
@@ -71,6 +73,11 @@ export function serviceOuvert(type, user) {
 export function dateOuvertureEmporter(locale = 'fr-BE') { return formater(OUVERTURE_EMPORTER, locale); }
 export function commandesOuvertes(user) { return serviceOuvert('pickup', user); }
 export function livraisonOuverte(user) { return serviceOuvert('delivery', user); }
+// La liste des commerces (audit du 19/10, discovery-02) : après GO, aucun livreur du pool Fairide libre maintenant = la
+// livraison n'est pas promise sur les cartes (le serveur la refuserait : NO_COURIER_AVAILABLE). Un commerce qui livre
+// lui-même garde sa vérification sur sa fiche (GET /orders/delivery-available/:id). Les comptes exemptés passent, comme
+// côté serveur.
+export function livreurFairideLibre(user) { return exempte(user) || etat.livraisonMaintenant !== false; }
 
 /* LA LIVRAISON EST-ELLE POSSIBLE CHEZ CE COMMERCE, MAINTENANT ? (GET /orders/delivery-available/:id)
  * Après GO, une livraison demande un livreur disponible à l'instant (lancement.js) : sinon le commerce ne propose que

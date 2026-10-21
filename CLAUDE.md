@@ -109,7 +109,7 @@ found, on the way, delivered, ready for pickup, cancelled; business — order ca
 order still waiting for acceptance; courier — his job ready, cancelled before pickup, withdrawn by the client. Plus, sent
 directly: new order to the business (payment), courier at the door to the client, and **new job to every courier who
 would see it** (`notifLivreurs.js`, same eligibility as `GET /orders/available`, everyone at once, no rating read; a scheduled
-delivery reaches couriers, and this push, only at its slot minus prep, travel and 15 min: `ouvertureLivreurs.js`). Nobody
+delivery reaches couriers, and this push, only at its slot minus prep, travel and 20 min (= the 20-min no-courier cancel window, which so ends when the kitchen must start; Owen 2026-10-21): `ouvertureLivreurs.js`). Nobody
 is notified of their own action (`oublierPush` in the routes). Toggles: `ReglageNotifications.jsx` (client in Mes
 commandes, courier via `NotifCourses.jsx`), `NewOrderAlertBar` (business), and once after sign-up in the app
 (`AmorceNotifications.jsx`). A new status worth a push goes in the trigger and in `pushFile.js` texts, not in a route.
@@ -534,13 +534,21 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   is status + company number + vehicle only; bag and « another platform? » are in the profile's Infos step, the
   municipality comes from the address. The courier profile opens on a « Prochaine étape » card.
   **Since 2026-10-15 (UX audit)** courier signup is three screens (account, identity, address): the company number is
-  optional there (the dossier still requires it before submission, missing item `bce`), there is no ID / selfie step (the
+  optional there (missing item `bce`; since 2026-10-18 the dossier can be SENT without it and the team cannot APPROVE it
+  without it: `MANQUES_APRES_ENVOI`), there is no ID / selfie step (the
   dossier's identity step does it), and no location prompt (PositionRequise asks above the job list). The selfie document
   is not required once Stripe Identity or an in-person check verified the face (`couriers.documentsRequis`). A non-EEA
   courier can *claim* the professional-card exemption (`self_employment_claimed_at`): it unblocks submission only; approval
   and rides still need the team's `self_employment_by_residence`, granted or withdrawn with a reason in Admin › Livreurs ›
   dossier › Documents (audit 2026-10-19, admin-08). The signup draft is kept 48 h in localStorage (declared
-  in `cookies.technical`).
+  in `cookies.technical`). **After approval the dossier is not frozen** (audit 2026-10-19, courier-4 to -7, -30): the
+  approved page (Onboarding.jsx on the site, DossierSuivi.jsx in the app, blocks in dossierBlocs.jsx) lets the courier change
+  zone, vehicle (+ licence and plate when motorised), « other platforms » (1 vs 3 jobs at a time), bag and minimum, upload a
+  renewed residence permit / professional card (date first) and confirm school + year for the yearly student renewal —
+  none of it re-opens the review; the team gets a task (vehicle changed, permit to check). A STATUS change sends the
+  dossier back to draft when the new status needs something (siège, école, contract), else to the team; no offers until
+  re-verified. The daily job also e-mails / pushes 30 and 7 days before a dated document expires
+  (`couriers.rappelerEcheancesPieces`).
 - **Merchant**: card signature, allergen attestation and professional declaration in
   [ConformiteCarte](src/components/conformite/ConformiteCarte.jsx) (menu page); allergens / VAT / alcohol
   per dish in the dish editor; allergy confirmation and ID check at the counter in the orders page.
@@ -549,12 +557,22 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   on the other dashboard pages, read-only in « agir pour ». It replaced the status card, the CarteAValider banner and
   MenuReadiness's merchant list — add a new go-live step there, not in a new banner. Signing the menu now also confirms a
   menu handed over by the team (`carteSignee.signer` sets `menu_confirmed_at`; backend migration 037 repaired shops left hidden).
-- **Courier**: notices to accept before the first ride, biometric consent before Stripe Identity,
-  nationality and residence permit (onboarding); ID check at the door (dashboard).
+- **Courier**: notices to accept before the first ride, biometric consent before Stripe Identity (withdrawable from the
+  identity step and Mon compte › Mes pièces: an open Stripe check is cancelled and the identity goes to an in-person check),
+  nationality and residence permit (onboarding); ID check at the door (dashboard). The team records an identity check in
+  Admin › Livreurs › dossier as « en personne » or « sur la pièce déposée », with the name as printed on the ID; a refusal
+  needs a reason, sent to the courier (audit 2026-10-19, admin-42/43).
 - **Admin**: suspending anyone goes through [DecisionDialog](src/components/admin/DecisionDialog.jsx)
   (facts + contractual basis) — the API refuses a bare `{ status: 'blocked' }`. New compliance tabs
   (decisions, DSA reports, breaches, processors, prohibited products, parameters) are in
   [pages/admin/compliance/](src/pages/admin/compliance/).
+  « Résiliation » is recorded and announced as a termination; a case opened by a report or a check can be closed « aucune
+  mesure ». Lifting goes through the decisions register only: « Réactiver » (Livreurs, Dossiers) and « Rétablir »
+  (Décisions) call `decisionMotivee.retablir` with a reason sent to the person; a status change or an approval never lifts
+  a suspension. People see their decisions and « Contester cette décision » in Mon compte
+  ([MesDecisions](src/components/conformite/MesDecisions.jsx)); the team records an appeal received by e-mail in Décisions
+  (audit 2026-10-19, admin-37 to 40). DSA reports open a task and e-mail the team; « contenu retiré » really hides the dish
+  or deletes the review and sends the statement of reasons to whoever published it (admin-41).
 - **Filings** (admin › Conformité › *Déclarations*, [DeclarationsTab](src/pages/admin/compliance/DeclarationsTab.jsx)):
   DAC7 for both couriers and businesses, CSV exports, the yearly copy sent to each seller, and the art. 17
   platform-work register. Sellers download their own DAC7 copy ([CopieDac7](src/components/conformite/CopieDac7.jsx))
@@ -583,9 +601,9 @@ and the courier's delivery VAT are **not** affected.
 On an order paid online Fairide keeps **10% of the price paid** (`commissionFairide(subtotal, pricing)` = subtotal × r, plus
 Fairide's VAT if it ever becomes VAT-registered; `commission_vat` = 0 under the franchise): a €10 burger gives €1.00 to Fairide,
 €9.00 to the business. The business may raise its prices (`restaurants.price_markup_percent`, requested by the business,
-applied by the team) **up to `hausseMaxPourcent` = r / (1 − r) = 11.1%**, the increase that gives it its full in-store price
-back (€10 → €11.10 → €9.99 for it); never more. One function applies it everywhere (`appliquerHausse` in
-`../fairide-backend/prixMagasin.js`): own price kept in `price_base`/`delta_base`, paid add-ons follow, rounded up to €0.10.
+applied by the team) **up to `hausseMaxPourcent` = 10 %** (founder, 2026-10-16, whatever the VAT regime: €10 → €11.00 → €9.90 for
+it; it was r / (1 − r) = 11.1 % from 10-13 to 10-16); never more. One function applies it everywhere (`appliquerHausse` in
+`../fairide-backend/prixMagasin.js`): own price kept in `price_base`/`delta_base`, paid add-ons follow, rounded DOWN to €0.10 (`pricing.js`, `prixMagasin.js`; the team's « adjust all prices » tool rounds the same way, audit admin-31).
 The « C'est bon » page offers the max increase in one tap, only on cards with checked in-store prices.
 The customer additionally pays the **delivery fee only — nothing is added on top** (model of 2026-10-08 evening):
 €5 excl. VAT for the first km, then €0.80 excl. VAT per started km, 21% VAT added (€6.05 incl. VAT minimum). **10% of it
@@ -664,7 +682,7 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   texts were rewritten, and `envoyer()` runs `sansTiretsCadratins` on subject and body as a safety net; subjects end « | Fairide ».
 - **Couriers**: two statuses only (P2P removed); they set their minimum per ride and per km and only see offers above it
   (the customer's delivery fee rises to the cheapest courier's minimum, capped); **no delivery rating**; suspension only for
-  fraud, serious misconduct or legal obligation; random check selfie at shift start (`controleSelfie.js`); grid of the 8
+  fraud, serious misconduct or legal obligation; random check selfie at shift start, only when the courier is really available (not paused, Stripe active, after GO), with 60 min to take it while jobs keep coming (`DELAI_SELFIE_MIN`, Owen 2026-10-21; `controleSelfie.js`); grid of the 8
   criteria of art. 337/3 in Admin › Conformité. Never add a rating, ranking or penalty — that is criterion 6°/7°.
 - **Accounting**: monthly export (`comptaMensuelle.js`) separates Fairide sales from third-party funds and is emailed once to
   the archive address; subscription invoices are Fairide's own (`FAIRIDE-ABO-…`) and go through Peppol.
@@ -683,7 +701,10 @@ the job, and the system fee (inside the delivery fee) from Fairide. The backend 
   destination (the server strips the client's name, phone and house number before the job is taken);
 - [EspaceVendeurLivreur](src/components/conformite/EspaceVendeurLivreur.jsx) — minimum fee and the
   courier's sale documents (self-billing mandate, accepted in the notices step);
-- admin › Conformité › *Attribution des courses* ([DispatchTab](src/pages/admin/compliance/DispatchTab.jsx)).
+- admin › Conformité › *Attribution des courses* ([DispatchTab](src/pages/admin/compliance/DispatchTab.jsx)): delivery settings, and the
+  evidence that refusing costs nothing as **aggregates only** — couriers grouped by refusal-rate band, average offers
+  received per band, shown only when a band has at least 5 couriers (backend `statsAttribution.js`). No per-courier row,
+  no « # » rank, on screen or in the CRT ZIP (founder, 2026-10-21: « if it's a driver classement let's not have any »).
 
 Never add anything that ranks, rates or penalises couriers for refusing: the backend's
 `tests/trois-vendeurs.test.js` fails if dispatch starts reading such data, and the courier notice promises it.
@@ -761,7 +782,7 @@ delivery) or `VITE_DELIVERY_OPEN_AT` / `VITE_ONLINE_PAYMENT_OPEN_AT` (unused; st
   between activation and GO (`prolongerEssais`: the free month counts from the opening). A Stripe failure opens an
   admin task instead of blocking.
 - **After GO, no courier = no delivery.** `lancement.livreursDisponibles` counts couriers who could take the job now:
-  approved, Stripe active, status verified, not paused, not test, no job in hand, no pending selfie check, right pool
+  approved, Stripe active, status verified, not paused, not test, no job in hand, no selfie check past its 60-min deadline, right pool
   (`delivery_mode` own/fairide), bikes only within `VELO_MAX_KM`. Zero → order and quote refused with
   `NO_COURIER_AVAILABLE` (409). It only COUNTS couriers: never add ratings, rankings or acceptance history to it
   (employment-presumption rule, see `notifLivreurs.js`). Scheduled orders are judged like immediate ones.

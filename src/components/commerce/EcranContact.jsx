@@ -42,23 +42,29 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
   }, [restoId, token]);
   const majResponsable = (i, champ, v) => setResponsables((l) => l.map((x, j) => (j === i ? { ...x, [champ]: v } : x)));
 
+  // DEUX APPELS, DITS COMME TELS (audit du 19/10, shop-332) : les responsables partent d'abord (route à part, jamais dans la
+  // fiche publique), puis le reste. Si le second échoue, le toast dit que les responsables, eux, sont enregistrés — avant,
+  // seule l'erreur s'affichait et on croyait que rien n'était passé.
   const valider = async () => {
     if (responsables) {
       try {
         await api(`/restaurants/${restoId}/managers`, { method: 'PUT', token, body: { managers: responsables.filter((r) => r.name.trim() || r.phone.trim()) } });
       } catch (e) { toast(e.message, 'erreur'); return; }
     }
-    return enregistrerContact();
+    return enregistrerContact(responsables ? { prefixeErreur: t('editResto.managersSavedRestFailed') } : undefined);
   };
-  const enregistrerContact = () => enregistrer({
+  const enregistrerContact = (options) => enregistrer({
     phone: tel.trim(), phoneSecondary: tel2Ouvert ? tel2.trim() : '',
     phonePublic: telPublic, phoneSecondaryPublic: tel2Ouvert ? tel2Public : true,
     email: mail.trim(), emailSecondary: mail2Ouvert ? mail2.trim() : '',
     website: site.trim(), instagram: instagram.trim(), facebook: facebook.trim()
-  });
+  }, options);
+  // Saisie en cours (shop-321) : le sous-écran demande avant de se fermer sans enregistrer.
+  const modifie = tel !== (restaurant.phone || '') || mail !== (restaurant.email || '') || site !== (restaurant.website || '')
+    || instagram !== (restaurant.instagram || '') || facebook !== (restaurant.facebook || '');
 
   return (
-    <SousEcran titre={t('editResto.rowContact')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />}>
+    <SousEcran titre={t('editResto.rowContact')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />} modifie={modifie}>
       <div className="field">
         <label htmlFor="commerce-tel">{t('editResto.phoneOnSite')}</label>
         <PhoneInput id="commerce-tel" value={tel} onChange={setTel} autoComplete="off" />
@@ -107,8 +113,10 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
               <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                 <input style={{ flex: 1 }} aria-label={t('auth.managerName')} placeholder={t('auth.managerNamePh')} value={r.name} onChange={(e) => majResponsable(i, 'name', e.target.value)} />
                 {r.role === 'owner' && <span className="pill">{t('editResto.managerOwner')}</span>}
-                <button type="button" className="btn-ghost btn-sm" onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))}>{t('editResto.removeSecond')}</button>
+                <button type="button" className="btn-ghost btn-sm" onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))} aria-label={t('auth.managerRemoveA11y', { n: i + 1 })}>{t('editResto.removeSecond')}</button>
               </div>
+              {/* Nommé, et « Retirer » dit qui il retire (audit du 19/10, CROSS-89/109). */}
+              <label className="sr-only" htmlFor={`commerce-resp-${i}`}>{t('auth.managerPhoneA11y', { n: i + 1 })}</label>
               <div style={{ marginTop: 6 }}><PhoneInput id={`commerce-resp-${i}`} value={r.phone} onChange={(v) => majResponsable(i, 'phone', v)} autoComplete="off" /></div>
             </div>
           ))}

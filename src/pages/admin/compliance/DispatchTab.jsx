@@ -11,9 +11,12 @@ import { ErrorCard } from '../../../components/admin/AdminListTools';
  * 1. Réglages de la livraison — hausse par paliers du prix proposé (payée par Fairide), annulation
  *    automatique faute de livreur (vide = jamais), vendeur de la livraison (« fairide » = repli, seulement
  *    si l'avocat l'impose). Backend : PATCH /admin/compliance/parameters, bornes vérifiées côté serveur.
- * 2. Export mensuel anonymisé « offres reçues / refus / prises » par livreur : la pièce qui montre que les
- *    offres reçues ne baissent pas avec les refus (présomption de salariat, critère « sanction du refus »).
- *    Pas de nom, pas d'identifiant : un rang. Ce tableau n'alimente AUCUNE décision — il sert de preuve.
+ * 2. « Offres reçues / refus / prises » du mois, EN AGRÉGATS : la pièce qui montre que les offres reçues ne baissent
+ *    pas avec les refus (présomption de salariat, critère « sanction du refus »). Plus de ligne par livreur ni de
+ *    rang « # » (audit du 19/10, admin-76 ; fondateur, 21/10 : « if it's a driver classement let's not have any ») :
+ *    avec 5 à 10 livreurs, « n° 1, 40 % de refus » se reconnaissait. Les livreurs sont répartis par tranche de part
+ *    de refus, avec la moyenne d'offres reçues par tranche, seulement si elle compte au moins 5 livreurs
+ *    (fairide-backend/statsAttribution.js). Ces chiffres n'alimentent AUCUNE décision : ils servent de preuve.
  * 3. Dossier CRT (G6) — archive pour la demande d'avis : contrat type, notice, géolocalisation, dispatch,
  *    six mois de statistiques anonymisées. Les captures d'écran s'y ajoutent à la main (liste dans l'archive). */
 const CLES = ['delivery_bump_cents', 'delivery_bump_every_min', 'delivery_bump_cap_cents', 'delivery_no_courier_cancel_min'];
@@ -70,16 +73,25 @@ export default function DispatchTab() {
         <input id={`${id}-mois`} type="month" value={mois} onChange={(e) => e.target.value && setMois(e.target.value)} />
       </div>
       {!stats && !erreur && <SkeletonCards count={1} />}
-      {stats && stats.couriers.length === 0 && <p className="small">{t('conformite.dispatchEmpty')}</p>}
-      {stats && stats.couriers.length > 0 && (
-        <div style={{ overflowX: 'auto' }}>
-          <table className="admin-table">
-            <thead><tr><th>#</th><th>{t('conformite.dispatchOffers')}</th><th>{t('conformite.dispatchRefused')}</th><th>{t('conformite.dispatchAccepted')}</th><th>{t('conformite.dispatchRefusalRate')}</th></tr></thead>
-            <tbody>
-              {stats.couriers.map((c) => <tr key={c.rank}><td>{c.rank}</td><td>{c.offers}</td><td>{c.refused}</td><td>{c.accepted}</td><td>{c.refusalRate} %</td></tr>)}
-            </tbody>
-          </table>
-        </div>
+      {stats && !stats.couriers && <p className="small">{t('conformite.dispatchEmpty')}</p>}
+      {stats && stats.couriers > 0 && (
+        <>
+          <p className="small" style={{ margin: '0 0 6px' }}>{t('conformite.dispatchTotals', { couriers: stats.couriers, offers: stats.offers, refused: stats.refused, accepted: stats.accepted })}</p>
+          <div className="table-scroll">
+            <table className="admin-table">
+              <thead><tr><th scope="col">{t('conformite.dispatchBand')}</th><th scope="col">{t('conformite.dispatchBandCouriers')}</th><th scope="col">{t('conformite.dispatchAvgOffers')}</th></tr></thead>
+              <tbody>
+                {(stats.bands || []).map((b) => (
+                  <tr key={b.band}>
+                    <th scope="row">{t('conformite.dispatchBandLabel', { band: b.band })}</th>
+                    <td>{b.tooFew ? t('conformite.dispatchFewer', { n: stats.minPerBand }) : b.couriers}</td>
+                    <td>{b.tooFew ? t('conformite.dispatchTooFew') : b.avgOffers ?? '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <h4 style={{ marginTop: 20 }}>{t('conformite.crtTitle')}</h4>

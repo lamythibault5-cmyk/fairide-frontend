@@ -16,6 +16,8 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
 import EtatVide from '../../components/EtatVide';
+import ErrorCard from '../../components/ErrorCard';
+import { eurosCourt, libellePromo } from '../../prixPlat';
 
 /* PROMOTIONS — BANDEAU IRIS ET FEUILLE BLANCHE, DANS L'APP COMME SUR LE SITE (fondateur, 2026-10-19, « Proposal » de la
  * section 4 de finitions-appli.html). Sur le bandeau, le titre et le compte (« 1 active · 1 en pause ») ; dans la feuille,
@@ -40,7 +42,8 @@ const ICONES = { percent: 'etiquette', bogo: 'cadeau', cart_threshold: 'sac' };
 const MONTANTS_PRODUIT = [0.5, 1, 1.5, 2, 3];
 const POURCENTS_PRODUIT = [5, 10, 15];
 const MONTANTS_LIVRAISON = [1, 1.5, 2, 3];
-const eur = (v) => `${Number(v).toFixed(2).replace('.', ',').replace(/,00$/, '')} €`;
+// Dans la langue affichée (« €1.50 » en anglais), plus « 1,50 € » partout (audit du 19/10, shop-119).
+const eur = (v) => eurosCourt(v);
 
 /* Les deux options deviennent des rangées à interrupteur (2026-10-19). Allumer n'enregistre rien encore : il faut un
  * montant, donc l'interrupteur ouvre le choix sous la rangée (euros ou pourcentage, puis le montant) et c'est le montant
@@ -172,9 +175,11 @@ export default function PromotionsPage() {
   const [togglingId, setTogglingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [aSupprimer, setASupprimer] = useState(null);
-
+  // Échec du chargement : « Chargement... » restait affiché pour toujours (audit du 19/10, shop-113).
+  const [erreurPromos, setErreurPromos] = useState('');
   function loadPromos() {
-    api(`/restaurants/${restoId}/promotions/mine`, { token }).then(setPromos).catch((e) => toast(e.message, 'erreur'));
+    setErreurPromos('');
+    api(`/restaurants/${restoId}/promotions/mine`, { token }).then(setPromos).catch((e) => setErreurPromos(e.message));
   }
 
   useEffect(() => {
@@ -186,10 +191,11 @@ export default function PromotionsPage() {
     setSaving(true);
     try {
       if (type === 'cart_threshold') {
-        const x = Number(discountValue);
-        const y = Number(minCartTotal);
-        if (!x || x <= 0) { toast(t('promosPage.toastAmount')); setSaving(false); return; }
-        if (!y || y <= x) { toast(t('promosPage.toastThreshold')); setSaving(false); return; }
+        // Virgule acceptée (audit du 19/10, CROSS-62).
+        const x = Number(String(discountValue).replace(',', '.'));
+        const y = Number(String(minCartTotal).replace(',', '.'));
+        if (!x || x <= 0) { toast(t('promosPage.toastAmount'), 'erreur'); setSaving(false); return; }
+        if (!y || y <= x) { toast(t('promosPage.toastThreshold'), 'erreur'); setSaving(false); return; }
         await api(`/restaurants/${restoId}/promotions`, { method: 'POST', token, body: { discountValue: x, minCartTotal: y } });
       } else {
         if (!itemId) { toast(t('promosPage.toastChooseDish'), 'erreur'); setSaving(false); return; }
@@ -240,7 +246,9 @@ export default function PromotionsPage() {
   const compte = propres === null ? null : propres.length === 0 ? t('promosPage.none')
     : [actives > 0 && t(actives > 1 ? 'promosPage.countActive_other' : 'promosPage.countActive_one', { n: actives }),
       enPause > 0 && t('promosPage.countPaused', { n: enPause })].filter(Boolean).join(' · ');
-  const titrePromo = (p) => (p.itemName ? `${p.label} · ${p.itemName}` : p.label);
+  // Libellé recomposé dans la langue affichée (prixPlat.libellePromo, comme côté client) : le libellé enregistré par le
+  // serveur est en français (« 1 acheté = 1 offert ») et s'affichait tel quel en anglais et en néerlandais (shop-115).
+  const titrePromo = (p) => { const l = libellePromo(p, t) || p.label; return p.itemName ? `${l} · ${p.itemName}` : l; };
 
   // Les champs d'une nouvelle promotion : dans la feuille sur le site, dans une feuille par-dessus dans l'app.
   const champsPromo = (
@@ -284,11 +292,11 @@ export default function PromotionsPage() {
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor={idsA11y + '-amountoff'}>{t('promosPage.amountOff')}</label>
-              <input id={idsA11y + '-amountoff'} type="number" step="0.5" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="5" />
+              <input id={idsA11y + '-amountoff'} inputMode="decimal" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="5" />
             </div>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor={idsA11y + '-threshold'}>{t('promosPage.threshold')}</label>
-              <input id={idsA11y + '-threshold'} type="number" step="0.5" value={minCartTotal} onChange={(e) => setMinCartTotal(e.target.value)} placeholder="30" />
+              <input id={idsA11y + '-threshold'} inputMode="decimal" value={minCartTotal} onChange={(e) => setMinCartTotal(e.target.value)} placeholder="30" />
             </div>
           </div>
         )}
@@ -299,7 +307,8 @@ export default function PromotionsPage() {
   return (
     <CadreSite appli lecture classe="ec-promos" titre={t('promosPage.title')} sous={compte ?? '…'}>
       <p className="ec-feuille-titre">{t('promosPage.ownPromosTitle')}</p>
-      {propres === null && <p className="ec-aide">{t('promosPage.loading')}</p>}
+      {propres === null && erreurPromos && <ErrorCard message={erreurPromos} onRetry={loadPromos} />}
+      {propres === null && !erreurPromos && <p className="ec-aide">{t('promosPage.loading')}</p>}
       {propres !== null && propres.length === 0 && !formOpen && <EtatVide icone="etiquette" titre={t('promosPage.none')} />}
       {propres !== null && propres.length > 0 && (
         <div className="ec-lignes">

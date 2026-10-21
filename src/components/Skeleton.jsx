@@ -9,12 +9,17 @@
  * Styles : « Chargement en bandeau et feuille » dans styles.css. Le vélo roule aussi sur la route des bandeaux déjà affichés
  * tant que leur feuille contient un squelette (même bloc, :has). */
 import { createPortal } from 'react-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export function SkeletonCards({ count = 3 }) {
+  const { t } = useLanguage();
+  // Les lignes grises restent muettes, mais l'attente est dite (audit du 19/10, CROSS-93) : tout aria-hidden, un lecteur
+  // d'écran ne trouvait rien sur la page pendant le chargement.
   return (
-    <div className="sq-lignes" aria-hidden="true">
+    <div className="sq-lignes">
+      <span className="sr-only" role="status">{t('accountUi.loading')}</span>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="sq-ligne">
+        <div key={i} className="sq-ligne" aria-hidden="true">
           <span className="skeleton sq-vignette" />
           <span className="sq-traits"><i className="skeleton" /><i className="skeleton" /></span>
         </div>

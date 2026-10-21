@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 const PreviewModeContext = createContext(null);
 const STORAGE_KEY = 'fairide_preview_mode';
@@ -23,6 +23,13 @@ export function PreviewModeProvider({ children }) {
     sessionStorage.removeItem(STORAGE_KEY);
     setPreviewMode(false);
   }, []);
+
+  // La déconnexion termine l'aperçu (audit du 19/10, shop-415) : le compte suivant, dans le même onglet ou la même app,
+  // démarrait en mode aperçu avec la barre d'onglets du client. AuthContext annonce la déconnexion par cet événement.
+  useEffect(() => {
+    window.addEventListener('fairide:deconnexion', exitPreview);
+    return () => window.removeEventListener('fairide:deconnexion', exitPreview);
+  }, [exitPreview]);
 
   // Sans cette mémoïsation, chaque rendu d'un fournisseur EXTÉRIEUR (langue, toast, session) faisait
   // passer une valeur neuve mais identique, et re-rendait tout ce qui appelle usePreviewMode().

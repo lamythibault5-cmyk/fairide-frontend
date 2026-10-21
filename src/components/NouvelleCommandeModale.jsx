@@ -55,8 +55,10 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders, ready]);
 
-  // Une autre commande ouverte : son propre temps de préparation, un exemplaire.
-  useEffect(() => { setEnPlus(0); setExemplaires(1); }, [ouverte]);
+  // Une autre commande ouverte : son propre temps de préparation, et le nombre minimum d'exemplaires (deux pour une livraison :
+  // sac du client + cuisine, backend impressions.js ; audit du 19/10, shop-228).
+  const typeOuverte = orders.find((x) => x.id === ouverte)?.orderType;
+  useEffect(() => { setEnPlus(0); setExemplaires(typeOuverte === 'delivery' ? 2 : 1); }, [ouverte, typeOuverte]);
 
   useEffect(() => {
     if (!ouverte || !restoId) return;
@@ -75,20 +77,27 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
   async function reimprimer() {
     setEnvoi(true);
     try {
-      await api(`/orders/${o.id}/print`, { method: 'POST', token, body: { copies: exemplaires } });
-      toast(exemplaires > 1 ? t('ordersResto.toastTicketSentN', { n: exemplaires }) : t('ordersResto.ticketSentTerminal'));
+      const r = await api(`/orders/${o.id}/print`, { method: 'POST', token, body: { copies: exemplaires } });
+      const n = r?.jobIds?.length || exemplaires;
+      toast(n > 1 ? t('ordersResto.toastTicketSentN', { n }) : t('ordersResto.ticketSentTerminal'));
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); }
   }
 
   async function agir(chemin, body, succes) {
-    if (action) return;
+    if (action) return false;
     setAction(chemin);
     try {
       await api(`/orders/${o.id}/${chemin}`, { method: 'PATCH', token, body });
       succes?.();
       fermer();
       await loadDashboard?.(restoId, { fiche: false, annexes: false, silencieux: true });
-    } catch (e) { toast(e.message, 'erreur'); } finally { setAction(null); }
+      return true;
+    } catch (e) {
+      toast(e.message, 'erreur');
+      // Acceptée ou refusée ailleurs entre-temps : relue tout de suite, la feuille se ferme d'elle-même (shop-214).
+      loadDashboard?.(restoId, { fiche: false, annexes: false, silencieux: true });
+      return false;
+    } finally { setAction(null); }
   }
   // Accepter une demande d'allergie, c'est s'engager à la respecter (A1) : on le fait confirmer, comme sur la carte.
   const accepter = (allergyAck = false) => agir('accept', { extraMinutes: enPlus, ...(allergyAck ? { allergyAck: true } : {}) }, () => { vibrer('succes'); toast(t('serviceCommerce.toastAcceptee', { num }), 'succes'); });
@@ -138,7 +147,7 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
                   <Icone nom="imprimante" taille={18} /><span className="nc-imprimer-mot">{envoi ? t('ordersResto.printing') : t('serviceCommerce.imprimer')}</span>
                 </button>
                 <span className="exemplaires" role="group" aria-label={t('ordersResto.copiesLabel')}>
-                  <button type="button" className="btn-ghost" disabled={exemplaires <= 1} onClick={() => setExemplaires((v) => Math.max(1, v - 1))} aria-label="−">−</button>
+                  <button type="button" className="btn-ghost" disabled={exemplaires <= (o.orderType === 'delivery' ? 2 : 1)} onClick={() => setExemplaires((v) => Math.max(o.orderType === 'delivery' ? 2 : 1, v - 1))} aria-label="−">−</button>
                   <b aria-live="polite">{exemplaires}</b>
                   <button type="button" className="btn-ghost" disabled={exemplaires >= 5} onClick={() => setExemplaires((v) => Math.min(5, v + 1))} aria-label="+">+</button>
                 </span>
@@ -148,15 +157,19 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
           </div>
         </div>
       </Modale>
-      {/* Motif obligatoire : le serveur le refuse sans (MOTIF_REQUIS) et le transmet au client. */}
+      {/* Motif obligatoire : le serveur le refuse sans (MOTIF_REQUIS) et le transmet au client. Payée sur place, rien n'est à
+          rembourser : le texte ne promet plus de remboursement (audit du 19/10, shop-205). Il envoie le statut vu (shop-208) :
+          refusée seulement si elle attend encore ; la fenêtre reste ouverte si l'envoi échoue (shop-222). */}
       <ReasonDialog open={aRefuser} danger
         title={t('ordersResto.confirmRefuseTitle')}
-        message={`${t('ordersResto.confirmRefuseText', { name: o.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
+        message={`${t(o.paymentMode === 'on_site' ? 'ordersResto.confirmRefuseTextOnSite' : 'ordersResto.confirmRefuseText', { name: o.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
         label={t('ordersResto.refuseReasonLabel')}
         placeholder={t('ordersResto.refuseReasonPlaceholder')}
         confirmLabel={t('ordersResto.refuse')}
+        suggestions={[t('ordersResto.refuseReason1'), t('ordersResto.refuseReason2'), t('ordersResto.refuseReason3')]}
+        loading={action === 'refuse'}
         onCancel={() => setARefuser(false)}
-        onConfirm={(motif) => { setARefuser(false); agir('refuse', { reason: motif }); }} />
+        onConfirm={async (motif) => { if (await agir('refuse', { reason: motif, expectedStatus: 'nouveau' })) setARefuser(false); }} />
       <ConfirmDialog open={allergie}
         title={t('conformite.allergyConfirmTitle')}
         message={t('conformite.allergyConfirmText', { request: o.allergyRequest || '' })}

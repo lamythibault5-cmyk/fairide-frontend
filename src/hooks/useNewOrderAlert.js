@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { raisonFermeture } from '../components/commerce/raisonFermeture';
 
 // Alerte du restaurateur à l'arrivée d'une commande.
 //
@@ -189,7 +190,11 @@ export default function useNewOrderAlert(orders, ready) {
   const newCount = newOrders.length;
 
   const ctxRef = useRef(null);
-  const prevCountRef = useRef(null);
+  // Les commandes « nouvelle » déjà vues (audit du 19/10, shop-215) : comparer les NOMBRES ratait une arrivée quand, dans le
+  // même sondage, une autre commande sortait (expirée, annulée par le client) — compte inchangé, ni son ni notification,
+  // alors que la feuille « Nouvelle commande », qui compare les identifiants, s'ouvrait. Même règle ici.
+  const prevIdsRef = useRef(null);
+  const cleNouvelles = newOrders.map((o) => o.id).sort().join(',');
 
   const setSoundEnabled = useCallback((value) => {
     setSoundEnabledState(value);
@@ -289,22 +294,24 @@ export default function useNewOrderAlert(orders, ready) {
     try { jouerSonnerie(ctx, sonnerie, gainRef.current || ctx.destination); } catch { /* contexte audio fermé par le navigateur */ }
   }, [soundEnabled, sonnerie]);
 
-  // Sonne + notifie à chaque NOUVELLE commande, pas à chaque rafraîchissement. prevCountRef démarre à
+  // Sonne + notifie à chaque NOUVELLE commande, pas à chaque rafraîchissement. prevIdsRef démarre à
   // null pour distinguer le tout premier chargement (où l'on ne veut pas sonner pour des commandes
   // déjà présentes avant l'ouverture de la page) d'une vraie arrivée.
   useEffect(() => {
     // Tant que les données ne sont pas chargées, on n'établit aucune référence : le premier VRAI
     // chargement sert de point de départ, et seules les commandes arrivées après déclenchent l'alerte.
     if (!ready) return;
-    const prev = prevCountRef.current;
-    prevCountRef.current = newCount;
-    if (prev === null || newCount <= prev) return;
+    const ids = cleNouvelles ? cleNouvelles.split(',') : [];
+    const prev = prevIdsRef.current;
+    prevIdsRef.current = new Set([...(prev || []), ...ids]);
+    if (prev === null) return;
+    const arrived = ids.filter((id) => !prev.has(id)).length;
+    if (!arrived) return;
     // Nouvelle arrivée : le compte des sonneries repart, et une alarme coupée se rallume.
     setJouees(1);
     setCoupee(false);
     ring();
 
-    const arrived = newCount - prev;
     // Un tag constant remplace la notification précédente au lieu d'en empiler une par sondage.
     notifier(arrived > 1 ? t('alertBar.notifTitleMany', { n: arrived }) : t('alertBar.notifTitleOne'),
       { body: t('alertBar.notifBody'), icon: '/icons/icon.svg', tag: 'fairide-new-order' });
@@ -312,11 +319,13 @@ export default function useNewOrderAlert(orders, ready) {
     // commande en attente au chargement ne rejouait jamais cet effet au passage de ready à true (le
     // compteur restant à 0), la référence n'était donc jamais posée — et la toute première commande
     // reçue repartait par la branche `prev === null`, sans un son.
-  }, [newCount, ring, ready]);
+  }, [cleNouvelles, ring, ready]);
 
-  // Annulation par le client (possible tant que la commande n'est pas acceptée) : on compare les
-  // statuts d'un sondage à l'autre. Une commande vue « nouveau » et revue « annule » déclenche un son
-  // descendant (distinct du carillon d'arrivée), un toast et une notification système.
+  // Annulation (client, délai dépassé, faute de livreur, client absent…) : on compare les statuts d'un sondage à l'autre.
+  // Une commande vue en cours et revue « annule » déclenche un son descendant (distinct du carillon d'arrivée), un toast et
+  // une notification système, avec SA raison (audit du 19/10, shop-203 : tout s'annonçait « annulée par le client avant
+  // acceptation »). Le geste du commerce lui-même (client pas venu, contrôle d'âge au comptoir) ne sonne pas : son propre
+  // toast reste affiché (raisonFermeture.js).
   const prevStatusRef = useRef(null);
   useEffect(() => {
     if (!ready) return;
@@ -324,12 +333,15 @@ export default function useNewOrderAlert(orders, ready) {
     const actuel = new Map(orders.map((o) => [o.id, o.status]));
     prevStatusRef.current = actuel;
     if (!prev) return;
-    const annulees = orders.filter((o) => o.status === 'annule' && prev.has(o.id) && !['annule', 'refuse'].includes(prev.get(o.id)));
+    const annulees = orders.filter((o) => o.status === 'annule' && prev.has(o.id) && !['annule', 'refuse'].includes(prev.get(o.id)))
+      .map((o) => ({ o, raison: raisonFermeture(o, prev.get(o.id)) }))
+      .filter((x) => x.raison && !x.raison.propre);
     if (!annulees.length) return;
     const ctx = ctxRef.current;
     if (soundEnabled && ctx && ctx.state === 'running') { try { playChime(ctx, [660, 440], gainRef.current || ctx.destination); } catch { /* contexte fermé */ } }
-    toast(annulees.length > 1 ? t('alertBar.cancelToastMany', { n: annulees.length }) : t('alertBar.cancelToastOne', { client: annulees[0].clientName || '' }));
-    notifier(t('alertBar.cancelNotifTitle'), { body: t('alertBar.cancelNotifBody'), icon: '/icons/icon.svg', tag: 'fairide-order-cancelled' });
+    const texte = annulees.length > 1 ? t('alertBar.cancelToastMany', { n: annulees.length }) : t(annulees[0].raison.cle, { client: annulees[0].o.clientName || '' });
+    toast(texte);
+    notifier(t('alertBar.cancelNotifTitle'), { body: texte, icon: '/icons/icon.svg', tag: 'fairide-order-cancelled' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders, ready]);
 
@@ -355,11 +367,12 @@ export default function useNewOrderAlert(orders, ready) {
 
   useEffect(() => {
     const base = baseTitleRef.current || 'Fairide';
+    // Dans la langue du commerce : le compteur était écrit en dur en français (audit du 19/10, shop-220).
     document.title = newCount > 0
-      ? `(${newCount}) Nouvelle${newCount > 1 ? 's' : ''} commande${newCount > 1 ? 's' : ''}, ${base}`
+      ? t(newCount > 1 ? 'alertBar.tabTitleMany' : 'alertBar.tabTitleOne', { n: newCount, base })
       : base;
     return () => { document.title = base; };
-  }, [newCount]);
+  }, [newCount, t]);
 
   return { audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme };
 }

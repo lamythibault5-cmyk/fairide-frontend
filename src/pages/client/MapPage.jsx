@@ -6,6 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
 import { RESTAURANT_TYPES, restaurantTypeLabel, haversineDistanceKm } from '../../menuCategories';
 import Icone from '../../components/Icone';
+import { kmLisible } from '../../prixPlat';
 import VisuelVide from '../../components/VisuelVide';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import { cacherImageCassee } from '../../images';
@@ -77,9 +78,16 @@ export default function MapPage() {
    * souris. Mêmes filtres, mêmes commerces, même ordre que les épingles. Jamais dans l'app, ni sur un téléphone. */
   const colonne = useSiteLarge(1100);
 
-  useEffect(() => {
-    api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
-  }, []);
+  // Liste pas lue (réseau, serveur) : « Aucun commerce avec ces filtres » était faux (audit du 19/10, CROSS-34). On dit que
+  // le chargement a échoué, avec « Réessayer ».
+  const [echec, setEchec] = useState(false);
+  const charger = () => {
+    setEchec(false);
+    setChargement(true);
+    api('/restaurants').then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { charger(); }, []);
 
   // Plus aucun appel périodique ici. Cette page interrogeait /orders/mine toutes les trente
   // secondes, uniquement pour savoir s'il fallait afficher le bandeau « ta livraison est en
@@ -143,7 +151,7 @@ export default function MapPage() {
       </span>
       <span className="carte-fiche-texte">
         <b className="carte-fiche-nom"><span>{r.name}</span>{r.certified && <CertifiedBadge size={14} />}</b>
-        <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.neighborhood, r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ')}</small>
+        <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.neighborhood, r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ')}</small>
         <small className="carte-fiche-infos">
           {/* Pas d'étoile sans avis : une note que personne n'a donnée n'est pas un avis (CDE VI.100). */}
           {r.reviewCount > 0
@@ -241,7 +249,12 @@ export default function MapPage() {
               qu'à fermer un panneau déjà fermé. « Tout réinitialiser » n'apparaît, lui, que
               lorsqu'il y a vraiment quelque chose à remettre à zéro. */}
           <div className="carte-ligne-etat">
-            {!chargement && (
+            {!chargement && echec && (
+              <p className="carte-compte">
+                {t('common.loadFailedTitle')}. <button type="button" className="carte-reinit" onClick={charger}>{t('common.retry')}</button>
+              </p>
+            )}
+            {!chargement && !echec && (
               <p className="carte-compte">
                 {liste.length === 0 ? t('mapClient.noneMatch') : t('mapClient.count', { n: liste.length })}
               </p>
@@ -269,7 +282,7 @@ export default function MapPage() {
                     </span>
                     <span className="carte-fiche-texte">
                       <b className="carte-fiche-nom"><span>{r.name}</span>{r.certified && <CertifiedBadge size={14} />}</b>
-                      <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ')}</small>
+                      <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ')}</small>
                       <small>
                         {/* Pas d'étoile sans avis (CDE VI.100), comme la fiche du commerce touché. */}
                         {r.reviewCount > 0

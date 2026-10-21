@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StarsDisplay } from './Stars';
 import FichePlat from './FichePlat';
+import Modale from './Modale';
 import MenuCategorySections from './MenuCategorySections';
 import { resolveItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
@@ -19,6 +20,8 @@ function lineKeyFor(itemId, optionItemIds) {
 // précise qu'un vrai paiement serait déclenché côté client.
 export default function RestaurantPreview({ restaurant }) {
   const { t } = useLanguage();
+  const menuVisible = (restaurant.menu || []).filter((m) => !m.allergensMissing && !m.alcoholUnavailable && !m.withdrawn);
+  const masques = (restaurant.menu || []).filter((m) => m.allergensMissing || m.alcoholUnavailable || m.withdrawn);
   const [lines, setLines] = useState({});
   const [pickerItem, setPickerItem] = useState(null);
   const [fulfillmentType, setFulfillmentType] = useState('delivery');
@@ -51,6 +54,10 @@ export default function RestaurantPreview({ restaurant }) {
     else addOne(item.id, item.price);
   }
 
+  // CE QUE LE CLIENT VOIT VRAIMENT (audit du 19/10, discovery-26). La fiche lue par le commerce contient toute sa carte ; le
+  // public ne reçoit pas les plats aux allergènes non déclarés, l'alcool qu'il ne peut pas vendre, ni les plats retirés
+  // (routes/restaurants.js, ficheDeListe). L'aperçu montrait ces plats comme si les clients les voyaient : il applique le même
+  // filtre et dit combien sont masqués.
   const count = Object.values(lines).reduce((a, l) => a + l.qty, 0);
   let subtotal = 0;
   Object.values(lines).forEach((l) => { subtotal += l.unitPrice * l.qty; });
@@ -86,8 +93,18 @@ export default function RestaurantPreview({ restaurant }) {
             {t('restoPreview.promosBanner')}
           </div>
         )}
-        {restaurant.menu.length === 0 && <div className="empty">{t('restoPreview.emptyMenu')}</div>}
-        <MenuCategorySections menu={restaurant.menu} sections={restaurant.sections || []} onAdd={addToCart} />
+        {/* CE QUE VOIENT LES CLIENTS (audit du 19/10, shop-413) : la fiche publique masque un plat sans allergènes déclarés et
+            l'alcool tant qu'il n'est pas autorisé (backend routes/restaurants.js) ; l'aperçu les montrait et laissait les ajouter.
+            Ils sont listés à part, sans bouton d'ajout, pour que le commerce sache pourquoi un plat manque. */}
+        {menuVisible.length === 0 && <div className="empty">{t('restoPreview.emptyMenu')}</div>}
+        <MenuCategorySections menu={menuVisible} sections={restaurant.sections || []} onAdd={addToCart} />
+        {masques.length > 0 && (
+          <div style={{ marginTop: 14 }}>
+            <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('restoPreview.hiddenTitle')}</h3>
+            <p className="small" style={{ margin: '0 0 6px', color: 'var(--ink-soft)' }}>{t('restoPreview.hiddenText')}</p>
+            <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>{masques.map((m) => <li key={m.id}>{m.name}</li>)}</ul>
+          </div>
+        )}
       </div>
 
       {count > 0 && (
@@ -109,9 +126,10 @@ export default function RestaurantPreview({ restaurant }) {
                   )}
                 </span>
                 <div className="row" style={{ gap: 8 }}>
-                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => changeLineQty(lineKey, -1)}>−</button>
+                  {/* − et + nommés (audit du 19/10, CROSS-90). */}
+                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => changeLineQty(lineKey, -1)} aria-label={`${t('platSheet.less')} · ${item.name}`}>−</button>
                   <span>{line.qty}</span>
-                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => changeLineQty(lineKey, 1)}>+</button>
+                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => changeLineQty(lineKey, 1)} aria-label={`${t('platSheet.more')} · ${item.name}`}>+</button>
                 </div>
               </div>
             );
@@ -135,15 +153,13 @@ export default function RestaurantPreview({ restaurant }) {
       )}
 
       {confirmOpen && (
-        <div className="modal-overlay" onClick={() => setConfirmOpen(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <Modale ariaLabel={t('restoPreview.previewOnlyTitle')} onFermer={() => setConfirmOpen(false)}>
             <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('restoPreview.previewOnlyTitle')}</h3>
             <p className="small" style={{ margin: '0 0 16px' }}>
               {t('restoPreview.previewOnlyBody')}
             </p>
             <button className="btn-teal" onClick={() => setConfirmOpen(false)}>{t('restoPreview.gotIt')}</button>
-          </div>
-        </div>
+        </Modale>
       )}
 
       {pickerItem && (

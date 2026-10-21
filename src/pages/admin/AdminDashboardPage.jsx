@@ -145,11 +145,11 @@ export default function AdminDashboardPage() {
       <div className="row" style={{ gap: 16, flexWrap: 'wrap', marginTop: 20 }}>
         <div className="card" style={{ flex: '1 1 300px' }}>
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{tr('adminDash.ordersPerDay')}</h3>
-          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(d.day).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: d.orders }))} color="var(--blue)" />
+          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(`${String(d.day).slice(0, 10)}T12:00:00Z`).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: d.orders }))} color="var(--blue)" />
         </div>
         <div className="card" style={{ flex: '1 1 300px' }}>
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{tr('adminDash.revenuePerDay')}</h3>
-          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(d.day).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: d.revenue }))} formatValue={money} color="var(--teal)" />
+          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(`${String(d.day).slice(0, 10)}T12:00:00Z`).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: d.revenue }))} formatValue={money} color="var(--teal)" />
         </div>
       </div>
 
@@ -180,7 +180,9 @@ export default function AdminDashboardPage() {
           <>
             <RealtimeCard num={overview.support?.open ?? 0} label={tr('adminDash.openTickets')} to="/admin/support" warn={overview.support?.slaBreached > 0} />
             <RealtimeCard num={overview.tasks?.overdue ?? 0} label={tr('adminDash.overdueTasks')} to="/admin/tasks?due=overdue" warn={overview.tasks?.overdue > 0} />
-            <RealtimeCard num={(overview.restaurants?.pending ?? 0) + (overview.drivers?.pending ?? 0)} label={tr('adminDash.pendingValidations')} to={overview.restaurants?.pending > 0 ? '/admin/restaurants?status=pending' : '/admin/drivers?status=pending'} warn={(overview.restaurants?.pending ?? 0) + (overview.drivers?.pending ?? 0) > 0} />
+            {/* Les dossiers livreurs ENVOYÉS (couriers.pending), pas les comptes « en attente » ; et vers Livreurs › Dossiers,
+                là où l'on valide (audit du 19/10, admin-72). */}
+            <RealtimeCard num={(overview.restaurants?.pending ?? 0) + (overview.couriers?.pending ?? 0)} label={tr('adminDash.pendingValidations')} to={overview.restaurants?.pending > 0 ? '/admin/restaurants?status=pending' : '/admin/couriers'} warn={(overview.restaurants?.pending ?? 0) + (overview.couriers?.pending ?? 0) > 0} />
             {overview.documents?.expiringSoon !== undefined && <RealtimeCard num={overview.documents.expiringSoon} label={tr('adminDash.documentsExpiringSoon')} to="/admin/documents?expiry=expiring_soon" warn={overview.documents.expiringSoon > 0} />}
           </>
         )}

@@ -166,7 +166,9 @@ export function hubBadge(hub, overview, role) {
 
 // « À traiter aujourd'hui » : les lignes de l'écran d'accueil, dans l'ordre d'urgence. Chaque ligne
 // pointe vers la vue déjà filtrée de l'application concernée.
-export function attentionItems(o) {
+// `role` (audit du 19/10, admin-51) : une ligne ne mène plus vers une application que le rôle ne peut pas ouvrir (le
+// support tombait sur « Cette application n'est pas ouverte à ton rôle » en touchant « facture en retard »).
+export function attentionItems(o, role) {
   if (!o) return [];
   const items = [
     { key: 'ordersLate', count: n(o.orders?.late), to: '/admin/orders?late=1', tone: 'danger' },
@@ -176,9 +178,16 @@ export function attentionItems(o) {
     { key: 'ordersPending', count: n(o.orders?.pending), to: '/admin/orders?status=nouveau', tone: 'warn' },
     { key: 'supportSla', count: n(o.support?.slaBreached), to: '/admin/support?sla=1', tone: 'danger' },
     { key: 'tasksOverdue', count: n(o.tasks?.overdue), to: '/admin/tasks?due=overdue', tone: 'danger' },
-    { key: 'restaurantsPending', count: n(o.restaurants?.pending), to: '/admin/restaurants?status=pending', tone: 'warn' },
-    { key: 'driversPending', count: n(o.drivers?.pending), to: '/admin/drivers?status=pending', tone: 'warn' },
+    { key: 'restaurantsPending', count: n(o.restaurants?.pending), to: '/admin/restaurants?status=pending&nature=real', tone: 'warn' },
+    // Un seul compte des dossiers à valider (audit du 19/10, admin-72) : « livreurs en attente » comptait aussi les
+    // inscriptions jamais envoyées et les comptes de test, et menait à une page où l'on ne valide plus.
     { key: 'couriersPending', count: n(o.couriers?.pending), to: '/admin/couriers', tone: 'warn' },
+    // Signalements DSA (échéance interne 72 h, admin-41), selfies de contrôle à comparer (admin-69), pièces de dossiers
+    // livreurs à vérifier, que « documents à vérifier » ne comptait pas (admin-80).
+    { key: 'dsaOverdue', count: n(o.compliance?.dsaOverdue), to: '/admin/compliance?onglet=dsa', tone: 'danger' },
+    { key: 'dsaOpen', count: n(o.compliance?.dsaOpen) - n(o.compliance?.dsaOverdue), to: '/admin/compliance?onglet=dsa', tone: 'warn' },
+    { key: 'selfiesToCheck', count: n(o.couriers?.selfiesToCheck), to: '/admin/couriers?onglet=controles', tone: 'warn' },
+    { key: 'courierPiecesToCheck', count: n(o.couriers?.piecesToCheck), to: '/admin/couriers', tone: 'warn' },
     { key: 'documentsExpired', count: n(o.documents?.expired), to: '/admin/documents?expiry=expired', tone: 'danger' },
     { key: 'documentsExpiringSoon', count: n(o.documents?.expiringSoon), to: '/admin/documents?expiry=expiring_soon', tone: 'warn' },
     { key: 'documentsPending', count: n(o.documents?.pending), to: '/admin/documents?verification=en_attente', tone: 'warn' },
@@ -193,5 +202,8 @@ export function attentionItems(o) {
   ];
   // Une ligne qui mène à une application masquée (les relances CRM) ne s'affiche plus : elle
   // enverrait vers un écran que la navigation ne montre plus.
-  return items.filter((i) => i.count > 0 && (moduleForPath(i.to.split(/[?#]/)[0])?.hidden !== true));
+  return items.filter((i) => {
+    const mod = moduleForPath(i.to.split(/[?#]/)[0]);
+    return i.count > 0 && mod?.hidden !== true && (!mod || moduleAllowed(mod, role));
+  });
 }

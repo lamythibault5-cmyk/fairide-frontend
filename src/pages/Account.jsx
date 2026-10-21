@@ -1,5 +1,5 @@
 import GarantieAbonnement from '../components/GarantieAbonnement';
-import { achatsCommerceAutorises, allerAuPaiement, experienceApp } from '../natif';
+import { achatsCommerceAutorises, allerAuPaiement, experienceApp, lienPublic } from '../natif';
 import { useEffect, useRef, useState, useId } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
@@ -21,11 +21,15 @@ import LigneCompte from '../components/LigneCompte';
 import MesDonnees from '../components/MesDonnees';
 import CartesEnregistrees from '../components/client/CartesEnregistrees';
 import EquipeCommerce from '../components/commerce/EquipeCommerce';
+import QuitterEquipe from '../components/commerce/QuitterEquipe';
 import { definirModeEquipe } from '../modeEquipe';
 import '../ecran-equipe-groupe.css';
 import NouvellesFairide from '../components/NouvellesFairide';
+import LigneNotifications from '../components/client/LigneNotifications';
 import MesCasquettes from '../components/MesCasquettes';
+import MotDePasseFedere from '../components/MotDePasseFedere';
 import InboxSection from '../components/InboxSection';
+import MesDecisions from '../components/conformite/MesDecisions';
 import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
@@ -45,6 +49,7 @@ import '../ecran-compte.css';
 // Le site sur ordinateur (2026-10-16) : rubriques à gauche, contenu à droite. Sans effet dans l'app (html.appli).
 import '../site-compte.css';
 import { telephoneLisible } from '../validation';
+import ErrorCard from '../components/ErrorCard';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -96,7 +101,7 @@ export default function Account() {
   // feuille de partage lève AbortError : ce n'est pas une panne, c'est un utilisateur qui a changé
   // d'avis — lui afficher une erreur serait lui reprocher son geste.
   async function partagerFairide() {
-    const lien = window.location.origin;
+    const lien = lienPublic();
     try {
       if (navigator.share) {
         await navigator.share({
@@ -118,8 +123,14 @@ export default function Account() {
   const DELETION_REASONS = deletionReasons(t);
   const GENDERS = genders(t);
   const [driverDeliveries, setDriverDeliveries] = useState(null);
+  // Échec du chargement de l'activité : « Chargement… » restait pour toujours ; un message et Réessayer (audit du 19/10, CROSS-33).
+  const [erreurActivite, setErreurActivite] = useState(null);
+  const [relanceActivite, setRelanceActivite] = useState(0);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
+  // Fiche du commerce pas chargée (réseau) : contrat, paiements, abonnement et services disparaissaient sans un mot ; une
+  // carte « Réessayer » prend leur place (audit du 19/10, CROSS-44).
+  const [erreurCommerce, setErreurCommerce] = useState('');
   const [membreEquipe, setMembreEquipe] = useState(false);
   // Reçus de la sous-section Paiement : toutes les commandes du restaurant, filtrées sur « payées » à l'affichage.
   const [commandesResto, setCommandesResto] = useState([]);
@@ -215,10 +226,10 @@ export default function Account() {
     if (role !== 'driver') return;
     // Plus d'appel à /reviews/driver/mine : le livreur n'est pas noté (contrat livreur, présomption de salariat).
     api('/orders/mine/deliveries', { token })
-      .then(setDriverDeliveries)
-      .catch((e) => toast(e.message, 'erreur'));
+      .then((r) => { setDriverDeliveries(r); setErreurActivite(null); })
+      .catch((e) => { toast(e.message, 'erreur'); setErreurActivite(e); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role]);
+  }, [role, relanceActivite]);
 
   // Commercial Fairide ? (accès donné par l'admin dans Admin › Sales) : décide si la rubrique Sales apparaît. Clients seulement.
   const [salesEtat, setSalesEtat] = useState(null);
@@ -234,6 +245,7 @@ export default function Account() {
   // Commerce du compte (id, commandes) ; rappelé après un enregistrement depuis la sous-section Paiement.
   function rechargerRestaurant() {
     if (role !== 'restaurant') return;
+    setErreurCommerce('');
     api('/restaurants/mine/dashboard', { token }).then((list) => {
       // Membre de l'équipe d'un commerce (backend equipeCommerce.js) : pas les rubriques du propriétaire.
       setMembreEquipe(list[0]?.staffRole === 'service');
@@ -244,9 +256,9 @@ export default function Account() {
         setRestoId(list[0].id);
         api(`/orders/restaurant/${list[0].id}`, { token }).then((rows) => setCommandesResto(Array.isArray(rows) ? rows : [])).catch(() => {});
         // Fiche à jour (numéros légaux, Stripe) même quand l'id n'a pas changé.
-        api(`/restaurants/${list[0].id}`, { token }).then(setRestaurant).catch(() => {});
+        api(`/restaurants/${list[0].id}`, { token }).then(setRestaurant).catch((e) => setErreurCommerce(e.message));
       }
-    }).catch((e) => toast(e.message, 'erreur'));
+    }).catch((e) => setErreurCommerce(e.message));
   }
   useEffect(() => {
     if (role !== 'restaurant') return;
@@ -396,7 +408,7 @@ export default function Account() {
 
   async function handleConvert(e) {
     e.preventDefault();
-    const amount = Number(convertAmount);
+    const amount = Number(String(convertAmount).replace(',', '.'));
     if (!amount || amount <= 0) return;
     setConverting(true);
     try {
@@ -566,6 +578,8 @@ export default function Account() {
           </LigneCompte>
         </div>
       </div>
+      {/* Décisions qui me concernent et « Contester » (audit du 19/10, admin-39) : rien quand il n'y en a pas. */}
+      <MesDecisions />
       </RubriqueCompte>
 
       {/* ——— Mon profil : tout ce qui décrit la personne et son accès. ——— */}
@@ -577,11 +591,11 @@ export default function Account() {
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
                 <label htmlFor={idsA11y + '-firstname'}>{t('auth.firstName')}</label>
-                <input id={idsA11y + '-firstname'} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                <input id={idsA11y + '-firstname'} value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="given-name" />
               </div>
               <div className="field" style={{ flex: 1 }}>
                 <label htmlFor={idsA11y + '-lastname'}>{t('auth.lastName')}</label>
-                <input id={idsA11y + '-lastname'} value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                <input id={idsA11y + '-lastname'} value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="family-name" />
               </div>
             </div>
             <div className="row" style={{ gap: 8 }}>
@@ -609,11 +623,11 @@ export default function Account() {
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
                 <label htmlFor={idsA11y + '-postalcode'}>{t('auth.postalCode')}</label>
-                <input id={idsA11y + '-postalcode'} value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} />
+                <input id={idsA11y + '-postalcode'} value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" maxLength={4} autoComplete="postal-code" />
               </div>
               <div className="field" style={{ flex: 2 }}>
                 <label htmlFor={idsA11y + '-city'}>{t('auth.city')}</label>
-                <input id={idsA11y + '-city'} value={addressCity} onChange={(e) => setAddressCity(e.target.value)} />
+                <input id={idsA11y + '-city'} value={addressCity} onChange={(e) => setAddressCity(e.target.value)} autoComplete="address-level2" />
               </div>
             </div>
             <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
@@ -630,6 +644,8 @@ export default function Account() {
             {confirmDeleteOpen && (
               <div>
                 <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>{t('account.deleteWarning')}</p>
+                {/* Le solde Fairide est perdu à la suppression (accountDeletion.js) : on le dit avant (audit du 19/10, AO-27b). */}
+                {Number(user.balance) > 0 && <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>{t('account.deleteBalanceLost', { amount: solde })}</p>}
                 {!deleteCodeSent && (
                   <>
                     <div className="field">
@@ -695,6 +711,8 @@ export default function Account() {
         </LigneCompte>
 
         <LigneCompte icone="cle" titre={t('account.passwordTitle')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
+          {/* Compte Google / Apple : pas de mot de passe actuel à donner (audit du 19/10, auth-18). */}
+          <MotDePasseFedere />
           <form onSubmit={savePassword}>
             <div className="field">
               <label htmlFor="mdp-actuel">{t('account.currentPassword')}</label>
@@ -719,6 +737,7 @@ export default function Account() {
           <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
           {experienceApp() ? <ListeLangues /> : <LanguageSwitcher />}
         </LigneCompte>
+        {role === 'client' && <LigneNotifications ouverte={ouvertes.has('notifs')} onClick={() => basculer('notifs')} />}
         <NouvellesFairide ouverte={ouvertes.has('nouvelles')} onClick={() => basculer('nouvelles')} />
         <LigneCompte icone="dossier" titre={t('accountUi.myData_rowTitle')} sous={t('accountUi.myData_rowSub')} ouverte={ouvertes.has('donnees')} onClick={() => basculer('donnees')}>
           {ouvertes.has('donnees') && <MesDonnees />}
@@ -757,7 +776,9 @@ export default function Account() {
             </div>
             <form onSubmit={handleRedeemCode} className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1, margin: 0 }}>
-                <input value={redeemCode} onChange={(e) => setRedeemCode(e.target.value.toUpperCase())} placeholder={t('account.redeemPlaceholder')} />
+                {/* Champs nommés (audit du 19/10, CROSS-88) : le texte d'exemple seul disparaît dès qu'on tape, et n'est pas un nom. */}
+                <input value={redeemCode} onChange={(e) => setRedeemCode(e.target.value.toUpperCase())} placeholder={t('account.redeemPlaceholder')}
+                  aria-label={t('accountUi.redeemCodeA11y')} autoComplete="off" autoCorrect="off" spellCheck={false} />
               </div>
               <button type="submit" className="btn-teal" disabled={redeeming}>{redeeming ? '...' : t('account.redeemButton')}</button>
             </form>
@@ -775,7 +796,9 @@ export default function Account() {
             </div>
             <form onSubmit={handleConvert} className="row" style={{ gap: 8, marginBottom: generatedCodes?.length ? 14 : 0 }}>
               <div className="field" style={{ flex: 1, margin: 0 }}>
-                <input type="number" step="0.01" min="5" value={convertAmount} onChange={(e) => setConvertAmount(e.target.value)} placeholder={t('account.convert.amountPlaceholder')} />
+                {/* Texte + clavier décimal (audit du 19/10, CROSS-62/72) : « 12,50 » est lu, la molette ne change plus le montant. */}
+                <input type="text" inputMode="decimal" value={convertAmount} onChange={(e) => setConvertAmount(e.target.value)} placeholder={t('account.convert.amountPlaceholder')}
+                  aria-label={t('accountUi.convertAmountA11y')} autoComplete="off" />
               </div>
               <button type="submit" className="btn-teal" disabled={converting}>{converting ? '...' : t('account.convert.button')}</button>
             </form>
@@ -804,7 +827,7 @@ export default function Account() {
             <>
               <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 12 }}>
                 <div className="field" style={{ flex: 1, margin: 0 }}>
-                  <input readOnly value={referralStats.code} style={{ fontWeight: 700, letterSpacing: 1 }} />
+                  <input readOnly value={referralStats.code} style={{ fontWeight: 700, letterSpacing: 1 }} aria-label={t('accountUi.referralCodeA11y')} />
                 </div>
                 <button type="button" className="btn-teal" onClick={copyReferralCode}>{t('account.referral.copy')}</button>
               </div>
@@ -871,8 +894,11 @@ export default function Account() {
             </div>
           </div>
           <LigneCompte to="/dashboard/orders" icone="commandes" titre={t('nav.orders')} />
+          {/* Partir de soi-même (audit du 19/10, shop-410). */}
+          <QuitterEquipe restaurant={restaurant} />
         </div>
       )}
+      {role === 'restaurant' && !restaurant && erreurCommerce && <ErrorCard titre={t('accountUi.myBusiness')} message={erreurCommerce} onRetry={rechargerRestaurant} />}
       {role === 'restaurant' && restaurant && !membreEquipe && <h2 className="compte-feuille-titre">{t('accountUi.myBusiness')}</h2>}
       {role === 'restaurant' && restaurant && !membreEquipe && (
         <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>
@@ -1142,7 +1168,7 @@ export default function Account() {
       {role === 'driver' && (
         <div className="card account-groupe" aria-label={t('accountUi.myRides')}>
           <LigneCompte icone="stats" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
-            <DriverActivity deliveries={driverDeliveries} t={t} />
+            <DriverActivity deliveries={driverDeliveries} t={t} erreur={erreurActivite} onReessayer={() => setRelanceActivite((n) => n + 1)} />
           </LigneCompte>
           <LigneCompte icone="contrat" titre={t('driverTerms.rowTitle')} sous={t('driverTerms.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <DriverContractTerms />}
@@ -1187,7 +1213,7 @@ export default function Account() {
 
       <p className="account-legal">
         <Link to="/confidentialite">{t('accountUi.privacy')}</Link>
-        <Link to="/cgv">CGV</Link>
+        <Link to="/cgv">{t('footer.terms')}</Link>
         <Link to="/mentions-legales">{t('accountUi.legalNotice')}</Link>
         <Link to="/cookies">{t('footer.cookies')}</Link>
         {/* Sur le site : revoir son choix de cookies. Dans l'app, il n'y a qu'un choix, les rapports de panne, et il a sa
@@ -1226,7 +1252,19 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
   const [editing, setEditing] = useState(false);
   const [newValue, setNewValue] = useState('');
   const [codeSent, setCodeSent] = useState(false);
+  const [canal, setCanal] = useState('email');
   const [code, setCode] = useState('');
+  const { user } = useAuth();
+  /* OÙ LE CODE EST VRAIMENT PARTI (audit du 19/10, AO-03). L'écran disait « par email à ton adresse actuelle (pas encore de
+   * SMS chez Fairide) », alors que le serveur l'envoie à la NOUVELLE adresse e-mail, et par SMS au NOUVEAU numéro (canal
+   * 'sms' de la réponse) ; à l'adresse actuelle seulement pour un numéro que nos SMS n'atteignent pas (canal 'email'). Celui
+   * qui corrigeait une adresse mal tapée attendait le code dans la mauvaise boîte. */
+  const ouEnvoye = (c) => {
+    const valeur = newValue.trim();
+    if (field === 'email') return t('accountUi.contactCodeSentNewEmail', { email: valeur });
+    return c === 'sms' ? t('accountUi.contactCodeSentSms', { phone: telephoneLisible(valeur) })
+      : t('accountUi.contactCodeSentCurrentEmail', { email: user?.email || '', phone: telephoneLisible(valeur) });
+  };
   const [sending, setSending] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
@@ -1241,9 +1279,11 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
     if (!newValue.trim()) { toast(t('accountUi.toastNewValue')); return; }
     setSending(true);
     try {
-      await requestContactChange(field, newValue.trim());
+      const r = await requestContactChange(field, newValue.trim());
+      const c = r?.canal === 'sms' ? 'sms' : 'email';
+      setCanal(c);
       setCodeSent(true);
-      toast(t('accountUi.toastCodeSent'), 'succes');
+      toast(ouEnvoye(c), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -1283,7 +1323,13 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
       {!codeSent ? (
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <div className="field" style={{ flex: 1, margin: 0, minWidth: 180 }}>
-            {type === 'tel' ? <PhoneInput value={newValue} onChange={setNewValue} /> : <input type={type} value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder={placeholder} />}
+            {/* Nommé (CROSS-88), rempli par le navigateur (CROSS-69), envoyé par Entrée (CROSS-74). */}
+            <label className="sr-only" htmlFor={`contact-nouveau-${field}`}>{t('accountUi.newValueA11y', { label })}</label>
+            {type === 'tel'
+              ? <PhoneInput id={`contact-nouveau-${field}`} value={newValue} onChange={setNewValue} />
+              : <input id={`contact-nouveau-${field}`} type={type} value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder={placeholder}
+                  autoComplete={type === 'email' ? 'email' : undefined}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !sending) { e.preventDefault(); sendCode(); } }} />}
           </div>
           <button type="button" className="btn-teal" disabled={sending} onClick={sendCode}>{sending ? '...' : t('accountUi.sendCode')}</button>
           <button type="button" className="btn-ghost" onClick={cancel}>{t('accountUi.cancel')}</button>
@@ -1291,11 +1337,13 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
       ) : (
         <div>
           <p className="small" style={{ margin: '0 0 8px' }}>
-            {t('accountUi.codeSentConfirmSwitch', { sms: field === 'phone' ? t('accountUi.noSmsYet') : '' })} <b>{newValue}</b>.
+            {ouEnvoye(canal)}
           </p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <div className="field" style={{ flex: 1, margin: 0, minWidth: 140 }}>
-              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" maxLength={6} />
+              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" maxLength={6}
+                aria-label={t('accountUi.codeA11y')} inputMode="numeric" autoComplete="one-time-code"
+                onKeyDown={(e) => { if (e.key === 'Enter' && !confirming) { e.preventDefault(); confirm(); } }} />
             </div>
             <button type="button" className="btn-teal" disabled={confirming} onClick={confirm}>{confirming ? '...' : t('accountUi.confirmCode')}</button>
             <button type="button" className="btn-ghost" disabled={sending} onClick={sendCode}>{t('accountUi.resend')}</button>
@@ -1310,7 +1358,15 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
 // Résumé compact de l'activité du livreur, dans sa rangée dépliable de la page Mon compte — les détails
 // (historique de livraisons, pourboires) vivent chacun sur leur propre page dédiée. Pas d'étoiles : le
 // livreur n'est pas noté (contrat livreur, présomption de salariat).
-function DriverActivity({ deliveries, t }) {
+function DriverActivity({ deliveries, t, erreur, onReessayer }) {
+  if (!deliveries && erreur) {
+    return (
+      <div>
+        <p className="small" role="alert">{erreur.message}</p>
+        <button type="button" className="btn-outline btn-sm" onClick={onReessayer}>{t('common.retry')}</button>
+      </div>
+    );
+  }
   if (!deliveries) return <p className="small">{t('accountUi.loading')}</p>;
 
   const delivered = deliveries.filter((o) => o.status === 'livre');

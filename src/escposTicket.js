@@ -153,7 +153,8 @@ export function buildTicketBytes(order, restaurant, { columns = COLUMNS_58MM } =
 
   // --- Pied ------------------------------------------------------------------------------------------
   t.rule();
-  t.lines("Recapitulatif de commande fourni par Fairide - ne remplace pas le ticket de caisse de votre propre systeme d'encaissement si vous y etes soumis legalement.");
+  // Le commerce est nommé, pas tutoyé ni vouvoyé : ce ticket peut finir dans le sac du client (audit du 19/10, CROSS-15).
+  t.lines("Recapitulatif de commande fourni par Fairide : il ne remplace pas le ticket de caisse du commerce, s'il est tenu d'en delivrer un.");
   t.align(1).line().line('Merci et bonne degustation !');
 
   // Avance le papier pour dégager la zone de découpe, puis tente une coupe partielle. Les modèles sans

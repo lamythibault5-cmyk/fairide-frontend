@@ -27,15 +27,21 @@ export default function EcranAdresse({ restaurant, restoId, loadDashboard, onFer
 
   function valider() {
     if (!commune.trim()) { toast(t('editResto.toastCommuneRequired'), 'erreur'); return; }
-    if ((recoEtat === 'none' || recoEtat === 'error') && !confirmee) { toast(t('editResto.toastAddressConfirm')); return; }
+    // En ligne, la rue et le numéro ne se vident plus : c'est là que les livreurs viennent (audit du 19/10, shop-316).
+    if (restaurant.publicListed && (!rue.trim() || !numero.trim())) { toast(t('editResto.toastStreetNumberRequired'), 'erreur'); return; }
+    if ((recoEtat === 'none' || recoEtat === 'error') && !confirmee) { toast(t('editResto.toastAddressConfirm'), 'erreur'); return; }
     enregistrer({
       commune, addressCity: commune, neighborhood: quartier.trim(),
       addressStreet: rue.trim(), addressNumber: numero.trim(), addressPostalCode: cp.trim()
+    }, {
+      // Adresse introuvable pour le géocodeur : le point est posé au centre de la commune (ou gardé), l'équipe le placera.
+      succes: (r) => (r?.geocodeImprecise ? t('editResto.toastAddressImprecise') : null)
     });
   }
 
   return (
-    <SousEcran titre={t('editResto.address')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />}>
+    <SousEcran titre={t('editResto.address')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />}
+      modifie={rue !== (restaurant.addressStreet || '') || numero !== (restaurant.addressNumber || '') || cp !== (restaurant.addressPostalCode || '')}>
       <AddressSearch compact onSelect={(a) => { setRue(a.street); if (a.number) setNumero(a.number); if (a.postalCode) setCp(a.postalCode); if (a.city && communeAcceptee(a.city)) setCommune(a.city); }} />
       <div className="field"><label htmlFor={ids + '-rue'}>{t('editResto.streetForDrivers')}</label><input id={ids + '-rue'} value={rue} onChange={(e) => setRue(e.target.value)} placeholder={t('editResto.phStreet')} /></div>
       <div className="row" style={{ gap: 8 }}>
@@ -45,13 +51,13 @@ export default function EcranAdresse({ restaurant, restoId, loadDashboard, onFer
         </div>
         <div className="field" style={{ flex: 1 }}>
           <label htmlFor={ids + '-cp'}>{t('editResto.postalCode')}</label>
-          <input id={ids + '-cp'} inputMode="numeric" value={cp} onChange={(e) => { setCp(e.target.value); const c = communeDepuisCodePostal(e.target.value); if (c) setCommune((v) => v || c); }} placeholder="1000" />
+          <input id={ids + '-cp'} inputMode="numeric" maxLength={4} value={cp} onChange={(e) => { setCp(e.target.value); const c = communeDepuisCodePostal(e.target.value); if (c) setCommune((v) => v || c); }} placeholder="1000" />
         </div>
       </div>
       <div className="field">
         <label htmlFor={ids + '-commune'}>{t('editResto.municipality')}</label>
         {/* Champ libre avec suggestions (les 19 communes puis la périphérie) : une liste fermée transformait Tervuren en Anderlecht. */}
-        <input id={ids + '-commune'} list={ids + '-communes'} value={commune} onChange={(e) => setCommune(e.target.value)} placeholder="Ixelles, Tervuren…" autoComplete="address-level2" />
+        <input id={ids + '-commune'} list={ids + '-communes'} value={commune} onChange={(e) => setCommune(e.target.value)} placeholder="Ixelles, Tervuren…" autoComplete="off" />
         <datalist id={ids + '-communes'}>
           {COMMUNES_SUGGEREES.map((c) => <option key={c} value={c} />)}
         </datalist>

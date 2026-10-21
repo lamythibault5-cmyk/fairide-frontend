@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import PasswordInput from '../../components/PasswordInput';
+import PhoneInput from '../../components/PhoneInput';
 import BoutonsConnexionNative from '../../components/BoutonsConnexionNative';
 import { estNatif, connexionFournisseur } from '../../natif';
 import { attendrePage, espaceApresConnexion } from '../../routePrefetch';
+import { lireBienvenue } from '../../bienvenue';
 import { Haut } from './EcransBienvenue';
 import { Champ } from './InscriptionAppli';
+import { CHAMP_CODE_SECOURS } from '../../validation';
+import useDecompte, { DELAI_RENVOI_S } from '../../hooks/useDecompte';
 
 /* LA CONNEXION DANS L'APPLICATION (2026-10-15) — /login quand experienceApp(), à la place d'Auth.jsx.
  *
@@ -16,7 +20,8 @@ import { Champ } from './InscriptionAppli';
  * page du site (en-tête Aide · Contact · Inscription, carte « Se connecter / Créer un compte », pied de page). C'est
  * maintenant un écran de l'accueil (.bv) : e-mail, mot de passe, un bouton. Les cas d'Auth.jsx y sont tous :
  *   - second facteur (TOTP_REQUIRED) : écran du code, pour le mot de passe comme pour Apple / Google ;
- *   - adresse jamais confirmée (EMAIL_NOT_VERIFIED) : un code neuf part, écran du code ;
+ *   - adresse jamais confirmée (EMAIL_NOT_VERIFIED) : écran du code ; un code neuf ne part que si l'ancien a expiré, et
+ *     « Changer de numéro » y corrige un numéro mal tapé (audit du 19/10, auth-02 et auth-03) ;
  *   - mot de passe oublié (?oubli=1 aussi, lien périmé de ResetPassword.jsx) : e-mail, puis « lien envoyé » ;
  *   - pas de compte : « Créer un compte » ouvre l'inscription de l'app (/bienvenue, au choix du profil).
  * Un lien d'inscription du site (?audience=…&role=…) y mène directement, profil présélectionné. */
@@ -25,7 +30,10 @@ const AUDIENCE_ROLE = { partner: 'restaurant', client: 'client' };
 
 export default function ConnexionAppli() {
   const { t } = useLanguage();
-  const { login, verifyEmail, resendCode, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  const { user, login, verifyEmail, resendCode, changePendingPhone, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  // Déjà connecté EN ARRIVANT (audit du 19/10, auth-13) : un lien fairide.be/login ouvert dans l'app montrait le formulaire.
+  // Comme sur le site (Auth.jsx) : on va dans son espace, ou là où l'on voulait aller. Une connexion faite ICI garde sa suite.
+  const [connecteALArrivee] = useState(() => !!user);
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,12 +55,29 @@ export default function ConnexionAppli() {
   const [erreurs, setErreurs] = useState({});
   const [attente, setAttente] = useState(false);
   const [pasDeCompte, setPasDeCompte] = useState(false);
+  // « Changer de numéro » (audit du 19/10, auth-03) : le bon numéro, et le jeton Apple / Google d'un compte qui attend son
+  // code (il prouve le compte à la place du mot de passe, qu'un compte Apple / Google n'a pas).
+  const [nouveauNumero, setNouveauNumero] = useState('');
+  const [preuve, setPreuve] = useState(attenteCode?.preuve || null);
+  // « Renvoyer le code » attend 30 s après chaque envoi (audit du 19/10, auth-12) : chaque toucher était un SMS payé.
+  const [attenteRenvoi, lancerAttenteRenvoi] = useDecompte();
+  useEffect(() => { if (ecran === 'code') lancerAttenteRenvoi(DELAI_RENVOI_S); }, [ecran, lancerAttenteRenvoi]);
+
+  if (connecteALArrivee && user) return <Navigate to={location.state?.from || espaceApresConnexion(user)} replace />;
 
   // Lien d'inscription du site ouvert dans l'app : l'inscription de l'app, profil choisi.
   const audience = params.get('audience');
-  if (audience || params.get('ref')) {
+  /* LE MUR DE COMPTE D'UN COMMERCE (audit du 19/10, auth-07). Un commerce touché sans session (murCompte.js) arrive ici avec
+   * ?audience=client et le commerce en `from`. Tout partait vers l'accueil (« Tu es… », le questionnaire), sans lien de
+   * connexion, et « J'ai déjà un compte » y perdait le commerce : une personne qui avait déjà un compte sur ce téléphone
+   * (déconnectée, session expirée) se reconnectait et tombait sur la liste. Sur un téléphone qui a déjà vu l'accueil, c'est
+   * donc CET écran de connexion, le commerce gardé en `from` ; « Créer un compte » mène toujours à l'accueil, avec lui. Un
+   * premier lancement garde l'accueil (bienvenue.js), qui garde aussi `from` jusqu'au compte ouvert. */
+  const murCompte = audience === 'client' && !params.get('role') && !params.get('ref') && !!location.state?.from && !!lireBienvenue().vu;
+  if ((audience || params.get('ref')) && !murCompte) {
     const role = params.get('role') || AUDIENCE_ROLE[audience] || null;
-    return <Navigate to="/bienvenue" replace state={{ depart: 'profil', role, from }} />;
+    // Le code de parrainage du lien (?ref=) suit jusqu'à l'inscription de l'app (audit du 19/10, auth-28) : il s'y perdait.
+    return <Navigate to="/bienvenue" replace state={{ depart: 'profil', role, from, ref: params.get('ref') || undefined }} />;
   }
 
   const creerCompte = () => navigate('/bienvenue', { state: { depart: 'profil', from } });
@@ -60,7 +85,8 @@ export default function ConnexionAppli() {
   function retour() {
     if (ecran === 'connexion') { navigate('/', { replace: true }); return; }
     if (ecran === 'oubliCode') { setCode(''); aller('oubli', { arriere: true }); return; }
-    setCode(''); setFed(null);
+    if (ecran === 'numero') { aller('code', { arriere: true }); return; }
+    setCode(''); setFed(null); setPreuve(null);
     aller('connexion', { arriere: true });
   }
 
@@ -73,13 +99,23 @@ export default function ConnexionAppli() {
   // Erreurs communes au mot de passe et au code : ce que le serveur répond, rangé sous le bon champ.
   async function traiter(err) {
     if (err.message === 'EMAIL_NOT_VERIFIED') {
-      // Le code de l'inscription a sans doute expiré : on en envoie un neuf (comme Auth.jsx), par SMS ou par e-mail.
+      // Code de l'inscription encore valable (codeActif, audit du 19/10, auth-02) : l'écran du code, sans SMS de plus.
+      if (err.data?.codeActif) {
+        setCanalCode(err.data.channel === 'sms' ? 'sms' : 'email'); setTelMasque(err.data.phoneMasked || '');
+        setCode(''); aller('code');
+        toast(t('auth.codeStillValid'));
+        return;
+      }
+      // Code expiré : on en envoie un neuf (comme Auth.jsx), par SMS ou par e-mail.
       let r = null;
-      try { r = await resendCode(email.trim()); } catch { /* plafond atteint : « Renvoyer » reste là */ }
+      let refus = null;
+      try { r = await resendCode(email.trim()); } catch (e) { refus = e; /* plafond atteint : « Renvoyer » reste là */ }
       const canal = (r?.channel || err.data?.channel) === 'sms' ? 'sms' : 'email';
       setCanalCode(canal); setTelMasque(r?.phoneMasked || err.data?.phoneMasked || '');
       setCode(''); aller('code');
-      toast(t(canal === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
+      // « Code envoyé » seulement s'il est vraiment parti (audit du 19/10, auth-24) ; sinon la raison du serveur.
+      if (r) toast(t(canal === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
+      else toast(refus?.message || t('auth.errEmailNotVerified'), 'erreur');
     } else if (err.code === 'TOTP_REQUIRED') {
       setCode(''); aller('totp');
     } else if (err.code === 'TOTP_INVALID' || err.code === 'TOTP_REPLAY') {
@@ -87,8 +123,17 @@ export default function ConnexionAppli() {
     } else if (err.code === 'ACCOUNT_DELETED' || err.code === 'NO_ACCOUNT') {
       setPasDeCompte(true);
       setErreurs({ email: t(err.code === 'ACCOUNT_DELETED' ? 'auth.errAccountDeleted' : 'auth.errNoAccount') });
+    } else if (ecran === 'numero') {
+      // « Changer de numéro » : le numéro refusé sous son champ, le mot de passe faux sous le sien.
+      const MESSAGES = { PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid', PHONE_DOUBLE_PREFIX: 'auth.errPhoneDoublePrefix' };
+      if (err.field === 'phone') setErreurs({ phone: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
+      else if (err.code === 'BAD_CREDENTIALS' && !preuve) setErreurs({ password: err.message });
+      else toast(err.message, 'erreur');
     } else {
-      setErreurs({ [ecran === 'connexion' ? 'password' : 'code']: err.message });
+      // Chaque écran montre l'erreur sous SON champ. « Mot de passe oublié » n'a que l'e-mail : l'erreur (trop de demandes,
+      // serveur injoignable…) allait sous un champ « code » absent de l'écran, et le bouton semblait ne rien faire
+      // (audit du 19/10, auth-04 / CROSS-43).
+      setErreurs({ [{ connexion: 'password', oubli: 'email' }[ecran] || 'code']: err.message });
     }
   }
 
@@ -104,6 +149,12 @@ export default function ConnexionAppli() {
     }
     if ((ecran === 'totp' || ecran === 'code' || ecran === 'oubliCode') && !code.trim()) { setErreurs({ code: requis }); return; }
     if (ecran === 'envoye') { aller('connexion', { arriere: true }); return; }
+    if (ecran === 'numero') {
+      const e = {};
+      if (!nouveauNumero.trim()) e.phone = requis;
+      if (!preuve && !password) e.password = requis;
+      if (Object.keys(e).length) { setErreurs(e); return; }
+    }
     setAttente(true); setErreurs({}); setPasDeCompte(false);
     let reussi = false;
     try {
@@ -121,6 +172,15 @@ export default function ConnexionAppli() {
         if (r?.confirmationRequired) { setCode(''); aller('oubliCode'); return; }
         aller('envoye'); return;
       } else if (ecran === 'oubliCode') { await confirmForgotPassword(email.trim(), code.trim()); aller('envoye'); return; }
+      else if (ecran === 'numero') {
+        // Un code part au bon numéro (audit du 19/10, auth-03), puis retour à l'écran du code.
+        const r = await changePendingPhone(email.trim(), nouveauNumero.trim(), { password, preuve });
+        const canal = r?.channel === 'sms' ? 'sms' : 'email';
+        setCanalCode(canal); setTelMasque(r?.phoneMasked || nouveauNumero.trim());
+        setCode(''); aller('code', { arriere: true });
+        toast(t(canal === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
+        return;
+      }
       reussi = true;
       await arriver(data.user);
     } catch (err) {
@@ -149,13 +209,19 @@ export default function ConnexionAppli() {
         if (err.code === 'TOTP_REQUIRED') { setFed(jeton); setCode(''); aller('totp'); return; }
         // Inscription Apple / Google faite, code SMS jamais saisi : l'écran du code (« Renvoyer » y est).
         if (err.message === 'PHONE_NOT_VERIFIED') {
+          setPreuve({ fournisseur: jeton.fournisseur, jeton: jeton.jeton });
           setEmail(err.data?.email || ''); setCanalCode('sms'); setTelMasque(err.data?.phoneMasked || '');
           setCode(''); aller('code'); return;
         }
         toast(err.message, 'erreur');
       }
     } catch (err) {
-      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) toast(err?.message ? `${t('appli.nativeLoginFailed')} (${err.message})` : t('appli.nativeLoginFailed'), 'erreur');
+      // Le texte brut du greffon (« com.google.android.gms…: 10: ») n'est plus collé au message (audit du 19/10, CROSS-13) : il
+      // part dans la console (adb logcat) ; un refus du serveur (ApiError, avec un statut) garde son propre texte, traduit.
+      if (!/annul|cancel|1001|12501/i.test(err?.message || '')) {
+        if (!err?.status) console.error('Connexion native :', err);
+        toast(err?.status && err?.message ? err.message : t('appli.nativeLoginFailed'), 'erreur');
+      }
     } finally {
       if (!reussi) setAttente(false);
     }
@@ -175,6 +241,7 @@ export default function ConnexionAppli() {
       const r = await resendCode(email.trim());
       if (r?.channel) { setCanalCode(r.channel === 'sms' ? 'sms' : 'email'); if (r.phoneMasked) setTelMasque(r.phoneMasked); }
       setCode(''); toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.newCodeSent'));
+      lancerAttenteRenvoi(DELAI_RENVOI_S);
     }
     catch (err) { toast(err.message, 'erreur'); }
     finally { setAttente(false); }
@@ -183,7 +250,10 @@ export default function ConnexionAppli() {
   const champCode = (
     <>
       <label htmlFor="bv-c-code" className="sr-only">{t('auth.verifyCodeLabel')}</label>
-      <input id="bv-c-code" className={`bv-saisie${erreurs.code ? ' input-invalid' : ''}`} inputMode="numeric" autoComplete="one-time-code" maxLength={ecran === 'totp' ? 11 : 6}
+      {/* Second facteur : clavier TEXTE (audit du 19/10, CROSS-60). Un code de secours (« A1B2C-3D4E5 ») a des lettres et un
+          tiret, que le pavé numérique n'a pas : sans application d'authentification, on restait dehors sur téléphone. */}
+      <input id="bv-c-code" className={`bv-saisie${erreurs.code ? ' input-invalid' : ''}`} autoComplete="one-time-code" maxLength={ecran === 'totp' ? 11 : 6}
+        {...(ecran === 'totp' ? CHAMP_CODE_SECOURS : { inputMode: 'numeric' })}
         placeholder="123456" value={code} onChange={(e) => setCode(ecran === 'totp' ? e.target.value : e.target.value.replace(/\D/g, '').slice(0, 6))} />
       {erreurs.code && <p className="field-error bv-centre" role="alert">{erreurs.code}</p>}
     </>
@@ -202,11 +272,30 @@ export default function ConnexionAppli() {
       break;
     case 'code':
       bouton = t('auth.confirm');
-      entete = titre(t('auth.verifyTitle'), canalCode === 'sms' ? t('auth.verifyTextSms', { phone: telMasque }) : t('auth.verifyText', { email: email.trim() }));
+      // Titre selon le canal (audit du 19/10, auth-23) : « Confirme ton email » au-dessus d'un code parti par SMS.
+      entete = titre(t(canalCode === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle'), canalCode === 'sms' ? t('auth.verifyTextSms', { phone: telMasque }) : t('auth.verifyText', { email: email.trim() }));
       contenu = (
         <>
           {champCode}
-          <button type="button" className="bv-lien" disabled={attente} onClick={renvoyer}>{t('auth.resendCode')}</button>
+          <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={renvoyer}>{attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}</button>
+          <button type="button" className="bv-lien" disabled={attente} onClick={() => { setNouveauNumero(''); aller('numero'); }}>{t('auth.changePhone')}</button>
+        </>
+      );
+      break;
+    case 'numero':
+      bouton = t('auth.changePhoneSend');
+      entete = titre(t('auth.changePhoneTitle'), t('auth.changePhoneText'));
+      contenu = (
+        <>
+          <Champ id="bv-c-tel" label={t('auth.phone')} erreur={erreurs.phone}>
+            <PhoneInput id="bv-c-tel" value={nouveauNumero} onChange={setNouveauNumero} invalid={!!erreurs.phone} />
+          </Champ>
+          {/* Sans jeton Apple / Google ni mot de passe en mémoire (écran rouvert), le mot de passe prouve le compte. */}
+          {!preuve && (
+            <Champ id="bv-c-tel-mdp" label={t('auth.changePhonePassword')} erreur={erreurs.password}>
+              <PasswordInput id="bv-c-tel-mdp" value={password} invalid={!!erreurs.password} autoComplete="current-password" onChange={(e) => setPassword(e.target.value)} />
+            </Champ>
+          )}
         </>
       );
       break;
@@ -264,7 +353,8 @@ export default function ConnexionAppli() {
           <div className="bv-grandit" />
           {/* Apple / Google : dans la vraie application seulement, au-dessus du bouton (comme l'écran du compte). */}
           {ecran === 'connexion' && estNatif() && <BoutonsConnexionNative onChoix={viaFournisseur} disabled={attente} />}
-          <button type="submit" className="bv-btn btn-gold" disabled={attente}>{attente ? t('common.loading') : bouton}</button>
+          {/* Un code SMS / e-mail incomplet ne part plus au serveur (audit du 19/10, LIVE-28) : six chiffres d'abord. */}
+          <button type="submit" className="bv-btn btn-gold" disabled={attente || ((ecran === 'code' || ecran === 'oubliCode') && code.length !== 6)}>{attente ? t('common.loading') : bouton}</button>
           {/* Pas en double : après « aucun compte », le lien est déjà sous le champ e-mail. */}
           {ecran === 'connexion' && !pasDeCompte && <button type="button" className="bv-lien" onClick={creerCompte}>{t('appli.connCreer')}</button>}
         </form>

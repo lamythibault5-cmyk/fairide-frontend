@@ -78,7 +78,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
   async function save() {
     setSaving(true);
     try {
-      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy, organic, vegan, ...conformite, ...(requestedBy.trim() ? { requestedBy: requestedBy.trim() } : {}) });
+      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(String(price).replace(',', '.')), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy, organic, vegan, ...conformite, ...(requestedBy.trim() ? { requestedBy: requestedBy.trim() } : {}) });
       setRequestedBy('');
       if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       // Les traductions partent APRÈS le plat lui-même : le serveur recalcule l'empreinte du texte
@@ -136,7 +136,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
       <div className="card" style={{ marginBottom: 10, gridColumn: '1 / -1' }}>
         <div className="field"><label htmlFor={idsA11y + '-name'}>{t('menuItem.name')}</label><input id={idsA11y + '-name'} value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div className="field"><label htmlFor={idsA11y + '-description'}>{t('menuItem.description')}</label><input id={idsA11y + '-description'} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('menuItem.phDescription')} /></div>
-        <div className="field"><label htmlFor={idsA11y + '-price'}>{t('menuItem.price')}</label><input id={idsA11y + '-price'} type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-price'}>{t('menuItem.price')}</label><input id={idsA11y + '-price'} inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
         <div className="field"><label htmlFor={idsA11y + '-demande'}>{t('menuItem.requestedBy')}</label><input id={idsA11y + '-demande'} value={requestedBy} onChange={(e) => setRequestedBy(e.target.value)} placeholder={t('menuItem.requestedByPlaceholder')} /></div>
 
         {/* Traductions : repliées par défaut, et volontairement placées APRÈS le prix. Le
@@ -165,6 +165,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
                       style={{ marginBottom: 6 }}
                     />
                     <input
+                      aria-label={`${lang.toUpperCase()} · ${t('menuItem.description')}`}
                       value={translationDrafts[lang]?.desc ?? tr.desc ?? ''}
                       onChange={(e) => setTranslationDrafts((d) => ({ ...d, [lang]: { ...(d[lang] || tr), desc: e.target.value } }))}
                       placeholder={t('menuItem.description')}
@@ -305,6 +306,19 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
       }}
       onClick={reorderMode || lectureSeule ? undefined : selectMode ? () => onToggleSelect(item.id) : () => setEditing(true)}
       title={reorderMode || lectureSeule ? '' : selectMode ? t('menuItem.clickSelect') : t('menuItem.clickEdit')}
+      /* AU CLAVIER (audit du 19/10, CROSS-85) : toucher la carte était le seul moyen de modifier un plat. Elle entre dans la
+         tabulation et s'ouvre par Entrée ou Espace quand elle a elle-même le focus (pas ses boutons de stock). Un groupe
+         nommé plutôt qu'un bouton : la carte contient des boutons. */
+      {...(reorderMode || lectureSeule ? {} : {
+        tabIndex: 0,
+        role: 'group',
+        'aria-label': `${item.name} · ${selectMode ? t('menuItem.clickSelect') : t('menuItem.clickEdit')}`,
+        onKeyDown: (e) => {
+          if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+          e.preventDefault();
+          if (selectMode) onToggleSelect(item.id); else setEditing(true);
+        }
+      })}
     >
       {reorderMode && (
         <button
@@ -330,8 +344,9 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
       <div className="name">
         {item.name}
         {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
-        {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}</span>}
-        {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}</span>}
+        {/* En toutes lettres, comme sur la carte du client (audit du 19/10, discovery-06). */}
+        {item.organic && <span className="plat-age">{t('menuCategories.organic')}</span>}
+        {item.vegan && <span className="plat-age">{t('menuCategories.vegan')}</span>}
       </div>
       <div className="small desc">
         {item.outOfStockToday ? t('menuItem.stockOutToday') : item.available === false ? t('menuItem.unavailable') : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}

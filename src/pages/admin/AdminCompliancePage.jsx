@@ -1,4 +1,5 @@
 import { useEffect, useState, useId } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -41,7 +42,9 @@ function StatusPill({ status, tr }) {
 
 export default function AdminCompliancePage() {
   const { t: tr } = useLanguage();
-  const [onglet, setOnglet] = useEtatPage('onglet', 'requests');
+  // ?onglet=dsa : la ligne « signalement(s) DSA » de l'accueil ouvre directement l'onglet (audit du 19/10, admin-41).
+  const [params] = useSearchParams();
+  const [onglet, setOnglet] = useEtatPage('onglet', params.get('onglet') || 'requests', { forcer: !!params.get('onglet') });
   const [showCreate, setShowCreate] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -459,11 +462,17 @@ function ExportsTab() {
           <div className="compliance-filters">
             <label className="small" htmlFor={idsA11y + '-year'}>{tr('adminCommon.year')}</label>
             <select id={idsA11y + '-year'} value={year} onChange={(e) => setYear(Number(e.target.value))}>{annees.map((a) => <option key={a} value={a}>{a}</option>)}</select>
-            <label className="small" htmlFor={idsA11y + '-quarter'}>{tr('adminCompliance.quarter')}</label>
-            <select id={idsA11y + '-quarter'} value={quarter} onChange={(e) => setQuarter(e.target.value)}>
-              <option value="">{tr('adminCompliance.wholeYear')}</option>
-              {[1, 2, 3, 4].map((q) => <option key={q} value={q}>T{q}</option>)}
-            </select>
+            {/* Le trimestre ne s'affiche que si un export le lit (audit du 19/10, admin-73) : DAC7 ne lit que l'année, et le
+                fichier sortait nommé « T3 » avec l'année entière dedans. */}
+            {data.items.some((item) => item.params.includes('quarter')) && (
+              <>
+                <label className="small" htmlFor={idsA11y + '-quarter'}>{tr('adminCompliance.quarter')}</label>
+                <select id={idsA11y + '-quarter'} value={quarter} onChange={(e) => setQuarter(e.target.value)}>
+                  <option value="">{tr('adminCompliance.wholeYear')}</option>
+                  {[1, 2, 3, 4].map((q) => <option key={q} value={q}>T{q}</option>)}
+                </select>
+              </>
+            )}
           </div>
           <div className="compliance-grid">
             {data.items.map((item) => (

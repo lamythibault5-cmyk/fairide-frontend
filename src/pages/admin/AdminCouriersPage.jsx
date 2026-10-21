@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, useId } from 'react';
+import { useEffect, useMemo, useRef, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { api, apiDownload } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
@@ -17,9 +17,11 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { estCompteReel, estCompteSupprime, estCompteTest, TestBadge, DeletedBadge, NatureChips, natureOk, filterBySearch, downloadCsv } from './adminUtils';
 import useEtatPage from '../../hooks/useEtatPage';
+import useDialogue from '../../hooks/useDialogue';
 import urlSure from '../../urlSure';
 import ouvrirDocument from '../../ouvrirDocument';
 import { euros } from '../../prixPlat';
+import { libelleManque } from '../../conformite';
 import Icone from '../../components/Icone';
 
 // Dossiers livreurs (statuts économie collaborative / étudiant-indépendant / indépendant) : file de
@@ -51,7 +53,9 @@ export default function AdminCouriersPage() {
   const [nature, setNature] = useEtatPage('nature', 'all');
   const [search, setSearch] = useState(location.state?.presetSearch || '');
   const [selection, setSelection] = useState(null);
-  const [onglet, setOnglet] = useEtatPage('onglet', 'dossiers');
+  // ?onglet=controles : « selfie(s) à vérifier » de l'accueil ouvre l'onglet des contrôles (audit du 19/10, admin-69).
+  const [params] = useSearchParams();
+  const [onglet, setOnglet] = useEtatPage('onglet', params.get('onglet') || 'dossiers', { forcer: !!params.get('onglet') });
   const [mode, setMode] = useViewMode('couriers', 'table');
   const { sort, toggle } = useTableSort('updatedAt');
 
@@ -63,6 +67,16 @@ export default function AdminCouriersPage() {
   };
   const [prets, setPrets] = useState(() => new Map());
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Arrivé depuis Livreurs « Ouvrir le dossier » : si la recherche pré-remplie ne trouve qu'un dossier, il s'ouvre
+  // (audit du 19/10, admin-87 : il fallait encore un clic sur la seule ligne de la liste).
+  const ouvertAuto = useRef(false);
+  useEffect(() => {
+    if (ouvertAuto.current || !data || !location.state?.presetSearch) return;
+    ouvertAuto.current = true;
+    const q = String(location.state.presetSearch).toLowerCase();
+    const trouves = (data.rows ?? []).filter((r) => [r.name, r.email].some((v) => String(v || '').toLowerCase().includes(q)));
+    if (trouves.length === 1) setSelection(trouves[0].id);
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const lifecycle = (s) => tr(`courierOnboarding.lifecycle_${s}`);
   const statut = (s) => (s && STATUTS.includes(s) ? tr(`courierOnboarding.status_${s}`) : s || '-');
@@ -84,7 +98,7 @@ export default function AdminCouriersPage() {
     { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '-'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}`, sortValue: (r) => r.zone || '' },
     { key: 'updatedAt', label: tr('adminCouriers.colUpdated'), get: (r) => fmt(r.updatedAt), sortValue: (r) => r.updatedAt }
   ];
-  const lignes = useMemo(() => sortRows(filterBySearch((data?.rows ?? []).filter((r) => (filtre === 'all' || r.lifecycleStatus === filtre) && (typeFiltre === 'all' || r.statusType === typeFiltre) && natureOk(nature, r)), search, (r) => [r.name, r.email, r.zone, r.statusType]), colonnes, sort), [data, filtre, typeFiltre, nature, search, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lignes = useMemo(() => sortRows(filterBySearch((data?.rows ?? []).filter((r) => (filtre === 'all' || r.lifecycleStatus === filtre) && (typeFiltre === 'all' || r.statusType === typeFiltre) && natureOk(nature, r)), rechercheTel(search), (r) => [r.name, r.email, r.zone, r.statusType, telNational(r.phone)]), colonnes, sort), [data, filtre, typeFiltre, nature, search, sort]); // eslint-disable-line react-hooks/exhaustive-deps
   const nbReels = useMemo(() => (data?.rows ?? []).filter((r) => estCompteReel(r)).length, [data]);
   const nbSupprimes = useMemo(() => (data?.rows ?? []).filter((r) => estCompteSupprime(r)).length, [data]);
 
@@ -113,7 +127,7 @@ export default function AdminCouriersPage() {
             <div className="stat-grid">
               <div className="stat-card highlight"><div className="num">{(data.rows ?? []).length}</div><div className="label">{tr('adminCouriers.kpiAll')}</div></div>
               <div className="stat-card"><div className="num">{nbReels}</div><div className="label">{tr('adminCouriers.kpiReal')}</div></div>
-              {['pending_review', 'approved', 'blocked_threshold', 'rejected', 'draft'].map((s) => (
+              {['pending_review', 'approved', 'suspended', 'rejected', 'draft'].map((s) => (
                 <button key={s} type="button" className={`stat-card${filtre === s ? ' highlight' : ''}`} style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setFiltre(filtre === s ? 'all' : s)}>
                   <div className="num">{data.counts?.[s] || 0}</div><div className="label">{lifecycle(s)}</div>
                 </button>
@@ -123,7 +137,7 @@ export default function AdminCouriersPage() {
           <div className="admin-control-panel">
             <input aria-label={tr('adminCouriers.phSearch')} placeholder={tr('adminCouriers.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
             <div className="role-pick" style={{ margin: 0 }}>
-              {['all', 'pending_review', 'approved', 'suspended', 'blocked_threshold', 'rejected', 'draft'].map((s) => <div key={s} className={`chip${filtre === s ? ' active' : ''}`} onClick={() => setFiltre(s)}>{s === 'all' ? tr('adminCommon.allM') : lifecycle(s)}</div>)}
+              {['all', 'pending_review', 'approved', 'suspended', 'rejected', 'draft'].map((s) => <div key={s} className={`chip${filtre === s ? ' active' : ''}`} onClick={() => setFiltre(s)}>{s === 'all' ? tr('adminCommon.allM') : lifecycle(s)}</div>)}
             </div>
             {/* Les trois statuts légaux */}
             <div className="role-pick" style={{ margin: 0 }}>
@@ -150,7 +164,7 @@ export default function AdminCouriersPage() {
                 </div>
               </div>
               <div className="small">{r.email}</div>
-              <div className="small"><Icone nom="document" taille={16} className="icone-texte" />{' '}{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''} · {r.identity?.status === 'verified' ? `${tr('adminCouriers.colIdentity')}` : r.identity?.status === 'pending' ? `${tr('adminCouriers.colIdentity')}` : `· ${tr('adminCouriers.colIdentity')}`} · {tr('adminCouriers.colGross')} {euro(r.grossTotal ?? 0)}</div>
+              <div className="small"><Icone nom="document" taille={16} className="icone-texte" />{' '}{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''} · {tr('adminCouriers.colIdentity')} {r.identity?.status === 'verified' ? tr('adminCouriers.identityStateVerified') : r.identity?.status === 'pending' ? tr('adminCouriers.identityStatePending') : r.identity?.status === 'failed' ? tr('adminCouriers.identityStateFailed') : tr('adminCouriers.identityStateNone')} · {tr('adminCouriers.colGross')} {euro(r.grossTotal ?? 0)}</div>
               <div className="small"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{r.zone || '-'} · {r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}</div>
               <div className="small" style={{ opacity: 0.6 }}>{tr('adminCouriers.colUpdated')} {fmt(r.updatedAt)}</div>
             </div>
@@ -181,6 +195,8 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   const [confirm, setConfirm] = useState(null); // { title, message, danger, run }
   const [motifDialog, setMotifDialog] = useState(null); // { title, message, label, danger, confirmLabel, required, run(reason) }
   const [decisionLivreur, setDecisionLivreur] = useState(false); // suspension motivée (B7, D6)
+  const [identiteOk, setIdentiteOk] = useState(false); // identité vérifiée par l'équipe : comment, et le nom de la pièce (admin-42)
+  const [demandeInfo, setDemandeInfo] = useState(false); // « Demander une info » (admin-70)
   const load = () => { setErreur(null); return api(`/admin/couriers/${id}`, { token }).then(setD).catch((e) => setErreur(e.message)); };
   useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   async function agir(fn, ok) { setBusy(true); try { await fn(); if (ok) toast(ok); await load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); } }
@@ -189,7 +205,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   // vérifiée : on montre alors ce qui bloque et on propose de valider quand même, avec un motif obligatoire (tracé).
   const libelleBlocage = (b) => (b === 'identite_non_verifiee' ? tr('adminCouriers.blockIdentity')
     : b.startsWith('document_non_verifie_') ? tr('adminCouriers.blockDocUnverified', { doc: tr(`courierOnboarding.doc_${b.slice(21)}`) })
-      : tr(`courierOnboarding.missing_${b}`));
+      : libelleManque(b, tr));
   async function validerDossier(reason, force) {
     setBusy(true);
     try {
@@ -263,13 +279,23 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secIdentity')}</h4>
           <DrawerRow label={tr('adminCommon.status')} value={identite.status === 'verified' ? `${tr(`adminCouriers.provider_${identite.provider || 'manual'}`)}` : `${identite.status || '-'}${identite.provider ? ` (${identite.provider})` : ''}`} />
+          {identite.rejectedReason && <DrawerRow label={tr('adminCouriers.identityKoReason')} value={identite.rejectedReason} />}
           <DrawerRow label={tr('adminCouriers.verifiedName')} value={`${identite.firstName || ''} ${identite.lastName || ''}`.trim() || '-'} />
           <DrawerRow label={tr('adminCouriers.nameMatch')} value={`${tr('adminCouriers.account')} ${identite.nameMatchAccount == null ? '-' : identite.nameMatchAccount ? '✓' : '✗'} · Stripe ${identite.nameMatchStripe == null ? '-' : identite.nameMatchStripe ? '✓' : '✗'}`} />
           {identite.status !== 'verified' && (
             <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-              <button className="btn-outline" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markIdentityOk'), message: tr('adminCouriers.identityOkBody'), run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: true, firstName: d.user?.name?.split(' ')[0], lastName: d.user?.name?.split(' ').slice(1).join(' ') } }), tr('adminCouriers.toastIdentityOk')) })}>{tr('adminCouriers.markIdentityOk')}</button>
-              <button className="btn-danger-ghost" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markIdentityKo'), message: tr('adminCouriers.identityKoBody'), danger: true, run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: false } })) })}>{tr('adminCouriers.markIdentityKo')}</button>
+              {/* Comment (en personne / sur la pièce déposée) et le nom tel qu'il figure sur la pièce (audit du 19/10, admin-42) :
+                  c'était le nom du compte, et « manuel » même après un rendez-vous, si bien que le selfie restait demandé. */}
+              <button className="btn-outline" disabled={busy} onClick={() => setIdentiteOk(true)}>{tr('adminCouriers.markIdentityOk')}</button>
+              {/* Refus motivé : le motif part au livreur par e-mail et notification, et s'affiche dans son dossier (admin-43). */}
+              <button className="btn-danger-ghost" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.markIdentityKo'), message: tr('adminCouriers.identityKoBody'), label: tr('adminCouriers.identityKoReason'), danger: true, confirmLabel: tr('adminCouriers.markIdentityKo'), run: (reason) => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: false, reason } }), tr('adminCouriers.toastIdentityRefused')) })}>{tr('adminCouriers.markIdentityKo')}</button>
             </div>
+          )}
+          {identiteOk && (
+            <IdentiteVerifieeDialog tr={tr} busy={busy} identite={identite} nomCompte={d.user?.name || ''}
+              aDesPieces={documents.some((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && !x.rejectedReason)}
+              onCancel={() => setIdentiteOk(false)}
+              onConfirm={(corps) => { setIdentiteOk(false); agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: true, ...corps } }), tr('adminCouriers.toastIdentityOk')); }} />
           )}
           {identite.status !== 'verified' && (
             <details className="small" style={{ marginTop: 8 }}>
@@ -343,18 +369,18 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           <h4 className="drawer-section-title" style={{ marginTop: 12 }}>{tr('adminCouriers.earningsByYear')}</h4>
           {(gains.byYear ?? []).length === 0 && <p className="small">{tr('adminCouriers.noEarnings')}</p>}
           {(gains.byYear ?? []).length > 0 && (
-            <table className="admin-table" style={{ width: '100%' }}>
+            <div className="table-scroll"><table className="admin-table" style={{ width: '100%' }}>
               <thead><tr><th>{tr('adminCouriers.colYear')}</th><th>{tr('adminCouriers.colCount')}</th><th>{tr('adminCouriers.colGross')}</th><th>{tr('adminCouriers.colWithholding')}</th><th>{tr('adminCouriers.colNet')}</th></tr></thead>
               <tbody>{gains.byYear.map((y) => <tr key={y.year}><td>{y.year}</td><td>{y.deliveries ?? 0}</td><td>{euro(y.gross)}</td><td>{euro(y.withholding)}</td><td><b>{euro(y.net)}</b></td></tr>)}</tbody>
-            </table>
+            </table></div>
           )}
           {(gains.byQuarter ?? []).length > 0 && (
             <>
               <h4 className="drawer-section-title" style={{ marginTop: 12 }}>{tr('adminCouriers.earningsByQuarter')}</h4>
-              <table className="admin-table" style={{ width: '100%' }}>
+              <div className="table-scroll"><table className="admin-table" style={{ width: '100%' }}>
                 <thead><tr><th>{tr('adminCouriers.colQuarter')}</th><th>{tr('adminCouriers.colCount')}</th><th>{tr('adminCouriers.colGross')}</th><th>{tr('adminCouriers.colWithholding')}</th><th>{tr('adminCouriers.colNet')}</th></tr></thead>
                 <tbody>{gains.byQuarter.map((q) => <tr key={`${q.year}-${q.quarter}`}><td>{q.year} T{q.quarter}</td><td>{q.count ?? 0}</td><td>{euro(q.gross)}</td><td>{euro(q.withholding)}</td><td><b>{euro(q.net)}</b></td></tr>)}</tbody>
-              </table>
+              </table></div>
             </>
           )}
         </>
@@ -362,15 +388,26 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
       {onglet === 'decision' && (
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secDecision')}</h4>
-          {missing.length > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--gold-deep)' }}>{tr('adminCouriers.missingList')} {missing.map((m) => tr(`courierOnboarding.missing_${m}`)).join(', ')}</p>}
+          {missing.length > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--gold-deep)' }}>{tr('adminCouriers.missingList')} {missing.map((m) => libelleManque(m, tr)).join(', ')}</p>}
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            {c.lifecycleStatus !== 'approved' && <button className="btn-teal" disabled={busy || (missing.length > 0 && c.lifecycleStatus !== 'suspended')} title={missing.length ? tr('adminCouriers.missingHint', { n: missing.length }) : ''} onClick={() => setMotifDialog({ title: c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve'), message: tr('adminCouriers.approveBody'), required: false, confirmLabel: c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve'), run: (reason) => (c.lifecycleStatus === 'suspended' ? agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'reactivate', reason: reason || undefined } }), tr('adminCouriers.toastApproved')) : validerDossier(reason, false)) })}>{c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve')}</button>}
+            {/* RÉACTIVER = RÉTABLIR LA DÉCISION (audit du 19/10, admin-37) : le serveur lève le dossier du registre et envoie
+                le motif au livreur ; il est donc obligatoire. Approuver reste sans motif (sauf validation forcée). */}
+            {c.lifecycleStatus === 'suspended' && <button className="btn-teal" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.reactivate'), message: tr('adminCouriers.reactivateBody'), label: tr('adminCouriers.reactivateReason'), confirmLabel: tr('adminCouriers.reactivate'), run: (reason) => agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'reactivate', reason } }), tr('adminCouriers.toastReactivated')) })}>{tr('adminCouriers.reactivate')}</button>}
+            {!['approved', 'suspended'].includes(c.lifecycleStatus) && <button className="btn-teal" disabled={busy || missing.length > 0} title={missing.length ? tr('adminCouriers.missingHint', { n: missing.length }) : ''} onClick={() => setMotifDialog({ title: tr('adminCouriers.approve'), message: tr('adminCouriers.approveBody'), required: false, confirmLabel: tr('adminCouriers.approve'), run: (reason) => validerDossier(reason, false) })}>{tr('adminCouriers.approve')}</button>}
+            {/* Validé par erreur (audit du 19/10, admin-71) : retour « à valider » avec un motif, avant toute course. */}
+            {c.lifecycleStatus === 'approved' && <button className="btn-ghost" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.unapprove'), message: tr('adminCouriers.unapproveBody'), label: tr('adminCouriers.unapproveReason'), confirmLabel: tr('adminCouriers.unapprove'), run: (reason) => agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'unapprove', reason } }), tr('adminCouriers.toastUnapproved')) })}>{tr('adminCouriers.unapprove')}</button>}
+            {/* Demander une info sans rien refuser (audit du 19/10, admin-70), comme pour un commerce : message dans
+                Mon compte › Messages, et par e-mail ; le livreur répond au même endroit. */}
+            {c.userId && <button className="btn-outline" disabled={busy} onClick={() => setDemandeInfo(true)}>{tr('adminCouriers.askInfo')}</button>}
             {c.lifecycleStatus === 'pending_review' && <button className="btn-danger-ghost" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.reject'), message: tr('adminCouriers.rejectBody'), danger: true, confirmLabel: tr('adminCouriers.reject'), run: (reason) => agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'rejected', reason } }), tr('adminCouriers.toastRejected')) })}>{tr('adminCouriers.reject')}</button>}
             {/* Suspension (B7, D6) : décision humaine motivée, exposé des motifs envoyé, réexamen sous 14 jours. */}
             {['approved', 'blocked_threshold'].includes(c.lifecycleStatus) && <button className="btn-danger-ghost" disabled={busy} onClick={() => setDecisionLivreur(true)}>{tr('adminCouriers.suspend')}</button>}
             <DecisionDialog open={decisionLivreur} cible={c.name || ''} targetType="courier" loading={busy}
               onCancel={() => setDecisionLivreur(false)}
-              onConfirm={async (payload) => { setDecisionLivreur(false); await agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'suspended', ...payload } })); }} />
+              onConfirm={async (payload) => { setDecisionLivreur(false); await agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'suspended', ...payload } }), tr(payload.measure === 'termination' ? 'adminCouriers.toastTerminated' : 'adminCouriers.toastSuspended')); }} />
+            <ReasonDialog open={demandeInfo} title={tr('adminCouriers.askInfoTitle', { name: d.user?.name || '' })} message={tr('adminCouriers.askInfoBody')} label={tr('adminCouriers.askInfoLabel')} multiline confirmLabel={tr('adminCouriers.askInfoSend')} loading={busy}
+              onCancel={() => setDemandeInfo(false)}
+              onConfirm={(texte) => { setDemandeInfo(false); agir(() => api('/admin/messages/threads', { method: 'POST', token, body: { userId: c.userId, subject: tr('adminCouriers.askInfoSubject'), body: texte, notifyByEmail: true } }), tr('adminCouriers.askInfoSent')); }} />
           </div>
           <div className="divider" />
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
@@ -383,10 +420,57 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secLog')}</h4>
           {events.length === 0 && <p className="small">-</p>}
-          <div className="small">{events.map((e, i) => <div key={i} style={{ padding: '2px 0' }}>{new Date(e.created_at || e.createdAt).toLocaleString(getLocale())}, <b>{e.event || e.action}</b> {e.details && Object.keys(e.details).length ? <span style={{ opacity: 0.7 }}>{JSON.stringify(e.details).slice(0, 120)}</span> : null}</div>)}</div>
+          <div className="small">{events.map((e, i) => <div key={i} style={{ padding: '2px 0' }}>{new Date(e.created_at || e.createdAt).toLocaleString(getLocale())}, <b>{libelleEvenement(e.event || e.action, tr)}</b> {detailsLisibles(e.details) ? <span style={{ opacity: 0.7 }}>{detailsLisibles(e.details)}</span> : null}</div>)}</div>
         </>
       )}
     </>
+  );
+}
+
+/* IDENTITÉ VÉRIFIÉE PAR L'ÉQUIPE (audit du 19/10, admin-42, LIVE-06). Deux questions avant d'enregistrer :
+ *   - comment : « En personne » (rendez-vous, pièce comparée au visage → provider 'in_person' : le selfie n'est plus
+ *     demandé, comme après Stripe Identity) ou « Sur la pièce déposée » ('manual' : le selfie reste demandé pour comparer) ;
+ *     choisi d'avance selon ce que le livreur a demandé (rendez-vous) ou déposé ;
+ *   - le prénom et le nom tels qu'ils figurent sur la pièce, préremplis depuis le compte, à corriger : c'est ce nom que
+ *     la concordance compare au compte et à Stripe (avant : le nom du compte coupé au premier espace, toujours concordant). */
+function IdentiteVerifieeDialog({ tr, busy, identite, nomCompte, aDesPieces, onConfirm, onCancel }) {
+  const ids = useId();
+  const racine = useRef(null);
+  useDialogue(racine, onCancel); // Échap, focus dans la fenêtre, fond figé
+  const mots = nomCompte.trim().split(/\s+/).filter(Boolean);
+  const [fournisseur, setFournisseur] = useState(identite.provider === 'manual' || (identite.provider !== 'in_person' && aDesPieces) ? 'manual' : 'in_person');
+  const [prenom, setPrenom] = useState(identite.firstName || mots[0] || '');
+  const [nom, setNom] = useState(identite.lastName || mots.slice(1).join(' '));
+  const pret = prenom.trim() && nom.trim();
+  return createPortal(
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-box admin-reason-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }} role="dialog" aria-modal="true" aria-labelledby={`${ids}-titre`} ref={racine} tabIndex={-1}>
+        <h3 id={`${ids}-titre`} style={{ margin: '0 0 8px' }}>{tr('adminCouriers.markIdentityOk')}</h3>
+        <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminCouriers.identityOkBody')}</p>
+        <fieldset style={{ border: 0, padding: 0, margin: '0 0 12px' }}>
+          <legend className="small" style={{ marginBottom: 6 }}><b>{tr('adminCouriers.identityHow')}</b></legend>
+          {[['in_person', 'identityHowInPerson'], ['manual', 'identityHowDocument']].map(([v, cle]) => (
+            <label key={v} className="row small" style={{ gap: 8, alignItems: 'center', cursor: 'pointer', margin: '0 0 4px' }}>
+              <input type="radio" name={`${ids}-comment`} style={{ width: 'auto' }} checked={fournisseur === v} onChange={() => setFournisseur(v)} />
+              <span>{tr(`adminCouriers.${cle}`)}</span>
+            </label>
+          ))}
+        </fieldset>
+        <div className="field">
+          <label htmlFor={`${ids}-prenom`}>{tr('adminCouriers.identityFirstName')}</label>
+          <input id={`${ids}-prenom`} value={prenom} onChange={(e) => setPrenom(e.target.value)} />
+        </div>
+        <div className="field">
+          <label htmlFor={`${ids}-nom`}>{tr('adminCouriers.identityLastName')}</label>
+          <input id={`${ids}-nom`} value={nom} onChange={(e) => setNom(e.target.value)} />
+        </div>
+        <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>
+          <button type="button" className="btn-ghost" onClick={onCancel} disabled={busy}>{tr('adminCommon.cancel')}</button>
+          <button type="button" className="btn-gold" disabled={busy || !pret} onClick={() => onConfirm({ provider: fournisseur, firstName: prenom.trim(), lastName: nom.trim() })}>{busy ? '...' : tr('adminCouriers.markIdentityOk')}</button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -477,7 +561,7 @@ function Exports({ tr, token, toast }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
-  const [annee, setAnnee] = useState(new Date().getFullYear()); const [trim, setTrim] = useState('');
+  const [annee, setAnnee] = useState(new Date().getFullYear());
   const go = (path, nom) => telecharger(path, token, nom).catch((e) => toast(e.message, 'erreur'));
   return (
     <div className="card">
@@ -485,17 +569,37 @@ function Exports({ tr, token, toast }) {
       <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminCouriers.exportsHelp')}</p>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-year-2'}>{tr('adminCouriers.year')}</label><input id={idsA11y + '-year-2'} type="number" value={annee} onChange={(e) => setAnnee(e.target.value)} style={{ width: 110 }} /></div>
-        <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-quarter'}>{tr('adminCouriers.quarter')}</label><select id={idsA11y + '-quarter'} value={trim} onChange={(e) => setTrim(e.target.value)}><option value="">{tr('adminCouriers.allQuarters')}</option>{[1, 2, 3, 4].map((q) => <option key={q} value={q}>T{q}</option>)}</select></div>
-        <button className="btn-outline" onClick={() => go(`/admin/couriers/export/dac7?year=${annee}${trim ? `&quarter=${trim}` : ''}`, `dac7-${annee}${trim ? `-T${trim}` : ''}.csv`)}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}DAC7</button>
+        {/* Plus de choix du trimestre (audit du 19/10, admin-73) : le serveur exporte toujours l'année entière, et le fichier
+            s'appelait « T3 » quand même. DAC7 se déclare par année. */}
+        <button className="btn-outline" onClick={() => go(`/admin/couriers/export/dac7?year=${annee}`, `dac7-${annee}.csv`)}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}DAC7</button>
       </div>
     </div>
   );
 }
 
+// Journal du dossier (audit du 19/10, admin-87) : un libellé par événement plutôt que « review_reactivate {"reason":null} ».
+// Un code inconnu reste affiché tel quel ; les détails en clair, sans les valeurs vides.
+function libelleEvenement(code, tr) {
+  const v = tr(`adminCouriers.event_${code}`);
+  return v === `adminCouriers.event_${code}` ? code : v;
+}
+function detailsLisibles(details) {
+  if (!details || typeof details !== 'object') return '';
+  return Object.entries(details).filter(([, v]) => v !== null && v !== undefined && v !== '' && typeof v !== 'object')
+    .map(([k, v]) => `${k} : ${String(v).slice(0, 80)}`).join(' · ').slice(0, 200);
+}
+
+// Un livreur au téléphone (audit du 19/10, admin-11 / C16) : son numéro, comparé sans indicatif ni 0 de tête ni
+// séparateurs, pour que « 0470 12 34 56 », « +32470123456 » et « 470123456 » le retrouvent tous.
+function telNational(v) { return String(v || '').replace(/\D/g, '').replace(/^(00)?32/, '').replace(/^0/, ''); }
+function rechercheTel(q) { return /^[\d\s+()./-]{6,}$/.test(String(q || '').trim()) ? telNational(q) : q; }
+
 // Journal d'audit des actions sensibles (/admin/audit-log) : qui, quoi, sur quoi, avant → après.
+// Le serveur répond { entries } avec actorEmail (routes/couriers.js) : la page lisait rows et actorName, et restait vide
+// — GO, approbations forcées, drapeaux invisibles (audit du 19/10, admin-36).
 function JournalAudit({ tr, token }) {
   const [lignes, setLignes] = useState(null); const [erreur, setErreur] = useState(null);
-  const charger = () => { setErreur(null); api('/admin/audit-log?limit=200', { token }).then((r) => setLignes(Array.isArray(r) ? r : (r?.rows ?? []))).catch((e) => setErreur(e.message)); };
+  const charger = () => { setErreur(null); api('/admin/audit-log?limit=200', { token }).then((r) => setLignes(Array.isArray(r) ? r : (r?.entries ?? r?.rows ?? []))).catch((e) => setErreur(e.message)); };
   useEffect(() => { charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const court = (v) => (v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v));
   return (
@@ -513,7 +617,7 @@ function JournalAudit({ tr, token }) {
               {lignes.map((l) => (
                 <tr key={l.id}>
                   <td className="small" style={{ whiteSpace: 'nowrap' }}>{l.createdAt ? new Date(l.createdAt).toLocaleString(getLocale()) : '-'}</td>
-                  <td className="small">{l.actorName || l.actorId || '-'}</td>
+                  <td className="small">{l.actorEmail || l.actorName || l.actorId || '-'}</td>
                   <td><b>{l.action}</b></td>
                   <td className="small">{court(l.target)}</td>
                   <td className="small" style={{ maxWidth: 380, overflowWrap: 'anywhere', opacity: 0.8 }}>{court(l.before).slice(0, 160)}{l.before != null || l.after != null ? ' → ' : ''}{court(l.after).slice(0, 160)}</td>

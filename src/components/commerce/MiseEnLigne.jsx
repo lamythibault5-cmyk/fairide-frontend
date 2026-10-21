@@ -43,13 +43,15 @@ export default function MiseEnLigne(props) {
   const etat = useMiseEnLigne(props);
   if (!etat?.prochaine) return null;
   const { restantes, prochaine } = etat;
+  // Commerce déjà visible (nouveau contrat à accepter, carte à revalider…) : pas « avant d'être visible des clients » (shop-15).
+  const restantesTexte = t(props.restaurant?.publicListed ? 'miseEnLigne.remainingListed' : 'miseEnLigne.remaining', { n: restantes.length });
   // Sur le bandeau iris de Commandes (site, 2026-10-16) : une ligne claire et un bouton blanc — le lime de la page est à
   // « Accepter ». Même étape, même action.
   if (props.surBandeau) {
     const a = prochaine.action;
     return (
       <div className="sp-b-etape">
-        <span className="sp-b-etape-texte"><Icone nom={prochaine.icone} taille={18} /><span><b>{t('miseEnLigne.nextStep', { step: prochaine.titre })}</b>{' · '}{t('miseEnLigne.remaining', { n: restantes.length })}</span></span>
+        <span className="sp-b-etape-texte"><Icone nom={prochaine.icone} taille={18} /><span><b>{t('miseEnLigne.nextStep', { step: prochaine.titre })}</b>{' · '}{restantesTexte}</span></span>
         {a.to ? <Link to={a.to} className="sp-puce sp-puce--blanche">{a.libelle}</Link>
           : <button type="button" className="sp-puce sp-puce--blanche" onClick={a.onClick} disabled={a.disabled}>{a.libelle}</button>}
       </div>
@@ -58,7 +60,7 @@ export default function MiseEnLigne(props) {
   return (
     <div className="card account-groupe" aria-label={t('miseEnLigne.title')}>
       <LigneCompte icone={prochaine.icone} accent="warn" titre={t('miseEnLigne.nextStep', { step: prochaine.titre })}
-        sous={t('miseEnLigne.remaining', { n: restantes.length })} action={bouton(prochaine, true)} />
+        sous={restantesTexte} action={bouton(prochaine, true)} />
     </div>
   );
 }
@@ -105,8 +107,9 @@ export function RouteMiseEnLigne({ etapes, libelles = false }) {
 // `boutonDansCarte` (site) : le bouton lime dans la carte de la prochaine étape, à droite, au lieu de pleine largeur dessous.
 export function EtapesMiseEnLigne({ etat, boutonDansCarte = false }) {
   const { t } = useLanguage();
-  const { etapes, prochaine } = etat;
-  const p = prochaine;
+  const { etapes, prochaine, alerte } = etat;
+  // Sans action possible, l'alerte (retiré du site par Fairide, shop-13) prend la carte de tête, sans bouton.
+  const p = prochaine || alerte;
   const boutonLime = p?.action && (p.action.to
     ? <Link to={p.action.to} className="ec-bouton ec-bouton--lime">{p.action.libelle}</Link>
     : <button type="button" className="ec-bouton ec-bouton--lime" onClick={p.action.onClick} disabled={p.action.disabled}>{p.action.libelle}</button>);

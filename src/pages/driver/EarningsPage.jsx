@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import EtatVide from '../../components/EtatVide';
+import ErreurChargement from '../../components/ErreurChargement';
 import ChiffresRoulants from '../../components/ChiffresRoulants';
 import RouteVelo from '../../components/livreur/RouteVelo';
 import Icone from '../../components/Icone';
@@ -56,15 +57,19 @@ export default function EarningsPage() {
   // Le dernier total affiché : pendant le chargement d'une autre année, il reste en place, puis seuls les chiffres qui
   // changent roulent.
   const [netAffiche, setNetAffiche] = useState(null);
+  // Chargement raté (audit du 19/10, CROSS-32) : « 0,00 € » et « aucune course » s'affichaient comme si l'année était vide.
+  const [erreur, setErreur] = useState(false);
+  const [essai, setEssai] = useState(0);
   const annees = useMemo(() => { const a = new Date().getFullYear(); const l = []; for (let y = a; y >= Math.min(a, PREMIERE_ANNEE); y--) l.push(y); return l; }, []);
 
   useEffect(() => { api('/couriers/me', { token }).then(setDossier).catch(() => setDossier({})); }, [token]);
   useEffect(() => {
     setGains(null);
+    setErreur(false);
     setBarreMontree(null);
-    api(`/couriers/me/earnings?year=${annee}`, { token }).then(setGains).catch((e) => { toast(e.message, 'erreur'); setGains({ year: annee, totals: {}, byMonth: [], lines: [], ceiling: null }); });
+    api(`/couriers/me/earnings?year=${annee}`, { token }).then(setGains).catch((e) => { toast(e.message, 'erreur'); setNetAffiche(null); setErreur(true); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, annee]);
+  }, [token, annee, essai]);
   useEffect(() => { if (gains) setNetAffiche(euro(gains.totals?.net)); }, [gains]);
 
   const legal = dossier?.legal ?? {};
@@ -205,7 +210,7 @@ export default function EarningsPage() {
       </section>
 
       <div className="ecl-feuille">
-        {!gains ? <SkeletonCards count={2} /> : (
+        {erreur ? <ErreurChargement onReessayer={() => setEssai((n) => n + 1)} /> : !gains ? <SkeletonCards count={2} /> : (
           <div className="ecl-site-cols">
             <div className="ecl-site-col">
               {!auMoinsUnGain && courses.length === 0 && <EtatVide icone="euro" titre={t('driverPay.none')} />}

@@ -1,7 +1,8 @@
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useLanguage } from './LanguageContext';
 import Icone from '../components/Icone';
 import { vibrer } from '../gestes';
+import { inscrireToastGlobal } from '../toastGlobal';
 
 const ToastContext = createContext(null);
 // Au-delà, le message reste plusieurs secondes : il reçoit aussi la croix pour le fermer soi-même.
@@ -13,6 +14,14 @@ export function ToastProvider({ children }) {
   const [ton, setTon] = useState('');
   const [show, setShow] = useState(false);
   const timer = useRef(null);
+  /* LES RÉGIONS VIVANTES (audit du 19/10, CROSS-84). Le rôle alert/status changeait dans le même rendu que le texte : un
+   * lecteur d'écran n'annonce pas toujours une région qui vient d'apparaître, et le même message deux fois de suite ne
+   * changeait rien au DOM, donc rien n'était relu. Deux régions toujours présentes (polie et assertive) reçoivent le texte ;
+   * on les vide puis on écrit au tour suivant, si bien qu'une répétition est annoncée elle aussi. */
+  const [annonce, setAnnonce] = useState({ poli: '', urgent: '' });
+  const annonceTimer = useRef(null);
+  // Durée restante, pour reprendre le compte à rebours quand la souris ou le focus quitte le toast.
+  const fin = useRef(0);
 
   /* `ton` est facultatif : toast('…') se comporte exactement comme avant ; toast('…', 'erreur') met le message en rouge ;
    * toast('…', 'succes') le précède d'une coche verte (audit UX du 15/10/2026).
@@ -49,20 +58,46 @@ export function ToastProvider({ children }) {
      * en plus d'1,5 s pour poser les yeux —, entre 3,2 s pour « Plat ajouté » et 12 s au plus ; une erreur garde 2 s de
      * plus. Un message long ou une erreur se ferme aussi à la croix (audit du 15/10/2026). */
     const duree = Math.max(3200, Math.min(12000, 1500 + String(msg || '').length * 65)) + (tonDemande === 'erreur' ? 2000 : 0);
+    fin.current = duree;
     timer.current = setTimeout(() => setShow(false), duree);
+    clearTimeout(annonceTimer.current);
+    setAnnonce({ poli: '', urgent: '' });
+    annonceTimer.current = setTimeout(() => setAnnonce(tonDemande === 'erreur' ? { poli: '', urgent: String(msg || '') } : { poli: String(msg || ''), urgent: '' }), 60);
   }, []);
   const fermer = () => { clearTimeout(timer.current); setShow(false); };
+  /* Pause au survol et au focus (CROSS-84) : qui lit lentement, ou atteint la croix au clavier, ne voit plus le message
+   * s'effacer sous ses yeux. Il repart pour 3 s au moins quand on s'en va. */
+  const suspendre = () => { if (show) clearTimeout(timer.current); };
+  const reprendre = () => {
+    if (!show) return;
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setShow(false), Math.max(3000, Math.min(fin.current, 6000)));
+  };
+  useEffect(() => () => { clearTimeout(timer.current); clearTimeout(annonceTimer.current); }, []);
+  // Le code hors composant (pdf.js) affiche aussi ses erreurs ici (audit du 19/10, CROSS-08).
+  useEffect(() => inscrireToastGlobal(toast), [toast]);
 
   return (
     <ToastContext.Provider value={toast}>
       {children}
-      <div className={`toast${show ? ' show' : ''}${ton === 'erreur' ? ' toast-erreur' : ''}${ton === 'succes' ? ' toast-succes' : ''}`} role={ton === 'erreur' ? 'alert' : 'status'}>
+      {/* Ce que le lecteur d'écran annonce (CROSS-84) ; le toast visible, lui, n'a plus de rôle pour ne pas le dire deux fois. */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{annonce.poli}</div>
+      <div className="sr-only" role="alert" aria-live="assertive" aria-atomic="true">{annonce.urgent}</div>
+      <div
+        className={`toast${show ? ' show' : ''}${ton === 'erreur' ? ' toast-erreur' : ''}${ton === 'succes' ? ' toast-succes' : ''}`}
+        aria-hidden={show ? undefined : 'true'}
+        onMouseEnter={suspendre}
+        onMouseLeave={reprendre}
+        onFocus={suspendre}
+        onBlur={reprendre}
+      >
         {/* Aux couleurs de Fairide (fondateur, 2026-10-17 : « pas fan des messages noirs ») : information en iris, confirmation
             en iris avec la coche lime, erreur en rouge avec son triangle. */}
         {ton === 'succes' && <span className="toast-coche" aria-hidden="true"><Icone nom="valider" taille={16} /></span>}
         {ton === 'erreur' && <span className="toast-coche toast-coche--erreur" aria-hidden="true"><Icone nom="alerte" taille={16} /></span>}
         <span>{message}</span>
-        {(ton === 'erreur' || String(message || '').length > SEUIL_LONG) && <button type="button" className="toast-fermer" onClick={fermer} aria-label={t('common.close')}>×</button>}
+        {/* Rendue seulement quand le toast est visible : un toast caché gardait sa croix dans l'ordre de tabulation (CROSS-84). */}
+        {show && (ton === 'erreur' || String(message || '').length > SEUIL_LONG) && <button type="button" className="toast-fermer" onClick={fermer} aria-label={t('common.close')}>×</button>}
       </div>
     </ToastContext.Provider>
   );

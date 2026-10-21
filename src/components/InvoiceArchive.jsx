@@ -7,6 +7,7 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 import PeppolSettings from './PeppolSettings';
 import { euros } from '../prixPlat';
 import Icone from './Icone';
+import ErrorCard from './ErrorCard';
 
 // Archive des documents émis, partagée par le restaurateur (factures de commission) et le livreur
 // (relevés mensuels des ventes encaissées pour son compte, fondateur 2026-10-14 : pas des factures, hors Peppol → `peppol`
@@ -48,6 +49,8 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
   const [data, setData] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [mailId, setMailId] = useState(null);
+  const [erreur, setErreur] = useState('');
+  const [essai, setEssai] = useState(0);
 
   // Renvoi de la facture par e-mail à l'adresse du compte, PDF joint (voir POST /invoices/restaurant/:id/send).
   async function envoyerParEmail(inv) {
@@ -64,11 +67,14 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
   }
 
   useEffect(() => {
+    // Échec de chargement : une carte « Réessayer », plus « Aucune facture émise » comme si l'archive était vide (audit du
+    // 19/10, shop-113).
+    setErreur('');
     api(endpoint, { token })
       .then(setData)
-      .catch((e) => { toast(e.message, 'erreur'); setData({ invoices: [] }); });
+      .catch((e) => setErreur(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [endpoint]);
+  }, [endpoint, essai]);
 
   async function download(inv, format = 'pdf') {
     setBusyId(inv.id);
@@ -82,6 +88,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
     }
   }
 
+  if (erreur) return <ErrorCard message={erreur} onRetry={() => setEssai((n) => n + 1)} />;
   if (!data) return <SkeletonCards count={2} />;
 
   const invoices = data.invoices || [];
@@ -108,7 +115,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
                 <th>{t('invoiceArchive.period')}</th>
                 <th>{t('invoiceArchive.issuedOn')}</th>
                 <th className="num">{t('invoiceArchive.amountExVat')}</th>
-                <th className="num">TVA</th>
+                <th className="num">{t('invoiceArchive.vat')}</th>
                 <th className="num">{colonneMontant}</th>
                 <th>{t('invoiceArchive.status')}</th>
                 {peppol && <th>{t('invoiceArchive.peppol')}</th>}

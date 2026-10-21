@@ -43,7 +43,7 @@ export function OptionGroupForm({ initial, onSave, onCancel, saving }) {
   function save() {
     const cleanItems = items
       .filter((it) => it.name.trim())
-      .map((it) => ({ name: it.name.trim(), priceDelta: parseFloat(it.priceDelta) || 0 }));
+      .map((it) => ({ name: it.name.trim(), priceDelta: parseFloat(String(it.priceDelta).replace(',', '.')) || 0 }));
     if (!name.trim() || !cleanItems.length) return;
     const maxSel = type === 'multiple' ? parseInt(maxSelections, 10) || null : null;
     onSave({ name: name.trim(), type, required, maxSelections: maxSel, items: cleanItems });
@@ -77,17 +77,19 @@ export function OptionGroupForm({ initial, onSave, onCancel, saving }) {
           <input id={idsA11y + '-maxchoices'} type="number" min="1" step="1" value={maxSelections} onChange={(e) => setMaxSelections(e.target.value)} placeholder={t('optionGroups.phUnlimited')} />
         </div>
       )}
-      <label className="small" style={{ display: 'block', marginBottom: 6 }} htmlFor={idsA11y + '-options'}>{t('optionGroups.options')}</label>
+      {/* Un id par ligne et un nom par champ (audit du 19/10, CROSS-89/90) : toutes les lignes portaient le même id, le prix et
+          la croix n'avaient aucun nom. */}
+      <label className="small" style={{ display: 'block', marginBottom: 6 }} htmlFor={idsA11y + '-options-0'}>{t('optionGroups.options')}</label>
       {items.map((it, idx) => (
         <div className="row" key={idx} style={{ gap: 8, marginBottom: 6 }}>
-          <input id={idsA11y + '-options'} style={{ flex: 2 }} value={it.name} onChange={(e) => setItemField(idx, 'name', e.target.value)} placeholder={t('optionGroups.phOption')} />
-          <input style={{ flex: 1 }} type="number" step="0.5" value={it.priceDelta} onChange={(e) => setItemField(idx, 'priceDelta', e.target.value)} placeholder="+1.00" />
-          <button type="button" className="btn-danger-ghost" style={{ padding: '4px 10px' }} onClick={() => removeRow(idx)} disabled={items.length <= 1}>✕</button>
+          <input id={`${idsA11y}-options-${idx}`} style={{ flex: 2 }} value={it.name} onChange={(e) => setItemField(idx, 'name', e.target.value)} placeholder={t('optionGroups.phOption')} aria-label={t('optionGroups.optionNameA11y', { n: idx + 1 })} />
+          <input style={{ flex: 1 }} inputMode="decimal" value={it.priceDelta} onChange={(e) => setItemField(idx, 'priceDelta', e.target.value)} placeholder="+1.00" aria-label={t('optionGroups.optionPriceA11y', { n: idx + 1 })} />
+          <button type="button" className="btn-danger-ghost" style={{ padding: '4px 10px' }} onClick={() => removeRow(idx)} disabled={items.length <= 1} aria-label={t('optionGroups.removeOptionA11y', { n: idx + 1 })}>✕</button>
         </div>
       ))}
       <button type="button" className="btn-ghost" style={{ marginBottom: 12 }} onClick={addRow}>{t('optionGroups.addOption')}</button>
       <div className="row" style={{ gap: 8 }}>
-        <button className="btn-teal" disabled={saving} onClick={save}>{saving ? '...' : 'Enregistrer'}</button>
+        <button className="btn-teal" disabled={saving} onClick={save}>{saving ? '...' : t('menuItem.save')}</button>
         <button className="btn-ghost" onClick={onCancel}>{t('optionGroups.cancel')}</button>
       </div>
     </div>
@@ -144,7 +146,7 @@ export default function OptionGroupManager({ groups, onCreate, onUpdate, onDelet
                 <span className="small">({g.type === 'single' ? t('optionGroups.singleShort') : g.maxSelections ? t('optionGroups.maxShort', { n: g.maxSelections }) : t('optionGroups.multipleShort')}{g.required ? t('optionGroups.requiredShort') : ''})</span>
               </span>
               <div className="row" style={{ gap: 6 }}>
-                <button className="btn-ghost" onClick={() => setEditingId(g.id)}><Icone nom="crayon" taille={16} className="icone-texte" /></button>
+                <button className="btn-ghost" onClick={() => setEditingId(g.id)} aria-label={t('optionGroups.editGroupA11y', { name: g.name })}><Icone nom="crayon" taille={16} className="icone-texte" /></button>
                 <button className="btn-danger-ghost" onClick={() => onDelete(g.id)}>{t('optionGroups.delete')}</button>
               </div>
             </div>

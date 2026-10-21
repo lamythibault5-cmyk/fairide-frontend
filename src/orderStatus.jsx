@@ -134,12 +134,13 @@ export function EcheanceAcceptation({ order }) {
     return () => clearInterval(id);
   }, [order.acceptDeadline]);
   if (!order.acceptDeadline || order.status !== 'nouveau') return null;
+  // Échéance d'une commande programmée : un autre jour, avec sa date (audit du 19/10, shop-221 : « avant 11:30 (encore 2850 min) »).
   const minutes = Math.max(0, Math.ceil((order.acceptDeadline - maintenant) / 60000));
   const urgent = minutes <= 5;
   return (
     <div className={`small echeance-acceptation${urgent ? ' urgente' : ''}`} role={urgent ? 'alert' : undefined}>
       <Icone nom="horloge" taille={16} className="icone-texte" />{' '}{minutes > 0
-        ? t('orderStatus.acceptBefore', { time: formatTime(order.acceptDeadline), min: minutes })
+        ? t(minutes > 60 ? 'orderStatus.acceptBeforeLater' : 'orderStatus.acceptBefore', { time: formatDateTime(order.acceptDeadline), min: minutes })
         : t('orderStatus.acceptNow')}
     </div>
   );
@@ -200,6 +201,8 @@ export function titreSuivi(order, t) {
   if (status === 'nouveau' && order.paid === false && order.paymentMode !== 'on_site') return statusLabel(status, orderType, t, true);
   // À payer sur place mais jamais partie au commerce : « le commerce regarde ta commande » serait faux.
   if (status === 'nouveau' && order.paid === false) return t('orders.notSentTitle');
+  // Un livreur nommé est déjà en route vers le commerce : plus « on attend un livreur » (audit du 19/10, AO-14).
+  if (status === 'pret' && orderType === 'delivery' && order.driverName) return t('orderStatus.grand.pretDeliveryDriver', { name: prenomLivreur(order) });
   if (status === 'pret') return t(orderType === 'delivery' ? 'orderStatus.grand.pretDelivery' : 'orderStatus.grand.pretPickup');
   if (['nouveau', 'preparation', 'livraison'].includes(status)) return t(`orderStatus.grand.${status}`);
   return statusLabel(status, orderType, t, true);
@@ -260,7 +263,7 @@ export function ProchaineEtape({ order }) {
   if (status === 'nouveau' && order.paid === false) return null;
   if (status === 'nouveau' && order.acceptDeadline) {
     // Payée sur place : rien n'a été débité, il n'y a rien à rembourser (audit du 18/10/2026).
-    return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_nouveau_deadline_on_site' : 'orderStatus.next_nouveau_deadline', { time: formatTime(order.acceptDeadline) })}</div>;
+    return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_nouveau_deadline_on_site' : 'orderStatus.next_nouveau_deadline', { time: formatDateTime(order.acceptDeadline) })}</div>;
   }
   // Remboursement automatique refusé par Stripe (audit du 19/10/2026, AO-02, backend refundPending) : on ne dit pas
   // « remboursée » tant que l'équipe ne l'a pas refait.
@@ -271,9 +274,16 @@ export function ProchaineEtape({ order }) {
   if (status === 'annule' && order.expiredUnaccepted && order.paid === false) {
     return <div className="small order-next">{t('orderStatus.next_never_sent')}</div>;
   }
+  // Close après une attente sans client (livraison « client absent », à emporter non récupérée, audit du 19/10, shop-206) :
+  // la ligne de l'incident dit déjà que la commande reste due (Orders.jsx) ; « un paiement éventuel est remboursé » serait faux.
+  if (status === 'annule' && ['client_absent', 'pickup_not_collected'].includes(order.deliveryIncident)) return null;
   if (status === 'annule' && order.expiredUnaccepted) {
     return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_expired_on_site' : 'orderStatus.next_expired')}</div>;
   }
+  // Client absent à la porte (audit du 19/10, AO-04) : la carte disait à la fois « Un paiement éventuel est remboursé » et,
+  // juste dessous, « une commande non réceptionnée reste due » (orders.noCourier_incident_client_absent, conforme aux CGU).
+  // Le texte de l'incident, affiché partout où la commande l'est (Orders.jsx), suffit : pas de note « remboursé ».
+  if (status === 'annule' && order.deliveryIncident === 'client_absent') return null;
   if (status === 'nouveau') cle = 'next_nouveau';
   else if (status === 'preparation') cle = livraison ? 'next_preparation_delivery' : 'next_preparation_pickup';
   else if (status === 'pret') cle = livraison ? 'next_pret_delivery' : 'next_pret_pickup';
@@ -282,7 +292,16 @@ export function ProchaineEtape({ order }) {
   else if (status === 'refuse') cle = 'next_refuse';
   else if (status === 'annule') cle = order.pickupNoShow ? 'next_no_show' : 'next_annule';
   if (!cle) return null;
+  // Livreur déjà nommé (audit du 19/10, AO-14) : « un livreur viendra… tu recevras son nom » était faux, on dit lequel.
+  if (livraison && order.driverName && ['next_preparation_delivery', 'next_pret_delivery'].includes(cle)) {
+    return <div className="small order-next">{t(`orderStatus.${cle}_driver`, { name: prenomLivreur(order) })}</div>;
+  }
   return <div className="small order-next">{t(`orderStatus.${cle}`)}</div>;
+}
+
+// Le prénom du livreur, tel que le client le lit ailleurs (Orders.jsx, codeGiveDriverName).
+function prenomLivreur(order) {
+  return String(order.driverName || '').split(' ')[0];
 }
 
 export function ProgressBar({ status, orderType }) {

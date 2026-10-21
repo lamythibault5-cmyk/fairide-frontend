@@ -1,4 +1,5 @@
 import { restaurantTypeLabel } from './menuCategories';
+import { eurosCourt } from './prixPlat';
 
 // Mises en avant payantes (fondateur, 2026-10-02) : un commerce paie pour une position en tête d'une rangée de la
 // liste (voir routes/placements.js côté API). Ici, le seul calcul que fait le site : remonter les commerces épinglés à
@@ -43,5 +44,6 @@ export function titreRangee(t, section) {
 // « 1re position », « 2e position », « 3e position », puis « Position 4 »… (l'admin peut en vendre jusqu'à dix).
 export const libellePosition = (t, n) => (n <= 3 ? t(`placements.pos${n}`) : t('placements.posN', { n }));
 
-export const euros = (v) => `${Number(v).toFixed(2).replace('.', ',').replace(/,00$/, '')} €`;
+// Dans la langue affichée, avec séparateur de milliers (audit du 19/10, shop-119) : prixPlat.eurosCourt.
+export const euros = (v) => eurosCourt(v);
 export const jourCourt = (iso) => String(iso || '').split('-').reverse().join('/');

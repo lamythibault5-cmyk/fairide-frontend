@@ -3,6 +3,7 @@ import { effacerRecherches } from '../recherchesRecentes';
 import { api, setSessionExpiredHandler } from '../api';
 import { useToast } from './ToastContext';
 import { useLanguage } from './LanguageContext';
+import { languePreferee, SUPPORTED_LANGUAGES } from '../i18n/routing';
 import { effacerReprise } from '../bienvenue';
 
 const AuthContext = createContext(null);
@@ -14,6 +15,24 @@ const ACT_KEY = 'fairide_session_agir';
 // Casquette active d'un compte qui en porte plusieurs (voir plus bas). Mémorisée pour que l'onglet
 // rouvre sur la même vue, jamais crue sur parole : elle est revalidée contre les rôles du compte.
 const ROLE_ACTIF_KEY = 'fairide_role_actif';
+/* LA CASQUETTE RETENUE PAR COMPTE (audit du 19/10, shop-402). La déconnexion oublie la casquette active (le compte suivant
+ * sur la tablette ne doit pas ouvrir sur la vue du précédent) : un membre de l'équipe, dont le rôle d'origine est « client »,
+ * se reconnectait à chaque service sur la vue client — mauvaise barre d'onglets, pas de « Mon équipe ». On retient donc
+ * aussi le dernier choix PAR COMPTE (identifiant → casquette), relu à la connexion de ce même compte, et toujours revalidé
+ * contre ses rôles. Rien de personnel : un identifiant opaque et un nom de rôle. */
+const ROLE_PAR_COMPTE_KEY = 'fairide_role_par_compte';
+function roleRetenuPour(userId) {
+  if (!userId) return null;
+  try { return JSON.parse(localStorage.getItem(ROLE_PAR_COMPTE_KEY) || '{}')[userId] || null; } catch { return null; }
+}
+function retenirRolePour(userId, role) {
+  if (!userId) return;
+  try {
+    const m = JSON.parse(localStorage.getItem(ROLE_PAR_COMPTE_KEY) || '{}');
+    m[userId] = role;
+    localStorage.setItem(ROLE_PAR_COMPTE_KEY, JSON.stringify(m));
+  } catch { /* sans stockage */ }
+}
 /* SIMULATION (Admin › Simulation). La console ouvre un onglet avec les sessions de trois comptes de test (client,
  * restaurateur, livreur) plus le profil « visiteur » (aucune session). Tout vit dans sessionStorage, propre à
  * l'onglet, et arrive par le fragment #simuler=… : comme pour « Fairide agit comme… », la session admin
@@ -51,7 +70,7 @@ function sessionDepuisFragment() {
 }
 
 export function AuthProvider({ children }) {
-  const { t, language } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const toast = useToast();
   const [simulation, setSimulation] = useState(simulationInitiale);
   // Onglet de simulation : ni localStorage, ni session d'action — seulement les profils de la simulation.
@@ -77,6 +96,12 @@ export function AuthProvider({ children }) {
 
   // Garde-fou anti-répétition de la déconnexion pour expiration (voir l'effet plus bas).
   const expiredRef = useRef(false);
+  /* DÉCONNEXION VOULUE (audit du 19/10, auth-14). Après « Se déconnecter », ProtectedRoute renvoyait vers /login avec la page
+   * quittée en `from` : la personne suivante sur l'appareil (un commerce après un client) arrivait dans « Mon compte » au lieu
+   * de son espace, et le site montrait le formulaire de connexion au lieu de l'accueil. Ce drapeau dit à ProtectedRoute
+   * d'aller à l'accueil, sans `from` ; il retombe dès qu'une session s'ouvre. Une session EXPIRÉE garde le `from` (USR-6). */
+  const [deconnexionVoulue, setDeconnexionVoulue] = useState(false);
+  useEffect(() => { if (session?.user) setDeconnexionVoulue(false); }, [session?.user]);
 
   useEffect(() => {
     if (simuRef.current) {
@@ -127,10 +152,15 @@ export function AuthProvider({ children }) {
   // toute requête de l'utilisateur (livreur en route, réservation confirmée par le restaurateur...).
   useEffect(() => {
     if (!session?.token || !session.user || session.user.language === language || session.actingAs) return;
+    /* UN NOUVEL APPAREIL N'IMPOSE PAS SA LANGUE AU COMPTE (audit du 19/10, AO-23). La langue de la page vient de l'adresse
+     * (le français à la racine) : un client néerlandophone qui se connectait pour la première fois sur fairide.be/login
+     * repassait son compte en français, et ses e-mails et notifications suivaient. Sans choix mémorisé sur cet appareil
+     * (routing.js, posé par un vrai changement de langue), c'est la langue du compte qui l'emporte : la page s'y met. */
+    if (!languePreferee() && SUPPORTED_LANGUAGES.includes(session.user.language)) { setLanguage(session.user.language); return; }
     api('/auth/me', { method: 'PATCH', token: session.token, body: { language }, logoutOn401: false })
       .then((user) => setSession((prev) => (prev ? { ...prev, user } : prev)))
       .catch(() => {});
-  }, [language, session?.token]);
+  }, [language, session?.token, setLanguage]);
 
   /* LA SESSION SE PROLONGE QUAND ON S'EN SERT (audit du 18/10/2026). Elle dure 30 jours depuis la connexion : ouverte
    * chaque jour, l'application déconnectait quand même le 31e. Au plus une fois par jour (à l'ouverture, au retour au
@@ -152,6 +182,39 @@ export function AuthProvider({ children }) {
     return () => { fini = true; document.removeEventListener('visibilitychange', renouveler); };
   }, [session?.token, session?.actingAs]);
 
+  /* LES DROITS DE LA SESSION SE METTENT À JOUR (audit du 19/10, LIVE-19). Le compte gardé dans le téléphone n'était relu
+   * qu'à la connexion : un membre ajouté à l'équipe restait renvoyé hors de /admin (isAdmin faux), un compte passé « test »
+   * ne l'était pas, jusqu'à se déconnecter. On relit /auth/me à l'ouverture et au retour au premier plan (au plus une fois
+   * toutes les cinq minutes). Pas pendant « Fairide agit comme… » ni en simulation : leur session n'est pas celle du
+   * compte lu. Une session révoquée répond 401, et la déconnexion centrale (api.js) fait le reste. */
+  useEffect(() => {
+    if (!session?.token || session.actingAs || simuRef.current) return undefined;
+    let derniere = 0;
+    const relire = () => {
+      if (document.visibilityState === 'hidden' || Date.now() - derniere < 5 * 60 * 1000) return;
+      derniere = Date.now();
+      api('/auth/me', { token: session.token })
+        .then((user) => setSession((prev) => (prev && prev.token === session.token && JSON.stringify(prev.user) !== JSON.stringify(user) ? { ...prev, user } : prev)))
+        .catch(() => { /* réseau : on réessaiera au prochain retour */ });
+    };
+    relire();
+    document.addEventListener('visibilitychange', relire);
+    return () => document.removeEventListener('visibilitychange', relire);
+  }, [session?.token, session?.actingAs]);
+
+  /* DÉCONNEXION DANS UN AUTRE ONGLET (audit du 19/10, auth-14). Se déconnecter dans un onglet laissait les autres travailler
+   * avec la même session jusqu'au rechargement. L'événement « storage » dit quand un autre onglet a vidé la session : on la
+   * vide ici aussi. Pas dans un onglet « Fairide agit comme… » ni de simulation, qui ont leur propre session. */
+  useEffect(() => {
+    function ailleurs(e) {
+      if (e.key !== STORAGE_KEY || e.newValue || simuRef.current || actingRef.current) return;
+      setSession(null);
+      setDeconnexionVoulue(true);
+    }
+    window.addEventListener('storage', ailleurs);
+    return () => window.removeEventListener('storage', ailleurs);
+  }, []);
+
   // Session expirée (401 sur une requête authentifiée, voir api.js) : on vide la session, ce qui
   // suffit à renvoyer vers /login puisque ProtectedRoute redirige dès que `user` est nul — pas de
   // navigation impérative ici, qui ferait sortir à tort un visiteur d'une page publique.
@@ -163,11 +226,13 @@ export function AuthProvider({ children }) {
       if (expiredRef.current) return;
       expiredRef.current = true;
       setSession(null);
-      // Compte supprimé (par son titulaire ou par Fairide) : on le dit tel quel, pas « session expirée ».
-      toast(code === 'ACCOUNT_DELETED' ? t('auth.accountDeletedLogout') : t('auth.sessionExpired'));
+      // Compte supprimé (par son titulaire ou par Fairide) : on le dit tel quel, pas « session expirée ». Session révoquée
+      // (mot de passe changé, « déconnecter tous mes appareils ») : sa propre phrase (audit du 19/10, auth-37).
+      toast(code === 'ACCOUNT_DELETED' ? t('auth.accountDeletedLogout') : code === 'SESSION_REVOKED' ? t('auth.sessionRevoked') : t('auth.sessionExpired'));
     });
     return () => setSessionExpiredHandler(null);
-  }, [toast]);
+    // `t` aussi (audit du 19/10, auth-33) : sans lui, le message gardait la langue dans laquelle la page s'était ouverte.
+  }, [toast, t]);
 
   /* `totpCode` n'est envoyé qu'au second passage : le serveur répond d'abord 401 TOTP_REQUIRED, ce que
    * Auth.jsx transforme en champ « code à 6 chiffres ». On ne le demande jamais d'avance — demander un
@@ -192,6 +257,12 @@ export function AuthProvider({ children }) {
 
   async function resendCode(email) {
     return api('/auth/resend-code', { method: 'POST', body: { email } });
+  }
+
+  // « Changer de numéro » sur l'écran du code (audit du 19/10, auth-03) : le compte en attente se prouve par son mot de
+  // passe, ou par le jeton Apple / Google (preuve = { fournisseur, jeton }), et un code part au nouveau numéro.
+  async function changePendingPhone(email, phone, { password, preuve } = {}) {
+    return api('/auth/pending/phone', { method: 'POST', body: { email, phone, ...(preuve?.jeton ? { fournisseur: preuve.fournisseur, jeton: preuve.jeton } : { password }) } });
   }
 
   async function forgotPassword(email) {
@@ -285,6 +356,7 @@ export function AuthProvider({ children }) {
   function logout() {
     // En simulation, « Se déconnecter » ramène au profil visiteur sans perdre les sessions de test.
     if (simuRef.current) { changerProfilSimulation('visitor', '/'); return; }
+    setDeconnexionVoulue(true);
     setSession(null);
     // La casquette active appartient à la session qui s'en va : sans cet oubli, le compte suivant
     // ouvrirait sur la vue du précédent (ou sur une vue à laquelle il n'a pas droit, le temps que
@@ -319,8 +391,9 @@ export function AuthProvider({ children }) {
     ? session.user.roles
     : (session?.user?.role ? [session.user.role] : []);
   // (En simulation, la casquette mémorisée est celle de l'admin, dans localStorage : elle ne vaut pas ici.)
-  const roleActif = !session?.actingAs && !simuRef.current && roleMemorise && roles.includes(roleMemorise)
-    ? roleMemorise
+  const roleRetenu = roleMemorise || (!session?.actingAs && !simuRef.current ? roleRetenuPour(session?.user?.id) : null);
+  const roleActif = !session?.actingAs && !simuRef.current && roleRetenu && roles.includes(roleRetenu)
+    ? roleRetenu
     : (session?.user?.role || null);
 
   // Ajoute une casquette au compte courant (POST /auth/roles) et met la session à jour sans
@@ -332,16 +405,20 @@ export function AuthProvider({ children }) {
   }
 
   // Changer de casquette ne touche ni au compte ni au jeton : c'est un changement de vue.
-  function changerRole(cible) {
-    if (!roles.includes(cible)) return false;
+  // `rolesConnus` : les rôles que l'appelant vient de relire (refreshUser). Juste après avoir rejoint une équipe, `roles`
+  // est encore celui du rendu d'avant (['client']) : sans eux, la casquette « commerce » était refusée (shop-402).
+  function changerRole(cible, rolesConnus) {
+    if (!(rolesConnus || roles).includes(cible)) return false;
     setRoleMemorise(cible);
     if (simuRef.current) return true; // localStorage appartient à la session admin des autres onglets
     try { localStorage.setItem(ROLE_ACTIF_KEY, cible); } catch { /* sans stockage */ }
+    if (!session?.actingAs) retenirRolePour(session?.user?.id, cible);
     return true;
   }
 
   const value = {
     user: session?.user || null,
+    deconnexionVoulue,
     token: session?.token || null,
     role: roleActif,
     roles,
@@ -359,6 +436,7 @@ export function AuthProvider({ children }) {
     register,
     verifyEmail,
     resendCode,
+    changePendingPhone,
     forgotPassword,
     confirmForgotPassword,
     resetPassword,

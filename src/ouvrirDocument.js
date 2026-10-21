@@ -1,6 +1,10 @@
 import { api } from './api';
 import urlSure from './urlSure';
 import { estNatif, ouvrirLienExterne } from './natif';
+import { traduire } from './context/LanguageContext';
+
+// Le message de secours dans la langue de la personne (audit du 19/10, CROSS-13) : il était écrit en français en dur.
+const indisponible = () => traduire('common.docUnavailable');
 
 /* Ouvre une pièce jointe dont l'adresse n'est pas publique.
  *
@@ -30,21 +34,21 @@ export default async function ouvrirDocument({ url, lien, token, toast, messageE
     try {
       const r = await api(lien, { token });
       const sure = urlSure(r?.url);
-      if (!sure) throw new Error(messageErreur || 'Document indisponible.');
+      if (!sure) throw new Error(messageErreur || indisponible());
       await ouvrirLienExterne(sure);
-    } catch (e) { toast?.(e.message || messageErreur || 'Document indisponible.'); }
+    } catch (e) { toast?.(e.message || messageErreur || indisponible()); }
     return;
   }
   const onglet = window.open('', '_blank', 'noopener,noreferrer');
   try {
     const r = await api(lien, { token });
     const sure = urlSure(r?.url);
-    if (!sure) throw new Error(messageErreur || 'Document indisponible.');
+    if (!sure) throw new Error(messageErreur || indisponible());
     if (onglet) onglet.location = sure;
     else window.open(sure, '_blank', 'noopener,noreferrer'); // onglet bloqué : dernier recours
   } catch (e) {
     // L'onglet vide resterait sinon ouvert sur une page blanche, sans explication.
     if (onglet) onglet.close();
-    toast?.(e.message || messageErreur || 'Document indisponible.');
+    toast?.(e.message || messageErreur || indisponible());
   }
 }

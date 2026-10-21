@@ -18,15 +18,18 @@ export default function useEnregistrerCommerce({ restoId, loadDashboard, onFerme
   const { t } = useLanguage();
   const [enCours, setEnCours] = useState(false);
 
-  async function enregistrer(body) {
+  // `succes(reponse)` : un autre message que « mis à jour » selon la réponse (adresse non trouvée, shop-316) ; `prefixeErreur` :
+  // ce qui a déjà été enregistré avant cet appel, dit avec l'erreur (Contact, shop-332).
+  async function enregistrer(body, { succes, prefixeErreur } = {}) {
     setEnCours(true);
     try {
-      await api(`/restaurants/${restoId}`, { method: 'PATCH', token, body });
+      const r = await api(`/restaurants/${restoId}`, { method: 'PATCH', token, body });
       await loadDashboard(restoId);
-      toast(t('editResto.toastUpdated'));
+      const message = succes?.(r);
+      if (message) toast(message, 'erreur'); else toast(t('editResto.toastUpdated'));
       onFermer();
     } catch (e) {
-      toast(e.message, 'erreur');
+      toast(prefixeErreur ? `${prefixeErreur} ${e.message}` : e.message, 'erreur');
     } finally {
       setEnCours(false);
     }

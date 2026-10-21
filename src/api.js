@@ -34,10 +34,12 @@ export function setSessionExpiredHandler(fn) {
 // déconnecterait l'utilisateur en lui annonçant une session expirée — deux mensonges d'un coup.
 // C'est le SEUL endpoint authentifié du backend dans ce cas ; partout ailleurs un 401 vient du
 // middleware requireAuth, donc d'un token réellement périmé.
+// Session révoquée (mot de passe changé, « déconnecter tous mes appareils ») : son propre texte, pas « expirée » (audit du
+// 19/10, auth-37). Le code vient de middleware/auth.js (SESSION_REVOKED).
 function handleResponse(res, data, hadToken, logoutOn401) {
   if (res.ok) return data;
   if (res.status === 401 && hadToken && logoutOn401) {
-    const error = new ApiError(data.code === 'ACCOUNT_DELETED' ? data.error : traduire('auth.sessionExpired'), 401);
+    const error = new ApiError(data.code === 'ACCOUNT_DELETED' ? data.error : traduire(data.code === 'SESSION_REVOKED' ? 'auth.sessionRevoked' : 'auth.sessionExpired'), 401);
     error.code = data.code;
     // Le contexte reçoit la raison : compte supprimé (le dire) ou simple session périmée.
     if (onSessionExpired) onSessionExpired(data.code);
@@ -129,12 +131,13 @@ export async function apiDownload(path, { token, filename, method = 'GET', body,
        l'expiration affichait une erreur générique et laissait l'utilisateur sur une page dont plus
        rien ne fonctionnait, sans jamais le renvoyer vers /login. */
     if (res.status === 401 && token) {
-      const error = new ApiError(data.code === 'ACCOUNT_DELETED' ? data.error : traduire('auth.sessionExpired'), 401);
+      const error = new ApiError(data.code === 'ACCOUNT_DELETED' ? data.error : traduire(data.code === 'SESSION_REVOKED' ? 'auth.sessionRevoked' : 'auth.sessionExpired'), 401);
       error.code = data.code;
       if (onSessionExpired) onSessionExpired(data.code);
       throw error;
     }
-    throw new ApiError(data.error || 'Téléchargement impossible.', res.status);
+    // Repli traduit (audit du 19/10, CROSS-45) : le texte était écrit en dur en français.
+    throw new ApiError(data.error || traduire('common.downloadError'), res.status);
   }
   const blob = await res.blob();
   if (rendreBlob) return blob;

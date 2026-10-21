@@ -43,7 +43,8 @@ export default function AmorceNotifications() {
     client: { titre: t('appli.notifTitre'), sous: t('appli.notifSub'), faits: [['coche', t('appli.nAccept'), t('appli.nAcceptS')], ['velo', t('appli.nRoute'), t('appli.nRouteS')], ['porte', t('appli.n1'), t('appli.n1S')]] }
   }[role];
   return (
-    <div className="bv bv-par-dessus" role="dialog" aria-modal="true" aria-label={textes.titre}>
+    // Le Retour d'Android (natif.js) envoie Échap au dialogue du dessus : ici, c'est « Plus tard » (audit du 19/10, CROSS-05).
+    <div className="bv bv-par-dessus" role="dialog" aria-modal="true" aria-label={textes.titre} onKeyDown={(e) => { if (e.key === 'Escape' && !attente) fermer(); }}>
       <main className="bv-ecran">
         <EcranPermission
           icone="cloche"

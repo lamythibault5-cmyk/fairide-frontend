@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api, API_BASE } from '../api';
+import { api, apiDownload } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -19,22 +19,24 @@ export default function MesDonnees() {
   async function telecharger() {
     setEnCours(true);
     try {
-      const r = await fetch(`${API_BASE}/me/export`, { headers: { Authorization: `Bearer ${token}` } });
-      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || t('accountUi.myData_exportError'));
-      const blob = await r.blob();
-      const lien = document.createElement('a');
-      lien.href = URL.createObjectURL(blob);
-      lien.download = `fairide-mes-donnees-${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(lien); lien.click();
-      setTimeout(() => { URL.revokeObjectURL(lien.href); lien.remove(); }, 1000);
+      /* Par apiDownload (audit du 19/10, AO-08 / CROSS-45). Le fetch brut suivi d'un <a download> ne faisait RIEN dans
+       * l'application (la WebView ignore les téléchargements) : le droit d'accès RGPD y était un bouton mort. apiDownload
+       * envoie le fichier à la feuille de partage du téléphone (Enregistrer dans Fichiers, Envoyer…), garde le
+       * téléchargement nommé sur le site, gère la session expirée et traduit « serveur injoignable » (au lieu de
+       * « Failed to fetch »). */
+      await apiDownload('/me/export', { token, filename: `fairide-mes-donnees-${new Date().toISOString().slice(0, 10)}.json` });
     } catch (e) {
-      toast(e.message, 'erreur');
+      toast(e.message || t('accountUi.myData_exportError'), 'erreur');
     } finally {
       setEnCours(false);
     }
   }
 
+  // Un second appui pendant l'envoi relançait la demande (audit du 19/10, CROSS-48) : le bouton attend la réponse.
+  const [deconnexionEnCours, setDeconnexionEnCours] = useState(false);
   async function deconnecterPartout() {
+    if (deconnexionEnCours) return;
+    setDeconnexionEnCours(true);
     try {
       await api('/me/logout-everywhere', { method: 'POST', token });
       toast(t('accountUi.myData_loggedOutEverywhere'));
@@ -43,6 +45,7 @@ export default function MesDonnees() {
       toast(e.message, 'erreur');
     } finally {
       setConfirmer(false);
+      setDeconnexionEnCours(false);
     }
   }
 
@@ -59,6 +62,7 @@ export default function MesDonnees() {
         confirmLabel={t('accountUi.myData_logoutAllButton')}
         onCancel={() => setConfirmer(false)}
         onConfirm={deconnecterPartout}
+        loading={deconnexionEnCours}
       />
     </div>
   );

@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { useOutletContext, Link } from 'react-router-dom';
-import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { useOutletContext } from 'react-router-dom';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -22,6 +21,7 @@ import ConformiteCarte from '../../components/conformite/ConformiteCarte';
 import MentionsAlimentaires from '../../components/commerce/MentionsAlimentaires';
 import MenuReadiness from '../../components/MenuReadiness';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import Modale from '../../components/Modale';
 import HaussePrix from '../../components/HaussePrix';
 import DemandeModifCarte from '../../components/DemandeModifCarte';
 import TvaCarte from '../../components/commerce/TvaCarte';
@@ -109,7 +109,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // fait défiler la page normalement, seul un vrai geste de glisser déclenche le drag.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    // Au clavier aussi (audit du 19/10, CROSS-86) : la poignée ⠿ prend le plat à Espace, les flèches le déplacent, Espace le
+    // pose, Échap annule. Sans ce capteur, ranger la carte demandait une souris ou un doigt.
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   function toggleReorderSection(sectionId) {
@@ -183,9 +186,13 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
+  // Un second appui pendant l'envoi créait le plat deux fois (audit du 19/10, CROSS-48).
+  const [ajoutPlatEnCours, setAjoutPlatEnCours] = useState(false);
   async function addMenuItem() {
-    const price = parseFloat(itemPrice);
+    if (ajoutPlatEnCours) return;
+    const price = parseFloat(String(itemPrice).replace(',', '.')); // « 12,50 » accepté (audit du 19/10, CROSS-62)
     if (!itemName.trim() || !price) { toast(t('menuPage.toastNamePrice')); return; }
+    setAjoutPlatEnCours(true);
     try {
       await api(`/restaurants/${restoId}/menu`, { method: 'POST', token, body: { name: itemName.trim(), price, category: itemCategory, imageUrl: itemImageUrl.trim() } });
       setItemName(''); setItemPrice(''); setItemImageUrl('');
@@ -193,6 +200,8 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       toast(t('menuPage.toastDishAdded'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
+    } finally {
+      setAjoutPlatEnCours(false);
     }
   }
 
@@ -463,8 +472,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // il faisait défiler vers #menu-concierge, qui n'existe que côté restaurateur — en console, le bouton
   // ne faisait que refermer la carte de démarrage.
 
-  // « Geste prix » sur la carte déjà en ligne : tous les prix ± X % (arrondi au demi-euro supérieur), après confirmation.
+  // « Geste prix » sur la carte déjà en ligne : tous les prix ± X %, après confirmation. Outil de l'équipe (audit du 19/10,
+  // admin-31) : au plus +10 %, arrondi au 0,10 € inférieur comme la hausse, « à la demande de » noté dans l'historique des
+  // plats ; si la carte signée ne l'est plus, le commerce est invité à la revalider (le serveur s'en charge et le dit).
   const [ajustPct, setAjustPct] = useState('');
+  const [ajustDemandePar, setAjustDemandePar] = useState('');
   const [ajustConfirm, setAjustConfirm] = useState(false);
   const [ajusting, setAjusting] = useState(false);
   async function ajusterTousLesPrix() {
@@ -472,10 +484,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     if (!Number.isFinite(percent) || percent === 0) { toast(t('menuPage.adjustInvalid'), 'erreur'); return; }
     setAjusting(true);
     try {
-      const r = await api(`/restaurants/${restoId}/menu/adjust-prices`, { method: 'POST', token, body: { percent } });
+      const r = await api(`/restaurants/${restoId}/menu/adjust-prices`, { method: 'POST', token, body: { percent, requestedBy: ajustDemandePar.trim() || undefined } });
       await loadDashboard(restoId);
-      setAjustConfirm(false); setAjustPct('');
-      toast(t('menuPage.adjustDone', { n: r.updated, p: `${percent > 0 ? '+' : ''}${percent} %` }), 'succes');
+      setAjustConfirm(false); setAjustPct(''); setAjustDemandePar('');
+      toast(`${t('menuPage.adjustDone', { n: r.updated, p: `${percent > 0 ? '+' : ''}${percent} %` })}${r.cardToRevalidate ? ` ${t('menuPage.adjustRevalidate')}` : ''}`, 'succes');
     } catch (e) { toast(e.message, 'erreur'); } finally { setAjusting(false); }
   }
 
@@ -593,7 +605,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                       client ne voit pas et que le commerce ne peut pas changer ne faisait que l'intriguer. */}
                   {editingSectionId === section.id ? (
                     <div className="row" style={{ gap: 6 }}>
-                      <input style={{ width: 180 }} value={editSectionName} onChange={(e) => setEditSectionName(e.target.value)} />
+                      <input style={{ width: 180 }} value={editSectionName} onChange={(e) => setEditSectionName(e.target.value)} aria-label={t('menuPage.renameSection')} />
                       <button className="btn-teal" style={{ padding: '4px 10px' }} onClick={() => handleSectionRename(section.id)}>OK</button>
                       <button className="btn-ghost" style={{ padding: '4px 10px' }} onClick={() => setEditingSectionId(null)}>{t('menuPage.cancel')}</button>
                     </div>
@@ -675,7 +687,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                 {reorderSectionId !== section.id && selectSectionId !== section.id && (addSectionId === section.id ? (
                   <div className="card" id={`ajout-plat-${section.id}`} style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
                     <div className="field"><label htmlFor={`plat-nom-${section.id}`}>{t('menuPage.name')}</label><input id={`plat-nom-${section.id}`} value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder={t('menuPage.phDishName')} /></div>
-                    <div className="field"><label htmlFor={`plat-prix-${section.id}`}>{t('menuPage.price')}</label><input id={`plat-prix-${section.id}`} type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
+                    <div className="field"><label htmlFor={`plat-prix-${section.id}`}>{t('menuPage.price')}</label><input id={`plat-prix-${section.id}`} inputMode="decimal" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
                     <div className="field">
                       <span className="titre-groupe">{t('menuPage.imageOptional')}</span>
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
@@ -686,14 +698,14 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                             <span className="dish-thumb-empty"><Icone nom={categoryEmoji(itemCategory)} taille={20} /></span>
                           )
                         )}
-                        <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder={t('menuPage.phPhotoUrl')} />
+                        <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder={t('menuPage.phPhotoUrl')} aria-label={t('menuPage.phPhotoUrl')} />
                       </div>
                       <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => setAddItemGalleryOpen(true)}>
                         {t('menuPage.fromGallery')}
                       </button>
                     </div>
                     <div className="row" style={{ gap: 8 }}>
-                      <button className="btn-teal" onClick={addMenuItem}>{t('menuPage.add')}</button>
+                      <button className="btn-teal" disabled={ajoutPlatEnCours} aria-busy={ajoutPlatEnCours || undefined} onClick={addMenuItem}>{ajoutPlatEnCours ? '…' : t('menuPage.add')}</button>
                       <button className="btn-ghost" onClick={() => setAddSectionId(null)}>{t('menuPage.close')}</button>
                     </div>
                     {addItemGalleryOpen && (
@@ -718,7 +730,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         })}
         {modeAdmin && !reorderSectionId && !selectSectionId && (creatingSection ? (
           <div className="row" style={{ gap: 8 }}>
-            <input style={{ flex: 1 }} value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} placeholder={t('menuPage.phSectionName')} />
+            <input style={{ flex: 1 }} value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} placeholder={t('menuPage.phSectionName')} aria-label={t('menuPage.newSectionShort')} />
             <button className="btn-teal" style={{ padding: '4px 10px' }} onClick={handleSectionCreate}>{t('menuPage.create')}</button>
             <button className="btn-ghost" style={{ padding: '4px 10px' }} onClick={() => setCreatingSection(false)}>{t('menuPage.cancel')}</button>
           </div>
@@ -739,9 +751,9 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         />
       )}
 
-      {sectionApplyPanel && createPortal(
-        <div className="modal-overlay" onClick={() => setSectionApplyPanel(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+      {/* Modale plutôt qu'un fond fait main (audit du 19/10, CROSS-06) : Échap, focus, Retour d'Android. */}
+      {sectionApplyPanel && (
+        <Modale ariaLabel={t('menuPage.applyPhotoTo')} onFermer={() => setSectionApplyPanel(null)}>
             <h3 style={{ margin: '0 0 4px', fontSize: 16 }}>{t('menuPage.applyPhotoTo')}</h3>
             <p className="small" style={{ margin: '0 0 12px' }}>
               {t('menuPage.applyPanelHelp', { section: categoryLabel(sectionApplyPanel.section.name, t) })}
@@ -776,9 +788,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
               </button>
               <button className="btn-ghost" disabled={applyingImage} onClick={() => setSectionApplyPanel(null)}>{t('menuPage.skip')}</button>
             </div>
-          </div>
-        </div>,
-        document.body
+        </Modale>
       )}
 
       {modeAdmin && <OptionGroupManager
@@ -846,25 +856,28 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
 
       {restaurant.menu.length > 0 && modeAdmin && (
         <div className="card geste-prix-carte" id="menu-geste-prix">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.adjustTitle')}</h3>
-          <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.adjustIntro')}</p>
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.adjustTitleTeam')}</h3>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.adjustIntroTeam')}</p>
           <div className="row" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             {[-20, -15, -10, -5, 5, 10].map((v) => (
               <button key={v} type="button" className={`chip${Number(ajustPct) === v ? ' active' : ''}`} onClick={() => setAjustPct(String(v))}>{v > 0 ? '+' : ''}{v} %</button>
             ))}
-            <input type="number" step="1" min="-50" max="50" value={ajustPct} onChange={(e) => setAjustPct(e.target.value)} placeholder="%" style={{ width: 90 }} aria-label={t('menuPage.adjustCustom')} />
+            <input type="number" step="1" min="-50" max="10" value={ajustPct} onChange={(e) => setAjustPct(e.target.value)} placeholder="%" style={{ width: 90 }} aria-label={t('menuPage.adjustCustom')} />
             <button type="button" className="btn-teal btn-sm" disabled={!ajustPct || Number(ajustPct) === 0} onClick={() => setAjustConfirm(true)}>{t('menuPage.adjustButton')}</button>
           </div>
           {ajustConfirm && (
             <div className="card" style={{ marginTop: 10, padding: 12, border: '1px solid var(--line)' }}>
-              <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.adjustConfirm', { n: restaurant.menu.length, p: `${Number(ajustPct) > 0 ? '+' : ''}${Number(ajustPct)} %` })}</p>
+              <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.adjustConfirmTeam', { n: restaurant.menu.length, p: `${Number(ajustPct) > 0 ? '+' : ''}${Number(ajustPct)} %` })}</p>
+              <div className="field" style={{ margin: '0 0 8px' }}>
+                <label htmlFor="ajust-demande-par">{t('menuPage.adjustRequestedBy')}</label>
+                <input id="ajust-demande-par" value={ajustDemandePar} onChange={(e) => setAjustDemandePar(e.target.value)} placeholder={t('menuPage.adjustRequestedByPh')} maxLength={160} />
+              </div>
               <div className="row" style={{ gap: 8 }}>
                 <button type="button" className="btn-teal" disabled={ajusting} onClick={ajusterTousLesPrix}>{ajusting ? '…' : t('menuPage.adjustYes')}</button>
                 <button type="button" className="btn-ghost" onClick={() => setAjustConfirm(false)}>{t('menuPage.adjustNo')}</button>
               </div>
             </div>
           )}
-          <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{t('menuPage.adjustAlt')} <Link to="/dashboard/promotions">{t('menuPage.adjustAltLink')}</Link></p>
         </div>
       )}
 

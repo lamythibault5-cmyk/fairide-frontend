@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import ReasonDialog from '../../components/admin/ReasonDialog';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { titreRangee, libellePosition, euros, jourCourt } from '../../misesEnAvant';
 import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES_SUGGEREES } from '../../menuCategories';
 
@@ -67,8 +69,11 @@ export default function AdminPlacementsPage() {
     try { await api(`/admin/placements/zones/${zoneId}`, { method: 'PUT', token, body: { communes: communesZone } }); toast(tr('adminPlacements.saved')); charger(); }
     catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
+  const [aDecider, setADecider] = useState(null); // { b, action: 'refuse' | 'cancel' }
+  const [retraitZone, setRetraitZone] = useState(false);
+  // ConfirmDialog et non window.confirm, muet dans une PWA installée (audit du 19/10, admin-86).
   async function retirerZone() {
-    if (!window.confirm(tr('adminPlacements.zoneRemoveConfirm', { zone: nomPortee }))) return;
+    setRetraitZone(false);
     setOccupe(true);
     try { await api(`/admin/placements/zones/${zoneId}`, { method: 'DELETE', token }); toast(tr('adminPlacements.zoneRemoved')); setCommune(''); }
     catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
@@ -119,6 +124,10 @@ export default function AdminPlacementsPage() {
     try { await api('/admin/placements/prices', { method: 'PUT', token, body: zoneId ? { zone: zoneId, prices } : { commune: commune || undefined, prices } }); toast(tr('adminPlacements.pricesSaved')); charger(); }
     catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
+  /* Refuser ou arrêter (audit du 19/10, admin-34) : un tap suffisait, sans motif, et « Arrêter » rembourse aussitôt par
+   * Stripe ce qui n'a pas servi. Une fenêtre demande le motif (envoyé au commerce, comme le permettait déjà l'e-mail) et
+   * dit ce qui va se passer ; le serveur refuse sans motif. */
+  function demanderDecision(b, action) { setADecider({ b, action }); }
   async function decider(b, corps) {
     setOccupe(true);
     try { await api(`/admin/placements/${b.id}`, { method: 'PATCH', token, body: corps }); toast(tr('adminPlacements.saved')); charger(); }
@@ -175,7 +184,7 @@ export default function AdminPlacementsPage() {
                   <span className={`modif-statut mea-statut--${etat.enabled ? 'active' : 'cancelled'}`}>{etat.enabled ? tr('adminPlacements.open') : tr('adminPlacements.closed')}</span>
                   {!zoneId && etat.enabled && !etat.ownEnabled && etat.viaZone && <span className="small">{tr('adminPlacements.openViaZone', { zone: etat.viaZone })}</span>}
                   <button type="button" className={(zoneId ? etat.enabled : etat.ownEnabled) ? 'btn-danger-ghost' : 'btn-teal'} disabled={occupe} onClick={() => ouvrirCommune(!(zoneId ? etat.enabled : etat.ownEnabled))}>{(zoneId ? etat.enabled : etat.ownEnabled) ? tr('adminPlacements.close') : tr('adminPlacements.openAction')}</button>
-                  {zoneId && <button type="button" className="btn-ghost" disabled={occupe} onClick={retirerZone}>{tr('adminPlacements.zoneRemove')}</button>}
+                  {zoneId && <button type="button" className="btn-ghost" disabled={occupe} onClick={() => setRetraitZone(true)}>{tr('adminPlacements.zoneRemove')}</button>}
                 </>
               )}
             </div>
@@ -281,7 +290,7 @@ export default function AdminPlacementsPage() {
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
                 <button type="button" className="btn-teal" disabled={occupe} onClick={() => decider(b, { action: 'approve' })}>{tr('adminPlacements.approve')}</button>
-                <button type="button" className="btn-danger-ghost" disabled={occupe} onClick={() => decider(b, { action: 'refuse' })}>{tr('adminPlacements.refuse')}</button>
+                <button type="button" className="btn-danger-ghost" disabled={occupe} onClick={() => demanderDecision(b, 'refuse')}>{tr('adminPlacements.refuse')}</button>
               </div>
             </div>
           ))}
@@ -300,12 +309,26 @@ export default function AdminPlacementsPage() {
                     {FACTURATION.map((f) => <option key={f} value={f}>{tr(`adminPlacements.billing_${f}`)}</option>)}
                   </select>
                 )}
-                {b.status === 'active' && <button type="button" className="btn-danger-ghost" disabled={occupe} onClick={() => decider(b, { action: 'cancel' })}>{tr('adminPlacements.stop')}</button>}
+                {['active', 'awaiting_payment'].includes(b.status) && <button type="button" className="btn-danger-ghost" disabled={occupe} onClick={() => demanderDecision(b, 'cancel')}>{tr('adminPlacements.stop')}</button>}
               </div>
             </div>
           ))}
         </>
       )}
+      <ReasonDialog
+        open={!!aDecider}
+        title={aDecider ? tr(aDecider.action === 'refuse' ? 'adminPlacements.refuseTitle' : 'adminPlacements.stopTitle', { name: aDecider.b.restaurantName }) : ''}
+        message={aDecider ? (aDecider.action === 'refuse' ? tr('adminPlacements.refuseBody')
+          : aDecider.b.paidOnline ? tr('adminPlacements.stopBodyPaid', { amount: euros(aDecider.b.totalHt) }) : tr('adminPlacements.stopBody')) : ''}
+        label={tr('adminPlacements.reasonLabel')}
+        placeholder={tr('adminPlacements.reasonPh')}
+        confirmLabel={aDecider?.action === 'refuse' ? tr('adminPlacements.refuse') : tr('adminPlacements.stop')}
+        multiline danger loading={occupe}
+        onConfirm={(motif) => { const d = aDecider; setADecider(null); decider(d.b, { action: d.action, reason: motif }); }}
+        onCancel={() => setADecider(null)}
+      />
+      <ConfirmDialog open={retraitZone} title={tr('adminPlacements.zoneRemoveConfirm', { zone: nomPortee })} danger loading={occupe}
+        onConfirm={retirerZone} onCancel={() => setRetraitZone(false)} />
     </div>
   );
 }

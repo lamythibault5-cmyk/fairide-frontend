@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { getLocale, useLanguage } from '../../context/LanguageContext';
 import useAdminRole from '../../hooks/useAdminRole';
-import { chargerLancement } from '../../launch';
+import { chargerLancement, OUVERTURE_EMPORTER, dateOuvertureEmporter } from '../../launch';
 import ConfirmDialog from '../ConfirmDialog';
 import Icone from '../Icone';
 
@@ -24,7 +24,10 @@ export default function BoutonGo() {
   const [confirmerFermeture, setConfirmerFermeture] = useState(false);
   const peutAppuyer = !role || role === 'owner' || role === 'admin';
 
-  const lire = () => api('/admin/launch', { token }).then(setEtat).catch(() => setEtat((e) => e || null));
+  // Lecture en échec : la carte reste, avec l'erreur et « Réessayer » (audit du 19/10, admin-49). Elle disparaissait sans
+  // un mot, et l'équipe pouvait croire la livraison fermée, ou ne plus trouver « Refermer » pendant un incident.
+  const [erreur, setErreur] = useState(null);
+  const lire = () => api('/admin/launch', { token }).then((r) => { setEtat(r); setErreur(null); }).catch((e) => setErreur(e.message || tr('adminGo.loadError')));
   useEffect(() => { lire(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps -- lecture à l'arrivée
 
   async function basculer(go) {
@@ -33,7 +36,8 @@ export default function BoutonGo() {
       const r = await api('/admin/launch', { method: 'POST', token, body: { go, confirmation: go ? saisie.trim().toUpperCase() : undefined } });
       setEtat(r); setSaisie(''); setConfirmerFermeture(false);
       chargerLancement(); // le reste de la console (bandeau d'ouverture) suit tout de suite
-      toast(go ? (r.premierGo ? tr('adminGo.doneFirst', { envoyes: r.suites?.annonce?.envoyes ?? 0 }) : tr('adminGo.doneOpen')) : tr('adminGo.doneClosed'), 'succes');
+      // Premier GO : les annonces partent en arrière-plan (admin-50) ; leur compte rendu arrive dans une tâche.
+      toast(go ? (r.premierGo ? tr('adminGo.doneFirst') : tr('adminGo.doneOpen')) : tr('adminGo.doneClosed'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -41,12 +45,25 @@ export default function BoutonGo() {
     }
   }
 
+  if (!etat && erreur) {
+    return (
+      <section className="card" style={{ margin: '16px 0' }} aria-labelledby="bouton-go-titre">
+        <h3 id="bouton-go-titre" style={{ margin: '0 0 6px', fontSize: 16 }}><Icone nom="scooter" taille={18} className="icone-texte" /> {tr('adminGo.title')}</h3>
+        <p style={{ margin: '0 0 8px' }}><b>{tr('adminGo.unknownState')}</b></p>
+        <p className="small texte-erreur" style={{ margin: '0 0 8px' }}>{erreur}</p>
+        <button type="button" className="btn-outline" onClick={lire}>{tr('adminCommon.retry')}</button>
+      </section>
+    );
+  }
   if (!etat) return null;
+  // Avant le 1er novembre, l'à emporter payé sur place n'est pas encore ouvert non plus : la carte ne doit pas dire le
+  // contraire à l'équipe qui décide du GO (audit du 19/10, LIVE-08). Même date que le site et le serveur (launch.js).
+  const emporterOuvert = Date.now() >= OUVERTURE_EMPORTER.getTime();
   const depuis = etat.goAt ? new Date(etat.goAt).toLocaleString(getLocale(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
   return (
     <section className="card" style={{ borderColor: etat.go ? 'var(--line)' : 'var(--iris)', margin: '16px 0' }} aria-labelledby="bouton-go-titre">
       <h3 id="bouton-go-titre" style={{ margin: '0 0 6px', fontSize: 16 }}><Icone nom="scooter" taille={18} className="icone-texte" /> {tr('adminGo.title')}</h3>
-      <p style={{ margin: '0 0 8px' }}><b>{etat.force ? tr('adminGo.forced') : etat.go ? tr('adminGo.open', { date: depuis }) : tr('adminGo.closed')}</b></p>
+      <p style={{ margin: '0 0 8px' }}><b>{etat.force ? tr('adminGo.forced') : etat.go ? tr('adminGo.open', { date: depuis }) : emporterOuvert ? tr('adminGo.closed') : tr('adminGo.closedBeforePickup', { date: dateOuvertureEmporter(getLocale()) })}</b></p>
       <p className="small" style={{ margin: '0 0 4px' }}>
         {tr('adminGo.ready', { prets: etat.livreursPrets, total: etat.livreursTotal, commerces: etat.commercesPrets, commercesTotal: etat.commercesTotal, dispo: etat.livreursDisponiblesMaintenant })}
       </p>
@@ -68,7 +85,7 @@ export default function BoutonGo() {
       <ConfirmDialog
         open={confirmerFermeture} loading={enCours} danger
         onCancel={() => setConfirmerFermeture(false)} onConfirm={() => basculer(false)}
-        title={tr('adminGo.title')} message={tr('adminGo.confirmClose')} confirmLabel={tr('adminGo.closeButton')}
+        title={tr('adminGo.title')} message={etat.livraisonsProgrammees > 0 ? `${tr('adminGo.confirmClose')} ${tr('adminGo.confirmCloseScheduled', { n: etat.livraisonsProgrammees })}` : tr('adminGo.confirmClose')} confirmLabel={tr('adminGo.closeButton')}
       />
     </section>
   );

@@ -87,8 +87,9 @@ export default function DriverContractTerms() {
                   {(d.contracts || []).filter((k) => k.id !== signe.id).map((k) => (
                     <div key={k.id} className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 4 }}>
                       <span>{EMOJI[k.contractType] || ''}{k.version} · {k.signedAt ? new Date(k.signedAt).toLocaleDateString(getLocale()) : ''}</span>
-                      <button type="button" className="btn-ghost btn-sm" onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/${k.id}/pdf`, token, t('courierOnboarding.previewFailed'))}><Icone nom="document" taille={16} className="icone-texte" /></button>
-                      <button type="button" className="btn-ghost btn-sm" onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/${k.id}/pdf`, token, `contrat-fairide-${k.contractType}-${k.version}.pdf`, t('courierOnboarding.previewFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" /></button>
+                      {/* Boutons icône nommés (audit du 19/10, CROSS-90). */}
+                      <button type="button" className="btn-ghost btn-sm" aria-label={`${t('driverTerms.openContract')} · ${k.version}`} onClick={() => ouvrirPdf(`${API_BASE}/couriers/me/contract/${k.id}/pdf`, token, t('courierOnboarding.previewFailed'))}><Icone nom="document" taille={16} className="icone-texte" /></button>
+                      <button type="button" className="btn-ghost btn-sm" aria-label={`${t('driverTerms.savePdf')} · ${k.version}`} onClick={() => telechargerPdf(`${API_BASE}/couriers/me/contract/${k.id}/pdf`, token, `contrat-fairide-${k.contractType}-${k.version}.pdf`, t('courierOnboarding.previewFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" /></button>
                     </div>
                   ))}
                 </div>

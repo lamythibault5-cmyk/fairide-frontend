@@ -101,16 +101,20 @@ export default function AdminSupportPage() {
     if (category) params.set('category', category);
     if (tag) params.set('tag', tag);
     if (escalatedOnly) params.set('escalated', '1');
+    // « SLA dépassés » filtré par le serveur sur tous les tickets, pas sur les 50 chargés (audit du 19/10, admin-58).
+    if (slaOnly) params.set('sla', '1');
     if (mine && user?.email) params.set('assignedToEmail', user.email);
     if (q) params.set('q', q);
     params.set('limit', PAGE_SIZE);
     params.set('offset', page * PAGE_SIZE);
     api(`/admin/support/tickets?${params.toString()}`, { token }).then(setData).catch((e) => setErreur(e.message));
   }
-  useEffect(() => { load(); }, [status, priority, category, tag, escalatedOnly, mine, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setPage(0); }, [status, priority, category, tag, escalatedOnly, mine, q]);
+  useEffect(() => { load(); }, [status, priority, category, tag, escalatedOnly, slaOnly, mine, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setPage(0); }, [status, priority, category, tag, escalatedOnly, slaOnly, mine, q]);
   // Ouverture directe par l'adresse (?id=…) consommée une seule fois.
-  useEffect(() => { if (searchParams.get('id')) { const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true }); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Relu à chaque nouvel ?id= : la recherche globale y mène aussi quand Support est déjà ouvert (audit du 19/10, admin-09).
+  const idParam = searchParams.get('id');
+  useEffect(() => { const id = idParam; if (id) { setSelectedId(id); const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true }); } }, [idParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const lignes = useMemo(() => (data?.rows || []).filter((t) => !slaOnly || slaDepasse(t)), [data, slaOnly]);
   const tagsConnus = useMemo(() => [...new Set((data?.rows || []).flatMap((t) => t.tags || []))].sort(), [data]);
@@ -443,8 +447,10 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
     if (!replyText.trim()) return;
     setSending(true);
     try {
-      await api(`/admin/support/tickets/${id}/reply`, { method: 'POST', token, body: { text: replyText.trim() } });
-      toast(tr('adminSupport.toastReplySent'));
+      const r = await api(`/admin/support/tickets/${id}/reply`, { method: 'POST', token, body: { text: replyText.trim() } });
+      // E-mail refusé : la réponse est dans « Messages » du compte, mais l'équipe doit le savoir (audit du 19/10, admin-25).
+      if (r?.emailFailed) toast(tr('adminSupport.toastReplyEmailFailed'), 'erreur');
+      else toast(tr(r?.messages ? 'adminSupport.toastReplySentBoth' : 'adminSupport.toastReplySent'));
       setReplyText('');
       load();
     } catch (e) {
@@ -548,8 +554,8 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       {t && onglet === 'repondre' && (
         <>
           <h4 className="drawer-section-title">{tr('adminSupport.replyToRequester')}</h4>
-          {!t.requesterEmail && <div className="small" style={{ opacity: 0.6 }}>{tr('adminSupport.noContactEmail')}</div>}
-          {t.requesterEmail && (
+          {!t.requesterEmail && !t.linkedClientId && <div className="small" style={{ opacity: 0.6 }}>{tr('adminSupport.noContactEmail')}</div>}
+          {(t.requesterEmail || t.linkedClientId) && (
             <>
               <div className="row" style={{ gap: 8, marginBottom: 6, alignItems: 'center' }}>
                 {cannedReplies && cannedReplies.length > 0 && (
