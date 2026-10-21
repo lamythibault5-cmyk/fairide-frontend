@@ -109,7 +109,7 @@ found, on the way, delivered, ready for pickup, cancelled; business — order ca
 order still waiting for acceptance; courier — his job ready, cancelled before pickup, withdrawn by the client. Plus, sent
 directly: new order to the business (payment), courier at the door to the client, and **new job to every courier who
 would see it** (`notifLivreurs.js`, same eligibility as `GET /orders/available`, everyone at once, no rating read; a scheduled
-delivery reaches couriers, and this push, only at its slot minus prep, travel and 15 min: `ouvertureLivreurs.js`). Nobody
+delivery reaches couriers, and this push, only at its slot minus prep, travel and 20 min (= the 20-min no-courier cancel window, which so ends when the kitchen must start; Owen 2026-10-21): `ouvertureLivreurs.js`). Nobody
 is notified of their own action (`oublierPush` in the routes). Toggles: `ReglageNotifications.jsx` (client in Mes
 commandes, courier via `NotifCourses.jsx`), `NewOrderAlertBar` (business), and once after sign-up in the app
 (`AmorceNotifications.jsx`). A new status worth a push goes in the trigger and in `pushFile.js` texts, not in a route.
@@ -664,7 +664,7 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   texts were rewritten, and `envoyer()` runs `sansTiretsCadratins` on subject and body as a safety net; subjects end « | Fairide ».
 - **Couriers**: two statuses only (P2P removed); they set their minimum per ride and per km and only see offers above it
   (the customer's delivery fee rises to the cheapest courier's minimum, capped); **no delivery rating**; suspension only for
-  fraud, serious misconduct or legal obligation; random check selfie at shift start (`controleSelfie.js`); grid of the 8
+  fraud, serious misconduct or legal obligation; random check selfie at shift start, only when the courier is really available (not paused, Stripe active, after GO), with 60 min to take it while jobs keep coming (`DELAI_SELFIE_MIN`, Owen 2026-10-21; `controleSelfie.js`); grid of the 8
   criteria of art. 337/3 in Admin › Conformité. Never add a rating, ranking or penalty — that is criterion 6°/7°.
 - **Accounting**: monthly export (`comptaMensuelle.js`) separates Fairide sales from third-party funds and is emailed once to
   the archive address; subscription invoices are Fairide's own (`FAIRIDE-ABO-…`) and go through Peppol.
@@ -761,7 +761,7 @@ delivery) or `VITE_DELIVERY_OPEN_AT` / `VITE_ONLINE_PAYMENT_OPEN_AT` (unused; st
   between activation and GO (`prolongerEssais`: the free month counts from the opening). A Stripe failure opens an
   admin task instead of blocking.
 - **After GO, no courier = no delivery.** `lancement.livreursDisponibles` counts couriers who could take the job now:
-  approved, Stripe active, status verified, not paused, not test, no job in hand, no pending selfie check, right pool
+  approved, Stripe active, status verified, not paused, not test, no job in hand, no selfie check past its 60-min deadline, right pool
   (`delivery_mode` own/fairide), bikes only within `VELO_MAX_KM`. Zero → order and quote refused with
   `NO_COURIER_AVAILABLE` (409). It only COUNTS couriers: never add ratings, rankings or acceptance history to it
   (employment-presumption rule, see `notifLivreurs.js`). Scheduled orders are judged like immediate ones.

@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import ConfirmDialog from '../ConfirmDialog';
 import { ATTENTE_PORTE_MIN, APPELS_CLIENT_MIN } from '../../conformite';
 import Icone from '../Icone';
+import AppelerFairide from './AppelerFairide';
 
 // Incidents d'une course, côté livreur (plan de test de bout en bout, 2 octobre 2026) — voir « INCIDENTS DE LIVRAISON »
 // dans routes/orders.js côté serveur :
@@ -12,12 +13,14 @@ import { ATTENTE_PORTE_MIN, APPELS_CLIENT_MIN } from '../../conformite';
 //     liberté de refuser et d'organiser son travail compte parmi les critères de l'art. 337/3 (présomption de salariat).
 //     On le rend seulement rare par le texte (« si tu peux encore la faire, garde-la »), jamais par une conséquence ;
 //   - en livraison : « Client injoignable » (LIV-5, commande sans alcool : attente de 10 min puis clôture) et
-//     « Je ne peux pas terminer » (LIV-2 après retrait : l'équipe est alertée et appelle).
+//     « Je ne peux pas terminer » (LIV-2 après retrait : l'équipe est alertée — tâche urgente, e-mail, push). L'écran ne
+//     promet plus qu'elle appelle : il le dit, et donne le numéro de Fairide (audit du 19/10, courier-13).
 // Rien de ceci n'est lu pour classer ou pénaliser le livreur ; les libellés le disent.
 export default function IncidentsCourse({ order, token, toast, onChange }) {
   const { t } = useLanguage();
   const [confirmer, setConfirmer] = useState(null); // 'rendre' | 'bloque' | 'absent'
   const [enCours, setEnCours] = useState(false);
+  const [telephone, setTelephone] = useState(null);
   const [maintenant, setMaintenant] = useState(() => Date.now());
   useEffect(() => { const id = setInterval(() => setMaintenant(Date.now()), 15000); return () => clearInterval(id); }, []);
 
@@ -25,7 +28,9 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
     setEnCours(true);
     try {
       const r = await api(`/orders/${order.id}/${chemin}`, { method: 'PATCH', token, body });
-      if (r?.message) toast(r.message);
+      // Livreur bloqué avec la commande : le message reste à l'écran, traduit, avec le numéro (plus bas) ; pas de toast.
+      if (r?.incident) setTelephone(r.supportPhone || null);
+      else if (r?.message) toast(r.message);
       await onChange?.();
       return r;
     } catch (e) {
@@ -83,7 +88,14 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
           </div>
         </div>
       )}
-      {enLivraison && <button type="button" className="btn-ghost btn-sm" disabled={enCours} onClick={() => setConfirmer('bloque')}>{t('dashDriver.incident_cannotFinish')}</button>}
+      {enLivraison && (order.deliveryIncident === 'courier_stuck_after_pickup' ? (
+        <div style={{ width: '100%' }} role="status">
+          <p className="small" style={{ margin: '0 0 8px', fontWeight: 600 }}>{t('dashDriver.incident_stuckNotice')}</p>
+          <AppelerFairide numero={telephone} />
+        </div>
+      ) : (
+        <button type="button" className="btn-ghost btn-sm" disabled={enCours} onClick={() => setConfirmer('bloque')}>{t('dashDriver.incident_cannotFinish')}</button>
+      ))}
       <ConfirmDialog
         open={!!confirmer}
         title={confirmer === 'rendre' ? t('dashDriver.incident_releaseTitle') : confirmer === 'absent' ? t('dashDriver.incident_closeAbsentTitle') : t('dashDriver.incident_cannotFinishTitle')}

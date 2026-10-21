@@ -38,6 +38,20 @@ export default function PositionRequise({ children, repli }) {
     window.addEventListener('focus', auRetour);
     return () => { document.removeEventListener('visibilitychange', auRetour); window.removeEventListener('focus', auRetour); };
   }, [verifier]);
+  // Sur le site, la question du navigateur (posée par le suivi de position du tableau de bord) ne déclenche ni focus ni
+  // visibilitychange : la position autorisée, la liste restait cachée jusqu'au rechargement de la page (audit du 19/10,
+  // LIVE-26). L'API Permissions prévient du changement ; là où elle n'existe pas, rien ne change.
+  useEffect(() => {
+    let statut = null;
+    let fini = false;
+    if (typeof navigator.permissions?.query !== 'function') return undefined;
+    navigator.permissions.query({ name: 'geolocation' }).then((p) => {
+      if (fini || !p?.addEventListener) return;
+      statut = p;
+      p.addEventListener('change', verifier);
+    }).catch(() => {});
+    return () => { fini = true; statut?.removeEventListener('change', verifier); };
+  }, [verifier]);
 
   const avecRepli = repli !== undefined;
   // Partage coupé dans Mon compte : même effet que l'autorisation refusée (le client ne verrait rien).

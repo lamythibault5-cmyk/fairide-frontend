@@ -5343,6 +5343,11 @@ export default {
       text: "Au hasard, environ une fois sur cinq quand tu reprends ton service, Fairide vérifie que c'est bien toi qui utilises ton compte. Prends un selfie, visage découvert : les courses reviennent dès qu'il est envoyé.",
       button: "Prendre mon selfie",
       privacy: "Quelqu'un de l'équipe le compare à l'œil aux photos de ton dossier, puis l'efface (au plus tard 30 jours après). Aucune reconnaissance automatique.",
+      // Délai de 60 minutes pour prendre le selfie (fondateur, 2026-10-21) ; bandeau quand le délai est écoulé (LIVE-25).
+      titleDelai: "Selfie de contrôle demandé : prends-le avant {time}",
+      textDelai: "Au hasard, environ une fois sur cinq quand tu reprends ton service, Fairide vérifie que c'est bien toi qui utilises ton compte. Tu peux continuer à prendre des courses en attendant. Après {time}, les nouvelles courses attendront ton selfie.",
+      headerTitle: "Selfie de contrôle demandé",
+      headerSub: "Pas de nouvelle course tant qu'il n'est pas envoyé",
     },
     // Invitation d'un commerce à devenir son livreur dédié (audit du 19/10, shop-301 ; LivreurDedie.jsx).
     livreurDedie: {
@@ -6204,7 +6209,9 @@ export default {
       incident_closeAbsentText: "La commande sera marquée « non livrée — client absent ». Ta course est payée et tu gardes la commande. Le client n'est pas remboursé : une commande non réceptionnée par sa faute reste due (CGV).",
       incident_cannotFinish: "Je ne peux pas terminer",
       incident_cannotFinishTitle: "Tu ne peux pas terminer la livraison ?",
-      incident_cannotFinishText: "Tu as déjà la commande : l'équipe Fairide est alertée tout de suite et t'appelle pour organiser la suite. Ne la jette pas.",
+      incident_cannotFinishText: "Tu as déjà la commande : l'équipe Fairide est alertée tout de suite, et tu auras son numéro pour organiser la suite. Ne la jette pas.",
+      // Après « Je ne peux pas terminer » (audit du 19/10, courier-13) : ce qui s'est vraiment passé, puis le numéro de Fairide.
+      incident_stuckNotice: "L'équipe Fairide est prévenue. Garde la commande et appelle Fairide pour organiser la suite.",
       ariaAccount: 'Mon compte livreur',
       blockedTitle: 'Compte bloqué par Fairide',
       blockedSub: 'Tu ne peux plus voir ni prendre de commandes',
@@ -6230,9 +6237,10 @@ export default {
       sosMotif_malaise: 'Malaise',
       sosMotif_autre: 'Autre',
       sosAlertTeam: "Prévenir l'équipe Fairide",
-      sosAlertTeamHelp: "L'équipe reçoit ton nom, ton téléphone, ta course en cours et ta position au moment où tu appuies, et te rappelle. Rien n'est noté contre toi.",
-      sosSent: "L'équipe Fairide est prévenue, avec ta position. Elle va t'appeler. En danger, appelle le 112.",
-      sosSentNoPosition: "L'équipe Fairide est prévenue, mais ta position n'a pas pu être lue. Elle va t'appeler. En danger, appelle le 112.",
+      sosAlertTeamHelp: "L'équipe reçoit ton nom, ton téléphone, ta course en cours et ta position au moment où tu appuies. Rien n'est noté contre toi.",
+      sosSent: "L'équipe Fairide est prévenue, avec ta position. En danger, appelle le 112.",
+      sosSentNoPosition: "L'équipe Fairide est prévenue, mais ta position n'a pas pu être lue. En danger, appelle le 112.",
+      callFairide: 'Appeler Fairide : {phone}',
       geoDisabled: 'Partage de position désactivé.',
       geoWaiting: 'En attente de l\'autorisation de géolocalisation...',
       geoShared: 'Position partagée{last}.',
