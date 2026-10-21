@@ -82,7 +82,8 @@ privacy policy (CONF-2026-10-16) says so. On the website nothing changes: Sentry
 (Connect, Identity, billing portal) always opens through `allerAuPaiement` (in-app browser, return path) — never
 `window.location.href`, which left the app.
 **First-day flows are app screens too** (phase 2, 2026-10-15), opened full-screen through [EcranPlein](src/components/EcranPlein.jsx)
-(a portal into `<body>` — inside the shell, `.page-fade` broke `position: fixed`): a business's « Envoyer ma carte »
+(a portal into `<body>` — inside the shell, `.page-fade` broke `position: fixed`; a Modale / ConfirmDialog opened from inside it
+stacks above it through one rule, `.bv-plein ~ .modal-overlay` in styles.css, checked by `check:app`): a business's « Envoyer ma carte »
 ([EnvoiCarteAppli](src/components/commerce/EnvoiCarteAppli.jsx)), the courier's draft dossier
 ([DossierAppli](src/pages/driver/DossierAppli.jsx), one topic or one document per screen; rules shared with Onboarding.jsx in
 [dossierCommun.js](src/pages/driver/dossierCommun.js)); once sent, validated or suspended the app shows
@@ -100,7 +101,12 @@ new promotions open in a sheet. Local backend on a Neon dev database: see `../fa
 **`npm run check:app` before every push** ([scripts/verifier-appli.mjs](scripts/verifier-appli.mjs)): opens every app page at
 375×667 in app mode for four profiles against a mocked backend (real captured responses in `scripts/verifier-appli-donnees.json`)
 and fails on any website chrome, a crashed page, or a full-screen screen that scrolls. Needs Chrome or Edge installed. A new
-app page goes into its `PAGES`; a page crashing for lack of data gets a better mock, it is never removed from the list. The onboarding copy makes **no claim the code does not back** — never « moins cher » (it depends on the
+app page goes into its `PAGES`; a page crashing for lack of data gets a better mock, it is never removed from the list.
+**The bottom tab bar is anchored to the bottom edge** (founder, 2026-10-21, decision 11: it floated above the bottom on an
+Android phone): under 900 px `.dashboard-sidebar` is `bottom: 0` with `padding-bottom: max(6px, env(safe-area-inset-bottom))`,
+on the website, the home-screen app and the native app alike, `--hauteur-onglets` 74 px. Never give it a fixed bottom offset
+again; `npm run check:barres` ([scripts/verifier-barres-bas.mjs](scripts/verifier-barres-bas.mjs)) checks it for the four spaces
+at Android sizes, address bar collapse, visualViewport changes and a 48 px system inset. The onboarding copy makes **no claim the code does not back** — never « moins cher » (it depends on the
 business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them.
 
 **Push notifications (2026-10-11), what exists:** order-status pushes for all three roles come from a DB trigger

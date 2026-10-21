@@ -30,7 +30,9 @@ import AlerteLivreurBar from '../../components/AlerteLivreurBar';
 import SelfieControle from '../../components/livreur/SelfieControle';
 import LivreurDedie from '../../components/livreur/LivreurDedie';
 import NotifCourses from '../../components/livreur/NotifCourses';
-import PositionRequise from '../../components/livreur/PositionRequise';
+import PositionRequise, { ExplicationPosition } from '../../components/livreur/PositionRequise';
+import useEtatPosition from '../../hooks/useEtatPosition';
+import Modale from '../../components/Modale';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 import EtatVide from '../../components/EtatVide';
 import '../../ecran-livreur.css';
@@ -181,7 +183,22 @@ export default function DriverDashboard() {
   const large = useSiteLarge(!experienceApp());
   const [choisie, setChoisie] = useState(null);
 
+  /* LA POSITION, JUSTE AVANT « DISPONIBLE » (fondateur, 2026-10-21, décision 10). Elle n'est plus demandée à l'inscription :
+   * un livreur en pause qui touche l'interrupteur pour recevoir des courses, sans position autorisée, voit d'abord
+   * l'explication (la même que l'ancien écran de l'inscription) et la question du système ; l'interrupteur ne s'allume
+   * qu'après un oui. « Pas maintenant » le laisse en pause : disponible sans position, il ne verrait aucune course
+   * (PositionRequise) tout en recevant les alertes de nouvelles courses. Partage coupé dans Mon compte : rien à demander ici,
+   * PositionRequise le dit au-dessus de la liste. */
+  const [etatPos, verifierPos] = useEtatPosition();
+  const [demandePosition, setDemandePosition] = useState(false);
   async function togglePause() {
+    if (user?.driverPaused && user?.locationSharingEnabled !== false && (await verifierPos()) !== 'granted') {
+      setDemandePosition(true);
+      return;
+    }
+    basculerPause();
+  }
+  async function basculerPause() {
     setTogglingPause(true);
     try {
       await api('/auth/me', { method: 'PATCH', token, body: { driverPaused: !user?.driverPaused } });
@@ -343,8 +360,11 @@ export default function DriverDashboard() {
    * « Courses » pour tout livreur : le navigateur demandait la position à un nouvel inscrit dont le dossier n'était même pas
    * envoyé, contre la promesse de l'inscription (driverGeoNotice : « que lorsque tu voudras recevoir des courses »). Il
    * démarre désormais pour un livreur qui peut rouler et n'est pas en pause, ou qui a une course en main ; avant,
-   * PositionRequise demande l'autorisation au-dessus de la liste des courses, au moment où elle sert. */
-  const suiviUtile = mine.length > 0 || (user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && !user?.driverPaused);
+   * PositionRequise demande l'autorisation au-dessus de la liste des courses, au moment où elle sert.
+   * Sans course en main, il attend aussi que la position soit DÉJÀ autorisée (décision 10 du 2026-10-21) : sinon le
+   * watchPosition posait lui-même la question du système dès l'ouverture de la page, avant que le livreur ait lu
+   * l'explication. Sans course en main, il ne sert de toute façon qu'à tenir la position prête (rien n'est envoyé). */
+  const suiviUtile = mine.length > 0 || (user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && !user?.driverPaused && etatPos === 'granted');
   useEffect(() => {
     if (user?.locationSharingEnabled === false || !suiviUtile) {
       setSharingLocation(false);
@@ -1068,6 +1088,14 @@ export default function DriverDashboard() {
       <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
         onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); deliver(o, true); }}
         onRefuse={() => refuserRemiseAge(ageAVerifier)} />
+      {/* Juste avant « Disponible » : la position (voir togglePause). */}
+      {demandePosition && (
+        <Modale titre={t('appli.lvPosTitre')} onFermer={() => setDemandePosition(false)}>
+          <ExplicationPosition etat={etatPos} verifier={verifierPos} onAutorisee={() => { setDemandePosition(false); basculerPause(); }}>
+            <button type="button" className="btn-outline" onClick={() => setDemandePosition(false)}>{t('dashDriver.posReqPlusTard')}</button>
+          </ExplicationPosition>
+        </Modale>
+      )}
     </div>
   );
 }
