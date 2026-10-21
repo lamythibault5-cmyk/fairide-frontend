@@ -15,6 +15,7 @@
     "icones:site": "node scripts/icones-site.mjs",
     "app:assets": "node scripts/app-assets.mjs && npx @capacitor/assets generate --android --iconBackgroundColor \"#3B2FB5\" --iconBackgroundColorDark \"#3B2FB5\" --splashBackgroundColor \"#3B2FB5\" --splashBackgroundColorDark \"#3B2FB5\" && node scripts/app-assets.mjs --icones-android",
     "check:app": "node scripts/verifier-appli.mjs",
+    "check:barres": "node scripts/verifier-barres-bas.mjs",
     "postinstall": "node scripts/corriger-connexion-google.mjs"
   },
   "dependencies": {

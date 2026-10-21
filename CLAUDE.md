@@ -100,7 +100,12 @@ new promotions open in a sheet. Local backend on a Neon dev database: see `../fa
 **`npm run check:app` before every push** ([scripts/verifier-appli.mjs](scripts/verifier-appli.mjs)): opens every app page at
 375×667 in app mode for four profiles against a mocked backend (real captured responses in `scripts/verifier-appli-donnees.json`)
 and fails on any website chrome, a crashed page, or a full-screen screen that scrolls. Needs Chrome or Edge installed. A new
-app page goes into its `PAGES`; a page crashing for lack of data gets a better mock, it is never removed from the list. The onboarding copy makes **no claim the code does not back** — never « moins cher » (it depends on the
+app page goes into its `PAGES`; a page crashing for lack of data gets a better mock, it is never removed from the list.
+**The bottom tab bar is anchored to the bottom edge** (founder, 2026-10-21, decision 11: it floated above the bottom on an
+Android phone): under 900 px `.dashboard-sidebar` is `bottom: 0` with `padding-bottom: max(6px, env(safe-area-inset-bottom))`,
+on the website, the home-screen app and the native app alike, `--hauteur-onglets` 74 px. Never give it a fixed bottom offset
+again; `npm run check:barres` ([scripts/verifier-barres-bas.mjs](scripts/verifier-barres-bas.mjs)) checks it for the four spaces
+at Android sizes, address bar collapse, visualViewport changes and a 48 px system inset. The onboarding copy makes **no claim the code does not back** — never « moins cher » (it depends on the
 business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them.
 
 **Push notifications (2026-10-11), what exists:** order-status pushes for all three roles come from a DB trigger

@@ -109,7 +109,8 @@
   --ressort-ui: cubic-bezier(.2, .8, .2, 1);
   --ressort-ui: linear(0, .158, .413, .626, .773, .868, .925, .958, .977, .987, 1);
   /* Hauteur des onglets flottants du bas, marge comprise (12 + 6 + 60 + 6 + 2 de filets) : les éléments
-     fixés au-dessus (toast, pilule du panier, fiche de la carte) et le pied de page s'y calent. */
+     fixés au-dessus (toast, pilule du panier, fiche de la carte) et le pied de page s'y calent. Sous 900 px, 74 px depuis le
+     2026-10-21 (la barre est collée au bas, voir .dashboard-sidebar dans la requête max-width: 900px). */
   --hauteur-onglets: 86px;
   --shadow-1: rgba(0, 0, 0, 0.12) 0 4px 16px 0;  /* carte détachée sur une bande claire */
   --shadow-2: rgba(0, 0, 0, 0.16) 0 4px 16px 0;  /* carte qui porte un formulaire */
@@ -2754,9 +2755,18 @@ main.page-fade { min-height: calc(100dvh - 140px); }
      Le conteneur n'a donc plus ni fond ni bordure : ce sont les pastilles qui portent le blanc. */
   .dashboard-sidebar {
     position: fixed; left: 0; right: 0; top: auto; height: auto; width: 100%;
-    bottom: calc(12px + env(safe-area-inset-bottom));
+    /* COLLÉE AU BORD DU BAS, PARTOUT (fondateur, 2026-10-21, décision 11 : sur l'Android de son père, la barre de la console
+       flottait au-dessus du bas avec un vide dessous). Avant, la barre était posée à 12 px + env(safe-area-inset-bottom) du
+       bord : sur Chrome Android récent, bord à bord avec viewport-fit=cover (index.html), cette marge du système peut valoir
+       la hauteur de la barre de navigation d'Android (environ 24 à 48 px) quand la barre d'adresse se replie, et les 12 px s'y
+       ajoutaient — la barre montait d'autant, au-dessus d'une bande vide. Le conteneur est maintenant ancré à bottom: 0
+       (son bord bas = le bas de l'écran, sur le site, l'app ajoutée à l'écran d'accueil et l'app native), et la pilule se
+       pose juste sur la zone du système grâce au rembourrage : max(6px, marge du système), la règle que l'app native avait
+       déjà depuis le 2026-10-20. Rien ne la décale en JavaScript (aucun code visualViewport ni décalage clavier ne la
+       touche ; dans l'app, le clavier la masque, voir html.clavier-ouvert). Vérifié par scripts/verifier-barres-bas.mjs. */
+    bottom: 0;
     flex-direction: row; align-items: center; justify-content: center; gap: 10px;
-    padding: 0 8px; /* 8 et non 12 : quatre pixels de plus pour les libellés de la barre-pilule */
+    padding: 0 8px max(6px, env(safe-area-inset-bottom)); /* 8 et non 12 sur les côtés : quatre pixels de plus pour les libellés de la barre-pilule */
     background: transparent; border-right: none; border-top: none;
     box-shadow: none; z-index: 50; pointer-events: none;
     overflow: visible;
@@ -2766,9 +2776,9 @@ main.page-fade { min-height: calc(100dvh - 140px); }
      env(safe-area-inset-bottom), et les 12 px de plus faisaient flotter la barre bien au-dessus. Elle se pose maintenant
      juste sur cette zone (6 px du bord au minimum si le système n'en déclare aucune). --hauteur-onglets perd les mêmes
      12 px : tout ce qui se cale au-dessus (pilule du panier, barre « Accepter », toast, fiche de la carte) descend avec
-     elle. Le site et l'app ajoutée à l'écran d'accueil ne changent pas. */
-  html.natif { --hauteur-onglets: 74px; }
-  html.natif .dashboard-sidebar { bottom: max(6px, env(safe-area-inset-bottom)); }
+     elle. Depuis le 2026-10-21 (décision 11, voir juste au-dessus), la même règle vaut aussi sur le site et dans l'app
+     ajoutée à l'écran d'accueil : --hauteur-onglets y passe à 74 px pour tout le monde. */
+  :root { --hauteur-onglets: 74px; }
   /* Le conteneur laisse passer les clics (il couvre toute la largeur), les pastilles les prennent. */
   .dashboard-sidebar > * { pointer-events: auto; }
   .dashboard-sidebar::-webkit-scrollbar { display: none; }
@@ -2790,7 +2800,8 @@ main.page-fade { min-height: calc(100dvh - 140px); }
      téléphones). Tout ce qui bouge est `transform` / `opacity`, sauf la hauteur des onglets, qui ne
      recalcule que cette barre fixée (`contain`). */
   .dashboard-sidebar { transition: padding .14s var(--ressort-ui); }
-  .dashboard-sidebar--compacte { padding: 0 48px; }
+  /* Les côtés seulement : un `padding` complet effacerait le rembourrage du bas qui pose la barre sur la zone du système. */
+  .dashboard-sidebar--compacte { padding-left: 48px; padding-right: 48px; }
   .dashboard-nav {
     flex-direction: row; gap: 0; width: 100%; max-width: 460px; flex: 0 1 auto; min-width: 0;
     justify-content: stretch; overflow: visible; pointer-events: auto;
