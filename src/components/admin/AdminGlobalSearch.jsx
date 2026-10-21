@@ -28,14 +28,22 @@ export default function AdminGlobalSearch() {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [results, setResults] = useState(null);
+  const [erreur, setErreur] = useState(null);
   const debouncedQ = useDebouncedValue(q, 300);
   const boxRef = useRef(null);
   const inputRef = useRef(null);
 
+  /* Audit du 19/10, admin-54 : une réponse plus lente d'une recherche précédente pouvait remplacer la bonne (on l'ignore
+   * maintenant : seule la dernière demandée s'affiche), et une erreur laissait « Recherche… » pour toujours (elle se dit). */
   useEffect(() => {
-    if (debouncedQ.trim().length < 2) { setResults(null); return; }
-    api(`/admin/search?q=${encodeURIComponent(debouncedQ.trim())}`, { token }).then(setResults).catch(() => {});
-  }, [debouncedQ, token]);
+    if (debouncedQ.trim().length < 2) { setResults(null); setErreur(null); return undefined; }
+    let actuelle = true;
+    setResults(null); setErreur(null);
+    api(`/admin/search?q=${encodeURIComponent(debouncedQ.trim())}`, { token })
+      .then((r) => { if (actuelle) setResults(r); })
+      .catch((e) => { if (actuelle) setErreur(e.message || tr('adminSearch.error')); });
+    return () => { actuelle = false; };
+  }, [debouncedQ, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     function onClickOutside(e) { if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false); }
@@ -61,6 +69,22 @@ export default function AdminGlobalSearch() {
   }
 
   const hasResults = results && groups(tr).some((g) => results[g.key]?.length > 0);
+  // Au clavier (admin-54) : Entrée ouvre le premier résultat, flèche bas descend dans la liste ; chaque résultat est un
+  // bouton (Tab, Entrée), et les flèches passent d'un résultat à l'autre.
+  const listeRef = useRef(null);
+  const premier = () => { for (const g of groups(tr)) { const it = results?.[g.key]?.[0]; if (it) return [g.key, it]; } return null; };
+  function surTouche(e) {
+    if (e.key === 'Enter' && hasResults) { e.preventDefault(); const p = premier(); if (p) goTo(p[0], p[1]); }
+    if (e.key === 'ArrowDown' && hasResults) { e.preventDefault(); listeRef.current?.querySelector('button')?.focus(); }
+  }
+  function surToucheListe(e) {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const boutons = [...(listeRef.current?.querySelectorAll('button') || [])];
+    const i = boutons.indexOf(document.activeElement);
+    if (e.key === 'ArrowUp' && i <= 0) { inputRef.current?.focus(); return; }
+    boutons[Math.min(boutons.length - 1, Math.max(0, i + (e.key === 'ArrowDown' ? 1 : -1)))]?.focus();
+  }
 
   return (
     <div ref={boxRef} className="admin-recherche" style={{ position: 'relative', padding: '0 16px 12px' }}>
@@ -69,13 +93,15 @@ export default function AdminGlobalSearch() {
         value={q}
         onChange={(e) => { setQ(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
+        onKeyDown={surTouche}
         placeholder={tr('adminSearch.phSearch')}
         aria-label={tr('adminSearch.phSearch')}
       />
       {!q && <span className="admin-search-hint" aria-hidden="true">Ctrl K</span>}
       {open && q.trim().length >= 2 && (
-        <div className="card admin-recherche-resultats">
-          {!results && <div className="small" style={{ padding: 8 }}>{tr('adminSearch.searching')}</div>}
+        <div className="card admin-recherche-resultats" ref={listeRef} onKeyDown={surToucheListe}>
+          {erreur && <div className="small texte-erreur" role="alert" style={{ padding: 8 }}>{erreur}</div>}
+          {!results && !erreur && <div className="small" style={{ padding: 8 }}>{tr('adminSearch.searching')}</div>}
           {results && !hasResults && <div className="small" style={{ padding: 8, opacity: 0.6 }}>{tr('adminCommon.noResults')}</div>}
           {results && groups(tr).map((g) => {
             const items = results[g.key] || [];
@@ -84,10 +110,10 @@ export default function AdminGlobalSearch() {
               <div key={g.key} style={{ marginBottom: 6 }}>
                 <div className="small" style={{ fontWeight: 700, opacity: 0.6, padding: '4px 4px 2px' }}>{g.label}</div>
                 {items.map((it) => (
-                  <div key={it.id} className="row" style={{ justifyContent: 'space-between', padding: '6px 4px', cursor: 'pointer', borderRadius: 6 }} onClick={() => goTo(g.key, it)}>
+                  <button type="button" key={it.id} className="row lien-bouton" style={{ justifyContent: 'space-between', padding: '6px 4px', cursor: 'pointer', borderRadius: 6, width: '100%', textAlign: 'left', textDecoration: 'none', color: 'inherit' }} onClick={() => goTo(g.key, it)}>
                     <span className="small">{it.label}</span>
                     <span className="small" style={{ opacity: 0.6 }}>{it.sublabel}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             );

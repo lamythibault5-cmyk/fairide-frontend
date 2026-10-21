@@ -6,11 +6,11 @@ import { useLanguage } from '../../../context/LanguageContext';
 import { useToast } from '../../../context/ToastContext';
 import { useApiData, LoadState } from './common';
 
-const CHAMPS = [
-  { key: 'autoAssignRadiusKm', min: 0.5, max: 50, step: 0.5, unit: 'km' },
-  { key: 'maxSimultaneousOrders', min: 1, max: 10, step: 1, entier: true },
-  { key: 'acceptTimeoutSeconds', min: 15, max: 600, step: 5, entier: true, unit: 's' }
-];
+/* RAYON, COMMANDES SIMULTANÉES ET DÉLAI D'ACCEPTATION NE SONT PLUS PROPOSÉS (audit du 19/10, admin-74). Ils étaient
+ * enregistrés mais lus par aucun code : l'équipe croyait régler le dispatch, rien ne changeait. Et ils décrivaient une
+ * attribution « une course à un livreur à la fois » qui n'est pas le modèle : chaque course va à la liste d'offres de tous
+ * les livreurs (docs/dispatch.md du back-end). Seul le contrôle des zones agit ; le serveur garde les trois clés, sans effet. */
+const CHAMPS = [];
 
 // Onglet Réglages : les quatre paramètres de dispatch (rayon d'attribution, commandes simultanées, délai
 // d'acceptation, contrôle des zones), enregistrés dans platform_settings et journalisés côté serveur.
@@ -85,7 +85,7 @@ export default function SettingsTab() {
           <div className="card" style={{ marginBottom: 14 }}>
             <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{tr('adminLogistics.settingsTitle')}</h3>
             <p className="small lg-muted" style={{ margin: '0 0 14px' }}>{tr('adminLogistics.settingsNote')}</p>
-            <div className="lg-form lg-form-grid">
+            {CHAMPS.length > 0 && <div className="lg-form lg-form-grid">
               {CHAMPS.map((c) => (
                 <div className="field" key={c.key}>
                   <label htmlFor={`lg-set-${c.key}`}>{libelles[c.key][0]}</label>
@@ -93,7 +93,7 @@ export default function SettingsTab() {
                   <span className="help">{libelles[c.key][1]} {tr('adminLogistics.rangeHint', { min: c.min, max: c.max })}</span>
                 </div>
               ))}
-            </div>
+            </div>}
             <div className="lg-setting-row" style={{ marginTop: 6 }}>
               <div>
                 <label htmlFor="lg-set-zone" style={{ marginBottom: 2 }}>{tr('adminLogistics.setZoneCheck')}</label>

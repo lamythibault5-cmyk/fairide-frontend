@@ -3,6 +3,7 @@ import { api } from '../../../api';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { useLanguage, getLocale } from '../../../context/LanguageContext';
+import { ErrorCard } from '../../../components/admin/AdminListTools';
 
 /* Admin › Conformité › Présomption de salariat (CODE-13, DEC-21 ; serveur : presomptionSalariat.js).
  *
@@ -15,8 +16,11 @@ export default function CriteresSalariatTab() {
   const toast = useToast();
   const { t } = useLanguage();
   const [g, setG] = useState(null);
-  const charger = useCallback(() => { api('/admin/compliance/platform-work-criteria', { token }).then(setG).catch((e) => toast(e.message, 'erreur')); }, [token, toast]);
+  // Une erreur de chargement laissait « … » pour toujours (audit du 19/10, admin-81) : elle se montre, avec « Réessayer ».
+  const [erreur, setErreur] = useState(null);
+  const charger = useCallback(() => { setErreur(null); api('/admin/compliance/platform-work-criteria', { token }).then(setG).catch((e) => setErreur(e.message)); }, [token]);
   useEffect(() => { charger(); }, [charger]);
+  if (erreur && !g) return <ErrorCard message={erreur} onRetry={charger} />;
   if (!g) return <p className="small">…</p>;
   return (
     <div className="card">

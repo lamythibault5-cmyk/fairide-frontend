@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { estCompteTest, TestBadge, fmtDate } from './adminUtils';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import TwoFactorSetup from '../../components/TwoFactorSetup';
 import Icone from '../../components/Icone';
@@ -92,6 +92,14 @@ export default function AdminSettingsPage() {
   }, [section]);
 
   const pricingDirty = pricing && pricingForm && PRICING_FIELD_DEFS.some((f) => Number(pricingForm[f.key]) !== Number(toDisplayForm(pricing)[f.key]));
+  /* Audit du 19/10, admin-53 : un champ vidé valait Number('') = 0 et passait (commission à 0 %). Un champ vide ou illisible
+   * bloque maintenant l'enregistrement, et la confirmation dit ce qui change (avant → après). L'historique des changements,
+   * déjà journalisé par le serveur, se lit sous le formulaire. */
+  const champVide = pricingForm && PRICING_FIELD_DEFS.some((f) => String(pricingForm[f.key] ?? '').trim() === '' || !Number.isFinite(Number(pricingForm[f.key])));
+  const changements = pricing && pricingForm ? pricingFields(tr).filter((f) => Number(pricingForm[f.key]) !== Number(toDisplayForm(pricing)[f.key]))
+    .map((f) => `${f.label} : ${toDisplayForm(pricing)[f.key]} → ${pricingForm[f.key]} ${f.suffix}`) : [];
+  const [historique, setHistorique] = useState(null);
+  const chargerHistorique = () => api('/admin/settings/history', { token }).then(setHistorique).catch(() => setHistorique([]));
 
   async function savePricing() {
     setSavingPricing(true);
@@ -102,6 +110,7 @@ export default function AdminSettingsPage() {
       setPricing(updated);
       setPricingForm(toDisplayForm(updated));
       toast(tr('adminSettings.toastPricingUpdated'));
+      if (historique) chargerHistorique();
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -158,9 +167,20 @@ export default function AdminSettingsPage() {
               </div>
             ))}
             <ExempleTarifs form={pricingForm} tr={tr} />
-            <button className="btn-teal" disabled={!pricingDirty || savingPricing} onClick={() => setConfirmSave(true)}>
+            {champVide && <p className="small texte-erreur" role="alert" style={{ margin: '0 0 8px' }}>{tr('adminSettings.emptyField')}</p>}
+            <button className="btn-teal" disabled={!pricingDirty || champVide || savingPricing} onClick={() => setConfirmSave(true)}>
               {savingPricing ? '...' : tr('adminCommon.save')}
             </button>
+            <details className="small" style={{ marginTop: 14 }} onToggle={(e) => { if (e.currentTarget.open && !historique) chargerHistorique(); }}>
+              <summary>{tr('adminSettings.historyTitle')}</summary>
+              {!historique && <p className="small">…</p>}
+              {historique && historique.length === 0 && <p className="small">{tr('adminSettings.historyNone')}</p>}
+              {historique && historique.map((h) => (
+                <p key={h.id} className="small" style={{ margin: '6px 0 0' }}>
+                  {new Date(h.createdAt).toLocaleString(getLocale())} · {h.adminEmail} : {Object.entries(h.changes || {}).map(([k, v]) => (v && typeof v === 'object' && 'from' in v ? `${k} ${v.from} → ${v.to}` : k)).join(', ')}
+                </p>
+              ))}
+            </details>
           </div>
         )
       )}
@@ -179,7 +199,7 @@ export default function AdminSettingsPage() {
       <ConfirmDialog
         open={confirmSave}
         title={tr('adminSettings.confirmPricing')}
-        message={tr('adminSettings.confirmPricingBody')}
+        message={changements.length ? `${tr('adminSettings.confirmPricingBody')} ${changements.join(' · ')}` : tr('adminSettings.confirmPricingBody')}
         danger
         loading={savingPricing}
         onConfirm={savePricing}

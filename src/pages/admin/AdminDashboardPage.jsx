@@ -180,7 +180,9 @@ export default function AdminDashboardPage() {
           <>
             <RealtimeCard num={overview.support?.open ?? 0} label={tr('adminDash.openTickets')} to="/admin/support" warn={overview.support?.slaBreached > 0} />
             <RealtimeCard num={overview.tasks?.overdue ?? 0} label={tr('adminDash.overdueTasks')} to="/admin/tasks?due=overdue" warn={overview.tasks?.overdue > 0} />
-            <RealtimeCard num={(overview.restaurants?.pending ?? 0) + (overview.drivers?.pending ?? 0)} label={tr('adminDash.pendingValidations')} to={overview.restaurants?.pending > 0 ? '/admin/restaurants?status=pending' : '/admin/drivers?status=pending'} warn={(overview.restaurants?.pending ?? 0) + (overview.drivers?.pending ?? 0) > 0} />
+            {/* Les dossiers livreurs ENVOYÉS (couriers.pending), pas les comptes « en attente » ; et vers Livreurs › Dossiers,
+                là où l'on valide (audit du 19/10, admin-72). */}
+            <RealtimeCard num={(overview.restaurants?.pending ?? 0) + (overview.couriers?.pending ?? 0)} label={tr('adminDash.pendingValidations')} to={overview.restaurants?.pending > 0 ? '/admin/restaurants?status=pending' : '/admin/couriers'} warn={(overview.restaurants?.pending ?? 0) + (overview.couriers?.pending ?? 0) > 0} />
             {overview.documents?.expiringSoon !== undefined && <RealtimeCard num={overview.documents.expiringSoon} label={tr('adminDash.documentsExpiringSoon')} to="/admin/documents?expiry=expiring_soon" warn={overview.documents.expiringSoon > 0} />}
           </>
         )}

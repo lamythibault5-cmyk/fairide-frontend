@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import DecisionDialog from './DecisionDialog';
+import ConfirmDialog from '../ConfirmDialog';
+import { ErrorCard } from './AdminListTools';
 import Icone from '../Icone';
 
 /* Admin › Livreurs › Contrôles (CODE-14, DEC-23 ; serveur : controleSelfie.js).
@@ -16,9 +18,14 @@ export default function ControlesSelfie({ token, toast }) {
   const [liste, setListe] = useState(null);
   const [enCours, setEnCours] = useState(null);
   const [suspendre, setSuspendre] = useState(null);
+  // « Pas la même personne » efface le selfie et ouvre une suspension pour fraude : une confirmation d'abord (audit du
+  // 19/10, admin-69 : un clic de travers détruisait la pièce). Une erreur de chargement se dit, au lieu d'une liste vide.
+  const [aConfirmer, setAConfirmer] = useState(null);
+  const [erreur, setErreur] = useState(null);
   const charger = useCallback(() => {
-    api('/admin/couriers/selfie-checks', { token }).then(setListe).catch((e) => { toast(e.message, 'erreur'); setListe([]); });
-  }, [token, toast]);
+    setErreur(null);
+    api('/admin/couriers/selfie-checks', { token }).then(setListe).catch((e) => { setErreur(e.message); setListe(null); });
+  }, [token]);
   useEffect(() => { charger(); }, [charger]);
 
   async function decider(c, decision) {
@@ -26,19 +33,21 @@ export default function ControlesSelfie({ token, toast }) {
     try {
       const r = await api(`/admin/couriers/selfie-checks/${c.id}`, { method: 'PATCH', token, body: { decision } });
       toast(t(decision === 'match' ? 'controlesSelfie.toastMatch' : 'controlesSelfie.toastMismatch'));
-      if (decision === 'mismatch' && r.courierUserId) setSuspendre({ id: r.courierUserId, name: c.name });
+      if (decision === 'mismatch' && r.courierUserId) setSuspendre({ id: r.courierUserId, name: c.name, checkId: c.id });
       charger();
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   async function confirmerSuspension(payload) {
     setEnCours('suspension');
     try {
-      await api(`/admin/drivers/${suspendre.id}/status`, { method: 'PATCH', token, body: { status: 'blocked', ...payload } });
+      // Le contrôle est cité dans le dossier de décision (evidenceRefs) : la trace de ce qui a été constaté reste liée.
+      await api(`/admin/drivers/${suspendre.id}/status`, { method: 'PATCH', token, body: { status: 'blocked', ...payload, evidenceRefs: [`selfie_check:${suspendre.checkId}`] } });
       toast(t('controlesSelfie.toastSuspended'));
       setSuspendre(null);
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
 
+  if (erreur) return <ErrorCard message={erreur} onRetry={charger} />;
   if (!liste) return <p className="small">…</p>;
   const date = (ms) => new Date(ms).toLocaleString(getLocale(), { dateStyle: 'short', timeStyle: 'short' });
   return (
@@ -67,10 +76,12 @@ export default function ControlesSelfie({ token, toast }) {
           </div>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <button type="button" className="btn-teal" disabled={enCours === c.id} onClick={() => decider(c, 'match')}>{t('controlesSelfie.match')}</button>
-            <button type="button" className="btn-danger-ghost" disabled={enCours === c.id} onClick={() => decider(c, 'mismatch')}>{t('controlesSelfie.mismatch')}</button>
+            <button type="button" className="btn-danger-ghost" disabled={enCours === c.id} onClick={() => setAConfirmer(c)}>{t('controlesSelfie.mismatch')}</button>
           </div>
         </div>
       ))}
+      <ConfirmDialog open={!!aConfirmer} title={t('controlesSelfie.confirmMismatchTitle', { name: aConfirmer?.name || '' })} message={t('controlesSelfie.confirmMismatchBody')} danger
+        onCancel={() => setAConfirmer(null)} onConfirm={() => { const c = aConfirmer; setAConfirmer(null); decider(c, 'mismatch'); }} />
       <DecisionDialog open={!!suspendre} cible={suspendre?.name} targetType="user" livreur loading={enCours === 'suspension'}
         onCancel={() => setSuspendre(null)} onConfirm={confirmerSuspension} />
     </div>

@@ -15,11 +15,15 @@ import { useLanguage } from '../../context/LanguageContext';
  * figurent pas et n'y figureront pas : c'est ce que la notice de transparence promet aux livreurs.
  * `livreur` : vrai pour un compte livreur passé en targetType « user » (page Livreurs).
  *
+ * `aucuneMesure` : décider un dossier DÉJÀ OUVERT (signalement, contrôle automatique) peut aussi le clore « aucune mesure »
+ * (audit du 19/10, admin-40) : seuls les faits sont alors demandés, rien n'est envoyé, aucun statut ne change. Sans cette
+ * option, un signalement infondé restait « à décider » pour toujours.
+ *
  * onConfirm(payload) reçoit { measure, facts, contractualBasis, legalBasis, reasonCode?, effectiveAt?, noticeException? }. */
 // CODE-13 (DEC-21) : trois motifs seulement contre un livreur — fraude, faute grave, obligation légale (decisionMotivee.js).
 const MOTIFS_LIVREUR = ['fraud_identity', 'serious_misconduct', 'legal_obligation'];
 
-export default function DecisionDialog({ open, cible, targetType, livreur = false, loading, onConfirm, onCancel }) {
+export default function DecisionDialog({ open, cible, targetType, livreur = false, aucuneMesure = false, loading, onConfirm, onCancel }) {
   const { t } = useLanguage();
   const id = useId();
   const [measure, setMeasure] = useState('suspension');
@@ -33,9 +37,11 @@ export default function DecisionDialog({ open, cible, targetType, livreur = fals
   useEffect(() => { if (open) { setMeasure('suspension'); setFacts(''); setContractualBasis(''); setLegalBasis(''); setException(''); setReasonCode(''); setEffectiveAt(dans30); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!open) return null;
   const resiliationCommerce = targetType === 'restaurant' && measure === 'termination';
-  const motifRequis = livreur || targetType === 'courier';
-  const pret = facts.trim().length >= 20 && contractualBasis.trim().length > 0 && (!motifRequis || !!reasonCode);
+  const sansMesure = measure === 'none';
+  const motifRequis = (livreur || targetType === 'courier') && !sansMesure;
+  const pret = facts.trim().length >= 20 && (sansMesure || contractualBasis.trim().length > 0) && (!motifRequis || !!reasonCode);
   function valider() {
+    if (sansMesure) { onConfirm({ measure: 'none', facts: facts.trim() }); return; }
     onConfirm({
       measure, facts: facts.trim(), ...(motifRequis ? { reasonCode } : {}), contractualBasis: contractualBasis.trim(), legalBasis: legalBasis.trim() || undefined,
       ...(resiliationCommerce ? (exception ? { noticeException: exception } : { effectiveAt: new Date(`${effectiveAt}T00:00:00`).toISOString() }) : {})
@@ -49,7 +55,9 @@ export default function DecisionDialog({ open, cible, targetType, livreur = fals
         <select id={`${id}-m`} value={measure} onChange={(e) => setMeasure(e.target.value)}>
           <option value="suspension">{t('conformite.measure_suspension')}</option>
           <option value="termination">{t('conformite.measure_termination')}</option>
+          {aucuneMesure && <option value="none">{t('conformite.measure_none')}</option>}
         </select>
+        {sansMesure && <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t('conformite.decisionNoneHelp')}</p>}
       </div>
       {motifRequis && (
         <div className="field">
@@ -65,14 +73,18 @@ export default function DecisionDialog({ open, cible, targetType, livreur = fals
         <label htmlFor={`${id}-f`}>{t('conformite.decisionFacts')}</label>
         <textarea id={`${id}-f`} rows={4} value={facts} onChange={(e) => setFacts(e.target.value)} placeholder={t('conformite.decisionFactsPh')} />
       </div>
-      <div className="field">
-        <label htmlFor={`${id}-c`}>{t('conformite.decisionContract')}</label>
-        <input id={`${id}-c`} value={contractualBasis} onChange={(e) => setContractualBasis(e.target.value)} placeholder={t('conformite.decisionContractPh')} />
-      </div>
-      <div className="field">
-        <label htmlFor={`${id}-l`}>{t('conformite.decisionLegal')}</label>
-        <input id={`${id}-l`} value={legalBasis} onChange={(e) => setLegalBasis(e.target.value)} />
-      </div>
+      {!sansMesure && (
+        <>
+          <div className="field">
+            <label htmlFor={`${id}-c`}>{t('conformite.decisionContract')}</label>
+            <input id={`${id}-c`} value={contractualBasis} onChange={(e) => setContractualBasis(e.target.value)} placeholder={t('conformite.decisionContractPh')} />
+          </div>
+          <div className="field">
+            <label htmlFor={`${id}-l`}>{t('conformite.decisionLegal')}</label>
+            <input id={`${id}-l`} value={legalBasis} onChange={(e) => setLegalBasis(e.target.value)} />
+          </div>
+        </>
+      )}
       {resiliationCommerce && (
         <div className="field">
           <label htmlFor={`${id}-e`}>{t('conformite.decisionNotice')}</label>
@@ -83,11 +95,11 @@ export default function DecisionDialog({ open, cible, targetType, livreur = fals
           {!exception && <input type="date" aria-label={t('conformite.decisionEffective')} min={dans30} value={effectiveAt} onChange={(e) => setEffectiveAt(e.target.value)} style={{ marginTop: 6 }} />}
         </div>
       )}
-      <p className="small" style={{ color: 'var(--ink-soft)' }}>{t('conformite.decisionStatementNote')}</p>
+      {!sansMesure && <p className="small" style={{ color: 'var(--ink-soft)' }}>{t('conformite.decisionStatementNote')}</p>}
       <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel} disabled={loading}>{t('common.cancel')}</button>
-        <button type="button" className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={loading || !pret} onClick={valider}>
-          {loading ? '…' : t('conformite.decisionConfirm')}
+        <button type="button" className="btn-outline" style={sansMesure ? undefined : { borderColor: 'var(--red)', color: 'var(--red)' }} disabled={loading || !pret} onClick={valider}>
+          {loading ? '…' : sansMesure ? t('conformite.decisionCloseNone') : t('conformite.decisionConfirm')}
         </button>
       </div>
     </Modale>

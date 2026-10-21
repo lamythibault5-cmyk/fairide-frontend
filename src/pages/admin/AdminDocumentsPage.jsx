@@ -1,6 +1,6 @@
 import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api, apiUpload } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -21,6 +21,7 @@ import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import useEtatPage from '../../hooks/useEtatPage';
 import ouvrirDocument from '../../ouvrirDocument';
 import useAdminRole from '../../hooks/useAdminRole';
+import useAdminOverview from '../../hooks/useAdminOverview';
 
 // Valider ou rejeter un document (une pièce d'identité de livreur vaut validation de son dossier) : owner/admin/ops, comme
 // le serveur (audit du 19/10, admin-16). Rôle pas encore connu : tout est montré, le serveur reste le garde-fou.
@@ -42,6 +43,9 @@ export default function AdminDocumentsPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [overview, setOverview] = useState(null);
+  // Pièces des dossiers livreurs (courier_documents) : ce compteur-ci ne les voit pas (audit du 19/10, admin-80) ; une
+  // tuile à part les compte et mène là où on les vérifie, Livreurs › Dossiers.
+  const { overview: apercu } = useAdminOverview();
   const [targetType, setTargetType] = useState(searchParams.get('targetType') || '');
   const [documentType, setDocumentType] = useState('');
   const [verificationStatus, setVerificationStatus] = useState(searchParams.get('verification') || '');
@@ -130,7 +134,8 @@ export default function AdminDocumentsPage() {
           <div className="stat-card highlight"><div className="num">{overview.total}</div><div className="label">{tr('adminCommon.documents')}</div></div>
           <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setExpiry('expired')}><div className="num" style={{ color: overview.expired > 0 ? 'var(--red)' : 'inherit' }}>{overview.expired}</div><div className="label">{tr('adminDocs.expired')}</div></button>
           <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setExpiry('expiring_soon')}><div className="num" style={{ color: overview.expiringSoon > 0 ? 'var(--gold-deep)' : 'inherit' }}>{overview.expiringSoon}</div><div className="label">{tr('adminDocs.expiringWithin', { n: overview.expiryWarningDays })}</div></button>
-          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setVerificationStatus('en_attente')}><div className="num">{overview.pendingVerification}</div><div className="label">{tr('adminDocs.pendingVerification')}</div></button>
+          <button type="button" className="stat-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setVerificationStatus('en_attente')}><div className="num">{overview.pendingVerification}</div><div className="label">{tr('adminDocs.pendingVerificationNoCourier')}</div></button>
+          <Link to="/admin/couriers" className="stat-card" style={{ textAlign: 'left', textDecoration: 'none', color: 'inherit' }}><div className="num">{apercu?.couriers?.piecesToCheck ?? '-'}</div><div className="label">{tr('adminDocs.courierPiecesPending')}</div></Link>
         </div>
       )}
 

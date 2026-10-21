@@ -81,8 +81,6 @@ export default function ZonesTab() {
       { label: tr('adminLogistics.colOrders30d'), get: (z) => z.ordersLast30d },
       { label: tr('adminLogistics.colAvgMinutes'), get: (z) => z.avgDeliveryMinutes30d ?? '' },
       { label: tr('adminCommon.drivers'), get: (z) => z.driversApproved },
-      { label: tr('adminLogistics.colFeeExtra'), get: (z) => z.feeExtra },
-      { label: tr('adminLogistics.colEtaExtra'), get: (z) => z.etaExtraMinutes },
       { label: tr('adminCommon.notes'), get: (z) => z.notes || '' }
     ]);
   }
@@ -103,8 +101,6 @@ export default function ZonesTab() {
     { key: 'ordersLast30d', label: tr('adminLogistics.colOrders30d'), align: 'right', get: (z) => z.ordersLast30d, sum: true },
     { key: 'avgDeliveryMinutes30d', label: tr('adminLogistics.colAvgMinutes'), align: 'right', get: (z) => (z.avgDeliveryMinutes30d === null ? <span className="lg-muted">-</span> : tr('adminLogistics.minutesShort', { n: z.avgDeliveryMinutes30d })), sortValue: (z) => z.avgDeliveryMinutes30d },
     { key: 'driversApproved', label: tr('adminCommon.drivers'), align: 'right', get: (z) => z.driversApproved, sum: true },
-    { key: 'feeExtra', label: tr('adminLogistics.colFeeExtra'), align: 'right', get: (z) => (z.feeExtra ? `+${z.feeExtra.toFixed(2)} €` : <span className="lg-muted">-</span>), sortValue: (z) => z.feeExtra },
-    { key: 'etaExtraMinutes', label: tr('adminLogistics.colEtaExtra'), align: 'right', get: (z) => (z.etaExtraMinutes ? `+${z.etaExtraMinutes} min` : <span className="lg-muted">-</span>), sortValue: (z) => z.etaExtraMinutes },
     { key: 'notes', label: tr('adminCommon.notes'), get: (z) => (z.notes ? <span className="small" title={z.notes}>{z.notes.length > 40 ? z.notes.slice(0, 40) + '…' : z.notes}</span> : <span className="lg-muted">-</span>) }
   ];
 
@@ -164,17 +160,9 @@ export default function ZonesTab() {
                 <DrawerRow label={tr('adminLogistics.colAvgMinutes')} value={ouverte.avgDeliveryMinutes30d === null ? '-' : tr('adminLogistics.minutesShort', { n: ouverte.avgDeliveryMinutes30d })} />
                 <DrawerRow label={tr('adminCommon.drivers')} value={ouverte.driversApproved} />
                 <DrawerRow label={tr('adminLogistics.updatedAt')} value={fmtDateTime(ouverte.updatedAt)} />
+                {/* Supplément de prix et délai par zone retirés (audit du 19/10, admin-74) : enregistrés, mais lus par aucun calcul
+                    de prix ni d'estimation. Leur valeur actuelle repart telle quelle avec les notes. */}
                 <div className="lg-form" style={{ marginTop: 16 }}>
-                  <div className="field">
-                    <label htmlFor="lg-fee">{tr('adminLogistics.fieldFeeExtra')}</label>
-                    <input id="lg-fee" type="number" min="0" max="20" step="0.5" value={form.feeExtra} onChange={(e) => setForm((f) => ({ ...f, feeExtra: e.target.value }))} />
-                    <span className="help">{tr('adminLogistics.fieldFeeExtraHelp')}</span>
-                  </div>
-                  <div className="field">
-                    <label htmlFor="lg-eta">{tr('adminLogistics.fieldEtaExtra')}</label>
-                    <input id="lg-eta" type="number" min="0" max="120" step="5" value={form.etaExtraMinutes} onChange={(e) => setForm((f) => ({ ...f, etaExtraMinutes: e.target.value }))} />
-                    <span className="help">{tr('adminLogistics.fieldEtaExtraHelp')}</span>
-                  </div>
                   <div className="field">
                     <label htmlFor="lg-notes">{tr('adminLogistics.fieldNotes')}</label>
                     <textarea id="lg-notes" rows={4} maxLength={2000} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />

@@ -27,6 +27,7 @@ import NouvellesFairide from '../components/NouvellesFairide';
 import MesCasquettes from '../components/MesCasquettes';
 import MotDePasseFedere from '../components/MotDePasseFedere';
 import InboxSection from '../components/InboxSection';
+import MesDecisions from '../components/conformite/MesDecisions';
 import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
@@ -575,6 +576,8 @@ export default function Account() {
           </LigneCompte>
         </div>
       </div>
+      {/* Décisions qui me concernent et « Contester » (audit du 19/10, admin-39) : rien quand il n'y en a pas. */}
+      <MesDecisions />
       </RubriqueCompte>
 
       {/* ——— Mon profil : tout ce qui décrit la personne et son accès. ——— */}
