@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { eurosCourt } from '../prixPlat';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import Icone from './Icone';
 
@@ -19,7 +20,8 @@ export default function GarantieAbonnement({ restoId, token, abonne = false }) {
   }, [restoId, token, abonne]);
 
   const jour = (d) => new Date(d).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long' });
-  const euros = (v) => `${Number(v).toFixed(2).replace('.', ',').replace(/,00$/, '')} €`;
+  // Montants dans la langue affichée (audit du 19/10, shop-119), plus « 12,50 € » en anglais.
+  const euros = (v) => eurosCourt(v);
   return (
     <div className="garantie-abonnement">
       <b><Icone nom="bouclier" taille={16} className="icone-texte" />{' '}{t('accountUi.guaranteeTitle')}</b>

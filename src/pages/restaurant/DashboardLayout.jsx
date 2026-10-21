@@ -49,7 +49,12 @@ export default function DashboardLayout() {
   const toast = useToast();
   // Sans restaurant, seule la racine (« Mon commerce ») propose la création ; les autres sections attendent.
   // /dashboard/edit est l'ancienne adresse des infos : même page (la redirection ne joue qu'avec un restaurant).
-  const chemin = useLocation().pathname.replace(/\/$/, '');
+  const lieu = useLocation();
+  const chemin = lieu.pathname.replace(/\/$/, '');
+  // Retour de Stripe (`?connect=return`, ou `refresh` quand le lien a expiré / a été quitté en route) : lu à chaque
+  // navigation, pas seulement au montage — dans l'app le retour est un historique.push et ce tableau de bord reste monté
+  // (audit du 19/10, shop-7).
+  const retourConnect = new URLSearchParams(lieu.search).get('connect');
   const surAccueil = ['/dashboard', '/dashboard/edit'].includes(chemin);
   // Pages au bandeau iris (2026-10-16, ecran-commerce.css) : elles portent elles-mêmes le nom du commerce et posent
   // les blocs communs (alertes, prochaine étape, alerte de commande) en tête de leur feuille blanche.
@@ -62,6 +67,8 @@ export default function DashboardLayout() {
   const [restaurant, setRestaurant] = useState(null);
   const [orders, setOrders] = useState([]);
   const [reviews, setReviews] = useState(null);
+  // Avis pas chargés (réseau) : la page Avis le dit avec « Réessayer » au lieu de « Pas encore d'avis » (audit du 19/10, shop-113).
+  const [avisEnEchec, setAvisEnEchec] = useState(false);
   const [drivers, setDrivers] = useState([]);
 
   const [newRestoOpen, setNewRestoOpen] = useState(false);
@@ -81,9 +88,6 @@ export default function DashboardLayout() {
   const [connecting, setConnecting] = useState(false);
   // La rangée d'état dépliée en tête du tableau de bord (validation), null si aucune.
   const [statutOuvert, setStatutOuvert] = useState(null);
-  // Capturé une seule fois au montage, avant que l'effet ci-dessous ne nettoie l'URL — loadDashboard
-  // (appelé de façon asynchrone, après coup) ne pourrait plus lire ce paramètre autrement.
-  const connectReturnRef = useRef(new URLSearchParams(window.location.search).get('connect'));
   const statutReluRef = useRef(false); // statut Stripe « en attente » relu une fois par page (voir loadDashboard)
 
   // Plus de carte « Aujourd'hui » dans la colonne de droite (2026-09-23). Elle comptait TOUTES les
@@ -141,12 +145,26 @@ export default function DashboardLayout() {
   }
   useEffect(() => {
     chargerCommerces();
-    if (new URLSearchParams(window.location.search).get('connect')) {
-      toast(t('dashResto.toastPaymentsValidating'));
-      window.history.replaceState({}, '', '/dashboard');
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // RETOUR DE STRIPE (audit du 19/10, shop-7). Avant : « en cours de validation » à chaque retour, y compris quand le lien
+  // avait expiré ou que le commerçant avait quitté Stripe à mi-chemin ; et dans l'app, aucun statut relu (le tableau de bord
+  // restait monté). Maintenant : on relit le statut chez Stripe, on recharge la fiche, et le message dit ce qui est vrai.
+  useEffect(() => {
+    if (!retourConnect || !restoId) return;
+    navigate('/dashboard', { replace: true });
+    api(`/restaurants/${restoId}/connect/refresh`, { method: 'POST', token })
+      .then((r) => {
+        const statut = r?.stripeConnectStatus;
+        if (statut === 'active') toast(t('dashResto.toastPaymentsActive'), 'succes');
+        else if (statut === 'pending' && retourConnect === 'return') toast(t('dashResto.toastPaymentsValidating'));
+        // Refusé : la rangée d'état du tableau de bord le dit déjà, avec la marche à suivre.
+        else if (statut !== 'rejected') toast(t('dashResto.toastPaymentsUnfinished'));
+      })
+      .catch((e) => toast(e.message, 'erreur'))
+      .finally(() => loadDashboard(restoId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [retourConnect, restoId]);
 
   // Rafraîchissement : les commandes toutes les 15 s, même onglet en arrière-plan (c'est ce qui fait sonner l'alerte
   // « nouvelle commande », voir useNewOrderAlert) ; la fiche complète, les avis et les livreurs une fois par minute et
@@ -196,23 +214,19 @@ export default function DashboardLayout() {
   // `fiche` : recharger aussi la fiche du commerce (carte comprise) ; `annexes` : les avis et les livreurs.
   async function loadDashboard(id, { fiche = true, annexes = true, silencieux = false } = {}) {
     try {
-      // Retour de l'onboarding Stripe Connect : le statut n'est pas suivi par webhook pour ce type
-      // de compte, on le relit activement une fois avant de charger le reste du tableau de bord.
-      if (connectReturnRef.current) {
-        connectReturnRef.current = null;
-        await api(`/restaurants/${id}/connect/refresh`, { method: 'POST', token }).catch(() => {});
-      }
+      // Retour de l'onboarding Stripe Connect : le statut (pas suivi par webhook pour ce type de compte) est relu par
+      // l'effet « retour de Stripe » plus haut, qui recharge ensuite le tableau de bord (shop-7).
       const [ordersData, restoData, reviewsData, driversData] = await Promise.all([
         api(`/orders/restaurant/${id}`, { token }),
         fiche ? api(`/restaurants/${id}`, { token }) : null,
         // Annexes (avis, livreurs) : un échec ne doit jamais vider la liste des commandes (banc du 9 oct. 2026 : un 404 sur les
         // avis laissait « Pas encore de commande » alors que le serveur en renvoyait).
-        annexes ? api(`/restaurants/${id}/reviews`).catch(() => null) : null,
+        annexes ? api(`/restaurants/${id}/reviews`).catch(() => false) : null,
         annexes ? api(`/restaurants/${id}/drivers`, { token }).catch(() => null) : null
       ]);
       setOrders(ordersData);
       if (restoData) setRestaurant(restoData);
-      if (reviewsData) setReviews(reviewsData);
+      if (reviewsData) { setReviews(reviewsData); setAvisEnEchec(false); } else if (reviewsData === false) setAvisEnEchec(true);
       if (driversData) setDrivers(driversData);
       // Marque la fin du premier chargement réel : sans ce signal, l'alerte "nouvelle commande"
       // prend l'arrivée des données initiales pour des commandes qui viennent de tomber (voir
@@ -311,7 +325,8 @@ export default function DashboardLayout() {
       const r = await api(`/restaurants/${restoId}/connect/onboard`, { method: 'POST', token });
       // Dans l'app, Stripe s'ouvre dans le navigateur intégré et l'on revient ici en le fermant (allerAuPaiement, natif.js) ;
       // sur le site, rien ne change : la page part vers Stripe.
-      await allerAuPaiement(r.url, { retour: '/dashboard' });
+      // Retour avec `?connect=return` aussi quand on ferme le navigateur intégré : le statut est alors relu (shop-7).
+      await allerAuPaiement(r.url, { retour: '/dashboard?connect=return' });
       setConnecting(false);
     } catch (e) {
       // Numéros d'entreprise / TVA manquants : on emmène vers la sous-section Paiement qui les demande.
@@ -442,7 +457,7 @@ export default function DashboardLayout() {
       )}
       {restaurant && (
         <div className="page-fade" key={chemin}>
-          <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard,
+          <Outlet context={{ restaurant: restaurant || null, orders, reviews, avisEnEchec, drivers, restoId, loadDashboard,
             communs: bandeau ? communs : null, onConnect: connectOnboard, connecting, lectureSeule: !!actingAs,
             alerte: { ...orderAlert, push } }} />
         </div>

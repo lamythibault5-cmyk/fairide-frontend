@@ -30,6 +30,7 @@ import RedirectionRole from '../components/RedirectionRole';
 import Icone from '../components/Icone';
 import CadreConnexion from '../components/CadreConnexion';
 import AvecMarque from '../components/AvecMarque';
+import VerifSociete from '../components/commerce/VerifSociete';
 import { defilement } from '../gestes';
 
 function roles(t) {
@@ -155,7 +156,7 @@ export default function Auth() {
   const [nomCommerce, setNomCommerce] = useState('');
   const [commerceTrouve, setCommerceTrouve] = useState(null);
   const raisonSocialeBce = useRef(''); // dernière raison sociale remplie par la BCE, remplaçable par la suivante (shop-1)
-  const [, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null — gardé pour la vérification BCE, lu nulle part encore
+  const [verifSociete, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null — affiché sous le numéro (VerifSociete, shop-2)
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
   // pickupPaymentMode : 'on_site' (0 % de commission) | 'online' | 'both' — l'à emporter relève toujours de la version complète, voir OffreFormules.
   const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: 'on_site' });
@@ -285,7 +286,9 @@ export default function Auth() {
   useEffect(() => {
     if (role !== 'restaurant') return undefined;
     const chiffres = companyNumber.replace(/\D/g, '');
-    if (chiffres.length !== 10) { setVerifSociete(null); return undefined; }
+    // La ligne du numéro précédent ne reste pas affichée sous un autre numéro pendant la nouvelle recherche (shop-2).
+    setVerifSociete(null);
+    if (chiffres.length !== 10) return undefined;
     let annule = false;
     const timer = setTimeout(async () => {
       try {
@@ -699,6 +702,9 @@ export default function Auth() {
     }
     if (key === 'hours') {
       if (!horairesNonVides(hours)) e.hours = t('auth.errHours');
+      // Un service à une heure effacée : le serveur ne pouvait pas l'enregistrer et posait 11:00-22:00 à la place, sans rien
+      // dire (audit du 19/10, CROSS-61). Même contrôle, service par service, que l'inscription dans l'app.
+      else if (Object.values(hours).some((c) => Array.isArray(c) && c.some((sh) => !sh?.open || !sh?.close))) e.hours = t('auth.errHoursSlot');
       // La case « j'ai vérifié » vit ici : c'est le dernier écran qui montre du préremplissage, et elle
       // récapitule les trois sources (site, horaires, type) d'un seul geste.
       if ((hoursDepuisWeb || typeDepuisSite || siteTrouve) && !infosVerifiees) e.infosVerifiees = t('auth.errVerifyPrefill');
@@ -1671,6 +1677,7 @@ export default function Auth() {
                   <input id="auth-f-bce" inputMode="numeric" className={errors.companyNumber ? 'input-invalid' : undefined}
                     value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
                   {fieldError('companyNumber')}
+                  {!errors.companyNumber && <VerifSociete verif={verifSociete} style={{ margin: '4px 0 0' }} />}
                   <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('auth.companyNumberRestoHelp')}</p>
                 </div>
                 <div className="field">

@@ -127,6 +127,11 @@ export default function ValiderCarte() {
           {erreur
             ? <p className="gn-note" role="alert"><Icone nom="alerte" taille={18} />{erreur}</p>
             : <p className="gn-texte" role="status">{t('validerCarte.loading')}</p>}
+          {/* Lien expiré, remplacé ou déjà utilisé : plus d'impasse (audit du 19/10, shop-10). Le commerçant connecté rejoint
+              Ma carte, où « Relire ma carte » fait un nouveau lien ; les autres se connectent pour y arriver. */}
+          {erreur && (commercant
+            ? <Link to="/dashboard/menu" className="btn-gold gn-action" style={{ marginTop: 18 }}>{t('validerCarte.openMenu')}</Link>
+            : <Link to="/login" state={{ from: '/dashboard/menu' }} className="btn-gold gn-action" style={{ marginTop: 18 }}>{t('validerCarte.signIn')}</Link>)}
         </FeuilleGenerale>
       </div>
     );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { api } from '../api';
+import { euros } from '../prixPlat';
 import { allerAuPaiement } from '../natif';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -15,7 +16,8 @@ import { paiementsOuverts, dateOuverturePaiements } from '../launch';
 // dans PaiementLivreur.jsx : deux copies d'un même calendrier, qu'aucune des trente phrases annonçant
 // « fin septembre » ne pouvait suivre quand il bougeait.
 
-const euro = (n) => `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
+// Dans la langue affichée (audit du 19/10, shop-119) : prixPlat.euros, la règle du dépôt.
+const euro = (n) => euros(n);
 
 // Numéro d'entreprise et de TVA : plus demandés à l'inscription (décision du fondateur, 2026-09-10), mais
 // indispensables à Stripe et à la facturation. Ils se renseignent ici, une fois, avec vérification au registre
@@ -91,7 +93,10 @@ function CoordonneesLegales({ restaurant, onSaved, enchainer = false }) {
 export default function PaiementRestaurant({ restaurant, orders, onRestaurantChange }) {
   const { t } = useLanguage();
   const locale = getLocale();
-  const payees = (orders || []).filter((o) => o.paid && o.paymentMode !== 'on_site').sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  // Seulement ce que le commerce a vraiment reçu, comme les relevés (audit du 19/10, shop-108) : une commande refusée ou
+  // annulée garde paid = true mais le client est remboursé et le virement repris ; une commande d'entraînement n'est pas de
+  // l'argent.
+  const payees = (orders || []).filter((o) => o.paid && o.paymentMode !== 'on_site' && !['annule', 'refuse'].includes(o.status) && !o.isTraining).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const net = (o) => Number(o.subtotal || 0) - Number(o.commission || 0);
   const totaux = payees.reduce((a, o) => ({ total: a.total + Number(o.total || 0), produits: a.produits + Number(o.subtotal || 0), livraison: a.livraison + Number(o.deliveryFee || 0), commission: a.commission + Number(o.commission || 0), net: a.net + net(o) }), { total: 0, produits: 0, livraison: 0, commission: 0, net: 0 });
   const ouvert = paiementsOuverts();

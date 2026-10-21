@@ -93,9 +93,15 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
       : { cle: 'valider', icone: 'valider', titre: t(commandesArretees ? 'miseEnLigne.validateStopped' : 'miseEnLigne.validate'), sous: t(commandesArretees ? 'miseEnLigne.validateStoppedSub' : 'miseEnLigne.validateSub'),
           action: { libelle: occupe ? '…' : t('miseEnLigne.validateBtn'), onClick: validerCarte, disabled: occupe } });
   }
+  // Nouvelle version du contrat pour un commerce déjà en ligne (audit du 19/10, shop-15) : la date limite et ce qui se passe
+  // ensuite, au lieu de « Signe tes engagements · avant d'être visible des clients » alors qu'il l'est.
+  const renouveler = !o.contractAccepted && o.contractRenewal && restaurant.publicListed ? o.contractRenewal : null;
+  const jourLong = (iso) => new Date(iso).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', timeZone: 'Europe/Brussels' });
   etapes.push(engagementsOk
     ? { cle: 'engagements', fait: true, icone: 'contrat', titre: t('miseEnLigne.commitmentsDone') }
-    : { cle: 'engagements', icone: 'contrat', titre: t('miseEnLigne.commitments'), sous: t('miseEnLigne.commitmentsSub'),
+    : { cle: 'engagements', icone: 'contrat',
+        titre: renouveler ? t('miseEnLigne.contractRenew', { date: jourLong(renouveler.inForceAt) }) : t('miseEnLigne.commitments'),
+        sous: renouveler ? t('miseEnLigne.contractRenewSub', { date: jourLong(renouveler.graceEndsAt) }) : t('miseEnLigne.commitmentsSub'),
         action: { libelle: t('miseEnLigne.commitmentsBtn'), to: o.contractAccepted ? '/dashboard/menu#conformite-carte' : '/account?ouvrir=contrat&retour=/dashboard' } });
   // À emporter payé sur place seulement : rien ne transite par Fairide, pas d'étape paiements (formules.paiementsRequis).
   if (o.paymentsRequired !== false) {

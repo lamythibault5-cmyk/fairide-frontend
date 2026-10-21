@@ -39,7 +39,8 @@ export function euros(v) {
 }
 
 // Même chose sans « ,00 » pour un montant rond : un badge « -4 € dès 25 € » se lit mieux que « -4,00 € dès 25,00 € ».
-function eurosCourt(v) {
+// Exportée pour la page Promotions du commerce (audit du 19/10, shop-119 : elle avait son propre format, français partout).
+export function eurosCourt(v) {
   const n = Number(v) || 0;
   return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
 }

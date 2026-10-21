@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -48,15 +48,21 @@ export default function StatsPage() {
   const [donnees, setDonnees] = useState(null);
   const [charge, setCharge] = useState(false);
   const [erreur, setErreur] = useState(null);
+  // Retour du curseur après un échec : les chiffres de cette période sont déjà là, pas de nouvel appel (shop-111).
+  const retourSansAppel = useRef(false);
 
   useEffect(() => {
     if (!restoId) return undefined;
+    if (retourSansAppel.current) { retourSansAppel.current = false; return undefined; }
     let actif = true;
     setCharge(true);
     api(`/restaurants/${restoId}/analytics?days=${jours}`, { token })
       // Serveur d'avant cette route, ou réponse inattendue : un message, pas une page plantée.
       .then((d) => { if (!actif) return; if (d && Array.isArray(d.parJour)) { setDonnees(d); setErreur(null); } else setErreur(t('statsResto.loadFailed')); })
-      .catch((e) => { if (actif) setErreur(e.message); })
+      // Échec d'un changement de période : le curseur revient sur la période encore affichée et l'erreur se lit au-dessus
+      // des chiffres. Avant, « 90 jours » restait choisi au-dessus des chiffres de 30 jours, sans rien dire (audit du 19/10,
+      // shop-111).
+      .catch((e) => { if (!actif) return; setErreur(e.message); setCharge(false); if (donnees && String(donnees.jours) !== jours) { retourSansAppel.current = true; setJours(String(donnees.jours)); } })
       .finally(() => { if (actif) setCharge(false); });
     return () => { actif = false; };
     // `t` sert seulement au message d'erreur : le changer ne doit pas recharger les chiffres.
@@ -102,7 +108,7 @@ export default function StatsPage() {
       </BandeauCommerce>
       <FeuilleCommerce>
         {communs}
-        {erreur && !d && <p className="small" role="alert">{erreur}</p>}
+        {erreur && <p className="small" role="alert">{erreur}</p>}
         {!d && !erreur && <p className="small">…</p>}
         {d && (
           <div style={{ opacity: charge ? 0.5 : 1, transition: 'opacity .15s' }}>
@@ -123,17 +129,17 @@ export default function StatsPage() {
 
             <div className="ec-graphique">
               <GraphiqueBarres titre={t(d.jours === 90 ? 'statsResto.chartWeeks' : 'statsResto.chartDays')} donnees={serie}
-                formatValeur={nombre} libelleTableau={t('statsResto.asTable')} />
+                formatValeur={nombre} entier libelleTableau={t('statsResto.asTable')} />
             </div>
             <div className="ec-graphique">
               <GraphiqueBarres titre={t('statsResto.chartHours')} hauteur={150}
                 donnees={d.parHeure.map((n, h) => ({ cle: `${d.jours}-${h}`, libelle: t('statsResto.hourRange', { h, h2: (h + 1) % 24 }), court: `${h}h`, valeur: n }))}
-                formatValeur={nombre} libelleTableau={t('statsResto.asTable')} />
+                formatValeur={nombre} entier libelleTableau={t('statsResto.asTable')} />
             </div>
             <div className="ec-graphique">
               <GraphiqueBarres titre={t('statsResto.chartWeekdays')} hauteur={150}
                 donnees={d.parJourSemaine.map((n, j) => ({ cle: `${d.jours}-${j}`, libelle: nomsJours[j], valeur: n }))}
-                formatValeur={nombre} libelleTableau={t('statsResto.asTable')} />
+                formatValeur={nombre} entier libelleTableau={t('statsResto.asTable')} />
             </div>
 
             <p className="ec-feuille-titre">{t('statsResto.topDishes')}</p>
