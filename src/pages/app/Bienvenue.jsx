@@ -7,10 +7,9 @@ import { api } from '../../api';
 import { experienceApp, demanderPosition, connexionFournisseur } from '../../natif';
 import { communeDepuisCodePostal, communeRingDistance, haversineDistanceKm } from '../../menuCategories';
 import { ecrireBienvenue, ecrireReprise, lireReprise, lireParcoursFait, ecrireParcoursFait } from '../../bienvenue';
-import { repondAuxEnvies } from '../../envies';
 import {
-  Haut, EcranAccueil, EcranProfil, EcranChoix, EcranCartes, EcranPourquoi, EcranEnvies, EcranPermission, EcranCodePostal,
-  EcranRecherche, EcranCompte, EcranPromesses
+  Haut, EcranAccueil, EcranProfil, EcranQuestion, EcranPourquoi, EcranPermission, EcranCodePostal,
+  EcranRecherche, EcranCompte, EcranPromesses, BarresCommande
 } from './EcransBienvenue';
 import InscriptionAppli from './InscriptionAppli';
 
@@ -28,6 +27,11 @@ import InscriptionAppli from './InscriptionAppli';
  *     compte — leur vrai parcours (dossier livreur, fiche commerce) existe déjà après l'inscription.
  *   - Pas de démo « choisis 3 commerces » ni de partage (retirés par le fondateur, « trop long ») : la position
  *     mène au chargement, puis aux commerces qui livrent vraiment chez toi, au-dessus des boutons de compte.
+ *   - PLUS COURT DEPUIS LE 2026-10-22 (des testeurs le trouvaient trop long ; version retenue de
+ *     maquettes/onboarding-court/onboarding-court.html) : une seule question au lieu de « ce qui compte », « ce qui agace »,
+ *     trois cartes à glisser et « une envie en particulier ? ». Le client passe 5 écrans avant le compte au lieu de 8 et
+ *     3 cartes. Chacun voit d'abord ce qu'il y gagne : le client son argent, le livreur ce qu'il touche, le commerce ce que
+ *     la plateforme lui prend. Les envies déjà données sur un téléphone restent (rangée « Vos envies », RestaurantList.jsx).
  *   - Le compte est demandé APRÈS avoir vu les commerces (règle 5.1.1 d'Apple), Apple à côté de Google (4.8).
  *   - L'inscription elle-même se fait ICI, dans les mêmes écrans (InscriptionAppli.jsx, 2026-10-15) : plus de passage
  *     par /login, la page du site avec son en-tête. Seul « J'ai déjà un compte » y mène encore.
@@ -38,34 +42,31 @@ import InscriptionAppli from './InscriptionAppli';
  * RAYON. « Qui livre chez toi » est calculé ici, avec ce que la liste publique renvoie déjà (position et
  * deliveryRadiusKm de chaque commerce, 6 km par défaut — rayonLivraison.js côté serveur) : aucune route en plus.
  * Au lancement il y a peu de commerces, donc on les montre TOUS ceux qui livrent, du plus proche au plus loin
- * (décision du fondateur), les envies cochées d'abord. */
+ * (décision du fondateur). */
 
-const BUTS = [['prix', 'euro', 'bPrix', true], ['juste', 'balance', 'bJuste', true], ['local', 'commerce', 'bLocal', true], ['decouvrir', 'boussole', 'bDecouvrir', true]];
-// Trois freins, tous sur le prix (retour du fondateur : c'est la seule vraie douleur).
-const FREINS = [['gonfle', 'tendance', 'fGonfle'], ['frais', 'ticket', 'fFrais'], ['resto', 'restaurants', 'fResto']];
-// Quelles cuisines répondent à quelle envie : la table vit dans src/envies.js depuis le 2026-10-13, partagée avec la
-// rangée « Vos envies » de la liste des commerces (cuisines saisies librement relevées en production le 2026-10-11).
 const PARCOURS = {
-  client: ['buts', 'freins', 'cartes', 'pourquoi', 'envies', 'position', 'codePostal', 'recherche', 'compte'],
+  client: ['question', 'pourquoi', 'position', 'codePostal', 'recherche', 'compte'],
   // Plus d'écran « position » pour le livreur (fondateur, 2026-10-21, décision 10) : elle est demandée juste avant son
   // premier « Disponible », avec la même explication (components/livreur/PositionRequise.jsx), jamais à l'inscription.
   driver: ['lvPromesses', 'compte'],
   restaurant: ['coPromesses', 'compte']
 };
+// Les réponses possibles à la seule question (QUESTION, EcransBienvenue.jsx) : une reprise n'en garde pas d'autre.
+const CHOIX = ['prix', 'total', 'ici'];
+// Un accueil laissé en route avant le 2026-10-22 reprend sur l'écran qui a remplacé le sien.
+const ECRANS_RETIRES = { buts: 'question', freins: 'question', cartes: 'question', envies: 'position' };
 // Le chargement que le fondateur aime : assez long pour se lire (1,8 s, puis 3,8 s le 2026-10-16 : « 2 secondes de plus »).
 const DUREE_RECHERCHE_MS = 3800;
 
-// Commerces qui livrent à cette position (ou, sans position, rangés par proximité de commune), envies d'abord.
-function trierCommerces(liste, { position, commune, envies }) {
-  const repond = (r) => repondAuxEnvies(r, envies);
+// Commerces qui livrent à cette position (ou, sans position, rangés par proximité de commune).
+function trierCommerces(liste, { position, commune }) {
   let items = liste.map((r) => ({
     r,
-    km: position && r.lat !== null && r.lng !== null ? haversineDistanceKm(position.lat, position.lng, r.lat, r.lng) : null,
-    envie: envies.length ? repond(r) : false
+    km: position && r.lat !== null && r.lng !== null ? haversineDistanceKm(position.lat, position.lng, r.lat, r.lng) : null
   }));
   if (position) items = items.filter((x) => x.km !== null && x.km <= (x.r.deliveryRadiusKm ?? 6));
   const proximite = (x) => (position ? x.km : communeRingDistance(commune, x.r.commune));
-  return items.sort((a, b) => (Number(b.envie) - Number(a.envie)) || (proximite(a) - proximite(b)));
+  return items.sort((a, b) => proximite(a) - proximite(b));
 }
 
 // Points du cercle : à leur vraie place autour de la position (échelle = le plus grand rayon), sinon en spirale.
@@ -100,21 +101,19 @@ export default function Bienvenue() {
   });
   // Apple / Google sans compte, depuis la connexion (ConnexionAppli.jsx) : le jeton est gardé, l'accueil ne le jette plus.
   const fedRecu = location.state?.fed || null;
-  const depart = dejaFait ? (fedRecu ? 'inscription' : 'compte') : location.state?.depart === 'profil' ? 'profil' : reprise?.ecran || 'accueil';
+  const depart = dejaFait ? (fedRecu ? 'inscription' : 'compte') : location.state?.depart === 'profil' ? 'profil'
+    : ECRANS_RETIRES[reprise?.ecran] || reprise?.ecran || 'accueil';
   const depuis = location.state?.from || null;
   const [ecran, setEcran] = useState(depart);
-  const [historique, setHistorique] = useState(() => (dejaFait ? ['accueil', 'profil'] : Array.isArray(reprise?.historique) ? reprise.historique : []));
+  const [historique, setHistorique] = useState(() => (dejaFait ? ['accueil', 'profil']
+    : Array.isArray(reprise?.historique) ? reprise.historique.filter((e) => !ECRANS_RETIRES[e]) : []));
   // Sens du dernier passage d'écran : en reculant, l'écran revient par la gauche, d'où il était parti (cohérence
   // spatiale, plan du 2026-10-13). Avant, tout arrivait par la droite, retour compris.
   const [recule, setRecule] = useState(false);
   const [role, setRole] = useState(() => (dejaFait ? dejaFait.role : ['client', 'driver', 'restaurant'].includes(location.state?.role) ? location.state.role
     : ['client', 'driver', 'restaurant'].includes(reprise?.role) ? reprise.role : null));
-  const [buts, setButs] = useState(() => (Array.isArray(reprise?.buts) ? reprise.buts : []));
-  const [freins, setFreins] = useState(() => (Array.isArray(reprise?.freins) ? reprise.freins : []));
-  // « oui » sur la première carte (« J'ai déjà payé plus cher sur une appli qu'au restaurant… ») : avec le frein « gonfle »,
-  // c'est ce qui fait afficher « Tu nous l'as dit… » sur l'écran « Pourquoi » (2026-10-19).
-  const [prixVecu, setPrixVecu] = useState(() => reprise?.prixVecu === true);
-  const [envies, setEnvies] = useState(() => (Array.isArray(dejaFait?.envies) ? dejaFait.envies : Array.isArray(reprise?.envies) ? reprise.envies : []));
+  // La réponse à la seule question (EcransBienvenue.jsx, QUESTION) : sa carte passe en tête de « Ce que tu y gagnes ».
+  const [choix, setChoix] = useState(() => (CHOIX.includes(reprise?.choix) ? reprise.choix : null));
   const [position, setPosition] = useState(() => dejaFait?.position || reprise?.position || null);
   const [cp, setCp] = useState(() => dejaFait?.cp || reprise?.cp || '');
   const [liste, setListe] = useState(null);
@@ -128,12 +127,12 @@ export default function Bienvenue() {
 
   const communeCp = cp.length === 4 ? communeDepuisCodePostal(cp) : '';
   const parcours = useMemo(() => ['accueil', 'profil', ...(role ? PARCOURS[role] : [])], [role]);
-  const resultats = useMemo(() => (liste ? trierCommerces(liste, { position, commune: communeCp, envies }) : []), [liste, position, communeCp, envies]);
+  const resultats = useMemo(() => (liste ? trierCommerces(liste, { position, commune: communeCp }) : []), [liste, position, communeCp]);
   const points = useMemo(() => pointsDuCercle(resultats, position), [resultats, position]);
 
   // La liste des commerces part dès l'écran « Pourquoi » : au chargement, elle est souvent déjà là.
   useEffect(() => {
-    if (role !== 'client' || liste || !['pourquoi', 'envies', 'position', 'codePostal', 'recherche', 'compte', 'inscription'].includes(ecran)) return;
+    if (role !== 'client' || liste || !['pourquoi', 'position', 'codePostal', 'recherche', 'compte', 'inscription'].includes(ecran)) return;
     api('/restaurants').then((r) => setListe(Array.isArray(r) ? r : [])).catch(() => { setListeEchec(true); setListe([]); });
   }, [role, ecran, liste]);
 
@@ -146,14 +145,14 @@ export default function Bienvenue() {
     const passe = historique.filter((e) => e !== 'recherche' && e !== 'inscription');
     ecrireReprise({
       ecran: etape, historique: passe[passe.length - 1] === etape ? passe.slice(0, -1) : passe,
-      role, buts, freins, prixVecu, envies, position, cp
+      role, choix, position, cp
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ecran, role, buts, freins, prixVecu, envies, position, cp, fed]);
+  }, [ecran, role, choix, position, cp, fed]);
 
   // Arrivé à l'écran du compte (ou à l'inscription par Apple / Google) : l'accueil est fait, il ne sera pas rejoué.
   useEffect(() => {
-    if ((ecran === 'compte' || ecran === 'inscription') && role) ecrireParcoursFait({ role, envies, position, cp });
+    if ((ecran === 'compte' || ecran === 'inscription') && role) ecrireParcoursFait({ role, position, cp });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ecran, role]);
 
@@ -194,7 +193,6 @@ export default function Bienvenue() {
     setRecule(true);
     setEcran(precedent || 'accueil');
   }
-  const basculer = (setter) => (v) => setter((l) => (l.includes(v) ? l.filter((x) => x !== v) : [...l, v]));
   // Tant qu'aucun profil n'est choisi, le parcours ne compte que deux écrans : « Tu es… » aurait affiché une barre
   // pleine (retour du fondateur, 2026-10-11). On mesure donc sur le parcours le plus long, celui du client.
   const mesure = role ? parcours : ['accueil', 'profil', ...PARCOURS.client];
@@ -212,7 +210,7 @@ export default function Bienvenue() {
   function memoriser() {
     ecrireBienvenue({
       // codePostal : repris par l'inscription (Auth.jsx) pour ne pas redemander ce qui vient d'être tapé.
-      vu: true, role, envies, commune: communeCp || null, codePostal: communeCp ? cp : null, position: position || null,
+      vu: true, role, commune: communeCp || null, codePostal: communeCp ? cp : null, position: position || null,
       amorceNotifs: 'a-faire'
     });
   }
@@ -254,8 +252,8 @@ export default function Bienvenue() {
   // reste dans la feuille blanche, comme les écrans suivants.
   const fondIris = ['recherche', 'lvPromesses', 'coPromesses'].includes(ecran);
   const sansHaut = ['accueil', 'recherche'].includes(ecran);
-  // « Passer » saute les questions, jamais le message : on atterrit sur « Pourquoi passer à Fairide ? ».
-  const passerQuestions = ['buts', 'freins', 'cartes'].includes(ecran) ? () => aller('pourquoi') : null;
+  // « Passer » saute la question, jamais le message : on atterrit sur « Ce que tu y gagnes ».
+  const passerQuestions = ecran === 'question' ? () => aller('pourquoi') : null;
 
   let contenu;
   switch (ecran) {
@@ -263,16 +261,10 @@ export default function Bienvenue() {
       contenu = <EcranAccueil onCommencer={() => aller('profil')} onConnexion={dejaInscrit} />; break;
     case 'profil':
       contenu = <EcranProfil role={role} onChoix={setRole} onSuite={suivant} />; break;
-    case 'buts':
-      contenu = <EcranChoix titre={t('appli.butTitre')} liste={BUTS} choisis={buts} onBasculer={basculer(setButs)} onSuite={suivant} exigerUn />; break;
-    case 'freins':
-      contenu = <EcranChoix titre={t('appli.freinsTitre')} liste={FREINS} choisis={freins} onBasculer={basculer(setFreins)} onSuite={suivant} libelleVide={t('appli.rien')} />; break;
-    case 'cartes':
-      contenu = <EcranCartes onFini={(votes) => { setPrixVecu(votes[0] === true); aller('pourquoi'); }} />; break;
+    case 'question':
+      contenu = <EcranQuestion choix={choix} onChoix={setChoix} onSuite={suivant} />; break;
     case 'pourquoi':
-      contenu = <EcranPourquoi onSuite={suivant} echo={prixVecu || freins.includes('gonfle')} />; break;
-    case 'envies':
-      contenu = <EcranEnvies envies={envies} onBasculer={basculer(setEnvies)} onSuite={suivant} />; break;
+      contenu = <EcranPourquoi onSuite={suivant} premier={choix} />; break;
     case 'position':
       contenu = (
         <EcranPermission icone="position" titre={t('appli.posTitre')} sous={t('appli.posSub')} bouton={t('appli.posBtn')} attente={attente}
@@ -282,7 +274,7 @@ export default function Bienvenue() {
     case 'codePostal':
       contenu = <EcranCodePostal cp={cp} commune={communeCp} onCp={setCp} onSuite={() => { setPosition(null); aller('recherche'); }} />; break;
     case 'recherche':
-      contenu = <EcranRecherche commune={position ? '' : communeCp} points={liste ? points : []} envies={envies} duree={DUREE_RECHERCHE_MS} />; break;
+      contenu = <EcranRecherche commune={position ? '' : communeCp} points={liste ? points : []} duree={DUREE_RECHERCHE_MS} />; break;
     case 'compte':
       contenu = (
         <EcranCompte role={role} resultats={resultats} listeEchec={listeEchec} avecPosition={!!position} commune={communeCp} attente={attente}
@@ -290,13 +282,13 @@ export default function Bienvenue() {
       ); break;
     case 'lvPromesses':
       contenu = (
-        <EcranPromesses chip={t('appli.lvChip')} chipIcone="velo" titre={t('appli.lvTitre')} bouton={t('appli.lvBtn')} onSuite={suivant}
-          faits={[['euro', t('appli.lv1'), t('appli.lv1S')], ['interdit', t('appli.lv2'), t('appli.lv2S')], ['cadeau', t('appli.lv3'), t('appli.lv3S')], ['document', t('appli.lv4'), t('appli.lv4S')]]} />
+        <EcranPromesses chip={t('appli.lvChip')} chipIcone="velo" titre={t('appli.lvTitre')} bouton={t('appli.lvBtn')} onSuite={suivant} ligneBe
+          faits={[['euro', t('appli.lvGain'), t('appli.lvGainS')], ['cadeau', t('appli.lv3'), t('appli.lv3S')], ['horloge', t('appli.lv1'), t('appli.lv1S')]]} />
       ); break;
     case 'coPromesses':
       contenu = (
-        <EcranPromesses chip={t('appli.coChip')} chipIcone="be" titre={t('appli.coTitre')} sous={t('appli.coSub')} bouton={t('appli.coBtn')} onSuite={suivant}
-          faits={[['euro', t('appli.co1'), t('appli.co1S')], ['cadeau', t('appli.co2'), t('appli.co2S')], ['bouclier', t('appli.co3'), t('appli.co3S')], ['document', t('appli.co4'), t('appli.co4S')]]} />
+        <EcranPromesses chip={t('appli.coChip')} chipIcone="be" titre={t('appli.coTitre')} bouton={t('appli.coBtn')} onSuite={suivant}
+          barres={<BarresCommande />} faits={[['euro', t('appli.co1'), t('appli.co1S')], ['cadeau', t('appli.co2'), t('appli.co2S')]]} />
       ); break;
     default:
       contenu = null;

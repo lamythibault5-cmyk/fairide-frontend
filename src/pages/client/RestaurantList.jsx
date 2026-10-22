@@ -570,7 +570,8 @@ export default function RestaurantList() {
     ? parDistance.slice(0, PROCHES_MAX)
     : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)).slice(0, PROCHES_MAX) : [],
   placements, 'nearby', parDistance.length ? parDistance : nonGroceryTous));
-  /* VOS ENVIES (2026-10-13). L'accueil de l'application demande « Une envie en particulier ? » et range ses résultats
+  /* VOS ENVIES (2026-10-13). L'accueil de l'application demandait « Une envie en particulier ? » (retiré le 2026-10-22 :
+   * un téléphone qui n'a pas répondu n'a pas cette rangée ; ceux qui ont répondu la gardent) et rangeait ses résultats
    * avec ; la liste les oubliait ensuite. Une rangée de plus, juste sous « Autour de vous », avec les commerces qui y
    * répondent, dans le même ordre de proximité — les autres rangées ne bougent pas. Les envies vivent dans le téléphone
    * (bienvenue.js, jamais envoyées) : sur le site, où l'accueil de l'app ne passe pas, la rangée n'existe pas.

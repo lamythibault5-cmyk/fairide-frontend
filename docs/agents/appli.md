@@ -40,6 +40,12 @@ business dashboard / orders / menu / stats (BandeauCommerce.jsx, CarteCommerce.j
 shadows are scoped to `html.appli`; the website keeps iris bands and white sheets without glass. `.page-fade` animates with
 `backwards`, not `both`: an opacity held after the animation disables `backdrop-filter` for everything inside the page.
 In the app, `/` never shows the marketing landing: first launch → `/bienvenue`, afterwards → `/restaurants` (Home.jsx).
+**Shorter since 2026-10-22** (version picked on `maquettes/onboarding-court/onboarding-court.html`): the same welcome for all three
+profiles (slogan « Paie ton repas, pas la plateforme. », euro bars of a 12 € dish); the customer answers ONE question (« Payer moins »
+/ « Un total sans surprise » / « Que mon argent reste ici »), whose card leads « Ce que tu y gagnes » (no « Tu nous l'as dit »), then
+location and the account: 5 screens before the account instead of 8 + 3 swipe cards. Each profile sees its own gain first: the
+customer their money, the courier « Ce que tu gagnes » (90 % of the delivery, 100 % of tips, their minimum), the business « 10 %, pas 30. »
+with what the platform takes on a 20 € order. « Payer moins » is the customer's wish; the screens never answer it with « moins cher ».
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](../../src/pages/app/InscriptionAppli.jsx)):
 « Continuer avec mon e-mail », and Apple / Google for an account that does not exist yet, no longer go to `/login` — one question
