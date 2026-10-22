@@ -40,7 +40,7 @@ function velo(cote, largeur, fond = null, trait = 5) {
 </svg>`);
 }
 
-// LE VÉLO « TRÈS GRAND » (fondateur, 2026-10-18, version D de mockups/play-store/index.html) : 88 % de la largeur de
+// LE VÉLO « TRÈS GRAND » (fondateur, 2026-10-18, version D de maquettes/fiche-play-store/index.html) : 88 % de la largeur de
 // l'icône, au lieu de 58 % (icône pleine) et 42 % (icône adaptative Android) — il ressortait trop peu à côté des autres
 // applis. Le site garde un vélo un peu moins grand (public/icons/icon.svg, scripts/icones-site.mjs) : son icône est
 // souvent découpée en cercle. Trait 4,65 : à cette taille, le trait de 5 paraissait lourd.

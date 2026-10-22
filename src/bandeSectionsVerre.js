@@ -1,5 +1,5 @@
 // LA BANDE DES SECTIONS EN VERRE (fiche d'un commerce dans l'app, fondateur 2026-10-16, « Fiche d'un commerce » de
-// mockups/tous-les-ecrans.html). Chargé avec import() par CategoryQuickNav dans l'app seulement : le site n'en télécharge rien.
+// maquettes/tous-les-ecrans/tous-les-ecrans.html). Chargé avec import() par CategoryQuickNav dans l'app seulement : le site n'en télécharge rien.
 //
 // La lentille se pose sur la section qu'on lit (CategoryQuickNav la déplace au défilement). Ici, le geste de la barre
 // d'onglets (barreVerre.js) : appuyer sur la section allumée fait grossir la lentille ; glisser la promène d'une section à

@@ -26,7 +26,7 @@ import Icone from '../Icone';
  * une rangée « Prochaine étape », et rien du tout s'il ne reste que des étapes de Fairide.
  * La liste disparaît quand tout est fait. Un commerce de démonstration n'en a pas.
  *
- * NOUVEAU STYLE (fondateur, 2026-10-16, mockups/tous-les-ecrans.html, Commerce › Mon commerce) : sur « Mon commerce », la
+ * NOUVEAU STYLE (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, Commerce › Mon commerce) : sur « Mon commerce », la
  * liste devient une ROUTE sur le bandeau iris (RouteMiseEnLigne : coches lime derrière, le vélo sur l'étape en cours) ; la
  * prochaine étape a la carte et le bouton lime, le reste se range dessous (EtapesMiseEnLigne). Le calcul est dans
  * useMiseEnLigne, appelé une fois par EditPage pour les deux morceaux ; le composant par défaut est la rangée « Prochaine étape »

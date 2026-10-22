@@ -17,7 +17,7 @@ import InscriptionAppli from './InscriptionAppli';
 /* ACCUEIL DE L'APPLICATION iOS / ANDROID — /bienvenue, premier lancement seulement.
  *
  * Conçu avec le skill app-onboarding-questionnaire et validé sur maquette par le fondateur le 2026-10-11
- * (mockups/app-onboarding.html, à garder en phase). Le site n'est pas touché : Home.jsx n'envoie ici que dans
+ * (maquettes/app-onboarding/app-onboarding.html, à garder en phase). Le site n'est pas touché : Home.jsx n'envoie ici que dans
  * l'application (estNatif()), et un visiteur de fairide.be qui taperait l'adresse retombe sur l'accueil — sauf
  * avec ?apercu, pour pouvoir le relire dans un navigateur (npm run dev).
  *
@@ -250,7 +250,7 @@ export default function Bienvenue() {
   // « J'ai déjà un compte » garde le commerce touché sans compte (`from`) : la connexion y ramène (audit du 19/10, auth-07).
   const dejaInscrit = () => { ecrireBienvenue({ vu: true, amorceNotifs: 'a-faire' }); navigate('/login', depuis ? { state: { from: depuis } } : undefined); };
 
-  // L'accueil a rejoint le bandeau iris le 2026-10-16 (version B2 de mockups/accueil-appli.html) : slogan sur l'iris, le
+  // L'accueil a rejoint le bandeau iris le 2026-10-16 (version B2 de maquettes/accueil-appli/accueil-appli.html) : slogan sur l'iris, le
   // reste dans la feuille blanche, comme les écrans suivants.
   const fondIris = ['recherche', 'lvPromesses', 'coPromesses'].includes(ecran);
   const sansHaut = ['accueil', 'recherche'].includes(ecran);

@@ -669,7 +669,7 @@ export default function Checkout() {
           d'où l'on vient, donc celui qu'on s'attend à retrouver en reculant. Revenir à la carte pour
           ajouter un plat reste possible — c'est « Ajouter un plat », dans la barre de récapitulatif
           plus bas, qui garde ce rôle.
-          HABIT DU 2026-10-16 (« Proposition » de mockups/tous-les-ecrans.html) : bandeau iris où le vélo roule de
+          HABIT DU 2026-10-16 (« Proposition » de maquettes/tous-les-ecrans/tous-les-ecrans.html) : bandeau iris où le vélo roule de
           « Panier » à « Paiement », les choix en cartes iris à coche lime, le reste dans la feuille blanche ; dans l'app, le
           total roule dans la pastille iris d'une barre de verre. Rien de la logique n'a bougé. */}
       <BandeauCommande
@@ -856,7 +856,7 @@ export default function Checkout() {
                 )}
               </div>
             )}
-            {/* Site (2026-10-16, mockups/site-ordinateur.html) : le pourboire est un choix comme les autres, il rejoint la colonne
+            {/* Site (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : le pourboire est un choix comme les autres, il rejoint la colonne
                 des choix ; le total du récapitulatif roule quand il change. L'app le garde en tête du récapitulatif. */}
             {!APPLI && blocPourboire}
             {/* Site : les codes, l'allergie, l'âge et les CGU sont des choix aussi — ils passent dans cette colonne, AVANT le

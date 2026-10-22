@@ -31,7 +31,7 @@ export default function CookieBanner() {
   if (!visible) return null;
 
   return (
-    /* LA CARTE IRIS (fondateur, 2026-10-16, section 1 de mockups/site-ordinateur.html) : elle était noire, « Accepter »
+    /* LA CARTE IRIS (fondateur, 2026-10-16, section 1 de maquettes/site-ordinateur/site-ordinateur.html) : elle était noire, « Accepter »
        en lime et « Refuser » en contour — même taille, mais pas le même poids visuel, ce que l'APD reproche justement aux
        bannières. Les deux choix sont maintenant le MÊME bouton (blanc, texte iris, même graisse), côte à côte, à parts
        égales. Le lien vers la politique des cookies reste. En bas à gauche, à côté de la barre latérale et au-dessus des

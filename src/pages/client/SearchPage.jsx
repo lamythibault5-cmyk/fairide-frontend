@@ -171,7 +171,7 @@ export default function SearchPage() {
 
   const prix = (p) => (typeof p.price === 'number' ? euros(p.price) : p.price ? euros(Number(p.price)) : '');
 
-  /* LE SITE (fondateur, 2026-10-16, mockups/site-ordinateur.html, « Le cadre ») : le titre et le champ sur un bandeau iris,
+  /* LE SITE (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, « Le cadre ») : le titre et le champ sur un bandeau iris,
    * avec la route et le vélo, et ce qu'on trouve dans la feuille blanche dessous — les commerces en cartes (grille), les
    * plats sur deux colonnes à partir de 1 100 px. Mêmes résultats, même ordre, mêmes liens. L'app garde son écran tel quel. */
   const site = !experienceApp();
@@ -207,7 +207,7 @@ export default function SearchPage() {
       {/* Avant la première lettre, on montre par où commencer : les cuisines et les communes, qui sont
           ce qu'on cherche le plus, plus le chemin vers l'aide. Une page vide avec un champ ne dit
           rien de ce qu'il accepte. */}
-      {/* DANS L'APP (fondateur, 2026-10-17, « Search » de mockups/commerces-marque.html) : les envies en tuiles, les régimes en
+      {/* DANS L'APP (fondateur, 2026-10-17, « Search » de maquettes/commerces-marque/commerces-marque.html) : les envies en tuiles, les régimes en
           pastilles dessous, puis les communes et l'aide comme avant. Le site garde ses pastilles. Depuis le 2026-10-21 (piste A
           de maquettes/recherche-couleurs), chaque tuile montre l'illustration en couleur de la cuisine sur son fond pastel, au
           lieu de l'icône iris dans un carré blanc sur lavande : la grille paraissait sans vie, et dix cuisines partageaient la
@@ -365,7 +365,7 @@ export default function SearchPage() {
     </>
   );
 
-  /* L'APP (fondateur, 2026-10-17, « Search » de mockups/commerces-marque.html) : le titre et le champ sur le bandeau iris,
+  /* L'APP (fondateur, 2026-10-17, « Search » de maquettes/commerces-marque/commerces-marque.html) : le titre et le champ sur le bandeau iris,
      comme Favoris et Mon compte, le reste dans la feuille blanche. Pas de « bleu sur bleu » : dans l'app, aucun en-tête iris
      ne se pose au-dessus (le site, lui, garde son écran ci-dessous). */
   if (!site) {

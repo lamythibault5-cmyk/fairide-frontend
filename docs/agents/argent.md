@@ -1,0 +1,92 @@
+# Money: pricing, commission, fees, subscription, three sellers
+
+Moved out of `CLAUDE.md` on 2026-10-22, word for word, so the guide every session loads stays short. Read it before touching a price, a fee, a share, a promo code, invoicing or dispatch.
+The always-on rules are still in `CLAUDE.md` › « Rules that are never broken ». If you change what this file
+describes, change this file in the same commit: a stale guide gets believed.
+
+## Pricing model (2026-09-23 evening; Fairide a VAT franchisé since 2026-10-12)
+
+**Fairide SRL is under the Belgian small-business VAT franchise** (art. 56bis CTVA — SPF Finances letter of 2026-10-12,
+effective 2026-09-07): it charges **no VAT** on anything it sells (commission, system fee, subscription, placements), files
+no periodic VAT return and deducts nothing. Switch: `FAIRIDE_VAT_REGIME` on the backend (`franchise` by default, `assujetti`
+to leave it), read by `fairideCompanyInfo.js`; `getPricing()` then returns `vatRateCommission` / `vatRateServiceFee` = 0 and
+keeps the saved rates under `*Assujetti`. The franchise ends **with the transaction that takes Fairide's yearly turnover over
+€25,000 excl. VAT** — Admin › Comptabilité › Obligations shows the counter (`seuilFranchise.js`, prorated in 2026).
+Invoices carry « Régime particulier de franchise des petites entreprises » and Peppol category `E`; the business's dish VAT
+and the courier's delivery VAT are **not** affected.
+
+**Model of 2026-10-13 (founder), replacing « in-store price + 10 % »:** menus show **the business's own prices** by default.
+On an order paid online Fairide keeps **10% of the price paid** (`commissionFairide(subtotal, pricing)` = subtotal × r, plus
+Fairide's VAT if it ever becomes VAT-registered; `commission_vat` = 0 under the franchise): a €10 burger gives €1.00 to Fairide,
+€9.00 to the business. The business may raise its prices (`restaurants.price_markup_percent`, requested by the business,
+applied by the team) **up to `hausseMaxPourcent` = 10 %** (founder, 2026-10-16, whatever the VAT regime: €10 → €11.00 → €9.90 for
+it; it was r / (1 − r) = 11.1 % from 10-13 to 10-16); never more. One function applies it everywhere (`appliquerHausse` in
+`../fairide-backend/prixMagasin.js`): own price kept in `price_base`/`delta_base`, paid add-ons follow, rounded DOWN to €0.10 (`pricing.js`, `prixMagasin.js`; the team's « adjust all prices » tool rounds the same way, audit admin-31).
+The « C'est bon » page offers the max increase in one tap, only on cards with checked in-store prices.
+The customer additionally pays the **delivery fee only — nothing is added on top** (model of 2026-10-08 evening):
+€5 excl. VAT for the first km, then €0.80 excl. VAT per started km, 21% VAT added (€6.05 incl. VAT minimum). **10% of it
+is Fairide's system fee, included** (`fraisService`, stored as `service_fee` + `service_fee_vat`); the courier receives
+**90% of their own grid** (bike €0.60/km, motorised €0.80/km), and the bike difference stays with Fairide. A courier's
+minimum (CODE-13) applies to their share: the client fee is raised to minimum / 0.9 when no courier accepts the grid
+(`routes/orders.js`, `troisVendeurs.prixAvecMinimum`). Takeaway paid on site: no commission, no fee.
+**Tips go 100% to the courier** (`tipFairideRate` 0 — founder, 2026-10-13: « tips go 100 percent to driver »; this
+reverses the 90/10 rule of 2026-10-09. Backend migration 026 had put 10% in the database, migration 032 resets it to 0).
+The courier and restaurant contracts, the T&Cs and the courier texts promise it. **Since 2026-10-21 it is a fixed rule, not a
+setting** (founder): `REGLES_FIXES` in `../fairide-backend/pricing.js` forces `tipFairideRate` 0 and `deliveryFairideRate` 0.10 (the
+courier's 90 %) whatever `platform_settings` says, Admin › Paramètres no longer shows either field, and `PATCH /admin/settings`
+refuses another value (`FIXED_RULE`).
+**Delivery distance: 6 km by default**, or what the business sets (1–15 km since 2026-10-21, founder: 30 km was ~1 h 50 by bike and
+~28 € of delivery fee; 15 km covers the whole Brussels region) in « Commandes et capacité » (`../fairide-backend/rayonLivraison.js`;
+NULL used to mean « no limit » and accepted Antwerp). Backend migration 080 clamped settings above 15 km (one `admin_actions` row
+each). The business contract `RESTO-2026.20` still prints « de 1 à 30 km » (`RAYON_MAX_KM_CONTRAT`) until its next version.
+**Order promo codes** (`order_percent`, `order_amount`, `order_free_delivery`, `../fairide-backend/codesPromo.js`) are
+paid by Fairide like the balance: they lower `orders.total`, never the business's or the courier's share; online
+payment only.
+Subscription: €20/month, first month free, with the « petit mois = pas d'abonnement » guarantee: a month whose orders
+do not exceed **€50** of products (VAT incl., no delivery or tips) is not charged, or refunded
+(`../fairide-backend/garantieAbonnement.js`; threshold `SEUIL_GARANTIE_EUROS` in `formules.js`, read by the contract and the
+emails — since 2026-10-11, contract `RESTO-2026.18`; it was « zéro commande » from 2026-10-02). The front texts say « 50 € » in
+full (i18n): change them with the constant. Paid **mises en avant** have their own, separate « zero orders = refunded » rule.
+**Offered by default during the launch (founder, 2026-10-07)**: the only automatic charge is the 10% commission on orders paid online.
+A business sells without any subscription until the team turns billing on for it (Admin › Commerces › « Facturer
+l'abonnement », `restaurants.subscription_billing_enabled`, false by default — see `formules.abonnementOffert`). Its
+account page then shows « offert pendant le lancement » and the Stripe checkout refuses (`SUBSCRIPTION_WAIVED`).
+**Grace period (founder, 2026-10-21)**: turning billing on for a shop without an active subscription keeps its orders open for
+14 days (`DELAI_GRACE_ABONNEMENT_JOURS`, `formules.enDelaiGrace`, `restaurants.subscription_grace_*`): an e-mail with the date at
+the start, reminders on day 7 and day 12 (`delaiGraceAbonnement.js`, every 6 h), and a dashboard band « Tes commandes continuent
+jusqu'au … » (DashboardLayout, `subscriptionGraceUntil`; on the website it says where to subscribe, in the app only the date).
+Orders stop at the deadline. The front texts say « 14 jours » in full: change them with the constant.
+
+- server: `commissionFairide` and `fraisService` in `../fairide-backend/pricing.js`, called by `routes/orders.js`;
+  `service_fee` stores the system fee excl. VAT, `service_fee_vat` its VAT (0 under the franchise) — both already inside
+  `delivery_fee`;
+- client estimate: [src/fraisService.js](../../src/fraisService.js);
+- cards are built at the business's in-store prices (`../fairide-backend/scripts/prix.js` corrects platform-priced cards);
+  no ×1.10 any more. Since 2026-10-01 the business can no longer edit dishes or prices itself
+  (`MENU_LOCKED`) — it asks, and the team applies;
+- legal texts: contract `RESTO-2026.19` (in force 1 Nov 2026; 2026.18 widens the subscription guarantee, 2026.19 says Fairide charges no VAT and, revised before publication on 2026-10-13, the own-prices model; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-13-b` (commission = 10 % of the price paid; says the subscription is 20 € with no VAT and that Fairide's system fee carries none), privacy
+  `CONF-2026-10-17` (since 10-15: door-drop photo 30 days, courier position with the screen locked, courier SOS; 10-16-b: business staff
+  accounts and group orders; 10-17: GatewayAPI as the SMS processor; they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
+  restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).
+
+## Three sellers per order (decided 2026-09-23)
+
+The customer buys the food from the business, the **delivery from the independent courier** who accepts
+the job, and the system fee (inside the delivery fee) from Fairide. The backend records a seller per line (`order_lines`, see
+`../fairide-backend/troisVendeurs.js`). What the front end shows because of it:
+
+- checkout recap labels each line with its seller (`conformite.seller*`);
+- [VendeurLivraison](../../src/components/conformite/VendeurLivraison.jsx) on the client's orders — the
+  courier's "Prénom N.", company number and VAT regime once known, and a free "decline this courier"
+  while the order hasn't left;
+- driver offers show the price, any Fairide-paid increase and a **Refuse** button, and an approximate
+  destination (the server strips the client's name, phone and house number before the job is taken);
+- [EspaceVendeurLivreur](../../src/components/conformite/EspaceVendeurLivreur.jsx) — minimum fee and the
+  courier's sale documents (self-billing mandate, accepted in the notices step);
+- admin › Conformité › *Attribution des courses* ([DispatchTab](../../src/pages/admin/compliance/DispatchTab.jsx)): delivery settings, and the
+  evidence that refusing costs nothing as **aggregates only** — couriers grouped by refusal-rate band, average offers
+  received per band, shown only when a band has at least 5 couriers (backend `statsAttribution.js`). No per-courier row,
+  no « # » rank, on screen or in the CRT ZIP (founder, 2026-10-21: « if it's a driver classement let's not have any »).
+
+Never add anything that ranks, rates or penalises couriers for refusing: the backend's
+`tests/trois-vendeurs.test.js` fails if dispatch starts reading such data, and the courier notice promises it.

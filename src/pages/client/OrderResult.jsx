@@ -172,7 +172,7 @@ function ResultatCommande({ success }) {
     }
   }[state];
 
-  /* COMMANDE PAYÉE : LE MOMENT DE L'APPLICATION. Depuis le 2026-10-16 (« Proposition » de mockups/tous-les-ecrans.html,
+  /* COMMANDE PAYÉE : LE MOMENT DE L'APPLICATION. Depuis le 2026-10-16 (« Proposition » de maquettes/tous-les-ecrans/tous-les-ecrans.html,
      fondateur) : plein écran iris, le vélo de la marque roule jusqu'au commerce qui apparaît, la coche lime saute ; le
      récapitulatif (commerce, plats, mode, total débité) monte dans la feuille blanche. Mêmes textes, mêmes deux actions ;
      « Voir mes commandes » reste la seule action lime. Les autres états (vérification, attente, échec) restent sobres.

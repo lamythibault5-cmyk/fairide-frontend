@@ -6,7 +6,7 @@ import { BandeauCommerce, FeuilleCommerce } from './BandeauCommerce';
 // Vrai sur le site, faux dans l'app (native ou écran d'accueil) : constant pour toute la session.
 export const SITE = !experienceApp();
 
-/* LE BANDEAU DES AUTRES PAGES DU COMMERCE, SUR LE SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») :
+/* LE BANDEAU DES AUTRES PAGES DU COMMERCE, SUR LE SITE (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, lot « pro ») :
  * Promotions, Avis, Factures, Guide et Aperçu client prennent la même famille que Mon commerce et Commandes — « ← Mon
  * compte » et le nom sur le bandeau iris, le titre et sa phrase d'introduction, puis la feuille blanche avec les blocs
  * communs du tableau de bord (DashboardLayout les lui passe, `communs`) et la page elle-même. `lecture` : largeur de

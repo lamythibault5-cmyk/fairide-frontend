@@ -68,7 +68,7 @@ const attentePage = <AttentePage />;
 function isDashboardPath(pathname) {
   return DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
-/* CONNECTÉ, TOUT LE SITE EST DANS LA COQUILLE (fondateur, 2026-10-16, mockups/site-ordinateur.html : le « cadre » de chaque
+/* CONNECTÉ, TOUT LE SITE EST DANS LA COQUILLE (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html : le « cadre » de chaque
  * page connectée est la barre latérale). L'aide, les pages légales, notre histoire, « C'est bon » et la page introuvable
  * s'ouvraient sous l'en-tête iris du site, avec une seconde navigation (Restaurants · Favoris · Mes commandes) qui ne
  * ressemblait à rien d'autre une fois connecté — l'app, elle, les garde déjà dans sa coquille. Seules la connexion et le
@@ -85,7 +85,7 @@ const HORS_COQUILLE = ['/login', '/reset-password'];
  *
  * /restaurants (la LISTE) n'en fait pas partie : on y flâne, les onglets y sont utiles. Le parcours
  * commence sur la fiche d'un commerce — exactement le geste qui, chez Uber Eats, fait disparaître la
- * barre du bas (DESIGN.md, et les captures fournies par le fondateur).
+ * barre du bas (docs/archives/DESIGN-uber.md, et les captures fournies par le fondateur).
  *
  * Voir EnteteFlux.jsx, qui porte la seule sortie de ces pages. */
 // La commande groupée (/groupe/:code) en fait partie : elle a sa barre du bas et son retour à la carte, comme le panier.

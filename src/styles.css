@@ -27,7 +27,7 @@
   --iris-deep: #2A2185;
   --lime: #C8F03C;
 
-  /* Neutres — échelle neutre, plus les gris chauds d'avant (DESIGN.md § Colors).
+  /* Neutres — échelle neutre, plus les gris chauds d'avant (docs/archives/DESIGN-uber.md § Colors).
      Le beige de --ink-soft / --ink-faint / --line donnait une page légèrement jaune ; sur un
      fond blanc franc, un gris neutre se lit comme du calme plutôt que comme du papier vieilli. */
   --ink: #000000;        /* titres et texte principal sur fond clair */
@@ -67,7 +67,7 @@
   --green: #2E7D32;
   --heart: #FF3B5C;
 
-  /* Formes — LA PILULE EST LA FORME SIGNATURE (DESIGN.md § Shapes).
+  /* Formes — LA PILULE EST LA FORME SIGNATURE (docs/archives/DESIGN-uber.md § Shapes).
      Tout ce qui se clique s'arrondit à 999px : boutons, puces, badges, pastilles. Les cartes
      gardent un rayon franc de 16px, les champs de saisie 8px. Ce contraste-là — cliquable
      complètement rond, contenant franchement carré — remplace l'ancien couple 20px/6px : il dit
@@ -132,7 +132,7 @@
   --anneau-champ: inset 0 0 0 .5px var(--iris), 0 0 0 4px var(--iris-tint);
   --anneau-champ-erreur: inset 0 0 0 .5px var(--red), 0 0 0 4px #FBE9EA;
 
-  /* Échelle typographique (DESIGN.md § Typography). Posée ici en jetons pour que les surfaces
+  /* Échelle typographique (docs/archives/DESIGN-uber.md § Typography). Posée ici en jetons pour que les surfaces
      reprises une à une s'y accrochent au lieu de réinventer une taille à chaque fois. */
   --t-display-xxl: 52px; --t-display-xl: 36px; --t-display-lg: 32px;
   --t-display-md: 24px;  --t-display-sm: 20px;
@@ -206,7 +206,7 @@ a, button, .cuisine-chip, .rest-card, .card, input, select, textarea {
 
 /* PLUS DE RESSERREMENT NÉGATIF SUR LES TITRES. L'ancienne direction tirait sa personnalité d'un
    -0,02em très marqué ; la nouvelle interdit explicitement toute variation d'approche sur les
-   titres (DESIGN.md : « the display face is never letter-spaced, positive or negative »). Un titre
+   titres (docs/archives/DESIGN-uber.md : « the display face is never letter-spaced, positive or negative »). Un titre
    resserré se lit comme une affiche, un titre à approche neutre se lit comme une phrase — et c'est
    une phrase qu'on veut, posée calmement. L'interligne passe de 1,1 à 1,22 pour la même raison :
    1,1 empile les lignes, 1,22 les laisse respirer. */
@@ -411,7 +411,7 @@ a { color: inherit; }
 /* Actif : pastille blanche, texte iris (contraste 8:1) — le blanc translucide sur iris tombait à 4,4:1, sous le seuil AA. */
 .lang-switcher button.active { background: #fff; color: var(--iris); opacity: 1; }
 
-/* Carte : 16px de rayon, 24px de marge intérieure, 16px entre deux cartes (DESIGN.md § Cards).
+/* Carte : 16px de rayon, 24px de marge intérieure, 16px entre deux cartes (docs/archives/DESIGN-uber.md § Cards).
    Uber pose ses cartes sans filet ni ombre, séparées par du seul blanc. On garde le filet 1px :
    leurs pages de marketing ont trois blocs par écran, nos tableaux de bord en ont quinze, et sans
    frontière ils fondent les uns dans les autres. Le filet reste donc notre langage d'élévation —
@@ -574,7 +574,7 @@ label { font-size: 14px; font-weight: 500; color: var(--ink); display: block; ma
   :is(.field, .bv-champ, .address-search) > label:first-child { transition: none; }
 }
 
-/* TOUS LES BOUTONS SONT DES PILULES (DESIGN.md § Buttons). 15px plutôt que les 16px d'Uber :
+/* TOUS LES BOUTONS SONT DES PILULES (docs/archives/DESIGN-uber.md § Buttons). 15px plutôt que les 16px d'Uber :
    leurs pages portent trois boutons, nos tableaux de bord en portent trente par écran, et un saut
    de 14 à 16 déplaçait les colonnes des tableaux admin. 15px donne le gain de lisibilité sans
    casser les mises en page denses ; .btn-lg ci-dessous porte la vraie taille d'Uber là où l'action
@@ -591,7 +591,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
    est à peine visible dessus — un visiteur au clavier traversait donc l'application sans jamais
    savoir où il se trouvait, y compris dans le tunnel de commande.
 
-   DESIGN.md (Uber) ne documente que le repos et l'appui — il est muet sur la mise au point.
+   docs/archives/DESIGN-uber.md (Uber) ne documente que le repos et l'appui — il est muet sur la mise au point.
    La règle vient d'Apple, qui en fait un élément de système au même titre que l'appui :
    « Focus state: 2px solid outline ». On garde la couleur de marque plutôt que son bleu.
 
@@ -606,7 +606,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, label:focus-visibl
   outline-offset: 2px;
 }
 /* Sur fond iris, un anneau iris est invisible. Même geste, encre inversée — c'est la règle que
-   DESIGN.md pose déjà pour les liens (`link-on-dark`) et Apple pour la sienne (`text-link-on-dark`). */
+   docs/archives/DESIGN-uber.md pose déjà pour les liens (`link-on-dark`) et Apple pour la sienne (`text-link-on-dark`). */
 .hero :focus-visible, .cart-bar :focus-visible, .join-card-iris :focus-visible,
 .btn-hero-ghost:focus-visible, .dashboard-nav-link.active:focus-visible {
   outline-color: #fff;
@@ -637,7 +637,7 @@ a, button, input, select, textarea, label, summary, [role="button"], [role="tab"
   /* LES PUCES GROSSISSENT AU DOIGT. Mesuré au navigateur piloté : les 81 puces de cuisine de
      l'accueil faisaient 37px de haut, sous le seuil de 44 en dessous duquel une cible se rate.
      Ce sont pourtant les contrôles les plus touchés de la page — le premier geste d'un client est
-     de filtrer par type de cuisine. DESIGN.md le dit pour la même raison : « Category chips
+     de filtrer par type de cuisine. docs/archives/DESIGN-uber.md le dit pour la même raison : « Category chips
      inflate to ≥ 44 px tall through extra padding on touch viewports. »
      Posé sous (pointer: coarse) et pas dans la règle de base : à la souris, un filtre de 44px de
      haut dans une rangée qui en compte vingt alourdit la page sans rien gagner. */
@@ -753,7 +753,7 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .texte-erreur { color: var(--red); }
 
 /* .btn-subtle — la pilule grise des actions de troisième rang (« En savoir plus », « Modifier »),
-   reprise de DESIGN.md, à poser surface par surface au fil de la reprise. Elle remplace
+   reprise de docs/archives/DESIGN-uber.md, à poser surface par surface au fil de la reprise. Elle remplace
    avantageusement un .btn-outline dans une carte : un aplat gris pèse moins qu'un trait, et une
    carte qui porte quatre boutons cernés ressemble à un formulaire administratif. */
 .btn-subtle { background: var(--surface-soft); color: var(--ink); }
@@ -911,7 +911,7 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
    et le bouton de commande — alors que la règle n'en autorise qu'un par vue. Le lime revient à
    ce qui se commande ; se déplacer dans une carte n'est pas l'action décisive d'un écran, c'est
    de la navigation, et la navigation porte l'iris comme partout ailleurs.
-   Le poids descend de 700 à 500 : DESIGN.md interdit de monter les libellés de contrôle à 700. */
+   Le poids descend de 700 à 500 : docs/archives/DESIGN-uber.md interdit de monter les libellés de contrôle à 700. */
 .category-quicknav button {
   /* Blanc opaque, et plus de backdrop-filter : la pilule était à 95 % d'opacité AVEC un flou
      derrière, donc ce qui défilait dessous s'y voyait, brouillé. Sur une carte de plats, ce qui
@@ -1535,7 +1535,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .auth-box { max-width: 380px; margin: 40px auto; }
 /* La carte de connexion est le seul objet de sa page. Elle portait pour ça un cadre de 2px
    d'iris — le seul contour appuyé du site. Ce cadre disparaît : une carte qui porte un
-   formulaire ne s'entoure pas, elle FLOTTE (DESIGN.md, request-form-card, ombre de niveau 2).
+   formulaire ne s'entoure pas, elle FLOTTE (docs/archives/DESIGN-uber.md, request-form-card, ombre de niveau 2).
    Le cadre enfermait le formulaire ; l'ombre le pose sur la page. Même intention, exactement,
    mais sans dessiner une boîte autour de quelqu'un qui tape son mot de passe. */
 .auth-box .card { border: 1px solid var(--line); box-shadow: var(--shadow-2); }
@@ -1616,7 +1616,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 /* Filtre de cuisine : l'emoji passe À CÔTÉ du libellé, plus au-dessus. Empilés, la puce était
    aussi haute que large, et l'arrondi de 999px la transformait en cercle qui rognait le mot au
    lieu de l'entourer (« healthy » devenait « althy »). C'est exactement le category-button de
-   DESIGN.md : icône, puis libellé, sur une ligne, dans une pilule couchée. Le libellé remonte
+   docs/archives/DESIGN-uber.md : icône, puis libellé, sur une ligne, dans une pilule couchée. Le libellé remonte
    de 11 à 13px — à 11px il fallait s'approcher de l'écran pour lire un filtre. */
 .cuisine-chip { flex: 0 0 auto; display: inline-flex; flex-direction: row; align-items: center; gap: 7px; padding: 9px 16px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
 .cuisine-chip .emoji { font-size: 17px; line-height: 1; }
@@ -2748,7 +2748,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
     grid-template-columns: 1fr;
     grid-template-areas: "main" "right" "footer";
   }
-  /* PASTILLES FLOTTANTES, plus une barre pleine (DESIGN.md, et l'application Uber dont le
+  /* PASTILLES FLOTTANTES, plus une barre pleine (docs/archives/DESIGN-uber.md, et l'application Uber dont le
      fondateur a fourni les captures). La barre collée en bas donnait, à six ou sept onglets, des
      cibles d'environ 38px de haut — sous le minimum de 44px, et il fallait viser. Cinq ronds de
      56px qui flottent au-dessus du contenu règlent la cible et séparent les boutons à l'œil.
@@ -2860,7 +2860,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
      règle 2 de l'identité (pas de flou), limitée à cette barre. Coût : un flou sur une bande de 74px, ce que Safari
      fait déjà pour ses propres barres ; si un Android modeste saccade, c'est ce bloc qu'il faut limiter à html.natif.
      Repli plein si le système demande moins de transparence. */
-  /* VERRE LIQUIDE (fondateur, 2026-10-16 : version 2 de mockups/barre-onglets-verre.html, sur le modèle de la barre de
+  /* VERRE LIQUIDE (fondateur, 2026-10-16 : version 2 de maquettes/barre-onglets-verre/barre-onglets-verre.html, sur le modèle de la barre de
      WhatsApp). Remplace le blanc translucide du 2026-10-13, toujours dans l'app seulement (html.appli : l'app native ET le
      site ajouté à l'écran d'accueil) ; le site garde sa barre blanche pleine. La barre est presque transparente : un voile
      blanc léger, un flou court qui laisse deviner la forme de ce qui passe dessous, la saturation qui ravive les couleurs,
@@ -2939,7 +2939,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 }
 
 /* En-tête du parcours de commande : la seule sortie de ces pages.
-   Géométrie reprise de `button-floating` (DESIGN.md) — fond blanc, texte encre, forme pilule, ombre
+   Géométrie reprise de `button-floating` (docs/archives/DESIGN-uber.md) — fond blanc, texte encre, forme pilule, ombre
    légère — exprimée avec les jetons Fairide, comme l'avaient déjà fait les pastilles du bas. */
 /* LE BANDEAU DU PARCOURS EST COLLANT. Il ne l'était pas : sur téléphone, la croix — la SEULE
    sortie de ces pages, puisque les onglets du bas s'y effacent — partait vers le haut au premier
@@ -2972,7 +2972,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 .flux-titre { transition: opacity .18s ease; }
 .flux-bouton {
   flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
-  /* 44px : le minimum tactile, celui que DESIGN.md relève aussi sur les pilules d'Uber. Les
+  /* 44px : le minimum tactile, celui que docs/archives/DESIGN-uber.md relève aussi sur les pilules d'Uber. Les
      anciens retours étaient des liens de texte de 18px de haut — on les manquait au pouce. */
   width: 44px; height: 44px;
   background: #fff; color: var(--ink);
@@ -3302,7 +3302,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
    s'affichait donc que derrière la colonne de contenu, jamais dans les marges. */
 /* Aplat visible avant que la vidéo soit là, et derrière elle pendant tout le fondu. C'était un
    dégradé en trois teintes de lilas ; c'est devenu un gris quasi blanc. Deux raisons : un dégradé
-   atmosphérique est exactement ce que la nouvelle direction exclut (DESIGN.md : « no gradients, no
+   atmosphérique est exactement ce que la nouvelle direction exclut (docs/archives/DESIGN-uber.md : « no gradients, no
    atmospheric backdrops »), et surtout cette teinte donnait un fond violet à la page de connexion,
    où le contenu est un simple formulaire. Une page de saisie se pose sur du blanc. */
 .cuisine-fond { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
@@ -4419,7 +4419,7 @@ html.avec-pilule-panier main { padding-bottom: calc(76px + env(safe-area-inset-b
   .panier-pilule { bottom: 24px; left: auto; right: 24px; transform: none; }
 }
 
-/* DANS L'APP, LA BARRE DU PANIER EN VERRE (fondateur, 2026-10-16, version 2C de mockups/autres-idees.html) : pleine largeur,
+/* DANS L'APP, LA BARRE DU PANIER EN VERRE (fondateur, 2026-10-16, version 2C de maquettes/autres-idees/autres-idees.html) : pleine largeur,
    le verre de la barre d'onglets, le sac et son compteur lime, « Voir le panier », et le total dans une pastille iris dont
    les chiffres roulent (FloatingCart). Sur la carte d'un commerce, les onglets sont masqués (estFluxCommande) : la barre
    descend au bas de l'écran. Le site garde la pilule iris. */
@@ -5069,7 +5069,7 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 
 /* ==========================================================================================================
    ACCUEIL DE L'APPLICATION iOS / ANDROID (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) — 2026-10-11.
-   Plein écran, hors <Layout>. Repris de la maquette validée par le fondateur (mockups/app-onboarding.html) :
+   Plein écran, hors <Layout>. Repris de la maquette validée par le fondateur (maquettes/app-onboarding/app-onboarding.html) :
    fond blanc ou iris, filets 1px, aucune ombre ; le lime ne sert qu'au bouton décisif d'un écran iris (règle n° 3),
    jamais en texte sur blanc (règle n° 1). Préfixe bv- : aucune règle du site n'est touchée.
    ========================================================================================================== */
@@ -5117,7 +5117,7 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-velo.roule svg { animation: bv-bonds .7s ease-in-out; }
 @keyframes bv-bonds { 0%, 100% { transform: none; } 20%, 60% { transform: translateY(-2px) rotate(-3deg); } 40%, 80% { transform: translateY(0) rotate(1deg); } }
 
-/* LE BANDEAU IRIS (fondateur, 2026-10-16 : version D de mockups/onboarding-chaleur.html). L'écran est iris ; l'en-tête,
+/* LE BANDEAU IRIS (fondateur, 2026-10-16 : version D de maquettes/onboarding-chaleur/onboarding-chaleur.html). L'écran est iris ; l'en-tête,
    le titre et le sous-titre sont dessus, en blanc ; le reste monte dans la feuille blanche (.bv-feuille), qui va
    jusqu'aux bords et en bas de l'écran. Exception voulue à la règle « un seul lime par écran » : le bouton lime ET la
    coche lime des choix (aplat lime, trait encre, sur iris). */
@@ -5164,7 +5164,7 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-petit { font-size: 12px; color: var(--ink-faint); display: block; }
 .bv-iris .bv-petit { color: rgba(255,255,255,.7); }
 
-/* LE PREMIER ÉCRAN (version B2 de mockups/accueil-appli.html, 2026-10-16) : la marque et la langue, le slogan du site
+/* LE PREMIER ÉCRAN (version B2 de maquettes/accueil-appli/accueil-appli.html, 2026-10-16) : la marque et la langue, le slogan du site
    sur l'iris, le vélo qui arrive devant un commerce, puis la feuille (phrase, barres de commission, bouton). Il remplace
    le « 10 % » de 88 px sur fond tout iris, jugé « trop fort » par le fondateur. */
 .bv-bandeau .bv-ligne-haut { align-items: center; margin-top: 8px; }

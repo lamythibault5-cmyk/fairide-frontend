@@ -1,4 +1,4 @@
-// LES DERNIÈRES RECHERCHES (fondateur, 2026-10-17 : « oui, ayons un Récemment » — « Search » de mockups/commerces-marque.html).
+// LES DERNIÈRES RECHERCHES (fondateur, 2026-10-17 : « oui, ayons un Récemment » — « Search » de maquettes/commerces-marque/commerces-marque.html).
 //
 // Les CINQ derniers mots cherchés, du plus récent au plus ancien, gardés DANS LE TÉLÉPHONE (localStorage) et jamais envoyés
 // au serveur : c'est une préférence d'affichage, déclarée comme telle dans la politique des cookies (cookies.preferences),

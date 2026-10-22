@@ -2,7 +2,7 @@
 
 *12 octobre 2026, révisé le 13 avec les principes d'Apple (« Designing Fluid Interfaces », WWDC 2018 ;
 « Principles of Great Design »). Analyse faite en lisant le code (`main` + `feat/app-onboarding`) et la maquette
-`mockups/app-onboarding.html`, pas en naviguant : chaque point « à vérifier » se regarde dans le navigateur avant
+`maquettes/app-onboarding/app-onboarding.html`, pas en naviguant : chaque point « à vérifier » se regarde dans le navigateur avant
 d'être codé.*
 
 **Les deux fils du plan :** moins de clics, et du mouvement qui a l'air physique. **Une contrainte décide de

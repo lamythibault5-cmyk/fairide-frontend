@@ -14,7 +14,7 @@ import Icone from './Icone';
 // `children` : l'action n'est pas toujours un lien. Un écran d'échec propose de REFAIRE ce qui vient
 // d'échouer — un bouton, pas une destination — et `actionVers` ne sait exprimer qu'une destination.
 // Le reste de la forme (icône, titre, phrase, une seule action) ne change pas pour autant.
-/* LE VÉLO QUI ATTEND (fondateur, 2026-10-16, version 4B de mockups/autres-idees.html). Sur les écrans vides qui occupent
+/* LE VÉLO QUI ATTEND (fondateur, 2026-10-16, version 4B de maquettes/autres-idees/autres-idees.html). Sur les écrans vides qui occupent
  * toute la page (Mes commandes, Mes favoris, le panier) : `scene` remplace le rond gris par le vélo de la marque qui
  * arrive sur sa route pointillée et attend, à côté d'un repère qui dit ce qui manque (la position pour une commande,
  * le cœur pour un favori, le sac pour le panier). C'est le logo en SVG : rien à charger. Le bouton passe en lime. */

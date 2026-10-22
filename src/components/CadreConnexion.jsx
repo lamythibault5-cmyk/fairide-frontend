@@ -1,4 +1,4 @@
-/* LA CONNEXION DU SITE EN DEUX MOITIÉS (fondateur, 2026-10-16, section 2 de mockups/site-ordinateur.html). Sous l'en-tête
+/* LA CONNEXION DU SITE EN DEUX MOITIÉS (fondateur, 2026-10-16, section 2 de maquettes/site-ordinateur/site-ordinateur.html). Sous l'en-tête
    des visiteurs, qui ne change pas : l'iris à gauche prolonge l'en-tête (un titre et le vélo de la marque qui attend sur sa
    route) ; le formulaire est posé sur une feuille blanche à droite, sans carte autour. Sur téléphone, PAS de second bandeau
    iris sous celui de l'en-tête (fondateur, 2026-10-16 : « double bannière, trop lourd ») : le titre en encre sur le blanc,

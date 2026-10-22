@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
-// LE TEMPS QUI RESTE POUR ACCEPTER, EN ANNEAU (2026-10-16, mockups/tous-les-ecrans.html › Commandes) : il se vide de
+// LE TEMPS QUI RESTE POUR ACCEPTER, EN ANNEAU (2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html › Commandes) : il se vide de
 // l'arrivée de la commande jusqu'à son échéance (acceptDeadline, la même que EcheanceAcceptation), rouge sous 5 minutes.
 // Partagé par les cartes de Commandes (OrdersPage) et la feuille « Nouvelle commande » (NouvelleCommandeModale) depuis
 // l'audit design 2 (2026-10-19) : sur une commande qui attend, c'est lui qui dit le délai — plus de phrase d'échéance.

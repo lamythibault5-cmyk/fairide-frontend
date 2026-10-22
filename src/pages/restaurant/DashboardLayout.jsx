@@ -34,7 +34,7 @@ const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
 // CadreSite `appli`).
 const PAGES_BANDEAU = ['/dashboard', '/dashboard/edit', '/dashboard/orders', '/dashboard/menu', '/dashboard/stats',
   '/dashboard/promotions', '/dashboard/reviews', '/dashboard/invoices'];
-// Sur le SITE (pas dans l'app), les autres pages du commerce ont aussi leur bandeau (2026-10-16, mockups/site-ordinateur.html,
+// Sur le SITE (pas dans l'app), les autres pages du commerce ont aussi leur bandeau (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html,
 // lot « pro ») : elles reçoivent les blocs communs dans leur feuille, comme les pages ci-dessus.
 const SITE = !experienceApp();
 const PAGES_BANDEAU_SITE = ['/dashboard/guide', '/dashboard/preview'];

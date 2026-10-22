@@ -8,7 +8,7 @@ import ChiffresRoulants from './ChiffresRoulants';
 import EtatVide from './EtatVide';
 import { ligneIndisponible } from '../panierDisponible';
 
-/* LE PANIER EN COLONNE, À DROITE DE LA CARTE (fondateur, 2026-10-16, « Page d'un commerce » de mockups/site-ordinateur.html).
+/* LE PANIER EN COLONNE, À DROITE DE LA CARTE (fondateur, 2026-10-16, « Page d'un commerce » de maquettes/site-ordinateur/site-ordinateur.html).
  * Sur un ordinateur, la place ne manque pas : au lieu d'une pilule posée sur la carte, le panier vit dans une colonne collante
  * à côté d'elle. On voit ce qu'on a pris en ajoutant, on corrige une quantité sans quitter la carte, et le total roule.
  *

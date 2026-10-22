@@ -31,7 +31,7 @@ const MARGE_SEUIL_PX = 8;
 // `verre` (fiche d'un commerce dans l'app, 2026-10-16) : la bande devient une bande de verre et la section lue est
 // marquée par une LENTILLE qui glisse d'une section à l'autre au défilement — comme celle de la barre d'onglets. Le geste
 // (appuyer, glisser la lentille) vit dans bandeSectionsVerre.js, chargé à la demande dans l'app seulement.
-// `pouce` (fiche d'un commerce sur le site, 2026-10-16, « Blanc plein » de mockups/site-ordinateur.html) : la même pastille
+// `pouce` (fiche d'un commerce sur le site, 2026-10-16, « Blanc plein » de maquettes/site-ordinateur/site-ordinateur.html) : la même pastille
 // iris qui glisse d'une section à l'autre, sur une bande blanche pleine — sans verre ni geste au doigt (rien de plus à charger).
 /* LE SAUT VERS UNE SECTION, AU RYTHME DE LA BARRE D'ONGLETS (fondateur, 2026-10-17 : « l'animation est un peu trop longue ;
  * même style et même durée que la barre des tâches »). Le défilement « smooth » du navigateur choisit sa propre durée —

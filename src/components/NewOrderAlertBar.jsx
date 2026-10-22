@@ -20,7 +20,7 @@ import { useToast } from '../context/ToastContext';
 import { SONNERIES, REPETITIONS } from '../hooks/useNewOrderAlert';
 import Icone from './Icone';
 
-// Sur le site (2026-10-16, mockups/site-ordinateur.html) : un seul lime par vue, celui de la page (Signer, Accepter…) ; les
+// Sur le site (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : un seul lime par vue, celui de la page (Signer, Accepter…) ; les
 // boutons pressants de la barre passent en iris. Dans l'app, ils restent lime, comme avant.
 const PRESSANT = experienceApp() ? 'btn-gold' : 'btn-teal';
 

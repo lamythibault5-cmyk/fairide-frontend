@@ -1,5 +1,5 @@
 /* LES ÉCRANS DU COMMERCE DANS LE NOUVEAU STYLE (fondateur, 2026-10-16 : « Proposition » de la partie Commerce de
-   mockups/tous-les-ecrans.html). Mon commerce, Commandes, Ma carte et Statistiques s'ouvrent sur un BANDEAU IRIS (le nom,
+   maquettes/tous-les-ecrans/tous-les-ecrans.html). Mon commerce, Commandes, Ma carte et Statistiques s'ouvrent sur un BANDEAU IRIS (le nom,
    le titre, ce qui se règle d'un geste) ; le reste monte dans une FEUILLE BLANCHE aux coins ronds, comme les écrans
    d'accueil de l'app (.bv-bandeau) et le suivi d'une commande (RouteSuivi). Mêmes contenus et mêmes fonctions qu'avant.
    Composants : components/commerce/BandeauCommerce.jsx (bandeau, feuille, interrupteur, curseur à pouce),

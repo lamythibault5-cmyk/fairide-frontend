@@ -190,7 +190,7 @@ export function DeliveryTiming({ order }) {
   );
 }
 
-/* SUIVI EN BANDEAU IRIS (fondateur, 2026-10-16, version 1C de mockups/autres-idees.html). Une commande en cours s'ouvre
+/* SUIVI EN BANDEAU IRIS (fondateur, 2026-10-16, version 1C de maquettes/autres-idees/autres-idees.html). Une commande en cours s'ouvre
    sur un bandeau iris : le statut en grand (titreSuivi), l'heure, et une route où le vélo de la marque, en lime, roule
    d'arrêt en arrêt — chaque étape passée garde une coche lime, la route défile sous les roues pendant la livraison. Le
    déplacement est une transition CSS sur `left` : quand le statut change (rafraîchissement de Mes commandes), le vélo

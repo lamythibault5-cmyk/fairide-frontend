@@ -1,4 +1,4 @@
-/* LE VÉLO SUR SA ROUTE, côté livreur (fondateur, 2026-10-16, mockups/tous-les-ecrans.html, partie Livreur).
+/* LE VÉLO SUR SA ROUTE, côté livreur (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, partie Livreur).
  *
  * Le vélo « 5a » de la marque (BrandMark.jsx, sans tuile), à la couleur du texte : lime sur le bandeau iris. Il est posé
  * sur une route en pointillés, à `position` % de sa longueur. `roule` : la route défile sous ses roues et il pédale (le

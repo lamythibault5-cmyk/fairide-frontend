@@ -16,7 +16,7 @@ import { mouvementReduit, vibrer } from '../../gestes';
 import '../../ecran-liste.css';
 import '../../site-liste.css';
 
-/* MES FAVORIS (fondateur, 2026-10-16, proposition « Le cœur qui bat » de mockups/tous-les-ecrans.html). Le titre et le
+/* MES FAVORIS (fondateur, 2026-10-16, proposition « Le cœur qui bat » de maquettes/tous-les-ecrans/tous-les-ecrans.html). Le titre et le
  * nombre de commerces sur un bandeau iris, les cartes dans la feuille blanche. Chaque carte porte le cœur des cartes de
  * la liste : le toucher retire le favori SUR PLACE — le cœur se vide, la carte s'efface, les autres se resserrent — sans
  * passer par la fiche du commerce. Plus rien : le vélo attend sur sa route (EtatVide scene="favoris"). */

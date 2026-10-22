@@ -16,7 +16,7 @@ import Icone from './Icone';
 // hook ne peut pas être appelé après le `if (!open) return null` ci-dessous, et le déplacer avant
 // poserait le verrou de défilement et volerait le focus alors que rien n'est affiché.
 //
-// LA FEUILLE DE CONFIRMATION DE L'APP (fondateur, 2026-10-17, « Confirmation sheets » de mockups/commerces-marque.html) :
+// LA FEUILLE DE CONFIRMATION DE L'APP (fondateur, 2026-10-17, « Confirmation sheets » de maquettes/commerces-marque/commerces-marque.html) :
 // dans l'app (html.appli), la fenêtre monte du bas en feuille — poignée, tuile d'icône (`icone`, nom d'Icone.jsx), titre,
 // message, ce qui va changer dans un encart (`detail`), le bouton d'action sur toute la largeur et l'annulation en texte
 // dessous. Le site garde sa fenêtre centrée. Styles dans client-ui.css (.confirm-feuille).

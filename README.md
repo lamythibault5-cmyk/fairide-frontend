@@ -1,16 +1,19 @@
-# React + Vite
+# Fairide — site et application
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Fairide est une plateforme de livraison de repas pour Bruxelles : le commerce garde ses prix, Fairide prend 10 % du prix
+payé, le livreur indépendant reçoit 90 % des frais de livraison et 100 % du pourboire.
 
-Currently, two official plugins are available:
+Ce dépôt contient le site [fairide.be](https://fairide.be) (React 19 + Vite, déployé par Vercel) et les applications
+Android / iOS qui emballent le même code avec Capacitor. L'API est dans
+[fairide-backend](https://github.com/lamythibault5-cmyk/fairide-backend).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```
+npm install
+cp .env.example .env.local   # sans lui, le serveur de dev parle à la PRODUCTION
+npm run dev
+```
 
-## React Compiler
+Vérifications : `npm run lint`, `npm run check:i18n`, `npm run check:app` (l'application ne montre jamais l'habillage du
+site), `npm run check:barres`, `npm run build`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Tout le reste, pour les humains comme pour les agents : [CLAUDE.md](CLAUDE.md) et [docs/agents/](docs/agents/).

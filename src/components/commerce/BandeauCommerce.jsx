@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import '../../ecran-commerce.css';
 
 /* LE BANDEAU IRIS ET LA FEUILLE BLANCHE DES ÉCRANS DU COMMERCE (fondateur, 2026-10-16, « Proposition » de la partie
-   Commerce de mockups/tous-les-ecrans.html ; styles dans ecran-commerce.css). Mon commerce, Commandes, Ma carte et
+   Commerce de maquettes/tous-les-ecrans/tous-les-ecrans.html ; styles dans ecran-commerce.css). Mon commerce, Commandes, Ma carte et
    Statistiques commencent par <BandeauCommerce> (nom, titre, ce qui se règle d'un geste) puis mettent le reste dans
    <FeuilleCommerce>. DashboardLayout ne pose alors plus le nom du commerce au-dessus de la page (`avecBandeau`). */
 export function BandeauCommerce({ children, retour = false }) {

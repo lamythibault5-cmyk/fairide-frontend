@@ -14,7 +14,7 @@ import DiscoverSection from '../components/landing/DiscoverSection';
 import Icone from '../components/Icone';
 import '../site-accueil.css';
 
-/* L'ACCUEIL DU SITE, VERSION « BANDEAU ET FEUILLE » (fondateur, 2026-10-16, version B de mockups/accueil-site.html).
+/* L'ACCUEIL DU SITE, VERSION « BANDEAU ET FEUILLE » (fondateur, 2026-10-16, version B de maquettes/accueil-site/accueil-site.html).
  * Le même cadre que l'app et que les autres écrans du site : un bandeau iris plein (plus de vidéo ni de photo derrière),
  * le slogan en blanc, la barre d'adresse et le vélo sur sa route ; « Pourquoi Fairide ? » en deux barres calmes ; tout le
  * reste monte dans une feuille blanche aux coins ronds. Le lime ne reste que sur ce qui fait avancer (la flèche de

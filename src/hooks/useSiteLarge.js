@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { experienceApp } from '../natif';
 
-/* LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, lot « liste » de mockups/site-ordinateur.html). Vrai seulement sur le
+/* LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, lot « liste » de maquettes/site-ordinateur/site-ordinateur.html). Vrai seulement sur le
  * SITE, dans une fenêtre d'au moins `min` px : l'app ne change pas, quelle que soit la largeur de l'écran (une tablette en
  * mode app garde ses rangées et ses pastilles). Suit le redimensionnement de la fenêtre. Utilisé par la liste des
  * commerces (RestaurantList.jsx) et la carte (MapPage.jsx) ; src/site-liste.css porte la mise en page, sous html:not(.appli). */

@@ -1,4 +1,4 @@
-// LA LENTILLE DES CUISINES (fondateur, 2026-10-16, proposition A de mockups/tous-les-ecrans.html), dans l'app seulement.
+// LA LENTILLE DES CUISINES (fondateur, 2026-10-16, proposition A de maquettes/tous-les-ecrans/tous-les-ecrans.html), dans l'app seulement.
 // Chargé avec import() par TeteListe.jsx : le site n'en télécharge rien, comme barreVerre.js pour la barre d'onglets.
 //
 // La bande des pastilles de cuisine est du même verre que la barre d'onglets, et la cuisine choisie est sous la même

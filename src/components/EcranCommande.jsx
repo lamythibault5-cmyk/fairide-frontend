@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import '../ecran-commande.css';
 import '../site-commande.css';
 
-/* LE PARCOURS DE COMMANDE EN BANDEAU IRIS (fondateur, 2026-10-16, « Proposition » de mockups/tous-les-ecrans.html :
+/* LE PARCOURS DE COMMANDE EN BANDEAU IRIS (fondateur, 2026-10-16, « Proposition » de maquettes/tous-les-ecrans/tous-les-ecrans.html :
  * Panier, Paiement, Commande confirmée). Même famille que l'accueil de l'app (.bv-bandeau) et le suivi 1C : l'en-tête est
  * un bandeau iris (retour, commerce, grand titre, route en pointillés où roule le vélo de la marque, en lime) et le reste
  * monte dans une feuille blanche aux coins ronds. Sur le site comme dans l'app : seul le verre de la barre du bas est
@@ -65,7 +65,7 @@ export function FeuilleCommande({ children, className = '' }) {
   return <div className={`ec-feuille ${className}`}><div className="ec-col">{children}</div></div>;
 }
 
-/* LA ROUTE PANIER → PAIEMENT → SUIVI DU SITE (2026-10-16, « Proposition » de mockups/site-ordinateur.html, section 5). Les
+/* LA ROUTE PANIER → PAIEMENT → SUIVI DU SITE (2026-10-16, « Proposition » de maquettes/site-ordinateur/site-ordinateur.html, section 5). Les
  * mêmes arrêts que le suivi d'une commande (RouteSuivi, orderStatus.jsx, classes .route-suivi de client-ui.css) : les étapes
  * passées gardent leur coche lime, et le vélo arrive en roulant de l'arrêt précédent jusqu'à l'étape de l'écran. L'app garde
  * sa route sans arrêts (RouteCommande) : rien n'y change. Décorative comme elle : le titre de l'écran dit déjà où l'on est. */

@@ -4716,7 +4716,7 @@ export default {
       none: 'Pas encore de pourboire reçu.'
     },
     siteLivreur: {
-      // Espace livreur sur le site (fondateur, 2026-10-16, mockups/site-ordinateur.html, « Livreur ») : Dashboard.jsx, PageLivreur.jsx.
+      // Espace livreur sur le site (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, « Livreur ») : Dashboard.jsx, PageLivreur.jsx.
       disponible: 'Tu es disponible',
       enPause: 'Tu es en pause',
       proposees: '{n} courses proposées autour de toi',
@@ -6364,7 +6364,7 @@ export default {
       paidOnlineBadge: 'Déjà payé en ligne'
     },
     ecranLivreur: {
-      // Écrans livreur au bandeau iris (fondateur, 2026-10-16, mockups/tous-les-ecrans.html, Livreur) : Dashboard.jsx, EarningsPage.jsx.
+      // Écrans livreur au bandeau iris (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, Livreur) : Dashboard.jsx, EarningsPage.jsx.
       course: 'Course',
       directionCommerce: 'Direction {name}',
       enRouteVers: 'En route vers {name}',
@@ -6592,7 +6592,7 @@ export default {
       tapToPause: 'Touche pour te mettre en pause',
       tapToResume: 'Touche pour recevoir des courses'
     },
-    // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
+    // Espace commerce sur le SITE (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
     sitePro: {
       etape_ouvrir: "Commandes",
       reglagesService: 'Réglages du service',
@@ -9745,7 +9745,7 @@ export default {
       job_cancelled: 'annulé'
     },
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
-    // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
+    // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (maquettes/app-onboarding/app-onboarding.html).
     appli: {
       rapCouper: 'Couper',
       rapActiver: 'Activer',

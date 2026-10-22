@@ -7,7 +7,7 @@ import { euros } from '../../prixPlat';
 // comme dans l'app (« Pourquoi passer à Fairide ? »), à la place des deux grandes cases et de la flèche dessinée. Plus de
 // légende « le resto garde 90 % » : le fondateur préfère dire « seulement 10 % » que « ils gardent 90 % » (2026-10-16).
 //
-// LE PREMIER ARGUMENT : DES PRIX QUI NE SONT PAS GONFLÉS (fondateur, 2026-10-19, version B de mockups/prix-pas-gonfles.html).
+// LE PREMIER ARGUMENT : DES PRIX QUI NE SONT PAS GONFLÉS (fondateur, 2026-10-19, version B de maquettes/prix-pas-gonfles/prix-pas-gonfles.html).
 // « Le restaurant ne doit plus gonfler ses prix » parle au client mieux que « 10 % au lieu de 30 » : la phrase ouvre la
 // carte, les barres disent pourquoi, et deux étiquettes montrent ce que ça change sur un plat. Sans note de calcul sous les
 // étiquettes (fondateur) : le calcul complet est dans l'aide (help.prices2) et dans la FAQ de /notre-histoire.

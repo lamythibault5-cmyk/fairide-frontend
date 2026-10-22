@@ -49,7 +49,7 @@ export default function MapPage() {
   const [tri, setTri] = useState('recommande'); // 'recommande' | 'note' | 'distance'
   const [panneau, setPanneau] = useState(null); // 'cuisine' | 'tri' | null
   const [recherche, setRecherche] = useState('');
-  /* LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, lot « liste » de mockups/site-ordinateur.html) : à partir de 1 100 px,
+  /* LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, lot « liste » de maquettes/site-ordinateur/site-ordinateur.html) : à partir de 1 100 px,
    * la recherche, les filtres et les commerces trouvés passent dans une colonne blanche à gauche, la carte prend le reste.
    * Le tiroir « Commerces près de toi » a été retiré du téléphone parce qu'il RECOUVRAIT la carte (voir plus haut) ; sur un
    * écran large, la colonne est À CÔTÉ : elle ne cache rien, et elle épargne de viser des épingles de huit pixels à la
@@ -115,7 +115,7 @@ export default function MapPage() {
   const basculer = (nom) => setPanneau((p) => (p === nom ? null : nom));
   const LIBELLE_TRI = { recommande: t('mapClient.sortRecommended'), note: t('mapClient.sortRating'), distance: t('mapClient.sortDistance') };
 
-  /* LA FICHE DU COMMERCE TOUCHÉ (fondateur, 2026-10-16, proposition « Verre sur le plan » de mockups/tous-les-ecrans.html).
+  /* LA FICHE DU COMMERCE TOUCHÉ (fondateur, 2026-10-16, proposition « Verre sur le plan » de maquettes/tous-les-ecrans/tous-les-ecrans.html).
    * Plus la grande bulle à photo et deux boutons : une fiche compacte qui monte au-dessus des onglets — en verre dans
    * l'app, blanche à filet sur le site —, la photo, le nom, « cuisine · commune · quartier · distance », la note (seulement
    * s'il y a de vrais avis, sinon « Nouveau ») et la promo, l'adresse, et « Voir ». La croix (ou un toucher sur le plan)
