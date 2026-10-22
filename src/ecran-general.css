@@ -35,6 +35,10 @@
 /* Les boutons pleins de ces écrans : pleine largeur, 52 px, ronds (ec-bouton de Mon commerce, au poids du lien). */
 .gn-action { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; font-size: 16px; font-weight: 700; text-decoration: none; border-radius: var(--radius-pill); }
 a.btn-gold.gn-action { font-weight: 700; }
+/* « C'est bon » fait, engagements encore à signer (ValiderCarte) : la carte de la prochaine étape, puis le bouton et le lien
+ * « Mot de passe oublié ? » centré dessous. */
+.gn-feuille .ec-prochaine { margin: 0 0 16px; }
+.gn-lien { display: block; margin: 14px auto 0; text-align: center; font-size: 14px; font-weight: 600; color: var(--iris); }
 /* Une remarque (lien périmé, carte déjà validée) : filet iris, icône iris, texte encre — jamais de rouge plein. */
 .gn-note { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--iris); border-radius: 16px; color: var(--ink); font-size: 14px; line-height: 1.45; }
 .gn-note > svg { flex: none; color: var(--iris); margin-top: 1px; }

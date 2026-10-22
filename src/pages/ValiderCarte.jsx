@@ -11,6 +11,7 @@ import Icone from '../components/Icone';
 import { OptionCommande } from '../components/EcranCommande';
 import { BandeauGeneral, FeuilleGenerale, SectionGenerale } from '../components/EcranGeneral';
 import QuestionsCarte, { reponseAffichee } from '../components/commerce/QuestionsCarte';
+import '../ecran-commerce.css';
 
 /* « C'est bon » en un geste (CODE-3, 8 octobre 2026, DEC-25) — /carte/valider/:token.
  *
@@ -56,6 +57,8 @@ export default function ValiderCarte() {
   const [nom, setNom] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [fait, setFait] = useState(null);
+  // Ce qu'il reste au commerce après « C'est bon » ({ step, to, listed } ou null), renvoyé par le serveur avec la validation.
+  const [suite, setSuite] = useState(null);
   const [ajouter, setAjouter] = useState(false);
   const [envoiQuestions, setEnvoiQuestions] = useState(false);
   // Les réponses qu'on vient d'envoyer, rappelées sur l'écran de remerciement (la page rechargée ne les a plus).
@@ -89,6 +92,7 @@ export default function ValiderCarte() {
     setEnvoi(true);
     try {
       const r = await api(`/menu-validation/${encodeURIComponent(token)}`, { method: 'POST', body: { name: nom, sha256: carte.sha256, ...(choixOffert ? { addFairideRate: ajouter } : {}) } });
+      setSuite(r.next || null);
       setFait(r.version);
     } catch (e) {
       setErreur(e.message);
@@ -96,6 +100,10 @@ export default function ValiderCarte() {
       if (e.status === 409) charger();
     } finally { setEnvoi(false); }
   }
+
+  // « C'est bon » se touche en bas d'une longue carte : sur le site, l'écran de fin s'affichait au même défilement, donc
+  // hors de vue (un blanc et le pied de page). On remonte en haut pour qu'il se lise.
+  useEffect(() => { if (fait) window.scrollTo(0, 0); }, [fait]);
 
   const avecCarte = !!carte && !fait && !carte.questions?.open?.length && !carte.questions?.waiting;
   useEffect(() => {
@@ -113,8 +121,31 @@ export default function ValiderCarte() {
       <div className="gn-page">
         <BandeauGeneral icone="valider" titre={t('validerCarte.doneTitle')} sous={nomCommerce} />
         <FeuilleGenerale>
-          <p className="gn-texte gn-texte--encre" role="status">{t(commercant ? 'validerCarte.doneTextConnected' : 'validerCarte.doneText', { name: nomCommerce })}</p>
-          {commercant && <Link to="/dashboard" className="btn-gold gn-action">{t('validerCarte.backToDashboard')}</Link>}
+          <p className="gn-texte gn-texte--encre" role="status">{t(commercant || suite ? 'validerCarte.doneTextConnected' : 'validerCarte.doneText', { name: nomCommerce })}</p>
+          {/* Il lui reste ses engagements (commerces inscrits avant le 13/10, ou nouveau contrat ; maquettes/etapes-commerce,
+              option A) : la prochaine étape et le bouton qui y mène, connexion d'abord s'il ne l'est pas. */}
+          {suite && (
+            <>
+              <p className="gn-texte">{t(suite.listed ? 'validerCarte.nextIntroListed' : 'validerCarte.nextIntro')}</p>
+              <div className="ec-prochaine">
+                <span className="ec-tuile"><Icone nom="contrat" taille={20} /></span>
+                <span className="ec-prochaine-texte">
+                  <small>{t('ecranCommerce.prochaineEtape')}</small>
+                  <b>{t('miseEnLigne.commitments')}</b>
+                  <span>{t('miseEnLigne.commitmentsSub')}</span>
+                </span>
+              </div>
+              {commercant
+                ? <Link to={suite.to} className="btn-gold gn-action">{t('validerCarte.nextContinue')}</Link>
+                : (
+                  <>
+                    <Link to="/login" state={{ from: suite.to }} className="btn-gold gn-action">{t('validerCarte.nextSignIn')}</Link>
+                    <Link to="/login?oubli=1" state={{ from: suite.to }} className="gn-lien">{t('auth.forgotPassword')}</Link>
+                  </>
+                )}
+            </>
+          )}
+          {commercant && !suite && <Link to="/dashboard" className="btn-gold gn-action">{t('validerCarte.backToDashboard')}</Link>}
         </FeuilleGenerale>
       </div>
     );
