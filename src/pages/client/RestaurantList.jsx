@@ -142,7 +142,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   // recherche ou la page prérendue y mènent toujours directement. Seul ce clic-ci est filtré.
   return (
     <Link
-      {...lienFiche(user, r.id, r.name)}
+      {...lienFiche(user, r, r.name)}
       className={`rest-card rc${isClosed ? ' rc-est-ferme' : ''}`}
       // La fiche part dès que le doigt se pose (cacheDonnees.js) — seulement si le lien y mène (connecté, murCompte.js).
       onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}
@@ -244,7 +244,7 @@ function ALaUne({ list, inscritLe, t }) {
             r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ');
           return (
             // Même règle que les cartes dessous : sans compte, le clic mène à la connexion, puis à la fiche.
-            <Link key={r.id} {...lienFiche(user, r.id, r.name)} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`} onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}>
+            <Link key={r.id} {...lienFiche(user, r, r.name)} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`} onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}>
               <VisuelVide nom={r.name} cuisine={r.cuisine} />
               <img {...imgProps(r.coverImageUrl, 800, '(max-width: 640px) 92vw, 380px')} alt="" className="une-photo" decoding="async" onError={cacherImageCassee} />
               <span className="une-voile" aria-hidden="true" />

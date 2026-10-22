@@ -158,9 +158,9 @@ export default function SearchPage() {
     retenir();
     if (!resultats || resultats.total !== 1) return;
     const r = resultats;
-    const versFiche = (id) => { const l = lienFiche(user, id); return navigate(l.to, { state: l.state }); };
-    if (r.commerces[0]) return versFiche(r.commerces[0].id);
-    if (r.plats[0]) return versFiche(r.plats[0].restaurant.id);
+    const versFiche = (commerce) => { const l = lienFiche(user, commerce); return navigate(l.to, { state: l.state }); };
+    if (r.commerces[0]) return versFiche(r.commerces[0]);
+    if (r.plats[0]) return versFiche(r.plats[0].restaurant);
     if (r.cuisines[0]) return navigate('/restaurants', { state: { cuisine: r.cuisines[0].value } });
     if (r.communes[0]) return navigate('/restaurants', { state: { commune: r.communes[0] } });
     if (r.aide[0]) return navigate(r.aide[0].to);
@@ -320,21 +320,21 @@ export default function SearchPage() {
             <section className="sl-res-commerces">
               <h3 className="recherche-titre-groupe">{t('search.businesses')}</h3>
               <div className="rest-grid sl-grille">
-                {resultats.commerces.map((r) => <CarteCommerce key={r.id} r={r} t={t} lien={lienFiche(user, r.id, r.name)} />)}
+                {resultats.commerces.map((r) => <CarteCommerce key={r.id} r={r} t={t} lien={lienFiche(user, r, r.name)} />)}
               </div>
             </section>
           )}
           {!site && (
             <Groupe titre={t('search.businesses')} quand={resultats.commerces.length}>
               {resultats.commerces.map((r) => (
-                <Ligne key={r.id} {...lienFiche(user, r.id, r.name)} image={r.coverImageUrl} icone="commerce" titre={r.name}
+                <Ligne key={r.id} {...lienFiche(user, r, r.name)} image={r.coverImageUrl} icone="commerce" titre={r.name}
                   sous={[r.cuisine && (restaurantTypeLabel(r.cuisine, t) || r.cuisine), r.commune].filter(Boolean).join(' · ')} />
               ))}
             </Groupe>
           )}
           <Groupe titre={t('search.dishes')} quand={resultats.plats.length}>
             {resultats.plats.map(({ restaurant, plat }) => (
-              <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} {...lienFiche(user, restaurant.id, restaurant.name)} image={plat.imageUrl} icone="restaurants"
+              <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} {...lienFiche(user, restaurant, restaurant.name)} image={plat.imageUrl} icone="restaurants"
                 titre={plat.name} sous={`${restaurant.name}${prix(plat) ? ` · ${prix(plat)}` : ''}`} />
             ))}
           </Groupe>

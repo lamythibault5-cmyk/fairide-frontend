@@ -195,7 +195,7 @@ export function restaurantListJsonLd(restaurants, { url }) {
     itemListElement: list.map((r, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      url: `${SITE_URL}/restaurants/${r.id}`,
+      url: `${SITE_URL}/restaurants/${r.slug || r.id}`,
       name: r.name
     }))
   });

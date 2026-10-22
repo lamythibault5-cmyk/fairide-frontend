@@ -167,7 +167,11 @@ every customer's first load.
 | Admin | `/admin/*` | [src/pages/admin/](src/pages/admin/) |
 
 `/restaurants` and `/restaurants/:id` are **deliberately public** — no `ProtectedRoute` — so
-they stay indexable and shareable. Only actions (order, favourite) require login. Don't
+they stay indexable and shareable. Since 2026-10-22 a business page's address is its readable slug
+(`/restaurants/delispice-woluwe-saint-pierre`, set by the backend, migration 083): build links with `cheminFiche(r)`
+([src/adresseFiche.js](src/adresseFiche.js)), never `/restaurants/${r.id}` when you have the object. Old id links still
+work: [FicheCommerce.jsx](src/pages/client/FicheCommerce.jsx) turns the address into the id that `RestaurantMenu` always
+works with, and the page then swaps in the slug address; the prerender writes a redirect page at each old id address. Only actions (order, favourite) require login. Don't
 "fix" this by wrapping them. One click is gated on purpose (2026-09-27): a logged-out visitor who opens
 a business **from the list** (`RestaurantCard` in RestaurantList.jsx) goes to login first, and
 Auth.jsx brings them back to that business after sign-in or client sign-up. The route itself stays

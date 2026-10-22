@@ -122,6 +122,15 @@ export function prechargerFiche(id, token) {
   chargerAvecCache(`/restaurants/${id}/reviews`).catch(() => {});
 }
 
+/* Une fiche lue par son adresse lisible (/restaurants/<slug>, FicheCommerce.jsx) est rangée aussi sous son identifiant, la
+ * clé que lit la fiche : elle s'affiche aussitôt, sans relire la même réponse sous un autre nom. Datée de maintenant,
+ * comme une lecture qui vient de se faire (FRAIS_MS). */
+export function garderEnCache(chemin, token, donnees) {
+  let signature = null;
+  try { signature = JSON.stringify(donnees); } catch { /* signature absente : la prochaine lecture remplacera */ }
+  ranger(cle(chemin, token), { donnees, signature, at: Date.now(), enCours: null });
+}
+
 export function viderCacheDonnees() {
   memoire.clear();
 }

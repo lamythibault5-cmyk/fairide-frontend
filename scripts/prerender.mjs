@@ -36,6 +36,7 @@ import { loadEnv } from 'vite';
 
 import { translations, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, chargerLangue } from '../src/i18n/translations.js';
 import { cheminLocalise, HREFLANG } from '../src/i18n/routing.js';
+import { cheminFiche } from '../src/adresseFiche.js';
 import {
   SITE_URL, organizationJsonLd, websiteJsonLd, restaurantJsonLd, restaurantListJsonLd, breadcrumbJsonLd, faqJsonLd
 } from '../src/seo/jsonLd.js';
@@ -113,7 +114,7 @@ const PAGES = [
     titre: 'story.pageTitle',
     description: 'story.metaDescription',
     jsonLd: ({ langue }) => [
-      { id: 'ld-faq', donnees: faqJsonLd([7, 1, 2, 3, 4, 6, 5].map((n) => ({ question: cle(`story.faqQ${n}`, langue), answer: cle(`story.faqA${n}`, langue) }))) },
+      { id: 'ld-faq', donnees: faqJsonLd([7, 1, 2, 3, 4, 6, 5, 8].map((n) => ({ question: cle(`story.faqQ${n}`, langue), answer: cle(`story.faqA${n}`, langue) }))) },
       {
         id: 'ld-breadcrumb',
         donnees: breadcrumbJsonLd([
@@ -188,6 +189,30 @@ function documentPour(gabarit, { titre, description, url, image, type = 'website
     html = html.replace('</head>', `    ${scripts}\n  </head>`);
   }
   return html;
+}
+
+/* REDIRECTION D'UNE ANCIENNE ADRESSE DE FICHE (/restaurants/<identifiant> → /restaurants/<slug>). Vercel ne sait faire une
+   vraie redirection 301 que par une règle de vercel.json, écrite à la main, alors que la liste des commerces vient de l'API
+   au moment du build. Une page dont le rafraîchissement est immédiat (délai 0) est traitée par Google comme une redirection
+   permanente (Google Search Central, « Redirections et recherche Google ») ; le canonical dit la même chose, et le lien sert
+   à qui a désactivé les redirections. Pas de noindex : avec un canonical, Google y lirait deux consignes contraires. Le
+   rafraîchissement vise un chemin RELATIF : le même dist/ est embarqué dans l'app (Capacitor), où une adresse absolue
+   ouvrirait le navigateur. Hors du plan du site : seule l'adresse lisible y figure. Un commerce publié après le build n'a
+   pas cette page : la SPA s'en charge (RestaurantMenu.jsx remplace l'adresse). */
+function redirectionVers(chemin, langue) {
+  const canonique = attr(`${SITE_URL}${chemin}`);
+  const relatif = attr(chemin);
+  return `<!doctype html>
+<html lang="${langue}">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fairide</title>
+    <link rel="canonical" href="${canonique}" />
+    <meta http-equiv="refresh" content="0; url=${relatif}" />
+  </head>
+  <body><a href="${relatif}">${canonique}</a></body>
+</html>
+`;
 }
 
 async function ecrire(chemin, html) {
@@ -296,7 +321,14 @@ async function principal() {
   let fiches = 0;
   for (const langue of SUPPORTED_LANGUAGES) {
     for (const r of commerces || []) {
-      const applicatif = `/restaurants/${r.id}`;
+      // L'adresse lisible (src/adresseFiche.js, fondateur 2026-10-22) ; l'identifiant pour une API qui n'envoie pas encore
+      // de slug (backend pas encore déployé), comme avant.
+      const applicatif = cheminFiche(r);
+      if (r.slug) {
+        // L'ancienne adresse par identifiant, indexée et partagée avant le 2026-10-22, devient une redirection.
+        const ancien = cheminLocalise(`/restaurants/${r.id}`, langue);
+        await ecrire(ancien, redirectionVers(cheminLocalise(applicatif, langue), langue));
+      }
       const chemin = cheminLocalise(applicatif, langue);
       const commune = r.commune || r.city || 'Bruxelles';
       // La virgule du gabarit reste orpheline quand la cuisine n'est pas renseignée

@@ -5,6 +5,7 @@ import { coucheTuiles } from '../carte';
 import 'leaflet/dist/leaflet.css';
 import { RESTAURANT_TYPES, restaurantTypeLabel } from '../menuCategories';
 import { escapeHtml } from '../escapeHtml';
+import { cheminFiche } from '../adresseFiche';
 import { StarsDisplay } from './Stars';
 import CertifiedBadge from './CertifiedBadge';
 import { useLanguage } from '../context/LanguageContext';
@@ -163,7 +164,7 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
             {selected.desc && <p className="small" style={{ margin: '6px 0' }}>{selected.desc}</p>}
             <p className="small" style={{ margin: '6px 0', color: 'var(--ink-soft)' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{selected.address}</p>
             <div className="row" style={{ gap: 8, marginTop: 10 }}>
-              <button className="btn-teal" style={{ flex: 1 }} onClick={() => navigate(`/restaurants/${selected.id}`)}>
+              <button className="btn-teal" style={{ flex: 1 }} onClick={() => navigate(cheminFiche(selected))}>
                 {t('map.viewRestaurant')}
               </button>
               <button className="btn-outline" onClick={() => setSelected(null)}>
