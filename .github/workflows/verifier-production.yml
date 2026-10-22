@@ -1,0 +1,83 @@
+# LA FUSION EST-ELLE VRAIMENT EN LIGNE ? (fondateur, 2026-10-20)
+#
+# Ce qui s'est passé : la PR #171 a été fusionnée dans main le 20/10 à 08:22, Vercel a bien construit le staging, mais n'a
+# JAMAIS lancé le déploiement de PRODUCTION. fairide.be a continué de servir la version de la veille, sans aucune alerte :
+# le fondateur l'a découvert en regardant le site. Les fusions précédentes avaient bien leurs deux déploiements.
+#
+# CE QUE FAIT CE WORKFLOW, après chaque push sur main : il attend que Vercel annonce à GitHub un déploiement « Production »
+# réussi pour CE commit (jusqu'à 15 minutes, la construction en prend 2 à 4). S'il n'arrive pas :
+#   - si le secret VERCEL_DEPLOY_HOOK_PRODUCTION existe (une URL « Deploy Hook » de Vercel, branche main), il le déclenche
+#     une fois et attend encore 15 minutes ;
+#   - sinon, ou si ça échoue encore, le workflow échoue : croix rouge sur le commit et e-mail de GitHub à qui a fusionné,
+#     avec la marche à suivre ci-dessous. Rien n'est jamais déployé ailleurs, rien n'est modifié.
+# Une nouvelle fusion annule la vérification de la précédente (Vercel ne construit que la plus récente).
+#
+# À FAIRE À LA MAIN si la croix rouge apparaît : Vercel › projet fairide-frontend › Deployments › le dernier déploiement
+# de main › « Redeploy » (ou « Create Deployment » sur main).
+name: Production à jour
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: read
+
+concurrency:
+  group: verifier-production
+  cancel-in-progress: true
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Déploiement Vercel « Production » de ce commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_PRODUCTION }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Renvoie success / failure / error / en-attente / absent pour le déploiement Production de $SHA.
+          etat() {
+            ids=$(gh api "repos/$REPO/deployments?sha=$SHA&environment=Production&per_page=5" --jq '.[].id')
+            [ -z "$ids" ] && { echo absent; return; }
+            for id in $ids; do
+              s=$(gh api "repos/$REPO/deployments/$id/statuses?per_page=1" --jq '.[0].state // "en-attente"')
+              [ "$s" = success ] && { echo success; return; }
+              last=$s
+            done
+            echo "${last:-en-attente}"
+          }
+          attendre() {
+            for i in $(seq 1 30); do
+              e=$(etat); echo "$(date -u +%H:%M:%S) Production de ${SHA:0:7} : $e"
+              case "$e" in success) return 0 ;; failure|error) return 2 ;; esac
+              sleep 30
+            done
+            return 1
+          }
+          if attendre; then echo "✅ En ligne sur fairide.be."; exit 0; else r=$?; fi
+          if [ "$r" = 2 ]; then
+            echo "::error::Le déploiement de production de ${SHA:0:7} a ÉCHOUÉ sur Vercel. Ouvrir Vercel › fairide-frontend › Deployments pour lire l'erreur."
+            exit 1
+          fi
+          if [ -n "$HOOK" ]; then
+            echo "Aucun déploiement de production après 15 min : on le déclenche (Deploy Hook)."
+            depart=$(date -u +%s)
+            curl -fsS -X POST "$HOOK" > /dev/null
+            # Un déploiement par Deploy Hook n'est pas toujours rapporté à GitHub sous ce commit : on regarde aussi la date
+            # de la page d'accueil (Last-Modified = moment du déploiement, la page est prérendue).
+            for i in $(seq 1 30); do
+              sleep 30
+              [ "$(etat)" = success ] && { echo "✅ En ligne sur fairide.be (relancé par le Deploy Hook)."; exit 0; }
+              lm=$(curl -sSI "https://fairide.be/?verif=$depart-$i" | tr -d '\r' | awk -F': ' 'tolower($1)=="last-modified"{print $2}')
+              [ -n "$lm" ] && [ "$(date -u -d "$lm" +%s)" -gt "$depart" ] && { echo "✅ fairide.be reconstruit à $lm (Deploy Hook)."; exit 0; }
+              echo "$(date -u +%H:%M:%S) en attente du Deploy Hook (fairide.be : $lm)"
+            done
+          fi
+          echo "::error::Vercel n'a PAS mis ${SHA:0:7} en production : fairide.be sert encore l'ancienne version. Vercel › fairide-frontend › Deployments › dernier déploiement de main › Redeploy."
+          exit 1
