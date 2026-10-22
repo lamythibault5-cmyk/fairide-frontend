@@ -8656,6 +8656,7 @@ export default {
       verifyCodeLabel: 'Verification code',
       confirm: 'Confirm',
       resendCode: 'Resend code',
+      codeByEmail: 'No text message? Get the code by email',
       back: '← Back',
       welcome: 'Welcome, {name}!',
       errEmailPassword: 'Email and password required.',

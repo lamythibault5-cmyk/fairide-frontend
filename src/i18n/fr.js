@@ -8713,6 +8713,7 @@ export default {
       verifyCodeLabel: 'Code de vérification',
       confirm: 'Confirmer',
       resendCode: 'Renvoyer le code',
+      codeByEmail: 'Pas reçu le SMS ? Recevoir le code par e-mail',
       back: '← Retour',
       welcome: 'Bienvenue, {name} !',
       errEmailPassword: 'Email et mot de passe requis.',

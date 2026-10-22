@@ -235,12 +235,13 @@ export default function ConnexionAppli() {
     finally { setAttente(false); }
   }
 
-  async function renvoyer() {
+  // canal 'email' : « Recevoir le code par e-mail », quand le SMS n'arrive pas (22/10/2026).
+  async function renvoyer(canal) {
     setAttente(true);
     try {
-      const r = await resendCode(email.trim());
+      const r = await resendCode(email.trim(), canal);
       if (r?.channel) { setCanalCode(r.channel === 'sms' ? 'sms' : 'email'); if (r.phoneMasked) setTelMasque(r.phoneMasked); }
-      setCode(''); toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.newCodeSent'));
+      setCode(''); toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : r?.channel === 'email' ? 'auth.errVerificationSent' : 'auth.newCodeSent'));
       lancerAttenteRenvoi(DELAI_RENVOI_S);
     }
     catch (err) { toast(err.message, 'erreur'); }
@@ -277,7 +278,11 @@ export default function ConnexionAppli() {
       contenu = (
         <>
           {champCode}
-          <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={renvoyer}>{attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}</button>
+          <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={() => renvoyer()}>{attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}</button>
+          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026) : le code par e-mail, même attente. */}
+          {canalCode === 'sms' && (
+            <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={() => renvoyer('email')}>{t('auth.codeByEmail')}</button>
+          )}
           <button type="button" className="bv-lien" disabled={attente} onClick={() => { setNouveauNumero(''); aller('numero'); }}>{t('auth.changePhone')}</button>
         </>
       );

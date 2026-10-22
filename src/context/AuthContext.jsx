@@ -255,8 +255,9 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function resendCode(email) {
-    return api('/auth/resend-code', { method: 'POST', body: { email } });
+  // canal 'email' : « Recevoir le code par e-mail » quand le SMS n'arrive pas (22/10/2026, routes/auth.js › /resend-code).
+  async function resendCode(email, canal) {
+    return api('/auth/resend-code', { method: 'POST', body: { email, ...(canal === 'email' ? { canal } : {}) } });
   }
 
   // « Changer de numéro » sur l'écran du code (audit du 19/10, auth-03) : le compte en attente se prouve par son mot de

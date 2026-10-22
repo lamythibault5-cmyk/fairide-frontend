@@ -8665,6 +8665,7 @@ export default {
       verifyCodeLabel: 'Verificatiecode',
       confirm: 'Bevestigen',
       resendCode: 'Code opnieuw versturen',
+      codeByEmail: 'Geen sms gekregen? Ontvang de code per e-mail',
       back: '← Terug',
       welcome: 'Welkom, {name}!',
       errEmailPassword: 'E-mail en wachtwoord vereist.',
