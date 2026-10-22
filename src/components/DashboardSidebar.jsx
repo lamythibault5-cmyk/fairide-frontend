@@ -58,7 +58,7 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
     ];
   }
   if (role === 'driver') {
-    // Ce qu'un livreur regarde EN COURSE : ses courses, la carte, ses gains. Avis et factures sont
+    // Ce qu'un livreur regarde EN COURSE : ses courses, la carte, ses gains. Les factures sont
     // dans Mon compte — on les ouvre de temps en temps, pas au guidon. Une rubrique, un seul endroit.
     //
     // 2026-09-23 : « Pourboires » est devenu « Gains » — la page des gains liste déjà chaque pourboire

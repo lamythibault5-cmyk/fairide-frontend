@@ -14,6 +14,10 @@ import { useLanguage } from '../../context/LanguageContext';
  * (?type=restaurant&id=…&nom=…) depuis le lien « Signaler » de la fiche. Le serveur accuse réception
  * par e-mail et envoie ensuite la décision motivée (routes/conformite.js). */
 const CATEGORIES = ['illegal_product', 'food_safety', 'allergen_info', 'misleading', 'hate_or_harassment', 'fraud', 'ip_infringement', 'minor_safety', 'other'];
+// Ce qu'on peut signaler (CIBLES de routes/conformite.js côté serveur). Plus d'« avis » depuis le retrait des avis clients
+// (fondateur, 22/10/2026 : pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient mauvaise impression ; on les
+// refera peut-être plus tard) : un ancien lien ?type=review tombe sur « ouvre la fiche du commerce » au lieu d'un refus.
+const TYPES = ['restaurant', 'menu_item', 'courier'];
 
 export default function ReportPage() {
   const { t } = useLanguage();
@@ -22,7 +26,7 @@ export default function ReportPage() {
   const id = useId();
   const [params] = useSearchParams();
   const type = params.get('type') || 'restaurant';
-  const cibleId = params.get('id') || '';
+  const cibleId = TYPES.includes(type) ? params.get('id') || '' : '';
   const nom = params.get('nom') || '';
   const [category, setCategory] = useState('');
   const [explanation, setExplanation] = useState('');

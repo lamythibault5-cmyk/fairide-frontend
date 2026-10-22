@@ -168,10 +168,9 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
         {/* Type principal + le premier type secondaire (7 types possibles, voir EcranCuisines) : deux, pour rester lisible. */}
         <p className="rc-sous">{[[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 2).map((c) => restaurantTypeLabel(c, t) || c).join(', '), r.neighborhood || r.commune, r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ')}</p>
         <p className="rc-infos">
-          {/* Pas d'étoiles sans avis : une note que personne n'a donnée n'est pas un avis (CDE VI.100). */}
-          {r.reviewCount > 0
-            ? <span className="rc-note"><span aria-hidden="true">★</span> {Number(r.rating).toFixed(1)} <span className="rc-discret">({r.reviewCount})</span></span>
-            : <span className="rc-nouveau">{t('restaurantList.newBadge')}</span>}
+          {/* Plus de note ni de « Nouveau » (qui voulait dire « pas encore d'avis ») depuis le retrait des avis clients
+              (fondateur, 22/10/2026 : pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient mauvaise impression ;
+              on les refera peut-être plus tard). */}
           {/* Position payée par le commerce : toujours dite au client (classement payant, CDE VI.99). */}
           {r.sponsorise && <span className="rc-sponsorise" title={t('restoListUi.sponsoredTitle')}>{t('restoListUi.sponsored')}</span>}
           {services.map((s) => <span key={s} className="rc-discret">{s}</span>)}
@@ -253,9 +252,6 @@ function ALaUne({ list, inscritLe, t }) {
               <span className="une-texte">
                 <span className="une-nom">{r.name}{r.certified && <CertifiedBadge size={18} />}</span>
                 <span className="une-infos">
-                  {r.reviewCount > 0
-                    ? <span className="une-note"><Icone nom="etoile" taille={13} />{Number(r.rating).toFixed(1).replace('.', ',')} <span>({r.reviewCount})</span></span>
-                    : <span>{t('restaurantList.newBadge')}</span>}
                   {sous && <span>{sous}</span>}
                 </span>
               </span>
@@ -520,14 +516,14 @@ export default function RestaurantList() {
       return true;
     })
     // Le tri choisi passe AVANT le rangement par anneaux de communes ci-dessous : demander « les
-    // mieux notes » et recevoir d'abord sa propre commune ne serait pas un tri.
+    // plus proches » et recevoir d'abord sa propre commune ne serait pas un tri. Plus de tri « Note » depuis le retrait
+    // des avis clients (fondateur, 22/10/2026) ; le tri n'est gardé nulle part (état de la page), aucun ancien choix à
+    // reprendre — une valeur inconnue retombe sur l'ordre « Recommandé ».
     //
     // PAS DE TRI « ARRIVE LE PLUS TOT ». Il faudrait un temps de preparation par commerce et une
     // estimation de course ; ni l'un ni l'autre n'existe. La distance est la seule approximation
     // honnete dont on dispose, et elle porte son vrai nom.
     .sort((a, b) => {
-      // Seules les notes réellement données comptent : sans avis, le commerce passe après ceux qui en ont.
-      if (tri === 'note') return (b.reviewCount > 0 ? b.rating : 0) - (a.reviewCount > 0 ? a.rating : 0);
       if (tri === 'distance') return (distanceDe(a) ?? Infinity) - (distanceDe(b) ?? Infinity);
       return 0;
     })
@@ -542,7 +538,8 @@ export default function RestaurantList() {
   // Page d'accueil "par sections" (façon Uber Eats/Deliveroo) affichée uniquement sans filtre actif —
   // dès qu'on cherche/filtre, on retombe sur la liste plate ci-dessus, plus adaptée à une recherche.
   // Une rangée trop courte tourne mal en boucle (2 cartes qui se répètent) : en dessous de MIN_PAR_RANGEE
-  // commerces, on la complète avec d'autres commerces de la liste, les mieux notés d'abord, sans doublon.
+  // commerces, on la complète avec d'autres commerces de la liste, dans l'ordre de la liste, sans doublon (« les mieux
+  // notés d'abord » jusqu'au retrait des avis, 22/10/2026).
   // Une rangée vide reste vide : on ne fabrique pas une section « Bio » sans le moindre produit bio.
   // SEULE « AUTOUR DE TOI » EST COMPLÉTÉE (audit du 19/10, discovery-07) : une rangée « Vegan » d'un commerce vegan et de
   // cinq commerces qui ne le sont pas mentait sur son titre. Les rangées à thème restent courtes ; une rangée d'une seule
@@ -552,7 +549,6 @@ export default function RestaurantList() {
     const dejaLa = new Set(liste.map((r) => r.id));
     const renfort = [...base]
       .filter((r) => !dejaLa.has(r.id))
-      .sort((a, b) => (b.reviewCount > 0 ? Number(b.avgRating || b.rating) || 0 : 0) - (a.reviewCount > 0 ? Number(a.avgRating || a.rating) || 0 : 0))
       .slice(0, MIN_PAR_RANGEE - liste.length);
     return [...liste, ...renfort];
   };
@@ -650,7 +646,7 @@ export default function RestaurantList() {
   }, [restaurants, homeCommune, orderedRestaurantIds, user?.lat, user?.lng]);
 
   const avecPosition = !!(user?.lat && user?.lng);
-  const libelleTri = (cle) => (cle === 'recommande' ? t('mapClient.sortRecommended') : cle === 'note' ? t('siteListe.triNote') : t('siteListe.triDistance'));
+  const libelleTri = (cle) => (cle === 'recommande' ? t('mapClient.sortRecommended') : t('siteListe.triDistance'));
   // « Manger local : les commerces de … d'abord » retiré (fondateur, 2026-10-16) : on ne prévient plus que si la commune n'a
   // encore aucun commerce, pour dire pourquoi la liste montre ceux d'à côté.
   const localTexte = homeCommune && dansCommune.length === 0 ? t('restaurantList.localEmpty', { commune: homeCommune }) : null;
@@ -726,7 +722,7 @@ export default function RestaurantList() {
           {TRI && (
           <fieldset className="sl-groupe">
             <legend className="sl-groupe-titre">{t('mapClient.sort')}</legend>
-            {['recommande', 'note', 'distance'].map((cle) => {
+            {['recommande', 'distance'].map((cle) => {
               const indisponible = cle === 'distance' && !avecPosition;
               return (
                 <label key={cle} className={`sl-choix sl-choix--radio${tri === cle ? ' on' : ''}${indisponible ? ' sl-choix--off' : ''}`}
@@ -794,18 +790,18 @@ export default function RestaurantList() {
         )}
         {!colonne && TRI && <>
         <button type="button" className={`cuisine-chip${tri !== 'recommande' ? ' active' : ''}`} aria-expanded={panneau === 'tri'} onClick={() => setPanneau((x) => (x === 'tri' ? null : 'tri'))}>
-          <Icone nom="stats" taille={16} />{tri === 'recommande' ? t('mapClient.sort') : (tri === 'note' ? t('mapClient.sortRating') : t('mapClient.sortDistance'))}
+          <Icone nom="stats" taille={16} />{tri === 'distance' ? t('mapClient.sortDistance') : t('mapClient.sort')}
         </button>
         </>}
       </div>}
       {!colonne && panneau === 'tri' && (
         <div className="carte-panneau liste-panneau">
-          {['recommande', 'note', 'distance'].map((cle) => (
+          {['recommande', 'distance'].map((cle) => (
             <button key={cle} type="button" className={`cuisine-chip${tri === cle ? ' active' : ''}`}
               disabled={cle === 'distance' && !(user?.lat && user?.lng)}
               title={cle === 'distance' && !(user?.lat && user?.lng) ? t('mapClient.sortDistanceNeedsAddress') : undefined}
               onClick={() => { setTri(cle); setPanneau(null); }}>
-              {cle === 'recommande' ? t('mapClient.sortRecommended') : cle === 'note' ? t('mapClient.sortRating') : t('mapClient.sortDistance')}
+              {cle === 'recommande' ? t('mapClient.sortRecommended') : t('mapClient.sortDistance')}
             </button>
           ))}
         </div>

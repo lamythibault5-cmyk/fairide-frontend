@@ -62,7 +62,7 @@ function aujourdhuiIso() {
 
 export default function EditPage() {
   const { t } = useLanguage();
-  const { restaurant, orders, reviews, drivers, restoId, loadDashboard, communs, onConnect, connecting, lectureSeule } = useOutletContext();
+  const { restaurant, orders, drivers, restoId, loadDashboard, communs, onConnect, connecting, lectureSeule } = useOutletContext();
   const { token } = useAuth();
   const [ouvert, setOuvert] = useState(null);
   const etapes = useMiseEnLigne({ restaurant, restoId, token, onConnect, connecting, onChange: () => loadDashboard(restoId), lectureSeule });
@@ -95,8 +95,8 @@ export default function EditPage() {
     : r.open === false ? t('ecranCommerce.enLigneFerme')
     : paiementsActifs ? t('ecranCommerce.enLigne')
       : comptoir ? t('serviceCommerce.visibleComptoir') : t('serviceCommerce.visibleFerme');
-  // Les quatre outils du quotidien (Statistiques, Avis, Promotions, Factures), en tuiles sous la mise en ligne.
-  const tuiles = <TuilesCommerce restaurant={r} orders={orders} reviews={reviews} restoId={restoId} token={token} />;
+  // Les outils du quotidien (Statistiques, Promotions, Factures ; plus d'Avis depuis le 22/10/2026), en tuiles sous la mise en ligne.
+  const tuiles = <TuilesCommerce restaurant={r} orders={orders} restoId={restoId} token={token} />;
   const ligne = (cle, props) => <LigneCompte {...props} onClick={() => setOuvert(cle)} />;
 
   const type = restaurantTypeLabel(r.cuisine, t) || r.cuisine;

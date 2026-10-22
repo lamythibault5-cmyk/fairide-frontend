@@ -36,16 +36,13 @@
 .rc-sous { margin: 0; font-size: 13px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rc-infos { margin: 2px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; color: var(--ink); }
 .rc-infos > span + span::before { content: none; }
-.rc-note { font-weight: 700; }
-.rc-note > span[aria-hidden] { color: var(--iris); }
 .rc-discret { color: var(--ink-soft); font-weight: 500; }
-.rc-nouveau { background: rgba(59, 47, 181, .10); color: var(--iris); font-weight: 700; font-size: 12px; padding: 2px 8px; border-radius: var(--radius-pill); }
 .rc-livraison { color: var(--iris); font-weight: 700; font-size: 12px; }
 .rc-vitrine { color: var(--red); font-weight: 700; font-size: 12px; }
 /* Badge « Prix du comptoir » (PrixComptoir.jsx) : la même pastille iris pâle que « Nouveau », avec l'étiquette de prix. */
 .prix-comptoir { display: inline-flex; align-items: center; gap: 4px; background: rgba(59, 47, 181, .10); color: var(--iris); font-weight: 700; font-size: 12px; line-height: 1.3; padding: 2px 8px; border-radius: var(--radius-pill); white-space: nowrap; }
 .prix-comptoir svg { flex: none; }
-/* Plus fort que les pastilles grises de .fiche-meta (plus bas dans ce fichier, 0-3-1). */
+/* Plus fort que les pastilles de .fiche-meta (plus bas dans ce fichier, 0-2-1 et 0-3-1). */
 .fiche-meta > span.prix-comptoir.prix-comptoir:not([aria-hidden]) { background: rgba(59, 47, 181, 0.09); color: var(--iris); gap: 5px; }
 /* Rangées défilantes et grilles : les anciens réglages compacts (padding 8px, photo 92px, pastilles 9,5px)
    ne s'appliquent plus à la nouvelle carte. */
@@ -307,7 +304,7 @@
 /* Commande refusée : le motif et le remboursement, rien d'autre. */
 .suivi-refus { margin: 4px 0 2px; font-size: 13px; line-height: 1.45; color: var(--ink); }
 .suivi-refus p { margin: 0 0 4px; }
-/* LE PIED : avis, pourboire, « Signaler un problème » en liens iris alignés sur le texte, puis « Commander à nouveau ». Les
+/* LE PIED : pourboire, reçu, « Signaler un problème » en liens iris alignés sur le texte, puis « Commander à nouveau ». Les
    deux étaient décalés (le lien fantôme gardait son retrait, le bouton sa marge à gauche). */
 .suivi-pied { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; margin-top: 10px; }
 .suivi-pied:empty { display: none; }
@@ -319,6 +316,14 @@
 .paiement-non-termine { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--iris); border-radius: var(--radius); }
 .suivi-carte.est-passee { padding-top: 16px; padding-bottom: 16px; }
 .suivi-carte.est-passee .suivi-resto { font-size: 16px; }
+/* Commande passée (22/10/2026) : le logo du commerce devant son nom, le nom mène à sa fiche (Orders.jsx LogoCommerce). */
+.suivi-carte.est-passee .suivi-tete { align-items: center; }
+.suivi-carte.est-passee .suivi-tete-texte { flex: 1; }
+.logo-commerce { flex: none; width: 40px; height: 40px; border-radius: 12px; overflow: hidden; background: rgba(59, 47, 181, .08);
+  color: var(--iris); display: grid; place-items: center; font-weight: 800; font-size: 17px; }
+.logo-commerce img { width: 100%; height: 100%; object-fit: cover; display: block; background: #fff; }
+.lien-commerce { color: inherit; text-decoration: none; }
+.lien-commerce:hover, .lien-commerce:focus-visible { text-decoration: underline; }
 /* COMMANDE EN COURS : LE BANDEAU IRIS (2026-10-16, version 1C ; Orders.jsx, RouteSuivi dans orderStatus.jsx). Le haut de la
    carte est iris, le statut en grand, la route lime ; le bas reste blanc et remonte sur le bandeau en coins arrondis. */
 .card.suivi-carte--bandeau { padding: 0 16px 16px; overflow: hidden; border-color: var(--iris); }
@@ -525,15 +530,16 @@
   .fiche-media > .fiche-logo { width: 72px; height: 72px; bottom: -24px; }
 }
 .fiche-nom { letter-spacing: -0.02em; }
-/* La ligne de méta devient une rangée de pastilles : « Nouveau » (ou la note) en iris, la commune en gris,
-   « Infos » en bouton à contour. Les points médians n'ont plus lieu d'être. */
+/* La ligne de méta devient une rangée de pastilles : la commune en gris (dans l'app, la cuisine en tête, en iris),
+   « Infos » en bouton à contour. Les points médians n'ont plus lieu d'être. « Nouveau » ou la note ouvraient la rangée sur
+   le site jusqu'au retrait des avis clients (fondateur, 22/10/2026). */
 .fiche-meta { gap: 6px; margin: 2px 0 10px; }
 .fiche-meta > span[aria-hidden="true"] { display: none; }
-.fiche-meta > span:not([aria-hidden]):not(.fiche-meta-note) {
+.fiche-meta > span:not([aria-hidden]) {
   display: inline-flex; align-items: center; padding: 5px 11px; border-radius: var(--radius-pill);
   background: var(--surface-soft); color: var(--ink); font-size: 12.5px; font-weight: 600; line-height: 1.2;
 }
-.fiche-meta > span:first-child:not(.fiche-meta-note), .fiche-meta > .fiche-meta-note + span { background: rgba(59, 47, 181, 0.09); color: var(--iris); }
+.fiche-appli .fiche-meta > span:first-child { background: rgba(59, 47, 181, 0.09); color: var(--iris); }
 .fiche-meta > .fiche-infos-lien {
   display: inline-flex; align-items: center; gap: 4px; padding: 4px 11px; border-radius: var(--radius-pill);
   border: 1px solid var(--line); background: #fff; font-size: 12.5px; font-weight: 600; text-decoration: none; line-height: 1.2;

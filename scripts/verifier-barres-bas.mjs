@@ -50,7 +50,6 @@ function simuler(chemin, methode, profil) {
   if (/^\/auth\/me$/.test(chemin)) return methode === 'GET' ? u : { ...u, user: u };
   if (methode === 'GET' && REELLES[chemin]) return REELLES[chemin];
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/compliance$/.test(chemin)) return REELLES['/restaurants/:id/compliance'];
-  if (methode === 'GET' && /^\/restaurants\/[^/]+\/reviews$/.test(chemin)) return { reviews: [], average: null, count: 0 };
   if (methode === 'GET' && /^\/restaurants\/[^/]+$/.test(chemin) && profil === 'restaurant') return REELLES['/restaurants/mine/dashboard'][0];
   if (methode !== 'GET') return {};
   return [];

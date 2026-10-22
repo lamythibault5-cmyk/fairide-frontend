@@ -108,7 +108,8 @@ read that doc before working near it.
 **People and the law** *(conformite.md)*
 - Never rate, rank, score or penalise couriers — no customer rating, no refusal-based ranking, no hidden throttle, no
   per-courier table: it would create a presumption of employment. Backend tests fail if dispatch reads such data.
-- Stars need reviews: never show `StarsDisplay` or sort by rating without `reviewCount > 0`.
+- No customer reviews, stars or ratings anywhere: the founder removed reviews on 2026-10-22 (too few users yet, a shop with
+  few stars would look bad). They may come back later; until then never show a star, a rating or a « note » sort. *(conformite.md)*
 - Legal texts are hashed: changing `terms.*` or `privacy.*` means registering a new version in the backend (`cgu.js`).
 - Marketing to customers needs an unticked opt-in box; never opt-out. No alcohol is sold (`ALCOHOL_ENABLED` stays off).
 - French UI says « tu » everywhere; the legal pages keep « vous ». Onboarding makes no claim the code does not back.
@@ -151,11 +152,11 @@ are loaded with `import()` from `natif.js` so the website never downloads them.
 
 ### Four roles, one SPA
 
-Every route lives in [src/App.jsx](src/App.jsx) (312 lines) — the full route map, read it first when
+Every route lives in [src/App.jsx](src/App.jsx) (311 lines) — the full route map, read it first when
 orienting. Access is gated by `<ProtectedRoute role="...">`.
 
 **Routes are code-split by role.** Only the public entry path (home, login, restaurant list, restaurant
-menu) is statically imported; everything else is lazy behind `<Suspense>` — 82 lazy pages on 2026-10-22, through the `lazyPage()` wrapper
+menu) is statically imported; everything else is lazy behind `<Suspense>` — 79 lazy pages on 2026-10-22 (after the reviews pages went), through the `lazyPage()` wrapper
 ([src/lazyPage.js](src/lazyPage.js)). Keep it that way when adding a route: a static import of a dashboard page pulls it into
 every customer's first load.
 
@@ -222,7 +223,7 @@ thrown to the caller as normal. Don't add per-call 401 checks.
 ### Internationalisation
 
 [src/i18n/translations.js](src/i18n/translations.js) holds `fr` / `en` / `nl` tables; default `fr`.
-**315 of the 363 `.jsx` files** call `useLanguage()` (2026-10-22). Adding a key means adding it to all three locales;
+**312 of the 359 `.jsx` files** call `useLanguage()` (2026-10-22). Adding a key means adding it to all three locales;
 `npm run check:i18n` (also in CI) fails otherwise. **`fr.js` and `nl.js` are committed with CRLF line endings**: a
 `sed -i` from Git Bash rewrites them to LF and the diff shows ~8,500 changed lines — edit them with the Edit tool or Node,
 and check `git diff --numstat` before committing.

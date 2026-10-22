@@ -139,14 +139,14 @@ function menuJsonLd(restaurant) {
 
 /* La fiche d'un commerce.
 
-   RÈGLE DURE sur aggregateRating : la colonne `rating` vaut 4.5 par défaut en base
-   (schema.sql), et l'API retombe dessus quand il n'y a aucun avis. Publier une note construite
-   là-dessus reviendrait à inventer des avis : c'est une action manuelle côté Google, et une
-   pratique commerciale trompeuse au sens de la directive Omnibus, appliquée en Belgique. On
-   n'émet donc la note QUE si reviewCount est strictement positif. Ne pas assouplir. */
+   PAS D'aggregateRating. Les avis clients ont été retirés le 22/10/2026 (fondateur : pas assez
+   d'utilisateurs, des commerces avec peu d'étoiles feraient mauvaise impression ; on les refera
+   peut-être plus tard) et l'API n'envoie plus de note. Si les avis reviennent, la règle d'avant
+   tient toujours : une note seulement quand de vrais clients l'ont donnée (reviewCount > 0) —
+   en publier une sans avis reviendrait à inventer des avis : action manuelle côté Google, et
+   pratique commerciale trompeuse au sens de la directive Omnibus, appliquée en Belgique. */
 export function restaurantJsonLd(restaurant, { url }) {
   if (!restaurant) return null;
-  const hasRealRating = Number(restaurant.reviewCount) > 0;
 
   return clean({
     '@context': 'https://schema.org',
@@ -164,15 +164,6 @@ export function restaurantJsonLd(restaurant, { url }) {
       : undefined,
     openingHoursSpecification: openingHours(restaurant.hours),
     hasMenu: menuJsonLd(restaurant),
-    aggregateRating: hasRealRating
-      ? {
-        '@type': 'AggregateRating',
-        ratingValue: Number(restaurant.rating).toFixed(1),
-        reviewCount: Number(restaurant.reviewCount),
-        bestRating: '5',
-        worstRating: '1'
-      }
-      : undefined,
     potentialAction: {
       '@type': 'OrderAction',
       target: { '@type': 'EntryPoint', urlTemplate: url, actionPlatform: 'https://schema.org/DesktopWebPlatform' },

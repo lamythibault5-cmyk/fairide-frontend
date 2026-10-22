@@ -135,12 +135,9 @@ export function BoutonFacturationAbonnement({ detail, token, api, toast, tr, onC
   );
 }
 
-// Note tirée des avis réels (audit du 19/10, admin-65 / LIVE-20) : « — » tant que personne n'a laissé d'avis, au lieu du
-// « 4.5★ » par défaut de la base.
-function noteAvis(r, tr) {
-  if (r.rating === null || r.rating === undefined || !r.reviewCount) return tr('adminRestos.noReviewsYet');
-  return `${Number(r.rating).toFixed(1)}★ (${r.reviewCount})`;
-}
+// La colonne « Note » (tirée des avis, audit du 19/10, admin-65) est partie avec les avis clients (fondateur, 22/10/2026 :
+// pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient mauvaise impression ; on les refera peut-être plus
+// tard). L'API n'envoie plus rating / reviewCount.
 // « Prêt » ou « Manque : n » : la règle de la carte GO (pretLancement.js), commerce par commerce (admin-28).
 function PastillePret({ pret, tr }) {
   const n = (pret.manques || []).filter((m) => m.niveau === 'bloquant').length;
@@ -427,7 +424,6 @@ export default function AdminRestaurantsPage() {
     { key: 'phone', label: tr('adminCommon.phone'), get: (r) => (r.restaurantPhone || r.ownerPhone ? <a href={`tel:${String(r.restaurantPhone || r.ownerPhone).replace(/[^+\d]/g, '')}`} onClick={(e) => e.stopPropagation()}>{r.restaurantPhone || r.ownerPhone}</a> : '-'), sortValue: (r) => r.restaurantPhone || r.ownerPhone || '' },
     { key: 'fullAddress', label: tr('adminRestos.addressCol'), get: (r) => r.fullAddress || '-', sortValue: (r) => r.fullAddress || '' },
     { key: 'businessStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: BUSINESS_STATUS_LABELS[r.businessStatus]?.color }}>{BUSINESS_STATUS_LABELS[r.businessStatus]?.label}</span>, sortValue: (r) => r.businessStatus },
-    { key: 'rating', label: tr('adminCommon.rating'), get: (r) => noteAvis(r, tr), sortValue: (r) => r.rating ?? -1, align: 'right' },
     { key: 'orderCount', label: tr('adminCommon.orders'), get: (r) => r.orderCount, align: 'right', sum: true },
     { key: 'revenue', label: 'CA', get: (r) => money(r.revenue), sortValue: (r) => r.revenue, align: 'right', sum: true },
     { key: 'commissionGenerated', label: tr('adminCommon.commission'), get: (r) => money(r.commissionGenerated), sortValue: (r) => r.commissionGenerated, align: 'right', sum: true },
@@ -509,7 +505,7 @@ export default function AdminRestaurantsPage() {
                 {!estTest(r) && pretParId[r.id] && <PastillePret pret={pretParId[r.id]} tr={tr} />}
               </div>
             </div>
-            <div className="small">{r.commune} · {r.cuisine} · {noteAvis(r, tr)}</div>
+            <div className="small">{r.commune} · {r.cuisine}</div>
             <ContactCommerce r={r} tr={tr} />
             <div className="small">{tr('adminRestos.ownerLine', { name: r.responsibleName || '-', phone: r.ownerEmail ? ` · ${r.ownerEmail}` : '' })}</div>
             {r.menuItemCount !== null && r.menuItemCount !== undefined && <div className="small"><Icone nom="restaurants" taille={16} className="icone-texte" />{' '}{tr('adminRestos.menuLine', { n: r.menuItemCount })}</div>}
@@ -855,7 +851,7 @@ function RestaurantDetailModal({ selected, detail, orders, pret, onClose, onSusp
   return createPortal(
     <RecordDrawer
       title={selected.name}
-      subtitle={detail ? `${detail.commune}${detail.neighborhood ? ` (${detail.neighborhood})` : ''} · ${detail.cuisine} · ${noteAvis(detail, tr)}` : ''}
+      subtitle={detail ? `${detail.commune}${detail.neighborhood ? ` (${detail.neighborhood})` : ''} · ${detail.cuisine}` : ''}
       badge={biz ? <span className="pill" style={{ color: biz.color }}>{biz.label}</span> : null}
       actions={<a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
       tabs={[

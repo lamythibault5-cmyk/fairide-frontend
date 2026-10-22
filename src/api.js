@@ -59,7 +59,7 @@ function handleResponse(res, data, hadToken, logoutOn401) {
 
 // `withHeaders: true` renvoie { data, headers } au lieu du seul corps : les listes admin paginées
 // annoncent leur total dans l'en-tête X-Total-Count tout en gardant un tableau en réponse (voir
-// GET /admin/restaurants|drivers|clients|reviews côté serveur). Sans l'option, comportement inchangé.
+// GET /admin/restaurants|drivers|clients côté serveur). Sans l'option, comportement inchangé.
 export async function api(path, { method = 'GET', body, token, logoutOn401 = true, withHeaders = false } = {}) {
   // Langue de l'interface : le backend en fait la langue des e-mails déclenchés par cette requête
   // (code de vérification, bienvenue...) — voir userLang.js côté serveur.

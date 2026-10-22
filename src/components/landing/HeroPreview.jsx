@@ -17,9 +17,8 @@ import { useLanguage } from '../../context/LanguageContext';
 // commerces » : depuis l'accueil, on ne part pas dans la liste par cette colonne. Le seul geste
 // d'entrée est le choix de commune juste à côté (CommunePicker). Montrer de vrais partenaires suffit
 // à dire ce qu'est Fairide ; y ajouter des liens transformait la bannière en menu de navigation.
-function StarIcon() {
-  return <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>;
-}
+// Plus d'étoile de note sur ces cartes depuis le retrait des avis clients (fondateur, 22/10/2026 : pas assez d'utilisateurs,
+// des commerces avec peu d'étoiles feraient mauvaise impression ; on les refera peut-être plus tard).
 
 export function CommunePicker({ variante = 'hero' }) {
   const { t } = useLanguage();
@@ -109,7 +108,6 @@ export default function HeroPreview({ restaurants, rangee = false }) {
                 <span className="hero-preview-meta">{restaurantTypeLabel(r.cuisine, t)} · {r.commune}</span>
               </div>
               <div className="hero-preview-side">
-                {r.reviewCount > 0 && <span className="hero-preview-rating"><StarIcon /> {Number(r.rating).toFixed(1)}</span>}
                 {r.reel && !r.publie ? <span className="hero-preview-open hero-preview-bientot">{t('landing.heroPreviewSoon')}</span> : <span className={`hero-preview-open${r.estOuvert ? '' : ' ferme'}`}>{r.estOuvert ? t('landing.heroPreviewOpen') : t('landing.heroPreviewClosed')}</span>}
               </div>
             </div>

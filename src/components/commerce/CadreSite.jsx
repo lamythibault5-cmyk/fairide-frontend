@@ -7,14 +7,14 @@ import { BandeauCommerce, FeuilleCommerce } from './BandeauCommerce';
 export const SITE = !experienceApp();
 
 /* LE BANDEAU DES AUTRES PAGES DU COMMERCE, SUR LE SITE (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, lot « pro ») :
- * Promotions, Avis, Factures, Guide et Aperçu client prennent la même famille que Mon commerce et Commandes — « ← Mon
+ * Promotions, Factures, Guide et Aperçu client (et Avis, retirée le 22/10/2026) prennent la même famille que Mon commerce et Commandes — « ← Mon
  * compte » et le nom sur le bandeau iris, le titre et sa phrase d'introduction, puis la feuille blanche avec les blocs
  * communs du tableau de bord (DashboardLayout les lui passe, `communs`) et la page elle-même. `lecture` : largeur de
  * lecture (760 px) plutôt que large (1 120 px). Dans l'app rien ne change : un simple <div>, la page garde son titre.
  *
- * `appli` (fondateur, 2026-10-19, section 4 de finitions-appli.html) : Promotions, Avis et Factures prennent le bandeau et
+ * `appli` (fondateur, 2026-10-19, section 4 de finitions-appli.html) : Promotions et Factures prennent le bandeau et
  * la feuille DANS L'APP aussi. DashboardLayout les compte alors parmi ses pages au bandeau (PAGES_BANDEAU), pour que les
- * blocs communs arrivent dans la feuille et non au-dessus de l'iris. `sous` peut être un nœud (les étoiles des avis) ;
+ * blocs communs arrivent dans la feuille et non au-dessus de l'iris. `sous` peut être un nœud ;
  * `classe` vise une page dans ecran-commerce.css (l'impression des factures, par exemple). */
 export default function CadreSite({ titre, sous, lecture = false, appli = false, classe = '', children }) {
   const { t } = useLanguage();

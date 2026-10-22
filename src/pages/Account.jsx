@@ -1158,7 +1158,6 @@ export default function Account() {
           </LigneCompte>
           <LigneCompte to="/dashboard/promotions" icone="etiquette" titre={t('accountUi.promotions')} />
           <LigneCompte to="/dashboard/guide" icone="guide" titre={t('accountUi.guide')} />
-          <LigneCompte to="/dashboard/reviews" icone="etoile" titre={t('accountUi.customerReviews')} sous={restaurant.reviewCount > 0 ? t('accountUi.ratingSummary', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('accountUi.noReviewsYet')} />
         </div>
       )}
 

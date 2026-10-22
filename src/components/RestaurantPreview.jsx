@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { StarsDisplay } from './Stars';
 import FichePlat from './FichePlat';
 import Modale from './Modale';
 import MenuCategorySections from './MenuCategorySections';
@@ -82,10 +81,6 @@ export default function RestaurantPreview({ restaurant }) {
           </div>
         )}
         <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
-        <div className="row" style={{ gap: 6, margin: '2px 0' }}>
-          {restaurant.reviewCount > 0 && <StarsDisplay value={restaurant.rating} />}
-          <span className="small">{restaurant.reviewCount > 0 ? t('restoPreview.ratingWithCount', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('restoPreview.newBadge')}</span>
-        </div>
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
         <p className="small" style={{ margin: '0 0 10px' }}>{restaurant.openingHours ? `${restaurant.openingHours}` : ''}</p>
         {restaurant.hasPromo && (

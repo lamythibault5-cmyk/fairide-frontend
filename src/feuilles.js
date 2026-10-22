@@ -14,7 +14,7 @@
 // qui leur donne leurs données.
 import { experienceApp } from './natif';
 
-export const PAGES_EN_FEUILLE = ['/favorites', '/orders', '/invoices', '/documents', '/driver/earnings', '/driver/invoices', '/driver/reviews'];
+export const PAGES_EN_FEUILLE = ['/favorites', '/orders', '/invoices', '/documents', '/driver/earnings', '/driver/invoices'];
 
 export function estPageEnFeuille(chemin) {
   return PAGES_EN_FEUILLE.includes(chemin);

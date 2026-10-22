@@ -23,8 +23,8 @@ function etapesDe(profil, restoId) {
   return {
     visitor: [['home', '/'], ['list', '/restaurants'], ['search', '/recherche'], ['help', '/aide'], ['story', '/notre-histoire'], ['signup', '/login'], ['legal', '/cgv']],
     client: [['menu', fiche], ['cart', '/panier'], ['checkout', '/checkout'], ['tracking', '/orders'], ['favorites', '/favorites'], ['map', '/map'], ['invoices', '/invoices'], ['account', '/account']],
-    restaurant: [['home', '/dashboard'], ['orders', '/dashboard/orders'], ['menu', '/dashboard/menu'], ['preview', '/dashboard/preview'], ['promotions', '/dashboard/promotions'], ['reviews', '/dashboard/reviews'], ['invoices', '/dashboard/invoices'], ['guide', '/dashboard/guide']],
-    driver: [['home', '/driver'], ['map', '/driver/map'], ['earnings', '/driver/earnings'], ['invoices', '/driver/invoices'], ['reviews', '/driver/reviews'], ['onboarding', '/driver/onboarding'], ['account', '/account']]
+    restaurant: [['home', '/dashboard'], ['orders', '/dashboard/orders'], ['menu', '/dashboard/menu'], ['preview', '/dashboard/preview'], ['promotions', '/dashboard/promotions'], ['invoices', '/dashboard/invoices'], ['guide', '/dashboard/guide']],
+    driver: [['home', '/driver'], ['map', '/driver/map'], ['earnings', '/driver/earnings'], ['invoices', '/driver/invoices'], ['onboarding', '/driver/onboarding'], ['account', '/account']]
   }[profil] || [];
 }
 

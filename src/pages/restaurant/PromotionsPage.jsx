@@ -25,7 +25,7 @@ import { eurosCourt, libellePromo } from '../../prixPlat';
  * de « Activer / Désactiver ». Supprimer : un glissement vers la gauche dans l'app native, un petit × sur le site
  * (LigneGlissante.jsx), puis la même ConfirmDialog — avant, le bouton supprimait sans rien demander. Mêmes appels au
  * serveur, mêmes champs de création, mêmes contrôles qu'avant ; les styles sont dans ecran-commerce.css (bloc « Promotions,
- * Avis, Factures »). */
+ * Avis, Factures », Avis retirés le 22/10/2026). */
 
 const TYPES = [
   { value: 'percent', label: 'typePercent' },

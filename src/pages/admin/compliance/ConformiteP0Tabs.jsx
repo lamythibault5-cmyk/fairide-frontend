@@ -165,7 +165,8 @@ export function DsaTab() {
             <select id={`${id}-d`} value={decision} onChange={(e) => setDecision(e.target.value)}>
               {['no_action', ...(enCours.canRemoveContent ? ['content_removed'] : []), 'account_case_opened'].map((d) => <option key={d} value={d}>{t(`conformite.dsaDecision_${d}`)}</option>)}
             </select>
-            {/* « Contenu retiré » retire vraiment (plat hors carte, avis supprimé) et envoie l'exposé à qui l'a publié. */}
+            {/* « Contenu retiré » retire vraiment (plat hors carte) et envoie l'exposé à qui l'a publié. Plus d'avis à supprimer
+                depuis leur retrait (22/10/2026). */}
             {decision === 'content_removed' && <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t('conformite.dsaRemoveNote')}</p>}
           </div>
           <div className="field">
