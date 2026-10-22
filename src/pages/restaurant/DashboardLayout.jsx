@@ -16,7 +16,7 @@ import SonTerminal from '../../components/commerce/SonTerminal';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 import BandeauOuverture from '../../components/BandeauOuverture';
 import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import { cuisineDepuisOsm } from '../../osmCuisine';
@@ -413,6 +413,17 @@ export default function DashboardLayout() {
         <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
           <LigneCompte accent="danger" icone="carteBancaire" titre={t('dashResto.subRequiredTitle')}
             sous={achatsCommerceAutorises() ? t('dashResto.subRequiredWeb') : t('dashResto.subRequiredApp')}
+            to={achatsCommerceAutorises() ? '/account?ouvrir=abonnement' : undefined} />
+        </div>
+      )}
+      {/* Délai de grâce (fondateur, 2026-10-21) : facturation activée, pas encore souscrit, les commandes continuent jusqu'à
+          la date. Sur le site, la ligne dit où souscrire ; dans l'app, seulement la date (ni bouton, ni renvoi vers un
+          paiement : achatsCommerceAutorises, natif.js). */}
+      {!abonnementBloque && !!restaurant.subscriptionGraceUntil && (
+        <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
+          <LigneCompte accent="warn" icone="carteBancaire"
+            titre={t('dashResto.subGraceTitle', { date: new Date(restaurant.subscriptionGraceUntil).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long' }) })}
+            sous={achatsCommerceAutorises() ? t('dashResto.subGraceWeb') : t('dashResto.subGraceApp')}
             to={achatsCommerceAutorises() ? '/account?ouvrir=abonnement' : undefined} />
         </div>
       )}

@@ -16,7 +16,8 @@ const sectionLabels = (tr) => ({ "Tarification": tr('adminSettings.section_prici
 
 const pricingFields = (tr) => [
   { key: 'commissionRate', label: tr('adminSettings.commissionLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.commissionHint') },
-  { key: 'deliveryFairideRate', label: tr('adminSettings.serviceFeeLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.serviceFeeHint') },
+  // Part du livreur (90 %, donc 10 % de frais de système) et pourboire (100 % au livreur) : des règles fixes depuis le
+  // 21/10/2026 (fondateur), plus des champs. Le serveur refuse de les changer (pricing.REGLES_FIXES) ; une note les rappelle.
   { key: 'deliveryBaseFee', label: tr('adminSettings.baseDeliveryRate'), suffix: '€', hint: tr('adminSettings.baseFeeHint') },
   { key: 'deliveryBaseKm', label: tr('adminSettings.baseDistance'), suffix: 'km' },
   { key: 'deliveryExtraPerKm', label: tr('adminSettings.perKmExtra'), suffix: '€/km', hint: tr('adminSettings.perKmExtraHint') },
@@ -25,7 +26,6 @@ const pricingFields = (tr) => [
   // livraison à vélo comme motorisé (pricing.tauxKmLivreur). driverPerKmMotor / driverPerKmBike ne sont plus lus.
   { key: 'secondOrderRadiusKm', label: tr('adminSettings.secondOrderRadius'), suffix: 'km', hint: tr('adminSettings.secondOrderRadiusHint') },
   { key: 'extraOrderMaxDelayMin', label: tr('adminSettings.extraOrderMaxDelay'), suffix: 'min', hint: tr('adminSettings.extraOrderMaxDelayHint') },
-  { key: 'tipFairideRate', label: tr('adminSettings.tipFairideRate'), suffix: '%', isRate: true, hint: tr('adminSettings.tipFairideRateHint') },
   { key: 'vatRateCommission', label: tr('adminSettings.vatCommission'), suffix: '%', isRate: true, hint: tr('adminSettings.vatCommissionHint') },
   { key: 'vatRateServiceFee', label: tr('adminSettings.vatServiceFees'), suffix: '%', isRate: true, hint: tr('adminSettings.vatServiceHint') }
 ];
@@ -41,11 +41,11 @@ const USER_TYPE_ORDER = ['client', 'restaurant', 'driver'];
 // Exemple chiffré, recalculé à chaque frappe (mêmes formules que pricing.js côté serveur : kilomètre entamé dès le 2e, tarifs
 // prix finaux TVA comprise, sans « + TVA » (fondateur, 2026-10-14), 10 % de frais de système compris = le reste après la part
 // du livreur arrondie, livreur = 90 % de ce que paie le client, quel que soit son véhicule).
-function ExempleTarifs({ form, tr }) {
+function ExempleTarifs({ form, partSysteme, tr }) {
   const n = (k) => Number(form[k]) || 0;
   const kmEntames = (d) => Math.max(0, Math.ceil(d - n('deliveryBaseKm') - 1e-9));
   const client = (d) => +(n('deliveryBaseFee') + kmEntames(d) * n('deliveryExtraPerKm')).toFixed(2);
-  const livreur = (d) => +(client(d) * (1 - n('deliveryFairideRate') / 100)).toFixed(2);
+  const livreur = (d) => +(client(d) * (1 - partSysteme)).toFixed(2);
   const eur = (v) => `${v.toFixed(2).replace('.', ',')} €`;
   const lignes = [1, 2.5, 4].map((d) => ({ d, c: client(d), s: +(client(d) - livreur(d)).toFixed(2), v: livreur(d) }));
   return (
@@ -152,6 +152,7 @@ export default function AdminSettingsPage() {
             <p className="small" style={{ margin: '0 0 14px', opacity: 0.75 }}>
               {tr('adminSettings.pricingHelp')}
             </p>
+            <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminSettings.fixedRules')}</p>
             {pricing.fairideVatRegime === 'franchise' && (
               <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminSettings.vatFranchiseNote', { commission: +(Number(pricing.vatRateCommissionAssujetti) * 100).toFixed(2), service: +(Number(pricing.vatRateServiceFeeAssujetti) * 100).toFixed(2) })}</p>
             )}
@@ -166,7 +167,7 @@ export default function AdminSettingsPage() {
                 />
               </div>
             ))}
-            <ExempleTarifs form={pricingForm} tr={tr} />
+            <ExempleTarifs form={pricingForm} partSysteme={Number(pricing.deliveryFairideRate ?? 0.1)} tr={tr} />
             {champVide && <p className="small texte-erreur" role="alert" style={{ margin: '0 0 8px' }}>{tr('adminSettings.emptyField')}</p>}
             <button className="btn-teal" disabled={!pricingDirty || champVide || savingPricing} onClick={() => setConfirmSave(true)}>
               {savingPricing ? '...' : tr('adminCommon.save')}

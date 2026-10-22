@@ -62,8 +62,16 @@ const PAGES = {
 // donne undefined comme sur un objet vide). Les réponses qui doivent être un objet sont écrites ici.
 // État du dossier livreur simulé pour la page en cours (paramètre ?dossier= de PAGES), lu par simuler().
 let etatDossier = null;
+// Scénario du consentement biométrique (plus bas) : Stripe Identity proposé, et le consentement déjà donné ou non.
+let identiteStripe = null;
 function simuler(chemin, methode, profil) {
   const u = UTILISATEURS[profil];
+  if (methode === 'GET' && chemin === '/couriers/me' && identiteStripe) {
+    const d = structuredClone(REELLES['/couriers/me']);
+    d.identityProviders = { ...d.identityProviders, stripe_identity: true };
+    d.biometricConsent = identiteStripe === 'consenti';
+    return d;
+  }
   if (methode === 'GET' && chemin === '/couriers/me' && etatDossier) {
     const d = structuredClone(REELLES['/couriers/me']);
     Object.assign(d.courier, { lifecycleStatus: etatDossier, submittedAt: '2026-10-23T08:00:00Z', reviewedAt: etatDossier === 'approved' ? '2026-10-24T09:00:00Z' : null, statusVerifiedAt: etatDossier === 'approved' ? '2026-10-24T09:00:00Z' : null });
@@ -177,6 +185,10 @@ async function ouvrir(navigateur, base, { profil, appli = true, consentement = '
     if (url.origin === origine) return route.continue();
     if (url.pathname.includes('/api/')) {
       const chemin = url.pathname.replace(/^.*\/api/, '');
+      // Le serveur exige le consentement biométrique avant Stripe Identity (backend routes/couriers.js, 428).
+      if (chemin === '/couriers/me/identity/start' && identiteStripe === 'a-demander') {
+        return route.fulfill({ status: 428, contentType: 'application/json', body: JSON.stringify({ error: 'Accepte d\'abord la vérification biométrique, ou choisis la vérification manuelle.', code: 'CONSENTEMENT_BIOMETRIQUE_REQUIS', consent: { kind: 'biometric_identity', title: 'Vérification biométrique', text: 'Texte du consentement.', version: 1 } }) });
+      }
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(simuler(chemin, route.request().method(), profil)) });
     }
     return route.abort(); // images, cartes, polices externes : inutiles ici
@@ -237,6 +249,35 @@ try {
       resultats.push({ profil: 'client', page: `${chemin} (avec panier)`, ...(await examiner(page, { profil: 'client', appli: true })) });
     }
     await ctx.close();
+  }
+  // LES FENÊTRES OUVERTES DEPUIS UN ÉCRAN PLEIN (2026-10-21) : dans le dossier livreur (EcranPlein), « Vérifier mon identité »
+  // ouvrait le consentement biométrique SOUS le dossier, invisible. On le touche, puis « Retirer mon consentement
+  // biométrique » (ConfirmDialog), et la fenêtre doit être visible ET au-dessus de tout : le point au centre de sa boîte
+  // appartient à la boîte (elementFromPoint), pas au dossier.
+  {
+    const dessus = (page, nom) => page.evaluate((nom) => {
+      const boite = [...document.querySelectorAll('.modal-overlay .modal-box')].filter((el) => el.getClientRects().length > 0).pop();
+      if (!boite) return [`${nom} : fenêtre absente`];
+      const r = boite.getBoundingClientRect();
+      const x = r.left + r.width / 2;
+      const y = Math.max(0, r.top) + Math.min(r.height, window.innerHeight - Math.max(0, r.top)) / 2;
+      return boite.contains(document.elementFromPoint(x, y)) ? [] : [`${nom} : fenêtre cachée sous l'écran plein`];
+    }, nom);
+    for (const [etat, nom, bouton] of [['a-demander', 'consentement biométrique', 'Vérifier mon identité'], ['consenti', 'retrait du consentement', 'Retirer mon consentement biométrique']]) {
+      identiteStripe = etat;
+      const { ctx, page } = await ouvrir(navigateur, base, { profil: 'driver' });
+      await page.goto(`${base}/driver/onboarding`);
+      const r = await examiner(page, { profil: 'driver', appli: true });
+      try {
+        await page.locator('.ecl-etape', { hasText: 'Pièce d’identité' }).click({ timeout: 5000 });
+        await page.getByRole('button', { name: bouton }).click({ timeout: 5000 });
+        await page.waitForTimeout(500);
+        r.problemes.push(...(await dessus(page, nom)));
+      } catch (e) { r.problemes.push(`${nom} : parcours impossible (${e.message.split('\n')[0]})`); }
+      resultats.push({ profil: 'driver', page: `/driver/onboarding (${nom})`, ...r });
+      await ctx.close();
+    }
+    identiteStripe = null;
   }
   // Premier lancement sans réponse sur les rapports de panne : ni la carte cookies du site, ni un écran plein qui bloque
   // (fondateur, 2026-10-16 : la question se pose par une case à l'inscription, au moment d'une panne et dans Mon compte).

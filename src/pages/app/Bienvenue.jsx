@@ -47,7 +47,9 @@ const FREINS = [['gonfle', 'tendance', 'fGonfle'], ['frais', 'ticket', 'fFrais']
 // rangée « Vos envies » de la liste des commerces (cuisines saisies librement relevées en production le 2026-10-11).
 const PARCOURS = {
   client: ['buts', 'freins', 'cartes', 'pourquoi', 'envies', 'position', 'codePostal', 'recherche', 'compte'],
-  driver: ['lvPromesses', 'lvPosition', 'compte'],
+  // Plus d'écran « position » pour le livreur (fondateur, 2026-10-21, décision 10) : elle est demandée juste avant son
+  // premier « Disponible », avec la même explication (components/livreur/PositionRequise.jsx), jamais à l'inscription.
+  driver: ['lvPromesses', 'compte'],
   restaurant: ['coPromesses', 'compte']
 };
 // Le chargement que le fondateur aime : assez long pour se lire (1,8 s, puis 3,8 s le 2026-10-16 : « 2 secondes de plus »).
@@ -198,15 +200,12 @@ export default function Bienvenue() {
   const mesure = role ? parcours : ['accueil', 'profil', ...PARCOURS.client];
   const progression = Math.max(0, mesure.indexOf(ecran)) / (mesure.length - 1);
 
-  async function utiliserPosition(ensuite) {
+  // Le client seulement depuis le 2026-10-21 : le livreur n'a plus d'écran de position dans l'accueil (voir PARCOURS).
+  async function utiliserPosition() {
     setAttente(true);
     const p = await demanderPosition();
     setAttente(false);
-    if (role === 'client') {
-      if (p) { setPosition(p); aller('recherche'); } else { toast(t('appli.posEchec')); aller('codePostal'); }
-      return;
-    }
-    ensuite();
+    if (p) { setPosition(p); aller('recherche'); } else { toast(t('appli.posEchec')); aller('codePostal'); }
   }
 
   // On quitte l'accueil pour la page de connexion : on retient ce qui sert après (Home.jsx, AmorceNotifications.jsx).
@@ -293,15 +292,6 @@ export default function Bienvenue() {
       contenu = (
         <EcranPromesses chip={t('appli.lvChip')} chipIcone="velo" titre={t('appli.lvTitre')} bouton={t('appli.lvBtn')} onSuite={suivant}
           faits={[['euro', t('appli.lv1'), t('appli.lv1S')], ['interdit', t('appli.lv2'), t('appli.lv2S')], ['cadeau', t('appli.lv3'), t('appli.lv3S')], ['document', t('appli.lv4'), t('appli.lv4S')]]} />
-      ); break;
-    case 'lvPosition':
-      contenu = (
-        <EcranPermission icone="position" titre={t('appli.lvPosTitre')} sous={t('appli.lvPosSub')} bouton={t('appli.lvPosBtn')} attente={attente}
-          faits={[['horloge', t('appli.lvPos1'), t('appli.lvPos1S')], ['apercu', t('appli.lvPos2'), t('appli.lvPos2S')]]}
-          // Indispensable pour livrer : pas de « Pas maintenant ». Un refus n'empêche pas de créer le compte (le
-          // tableau de bord bloque ensuite les courses tant qu'elle manque, PositionRequise.jsx) — bloquer l'inscription
-          // elle-même pour une permission serait refusé par Apple (règle 5.1.1).
-          onOui={() => utiliserPosition(suivant)} />
       ); break;
     case 'coPromesses':
       contenu = (

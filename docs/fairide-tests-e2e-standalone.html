@@ -296,7 +296,7 @@ const TESTS = [
  e:["Client absent (sans alcool) : 10 min d'attente, livreur payé, remboursement décidé par l'admin au cas par cas","Aucun livreur : le client peut annuler après 20 min, remboursé ; Fairide paie, le commerce garde son dû","Livreur qui attend au commerce : enregistré, PAS de rémunération d'attente","Valeurs dans routes/orders.js (ATTENTE_CLIENT_ABSENT_MIN, DELAI_SANS_LIVREUR_MIN) — dire à Claude s'il faut les changer"],
  a:"Les règles sont acceptées (ou les nouvelles valeurs données) et reportées dans les CGV / la notice coursier si l'avocat le demande."},
 {id:"ACT-6",s:"ACT",t:"Distance par défaut 6 km : prévenir les commerces qui n'avaient rien réglé",r:"admin",tr:"-",p:2,
- e:["Ils livraient « sans limite » ; ils livrent maintenant jusqu'à 6 km","Leur dire qu'ils peuvent choisir 1 à 30 km dans Mon commerce › Commandes et capacité"],
+ e:["Ils livraient « sans limite » ; ils livrent maintenant jusqu'à 6 km","Leur dire qu'ils peuvent choisir 1 à 15 km dans Mon commerce › Commandes et capacité"],
  a:"Aucun commerce surpris par des commandes refusées au-delà de 6 km."},
 {id:"ACT-7",s:"ACT",t:"Vérifier la correction de l'alcool sur les vraies cartes",r:"admin",tr:"-",p:1,
  e:["Après le déploiement (migration 011), ouvrir chaque commerce qui a une section « Bières & boissons »","Les softs (Coca, eau, jus) doivent être visibles sans « 18+ » ; bières, vins, cocktails toujours 18+ (et masqués sans autorisation accises)","Corriger à la main un plat mal classé (case Alcool dans l'éditeur de plat)"],

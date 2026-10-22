@@ -82,7 +82,8 @@ privacy policy (CONF-2026-10-16) says so. On the website nothing changes: Sentry
 (Connect, Identity, billing portal) always opens through `allerAuPaiement` (in-app browser, return path) — never
 `window.location.href`, which left the app.
 **First-day flows are app screens too** (phase 2, 2026-10-15), opened full-screen through [EcranPlein](src/components/EcranPlein.jsx)
-(a portal into `<body>` — inside the shell, `.page-fade` broke `position: fixed`): a business's « Envoyer ma carte »
+(a portal into `<body>` — inside the shell, `.page-fade` broke `position: fixed`; a Modale / ConfirmDialog opened from inside it
+stacks above it through one rule, `.bv-plein ~ .modal-overlay` in styles.css, checked by `check:app`): a business's « Envoyer ma carte »
 ([EnvoiCarteAppli](src/components/commerce/EnvoiCarteAppli.jsx)), the courier's draft dossier
 ([DossierAppli](src/pages/driver/DossierAppli.jsx), one topic or one document per screen; rules shared with Onboarding.jsx in
 [dossierCommun.js](src/pages/driver/dossierCommun.js)); once sent, validated or suspended the app shows
@@ -100,7 +101,12 @@ new promotions open in a sheet. Local backend on a Neon dev database: see `../fa
 **`npm run check:app` before every push** ([scripts/verifier-appli.mjs](scripts/verifier-appli.mjs)): opens every app page at
 375×667 in app mode for four profiles against a mocked backend (real captured responses in `scripts/verifier-appli-donnees.json`)
 and fails on any website chrome, a crashed page, or a full-screen screen that scrolls. Needs Chrome or Edge installed. A new
-app page goes into its `PAGES`; a page crashing for lack of data gets a better mock, it is never removed from the list. The onboarding copy makes **no claim the code does not back** — never « moins cher » (it depends on the
+app page goes into its `PAGES`; a page crashing for lack of data gets a better mock, it is never removed from the list.
+**The bottom tab bar is anchored to the bottom edge** (founder, 2026-10-21, decision 11: it floated above the bottom on an
+Android phone): under 900 px `.dashboard-sidebar` is `bottom: 0` with `padding-bottom: max(6px, env(safe-area-inset-bottom))`,
+on the website, the home-screen app and the native app alike, `--hauteur-onglets` 74 px. Never give it a fixed bottom offset
+again; `npm run check:barres` ([scripts/verifier-barres-bas.mjs](scripts/verifier-barres-bas.mjs)) checks it for the four spaces
+at Android sizes, address bar collapse, visualViewport changes and a 48 px system inset. The onboarding copy makes **no claim the code does not back** — never « moins cher » (it depends on the
 business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them.
 
 **Push notifications (2026-10-11), what exists:** order-status pushes for all three roles come from a DB trigger
@@ -613,10 +619,14 @@ minimum (CODE-13) applies to their share: the client fee is raised to minimum / 
 (`routes/orders.js`, `troisVendeurs.prixAvecMinimum`). Takeaway paid on site: no commission, no fee.
 **Tips go 100% to the courier** (`tipFairideRate` 0 — founder, 2026-10-13: « tips go 100 percent to driver »; this
 reverses the 90/10 rule of 2026-10-09. Backend migration 026 had put 10% in the database, migration 032 resets it to 0).
-The courier and restaurant contracts, the T&Cs and the courier texts promise it, so the admin setting must not move
-without them.
-**Delivery distance: 6 km by default**, or what the business sets (1–30 km) in « Commandes et capacité »
-(`../fairide-backend/rayonLivraison.js`; NULL used to mean « no limit » and accepted Antwerp).
+The courier and restaurant contracts, the T&Cs and the courier texts promise it. **Since 2026-10-21 it is a fixed rule, not a
+setting** (founder): `REGLES_FIXES` in `../fairide-backend/pricing.js` forces `tipFairideRate` 0 and `deliveryFairideRate` 0.10 (the
+courier's 90 %) whatever `platform_settings` says, Admin › Paramètres no longer shows either field, and `PATCH /admin/settings`
+refuses another value (`FIXED_RULE`).
+**Delivery distance: 6 km by default**, or what the business sets (1–15 km since 2026-10-21, founder: 30 km was ~1 h 50 by bike and
+~28 € of delivery fee; 15 km covers the whole Brussels region) in « Commandes et capacité » (`../fairide-backend/rayonLivraison.js`;
+NULL used to mean « no limit » and accepted Antwerp). Backend migration 080 clamped settings above 15 km (one `admin_actions` row
+each). The business contract `RESTO-2026.20` still prints « de 1 à 30 km » (`RAYON_MAX_KM_CONTRAT`) until its next version.
 **Order promo codes** (`order_percent`, `order_amount`, `order_free_delivery`, `../fairide-backend/codesPromo.js`) are
 paid by Fairide like the balance: they lower `orders.total`, never the business's or the courier's share; online
 payment only.
@@ -629,6 +639,11 @@ full (i18n): change them with the constant. Paid **mises en avant** have their o
 A business sells without any subscription until the team turns billing on for it (Admin › Commerces › « Facturer
 l'abonnement », `restaurants.subscription_billing_enabled`, false by default — see `formules.abonnementOffert`). Its
 account page then shows « offert pendant le lancement » and the Stripe checkout refuses (`SUBSCRIPTION_WAIVED`).
+**Grace period (founder, 2026-10-21)**: turning billing on for a shop without an active subscription keeps its orders open for
+14 days (`DELAI_GRACE_ABONNEMENT_JOURS`, `formules.enDelaiGrace`, `restaurants.subscription_grace_*`): an e-mail with the date at
+the start, reminders on day 7 and day 12 (`delaiGraceAbonnement.js`, every 6 h), and a dashboard band « Tes commandes continuent
+jusqu'au … » (DashboardLayout, `subscriptionGraceUntil`; on the website it says where to subscribe, in the app only the date).
+Orders stop at the deadline. The front texts say « 14 jours » in full: change them with the constant.
 
 - server: `commissionFairide` and `fraisService` in `../fairide-backend/pricing.js`, called by `routes/orders.js`;
   `service_fee` stores the system fee excl. VAT, `service_fee_vat` its VAT (0 under the franchise) — both already inside
@@ -685,7 +700,15 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   fraud, serious misconduct or legal obligation; random check selfie at shift start, only when the courier is really available (not paused, Stripe active, after GO), with 60 min to take it while jobs keep coming (`DELAI_SELFIE_MIN`, Owen 2026-10-21; `controleSelfie.js`); grid of the 8
   criteria of art. 337/3 in Admin › Conformité. Never add a rating, ranking or penalty — that is criterion 6°/7°.
 - **Accounting**: monthly export (`comptaMensuelle.js`) separates Fairide sales from third-party funds and is emailed once to
-  the archive address; subscription invoices are Fairide's own (`FAIRIDE-ABO-…`) and go through Peppol.
+  the archive address; subscription invoices are Fairide's own (`FAIRIDE-ABO-…`) and go through Peppol. The courier price
+  increase Fairide pays (`order_delivery_bonus`) is a COST on `613-HAUSSE` (PCMN 613100), never on revenue 701 (founder,
+  2026-10-21; backend migration 081 moved older entries): the VAT-franchise counter and the export's sales column ignore it,
+  the export has its own « Hausses de course » column.
+- **Admin cancel of a paid order** (founder, 2026-10-21): the team picks a reason in the cancel window
+  ([ChoixRemboursement](src/components/admin/ChoixRemboursement.jsx); codes in `remboursementAnnulation.js`, same table as
+  `../fairide-backend/motifsAnnulation.js`). Shop-side reasons (closed, dish unavailable, not prepared, shop asked) propose the
+  shop as bearer, every other reason Fairide; the team can change it. The code is stored with the refund
+  (`order_refunds.reason_code`); the server refuses a refunding cancel without one (`CANCEL_REASON_REQUIRED`).
 
 ## Three sellers per order (decided 2026-09-23)
 

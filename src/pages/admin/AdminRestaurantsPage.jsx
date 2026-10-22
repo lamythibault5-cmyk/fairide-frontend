@@ -887,7 +887,11 @@ function RestaurantDetailModal({ selected, detail, orders, pret, onClose, onSusp
           )}
           {/* Offert ou facturé, et l'état Stripe, en mots (audit du 19/10, admin-26 / admin-86 : « Abonnement : none »). */}
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLineWords', { offer: detail.isDemo ? tr('adminRestos.subDemo') : detail.subscriptionBillingEnabled ? tr('adminRestos.subBilled') : tr('adminRestos.subOffered'), sub: libelle(SUBSCRIPTION_STATUS_LABELS, detail.subscriptionStatus || 'none'), mode: libelle(DELIVERY_MODE_LABELS, detail.deliveryMode) })}</p>
-          {detail.subscriptionBillingEnabled && !detail.isDemo && !['active', 'trialing'].includes(detail.subscriptionStatus) && (
+          {/* Délai de grâce (fondateur, 2026-10-21) : facturé, pas encore souscrit, commandes ouvertes jusqu'à la date. */}
+          {detail.subscriptionBillingEnabled && !detail.isDemo && !!detail.subscriptionGraceUntil && (
+            <p className="small" style={{ margin: '2px 0', color: 'var(--orange)' }}>{tr('adminRestos.subGraceUntil', { date: fmtDate(detail.subscriptionGraceUntil) })}</p>
+          )}
+          {detail.subscriptionBillingEnabled && !detail.isDemo && !detail.subscriptionGraceUntil && !['active', 'trialing'].includes(detail.subscriptionStatus) && (
             <p className="small" style={{ margin: '2px 0', color: 'var(--red)' }}>{tr('adminRestos.subBilledNoOrders')}</p>
           )}
           {/* Livraison Fairide dans la zone : coupée pour un commerce seul (pas de livreur) ; sans objet s'il livre lui-même. */}
