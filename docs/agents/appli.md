@@ -81,7 +81,8 @@ never a tab. The website keeps its pages unchanged.
 in a sheet in the app (every Mon compte section at once); any `target="_blank"` link is caught by `garderLesLiensDansLApp`
 (natif.js) — a Fairide page opens in the app, another site in the in-app browser, maps/Waze/tel unchanged; `apiDownload` hands
 files to the share sheet in the native app; « Imprimer » is hidden in the app; `html.appli` marks app mode for CSS (wide tables
-scroll sideways). Orders put the delivery code under the progress bar and open the review and « Signaler » in sheets;
+scroll sideways). Orders put the delivery code under the progress bar and open the tip and « Signaler » in sheets (no reviews since
+2026-10-22, conformite.md);
 new promotions open in a sheet. Local backend on a Neon dev database: see `../fairide-backend/.env` (port 5173 for CORS).
 **`npm run check:app` before every push** ([scripts/verifier-appli.mjs](../../scripts/verifier-appli.mjs)): opens every app page at
 375×667 in app mode for four profiles against a mocked backend (real captured responses in `scripts/verifier-appli-donnees.json`)

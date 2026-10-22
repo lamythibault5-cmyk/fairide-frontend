@@ -5,8 +5,8 @@ import RouteVelo from './RouteVelo';
 import '../../ecran-livreur.css';
 import '../../site-livreur.css';
 
-/* L'EN-TÊTE DES PAGES SECONDAIRES DU LIVREUR (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : Carte, Factures, Avis
- * et le dossier prennent le bandeau iris du tableau de bord et des gains (titre, une phrase, le vélo arrêté sur sa route)
+/* L'EN-TÊTE DES PAGES SECONDAIRES DU LIVREUR (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : Carte, Factures
+ * et le dossier (et la page Avis, retirée le 22/10/2026) prennent le bandeau iris du tableau de bord et des gains (titre, une phrase, le vélo arrêté sur sa route)
  * et leur contenu passe dans la feuille blanche, à largeur de lecture sur un ordinateur (site-livreur.css).
  *
  * DANS L'APP, SUR DEMANDE (fondateur, 2026-10-19, section 4 de finitions-appli.html) : Carte et Factures passent aussi au

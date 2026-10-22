@@ -52,7 +52,6 @@ const RestaurantOrdersPage = lazyPage(() => import('./pages/restaurant/OrdersPag
 const RestaurantPreviewPage = lazyPage(() => import('./pages/restaurant/PreviewPage'));
 const RestaurantEditPage = lazyPage(() => import('./pages/restaurant/EditPage'));
 const RestaurantPromotionsPage = lazyPage(() => import('./pages/restaurant/PromotionsPage'));
-const RestaurantReviewsPage = lazyPage(() => import('./pages/restaurant/ReviewsPage'));
 const RestaurantStatsPage = lazyPage(() => import('./pages/restaurant/StatsPage'));
 const RestaurantInvoicesPage = lazyPage(() => import('./pages/restaurant/InvoicesPage'));
 const RestaurantGuidePage = lazyPage(() => import('./pages/restaurant/GuidePage'));
@@ -62,7 +61,6 @@ const RestaurantSimulationPage = lazyPage(() => import('./pages/restaurant/Simul
 // --- Espace livreur ---
 const DriverDashboard = lazyPage(() => import('./pages/driver/Dashboard'));
 const DriverMapPage = lazyPage(() => import('./pages/driver/MapPage'));
-const DriverReviewsPage = lazyPage(() => import('./pages/driver/ReviewsPage'));
 const DriverInvoicesPage = lazyPage(() => import('./pages/driver/InvoicesPage'));
 const DriverEarningsPage = lazyPage(() => import('./pages/driver/EarningsPage'));
 const DriverOnboarding = lazyPage(() => import('./pages/driver/Onboarding'));
@@ -72,7 +70,6 @@ const AdminLayout = lazyPage(() => import('./pages/admin/AdminLayout'));
 const AdminDashboardPage = lazyPage(() => import('./pages/admin/AdminDashboardPage'));
 const AdminHomePage = lazyPage(() => import('./pages/admin/AdminHomePage'));
 const AdminPromotionsPage = lazyPage(() => import('./pages/admin/AdminPromotionsPage'));
-const AdminReviewsPage = lazyPage(() => import('./pages/admin/AdminReviewsPage'));
 const AdminOrdersPage = lazyPage(() => import('./pages/admin/AdminOrdersPage'));
 const AdminCrmPage = lazyPage(() => import('./pages/admin/AdminCrmPage'));
 const AdminRestaurantsPage = lazyPage(() => import('./pages/admin/AdminRestaurantsPage'));
@@ -111,7 +108,7 @@ const LegalNotice = lazyPage(() => import('./pages/legal/LegalNotice'));
 const Terms = lazyPage(() => import('./pages/legal/Terms'));
 const Privacy = lazyPage(() => import('./pages/legal/Privacy'));
 const CookiesPolicy = lazyPage(() => import('./pages/legal/Cookies'));
-// Conformité (backlog du 23/09/2026) : classement et avis (C5), signalement DSA (C6).
+// Conformité (backlog du 23/09/2026) : classement (C5), signalement DSA (C6). Les avis clients ont été retirés le 22/10/2026.
 const RankingPage = lazyPage(() => import('./pages/legal/RankingPage'));
 // Accessibilité (décision DEC-10, 6 oct. 2026).
 const AccessibilityPage = lazyPage(() => import('./pages/legal/AccessibilityPage'));
@@ -155,8 +152,7 @@ export default function App() {
     ['/invoices', t('accountUi.myInvoices'), <ProtectedRoute role="client"><ClientInvoicesPage /></ProtectedRoute>],
     ['/documents', t('mesDocuments.rowTitle'), <ProtectedRoute><DocumentsPage /></ProtectedRoute>],
     ['/driver/earnings', t('nav.earnings'), <ProtectedRoute role="driver"><DriverEarningsPage /></ProtectedRoute>],
-    ['/driver/invoices', t('accountUi.myInvoices'), <ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>],
-    ['/driver/reviews', t('accountUi.customerReviews'), <ProtectedRoute role="driver"><DriverReviewsPage /></ProtectedRoute>]
+    ['/driver/invoices', t('accountUi.myInvoices'), <ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>]
   ];
   return (
     <>
@@ -219,7 +215,10 @@ export default function App() {
               jamais envoyée au commerce (routes/orders.js, promesse faite aux livreurs) : elle attendait
               une position qui n'arrivait pas. L'ancienne adresse mène aux commandes. */}
           <Route path="map" element={<Navigate to="/dashboard/orders" replace />} />
-          <Route path="reviews" element={<RestaurantReviewsPage />} />
+          {/* Avis clients retirés (fondateur, 22/10/2026 : pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient
+              mauvaise impression ; on les refera peut-être plus tard). L'ancienne adresse (favoris, notifications, e-mails déjà
+              envoyés) mène à Mon commerce plutôt qu'à une page introuvable. Même chose pour /driver/reviews et /admin/reviews. */}
+          <Route path="reviews" element={<Navigate to="/dashboard" replace />} />
           <Route path="stats" element={<RestaurantStatsPage />} />
           <Route path="invoices" element={<RestaurantInvoicesPage />} />
           <Route path="guide" element={<RestaurantGuidePage />} />
@@ -230,7 +229,7 @@ export default function App() {
         </Route>
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
         <Route path="/driver/map" element={<ProtectedRoute role="driver"><DriverMapPage /></ProtectedRoute>} />
-        <Route path="/driver/reviews" element={<ProtectedRoute role="driver"><DriverReviewsPage /></ProtectedRoute>} />
+        <Route path="/driver/reviews" element={<Navigate to="/driver" replace />} />
         {/* Les pourboires sont des lignes de « Mes gains » : l'ancienne adresse y mène. */}
         <Route path="/driver/tips" element={<Navigate to="/driver/earnings" replace />} />
         <Route path="/driver/invoices" element={<ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>} />
@@ -249,7 +248,7 @@ export default function App() {
           <Route index element={<AdminHomePage />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="promotions" element={<AdminPromotionsPage />} />
-          <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route path="reviews" element={<Navigate to="/admin" replace />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="crm" element={<AdminCrmPage />} />
           <Route path="restaurants" element={<AdminRestaurantsPage />} />

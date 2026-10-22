@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import urlSure from '../../urlSure';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -19,8 +19,6 @@ import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import Modale from '../../components/Modale';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import { StarsDisplay } from '../../components/Stars';
-import { ContexteAvis, SignatureReponse } from '../../components/AvisSignes';
 // Chargée à la demande, même raison que dans RestaurantList.jsx : Leaflet ne doit pas retarder
 // l'affichage d'une fiche de commerce, qui est une page publique et indexable.
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
@@ -136,7 +134,6 @@ export default function RestaurantMenu({ id }) {
   const [erreur, setErreur] = useState(null);
   // Incrémenté par « Réessayer » : il suffit qu'il change pour que l'effet de chargement reparte.
   const [essai, setEssai] = useState(0);
-  const [reviews, setReviews] = useState(() => lireCache(`/restaurants/${id}/reviews`) || null);
   const [discover, setDiscover] = useState(() => tirerDecouvertes(lireCache('/restaurants'), id));
   // Le commerce pour lequel « À découvrir » a été tiré (null : pas encore tiré, la liste n'était pas gardée).
   const decouvertesPour = useRef(lireCache('/restaurants') ? id : null);
@@ -317,12 +314,10 @@ export default function RestaurantMenu({ id }) {
     const pourCetteFiche = (fn) => (v) => { if (ficheCourante.current === id) fn(v); };
     const gardee = lireCache(`/restaurants/${id}`, token);
     setRestaurant(gardee || null);
-    setReviews(lireCache(`/restaurants/${id}/reviews`) || null);
     setComplet(false);
     chargerAvecCache(`/restaurants/${id}`, { token }).then(pourCetteFiche(setRestaurant)).catch(pourCetteFiche((e) => { if (!gardee || e.status === 404) setErreur(e); }));
     // La capacité du jour (« complet ») change d'une commande à l'autre : toujours relue, jamais gardée.
     api(`/restaurants/${id}/capacity`).then(pourCetteFiche((c) => setComplet(!!c.full))).catch(() => {});
-    chargerAvecCache(`/restaurants/${id}/reviews`).then(pourCetteFiche(setReviews)).catch(() => {});
     // « À découvrir » est tiré une fois par fiche : une relecture identique ne rebat pas la rangée sous les yeux.
     const tous = lireCache('/restaurants');
     if (tous && decouvertesPour.current !== id) { decouvertesPour.current = id; setDiscover(tirerDecouvertes(tous, id)); }
@@ -340,7 +335,7 @@ export default function RestaurantMenu({ id }) {
   }, [id, essai]);
 
   // Sauvegarde en continu la position de scroll pour pouvoir la restaurer après un rafraîchissement,
-  // puisque le contenu (menu, avis...) se charge de façon asynchrone et décale la hauteur de la page.
+  // puisque le contenu (menu, à découvrir...) se charge de façon asynchrone et décale la hauteur de la page.
   // La restauration native du navigateur est coupée une fois pour toutes par ScrollRestorer (2026-10-17). Elle l'était
   // ici, le temps de la fiche, puis RÉTABLIE en la quittant : après la visite d'un commerce, le navigateur se remettait à
   // replacer lui-même les pages au retour arrière, en concurrence avec ScrollRestorer, sur tout le site.
@@ -700,18 +695,17 @@ export default function RestaurantMenu({ id }) {
     </button>
   );
   /* LE TICKET DE L'APP (fondateur, 2026-10-17, version B de « Fiche du commerce » dans maquettes/commerces-marque/commerces-marque.html) : la
-     note, la distance et le prix de la livraison, en trois cases séparées par des pointillés, sous le nom. La distance est
+     distance et le prix de la livraison, en cases séparées par des pointillés, sous le nom. La case de la note est partie avec
+     les avis clients (fondateur, 22/10/2026 : pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient mauvaise
+     impression ; on les refera peut-être plus tard) — jamais d'étoile ni de note en attendant. La distance est
      celle de chez toi quand l'adresse du compte est connue, sinon le rayon de livraison choisi par le commerce ; le prix est
      le même « dès » qu'avant (estimation, le montant exact se calcule au serveur). Le minimum de commande reste dit dessous. */
   const distanceKm = user?.lat && user?.lng && restaurant.lat && restaurant.lng ? haversineDistanceKm(user.lat, user.lng, restaurant.lat, restaurant.lng) : null;
   const kmTexte = (v) => (v < 10 ? Number(v).toFixed(1) : String(Math.round(v))).replace('.', ',');
+  const caseDistance = distanceKm != null || (restaurant.deliveryRadiusKm != null && modeActif !== 'pickup' && !onlineOrderingDisabled);
   const ticket = APPLI && (
     <>
-      <div className="fiche-ticket">
-        <div>
-          <b>{restaurant.reviewCount > 0 ? <><Icone nom="etoile" taille={14} />{Number(restaurant.rating).toFixed(1).replace('.', ',')}</> : t('restaurantList.newBadge')}</b>
-          <small>{restaurant.reviewCount > 0 ? t('restaurantMenu.ticketReviews', { n: restaurant.reviewCount }) : t('restaurantMenu.ticketNoReviews')}</small>
-        </div>
+      {(caseDistance || !onlineOrderingDisabled) && <div className="fiche-ticket">
         {distanceKm != null ? (
           <div><b>{kmTexte(distanceKm)} km</b><small>{t('restaurantMenu.ticketFromYou')}</small></div>
         ) : restaurant.deliveryRadiusKm != null && modeActif !== 'pickup' && !onlineOrderingDisabled ? (
@@ -720,7 +714,7 @@ export default function RestaurantMenu({ id }) {
         {!onlineOrderingDisabled && (
           <div><b>{fraisLivraison}</b><small>{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</small></div>
         )}
-      </div>
+      </div>}
       {/* Montant minimum choisi par le commerce (PAN-3), annoncé avant de composer le panier. */}
       {!onlineOrderingDisabled && restaurant.minOrderAmount > 0 && (
         <p className="fiche-ticket-note">{t('restoMenuUi.minOrder', { amount: euros(restaurant.minOrderAmount) })}</p>
@@ -790,24 +784,15 @@ export default function RestaurantMenu({ id }) {
           ligne — « 4.1 ★ (4 000+) · €1.79 Delivery Fee · Info » — et range le reste derrière
           « Info ». Le visiteur vient lire une carte. */}
       <p className="fiche-meta">
-        {/* Pas d'étoiles quand personne n'a encore noté : cinq étoiles vides à côté du mot
-            « Nouveau » se lisaient comme une note de zéro sur cinq, ce qui est le contraire de
-            ce qu'on veut dire d'un commerce qui vient d'arriver. */}
-        {/* Dans l'app, la note est dans le « ticket » sous le nom (version B) : pas deux fois. */}
-        {!APPLI && (restaurant.reviewCount > 0 ? (
-          <>
-            <span className="fiche-meta-note"><StarsDisplay value={restaurant.rating} size={13} /></span>
-            <span>{t('restaurantMenu.ratingReviews', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount })}</span>
-          </>
-        ) : (
-          <span>{t('restaurantList.newBadge')}</span>
-        ))}
-        {/* Dans l'app, la cuisine en tête de ligne (« Pizza · Ixelles »), comme dans la maquette retenue. */}
-        {APPLI && restaurant.cuisine && <span>{restaurantTypeLabel(restaurant.cuisine, t) || restaurant.cuisine}</span>}
-        {restaurant.commune && <><span aria-hidden="true">·</span><span>{restaurant.commune}</span></>}
-        {/* Prix vérifiés en magasin, sans hausse (PrixComptoir.jsx) : un fait sur ce commerce, jamais la commission. */}
-        {restaurant.prixComptoir && <><span aria-hidden="true">·</span><PrixComptoir /></>}
-        <span aria-hidden="true">·</span>
+        {/* La note (ou « Nouveau » tant que personne n'avait noté) ouvrait cette ligne jusqu'au retrait des avis clients
+            (fondateur, 22/10/2026). Les points ne séparent plus que ce qui est réellement affiché. */}
+        {[
+          // Dans l'app, la cuisine en tête de ligne (« Pizza · Ixelles »), comme dans la maquette retenue.
+          APPLI && restaurant.cuisine && <span key="cuisine">{restaurantTypeLabel(restaurant.cuisine, t) || restaurant.cuisine}</span>,
+          restaurant.commune && <span key="commune">{restaurant.commune}</span>,
+          // Prix vérifiés en magasin, sans hausse (PrixComptoir.jsx) : un fait sur ce commerce, jamais la commission.
+          restaurant.prixComptoir && <PrixComptoir key="prix" />
+        ].filter(Boolean).map((x) => <Fragment key={x.key}>{x}<span aria-hidden="true">·</span></Fragment>)}
         <button type="button" className="fiche-infos-lien" onClick={() => setInfosOuvertes(true)}>
           {t('restaurantMenu.infoButton')}
         </button>
@@ -972,30 +957,6 @@ export default function RestaurantMenu({ id }) {
     </>
   );
 
-  const avis = reviews && reviews.reviews.length > 0 && (
-    <div className="card" style={{ marginTop: 18 }}>
-      <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('restaurantMenu.reviewsTitle')}</h3>
-      {reviews.reviews.map((r, i) => (
-        <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--cream-dim)' }}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b style={{ fontSize: 13 }}>{r.clientName}</b>
-            <StarsDisplay value={r.foodRating} />
-          </div>
-          {/* De quoi parle l'avis (plats, commune de livraison) et qui a répondu (audit design 2, idée 11f). */}
-          <ContexteAvis avis={r} />
-          {r.foodComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.foodComment}</p>}
-          {r.restaurantReply && (
-            <div style={{ marginTop: 6, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
-              <div className="small" style={{ fontWeight: 700 }}>{t('restaurantMenu.reviewReplyFrom', { name: restaurant.name })}</div>
-              <p className="small" style={{ margin: '2px 0 0' }}>{r.restaurantReply}</p>
-              <SignatureReponse signature={reviews.signature} />
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-
   const fenetres = (
     <>
       {/* `imageUrl` : la MÊME résolution que la carte du plat (resolveItemImage, MenuCategorySections).
@@ -1141,7 +1102,6 @@ export default function RestaurantMenu({ id }) {
         {carte}
         {/* Vendeur (A8) : toujours affiché avant la commande, sans clic, sous la carte plutôt qu'entre l'en-tête et les plats. */}
         <FicheVendeur restaurant={restaurant} />
-        {avis}
         {decouvrir}
         {fenetres}
       </div>
@@ -1171,7 +1131,6 @@ export default function RestaurantMenu({ id }) {
             {carte}
             {/* Vendeur (A8) : toujours affiché avant la commande, sans clic, sous la carte. */}
             <FicheVendeur restaurant={restaurant} />
-            {avis}
           </div>
           {avecPanier && <PanierColonne restaurant={restaurant} mode={modeActif} />}
         </div>

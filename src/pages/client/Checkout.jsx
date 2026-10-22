@@ -617,7 +617,7 @@ export default function Checkout() {
         valeur={pourboire}
         onChange={setPourboire}
         options={[
-          { value: '0', label: t('review.tipNone') },
+          { value: '0', label: t('pourboire.none') },
           { value: '1', label: euros(1) },
           { value: '2', label: euros(2) },
           { value: '3', label: euros(3) },

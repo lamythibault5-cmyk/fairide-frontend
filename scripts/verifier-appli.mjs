@@ -28,8 +28,7 @@ const HAUTEUR = 667;
 
 const COMMERCE = {
   id: 1, name: 'Chez Simone', cuisine: 'Pizza', commune: 'Ixelles', status: 'approved', lat: 50.83, lng: 4.37, deliveryRadiusKm: 6,
-  address: 'Rue du Midi 12, 1000 Bruxelles', hours: { mon: [{ open: '11:00', close: '22:00' }] }, menu: [], sections: [], offersDelivery: true, offersPickup: true,
-  reviewCount: 0, rating: 4.5
+  address: 'Rue du Midi 12, 1000 Bruxelles', hours: { mon: [{ open: '11:00', close: '22:00' }] }, menu: [], sections: [], offersDelivery: true, offersPickup: true
 };
 // LE PAIEMENT AVEC UN PANIER (audit du 19/10, checkout-26) : /checkout sans panier renvoyait vers la liste, et le paiement de
 // l'app (feuilles Codes, Allergie, Avant de commander, barre de verre) n'était jamais dessiné. Un second commerce, avec un plat,
@@ -53,9 +52,9 @@ const PAGES = {
   visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', '/equipe/essai', ...COMMUNES],
   client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', '/groupe/essai1234', '/equipe/essai', ...COMMUNES],
   // ?dossier= : le même dossier simulé, envoyé ou validé (DossierSuivi.jsx) ; sans lui, le brouillon réel (DossierAppli.jsx).
-  driver: ['/', '/driver', '/driver/onboarding', '/driver/onboarding?dossier=pending_review', '/driver/onboarding?dossier=approved', '/driver/map', '/driver/earnings', '/driver/invoices', '/driver/reviews', '/documents', '/account', ...COMMUNES],
+  driver: ['/', '/driver', '/driver/onboarding', '/driver/onboarding?dossier=pending_review', '/driver/onboarding?dossier=approved', '/driver/map', '/driver/earnings', '/driver/invoices', '/documents', '/account', ...COMMUNES],
   admin: ['/', '/admin', '/admin/cartes', '/admin/restaurants', '/account'],
-  restaurant: ['/', '/dashboard', '/dashboard/menu', '/dashboard/questions', '/dashboard/orders', '/dashboard/preview', '/dashboard/promotions', '/dashboard/reviews', '/dashboard/stats', '/dashboard/invoices', '/dashboard/guide', '/sales', '/account', '/carte/valider/essai', ...COMMUNES]
+  restaurant: ['/', '/dashboard', '/dashboard/menu', '/dashboard/questions', '/dashboard/orders', '/dashboard/preview', '/dashboard/promotions', '/dashboard/stats', '/dashboard/invoices', '/dashboard/guide', '/sales', '/account', '/carte/valider/essai', ...COMMUNES]
 };
 
 // Le serveur simulé. Par défaut une liste vide (sans danger : .map, .length, .filter marchent ; une propriété lue
@@ -90,7 +89,6 @@ function simuler(chemin, methode, profil) {
   // Le tableau de bord du commerce (réponse réelle, identifiants UUID) : chaque page du commerce lit ensuite /restaurants/<id>/…
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/compliance$/.test(chemin)) return REELLES['/restaurants/:id/compliance'];
   if (/^\/restaurants$/.test(chemin)) return [COMMERCE];
-  if (/^\/restaurants\/[^/]+\/reviews$/.test(chemin)) return { reviews: [], average: null, count: 0 };
   if (/^\/restaurants\/[^/]+\/capacity$/.test(chemin)) return { full: false };
   // Statistiques du commerce (backend analytiqueCommerce.js) : 30 jours d'une petite pizzeria, forme exacte de la réponse.
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/analytics$/.test(chemin)) {
@@ -98,7 +96,7 @@ function simuler(chemin, methode, profil) {
     return {
       jours: 30, debut: '2026-09-15T22:00:00.000Z', fin: '2026-10-15T22:00:00.000Z', commandes: 58, chiffreAffaires: 1247, panierMoyen: 21.5,
       livraison: 41, emporter: 17, refusees: 2, expirees: 1, annulees: 1, tauxAcceptation: 0.951, acceptationMedianeMin: 1.8, preparationMedianeMin: 16,
-      clients: 39, clientsRevenus: 12, avis: { nombre: 6, moyenne: 4.5 }, precedent: { commandes: 47, chiffreAffaires: 998, panierMoyen: 21.2 },
+      clients: 39, clientsRevenus: 12, precedent: { commandes: 47, chiffreAffaires: 998, panierMoyen: 21.2 },
       parJour, parHeure: Array.from({ length: 24 }, (_, h) => (h >= 11 && h <= 14 ? 6 : h >= 18 && h <= 21 ? 8 : 0)),
       parJourSemaine: [6, 5, 7, 8, 11, 13, 8], topPlats: [{ nom: 'Margherita', quantite: 22, chiffre: 264 }, { nom: 'Quatre fromages', quantite: 14, chiffre: 210 }]
     };

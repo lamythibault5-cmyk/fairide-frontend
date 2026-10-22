@@ -6,7 +6,7 @@
        liste à gauche (boutons compacts), la carte et le détail de la course choisie à droite ; une course en main, son
        détail à gauche et sa carte à droite. Des boutons partout (la glissière est réservée à l'app).
      - Gains (EarningsPage.jsx) : à partir de 1100 px, les règles et les mois à gauche, le détail à droite.
-     - Carte, Factures, Avis, dossier (PageLivreur.jsx) : le même bandeau, le contenu dans la feuille, à largeur de lecture.
+     - Carte, Factures, dossier (PageLivreur.jsx ; la page Avis est partie le 22/10/2026) : le même bandeau, le contenu dans la feuille, à largeur de lecture.
    Sur un téléphone (site, sous 900 px), le bandeau va d'un bord à l'autre comme dans l'app (ecran-livreur.css) et la page
    reste en une colonne.
    L'APP NE CHANGE PAS : tout ce qui suit est réservé au site (html:not(.appli)), ou porte sur des éléments que seul le site

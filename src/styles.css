@@ -644,8 +644,6 @@ a, button, input, select, textarea, label, summary, [role="button"], [role="tab"
   .cuisine-chip, .chip, .pill.recherche-pastille, .diet-chip, .discover-filtres .chip { min-height: 44px; }
 }
 
-.stars-input { display: inline-flex; gap: 2px; }
-.stars-input button { background: transparent; padding: 4px 6px; min-width: 40px; min-height: 40px; font-size: 26px; line-height: 1; }
 /* 15px et non plus 14 : la même classe .btn-gold rendait un libellé à 15px sur un <button> et à
    14px sur un <a>, si bien que deux boutons voisins dans une même rangée n'avaient pas la même
    taille de texte selon l'élément choisi pour les écrire. Une seule valeur, celle de `button`. */
@@ -846,10 +844,8 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   .rest-grid .rest-card-name-text, .rest-grid-loop .rest-card-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .rest-grid .pill-row, .rest-grid-loop .pill-row { margin-bottom: 4px; gap: 4px; }
   .rest-grid .pill, .rest-grid-loop .pill { font-size: 9.5px; padding: 2px 7px; }
-  .rest-grid .rest-card-rating, .rest-grid-loop .rest-card-rating { transform: scale(0.9); transform-origin: left center; }
   .rest-grid .rest-card-desc, .rest-grid-loop .rest-card-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 10.5px; margin: 2px 0; }
-  .rest-grid .rest-card-dishes, .rest-grid-loop .rest-card-dishes,
-  .rest-grid .rest-card-reviews, .rest-grid-loop .rest-card-reviews { display: none; }
+  .rest-grid .rest-card-dishes, .rest-grid-loop .rest-card-dishes { display: none; }
   .rest-grid .rest-card-fav, .rest-grid-loop .rest-card-fav { top: 5px; right: 5px; }
   .rest-grid .rest-card-fav svg, .rest-grid-loop .rest-card-fav svg { width: 18px; height: 18px; }
   .rest-grid .promo-badge, .rest-grid-loop .promo-badge { font-size: 8.5px; padding: 2px 6px; top: 5px; left: 5px; }
@@ -1270,7 +1266,6 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
   margin: 0 0 4px; font-size: var(--t-body-sm); color: var(--ink-soft);
 }
-.fiche-meta-note { display: inline-flex; align-items: center; }
 /* « Infos » est un bouton, mais il doit se lire comme un lien : c'est une porte vers un
    complément, pas une action. D'où le soulignement plutôt que la pilule. */
 .fiche-infos-lien {
@@ -3739,11 +3734,6 @@ button.dashboard-retour { background: none; border: 0; border-radius: 0; font-fa
 .kanban-col-foot { margin-top: 8px; }
 .admin-progress { height: 4px; background: var(--line); border-radius: var(--radius-pill); margin-top: 4px; overflow: hidden; width: 90px; }
 .admin-progress span { display: block; height: 100%; background: var(--iris); }
-.admin-stars { color: var(--iris); letter-spacing: 1px; }
-.admin-stars span { color: var(--line); }
-.admin-review.low { border-color: rgba(217,45,60,0.5); }
-.admin-review-lines { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
-.admin-review-comment { margin-left: 6px; }
 .dashboard-nav-group { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); padding: 10px 12px 2px; font-weight: 700; }
 .dashboard-nav-link .nav-badge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; background: var(--iris); color: #fff; }
 .dashboard-nav-link .nav-badge.tone-danger { background: var(--red); }
@@ -4113,7 +4103,6 @@ button.doc-slot-vide { border: 0; cursor: pointer; font-family: inherit; }
 .hero-preview-body b { font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hero-preview-meta { font-size: 12.5px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hero-preview-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.hero-preview-rating { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
 .hero-preview-open { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); white-space: nowrap; }
 .hero-preview-open.ferme { background: var(--cream-dim); color: var(--ink-soft); }
 .hero-preview-open.hero-preview-bientot { background: var(--iris); color: #fff; }
@@ -4153,7 +4142,6 @@ button.doc-slot-vide { border: 0; cursor: pointer; font-family: inherit; }
 .discover-tile-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 3px; }
 .discover-tile-body b { font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .discover-tile-meta { font-size: 13px; color: var(--ink-soft); }
-.discover-tile-reviews { color: var(--ink-soft); opacity: 0.8; }
 @media (max-width: 640px) { .discover-section { padding: 18px 14px 20px; border-radius: var(--radius); } .discover-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .discover-tile { border-radius: var(--radius); } .discover-tile-body { padding: 10px 11px 12px; } .discover-tile-body b { font-size: 14px; } .discover-tile-cuisine { font-size: 11px; padding: 3px 8px; left: 8px; bottom: 8px; } }
 
 /* Accueil : compteur du panneau d'aperçu, bénéfices des portes d'entrée. */

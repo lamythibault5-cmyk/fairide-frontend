@@ -200,7 +200,6 @@
 .carte-fiche-nom { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 15px; font-weight: 700; }
 .carte-fiche-nom > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .carte-fiche-texte small { display: block; font-size: 12px; line-height: 1.35; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.carte-fiche-nouveau { color: var(--iris); font-weight: 700; }
 .carte-fiche-promo { margin-left: 6px; padding: 1px 7px; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); font-weight: 700; }
 .carte-fiche a.carte-fiche-voir { flex: none; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 700; text-decoration: none; }
 /* La croix (« Retour à la carte ») : un rond de 28 px, mais 44 px à toucher, posé sur le coin de la fiche. */
@@ -242,7 +241,7 @@
   html.appli .carte-page .carte-pastilles .cuisine-chip.active svg { filter: none; }
   html.appli .carte-page .carte-panneau .cuisine-chip { background: rgba(255, 255, 255, .5); border-color: rgba(255, 255, 255, .7); }
   html.appli .carte-page .leaflet-control-zoom.leaflet-bar a { background: transparent; color: var(--ink); border-bottom-color: rgba(255, 255, 255, .6); }
-  html.appli .carte-page .carte-fiche .btn-gold, html.appli .carte-page .carte-fiche-nouveau, html.appli .carte-page .carte-fiche-promo { text-shadow: none; }
+  html.appli .carte-page .carte-fiche .btn-gold, html.appli .carte-page .carte-fiche-promo { text-shadow: none; }
   html.appli .carte-page .carte-fiche-fermer::before { background: rgba(255, 255, 255, .6); }
   /* Les épingles et la maison se décollent du plan (ombre douce : l'app seulement) ; la maison respire. */
   html.appli .carte-page .map-pin.map-pin { box-shadow: 0 3px 8px rgba(20, 18, 31, .25); }
@@ -338,9 +337,6 @@
 .une-nom .certified-badge { color: #fff; }
 .une-nom .certified-badge path { stroke: var(--iris); }
 .une-infos { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: 13px; color: rgba(255, 255, 255, .88); }
-.une-note { display: inline-flex; align-items: center; gap: 4px; color: #fff; font-weight: 700; }
-.une-note svg { color: var(--lime); }
-.une-note span { font-weight: 400; color: rgba(255, 255, 255, .8); }
 .une-carte:focus-visible { outline: 3px solid var(--iris); outline-offset: 2px; }
 .une-points { display: flex; justify-content: center; gap: 5px; margin-top: 10px; }
 .une-points i { width: 6px; height: 6px; border-radius: 3px; background: rgba(59, 47, 181, .2); transition: width .3s cubic-bezier(.34, 1.45, .64, 1), background .2s; }

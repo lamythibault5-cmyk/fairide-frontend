@@ -223,8 +223,8 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-top-plat-chiffres { display: flex; flex-direction: column; align-items: flex-end; font-size: 14px; font-variant-numeric: tabular-nums; }
 .ec-top-plat-chiffres small { font-size: 12px; color: var(--ink-soft); }
 
-/* ---------- Promotions, Avis, Factures (fondateur, 2026-10-19, section 4 de finitions-appli.html) ----------
-   Les trois écrans secondaires du commerce prennent le bandeau et la feuille dans l'app aussi (CadreSite `appli`). Dans la
+/* ---------- Promotions, Factures (fondateur, 2026-10-19, section 4 de finitions-appli.html ; Avis retirés le 22/10/2026) ----------
+   Les écrans secondaires du commerce prennent le bandeau et la feuille dans l'app aussi (CadreSite `appli`). Dans la
    feuille : des RANGÉES à filet plutôt que des cartes encadrées — une tuile d'icône teintée d'iris, un titre, une petite
    ligne, et au bout un interrupteur (.ec-interrupteur) ou rien. Supprimer une promotion : LigneGlissante.jsx (glisser dans
    l'app native, × sur le site). Les composants partagés avec le livreur (InvoiceArchive, InvoicePreferences,
@@ -270,17 +270,6 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-bloc > .card > h3:first-child, .ec-bloc > .card > .row:first-child > h3, .ec-bloc > .card > .row:first-child > div > h3, .ec-bloc--releves > div > .card > h3:first-child {
   font-family: var(--font-ui); font-size: 12px !important; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; }
 
-/* Avis : la note sur le bandeau (étoiles blanches : Stars.jsx les écrit en encre, en ligne), puis une rangée par avis. */
-.ec-avis-note { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.ec-avis-etoiles > span { color: #fff !important; }
-.ec-avis-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.ec-avis-tete > b { font-size: 15px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-.ec-avis-tete > span { flex: none; }
-.ec-avis-commentaire { margin: 2px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink); }
-.ec-avis-reponse { margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--iris); display: flex; flex-direction: column; }
-.ec-avis-reponse > small { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
-.ec-avis-reponse > p { margin: 2px 0 0; font-size: 13.5px; line-height: 1.5; }
-.ec-avis-edition { margin-top: 8px; }
 
 /* Factures : les onglets au pouce iris, l'alerte de configuration, la facture comme document. */
 .ec-factures-onglets { margin-bottom: 18px; }
@@ -419,7 +408,9 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-soir-heures { position: relative; display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: rgba(255, 255, 255, .78); font-variant-numeric: tabular-nums; }
 .ec-soir-maintenant { position: absolute; top: 0; transform: translateX(-50%); color: #fff; font-weight: 700; }
 .ec-outils { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 6px; }
-@media (min-width: 1100px) { .ec-outils { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* Trois tuiles depuis le retrait des avis (22/10/2026) : au téléphone la dernière prend toute la largeur au lieu de laisser un trou. */
+.ec-outils > .ec-outil:last-child:nth-child(odd) { grid-column: 1 / -1; }
+@media (min-width: 1100px) { .ec-outils { grid-template-columns: repeat(3, minmax(0, 1fr)); } .ec-outils > .ec-outil:last-child:nth-child(odd) { grid-column: auto; } }
 .ec-outil { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: #fff; color: var(--ink); text-decoration: none; min-width: 0; transition: border-color .15s, transform .12s; }
 .ec-outil:hover { border-color: var(--iris); }
 .ec-outil:active { transform: scale(.98); }
@@ -427,11 +418,6 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-outil b { font-size: 15.5px; font-weight: 700; }
 .ec-outil small { font-size: 13px; color: var(--ink-soft); line-height: 1.35; overflow-wrap: anywhere; }
 
-/* Avis : de quoi parle l'avis, et le prénom qui signe les réponses. */
-.ec-avis-contexte { font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
-.ec-signature { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-.ec-signature input { flex: 1 1 auto; min-width: 0; min-height: 44px; }
-.ec-signature .ec-bouton { margin: 0; width: auto; min-height: 44px; padding: 0 18px; }
 /* « 1 commande à traiter » sur l'accueil : un bouton qui ouvre la feuille de la commande (NewOrderAlertBar `onOuvrir`). */
 .alerte-ouvrir { flex: 1 1 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px !important; padding: 0; border: 0; background: none;
   font: inherit; font-size: 16px; font-weight: 700; color: var(--ink); text-align: left; cursor: pointer; }

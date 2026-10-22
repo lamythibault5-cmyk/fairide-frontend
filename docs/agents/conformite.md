@@ -19,8 +19,16 @@ components live in [src/components/conformite/](../../src/components/conformite/
   allergens and an 18+ badge on each dish, a « Signaler » link to [/signaler](../../src/pages/legal/ReportPage.jsx).
   [/classement](../../src/pages/legal/RankingPage.jsx) describes the ranking **as the code does it** — if you
   change the sort in RestaurantList.jsx, change that page's text in the same commit.
-- **Stars need reviews.** `restaurants.rating` defaults to 4.5 in the database: never render
-  `StarsDisplay` or sort by rating without `reviewCount > 0` — that would show a rating nobody gave.
+- **No customer reviews since 2026-10-22** (founder: « pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient
+  mauvaise impression ; on les refera peut-être plus tard »). Removed from the site and the app: leaving a review (the tip
+  stays, alone, in Orders.jsx `PourboireForm`), the reviews on the restaurant page, stars on cards, map, landing and
+  previews, the « note » sort, the shop's Avis page and tile, the rating in Statistiques, Admin › Avis, the rating
+  columns, `aggregateRating` in the JSON-LD, the « avis » DSA report target and the /classement paragraphs. The backend
+  removed the review endpoints and stopped sending `rating` / `reviewCount`. Old addresses (`/dashboard/reviews`,
+  `/driver/reviews`, `/admin/reviews`) redirect to their parent page. Until reviews come back, never show a star, a rating
+  or a « note » sort. If they do come back, the old rule returns with them: `restaurants.rating` defaults to 4.5 in the
+  database, so a star or a rating sort only with `reviewCount > 0` — otherwise it shows a rating nobody gave (CDE VI.100),
+  and /classement must say again how reviews work. No Google-reviews link either, for now.
 - **Signup is checkboxes only** (founder, 2026-10-12). Business: one box at the end of signup signs the partnership
   contract, the professional declaration and the allergen procedure ([EngagementsInscription](../../src/components/commerce/EngagementsInscription.jsx),
   texts from `GET /restaurants/engagements` and `/restaurants/contract-terms`). Courier: one « Mes engagements » step in
@@ -97,7 +105,7 @@ components live in [src/components/conformite/](../../src/components/conformite/
   a suspension. People see their decisions and « Contester cette décision » in Mon compte
   ([MesDecisions](../../src/components/conformite/MesDecisions.jsx)); the team records an appeal received by e-mail in Décisions
   (audit 2026-10-19, admin-37 to 40). DSA reports open a task and e-mail the team; « contenu retiré » really hides the dish
-  or deletes the review and sends the statement of reasons to whoever published it (admin-41).
+  (reviews could be removed too until they were dropped on 2026-10-22) and sends the statement of reasons to whoever published it (admin-41).
 - **Filings** (admin › Conformité › *Déclarations*, [DeclarationsTab](../../src/pages/admin/compliance/DeclarationsTab.jsx)):
   DAC7 for both couriers and businesses, CSV exports, the yearly copy sent to each seller, and the art. 17
   platform-work register. Sellers download their own DAC7 copy ([CopieDac7](../../src/components/conformite/CopieDac7.jsx))

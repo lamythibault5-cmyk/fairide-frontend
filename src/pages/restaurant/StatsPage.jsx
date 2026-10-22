@@ -21,7 +21,8 @@ import { SITE } from '../../components/commerce/CadreSite';
  * NOUVEAU STYLE (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html › Statistiques, « Le chiffre en grand ») : sur le
  * bandeau iris, « ← Mon compte », la période au pouce lime qui glisse et le chiffre en grand dont les chiffres roulent
  * (ChiffresRoulants) ; dans la feuille, les tuiles, les barres qui poussent (toucher une barre montre son nombre,
- * GraphiqueBarres) et les plats avec leur barre. Les notes n'apparaissent que s'il y a des avis. */
+ * GraphiqueBarres) et les plats avec leur barre. Plus de note moyenne depuis le retrait des avis clients (fondateur,
+ * 22/10/2026 : pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient mauvaise impression). */
 const PERIODES = ['7', '30', '90'];
 
 function ecart(actuel, avant) {
@@ -130,8 +131,6 @@ export default function StatsPage() {
             </div>
             <p className="small" style={{ margin: '12px 0 0', color: 'var(--ink-soft)' }}>
               {t('statsResto.split', { delivery: d.livraison, pickup: d.emporter, refused: d.refusees, expired: d.expirees })}
-              {/* Les notes seulement s'il y a des avis (fondateur : jamais d'étoiles sans avis). */}
-              {d.avis?.nombre > 0 && ` ${t('statsResto.reviews', { n: d.avis.nombre, rating: d.avis.moyenne.toLocaleString(locale) })}`}
             </p>
 
             <div className="ec-graphique">

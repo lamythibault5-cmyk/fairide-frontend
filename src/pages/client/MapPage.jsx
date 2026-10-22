@@ -47,7 +47,7 @@ export default function MapPage() {
   const [promosSeules, setPromosSeules] = useState(false);
   const [ouvertsSeuls, setOuvertsSeuls] = useState(false);
   const [cuisine, setCuisine] = useState('');
-  const [tri, setTri] = useState('recommande'); // 'recommande' | 'note' | 'distance'
+  const [tri, setTri] = useState('recommande'); // 'recommande' | 'distance' (plus de « note » depuis le retrait des avis, 22/10/2026)
   const [panneau, setPanneau] = useState(null); // 'cuisine' | 'tri' | null
   const [recherche, setRecherche] = useState('');
   /* LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, lot « liste » de maquettes/site-ordinateur/site-ordinateur.html) : à partir de 1 100 px,
@@ -95,9 +95,6 @@ export default function MapPage() {
     // « Recommandé » ne réordonne rien : c'est l'ordre que le serveur renvoie, celui des autres
     // pages. Un tri maison baptisé « recommandé » laisserait croire à un classement éditorial qui
     // n'existe pas.
-    // Note comptée seulement si quelqu'un a noté : restaurants.rating vaut 4,5 par défaut en base, et un
-    // commerce sans avis passait devant un commerce noté 4,2 par de vrais clients. Même règle que RestaurantList.
-    if (tri === 'note') return [...avecDistance].sort((a, b) => (b.reviewCount > 0 ? b.rating || 0 : 0) - (a.reviewCount > 0 ? a.rating || 0 : 0));
     if (tri === 'distance') return [...avecDistance].sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
     return avecDistance;
   }, [restaurants, promosSeules, ouvertsSeuls, cuisine, tri, position, recherche]);
@@ -114,12 +111,12 @@ export default function MapPage() {
     setPromosSeules(false); setOuvertsSeuls(false); setCuisine(''); setTri('recommande'); setPanneau(null); setRecherche('');
   }
   const basculer = (nom) => setPanneau((p) => (p === nom ? null : nom));
-  const LIBELLE_TRI = { recommande: t('mapClient.sortRecommended'), note: t('mapClient.sortRating'), distance: t('mapClient.sortDistance') };
+  const LIBELLE_TRI = { recommande: t('mapClient.sortRecommended'), distance: t('mapClient.sortDistance') };
 
   /* LA FICHE DU COMMERCE TOUCHÉ (fondateur, 2026-10-16, proposition « Verre sur le plan » de maquettes/tous-les-ecrans/tous-les-ecrans.html).
    * Plus la grande bulle à photo et deux boutons : une fiche compacte qui monte au-dessus des onglets — en verre dans
-   * l'app, blanche à filet sur le site —, la photo, le nom, « cuisine · commune · quartier · distance », la note (seulement
-   * s'il y a de vrais avis, sinon « Nouveau ») et la promo, l'adresse, et « Voir ». La croix (ou un toucher sur le plan)
+   * l'app, blanche à filet sur le site —, la photo, le nom, « cuisine · commune · quartier · distance », la promo
+   * (la note est partie avec les avis clients, fondateur, 22/10/2026), l'adresse, et « Voir ». La croix (ou un toucher sur le plan)
    * la ferme : c'était « Retour à la carte ». */
   const fiche = (r, fermer) => (
     <div className="carte-fiche" key={r.id}>
@@ -130,13 +127,7 @@ export default function MapPage() {
       <span className="carte-fiche-texte">
         <b className="carte-fiche-nom"><span>{r.name}</span>{r.certified && <CertifiedBadge size={14} />}</b>
         <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.neighborhood, r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ')}</small>
-        <small className="carte-fiche-infos">
-          {/* Pas d'étoile sans avis : une note que personne n'a donnée n'est pas un avis (CDE VI.100). */}
-          {r.reviewCount > 0
-            ? <span><span aria-hidden="true">★</span> {Number(r.rating).toFixed(1)} {t('map.reviewsCount', { count: r.reviewCount })}</span>
-            : <span className="carte-fiche-nouveau">{t('restaurantList.newBadge')}</span>}
-          {r.hasPromo && <span className="carte-fiche-promo">{t('restoMap.promo')}</span>}
-        </small>
+        {r.hasPromo && <small className="carte-fiche-infos"><span className="carte-fiche-promo">{t('restoMap.promo')}</span></small>}
         {r.address && <small className="carte-fiche-adresse">{r.address}</small>}
       </span>
       <Link to={cheminFiche(r)} className="btn-gold carte-fiche-voir">{t('ecranListe.carteVoir')}</Link>
@@ -177,7 +168,7 @@ export default function MapPage() {
             </button>
             {TRI && (
             <button type="button" className={`cuisine-chip${tri !== 'recommande' ? ' active' : ''}`} aria-expanded={panneau === 'tri'} onClick={() => basculer('tri')}>
-              <Icone nom="stats" taille={16} />{tri === 'recommande' ? t('mapClient.sort') : LIBELLE_TRI[tri]}
+              <Icone nom="stats" taille={16} />{LIBELLE_TRI[tri] && tri !== 'recommande' ? LIBELLE_TRI[tri] : t('mapClient.sort')}
             </button>
             )}
           </div>
@@ -197,7 +188,7 @@ export default function MapPage() {
           )}
           {panneau === 'tri' && (
             <div className="carte-panneau">
-              {['recommande', 'note', 'distance'].map((cle) => (
+              {['recommande', 'distance'].map((cle) => (
                 <button key={cle} type="button" className={`cuisine-chip${tri === cle ? ' active' : ''}`}
                   disabled={cle === 'distance' && !position}
                   title={cle === 'distance' && !position ? t('mapClient.sortDistanceNeedsAddress') : undefined}
@@ -247,13 +238,7 @@ export default function MapPage() {
                     <span className="carte-fiche-texte">
                       <b className="carte-fiche-nom"><span>{r.name}</span>{r.certified && <CertifiedBadge size={14} />}</b>
                       <small>{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune, r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ')}</small>
-                      <small>
-                        {/* Pas d'étoile sans avis (CDE VI.100), comme la fiche du commerce touché. */}
-                        {r.reviewCount > 0
-                          ? <span><span aria-hidden="true">★</span> {Number(r.rating).toFixed(1)} {t('map.reviewsCount', { count: r.reviewCount })}</span>
-                          : <span className="carte-fiche-nouveau">{t('restaurantList.newBadge')}</span>}
-                        {r.hasPromo && <span className="carte-fiche-promo">{t('restoMap.promo')}</span>}
-                      </small>
+                      {r.hasPromo && <small><span className="carte-fiche-promo">{t('restoMap.promo')}</span></small>}
                     </span>
                   </Link>
                 </li>

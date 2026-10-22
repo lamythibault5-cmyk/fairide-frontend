@@ -2,8 +2,8 @@ import { allerAuPaiement, experienceApp } from '../../natif';
 import SousEcran from '../../components/SousEcran';
 
 /* DANS L'APPLICATION (2026-10-15), la carte d'une commande en cours se lit dans l'ordre où l'on en a besoin : le code à
- * donner au livreur (ou à montrer au commerce) juste sous la progression, plus en bas sous la carte ; l'avis et le
- * pourboire, et « Signaler un problème », s'ouvrent dans une feuille au lieu de s'insérer dans la carte. */
+ * donner au livreur (ou à montrer au commerce) juste sous la progression, plus en bas sous la carte ; le pourboire et
+ * « Signaler un problème » s'ouvrent dans une feuille au lieu de s'insérer dans la carte. */
 const APPLI = experienceApp();
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { vibrer } from '../../gestes';
@@ -31,7 +31,6 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { DeliveryTiming, ProchaineEtape, RouteSuivi, titreSuivi, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
-import { StarsInput, StarsDisplay } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import Icone from '../../components/Icone';
@@ -67,54 +66,32 @@ function NomCommerce({ order }) {
   return <Link to={`/restaurants/${order.restaurantId}`} className="lien-commerce">{order.restaurantName}</Link>;
 }
 
-// `pourboireSeul` : l'avis est déjà envoyé, il ne reste que le pourboire. Sans ce mode, un client qui
-// abandonnait le paiement du pourboire (ou dont l'envoi échouait après l'avis) ne pouvait plus jamais le
-// laisser : le formulaire ne se rouvre pas sur une commande notée, et le renvoyer butait sur « avis déjà
-// envoyé » avant d'atteindre le pourboire.
-function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
-  // Aucune étoile au départ (audit du 19/10, AO-21) : un seul toucher sur « Envoyer » publiait un 5 étoiles que le client
-  // n'avait pas choisi. L'envoi attend une note (bouton désactivé tant qu'il n'y en a pas).
-  const [foodRating, setFoodRating] = useState(0);
-  const [foodComment, setFoodComment] = useState('');
+/* LE POURBOIRE APRÈS LA LIVRAISON. Il vivait dans le formulaire d'avis (étoiles + commentaire + pourboire) ; les avis
+ * clients ont été retirés le 22/10/2026 (fondateur : « pas assez d'utilisateurs, des commerces avec peu d'étoiles
+ * feraient mauvaise impression ; on les refera peut-être plus tard »). Il reste seul : « Laisser un pourboire » sur une
+ * commande livrée par un livreur et dont le pourboire n'est pas encore payé, autant de fois qu'il le faut — un paiement
+ * abandonné chez Stripe laisse le bouton en place (c'était le rôle de l'ancien mode `pourboireSeul`). Pas de choix
+ * « Aucun » ici : ne rien laisser, c'est simplement ne pas ouvrir le formulaire ; l'envoi attend un montant. */
+function PourboireForm({ order, token, toast, onDone, t }) {
   const [tipChoice, setTipChoice] = useState(0);
   const [tipInput, setTipInput] = useState('');
   const [saving, setSaving] = useState(false);
+  // « 2,50 » est lu comme 2,50 € (audit du 19/10, CROSS-62) : Number('2,50') donnait NaN, et le pourboire tombait sans un mot.
+  const tip = tipInput.trim() ? +(Number(tipInput.trim().replace(',', '.')) || 0).toFixed(2) : tipChoice;
 
   async function submit() {
+    if (!(tip > 0)) return;
     setSaving(true);
     try {
-      if (!pourboireSeul) {
-        try {
-          await api(`/orders/${order.id}/review`, {
-            method: 'POST', token,
-            body: {
-              // Plus de note de la livraison (CODE-13, DEC-21) : le livreur est un indépendant, la plateforme ne l'évalue pas.
-              foodRating, foodComment: foodComment.trim()
-            }
-          });
-        } catch (e) {
-          // 409 = avis déjà enregistré (second envoi après un pourboire qui a échoué) : on passe au pourboire.
-          if (e.status !== 409) throw e;
-        }
+      await api(`/orders/${order.id}/tip`, { method: 'PATCH', token, body: { tip } });
+      const pay = await api(`/payments/tip-checkout/${order.id}`, { method: 'POST', token });
+      if (pay.simulated) {
+        toast(t('pourboire.toastThanks'), 'succes');
+        // Pourboire acquis : le bouton « Laisser un pourboire » ne doit pas rester affiché (plan de test SIM-9).
+        onDone({ tipPaid: true, tipAmount: tip });
+      } else {
+        await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
       }
-      // « 2,50 » est lu comme 2,50 € (audit du 19/10, CROSS-62) : Number('2,50') donnait NaN, et le pourboire tombait sans un mot.
-      const tip = tipInput.trim() ? +(Number(tipInput.trim().replace(',', '.')) || 0).toFixed(2) : tipChoice;
-      // L'avis envoyé se lit tout de suite sous la commande (AO-22), sans attendre la relecture des 15 s.
-      const avis = pourboireSeul ? {} : { myReview: { foodRating, foodComment: foodComment.trim(), restaurantReply: '' } };
-      if (order.driverName && tip > 0) {
-        await api(`/orders/${order.id}/tip`, { method: 'PATCH', token, body: { tip } });
-        const pay = await api(`/payments/tip-checkout/${order.id}`, { method: 'POST', token });
-        if (pay.simulated) {
-          toast(t('review.toastThanksTip'));
-          // Pourboire acquis : le bouton « Laisser un pourboire » ne doit pas rester affiché (plan de test SIM-9).
-          onDone({ tipPaid: true, ...avis });
-        } else {
-          await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
-        }
-        return;
-      }
-      toast(t('review.toastThanks'), 'succes');
-      onDone(avis);
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -124,45 +101,33 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
 
   return (
     <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: 14, marginTop: 8 }}>
-      {!pourboireSeul && <div style={{ marginBottom: 10 }}>
-        <div className="small" style={{ marginBottom: 4 }}>{t('review.foodRatingLabel')}</div>
-        <StarsInput value={foodRating} onChange={setFoodRating} ariaLabel={t('review.foodRatingLabel')} />
-        {/* 1 000 caractères : la même limite que le serveur (routes/reviews.js LONGUEUR_MAX_AVIS). Nommé (audit du 19/10, CROSS-88). */}
-        <input maxLength={1000} value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder={t('review.foodCommentPlaceholder')} aria-label={t('review.foodCommentPlaceholder')} style={{ marginTop: 6 }} />
-      </div>}
-      {/* Pourboire déjà laissé en payant la commande : on ne le redemande pas. */}
-      {order.driverName && order.tipPaid && (
-        <p className="small" style={{ margin: '0 0 12px' }}>{t('review.tipAlreadyPaid', { name: order.driverName, amount: euros(order.tipAmount) })}</p>
-      )}
-      {order.driverName && !order.tipPaid && (
-        <div style={{ marginBottom: 12 }}>
-          <div className="small" style={{ marginBottom: 4, fontWeight: 600 }}>{t('review.tipPrompt', { name: order.driverName })}</div>
-          <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-            {[0, 1, 2, 3].map((amount) => (
-              <button
-                key={amount}
-                type="button"
-                className={tipChoice === amount && !tipInput.trim() ? 'btn-teal' : 'btn-ghost'}
-                aria-pressed={tipChoice === amount && !tipInput.trim()}
-                onClick={() => { setTipChoice(amount); setTipInput(''); }}
-                style={{ padding: '6px 12px', fontSize: 13 }}
-              >
-                {amount === 0 ? t('review.tipNone') : `${amount}€`}
-              </button>
-            ))}
-            <input aria-label={t('review.tipOtherPlaceholder')}
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder={t('review.tipOtherPlaceholder')}
-              value={tipInput}
-              onChange={(e) => setTipInput(e.target.value)}
-              style={{ width: 110, padding: '6px 10px', fontSize: 13 }}
-            />
-          </div>
+      <div style={{ marginBottom: 12 }}>
+        <div className="small" style={{ marginBottom: 4, fontWeight: 600 }}>{t('pourboire.prompt', { name: order.driverName })}</div>
+        <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+          {[1, 2, 3].map((amount) => (
+            <button
+              key={amount}
+              type="button"
+              className={tipChoice === amount && !tipInput.trim() ? 'btn-teal' : 'btn-ghost'}
+              aria-pressed={tipChoice === amount && !tipInput.trim()}
+              onClick={() => { setTipChoice(amount); setTipInput(''); }}
+              style={{ padding: '6px 12px', fontSize: 13 }}
+            >
+              {`${amount}€`}
+            </button>
+          ))}
+          <input aria-label={t('pourboire.otherPlaceholder')}
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder={t('pourboire.otherPlaceholder')}
+            value={tipInput}
+            onChange={(e) => setTipInput(e.target.value)}
+            style={{ width: 110, padding: '6px 10px', fontSize: 13 }}
+          />
         </div>
-      )}
-      <button className="btn-teal" disabled={saving || (!pourboireSeul && foodRating < 1)} onClick={submit}>{saving ? '...' : t('review.send')}</button>
+      </div>
+      <button className="btn-teal" disabled={saving || !(tip > 0)} onClick={submit}>{saving ? '...' : t('pourboire.send')}</button>
     </div>
   );
 }
@@ -172,7 +137,7 @@ export default function Orders() {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [echec, setEchec] = useState(false);
-  const [reviewingId, setReviewingId] = useState(null);
+  const [pourboireId, setPourboireId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
   // Annuler une commande passe par une confirmation (audit du 15/10/2026) : un toucher l'annulait aussitôt.
   const [aAnnuler, setAAnnuler] = useState(null);
@@ -603,45 +568,26 @@ export default function Orders() {
   ) : null);
   // En route, « le commerce la prépare » était faux (audit du 19/10, AO-15) : une phrase pour la livraison.
   const noteVerrou = (o) => (['preparation', 'pret', 'livraison'].includes(o.status) ? <div className="small" style={{ marginTop: 6 }}>{t(o.status === 'livraison' ? 'orders.cancelLockedOnTheWay' : 'orders.cancelLocked')}</div> : null);
-  // LE PIED D'UNE COMMANDE : avis, pourboire, « Signaler un problème » ou « Un souci ? », « Commander à nouveau ». Une rangée
+  // LE PIED D'UNE COMMANDE : pourboire, « Signaler un problème » ou « Un souci ? », « Commander à nouveau ». Une rangée
   // alignée sur le texte de la carte (audit design 2 : les deux liens étaient décalés l'un par rapport à l'autre).
   // `avecRecommander` : sur le site, « Commander à nouveau » est déjà sur la ligne du tableau.
+  // Plus d'avis (« Laisser un avis », l'avis envoyé et la réponse du commerce) depuis le 22/10/2026 : voir PourboireForm.
   const blocPied = (o, avecRecommander = true) => (
     <>
-      {reviewingId === o.id && (() => {
+      {pourboireId === o.id && (() => {
         const formulaire = (
-          <ReviewForm
-            order={o} token={token} toast={toast} t={t} pourboireSeul={!!o.reviewed}
-            onDone={(maj = {}) => { setReviewingId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, reviewed: true, ...maj } : x))); }}
+          <PourboireForm
+            order={o} token={token} toast={toast} t={t}
+            onDone={(maj = {}) => { setPourboireId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, ...maj } : x))); }}
           />
         );
-        return APPLI ? <SousEcran titre={o.reviewed ? t('orders.leaveTip') : t('orders.leaveReview')} onFermer={() => setReviewingId(null)}>{formulaire}</SousEcran> : formulaire;
+        return APPLI ? <SousEcran titre={t('orders.leaveTip')} onFermer={() => setPourboireId(null)}>{formulaire}</SousEcran> : formulaire;
       })()}
-      {o.status === 'livre' && o.reviewed && (
-        <div className="small" style={{ marginTop: 8, color: 'var(--teal-deep)' }}>{t('orders.reviewSent')}</div>
-      )}
-      {/* Ce que le client a écrit, et la réponse publique du commerce (audit du 19/10, AO-22) — la même mise en forme que sur
-          la page du commerce (RestaurantMenu.jsx). Lecture seule : modifier ou retirer un avis reste à décider. */}
-      {o.status === 'livre' && o.myReview && (
-        <div className="small" style={{ marginTop: 4 }}>
-          <StarsDisplay value={o.myReview.foodRating} />
-          {o.myReview.foodComment && <p className="small" style={{ margin: '2px 0 0' }}>{o.myReview.foodComment}</p>}
-          {o.myReview.restaurantReply && (
-            <div style={{ marginTop: 6, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
-              <div className="small" style={{ fontWeight: 700 }}>{t('restaurantMenu.reviewReplyFrom', { name: o.restaurantName })}</div>
-              <p className="small" style={{ margin: '2px 0 0' }}>{o.myReview.restaurantReply}</p>
-            </div>
-          )}
-        </div>
-      )}
       {/* « Un souci ? » à chaque étape — sauf là où « Signaler un problème » est déjà proposé. */}
       {!(o.paid && ['livre', 'livraison'].includes(o.status)) && <AideCommande order={o} />}
       <div className="suivi-pied">
-        {o.status === 'livre' && !o.reviewed && reviewingId !== o.id && (
-          <button type="button" className="suivi-lien" onClick={() => setReviewingId(o.id)}>{t('orders.leaveReview')}</button>
-        )}
-        {o.status === 'livre' && o.reviewed && o.driverName && !o.tipPaid && reviewingId !== o.id && (
-          <button type="button" className="suivi-lien" onClick={() => setReviewingId(o.id)}>{t('orders.leaveTip')}</button>
+        {o.status === 'livre' && o.driverName && !o.tipPaid && pourboireId !== o.id && (
+          <button type="button" className="suivi-lien" onClick={() => setPourboireId(o.id)}>{t('orders.leaveTip')}</button>
         )}
         {/* Signaler un problème (USR-10) : commande payée et terminée ; « jamais reçue » aussi pendant la livraison. */}
         {o.paid && ['livre', 'livraison'].includes(o.status) && (
@@ -827,7 +773,7 @@ export default function Orders() {
    * iris de la page (le statut en grand, la route où roule le vélo, 1C) ; dans la feuille blanche, sur un ordinateur, la carte
    * du trajet et le code à donner au livreur tiennent côte à côte, le détail dessous. Une deuxième commande en cours garde
    * sa carte à bandeau. Les commandes passées deviennent un tableau compact (des cartes compactes sur un téléphone) ;
-   * « Commander à nouveau » est sur la ligne, le reste (avis, signalement, motif d'un refus…) s'ouvre sous « Détails ».
+   * « Commander à nouveau » est sur la ligne, le reste (pourboire, signalement, motif d'un refus…) s'ouvre sous « Détails ».
    * Mêmes données, mêmes actions qu'avant. Styles : site-commande.css. */
   const corpsSite = (o) => {
     const carte = blocCarte(o);
@@ -893,7 +839,7 @@ export default function Orders() {
               </thead>
               <tbody>
                 {passees.map((o) => {
-                  const ouvert = ouvertes.has(o.id) || reviewingId === o.id;
+                  const ouvert = ouvertes.has(o.id) || pourboireId === o.id;
                   const n = nbArticles(o);
                   return (
                     <Fragment key={o.id}>

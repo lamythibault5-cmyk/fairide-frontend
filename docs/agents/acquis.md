@@ -58,6 +58,10 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   `../fairide-backend/motifsAnnulation.js`). Shop-side reasons (closed, dish unavailable, not prepared, shop asked) propose the
   shop as bearer, every other reason Fairide; the team can change it. The code is stored with the refund
   (`order_refunds.reason_code`); the server refuses a refunding cancel without one (`CANCEL_REASON_REQUIRED`).
+- **No customer reviews** (founder, 2026-10-22): reviews, stars and ratings were removed from the whole front and the
+  backend — too few users yet, and a shop with few stars would look bad; they may come back later. The tip after delivery
+  stays (« Laisser un pourboire », Orders.jsx). Don't « restore » a star, a rating sort or a reviews page in passing: what
+  was removed and the rule if they return are in conformite.md.
 
 ## End-to-end test plan fixes (2026-10-02)
 

@@ -12,7 +12,7 @@ import TwoFactorSetup from '../../components/TwoFactorSetup';
 import Icone from '../../components/Icone';
 
 const SECTIONS = ['Tarification', 'Utilisateurs', 'Sécurité'];
-const sectionLabels = (tr) => ({ "Tarification": tr('adminSettings.section_pricing'), "Utilisateurs": tr('adminSettings.section_users'), "Sécurité": tr('adminSettings.section_security'), "Avis": tr('adminSettings.section_reviews'), "Codes promo": tr('adminSettings.section_promos') });
+const sectionLabels = (tr) => ({ "Tarification": tr('adminSettings.section_pricing'), "Utilisateurs": tr('adminSettings.section_users'), "Sécurité": tr('adminSettings.section_security'), "Codes promo": tr('adminSettings.section_promos') });
 
 const pricingFields = (tr) => [
   { key: 'commissionRate', label: tr('adminSettings.commissionLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.commissionHint') },

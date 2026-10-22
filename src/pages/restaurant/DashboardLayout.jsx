@@ -25,15 +25,15 @@ import { remonterEnHaut } from '../../remonter';
 import Icone from '../../components/Icone';
 import '../../site-pro.css';
 
-// Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
+// Charge une seule fois restaurant/orders/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
 // commun à toutes les sous-pages : création du commerce (components/commerce/CreationCommerce.jsx) et
 // bannières (validation/abonnement/Stripe).
 const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
-// Promotions, Avis et Factures les ont rejointes dans l'app aussi le 2026-10-19 (fondateur, finitions-appli.html, section 4 :
+// Promotions et Factures les ont rejointes dans l'app aussi le 2026-10-19 (fondateur, finitions-appli.html, section 4 :
 // CadreSite `appli`).
 const PAGES_BANDEAU = ['/dashboard', '/dashboard/edit', '/dashboard/orders', '/dashboard/menu', '/dashboard/stats',
-  '/dashboard/promotions', '/dashboard/reviews', '/dashboard/invoices'];
+  '/dashboard/promotions', '/dashboard/invoices'];
 // Sur le SITE (pas dans l'app), les autres pages du commerce ont aussi leur bandeau (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html,
 // lot « pro ») : elles reçoivent les blocs communs dans leur feuille, comme les pages ci-dessus.
 const SITE = !experienceApp();
@@ -76,9 +76,6 @@ export default function DashboardLayout() {
      « Pas encore de commande » quand rien n'était jamais arrivé. « echecs » compte les relectures ratées d'affilée,
      « derniereMaj » l'heure de la dernière réussie, « accesPerdu » un 403 (membre retiré, commerce fermé). */
   const [etatCommandes, setEtatCommandes] = useState({ echecs: 0, derniereMaj: null, erreur: null, accesPerdu: false });
-  const [reviews, setReviews] = useState(null);
-  // Avis pas chargés (réseau) : la page Avis le dit avec « Réessayer » au lieu de « Pas encore d'avis » (audit du 19/10, shop-113).
-  const [avisEnEchec, setAvisEnEchec] = useState(false);
   const [drivers, setDrivers] = useState([]);
 
   const [newRestoOpen, setNewRestoOpen] = useState(false);
@@ -104,8 +101,7 @@ export default function DashboardLayout() {
   // commandes jamais reçues (le serveur renvoie l'historique complet) sous le titre « Aujourd'hui »,
   // additionnait au chiffre d'affaires les commandes refusées et annulées, et affichait un « Économisé
   // vs les grandes plateformes » calculé sur une commission supposée de 30 %, que rien ne permettait de
-  // vérifier. Le nombre de commandes en cours et du jour est maintenant en tête de la page Commandes ;
-  // les avis sont dans Mon compte.
+  // vérifier. Le nombre de commandes en cours et du jour est maintenant en tête de la page Commandes.
 
   // Terminal « navigateur » (Goodcom sans coque Android) : si CET appareil est associé au commerce, il imprime les
   // tickets de la file d'impression tant que le tableau de bord est ouvert (voir terminalNavigateur.js).
@@ -186,7 +182,7 @@ export default function DashboardLayout() {
   }, [retourConnect, restoId]);
 
   // Rafraîchissement : les commandes toutes les 15 s, même onglet en arrière-plan (c'est ce qui fait sonner l'alerte
-  // « nouvelle commande », voir useNewOrderAlert) ; la fiche complète, les avis et les livreurs une fois par minute et
+  // « nouvelle commande », voir useNewOrderAlert) ; la fiche complète et les livreurs une fois par minute et
   // seulement onglet visible. Avant, les quatre partaient toutes les 15 s, onglet caché compris : la fiche seule
   // recharge toute la carte, soit une quinzaine de requêtes en base à chaque tour et par tablette.
   const tour = useRef(0);
@@ -237,25 +233,25 @@ export default function DashboardLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chemin, restoId]);
 
-  // `fiche` : recharger aussi la fiche du commerce (carte comprise) ; `annexes` : les avis et les livreurs.
+  // `fiche` : recharger aussi la fiche du commerce (carte comprise) ; `annexes` : les livreurs. Plus d'avis à lire depuis
+  // leur retrait (fondateur, 22/10/2026 : pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient mauvaise
+  // impression ; on les refera peut-être plus tard).
   async function loadDashboard(id, { fiche = true, annexes = true, silencieux = false } = {}) {
     try {
       // Retour de l'onboarding Stripe Connect : le statut (pas suivi par webhook pour ce type de compte) est relu par
       // l'effet « retour de Stripe » plus haut, qui recharge ensuite le tableau de bord (shop-7).
-      const [ordersData, restoData, reviewsData, driversData] = await Promise.all([
+      const [ordersData, restoData, driversData] = await Promise.all([
         // Vue « service » (shop-213) : en cours + closes depuis 24 h, au lieu de tout l'historique toutes les 15 s.
         api(`/orders/restaurant/${id}?vue=service`, { token }),
         fiche ? api(`/restaurants/${id}`, { token }) : null,
-        // Annexes (avis, livreurs) : un échec ne doit jamais vider la liste des commandes (banc du 9 oct. 2026 : un 404 sur les
-        // avis laissait « Pas encore de commande » alors que le serveur en renvoyait).
-        annexes ? api(`/restaurants/${id}/reviews`).catch(() => false) : null,
+        // Annexes (livreurs) : un échec ne doit jamais vider la liste des commandes (banc du 9 oct. 2026 : un 404 sur une
+        // annexe laissait « Pas encore de commande » alors que le serveur en renvoyait).
         annexes ? api(`/restaurants/${id}/drivers`, { token }).catch(() => null) : null
       ]);
       setOrders(Array.isArray(ordersData) ? ordersData : (ordersData?.orders || []));
       if (!Array.isArray(ordersData) && ordersData) setStatsService({ historyCount: ordersData.historyCount || 0, monthCount: ordersData.monthCount || 0 });
       setEtatCommandes({ echecs: 0, derniereMaj: Date.now(), erreur: null, accesPerdu: false });
       if (restoData) setRestaurant(restoData);
-      if (reviewsData) { setReviews(reviewsData); setAvisEnEchec(false); } else if (reviewsData === false) setAvisEnEchec(true);
       if (driversData) setDrivers(driversData);
       // Marque la fin du premier chargement réel : sans ce signal, l'alerte "nouvelle commande"
       // prend l'arrivée des données initiales pour des commandes qui viennent de tomber (voir
@@ -452,13 +448,13 @@ export default function DashboardLayout() {
           aucun bouton : elle ne signe ni ne valide rien à la place du commerce. */}
       {/* Depuis le 2026-10-17 (fondateur : deux boutons lime au-dessus du titre de chaque page), la rangée « Prochaine étape »
           ne vit plus que sur la page Commandes de l'app (le terminal) : l'accueil a la liste complète, et les autres pages
-          (menu, factures, promotions, avis…) n'ont pas à la répéter. */}
+          (menu, factures, promotions…) n'ont pas à la répéter. */}
       {chemin === '/dashboard/orders' && !commandesSite && !membreEquipe && (
         <MiseEnLigne restaurant={restaurant} restoId={restoId} token={token} onConnect={connectOnboard} connecting={connecting}
           onChange={() => loadDashboard(restoId)} lectureSeule={!!actingAs} />
       )}
       {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même
-          s'il est en train de modifier son menu ou de consulter ses avis. */}
+          s'il est en train de modifier son menu ou de consulter ses factures. */}
       {/* Barre complète sur l'accueil et les commandes ; ailleurs, la version compacte (NewOrderAlertBar.jsx). */}
       {/* Sur Commandes, l'alarme est une ligne du bandeau iris (LigneAlarme dans l'app, AlerteBandeau sur le site — audit
           design 2, 2026-10-19) : la carte ne se répète pas dans la feuille, la commande qui attend passe en premier. */}
@@ -530,7 +526,7 @@ export default function DashboardLayout() {
       )}
       {restaurant && !etatCommandes.accesPerdu && (
         <div className="page-fade" key={chemin}>
-          <Outlet context={{ restaurant: restaurant || null, orders, reviews, avisEnEchec, drivers, restoId, loadDashboard, ordersLoaded, etatCommandes, statsService,
+          <Outlet context={{ restaurant: restaurant || null, orders, drivers, restoId, loadDashboard, ordersLoaded, etatCommandes, statsService,
             communs: bandeau ? communs : null, onConnect: connectOnboard, connecting, lectureSeule: !!actingAs,
             alerte: { ...orderAlert, push } }} />
         </div>

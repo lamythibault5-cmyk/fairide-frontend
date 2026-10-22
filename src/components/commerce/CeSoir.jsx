@@ -80,10 +80,13 @@ export function BandeauSoir({ restaurant: r, orders }) {
   );
 }
 
-/* LES QUATRE OUTILS DU QUOTIDIEN EN TUILES (même audit) : Statistiques, Avis, Promotions, Factures — chacune ouvre la page
+/* LES OUTILS DU QUOTIDIEN EN TUILES (même audit) : Statistiques, Promotions, Factures — chacune ouvre la page
  * qui existe déjà (elles gardent leur « ← Mon compte »), avec une ligne qui dit où on en est. Les promotions et la dernière
- * facture sont lues une fois à l'ouverture de l'accueil (deux petites lectures) ; le reste vient du tableau de bord. */
-export function TuilesCommerce({ restaurant: r, orders, reviews, restoId, token }) {
+ * facture sont lues une fois à l'ouverture de l'accueil (deux petites lectures) ; le reste vient du tableau de bord.
+ * La tuile Avis est partie le 22/10/2026 avec les avis clients (fondateur : pas assez d'utilisateurs, des commerces avec peu
+ * d'étoiles feraient mauvaise impression ; on les refera peut-être plus tard). Trois tuiles : ecran-commerce.css étale la
+ * dernière sur la largeur au téléphone. */
+export function TuilesCommerce({ restaurant: r, orders, restoId, token }) {
   const { t } = useLanguage();
   const statsService = useOutletContext()?.statsService;
   const [promos, setPromos] = useState(null);
@@ -101,8 +104,6 @@ export function TuilesCommerce({ restaurant: r, orders, reviews, restoId, token 
   // Compté par le serveur quand le tableau ne reçoit que les commandes en cours et des dernières 24 h (vue « service »,
   // audit du 19/10, shop-213) ; la liste complète reste le repli.
   const ceMois = statsService?.monthCount ?? (orders || []).filter((o) => !finie(o) && !o.isTraining && Number(o.createdAt) >= debutMois.getTime()).length;
-  const note = Number(r.rating || 0).toLocaleString(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  const sansReponse = (reviews?.reviews || []).filter((x) => !x.restaurantReply).length;
   const actives = promos === null ? null : promos.filter((x) => x.active).length + (r.fairideAdvantage ? 1 : 0);
   const statutFacture = { emise: 'invoiceArchive.statusIssued', envoyee: 'invoiceArchive.statusSent', payee: 'invoiceArchive.statusPaid' };
   const mois = facture ? new Date(facture.periodStart).toLocaleDateString(getLocale(), { month: 'long', timeZone: 'Europe/Brussels' }) : '';
@@ -110,8 +111,6 @@ export function TuilesCommerce({ restaurant: r, orders, reviews, restoId, token 
   const tuiles = [
     { to: '/dashboard/stats', icone: 'stats', titre: t('serviceCommerce.tuileStats'),
       sous: ceMois ? t(ceMois === 1 ? 'serviceCommerce.ceMoisUne' : 'serviceCommerce.ceMoisN', { n: ceMois }) : t('serviceCommerce.ceMoisAucune') },
-    { to: '/dashboard/reviews', icone: 'etoile', titre: t('serviceCommerce.tuileAvis'),
-      sous: r.reviewCount > 0 ? (sansReponse ? t('serviceCommerce.avisSansReponse', { note, n: sansReponse }) : t('serviceCommerce.avisToutRepondu', { note })) : t('serviceCommerce.avisAucun') },
     { to: '/dashboard/promotions', icone: 'etiquette', titre: t('serviceCommerce.tuilePromos'),
       sous: actives === null ? '' : actives ? t(actives === 1 ? 'serviceCommerce.promosUne' : 'serviceCommerce.promosN', { n: actives }) : t('serviceCommerce.promosAucune') },
     { to: '/dashboard/invoices', icone: 'document', titre: t('serviceCommerce.tuileFactures'),

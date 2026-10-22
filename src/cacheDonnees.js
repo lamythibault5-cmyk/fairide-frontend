@@ -114,12 +114,11 @@ export function modifierCache(chemin, token, modifier) {
 }
 
 /* PRÉCHARGEMENT AU TOUCHER (fondateur, 2026-10-20). Entre le doigt posé sur la carte d'un commerce et le clic, il se passe
- * 80 à 150 ms, plus la transition de la photo : la fiche et ses avis partent dès le contact. Appelé seulement quand le lien
+ * 80 à 150 ms, plus la transition de la photo : la fiche part dès le contact (ses avis aussi, jusqu'à leur retrait le 22/10/2026). Appelé seulement quand le lien
  * mène vraiment à la fiche (connecté, voir murCompte.js) : sans compte, il mène à la connexion. */
 export function prechargerFiche(id, token) {
   if (!id) return;
   chargerAvecCache(`/restaurants/${id}`, { token }).catch(() => {});
-  chargerAvecCache(`/restaurants/${id}/reviews`).catch(() => {});
 }
 
 /* Une fiche lue par son adresse lisible (/restaurants/<slug>, FicheCommerce.jsx) est rangée aussi sous son identifiant, la

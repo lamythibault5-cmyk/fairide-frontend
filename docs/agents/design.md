@@ -217,9 +217,10 @@ orders already loaded ([clientCommande.js](../../src/components/commerce/clientC
 comes from the postal code). App orders screen: alarm as one band line ([LigneAlarme](../../src/components/commerce/LigneAlarme.jsx), white
 « Couper », never lime), sections À traiter / En préparation / Prêtes, glass « Accepter #058 » bar above the tabs (portal; the website board keeps
 Accepter on the card), courier as a person ([LivreurCommande](../../src/components/commerce/LivreurCommande.jsx): no ETA, no vehicle — neither reaches the
-shop). Shop home: « Ce soir chez … » band and four tool tiles ([CeSoir.jsx](../../src/components/commerce/CeSoir.jsx)) once setup is done; the setup pill says
-« Visible · paiement au comptoir » while Stripe is not active; « Supprimer ce restaurant » lives in Infos légales. Review replies are signed with a
-first name (backend migration 051, `PATCH /restaurants/:id/review-signature`; shown via [AvisSignes](../../src/components/AvisSignes.jsx)).
+shop). Shop home: « Ce soir chez … » band and three tool tiles ([CeSoir.jsx](../../src/components/commerce/CeSoir.jsx)) once setup is done; the setup pill says
+« Visible · paiement au comptoir » while Stripe is not active; « Supprimer ce restaurant » lives in Infos légales. Three tool tiles since
+2026-10-22 (Statistiques, Promotions, Factures): the Avis tile, the reviews page and the signed replies went with customer
+reviews (founder, conformite.md); never bring back stars or ratings meanwhile.
 
 Note the two heavily-commented rules near the top of the file — `overflow-x: clip` on
 `html`/`body` and `-webkit-tap-highlight-color: transparent`. Both encode a bug that was

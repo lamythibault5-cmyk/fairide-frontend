@@ -6,7 +6,6 @@ import 'leaflet/dist/leaflet.css';
 import { RESTAURANT_TYPES, restaurantTypeLabel } from '../menuCategories';
 import { escapeHtml } from '../escapeHtml';
 import { cheminFiche } from '../adresseFiche';
-import { StarsDisplay } from './Stars';
 import CertifiedBadge from './CertifiedBadge';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
@@ -157,10 +156,6 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
               <span>{selected.name}</span>
               {selected.certified && <CertifiedBadge size={16} />}
             </h3>
-            <div className="row" style={{ gap: 6, margin: '2px 0' }}>
-              {selected.reviewCount > 0 && <StarsDisplay value={selected.rating} />}
-              <span className="small">{selected.reviewCount > 0 ? t('map.reviewsCount', { count: selected.reviewCount }) : t('restaurantList.newBadge')}</span>
-            </div>
             {selected.desc && <p className="small" style={{ margin: '6px 0' }}>{selected.desc}</p>}
             <p className="small" style={{ margin: '6px 0', color: 'var(--ink-soft)' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{selected.address}</p>
             <div className="row" style={{ gap: 8, marginTop: 10 }}>

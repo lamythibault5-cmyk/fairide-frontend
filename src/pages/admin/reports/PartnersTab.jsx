@@ -8,7 +8,6 @@ import { useReport, SectionCard } from './common';
 // (presetSearch, comme la page Commandes). Le bouton CSV de l'en-tête exporte les restaurants ; les livreurs
 // ont leur propre bouton. Pour les livreurs, seulement livraisons et gains (paiement, DAC7) : ni ponctualité, ni
 // note, ni classement, promis par le contrat livreur (présomption de salariat, loi du 3/10/2022).
-const note = (v) => (v === null || v === undefined ? '-' : `${v.toFixed(1)} ★`);
 const tauxOuTiret = (v) => (v === null || v === undefined ? '-' : pct(v));
 
 export default function PartnersTab({ token, query, onExport }) {
@@ -25,7 +24,7 @@ export default function PartnersTab({ token, query, onExport }) {
     { key: 'gmv', label: 'GMV', get: (r) => money(r.gmv), sortValue: (r) => r.gmv, align: 'right', sum: true },
     { key: 'acceptanceRate', label: tr('adminReports.acceptance'), get: (r) => tauxOuTiret(r.acceptanceRate), sortValue: (r) => r.acceptanceRate ?? -1, align: 'right' },
     { key: 'avgPrepMinutes', label: tr('adminReports.prepTime'), get: (r) => (r.avgPrepMinutes === null ? '-' : tr('adminRestos.minutes', { n: r.avgPrepMinutes })), sortValue: (r) => r.avgPrepMinutes ?? -1, align: 'right' },
-    { key: 'rating', label: tr('adminCommon.rating'), get: (r) => note(r.rating), sortValue: (r) => r.rating ?? -1, align: 'right' },
+    // Plus de colonne « Note » depuis le retrait des avis clients (fondateur, 22/10/2026).
     { key: 'cancellationRate', label: tr('adminCommon.cancellationRate'), get: (r) => tauxOuTiret(r.cancellationRate), sortValue: (r) => r.cancellationRate ?? -1, align: 'right' },
     { key: 'refunds', label: tr('adminCommon.refunds'), get: (r) => money(r.refunds), sortValue: (r) => r.refunds, align: 'right', sum: true }
   ];

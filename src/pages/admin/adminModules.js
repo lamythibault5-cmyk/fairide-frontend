@@ -16,7 +16,9 @@
 // celle où mène l'entrée de la barre, donc celle qu'on ouvre le plus souvent.
 // `icon` est un nom de tracé de components/Icone.jsx, plus un emoji : voir l'en-tête de ce fichier-là.
 export const ADMIN_HUBS = [
-  { key: 'orders', icon: 'commandes', modules: ['orders', 'incidents', 'reviews'] },
+  // « Avis » (modération) retiré le 22/10/2026 avec les avis clients (fondateur : pas assez d'utilisateurs, des commerces
+  // avec peu d'étoiles feraient mauvaise impression ; on les refera peut-être plus tard). /admin/reviews mène à l'accueil.
+  { key: 'orders', icon: 'commandes', modules: ['orders', 'incidents'] },
   // Fondateur, 2026-09-23 : la pastille « Commerces » montre le NOMBRE DE VRAIS COMMERCES inscrits (ni démo, ni test), pas
   // ce qui attend une action ; les restaurants à valider gardent leur propre pastille sur l'onglet Restaurants.
   { key: 'partners', icon: 'commerce', modules: ['restaurants', 'cartes', 'placements', 'terminals', 'sales', 'crm'], badge: (o) => pastille(n(o.accounts?.restaurants?.real), 'info') },
@@ -48,7 +50,6 @@ export const ADMIN_MODULES = [
   { key: 'drivers', path: '/admin/drivers', icon: 'scooter', hub: 'couriers', badge: (o) => pastille(n(o.drivers?.pending)) },
   { key: 'couriers', path: '/admin/couriers', icon: 'dossier', hub: 'couriers', badge: (o) => pastille(n(o.couriers?.pending)) },
   { key: 'clients', path: '/admin/clients', icon: 'personnes', hub: 'customers', badge: (o) => pastille(n(o.clients?.newWeek), 'info') },
-  { key: 'reviews', path: '/admin/reviews', icon: 'etoile', hub: 'orders', badge: (o) => pastille(n(o.reviews?.low), 'danger') },
   { key: 'crm', path: '/admin/crm', icon: 'cible', hub: 'partners', hidden: true, badge: (o) => pastille(n(o.crm?.followUpsOverdue), 'danger') },
   // Un code actif n'est pas « à traiter » : seule une donnée d'action réelle (codes qui expirent sous
   // peu, si le serveur la fournit) mérite une pastille.
@@ -195,7 +196,6 @@ export function attentionItems(o, role) {
     { key: 'salesOverdue', count: n(o.sales?.overdue), to: '/admin/sales?tab=prospects&overdue=1', tone: 'warn' },
     { key: 'invoicesOverdue', count: n(o.invoices?.overdue), to: '/admin/invoices', tone: 'danger' },
     { key: 'incidentsRefunds', count: n(o.incidents?.refundsToday), to: '/admin/orders?refunded=1', tone: 'info' },
-    { key: 'reviewsLow', count: n(o.reviews?.low), to: '/admin/reviews?low=1', tone: 'warn' },
     { key: 'deletionRequests', count: n(o.deletions?.pending), to: '/admin#suppressions', tone: 'warn' },
     { key: 'supportOpen', count: n(o.support?.open), to: '/admin/support', tone: 'info' },
     { key: 'tasksDueSoon', count: n(o.tasks?.dueSoon), to: '/admin/tasks?due=due_soon', tone: 'info' }

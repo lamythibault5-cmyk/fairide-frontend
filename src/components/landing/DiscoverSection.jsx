@@ -54,11 +54,11 @@ export default function DiscoverSection({ restaurants }) {
             <div className="discover-tile-img">
               <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 400, '(max-width: 640px) 50vw, 400px')} alt={r.name} onError={cacherImageCassee} />
               <span className="discover-tile-cuisine">{restaurantTypeLabel(r.cuisine, t)}</span>
-              {r.reel && !r.publie ? <span className="discover-tile-rating">{t('landing.heroPreviewSoon')}</span> : r.reviewCount > 0 && <span className="discover-tile-rating">★ {Number(r.rating).toFixed(1)}</span>}
+              {r.reel && !r.publie ? <span className="discover-tile-rating">{t('landing.heroPreviewSoon')}</span> : null}
             </div>
             <div className="discover-tile-body">
               <b>{r.name}</b>
-              <span className="discover-tile-meta"><Icone nom="position" taille={14} /> {r.neighborhood ? `${r.neighborhood} · ` : ''}{r.commune}{r.reviewCount > 0 ? <span className="discover-tile-reviews"> · {r.reviewCount} {t('landing.discoverReviews')}</span> : null}</span>
+              <span className="discover-tile-meta"><Icone nom="position" taille={14} /> {r.neighborhood ? `${r.neighborhood} · ` : ''}{r.commune}</span>
             </div>
           </Reveal>
         ))}
