@@ -32,7 +32,9 @@ function Langues() {
   );
 }
 
+// `nom` « be » : le drapeau belge dessiné au lieu d'une icône.
 function Tuile({ nom, grande = false }) {
+  if (nom === 'be') return <span className="bv-tuile bv-tuile-be"><Drapeau /></span>;
   return <span className={`bv-tuile${grande ? ' grande' : ''}`}><Icone nom={nom} taille={grande ? 34 : 20} /></span>;
 }
 
@@ -140,10 +142,28 @@ function SceneAccueil() {
   );
 }
 
-/* PREMIER ÉCRAN, version B2 de maquettes/accueil-appli/accueil-appli.html (fondateur, 2026-10-16 : l'ancien, tout iris avec un « 10 % »
- * de 88 px, était « trop fort »). Même cadre que les écrans suivants : le slogan du site dans le bandeau iris, le vélo
- * dessous, puis la feuille blanche avec la phrase, les barres de commission (celles de « Pourquoi passer à Fairide ? ») et
- * le seul bouton lime. Le slogan est celui de l'accueil du site (landing.title1/title2), pour les trois langues. */
+/* LES BARRES EN EUROS : ce qu'un restaurant ajoute AU PLUS à un plat de 12 € pour payer la commission. 30 % : 12 € ÷ 0,70
+ * = 17,14 €, soit +5,10 € (arrondi aux 10 cents inférieurs) ; Fairide : la hausse est plafonnée à 10 % (hausseMaxPourcent du
+ * backend), soit +1,20 €. Un calcul, pas un relevé des prix d'une autre application (voir HeroPrix.jsx). L'ajout des autres
+ * applis fait toute la largeur, celui de Fairide est à l'échelle. Sur le premier écran et sur « Ce que tu y gagnes ». */
+const PLAT = 12;
+const AJOUT_EUX = Math.floor((PLAT / 0.7 - PLAT) * 10 + 1e-6) / 10; // 5,10 €
+const AJOUT_NOUS = Math.floor(PLAT * 0.1 * 10 + 1e-6) / 10; // 1,20 €
+const platAffiche = () => euros(PLAT).replace(/[,.]00(?=\D|$)/, '');
+function BarresPlat() {
+  const { t } = useLanguage();
+  return (
+    <div className="bv-barres" aria-label={`${t('appli.autresApplis')} +${euros(AJOUT_EUX)}, Fairide +${euros(AJOUT_NOUS)}`}>
+      <span>{t('appli.autresApplis')}</span><i className="autres-euros" /><span>+{euros(AJOUT_EUX)}</span>
+      <span>Fairide</span><i className="fairide" style={{ width: `${(AJOUT_NOUS / AJOUT_EUX) * 100}%` }} /><span><b>+{euros(AJOUT_NOUS)}</b></span>
+    </div>
+  );
+}
+
+/* PREMIER ÉCRAN, version B2 de maquettes/accueil-appli/accueil-appli.html (fondateur, 2026-10-16), le même pour les trois profils.
+ * Le slogan du site dans le bandeau iris (landing.title1/title2, gardé par le fondateur le 2026-10-22), le vélo dessous, puis
+ * la feuille blanche : la phrase, les barres en euros d'un plat de 12 € (version retenue de
+ * maquettes/onboarding-court/onboarding-court.html, à la place des barres de commission en %), la ligne belge, le bouton lime. */
 export function EcranAccueil({ onCommencer, onConnexion }) {
   const { t } = useLanguage();
   return (
@@ -158,10 +178,9 @@ export function EcranAccueil({ onCommencer, onConnexion }) {
       <SceneAccueil />
       <Feuille>
         <p className="bv-sous bv-accroche">{t('appli.accSub')}</p>
-        {/* Sans texte barré (fondateur, 2026-10-16) : la fourchette des autres applis est écrite en clair. */}
-        <div className="bv-carte bv-barres" aria-label={`Fairide 10 %, ${t('appli.autresApplis')} 22–32 %`}>
-          <span>Fairide</span><i className="fairide" /><span><b>10 %</b></span>
-          <span>{t('appli.autresApplis')}</span><i className="autres"><em /></i><span>22–32 %</span>
+        <div className="bv-carte bv-carte-barres">
+          <b>{t('appli.accBarres', { prix: platAffiche() })}</b>
+          <BarresPlat />
         </div>
         <p className="bv-petit bv-ligne-be bv-be-accueil"><Drapeau /> {t('appli.beChip')}</p>
         <button type="button" className="bv-btn btn-gold" onClick={onCommencer}>{t('appli.commencer')}</button>
@@ -188,126 +207,48 @@ export function EcranProfil({ role, onChoix, onSuite }) {
   );
 }
 
-// Écran à choix multiple générique (« ce qui compte », « ce qui agace »). Liste : [valeur, icône, clé, a un sous-titre].
-export function EcranChoix({ titre, liste, choisis, onBasculer, onSuite, exigerUn, libelleVide }) {
+/* UNE SEULE QUESTION (fondateur, 2026-10-22, version B de maquettes/onboarding-court/onboarding-court.html) : « Qu'est-ce qui
+ * compte le plus pour toi ? », un seul choix, qui passe en tête de l'écran suivant. Elle remplace « ce qui compte », « ce qui
+ * agace » et les trois cartes à glisser (« trop long », retours des testeurs). « Payer moins » est le souhait du client :
+ * l'écran suivant n'y répond jamais par « moins cher », seulement par des prix pas gonflés (CLAUDE.md, l'argent). */
+const QUESTION = [['prix', 'euro', 'qPrix'], ['total', 'ticket', 'qTotal'], ['ici', 'be', 'qIci']];
+export function EcranQuestion({ choix, onChoix, onSuite }) {
   const { t } = useLanguage();
   return (
     <>
-      <h1 className="bv-titre">{titre}</h1>
-      <p className="bv-sous">{t('appli.plusieurs')}</p>
+      <h1 className="bv-titre">{t('appli.qTitre')}</h1>
+      <p className="bv-sous">{t('appli.qSub')}</p>
       <Feuille>
-        {liste.map(([v, icone, k, avecSous]) => (
-          <Option key={v} multi on={choisis.includes(v)} icone={icone} titre={t(`appli.${k}`)} sous={avecSous ? t(`appli.${k}S`) : null} onClick={() => onBasculer(v)} />
-        ))}
+        {QUESTION.map(([v, icone, k]) => <Option key={v} on={choix === v} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)} onClick={() => onChoix(v)} />)}
         <div className="bv-grandit" />
-        <button type="button" className="bv-btn btn-gold" disabled={exigerUn && !choisis.length} onClick={onSuite}>
-          {choisis.length || !libelleVide ? t('appli.continuer') : libelleVide}
-        </button>
+        <button type="button" className="bv-btn btn-gold" disabled={!choix} onClick={onSuite}>{t('appli.continuer')}</button>
       </Feuille>
     </>
   );
 }
 
-/* Cartes à glisser : au doigt (événements pointer, qui couvrent le tactile et la souris) ou par les deux boutons.
- * Au-delà de 90 px la carte part ; après la dernière, on passe tout seul à « Pourquoi passer à Fairide ? » (retour
- * du fondateur : pas de bouton à toucher entre les deux). */
-const CARTES = ['c1', 'c2', 'c3'];
-export function EcranCartes({ onFini }) {
+/* « CE QUE TU Y GAGNES » (version retenue de maquettes/onboarding-court/onboarding-court.html, 2026-10-22) : l'argent du client
+ * d'abord, plus le livreur ni le restaurant (« les gens tiennent à leur argent », fondateur). Des prix pas gonflés, avec la
+ * raison (plus la commission est grosse, plus le restaurant monte ses prix), rien d'ajouté au paiement, ton argent reste à
+ * Bruxelles. La carte choisie à la question passe en tête, sans phrase « Tu nous l'as dit » (retirée par le fondateur). */
+const CARTES_POURQUOI = { prix: ['euro', 'pq1'], total: ['ticket', 'pq2'], ici: ['be', 'pq3'] };
+export function EcranPourquoi({ onSuite, premier = null }) {
   const { t } = useLanguage();
-  const [index, setIndex] = useState(0);
-  const [dx, setDx] = useState(0);
-  const [depart, setDepart] = useState(null); // 'oui' | 'non' pendant l'animation de sortie
-  const x0 = useRef(null);
-  const votes = useRef([]);
-  const voter = (oui) => {
-    if (depart) return;
-    setDepart(oui ? 'oui' : 'non');
-    setTimeout(() => {
-      votes.current.push(oui);
-      setDepart(null); setDx(0);
-      if (index + 1 >= CARTES.length) onFini(votes.current); else setIndex(index + 1);
-    }, 220);
-  };
-  const decalage = depart ? (depart === 'oui' ? 420 : -420) : dx;
+  const ordre = ['prix', 'total', 'ici'].sort((a, b) => Number(b === premier) - Number(a === premier));
   return (
     <>
-      <h1 className="bv-titre">{t('appli.cartesTitre')}</h1>
-      <p className="bv-sous">{t('appli.cartesSub')}</p>
+      <h1 className="bv-titre">{t('appli.pqTitre')}</h1>
       <Feuille>
-        <div className="bv-paquet">
-          {index + 1 < CARTES.length && <div className="bv-glisse dessous"><div className="bv-guillemet">“</div>{t(`appli.${CARTES[index + 1]}`)}</div>}
-          <div
-            key={index}
-            className="bv-glisse"
-            style={{ transform: `translateX(${decalage}px) rotate(${decalage / 18}deg)`, opacity: depart ? 0 : 1, transition: x0.current === null ? 'transform .25s, opacity .25s' : 'none' }}
-            onPointerDown={(e) => { x0.current = e.clientX; e.currentTarget.setPointerCapture(e.pointerId); }}
-            onPointerMove={(e) => { if (x0.current !== null) setDx(e.clientX - x0.current); }}
-            onPointerUp={() => { if (x0.current === null) return; x0.current = null; if (Math.abs(dx) > 90) voter(dx > 0); else setDx(0); }}
-            onPointerCancel={() => { x0.current = null; setDx(0); }}
-          >
-            <span className="bv-tampon non" style={{ opacity: Math.max(0, -decalage / 90) }}>{t('appli.non')}</span>
-            <span className="bv-tampon oui" style={{ opacity: Math.max(0, decalage / 90) }}>{t('appli.oui')}</span>
-            <div className="bv-guillemet">“</div>{t(`appli.${CARTES[index]}`)}
-          </div>
-        </div>
-        <div className="bv-votes">
-          <button type="button" className="bv-rond grand" onClick={() => voter(false)} aria-label={t('appli.non')}><Icone nom="croix" taille={24} /></button>
-          <button type="button" className="bv-rond grand plein" onClick={() => voter(true)} aria-label={t('appli.oui')}><Icone nom="valider" taille={26} /></button>
-        </div>
-        <p className="bv-petit bv-centre" style={{ marginTop: 14 }}>{t('appli.carteN', { n: index + 1, total: CARTES.length })}</p>
-      </Feuille>
-    </>
-  );
-}
-
-// Des prix qui ne sont pas gonflés d'abord (fondateur, 2026-10-19, version F de maquettes/prix-pas-gonfles/prix-pas-gonfles.html : c'est la
-// première raison de passer à Fairide), puis rien d'ajouté, puis la justice ; le local en une ligne.
-// LES BARRES EN EUROS : ce qu'un restaurant ajoute AU PLUS à un plat de 12 € pour couvrir la commission. 30 % : 12 € ÷ 0,70
-// = 17,14 €, soit +5,10 € (arrondi aux 10 cents inférieurs) ; Fairide : la hausse est plafonnée à 10 % (hausseMaxPourcent du
-// backend), soit +1,20 €. Un calcul, pas un relevé des prix d'une autre application (voir HeroPrix.jsx).
-// `echo` : la personne a dit, juste avant, que payer plus cher qu'au restaurant l'agace (Bienvenue.jsx) ; on le lui rappelle.
-const PLAT = 12;
-const AJOUT_EUX = Math.floor((PLAT / 0.7 - PLAT) * 10 + 1e-6) / 10; // 5,10 €
-const AJOUT_NOUS = Math.floor(PLAT * 0.1 * 10 + 1e-6) / 10; // 1,20 €
-export function EcranPourquoi({ onSuite, echo = false }) {
-  const { t } = useLanguage();
-  const plat = euros(PLAT).replace(/[,.]00(?=\D|$)/, '');
-  return (
-    <>
-      <h1 className="bv-titre"><AvecMarque>{t('appli.pqTitre')}</AvecMarque></h1>
-      <p className="bv-sous">{t('appli.pqSub')}</p>
-      <Feuille>
-        {echo && <p className="bv-echo"><Icone nom="bulle" taille={18} />{t('appli.pqEcho')}</p>}
-        <Fait vedette icone="euro" titre={t('appli.pq1')} sous={t('appli.pq1S', { prix: plat })}>
-          {/* Barres à l'échelle : l'ajout des autres applis = toute la largeur, celui de Fairide en proportion. */}
-          <div className="bv-barres" aria-hidden="true">
-            <span>{t('appli.autresApplis')}</span><i className="autres-euros" /><span>+{euros(AJOUT_EUX)}</span>
-            <span>Fairide</span><i className="fairide" style={{ width: `${(AJOUT_NOUS / AJOUT_EUX) * 100}%` }} /><span><b>+{euros(AJOUT_NOUS)}</b></span>
-          </div>
-        </Fait>
-        <Fait icone="ticket" titre={t('appli.pq2')} sous={t('appli.pq2S')} />
-        <Fait icone="balance" titre={t('appli.pq3')} sous={t('appli.pq3S')} />
-        <p className="bv-petit bv-ligne-be"><Drapeau /> {t('appli.pqBe')}</p>
+        {ordre.map((cle, n) => {
+          const [icone, k] = CARTES_POURQUOI[cle];
+          return (
+            <Fait key={cle} vedette={n === 0} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)}>
+              {cle === 'prix' && <BarresPlat />}
+            </Fait>
+          );
+        })}
         <div className="bv-grandit" />
         <button type="button" className="bv-btn btn-gold" onClick={onSuite}>{t('appli.pqBtn')}</button>
-      </Feuille>
-    </>
-  );
-}
-
-const ENVIES = [['snack', 'frites', 'eSnack'], ['pizza', 'pizza', 'ePizza'], ['burger', 'burger', 'eBurger'], ['monde', 'globe', 'eMonde'], ['healthy', 'bol', 'eHealthy'], ['sucre', 'tasse', 'eSucre']];
-export function EcranEnvies({ envies, onBasculer, onSuite }) {
-  const { t } = useLanguage();
-  return (
-    <>
-      <h1 className="bv-titre">{t('appli.envTitre')}</h1>
-      <p className="bv-sous">{t('appli.envSub')}</p>
-      <Feuille>
-        <div className="bv-grille">
-          {ENVIES.map(([v, icone, k]) => <Option key={v} on={envies.includes(v)} icone={icone} titre={t(`appli.${k}`)} onClick={() => onBasculer(v)} />)}
-        </div>
-        <div className="bv-grandit" />
-        <button type="button" className="bv-btn btn-gold" onClick={onSuite}>{envies.length ? t('appli.continuer') : t('appli.envTout')}</button>
       </Feuille>
     </>
   );
@@ -368,12 +309,12 @@ export function Cercle({ points, anime, petit }) {
   );
 }
 
-// Les trois étapes se cochent au quart, à la moitié et aux trois quarts de `duree` : la dernière reste lisible avant le compte.
-export function EcranRecherche({ commune, points, envies, duree }) {
+// Les deux étapes se cochent au tiers et aux deux tiers de `duree` : la dernière reste lisible avant le compte.
+export function EcranRecherche({ commune, points, duree }) {
   const { t } = useLanguage();
   const [etape, setEtape] = useState(0);
   useEffect(() => {
-    const minuteurs = [1, 2, 3].map((n) => setTimeout(() => setEtape(n), (duree / 4) * n));
+    const minuteurs = [1, 2].map((n) => setTimeout(() => setEtape(n), (duree / 3) * n));
     return () => minuteurs.forEach(clearTimeout);
   }, [duree]);
   return (
@@ -382,7 +323,7 @@ export function EcranRecherche({ commune, points, envies, duree }) {
       <Cercle points={points} anime />
       <h1 className="bv-titre bv-centre" style={{ fontSize: 26 }} aria-live="polite">{commune ? t('appli.calcTitre', { c: commune }) : t('appli.calcTitrePosition')}</h1>
       <ul className="bv-etapes">
-        {[t('appli.calc1'), envies.length ? t('appli.calc2') : t('appli.calc2b'), t('appli.calc3')].map((txt, k) => <li key={txt} className={etape > k ? 'fait' : ''}>{txt}</li>)}
+        {[t('appli.calc1'), t('appli.calc3')].map((txt, k) => <li key={txt} className={etape > k ? 'fait' : ''}>{txt}</li>)}
       </ul>
       <div className="bv-grandit" />
     </>
@@ -451,13 +392,34 @@ export function EcranCompte({ role, resultats, listeEchec = false, avecPosition,
   );
 }
 
-export function EcranPromesses({ chip, chipIcone, titre, sous, faits, bouton, onSuite }) {
+/* Livreur et commerce (version retenue de maquettes/onboarding-court/onboarding-court.html, 2026-10-22) : ce qu'ils y gagnent
+ * d'abord. `barres` : une carte au-dessus des promesses (commerce : ce que la plateforme prend sur une commande de 20 €) ;
+ * `ligneBe` : « Startup belge, née à Bruxelles » sous les promesses (livreur, dont la pastille n'a pas le drapeau). */
+const COMMANDE = 20;
+export function BarresCommande() {
+  const { t } = useLanguage();
+  const [bas, haut, nous] = [COMMANDE * 0.22, COMMANDE * 0.32, COMMANDE * 0.1];
+  return (
+    <div className="bv-carte bv-carte-barres">
+      <b>{t('appli.coBarres', { montant: euros(COMMANDE).replace(/[,.]00(?=\D|$)/, '') })}</b>
+      <div className="bv-barres">
+        <span>{t('appli.autresApplis')}</span><i className="autres-euros" /><span>{t('appli.coFourchette', { bas: euros(bas), haut: euros(haut) })}</span>
+        <span>Fairide</span><i className="fairide" style={{ width: `${(nous / haut) * 100}%` }} /><span><b>{euros(nous)}</b></span>
+      </div>
+    </div>
+  );
+}
+
+export function EcranPromesses({ chip, chipIcone, titre, sous, barres, faits, ligneBe, bouton, onSuite }) {
+  const { t } = useLanguage();
   return (
     <>
       <span className="bv-pastille" style={{ marginTop: 6 }}>{chipIcone === 'be' ? <Drapeau /> : <Icone nom={chipIcone} taille={14} />} {chip}</span>
       <h1 className="bv-titre" style={{ fontSize: 34, marginTop: 16 }}>{titre}</h1>
       {sous && <p className="bv-sous">{sous}</p>}
+      {barres}
       {faits.map(([ic, ti, so]) => <Fait key={ti} icone={ic} titre={ti} sous={so} />)}
+      {ligneBe && <p className="bv-petit bv-ligne-be"><Drapeau /> {t('appli.beChip')}</p>}
       <div className="bv-grandit" />
       <button type="button" className="bv-btn btn-gold" onClick={onSuite}>{bouton}</button>
     </>

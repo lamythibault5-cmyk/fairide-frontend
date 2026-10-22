@@ -1,4 +1,5 @@
-// Les « envies » choisies à l'accueil de l'application (pages/app/Bienvenue.jsx, écran « Une envie en particulier ? »),
+// Les « envies » choisies à l'accueil de l'application (pages/app/Bienvenue.jsx, écran « Une envie en particulier ? », retiré le
+// 2026-10-22 pour raccourcir l'accueil : les envies déjà données sur un téléphone servent encore à la rangée « Vos envies »),
 // et les cuisines qui y répondent. Sorti de Bienvenue.jsx le 2026-10-13 pour que la liste des commerces
 // (RestaurantList.jsx, rangée « Vos envies ») range avec exactement la même table que l'écran de résultats de l'accueil :
 // deux tables séparées auraient fini par ne plus dire la même chose.

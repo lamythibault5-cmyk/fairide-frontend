@@ -5099,8 +5099,6 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-haut { display: flex; align-items: center; gap: 12px; min-height: 36px; margin-bottom: 14px; }
 .bv-rond { width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: inherit; display: grid; place-items: center; flex: none; }
 .bv-iris .bv-rond { border-color: rgba(255,255,255,.35); }
-.bv-rond.grand { width: 64px; height: 64px; background: #fff; color: var(--ink); }
-.bv-rond.plein { background: var(--iris); border-color: var(--iris); color: #fff; }
 .bv-progression { flex: 1; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .bv-progression i { display: block; height: 100%; background: var(--iris); transition: width .3s; }
 .bv-iris .bv-progression { background: rgba(255,255,255,.25); }
@@ -5182,8 +5180,18 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 @keyframes bv-respire { 50% { transform: translateY(-1.5px) rotate(-1deg); } }
 @media (prefers-reduced-motion: reduce) { .bv-scene * { animation: none !important; } }
 .bv-feuille .bv-accroche { color: var(--ink); font-size: 16px; margin-bottom: 14px; }
-.bv-carte.bv-barres { margin: 0; padding: 14px 16px; gap: 10px 12px; }
-.bv-carte.bv-barres b { color: var(--iris); }
+/* Une carte de barres en euros : le plat de 12 € (premier écran), la commande de 20 € (promesses du commerce). */
+/* Serrée : sur le premier écran, la carte a deux lignes de titre et tout doit tenir sans défiler à 375 × 667 (npm run check:app). */
+.bv-carte.bv-carte-barres { margin: 0; padding: 10px 14px; }
+.bv-feuille .bv-accroche + .bv-carte-barres { margin-top: -4px; }
+.bv-carte-barres > b { display: block; font-size: 14px; line-height: 1.35; }
+.bv-carte-barres .bv-barres { margin: 8px 0 0; }
+.bv-carte-barres .bv-barres b { color: var(--iris); font-size: 15px; }
+.bv-iris .bv-carte-barres { margin: 16px 0 10px; }
+.bv-iris .bv-carte-barres > b { font-weight: 500; color: rgba(255,255,255,.8); }
+.bv-iris .bv-barres .autres-euros { background: rgba(255,255,255,.45); }
+.bv-iris .bv-barres .fairide { background: var(--lime); }
+.bv-iris .bv-carte-barres .bv-barres b { color: var(--lime); }
 .bv-be-accueil { justify-content: center; margin: 22px 0 2px; }
 .bv-bandeau .bv-titre-accueil ~ .bv-feuille { flex: none; }
 
@@ -5204,6 +5212,9 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 /* Tuile d'icône : iris plein, trait blanc ; sur fond iris, un filet blanc. */
 .bv-tuile { width: 40px; height: 40px; border-radius: 12px; background: var(--iris); color: #fff; display: grid; place-items: center; flex: none; }
 .bv-iris .bv-tuile { background: transparent; border: 1px solid rgba(255,255,255,.4); }
+/* Le drapeau en tuile (« Ton argent reste à Bruxelles ») : fond iris très clair, pas d'aplat iris derrière le noir du drapeau. */
+.bv-tuile.bv-tuile-be { background: rgba(59, 47, 181, .08); }
+.bv-tuile-be .bv-drapeau { width: 20px; height: 15px; }
 .bv-tuile.grande { width: 72px; height: 72px; border-radius: 22px; margin: 26px 0 14px; }
 
 .bv-option { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 16px; padding: 13px 14px; margin-bottom: 10px; font-size: 15px; font-weight: 500; transition: background .15s, color .15s; }
@@ -5237,20 +5248,6 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 /* « Pourquoi passer à Fairide ? » en euros (2026-10-19) : l'ajout des autres applis fait toute la largeur ; celui de Fairide
    reçoit sa largeur en ligne (EcranPourquoi). */
 .bv-barres .autres-euros { background: var(--ink-faint); }
-/* « Tu nous l'as dit… » : la personne a dit que payer plus cher qu'au restaurant l'agace (EcranPourquoi, `echo`). */
-.bv-echo { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 10px; padding: 10px 12px; border-radius: 14px;
-  background: rgba(59, 47, 181, .08); color: var(--iris); font-size: 13.5px; line-height: 1.4; font-weight: 600; }
-.bv-echo svg { flex: none; margin-top: 1px; }
-
-/* Cartes à glisser. */
-.bv-paquet { position: relative; height: 290px; margin: 6px 0 18px; }
-.bv-glisse { position: absolute; inset: 0; border: 1px solid var(--line); border-radius: 24px; background: #fff; display: flex; flex-direction: column; justify-content: center; padding: 28px; font-size: 23px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 500; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
-.bv-glisse.dessous { transform: scale(.95) translateY(12px); }
-.bv-guillemet { font-size: 54px; line-height: .6; color: var(--iris); margin-bottom: 10px; }
-.bv-tampon { position: absolute; top: 20px; padding: 4px 10px; border-radius: var(--radius-chip); font-size: 14px; font-weight: 700; color: #fff; }
-.bv-tampon.oui { right: 20px; background: var(--iris); }
-.bv-tampon.non { left: 20px; background: var(--chip); }
-.bv-votes { display: flex; justify-content: center; gap: 28px; }
 
 .bv-saisie { width: 100%; font-size: 22px; font-weight: 500; letter-spacing: .1em; padding: 16px; border: 1px solid var(--line); border-radius: 16px; text-align: center; background: #fff; }
 .bv-saisie.input-invalid { border-color: var(--red); }
