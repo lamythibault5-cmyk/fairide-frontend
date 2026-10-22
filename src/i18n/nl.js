@@ -7341,6 +7341,8 @@ export default {
       listDescription: 'Eten bestellen in Brussel: restaurants, bakkers, supermarkten en nachtwinkels, geleverd of om af te halen. Het Brusselse alternatief voor Uber Eats, met maximaal 10% commissie.',
       restaurantTitle: "{name}, {cuisine} in {commune} · Fairide",
       restaurantDescription: "Bestel bij {name} in {commune}, om te laten leveren of af te halen, op Fairide.",
+      // Titre de la carte dans le texte lisible sans JavaScript des fiches (scripts/contenuStatique.mjs).
+      carteStatique: "De kaart",
       loginTitle: 'Inloggen en registreren · fairide.be Brussel',
       loginDescription: 'Maak je klantaccount aan, registreer je restaurant of word koerier op fairide.be, het Brusselse bezorgplatform met 10% commissie.',
       searchTitle: 'Zoeken · fairide.be',

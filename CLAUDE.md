@@ -35,7 +35,8 @@ platforms. The customer pays the delivery fee on top, nothing else. **This repo 
 ```
 npm install            # node_modules is not checked in; in a worktree, junction it to the main checkout's instead
 npm run dev            # vite dev server (needs .env.local, see below)
-npm run build          # production build + prerender of the public pages (scripts/prerender.mjs)
+npm run build          # production build + prerender of the public pages (scripts/prerender.mjs: head, readable body
+                       # text for crawlers without JavaScript in contenuStatique.mjs, sitemap, IndexNow ping on Vercel production)
 npm run lint           # oxlint: 0 errors, ~150 pre-existing warnings on 2026-10-22
 npm run check:i18n     # fr / nl / en have the same keys
 npm run check:app      # every app page in app mode, four profiles: fails on any website chrome, crash, scrolling full screen

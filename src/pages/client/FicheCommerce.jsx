@@ -51,6 +51,6 @@ export default function FicheCommerce() {
   }, [adresse, id, token, essai]);
 
   if (id) return <RestaurantMenu id={id} />;
-  if (echec?.adresse === adresse && essai === echec.essai) return <EchecFiche erreur={echec.erreur} onReessayer={() => setEssai((n) => n + 1)} />;
+  if (echec?.adresse === adresse && essai === echec.essai) return <EchecFiche erreur={echec.erreur} chemin={`/restaurants/${adresse}`} onReessayer={() => setEssai((n) => n + 1)} />;
   return experienceApp() ? <SqueletteEcran photo /> : <SkeletonCards count={3} />;
 }
