@@ -1206,10 +1206,11 @@ export default function Auth() {
     finally { setResending(false); }
   }
 
-  async function handleResend() {
+  // canal 'email' : « Recevoir le code par e-mail », quand le SMS n'arrive pas (22/10/2026).
+  async function handleResend(canal) {
     setResending(true);
     try {
-      const r = await resendCode(pendingEmail);
+      const r = await resendCode(pendingEmail, canal);
       if (r?.channel) { setPendingChannel(r.channel === 'sms' ? 'sms' : 'email'); if (r.phoneMasked) setPendingPhone(r.phoneMasked); }
       setCode(''); setErreurCode('');
       lancerAttenteRenvoi(DELAI_RENVOI_S);
@@ -1354,9 +1355,15 @@ export default function Auth() {
               {loading ? t('common.loading') : t('auth.confirm')}
             </button>
           </form>
-          <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending || attenteRenvoi > 0} onClick={handleResend}>
+          <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending || attenteRenvoi > 0} onClick={() => handleResend()}>
             {resending ? t('common.loading') : attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}
           </button>
+          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026) : le code par e-mail, même attente. */}
+          {pendingChannel === 'sms' && (
+            <button className="btn-ghost" style={{ marginTop: 4 }} disabled={resending || attenteRenvoi > 0} onClick={() => handleResend('email')}>
+              {t('auth.codeByEmail')}
+            </button>
+          )}
           {/* Un numéro mal tapé : on le corrige ici, depuis l'inscription comme depuis la connexion (audit du 19/10, auth-03). */}
           {changerNumero ? (
             <form onSubmit={envoyerNouveauNumero} style={{ marginTop: 14 }} noValidate>
