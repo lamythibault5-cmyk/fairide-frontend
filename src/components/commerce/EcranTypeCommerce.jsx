@@ -1,37 +1,39 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { RESTAURANT_TYPES, restaurantTypeLabel } from '../../menuCategories';
+import { cuisinesCommerce } from '../../specialites';
 import SousEcran from '../SousEcran';
+import ChoixSpecialites from './ChoixSpecialites';
 
-/* Mon commerce › Type de commerce. UN SEUL TEMPS DEPUIS L'AUDIT DU 19/10 (shop-317).
+/* Mon commerce › Ce que tu vends. LE MÊME ÉCRAN QU'À L'INSCRIPTION (fondateur, 2026-10-22, maquettes/categories-commerce :
+ * « faire bien en sorte qu'ils puissent changer ça quand ils veulent dans les settings de la même manière »).
  *
- * Avant : le nouveau type, puis « que faire de ta carte » (garder, ou remplacer par les plats types), puis un code reçu par
- * e-mail. Mais depuis le verrou de la carte (2026-10-01), « remplacer » ne faisait plus rien pour un commerce (MENU_LOCKED,
- * avalé) alors que l'écran disait « Type mis à jour » ; et le code, envoyé au commerce lui-même, ne protégeait plus rien :
- * changer de type ne touche qu'à l'affichage, comme « Autres types de cuisine ». Le serveur ne demande plus de code pour ce
- * geste (PATCH /cuisine). Pour changer de carte, le commerce passe par Ma carte › demande de modification. Les types sont
- * affichés dans la langue choisie (restaurantTypeLabel) ; la valeur envoyée reste la valeur française de la table. */
+ * Il remplace les deux réglages d'avant : « Type de commerce » (une liste déroulante, plus « Autre » à préciser) et
+ * « Autres types de cuisine » (6 pastilles en plus). Les spécialités choisies, dans l'ordre : la première est le type
+ * principal, les autres les types en plus, enregistrés en une fois (PATCH /:id/specialites).
+ *
+ * Aucun code demandé, et la carte ne change pas : changer de type ne touche qu'à l'affichage et aux filtres depuis le
+ * verrou de la carte (audit du 19/10, shop-317). Pour changer de carte, le commerce passe par Ma carte › demande de
+ * modification. */
 export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, onFermer }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
-  const ids = useId();
-  const connu = RESTAURANT_TYPES.some((c) => c.value === restaurant.cuisine);
-  const [type, setType] = useState(connu ? restaurant.cuisine : 'Autre');
-  const [autre, setAutre] = useState(connu ? '' : (restaurant.cuisine || ''));
+  // Un commerce encore en « Autre » (texte libre vide d'avant) n'a rien de choisi : il part d'une liste vide.
+  const [valeurs, setValeurs] = useState(() => cuisinesCommerce(restaurant).filter((c) => c !== 'Autre'));
+  const [erreur, setErreur] = useState(null);
   const [enCours, setEnCours] = useState(false);
 
-  async function confirmer() {
+  async function enregistrer() {
     if (enCours) return;
-    const final = type === 'Autre' ? autre.trim() || 'Autre' : type;
+    if (!valeurs.length) { setErreur(t('specialites.aucune')); return; }
     setEnCours(true);
     try {
-      await api(`/restaurants/${restoId}/cuisine`, { method: 'PATCH', token, body: { cuisine: final } });
-      await loadDashboard(restoId);
-      toast(t('editResto.toastTypeUpdated'), 'succes');
+      await api(`/restaurants/${restoId}/specialites`, { method: 'PATCH', token, body: { cuisines: valeurs } });
+      await loadDashboard?.(restoId);
+      toast(t('specialites.enregistre'), 'succes');
       onFermer();
     } catch (e) {
       toast(e.message, 'erreur');
@@ -40,21 +42,13 @@ export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, 
   }
 
   const pied = (
-    <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 48 }} disabled={enCours} onClick={confirmer}>{enCours ? '…' : t('editResto.confirmChange')}</button>
+    <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 48 }} disabled={enCours} onClick={enregistrer}>{enCours ? '…' : t('specialites.enregistrer')}</button>
   );
 
   return (
-    <SousEcran titre={t('editResto.rowType')} onFermer={onFermer} pied={pied}>
-      <div className="field">
-        <label htmlFor={ids + '-type'}>{t('editResto.newType')}</label>
-        <select id={ids + '-type'} value={type} onChange={(e) => setType(e.target.value)}>
-          {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{restaurantTypeLabel(c.value, t)}</option>)}
-        </select>
-      </div>
-      {type === 'Autre' && (
-        <div className="field"><label htmlFor={ids + '-autre'}>{t('editResto.specifyType')}</label><input id={ids + '-autre'} value={autre} onChange={(e) => setAutre(e.target.value)} placeholder={t('editResto.phType')} /></div>
-      )}
-      <p className="small" style={{ margin: 0, color: 'var(--ink-soft)' }}>{t('editResto.typeKeepsMenu')}</p>
+    <SousEcran titre={t('specialites.groupe')} onFermer={onFermer} pied={pied}>
+      <p className="small" style={{ margin: '0 0 12px', color: 'var(--ink-soft)' }}>{t('specialites.aideReglages')}</p>
+      <ChoixSpecialites valeurs={valeurs} onChange={(v) => { setValeurs(v); setErreur(null); }} erreur={erreur} />
     </SousEcran>
   );
 }

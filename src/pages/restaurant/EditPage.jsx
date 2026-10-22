@@ -12,9 +12,9 @@ import EcranLegal from '../../components/commerce/EcranLegal';
 import EcranLivreurs from '../../components/commerce/EcranLivreurs';
 import EcranOffreLivraison from '../../components/commerce/EcranOffreLivraison';
 import EcranTypeCommerce from '../../components/commerce/EcranTypeCommerce';
-import EcranCuisines from '../../components/commerce/EcranCuisines';
 import EcranCapacite from '../../components/commerce/EcranCapacite';
 import { restaurantTypeLabel } from '../../menuCategories';
+import { cuisinesCommerce } from '../../specialites';
 import EcranSuppression from '../../components/commerce/EcranSuppression';
 import { BandeauCommerce, FeuilleCommerce } from '../../components/commerce/BandeauCommerce';
 import { useAuth } from '../../context/AuthContext';
@@ -52,7 +52,7 @@ const SITE = !experienceApp();
 const ECRANS = {
   identite: EcranIdentite, contact: EcranContact, adresse: EcranAdresse, horaires: EcranHoraires,
   fermetures: EcranFermetures, legal: EcranLegal, livraison: EcranLivreurs, offre: EcranOffreLivraison,
-  type: EcranTypeCommerce, cuisines: EcranCuisines, suppression: EcranSuppression, capacite: EcranCapacite
+  type: EcranTypeCommerce, suppression: EcranSuppression, capacite: EcranCapacite
 };
 
 function aujourdhuiIso() {
@@ -99,7 +99,8 @@ export default function EditPage() {
   const tuiles = <TuilesCommerce restaurant={r} orders={orders} restoId={restoId} token={token} />;
   const ligne = (cle, props) => <LigneCompte {...props} onClick={() => setOuvert(cle)} />;
 
-  const type = restaurantTypeLabel(r.cuisine, t) || r.cuisine;
+  // Ce que le commerce vend : ses spécialités dans l'ordre, la première étant celle de sa fiche (EcranTypeCommerce.jsx).
+  const type = cuisinesCommerce(r).map((c) => restaurantTypeLabel(c, t) || c).join(', ');
   const nbPlats = (r.menu || []).length;
   // La fiche telle que la liste des commerces la montre : photo de couverture, nom, type · commune · horaires du jour.
   const apercu = SITE && (
@@ -166,9 +167,9 @@ export default function EditPage() {
     <p className="ec-feuille-titre">{t('editResto.rowLegal')}</p>
     <div className="card account-groupe" aria-label={t('editResto.rowLegal')}>
       {ligne('legal', { icone: 'document', titre: t('editResto.rowLegal'), sous: legalManquant ? aCompleter : `BCE ${r.companyNumber}`, accent: legalManquant ? 'warn' : undefined })}
-      {/* Le libellé dans la langue choisie, plus la valeur française brute (audit du 19/10, shop-317). */}
-      {ligne('type', { icone: 'restaurants', titre: t('editResto.rowType'), sous: type })}
-      {ligne('cuisines', { icone: 'restaurants', titre: t('editResto.rowCuisines'), sous: (r.extraCuisines || []).length ? (r.extraCuisines || []).map((c) => restaurantTypeLabel(c, t) || c).join(', ') : t('editResto.cuisinesNone') })}
+      {/* Les libellés dans la langue choisie, plus les valeurs françaises brutes (audit du 19/10, shop-317). Une seule ligne
+          depuis le 2026-10-22 : « Type de commerce » et « Autres types de cuisine » sont devenus le même écran. */}
+      {ligne('type', { icone: 'restaurants', titre: t('specialites.groupe'), sous: type })}
     </div>
     </>
   );

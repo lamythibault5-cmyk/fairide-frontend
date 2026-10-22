@@ -16,8 +16,9 @@ import PhoneInput from '../components/PhoneInput';
 import EmailDomainChips from '../components/EmailDomainChips';
 import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
-import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES, communeDepuisCodePostal } from '../menuCategories';
-import { MAX_CUISINES } from '../components/commerce/EcranCuisines';
+import { restaurantTypeLabel, COMMUNES, communeDepuisCodePostal } from '../menuCategories';
+import { specialite } from '../specialites';
+import ChoixSpecialites from '../components/commerce/ChoixSpecialites';
 import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
 import { attendrePage, espaceApresConnexion, prechargerPage } from '../routePrefetch';
@@ -162,8 +163,10 @@ export default function Auth() {
   const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: 'on_site' });
   // Type de cuisine (liste complète + « Autre » à préciser), retenu pour la création du restaurant et donné en
   // contexte à la lecture IA du menu.
-  const [cuisine, setCuisine] = useState('');
-  const [customCuisine, setCustomCuisine] = useState('');
+  // Ce que le commerce vend (ChoixSpecialites.jsx, fondateur, 2026-10-22) : jusqu'à 7 spécialités, la première est son type
+  // principal (`cuisine`), les autres ses types en plus. Une saisie libre (« Je ne trouve pas ») y est telle quelle.
+  const [specialites, setSpecialites] = useState([]);
+  const cuisine = specialites[0] || '';
   // Horaires structurés (une ligne par jour), prérempli depuis la fiche web quand elle en donne, adaptés ici.
   const [hours, setHours] = useState(null);
   const [hoursDepuisWeb, setHoursDepuisWeb] = useState(false);
@@ -180,7 +183,6 @@ export default function Auth() {
   const [restoPhone, setRestoPhone] = useState('');
   const [responsables, setResponsables] = useState([]);
   // Autres types de cuisine dès l'inscription (fondateur, 2026-10-01) : 6 au plus, 7 avec le type principal.
-  const [extraCuisines, setExtraCuisines] = useState([]);
   const [emailSecondary, setEmailSecondary] = useState('');
   const [emailSecondaryOuvert, setEmailSecondaryOuvert] = useState(false);
   const [horairesSiteEtat, setHorairesSiteEtat] = useState(''); // '' | 'lecture' | 'recherche' | 'trouve' | 'trouveWeb' | 'rien'
@@ -195,7 +197,7 @@ export default function Auth() {
   const [horairesSiteSource, setHorairesSiteSource] = useState('');
   const [typeDepuisSite, setTypeDepuisSite] = useState(false); // le type affiché vient du site, pas d'un choix
   const [relireSite, setRelireSite] = useState(0);
-  const cuisineFinale = cuisine === 'Autre' ? (customCuisine.trim() || 'Autre') : cuisine;
+  const cuisineFinale = cuisine;
   // Dès que le commerce est trouvé dans la recherche : horaires publiés sur son site (schema.org ou texte), et s'il
   // n'a pas de site ou que le site ne les donne pas, recherche web par nom + adresse (site officiel et horaires).
   // Tout est proposé, jamais imposé : pas par-dessus des horaires déjà réglés à la main, et relu avant de continuer.
@@ -227,8 +229,10 @@ export default function Auth() {
           setHorairesSiteEtat(e.hoursFromSearch ? 'trouveWeb' : 'trouve'); setHorairesSiteSource(e.hoursSource || site);
         } else { setHorairesSiteEtat('rien'); setHorairesSiteSource(''); }
         // Type de commerce : proposé seulement si le restaurateur n'a rien choisi lui-même.
-        if (e.cuisine && RESTAURANT_TYPES.some((rt) => rt.value === e.cuisine)) {
-          setCuisine((v) => (!v || typeDepuisSite ? e.cuisine : v));
+        // Proposé en premier choix ; un premier choix lui-même proposé par le site est remplacé, les autres restent.
+        const devine = specialite(e.cuisine)?.value;
+        if (devine) {
+          setSpecialites((v) => (!v.length ? [devine] : typeDepuisSite ? [devine, ...v.slice(1).filter((x) => x !== devine)] : v));
           setTypeDepuisSite(true); setInfosVerifiees(false);
         }
       }).catch(() => { if (!annule) { setHorairesSiteEtat('rien'); setHorairesSiteSource(''); } });
@@ -260,7 +264,7 @@ export default function Auth() {
     return {
       name: nomCommerce.trim() || fiche.name || legalName.trim(), cuisine: cuisineFinale, hours,
       engagements: accepteEngagements,
-      extraCuisines: extraCuisines.filter((c) => c !== cuisineFinale).slice(0, MAX_CUISINES - 1),
+      extraCuisines: specialites.slice(1),
       openingHours: fiche.openingHours || '',
       addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
       commune: addressCity.trim(), neighborhood: '',
@@ -281,8 +285,8 @@ export default function Auth() {
 
   useEffect(() => {
     if (role !== 'restaurant') return;
-    try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, cuisineType: cuisine, customCuisine: customCuisine.trim(), hours: horairesNonVides(hours) ? hours : undefined })); } catch { /* sans stockage */ }
-  }, [cuisine, customCuisine, hours, role]);
+    try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, cuisineType: cuisine, extraCuisines: specialites.slice(1), hours: horairesNonVides(hours) ? hours : undefined })); } catch { /* sans stockage */ }
+  }, [cuisine, specialites, hours, role]);
   useEffect(() => {
     if (role !== 'restaurant') return undefined;
     const chiffres = companyNumber.replace(/\D/g, '');
@@ -468,9 +472,9 @@ export default function Auth() {
     courierStatus: [courierStatus, setCourierStatus], schoolName: [schoolName, setSchoolName], academicYear: [academicYear, setAcademicYear], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption],
     autrePlateforme: [autrePlateforme, setAutrePlateforme], plateformes: [plateformes, setPlateformes], plateformeAutre: [plateformeAutre, setPlateformeAutre], zonesPreferees: [zonesPreferees, setZonesPreferees],
     commerceTrouve: [commerceTrouve, setCommerceTrouve], nomCommerce: [nomCommerce, setNomCommerce], services: [services, setServices],
-    cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
+    specialites: [specialites, setSpecialites], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
     phoneSecondary: [phoneSecondary, setPhoneSecondary], phoneSecondaryOuvert: [phoneSecondaryOuvert, setPhoneSecondaryOuvert],
-    restoPhone: [restoPhone, setRestoPhone], responsables: [responsables, setResponsables], extraCuisines: [extraCuisines, setExtraCuisines],
+    restoPhone: [restoPhone, setRestoPhone], responsables: [responsables, setResponsables],
     emailSecondary: [emailSecondary, setEmailSecondary], emailSecondaryOuvert: [emailSecondaryOuvert, setEmailSecondaryOuvert],
     siteTrouve: [siteTrouve, setSiteTrouve], infosVerifiees: [infosVerifiees, setInfosVerifiees], typeDepuisSite: [typeDepuisSite, setTypeDepuisSite],
     // Code de vérification en attente : sans eux, un rechargement renvoyait au formulaire alors que le compte existe.
@@ -689,7 +693,7 @@ export default function Auth() {
       else if (restoPhone.trim().replace(/\D/g, '').length < 8) e.restoPhone = t('auth.errPhoneInvalid');
     }
     if (key === 'details') {
-      if (!cuisine) e.cuisine = t('auth.errCuisine');
+      if (!cuisine) e.cuisine = t('specialites.aucune');
       // NUMÉRO D'ENTREPRISE À L'INSCRIPTION (12 oct. 2026). Il était demandé plus tard, à « Configurer mes paiements » :
       // un écran et un enregistrement de plus au moment où l'on veut juste activer Stripe. Tapé ici, la BCE remplit la
       // dénomination et la TVA (effet plus haut), et les paiements ne demandent plus qu'un geste.
@@ -1612,38 +1616,15 @@ export default function Auth() {
                 (services). */}
             {stepKey === 'details' && (
               <>
-                <div className="field">
-                  <label htmlFor="auth-f-cuisine">{t('auth.cuisineLabel')}</label>
-                  <select id="auth-f-cuisine" className={errors.cuisine ? 'input-invalid' : undefined} value={cuisine} onChange={(e) => { setCuisine(e.target.value); setTypeDepuisSite(false); }}>
-                    <option value="">{t('auth.cuisinePlaceholder')}</option>
-                    {/* Libellé traduit (audit du 19/10, auth-29) : la liste restait en français en néerlandais et en anglais. */}
-                    {RESTAURANT_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{restaurantTypeLabel(rt.value, t)}</option>)}
-                  </select>
-                  {cuisine === 'Autre' && (
-                    <input style={{ marginTop: 6 }} value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} aria-label={t('dashResto.specifyType')} />
-                  )}
-                  <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{typeDepuisSite && cuisine ? `${t('auth.cuisineFromSite')}` : t('auth.cuisineHelp')}</p>
+                {/* CE QUE LE COMMERCE VEND (fondateur, 2026-10-22, maquettes/categories-commerce : « site pareil que l'app ») : le même
+                    écran que l'inscription dans l'app et Mon commerce, à la place de la liste déroulante des 35 types et des
+                    pastilles « Tu proposes aussi… ». Jusqu'à 7 spécialités, la première s'affiche sur la fiche. */}
+                <div className="field" role="group" aria-labelledby="auth-specialites-titre">
+                  <span className="titre-groupe" id="auth-specialites-titre">{t('auth.cuisineLabel')}</span>
+                  <p className="small" style={{ margin: '0 0 8px', opacity: 0.8 }}>{typeDepuisSite && cuisine ? t('auth.cuisineFromSite') : t('auth.cuisineHelp')}</p>
+                  <ChoixSpecialites valeurs={specialites} onChange={(v) => { setSpecialites(v); setTypeDepuisSite(false); }} />
                   {fieldError('cuisine')}
                 </div>
-                {cuisine && cuisine !== 'Autre' && (
-                  <div className="field" role="group" aria-labelledby="auth-cuisines-titre">
-                    <span className="titre-groupe" id="auth-cuisines-titre">{t('auth.extraCuisinesTitle')}</span>
-                    <p className="small" style={{ margin: '0 0 6px', opacity: 0.8 }}>{t('auth.extraCuisinesHelp', { max: MAX_CUISINES })}</p>
-                    <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-                      {RESTAURANT_TYPES.filter((rt) => rt.value !== cuisine && rt.value !== 'Autre').map((rt) => {
-                        const actif = extraCuisines.includes(rt.value);
-                        const plein = extraCuisines.filter((c) => c !== cuisine).length >= MAX_CUISINES - 1;
-                        return (
-                          <button key={rt.value} type="button" className={`cuisine-chip${actif ? ' active' : ''}`} aria-pressed={actif} disabled={!actif && plein}
-                            onClick={() => setExtraCuisines((l) => (l.includes(rt.value) ? l.filter((x) => x !== rt.value) : [...l, rt.value]))}>
-                            <span className="emoji"><Icone nom={rt.icone} taille={18} /></span><span>{restaurantTypeLabel(rt.value, t)}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {extraCuisines.length > 0 && <p className="small" style={{ margin: '6px 0 0', fontWeight: 700 }}>{t('editResto.cuisinesCount', { n: extraCuisines.filter((c) => c !== cuisine).length + 1, max: MAX_CUISINES })}</p>}
-                  </div>
-                )}
                 {/* Plus de question sur la carte ici : elle se crée après l'inscription, dans « Mon menu »
                     (fondateur, 2026-09-14). L'inscription reste courte : le commerce, ses horaires, ses services. */}
                 <div className="field contacts-commerce" role="group" aria-labelledby="auth-contacts-titre">
@@ -1750,7 +1731,7 @@ export default function Auth() {
                     <ul className="small" style={{ margin: '0 0 8px', paddingLeft: 18 }}>
                       {siteTrouve && <li><Icone nom="globe" taille={16} className="icone-texte" />{' '}{t('auth.verifyPrefillWebsite')} <a href={urlSure(siteTrouve)} target="_blank" rel="noreferrer">{siteTrouve}</a></li>}
                       {hoursDepuisWeb && <li>{t('auth.verifyPrefillHours')}</li>}
-                      {typeDepuisSite && cuisine && <li><Icone nom="restaurants" taille={16} className="icone-texte" />{' '}{t('auth.verifyPrefillType', { type: cuisine })}</li>}
+                      {typeDepuisSite && cuisine && <li><Icone nom="restaurants" taille={16} className="icone-texte" />{' '}{t('auth.verifyPrefillType', { type: restaurantTypeLabel(cuisine, t) })}</li>}
                     </ul>
                     <label className="verif-prefill-case">
                       <input type="checkbox" checked={infosVerifiees} onChange={(e) => setInfosVerifiees(e.target.checked)} />

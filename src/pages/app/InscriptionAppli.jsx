@@ -11,7 +11,7 @@ import PasswordInput from '../../components/PasswordInput';
 import EmailDomainChips from '../../components/EmailDomainChips';
 import AddressSearch from '../../components/AddressSearch';
 import EngagementsInscription from '../../components/commerce/EngagementsInscription';
-import { RESTAURANT_TYPES, restaurantTypeLabel } from '../../menuCategories';
+import ChoixSpecialites from '../../components/commerce/ChoixSpecialites';
 import { DAY_ORDER, dayLabel } from '../../openingHours';
 import { bceValide, raisonBce, codePostalValide } from '../../validation';
 import useDecompte, { DELAI_RENVOI_S } from '../../hooks/useDecompte';
@@ -36,7 +36,7 @@ import VerifSociete from '../../components/commerce/VerifSociete';
  * celles du serveur (routes/auth.js) — changer une règle, c'est la changer aux trois endroits. Ce qui diffère :
  *   - les horaires se donnent en une fois (jours + heures, un 2e service possible) au lieu de sept lignes ; un jour
  *     différent des autres se règle ensuite dans Mon commerce › Horaires ;
- *   - ce qui est facultatif n'est pas demandé : autres cuisines, autres responsables, second numéro ou e-mail du
+ *   - ce qui est facultatif n'est pas demandé : autres responsables, second numéro ou e-mail du
  *     commerce, numéro masqué au public — tout se règle dans Mon commerce ;
  *   - pas de recherche automatique des horaires sur le web, donc pas de case « j'ai vérifié le préremplissage » ;
  *   - le brouillon gardé 48 h est arrivé ici aussi (audit du 19/10, CROSS-63, voir CLE_BROUILLON plus bas) : on ne
@@ -74,7 +74,6 @@ const ETAPE_DU_CHAMP = {
   legalName: 'entreprise', vatNumber: 'entreprise', responsibleName: 'entreprise', cuisine: 'type'
 };
 const MDP_FORME = (v) => v.length >= 6 && /[A-Z]/.test(v) && /[a-z]/.test(v);
-const sansAccents = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 function decoderJwt(jeton) {
   try { const b = jeton.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(decodeURIComponent(escape(atob(b)))); } catch { return {}; }
@@ -135,9 +134,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   // Commerce
   const [nomCommerce, setNomCommerce] = useState('');
   const [restoPhone, setRestoPhone] = useState('');
-  const [cuisine, setCuisine] = useState('');
-  const [customCuisine, setCustomCuisine] = useState('');
-  const [rechercheType, setRechercheType] = useState('');
+  // Ce que le commerce vend (ChoixSpecialites.jsx) : jusqu'à 7 spécialités, la première est son type principal.
+  const [specialites, setSpecialites] = useState([]);
   const [legalName, setLegalName] = useState('');
   const [vatNumber, setVatNumber] = useState('');
   const [responsable, setResponsable] = useState(null); // null : la personne qui s'inscrit
@@ -195,7 +193,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     index: [index, setIndex], email: [email, setEmail], firstName: [firstName, setFirstName], lastName: [lastName, setLastName], phone: [phone, setPhone],
     addressStreet: [addressStreet, setAddressStreet], addressNumber: [addressNumber, setAddressNumber], addressPostalCode: [addressPostalCode, setAddressPostalCode], addressCity: [addressCity, setAddressCity],
     companyNumber: [companyNumber, setCompanyNumber],
-    nomCommerce: [nomCommerce, setNomCommerce], restoPhone: [restoPhone, setRestoPhone], cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine],
+    nomCommerce: [nomCommerce, setNomCommerce], restoPhone: [restoPhone, setRestoPhone], specialites: [specialites, setSpecialites],
     legalName: [legalName, setLegalName], vatNumber: [vatNumber, setVatNumber], responsable: [responsable, setResponsable], jours: [jours, setJours], creneaux: [creneaux, setCreneaux], services: [services, setServices],
     referralCode: [referralCode, setReferralCode], referralOuvert: [referralOuvert, setReferralOuvert]
   };
@@ -228,7 +226,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const derniere = index >= etapes.length - 1;
   const progression = enAttente ? 1 : (index + 1) / (etapes.length + 1);
   const nomResponsable = responsable ?? `${firstName} ${lastName}`.trim();
-  const cuisineFinale = cuisine === 'Autre' ? (customCuisine.trim() || 'Autre') : cuisine;
+  const cuisineFinale = specialites[0] || '';
 
   useEffect(() => {
     if (role === 'client') api('/auth/terms/current').then((r) => setVersionCgu(r.version)).catch(() => {});
@@ -278,7 +276,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       if (!restoPhone.trim()) e.restoPhone = requis;
       else if (restoPhone.replace(/\D/g, '').length < 8) e.restoPhone = t('auth.errPhoneInvalid');
     }
-    if (cle === 'type' && !cuisine) e.cuisine = t('auth.errCuisine');
+    if (cle === 'type' && !specialites.length) e.cuisine = t('specialites.aucune');
     if (cle === 'entreprise') {
       if (!companyNumber.trim()) e.companyNumber = requis;
       else if (!bceValide(companyNumber)) e.companyNumber = messageBce();
@@ -380,7 +378,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   // Le commerce tel qu'Auth.jsx l'envoie (construireCommerce), avec les réglages facultatifs à leur valeur par défaut.
   function commerce() {
     return {
-      name: nomCommerce.trim(), cuisine: cuisineFinale, hours: horaires(), engagements: accepteEngagements, extraCuisines: [], openingHours: '',
+      name: nomCommerce.trim(), cuisine: cuisineFinale, hours: horaires(), engagements: accepteEngagements, extraCuisines: specialites.slice(1), openingHours: '',
       addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
       commune: addressCity.trim(), neighborhood: '',
       phone: restoPhone.trim() || phone.trim(), phoneSecondary: '', phonePublic: true, phoneSecondaryPublic: true,
@@ -603,36 +601,14 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
         </>
       );
       break;
-    /* Des pastilles plutôt que la liste déroulante du téléphone, qui sortait de l'app (retour du fondateur, 2026-10-16).
-       35 types : un champ de recherche filtre, et seule la boîte des pastilles défile, pas l'écran. « Autre » reste
-       toujours visible, en dernier, pour un commerce que la recherche ne trouve pas ; le type déjà choisi aussi. */
-    case 'type': {
-      const cherche = sansAccents(rechercheType.trim());
-      const types = RESTAURANT_TYPES.filter((rt) => rt.value === 'Autre' || rt.value === cuisine || !cherche ||sansAccents(restaurantTypeLabel(rt.value, t)).includes(cherche));
+    /* CE QUE LE COMMERCE VEND (fondateur, 2026-10-22, version A de maquettes/categories-commerce) : la recherche qui comprend
+       (« congo », « pho »), les 19 familles en tuiles, jusqu'à 7 spécialités dès l'inscription — la première s'affiche sur
+       la fiche. Avant : 35 pastilles, un seul choix, et « congo » ne trouvait que « Autre ». Seul le corps de l'écran de
+       choix défile (`boite`), pas l'écran : le bouton reste en bas, comme avec les pastilles d'avant (2026-10-16). */
+    case 'type':
       entete = titre(t('appli.insTypeTitre'), t('auth.cuisineHelp'));
-      contenu = (
-        <>
-          <label htmlFor="bv-i-type" className="sr-only">{t('appli.insTypeChercher')}</label>
-          <input id="bv-i-type" type="search" className="bv-types-recherche" autoComplete="off" enterKeyHint="search"
-            value={rechercheType} onChange={(e) => setRechercheType(e.target.value)} placeholder={t('appli.insTypeChercher')} />
-          <div className={`bv-types${cuisine === 'Autre' ? ' avec-autre' : ''}`} role="radiogroup" aria-label={t('auth.cuisineLabel')}>
-            {types.map((rt) => (
-              <button key={rt.value} type="button" role="radio" aria-checked={cuisine === rt.value}
-                className={`bv-type${cuisine === rt.value ? ' on' : ''}`} onClick={() => setCuisine(rt.value)}>
-                <Icone nom={rt.icone} taille={16} />{restaurantTypeLabel(rt.value, t)}
-              </button>
-            ))}
-          </div>
-          {erreurs.cuisine && <p className="field-error" role="alert">{erreurs.cuisine}</p>}
-          {cuisine === 'Autre' && (
-            <Champ id="bv-i-type-autre" label={t('dashResto.specifyType')}>
-              <input id="bv-i-type-autre" value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} />
-            </Champ>
-          )}
-        </>
-      );
+      contenu = <ChoixSpecialites valeurs={specialites} onChange={setSpecialites} erreur={erreurs.cuisine} boite />;
       break;
-    }
     case 'entreprise':
       entete = titre(t('appli.insEntrepriseTitre'));
       contenu = (

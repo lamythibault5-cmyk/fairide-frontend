@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import { coucheTuiles } from '../carte';
 import 'leaflet/dist/leaflet.css';
-import { RESTAURANT_TYPES, restaurantTypeLabel } from '../menuCategories';
+import { restaurantTypeLabel } from '../menuCategories';
+import { FAMILLES, iconeSpecialite } from '../specialites';
 import { escapeHtml } from '../escapeHtml';
 import { cheminFiche } from '../adresseFiche';
 import CertifiedBadge from './CertifiedBadge';
@@ -15,11 +16,11 @@ const BRUSSELS_CENTER = [50.8503, 4.3517];
 
 // Les icônes des épingles, préparées au chargement du module (mises en cache). Depuis le 2026-10-17, iconeHtml écrit le SVG
 // en texte sans React : l'appeler depuis un effet ne pose plus de problème ; ce préchargement reste, sans danger.
-for (const nom of new Set(['restaurants', ...RESTAURANT_TYPES.map((t) => t.icone)])) iconeHtml(nom, 16);
+for (const nom of new Set(['restaurants', ...FAMILLES.map((f) => f.icone)])) iconeHtml(nom, 16);
 iconeHtml('maison', 15);
 
 function cuisineEmoji(cuisine) {
-  return RESTAURANT_TYPES.find((t) => t.value === cuisine)?.icone || 'restaurants'; // un nom d'icône (Icone.jsx)
+  return iconeSpecialite(cuisine); // un nom d'icône (Icone.jsx) : celle de sa famille
 }
 
 function pinIcon(cuisine, active) {

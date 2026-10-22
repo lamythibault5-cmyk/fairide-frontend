@@ -175,6 +175,15 @@ holds icon *names*, not emoji (`RESTAURANT_TYPES[].icone`, `ORDER_STAGES[].icon`
 monochrome glyph (✓ ✗). Message reactions are still *stored* as emoji (server values) and *shown* as icons
 ([reactions.jsx](../../src/reactions.jsx)).
 
+**Shop categories: specialities and families (founder, 2026-10-22, `maquettes/categories-commerce/`).** A shop picks up to 7
+specialities (~150, [specialites.js](../../src/specialites.js); the first is `restaurants.cuisine`, the others `extra_cuisines`);
+customers see 19 families, derived from the list and never stored. One picker everywhere, sign-up in the app and on the site,
+shop creation and Mon commerce ([ChoixSpecialites.jsx](../../src/components/commerce/ChoixSpecialites.jsx)). The colour
+illustrations of the cuisines (3D in the app, 2D on the site) are allowed in three places only: the cuisine strip, « Par envie »
+and the family tiles of that picker; everywhere else a speciality shows its family's line icon (`iconeSpecialite`). Hide
+a family or speciality no shop carries. The backend keeps a copy of the list (`fairide-backend/specialitesCommerce.js`, a test
+compares both): add a speciality in both, with its NL/EN label under `menuCategories.cuisine`.
+
 **Gestures are app-only (since 2026-10-13).** Physical motion — springs with velocity hand-off, momentum projection,
 rubber-banding ([src/ressort.js](../../src/ressort.js)) — runs only when `estNatif()`, loaded with `import()`, so the website
 downloads nothing extra (founder: the site must not get slower). What uses it: sheets pulled down to close

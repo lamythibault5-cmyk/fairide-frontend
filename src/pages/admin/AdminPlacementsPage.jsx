@@ -7,7 +7,8 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { titreRangee, libellePosition, euros, jourCourt } from '../../misesEnAvant';
-import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES_SUGGEREES } from '../../menuCategories';
+import { restaurantTypeLabel, COMMUNES_SUGGEREES } from '../../menuCategories';
+import { SPECIALITES } from '../../specialites';
 
 // Admin › Mises en avant (fondateur, 2026-10-02) : le prix de la 1re, 2e et 3e position de chaque rangée de la liste
 // (par semaine, hors TVA), et les demandes des commerçants à accepter ou refuser. Changer un prix ne touche pas les
@@ -92,7 +93,7 @@ export default function AdminPlacementsPage() {
   const dejaLa = new Set((etat?.sections || []).map((s) => s.key));
   const rangeesPossibles = [
     ...Object.keys(etat?.optional || {}).filter((k) => !dejaLa.has(k)).map((k) => ({ valeur: `key:${k}`, libelle: titreRangee(tr, { key: k, label: etat.optional[k] }) })),
-    ...RESTAURANT_TYPES.filter((c) => !dejaLa.has(`cuisine:${c.value}`)).map((c) => ({ valeur: `cuisine:${c.value}`, libelle: restaurantTypeLabel(c.value, tr) || c.value }))
+    ...SPECIALITES.filter((c) => !dejaLa.has(`cuisine:${c.value}`)).map((c) => ({ valeur: `cuisine:${c.value}`, libelle: restaurantTypeLabel(c.value, tr) || c.value }))
   ];
   async function reglerPositions(n) {
     setOccupe(true);

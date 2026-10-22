@@ -1,4 +1,4 @@
-import { RESTAURANT_TYPES } from '../menuCategories';
+import { iconeSpecialite, specialite } from '../specialites';
 import Icone from './Icone';
 
 /* VISUEL DE MARQUE quand un commerce n'a pas de photo (ou que sa photo ne charge pas).
@@ -14,7 +14,7 @@ export function paletteDe(nom) {
 }
 
 export default function VisuelVide({ nom, cuisine, className = '', taille = 'carte' }) {
-  const emoji = RESTAURANT_TYPES.find((c) => c.value === cuisine)?.icone; // nom d'icône (Icone.jsx)
+  const emoji = specialite(cuisine) ? iconeSpecialite(cuisine) : undefined; // nom d'icône (Icone.jsx) : celle de sa famille
   const initiale = String(nom || '').trim().charAt(0).toUpperCase();
   return (
     <span className={`visuel-vide visuel-vide--p${paletteDe(nom)} visuel-vide--${taille} ${className}`.trim()} aria-hidden="true">

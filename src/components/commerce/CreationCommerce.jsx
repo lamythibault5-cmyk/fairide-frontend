@@ -4,7 +4,9 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { COMMUNES_SUGGEREES, communeAcceptee, RESTAURANT_TYPES } from '../../menuCategories';
+import { COMMUNES_SUGGEREES, communeAcceptee } from '../../menuCategories';
+import { specialite } from '../../specialites';
+import ChoixSpecialites from './ChoixSpecialites';
 import { formatFullSchedule } from '../../openingHours';
 import { cuisineDepuisOsm } from '../../osmCuisine';
 import AddressSearch from '../AddressSearch';
@@ -46,8 +48,10 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
   // Commerce déjà désigné à l'inscription : les étapes arrivent préremplies, on ne redemande pas de le chercher.
   const [commerceDejaChoisi, setCommerceDejaChoisi] = useState(false);
   const [name, setName] = useState('');
-  const [cuisine, setCuisine] = useState(RESTAURANT_TYPES[0].value);
-  const [customCuisine, setCustomCuisine] = useState('');
+  // Ce que le commerce vend (ChoixSpecialites.jsx, 2026-10-22) : la première spécialité est son type principal. Plus de
+  // « Pizza » choisi d'office : la liste part vide, ou de ce que l'inscription, la fiche ou le site ont dit.
+  const [specialites, setSpecialites] = useState([]);
+  const proposer = (valeur) => { const v = specialite(valeur)?.value; if (v) setSpecialites((l) => (l.length ? l : [v])); };
   const [commune, setCommune] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [addressStreet, setAddressStreet] = useState('');
@@ -74,13 +78,10 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
       const h = JSON.parse(brut);
       if (h.name) { setName((v) => v || h.name); setCommerceDejaChoisi(true); }
       // Le type choisi à l'inscription prime ; sinon celui deviné depuis la fiche OpenStreetMap.
-      if (h.cuisineType && RESTAURANT_TYPES.some((rt) => rt.value === h.cuisineType)) {
-        setCuisine(h.cuisineType);
-        if (h.cuisineType === 'Autre' && h.customCuisine) setCustomCuisine(h.customCuisine);
-      } else {
-        const typeDevine = cuisineDepuisOsm(h.cuisine, h.type);
-        if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
-      }
+      // « Autre » + `customCuisine` : un indice laissé par l'inscription d'avant le 2026-10-22.
+      const principal = h.cuisineType === 'Autre' ? (h.customCuisine || '') : (h.cuisineType || '');
+      if (principal) setSpecialites([principal, ...(Array.isArray(h.extraCuisines) ? h.extraCuisines : [])].filter(Boolean));
+      else proposer(cuisineDepuisOsm(h.cuisine, h.type));
       if (h.openingHours) setOpeningHoursTexte(h.openingHours);
       if (h.hours && typeof h.hours === 'object') { setHours(h.hours); setHorairesDepuisInscription(true); }
       if (h.website) setSiteWeb(h.website);
@@ -92,7 +93,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           if (e.neighborhood) setNeighborhood((v) => v || e.neighborhood);
           if (e.description) setDesc((v) => v || e.description);
           // Type de commerce deviné depuis le site, seulement si rien n'a été retenu à l'inscription.
-          if (e.cuisine && RESTAURANT_TYPES.some((rt) => rt.value === e.cuisine)) setCuisine((v) => (!v || v === RESTAURANT_TYPES[0].value ? e.cuisine : v));
+          proposer(e.cuisine);
           // Horaires publiés sur le site du commerce : proposés tant que rien n'a été réglé à la main.
           if (horairesRemplis(e.hours)) {
             setHours((v) => (horairesRemplis(v) ? v : e.hours));
@@ -116,8 +117,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
   useEffect(() => {
     try { if (localStorage.getItem('fairide_resto_hint')) return; } catch { /* sans stockage */ }
     const sc = user?.signupCuisine; if (!sc) return;
-    if (RESTAURANT_TYPES.some((rt) => rt.value === sc)) setCuisine(sc);
-    else { setCuisine('Autre'); setCustomCuisine(sc); }
+    if (sc !== 'Autre') setSpecialites((l) => (l.length ? l : [sc]));
   }, [user?.signupCuisine]);
 
   const cle = ETAPES[etape];
@@ -126,6 +126,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
   // Ce qui manque à l'étape affichée, ou null. Un compte fondateur passe outre : le serveur complète.
   function manque() {
     if (cle === 'identite' && !name.trim() && !fondateur) return t('dashResto.toastNameRequired');
+    if (cle === 'identite' && !specialites.length && !fondateur) return t('specialites.aucune');
     if (cle === 'adresse') {
       if (!fondateur && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim())) return t('dashResto.toastAddressRequired');
       // Adresse tapée mais non reconnue : on ne bloque pas, on demande une confirmation explicite.
@@ -146,7 +147,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
       const r = await api('/restaurants', {
         method: 'POST', token,
         body: {
-          name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine, desc: desc.trim(),
+          name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: specialites[0] || 'Autre', extraCuisines: specialites.slice(1), desc: desc.trim(),
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
           hours, deliveryMode: deliveryModePref,
           openingHours: openingHoursTexte, offersDelivery, offersPickup, phone: telephoneCommerce.trim(), website: siteWeb.trim()
@@ -181,21 +182,16 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           {!commerceDejaChoisi && <BusinessSearch compact initialPostalCode={addressPostalCode} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} onSelect={(f) => {
             if (!f) return;
             if (f.name) setName(f.name);
-            const typeDevine = cuisineDepuisOsm(f.cuisine, f.type); if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
+            proposer(cuisineDepuisOsm(f.cuisine, f.type));
             if (f.street) setAddressStreet(f.street); if (f.number) setAddressNumber(f.number); if (f.postalCode) setAddressPostalCode(f.postalCode);
             if (f.city && communeAcceptee(f.city)) setCommune(f.city);
             if (f.openingHours) setOpeningHoursTexte(f.openingHours);
           }} />}
           <div className="field"><label htmlFor={ids + '-nom'}>{t('dashResto.businessName')}</label><input id={ids + '-nom'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
-          <div className="field">
-            <label htmlFor={ids + '-type'}>{t('dashResto.businessType')}</label>
-            <select id={ids + '-type'} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
-              {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.value}</option>)}
-            </select>
+          <div className="field" role="group" aria-labelledby={ids + '-type'}>
+            <span className="titre-groupe" id={ids + '-type'}>{t('dashResto.businessType')}</span>
+            <ChoixSpecialites valeurs={specialites} onChange={setSpecialites} />
           </div>
-          {cuisine === 'Autre' && (
-            <div className="field"><label htmlFor={ids + '-autre'}>{t('dashResto.specifyType')}</label><input id={ids + '-autre'} value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} /></div>
-          )}
         </>
       )}
 

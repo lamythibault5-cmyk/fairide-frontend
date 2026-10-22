@@ -5,7 +5,8 @@ import { cheminFiche } from '../../adresseFiche';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
-import { RESTAURANT_TYPES, restaurantTypeLabel, haversineDistanceKm } from '../../menuCategories';
+import { restaurantTypeLabel, haversineDistanceKm } from '../../menuCategories';
+import { FAMILLES, famillesCommerce, libelleFamille } from '../../specialites';
 import Icone from '../../components/Icone';
 import { kmLisible } from '../../prixPlat';
 import VisuelVide from '../../components/VisuelVide';
@@ -46,6 +47,7 @@ export default function MapPage() {
   const [chargement, setChargement] = useState(true);
   const [promosSeules, setPromosSeules] = useState(false);
   const [ouvertsSeuls, setOuvertsSeuls] = useState(false);
+  // Une FAMILLE (specialites.js), comme la bande de la liste depuis le 2026-10-22 : « Afrique » montre aussi les congolais.
   const [cuisine, setCuisine] = useState('');
   const [tri, setTri] = useState('recommande'); // 'recommande' | 'distance' (plus de « note » depuis le retrait des avis, 22/10/2026)
   const [panneau, setPanneau] = useState(null); // 'cuisine' | 'tri' | null
@@ -83,7 +85,7 @@ export default function MapPage() {
     const nom = recherche.trim().toLowerCase();
     const filtres = restaurants.filter((r) => {
       if (promosSeules && !r.hasPromo) return false;
-      if (cuisine && r.cuisine !== cuisine && !(r.extraCuisines || []).includes(cuisine)) return false; // type principal ou secondaire
+      if (cuisine && !famillesCommerce(r).has(cuisine)) return false; // par n'importe laquelle de ses spécialités
       if (ouvertsSeuls && r.hours && !getOpenStatus(r.hours, maintenant, r.closures).isOpen) return false;
       if (nom && !(r.name || '').toLowerCase().includes(nom)) return false;
       return true;
@@ -102,8 +104,8 @@ export default function MapPage() {
   // Les types de cuisine réellement représentés : proposer « Sushi » quand aucun commerce n'en fait
   // donne un filtre qui ne renvoie jamais rien.
   const cuisinesPresentes = useMemo(() => {
-    const vus = new Set(restaurants.map((r) => r.cuisine).filter(Boolean));
-    return RESTAURANT_TYPES.filter((c) => vus.has(c.value));
+    const vus = new Set(restaurants.flatMap((r) => [...famillesCommerce(r)]));
+    return FAMILLES.filter((f) => vus.has(f.cle));
   }, [restaurants]);
 
   const filtreActif = promosSeules || ouvertsSeuls || !!cuisine || tri !== 'recommande' || !!recherche.trim();
@@ -164,7 +166,7 @@ export default function MapPage() {
                 milieu de l'écran dans le style du navigateur, une liste grise sans rapport avec la
                 page, posée par-dessus la carte. */}
             <button type="button" className={`cuisine-chip${cuisine ? ' active' : ''}`} aria-expanded={panneau === 'cuisine'} onClick={() => basculer('cuisine')}>
-              <Icone nom="restaurants" taille={16} />{cuisine ? restaurantTypeLabel(cuisine, t) : t('mapClient.filterCuisine')}
+              <Icone nom="restaurants" taille={16} />{cuisine ? libelleFamille(cuisine, t) : t('mapClient.filterCuisine')}
             </button>
             {TRI && (
             <button type="button" className={`cuisine-chip${tri !== 'recommande' ? ' active' : ''}`} aria-expanded={panneau === 'tri'} onClick={() => basculer('tri')}>
@@ -178,10 +180,10 @@ export default function MapPage() {
               <button type="button" className={`cuisine-chip${cuisine ? '' : ' active'}`} onClick={() => { setCuisine(''); setPanneau(null); }}>
                 {t('mapClient.filterAllCuisines')}
               </button>
-              {cuisinesPresentes.map((c) => (
-                <button key={c.value} type="button" className={`cuisine-chip${cuisine === c.value ? ' active' : ''}`}
-                  onClick={() => { setCuisine(c.value === cuisine ? '' : c.value); setPanneau(null); }}>
-                  <span className="emoji"><Icone nom={c.icone} taille={18} /></span>{restaurantTypeLabel(c.value, t)}
+              {cuisinesPresentes.map((f) => (
+                <button key={f.cle} type="button" className={`cuisine-chip${cuisine === f.cle ? ' active' : ''}`}
+                  onClick={() => { setCuisine(f.cle === cuisine ? '' : f.cle); setPanneau(null); }}>
+                  <span className="emoji"><Icone nom={f.icone} taille={18} /></span>{libelleFamille(f.cle, t)}
                 </button>
               ))}
             </div>

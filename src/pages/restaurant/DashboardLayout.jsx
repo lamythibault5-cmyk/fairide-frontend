@@ -6,7 +6,7 @@ import { allerAuPaiement, experienceApp, achatsCommerceAutorises } from '../../n
 import { useAuth } from '../../context/AuthContext';
 import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
-import { RESTAURANT_TYPES } from '../../menuCategories';
+import { specialite } from '../../specialites';
 import CreationCommerce from '../../components/commerce/CreationCommerce';
 import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
@@ -324,15 +324,17 @@ export default function DashboardLayout() {
     if (!h || !h.name) return null;
     const horairesValides = h.hours && Object.values(h.hours).some((c) => Array.isArray(c) && c.length);
     const typeDevine = cuisineDepuisOsm(h.cuisine, h.type);
+    // Ce que l'inscription a retenu (sa 1re spécialité, une saisie libre comprise ; « Autre » + `customCuisine` : indice
+    // d'avant le 2026-10-22), sinon le type deviné depuis la fiche OpenStreetMap.
     const cuisineChoisie = h.cuisineType === 'Autre' && h.customCuisine ? h.customCuisine
-      : (h.cuisineType && RESTAURANT_TYPES.some((rt) => rt.value === h.cuisineType)) ? h.cuisineType
-        : (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) ? typeDevine : 'Autre';
+      : h.cuisineType && h.cuisineType !== 'Autre' ? h.cuisineType
+        : specialite(typeDevine)?.value || 'Autre';
     const sv = h.services || {};
     try {
       const r = await api('/restaurants', {
         method: 'POST', token,
         body: {
-          name: String(h.name).trim(), commune: h.commune || user?.addressCity || '', neighborhood: h.neighborhood || '', cuisine: cuisineChoisie, desc: '',
+          name: String(h.name).trim(), commune: h.commune || user?.addressCity || '', neighborhood: h.neighborhood || '', cuisine: cuisineChoisie, extraCuisines: Array.isArray(h.extraCuisines) ? h.extraCuisines : [], desc: '',
           addressStreet: h.street || user?.addressStreet || '', addressNumber: h.number || user?.addressNumber || '', addressPostalCode: h.postalCode || user?.addressPostalCode || '', addressCity: h.commune || user?.addressCity || '',
           hours: horairesValides ? h.hours : null, openingHours: h.openingHours || '', deliveryMode: sv.deliveryMode === 'own' ? 'own' : 'fairide',
           fromSignup: true,

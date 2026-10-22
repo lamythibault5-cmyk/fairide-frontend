@@ -21,7 +21,8 @@ import AutoScrollRow from '../../components/AutoScrollRow';
 import { epingler, titreRangee } from '../../misesEnAvant';
 import { lireBienvenue } from '../../bienvenue';
 import { repondAuxEnvies } from '../../envies';
-import { COMMUNES, ILLUSTRATION_TOUTES_CUISINES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel, communeDepuisCodePostal } from '../../menuCategories';
+import { COMMUNES, ILLUSTRATION_TOUTES_CUISINES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel, communeDepuisCodePostal } from '../../menuCategories';
+import { FAMILLES, SPECIALITES, cuisinesCommerce, famillesCommerce, libelleFamille, specialite } from '../../specialites';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { statutOuverture } from '../../openingHours';
 import { tarifLivraison, eurosCourts, horsZoneLivraison } from '../../livraison';
@@ -57,7 +58,9 @@ const FILTRE_EMPORTER = false;
 
 // Types "courses alimentaires" plutôt que "repas à commander" — regroupés dans leur propre section
 // (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
-const GROCERY_TYPES = ['Supermarché', 'Night Shop', 'Boulangerie', 'Boucherie'];
+// Les commerces de la rangée « Courses » : la famille Courses & Épicerie (supermarché, night shop, boucherie, primeur…) et
+// les boulangeries, d'après leur type principal — comme la liste fixe d'avant (Supermarché, Night Shop, Boulangerie, Boucherie).
+const estCourses = (r) => specialite(r.cuisine)?.familles[0] === 'courses' || ['Boulangerie', 'Boulangerie du monde'].includes(specialite(r.cuisine)?.value);
 const DISCOVER_RADIUS_KM = 10;
 // Taille minimale d'une rangée thématique avant complément (voir completer()).
 const MIN_PAR_RANGEE = 6;
@@ -165,7 +168,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
           <span className="rest-card-name-text">{r.name}</span>
           {r.certified && <CertifiedBadge />}
         </h3>
-        {/* Type principal + le premier type secondaire (7 types possibles, voir EcranCuisines) : deux, pour rester lisible. */}
+        {/* Type principal + le premier type secondaire (7 spécialités possibles, voir EcranTypeCommerce) : deux, pour rester lisible. */}
         <p className="rc-sous">{[[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 2).map((c) => restaurantTypeLabel(c, t) || c).join(', '), r.neighborhood || r.commune, r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ')}</p>
         <p className="rc-infos">
           {/* Plus de note ni de « Nouveau » (qui voulait dire « pas encore d'avis ») depuis le retrait des avis clients
@@ -364,7 +367,13 @@ export default function RestaurantList() {
   }, []);
   const [search, setSearch] = useState(filtresInitiaux.search || '');
   const [commune, setCommune] = useState(filtresInitiaux.commune || '');
-  const [cuisine, setCuisine] = useState(filtresInitiaux.cuisine || '');
+  // LA FAMILLE ET LA SPÉCIALITÉ CHOISIES (fondateur, 2026-10-22, version X de maquettes/categories-commerce). La bande montre
+  // les familles, la rangée dessous les spécialités de la famille choisie. La Recherche envoie une famille (« Par envie »)
+  // ou une spécialité (« Congolais ») : la liste s'ouvre sur sa famille, la spécialité choisie dessous.
+  const specialiteInitiale = specialite(filtresInitiaux.cuisine);
+  const [famille, setFamille] = useState(filtresInitiaux.famille || specialiteInitiale?.familles[0] || '');
+  const [specialiteFiltre, setSpecialiteFiltre] = useState(specialiteInitiale?.value || '');
+  const choisirFamille = useCallback((cle) => { setFamille(cle); setSpecialiteFiltre(''); }, []);
   // Masqués pour le moment (MENTIONS_ALIMENTAIRES) : jamais allumés à l'ouverture, sinon la liste serait filtrée sans
   // aucune pastille pour retirer le filtre.
   const [bio, setBio] = useState(MENTIONS_ALIMENTAIRES && !!filtresInitiaux.bio);
@@ -458,11 +467,15 @@ export default function RestaurantList() {
     }
   }
 
-  // Bio et Vegan sont dans la même rangée que les types de commerce, en fin de liste : des filtres comme les
-  // autres (cumulables entre eux et avec un type), sans mise en avant.
+  // Bio et Vegan sont dans la même rangée que les familles, en fin de liste : des filtres comme les
+  // autres (cumulables entre eux et avec une famille), sans mise en avant.
+  // CASES VIDES CACHÉES (réponse 6 du questionnaire, 2026-10-22) : seules les familles qui ont au moins un commerce dans la
+  // liste, et celle déjà choisie. Avant, les 35 types s'affichaient même vides et menaient à « aucun commerce ».
+  const famillesPresentes = new Set(restaurants.flatMap((r) => [...famillesCommerce(r)]));
   const cuisineOptions = [
     { value: '', emoji: 'restaurants', illustration: ILLUSTRATION_TOUTES_CUISINES, label: t('restaurantList.allCuisines') },
-    ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.icone, illustration: rt.illustration, label: restaurantTypeLabel(rt.value, t) })),
+    ...FAMILLES.filter((f) => famillesPresentes.has(f.cle) || f.cle === famille)
+      .map((f) => ({ value: f.cle, emoji: f.icone, illustration: f.illustration, label: libelleFamille(f.cle, t, { court: true }) })),
     // Bio, Vegan, Halal, Sans gluten : masqués pour le moment (MENTIONS_ALIMENTAIRES, dietary.js).
     ...(MENTIONS_ALIMENTAIRES ? [
     { value: '__bio', emoji: 'feuille', label: t('restaurantList.chipBio'), regime: 'bio' },
@@ -472,10 +485,10 @@ export default function RestaurantList() {
     ] : [])
   ];
   const REGIMES = { bio: [bio, setBio], vegan: [vegan, setVegan], halal: [halal, setHalal], sansGluten: [sansGluten, setSansGluten] };
-  const chipActive = (opt) => (opt.regime ? REGIMES[opt.regime][0] : cuisine === opt.value);
+  const chipActive = (opt) => (opt.regime ? REGIMES[opt.regime][0] : famille === opt.value);
   const surChip = (opt) => {
     if (opt.regime) REGIMES[opt.regime][1]((v) => !v);
-    else setCuisine(cuisine === opt.value ? '' : opt.value);
+    else choisirFamille(famille === opt.value ? '' : opt.value);
   };
 
   // Mises en avant PAR COMMUNE (fondateur, 2026-10-06) : un commerce qui paie n'est épinglé que pour les clients de sa commune
@@ -498,7 +511,7 @@ export default function RestaurantList() {
   const base = homeCommune ? [...restaurants].sort((a, b) => rang(a) - rang(b)) : restaurants;
   const communeEpingles = commune || homeCommune;
   const placements = communeEpingles ? placementsTous.filter((p) => !p.commune || p.commune === communeEpingles) : [];
-  const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || halal || sansGluten || emporter || tri !== 'recommande');
+  const hasActiveFilter = !!(search || famille || specialiteFiltre || commune || bio || vegan || halal || sansGluten || emporter || tri !== 'recommande');
 
   // Distance a vol d'oiseau depuis l'adresse du compte, quand elle est connue.
   const distanceDe = (r) => (user?.lat && user?.lng && r.lat && r.lng ? haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) : null);
@@ -506,7 +519,9 @@ export default function RestaurantList() {
   const list = restaurants
     .filter((r) => {
       if (commune && r.commune !== commune) return false;
-      if (cuisine && r.cuisine !== cuisine && !(r.extraCuisines || []).includes(cuisine)) return false; // type principal ou secondaire
+      // Type principal ou en plus : une seule de ses spécialités suffit.
+      if (famille && !famillesCommerce(r).has(famille)) return false;
+      if (specialiteFiltre && !cuisinesCommerce(r).some((c) => specialite(c)?.value === specialiteFiltre)) return false;
       if (bio && !restoBio(r)) return false;
       if (vegan && !restoVegan(r)) return false;
       if (halal && !restoHalal(r)) return false;
@@ -552,11 +567,11 @@ export default function RestaurantList() {
       .slice(0, MIN_PAR_RANGEE - liste.length);
     return [...liste, ...renfort];
   };
-  const nonGrocery = base.filter((r) => !GROCERY_TYPES.includes(r.cuisine));
-  const nonGroceryTous = restaurants.filter((r) => !GROCERY_TYPES.includes(r.cuisine)); // « Autour de vous » : toutes les communes
+  const nonGrocery = base.filter((r) => !estCourses(r));
+  const nonGroceryTous = restaurants.filter((r) => !estCourses(r)); // « Autour de vous » : toutes les communes
   // MISES EN AVANT (fondateur, 2026-10-02) : un commerce qui a payé la 1re, 2e ou 3e position d'une rangée y remonte,
   // marqué « Sponsorisé » — seulement s'il a sa place dans la rangée (voir misesEnAvant.js).
-  const groceryList = epinglerOuMelanger(base.filter((r) => GROCERY_TYPES.includes(r.cuisine)), placements, 'grocery');
+  const groceryList = epinglerOuMelanger(base.filter(estCourses), placements, 'grocery');
   // AUTOUR DE VOUS, DU PLUS PROCHE AU PLUS LOIN (fondateur, 2026-10-01). Adresse géolocalisée : les commerces triés
   // par distance réelle, la distance affichée sur la carte. Sans position : sa commune d'abord, puis les communes
   // voisines de proche en proche (communeRingDistance). Les commerces sans coordonnées passent après.
@@ -686,9 +701,18 @@ export default function RestaurantList() {
         options={colonne ? cuisineOptions.filter((o) => !o.regime) : cuisineOptions}
         estActive={chipActive}
         surPuce={surChip}
-        cuisine={cuisine}
-        choisirCuisine={setCuisine}
+        cuisine={famille}
+        choisirCuisine={choisirFamille}
         libelleBande={t('ecranListe.cuisinesAria')}
+        sous={famille ? {
+          // Les spécialités de la famille que portent les commerces de la liste, dans l'ordre de specialites.js.
+          options: SPECIALITES.filter((s) => s.familles.includes(famille) && restaurants.some((r) => cuisinesCommerce(r).some((c) => specialite(c) === s)))
+            .map((s) => ({ value: s.value, label: restaurantTypeLabel(s.value, t) })),
+          valeur: specialiteFiltre,
+          choisir: setSpecialiteFiltre,
+          libelleTout: t('specialites.sousTout'),
+          libelle: t('specialites.sousAria', { famille: libelleFamille(famille, t) })
+        } : null}
         mode={modeSurBandeau ? {
           emporter,
           choisir: setEmporter,
@@ -866,7 +890,7 @@ export default function RestaurantList() {
           sortir (audit du 15/10/2026). On dit que c'est le filtre, et on l'efface en un geste. */}
       {!loading && hasActiveFilter && list.length === 0 && (
         <EtatVide icone="recherche" titre={t('restaurantList.emptyFiltered')}>
-          <button type="button" className="btn-teal" onClick={() => { setSearch(''); setCuisine(''); setCommune(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false); setEmporter(false); setTri('recommande'); }}>
+          <button type="button" className="btn-teal" onClick={() => { setSearch(''); choisirFamille(''); setCommune(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false); setEmporter(false); setTri('recommande'); }}>
             {t('restaurantList.clearFilters')}
           </button>
         </EtatVide>

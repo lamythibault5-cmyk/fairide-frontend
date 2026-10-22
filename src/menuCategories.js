@@ -246,6 +246,9 @@ export function haversineDistanceKm(lat1, lng1, lat2, lng2) {
 // Android et ordinateur (c'est ce qui avait fait retirer les emojis, voir Icone.jsx). Une illustration par type, aucune
 // en double. Exception voulue à la règle des deux couleurs, limitée à ces deux endroits de l'app ; `icone` (le tracé
 // monochrome) sert partout ailleurs et sur le site.
+// DEPUIS LE 2026-10-22, CES 35 TYPES SONT DES SPÉCIALITÉS PARMI ~150 (specialites.js), rangées en 19 familles : la bande, « Par
+// envie », la carte et l'écran de choix du commerce lisent specialites.js. Cette table garde l'icône, l'illustration et la carte
+// modèle (TYPE_TEMPLATES) des 35 d'origine.
 export const ILLUSTRATION_TOUTES_CUISINES = 'tous';
 export const RESTAURANT_TYPES = [
   { value: 'Pizza', icone: 'pizza', illustration: 'pizza', fond: '#FFE6D8' },
