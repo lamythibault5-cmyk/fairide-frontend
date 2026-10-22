@@ -26,7 +26,7 @@ import usePageMeta from '../hooks/usePageMeta';
 import { suivre } from '../analytics';
 import { bceValide, raisonBce, codePostalValide, CHAMP_CODE_SECOURS, formaterAnneeAcademique } from '../validation';
 import { lireAdresseAccueil } from '../adresseAccueil';
-import useDecompte, { DELAI_RENVOI_S } from '../hooks/useDecompte';
+import useDecompte, { DELAI_RENVOI_S, DELAI_CODE_EMAIL_S } from '../hooks/useDecompte';
 import RedirectionRole from '../components/RedirectionRole';
 import Icone from '../components/Icone';
 import CadreConnexion from '../components/CadreConnexion';
@@ -424,6 +424,9 @@ export default function Auth() {
   // « Renvoyer le code » attend 30 s après chaque envoi (audit du 19/10, auth-12, voir hooks/useDecompte.js).
   const [attenteRenvoi, lancerAttenteRenvoi] = useDecompte();
   useEffect(() => { if (pendingEmail) lancerAttenteRenvoi(DELAI_RENVOI_S); }, [pendingEmail, lancerAttenteRenvoi]);
+  // « Je n'ai pas reçu le SMS », puis le code par e-mail 30 s plus tard (voir DELAI_CODE_EMAIL_S).
+  const [smsPasRecu, setSmsPasRecu] = useState(false);
+  const [attenteEmail, lancerAttenteEmail] = useDecompte();
   // Code SMS lu par Chrome sur Android (WebOTP, audit du 19/10, auth-35) : le SMS finit par « @fairide.be #123456 »
   // (routes/auth.js, smsCode) ; le navigateur propose alors de remplir le champ. Ailleurs (iPhone, ordinateur, application),
   // rien ne change : autocomplete="one-time-code" fait le reste.
@@ -1362,12 +1365,21 @@ export default function Auth() {
           <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending || attenteRenvoi > 0} onClick={() => handleResend()}>
             {resending ? t('common.loading') : attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}
           </button>
-          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026) : le code par e-mail, même attente. */}
-          {pendingChannel === 'sms' && (
-            <button className="btn-ghost" style={{ marginTop: 4 }} disabled={resending || attenteRenvoi > 0} onClick={() => handleResend('email')}>
-              {t('auth.codeByEmail')}
+          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026). Dernier recours, en deux temps
+              (fondateur) : « Je n'ai pas reçu le SMS », puis le code par e-mail après un décompte VISIBLE (DELAI_CODE_EMAIL_S) ;
+              l'ancien bouton, désactivé sans le dire pendant l'attente de « Renvoyer », semblait ne pas marcher (22/10). */}
+          {pendingChannel === 'sms' && (!smsPasRecu ? (
+            <button className="btn-ghost" style={{ marginTop: 4 }} disabled={resending} onClick={() => { setSmsPasRecu(true); lancerAttenteEmail(DELAI_CODE_EMAIL_S); }}>
+              {t('auth.smsPasRecu')}
             </button>
-          )}
+          ) : (
+            <>
+              <p className="small" style={{ margin: '8px 0 0', textAlign: 'center' }}>{t('auth.smsPasRecuAide')}</p>
+              <button className="btn-ghost" style={{ marginTop: 4 }} disabled={resending || attenteEmail > 0} onClick={() => handleResend('email')}>
+                {attenteEmail > 0 ? t('auth.codeByEmailIn', { s: attenteEmail }) : t('auth.codeByEmail')}
+              </button>
+            </>
+          ))}
           {/* Un numéro mal tapé : on le corrige ici, depuis l'inscription comme depuis la connexion (audit du 19/10, auth-03). */}
           {changerNumero ? (
             <form onSubmit={envoyerNouveauNumero} style={{ marginTop: 14 }} noValidate>

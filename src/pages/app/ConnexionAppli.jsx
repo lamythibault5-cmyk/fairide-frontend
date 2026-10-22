@@ -12,7 +12,7 @@ import { lireBienvenue } from '../../bienvenue';
 import { Haut } from './EcransBienvenue';
 import { Champ } from './InscriptionAppli';
 import { CHAMP_CODE_SECOURS } from '../../validation';
-import useDecompte, { DELAI_RENVOI_S } from '../../hooks/useDecompte';
+import useDecompte, { DELAI_RENVOI_S, DELAI_CODE_EMAIL_S } from '../../hooks/useDecompte';
 
 /* LA CONNEXION DANS L'APPLICATION (2026-10-15) — /login quand experienceApp(), à la place d'Auth.jsx.
  *
@@ -62,6 +62,9 @@ export default function ConnexionAppli() {
   // « Renvoyer le code » attend 30 s après chaque envoi (audit du 19/10, auth-12) : chaque toucher était un SMS payé.
   const [attenteRenvoi, lancerAttenteRenvoi] = useDecompte();
   useEffect(() => { if (ecran === 'code') lancerAttenteRenvoi(DELAI_RENVOI_S); }, [ecran, lancerAttenteRenvoi]);
+  // « Je n'ai pas reçu le SMS », puis le code par e-mail 30 s plus tard (voir DELAI_CODE_EMAIL_S).
+  const [smsPasRecu, setSmsPasRecu] = useState(false);
+  const [attenteEmail, lancerAttenteEmail] = useDecompte();
 
   if (connecteALArrivee && user) return <Navigate to={location.state?.from || espaceApresConnexion(user)} replace />;
 
@@ -279,10 +282,18 @@ export default function ConnexionAppli() {
         <>
           {champCode}
           <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={() => renvoyer()}>{attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}</button>
-          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026) : le code par e-mail, même attente. */}
-          {canalCode === 'sms' && (
-            <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={() => renvoyer('email')}>{t('auth.codeByEmail')}</button>
-          )}
+          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026). Dernier recours, en deux temps
+              (fondateur) : « Je n'ai pas reçu le SMS », puis le code par e-mail après un décompte visible (DELAI_CODE_EMAIL_S). */}
+          {canalCode === 'sms' && (!smsPasRecu ? (
+            <button type="button" className="bv-lien" disabled={attente} onClick={() => { setSmsPasRecu(true); lancerAttenteEmail(DELAI_CODE_EMAIL_S); }}>{t('auth.smsPasRecu')}</button>
+          ) : (
+            <>
+              <p className="bv-aide bv-centre">{t('auth.smsPasRecuAide')}</p>
+              <button type="button" className="bv-lien" disabled={attente || attenteEmail > 0} onClick={() => renvoyer('email')}>
+                {attenteEmail > 0 ? t('auth.codeByEmailIn', { s: attenteEmail }) : t('auth.codeByEmail')}
+              </button>
+            </>
+          ))}
           <button type="button" className="bv-lien" disabled={attente} onClick={() => { setNouveauNumero(''); aller('numero'); }}>{t('auth.changePhone')}</button>
         </>
       );
