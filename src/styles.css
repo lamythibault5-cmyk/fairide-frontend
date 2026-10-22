@@ -4255,16 +4255,29 @@ button.doc-slot-vide { border: 0; cursor: pointer; font-family: inherit; }
 /* Les boutons sont déjà des boîtes d'une seule ligne : le centrage par flex y est sans danger. */
 .landing-cta-principal, .discover-info-btn { display: inline-flex; align-items: center; gap: 8px; }
 
-/* Tuile d'information en fin de vitrine « Découvre » : occupe les cellules restantes de la dernière rangée
-   (ou une rangée entière si la précédente est complète). Aplat iris, comme la bannière. */
-.discover-info { grid-column: auto / -1; display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; border-radius: var(--radius); background: var(--iris); color: #fff; min-height: 220px; box-shadow: var(--shadow-3); }
-.discover-info-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
-.discover-info-title { font-size: 20px; line-height: 1.2; }
-.discover-info-stats { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; opacity: .95; }
-.discover-info-stats b { font-size: 16px; margin-right: 2px; }
-.discover-info-text { margin: 0; color: rgba(255, 255, 255, .86); line-height: 1.45; }
-.discover-info .discover-info-btn { text-decoration: none; padding: 8px 14px; font-size: 13.5px; }
-@media (max-width: 640px) { .discover-info { grid-column: 1 / -1; min-height: 0; padding: 14px 14px; } .discover-info-title { font-size: 17px; } }
+/* Bandeau d'information sous la vitrine « Découvre » : toute la largeur de la grille. En « auto / -1 » il tombait seul dans
+   la dernière colonne d'une rangée vide dès que les 8 cartes remplissaient leurs rangées (2026-10-22). Aplat iris, comme le
+   bandeau du haut : texte à gauche, chiffres en lime et bouton à droite ; tout s'empile sous 900 px. */
+.discover-info {
+  grid-column: 1 / -1; margin-top: 8px; padding: 30px 34px; border-radius: 24px; background: var(--iris); color: #fff; box-shadow: var(--shadow-3);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'eyebrow stats' 'title stats' 'text actions';
+  column-gap: 56px; row-gap: 10px; align-items: start;
+}
+.discover-info-eyebrow { grid-area: eyebrow; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: rgba(255, 255, 255, .72); }
+.discover-info-title { grid-area: title; font-family: var(--font-titre); font-size: 26px; line-height: 1.2; letter-spacing: -0.015em; max-width: 620px; text-wrap: balance; }
+.discover-info-stats { grid-area: stats; display: flex; gap: 32px; font-size: 13.5px; line-height: 1.3; color: rgba(255, 255, 255, .84); }
+.discover-info-stats span { display: flex; flex-direction: column; max-width: 130px; }
+.discover-info-stats b { font-family: var(--font-titre); font-size: 40px; line-height: 1; letter-spacing: -0.02em; color: var(--lime); margin-bottom: 6px; white-space: nowrap; }
+.discover-info-text { grid-area: text; margin: 0; max-width: 620px; font-size: 14.5px; color: rgba(255, 255, 255, .84); line-height: 1.55; }
+.discover-info-actions { grid-area: actions; align-self: end; }
+.discover-info .discover-info-btn { text-decoration: none; padding: 11px 18px; border: 0; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); font-size: 14.5px; font-weight: 700; transition: transform .2s; }
+.discover-info .discover-info-btn:hover { transform: translateX(2px); }
+@media (max-width: 900px) {
+  .discover-info { grid-template-columns: 1fr; grid-template-areas: 'eyebrow' 'title' 'text' 'stats' 'actions'; padding: 24px 24px; }
+  .discover-info-stats { margin-top: 8px; }
+  .discover-info-actions { margin-top: 6px; }
+}
+@media (max-width: 640px) { .discover-info { padding: 20px 18px; border-radius: 20px; } .discover-info-title { font-size: 20px; } .discover-info-stats b { font-size: 32px; } }
 
 /* Mon menu › copier-coller guidé depuis le site ou la page plateforme du commerce. */
 .copier-coller { margin-top: 12px; padding: 12px 14px; border-radius: var(--radius-card-sm); border: 1px dashed var(--line); background: var(--cream-dim); }

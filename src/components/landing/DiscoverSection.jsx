@@ -30,8 +30,8 @@ export default function DiscoverSection({ restaurants }) {
     return retenus;
   }, [restaurants, filtre]);
 
-  // Tuile d'information qui remplit la fin de la grille (grid-column: auto / -1) : chiffres de la vitrine et
-  // deux portes d'entrée, plutôt qu'un trou blanc quand le nombre de cartes ne tombe pas juste.
+  // Bandeau d'information sous la grille, sur toute sa largeur (grid-column: 1 / -1) : chiffres de la vitrine et
+  // porte d'entrée des commerces.
 
   if (restaurants.length === 0) return null;
   return (
@@ -70,7 +70,7 @@ export default function DiscoverSection({ restaurants }) {
             <span><b>10 %</b> {t('landing.discoverInfoCommission')}</span>
           </div>
           <p className="small discover-info-text">{t('landing.discoverInfoText')}</p>
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
+          <div className="discover-info-actions">
             <Link to="/login?audience=partner&role=restaurant" className="btn-hero-ghost discover-info-btn"><Icone nom="commerce" taille={16} /> {t('landing.discoverInfoJoin')}</Link>
           </div>
         </Reveal>
