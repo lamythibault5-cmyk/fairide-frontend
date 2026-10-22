@@ -4471,6 +4471,8 @@ export default {
       faqA6: 'If its orders don\'t exceed €50 in a month (product prices, VAT included, without delivery or tips), it does not pay that month\'s subscription. During the first (free) month, the second month is then free too. After that, such a month is refunded automatically: the €20 goes back to the payment method used. Above €50 of orders in the month, that month\'s subscription is due. The 10% on orders paid online only applies to orders actually placed.',
       faqQ7: "Are prices the same as at the restaurant?",
       faqA7: "The menu shows the restaurant's prices. Fairide takes only 10% commission, where big platforms advertise 22 to 32%: so restaurants no longer have to inflate their menu. They can raise their prices by up to 10% to cover the commission, never more. For a dish at €12 at the counter: €12 ÷ 0.70 ≈ €17.10 to cover a 30% commission, €13.20 at most on Fairide. It is a calculation, not a survey of another platform's prices. Restaurants that keep their prices, checked by our team, carry the « In-store prices » badge.",
+      faqQ8: "Why are we called Fairide?",
+      faqA8: "Fairide comes from “fair ride”: a fair deal for the restaurant, for the courier and for you. Many people write it “Fairride” or “Fair ride”: that is us, at fairide.be.",
       /* Same reasoning as the fr block: the title targets the searches people actually type. */
       pageTitle: 'Alternative to Uber Eats and Deliveroo in Brussels · Fairide',
       metaDescription: 'The Belgian alternative to Uber Eats and Deliveroo in Brussels: commission capped at 10 % for businesses, 90% of the delivery fees for couriers.',

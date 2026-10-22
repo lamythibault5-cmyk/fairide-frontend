@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
+import { cheminFiche } from '../../adresseFiche';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
@@ -138,7 +139,7 @@ export default function MapPage() {
         </small>
         {r.address && <small className="carte-fiche-adresse">{r.address}</small>}
       </span>
-      <Link to={`/restaurants/${r.id}`} className="btn-gold carte-fiche-voir">{t('ecranListe.carteVoir')}</Link>
+      <Link to={cheminFiche(r)} className="btn-gold carte-fiche-voir">{t('ecranListe.carteVoir')}</Link>
       <button type="button" className="carte-fiche-fermer" onClick={fermer} aria-label={t('map.backToMapAria')}><Icone nom="croix" taille={14} /></button>
     </div>
   );
@@ -238,7 +239,7 @@ export default function MapPage() {
             <ul className="sl-carte-liste">
               {liste.map((r) => (
                 <li key={r.id}>
-                  <Link to={`/restaurants/${r.id}`} className="sl-carte-ligne">
+                  <Link to={cheminFiche(r)} className="sl-carte-ligne">
                     <span className="carte-fiche-photo">
                       <VisuelVide nom={r.name} cuisine={r.cuisine} />
                       {r.coverImageUrl && <img src={r.coverImageUrl} alt="" loading="lazy" onError={cacherImageCassee} />}
@@ -285,7 +286,7 @@ export default function MapPage() {
         {!colonne && !!recherche.trim() && liste.length > 0 && (
           <div className="carte-resultats" role="list">
             {liste.map((r) => (
-              <Link key={r.id} to={`/restaurants/${r.id}`} className="carte-resultat" role="listitem">
+              <Link key={r.id} to={cheminFiche(r)} className="carte-resultat" role="listitem">
                 {r.coverImageUrl || r.logoImageUrl ? (
                   <img src={r.logoImageUrl || r.coverImageUrl} alt="" loading="lazy" />
                 ) : (

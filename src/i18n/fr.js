@@ -4472,6 +4472,8 @@ export default {
       faqA6: 'Si ses commandes ne dépassent pas 50 € sur un mois (prix des produits, TVA comprise, sans la livraison ni les pourboires), il ne paie pas l\'abonnement de ce mois. Pendant le premier mois (offert), le deuxième est alors offert aussi. Ensuite, un tel mois est remboursé automatiquement : les 20 € reviennent sur le moyen de paiement utilisé. Au-delà de 50 € de commandes dans le mois, l\'abonnement de ce mois est dû. Les 10 % sur les commandes payées en ligne, eux, ne concernent que les commandes réellement passées.',
       faqQ7: "Les prix sont-ils les mêmes qu’au restaurant ?",
       faqA7: "La carte affiche les prix du restaurant. Fairide ne prend que 10 % de commission, là où les grandes plateformes annoncent 22 à 32 % : le restaurant ne doit donc plus gonfler sa carte. Il peut monter ses prix de 10 % au plus pour couvrir la commission, jamais plus. Pour un plat à 12 € au comptoir : 12 € ÷ 0,70 ≈ 17,10 € pour couvrir 30 % de commission, 13,20 € au plus sur Fairide. C'est un calcul, pas un relevé des prix d'une autre plateforme. Les restaurants qui gardent leurs prix, vérifiés par notre équipe, portent le badge « Prix du comptoir ».",
+      faqQ8: "Pourquoi s’appelle-t-on Fairide ?",
+      faqA8: "Fairide vient de l’anglais « fair ride », une course équitable : pour le restaurant, pour le livreur et pour toi. Beaucoup l’écrivent « Fairride » ou « Fair ride » : c’est bien nous, à l’adresse fairide.be.",
       /* Le titre de la page et sa description visent les recherches réelles : « alternative Uber
          Eats », « alternative Deliveroo Bruxelles », « livraison commission réduite ». Un titre
          qui ne dit que « Notre histoire » ne peut se placer sur aucune d'elles — personne ne

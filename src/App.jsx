@@ -26,7 +26,7 @@ import { useAuth } from './context/AuthContext';
 import Home from './pages/Home';
 import ResetPassword from './pages/ResetPassword';
 import RestaurantList from './pages/client/RestaurantList';
-import RestaurantMenu from './pages/client/RestaurantMenu';
+import FicheCommerce from './pages/client/FicheCommerce';
 import NotFound from './pages/NotFound';
 
 // --- Espace client (au-delà des pages publiques) ---
@@ -182,7 +182,7 @@ export default function App() {
             Ce sont aussi, pour cette raison, les deux seules pages hors accueil gardées en import
             statique : une page indexable ne doit pas attendre un second téléchargement pour s'afficher. */}
         <Route path="/restaurants" element={<RestaurantList />} />
-        <Route path="/restaurants/:id" element={<RestaurantMenu />} />
+        <Route path="/restaurants/:id" element={<FicheCommerce />} />
         {/* Réservation de table retirée (2026-09-25) : les liens déjà partagés (fiche Google, QR, réseaux) mènent à la
             carte du commerce, où l'on commande à emporter ou en livraison. */}
         <Route path="/restaurants/:id/reserver" element={<RedirectionFiche />} />

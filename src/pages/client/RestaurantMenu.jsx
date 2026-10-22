@@ -48,6 +48,7 @@ import { chargerAvecCache, lireCache, modifierCache } from '../../cacheDonnees';
 import PanierColonne from '../../components/PanierColonne';
 import { repeterTantQueLibre } from '../../defilementAuto';
 import { lienFiche } from '../../murCompte';
+import { cheminFiche, retenirSlugs } from '../../adresseFiche';
 import '../../ecran-fiche.css';
 import '../../site-fiche.css';
 
@@ -71,14 +72,40 @@ const APPLI = experienceApp();
    consomme la réponse, les suivantes sont des navigations. */
 const CHEMIN_AU_CHARGEMENT = typeof window !== 'undefined' ? window.location.pathname : '';
 let premiereFicheMontee = false;
-function rechargementDeCettePage(id) {
+function rechargementDeCettePage(id, adresse) {
   const premiere = !premiereFicheMontee;
   premiereFicheMontee = true;
   let recharge = false;
   try { recharge = performance.getEntriesByType('navigation')[0]?.type === 'reload'; } catch { /* API absente */ }
   let dernier = null;
   try { dernier = sessionStorage.getItem('fairide_last_restaurant_viewed'); } catch { /* sans stockage */ }
-  return premiere && recharge && CHEMIN_AU_CHARGEMENT === `/restaurants/${id}` && dernier === id;
+  // L'adresse rechargée est la lisible (/restaurants/<slug>) ou, pour un ancien lien, l'identifiant (adresseFiche.js).
+  const ici = CHEMIN_AU_CHARGEMENT === `/restaurants/${id}` || CHEMIN_AU_CHARGEMENT === `/restaurants/${adresse}`;
+  return premiere && recharge && ici && dernier === id;
+}
+
+/* L'échec du chargement d'une fiche : introuvable (retiré, jamais publié, adresse fausse) ou erreur réseau, avec
+   « Réessayer ». Partagé avec FicheCommerce.jsx, qui peut échouer avant même de savoir quel commerce monter. */
+export function EchecFiche({ erreur, onReessayer }) {
+  const { t } = useLanguage();
+  const introuvable = erreur.status === 404;
+  return (
+    <EtatVide
+      icone={introuvable ? 'recherche' : 'bogue'}
+      titre={introuvable ? t('restaurantMenu.notFound') : t('restaurantMenu.loadError')}
+      actionVers={introuvable ? '/restaurants' : undefined}
+      actionTexte={introuvable ? t('restaurantMenu.backToRestaurants') : undefined}
+    >
+      {!introuvable && (
+        <>
+          <button type="button" className="btn-teal" onClick={onReessayer}>
+            {t('restaurantMenu.retry')}
+          </button>
+          <Link to="/restaurants" className="btn-outline">{t('restaurantMenu.backToRestaurants')}</Link>
+        </>
+      )}
+    </EtatVide>
+  );
 }
 
 // Moyens de paiement au retrait (serveur : reseauxCommerce.js) → clé de leur libellé.
@@ -87,8 +114,10 @@ const LIBELLES_PAIEMENT = { especes: 'payEspeces', bancontact: 'payBancontact', 
 // Huit commerces au hasard pour « À découvrir », sans celui-ci.
 const tirerDecouvertes = (tous, id) => (tous || []).filter((r) => r.id !== id).sort(() => Math.random() - 0.5).slice(0, 8);
 
-export default function RestaurantMenu() {
-  const { id } = useParams();
+// `id` : l'identifiant du commerce, toujours (FicheCommerce.jsx le tire de l'adresse, lisible ou non). L'adresse elle-même
+// (`useParams`) ne sert qu'à la remplacer par la lisible.
+export default function RestaurantMenu({ id }) {
+  const { id: adresse } = useParams();
   const { token, user, role } = useAuth();
   const { previewMode } = usePreviewMode();
   /* DÉJÀ LUE, LA FICHE S'OUVRE TOUT DE SUITE (2026-10-20, test de l'app Android avec Maestro Pizza : « lent à s'ouvrir »).
@@ -166,15 +195,16 @@ export default function RestaurantMenu() {
   usePageMeta({
     title: restaurant ? t('seo.restaurantTitle', { name: restaurant.name, cuisine: restaurant.cuisine || '', commune: restaurant.commune || '' }) : undefined,
     description: restaurant ? (restaurant.desc || t('seo.restaurantDescription', { name: restaurant.name, commune: restaurant.commune || 'Bruxelles' })) : undefined,
-    path: `/restaurants/${id}`,
+    // Le canonical porte l'adresse lisible (adresseFiche.js) : un ancien lien par identifiant se déclare doublon de celle-ci.
+    path: restaurant ? cheminFiche(restaurant) : `/restaurants/${adresse}`,
     image: restaurant?.coverImageUrl || undefined,
     type: 'restaurant'
   });
-  useJsonLd(restaurant ? restaurantJsonLd(restaurant, { url: `${SITE_URL}/restaurants/${id}` }) : null, 'ld-restaurant');
+  useJsonLd(restaurant ? restaurantJsonLd(restaurant, { url: `${SITE_URL}${cheminFiche(restaurant)}` }) : null, 'ld-restaurant');
   useJsonLd(restaurant ? breadcrumbJsonLd([
     { name: 'Fairide', path: '/' },
     { name: t('restoListUi.heading'), path: '/restaurants' },
-    { name: restaurant.name, path: `/restaurants/${id}` }
+    { name: restaurant.name, path: cheminFiche(restaurant) }
   ]) : null, 'ld-breadcrumb');
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -247,7 +277,17 @@ export default function RestaurantMenu() {
      le défilement du client. Avec un seul commerce publié, c'était chaque visite après la première. (Invisible en
      développement : le double passage des effets de React StrictMode annulait les minuteurs.) Il faut maintenant que le
      navigateur ait réellement rechargé le document, sur cette adresse-ci, et que ce soit la première fiche montée. */
-  const isRefreshRef = useRef(rechargementDeCettePage(id));
+  const isRefreshRef = useRef(rechargementDeCettePage(id, adresse));
+  /* ANCIENNE ADRESSE → ADRESSE LISIBLE (adresseFiche.js). Ouverte par son identifiant (lien partagé avant le 2026-10-22,
+     commande, panier, console), la fiche prend son adresse lisible dès qu'elle la connaît, sans rien recharger :
+     FicheCommerce retrouve le même identifiant pour le slug, la fiche reste montée. L'état de la navigation (retour de
+     connexion, photo en vol) et la requête suivent. Rien si la réponse est celle d'une autre fiche, ou sans slug. */
+  useEffect(() => {
+    if (!restaurant?.slug || String(restaurant.id) !== String(id) || adresse === restaurant.slug) return;
+    retenirSlugs(restaurant);
+    navigate({ pathname: cheminFiche(restaurant), search: location.search, hash: location.hash }, { replace: true, state: location.state });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurant?.slug, restaurant?.id, id, adresse]);
   const scrollRestoredRef = useRef(false);
   // Capturé une seule fois au montage, avant que l'effet de suivi du scroll ci-dessous ne puisse
   // écraser cette valeur (ex. suite à la restauration native du navigateur au rechargement).
@@ -376,26 +416,7 @@ export default function RestaurantMenu() {
      serveur : une adresse dont l'identifiant n'est pas un UUID valide ne répond pas 404 mais 500,
      et celui-là ne guérira jamais — « Réessayer » seul y serait un cul-de-sac. Le bouton reste
      l'action principale (la plupart des échecs sont bien passagers), la sortie est dessous. */
-  if (erreur) {
-    const introuvable = erreur.status === 404;
-    return (
-      <EtatVide
-        icone={introuvable ? 'recherche' : 'bogue'}
-        titre={introuvable ? t('restaurantMenu.notFound') : t('restaurantMenu.loadError')}
-        actionVers={introuvable ? '/restaurants' : undefined}
-        actionTexte={introuvable ? t('restaurantMenu.backToRestaurants') : undefined}
-      >
-        {!introuvable && (
-          <>
-            <button type="button" className="btn-teal" onClick={() => setEssai((n) => n + 1)}>
-              {t('restaurantMenu.retry')}
-            </button>
-            <Link to="/restaurants" className="btn-outline">{t('restaurantMenu.backToRestaurants')}</Link>
-          </>
-        )}
-      </EtatVide>
-    );
-  }
+  if (erreur) return <EchecFiche erreur={erreur} onReessayer={() => setEssai((n) => n + 1)} />;
   // Chargement dans l'app : la fiche commence par sa photo, un aplat iris pâle la remplace en attendant (Skeleton.jsx).
   if (!restaurant) return experienceApp() ? <SqueletteEcran photo src={photoEnVol(id)} /> : <SkeletonCards count={3} />;
 
@@ -1197,7 +1218,7 @@ function DiscoverSection({ restaurants, t, user }) {
         keyFor={(r) => r.id}
         className="discover-track"
         renderItem={(r, i, key) => (
-          <Link key={key} {...lienFiche(user, r.id, r.name)} className="discover-card">
+          <Link key={key} {...lienFiche(user, r, r.name)} className="discover-card">
             {/* Le visuel de marque sous la photo : un commerce sans photo (ou dont la photo casse) garde une vignette. */}
             <span className="discover-card-media">
               <VisuelVide nom={r.name} cuisine={r.cuisine} />

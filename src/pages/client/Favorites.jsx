@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
+import { cheminFiche } from '../../adresseFiche';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
@@ -91,7 +92,7 @@ export default function Favorites() {
             {restaurants.map((r) => {
               const sort = sortantes.has(r.id);
               return (
-                <Link key={r.id} to={`/restaurants/${r.id}`} className={`fav-carte${sort ? ' fav-carte--sort' : ''}`}>
+                <Link key={r.id} to={cheminFiche(r)} className={`fav-carte${sort ? ' fav-carte--sort' : ''}`}>
                   <span className="fav-photo">
                     <VisuelVide nom={r.name} cuisine={r.cuisine} />
                     {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 50vw, 240px')} alt="" onError={cacherImageCassee} />}
