@@ -5726,6 +5726,7 @@ export default {
       modifSend: 'Envoyer à Fairide',
       modifSent: 'Demande envoyée ! L\'équipe Fairide s\'en occupe et la carte est mise à jour au plus vite.',
       modifEmpty: 'Dis-nous ce que tu veux changer (ou joins une photo).',
+      modifIncomplete: 'Complète ta demande : quel plat, quel prix ?',
       modifPhotoOnly: 'Photo jointe',
       modifStatus_en_attente: 'Envoyée',
       modifStatus_en_cours: 'En cours',

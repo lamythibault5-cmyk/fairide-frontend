@@ -5709,6 +5709,7 @@ export default {
       modifSend: 'Send to Fairide',
       modifSent: 'Request sent! The Fairide team is on it and your menu will be updated as soon as possible.',
       modifEmpty: 'Tell us what you want to change (or attach a photo).',
+      modifIncomplete: 'Finish your request: which dish, which price?',
       modifPhotoOnly: 'Photo attached',
       modifStatus_en_attente: 'Sent',
       modifStatus_en_cours: 'In progress',

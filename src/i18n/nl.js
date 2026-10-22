@@ -5718,6 +5718,7 @@ export default {
       modifSend: 'Naar Fairide sturen',
       modifSent: 'Aanvraag verstuurd! Het Fairide-team gaat ermee aan de slag en je kaart wordt zo snel mogelijk aangepast.',
       modifEmpty: 'Laat ons weten wat je wilt veranderen (of voeg een foto toe).',
+      modifIncomplete: 'Vul je vraag aan: welk gerecht, welke prijs?',
       modifPhotoOnly: 'Foto toegevoegd',
       modifStatus_en_attente: 'Verstuurd',
       modifStatus_en_cours: 'Bezig',
