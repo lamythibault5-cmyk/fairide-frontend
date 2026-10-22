@@ -38,7 +38,6 @@ html:not(.appli) .sc-commandes .sc-sec-titre { display: flex; align-items: cente
 html:not(.appli) .sc-commandes .sc-sec-titre svg { color: var(--iris); }
 html:not(.appli) .sc-passees { width: 100%; border-collapse: collapse; font-size: 14.5px; }
 html:not(.appli) .sc-passees .sc-nom-c { display: flex; align-items: center; gap: 12px; min-width: 0; }
-html:not(.appli) .sc-passees .sc-tuile { flex: none; width: 40px; height: 40px; border-radius: 10px; background: rgba(59, 47, 181, .08); color: var(--iris); display: grid; place-items: center; }
 html:not(.appli) .sc-passees .sc-nom-texte { display: flex; flex-direction: column; min-width: 0; }
 html:not(.appli) .sc-passees .sc-nom-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 html:not(.appli) .sc-passees .sc-nom-texte small { font-size: 12.5px; color: var(--ink-soft); }
@@ -202,6 +201,6 @@ html:not(.appli) .sc-page .sc-codes { margin-top: 22px; padding-top: 6px; border
   html:not(.appli) .sc-passees .sc-c-actions { grid-area: act; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
   html:not(.appli) .sc-passees .sc-c-actions .btn-outline { min-height: 40px; padding: 8px 14px; font-size: 14px; }
   html:not(.appli) .sc-passees .sc-details { margin-left: auto; min-height: 40px; }
-  html:not(.appli) .sc-passees .sc-tuile { width: 36px; height: 36px; }
+  html:not(.appli) .sc-passees .logo-commerce { width: 36px; height: 36px; }
   html:not(.appli) .sc-passees tr.sc-passee-detail { padding: 0 14px 14px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 16px 16px; }
 }

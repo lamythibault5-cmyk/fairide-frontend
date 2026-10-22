@@ -319,6 +319,14 @@
 .paiement-non-termine { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--iris); border-radius: var(--radius); }
 .suivi-carte.est-passee { padding-top: 16px; padding-bottom: 16px; }
 .suivi-carte.est-passee .suivi-resto { font-size: 16px; }
+/* Commande passée (22/10/2026) : le logo du commerce devant son nom, le nom mène à sa fiche (Orders.jsx LogoCommerce). */
+.suivi-carte.est-passee .suivi-tete { align-items: center; }
+.suivi-carte.est-passee .suivi-tete-texte { flex: 1; }
+.logo-commerce { flex: none; width: 40px; height: 40px; border-radius: 12px; overflow: hidden; background: rgba(59, 47, 181, .08);
+  color: var(--iris); display: grid; place-items: center; font-weight: 800; font-size: 17px; }
+.logo-commerce img { width: 100%; height: 100%; object-fit: cover; display: block; background: #fff; }
+.lien-commerce { color: inherit; text-decoration: none; }
+.lien-commerce:hover, .lien-commerce:focus-visible { text-decoration: underline; }
 /* COMMANDE EN COURS : LE BANDEAU IRIS (2026-10-16, version 1C ; Orders.jsx, RouteSuivi dans orderStatus.jsx). Le haut de la
    carte est iris, le statut en grand, la route lime ; le bas reste blanc et remonte sur le bandeau en coins arrondis. */
 .card.suivi-carte--bandeau { padding: 0 16px 16px; overflow: hidden; border-color: var(--iris); }

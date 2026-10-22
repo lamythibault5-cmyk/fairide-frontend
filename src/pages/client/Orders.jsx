@@ -12,7 +12,7 @@ import EtatVide from '../../components/EtatVide';
 import ErreurChargement from '../../components/ErreurChargement';
 import InfosRetrait, { AideCommande } from '../../components/client/InfosRetrait';
 import BandeauOuverture from '../../components/BandeauOuverture';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { preparerNouvelleCommande } from '../../recommander';
 import SignalerProbleme from '../../components/client/SignalerProbleme';
@@ -38,6 +38,7 @@ import Icone from '../../components/Icone';
 import VendeurLivraison from '../../components/conformite/VendeurLivraison';
 import Modale from '../../components/Modale';
 import { euros } from '../../prixPlat';
+import { imgProps } from '../../images';
 import { BandeauCommande, FeuilleCommande } from '../../components/EcranCommande';
 import '../../ecran-liste.css';
 
@@ -47,6 +48,24 @@ function vignettePhoto(url, taille, carre = true) {
   return url.replace('/image/upload/', carre ? `/image/upload/c_fill,w_${taille},h_${taille},f_auto,q_auto/` : `/image/upload/c_limit,w_${taille},f_auto,q_auto/`);
 }
 const heureCourte = (ms) => new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
+
+// COMMANDES PASSÉES (fondateur, 22/10/2026) : le logo du commerce à la place de l'icône sac/vélo — l'initiale de son nom
+// s'il n'en a pas choisi ou si l'image ne charge pas — et son nom mène à sa fiche. Un commerce qui a quitté Fairide
+// (restaurantExists à false, GET /api/orders/mine) garde son nom sur la commande, sans lien. Styles : client-ui.css.
+function LogoCommerce({ order }) {
+  const [casse, setCasse] = useState(false);
+  return (
+    <span className="logo-commerce" aria-hidden="true">
+      {order.restaurantLogoUrl && !casse
+        ? <img {...imgProps(order.restaurantLogoUrl, 40)} alt="" loading="lazy" decoding="async" onError={() => setCasse(true)} />
+        : (order.restaurantName || '').trim().charAt(0).toUpperCase()}
+    </span>
+  );
+}
+function NomCommerce({ order }) {
+  if (!order.restaurantId || order.restaurantExists === false) return order.restaurantName;
+  return <Link to={`/restaurants/${order.restaurantId}`} className="lien-commerce">{order.restaurantName}</Link>;
+}
 
 // `pourboireSeul` : l'avis est déjà envoyé, il ne reste que le pourboire. Sans ce mode, un client qui
 // abandonnait le paiement du pourboire (ou dont l'envoi échouait après l'avis) ne pouvait plus jamais le
@@ -760,8 +779,9 @@ export default function Orders() {
   const cartePassee = (o) => (
     <>
       <div className="suivi-tete">
+        <LogoCommerce order={o} />
         <span className="suivi-tete-texte">
-          <b className="suivi-resto">{o.restaurantName}</b>
+          <b className="suivi-resto"><NomCommerce order={o} /></b>
           <span className="suivi-sous">{orderTypeLabel(o, t)} · {quand(o.createdAt)}</span>
         </span>
         <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span>
@@ -880,8 +900,8 @@ export default function Orders() {
                       <tr className={`sc-passee${ouvert ? ' ouverte' : ''}`}>
                         <td className="sc-c-nom">
                           <span className="sc-nom-c">
-                            <span className="sc-tuile" aria-hidden="true"><Icone nom={o.orderType === 'pickup' ? 'sac' : 'velo'} taille={18} /></span>
-                            <span className="sc-nom-texte"><b>{o.restaurantName}</b><small>{orderTypeLabel(o, t)}<span className="sc-tel-seul"> · {quand(o.createdAt)}</span></small></span>
+                            <LogoCommerce order={o} />
+                            <span className="sc-nom-texte"><b><NomCommerce order={o} /></b><small>{orderTypeLabel(o, t)}<span className="sc-tel-seul"> · {quand(o.createdAt)}</span></small></span>
                           </span>
                         </td>
                         <td className="sc-c-date">{quand(o.createdAt)}</td>
