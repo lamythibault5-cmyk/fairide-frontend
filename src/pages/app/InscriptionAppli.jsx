@@ -14,7 +14,7 @@ import EngagementsInscription from '../../components/commerce/EngagementsInscrip
 import ChoixSpecialites from '../../components/commerce/ChoixSpecialites';
 import { DAY_ORDER, dayLabel } from '../../openingHours';
 import { bceValide, raisonBce, codePostalValide } from '../../validation';
-import useDecompte, { DELAI_RENVOI_S } from '../../hooks/useDecompte';
+import useDecompte, { DELAI_RENVOI_S, DELAI_CODE_EMAIL_S } from '../../hooks/useDecompte';
 import { lireBienvenue, lireCodeEnAttente, ecrireCodeEnAttente } from '../../bienvenue';
 import { attendrePage } from '../../routePrefetch';
 import { connexionFournisseur } from '../../natif';
@@ -187,6 +187,9 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [attenteRenvoi, lancerAttenteRenvoi] = useDecompte();
   const codeAffiche = !!enAttente && !changerNumero;
   useEffect(() => { if (codeAffiche) lancerAttenteRenvoi(DELAI_RENVOI_S); }, [codeAffiche, lancerAttenteRenvoi]);
+  // « Je n'ai pas reçu le SMS », puis le code par e-mail 30 s plus tard (voir DELAI_CODE_EMAIL_S).
+  const [smsPasRecu, setSmsPasRecu] = useState(false);
+  const [attenteEmail, lancerAttenteEmail] = useDecompte();
 
   // Brouillon (voir CLE_BROUILLON) : les réponses de chaque écran, le mot de passe jamais.
   const champsBrouillon = {
@@ -784,11 +787,18 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
             placeholder="123456" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
           {erreurs.code && <p className="field-error bv-centre" role="alert">{erreurs.code}</p>}
           <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={() => renvoyer()}>{attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}</button>
-          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026) : le code par e-mail, tout de suite
-              (pas l'attente de « Renvoyer », qui le désactivait sans le dire ; le serveur plafonne à 5 demandes par heure). */}
-          {enAttente.canal === 'sms' && (
-            <button type="button" className="bv-lien" disabled={attente} onClick={() => renvoyer('email')}>{t('auth.codeByEmail')}</button>
-          )}
+          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026). Dernier recours, en deux temps
+              (fondateur) : « Je n'ai pas reçu le SMS », puis le code par e-mail après un décompte visible (DELAI_CODE_EMAIL_S). */}
+          {enAttente.canal === 'sms' && (!smsPasRecu ? (
+            <button type="button" className="bv-lien" disabled={attente} onClick={() => { setSmsPasRecu(true); lancerAttenteEmail(DELAI_CODE_EMAIL_S); }}>{t('auth.smsPasRecu')}</button>
+          ) : (
+            <>
+              <p className="bv-aide bv-centre">{t('auth.smsPasRecuAide')}</p>
+              <button type="button" className="bv-lien" disabled={attente || attenteEmail > 0} onClick={() => renvoyer('email')}>
+                {attenteEmail > 0 ? t('auth.codeByEmailIn', { s: attenteEmail }) : t('auth.codeByEmail')}
+              </button>
+            </>
+          ))}
           <button type="button" className="bv-lien" disabled={attente}
             onClick={() => { setNouveauNumero(phone); setErreurs({}); setRecule(false); setChangerNumero(true); }}>{t('auth.changePhone')}</button>
         </>
