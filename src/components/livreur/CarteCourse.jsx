@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { coucheTuiles } from '../../carte';
 import { pastilleCommerce, pastilleMaison, TRACE_RESTE } from '../../marqueursCarte';
 
-/* LA CARTE D'UNE COURSE, SUR LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, mockups/site-ordinateur.html, « Livreur ») :
+/* LA CARTE D'UNE COURSE, SUR LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, « Livreur ») :
  * à droite de la liste, le commerce (rond cerclé d'iris) et le client (rond lime) reliés par des points iris, comme le trajet
  * dessiné sur chaque carte de course.
  *

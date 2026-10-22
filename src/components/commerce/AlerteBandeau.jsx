@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { SONNERIES, REPETITIONS } from '../../hooks/useNewOrderAlert';
 import Icone from '../Icone';
 
-/* L'ALARME DES COMMANDES SUR LE BANDEAU IRIS (site seulement, 2026-10-16, mockups/site-ordinateur.html › Espace commerce,
+/* L'ALARME DES COMMANDES SUR LE BANDEAU IRIS (site seulement, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html › Espace commerce,
  * « Le service, le son et la prochaine étape montent dans le bandeau »). Les mêmes gestes que NewOrderAlertBar — son
  * activé / coupé, son bloqué par le navigateur, couper l'alarme, réglages (sonnerie, répétitions, volume, test),
  * notifications push ou système — et la même phrase honnête sur ce que l'alerte garantit, mais en pastilles claires sur

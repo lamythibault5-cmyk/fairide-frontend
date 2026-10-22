@@ -1,5 +1,5 @@
 /* LE PARCOURS DE COMMANDE SUR LE SITE : Panier, Paiement, Commande confirmée, Mes commandes (fondateur, 2026-10-16,
-   « Proposition » de mockups/site-ordinateur.html, sections 5 et 6). Importé par components/EcranCommande.jsx, donc par les
+   « Proposition » de maquettes/site-ordinateur/site-ordinateur.html, sections 5 et 6). Importé par components/EcranCommande.jsx, donc par les
    quatre pages.
    Tout est sous `html:not(.appli)` : l'app (html.appli, natif ou écran d'accueil) garde exactement ses écrans
    (ecran-commande.css, client-ui.css). Les seules règles hors de ce cadre sont les `display: contents` des enveloppes

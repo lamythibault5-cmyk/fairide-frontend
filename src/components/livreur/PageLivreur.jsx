@@ -5,7 +5,7 @@ import RouteVelo from './RouteVelo';
 import '../../ecran-livreur.css';
 import '../../site-livreur.css';
 
-/* L'EN-TÊTE DES PAGES SECONDAIRES DU LIVREUR (fondateur, 2026-10-16, mockups/site-ordinateur.html) : Carte, Factures, Avis
+/* L'EN-TÊTE DES PAGES SECONDAIRES DU LIVREUR (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : Carte, Factures, Avis
  * et le dossier prennent le bandeau iris du tableau de bord et des gains (titre, une phrase, le vélo arrêté sur sa route)
  * et leur contenu passe dans la feuille blanche, à largeur de lecture sur un ordinateur (site-livreur.css).
  *

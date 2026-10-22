@@ -18,7 +18,7 @@ import { SITE } from '../../components/commerce/CadreSite';
  * jours chargés, et les plats qui marchent. Le choix de période est seul, au-dessus de tout, et vaut pour toute la page.
  * Pendant le rechargement, la page garde l'ancien rendu en transparence plutôt qu'un squelette.
  *
- * NOUVEAU STYLE (fondateur, 2026-10-16, mockups/tous-les-ecrans.html › Statistiques, « Le chiffre en grand ») : sur le
+ * NOUVEAU STYLE (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html › Statistiques, « Le chiffre en grand ») : sur le
  * bandeau iris, « ← Mon compte », la période au pouce lime qui glisse et le chiffre en grand dont les chiffres roulent
  * (ChiffresRoulants) ; dans la feuille, les tuiles, les barres qui poussent (toucher une barre montre son nombre,
  * GraphiqueBarres) et les plats avec leur barre. Les notes n'apparaissent que s'il y a des avis. */

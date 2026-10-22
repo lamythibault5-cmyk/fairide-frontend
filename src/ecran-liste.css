@@ -1,5 +1,5 @@
 /* =====================================================================================================================
-   LOT « LISTE » (fondateur, 2026-10-16, mockups/tous-les-ecrans.html) : le haut de la liste des commerces (proposition A),
+   LOT « LISTE » (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html) : le haut de la liste des commerces (proposition A),
    la carte et les favoris. Importé par RestaurantList.jsx, MapPage.jsx et Favorites.jsx.
 
    Règles de la marque : fonds blancs ou iris ; lime seulement en aplat sous de l'encre, ou sur l'iris. Le VERRE (flou,
@@ -111,7 +111,7 @@
 .lt-puces--illustrees .lt-trait { height: 40px; }
 
 /* Dans l'app : le verre de la barre d'onglets (styles.css, html.appli .dashboard-nav), version 2 de
-   mockups/barre-onglets-verre.html. Exception voulue à la règle 2 (flou, reflets, ombre), limitée à l'app. */
+   maquettes/barre-onglets-verre/barre-onglets-verre.html. Exception voulue à la règle 2 (flou, reflets, ombre), limitée à l'app. */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   html.appli .lt-puces {
     background: rgba(255, 255, 255, .22); border-color: rgba(255, 255, 255, .6);
@@ -307,7 +307,7 @@
 
 /* ---------------------------------------------------------------------------------------------------------------------
    À LA UNE PRÈS DE TOI (RestaurantList.jsx, ALaUne ; fondateur, 2026-10-17, haut de la version B de « Liste » dans
-   mockups/commerces-marque.html). Une grande carte photo par écran, le nom en blanc sur la photo ; un voile d'encre monte
+   maquettes/commerces-marque/commerces-marque.html). Une grande carte photo par écran, le nom en blanc sur la photo ; un voile d'encre monte
    du bas de la photo pour que le texte reste lisible sur n'importe quelle image (c'est un traitement de la photo, pas un
    fond). Des points iris disent où l'on en est. Sur le site, à partir de 900 px, trois cartes de front et pas de points.
    --------------------------------------------------------------------------------------------------------------------- */
@@ -351,7 +351,7 @@ html:not(.appli) .sl-liste--grand .une-points { display: none; }
 @media (prefers-reduced-motion: reduce) { .une-carte > .une-photo, .une-points i { transition: none; } }
 
 /* ---------------------------------------------------------------------------------------------------------------------
-   RECHERCHE DANS L'APP (SearchPage.jsx ; fondateur, 2026-10-17, « Search » de mockups/commerces-marque.html). Le titre et le
+   RECHERCHE DANS L'APP (SearchPage.jsx ; fondateur, 2026-10-17, « Search » de maquettes/commerces-marque/commerces-marque.html). Le titre et le
    champ sur le bandeau iris (champ blanc en pilule), les envies en tuiles dans la feuille. Le site garde son écran.
    --------------------------------------------------------------------------------------------------------------------- */
 .recherche-app .eb-bandeau .recherche-champ { margin: 14px 0 0; border-color: #fff; border-radius: 999px; padding-left: 18px; }

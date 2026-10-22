@@ -1,5 +1,9 @@
 # Fairide — direction 5a « The frame »
 
+> **À jour en partie (vérifié le 2026-10-22).** La palette (iris, lime) et le vélo « 5a » valent toujours. La typographie
+> (Space Grotesk), l'interlettrage des titres (-0,02em) et les rayons (20/26 px, 6 px) ne valent plus : Inter / Inter Tight,
+> 0 d'interlettrage, 16 / 8 px. La vérité du jour : `docs/agents/design.md` et les jetons en tête de `src/styles.css`.
+
 Spécification de l'identité visuelle, reprise telle quelle du document de direction
 artistique. Tout y est littéral : hex, px, ratios. C'est la source de vérité pour
 [src/styles.css](src/styles.css) et pour [BrandMark.jsx](src/components/BrandMark.jsx).

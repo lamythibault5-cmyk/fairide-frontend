@@ -354,7 +354,7 @@ export default function Orders() {
       </div>
     );
   }
-  /* AUCUNE COMMANDE (fondateur, 2026-10-17, « My orders » de mockups/commerces-marque.html) : le même bandeau que Mes favoris,
+  /* AUCUNE COMMANDE (fondateur, 2026-10-17, « My orders » de maquettes/commerces-marque/commerces-marque.html) : le même bandeau que Mes favoris,
      le calendrier d'ouverture posé dessus en note translucide, le vélo qui attend dans la feuille blanche. */
   // Tirer pour actualiser (app) : la même relecture que le sondage des 15 s.
   const tirer = <TirerPourActualiser onActualiser={() => api('/orders/mine', { token }).then(setOrders)} />;
@@ -387,7 +387,7 @@ export default function Orders() {
   }
 
   /* LES MORCEAUX D'UNE COMMANDE. Ils étaient écrits d'un seul tenant dans la carte ; le site les range à sa façon (2026-10-16,
-   * mockups/site-ordinateur.html, section 6), la carte de l'app suit le moment de la commande (audit design 2, plus bas). */
+   * maquettes/site-ordinateur/site-ordinateur.html, section 6), la carte de l'app suit le moment de la commande (audit design 2, plus bas). */
   // UN ARTICLE PAR LIGNE, avec sa quantité dans une case.
   // Les articles étaient aplatis en une seule chaîne par .join(', ') : « 2× Maxi Frites
   // (Sauce andalouse), 1× L'Ardenne Menu (L'Ardenne, Maxi Frites, Coca Cola 33cl) ». Sur
@@ -803,7 +803,7 @@ export default function Orders() {
     );
   }
 
-  /* LE SITE (2026-10-16, « Proposition » de mockups/site-ordinateur.html, section 6). La commande en cours EST le bandeau
+  /* LE SITE (2026-10-16, « Proposition » de maquettes/site-ordinateur/site-ordinateur.html, section 6). La commande en cours EST le bandeau
    * iris de la page (le statut en grand, la route où roule le vélo, 1C) ; dans la feuille blanche, sur un ordinateur, la carte
    * du trajet et le code à donner au livreur tiennent côte à côte, le détail dessous. Une deuxième commande en cours garde
    * sa carte à bandeau. Les commandes passées deviennent un tableau compact (des cartes compactes sur un téléphone) ;

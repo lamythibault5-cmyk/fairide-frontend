@@ -1,5 +1,5 @@
 /* LE PARCOURS DE COMMANDE EN BANDEAU IRIS : Panier, Paiement, Commande confirmée (fondateur, 2026-10-16, « Proposition » de
-   mockups/tous-les-ecrans.html ; composants dans components/EcranCommande.jsx, importé par les trois pages).
+   maquettes/tous-les-ecrans/tous-les-ecrans.html ; composants dans components/EcranCommande.jsx, importé par les trois pages).
    Même famille que l'accueil de l'app (.bv-bandeau, styles.css) et le suivi 1C (.suivi-bandeau, client-ui.css) : un bandeau
    iris (retour, commerce, grand titre, la route où roule le vélo lime de la marque), puis une feuille blanche aux coins
    ronds qui monte dessus. Bandeau et feuille valent pour le site comme pour l'app ; le verre (flou, reflets, ombre douce) de

@@ -49,7 +49,7 @@ export function Fait({ icone, titre, sous, vedette, children }) {
   );
 }
 
-/* ACCUEIL « BANDEAU IRIS » (fondateur, 2026-10-16, version D de mockups/onboarding-chaleur.html). Le haut de chaque
+/* ACCUEIL « BANDEAU IRIS » (fondateur, 2026-10-16, version D de maquettes/onboarding-chaleur/onboarding-chaleur.html). Le haut de chaque
  * écran est iris : retour, la route du vélo, le titre ; ce qu'on choisit ou remplit monte dans une feuille blanche aux
  * coins ronds. Un écran met ce qui suit son titre dans <Feuille>. Hors d'un écran à bandeau (.bv-bandeau : l'amorce des
  * notifications, le dossier livreur), la feuille s'efface (display: contents) et rien ne change. */
@@ -140,7 +140,7 @@ function SceneAccueil() {
   );
 }
 
-/* PREMIER ÉCRAN, version B2 de mockups/accueil-appli.html (fondateur, 2026-10-16 : l'ancien, tout iris avec un « 10 % »
+/* PREMIER ÉCRAN, version B2 de maquettes/accueil-appli/accueil-appli.html (fondateur, 2026-10-16 : l'ancien, tout iris avec un « 10 % »
  * de 88 px, était « trop fort »). Même cadre que les écrans suivants : le slogan du site dans le bandeau iris, le vélo
  * dessous, puis la feuille blanche avec la phrase, les barres de commission (celles de « Pourquoi passer à Fairide ? ») et
  * le seul bouton lime. Le slogan est celui de l'accueil du site (landing.title1/title2), pour les trois langues. */
@@ -260,7 +260,7 @@ export function EcranCartes({ onFini }) {
   );
 }
 
-// Des prix qui ne sont pas gonflés d'abord (fondateur, 2026-10-19, version F de mockups/prix-pas-gonfles.html : c'est la
+// Des prix qui ne sont pas gonflés d'abord (fondateur, 2026-10-19, version F de maquettes/prix-pas-gonfles/prix-pas-gonfles.html : c'est la
 // première raison de passer à Fairide), puis rien d'ajouté, puis la justice ; le local en une ligne.
 // LES BARRES EN EUROS : ce qu'un restaurant ajoute AU PLUS à un plat de 12 € pour couvrir la commission. 30 % : 12 € ÷ 0,70
 // = 17,14 €, soit +5,10 € (arrondi aux 10 cents inférieurs) ; Fairide : la hausse est plafonnée à 10 % (hausseMaxPourcent du

@@ -5,7 +5,7 @@ import { defilement } from '../gestes';
 import { illustrationCuisine } from '../menuCategories';
 
 /* LE HAUT DE LA LISTE DES COMMERCES (fondateur, 2026-10-16, proposition A de « Le haut de la liste des commerces »,
- * mockups/tous-les-ecrans.html). Deux étages, collés en haut de l'écran :
+ * maquettes/tous-les-ecrans/tous-les-ecrans.html). Deux étages, collés en haut de l'écran :
  *
  *   1. LE BANDEAU IRIS, avec l'adresse de livraison (le bouton « Livrer à » d'avant, mêmes libellés, même carnet
  *      d'adresses) et, dessous, la route en pointillés où roule le vélo de la marque pendant qu'on fait défiler la page.
@@ -32,7 +32,7 @@ const VELO = (
 );
 
 /* La route en pointillés et le vélo lime, immobile : le bandeau de la page Recherche du site (SearchPage.jsx) la reprend,
- * comme la maquette (mockups/site-ordinateur.html, « Le cadre »). Mêmes classes que la route du bandeau ci-dessous. */
+ * comme la maquette (maquettes/site-ordinateur/site-ordinateur.html, « Le cadre »). Mêmes classes que la route du bandeau ci-dessous. */
 export function RouteVelo({ position = 12, className = '' }) {
   return (
     <div className={`lt-route${className ? ` ${className}` : ''}`} aria-hidden="true">

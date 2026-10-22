@@ -2,7 +2,7 @@ import Icone from './Icone';
 import { useLanguage } from '../context/LanguageContext';
 
 /* MON COMPTE SUR ORDINATEUR, EN DEUX COLONNES (fondateur, 2026-10-16 : « Proposition » de la section 7 de
- * mockups/site-ordinateur.html). Les rubriques à gauche, le contenu de celle qu'on a choisie à droite, sans quitter la page.
+ * maquettes/site-ordinateur/site-ordinateur.html). Les rubriques à gauche, le contenu de celle qu'on a choisie à droite, sans quitter la page.
  *
  * Deux pièces, et aucune ne change ce qu'une rangée fait :
  * - NavCompte : la colonne des rubriques (Messages, Mon profil, Solde et avantages, la rubrique du rôle, Mes casquettes,

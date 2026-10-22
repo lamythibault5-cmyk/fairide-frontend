@@ -4714,7 +4714,7 @@ export default {
       none: 'Nog geen fooi ontvangen.'
     },
     siteLivreur: {
-      // Koeriersruimte op de website (oprichter, 2026-10-16, mockups/site-ordinateur.html, « Livreur ») : Dashboard.jsx, PageLivreur.jsx.
+      // Koeriersruimte op de website (oprichter, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, « Livreur ») : Dashboard.jsx, PageLivreur.jsx.
       disponible: 'Je bent beschikbaar',
       enPause: 'Je bent in pauze',
       proposees: '{n} ritten aangeboden in je buurt',
@@ -6354,7 +6354,7 @@ export default {
       paidOnlineBadge: 'Al online betaald'
     },
     ecranLivreur: {
-      // Koeriersschermen met de irisband (oprichter, 2026-10-16, mockups/tous-les-ecrans.html, Livreur): Dashboard.jsx, EarningsPage.jsx.
+      // Koeriersschermen met de irisband (oprichter, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, Livreur): Dashboard.jsx, EarningsPage.jsx.
       course: 'Rit',
       directionCommerce: 'Op weg naar {name}',
       enRouteVers: 'Onderweg naar {name}',
@@ -6581,7 +6581,7 @@ export default {
       tapToPause: 'Tik om te pauzeren',
       tapToResume: 'Tik om ritten te ontvangen'
     },
-    // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
+    // Espace commerce sur le SITE (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
     sitePro: {
       etape_ouvrir: "Bestellingen",
       reglagesService: 'Instellingen van de service',
@@ -9695,7 +9695,7 @@ export default {
       job_cancelled: 'geannuleerd'
     },
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
-    // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
+    // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (maquettes/app-onboarding/app-onboarding.html).
     appli: {
       rapCouper: 'Uitzetten',
       rapActiver: 'Aanzetten',

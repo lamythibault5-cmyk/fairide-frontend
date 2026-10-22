@@ -1,5 +1,5 @@
 /* MON COMPTE, BANDEAU IRIS ET FEUILLE BLANCHE (fondateur, 2026-10-16 : « Proposition » de Mon compte dans
-   mockups/tous-les-ecrans.html). Importé par pages/Account.jsx seulement : la feuille de style arrive avec la page.
+   maquettes/tous-les-ecrans/tous-les-ecrans.html). Importé par pages/Account.jsx seulement : la feuille de style arrive avec la page.
    En haut, le bandeau iris (EnteteCompte.jsx) : initiales dans un rond lime, nom et e-mail, trois raccourcis en tuiles
    sur l'iris, le vélo garé au bord. Dessous, la feuille blanche aux coins ronds qui remonte sur le bandeau : les mêmes
    rangées qu'avant (LigneCompte), dans le même ordre, sous un petit titre par groupe, l'icône iris dans sa tuile.

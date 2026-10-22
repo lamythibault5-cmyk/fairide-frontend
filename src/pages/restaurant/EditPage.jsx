@@ -39,10 +39,10 @@ import { euros } from '../../prixPlat';
 // Un sous-écran est monté à l'ouverture et démonté à la fermeture : ses champs partent de `restaurant`
 // une seule fois, et le rafraîchissement du tableau de bord toutes les 15 s n'efface plus une saisie.
 //
-// BANDEAU IRIS (fondateur, 2026-10-16, mockups/tous-les-ecrans.html › Mon commerce) : le nom, l'état en ligne et la
+// BANDEAU IRIS (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html › Mon commerce) : le nom, l'état en ligne et la
 // route vers la mise en ligne sur le bandeau (le vélo sur l'étape en cours) ; dans la feuille, la prochaine étape et son
 // bouton lime, les autres étapes, puis les blocs communs du tableau de bord et les rangées ci-dessous.
-// SUR LE SITE (2026-10-16, mockups/site-ordinateur.html › Mon commerce, lot « pro ») : une vue d'ensemble sur deux colonnes.
+// SUR LE SITE (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html › Mon commerce, lot « pro ») : une vue d'ensemble sur deux colonnes.
 // À gauche, la prochaine étape (le bouton lime dans sa carte), les autres étapes, puis les rangées ; à droite, « Ta fiche,
 // comme les clients la verront » et deux tuiles (la carte, les horaires du jour) qui mènent à leur modification. La route
 // du bandeau porte le nom de chaque arrêt. Sur une feuille étroite (téléphone), tout s'empile : étapes, fiche, rangées.

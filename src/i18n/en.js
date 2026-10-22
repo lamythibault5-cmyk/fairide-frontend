@@ -4705,7 +4705,7 @@ export default {
       none: 'No tip received yet.'
     },
     siteLivreur: {
-      // Courier area on the website (founder, 2026-10-16, mockups/site-ordinateur.html, "Livreur"): Dashboard.jsx, PageLivreur.jsx.
+      // Courier area on the website (founder, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, "Livreur"): Dashboard.jsx, PageLivreur.jsx.
       disponible: "You're available",
       enPause: "You're on a break",
       proposees: '{n} rides offered near you',
@@ -6345,7 +6345,7 @@ export default {
       paidOnlineBadge: 'Already paid online'
     },
     ecranLivreur: {
-      // Courier screens with the iris header (founder, 2026-10-16, mockups/tous-les-ecrans.html, Livreur): Dashboard.jsx, EarningsPage.jsx.
+      // Courier screens with the iris header (founder, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, Livreur): Dashboard.jsx, EarningsPage.jsx.
       course: 'Ride',
       directionCommerce: 'Heading to {name}',
       enRouteVers: 'On the way to {name}',
@@ -6572,7 +6572,7 @@ export default {
       tapToPause: 'Tap to pause',
       tapToResume: 'Tap to receive rides'
     },
-    // Espace commerce sur le SITE (2026-10-16, mockups/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
+    // Espace commerce sur le SITE (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, lot « pro ») : tableau des commandes, Mon commerce.
     sitePro: {
       etape_ouvrir: "Orders",
       reglagesService: 'Service settings',
@@ -9686,7 +9686,7 @@ export default {
       job_cancelled: 'cancelled'
     },
     // Accueil de l'application iOS / Android (pages/app/Bienvenue.jsx, AmorceNotifications.jsx) et boutons Apple / Google
-    // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (mockups/app-onboarding.html).
+    // natifs (BoutonsConnexionNative.jsx). Validé sur maquette par le fondateur le 2026-10-11 (maquettes/app-onboarding/app-onboarding.html).
     appli: {
       rapCouper: 'Turn off',
       rapActiver: 'Turn on',

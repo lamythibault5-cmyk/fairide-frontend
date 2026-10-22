@@ -1,6 +1,6 @@
 /* =====================================================================================================================
    FICHE D'UN COMMERCE DANS L'APP — la feuille qui monte sur la photo (fondateur, 2026-10-16 ; « Proposition » de l'écran
-   « Fiche d'un commerce » dans mockups/tous-les-ecrans.html). Importé par RestaurantMenu.jsx.
+   « Fiche d'un commerce » dans maquettes/tous-les-ecrans/tous-les-ecrans.html). Importé par RestaurantMenu.jsx.
 
    Ce qui change, dans l'app seulement (.fiche-appli, posé quand experienceApp()) :
    - la photo de couverture prend le haut de l'écran, bord à bord, sous la barre d'état ;
@@ -211,7 +211,7 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 }
 
 /* =====================================================================================================================
-   VERSION B, « SCEAU ET TICKET » (fondateur, 2026-10-17, mockups/commerces-marque.html), avec la carte en pointillés de la
+   VERSION B, « SCEAU ET TICKET » (fondateur, 2026-10-17, maquettes/commerces-marque/commerces-marque.html), avec la carte en pointillés de la
    version C (« je garde les pointillés »). Dans l'app seulement.
    - La photo de couverture bord à bord (règles « La photo, bord à bord » plus haut) ; la feuille blanche monte dessus.
    - LE SCEAU, à cheval sur le bord de la feuille : le logo du commerce, ou son initiale sur un carré lime (aplat lime,

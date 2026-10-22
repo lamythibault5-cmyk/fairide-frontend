@@ -1,5 +1,9 @@
 # Audit de sécurité Fairide
 
+> **Audit du 16 septembre 2026, pas tenu à jour.** Une partie des failles est corrigée depuis (par exemple la CSP est
+> appliquée dans `vercel.json`, plus en « Report-Only »), et `AI-CHECKLIST.md` n'existe dans aucun des deux dépôts.
+> Revérifier chaque point dans le code avant de le citer.
+
 Audit des 17 catégories de `AI-CHECKLIST.md`, passé sur les deux dépôts — frontend (React/Vite,
 Vercel) et backend (Express/Postgres, Railway) — le **16 septembre 2026**.
 

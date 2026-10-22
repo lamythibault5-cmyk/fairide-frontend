@@ -211,7 +211,7 @@ function CarteBientot({ r, t }) {
   );
 }
 
-/* À LA UNE PRÈS DE TOI (fondateur, 2026-10-17, haut de la version B de « Liste » dans mockups/commerces-marque.html ; les
+/* À LA UNE PRÈS DE TOI (fondateur, 2026-10-17, haut de la version B de « Liste » dans maquettes/commerces-marque/commerces-marque.html ; les
  * rangées d'aujourd'hui restent dessous, telles quelles). Une grande carte photo par écran, le nom écrit sur la photo, et des
  * points qui disent où l'on en est ; on passe de l'une à l'autre au doigt (défilement aimanté). Sur un ordinateur, trois de
  * front. Le CHOIX n'est pas payant : jusqu'à UNE_MAX commerces avec une photo de couverture, les plus proches d'abord (même
@@ -276,7 +276,7 @@ function ALaUne({ list, inscritLe, t }) {
 // (EmplacementSponsor : rien pour le public tant que l'admin n'a pas activé la rangée).
 // `grille` (site, à partir de 900 px) : une grille qui suit la largeur, au lieu d'une rangée qui défile de côté — à la
 // souris, une rangée qui défile se manie mal, et un écran large montre trois ou quatre commerces de front sans rien cacher
-// (mockups/site-ordinateur.html, section « Liste »). Mêmes commerces, même ordre ; seule la disposition change.
+// (maquettes/site-ordinateur/site-ordinateur.html, section « Liste »). Mêmes commerces, même ordre ; seule la disposition change.
 function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, autoplay = false, cle, grille = false }) {
   if (list.length === 0) return null;
   const titre = <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}{cle && <EmplacementSponsor cle={cle} />}</h3>;
@@ -390,7 +390,7 @@ export default function RestaurantList() {
   // Rangées ouvertes à la vente par l'admin en plus de celles d'origine : une par type de cuisine (« Pizza »…).
   const [rangeesAjoutees, setRangeesAjoutees] = useState(() => lireCache('/placements/active')?.sections || []);
   const toast = useToast();
-  // LE SITE SUR UN ORDINATEUR (mockups/site-ordinateur.html, « Liste ») — jamais dans l'app : à partir de 900 px, des
+  // LE SITE SUR UN ORDINATEUR (maquettes/site-ordinateur/site-ordinateur.html, « Liste ») — jamais dans l'app : à partir de 900 px, des
   // grilles au lieu des rangées et Livraison / À emporter sur le bandeau ; à partir de 1 100 px, les filtres (Trier, Prix,
   // Envies) passent dans une colonne à gauche. Mêmes états, mêmes règles de tri et de filtre qu'avant : rien d'autre ne bouge.
   // Trier et Envies masqués (TRI, MENTIONS_ALIMENTAIRES) : la colonne n'aurait plus rien à porter et laissait un grand blanc à
@@ -702,7 +702,7 @@ export default function RestaurantList() {
       />
       {choixAdresse && <ChoixAdresse onFermer={() => setChoixAdresse(false)} />}
       <div className="sl-corps">
-      {/* LA COLONNE DES FILTRES (site, à partir de 1 100 px ; mockups/site-ordinateur.html, « Liste »). Les mêmes filtres que
+      {/* LA COLONNE DES FILTRES (site, à partir de 1 100 px ; maquettes/site-ordinateur/site-ordinateur.html, « Liste »). Les mêmes filtres que
           les pastilles et leurs panneaux, ouverts d'un coup au lieu d'être repliés : Trier (mêmes trois tris) et Envies (les
           quatre bascules de régime qui terminent la bande des cuisines), tous deux masqués pour le moment. Elle reste à l'écran quand on
           descend (collante) ; « Manger local » passe en bas, comme dans la maquette. */}

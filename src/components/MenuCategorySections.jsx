@@ -28,7 +28,7 @@ import { vibrer } from '../gestes';
 // le « + ». C'est la forme qui se parcourt le plus vite au pouce (une colonne, la photo ne coupe pas le texte), et
 // un plat sans photo ne laisse plus de trou. Toute la ligne reste le bouton (voir l'ancien commentaire : une cible
 // de 30 px dans une carte de 250 obligeait à viser).
-/* LE « + » DEVIENT COMPTEUR (fondateur, 2026-10-16, version 3C de mockups/autres-idees.html). Un + iris plein ; dès
+/* LE « + » DEVIENT COMPTEUR (fondateur, 2026-10-16, version 3C de maquettes/autres-idees/autres-idees.html). Un + iris plein ; dès
  * qu'un plat est dans le panier, il s'ouvre en « − n + », le chiffre dans un rond lime (lime sur iris), puis se replie
  * au bout de 2,6 s en un rond qui garde le nombre — on voit ce qu'on a déjà pris sans ouvrir le panier. Toucher le rond
  * le rouvre. « − » retire un exemplaire de la dernière ligne de ce plat (un plat pris avec des options différentes
@@ -74,7 +74,7 @@ function PasPlat({ item, name, image, onAjout, t }) {
   );
 }
 
-/* LA CARTE DE BISTROT (fondateur, 2026-10-17, version C de « Fiche du commerce » dans mockups/commerces-marque.html), dans
+/* LA CARTE DE BISTROT (fondateur, 2026-10-17, version C de « Fiche du commerce » dans maquettes/commerces-marque/commerces-marque.html), dans
  * l'app seulement (`bistrot`, posé par RestaurantMenu quand experienceApp()). Le plat se lit comme sur la carte imprimée
  * du commerce : une petite photo carrée à gauche, le nom, des points de conduite, le prix sur la même ligne, la description
  * dessous ; le compteur « − n + » (PasPlat) se pose à droite, sous le prix. Mêmes données, mêmes gestes que la ligne du site. */

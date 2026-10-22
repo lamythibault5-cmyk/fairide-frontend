@@ -1,4 +1,4 @@
-// LA BARRE D'ONGLETS EN VERRE (fondateur, 2026-10-16, version 2 de mockups/barre-onglets-verre.html), dans l'app seulement.
+// LA BARRE D'ONGLETS EN VERRE (fondateur, 2026-10-16, version 2 de maquettes/barre-onglets-verre/barre-onglets-verre.html), dans l'app seulement.
 // Chargé avec import() par useCurseurOnglets.js : le site ne télécharge rien de tout ceci.
 //
 // Deux choses que le CSS seul ne sait pas faire :

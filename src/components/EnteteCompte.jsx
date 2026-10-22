@@ -4,7 +4,7 @@ import Icone from './Icone';
 import { useLanguage } from '../context/LanguageContext';
 
 /* L'EN-TÊTE DE MON COMPTE, SUR LE BANDEAU IRIS (fondateur, 2026-10-16 : « Proposition » de Mon compte dans
- * mockups/tous-les-ecrans.html). Les initiales dans un rond lime, le nom en titre et l'e-mail dessous, puis les trois
+ * maquettes/tous-les-ecrans/tous-les-ecrans.html). Les initiales dans un rond lime, le nom en titre et l'e-mail dessous, puis les trois
  * raccourcis du rôle en tuiles sur l'iris ; le vélo de la marque est garé au bord. Tout ce qui suit monte dans la feuille
  * blanche (.compte-feuille, Account.jsx). Le style est dans ecran-compte.css, importé par Account.jsx ; sur le site large
  * (site-compte.css, 1100 px et plus, hors app), l'identité et les raccourcis tiennent sur une ligne, en pastilles.

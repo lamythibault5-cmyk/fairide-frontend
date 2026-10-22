@@ -35,7 +35,7 @@ import '../../site-livreur.css';
 //     passent derrière une ligne « Ta fiscalité ».
 // Un serveur d'avant (sans `byWeek` ni `rides`) : les mois et les écritures, comme avant.
 //
-// SUR LE SITE, SUR UN ORDINATEUR (mockups/site-ordinateur.html, 2026-10-16) : le graphique à gauche, les courses à droite
+// SUR LE SITE, SUR UN ORDINATEUR (maquettes/site-ordinateur/site-ordinateur.html, 2026-10-16) : le graphique à gauche, les courses à droite
 // (site-livreur.css). Les deux enveloppes .ecl-site-col n'ont pas de boîte ailleurs : l'app et le téléphone gardent leur
 // colonne unique.
 const PREMIERE_ANNEE = 2026;

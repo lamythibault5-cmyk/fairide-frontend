@@ -31,12 +31,12 @@ import { statutOuverture } from '../../openingHours';
 // L'ordre suit celui de l'application dont le fondateur a fourni les captures : les articles, puis
 // les suggestions, puis un seul bouton vers le paiement.
 //
-// HABIT DU 2026-10-16 (« Proposition » de mockups/tous-les-ecrans.html, fondateur) : le commerce et « Ton panier » sur un
+// HABIT DU 2026-10-16 (« Proposition » de maquettes/tous-les-ecrans/tous-les-ecrans.html, fondateur) : le commerce et « Ton panier » sur un
 // bandeau iris où le vélo arrive, les lignes dans la feuille blanche, des compteurs iris au chiffre dans un rond lime (comme
 // le « − n + » de la carte, 3C), et dans l'app le sous-total qui roule dans la pastille iris d'une barre de verre (2C). Même
 // contenu et mêmes fonctions qu'avant.
 //
-// LE SITE (2026-10-16, mockups/site-ordinateur.html, section 5) : la route Panier → Paiement → Suivi traverse le bandeau, et
+// LE SITE (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, section 5) : la route Panier → Paiement → Suivi traverse le bandeau, et
 // sur un ordinateur la page passe en deux colonnes — les lignes et les suggestions à gauche, un récapitulatif collant à
 // droite (sous-total qui roule, le seul bouton lime). Sur un téléphone, la barre iris reste collée en bas. Styles :
 // site-commande.css, sous html:not(.appli) ; l'app garde exactement sa page.
@@ -101,7 +101,7 @@ export default function PanierPage() {
   const totaux = restaurant && cart.count > 0 ? cart.totals(restaurant.menu, restaurant.activeCartPromo) : null;
   const sousTotal = totaux ? totaux.subtotal : cart.rawTotal;
 
-  /* PANIER VIDE (fondateur, 2026-10-17, « Empty cart » de mockups/commerces-marque.html) : le même bandeau que le panier plein,
+  /* PANIER VIDE (fondateur, 2026-10-17, « Empty cart » de maquettes/commerces-marque/commerces-marque.html) : le même bandeau que le panier plein,
      pour que l'écran ne change pas d'habit quand on retire le dernier article. */
   if (cart.count === 0) {
     return (

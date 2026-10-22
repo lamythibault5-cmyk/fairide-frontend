@@ -17,7 +17,7 @@ import Icone from '../Icone';
 import { BandeauCommerce, FeuilleCommerce } from './BandeauCommerce';
 import { SITE } from './CadreSite';
 
-/* « MA CARTE » CÔTÉ COMMERCE, AU BANDEAU IRIS (fondateur, 2026-10-16, mockups/tous-les-ecrans.html › Ma carte,
+/* « MA CARTE » CÔTÉ COMMERCE, AU BANDEAU IRIS (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html › Ma carte,
  * « Interrupteur de rupture »). Le commerce ne modifie pas ses plats lui-même (fondateur, 2026-10-01) : il met un plat en
  * rupture pour aujourd'hui, le retire de la carte, ou demande un changement à Fairide. La page garde ces trois gestes :
  *   - chaque plat a son interrupteur « En vente aujourd'hui » qui rebondit — c'est l'ancien bouton « Rupture », même route

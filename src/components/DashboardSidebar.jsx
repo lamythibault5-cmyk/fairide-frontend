@@ -220,7 +220,7 @@ export default function DashboardSidebar() {
         ))}
       </nav>
       )}
-      {/* LE BAS DE LA BARRE, SUR LE SITE (fondateur, 2026-10-16, mockups/site-ordinateur.html) : la langue et les liens
+      {/* LE BAS DE LA BARRE, SUR LE SITE (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : la langue et les liens
           légaux y descendent — ils étaient une rangée sous chaque page, et la langue n'existait que dans Mon compte. Rendu
           hors de l'app seulement (l'app n'a aucun cadre du site, voir Layout.jsx) ; masqué sous 900px, où la barre devient
           les onglets du bas (site-cadre.css). */}

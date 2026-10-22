@@ -22,7 +22,7 @@ import { useLanguage } from '../context/LanguageContext';
 // fiche par un lien partagé, et reculer ferait alors SORTIR du site. Le dépôt n'utilise d'ailleurs
 // `navigate(-1)` nulle part dans pages/client — les retours y sont toujours des liens explicites.
 //
-// Le bouton reprend `button-floating` de DESIGN.md (fond blanc, texte encre, forme pilule, ombre
+// Le bouton reprend `button-floating` de docs/archives/DESIGN-uber.md (fond blanc, texte encre, forme pilule, ombre
 // légère) exprimé avec les jetons Fairide — c'est déjà ce qu'avaient fait les pastilles du bas.
 // `onRetour` plutôt que `vers` : le paiement recule d'une ÉTAPE, pas d'une adresse. Le geste reste
 // exactement le même à l'écran — c'est ce qui compte — mais il ne change pas de page.

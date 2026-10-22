@@ -52,7 +52,7 @@ import '../../ecran-fiche.css';
 import '../../site-fiche.css';
 
 /* DANS L'APP, LA FICHE MONTE EN FEUILLE SUR LA PHOTO (fondateur, 2026-10-16, « Proposition » de « Fiche d'un commerce »
- * dans mockups/tous-les-ecrans.html). La photo de couverture prend le haut de l'écran, bord à bord ; la page monte dessus
+ * dans maquettes/tous-les-ecrans/tous-les-ecrans.html). La photo de couverture prend le haut de l'écran, bord à bord ; la page monte dessus
  * en feuille blanche aux coins arrondis, le logo posé à cheval ; la croix, la recherche et le cœur flottent en RONDS IRIS
  * par-dessus (blancs sur verre blanc dans la maquette, ils étaient illisibles sur une photo claire — retour du fondateur) ;
  * les sections passent dans une bande de verre où une lentille suit la section qu'on lit (CategoryQuickNav `verre`).
@@ -574,7 +574,7 @@ export default function RestaurantMenu() {
   /* LA CROIX, LA LOUPE ET LE CŒUR, EN RONDS IRIS FLOTTANTS (`flottant`).
      Ils étaient d'abord un bandeau collant (croix, nom, recherche) au-dessus des sections : le BANDEAU D'ABORD, LES SECTIONS
      DESSOUS — la croix devait rester la sortie de la page, puisque les onglets du bas s'y effacent (Layout.jsx,
-     EnteteFlux.jsx). Dans l'app (2026-10-16) puis sur le site (même jour, mockups/site-ordinateur.html) ils flottent sur la
+     EnteteFlux.jsx). Dans l'app (2026-10-16) puis sur le site (même jour, maquettes/site-ordinateur/site-ordinateur.html) ils flottent sur la
      photo de couverture. Sur téléphone ils collent en haut de l'écran, la bande des sections juste dessous : c'est toujours
      la seule sortie. Sur un ordinateur, la barre latérale fait la navigation : ils partent avec la photo (site-fiche.css).
      La croix, et non une flèche : d'ici on SORT du parcours pour revenir à la liste. */
@@ -650,7 +650,7 @@ export default function RestaurantMenu() {
   const logo = restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" onError={cacherImageCassee} />;
 
   // Les frais, selon le mode. Le panneau gris de l'app est inchangé ; sur le site, les mêmes faits en colonnes « valeur /
-  // libellé » à droite de la bascule (mockups/site-ordinateur.html). Rien de plus n'y est dit (voir le panneau ci-dessous).
+  // libellé » à droite de la bascule (maquettes/site-ordinateur/site-ordinateur.html). Rien de plus n'y est dit (voir le panneau ci-dessous).
   const fraisLivraison = modeActif === 'pickup'
     ? t('restaurantMenu.feePickup')
     : restaurant.freeDelivery
@@ -678,7 +678,7 @@ export default function RestaurantMenu() {
       <Icone nom="personnes" taille={17} />{APPLI ? t('groupOrder.startShort') : t('groupOrder.start')}
     </button>
   );
-  /* LE TICKET DE L'APP (fondateur, 2026-10-17, version B de « Fiche du commerce » dans mockups/commerces-marque.html) : la
+  /* LE TICKET DE L'APP (fondateur, 2026-10-17, version B de « Fiche du commerce » dans maquettes/commerces-marque/commerces-marque.html) : la
      note, la distance et le prix de la livraison, en trois cases séparées par des pointillés, sous le nom. La distance est
      celle de chez toi quand l'adresse du compte est connue, sinon le rayon de livraison choisi par le commerce ; le prix est
      le même « dès » qu'avant (estimation, le montant exact se calcule au serveur). Le minimum de commande reste dit dessous. */
@@ -1097,7 +1097,7 @@ export default function RestaurantMenu() {
 
   const decouvrir = discover.length > 0 && <DiscoverSection restaurants={discover} t={t} user={user} />;
 
-  /* LA FICHE DANS L'APP, VERSION B « SCEAU ET TICKET » (fondateur, 2026-10-17, mockups/commerces-marque.html ; il avait
+  /* LA FICHE DANS L'APP, VERSION B « SCEAU ET TICKET » (fondateur, 2026-10-17, maquettes/commerces-marque/commerces-marque.html ; il avait
      d'abord retenu C, puis précisé « B, mais je garde les pointillés de la carte »). La photo de couverture bord à bord ; la
      feuille blanche monte dessus avec, à cheval sur son bord, le SCEAU du commerce — son logo, ou son initiale sur un carré
      lime. Sous le nom : le ticket (note, distance, livraison), la bascule et « À plusieurs », l'annonce d'ouverture sur la
@@ -1127,7 +1127,7 @@ export default function RestaurantMenu() {
     );
   }
 
-  /* SUR LE SITE (fondateur, 2026-10-16, « Proposition » de « Page d'un commerce » dans mockups/site-ordinateur.html) : la
+  /* SUR LE SITE (fondateur, 2026-10-16, « Proposition » de « Page d'un commerce » dans maquettes/site-ordinateur/site-ordinateur.html) : la
      photo d'un bord à l'autre de la page, la feuille blanche qui monte dessus avec le logo à cheval, puis deux colonnes — à
      gauche l'en-tête, la bande des sections (blanche, collante) et la carte sur deux colonnes de plats ; à droite le panier,
      collant (PanierColonne). Sur un téléphone, une seule colonne et la barre du panier en bas (FloatingCart). Mise en page

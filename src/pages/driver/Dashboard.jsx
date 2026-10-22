@@ -43,7 +43,7 @@ import { telephoneLisible } from '../../validation';
 // téléphone ni dans l'app (CarteCourse.jsx).
 const CarteCourse = lazy(() => import('../../components/livreur/CarteCourse'));
 
-/* LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, mockups/site-ordinateur.html, section « Livreur », « Proposition ») :
+/* LE SITE SUR UN ORDINATEUR (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html, section « Livreur », « Proposition ») :
    à partir de 1100 px, la liste des courses à gauche, la carte et le détail de la course choisie à droite ; une course
    en main, son détail à gauche et sa carte à droite. Jamais dans l'app, qui garde son écran de téléphone, et pas sur un
    téléphone non plus : la page y reste en une colonne, avec des boutons (la glissière est réservée à l'app). */
@@ -570,7 +570,7 @@ export default function DriverDashboard() {
   const enPause = !!user?.driverPaused;
   const appli = experienceApp();
 
-  /* LE BANDEAU IRIS (fondateur, 2026-10-16, mockups/tous-les-ecrans.html, « Le vélo roule quand tu es dispo » et « Glisse
+  /* LE BANDEAU IRIS (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, « Le vélo roule quand tu es dispo » et « Glisse
      le vélo »). Sans course en main, il porte l'interrupteur : disponible, le vélo roule sur sa route ; en pause, il
      s'arrête. Avec une course en main, il montre son trajet : le vélo attend au commerce, roule vers la maison une fois la
      commande récupérée, et saute à l'arrivée (état `terminee`, quelques secondes après la remise). Une seule course est au
@@ -769,7 +769,7 @@ export default function DriverDashboard() {
     </p>
   );
 
-  /* LE BANDEAU DU SITE (mockups/site-ordinateur.html, « Livreur ») : qui roule et sur quoi, « Tu es disponible » en titre,
+  /* LE BANDEAU DU SITE (maquettes/site-ordinateur/site-ordinateur.html, « Livreur ») : qui roule et sur quoi, « Tu es disponible » en titre,
      les courses proposées en sous-titre, les gains du jour à droite ; dessous l'interrupteur et, à côté, Urgence ; puis la
      route. Une course en main : son trajet, comme dans l'app. La disposition (deux colonnes sur un ordinateur, une
      pile sur un téléphone) est dans site-livreur.css (.ecl-bandeau-site). */

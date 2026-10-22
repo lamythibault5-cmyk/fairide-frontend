@@ -39,7 +39,7 @@ import LivreurCommande from '../../components/commerce/LivreurCommande';
 import { heurePrete, ouEstLeClient, prenom } from '../../components/commerce/clientCommande';
 import { telephoneLisible } from '../../validation';
 
-// Le SITE (pas l'app) montre les commandes en tableau à trois colonnes (2026-10-16, mockups/site-ordinateur.html › Espace
+// Le SITE (pas l'app) montre les commandes en tableau à trois colonnes (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html › Espace
 // commerce, lot « pro ») : Nouvelles, En préparation, Prêtes. L'app garde sa liste, inchangée.
 const SITE = !experienceApp();
 const COLONNES = [
@@ -702,7 +702,7 @@ export default function OrdersPage() {
     </>
   );
 
-  /* LE TABLEAU DU SITE (2026-10-16, mockups/site-ordinateur.html › Espace commerce). Trois colonnes : Nouvelles (la plus
+  /* LE TABLEAU DU SITE (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html › Espace commerce). Trois colonnes : Nouvelles (la plus
      pressée en tête, bordure rouge qui bat, seule à porter « Accepter » en lime ; les suivantes en iris), En préparation,
      Prêtes (prête, livreur en route). La colonne dit l'étape : la pastille ne reste que là où elle précise (livreur attendu,
      client attendu, en route). Mêmes gestes que la liste de l'app : photo, ticket, temps en plus, allergie à confirmer,

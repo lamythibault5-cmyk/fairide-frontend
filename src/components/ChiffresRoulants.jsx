@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-/* Un montant dont les chiffres ROULENT quand il change (fondateur, 2026-10-16, mockups/autres-idees.html 2C et 3C) : seul le
+/* Un montant dont les chiffres ROULENT quand il change (fondateur, 2026-10-16, maquettes/autres-idees/autres-idees.html 2C et 3C) : seul le
    chiffre qui a changé remonte, les autres restent. Sa clé porte le caractère : un chiffre différent est un nouvel élément,
    donc l'animation (.chiffre-roulant.roule, styles.css) rejoue. Sert à la barre du panier et au bouton de la fiche d'un plat. */
 export default function ChiffresRoulants({ valeur }) {

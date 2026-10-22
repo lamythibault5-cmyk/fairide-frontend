@@ -1,5 +1,5 @@
 /* ÉCRANS DU LIVREUR AU BANDEAU IRIS (fondateur, 2026-10-16 : propositions de la partie « Livreur » de
-   mockups/tous-les-ecrans.html). Même famille que l'accueil de l'app (.bv-bandeau) et le suivi du client (RouteSuivi) :
+   maquettes/tous-les-ecrans/tous-les-ecrans.html). Même famille que l'accueil de l'app (.bv-bandeau) et le suivi du client (RouteSuivi) :
    en haut un bandeau iris où roule le vélo de la marque, en lime ; dessous, une feuille blanche aux coins ronds.
      - Tableau de bord (/driver, Dashboard.jsx) : l'interrupteur de disponibilité est sur le bandeau ; disponible, le vélo
        roule, en pause il s'arrête. Chaque course a son trajet en pointillés, son prix dans une pastille iris et

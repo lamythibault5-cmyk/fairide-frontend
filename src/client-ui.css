@@ -603,7 +603,7 @@
 /* Le titre « Découvrir aussi » respire au-dessus de ses vignettes. */
 .auto-scroll-row.discover-track { margin-top: 12px; }
 
-/* LA FEUILLE DE CONFIRMATION (ConfirmDialog ; fondateur, 2026-10-17, « Confirmation sheets » de mockups/commerces-marque.html).
+/* LA FEUILLE DE CONFIRMATION (ConfirmDialog ; fondateur, 2026-10-17, « Confirmation sheets » de maquettes/commerces-marque/commerces-marque.html).
    Partout : la tuile d'icône et l'encart de ce qui va changer, quand l'appelant les donne. Dans l'app seulement : une poignée
    en tête de la feuille, le titre plus grand, l'annulation en texte sous le bouton d'action (qui barre déjà la largeur). */
 .confirm-poignee { display: none; }
