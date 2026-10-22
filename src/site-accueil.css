@@ -147,7 +147,8 @@ html:not(.appli) .sa-accueil .discover-head .section-title { font-size: 28px; le
 html:not(.appli) .sa-accueil .discover-head { margin-bottom: 16px; }
 /* Une carte seule sur sa rangée ne s'étire plus à la hauteur du bloc iris voisin. */
 html:not(.appli) .sa-accueil .discover-grid { align-items: start; }
-html:not(.appli) .sa-accueil .discover-tile, html:not(.appli) .sa-accueil .discover-info { box-shadow: none; border-radius: 18px; }
+html:not(.appli) .sa-accueil .discover-tile { box-shadow: none; border-radius: 18px; }
+html:not(.appli) .sa-accueil .discover-info { box-shadow: none; }
 html:not(.appli) .sa-accueil .discover-tile { transition: border-color .2s, transform .2s; }
 html:not(.appli) .sa-accueil .discover-tile:hover { transform: translateY(-2px); border-color: var(--iris); box-shadow: none; }
 html:not(.appli) .sa-accueil .discover-tile:hover .discover-tile-img img { transform: none; }
