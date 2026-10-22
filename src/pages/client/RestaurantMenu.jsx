@@ -83,10 +83,15 @@ function rechargementDeCettePage(id, adresse) {
 }
 
 /* L'échec du chargement d'une fiche : introuvable (retiré, jamais publié, adresse fausse) ou erreur réseau, avec
-   « Réessayer ». Partagé avec FicheCommerce.jsx, qui peut échouer avant même de savoir quel commerce monter. */
-export function EchecFiche({ erreur, onReessayer }) {
+   « Réessayer ». Partagé avec FicheCommerce.jsx, qui peut échouer avant même de savoir quel commerce monter.
+   INTROUVABLE = NOINDEX (2026-10-22, seo-a-faire.md, point 3) : le site répond 200 à toute adresse (application d'une seule
+   page), et cet écran sans noindex était une page « introuvable » que Google pouvait indexer comme une vraie (« soft 404 »).
+   Même règle que NotFound.jsx, comme Google le recommande pour ces applications. Une erreur réseau n'en est pas une : la
+   fiche existe, elle reste indexable. `chemin` : l'adresse demandée, pour le canonical. */
+export function EchecFiche({ erreur, onReessayer, chemin }) {
   const { t } = useLanguage();
   const introuvable = erreur.status === 404;
+  usePageMeta({ title: introuvable ? t('seo.notFoundTitle') : undefined, path: chemin, robots: introuvable ? 'noindex, follow' : undefined });
   return (
     <EtatVide
       icone={introuvable ? 'recherche' : 'bogue'}
@@ -189,8 +194,11 @@ export default function RestaurantMenu({ id }) {
   // considère la fiche comme un doublon de l'accueil plutôt que de l'indexer pour elle-même.
   /* Titre, description et image construits depuis la fiche : c'est ce qui distingue cette page
      des autres aux yeux d'un moteur, et ce qui s'affiche quand le lien est partagé. */
+  // Fiche introuvable : même titre et même noindex que l'écran d'échec (EchecFiche), dont l'effet passe AVANT celui-ci.
+  const introuvable = !restaurant && erreur?.status === 404;
   usePageMeta({
-    title: restaurant ? t('seo.restaurantTitle', { name: restaurant.name, cuisine: restaurant.cuisine || '', commune: restaurant.commune || '' }) : undefined,
+    title: restaurant ? t('seo.restaurantTitle', { name: restaurant.name, cuisine: restaurant.cuisine || '', commune: restaurant.commune || '' }) : (introuvable ? t('seo.notFoundTitle') : undefined),
+    robots: introuvable ? 'noindex, follow' : undefined,
     description: restaurant ? (restaurant.desc || t('seo.restaurantDescription', { name: restaurant.name, commune: restaurant.commune || 'Bruxelles' })) : undefined,
     // Le canonical porte l'adresse lisible (adresseFiche.js) : un ancien lien par identifiant se déclare doublon de celle-ci.
     path: restaurant ? cheminFiche(restaurant) : `/restaurants/${adresse}`,
@@ -411,7 +419,7 @@ export default function RestaurantMenu({ id }) {
      serveur : une adresse dont l'identifiant n'est pas un UUID valide ne répond pas 404 mais 500,
      et celui-là ne guérira jamais — « Réessayer » seul y serait un cul-de-sac. Le bouton reste
      l'action principale (la plupart des échecs sont bien passagers), la sortie est dessous. */
-  if (erreur) return <EchecFiche erreur={erreur} onReessayer={() => setEssai((n) => n + 1)} />;
+  if (erreur) return <EchecFiche erreur={erreur} chemin={`/restaurants/${adresse}`} onReessayer={() => setEssai((n) => n + 1)} />;
   // Chargement dans l'app : la fiche commence par sa photo, un aplat iris pâle la remplace en attendant (Skeleton.jsx).
   if (!restaurant) return experienceApp() ? <SqueletteEcran photo src={photoEnVol(id)} /> : <SkeletonCards count={3} />;
 

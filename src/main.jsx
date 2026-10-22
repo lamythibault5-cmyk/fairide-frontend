@@ -131,6 +131,9 @@ function retirerEcranChargement() {
   const prete = () => {
     const root = document.getElementById('root');
     if (!root || !root.children.length) return false;
+    // Le texte pré-rendu pour les moteurs (scripts/contenuStatique.mjs) n'est pas la page : on attend que React l'ait remplacé,
+    // sinon l'écran s'effacerait sur ce texte sans mise en forme.
+    if (root.querySelector('[data-prerendu]')) return false;
     return !root.querySelector('.skeleton');
   };
   const sonder = () => {

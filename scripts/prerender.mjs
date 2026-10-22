@@ -13,11 +13,10 @@
  * avant — seul le <head> initial change. Aucune dépendance ajoutée, aucun navigateur à installer :
  * du remplacement de chaînes dans un gabarit, en Node.
  *
- * CE QU'IL NE FAIT PAS. Le <body> reste vide jusqu'à l'exécution du JavaScript. Rendre le corps
- * demanderait un navigateur sans écran à la construction (le contenu des pages vient de l'API, via
- * des effets React qu'un rendu de chaîne n'exécute pas). C'est l'étape suivante possible ; celle-ci
- * couvre déjà les aperçus sociaux et donne aux moteurs les métadonnées sans attendre le second
- * passage.
+ * LE CORPS DE LA PAGE (depuis le 2026-10-22) : une version simple de son texte, écrite dans <div id="root"> par
+ * contenuStatique.mjs, pour les moteurs qui n'exécutent pas (ou mal) le JavaScript — Bing, Brave, les assistants. React la
+ * remplace à son premier rendu. Ce n'est pas un rendu de l'application (il faudrait un navigateur sans écran à la
+ * construction) : des gabarits de chaînes, avec les mêmes textes et les mêmes données.
  *
  * LES TEXTES VIENNENT DES MÊMES CLÉS QUE L'APPLICATION (src/i18n/translations.js) et les données
  * structurées des mêmes fonctions (src/seo/jsonLd.js), qui sont pures et sans DOM précisément pour
@@ -37,6 +36,8 @@ import { loadEnv } from 'vite';
 import { translations, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, chargerLangue } from '../src/i18n/translations.js';
 import { cheminLocalise, HREFLANG } from '../src/i18n/routing.js';
 import { cheminFiche } from '../src/adresseFiche.js';
+import { QUESTIONS_HISTOIRE } from '../src/seo/contenuHistoire.js';
+import { corpsAccueil, corpsListe, corpsFiche, corpsHistoire, corpsSimple } from './contenuStatique.mjs';
 import {
   SITE_URL, organizationJsonLd, websiteJsonLd, restaurantJsonLd, restaurantListJsonLd, breadcrumbJsonLd, faqJsonLd
 } from '../src/seo/jsonLd.js';
@@ -114,7 +115,7 @@ const PAGES = [
     titre: 'story.pageTitle',
     description: 'story.metaDescription',
     jsonLd: ({ langue }) => [
-      { id: 'ld-faq', donnees: faqJsonLd([7, 1, 2, 3, 4, 6, 5, 8].map((n) => ({ question: cle(`story.faqQ${n}`, langue), answer: cle(`story.faqA${n}`, langue) }))) },
+      { id: 'ld-faq', donnees: faqJsonLd(QUESTIONS_HISTOIRE.map((n) => ({ question: cle(`story.faqQ${n}`, langue), answer: cle(`story.faqA${n}`, langue) }))) },
       {
         id: 'ld-breadcrumb',
         donnees: breadcrumbJsonLd([
@@ -155,8 +156,11 @@ function liensDeLangue(cheminApplicatif) {
   return liens.join('\n    ');
 }
 
-function documentPour(gabarit, { titre, description, url, image, type = 'website', blocs = [], langue = DEFAULT_LANGUAGE, cheminApplicatif = '/' }) {
+function documentPour(gabarit, { titre, description, url, image, type = 'website', blocs = [], langue = DEFAULT_LANGUAGE, cheminApplicatif = '/', corps = '' }) {
   let html = gabarit;
+  // Le texte de la page, lisible sans JavaScript (contenuStatique.mjs) : React le remplace à son premier rendu.
+  // Fonction de remplacement : un « $ » dans un nom de commerce ou un plat serait sinon lu comme un motif de replace().
+  if (corps) html = html.replace('<div id="root"></div>', () => `<div id="root">\n    ${corps}\n    </div>`);
   // index.html porte lang="fr" en dur : la version néerlandaise s'annoncerait comme française, ce
   // que les lecteurs d'écran comme les moteurs prennent au mot.
   html = html.replace(/<html lang="[^"]*"/, `<html lang="${langue}"`);
@@ -213,6 +217,38 @@ function redirectionVers(chemin, langue) {
   <body><a href="${relatif}">${canonique}</a></body>
 </html>
 `;
+}
+
+// Le corps lisible de chaque page statique : les quatre pages qui ont un vrai contenu à lire, le titre et la description pour
+// les autres (contenuStatique.mjs).
+function corpsDePage(chemin, ctx) {
+  if (chemin === '/') return corpsAccueil(ctx);
+  if (chemin === '/restaurants') return corpsListe(ctx);
+  if (chemin === '/notre-histoire') return corpsHistoire(ctx);
+  return corpsSimple({ ...ctx, cheminApplicatif: chemin });
+}
+
+/* INDEXNOW (2026-10-22, seo-a-faire.md, point 4) : à chaque mise en ligne du site, on signale ses adresses à Bing et aux
+   autres moteurs du protocole IndexNow (une soumission est partagée entre eux tous). Sans cela, Bing découvre les pages à
+   son rythme — le 2026-10-22 il n'en avait indexé aucune. Google n'utilise pas IndexNow : le plan du site lui suffit.
+   La clé est publique par nature : le fichier public/<clé>.txt prouve que la demande vient du propriétaire du site.
+   Seulement pour la PRODUCTION Vercel (VERCEL_ENV) : ni en local, ni pour staging, qui signaleraient des pages qui ne sont
+   pas (encore) en ligne. Un échec ne casse jamais le déploiement. Le tout premier envoi peut répondre 202 ou 403 : le
+   fichier de clé n'est en ligne qu'avec ce déploiement-ci ; les suivants passent. */
+const INDEXNOW_CLE = 'f6a32c1db8a22a6a7898601af6619b75';
+async function signalerIndexNow(urls) {
+  if (process.env.VERCEL_ENV !== 'production') return;
+  try {
+    const reponse = await fetch('https://api.indexnow.org/indexnow', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json; charset=utf-8' },
+      body: JSON.stringify({ host: new URL(SITE_URL).host, key: INDEXNOW_CLE, keyLocation: `${SITE_URL}/${INDEXNOW_CLE}.txt`, urlList: urls }),
+      signal: AbortSignal.timeout(10000)
+    });
+    console.log(`[prerender] IndexNow : ${urls.length} adresses signalées (HTTP ${reponse.status}).`);
+  } catch (e) {
+    console.warn(`[prerender] IndexNow injoignable (${e.message}) : sans conséquence, Bing relira le plan du site.`);
+  }
 }
 
 async function ecrire(chemin, html) {
@@ -306,7 +342,8 @@ async function principal() {
         titre,
         description,
         url: `${SITE_URL}${chemin}`,
-        blocs: page.jsonLd ? page.jsonLd({ ...ctx, langue }) : []
+        blocs: page.jsonLd ? page.jsonLd({ ...ctx, langue }) : [],
+        corps: corpsDePage(page.chemin, { t: (k) => cle(k, langue), langue, commerces: ctx.commerces, titre, description })
       });
       await ecrire(chemin, html);
       entrees.push({
@@ -339,6 +376,7 @@ async function principal() {
       const html = documentPour(gabarit, {
         langue,
         cheminApplicatif: applicatif,
+        corps: corpsFiche({ t: (k) => cle(k, langue), langue, commerce: r }),
         titre,
         description,
         url: `${SITE_URL}${chemin}`,
@@ -365,6 +403,7 @@ async function principal() {
   }
 
   await writeFile(path.join(DIST, 'sitemap.xml'), sitemap(entrees), 'utf8');
+  await signalerIndexNow(entrees.map((e) => `${SITE_URL}${e.chemin}`));
   console.log(`[prerender] ${PAGES.length} pages publiques × ${SUPPORTED_LANGUAGES.length} langues + ${fiches} fiches, sitemap de ${entrees.length} adresses.`);
 }
 

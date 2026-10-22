@@ -7303,6 +7303,8 @@ export default {
       listDescription: "Livraison de repas à Bruxelles : restaurants, boulangeries, supermarchés et night shops, livrés ou à emporter. L'alternative bruxelloise à Uber Eats, à 10 % de commission au plus.",
       restaurantTitle: "{name}, {cuisine} à {commune} · Fairide",
       restaurantDescription: "Commande chez {name} à {commune}, en livraison ou à emporter, sur Fairide.",
+      // Titre de la carte dans le texte lisible sans JavaScript des fiches (scripts/contenuStatique.mjs).
+      carteStatique: "La carte",
       loginTitle: 'Connexion et inscription · fairide.be Bruxelles',
       loginDescription: 'Crée ton compte client, inscris ton restaurant ou deviens livreur sur fairide.be, la plateforme bruxelloise de livraison à 10 % de commission.',
       searchTitle: 'Recherche · fairide.be',

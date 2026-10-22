@@ -7265,6 +7265,8 @@ export default {
       listDescription: 'Food delivery in Brussels: restaurants, bakeries, supermarkets and night shops, delivered or for takeaway. The Brussels alternative to Uber Eats, at most 10% commission.',
       restaurantTitle: "{name}, {cuisine} in {commune} · Fairide",
       restaurantDescription: "Order from {name} in {commune}, for delivery or takeaway, on Fairide.",
+      // Titre de la carte dans le texte lisible sans JavaScript des fiches (scripts/contenuStatique.mjs).
+      carteStatique: "Menu",
       loginTitle: 'Sign in and sign up · fairide.be Brussels',
       loginDescription: 'Create your customer account, list your restaurant or become a courier on fairide.be, the Brussels delivery platform with a 10% commission.',
       searchTitle: 'Search · fairide.be',

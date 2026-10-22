@@ -5,6 +5,7 @@ import RetourCompte from '../components/RetourCompte';
 import Rich from '../components/Rich';
 import { useLanguage } from '../context/LanguageContext';
 import AvecMarque from '../components/AvecMarque';
+import { BLOCS_HISTOIRE as BLOCS, QUESTIONS_HISTOIRE as QUESTIONS } from '../seo/contenuHistoire';
 
 // Notre histoire, sortie de la page Compte, où elle occupait une carte de cinquante lignes que
 // personne n'avait demandé à lire. Elle s'intercalait entre les coordonnées de connexion et les
@@ -25,14 +26,7 @@ import AvecMarque from '../components/AvecMarque';
 // le <head>. Les deux lisent les mêmes clés, il ne peut donc pas y avoir de divergence.
 
 const TITRE = { margin: '0 0 6px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 };
-const BLOCS = [
-  ['alternative', 'p'], ['constat', 'p'], ['mission', 'p'], ['demarche', 'ul', 4], ['identite', 'p'], ['valeurs', 'ul', 4], ['objectifs', 'ul', 4]
-];
-// 6 (2026-10-02) : la garantie d’abonnement (50 € de commandes ou moins depuis le 2026-10-11), à la suite de l'inscription.
-// 7 (2026-10-19) : « Les prix sont-ils les mêmes qu'au restaurant ? », en tête, comme dans l'aide.
-// 8 (2026-10-22) : « Pourquoi s’appelle-t-on Fairide ? » — « fair ride », et les orthographes que les gens tapent (Fairride, Fair ride),
-// écrites en toutes lettres sur une page que Google lit, en plus de alternateName (seo/jsonLd.js).
-const QUESTIONS = [7, 1, 2, 3, 4, 6, 5, 8];
+// Les blocs et l'ordre des questions : seo/contenuHistoire.js (partagés avec le pré-rendu).
 
 export default function OurStory() {
   const { t } = useLanguage();
