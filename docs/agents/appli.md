@@ -31,8 +31,8 @@ number in a lime circle and folds back to a circle that keeps the count (`PasPla
 quantity and « Ajouter » are one lime block — 3C; full-page empty screens (orders, favourites, cart) show the bike waiting on its
 road (`EtatVide scene=…`) — 4B. Buttons inside these need `min-height` overrides: the global 44 px touch rule has specificity (0,3,1).
 **Every main screen in that style (2026-10-16, « Proposition » phones of `maquettes/tous-les-ecrans/tous-les-ecrans.html`)**:
-restaurant list (address on an iris band with the riding bike, glass cuisine strip with a draggable lens: TeteListe.jsx,
-lentillePuces.js), map, favourites, restaurant page (sheet over the cover, glass sections strip, floating round buttons in solid iris
+restaurant list (address on an iris band with the riding bike, glass strip of cuisine families with a draggable lens and, under the chosen
+family, a row of its specialities: TeteListe.jsx, lentillePuces.js), map, favourites, restaurant page (sheet over the cover, glass sections strip, floating round buttons in solid iris
 with a white ring — white-on-glass was unreadable), cart / checkout / order confirmed (EcranCommande.jsx), Mon compte (EnteteCompte.jsx),
 business dashboard / orders / menu / stats (BandeauCommerce.jsx, CarteCommerce.jsx), courier dashboard / job in progress / earnings
 (RouteVelo.jsx). **Each family's CSS lives in its own file imported by its pages**: `src/ecran-liste.css`, `ecran-fiche.css`,

@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { MENTIONS_ALIMENTAIRES, platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
-import { COMMUNES, COMMUNES_SUGGEREES, RESTAURANT_TYPES, illustrationCuisine, restaurantTypeLabel } from '../../menuCategories';
+import { COMMUNES, COMMUNES_SUGGEREES, illustrationCuisine, restaurantTypeLabel } from '../../menuCategories';
+import { FAMILLES, chercherSpecialites, cuisinesCommerce, famillesCommerce, iconeSpecialite, libelleFamille, specialite } from '../../specialites';
 import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
@@ -106,6 +107,10 @@ export default function SearchPage() {
   }, [token]);
 
   const q = normaliser(requete);
+  // « PAR ENVIE » : LES FAMILLES (fondateur, 2026-10-22, maquettes/categories-commerce) qui ont au moins un commerce — les
+  // 14 premiers types d'avant s'affichaient même vides. Toutes tant que la liste n'est pas lue, pour ne pas sauter.
+  const famillesLues = new Set(restaurants.flatMap((r) => [...famillesCommerce(r)]));
+  const famillesTuiles = restaurants.length ? FAMILLES.filter((f) => famillesLues.has(f.cle)) : FAMILLES;
   const filtreRegime = bio || vegan || halal || sansGluten;
   const actif = q.length >= 2 || filtreRegime;
   const platOk = (p) => (!bio || platBio(p)) && (!vegan || platVegan(p)) && (!halal || platHalal(p)) && (!sansGluten || platSansGluten(p));
@@ -114,7 +119,12 @@ export default function SearchPage() {
   const resultats = useMemo(() => {
     if (!actif) return null;
     // Le type de cuisine se cherche aussi dans la langue affichée (« Italian », « Italiaans ») : audit du 19/10, discovery-22.
-    const texteOk = (r) => q.length < 2 || contient(r.name, q) || contient(r.cuisine, q) || contient(restaurantTypeLabel(r.cuisine, t), q) || contient(r.desc, q) || contient(r.neighborhood, q);
+    // Et par les mots de tous les jours depuis le 2026-10-22 (specialites.js) : « congo » trouve les commerces congolais, par
+    // n'importe laquelle de leurs spécialités.
+    const specialitesTrouvees = q.length < 2 ? [] : chercherSpecialites(requete, t);
+    const parSpecialite = new Set(specialitesTrouvees.map((x) => x.value));
+    const texteOk = (r) => q.length < 2 || contient(r.name, q) || cuisinesCommerce(r).some((c) => contient(c, q) || contient(restaurantTypeLabel(c, t), q) || parSpecialite.has(specialite(c)?.value))
+      || contient(r.desc, q) || contient(r.neighborhood, q);
     const commerces = restaurants
       .filter((r) => restoOk(r) && texteOk(r))
       .slice(0, filtreRegime && q.length < 2 ? 30 : MAX_PAR_GROUPE);
@@ -133,7 +143,10 @@ export default function SearchPage() {
       if (plats.length >= MAX_PAR_GROUPE) break;
     }
 
-    const cuisines = q.length < 2 ? [] : RESTAURANT_TYPES.filter((c) => contient(c.value, q) || contient(restaurantTypeLabel(c.value, t), q)).slice(0, MAX_PAR_GROUPE);
+    // Seulement les spécialités qu'au moins un commerce porte (cases vides cachées, 2026-10-22) : sinon « Péruvien » menait à
+    // une liste vide.
+    const portees = new Set(restaurants.flatMap((r) => cuisinesCommerce(r).map((c) => specialite(c)?.value)));
+    const cuisines = specialitesTrouvees.filter((x) => portees.has(x.value)).slice(0, MAX_PAR_GROUPE);
     // La recherche trouve aussi la périphérie (Tervuren…) ; les puces « Par commune » restent les 19.
     const communes = q.length < 2 ? [] : COMMUNES_SUGGEREES.filter((c) => contient(c, q)).slice(0, MAX_PAR_GROUPE);
     const aide = q.length < 2 ? [] : sujetsAide(t).filter((s) => contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)).slice(0, MAX_PAR_GROUPE);
@@ -216,10 +229,10 @@ export default function SearchPage() {
         <>
           <h3 className="recherche-titre-app">{t('search.byCraving')}</h3>
           <div className="recherche-tuiles">
-            {RESTAURANT_TYPES.slice(0, 14).map((c) => (
-              <Link key={c.value} to="/restaurants" state={{ cuisine: c.value }} className="recherche-tuile" style={{ '--tuile-fond': c.fond }}>
-                <img className="recherche-tuile-illu" src={illustrationCuisine(c.illustration)} alt="" width="52" height="52" decoding="async" draggable="false" />
-                <span>{restaurantTypeLabel(c.value, t) || c.value}</span>
+            {famillesTuiles.map((f) => (
+              <Link key={f.cle} to="/restaurants" state={{ famille: f.cle }} className="recherche-tuile" style={{ '--tuile-fond': f.fond }}>
+                <img className="recherche-tuile-illu" src={illustrationCuisine(f.illustration)} alt="" width="52" height="52" decoding="async" draggable="false" />
+                <span>{libelleFamille(f.cle, t)}</span>
               </Link>
             ))}
           </div>
@@ -267,10 +280,10 @@ export default function SearchPage() {
             {/* SUR LE SITE AUSSI, LES TUILES PASTEL (fondateur, 2026-10-21, version B de maquettes/site-illustrations) : les
                 mêmes que dans l'app, avec l'illustration 2D (sans relief) au lieu de la 3D. */}
             <div className="recherche-tuiles recherche-tuiles--site">
-              {RESTAURANT_TYPES.slice(0, 14).map((c) => (
-                <Link key={c.value} to="/restaurants" state={{ cuisine: c.value }} className="recherche-tuile" style={{ '--tuile-fond': c.fond }}>
-                  <img className="recherche-tuile-illu" src={illustrationCuisine(c.illustration, { plat: true })} alt="" width="40" height="40" decoding="async" draggable="false" />
-                  <span>{restaurantTypeLabel(c.value, t) || c.value}</span>
+              {famillesTuiles.map((f) => (
+                <Link key={f.cle} to="/restaurants" state={{ famille: f.cle }} className="recherche-tuile" style={{ '--tuile-fond': f.fond }}>
+                  <img className="recherche-tuile-illu" src={illustrationCuisine(f.illustration, { plat: true })} alt="" width="40" height="40" decoding="async" draggable="false" />
+                  <span>{libelleFamille(f.cle, t)}</span>
                 </Link>
               ))}
             </div>
@@ -340,7 +353,7 @@ export default function SearchPage() {
           </Groupe>
           <Groupe titre={t('search.cuisineTypes')} quand={resultats.cuisines.length}>
             {resultats.cuisines.map((c) => (
-              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={<Icone nom={c.icone} taille={20} />} titre={restaurantTypeLabel(c.value, t) || c.value} sous={t('search.seeTypeBusinesses')} />
+              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={<Icone nom={iconeSpecialite(c.value)} taille={20} />} titre={restaurantTypeLabel(c.value, t) || c.value} sous={t('search.seeTypeBusinesses')} />
             ))}
           </Groupe>
           <Groupe titre={t('search.municipalities')} quand={resultats.communes.length}>
