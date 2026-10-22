@@ -1362,9 +1362,11 @@ export default function Auth() {
           <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending || attenteRenvoi > 0} onClick={() => handleResend()}>
             {resending ? t('common.loading') : attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}
           </button>
-          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026) : le code par e-mail, même attente. */}
+          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026) : le code par e-mail. SANS l'attente
+              de « Renvoyer » : désactivé pendant les 30 s sans le dire, un commerce cliquait et rien ne se passait (22/10). Le
+              serveur plafonne déjà les demandes (5 par heure et par compte). */}
           {pendingChannel === 'sms' && (
-            <button className="btn-ghost" style={{ marginTop: 4 }} disabled={resending || attenteRenvoi > 0} onClick={() => handleResend('email')}>
+            <button className="btn-ghost" style={{ marginTop: 4 }} disabled={resending} onClick={() => handleResend('email')}>
               {t('auth.codeByEmail')}
             </button>
           )}

@@ -784,9 +784,10 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
             placeholder="123456" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
           {erreurs.code && <p className="field-error bv-centre" role="alert">{erreurs.code}</p>}
           <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={() => renvoyer()}>{attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}</button>
-          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026) : le code par e-mail, même attente. */}
+          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026) : le code par e-mail, tout de suite
+              (pas l'attente de « Renvoyer », qui le désactivait sans le dire ; le serveur plafonne à 5 demandes par heure). */}
           {enAttente.canal === 'sms' && (
-            <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={() => renvoyer('email')}>{t('auth.codeByEmail')}</button>
+            <button type="button" className="bv-lien" disabled={attente} onClick={() => renvoyer('email')}>{t('auth.codeByEmail')}</button>
           )}
           <button type="button" className="bv-lien" disabled={attente}
             onClick={() => { setNouveauNumero(phone); setErreurs({}); setRecule(false); setChangerNumero(true); }}>{t('auth.changePhone')}</button>
