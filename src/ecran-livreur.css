@@ -256,6 +256,9 @@ html .ecl .ecl-barres button.ecl-barre-v:hover, html .ecl .ecl-barres button.ecl
 /* « ← Mon compte » sur le bandeau (Factures) ; celui que Layout pose au-dessus de la page s'efface, comme pour les Statistiques
    du commerce. Le sommaire du dossier n'en a pas : « Dossier » est un onglet de la barre du bas. */
 .dashboard-main:has(.ecl-bandeau--retour, .ecl-dossier) > .dashboard-retour { display: none; }
+/* La fin de l'inscription express (FinExpress, DossierAppli.jsx) : « Validé automatiquement » en lime, sinon ce que l'équipe regarde. */
+.ecl-puce-fin { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin: 10px 0 2px; padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 600; background: rgba(255, 255, 255, .16); color: #fff; }
+.ecl-puce-fin.vert { background: var(--lime); color: var(--ink); }
 .ecl-b-retour { font-size: 14px; font-weight: 600; color: #fff; text-decoration: none; padding: 4px 0; }
 .ecl-b-retour:hover { color: #fff; text-decoration: underline; }
 /* Ouverte en feuille depuis Mon compte (PageFeuille.jsx) : le bandeau monte jusqu'en haut, sous le rond ‹ de la feuille, qui

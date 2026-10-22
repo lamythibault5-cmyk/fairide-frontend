@@ -5,12 +5,11 @@ import { useToast } from '../../context/ToastContext';
 import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
 import { allerAuPaiement } from '../../natif';
 import { libelleManque } from '../../conformite';
-import { euros } from '../../prixPlat';
 import ouvrirDocument from '../../ouvrirDocument';
 import Icone from '../../components/Icone';
 import EcranPlein from '../../components/EcranPlein';
 import SousEcran from '../../components/SousEcran';
-import { ConsentementBiometrique, RetraitConsentementBiometrique } from '../../components/conformite/LivreurConformite';
+import { RetraitConsentementBiometrique } from '../../components/conformite/LivreurConformite';
 import { Haut, Option, Fait } from '../app/EcransBienvenue';
 import { Champ } from '../app/InscriptionAppli';
 import RouteVelo from '../../components/livreur/RouteVelo';
@@ -29,21 +28,29 @@ import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AV
  *
  * MÊMES ROUTES, MÊMES RÈGLES que le dossier du site (Onboarding.jsx), les listes communes dans dossierCommun.js :
  * POST /couriers/me/status, /identity/start, /documents, PATCH /couriers/me, POST /engagements, Stripe Connect, /submit.
+ *
+ * INSCRIPTION EXPRESS DEPUIS LE 2026-10-22 (version A de maquettes/inscription-livreur/inscription-livreur.html) : l'inscription ne
+ * demande plus que le compte ; ici, « Ton activité » (statut, numéro d'entreprise lu au registre, adresse s'il ne la donne pas,
+ * école, TVA, nationalité, caisse), « Tes courses » (véhicule, zone, autres plateformes, sac, minimum), hors EEE les deux pièces,
+ * la pièce d'identité chez Stripe sans selfie, « Pièce vérifiée » (registre national), le compte de versement, la photo, une case.
+ * Plus d'écran d'envoi : le serveur envoie le dossier dès qu'il est complet et le valide seul quand tout est vert
+ * (routes/couriers.js › avancerDossier) ; Onboarding.jsx montre alors FinExpress (« Tu peux rouler » ou « Presque prêt »).
  * Une fois le dossier envoyé, l'app passe à DossierSuivi.jsx (compteurs, changement de statut, documents de vente, en bandeau
  * et feuille depuis le 2026-10-19). Le guide « comment devenir indépendant » (liens vers les sites publics) reste sur le site. */
-const STATUTS = [['independent', 'mallette'], ['student_independent', 'guide']];
+const STATUTS = ['independent', 'student_independent'];
 const VEHICULES = ['velo', 'velo_electrique', 'scooter', 'voiture'];
+const NATIONALITES = ['BE', 'EEA_CH', 'THIRD'];
 const AVANT_COURSE = ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur'];
 // Ancienne étape du dossier du site (retour de Stripe : setEtape('envoi')) → écran d'ici.
-const ECRAN_DE_ETAPE = { statut: 'statut', identite: 'identite', infos: 'perso', engagements: 'engagements', paiement: 'paiement', envoi: 'envoi' };
+const ECRAN_DE_ETAPE = { statut: 'activite', identite: 'identite', infos: 'activite', engagements: 'engagements', paiement: 'paiement', envoi: 'paiement' }; // « envoi » : le retour de Stripe Connect (Onboarding.jsx)
 
 // Ce qui manque → l'écran qui le demande.
-function ecranDuManque(m, statusType) {
+function ecranDuManque(m) {
   if (m.startsWith('document_')) return m === 'document_identity_card' ? 'identite' : `doc:${m.slice('document_'.length)}`;
   const table = {
-    statut: 'statut', identite: 'identite', nationalite: 'perso', date_naissance: 'perso', registre_national: 'perso', age_minimum: 'perso',
-    zone: 'course', vehicule: 'course', permis_immatriculation: 'course', ecole: 'etudes', bce: 'entreprise', tva: 'entreprise', tva_numero: 'entreprise',
-    caisse: statusType === 'student_independent' ? 'caisse' : 'societe', siege: 'societe',
+    statut: 'activite', identite: 'identite', nationalite: 'activite', date_naissance: 'registre', registre_national: 'registre', age_minimum: 'registre',
+    zone: 'courses', vehicule: 'courses', permis_immatriculation: 'courses', ecole: 'activite', bce: 'activite', tva: 'activite', tva_numero: 'activite',
+    caisse: 'activite', siege: 'activite',
     titre_sejour: 'doc:residence_permit', carte_professionnelle: 'doc:professional_card'
   };
   if (table[m]) return table[m];
@@ -53,7 +60,7 @@ function ecranDuManque(m, statusType) {
 
 export default function DossierAppli({ d, charger, token, user, busy, action, refreshUser, etapeDemandee }) {
   const { t } = useLanguage();
-  const c = d.courier; const legal = d.legal ?? {};
+  const c = d.courier;
   const manques = (d.missing ?? []).filter((m) => !MANQUES_INFORMATIFS.includes(m));
   const stripeActif = (d.user?.stripeConnectStatus || user?.stripeConnectStatus) === 'active';
 
@@ -62,13 +69,14 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
   const motorise = ['scooter', 'voiture'].includes(f.vehicleType);
   const horsEee = f.nationalityGroup === 'THIRD';
   const docs = documentsRequis(d, { statusType: c.statusType, motorise, horsEee });
-  const ecrans = ['statut', 'identite', 'perso', 'course', 'autres',
-    ...(c.statusType === 'student_independent' ? ['etudes', 'entreprise', 'caisse'] : c.statusType === 'independent' ? ['entreprise', 'societe'] : []),
-    ...docs.map((x) => `doc:${x}`), 'engagements', 'paiement', 'tarif', 'envoi'];
+  // Hors EEE, les deux pièces juste après « Tes courses » ; la photo (et les pièces d'un véhicule motorisé) après le versement.
+  const docsSejour = docs.filter((x) => ['residence_permit', 'professional_card'].includes(x));
+  const ecrans = ['activite', 'courses', ...docsSejour.map((x) => `doc:${x}`), 'identite', 'registre', 'paiement',
+    ...docs.filter((x) => !docsSejour.includes(x)).map((x) => `doc:${x}`), 'engagements'];
   const aFaire = (e) => manques.some((m) => ecranDuManque(m, c.statusType) === e);
 
   // Le premier écran qui manque encore quelque chose : là où mène « Compléter mon dossier ».
-  const premierEcran = ecrans.find(aFaire) || (stripeActif ? 'envoi' : 'paiement');
+  const premierEcran = ecrans.find(aFaire) || (stripeActif ? 'engagements' : 'paiement');
 
   // `ecran` vide : le sommaire du dossier (SommaireDossier, plus bas). Une étape demandée (retour de Stripe) s'ouvre directement.
   const [ecran, setEcran] = useState(() => ECRAN_DE_ETAPE[etapeDemandee] || null);
@@ -100,111 +108,43 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     </select>
   );
 
-  if (ecran === 'statut') {
-    titre = t('auth.courierStatusTitle'); sous = t('appli.dosStatutSous');
-    contenu = <EcranStatut c={c} t={t} busy={busy} onChoix={(st) => (st === c.statusType ? suivant() : action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType: st } }), t('courierOnboarding.toastStatusSaved')).then((ok) => ok && suivant()))} />;
+  if (ecran === 'activite') {
+    titre = t('appli.exActiviteTitre'); sous = t('appli.exActiviteSous');
+    contenu = <EcranActivite d={d} f={f} val={val} t={t} token={token} busy={busy} action={action} select={select} />;
+    pied = continuer(async () => {
+      // Dénomination d'un indépendant en personne physique : son nom, si le registre ne l'a pas donnée.
+      const corps = corpsInfos({ ...f, legalName: f.legalName || d.companyRegistry?.name || d.user?.name || '' }, c);
+      const adresse = !d.user?.address && f.addressStreet ? { addressStreet: f.addressStreet, addressNumber: f.addressNumber, addressPostalCode: f.addressPostalCode, addressCity: f.addressCity } : {};
+      const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: { ...corps, ...adresse } }));
+      if (ok) { setF((x) => ({ ...x, nationalNumber: '' })); suivant(); }
+    });
+  } else if (ecran === 'courses') {
+    titre = t('appli.exCoursesTitre'); sous = t('appli.exCoursesSous');
+    contenu = <EcranCourses d={d} c={c} f={f} val={val} t={t} motorise={motorise} select={select} />;
+    pied = continuer(enregistrerPuisSuivant);
   } else if (ecran === 'identite') {
-    titre = t('courierOnboarding.identityTitle'); sous = t('courierOnboarding.identityHelp');
+    titre = t('appli.exPieceTitre'); sous = t('appli.exPieceSous');
     contenu = <EcranIdentite d={d} t={t} token={token} busy={busy} action={action} onSuivant={suivant} />;
-  } else if (ecran === 'perso') {
-    titre = t('courierOnboarding.partPersonal');
+  } else if (ecran === 'registre') {
+    const id = c.identity ?? {};
+    titre = id.status === 'verified' ? t('appli.exVerifieeTitre') : t('courierOnboarding.partPersonal'); sous = t('appli.exVerifieeSous');
     contenu = (
       <>
-        <Champ id="dos-nat" label={t('conformite.fNationality')} aide={horsEee ? t('conformite.fNationalityThirdHelp') : null}>
-          {select('dos-nat', 'nationalityGroup', ['BE', 'EEA_CH', 'THIRD'].map((n) => [n, t(`conformite.nationality_${n}`)]))}
-        </Champ>
-        <Champ id="dos-naissance" label={t('courierOnboarding.fBirthDate')}>
-          <input id="dos-naissance" type="date" value={f.birthDate} onChange={(e) => val('birthDate', e.target.value)} />
-        </Champ>
-        <Champ id="dos-nrn" label={t('courierOnboarding.fNrn')} aide={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('courierOnboarding.nrnHelp')}>
-          <input id="dos-nrn" inputMode="numeric" value={f.nationalNumber} onChange={(e) => val('nationalNumber', e.target.value)} placeholder="85.07.30-033.28" />
-        </Champ>
-      </>
-    );
-    pied = continuer(enregistrerPuisSuivant);
-  } else if (ecran === 'course') {
-    titre = t('courierOnboarding.partRides');
-    contenu = (
-      <>
-        <Champ id="dos-zone" label={t('courierOnboarding.fZone')}>{select('dos-zone', 'zone', (d.zones ?? []).map((z) => [z, z]))}</Champ>
-        <span className="bv-etiquette">{t('courierOnboarding.fVehicle')}</span>
-        <div className="bv-grille" style={{ marginBottom: 14 }}>
-          {(d.vehicles ?? VEHICULES).map((v) => <Option key={v} on={f.vehicleType === v} titre={t(`courierOnboarding.vehicle_${v}`)} onClick={() => val('vehicleType', v)} />)}
-        </div>
-        {motorise && (
-          <div className="bv-rangee bv-rangee-moitie">
-            <Champ id="dos-permis" label={t('courierOnboarding.fLicence')}><input id="dos-permis" value={f.licenceNumber} onChange={(e) => val('licenceNumber', e.target.value)} /></Champ>
-            <Champ id="dos-plaque" label={t('courierOnboarding.fPlate')}><input id="dos-plaque" value={f.licencePlate} onChange={(e) => val('licencePlate', e.target.value)} placeholder="1-ABC-123" /></Champ>
-          </div>
+        {id.status === 'verified' ? (
+          <Fait icone="valider" titre={`${id.firstName || ''} ${id.lastName || ''}`.trim()}
+            sous={c.birthDate ? t('appli.exNele', { date: new Date(c.birthDate).toLocaleDateString(getLocale()), age: Math.floor((Date.now() - new Date(c.birthDate)) / (365.25 * 24 * 3600 * 1000)) }) : null} />
+        ) : ['pending', 'processing'].includes(id.status) && id.provider === 'stripe_identity' ? (
+          <Fait icone="horloge" titre={t('appli.exStripeVerifie')} sous={t('appli.exStripeVerifieS')} />
+        ) : null}
+        {/* Date de naissance : lue sur la pièce par Stripe ; à taper seulement sans elle (pièce déposée, contrôle en personne). */}
+        {!c.birthDate && id.provider !== 'stripe_identity' && (
+          <Champ id="dos-naissance" label={t('courierOnboarding.fBirthDate')}>
+            <input id="dos-naissance" type="date" value={f.birthDate} onChange={(e) => val('birthDate', e.target.value)} />
+          </Champ>
         )}
-      </>
-    );
-    pied = continuer(enregistrerPuisSuivant);
-  } else if (ecran === 'autres') {
-    // Autres plateformes (une ou deux courses à la fois, routes/orders.js) et le sac de livraison.
-    const sacModifiable = ['none', 'due'].includes(c.bag?.depositStatus || 'none');
-    titre = t('appli.dosAutresTitre');
-    contenu = (
-      <>
-        <span className="bv-etiquette" id="dos-plateformes">{t('auth.platformsTitle')}</span>
-        <div className="bv-segments" role="radiogroup" aria-labelledby="dos-plateformes">
-          {[['no', t('auth.platformsNo')], ['yes', t('auth.platformsYes')]].map(([v, txt]) => (
-            <button key={v} type="button" role="radio" aria-checked={f.worksOtherPlatforms === v} className={f.worksOtherPlatforms === v ? 'on' : ''} onClick={() => val('worksOtherPlatforms', v)}>{txt}</button>
-          ))}
-        </div>
-        <p className="bv-aide" style={{ margin: '-4px 0 18px' }}>{t('auth.platformsHelp')}</p>
-        <span className="bv-etiquette" id="dos-sac">{t('courierOnboarding.fBag')}</span>
-        <div className="bv-segments" role="radiogroup" aria-labelledby="dos-sac">
-          {[['own', t('auth.bag_own')], ['fairide', t('auth.bag_fairide')]].map(([v, txt]) => (
-            <button key={v} type="button" role="radio" aria-checked={f.bagOption === v} disabled={!sacModifiable} className={f.bagOption === v ? 'on' : ''} onClick={() => val('bagOption', v)}>{txt}</button>
-          ))}
-        </div>
-        <p className="bv-aide" style={{ marginTop: -4 }}>{sacModifiable ? t('courierOnboarding.fBagHelp', { amount: c.bag?.depositAmount || 40 }) : t(`courierOnboarding.bagDeposit_${c.bag.depositStatus}`, { amount: c.bag?.depositAmount || 40 })}</p>
-      </>
-    );
-    pied = continuer(enregistrerPuisSuivant);
-  } else if (ecran === 'etudes') {
-    titre = t('courierOnboarding.stuIndepSection');
-    contenu = (
-      <>
-        <Champ id="dos-ecole" label={t('courierOnboarding.fSchool')}><input id="dos-ecole" value={f.schoolName} onChange={(e) => val('schoolName', e.target.value)} /></Champ>
-        <Champ id="dos-annee" label={t('courierOnboarding.fAcademicYear')} aide={legal.studentParentsCeiling != null ? t('courierOnboarding.studentParentsInfo', { amount: euros(legal.studentParentsCeiling) }) : null}>
-          {/* Tiret posé tout seul : le pavé numérique de l'iPhone n'en a pas (audit du 19/10, CROSS-64). */}
-          <input id="dos-annee" inputMode="numeric" value={f.academicYear} onChange={(e) => val('academicYear', formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" />
+        <Champ id="dos-nrn" label={t('courierOnboarding.fNrn')} aide={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('appli.exNrnAide')}>
+          <input id="dos-nrn" inputMode="numeric" value={f.nationalNumber} onChange={(e) => val('nationalNumber', e.target.value)} placeholder="99.05.05-123.45" />
         </Champ>
-      </>
-    );
-    pied = continuer(enregistrerPuisSuivant);
-  } else if (ecran === 'entreprise') {
-    titre = t('appli.dosEntrepriseTitre');
-    contenu = (
-      <>
-        <Champ id="dos-bce" label={t('courierOnboarding.fBce')} aide={c.independent?.companyVerified ? t('courierOnboarding.bceVerified') : t('courierOnboarding.bceHelp')}>
-          <input id="dos-bce" inputMode="numeric" value={f.companyNumber} onChange={(e) => val('companyNumber', e.target.value)} placeholder="0123.456.789" />
-        </Champ>
-        <Champ id="dos-tva" label={t('courierOnboarding.fVatStatus')}>
-          {select('dos-tva', 'vatStatus', [['franchise', t('courierOnboarding.vatFranchise', { max: legal.franchiseMaxTurnover != null ? euros(legal.franchiseMaxTurnover) : '—' })], ['assujetti', t('courierOnboarding.vatNormal')]])}
-        </Champ>
-        {f.vatStatus === 'assujetti' && (
-          <Champ id="dos-tva-num" label={t('courierOnboarding.fVatNumber')}><input id="dos-tva-num" value={f.vatNumber} onChange={(e) => val('vatNumber', e.target.value)} placeholder="BE0123456789" /></Champ>
-        )}
-      </>
-    );
-    pied = continuer(enregistrerPuisSuivant);
-  } else if (ecran === 'caisse' || ecran === 'societe') {
-    const connue = !f.socialInsuranceFund || CAISSES.includes(f.socialInsuranceFund);
-    titre = ecran === 'caisse' ? t('courierOnboarding.fSocialInsuranceFund') : t('appli.dosSocieteTitre');
-    contenu = (
-      <>
-        <Champ id="dos-caisse" label={ecran === 'caisse' ? null : t('courierOnboarding.fSocialInsuranceFund')} aide={t('courierOnboarding.fSocialInsuranceFundHelp')}>
-          {select('dos-caisse', 'socialInsuranceFund', [...CAISSES.map((x) => [x, x]), ...(connue ? [] : [[f.socialInsuranceFund, f.socialInsuranceFund]])])}
-        </Champ>
-        {ecran === 'societe' && (
-          <>
-            <Champ id="dos-raison" label={t('courierOnboarding.fLegalName')}><input id="dos-raison" value={f.legalName} onChange={(e) => val('legalName', e.target.value)} /></Champ>
-            <Champ id="dos-siege" label={t('courierOnboarding.fSeat')}><input id="dos-siege" value={f.seatAddress} onChange={(e) => val('seatAddress', e.target.value)} /></Champ>
-          </>
-        )}
       </>
     );
     pied = continuer(enregistrerPuisSuivant);
@@ -215,20 +155,15 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     pied = continuer();
   } else if (ecran === 'engagements') {
     titre = t('conformite.engagementsTitle');
-    contenu = <EcranEngagements t={t} token={token} busy={busy} action={action} onSuivant={() => { charger(); suivant(); }}
+    contenu = <EcranEngagements t={t} token={token} busy={busy} action={action} onSuivant={() => { charger(); refreshUser?.(); if (rang >= ecrans.length - 1) aller('manques'); else suivant(); }}
       contrat={{ aSigner: manques.includes('contrat'), nom: `${c.identity?.firstName || ''} ${c.identity?.lastName || ''}`.trim() || d.user?.name || '', onApercu: () => ouvrirPdf(`${API_BASE}/couriers/me/contract/preview`, token, t('courierOnboarding.previewFailed')) }} />;
   } else if (ecran === 'paiement') {
     titre = t('courierOnboarding.paymentTitle'); sous = t('courierOnboarding.paymentHelp');
     contenu = <EcranPaiement t={t} token={token} busy={busy} actif={stripeActif} onSuivant={suivant} />;
-  } else if (ecran === 'tarif') {
-    titre = t('conformite.minFeeTitle'); sous = t('conformite.minFeeHelp');
-    contenu = <EcranTarif c={c} t={t} token={token} busy={busy} action={action} onSuivant={suivant} />;
   } else {
+    // Après la dernière case, le serveur envoie (et valide si tout est vert) : il ne reste ici que ce qui manque encore.
     titre = t('courierOnboarding.submitTitle');
-    contenu = (
-      <EcranEnvoi d={d} t={t} busy={busy} manques={manques} statusType={c.statusType} onAller={(e) => aller(e, true)}
-        onEnvoyer={() => action(() => api('/couriers/me/submit', { method: 'POST', token }), t('courierOnboarding.toastSubmitted')).then(() => refreshUser?.())} />
-    );
+    contenu = <EcranManques d={d} t={t} manques={manques} statusType={c.statusType} onAller={(e) => aller(e, true)} />;
   }
 
   return (
@@ -258,21 +193,19 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
  * mais il peut arriver APRÈS l'envoi (fondateur, 18/10/2026 : MANQUES_APRES_ENVOI) ; il reste exigé avant la validation par
  * l'équipe (audit du 19/10, courier-35 : ce commentaire disait « exigé à l'envoi »). */
 const ETAPES_SOMMAIRE = [
-  ['statut', ['statut']],
-  ['identite', ['identite']],
-  ['infos', ['perso', 'course', 'autres']],
-  ['activite', ['etudes', 'entreprise', 'caisse', 'societe']],
-  ['documents', null], // les écrans doc:… du statut choisi
-  ['engagements', ['engagements']],
-  ['paiement', ['paiement', 'tarif']],
-  ['envoi', ['envoi']]
+  ['activite', ['activite']],
+  ['courses', ['courses']],
+  ['identite', ['identite', 'registre']],
+  ['paiement', ['paiement']],
+  ['documents', null], // les écrans doc:… (photo, et hors EEE les deux pièces)
+  ['engagements', ['engagements']]
 ];
 
 function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActif, premierEcran, onOuvrir }) {
   const c = d.courier;
   const etapes = ETAPES_SOMMAIRE.map(([cle, liste]) => {
     const siens = (liste ?? docs.map((x) => `doc:${x}`)).filter((e) => ecrans.includes(e));
-    const fait = cle === 'paiement' ? stripeActif : cle === 'envoi' ? !['draft', 'rejected'].includes(c.lifecycleStatus) : !siens.some(aFaire);
+    const fait = cle === 'paiement' ? stripeActif : !siens.some(aFaire);
     return { cle, siens, fait, manquants: manques.filter((m) => siens.includes(ecranDuManque(m, c.statusType))) };
   }).filter((e) => e.siens.length);
   const restantes = etapes.filter((e) => !e.fait);
@@ -292,9 +225,8 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
       const txt = libelleManque(e.manquants[0], t);
       return txt.charAt(0).toUpperCase() + txt.slice(1);
     }
-    if (e.cle === 'statut' && c.statusType) return t(`courierOnboarding.status_${c.statusType}`);
-    if (e.cle === 'infos') return [c.vehicleType && t(`courierOnboarding.vehicle_${c.vehicleType}`), c.zone].filter(Boolean).join(' · ') || null;
-    if (e.cle === 'activite') return c.independent?.companyNumber || null;
+    if (e.cle === 'activite') return [c.statusType && t(`courierOnboarding.status_${c.statusType}`), c.independent?.companyNumber].filter(Boolean).join(' · ') || null;
+    if (e.cle === 'courses') return [c.vehicleType && t(`courierOnboarding.vehicle_${c.vehicleType}`), c.zone].filter(Boolean).join(' · ') || null;
     if (e.cle === 'paiement') return t('courierOnboarding.paymentActive');
     return null;
   };
@@ -310,8 +242,6 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
       </li>
     );
   };
-  // Il ne reste que l'envoi : le bouton le dit (il ouvre l'écran d'envoi, qui montre ce qui sera envoyé).
-  const seulEnvoi = restantes.length === 1 && restantes[0].cle === 'envoi';
 
   return (
     <div className="ecl ecl-page ecl-dossier">
@@ -330,7 +260,7 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
             <h2 className="ecl-titre-sec">{t('appli.dosAFaire')}</h2>
             <ul className="ecl-etapes">{restantes.map(ligne)}</ul>
             <button type="button" className="btn-gold ecl-bouton-dossier" onClick={() => onOuvrir(premierEcran)}>
-              {seulEnvoi ? t('appli.dosVerifierEnvoyer') : t('appli.dosCompleter')}
+              {t('appli.dosCompleter')}
             </button>
           </>
         )}
@@ -345,14 +275,105 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
   );
 }
 
-// Le statut : deux choix, la ligne courte de l'inscription sous chacun. Choisir le même ne rappelle pas le serveur.
-function EcranStatut({ c, t, busy, onChoix }) {
-  const [choix, setChoix] = useState(c.statusType || '');
+/* « TON ACTIVITÉ » (version A) : le statut, le numéro d'entreprise — lu au registre TVA européen dès qu'il a ses dix chiffres
+ * (PATCH /couriers/me : le serveur remplit dénomination, siège, adresse et zone avec ce que le registre dit) —, l'adresse quand
+ * personne ne la donne, l'école d'un étudiant, la TVA, la nationalité (la pièce la confirmera) et la caisse. */
+// « RUE DU BAILLI 42 1050 IXELLES » (registre, en capitales) → « Rue Du Bailli 42 1050 Ixelles », lisible sur la carte.
+const adresseLisible = (a) => String(a || '').toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (x) => x.toUpperCase());
+function EcranActivite({ d, f, val, t, token, busy, action, select }) {
+  const c = d.courier;
+  const registre = d.companyRegistry;
+  const chiffres = String(f.companyNumber || '').replace(/\D/g, '');
+  const dejaLu = registre && chiffres === String(c.independent?.companyNumber || '').replace(/\D/g, '');
+  // Dix chiffres tapés, pas encore lus : on les envoie (le registre répond en une ou deux secondes).
+  useEffect(() => {
+    if (chiffres.length !== 10 || dejaLu) return undefined;
+    const minuteur = setTimeout(() => { action(() => api('/couriers/me', { method: 'PATCH', token, body: { companyNumber: chiffres } })); }, 500);
+    return () => clearTimeout(minuteur);
+  }, [chiffres]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Le registre a trouvé le numéro : il est assujetti à la TVA (VIES ne connaît que les assujettis).
+  useEffect(() => { if (dejaLu && registre?.valid && !f.vatStatus) val('vatStatus', 'assujetti'); }, [dejaLu, registre?.valid]); // eslint-disable-line react-hooks/exhaustive-deps
+  const segments = (id, k, liste, libelle) => (
+    <div className="bv-segments" role="radiogroup" aria-labelledby={id}>
+      {liste.map((v) => <button key={v} type="button" role="radio" aria-checked={f[k] === v} className={f[k] === v ? 'on' : ''} onClick={() => val(k, v)}>{libelle(v)}</button>)}
+    </div>
+  );
+  const connue = !f.socialInsuranceFund || CAISSES.includes(f.socialInsuranceFund);
   return (
     <>
-      {STATUTS.map(([st, icone]) => <Option key={st} on={choix === st} icone={icone} titre={t(`courierOnboarding.status_${st}`)} sous={t(`appli.insStatut_${st}`)} onClick={() => setChoix(st)} />)}
-      <div className="bv-grandit" />
-      <button type="button" className="bv-btn btn-teal" disabled={busy || !choix} onClick={() => onChoix(choix)}>{busy ? t('common.loading') : t('appli.continuer')}</button>
+      <div className="bv-segments" role="radiogroup" aria-label={t('auth.courierStatusTitle')}>
+        {STATUTS.map((st) => (
+          <button key={st} type="button" role="radio" aria-checked={c.statusType === st} className={c.statusType === st ? 'on' : ''} disabled={busy}
+            onClick={() => st !== c.statusType && action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType: st } }))}>{t(`appli.exStatut_${st}`)}</button>
+        ))}
+      </div>
+      <Champ id="dos-bce" label={t('courierOnboarding.fBce')}>
+        <input id="dos-bce" inputMode="numeric" value={f.companyNumber} onChange={(e) => val('companyNumber', e.target.value)} placeholder="0123.456.789" />
+      </Champ>
+      {dejaLu && registre.valid === true && <Fait icone="valider" titre={t('appli.exRegistreOk', { name: registre.name })} sous={t('appli.exRegistreOkS', { address: adresseLisible(registre.address) })} />}
+      {dejaLu && registre.valid === false && <Fait icone="horloge" titre={t('appli.exRegistreNon')} sous={t('appli.exRegistreNonS')} />}
+      {dejaLu && registre.valid == null && <Fait icone="horloge" titre={t('appli.exRegistreMuet')} sous={t('appli.exRegistreMuetS')} />}
+      {!chiffres && <p className="bv-aide" style={{ marginTop: -4 }}>{t('appli.exSansNumero')}</p>}
+      {/* L'adresse : seulement si ni le compte ni le registre ne l'ont (le serveur la reprend du registre quand il la trouve). */}
+      {!d.user?.address && !(dejaLu && registre.valid) && (
+        <>
+          <span className="bv-etiquette">{t('appli.exAdresse')}</span>
+          <div className="bv-rangee"><Champ id="dos-rue" label={t('appli.exRue')}><input id="dos-rue" value={f.addressStreet} onChange={(e) => val('addressStreet', e.target.value)} autoComplete="address-line1" /></Champ>
+            <Champ id="dos-num" label={t('appli.exNumero')}><input id="dos-num" value={f.addressNumber} onChange={(e) => val('addressNumber', e.target.value)} /></Champ></div>
+          <div className="bv-rangee"><Champ id="dos-cp" label={t('appli.exCp')}><input id="dos-cp" inputMode="numeric" maxLength={4} value={f.addressPostalCode} onChange={(e) => val('addressPostalCode', e.target.value.replace(/\D/g, ''))} autoComplete="postal-code" /></Champ>
+            <Champ id="dos-commune" label={t('appli.exCommune')}><input id="dos-commune" value={f.addressCity} onChange={(e) => val('addressCity', e.target.value)} autoComplete="address-level2" /></Champ></div>
+        </>
+      )}
+      {c.statusType === 'student_independent' && (
+        <div className="bv-rangee">
+          <Champ id="dos-ecole" label={t('courierOnboarding.fSchool')}><input id="dos-ecole" value={f.schoolName} onChange={(e) => val('schoolName', e.target.value)} /></Champ>
+          {/* Tiret posé tout seul : le pavé numérique de l'iPhone n'en a pas (audit du 19/10, CROSS-64). */}
+          <Champ id="dos-annee" label={t('courierOnboarding.fAcademicYear')}><input id="dos-annee" inputMode="numeric" value={f.academicYear} onChange={(e) => val('academicYear', formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" /></Champ>
+        </div>
+      )}
+      <span className="bv-etiquette" id="dos-tva">{t('appli.exRegimeTva')}</span>
+      {segments('dos-tva', 'vatStatus', ['franchise', 'assujetti'], (v) => t(`appli.exTva_${v}`))}
+      <span className="bv-etiquette" id="dos-nat">{t('appli.exNationalite')}</span>
+      {segments('dos-nat', 'nationalityGroup', NATIONALITES, (v) => t(`appli.exNat_${v}`))}
+      <p className="bv-aide" style={{ marginTop: -4 }}>{f.nationalityGroup === 'THIRD' ? t('conformite.fNationalityThirdHelp') : t('appli.exNationaliteAide')}</p>
+      <Champ id="dos-caisse" label={t('courierOnboarding.fSocialInsuranceFund')} aide={t('courierOnboarding.fSocialInsuranceFundHelp')}>
+        {select('dos-caisse', 'socialInsuranceFund', [...CAISSES.map((x) => [x, x]), ...(connue ? [] : [[f.socialInsuranceFund, f.socialInsuranceFund]])])}
+      </Champ>
+    </>
+  );
+}
+
+/* « TES COURSES » (version A) : le véhicule (permis et plaque s'il est motorisé), la zone (tirée de l'adresse, à changer ici), une
+ * autre plateforme (une course à la fois, ou trois), le sac, et le minimum par course et par km — facultatif. */
+function EcranCourses({ d, c, f, val, t, motorise, select }) {
+  const sacModifiable = ['none', 'due'].includes(c.bag?.depositStatus || 'none');
+  const segments = (id, k, liste) => (
+    <div className="bv-segments" role="radiogroup" aria-labelledby={id}>
+      {liste.map(([v, txt]) => <button key={v} type="button" role="radio" aria-checked={f[k] === v} disabled={k === 'bagOption' && !sacModifiable} className={f[k] === v ? 'on' : ''} onClick={() => val(k, v)}>{txt}</button>)}
+    </div>
+  );
+  return (
+    <>
+      <div className="bv-grille" style={{ marginBottom: 14 }}>
+        {(d.vehicles ?? VEHICULES).map((v) => <Option key={v} on={f.vehicleType === v} titre={t(`courierOnboarding.vehicle_${v}`)} onClick={() => val('vehicleType', v)} />)}
+      </div>
+      {motorise && (
+        <div className="bv-rangee bv-rangee-moitie">
+          <Champ id="dos-permis" label={t('courierOnboarding.fLicence')}><input id="dos-permis" value={f.licenceNumber} onChange={(e) => val('licenceNumber', e.target.value)} /></Champ>
+          <Champ id="dos-plaque" label={t('courierOnboarding.fPlate')}><input id="dos-plaque" value={f.licencePlate} onChange={(e) => val('licencePlate', e.target.value)} placeholder="1-ABC-123" /></Champ>
+        </div>
+      )}
+      <Champ id="dos-zone" label={t('courierOnboarding.fZone')}>{select('dos-zone', 'zone', (d.zones ?? []).map((z) => [z, z]))}</Champ>
+      <span className="bv-etiquette" id="dos-plateformes">{t('auth.platformsTitle')}</span>
+      {segments('dos-plateformes', 'worksOtherPlatforms', [['no', t('auth.platformsNo')], ['yes', t('auth.platformsYes')]])}
+      <span className="bv-etiquette" id="dos-sac">{t('courierOnboarding.fBag')}</span>
+      {segments('dos-sac', 'bagOption', [['own', t('auth.bag_own')], ['fairide', t('auth.bag_fairide')]])}
+      <p className="bv-aide" style={{ marginTop: -4 }}>{sacModifiable ? t('courierOnboarding.fBagHelp', { amount: c.bag?.depositAmount || 40 }) : t(`courierOnboarding.bagDeposit_${c.bag.depositStatus}`, { amount: c.bag?.depositAmount || 40 })}</p>
+      <span className="bv-etiquette" style={{ marginTop: 14 }}>{t('appli.exMinimum')}</span>
+      <div className="bv-rangee bv-rangee-moitie">
+        <Champ id="dos-min" label={t('appli.exMinCourse')}><input id="dos-min" type="number" min="0" max="100" step="0.10" inputMode="decimal" value={f.minFee} onChange={(e) => val('minFee', e.target.value)} /></Champ>
+        <Champ id="dos-min-km" label={t('appli.exMinKm')}><input id="dos-min-km" type="number" min="0" max="10" step="0.05" inputMode="decimal" value={f.minFeePerKm} onChange={(e) => val('minFeePerKm', e.target.value)} /></Champ>
+      </div>
     </>
   );
 }
@@ -362,8 +383,17 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
   const toast = useToast();
   const id = d.courier.identity ?? {}; const prov = d.identityProviders ?? {};
   const fichier = useRef(null);
-  const [consentement, setConsentement] = useState(null);
   const [choix, setChoix] = useState(prov.stripe_identity ? 'stripe_identity' : 'manual');
+  // Version A : Stripe d'abord, présenté seul ; les autres façons (contrôle en personne) seulement sur demande.
+  const [autresFacons, setAutresFacons] = useState(!prov.stripe_identity);
+  // Le consentement biométrique (texte et version courante), coché sur l'écran même (version B, 2026-10-22).
+  const [consentement, setConsentement] = useState(null);
+  const [accord, setAccord] = useState(false);
+  const [texteOuvert, setTexteOuvert] = useState(false);
+  useEffect(() => {
+    if (!prov.stripe_identity || d.biometricConsent) return;
+    api('/couriers/me/consents', { token }).then((liste) => setConsentement((Array.isArray(liste) ? liste : []).find((x) => x.kind === 'biometric_identity') || null)).catch(() => {});
+  }, [prov.stripe_identity, d.biometricConsent, token]);
   const [autreMoyen, setAutreMoyen] = useState(false);
   // Une pièce refusée par l'équipe ne compte pas : le livreur lit le motif et en dépose une autre.
   const pieces = (d.documents ?? []).filter((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType) && !x.rejectedReason);
@@ -374,8 +404,8 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
         const r = await api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'stripe_identity' } });
         if (r.url) { await allerAuPaiement(r.url, { retour: '/driver/onboarding' }); return null; }
       } catch (e) {
-        // B1 : le selfie exige un consentement biométrique séparé — on l'affiche au lieu de l'erreur.
-        if (e.code === 'CONSENTEMENT_BIOMETRIQUE_REQUIS') { setConsentement(e.data?.consent || null); return null; }
+        // Consentement retiré ou nouvelle version du texte entre-temps : la case réapparaît, avec le texte reçu.
+        if (e.code === 'CONSENTEMENT_BIOMETRIQUE_REQUIS') { if (e.data?.consent) setConsentement(e.data.consent); setAccord(false); return null; }
         // Déjà vérifiée entre-temps (webhook) : rien à relancer, le dossier relu le montre (audit du 19/10, courier-3).
         if (e.code === 'IDENTITE_DEJA_VERIFIEE') return null;
         throw e;
@@ -427,12 +457,51 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
       </>
     );
   }
-  const actions = { stripe_identity: [stripe, id.status === 'pending' && id.provider === 'stripe_identity' ? t('courierOnboarding.identityResume') : t('courierOnboarding.identityStart')], manual: [manuel, t('courierOnboarding.manualUpload')], in_person: [() => action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'in_person' } }), t('courierOnboarding.inPersonRequested')), t('courierOnboarding.inPersonRequest')] };
+  /* LA PIÈCE ET LE SELFIE CHEZ STRIPE (version B, 2026-10-22 : sans selfie, une carte trouvée ou prêtée suffisait à s'inscrire).
+   * Ce que Fairide en reçoit, le selfie comparé par Stripe, et le consentement biométrique en une case sur l'écran même (RGPD
+   * art. 9 : explicite, et le texte entier à un toucher) — plus de fenêtre à part. Qui refuse : « Je préfère sans selfie »,
+   * photo de la pièce et un selfie que l'équipe regarde (plus jamais de rendez-vous). */
+  if (!autresFacons && !id.rejectedReason) {
+    const dejaConsenti = !!d.biometricConsent;
+    return (
+      <>
+        <Fait icone="document" titre={t('appli.exRecoit')} sous={t('appli.exRecoitS')} />
+        <Fait icone="bouclier" titre={t('appli.exSelfie')} sous={t('appli.exSelfieS')} />
+        {!dejaConsenti && consentement && (
+          <label className="bv-case-ligne">
+            <input type="checkbox" checked={accord} onChange={(e) => setAccord(e.target.checked)} />
+            <span>{t('appli.exConsent')} <button type="button" className="lien-bouton" onClick={(e) => { e.preventDefault(); setTexteOuvert(true); }}>{t('appli.exConsentLire')}</button></span>
+          </label>
+        )}
+        {texteOuvert && consentement && (
+          <SousEcran titre={consentement.title} onFermer={() => setTexteOuvert(false)}>
+            {/* Texte rendu tel quel : c'est sa version exacte (et son empreinte) qui est enregistrée. */}
+            <div className="bv-texte-legal">{consentement.text}</div>
+          </SousEcran>
+        )}
+        {id.status === 'failed' && <p className="field-error" role="alert">{t('courierOnboarding.identityFailed')}{ERREURS_IDENTITE.includes(id.error) && <> {t(`courierOnboarding.identityError_${id.error}`)}</>}</p>}
+        {retrait}
+        <div className="bv-grandit" />
+        <button type="button" className="bv-btn btn-gold" disabled={busy || (!dejaConsenti && !accord)} onClick={async () => {
+          // La case cochée enregistre le consentement dans sa version affichée, puis Stripe s'ouvre.
+          if (!dejaConsenti) {
+            const ok = await action(() => api('/couriers/me/consents', { method: 'POST', token, body: { kind: 'biometric_identity', version: consentement.version, accepted: true } }));
+            if (!ok) return;
+          }
+          stripe();
+        }}>{busy ? t('common.loading') : id.status === 'pending' && id.provider === 'stripe_identity' ? t('courierOnboarding.identityResume') : t('appli.exVerifier')}</button>
+        <button type="button" className="bv-lien" onClick={() => { setAutresFacons(true); setChoix('manual'); }}>{t('appli.exSansBiometrie')}</button>
+      </>
+    );
+  }
+  // Stripe choisi ici : retour à l'écran de la pièce, où se coche le consentement (jamais Stripe sans la case).
+  const actions = { stripe_identity: [() => { setAutresFacons(false); setChoix('stripe_identity'); }, id.status === 'pending' && id.provider === 'stripe_identity' ? t('courierOnboarding.identityResume') : t('courierOnboarding.identityStart')], manual: [manuel, t('courierOnboarding.manualUpload')], in_person: [() => action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'in_person' } }), t('courierOnboarding.inPersonRequested')), t('courierOnboarding.inPersonRequest')] };
   return (
     <>
       {[['stripe_identity', 'document', 'stripeIdentityHelp'], ['manual', 'apercu', 'manualHelp'], ['in_person', 'personnes', 'inPersonHelp']]
-        // Stripe d'abord (fondateur, 19/10/2026) : le dépôt d'une photo seulement quand Stripe Identity est coupé.
-        .filter(([p]) => (p === 'manual' ? !prov.stripe_identity : prov[p]))
+        // Les façons ouvertes par le serveur : Stripe, et sans biométrie la pièce + un selfie regardés par l'équipe. Plus de
+        // contrôle en personne depuis le 2026-10-22 (le serveur ne le propose plus : in_person false).
+        .filter(([p]) => prov[p])
         .map(([p, icone, aide]) => <Option key={p} on={choix === p} icone={icone} titre={t(`courierOnboarding.provider_${p}`)} sous={t(`courierOnboarding.${aide}`)} onClick={() => setChoix(p)} />)}
       {refusee && <p className="field-error" role="alert">{t('courierOnboarding.identityRejected', { reason: refusee.rejectedReason })}</p>}
       {/* Identité refusée par l'équipe : son motif plutôt que l'échec générique (audit du 19/10, admin-43). */}
@@ -444,9 +513,6 @@ function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
       <div className="bv-grandit" />
       <button type="button" className="bv-btn btn-gold" disabled={busy} onClick={actions[choix][0]}>{busy ? t('common.loading') : actions[choix][1]}</button>
       <button type="button" className="bv-lien" onClick={onSuivant}>{t('appli.pasMaintenant')}</button>
-      <ConsentementBiometrique consent={consentement} token={token} onFermer={() => setConsentement(null)}
-        onAccepte={() => { setConsentement(null); stripe(); }}
-        onManuel={() => { setConsentement(null); if (prov.stripe_identity) { setChoix('in_person'); actions.in_person[0](); } else { setChoix('manual'); manuel(); } }} />
     </>
   );
 }
@@ -580,48 +646,13 @@ function EcranPaiement({ t, token, busy, actif, onSuivant }) {
   );
 }
 
-// Le tarif minimum (par course et par km) : facultatif, enregistré seulement s'il a changé (comme TarifMinimum).
-function EcranTarif({ c, t, token, busy, action, onSuivant }) {
-  const depart = [c.minFeeCents, c.minFeePerKmCents].map((v) => (v != null ? (v / 100).toFixed(2) : ''));
-  const [valeur, setValeur] = useState(depart[0]);
-  const [parKm, setParKm] = useState(depart[1]);
-  const centimes = (v) => { const b = String(v).replace(',', '.').trim(); return b === '' ? null : Math.round(Number(b) * 100); };
-  const invalide = [valeur, parKm].some((v) => v !== '' && !(Number(String(v).replace(',', '.')) >= 0));
-  async function suite() {
-    if (valeur === depart[0] && parKm === depart[1]) { onSuivant(); return; }
-    const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: { minFeeCents: centimes(valeur), minFeePerKmCents: centimes(parKm) } }), t('conformite.minFeeSaved'));
-    if (ok) onSuivant();
-  }
-  return (
-    <>
-      <div className="bv-rangee bv-rangee-moitie">
-        <Champ id="dos-min" label={t('conformite.minFeeLabel')}><input id="dos-min" type="number" min="0" max="100" step="0.10" inputMode="decimal" value={valeur} onChange={(e) => setValeur(e.target.value)} /></Champ>
-        <Champ id="dos-min-km" label={t('conformite.minFeePerKmLabel')}><input id="dos-min-km" type="number" min="0" max="10" step="0.05" inputMode="decimal" value={parKm} onChange={(e) => setParKm(e.target.value)} /></Champ>
-      </div>
-      <div className="bv-grandit" />
-      <button type="button" className="bv-btn btn-teal" disabled={busy || invalide} onClick={suite}>{busy ? t('common.loading') : (valeur || parKm) ? t('appli.continuer') : t('appli.dosSansMinimum')}</button>
-    </>
-  );
-}
-
-// L'envoi : ce qui manque encore, chaque ligne ramène à son écran ; sinon « Envoyer mon dossier ».
-function EcranEnvoi({ d, t, busy, manques: tousManques, statusType, onAller, onEnvoyer }) {
+// Ce qui manque encore, après la dernière case : chaque ligne ramène à son écran. Pas de bouton d'envoi : le serveur envoie
+// le dossier dès qu'il est complet (hors numéro d'entreprise, qui peut arriver après, MANQUES_APRES_ENVOI).
+function EcranManques({ d, t, manques: tousManques, statusType, onAller }) {
   const infos = (d.missing ?? []).filter((m) => MANQUES_INFORMATIFS.includes(m));
-  // Le numéro d'entreprise peut arriver après l'envoi (MANQUES_APRES_ENVOI) : il ne retient pas le bouton.
   const manques = tousManques.filter((m) => !MANQUES_APRES_ENVOI.includes(m));
-  const entrepriseEnAttente = tousManques.some((m) => MANQUES_APRES_ENVOI.includes(m));
-  if (!manques.length) {
-    return (
-      <>
-        <p className="bv-sous">{t('courierOnboarding.submitReady')}</p>
-        {entrepriseEnAttente && <p className="bv-aide">{t('courierOnboarding.bceLater')}</p>}
-        {infos.map((m) => <p key={m} className="bv-aide">{t(`courierOnboarding.missing_${m}`)}</p>)}
-        <div className="bv-grandit" />
-        <button type="button" className="bv-btn btn-gold" disabled={busy} onClick={onEnvoyer}>{busy ? t('common.loading') : t('courierOnboarding.submit')}</button>
-      </>
-    );
-  }
-  // Quatre lignes au plus (un dossier tout neuf en compte une douzaine) ; le bouton mène au premier manque.
+  if (!manques.length) return <p className="bv-sous">{t('courierOnboarding.submitReady')}</p>;
+  // Quatre lignes au plus ; le bouton mène au premier manque.
   const premier = manques.map((m) => ecranDuManque(m, statusType)).find(Boolean);
   return (
     <>
@@ -641,5 +672,56 @@ function EcranEnvoi({ d, t, busy, manques: tousManques, statusType, onAller, onE
       <div className="bv-grandit" />
       {premier && <button type="button" className="bv-btn btn-gold" onClick={() => onAller(premier)}>{t('appli.dosCompleter')}</button>}
     </>
+  );
+}
+
+/* LA FIN DE L'INSCRIPTION EXPRESS (version A de maquettes/inscription-livreur/inscription-livreur.html) : Onboarding.jsx la montre au
+ * moment où le serveur envoie le dossier (routes/couriers.js › avancerDossier). Tout vert : « Tu peux rouler », validé sans
+ * attendre personne. Sinon : « Presque prêt », et seulement ce que l'équipe regarde (d.teamChecks) ou ce que Stripe vérifie
+ * encore. Chaque ligne dit d'où vient son vert. */
+export function FinExpress({ d, t, onCourses, onDossier }) {
+  const c = d.courier; const id = c.identity ?? {};
+  const valide = c.lifecycleStatus === 'approved';
+  const equipe = d.teamChecks ?? [];
+  const stripeActif = d.user?.stripeConnectStatus === 'active';
+  const age = c.birthDate ? Math.floor((Date.now() - new Date(c.birthDate)) / (365.25 * 24 * 3600 * 1000)) : null;
+  const sansNumero = (d.missing ?? []).includes('bce');
+  const prenom = id.firstName || (d.user?.name || '').trim().split(/\s+/)[0];
+  const lignes = [
+    ['bce', t('appli.exLigneBce'), equipe.includes('bce') ? 'equipe' : sansNumero ? 'attente' : 'fait',
+      equipe.includes('bce') ? t('appli.exLigneBceEquipe') : sansNumero ? t('appli.exSansNumero') : t('appli.exLigneBceOk', { name: `${id.firstName || ''} ${id.lastName || ''}`.trim() })],
+    ['piece', t('appli.exLignePiece'), equipe.includes('identite') ? 'equipe' : 'fait', equipe.includes('identite') ? t('appli.exLignePieceEquipe') : id.provider === 'stripe_identity' ? t('appli.exLignePieceStripe') : t('appli.exLignePieceManuel')],
+    ['age', t('appli.exLigneAge'), 'fait', age != null ? t('appli.exAns', { age }) : null],
+    ['droit', t('appli.exLigneDroit'), equipe.includes('titre_sejour') || equipe.includes('nationalite') ? 'equipe' : 'fait',
+      equipe.includes('titre_sejour') ? t('appli.exLigneDroitSejour') : equipe.includes('nationalite') ? t('appli.exLigneDroitNat') : t('appli.exLigneDroitEee')],
+    ['versement', t('appli.exLigneVersement'), stripeActif ? 'fait' : 'attente', stripeActif ? t('appli.exLigneVersementOk') : t('appli.exLigneVersementAttente')],
+    ['engagements', t('appli.exLigneEngagements'), 'fait', t('appli.exLigneEngagementsOk')]
+  ];
+  return (
+    <div className="ecl ecl-page ecl-dossier">
+      <section className="ecl-bandeau">
+        <div className="ecl-b-haut"><span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span></div>
+        <span className={`ecl-puce-fin${valide ? ' vert' : ''}`}>
+          <Icone nom={valide ? 'valider' : 'horloge'} taille={14} />
+          {valide ? t('appli.exPuceAuto') : equipe.length ? t('appli.exPuceEquipe', { quoi: equipe.map((k) => t(`appli.exQuoi_${k}`)).join(', ') }) : t('appli.exPuceStripe')}
+        </span>
+        <h1 className="ecl-b-titre">{valide ? t('appli.exFinVert') : t('appli.exFinPresque')}</h1>
+        <p className="ecl-b-sous">{valide ? t('appli.exFinVertS') : t('appli.exFinPresqueS')}</p>
+        <RouteVelo position={valide ? 94 : 80} depart={6} />
+      </section>
+      <div className="ecl-feuille">
+        <ul className="ecl-etapes">
+          {lignes.map(([k, titre, etat, sous]) => (
+            <li key={k}>
+              <div className="ecl-etape">
+                <span className={`ecl-rond-etape${etat === 'fait' ? ' fait' : ''}`} aria-hidden="true">{etat === 'fait' ? <Icone nom="valider" taille={14} /> : <Icone nom="horloge" taille={12} />}</span>
+                <span className="ecl-grow"><b>{titre}</b>{sous && <small>{sous}</small>}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <button type="button" className="btn-gold ecl-bouton-dossier" onClick={valide ? onCourses : onDossier}>{valide ? t('appli.exVoirCourses') : t('appli.exVoirDossier')}</button>
+      </div>
+    </div>
   );
 }

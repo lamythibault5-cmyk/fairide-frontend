@@ -34,7 +34,31 @@ components live in [src/components/conformite/](../../src/components/conformite/
   the services screen ends with one « offert pendant le lancement » note (no formulas box, no terminal). Courier screen 2
   is status + company number + vehicle only; bag and « another platform? » are in the profile's Infos step, the
   municipality comes from the address. The courier profile opens on a « Prochaine étape » card.
-  **Since 2026-10-15 (UX audit)** courier signup is three screens (account, identity, address): the company number is
+  **Express courier signup since 2026-10-22** (founder, version A of `maquettes/inscription-livreur/inscription-livreur.html`):
+  the app signup asks the account only (e-mail, name, phone, last screen + SMS code; no status, company number, vehicle or
+  address — the backend accepts a courier without them). The dossier then asks « Ton activité » (status, company number read
+  at the EU VAT register VIES, which fills legal name, seat, address and zone; the address typed only when nobody gives it;
+  school, VAT regime, nationality declared in one tap, social insurance fund), « Tes courses » (vehicle, zone, other
+  platforms, bag, minimum), non-EEA documents, the ID at **Stripe Identity, document + selfie** (version B, chosen on
+  2026-10-22 over « document only »: without the face match a found or lent ID card was enough to sign up), with the
+  biometric consent as ONE box on the identity screen (its full text one tap away; the 428 `CONSENTEMENT_BIOMETRIQUE_REQUIS`
+  stays as the server-side guard). Whoever refuses (« Je préfère sans selfie chez Stripe ») uploads an ID photo and a
+  selfie, compared by eye by the team in Admin › Livreurs (provider `manual`). **No in-person check any more** (the team
+  is two people): `fournisseursDisponibles().in_person` is false, `identity/start` refuses it, withdrawing the consent
+  moves to `manual`; old in-person dossiers are still read. Then « Pièce vérifiée » (national register number), Stripe
+  Connect, the photo, one box. No send screen: `routes/couriers.js › avancerDossier` (backend) sends a complete dossier itself and **approves it with nobody when
+  everything is green** (`validationLivreur.js`): ID verified (by Stripe, or by the team for the no-biometrics path),
+  company number active at VIES under the ID's name, nationality declared EEA/Swiss AND confirmed by an EEA/Swiss ID card or passport (the issuing country alone is not
+  enough: Belgium also issues residence cards to non-EEA people), 18+, Stripe payouts active, notices + contract accepted,
+  no decision in force. Otherwise the team gets one task listing only what to look at (`teamChecks`: `bce` — numbers
+  under the VAT franchise are not in VIES, the team checks the public BCE —, `nationalite` (confirmed with
+  `nationalityVerified`), `titre_sejour` for non-EEA until the team verified the permit and the professional card or
+  granted the exemption, CPS 175/1, `identite` for the ID photo + selfie). Admin › Livreurs shows them (« À regarder »
+  column, filter and counter; a block at the top of each dossier with one button per point: open the public BCE,
+  « Numéro confirmé », « Nationalité confirmée », « Voir les documents »); the team's last gesture validates the dossier at
+  once (`validated: true` in the answer). The profile photo is looked at after the fact (task, and the block says so). The app shows « Tu peux rouler » / « Presque prêt » (`FinExpress`). The website keeps its six steps with the
+  same rules. The random shift selfie is unchanged (compared by eye with the profile photo).
+  **From 2026-10-15 to 2026-10-22 (UX audit)** courier signup was three screens (account, identity, address): the company number is
   optional there (missing item `bce`; since 2026-10-18 the dossier can be SENT without it and the team cannot APPROVE it
   without it: `MANQUES_APRES_ENVOI`), there is no ID / selfie step (the
   dossier's identity step does it), and no location prompt (PositionRequise asks above the job list). The selfie document

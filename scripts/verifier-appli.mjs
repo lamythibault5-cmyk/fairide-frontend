@@ -185,10 +185,6 @@ async function ouvrir(navigateur, base, { profil, appli = true, consentement = '
     if (url.origin === origine) return route.continue();
     if (url.pathname.includes('/api/')) {
       const chemin = url.pathname.replace(/^.*\/api/, '');
-      // Le serveur exige le consentement biométrique avant Stripe Identity (backend routes/couriers.js, 428).
-      if (chemin === '/couriers/me/identity/start' && identiteStripe === 'a-demander') {
-        return route.fulfill({ status: 428, contentType: 'application/json', body: JSON.stringify({ error: 'Accepte d\'abord la vérification biométrique, ou choisis la vérification manuelle.', code: 'CONSENTEMENT_BIOMETRIQUE_REQUIS', consent: { kind: 'biometric_identity', title: 'Vérification biométrique', text: 'Texte du consentement.', version: 1 } }) });
-      }
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(simuler(chemin, route.request().method(), profil)) });
     }
     return route.abort(); // images, cartes, polices externes : inutiles ici
@@ -250,10 +246,10 @@ try {
     }
     await ctx.close();
   }
-  // LES FENÊTRES OUVERTES DEPUIS UN ÉCRAN PLEIN (2026-10-21) : dans le dossier livreur (EcranPlein), « Vérifier mon identité »
-  // ouvrait le consentement biométrique SOUS le dossier, invisible. On le touche, puis « Retirer mon consentement
-  // biométrique » (ConfirmDialog), et la fenêtre doit être visible ET au-dessus de tout : le point au centre de sa boîte
-  // appartient à la boîte (elementFromPoint), pas au dossier.
+  // LES FENÊTRES OUVERTES DEPUIS UN ÉCRAN PLEIN (2026-10-21) : dans le dossier livreur (EcranPlein), une fenêtre s'ouvrait SOUS
+  // le dossier, invisible. « Retirer mon consentement biométrique » (ConfirmDialog, pour qui l'a donné avant le 2026-10-22) doit
+  // être visible ET au-dessus de tout : le point au centre de sa boîte appartient à la boîte (elementFromPoint), pas au dossier.
+  // Le consentement à demander avant Stripe n'existe plus (inscription express : la pièce seule, sans selfie).
   {
     const dessus = (page, nom) => page.evaluate((nom) => {
       const boite = [...document.querySelectorAll('.modal-overlay .modal-box')].filter((el) => el.getClientRects().length > 0).pop();
@@ -263,7 +259,7 @@ try {
       const y = Math.max(0, r.top) + Math.min(r.height, window.innerHeight - Math.max(0, r.top)) / 2;
       return boite.contains(document.elementFromPoint(x, y)) ? [] : [`${nom} : fenêtre cachée sous l'écran plein`];
     }, nom);
-    for (const [etat, nom, bouton] of [['a-demander', 'consentement biométrique', 'Vérifier mon identité'], ['consenti', 'retrait du consentement', 'Retirer mon consentement biométrique']]) {
+    for (const [etat, nom, bouton] of [['consenti', 'retrait du consentement', 'Retirer mon consentement biométrique']]) {
       identiteStripe = etat;
       const { ctx, page } = await ouvrir(navigateur, base, { profil: 'driver' });
       await page.goto(`${base}/driver/onboarding`);

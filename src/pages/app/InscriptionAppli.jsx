@@ -11,9 +11,9 @@ import PasswordInput from '../../components/PasswordInput';
 import EmailDomainChips from '../../components/EmailDomainChips';
 import AddressSearch from '../../components/AddressSearch';
 import EngagementsInscription from '../../components/commerce/EngagementsInscription';
-import { RESTAURANT_TYPES, restaurantTypeLabel, COMMUNES } from '../../menuCategories';
+import { RESTAURANT_TYPES, restaurantTypeLabel } from '../../menuCategories';
 import { DAY_ORDER, dayLabel } from '../../openingHours';
-import { bceValide, raisonBce, codePostalValide, formaterAnneeAcademique } from '../../validation';
+import { bceValide, raisonBce, codePostalValide } from '../../validation';
 import useDecompte, { DELAI_RENVOI_S } from '../../hooks/useDecompte';
 import { lireBienvenue, lireCodeEnAttente, ecrireCodeEnAttente } from '../../bienvenue';
 import { attendrePage } from '../../routePrefetch';
@@ -63,17 +63,16 @@ function oublierBrouillon() {
 
 const ETAPES = {
   client: ['email', 'nom', 'tel', 'adresse', 'fin'],
-  // 'etudes' n'existe que pour l'étudiant-indépendant (voir etapes plus bas).
-  driver: ['email', 'nom', 'tel', 'statut', 'etudes', 'bce', 'vehicule', 'adresse', 'fin'],
+  // Inscription express (2026-10-22, version A de maquettes/inscription-livreur) : le compte seulement. Statut, numéro d'entreprise,
+  // véhicule et adresse se donnent dans le dossier (DossierAppli.jsx, « Ton activité », « Tes courses »), une fois, pas deux.
+  driver: ['email', 'nom', 'tel', 'fin'],
   restaurant: ['email', 'nom', 'tel', 'commerce', 'type', 'entreprise', 'horaires', 'services', 'adresse', 'fin']
 };
 // Erreur renvoyée par le serveur sur un champ → l'écran qui le porte.
 const ETAPE_DU_CHAMP = {
-  email: 'email', password: 'email', firstName: 'nom', lastName: 'nom', phone: 'tel', courierStatus: 'statut', vehicleType: 'vehicule',
-  schoolName: 'etudes', academicYear: 'etudes', addressStreet: 'adresse', addressNumber: 'adresse', addressPostalCode: 'adresse', addressCity: 'adresse',
+  email: 'email', password: 'email', firstName: 'nom', lastName: 'nom', phone: 'tel', addressStreet: 'adresse', addressNumber: 'adresse', addressPostalCode: 'adresse', addressCity: 'adresse',
   legalName: 'entreprise', vatNumber: 'entreprise', responsibleName: 'entreprise', cuisine: 'type'
 };
-const STATUTS = [['independent', 'document'], ['student_independent', 'guide']];
 const MDP_FORME = (v) => v.length >= 6 && /[A-Z]/.test(v) && /[a-z]/.test(v);
 const sansAccents = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
@@ -131,14 +130,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [addressNumber, setAddressNumber] = useState('');
   const [addressPostalCode, setAddressPostalCode] = useState(role === 'client' ? bienvenue.codePostal || '' : '');
   const [addressCity, setAddressCity] = useState(role === 'client' ? bienvenue.commune || '' : '');
-  // Livreur
-  const [courierStatus, setCourierStatus] = useState('');
-  const [schoolName, setSchoolName] = useState('');
-  const [academicYear, setAcademicYear] = useState('');
   const [companyNumber, setCompanyNumber] = useState('');
   const [verifSociete, setVerifSociete] = useState(null); // réponse VIES affichée sous le numéro du commerce (shop-2)
-  const [vehicleType, setVehicleType] = useState('');
-  const [courierOptions, setCourierOptions] = useState(null);
   // Commerce
   const [nomCommerce, setNomCommerce] = useState('');
   const [restoPhone, setRestoPhone] = useState('');
@@ -201,7 +194,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const champsBrouillon = {
     index: [index, setIndex], email: [email, setEmail], firstName: [firstName, setFirstName], lastName: [lastName, setLastName], phone: [phone, setPhone],
     addressStreet: [addressStreet, setAddressStreet], addressNumber: [addressNumber, setAddressNumber], addressPostalCode: [addressPostalCode, setAddressPostalCode], addressCity: [addressCity, setAddressCity],
-    courierStatus: [courierStatus, setCourierStatus], schoolName: [schoolName, setSchoolName], academicYear: [academicYear, setAcademicYear], companyNumber: [companyNumber, setCompanyNumber], vehicleType: [vehicleType, setVehicleType],
+    companyNumber: [companyNumber, setCompanyNumber],
     nomCommerce: [nomCommerce, setNomCommerce], restoPhone: [restoPhone, setRestoPhone], cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine],
     legalName: [legalName, setLegalName], vatNumber: [vatNumber, setVatNumber], responsable: [responsable, setResponsable], jours: [jours, setJours], creneaux: [creneaux, setCreneaux], services: [services, setServices],
     referralCode: [referralCode, setReferralCode], referralOuvert: [referralOuvert, setReferralOuvert]
@@ -230,8 +223,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   // Compte créé (le code attendu prend le relais, bienvenue.js) : le brouillon n'a plus rien à reprendre.
   useEffect(() => { if (enAttente) oublierBrouillon(); }, [enAttente]);
 
-  const etapes = useMemo(() => ETAPES[role].filter((e) => !(e === 'email' && fed) && !(e === 'nom' && nomConnu)
-    && !(e === 'etudes' && courierStatus !== 'student_independent')), [role, fed, nomConnu, courierStatus]);
+  const etapes = useMemo(() => ETAPES[role].filter((e) => !(e === 'email' && fed) && !(e === 'nom' && nomConnu)), [role, fed, nomConnu]);
   const etape = enAttente ? (changerNumero ? 'numero' : 'code') : etapes[Math.min(index, etapes.length - 1)];
   const derniere = index >= etapes.length - 1;
   const progression = enAttente ? 1 : (index + 1) / (etapes.length + 1);
@@ -240,7 +232,6 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
 
   useEffect(() => {
     if (role === 'client') api('/auth/terms/current').then((r) => setVersionCgu(r.version)).catch(() => {});
-    if (role === 'driver') api('/couriers/options').then(setCourierOptions).catch(() => {});
   }, [role]);
   // Numéro d'entreprise du commerce : la BCE donne la raison sociale et la TVA (même appel qu'Auth.jsx).
   useEffect(() => {
@@ -296,15 +287,6 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     }
     if (cle === 'horaires' && (!jours.length || creneaux.some((c) => !c.open || !c.close))) e.hours = t('auth.errHours');
     if (cle === 'services' && !services.delivery && !services.pickup) e.services = t('auth.errServices');
-    if (cle === 'statut' && !courierStatus) e.courierStatus = t('auth.errCourierStatus');
-    if (cle === 'etudes') {
-      if (schoolName.trim().length < 2) e.schoolName = requis;
-      if (!academicYear.trim()) e.academicYear = requis;
-      else if (!/^\d{4}(\s*[-/–]\s*\d{2,4})?$/.test(academicYear.trim())) e.academicYear = t('auth.errAcademicYear');
-    }
-    // Facultatif pour un livreur (audit UX du 15/10/2026) : vérifié seulement s'il est donné.
-    if (cle === 'bce' && companyNumber.trim() && !bceValide(companyNumber)) e.companyNumber = messageBce();
-    if (cle === 'vehicule' && !vehicleType) e.vehicleType = t('auth.errVehicle');
     if (cle === 'adresse') {
       if (!addressStreet.trim()) e.addressStreet = requis;
       if (!addressNumber.trim()) e.addressNumber = requis;
@@ -415,11 +397,6 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     const chiffres = companyNumber.replace(/\D/g, '');
     return chiffres.length === 10 ? `BE${chiffres}` : '';
   }
-  function communeDeLAdresse() {
-    const trouvee = COMMUNES.find((c) => c.toLowerCase() === addressCity.trim().toLowerCase());
-    return trouvee ? [trouvee] : [];
-  }
-
   async function creerCompte() {
     const extra = {
       phone: phone.trim(),
@@ -427,11 +404,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       ...(role === 'restaurant' ? {
         legalName: legalName.trim(), companyNumber: companyNumber.trim(), vatNumber: tva(), responsibleName: nomResponsable, cuisine: cuisineFinale,
         business: commerce()
-      } : { addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim() }),
-      ...(role === 'driver' ? {
-        companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType,
-        otherPlatforms: [], otherPlatformNote: '', preferredZones: communeDeLAdresse()
-      } : {}),
+      } : role === 'client' ? { addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim() } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
       ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {}),
       // Apple / Google : le prénom et le nom de l'écran « nom » (ou ceux du fournisseur, préremplis) font foi. Avant, le
@@ -482,7 +455,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
         const MESSAGES = { EMAIL_TAKEN: 'auth.errEmailTaken', EMAIL_INVALID: 'auth.errEmailInvalid', EMAIL_RESERVED: 'auth.errEmailReserved', PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid' };
         allerA(champ === 'phone' ? 'tel' : 'email', { [champ]: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
       } else if (champ === 'companyNumber') {
-        allerA(role === 'restaurant' ? 'entreprise' : 'bce', { companyNumber: err.data?.detail || err.message });
+        allerA('entreprise', { companyNumber: err.data?.detail || err.message });
       } else if (ETAPE_DU_CHAMP[champ]) {
         allerA(ETAPE_DU_CHAMP[champ], { [champ]: err.data?.detail || err.message });
       } else {
@@ -739,64 +712,9 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
         </>
       );
       break;
-    case 'statut':
-      entete = titre(t('auth.courierStatusTitle'), t('appli.insStatutSous'));
-      contenu = (
-        <>
-          {STATUTS.map(([st, icone]) => (
-            <Option key={st} on={courierStatus === st} icone={icone} titre={t(`auth.courierStatus_${st}`)} sous={t(`appli.insStatut_${st}`)} onClick={() => setCourierStatus(st)} />
-          ))}
-          {erreurs.courierStatus && <p className="field-error" role="alert">{erreurs.courierStatus}</p>}
-        </>
-      );
-      break;
-    case 'etudes':
-      entete = titre(t('appli.insEtudesTitre'));
-      contenu = (
-        <>
-          <Champ id="bv-i-ecole" label={t('auth.schoolName')} erreur={erreurs.schoolName}>
-            <input id="bv-i-ecole" autoComplete="organization" className={erreurs.schoolName ? 'input-invalid' : undefined} value={schoolName}
-              onChange={(e) => setSchoolName(e.target.value)} placeholder={t('auth.schoolNamePlaceholder')} />
-          </Champ>
-          <Champ id="bv-i-annee" label={t('auth.academicYear')} erreur={erreurs.academicYear}>
-            <input id="bv-i-annee" inputMode="numeric" className={erreurs.academicYear ? 'input-invalid' : undefined} value={academicYear}
-              onChange={(e) => setAcademicYear(formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" />
-          </Champ>
-        </>
-      );
-      break;
-    case 'bce':
-      // Facultatif : sans numéro, le bouton dit « plus tard » — le dossier le demandera avant la première course.
-      if (!companyNumber.trim()) bouton = t('appli.insPlusTard');
-      entete = titre(t('auth.companyNumberDriver'), t('auth.companyNumberDriverHelp'));
-      contenu = (
-        <>
-          <Champ id="bv-i-bce-lv" label={t('auth.companyNumberDriver')} labelMasque erreur={erreurs.companyNumber}>
-            <input id="bv-i-bce-lv" inputMode="numeric" className={erreurs.companyNumber ? 'input-invalid' : undefined} value={companyNumber}
-              onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
-          </Champ>
-        </>
-      );
-      break;
-    case 'vehicule': {
-      const km = courierOptions?.bikeMaxKm || 4;
-      entete = titre(t('auth.vehicleTitle'));
-      contenu = (
-        <>
-          <div className="bv-grille">
-            {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
-              <Option key={v} on={vehicleType === v} titre={t(`courierOnboarding.vehicle_${v}`)} onClick={() => setVehicleType(v)} />
-            ))}
-          </div>
-          {vehicleType && <p className="bv-aide" style={{ marginTop: 12 }}>{['velo', 'velo_electrique'].includes(vehicleType) ? t('auth.vehicleHelpBike', { km }) : t('auth.vehicleHelpMotor', { km })}</p>}
-          {erreurs.vehicleType && <p className="field-error" role="alert">{erreurs.vehicleType}</p>}
-        </>
-      );
-      break;
-    }
     case 'adresse':
       entete = titre(role === 'restaurant' ? t('auth.stepAddressTitleRestaurant') : role === 'client' ? t('appli.insAdresseClient') : t('auth.stepAddressTitle'),
-        role === 'client' ? t('auth.stepAddressSubClient') : role === 'driver' ? t('auth.stepAddressSubDriver') : null);
+        role === 'client' ? t('auth.stepAddressSubClient') : null);
       contenu = (
         <>
           <div className="bv-champ">
