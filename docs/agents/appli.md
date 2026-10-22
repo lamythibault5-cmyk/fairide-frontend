@@ -68,7 +68,9 @@ privacy policy (CONF-2026-10-16) says so. On the website nothing changes: Sentry
 (a portal into `<body>` — inside the shell, `.page-fade` broke `position: fixed`; a Modale / ConfirmDialog opened from inside it
 stacks above it through one rule, `.bv-plein ~ .modal-overlay` in styles.css, checked by `check:app`): a business's « Envoyer ma carte »
 ([EnvoiCarteAppli](../../src/components/commerce/EnvoiCarteAppli.jsx)), the courier's draft dossier
-([DossierAppli](../../src/pages/driver/DossierAppli.jsx), one topic or one document per screen; rules shared with Onboarding.jsx in
+([DossierAppli](../../src/pages/driver/DossierAppli.jsx), one topic or one document per screen — since 2026-10-22 the express order
+« Ton activité », « Tes courses », non-EEA documents, ID (Stripe, no selfie), « Pièce vérifiée », payouts, photo, « Mes
+engagements », then [FinExpress](../../src/pages/driver/DossierAppli.jsx) when the backend sends / approves it, see conformite.md; rules shared with Onboarding.jsx in
 [dossierCommun.js](../../src/pages/driver/dossierCommun.js)); once sent, validated or suspended the app shows
 [DossierSuivi](../../src/pages/driver/DossierSuivi.jsx) instead of the website page (2026-10-19, second design audit: band « Dossier
 envoyé » / « C'est bon, tu peux rouler », one lime « Voir les courses », counters as white tiles, rows opening sheets; the blocks

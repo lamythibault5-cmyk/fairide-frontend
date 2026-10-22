@@ -45,6 +45,12 @@ export function documentsRequis(d, { statusType, motorise, horsEee }) {
 // refuser chaque enregistrement de l'écran (audit du 19/10, courier-12 ; le serveur ignore aussi un choix inchangé).
 export function corpsInfos(f, c = null) {
   const body = { ...f };
+  // L'adresse part seule, quand « Ton activité » la demande (DossierAppli.jsx) ; le minimum, seulement s'il a changé (sinon
+  // chaque « Continuer » réécrirait la date de son dernier changement).
+  for (const k of ['addressStreet', 'addressNumber', 'addressPostalCode', 'addressCity', 'minFee', 'minFeePerKm']) delete body[k];
+  const centimes = (v) => { const b = String(v ?? '').replace(',', '.').trim(); return b === '' ? null : Math.round(Number(b) * 100); };
+  if (f.minFee !== undefined && centimes(f.minFee) !== (c?.minFeeCents ?? null)) body.minFeeCents = centimes(f.minFee);
+  if (f.minFeePerKm !== undefined && centimes(f.minFeePerKm) !== (c?.minFeePerKmCents ?? null)) body.minFeePerKmCents = centimes(f.minFeePerKm);
   for (const k of ['zone', 'birthDate', 'vehicleType']) if (!body[k]) delete body[k];
   if (!body.nationalNumber) delete body.nationalNumber;
   if (!body.bagOption || (c && !['none', 'due'].includes(c.bag?.depositStatus || 'none'))) delete body.bagOption;
@@ -64,6 +70,9 @@ export function infosDepuisDossier(c, zones = []) {
     schoolName: c.student?.school ?? '', academicYear: c.student?.academicYear ?? '',
     socialInsuranceFund: c.socialInsuranceFund ?? c.student?.socialInsuranceFund ?? '',
     companyNumber: c.independent?.companyNumber ?? '', vatStatus: c.independent?.vatStatus ?? '', vatNumber: c.independent?.vatNumber ?? '', legalName: c.independent?.legalName ?? '', seatAddress: c.independent?.seatAddress ?? '',
-    nationalityGroup: c.nationalityGroup ?? ''
+    nationalityGroup: c.nationalityGroup ?? '',
+    // Inscription express (DossierAppli, « Ton activité » et « Tes courses ») : l'adresse si personne ne l'a donnée, le minimum.
+    addressStreet: '', addressNumber: '', addressPostalCode: '', addressCity: '',
+    minFee: c.minFeeCents != null ? (c.minFeeCents / 100).toFixed(2) : '', minFeePerKm: c.minFeePerKmCents != null ? (c.minFeePerKmCents / 100).toFixed(2) : ''
   };
 }

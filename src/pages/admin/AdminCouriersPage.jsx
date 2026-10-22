@@ -91,6 +91,11 @@ export default function AdminCouriersPage() {
         ? <span className="pill" style={{ color: 'var(--green)' }}><Icone nom="valider" taille={14} className="icone-texte" />{' '}{tr('adminCouriers.ready')}</span>
         : <span className="small" title={(p.manques || []).filter((m) => m.niveau === 'bloquant').map((m) => m.label).join(' · ')}>{tr('adminCouriers.missingFirst', { what: bloquant?.label || '' })}</span>;
     }, sortValue: (r) => (pretDe(r)?.pret ? 0 : 1) },
+    // INSCRIPTION EXPRESS (2026-10-22) : le serveur valide seul un dossier tout vert ; sinon il dit ce que l'équipe doit regarder.
+    { key: 'aRegarder', label: tr('adminCouriers.exARegarder'), get: (r) => (r.teamChecks?.length
+      ? <span className="row" style={{ gap: 4, flexWrap: 'wrap' }}>{r.teamChecks.map((p) => <span key={p} className="pill" style={{ color: 'var(--red)' }}>{tr(`adminCouriers.exPoint_${p}`)}</span>)}</span>
+      : r.autoApprovedAt ? <span className="pill" style={{ color: 'var(--green)' }}><Icone nom="valider" taille={14} className="icone-texte" />{' '}{tr('adminCouriers.exAuto')}</span> : '-'),
+      sortValue: (r) => (r.teamChecks?.length ? 0 : 1) },
     { key: 'statusType', label: tr('adminCouriers.colStatus'), get: (r) => <>{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''}</>, sortValue: (r) => r.statusType || '' },
     { key: 'lifecycleStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{lifecycle(r.lifecycleStatus)}</span>, sortValue: (r) => r.lifecycleStatus },
     { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className="pill"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? <Icone nom="horloge" taille={16} className="icone-texte" /> : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? 1 : 0) },
@@ -98,8 +103,9 @@ export default function AdminCouriersPage() {
     { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '-'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}`, sortValue: (r) => r.zone || '' },
     { key: 'updatedAt', label: tr('adminCouriers.colUpdated'), get: (r) => fmt(r.updatedAt), sortValue: (r) => r.updatedAt }
   ];
-  const lignes = useMemo(() => sortRows(filterBySearch((data?.rows ?? []).filter((r) => (filtre === 'all' || r.lifecycleStatus === filtre) && (typeFiltre === 'all' || r.statusType === typeFiltre) && natureOk(nature, r)), rechercheTel(search), (r) => [r.name, r.email, r.zone, r.statusType, telNational(r.phone)]), colonnes, sort), [data, filtre, typeFiltre, nature, search, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lignes = useMemo(() => sortRows(filterBySearch((data?.rows ?? []).filter((r) => (filtre === 'all' || (filtre === 'a_regarder' ? r.teamChecks?.length > 0 : r.lifecycleStatus === filtre)) && (typeFiltre === 'all' || r.statusType === typeFiltre) && natureOk(nature, r)), rechercheTel(search), (r) => [r.name, r.email, r.zone, r.statusType, telNational(r.phone)]), colonnes, sort), [data, filtre, typeFiltre, nature, search, sort]); // eslint-disable-line react-hooks/exhaustive-deps
   const nbReels = useMemo(() => (data?.rows ?? []).filter((r) => estCompteReel(r)).length, [data]);
+  const nbARegarder = useMemo(() => (data?.rows ?? []).filter((r) => r.teamChecks?.length > 0).length, [data]);
   const nbSupprimes = useMemo(() => (data?.rows ?? []).filter((r) => estCompteSupprime(r)).length, [data]);
 
   function exportCsv() {
@@ -127,6 +133,10 @@ export default function AdminCouriersPage() {
             <div className="stat-grid">
               <div className="stat-card highlight"><div className="num">{(data.rows ?? []).length}</div><div className="label">{tr('adminCouriers.kpiAll')}</div></div>
               <div className="stat-card"><div className="num">{nbReels}</div><div className="label">{tr('adminCouriers.kpiReal')}</div></div>
+              {/* Ce que l'équipe a à regarder (inscription express) : un clic filtre la liste. */}
+              <button type="button" className={`stat-card${filtre === 'a_regarder' ? ' highlight' : ''}`} style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setFiltre(filtre === 'a_regarder' ? 'all' : 'a_regarder')}>
+                <div className="num" style={nbARegarder ? { color: 'var(--red)' } : undefined}>{nbARegarder}</div><div className="label">{tr('adminCouriers.exARegarder')}</div>
+              </button>
               {['pending_review', 'approved', 'suspended', 'rejected', 'draft'].map((s) => (
                 <button key={s} type="button" className={`stat-card${filtre === s ? ' highlight' : ''}`} style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setFiltre(filtre === s ? 'all' : s)}>
                   <div className="num">{data.counts?.[s] || 0}</div><div className="label">{lifecycle(s)}</div>
@@ -137,7 +147,7 @@ export default function AdminCouriersPage() {
           <div className="admin-control-panel">
             <input aria-label={tr('adminCouriers.phSearch')} placeholder={tr('adminCouriers.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
             <div className="role-pick" style={{ margin: 0 }}>
-              {['all', 'pending_review', 'approved', 'suspended', 'rejected', 'draft'].map((s) => <div key={s} className={`chip${filtre === s ? ' active' : ''}`} onClick={() => setFiltre(s)}>{s === 'all' ? tr('adminCommon.allM') : lifecycle(s)}</div>)}
+              {['all', 'a_regarder', 'pending_review', 'approved', 'suspended', 'rejected', 'draft'].map((s) => <div key={s} className={`chip${filtre === s ? ' active' : ''}`} onClick={() => setFiltre(s)}>{s === 'all' ? tr('adminCommon.allM') : s === 'a_regarder' ? tr('adminCouriers.exARegarder') : lifecycle(s)}</div>)}
             </div>
             {/* Les trois statuts légaux */}
             <div className="role-pick" style={{ margin: 0 }}>
@@ -176,6 +186,51 @@ export default function AdminCouriersPage() {
   );
 }
 
+/* « À REGARDER » (inscription express, 2026-10-22). Le serveur valide seul un dossier tout vert (routes/couriers.js ›
+ * avancerDossier) ; sinon il dit ce que l'équipe doit regarder (d.teamChecks), et seulement ça. Un bouton par point ; quand
+ * c'était le dernier, le dossier se valide aussitôt (réponse « validated ») et l'équipe le lit dans un message. Un dossier
+ * validé sans personne le dit, avec la photo de profil qui reste à regarder. */
+function ARegarder({ d, tr, token, busy, agir, onDocuments }) {
+  const c = d.courier; const id = c.identity ?? {};
+  const points = d.teamChecks ?? [];
+  const photo = (d.documents ?? []).find((x) => x.docType === 'profile_photo' && !x.rejectedReason);
+  if (!points.length && !d.autoApprovedAt) return null;
+  const verifier = (corps, ok) => agir(() => api(`/admin/couriers/${c.id}/verify`, { method: 'PATCH', token, body: corps }), ok);
+  const chiffres = String(c.independent?.companyNumber || '').replace(/\D/g, '');
+  const registre = d.companyRegistry;
+  const piece = id.documentType ? `${tr(`adminCouriers.exPiece_${id.documentType}`)}${id.documentCountry ? ` · ${id.documentCountry}` : ''}` : tr('adminCouriers.exPieceInconnue');
+  const ligne = (cle, texte, actions) => (
+    <div key={cle} className="card" style={{ padding: '10px 12px', marginBottom: 8 }}>
+      <b>{tr(`adminCouriers.exPoint_${cle}`)}</b>
+      <div className="small" style={{ margin: '2px 0 6px' }}>{texte}</div>
+      <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>{actions}</div>
+    </div>
+  );
+  return (
+    <>
+      {d.autoApprovedAt && (
+        <div className="card" style={{ padding: '10px 12px', marginBottom: 8 }}>
+          <b><Icone nom="valider" taille={16} className="icone-texte" />{' '}{tr('adminCouriers.exAutoLe', { date: fmt(d.autoApprovedAt) })}</b>
+          {photo && !photo.verifiedAt && <div className="small" style={{ margin: '2px 0 6px' }}>{tr('adminCouriers.exPhotoARegarder')}</div>}
+          {photo && !photo.verifiedAt && <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>}
+        </div>
+      )}
+      {points.length > 0 && <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCouriers.exARegarder')}</h4>}
+      {points.includes('bce') && ligne('bce',
+        tr('adminCouriers.exBceDetail', { num: c.independent?.companyNumber || '-', registre: !registre ? tr('adminCouriers.exRegistrePasLu') : registre.valid ? tr('adminCouriers.exRegistreValide', { name: registre.name }) : registre.valid === false ? tr('adminCouriers.exRegistreAbsent') : tr('adminCouriers.exRegistrePasLu'), nom: `${id.firstName || ''} ${id.lastName || ''}`.trim() || '-' }),
+        <>
+          {chiffres.length === 10 && <a className="btn-outline" href={`https://kbopub.economie.fgov.be/kbopub/toonondernemingps.html?ondernemingsnummer=${chiffres}`} target="_blank" rel="noopener noreferrer">{tr('adminCouriers.exOuvrirBce')}</a>}
+          <button className="btn-teal" disabled={busy} onClick={() => verifier({ companyVerified: true }, tr('adminCouriers.toastCompanyOk'))}>{tr('adminCouriers.exBceOk')}</button>
+        </>)}
+      {points.includes('nationalite') && ligne('nationalite',
+        tr('adminCouriers.exNatDetail', { declaree: c.nationalityGroup ? tr(`conformite.nationality_${c.nationalityGroup}`) : '-', piece }),
+        <button className="btn-teal" disabled={busy} onClick={() => verifier({ nationalityVerified: true }, tr('adminCouriers.exNatToast'))}>{tr('adminCouriers.exNatOk')}</button>)}
+      {points.includes('titre_sejour') && ligne('titre_sejour', tr('adminCouriers.exSejourDetail'), <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>)}
+      {points.includes('identite') && ligne('identite', tr('adminCouriers.exIdentiteDetail'), <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>)}
+    </>
+  );
+}
+
 function ViewTabs({ onglet, setOnglet, tr }) {
   return (
     <div className="role-pick" style={{ margin: 0 }}>
@@ -199,7 +254,8 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   const [demandeInfo, setDemandeInfo] = useState(false); // « Demander une info » (admin-70)
   const load = () => { setErreur(null); return api(`/admin/couriers/${id}`, { token }).then(setD).catch((e) => setErreur(e.message)); };
   useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
-  async function agir(fn, ok) { setBusy(true); try { await fn(); if (ok) toast(ok); await load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); } }
+  // `validated` : le geste de l'équipe était le dernier point à regarder, le serveur a validé le dossier (inscription express).
+  async function agir(fn, ok) { setBusy(true); try { const r = await fn(); if (ok) toast(ok); if (r?.validated) toast(tr('adminCouriers.exValide'), 'succes'); await load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); } }
   const statut = (x) => (x && STATUTS.includes(x) ? tr(`courierOnboarding.status_${x}`) : x || '-');
   // Validation du dossier. Le serveur refuse (409 DOSSIER_INCOMPLET) tant qu'une pièce requise ou l'identité n'est pas
   // vérifiée : on montre alors ce qui bloque et on propose de valider quand même, avec un motif obligatoire (tracé).
@@ -253,6 +309,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
     <>
       {onglet === 'dossier' && (
         <>
+          <ARegarder d={d} tr={tr} token={token} busy={busy} agir={agir} onDocuments={() => setOnglet('documents')} />
           <h4 className="drawer-section-title">{tr('adminCouriers.secStatus')}</h4>
           <DrawerRow label={tr('adminCouriers.colStatus')} value={`${statut(c.statusType)}${c.statusVerifiedAt ? ` · ${tr('adminCouriers.statusVerifiedAt')} ${fmt(c.statusVerifiedAt)}` : ` · ${tr('adminCouriers.statusNotVerified')}`}`} strong />
           <DrawerRow label={tr('adminCouriers.zoneVehicle')} value={`${c.zone || '-'} · ${c.vehicleType ? tr(`courierOnboarding.vehicle_${c.vehicleType}`) : '-'}${c.licencePlate ? ` · ${c.licencePlate}` : ''}`} />

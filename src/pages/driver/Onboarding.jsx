@@ -1,13 +1,13 @@
 import { allerAuPaiement, experienceApp } from '../../natif';
 import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
-import DossierAppli from './DossierAppli';
+import DossierAppli, { FinExpress } from './DossierAppli';
 import DossierSuivi from './DossierSuivi';
 import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer, MesCourses, PiecesSejour, ConfirmerEcole } from './dossierBlocs';
 import PageLivreur from '../../components/livreur/PageLivreur';
 import SacLivraison from '../../components/SacLivraison';
 import useRevalidation from '../../useRevalidation';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -112,6 +112,16 @@ export default function Onboarding() {
   }, [location.key]);
   // LIVE-07 (audit du 19/10) : les réponses de « Infos & documents » gardées ici, hors de l'étape (voir EtapeInfos).
   const [brouillonInfos, setBrouillonInfos] = useState(null);
+  // FIN DE L'INSCRIPTION EXPRESS (2026-10-22) : le dossier, brouillon à l'écran, vient de partir (le serveur l'envoie seul dès
+  // qu'il est complet, et le valide si tout est vert). On le montre une fois, au moment où ça arrive, avant le suivi du dossier.
+  const navigate = useNavigate();
+  const [finExpress, setFinExpress] = useState(false);
+  const cycleAvant = useRef(null);
+  useEffect(() => {
+    const cycle = d?.courier?.lifecycleStatus;
+    if (['draft', 'rejected'].includes(cycleAvant.current) && ['pending_review', 'approved'].includes(cycle)) setFinExpress(true);
+    if (cycle) cycleAvant.current = cycle;
+  }, [d?.courier?.lifecycleStatus]);
 
   // RETOUR DE STRIPE DANS L'APP (2026-10-21, vérification Stripe site / app). L'effet ci-dessus ne tourne qu'à l'ouverture :
   // dans l'app, le dossier reste ouvert pendant la vérification d'identité ou Stripe Connect (par-dessus), et le livreur
@@ -161,6 +171,10 @@ export default function Onboarding() {
     return !MANQUES_PAR_ETAPE[e].some((m) => manques.includes(m) && !MANQUES_INFORMATIFS.includes(m));
   };
   const enDossier = c.lifecycleStatus === 'draft' || c.lifecycleStatus === 'rejected';
+  // Le dossier vient de partir (le serveur l'envoie seul, et le valide si tout est vert) : la fin de l'inscription express.
+  if (experienceApp() && finExpress && ['pending_review', 'approved'].includes(c.lifecycleStatus)) {
+    return <FinExpress d={d} t={t} onCourses={() => { setFinExpress(false); navigate('/driver'); }} onDossier={() => setFinExpress(false)} />;
+  }
   const roule = valide || c.lifecycleStatus === 'suspended' || c.lifecycleStatus === 'blocked_threshold';
   if (experienceApp() && enDossier) {
     return <DossierAppli d={d} charger={charger} token={token} user={user} busy={busy} action={action} refreshUser={refreshUser} etapeDemandee={etape} />;
