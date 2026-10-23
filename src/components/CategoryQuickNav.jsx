@@ -78,9 +78,12 @@ export default function CategoryQuickNav({ categories, verre = false, pouce = fa
   const rangeeRef = useRef(null);
   const lentilleRef = useRef(null);
   const activeAvant = useRef(null);
-  // Pendant le défilement lancé par un clic, le suivi est suspendu : la barre ne s'allume pas sur chaque section
-  // traversée, elle reste sur celle qu'on a demandée (voir jumpTo).
-  const verrou = useRef(0);
+  // Après un toucher sur une section, le suivi est suspendu JUSQU'AU PROCHAIN GESTE de la personne (doigt, molette, touche),
+  // plus seulement le temps du saut. Avant (2026-10-23, app iPhone : « Mitraillette » puis retour à « Pita Turk ») : le saut
+  // pose le titre à sa marge d'ancrage (scroll-margin-top), le suivi reprenait 0,8 s plus tard avec SON seuil (bas de la
+  // barre + 8 px), et dès que l'ancrage tombait un peu plus bas que ce seuil — ou qu'une des dernières sections ne pouvait
+  // pas monter jusque-là, la page étant au bout — la section précédente se rallumait.
+  const verrou = useRef(false);
 
   useEffect(() => {
     // Scroll-spy par position plutôt que par IntersectionObserver : la section active est la DERNIÈRE
@@ -90,16 +93,26 @@ export default function CategoryQuickNav({ categories, verre = false, pouce = fa
     // propre événement "entrée" si un autre événement du même lot prend le dessus). Plus classique
     // (technique "scrollspy" standard) et plus fiable qu'un suivi par intersection.
     let ticking = false;
+    // La marge d'ancrage de chaque section (là où le saut pose son titre), lue une fois et relue au redimensionnement :
+    // une section dont le titre est à sa place d'arrivée compte comme lue, même si l'ancrage est sous le seuil mesuré.
+    let ancrages = new Map();
+    const lireAncrages = () => {
+      ancrages = new Map();
+      for (const c of categoriesRef.current) {
+        const el = document.getElementById(`menu-cat-${c.id}`);
+        if (el) ancrages.set(c.id, parseFloat(getComputedStyle(el).scrollMarginTop) || 0);
+      }
+    };
     function computeActive() {
       ticking = false;
-      if (Date.now() < verrou.current) return;
+      if (verrou.current) return;
       const bas = barreRef.current?.getBoundingClientRect().bottom;
       const seuil = (bas > 0 ? bas : SEUIL_REPLI_PX) + MARGE_SEUIL_PX;
       let current = categoriesRef.current[0]?.id;
       for (const c of categoriesRef.current) {
         const el = document.getElementById(`menu-cat-${c.id}`);
         if (!el) continue;
-        if (el.getBoundingClientRect().top <= seuil) {
+        if (el.getBoundingClientRect().top <= Math.max(seuil, (ancrages.get(c.id) || 0) + 2)) {
           current = c.id;
         } else {
           break;
@@ -112,12 +125,18 @@ export default function CategoryQuickNav({ categories, verre = false, pouce = fa
       ticking = true;
       requestAnimationFrame(computeActive);
     }
+    const onResize = () => { lireAncrages(); onScroll(); };
+    // Un geste de la personne rend la main au suivi (voir verrou).
+    const reprendre = () => { verrou.current = false; };
+    lireAncrages();
     computeActive();
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
+    window.addEventListener('resize', onResize);
+    ['touchstart', 'wheel', 'keydown'].forEach((g) => window.addEventListener(g, reprendre, { passive: true }));
     return () => {
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
+      window.removeEventListener('resize', onResize);
+      ['touchstart', 'wheel', 'keydown'].forEach((g) => window.removeEventListener(g, reprendre));
     };
   }, [categories]);
 
@@ -184,13 +203,13 @@ export default function CategoryQuickNav({ categories, verre = false, pouce = fa
   function jumpTo(id) {
     const el = document.getElementById(`menu-cat-${id}`);
     if (!el) return;
-    // La section demandée s'allume tout de suite ; le suivi reprend une fois le saut fini (voir defilerVers).
+    // La section demandée s'allume tout de suite et le reste jusqu'au prochain geste de la personne (voir verrou).
     setActive(id);
-    verrou.current = Date.now() + DUREE_SAUT_MS + 400;
+    verrou.current = true;
     // Même point d'arrivée que scrollIntoView : le haut de la section, moins sa marge d'ancrage (sous les ronds et la bande).
     const marge = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
     const cible = Math.max(0, Math.min(el.getBoundingClientRect().top + window.scrollY - marge, document.documentElement.scrollHeight - window.innerHeight));
-    defilerVers(cible, () => { verrou.current = 0; });
+    defilerVers(cible, () => {});
   }
 
   if (categories.length < 2) return null;
