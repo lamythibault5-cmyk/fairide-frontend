@@ -151,10 +151,9 @@ async function lancerNavigateur() {
   throw new Error('Ni Chrome ni Edge trouvé : installe Google Chrome pour lancer cette vérification.');
 }
 
-// theme : le choix clair / sombre déjà fait (sinon l'écran « Clair ou sombre ? » couvre les accueils) ; null = pas encore choisi.
-async function ouvrir(navigateur, base, { profil, appli = true, consentement = 'refused', theme = SOMBRE ? 'sombre' : 'clair' }) {
+async function ouvrir(navigateur, base, { profil, appli = true, consentement = 'refused' }) {
   const ctx = await navigateur.newContext({ viewport: { width: LARGEUR, height: HAUTEUR }, isMobile: true, hasTouch: true, locale: 'fr-BE' });
-  await ctx.addInitScript(({ appli, consentement, session, role, theme }) => {
+  await ctx.addInitScript(({ appli, consentement, session, role, sombre }) => {
     if (appli) {
       const original = window.matchMedia.bind(window);
       window.matchMedia = (q) => (String(q).includes('display-mode: standalone')
@@ -190,8 +189,8 @@ async function ouvrir(navigateur, base, { profil, appli = true, consentement = '
     localStorage.setItem('fairide_bienvenue', JSON.stringify({ vu: true, role: role || 'client', commune: 'Ixelles' }));
     if (consentement) { localStorage.setItem('fairide_cookie_consent', consentement); localStorage.setItem('fairide_cookie_consent_at', String(Date.now())); }
     if (session) localStorage.setItem('fairide_session', JSON.stringify(session));
-    if (theme) localStorage.setItem('fairide_theme', theme);
-  }, { appli, consentement, session: profil === 'visiteur' ? null : { token: `jeton-${profil}`, user: UTILISATEURS[profil] }, role: profil === 'visiteur' ? null : profil, theme });
+    if (sombre) localStorage.setItem('fairide_theme', 'sombre');
+  }, { appli, consentement, session: profil === 'visiteur' ? null : { token: `jeton-${profil}`, user: UTILISATEURS[profil] }, role: profil === 'visiteur' ? null : profil, sombre: SOMBRE });
   const page = await ctx.newPage();
   const origine = new URL(base).origin;
   await page.route('**/*', (route) => {
@@ -359,28 +358,6 @@ try {
       await ctx.close();
     }
     identiteStripe = null;
-  }
-  // « CLAIR OU SOMBRE ? » À L'ARRIVÉE (2026-10-23, ChoixApparenceArrivee.jsx) : sans choix enregistré, l'écran couvre
-  // l'accueil de chaque profil, tient sans défiler, « Sombre » assombrit tout l'écran, « Continuer » l'enregistre, et il ne
-  // revient pas. Examiné après « Sombre » : en --sombre, il passe aussi le contrôle des couleurs.
-  for (const [profil, accueil] of [['client', '/restaurants'], ['driver', '/driver'], ['restaurant', '/dashboard']]) {
-    const { ctx, page } = await ouvrir(navigateur, base, { profil, theme: null });
-    await page.goto(base + accueil);
-    const nom = `${accueil} (clair ou sombre ? à l'arrivée)`;
-    try {
-      await page.locator('.ap-ecran').waitFor({ timeout: 6000 });
-      await page.locator('.ap-choix').nth(1).click();
-      const r = await examiner(page, { profil, appli: true });
-      if (!(await page.evaluate(() => document.documentElement.classList.contains('sombre')))) r.problemes.push('« Sombre » n\'assombrit pas l\'écran');
-      await page.getByRole('button', { name: 'Continuer' }).click();
-      await page.waitForTimeout(400);
-      if (await page.locator('.ap-ecran').count()) r.problemes.push('l\'écran reste après « Continuer »');
-      if ((await page.evaluate(() => localStorage.getItem('fairide_theme'))) !== 'sombre') r.problemes.push('le choix n\'est pas enregistré');
-      await page.reload(); await page.waitForTimeout(1200);
-      if (await page.locator('.ap-ecran').count()) r.problemes.push('l\'écran revient après un choix');
-      resultats.push({ profil, page: nom, ...r });
-    } catch (e) { resultats.push({ profil, page: nom, problemes: [`écran absent ou parcours impossible (${e.message.split('\n')[0]})`] }); }
-    await ctx.close();
   }
   // Premier lancement sans réponse sur les rapports de panne : ni la carte cookies du site, ni un écran plein qui bloque
   // (fondateur, 2026-10-16 : la question se pose par une case à l'inscription, au moment d'une panne et dans Mon compte).

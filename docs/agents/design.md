@@ -117,12 +117,7 @@ The old names survive as aliases so ~100 call sites keep working: `--gold` = lim
 **The app's dark mode (founder, 2026-10-23, version C « Tout en nuit » of `maquettes/mode-sombre/mode-sombre.html`, from the
 dark variant of the app icon).** App only (`html.appli`); **the website stays light**. Mon compte › Apparence offers Automatique
 (default, follows the phone) / Clair / Sombre ([ChoixApparence.jsx](../../src/components/ChoixApparence.jsx)), stored on the
-device ([theme.js](../../src/theme.js), `fairide_theme`), applied before the first render as `html.sombre`. Whoever has not
-chosen yet gets « Clair ou sombre ? » once, as a full screen on their own home (client list, courier Courses, shop
-Commandes; new accounts right after sign-up, existing ones at their first opening of the updated app): two drawn previews
-of the home in each mode plus « Comme ton téléphone » (pre-selected); a tap previews it on the whole screen, « Continuer »
-saves it ([ChoixApparenceArrivee.jsx](../../src/components/ChoixApparenceArrivee.jsx), version B of
-`maquettes/choix-apparence/choix-apparence.html`; check:app covers it for the three profiles). The night `#15113A`
+device ([theme.js](../../src/theme.js), `fairide_theme`), applied before the first render as `html.sombre`. The night `#15113A`
 is the page **and** the top bands; cards `#1F1A50`, sub-areas `#2A2468`; iris stays on buttons and pills only; lime keeps its
 uses. Colours switch through tokens; [theme-sombre.css](../../src/theme-sombre.css) (imported last) redefines them under
 `html.appli.sombre` and holds the few rules tokens can't reach (glass, map tiles, white-on-band items). Four tokens exist for
