@@ -6,7 +6,8 @@
     "androidScheme": "https"
   },
   "ios": {
-    "contentInset": "automatic",
+    "contentInset": "never",
+    "allowsLinkPreview": false,
     "scheme": "Fairide",
     "backgroundColor": "#ffffff"
   },
