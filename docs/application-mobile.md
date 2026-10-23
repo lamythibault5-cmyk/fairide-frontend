@@ -38,21 +38,31 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
    `be.fairide.app` (`capacitor.config.json`, `android/app/build.gradle`).
 2. **Icônes et écran de lancement** : FAIT pour Android (`npm run app:assets` : `scripts/app-assets.mjs` dessine
    `assets/icon*.png` et `assets/splash*.png` à partir du vélo « 5a », puis `@capacitor/assets` remplit
-   `android/app/src/main/res`). Pour iOS, une fois `ios/` créé sur le Mac :
-   `npx @capacitor/assets generate --ios --iconBackgroundColor '#3B2FB5' --splashBackgroundColor '#3B2FB5'`.
+   `android/app/src/main/res`). FAIT pour iOS (22 oct. 2026) : `npm run app:assets:ios` remplit
+   `ios/App/App/Assets.xcassets` à partir des mêmes images (icône 1024 px sans transparence, exigée par Apple).
 3. **Android** : ouvrir `android/` dans Android Studio (`npm run app:android`), générer la clé de signature
    (Play App Signing conseillé), puis copier l'empreinte SHA-256 du certificat dans
    `public/.well-known/assetlinks.json` (déployer le site) — c'est ce qui fait que `https://fairide.be/…`
    s'ouvre dans l'application, retour de paiement compris.
-4. **iOS** (un Mac avec Xcode est indispensable) : `npx cap add ios`, puis dans Xcode → Signing & Capabilities :
-   *Push Notifications* et *Associated Domains* (`applinks:fairide.be`). Remplacer `TEAMID_APPLE` dans
-   `public/.well-known/apple-app-site-association` par le Team ID (déployer le site).
+4. **iOS** : le projet `ios/` existe (22 oct. 2026, `npx cap add ios`). Ses droits sont dans
+   `ios/App/App/App.entitlements` (notifications, Sign in with Apple, `applinks:fairide.be`) : Xcode les active sur
+   l'identifiant `be.fairide.app` à la première signature. iPhone et iPad (`TARGETED_DEVICE_FAMILY = "1,2"`, Owen
+   23 oct. 2026 : l'app doit marcher sur tablette, iPad comme Android) ; l'iPad tourne dans les quatre sens et partage
+   l'écran (Split View), la mise en page suit la largeur comme sur le site. iOS 15 minimum (Firebase). Construire et envoyer :
+   « Sortir une version iPhone » plus bas. Team ID Apple `44V9JV2JQN` (23 oct. 2026), déjà dans
+   `public/.well-known/apple-app-site-association` : `https://fairide.be/…` s'ouvre dans l'app une fois le site déployé.
 5. **Notifications** : projet Firebase → télécharger `google-services.json` dans `android/app/` ;
-   pour iOS, déposer la clé APNs (.p8) dans Firebase → Cloud Messaging. Créer un compte de service
+   pour iOS, ajouter une app iOS `be.fairide.app` au même projet Firebase, télécharger son
+   `GoogleService-Info.plist` dans `ios/App/App/` (hors git, comme `google-services.json` ; une étape du projet Xcode
+   le copie dans l'app), et déposer la clé APNs (.p8, Apple Developer → Keys) dans Firebase → Cloud Messaging.
+   **Pourquoi Firebase est dans l'app iPhone** : iOS remet au greffon un jeton APNs, que FCM refuse
+   (`INVALID_ARGUMENT`, et le serveur l'efface comme mort : aucune notification, sans erreur visible).
+   `AppDelegate.swift` confie le jeton APNs à Firebase et donne le jeton Firebase au greffon. Sans le fichier, l'app
+   démarre mais ne reçoit pas de notifications (Xcode l'écrit en avertissement). Créer un compte de service
    (Paramètres du projet → Comptes de service → générer une clé JSON) et coller le JSON dans la variable
    Railway `FCM_SERVICE_ACCOUNT_JSON`. Sans cette variable, `/api/push/key` répond `native: false` et
    l'application ne propose pas le bouton.
-6. **Fiches de magasin** : captures d'écran (téléphone 6,7″ et 6,5″ pour Apple, téléphone + tablette 7″ pour Google),
+6. **Fiches de magasin** : captures d'écran (iPhone 6,9″, 1320 × 2868, et iPad 13″, 2064 × 2752, pour Apple ; téléphone + tablette 7″ pour Google),
    politique de confidentialité = `https://fairide.be/confidentialite`, catégorie « Nourriture et boissons ».
    Apple demande un compte de démonstration : utiliser un commerce de simulation (Admin › Simulation).
 7. **Stripe** : rien à changer — le paiement reste sur checkout.stripe.com dans le navigateur intégré, ce
@@ -64,22 +74,27 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
      dans le code : l'app demande un jeton pour l'ID **web**, que le serveur vérifie déjà.
    - **iOS** : créer un ID client de type *iOS* (bundle `be.fairide.app`), le mettre dans `VITE_GOOGLE_IOS_CLIENT_ID`
      (Vercel et `.env.local` avant `npm run app:sync`), et ajouter son « iOS URL scheme » (l'ID à l'envers,
-     `com.googleusercontent.apps.…`) dans Xcode → Info → URL Types.
-9. **« Continuer avec Apple »** (iPhone) : dans Xcode → Signing & Capabilities, ajouter *Sign in with Apple*. Côté
+     `com.googleusercontent.apps.…`) dans Xcode → Info → URL Types. FAIT le 23 oct. 2026 : client iOS « Fairide iOS »
+     `236237065648-39n11a8pc53v4eavik8ek3t3602dhqv9.apps.googleusercontent.com` (projet Google Cloud du client web, pas
+     celui de Firebase), schéma déjà dans `ios/App/App/Info.plist` (`CFBundleURLTypes`). Le plist proposé par Google ne sert pas.
+9. **« Continuer avec Apple »** (iPhone) : *Sign in with Apple* est déclaré dans `App.entitlements`. Côté
    serveur rien à configurer (le jeton est vérifié avec les clés publiques d'Apple ; `APPLE_CLIENT_IDS` ne sert que si
    l'identifiant de l'app change). **Relais e-mail** : une personne peut masquer son adresse
    (`…@privaterelay.appleid.com`) ; nos e-mails n'y arrivent que si le domaine d'envoi est déclaré dans le compte
    Apple Developer → Services → *Sign in with Apple for Email Communication* (domaine `fairide.be` + l'adresse
    d'expédition de Resend). **Reste à faire** : à la suppression d'un compte lié à Apple, Apple demande de révoquer
    le jeton (`appleid.apple.com/auth/revoke`) — il faut pour cela une clé `.p8` *Sign in with Apple*, pas encore créée.
-10. **Position, texte des permissions iOS** : dans `ios/App/App/Info.plist`, `NSLocationWhenInUseUsageDescription`
-    (« Pour te montrer les commerces qui livrent jusqu'à chez toi, et aux livreurs les courses proches. »). Sans elle,
-    iOS refuse la demande et Apple refuse l'application. Android : déjà déclaré dans `AndroidManifest.xml`.
+10. **Textes des permissions iOS** : FAIT dans `ios/App/App/Info.plist` : `NSLocationWhenInUseUsageDescription`
+    (« Pour te montrer les commerces qui livrent jusqu'à chez toi, et aux livreurs les courses proches. ») et
+    `NSCameraUsageDescription` (photo de la commande prête, documents du dossier livreur : les champs `capture`).
+    Sans elles, iOS refuse la position, l'app s'arrête en ouvrant l'appareil photo, et Apple refuse l'application.
+    Un nouvel accès (micro, contacts…) demande sa phrase ici. Android : déjà déclaré dans `AndroidManifest.xml`.
+    `ios/App/App/PrivacyInfo.xcprivacy` déclare à Apple les données collectées (pas de pistage) et les raisons des API
+    sensibles des greffons ; un nouveau type de donnée collectée s'y ajoute, et dans App Store Connect › App Privacy.
 11. **Position du livreur en arrière-plan** (15 oct. 2026, voir le tableau plus haut) :
-    - **iOS** : dans `Info.plist`, ajouter `NSLocationAlwaysAndWhenInUseUsageDescription` (« Pendant une livraison, ta
-      position reste partagée avec le client même écran verrouillé, jusqu'à la remise. ») et, dans Xcode → Signing &
-      Capabilities → *Background Modes*, cocher *Location updates* (`UIBackgroundModes` = `location`). Apple demande
-      pourquoi à la revue : le suivi de la livraison par le client.
+    - **iOS** : FAIT dans `Info.plist` : `NSLocationAlwaysAndWhenInUseUsageDescription` (« Pendant une livraison, ta
+      position reste partagée avec le client même écran verrouillé, jusqu'à la remise. ») et `UIBackgroundModes` =
+      `location`. Apple demande pourquoi à la revue : le suivi de la livraison par le client (l'écrire dans les notes).
     - **Google Play** : Play Console → Contenu de l'application → *Types de services de premier plan* : déclarer
       « location », avec une courte vidéo de la notification pendant une course. L'application ne demande PAS la position
       « en arrière-plan » (`ACCESS_BACKGROUND_LOCATION`) : le service au premier plan suffit, ce qui évite le formulaire
@@ -87,8 +102,40 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
 12. **Clair uniquement** (19 oct. 2026, audit « Look and feel ») : Fairide n'a pas de thème sombre. Le site et Android
     sont déjà forcés en clair (balise `color-scheme` d'index.html, `color-scheme: light only` dans styles.css, thème
     `Theme.AppCompat.Light.NoActionBar` + `forceDarkAllowed=false` dans `android/app/src/main/res/values/styles.xml`).
-    **iOS** : dans `Info.plist`, ajouter `UIUserInterfaceStyle` = `Light` ; sans elle, un iPhone en mode sombre affiche le
+    **iOS** : FAIT, `UIUserInterfaceStyle` = `Light` dans `Info.plist` ; sans elle, un iPhone en mode sombre affiche le
     clavier, les sélecteurs de date et les fenêtres du système en noir sur nos écrans blancs.
+
+## Sortir une version iPhone (sur le Mac d'Owen)
+
+Pas de workflow GitHub pour l'iPhone : Xcode signe et envoie lui-même vers TestFlight.
+
+**Une fois**
+1. Installer Xcode (App Store du Mac) et l'ouvrir une fois, Node 22, CocoaPods (`brew install cocoapods`).
+2. Cloner le dépôt frontend, `npm ci`.
+3. À la racine, un fichier `.env.production.local` (hors git) : `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_IOS_CLIENT_ID`
+   (point 8), `VITE_SENTRY_DSN`, `VITE_PLAUSIBLE_DOMAIN`, mêmes valeurs que les variables GitHub du workflow Play Store.
+   Le serveur de production et l'absence de photos de banque d'images sont imposés par `npm run app:ios:production`,
+   jamais par ce fichier.
+4. `GoogleService-Info.plist` dans `ios/App/App/` (point 5).
+5. App Store Connect › Apps › « + » : app iOS « Fairide », langue principale français, identifiant `be.fairide.app`.
+6. Xcode (ouvert par la commande ci-dessous) › cible *App* › Signing & Capabilities › *Team* : l'équipe Fairide. La
+   signature est automatique ; vérifier que l'onglet liste Push Notifications, Sign in with Apple, Associated Domains et
+   Background Modes (Location updates).
+
+**Chaque version**
+1. `git pull`, `npm ci`, puis `npm run app:ios:production` : construit le site contre le serveur de production, le copie
+   dans `ios/` (`pod install` au passage) et ouvre Xcode.
+2. En haut de Xcode, appareil *Any iOS Device (arm64)*, puis Product › Archive.
+3. Dans l'Organizer : Distribute App › App Store Connect › Upload, en laissant cochée *Manage Version and Build Number*
+   (Xcode monte le numéro de build lui-même ; ne pas le changer à la main dans le projet).
+4. Après 10 à 30 minutes, la version apparaît dans App Store Connect › TestFlight. Testeurs internes (l'équipe, jusqu'à
+   100) : tout de suite, sans revue Apple.
+
+**Déboguer** : iPhone branché, Xcode › Run ; les journaux natifs s'affichent dans la console de Xcode (l'équivalent
+d'`adb logcat`), et Safari › Développement › [l'iPhone] inspecte la page de l'app (version Debug).
+
+**Pas encore fait** : à la suppression d'un compte lié à Apple, révoquer son jeton (point 9) ; il faut d'abord la clé
+`.p8` *Sign in with Apple*.
 
 ## Mettre à jour l'application
 

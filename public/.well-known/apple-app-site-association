@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["TEAMID_APPLE.be.fairide.app"],
+        "appIDs": ["44V9JV2JQN.be.fairide.app"],
         "components": [
           { "/": "/order-success*", "comment": "Retour de paiement Stripe" },
           { "/": "/order-cancelled*", "comment": "Paiement abandonné" },

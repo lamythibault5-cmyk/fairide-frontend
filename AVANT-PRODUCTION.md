@@ -151,8 +151,8 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       « Fairide : livraison en cours » est visible ; elle disparaît à la livraison. Recommencer en passant sur Waze.
 - [ ] 🔴 **D — Déclaration Google Play** : Play Console › Contenu de l'application › *Types de services de premier plan*
       → « location », avec une courte vidéo de la notification pendant une course (docs/application-mobile.md, point 11).
-- [ ] 🔴 **D — iPhone** : `NSLocationAlwaysAndWhenInUseUsageDescription` et *Background Modes › Location updates* dans le
-      projet iOS (docs/application-mobile.md, point 11), sinon Apple refuse l'application.
+- [x] 🔴 **D — iPhone** : `NSLocationAlwaysAndWhenInUseUsageDescription` et *Background Modes › Location updates* dans le
+      projet iOS (docs/application-mobile.md, point 11) : fait le 22/10 dans `ios/App/App/Info.plist`.
 - [ ] 🔴 **F — Cartes enregistrées** (`fairide-backend/cartesEnregistrees.js`) : sur le staging, payer une commande en
       cochant « enregistrer » sur la page Stripe → la commande suivante repropose la carte ; Mon compte › Moyens de
       paiement la montre (marque, 4 chiffres) et la retire. Supprimer le compte de test → le client Stripe disparaît
@@ -191,8 +191,8 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
 ## 4. Applications iPhone et Android
 
 - [ ] 🔴 **F — Comptes Apple Developer et Google Play** (en vérification au 15/10).
-- [ ] **D — iPhone : TestFlight** construit par GitHub (machines Mac de GitHub, pas besoin d'un Mac). Il faudra :
-      Team ID Apple, une clé API App Store Connect (.p8, Key ID, Issuer ID).
+- [ ] **D — iPhone : TestFlight** construit et envoyé par Xcode sur le Mac d'Owen (docs/application-mobile.md,
+      « Sortir une version iPhone ») : Firebase iOS (`GoogleService-Info.plist` + clé APNs), ID client Google iOS, Team ID.
 - [ ] **D — Android : la version des magasins** (`be.fairide.app`) : appli Firebase de production (empreinte de la clé
       Play), Play App Signing, test interne Play, puis production.
 - [ ] **T — Liens universels** : empreinte SHA-256 dans `public/.well-known/assetlinks.json`, Team ID dans
