@@ -33,4 +33,13 @@ end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
+  # Capacitor only lifts the plugins to iOS 14 (pods_helpers.rb); Xcode 27 refuses anything under 15 ("range of supported
+  # deployment target versions is 15.0 to 27.x"), one error per plugin. Lift them to the app's own minimum.
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      end
+    end
+  end
 end
