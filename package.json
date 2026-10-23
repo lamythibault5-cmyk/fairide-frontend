@@ -17,6 +17,7 @@
     "app:assets": "node scripts/app-assets.mjs && npx @capacitor/assets generate --android --iconBackgroundColor \"#3B2FB5\" --iconBackgroundColorDark \"#3B2FB5\" --splashBackgroundColor \"#3B2FB5\" --splashBackgroundColorDark \"#3B2FB5\" && node scripts/app-assets.mjs --icones-android",
     "app:assets:ios": "npx @capacitor/assets generate --ios --iconBackgroundColor \"#3B2FB5\" --splashBackgroundColor \"#3B2FB5\" --splashBackgroundColorDark \"#3B2FB5\"",
     "check:app": "node scripts/verifier-appli.mjs",
+    "check:sombre": "node scripts/verifier-appli.mjs --sombre",
     "check:barres": "node scripts/verifier-barres-bas.mjs",
     "postinstall": "node scripts/corriger-connexion-google.mjs"
   },

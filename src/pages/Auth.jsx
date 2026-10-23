@@ -1542,7 +1542,7 @@ export default function Auth() {
                             onClick={() => setCourierStatus(st)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setCourierStatus(st); }}>
                             <b>{st === 'student_independent' ? <Icone nom="guide" taille={16} className="icone-texte" /> : <Icone nom="document" taille={16} className="icone-texte" />}{t(`auth.courierStatus_${st}`)}</b>
                             <span className="small">{t(`auth.courierStatus_${st}_desc`)}</span>
-                            <span className="small" style={{ color: 'var(--iris)' }}>{t(`auth.courierStatus_${st}_asks`)}</span>
+                            <span className="small" style={{ color: 'var(--iris-texte)' }}>{t(`auth.courierStatus_${st}_asks`)}</span>
                           </div>
                         ))}
                       </div>

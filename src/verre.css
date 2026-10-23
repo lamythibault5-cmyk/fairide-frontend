@@ -47,7 +47,7 @@ html.natif-ios.verre-etat-on .verre-etat { opacity: 1; visibility: visible; tran
 /* ---------- 2. Les ronds de la fiche ---------- */
 html.appli body .fiche-appli .flux-entete--flottant .flux-bouton,
 html.appli body .fiche-appli .favorite-heart--rond {
-  border: 0; color: var(--iris); background: var(--verre-clair-fond);
+  border: 0; color: var(--iris-texte); background: var(--verre-clair-fond);
   -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou); box-shadow: var(--verre-clair-ombre);
 }
 html.appli body .fiche-appli .flux-entete--flottant .flux-bouton:hover,
@@ -97,10 +97,10 @@ html.appli body .fiche-appli .fiche-infos-lien {
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   html.appli body .carte-page .carte-reinit,
   html.appli body .carte-page .leaflet-control-zoom.leaflet-bar {
-    border-color: transparent; color: var(--iris); text-shadow: none; background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
+    border-color: transparent; color: var(--iris-texte); text-shadow: none; background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
     -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
   }
-  html.appli body .carte-page .leaflet-control-zoom.leaflet-bar a { color: var(--iris); border-bottom-color: rgba(59, 47, 181, .15); }
+  html.appli body .carte-page .leaflet-control-zoom.leaflet-bar a { color: var(--iris-texte); border-bottom-color: rgba(59, 47, 181, .15); }
 }
 
 /* ---------- Les messages (toasts) : verre iris ; une erreur reste rouge plein ---------- */

@@ -310,7 +310,7 @@ function EtatDossier({ d, t, onChangeStatus }) {
           {c.statusType && <span className="pill teal" style={{ marginLeft: 8 }}>{t(`courierOnboarding.status_${c.statusType}`)}</span>}
           <p className="small" style={{ margin: '4px 0 0' }}>{t(`courierOnboarding.lifecycle_${c.lifecycleStatus}_help`)}</p>
           {c.lifecycleStatus === 'rejected' && c.reviewReason && <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('courierOnboarding.rejectedReason', { reason: c.reviewReason })}</p>}
-          {c.needsRenewal && <p className="small" style={{ margin: '6px 0 0', color: 'var(--gold-deep)' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.renewalNeeded')}</p>}
+          {c.needsRenewal && <p className="small" style={{ margin: '6px 0 0', color: 'var(--iris-texte)' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('courierOnboarding.renewalNeeded')}</p>}
           {c.lifecycleStatus === 'approved' && (
             <p className="small" style={{ margin: '6px 0 0', opacity: 0.85 }}>{c.statusVerifiedAt ? `${t('courierOnboarding.statusVerified', { date: new Date(c.statusVerifiedAt).toLocaleDateString(getLocale()) })}` : `${t('courierOnboarding.statusNotVerified')}`}</p>
           )}

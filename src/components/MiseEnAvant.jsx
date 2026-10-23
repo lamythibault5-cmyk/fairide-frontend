@@ -150,9 +150,9 @@ export default function MiseEnAvant({ restoId, token, toast }) {
                     <span className="small" style={{ display: 'block' }}>{jourCourt(b.startsOn)} → {jourCourt(b.endsOn)} · {euros(b.totalHt)}{Number(etat.vatRate) > 0 ? ` ${t('placements.exVat')}` : ''}{b.paidOnline && b.refundStatus !== 'rembourse' ? ` · ${t('placements.paidOnline')}` : ''}</span>
                     {b.decisionNote && b.status !== 'refused' && <span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{b.decisionNote}</span>}
                     {b.refusalReason && <span className="small" style={{ display: 'block' }}>{b.refusalReason}</span>}
-                    {b.refundStatus === 'rembourse' && <span className="small" style={{ display: 'block', color: 'var(--iris)' }}>{t('placements.refund_rembourse')}</span>}
-                    {b.refundStatus === 'a_rembourser' && <span className="small" style={{ display: 'block', color: 'var(--iris)' }}>{t('placements.refund_a_rembourser')}</span>}
-                    {b.refundStatus === 'prorata' && <span className="small" style={{ display: 'block', color: 'var(--iris)' }}>{t('placements.refund_prorata')}</span>}
+                    {b.refundStatus === 'rembourse' && <span className="small" style={{ display: 'block', color: 'var(--iris-texte)' }}>{t('placements.refund_rembourse')}</span>}
+                    {b.refundStatus === 'a_rembourser' && <span className="small" style={{ display: 'block', color: 'var(--iris-texte)' }}>{t('placements.refund_a_rembourser')}</span>}
+                    {b.refundStatus === 'prorata' && <span className="small" style={{ display: 'block', color: 'var(--iris-texte)' }}>{t('placements.refund_prorata')}</span>}
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <span className={`modif-statut mea-statut--${b.status}`}>{t(!achats && b.status === 'awaiting_payment' ? 'placements.status_awaiting_payment_app' : `placements.status_${b.status}`)}</span>

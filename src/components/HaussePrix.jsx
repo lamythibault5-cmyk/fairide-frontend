@@ -88,7 +88,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
         <span>{t('menuPage.markupMin')}</span><span>+{pct(etat.max)} %</span>
       </div>
       {/* Le badge « Prix du comptoir » se garde à 0 % (prixMagasin.prixDuComptoir) : le dire avant que le commerce monte ses prix. */}
-      <p className="small" style={{ margin: '8px 0 0', fontWeight: 600, color: 'var(--iris)' }}>
+      <p className="small" style={{ margin: '8px 0 0', fontWeight: 600, color: 'var(--iris-texte)' }}>
         <Icone nom="etiquette" taille={16} className="icone-texte" />{' '}{valeur === 0 ? t('menuPage.markupBadgeKeep') : t('menuPage.markupBadgeLost')}
       </p>
       <div className="hausse-prix-exemple small" style={{ margin: '10px 0', padding: 10, borderRadius: 10, background: 'var(--surface-soft)' }}>

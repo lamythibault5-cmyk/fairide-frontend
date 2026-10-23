@@ -86,6 +86,8 @@ export const TRACES = {
   // « Intérieur » au paiement : une maison, distincte de `commerce` par son toit en pointe.
   maison: <><path d="m3 10 9-7 9 7" /><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" /><path d="M10 21v-6h4v6" /></>,
   // « Terrasse » : le soleil, en face de la maison.
+  // Le mode sombre (Mon compte › Apparence) : la lune, en face du soleil.
+  lune: <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />,
   soleil: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="M4.9 4.9 6.3 6.3" /><path d="m17.7 17.7 1.4 1.4" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m4.9 19.1 1.4-1.4" /><path d="m17.7 6.3 1.4-1.4" /></>,
   // « Sonner », pour les consignes de livraison — la cloche est déjà prise par les notifications.
   sonnette: <><rect x="6" y="3" width="12" height="18" rx="4" /><circle cx="12" cy="9" r="2" /><path d="M10 15h4" /></>,

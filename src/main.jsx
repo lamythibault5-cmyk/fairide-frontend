@@ -27,6 +27,9 @@ import './client-ui.css';
 // Le verre de l'app (2026-10-23) : après les feuilles communes ; ses règles sont aussi plus fortes que celles de chaque écran.
 import './verre.css';
 import './transitions-appli.css';
+// Le mode sombre de l'app (2026-10-23) : en dernier, ses règles sous html.appli.sombre l'emportent sur celles des écrans.
+import './theme-sombre.css';
+import { suivreTheme } from './theme';
 import { rechargerSiNouveauCode } from './lazyPage';
 import { demarrerAnalytics } from './analytics';
 import { estNatif, demarrerNatif, retirerEcranLancementNatif, garderLesLiensDansLApp } from './natif';
@@ -158,6 +161,8 @@ setTimeout(retirerEcranChargement, 0);
 // Coque iOS / Android : bouton Retour, liens universels, barre d'état, clavier (voir natif.js).
 demarrerNatif(historiqueLangue);
 garderLesLiensDansLApp(historiqueLangue);
+// Clair ou sombre, dans l'app seulement (theme.js) : après html.appli, avant le premier rendu.
+suivreTheme();
 if (estNatif()) ecouterNotificationsNatives(historiqueLangue);
 // Le fondu d'une photo part quand elle arrive, pas au rendu (images.js) — site et app.
 installerFonduPhotos();

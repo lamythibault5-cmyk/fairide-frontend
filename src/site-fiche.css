@@ -66,7 +66,7 @@
 /* La recherche ouverte : un champ blanc à gauche du cœur. */
 .fiche-site .flux-entete--flottant .fiche-recherche {
   flex: 0 1 auto; width: 380px; max-width: calc(100cqw - 180px); min-width: 0; height: 46px; margin: 0; padding: 0 5px 0 14px; gap: 6px;
-  background: #fff; border: 1.5px solid var(--line); border-radius: 23px;
+  background: var(--carte); border: 1.5px solid var(--line); border-radius: 23px;
 }
 .fiche-site .flux-entete--flottant .fiche-recherche:focus-within { border-color: var(--iris); }
 .fiche-site .flux-entete--flottant .fiche-recherche input { min-height: 0; padding: 0; font-size: 16px; }
@@ -83,14 +83,14 @@
   .fiche-site .flux-entete--flottant > .flux-actions:has(.fiche-recherche) { left: 64px; }
   .fiche-site .flux-entete--flottant .fiche-recherche { flex: 1 1 auto; width: auto; max-width: none; height: 44px; }
   .fiche-site.fiche-site--compact .flux-entete--flottant::before {
-    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 64px; background: #fff;
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 64px; background: var(--carte);
   }
 }
 
 /* ---------- La feuille ---------- */
 .fiche-site-feuille {
   position: relative; z-index: 2; margin-top: -26px; padding: 0 16px 32px;
-  background: #fff; border-radius: 26px 26px 0 0;
+  background: var(--cream); border-radius: 26px 26px 0 0;
   animation: fiche-site-monte .45s var(--ressort-ui) backwards;
 }
 @keyframes fiche-site-monte { from { transform: translateY(36px); } to { transform: none; } }
@@ -161,7 +161,7 @@
 /* ---------- La bande des sections : blanche pleine, collante, la pastille iris qui glisse ---------- */
 .fiche-page.fiche-site .category-quicknav {
   position: sticky; top: 0; z-index: 41;
-  margin: 0 0 18px; padding: 8px 0; background: #fff; border-bottom: 1px solid var(--line);
+  margin: 0 0 18px; padding: 8px 0; background: var(--carte); border-bottom: 1px solid var(--line);
 }
 .fiche-site .category-quicknav-sections { gap: 6px; }
 .fiche-site .category-quicknav button {
@@ -203,7 +203,7 @@
   .fiche-site--panier .fiche-site-grille { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 32px; align-items: start; }
   .fiche-site--panier .fiche-panier-col {
     display: flex; flex-direction: column; position: sticky; top: 72px; margin-top: 24px;
-    max-height: calc(100vh - 96px); padding: 20px; background: #fff; border: 1px solid var(--line); border-radius: 22px;
+    max-height: calc(100vh - 96px); padding: 20px; background: var(--carte); border: 1px solid var(--line); border-radius: 22px;
   }
 }
 @container fiche (min-width: 1150px) {
@@ -240,7 +240,7 @@
 .fiche-panier-pas button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
 .fiche-panier-pas b {
   width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--lime); color: var(--ink); font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums;
+  background: var(--lime); color: var(--sur-lime); font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums;
   animation: plat-pas-chiffre .3s cubic-bezier(.34, 1.45, .64, 1);
 }
 .fiche-panier-st { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 12px 0 2px; font-size: 15px; }
@@ -256,7 +256,7 @@
 .fiche-voir-panier > span:first-child { flex: 1; }
 .fiche-voir-panier-total {
   height: 44px; display: flex; align-items: center; padding: 0 14px; border-radius: 22px;
-  background: #fff; color: var(--iris); font-variant-numeric: tabular-nums; overflow: hidden;
+  background: var(--carte); color: var(--iris-texte); font-variant-numeric: tabular-nums; overflow: hidden;
 }
 /* Le bouton rebondit quand un plat y atterrit (deux classes en alternance : une animation ne repart pas si sa classe reste). */
 .fiche-voir-panier--rebond0 { animation: fiche-panier-rebond0 .45s cubic-bezier(.34, 1.45, .64, 1); }
