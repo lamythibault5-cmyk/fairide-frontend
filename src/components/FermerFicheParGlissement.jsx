@@ -9,15 +9,17 @@ import { mouvementReduit, vibrer } from '../gestes';
  * elle qui ramène à la liste, avec la photo qui rentre dans sa carte (transitionPhoto.js), partie de là où le doigt l'a
  * laissée ; la fiche démontée emporte son déplacement. Sinon la fiche remonte, au ressort, à la vitesse du doigt.
  *
- * Écouteurs posés SUR LA PHOTO seulement : un toucher ailleurs ne passe jamais par ici, et le défilement de la page n'attend
- * pas JavaScript (voir RetourParGlissement.jsx). Un mouvement plutôt de côté n'est pas un retour. */
+ * Écouteurs posés sur le HAUT DE LA FICHE (la photo et la feuille blanche dessous, fondateur : « même l'espace blanc du haut
+ * où il n'y a rien ») : un toucher plus bas ne passe jamais par ici, et le défilement de la page n'attend pas JavaScript
+ * (voir RetourParGlissement.jsx). Un toucher sur un bouton, un lien ou un champ reste à eux ; un mouvement de côté n'est pas
+ * un retour. */
 const SEUIL = 150;
 const SENS = 10;
 
 export default function FermerFicheParGlissement({ pageRef }) {
   useEffect(() => {
     const page = pageRef.current;
-    const photo = page?.querySelector('.fiche-media');
+    const photo = page?.querySelector('.fiche-entete');
     if (!page || !photo || mouvementReduit()) return undefined;
     let m = null;
     import('../ressort').then((mod) => { m = mod; }).catch(() => {});
@@ -29,12 +31,13 @@ export default function FermerFicheParGlissement({ pageRef }) {
       page.style.borderRadius = y ? `${Math.min(28, y / 3)}px` : '';
     };
     const finir = () => {
-      page.style.willChange = ''; page.style.transformOrigin = ''; page.style.overflow = ''; page.style.boxShadow = '';
+      page.style.willChange = ''; page.style.transformOrigin = ''; page.style.overflow = ''; page.style.boxShadow = ''; page.style.background = '';
       document.documentElement.classList.remove('fiche-glisse');
     };
 
     function debut(e) {
       if (!m || e.touches.length !== 1 || window.scrollY > 0) return;
+      if (e.target.closest?.('a, button, input, select, textarea, label, [role="button"], .fiche-modes')) return;
       vol?.arreter();
       const t = e.touches[0];
       g = { x0: t.clientX, y0: t.clientY, y: 0, actif: false, suivi: m.suiviVitesse() };
@@ -49,7 +52,7 @@ export default function FermerFicheParGlissement({ pageRef }) {
         if (dy < SENS) { if (dy < -SENS) g = null; return; }
         g.actif = true;
         page.style.willChange = 'transform'; page.style.transformOrigin = '50% 0'; page.style.overflow = 'hidden';
-        page.style.boxShadow = '0 -10px 40px rgba(20, 18, 31, .25)';
+        page.style.boxShadow = '0 -10px 40px rgba(20, 18, 31, .25)'; page.style.background = '#fff';
         document.documentElement.classList.add('fiche-glisse');
       }
       if (e.cancelable) e.preventDefault();

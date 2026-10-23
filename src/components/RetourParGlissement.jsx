@@ -14,6 +14,21 @@ import { mouvementReduit, vibrer } from '../gestes';
  * Ne démarre pas : au-delà de 20 px du bord, quand une feuille ou un dialogue est ouvert, ou quand il n'y a pas de
  * page précédente dans l'application (première page). */
 const BORD = 20;
+// PARTOUT, PAS SEULEMENT DU BORD (fondateur, 2026-10-23 : « dans le panier, glisser pour revenir sans toucher le bouton ») :
+// sur un écran qui a un bouton retour ou fermer (panier, paiement, suivi, fiche, parcours), un glissement vers la droite
+// parti de n'importe où recule aussi. Jamais sur les écrans des onglets (rien derrière), ni depuis ce qui défile déjà de côté
+// ou prend le doigt : rangées, carte, bande des sections, barre d'onglets, compteurs, champs.
+const RETOUR_A_L_ECRAN = '.ec-haut .ec-rond, .flux-entete .flux-bouton';
+const PREND_LE_DOIGT = 'input, textarea, select, [role="slider"], .leaflet-container, .category-quicknav, .dashboard-sidebar, .plat-pas, .ec-pas, .fiche-modes';
+function partoutPermis(cibleTouchee) {
+  if (!document.querySelector(RETOUR_A_L_ECRAN)) return false;
+  for (let el = cibleTouchee; el && el !== document.body; el = el.parentElement) {
+    if (el.matches?.(PREND_LE_DOIGT)) return false;
+    const ox = getComputedStyle(el).overflowX;
+    if ((ox === 'auto' || ox === 'scroll') && el.scrollWidth > el.clientWidth + 1) return false;
+  }
+  return true;
+}
 const DEVIEE = 12; // au-delà, un mouvement plutôt vertical est un défilement, pas un retour
 
 export default function RetourParGlissement() {
@@ -30,7 +45,7 @@ export default function RetourParGlissement() {
 
     function debut(e) {
       const t = e.touches[0];
-      if (t.clientX > BORD || !m || !peutReculer()) return;
+      if (!m || !peutReculer() || (t.clientX > BORD && !partoutPermis(e.target))) return;
       const el = cible(); if (!el) return;
       g = { x0: t.clientX, y0: t.clientY, el, x: 0, actif: false, suivi: m.suiviVitesse() };
       g.suivi.ajouter(t.clientX);
@@ -41,7 +56,8 @@ export default function RetourParGlissement() {
       const t = e.touches[0];
       const dx = t.clientX - g.x0; const dy = t.clientY - g.y0;
       if (!g.actif) {
-        if (Math.abs(dy) > DEVIEE && Math.abs(dy) > Math.abs(dx)) { g = null; return; }
+        // Un défilement vertical : on rend la main tout de suite (l'écouteur bloquant ne reste pas pour la suite du geste).
+        if (Math.abs(dy) > DEVIEE && Math.abs(dy) > Math.abs(dx)) { g = null; document.removeEventListener('touchmove', suite); return; }
         if (dx < DEVIEE) return;
         g.actif = true;
         g.el.style.willChange = 'transform';
