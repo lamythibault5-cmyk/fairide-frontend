@@ -8,19 +8,26 @@
  * un défilement (regardSousBarre.js, 2026-10-20 : c'était à chaque image), et le greffon n'est appelé que quand la couleur
  * change : la barre ne clignote pas. iPhone : la barre est transparente, seule la couleur des icônes change. */
 import { IRIS, fondSous, surveillerSousBarre } from './regardSousBarre';
+import { NUIT, estSombre } from './theme';
 
+/* En mode sombre (theme.js), tout ce qui passe sous la barre est sombre : icônes claires toujours, et sur Android le fond
+ * de la barre prend l'iris d'un bouton ou d'un bandeau resté iris, sinon la nuit. */
 export function suivreBarreEtat({ StatusBar, Style, android }) {
-  let iris = null;
+  let avant = null;
   const appliquer = () => {
     const fond = fondSous(2);
     // Le verre iris sous la barre d'état (verreBarreEtat.js, iPhone) est translucide : fondSous() regarde à travers. Tant
     // qu'il est là, les icônes restent blanches.
     const estIris = document.documentElement.classList.contains('verre-etat-on') || (fond !== null && IRIS.has(fond));
-    if (estIris === iris) return;
-    iris = estIris;
-    // Style.Dark = icônes claires (sur l'iris), Style.Light = icônes sombres (sur le blanc).
-    StatusBar.setStyle({ style: estIris ? Style.Dark : Style.Light }).catch(() => {});
-    if (android) StatusBar.setBackgroundColor({ color: estIris ? '#3B2FB5' : '#FFFFFF' }).catch(() => {});
+    const sombre = estSombre();
+    const couleur = estIris && fond !== '21,17,58' ? '#3B2FB5' : sombre ? NUIT : '#FFFFFF';
+    if (couleur === avant) return;
+    avant = couleur;
+    // Style.Dark = icônes claires (sur l'iris ou la nuit), Style.Light = icônes sombres (sur le blanc).
+    StatusBar.setStyle({ style: couleur === '#FFFFFF' ? Style.Light : Style.Dark }).catch(() => {});
+    if (android) StatusBar.setBackgroundColor({ color: couleur }).catch(() => {});
   };
   surveillerSousBarre(appliquer);
+  // Le choix clair / sombre a changé sans que la page bouge.
+  window.addEventListener('fairide:theme', appliquer);
 }

@@ -78,7 +78,7 @@
 
 /* Une course de la liste : un bouton, cerclé d'iris quand c'est elle qu'on regarde à droite. */
 .ecl-choix-liste { margin-top: 12px; }
-.ecl-choix { display: block; width: 100%; text-align: left; font: inherit; color: inherit; background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 16px; cursor: pointer;
+.ecl-choix { display: block; width: 100%; text-align: left; font: inherit; color: inherit; background: var(--carte); border: 1px solid var(--line); border-radius: 20px; padding: 16px; cursor: pointer;
   transition: border-color .2s, transform .32s var(--ecl-ressort), opacity .32s; }
 .ecl-choix + .ecl-choix { margin-top: 10px; }
 .ecl-choix:hover { border-color: #B9B3A8; }
@@ -90,7 +90,7 @@
 .ecl-choix .ecl-tj-libs { font-size: 12.5px; }
 
 /* Le détail : la carte en haut, puis la course. Aussi pour la course en main (la carte et les deux adresses). */
-.ecl-fiche-course { border: 1px solid var(--line); border-radius: 22px; overflow: hidden; background: #fff; }
+.ecl-fiche-course { border: 1px solid var(--line); border-radius: 22px; overflow: hidden; background: var(--carte); }
 .ecl-carte-course { display: block; width: 100%; border-bottom: 1px solid var(--line); background: var(--cream-dim); }
 .ecl-fc-corps { padding: 18px 22px 20px; }
 .ecl-fc-tete { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
@@ -98,7 +98,7 @@
 .ecl-fc-tete .small { margin: 0; font-size: 14px; }
 .ecl-lieux { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0 4px; }
 .ecl-lieux > div { display: flex; gap: 10px; font-size: 14px; line-height: 1.4; min-width: 0; }
-.ecl-lieux > div > svg { flex: none; color: var(--iris); margin-top: 2px; }
+.ecl-lieux > div > svg { flex: none; color: var(--iris-texte); margin-top: 2px; }
 .ecl-lieux small { display: block; font-size: 12.5px; color: var(--ink-soft); overflow-wrap: anywhere; }
 .ecl-fc-corps > .ecl-lieux:last-child { margin-bottom: 0; }
 .ecl-fc-actions { display: flex; gap: 10px; margin-top: 16px; }

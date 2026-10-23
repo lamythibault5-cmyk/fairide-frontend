@@ -62,7 +62,7 @@
 .fiche-appli .flux-entete--flottant > .flux-actions:has(.fiche-recherche) { left: calc(64px - var(--fiche-g)); }
 .fiche-appli .flux-entete--flottant .fiche-recherche {
   flex: 1 1 auto; width: auto; min-width: 0; height: 44px; margin: 0; padding: 0 4px 0 12px; gap: 6px;
-  background: #fff; border: 1.5px solid var(--line); border-radius: 22px;
+  background: var(--carte); border: 1.5px solid var(--line); border-radius: 22px;
 }
 .fiche-appli .flux-entete--flottant .fiche-recherche:focus-within { border-color: var(--iris); }
 .fiche-appli .flux-entete--flottant .fiche-recherche input { min-height: 0; padding: 0; font-size: 16px; }
@@ -94,7 +94,7 @@ html.fiche-glisse body, html.fiche-glisse .dashboard-main { background: var(--ir
 .fiche-appli .fiche-feuille {
   display: block; position: relative; z-index: 2;
   margin: -26px calc(-1 * var(--fiche-g)) 0; padding: 22px var(--fiche-g) 2px;
-  background: #fff; border-radius: 26px 26px 0 0;
+  background: var(--cream); border-radius: 26px 26px 0 0;
   animation: fiche-feuille-monte .45s var(--ressort-ui) backwards;
 }
 .fiche-appli .fiche-entete--logo .fiche-feuille { padding-top: 48px; }
@@ -144,7 +144,7 @@ html.fiche-glisse body, html.fiche-glisse .dashboard-main { background: var(--ir
 .fiche-page.fiche-appli .category-quicknav--verre {
   top: calc(var(--fiche-haut) + 64px); z-index: 40;
   margin: 4px -6px 12px; padding: 0; border-radius: 30px;
-  background: #fff; border: 1px solid var(--line);
+  background: var(--carte); border: 1px solid var(--line);
 }
 .fiche-appli .category-quicknav--verre .category-quicknav-sections { gap: 2px; padding: 4px; border-radius: 30px; }
 .fiche-appli .category-quicknav--verre button {
@@ -176,7 +176,7 @@ html.fiche-glisse body, html.fiche-glisse .dashboard-main { background: var(--ir
       0 10px 30px rgba(20, 18, 31, .14), 0 1px 3px rgba(20, 18, 31, .08);
   }
   html.appli .fiche-appli .category-quicknav--verre button { color: rgba(20, 18, 31, .86); text-shadow: 0 0 8px rgba(255, 255, 255, .75); }
-  html.appli .fiche-appli .category-quicknav--verre button.active, html.appli .fiche-appli .category-quicknav--verre button.quicknav-survol { color: var(--iris); }
+  html.appli .fiche-appli .category-quicknav--verre button.active, html.appli .fiche-appli .category-quicknav--verre button.quicknav-survol { color: var(--iris-texte); }
   html.appli .fiche-appli .category-quicknav--glisse button.active:not(.quicknav-survol) { color: rgba(20, 18, 31, .86); }
   html.appli .fiche-appli .category-quicknav--verre .quicknav-lentille {
     background: rgba(255, 255, 255, .42); border: 1px solid rgba(255, 255, 255, .75);
@@ -191,7 +191,7 @@ html.fiche-glisse body, html.fiche-glisse .dashboard-main { background: var(--ir
 }
 /* Le fondu d'arrivée de la page éteignait le flou : réglé pour toutes les pages dans client-ui.css (.page-fade, `backwards`). */
 @media (prefers-reduced-transparency: reduce) {
-  html.appli .fiche-page.fiche-appli .category-quicknav--verre { background: #fff; border-color: var(--line); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+  html.appli .fiche-page.fiche-appli .category-quicknav--verre { background: var(--carte); border-color: var(--line); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
   html.appli .fiche-appli .category-quicknav--verre button { color: var(--ink); text-shadow: none; }
   html.appli .fiche-appli .category-quicknav--verre button.active { color: #fff; }
   html.appli .fiche-appli .category-quicknav--verre .quicknav-lentille { background: var(--iris); border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
@@ -227,7 +227,7 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .fiche-entete--sceau .fiche-feuille { padding-top: 46px; }
 .fiche-appli .fiche-sceau {
   position: absolute; z-index: 3; left: calc(var(--fiche-g) + 2px); top: -34px; width: 68px; height: 68px; overflow: hidden;
-  display: grid; place-items: center; border-radius: 20px; border: 4px solid #fff; background: var(--lime); color: var(--ink);
+  display: grid; place-items: center; border-radius: 20px; border: 4px solid #fff; background: var(--lime); color: var(--sur-lime);
   font-family: var(--font-titre); font-size: 32px; font-weight: 700; line-height: 1;
   animation: fiche-logo-saute .45s var(--ressort-ui) .15s backwards;
 }
@@ -243,7 +243,7 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .fiche-ticket > div { display: grid; justify-items: center; gap: 1px; padding: 11px 6px; text-align: center; min-width: 0; }
 .fiche-appli .fiche-ticket > div + div { background: linear-gradient(rgba(59, 47, 181, .22) 50%, transparent 0) left / 2px 8px repeat-y; }
 .fiche-appli .fiche-ticket b { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; }
-.fiche-appli .fiche-ticket b svg { color: var(--iris); }
+.fiche-appli .fiche-ticket b svg { color: var(--iris-texte); }
 .fiche-appli .fiche-ticket small { font-size: 11.5px; line-height: 1.25; color: var(--ink-soft); }
 .fiche-appli .fiche-ticket-note { margin: 0 0 4px; font-size: 12.5px; color: var(--ink-soft); text-align: center; }
 
@@ -251,7 +251,7 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .fiche-entete--sceau .fiche-faits { border: 0; padding: 0; margin: 14px 0 12px; flex-wrap: wrap; }
 .fiche-appli .fiche-groupe-lien {
   display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 4px; border: 0; background: none;
-  color: var(--iris); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  color: var(--iris-texte); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .fiche-appli .fiche-groupe-lien:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; border-radius: 8px; }
 
@@ -301,7 +301,7 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 
 /* Les sections : le nom en iris entre deux traits en pointillés ; le nombre de plats se lit dans la carte. */
 .fiche-appli .plats-section-titre {
-  justify-content: center; gap: 12px; padding-left: 0; margin: 28px 0 4px; color: var(--iris); font-size: 20px; text-align: center;
+  justify-content: center; gap: 12px; padding-left: 0; margin: 28px 0 4px; color: var(--iris-texte); font-size: 20px; text-align: center;
 }
 .fiche-appli .fiche-carte-plats > div:first-of-type .plats-section-titre { margin-top: 10px; }
 .fiche-appli .plats-section-titre::before, .fiche-appli .plats-section-titre::after {

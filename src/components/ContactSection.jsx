@@ -59,7 +59,7 @@ export default function ContactSection({ messageInitial = '' }) {
   return (
     <div className="contact-grid">
       <div className="card">
-        <p className="small" style={{ margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 0.4, fontWeight: 700, color: 'var(--teal)' }}>{t('contact.eyebrow')}</p>
+        <p className="small" style={{ margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 0.4, fontWeight: 700, color: 'var(--iris-texte)' }}>{t('contact.eyebrow')}</p>
         <h2 style={{ margin: '0 0 4px', fontSize: 20 }}>{t('contact.formTitle')}</h2>
         <p className="small" style={{ margin: '0 0 16px' }}>{t('contact.formSubtitle')}</p>
         {sent ? (

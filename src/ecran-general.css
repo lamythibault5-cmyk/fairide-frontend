@@ -38,10 +38,10 @@ a.btn-gold.gn-action { font-weight: 700; }
 /* « C'est bon » fait, engagements encore à signer (ValiderCarte) : la carte de la prochaine étape, puis le bouton et le lien
  * « Mot de passe oublié ? » centré dessous. */
 .gn-feuille .ec-prochaine { margin: 0 0 16px; }
-.gn-lien { display: block; margin: 14px auto 0; text-align: center; font-size: 14px; font-weight: 600; color: var(--iris); }
+.gn-lien { display: block; margin: 14px auto 0; text-align: center; font-size: 14px; font-weight: 600; color: var(--iris-texte); }
 /* Une remarque (lien périmé, carte déjà validée) : filet iris, icône iris, texte encre — jamais de rouge plein. */
 .gn-note { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--iris); border-radius: 16px; color: var(--ink); font-size: 14px; line-height: 1.45; }
-.gn-note > svg { flex: none; color: var(--iris); margin-top: 1px; }
+.gn-note > svg { flex: none; color: var(--iris-texte); margin-top: 1px; }
 /* Fini : la coche dans un rond iris, au-dessus du texte. */
 .gn-coche { width: 52px; height: 52px; border-radius: 50%; background: var(--iris); color: #fff; display: grid; place-items: center; margin: 4px 0 14px; }
 
@@ -95,7 +95,7 @@ a.btn-gold.gn-action { font-weight: 700; }
 .gn-question > summary::after { content: ''; flex: none; width: 8px; height: 8px; margin-right: 4px; border-right: 2px solid var(--ink-soft); border-bottom: 2px solid var(--ink-soft);
   transform: translateY(-2px) rotate(45deg); transition: transform .2s; }
 .gn-question[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
-@media (hover: hover) { .gn-question > summary:hover { color: var(--iris); } }
+@media (hover: hover) { .gn-question > summary:hover { color: var(--iris-texte); } }
 .gn-question > summary:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; border-radius: 6px; }
 .gn-reponse { padding: 0 0 16px; }
 .gn-reponse p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); }
@@ -148,13 +148,13 @@ html:not(.appli) .wrap .gn-feuille { margin: 0; padding: 22px 0 8px; border-radi
 .qc-titre { display: block; margin: 3px 0 4px; font-family: var(--font-titre); font-size: 15.5px; font-weight: 700; line-height: 1.35; color: var(--ink); }
 .qc-contexte { margin: 0 0 10px; font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
 .qc-choix { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-.qc-pastille { min-height: 40px; padding: 8px 14px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
-.qc-pastille--ouvre { border-style: dashed; color: var(--iris); }
+.qc-pastille { min-height: 40px; padding: 8px 14px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--carte); color: var(--ink); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+.qc-pastille--ouvre { border-style: dashed; color: var(--iris-texte); }
 .qc-pastille.on { background: var(--iris); border: 1px solid var(--iris); color: #fff; }
 .qc-champ { width: 100%; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--iris); border-radius: 12px; font: inherit; font-size: 14.5px; }
 .qc-pied { margin-top: 18px; }
 .qc-compte { margin: 0 0 8px; text-align: center; font-size: 12.5px; color: var(--ink-faint); }
-.qc-appel { display: block; margin-top: 12px; text-align: center; font-size: 13.5px; color: var(--iris); }
+.qc-appel { display: block; margin-top: 12px; text-align: center; font-size: 13.5px; color: var(--iris-texte); }
 .qc-merci-titre { margin: 4px 0 8px; font-size: 20px; color: var(--ink); }
 .qc-recap { margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--surface-soft); font-size: 13.5px; line-height: 1.55; color: var(--ink); }
 .qc-recap ol { margin: 4px 0 0; padding-left: 18px; }

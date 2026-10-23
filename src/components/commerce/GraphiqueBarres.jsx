@@ -94,7 +94,7 @@ export default function GraphiqueBarres({ titre, donnees, formatValeur = (v) => 
           <div role="status" style={{
             position: 'absolute', pointerEvents: 'none', top: Math.max(0, y(actif.valeur) - 52),
             left: Math.min(Math.max(0, MARGE_GAUCHE + iActif * fente + fente / 2 - 70), Math.max(0, largeur - 140)),
-            width: 140, background: '#fff', border: '1px solid var(--line)', borderRadius: 8, padding: '6px 8px', fontSize: 12
+            width: 140, background: 'var(--carte)', border: '1px solid var(--line)', borderRadius: 8, padding: '6px 8px', fontSize: 12
           }}>
             <b style={{ display: 'block', fontSize: 14 }}>{formatValeur(actif.valeur)}</b>
             <span style={{ color: 'var(--ink-soft)' }}>{actif.libelle}{actif.detail ? ` · ${actif.detail}` : ''}</span>
