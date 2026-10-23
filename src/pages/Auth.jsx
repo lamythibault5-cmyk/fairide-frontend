@@ -1592,6 +1592,7 @@ export default function Auth() {
                           {['velo', 'velo_electrique'].includes(vehicleType) ? t('auth.vehicleHelpBike', { km: courierOptions?.bikeMaxKm || 4 }) : t('auth.vehicleHelpMotor', { km: courierOptions?.bikeMaxKm || 4 })}
                         </p>
                       )}
+                      {vehicleType === 'voiture' && <p className="small" style={{ margin: '6px 0 0' }}>{t('courierOnboarding.carWeightHelp')}</p>}
                     </div>
                     {/* ÉCRAN 2 ALLÉGÉ (12 oct. 2026). Il portait aussi le sac, « une autre plateforme ? » et 19 communes à cocher :
                         l'écran le plus lourd des deux inscriptions. Le sac et les autres plateformes se règlent dans le dossier

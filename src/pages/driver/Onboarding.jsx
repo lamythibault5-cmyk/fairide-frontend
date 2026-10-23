@@ -615,7 +615,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext, brouillon = null, onBro
           </Champ>
           {motorise && (<>
             <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
-            <Champ label={t('courierOnboarding.fPlate')}><input value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
+            <Champ label={t('courierOnboarding.fPlate')} help={f.vehicleType === 'voiture' ? t('courierOnboarding.carWeightHelp') : undefined}><input value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
           </>)}
           {/* Venu de l'inscription (12 oct. 2026) : décide d'une ou deux courses à la fois (routes/orders.js). */}
           <Champ label={t('auth.platformsTitle')} help={t('auth.platformsHelp')}>

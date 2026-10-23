@@ -26,7 +26,8 @@ const BRUSSELS_CENTER = [50.8503, 4.3517];
 
 // `velo` : le livreur roule à vélo — l'itinéraire et le temps d'arrivée sont demandés pour un cycliste (le serveur
 // recalcule la durée à l'allure d'un vélo), sans la majoration « scooter » ci-dessus.
-export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3B2FB5', onEta, height = 280, velo = false }) {
+// `voiture` : l'itinéraire d'une voiture ; la majoration de 15 % reste (se garer en ville prend du temps).
+export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3B2FB5', onEta, height = 280, velo = false, voiture = false }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const containerRef = useRef(null);
@@ -120,7 +121,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
     if (autoSuiviRef.current) mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
 
     let cancelled = false;
-    itineraireRue(token, originLat, originLng, targetLat, targetLng, { velo })
+    itineraireRue(token, originLat, originLng, targetLat, targetLng, { velo, voiture })
       .then(({ latLngs, duration, distance }) => {
         if (cancelled || !lineRef.current) return;
         lineRef.current.setLatLngs(latLngs);
@@ -136,7 +137,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originLat, originLng, targetLat, targetLng, velo]);
+  }, [originLat, originLng, targetLat, targetLng, velo, voiture]);
 
   function recentrer() {
     autoSuiviRef.current = true; setRecentrable(false);

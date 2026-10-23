@@ -44,10 +44,13 @@ export default function MapPage() {
   const [position, setPosition] = useState(null);
   const [sharingLocation, setSharingLocation] = useState(false);
   const hauteurCourse = useHauteurCourse();
-  // À vélo (classique, électrique, cargo) : l'itinéraire et le temps d'arrivée sont ceux d'un cycliste.
-  const [velo, setVelo] = useState(false);
+  // À vélo (classique, électrique, cargo) : l'itinéraire et le temps d'arrivée sont ceux d'un cycliste ; en voiture, ceux
+  // d'une voiture (2026-10-23) ; en scooter, ceux d'un scooter.
+  const [vehicule, setVehicule] = useState('');
+  const velo = vehicule.startsWith('velo');
+  const voiture = vehicule === 'voiture';
   useEffect(() => {
-    api('/couriers/me', { token }).then((d) => setVelo(String(d.courier?.vehicleType || '').startsWith('velo'))).catch(() => {});
+    api('/couriers/me', { token }).then((d) => setVehicule(String(d.courier?.vehicleType || ''))).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -151,7 +154,7 @@ export default function MapPage() {
             role="driver" hauteur={hauteurCourse}
             legende={position ? t('mapDriver.hereYouAre') : t('mapDriver.whenStarts')}
             etaSansEstimation={t('mapDriver.noRide')}
-            rendreCarte={({ height, onEta }) => <DriverNavigationMap originLat={position?.lat} originLng={position?.lng} height={height} onEta={onEta} velo={velo} />}
+            rendreCarte={({ height, onEta }) => <DriverNavigationMap originLat={position?.lat} originLng={position?.lng} height={height} onEta={onEta} velo={velo} voiture={voiture} />}
           />
         </section>
       ) : (
@@ -165,7 +168,7 @@ export default function MapPage() {
               originLat={position?.lat} originLng={position?.lng}
               targetLat={target.lat} targetLng={target.lng}
               targetLabel={target.label} targetEmoji={target.emoji} targetColor={target.color}
-              height={height} onEta={onEta} velo={velo}
+              height={height} onEta={onEta} velo={velo} voiture={voiture}
             />
           );
           return (

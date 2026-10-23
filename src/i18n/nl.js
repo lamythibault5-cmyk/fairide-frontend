@@ -1473,6 +1473,7 @@ export default {
       ridesHelp: 'Je zone, je voertuig, je andere platformen en je tas: werk ze bij als ze veranderen. Je dossier blijft goedgekeurd.',
       ridesSaved: 'Opgeslagen.',
       motorNeedsLicence: 'Scooter of auto: vul je rijbewijsnummer en je nummerplaat in.',
+      carWeightHelp: 'Met de auto: je inschrijvingsbewijs moet een maximaal toegelaten massa van ten hoogste 2.500 kg en een laadvermogen onder 500 kg vermelden. Daarboven vraagt de wet een vervoervergunning.',
       permitsTitle: 'Je verblijfsvergunning en je beroepskaart',
       permitsHelp: 'Laad het nieuwe document op voor het vervalt, met de datum: Fairide herinnert je er 30 en 7 dagen vooraf aan. Het team controleert het; je ritten gaan door zolang er een geldig document opgeladen is.',
       permitNone: 'Geen geldig document opgeladen.',
