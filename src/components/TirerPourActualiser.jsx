@@ -54,6 +54,7 @@ export default function TirerPourActualiser({ onActualiser }) {
       if (e.target.closest?.('[role="dialog"], .plat-feuille, input, textarea, select')) return;
       y0 = e.touches[0].clientY;
       pret = false;
+      window.addEventListener('touchmove', bouge, { passive: false });
     };
     const bouge = (e) => {
       if (y0 === null) return;
@@ -67,6 +68,7 @@ export default function TirerPourActualiser({ onActualiser }) {
       setEtat(auSeuil ? 'pret' : 'tire');
     };
     const fin = async () => {
+      window.removeEventListener('touchmove', bouge);
       if (y0 === null) return;
       y0 = null;
       if (!pret) { poser(0, true); setEtat('repos'); return; }
@@ -82,8 +84,9 @@ export default function TirerPourActualiser({ onActualiser }) {
       pret = false;
       setTimeout(() => { occupe = false; }, 450);
     };
+    // BLOQUANT SEULEMENT PENDANT LE GESTE (2026-10-23, voir RetourParGlissement.jsx) : touchmove non passif ajouté par debut,
+    // quand le toucher part du haut de la page, et retiré par fin ; le reste du temps, le défilement n'attend pas JavaScript.
     window.addEventListener('touchstart', debut, { passive: true });
-    window.addEventListener('touchmove', bouge, { passive: false });
     window.addEventListener('touchend', fin);
     window.addEventListener('touchcancel', fin);
     return () => {

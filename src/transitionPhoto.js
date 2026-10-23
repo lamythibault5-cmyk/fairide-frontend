@@ -54,13 +54,17 @@ function poserRayons(depart, arrivee) {
 
 // Attend qu'un élément apparaisse (au plus `ms`) : la page suivante se rend après le changement d'adresse. 150 ms : la page
 // est figée pendant l'attente, et avec les données gardées (cacheDonnees.js) l'élément est là dès la première image.
+// MINUTEUR, PAS requestAnimationFrame (2026-10-23, app iPhone : 4 à 10 s avant d'ouvrir ou de quitter une fiche). Pendant la
+// mise à jour d'une View Transition, le navigateur suspend le rendu : rAF ne se déclenchait plus, le plafond de 150 ms n'était
+// jamais relu, et la transition attendait le délai du navigateur lui-même (~4 s, écran figé, touchers ignorés). Mesuré :
+// 4 150 ms avant, 420 ms après.
 function attendre(trouver, ms = 150) {
   return new Promise((resolve) => {
     const debut = performance.now();
     const tour = () => {
       const el = trouver();
       if (el || performance.now() - debut > ms) resolve(el || null);
-      else requestAnimationFrame(tour);
+      else setTimeout(tour, 16);
     };
     tour();
   });

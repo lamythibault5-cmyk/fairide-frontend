@@ -34,6 +34,7 @@ export default function RetourParGlissement() {
       const el = cible(); if (!el) return;
       g = { x0: t.clientX, y0: t.clientY, el, x: 0, actif: false, suivi: m.suiviVitesse() };
       g.suivi.ajouter(t.clientX);
+      document.addEventListener('touchmove', suite, { passive: false });
     }
     function suite(e) {
       if (!g) return;
@@ -51,6 +52,7 @@ export default function RetourParGlissement() {
       g.el.style.transform = `translateX(${g.x}px)`;
     }
     function fin() {
+      document.removeEventListener('touchmove', suite);
       if (!g) return;
       const { el, x, actif, suivi } = g; g = null;
       if (!actif) return;
@@ -65,8 +67,10 @@ export default function RetourParGlissement() {
       });
     }
 
+    // BLOQUANT SEULEMENT PENDANT LE GESTE (2026-10-23, app iPhone « 10 images par seconde ») : un écouteur touchmove non passif
+    // posé en permanence sur le document obligeait iOS à attendre JavaScript avant CHAQUE défilement, partout. Il n'est
+    // ajouté qu'au toucher qui part du bord gauche (debut), et retiré au lâcher (fin).
     document.addEventListener('touchstart', debut, { passive: true });
-    document.addEventListener('touchmove', suite, { passive: false });
     document.addEventListener('touchend', fin, { passive: true });
     document.addEventListener('touchcancel', fin, { passive: true });
     return () => {
