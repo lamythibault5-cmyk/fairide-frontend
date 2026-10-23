@@ -48,7 +48,11 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
    `ios/App/App/App.entitlements` (notifications, Sign in with Apple, `applinks:fairide.be`) : Xcode les active sur
    l'identifiant `be.fairide.app` à la première signature. iPhone et iPad (`TARGETED_DEVICE_FAMILY = "1,2"`, Owen
    23 oct. 2026 : l'app doit marcher sur tablette, iPad comme Android) ; l'iPad tourne dans les quatre sens et partage
-   l'écran (Split View), la mise en page suit la largeur comme sur le site. iOS 15 minimum (Firebase). Construire et envoyer :
+   l'écran (Split View), la mise en page suit la largeur comme sur le site. iOS 15 minimum (Firebase).
+   `capacitor.config.json` › `ios.contentInset` = `never` (23 oct. 2026) : le CSS gère déjà l'encoche et la barre d'accueil
+   (`env(safe-area-inset-*)`, écrit pour le site ajouté à l'écran d'accueil) ; avec `automatic`, iOS ajoutait la même marge
+   une seconde fois et laissait un vide sous la barre d'onglets. `allowsLinkPreview: false` : pas d'aperçu de lien au
+   toucher long, comme une app. Construire et envoyer :
    « Sortir une version iPhone » plus bas. Team ID Apple `44V9JV2JQN` (23 oct. 2026), déjà dans
    `public/.well-known/apple-app-site-association` : `https://fairide.be/…` s'ouvre dans l'app une fois le site déployé.
 5. **Notifications** : projet Firebase → télécharger `google-services.json` dans `android/app/` ;
@@ -77,6 +81,10 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
      `com.googleusercontent.apps.…`) dans Xcode → Info → URL Types. FAIT le 23 oct. 2026 : client iOS « Fairide iOS »
      `236237065648-39n11a8pc53v4eavik8ek3t3602dhqv9.apps.googleusercontent.com` (projet Google Cloud du client web, pas
      celui de Firebase), schéma déjà dans `ios/App/App/Info.plist` (`CFBundleURLTypes`). Le plist proposé par Google ne sert pas.
+     **Les deux ID sont aussi dans `Info.plist`** (`GIDClientID` = iOS, `GIDServerClientID` = web ; 23 oct. 2026) : une version
+     construite sans `VITE_GOOGLE_IOS_CLIENT_ID` laissait le greffon sans configuration, et le premier toucher sur « Continuer
+     avec Google » fermait l'app (« No active configuration. Make sure GIDClientID is set in Info.plist »). GoogleSignIn lit
+     ces clés tout seul ; la variable reste la source pour `natif.js`.
 9. **« Continuer avec Apple »** (iPhone) : *Sign in with Apple* est déclaré dans `App.entitlements`. Côté
    serveur rien à configurer (le jeton est vérifié avec les clés publiques d'Apple ; `APPLE_CLIENT_IDS` ne sert que si
    l'identifiant de l'app change). **Relais e-mail** : une personne peut masquer son adresse
