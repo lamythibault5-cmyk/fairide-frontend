@@ -2,6 +2,7 @@ import { useEffect, useState, useId } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import SousEcran from '../../components/SousEcran';
 import { experienceApp } from '../../natif';
+import { vibrer } from '../../gestes';
 
 const APPLI = experienceApp();
 import { api } from '../../api';
@@ -92,6 +93,7 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
     <button type="button" role="switch" aria-checked={actif} aria-expanded={!actif ? choix === cle : undefined}
       className={`ec-interrupteur${actif || choix === cle ? ' on' : ''}`} aria-label={titre} disabled={busy === cle}
       onClick={() => {
+        vibrer('bascule');
         if (actif) { if (cle === 'produits') reglerProduits(null, null); else reglerLivraison(0); }
         else setChoix(choix === cle ? null : cle);
       }} />
@@ -322,7 +324,7 @@ export default function PromotionsPage() {
               </span>
               <button type="button" role="switch" aria-checked={!!p.active} className={`ec-interrupteur${p.active ? ' on' : ''}`}
                 aria-label={`${t('promosPage.switchAria')} : ${titrePromo(p)}`} aria-busy={togglingId === p.id} disabled={togglingId === p.id}
-                onClick={() => toggleActive(p)} />
+                onClick={() => { vibrer('bascule'); toggleActive(p); }} />
             </LigneGlissante>
           ))}
         </div>

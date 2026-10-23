@@ -103,7 +103,7 @@ export default function StatsPage() {
         </div>
         {/* Sur le site, la taille commune des titres de bandeau (site-pro.css). */}
         <h1 className="ec-b-titre" style={SITE ? undefined : { fontSize: 26 }}>{t('statsResto.title')}</h1>
-        <SegmentGlisse lime libelle={t('statsResto.period')} valeur={jours} onChange={(v) => { vibrer(8); setJours(v); }}
+        <SegmentGlisse lime libelle={t('statsResto.period')} valeur={jours} onChange={(v) => { vibrer('choix'); setJours(v); }}
           options={PERIODES.map((p) => ({ value: p, label: t(`statsResto.days${p}`) }))} />
         <p className="ec-b-sous" style={{ marginTop: 16 }}>{t('statsResto.revenue')}</p>
         <div className="ec-gros-chiffre" aria-live="polite">{d ? <ChiffresRoulants valeur={euros(d.chiffreAffaires)} /> : '…'}</div>

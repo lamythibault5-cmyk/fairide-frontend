@@ -1,6 +1,7 @@
 // Petits gestes qui rendent l'appli « vivante » sur téléphone (fondateur, 2026-10-01 : « smooth, fluide, original »).
-// Tout ici est décoratif : si l'API manque (iOS n'a pas de vibration, vieux navigateurs sans Web Animations) ou si
-// l'utilisateur a demandé moins de mouvement, rien ne se passe et l'action elle-même n'en dépend jamais.
+// Tout ici est décoratif : si l'API manque (Safari n'a pas de vibration, vieux navigateurs sans Web Animations) ou si
+// l'utilisateur a demandé moins de mouvement (pour les animations ; les vibrations suivent leur propre réglage, voir
+// vibrer), rien ne se passe et l'action elle-même n'en dépend jamais.
 
 export function mouvementReduit() {
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
@@ -17,20 +18,44 @@ export function defilement() {
 // (Android seulement, muet ailleurs).
 import { estNatif, vibrerNatif } from './natif';
 
-/* LES SENSATIONS NOMMÉES (fondateur, 2026-10-19, audit « Look and feel » 6a). Un tic léger partout, c'était la même chose
- * pour un + et pour un paiement accepté. On se sert maintenant de celles que le téléphone connaît :
- *   'succes'    deux tapes, la seconde plus forte : paiement confirmé, commande acceptée par le commerce ;
- *   'erreur'    trois tapes fermes : tout message d'erreur (le toast rouge, ToastContext.jsx) ;
- *   'selection' le cran d'une molette : les lentilles (onglets, puces, sections) qui passent sur un élément ;
- *   'moyen'     une tape franche : la lentille qui se pose, le seuil du « tirer pour actualiser ».
- * Sur le site, chacune a son équivalent en millisecondes pour navigator.vibrate. */
-const HAPTIQUES = { succes: [10, 40, 18], erreur: [14, 40, 14, 40, 14], selection: 4, moyen: 16 };
+/* UN SENS PAR GESTE, PAS DES MILLISECONDES (2026-10-23, test TestFlight : « je ne sens pas les vibrations » ; suite des
+ * sensations nommées du 2026-10-19, audit « Look and feel » 6a). Les appelants passaient des durées (6, 8, 10, 14) : sur
+ * l'iPhone, tout ce qui était sous 20 devenait la tape la plus faible du téléphone, perdue dans une coque — 21 des 43
+ * vibrations de l'app. On dit maintenant ce que le geste VEUT DIRE, et le téléphone joue sa propre sensation pour ce sens
+ * (natif.js → greffon Haptique d'iOS et d'Android, ios/App/App/HaptiquePlugin.swift, android/…/HaptiquePlugin.java) :
+ *   'choix'      le cran d'une molette : une lentille (onglets, puces, sections) qui passe sur un élément, un segment ;
+ *   'bascule'    un petit contrôle : cœur, interrupteur, − / + ;
+ *   'valider'    un toucher qui engage, AU MOMENT DU TOUCHER : Ajouter, Payer, Accepter, Prendre la course, Envoyer ;
+ *   'seuil'      un seuil franchi pendant un geste, une lentille qui se pose ;
+ *   'pose'       une feuille qui se pose ;
+ *   'appuiLong'  un appui long ;
+ *   'succes'     la réponse qui confirme : paiement confirmé, commande acceptée, demande envoyée ;
+ *   'attention'  ce qui bloque sans être une erreur : option obligatoire manquante, course annulée, commande refusée ;
+ *   'erreur'     tout message d'erreur (le toast rouge, ToastContext.jsx), paiement échoué ;
+ *   'alerte'     ce qui doit se sentir dans une poche : une course arrive, une course est prête (livreur).
+ * Pas de vibration pour un simple toucher d'onglet ni pour un retour par glissement : l'iPhone n'en fait pas là.
+ * Les anciennes valeurs (nombres, tableaux, 'selection', 'moyen') sont encore comprises le temps que tous les écrans passent
+ * aux sens. Sur le site, chaque sens a son équivalent en millisecondes pour navigator.vibrate (Android seulement).
+ * PLUS COUPÉ PAR « RÉDUIRE LES ANIMATIONS » : une vibration n'est pas un mouvement à l'écran, et le réglage « Vibrations du
+ * système » de l'iPhone (ou « Retour tactile » d'Android) s'applique de lui-même. Avant, cocher « Réduire les animations »
+ * éteignait toutes les vibrations de l'app, celles d'un paiement et des erreurs comprises. */
+const MOTIFS_WEB = {
+  choix: 4, bascule: 8, valider: 14, seuil: 16, pose: 6, appuiLong: 30,
+  succes: [10, 40, 18], attention: [14, 40, 14], erreur: [14, 40, 14, 40, 14], alerte: [220, 120, 220]
+};
+const ANCIENS = { selection: 'choix', moyen: 'seuil' };
 
-export function vibrer(motif = 12) {
-  if (mouvementReduit()) return;
+export function sensDe(motif) {
+  if (Array.isArray(motif)) return 'succes';
+  if (typeof motif === 'number') return motif > 10 ? 'valider' : 'bascule';
+  return ANCIENS[motif] || (MOTIFS_WEB[motif] !== undefined ? motif : 'valider');
+}
+
+export function vibrer(motif = 'valider') {
+  const sens = sensDe(motif);
   // Application native : le moteur haptique (Taptic Engine sur iPhone, où navigator.vibrate n'existe pas).
-  if (estNatif()) { vibrerNatif(motif).catch(() => {}); return; }
-  try { navigator.vibrate?.(HAPTIQUES[motif] ?? motif); } catch { /* non pris en charge */ }
+  if (estNatif()) { vibrerNatif(sens); return; }
+  try { navigator.vibrate?.(MOTIFS_WEB[sens]); } catch { /* non pris en charge */ }
 }
 
 // Où atterrit un ajout : la pilule du panier si elle est affichée, sinon l'endroit où elle va apparaître

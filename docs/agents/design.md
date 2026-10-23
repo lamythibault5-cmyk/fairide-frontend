@@ -194,9 +194,16 @@ Android has it in the system), and swipe-to-confirm for the courier's « récup�
 `fill-mode: both` overrides inline transforms — the sheet's entry animation is `backwards` for that reason.
 
 **App polish (founder, 2026-10-19, audit « Look and feel »).** Reuse these instead of re-inventing them:
-- **Haptics** — `vibrer('succes' | 'erreur' | 'selection' | 'moyen')` in [gestes.js](../../src/gestes.js) (named phone feelings; a
-  number still means a light tap). Success = payment confirmed / order accepted; error = every `toast(…, 'erreur')`
-  (wired in ToastContext); selection = a lens sliding over items; medium = a lens landing, pull-to-refresh threshold.
+- **Haptics** (2026-10-23) — `vibrer(sens)` in [gestes.js](../../src/gestes.js) takes a MEANING, never milliseconds:
+  `choix` (a lens or segment passing over items), `bascule` (heart, switch, − / +), `valider` (a committing tap, fired AT
+  the tap: Add, Pay, Accept, Claim, Send), `seuil` (a threshold crossed during a gesture, a lens landing), `pose`,
+  `appuiLong`, `succes` (the answer that confirms), `attention` (blocked: missing option, cancelled job, refused order),
+  `erreur` (every `toast(…, 'erreur')`, wired in ToastContext; failed payment), `alerte` (courier: a job arrives / is ready,
+  a real 0.4 s buzz). No haptic on a plain tab tap, a swipe-back or a sheet dismiss (iOS has none there). Haptics no longer
+  stop under Reduce Motion: the phone's own haptics switch applies. In the native app they go through the project's own
+  plugin `Haptique` (ios/App/App/HaptiquePlugin.swift, registered by FairideViewController.swift; android/…/HaptiquePlugin.java,
+  registered in MainActivity), with warmed-up generators; @capacitor/haptics is only the fallback for older builds. Old
+  values (numbers, arrays, `selection`, `moyen`) are still mapped, but write meanings in new code.
 - **Loading** — [Skeleton.jsx](../../src/components/Skeleton.jsx): `SkeletonCards` are row-shaped light-iris skeletons;
   `SqueletteEcran` is a whole loading screen in band + sheet (`titre` when the screen is known, shimmer bars otherwise,
   `photo` for the restaurant page). App only at call sites (`experienceApp()`); the bike rides while a skeleton shows.

@@ -59,7 +59,7 @@ export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = 
   function activer() {
     if (disabled || fait || Date.now() - dernierContact.current < 1000) return;
     setFait(true);
-    vibrer([10, 30, 10]);
+    vibrer('valider');
     poser(course());
     onConfirmer();
   }
@@ -75,6 +75,11 @@ export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = 
     const g = geste.current; if (!g) return;
     g.x = Math.max(0, Math.min(course(), e.clientX - g.x0));
     g.suivi?.ajouter(e.clientX);
+    // Le cran se sent quand le pouce passe le seuil, pendant le geste, comme sur l'iPhone — plus seulement au lâcher
+    // (2026-10-23, gestes.js) ; il se resent si le pouce revient en arrière puis repasse.
+    const auSeuil = g.x >= course() * 0.9;
+    if (auSeuil && !g.auSeuil) vibrer('seuil');
+    g.auSeuil = auSeuil;
     poser(g.x);
   }
   function finir(e) {
@@ -86,7 +91,8 @@ export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = 
     const valide = g.x + (m ? m.projeter(v) : 0) >= max * 0.9;
     if (valide) {
       setFait(true);
-      vibrer([10, 30, 10]);
+      // Validé par l'élan sans avoir touché le seuil du doigt : le cran part ici.
+      if (!g.auSeuil) vibrer('seuil');
       poser(max);
       onConfirmer();
       return;

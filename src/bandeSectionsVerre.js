@@ -49,7 +49,7 @@ export function brancherBandeSections(barre, rangee, lentille) {
       geste.survol?.classList.remove('quicknav-survol');
       b?.classList.add('quicknav-survol');
       geste.survol = b;
-      vibrer('selection');
+      vibrer('choix');
     }
   };
   const fin = () => {
@@ -64,7 +64,7 @@ export function brancherBandeSections(barre, rangee, lentille) {
     if (!glisse) return; // un simple toucher : le clic du bouton fait le reste
     // Le clic du navigateur tombe sur la rangée (le pointeur est capturé) : c'est nous qui cliquons la bonne section.
     // Autre section : CategoryQuickNav y repose la lentille. Même section : elle revient à sa place de repos.
-    if (survol && !survol.classList.contains('active')) { vibrer('moyen'); survol.click(); }
+    if (survol && !survol.classList.contains('active')) { vibrer('seuil'); survol.click(); }
     else if (lentille.dataset.repos) lentille.style.transform = lentille.dataset.repos;
   };
   const annule = () => {

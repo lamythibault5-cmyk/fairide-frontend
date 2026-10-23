@@ -13,7 +13,7 @@ passe par `src/natif.js` (et `src/pushNatif.js` pour les notifications) — null
 | Paiement Stripe | `allerAuPaiement(url, { retour })` | navigateur intégré (SFSafariViewController / Custom Tab) ; retour par lien universel, sinon page `retour` à la fermeture |
 | Liens externes, documents signés | `ouvrirLienExterne`, `ouvrirDocument.js` | navigateur intégré |
 | PDF reçus en mémoire (contrats) | `ouvrirPdfBlob` | fichier dans le cache + feuille de partage du système |
-| Vibrations | `gestes.js` → `vibrerNatif` | moteur haptique (Taptic Engine sur iPhone, où `navigator.vibrate` n'existe pas) |
+| Vibrations | `gestes.js` → `vibrerNatif` | greffon du projet `Haptique` (iOS : `ios/App/App/HaptiquePlugin.swift`, inscrit par `FairideViewController.swift` ; Android : `HaptiquePlugin.java`, inscrit dans `MainActivity`) : une sensation du téléphone par sens, générateurs préparés au toucher ; `@capacitor/haptics` en repli pour une ancienne version de l'app |
 | Barre d'état | `demarrerNatif` | iris `#3B2FB5`, texte clair (Android : `overlaysWebView: false`) |
 | Encoche / barre d'accueil | `styles.css` (fin), `index.html` | `viewport-fit=cover` + `env(safe-area-inset-*)` sur `.hero`, les barres fixes, les onglets |
 | Clavier | `demarrerNatif` | classe `clavier-ouvert` sur `<html>` : les barres fixes du bas se rangent |

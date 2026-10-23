@@ -478,6 +478,8 @@ export default function Checkout() {
       return;
     }
     if (lignesIndisponibles(cart.lines, restaurant?.menu).length) { toast(t('checkout.removeUnavailable'), 'erreur'); return; }
+    // Le toucher qui engage se sent tout de suite, la confirmation (« succès ») viendra avec la réponse (gestes.js).
+    vibrer('valider');
     setPlacing(true);
     if (!surPlaceChoisi) setOuverturePaiement(true);
     try {

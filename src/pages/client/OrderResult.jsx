@@ -135,6 +135,7 @@ function ResultatCommande({ success }) {
         if (!order) { setState('introuvable'); return; }
         if (order && (order.status === 'annule' || order.status === 'refuse')) {
           setState('failed');
+          vibrer('erreur'); // le pendant du « succès » d'un paiement confirmé (gestes.js) : il ne se sentait pas
           // Commande annulée ou refusée : on rend au client son panier tel qu'il l'avait composé,
           // pour qu'il puisse réessayer sans tout ressaisir.
           cartRef.current.restoreStashed();

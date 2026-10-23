@@ -95,7 +95,7 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
     const o = nouvelles[0];
     const gain = o.driverFee != null ? new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR' }).format(Number(o.driverFee)) : '';
     alerter(
-      NOTES_NOUVELLE, [220, 120, 220],
+      NOTES_NOUVELLE, 'alerte',
       nouvelles.length > 1 ? t('driverAlert.notifNewMany', { n: nouvelles.length }) : t('driverAlert.notifNewOne', { name: o.restaurantName || '' }),
       nouvelles.length > 1 ? t('driverAlert.notifNewManyBody') : t('driverAlert.notifNewOneBody', { commune: o.commune || '', gain }),
       'fairide-course-disponible'
@@ -113,7 +113,7 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
     const nouvelles = pretes.filter((o) => !avant.has(o.id));
     if (!nouvelles.length) return;
     alerter(
-      NOTES_PRETE, [400, 150, 400],
+      NOTES_PRETE, 'alerte',
       t('driverAlert.notifReady', { name: nouvelles[0].restaurantName || '' }),
       t('driverAlert.notifReadyBody'),
       'fairide-course-prete'
@@ -132,7 +132,7 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
     const annulees = mesCourses.filter((o) => ['annule', 'refuse'].includes(o.status) && ['preparation', 'pret'].includes(avant.get(o.id)));
     if (!annulees.length) return;
     alerter(
-      NOTES_ANNULEE, [300, 120, 300, 120, 300],
+      NOTES_ANNULEE, 'attention',
       t('driverAlert.notifCancelled', { name: annulees[0].restaurantName || '' }),
       t('driverAlert.notifCancelledBody'),
       'fairide-course-annulee'

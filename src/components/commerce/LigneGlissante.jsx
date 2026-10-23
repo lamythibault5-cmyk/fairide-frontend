@@ -91,7 +91,7 @@ export default function LigneGlissante({ children, onSupprimer, libelle, disable
     const m = ressortMod.current;
     const v = g.suivi ? g.suivi.vitesse() : 0;
     const ouvrir = position.current + (m ? m.projeter(v) : 0) < -LARGEUR / 2;
-    if (ouvrir && !ouverte) vibrer(8);
+    if (ouvrir && !ouverte) vibrer('seuil');
     aller(ouvrir ? -LARGEUR : 0, v);
   }
   // Rangée ouverte : un appui dessus la referme, sans rien déclencher d'autre.

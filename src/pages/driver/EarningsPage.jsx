@@ -169,7 +169,7 @@ export default function EarningsPage() {
 
   function choisirAnnee(y) {
     if (y === annee) return;
-    if (experienceApp()) vibrer(8);
+    if (experienceApp()) vibrer('choix');
     setAnnee(y);
   }
 
