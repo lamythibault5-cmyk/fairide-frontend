@@ -55,7 +55,7 @@
    2 · LE BANDEAU IRIS ET LA FEUILLE BLANCHE
    --------------------------------------------------------------------------------------------------------------------- */
 .site-bande {
-  position: relative; background: var(--bande); color: #fff;
+  position: relative; background: var(--iris); color: #fff;
   /* Ce que .dashboard-main met autour de la page (24 px en haut, 28 px sur les côtés au-dessus de 900 px). */
   margin: -24px -28px 0; padding: 30px 28px 56px;
 }
@@ -65,7 +65,7 @@
 .site-bande-sous { margin: 0; color: rgba(255, 255, 255, .82); font-size: 16px; line-height: 1.45; }
 .site-bande a:not([class]) { color: #fff; }
 .site-feuille {
-  position: relative; background: var(--cream); color: var(--ink);
+  position: relative; background: #fff; color: var(--ink);
   border-radius: 28px 28px 0 0; margin: -26px -28px 0; padding: 30px 28px 48px;
   animation: site-monte .5s var(--site-ressort) backwards;
 }
@@ -84,7 +84,7 @@
    3 · BANDES COLLANTES, SURVOL, FOCUS
    --------------------------------------------------------------------------------------------------------------------- */
 /* Blanc plein et filet (choix du fondateur pour le site, 2026-10-13, confirmé le 2026-10-16). */
-.site-collant { position: sticky; top: 0; z-index: 20; background: var(--cream); border-bottom: 1px solid var(--line); }
+.site-collant { position: sticky; top: 0; z-index: 20; background: #fff; border-bottom: 1px solid var(--line); }
 
 .site-survol { border: 1px solid var(--line); transition: border-color .2s, transform .3s var(--site-ressort); }
 .site-survol:hover, .site-survol:focus-visible { border-color: var(--iris); }
@@ -211,7 +211,7 @@
 .auth-site-feuille {
   position: relative; display: flex; justify-content: center; align-items: center;
   /* Arrondi en haut seulement : en bas, la feuille rejoint le blanc de la page (le pied de page suit). */
-  background: var(--cream); border-radius: 32px 0 0 0; padding: 56px 40px 64px;
+  background: #fff; border-radius: 32px 0 0 0; padding: 56px 40px 64px;
   animation: auth-entre .55s var(--site-ressort) backwards;
 }
 /* L'inscription change de hauteur à chaque étape : elle part du haut, pour que le sélecteur ne saute pas d'une étape à l'autre. */
@@ -236,7 +236,7 @@
 .auth-segment button[aria-selected="true"] { color: #fff; }
 
 @media (max-width: 960px) {
-  .auth-site { grid-template-columns: minmax(0, 1fr); min-height: 0; margin-top: -24px; background: var(--cream); }
+  .auth-site { grid-template-columns: minmax(0, 1fr); min-height: 0; margin-top: -24px; background: #fff; }
   .auth-site-iris { padding: 26px 20px 0; color: var(--ink); }
   .auth-site-titre { margin: 0; }
   .auth-site-titre h1 { font-size: 28px; margin-bottom: 6px; color: var(--ink); }

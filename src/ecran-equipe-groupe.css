@@ -9,11 +9,11 @@
 /* Le bouton secondaire : pastille à filet iris, texte iris (sur fond blanc). */
 .eg-bouton-iris {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 18px;
-  border: 1px solid var(--iris); border-radius: var(--radius-pill); background: var(--carte); color: var(--iris-texte);
+  border: 1px solid var(--iris); border-radius: var(--radius-pill); background: #fff; color: var(--iris);
   font: inherit; font-size: 14.5px; font-weight: 600; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap;
   transition: background .15s, transform .12s;
 }
-.eg-bouton-iris:hover { background: rgba(59, 47, 181, .06); color: var(--iris-texte); }
+.eg-bouton-iris:hover { background: rgba(59, 47, 181, .06); color: var(--iris); }
 .eg-bouton-iris:active { transform: scale(.97); }
 .eg-bouton-iris:disabled { opacity: .55; cursor: default; }
 .eg-bouton-iris svg { flex: none; }
@@ -29,9 +29,9 @@
 /* L'encart : filet iris, coins ronds, une icône iris, le texte. Le bandeau du groupe (BandeauGroupe) et les états du groupe. */
 .eg-note {
   display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px; padding: 12px 14px;
-  border: 1px solid var(--iris); border-radius: 16px; background: var(--carte); color: var(--ink); font-size: 14px; line-height: 1.45;
+  border: 1px solid var(--iris); border-radius: 16px; background: #fff; color: var(--ink); font-size: 14px; line-height: 1.45;
 }
-.eg-note > svg { flex: none; color: var(--iris-texte); margin-top: 1px; }
+.eg-note > svg { flex: none; color: var(--iris); margin-top: 1px; }
 
 .eg-texte { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
 .eg-petit { margin: 0; color: var(--ink-soft); font-size: 12.5px; line-height: 1.45; }
@@ -46,7 +46,7 @@
 .eg-lien { display: flex; gap: 8px; align-items: center; }
 .eg-lien input {
   flex: 1 1 auto; min-width: 0; height: 42px; min-height: 42px !important; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--radius-pill);
-  background: var(--carte); color: var(--ink-soft); font-size: 13.5px; text-overflow: ellipsis;
+  background: #fff; color: var(--ink-soft); font-size: 13.5px; text-overflow: ellipsis;
 }
 .eg-lien input:focus { border-color: var(--iris); color: var(--ink); }
 @media (max-width: 420px) {
@@ -58,7 +58,7 @@
 .eg-ligne { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; }
 .eg-ligne:last-child { border-bottom: 0; }
 .eg-qte { flex: none; min-width: 32px; height: 26px; padding: 0 6px; border: 1px solid var(--line); border-radius: 8px; display: grid; place-items: center;
-  color: var(--iris-texte); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  color: var(--iris); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .eg-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .eg-ligne-texte b { font-weight: 600; overflow-wrap: anywhere; }
 .eg-ligne-texte small { color: var(--ink-soft); font-size: 12.5px; margin-top: 1px; }
@@ -76,7 +76,7 @@
 .eg-personne-tete { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; }
 .eg-personne-tete b { flex: 1; min-width: 0; font-weight: 700; }
 .eg-personne-tete .eg-prix { font-weight: 600; }
-.eg-initiale { flex: none; width: 32px; height: 32px; border-radius: 50%; background: rgba(59, 47, 181, .1); color: var(--iris-texte);
+.eg-initiale { flex: none; width: 32px; height: 32px; border-radius: 50%; background: rgba(59, 47, 181, .1); color: var(--iris);
   display: grid; place-items: center; font-size: 13.5px; font-weight: 800; }
 .eg-personne .eg-lignes { padding-left: 42px; }
 .eg-personne .eg-ligne { min-height: 44px; font-size: 14px; }
@@ -145,7 +145,7 @@
 .eg-pastille { align-self: flex-start; display: inline-block; padding: 3px 9px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 600; line-height: 1.35;
   background: var(--cream-dim); color: var(--ink-soft); }
 .eg-pastille--active { background: rgba(46, 125, 79, .12); color: var(--green); }
-.eg-pastille--invited { background: rgba(59, 47, 181, .08); color: var(--iris-texte); }
+.eg-pastille--invited { background: rgba(59, 47, 181, .08); color: var(--iris); }
 .eg-pastille--expired { background: rgba(196, 110, 20, .12); color: var(--orange); }
 .eg-equipe-vide { margin: 8px 0 0; padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--ink-soft); font-size: 14px; }
 .eg-inviter { margin-top: 18px; }
@@ -157,7 +157,7 @@
 
 /* ---------- La carte du membre de l'équipe (Mon compte) ---------- */
 .eg-membre-carte { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border-bottom: 1px solid var(--line); }
-.eg-membre-carte > .eg-tuile { flex: none; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; color: var(--iris-texte); display: grid; place-items: center; }
+.eg-membre-carte > .eg-tuile { flex: none; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; color: var(--iris); display: grid; place-items: center; }
 .eg-membre-carte b { display: block; font-size: 14.5px; margin-bottom: 2px; }
 .eg-membre-carte p { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.45; }
 /* Un seul raccourci (Mes commandes) : une tuile en largeur plutôt qu'un tiers de rangée. */
@@ -166,20 +166,20 @@
 
 /* ---------- L'invitation dans l'équipe (/equipe/:code) ---------- */
 .eg-invit { max-width: 520px; margin: 8px auto 32px; }
-.eg-invit-bandeau { position: relative; background: var(--bande); color: #fff; padding: 22px 22px 48px; border-radius: 26px 26px 0 0; }
+.eg-invit-bandeau { position: relative; background: var(--iris); color: #fff; padding: 22px 22px 48px; border-radius: 26px 26px 0 0; }
 .eg-invit-ctx { display: flex; align-items: center; gap: 8px; margin: 0; color: rgba(255, 255, 255, .78); font-size: 13px; font-weight: 600; }
 .eg-invit-titre { margin: 12px 0 6px; color: #fff; font-family: var(--font-titre); font-size: 28px; line-height: 1.12; font-weight: 700; letter-spacing: 0; overflow-wrap: anywhere; }
 .eg-invit-sous { margin: 0; color: rgba(255, 255, 255, .82); font-size: 14.5px; line-height: 1.45; }
 .eg-invit-bandeau .ec-route-bloc { margin-top: 14px; }
 .eg-invit-feuille {
-  position: relative; margin-top: -22px; padding: 22px 22px 24px; background: var(--cream); border: 1px solid var(--line); border-top: 0;
+  position: relative; margin-top: -22px; padding: 22px 22px 24px; background: #fff; border: 1px solid var(--line); border-top: 0;
   border-radius: 26px 26px 26px 26px;
 }
 .eg-invit-feuille h2 { margin: 0 0 10px; font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; }
 .eg-peut { list-style: none; margin: 0 0 18px; padding: 0; }
 .eg-peut li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; line-height: 1.4; }
 .eg-peut li:last-child { border-bottom: 0; }
-.eg-peut li > span { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: rgba(59, 47, 181, .1); color: var(--iris-texte); }
+.eg-peut li > span { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: rgba(59, 47, 181, .1); color: var(--iris); }
 .eg-peut li.eg-peut-pas { color: var(--ink-soft); }
 .eg-peut li.eg-peut-pas > span { background: var(--cream-dim); color: var(--ink-faint); }
 .eg-invit-actions { display: flex; flex-direction: column; gap: 8px; }

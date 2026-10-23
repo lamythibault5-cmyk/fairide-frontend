@@ -106,33 +106,12 @@ source spec and `maquettes/landing-iris/landing-iris.html` for the reference pag
    that grows when pressed and follows the finger ([src/barreVerre.js](../../src/barreVerre.js), loaded with `import()` in the app only;
    on desktop Chromium it also refracts what passes under its edges; not on Android since 2026-10-20, too heavy on a mid-range
    phone). On the website it stays solid white.
-   *Second exception:* the app's **dark mode** (below) swaps white for the night `#15113A`.
 3. **One lime accent per view.** If a screen already has a `btn-gold`, its active tab / badge /
    nav item uses white or iris instead. *Exception (founder, 2026-10-16):* the app's welcome/sign-up screens pair the lime
    button with the lime check of ticked options and the « Salut ! » chip.
 
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.
-
-**The app's dark mode (founder, 2026-10-23, version C « Tout en nuit » of `maquettes/mode-sombre/mode-sombre.html`, from the
-dark variant of the app icon).** App only (`html.appli`); **the website stays light**. Mon compte › Apparence offers Automatique
-(default, follows the phone) / Clair / Sombre ([ChoixApparence.jsx](../../src/components/ChoixApparence.jsx)), stored on the
-device ([theme.js](../../src/theme.js), `fairide_theme`), applied before the first render as `html.sombre`. Whoever has not
-chosen yet gets « Clair ou sombre ? » once, as a full screen on their own home (client list, courier Courses, shop
-Commandes; new accounts right after sign-up, existing ones at their first opening of the updated app): two drawn previews
-of the home in each mode plus « Comme ton téléphone » (pre-selected); a tap previews it on the whole screen, « Continuer »
-saves it ([ChoixApparenceArrivee.jsx](../../src/components/ChoixApparenceArrivee.jsx), version B of
-`maquettes/choix-apparence/choix-apparence.html`; check:app covers it for the three profiles). The night `#15113A`
-is the page **and** the top bands; cards `#1F1A50`, sub-areas `#2A2468`; iris stays on buttons and pills only; lime keeps its
-uses. Colours switch through tokens; [theme-sombre.css](../../src/theme-sombre.css) (imported last) redefines them under
-`html.appli.sombre` and holds the few rules tokens can't reach (glass, map tiles, white-on-band items). Four tokens exist for
-it, **each equal in light to the colour it replaced** (light mode is pixel-identical — checked on 2026-10-23):
-`--carte` (a card / field / modal sheet; the PAGE is `--cream`, and so are sheets rising over a band), `--iris-texte` (iris
-used as text or icon on white; a filled iris stays `--iris`), `--bande` (a full-width top band), `--sur-lime` (text on a lime
-fill: dark in both modes). So in new CSS: **never write `#fff` as a background, `var(--iris)` as a text colour, or
-`var(--ink)` on lime** — use those tokens. Kept white on purpose: shop logos, switch knobs, the Google button, signatures,
-QR codes. `npm run check:sombre` opens every app page in dark and fails on any light background, full-width iris band,
-light hairline or text under 3:1; it prints the offending class.
 
 Fonts (since 2026-10-13, founder's choice on the Revolut model): **Inter** for the interface (`--font-ui`, 400–700) and
 **Inter Tight** for `h1`–`h3` (`--font-titre`, 500–700) — one family, two cuts, not a font pairing. Both are **served by
@@ -239,16 +218,13 @@ threshold + CSS transition), dragging a restaurant photo down to close it
   gone from the rides screen; the alert sound is a row in Mon compte ([SonAlertesLivreur](../../src/components/livreur/SonAlertesLivreur.jsx)).
 - **Pull to refresh** — `<TirerPourActualiser onActualiser={promise} />` ([component](../../src/components/TirerPourActualiser.jsx)),
   native only, on Mes commandes, the restaurant list, the courier's Courses and the shop's Commandes.
-- **Status bar** follows the band in the app ([barreEtat.js](../../src/barreEtat.js)): iris over an iris band, white otherwise;
-  in dark mode always light icons (Android background: iris under an iris band, otherwise the night).
+- **Status bar** follows the band in the app ([barreEtat.js](../../src/barreEtat.js)): iris over an iris band, white otherwise.
 - **Photo transition** card → restaurant page with the View Transitions API ([transitionPhoto.js](../../src/transitionPhoto.js)).
 - **Data already read stays in memory** (2026-10-20, [cacheDonnees.js](../../src/cacheDonnees.js)): the restaurant list and pages show
   what was read during the visit at once and re-read in the background (same answer = same object, no re-render); a card
   prefetches its page on touch. A plain Map, never localStorage (nothing to declare), emptied on logout, keyed by token.
-- **The phone never darkens the page by itself**: `color-scheme: light only` (index.html + styles.css) while the app is light,
-  `forceDarkAllowed=false` on Android. The app's own dark mode (2026-10-23, see « The app's dark mode » above) needs the phone
-  to tell the WebView it is dark: iOS `UIUserInterfaceStyle = Automatic` and the Android theme `DayNight` (both were Light from
-  10-19 to 10-23). An app installed before that build stays light on « Automatique » until it is updated.
+- **Light only**: `color-scheme: light only` (index.html + styles.css) and a Light Android theme. No dark mode until one is
+  designed; iOS needs `UIUserInterfaceStyle = Light` (docs/application-mobile.md).
 
 **Shop screens, design audit 2 (founder, 2026-10-19).** The new-order sheet ([NouvelleCommandeModale](../../src/components/NouvelleCommandeModale.jsx))
 accepts in one tap (prep time + lime « Accepter · prête vers HH:MM », Refuser with reason, Imprimer, Plus tard; no « Tu gardes »); the home's

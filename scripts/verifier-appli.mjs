@@ -16,13 +16,6 @@
 // se corrige dans `simuler()` (réponse plus réaliste), pas en la retirant de la liste.
 //
 // Il faut Chrome (ou Edge) installé : le pilote (playwright-core) ne télécharge aucun navigateur.
-//
-// LE MODE SOMBRE — `npm run check:sombre` (= ce script avec --sombre, 2026-10-23) : les mêmes pages, l'app réglée en sombre
-// (theme.js). En plus des contrôles ci-dessus, il échoue sur ce qui reste clair dans la nuit : un fond clair (blanc, gris
-// clair) d'au moins 300 px², une bande iris de toute la largeur (en version C, les bandes prennent la nuit), un filet clair,
-// un texte à moins de 3:1 sur son fond. Les photos, cartes (plans) et le lime n'entrent pas en compte. À la fin, la liste
-// des éléments fautifs regroupés (classe CSS, nombre de pages) : c'est là qu'on trouve le sélecteur à corriger dans
-// src/theme-sombre.css.
 import { createServer } from 'vite';
 import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
@@ -32,7 +25,6 @@ const REELLES = JSON.parse(readFileSync(new URL('./verifier-appli-donnees.json',
 
 const LARGEUR = 375;
 const HAUTEUR = 667;
-const SOMBRE = process.argv.includes('--sombre');
 
 const COMMERCE = {
   id: 1, name: 'Chez Simone', cuisine: 'Pizza', commune: 'Ixelles', status: 'approved', lat: 50.83, lng: 4.37, deliveryRadiusKm: 6,
@@ -151,10 +143,9 @@ async function lancerNavigateur() {
   throw new Error('Ni Chrome ni Edge trouvé : installe Google Chrome pour lancer cette vérification.');
 }
 
-// theme : le choix clair / sombre déjà fait (sinon l'écran « Clair ou sombre ? » couvre les accueils) ; null = pas encore choisi.
-async function ouvrir(navigateur, base, { profil, appli = true, consentement = 'refused', theme = SOMBRE ? 'sombre' : 'clair' }) {
+async function ouvrir(navigateur, base, { profil, appli = true, consentement = 'refused' }) {
   const ctx = await navigateur.newContext({ viewport: { width: LARGEUR, height: HAUTEUR }, isMobile: true, hasTouch: true, locale: 'fr-BE' });
-  await ctx.addInitScript(({ appli, consentement, session, role, theme }) => {
+  await ctx.addInitScript(({ appli, consentement, session, role }) => {
     if (appli) {
       const original = window.matchMedia.bind(window);
       window.matchMedia = (q) => (String(q).includes('display-mode: standalone')
@@ -190,8 +181,7 @@ async function ouvrir(navigateur, base, { profil, appli = true, consentement = '
     localStorage.setItem('fairide_bienvenue', JSON.stringify({ vu: true, role: role || 'client', commune: 'Ixelles' }));
     if (consentement) { localStorage.setItem('fairide_cookie_consent', consentement); localStorage.setItem('fairide_cookie_consent_at', String(Date.now())); }
     if (session) localStorage.setItem('fairide_session', JSON.stringify(session));
-    if (theme) localStorage.setItem('fairide_theme', theme);
-  }, { appli, consentement, session: profil === 'visiteur' ? null : { token: `jeton-${profil}`, user: UTILISATEURS[profil] }, role: profil === 'visiteur' ? null : profil, theme });
+  }, { appli, consentement, session: profil === 'visiteur' ? null : { token: `jeton-${profil}`, user: UTILISATEURS[profil] }, role: profil === 'visiteur' ? null : profil });
   const page = await ctx.newPage();
   const origine = new URL(base).origin;
   await page.route('**/*', (route) => {
@@ -206,75 +196,9 @@ async function ouvrir(navigateur, base, { profil, appli = true, consentement = '
   return { ctx, page };
 }
 
-// Ce qui reste clair dans l'app réglée en sombre (--sombre). Rend des défauts { quoi, ou } ; `ou` décrit l'élément
-// (balise, deux premières classes) pour les regrouper d'une page à l'autre.
-function controlerSombre() {
-  const rgb = (s) => { const m = s && s.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[\s,/]+/).filter(Boolean).map(parseFloat); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
-  const canal = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
-  const lum = (c) => 0.2126 * canal(c.r) + 0.7152 * canal(c.g) + 0.0722 * canal(c.b);
-  const sat = (c) => { const max = Math.max(c.r, c.g, c.b), min = Math.min(c.r, c.g, c.b); return max ? (max - min) / max : 0; };
-  const clair = (c) => c && c.a > 0.5 && lum(c) > 0.45 && sat(c) < 0.3;
-  const iris = (c) => c && c.a > 0.9 && Math.abs(c.r - 59) < 8 && Math.abs(c.g - 47) < 8 && Math.abs(c.b - 181) < 8;
-  const melange = (c, d) => ({ r: c.r * c.a + d.r * (1 - c.a), g: c.g * c.a + d.g * (1 - c.a), b: c.b * c.a + d.b * (1 - c.a), a: 1 });
-  const nom = (e) => `${e.tagName.toLowerCase()}${[...e.classList].slice(0, 2).map((c) => `.${c}`).join('')}`;
-  // Un élément sans classe se décrit par le premier parent qui en a une : « div.fiche-meta > span ».
-  const decrire = (e) => { if (e.classList.length) return nom(e); const p = e.parentElement?.closest('[class]'); return p ? `${nom(p)} > ${nom(e)}` : nom(e); };
-  // Le fond réellement peint sous l'élément : on remonte en mélangeant les voiles ; une photo ou une carte arrête tout (null).
-  const fondDe = (e) => {
-    const couches = [];
-    for (let x = e; x; x = x.parentElement) {
-      const s = getComputedStyle(x);
-      if (/url\(/.test(s.backgroundImage) || x.matches('img, video, canvas, .leaflet-container')) return null;
-      const c = rgb(s.backgroundColor);
-      if (c && c.a > 0) { couches.push(c); if (c.a >= 0.95) break; }
-    }
-    let fond = rgb(getComputedStyle(document.documentElement).backgroundColor) || { r: 255, g: 255, b: 255, a: 1 };
-    if (fond.a < 1) fond = rgb(getComputedStyle(document.body).backgroundColor) || fond;
-    for (const c of couches.reverse()) fond = melange(c, fond);
-    return fond;
-  };
-  const defauts = [];
-  const vus = new Set();
-  const texteDe = (e) => (e.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30);
-  const noter = (quoi, e, detail = '') => { const ou = decrire(e); const cle = `${quoi}|${ou}`; if (vus.has(cle)) return; vus.add(cle); defauts.push({ quoi, ou, detail: `« ${texteDe(e)} »${detail ? ` ${detail}` : ''}` }); };
-  const ecrire = (c) => `rgb(${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)})`;
-  for (const e of document.querySelectorAll('body *')) {
-    if (e.closest('img, svg, video, canvas, picture, .leaflet-container, #splash, [aria-hidden="true"]')) continue;
-    if (!e.getClientRects().length) continue;
-    const s = getComputedStyle(e);
-    if (s.visibility === 'hidden' || Number(s.opacity) === 0) continue;
-    const r = e.getBoundingClientRect();
-    const bg = rgb(s.backgroundColor);
-    // Du blanc posé sur un bouton iris (une case cochée, un rond) reste voulu.
-    if (clair(bg) && r.width * r.height >= 300 && !iris(e.parentElement && fondDe(e.parentElement))) noter('fond clair', e);
-    if (iris(bg) && r.width >= window.innerWidth - 8 && r.height > 40) noter('bande iris', e);
-    for (const cote of ['Top', 'Bottom', 'Left', 'Right']) {
-      if (parseFloat(s[`border${cote}Width`]) > 0 && s[`border${cote}Style`] !== 'none' && clair(rgb(s[`border${cote}Color`])) && !iris(e.parentElement && fondDe(e.parentElement))) { noter('filet clair', e); break; }
-    }
-    for (const ps of ['::before', '::after']) {
-      const p = getComputedStyle(e, ps);
-      if (p.content === 'none' || p.content === 'normal') continue;
-      // Le bouton blanc d'un interrupteur, un point : blancs voulus, même dans la nuit.
-      if (clair(rgb(p.backgroundColor)) && parseFloat(p.width) * parseFloat(p.height) >= 1100) noter(`fond clair (${ps})`, e);
-    }
-    const texte = [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
-    if (texte) {
-      const fond = fondDe(e);
-      const c = rgb(s.color);
-      if (fond && c && c.a > 0.3) {
-        const t = melange(c, fond);
-        const [a, b] = [lum(t), lum(fond)].sort((x, y) => y - x);
-        if ((a + 0.05) / (b + 0.05) < 3) noter('texte peu lisible', e, `${ecrire(t)} sur ${ecrire(fond)}`);
-      }
-    }
-  }
-  return defauts;
-}
-
 async function examiner(page, { profil, appli }) {
   await page.waitForTimeout(900);
-  const sombre = SOMBRE && appli ? await page.evaluate(controlerSombre) : [];
-  return page.evaluate(({ profil, appli, LARGEUR_ECRAN, sombre }) => {
+  return page.evaluate(({ profil, appli, LARGEUR_ECRAN }) => {
     const voit = (sel) => [...document.querySelectorAll(sel)].some((el) => el.getClientRects().length > 0);
     const problemes = [];
     if (voit('[data-page-plantee]')) problemes.push(`page plantée : ${(window.__erreurs || []).pop() || 'cause inconnue'}`);
@@ -294,10 +218,9 @@ async function examiner(page, { profil, appli }) {
       // téléphone la dézoome (1 080 px au lieu de 390 après la PR #213). Les rangées qui défilent de côté restent dans leur cadre.
       const largeur = document.documentElement.scrollWidth;
       if (largeur > window.innerWidth + 1 || window.innerWidth > LARGEUR_ECRAN + 1) problemes.push(`page plus large que l'écran (${Math.max(largeur, window.innerWidth)} px pour ${LARGEUR_ECRAN})`);
-      if (sombre.length) problemes.push(`sombre : ${sombre.length} défaut${sombre.length > 1 ? 's' : ''}`);
     }
-    return { arrivee: location.pathname + location.search, problemes, sombre };
-  }, { profil, appli, LARGEUR_ECRAN: LARGEUR, sombre });
+    return { arrivee: location.pathname + location.search, problemes };
+  }, { profil, appli, LARGEUR_ECRAN: LARGEUR });
 }
 
 const serveur = await createServer({ server: { port: 0, strictPort: false }, logLevel: 'silent' });
@@ -360,28 +283,6 @@ try {
     }
     identiteStripe = null;
   }
-  // « CLAIR OU SOMBRE ? » À L'ARRIVÉE (2026-10-23, ChoixApparenceArrivee.jsx) : sans choix enregistré, l'écran couvre
-  // l'accueil de chaque profil, tient sans défiler, « Sombre » assombrit tout l'écran, « Continuer » l'enregistre, et il ne
-  // revient pas. Examiné après « Sombre » : en --sombre, il passe aussi le contrôle des couleurs.
-  for (const [profil, accueil] of [['client', '/restaurants'], ['driver', '/driver'], ['restaurant', '/dashboard']]) {
-    const { ctx, page } = await ouvrir(navigateur, base, { profil, theme: null });
-    await page.goto(base + accueil);
-    const nom = `${accueil} (clair ou sombre ? à l'arrivée)`;
-    try {
-      await page.locator('.ap-ecran').waitFor({ timeout: 6000 });
-      await page.locator('.ap-choix').nth(1).click();
-      const r = await examiner(page, { profil, appli: true });
-      if (!(await page.evaluate(() => document.documentElement.classList.contains('sombre')))) r.problemes.push('« Sombre » n\'assombrit pas l\'écran');
-      await page.getByRole('button', { name: 'Continuer' }).click();
-      await page.waitForTimeout(400);
-      if (await page.locator('.ap-ecran').count()) r.problemes.push('l\'écran reste après « Continuer »');
-      if ((await page.evaluate(() => localStorage.getItem('fairide_theme'))) !== 'sombre') r.problemes.push('le choix n\'est pas enregistré');
-      await page.reload(); await page.waitForTimeout(1200);
-      if (await page.locator('.ap-ecran').count()) r.problemes.push('l\'écran revient après un choix');
-      resultats.push({ profil, page: nom, ...r });
-    } catch (e) { resultats.push({ profil, page: nom, problemes: [`écran absent ou parcours impossible (${e.message.split('\n')[0]})`] }); }
-    await ctx.close();
-  }
   // Premier lancement sans réponse sur les rapports de panne : ni la carte cookies du site, ni un écran plein qui bloque
   // (fondateur, 2026-10-16 : la question se pose par une case à l'inscription, au moment d'une panne et dans Mon compte).
   {
@@ -414,18 +315,5 @@ for (const r of resultats) {
   const arrivee = r.arrivee && r.arrivee !== r.page ? ` → ${r.arrivee}` : '';
   console.log(`${r.profil.padEnd(10)} ${(r.page + arrivee).padEnd(52)} ${etat}`);
 }
-if (SOMBRE) {
-  // Les défauts regroupés par élément : le même sélecteur fautif sur dix pages ne se corrige qu'une fois.
-  const groupes = new Map();
-  for (const r of resultats) for (const d of r.sombre || []) {
-    const cle = `${d.quoi.padEnd(24)} ${d.ou}`;
-    if (!groupes.has(cle)) groupes.set(cle, { pages: [], detail: d.detail });
-    groupes.get(cle).pages.push(`${r.profil} ${r.page}`);
-  }
-  console.log(`\nMode sombre : ${groupes.size} éléments à corriger`);
-  for (const [cle, { pages, detail }] of [...groupes].sort((a, b) => b[1].pages.length - a[1].pages.length)) {
-    console.log(`  ${cle}   (${pages.length} page${pages.length > 1 ? 's' : ''}, ex. ${pages[0]})\n      ${detail}`);
-  }
-}
-console.log(`\n${resultats.length} pages vérifiées en mode application${SOMBRE ? ', réglée en sombre' : ''}, ${echecs.length} en échec.`);
+console.log(`\n${resultats.length} pages vérifiées en mode application, ${echecs.length} en échec.`);
 process.exit(echecs.length ? 1 : 0);

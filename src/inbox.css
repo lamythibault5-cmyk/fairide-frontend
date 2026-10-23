@@ -31,7 +31,7 @@
 .inbox-item.is-unread .inbox-item-text b { font-weight: 800; }
 .inbox-item-date { flex: 0 0 auto; color: var(--ink-faint); white-space: nowrap; }
 
-.inbox-back { align-self: flex-start; background: transparent; border: 0; padding: 4px 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--iris-texte); cursor: pointer; }
+.inbox-back { align-self: flex-start; background: transparent; border: 0; padding: 4px 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--iris); cursor: pointer; }
 .inbox-back:hover { text-decoration: underline; }
 .inbox-thread-subject { margin: 0; font-size: 16px; }
 .inbox-closed { margin: 0; padding: 8px 10px; border-radius: var(--radius-chip); background: var(--cream-dim); }
@@ -47,7 +47,7 @@
 .inbox-bubble-date { font-size: 11px; color: var(--ink-faint); align-self: flex-end; }
 
 .inbox-reactions { display: flex; gap: 6px; flex-wrap: wrap; }
-.inbox-reaction { width: 40px; height: 36px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: var(--carte); font-size: 18px; cursor: pointer; transition: transform .12s, border-color .12s; }
+.inbox-reaction { width: 40px; height: 36px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #fff; font-size: 18px; cursor: pointer; transition: transform .12s, border-color .12s; }
 .inbox-reaction:hover:not(:disabled), .inbox-reaction:focus-visible { transform: scale(1.12); border-color: var(--iris); outline: none; }
 .inbox-reaction:disabled { opacity: .5; cursor: default; }
 

@@ -35,12 +35,12 @@
   position: relative; box-sizing: border-box;
   height: calc(var(--lt-hb) + env(safe-area-inset-top));
   padding: calc(8px + env(safe-area-inset-top)) 16px 0;
-  background: var(--bande); color: #fff;
+  background: var(--iris); color: #fff;
 }
 /* La lèvre de la feuille blanche, comme le suivi de commande et les écrans de bienvenue. */
 .lt-bandeau::after {
   content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 16px;
-  background: var(--cream); border-radius: 24px 24px 0 0;
+  background: #fff; border-radius: 24px 24px 0 0;
 }
 .lt-adresse {
   /* 40 px à l'œil ; la cible de 44 px que styles.css donne à tout bouton déborde de 2 px en haut et en bas (marges négatives). */
@@ -82,7 +82,7 @@
 @keyframes lt-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
 
 /* La bande des cuisines. Sur le site : blanche à filet, la lentille est une pastille iris pleine. */
-.lt-puces { position: relative; border-radius: 30px; background: var(--carte); border: 1px solid var(--line); }
+.lt-puces { position: relative; border-radius: 30px; background: #fff; border: 1px solid var(--line); }
 .liste-tete--bandeau .lt-puces { margin: -12px 10px 0; }
 .lt-defile { overflow-x: auto; overflow-y: hidden; border-radius: 30px; scrollbar-width: none; overscroll-behavior-x: contain; }
 .lt-defile::-webkit-scrollbar { display: none; }
@@ -139,7 +139,7 @@
   /* Sur le verre : encre et halo blanc léger, sinon les libellés disparaissent sur une photo qui passe dessous. */
   html.appli .lt-puce { color: rgba(20, 18, 31, .86); text-shadow: 0 0 8px rgba(255, 255, 255, .75); }
   html.appli .lt-puce svg { filter: drop-shadow(0 0 4px rgba(255, 255, 255, .6)); }
-  html.appli .lt-puce[data-cuisine].on, html.appli .lt-puce--survol { color: var(--iris-texte); font-weight: 600; touch-action: none; }
+  html.appli .lt-puce[data-cuisine].on, html.appli .lt-puce--survol { color: var(--iris); font-weight: 600; touch-action: none; }
   html.appli .lt-puce[data-regime].on { color: #fff; text-shadow: none; }
   html.appli .lt-puce[data-regime].on svg { filter: none; }
   html.appli .lt-trait { background: rgba(20, 18, 31, .14); }
@@ -158,13 +158,13 @@
    blanches à filet, iris quand elles sont choisies. Elle flotte sous la bande comme elle, sans fond à elle. */
 .lt-sous { display: flex; gap: 6px; margin: 8px 0 0; padding: 0 15px 2px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; animation: lt-sous .25s ease-out; }
 .lt-sous::-webkit-scrollbar { display: none; }
-.lt-sous-puce { flex: none; padding: 7px 13px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--carte); color: var(--ink); font-size: 13px; font-weight: 500; white-space: nowrap; }
+.lt-sous-puce { flex: none; padding: 7px 13px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 13px; font-weight: 500; white-space: nowrap; }
 .lt-sous-puce.on { border-color: var(--iris); background: var(--iris); color: #fff; }
 @keyframes lt-sous { from { opacity: 0; transform: translateY(-4px); } }
 @media (prefers-reduced-motion: reduce) { .lt-sous { animation: none; } }
 @keyframes lt-goutte { 0% { scale: 1 1; } 35% { scale: 1.3 .86; } 70% { scale: .96 1.05; } 100% { scale: 1 1; } }
 @media (prefers-reduced-transparency: reduce) {
-  html.appli .lt-puces { background: var(--carte); -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); }
+  html.appli .lt-puces { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); }
   html.appli .lt-lentille { background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none; }
   html.appli .lt-puce[data-cuisine].on { color: #fff; text-shadow: none; }
 }
@@ -190,13 +190,13 @@
 @keyframes carte-epingle { from { transform: none; } to { transform: scale(1.32) translateY(-4px); } }
 .carte-page .leaflet-marker-icon:has(.map-pin.active) { z-index: 900 !important; }
 /* Chez toi : un rond lime cerclé d'iris, la maison à l'encre. */
-.carte-page .map-pin.map-pin.map-pin-home { background: var(--lime); color: var(--sur-lime); border: 3px solid var(--iris); }
+.carte-page .map-pin.map-pin.map-pin-home { background: var(--lime); color: var(--ink); border: 3px solid var(--iris); }
 
 /* La fiche du commerce touché. */
 .carte-fiche {
   position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 600; max-width: 520px; margin: 0 auto;
   display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 24px;
-  background: var(--carte); border: 1px solid var(--line); color: var(--ink);
+  background: #fff; border: 1px solid var(--line); color: var(--ink);
   animation: carte-fiche-monte .45s cubic-bezier(.34, 1.45, .64, 1) both;
 }
 @keyframes carte-fiche-monte { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -212,14 +212,14 @@
 .carte-fiche-nom { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 15px; font-weight: 700; }
 .carte-fiche-nom > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .carte-fiche-texte small { display: block; font-size: 12px; line-height: 1.35; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.carte-fiche-promo { margin-left: 6px; padding: 1px 7px; border-radius: var(--radius-pill); background: var(--lime); color: var(--sur-lime); font-weight: 700; }
+.carte-fiche-promo { margin-left: 6px; padding: 1px 7px; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); font-weight: 700; }
 .carte-fiche a.carte-fiche-voir { flex: none; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 700; text-decoration: none; }
 /* La croix (« Retour à la carte ») : un rond de 28 px, mais 44 px à toucher, posé sur le coin de la fiche. */
 .carte-fiche button.carte-fiche-fermer.carte-fiche-fermer {
   position: absolute; top: -16px; right: -10px; width: 44px; height: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 50%;
   background: transparent; color: var(--ink); display: grid; place-items: center;
 }
-.carte-fiche-fermer::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: var(--carte); border: 1px solid var(--line); }
+.carte-fiche-fermer::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: #fff; border: 1px solid var(--line); }
 .carte-fiche-fermer svg { position: relative; }
 /* Le zoom de Leaflet vit en bas à droite : il remonte au-dessus de la fiche quand elle est ouverte. */
 .carte-plein:has(.carte-fiche) .leaflet-top.leaflet-left { bottom: 210px; }
@@ -269,7 +269,7 @@
 @media (prefers-reduced-transparency: reduce) {
   html.appli .carte-page .carte-recherche, html.appli .carte-page .carte-pastilles .cuisine-chip, html.appli .carte-page .carte-compte,
   html.appli .carte-page .carte-reinit, html.appli .carte-page .carte-panneau, html.appli .carte-page .carte-resultat, html.appli .carte-page .carte-fiche {
-    background: var(--carte); -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line);
+    background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -285,13 +285,13 @@
 .eb-bandeau {
   margin: calc(-1 * var(--eb-mh)) calc(-1 * var(--eb-mg)) 0;
   padding: calc(20px + env(safe-area-inset-top)) calc(var(--eb-mg) + 4px) 46px;
-  background: var(--bande); color: #fff;
+  background: var(--iris); color: #fff;
 }
 .eb-titre { font-family: var(--font-titre); font-size: 28px; line-height: 1.1; font-weight: 700; letter-spacing: 0; margin: 4px 0 6px; color: #fff; }
 .eb-sous { margin: 0; font-size: 14.5px; line-height: 1.4; color: rgba(255, 255, 255, .82); }
 .eb-feuille {
   position: relative; margin: -24px calc(-1 * var(--eb-mg)) 0; padding: 20px var(--eb-mg) 0;
-  background: var(--cream); border-radius: 26px 26px 0 0;
+  background: #fff; border-radius: 26px 26px 0 0;
   animation: eb-monte .45s cubic-bezier(.34, 1.45, .64, 1) backwards;
 }
 @keyframes eb-monte { from { transform: translateY(36px); opacity: .5; } to { transform: none; opacity: 1; } }
@@ -348,7 +348,7 @@
   position: absolute; top: 12px; z-index: 3; display: inline-flex; align-items: center; gap: 5px;
   padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; line-height: 1.2;
 }
-.une-surtitre { left: 12px; background: var(--carte); color: var(--iris-texte); }
+.une-surtitre { left: 12px; background: #fff; color: var(--iris); }
 .une-etat { right: 12px; background: var(--ink); color: #fff; }
 .une-texte { position: absolute; left: 16px; right: 16px; bottom: 14px; z-index: 3; display: grid; gap: 4px; }
 .une-nom { display: flex; align-items: center; gap: 7px; font-family: var(--font-titre); font-size: 24px; font-weight: 700; line-height: 1.1; color: #fff; overflow-wrap: anywhere; }
@@ -369,7 +369,7 @@ html:not(.appli) .sl-liste--grand .une-points { display: none; }
    champ sur le bandeau iris (champ blanc en pilule), les envies en tuiles dans la feuille. Le site garde son écran.
    --------------------------------------------------------------------------------------------------------------------- */
 .recherche-app .eb-bandeau .recherche-champ { margin: 14px 0 0; border-color: #fff; border-radius: 999px; padding-left: 18px; }
-.recherche-app .eb-bandeau .recherche-loupe { color: var(--iris-texte); }
+.recherche-app .eb-bandeau .recherche-loupe { color: var(--iris); }
 .recherche-titre-app { margin: 4px 0 10px; font-size: 17px; font-weight: 700; color: var(--ink); }
 .recherche-app .recherche-pastilles + .recherche-titre-app, .recherche-tuiles + .recherche-titre-app { margin-top: 24px; }
 .recherche-tuiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -399,7 +399,7 @@ html:not(.appli) .sl-liste--grand .une-points { display: none; }
 /* Récemment (SearchPage.jsx, app ; 2026-10-17) : les cinq derniers mots, une ligne chacun, « Effacer » en face du titre. */
 .recherche-recentes { margin-top: 24px; }
 .recherche-recentes-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.recherche-recentes-effacer { min-height: 0; padding: 4px 0; border: 0; background: none; color: var(--iris-texte); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.recherche-recentes-effacer { min-height: 0; padding: 4px 0; border: 0; background: none; color: var(--iris); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
 .recherche-recente {
   display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none;
   background: none; color: var(--ink); font: inherit; font-size: 15px; text-align: left; cursor: pointer;
