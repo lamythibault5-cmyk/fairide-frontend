@@ -33,7 +33,9 @@ components live in [src/components/conformite/](../../src/components/conformite/
   contract, the professional declaration and the allergen procedure ([EngagementsInscription](../../src/components/commerce/EngagementsInscription.jsx),
   texts from `GET /restaurants/engagements` and `/restaurants/contract-terms`). Courier: one « Mes engagements » step in
   onboarding (`POST /couriers/me/engagements`) accepts the pre-ride notices, the self-billing mandate, the
-  `declaration_honneur` (replaces every status and vehicle document) and the contract. **No drawn signature anywhere**
+  `declaration_honneur` (replaces every status and vehicle document; since 2026-10-23 it also says the motor insurance covers
+  paid delivery, and that a car stays at ≤ 2.5 t maximum mass and < 500 kg payload, above which Belgian law requires a
+  transport licence: the same line shows under « Voiture » wherever the vehicle is chosen) and the contract. **No drawn signature anywhere**
   (typed name + box = simple e-signature, eIDAS art. 25); a drawing sent anyway must be a valid PNG. Still required,
   because the law targets Fairide itself: courier ID check, non-EEA residence permit + professional card (CPS 175/1),
   biometric consent as its own box (GDPR art. 9), business number before publication, the menu's « C'est bon ».

@@ -47,8 +47,9 @@ export function coucheTuiles(L, options = {}) {
 
 // Itinéraire routier et durée estimée : { latLngs: [[lat, lng], …], duration (s), distance (m) }.
 // Lève si le service ne répond pas : l'appelant garde alors sa ligne droite.
-export async function itineraireRue(token, fromLat, fromLng, toLat, toLng, { velo = false } = {}) {
-  const r = await api(`/geo/route?from=${fromLat},${fromLng}&to=${toLat},${toLng}&mode=${velo ? 'velo' : 'moteur'}`, { token });
+// `voiture` : l'itinéraire d'une voiture (rocades, tunnels), pas celui d'un scooter (fondateur, 2026-10-23).
+export async function itineraireRue(token, fromLat, fromLng, toLat, toLng, { velo = false, voiture = false } = {}) {
+  const r = await api(`/geo/route?from=${fromLat},${fromLng}&to=${toLat},${toLng}&mode=${velo ? 'velo' : voiture ? 'voiture' : 'moteur'}`, { token });
   if (!r || !r.geometry?.length) throw new Error('no-route');
   return { latLngs: r.geometry, duration: r.durationS, distance: r.distanceM };
 }

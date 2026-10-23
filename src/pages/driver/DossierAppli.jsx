@@ -363,6 +363,8 @@ function EcranCourses({ d, c, f, val, t, motorise, select }) {
           <Champ id="dos-plaque" label={t('courierOnboarding.fPlate')}><input id="dos-plaque" value={f.licencePlate} onChange={(e) => val('licencePlate', e.target.value)} placeholder="1-ABC-123" /></Champ>
         </div>
       )}
+      {/* En voiture, les deux poids de la carte grise : au-delà, licence de transport (maquettes/livreur-voiture/livreur-voiture.html). */}
+      {f.vehicleType === 'voiture' && <p className="bv-aide" style={{ marginTop: -4, marginBottom: 14 }}>{t('courierOnboarding.carWeightHelp')}</p>}
       <Champ id="dos-zone" label={t('courierOnboarding.fZone')}>{select('dos-zone', 'zone', (d.zones ?? []).map((z) => [z, z]))}</Champ>
       <span className="bv-etiquette" id="dos-plateformes">{t('auth.platformsTitle')}</span>
       {segments('dos-plateformes', 'worksOtherPlatforms', [['no', t('auth.platformsNo')], ['yes', t('auth.platformsYes')]])}

@@ -1474,6 +1474,7 @@ export default {
       ridesHelp: 'Ta zone, ton véhicule, tes autres plateformes et ton sac : mets-les à jour quand ça change. Ton dossier reste validé.',
       ridesSaved: 'Enregistré.',
       motorNeedsLicence: 'Scooter ou voiture : indique ton numéro de permis et ta plaque.',
+      carWeightHelp: 'En voiture : ta carte grise doit indiquer 2 500 kg au plus de masse maximale et moins de 500 kg de charge utile. Au-delà, la loi demande une licence de transport.',
       permitsTitle: 'Ton titre de séjour et ta carte professionnelle',
       permitsHelp: 'Dépose la nouvelle pièce avant son échéance, avec sa date : Fairide te le rappelle 30 et 7 jours avant. L\'équipe la vérifie ; tes courses continuent tant qu\'une pièce valable est déposée.',
       permitNone: 'Aucune pièce valable déposée.',

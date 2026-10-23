@@ -1473,6 +1473,7 @@ export default {
       ridesHelp: 'Your area, vehicle, other platforms and bag: update them when they change. Your file stays approved.',
       ridesSaved: 'Saved.',
       motorNeedsLicence: 'Scooter or car: enter your licence number and your plate.',
+      carWeightHelp: 'By car: your registration certificate must show a maximum mass of 2,500 kg or less and a payload under 500 kg. Above that, the law requires a transport licence.',
       permitsTitle: 'Your residence permit and professional card',
       permitsHelp: 'Upload the new document before it expires, with its date: Fairide reminds you 30 and 7 days before. The team checks it; your deliveries continue as long as a valid document is uploaded.',
       permitNone: 'No valid document uploaded.',
