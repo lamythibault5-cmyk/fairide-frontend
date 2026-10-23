@@ -77,7 +77,6 @@ export default function CategoryQuickNav({ categories, verre = false, pouce = fa
   const barreRef = useRef(null);
   const rangeeRef = useRef(null);
   const lentilleRef = useRef(null);
-  const activeAvant = useRef(null);
   // Après un toucher sur une section, le suivi est suspendu JUSQU'AU PROCHAIN GESTE de la personne (doigt, molette, touche),
   // plus seulement le temps du saut. Avant (2026-10-23, app iPhone : « Mitraillette » puis retour à « Pita Turk ») : le saut
   // pose le titre à sa marge d'ancrage (scroll-margin-top), le suivi reprenait 0,8 s plus tard avec SON seuil (bas de la
@@ -175,13 +174,9 @@ export default function CategoryQuickNav({ categories, verre = false, pouce = fa
       lentille.style.top = `${btn.offsetTop}px`;
     }
     poser();
-    // La goutte qui s'étire en changeant de section (pas au premier affichage ; coupée si le système réduit les animations).
-    if (activeAvant.current !== null && activeAvant.current !== active) {
-      lentille.classList.remove('quicknav-lentille--etire');
-      void lentille.offsetWidth;
-      lentille.classList.add('quicknav-lentille--etire');
-    }
-    activeAvant.current = active;
+    // Plus de « goutte » en changeant de section (fondateur, 2026-10-23 : « comme la barre d'onglets, beaucoup plus calme ») :
+    // elle s'étirait à chaque section touchée ET à chaque section croisée en faisant défiler la carte. La lentille glisse
+    // seulement (transition de ecran-fiche.css, la courbe de la barre d'onglets).
     if (typeof ResizeObserver === 'undefined') return undefined;
     const obs = new ResizeObserver(poser);
     obs.observe(rangee);
