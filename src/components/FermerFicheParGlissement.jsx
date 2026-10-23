@@ -9,17 +9,16 @@ import { mouvementReduit, vibrer } from '../gestes';
  * elle qui ramène à la liste, avec la photo qui rentre dans sa carte (transitionPhoto.js), partie de là où le doigt l'a
  * laissée ; la fiche démontée emporte son déplacement. Sinon la fiche remonte, au ressort, à la vitesse du doigt.
  *
- * Écouteurs posés sur le HAUT DE LA FICHE (la photo et la feuille blanche dessous, fondateur : « même l'espace blanc du haut
- * où il n'y a rien ») : un toucher plus bas ne passe jamais par ici, et le défilement de la page n'attend pas JavaScript
- * (voir RetourParGlissement.jsx). Un toucher sur un bouton, un lien ou un champ reste à eux ; un mouvement de côté n'est pas
- * un retour. */
+ * Écouteurs posés SUR LA PHOTO seulement (le tirage depuis la feuille blanche du haut, essayé le 23/10, a été retiré à la
+ * demande du fondateur) : un toucher ailleurs ne passe jamais par ici, et le défilement de la page n'attend pas JavaScript.
+ * Un toucher sur un bouton ou un lien posé sur la photo reste à lui ; un mouvement de côté n'est pas un retour. */
 const SEUIL = 150;
 const SENS = 10;
 
 export default function FermerFicheParGlissement({ pageRef }) {
   useEffect(() => {
     const page = pageRef.current;
-    const photo = page?.querySelector('.fiche-entete');
+    const photo = page?.querySelector('.fiche-media');
     if (!page || !photo || mouvementReduit()) return undefined;
     let m = null;
     import('../ressort').then((mod) => { m = mod; }).catch(() => {});
