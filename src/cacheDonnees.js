@@ -113,6 +113,17 @@ export function modifierCache(chemin, token, modifier) {
   try { e.signature = JSON.stringify(e.donnees); } catch { e.signature = null; }
 }
 
+/* Le cœur d'un commerce dans la copie gardée des favoris, à une valeur ENTIÈRE (oui / non) et non une bascule : depuis le
+ * 2026-10-23 (app lente, taps qui attendent le serveur) le cœur change avant la réponse, et l'annulation d'un échec doit
+ * pouvoir remettre exactement l'état d'avant (actionOptimiste.js). Même clé pour la liste, la fiche et Mes favoris. */
+export function poserFavoriEnCache(token, id, actif) {
+  modifierCache('/restaurants/favorites/ids', token, (ids) => {
+    const liste = Array.isArray(ids) ? ids : [];
+    if (actif) return liste.includes(id) ? liste : [...liste, id];
+    return liste.filter((x) => x !== id);
+  });
+}
+
 /* PRÉCHARGEMENT AU TOUCHER (fondateur, 2026-10-20). Entre le doigt posé sur la carte d'un commerce et le clic, il se passe
  * 80 à 150 ms, plus la transition de la photo : la fiche part dès le contact (ses avis aussi, jusqu'à leur retrait le 22/10/2026). Appelé seulement quand le lien
  * mène vraiment à la fiche (connecté, voir murCompte.js) : sans compte, il mène à la connexion. */

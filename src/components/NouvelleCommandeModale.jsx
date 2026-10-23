@@ -10,6 +10,7 @@ import { BandeauAllergie } from './conformite/CommandeConformite';
 import { orderTypeLabel } from '../orderStatus';
 import { euros } from '../prixPlat';
 import { vibrer } from '../gestes';
+import { fusionnerCommande } from './commerce/majLocale';
 import Icone from './Icone';
 import { SegmentGlisse } from './commerce/BandeauCommerce';
 import AnneauDelai from './commerce/AnneauDelai';
@@ -32,7 +33,7 @@ import '../ecran-commerce.css';
  * Elle s'ouvre d'elle-même pour une commande arrivée APRÈS le chargement (jamais pour celles déjà là, même règle que
  * useNewOrderAlert), ou quand on touche « 1 commande à traiter » sur l'accueil (DashboardLayout lui passe `ouverte`). Elle
  * se ferme seule quand la commande n'attend plus (acceptée sur le terminal, refusée, expirée). */
-export default function NouvelleCommandeModale({ orders, ready, restoId, loadDashboard, ouverte, setOuverte }) {
+export default function NouvelleCommandeModale({ orders, ready, restoId, loadDashboard, modifierCommandes, ouverte, setOuverte }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -87,10 +88,15 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
     if (action) return false;
     setAction(chemin);
     try {
-      await api(`/orders/${o.id}/${chemin}`, { method: 'PATCH', token, body });
+      const maj = await api(`/orders/${o.id}/${chemin}`, { method: 'PATCH', token, body });
       succes?.();
+      /* Acceptée : la commande renvoyée par le serveur prend sa place dans la liste du tableau tout de suite (2026-10-23, app
+       * lente : la liste derrière la fenêtre restait « nouvelle », l'alarme sonnait encore, jusqu'à la fin de la relecture).
+       * Le refus ne change pas : la fenêtre du motif attend la réponse PUIS la relecture, comme avant. */
+      if (chemin === 'accept') modifierCommandes?.((liste) => fusionnerCommande(liste, maj));
       fermer();
-      await loadDashboard?.(restoId, { fiche: false, annexes: false, silencieux: true });
+      const relecture = loadDashboard?.(restoId, { fiche: false, annexes: false, silencieux: true });
+      if (chemin !== 'accept') await relecture;
       return true;
     } catch (e) {
       toast(e.message, 'erreur');
@@ -132,10 +138,10 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
           <BandeauAllergie order={o} />
 
           <p className="ec-feuille-titre">{t('ordersResto.extraPrepLabel')}</p>
-          <SegmentGlisse libelle={t('ordersResto.extraPrepLabel')} valeur={enPlus} onChange={(v) => { vibrer('selection'); setEnPlus(v); }}
+          <SegmentGlisse libelle={t('ordersResto.extraPrepLabel')} valeur={enPlus} onChange={(v) => { vibrer('choix'); setEnPlus(v); }}
             options={[{ value: 0, label: t('ordersResto.extraPrepNone') }, ...[10, 20, 30].map((m) => ({ value: m, label: t('ordersResto.extraPrepMinutes', { n: m }) }))]} />
           <button type="button" className="ec-bouton ec-bouton--lime" disabled={!!action}
-            onClick={() => { if (o.allergyRequest) setAllergie(true); else accepter(); }}>
+            onClick={() => { if (o.allergyRequest) setAllergie(true); else { vibrer('valider'); accepter(); } }}>
             {action === 'accept' ? '…' : pret ? t('serviceCommerce.accepterPreteVers', { time: pret }) : t('ordersResto.accept')}
           </button>
 
@@ -175,7 +181,7 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
         message={t('conformite.allergyConfirmText', { request: o.allergyRequest || '' })}
         confirmLabel={t('conformite.allergyConfirmAccept')}
         onCancel={() => setAllergie(false)}
-        onConfirm={() => { setAllergie(false); accepter(true); }} />
+        onConfirm={() => { setAllergie(false); vibrer('valider'); accepter(true); }} />
     </>
   );
 }

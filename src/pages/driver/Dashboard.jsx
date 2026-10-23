@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useActionOptimiste } from '../../actionOptimiste';
 import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
 import ErrorCard from '../../components/ErrorCard';
@@ -155,8 +156,9 @@ function CodeCases({ valeur, onChange, onValider, libelle }) {
 export default function DriverDashboard() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { token, user, refreshUser } = useAuth();
+  const { token, user, refreshUser, modifierUtilisateur } = useAuth();
   const toast = useToast();
+  const agirOptimiste = useActionOptimiste();
   const [available, setAvailable] = useState([]);
   const [mine, setMine] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -175,7 +177,6 @@ export default function DriverDashboard() {
   const [sharingLocation, setSharingLocation] = useState(false);
   const [lastPositionAt, setLastPositionAt] = useState(null);
   const [connecting, setConnecting] = useState(false);
-  const [togglingPause, setTogglingPause] = useState(false);
   // Selfie de contrôle demandé (SelfieControle.jsx) : null, ou { dueAt, blocking }. Sert au bandeau (LIVE-25).
   const [selfie, setSelfie] = useState(null);
   const activeIdsRef = useRef([]);
@@ -198,18 +199,27 @@ export default function DriverDashboard() {
     }
     basculerPause();
   }
-  async function basculerPause() {
-    setTogglingPause(true);
-    try {
-      await api('/auth/me', { method: 'PATCH', token, body: { driverPaused: !user?.driverPaused } });
-      await refreshUser();
-      // Reprise : les courses tout de suite, sans attendre le prochain relevé de 15 secondes (audit du 19/10, LIVE-26).
-      load();
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setTogglingPause(false);
-    }
+  /* L'INTERRUPTEUR BASCULE AU TOUCHER (2026-10-23, app lente : « … » grisé le temps d'un PATCH /auth/me, PUIS d'un second
+   * GET /auth/me, puis du relevé des courses). La position est vérifiée AVANT (togglePause, plus haut) : l'interrupteur ne
+   * s'allume jamais sur un téléphone qui refuserait la position. Ensuite il change tout de suite dans le profil gardé
+   * (AuthContext.modifierUtilisateur), l'appel suit et sa réponse — le profil tel que le serveur l'a écrit — remplace la
+   * devinette, sans second GET ; un refus le remet comme avant avec le message d'erreur (actionOptimiste.js). La réponse du
+   * PATCH ne porte que le rôle d'origine du compte (publicUser sans lireRoles, routes/auth.js) : les rôles déjà connus sont
+   * gardés, sinon un livreur aussi client perdrait sa casquette « client » jusqu'au relevé suivant. */
+  function basculerPause() {
+    const voulu = !user?.driverPaused;
+    agirOptimiste('pause', {
+      appliquer: () => { const avant = !!user?.driverPaused; modifierUtilisateur((u) => ({ ...u, driverPaused: voulu })); return avant; },
+      envoyer: () => api('/auth/me', { method: 'PATCH', token, body: { driverPaused: voulu } }),
+      annuler: (avant) => modifierUtilisateur((u) => ({ ...u, driverPaused: avant })),
+      confirmer: (profil) => {
+        const lu = { ...(profil || {}) };
+        delete lu.token; // jamais ici (seul un changement de mot de passe en renvoie un), et la session garde le sien
+        modifierUtilisateur((u) => ({ ...u, ...lu, roles: u.roles?.length ? u.roles : lu.roles }));
+        // Reprise : les courses tout de suite, sans attendre le prochain relevé de 15 secondes (audit du 19/10, LIVE-26).
+        load();
+      }
+    });
   }
 
   useEffect(() => {
@@ -289,7 +299,8 @@ export default function DriverDashboard() {
         // Courses en main et récentes seulement (audit du 19/10, courier-21 : tout l'historique, toutes les 15 s).
         api('/orders/mine/deliveries?recent=1', { token })
       ]);
-      setAvailable(availableData);
+      // Sans les courses écartées à l'instant (refuserOffre) : un relevé parti avant l'enregistrement du refus les remettrait.
+      setAvailable(refusees.current.size ? availableData.filter((o) => !refusees.current.has(o.id)) : availableData);
       setMine(mineData);
       setErreur(null);
       chargeReussieRef.current = true;
@@ -426,33 +437,58 @@ export default function DriverDashboard() {
   }, [token, user?.locationSharingEnabled, enLivraison, suiviUtile]);
 
   // Refuser une course (B23bis) : elle quitte SA liste, et rien d'autre — le refus n'est relu par aucune
-  // autre décision (docs/dispatch.md côté serveur). Retrait local immédiat, sans attendre le rechargement.
-  // Un seul envoi à la fois (audit du 19/10, CROSS-36) : un deuxième appui, réseau lent, renvoyait la demande.
-  const refusEnCours = useRef(null);
-  async function refuserOffre(id) {
-    if (refusEnCours.current === id) return;
-    refusEnCours.current = id;
-    try {
-      await api(`/orders/${id}/refuse-offer`, { method: 'PATCH', token });
-      // La carte glisse vers la gauche, puis quitte la liste (ecran-livreur.css, .ecl-offre.part).
-      setPartantes((p) => [...p, id]);
-      setTimeout(() => {
-        setAvailable((prev) => prev.filter((x) => x.id !== id));
+  // autre décision (docs/dispatch.md côté serveur). Un seul envoi par course (audit du 19/10, CROSS-36) : un deuxième appui,
+  // réseau lent, renvoyait la demande.
+  /* LA CARTE PART AU TOUCHER (2026-10-23, app lente : elle attendait la réponse du serveur avant de glisser). Elle glisse
+   * vers la gauche puis quitte la liste tout de suite (ecran-livreur.css, .ecl-offre.part), l'appel suit ; si le serveur
+   * refuse, elle revient à sa place avec le message d'erreur (actionOptimiste.js). `refusees` garde les courses écartées :
+   * un relevé de 15 s parti avant que le serveur ait enregistré le refus ne la remet pas dans la liste. */
+  const refusees = useRef(new Set());
+  function refuserOffre(id) {
+    if (refusees.current.has(id)) return;
+    agirOptimiste(`refus:${id}`, {
+      appliquer: () => {
+        const rang = available.findIndex((x) => x.id === id);
+        const offre = available[rang] || null;
+        refusees.current.add(id);
+        setPartantes((p) => [...p, id]);
+        const minuteur = setTimeout(() => {
+          setAvailable((prev) => prev.filter((x) => x.id !== id));
+          setPartantes((p) => p.filter((x) => x !== id));
+        }, mouvementReduit() ? 0 : 300);
+        return { offre, rang, minuteur };
+      },
+      envoyer: () => api(`/orders/${id}/refuse-offer`, { method: 'PATCH', token }),
+      annuler: ({ offre, rang, minuteur }) => {
+        clearTimeout(minuteur);
+        refusees.current.delete(id);
         setPartantes((p) => p.filter((x) => x !== id));
-      }, mouvementReduit() ? 0 : 300);
-      toast(t('conformite.offerRefused'));
-    } catch (e) { toast(e.message, 'erreur'); } finally { refusEnCours.current = null; }
+        if (offre) setAvailable((prev) => (prev.some((x) => x.id === id) ? prev : [...prev.slice(0, Math.max(0, rang)), offre, ...prev.slice(Math.max(0, rang))]));
+      },
+      confirmer: () => toast(t('conformite.offerRefused'))
+    });
   }
 
   // Course en train d'être prise (bordure iris le temps de la réponse) et cartes refusées qui s'en vont.
   const [prise, setPrise] = useState(null);
   const [partantes, setPartantes] = useState([]);
   async function claim(id) {
+    // Le toucher qui engage se sent tout de suite ; « succès » quand le serveur confirme que la course est à moi (gestes.js).
+    if (experienceApp()) vibrer('valider');
     setPrise(id);
     try {
-      await api(`/orders/${id}/claim`, { method: 'PATCH', token });
-      if (experienceApp()) vibrer([10, 30, 10]);
-      await load();
+      const course = await api(`/orders/${id}/claim`, { method: 'PATCH', token });
+      if (experienceApp()) vibrer('succes');
+      /* PRENDRE UNE COURSE RESTE CONFIRMÉ PAR LE SERVEUR : plusieurs livreurs visent la même, seul le premier l'a. Mais
+       * l'écran n'attend plus en plus le relevé complet des deux listes (2026-10-23, app lente) : la course renvoyée par
+       * /claim (la même forme que /orders/mine/deliveries) passe dans « mes courses » tout de suite, quitte les offres, et
+       * les deux listes sont relues en arrière-plan. */
+      if (course?.id) {
+        setMine((prev) => [course, ...prev.filter((x) => x.id !== course.id)]
+          .sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0)));
+        setAvailable((prev) => prev.filter((x) => x.id !== course.id));
+        load();
+      } else await load();
     } catch (e) {
       toast(e.message, 'erreur');
       // Notices à relire (B4), titre de séjour expiré (B2) ou dossier à compléter / pas encore vérifié — y compris l'ancien
@@ -602,12 +638,12 @@ export default function DriverDashboard() {
   const partageOk = user?.locationSharingEnabled !== false && sharingLocation;
 
   const interrupteur = (surBlanc) => (
-    <button type="button" className={`ecl-service${enPause ? '' : ' on'}${surBlanc ? ' sur-blanc' : ''}`} aria-pressed={!enPause} disabled={togglingPause}
-      onClick={() => { if (appli) vibrer(10); togglePause(); }}>
+    <button type="button" className={`ecl-service${enPause ? '' : ' on'}${surBlanc ? ' sur-blanc' : ''}`} aria-pressed={!enPause}
+      onClick={() => { if (appli) vibrer('bascule'); togglePause(); }}>
       <span className="ecl-service-txt">
         <b>{enPause ? t('dashDriver.accountPaused') : t('dashDriver.availableToDeliver')}</b>
         {/* Sur un ordinateur, on clique : « Touche pour… » se lit mal à la souris. */}
-        <span>{togglingPause ? '…' : enPause ? t(large ? 'siteLivreur.cliqueReprendre' : 'dashDriver.tapToResume') : t(large ? 'siteLivreur.cliquePause' : 'dashDriver.tapToPause')}</span>
+        <span>{enPause ? t(large ? 'siteLivreur.cliqueReprendre' : 'dashDriver.tapToResume') : t(large ? 'siteLivreur.cliquePause' : 'dashDriver.tapToPause')}</span>
       </span>
       <span className="ecl-inter" aria-hidden="true" />
     </button>

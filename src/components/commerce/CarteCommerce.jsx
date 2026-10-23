@@ -146,27 +146,24 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
   );
 }
 
-// Un plat : photo, nom, état du jour, « Retirer de la carte », et l'interrupteur « En vente aujourd'hui ». L'interrupteur
-// bascule tout de suite (on montre la valeur visée pendant l'appel) et revient si le serveur refuse.
+// Un plat : photo, nom, état du jour, « Retirer de la carte », et l'interrupteur « En vente aujourd'hui ».
+/* L'INTERRUPTEUR ET « RETIRER » NE SE VERROUILLENT PLUS (2026-10-23, app lente : la ligne basculait, puis restait bloquée
+ * jusqu'à la fin du rechargement complet de la fiche). Le plat lui-même change dans la fiche gardée au toucher (MenuPage.jsx,
+ * changerPlatEnStock) et revient si le serveur refuse ; un second toucher pendant l'envoi est permis, le dernier gagne
+ * (actionOptimiste.js). Plus d'état « visé » à part : la ligne lit toujours le plat. */
 function LignePlat({ item, sections, t, onStock, onWithdraw }) {
-  const [visee, setVisee] = useState(null);
-  const [retraitEnCours, setRetraitEnCours] = useState(false);
-  const enVente = visee ?? !item.outOfStockToday;
+  const enVente = !item.outOfStockToday;
   const image = resolveItemImage(item, sections);
   const interrupteur = !item.withdrawn && (item.available !== false || item.outOfStockToday);
   const indisponible = !item.withdrawn && item.available === false && !item.outOfStockToday;
   const rupture = !item.withdrawn && !indisponible && !enVente;
 
-  async function basculer() {
-    if (visee !== null) return;
-    const v = !enVente;
-    setVisee(v);
-    vibrer(10);
-    try { await onStock(item.id, !v); } catch { /* message déjà affiché */ } finally { setVisee(null); }
+  function basculer() {
+    vibrer('bascule');
+    onStock(item.id, enVente).catch(() => { /* message déjà affiché, plat remis comme avant */ });
   }
-  async function retirer() {
-    setRetraitEnCours(true);
-    try { await onWithdraw(item.id, !item.withdrawn); } catch { /* message déjà affiché */ } finally { setRetraitEnCours(false); }
+  function retirer() {
+    onWithdraw(item.id, !item.withdrawn).catch(() => { /* message déjà affiché, plat remis comme avant */ });
   }
 
   const etat = item.withdrawn ? t('ecranCommerce.retire')
@@ -183,16 +180,16 @@ function LignePlat({ item, sections, t, onStock, onWithdraw }) {
         {item.activePromo && <span className="ec-plat-promo"><Icone nom="etiquette" taille={12} className="icone-texte" />{' '}{item.activePromo.label}</span>}
         <small key={etat} className="ec-plat-etat fondu">{etat}</small>
         {(item.withdrawn || item.available !== false) && (
-          <button type="button" className="ec-lien" disabled={retraitEnCours} onClick={retirer}
+          <button type="button" className="ec-lien" onClick={retirer}
             title={item.withdrawn ? t('menuItem.withdrawBackHelp') : t('menuItem.withdrawHelp')}>
-            {retraitEnCours ? '…' : item.withdrawn ? `↩︎ ${t('menuItem.withdrawBack')}` : t('menuItem.markUnavailable')}
+            {item.withdrawn ? `↩︎ ${t('menuItem.withdrawBack')}` : t('menuItem.markUnavailable')}
           </button>
         )}
       </span>
       {interrupteur && (
         <button type="button" role="switch" aria-checked={enVente} className={`ec-interrupteur${enVente ? ' on' : ''}`}
           aria-label={`${t('ecranCommerce.enVenteAujourdhui')} : ${item.name}`} title={enVente ? t('menuItem.stockOutHelp') : t('menuItem.stockBackHelp')}
-          aria-busy={visee !== null} onClick={basculer} />
+          onClick={basculer} />
       )}
     </div>
   );

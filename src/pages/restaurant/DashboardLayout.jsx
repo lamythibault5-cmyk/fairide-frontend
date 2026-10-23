@@ -504,7 +504,7 @@ export default function DashboardLayout() {
       {/* Terminal Goodcom au son bloqué par le navigateur : l'écran plein qui le débloque d'un toucher (SonTerminal.jsx). */}
       <SonTerminal alerte={orderAlert} />
       {/* La commande qui vient d'arriver, affichée d'elle-même (fondateur, 2026-10-01). */}
-      {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} loadDashboard={loadDashboard}
+      {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} loadDashboard={loadDashboard} modifierCommandes={setOrders}
         ouverte={feuilleCommande} setOuverte={setFeuilleCommande} />}
 
       {/* Accès perdu (membre retiré, commerce fermé, shop-403) : un seul message, et le chemin vers la vue client. */}
@@ -528,7 +528,11 @@ export default function DashboardLayout() {
       )}
       {restaurant && !etatCommandes.accesPerdu && (
         <div className="page-fade" key={chemin}>
+          {/* modifierRestaurant / modifierCommandes (2026-10-23, app lente) : un geste (« épuisé », « Prête », pause, accepter)
+              change la fiche ou la liste ici même, avant la réponse ou sans attendre le rechargement complet
+              (actionOptimiste.js, components/commerce/majLocale.js). Le sondage de 15 s et les relectures les corrigent. */}
           <Outlet context={{ restaurant: restaurant || null, orders, drivers, restoId, loadDashboard, ordersLoaded, etatCommandes, statsService,
+            modifierRestaurant: setRestaurant, modifierCommandes: setOrders,
             communs: bandeau ? communs : null, onConnect: connectOnboard, connecting, lectureSeule: !!actingAs,
             alerte: { ...orderAlert, push } }} />
         </div>

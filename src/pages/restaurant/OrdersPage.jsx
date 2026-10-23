@@ -1,5 +1,7 @@
 import InterrupteurService from '../../components/commerce/InterrupteurService';
 import RupturesDuJour from '../../components/commerce/RupturesDuJour';
+import { fusionnerCommande } from '../../components/commerce/majLocale';
+import { useActionOptimiste } from '../../actionOptimiste';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
@@ -85,7 +87,7 @@ export default function OrdersPage() {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
-  const { orders, restaurant, restoId, loadDashboard, communs, alerte, onConnect, connecting, lectureSeule, ordersLoaded, etatCommandes, statsService } = useOutletContext();
+  const { orders, restaurant, restoId, loadDashboard, communs, alerte, onConnect, connecting, lectureSeule, ordersLoaded, etatCommandes, statsService, modifierRestaurant, modifierCommandes } = useOutletContext();
   // Membre de l'équipe (modeEquipe.js) : la mise en ligne du commerce et le terminal sont l'affaire du propriétaire.
   const membreEquipe = useModeEquipe();
 
@@ -235,15 +237,46 @@ export default function OrdersPage() {
     };
   }, [orders]);
 
+  /* « PRÊTE » BOUGE AU TOUCHER (2026-10-23, app lente : la carte attendait l'appel PUIS le rechargement complet du tableau
+   * avant de passer dans « Prêtes »). Elle y passe tout de suite, l'appel suit ; la réponse (la commande telle que le serveur
+   * l'a écrite) remplace la devinette, un refus la remet « En préparation » avec le message d'erreur (actionOptimiste.js).
+   * Rien n'est remboursé ni annoncé au client avant la réponse : c'est le serveur qui prévient (e-mail, livreur), seulement
+   * s'il a accepté. La relecture des commandes part ensuite en arrière-plan. */
+  const agirOptimiste = useActionOptimiste();
+  function marquerPrete(orderId) {
+    agirOptimiste(`prete:${orderId}`, {
+      appliquer: () => {
+        const avant = orders.find((o) => o.id === orderId)?.status;
+        modifierCommandes?.((liste) => liste.map((o) => (o.id === orderId ? { ...o, status: 'pret' } : o)));
+        return avant;
+      },
+      envoyer: () => api(`/orders/${orderId}/ready`, { method: 'PATCH', token }),
+      // Seulement si elle est encore « pret » d'après nous : une relecture entre-temps a pu lui donner un autre état réel.
+      annuler: (avant) => modifierCommandes?.((liste) => liste.map((o) => (o.id === orderId && o.status === 'pret' && avant ? { ...o, status: avant } : o))),
+      confirmer: (maj) => modifierCommandes?.((liste) => fusionnerCommande(liste, maj)),
+      rafraichir: () => loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true })
+    });
+  }
+
   // Rend { ok, code } : les fenêtres de motif ne se ferment qu'en cas de succès (shop-222).
   async function orderAction(orderId, action, body) {
+    if (action === 'ready') { marquerPrete(orderId); return { ok: true }; }
     if (verrous.current.has(orderId)) return { ok: false };
     verrous.current.add(orderId);
     setActionsEnCours(new Set(verrous.current));
     try {
-      await api(`/orders/${orderId}/${action}`, { method: 'PATCH', token, body });
+      const maj = await api(`/orders/${orderId}/${action}`, { method: 'PATCH', token, body });
       // Commande acceptée : le retour « succès » du téléphone (gestes.js, App polish du 2026-10-19).
       if (action === 'accept') vibrer('succes');
+      /* ACCEPTER RESTE CONFIRMÉ PAR LE SERVEUR (paiement, allergie, délai : il peut refuser), mais l'écran n'attend plus en
+       * plus le rechargement complet (2026-10-23, app lente) : la commande renvoyée par PATCH /accept prend sa place dans la
+       * liste tout de suite (« En préparation », l'alarme se tait), et la relecture des commandes suit en arrière-plan. Le
+       * refus garde, lui, son rechargement complet avant de fermer la fenêtre du motif. */
+      if (action === 'accept' && modifierCommandes) {
+        modifierCommandes((liste) => fusionnerCommande(liste, maj));
+        loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
+        return { ok: true };
+      }
       await loadDashboard(restoId);
       return { ok: true };
     } catch (e) {
@@ -484,7 +517,7 @@ export default function OrdersPage() {
           {/* Temps de préparation en plus, annoncé à l'acceptation (RES-10) : l'heure estimée du client recule d'autant. */}
           <p className="ec-feuille-titre">{t('ordersResto.extraPrepLabel')}</p>
           <SegmentGlisse libelle={t('ordersResto.extraPrepLabel')} valeur={tempsEnPlus[o.id] || 0}
-            onChange={(v) => { vibrer('selection'); setTempsEnPlus((p) => ({ ...p, [o.id]: v })); }}
+            onChange={(v) => { vibrer('choix'); setTempsEnPlus((p) => ({ ...p, [o.id]: v })); }}
             options={[{ value: 0, label: t('ordersResto.extraPrepNone') }, ...[10, 20, 30].map((m) => ({ value: m, label: t('ordersResto.extraPrepMinutes', { n: m }) }))]} />
           {/* Sur un téléphone, ceux de la plus pressée sont dans la barre du bas : cachés ici par le CSS (.ec-cmd-boutons-barre),
               mais gardés pour une tablette plus large, où la barre ne s'affiche pas. */}
@@ -519,7 +552,7 @@ export default function OrdersPage() {
   };
   // Accepter : une demande d'allergie se confirme d'abord (A1), comme dans la feuille « Nouvelle commande ».
   function accepter(o) {
-    vibrer(14);
+    vibrer('valider');
     if (o.allergyRequest) setAllergieAConfirmer(o);
     else orderAction(o.id, 'accept', { extraMinutes: tempsEnPlus[o.id] || 0 });
   }
@@ -827,7 +860,7 @@ export default function OrdersPage() {
           {/* Le terminal se règle chez le propriétaire : un membre de l'équipe n'a pas la page (DashboardLayout le ramène ici). */}
           {alerte && <AlerteBandeau {...alerte} terminal={membreEquipe ? null : etatTerminal} />}
         </div>
-        {restaurant && <InterrupteurService surBandeau restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />}
+        {restaurant && <InterrupteurService surBandeau restaurant={restaurant} restoId={restoId} token={token} loadDashboard={loadDashboard} modifierRestaurant={modifierRestaurant} />}
         {restaurant && !membreEquipe && <MiseEnLigne surBandeau restaurant={restaurant} restoId={restoId} token={token} onConnect={onConnect} connecting={connecting}
           onChange={() => loadDashboard(restoId)} lectureSeule={lectureSeule} />}
       </BandeauCommerce>
@@ -849,7 +882,7 @@ export default function OrdersPage() {
         </div>
         {restaurant && (
           <div className="ec-ruptures">
-            <RupturesDuJour restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
+            <RupturesDuJour restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} modifierRestaurant={modifierRestaurant} />
           </div>
         )}
         {nbHistorique > 0 && (
@@ -879,7 +912,7 @@ export default function OrdersPage() {
       <BandeauCommerce>
         <div className="ec-b-haut">
           <span><b>{restaurant?.name}</b>{' · '}{t('ordersResto.summary', { current: enCours.length, today: duJour })}</span>
-          {restaurant && <InterrupteurService compact restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />}
+          {restaurant && <InterrupteurService compact restaurant={restaurant} restoId={restoId} token={token} loadDashboard={loadDashboard} modifierRestaurant={modifierRestaurant} />}
         </div>
         <LigneAlarme alerte={alerte} />
         {terminaux && !membreEquipe && <span className="ec-terminal"><Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></span>}
@@ -893,7 +926,7 @@ export default function OrdersPage() {
         {/* Rupture du jour, sous les commandes (le geste reste à portée pendant le service). */}
         {restaurant && (
           <div className="ec-ruptures">
-            <RupturesDuJour restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} />
+            <RupturesDuJour restaurant={restaurant} restoId={restoId} token={token} toast={toast} loadDashboard={loadDashboard} modifierRestaurant={modifierRestaurant} />
           </div>
         )}
         {nbHistorique > 0 && (
