@@ -30,6 +30,12 @@ const COMMERCE = {
   id: 1, name: 'Chez Simone', cuisine: 'Pizza', commune: 'Ixelles', status: 'approved', lat: 50.83, lng: 4.37, deliveryRadiusKm: 6,
   address: 'Rue du Midi 12, 1000 Bruxelles', hours: { mon: [{ open: '11:00', close: '22:00' }] }, menu: [], sections: [], offersDelivery: true, offersPickup: true
 };
+// ASSEZ DE COMMERCES POUR DES RANGÉES QUI DÉFILENT DE CÔTÉ (2026-10-23). Avec un seul commerce, la liste n'avait aucune rangée :
+// le texte caché du badge « Prix du comptoir » qui, sorti de sa carte, rendait la page trois fois plus large que l'écran (PR
+// #213, corrigé par position: relative sur .rest-card.rc) passait inaperçu. Huit commerces, la moitié au prix du comptoir.
+const LISTE_COMMERCES = [COMMERCE, ...Array.from({ length: 7 }, (_, i) => ({
+  ...COMMERCE, id: 100 + i, name: `Commerce ${i + 1}`, slug: `commerce-${i + 1}-ixelles`, prixComptoir: i % 2 === 0, hours: null, menu: []
+}))];
 // LE PAIEMENT AVEC UN PANIER (audit du 19/10, checkout-26) : /checkout sans panier renvoyait vers la liste, et le paiement de
 // l'app (feuilles Codes, Allergie, Avant de commander, barre de verre) n'était jamais dessiné. Un second commerce, avec un plat,
 // sert au panier posé plus bas ; le premier garde sa carte vide pour les autres pages.
@@ -88,7 +94,7 @@ function simuler(chemin, methode, profil) {
   if (methode === 'GET' && REELLES[chemin]) return REELLES[chemin];
   // Le tableau de bord du commerce (réponse réelle, identifiants UUID) : chaque page du commerce lit ensuite /restaurants/<id>/…
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/compliance$/.test(chemin)) return REELLES['/restaurants/:id/compliance'];
-  if (/^\/restaurants$/.test(chemin)) return [COMMERCE];
+  if (/^\/restaurants$/.test(chemin)) return LISTE_COMMERCES;
   if (/^\/restaurants\/[^/]+\/capacity$/.test(chemin)) return { full: false };
   // Statistiques du commerce (backend analytiqueCommerce.js) : 30 jours d'une petite pizzeria, forme exacte de la réponse.
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/analytics$/.test(chemin)) {
@@ -192,7 +198,7 @@ async function ouvrir(navigateur, base, { profil, appli = true, consentement = '
 
 async function examiner(page, { profil, appli }) {
   await page.waitForTimeout(900);
-  return page.evaluate(({ profil, appli }) => {
+  return page.evaluate(({ profil, appli, LARGEUR_ECRAN }) => {
     const voit = (sel) => [...document.querySelectorAll(sel)].some((el) => el.getClientRects().length > 0);
     const problemes = [];
     if (voit('[data-page-plantee]')) problemes.push(`page plantée : ${(window.__erreurs || []).pop() || 'cause inconnue'}`);
@@ -208,9 +214,13 @@ async function examiner(page, { profil, appli }) {
       if (!coquille && !problemes.length) problemes.push("coquille de l'app absente");
       const plein = [...document.querySelectorAll('.bv')].filter((el) => el.getClientRects().length > 0).pop();
       if (plein && plein.scrollHeight > plein.clientHeight + 1) problemes.push(`écran plein trop haut (${plein.scrollHeight} px pour ${plein.clientHeight})`);
+      // LA PAGE NE DÉPASSE JAMAIS L'ÉCRAN DE CÔTÉ (2026-10-23) : un élément qui sort de son cadre élargit la page entière, et le
+      // téléphone la dézoome (1 080 px au lieu de 390 après la PR #213). Les rangées qui défilent de côté restent dans leur cadre.
+      const largeur = document.documentElement.scrollWidth;
+      if (largeur > window.innerWidth + 1 || window.innerWidth > LARGEUR_ECRAN + 1) problemes.push(`page plus large que l'écran (${Math.max(largeur, window.innerWidth)} px pour ${LARGEUR_ECRAN})`);
     }
     return { arrivee: location.pathname + location.search, problemes };
-  }, { profil, appli });
+  }, { profil, appli, LARGEUR_ECRAN: LARGEUR });
 }
 
 const serveur = await createServer({ server: { port: 0, strictPort: false }, logLevel: 'silent' });
