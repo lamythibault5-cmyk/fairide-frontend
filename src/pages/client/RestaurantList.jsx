@@ -352,7 +352,9 @@ export default function RestaurantList() {
   const [restaurants, setRestaurants] = useState(() => lireCache('/restaurants') || []);
   /* Apres la declaration de `restaurants`, jamais avant : lu plus haut, le tableau serait dans
      sa zone morte temporelle et la page planterait au montage. */
-  useJsonLd(restaurantListJsonLd(restaurants, { url: `${SITE_URL}/restaurants` }), 'ld-list');
+  // Mémorisé sur la liste : refait quand la liste change, pas à chaque rendu (useJsonLd.js).
+  const ldListe = useMemo(() => restaurantListJsonLd(restaurants, { url: `${SITE_URL}/restaurants` }), [restaurants]);
+  useJsonLd(ldListe, 'ld-list');
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(token ? lireCache('/restaurants/favorites/ids', token) || [] : []));
   const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(() => new Set(token ? (lireCache('/orders/mine', token) || []).map((o) => o.restaurantId) : []));
   const [loading, setLoading] = useState(() => !lireCache('/restaurants'));

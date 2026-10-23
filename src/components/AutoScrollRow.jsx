@@ -88,7 +88,7 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, m
     const compact = window.matchMedia(`(max-width: ${COMPACT_BREAKPOINT}px)`);
     const vitesseCible = () => (autoplay ? (compact.matches ? mobileSpeed : speed) : 0);
     let targetSpeed = vitesseCible();
-    const onTierChange = () => { targetSpeed = vitesseCible(); };
+    const onTierChange = () => { targetSpeed = vitesseCible(); relancer(); };
     compact.addEventListener('change', onTierChange);
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -101,7 +101,7 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, m
     // « visible » reste vrai tant que le navigateur n'a rien dit : si l'observateur ne répond jamais, la rangée défile
     // comme avant plutôt que de rester figée.
     if (typeof IntersectionObserver !== 'undefined') {
-      vue = new IntersectionObserver((entrees) => { visible = entrees.some((e) => e.isIntersecting); }, { threshold: 0.15 });
+      vue = new IntersectionObserver((entrees) => { visible = entrees.some((e) => e.isIntersecting); relancer(); }, { threshold: 0.15 });
       vue.observe(viewport);
     }
 
@@ -117,33 +117,48 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, m
       track.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`;
     }
 
-    let raf;
+    /* LA BOUCLE S'ARRÊTE QUAND RIEN NE BOUGE (2026-10-23, app iPhone lente). Elle tournait à chaque image pour toute la vie
+     * de la page — rangées immobiles (autoplay=false) et rangées sorties de l'écran comprises — et la vitesse de fond, qui
+     * décroît en exponentielle, n'atteignait jamais exactement 0 : la piste recevait une nouvelle transformation à chaque
+     * image, d'un millionième de pixel (mesuré : 164 écritures en 4 s de défilement d'une fiche), et le navigateur
+     * recomposait la page pour rien. Maintenant la vitesse tombe à 0 sous 0,5 px/s, la boucle s'endort quand il n'y a ni
+     * vitesse, ni inertie, ni rien à rattraper, et tout ce qui peut la remettre en route la relance (entrée dans l'écran,
+     * reprise après un geste, lâcher avec élan, changement de taille d'écran). Pendant un glissement, pointermove peint lui-même. */
+    let raf = 0;
     let last = null;
     function step(now) {
+      raf = 0;
       if (last === null) last = now;
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
+      if (dragRef.current) return;
 
-      if (!dragRef.current) {
-        const wanted = (pausedRef.current || !visible || (canLoop && reduceMotion.matches)) ? 0 : (canLoop ? targetSpeed : 0);
-        autoSpeedRef.current += (wanted - autoSpeedRef.current) * (1 - Math.exp(-dt / SPEED_RAMP_TAU));
-        // Inertie du lâcher, en px/s, qui s'éteint exponentiellement et s'ajoute à la vitesse de fond.
-        inertiaRef.current *= Math.exp(-dt * INERTIA_DECAY);
-        if (Math.abs(inertiaRef.current) < 1) inertiaRef.current = 0;
-        const v = autoSpeedRef.current + inertiaRef.current;
-        if (v !== 0) {
-          offsetRef.current = wrap(offsetRef.current + v * dt);
-          paint();
-        }
+      const wanted = (pausedRef.current || !visible || (canLoop && reduceMotion.matches)) ? 0 : (canLoop ? targetSpeed : 0);
+      // Sortie de l'écran, la rangée s'arrête net : personne ne voit son ralenti, qui faisait encore 4 s de peinture.
+      if (!visible) { autoSpeedRef.current = 0; inertiaRef.current = 0; }
+      autoSpeedRef.current += (wanted - autoSpeedRef.current) * (1 - Math.exp(-dt / SPEED_RAMP_TAU));
+      if (wanted === 0 && Math.abs(autoSpeedRef.current) < 0.5) autoSpeedRef.current = 0;
+      // Inertie du lâcher, en px/s, qui s'éteint exponentiellement et s'ajoute à la vitesse de fond.
+      inertiaRef.current *= Math.exp(-dt * INERTIA_DECAY);
+      if (Math.abs(inertiaRef.current) < 1) inertiaRef.current = 0;
+      const v = autoSpeedRef.current + inertiaRef.current;
+      if (v !== 0) {
+        offsetRef.current = wrap(offsetRef.current + v * dt);
+        paint();
       }
+      if (v !== 0 || wanted !== 0) raf = requestAnimationFrame(step);
+    }
+    function relancer() {
+      if (raf || dragRef.current) return;
+      last = null;
       raf = requestAnimationFrame(step);
     }
-    raf = requestAnimationFrame(step);
+    relancer();
 
     function clearResume() { clearTimeout(resumeTimerRef.current); }
     function scheduleResume() {
       clearResume();
-      resumeTimerRef.current = setTimeout(() => { pausedRef.current = false; }, RESUME_AFTER_GESTURE_MS);
+      resumeTimerRef.current = setTimeout(() => { pausedRef.current = false; relancer(); }, RESUME_AFTER_GESTURE_MS);
     }
 
     function onPointerDown(e) {
@@ -190,6 +205,7 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, m
         inertiaRef.current = Math.max(-2600, Math.min(2600, d.v));
         try { viewport.releasePointerCapture(e.pointerId); } catch { /* rien à libérer */ }
       }
+      relancer();
       scheduleResume();
     }
 

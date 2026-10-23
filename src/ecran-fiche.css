@@ -261,10 +261,12 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
   background: var(--iris); color: #fff; border-radius: 18px; padding: 12px 14px 8px;
 }
 .fiche-appli .fiche-info--route .fiche-info-icone { background: rgba(255, 255, 255, .16); color: #fff; }
-.fiche-appli .fiche-info-route { grid-column: 1 / -1; position: relative; height: 18px; }
+/* Conteneur de taille : le vélo arrive par `transform` en % de la route (1cqw), plus par `left`, qui refaisait la mise en
+   page à chaque image pendant 1,4 s à l'ouverture de la fiche (2026-10-23, app iPhone lente). */
+.fiche-appli .fiche-info-route { grid-column: 1 / -1; position: relative; height: 18px; container-type: inline-size; }
 .fiche-appli .fiche-info-route::before { content: ''; position: absolute; left: 0; right: 0; bottom: 3px; border-top: 3px dashed rgba(255, 255, 255, .4); }
 .fiche-appli .fiche-info-velo { position: absolute; bottom: 5px; left: 62%; color: var(--lime); line-height: 0; animation: fiche-velo-roule 1.4s cubic-bezier(.3, .7, .4, 1) .3s backwards; }
-@keyframes fiche-velo-roule { from { left: 4%; } }
+@keyframes fiche-velo-roule { from { transform: translateX(-58cqw); } }
 
 /* L'aperçu de la carte : des plats en photo, en rangée qui défile, avant la bande des sections. */
 .fiche-appli .fiche-apercu { margin: 4px 0 6px; }
@@ -310,7 +312,10 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .sub-category-header { margin: 14px 0 2px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); }
 
 /* Un plat : petite photo carrée à gauche, « nom ····· prix », la description dessous, le « + » à droite sous le prix. */
-.fiche-appli .plat.plat-bistrot { gap: 12px; padding: 12px 0; min-height: 86px; align-items: flex-start; border-bottom-color: transparent; }
+/* min-height !important (2026-10-23, test de l'app) : la ligne est un <button>, et la règle des 44 px tactiles (styles.css,
+   button:not(...), spécificité 0,3,1) passait devant (0,3,0). Un plat sans description faisait 54 px de haut, et son « + »,
+   posé à 40 px du haut et haut de 40 px, débordait de 26 px sur le prix du plat suivant. */
+.fiche-appli .plat.plat-bistrot { gap: 12px; padding: 12px 0; min-height: 86px !important; align-items: flex-start; border-bottom-color: transparent; }
 .fiche-appli .plat-bistrot .plat-visuel { width: 56px; height: 56px; border-radius: 14px; }
 .fiche-appli .plat-bistrot .plat-texte { gap: 3px; }
 /* Le prix et ses points restent sur la PREMIÈRE ligne du nom (fondateur, 2026-10-17 : « Pizza Margherita napolitaine » sur deux

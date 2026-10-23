@@ -68,7 +68,12 @@ function PasPlat({ item, name, image, onAjout, t }) {
     <div className={`plat-pas plat-pas--${etat}${bosse ? ` plat-pas--bosse${bosse % 2}` : ''}`} role="group" aria-label={name}>
       <button type="button" className="plat-pas-moins" tabIndex={etat === 'ouvert' ? 0 : -1} aria-hidden={etat !== 'ouvert'} onClick={moins} aria-label={t('menuCategories.oneLess', { name })}>−</button>
       <button type="button" className="plat-pas-chiffre" tabIndex={etat === 'replie' ? 0 : -1} aria-hidden={etat === 'ferme'} onClick={(e) => { e.stopPropagation(); garderOuvert(); }}
-        aria-label={t('menuCategories.inCart', { n: qte })}><span key={qte}>{qte}</span></button>
+        aria-label={t('menuCategories.inCart', { n: qte })}>
+        {/* Le chiffre n'existe qu'à partir de 1 (2026-10-23, app iPhone lente) : toujours rendu, même caché à 0, il jouait
+            son entrée sur CHAQUE plat à l'ouverture de la fiche — 266 animations dans la même image sur une carte de 250 plats,
+            l'avertissement « Too many messages … AcceleratedAnimationDidStart » de WebKit. Il entre maintenant au premier ajout,
+            et rejoue à chaque changement (key). */}
+        {qte > 0 && <span key={qte}>{qte}</span>}</button>
       <button type="button" className="plat-pas-plus" tabIndex={etat === 'replie' ? -1 : 0} onClick={plus} aria-label={t('menuCategories.quickAdd', { name })}><span aria-hidden="true">+</span></button>
     </div>
   );

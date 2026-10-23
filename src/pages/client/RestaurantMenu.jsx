@@ -1,4 +1,4 @@
-import { Fragment, Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import urlSure from '../../urlSure';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -206,7 +206,9 @@ export default function RestaurantMenu({ id }) {
     image: restaurant?.coverImageUrl || undefined,
     type: 'restaurant'
   });
-  useJsonLd(restaurant ? restaurantJsonLd(restaurant, { url: `${SITE_URL}${cheminFiche(restaurant)}` }) : null, 'ld-restaurant');
+  // Mémorisé sur la fiche : la carte entière passe en données structurées, à refaire seulement quand la fiche change (useJsonLd.js).
+  const ldFiche = useMemo(() => (restaurant ? restaurantJsonLd(restaurant, { url: `${SITE_URL}${cheminFiche(restaurant)}` }) : null), [restaurant]);
+  useJsonLd(ldFiche, 'ld-restaurant');
   useJsonLd(restaurant ? breadcrumbJsonLd([
     { name: 'Fairide', path: '/' },
     { name: t('restoListUi.heading'), path: '/restaurants' },

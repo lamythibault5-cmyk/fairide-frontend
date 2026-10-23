@@ -47,10 +47,20 @@ export default function FloatingCart() {
     return () => window.removeEventListener('fairide:panier-atterri', ecoute);
   }, []);
   useEffect(() => { if (cart.count > avant.current) setRebond((n) => n + 1); avant.current = cart.count; }, [cart.count]);
+  /* LE REBOND REJOUE SANS RECRÉER LA BARRE (2026-10-23, app iPhone lente). Une clé changée à chaque ajout reconstruisait la
+     barre entière : un nouveau calque de verre flouté à préparer, et les chiffres du total (ChiffresRoulants) qui repartaient
+     de zéro au lieu de rouler vers le nouveau montant. La barre reste la même ; au deuxième rebond et aux suivants, on
+     rembobine sa propre animation (la classe --rebond est déjà posée, une animation finie ne repart pas toute seule). */
+  const pilule = useRef(null);
+  useEffect(() => {
+    if (rebond < 2 || !pilule.current?.getAnimations) return;
+    // Ses animations CSS seulement : une transition en cours (la barre qui se resserre au défilement) ne doit pas repartir.
+    for (const a of pilule.current.getAnimations()) if (a.animationName) { a.currentTime = 0; a.play(); }
+  }, [rebond]);
   if (!visible) return null;
 
   return (
-    <Link to="/panier" className={`panier-pilule${bulle ? ' panier-pilule--bulle' : ''}${rebond ? ' panier-pilule--rebond' : ''}`} key={`pilule-${rebond}`}
+    <Link ref={pilule} to="/panier" className={`panier-pilule${bulle ? ' panier-pilule--bulle' : ''}${rebond ? ' panier-pilule--rebond' : ''}`}
       aria-label={`${t('panier.viewCart')} · ${euros(cart.sousTotal)}`}>
       <span className="panier-pilule-icone" aria-hidden="true">
         <Icone nom="sac" taille={20} />

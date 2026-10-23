@@ -36,6 +36,20 @@ const photosVues = new Set();
 export function photoVue(url) { return !!url && photosVues.has(url); }
 export function retenirPhotoVue(url) { if (url) photosVues.add(url); }
 
+/* LE FONDU D'UNE PHOTO PART QUAND ELLE ARRIVE (2026-10-23, voir « Fondu d'apparition des photos » dans styles.css). Un seul
+   écouteur pour toute la page (l'événement `load` d'une image ne remonte pas, il se capte) : une photo de carte, de plat ou
+   de fiche qui finit de charger reçoit `photo-arrivee`, qui joue le fondu une fois. Une photo paresseuse loin sous l'écran
+   ne charge (et ne fond) qu'en approchant : les fondus s'étalent au lieu de partir tous ensemble. Une photo de carte déjà
+   vue pendant la visite (rc-photo--vue) n'a toujours pas de fondu. Appelé une fois par main.jsx. */
+const PHOTOS_EN_FONDU = 'img.rc-photo, .plat-photo img, img.dish-thumb-lg, .plat-visuel img.plat-photo';
+export function installerFonduPhotos() {
+  if (typeof document === 'undefined') return;
+  document.addEventListener('load', (e) => {
+    const img = e.target;
+    if (img?.tagName === 'IMG' && img.matches(PHOTOS_EN_FONDU)) img.classList.add('photo-arrivee');
+  }, true);
+}
+
 // Image qui ne charge pas (photo retirée d'Unsplash, lien mort) : on retire la balise plutôt que de laisser l'icône
 // cassée et le texte de remplacement au milieu de la carte — le fond (dégradé, couleur) reste, la fiche se lit.
 export function cacherImageCassee(e) {

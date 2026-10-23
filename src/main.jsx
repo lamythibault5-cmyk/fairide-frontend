@@ -30,6 +30,7 @@ import { rechargerSiNouveauCode } from './lazyPage';
 import { demarrerAnalytics } from './analytics';
 import { estNatif, demarrerNatif, retirerEcranLancementNatif, garderLesLiensDansLApp } from './natif';
 import { ecouterNotificationsNatives } from './pushNatif';
+import { installerFonduPhotos } from './images';
 
 // POLICES : on rallume la feuille laissée en `media="print"` par index.html (voir le commentaire
 // détaillé là-bas). Deux contraintes se croisent et cette ligne est le seul point où elles tiennent
@@ -157,6 +158,8 @@ setTimeout(retirerEcranChargement, 0);
 demarrerNatif(historiqueLangue);
 garderLesLiensDansLApp(historiqueLangue);
 if (estNatif()) ecouterNotificationsNatives(historiqueLangue);
+// Le fondu d'une photo part quand elle arrive, pas au rendu (images.js) — site et app.
+installerFonduPhotos();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

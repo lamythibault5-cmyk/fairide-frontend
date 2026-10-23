@@ -151,7 +151,7 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 
 /* RouteSuivi (orderStatus.jsx) est dessinée pour un fond iris ; sur la feuille blanche : route iris, arrêts gris, coches lime. */
 .ec-route-blanc .route-suivi { color: var(--iris); margin: 6px 0 4px; }
-.ec-route-blanc .rs-voie { background: repeating-linear-gradient(90deg, rgba(59, 47, 181, .25) 0 7px, transparent 7px 13px); }
+.ec-route-blanc .rs-voie::before { background: repeating-linear-gradient(90deg, rgba(59, 47, 181, .25) 0 7px, transparent 7px 13px); }
 .ec-route-blanc .rs-fait { background: var(--iris); }
 .ec-route-blanc .rs-arret { background: #fff; border-color: var(--line); }
 .ec-route-blanc .rs-arret.actuel { background: var(--iris); border-color: var(--iris); }
