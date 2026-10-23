@@ -7,7 +7,14 @@
    ============================================================================================ */
 
 /* ---------- Carte d'un commerce (liste, rangées, recherche) ---------- */
+/* position: relative (2026-10-23, page trois fois trop large dans l'app) : la carte est le repère de ce qu'elle contient en
+   position absolue, notamment le texte réservé aux lecteurs d'écran du badge « Prix du comptoir » (.sr-only). Sans repère,
+   ce texte se plaçait par rapport à la page, à sa place dans une rangée qui défile de côté (jusqu'à 2 000 px à droite) :
+   l'overflow de la rangée ne le coupait plus et la page entière devenait plus large que l'écran (1 080 px au lieu de 390,
+   l'écran se dézoomait). Jusqu'à la PR #213, l'animation d'entrée gardée (`both`) laissait une transformation sur chaque
+   carte, qui en faisait ce repère sans qu'on le sache. */
 .rest-card.rc {
+  position: relative;
   display: flex; flex-direction: column; padding: 0; overflow: hidden;
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
   color: inherit; text-decoration: none; min-width: 0; margin: 0;
