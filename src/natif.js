@@ -180,6 +180,8 @@ export async function demarrerNatif(historique) {
   if (!estNatif()) return;
   const html = document.documentElement;
   html.classList.add('natif', `natif-${plateforme()}`);
+  // iPhone : le verre iris sous l'heure et la batterie quand la page défile (verreBarreEtat.js, verre.css).
+  if (plateforme() === 'ios') import('./verreBarreEtat').then(({ installerVerreBarreEtat }) => installerVerreBarreEtat()).catch(() => {});
   // La photo d'un commerce voyage de sa carte à sa fiche (transitionPhoto.js, audit « Look and feel » 6b).
   import('./transitionPhoto').then(({ installerTransitionPhoto }) => installerTransitionPhoto(historique)).catch(() => {});
 

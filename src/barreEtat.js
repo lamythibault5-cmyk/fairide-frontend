@@ -13,7 +13,9 @@ export function suivreBarreEtat({ StatusBar, Style, android }) {
   let iris = null;
   const appliquer = () => {
     const fond = fondSous(2);
-    const estIris = fond !== null && IRIS.has(fond);
+    // Le verre iris sous la barre d'état (verreBarreEtat.js, iPhone) est translucide : fondSous() regarde à travers. Tant
+    // qu'il est là, les icônes restent blanches.
+    const estIris = document.documentElement.classList.contains('verre-etat-on') || (fond !== null && IRIS.has(fond));
     if (estIris === iris) return;
     iris = estIris;
     // Style.Dark = icônes claires (sur l'iris), Style.Light = icônes sombres (sur le blanc).
