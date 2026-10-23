@@ -76,11 +76,6 @@ html.appli body .fiche-appli .fiche-modes-pouce {
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 
-/* ---------- Derrière l'app, de l'iris (iPhone ; fondateur, 2026-10-23 : « en tirant vers le bas je vois du blanc ») ----------
-   Le fond de la toile est l'iris ; la page garde son crème, au moins sur toute la hauteur de l'écran. Si iOS fait rebondir la
-   page (en haut, en bas) ou qu'un geste la déplace, c'est l'iris qui apparaît, jamais un blanc. */
-html.natif-ios { background: var(--iris); }
-html.natif-ios body { min-height: 100vh; }
 
 /* ---------- Les puces de la fiche (cuisine, commune, Infos) ---------- */
 html.appli body .fiche-appli .fiche-meta > span:not([aria-hidden]),

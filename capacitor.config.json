@@ -9,7 +9,7 @@
     "contentInset": "never",
     "allowsLinkPreview": false,
     "scheme": "Fairide",
-    "backgroundColor": "#3B2FB5"
+    "backgroundColor": "#ffffff"
   },
   "android": {
     "allowMixedContent": false,

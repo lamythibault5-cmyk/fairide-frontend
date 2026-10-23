@@ -14,7 +14,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
 import { SkeletonCards, SqueletteEcran } from './Skeleton';
-import { estNatif, experienceApp, plateforme } from '../natif';
+import { experienceApp } from '../natif';
 import { lireBienvenue } from '../bienvenue';
 import useBarreSurIris from '../hooks/useBarreSurIris';
 // Le cadre du site (barre latérale blanche, largeurs, bandeau et feuille, carte des cookies, connexion) : voir son en-tête.
@@ -23,10 +23,9 @@ import '../site-cadre.css';
 // « Activer les notifications » juste après l'inscription, dans l'application seulement (voir AmorceNotifications.jsx).
 // Chargé à la demande : sur fairide.be la condition est toujours fausse, et le module n'est jamais téléchargé.
 const AmorceNotifications = lazy(() => import('./AmorceNotifications'));
-// Retour par glissement depuis le bord gauche, application iPhone seulement (Android l'a dans le système). Même
-// chargement à la demande : le site ne télécharge ni ce module ni le ressort qu'il utilise.
-const RetourParGlissement = lazy(() => import('./RetourParGlissement'));
-const retourParGlissement = estNatif() && plateforme() === 'ios';
+// PAS DE RETOUR PAR GLISSEMENT (fondateur, 2026-10-23) : le glissement vers la droite pour reculer (bord gauche, puis de
+// n'importe où) a été retiré — sur la liste, la page partait de côté sur un fond vide « à l'infini ». On recule par les
+// boutons retour / fermer ; Android garde le geste du système.
 /* L'APPLICATION N'A PAS LE CADRE DU SITE (2026-10-15). Dans l'app (experienceApp : la coque native ou le site ajouté à
  * l'écran d'accueil), aucune page ne montre l'en-tête du site (Restaurants · Aide · Contact · Connexion · Inscription),
  * son pied de page, la rangée des liens légaux ni la carte des cookies : c'était le site qui reprenait la main au milieu
@@ -247,7 +246,6 @@ export default function Layout() {
         {!APPLI && <CookieBanner />}
         {seesClientCart && <FloatingCart />}
         {experienceApp() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
-        {retourParGlissement && <Suspense fallback={null}><RetourParGlissement /></Suspense>}
       </>
     );
   }
@@ -278,7 +276,6 @@ export default function Layout() {
             </Suspense>
           </main>
         </div>
-        {retourParGlissement && <Suspense fallback={null}><RetourParGlissement /></Suspense>}
       </>
     );
   }
@@ -392,7 +389,6 @@ export default function Layout() {
       </div>
       <CookieBanner />
       {seesClientCart && <FloatingCart />}
-      {retourParGlissement && <Suspense fallback={null}><RetourParGlissement /></Suspense>}
       {/* Pas de filigrane ici : cette branche affiche déjà la bannière .hero, avec le vélo ET le
           mot « fairide » à vingt pixels de l'endroit où le filigrane se serait posé. Il n'y
           apportait rien, et sa présence obligeait .hero-inner à réserver 88 à 108px de largeur
