@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { api } from '../api';
+import { api, apiUpload } from '../api';
 import { defilement } from '../gestes';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -73,6 +73,16 @@ export default function ValiderCarte() {
   const pctLocal = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
   const avecCommission = choixOffert && ajouter;
   const prixAVerifier = !!carte?.pricesToCheck;
+  const [envoiPhoto, setEnvoiPhoto] = useState(false);
+  const [photoEnvoyee, setPhotoEnvoyee] = useState(false);
+  async function envoyerPhotos(fichiers) {
+    if (!fichiers.length) return;
+    setEnvoiPhoto(true);
+    try {
+      await apiUpload(`/menu-validation/${encodeURIComponent(token)}/photos`, { files: fichiers, fieldName: 'files' });
+      setPhotoEnvoyee(true); setErreur('');
+    } catch (e) { setErreur(e.message); } finally { setEnvoiPhoto(false); }
+  }
 
   const charger = () => api(`/menu-validation/${encodeURIComponent(token)}`)
     .then((c) => { setCarte(c); setNom((n) => n || c.restaurant.responsibleName || ''); setErreur(''); })
@@ -213,6 +223,17 @@ export default function ValiderCarte() {
         {/* Prix repris d'une plateforme, pas encore relevés au comptoir (fondateur, 22/10/2026) : pas de « C'est bon », le
             serveur le refuserait (PRIX_A_VERIFIER). On le dit en tête, et la fin de page le redit à la place du bouton. */}
         {prixAVerifier && <p className="gn-note" role="note"><Icone nom="etiquette" taille={18} />{t('validerCarte.pricesToCheck')}</p>}
+        {/* La photo de la carte, envoyée d'ici sans compte (fondateur, 23/10/2026 ; maquettes/prix-plateforme, option A) :
+            elle arrive chez l'équipe comme une demande « Modifier la carte », et ce lien sert ensuite à valider. */}
+        {prixAVerifier && (photoEnvoyee
+          ? <p className="gn-note" role="status"><Icone nom="valider" taille={18} />{t('validerCarte.photoSent')}</p>
+          : (
+            <label className="btn-gold gn-action" style={{ marginBottom: 16, cursor: envoiPhoto ? 'wait' : 'pointer', opacity: envoiPhoto ? 0.7 : 1 }}>
+              <Icone nom="photo" taille={18} className="icone-texte" />{' '}{envoiPhoto ? '…' : t('validerCarte.sendPhoto')}
+              <input type="file" accept="image/*,application/pdf" multiple hidden disabled={envoiPhoto}
+                onChange={(e) => envoyerPhotos([...(e.target.files || [])].slice(0, 10))} />
+            </label>
+          ))}
         {carte.alreadyValidated && <p className="gn-note" role="note"><Icone nom="valider" taille={18} />{t('validerCarte.alreadyValidated')}</p>}
         {!carte.alreadyValidated && q.applied > 0 && <p className="gn-note" role="note"><Icone nom="valider" taille={18} />{t('questionsCarte.applied', { n: q.applied })}</p>}
         {erreur && <p className="gn-note" role="alert"><Icone nom="alerte" taille={18} />{erreur}</p>}
