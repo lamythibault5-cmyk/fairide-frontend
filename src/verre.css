@@ -1,0 +1,119 @@
+/* LE VERRE DANS L'APP (fondateur, 2026-10-23 ; réponses à maquettes/verre-boutons/verre-boutons.html) :
+ *   1. haut des pages : verre iris flou sous la barre d'état (B) — la bande est posée par verreBarreEtat.js, iPhone seulement ;
+ *   2. ronds de la fiche (fermer, recherche, favori) : verre clair laiteux, pointe et filet iris, icône iris (B) ;
+ *   3. aussi en verre : les « + » des plats et des suggestions, le « − 1 + » du panier, Livraison / À emporter, la barre
+ *      « Aller au paiement », les puces de la fiche, recentrer et zoom de la carte, les messages (toasts) ;
+ *   4. vrai flou partout, même sur les boutons répétés (un « + » par plat) — voir --verre-repete-flou plus bas ;
+ *   5. le site ne change pas : tout est sous html.appli (l'app, et le site ajouté à l'écran d'accueil).
+ * Préfixe `html.appli body` : plus fort que les règles des fichiers de chaque écran, chargés après celui-ci.
+ * Deux recettes, reprises de la barre d'onglets et de « Voir le panier » :
+ *   - VERRE CLAIR : blanc laiteux (82 %, sinon gris sur une photo sombre), teinte et filet iris pour se voir sur du blanc ;
+ *   - VERRE IRIS : iris à 72 % (56 % dans la maquette : un « + » blanc se lisait mal sur du blanc), flou derrière. */
+
+html.appli {
+  /* LE SEUL RÉGLAGE À CHANGER si les « + » ralentissent l'iPhone : `none` les passe en verre léger (même reflet, sans flou).
+     Chaque « + » à l'écran recalcule le flou de ce qu'il couvre à chaque image de défilement (choix du fondateur, question 4). */
+  --verre-repete-flou: blur(8px) saturate(170%);
+  --verre-clair-fond: linear-gradient(rgba(59, 47, 181, .10), rgba(59, 47, 181, .10)), rgba(255, 255, 255, .82);
+  --verre-clair-flou: blur(8px) saturate(180%) brightness(1.3);
+  --verre-clair-ombre: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .22),
+    inset 4px 0 9px -4px rgba(255, 70, 170, .25), inset -4px 0 9px -4px rgba(40, 190, 255, .28), 0 6px 18px rgba(20, 18, 31, .18);
+  --verre-iris-fond: rgba(59, 47, 181, .72);
+  --verre-iris-flou: blur(8px) saturate(170%);
+  --verre-iris-ombre: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 0 -1px 1px rgba(255, 255, 255, .18),
+    inset 4px 0 9px -4px rgba(255, 70, 170, .3), inset -4px 0 9px -4px rgba(40, 190, 255, .32), 0 4px 12px rgba(59, 47, 181, .3);
+}
+
+/* ---------- 1. Sous la barre d'état ---------- */
+.verre-etat { display: none; }
+html.natif-ios .verre-etat {
+  display: block; position: fixed; z-index: 41; top: 0; left: 0; right: 0; pointer-events: none;
+  height: calc(env(safe-area-inset-top, 0px) + 18px);
+  background: rgba(59, 47, 181, .7);
+  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
+  -webkit-mask-image: linear-gradient(#000 0, #000 calc(100% - 18px), transparent 100%); mask-image: linear-gradient(#000 0, #000 calc(100% - 18px), transparent 100%);
+  /* Caché : visibility et non seulement opacity, pour que le flou ne soit pas calculé quand il ne se voit pas. */
+  opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility 0s linear .2s;
+}
+html.natif-ios.verre-etat-on .verre-etat { opacity: 1; visibility: visible; transition: opacity .2s ease, visibility 0s; }
+
+/* ---------- 2. Les ronds de la fiche ---------- */
+html.appli body .fiche-appli .flux-entete--flottant .flux-bouton,
+html.appli body .fiche-appli .favorite-heart--rond {
+  border: 0; color: var(--iris); background: var(--verre-clair-fond);
+  -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou); box-shadow: var(--verre-clair-ombre);
+}
+html.appli body .fiche-appli .flux-entete--flottant .flux-bouton:hover,
+html.appli body .fiche-appli .favorite-heart--rond:hover { background: var(--verre-clair-fond); }
+html.appli body .fiche-appli .favorite-heart--rond svg path { stroke: var(--iris); }
+html.appli body .fiche-appli .favorite-heart--rond.is-active svg path { fill: var(--iris); stroke: var(--iris); }
+
+/* ---------- 3. Les « + » (plats, aperçu de la carte, suggestions du panier), le « − 1 + » du panier ---------- */
+/* Pas de bordure (elle décalerait les boutons posés à 2 px du bord) : le filet est une ombre intérieure. */
+html.appli body .plat-pas,
+html.appli body .fiche-appli .fiche-apercu-plus,
+html.appli body .ec-feuille .upsell-item::after {
+  background: var(--verre-iris-fond); box-shadow: var(--verre-iris-ombre);
+  -webkit-backdrop-filter: var(--verre-repete-flou); backdrop-filter: var(--verre-repete-flou);
+}
+html.appli body .fiche-appli .fiche-apercu-plus { border: 0; }
+html.appli body .ec-pas {
+  background: var(--verre-iris-fond); box-shadow: var(--verre-iris-ombre);
+  -webkit-backdrop-filter: var(--verre-iris-flou); backdrop-filter: var(--verre-iris-flou);
+}
+
+/* ---------- Livraison / À emporter ---------- */
+html.appli body .fiche-appli .fiche-entete .fiche-modes {
+  background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
+  -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
+}
+html.appli body .fiche-appli .fiche-modes-pouce {
+  background: var(--verre-iris-fond); box-shadow: var(--verre-iris-ombre);
+  -webkit-backdrop-filter: var(--verre-iris-flou); backdrop-filter: var(--verre-iris-flou);
+}
+
+/* ---------- Les puces de la fiche (cuisine, commune, Infos) ---------- */
+html.appli body .fiche-appli .fiche-meta > span:not([aria-hidden]),
+html.appli body .fiche-appli .fiche-infos-lien {
+  border-color: transparent; background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
+  -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
+}
+
+/* ---------- La barre « Aller au paiement » (déjà en verre) : la pointe et le filet iris, pour qu'elle se voie sur du blanc ---------- */
+@media (max-width: 900px) {
+  html.appli body .ec-page .cart-bar.ec-barre {
+    background: linear-gradient(rgba(59, 47, 181, .06), rgba(59, 47, 181, .06)), rgba(255, 255, 255, .5);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .2), inset 0 0 18px rgba(255, 255, 255, .25),
+      inset 5px 0 8px -4px rgba(255, 70, 170, .22), inset -5px 0 8px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .18), 0 1px 3px rgba(20, 18, 31, .08);
+  }
+}
+
+/* ---------- La carte : recentrer et zoom ---------- */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html.appli body .carte-page .carte-reinit,
+  html.appli body .carte-page .leaflet-control-zoom.leaflet-bar {
+    border-color: transparent; color: var(--iris); text-shadow: none; background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
+    -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
+  }
+  html.appli body .carte-page .leaflet-control-zoom.leaflet-bar a { color: var(--iris); border-bottom-color: rgba(59, 47, 181, .15); }
+}
+
+/* ---------- Les messages (toasts) : verre iris ; une erreur reste rouge plein ---------- */
+html.appli body .toast:not(.toast-erreur) {
+  background: rgba(59, 47, 181, .78); box-shadow: var(--verre-iris-ombre), 0 10px 30px rgba(20, 18, 31, .22);
+  -webkit-backdrop-filter: blur(12px) saturate(170%); backdrop-filter: blur(12px) saturate(170%);
+}
+
+/* « Réduire la transparence » (réglages d'accessibilité de l'iPhone) : des aplats, sans flou. */
+@media (prefers-reduced-transparency: reduce) {
+  html.natif-ios .verre-etat { background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html.appli body .plat-pas, html.appli body .fiche-appli .fiche-apercu-plus, html.appli body .ec-feuille .upsell-item::after, html.appli body .ec-pas,
+  html.appli body .fiche-appli .fiche-modes-pouce, html.appli body .toast:not(.toast-erreur) {
+    background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  html.appli body .fiche-appli .flux-entete--flottant .flux-bouton, html.appli body .fiche-appli .favorite-heart--rond,
+  html.appli body .fiche-appli .fiche-entete .fiche-modes, html.appli body .fiche-appli .fiche-meta > span:not([aria-hidden]),
+  html.appli body .fiche-appli .fiche-infos-lien, html.appli body .carte-page .carte-reinit, html.appli body .carte-page .leaflet-control-zoom.leaflet-bar {
+    background: #EFEEFA; -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+}

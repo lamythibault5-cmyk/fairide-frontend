@@ -39,7 +39,9 @@ with a white ring — white-on-glass was unreadable), cart / checkout / order co
 business dashboard / orders / menu / stats (BandeauCommerce.jsx, CarteCommerce.jsx), courier dashboard / job in progress / earnings
 (RouteVelo.jsx). **Each family's CSS lives in its own file imported by its pages**: `src/ecran-liste.css`, `ecran-fiche.css`,
 `ecran-commande.css`, `ecran-compte.css`, `ecran-commerce.css`, `ecran-livreur.css` — look there before styles.css. Glass, blur and soft
-shadows are scoped to `html.appli`; the website keeps iris bands and white sheets without glass. `.page-fade` animates with
+shadows are scoped to `html.appli`; the website keeps iris bands and white sheets without glass.
+**The app glass of 2026-10-23** (answers to `maquettes/verre-boutons/verre-boutons.html`) is in ONE file, [src/verre.css](../../src/verre.css): an iris glass band under the iPhone status bar once the page scrolls ([verreBarreEtat.js](../../src/verreBarreEtat.js), it waits for a restaurant photo to leave), milky « clear » glass with an iris rim for the restaurant round buttons, puces, Livraison / À emporter and map controls, iris glass (72 %) for every « + », the cart « − 1 + » and toasts. Real blur on the repeated « + » is the founder’s choice: `--verre-repete-flou: none` turns them into light glass if the iPhone slows down.
+`.page-fade` animates with
 `backwards`, not `both`: an opacity held after the animation disables `backdrop-filter` for everything inside the page.
 In the app, `/` never shows the marketing landing: first launch → `/bienvenue`, afterwards → `/restaurants` (Home.jsx).
 **Shorter since 2026-10-22** (version picked on `maquettes/onboarding-court/onboarding-court.html`): the same welcome for all three
