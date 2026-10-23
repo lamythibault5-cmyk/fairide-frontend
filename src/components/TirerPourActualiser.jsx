@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { estNatif } from '../natif';
 import { mouvementReduit, vibrer } from '../gestes';
@@ -126,7 +127,7 @@ export default function TirerPourActualiser({ onActualiser }) {
   return (
     <>
       <span ref={repere} hidden />
-      <div ref={zone} className={`tirer-zone${etat === 'actualise' && !mouvementReduit() ? ' tirer-zone--roule' : ''}`} aria-hidden={etat === 'repos'}>
+      {createPortal(<div ref={zone} className={`tirer-zone${etat === 'actualise' && !mouvementReduit() ? ' tirer-zone--roule' : ''}`} aria-hidden={etat === 'repos'}>
         <div className="tirer-route">
           <span className="tirer-velo">
             <svg viewBox="-3 5 82 42" width="34" height="17" aria-hidden="true">
@@ -136,7 +137,7 @@ export default function TirerPourActualiser({ onActualiser }) {
           </span>
         </div>
         <p className="tirer-libelle" role="status">{etat === 'repos' ? '' : libelle}</p>
-      </div>
+      </div>, document.body)}
     </>
   );
 }
