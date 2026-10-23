@@ -72,6 +72,7 @@ export default function ValiderCarte() {
   const hausse = carte?.fairideRateChoice?.markup || 0;
   const pctLocal = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
   const avecCommission = choixOffert && ajouter;
+  const prixAVerifier = !!carte?.pricesToCheck;
 
   const charger = () => api(`/menu-validation/${encodeURIComponent(token)}`)
     .then((c) => { setCarte(c); setNom((n) => n || c.restaurant.responsibleName || ''); setErreur(''); })
@@ -208,7 +209,10 @@ export default function ValiderCarte() {
     <div className="gn-page">
       <BandeauGeneral icone="document" titre={t('validerCarte.pageTitle')} sous={<b>{nomCommerce}</b>} />
       <FeuilleGenerale>
-        <p className="gn-texte">{t('validerCarte.intro')}</p>
+        <p className="gn-texte">{t(prixAVerifier ? 'validerCarte.introPricesToCheck' : 'validerCarte.intro')}</p>
+        {/* Prix repris d'une plateforme, pas encore relevés au comptoir (fondateur, 22/10/2026) : pas de « C'est bon », le
+            serveur le refuserait (PRIX_A_VERIFIER). On le dit en tête, et la fin de page le redit à la place du bouton. */}
+        {prixAVerifier && <p className="gn-note" role="note"><Icone nom="etiquette" taille={18} />{t('validerCarte.pricesToCheck')}</p>}
         {carte.alreadyValidated && <p className="gn-note" role="note"><Icone nom="valider" taille={18} />{t('validerCarte.alreadyValidated')}</p>}
         {!carte.alreadyValidated && q.applied > 0 && <p className="gn-note" role="note"><Icone nom="valider" taille={18} />{t('questionsCarte.applied', { n: q.applied })}</p>}
         {erreur && <p className="gn-note" role="alert"><Icone nom="alerte" taille={18} />{erreur}</p>}
@@ -274,14 +278,15 @@ export default function ValiderCarte() {
           </section>
         ))}
 
-        {blocPlusBas && (
+        {prixAVerifier && <p className="gn-note" role="note"><Icone nom="horloge" taille={18} />{t('validerCarte.pricesToCheckEnd')}</p>}
+        {!prixAVerifier && blocPlusBas && (
           <div className="gn-raccourci">
             <button type="button" className="gn-raccourci-pilule" onClick={allerAuBloc}>
               <Icone nom="bas" taille={18} />{t('validerCarte.goToCestBon')}
             </button>
           </div>
         )}
-        <div className="gn-valider" ref={blocValider}>
+        {!prixAVerifier && <div className="gn-valider" ref={blocValider}>
           <p className="gn-texte gn-texte--encre">{t('validerCarte.commitment')}</p>
           <div className="field">
             <label htmlFor={`${id}-nom`}>{t('validerCarte.yourName')}</label>
@@ -291,7 +296,7 @@ export default function ValiderCarte() {
             {envoi ? '…' : t('validerCarte.cestBon')}
           </button>
           <p className="gn-texte" style={{ margin: '12px 0 0', fontSize: 13.5 }}>{t('validerCarte.notRight')}</p>
-        </div>
+        </div>}
       </FeuilleGenerale>
     </div>
   );
