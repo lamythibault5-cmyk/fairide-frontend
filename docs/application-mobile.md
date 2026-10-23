@@ -49,8 +49,8 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
    l'identifiant `be.fairide.app` à la première signature. iPhone et iPad (`TARGETED_DEVICE_FAMILY = "1,2"`, Owen
    23 oct. 2026 : l'app doit marcher sur tablette, iPad comme Android) ; l'iPad tourne dans les quatre sens et partage
    l'écran (Split View), la mise en page suit la largeur comme sur le site. iOS 15 minimum (Firebase). Construire et envoyer :
-   « Sortir une version iPhone » plus bas. Reste : remplacer `TEAMID_APPLE` dans
-   `public/.well-known/apple-app-site-association` par le Team ID (déployer le site).
+   « Sortir une version iPhone » plus bas. Team ID Apple `44V9JV2JQN` (23 oct. 2026), déjà dans
+   `public/.well-known/apple-app-site-association` : `https://fairide.be/…` s'ouvre dans l'app une fois le site déployé.
 5. **Notifications** : projet Firebase → télécharger `google-services.json` dans `android/app/` ;
    pour iOS, ajouter une app iOS `be.fairide.app` au même projet Firebase, télécharger son
    `GoogleService-Info.plist` dans `ios/App/App/` (hors git, comme `google-services.json` ; une étape du projet Xcode
@@ -74,7 +74,9 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
      dans le code : l'app demande un jeton pour l'ID **web**, que le serveur vérifie déjà.
    - **iOS** : créer un ID client de type *iOS* (bundle `be.fairide.app`), le mettre dans `VITE_GOOGLE_IOS_CLIENT_ID`
      (Vercel et `.env.local` avant `npm run app:sync`), et ajouter son « iOS URL scheme » (l'ID à l'envers,
-     `com.googleusercontent.apps.…`) dans Xcode → Info → URL Types.
+     `com.googleusercontent.apps.…`) dans Xcode → Info → URL Types. FAIT le 23 oct. 2026 : client iOS « Fairide iOS »
+     `236237065648-39n11a8pc53v4eavik8ek3t3602dhqv9.apps.googleusercontent.com` (projet Google Cloud du client web, pas
+     celui de Firebase), schéma déjà dans `ios/App/App/Info.plist` (`CFBundleURLTypes`). Le plist proposé par Google ne sert pas.
 9. **« Continuer avec Apple »** (iPhone) : *Sign in with Apple* est déclaré dans `App.entitlements`. Côté
    serveur rien à configurer (le jeton est vérifié avec les clés publiques d'Apple ; `APPLE_CLIENT_IDS` ne sert que si
    l'identifiant de l'app change). **Relais e-mail** : une personne peut masquer son adresse
