@@ -29,6 +29,8 @@ import TvaCarte from '../../components/commerce/TvaCarte';
 import { defilement } from '../../gestes';
 import Icone from '../../components/Icone';
 import CarteCommerce from '../../components/commerce/CarteCommerce';
+import { champsStockVises, etatStock, modifierPlat } from '../../components/commerce/majLocale';
+import { useActionOptimiste } from '../../actionOptimiste';
 
 // `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
 // (console admin : AdminMenuPage) ; `modeAdmin` retire la demande « Fairide s'en occupe », sans objet pour l'équipe.
@@ -37,7 +39,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const toast = useToast();
   const { t } = useLanguage();
   const contexteOutlet = useOutletContext();
-  const { restaurant, restoId, loadDashboard, communs } = contexte || contexteOutlet || {};
+  const { restaurant, restoId, loadDashboard, communs, modifierRestaurant } = contexte || contexteOutlet || {};
 
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
@@ -235,21 +237,31 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
-  // Rupture du jour d'un plat : bouton à côté de chaque produit, levée automatiquement le lendemain.
-  async function changerRetrait(itemId, withdrawn) {
-    try {
-      await api(`/restaurants/${restoId}/menu/${itemId}/stock`, { method: 'POST', token, body: { withdrawn } });
-      toast(withdrawn ? t('menuItem.withdrawDone') : t('menuItem.withdrawBackDone'));
-      await loadDashboard(restoId);
-    } catch (e) { toast(e.message, 'erreur'); throw e; }
+  /* Rupture du jour d'un plat (levée automatiquement le lendemain) et retrait de la carte : bouton à côté de chaque produit.
+   * LE PLAT CHANGE AU TOUCHER (2026-10-23, app lente : l'interrupteur attendait l'appel PUIS le rechargement complet de la
+   * fiche, et restait verrouillé jusque-là). Le plat est modifié dans la fiche gardée, l'appel suit, sa réponse (l'état
+   * réel du plat) remplace la devinette ; un refus remet le plat comme avant avec le message d'erreur (actionOptimiste.js).
+   * La relecture se fait ensuite en arrière-plan, la plus légère (les commandes seules : la réponse donne déjà le plat, et la
+   * fiche complète est relue chaque minute par DashboardLayout), une seule fois après une rafale de gestes. Rupture et
+   * retrait ont chacun leur clé : ce sont deux réglages, l'un ne remplace pas l'autre.
+   * Rejette en cas d'échec (le message est déjà affiché) : la ligne de la console admin (MenuItemRow) garde son « … ». */
+  const agirOptimiste = useActionOptimiste();
+  async function changerPlatEnStock(itemId, cle, corps, messageOk) {
+    const plat = (restaurant.menu || []).find((i) => i.id === itemId);
+    const r = await agirOptimiste(`${cle}:${itemId}`, {
+      appliquer: () => { const avant = etatStock(plat); modifierPlat(modifierRestaurant, itemId, champsStockVises(plat, corps)); return avant; },
+      envoyer: () => api(`/restaurants/${restoId}/menu/${itemId}/stock`, { method: 'POST', token, body: corps }),
+      annuler: (avant) => modifierPlat(modifierRestaurant, itemId, avant),
+      confirmer: (rep) => { modifierPlat(modifierRestaurant, itemId, etatStock(rep)); toast(messageOk); },
+      // Sans fiche gardée à modifier, la relecture reprend la fiche (le plat ne bougerait pas sinon).
+      rafraichir: () => loadDashboard(restoId, { fiche: !modifierRestaurant, annexes: false, silencieux: true })
+    });
+    if (!r.ok && !r.depasse) throw r.erreur;
   }
-  async function changerStock(itemId, outOfStock) {
-    try {
-      await api(`/restaurants/${restoId}/menu/${itemId}/stock`, { method: 'POST', token, body: { outOfStock } });
-      await loadDashboard(restoId);
-      toast(outOfStock ? t('menuItem.stockOutDone') : t('menuItem.stockBackDone'));
-    } catch (e) { toast(e.message, 'erreur'); throw e; }
-  }
+  const changerRetrait = (itemId, withdrawn) => changerPlatEnStock(itemId, 'retrait', { withdrawn },
+    withdrawn ? t('menuItem.withdrawDone') : t('menuItem.withdrawBackDone'));
+  const changerStock = (itemId, outOfStock) => changerPlatEnStock(itemId, 'stock', { outOfStock },
+    outOfStock ? t('menuItem.stockOutDone') : t('menuItem.stockBackDone'));
 
   async function saveMenuItemOptionGroups(itemId, groupIds) {
     try {

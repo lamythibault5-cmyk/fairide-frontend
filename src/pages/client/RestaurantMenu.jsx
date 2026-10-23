@@ -43,7 +43,8 @@ import FicheVendeur from '../../components/conformite/FicheVendeur';
 import { estNatif, experienceApp } from '../../natif';
 import FermerFicheParGlissement from '../../components/FermerFicheParGlissement';
 import { photoEnVol, entreeParPhoto } from '../../transitionPhoto';
-import { chargerAvecCache, lireCache, modifierCache } from '../../cacheDonnees';
+import { chargerAvecCache, lireCache, poserFavoriEnCache } from '../../cacheDonnees';
+import { useActionOptimiste } from '../../actionOptimiste';
 import PanierColonne from '../../components/PanierColonne';
 import { repeterTantQueLibre } from '../../defilementAuto';
 import { lienFiche } from '../../murCompte';
@@ -148,7 +149,8 @@ export default function RestaurantMenu({ id }) {
   // Un double appui sur « Commande groupée » créait deux groupes (audit du 19/10, CROSS-48).
   const groupeEnCreation = useRef(false);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(token ? lireCache('/restaurants/favorites/ids', token) || [] : []));
-  const [favoriteBusy, setFavoriteBusy] = useState(false);
+  // Le cœur n'attend plus le serveur (2026-10-23, app lente) : plus de « favoriteBusy » qui le grisait pendant l'appel.
+  const agirOptimiste = useActionOptimiste();
   // Les horaires, l'adresse, le téléphone et le site vivaient en clair sous le titre, soit six
   // lignes de métadonnées avant le premier plat. Ils passent derrière « Infos », comme sur la
   // fiche d'Uber : un visiteur vient lire une carte, pas un annuaire.
@@ -431,7 +433,19 @@ export default function RestaurantMenu({ id }) {
   // Les sections proposées à la navigation rapide suivent la recherche : filtrer la carte sans
   // filtrer sa table des matières laisserait des onglets qui ne mènent nulle part.
 
-  async function toggleFavorite() {
+  /* LE CŒUR CHANGE AU TOUCHER (2026-10-23, app lente : il restait grisé le temps de la réponse du serveur). L'appel suit ;
+   * un refus le remet comme avant, avec le message d'erreur (actionOptimiste.js). La copie gardée suit dans les deux sens
+   * (cacheDonnees.js) : la liste montre le bon cœur dès le retour. */
+  function poserFavori(actif) {
+    setFavoriteIds((prev) => {
+      if (prev.has(id) === actif) return prev;
+      const next = new Set(prev);
+      if (actif) next.add(id); else next.delete(id);
+      return next;
+    });
+    poserFavoriEnCache(token, id, actif);
+  }
+  function toggleFavorite() {
     if (!user) {
       navigate('/login?audience=client', { state: { from: location.pathname } });
       return;
@@ -439,22 +453,13 @@ export default function RestaurantMenu({ id }) {
     // « Essayer comme client » depuis son commerce : le serveur réserve les favoris aux comptes client et répondait par une
     // erreur de rôle brute ; l'aperçu le dit simplement (audit du 19/10, discovery-26).
     if (previewMode && role === 'restaurant') { toast(t('restoPreview.favoriteInPreview')); return; }
-    setFavoriteBusy(true);
-    try {
-      if (isFavorite) {
-        await api(`/restaurants/${id}/favorite`, { method: 'DELETE', token });
-        setFavoriteIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
-      } else {
-        await api(`/restaurants/${id}/favorite`, { method: 'POST', token });
-        setFavoriteIds((prev) => new Set(prev).add(id));
-      }
-      // La copie gardée suit (cacheDonnees.js) : la liste montre le bon cœur dès le retour.
-      modifierCache('/restaurants/favorites/ids', token, (ids) => (isFavorite ? ids.filter((x) => x !== id) : [...ids, id]));
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setFavoriteBusy(false);
-    }
+    const avant = isFavorite;
+    vibrer('bascule'); // le cœur se sent au toucher, comme il se remplit (gestes.js)
+    agirOptimiste(`favori:${id}`, {
+      appliquer: () => { poserFavori(!avant); return avant; },
+      envoyer: () => api(`/restaurants/${id}/favorite`, { method: avant ? 'DELETE' : 'POST', token }),
+      annuler: (etat) => poserFavori(etat)
+    });
   }
 
   const onlineOrderingDisabled = !restaurant.offersDelivery && !restaurant.offersPickup;
@@ -581,7 +586,7 @@ export default function RestaurantMenu({ id }) {
 
   // Le cœur est un rond flottant avec la croix et la loupe, dans l'app comme sur le site (2026-10-16).
   const coeur = (
-    <FavoriteHeart active={isFavorite} busy={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className="favorite-heart--rond" />
+    <FavoriteHeart active={isFavorite} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className="favorite-heart--rond" />
   );
   // Les sections : sous l'en-tête, dans la feuille. Dans l'app, une bande de verre ; sur le site, une bande blanche pleine
   // où une pastille iris glisse d'une section à l'autre (`pouce`).

@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
+import { poserFavoriEnCache } from '../../cacheDonnees';
+import { useActionOptimiste } from '../../actionOptimiste';
 import { cheminFiche } from '../../adresseFiche';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import VisuelVide from '../../components/VisuelVide';
@@ -28,10 +29,11 @@ export default function Favorites() {
   // Liste pas lue (réseau, serveur) : « Impossible de charger » et Réessayer, jamais « Aucun favori » (audit du 19/10,
   // discovery-19 : un toast, puis l'écran vide, faisait croire les favoris perdus).
   const [echec, setEchec] = useState(false);
-  // Les cartes en train de partir (cœur touché) : elles s'effacent avant d'être retirées de la liste.
+  // Les cartes en train de partir (cœur touché) : elles s'effacent avant d'être retirées de la liste. Un minuteur par carte :
+  // annulé si le serveur refuse, pour qu'elle ne parte pas après être revenue.
   const [sortantes, setSortantes] = useState(() => new Set());
-  const minuteurs = useRef([]);
-  const toast = useToast();
+  const minuteurs = useRef(new Map());
+  const agirOptimiste = useActionOptimiste();
   const { previewMode } = usePreviewMode();
   const { t } = useLanguage();
 
@@ -49,24 +51,38 @@ export default function Favorites() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Le cœur touché : la carte part tout de suite (le geste répond), le serveur suit. S'il refuse, elle revient.
-  async function retirer(e, r) {
+  /* Le cœur touché : la carte part tout de suite (le geste répond), le serveur suit. S'il refuse, elle revient à sa place.
+   * DEPUIS LE 2026-10-23 (app lente, taps qui attendent le serveur) elle quitte aussi la liste à la fin de son effacement
+   * SANS attendre la réponse : avant, sur un réseau lent, elle restait à moitié effacée tant que le serveur n'avait pas
+   * répondu. La copie gardée des favoris suit (cacheDonnees.js), sinon la liste des commerces remontrait un cœur plein. */
+  function retirer(e, r) {
     e.preventDefault();
     e.stopPropagation();
     if (sortantes.has(r.id)) return;
-    vibrer(10);
-    setSortantes((s) => new Set(s).add(r.id));
-    const duree = mouvementReduit() ? 0 : 520;
-    const fin = new Promise((ok) => { minuteurs.current.push(setTimeout(ok, duree)); });
-    try {
-      await api(`/restaurants/${r.id}/favorite`, { method: 'DELETE', token });
-      await fin;
-      setRestaurants((liste) => liste.filter((x) => x.id !== r.id));
-    } catch (err) {
-      toast(err.message, 'erreur');
-    } finally {
-      setSortantes((s) => { const n = new Set(s); n.delete(r.id); return n; });
-    }
+    vibrer('bascule');
+    agirOptimiste(`favori:${r.id}`, {
+      appliquer: () => {
+        const rang = restaurants.findIndex((x) => x.id === r.id);
+        setSortantes((s) => new Set(s).add(r.id));
+        minuteurs.current.set(r.id, setTimeout(() => {
+          minuteurs.current.delete(r.id);
+          setRestaurants((liste) => liste.filter((x) => x.id !== r.id));
+          setSortantes((s) => { const n = new Set(s); n.delete(r.id); return n; });
+        }, mouvementReduit() ? 0 : 520));
+        poserFavoriEnCache(token, r.id, false);
+        return rang;
+      },
+      envoyer: () => api(`/restaurants/${r.id}/favorite`, { method: 'DELETE', token }),
+      annuler: (rang) => {
+        clearTimeout(minuteurs.current.get(r.id));
+        minuteurs.current.delete(r.id);
+        setSortantes((s) => { const n = new Set(s); n.delete(r.id); return n; });
+        // Remise à la place qu'elle avait, si l'effacement a eu le temps de la retirer.
+        setRestaurants((liste) => (liste.some((x) => x.id === r.id) ? liste
+          : [...liste.slice(0, Math.max(0, rang)), r, ...liste.slice(Math.max(0, rang))]));
+        poserFavoriEnCache(token, r.id, true);
+      }
+    });
   }
 
   const n = restaurants.length;

@@ -314,6 +314,14 @@ export function AuthProvider({ children }) {
     return user;
   }
 
+  /* Change le profil gardé SANS appel au serveur (2026-10-23, app lente : l'interrupteur pause / en service du livreur
+   * attendait un PATCH puis un second GET /auth/me avant de basculer). L'écran qui l'appelle a déjà envoyé, ou va envoyer,
+   * le changement, et remet l'ancienne valeur si le serveur refuse (actionOptimiste.js). Le relevé régulier (refreshUser)
+   * reste la référence. */
+  function modifierUtilisateur(modifier) {
+    setSession((prev) => (prev?.user ? { ...prev, user: modifier(prev.user) } : prev));
+  }
+
   async function requestContactChange(field, newValue) {
     return api('/auth/me/request-contact-change', { method: 'POST', token: session.token, body: { field, newValue } });
   }
@@ -445,6 +453,7 @@ export function AuthProvider({ children }) {
     loginWithApple,
     updateProfile,
     refreshUser,
+    modifierUtilisateur,
     requestContactChange,
     confirmContactChange,
     requestDeletionCode,

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee, photoVue, retenirPhotoVue } from '../../images';
-import { chargerAvecCache, lireCache, modifierCache, prechargerFiche } from '../../cacheDonnees';
+import { chargerAvecCache, lireCache, poserFavoriEnCache, prechargerFiche } from '../../cacheDonnees';
+import { useActionOptimiste } from '../../actionOptimiste';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -41,6 +42,7 @@ import '../../ecran-liste.css';
 import '../../site-liste.css';
 import AvecMarque from '../../components/AvecMarque';
 import { lienFiche } from '../../murCompte';
+import { vibrer } from '../../gestes';
 import { normaliserRecherche } from '../../normaliserRecherche';
 
 // « TRIER » RETIRÉ POUR LE MOMENT (fondateur, 2026-10-20, après le test avec Maestro Pizza) : avec une poignée de commerces,
@@ -446,27 +448,33 @@ export default function RestaurantList() {
   // Tirer pour actualiser : sans réseau, la liste restait telle quelle sans rien dire (discovery-32).
   const actualiser = () => charger({ forcer: true }).then((ok) => { if (!ok && restaurants.length) toast(t('restoListUi.refreshFailed'), 'erreur'); });
 
-  async function toggleFavorite(e, id) {
+  /* LE CŒUR SE REMPLIT AU TOUCHER (2026-10-23, app lente : le cœur attendait la réponse du serveur avant de changer). Il
+   * change tout de suite, l'appel suit ; si le serveur refuse, il revient avec le message d'erreur (actionOptimiste.js).
+   * La copie gardée suit dans les deux sens (cacheDonnees.js) : la fiche, puis la liste au retour, montrent le bon cœur. */
+  const agirOptimiste = useActionOptimiste();
+  function poserFavori(id, actif) {
+    setFavoriteIds((prev) => {
+      if (prev.has(id) === actif) return prev;
+      const next = new Set(prev);
+      if (actif) next.add(id); else next.delete(id);
+      return next;
+    });
+    poserFavoriEnCache(token, id, actif);
+  }
+  function toggleFavorite(e, id) {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
       navigate('/login?audience=client', { state: { from: location.pathname } });
       return;
     }
-    const isFav = favoriteIds.has(id);
-    try {
-      if (isFav) {
-        await api(`/restaurants/${id}/favorite`, { method: 'DELETE', token });
-        setFavoriteIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
-      } else {
-        await api(`/restaurants/${id}/favorite`, { method: 'POST', token });
-        setFavoriteIds((prev) => new Set(prev).add(id));
-      }
-      // La copie gardée suit (cacheDonnees.js) : la fiche, puis la liste au retour, montrent le bon cœur dès l'ouverture.
-      modifierCache('/restaurants/favorites/ids', token, (ids) => (isFav ? ids.filter((x) => x !== id) : [...ids, id]));
-    } catch (err) {
-      toast(err.message, 'erreur');
-    }
+    const avant = favoriteIds.has(id);
+    vibrer('bascule'); // le cœur se sent au toucher, comme il se remplit (gestes.js)
+    agirOptimiste(`favori:${id}`, {
+      appliquer: () => { poserFavori(id, !avant); return avant; },
+      envoyer: () => api(`/restaurants/${id}/favorite`, { method: avant ? 'DELETE' : 'POST', token }),
+      annuler: (etat) => poserFavori(id, etat)
+    });
   }
 
   // Bio et Vegan sont dans la même rangée que les familles, en fin de liste : des filtres comme les

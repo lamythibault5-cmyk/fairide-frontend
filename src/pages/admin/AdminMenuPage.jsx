@@ -127,7 +127,7 @@ export default function AdminMenuPage() {
           <p className="small" style={{ margin: '4px 0 10px' }}>
             {tr('adminMenu.intro', { name: restaurant.name, n: (restaurant.menu || []).length })}
           </p>
-          <MenuPage key={id} modeAdmin contexte={{ restaurant, restoId: id, loadDashboard: charger }} />
+          <MenuPage key={id} modeAdmin contexte={{ restaurant, restoId: id, loadDashboard: charger, modifierRestaurant: setRestaurant }} />
         </>
       )}
     </div>
