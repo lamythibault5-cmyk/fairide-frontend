@@ -33,7 +33,7 @@ export default function PreviewPage() {
         </p>
         <button type="button" className="btn-outline" onClick={tryAsClient}>{t('previewPage.tryAsCustomer')}</button>
       </div>
-      <div className="card apercu-cadre">
+      <div className="card" style={{ border: '2px solid var(--ink)' }}>
         <RestaurantPreview restaurant={restaurant} />
       </div>
     </CadreSite>

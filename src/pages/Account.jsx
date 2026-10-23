@@ -18,8 +18,6 @@ import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher, { ListeLangues } from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
-import ChoixApparence from '../components/ChoixApparence';
-import { choixTheme } from '../theme';
 import MesDonnees from '../components/MesDonnees';
 import CartesEnregistrees from '../components/client/CartesEnregistrees';
 import EquipeCommerce from '../components/commerce/EquipeCommerce';
@@ -190,8 +188,6 @@ export default function Account() {
   const { unread: nonLus } = useInbox();
   const retour = /^\/[a-z0-9/_-]*$/i.test(searchParams.get('retour') || '') ? searchParams.get('retour') : '';
   const [ouvertes, setOuvertes] = useState(() => new Set(sectionDemandee ? [sectionDemandee] : []));
-  // Clair / sombre / automatique : le sous-titre de la rangée Apparence suit le choix fait dedans.
-  const [apparence, setApparence] = useState(choixTheme);
   // Sur ordinateur, la rubrique montrée à droite (RubriquesCompte.jsx) : celle de la rangée demandée par le lien, sinon
   // Mon profil. Sur un téléphone et dans l'app, toutes les rubriques sont visibles et cet état ne change rien.
   const [rubrique, setRubrique] = useState(() => rubriqueDe(sectionDemandee));
@@ -741,13 +737,6 @@ export default function Account() {
           <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
           {experienceApp() ? <ListeLangues /> : <LanguageSwitcher />}
         </LigneCompte>
-        {/* Clair, sombre ou comme le téléphone (2026-10-23, theme.js) : l'app seulement, le site reste clair. */}
-        {experienceApp() && (
-          <LigneCompte icone="lune" titre={t('account.appearance')} sous={t(`account.appearance_${apparence}`)} ouverte={ouvertes.has('apparence')} onClick={() => basculer('apparence')}>
-            <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.appearanceHelp')}</p>
-            <ChoixApparence onChange={setApparence} />
-          </LigneCompte>
-        )}
         {role === 'client' && <LigneNotifications ouverte={ouvertes.has('notifs')} onClick={() => basculer('notifs')} />}
         <NouvellesFairide ouverte={ouvertes.has('nouvelles')} onClick={() => basculer('nouvelles')} />
         <LigneCompte icone="dossier" titre={t('accountUi.myData_rowTitle')} sous={t('accountUi.myData_rowSub')} ouverte={ouvertes.has('donnees')} onClick={() => basculer('donnees')}>

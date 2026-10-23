@@ -29,7 +29,7 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
 .sp-puce:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
 .sp-puce:disabled { opacity: .6; cursor: default; }
 .sp-puce[aria-pressed="false"] { color: rgba(255, 255, 255, .8); }
-.sp-puce--blanche, .sp-puce--blanche:hover { background: var(--carte); border-color: #fff; color: var(--iris-texte); }
+.sp-puce--blanche, .sp-puce--blanche:hover { background: #fff; border-color: #fff; color: var(--iris); }
 .sp-puce--blanche:hover { background: rgba(255, 255, 255, .88); }
 .sp-puce svg { flex: none; }
 
@@ -40,7 +40,7 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
 .sp-b-aide b { color: #fff; }
 .sp-reglages { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; padding: 12px 14px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, .3); }
 .sp-reglages label { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: rgba(255, 255, 255, .82); }
-.sp-reglages select { width: auto; min-width: 150px; padding: 7px 34px 7px 10px; font-size: 13.5px; border-radius: 10px; border: 0; background-color: var(--carte); color: var(--ink); }
+.sp-reglages select { width: auto; min-width: 150px; padding: 7px 34px 7px 10px; font-size: 13.5px; border-radius: 10px; border: 0; background-color: #fff; color: var(--ink); }
 /* Sur le bandeau iris, le curseur iris disparaissait dans le fond (fondateur, 2026-10-17) : partie remplie et filet du rond en
    lime (lime sur iris, règle 1), piste blanche translucide. */
 .sp-reglages input[type="range"] { width: 160px; --curseur-plein: var(--lime); --curseur-bord: var(--lime); --curseur-vide: rgba(255, 255, 255, .3); }
@@ -88,10 +88,10 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
 .sp-tableau { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 .sp-kol { background: var(--cream-dim); border-radius: 20px; padding: 12px; }
 .sp-kol-t { display: flex; align-items: center; gap: 8px; margin: 0; padding: 4px 6px 12px; font-family: var(--font-ui); font-size: 15.5px; font-weight: 800; }
-.sp-kol-ic { display: inline-flex; color: var(--iris-texte); }
+.sp-kol-ic { display: inline-flex; color: var(--iris); }
 .sp-kol--nouv .sp-kol-ic { color: var(--red); }
 .sp-sonne svg { animation: ec-sonne 1.2s ease-in-out infinite; transform-origin: 50% 10%; }
-.sp-kol-n { min-width: 24px; height: 24px; padding: 0 7px; border-radius: 12px; background: var(--carte); border: 1px solid var(--line); display: grid; place-items: center; font-size: 12.5px; font-weight: 700; }
+.sp-kol-n { min-width: 24px; height: 24px; padding: 0 7px; border-radius: 12px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12.5px; font-weight: 700; }
 .sp-kol-vide { margin: 0; text-align: center; font-size: 13.5px; color: var(--ink-faint); padding: 26px 12px; border: 1.5px dashed var(--line); border-radius: 16px; }
 .sp-vide-etroit { display: none; }
 @container sp-cadre (min-width: 840px) {
@@ -106,7 +106,7 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
 
 /* Une commande du tableau. La plus pressée des nouvelles : bordure rouge qui bat (la seule à porter le lime). */
 @keyframes sp-pouls { 0%, 100% { box-shadow: 0 0 0 0 rgba(200, 56, 43, .4); } 60% { box-shadow: 0 0 0 8px rgba(200, 56, 43, 0); } }
-.sp-cmd { position: relative; background: var(--carte); border: 1px solid var(--line); border-radius: 16px; padding: 14px; cursor: pointer; transition: border-color .15s; font-size: 14px; }
+.sp-cmd { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px; cursor: pointer; transition: border-color .15s; font-size: 14px; }
 .sp-kol .sp-cmd + .sp-cmd { margin-top: 10px; }
 .sp-cmd:hover { border-color: #B9B3A8; }
 .sp-cmd--pressee { border: 2px solid var(--red); padding: 13px; animation: sp-pouls 1.6s ease-out infinite; }
@@ -118,10 +118,10 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
 .sp-cmd-client { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
 .sp-cmd-tel { font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; }
 .sp-cmd-outils { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px; max-width: 76px; }
-.sp-outil { width: 34px; height: 34px; min-height: 0 !important; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: var(--carte); color: var(--ink-soft);
+.sp-outil { width: 34px; height: 34px; min-height: 0 !important; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink-soft);
   display: inline-grid; place-items: center; grid-auto-flow: column; cursor: pointer; font-size: 11px; text-decoration: none; transition: border-color .15s, color .15s; }
 @media (pointer: coarse) { .sp-outil { width: 44px; height: 44px; } }
-.sp-outil:hover { border-color: var(--iris); color: var(--iris-texte); }
+.sp-outil:hover { border-color: var(--iris); color: var(--iris); }
 .sp-outil:disabled { opacity: .5; cursor: default; }
 .sp-cmd-outils .ec-anneau { order: -1; margin: 0 0 2px auto; }
 .sp-cmd-outils .ec-anneau-date { order: -1; flex-basis: 100%; max-width: none; margin-bottom: 2px; } /* programmée (shop-221) */
@@ -136,8 +136,8 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
 .sp-cmd-actions .ec-segment button { font-size: 12.5px; padding: 0 4px; }
 .sp-cmd-boutons { display: flex; gap: 8px; margin-top: 10px; cursor: default; }
 .sp-cmd-boutons .ec-bouton { flex: 1 1 0; width: auto; margin: 0; min-height: 46px !important; padding: 10px 12px; font-size: 15px; }
-.sp-bouton-contour { background: var(--carte); color: var(--ink); border: 1px solid var(--line); }
-.sp-bouton-contour:hover:not(:disabled) { border-color: var(--iris); color: var(--iris-texte); }
+.sp-bouton-contour { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.sp-bouton-contour:hover:not(:disabled) { border-color: var(--iris); color: var(--iris); }
 .sp-cmd-code { display: flex; gap: 8px; margin-top: 10px; cursor: default; }
 .sp-cmd-code input { flex: 1 1 auto; min-width: 0; }
 .sp-pas-venu { color: var(--red) !important; margin-top: 8px; padding-left: 0 !important; }
@@ -166,17 +166,17 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
   .sp-prochaine .ec-bouton { flex: 1 1 100%; }
 }
 /* La fiche telle que la verront les clients, et les deux tuiles. */
-.sp-fiche { border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: var(--carte); }
+.sp-fiche { border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: #fff; }
 .sp-fiche-photo { position: relative; overflow: hidden; height: 150px; background: var(--cream-dim); display: grid; place-items: center; color: var(--ink-faint); font-size: 13.5px; }
 .sp-fiche-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .sp-fiche-photo span { display: inline-flex; align-items: center; gap: 8px; }
 .sp-fiche-corps { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px 16px; }
 .sp-fiche-corps b { font-size: 17px; }
 .sp-fiche-liens { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; }
-.sp-lien { background: none; border: 0; padding: 0; min-height: 0 !important; font: inherit; font-size: 14px; font-weight: 600; color: var(--iris-texte); cursor: pointer; text-decoration: none; }
+.sp-lien { background: none; border: 0; padding: 0; min-height: 0 !important; font: inherit; font-size: 14px; font-weight: 600; color: var(--iris); cursor: pointer; text-decoration: none; }
 .sp-lien:hover { text-decoration: underline; }
 .sp-tuiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
-.sp-tuile { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--carte);
+.sp-tuile { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 18px; background: #fff;
   color: var(--ink); font: inherit; text-align: left; text-decoration: none; cursor: pointer; transition: border-color .2s; min-width: 0; }
 .sp-tuile:hover { border-color: var(--iris); }
 .sp-tuile:hover .sp-lien { text-decoration: underline; }
@@ -209,6 +209,6 @@ html:not(.appli) .ec-b-haut { min-height: 28px; }
 }
 .son-terminal b { font-family: var(--font-titre); font-size: 26px; line-height: 1.15; max-width: 16ch; }
 .son-terminal > span:last-child { font-size: 15px; line-height: 1.45; max-width: 32ch; color: rgba(255, 255, 255, .85); }
-.son-terminal-icone { width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; background: var(--lime); color: var(--sur-lime); animation: son-terminal-sonne 1.6s ease-in-out infinite; }
+.son-terminal-icone { width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; background: var(--lime); color: var(--ink); animation: son-terminal-sonne 1.6s ease-in-out infinite; }
 @keyframes son-terminal-sonne { 0%, 70%, 100% { transform: rotate(0); } 75% { transform: rotate(-12deg); } 85% { transform: rotate(12deg); } 95% { transform: rotate(-6deg); } }
 @media (prefers-reduced-motion: reduce) { .son-terminal-icone { animation: none; } }

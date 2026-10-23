@@ -72,10 +72,7 @@
 	<array>
 		<string>location</string>
 	</array>
-	<!-- Automatic (2026-10-23, mode sombre de l'app, src/theme.js) : le téléphone dit à la vue web s'il est en sombre, pour le
-	     choix « Automatique » de Mon compte › Apparence. C'était Light depuis le 2026-10-19, quand l'app n'avait pas de thème
-	     sombre. La page ne s'assombrit pas d'elle-même : color-scheme « light only » tant que l'app est en clair. -->
 	<key>UIUserInterfaceStyle</key>
-	<string>Automatic</string>
+	<string>Light</string>
 </dict>
 </plist>

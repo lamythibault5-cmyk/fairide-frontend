@@ -3,7 +3,7 @@
    spécialités d'une famille. Même écran dans l'app, sur le site et dans Mon commerce : blanc, filets, iris pour ce qui est
    choisi ; ni ombre ni dégradé. */
 .cs { display: flex; flex-direction: column; min-width: 0; }
-.cs-cherche { width: 100%; font-size: 16px; padding: 13px 16px; background: var(--carte); border: 1px solid var(--line); border-radius: var(--radius-pill); color: var(--ink); }
+.cs-cherche { width: 100%; font-size: 16px; padding: 13px 16px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-pill); color: var(--ink); }
 .cs-cherche:focus { outline: none; border-color: var(--iris); box-shadow: var(--anneau-champ); }
 
 .cs-choix { margin-top: 12px; }
@@ -12,7 +12,7 @@
 .cs-choisi { display: inline-flex; align-items: center; gap: 2px; padding: 3px 4px 3px 0; border-radius: var(--radius-pill); background: var(--iris); color: #fff; }
 .cs-choisi-nom { display: inline-flex; align-items: center; gap: 7px; padding: 5px 4px 5px 13px; border: 0; background: none; color: inherit; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 span.cs-choisi-nom { cursor: default; }
-.cs-choisi-nom small { padding: 1px 8px; border-radius: var(--radius-pill); background: var(--lime); color: var(--sur-lime); font-size: 11px; font-weight: 700; }
+.cs-choisi-nom small { padding: 1px 8px; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); font-size: 11px; font-weight: 700; }
 .cs-retirer { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .2); color: #fff; cursor: pointer; }
 .cs-aide { margin: 8px 2px 0; font-size: 13px; line-height: 1.4; color: var(--ink-faint); }
 
@@ -20,7 +20,7 @@ span.cs-choisi-nom { cursor: default; }
 .cs-titre { margin: 0 0 9px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
 .cs-rien { margin: 4px 2px 0; font-size: 14px; color: var(--ink-soft); }
 .cs-puces { display: flex; flex-wrap: wrap; gap: 8px; }
-.cs-puce { display: inline-flex; align-items: center; padding: 9px 14px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--carte); color: var(--ink); font-size: 15px; font-weight: 500; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.cs-puce { display: inline-flex; align-items: center; padding: 9px 14px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 15px; font-weight: 500; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
 .cs-puce.on { background: var(--iris); border-color: var(--iris); color: #fff; }
 .cs-puce:disabled { opacity: .45; cursor: default; }
 
@@ -39,11 +39,11 @@ html:not(.appli) .cs-tuile img { width: 34px; height: 34px; }
 .cs-volet { animation: cs-volet .25s cubic-bezier(.3, .9, .4, 1); }
 @keyframes cs-volet { from { opacity: 0; transform: translateX(24px); } }
 @media (prefers-reduced-motion: reduce) { .cs-volet { animation: none; } }
-.cs-retour { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 6px -4px; padding: 6px 4px; border: 0; background: none; color: var(--iris-texte); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.cs-retour { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 6px -4px; padding: 6px 4px; border: 0; background: none; color: var(--iris); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .cs-volet-titre { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 19px; }
 .cs-volet-titre img { width: 30px; height: 30px; padding: 3px; border-radius: 9px; }
 
-.cs-pas-trouve { display: block; margin: 18px auto 0; padding: 10px 6px; border: 0; background: none; color: var(--iris-texte); font: inherit; font-size: 14.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.cs-pas-trouve { display: block; margin: 18px auto 0; padding: 10px 6px; border: 0; background: none; color: var(--iris); font: inherit; font-size: 14.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .cs-pas-trouve:disabled { color: var(--ink-faint); cursor: default; }
 .cs-libre { margin-top: 16px; }
 .cs-libre label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }

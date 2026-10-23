@@ -64,10 +64,10 @@ html:not(.appli) .sl-liste--grand .lt-route { margin-top: 2px; }
   color: rgba(255, 255, 255, .88); font-size: 14px; font-weight: 600; white-space: nowrap; transition: color .25s;
 }
 .lt-mode > button:hover:not(:disabled) { filter: none; color: #fff; }
-.lt-mode > button.on, .lt-mode > button.on:hover:not(:disabled) { color: var(--iris-texte); }
+.lt-mode > button.on, .lt-mode > button.on:hover:not(:disabled) { color: var(--iris); }
 .lt-mode > button:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
 .lt-mode-pouce {
-  position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: var(--carte);
+  position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: #fff;
   transition: transform .45s cubic-bezier(.34, 1.45, .64, 1);
 }
 .lt-mode--emporter .lt-mode-pouce { transform: translateX(100%); }
@@ -126,7 +126,7 @@ html:not(.appli) .sl-liste--grand .liste-section > .section-title { font-size: 2
 .sl-prix { display: flex; gap: 6px; }
 html:not(.appli) .sl-prix .cuisine-chip { min-height: 36px; padding: 0 14px; }
 .sl-local { display: flex; gap: 10px; margin: 0; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.45; color: var(--ink-soft); }
-.sl-local svg { flex: none; color: var(--iris-texte); }
+.sl-local svg { flex: none; color: var(--iris); }
 
 /* ---------------------------------------------------------------------------------------------------------------------
    2 · LES GRILLES DE CARTES (liste, recherche) ET LE CŒUR DES CARTES
@@ -251,7 +251,7 @@ html:not(.appli) .sl-carte { display: flex; }
 html:not(.appli) .sl-carte .carte-plein { flex: 1 1 auto; min-width: 0; }
 .sl-carte-colonne {
   flex: 0 0 380px; height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
-  background: var(--carte); border-right: 1px solid var(--line);
+  background: #fff; border-right: 1px solid var(--line);
 }
 /* Les commandes ne flottent plus sur le plan : elles sont le haut de la colonne, collé quand la liste défile. */
 html:not(.appli) .sl-carte-colonne .carte-controles {

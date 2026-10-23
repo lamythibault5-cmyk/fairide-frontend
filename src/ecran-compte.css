@@ -9,10 +9,10 @@
 .compte-ecran { --compte-bord: 18px; }
 
 /* ---------- Le bandeau ---------- */
-.compte-bandeau { position: relative; background: var(--bande); color: #fff; padding: 20px 20px 58px; border-radius: var(--radius) var(--radius) 0 0; }
+.compte-bandeau { position: relative; background: var(--iris); color: #fff; padding: 20px 20px 58px; border-radius: var(--radius) var(--radius) 0 0; }
 .compte-tete { display: flex; align-items: center; gap: 14px; margin: 4px 0 18px; }
 .compte-avatar {
-  flex: none; width: 62px; height: 62px; border-radius: 50%; background: var(--lime); color: var(--sur-lime);
+  flex: none; width: 62px; height: 62px; border-radius: 50%; background: var(--lime); color: var(--ink);
   display: grid; place-items: center; font-family: var(--font-ui); font-size: 21px; font-weight: 800; letter-spacing: .02em;
 }
 .compte-tete-texte { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -40,7 +40,7 @@
 
 /* ---------- La feuille ---------- */
 .compte-feuille {
-  position: relative; background: var(--cream); color: var(--ink); border-radius: 26px 26px 0 0;
+  position: relative; background: #fff; color: var(--ink); border-radius: 26px 26px 0 0;
   margin-top: -22px; padding: 22px var(--compte-bord) 8px;
 }
 .compte-feuille-titre {
@@ -62,14 +62,14 @@
 .compte-feuille .card.compte-groupe-messages .account-link-row:hover { background: none; }
 /* Non lus : plus de dégradé jaune ni de liseré (inbox.css) sur la feuille ; la tuile et le tracé passent à l'orange de
    l'avertissement (accent « warn ») et la ligne « n nouveaux messages » s'écrit en noir. */
-.compte-feuille .card.compte-groupe-messages.a-non-lus { background: var(--carte); }
+.compte-feuille .card.compte-groupe-messages.a-non-lus { background: #fff; }
 .compte-feuille .compte-groupe-messages.a-non-lus .account-link-icon { border-color: currentColor; }
 .compte-feuille .compte-groupe-messages.a-non-lus .account-link-text .small { color: var(--ink); font-weight: 600; }
 
 /* Les rangées : l'icône iris dans une tuile à filet, le chevron dessiné. */
 .compte-feuille .account-link-row { padding: 11px 14px; gap: 12px; border-radius: 0; transition: background .15s, transform .12s; }
 .compte-feuille .account-link-icon {
-  width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; color: var(--iris-texte); background: var(--carte);
+  width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; color: var(--iris); background: #fff;
 }
 .compte-feuille .account-link-icon svg { width: 19px; height: 19px; }
 .compte-feuille .account-link-icon.account-link-icon--warn { color: var(--orange); }

@@ -40,13 +40,11 @@ npm run build          # production build + prerender of the public pages (scrip
 npm run lint           # oxlint: 0 errors, ~150 pre-existing warnings on 2026-10-22
 npm run check:i18n     # fr / nl / en have the same keys
 npm run check:app      # every app page in app mode, four profiles: fails on any website chrome, crash, scrolling full screen
-npm run check:sombre   # the same pages with the app set to dark: fails on anything left light or hard to read
 npm run check:barres   # the bottom tab bar stays on the bottom edge at Android sizes
 npm run preview        # serve the build locally
 ```
 
-**Before every push: `lint`, `check:i18n`, `build`, and `check:app` + `check:sombre` for anything the app shows** (they
-need Chrome or Edge).
+**Before every push: `lint`, `check:i18n`, `build`, and `check:app` for anything the app shows** (it needs Chrome or Edge).
 CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs lint, check:i18n, build and `npm audit` on every PR, but
 **not** check:app nor check:barres: run them yourself. Lint warnings are mostly old: check that *your* files are absent
 from the output. There is no test framework in this repo; where behaviour matters, check it in the browser.
@@ -91,9 +89,6 @@ read that doc before working near it.
 - Two brand colours: iris `#3B2FB5` and lime `#C8F03C`. Lime only on iris, or as a filled block with ink text; backgrounds
   are white or iris, no gradients, no shadows (glass exists in the app only, `html.appli`); one lime accent per view.
   Change colours in the `:root` tokens, never at call sites. *(design.md)*
-- The app has a dark mode (2026-10-23; the website stays light): in CSS a background is `--carte` / `--cream`, never `#fff`;
-  iris text is `--iris-texte`; text on lime is `--sur-lime`; a top band is `--bande`. `npm run check:sombre` must pass
-  before any push that touches what the app shows. *(design.md)*
 - Fonts: Inter (interface) and Inter Tight (`h1`–`h3`), served by Fairide — never `fonts.googleapis.com`. Bricolage
   Grotesque is for the word `fairide` (`.wordmark`) only. The logo is the bicycle « 5a » and is never a link. *(design.md)*
 - No emojis anywhere, admin included: icons are [Icone.jsx](src/components/Icone.jsx). Don't add struck-through text to

@@ -12,7 +12,7 @@
 .ec-page { --ec-ressort: cubic-bezier(.34, 1.45, .64, 1); --ec-ressort-fort: cubic-bezier(.3, 1.8, .5, 1); }
 
 /* ---------- Le bandeau ---------- */
-.ec-bandeau { position: relative; background: var(--bande); color: #fff; padding: 20px 24px 46px; border-radius: var(--radius) var(--radius) 0 0; }
+.ec-bandeau { position: relative; background: var(--iris); color: #fff; padding: 20px 24px 46px; border-radius: var(--radius) var(--radius) 0 0; }
 .ec-haut { display: flex; align-items: center; gap: 12px; min-height: 38px; font-size: 13px; color: rgba(255, 255, 255, .78); }
 .ec-haut-texte { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ec-haut-texte b { color: #fff; font-weight: 600; }
@@ -41,7 +41,7 @@
 .ec-route-libs .actuel { color: #fff; font-weight: 700; }
 
 /* ---------- La feuille ---------- */
-.ec-feuille { position: relative; top: 0; background: var(--cream); color: var(--ink); border-radius: 26px 26px 0 0; margin-top: -22px; padding: 22px 24px 24px;
+.ec-feuille { position: relative; top: 0; background: #fff; color: var(--ink); border-radius: 26px 26px 0 0; margin-top: -22px; padding: 22px 24px 24px;
   animation: ec-monte .45s var(--ec-ressort) backwards; }
 @keyframes ec-monte { from { top: 40px; opacity: .4; } }
 .ec-feuille .ec-section, .ec-feuille .co-recap-tete h3 { font-size: 12px !important; font-weight: 700 !important; color: var(--ink-soft);
@@ -85,7 +85,7 @@
 .ec-pas button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
 .ec-pas .ec-pas-moins { left: 2px; }
 .ec-pas .ec-pas-plus { right: 2px; }
-.ec-pas-chiffre { position: absolute; left: 50%; top: 6px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; background: var(--carte); color: var(--iris-texte);
+.ec-pas-chiffre { position: absolute; left: 50%; top: 6px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; background: #fff; color: var(--iris);
   display: grid; place-items: center; font-weight: 800; font-size: 14px; overflow: hidden; }
 .ec-pas-chiffre > span { display: block; }
 .ec-ch-monte { animation: ec-ch-monte .3s var(--ec-ressort); }
@@ -97,7 +97,7 @@
 .ec-feuille .upsell-card { border: 0; padding: 0; margin: 22px 0 0; background: none; }
 .ec-feuille .upsell-card h3 { font-size: 12px !important; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; margin: 0 0 8px !important; }
 .ec-feuille .upsell-row { gap: 10px; margin: 0 -18px 8px; padding: 0 18px 4px; }
-.ec-feuille .upsell-item { position: relative; width: 116px; background: var(--carte); border-radius: 14px; align-items: flex-start; text-align: left; padding: 8px 8px 10px; }
+.ec-feuille .upsell-item { position: relative; width: 116px; background: #fff; border-radius: 14px; align-items: flex-start; text-align: left; padding: 8px 8px 10px; }
 .ec-feuille .upsell-item img, .ec-feuille .upsell-item-emoji { width: 100%; height: 64px; border-radius: 10px; }
 .ec-feuille .upsell-item-emoji { background: var(--surface-soft); color: var(--ink-faint); }
 .ec-feuille .upsell-item-name { font-size: 12.5px; min-height: 31px; }
@@ -110,13 +110,13 @@
 /* Un choix unique en cartes : l'option retenue en aplat iris, sa coche BLANCHE qui saute (lime jusqu'au 2026-10-19 : avec
    « Livraison » et « Dès que possible » cochés, le paiement montrait deux lime de plus que « Commander et payer »). */
 .ec-options { display: flex; flex-direction: column; gap: 8px; }
-.ec-option { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; text-align: left; border: 1px solid var(--line); background: var(--carte); color: var(--ink);
+.ec-option { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; text-align: left; border: 1px solid var(--line); background: #fff; color: var(--ink);
   border-radius: 16px; padding: 11px 13px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .12s; }
 @media (hover: hover) { .ec-option:not(.on):hover { border-color: var(--iris); } }
 .ec-option:active { transform: scale(.98); }
 .ec-option-texte { min-width: 0; }
 .ec-option-texte small { display: block; font-weight: 400; color: var(--ink-soft); margin-top: 2px; font-size: 12.5px; }
-.ec-option-tuile { flex: none; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); color: var(--iris-texte); display: grid; place-items: center; }
+.ec-option-tuile { flex: none; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); color: var(--iris); display: grid; place-items: center; }
 .ec-case { flex: none; margin-left: auto; width: 22px; height: 22px; border-radius: 8px; border: 1px solid var(--line); display: grid; place-items: center; }
 .ec-option.on { background: var(--iris); border-color: var(--iris); color: #fff; }
 .ec-option.on .ec-option-texte small { color: rgba(255, 255, 255, .8); }
@@ -126,7 +126,7 @@
 .ec-option.on:focus-visible { outline-color: var(--lime); }
 .ec-feuille .checkout-form .ec-options + .checkout-rangee { margin-top: 6px; }
 .ec-feuille .checkout-rangee { border-radius: 0; }
-.ec-feuille .checkout-rangee > svg { flex: none; color: var(--iris-texte); }
+.ec-feuille .checkout-rangee > svg { flex: none; color: var(--iris); }
 /* Le pourboire : la pastille choisie gélifie, et le total roule dans la barre. */
 .ec-pourboire { margin: 0 0 4px; }
 .ec-pourboire .choix-pastilles { gap: 6px; flex-wrap: nowrap; }
@@ -141,7 +141,7 @@
 .co-articles-texte { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .co-articles-texte b { font-size: 15px; font-weight: 700; color: var(--ink); }
 .co-articles-texte span { font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
-.co-modifier { flex: none; font-size: 14px; font-weight: 700; color: var(--iris-texte); text-decoration: none; padding: 8px 0; }
+.co-modifier { flex: none; font-size: 14px; font-weight: 700; color: var(--iris); text-decoration: none; padding: 8px 0; }
 .co-modifier:hover { text-decoration: underline; }
 /* Le ticket : filet iris en tirets, lignes à pointillés (ceux de la carte, .bistrot-points), le total sous un filet. */
 .co-ticket-titre { margin: 22px 0 8px !important; }
@@ -189,7 +189,7 @@
   html.appli .ec-page { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 900px) and (prefers-reduced-transparency: reduce) {
-  html.appli .ec-page .cart-bar.ec-barre { background: var(--carte); -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); text-shadow: none; }
+  html.appli .ec-page .cart-bar.ec-barre { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); text-shadow: none; }
 }
 
 /* ---------- Commande confirmée ---------- */
@@ -208,12 +208,12 @@
 @keyframes ec-respire { 50% { transform: translateY(-1.5px) rotate(-1deg); } }
 .ec-merci-commerce { transform-box: fill-box; transform-origin: 50% 100%; animation: ec-apparait .45s var(--ec-ressort) 1.25s both; }
 @keyframes ec-apparait { from { transform: scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
-.ec-coche-merci { width: 58px; height: 58px; margin-top: 0; border-radius: 50%; background: var(--lime); color: var(--sur-lime); display: grid; place-items: center;
+.ec-coche-merci { width: 58px; height: 58px; margin-top: 0; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center;
   animation: ec-apparait .5s var(--ec-ressort-fort) 1.7s both; }
 .ec-coche-merci svg { stroke-width: 2.8; }
 .ec-merci-texte { margin: 0 0 10px; line-height: 1.5; color: var(--ink-soft); font-size: 14.5px; }
 .ec-recap-ligne { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
-.ec-recap-ligne > svg { flex: none; color: var(--iris-texte); }
+.ec-recap-ligne > svg { flex: none; color: var(--iris); }
 .ec-recap-texte { flex: 1; min-width: 0; }
 .ec-recap-texte b { font-weight: 600; }
 .ec-recap-texte small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.4; }

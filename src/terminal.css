@@ -35,10 +35,10 @@
 
 /* Page Terminal & impression */
 .terminal-liste { display: grid; gap: 10px; }
-.terminal-ligne { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); background: var(--carte); }
+.terminal-ligne { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); background: #fff; }
 .terminal-ligne .puces { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
 .terminal-choix { display: grid; gap: 8px; }
-.terminal-choix label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); cursor: pointer; background: var(--carte); }
+.terminal-choix label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); cursor: pointer; background: #fff; }
 .terminal-choix label.est-actif { border-color: var(--iris); box-shadow: inset 2px 0 0 var(--iris); }
 .terminal-choix input { width: auto; margin-top: 3px; }
 

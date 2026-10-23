@@ -7,8 +7,7 @@
  * replie se voit au plus 120 ms plus tard, ce qui ne se remarque pas) ; après des changements du DOM, un regard par rafale,
  * puis un second 450 ms plus tard, quand les animations d'entrée sont finies. */
 
-// Avec la nuit du mode sombre (#15113A, theme.js) : elle aussi demande des icônes claires.
-export const IRIS = new Set(['59,47,181', '42,33,133', '21,17,58']);
+export const IRIS = new Set(['59,47,181', '42,33,133']);
 
 // Le premier fond opaque sous le point (milieu de l'écran, hauteur `y`), en remontant les parents ; « r,v,b » ou null.
 export function fondSous(y) {
