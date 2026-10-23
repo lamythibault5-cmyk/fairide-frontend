@@ -12,6 +12,8 @@ everything native goes through `src/natif.js` and `src/pushNatif.js` — see
 **Releasing the Android app**: never bump `versionCode` by hand — see « Mettre à jour l'application » in that file
 (Fairide Test builds itself on every merge to `main`; the Play Store app is GitHub › Actions › *App Android Play
 Store* › *Run workflow*, which uploads to Internal testing itself).
+**Releasing the iPhone app**: nothing to do — every merge to `main` builds it on GitHub's Macs and sends it to TestFlight
+(`app-ios-testflight.yml`, since 2026-10-23); its signing expires 2027-10-23 (see « Sortir une version iPhone »).
 `@capacitor/geolocation` and `@capgo/capacitor-social-login` (Apple / Google sheet — the site's Google button is refused
 inside a WebView) are loaded with `import()` from `natif.js` only, so the website never downloads them.
 

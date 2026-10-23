@@ -25,7 +25,7 @@ name: App iPhone TestFlight
 
 on:
   push:
-    branches: [main, ci/app-ios-testflight]  # TEMPORAIRE : essai de la branche, retiré avant fusion
+    branches: [main]
     paths-ignore: ['**.md', 'docs/**', 'security/**']
   workflow_dispatch:
 
