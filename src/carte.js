@@ -9,6 +9,7 @@
 // ITINÉRAIRES. Les cartes du client et du livreur appelaient le serveur de démonstration OSRM directement
 // depuis le navigateur. Elles passent par l'API (GET /geo/route), qui choisit le fournisseur et met en cache.
 import { api } from './api';
+import { estNatif } from './natif';
 
 export const TUILES = {
   url: import.meta.env.VITE_MAP_TILE_URL || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -30,12 +31,19 @@ let reglageConnu = false;
 reglagePret.then(() => { reglageConnu = true; });
 const TUILE_VIDE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
+// TUILES EN MODE CORS DANS L'APPLICATION (2026-10-23, carte vide sur iPhone). La clé MapTiler n'accepte que les origines de
+// Fairide (tableau de bord MapTiler) et la lit dans le Referer OU l'en-tête Origin. Dans l'app iPhone, la page est
+// capacitor://localhost : WebKit n'envoie de Referer que depuis une page http(s), chaque tuile arrivait sans, et MapTiler
+// répondait 403. Une image chargée en CORS (crossorigin="anonymous") porte toujours l'en-tête Origin, que MapTiler accepte
+// (Access-Control-Allow-Origin: *). Le site garde le chargement normal : son Referer suffit.
+const CORS_APPLI = estNatif() ? { crossOrigin: 'anonymous' } : {};
+
 export function coucheTuiles(L, options = {}) {
   if (reglageConnu) {
     const r = reglageServeur || TUILES;
-    return L.tileLayer(r.url, { attribution: r.attribution, maxZoom: 19, ...options });
+    return L.tileLayer(r.url, { attribution: r.attribution, maxZoom: 19, ...CORS_APPLI, ...options });
   }
-  const couche = L.tileLayer(TUILE_VIDE, { maxZoom: 19, ...options });
+  const couche = L.tileLayer(TUILE_VIDE, { maxZoom: 19, ...CORS_APPLI, ...options });
   reglagePret.then((r) => {
     // L'attribution (mention obligatoire du fournisseur) arrive avec le fond.
     couche.options.attribution = r.attribution;
