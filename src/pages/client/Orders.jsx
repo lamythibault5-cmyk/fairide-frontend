@@ -226,11 +226,17 @@ export default function Orders() {
   }, []);
   // Commande acceptée par le commerce sous les yeux du client (« nouveau » → la suite) : la sensation « succès » du
   // téléphone (audit « Look and feel » 6a, 2026-10-19). Le premier chargement ne vibre pas : rien n'a changé sous ses yeux.
+  // Aussi (2026-10-23, vibrations par sens, gestes.js) : prête à emporter et livrée → « succès » ; refusée ou annulée →
+  // « attention ». Une seule vibration par relecture, la plus forte l'emporte.
   const statutsVus = useRef(null);
   useEffect(() => {
     const avant = statutsVus.current;
     statutsVus.current = new Map(orders.map((o) => [o.id, o.status]));
-    if (avant && orders.some((o) => avant.get(o.id) === 'nouveau' && !['nouveau', 'refuse', 'annule'].includes(o.status))) vibrer('succes');
+    if (!avant) return;
+    const changees = orders.filter((o) => avant.has(o.id) && avant.get(o.id) !== o.status);
+    if (changees.some((o) => ['refuse', 'annule'].includes(o.status))) vibrer('attention');
+    else if (changees.some((o) => (avant.get(o.id) === 'nouveau' && o.status !== 'nouveau')
+      || o.status === 'livre' || (o.status === 'pret' && o.orderType === 'pickup'))) vibrer('succes');
   }, [orders]);
   // Retour sur l'onglet après une absence : relecture immédiate des commandes.
   useRevalidation(() => api('/orders/mine', { token }).then(setOrders), { actif: !(previewMode && role === 'restaurant') });

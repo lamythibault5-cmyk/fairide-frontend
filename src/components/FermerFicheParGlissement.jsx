@@ -54,7 +54,7 @@ export default function FermerFicheParGlissement({ pageRef }) {
       }
       if (e.cancelable) e.preventDefault();
       const y = dy - SENS;
-      if ((g.y < SEUIL) !== (y < SEUIL) && y >= SEUIL) vibrer(8);
+      if ((g.y < SEUIL) !== (y < SEUIL) && y >= SEUIL) vibrer('seuil');
       g.y = Math.max(0, y);
       g.suivi.ajouter(t.clientY);
       poser(g.y);

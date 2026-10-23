@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mouvementReduit, vibrer } from '../gestes';
+import { mouvementReduit } from '../gestes';
 
 /* RETOUR PAR GLISSEMENT DEPUIS LE BORD GAUCHE — application iOS seulement (monté par Layout.jsx quand
  * plateforme() === 'ios').
@@ -60,7 +60,7 @@ export default function RetourParGlissement() {
       const v = suivi.vitesse();
       const recule = x + m.projeter(v) > largeur / 3;
       const poser = (p) => { el.style.transform = p ? `translateX(${p}px)` : ''; };
-      if (recule) vibrer(8);
+      // Pas de vibration au retour : celui de l'iPhone n'en fait pas (2026-10-23, les vibrations par sens, gestes.js).
       m.ressort({
         de: x, vers: recule ? largeur : 0, vitesse: v, amortissement: 1, reponse: recule ? 0.25 : 0.3, surImage: poser,
         fin: () => { el.style.willChange = ''; if (recule) { navigate(-1); requestAnimationFrame(() => poser(0)); } }

@@ -138,7 +138,7 @@ export default function PanierPage() {
   const { desserts, drinks } = restaurant ? computeUpsellSuggestions(restaurant, cart) : { desserts: [], drinks: [] };
 
   function moins(cle, ligne) {
-    vibrer(8);
+    vibrer('bascule');
     if (ligne.qty > 1 || mouvementReduit()) { cart.changeLineQty(cle, -1); return; }
     setSortantes((s) => new Set(s).add(cle));
     setTimeout(() => {
@@ -212,7 +212,7 @@ export default function PanierPage() {
               <PasPanier
                 qty={ligne.qty} nom={ligne.name}
                 onMoins={() => moins(cle, ligne)}
-                onPlus={() => { vibrer(8); cart.changeLineQty(cle, 1); }}
+                onPlus={() => { vibrer('bascule'); cart.changeLineQty(cle, 1); }}
                 libelleMoins={t('checkout.qtyLess')} libellePlus={t('checkout.qtyMore')}
               />
               )}

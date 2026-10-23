@@ -137,7 +137,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
   function allerAuGroupe(g) {
     const bloc = blocsGroupes.current[g.id];
     if (!bloc) return;
-    vibrer('selection');
+    vibrer('attention');
     bloc.scrollIntoView({ behavior: mouvementReduit() ? 'auto' : 'smooth', block: 'start' });
     bloc.classList.remove('plat-groupe--signale');
     void bloc.offsetWidth; // relance l'animation si l'on touche deux fois
@@ -273,12 +273,12 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
           </button>
         )}
         <div className="plat-quantite" role="group" aria-label={t('platSheet.quantity')}>
-          <button type="button" onClick={() => { vibrer(6); setQty((q) => Math.max(1, q - 1)); }} disabled={qty <= 1} aria-label={t('platSheet.less')}>−</button>
+          <button type="button" onClick={() => { vibrer('bascule'); setQty((q) => Math.max(1, q - 1)); }} disabled={qty <= 1} aria-label={t('platSheet.less')}>−</button>
           {/* Le chiffre visible est recréé à chaque changement (key, pour son animation) : une région vivante recréée n'est pas
               annoncée. La quantité est donc dite par une région stable à côté (audit du 19/10, CROSS-94). */}
           <span aria-hidden="true" key={qty} className="plat-quantite-chiffre">{qty}</span>
           <span className="sr-only" aria-live="polite">{qty}</span>
-          <button type="button" onClick={() => { vibrer(6); setQty((q) => Math.min(99, q + 1)); }} disabled={qty >= 99} aria-label={t('platSheet.more')}>+</button>
+          <button type="button" onClick={() => { vibrer('bascule'); setQty((q) => Math.min(99, q + 1)); }} disabled={qty >= 99} aria-label={t('platSheet.more')}>+</button>
         </div>
         <button
           type="button"
@@ -289,7 +289,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
             // Le plat s'envole vers le panier : on voit où il est parti. L'ajout, lui, n'attend plus la fin de l'animation de
             // fermeture (230 ms sur le chemin de l'action — audit du 15/10/2026, « on n'attend jamais une animation pour agir ») :
             // le panier est à jour tout de suite, l'envol (élément à part, gestes.js) continue seul.
-            vibrer(14);
+            vibrer('valider');
             envolerVersPanier({ depuis: boutonAjouter.current?.getBoundingClientRect(), image: imageUrl, quantite: qty });
             onConfirm(optionItemIds, snapshot, prixUnite, qty, note.trim());
           }}

@@ -22,7 +22,7 @@
 //   - position de l'appareil (demanderPosition) et connexion Apple / Google native (connexionFournisseur),
 //     pour l'accueil de l'application (pages/app/Bienvenue.jsx) et la page de connexion.
 
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { traduire } from './context/LanguageContext';
 
 export function estNatif() {
@@ -140,22 +140,63 @@ export async function telechargerPdfBlob(blob, nom = 'fairide.pdf') {
   await Share.share({ title: nom, url: uri });
 }
 
-// Vibration haptique native. `motif` suit la convention de navigator.vibrate : un nombre (ms) ou un tableau ; ou l'une
-// des sensations nommées du téléphone (gestes.js, HAPTIQUES) : 'succes', 'erreur', 'selection', 'moyen'.
-let selectionOuverte = false;
-export async function vibrerNatif(motif) {
-  const { Haptics, ImpactStyle, NotificationType } = await import('@capacitor/haptics');
-  if (motif === 'succes') { await Haptics.notification({ type: NotificationType.Success }); return; }
-  if (motif === 'erreur') { await Haptics.notification({ type: NotificationType.Error }); return; }
-  if (motif === 'moyen') { await Haptics.impact({ style: ImpactStyle.Medium }); return; }
-  if (motif === 'selection') {
-    // Le « cran » d'une molette. Sans selectionStart, iOS comme Android ignorent selectionChanged : on l'ouvre une fois.
-    if (!selectionOuverte) { await Haptics.selectionStart(); selectionOuverte = true; }
-    await Haptics.selectionChanged();
-    return;
+/* VIBRATION NATIVE (2026-10-23, test TestFlight : « je ne sens pas les vibrations »). `sens` : l'un des sens de gestes.js
+ * ('choix', 'bascule', 'valider', 'seuil', 'pose', 'appuiLong', 'succes', 'attention', 'erreur', 'alerte').
+ *   - Le greffon Haptique de l'app (ios/App/App/HaptiquePlugin.swift, android/…/HaptiquePlugin.java) joue la sensation du
+ *     téléphone pour ce sens, avec des générateurs gardés et préparés quand un doigt touche l'écran (preparerHaptique).
+ *   - Sans lui (une version de l'app construite avant lui), @capacitor/haptics prend le relais, avec des tapes moyennes au
+ *     lieu de la plus légère : c'était elle partout, et elle ne se sentait pas.
+ *   - 'alerte' reste une vraie vibration de 0,4 s (@capacitor/haptics), à sentir dans une poche.
+ * Chargé au démarrage (demarrerNatif) et jamais attendu : la vibration part au toucher, l'action n'attend rien. */
+let haptique = null; // { jouer(sens), preparer() }
+let haptiquePrete = null;
+function chargerHaptique() {
+  if (!haptiquePrete) {
+    haptiquePrete = (async () => {
+      const capacitor = await import('@capacitor/haptics');
+      const { Haptics, ImpactStyle, NotificationType } = capacitor;
+      const alerte = () => Haptics.vibrate({ duration: 400 });
+      if (Capacitor.isPluginAvailable('Haptique')) {
+        const Haptique = registerPlugin('Haptique');
+        return { jouer: (sens) => (sens === 'alerte' ? alerte() : Haptique.jouer({ sens })), preparer: () => Haptique.preparer() };
+      }
+      let selectionOuverte = false;
+      const repli = {
+        choix: async () => {
+          // Le « cran » d'une molette. Sans selectionStart, iOS comme Android ignorent selectionChanged : on l'ouvre une fois.
+          if (!selectionOuverte) { await Haptics.selectionStart(); selectionOuverte = true; }
+          await Haptics.selectionChanged();
+        },
+        bascule: () => Haptics.impact({ style: ImpactStyle.Medium }),
+        valider: () => Haptics.impact({ style: ImpactStyle.Medium }),
+        seuil: () => Haptics.impact({ style: ImpactStyle.Heavy }),
+        pose: () => Haptics.impact({ style: ImpactStyle.Light }),
+        appuiLong: () => Haptics.impact({ style: ImpactStyle.Heavy }),
+        succes: () => Haptics.notification({ type: NotificationType.Success }),
+        attention: () => Haptics.notification({ type: NotificationType.Warning }),
+        erreur: () => Haptics.notification({ type: NotificationType.Error }),
+        alerte
+      };
+      return { jouer: (sens) => (repli[sens] || repli.valider)(), preparer: () => {} };
+    })().then((h) => { haptique = h; return h; }, (e) => { haptiquePrete = null; throw e; });
   }
-  if (Array.isArray(motif)) { await Haptics.notification({ type: NotificationType.Success }); return; }
-  await Haptics.impact({ style: Number(motif) > 20 ? ImpactStyle.Medium : ImpactStyle.Light });
+  return haptiquePrete;
+}
+export function vibrerNatif(sens) {
+  const jouer = (h) => { try { Promise.resolve(h.jouer(sens)).catch(() => {}); } catch { /* greffon absent */ } };
+  if (haptique) jouer(haptique);
+  else chargerHaptique().then(jouer).catch(() => {});
+}
+// Un doigt se pose : les générateurs de l'iPhone se préparent, la vibration qui suivra part sans le délai de réveil du
+// moteur. Au plus toutes les 400 ms (un geste envoie plusieurs pointerdown), et seulement pendant qu'on touche l'écran.
+function preparerHaptique() {
+  let dernier = 0;
+  document.addEventListener('pointerdown', () => {
+    const t = Date.now();
+    if (!haptique || t - dernier < 400) return;
+    dernier = t;
+    try { Promise.resolve(haptique.preparer()).catch(() => {}); } catch { /* rien */ }
+  }, { capture: true, passive: true });
 }
 
 // Les routes d'entrée : un Retour Android depuis l'une d'elles réduit l'application (comme l'accueil du
@@ -180,6 +221,9 @@ export async function demarrerNatif(historique) {
   if (!estNatif()) return;
   const html = document.documentElement;
   html.classList.add('natif', `natif-${plateforme()}`);
+  // Les vibrations sont prêtes avant le premier toucher (voir vibrerNatif).
+  chargerHaptique().catch(() => {});
+  preparerHaptique();
   // iPhone : le verre iris sous l'heure et la batterie quand la page défile (verreBarreEtat.js, verre.css).
   if (plateforme() === 'ios') import('./verreBarreEtat').then(({ installerVerreBarreEtat }) => installerVerreBarreEtat()).catch(() => {});
   // La photo d'un commerce voyage de sa carte à sa fiche (transitionPhoto.js, audit « Look and feel » 6b).

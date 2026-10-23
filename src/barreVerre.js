@@ -142,7 +142,7 @@ export function brancherBarreVerre(nav, curseur) {
       geste.survol?.classList.remove('dashboard-nav-link--survol');
       lien?.classList.add('dashboard-nav-link--survol');
       geste.survol = lien;
-      vibrer('selection');
+      vibrer('choix');
     }
   };
   const lache = (e) => {
@@ -152,7 +152,7 @@ export function brancherBarreVerre(nav, curseur) {
     nav.classList.remove('dashboard-nav--appui', 'dashboard-nav--glisse');
     geste = null;
     if (!glisse) return; // un simple toucher : le clic du lien fait le reste
-    if (survol && !survol.classList.contains('active')) { vibrer('moyen'); survol.click(); }
+    if (survol && !survol.classList.contains('active')) { vibrer('seuil'); survol.click(); }
     // Même onglet : la lentille revient à la place que useCurseurOnglets lui avait donnée.
     else curseur.style.transform = `translate(${curseur.dataset.x || 0}px, ${curseur.dataset.y || 6}px)`;
   };

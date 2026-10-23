@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { experienceApp } from '../natif';
-import { mouvementReduit, vibrer } from '../gestes';
+import { mouvementReduit } from '../gestes';
 
 /* FEUILLE QU'ON TIRE VERS LE BAS POUR LA FERMER — la fiche d'un plat (FichePlat) et les sous-écrans du paiement
  * (SousEcran), sur téléphone.
@@ -57,7 +57,7 @@ export default function useFeuilleGlissable({ panneau, defile, fermerAnime, ferm
     if (!natif || !m) {
       const vitesse = g.dy / Math.max(1, Date.now() - g.t0);
       panneau.current.style.transition = '';
-      if (g.dy > 110 || (g.dy > 40 && vitesse > 0.6)) { vibrer(8); fermerAnime(); } else poser(0);
+      if (g.dy > 110 || (g.dy > 40 && vitesse > 0.6)) { fermerAnime(); } else poser(0);
       return;
     }
     const v = g.suivi ? g.suivi.vitesse() : 0;
@@ -65,7 +65,7 @@ export default function useFeuilleGlissable({ panneau, defile, fermerAnime, ferm
     // Fermer si l'élan l'emmène au-delà du tiers de sa hauteur — ou si on la lance franchement vers le bas.
     const part = g.dy + m.projeter(v) > hauteur / 3 || v > 900;
     const panneauEl = panneau.current;
-    if (part) vibrer(8);
+    // Pas de vibration quand la feuille part : les feuilles de l'iPhone n'en font pas (2026-10-23, gestes.js).
     anim.current = m.ressort({
       de: g.dy, vers: part ? hauteur + 40 : 0, vitesse: v,
       amortissement: part ? 1 : 0.85, reponse: part ? 0.28 : 0.32,

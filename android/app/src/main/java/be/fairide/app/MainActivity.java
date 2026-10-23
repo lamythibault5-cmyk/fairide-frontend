@@ -1,6 +1,7 @@
 package be.fairide.app;
 
 import android.content.Intent;
+import android.os.Bundle;
 
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.Plugin;
@@ -15,6 +16,14 @@ import ee.forgr.capacitor.social.login.SocialLoginPlugin;
  * reçoit que si on la lui passe. Sans ce relais, la connexion attendait sans fin : bouton grisé, aucun message
  * (16 oct. 2026). L’interface ModifiedMainActivityForSocialLoginPlugin dit au greffon que le relais est en place. */
 public class MainActivity extends BridgeActivity implements ModifiedMainActivityForSocialLoginPlugin {
+
+    // Les greffons qui vivent dans ce projet et pas dans node_modules : `npx cap sync` ne les trouve pas seul. Avant
+    // super.onCreate, qui démarre la vue web avec la liste des greffons.
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(HaptiquePlugin.class);
+        super.onCreate(savedInstanceState);
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

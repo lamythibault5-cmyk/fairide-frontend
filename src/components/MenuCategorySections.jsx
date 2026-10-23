@@ -59,7 +59,7 @@ function PasPlat({ item, name, image, onAjout, t }) {
     e.stopPropagation();
     const derniere = lignes[lignes.length - 1];
     if (!derniere) return;
-    vibrer(6);
+    vibrer('bascule');
     cart.changeLineQty(derniere[0], -1);
     garderOuvert();
   };

@@ -52,7 +52,7 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
       geste.survol?.classList.remove('lt-puce--survol');
       puce?.classList.add('lt-puce--survol');
       geste.survol = puce;
-      vibrer('selection');
+      vibrer('choix');
     }
   };
   const fin = (e, annule) => {
@@ -64,7 +64,7 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
     if (!glisse) return; // un simple toucher : le clic du bouton fait le reste
     // La lentille revient à la place que TeteListe lui a donnée, ou part vers la cuisine lâchée (nouveau rendu).
     lentille.style.transform = `translate(${lentille.dataset.x || 0}px, ${lentille.dataset.y || 6}px)`;
-    if (!annule && survol && !survol.classList.contains('on')) { vibrer('moyen'); choisir(survol.dataset.cuisine); }
+    if (!annule && survol && !survol.classList.contains('on')) { vibrer('seuil'); choisir(survol.dataset.cuisine); }
   };
   const lache = (e) => fin(e, false);
   const annule = (e) => fin(e, true);

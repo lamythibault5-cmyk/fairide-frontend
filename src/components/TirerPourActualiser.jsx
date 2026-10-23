@@ -79,7 +79,7 @@ export default function TirerPourActualiser({ onActualiser }) {
       if (e.cancelable) e.preventDefault();
       poser(Math.min(MAX, dy * AMORTI), false);
       const auSeuil = p >= SEUIL;
-      if (auSeuil !== pret) { pret = auSeuil; if (auSeuil) vibrer('moyen'); }
+      if (auSeuil !== pret) { pret = auSeuil; if (auSeuil) vibrer('seuil'); }
       setEtat(auSeuil ? 'pret' : 'tire');
     };
     const fin = async () => {

@@ -81,9 +81,9 @@ export default function PanierColonne({ restaurant, mode }) {
                       : <small className="fiche-panier-ligne-prix">{euros(l.unitPrice * l.qty)}</small>}
                   </span>
                   <span className="fiche-panier-pas" role="group" aria-label={l.name}>
-                    <button type="button" onClick={() => { vibrer(6); cart.changeLineQty(cle, -1); }} aria-label={t('menuCategories.oneLess', { name: l.name })}>−</button>
+                    <button type="button" onClick={() => { vibrer('bascule'); cart.changeLineQty(cle, -1); }} aria-label={t('menuCategories.oneLess', { name: l.name })}>−</button>
                     <b key={l.qty}>{l.qty}</b>
-                    <button type="button" onClick={() => { vibrer(6); cart.changeLineQty(cle, 1); }} disabled={l.qty >= 99} aria-label={t('siteFiche.oneMore', { name: l.name })}>+</button>
+                    <button type="button" onClick={() => { vibrer('bascule'); cart.changeLineQty(cle, 1); }} disabled={l.qty >= 99} aria-label={t('siteFiche.oneMore', { name: l.name })}>+</button>
                   </span>
                 </li>
               );

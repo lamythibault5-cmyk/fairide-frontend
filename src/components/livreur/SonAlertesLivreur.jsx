@@ -15,7 +15,7 @@ export default function SonAlertesLivreur() {
   function basculer() {
     const v = !actif;
     setActif(v);
-    vibrer('selection');
+    vibrer('bascule');
     try { localStorage.setItem(CLE_SON, v ? 'on' : 'off'); } catch { /* sans stockage : le son reste comme il était */ }
   }
   return (
