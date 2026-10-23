@@ -87,12 +87,31 @@ function alignerAdresse() {
   globalHistory.replaceState(globalHistory.state, '', `${cheminLocalise(cheminSansPrefixe(pathname), langue)}${search}${hash}`);
 }
 
+/* LES ÉCRANS GLISSENT (2026-10-23, version A de maquettes/transitions-appli/transitions-appli.html ; transitionPhoto.js).
+ * Deux crochets pour l'app, sans effet sur le site tant que personne ne les pose :
+ *  - `envelopperNavigations(fn)` : un « avancer » (push) ou un « reculer » (go(-1)) passe par `fn(sens, faire)`, qui peut
+ *    l'emballer dans une transition de vue ; `faire()` fait la navigation elle-même, exactement comme avant ;
+ *  - `cheminPrecedent()` : l'adresse de l'écran d'avant dans l'historique, pour qu'une croix ou un ‹ qui y mène RECULE au
+ *    lieu d'ouvrir l'écran une seconde fois (liste retrouvée à sa place, historique qui ne s'allonge pas). Gardée en mémoire
+ *    seulement : après un rechargement on ne sait plus, et la croix refait ce qu'elle faisait. */
+let envelopper = null;
+export function envelopperNavigations(fn) { envelopper = fn; }
+const cheminsVus = new Map(); // index d'historique → chemin sans préfixe
+function noterChemin() {
+  cheminsVus.set(index, cheminSansPrefixe(window.location.pathname));
+}
+export function cheminPrecedent() {
+  return cheminsVus.get(index - 1) || null;
+}
+noterChemin();
+
 function handlePop() {
   action = 'POP';
   alignerAdresse();
   const suivant = getIndex();
   const delta = suivant == null ? null : suivant - index;
   index = suivant;
+  noterChemin();
   if (listener) listener({ action, location: historiqueLangue.location, delta });
 }
 
@@ -114,29 +133,46 @@ export const historiqueLangue = {
     return { pathname: url.pathname, search: url.search, hash: url.hash };
   },
   push(to, state) {
-    action = 'PUSH';
-    const location = versLocation(to, state);
-    // Navigation déclenchée par un bouton (navigate()) : la barre de progression démarre aussi, pas seulement
-    // sur un clic de lien (voir NavigationFeedback.jsx).
-    if (location.pathname !== lireLocation().pathname) window.dispatchEvent(new Event('fairide:navigation'));
-    index = (getIndex() ?? index) + 1;
-    const url = avecPrefixe(location);
-    try {
-      globalHistory.pushState(etatHistorique(location, index), '', url);
-    } catch (e) {
-      if (e instanceof DOMException && e.name === 'DataCloneError') throw e;
-      window.location.assign(url);
-    }
-    if (listener) listener({ action, location: historiqueLangue.location, delta: 1 });
+    const faire = () => {
+      action = 'PUSH';
+      const location = versLocation(to, state);
+      // Navigation déclenchée par un bouton (navigate()) : la barre de progression démarre aussi, pas seulement
+      // sur un clic de lien (voir NavigationFeedback.jsx).
+      if (location.pathname !== lireLocation().pathname) window.dispatchEvent(new Event('fairide:navigation'));
+      index = (getIndex() ?? index) + 1;
+      // Les écrans « devant » (après un retour) n'existent plus : une nouvelle page les remplace.
+      for (const i of cheminsVus.keys()) if (i >= index) cheminsVus.delete(i);
+      const url = avecPrefixe(location);
+      try {
+        globalHistory.pushState(etatHistorique(location, index), '', url);
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'DataCloneError') throw e;
+        window.location.assign(url);
+      }
+      noterChemin();
+      if (listener) listener({ action, location: historiqueLangue.location, delta: 1 });
+    };
+    if (envelopper) envelopper('avance', faire, versLocation(to, state)); else faire();
   },
   replace(to, state) {
     action = 'REPLACE';
     const location = versLocation(to, state);
     index = getIndex() ?? index;
     globalHistory.replaceState(etatHistorique(location, index), '', avecPrefixe(location));
+    noterChemin();
     if (listener) listener({ action, location: historiqueLangue.location, delta: 0 });
   },
-  go(n) { return globalHistory.go(n); },
+  go(n) {
+    if (envelopper && n === -1) { envelopper('recule', () => globalHistory.go(n), null, {}); return undefined; }
+    return globalHistory.go(n);
+  },
+  // Le bouton Retour d'Android (natif.js) appelait historique.back(), qui n'existait pas sur cet historique : l'appel levait
+  // une erreur et Retour ne faisait rien hors des onglets et des fenêtres (trouvé le 2026-10-23). `geste` : un recul voulu
+  // par un geste de la personne (Retour d'Android, croix), qui glisse même sans clic juste avant (transitionPhoto.js).
+  back({ geste = false } = {}) {
+    if (envelopper) { envelopper('recule', () => globalHistory.go(-1), null, { geste }); return undefined; }
+    return globalHistory.go(-1);
+  },
 };
 
 export function langueHistorique() { return langue; }

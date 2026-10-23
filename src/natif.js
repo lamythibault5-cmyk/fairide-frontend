@@ -226,8 +226,9 @@ export async function demarrerNatif(historique) {
   preparerHaptique();
   // iPhone : le verre iris sous l'heure et la batterie quand la page défile (verreBarreEtat.js, verre.css).
   if (plateforme() === 'ios') import('./verreBarreEtat').then(({ installerVerreBarreEtat }) => installerVerreBarreEtat()).catch(() => {});
-  // La photo d'un commerce voyage de sa carte à sa fiche (transitionPhoto.js, audit « Look and feel » 6b).
-  import('./transitionPhoto').then(({ installerTransitionPhoto }) => installerTransitionPhoto(historique)).catch(() => {});
+  // Les écrans glissent, la photo d'un commerce voyage, la croix et ‹ reculent, le bas de page rebondit (transitionPhoto.js,
+  // maquettes/transitions-appli, 2026-10-23).
+  import('./transitionPhoto').then(({ installerTransitionsEcrans }) => installerTransitionsEcrans(historique)).catch(() => {});
 
   try {
     const { App } = await import('@capacitor/app');
@@ -258,7 +259,8 @@ export async function demarrerNatif(historique) {
       if (retourEtape) { retourEtape.click(); return; }
       if (RACINES.has(chemin) || window.history.length <= 1) { App.minimizeApp().catch(() => {}); return; }
       if (ONGLETS[chemin]) { historique.replace(ONGLETS[chemin]); return; }
-      historique.back();
+      // Un geste de la personne : l'écran recule en glissant, comme sur iPhone (transitionPhoto.js).
+      historique.back({ geste: true });
     });
 
     // Lien universel (https://fairide.be/order-success?order=…) ou schéma de l'application : on navigue

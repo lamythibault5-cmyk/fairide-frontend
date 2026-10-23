@@ -26,6 +26,7 @@ import './styles.css';
 import './client-ui.css';
 // Le verre de l'app (2026-10-23) : après les feuilles communes ; ses règles sont aussi plus fortes que celles de chaque écran.
 import './verre.css';
+import './transitions-appli.css';
 import { rechargerSiNouveauCode } from './lazyPage';
 import { demarrerAnalytics } from './analytics';
 import { estNatif, demarrerNatif, retirerEcranLancementNatif, garderLesLiensDansLApp } from './natif';

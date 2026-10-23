@@ -1,6 +1,7 @@
 import { useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import useDialogue from '../hooks/useDialogue';
+import useTirerPourFermer from '../hooks/useTirerPourFermer';
 
 // LA FENÊTRE MODALE, UNE FOIS POUR TOUTES.
 //
@@ -23,9 +24,12 @@ export default function Modale({ titre, ariaLabel, largeur, classe, classeBoite,
   const racine = useRef(null);
   const idTitre = useId();
   useDialogue(racine, onFermer);
+  // Dans l'app, sur téléphone : la feuille se tire vers le bas pour fermer (2026-10-23, maquettes/transitions-appli point 7).
+  const tirer = useTirerPourFermer(racine, onFermer);
   return createPortal(
     <div className={`modal-overlay${classe ? ` ${classe}` : ''}`} onClick={onFermer}>
       <div
+        {...tirer}
         className={`modal-box${classeBoite ? ` ${classeBoite}` : ''}`}
         onClick={(e) => e.stopPropagation()}
         style={largeur ? { maxWidth: largeur } : undefined}

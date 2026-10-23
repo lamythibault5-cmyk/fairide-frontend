@@ -42,7 +42,7 @@ import { VeloMarque } from '../../components/EcranCommande';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
 import { estNatif, experienceApp } from '../../natif';
 import FermerFicheParGlissement from '../../components/FermerFicheParGlissement';
-import { photoEnVol, entreeParPhoto } from '../../transitionPhoto';
+import { photoEnVol, entreeParPhoto, ouvrirAvecPhoto } from '../../transitionPhoto';
 import { chargerAvecCache, lireCache, poserFavoriEnCache } from '../../cacheDonnees';
 import { useActionOptimiste } from '../../actionOptimiste';
 import PanierColonne from '../../components/PanierColonne';
@@ -544,7 +544,8 @@ export default function RestaurantMenu({ id }) {
     if (!peutAjouter(item)) return;
     // Toucher le PLAT ouvre sa fiche (photo en grand, description, options, quantité — voir FichePlat.jsx).
     // Le « + » posé dessus, lui, ajoute directement (ajoutDirect ci-dessous).
-    setPickerItem(item);
+    // Dans l'app, la photo du plat grandit jusqu'à sa place dans la feuille (transitionPhoto.js, ouvrirAvecPhoto).
+    ouvrirAvecPhoto(() => setPickerItem(item));
   }
 
   // LE « + » AJOUTE TOUT DE SUITE (fondateur, 2026-10-01) : une unité, sans options, et le plat s'envole vers le

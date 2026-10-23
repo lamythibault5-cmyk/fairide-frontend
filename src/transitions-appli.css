@@ -1,0 +1,68 @@
+/* PASSER D'UN ÉCRAN À L'AUTRE, DANS L'APP (fondateur, 2026-10-23, réponses à maquettes/transitions-appli/transitions-appli.html).
+ * Le site ne change pas : tout est sous html.appli (ou les classes posées par transitionPhoto.js, qui n'est lancé que dans
+ * l'app native). Chargé après styles.css, client-ui.css et verre.css (main.jsx). */
+
+/* ---------- 1. Avancer, reculer : l'écran glisse (version A, comme iOS) ----------
+   L'écran qui arrive glisse depuis la droite et porte une ombre sur son bord ; celui qu'il couvre recule de 30 % et
+   s'assombrit. Au retour, l'inverse : l'écran du dessus repart vers la droite. 350 ms, la courbe des écrans de l'app. */
+html.vt-avance::view-transition-old(root) { animation: vt-recule-dessous .35s cubic-bezier(.2, .8, .2, 1) both; }
+html.vt-avance::view-transition-new(root) { animation: vt-arrive-droite .35s cubic-bezier(.2, .8, .2, 1) both; box-shadow: -10px 0 28px rgba(20, 18, 31, .16); }
+html.vt-recule::view-transition-old(root) { animation: vt-part-droite .35s cubic-bezier(.2, .8, .2, 1) both; box-shadow: -10px 0 28px rgba(20, 18, 31, .16); z-index: 1; }
+html.vt-recule::view-transition-new(root) { animation: vt-revient-dessous .35s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes vt-arrive-droite { from { transform: translateX(100%); } }
+@keyframes vt-recule-dessous { to { transform: translateX(-30%); filter: brightness(.86); } }
+@keyframes vt-part-droite { to { transform: translateX(100%); } }
+@keyframes vt-revient-dessous { from { transform: translateX(-30%); filter: brightness(.86); } }
+/* Ce qui ne bouge pas d'un écran à l'autre ne glisse pas avec lui : la barre d'onglets, le verre sous l'heure, la bulle du
+   panier sont capturés à part ; présents des deux côtés ils restent en place, sinon ils se fondent. */
+html.vt .dashboard-sidebar { view-transition-name: onglets; }
+html.vt .verre-etat { view-transition-name: verre-etat; }
+html.vt .panier-pilule { view-transition-name: panier; }
+::view-transition-group(onglets), ::view-transition-group(verre-etat), ::view-transition-group(panier) { animation-duration: .25s; }
+
+/* Plus de fondu à l'arrivée d'une page dans l'app : la transition ci-dessus le remplace, et un onglet (version A,
+   « immédiat ») ou un iPhone sans View Transitions (iOS 15 à 17) change d'écran d'un coup, comme une app. */
+html.appli .page-fade { animation: none; }
+
+/* ---------- 2. La photo du plat grandit jusqu'à sa feuille (ouvrirAvecPhoto, transitionPhoto.js) ----------
+   La feuille ne joue pas sa propre montée : elle arrive en fondu avec le reste, pendant que la photo voyage. */
+::view-transition-group(photo-plat) { animation-duration: .4s; animation-timing-function: cubic-bezier(.3, .75, .2, 1); overflow: clip; }
+::view-transition-old(photo-plat), ::view-transition-new(photo-plat) { height: 100%; width: 100%; object-fit: cover; overflow: clip; }
+::view-transition-image-pair(photo-plat) { overflow: clip; border-radius: var(--photo-rayon-arrivee, 0); animation: photo-rayon .4s cubic-bezier(.3, .75, .2, 1) both; }
+html.vt-feuille .plat-panneau, html.vt-feuille .plat-feuille { animation: none; }
+html.vt-feuille::view-transition-old(root), html.vt-feuille::view-transition-new(root) { animation-duration: .25s; }
+
+/* ---------- 3. Les feuilles et les confirmations montent du bas et se tirent pour fermer (version A) ----------
+   La boîte d'une fenêtre (Modale.jsx, ConfirmDialog.jsx) monte de tout en bas de l'écran, le fond s'assombrit en même temps ;
+   elle suit le doigt vers le bas (useTirerPourFermer). `backwards` et non `both` : une animation gardée après sa fin
+   passerait devant le déplacement posé par le doigt (style en ligne), et la feuille ne suivrait plus. */
+@media (max-width: 640px) {
+  html.appli .modal-overlay { animation: vt-voile .25s ease backwards; }
+  html.appli .modal-box { animation: vt-feuille-monte .42s cubic-bezier(.32, .72, 0, 1) backwards; touch-action: pan-y; }
+}
+@keyframes vt-voile { from { opacity: 0; } }
+@keyframes vt-feuille-monte { from { transform: translateY(100%); } }
+
+/* ---------- 4. Le bout de la page rebondit, en bas seulement (version B) ----------
+   html.pres-du-bas est posé par transitionPhoto.js une fois passée la moitié de la page : le rebond (iPhone) ou l'étirement
+   (Android) n'y est permis qu'en bas. En haut il reste coupé (styles.css, « pas de rebond de la page entière ») : il s'y
+   battrait avec « tirer pour actualiser » et montrerait ce qu'il y a au-dessus du bandeau. Sous la page apparaît son propre
+   fond (crème), l'iris derrière la page ayant été retiré (PR #217). */
+html.appli.pres-du-bas, html.appli.pres-du-bas body { overscroll-behavior-y: auto; }
+
+/* ---------- 5. L'appui se voit tout de suite (version A) ----------
+   Les boutons s'enfoncent à 96 % et foncent un peu, les cartes à 97 %, les rangées prennent une teinte iris. `scale` (et non
+   `transform`) : il s'ajoute aux transformations propres à chaque bouton au lieu de les remplacer. Avant, sur écran tactile, un
+   bouton ne changeait pas de taille (styles.css, pointer: coarse) pour ne pas glisser hors du doigt ; à 96 % le bord ne bouge
+   que d'un pixel environ. */
+@media (pointer: coarse) {
+  html.appli button:active:not(:disabled),
+  html.appli a.btn-primary:active, html.appli a.btn-gold:active, html.appli a.btn-teal:active, html.appli a.btn-outline:active { scale: .96; filter: brightness(.92); }
+  html.appli .rest-card:active, html.appli .une-carte:active, html.appli .fav-carte:active, html.appli .sl-carte-ligne:active, html.appli .rest-card.rc:active { transform: none; scale: .97; }
+  html.appli .account-link-row:active, html.appli .compte-feuille .account-link-row:active, html.appli .plat-cliquable:active { transform: none; scale: none; background: rgba(59, 47, 181, .07); }
+  /* Les onglets gardent leur propre rebond (client-ui.css). */
+  html.appli .dashboard-nav-link:active { scale: none; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.appli button:active:not(:disabled), html.appli .rest-card:active, html.appli .une-carte:active, html.appli .fav-carte:active, html.appli .sl-carte-ligne:active { scale: none; }
+}

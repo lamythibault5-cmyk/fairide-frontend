@@ -14,6 +14,7 @@ import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import useNotificationsClient from '../hooks/useNotificationsClient';
 import { ADMIN_HUBS, hubBadge, hubModules, moduleForPath } from '../pages/admin/adminModules';
 import { experienceApp } from '../natif';
+import { defilement } from '../gestes';
 import { useModeEquipe } from '../modeEquipe';
 
 const NATIF = experienceApp();
@@ -84,6 +85,24 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
 // Neuf entrées, plus vingt-huit : l'accueil, un lien par pôle (voir ADMIN_HUBS), le compte. L'entrée d'un pôle reste allumée
 // sur n'importe lequel de ses onglets — d'où le calcul à la main plutôt que l'isActive de NavLink,
 // qui ne connaît que sa propre adresse.
+/* LES ONGLETS DE L'APP (fondateur, 2026-10-23, version A de maquettes/transitions-appli) : comme sur iPhone, un onglet
+ * s'affiche tout de suite et retrouve l'endroit où on l'avait laissé ; toucher l'onglet où l'on est remonte en haut.
+ *   - `replace` : changer d'onglet n'ajoute pas d'écran à l'historique (le glisser-retour ne ramène plus à l'onglet d'avant,
+ *     et la navigation n'est pas animée, transitionPhoto.js n'emballe que les « avancer ») ;
+ *   - `restaurerDefilement` : ScrollRestorer.jsx remet la position gardée pour cette adresse au lieu de remonter en haut ;
+ *   - sur l'onglet affiché lui-même (adresse exacte, pas une fiche ouverte depuis lui) : remonter en douceur. */
+function ongletAppli(vers, ici) {
+  return {
+    replace: true,
+    state: { restaurerDefilement: true },
+    onClick: (e) => {
+      if (ici !== vers) return;
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: defilement() });
+    }
+  };
+}
+
 function AdminNav({ t }) {
   const { overview } = useAdminOverview();
   // Équipe & accès : on masque les applications fermées au rôle du membre (tout reste visible tant que le
@@ -210,7 +229,8 @@ export default function DashboardSidebar() {
       <nav className="dashboard-nav" ref={navRef}>
         <span className="nav-curseur" aria-hidden="true" />
         {items.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
+          <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}
+            {...(NATIF ? ongletAppli(item.to, pathname) : {})}>
             <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} /></span>
             {/* Deux libellés : le complet pour la colonne latérale, le court pour la barre du bas (styles.css choisit). */}
             <span className="dashboard-nav-label"><span className="libelle-long">{item.label}</span>{item.court && <span className="libelle-court">{item.court}</span>}</span>
