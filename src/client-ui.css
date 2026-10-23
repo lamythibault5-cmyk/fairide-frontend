@@ -225,12 +225,19 @@
   background: #fff; border: 2px solid var(--line); color: #fff;
 }
 .suivi-etapes li.est-fait .suivi-etape-point { background: var(--iris); border-color: var(--iris); }
-.suivi-etapes li.est-actuel .suivi-etape-point { background: var(--iris); border-color: var(--iris); box-shadow: 0 0 0 4px var(--lime); animation: suivi-pouls 1.8s ease-in-out infinite; }
+.suivi-etapes li.est-actuel .suivi-etape-point { background: var(--iris); border-color: var(--iris); box-shadow: 0 0 0 4px var(--lime); }
+/* La respiration de l'étape en cours, en boucle tant que la commande avance : un anneau lime de 3 px posé juste autour de
+   l'anneau fixe (de 4 à 7 px du bord), qui apparaît et s'efface par opacity et transform (2026-10-23, app iPhone lente : la
+   boucle animait box-shadow, une repeinte à chaque image pendant tout le suivi). */
+.suivi-etapes li.est-actuel .suivi-etape-point::after {
+  content: ''; position: absolute; inset: -9px; border-radius: 50%; border: 3px solid rgba(200, 240, 60, .55); opacity: 0; pointer-events: none;
+  animation: suivi-pouls 1.8s ease-in-out infinite;
+}
 .suivi-etape-lib { font-size: 11.5px; color: var(--ink-faint); line-height: 1.2; }
 .suivi-etapes li.est-fait .suivi-etape-lib { color: var(--ink-soft); }
 .suivi-etapes li.est-actuel .suivi-etape-lib { color: var(--ink); font-weight: 800; }
-@keyframes suivi-pouls { 0%, 100% { box-shadow: 0 0 0 4px var(--lime); } 50% { box-shadow: 0 0 0 7px rgba(200, 240, 60, .55); } }
-@media (prefers-reduced-motion: reduce) { .suivi-etapes li.est-actuel .suivi-etape-point { animation: none; } }
+@keyframes suivi-pouls { 0%, 100% { opacity: 0; transform: scale(.85); } 50% { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .suivi-etapes li.est-actuel .suivi-etape-point::after { animation: none; } }
 
 .suivi-carte .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 8px 0; color: var(--ink); font-size: 13px; }
 .suivi-lieu { color: var(--ink-soft); margin: 6px 0; }
@@ -336,9 +343,13 @@
 .suivi-bandeau .small { color: rgba(255, 255, 255, .82); }
 .suivi-bandeau .small b { color: #fff; }
 .route-suivi { position: relative; height: 48px; margin: 12px 0 6px; color: var(--lime); }
-.rs-voie { position: absolute; top: 35px; height: 3px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .38) 0 7px, transparent 7px 13px); }
-.route-suivi.en-route .rs-voie { animation: rs-voie .5s linear infinite; }
-@keyframes rs-voie { to { background-position: -13px 0; } }
+/* Les pointillés défilent pendant la livraison en glissant d'un motif (13 px) par `transform`, sur une couche un motif plus
+   longue que la route (2026-10-23, app iPhone lente : `background-position` repeignait la route à chaque image, pendant
+   toute la livraison). */
+.rs-voie { position: absolute; top: 35px; height: 3px; overflow: hidden; }
+.rs-voie::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; right: -13px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .38) 0 7px, transparent 7px 13px); }
+.route-suivi.en-route .rs-voie::before { animation: rs-voie .5s linear infinite; }
+@keyframes rs-voie { to { transform: translateX(-13px); } }
 .rs-fait { position: absolute; top: 35px; height: 3px; border-radius: 2px; background: var(--lime); transition: width .9s cubic-bezier(.3, .7, .4, 1); }
 .rs-arret { position: absolute; top: 36.5px; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--iris); border: 2px solid rgba(255, 255, 255, .45); display: grid; place-items: center; }
 .rs-arret.actuel { width: 12px; height: 12px; margin: -6px 0 0 -6px; background: var(--lime); border-color: var(--lime); }
@@ -553,9 +564,16 @@
 .fiche-statut { width: fit-content; max-width: 100%; padding: 7px 13px; border-radius: 14px; background: var(--surface-soft); margin: 0 0 14px; font-size: 13.5px; }
 .fiche-statut.est-ouvert { background: rgba(59, 47, 181, 0.08); }
 /* Trois pulsations puis repos (audit du 15/10/2026) : en boucle infinie sur chaque fiche ouverte, elle repeignait sans fin. */
-.fiche-statut.est-ouvert .fiche-statut-point { animation: fiche-pouls 2.2s ease-in-out 3; }
-@keyframes fiche-pouls { 0%, 100% { box-shadow: 0 0 0 0 rgba(59, 47, 181, 0.35); } 50% { box-shadow: 0 0 0 5px rgba(59, 47, 181, 0); } }
-@media (prefers-reduced-motion: reduce) { .fiche-statut.est-ouvert .fiche-statut-point { animation: none; } }
+/* Le halo est un rond qui grandit et s'efface (transform, opacity), plus une ombre animée (2026-10-23, app iPhone lente) : une
+   ombre qui change de taille repeint la pastille à chaque image, le compositeur, lui, déplace le rond sans rien repeindre.
+   Même halo : 5 px autour de la pastille de 9 px (×2,1), iris à 35 % qui s'éteint. */
+.fiche-statut.est-ouvert .fiche-statut-point { position: relative; }
+.fiche-statut.est-ouvert .fiche-statut-point::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%; background: rgba(59, 47, 181, 0.35); opacity: 0; pointer-events: none;
+  animation: fiche-pouls 2.2s ease-in-out 3;
+}
+@keyframes fiche-pouls { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(2.1); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fiche-statut.est-ouvert .fiche-statut-point::after { animation: none; } }
 
 /* Sections de la carte : un trait iris devant le titre, le nombre de plats en pastille. */
 .plats-section-titre { position: relative; padding-left: 13px; align-items: center; margin-top: 30px; }

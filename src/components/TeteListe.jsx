@@ -139,10 +139,16 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
     let arret = null;
     const route = velo.current.parentElement;
     let largeur = route ? route.clientWidth : 0;
+    // La dernière place écrite : arrivé au bout de sa route (après ~1 400 px), le vélo ne bouge plus, et réécrire la même
+    // valeur à chaque image coûtait quand même une mise à jour du style (2026-10-23, app iPhone lente).
+    let place = null;
     const poser = () => {
       attente = false;
       const y = Math.max(0, window.scrollY);
-      if (velo.current) velo.current.style.transform = `translateX(${Math.round(((Math.min(88, 8 + y / 18) - 8) / 100) * largeur)}px)`;
+      const x = Math.round(((Math.min(88, 8 + y / 18) - 8) / 100) * largeur);
+      if (x === place || !velo.current) return;
+      place = x;
+      velo.current.style.transform = `translateX(${x}px)`;
     };
     const mesure = typeof ResizeObserver === 'undefined' || !route ? null : new ResizeObserver(() => { largeur = route.clientWidth; poser(); });
     mesure?.observe(route);

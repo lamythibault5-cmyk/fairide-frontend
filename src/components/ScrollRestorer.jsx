@@ -40,18 +40,25 @@ export default function ScrollRestorer() {
   const navigationType = useNavigationType();
   const isFirstRun = useRef(true);
 
+  // La position est notée au fil du défilement et écrite au plus toutes les 150 ms, puis une dernière fois en quittant la
+  // page (2026-10-23, app iPhone lente) : elle était écrite dans sessionStorage à CHAQUE image, une écriture synchrone sur le
+  // fil qui fait défiler.
   useEffect(() => {
-    let ticking = false;
+    const cleDefilement = `fairide_scroll:${location.pathname}`;
+    let aEcrire = null;
+    let minuteur = 0;
+    const ecrire = () => {
+      minuteur = 0;
+      if (aEcrire === null) return;
+      try { sessionStorage.setItem(cleDefilement, String(aEcrire)); } catch { /* stockage indisponible */ }
+      aEcrire = null;
+    };
     function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        sessionStorage.setItem(`fairide_scroll:${location.pathname}`, String(window.scrollY));
-        ticking = false;
-      });
+      aEcrire = window.scrollY;
+      if (!minuteur) minuteur = setTimeout(ecrire, 150);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(minuteur); ecrire(); };
   }, [location.pathname]);
 
   useLayoutEffect(() => {
