@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 import useDialogue from '../hooks/useDialogue';
+import useTirerPourFermer from '../hooks/useTirerPourFermer';
 import Icone from './Icone';
 
 // Confirmation générique avant toute action sensible ou irréversible — un seul composant réutilisé
@@ -28,9 +29,12 @@ function Corps({ title, message, detail, icone, confirmLabel = 'Confirmer', canc
      ni la moindre gestion du focus : à l'ouverture le focus restait derrière, sur la page, si bien
      qu'au clavier on pouvait continuer à parcourir — et actionner — ce que la fenêtre recouvrait. */
   useDialogue(racine, onCancel);
+  // Dans l'app, sur téléphone : la feuille se tire vers le bas, comme Annuler (2026-10-23, maquettes/transitions-appli point 7).
+  // Pas pendant l'envoi : l'action est partie, la feuille attend sa réponse.
+  const tirer = useTirerPourFermer(racine, loading ? null : onCancel);
   return (
     <div className="modal-overlay confirm-voile" onClick={onCancel}>
-      <div className="modal-box confirm-feuille" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}
+      <div {...tirer} className="modal-box confirm-feuille" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}
         role="dialog" aria-modal="true" aria-labelledby="confirm-titre" ref={racine} tabIndex={-1}>
         <span className="confirm-poignee" aria-hidden="true" />
         {icone && <span className={`confirm-icone${danger ? ' confirm-icone--danger' : ''}`} aria-hidden="true"><Icone nom={icone} taille={22} /></span>}
