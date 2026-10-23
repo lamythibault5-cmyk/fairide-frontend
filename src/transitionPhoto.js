@@ -38,6 +38,8 @@ const NOM = 'photo-commerce';
 const NOM_PLAT = 'photo-plat';
 const FICHE = /^(?:\/(?:nl|en))?\/restaurants\/([^/]+)$/;
 const TOUCHER_RECENT_MS = 400;
+// Le panier et le paiement : la croix d'une fiche n'y « recule » jamais (voir plus bas, 3).
+const PARCOURS = /^(?:\/(?:nl|en))?\/(?:panier|checkout)(?:\/|$)/;
 
 let enVol = null; // { id, src, at } : la photo de la carte touchée, pour le squelette et la couverture de la fiche
 
@@ -219,7 +221,12 @@ export function installerTransitionsEcrans(historique) {
     if (croix || fleche) {
       const avant = cheminPrecedent();
       const memeEcran = avant && (avant === cheminSansPrefixe(url.pathname) || (!!idFiche(avant) && !!idFiche(url.pathname)));
-      if (avant && (croix || memeEcran)) {
+      // LA CROIX NE RECULE PAS VERS LE PANIER (2026-10-23, app iPhone : « je n'arrive jamais à en sortir »). Panier ouvert
+      // depuis la liste, puis ‹ (l'écran d'avant n'est pas la fiche : on l'OUVRE), puis la croix de la fiche : reculer
+      // ramenait au panier, dont ‹ rouvrait la fiche… sans fin. Si l'écran d'avant est le panier ou le paiement, la croix
+      // suit son lien : la liste.
+      const croixRecule = croix && !PARCOURS.test(avant || '');
+      if (avant && (croixRecule || memeEcran)) {
         e.preventDefault();
         if (idFiche(ici)) photoRetour = { id: idFiche(ici) };
         historique.back({ geste: true });
