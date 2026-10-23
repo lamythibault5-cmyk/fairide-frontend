@@ -1,0 +1,170 @@
+# Application iPhone (« Fairide », be.fairide.app) envoyée dans TESTFLIGHT, reliée à la PRODUCTION.
+#
+# POURQUOI. Sans ce workflow, chaque version iPhone demandait le Mac d'Owen (Xcode › Archive › Upload). Ici, les Mac de
+# GitHub (gratuits : le dépôt est public) construisent l'app à chaque fusion dans main et l'envoient dans App Store
+# Connect ; le groupe de test interne « Équipe » la reçoit dans l'app TestFlight (distribution automatique, sans revue
+# d'Apple). Jamais vers l'App Store public : la soumission se fait à la main dans App Store Connect.
+# Aussi à la main : Actions › App iPhone TestFlight › Run workflow.
+#
+# SIGNATURE. Un certificat « Apple Distribution » et un profil App Store (« Fairide App Store CI », push, Sign in with
+# Apple, domaines associés) ont été créés une fois par l'API App Store Connect le 23 oct. 2026 (valables jusqu'au
+# 23 oct. 2027 : les recréer avant). Originaux dans C:\Users\OSTA\fairide-cles\ios-ci\ (hors dépôt). Le build les pose
+# dans un trousseau temporaire, signe à la main (pas de signature automatique : elle créerait un certificat à chaque
+# build), puis Xcode envoie l'app avec la clé API.
+#
+# CONFIGURATION (Réglages du dépôt › Secrets and variables › Actions).
+#   Secrets : IOS_DIST_P12_BASE64 + IOS_DIST_P12_PASSWORD (certificat), IOS_PROFILE_BASE64 (profil),
+#             ASC_KEY_P8_BASE64 (clé API App Store Connect « GitHub », rôle Admin), GOOGLE_SERVICE_INFO_PLIST_BASE64
+#             (Firebase iOS : sans lui l'app marche mais ne reçoit pas de notifications).
+#   Variables : ASC_KEY_ID, ASC_ISSUER_ID, VITE_GOOGLE_CLIENT_ID, VITE_GOOGLE_IOS_CLIENT_ID, VITE_SENTRY_DSN,
+#               VITE_PLAUSIBLE_DOMAIN.
+#
+# NUMÉRO DE BUILD : numéro du lancement + 100 (les premiers envois faits depuis le Mac avaient 1, 2, 3…). La version
+# visible (1.0) se change dans le projet Xcode (MARKETING_VERSION).
+name: App iPhone TestFlight
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'security/**']
+  workflow_dispatch:
+
+# Deux fusions rapprochées : seule la plus récente est construite (elle contient l'autre).
+concurrency:
+  group: app-ios-testflight
+  cancel-in-progress: true
+
+jobs:
+  testflight:
+    name: Construire et envoyer dans TestFlight
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      VITE_API_BASE: https://fairide-backend-production.up.railway.app/api
+      VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+      VITE_GOOGLE_IOS_CLIENT_ID: ${{ vars.VITE_GOOGLE_IOS_CLIENT_ID }}
+      VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+      VITE_PLAUSIBLE_DOMAIN: ${{ vars.VITE_PLAUSIBLE_DOMAIN }}
+      # Jamais de photos de banque d'images présentées comme les plats d'un vrai commerce (AVANT-PRODUCTION.md).
+      VITE_STOCK_DISH_PHOTOS: 'off'
+      ASC_KEY_ID: ${{ vars.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ vars.ASC_ISSUER_ID }}
+      PROFIL: Fairide App Store CI
+      EQUIPE: 44V9JV2JQN
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Réglages présents
+        env:
+          P12: ${{ secrets.IOS_DIST_P12_BASE64 }}
+          PROFIL_B64: ${{ secrets.IOS_PROFILE_BASE64 }}
+          CLE: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          manque=""
+          [ -n "$P12" ] || manque="$manque IOS_DIST_P12_BASE64"
+          [ -n "$PROFIL_B64" ] || manque="$manque IOS_PROFILE_BASE64"
+          [ -n "$CLE" ] || manque="$manque ASC_KEY_P8_BASE64"
+          [ -n "$ASC_KEY_ID" ] || manque="$manque ASC_KEY_ID"
+          [ -n "$ASC_ISSUER_ID" ] || manque="$manque ASC_ISSUER_ID"
+          if [ -n "$manque" ]; then echo "::error::Réglages manquants :$manque (voir l'en-tête du workflow)."; exit 1; fi
+          echo "NUMERO_BUILD=$((GITHUB_RUN_NUMBER + 100))" >> "$GITHUB_ENV"
+          xcodebuild -version
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Site (dist/) relié à la production
+        run: npm run build
+
+      - name: Firebase (notifications)
+        env:
+          PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          if [ -n "$PLIST" ]; then
+            echo "$PLIST" | base64 --decode > ios/App/App/GoogleService-Info.plist
+            /usr/libexec/PlistBuddy -c "Print :BUNDLE_ID" ios/App/App/GoogleService-Info.plist
+          else
+            echo "::warning::GOOGLE_SERVICE_INFO_PLIST_BASE64 absent : cette version ne recevra pas les notifications."
+          fi
+
+      - name: Copie dans le projet iOS (pod install)
+        run: npx cap sync ios
+
+      - name: Certificat, profil et clé API
+        env:
+          P12: ${{ secrets.IOS_DIST_P12_BASE64 }}
+          P12_MDP: ${{ secrets.IOS_DIST_P12_PASSWORD }}
+          PROFIL_B64: ${{ secrets.IOS_PROFILE_BASE64 }}
+          CLE: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          TROUSSEAU="$RUNNER_TEMP/fairide.keychain-db"
+          MDP_TROUSSEAU="$(openssl rand -base64 24)"
+          security create-keychain -p "$MDP_TROUSSEAU" "$TROUSSEAU"
+          security set-keychain-settings -lut 21600 "$TROUSSEAU"
+          security unlock-keychain -p "$MDP_TROUSSEAU" "$TROUSSEAU"
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/distribution.p12"
+          security import "$RUNNER_TEMP/distribution.p12" -P "$P12_MDP" -A -t cert -f pkcs12 -k "$TROUSSEAU"
+          security set-key-partition-list -S apple-tool:,apple: -k "$MDP_TROUSSEAU" "$TROUSSEAU" > /dev/null
+          security list-keychains -d user -s "$TROUSSEAU" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/distribution.p12"
+          security find-identity -v -p codesigning "$TROUSSEAU"
+
+          echo "$PROFIL_B64" | base64 --decode > "$RUNNER_TEMP/profil.mobileprovision"
+          UUID=$(security cms -D -i "$RUNNER_TEMP/profil.mobileprovision" | plutil -extract UUID raw -)
+          for d in "$HOME/Library/MobileDevice/Provisioning Profiles" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$d"; cp "$RUNNER_TEMP/profil.mobileprovision" "$d/$UUID.mobileprovision"
+          done
+
+          mkdir -p "$HOME/private_keys"
+          echo "$CLE" | base64 --decode > "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"
+
+      # Signature à la main pour la cible App seulement (la passer en ligne de commande l'imposerait aussi aux Pods, qui
+      # refusent un profil). Push en « production », comme le profil App Store ; le dépôt garde « development » pour Xcode.
+      - name: Projet réglé pour l'App Store
+        run: |
+          perl -0pi -e 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";\n\t\t\t\tDEVELOPMENT_TEAM = $ENV{EQUIPE};\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "$ENV{PROFIL}";/g' ios/App/App.xcodeproj/project.pbxproj
+          /usr/libexec/PlistBuddy -c "Set :aps-environment production" ios/App/App/App.entitlements
+          grep -c "PROVISIONING_PROFILE_SPECIFIER" ios/App/App.xcodeproj/project.pbxproj
+
+      - name: Archive
+        run: |
+          set -o pipefail
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Fairide.xcarchive" \
+            CURRENT_PROJECT_VERSION="$NUMERO_BUILD" archive | tail -40
+
+      - name: Envoi dans App Store Connect
+        run: |
+          set -o pipefail
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$EQUIPE</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict><key>be.fairide.app</key><string>$PROFIL</string></dict>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Fairide.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" | tail -30
+          echo "Build $NUMERO_BUILD envoyé : App Store Connect › Fairide › TestFlight (10 à 30 min de traitement chez Apple)."
+
+      - name: Nettoyage
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/fairide.keychain-db" 2>/dev/null || true
+          rm -rf "$HOME/private_keys"

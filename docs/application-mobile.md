@@ -113,9 +113,18 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
     **iOS** : FAIT, `UIUserInterfaceStyle` = `Light` dans `Info.plist` ; sans elle, un iPhone en mode sombre affiche le
     clavier, les sélecteurs de date et les fenêtres du système en noir sur nos écrans blancs.
 
-## Sortir une version iPhone (sur le Mac d'Owen)
+## Sortir une version iPhone
 
-Pas de workflow GitHub pour l'iPhone : Xcode signe et envoie lui-même vers TestFlight.
+**Par GitHub, sans Mac (depuis le 23 oct. 2026, la voie normale)** : `.github/workflows/app-ios-testflight.yml`. À chaque
+fusion dans `main` (sauf docs seules), un Mac de GitHub construit l'app reliée à la production, la signe et l'envoie dans App
+Store Connect ; le groupe interne « Équipe » de TestFlight la reçoit tout seul (« Mettre à jour » dans l'app TestFlight),
+10 à 30 min après la fin du build. À la main : Actions › *App iPhone TestFlight* › *Run workflow*. Numéro de build = numéro
+du lancement + 100. La signature (certificat « Apple Distribution » + profil « Fairide App Store CI », créés par l'API App
+Store Connect avec la clé « GitHub », rôle Admin) **expire le 23 oct. 2027** : la recréer avant, sinon le build s'arrête.
+Originaux dans `C:\Users\OSTA\fairide-cles\ios-ci\` ; secrets et variables listés en tête du workflow. Rien ne part vers
+l'App Store public : la soumission se fait à la main dans App Store Connect (onglet Distribution).
+
+**Sur le Mac d'Owen (secours, et pour déboguer avec la console de Xcode)** : Xcode signe et envoie lui-même vers TestFlight.
 
 **Une fois**
 1. Installer Xcode (App Store du Mac) et l'ouvrir une fois, Node 22, CocoaPods (`brew install cocoapods`).
