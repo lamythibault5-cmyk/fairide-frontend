@@ -27,9 +27,17 @@ const telephoneSombre = () => {
   try { return window.matchMedia?.('(prefers-color-scheme: dark)').matches === true; } catch { return false; }
 };
 
+// L'écran « Clair ou sombre ? » de l'arrivée (ChoixApparenceArrivee.jsx) montre un choix avant qu'il soit enregistré.
+let apercu = null;
+
+// Le client a-t-il déjà choisi (là ou dans Mon compte) ? Sinon, l'écran de l'arrivée le lui demande une fois.
+export function themeChoisi() {
+  try { return localStorage.getItem(CLE) !== null; } catch { return true; }
+}
+
 function appliquer() {
   const html = document.documentElement;
-  const choix = choixTheme();
+  const choix = apercu || choixTheme();
   const sombre = html.classList.contains('appli') && (choix === 'sombre' || (choix === 'auto' && telephoneSombre()));
   if (sombre === html.classList.contains('sombre')) return;
   html.classList.toggle('sombre', sombre);
@@ -40,6 +48,13 @@ function appliquer() {
 
 export function definirTheme(choix) {
   try { localStorage.setItem(CLE, CHOIX_THEME.includes(choix) ? choix : 'auto'); } catch { /* stockage bloqué */ }
+  apercu = null;
+  appliquer();
+}
+
+// Montre `choix` sans l'enregistrer ; null revient au choix enregistré.
+export function apercuTheme(choix) {
+  apercu = CHOIX_THEME.includes(choix) ? choix : null;
   appliquer();
 }
 

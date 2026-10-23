@@ -15,6 +15,7 @@ import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
 import { SkeletonCards, SqueletteEcran } from './Skeleton';
 import { experienceApp } from '../natif';
+import { themeChoisi } from '../theme';
 import { lireBienvenue } from '../bienvenue';
 import useBarreSurIris from '../hooks/useBarreSurIris';
 // Le cadre du site (barre latérale blanche, largeurs, bandeau et feuille, carte des cookies, connexion) : voir son en-tête.
@@ -23,6 +24,9 @@ import '../site-cadre.css';
 // « Activer les notifications » juste après l'inscription, dans l'application seulement (voir AmorceNotifications.jsx).
 // Chargé à la demande : sur fairide.be la condition est toujours fausse, et le module n'est jamais téléchargé.
 const AmorceNotifications = lazy(() => import('./AmorceNotifications'));
+const ChoixApparenceArrivee = lazy(() => import('./ChoixApparenceArrivee'));
+// L'accueil de chaque profil dans l'app : le client (liste), le livreur (Courses), le commerce (Commandes).
+const ACCUEILS = ['/', '/restaurants', '/driver', '/dashboard'];
 // PAS DE RETOUR PAR GLISSEMENT (fondateur, 2026-10-23) : le glissement vers la droite pour reculer (bord gauche, puis de
 // n'importe où) a été retiré — sur la liste, la page partait de côté sur un fond vide « à l'infini ». On recule par les
 // boutons retour / fermer ; Android garde le geste du système.
@@ -246,6 +250,8 @@ export default function Layout() {
         {!APPLI && <CookieBanner />}
         {seesClientCart && <FloatingCart />}
         {experienceApp() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
+        {/* « Clair ou sombre ? », une fois, sur son accueil, à qui n'a pas encore choisi (ChoixApparenceArrivee.jsx). */}
+        {experienceApp() && !themeChoisi() && ACCUEILS.includes(location.pathname) && <Suspense fallback={null}><ChoixApparenceArrivee /></Suspense>}
       </>
     );
   }

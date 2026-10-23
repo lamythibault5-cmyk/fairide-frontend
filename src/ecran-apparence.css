@@ -1,0 +1,43 @@
+/* « CLAIR OU SOMBRE ? » À L'ARRIVÉE (ChoixApparenceArrivee.jsx ; version B de maquettes/choix-apparence/choix-apparence.html).
+   L'écran suit le choix touché (apercuTheme) : ses couleurs sont celles des jetons, clairs ou sombres. Les deux aperçus,
+   eux, montrent CHACUN un thème quel que soit celui de l'écran : leurs couleurs sont écrites ici exprès (les valeurs de
+   :root et de theme-sombre.css) et restent hors des jetons. Ils sont aria-hidden, donc hors de npm run check:sombre. */
+
+.ap-ecran { padding-top: calc(34px + env(safe-area-inset-top)); }
+.ap-bonjour { margin: 0; font-size: 14px; font-weight: 600; color: var(--iris-texte); }
+.ap-ecran .bv-titre { margin-top: 4px; }
+.ap-ecran .bv-sous { margin-bottom: 16px; }
+
+.ap-minis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.ap-choix { display: grid; justify-items: center; gap: 8px; padding: 0; min-height: 0; border: 0; background: none; color: var(--ink); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.ap-choix:active .ap-mini { transform: scale(.97); }
+.ap-etiquette { display: inline-flex; align-items: center; gap: 7px; }
+.ap-choix.on .ap-etiquette::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: var(--iris); box-shadow: inset 0 0 0 3px var(--cream); }
+
+/* L'aperçu : un téléphone vu de face, aussi haut que l'écran le permet (l'écran plein ne défile pas, npm run check:app). */
+.ap-mini {
+  --m-bande: #3B2FB5; --m-fond: #FFFFFF; --m-carte: #FFFFFF; --m-zone: #EFEFEF; --m-filet: #E2E2E2; --m-ligne: #D6D6D6; --m-onglets: #FFFFFF;
+  display: flex; flex-direction: column; width: 100%; height: clamp(150px, 36svh, 300px); overflow: hidden;
+  border-radius: 16px; border: 2px solid var(--line); background: var(--m-fond); transition: border-color .2s, transform .15s;
+}
+.ap-mini--sombre { --m-bande: #15113A; --m-fond: #15113A; --m-carte: #1F1A50; --m-zone: #2A2468; --m-filet: rgba(255, 255, 255, .13); --m-ligne: #4A4382; --m-onglets: #241E5C; }
+.ap-choix.on .ap-mini { border: 3px solid var(--iris); }
+.ap-mini-bande { flex: none; height: 22%; background: var(--m-bande); color: #C8F03C; display: flex; align-items: flex-end; gap: 6px; padding: 0 10% 7%; }
+.ap-mini-velo { width: 22%; height: auto; flex: none; }
+.ap-mini-route { flex: 1; margin-bottom: 3px; border-top: 2px dashed rgba(255, 255, 255, .35); }
+.ap-mini-feuille { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6%; margin-top: -6px; padding: 8% 7% 0; border-radius: 10px 10px 0 0; background: var(--m-fond); }
+.ap-mini-puces { display: flex; gap: 5%; }
+.ap-mini-puces i { flex: 1; aspect-ratio: 1; border-radius: 50%; background: var(--m-zone); }
+.ap-mini-une { flex: none; height: 26%; border-radius: 7px; background: #3A2A20; }
+.ap-mini-cartes { display: grid; grid-template-columns: 1fr 1fr; gap: 6%; }
+.ap-mini-carte { display: grid; gap: 3px; padding-bottom: 4px; border: 1px solid var(--m-filet); border-radius: 6px; background: var(--m-carte); overflow: hidden; }
+.ap-mini-photo { height: 26px; background: #C98A4B; }
+.ap-mini-photo--2 { background: #7A4A2E; }
+.ap-mini-ligne { height: 3px; margin: 0 12%; border-radius: 2px; background: var(--m-ligne); }
+.ap-mini-ligne--court { margin-right: 40%; }
+.ap-mini-onglets { flex: none; display: flex; justify-content: space-around; align-items: center; height: 11%; margin: 0 6% 5%; border-radius: 999px; background: var(--m-onglets); border: 1px solid var(--m-filet); }
+.ap-mini-onglets i { width: 9%; aspect-ratio: 1; border-radius: 50%; background: var(--m-ligne); }
+.ap-mini-onglets i.on { background: #3B2FB5; }
+
+.ap-plus-tard { margin: 10px 0 0; text-align: center; font-size: 13px; color: var(--ink-soft); }
+@media (prefers-reduced-motion: reduce) { .ap-mini { transition: none; } }
