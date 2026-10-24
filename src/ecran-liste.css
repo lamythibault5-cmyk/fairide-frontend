@@ -41,7 +41,12 @@
 .lt-bandeau::after {
   content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 16px;
   background: #fff; border-radius: 24px 24px 0 0;
+  transition: opacity .2s ease-out;
 }
+/* Elle fait partie de l'en-tête collant : une fois la page défilée, elle restait derrière le haut de la bande des cuisines,
+   blanche même quand une photo noire passait dessous (fondateur, 2026-10-24 : « comme si ce n'étaient pas les bonnes
+   dimensions »). Elle s'efface dès qu'on défile ; le verre ne montre plus que ce qui passe vraiment derrière lui. */
+.liste-tete--defilee .lt-bandeau::after { opacity: 0; }
 .lt-adresse {
   /* 40 px à l'œil ; la cible de 44 px que styles.css donne à tout bouton déborde de 2 px en haut et en bas (marges négatives). */
   display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; margin: -2px 0; padding: 0;

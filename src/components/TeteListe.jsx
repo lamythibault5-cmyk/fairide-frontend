@@ -143,6 +143,8 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
     const poser = () => {
       attente = false;
       const y = Math.max(0, window.scrollY);
+      // La lèvre blanche du bandeau s'efface dès que la page défile (ecran-liste.css, .liste-tete--defilee).
+      tete.current?.classList.toggle('liste-tete--defilee', y > 4);
       const x = Math.round(((Math.min(88, 8 + y / 18) - 8) / 100) * largeur);
       if (x === place || !velo.current) return;
       place = x;
