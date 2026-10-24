@@ -4,6 +4,9 @@
    Tout est sous `html:not(.appli)` : l'app (html.appli, natif ou écran d'accueil) garde exactement ses écrans
    (ecran-commande.css, client-ui.css). Les seules règles hors de ce cadre sont les `display: contents` des enveloppes
    ajoutées pour la mise en page du site : partout ailleurs, elles n'existent pas pour le rendu.
+   SAUF MES COMMANDES depuis le 2026-10-24 (fondateur, version A de maquettes/commandes-recherche) : l'app a pris l'écran du
+   site. Les règles `.sc-commandes` de toutes largeurs et toutes celles des commandes passées (`.sc-passees`) valent donc pour
+   les deux ; restent au site seul la mise en page de l'ordinateur (bandeau d'un bord à l'autre, deux colonnes du suivi).
    Sur un ordinateur (au-delà de 900 px, quand la barre latérale apparaît) :
    - le bandeau iris va d'un bord à l'autre de la zone de contenu, la feuille blanche monte dessus, et leur contenu tient
      dans une colonne de 1 120 px au plus, centrée ;
@@ -24,35 +27,39 @@ html:not(.appli) .sc-route .route-suivi { margin-bottom: 4px; }
 html:not(.appli) .sc-route .rs-arret.fait svg { stroke-width: 3; }
 
 /* ---------- Mes commandes, site, toutes largeurs ---------- */
-html:not(.appli) .sc-commandes .sc-surtitre { font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0; color: rgba(255, 255, 255, .75); margin: 0 0 4px; }
-html:not(.appli) .sc-commandes .sc-bandeau-suivi .ec-haut { min-height: 0; }
-html:not(.appli) .sc-commandes .sc-bandeau-suivi .small { color: rgba(255, 255, 255, .82); }
-html:not(.appli) .sc-commandes .sc-bandeau-suivi .small b { color: #fff; }
-html:not(.appli) .sc-commandes .sc-titre-suivi { animation: suivi-titre .35s ease both; }
-html:not(.appli) .sc-commandes .sc-notifs { display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 16px; }
-html:not(.appli) .sc-commandes .sc-notifs > :last-child { flex: 1 1 280px; }
-html:not(.appli) .sc-commandes .sc-suivi .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 0 0 10px; color: var(--ink); font-size: 13.5px; }
-html:not(.appli) .sc-commandes .sc-suivi .suivi-code { margin: 0 0 12px; }
-html:not(.appli) .sc-commandes .sc-autre-en-cours { margin-top: 24px; }
-html:not(.appli) .sc-commandes .sc-sec-titre { display: flex; align-items: center; gap: 10px; font-family: var(--font-titre); font-size: 21px; font-weight: 700; margin: 36px 0 12px; }
-html:not(.appli) .sc-commandes .sc-sec-titre svg { color: var(--iris); }
-html:not(.appli) .sc-passees { width: 100%; border-collapse: collapse; font-size: 14.5px; }
-html:not(.appli) .sc-passees .sc-nom-c { display: flex; align-items: center; gap: 12px; min-width: 0; }
-html:not(.appli) .sc-passees .sc-nom-texte { display: flex; flex-direction: column; min-width: 0; }
-html:not(.appli) .sc-passees .sc-nom-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-html:not(.appli) .sc-passees .sc-nom-texte small { font-size: 12.5px; color: var(--ink-soft); }
-html:not(.appli) .sc-passees .status-badge { text-transform: none; letter-spacing: 0; font-size: 12px; white-space: nowrap; }
-html:not(.appli) .sc-passees .status-livre { background: rgba(46, 125, 79, .12); color: var(--green); }
-html:not(.appli) .sc-passees .status-annule, html:not(.appli) .sc-passees .status-refuse { background: rgba(200, 56, 43, .1); color: var(--red); }
-html:not(.appli) .sc-passees .sc-details { display: inline-flex; align-items: center; gap: 7px; margin-left: 6px; padding: 8px 10px; border: 0; border-radius: var(--radius-pill);
+.sc-commandes .sc-surtitre { font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0; color: rgba(255, 255, 255, .75); margin: 0 0 4px; }
+.sc-commandes .sc-bandeau-suivi .ec-haut { min-height: 0; }
+.sc-commandes .sc-bandeau-suivi .small { color: rgba(255, 255, 255, .82); }
+.sc-commandes .sc-bandeau-suivi .small b { color: #fff; }
+.sc-commandes .sc-titre-suivi { animation: suivi-titre .35s ease both; }
+.sc-commandes .sc-notifs { display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 16px; }
+.sc-commandes .sc-notifs > :last-child { flex: 1 1 280px; }
+.sc-commandes .sc-suivi .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 0 0 10px; color: var(--ink); font-size: 13.5px; }
+.sc-commandes .sc-suivi .suivi-code { margin: 0 0 12px; }
+.sc-commandes .sc-autre-en-cours { margin-top: 24px; }
+.sc-commandes .sc-sec-titre { display: flex; align-items: center; gap: 10px; font-family: var(--font-titre); font-size: 21px; font-weight: 700; margin: 36px 0 12px; }
+.sc-commandes .sc-sec-titre svg { color: var(--iris); }
+/* Sans commande en cours, la route du vélo sous le titre (RouteVelo, Orders.jsx). */
+.sc-commandes .sc-route-velo { margin-top: 10px; }
+/* Dans l'app, la commande du bandeau garde l'ordre de sa carte (carteEnCours) : sa note « et maintenant ? » comme dans la carte. */
+.sc-commandes .sc-encours .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 0 0 10px; color: var(--ink); font-size: 13.5px; }
+.sc-passees { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.sc-passees .sc-nom-c { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.sc-passees .sc-nom-texte { display: flex; flex-direction: column; min-width: 0; }
+.sc-passees .sc-nom-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-passees .sc-nom-texte small { font-size: 12.5px; color: var(--ink-soft); }
+.sc-passees .status-badge { text-transform: none; letter-spacing: 0; font-size: 12px; white-space: nowrap; }
+.sc-passees .status-livre { background: rgba(46, 125, 79, .12); color: var(--green); }
+.sc-passees .status-annule, .sc-passees .status-refuse { background: rgba(200, 56, 43, .1); color: var(--red); }
+.sc-passees .sc-details { display: inline-flex; align-items: center; gap: 7px; margin-left: 6px; padding: 8px 10px; border: 0; border-radius: var(--radius-pill);
   background: none; color: var(--ink-soft); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
-html:not(.appli) .sc-passees .sc-details:hover { color: var(--ink); }
-html:not(.appli) .sc-passees .sc-details:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
-html:not(.appli) .sc-passees .sc-chevron { width: 7px; height: 7px; margin-top: -4px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .2s, margin .2s; }
-html:not(.appli) .sc-passees .sc-details[aria-expanded="true"] .sc-chevron { transform: rotate(-135deg); margin-top: 3px; }
-html:not(.appli) .sc-passees .sc-detail .suivi-resume { margin: 0 0 6px; }
-html:not(.appli) .sc-passees .sc-detail .order-next { margin: 0 0 8px; color: var(--ink); font-size: 13.5px; }
-html:not(.appli) .sc-passees .sc-detail > :first-child { margin-top: 0; }
+.sc-passees .sc-details:hover { color: var(--ink); }
+.sc-passees .sc-details:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+.sc-passees .sc-chevron { width: 7px; height: 7px; margin-top: -4px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .2s, margin .2s; }
+.sc-passees .sc-details[aria-expanded="true"] .sc-chevron { transform: rotate(-135deg); margin-top: 3px; }
+.sc-passees .sc-detail .suivi-resume { margin: 0 0 6px; }
+.sc-passees .sc-detail .order-next { margin: 0 0 8px; color: var(--ink); font-size: 13.5px; }
+.sc-passees .sc-detail > :first-child { margin-top: 0; }
 
 /* Paiement : codes, allergie, âge et CGU dans la colonne des choix (Checkout.jsx). */
 html:not(.appli) .sc-page .sc-codes { margin-top: 22px; padding-top: 6px; border-top: 1px solid var(--line); }
@@ -165,19 +172,19 @@ html:not(.appli) .sc-page .sc-codes { margin-top: 22px; padding-top: 6px; border
   html:not(.appli) .sc-commandes .sc-autre-en-cours .suivi-bandeau { margin: 0 -22px 16px; padding: 22px 24px 40px; }
 
   /* Les commandes passées : un tableau compact, comme la maquette. */
-  html:not(.appli) .sc-passees th { text-align: left; font-size: 12px; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase;
+  .sc-passees th { text-align: left; font-size: 12px; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase;
     padding: 10px 12px; border-bottom: 1px solid var(--line); }
-  html:not(.appli) .sc-passees td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  html:not(.appli) .sc-passees tr.sc-passee td { transition: background .15s; }
-  html:not(.appli) .sc-passees tr.sc-passee:hover td, html:not(.appli) .sc-passees tr.sc-passee.ouverte td { background: var(--cream-dim); }
-  html:not(.appli) .sc-passees tr.ouverte td { border-bottom-color: transparent; }
-  html:not(.appli) .sc-passees .sc-num { text-align: right; }
-  html:not(.appli) .sc-passees td.sc-num { font-variant-numeric: tabular-nums; font-weight: 700; }
-  html:not(.appli) .sc-passees .sc-c-date { white-space: nowrap; }
-  html:not(.appli) .sc-passees .sc-c-actions { text-align: right; white-space: nowrap; }
-  html:not(.appli) .sc-passees .sc-c-actions .btn-outline { min-height: 36px; padding: 6px 14px; font-size: 13.5px; background: #fff; }
-  html:not(.appli) .sc-passees .sc-tel-seul { display: none; }
-  html:not(.appli) .sc-passees .sc-passee-detail td { padding: 2px 12px 18px 64px; background: var(--cream-dim); }
+  .sc-passees td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .sc-passees tr.sc-passee td { transition: background .15s; }
+  .sc-passees tr.sc-passee:hover td, .sc-passees tr.sc-passee.ouverte td { background: var(--cream-dim); }
+  .sc-passees tr.ouverte td { border-bottom-color: transparent; }
+  .sc-passees .sc-num { text-align: right; }
+  .sc-passees td.sc-num { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .sc-passees .sc-c-date { white-space: nowrap; }
+  .sc-passees .sc-c-actions { text-align: right; white-space: nowrap; }
+  .sc-passees .sc-c-actions .btn-outline { min-height: 36px; padding: 6px 14px; font-size: 13.5px; background: #fff; }
+  .sc-passees .sc-tel-seul { display: none; }
+  .sc-passees .sc-passee-detail td { padding: 2px 12px 18px 64px; background: var(--cream-dim); }
 }
 
 /* Téléphone : chaque commande passée est une carte compacte (nom et total, articles et statut, actions). */
@@ -188,19 +195,19 @@ html:not(.appli) .sc-page .sc-codes { margin-top: 22px; padding-top: 6px; border
   html:not(.appli) .sc-commandes .sc-suivi-carte { order: 1; }
   html:not(.appli) .sc-commandes .sc-suivi-total, html:not(.appli) .sc-commandes .sc-suivi-actions { order: 2; }
   html:not(.appli) .sc-commandes .sc-sec-titre { font-size: 18px; margin-top: 28px; }
-  html:not(.appli) .sc-passees, html:not(.appli) .sc-passees tbody, html:not(.appli) .sc-passees tr, html:not(.appli) .sc-passees td { display: block; }
-  html:not(.appli) .sc-passees thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-  html:not(.appli) .sc-passees tr.sc-passee { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "nom total" "art statut" "act act";
+  .sc-passees, .sc-passees tbody, .sc-passees tr, .sc-passees td { display: block; }
+  .sc-passees thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .sc-passees tr.sc-passee { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "nom total" "art statut" "act act";
     gap: 6px 12px; align-items: center; margin-top: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; }
-  html:not(.appli) .sc-passees tr.sc-passee.ouverte { border-radius: 16px 16px 0 0; border-bottom: 0; }
-  html:not(.appli) .sc-passees .sc-c-nom { grid-area: nom; min-width: 0; }
-  html:not(.appli) .sc-passees .sc-c-date { display: none; }
-  html:not(.appli) .sc-passees .sc-c-art { grid-area: art; font-size: 13px; color: var(--ink-soft); padding-left: 48px; }
-  html:not(.appli) .sc-passees .sc-c-statut { grid-area: statut; justify-self: end; }
-  html:not(.appli) .sc-passees .sc-c-total { grid-area: total; justify-self: end; font-weight: 800; font-variant-numeric: tabular-nums; }
-  html:not(.appli) .sc-passees .sc-c-actions { grid-area: act; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
-  html:not(.appli) .sc-passees .sc-c-actions .btn-outline { min-height: 40px; padding: 8px 14px; font-size: 14px; }
-  html:not(.appli) .sc-passees .sc-details { margin-left: auto; min-height: 40px; }
-  html:not(.appli) .sc-passees .logo-commerce { width: 36px; height: 36px; }
-  html:not(.appli) .sc-passees tr.sc-passee-detail { padding: 0 14px 14px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 16px 16px; }
+  .sc-passees tr.sc-passee.ouverte { border-radius: 16px 16px 0 0; border-bottom: 0; }
+  .sc-passees .sc-c-nom { grid-area: nom; min-width: 0; }
+  .sc-passees .sc-c-date { display: none; }
+  .sc-passees .sc-c-art { grid-area: art; font-size: 13px; color: var(--ink-soft); padding-left: 48px; }
+  .sc-passees .sc-c-statut { grid-area: statut; justify-self: end; }
+  .sc-passees .sc-c-total { grid-area: total; justify-self: end; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .sc-passees .sc-c-actions { grid-area: act; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+  .sc-passees .sc-c-actions .btn-outline { min-height: 40px; padding: 8px 14px; font-size: 14px; }
+  .sc-passees .sc-details { margin-left: auto; min-height: 40px; }
+  .sc-passees .logo-commerce { width: 36px; height: 36px; }
+  .sc-passees tr.sc-passee-detail { padding: 0 14px 14px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 16px 16px; }
 }

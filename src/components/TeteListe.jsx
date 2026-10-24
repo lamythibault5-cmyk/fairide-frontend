@@ -36,12 +36,69 @@ const VELO = (
   </svg>
 );
 
-/* La route en pointillés et le vélo lime, immobile : le bandeau de la page Recherche du site (SearchPage.jsx) la reprend,
- * comme la maquette (maquettes/site-ordinateur/site-ordinateur.html, « Le cadre »). Mêmes classes que la route du bandeau ci-dessous. */
-export function RouteVelo({ position = 12, className = '' }) {
+/* LE VÉLO ROULE QUAND ON DÉFILE : sa place sur la route suit la page (8 % en haut, 88 % après ~1 400 px), et il pédale
+ * tant que ça bouge. Une écriture de style par image (requestAnimationFrame), aucun rendu React.
+ * Par `transform` depuis sa place de départ (left: 8 %, ecran-liste.css), en pixels de la route mesurée une fois puis à
+ * chaque changement de taille (2026-10-20, test de l'app Android) : `left` refaisait la mise en page à chaque image.
+ * `avance` (en points de pourcentage) s'ajoute au défilement : la Recherche le fait avancer de 9 par lettre tapée
+ * (fondateur, 2026-10-24, version A de maquettes/commandes-recherche) ; il y glisse (transition .3s) en pédalant. */
+export function useVeloQuiRoule(velo, actif = true, avance = 0) {
+  const avanceRef = useRef(avance);
+  const poserRef = useRef(null);
+  useEffect(() => {
+    if (!actif || !velo.current) return undefined;
+    let attente = false;
+    let arret = null;
+    const route = velo.current.parentElement;
+    let largeur = route ? route.clientWidth : 0;
+    // La dernière place écrite : arrivé au bout de sa route (après ~1 400 px), le vélo ne bouge plus, et réécrire la même
+    // valeur à chaque image coûtait quand même une mise à jour du style (2026-10-23, app iPhone lente).
+    let place = null;
+    const poser = () => {
+      attente = false;
+      const y = Math.max(0, window.scrollY);
+      const x = Math.round(((Math.min(88, 8 + y / 18 + avanceRef.current) - 8) / 100) * largeur);
+      if (x === place || !velo.current) return;
+      place = x;
+      velo.current.style.transform = `translateX(${x}px)`;
+    };
+    poserRef.current = poser;
+    const mesure = typeof ResizeObserver === 'undefined' || !route ? null : new ResizeObserver(() => { largeur = route.clientWidth; poser(); });
+    mesure?.observe(route);
+    const surDefilement = () => {
+      velo.current?.classList.add('roule');
+      clearTimeout(arret);
+      arret = setTimeout(() => velo.current?.classList.remove('roule'), 220);
+      if (attente) return;
+      attente = true;
+      window.requestAnimationFrame(poser);
+    };
+    poser();
+    window.addEventListener('scroll', surDefilement, { passive: true });
+    return () => { window.removeEventListener('scroll', surDefilement); clearTimeout(arret); mesure?.disconnect(); poserRef.current = null; };
+  }, [actif, velo]);
+  // Une lettre tapée ou effacée : il glisse jusqu'à sa nouvelle place en pédalant (`pedale` garde la transition, `roule` non).
+  useEffect(() => {
+    if (avanceRef.current === avance) return undefined;
+    avanceRef.current = avance;
+    const v = velo.current;
+    if (!v || !poserRef.current) return undefined;
+    poserRef.current();
+    v.classList.add('pedale');
+    const fin = setTimeout(() => v.classList.remove('pedale'), 420);
+    return () => clearTimeout(fin);
+  }, [avance, velo]);
+}
+
+/* La route en pointillés et le vélo lime : le bandeau de la page Recherche (SearchPage.jsx) et celui de Mes commandes sans
+ * commande en cours (Orders.jsx) la reprennent. Mêmes classes que la route du bandeau ci-dessous. `roule` : il avance quand
+ * on fait défiler, et de `avance` points en plus ; sinon il reste à `position`. */
+export function RouteVelo({ position = 12, className = '', roule = false, avance = 0 }) {
+  const velo = useRef(null);
+  useVeloQuiRoule(velo, roule, avance);
   return (
     <div className={`lt-route${className ? ` ${className}` : ''}`} aria-hidden="true">
-      <span className="lt-velo" style={{ left: `${position}%` }}>{VELO}</span>
+      <span className="lt-velo" ref={velo} style={roule ? undefined : { left: `${position}%` }}>{VELO}</span>
     </div>
   );
 }
@@ -127,41 +184,8 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
     return () => { fini = true; debrancher?.(); };
   }, [app]);
 
-  // LE VÉLO ROULE QUAND ON DÉFILE : sa place sur la route suit la page (8 % en haut, 88 % après ~1 400 px), et il pédale
-  // tant que ça bouge. Une écriture de style par image (requestAnimationFrame), aucun rendu React.
-  // Par `transform` depuis sa place de départ (left: 8 %, ecran-liste.css), en pixels de la route mesurée une fois puis à
-  // chaque changement de taille (2026-10-20, test de l'app Android) : `left` refaisait la mise en page à chaque image.
-  useEffect(() => {
-    if (!bandeau || !velo.current) return undefined;
-    let attente = false;
-    let arret = null;
-    const route = velo.current.parentElement;
-    let largeur = route ? route.clientWidth : 0;
-    // La dernière place écrite : arrivé au bout de sa route (après ~1 400 px), le vélo ne bouge plus, et réécrire la même
-    // valeur à chaque image coûtait quand même une mise à jour du style (2026-10-23, app iPhone lente).
-    let place = null;
-    const poser = () => {
-      attente = false;
-      const y = Math.max(0, window.scrollY);
-      const x = Math.round(((Math.min(88, 8 + y / 18) - 8) / 100) * largeur);
-      if (x === place || !velo.current) return;
-      place = x;
-      velo.current.style.transform = `translateX(${x}px)`;
-    };
-    const mesure = typeof ResizeObserver === 'undefined' || !route ? null : new ResizeObserver(() => { largeur = route.clientWidth; poser(); });
-    mesure?.observe(route);
-    const surDefilement = () => {
-      velo.current?.classList.add('roule');
-      clearTimeout(arret);
-      arret = setTimeout(() => velo.current?.classList.remove('roule'), 220);
-      if (attente) return;
-      attente = true;
-      window.requestAnimationFrame(poser);
-    };
-    poser();
-    window.addEventListener('scroll', surDefilement, { passive: true });
-    return () => { window.removeEventListener('scroll', surDefilement); clearTimeout(arret); mesure?.disconnect(); };
-  }, [bandeau]);
+  // Le vélo roule quand on défile (useVeloQuiRoule, plus haut) : seulement avec le bandeau, qui porte la route.
+  useVeloQuiRoule(velo, bandeau);
 
   const premiereBascule = options.findIndex((o) => o.regime);
   return (

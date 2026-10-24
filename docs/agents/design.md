@@ -34,7 +34,7 @@ namespace.
 **The rest of the website (same day, sections 3–9 of that mockup)**: each family has its own website CSS file, imported by its
 pages and scoped to `html:not(.appli)`: `src/site-liste.css` (list with a left filter column ≥ 1,100 px, search, map with a side
 list, favourites), `site-fiche.css` (restaurant page: menu in two columns, sticky cart column `PanierColonne.jsx`, dish as a
-centred dialog ≥ 900 px, bottom sheet below), `site-commande.css` (cart / checkout in two columns, past orders as a table),
+centred dialog ≥ 900 px, bottom sheet below), `site-commande.css` (cart / checkout in two columns, past orders as a table; its Mes commandes rules serve the app too since 2026-10-24),
 `site-compte.css` (Mon compte in two columns ≥ 1,100 px: `RubriquesCompte.jsx`), `site-pro.css` (business: orders board with three
 columns, Mon commerce overview, `CadreSite.jsx`), `site-livreur.css` (courier: jobs list + `CarteCourse.jsx` map and detail,
 `PageLivreur.jsx` for secondary pages). **On a laptop every iris band runs edge to edge of the content area** — one rule at the

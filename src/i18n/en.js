@@ -7593,7 +7593,7 @@ export default {
         maghreb: 'North Africa',
         afrique: 'Africa',
         ameriques: 'The Americas',
-        europe: 'Belgian & European',
+        europe: 'European',
         healthy: 'Healthy & Veggie',
         poisson: 'Fish & Seafood',
         cafe: 'Coffee & Brunch',

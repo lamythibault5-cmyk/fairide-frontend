@@ -7650,7 +7650,7 @@ export default {
         maghreb: 'Maghreb',
         afrique: 'Afrique',
         ameriques: 'Amériques',
-        europe: 'Belge & Europe',
+        europe: 'Europe',
         healthy: 'Healthy & Végé',
         poisson: 'Poisson & Fruits de mer',
         cafe: 'Café & Brunch',

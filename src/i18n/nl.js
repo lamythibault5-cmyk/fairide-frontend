@@ -7602,7 +7602,7 @@ export default {
         maghreb: 'Maghreb',
         afrique: 'Afrika',
         ameriques: 'Amerika',
-        europe: 'Belgisch & Europees',
+        europe: 'Europees',
         healthy: 'Gezond & Veggie',
         poisson: 'Vis & Zeevruchten',
         cafe: 'Koffie & Brunch',
