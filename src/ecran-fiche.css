@@ -223,7 +223,7 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
    - LE TICKET sous le nom : note, distance, prix de la livraison, en cases séparées par des pointillés, sur un aplat iris
      très clair. La bascule Livraison / À emporter et « À plusieurs » sur une rangée, sans filets.
    - L'annonce d'ouverture en bloc iris où roule le vélo ; l'aperçu des plats en photo, en rangée qui défile.
-   La carte (sections entre deux traits en pointillés, plats « nom ····· prix ») reste celle de la version C, plus bas.
+   La carte (titres à gauche avec un court trait en pointillés, plats « nom … prix » sans pointillés depuis le 2026-10-24) est plus bas.
    ===================================================================================================================== */
 .fiche-appli .fiche-entete--sceau .fiche-feuille { padding-top: 46px; }
 .fiche-appli .fiche-sceau {
@@ -300,19 +300,24 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .fiche-info { align-items: center; background: rgba(59, 47, 181, .07); border-radius: 16px; padding: 11px 12px; }
 .fiche-appli .fiche-info-icone { width: 32px; height: 32px; margin: 0; border-radius: 10px; background: var(--iris); color: #fff; align-items: center; justify-content: center; }
 
-/* Les sections : le nom en iris entre deux traits en pointillés ; le nombre de plats se lit dans la carte. */
+/* Les sections : le nom à gauche, en encre, et un court trait iris en pointillés dessous, le rappel de la route du vélo
+   (fondateur, 2026-10-24, réponse 2 de maquettes/menu-lignes/menu-lignes.html). Avant : centré en iris entre deux traits en
+   pointillés, qui prenaient toute la largeur. Le nombre de plats se lit dans la carte. */
 .fiche-appli .plats-section-titre {
-  justify-content: center; gap: 12px; padding-left: 0; margin: 28px 0 4px; color: var(--iris); font-size: 20px; text-align: center;
+  display: block; padding-left: 0; margin: 28px 0 8px; color: var(--ink); font-family: var(--font-titre); font-size: 21px; text-align: left;
 }
 .fiche-appli .fiche-carte-plats > div:first-of-type .plats-section-titre { margin-top: 10px; }
-.fiche-appli .plats-section-titre::before, .fiche-appli .plats-section-titre::after {
-  content: ''; position: static; flex: 1 1 24px; width: auto; height: 0; min-width: 24px; border-radius: 0;
-  background: none; border-top: 3px dashed rgba(59, 47, 181, .22);
+.fiche-appli .plats-section-titre::before { content: none; }
+.fiche-appli .plats-section-titre::after {
+  content: ''; position: static; display: block; width: 40px; height: 0; margin-top: 7px; border-radius: 2px;
+  background: none; border-top: 3px dashed var(--iris);
 }
 .fiche-appli .plats-section-compte { display: none; }
 .fiche-appli .sub-category-header { margin: 14px 0 2px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); }
 
-/* Un plat : petite photo carrée à gauche, « nom ····· prix », la description dessous, le « + » à droite sous le prix. */
+/* Un plat : petite photo carrée à gauche, le nom à gauche et le prix à droite sur la même ligne, la description dessous, le
+   « + » à droite sous le prix ; un filet clair entre deux plats (fondateur, 2026-10-24, version A de maquettes/menu-lignes : plus
+   de pointillés entre le nom et le prix). */
 /* min-height !important (2026-10-23, test de l'app) : la ligne est un <button>, et la règle des 44 px tactiles (styles.css,
    button:not(...), spécificité 0,3,1) passait devant (0,3,0). Un plat sans description faisait 54 px de haut, et son « + »,
    posé à 40 px du haut et haut de 40 px, débordait de 26 px sur le prix du plat suivant. */
@@ -323,7 +328,9 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
    lignes poussait le prix sur la seconde, à la hauteur du « + », qui le recouvrait). Le nom s'enroule sous lui-même. */
 .fiche-appli .bistrot-l1 { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
 .fiche-appli .bistrot-l1 .plat-nom { flex: 0 1 auto; min-width: 0; }
-.fiche-appli .bistrot-points { flex: 1 1 12px; min-width: 12px; height: 0; margin-top: 15px; border-bottom: 2px dotted #C9C4BA; }
+/* L'espace entre le nom et le prix reste (il pousse le prix à droite), sans ses pointillés. */
+.fiche-appli .bistrot-points { flex: 1 1 12px; min-width: 12px; height: 0; }
+.fiche-appli .plat-ligne-bistrot + .plat-ligne-bistrot { border-top: 1px solid #ECEAE5; }
 .fiche-appli .bistrot-l1 .plat-prix { flex: none; white-space: nowrap; font-size: 15px; }
 .fiche-appli .plat-bistrot .plat-desc, .fiche-appli .plat-bistrot .plat-allergenes, .fiche-appli .plat-bistrot .plat-prix-ligne { padding-right: 50px; }
 .fiche-appli .plat-bistrot .plat-prix-ligne { margin-top: 2px; }
