@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { definirModeEquipe } from '../../modeEquipe';
 import { api } from '../../api';
@@ -68,6 +68,13 @@ export default function DashboardLayout() {
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
   const [orders, setOrders] = useState([]);
+  /* UNE RELECTURE PARTIE AVANT UN GESTE NE L'EFFACE PLUS (revue du 24/10). « Prête » ou « Accepter » changent la liste ici
+     tout de suite (modifierCommandes) ; un sondage de 15 s parti juste avant revenait ensuite avec l'état d'avant, et la
+     carte retournait « En préparation » jusqu'au relevé suivant. Chaque geste monte ce compteur : une relecture qui le
+     retrouve changé à son retour ne remplace pas la liste. La relecture lancée après le geste (actionOptimiste.js,
+     `rafraichir`) part, elle, après lui, et passe. */
+  const versionCommandes = useRef(0);
+  const modifierCommandes = useCallback((maj) => { versionCommandes.current += 1; setOrders(maj); }, []);
   // Ce que la vue « service » calcule côté serveur (audit du 19/10, shop-213) : le nombre de commandes closes (titre de
   // l'historique, chargé à la demande) et celles du mois (accueil), puisque le tableau ne reçoit plus tout l'historique.
   const [statsService, setStatsService] = useState(null);
@@ -237,6 +244,7 @@ export default function DashboardLayout() {
   // leur retrait (fondateur, 22/10/2026 : pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient mauvaise
   // impression ; on les refera peut-être plus tard).
   async function loadDashboard(id, { fiche = true, annexes = true, silencieux = false } = {}) {
+    const version = versionCommandes.current;
     try {
       // Retour de l'onboarding Stripe Connect : le statut (pas suivi par webhook pour ce type de compte) est relu par
       // l'effet « retour de Stripe » plus haut, qui recharge ensuite le tableau de bord (shop-7).
@@ -248,7 +256,7 @@ export default function DashboardLayout() {
         // annexe laissait « Pas encore de commande » alors que le serveur en renvoyait).
         annexes ? api(`/restaurants/${id}/drivers`, { token }).catch(() => null) : null
       ]);
-      setOrders(Array.isArray(ordersData) ? ordersData : (ordersData?.orders || []));
+      if (versionCommandes.current === version) setOrders(Array.isArray(ordersData) ? ordersData : (ordersData?.orders || []));
       if (!Array.isArray(ordersData) && ordersData) setStatsService({ historyCount: ordersData.historyCount || 0, monthCount: ordersData.monthCount || 0 });
       setEtatCommandes({ echecs: 0, derniereMaj: Date.now(), erreur: null, accesPerdu: false });
       if (restoData) setRestaurant(restoData);
@@ -504,7 +512,7 @@ export default function DashboardLayout() {
       {/* Terminal Goodcom au son bloqué par le navigateur : l'écran plein qui le débloque d'un toucher (SonTerminal.jsx). */}
       <SonTerminal alerte={orderAlert} />
       {/* La commande qui vient d'arriver, affichée d'elle-même (fondateur, 2026-10-01). */}
-      {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} loadDashboard={loadDashboard} modifierCommandes={setOrders}
+      {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} loadDashboard={loadDashboard} modifierCommandes={modifierCommandes}
         ouverte={feuilleCommande} setOuverte={setFeuilleCommande} />}
 
       {/* Accès perdu (membre retiré, commerce fermé, shop-403) : un seul message, et le chemin vers la vue client. */}
@@ -532,7 +540,7 @@ export default function DashboardLayout() {
               change la fiche ou la liste ici même, avant la réponse ou sans attendre le rechargement complet
               (actionOptimiste.js, components/commerce/majLocale.js). Le sondage de 15 s et les relectures les corrigent. */}
           <Outlet context={{ restaurant: restaurant || null, orders, drivers, restoId, loadDashboard, ordersLoaded, etatCommandes, statsService,
-            modifierRestaurant: setRestaurant, modifierCommandes: setOrders,
+            modifierRestaurant: setRestaurant, modifierCommandes,
             communs: bandeau ? communs : null, onConnect: connectOnboard, connecting, lectureSeule: !!actingAs,
             alerte: { ...orderAlert, push } }} />
         </div>

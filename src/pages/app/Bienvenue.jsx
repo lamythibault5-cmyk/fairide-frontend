@@ -53,8 +53,16 @@ const PARCOURS = {
 };
 // Les réponses possibles à la seule question (QUESTION, EcransBienvenue.jsx) : une reprise n'en garde pas d'autre.
 const CHOIX = ['prix', 'total', 'ici'];
-// Un accueil laissé en route avant le 2026-10-22 reprend sur l'écran qui a remplacé le sien.
-const ECRANS_RETIRES = { buts: 'question', freins: 'question', cartes: 'question', envies: 'position' };
+// Un accueil laissé en route avant le 2026-10-22 reprend sur l'écran qui a remplacé le sien. `lvPosition` (position du
+// livreur, retirée le 2026-10-21) manquait : un livreur arrêté là rouvrait l'app sur un écran vide (revue du 24/10).
+const ECRANS_RETIRES = { buts: 'question', freins: 'question', cartes: 'question', envies: 'position', lvPosition: 'lvPromesses' };
+// Les écrans que le `switch` plus bas sait dessiner, plus l'inscription. Un écran gardé qui n'en fait pas partie (retiré
+// un jour sans entrée dans ECRANS_RETIRES, stockage abîmé) reprend à l'accueil au lieu d'un écran vide.
+const ECRANS = new Set(['accueil', 'profil', 'inscription', ...Object.values(PARCOURS).flat()]);
+const ecranValide = (e) => {
+  const v = ECRANS_RETIRES[e] || e;
+  return ECRANS.has(v) ? v : null;
+};
 // Le chargement que le fondateur aime : assez long pour se lire (1,8 s, puis 3,8 s le 2026-10-16 : « 2 secondes de plus »).
 const DUREE_RECHERCHE_MS = 3800;
 
@@ -102,11 +110,11 @@ export default function Bienvenue() {
   // Apple / Google sans compte, depuis la connexion (ConnexionAppli.jsx) : le jeton est gardé, l'accueil ne le jette plus.
   const fedRecu = location.state?.fed || null;
   const depart = dejaFait ? (fedRecu ? 'inscription' : 'compte') : location.state?.depart === 'profil' ? 'profil'
-    : ECRANS_RETIRES[reprise?.ecran] || reprise?.ecran || 'accueil';
+    : ecranValide(reprise?.ecran) || 'accueil';
   const depuis = location.state?.from || null;
   const [ecran, setEcran] = useState(depart);
   const [historique, setHistorique] = useState(() => (dejaFait ? ['accueil', 'profil']
-    : Array.isArray(reprise?.historique) ? reprise.historique.filter((e) => !ECRANS_RETIRES[e]) : []));
+    : Array.isArray(reprise?.historique) ? reprise.historique.filter((e) => !ECRANS_RETIRES[e] && ECRANS.has(e)) : []));
   // Sens du dernier passage d'écran : en reculant, l'écran revient par la gauche, d'où il était parti (cohérence
   // spatiale, plan du 2026-10-13). Avant, tout arrivait par la droite, retour compris.
   const [recule, setRecule] = useState(false);

@@ -243,7 +243,15 @@ export default function OrdersPage() {
    * Rien n'est remboursé ni annoncé au client avant la réponse : c'est le serveur qui prévient (e-mail, livreur), seulement
    * s'il a accepté. La relecture des commandes part ensuite en arrière-plan. */
   const agirOptimiste = useActionOptimiste();
+  /* UN SEUL « PRÊTE » PAR COMMANDE (revue du 24/10). « Prête » n'est pas un réglage qu'on bascule : un second toucher, pendant
+   * que le premier est en route ou juste après, partait en second PATCH /ready, que le serveur refuse (« déjà prête ») ; le
+   * refus remettait un instant la carte « En préparation ». On ignore donc un toucher tant que le précédent est en vol, et
+   * celui sur une commande que l'écran montre déjà prête. */
+  const pretesEnVol = useRef(new Set());
   function marquerPrete(orderId) {
+    if (pretesEnVol.current.has(orderId)) return;
+    if (orders.find((o) => o.id === orderId)?.status === 'pret') return;
+    pretesEnVol.current.add(orderId);
     agirOptimiste(`prete:${orderId}`, {
       appliquer: () => {
         const avant = orders.find((o) => o.id === orderId)?.status;
@@ -255,7 +263,7 @@ export default function OrdersPage() {
       annuler: (avant) => modifierCommandes?.((liste) => liste.map((o) => (o.id === orderId && o.status === 'pret' && avant ? { ...o, status: avant } : o))),
       confirmer: (maj) => modifierCommandes?.((liste) => fusionnerCommande(liste, maj)),
       rafraichir: () => loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true })
-    });
+    }).finally(() => pretesEnVol.current.delete(orderId));
   }
 
   // Rend { ok, code } : les fenêtres de motif ne se ferment qu'en cas de succès (shop-222).

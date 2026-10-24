@@ -55,6 +55,10 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
    toucher long, comme une app. Construire et envoyer :
    « Sortir une version iPhone » plus bas. Team ID Apple `44V9JV2JQN` (23 oct. 2026), déjà dans
    `public/.well-known/apple-app-site-association` : `https://fairide.be/…` s'ouvre dans l'app une fois le site déployé.
+   Depuis le 24 oct. 2026 (revue du 24/10) la liste y comprend `/retour-appli*` (le retour de Stripe d'une demande faite
+   dans l'app : sans lui, l'iPhone restait dans le navigateur intégré après le paiement) et `/driver*`. Une adresse qui
+   n'y est pas s'ouvre dans Safari, jamais dans l'app. Le bouton de `/retour-appli` prend sur iPhone le schéma de l'app,
+   `fairide:///chemin` (`CFBundleURLTypes` d'`Info.plist`) : iOS n'ouvre jamais l'app pour un lien vers le domaine déjà affiché.
 5. **Notifications** : projet Firebase → télécharger `google-services.json` dans `android/app/` ;
    pour iOS, ajouter une app iOS `be.fairide.app` au même projet Firebase, télécharger son
    `GoogleService-Info.plist` dans `ios/App/App/` (hors git, comme `google-services.json` ; une étape du projet Xcode
@@ -94,8 +98,10 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
    le jeton (`appleid.apple.com/auth/revoke`) — il faut pour cela une clé `.p8` *Sign in with Apple*, pas encore créée.
 10. **Textes des permissions iOS** : FAIT dans `ios/App/App/Info.plist` : `NSLocationWhenInUseUsageDescription`
     (« Pour te montrer les commerces qui livrent jusqu'à chez toi, et aux livreurs les courses proches. ») et
-    `NSCameraUsageDescription` (photo de la commande prête, documents du dossier livreur : les champs `capture`).
-    Sans elles, iOS refuse la position, l'app s'arrête en ouvrant l'appareil photo, et Apple refuse l'application.
+    `NSCameraUsageDescription` (photo de la commande prête, documents du dossier livreur : les champs `capture`),
+    `NSPhotoLibraryAddUsageDescription` (24 oct. 2026 : « Enregistrer l'image » au toucher long d'une photo de plat).
+    Sans elles, iOS refuse la position, l'app s'arrête en ouvrant l'appareil photo ou en enregistrant une image, et Apple
+    refuse l'application.
     Un nouvel accès (micro, contacts…) demande sa phrase ici. Android : déjà déclaré dans `AndroidManifest.xml`.
     `ios/App/App/PrivacyInfo.xcprivacy` déclare à Apple les données collectées (pas de pistage) et les raisons des API
     sensibles des greffons ; un nouveau type de donnée collectée s'y ajoute, et dans App Store Connect › App Privacy.

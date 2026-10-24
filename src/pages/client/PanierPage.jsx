@@ -19,6 +19,7 @@ import { mouvementReduit, vibrer } from '../../gestes';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
 import { paiementEnLigneOuvert, useLancement } from '../../launch';
 import { statutOuverture } from '../../openingHours';
+import { cheminFiche } from '../../adresseFiche';
 
 // Le panier, sur sa propre page.
 //
@@ -174,9 +175,10 @@ export default function PanierPage() {
   return (
     <div className="panier-page ec-page sc-page">
       {/* Une flèche, et non une croix : d'ici on RECULE d'un pas, vers la carte du commerce — on ne
-          quitte pas le parcours. Le nom du commerce est en tête du bandeau, comme chez Uber. */}
+          quitte pas le parcours. Le nom du commerce est en tête du bandeau, comme chez Uber. La fiche chargée donne l'adresse
+          lisible (cheminFiche, revue du 24/10) : plus de détour par l'identifiant, que la fiche devait ensuite remplacer. */}
       <BandeauCommande
-        vers={cart.restaurantId ? `/restaurants/${cart.restaurantId}` : null}
+        vers={cart.restaurantId ? cheminFiche(restaurant?.id === cart.restaurantId ? restaurant : cart.restaurantId) : null}
         libelleRetour={t('panier.backToMenu')}
         haut={<><b>{cart.restaurantName || restaurant?.name || ''}</b>{restaurant?.commune ? ` · ${restaurant.commune}` : ''}</>}
         titre={t('panier.title')}

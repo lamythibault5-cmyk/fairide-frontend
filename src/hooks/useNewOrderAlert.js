@@ -156,6 +156,8 @@ function loadSonnerie() {
 // Notification système. Par le service worker d'abord : Chrome sur Android refuse `new Notification()` (« Illegal
 // constructor ») — sur un téléphone ou un terminal Goodcom, aucune notification ne partait (2026-10-20). Le constructeur
 // reste en repli pour les navigateurs d'ordinateur sans service worker.
+// `options.data.url` : la page ouverte au toucher de la notification (public/sw.js, notificationclick). Chaque appelant
+// donne la sienne (revue du 24/10 : le livreur était envoyé vers les commandes d'un commerce).
 export function notifier(titre, options) {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   const direct = () => { try { new Notification(titre, options); } catch { /* refusé entre-temps */ } };
@@ -314,12 +316,13 @@ export default function useNewOrderAlert(orders, ready) {
 
     // Un tag constant remplace la notification précédente au lieu d'en empiler une par sondage.
     notifier(arrived > 1 ? t('alertBar.notifTitleMany', { n: arrived }) : t('alertBar.notifTitleOne'),
-      { body: t('alertBar.notifBody'), icon: '/icons/icon.svg', tag: 'fairide-new-order' });
+      { body: t('alertBar.notifBody'), icon: '/icons/icon.svg', tag: 'fairide-new-order', data: { url: '/dashboard/orders' } });
     // `ready` fait partie des dépendances, ce n'est pas une formalité : sans lui, un restaurant sans
     // commande en attente au chargement ne rejouait jamais cet effet au passage de ready à true (le
     // compteur restant à 0), la référence n'était donc jamais posée — et la toute première commande
-    // reçue repartait par la branche `prev === null`, sans un son.
-  }, [cleNouvelles, ring, ready]);
+    // reçue repartait par la branche `prev === null`, sans un son. `t` : un changement de langue rejoue l'effet sans
+    // rien sonner (toutes les commandes sont déjà dans prevIdsRef).
+  }, [cleNouvelles, ring, ready, t]);
 
   // Annulation (client, délai dépassé, faute de livreur, client absent…) : on compare les statuts d'un sondage à l'autre.
   // Une commande vue en cours et revue « annule » déclenche un son descendant (distinct du carillon d'arrivée), un toast et
@@ -341,7 +344,7 @@ export default function useNewOrderAlert(orders, ready) {
     if (soundEnabled && ctx && ctx.state === 'running') { try { playChime(ctx, [660, 440], gainRef.current || ctx.destination); } catch { /* contexte fermé */ } }
     const texte = annulees.length > 1 ? t('alertBar.cancelToastMany', { n: annulees.length }) : t(annulees[0].raison.cle, { client: annulees[0].o.clientName || '' });
     toast(texte);
-    notifier(t('alertBar.cancelNotifTitle'), { body: texte, icon: '/icons/icon.svg', tag: 'fairide-order-cancelled' });
+    notifier(t('alertBar.cancelNotifTitle'), { body: texte, icon: '/icons/icon.svg', tag: 'fairide-order-cancelled', data: { url: '/dashboard/orders' } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders, ready]);
 
