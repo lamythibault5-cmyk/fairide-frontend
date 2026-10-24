@@ -229,6 +229,9 @@ export async function demarrerNatif(historique) {
   // Les écrans glissent, la photo d'un commerce voyage, la croix et ‹ reculent, le bas de page rebondit (transitionPhoto.js,
   // maquettes/transitions-appli, 2026-10-23).
   import('./transitionPhoto').then(({ installerTransitionsEcrans }) => installerTransitionsEcrans(historique)).catch(() => {});
+  // Le verre qui répond au doigt : il grossit à la pose, une lumière le suit, il rebondit au lâcher (verreAppui.js, version B de
+  // maquettes/verre-appui, 2026-10-24).
+  import('./verreAppui').then(({ installerVerreAppui }) => installerVerreAppui()).catch(() => {});
 
   try {
     const { App } = await import('@capacitor/app');
