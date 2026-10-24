@@ -162,6 +162,11 @@ export function brancherBarreVerre(nav, curseur) {
     nav.classList.remove('dashboard-nav--appui', 'dashboard-nav--glisse');
     geste = null;
   };
+  /* La capture perdue par un ENFANT n'est pas la fin du geste (fondateur, 2026-10-24 : « je touche Mon compte, je glisse vers
+     Recherche, la pastille reste sur Compte »). Au doigt, le navigateur capture d'office le pointeur sur l'élément touché
+     (l'icône) ; quand le glissé commence, setPointerCapture le reprend pour la barre, et l'icône reçoit un lostpointercapture
+     qui remontait jusqu'ici et annulait le glissé après 6 px. Seule la perte de NOTRE capture compte. */
+  const perdu = (e) => { if (e.target === nav) annule(); };
 
   // Un lien se « traîne » par défaut (glisser-déposer du navigateur) : ce glissé-là annulait le nôtre (pointercancel).
   const pasDeTraine = (e) => e.preventDefault();
@@ -170,7 +175,7 @@ export function brancherBarreVerre(nav, curseur) {
   nav.addEventListener('pointermove', bouge);
   nav.addEventListener('pointerup', lache);
   nav.addEventListener('pointercancel', annule);
-  nav.addEventListener('lostpointercapture', annule);
+  nav.addEventListener('lostpointercapture', perdu);
 
   let debrancherTaille = null;
   if (refractionPossible()) {
@@ -184,7 +189,7 @@ export function brancherBarreVerre(nav, curseur) {
     nav.removeEventListener('pointermove', bouge);
     nav.removeEventListener('pointerup', lache);
     nav.removeEventListener('pointercancel', annule);
-    nav.removeEventListener('lostpointercapture', annule);
+    nav.removeEventListener('lostpointercapture', perdu);
     debrancherTaille?.();
   };
 }
