@@ -138,16 +138,18 @@ html.appli verre-lueur {
 }
 html.appli .verre-lumiere > verre-lueur { opacity: 1; transition-duration: .12s; }
 /* Sur l'iris (les « + », le « − 1 + », les retours des bandeaux), une lumière blanche plus douce. */
-html.appli :is(.plat-pas, .ec-pas, .fiche-apercu-plus, .ec-rond, .gn-rond, .bv-bandeau .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond, .ec-b-retour, .ecl-b-retour) > verre-lueur {
+html.appli :is(.plat-pas, .ec-pas, .fiche-apercu-plus, body:has(.fiche-appli) .plat-fermer, .ec-rond, .gn-rond, .bv-bandeau .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond, .ec-b-retour, .ecl-b-retour) > verre-lueur {
   background: radial-gradient(circle var(--verre-r, 60px) at var(--verre-x, 50%) var(--verre-y, 50%), rgba(255, 255, 255, .5), rgba(255, 255, 255, .16) 45%, rgba(255, 255, 255, 0) 100%);
 }
 
 /* Le contrôle qui grossit ne fonce plus et ce qu'il contient ne s'enfonce plus (la règle des boutons, transitions-appli.css) :
    le verre répond en grandissant, une seule chose bouge. */
 html.appli body .verre-presse { filter: none !important; }
-html.appli body .verre-presse :is(button, a):active { scale: none !important; filter: none !important; }
+html.appli body .verre-presse :is(button, a):active { scale: none !important; transform: none !important; filter: none !important; }
 html.appli .dashboard-nav-link:active .dashboard-nav-icon { transform: none; }
-html.appli body .ec-rond:active, html.appli body .gn-rond:active { transform: none; }
+/* Les ronds avaient leur propre enfoncement en `transform` (90 %, 88 %) : il se multipliait au grossissement en `scale`, et le rond
+   finissait plus PETIT qu'au repos (retour du fondateur sur l'iPhone, 2026-10-24 : « ils rétrécissent au toucher »). */
+html.appli body :is(.ec-rond, .gn-rond, .fiche-appli .flux-entete--flottant .flux-bouton, .fiche-appli .favorite-heart--rond, .fiche-appli .fiche-apercu-plus, .plat-fermer):active { transform: none; }
 
 /* Le filet s'allume au contact (le « miroitement » d'iOS 26). Les barres : */
 html.appli body :is(.dashboard-nav, .lt-puces, .fiche-appli .category-quicknav--verre, .panier-pilule).verre-lumiere {
