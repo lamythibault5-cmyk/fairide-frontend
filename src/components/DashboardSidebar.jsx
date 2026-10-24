@@ -1,24 +1,28 @@
-import { useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
 import Icone from './Icone';
-import AdminGlobalSearch from './admin/AdminGlobalSearch';
-import useAdminOverview from '../hooks/useAdminOverview';
-import useAdminRole from '../hooks/useAdminRole';
 import useInbox from '../hooks/useInbox';
 import { useCurseurOnglets } from '../hooks/useCurseurOnglets';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import useNotificationsClient from '../hooks/useNotificationsClient';
-import { ADMIN_HUBS, hubBadge, hubModules, moduleForPath } from '../pages/admin/adminModules';
 import { experienceApp } from '../natif';
 import { defilement } from '../gestes';
 import { useModeEquipe } from '../modeEquipe';
+import { lazyPage } from '../lazyPage';
 
 const NATIF = experienceApp();
 
+/* LA CONSOLE ADMIN HORS DU PREMIER CHARGEMENT DES CLIENTS (audit du 24/10). La recherche globale (et adminUtils.jsx qu'elle
+   tire) et la navigation des pôles (adminModules.js) ne servent qu'au compte admin, sur le site ; importées en dur ici, elles
+   partaient chez chaque visiteur (~15 Ko compressés). lazyPage() (lazy() qui recharge après une mise en ligne, comme les
+   pages) : leur code ne vient qu'au premier affichage pour un admin.
+   Pendant ce court chargement, rien à leur place (fallback null) — la barre garde sa marque, son profil et ses liens du bas. */
+const AdminGlobalSearch = lazyPage(() => import('./admin/AdminGlobalSearch'));
+const AdminNav = lazyPage(() => import('./admin/AdminNavLaterale'));
 
 // Items de nav par rôle : mêmes cibles que l'ancien .role-nav de Layout.jsx, juste redisposées
 // verticalement avec une icône — pas de nouvelle page/route inventée ici.
@@ -79,12 +83,6 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
   return [{ to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }];
 }
 
-// ERP interne : les applications du registre (pages/admin/adminModules.js), groupées par famille comme
-// sur l'accueil, avec le compteur « à traiter » de chacune. Affichées à la place de la nav du rôle pour
-// tout compte admin (voir isAdminAccount plus bas), quelle que soit la page visitée.
-// Neuf entrées, plus vingt-huit : l'accueil, un lien par pôle (voir ADMIN_HUBS), le compte. L'entrée d'un pôle reste allumée
-// sur n'importe lequel de ses onglets — d'où le calcul à la main plutôt que l'isActive de NavLink,
-// qui ne connaît que sa propre adresse.
 /* LES ONGLETS DE L'APP (fondateur, 2026-10-23, version A de maquettes/transitions-appli) : comme sur iPhone, un onglet
  * s'affiche tout de suite et retrouve l'endroit où on l'avait laissé ; toucher l'onglet où l'on est remonte en haut.
  *   - `replace` : changer d'onglet n'ajoute pas d'écran à l'historique (le glisser-retour ne ramène plus à l'onglet d'avant,
@@ -101,45 +99,6 @@ function ongletAppli(vers, ici) {
       window.scrollTo({ top: 0, behavior: defilement() });
     }
   };
-}
-
-function AdminNav({ t }) {
-  const { overview } = useAdminOverview();
-  // Équipe & accès : on masque les applications fermées au rôle du membre (tout reste visible tant que le
-  // rôle n'est pas connu — le serveur applique la vraie règle, voir middleware/auth.js).
-  const { role } = useAdminRole();
-  const { pathname } = useLocation();
-  const poleCourant = moduleForPath(pathname)?.hub;
-  const classe = (actif) => `dashboard-nav-link${actif ? ' active' : ''}`;
-  const navRef = useRef(null);
-  useCurseurOnglets(navRef, pathname);
-  return (
-    <nav className="dashboard-nav admin" ref={navRef}>
-      <span className="nav-curseur" aria-hidden="true" />
-      <NavLink to="/admin" end title={t('adminHubs.today')} aria-label={t('adminHubs.today')} className={({ isActive }) => classe(isActive)}>
-        <span className="dashboard-nav-icon"><Icone nom="maison" taille={20} /></span>
-        <span className="dashboard-nav-label">{t('adminHubs.today')}</span>
-      </NavLink>
-      {ADMIN_HUBS.map((hub) => {
-        const mods = hubModules(hub, role);
-        if (!mods.length) return null;
-        const badge = hubBadge(hub, overview, role);
-        const label = t(`adminHubs.${hub.key}`);
-        const actif = poleCourant === hub.key;
-        return (
-          <Link key={hub.key} to={mods[0].path} title={label} aria-label={label} aria-current={actif ? 'page' : undefined} className={classe(actif)}>
-            <span className="dashboard-nav-icon"><Icone nom={hub.icon} taille={20} /></span>
-            <span className="dashboard-nav-label">{label}</span>
-            {badge && <span className={`nav-badge tone-${badge.tone}`}>{badge.count}</span>}
-          </Link>
-        );
-      })}
-      <NavLink to="/account" title={t('nav.account')} aria-label={t('nav.account')} className={({ isActive }) => classe(isActive)}>
-        <span className="dashboard-nav-icon"><Icone nom="compte" taille={20} /></span>
-        <span className="dashboard-nav-label">{t('nav.account')}</span>
-      </NavLink>
-    </nav>
-  );
 }
 
 // FR · NL · EN au bas de la barre latérale du site : trois petites pastilles, celle de la langue choisie cernée d'un filet.
@@ -221,11 +180,11 @@ export default function DashboardSidebar() {
           <button type="button" onClick={leavePreview}>{t('nav.leave')}</button>
         </div>
       )}
-      {isAdminAccount && <AdminGlobalSearch />}
+      {isAdminAccount && <Suspense fallback={null}><AdminGlobalSearch /></Suspense>}
       {/* title et aria-label portent le libellé en toutes lettres : dans la barre compacte du bas
           (au défilement) il n'y a plus que les icônes, et une icône seule ne dit rien à un lecteur
           d'écran ni au survol. */}
-      {isAdminAccount ? <AdminNav t={t} /> : (
+      {isAdminAccount ? <Suspense fallback={null}><AdminNav t={t} /></Suspense> : (
       <nav className="dashboard-nav" ref={navRef}>
         <span className="nav-curseur" aria-hidden="true" />
         {items.map((item) => (

@@ -14,10 +14,16 @@ html.vt-recule::view-transition-new(root) { animation: vt-revient-dessous .35s c
 @keyframes vt-part-droite { to { transform: translateX(100%); } }
 @keyframes vt-revient-dessous { from { transform: translateX(-30%); filter: brightness(.86); } }
 /* Ce qui ne bouge pas d'un écran à l'autre ne glisse pas avec lui : la barre d'onglets, le verre sous l'heure, la bulle du
-   panier sont capturés à part ; présents des deux côtés ils restent en place, sinon ils se fondent. */
-html.vt .dashboard-sidebar { view-transition-name: onglets; }
-html.vt .verre-etat { view-transition-name: verre-etat; }
-html.vt .panier-pilule { view-transition-name: panier; }
+   panier sont capturés à part ; présents des deux côtés ils restent en place, sinon ils se fondent.
+   SEULEMENT PENDANT UNE TRANSITION (revue du 24/10). Posé en permanence (html.vt, dès que le téléphone sait faire), le nom
+   faisait de .dashboard-sidebar une « racine de fond » (backdrop root, Filter Effects 2) : le backdrop-filter de la barre de
+   verre qu'elle contient (.dashboard-nav) ne voyait plus que l'intérieur, vide, de la barre, et ne floutait plus rien
+   (Android, reproduit dans Chromium). Les classes vt-avance / vt-recule / vt-photo / vt-feuille sont posées par
+   transitionPhoto.js AVANT startViewTransition et retirées à sa fin : les deux captures ont donc le nom, la transition est
+   la même ; entre deux transitions, le verre floute de nouveau. */
+html.vt:is(.vt-avance, .vt-recule, .vt-photo, .vt-feuille) .dashboard-sidebar { view-transition-name: onglets; }
+html.vt:is(.vt-avance, .vt-recule, .vt-photo, .vt-feuille) .verre-etat { view-transition-name: verre-etat; }
+html.vt:is(.vt-avance, .vt-recule, .vt-photo, .vt-feuille) .panier-pilule { view-transition-name: panier; }
 ::view-transition-group(onglets), ::view-transition-group(verre-etat), ::view-transition-group(panier) { animation-duration: .25s; }
 
 /* Plus de fondu à l'arrivée d'une page dans l'app : la transition ci-dessus le remplace, et un onglet (version A,

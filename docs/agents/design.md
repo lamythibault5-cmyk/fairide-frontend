@@ -223,6 +223,10 @@ threshold + CSS transition), dragging a restaurant photo down to close it
 - **Data already read stays in memory** (2026-10-20, [cacheDonnees.js](../../src/cacheDonnees.js)): the restaurant list and pages show
   what was read during the visit at once and re-read in the background (same answer = same object, no re-render); a card
   prefetches its page on touch. A plain Map, never localStorage (nothing to declare), emptied on logout, keyed by token.
+- **The list carries no menus** (2026-10-24, [resumeCarte.js](../../src/resumeCarte.js)): home, list, map, search, favourites
+  and « À découvrir » read `GET /restaurants?vue=liste` (each shop without `menu`, with `resumeCarte`: dish counts and the first
+  dish promo); Recherche reads the dishes it searches from `?vue=plats` on first use; only the restaurant page loads a menu.
+  Without `?vue` the backend still sends the full answer: the prerender and app builds already installed read it.
 - **Light only**: `color-scheme: light only` (index.html + styles.css) and a Light Android theme. No dark mode until one is
   designed; iOS needs `UIUserInterfaceStyle = Light` (docs/application-mobile.md).
 

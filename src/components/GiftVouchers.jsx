@@ -5,11 +5,12 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 import './bons.css';
 import Icone from './Icone';
 import { experienceApp } from '../natif';
+// Montants au format de la langue (prixPlat.euros) : la copie locale mettait une virgule même en anglais (audit du 24/10).
+import { euros } from '../prixPlat';
 
 // Utilitaires repris de l'ancien module Réservations (retiré le 2026-09-25) : les bons cadeaux, eux, restent — ils
 // servent aussi à payer les commandes à emporter et en livraison.
 const dateCourte = (ms, locale = getLocale()) => new Intl.DateTimeFormat(locale, { timeZone: 'Europe/Brussels', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(ms));
-const euros = (n) => `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
 import useEtatPage from '../hooks/useEtatPage';
 
 // BONS CADEAUX — vendus et encaissés par le restaurant lui-même (comptoir, virement) : création avec

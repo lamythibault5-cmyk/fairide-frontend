@@ -159,3 +159,51 @@
 .fin-drawer-line:last-child { border-bottom: none; }
 .fin-drawer-line .amt { min-width: 84px; text-align: right; font-variant-numeric: tabular-nums; }
 .fin-drawer-total { display: flex; justify-content: space-between; padding: 10px 12px; background: var(--cream-dim); font-weight: 700; font-size: 13px; }
+
+/* Boîte à factures (BoiteFactures.jsx, 2026-10-23) : dépôt, état des entrées, pièces reçues. Mêmes tuiles blanches à filet
+   que les stats ; le seul accent est le bouton iris « Comptabiliser… ». */
+.boite-factures { border: 1px solid var(--line); border-radius: var(--radius-card-sm); padding: 14px 16px; margin-bottom: 16px; background: #fff; }
+.boite-factures-tete { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.boite-factures-tete h3 { margin: 0 0 2px; font-size: 16px; }
+.boite-factures-tete p { margin: 0; color: var(--ink-soft); max-width: 62ch; }
+.boite-factures-tete .spacer { flex: 1; }
+.boite-factures-depot { display: flex; gap: 12px; align-items: center; margin-top: 12px; padding: 14px 16px; border: 1.5px dashed var(--line); border-radius: var(--radius-chip); cursor: pointer; color: var(--iris); }
+.boite-factures-depot > span { display: flex; flex-direction: column; gap: 2px; color: var(--ink); }
+.boite-factures-depot .small { color: var(--ink-soft); }
+.boite-factures-depot.survol, .boite-factures-depot:hover { border-color: var(--iris); background: rgba(59,47,181,0.04); }
+.boite-factures-depot.occupe { opacity: 0.6; cursor: progress; }
+.boite-factures-depot:focus-within { outline: 2px solid var(--iris); outline-offset: 2px; }
+.boite-factures-entrees { display: flex; gap: 14px; flex-wrap: wrap; list-style: none; margin: 10px 0 0; padding: 0; font-size: 12px; }
+.boite-factures-entrees li { display: inline-flex; gap: 5px; align-items: center; }
+.boite-factures-entrees li.ok { color: var(--teal-deep); }
+.boite-factures-entrees li.non { color: var(--ink-soft); }
+.boite-factures-bilan { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+/* « À vérifier » : teinte et filet orange (--orange seul est trop clair pour du petit texte), texte à l'encre. */
+.boite-factures-bilan .a-verifier { color: var(--ink); }
+.boite-factures-bilan .a-verifier .icone-texte { color: var(--orange); }
+.piece-points { color: var(--ink); border-left: 2px solid var(--orange); }
+.boite-factures-bilan .a-verifier { display: inline-flex; gap: 4px; align-items: center; }
+.boite-factures-liste { list-style: none; margin: 12px 0 4px; padding: 0; border-top: 1px solid var(--line); }
+.boite-factures-liste .piece { padding: 9px 0; border-bottom: 1px solid var(--cream-dim); }
+.piece-ligne { display: grid; grid-template-columns: 130px 1fr auto auto; gap: 10px; align-items: center; }
+.piece-source { display: flex; flex-direction: column; font-size: 12px; font-weight: 600; }
+.piece-source .small, .piece-quoi .small { font-weight: 400; color: var(--ink-soft); }
+.piece-quoi { display: flex; flex-direction: column; min-width: 0; }
+.piece-quoi b, .piece-quoi .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.piece-points { margin: 6px 0 0 140px; padding-left: 22px; }
+.boite-factures-liste .statut-ignoree, .boite-factures-liste .statut-pas_une_facture, .boite-factures-liste .statut-doublon { opacity: 0.65; }
+.fin-status.piece-a_lire { background: rgba(59,47,181,0.10); color: var(--iris); }
+.fin-status.piece-lue { background: rgba(42,33,133,0.12); color: var(--teal-deep); }
+.fin-status.piece-echec { background: rgba(217,45,60,0.12); color: var(--red); }
+.fin-status.piece-doublon, .fin-status.piece-pas_une_facture, .fin-status.piece-ignoree { background: var(--cream-dim); color: var(--ink-soft); }
+.fin-status.a-verifier { background: rgba(224,122,31,0.16); color: var(--ink); }
+.fin-statut-depense { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-start; }
+.fin-piece-origine { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 0 0 10px; padding: 8px 12px; background: var(--cream-dim); border-radius: var(--radius-chip); }
+.fin-points-a-verifier { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--orange); background: rgba(224,122,31,0.06); border-radius: var(--radius-chip); }
+.fin-points-a-verifier ul { margin: 4px 0 0; padding-left: 18px; }
+@media (max-width: 720px) {
+  .piece-ligne { grid-template-columns: 1fr auto; }
+  .piece-ligne .piece-source { grid-column: 1 / -1; flex-direction: row; gap: 8px; }
+  .piece-ligne .fin-row-actions { grid-column: 1 / -1; justify-content: flex-start; }
+  .piece-points { margin-left: 0; }
+}

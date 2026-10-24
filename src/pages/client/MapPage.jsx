@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
+import { CHEMIN_LISTE } from '../../resumeCarte';
 import { cheminFiche } from '../../adresseFiche';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -65,7 +66,7 @@ export default function MapPage() {
   const charger = () => {
     setEchec(false);
     setChargement(true);
-    api('/restaurants').then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
+    api(CHEMIN_LISTE).then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
   };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { charger(); }, []);

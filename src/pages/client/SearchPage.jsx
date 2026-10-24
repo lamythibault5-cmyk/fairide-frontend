@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Icone from '../../components/Icone';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
+import { CHEMIN_LISTE, CHEMIN_PLATS_RECHERCHE } from '../../resumeCarte';
 import { MENTIONS_ALIMENTAIRES, platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
 import { COMMUNES, COMMUNES_SUGGEREES, illustrationCuisine, restaurantTypeLabel } from '../../menuCategories';
@@ -82,6 +83,10 @@ export default function SearchPage() {
   const [halal, setHalal] = useState(false);
   const [sansGluten, setSansGluten] = useState(false);
   const [restaurants, setRestaurants] = useState([]);
+  // Les plats de chaque commerce (id du commerce → plats) : la liste n'a plus les cartes (resumeCarte.js, 2026-10-24). Lus à la
+  // première recherche (champ touché, mot tapé ou filtre), pas à l'ouverture : toucher une famille n'en a pas besoin.
+  const [platsParCommerce, setPlatsParCommerce] = useState(null);
+  const platsDemandes = useRef(false);
   const [commandes, setCommandes] = useState([]);
   const [chargement, setChargement] = useState(true);
   // Commerces pas lus (réseau, serveur) : « Impossible de charger », pas « Rien trouvé pour … » (audit du 19/10, discovery-19).
@@ -98,13 +103,21 @@ export default function SearchPage() {
 
   const chargerCommerces = () => {
     setEchec(false); setChargement(true);
-    return api('/restaurants').then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
+    return api(CHEMIN_LISTE).then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
   };
   useEffect(() => {
     chargerCommerces();
     if (token) api('/orders/mine', { token }).then(setCommandes).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  const chargerPlats = () => {
+    if (platsDemandes.current) return;
+    platsDemandes.current = true;
+    api(CHEMIN_PLATS_RECHERCHE)
+      .then((l) => setPlatsParCommerce(new Map((Array.isArray(l) ? l : []).map((x) => [x.id, Array.isArray(x.plats) ? x.plats : []]))))
+      .catch(() => { platsDemandes.current = false; }); // réessayé à la prochaine recherche
+  };
 
   const q = normaliser(requete);
   // « PAR ENVIE » : LES FAMILLES (fondateur, 2026-10-22, maquettes/categories-commerce) qui ont au moins un commerce — les
@@ -115,6 +128,9 @@ export default function SearchPage() {
   const actif = q.length >= 2 || filtreRegime;
   const platOk = (p) => (!bio || platBio(p)) && (!vegan || platVegan(p)) && (!halal || platHalal(p)) && (!sansGluten || platSansGluten(p));
   const restoOk = (r) => (!bio || restoBio(r)) && (!vegan || restoVegan(r)) && (!halal || restoHalal(r)) && (!sansGluten || restoSansGluten(r));
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (actif) chargerPlats(); }, [actif]);
 
   const resultats = useMemo(() => {
     if (!actif) return null;
@@ -132,7 +148,8 @@ export default function SearchPage() {
     // Un plat par ligne, avec son commerce : on cherche « tiramisu », on veut savoir OÙ il y en a.
     const plats = [];
     for (const r of restaurants) {
-      for (const p of r.menu || []) {
+      // `menu` : une réponse sans `?vue` (ancien serveur) ; sinon les plats lus à part.
+      for (const p of (Array.isArray(r.menu) ? r.menu : platsParCommerce?.get(r.id)) || []) {
         if (p.available === false) continue;
         if (!platOk(p)) continue;
         if (q.length < 2 || contient(p.name, q) || contient(p.desc || p.description, q)) {
@@ -159,7 +176,7 @@ export default function SearchPage() {
 
     const total = commerces.length + plats.length + cuisines.length + communes.length + aide.length + rubriques.length + mesCommandes.length;
     return { commerces, plats, cuisines, communes, aide, rubriques, mesCommandes, total };
-  }, [actif, q, restaurants, commandes, user, bio, vegan, halal, sansGluten]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [actif, q, restaurants, platsParCommerce, commandes, user, bio, vegan, halal, sansGluten]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Récemment (app seulement, voir recherchesRecentes.js) : le mot est retenu quand il a servi — Entrée, ou un résultat touché.
   const [recentes, setRecentes] = useState(() => (experienceApp() ? lireRecherches() : []));
@@ -193,6 +210,7 @@ export default function SearchPage() {
         <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={20} /></span>
         <input
           ref={champ}
+          onFocus={chargerPlats}
           type="search"
           value={requete}
           onChange={(e) => setRequete(e.target.value)}
@@ -346,8 +364,8 @@ export default function SearchPage() {
             </Groupe>
           )}
           <Groupe titre={t('search.dishes')} quand={resultats.plats.length}>
-            {resultats.plats.map(({ restaurant, plat }) => (
-              <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} {...lienFiche(user, restaurant, restaurant.name)} image={plat.imageUrl} icone="restaurants"
+            {resultats.plats.map(({ restaurant, plat }, i) => (
+              <Ligne key={`${restaurant.id}-${plat.id || plat.name}-${i}`} {...lienFiche(user, restaurant, restaurant.name)} image={plat.imageUrl} icone="restaurants"
                 titre={plat.name} sous={`${restaurant.name}${prix(plat) ? ` · ${prix(plat)}` : ''}`} />
             ))}
           </Groupe>

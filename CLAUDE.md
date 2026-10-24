@@ -259,9 +259,9 @@ of absent features precisely so nobody re-invents or over-claims them.
 **Commit messages are in French**, present tense, describing the user-visible change
 ("Ajoute l'impression d'un bon de livraison par commande, côté restaurateur").
 
-**Watch file size.** [Account.jsx](src/pages/Account.jsx) (1,173) and
-[MenuPage.jsx](src/pages/restaurant/MenuPage.jsx) (929) are the two to stop growing — extract a
-component rather than adding to them. `AdminAccountingPage.jsx` is down to 488 and is no longer a
+**Watch file size.** [Auth.jsx](src/pages/Auth.jsx) (2,049), [Account.jsx](src/pages/Account.jsx) (1,382, up from
+1,173 on 2026-10-22) and [MenuPage.jsx](src/pages/restaurant/MenuPage.jsx) (910) are the ones to stop growing (counted
+2026-10-24) — extract a component rather than adding to them. `AdminAccountingPage.jsx` (491) is no longer a
 concern. `menuCategories.js` (3,978) is a data table, not logic — that one is fine.
 
 ## Git

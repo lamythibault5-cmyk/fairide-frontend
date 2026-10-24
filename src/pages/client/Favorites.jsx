@@ -5,6 +5,7 @@ import { api } from '../../api';
 import { poserFavoriEnCache } from '../../cacheDonnees';
 import { useActionOptimiste } from '../../actionOptimiste';
 import { cheminFiche } from '../../adresseFiche';
+import { nbPlats } from '../../resumeCarte';
 import { useAuth } from '../../context/AuthContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -39,7 +40,8 @@ export default function Favorites() {
 
   const charger = (silencieux = false) => {
     setEchec(false); setLoading(true);
-    return api('/restaurants/favorites/mine', { token }).then(setRestaurants).catch(() => { if (!silencieux) setEchec(true); }).finally(() => setLoading(false));
+    // Sans les cartes (resumeCarte.js) : le nombre de plats vient du résumé envoyé par le serveur.
+    return api('/restaurants/favorites/mine?vue=liste', { token }).then(setRestaurants).catch(() => { if (!silencieux) setEchec(true); }).finally(() => setLoading(false));
   };
   useEffect(() => {
     // Un restaurateur en mode aperçu n'a pas de vrais favoris (403 côté API) — liste vide silencieuse
@@ -123,7 +125,7 @@ export default function Favorites() {
                   <span className="fav-ligne">{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune].filter(Boolean).join(' · ')}</span>
                   {/* Commerce « Carte seule » : on ne peut pas y commander, dit ici aussi (audit du 19/10, discovery-34). */}
                   {r.vitrine && <span className="fav-ligne"><span className="rc-vitrine">{t('restoListUi.showcaseOnly')}</span></span>}
-                  <span className="fav-ligne fav-discret">{[r.neighborhood, t('restaurantList.dishesCount', { count: (r.menu || []).length })].filter(Boolean).join(' · ')}</span>
+                  <span className="fav-ligne fav-discret">{[r.neighborhood, t('restaurantList.dishesCount', { count: nbPlats(r) })].filter(Boolean).join(' · ')}</span>
                   {r.desc && <span className="fav-desc">{r.desc}</span>}
                 </Link>
               );

@@ -303,7 +303,9 @@ export function PiecesARemplacer({ d, t, token, busy, action }) {
     <div className="card" role="alert" style={{ borderColor: 'var(--red)' }}>
       <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('courierOnboarding.docsToReplaceTitle')}</h3>
       {types.map((type) => {
-        const refus = docs.filter((x) => x.docType === type && x.rejectedReason).at(-1);
+        // Le dernier refus, sans `.at(-1)` : absent d'iOS 15.0 à 15.3, l'écran plantait (revue du 24/10 ; l'app vise iOS 15).
+        const refusDuType = docs.filter((x) => x.docType === type && x.rejectedReason);
+        const refus = refusDuType[refusDuType.length - 1];
         return (
           <div key={type} className="courier-doc">
             <div>

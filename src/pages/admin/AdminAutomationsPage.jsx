@@ -155,7 +155,7 @@ function RuleCard({ rule, onChanged, onShowLog }) {
   async function testRule() {
     setBusy(true);
     try {
-      const r = await api(`/admin/automations/run/${rule.ruleType}${rule.enabled ? '' : '?force=1'}`, { method: 'POST', token });
+      const r = await api(`/admin/automations/run/${rule.ruleType}${rule.enabled ? '' : '?force=1'}`, { method: 'POST', token, delai: 180000 });
       setDernierTest(r);
       toast(tr('adminAutomations.toastTested', { created: r.created ?? 0, matched: r.matched ?? 0 }));
       onChanged();

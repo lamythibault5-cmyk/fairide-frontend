@@ -822,11 +822,11 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
 }
 
 // ----------------------------------------------------------------------------------------------- démarchage
-// Le guide du commercial (fondateur, 2026-09-21) : le flyer Fairide qu'il doit toujours avoir avec lui et laisser au
-// restaurateur, le pitch, les techniques de vente, et la règle d'or — on représente Fairide : si c'est non, on reste
-// pro, on laisse le flyer, on souhaite une bonne journée et on repasse la semaine d'après. Repliable (mémorisé).
-// ?v= : le flyer a changé le 2026-10-01 (version du fondateur) ; sans paramètre, un navigateur garderait l'ancien en cache.
-const FLYER_URL = '/docs/flyer-fairide.pdf?v=2026-10-01';
+// Le guide du commercial (fondateur, 2026-09-21) : le pitch, les techniques de vente, et la règle d'or — on représente
+// Fairide : si c'est non, on reste pro, on souhaite une bonne journée et on repasse la semaine d'après. Repliable (mémorisé).
+// LE FLYER PDF EST RETIRÉ (audit du 24/10, AVANT-PRODUCTION.md §1) : public/docs/flyer-fairide.pdf promettait encore
+// « 100 % des frais de livraison aux coursiers », « à emporter gratuit » et d'autres choses fausses depuis. Le bloc
+// « Ouvrir / imprimer le flyer » et le fichier partent ensemble ; un nouveau flyer reviendra ici quand il sera refait.
 // Barre « Ce commerce est-il déjà enregistré ? » : ma liste, les autres commerciaux (étape et date, sans leur nom), les
 // commerces déjà inscrits sur Fairide. 2 lettres suffisent, sans accents ni majuscules (GET /sales/lookup?large=1).
 function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen, onRegister }) {
@@ -922,16 +922,6 @@ function GuideCard({ t }) {
           <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.guideIntro')}</p>
         </div>
         <button type="button" className="btn-ghost btn-sm" onClick={basculer}>{ouvert ? t('sales.guideHide') : t('sales.guideShow')}</button>
-      </div>
-      <div className="crm-flyer">
-        <div>
-          <b><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('sales.flyerTitle')}</b>
-          <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.flyerText')}</p>
-        </div>
-        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <a className="btn-gold" href={FLYER_URL} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>{t('sales.flyerOpen')}</a>
-          <a className="btn-outline" href={FLYER_URL} download="flyer-fairide.pdf" style={{ textDecoration: 'none' }}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('sales.flyerDownload')}</a>
-        </div>
       </div>
       {ouvert && (
         <div className="crm-guide-corps">

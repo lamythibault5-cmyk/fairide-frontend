@@ -27,7 +27,7 @@
  * sortie. Le sitemap est écrit dans la foulée : c'est la seule façon d'y faire figurer les fiches,
  * qui manquaient jusqu'ici (voir le commentaire de l'ancien public/sitemap.xml).
  */
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -156,8 +156,38 @@ function liensDeLangue(cheminApplicatif) {
   return liens.join('\n    ');
 }
 
+/* LE DICTIONNAIRE NÉERLANDAIS OU ANGLAIS PART EN MÊME TEMPS QUE LE RESTE (audit du 24/10). translations.js ne charge nl.js
+   et en.js qu'avec import(), une fois le JavaScript principal exécuté : sur /nl, Lighthouse voyait nl-*.js demandé à 604 ms,
+   après la fin du reste (~455 ms), et la page attendait 2,3 s de plus que la française pour afficher son texte. Une balise
+   modulepreload dans les pages /nl et /en fait partir ce fichier dès la lecture du <head>, en parallèle ; l'import() le
+   retrouve ensuite dans le cache du navigateur. `crossorigin` comme les préchargements que Vite écrit lui-même : sans lui,
+   le navigateur ne réutiliserait pas la copie préchargée pour l'import du module. Le nom du fichier change à chaque build
+   (empreinte) : on le lit dans le manifeste de Vite (build.manifest, vite.config.js), jamais en devinant. Manifeste absent
+   ou langue introuvable : pas de balise, la page fonctionne comme avant. Le français n'en a pas besoin : il est dans le
+   morceau principal (voir l'en-tête de translations.js). */
+const MODULES_LANGUE = { nl: 'src/i18n/nl.js', en: 'src/i18n/en.js' };
+let prechargementsLangue = {};
+async function lirePrechargementsLangue() {
+  const chemin = path.join(DIST, '.vite', 'manifest.json');
+  if (!existsSync(chemin)) {
+    console.warn('[prerender] dist/.vite/manifest.json absent : pas de préchargement du dictionnaire sur /nl et /en.');
+    return {};
+  }
+  const manifeste = JSON.parse(await readFile(chemin, 'utf8'));
+  const resultat = {};
+  for (const [langue, module] of Object.entries(MODULES_LANGUE)) {
+    const entree = manifeste[module];
+    if (!entree?.file) { console.warn(`[prerender] ${module} absent du manifeste : pas de préchargement pour /${langue}.`); continue; }
+    // Ses propres dépendances aussi (aucune aujourd'hui : un dictionnaire n'importe rien), pour qu'aucune ne reste en cascade.
+    const fichiers = [entree.file, ...(entree.imports || []).map((k) => manifeste[k]?.file).filter(Boolean)];
+    resultat[langue] = fichiers.map((f) => `<link rel="modulepreload" crossorigin href="/${f}" />`).join('\n    ');
+  }
+  return resultat;
+}
+
 function documentPour(gabarit, { titre, description, url, image, type = 'website', blocs = [], langue = DEFAULT_LANGUAGE, cheminApplicatif = '/', corps = '' }) {
   let html = gabarit;
+  if (prechargementsLangue[langue]) html = html.replace('</head>', `    ${prechargementsLangue[langue]}\n  </head>`);
   // Le texte de la page, lisible sans JavaScript (contenuStatique.mjs) : React le remplace à son premier rendu.
   // Fonction de remplacement : un « $ » dans un nom de commerce ou un plat serait sinon lu comme un motif de replace().
   if (corps) html = html.replace('<div id="root"></div>', () => `<div id="root">\n    ${corps}\n    </div>`);
@@ -259,6 +289,7 @@ async function ecrire(chemin, html) {
 
 async function commercesPublics() {
   try {
+    // La réponse COMPLÈTE, sans `?vue=liste` (resumeCarte.js) : les fiches statiques écrivent les plats de chaque carte.
     const reponse = await fetch(`${API}/restaurants`, { headers: { accept: 'application/json' } });
     if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
     const donnees = await reponse.json();
@@ -324,6 +355,7 @@ async function principal() {
     process.exit(1);
   }
   const gabarit = await readFile(gabaritChemin, 'utf8');
+  prechargementsLangue = await lirePrechargementsLangue();
   const commerces = await commercesPublics();
   const ctx = { commerces: commerces || [] };
   const entrees = [];
@@ -403,6 +435,8 @@ async function principal() {
   }
 
   await writeFile(path.join(DIST, 'sitemap.xml'), sitemap(entrees), 'utf8');
+  // Le manifeste n'a servi qu'ici (lirePrechargementsLangue) : il ne doit être ni publié sur Vercel ni embarqué dans l'app.
+  await rm(path.join(DIST, '.vite'), { recursive: true, force: true });
   await signalerIndexNow(entrees.map((e) => `${SITE_URL}${e.chemin}`));
   console.log(`[prerender] ${PAGES.length} pages publiques × ${SUPPORTED_LANGUAGES.length} langues + ${fiches} fiches, sitemap de ${entrees.length} adresses.`);
 }

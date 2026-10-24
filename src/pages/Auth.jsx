@@ -1156,6 +1156,25 @@ export default function Auth() {
     }
   }
 
+  /* COMPTE DÉJÀ CONFIRMÉ AILLEURS (revue du 24/10) : code tapé dans l'app ou un autre onglet, réponse perdue. Le serveur
+   * répond ALREADY_VERIFIED à chaque code et l'écran restait bloqué. C'est une réussite : avec le mot de passe encore en
+   * mémoire, on connecte ; sinon retour au formulaire de connexion, adresse remplie, avec le message du serveur. */
+  async function compteDejaConfirme(err) {
+    const adresse = pendingEmail;
+    if (password && adresse) {
+      try {
+        const data = await login(adresse, password);
+        toast(t('auth.welcome', { name: data.user.name }), 'succes');
+        await allerApresInscription(data.user);
+        return true;
+      } catch { /* second facteur, mot de passe changé : le formulaire de connexion s'en charge */ }
+    }
+    setPendingEmail(''); setCode(''); setErreurCode(''); setChangerNumero(false); setPreuveCode(null);
+    setEmail(adresse); setMode('login');
+    toast(err.message);
+    return false;
+  }
+
   async function submitCode(e) {
     e.preventDefault();
     setErreurCode('');
@@ -1168,6 +1187,7 @@ export default function Auth() {
       toast(t('auth.welcome', { name: data.user.name }), 'succes');
       await allerApresInscription(data.user);
     } catch (err) {
+      if (err.code === 'ALREADY_VERIFIED') { reussi = await compteDejaConfirme(err); return; }
       setErreurCode(err.message);
       toast(err.message, 'erreur');
       reussi = false;
@@ -1251,7 +1271,8 @@ export default function Auth() {
       toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
     } catch (err) {
       const MESSAGES = { PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid', PHONE_DOUBLE_PREFIX: 'auth.errPhoneDoublePrefix' };
-      if (err.field === 'phone') setErreursNumero({ phone: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
+      if (err.code === 'ALREADY_VERIFIED') await compteDejaConfirme(err);
+      else if (err.field === 'phone') setErreursNumero({ phone: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
       else if (err.code === 'BAD_CREDENTIALS' && !preuveNumero) setErreursNumero({ password: err.message });
       else toast(err.message, 'erreur');
     } finally {

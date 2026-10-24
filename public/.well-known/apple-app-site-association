@@ -9,7 +9,9 @@
           { "/": "/orders*", "comment": "Suivi, pourboire payé" },
           { "/": "/account*", "comment": "Abonnement, Stripe Connect" },
           { "/": "/restaurants*", "comment": "Fiche partagée" },
-          { "/": "/reset-password*", "comment": "Lien du courriel de mot de passe oublié" }
+          { "/": "/reset-password*", "comment": "Lien du courriel de mot de passe oublié" },
+          { "/": "/retour-appli*", "comment": "Retour de Stripe pour une demande venue de l'app (paiement, pourboire, Identity, Connect)" },
+          { "/": "/driver*", "comment": "Espace livreur : retour de Stripe Identity / Connect du dossier, liens des e-mails" }
         ]
       }
     ]

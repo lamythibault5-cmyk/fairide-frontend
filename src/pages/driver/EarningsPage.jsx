@@ -106,7 +106,9 @@ export default function EarningsPage() {
     const rangs = [];
     for (let k = 0; k < n; k += pas) rangs.push(k);
     // La dernière barre a toujours son libellé ; trop près du précédent, elle le remplace.
-    if (rangs.at(-1) !== n - 1) { if (rangs.length > 1 && n - 1 - rangs.at(-1) < pas * 0.6) rangs.pop(); rangs.push(n - 1); }
+    // `rangs[rangs.length - 1]` et pas `.at(-1)` : absent d'iOS 15.0 à 15.3, l'écran plantait (revue du 24/10).
+    const dernier = rangs[rangs.length - 1];
+    if (dernier !== n - 1) { if (rangs.length > 1 && n - 1 - dernier < pas * 0.6) rangs.pop(); rangs.push(n - 1); }
     const lundiCourant = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate() - ((maintenant.getDay() + 6) % 7), 12);
     rangs.forEach((k, i) => {
       const b = barres[k];

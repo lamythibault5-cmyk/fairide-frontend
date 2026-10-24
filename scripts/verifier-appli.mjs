@@ -69,7 +69,7 @@ const PAGES = {
 let etatDossier = null;
 // Scénario du consentement biométrique (plus bas) : Stripe Identity proposé, et le consentement déjà donné ou non.
 let identiteStripe = null;
-function simuler(chemin, methode, profil) {
+function simuler(chemin, methode, profil, vue = null) {
   const u = UTILISATEURS[profil];
   if (methode === 'GET' && chemin === '/couriers/me' && identiteStripe) {
     const d = structuredClone(REELLES['/couriers/me']);
@@ -94,6 +94,9 @@ function simuler(chemin, methode, profil) {
   if (methode === 'GET' && REELLES[chemin]) return REELLES[chemin];
   // Le tableau de bord du commerce (réponse réelle, identifiants UUID) : chaque page du commerce lit ensuite /restaurants/<id>/…
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/compliance$/.test(chemin)) return REELLES['/restaurants/:id/compliance'];
+  // Les vues de la liste (backend routes/restaurants.js › VUES_LISTE, 2026-10-24) : sans les cartes, ou les plats de la recherche.
+  if (/^\/restaurants$/.test(chemin) && vue === 'liste') return LISTE_COMMERCES.map(({ menu, ...r }) => ({ ...r, resumeCarte: { plats: menu.length, healthy: 0, bio: 0, vegan: 0, halal: 0, sansGluten: 0, promoPlat: null } }));
+  if (/^\/restaurants$/.test(chemin) && vue === 'plats') return LISTE_COMMERCES.map((r) => ({ id: r.id, plats: r.menu }));
   if (/^\/restaurants$/.test(chemin)) return LISTE_COMMERCES;
   if (/^\/restaurants\/[^/]+\/capacity$/.test(chemin)) return { full: false };
   // Statistiques du commerce (backend analytiqueCommerce.js) : 30 jours d'une petite pizzeria, forme exacte de la réponse.
@@ -189,7 +192,7 @@ async function ouvrir(navigateur, base, { profil, appli = true, consentement = '
     if (url.origin === origine) return route.continue();
     if (url.pathname.includes('/api/')) {
       const chemin = url.pathname.replace(/^.*\/api/, '');
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(simuler(chemin, route.request().method(), profil)) });
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(simuler(chemin, route.request().method(), profil, url.searchParams.get('vue'))) });
     }
     return route.abort(); // images, cartes, polices externes : inutiles ici
   });
