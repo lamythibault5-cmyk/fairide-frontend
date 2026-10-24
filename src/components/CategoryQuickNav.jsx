@@ -222,7 +222,7 @@ export default function CategoryQuickNav({ categories, verre = false, pouce = fa
             aria-current={active === c.id ? 'true' : undefined}
             onClick={() => jumpTo(c.id)}
           >
-            {sectionLabel(c, language, t)}
+            <span className="quicknav-libelle">{sectionLabel(c, language, t)}</span>
           </button>
         ))}
       </div>

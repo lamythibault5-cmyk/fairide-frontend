@@ -164,6 +164,11 @@ html {
      Light de styles.xml) : en mode sombre, le téléphone ne doit rien assombrir de lui-même. Un vrai thème sombre se
      dessinera à part. */
   color-scheme: light only;
+  /* PAS DE GROSSISSEMENT AUTOMATIQUE DU TEXTE (fondateur, 2026-10-24, carte de Hill's sur iPhone) : Safari et la vue web de
+     l'app grossissent d'eux-mêmes un texte long dans un bloc large. Le nom de section « Menu smash black angus burger (servi
+     avec…) » prenait tout l'écran, dans la bande des sections comme dans le titre. Le zoom de l'utilisateur reste permis. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -921,6 +926,9 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   transition: transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
   min-height: 38px; display: flex; align-items: center;
 }
+/* Un nom de section très long (« Menu smash black angus burger (servi avec un grand cornet de frites…) », Hill's, 2026-10-24)
+   se coupe sur « … » : une seule pilule ne prend plus toute la largeur. Le titre de la section, lui, le donne en entier. */
+.quicknav-libelle { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
 .category-quicknav button:hover { border-color: var(--iris); color: var(--ink); }
 .category-quicknav button.active {
   background: var(--iris); color: #fff; border-color: var(--iris);

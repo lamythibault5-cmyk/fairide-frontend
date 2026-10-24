@@ -11,6 +11,7 @@ import CertifiedBadge from './CertifiedBadge';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
 import { iconeHtml } from '../iconeHtml';
+import { experienceApp } from '../natif';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
@@ -58,7 +59,9 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    mapRef.current = L.map(containerRef.current).setView(BRUSSELS_CENTER, singleMarker ? 15 : 12);
+    // Pas de + / − dans l'app (fondateur, 2026-10-24) : on zoome en pinçant ou d'un double toucher, et les boutons, posés à 84 px
+    // du bas, passaient sous la barre d'onglets. Le site sur ordinateur les garde, pour la souris.
+    mapRef.current = L.map(containerRef.current, { zoomControl: !experienceApp() }).setView(BRUSSELS_CENTER, singleMarker ? 15 : 12);
     coucheTuiles(L).addTo(mapRef.current);
     if (!singleMarker) {
       mapRef.current.on('click', () => setSelected(null));
