@@ -153,3 +153,6 @@ const ACCOUNT_KIND_ORDER = ['asset', 'liability', 'vat', 'revenue', 'expense'];
 export function sortAccounts(accounts) {
   return [...(accounts || [])].filter((a) => a.active !== false).sort((a, b) => ACCOUNT_KIND_ORDER.indexOf(a.kind) - ACCOUNT_KIND_ORDER.indexOf(b.kind) || a.code.localeCompare(b.code));
 }
+
+// Montant d'une facture en devise (USD d'Anthropic, de Railway…), écrit comme les euros de la console (boîte à factures).
+export const devise = (n, code) => { try { return new Intl.NumberFormat('fr-BE', { style: 'currency', currency: code }).format(Number(n) || 0); } catch { return `${Number(n || 0).toFixed(2)} ${code}`; } };

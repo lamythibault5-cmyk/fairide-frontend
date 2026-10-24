@@ -53,6 +53,14 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   increase Fairide pays (`order_delivery_bonus`) is a COST on `613-HAUSSE` (PCMN 613100), never on revenue 701 (founder,
   2026-10-21; backend migration 081 moved older entries): the VAT-franchise counter and the export's sales column ignore it,
   the export has its own « Hausses de course » column.
+- **Invoice inbox (Boîte à factures, founder 2026-10-23)**: supplier invoices dropped in Admin › Comptabilité › Achats & frais,
+  e-mailed to the invoice address or received on Peppol wait « à lire »; Claude reads them once a week in Claude Code
+  (workspace skill `fairide-factures`, Owen's own subscription) and they become DRAFT expenses
+  ([BoiteFactures.jsx](../../src/pages/admin/accounting/BoiteFactures.jsx), backend `facturesRecues.js`, its
+  `docs/comptabilite.md` § 7). **No model API call on the server** (founder, 2026-10-23: « sans API, sur mes tokens »).
+  Never auto-post them: the team posts, one click for every draft with no remark
+  (`POST /admin/accounting/expenses/post-clean`). The review points (wrong addressee, foreign VAT charged, totals) are
+  computed by the backend, not by the model.
 - **Admin cancel of a paid order** (founder, 2026-10-21): the team picks a reason in the cancel window
   ([ChoixRemboursement](../../src/components/admin/ChoixRemboursement.jsx); codes in `remboursementAnnulation.js`, same table as
   `../fairide-backend/motifsAnnulation.js`). Shop-side reasons (closed, dish unavailable, not prepared, shop asked) propose the
