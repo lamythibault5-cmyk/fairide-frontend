@@ -8,7 +8,8 @@ describes, change this file in the same commit: a stale guide gets believed.
 
 **Pre-launch cleanup (2026-10-17).** Demo shops no longer come back on deploy: every demo seed in the backend's `server.js` runs only
 with `FAIRIDE_SEED_DEMO=on` (absent in production). SMS codes go through GatewayAPI, only to +32/+31/+33/+49/+352, the rest by
-e-mail. Stripe is still in test mode until Fairide SRL is verified live — see `../fairide-backend/docs/nettoyage-pre-lancement-2026-10-17.md`.
+e-mail. Stripe is in live mode (`/api/health` › `stripeLive: true`, re-checked 2026-10-24); the reset of the test IDs is
+described in `../fairide-backend/docs/nettoyage-pre-lancement-2026-10-17.md`.
 
 
 Real, verified as absent on 2026-09-22 — not speculation.
@@ -39,6 +40,10 @@ Real, verified as absent on 2026-09-22 — not speculation.
 6. See the numbered TODO in `GuidePage.jsx` for the restaurateur-side feature backlog. Of the five items, only
    WhatsApp order tickets is still absent (re-checked 2026-10-06). The guide text itself was rewritten against the
    code that day — keep it in step when a delay or a button changes.
-7. **The admin cannot close a business for the evening.** Only the business closes or pauses itself
-   (InterrupteurService); the admin's one lever is « Retirer du site » (unpublish). See
-   [docs/procedures-incidents.md](../../docs/procedures-incidents.md), case 3.
+7. **Closing a business for the evening: the admin can** (this item said the opposite until 2026-10-24; DEC-15 of 2026-10-06 added it). Admin ›
+   Commerces › « Fermer jusqu'à demain » (`PATCH /admin/restaurants/:id/close-until-tomorrow`, `BoutonFermerSoir` in
+   [AdminRestaurantsPage](../../src/pages/admin/AdminRestaurantsPage.jsx)) pauses the business until 6:00 the next day, and
+   « Fairide s'en occupe » (`POST /admin/restaurants/:id/act-as`) opens its dashboard to accept an order for it. See
+   [docs/procedures-incidents.md](../../docs/procedures-incidents.md), case 3. What the team still cannot do from the console
+   (audit 2026-10-24): push a message to offline couriers (broadcast is inbox + e-mail), change a delivery address, or be
+   alerted before an unaccepted order is cancelled at 15 min.

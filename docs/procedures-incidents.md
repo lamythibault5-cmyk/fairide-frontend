@@ -61,8 +61,13 @@ historique. Un remboursement Stripe est réel et ne s'annule pas.
      ACT-5).
 3. Pour arrêter les nouvelles commandes :
    - **Le commerce répond** : il touche lui-même son interrupteur « Fermé », ou une pause de 15, 30 ou 60 min.
-   - **Il ne répond pas** : l'admin n'a pas de bouton « fermer pour ce soir ». Le seul geste est Admin › Commerces ›
-     **Retirer du site**, et il faut le republier ensuite. Manque à combler si ça se répète (à demander à Claude).
+   - **Il ne répond pas** : Admin › Commerces › fiche du commerce › **Fermer jusqu'à demain** (décision DEC-15). Il
+     reste visible, affiché fermé, ne prend plus de commande, et rouvre tout seul le lendemain à 6 h ; le commerçant
+     peut lever la fermeture lui-même, et le même bouton la lève depuis l'admin. **Retirer du site** ne sert plus
+     qu'à un retrait durable (il faut republier ensuite).
+   - **Une commande attend et le commerce est là mais ne voit pas l'écran** (téléphone à la caisse, pas de
+     notification) : Admin › Commerces › **Fairide s'en occupe** ouvre son tableau de bord dans un onglet (session de
+     8 h, journalisée dans ses notes) ; tu peux accepter la commande pour lui après l'avoir eu au téléphone.
 4. Le lendemain : appel au commerce. Si ça se répète, la suspension passe par la décision motivée (cas 4, point 3).
 
 ## 4. Client agressif, ou abus

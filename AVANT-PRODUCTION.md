@@ -4,13 +4,18 @@
 son détail technique (§ cités ci-dessous). Tout ce qui est marqué *vérifié le 15/10* a été relu ce jour-là en
 lecture seule (production Railway et Vercel, API publique, DNS).
 
+**Relue le 24 octobre 2026** (audit en lecture seule de la production) : ce qui est fait est coché avec *vérifié le
+24/10* ; le reste est toujours ouvert, ou marqué « non vérifiable » quand seul Owen ou Thibault peut le voir. Depuis le
+18/10, la livraison et le paiement en ligne n'ouvrent plus à une date mais au bouton **GO** (`docs/agents/lancement.md`) :
+le « 10 novembre » ci-dessous se lit « avant GO ».
+
 **Les dates qui commandent l'ordre :**
 
 | Date | Ce qui s'ouvre | Ce qui doit être prêt |
 |---|---|---|
 | **16 octobre** | campagne réseaux sociaux ; envoi du contrat commerce 2026.17–19 | §1 |
-| **1er novembre** | à emporter **payé sur place** ; contrat 2026.19 en vigueur | §1 et §2 |
-| **10 novembre** | **livraison** et **paiement en ligne** (argent réel) | §1, §2 et §3 |
+| **1er novembre** | à emporter **payé sur place** ; contrat 2026.19 en vigueur (2026.20 le 5/11) | §1 et §2 |
+| **GO** (bouton, pas de date) | **livraison** et **paiement en ligne** (argent réel) | §1, §2 et §3 |
 
 **Légende :** 🔴 bloquant · 🟠 juridique · 🟡 fiabilité · ⚪️ qualité. **Qui :** F = fondateurs (Thibault, Owen),
 T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = développement.
@@ -31,7 +36,8 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
 - [ ] 🔴 **F — Textes de la campagne** : mêmes règles que le site depuis le 14/10 — « l'alternative à Uber Eats »,
       10 % de commission face aux 22-32 % *annoncés* par les grandes plateformes ; **jamais « moins cher »** ;
       le livreur garde **90 %** de la livraison et **100 %** des pourboires ; zone = « Bruxelles et alentours ».
-- [ ] 🔴 **T — Photos de banque d'images à couper** (*vérifié le 15/10 : toujours actives en production*).
+- [x] 🔴 **T — Photos de banque d'images à couper** (*vérifié le 24/10 : la table des photos de plats est absente du
+      site publié, donc `VITE_STOCK_DISH_PHOTOS=off` ; les 4 vignettes de catégorie restent des images génériques*).
       Vercel › fairide-frontend › Settings › Environment Variables › Production : `VITE_STOCK_DISH_PHOTOS=off`
       (exactement), puis Redeploy. Un vrai commerce (Maestro pizza) est public : une photo de stock présentée
       comme son plat est une pratique trompeuse.
@@ -43,36 +49,53 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
 **Commerces**
 - [ ] 🔴 **F — Un vrai commerce prêt à recevoir une commande.** *Vérifié le 15/10 : 91 commerces en ligne, 1 seul
       réel (Maestro pizza).* Conditions dans l'ordre du code : AVANT-MISE-EN-LIGNE.md §1 ; l'outil
-      Admin › Prêt au lancement (`pretLancement.js`) dit ce qui manque, commerce par commerce.
+      Admin › Prêt au lancement (`pretLancement.js`) dit ce qui manque, commerce par commerce. *Vérifié le 24/10 :
+      30 commerces réels, 2 prêts selon l'outil (DeliSpice, Maestro pizza) + Pizza Altamira vendable en à emporter payé
+      sur place (la commande n'exige pas Stripe pour ce mode). Les autres attendent leurs propres signatures : carte
+      (3 signées, 25 liens « C'est bon » ouverts), allergènes (12), contrat (14). Aucun des 3 n'a de notification ni de
+      terminal : sans l'appli installée avec les notifications, une commande ne s'entend que par e-mail.*
 - [ ] 🔴 **F — Prix vérifiés en magasin sur chaque carte publiée** (2026-10-19). L'accueil, l'app et l'aide disent
       maintenant « le restaurant ne doit plus gonfler ses prix » : une carte reprise d'Uber Eats et encore aux prix de la
       plateforme (pastille orange « prix plateforme » dans Admin › Restaurants) contredirait la phrase. Relever les prix au
       comptoir et cocher « prix vérifiés en magasin » — c'est aussi ce qui donne le badge « Prix du comptoir ».
+      *Vérifié le 24/10 : 18 cartes sur 30 ; Maestro pizza (vendable, carte Uber Eats), Masa et Snack bodrum ne le sont pas.*
 - [ ] 🔴 **F — Une vraie commande de bout en bout sur le staging** (voir « Le staging » en bas) : commande, acceptation,
-      remise, puis les cas difficiles — refus, annulation, commande non récupérée.
-- [ ] 🟡 **F — L'abonnement des commerces reste éteint** (décision du 14/10). Le jour où on l'allume : prévenir
+      remise, puis les cas difficiles — refus, annulation, commande non récupérée. *Vérifié le 24/10 : `staging.fairide.be`
+      n'a toujours pas d'enregistrement DNS (§5) ; en production, 0 commande réelle, et aucun à emporter payé sur place
+      n'a encore été passé dans un vrai commerce : une commande d'essai (compte de test) dans chacun des 3 avant le 1/11.*
+- [x] 🟡 **F — L'abonnement des commerces reste éteint** (décision du 14/10 ; *vérifié le 24/10 : facturé pour 0 commerce*). Le jour où on l'allume : prévenir
       chaque commerce **30 jours avant** (contrat, clause « Abonnement ») — l'interrupteur admin ferme sinon
       l'à emporter et la livraison sur-le-champ.
 
 **Production (Railway, Vercel)**
-- [ ] 🔴 **T — Coupure de ~2 minutes à chaque déploiement du backend** (*vérifié le 15/10 : `healthcheckPath` vide*).
-      Railway › service fairide-backend › Settings › **Healthcheck Path** = `/api/health`.
+- [x] 🔴 **T — Coupure de ~2 minutes à chaque déploiement du backend** (*vérifié le 24/10 : `healthcheckPath`
+      = `/api/health` en production ; toujours vide en staging, sans gravité*).
 - [ ] 🔴 **T — Sécurité** (AVANT-MISE-EN-LIGNE.md §5) : `COURIER_DATA_KEY` est posée (*vérifié*) ; reste à
       confirmer que `JWT_SECRET` a bien été changé après la faille `verify-email` du 16/09, et à relire les journaux.
 - [ ] 🟡 **T — Sauvegardes** : le workflow nocturne existe (`fairide-backend/.github/workflows/sauvegarde-base.yml`,
       pg_dump chiffré + restauration d'essai). Vérifier qu'il passe au vert chaque nuit et que la clé privée
-      `age` est rangée hors de GitHub, à deux endroits.
+      `age` est rangée hors de GitHub, à deux endroits. *Vérifié le 24/10 : en échec du 15 au 22/10 (secret manquant),
+      première nuit verte le 23/10 ; la clé privée n'existe qu'à un endroit (`C:\Users\OSTA\fairide-sauvegarde-cle-privee.txt`) ;
+      les photos et documents de Cloudinary ne sont pas sauvegardés ; le dépôt backend étant privé, la sauvegarde consomme
+      les minutes GitHub Actions payantes (~1 840 sur 2 000 gratuites en octobre).*
 - [ ] 🟡 **T — Deux bizarreries dans les variables de production** : `DATABASE_URL` vaut
       `${{RAILWAY_ENVIRONMENT}}${{Postgres.DATABASE_URL}}` (le nom de l'environnement est collé devant l'adresse ;
       ça marche par chance) → mettre `${{Postgres.DATABASE_URL}}` ; et une variable nommée `ON` (collage raté ?).
+      *Vérifié le 24/10 : `ON` a disparu ; `DATABASE_URL` commence toujours par le nom de l'environnement. Le changer
+      redéploie le backend : hors des heures de service.*
 - [ ] 🟡 **T — Les aperçus Vercel parlent à la PRODUCTION.** Aucune `VITE_API_BASE` pour les aperçus : chaque branche
       en aperçu lit et écrit les vraies données. Leur donner l'API de staging (Settings › Environment Variables ›
       Preview › `VITE_API_BASE=https://fairide-backend-staging.up.railway.app/api`).
 - [ ] 🟡 **T — Géocodage et itinéraires** : `GEO_PROVIDER` vide (*vérifié*) = serveurs publics Nominatim, Photon,
       OSRM, dont les conditions excluent un usage commercial. Clé Geoapify (`GEO_PROVIDER=geoapify` +
       `GEOAPIFY_API_KEY`) ou instances à nous. La politique de géolocalisation des livreurs cite déjà les deux.
-- [ ] ⚪️ **T — Statistiques** : `VITE_PLAUSIBLE_DOMAIN=fairide.be` sur Vercel (production), puis Redeploy.
-- [ ] ⚪️ **T — E-mails** : DMARC est en `p=none` (*vérifié*) → `p=quarantine` après un test mail-tester.
+- [ ] 🟡 **T — Statistiques** : `VITE_PLAUSIBLE_DOMAIN=fairide.be` sur Vercel (production), puis Redeploy. *Vérifié
+      le 24/10 : toujours vide (aucun script Plausible sur le site) ; sans lui, le 1er novembre ne se mesure pas.*
+- [ ] ⚪️ **T — E-mails** : DMARC est en `p=none` (*vérifié le 24/10*) → `p=quarantine` après un test mail-tester.
+- [ ] 🔴 **F — Permanence du 1er novembre** : `permanence-premiere-semaine.md` est toujours le modèle vide du 15/10
+      (*vérifié le 24/10*). Noms, téléphones, créneaux, et qui répond au bouton d'urgence des livreurs. Ajouter une
+      surveillance externe gratuite (UptimeRobot ou équivalent) sur `https://fairide.be/` et `/api/health`, alertes aux
+      deux fondateurs : aujourd'hui seul Railway voit une panne, et ses alertes vont au titulaire du compte.
 
 **Juridique**
 - [ ] 🟠 **J — Relecture** : contrat commerce 2026.19 (préavis 16 jours contre les 30 promis ; positions sponsorisées ;
@@ -97,17 +120,19 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
 - [ ] 🟠 **F — DPA (RGPD art. 28)** à signer et archiver : Stripe, Resend, Cloudinary, Sentry, Vercel, Railway,
       Anthropic, MapTiler, Google/Firebase. La plupart se signent en ligne.
 - [ ] 🟠 **F — Politique de confidentialité, prestataires manquants** : Geoapify / Google Places / fournisseur Peppol /
-      Firebase (push) / Apple (connexion) — les ajouter dès qu'ils sont réellement allumés.
+      Firebase (push) / Apple (connexion) — les ajouter dès qu'ils sont réellement allumés. *Vérifié le 24/10 : Firebase
+      (push, allumé), Apple (connexion) et le fournisseur Peppol (allumé) manquent toujours à la liste `privacy.sub_*` ;
+      nouvelle version dans `cgu.js` à prévoir.*
 
-## 3. Avant le 10 novembre (livraison et paiement en ligne : de l'argent réel)
+## 3. Avant GO (livraison et paiement en ligne : de l'argent réel)
 
 **Stripe**
-- [ ] 🔴 **T — La production tourne avec une clé Stripe de TEST** (*vérifié le 15/10 : `sk_test_…`*). Avant le 10/11 :
-      clé `sk_live_…` sur Railway (production), **nouveau webhook en mode live** vers
-      `https://fairide-backend-production.up.railway.app/api/payments/webhook` (les 15 événements de
-      `docs/staging.md`) et son `STRIPE_WEBHOOK_SECRET`.
+- [x] 🔴 **T — La production tourne avec une clé Stripe de TEST** (*vérifié le 24/10 : clé `sk_live_…` et secret de
+      webhook posés, `/api/health` › `stripeLive: true`*). Reste à comparer, dans le tableau de bord Stripe, les
+      événements du webhook live avec les 15 de `docs/staging.md`.
 - [ ] 🔴 **F — Tous les commerces et livreurs refont « Activer mes paiements » en live** : un compte Stripe Connect
-      créé en mode test n'existe pas en mode live. Prévoir l'e-mail et la relance.
+      créé en mode test n'existe pas en mode live. Prévoir l'e-mail et la relance. *Vérifié le 24/10 : 2 commerces
+      actifs en live (DeliSpice, Maestro), 3 en cours, 25 pas commencé ; 0 livreur.*
 - [ ] 🔴 **F — Un premier vrai paiement** de quelques euros, remboursé ensuite, pour voir l'argent arriver chez
       le commerce et le livreur (virement du lundi).
 - [ ] 🟡 **T — Allumer Apple Pay et Google Pay** : tableau de bord Stripe › Settings › Payments › **Payment methods**,
@@ -120,15 +145,19 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
 **Livreurs**
 - [ ] 🔴 **F — Assurance accidents + protection juridique souscrite**, références saisies (paramètre
       `courier_insurance_policy`) : le contrat les promet avant la première course. Le bilan « Prêt au lancement »
-      le signale tant que c'est vide.
+      le signale tant que c'est vide. *Vérifié le 24/10 : toujours vide.* C'est aussi une obligation légale pour une
+      plateforme (loi du 3/10/2022, art. 19-21, et arrêté royal du 12/08/2024 : assurance accidents du travail au moins
+      équivalente à la loi de 1971) ; sans elle, le Fonds des accidents du travail indemnise puis se retourne contre
+      Fairide. Avant la première course payée.
 - [ ] 🔴 **D+F — Nouvelle version du contrat livreur** (livraison au prix TVA comprise depuis le 14/10 : 1 km =
       4,50 € au lieu de 5,45 €, c'est une baisse) : changer le numéro dans `courierContracts.js`, **prévenir les
       livreurs avant**, faire re-signer. Ils réaccepteront aussi le mandat, la notice et la politique de géolocalisation
       (textes changés le 14-15/10).
 - [ ] 🔴 **F — Des livreurs réels prêts** : dossier vérifié, contrat signé, Stripe live actif, notifications activées
-      (Admin › Prêt au lancement).
-- [ ] 🟡 **T — Notifications natives en production** : `FCM_SERVICE_ACCOUNT_JSON` n'est posée qu'en staging
-      (*vérifié : absente en production*). La poser en production avant les applications.
+      (Admin › Prêt au lancement). *Vérifié le 24/10 : 7 comptes livreur, 0 prêt ; 2 dossiers envoyés le 18/10 attendent
+      une relecture de l'équipe.*
+- [x] 🟡 **T — Notifications natives en production** (*vérifié le 24/10 : `/api/health` › `pushApp: true`*). La clé du
+      compte de service a été affichée par erreur dans une session Claude le 24/10 : la régénérer (§6).
 
 **Fonctions ajoutées le 15/10 (comparaison avec Uber Eats) — à vérifier sur le staging, puis une fois en live**
 - [ ] 🔴 **F — Pourboire au paiement** (`fairide-backend/pourboireCommande.js`). Sur le staging : commande en livraison,
@@ -190,17 +219,18 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
 
 ## 4. Applications iPhone et Android
 
-- [ ] 🔴 **F — Comptes Apple Developer et Google Play** (en vérification au 15/10).
-- [ ] **D — iPhone : TestFlight** construit et envoyé par Xcode sur le Mac d'Owen (docs/application-mobile.md,
-      « Sortir une version iPhone ») : Firebase iOS (`GoogleService-Info.plist` + clé APNs), ID client Google iOS, Team ID.
+- [x] 🔴 **F — Comptes Apple Developer et Google Play** (*vérifié le 24/10 : TestFlight et test interne Play en service*).
+- [x] **D — iPhone : TestFlight** (*vérifié le 24/10 : construit par GitHub à chaque fusion dans `main`*).
 - [ ] **D — Android : la version des magasins** (`be.fairide.app`) : appli Firebase de production (empreinte de la clé
-      Play), Play App Signing, test interne Play, puis production.
-- [ ] **T — Liens universels** : empreinte SHA-256 dans `public/.well-known/assetlinks.json`, Team ID dans
-      `apple-app-site-association` (docs/application-mobile.md, « Reste à faire »).
+      Play), Play App Signing, test interne Play, puis production. *Vérifié le 24/10 : test interne en service, mais le
+      dernier envoi date du 21/10 (en retard sur `main`) ; la piste de production : non vérifiable ici (Play Console).*
+- [x] **T — Liens universels** (*vérifié le 24/10 : `assetlinks.json` porte `be.fairide.app` avec 3 empreintes,
+      `apple-app-site-association` le Team ID*). Le chemin `/retour-appli` manquait côté iPhone : ajouté par la PR
+      `fix/appli-2410` (en attente du go d'Owen).
 - [ ] **T — Google Cloud › Identifiants** : origine `https://staging.fairide.be` (connexion Google sur le staging) ;
       clients OAuth Android et iOS pour la connexion native.
-- [ ] ⚪️ **F — La promesse « applications le 6 octobre »** (`appStoresAt`, `src/launch.js`) est passée : la retirer ou
-      la dater juste.
+- [x] ⚪️ **F — La promesse « applications le 6 octobre »** (`appStoresAt`, `src/launch.js`) est passée (*vérifié le
+      24/10 : plus rien ne l'affiche ; le backend renvoie encore `appStoresAt`, sans effet*).
 
 ## 5. Le staging (tester sans toucher aux vraies données)
 
@@ -217,7 +247,7 @@ Stripe en mode **test** (carte `4242 4242 4242 4242`), dates d'ouverture passée
 de démonstration. Le compte `contact@fairide.be` y est admin.
 
 - [ ] **T — DNS chez OVH** : CNAME `staging` → `25fbe1a85acf72dc.vercel-dns-017.com.` (sans lui, le site de staging
-      demande une connexion Vercel).
+      demande une connexion Vercel). *Vérifié le 24/10 : toujours absent (NXDOMAIN).*
 - [ ] **D — Un commerce et un livreur de test** sur le staging, paiements Stripe (test) activés, pour les commandes
       complètes.
 - [ ] Passer à l'**option B** (fusionner d'abord dans `staging`, tester, puis `staging` → `main`) quand il y aura de vrais
@@ -234,6 +264,11 @@ Des clés ont circulé pendant la mise en place du staging, le 15/10. À faire, 
       (`STRIPE_SECRET_KEY`).
 - [ ] **F — Firebase** : supprimer le fichier de clé du compte de service téléchargé
       (`fairide-7f841-firebase-adminsdk-…json` dans Téléchargements) — la même clé vit déjà dans Railway et GitHub.
+      *Vérifié le 24/10 : toujours là.* **Et régénérer la clé elle-même** : une session Claude l'a affichée par erreur le
+      24/10 en listant les variables Railway. Firebase › Paramètres du projet › Comptes de service › supprimer la clé
+      (identifiant commençant par `21f7`), en créer une, la mettre dans Railway (production et staging,
+      `FCM_SERVICE_ACCOUNT_JSON`) et dans le secret GitHub, puis vérifier `/api/health` › `pushApp: true`. Les trois
+      gestes ensemble : sans la nouvelle clé dans Railway, les notifications de l'app s'arrêtent.
 
 ---
 
