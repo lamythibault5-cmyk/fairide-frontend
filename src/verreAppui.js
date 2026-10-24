@@ -7,7 +7,8 @@
 // transition : il repart de la taille affichée, et un nouvel appui le rattrape en plein vol (« Designing Fluid Interfaces »).
 //
 // Réglages de la version B :
-//   - grossit de 8 % pour un petit bouton (≤ 64 px), de 3,5 % pour une barre (≥ 300 px), entre les deux selon la taille ;
+//   - grossit de 12 % pour un petit bouton (≤ 64 px), de 3,5 % pour une barre (≥ 300 px), entre les deux selon la taille. 8 % dans
+//     la maquette ; 12 % après l'essai sur l'iPhone (fondateur, 2026-10-24 : la barre est bien, les ronds « un peu plus gros ») ;
 //   - se penche de 2 px (petit) à 3 px (barre) vers le doigt ;
 //   - ressort à la pose : amortissement .85, réponse .2 s ; au lâcher : .55, .4 s (un rebond franc d'environ 1 %, posé en .45 s).
 // Les cartes et les rangées ne sont pas du verre : elles gardent leur enfoncement (transitions-appli.css, réponse 4).
@@ -23,7 +24,9 @@ const VERRE = [
   '.fiche-appli .fiche-infos-lien', '.fiche-appli .fiche-apercu-plus', '.plat-pas', '.ec-pas',
   '.carte-page .carte-reinit', '.carte-page .carte-pastilles .cuisine-chip', '.carte-fiche-fermer',
   // Les retours, en verre eux aussi (réponse 5) : le ‹ rond sur les bandeaux iris, « ← Retour » et « ← Mon compte ».
-  '.ec-rond', '.gn-rond', '.bv-rond', '.dashboard-retour', '.retour-compte', '.cs-retour', '.ec-b-retour', '.ecl-b-retour'
+  '.ec-rond', '.gn-rond', '.bv-rond', '.dashboard-retour', '.retour-compte', '.cs-retour', '.ec-b-retour', '.ecl-b-retour',
+  // La croix de la fiche d'un plat (ronde, iris à filet blanc) : un retour, elle aussi.
+  '.plat-fermer'
 ].join(', ');
 
 /* Ceux qui défilent de côté : le doigt qui part les faire défiler ne doit pas les faire gonfler. Ils attendent 70 ms (le
@@ -31,7 +34,7 @@ const VERRE = [
 const DEFILENT = '.lt-puces, .category-quicknav--verre, .carte-pastilles .cuisine-chip, .dashboard-nav.admin';
 const ATTENTE_DEFILE = 70;
 
-const PETIT = 0.08;
+const PETIT = 0.12;
 const BARRE = 0.035;
 const PENCHE = [2, 3];
 const APPUI = [0.85, 0.2];
@@ -109,6 +112,8 @@ export function installerVerreAppui() {
     e.appuye = true;
     regler(e.s, 1 + selonTaille(c.taille, [PETIT, BARRE]), APPUI);
     c.e = e;
+    // Tout de suite, sans attendre la première image : sinon l'enfoncement des boutons (96 %, transitions-appli.css) se voyait une image.
+    c.el.style.scale = e.s.x.toFixed(4);
     placer(c, c.x, c.y);
     lancer(c.el, e);
   };

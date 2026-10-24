@@ -50,7 +50,7 @@ name (Hill's) to fill the screen; section pills cut at 220 px with « … » (`.
 **Glass that answers the finger (2026-10-24, version B of `maquettes/verre-appui/verre-appui.html`, « iOS 26 »)**, native app only, in
 [verreAppui.js](../../src/verreAppui.js) (loaded by `demarrerNatif`) + the end of verre.css: every glass control (its list is `VERRE` in that
 file: the WHOLE tab bar, cuisine and sections strips, cart bar, restaurant round buttons, Livraison / À emporter, « + », « − 1 + », map
-chips, back buttons) grows the moment the finger lands (8 % small, 3.5 % bars, by size), leans 2–3 px toward it, a light
+chips, back buttons) grows the moment the finger lands (12 % small — 8 % in the mockup, raised after the iPhone test —, 3.5 % bars, by size), leans 2–3 px toward it, a light
 (`<verre-lueur>`, injected once) follows the finger and the rim lights up; release = spring (damping .55, response .4 s). `scale` /
 `translate` inline, so a control's own `transform` is kept. Strips that scroll sideways wait 70 ms (a scroll that starts cancels).
 Cards and rows keep the .97 press-down (glass grows, content presses down). Back buttons are glass: ‹ rounds on iris bands
