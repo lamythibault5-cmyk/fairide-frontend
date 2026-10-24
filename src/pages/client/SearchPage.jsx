@@ -124,6 +124,11 @@ export default function SearchPage() {
   // 14 premiers types d'avant s'affichaient même vides. Toutes tant que la liste n'est pas lue, pour ne pas sauter.
   const famillesLues = new Set(restaurants.flatMap((r) => [...famillesCommerce(r)]));
   const famillesTuiles = restaurants.length ? FAMILLES.filter((f) => famillesLues.has(f.cle)) : FAMILLES;
+  // « PAR COMMUNE », MÊME RÈGLE (fondateur, 2026-10-25) : seulement les communes où il y a au moins un commerce — les 19
+  // s'affichaient toutes et la plupart menaient à une liste vide. Une commune de la périphérie apparaît dès qu'un commerce
+  // y est (la liste filtre sur `r.commune` exact). Les 19 tant que la liste n'est pas lue, pour ne pas sauter.
+  const communesLues = new Set(restaurants.map((r) => r.commune).filter(Boolean));
+  const communesPastilles = restaurants.length ? COMMUNES_SUGGEREES.filter((c) => communesLues.has(c)) : COMMUNES;
   const filtreRegime = bio || vegan || halal || sansGluten;
   const actif = q.length >= 2 || filtreRegime;
   const platOk = (p) => (!bio || platBio(p)) && (!vegan || platVegan(p)) && (!halal || platHalal(p)) && (!sansGluten || platSansGluten(p));
@@ -164,8 +169,8 @@ export default function SearchPage() {
     // une liste vide.
     const portees = new Set(restaurants.flatMap((r) => cuisinesCommerce(r).map((c) => specialite(c)?.value)));
     const cuisines = specialitesTrouvees.filter((x) => portees.has(x.value)).slice(0, MAX_PAR_GROUPE);
-    // La recherche trouve aussi la périphérie (Tervuren…) ; les puces « Par commune » restent les 19.
-    const communes = q.length < 2 ? [] : COMMUNES_SUGGEREES.filter((c) => contient(c, q)).slice(0, MAX_PAR_GROUPE);
+    // Seulement les communes qui ont un commerce, comme les pastilles (2026-10-25) : « Uccle » ne mène plus à une liste vide.
+    const communes = q.length < 2 ? [] : communesPastilles.filter((c) => contient(c, q)).slice(0, MAX_PAR_GROUPE);
     const aide = q.length < 2 ? [] : sujetsAide(t).filter((s) => contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)).slice(0, MAX_PAR_GROUPE);
     const rubriques = rubriquesCompte(t)
       .filter((s) => q.length >= 2 && (!s.connecte || user) && (contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)))
@@ -277,12 +282,16 @@ export default function SearchPage() {
               ))}
             </section>
           )}
-          <h3 className="recherche-titre-app">{t('search.byMunicipality')}</h3>
-          <div className="recherche-pastilles">
-            {COMMUNES.map((c) => (
-              <Link key={c} to="/restaurants" state={{ commune: c }} className="pill recherche-pastille">{c}</Link>
-            ))}
-          </div>
+          {communesPastilles.length > 0 && (
+            <>
+              <h3 className="recherche-titre-app">{t('search.byMunicipality')}</h3>
+              <div className="recherche-pastilles">
+                {communesPastilles.map((c) => (
+                  <Link key={c} to="/restaurants" state={{ commune: c }} className="pill recherche-pastille">{c}</Link>
+                ))}
+              </div>
+            </>
+          )}
           <h3 className="recherche-titre-app">{t('search.aQuestion')}</h3>
           <div className="recherche-pastilles">
             {sujetsAide(t).slice(0, 4).map((s) => (
@@ -314,14 +323,16 @@ export default function SearchPage() {
             </div>
             )}
           </div>
-          <div className="card">
-            <h3 className="recherche-titre-groupe">{t('search.byMunicipality')}</h3>
-            <div className="recherche-pastilles">
-              {COMMUNES.map((c) => (
-                <Link key={c} to="/restaurants" state={{ commune: c }} className="pill recherche-pastille">{c}</Link>
-              ))}
+          {communesPastilles.length > 0 && (
+            <div className="card">
+              <h3 className="recherche-titre-groupe">{t('search.byMunicipality')}</h3>
+              <div className="recherche-pastilles">
+                {communesPastilles.map((c) => (
+                  <Link key={c} to="/restaurants" state={{ commune: c }} className="pill recherche-pastille">{c}</Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           <div className="card">
             <h3 className="recherche-titre-groupe">{t('search.aQuestion')}</h3>
             <div className="recherche-pastilles">
