@@ -77,6 +77,8 @@
    à chaque image de défilement, ~60 par seconde (2026-10-23, app iPhone lente : « AcceleratedAnimationDidStart »). Elle ne
    sert plus qu'au replacement d'un coup (taille de l'écran qui change). */
 .lt-velo.roule { transition: none; }
+/* Une lettre tapée dans la Recherche (useVeloQuiRoule, TeteListe.jsx) : il glisse jusqu'à sa place (la transition reste) en pédalant. */
+.lt-velo.pedale svg { animation: lt-pedale .5s ease-in-out infinite; }
 /* Dans le bandeau, la route à la hauteur de la maquette (la route de la Recherche, RouteVelo, garde la sienne). */
 .lt-bandeau .lt-route { height: 22px; margin-top: 0; }
 @keyframes lt-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
@@ -174,7 +176,7 @@ html.appli .sl-liste--calme .rest-card { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .liste-tete--bandeau, .lt-velo, .lt-lentille { transition: none !important; }
-  .lt-velo.roule svg { animation: none !important; }
+  .lt-velo.roule svg, .lt-velo.pedale svg { animation: none !important; }
 }
 
 /* ---------------------------------------------------------------------------------------------------------------------
@@ -371,8 +373,10 @@ html:not(.appli) .sl-liste--grand .une-points { display: none; }
 /* ---------------------------------------------------------------------------------------------------------------------
    RECHERCHE DANS L'APP (SearchPage.jsx ; fondateur, 2026-10-17, « Search » de maquettes/commerces-marque/commerces-marque.html). Le titre et le
    champ sur le bandeau iris (champ blanc en pilule), les envies en tuiles dans la feuille. Le site garde son écran.
+   Depuis le 2026-10-24 (version A de maquettes/commandes-recherche), la route et le vélo sous le champ, comme sur le site.
    --------------------------------------------------------------------------------------------------------------------- */
 .recherche-app .eb-bandeau .recherche-champ { margin: 14px 0 0; border-color: #fff; border-radius: 999px; padding-left: 18px; }
+.recherche-app .eb-bandeau .lt-route { margin-top: 10px; }
 .recherche-app .eb-bandeau .recherche-loupe { color: var(--iris); }
 .recherche-titre-app { margin: 4px 0 10px; font-size: 17px; font-weight: 700; color: var(--ink); }
 .recherche-app .recherche-pastilles + .recherche-titre-app, .recherche-tuiles + .recherche-titre-app { margin-top: 24px; }

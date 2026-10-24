@@ -39,6 +39,7 @@ import Modale from '../../components/Modale';
 import { euros } from '../../prixPlat';
 import { imgProps } from '../../images';
 import { BandeauCommande, FeuilleCommande } from '../../components/EcranCommande';
+import { RouteVelo } from '../../components/TeteListe';
 import '../../ecran-liste.css';
 import { cheminFiche } from '../../adresseFiche';
 
@@ -335,14 +336,19 @@ export default function Orders() {
   const passees = listeAffichee.filter(estPassee);
   const quand = (ms) => new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
-  // Mes commandes n'a pas de bandeau dans l'app (le titre, puis les cartes) : le titre, puis des lignes iris pâle (Skeleton.jsx).
-  if (loading) return <div><h1 className="page-title">{titre}</h1><SkeletonCards count={3} /></div>;
+  /* LE BANDEAU DE MES COMMANDES SANS COMMANDE EN COURS (fondateur, 2026-10-24, version A de maquettes/commandes-recherche) : le
+   * titre sur l'iris et la route où le vélo roule quand on fait défiler, dans l'app comme sur le site. Aussi pendant le
+   * chargement (des lignes iris pâle dans la feuille, Skeleton.jsx) et quand la liste n'a pas pu être lue. */
+  const bandeauTitre = <BandeauCommande titre={titre}><RouteVelo className="sc-route-velo" roule /></BandeauCommande>;
+  if (loading) return <div className="ec-page sc-page sc-commandes">{bandeauTitre}<FeuilleCommande><SkeletonCards count={3} /></FeuilleCommande></div>;
   // Pas lues (réseau, serveur) : jamais « Rien en route pour l'instant », qui ferait croire la commande perdue.
   if (echec && orders.length === 0) {
     return (
-      <div>
-        <h1 className="page-title">{titre}</h1>
-        <ErreurChargement onReessayer={() => { setEchec(false); setLoading(true); api('/orders/mine', { token }).then(setOrders).catch(() => setEchec(true)).finally(() => setLoading(false)); }} />
+      <div className="ec-page sc-page sc-commandes">
+        {bandeauTitre}
+        <FeuilleCommande>
+          <ErreurChargement onReessayer={() => { setEchec(false); setLoading(true); api('/orders/mine', { token }).then(setOrders).catch(() => setEchec(true)).finally(() => setLoading(false)); }} />
+        </FeuilleCommande>
       </div>
     );
   }
@@ -728,61 +734,19 @@ export default function Orders() {
       </>
     );
   };
-  // Une commande passée : ce qu'elle était, comment elle s'est terminée, ce qu'on peut encore faire. Sans les consignes à la
-  // porte ni l'adresse (audit design 2) ; refusée, le motif et le remboursement seulement.
-  const cartePassee = (o) => (
-    <>
-      <div className="suivi-tete">
-        <LogoCommerce order={o} />
-        <span className="suivi-tete-texte">
-          <b className="suivi-resto"><NomCommerce order={o} /></b>
-          <span className="suivi-sous">{orderTypeLabel(o, t)} · {quand(o.createdAt)}</span>
-        </span>
-        <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span>
-      </div>
-      {!['livre', 'refuse'].includes(o.status) && <ProchaineEtape order={o} />}
-      {blocArticles(o)}
-      {blocRefus(o)}
-      {o.status === 'livre' && o.driverName && (
-        <div style={{ margin: '6px 0' }}><DriverBadge name={o.driverName} photoUrl={o.driverPhotoUrl} size={40} /></div>
-      )}
-      {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
-      {blocTotal(o)}
-      {blocPied(o)}
-    </>
-  );
-
-  if (APPLI) {
-    return (
-      <div>
-        {tirer}
-        <h1 className="page-title">{titre}</h1>
-        {notifications}
-        {enCours.length > 0 && passees.length > 0 && <h2 className="suivi-section">{t('orders.sectionCurrent')}</h2>}
-        {[...enCours, ...passees].map((o, rang) => (
-          <Fragment key={o.id}>
-          {rang === enCours.length && passees.length > 0 && <h2 className="suivi-section">{t('orders.sectionPast')}</h2>}
-          <div className={`card suivi-carte${estPassee(o) ? ' est-passee' : ' suivi-carte--bandeau'}`}>
-            {estPassee(o) ? cartePassee(o) : (
-              <>
-                {enteteSuivi(o)}
-                {carteEnCours(o)}
-              </>
-            )}
-          </div>
-          </Fragment>
-        ))}
-        {dialogues}
-      </div>
-    );
-  }
 
   /* LE SITE (2026-10-16, « Proposition » de maquettes/site-ordinateur/site-ordinateur.html, section 6). La commande en cours EST le bandeau
    * iris de la page (le statut en grand, la route où roule le vélo, 1C) ; dans la feuille blanche, sur un ordinateur, la carte
    * du trajet et le code à donner au livreur tiennent côte à côte, le détail dessous. Une deuxième commande en cours garde
    * sa carte à bandeau. Les commandes passées deviennent un tableau compact (des cartes compactes sur un téléphone) ;
    * « Commander à nouveau » est sur la ligne, le reste (pourboire, signalement, motif d'un refus…) s'ouvre sous « Détails ».
-   * Mêmes données, mêmes actions qu'avant. Styles : site-commande.css. */
+   * Mêmes données, mêmes actions qu'avant. Styles : site-commande.css.
+   * L'APP AUSSI DEPUIS LE 2026-10-24 (fondateur, version A de maquettes/commandes-recherche : « je préfère celui du site »). Elle
+   * avait un titre noir, puis des cartes empilées, la seule page client sans bandeau. Même bandeau, même feuille, mêmes cartes
+   * courtes pour les commandes passées ; sous le bandeau, la commande en cours garde l'ordre de l'app (carteEnCours : le livreur,
+   * le code, « Détails » replié), qui suit le moment de la commande. Sans commande en cours, le vélo roule sur la route du
+   * bandeau quand on fait défiler (bandeauTitre). */
+  const corpsEnCours = (o) => (APPLI ? <div className="sc-encours suivi-carte--bandeau">{carteEnCours(o)}</div> : corpsSite(o));
   const corpsSite = (o) => {
     const carte = blocCarte(o);
     // Deux colonnes sur ordinateur : la carte du trajet à gauche et tout le reste à droite pendant la livraison ; sinon le
@@ -811,6 +775,7 @@ export default function Orders() {
   const nbArticles = (o) => (o.items || []).reduce((n, i) => n + (Number(i.qty) || 1), 0);
   return (
     <div className="ec-page sc-page sc-commandes">
+      {tirer}
       {vedette ? (
         <header className="ec-bandeau sc-bandeau-suivi">
           <div className="ec-col">
@@ -821,14 +786,14 @@ export default function Orders() {
             {!(vedette.status === 'nouveau' && !vedette.paid) && <RouteSuivi status={vedette.status} orderType={vedette.orderType} />}
           </div>
         </header>
-      ) : <BandeauCommande titre={titre} />}
+      ) : bandeauTitre}
       <FeuilleCommande>
         <div className="sc-notifs">{notifications}</div>
-        {vedette && corpsSite(vedette)}
+        {vedette && corpsEnCours(vedette)}
         {autresEnCours.map((o) => (
           <div key={o.id} className="card suivi-carte suivi-carte--bandeau sc-autre-en-cours">
             {enteteSuivi(o)}
-            {corpsSite(o)}
+            {corpsEnCours(o)}
           </div>
         ))}
         {passees.length > 0 && (

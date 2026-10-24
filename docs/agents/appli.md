@@ -32,6 +32,13 @@ total in an iris chip whose digits roll (FloatingCart, `ChiffresRoulants`) — 2
 number in a lime circle and folds back to a circle that keeps the count (`PasPlat`, MenuCategorySections), and the dish sheet's
 quantity and « Ajouter » are one lime block — 3C; full-page empty screens (orders, favourites, cart) show the bike waiting on its
 road (`EtatVide scene=…`) — 4B. Buttons inside these need `min-height` overrides: the global 44 px touch rule has specificity (0,3,1).
+**Mes commandes and Recherche with the bike (2026-10-24, version A of both screens in `maquettes/commandes-recherche/`, « site
+pareil que l'app »)**: the app's Mes commandes is now the website's screen (Orders.jsx, one render path): the order in progress IS
+the iris band (`RouteSuivi`), under it the app keeps `carteEnCours` (courier, code, « Détails » folded); past orders are the
+website's short cards (`.sc-passees`, « Commander à nouveau » + « Détails » opening under the card); no order in progress, loading or
+not read = `BandeauCommande` with the title and the road where the bike rolls on scroll. Recherche has the road under the field, app
+and site: the bike rolls on scroll and moves 9 points per letter typed. Both use `RouteVelo roule` / `useVeloQuiRoule` (TeteListe.jsx,
+shared with the list's band). The `.sc-commandes` / `.sc-passees` rules of site-commande.css are no longer website-only.
 **Every main screen in that style (2026-10-16, « Proposition » phones of `maquettes/tous-les-ecrans/tous-les-ecrans.html`)**:
 restaurant list (address on an iris band with the riding bike, glass strip of cuisine families with a draggable lens and, under the chosen
 family, a row of its specialities: TeteListe.jsx, lentillePuces.js), map, favourites, restaurant page (sheet over the cover, glass sections strip, floating round buttons in solid iris

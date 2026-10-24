@@ -396,6 +396,11 @@ export default function SearchPage() {
     </>
   );
 
+  /* LE VÉLO (fondateur, 2026-10-24, version A de maquettes/commandes-recherche, « site pareil que l'app ») : la route sous le
+     champ, dans l'app comme sur le site. Il avance quand on fait défiler, et d'un cran par lettre tapée, comme s'il partait
+     chercher ; effacer le ramène. */
+  const route = <RouteVelo className="sl-bande-route" roule avance={Math.min(requete.trim().length, 9) * 9} />;
+
   /* L'APP (fondateur, 2026-10-17, « Search » de maquettes/commerces-marque/commerces-marque.html) : le titre et le champ sur le bandeau iris,
      comme Favoris et Mon compte, le reste dans la feuille blanche. Pas de « bleu sur bleu » : dans l'app, aucun en-tête iris
      ne se pose au-dessus (le site, lui, garde son écran ci-dessous). */
@@ -405,6 +410,7 @@ export default function SearchPage() {
         <div className="eb-bandeau">
           <h1 className="eb-titre">{t('search.title')}</h1>
           {champRecherche}
+          {route}
         </div>
         {/* Un résultat touché après avoir tapé : le mot rejoint « Récemment ». */}
         <div className="eb-feuille" onClickCapture={(e) => { if (e.target.closest('a')) retenir(); }}>
@@ -419,7 +425,7 @@ export default function SearchPage() {
       <div className="eb-bandeau sl-bande">
         <h1 className="sl-bande-ctx"><Icone nom="recherche" taille={16} />{t('search.title')}</h1>
         {champRecherche}
-        <RouteVelo className="sl-bande-route" />
+        {route}
       </div>
       <div className="eb-feuille sl-feuille">
         {pastillesRegime}
