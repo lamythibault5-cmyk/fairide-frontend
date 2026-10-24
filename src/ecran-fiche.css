@@ -152,7 +152,10 @@ html.fiche-glisse body, html.fiche-glisse .dashboard-main { background: var(--ir
   touch-action: pan-x; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
 .fiche-appli .category-quicknav--verre button:hover { border-color: transparent; }
-.fiche-appli .category-quicknav--verre button.active { touch-action: none; }
+/* Plus de `touch-action: none` sur la section allumée (2026-10-24, test d'Owen sur Punjab Tandoori : « après avoir touché une
+   section, je n'arrive plus à faire défiler la bande de côté »). La section touchée devient l'allumée, juste sous le pouce, et le
+   glissé suivant y partait : il promenait la lentille au lieu de faire défiler la bande. Une bande qui défile de côté défile,
+   d'où que parte le doigt ; le glissé de la lentille reste à la souris (bandeSectionsVerre.js) et à la barre d'onglets. */
 .fiche-appli .category-quicknav--verre button.active, .fiche-appli .category-quicknav--verre button.quicknav-survol { background: transparent; border-color: transparent; color: #fff; font-weight: 600; }
 .fiche-appli .category-quicknav--glisse button.active:not(.quicknav-survol) { color: var(--ink); font-weight: 500; }
 .fiche-appli .category-quicknav--verre .quicknav-lentille {

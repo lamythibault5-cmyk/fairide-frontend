@@ -5,8 +5,8 @@
 // lentille. Le CSS la fait glisser d'une pastille à l'autre ; ici, ce qu'il ne sait pas faire :
 //   - APPUYER sur la cuisine choisie fait grossir la lentille (classe lt-puces--appui) ;
 //   - GLISSER la promène sous le doigt, d'une cuisine à l'autre, et au lâcher on choisit la plus proche. On ne capture
-//     le pointeur qu'après 6 px : un simple toucher reste le clic du bouton, et la bande défile toujours de côté quand on
-//     part d'une autre pastille (touch-action: pan-x sur les autres, none sur la choisie) ;
+//     le pointeur qu'après 6 px : un simple toucher reste le clic du bouton. À la souris ou au stylet seulement depuis le
+//     2026-10-24 : au doigt, la bande défile toujours de côté, même depuis la cuisine choisie (ecran-liste.css) ;
 //   - la RÉFRACTION des bords sur Chromium, avec les filtres de barreVerre.js — plus sur Android depuis le 2026-10-20
 //     (trop coûteuse sur un téléphone moyen, voir refractionPossible), où la bande garde le flou simple.
 import { vibrer } from './gestes';
@@ -29,7 +29,9 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
   };
 
   const appui = (e) => {
-    if (e.button > 0) return;
+    // Au doigt, la bande défile de côté, même depuis la cuisine choisie (2026-10-24, ecran-liste.css) : pas de lentille qui
+    // grossit au début d'un défilement. Le glissé de la lentille reste à la souris et au stylet.
+    if (e.button > 0 || e.pointerType === 'touch') return;
     const puce = e.target.closest?.('.lt-puce[data-cuisine]');
     if (!puce || !puce.classList.contains('on')) return;
     geste = { x0: e.clientX, id: e.pointerId, glisse: false, survol: null };

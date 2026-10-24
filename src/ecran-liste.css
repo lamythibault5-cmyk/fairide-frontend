@@ -139,7 +139,9 @@
   /* Sur le verre : encre et halo blanc léger, sinon les libellés disparaissent sur une photo qui passe dessous. */
   html.appli .lt-puce { color: rgba(20, 18, 31, .86); text-shadow: 0 0 8px rgba(255, 255, 255, .75); }
   html.appli .lt-puce svg { filter: drop-shadow(0 0 4px rgba(255, 255, 255, .6)); }
-  html.appli .lt-puce[data-cuisine].on, html.appli .lt-puce--survol { color: var(--iris); font-weight: 600; touch-action: none; }
+  /* Sans `touch-action: none` sur la cuisine choisie (2026-10-24, même cause que la bande des sections d'une fiche,
+     ecran-fiche.css) : la bande défile de côté d'où que parte le doigt. */
+  html.appli .lt-puce[data-cuisine].on, html.appli .lt-puce--survol { color: var(--iris); font-weight: 600; }
   html.appli .lt-puce[data-regime].on { color: #fff; text-shadow: none; }
   html.appli .lt-puce[data-regime].on svg { filter: none; }
   html.appli .lt-trait { background: rgba(20, 18, 31, .14); }
