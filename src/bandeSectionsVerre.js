@@ -4,7 +4,7 @@
 // La lentille se pose sur la section qu'on lit (CategoryQuickNav la déplace au défilement). Ici, le geste de la barre
 // d'onglets (barreVerre.js) : appuyer sur la section allumée fait grossir la lentille ; glisser la promène d'une section à
 // l'autre, et au lâcher on saute à la plus proche. Un simple toucher reste un clic normal. Le glissé ne part QUE de la
-// section allumée (touch-action: none sur elle seule, ecran-fiche.css) : ailleurs, le doigt fait défiler la bande de côté.
+// section allumée, et à la souris ou au stylet seulement depuis le 2026-10-24 : au doigt, la bande défile toujours de côté.
 import { vibrer } from './gestes';
 
 const SEUIL_GLISSE = 6;
@@ -26,7 +26,9 @@ export function brancherBandeSections(barre, rangee, lentille) {
   };
 
   const appui = (e) => {
-    if (e.button > 0) return;
+    // Au doigt, la bande défile de côté, même depuis la section allumée (2026-10-24, ecran-fiche.css) : pas de lentille qui
+    // grossit au début d'un défilement. Le glissé de la lentille reste à la souris et au stylet.
+    if (e.button > 0 || e.pointerType === 'touch') return;
     const b = e.target.closest?.('button');
     if (!b || !b.classList.contains('active')) return;
     geste = { x0: e.clientX, id: e.pointerId, glisse: false, survol: null };
