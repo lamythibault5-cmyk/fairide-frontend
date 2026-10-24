@@ -63,7 +63,7 @@ that follows a real tap (< 400 ms) or a gesture (`back({ geste: true })`: Androi
 changes, `state.fond` sheets and tabs (`replace`) don't. A card leading to a restaurant page (list, Recherche, Favoris, Carte) gives
 it its photo instead of sliding; a dish gives its photo to its sheet (`ouvrirAvecPhoto`). The cross of a restaurant page and the ‹ of
 the order screens go BACK when the previous history entry is that screen (`cheminPrecedent`), so the list comes back at its scroll
-position. Tabs (DashboardSidebar `ongletAppli`): `replace` + `state.restaurerDefilement` (each tab keeps its place), re-tapping the
+position. Tabs (DashboardSidebar `ongletAppli`): `replace` + `state.restaurerDefilement` (each tab keeps its place; Recherche and Mes commandes open at the top instead, founder 2026-10-24, `ONGLETS_EN_HAUT`), re-tapping the
 current tab scrolls to the top. `.page-fade` doesn't animate in the app. Modale / ConfirmDialog rise from the bottom and are pulled
 down to close (useTirerPourFermer). The page bounces at the bottom only (`html.pres-du-bas` past half the page; native bounce turned
 back on in FairideViewController). Press feedback: buttons `scale: .96` + darker, cards `.97`, rows an iris tint. Without View
