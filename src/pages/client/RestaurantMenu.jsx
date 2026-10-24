@@ -44,6 +44,7 @@ import { estNatif, experienceApp } from '../../natif';
 import FermerFicheParGlissement from '../../components/FermerFicheParGlissement';
 import { photoEnVol, entreeParPhoto, ouvrirAvecPhoto } from '../../transitionPhoto';
 import { chargerAvecCache, lireCache, poserFavoriEnCache } from '../../cacheDonnees';
+import { CHEMIN_LISTE } from '../../resumeCarte';
 import { useActionOptimiste } from '../../actionOptimiste';
 import PanierColonne from '../../components/PanierColonne';
 import { repeterTantQueLibre } from '../../defilementAuto';
@@ -141,9 +142,9 @@ export default function RestaurantMenu({ id }) {
   const [erreur, setErreur] = useState(null);
   // Incrémenté par « Réessayer » : il suffit qu'il change pour que l'effet de chargement reparte.
   const [essai, setEssai] = useState(0);
-  const [discover, setDiscover] = useState(() => tirerDecouvertes(lireCache('/restaurants'), id));
+  const [discover, setDiscover] = useState(() => tirerDecouvertes(lireCache(CHEMIN_LISTE), id));
   // Le commerce pour lequel « À découvrir » a été tiré (null : pas encore tiré, la liste n'était pas gardée).
-  const decouvertesPour = useRef(lireCache('/restaurants') ? id : null);
+  const decouvertesPour = useRef(lireCache(CHEMIN_LISTE) ? id : null);
   // Le commerce affiché en ce moment : une réponse arrivée après un changement de fiche (« À découvrir ») est ignorée.
   const ficheCourante = useRef(id);
   // Un double appui sur « Commande groupée » créait deux groupes (audit du 19/10, CROSS-48).
@@ -332,9 +333,9 @@ export default function RestaurantMenu({ id }) {
     // La capacité du jour (« complet ») change d'une commande à l'autre : toujours relue, jamais gardée.
     api(`/restaurants/${id}/capacity`).then(pourCetteFiche((c) => setComplet(!!c.full))).catch(() => {});
     // « À découvrir » est tiré une fois par fiche : une relecture identique ne rebat pas la rangée sous les yeux.
-    const tous = lireCache('/restaurants');
+    const tous = lireCache(CHEMIN_LISTE);
     if (tous && decouvertesPour.current !== id) { decouvertesPour.current = id; setDiscover(tirerDecouvertes(tous, id)); }
-    chargerAvecCache('/restaurants').then((all) => {
+    chargerAvecCache(CHEMIN_LISTE).then((all) => {
       if (all === tous && decouvertesPour.current === id) return;
       decouvertesPour.current = id;
       setDiscover(tirerDecouvertes(all, id));

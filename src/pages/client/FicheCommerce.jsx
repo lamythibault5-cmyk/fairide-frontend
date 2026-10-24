@@ -14,6 +14,7 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { chargerAvecCache, garderEnCache, lireCache } from '../../cacheDonnees';
 import { estIdentifiant, idPourSlug, retenirSlugs } from '../../adresseFiche';
+import { CHEMIN_LISTE } from '../../resumeCarte';
 import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import { experienceApp } from '../../natif';
 import RestaurantMenu, { EchecFiche } from './RestaurantMenu';
@@ -21,7 +22,7 @@ import RestaurantMenu, { EchecFiche } from './RestaurantMenu';
 function idConnu(adresse) {
   if (estIdentifiant(adresse)) return adresse;
   if (idPourSlug(adresse)) return idPourSlug(adresse);
-  retenirSlugs(lireCache('/restaurants') || []);
+  retenirSlugs(lireCache(CHEMIN_LISTE) || []);
   retenirSlugs(lireCache('/restaurants/landing') || []);
   return idPourSlug(adresse) || null;
 }

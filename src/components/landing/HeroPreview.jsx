@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
+import { CHEMIN_LISTE } from '../../resumeCarte';
 import { COMMUNES, categoryImage, restaurantTypeLabel } from '../../menuCategories';
 import { getOpenStatus } from '../../openingHours';
 import { useLanguage } from '../../context/LanguageContext';
@@ -44,7 +45,7 @@ export function CommunePicker({ variante = 'hero' }) {
 
 export function useCommercesPublics() {
   const [restaurants, setRestaurants] = useState([]);
-  useEffect(() => { api('/restaurants').then((all) => setRestaurants(Array.isArray(all) ? all : [])).catch(() => {}); }, []);
+  useEffect(() => { api(CHEMIN_LISTE).then((all) => setRestaurants(Array.isArray(all) ? all : [])).catch(() => {}); }, []);
   return restaurants;
 }
 

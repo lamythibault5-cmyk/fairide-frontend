@@ -15,6 +15,7 @@
  * resservie à une autre session. Le service worker, lui, ne met toujours rien en cache (public/sw.js). */
 import { api } from './api';
 import { estNatif } from './natif';
+import { CHEMIN_LISTE } from './resumeCarte';
 
 // Au-delà, une donnée gardée ne s'affiche plus d'avance (squelette, comme avant) : un menu ou des horaires d'il y a une
 // demi-heure, même corrigés une seconde après, seraient une fausse information le temps de la relecture.
@@ -35,9 +36,10 @@ const cle = (chemin, token) => `${token || ''}|${chemin}`;
  * compte (`/restaurants`, la même pour tout le monde, aucune donnée personnelle) est écrite dans localStorage et s'affiche
  * dès l'ouverture ; la relecture part aussitôt et remplace ce qui a changé (horaires, ouvert / fermé) une fraction de
  * seconde plus tard. Déclarée dans la politique des cookies (cookiesPolicy.technical). Gardée une semaine au plus, et
- * jamais au-delà de ~2 Mo (la réponse contient les cartes : elle grossit avec chaque commerce). Le site n'écrit rien. */
+ * jamais au-delà de ~2 Mo. Depuis le 2026-10-24 c'est la liste SANS les cartes (CHEMIN_LISTE, `?vue=liste`, resumeCarte.js),
+ * environ 2,5 Ko par commerce ; une copie complète gardée par une version précédente de l'app se relit encore (même clé, les
+ * écrans savent lire les deux formes) et est remplacée à la première relecture. Le site n'écrit rien. */
 const CLE_LISTE = 'fairide_liste_commerces';
-const CHEMIN_LISTE = '/restaurants';
 const LISTE_AGE_MAX_MS = 7 * 24 * 60 * 60 * 1000;
 const LISTE_TAILLE_MAX = 2000000;
 const listeGardable = (chemin, token) => chemin === CHEMIN_LISTE && !token && estNatif();

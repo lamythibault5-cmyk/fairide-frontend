@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../api';
+import { CHEMIN_LISTE } from '../../resumeCarte';
 import { experienceApp, demanderPosition, connexionFournisseur } from '../../natif';
 import { communeDepuisCodePostal, communeRingDistance, haversineDistanceKm } from '../../menuCategories';
 import { ecrireBienvenue, ecrireReprise, lireReprise, lireParcoursFait, ecrireParcoursFait } from '../../bienvenue';
@@ -133,7 +134,7 @@ export default function Bienvenue() {
   // La liste des commerces part dès l'écran « Pourquoi » : au chargement, elle est souvent déjà là.
   useEffect(() => {
     if (role !== 'client' || liste || !['pourquoi', 'position', 'codePostal', 'recherche', 'compte', 'inscription'].includes(ecran)) return;
-    api('/restaurants').then((r) => setListe(Array.isArray(r) ? r : [])).catch(() => { setListeEchec(true); setListe([]); });
+    api(CHEMIN_LISTE).then((r) => setListe(Array.isArray(r) ? r : [])).catch(() => { setListeEchec(true); setListe([]); });
   }, [role, ecran, liste]);
 
   // On retient où en est l'accueil, à chaque écran, pour le reprendre si l'application est fermée avant le compte

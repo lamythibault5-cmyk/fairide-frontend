@@ -259,6 +259,7 @@ async function ecrire(chemin, html) {
 
 async function commercesPublics() {
   try {
+    // La réponse COMPLÈTE, sans `?vue=liste` (resumeCarte.js) : les fiches statiques écrivent les plats de chaque carte.
     const reponse = await fetch(`${API}/restaurants`, { headers: { accept: 'application/json' } });
     if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
     const donnees = await reponse.json();
