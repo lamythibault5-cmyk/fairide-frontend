@@ -17,6 +17,9 @@
 // carte des plats, ni cases côté commerce (MentionsAlimentaires, fiche d'un plat), et ces deux rangées ne se vendent plus
 // en mise en avant (MiseEnAvant). Les données en base et les règles ci-dessous restent : repasser à true remet tout.
 // Les allergènes ne sont PAS concernés : ils restent partout (obligation d'information, règlement UE 1169/2011).
+
+import { compterPlats } from './resumeCarte';
+
 export const MENTIONS_ALIMENTAIRES = false;
 export const RANGEES_MENTIONS = ['bio', 'vegan'];
 
@@ -26,7 +29,11 @@ export const platBio = (m) => !!m.organic || /(^|[^a-zà-ÿ])bio(logique)?s?($|[
 export const platVegan = (m) => !!m.vegan || /v[eé]gan/i.test(texteDuPlat(m));
 export const platHalal = (m) => !!m.halal;
 export const platSansGluten = (m) => !!m.glutenFree;
-export const restoBio = (r) => (r.menu || []).some(platBio);
-export const restoVegan = (r) => (r.menu || []).some(platVegan);
-export const restoHalal = (r) => !!r.halalAll || (r.menu || []).some(platHalal);
-export const restoSansGluten = (r) => (r.menu || []).some(platSansGluten);
+// Un commerce de la liste n'a plus sa carte, seulement le nombre de plats de chaque mention (resumeCarte.js, 2026-10-24) : le
+// serveur les compte avec les mêmes règles (routes/restaurants.js › resumeCarte). Changer une règle ici = la changer là-bas.
+export const nbPlatsBio = (r) => compterPlats(r, 'bio', platBio);
+export const nbPlatsVegan = (r) => compterPlats(r, 'vegan', platVegan);
+export const restoBio = (r) => nbPlatsBio(r) > 0;
+export const restoVegan = (r) => nbPlatsVegan(r) > 0;
+export const restoHalal = (r) => !!r.halalAll || compterPlats(r, 'halal', platHalal) > 0;
+export const restoSansGluten = (r) => compterPlats(r, 'sansGluten', platSansGluten) > 0;

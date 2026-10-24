@@ -67,7 +67,7 @@
 .fiche-statut.est-ouvert .fiche-statut-point { background: var(--iris); }
 .fiche-statut.est-ouvert b { color: var(--iris); }
 .fiche-statut.est-ferme .fiche-statut-point { background: var(--red); }
-.fiche-statut.est-ferme b { color: var(--red); }
+.fiche-statut.est-ferme b { color: var(--red-texte); }
 .fiche-statut-detail { color: var(--ink-soft); }
 .fiche-info {
   display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px; padding: 12px 14px;

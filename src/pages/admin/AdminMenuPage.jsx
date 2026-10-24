@@ -11,6 +11,7 @@ import MenuPage from '../restaurant/MenuPage';
 import { BoutonGererCommerce } from './AdminRestaurantsPage';
 import Icone from '../../components/Icone';
 import QuestionsCommerce from '../../components/admin/QuestionsCommerce';
+import { cheminFiche } from '../../adresseFiche';
 
 // Carte d'un commerce vue par l'admin : exactement l'éditeur du restaurateur (Mes produits), branché sur
 // son restaurant — sections, plats, options, import PDF / photo / site, modèles, traduction. En tête, la
@@ -29,7 +30,7 @@ export default function AdminMenuPage() {
 
   const charger = useCallback(async () => {
     try { setRestaurant(await api(`/restaurants/${id}`, { token })); } catch (e) { setErreur(e.message); }
-  }, [id]);
+  }, [id, token]);
 
   useEffect(() => {
     // Passage direct d'un commerce à l'autre (même route, autre :id) : on vide d'abord, sinon la carte du commerce
@@ -74,7 +75,7 @@ export default function AdminMenuPage() {
       <AdminPageHeader module="restaurants" title={restaurant ? tr('adminMenu.title', { name: restaurant.name }) : tr('adminMenu.titleLoading')}
         actions={<>
           <Link to="/admin/restaurants" className="btn-outline" style={{ textDecoration: 'none' }}>{tr('adminMenu.back')}</Link>
-          <a href={`/restaurants/${id}`} target="_blank" rel="noreferrer" className="btn-outline" style={{ textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>
+          <a href={cheminFiche(restaurant || id)} target="_blank" rel="noreferrer" className="btn-outline" style={{ textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>
           <BoutonGererCommerce id={id} token={token} api={api} toast={toast} tr={tr} className={d && ouverte ? 'btn-gold' : 'btn-teal'} />
         </>} />
 

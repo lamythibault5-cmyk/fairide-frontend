@@ -44,29 +44,36 @@ export default function InterrupteurService({ restaurant, restoId, token, loadDa
    * rechargement complet de la fiche, des commandes et des livreurs). La fiche gardée par DashboardLayout reçoit tout de suite
    * l'état visé (ouvert, pause jusqu'à telle heure, stoppé jusqu'au prochain 6 h), la feuille des pauses se ferme, l'appel
    * suit ; sa réponse donne l'heure exacte de reprise, un refus remet l'état d'avant avec le message d'erreur
-   * (actionOptimiste.js). Une seule clé pour les trois gestes : c'est un seul réglage, « le service », et le dernier choix
-   * gagne. La relecture (fiche comprise, sans les livreurs) part en arrière-plan une fois les gestes finis. */
+   * (actionOptimiste.js). La relecture (fiche comprise, sans les livreurs) part en arrière-plan une fois les gestes finis.
+   *
+   * DEUX CLÉS, UNE PAR CHAMP DU SERVEUR (revue du 24/10). Une seule clé « service » couvrait la pause (paused_until) et
+   * l'ouverture (open) : comme actionOptimiste.js n'envoie que le DERNIER geste en file d'une clé, une pause (ou sa levée)
+   * suivie vite d'un « Fermer jusqu'à réouverture » n'était jamais envoyée, alors que l'écran l'avait montrée ; et un refus
+   * remettait les deux champs, défaisant au passage l'autre geste réussi. Pause et « stopper pour aujourd'hui » écrivent le
+   * même champ, valeur entière à chaque fois : même clé, le dernier gagne. Chaque clé ne garde et ne remet que son champ. */
   const agirOptimiste = useActionOptimiste();
-  function agir(champs, appel) {
+  function agir(champ, valeur, appel) {
     setChoix(false);
-    agirOptimiste('service', {
+    agirOptimiste(`service:${champ}`, {
       appliquer: () => {
-        const avant = { open: restaurant.open, pausedUntil: restaurant.pausedUntil ?? null };
-        modifierRestaurant?.((r) => (r ? { ...r, ...champs } : r));
+        const avant = champ === 'open' ? restaurant.open : (restaurant.pausedUntil ?? null);
+        modifierRestaurant?.((r) => (r ? { ...r, [champ]: valeur } : r));
         return avant;
       },
       envoyer: appel,
-      annuler: (avant) => modifierRestaurant?.((r) => (r ? { ...r, ...avant } : r)),
+      annuler: (avant) => modifierRestaurant?.((r) => (r ? { ...r, [champ]: avant } : r)),
       // Pause et « stopper pour aujourd'hui » rendent l'heure de reprise calculée par le serveur.
-      confirmer: (rep) => { if (rep && rep.pausedUntil !== undefined) modifierRestaurant?.((r) => (r ? { ...r, pausedUntil: rep.pausedUntil } : r)); },
+      confirmer: (rep) => {
+        if (champ === 'pausedUntil' && rep && rep.pausedUntil !== undefined) modifierRestaurant?.((r) => (r ? { ...r, pausedUntil: rep.pausedUntil } : r));
+      },
       rafraichir: () => loadDashboard(restoId, { annexes: false, silencieux: true })
     });
   }
-  const pause = (minutes) => agir({ pausedUntil: minutes ? Date.now() + minutes * 60000 : null },
+  const pause = (minutes) => agir('pausedUntil', minutes ? Date.now() + minutes * 60000 : null,
     () => api(`/restaurants/${restoId}/pause`, { method: 'PUT', token, body: { minutes } }));
-  const stopperJour = (closed) => agir({ pausedUntil: closed ? prochain6h() : null },
+  const stopperJour = (closed) => agir('pausedUntil', closed ? prochain6h() : null,
     () => api(`/restaurants/${restoId}/close-today`, { method: 'PUT', token, body: { closed } }));
-  const ouvrir = (open) => agir({ open }, () => api(`/restaurants/${restoId}`, { method: 'PATCH', token, body: { open } }));
+  const ouvrir = (open) => agir('open', open, () => api(`/restaurants/${restoId}`, { method: 'PATCH', token, body: { open } }));
 
   function toucher() {
     vibrer('bascule');

@@ -80,7 +80,10 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
     const ctx = ctxRef.current;
     if (sonActif && ctx && ctx.state === 'running') { try { playChime(ctx, notes, sortieRef.current || ctx.destination); } catch { /* contexte fermé */ } }
     vibrer(motifVibration);
-    notifier(titre, { body: corps, icon: '/icons/icon.svg', tag });
+    // `data.url` : la page que le service worker ouvre au toucher (public/sw.js). Sans elle, il ouvrait son défaut, la
+    // page des commandes d'un COMMERCE : le livreur, sans rôle commerce, atterrissait sur Mon compte et pouvait rater une
+    // course prise au premier arrivé (revue du 24/10). Les notifications envoyées par le serveur portent déjà `/driver`.
+    notifier(titre, { body: corps, icon: '/icons/icon.svg', tag, data: { url: '/driver' } });
   }, [sonActif]);
 
   // 1. Nouvelles courses disponibles.

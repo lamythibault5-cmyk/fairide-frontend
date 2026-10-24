@@ -8,7 +8,7 @@ import { CATEGORIES, categoryEmoji, categoryLabel, categoryKind, resolveItemImag
 import { useLanguage } from '../context/LanguageContext';
 import { OptionGroupForm } from './OptionGroupManager';
 import GalleryPickerModal from './GalleryPickerModal';
-import { galleryForSection } from '../menuCategories';
+import { galleryForSection } from '../galleryImages';
 import { euros } from '../prixPlat';
 import Icone from './Icone';
 

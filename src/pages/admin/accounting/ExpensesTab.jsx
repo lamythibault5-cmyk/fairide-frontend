@@ -6,12 +6,16 @@ import RecordDrawer from '../../../components/admin/RecordDrawer';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import { useLanguage } from '../../../context/LanguageContext';
 import { money, fmtDate, downloadCsv } from '../adminUtils';
-import { useApiData, LoadState, ErrorState, Pagination, todayIso, toNumber, sortAccounts, StatusPill } from './common';
+import { useApiData, LoadState, ErrorState, Pagination, todayIso, toNumber, sortAccounts, StatusPill, devise } from './common';
 import useEtatPage from '../../../hooks/useEtatPage';
+import ouvrirDocument from '../../../ouvrirDocument';
+import BoiteFactures from './BoiteFactures';
 
 // Achats & frais : les dépenses de Fairide (abonnements logiciels, frais bancaires, matériel…), du
 // brouillon à la comptabilisation puis au paiement. Comptabiliser génère l'écriture (charge + TVA
 // déductible / fournisseur), marquer payée génère le règlement (fournisseur / banque).
+// Au-dessus, la boîte à factures (BoiteFactures.jsx, 2026-10-23) : les pièces déposées, reçues par e-mail ou sur Peppol
+// deviennent des brouillons lus par Claude ; un brouillon « à vérifier » porte ce que la lecture demande de regarder.
 
 const PAGE_SIZE = 50;
 export const EXPENSE_STATUSES = ['draft', 'posted', 'paid'];
@@ -78,7 +82,12 @@ export default function ExpensesTab({ token, toast, periodKey, searchParams, go 
     { key: 'amountExclVat', label: tr('adminInvoices.colHt'), get: (r) => money(r.amountExclVat), sortValue: (r) => r.amountExclVat, align: 'right', sum: true },
     { key: 'vatAmount', label: tr('adminCommon.vat'), get: (r) => <span className="small">{money(r.vatAmount)} ({Number(r.vatRate || 0)}%)</span>, sortValue: (r) => r.vatAmount, align: 'right', sum: true },
     { key: 'amountInclVat', label: tr('adminInvoices.colTtc'), get: (r) => <b>{money(r.amountInclVat)}</b>, sortValue: (r) => r.amountInclVat, align: 'right', sum: true },
-    { key: 'status', label: tr('adminCommon.status'), get: (r) => <StatusPill status={r.status} labels={statusLabels} />, sortValue: (r) => r.status },
+    { key: 'status', label: tr('adminCommon.status'), get: (r) => (
+      <span className="fin-statut-depense">
+        <StatusPill status={r.status} labels={statusLabels} />
+        {r.status === 'draft' && r.checkPoints?.length > 0 && <span className="pill fin-status a-verifier" title={r.checkPoints.join(' / ')}>{tr('adminAccounting.toCheck')}</span>}
+      </span>
+    ), sortValue: (r) => r.status },
     { key: 'actions', label: '', align: 'right', get: (r) => (
       <span className="fin-row-actions">
         {r.status === 'draft' && <button type="button" className="btn-outline" onClick={(e) => { e.stopPropagation(); setConfirm({ kind: 'post', expense: r }); }}>{tr('adminAccounting.postExpense')}</button>}
@@ -90,6 +99,7 @@ export default function ExpensesTab({ token, toast, periodKey, searchParams, go 
 
   return (
     <>
+      <BoiteFactures token={token} toast={toast} onChange={state.reload} />
       <div className="fin-toolbar">
         <input aria-label={tr('adminAccounting.phSearchExpense')} type="search" placeholder={tr('adminAccounting.phSearchExpense')} value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="role-pick">
@@ -182,6 +192,18 @@ function ExpenseForm({ expense, token, toast, onClose, onSaved }) {
       footer={<><button type="button" className="btn-teal" disabled={!canSave} onClick={save}>{busy ? '...' : tr('adminCommon.save')}</button><button type="button" className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button></>}>
       {accounts.error && !accounts.data && <ErrorState error={accounts.error} onRetry={accounts.reload} />}
       {locked && <p className="small" style={{ margin: '0 0 10px', color: 'var(--gold-deep)' }}>{tr('adminAccounting.expenseLocked')}</p>}
+      {expense.pieceId && (
+        <div className="fin-piece-origine">
+          <span className="small">{[expense.invoiceNumber && tr('adminAccounting.invoiceNumberShort', { n: expense.invoiceNumber }), expense.supplierVat, expense.dueDate && tr('adminAccounting.dueDateOn', { date: fmtDate(expense.dueDate) }), expense.originalCurrency && devise(expense.originalAmount, expense.originalCurrency)].filter(Boolean).join(' · ')}</span>
+          <button type="button" className="btn-outline btn-sm" onClick={() => ouvrirDocument({ lien: `/admin/accounting/pieces/${expense.pieceId}/file`, token, toast })}>{tr('adminAccounting.inboxOpen')}</button>
+        </div>
+      )}
+      {!locked && expense.checkPoints?.length > 0 && (
+        <div className="fin-points-a-verifier" role="note">
+          <b className="small">{tr('adminAccounting.checkPointsTitle')}</b>
+          <ul className="small">{expense.checkPoints.map((c) => <li key={c}>{c}</li>)}</ul>
+        </div>
+      )}
       <div className="fin-form-grid">
         <div className="field"><label htmlFor={idsA11y + '-date'}>{tr('adminCommon.date')}</label><input id={idsA11y + '-date'} type="date" value={f.expenseDate} onChange={set('expenseDate')} disabled={locked} /></div>
         <div className="field"><label htmlFor={idsA11y + '-supplier'}>{tr('adminAccounting.supplier')}</label><input id={idsA11y + '-supplier'} value={f.supplier} onChange={set('supplier')} placeholder={tr('adminAccounting.phSupplier')} disabled={locked} /></div>
@@ -206,7 +228,7 @@ function ExpenseForm({ expense, token, toast, onClose, onSaved }) {
         <div className="field"><label htmlFor={idsA11y + '-paymentmethod'}>{tr('adminAccounting.paymentMethod')}</label>
           <select id={idsA11y + '-paymentmethod'} value={f.paymentMethod} onChange={set('paymentMethod')} disabled={locked}>{PAYMENT_METHODS.map((p) => <option key={p} value={p}>{pays[p]}</option>)}</select>
         </div>
-        <div className="field"><label htmlFor={idsA11y + '-attachment'}>{tr('adminAccounting.attachment')}</label><input id={idsA11y + '-attachment'} value={f.attachmentUrl} onChange={set('attachmentUrl')} placeholder="https://" /></div>
+        {!expense.pieceId && <div className="field"><label htmlFor={idsA11y + '-attachment'}>{tr('adminAccounting.attachment')}</label><input id={idsA11y + '-attachment'} value={f.attachmentUrl} onChange={set('attachmentUrl')} placeholder="https://" /></div>}
         <div className="field wide"><label htmlFor={idsA11y + '-notes'}>{tr('adminCommon.notes')}</label><textarea id={idsA11y + '-notes'} rows={2} value={f.notes} onChange={set('notes')} style={{ width: '100%' }} /></div>
       </div>
       <div className="fin-totals">

@@ -57,10 +57,27 @@ function handleResponse(res, data, hadToken, logoutOn401) {
   throw error;
 }
 
+const DELAI_LECTURE_MS = 20000;
+const DELAI_ECRITURE_MS = 45000;
+// Envoi de fichiers (photos de plats, carte en PDF, pièces du dossier livreur) : quelques mégaoctets sur un réseau mobile
+// lent peuvent légitimement prendre plus d'une minute. Le délai ne sert qu'à ne pas attendre une connexion morte.
+const DELAI_ENVOI_FICHIER_MS = 180000;
+
+// Échec de fetch : une lecture abandonnée (ou un réseau coupé) dit « serveur injoignable », comme avant ; une ÉCRITURE
+// abandonnée par le délai dit qu'elle est peut-être passée, parce qu'on ne sait pas si le serveur l'a reçue.
+function erreurReseau(controle, lecture) {
+  if (!lecture && controle?.signal.aborted) {
+    const e = new ApiError(traduire('common.writeTimeout'), 0);
+    e.code = 'WRITE_TIMEOUT';
+    return e;
+  }
+  return new ApiError(traduire('common.serverUnreachable'), 0);
+}
+
 // `withHeaders: true` renvoie { data, headers } au lieu du seul corps : les listes admin paginées
 // annoncent leur total dans l'en-tête X-Total-Count tout en gardant un tableau en réponse (voir
 // GET /admin/restaurants|drivers|clients côté serveur). Sans l'option, comportement inchangé.
-export async function api(path, { method = 'GET', body, token, logoutOn401 = true, withHeaders = false } = {}) {
+export async function api(path, { method = 'GET', body, token, logoutOn401 = true, withHeaders = false, delai: delaiDemande } = {}) {
   // Langue de l'interface : le backend en fait la langue des e-mails déclenchés par cette requête
   // (code de vérification, bienvenue...) — voir userLang.js côté serveur.
   const headers = { 'Content-Type': 'application/json', 'X-Fairide-Lang': getLanguage() };
@@ -69,16 +86,24 @@ export async function api(path, { method = 'GET', body, token, logoutOn401 = tru
   if (estNatif()) headers['X-Fairide-Appli'] = '1';
   if (token) headers.Authorization = 'Bearer ' + token;
   /* UNE LECTURE ABANDONNE APRÈS 20 SECONDES (audit du 18/10/2026). Sans limite, un serveur qui ne répond pas laissait un
-   * chargement tourner pour toujours. Seulement les lectures (GET) : une commande ou un paiement lent mais abouti ne doit
-   * jamais être annoncé comme raté — l'écriture garde son attente. L'écran affiche alors « Impossible de charger ». */
+   * chargement tourner pour toujours. L'écran affiche alors « Impossible de charger ».
+   * UNE ÉCRITURE APRÈS 45 SECONDES (audit du 24/10). Elle gardait son attente sans fin, pour qu'une commande lente mais
+   * aboutie ne soit jamais annoncée comme ratée. Mais sur un réseau mobile instable, une connexion bloquée laisse fetch
+   * pendu plusieurs minutes : « Commander et payer » restait sur « ... », sans rien d'autre à faire que recharger. 45 s, plus du
+   * double du délai des lectures, laisse sa chance à une écriture lente ; et le message ne dit pas « échec » : il dit que la
+   * demande est peut-être passée et qu'il faut vérifier (common.writeTimeout). Un appel qu'on sait long (import d'une carte,
+   * automatisation lancée à la main) passe `delai` en millisecondes. Recommander est sans risque : la commande porte
+   * `clientRequestId` (CartContext), et le serveur rend la même commande tant qu'elle n'est pas payée, puis refuse une
+   * seconde fois si elle l'est (ORDER_ALREADY_PLACED, commandeExistante dans routes/orders.js du backend). */
   const lecture = method === 'GET';
-  const controle = lecture && typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const minuteur = controle ? setTimeout(() => controle.abort(), 20000) : null;
+  const delai = delaiDemande || (lecture ? DELAI_LECTURE_MS : DELAI_ECRITURE_MS);
+  const controle = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const minuteur = controle ? setTimeout(() => controle.abort(), delai) : null;
   let res;
   try {
     res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal: controle?.signal });
   } catch {
-    throw new ApiError(traduire('common.serverUnreachable'), 0);
+    throw erreurReseau(controle, lecture);
   } finally {
     if (minuteur) clearTimeout(minuteur);
   }
@@ -168,11 +193,16 @@ export async function apiUpload(path, { file, files, token, fieldName = 'image',
   if (fields) Object.entries(fields).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== '') formData.append(k, v); });
   const headers = {};
   if (token) headers.Authorization = 'Bearer ' + token;
+  // Même garde que les écritures d'api(), avec un délai à la mesure d'un fichier (DELAI_ENVOI_FICHIER_MS).
+  const controle = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const minuteur = controle ? setTimeout(() => controle.abort(), DELAI_ENVOI_FICHIER_MS) : null;
   let res;
   try {
-    res = await fetch(API_BASE + path, { method: 'POST', headers, body: formData });
+    res = await fetch(API_BASE + path, { method: 'POST', headers, body: formData, signal: controle?.signal });
   } catch {
-    throw new ApiError(traduire('common.serverUnreachable'), 0);
+    throw erreurReseau(controle, false);
+  } finally {
+    if (minuteur) clearTimeout(minuteur);
   }
   const data = await res.json().catch(() => ({}));
   return handleResponse(res, data, !!token, true);

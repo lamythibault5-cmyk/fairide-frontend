@@ -107,7 +107,7 @@ function Segments({ label, valeur, options, onChoix }) {
 
 export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQuitter, onConnexion }) {
   const { t } = useLanguage();
-  const { register, verifyEmail, resendCode, changePendingPhone, loginWithGoogle, loginWithApple } = useAuth();
+  const { register, login, verifyEmail, resendCode, changePendingPhone, loginWithGoogle, loginWithApple } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const fond = useRef(null);
@@ -489,7 +489,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       toast(t(canal === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
     } catch (err) {
       const MESSAGES = { PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid', PHONE_DOUBLE_PREFIX: 'auth.errPhoneDoublePrefix' };
-      if (err.field === 'phone') setErreurs({ phone: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
+      if (err.code === 'ALREADY_VERIFIED') await compteDejaConfirme(err);
+      else if (err.field === 'phone') setErreurs({ phone: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
       else if (err.code === 'BAD_CREDENTIALS' && !preuve) setErreurs({ password: err.message });
       else if (preuve && /google|apple|jeton|token/i.test(err.message || '')) await rafraichirJetonFed();
       else toast(err.message, 'erreur');
@@ -498,12 +499,34 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     }
   }
 
+  /* COMPTE DÉJÀ CONFIRMÉ AILLEURS (revue du 24/10). Le code a été tapé sur le site, sur un autre téléphone, ou un premier
+   * envoi est passé sans réponse (réseau coupé) : le serveur répond ALREADY_VERIFIED à chaque code, et l'écran repris
+   * (lireCodeEnAttente) restait bloqué jusqu'à 24 h. C'est une réussite : on ouvre la session avec ce qu'on a encore
+   * en mémoire (mot de passe tapé, jeton Apple / Google), sinon on oublie l'attente et on passe à la connexion, adresse
+   * remplie, avec le message du serveur (« déjà confirmé, connecte-toi »). */
+  async function compteDejaConfirme(err) {
+    const adresse = enAttente?.email || email.trim();
+    try {
+      let data = null;
+      if (fed && jetonFed?.jeton) {
+        data = jetonFed.fournisseur === 'apple'
+          ? await loginWithApple(jetonFed.jeton, role, {})
+          : await loginWithGoogle(jetonFed.jeton, role, {});
+      } else if (password && adresse) data = await login(adresse, password);
+      if (data?.user) { setEnAttente(null); await arriver(data.user); return; }
+    } catch { /* second facteur, jeton expiré, mot de passe changé : l'écran de connexion sait faire */ }
+    setEnAttente(null); setCode('');
+    toast(err.message);
+    navigate('/login', { replace: true, state: { email: adresse, ...(retourApres ? { from: retourApres } : {}) } });
+  }
+
   async function confirmerCode() {
     setAttente(true);
     try {
       const data = await verifyEmail(enAttente.email, code.trim());
       await arriver(data.user);
     } catch (err) {
+      if (err.code === 'ALREADY_VERIFIED') { await compteDejaConfirme(err); setAttente(false); return; }
       setErreurs({ code: err.message });
       setAttente(false);
     }

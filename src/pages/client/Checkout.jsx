@@ -36,6 +36,7 @@ import CheckoutConformite from '../../components/conformite/CheckoutConformite';
 import { manqueConformite } from '../../conformite';
 import { defilement, vibrer } from '../../gestes';
 import { groupeACommander } from '../../commandeGroupee';
+import { cheminFiche } from '../../adresseFiche';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
@@ -192,7 +193,7 @@ export default function Checkout() {
     // Commerce sans livraison ni à emporter (commande en ligne fermée) : retour à sa fiche, le panier est conservé.
     if (!restaurant.offersDelivery && !restaurant.offersPickup) {
       toast(t('checkout.toastNoOnlineOrder'), 'erreur');
-      navigate(`/restaurants/${restaurantId}`);
+      navigate(cheminFiche(restaurant));
       return;
     }
     // Livraison pas encore ouverte (avant le GO) : l'à emporter est proposé d'abord.

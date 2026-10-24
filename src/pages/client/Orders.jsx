@@ -40,6 +40,7 @@ import { euros } from '../../prixPlat';
 import { imgProps } from '../../images';
 import { BandeauCommande, FeuilleCommande } from '../../components/EcranCommande';
 import '../../ecran-liste.css';
+import { cheminFiche } from '../../adresseFiche';
 
 // La photo de la commande (Cloudinary) : une vignette carrée légère, ou la photo entière ajustée à l'écran.
 function vignettePhoto(url, taille, carre = true) {
@@ -63,7 +64,8 @@ function LogoCommerce({ order }) {
 }
 function NomCommerce({ order }) {
   if (!order.restaurantId || order.restaurantExists === false) return order.restaurantName;
-  return <Link to={`/restaurants/${order.restaurantId}`} className="lien-commerce">{order.restaurantName}</Link>;
+  // Adresse lisible dès que le serveur envoie `restaurantSlug` avec la commande ; l'identifiant en attendant (revue du 24/10).
+  return <Link to={cheminFiche({ id: order.restaurantId, slug: order.restaurantSlug })} className="lien-commerce">{order.restaurantName}</Link>;
 }
 
 /* LE POURBOIRE APRÈS LA LIVRAISON. Il vivait dans le formulaire d'avis (étoiles + commentaire + pourboire) ; les avis
@@ -314,7 +316,7 @@ export default function Orders() {
       const updated = await api(`/orders/${o.id}/cancel`, { method: 'PATCH', token });
       setOrders((prev) => prev.map((x) => (x.id === o.id ? updated : x)));
       if (cart.restoreStashed(o.id)) navigate('/panier');
-      else navigate(`/restaurants/${o.restaurantId}`);
+      else navigate(cheminFiche({ id: o.restaurantId, slug: o.restaurantSlug }));
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {

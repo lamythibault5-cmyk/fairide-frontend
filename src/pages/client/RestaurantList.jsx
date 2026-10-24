@@ -8,7 +8,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
-import { MENTIONS_ALIMENTAIRES, platBio, platVegan, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
+import { MENTIONS_ALIMENTAIRES, nbPlatsBio, nbPlatsVegan, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
+import { CHEMIN_LISTE, nbPlatsHealthy, promoDUnPlat } from '../../resumeCarte';
 // Chargée à la demande : la carte tire Leaflet (~150 Ko) avec elle, et cette page fait partie des
 // rares gardées en import statique pour le référencement. Sans ce découpage, tout visiteur d'une fiche
 // de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
@@ -84,7 +85,7 @@ function matchCommune(addressCity) {
 // plat du menu — juste pour donner un aperçu concret de l'offre directement sur la carte du commerce.
 function offerLabelFor(r, t) {
   if (r.activeCartPromo) return libellePromo(r.activeCartPromo, t);
-  return libellePromo((r.menu || []).find((i) => i.activePromo)?.activePromo, t);
+  return libellePromo(promoDUnPlat(r), t);
 }
 
 // Livraison réellement possible ici et maintenant : ouverte (GO), dans la zone, et un livreur libre dans le pool Fairide
@@ -237,7 +238,8 @@ function ALaUne({ list, inscritLe, t }) {
   const maintenant = Date.now();
   return (
     <section className="liste-section une-section">
-      <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="eclair" taille={18} />{t('restaurantList.sectionFeatured')}</h3>
+      {/* h2 et non plus h3 (audit du 24/10, Lighthouse « heading-order ») : sous le h1 de la page, le titre d'une rangée sautait un niveau, et les noms des commerces (h3) étaient au même rang que leur rangée. Même classe et même style en ligne : rien ne bouge à l'écran. */}
+      <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="eclair" taille={18} />{t('restaurantList.sectionFeatured')}</h2>
       <div className="une-rail" ref={rail} onScroll={surDefilement}>
         {list.map((r) => {
           // Même état que la fiche : pause et « fermé pour aujourd'hui » compris (audit du 19/10, discovery-04).
@@ -280,7 +282,7 @@ function ALaUne({ list, inscritLe, t }) {
 // (maquettes/site-ordinateur/site-ordinateur.html, section « Liste »). Mêmes commerces, même ordre ; seule la disposition change.
 function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, autoplay = false, cle, grille = false }) {
   if (list.length === 0) return null;
-  const titre = <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}{cle && <EmplacementSponsor cle={cle} />}</h3>;
+  const titre = <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}{cle && <EmplacementSponsor cle={cle} />}</h2>;
   if (grille) {
     return (
       <section className="liste-section">
@@ -351,7 +353,7 @@ export default function RestaurantList() {
   /* AU RETOUR SUR LA LISTE, ELLE EST DÉJÀ LÀ (2026-10-20, test de l'app Android) : la dernière liste lue s'affiche dès la
      première image, sans squelette, et se relit en arrière-plan (cacheDonnees.js). C'est aussi ce qui permet à la photo
      d'une fiche fermée par sa croix de retrouver sa carte (transitionPhoto.js) au lieu de tomber sur des cartes grises. */
-  const [restaurants, setRestaurants] = useState(() => lireCache('/restaurants') || []);
+  const [restaurants, setRestaurants] = useState(() => lireCache(CHEMIN_LISTE) || []);
   /* Apres la declaration de `restaurants`, jamais avant : lu plus haut, le tableau serait dans
      sa zone morte temporelle et la page planterait au montage. */
   // Mémorisé sur la liste : refait quand la liste change, pas à chaque rendu (useJsonLd.js).
@@ -359,7 +361,7 @@ export default function RestaurantList() {
   useJsonLd(ldListe, 'ld-list');
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(token ? lireCache('/restaurants/favorites/ids', token) || [] : []));
   const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(() => new Set(token ? (lireCache('/orders/mine', token) || []).map((o) => o.restaurantId) : []));
-  const [loading, setLoading] = useState(() => !lireCache('/restaurants'));
+  const [loading, setLoading] = useState(() => !lireCache(CHEMIN_LISTE));
   // La liste n'a pas pu être lue (réseau, serveur) : « Impossible de charger » et Réessayer, pas « Aucun commerce ».
   const [echecListe, setEchecListe] = useState(false);
   // `silencieux` : tirer pour actualiser ne remet pas les cartes grises ; « Réessayer », si. `forcer` : relire même une
@@ -367,7 +369,7 @@ export default function RestaurantList() {
   const chargerListe = useCallback(({ silencieux = false, forcer = false } = {}) => {
     setEchecListe(false); if (!silencieux) setLoading(true);
     // Rend true / false : tirer pour actualiser le dit quand la lecture échoue alors que des cartes sont déjà là (discovery-32).
-    return chargerAvecCache('/restaurants', { forcer }).then((l) => { setRestaurants(l); setEchecListe(false); return true; }).catch(() => { setEchecListe(true); return false; }).finally(() => setLoading(false));
+    return chargerAvecCache(CHEMIN_LISTE, { forcer }).then((l) => { setRestaurants(l); setEchecListe(false); return true; }).catch(() => { setEchecListe(true); return false; }).finally(() => setLoading(false));
   }, []);
   const [search, setSearch] = useState(filtresInitiaux.search || '');
   const [commune, setCommune] = useState(filtresInitiaux.commune || '');
@@ -651,15 +653,15 @@ export default function RestaurantList() {
   // Bio et Vegan : la case cochée par le restaurateur (menu_items.organic / .vegan) fait foi ; à défaut,
   // le nom ou la description du plat suffit (« Burger vegan », « Vin bio ») pour que les rangées vivent
   // avant que toutes les cartes soient annotées. Un commerce peut apparaître dans plusieurs rangées.
-  const parMention = (test) => nonGrocery
-    .map((r) => ({ r, n: (r.menu || []).filter(test).length }))
+  const parMention = (compte) => nonGrocery
+    .map((r) => ({ r, n: compte(r) }))
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
     .map(({ r }) => r);
-  const bioList = epinglerOuMelanger(parMention(platBio), placements, 'bio');
-  const veganList = epinglerOuMelanger(parMention(platVegan), placements, 'vegan');
+  const bioList = epinglerOuMelanger(parMention(nbPlatsBio), placements, 'bio');
+  const veganList = epinglerOuMelanger(parMention(nbPlatsVegan), placements, 'vegan');
   const healthyList = epinglerOuMelanger(nonGrocery
-    .map((r) => ({ r, n: (r.menu || []).filter((m) => m.healthy).length }))
+    .map((r) => ({ r, n: nbPlatsHealthy(r) }))
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
     .map(({ r }) => r), placements, 'healthy');
@@ -873,7 +875,7 @@ export default function RestaurantList() {
           {aLaUne.length > 0 && <ALaUne list={aLaUne} inscritLe={inscritLe} t={t} />}
           {inscrits.length > 0 && (
             <div className="liste-section">
-              <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><span><AvecMarque>{t('restaurantList.sectionRegistered')}</AvecMarque></span></h3>
+              <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><span><AvecMarque>{t('restaurantList.sectionRegistered')}</AvecMarque></span></h2>
               <div className={grand ? 'rest-grid sl-grille' : 'rest-grid rest-grid-scroll'}>
                 {inscrits.map((x) => {
                   // Publié : la carte complète de la liste (horaires, offres, favori) ; sinon, une carte « bientôt ».

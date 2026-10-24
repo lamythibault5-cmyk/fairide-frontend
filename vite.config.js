@@ -38,5 +38,9 @@ survolALaSouris.postcss = true;
 export default defineConfig({
   plugins: [react()],
   css: { postcss: { plugins: [survolALaSouris()] } },
+  /* LE MANIFESTE DE CONSTRUCTION (audit du 24/10) : dist/.vite/manifest.json dit quel fichier porte quel module. Le pré-rendu
+     (scripts/prerender.mjs) y lit le nom du morceau nl / en pour l'annoncer dans les pages /nl et /en, puis le supprime : il
+     ne part ni sur Vercel ni dans l'app. */
+  build: { manifest: true },
   define: { __BUILD_ID__: JSON.stringify(buildId) }
 })

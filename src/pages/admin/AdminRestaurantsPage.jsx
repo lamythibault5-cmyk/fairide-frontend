@@ -27,6 +27,7 @@ import { REFUND_RESPONSIBILITY_LABELS, SUBSCRIPTION_STATUS_LABELS, DELIVERY_MODE
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import ouvrirDocument from '../../ouvrirDocument';
+import { cheminFiche } from '../../adresseFiche';
 import Icone from '../../components/Icone';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
@@ -853,7 +854,7 @@ function RestaurantDetailModal({ selected, detail, orders, pret, onClose, onSusp
       title={selected.name}
       subtitle={detail ? `${detail.commune}${detail.neighborhood ? ` (${detail.neighborhood})` : ''} · ${detail.cuisine}` : ''}
       badge={biz ? <span className="pill" style={{ color: biz.color }}>{biz.label}</span> : null}
-      actions={<a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
+      actions={<a href={cheminFiche(selected)} target="_blank" rel="noreferrer" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
       tabs={[
         { key: 'apercu', label: tr('adminCommon.tabOverview') },
         { key: 'commandes', label: tr('adminCommon.tabOrders'), count: orders ? orders.total : null },

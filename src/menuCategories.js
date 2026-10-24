@@ -1,5 +1,3 @@
-import { galleryForCuisine } from './galleryImages';
-
 export const CATEGORIES = [
   { value: 'entree', label: 'Entrées', image: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=600&q=80' },
   { value: 'plat', label: 'Plats', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80' },
@@ -36,7 +34,7 @@ export function categoryLabel(value, t) {
 // defaultItemImageOrNull() plus bas qui n'autorise aucune approximation par mot-clé sur un plat donné.
 const CATEGORY_HINT_DESSERT = /dessert|sucr|glace|pâtisserie|patisserie|gâteau|gateau/iu;
 const CATEGORY_HINT_DRINK = /boisson|breuvage|soft|vin\b|vins\b|bière|biere|cocktail|café|the\b|thé|jus\b|eau\b|cave/iu;
-const CATEGORY_HINT_ENTREE = /entrée|entree|apéritif|aperitif|salade|starter|mise en bouche/iu;
+export const CATEGORY_HINT_ENTREE = /entrée|entree|apéritif|aperitif|salade|starter|mise en bouche/iu;
 
 export function categoryImage(value) {
   const known = CATEGORIES.find((c) => c.value === value)?.image;
@@ -3930,30 +3928,7 @@ export function suggestItemImages(item, max = 6) {
   return [...new Set(urls)].slice(0, max);
 }
 
-// Galerie de photos proposée pour UNE section d'UN type de commerce (entrées, plats, desserts,
-// boissons — ou une section personnalisée ramenée à l'une des quatre). D'abord les photos des plats de
-// cette section dans le modèle officiel du type — ce sont exactement les plats que le restaurateur va
-// nommer — puis, pour les desserts et boissons, les classiques Fairide communs à tous les types, et
-// pour les entrées et plats la galerie libre du type (galleryImages.js). Alimente le sélecteur de photos
-// (GalleryPickerModal, prop `suggestions`) quand le restaurateur illustre une section ou un plat.
-export function galleryForSection(cuisine, sectionName, max = 30) {
-  const v = (sectionName || '').toLowerCase();
-  const kind = categoryKind(sectionName) || (sectionName === 'entree' || CATEGORY_HINT_ENTREE.test(v) ? 'entree' : 'plat');
-  const urls = [];
-  const ajouter = (u) => { if (u && !urls.includes(u)) urls.push(u); };
-  fullTemplateItems(cuisine).forEach((it) => { if (it.category === kind) ajouter(defaultItemImageOrNull(it)); });
-  if (kind === 'dessert' || kind === 'boisson') {
-    // Un tiramisu est un tiramisu, une limonade une limonade : les desserts et boissons des autres types
-    // de commerce valent aussi pour celui-ci — après les classiques Fairide.
-    (kind === 'dessert' ? CLASSIC_DESSERTS : CLASSIC_DRINKS).forEach((d) => ajouter(defaultItemImageOrNull(d)));
-    RESTAURANT_TYPES.forEach((t) => {
-      if (t.value === cuisine || urls.length >= max) return;
-      fullTemplateItems(t.value).forEach((it) => { if (it.category === kind) ajouter(defaultItemImageOrNull(it)); });
-    });
-  }
-  if (kind === 'entree' || kind === 'plat' || urls.length === 0) galleryForCuisine(cuisine).forEach(ajouter);
-  return urls.slice(0, max);
-}
+// galleryForSection() vit dans galleryImages.js depuis l'audit du 24/10 : voir l'en-tête de ce fichier-là.
 
 // ---------------------------------------------------------------------------------------------------
 // Images à l'import d'une carte (fondateur, 2026-09-19) : « une image par plat quand on est sûr, sinon

@@ -6,13 +6,15 @@ import { useToast } from '../context/ToastContext';
 import { allerAuPaiement } from '../natif';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { paiementsOuverts, dateOuverturePaiements } from '../launch';
+import { euros } from '../prixPlat';
 
 // Sous-section « Paiement » de Mon compte (livreur) : comment il est payé (sa part de la course, 90 % de sa grille,
 // et les pourboires en entier), le relevé mensuel des ventes encaissées pour son compte (plus d'autofacturation, 14/10/2026), ce qu'est
 // Stripe, l'activation des paiements (fermée jusqu'à début octobre 2026) et le reçu de chaque course
 // livrée. Même promesse que côté restaurateur : Fairide ne collecte aucune donnée bancaire.
 
-const euro = (n) => `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
+// Montants au format de la langue (prixPlat.euros) : la copie locale mettait une virgule même en anglais (audit du 24/10).
+const euro = (n) => euros(Number(n || 0));
 
 export default function PaiementLivreur({ user, deliveries }) {
   const { t } = useLanguage();

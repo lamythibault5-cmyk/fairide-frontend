@@ -8,7 +8,7 @@ import PhoneInput from '../../components/PhoneInput';
 import BoutonsConnexionNative from '../../components/BoutonsConnexionNative';
 import { estNatif, connexionFournisseur } from '../../natif';
 import { attendrePage, espaceApresConnexion } from '../../routePrefetch';
-import { lireBienvenue } from '../../bienvenue';
+import { lireBienvenue, lireCodeEnAttente, ecrireCodeEnAttente } from '../../bienvenue';
 import { Haut } from './EcransBienvenue';
 import { Champ } from './InscriptionAppli';
 import { CHAMP_CODE_SECOURS } from '../../validation';
@@ -49,7 +49,8 @@ export default function ConnexionAppli() {
   const [canalCode, setCanalCode] = useState(attenteCode?.canal || 'email');
   const [telMasque, setTelMasque] = useState(attenteCode?.telephone || '');
   const [recule, setRecule] = useState(false);
-  const [email, setEmail] = useState(attenteCode?.email || '');
+  // `state.email` : l'adresse d'une inscription confirmée ailleurs (InscriptionAppli.jsx, compteDejaConfirme).
+  const [email, setEmail] = useState(attenteCode?.email || location.state?.email || '');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [erreurs, setErreurs] = useState({});
@@ -99,9 +100,32 @@ export default function ConnexionAppli() {
     navigate(from, { replace: true });
   }
 
+  /* COMPTE DÉJÀ CONFIRMÉ (revue du 24/10). Le code a déjà servi ailleurs (site, autre téléphone, réponse perdue) : le
+   * serveur répond ALREADY_VERIFIED à chaque code et l'écran restait bloqué. C'est une réussite : on ouvre la session avec
+   * le mot de passe déjà tapé ou le jeton Apple / Google gardé, sinon retour à l'écran de connexion, adresse remplie, avec
+   * le message du serveur. L'inscription en attente gardée par l'accueil (bienvenue.js) est oubliée. */
+  async function dejaConfirme(err) {
+    if (lireCodeEnAttente()?.email === email.trim()) ecrireCodeEnAttente(null);
+    try {
+      let data = null;
+      if (preuve?.jeton) {
+        data = preuve.fournisseur === 'apple' ? await loginWithApple(preuve.jeton, 'client', {}) : await loginWithGoogle(preuve.jeton, 'client', {});
+      } else if (password) data = await login(email.trim(), password);
+      if (data?.user) { await arriver(data.user); return; }
+    } catch (e) {
+      // Second facteur : son écran, comme une connexion ordinaire.
+      if (e.code === 'TOTP_REQUIRED') { if (preuve?.jeton) setFed(preuve); setPreuve(null); setCode(''); aller('totp'); return; }
+    }
+    setCode(''); setPreuve(null);
+    toast(err.message);
+    aller('connexion', { arriere: true });
+  }
+
   // Erreurs communes au mot de passe et au code : ce que le serveur répond, rangé sous le bon champ.
   async function traiter(err) {
-    if (err.message === 'EMAIL_NOT_VERIFIED') {
+    if (err.code === 'ALREADY_VERIFIED') {
+      await dejaConfirme(err);
+    } else if (err.message === 'EMAIL_NOT_VERIFIED') {
       // Code de l'inscription encore valable (codeActif, audit du 19/10, auth-02) : l'écran du code, sans SMS de plus.
       if (err.data?.codeActif) {
         setCanalCode(err.data.channel === 'sms' ? 'sms' : 'email'); setTelMasque(err.data.phoneMasked || '');

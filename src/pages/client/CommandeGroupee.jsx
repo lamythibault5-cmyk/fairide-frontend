@@ -16,6 +16,7 @@ import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import { BandeauCommande, FeuilleCommande, BarreCommande, RouteCommande } from '../../components/EcranCommande';
 import { entrerDansGroupe, quitterGroupe, retenirGroupeACommander, groupeACommander, oublierGroupeACommander } from '../../commandeGroupee';
 import '../../ecran-equipe-groupe.css';
+import { cheminFiche } from '../../adresseFiche';
 
 const APPLI = experienceApp();
 
@@ -92,7 +93,7 @@ export default function CommandeGroupee() {
   }
   function choisir() {
     entrerDansGroupe({ code: g.code, restaurantId: g.restaurant.id, hostFirstName: g.hostFirstName });
-    navigate(`/restaurants/${g.restaurant.id}`);
+    navigate(cheminFiche(g.restaurant));
   }
   // Envoyer son panier : la part sur le serveur est REMPLACÉE, on y renvoie donc aussi ce qui y était déjà.
   async function envoyer() {
@@ -191,7 +192,7 @@ export default function CommandeGroupee() {
   return (
     <div className="eg-page ec-page sc-page">
       <BandeauCommande
-        vers={`/restaurants/${g.restaurant.id}`}
+        vers={cheminFiche(g.restaurant)}
         libelleRetour={t('panier.backToMenu')}
         haut={<b>{g.restaurant.name}</b>}
         titre={t('groupOrder.start')}

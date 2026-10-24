@@ -2,12 +2,15 @@ import { useMemo, useState } from 'react';
 import Modale from './Modale';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
+import { euros } from '../prixPlat';
 
 // Éditeur de ticket : à partir d'une commande (pour corriger ou compléter avant impression) ou de zéro
 // (commande passée par téléphone, table sur place, ticket de cuisine libre). On modifie le nom, le type,
 // les lignes (libellé, quantité, prix), une note, puis on imprime en Bluetooth (avec le nombre de copies
 // voulu) ou par la boîte d'impression. Rien n'est enregistré côté serveur : c'est un ticket papier.
-const euro = (n) => `${Number(n || 0).toFixed(2)} €`;
+// Montants au format de la langue, comme partout (prixPlat.euros) : la copie locale écrivait « 12.50 € », avec un point,
+// même en français (audit du 24/10).
+const euro = (n) => euros(Number(n || 0));
 
 function depuisCommande(order, t) {
   if (!order) return { clientName: '', orderType: 'pickup', items: [{ name: '', qty: 1, price: '' }], note: '', deliveryFee: 0, address: '' };

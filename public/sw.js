@@ -56,14 +56,28 @@ self.addEventListener('push', (event) => {
       // c'est-à-dire exactement le problème que le push est censé résoudre.
       // Une étiquette par commande depuis le 2026-10-17 (« fairide-commande-<id> ») : deux commandes ne se remplacent plus.
       requireInteraction: String(donnees.tag || '').startsWith('fairide-commande'),
-      data: { url: donnees.url }
+      // Sans adresse dans la charge, la page se déduit de l'étiquette (cibleDe, plus bas) : jamais celle d'un commerce
+      // pour une course de livreur.
+      data: { url: charge.url || cibleDe({ tag: donnees.tag }) }
     })
   );
 });
 
+/* Page à ouvrir quand la notification n'en donne pas (revue du 24/10). Une notification de LIVREUR (étiquette
+ * « fairide-course-… » : nouvelle course, course prête ou annulée, qu'elle vienne du serveur ou de la page) va à l'espace
+ * livreur : le défaut, les commandes d'un commerce, renvoyait le livreur sur Mon compte (il n'a pas de rôle commerce),
+ * et il pouvait rater une course prise au premier arrivé. Les pages déjà ouvertes avant cette version n'envoient pas
+ * d'adresse : l'étiquette les rattrape. */
+function cibleDe(notification) {
+  const url = notification.data && notification.data.url;
+  if (url) return url;
+  if (String(notification.tag || '').startsWith('fairide-course')) return '/driver';
+  return PAR_DEFAUT.url;
+}
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const cible = (event.notification.data && event.notification.data.url) || PAR_DEFAUT.url;
+  const cible = cibleDe(event.notification);
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((fenetres) => {
       // Réutiliser un onglet Fairide déjà ouvert plutôt que d'en empiler un de plus : le commerçant
@@ -71,7 +85,7 @@ self.addEventListener('notificationclick', (event) => {
       // plan, avec sa liste de commandes déjà chargée.
       for (const fenetre of fenetres) {
         if (fenetre.url.includes(self.location.origin) && 'focus' in fenetre) {
-          fenetre.navigate ? fenetre.navigate(cible) : null;
+          if (fenetre.navigate) fenetre.navigate(cible);
           return fenetre.focus();
         }
       }

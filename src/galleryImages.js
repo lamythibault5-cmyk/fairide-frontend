@@ -1,3 +1,13 @@
+import { CATEGORY_HINT_ENTREE, CLASSIC_DESSERTS, CLASSIC_DRINKS, RESTAURANT_TYPES, categoryKind, defaultItemImageOrNull, fullTemplateItems } from './menuCategories';
+
+/* HORS DU PREMIER CHARGEMENT (audit du 24/10). menuCategories.js importait ce fichier pour galleryForSection(), et comme la
+   liste et la fiche des clients importent menuCategories.js, ces 576 adresses de photos (46 Ko, 11 Ko compressés) partaient
+   chez chaque visiteur, alors qu'elles ne servent qu'au sélecteur de photos du commerçant (MenuPage, MenuItemRow). Le sens
+   de l'import est inversé : galleryForSection() est ici, et seules les pages du commerçant, chargées à la demande,
+   importent ce fichier. VITE_STOCK_DISH_PHOTOS n'y change rien, comme avant : cette galerie PROPOSE des photos au
+   commerçant, qui choisit (voir l'interrupteur dans menuCategories.js) ; la part qui en dépend passe toujours par
+   defaultItemImageOrNull(). */
+
 // Galeries d'images par type de commerce, proposées au restaurateur dans le sélecteur de photos
 // (voir GalleryPickerModal, prop `suggestions`, et galleryForSection dans menuCategories.js) — il n'a
 // donc pas besoin de fournir ses propres photos pour démarrer, tout en gardant sa galerie personnelle.
@@ -674,4 +684,29 @@ const GALLERY_BY_TYPE = {
 export function galleryForCuisine(cuisine) {
   const propres = GALLERY_BY_TYPE[cuisine] || GALLERY_BY_TYPE.Autre || [];
   return [...propres, ...SHARED_GALLERY];
+}
+
+// Galerie de photos proposée pour UNE section d'UN type de commerce (entrées, plats, desserts,
+// boissons — ou une section personnalisée ramenée à l'une des quatre). D'abord les photos des plats de
+// cette section dans le modèle officiel du type — ce sont exactement les plats que le restaurateur va
+// nommer — puis, pour les desserts et boissons, les classiques Fairide communs à tous les types, et
+// pour les entrées et plats la galerie libre du type (galleryImages.js). Alimente le sélecteur de photos
+// (GalleryPickerModal, prop `suggestions`) quand le restaurateur illustre une section ou un plat.
+export function galleryForSection(cuisine, sectionName, max = 30) {
+  const v = (sectionName || '').toLowerCase();
+  const kind = categoryKind(sectionName) || (sectionName === 'entree' || CATEGORY_HINT_ENTREE.test(v) ? 'entree' : 'plat');
+  const urls = [];
+  const ajouter = (u) => { if (u && !urls.includes(u)) urls.push(u); };
+  fullTemplateItems(cuisine).forEach((it) => { if (it.category === kind) ajouter(defaultItemImageOrNull(it)); });
+  if (kind === 'dessert' || kind === 'boisson') {
+    // Un tiramisu est un tiramisu, une limonade une limonade : les desserts et boissons des autres types
+    // de commerce valent aussi pour celui-ci — après les classiques Fairide.
+    (kind === 'dessert' ? CLASSIC_DESSERTS : CLASSIC_DRINKS).forEach((d) => ajouter(defaultItemImageOrNull(d)));
+    RESTAURANT_TYPES.forEach((t) => {
+      if (t.value === cuisine || urls.length >= max) return;
+      fullTemplateItems(t.value).forEach((it) => { if (it.category === kind) ajouter(defaultItemImageOrNull(it)); });
+    });
+  }
+  if (kind === 'entree' || kind === 'plat' || urls.length === 0) galleryForCuisine(cuisine).forEach(ajouter);
+  return urls.slice(0, max);
 }
