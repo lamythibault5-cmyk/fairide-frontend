@@ -7,8 +7,9 @@
 // transition : il repart de la taille affichée, et un nouvel appui le rattrape en plein vol (« Designing Fluid Interfaces »).
 //
 // Réglages de la version B :
-//   - grossit de 12 % pour un petit bouton (≤ 64 px), de 3,5 % pour une barre (≥ 300 px), entre les deux selon la taille. 8 % dans
-//     la maquette ; 12 % après l'essai sur l'iPhone (fondateur, 2026-10-24 : la barre est bien, les ronds « un peu plus gros ») ;
+//   - un BOUTON (retours, cœur, recherche, croix, « + », pastilles…) grossit de 50 % (fondateur, 2026-10-25 : « pas les barres,
+//     mais plus que 12, peut-être 50 % » ; 8 % dans la maquette, puis 12 %). Une BARRE (onglets, bandes, panier, Livraison /
+//     À emporter) garde son petit grossissement : 3,5 % à partir de 300 px, un peu plus si elle est plus courte ;
 //   - se penche de 2 px (petit) à 3 px (barre) vers le doigt ;
 //   - ressort à la pose : amortissement .85, réponse .2 s ; au lâcher : .55, .4 s (un rebond franc d'environ 1 %, posé en .45 s).
 // Les cartes et les rangées ne sont pas du verre : elles gardent leur enfoncement (transitions-appli.css, réponse 4).
@@ -28,13 +29,16 @@ const VERRE = [
   // La croix de la fiche d'un plat (ronde, iris à filet blanc) : un retour, elle aussi.
   '.plat-fermer'
 ].join(', ');
+// Les barres, qui ne grossissent qu'un peu (la barre d'onglets était « bien », fondateur 2026-10-24) ; tout le reste est un bouton.
+const BARRES = '.dashboard-nav, .lt-puces, .category-quicknav--verre, .panier-pilule, .fiche-appli .fiche-modes';
 
 /* Ceux qui défilent de côté : le doigt qui part les faire défiler ne doit pas les faire gonfler. Ils attendent 70 ms (le
    « delaysContentTouches » des vues qui défilent sur iOS) ; un défilement qui démarre avant annule l'appui (pointercancel). */
 const DEFILENT = '.lt-puces, .category-quicknav--verre, .carte-pastilles .cuisine-chip, .dashboard-nav.admin';
 const ATTENTE_DEFILE = 70;
 
-const PETIT = 0.12;
+const BOUTON = 0.5;
+const PETIT = 0.12; // une barre courte (le panier replié en bulle)
 const BARRE = 0.035;
 const PENCHE = [2, 3];
 const APPUI = [0.85, 0.2];
@@ -73,6 +77,7 @@ function boucle(t) {
     el.style.translate = `${e.tx.x.toFixed(2)}px ${e.ty.x.toFixed(2)}px`;
     if (!e.appuye && rs.every(auRepos)) {
       el.style.scale = ''; el.style.translate = '';
+      if (e.zAvant !== undefined) el.style.zIndex = e.zAvant;
       el.classList.remove('verre-presse');
       etats.delete(el);
     }
@@ -110,7 +115,13 @@ export function installerVerreAppui() {
     if (mouvementReduit?.matches) return;
     const e = etats.get(c.el) || { s: ressort(1), tx: ressort(0), ty: ressort(0) };
     e.appuye = true;
-    regler(e.s, 1 + selonTaille(c.taille, [PETIT, BARRE]), APPUI);
+    const barre = c.el.matches(BARRES);
+    regler(e.s, 1 + (barre ? selonTaille(c.taille, [PETIT, BARRE]) : BOUTON), APPUI);
+    // À 150 %, un bouton déborde sur son voisin (la recherche sur le cœur) : il passe devant lui le temps de l'appui.
+    if (!barre && e.zAvant === undefined) {
+      const st = getComputedStyle(c.el);
+      if (st.position !== 'static') { e.zAvant = c.el.style.zIndex; c.el.style.zIndex = String((parseInt(st.zIndex, 10) || 0) + 1); }
+    }
     c.e = e;
     // Tout de suite, sans attendre la première image : sinon l'enfoncement des boutons (96 %, transitions-appli.css) se voyait une image.
     c.el.style.scale = e.s.x.toFixed(4);
