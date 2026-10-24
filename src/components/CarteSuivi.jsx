@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
+import useDialogue from '../hooks/useDialogue';
 
 // Le bloc « carte » des pages Carte du restaurateur et du livreur : la carte dans la page, et un bouton pour
 // l'agrandir en plein écran avec le temps d'arrivée dans la barre du haut. Chaque page fournit SA carte via
@@ -32,32 +33,29 @@ function CarteSuiviPleinEcran({ role, rendreCarte, legende, etaSansEstimation, o
   const { t } = useLanguage();
   const [eta, setEta] = useState(null);
   const [hauteurEcran, setHauteurEcran] = useState(() => window.innerHeight);
+  const racine = useRef(null);
 
-  // Le gel du fond se pose sur <html>, pas sur <body> : html porte overflow-x: clip (styles.css), donc un body en
-  // overflow: hidden devenait sa propre boîte de défilement, revenait en haut, et la barre latérale collante sautait.
+  /* FENÊTRE MODALE POUR DE BON (audit du 24/10) : useDialogue, comme Modale et SousEcran. Le gel du fond sur <html> et Échap
+     pour fermer étaient déjà là (écrits à la main) ; s'y ajoutent le focus à l'ouverture, Tab qui reste dans la carte
+     agrandie et le focus rendu à « Agrandir la carte » à la fermeture. Avant, le focus restait dans la page dessous. */
+  useDialogue(racine, onClose);
   useEffect(() => {
-    const prevOverflow = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = 'hidden';
     // Vue agrandie ouverte : pas de panier flottant par-dessus la carte (styles.css).
     document.documentElement.classList.add('tracking-plein-actif');
-    const onKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
     const onResize = () => setHauteurEcran(window.innerHeight);
-    window.addEventListener('keydown', onKeyDown);
     window.addEventListener('resize', onResize);
     return () => {
-      document.documentElement.style.overflow = prevOverflow;
       document.documentElement.classList.remove('tracking-plein-actif');
-      window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('resize', onResize);
     };
-  }, [onClose]);
+  }, []);
 
   const texteEta = eta
     ? (role === 'driver' ? t('tracking.etaDriver', { min: eta.minutes }) : t('tracking.etaClient', { min: eta.minutes }))
     : (etaSansEstimation || t('tracking.courierOnWay'));
 
   return createPortal(
-    <div className="tracking-fullscreen-overlay" role="dialog" aria-modal="true" aria-label={t('tracking.fullscreenTitleMap')}>
+    <div className="tracking-fullscreen-overlay" role="dialog" aria-modal="true" aria-label={t('tracking.fullscreenTitleMap')} ref={racine} tabIndex={-1}>
       <div className="tracking-fullscreen-bar">
         <span className="tracking-fullscreen-eta" aria-live="polite">{texteEta}</span>
         <button type="button" className="tracking-fullscreen-close" onClick={onClose}>✕ <span>{t('tracking.close')}</span></button>

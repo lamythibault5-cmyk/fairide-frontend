@@ -21,13 +21,14 @@ import { PreviewModeProvider } from './context/PreviewModeContext';
 import { rapportsPanneActifs, onConsentChange } from './consent';
 import { langueDepuisChemin, PREFIXES, languePreferee } from './i18n/routing';
 import { historiqueLangue, changerLangue } from './i18n/historiqueLangue';
+import { chargerLangue, DEFAULT_LANGUAGE } from './i18n/translations';
 import './styles.css';
 // Parcours client (liste, fiche, panier, paiement, suivi) — après styles.css pour l'emporter sur les anciens réglages.
 import './client-ui.css';
 // Le verre de l'app (2026-10-23) : après les feuilles communes ; ses règles sont aussi plus fortes que celles de chaque écran.
 import './verre.css';
 import './transitions-appli.css';
-import { rechargerSiNouveauCode } from './lazyPage';
+import { rechargerSiNouveauCode, horsLigne } from './lazyPage';
 import { demarrerAnalytics } from './analytics';
 import { estNatif, demarrerNatif, retirerEcranLancementNatif, garderLesLiensDansLApp } from './natif';
 import { ecouterNotificationsNatives } from './pushNatif';
@@ -65,7 +66,10 @@ demarrerAnalytics();
 
 // Mise en ligne pendant qu'un onglet est ouvert : le code d'une section demandée n'existe plus sous son
 // ancien nom. Plutôt qu'une page vide, rechargement silencieux vers la nouvelle version (voir lazyPage.js).
-window.addEventListener('vite:preloadError', (e) => { e.preventDefault(); rechargerSiNouveauCode(e.payload); });
+// HORS LIGNE, l'erreur n'est plus retenue (audit du 24/10) : retenue (preventDefault) sans rechargement, l'import se
+// résolvait sur `undefined` et React plantait avec un message sans rapport. Laissée passer, elle arrive à lazyPage puis à
+// AppErrorBoundary, qui dit « Pas de connexion internet » et recharge au retour du réseau. En ligne, rien ne change.
+window.addEventListener('vite:preloadError', (e) => { if (rechargerSiNouveauCode(e.payload) || !horsLigne()) e.preventDefault(); });
 // Acceptation en cours de visite : on démarre sans attendre un rechargement de page. Refus après coup (« Couper » dans
 // Mon compte, dans l'app) : on arrête tout de suite.
 onConsentChange(() => {
@@ -111,6 +115,14 @@ if (preferee && preferee !== 'fr' && PREFIXES[preferee]) {
     window.location.replace(`${PREFIXES[preferee]}${pathname === '/' ? '' : pathname}${search}${hash}`);
   }
 }
+
+// LE DICTIONNAIRE DE LA LANGUE DE L'ADRESSE EST DEMANDÉ ICI, PAS AU PREMIER RENDU (audit du 24/10). LanguageProvider le
+// demande dans un effet, donc après que toute l'application a été rendue une première fois (en français) ; sur un téléphone
+// moyen, ce sont des centaines de millisecondes de plus avant que le texte néerlandais arrive. Lancé ici, l'import() part dès
+// l'exécution de ce fichier — et sur les pages /nl et /en pré-rendues, le fichier est déjà en route (modulepreload, voir
+// scripts/prerender.mjs). chargerLangue ne lève jamais et ne télécharge qu'une fois : l'effet du fournisseur reprend la même
+// promesse.
+if (langue !== DEFAULT_LANGUAGE) chargerLangue(langue);
 
 // Écran de chargement (index.html, #splash) : il ne fait que COUVRIR le chargement, jamais le prolonger
 // (fondateur, 2026-09-17 : « le plus smooth possible, pas d'attente longue »). Il s'efface dès que la page

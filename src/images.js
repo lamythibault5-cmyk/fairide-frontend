@@ -15,16 +15,24 @@ export function imageUrl(url, largeur) {
   return url;
 }
 
-// srcset pour une image affichée à `largeurAffichee` px : 1×, 2× et une variante intermédiaire.
-export function imageSrcSet(url, largeurAffichee) {
+// srcset pour une image affichée à `largeurAffichee` px : 1×, 2× et une variante intermédiaire, plus les largeurs
+// `plusPetites` quand l'image peut s'afficher bien plus étroite que prévu (voir LARGEURS_TELEPHONE).
+export function imageSrcSet(url, largeurAffichee, plusPetites = []) {
   if (!url || typeof url !== 'string' || !(url.includes('res.cloudinary.com') || url.includes('images.unsplash.com'))) return undefined;
-  const largeurs = [...new Set([largeurAffichee, Math.round(largeurAffichee * 1.5), largeurAffichee * 2])];
+  const largeurs = [...new Set([...plusPetites, largeurAffichee, Math.round(largeurAffichee * 1.5), largeurAffichee * 2])].sort((a, b) => a - b);
   return largeurs.map((w) => `${imageUrl(url, w)} ${w}w`).join(', ');
 }
 
+/* LES LARGEURS D'UN TÉLÉPHONE (audit du 24/10). La couverture d'une fiche est demandée pour 1 200 px (le site, d'un bord à
+   l'autre d'une colonne d'ordinateur) : son srcset commençait à 1 200w, donc même un téléphone en recevait au moins 1 200 px
+   (143 Ko pour Snack Bodrum), alors qu'à 390 px de large il lui en faut ~780 en 2× et ~720 pour le téléphone de Lighthouse.
+   Avec 480 / 720 / 960 en plus, le navigateur prend la plus petite qui suffit à son écran (`sizes`) ; l'ordinateur ne change
+   pas. Cloudinary fabrique chaque largeur à la demande (w_ dans l'adresse, voir imageUrl) et la garde en cache. */
+export const LARGEURS_TELEPHONE = [480, 720, 960];
+
 // Attributs prêts à étaler sur <img> : src optimisé, srcset, sizes.
-export function imgProps(url, largeurAffichee, sizes) {
-  return { src: imageUrl(url, largeurAffichee * 2), srcSet: imageSrcSet(url, largeurAffichee), sizes: sizes || `${largeurAffichee}px` };
+export function imgProps(url, largeurAffichee, sizes, plusPetites) {
+  return { src: imageUrl(url, largeurAffichee * 2), srcSet: imageSrcSet(url, largeurAffichee, plusPetites), sizes: sizes || `${largeurAffichee}px` };
 }
 
 /* PHOTOS DÉJÀ VUES PENDANT CETTE VISITE (2026-10-20, test de l'app Android). Les photos des cartes apparaissent en fondu

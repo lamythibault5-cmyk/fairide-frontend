@@ -9,9 +9,18 @@
    Grotesque reste la police du seul mot « fairide » (voir .wordmark dans styles.css).
 
    Régénérer : la feuille css2 de Google pour Inter:wght@400..700 et Inter+Tight:wght@500..700, lue avec un navigateur
-   récent (woff2), en ne gardant que les blocs latin et latin-ext. */
+   récent (woff2), en ne gardant que les blocs latin et latin-ext.
+
+   AUDIT DU 24/10 : bricolage-grotesque-fairide.woff2 (3 Ko) ne garde que les lettres de « fairide » / « Fairide » et
+   l'espace (F a d e f i r) ; la plage du grand fichier les exclut (et les caractères de contrôle U+0000-001F, sans dessin :
+   un saut de ligne en tête de texte suffisait à le faire venir). Le mot est donc dessiné par le petit fichier, préchargé.
+   Limite mesurée dans Chrome : quand main.jsx allume cette feuille, Chrome télécharge quand même le grand fichier, sans
+   qu'aucun texte affiché en ait besoin (cause non trouvée) — mais après le JavaScript, et non plus préchargé en tête.
+   Raisons et commande pour régénérer le petit : commentaire des polices dans index.html. Cache 30 jours (vercel.json) :
+   pour changer une police, lui donner un NOUVEAU nom de fichier, jamais la remplacer sous le même nom. */
 @font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 700 800; font-stretch: 100%; font-display: swap; src: url('/fonts/bricolage-grotesque-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-@font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 700 800; font-stretch: 100%; font-display: swap; src: url('/fonts/bricolage-grotesque-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 700 800; font-stretch: 100%; font-display: swap; src: url('/fonts/bricolage-grotesque-latin.woff2') format('woff2'); unicode-range: U+0021-0045, U+0047-0060, U+0062-0063, U+0067-0068, U+006A-0071, U+0073-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 700 800; font-stretch: 100%; font-display: swap; src: url('/fonts/bricolage-grotesque-fairide.woff2') format('woff2'); unicode-range: U+0020, U+0046, U+0061, U+0064-0066, U+0069, U+0072; }
 @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('/fonts/inter-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('/fonts/inter-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 @font-face { font-family: 'Inter Tight'; font-style: normal; font-weight: 500 700; font-display: swap; src: url('/fonts/inter-tight-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }

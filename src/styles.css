@@ -59,6 +59,10 @@
 
   /* Statuts */
   --red: #D92D3C;
+  /* Le même rouge, un ton plus sombre, pour du TEXTE posé sur le gris --surface-soft (audit du 24/10) : --red y donnait
+     4,15:1, sous les 4,5:1 qu'exige un texte de 13,5 px (WCAG 1.4.3) — « Fermé » sur la pastille d'état d'une fiche. 4,78:1
+     ici. Les pastilles, boutons et bordures gardent --red. */
+  --red-texte: #C8283A;
   --blue: #2B7FB8;
   --orange: #E07A1F;
   --purple: #B0459B;
@@ -5088,6 +5092,9 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-par-dessus { z-index: 200; }
 /* Parcours en écran plein lancé depuis une page (EcranPlein.jsx) : au-dessus de la coquille, sous l'amorce des notifications. */
 .bv-plein { z-index: 150; }
+/* L'écran plein et la carte de suivi agrandie prennent le focus à l'ouverture (useDialogue, audit du 24/10) pour le garder
+   dedans. Ce cadre n'est pas une commande : pas d'anneau autour de tout l'écran — ses boutons gardent le leur. */
+.bv-plein:focus, .tracking-fullscreen-overlay:focus { outline: none; }
 /* UNE FENÊTRE OUVERTE DEPUIS UN ÉCRAN PLEIN PASSE PAR-DESSUS LUI (2026-10-21). Les fenêtres (Modale, ConfirmDialog,
    ReasonDialog : .modal-overlay) sont à 100, l'écran plein à 150 : dans le dossier livreur de l'app, « Vérifier mon identité »
    ouvrait le consentement biométrique DESSOUS — rien ne semblait se passer, Stripe Identity ne pouvait pas démarrer ; le

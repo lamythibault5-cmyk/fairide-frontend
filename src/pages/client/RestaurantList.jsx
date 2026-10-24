@@ -237,7 +237,8 @@ function ALaUne({ list, inscritLe, t }) {
   const maintenant = Date.now();
   return (
     <section className="liste-section une-section">
-      <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="eclair" taille={18} />{t('restaurantList.sectionFeatured')}</h3>
+      {/* h2 et non plus h3 (audit du 24/10, Lighthouse « heading-order ») : sous le h1 de la page, le titre d'une rangée sautait un niveau, et les noms des commerces (h3) étaient au même rang que leur rangée. Même classe et même style en ligne : rien ne bouge à l'écran. */}
+      <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="eclair" taille={18} />{t('restaurantList.sectionFeatured')}</h2>
       <div className="une-rail" ref={rail} onScroll={surDefilement}>
         {list.map((r) => {
           // Même état que la fiche : pause et « fermé pour aujourd'hui » compris (audit du 19/10, discovery-04).
@@ -280,7 +281,7 @@ function ALaUne({ list, inscritLe, t }) {
 // (maquettes/site-ordinateur/site-ordinateur.html, section « Liste »). Mêmes commerces, même ordre ; seule la disposition change.
 function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, autoplay = false, cle, grille = false }) {
   if (list.length === 0) return null;
-  const titre = <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}{cle && <EmplacementSponsor cle={cle} />}</h3>;
+  const titre = <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}{cle && <EmplacementSponsor cle={cle} />}</h2>;
   if (grille) {
     return (
       <section className="liste-section">
@@ -864,7 +865,7 @@ export default function RestaurantList() {
           {aLaUne.length > 0 && <ALaUne list={aLaUne} inscritLe={inscritLe} t={t} />}
           {inscrits.length > 0 && (
             <div className="liste-section">
-              <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><span><AvecMarque>{t('restaurantList.sectionRegistered')}</AvecMarque></span></h3>
+              <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><span><AvecMarque>{t('restaurantList.sectionRegistered')}</AvecMarque></span></h2>
               <div className={grand ? 'rest-grid sl-grille' : 'rest-grid rest-grid-scroll'}>
                 {inscrits.map((x) => {
                   // Publié : la carte complète de la liste (horaires, offres, favori) ; sinon, une carte « bientôt ».

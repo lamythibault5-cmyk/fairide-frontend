@@ -15,7 +15,7 @@ import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
 import TemplatePicker from '../../components/TemplatePicker';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
-import { galleryForSection } from '../../menuCategories';
+import { galleryForSection } from '../../galleryImages';
 import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import ConformiteCarte from '../../components/conformite/ConformiteCarte';
 import MentionsAlimentaires from '../../components/commerce/MentionsAlimentaires';
@@ -436,7 +436,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     if (!items.length) { toast(t('menuPage.toastPickOne'), 'erreur'); return; }
     setAddingTemplate(true);
     try {
-      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
+      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items }, delai: 180000 });
       setTemplateOpen(false);
       loadDashboard(restoId);
       toast(t('menuPage.toastDishesAdded', { n: items.length }), 'succes');
@@ -509,7 +509,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     if (!items.length) { toast(t('menuPage.toastAllPresent')); return; }
     setBusy(true);
     try {
-      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
+      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items }, delai: 180000 });
       loadDashboard(restoId);
       toast(t('menuPage.toastProductsAdded', { n: items.length }), 'succes');
     } catch (e) {

@@ -14,8 +14,19 @@ export function erreurDeChargementDeCode(err) {
   return MOTIFS.test(message);
 }
 
+/* HORS LIGNE, ON NE RECHARGE PAS (audit du 24/10). Sur le site, sans réseau, ouvrir une section dont le code n'est pas encore
+   chargé fait échouer l'import (« Failed to fetch ») : recharger menait tout droit à la page « Vous êtes hors ligne » de
+   Chrome (le dinosaure), et la page où l'on était disparaissait. Le fichier n'a pas changé de nom, c'est le réseau qui manque :
+   l'erreur suit son chemin jusqu'à AppErrorBoundary, qui le dit et recharge de lui-même au retour du réseau. Dans l'app, le
+   code est sur le téléphone : ce cas n'y arrive pas. `navigator.onLine === false` est fiable dans ce sens-là (pas de réseau
+   du tout) ; un réseau présent mais mauvais garde le comportement d'avant. */
+export function horsLigne() {
+  return typeof navigator !== 'undefined' && navigator.onLine === false;
+}
+
 export function rechargerSiNouveauCode(err) {
   if (!erreurDeChargementDeCode(err)) return false;
+  if (horsLigne()) return false;
   let dernier = 0;
   try { dernier = Number(sessionStorage.getItem(CLE) || 0); } catch { /* sans stockage */ }
   if (Date.now() - dernier < 60000) return false;

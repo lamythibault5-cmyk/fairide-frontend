@@ -1,5 +1,5 @@
 import { Fragment, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { imgProps, cacherImageCassee } from '../../images';
+import { imgProps, cacherImageCassee, LARGEURS_TELEPHONE } from '../../images';
 import urlSure from '../../urlSure';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
@@ -677,7 +677,7 @@ export default function RestaurantMenu({ id }) {
       <VisuelVide nom={restaurant.name} cuisine={restaurant.cuisine} taille="bandeau" className="fiche-couverture-vide" />
       {restaurant.coverImageUrl && (APPLI
         ? <CouvertureAppli url={restaurant.coverImageUrl} petite={photoEnVol(id)} alt={restaurant.name} />
-        : <img {...imgProps(restaurant.coverImageUrl, 1200, '100vw')} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" onError={cacherImageCassee} />)}
+        : <img {...imgProps(restaurant.coverImageUrl, 1200, '100vw', LARGEURS_TELEPHONE)} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" onError={cacherImageCassee} />)}
     </>
   );
   const logo = restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" onError={cacherImageCassee} />;
@@ -1166,7 +1166,7 @@ export default function RestaurantMenu({ id }) {
    `src` se fait sans trou : le navigateur garde l'ancienne image jusqu'à ce que la nouvelle soit prête. Sans `petite` (lien
    direct, retour arrière), la grande seule, comme avant. */
 function CouvertureAppli({ url, petite, alt }) {
-  const grande = imgProps(url, 960, '(max-width: 960px) 100vw, 960px');
+  const grande = imgProps(url, 960, '(max-width: 960px) 100vw, 960px', LARGEURS_TELEPHONE);
   const [src, setSrc] = useState(petite);
   useEffect(() => {
     if (!petite) return undefined;

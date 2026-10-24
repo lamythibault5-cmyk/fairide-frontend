@@ -356,7 +356,10 @@ export default function OrdersPage() {
       // autant de fois que d'exemplaires demandés.
       if (await serviceGoodcomDisponible()) {
         const n = Math.max(1, copies);
-        for (let i = 0; i < n; i++) await imprimerSurGoodcom(r.lines, r.columns);
+        // L'erreur du terminal est dite dans la langue choisie, comme sur la page Terminal (audit du 24/10) : son texte à
+        // elle (« Délai dépassé », « Service d'impression Goodcom injoignable ») est en français et arrivait tel quel au toast.
+        const traduireEchec = (e) => { throw Object.assign(new Error(t('terminal.webDirectFail', { reason: t(`terminal.printer_${e?.code || 'unknown'}`) })), { code: e?.code }); };
+        for (let i = 0; i < n; i++) await imprimerSurGoodcom(r.lines, r.columns).catch(traduireEchec);
         setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + n }));
         toast(n > 1 ? t('ordersResto.toastTicketSentN', { n }) : t('ordersResto.ticketSentTerminal'));
         return;

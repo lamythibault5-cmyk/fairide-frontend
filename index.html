@@ -103,10 +103,19 @@
          variable, ce que demandent ses sept emplacements entre 17 et 34px. On a écarté
          `&text=fairide`, qui aurait réduit le fichier à deux kilo-octets : le jour où quelqu'un pose
          .wordmark sur un autre mot, les glyphes manquants retomberaient en silence sur la police de
-         repli, sans rien dans la console pour l'expliquer. -->
+         repli, sans rien dans la console pour l'expliquer.
+         DEPUIS LE 24/10 (audit), les deux à la fois, sans ce défaut : un petit fichier avec les seules lettres
+         du mot (bricolage-grotesque-fairide.woff2, 3,4 Ko au lieu de 75, même dessin au pixel près, vérifié),
+         déclaré après le grand avec une unicode-range limitée à ces lettres, que celle du grand exclut. C'est lui
+         qui est préchargé et qui dessine « fairide » ; une autre lettre écrite un jour en .wordmark fait venir le
+         grand, et reste en Bricolage. Chrome télécharge encore le grand quand main.jsx allume polices.css (voir
+         ce fichier), mais plus en tête de page, en concurrence avec le JavaScript.
+         Régénérer le petit (paquets Python fonttools et brotli) : python -m fontTools.subset
+         bricolage-grotesque-latin.woff2 --unicodes="U+0020,U+0046,U+0061,U+0064,U+0065,U+0066,U+0069,U+0072"
+         --layout-features='*' --flavor=woff2 --output-file=bricolage-grotesque-fairide.woff2 -->
     <!-- Le fichier de la police du mot « fairide », servi par nous : l'écran de chargement en a besoin
-         avant toute autre chose (voir le @font-face du #splash plus bas). -->
-    <link rel="preload" href="/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin />
+         avant toute autre chose (voir le @font-face du #splash plus bas). Le petit seulement : c'est lui qui sert. -->
+    <link rel="preload" href="/fonts/bricolage-grotesque-fairide.woff2" as="font" type="font/woff2" crossorigin />
     <!-- Polices servies par nous depuis le 2026-10-02 (public/fonts/polices.css) : la feuille Google partait avant
          toute réponse au bandeau cookies et donnait l'adresse IP du visiteur à Google (plan de test LEG-3). Même
          bascule media="print" → "all" qu'avant (main.jsx), pour ne jamais bloquer le démarrage. -->
@@ -142,7 +151,10 @@
            `font-src 'self'` l'autorise déjà, et le fichier n'est téléchargé que si le mot s'affiche.
            Même nom de famille que Google Fonts : le reste du site en profite aussi si Google est
            bloqué, et quand les deux sont là, ce sont les mêmes glyphes. */
-        @font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 700 800; font-display: swap; src: url("/fonts/bricolage-grotesque-latin.woff2") format("woff2"); }
+        @font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 700 800; font-display: swap; src: url("/fonts/bricolage-grotesque-latin.woff2") format("woff2"); unicode-range: U+0021-0045, U+0047-0060, U+0062-0063, U+0067-0068, U+006A-0071, U+0073-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+        /* Les lettres du mot (et l'espace) viennent du petit fichier, déclaré après ; la plage du grand ci-dessus les exclut,
+           au caractère près la même que dans public/fonts/polices.css (audit du 24/10, raisons là-bas). */
+        @font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 700 800; font-display: swap; src: url("/fonts/bricolage-grotesque-fairide.woff2") format("woff2"); unicode-range: U+0020, U+0046, U+0061, U+0064-0066, U+0069, U+0072; }
         #splash { position: fixed; inset: 0; z-index: 1000; background: #3B2FB5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity .2s ease; will-change: opacity; }
         /* LE VÉLO PART LIVRER (fondateur, 2026-10-21, option B de maquettes/verre-et-chargement/ecran-chargement.html) :
            la page prête, le vélo file vers la droite pendant que l'écran s'efface (main.jsx retire l'élément après). */

@@ -28,6 +28,9 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       (les positions « Sponsorisé » existent), « un coursier fairide.be prend le relais » (n'existe pas),
       « à emporter gratuit » (abonnement requis), « en ligne le 1er novembre » à côté de la livraison (10/11),
       et le téléphone 0474. À refaire, ou retirer du site.
+      *Retiré du site le 2026-10-24* (audit du 24/10 : le fichier et le bloc « Ouvrir / imprimer le flyer » du guide
+      commercial, SalesPage.jsx). Reste à faire : un nouveau flyer avant d'en réimprimer ; les textes du guide
+      (`sales.guidePitch2`, `guideNo2`…) parlent encore d'un flyer à laisser au comptoir.
 - [ ] 🔴 **F — Textes de la campagne** : mêmes règles que le site depuis le 14/10 — « l'alternative à Uber Eats »,
       10 % de commission face aux 22-32 % *annoncés* par les grandes plateformes ; **jamais « moins cher »** ;
       le livreur garde **90 %** de la livraison et **100 %** des pourboires ; zone = « Bruxelles et alentours ».
