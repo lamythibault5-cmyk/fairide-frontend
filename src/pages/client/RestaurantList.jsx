@@ -378,6 +378,15 @@ export default function RestaurantList() {
   const [famille, setFamille] = useState(filtresInitiaux.famille || specialiteInitiale?.familles[0] || '');
   const [specialiteFiltre, setSpecialiteFiltre] = useState(specialiteInitiale?.value || '');
   const choisirFamille = useCallback((cle) => { setFamille(cle); setSpecialiteFiltre(''); }, []);
+  /* CHANGER DE CUISINE NE FAIT PLUS « SAUTER » LA LISTE (fondateur, 2026-10-23 : « comme la barre d'onglets, beaucoup plus
+     calme »). Les cartes jouent leur entrée (popIn, styles.css) à la première apparition de la liste ; un changement de
+     famille ou de spécialité les remplace sans la rejouer — comme un onglet, qui change d'écran sans animation
+     (sl-liste--calme, ecran-liste.css). */
+  const [listeCalme, setListeCalme] = useState(false);
+  const filtresDeDepart = useRef(`${famille}|${specialiteFiltre}`);
+  useEffect(() => {
+    if (`${famille}|${specialiteFiltre}` !== filtresDeDepart.current) setListeCalme(true);
+  }, [famille, specialiteFiltre]);
   // Masqués pour le moment (MENTIONS_ALIMENTAIRES) : jamais allumés à l'ouverture, sinon la liste serait filtrée sans
   // aucune pastille pour retirer le filtre.
   const [bio, setBio] = useState(MENTIONS_ALIMENTAIRES && !!filtresInitiaux.bio);
@@ -683,7 +692,7 @@ export default function RestaurantList() {
   // Seulement s'il y a quelque chose dedans : sans « À emporter » ni tri, la rangée vide laissait un blanc.
   const pastillesFiltres = (!colonne || !modeSurBandeau) && (FILTRE_EMPORTER || (!colonne && (TRI || !!commune || !!search)));
   return (
-    <div className={`sl-liste${grand ? ' sl-liste--grand' : ''}${colonne ? ' sl-liste--colonne' : ''}`}>
+    <div className={`sl-liste${grand ? ' sl-liste--grand' : ''}${colonne ? ' sl-liste--colonne' : ''}${listeCalme ? ' sl-liste--calme' : ''}`}>
       <TirerPourActualiser onActualiser={actualiser} />
       {/* Le titre est MASQUÉ À L'ŒIL, pas supprimé (fondateur, 2026-09-17 : « retire-le de la page »).
           Il reste dans le document parce qu'il y avait été mis pour une raison précise : sans h1, le

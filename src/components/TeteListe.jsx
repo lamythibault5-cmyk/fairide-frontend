@@ -92,10 +92,8 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
       l.style.transform = `translate(${puce.offsetLeft}px, ${puce.offsetTop}px)`;
       if (premiere) { void l.offsetWidth; l.style.transition = ''; l.dataset.pose = '1'; }
       if (precedente && precedente !== puce) {
-        // La goutte : la lentille s'étire en partant (app seulement, voir ecran-liste.css), et la pastille vient à l'écran.
-        l.classList.remove('lt-lentille--etire');
-        void l.offsetWidth;
-        l.classList.add('lt-lentille--etire');
+        // La pastille vient à l'écran. Plus de « goutte » (la lentille qui s'étirait et rebondissait en partant) : elle glisse
+        // comme celle de la barre d'onglets (fondateur, 2026-10-23 : « beaucoup plus calme », ecran-liste.css).
         const d = defile.current;
         if (d) {
           const g = puce.offsetLeft - 24;

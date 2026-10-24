@@ -162,8 +162,6 @@ html.fiche-glisse body, html.fiche-glisse .dashboard-main { background: var(--ir
 }
 .fiche-appli .category-quicknav--glisse .quicknav-lentille { transition: transform .05s linear, width .3s var(--ressort-ui), scale .3s var(--ressort-ui), box-shadow .2s; }
 .fiche-appli .category-quicknav--appui .quicknav-lentille { scale: 1.08 1.14; }
-.fiche-appli .quicknav-lentille--etire { animation: quicknav-goutte .45s var(--ressort-ui); }
-@keyframes quicknav-goutte { 0% { scale: 1 1; } 35% { scale: 1.3 .84; } 70% { scale: .96 1.05; } 100% { scale: 1 1; } }
 /* Les ancres des sections atterrissent sous les ronds et la bande, pas derrière. */
 .fiche-appli [id^="menu-cat-"] { scroll-margin-top: calc(var(--fiche-haut) + 64px + 54px + 10px); }
 
@@ -209,7 +207,7 @@ html.appli body:has(.fiche-appli) .plat-fermer:active { transform: scale(.9); }
 body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
 
 @media (prefers-reduced-motion: reduce) {
-  .fiche-appli .fiche-feuille, .fiche-appli .fiche-media > .fiche-logo, .fiche-appli .quicknav-lentille--etire { animation: none; }
+  .fiche-appli .fiche-feuille, .fiche-appli .fiche-media > .fiche-logo { animation: none; }
   .fiche-appli .category-quicknav--verre .quicknav-lentille, .fiche-appli .fiche-modes-pouce { transition: none; }
 }
 
