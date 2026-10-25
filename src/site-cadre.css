@@ -184,7 +184,7 @@
 @media (max-width: 900px) {
   .carte-cookies { left: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); width: calc(100vw - 24px); padding: 16px 16px 14px; }
   /* Au-dessus de la barre d'onglets du bas, qu'elle ne doit pas cacher. */
-  .dashboard-shell:not(.dashboard-shell--flux) ~ .carte-cookies { bottom: calc(var(--hauteur-onglets) + 4px + env(safe-area-inset-bottom)); }
+  .dashboard-shell:not(.dashboard-shell--flux) ~ .carte-cookies { bottom: calc(var(--hauteur-onglets) + 4px + var(--bas-ecran)); }
 }
 
 /* ---------------------------------------------------------------------------------------------------------------------

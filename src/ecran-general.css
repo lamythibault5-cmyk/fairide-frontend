@@ -76,14 +76,14 @@ a.btn-gold.gn-action { font-weight: 700; }
    (fondateur, 2026-10-25, maquettes/une-action ; c'était une petite pilule iris, qu'on prenait pour une étiquette), qui
    descend au nom et au bouton final. Collante plutôt que fixe — dans la coquille, .page-fade casse position: fixed — et posée
    sur un support de hauteur nulle : elle flotte sans réserver de place dans la feuille. Au-dessus des onglets là où ils sont. */
-.gn-raccourci { position: sticky; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 40; height: 0;
+.gn-raccourci { position: sticky; bottom: calc(16px + var(--bas-ecran)); z-index: 40; height: 0;
   display: flex; justify-content: center; }
 .gn-raccourci-pilule { transform: translateY(-100%); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; max-width: 520px; min-height: 56px; padding: 0 22px; border: 0; border-radius: var(--radius-pill); background: var(--lime);
   color: var(--ink); font: 700 16px/1 var(--font-ui); box-shadow: 0 8px 24px rgba(20, 18, 31, .18); cursor: pointer; white-space: nowrap; }
 @media (max-width: 900px) {
   body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .gn-raccourci {
-    bottom: calc(var(--hauteur-onglets) + 12px + env(safe-area-inset-bottom)); }
+    bottom: calc(var(--hauteur-onglets) + 12px + var(--bas-ecran)); }
 }
 
 /* ---------- Aide : les questions en rangées qui s'ouvrent ---------- */

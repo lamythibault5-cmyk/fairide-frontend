@@ -6,14 +6,15 @@
 // avec un serveur simulé (aucun appel au vrai serveur), et pour chaque espace, sur le site ET en mode application (site
 // ajouté à l'écran d'accueil), vérifie que :
 //   - le bord bas de la barre (son conteneur fixé) est exactement le bas de l'écran (innerHeight, et le bas du visualViewport) ;
-//   - la pilule des onglets se pose à max(6 px, marge du système) de ce bord, jamais plus haut ;
+//   - la pilule des onglets se pose à max(6 px, marge du système − 12 px) de ce bord, jamais plus haut (elle mord de 12 px
+//     dans la zone du système depuis le 2026-10-25 : --bas-ecran, styles.css) ;
 //   - c'est encore vrai quand la barre d'adresse se replie (simulé : la fenêtre gagne 56 px de haut, puis les reperd),
 //     après un défilement (la barre se réduit aux icônes), et quand le visualViewport change (simulé : sa hauteur et son
 //     décalage sont modifiés puis ses événements resize et scroll envoyés — aucun code ne doit alors déplacer la barre) ;
 //   - aucun ancêtre de la barre ne crée de bloc conteneur pour position: fixed (transform, filter, contain, perspective,
 //     backdrop-filter, will-change) : la barre serait alors calée sur cet élément et non sur l'écran ;
 //   - avec une marge du système simulée de 48 px (barre de navigation d'Android à trois boutons) quand ce Chrome sait
-//     l'émuler (Emulation.setSafeAreaInsetsOverride), la pilule se pose juste au-dessus, toujours sans vide.
+//     l'émuler (Emulation.setSafeAreaInsetsOverride), la pilule s'y pose à 36 px du bas (48 − 12), toujours sans vide.
 //
 // Ce qu'un navigateur de bureau NE PEUT PAS prouver : la vraie barre d'adresse de Chrome Android, son mode bord à bord,
 // Safari sur iPhone et la coque native. Ce sont les points à revoir sur un vrai téléphone.
@@ -127,7 +128,7 @@ async function mesurer(page) {
 function juger(m, etape, { visuel = true } = {}) {
   if (m.absente) return [`${etape} : barre du bas absente`];
   const p = [];
-  const attendu = Math.max(6, m.marge);
+  const attendu = Math.max(6, m.marge - 12);
   if (Math.abs(m.basBarre - m.hauteur) > TOLERANCE) p.push(`${etape} : bas de la barre à ${Math.round(m.basBarre)} px pour un écran de ${m.hauteur} px`);
   if (visuel && Math.abs(m.basBarre - m.basVisuel) > TOLERANCE) p.push(`${etape} : bas de la barre à ${Math.round(m.basBarre)} px, bas du visualViewport à ${Math.round(m.basVisuel)} px`);
   if (Math.abs((m.hauteur - m.basPilule) - attendu) > TOLERANCE) p.push(`${etape} : pilule à ${Math.round(m.hauteur - m.basPilule)} px du bas (attendu ${attendu})`);

@@ -82,7 +82,8 @@ read that doc before working near it.
 **The app**
 - The app never shows website chrome (header, footer, legal row, cookie card): `npm run check:app` must pass before any
   push, and a new app page goes into its `PAGES` list, never removed from it. *(appli.md)*
-- The bottom tab bar sits on the bottom edge (`bottom: 0` + safe-area padding), never a fixed offset. *(appli.md)*
+- The bottom tab bar sits on the bottom edge (`bottom: 0` + padding `max(6px, var(--bas-ecran))`, the system inset minus 12 px),
+  never a fixed offset. *(appli.md)*
 - Stripe pages open through `allerAuPaiement`, never `window.location.href` (it leaves the app). *(appli.md)*
 
 **Look and feel**
