@@ -1,8 +1,8 @@
 // Même ouverture que partout ailleurs (audit du 19/10, CROSS-08) : onglet ouvert pendant le geste (Safari), toast et non alert().
 export { ouvrirPdf } from '../../pdf';
 
-// Ce que le dossier livreur du site (Onboarding.jsx) et celui de l'application (DossierAppli.jsx) partagent : les listes
-// et règles du dossier, écrites une seule fois pour que les deux ne divergent jamais.
+// Les listes et règles du dossier livreur (DossierAppli.jsx, DossierSuivi.jsx, dossierBlocs.jsx). Depuis le 2026-10-25, le
+// site et l'application montrent le même dossier ; ces règles servent aussi aux blocs d'après la validation.
 
 // « statut_non_verifie » n'est pas une action du livreur : c'est Fairide qui vérifie. Il n'empêche
 // donc pas d'envoyer le dossier, il est simplement affiché à titre d'information.
@@ -51,7 +51,11 @@ export function corpsInfos(f, c = null) {
   const centimes = (v) => { const b = String(v ?? '').replace(',', '.').trim(); return b === '' ? null : Math.round(Number(b) * 100); };
   if (f.minFee !== undefined && centimes(f.minFee) !== (c?.minFeeCents ?? null)) body.minFeeCents = centimes(f.minFee);
   if (f.minFeePerKm !== undefined && centimes(f.minFeePerKm) !== (c?.minFeePerKmCents ?? null)) body.minFeePerKmCents = centimes(f.minFeePerKm);
-  for (const k of ['zone', 'birthDate', 'vehicleType']) if (!body[k]) delete body[k];
+  /* DÉNOMINATION ET SIÈGE VIDES : RIEN N'EST ENVOYÉ (2026-10-25, dossier unique). Le formulaire est lu une fois, à l'ouverture ;
+   * le registre TVA européen remplit ensuite dénomination et siège côté serveur, dès le numéro d'entreprise tapé. Le
+   * « Continuer » de « Ton activité » renvoyait le siège vide du formulaire et effaçait celui du registre (relu une seule
+   * fois) : le manque « siege » revenait, sans champ pour le remplir, et le dossier ne se validait plus tout seul. */
+  for (const k of ['zone', 'birthDate', 'vehicleType', 'legalName', 'seatAddress']) if (!body[k]) delete body[k];
   if (!body.nationalNumber) delete body.nationalNumber;
   if (!body.bagOption || (c && !['none', 'due'].includes(c.bag?.depositStatus || 'none'))) delete body.bagOption;
   if (body.worksOtherPlatforms === 'yes' || body.worksOtherPlatforms === 'no') body.worksOtherPlatforms = body.worksOtherPlatforms === 'yes'; else delete body.worksOtherPlatforms;

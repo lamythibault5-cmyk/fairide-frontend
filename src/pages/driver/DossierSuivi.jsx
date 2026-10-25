@@ -8,7 +8,9 @@ import RouteVelo from '../../components/livreur/RouteVelo';
 import { EtapeNotices } from '../../components/conformite/LivreurConformite';
 import { DocumentsVente, TarifMinimum } from '../../components/conformite/EspaceVendeurLivreur';
 import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer, MesCourses, PiecesSejour, ConfirmerEcole } from './dossierBlocs';
-import { STATUTS } from './dossierCommun';
+import { STATUTS, ouvrirPdf } from './dossierCommun';
+import { EcranIdentite, EcranPaiement } from './DossierAppli';
+import { API_BASE } from '../../api';
 import '../../ecran-livreur.css';
 
 /* LE DOSSIER ENVOYÉ OU VALIDÉ, DANS L'APPLICATION (deuxième audit design, section 9 « C'est bon, tu peux rouler », approuvé par
@@ -54,10 +56,18 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
   // perd alors son lime, qui revient au geste à faire.
   const docs = d.documents ?? [];
   const piecesRefusees = docs.some((x) => x.rejectedReason && !docs.some((y) => y.docType === x.docType && !y.rejectedReason));
-  const textesARelire = AVANT_COURSE.some((m) => manques.includes(m));
+  /* TROIS GESTES QUE SEUL LE BROUILLON PROPOSAIT (2026-10-25). Une fois le dossier envoyé, plus aucun bouton pour : refaire
+   * l'identité refusée par l'équipe (e-mail « ouvre ton dossier », PATCH /admin/couriers/:id/verify), activer le compte de
+   * versement laissé pour plus tard (le serveur envoie le dossier sans lui mais ne le valide pas sans lui), signer une
+   * nouvelle version du contrat (manque « contrat » : la validation par l'équipe est refusée). Le livreur attendait une
+   * réponse qui ne pouvait pas venir. Mêmes écrans que le brouillon (DossierAppli.jsx), dans une feuille. */
+  const contratASigner = manques.includes('contrat');
+  const textesARelire = AVANT_COURSE.some((m) => manques.includes(m)) || contratASigner;
+  const identiteARefaire = c.identity?.status === 'failed';
+  const versementAFaire = (d.user?.stripeConnectStatus || user?.stripeConnectStatus) !== 'active';
   // Numéro d'entreprise ou n° de TVA encore attendu après l'envoi (audit du 19/10, courier-11 : le n° de TVA aussi).
   const bceAttendu = manques.includes('bce') || manques.includes('tva_numero');
-  const aAgir = piecesRefusees || textesARelire || bceAttendu || etat === 'blocked_threshold';
+  const aAgir = piecesRefusees || textesARelire || bceAttendu || identiteARefaire || versementAFaire || etat === 'blocked_threshold';
 
   const autreStatut = STATUTS.find((x) => x !== c.statusType);
   /* APRÈS LA VALIDATION, ENCORE À SA MAIN (audit du 19/10, courier-5, courier-6, courier-7) : ses courses (zone, véhicule, autres
@@ -89,7 +99,7 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
   };
 
   return (
-    <div className="ecl ecl-page ecl-dossier ecl-dossier-suivi">
+    <div className="ecl ecl-page ecl-page-large ecl-dossier ecl-dossier-suivi">
       <section className="ecl-bandeau">
         <div className="ecl-b-haut">
           <span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span>
@@ -102,39 +112,53 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
       </section>
 
       <div className="ecl-feuille">
-        {c.needsRenewal && <p className="ecl-note"><Icone nom="alerte" taille={18} />{t('courierOnboarding.renewalNeeded')}</p>}
-        {/* Le geste qui lève le renouvellement (audit du 19/10, courier-30) : confirmer l'école et l'année académique. */}
-        {roule && <ConfirmerEcole key={`ecole-${c.needsRenewal}`} d={d} t={t} token={token} busy={busy} action={action} />}
-        <Notifications t={t} token={token} enFeuille />
+        {/* Sur le site large (2026-10-25, dossier unique) : à gauche ce qui demande un geste et les compteurs, à droite les lignes
+            du dossier (site-livreur.css). Ailleurs, ces deux enveloppes n'ont pas de boîte (display: contents). */}
+        <div className="ecl-site-cols">
+          <div className="ecl-site-col">
+            {c.needsRenewal && <p className="ecl-note"><Icone nom="alerte" taille={18} />{t('courierOnboarding.renewalNeeded')}</p>}
+            {/* Le geste qui lève le renouvellement (audit du 19/10, courier-30) : confirmer l'école et l'année académique. */}
+            {roule && <ConfirmerEcole key={`ecole-${c.needsRenewal}`} d={d} t={t} token={token} busy={busy} action={action} />}
+            <Notifications t={t} token={token} enFeuille />
 
-        {valide && (
-          <Link to="/driver" className={`${aAgir ? 'btn-outline' : 'btn-gold'} ecl-bouton-dossier`}>{t('ecranLivreur.dosVoirCourses')}</Link>
-        )}
+            {valide && (
+              <Link to="/driver" className={`${aAgir ? 'btn-outline' : 'btn-gold'} ecl-bouton-dossier`}>{t('ecranLivreur.dosVoirCourses')}</Link>
+            )}
 
-        {/* Ce qui reste à faire après l'envoi : mêmes blocs que sur le site (dossierBlocs.jsx). */}
-        {etat === 'blocked_threshold' && (
-          <p className="ecl-note"><Icone nom="alerte" taille={18} /><span>{t('courierOnboarding.blockedExplain', { year: legal.year ?? new Date().getFullYear() })}</span></p>
-        )}
-        {textesARelire && (
-          <ul className="ecl-etapes ecl-a-faire">
-            <li>
-              <button type="button" className="ecl-etape" onClick={() => setFeuille('textes')}>
-                <span className="ecl-rond-etape" aria-hidden="true" />
-                <span className="ecl-grow"><b>{t('ecranLivreur.dosTextesTitre')}</b><small>{t('ecranLivreur.dosTextesSous')}</small></span>
-                <Icone nom="retour" taille={16} className="bv-chevron" />
-              </button>
-            </li>
-          </ul>
-        )}
-        <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />
-        {bceAttendu && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} manques={manques} />}
+            {/* Ce qui reste à faire après l'envoi : mêmes blocs que sur le site (dossierBlocs.jsx). */}
+            {etat === 'blocked_threshold' && (
+              <p className="ecl-note"><Icone nom="alerte" taille={18} /><span>{t('courierOnboarding.blockedExplain', { year: legal.year ?? new Date().getFullYear() })}</span></p>
+            )}
+            {(identiteARefaire || versementAFaire || textesARelire) && (
+              <ul className="ecl-etapes ecl-a-faire">
+                {[
+                  identiteARefaire && ['identite', t('ecranLivreur.dosPieceTitre'), c.identity?.rejectedReason ? t('courierOnboarding.rejectedReason', { reason: c.identity.rejectedReason }) : t('courierOnboarding.identityFailed')],
+                  versementAFaire && ['versement', t('ecranLivreur.dosVersementTitre'), t('ecranLivreur.dosVersementSous')],
+                  textesARelire && ['textes', t('ecranLivreur.dosTextesTitre'), t('ecranLivreur.dosTextesSous')]
+                ].filter(Boolean).map(([cle, titreLigne, sousLigne]) => (
+                  <li key={cle}>
+                    <button type="button" className="ecl-etape" onClick={() => setFeuille(cle)}>
+                      <span className="ecl-rond-etape" aria-hidden="true" />
+                      <span className="ecl-grow"><b>{titreLigne}</b><small>{sousLigne}</small></span>
+                      <Icone nom="retour" taille={16} className="bv-chevron" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />
+            {bceAttendu && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} manques={manques} />}
 
-        {(roule || Number(th.deliveries || 0) > 0) && <Compteurs d={d} t={t} />}
+            {(roule || Number(th.deliveries || 0) > 0) && <Compteurs d={d} t={t} />}
+          </div>
 
-        <h2 className="ecl-titre-sec">{t('ecranLivreur.dosTonDossier')}</h2>
-        {c.submittedAt && !valide && <p className="ecl-texte ecl-envoye-le">{t('courierOnboarding.submittedOn', { date: jour(c.submittedAt) })}</p>}
-        <ul className="ecl-etapes">{lignes.map(ligne)}</ul>
-        <p className="ecl-pied-legal">{t('courierOnboarding.legalFooter', { year: legal.year ?? new Date().getFullYear() })}</p>
+          <div className="ecl-site-col">
+            <h2 className="ecl-titre-sec">{t('ecranLivreur.dosTonDossier')}</h2>
+            {c.submittedAt && !valide && <p className="ecl-texte ecl-envoye-le">{t('courierOnboarding.submittedOn', { date: jour(c.submittedAt) })}</p>}
+            <ul className="ecl-etapes">{lignes.map(ligne)}</ul>
+            <p className="ecl-pied-legal">{t('courierOnboarding.legalFooter', { year: legal.year ?? new Date().getFullYear() })}</p>
+          </div>
+        </div>
       </div>
 
       {feuille === 'avant' && (
@@ -169,7 +193,18 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
       )}
       {feuille === 'textes' && (
         <SousEcran titre={t('conformite.engagementsTitle')} onFermer={() => setFeuille(null)}>
-          <div className="ecl-dans-feuille"><EtapeNotices token={token} busy={busy} action={action} onNext={() => { setFeuille(null); charger(); }} /></div>
+          <div className="ecl-dans-feuille"><EtapeNotices token={token} busy={busy} action={action} onNext={() => { setFeuille(null); charger(); }}
+            contrat={contratASigner ? { aSigner: true, nom: `${c.identity?.firstName || ''} ${c.identity?.lastName || ''}`.trim() || d.user?.name || '', onApercu: () => ouvrirPdf(`${API_BASE}/couriers/me/contract/preview`, token, t('courierOnboarding.previewFailed')) } : null} /></div>
+        </SousEcran>
+      )}
+      {feuille === 'identite' && (
+        <SousEcran titre={t('appli.exPieceTitre')} onFermer={() => setFeuille(null)}>
+          <div className="bv-form"><EcranIdentite d={d} t={t} token={token} busy={busy} action={action} onSuivant={() => { setFeuille(null); charger(); }} /></div>
+        </SousEcran>
+      )}
+      {feuille === 'versement' && (
+        <SousEcran titre={t('courierOnboarding.paymentTitle')} onFermer={() => setFeuille(null)}>
+          <div className="bv-form"><EcranPaiement t={t} token={token} busy={busy} actif={false} onSuivant={() => setFeuille(null)} /></div>
         </SousEcran>
       )}
     </div>

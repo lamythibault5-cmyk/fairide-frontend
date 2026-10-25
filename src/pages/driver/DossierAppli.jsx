@@ -14,10 +14,25 @@ import { Haut, Option, Fait } from '../app/EcransBienvenue';
 import { Champ } from '../app/InscriptionAppli';
 import RouteVelo from '../../components/livreur/RouteVelo';
 import { formaterAnneeAcademique } from '../../validation';
+import { useSiteLarge } from '../../hooks/useSiteLarge';
+import { defilement } from '../../gestes';
+import { euros } from '../../prixPlat';
+import GuideIndependant from '../../components/livreur/GuideIndependant';
+import { AvantDeCommencer } from './dossierBlocs';
 import '../../ecran-livreur.css';
 import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 
-/* LE DOSSIER LIVREUR DANS L'APPLICATION (2026-10-15) — /driver/onboarding tant que le dossier est en brouillon.
+/* UN SEUL DOSSIER, SUR LE SITE COMME DANS L'APP (fondateur, 2026-10-25). Le site avait son propre dossier en six étapes
+ * (Onboarding.jsx) : le livreur qui commençait sur le site et continuait dans l'app (ou l'inverse) tombait sur un autre écran,
+ * et chaque correction se faisait deux fois. Il n'en reste qu'un, celui-ci. Sur un téléphone (site ou app), rien ne change :
+ * le sommaire, puis un écran plein par sujet. Sur le site, à partir de 1 100 px (useSiteLarge), le sommaire reste à gauche et
+ * l'écran ouvert s'affiche à droite, dans la page : on voit tout le dossier en remplissant une étape, comme les six onglets
+ * le permettaient. Ce que seul le site avait est repris ici : le comparatif des deux statuts et le guide « devenir
+ * indépendant » (« Lequel choisir ? »), l'avertissement aux étudiants sur la charge des parents, « Avant de commencer », et
+ * le renvoi d'un dossier refusé (le serveur n'envoie seul qu'un brouillon : avancerDossier ; sans bouton, un dossier refusé
+ * dans l'app restait « complet » sans issue).
+ *
+ * LE DOSSIER LIVREUR DANS L'APPLICATION (2026-10-15) — /driver/onboarding tant que le dossier est en brouillon.
  *
  * C'est la première page d'un livreur qui vient de s'inscrire. Sur le site, elle empile le titre, l'état du dossier, la
  * carte « Prochaine étape », « Avant de commencer », l'en-tête des étapes, puis l'étape — dont certaines (Infos, Mes
@@ -36,7 +51,7 @@ import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AV
  * Plus d'écran d'envoi : le serveur envoie le dossier dès qu'il est complet et le valide seul quand tout est vert
  * (routes/couriers.js › avancerDossier) ; Onboarding.jsx montre alors FinExpress (« Tu peux rouler » ou « Presque prêt »).
  * Une fois le dossier envoyé, l'app passe à DossierSuivi.jsx (compteurs, changement de statut, documents de vente, en bandeau
- * et feuille depuis le 2026-10-19). Le guide « comment devenir indépendant » (liens vers les sites publics) reste sur le site. */
+ * et feuille depuis le 2026-10-19). */
 const STATUTS = ['independent', 'student_independent'];
 const VEHICULES = ['velo', 'velo_electrique', 'scooter', 'voiture'];
 const NATIONALITES = ['BE', 'EEA_CH', 'THIRD'];
@@ -78,10 +93,30 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
   // Le premier écran qui manque encore quelque chose : là où mène « Compléter mon dossier ».
   const premierEcran = ecrans.find(aFaire) || (stripeActif ? 'engagements' : 'paiement');
 
+  /* RENVOYER UN DOSSIER REFUSÉ. Le serveur envoie seul un brouillon complet (routes/couriers.js › avancerDossier), jamais un
+   * dossier refusé : seul POST /couriers/me/submit le remet en vérification. Le dossier du site avait ce bouton ; l'app n'en
+   * avait pas, et un livreur refusé qui avait tout corrigé voyait « ton dossier est complet » sans rien pouvoir faire. */
+  const envoyable = !manques.some((m) => !MANQUES_APRES_ENVOI.includes(m));
+  const refuse = c.lifecycleStatus === 'rejected';
+  const envoyer = () => action(() => api('/couriers/me/submit', { method: 'POST', token }), t('courierOnboarding.toastSubmitted')).then((ok) => { if (ok) refreshUser?.(); });
+
+  // Site sur un ordinateur : le sommaire à gauche, l'écran ouvert à droite (voir l'en-tête du fichier).
+  const large = useSiteLarge(1100);
   // `ecran` vide : le sommaire du dossier (SommaireDossier, plus bas). Une étape demandée (retour de Stripe) s'ouvre directement.
   const [ecran, setEcran] = useState(() => ECRAN_DE_ETAPE[etapeDemandee] || null);
+  // L'écran demandé arrive souvent APRÈS le dossier (Onboarding.jsx relit d'abord le dossier, puis traite le retour de
+  // Stripe) : lu seulement à l'ouverture, il était perdu, et le retour de Stripe retombait sur le sommaire.
+  useEffect(() => { if (ECRAN_DE_ETAPE[etapeDemandee]) setEcran(ECRAN_DE_ETAPE[etapeDemandee]); }, [etapeDemandee]);
+  // Sur un ordinateur, un écran est toujours ouvert à droite : le premier à compléter, ou celui du renvoi d'un dossier refusé.
+  const ouvert = ecran || (large ? (refuse && envoyable ? 'manques' : premierEcran) : null);
   const [recule, setRecule] = useState(false);
-  const rang = Math.max(0, ecrans.indexOf(ecran));
+  const rang = Math.max(0, ecrans.indexOf(ouvert));
+  // Changer d'écran sur un ordinateur : le haut du nouvel écran revient en vue s'il était remonté hors de la fenêtre.
+  const panneau = useRef(null);
+  useEffect(() => {
+    if (!large || !panneau.current) return;
+    if (panneau.current.getBoundingClientRect().top < 0) panneau.current.scrollIntoView({ behavior: defilement(), block: 'start' });
+  }, [ouvert, large]);
   const aller = (e, arriere = false) => { setRecule(arriere); setEcran(e); };
   const suivant = () => aller(ecrans[Math.min(rang + 1, ecrans.length - 1)]);
   // La croix (et le retour depuis le premier écran) ramène au sommaire, plus au tableau de bord : on y voit ce qui reste.
@@ -94,10 +129,13 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     if (ok) { setF((x) => ({ ...x, nationalNumber: '' })); suivant(); }
   }
 
-  if (!ecran) {
-    return <SommaireDossier d={d} t={t} user={user} ecrans={ecrans} docs={docs} manques={manques} aFaire={aFaire} stripeActif={stripeActif}
-      premierEcran={premierEcran} onOuvrir={(e) => aller(e)} />;
-  }
+  const sommaire = (panneauOuvert = null) => (
+    <SommaireDossier d={d} t={t} user={user} ecrans={ecrans} docs={docs} manques={manques} aFaire={aFaire} stripeActif={stripeActif}
+      premierEcran={premierEcran} onOuvrir={(e) => aller(e)} ouvert={large ? ouvert : null} renvoi={refuse && envoyable ? envoyer : null} busy={busy}>
+      {panneauOuvert}
+    </SommaireDossier>
+  );
+  if (!ouvert) return sommaire();
 
   let titre = ''; let sous = null; let contenu = null; let pied = null;
   const continuer = (fn = suivant, libelle = t('appli.continuer')) => <button type="button" className="bv-btn btn-teal" disabled={busy} onClick={fn}>{busy ? t('common.loading') : libelle}</button>;
@@ -108,24 +146,30 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     </select>
   );
 
-  if (ecran === 'activite') {
+  if (ouvert === 'activite') {
     titre = t('appli.exActiviteTitre'); sous = t('appli.exActiviteSous');
     contenu = <EcranActivite d={d} f={f} val={val} t={t} token={token} busy={busy} action={action} select={select} />;
     pied = continuer(async () => {
       // Dénomination d'un indépendant en personne physique : son nom, si le registre ne l'a pas donnée.
       const corps = corpsInfos({ ...f, legalName: f.legalName || d.companyRegistry?.name || d.user?.name || '' }, c);
       const adresse = !d.user?.address && f.addressStreet ? { addressStreet: f.addressStreet, addressNumber: f.addressNumber, addressPostalCode: f.addressPostalCode, addressCity: f.addressCity } : {};
-      const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: { ...corps, ...adresse } }));
+      /* SIÈGE D'UN INDÉPENDANT (manque « siege »). Le registre le donne quand il connaît le numéro ; l'adresse tapée ici aussi
+       * (serveur : enregistrerAdresse). Restait le livreur qui a déjà une adresse (toutes les inscriptions du site jusqu'au
+       * 2026-10-25) et un numéro sous la franchise, que le registre ne connaît pas : aucun écran ne demandait son siège et le
+       * dossier restait incomplet. Comme le serveur le fait pour une adresse tapée, son adresse devient son siège. */
+      const siege = c.statusType === 'independent' && !c.independent?.seatAddress && !f.seatAddress && !adresse.addressStreet
+        && !(d.companyRegistry?.valid && d.companyRegistry?.address) && d.user?.address ? { seatAddress: d.user.address } : {};
+      const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: { ...corps, ...adresse, ...siege } }));
       if (ok) { setF((x) => ({ ...x, nationalNumber: '' })); suivant(); }
     });
-  } else if (ecran === 'courses') {
+  } else if (ouvert === 'courses') {
     titre = t('appli.exCoursesTitre'); sous = t('appli.exCoursesSous');
     contenu = <EcranCourses d={d} c={c} f={f} val={val} t={t} motorise={motorise} select={select} />;
     pied = continuer(enregistrerPuisSuivant);
-  } else if (ecran === 'identite') {
+  } else if (ouvert === 'identite') {
     titre = t('appli.exPieceTitre'); sous = t('appli.exPieceSous');
     contenu = <EcranIdentite d={d} t={t} token={token} busy={busy} action={action} onSuivant={suivant} />;
-  } else if (ecran === 'registre') {
+  } else if (ouvert === 'registre') {
     const id = c.identity ?? {};
     titre = id.status === 'verified' ? t('appli.exVerifieeTitre') : t('courierOnboarding.partPersonal'); sous = t('appli.exVerifieeSous');
     contenu = (
@@ -148,27 +192,39 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
       </>
     );
     pied = continuer(enregistrerPuisSuivant);
-  } else if (ecran.startsWith('doc:')) {
-    const type = ecran.slice(4);
+  } else if (ouvert.startsWith('doc:')) {
+    const type = ouvert.slice(4);
     titre = t(`courierOnboarding.doc_${type}`); sous = t(`courierOnboarding.doc_${type}_help`);
     contenu = <EcranDocument key={type} type={type} d={d} c={c} t={t} token={token} busy={busy} action={action} />;
     pied = continuer();
-  } else if (ecran === 'engagements') {
+  } else if (ouvert === 'engagements') {
     titre = t('conformite.engagementsTitle');
     contenu = <EcranEngagements t={t} token={token} busy={busy} action={action} onSuivant={() => { charger(); refreshUser?.(); if (rang >= ecrans.length - 1) aller('manques'); else suivant(); }}
       contrat={{ aSigner: manques.includes('contrat'), nom: `${c.identity?.firstName || ''} ${c.identity?.lastName || ''}`.trim() || d.user?.name || '', onApercu: () => ouvrirPdf(`${API_BASE}/couriers/me/contract/preview`, token, t('courierOnboarding.previewFailed')) }} />;
-  } else if (ecran === 'paiement') {
+  } else if (ouvert === 'paiement') {
     titre = t('courierOnboarding.paymentTitle'); sous = t('courierOnboarding.paymentHelp');
     contenu = <EcranPaiement t={t} token={token} busy={busy} actif={stripeActif} onSuivant={suivant} />;
   } else {
     // Après la dernière case, le serveur envoie (et valide si tout est vert) : il ne reste ici que ce qui manque encore.
     titre = t('courierOnboarding.submitTitle');
-    contenu = <EcranManques d={d} t={t} manques={manques} statusType={c.statusType} onAller={(e) => aller(e, true)} />;
+    contenu = <EcranManques d={d} t={t} manques={manques} statusType={c.statusType} onAller={(e) => aller(e, true)} renvoi={refuse ? envoyer : null} busy={busy} />;
+  }
+
+  // Sur un ordinateur : l'écran ouvert dans la page, à droite du sommaire. Ni croix ni retour : le sommaire est à côté.
+  if (large) {
+    return sommaire(
+      <section className="bv-form ecl-dossier-ecran" key={ouvert} ref={panneau} aria-labelledby="dossier-ecran-titre">
+        <h2 className="bv-titre bv-titre-form" id="dossier-ecran-titre">{titre}</h2>
+        {sous && <p className="bv-sous">{sous}</p>}
+        {contenu}
+        {pied && <><div className="bv-grandit" />{pied}</>}
+      </section>
+    );
   }
 
   return (
     <EcranPlein etiquette={t('courierOnboarding.title')}>
-      <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={ecran}>
+      <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={ouvert}>
         <Haut onRetour={retour} progression={(rang + 1) / ecrans.length} onFermer={fermer} />
         <div className="bv-form">
           <h1 className="bv-titre bv-titre-form">{titre}</h1>
@@ -191,7 +247,12 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
  * Une étape regroupe des écrans de `ecrans` ; elle est faite quand aucun d'eux n'a de manque — paiements : compte Stripe
  * actif ; envoi : dossier envoyé. Les écrans et leurs règles ne changent pas. Le BCE est un manque sous « Ton activité »,
  * mais il peut arriver APRÈS l'envoi (fondateur, 18/10/2026 : MANQUES_APRES_ENVOI) ; il reste exigé avant la validation par
- * l'équipe (audit du 19/10, courier-35 : ce commentaire disait « exigé à l'envoi »). */
+ * l'équipe (audit du 19/10, courier-35 : ce commentaire disait « exigé à l'envoi »).
+ *
+ * Depuis le 2026-10-25 (dossier unique) : `children`, l'écran ouvert, posé à droite sur un ordinateur — l'étape ouverte
+ * (`ouvert`) est alors marquée dans la liste et le bouton lime s'efface (le geste lime est celui de l'écran) ; `renvoi`, un
+ * dossier refusé que plus rien ne retient : son bouton lime le renvoie à l'équipe ; « Avant de commencer » en bas, comme sur
+ * le dossier envoyé (DossierSuivi). */
 const ETAPES_SOMMAIRE = [
   ['activite', ['activite']],
   ['courses', ['courses']],
@@ -201,8 +262,9 @@ const ETAPES_SOMMAIRE = [
   ['engagements', ['engagements']]
 ];
 
-function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActif, premierEcran, onOuvrir }) {
+function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActif, premierEcran, onOuvrir, ouvert = null, renvoi = null, busy = false, children = null }) {
   const c = d.courier;
+  const [avant, setAvant] = useState(false);
   const etapes = ETAPES_SOMMAIRE.map(([cle, liste]) => {
     const siens = (liste ?? docs.map((x) => `doc:${x}`)).filter((e) => ecrans.includes(e));
     const fait = cle === 'paiement' ? stripeActif : !siens.some(aFaire);
@@ -232,9 +294,10 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
   };
   const ligne = (e) => {
     const sous = detail(e);
+    const actif = !!ouvert && e.siens.includes(ouvert);
     return (
       <li key={e.cle}>
-        <button type="button" className="ecl-etape" onClick={() => onOuvrir(e.siens.find(aFaire) || e.siens[0])}>
+        <button type="button" className={`ecl-etape${actif ? ' on' : ''}`} aria-current={actif ? 'step' : undefined} onClick={() => onOuvrir(e.siens.find(aFaire) || e.siens[0])}>
           <span className={`ecl-rond-etape${e.fait ? ' fait' : ''}`} aria-hidden="true">{e.fait && <Icone nom="valider" taille={14} />}</span>
           <span className="ecl-grow"><b>{t(`appli.dosEtape_${e.cle}`)}</b>{sous && <small>{sous}</small>}</span>
           {!e.fait && <Icone nom="retour" taille={16} className="bv-chevron" />}
@@ -242,9 +305,51 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
       </li>
     );
   };
+  // Un seul lime : renvoyer un dossier refusé quand plus rien ne le retient, sinon ouvrir le premier écran à compléter. Sur un
+  // ordinateur (`children`), aucun dans la liste : l'écran ouvert à droite porte le sien.
+  const boutonLime = children ? null : renvoi ? (
+    <button type="button" className="btn-gold ecl-bouton-dossier" disabled={busy} onClick={renvoi}>{busy ? t('common.loading') : t('appli.dosRenvoyer')}</button>
+  ) : restantes.length > 0 ? (
+    <button type="button" className="btn-gold ecl-bouton-dossier" onClick={() => onOuvrir(premierEcran)}>{t('appli.dosCompleter')}</button>
+  ) : null;
+
+  const liste = (
+    <>
+      {c.lifecycleStatus === 'rejected' && c.reviewReason && (
+        <p className="ecl-note"><Icone nom="alerte" taille={18} /><span>{t('courierOnboarding.rejectedReason', { reason: c.reviewReason })}{renvoi && !children && <> {t('appli.dosRenvoyerAide')}</>}</span></p>
+      )}
+      {restantes.length > 0 && (
+        <>
+          <h2 className="ecl-titre-sec">{t('appli.dosAFaire')}</h2>
+          <ul className="ecl-etapes">{restantes.map(ligne)}</ul>
+        </>
+      )}
+      {boutonLime}
+      {faites.length > 0 && (
+        <>
+          <h2 className="ecl-titre-sec">{t('appli.dosFait')}</h2>
+          <ul className="ecl-etapes">{faites.map(ligne)}</ul>
+        </>
+      )}
+      {/* « Avant de commencer » (paiement, courses groupées, assurance) : le dossier du site l'avait en tête, replié. */}
+      <ul className="ecl-etapes ecl-etapes-annexe">
+        <li>
+          <button type="button" className="ecl-etape" onClick={() => setAvant(true)}>
+            <span className="ecl-grow"><b>{t('courierOnboarding.beforeTitle')}</b><small>{t('ecranLivreur.dosAvantSous')}</small></span>
+            <Icone nom="retour" taille={16} className="bv-chevron" />
+          </button>
+        </li>
+      </ul>
+      {avant && (
+        <SousEcran titre={t('courierOnboarding.beforeTitle')} onFermer={() => setAvant(false)}>
+          <div className="ecl-dans-feuille"><AvantDeCommencer c={c} t={t} pricing={d.pricing} replie /></div>
+        </SousEcran>
+      )}
+    </>
+  );
 
   return (
-    <div className="ecl ecl-page ecl-dossier">
+    <div className={`ecl ecl-page ecl-dossier${children ? ' ecl-page-large ecl-dossier-large' : ''}`}>
       <section className="ecl-bandeau">
         <div className="ecl-b-haut"><span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span></div>
         <h1 className="ecl-b-titre">{t('appli.dosTitre')}</h1>
@@ -252,24 +357,12 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
         <RouteVelo position={Math.round(6 + (88 * faites.length) / Math.max(1, total))} depart={6} />
       </section>
       <div className="ecl-feuille">
-        {c.lifecycleStatus === 'rejected' && c.reviewReason && (
-          <p className="ecl-note"><Icone nom="alerte" taille={18} />{t('courierOnboarding.rejectedReason', { reason: c.reviewReason })}</p>
-        )}
-        {restantes.length > 0 && (
-          <>
-            <h2 className="ecl-titre-sec">{t('appli.dosAFaire')}</h2>
-            <ul className="ecl-etapes">{restantes.map(ligne)}</ul>
-            <button type="button" className="btn-gold ecl-bouton-dossier" onClick={() => onOuvrir(premierEcran)}>
-              {t('appli.dosCompleter')}
-            </button>
-          </>
-        )}
-        {faites.length > 0 && (
-          <>
-            <h2 className="ecl-titre-sec">{t('appli.dosFait')}</h2>
-            <ul className="ecl-etapes">{faites.map(ligne)}</ul>
-          </>
-        )}
+        {children ? (
+          <div className="ecl-dossier-cols">
+            <nav className="ecl-dossier-liste" aria-label={t('appli.dosTitre')}>{liste}</nav>
+            {children}
+          </div>
+        ) : liste}
       </div>
     </div>
   );
@@ -299,6 +392,8 @@ function EcranActivite({ d, f, val, t, token, busy, action, select }) {
     </div>
   );
   const connue = !f.socialInsuranceFund || CAISSES.includes(f.socialInsuranceFund);
+  const legal = d.legal ?? {};
+  const [comparer, setComparer] = useState(false);
   return (
     <>
       <div className="bv-segments" role="radiogroup" aria-label={t('auth.courierStatusTitle')}>
@@ -307,6 +402,13 @@ function EcranActivite({ d, f, val, t, token, busy, action, select }) {
             onClick={() => st !== c.statusType && action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType: st } }))}>{t(`appli.exStatut_${st}`)}</button>
         ))}
       </div>
+      {/* Le comparatif des deux statuts et le guide « devenir indépendant », que seul le dossier du site montrait. */}
+      <button type="button" className="bv-ajout" style={{ marginTop: -4, marginBottom: 12 }} onClick={() => setComparer(true)}>{t('appli.exLequel')}</button>
+      {comparer && (
+        <SousEcran titre={t('courierOnboarding.chooseStatus')} onFermer={() => setComparer(false)}>
+          <div className="ecl-dans-feuille"><ComparaisonStatuts legal={legal} t={t} actuel={c.statusType} /></div>
+        </SousEcran>
+      )}
       <Champ id="dos-bce" label={t('courierOnboarding.fBce')}>
         <input id="dos-bce" inputMode="numeric" value={f.companyNumber} onChange={(e) => val('companyNumber', e.target.value)} placeholder="0123.456.789" />
       </Champ>
@@ -331,6 +433,9 @@ function EcranActivite({ d, f, val, t, token, busy, action, select }) {
           <Champ id="dos-annee" label={t('courierOnboarding.fAcademicYear')}><input id="dos-annee" inputMode="numeric" value={f.academicYear} onChange={(e) => val('academicYear', formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" /></Champ>
         </div>
       )}
+      {c.statusType === 'student_independent' && legal.studentParentsCeiling != null && (
+        <p className="bv-aide" style={{ marginTop: -4 }}>{t('courierOnboarding.studentParentsInfo', { amount: euros(Number(legal.studentParentsCeiling)) })}</p>
+      )}
       <span className="bv-etiquette" id="dos-tva">{t('appli.exRegimeTva')}</span>
       {segments('dos-tva', 'vatStatus', ['franchise', 'assujetti'], (v) => t(`appli.exTva_${v}`))}
       <span className="bv-etiquette" id="dos-nat">{t('appli.exNationalite')}</span>
@@ -339,6 +444,50 @@ function EcranActivite({ d, f, val, t, token, busy, action, select }) {
       <Champ id="dos-caisse" label={t('courierOnboarding.fSocialInsuranceFund')} aide={t('courierOnboarding.fSocialInsuranceFundHelp')}>
         {select('dos-caisse', 'socialInsuranceFund', [...CAISSES.map((x) => [x, x]), ...(connue ? [] : [[f.socialInsuranceFund, f.socialInsuranceFund]])])}
       </Champ>
+    </>
+  );
+}
+
+/* LEQUEL CHOISIR ? Le comparatif des deux statuts du dossier du site (plafond, retenue, cotisations, TVA, démarches, âge), les
+ * montants de l'année tirés de `legal` (configuration fiscale, jamais écrits ici), et le guide « devenir indépendant » avec les
+ * sites officiels (GuideIndependant). Ici on lit seulement : le choix se fait sur les deux pastilles de « Ton activité ». */
+const EUROS_OU_TIRET = (x) => (x == null || x === '' ? '—' : euros(Number(x)));
+const POURCENT = (x) => (x == null || x === '' ? '—' : `${(Number(x) * 100).toLocaleString(getLocale(), { maximumFractionDigits: 2 })} %`);
+function ComparaisonStatuts({ legal, t, actuel }) {
+  const age = legal.adultMinAge ?? '—';
+  const lignes = {
+    student_independent: [
+      ['cmpCeiling', t('courierOnboarding.cmpStuCeiling', { ceiling: EUROS_OU_TIRET(legal.studentIndependentCeiling) })],
+      ['cmpWithholding', t('courierOnboarding.cmpStuWithholding')],
+      ['cmpSocial', t('courierOnboarding.cmpStuSocial', { exemption: EUROS_OU_TIRET(legal.studentIndependentExemption) })],
+      ['cmpVat', t('courierOnboarding.cmpStuVat', { max: EUROS_OU_TIRET(legal.franchiseMaxTurnover) })],
+      ['cmpSteps', t('courierOnboarding.cmpStuSteps')],
+      ['cmpAgeLabel', t('courierOnboarding.cmpStuAge', { age })]
+    ],
+    independent: [
+      ['cmpCeiling', t('courierOnboarding.cmpIndCeiling')],
+      ['cmpWithholding', t('courierOnboarding.cmpIndWithholding')],
+      ['cmpSocial', t('courierOnboarding.cmpIndSocial', { rate: POURCENT(legal.independentSocialRate), exemption: EUROS_OU_TIRET(legal.independentComplementaryExemption) })],
+      ['cmpVat', t('courierOnboarding.cmpIndVat', { max: EUROS_OU_TIRET(legal.franchiseMaxTurnover) })],
+      ['cmpSteps', t('courierOnboarding.cmpIndSteps')],
+      ['cmpAgeLabel', t('courierOnboarding.cmpAge', { age })]
+    ]
+  };
+  return (
+    <>
+      <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.chooseStatusHelp')}</p>
+      <div className="courier-compare">
+        {STATUTS.map((st) => (
+          <div key={st} className={`courier-compare-card${actuel === st ? ' active' : ''}`}>
+            <div className="courier-compare-head"><Icone nom={st === 'student_independent' ? 'guide' : 'mallette'} taille={26} /><b>{t(`courierOnboarding.status_${st}`)}</b></div>
+            <p className="small">{t(`courierOnboarding.status_${st}_desc`)}</p>
+            <dl className="courier-compare-list">
+              {lignes[st].map(([cle, txt]) => <div key={cle} style={{ display: 'contents' }}><dt>{t(`courierOnboarding.${cle}`)}</dt><dd>{txt}</dd></div>)}
+            </dl>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 14 }}><GuideIndependant legal={legal} /></div>
     </>
   );
 }
@@ -381,7 +530,7 @@ function EcranCourses({ d, c, f, val, t, motorise, select }) {
 }
 
 // L'identité : trois façons (Stripe Identity, une photo de la pièce, en personne) ; une fois lancée, ce qui en est.
-function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
+export function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
   const toast = useToast();
   const id = d.courier.identity ?? {}; const prov = d.identityProviders ?? {};
   const fichier = useRef(null);
@@ -628,7 +777,7 @@ function EcranEngagements({ t, token, busy, action, onSuivant, contrat }) {
 }
 
 // Les paiements : Stripe dans le navigateur intégré de l'app ; « Pas maintenant » ne bloque rien d'autre.
-function EcranPaiement({ t, token, busy, actif, onSuivant }) {
+export function EcranPaiement({ t, token, busy, actif, onSuivant }) {
   const [ouverture, setOuverture] = useState(false);
   const [erreur, setErreur] = useState('');
   async function connecter() {
@@ -650,10 +799,18 @@ function EcranPaiement({ t, token, busy, actif, onSuivant }) {
 
 // Ce qui manque encore, après la dernière case : chaque ligne ramène à son écran. Pas de bouton d'envoi : le serveur envoie
 // le dossier dès qu'il est complet (hors numéro d'entreprise, qui peut arriver après, MANQUES_APRES_ENVOI).
-function EcranManques({ d, t, manques: tousManques, statusType, onAller }) {
+// `renvoi` : un dossier refusé n'est pas renvoyé par le serveur (avancerDossier ne touche qu'aux brouillons), il faut ce bouton.
+function EcranManques({ d, t, manques: tousManques, statusType, onAller, renvoi = null, busy = false }) {
   const infos = (d.missing ?? []).filter((m) => MANQUES_INFORMATIFS.includes(m));
   const manques = tousManques.filter((m) => !MANQUES_APRES_ENVOI.includes(m));
-  if (!manques.length) return <p className="bv-sous">{t('courierOnboarding.submitReady')}</p>;
+  if (!manques.length) {
+    return (
+      <>
+        <p className="bv-sous">{renvoi ? t('appli.dosRenvoyerAide') : t('courierOnboarding.submitReady')}</p>
+        {renvoi && <><div className="bv-grandit" /><button type="button" className="bv-btn btn-gold" disabled={busy} onClick={renvoi}>{busy ? t('common.loading') : t('appli.dosRenvoyer')}</button></>}
+      </>
+    );
+  }
   // Quatre lignes au plus ; le bouton mène au premier manque.
   const premier = manques.map((m) => ecranDuManque(m, statusType)).find(Boolean);
   return (
@@ -679,8 +836,10 @@ function EcranManques({ d, t, manques: tousManques, statusType, onAller }) {
 
 /* LA FIN DE L'INSCRIPTION EXPRESS (version A de maquettes/inscription-livreur/inscription-livreur.html) : Onboarding.jsx la montre au
  * moment où le serveur envoie le dossier (routes/couriers.js › avancerDossier). Tout vert : « Tu peux rouler », validé sans
- * attendre personne. Sinon : « Presque prêt », et seulement ce que l'équipe regarde (d.teamChecks) ou ce que Stripe vérifie
- * encore. Chaque ligne dit d'où vient son vert. */
+ * attendre personne. Sinon : « Presque prêt », et seulement ce que l'équipe regarde (d.teamChecks) ou ce qui manque encore.
+ * Chaque ligne dit d'où vient son vert. Le compte de versement pas encore actif est un geste du LIVREUR (2026-10-25) : le
+ * serveur envoie le dossier sans lui (« Pas maintenant »), mais ne le valide pas sans lui, et personne ne le relance. La puce
+ * disait « Stripe vérifie encore ton compte », même quand Stripe n'avait jamais été ouvert ; DossierSuivi montre le bouton. */
 export function FinExpress({ d, t, onCourses, onDossier }) {
   const c = d.courier; const id = c.identity ?? {};
   const valide = c.lifecycleStatus === 'approved';
@@ -696,7 +855,7 @@ export function FinExpress({ d, t, onCourses, onDossier }) {
     ['age', t('appli.exLigneAge'), 'fait', age != null ? t('appli.exAns', { age }) : null],
     ['droit', t('appli.exLigneDroit'), equipe.includes('titre_sejour') || equipe.includes('nationalite') ? 'equipe' : 'fait',
       equipe.includes('titre_sejour') ? t('appli.exLigneDroitSejour') : equipe.includes('nationalite') ? t('appli.exLigneDroitNat') : t('appli.exLigneDroitEee')],
-    ['versement', t('appli.exLigneVersement'), stripeActif ? 'fait' : 'attente', stripeActif ? t('appli.exLigneVersementOk') : t('appli.exLigneVersementAttente')],
+    ['versement', t('appli.exLigneVersement'), stripeActif ? 'fait' : 'attente', stripeActif ? t('appli.exLigneVersementOk') : t('appli.exLigneVersementAFaire')],
     ['engagements', t('appli.exLigneEngagements'), 'fait', t('appli.exLigneEngagementsOk')]
   ];
   return (
@@ -705,10 +864,10 @@ export function FinExpress({ d, t, onCourses, onDossier }) {
         <div className="ecl-b-haut"><span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span></div>
         <span className={`ecl-puce-fin${valide ? ' vert' : ''}`}>
           <Icone nom={valide ? 'valider' : 'horloge'} taille={14} />
-          {valide ? t('appli.exPuceAuto') : equipe.length ? t('appli.exPuceEquipe', { quoi: equipe.map((k) => t(`appli.exQuoi_${k}`)).join(', ') }) : t('appli.exPuceStripe')}
+          {valide ? t('appli.exPuceAuto') : equipe.length ? t('appli.exPuceEquipe', { quoi: equipe.map((k) => t(`appli.exQuoi_${k}`)).join(', ') }) : t('appli.exPuceVersement')}
         </span>
         <h1 className="ecl-b-titre">{valide ? t('appli.exFinVert') : t('appli.exFinPresque')}</h1>
-        <p className="ecl-b-sous">{valide ? t('appli.exFinVertS') : t('appli.exFinPresqueS')}</p>
+        <p className="ecl-b-sous">{valide ? t('appli.exFinVertS') : !equipe.length && !stripeActif ? t('appli.exFinVersementS') : t('appli.exFinPresqueS')}</p>
         <RouteVelo position={valide ? 94 : 80} depart={6} />
       </section>
       <div className="ecl-feuille">

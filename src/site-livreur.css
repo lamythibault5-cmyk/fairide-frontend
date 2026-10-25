@@ -6,7 +6,8 @@
        liste à gauche (boutons compacts), la carte et le détail de la course choisie à droite ; une course en main, son
        détail à gauche et sa carte à droite. Des boutons partout (la glissière est réservée à l'app).
      - Gains (EarningsPage.jsx) : à partir de 1100 px, les règles et les mois à gauche, le détail à droite.
-     - Carte, Factures, dossier (PageLivreur.jsx ; la page Avis est partie le 22/10/2026) : le même bandeau, le contenu dans la feuille, à largeur de lecture.
+     - Carte, Factures (PageLivreur.jsx ; la page Avis est partie le 22/10/2026) : le même bandeau, le contenu dans la feuille, à largeur de lecture.
+     - Dossier (DossierAppli.jsx, DossierSuivi.jsx, 2026-10-25) : celui de l'app, en deux colonnes à partir de 1 100 px (plus bas).
    Sur un téléphone (site, sous 900 px), le bandeau va d'un bord à l'autre comme dans l'app (ecran-livreur.css) et la page
    reste en une colonne.
    L'APP NE CHANGE PAS : tout ce qui suit est réservé au site (html:not(.appli)), ou porte sur des éléments que seul le site
@@ -117,6 +118,35 @@
 }
 @media (min-width: 901px) {
   html:not(.appli) .ecl-gains .ecl-gros { font-size: 52px; }
+}
+
+/* ---------- Le dossier en brouillon, site large (DossierAppli.jsx, dossier unique du 2026-10-25) ----------
+   Le dossier de l'app sur un ordinateur : le sommaire (« À faire », « Fait ») à gauche, collant, l'étape ouverte marquée ;
+   l'écran ouvert à droite, dans la page, à la largeur d'un formulaire (ses champs et ses boutons sont ceux de l'app, .bv-…).
+   Le bouton lime est celui de l'écran ouvert : la liste n'en a pas. Sous 1 100 px, rien de tout ça (useSiteLarge) : le
+   sommaire, puis l'écran plein, comme dans l'app. */
+.ecl-dossier-cols { display: grid; grid-template-columns: minmax(260px, 330px) minmax(0, 1fr); gap: 44px; align-items: start; }
+.ecl-dossier-liste { position: sticky; top: 20px; min-width: 0; }
+.ecl-dossier-liste > .ecl-titre-sec:first-child, .ecl-dossier-liste > .ecl-note:first-child + .ecl-titre-sec { margin-top: 0; }
+/* L'étape ouverte : un fond iris très clair qui déborde un peu de la colonne, le filet du dessous effacé sous lui. */
+.ecl-dossier-liste .ecl-etape { border-radius: 0; transition: background-color .15s; }
+.ecl-dossier-liste .ecl-etape:hover { background: rgba(59, 47, 181, .04); }
+.ecl-dossier-liste .ecl-etape.on { background: rgba(59, 47, 181, .08); border-radius: 14px; margin: 0 -12px; padding: 10px 12px; width: calc(100% + 24px); border-bottom-color: transparent; }
+.ecl-dossier-liste .ecl-etape.on .ecl-grow b { color: var(--iris); }
+.ecl-dossier-ecran { display: flex; flex-direction: column; min-width: 0; max-width: 560px; padding-top: 4px; animation: bv-entre .28s ease; }
+.ecl-dossier-ecran > .bv-titre-form { margin: 0 0 8px; }
+.ecl-dossier-ecran .bv-btn { margin-top: 18px; }
+@media (prefers-reduced-motion: reduce) { .ecl-dossier-ecran { animation: none; } }
+
+/* ---------- Le dossier envoyé ou validé, site large (DossierSuivi.jsx, 2026-10-25) ----------
+   À gauche le geste (« Voir les courses », une pièce à remplacer, un texte à relire) et les compteurs ; à droite les lignes du
+   dossier. Une colonne vide (dossier envoyé, encore aucune course) laisse toute la largeur à l'autre. */
+@media (min-width: 1100px) {
+  html:not(.appli) .ecl-dossier-suivi .ecl-site-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 44px; align-items: start; }
+  html:not(.appli) .ecl-dossier-suivi .ecl-site-cols:has(> .ecl-site-col:empty) { grid-template-columns: minmax(0, 1fr); max-width: 620px; }
+  html:not(.appli) .ecl-dossier-suivi .ecl-site-col { display: block; min-width: 0; }
+  html:not(.appli) .ecl-dossier-suivi .ecl-site-col:empty { display: none; }
+  html:not(.appli) .ecl-dossier-suivi .ecl-site-cols > .ecl-site-col > .ecl-titre-sec:first-child { margin-top: 0; }
 }
 
 /* Impression (Factures : « Imprimer ») : l'iris ne s'imprime pas, le titre passe en encre sur blanc. */

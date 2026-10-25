@@ -7,9 +7,9 @@ import Icone from '../../components/Icone';
 import { euros } from '../../prixPlat';
 import { AVEC_ECHEANCE, ECHEANCE_REQUISE, STATUTS } from './dossierCommun';
 
-// LES BLOCS DU DOSSIER LIVREUR UNE FOIS ENVOYÉ (sortis d'Onboarding.jsx le 2026-10-19, deuxième audit design) : le dossier du
-// site (Onboarding.jsx) et celui de l'application, envoyé ou validé (DossierSuivi.jsx), montrent les mêmes blocs avec les mêmes
-// routes. `enFeuille` : rendu sans carte ni bouton « Ouvrir », pour une feuille de l'app (SousEcran) ou une remarque à filet.
+// LES BLOCS DU DOSSIER LIVREUR UNE FOIS ENVOYÉ (sortis d'Onboarding.jsx le 2026-10-19, deuxième audit design), montrés par
+// DossierSuivi.jsx, sur le site comme dans l'app depuis le 2026-10-25 (dossier unique). `enFeuille` : rendu sans carte ni bouton
+// « Ouvrir », pour une feuille (SousEcran) ou une remarque à filet.
 
 const euro = (n) => euros(Number(n || 0));
 
@@ -160,8 +160,8 @@ export function NumeroEntrepriseEnAttente({ t, token, busy, action, manques = []
 /* APRÈS LA VALIDATION, LE DOSSIER RESTE À LA MAIN DU LIVREUR (audit du 19/10, courier-5, courier-6, courier-7, courier-30). Les
  * étapes ne s'affichent que pour un brouillon : un livreur validé ne pouvait plus changer ni sa zone, ni son véhicule, ni ses
  * autres plateformes (qui décident d'une ou trois courses à la fois), ni son sac, ni déposer un titre de séjour renouvelé.
- * Trois blocs, mêmes routes que le dossier (PATCH /couriers/me, POST /couriers/me/documents), sur le site (Onboarding.jsx) et
- * dans l'app (DossierSuivi.jsx, en feuilles). Rien ici ne fait repasser le dossier en vérification : le statut se change par
+ * Trois blocs, mêmes routes que le dossier (PATCH /couriers/me, POST /couriers/me/documents), dans DossierSuivi.jsx (en feuilles, site
+ * et app). Rien ici ne fait repasser le dossier en vérification : le statut se change par
  * « Changer de statut », et un titre de séjour déposé arrive à l'équipe, qui le vérifie (serveur). */
 export function MesCourses({ d, t, token, busy, action }) {
   const id = useId();
