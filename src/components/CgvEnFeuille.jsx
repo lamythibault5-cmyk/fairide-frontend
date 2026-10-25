@@ -9,7 +9,7 @@ import { TexteConfidentialite } from '../pages/legal/Privacy';
 /* LE LIEN « CONDITIONS GÉNÉRALES » AU MOMENT D'ACCEPTER (2026-10-15).
  *
  * Sur le site, un nouvel onglet (on garde le formulaire ouvert). Dans l'application, un nouvel onglet n'existe pas : le
- * lien ouvrait le navigateur sur fairide.be — le site au milieu de l'app — ou quittait l'inscription / le paiement en
+ * lien ouvrait le navigateur sur fairride.be — le site au milieu de l'app — ou quittait l'inscription / le paiement en
  * cours. Ici, les conditions s'ouvrent dans une feuille par-dessus l'écran, et l'on revient exactement où l'on était. */
 export default function LienCgv({ children, cible = '_blank' }) {
   const { t } = useLanguage();

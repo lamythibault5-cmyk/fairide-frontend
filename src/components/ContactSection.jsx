@@ -15,7 +15,7 @@ export default function ContactSection({ messageInitial = '' }) {
   const INFO_CARDS = [
     // Noms du jeu maison (Icone.jsx), plus des emojis : le ✉️ et le 📞 se rendaient avec la police
     // du systeme, donc bleus et bombes sur Windows, plats ailleurs, a cote d'une interface au trait.
-    { icon: 'courrier', title: t('contact.emailLabel'), lines: ['contact@fairide.be'] },
+    { icon: 'courrier', title: t('contact.emailLabel'), lines: ['contact@fairride.be'] },
     { icon: 'position', title: t('contact.locationLabel'), lines: [t('contact.locationValue')] },
     { icon: 'telephone', title: t('contact.phoneLabel'), lines: ['+32 474 20 07 13'] }
   ];

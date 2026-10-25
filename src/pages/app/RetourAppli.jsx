@@ -8,7 +8,7 @@ import { Feuille } from './EcransBienvenue';
 /* RETOUR DANS L'APPLICATION APRÈS STRIPE (2026-10-21, vérification Stripe site / app).
  *
  * Dans l'app, Stripe s'ouvre dans le navigateur intégré (Custom Tab sur Android, allerAuPaiement dans natif.js). Après le
- * paiement, Stripe renvoie à une adresse https://fairide.be/… : rien ne garantit qu'Android la rende à l'application. Le
+ * paiement, Stripe renvoie à une adresse https://fairride.be/… : rien ne garantit qu'Android la rende à l'application. Le
  * lien d'application (assetlinks.json) doit être vérifié, et Chrome refuse souvent de passer la main sur une redirection
  * automatique, sans geste de la personne. Elle restait alors sur le SITE, déconnecté, dans le navigateur intégré.
  *
@@ -20,7 +20,7 @@ import { Feuille } from './EcransBienvenue';
  *     lien ou pas. L'app reçoit l'adresse (appUrlOpen, natif.js), ferme le navigateur intégré et ouvre la page.
  *   - sur iPhone / iPad (revue du 24/10) : /retour-appli est maintenant un lien universel (apple-app-site-association),
  *     donc la redirection de Stripe ouvre normalement l'app sans passer par cette page. Si iOS ne passe pas la main, le
- *     bouton ne peut PAS être un lien https://fairide.be/… : iOS n'ouvre jamais l'app pour un lien vers le domaine de la
+ *     bouton ne peut PAS être un lien https://fairride.be/… : iOS n'ouvre jamais l'app pour un lien vers le domaine de la
  *     page affichée. Il prend le schéma de l'app, `fairide:///chemin` (déclaré dans ios/App/App/Info.plist,
  *     CFBundleURLTypes ; appUrlOpen de natif.js l'accepte déjà). Pas d'essai automatique : Safari refuse ou demande pour
  *     un schéma ouvert sans geste.

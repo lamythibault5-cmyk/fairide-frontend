@@ -31,7 +31,7 @@ const AUDIENCE_ROLE = { partner: 'restaurant', client: 'client' };
 export default function ConnexionAppli() {
   const { t } = useLanguage();
   const { user, login, verifyEmail, resendCode, changePendingPhone, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
-  // Déjà connecté EN ARRIVANT (audit du 19/10, auth-13) : un lien fairide.be/login ouvert dans l'app montrait le formulaire.
+  // Déjà connecté EN ARRIVANT (audit du 19/10, auth-13) : un lien fairride.be/login ouvert dans l'app montrait le formulaire.
   // Comme sur le site (Auth.jsx) : on va dans son espace, ou là où l'on voulait aller. Une connexion faite ICI garde sa suite.
   const [connecteALArrivee] = useState(() => !!user);
   const toast = useToast();

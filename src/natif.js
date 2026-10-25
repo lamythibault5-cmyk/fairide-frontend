@@ -13,7 +13,7 @@
 //   - bouton Retour d'Android (sinon il ferme l'application au premier appui) ;
 //   - liens externes et paiement Stripe dans un navigateur intégré (SFSafariViewController / Custom Tab)
 //     plutôt que dans la WebView, qui n'a ni barre d'adresse ni cadenas — Stripe et Google l'exigent ;
-//   - retour dans l'application après Stripe : lien universel https://fairide.be/… (appUrlOpen) quand il
+//   - retour dans l'application après Stripe : lien universel https://fairride.be/… (appUrlOpen) quand il
 //     est configuré (docs/application-mobile.md), sinon fermeture du navigateur → on va à la page de retour ;
 //   - barre d'état iris, écran de lancement natif retiré quand la page est vraiment rendue ;
 //   - clavier : classe `clavier-ouvert` sur <html> pour escamoter les barres fixes du bas ;
@@ -57,7 +57,10 @@ export function plateforme() {
 }
 
 // Adresse publique du site : les liens universels et les retours de paiement y pointent.
-const ORIGINE_SITE = 'https://fairide.be';
+const ORIGINE_SITE = 'https://fairride.be';
+// Ses adresses reconnues comme « chez nous » : la nouvelle et l'ancienne (fairide.be, une seule r, jusqu'au 2026-10-25), qui
+// redirige vers la nouvelle — un lien d'un ancien e-mail ou d'un QR code imprimé doit encore s'ouvrir dans l'app.
+const ORIGINES_SITE = new Set([ORIGINE_SITE, 'https://www.fairride.be', 'https://fairide.be', 'https://www.fairide.be']);
 const CLE_RETOUR = 'fairide_retour_navigateur';
 
 // Lien à partager vers une page de Fairide (audit du 19/10, CROSS-02 et CROSS-03). Dans l'application, l'origine de la page
@@ -95,7 +98,7 @@ export function garderLesLiensDansLApp(historique) {
     try { url = new URL(a.getAttribute('href'), window.location.href); } catch { return; }
     if (!/^https?:$/.test(url.protocol)) return;
     if (/(^|\.)(waze\.com|maps\.apple\.com)$/.test(url.hostname) || (/(^|\.)google\.[a-z.]+$/.test(url.hostname) && url.pathname.startsWith('/maps'))) return;
-    const pageInterne = (url.origin === window.location.origin || url.origin === ORIGINE_SITE) && !/\.[a-z0-9]{2,5}$/i.test(url.pathname);
+    const pageInterne = (url.origin === window.location.origin || ORIGINES_SITE.has(url.origin)) && !/\.[a-z0-9]{2,5}$/i.test(url.pathname);
     if (pageInterne) { e.preventDefault(); historique.push(`${url.pathname}${url.search}${url.hash}`); return; }
     if (estNatif()) { e.preventDefault(); ouvrirLienExterne(url.href); }
   }, true);
@@ -269,12 +272,12 @@ export async function demarrerNatif(historique) {
       historique.back({ geste: true });
     });
 
-    // Lien universel (https://fairide.be/order-success?order=…) ou schéma de l'application : on navigue
+    // Lien universel (https://fairride.be/order-success?order=…) ou schéma de l'application : on navigue
     // à l'intérieur de la page déjà chargée, sans recharger la WebView.
     App.addListener('appUrlOpen', async ({ url }) => {
       try {
         const u = new URL(url);
-        const interne = u.origin === ORIGINE_SITE || u.protocol === 'fairide:';
+        const interne = ORIGINES_SITE.has(u.origin) || u.protocol === 'fairide:';
         if (!interne) return;
         try { sessionStorage.removeItem(CLE_RETOUR); } catch { /* rien */ }
         try { const { Browser } = await import('@capacitor/browser'); await Browser.close(); } catch { /* pas ouvert */ }
@@ -422,7 +425,7 @@ export async function etatPosition() {
 /* Connexion Apple / Google DANS L'APPLICATION (feuille native du système).
  *
  * POURQUOI PAS LE BOUTON GOOGLE DU SITE. Google refuse sa connexion dans une WebView (« disallowed_useragent ») :
- * le bouton de googleSignIn.js, qui marche sur fairide.be, échoue dans l'application. Le greffon passe par le
+ * le bouton de googleSignIn.js, qui marche sur fairride.be, échoue dans l'application. Le greffon passe par le
  * compte Google du téléphone (Android) ou la feuille Google/Apple d'iOS et rend le même jeton d'identité que le
  * site — POST /auth/google le vérifie exactement pareil, à condition que webClientId soit l'identifiant web
  * (VITE_GOOGLE_CLIENT_ID, celui que le serveur attend comme destinataire).

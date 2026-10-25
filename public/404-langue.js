@@ -5,8 +5,8 @@
   var langue = (location.pathname.match(/^\/(nl|en)(\/|$)/) || [])[1];
   if (!langue) return;
   var textes = {
-    nl: { page: 'Pagina niet gevonden · fairide.be', titre: 'Deze pagina bestaat niet', texte: 'De link is misschien verouderd, of het adres bevat een tikfout. De zaken zijn er nog altijd.', commerces: 'Bekijk de zaken', accueil: 'Terug naar de startpagina', mentions: 'Wettelijke vermeldingen', confidentialite: 'Privacy', cgv: 'Algemene voorwaarden', aide: 'Hulp' },
-    en: { page: 'Page not found · fairide.be', titre: 'This page does not exist', texte: 'The link may be out of date, or the address contains a typo. The shops are still here.', commerces: 'See the shops', accueil: 'Back to the home page', mentions: 'Legal notice', confidentialite: 'Privacy', cgv: 'Terms and conditions', aide: 'Help' }
+    nl: { page: 'Pagina niet gevonden · fairride.be', titre: 'Deze pagina bestaat niet', texte: 'De link is misschien verouderd, of het adres bevat een tikfout. De zaken zijn er nog altijd.', commerces: 'Bekijk de zaken', accueil: 'Terug naar de startpagina', mentions: 'Wettelijke vermeldingen', confidentialite: 'Privacy', cgv: 'Algemene voorwaarden', aide: 'Hulp' },
+    en: { page: 'Page not found · fairride.be', titre: 'This page does not exist', texte: 'The link may be out of date, or the address contains a typo. The shops are still here.', commerces: 'See the shops', accueil: 'Back to the home page', mentions: 'Legal notice', confidentialite: 'Privacy', cgv: 'Terms and conditions', aide: 'Help' }
   }[langue];
   document.documentElement.lang = langue;
   document.title = textes.page;

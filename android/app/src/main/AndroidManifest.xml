@@ -19,16 +19,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Liens d'application : fairide.be s'ouvre dans l'application (retour de paiement Stripe compris).
-                 autoVerify exige https://fairide.be/.well-known/assetlinks.json avec l'empreinte SHA-256 du
+            <!-- Liens d'application : fairride.be s'ouvre dans l'application (retour de paiement Stripe compris).
+                 autoVerify exige https://fairride.be/.well-known/assetlinks.json avec l'empreinte SHA-256 du
                  certificat de signature (voir docs/application-mobile.md). -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <!-- fairide.be seul (2026-10-21) : www.fairide.be redirige (308), Android refuse alors de le vérifier, et
-                     jusqu'à Android 11 un seul hôte refusé annule la vérification de tous. Stripe ne renvoie que vers fairide.be. -->
-                <data android:scheme="https" android:host="fairide.be" />
+                <!-- fairride.be seul (2026-10-25, deux r : le nom Fairride) : www.fairride.be et l'ancien fairide.be redirigent (308),
+                     Android refuse alors de les vérifier, et jusqu'à Android 11 un seul hôte refusé annule la vérification de
+                     tous. Stripe ne renvoie que vers fairride.be. Avant, fairide.be seul (2026-10-21). -->
+                <data android:scheme="https" android:host="fairride.be" />
             </intent-filter>
         </activity>
 

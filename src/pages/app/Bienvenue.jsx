@@ -18,7 +18,7 @@ import InscriptionAppli from './InscriptionAppli';
  *
  * Conçu avec le skill app-onboarding-questionnaire et validé sur maquette par le fondateur le 2026-10-11
  * (maquettes/app-onboarding/app-onboarding.html, à garder en phase). Le site n'est pas touché : Home.jsx n'envoie ici que dans
- * l'application (estNatif()), et un visiteur de fairide.be qui taperait l'adresse retombe sur l'accueil — sauf
+ * l'application (estNatif()), et un visiteur de fairride.be qui taperait l'adresse retombe sur l'accueil — sauf
  * avec ?apercu, pour pouvoir le relire dans un navigateur (npm run dev).
  *
  * CE QUI A ÉTÉ ADAPTÉ DU CADRE DU SKILL, ET POURQUOI

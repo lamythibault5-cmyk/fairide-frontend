@@ -30,7 +30,7 @@ const BARRE_ADRESSE = 56;
 const TOLERANCE = 1;
 
 const UTILISATEURS = {
-  admin: { id: 14, name: 'Équipe Fairride', firstName: 'Équipe', lastName: 'Fairride', email: 'contact@fairide.be', role: 'client', roles: ['client'], isAdmin: true },
+  admin: { id: 14, name: 'Équipe Fairride', firstName: 'Équipe', lastName: 'Fairride', email: 'contact@fairride.be', role: 'client', roles: ['client'], isAdmin: true },
   client: { id: 11, name: 'Cléa Client', firstName: 'Cléa', lastName: 'Client', email: 'client@exemple.be', role: 'client', roles: ['client'] },
   restaurant: { id: 13, name: 'Rémi Resto', firstName: 'Rémi', lastName: 'Resto', email: 'resto@exemple.be', role: 'restaurant', roles: ['restaurant'], restaurantId: 1 },
   driver: { id: 12, name: 'Lou Livreur', firstName: 'Lou', lastName: 'Livreur', email: 'livreur@exemple.be', role: 'driver', roles: ['driver'], adminStatus: 'approved', stripeConnectStatus: 'active' }

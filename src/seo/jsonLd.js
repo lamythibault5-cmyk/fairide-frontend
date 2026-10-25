@@ -8,7 +8,7 @@
    (cuisine, adresse, horaires, fourchette de prix), et le bloc Menu permet aux plats et à leurs
    prix de remonter. C'est le gain le moins cher du plan, puisque toute la donnée existe déjà. */
 
-export const SITE_URL = 'https://fairide.be';
+export const SITE_URL = 'https://fairride.be';
 const LOGO_URL = `${SITE_URL}/icons/icon-512.png`;
 const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
 
@@ -55,7 +55,7 @@ export function organizationJsonLd() {
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer support',
-      email: 'contact@fairide.be',
+      email: 'contact@fairride.be',
       telephone: '+32474200713',
       areaServed: 'BE',
       availableLanguage: ['fr', 'nl', 'en']

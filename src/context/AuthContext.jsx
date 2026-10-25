@@ -154,7 +154,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!session?.token || !session.user || session.user.language === language || session.actingAs) return;
     /* UN NOUVEL APPAREIL N'IMPOSE PAS SA LANGUE AU COMPTE (audit du 19/10, AO-23). La langue de la page vient de l'adresse
-     * (le français à la racine) : un client néerlandophone qui se connectait pour la première fois sur fairide.be/login
+     * (le français à la racine) : un client néerlandophone qui se connectait pour la première fois sur fairride.be/login
      * repassait son compte en français, et ses e-mails et notifications suivaient. Sans choix mémorisé sur cet appareil
      * (routing.js, posé par un vrai changement de langue), c'est la langue du compte qui l'emporte : la page s'y met. */
     if (!languePreferee() && SUPPORTED_LANGUAGES.includes(session.user.language)) { setLanguage(session.user.language); return; }

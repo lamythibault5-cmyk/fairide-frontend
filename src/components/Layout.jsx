@@ -22,7 +22,7 @@ import useBarreSurIris from '../hooks/useBarreSurIris';
 import '../site-cadre.css';
 
 // « Activer les notifications » juste après l'inscription, dans l'application seulement (voir AmorceNotifications.jsx).
-// Chargé à la demande : sur fairide.be la condition est toujours fausse, et le module n'est jamais téléchargé.
+// Chargé à la demande : sur fairride.be la condition est toujours fausse, et le module n'est jamais téléchargé.
 const AmorceNotifications = lazy(() => import('./AmorceNotifications'));
 // PAS DE RETOUR PAR GLISSEMENT (fondateur, 2026-10-23) : le glissement vers la droite pour reculer (bord gauche, puis de
 // n'importe où) a été retiré — sur la liste, la page partait de côté sur un fond vide « à l'infini ». On recule par les

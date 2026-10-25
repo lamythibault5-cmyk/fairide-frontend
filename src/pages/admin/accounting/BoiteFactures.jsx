@@ -89,7 +89,7 @@ export default function BoiteFactures({ token, toast, onChange }) {
       <div className="boite-factures-tete">
         <div>
           <h3 id="boite-factures-titre">{tr('adminAccounting.inboxTitle')}</h3>
-          <p className="small">{tr('adminAccounting.inboxHelp', { adresse: setup?.adresse || 'factures@fairide.be' })}</p>
+          <p className="small">{tr('adminAccounting.inboxHelp', { adresse: setup?.adresse || 'factures@fairride.be' })}</p>
         </div>
         <span className="spacer" />
         <button type="button" className="btn-outline" onClick={relever} disabled={releve}>{releve ? '...' : tr('adminAccounting.inboxFetch')}</button>

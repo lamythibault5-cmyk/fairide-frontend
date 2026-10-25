@@ -5,7 +5,7 @@ import { qrMatrix } from './components/qr';
 // Goodcom fournit un « Web Printer SDK » (github.com/goodcom6/HtmlPrinterDemo) : sur le terminal tourne le « service
 // d'impression Goodcom », qui écoute un WebSocket local (ws://localhost:62769, sous-protocole « printer »). On lui
 // envoie un ticket (HTML, PDF ou image en base64) ; il répond « 0 » en cas d'échec. Leur script ne fait que ça, en une
-// vingtaine de lignes : on le réécrit ici plutôt que de charger du code tiers sur fairide.be, et on y ajoute un délai
+// vingtaine de lignes : on le réécrit ici plutôt que de charger du code tiers sur fairride.be, et on y ajoute un délai
 // maximal et la détection du service.
 //
 // Le ticket est envoyé en IMAGE, dessinée à partir des mêmes lignes que partout ailleurs (backend ticketTerminal.js) :

@@ -17,7 +17,7 @@ import ErreurChargement from '../../components/ErreurChargement';
 // imprimante (installation). Le test « complet », par la file d'impression, reste le bouton plus bas.
 function ticketTestLocal(t, nom) {
   const x = (text, st = {}) => ({ t: 'text', text, align: st.align || 'center', size: st.size || 1, bold: !!st.bold, inverse: !!st.inverse });
-  return [x('fairide.be', { bold: true }), x(nom || ''), { t: 'rule', char: '-' }, x(t('terminal.webTestTitle'), { size: 2, bold: true, inverse: true }),
+  return [x('fairride.be', { bold: true }), x(nom || ''), { t: 'rule', char: '-' }, x(t('terminal.webTestTitle'), { size: 2, bold: true, inverse: true }),
     x('é è à ç ô ü € — ÉÈÀÇ'), x(new Date().toLocaleString()), { t: 'rule', char: '-' }, { t: 'feed', lines: 3 }];
 }
 

@@ -243,7 +243,7 @@ export default function App() {
         <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />
         <Route path="/crm" element={<Navigate to="/sales" replace />} />
         {/* Console d'administration : sur le SITE seulement (Owen, 2026-10-20). Dans l'application, toute adresse /admin…
-            montre AdminSurLeSite, qui renvoie vers fairide.be/admin ; AdminLayout et ses pages ne sont jamais montés. */}
+            montre AdminSurLeSite, qui renvoie vers fairride.be/admin ; AdminLayout et ses pages ne sont jamais montés. */}
         <Route path="/admin" element={experienceApp() ? <AdminSurLeSite /> : <ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<AdminHomePage />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />

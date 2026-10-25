@@ -98,7 +98,7 @@ export function boissonSubcategoryLabel(value, t) {
 // module est tiré par la page d'accueil (Landing.jsx en importe COMMUNES). L'exception interrompait
 // donc l'évaluation du bundle AVANT que main.jsx ne s'exécute : pas d'application du tout, et
 // l'écran de chargement restait affiché indéfiniment. Pas une page dégradée — un site qui ne démarre
-// pas, sur tout iPhone resté en iOS 15 ou 16.0-16.3. Constaté sur fairide.be le 2026-09-18.
+// pas, sur tout iPhone resté en iOS 15 ou 16.0-16.3. Constaté sur fairride.be le 2026-09-18.
 //
 // Consommer le caractère de gauche ne change rien au résultat ici : ces expressions ne servent qu'à
 // des `.test()`, jamais à relever une position ni à découper une chaîne.
