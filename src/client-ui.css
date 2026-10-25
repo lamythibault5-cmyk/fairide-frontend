@@ -622,6 +622,24 @@
 @keyframes plat-pas-bosse1 { 30% { scale: 1.12 .9; } 60% { scale: .96 1.05; } }
 @media (prefers-reduced-motion: reduce) { .plat-pas, .plat-pas * { animation: none !important; transition: none !important; } }
 
+/* LA GRILLE DES PHOTOS (fondateur, 2026-10-25, version A de maquettes/menu-photos/menu-photos.html, la règle d'Uber Eats) : une
+   section dont CHAQUE plat a sa photo (MenuCategorySections, `plats-grille`) passe en tuiles. Deux colonnes sur un téléphone,
+   plus sur la carte du site ; la photo carrée en haut, le « + » sur son coin, puis le nom, le prix et la description. App et
+   site. Une section avec une seule photo manquante reste en liste (photo de 112 px à droite). */
+.plats-grille.plats-liste { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px 12px; padding: 4px 0 8px; }
+.plat.plat-tuile { flex-direction: column; gap: 8px; padding: 4px 0 2px; border-bottom: 0; }
+.plat-tuile .plat-visuel { width: 100%; height: auto; aspect-ratio: 1; }
+.plat-tuile .plat-texte { gap: 2px; }
+.plat-tuile .plat-nom { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.plat-tuile .plat-prix-ligne { margin-top: 0; padding-top: 0; gap: 2px 8px; align-items: baseline; }
+/* .plat-prix et .plat-desc portent les marges de la fiche du plat (styles.css : 6, 10 et 18 px) : pas dans une tuile. */
+.plat-tuile .plat-nom, .plat-tuile .plat-prix { margin: 0; }
+.plat-tuile .plat-desc { margin: 2px 0 0; }
+/* Le « + » sur le coin bas droit de la photo : la ligne est un conteneur, la photo fait sa largeur (100cqw), 4 px de marge
+   au-dessus, le rond de 40 px à 8 px du bord. */
+.plat-ligne-tuile { container-type: inline-size; }
+.plat-ligne-tuile > .plat-pas { top: calc(4px + 100cqw - 48px); bottom: auto; right: 8px; translate: none; }
+
 /* « À découvrir » en bas de fiche : de vraies vignettes (photo ou visuel de marque), plus grandes. */
 .discover-card { flex-basis: 172px; border-radius: 16px; }
 .discover-card-media { position: relative; display: block; height: 104px; overflow: hidden; background: var(--surface-soft); }

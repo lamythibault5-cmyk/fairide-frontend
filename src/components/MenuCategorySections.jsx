@@ -81,12 +81,20 @@ function PasPlat({ item, name, image, onAjout, t }) {
 
 /* LA CARTE DE BISTROT (fondateur, 2026-10-17, version C de « Fiche du commerce » dans maquettes/commerces-marque/commerces-marque.html), dans
  * l'app seulement (`bistrot`, posé par RestaurantMenu quand experienceApp()). Le plat se lit comme sur la carte imprimée
- * du commerce : une petite photo carrée à gauche, le nom, des points de conduite, le prix sur la même ligne, la description
- * dessous ; le compteur « − n + » (PasPlat) se pose à droite, sous le prix. Mêmes données, mêmes gestes que la ligne du site. */
+ * du commerce : le nom, le prix sur la même ligne, la description dessous ; le compteur « − n + » (PasPlat) se pose à droite,
+ * sous le prix. Mêmes données, mêmes gestes que la ligne du site. Depuis le 2026-10-25, pour les plats SANS photo seulement :
+ * un plat avec photo prend la ligne du site (photo de 112 px à droite) ou la tuile de grille (voir ItemCard). */
 /* Mémorisée (2026-10-20, test de l'app Android) : chaque « + » change le panier, donc redessinait la fiche entière et ses
  * centaines de plats. La ligne ne dépend que du plat, de son image et de réglages stables ; seul son compteur (PasPlat), qui
  * lit le panier lui-même, se redessine. */
-const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAdd, t, language, bistrot = false }) {
+/* LES PHOTOS EN GRAND (fondateur, 2026-10-25, version A de maquettes/menu-photos/menu-photos.html, la règle d'Uber Eats) :
+ * - `tuile` : la section entière a des photos, le plat est une tuile de grille (grande photo carrée, le « + » sur son coin,
+ *   le nom, le prix et la description dessous) ; app et site ;
+ * - un plat avec photo dans une section en liste : la photo de 112 px à droite, le prix sous le nom (la ligne du site, que
+ *   l'app reprend : plus de vignette de 56 px à gauche) ;
+ * - un plat sans photo dans l'app garde la ligne de bistrot « nom … prix » (choix du 24/10). */
+const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAdd, t, language, bistrot: carteBistrot = false, tuile = false }) {
+  const bistrot = carteBistrot && !image && !tuile;
   // Nom et description dans la langue affichée, avec repli sur le texte du restaurateur (localizedItem).
   const { name, desc } = localizedItem(item, language);
   const indisponible = item.available === false;
@@ -121,11 +129,32 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
   const vignette = image && (
     /* imgProps : la vignette fait 112 px (client-ui.css) ; sans lui chaque plat chargeait l'original
        Cloudinary, 50 à 70 Ko pièce (Lighthouse du 5 oct. 2026 : ~940 Ko de trop sur une carte). */
-    <span className="plat-visuel">
-      <img loading="lazy" decoding="async" width="112" height="112" {...imgProps(image, 112)} alt="" className="plat-photo" />
-    </span>
+    tuile ? (
+      /* La tuile fait la moitié d'un téléphone (≈ 175 px) et jusqu'à 240 px dans la carte du site. */
+      <span className="plat-visuel">
+        <img loading="lazy" decoding="async" width="240" height="240" {...imgProps(image, 240, '(max-width: 640px) 50vw, 240px', [180])} alt="" className="plat-photo" />
+      </span>
+    ) : (
+      <span className="plat-visuel">
+        <img loading="lazy" decoding="async" width="112" height="112" {...imgProps(image, 112)} alt="" className="plat-photo" />
+      </span>
+    )
   );
-  const contenu = bistrot ? (
+  const contenu = tuile ? (
+    <>
+      {vignette}
+      <span className="plat-texte">
+        <span className="plat-nom">{name}{badges}</span>
+        <span className="plat-prix-ligne">
+          <span className={`plat-prix${remisee ? ' est-remise' : ''}`}>{euros(remisee ? remise : item.price)}</span>
+          {prixAvant}
+          {etiquette && <span className="plat-promo">{etiquette}</span>}
+        </span>
+        {ligneDesc}
+        {ligneAllergenes}
+      </span>
+    </>
+  ) : bistrot ? (
     <>
       {vignette}
       <span className="plat-texte">
@@ -156,13 +185,13 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
       {vignette}
     </>
   );
-  const classes = `plat${image ? '' : ' plat-sans-photo'}${indisponible ? ' plat-indisponible' : ''}${bistrot ? ' plat-bistrot' : ''}`;
+  const classes = `plat${image ? '' : ' plat-sans-photo'}${indisponible ? ' plat-indisponible' : ''}${bistrot ? ' plat-bistrot' : ''}${tuile ? ' plat-tuile' : ''}`;
   if (!cliquable) return <div className={classes}>{contenu}</div>;
   // DEUX GESTES, DEUX BOUTONS (fondateur, 2026-10-01) : toucher le plat ouvre sa fiche (photo, description,
   // options) ; toucher le « + » l'ajoute tout de suite au panier. Deux boutons frères et non imbriqués : un bouton
   // dans un bouton n'est pas du HTML valide, et le second toucher déclenchait aussi le premier.
   return (
-    <div className={`plat-ligne${image ? '' : ' plat-ligne-sans-photo'}${bistrot ? ' plat-ligne-bistrot' : ''}`}>
+    <div className={`plat-ligne${image ? '' : ' plat-ligne-sans-photo'}${bistrot ? ' plat-ligne-bistrot' : ''}${tuile ? ' plat-ligne-tuile' : ''}`}>
       <button type="button" className={`${classes} plat-cliquable`} onClick={() => onAdd(item)}>
         {contenu}
       </button>
@@ -194,6 +223,9 @@ export default function MenuCategorySections({ menu, sections, onAdd, onQuickAdd
         if (!items.length) return null;
         const label = sectionLabel(section, language, t);
         const subsectionGroups = groupBySubsection(items, section.name, t);
+        // La grille quand chaque plat de la section a sa photo (version A, 2026-10-25) ; une section d'un seul plat reste en
+        // ligne (une tuile seule laissait une demi-largeur vide). Une seule photo manquante et la section reste en liste.
+        const grille = items.length > 1 && items.every((i) => resolveItemImage(i, sections));
         return (
           <div key={section.id} id={`menu-cat-${section.id}`}>
             <h2 className="plats-section-titre">
@@ -203,8 +235,8 @@ export default function MenuCategorySections({ menu, sections, onAdd, onQuickAdd
             {subsectionGroups.map((group) => (
               <div key={group.key || '__none'}>
                 {group.label && <div className="sub-category-header"><span>{group.label}</span></div>}
-                <div className="plats-liste">
-                  {group.items.map((item) => <ItemCard key={item.id} item={item} image={resolveItemImage(item, sections)} onAdd={surAjout} onQuickAdd={surAjoutDirect} hideAdd={hideAdd} t={t} language={language} bistrot={bistrot} />)}
+                <div className={`plats-liste${grille ? ' plats-grille' : ''}`}>
+                  {group.items.map((item) => <ItemCard key={item.id} item={item} image={resolveItemImage(item, sections)} onAdd={surAjout} onQuickAdd={surAjoutDirect} hideAdd={hideAdd} t={t} language={language} bistrot={bistrot} tuile={grille} />)}
                 </div>
               </div>
             ))}
