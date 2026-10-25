@@ -23,6 +23,8 @@ import { estNatif, vibrerNatif } from './natif';
  * l'iPhone, tout ce qui était sous 20 devenait la tape la plus faible du téléphone, perdue dans une coque — 21 des 43
  * vibrations de l'app. On dit maintenant ce que le geste VEUT DIRE, et le téléphone joue sa propre sensation pour ce sens
  * (natif.js → greffon Haptique d'iOS et d'Android, ios/App/App/HaptiquePlugin.swift, android/…/HaptiquePlugin.java) :
+ *   'touche'     tout autre toucher d'un bouton ou d'un lien dans l'app (2026-10-25) : la tape légère, jouée d'elle-même
+ *                par installerTouches (plus bas) ; ouvrir un commerce, un onglet, une section, ‹ retour ;
  *   'choix'      le cran d'une molette : une lentille (onglets, puces, sections) qui passe sur un élément, un segment ;
  *                et une option prise parmi quelques-unes (2026-10-25) : pastilles, cases du paiement, options d'un plat ;
  *   'bascule'    un petit contrôle : cœur, interrupteur, − / + ;
@@ -34,14 +36,17 @@ import { estNatif, vibrerNatif } from './natif';
  *   'attention'  ce qui bloque sans être une erreur : option obligatoire manquante, course annulée, commande refusée ;
  *   'erreur'     tout message d'erreur (le toast rouge, ToastContext.jsx), paiement échoué ;
  *   'alerte'     ce qui doit se sentir dans une poche : une course arrive, une course est prête (livreur).
- * Pas de vibration pour un simple toucher d'onglet ni pour un retour par glissement : l'iPhone n'en fait pas là.
+ * TOUS LES BOUTONS, PAS SEULEMENT CEUX QUI ENGAGENT (fondateur, 2026-10-25, après avoir essayé d'autres apps : « c'est plus
+ * agréable »). Avant, un simple toucher d'onglet ne vibrait pas, comme dans les apps d'Apple ; maintenant chaque bouton
+ * donne la tape légère 'touche', et ceux qui ont leur propre sens le gardent (une seule vibration par toucher). Toujours
+ * muets : un retour par glissement, toucher le fond d'une feuille pour la fermer, taper dans un champ de texte.
  * Les anciennes valeurs (nombres, tableaux, 'selection', 'moyen') sont encore comprises le temps que tous les écrans passent
  * aux sens. Sur le site, chaque sens a son équivalent en millisecondes pour navigator.vibrate (Android seulement).
  * PLUS COUPÉ PAR « RÉDUIRE LES ANIMATIONS » : une vibration n'est pas un mouvement à l'écran, et le réglage « Vibrations du
  * système » de l'iPhone (ou « Retour tactile » d'Android) s'applique de lui-même. Avant, cocher « Réduire les animations »
  * éteignait toutes les vibrations de l'app, celles d'un paiement et des erreurs comprises. */
 const MOTIFS_WEB = {
-  choix: 4, bascule: 8, valider: 14, seuil: 16, pose: 6, appuiLong: 30,
+  touche: 3, choix: 4, bascule: 8, valider: 14, seuil: 16, pose: 6, appuiLong: 30,
   succes: [10, 40, 18], attention: [14, 40, 14], erreur: [14, 40, 14, 40, 14], alerte: [220, 120, 220]
 };
 const ANCIENS = { selection: 'choix', moyen: 'seuil' };
@@ -52,11 +57,30 @@ export function sensDe(motif) {
   return ANCIENS[motif] || (MOTIFS_WEB[motif] !== undefined ? motif : 'valider');
 }
 
+// Quand l'app a vibré pour la dernière fois : installerTouches ne rejoue pas une tape sur un toucher qui a déjà son sens.
+let derniereVibration = 0;
+
 export function vibrer(motif = 'valider') {
   const sens = sensDe(motif);
+  derniereVibration = Date.now();
   // Application native : le moteur haptique (Taptic Engine sur iPhone, où navigator.vibrate n'existe pas).
   if (estNatif()) { vibrerNatif(sens); return; }
   try { navigator.vibrate?.(MOTIFS_WEB[sens]); } catch { /* non pris en charge */ }
+}
+
+/* LA TAPE LÉGÈRE SOUS CHAQUE BOUTON (app seulement, natif.js → demarrerNatif ; fondateur, 2026-10-25). Un seul écouteur
+ * pour toute l'app plutôt qu'un vibrer() dans chaque écran : un bouton ajouté demain vibre aussi. Il écoute le clic (le
+ * doigt qui se lève sur le bouton, comme les boutons de l'iPhone : un défilement ne vibre pas) et attend que les écrans
+ * aient répondu : si l'un d'eux a déjà joué son sens (« Ajouter », un cœur, une option…), on ne double pas. Un libellé de
+ * case envoie deux clics (le libellé puis la case) : la même règle n'en garde qu'un. */
+const TOUCHABLE = 'button, a[href], summary, input[type="checkbox"], input[type="radio"], [role="button"], [role="link"], [role="tab"], [role="radio"], [role="switch"], [role="checkbox"], [role="menuitem"], [role="option"]';
+export function installerTouches() {
+  document.addEventListener('click', (e) => {
+    const cible = e.target instanceof Element ? e.target.closest(TOUCHABLE) : null;
+    if (!cible || cible.matches(':disabled, [aria-disabled="true"]')) return;
+    const t0 = Date.now();
+    setTimeout(() => { if (derniereVibration < t0 - 80) vibrer('touche'); }, 0);
+  }, { capture: true, passive: true });
 }
 
 // Où atterrit un ajout : la pilule du panier si elle est affichée, sinon l'endroit où elle va apparaître

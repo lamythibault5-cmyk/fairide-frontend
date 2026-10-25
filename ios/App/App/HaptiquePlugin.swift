@@ -21,6 +21,7 @@ public class HaptiquePlugin: CAPPlugin, CAPBridgedPlugin {
 
     // Created on first use, on the main thread (every call below hops to it): UIKit generators are main-thread only.
     private lazy var choix = UISelectionFeedbackGenerator()
+    private lazy var leger = UIImpactFeedbackGenerator(style: .light)
     private lazy var rigide = UIImpactFeedbackGenerator(style: .rigid)
     private lazy var moyen = UIImpactFeedbackGenerator(style: .medium)
     private lazy var doux = UIImpactFeedbackGenerator(style: .soft)
@@ -32,6 +33,7 @@ public class HaptiquePlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func preparer(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             self.choix.prepare()
+            self.leger.prepare()
             self.rigide.prepare()
             self.moyen.prepare()
             self.resultat.prepare()
@@ -43,6 +45,9 @@ public class HaptiquePlugin: CAPPlugin, CAPBridgedPlugin {
         let sens = call.getString("sens") ?? "valider"
         DispatchQueue.main.async {
             switch sens {
+            case "touche":                                  // any other button or link: the light tap (2026-10-25)
+                self.leger.impactOccurred(intensity: 1.0)
+                self.leger.prepare()
             case "choix":                                   // moving over options: tab lens, chips, sections, segments
                 self.choix.selectionChanged()
                 self.choix.prepare()

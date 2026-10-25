@@ -141,7 +141,7 @@ export async function telechargerPdfBlob(blob, nom = 'fairide.pdf') {
 }
 
 /* VIBRATION NATIVE (2026-10-23, test TestFlight : « je ne sens pas les vibrations »). `sens` : l'un des sens de gestes.js
- * ('choix', 'bascule', 'valider', 'seuil', 'pose', 'appuiLong', 'succes', 'attention', 'erreur', 'alerte').
+ * ('touche', 'choix', 'bascule', 'valider', 'seuil', 'pose', 'appuiLong', 'succes', 'attention', 'erreur', 'alerte').
  *   - Le greffon Haptique de l'app (ios/App/App/HaptiquePlugin.swift, android/…/HaptiquePlugin.java) joue la sensation du
  *     téléphone pour ce sens, avec des générateurs gardés et préparés quand un doigt touche l'écran (preparerHaptique).
  *   - Sans lui (une version de l'app construite avant lui), @capacitor/haptics prend le relais, avec des tapes moyennes au
@@ -167,6 +167,7 @@ function chargerHaptique() {
           if (!selectionOuverte) { await Haptics.selectionStart(); selectionOuverte = true; }
           await Haptics.selectionChanged();
         },
+        touche: () => Haptics.impact({ style: ImpactStyle.Light }),
         bascule: () => Haptics.impact({ style: ImpactStyle.Medium }),
         valider: () => Haptics.impact({ style: ImpactStyle.Medium }),
         seuil: () => Haptics.impact({ style: ImpactStyle.Heavy }),
@@ -224,6 +225,8 @@ export async function demarrerNatif(historique) {
   // Les vibrations sont prêtes avant le premier toucher (voir vibrerNatif).
   chargerHaptique().catch(() => {});
   preparerHaptique();
+  // La tape légère sous chaque bouton (gestes.js, 2026-10-25).
+  import('./gestes').then(({ installerTouches }) => installerTouches()).catch(() => {});
   // iPhone : le verre iris sous l'heure et la batterie quand la page défile (verreBarreEtat.js, verre.css).
   if (plateforme() === 'ios') import('./verreBarreEtat').then(({ installerVerreBarreEtat }) => installerVerreBarreEtat()).catch(() => {});
   // Les écrans glissent, la photo d'un commerce voyage, la croix et ‹ reculent, le bas de page rebondit (transitionPhoto.js,

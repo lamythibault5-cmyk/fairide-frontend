@@ -39,6 +39,8 @@ public class HaptiquePlugin extends Plugin {
     private static int effet(String sens) {
         int api = Build.VERSION.SDK_INT;
         switch (sens) {
+            case "touche": // tout autre bouton ou lien : la tape légère du clavier (2026-10-25)
+                return HapticFeedbackConstants.KEYBOARD_TAP;
             case "choix": // le cran d'une molette : lentilles, puces, sections
                 return api >= 34 ? HapticFeedbackConstants.SEGMENT_TICK : HapticFeedbackConstants.CLOCK_TICK;
             case "bascule": // un petit contrôle : cœur, interrupteur, − / +
