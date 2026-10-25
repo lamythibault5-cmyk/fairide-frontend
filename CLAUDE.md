@@ -71,7 +71,7 @@ without a `.env.local` your dev server edits live data. Local backend on a Neon 
 | `VITE_GOOGLE_CLIENT_ID` | Google Sign-In (script loaded in [index.html](index.html)) |
 | `VITE_SENTRY_DSN` | Enables Sentry — on the website only *after* cookie consent, see [src/main.jsx](src/main.jsx); in the app on by default (`docs/agents/appli.md`) |
 | `VITE_STOCK_DISH_PHOTOS` | `on` (code default) fills photo-less dishes from a stock-image table; `off` disables it. **Production is `off`** (Vercel since 2026-10-20, and the Play build): keep it off wherever real shops are shown — see [src/menuCategories.js](src/menuCategories.js) |
-| `VITE_MAP_TILE_URL` / `VITE_MAP_TILE_ATTRIBUTION` | Map tiles for all five Leaflet maps ([src/carte.js](src/carte.js)). Empty = public OpenStreetMap tiles, whose usage policy excludes heavy commercial use — **set before launch** |
+| `VITE_MAP_TILE_URL` / `VITE_MAP_TILE_ATTRIBUTION` | **Fallback only.** The tiles of all five Leaflet maps come from the backend (`GET /api/geo/tiles`, Railway variables `MAP_TILE_URL` / `MAP_TILE_ATTRIBUTION`): MapTiler since 2026-10-07 (decision DEC-11), checked live on 2026-10-25, so the provider changes without a new app version ([src/carte.js](src/carte.js)). These build variables are used only if the server does not answer within 3 s; empty (as on Vercel on 2026-10-25) = public OpenStreetMap tiles in that case. Optional safety net: the same MapTiler URL on Vercel |
 | `VITE_PLAUSIBLE_DOMAIN` | Cookieless analytics. Empty = [src/analytics.js](src/analytics.js) loads nothing at all — set it in the Vercel variables |
 
 ## Rules that are never broken
