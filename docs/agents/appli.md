@@ -153,9 +153,9 @@ app page goes into its `PAGES`; a page crashing for lack of data gets a better m
 Android phone): under 900 px `.dashboard-sidebar` is `bottom: 0` with `padding-bottom: max(6px, var(--bas-ecran))`,
 on the website, the home-screen app and the native app alike, `--hauteur-onglets` 74 px. `--bas-ecran` is the system inset minus
 12 px (founder, 2026-10-25: « a bit of dead space, bring it down a tiny bit »; 22 px instead of 34 on an iPhone), never below 0:
-every bar resting on the tab bar or alone at the bottom (cart bar, « Accepter », checkout bar, toasts, map card) uses it too. When
-the page scrolls down, the cart bar folds a little with the tabs (8 px shorter, 24 px narrower each side, words kept). Never give
-the tab bar a fixed bottom offset again; `npm run check:barres` ([scripts/verifier-barres-bas.mjs](../../scripts/verifier-barres-bas.mjs)) checks it for the four spaces
+every bar resting on the tab bar or alone at the bottom (cart bar, « Accepter », checkout bar, toasts, map card) uses it too. The
+cart bar does not fold when scrolling (a light fold was tried and removed the same day, founder: « better when it stays like
+before »); it only follows the tabs down by the 14 px they lose. Never give the tab bar a fixed bottom offset again; `npm run check:barres` ([scripts/verifier-barres-bas.mjs](../../scripts/verifier-barres-bas.mjs)) checks it for the four spaces
 at Android sizes, address bar collapse, visualViewport changes and a 48 px system inset. The onboarding copy makes **no claim the code does not back** — never « moins cher » (it depends on the
 business), only the 10 % vs 22-32 % commission gap; and notifications are only promised where the server sends them.
 
