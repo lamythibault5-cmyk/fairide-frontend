@@ -69,7 +69,7 @@ function PrixLigne({ ligne, remise, t }) {
   return (
     <span className="panier-ligne-prix">
       <b className="panier-ligne-paye">{euros(paye)}</b>
-      {remise?.discount > 0 && remiseCourte(remise.promo, t) && <> · {t('panier.remiseIncluse', { remise: remiseCourte(remise.promo, t) })}</>}
+      {remise?.discount > 0 && remiseCourte(remise.promo, t) && <> · <span className="panier-remise">{t('panier.remiseIncluse', { remise: remiseCourte(remise.promo, t) })}</span></>}
     </span>
   );
 }
@@ -229,7 +229,7 @@ export default function PanierPage() {
           )}
           {fermeMaintenant && <p className="small panier-avertissement" role="status">{t('panier.closedNow')}</p>}
           {totaux?.promoDiscount > 0 && (
-            <p className="panier-economie">{t('panier.economie', { amount: euros(totaux.promoDiscount), name: cart.restaurantName || restaurant?.name || '' })}</p>
+            <p className="panier-economie"><Icone nom="etiquette" taille={14} className="icone-texte" />{' '}{t('panier.economie', { amount: euros(totaux.promoDiscount), name: cart.restaurantName || restaurant?.name || '' })}</p>
           )}
           <button type="button" className="btn-ghost panier-vider" onClick={() => setViderOuvert(true)}>{t('floatingCart.clear')}</button>
           <ConfirmDialog open={viderOuvert} title={t('floatingCart.clearConfirmTitle')} message={t('floatingCart.clearConfirmBody')}

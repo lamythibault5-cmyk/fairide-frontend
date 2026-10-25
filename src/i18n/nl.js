@@ -5062,7 +5062,7 @@ export default {
       hiddenText: "Je klanten zien deze gerechten niet: allergenen nog niet aangegeven, of alcohol nog niet toegelaten. Vul ze aan in Mijn kaart.",
       hiddenTitle: "Verborgen voor klanten",
       banner: 'Voorbeeld, dit is precies wat je klanten zien. Je kunt het toevoegen aan het winkelmandje testen, maar er wordt geen echte bestelling geplaatst.',
-      promosBanner: 'Er lopen promo\'s op bepaalde gerechten, let op de rode badge!',
+      promosBanner: 'Er lopen promo\'s op bepaalde gerechten, let op het rode label!',
       emptyMenu: 'Je menu is nog leeg, je klanten zien niets tot je gerechten toevoegt.',
       cartPreview: 'Winkelmandje (voorbeeld)',
       delivery: 'Levering',

@@ -270,6 +270,7 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .fiche-apercu-bouton:active .fiche-apercu-photo img { transform: scale(1.05); }
 .fiche-appli .fiche-apercu-bouton b { font-size: 13.5px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fiche-appli .fiche-apercu-bouton > span:last-child { font-size: 12.5px; color: var(--ink-soft); }
+.fiche-appli .fiche-apercu-bouton > span.est-remise { color: var(--promo); font-weight: 700; }
 .fiche-appli .fiche-apercu-bouton:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; border-radius: 18px; }
 .fiche-appli .fiche-apercu-plus {
   position: absolute; top: 72px; right: 6px; width: 34px; height: 34px; min-height: 0 !important; padding: 0; border-radius: 50%;

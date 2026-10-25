@@ -148,7 +148,7 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
         <span className="plat-prix-ligne">
           <span className={`plat-prix${remisee ? ' est-remise' : ''}`}>{euros(remisee ? remise : item.price)}</span>
           {prixAvant}
-          {etiquette && <span className="plat-promo">{etiquette}</span>}
+          {etiquette && <span className="plat-promo"><Icone nom="etiquette" taille={14} className="icone-texte" />{' '}{etiquette}</span>}
         </span>
         {ligneDesc}
         {ligneAllergenes}
@@ -165,7 +165,7 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
         </span>
         {ligneDesc}
         {ligneAllergenes}
-        {(prixAvant || etiquette) && <span className="plat-prix-ligne">{prixAvant}{etiquette && <span className="plat-promo">{etiquette}</span>}</span>}
+        {(prixAvant || etiquette) && <span className="plat-prix-ligne">{prixAvant}{etiquette && <span className="plat-promo"><Icone nom="etiquette" taille={14} className="icone-texte" />{' '}{etiquette}</span>}</span>}
       </span>
     </>
   ) : (
@@ -179,7 +179,7 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
           {remisee
             ? <><span className="plat-prix est-remise">{euros(remise)}</span>{prixAvant}</>
             : <span className="plat-prix">{euros(item.price)}</span>}
-          {etiquette && <span className="plat-promo">{etiquette}</span>}
+          {etiquette && <span className="plat-promo"><Icone nom="etiquette" taille={14} className="icone-texte" />{' '}{etiquette}</span>}
         </span>
       </span>
       {vignette}

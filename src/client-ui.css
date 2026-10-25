@@ -32,6 +32,9 @@
   background: var(--lime); color: var(--ink); font-size: 12px; font-weight: 700; line-height: 1.2;
   padding: 5px 10px; border-radius: var(--radius-pill); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* La promo du commerce (« 1 acheté = 1 offert », « −20 % ») : pastille rouge promo avec l'étiquette (2026-10-25). Le badge
+   « Bientôt » garde le lime de .rc-offre. */
+.rc-offre.rc-promo { background: var(--promo); color: #fff; }
 .rc-etat {
   position: absolute; left: 8px; bottom: 8px; max-width: calc(100% - 16px);
   background: #fff; color: var(--ink); font-size: 12px; font-weight: 700; line-height: 1.2;
@@ -45,7 +48,8 @@
 .rc-infos > span + span::before { content: none; }
 .rc-discret { color: var(--ink-soft); font-weight: 500; }
 .rc-livraison { color: var(--iris); font-weight: 700; font-size: 12px; }
-.rc-vitrine { color: var(--red); font-weight: 700; font-size: 12px; }
+/* En gris depuis que le rouge est celui des promos (2026-10-25) : « Carte seule » sous une pastille rouge se lisait comme une offre. */
+.rc-vitrine { color: var(--ink-soft); font-weight: 700; font-size: 12px; }
 /* Badge « Prix du comptoir » (PrixComptoir.jsx) : la même pastille iris pâle que « Nouveau », avec l'étiquette de prix. */
 .prix-comptoir { display: inline-flex; align-items: center; gap: 4px; background: rgba(59, 47, 181, .10); color: var(--iris); font-weight: 700; font-size: 12px; line-height: 1.3; padding: 2px 8px; border-radius: var(--radius-pill); white-space: nowrap; }
 .prix-comptoir svg { flex: none; }
@@ -115,9 +119,11 @@
 .plat .plat-allergenes { font-size: 11.5px; margin: 0; }
 .plat-prix-ligne { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin-top: auto; padding-top: 2px; }
 .plat .plat-prix { font-size: 15px; font-weight: 700; color: var(--ink); }
-.plat-prix.est-remise, .plat .plat-prix.est-remise { color: var(--iris); }
+/* Promo d'un plat (2026-10-25, « comme Uber Eats ») : prix remisé en rouge promo, et l'offre en texte rouge avec son
+   étiquette, sans pastille (une pastille par plat faisait concurrence au bouton lime du panier). */
+.plat-prix.est-remise, .plat .plat-prix.est-remise { color: var(--promo); }
 .plat-prix-avant { font-size: 13px; color: var(--ink-faint); }
-.plat-promo { background: var(--lime); color: var(--ink); font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill); }
+.plat-promo { color: var(--promo); font-size: 13px; font-weight: 700; }
 .plat-visuel { position: relative; flex-shrink: 0; width: 112px; height: 112px; border-radius: 12px; overflow: hidden; background: var(--surface-soft); }
 .plat-visuel .plat-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
 .plat-ajout {

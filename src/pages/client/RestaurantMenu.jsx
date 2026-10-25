@@ -757,13 +757,14 @@ export default function RestaurantMenu({ id }) {
         {apercu.map((item) => {
           const { name } = localizedItem(item, language);
           const remise = prixRemise(item);
-          const prix = euros(remise !== null && remise < item.price ? remise : item.price);
+          const remisee = remise !== null && remise < item.price;
+          const prix = euros(remisee ? remise : item.price);
           return (
             <div className="fiche-apercu-plat" key={item.id}>
               <button type="button" className="fiche-apercu-bouton" onClick={() => addToCart(item)} disabled={onlineOrderingDisabled} aria-label={`${name}, ${prix}`}>
                 <span className="fiche-apercu-photo"><img loading="lazy" decoding="async" {...imgProps(item.imageUrl, 320)} alt="" onError={cacherImageCassee} /></span>
                 <b>{name}</b>
-                <span>{prix}</span>
+                <span className={remisee ? 'est-remise' : undefined}>{prix}</span>
               </button>
               {!onlineOrderingDisabled && (
                 <button type="button" className="fiche-apercu-plus" onClick={(e) => ajoutDirect(item, e.currentTarget.getBoundingClientRect(), item.imageUrl)} aria-label={t('menuCategories.quickAdd', { name })}>

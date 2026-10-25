@@ -165,7 +165,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
           title={t('restaurantList.addFavorite')}
           className="rest-card-fav rc-fav"
         />
-        {offerLabel && <span className="rc-offre">{offerLabel}</span>}
+        {offerLabel && <span className="rc-offre rc-promo"><Icone nom="etiquette" taille={13} className="icone-texte" />{' '}{offerLabel}</span>}
         {etatTexte && <span className="rc-etat">{etatTexte}</span>}
       </div>
       <div className="rc-corps">

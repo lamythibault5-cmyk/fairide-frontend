@@ -84,7 +84,7 @@ export default function RestaurantPreview({ restaurant }) {
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
         <p className="small" style={{ margin: '0 0 10px' }}>{restaurant.openingHours ? `${restaurant.openingHours}` : ''}</p>
         {restaurant.hasPromo && (
-          <div style={{ background: 'var(--red)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
+          <div style={{ background: 'var(--promo)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
             {t('restoPreview.promosBanner')}
           </div>
         )}

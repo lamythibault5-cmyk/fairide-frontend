@@ -48,8 +48,8 @@ import { cheminFiche } from '../../adresseFiche';
 // Page dédiée affichée après le clic sur "Commander" depuis le panier : le client y choisit
 // livraison/à emporter, vérifie ses informations, puis valide avant de passer au paiement.
 // Une ligne du ticket : libellé, pointillés (ceux de la carte du commerce), montant.
-function LigneTicket({ libelle, montant }) {
-  return <div className="co-t-ligne"><span>{libelle}</span><span className="co-t-points" aria-hidden="true" /><span className="co-t-montant">{montant}</span></div>;
+function LigneTicket({ libelle, montant, promo = false }) {
+  return <div className={`co-t-ligne${promo ? ' co-t-ligne--promo' : ''}`}><span>{libelle}</span><span className="co-t-points" aria-hidden="true" /><span className="co-t-montant">{montant}</span></div>;
 }
 
 export default function Checkout() {
@@ -959,7 +959,7 @@ export default function Checkout() {
             <div className="co-ticket">
               <LigneTicket libelle={t('checkout.ticketPlats')} montant={euros(platsTicket)} />
               {lignesOffre.map((o) => (
-                <LigneTicket key={o.remise} libelle={t('checkout.ticketOffre', { name: restaurant.name, remise: o.remise })} montant={`−${euros(o.montant)}`} />
+                <LigneTicket key={o.remise} libelle={t('checkout.ticketOffre', { name: restaurant.name, remise: o.remise })} montant={`−${euros(o.montant)}`} promo />
               ))}
               {fulfillmentType === 'delivery' && (
                 <>
