@@ -21,7 +21,7 @@ function versHtml(lignes, colonnes) {
   }).join('');
 }
 
-export function imprimerTicketPapier(lignes, colonnes = 32, titre = 'Ticket Fairide') {
+export function imprimerTicketPapier(lignes, colonnes = 32, titre = 'Ticket Fairride') {
   if (!Array.isArray(lignes) || !lignes.length) return false;
   const largeurMm = colonnes > 32 ? 72 : 48; // zone imprimable d'un rouleau de 58 mm (80 mm pour 48 colonnes)
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>${echapper(titre)}</title><style>

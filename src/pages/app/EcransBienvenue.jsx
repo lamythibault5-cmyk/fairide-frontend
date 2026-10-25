@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import BrandMark from '../../components/BrandMark';
+import MotMarque from '../../components/MotMarque';
 import Icone from '../../components/Icone';
 import BoutonsConnexionNative from '../../components/BoutonsConnexionNative';
 import { estNatif } from '../../natif';
@@ -153,9 +154,9 @@ const platAffiche = () => euros(PLAT).replace(/[,.]00(?=\D|$)/, '');
 function BarresPlat() {
   const { t } = useLanguage();
   return (
-    <div className="bv-barres" aria-label={`${t('appli.autresApplis')} +${euros(AJOUT_EUX)}, Fairide +${euros(AJOUT_NOUS)}`}>
+    <div className="bv-barres" aria-label={`${t('appli.autresApplis')} +${euros(AJOUT_EUX)}, Fairride +${euros(AJOUT_NOUS)}`}>
       <span>{t('appli.autresApplis')}</span><i className="autres-euros" /><span>+{euros(AJOUT_EUX)}</span>
-      <span>Fairide</span><i className="fairide" style={{ width: `${(AJOUT_NOUS / AJOUT_EUX) * 100}%` }} /><span><b>+{euros(AJOUT_NOUS)}</b></span>
+      <span>Fairride</span><i className="fairide" style={{ width: `${(AJOUT_NOUS / AJOUT_EUX) * 100}%` }} /><span><b>+{euros(AJOUT_NOUS)}</b></span>
     </div>
   );
 }
@@ -169,7 +170,7 @@ export function EcranAccueil({ onCommencer, onConnexion }) {
   return (
     <>
       <div className="bv-ligne-haut">
-        <span className="bv-marque"><BrandMark size={34} tile={false} color="#C8F03C" /><span className="wordmark">fairide</span></span>
+        <span className="bv-marque"><BrandMark size={34} tile={false} color="#C8F03C" /><MotMarque /></span>
         <Langues />
       </div>
       <h1 className="bv-titre bv-titre-accueil">{t('landing.title1')}<br />{t('landing.title2')}</h1>
@@ -405,7 +406,7 @@ export function BarresCommande() {
       <b>{t('appli.coBarres', { montant: euros(COMMANDE).replace(/[,.]00(?=\D|$)/, '') })}</b>
       <div className="bv-barres">
         <span>{t('appli.autresApplis')}</span><i className="autres-euros" /><span>{t('appli.coFourchette', { bas: euros(bas), haut: euros(haut) })}</span>
-        <span>Fairide</span><i className="fairide" style={{ width: `${(nous / haut) * 100}%` }} /><span><b>{euros(nous)}</b></span>
+        <span>Fairride</span><i className="fairide" style={{ width: `${(nous / haut) * 100}%` }} /><span><b>{euros(nous)}</b></span>
       </div>
     </div>
   );

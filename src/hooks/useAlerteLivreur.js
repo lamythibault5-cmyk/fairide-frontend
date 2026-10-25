@@ -159,7 +159,7 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
   if (baseTitre.current === null && typeof document !== 'undefined') baseTitre.current = document.title;
   const nbDispo = actif ? disponibles.length : 0;
   useEffect(() => {
-    const base = baseTitre.current || 'Fairide';
+    const base = baseTitre.current || 'Fairride';
     if (nbPretes) document.title = `(${nbPretes}) ${t(nbPretes === 1 ? 'driverAlert.titleReadyOne' : 'driverAlert.titleReady')} · ${base}`;
     else if (nbDispo) document.title = `(${nbDispo}) ${t(nbDispo === 1 ? 'driverAlert.titleAvailableOne' : 'driverAlert.titleAvailable')} · ${base}`;
     else document.title = base;

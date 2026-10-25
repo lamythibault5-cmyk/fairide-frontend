@@ -92,7 +92,8 @@ read that doc before working near it.
   that lime is the screen's next click: one obvious action, saying what and how much, never greyed out.
   Change colours in the `:root` tokens, never at call sites. *(design.md)*
 - Fonts: Inter (interface) and Inter Tight (`h1`–`h3`), served by Fairide — never `fonts.googleapis.com`. Bricolage
-  Grotesque is for the word `fairide` (`.wordmark`) only. The logo is the bicycle « 5a » and is never a link. *(design.md)*
+  Grotesque is for the word `fairride` only, always through `MotMarque.jsx` (« ride » in the accent). The brand is
+  « Fairride » (two r, 2026-10-25); the company stays « Fairide SRL ». The logo is the bicycle « 5a » and is never a link. *(design.md)*
 - No emojis anywhere, admin included: icons are [Icone.jsx](src/components/Icone.jsx). Don't add struck-through text to
   customer screens (founder, 2026-10-16: state a figure plainly, e.g. « 22-32 % »). *(design.md)*
 - `ConfirmDialog` / `ReasonDialog`, never `window.confirm` / `window.prompt`. Scroll locks go on `<html>`, never `<body>`.

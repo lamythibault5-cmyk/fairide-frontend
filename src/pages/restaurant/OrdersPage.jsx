@@ -383,7 +383,7 @@ export default function OrdersPage() {
       // Dans l'appli (iPhone, Android) sans terminal Goodcom : la WebView n'a pas de boîte d'impression, print() ne fait
       // rien, et l'écran comptait quand même « Ticket déjà imprimé 1 fois » (audit du 19/10, shop-211). On le dit, sans compter.
       if (estNatif()) { toast(t('ordersResto.printNoPrinterApp'), 'erreur'); return; }
-      imprimerTicketPapier(r.lines, r.columns, `Fairide ${order.orderNumber ? `#${String(order.orderNumber).padStart(3, '0')}` : String(order.id).slice(0, 8)}`);
+      imprimerTicketPapier(r.lines, r.columns, `Fairride ${order.orderNumber ? `#${String(order.orderNumber).padStart(3, '0')}` : String(order.id).slice(0, 8)}`);
       setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + 1 }));
     } catch (e) { toast(e.message, 'erreur'); }
   }

@@ -107,7 +107,7 @@ export default function DriverDocuments() {
   return (
     <div>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('driverDocs.intro')}</p>
-      {idv && idv.status === 'verified' && <p className="small" style={{ margin: '0 0 10px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('driverDocs.identityVerified', { provider: idv.provider === 'stripe_identity' ? 'Stripe Identity' : 'Fairide' })}</p>}
+      {idv && idv.status === 'verified' && <p className="small" style={{ margin: '0 0 10px' }}><Icone nom="valider" taille={16} className="icone-texte" />{' '}{t('driverDocs.identityVerified', { provider: idv.provider === 'stripe_identity' ? 'Stripe Identity' : 'Fairride' })}</p>}
       {/* Consentement biométrique donné : il se retire ici aussi (audit du 19/10, courier-9). */}
       {dossier.biometricConsent && (
         <p className="small" style={{ margin: '0 0 10px' }}>

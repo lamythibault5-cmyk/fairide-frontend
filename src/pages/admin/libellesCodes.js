@@ -10,14 +10,14 @@ function parLangue(tables) {
 }
 
 export const PAYMENT_MODE_LABELS = parLangue({
-  fr: { stripe: 'Carte (en ligne)', on_site: 'Payé au commerce', balance: 'Solde Fairide', simulated: 'Simulé', inconnu: 'Inconnu' },
-  en: { stripe: 'Card (online)', on_site: 'Paid at the business', balance: 'Fairide balance', simulated: 'Simulated', inconnu: 'Unknown' },
-  nl: { stripe: 'Kaart (online)', on_site: 'Betaald bij de zaak', balance: 'Fairide-saldo', simulated: 'Gesimuleerd', inconnu: 'Onbekend' }
+  fr: { stripe: 'Carte (en ligne)', on_site: 'Payé au commerce', balance: 'Solde Fairride', simulated: 'Simulé', inconnu: 'Inconnu' },
+  en: { stripe: 'Card (online)', on_site: 'Paid at the business', balance: 'Fairride balance', simulated: 'Simulated', inconnu: 'Unknown' },
+  nl: { stripe: 'Kaart (online)', on_site: 'Betaald bij de zaak', balance: 'Fairride-saldo', simulated: 'Gesimuleerd', inconnu: 'Onbekend' }
 });
 export const REFUND_RESPONSIBILITY_LABELS = parLangue({
-  fr: { restaurant: 'à la charge du commerce', driver: 'à la charge du livreur', fairide: 'à la charge de Fairide' },
-  en: { restaurant: 'charged to the business', driver: 'charged to the courier', fairide: 'charged to Fairide' },
-  nl: { restaurant: 'ten laste van de zaak', driver: 'ten laste van de koerier', fairide: 'ten laste van Fairide' }
+  fr: { restaurant: 'à la charge du commerce', driver: 'à la charge du livreur', fairide: 'à la charge de Fairride' },
+  en: { restaurant: 'charged to the business', driver: 'charged to the courier', fairide: 'charged to Fairride' },
+  nl: { restaurant: 'ten laste van de zaak', driver: 'ten laste van de koerier', fairide: 'ten laste van Fairride' }
 });
 export const SUBSCRIPTION_STATUS_LABELS = parLangue({
   fr: { none: 'aucun', trialing: 'mois offert en cours', active: 'actif', past_due: 'paiement en retard', paused: 'en pause', canceled: 'résilié', incomplete: 'incomplet', incomplete_expired: 'expiré', unpaid: 'impayé' },
@@ -25,9 +25,9 @@ export const SUBSCRIPTION_STATUS_LABELS = parLangue({
   nl: { none: 'geen', trialing: 'gratis maand loopt', active: 'actief', past_due: 'betaling achterstallig', paused: 'gepauzeerd', canceled: 'opgezegd', incomplete: 'onvolledig', incomplete_expired: 'verlopen', unpaid: 'onbetaald' }
 });
 export const DELIVERY_MODE_LABELS = parLangue({
-  fr: { fairide: 'livreurs Fairide', own: 'ses propres livreurs' },
-  en: { fairide: 'Fairide couriers', own: 'its own couriers' },
-  nl: { fairide: 'Fairide-koeriers', own: 'eigen koeriers' }
+  fr: { fairide: 'livreurs Fairride', own: 'ses propres livreurs' },
+  en: { fairide: 'Fairride couriers', own: 'its own couriers' },
+  nl: { fairide: 'Fairride-koeriers', own: 'eigen koeriers' }
 });
 // Libellé d'un code, ou le code lui-même quand la table ne le connaît pas encore.
 export const libelle = (table, code) => (code && table[code]) || code || '-';

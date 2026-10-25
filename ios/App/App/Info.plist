@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>fr</string>
 	<key>CFBundleDisplayName</key>
-	<string>Fairide</string>
+	<string>Fairride</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -73,7 +73,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Pour photographier une commande prête, ou un document de ton dossier livreur.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Pour enregistrer dans tes photos une image que tu gardes depuis Fairide, comme la photo d’un plat.</string>
+	<string>Pour enregistrer dans tes photos une image que tu gardes depuis Fairride, comme la photo d’un plat.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Pendant une livraison, ta position reste partagée avec le client même écran verrouillé, jusqu’à la remise.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

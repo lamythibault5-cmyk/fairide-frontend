@@ -35,7 +35,7 @@ function texte(brut) {
 }
 
 // « Aide · Fairide », « Restaurants en livraison à Bruxelles · Fairide » → le titre sans la marque, pour le h1.
-const sansMarque = (titre) => String(titre || '').replace(/\s*[·|]\s*(fairide(\.be)?)[^·|]*$/i, '').trim();
+const sansMarque = (titre) => String(titre || '').replace(/\s*[·|]\s*(fairr?ide(\.be)?)[^·|]*$/i, '').trim();
 
 function prix(valeur, langue) {
   const n = Number(valeur);
@@ -50,7 +50,7 @@ function cadre({ t, langue, cheminApplicatif, contenu }) {
     .map((l) => `<a href="${html(cheminLocalise(cheminApplicatif, l))}" hreflang="${l}" lang="${l}">${LANGUES[l]}</a>`)
     .join(' · ');
   return `<div data-prerendu>
-      <header><a href="${lien('/')}">fairide</a>
+      <header><a href="${lien('/')}">fairride</a>
         <nav><a href="${lien('/restaurants')}">${texte(t('nav.restaurants'))}</a> · <a href="${lien('/notre-histoire')}">${texte(t('story.title'))}</a> · <a href="${lien('/aide')}">${texte(t('nav.help'))}</a></nav>
       </header>
       <main>

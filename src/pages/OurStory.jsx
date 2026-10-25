@@ -40,7 +40,7 @@ export default function OurStory() {
     answer: t(`story.faqA${n}`)
   }))), 'ld-faq');
   useJsonLd(breadcrumbJsonLd([
-    { name: 'Fairide', path: '/' },
+    { name: 'Fairride', path: '/' },
     { name: t('story.title').replace(/^\W+\s*/, ''), path: '/notre-histoire' }
   ]), 'ld-breadcrumb');
   return (

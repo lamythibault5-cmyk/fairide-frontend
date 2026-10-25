@@ -352,7 +352,7 @@ export default function RestaurantList() {
   const location = useLocation();
   usePageMeta({ title: t('restoListUi.pageTitle'), description: t('seo.listDescription'), path: '/restaurants' });
   useJsonLd(breadcrumbJsonLd([
-    { name: 'Fairide', path: '/' },
+    { name: 'Fairride', path: '/' },
     { name: t('restoListUi.heading'), path: '/restaurants' }
   ]), 'ld-breadcrumb');
   // La page Recherche envoie ici ses résultats « cuisine » et « commune » par l'état de navigation :

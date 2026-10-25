@@ -1,6 +1,6 @@
 {
   "appId": "be.fairide.app",
-  "appName": "Fairide",
+  "appName": "Fairride",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"

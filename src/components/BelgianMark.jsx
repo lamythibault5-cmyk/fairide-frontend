@@ -25,7 +25,7 @@ const ROUGE = '#EF3340';
 export default function BelgianMark({ width = 120, title }) {
   return (
     <span className="be-mark" style={{ width, height: width / 2 }} title={title}>
-      <svg viewBox="26 50 80 40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label={title || 'Fairide'} shapeRendering="geometricPrecision">
+      <svg viewBox="26 50 80 40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label={title || 'Fairride'} shapeRendering="geometricPrecision">
         <g transform="translate(28 44)" fill="none" strokeWidth="5">
           <circle cx="15" cy="29" r="12.5" stroke={NOIR} />
           <circle cx="61" cy="29" r="12.5" stroke={ROUGE} />

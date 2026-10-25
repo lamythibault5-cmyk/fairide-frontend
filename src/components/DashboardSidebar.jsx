@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
+import MotMarque from './MotMarque';
 import Icone, { IconePleine } from './Icone';
 import useInbox from '../hooks/useInbox';
 import { useCurseurOnglets } from '../hooks/useCurseurOnglets';
@@ -175,7 +176,7 @@ export default function DashboardSidebar() {
       <div className="dashboard-sidebar-brand">
         {/* Sur le site, la tuile de la maquette (40 px, site-cadre.css) ; l'app garde la sienne. */}
         <BrandMark size={NATIF ? 30 : 40} />
-        <span className="wordmark">fairide</span>
+        <MotMarque />
       </div>
       {previewMode && role === 'restaurant' && (
         <div className="preview-mode-sidebar-banner">

@@ -158,11 +158,20 @@ Belgian-colours version [BelgianMark.jsx](../../src/components/BelgianMark.jsx).
 renders of it: change the drawing, re-render them. The old bowl logo's spec and files are in `docs/archives/`
 (`FairRide-logo-spec.md`, `brand-bol/`): never use them.
 
-The one exception is the word `fairide` itself, which is set in **Bricolage Grotesque** (700–800,
-optical sizing on) via the `.wordmark` class — lowercase, `-0.03em`. It is a *logotype* face, loaded
+**The name is « Fairride », with two r (founder, 2026-10-25).** People typed « fairride » and could not find « Fairide »;
+fairride.be was already ours. In sentences it is « Fairride »; the legal company keeps its name, « Fairide SRL »
+(contracts, invoices, legal notices), and so do the hidden identifiers (`be.fairide.app`, repos, env vars, DB columns,
+i18n keys) and, until the domain switch, `fairide.be` and the `@fairide.be` addresses. Mockup and choice:
+`maquettes/fairride-deux-r/fairride-deux-r.html`, version C.
+
+The one exception is the word `fairride` itself, which is set in **Bricolage Grotesque** (700–800,
+optical sizing on) via the `.wordmark` class — lowercase, `-0.03em`, always written by
+[MotMarque.jsx](../../src/components/MotMarque.jsx): « fair » in the text colour, « ride » in the accent (iris on
+white, lime on iris through `--marque-ride`, set by the iris grounds in `styles.css`; the splash and `public/404.html`
+write it by hand). Never type `fairride` into a `.wordmark` by hand: it would lose its two colours. It is a *logotype* face, loaded
 from a `<link>` in [index.html](../../index.html) rather than the `@import`, because the splash screen
 paints before `styles.css` exists. Seven call sites carry the class; `.wordmark` sets the family and
-nothing else. Inside a heading, the *word* « Fairide » alone is shown as the wordmark through
+nothing else. Inside a heading, the *word* « Fairride » alone is shown as the wordmark through
 [AvecMarque](../../src/components/AvecMarque.jsx) (2026-10-13). **Don't extend it to whole headings** — that would re-open the two-font pairing the design
 direction closed when it dropped Fraunces.
 

@@ -29,7 +29,7 @@ self.addEventListener('fetch', () => {});
 
 // L'URL ouverte au clic, et le regroupement des notifications, dépendent du type reçu.
 const PAR_DEFAUT = {
-  title: 'Fairide',
+  title: 'Fairride',
   body: '',
   url: '/dashboard/orders',
   tag: 'fairide'
