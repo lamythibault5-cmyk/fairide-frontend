@@ -45,3 +45,12 @@ choice inside a choice (Habebe's « Formule + soft » → Spa/Pales) is flattene
 model has one level of options. The admin list's menu pill comes from the menu itself, not the « Fairide s'en occupe »
 request: 0 dishes → « Carte à importer » (filter of the same name, counted server-side), otherwise the price state.
 The importer closes an open request and its task, without e-mailing the business.
+
+**Carte seule (2026-10-25, Owen).** A shop can be shown before its contract and its « C'est bon »: Admin › Restaurants ›
+drawer › « Montrer en carte seule » (`PATCH /admin/restaurants/:id/vitrine`, backend `routes/validationCarte.js`), then the
+usual « Approuver » with its compliance checks; once approved it goes online by itself with **no** « tu es en ligne » e-mail.
+For the public (list, shop page, search, favourites, pre-render), backend `routes/restaurants.js › pourLePublic`: a shop
+without a valid contract or never signed has delivery and takeaway closed (« Carte seule » label, the page says ordering is
+not open); a shop never signed **and** without in-store-checked prices (`prixMasques`) gets every dish and add-on price as
+`null`, no promos, and the page adds « Les prix arrivent bientôt ». The owner and the team still see all prices. Front:
+a `null` price is never written (no « 0,00 € », no JSON-LD offer). Never show platform prices to customers.

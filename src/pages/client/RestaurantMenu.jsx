@@ -758,13 +758,14 @@ export default function RestaurantMenu({ id }) {
           const { name } = localizedItem(item, language);
           const remise = prixRemise(item);
           const remisee = remise !== null && remise < item.price;
-          const prix = euros(remisee ? remise : item.price);
+          // Carte seule aux prix pas encore confirmés (prixMasques) : pas de prix, et surtout pas « 0,00 € ».
+          const prix = typeof item.price === 'number' ? euros(remisee ? remise : item.price) : '';
           return (
             <div className="fiche-apercu-plat" key={item.id}>
-              <button type="button" className="fiche-apercu-bouton" onClick={() => addToCart(item)} disabled={onlineOrderingDisabled} aria-label={`${name}, ${prix}`}>
+              <button type="button" className="fiche-apercu-bouton" onClick={() => addToCart(item)} disabled={onlineOrderingDisabled} aria-label={prix ? `${name}, ${prix}` : name}>
                 <span className="fiche-apercu-photo"><img loading="lazy" decoding="async" {...imgProps(item.imageUrl, 320)} alt="" onError={cacherImageCassee} /></span>
                 <b>{name}</b>
-                <span className={remisee ? 'est-remise' : undefined}>{prix}</span>
+                {prix && <span className={remisee ? 'est-remise' : undefined}>{prix}</span>}
               </button>
               {!onlineOrderingDisabled && (
                 <button type="button" className="fiche-apercu-plus" onClick={(e) => ajoutDirect(item, e.currentTarget.getBoundingClientRect(), item.imageUrl)} aria-label={t('menuCategories.quickAdd', { name })}>
@@ -970,7 +971,7 @@ export default function RestaurantMenu({ id }) {
       {onlineOrderingDisabled && (
         <div className="fiche-info">
           <span className="fiche-info-icone" aria-hidden="true"><Icone nom="horloge" taille={18} /></span>
-          <span>{t('restoMenuUi.orderingNotOpenInfo')}</span>
+          <span>{t('restoMenuUi.orderingNotOpenInfo')}{restaurant.prixMasques && <> {t('restoMenuUi.pricesSoonInfo')}</>}</span>
         </div>
       )}
       <div className="fiche-carte-plats">
