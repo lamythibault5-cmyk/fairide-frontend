@@ -1698,7 +1698,15 @@ body:has(.modal-overlay, .plat-feuille) .toast.show { transform: translateY(0); 
    de l'écran y est libre et le message peut rester à sa place habituelle. */
 @media (max-width: 900px) {
   body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .toast { bottom: calc(var(--hauteur-onglets) + 16px + var(--bas-ecran)); }
-  body:has(.panier-pilule) .toast { bottom: calc(140px + env(safe-area-inset-bottom)); }
+  /* Au-dessus de la barre du panier (2026-10-25, « qu'elle ne cache rien ») : son bas (les onglets + 12 px), sa hauteur (60 px) et
+     10 px d'air. À 140 px fixes, le message mordait sur la barre sur un téléphone sans zone du système. Sans onglets (fiche
+     d'un commerce), la barre est à 16 px du bas, le message juste au-dessus. */
+  /* Deux :has() : la règle des onglets juste au-dessus pèse plus lourd (son :has a trois classes) et posait le message sur la
+     barre (vérifié par maquettes/une-action/verifier-panier.mjs). */
+  body:has(.panier-pilule):has(.dashboard-sidebar) .toast, body:has(.panier-pilule):has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .toast {
+    bottom: calc(var(--hauteur-onglets) + 82px + var(--bas-ecran));
+  }
+  body:has(.panier-pilule):has(.dashboard-shell--flux) .toast, body:has(.panier-pilule):not(:has(.dashboard-sidebar)) .toast { bottom: calc(86px + var(--bas-ecran)); }
 }
 
 .center-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 40px 20px; }
@@ -4479,7 +4487,17 @@ html.appli .panier-pilule-texte { flex: 1; text-align: left; overflow: hidden; t
 html.appli .panier-pilule-total { height: 44px; padding: 0 16px; border-radius: 22px; background: var(--iris); color: #fff; text-shadow: none;
   display: flex; align-items: center; overflow: hidden; font-variant-numeric: tabular-nums; }
 html.appli .panier-pilule-compte { min-width: 20px; height: 20px; font-size: 12px; top: -7px; right: -9px; text-shadow: none; }
+/* Sans onglets dessous (fiche d'un commerce, pages du visiteur), la barre se pose à 16 px du bas. Dans l'app, et depuis le
+   2026-10-25 sur le site aussi : sur un téléphone, il montre la fiche de l'app, et la barre y flottait à 86 px du bas, au-dessus
+   d'un vide (la règle du site visait .fiche-site, que cette fiche n'a plus). */
 html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(:has(.dashboard-sidebar)) .panier-pilule { bottom: calc(16px + var(--bas-ecran)); }
+@media (max-width: 900px) {
+  html:not(.appli) body:has(.dashboard-shell--flux) .panier-pilule, html:not(.appli) body:not(:has(.dashboard-sidebar)) .panier-pilule { bottom: calc(16px + var(--bas-ecran)); }
+  /* La Carte du site a ses boutons + / − en bas à droite (l'app n'en a pas ; .leaflet-top.leaflet-left replacé en bas, plus haut
+     dans ce fichier) : avec la barre du panier, ils montent de sa hauteur (60 px) et de 12 px d'air. */
+  body:has(.panier-pilule:not(.panier-pilule--bulle)) .carte-plein .leaflet-top.leaflet-left { bottom: 156px; }
+  body:has(.panier-pilule:not(.panier-pilule--bulle)) .carte-plein:has(.carte-resultats) .leaflet-top.leaflet-left { bottom: 224px; }
+}
 @keyframes panier-arrive-app { from { transform: translateY(140%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes panier-gelee { 0% { transform: none; } 30% { transform: scale(1.04, .9); } 60% { transform: scale(.99, 1.04); } 100% { transform: none; } }
 @media (prefers-reduced-transparency: reduce) {
@@ -5566,8 +5584,8 @@ html:not(.appli) body:has(.fiche-site) .panier-pilule:not(.panier-pilule--bulle)
 
 /* LA BULLE DU PANIER (FloatingCart, hors de la liste et de la fiche d'un commerce ; fondateur, 2026-10-17). Un rond de 56 px
    sur le côté droit, au-dessus des onglets (en bas à droite sur ordinateur) : le sac et son compteur lime, rien d'autre. Il
-   descend avec la barre d'onglets quand elle se réduit (règle html.barre-compacte plus haut). Dans l'app, le verre de la
-   barre du panier ; sur le site, l'iris plein. */
+   descend avec la barre d'onglets quand elle se réduit (règle html.barre-compacte plus haut). Sa couleur : plus bas, « LA BULLE
+   EN LIME ». */
 .panier-pilule.panier-pilule--bulle,
 html.appli .panier-pilule.panier-pilule--bulle {
   left: auto; right: 16px; margin: 0; width: 56px; max-width: none; height: 56px; padding: 0; gap: 0;
@@ -5575,19 +5593,31 @@ html.appli .panier-pilule.panier-pilule--bulle {
 }
 html .panier-pilule--bulle .panier-pilule-texte, html .panier-pilule--bulle .panier-pilule-total,
 html.appli .panier-pilule--bulle .panier-pilule-texte, html.appli .panier-pilule--bulle .panier-pilule-total { display: none; }
-/* La bulle en IRIS PLEIN dans l'app aussi (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 3) : en verre blanc
-   on la voyait à peine. Le sac blanc, le compteur lime. Et pas de bulle quand l'écran vide propose déjà « Reprendre mon
-   panier » (EtatVide) : un seul geste. */
+/* LA BULLE EN LIME, COMME LA BARRE (fondateur, 2026-10-25 : « qu'elle fasse comme les autres ») : c'est le même panier, la même
+   couleur le fait reconnaître d'un coup d'œil. Sac à l'encre, compteur iris. Elle était en verre blanc (on la voyait à peine),
+   puis en iris plein le même jour. UN SEUL LIME PAR ÉCRAN (règle 4 de design.md) : quand la page a déjà son propre bouton lime
+   (« Me prévenir quand … arrive » sur le suivi, un document à signer…), la bulle repasse en iris, sac blanc, compteur lime.
+   Et pas de bulle quand l'écran vide propose déjà « Reprendre mon panier » (EtatVide) : un seul geste. */
+.panier-pilule.panier-pilule--bulle,
 html.appli .panier-pilule.panier-pilule--bulle {
-  background: var(--iris); color: #fff; border: 0; text-shadow: none;
-  -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 6px 18px rgba(59, 47, 181, .35);
+  background: var(--lime); color: var(--ink); border: 0; text-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 6px 18px rgba(20, 18, 31, .2);
 }
-html.appli .panier-pilule.panier-pilule--bulle svg { filter: none; }
+.panier-pilule.panier-pilule--bulle svg { filter: none; }
+.panier-pilule.panier-pilule--bulle .panier-pilule-compte { background: var(--iris); color: #fff; text-shadow: none; }
+body:has(main :is(.btn-gold, .ec-bouton--lime)) .panier-pilule.panier-pilule--bulle {
+  background: var(--iris); color: #fff; box-shadow: 0 6px 18px rgba(59, 47, 181, .35);
+}
+body:has(main :is(.btn-gold, .ec-bouton--lime)) .panier-pilule.panier-pilule--bulle .panier-pilule-compte { background: var(--lime); color: var(--ink); }
 body:has(.etat-vide-reprendre) .panier-pilule { display: none; }
 /* Sur la Carte, les boutons du zoom occupent le coin droit : la bulle passe à gauche, et s'efface quand la fiche d'un
    commerce est ouverte en bas de la carte. */
 body:has(.carte-page) .panier-pilule.panier-pilule--bulle, html.appli body:has(.carte-page) .panier-pilule.panier-pilule--bulle { right: auto; left: 16px; }
-body:has(.carte-page .carte-fiche, .carte-page .map-detail-card) .panier-pilule--bulle { display: none; }
+/* LA BARRE DU PANIER S'EFFACE QUAND QUELQUE CHOSE S'OUVRE PAR-DESSUS LA PAGE (fondateur, 2026-10-25 : « qu'elle ne cache jamais
+   autre chose, sur aucun écran »). Une fenêtre ou une feuille (role="dialog" : la fiche d'un plat, Infos, « Livrer à »,
+   une confirmation, un écran plein, la carte des cookies…) ou la fiche d'un commerce en bas de la Carte : la barre (et la bulle)
+   laisse la place, et revient à la fermeture avec son entrée habituelle. Le clavier ouvert la masque aussi (html.clavier-ouvert). */
+body:has([role="dialog"], .carte-page .carte-fiche, .carte-page .map-detail-card) .panier-pilule { display: none; }
 .panier-pilule.panier-pilule--bulle.panier-pilule--rebond, html.appli .panier-pilule.panier-pilule--bulle.panier-pilule--rebond { animation-name: bulle-rebond; }
 @media (min-width: 901px) { .panier-pilule.panier-pilule--bulle, html.appli .panier-pilule.panier-pilule--bulle { right: 24px; } }
 @keyframes bulle-arrive { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
