@@ -211,6 +211,35 @@ export function PrixMagasin({ detail, token, api, toast, tr, onChanged }) {
   );
 }
 
+// « Carte seule » (vitrine, backend migration 003 ; fondateur, 2026-10-25) : montrer un commerce avant son contrat et son
+// « C'est bon ». Il passe toujours par « Approuver » ; approuvé, il se publie sans e-mail au commerce. Le public voit sa carte
+// sans commande, et sans prix tant qu'ils ne sont ni vérifiés en magasin ni validés (routes/restaurants.js, pourLePublic).
+export function CarteSeule({ detail, token, api, toast, tr, onChanged }) {
+  const [busy, setBusy] = useState(false);
+  const [confirmer, setConfirmer] = useState(false);
+  const actif = !!detail.vitrine;
+  async function basculer() {
+    setConfirmer(false);
+    setBusy(true);
+    try {
+      const r = await api(`/admin/restaurants/${detail.id}/vitrine`, { method: 'PATCH', token, body: { vitrine: !actif } });
+      toast(r.vitrine && r.publicListed ? tr('adminRestos.showcaseOnlineToast') : r.vitrine ? tr('adminRestos.showcaseLineOn') : tr('adminRestos.showcaseLineOff'));
+      onChanged?.();
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+  }
+  return (
+    <div style={{ marginTop: 8 }}>
+      <p className="small" style={{ margin: 0 }}>{actif ? tr('adminRestos.showcaseLineOn') : tr('adminRestos.showcaseLineOff')}</p>
+      <button type="button" className="btn-outline" style={{ marginTop: 6, padding: '6px 14px', fontSize: 13 }} disabled={busy} onClick={() => setConfirmer(true)}>
+        {busy ? '…' : actif ? tr('adminRestos.showcaseUnmark') : tr('adminRestos.showcaseMark')}
+      </button>
+      <ConfirmDialog open={confirmer} title={actif ? tr('adminRestos.showcaseUnmark') : tr('adminRestos.showcaseMark')}
+        message={actif ? tr('adminRestos.showcaseUnmarkConfirm') : tr('adminRestos.showcaseMarkConfirm', { name: detail.name })}
+        loading={busy} onConfirm={basculer} onCancel={() => setConfirmer(false)} />
+    </div>
+  );
+}
+
 export default function AdminRestaurantsPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
@@ -959,6 +988,7 @@ function RestaurantDetailModal({ selected, detail, orders, pret, onClose, onSusp
             )}
             <Link to={`/admin/restaurants/${detail.id}/menu`} className={detail.conciergeStatus ? 'btn-gold' : 'btn-outline'} style={{ display: 'inline-block', marginTop: 8, padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
             {!detail.isDemo && <PrixMagasin detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}
+            {!detail.isDemo && <CarteSeule detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}
           </div>
           <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
             <BoutonGererCommerce id={detail.id} token={token} api={api} toast={toast} tr={tr} className={detail.conciergeStatus ? 'btn-gold' : 'btn-teal'} />

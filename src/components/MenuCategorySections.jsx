@@ -107,6 +107,8 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
   /* PAS DE PRIX BARRÉ (fondateur, 2026-10-17 : il n'aime pas le texte barré). Le prix d'avant reste dit — il le faut pour
    * une réduction (art. VI.18 CDE) — en clair : « avant 13,50 € ». */
   const prixAvant = remisee && <span className="plat-prix-avant">{t('menuCategories.priceBefore', { price: euros(item.price) })}</span>;
+  // Carte seule aux prix pas encore confirmés (backend, prixMasques) : le plat arrive sans prix, on n'écrit rien (pas « 0,00 € »).
+  const sansPrix = typeof item.price !== 'number';
   const badges = (
     <>
       {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}<Icone nom="bol" taille={16} className="icone-texte" /></span>}
@@ -145,11 +147,11 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
       {vignette}
       <span className="plat-texte">
         <span className="plat-nom">{name}{badges}</span>
-        <span className="plat-prix-ligne">
+        {!sansPrix && <span className="plat-prix-ligne">
           <span className={`plat-prix${remisee ? ' est-remise' : ''}`}>{euros(remisee ? remise : item.price)}</span>
           {prixAvant}
           {etiquette && <span className="plat-promo"><Icone nom="etiquette" taille={14} className="icone-texte" />{' '}{etiquette}</span>}
-        </span>
+        </span>}
         {ligneDesc}
         {ligneAllergenes}
       </span>
@@ -160,8 +162,8 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
       <span className="plat-texte">
         <span className="bistrot-l1">
           <span className="plat-nom">{name}{badges}</span>
-          <span className="bistrot-points" aria-hidden="true" />
-          <span className={`plat-prix${remisee ? ' est-remise' : ''}`}>{euros(remisee ? remise : item.price)}</span>
+          {!sansPrix && <span className="bistrot-points" aria-hidden="true" />}
+          {!sansPrix && <span className={`plat-prix${remisee ? ' est-remise' : ''}`}>{euros(remisee ? remise : item.price)}</span>}
         </span>
         {ligneDesc}
         {ligneAllergenes}
@@ -175,12 +177,12 @@ const ItemCard = memo(function ItemCard({ item, image, onAdd, onQuickAdd, hideAd
         {ligneDesc}
         {/* Allergènes déclarés (A1, palier 2) : listés sur la ligne quand il y en a ; « aucun des 14 » reste dans la fiche du plat. */}
         {ligneAllergenes}
-        <span className="plat-prix-ligne">
+        {!sansPrix && <span className="plat-prix-ligne">
           {remisee
             ? <><span className="plat-prix est-remise">{euros(remise)}</span>{prixAvant}</>
             : <span className="plat-prix">{euros(item.price)}</span>}
           {etiquette && <span className="plat-promo"><Icone nom="etiquette" taille={14} className="icone-texte" />{' '}{etiquette}</span>}
-        </span>
+        </span>}
       </span>
       {vignette}
     </>

@@ -3916,6 +3916,13 @@ export default {
       platformPricesLine: "Prix pas encore vérifiés en magasin : présumés ceux d'une plateforme.",
       inStorePricesMark: "Marquer : prix magasin vérifiés",
       inStorePricesUnmark: "Retirer « prix vérifiés »",
+      showcaseLineOn: "Carte seule : visible avant contrat et « C'est bon », sans commande. Prix montrés seulement s'ils sont vérifiés en magasin.",
+      showcaseLineOff: "Pas en carte seule : visible seulement une fois le contrat accepté et la carte validée.",
+      showcaseMark: "Montrer en carte seule",
+      showcaseUnmark: "Retirer « carte seule »",
+      showcaseMarkConfirm: "Montrer {name} en carte seule ? Une fois approuvé, il apparaît sur le site et dans l'app avec « Carte seule » : sa carte sans commande, et sans prix tant qu'ils ne sont pas vérifiés en magasin ou validés par le commerce. Aucun e-mail ne part au commerce.",
+      showcaseUnmarkConfirm: "Retirer « carte seule » ? Sans contrat accepté, le commerce quitte la liste.",
+      showcaseOnlineToast: "En ligne en carte seule.",
       fairideRateKept: "Le commerce a choisi de garder ses prix.",
       fairideRateAdded: "Le commerce a monté ses prix pour couvrir la commission de Fairride.",
       fairideRatePending: "Sur la page « C'est bon », le commerce choisira : garder ses prix ou les monter pour couvrir la commission de Fairride.",
@@ -4928,6 +4935,8 @@ export default {
       // promettre sur la date : on ne la connaît pas. Dire ce qui est vrai — la carte est là, la
       // commande pas encore — plutôt que de laisser croire que la commande est ouverte.
       orderingNotOpenInfo: 'La commande en ligne n\'est pas encore ouverte chez ce commerce. Cette carte est publiée à titre d\'information.',
+      // Carte seule aux prix pas encore confirmés (backend, prixMasques) : les plats sont montrés sans prix.
+      pricesSoonInfo: 'Les prix arrivent bientôt : le commerce est en train de les confirmer.',
       toastLogin: 'Connecte-toi ou crée un compte pour commander.',
       toastNoOnline: 'Ce restaurant ne propose pas encore la commande en ligne.',
       toastClosed: 'Ce commerce est actuellement fermé.',

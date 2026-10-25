@@ -128,11 +128,12 @@ function menuJsonLd(restaurant) {
         name: i.name,
         description: i.desc || undefined,
         image: i.imageUrl || undefined,
-        offers: {
+        // Carte seule aux prix pas encore confirmés : pas d'offre, plutôt qu'un prix de 0 € donné à Google.
+        offers: typeof i.price === 'number' ? {
           '@type': 'Offer',
           price: Number(i.price).toFixed(2),
           priceCurrency: 'EUR'
-        }
+        } : undefined
       }))
     }))
   });
