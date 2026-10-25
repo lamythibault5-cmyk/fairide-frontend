@@ -1,0 +1,40 @@
+{
+  "color-space-for-untagged-svg-colors" : "srgb",
+  "fill" : {
+    "solid" : "srgb:0.23137,0.18431,0.70980,1.00000"
+  },
+  "groups" : [
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "velo.svg",
+          "name" : "velo",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "name" : "velo",
+      "shadow" : {
+        "kind" : "none",
+        "opacity" : 0
+      },
+      "specular" : false,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "iOS"
+    ]
+  }
+}

@@ -80,9 +80,12 @@ await net(velo(1024 * SURECH, 1024 * SURECH * LARGEUR_VELO, null, TRAIT_VELO), 1
 /* LE CALQUE DU VÉLO POUR ICON COMPOSER (iPhone, iOS 26 ; fondateur, 2026-10-25 : « le lime de l'icône du site est plus vif »).
  * iOS 26 pose tout seul du « Liquid Glass » sur une icône faite d'une seule image (AppIcon.appiconset) : reflets et
  * transparence sur le vélo, qui passe de #C8F03C à environ #B4D44F, plus gris. L'icône du site ajoutée à l'écran d'accueil,
- * elle, n'est pas touchée. Seul un fichier AppIcon.icon (Icon Composer, sur le Mac) dit à iOS de laisser le vélo mat : ce
- * calque, posé sur un fond iris uni, avec le verre éteint. Marche à suivre : docs/agents/appli.md. */
-writeFileSync('assets/icon-velo.svg', velo(1024, 1024 * LARGEUR_VELO, null, TRAIT_VELO));
+ * elle, n'est pas touchée. Seul un fichier AppIcon.icon (format Icon Composer) dit à iOS de laisser le vélo mat : ce
+ * calque, posé sur un fond iris uni, avec le verre éteint. Écrit à la main depuis Windows (2026-10-25, pas de Mac) :
+ * ios/App/App/AppIcon.icon/icon.json ; ce script y recopie le calque pour que les deux icônes restent identiques. */
+const calqueVelo = velo(1024, 1024 * LARGEUR_VELO, null, TRAIT_VELO);
+writeFileSync('assets/icon-velo.svg', calqueVelo);
+writeFileSync('ios/App/App/AppIcon.icon/Assets/velo.svg', calqueVelo);
 await sharp({ create: { width: 1024, height: 1024, channels: 4, background: IRIS } }).png().toFile('assets/icon-background.png');
 // Écran de lancement : iris uni, vélo à 22 % de large (même rendu que le #splash de index.html, sans le mot).
 await sharp(velo(2732, 2732 * 0.22, IRIS)).png().toFile('assets/splash.png');
