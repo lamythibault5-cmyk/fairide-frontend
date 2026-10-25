@@ -20,6 +20,7 @@ import { fmtDate, fmtDateTime, downloadCsv, useDebouncedValue, pct, CRM_STAGES, 
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import Icone from '../../components/Icone';
+import useRechercheImposee from '../../hooks/useRechercheImposee';
 
 const PAGE_SIZE = 100;
 const periodTypes = (tr) => [{ key: 'month', label: tr('adminCommon.month') }, { key: 'quarter', label: tr('adminCommon.quarter') }, { key: 'year', label: tr('adminCommon.year') }];
@@ -41,6 +42,7 @@ export default function AdminCrmPage() {
   const [page, setPage] = useState(0);
   const [erreur, setErreur] = useState(null);
   const [search, setSearch] = useState(location.state?.presetSearch || searchParams.get('q') || '');
+  useRechercheImposee(setSearch);
   const q = useDebouncedValue(search, 350);
   const [selectedId, setSelectedId] = useState(null);
   const [showCreate, setShowCreate] = useState(() => searchParams.get('new') === '1');

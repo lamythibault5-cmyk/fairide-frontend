@@ -21,9 +21,6 @@ export default function EcranLegal({ restaurant, restoId, loadDashboard, onFerme
   const [tva, setTva] = useState(restaurant.vatNumber || '');
   const [responsable, setResponsable] = useState(restaurant.responsibleName || '');
   const [afsca, setAfsca] = useState(restaurant.afscaNumber || '');
-  // Plus modifiables ici (pas d'alcool sur Fairide) : renvoyées telles quelles à l'enregistrement.
-  const alcool = !!restaurant.sellsAlcohol;
-  const engagementAge = !!restaurant.alcoholAgeAckAt;
   const { enregistrer, enCours } = useEnregistrerCommerce({ restoId, loadDashboard, onFermer });
 
   // Contrat signé ou paiements Stripe actifs : ces numéros y sont inscrits. Un changement reste possible, mais l'équipe en est
@@ -34,10 +31,17 @@ export default function EcranLegal({ restaurant, restoId, loadDashboard, onFerme
 
   function valider() {
     if (!nomLegal.trim() || !bce.trim() || !tva.trim() || !responsable.trim()) { toast(t('editResto.toastLegalRequired'), 'erreur'); return; }
-    enregistrer({
-      legalName: nomLegal.trim(), companyNumber: bce.trim(), vatNumber: tva.trim(), responsibleName: responsable.trim(),
-      afscaNumber: afsca.trim(), sellsAlcohol: alcool, alcoholAgeAck: engagementAge
-    });
+    /* SEULEMENT CE QUI A CHANGÉ (2026-10-25). Tout partait, et l'écran est lu une fois : un numéro AFSCA relevé par l'équipe
+     * pendant que le commerce remplissait son responsable (appel d'inscription, Admin › Conformité) était effacé, la date de
+     * vérification restant posée. Numéro d'entreprise et TVA partent ensemble si l'un change : le serveur vérifie qu'ils
+     * concordent. L'alcool n'est plus modifiable ici : rien à renvoyer. */
+    const corps = {};
+    if (nomLegal !== (restaurant.legalName || '')) corps.legalName = nomLegal.trim();
+    if (bce !== (restaurant.companyNumber || '') || tva !== (restaurant.vatNumber || '')) { corps.companyNumber = bce.trim(); corps.vatNumber = tva.trim(); }
+    if (responsable !== (restaurant.responsibleName || '')) corps.responsibleName = responsable.trim();
+    if (afsca !== (restaurant.afscaNumber || '')) corps.afscaNumber = afsca.trim();
+    if (!Object.keys(corps).length) { onFermer(); return; }
+    enregistrer(corps);
   }
 
   return (

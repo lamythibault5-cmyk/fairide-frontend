@@ -22,6 +22,7 @@ import useEtatPage from '../../hooks/useEtatPage';
 import ouvrirDocument from '../../ouvrirDocument';
 import useAdminRole from '../../hooks/useAdminRole';
 import useAdminOverview from '../../hooks/useAdminOverview';
+import useRechercheImposee from '../../hooks/useRechercheImposee';
 
 // Valider ou rejeter un document (une pièce d'identité de livreur vaut validation de son dossier) : owner/admin/ops, comme
 // le serveur (audit du 19/10, admin-16). Rôle pas encore connu : tout est montré, le serveur reste le garde-fou.
@@ -51,6 +52,7 @@ export default function AdminDocumentsPage() {
   const [verificationStatus, setVerificationStatus] = useState(searchParams.get('verification') || '');
   const [expiry, setExpiry] = useEtatPage('expiration', searchParams.get('expiry') || '', { forcer: !!(searchParams.get('expiry') || '') });
   const [qInput, setQInput] = useState(location.state?.presetSearch || searchParams.get('q') || '');
+  useRechercheImposee(setQInput);
   const q = useDebouncedValue(qInput, 350);
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
@@ -68,7 +70,9 @@ export default function AdminDocumentsPage() {
     api('/admin/documents/overview', { token }).then(setOverview).catch((e) => toast(e.message, 'erreur'));
   }
   useEffect(() => { loadOverview(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (searchParams.get('id')) { const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true }); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Relu à chaque nouvel ?id= (2026-10-25, comme Support) : un lien suivi depuis cette page même n'ouvrait rien.
+  const idParam = searchParams.get('id');
+  useEffect(() => { if (idParam) { setSelectedId(idParam); const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true }); } }, [idParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function load() {
     setData(null); setErreur(null);

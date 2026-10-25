@@ -27,7 +27,10 @@ export default function PeppolSettings({ endpoint }) {
   async function enregistrer(changements) {
     setSaving(true);
     try {
-      const d = await api(endpoint, { method: 'PATCH', token, body: { peppolId: peppolId.trim(), ...changements } });
+      // L'identifiant seulement s'il a changé (2026-10-25) : l'interrupteur le renvoyait tel que lu à l'ouverture, et effaçait
+      // celui que l'équipe venait d'enregistrer (conformite.js) pendant que la page restait ouverte.
+      const id = peppolId.trim();
+      const d = await api(endpoint, { method: 'PATCH', token, body: { ...(id !== (data.peppolId || '') ? { peppolId: id } : {}), ...changements } });
       setData(d); setPeppolId(d.peppolId || '');
       toast(t('peppol.toastSaved'), 'succes');
     } catch (e) {

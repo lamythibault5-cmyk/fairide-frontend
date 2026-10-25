@@ -19,6 +19,7 @@ import {
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import Icone from '../../components/Icone';
+import useRechercheImposee from '../../hooks/useRechercheImposee';
 
 const PAGE_SIZE = 25;
 const MODES = (tr) => [{ key: 'list', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }, { key: 'kanban', icon: '▦', label: tr('adminKanban.kanban') }];
@@ -42,6 +43,7 @@ export default function AdminTasksPage() {
   const [assignee, setAssignee] = useState('');
   const [myTasksOnly, setMyTasksOnly] = useState(false);
   const [qInput, setQInput] = useState(location.state?.presetSearch || searchParams.get('q') || '');
+  useRechercheImposee(setQInput);
   const q = useDebouncedValue(qInput, 350);
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
@@ -60,6 +62,9 @@ export default function AdminTasksPage() {
     api('/admin/tasks/overview', { token }).then(setOverview).catch((e) => toast(e.message, 'erreur'));
   }
   useEffect(() => { loadOverview(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Relu à chaque nouvel ?id= (2026-10-25, comme Support) : un lien suivi depuis cette page même n'ouvrait pas la tâche.
+  const idParam = searchParams.get('id');
+  useEffect(() => { if (idParam) { setSelectedId(idParam); const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true }); } }, [idParam]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (searchParams.get('id') || searchParams.get('new')) { const next = Object.fromEntries([...searchParams.entries()]); delete next.id; delete next.new; setSearchParams(next, { replace: true }); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function load() {

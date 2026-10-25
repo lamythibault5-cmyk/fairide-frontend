@@ -42,7 +42,10 @@ export default function EcranIdentite({ restaurant, restoId, loadDashboard, onFe
 
   function valider() {
     if (!nom.trim()) { toast(t('editResto.toastNameRequired'), 'erreur'); return; }
-    enregistrer({ name: nom.trim(), desc: desc.trim(), coverImageUrl: couverture.trim() });
+    /* LA COUVERTURE SEULEMENT SI ELLE A CHANGÉ (2026-10-25). Sans photo à lui, le serveur montre au commerce une photo
+     * d'illustration à sa place (coverImageUrl, ownCover false) ; corriger son nom l'enregistrait comme SA photo : elle
+     * entrait dans « À la une », réservée aux vraies photos (audit du 19/10, discovery-05). */
+    enregistrer({ name: nom.trim(), desc: desc.trim(), ...(couverture.trim() !== (restaurant.coverImageUrl || '') ? { coverImageUrl: couverture.trim() } : {}) });
   }
 
   if (selecteur) {

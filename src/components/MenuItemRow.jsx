@@ -49,6 +49,21 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
   const [saving, setSaving] = useState(false);
   const [groupIds, setGroupIds] = useState(() => new Set((item.optionGroups || []).map((g) => g.id)));
 
+  /* LA FICHE REPART DU PLAT TEL QU'IL EST, À CHAQUE OUVERTURE (2026-10-25). Ces brouillons étaient lus une seule fois, à la
+   * première apparition de la ligne, qui reste montée quand la carte se recharge (clé = id du plat). Entre-temps, la photo
+   * de section appliquée (MenuPage), les allergènes déclarés dans le bloc de conformité (AllergenesPlat) ou un import avaient
+   * changé le plat ; « Enregistrer » renvoyait les anciennes valeurs et effaçait photo, allergènes ou TVA. Même défaut que le
+   * siège du dossier livreur (dossierCommun.js › corpsInfos) : un formulaire lu une fois, renvoyé en entier. */
+  function ouvrirEdition() {
+    setName(item.name); setDesc(item.desc || ''); setPrice(String(item.price)); setCategory(item.category || 'plat');
+    setSubsection(item.subsection || ''); setImageUrl(item.imageUrl || ''); setSuggestAtCheckout(!!item.suggestAtCheckout);
+    setHealthy(!!item.healthy); setOrganic(!!item.organic); setVegan(!!item.vegan);
+    setConformite({ allergens: item.allergens || [], allergensDeclaredNone: !!item.allergensDeclaredNone, vatRate: item.vatRate ?? null, isAlcohol: !!item.isAlcohol, minAge: item.minAge ?? null });
+    setGroupIds(new Set((item.optionGroups || []).map((g) => g.id)));
+    setTranslationDrafts({}); setRequestedBy('');
+    setEditing(true);
+  }
+
   function toggleGroup(id) {
     setGroupIds((prev) => {
       const next = new Set(prev);
@@ -79,9 +94,14 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
   async function save() {
     setSaving(true);
     try {
+      /* LES GROUPES D'ABORD, ET SEULEMENT S'ILS ONT CHANGÉ (2026-10-25). Le plat enregistré, le serveur attache lui-même
+       * « Boisson » / « Sauce » à un menu et « Choix » à un « X ou Y au choix » (routes/restaurants.js › ensureMenuComboGroups,
+       * syncChoiceGroupForItem). La liste envoyée ensuite remplace tout (DELETE puis INSERT) : elle détachait aussitôt ces
+       * groupes, que la fiche ne connaissait pas encore. */
+      const groupesAvant = (item.optionGroups || []).map((g) => g.id).sort().join('|');
+      if (onSetOptionGroups && Array.from(groupIds).sort().join('|') !== groupesAvant) await onSetOptionGroups(item.id, Array.from(groupIds));
       await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(String(price).replace(',', '.')), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy, organic, vegan, ...conformite, ...(requestedBy.trim() ? { requestedBy: requestedBy.trim() } : {}) });
       setRequestedBy('');
-      if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       // Les traductions partent APRÈS le plat lui-même : le serveur recalcule l'empreinte du texte
       // source à l'enregistrement d'une correction, elle doit donc refléter le nom qui vient d'être
       // écrit, pas le précédent — sinon la correction naîtrait déjà marquée périmée.
@@ -308,7 +328,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
         ...sortableStyle,
         ...(item.available === false ? { opacity: item.outOfStockToday ? 0.8 : 0.5 } : {})
       }}
-      onClick={reorderMode || lectureSeule ? undefined : selectMode ? () => onToggleSelect(item.id) : () => setEditing(true)}
+      onClick={reorderMode || lectureSeule ? undefined : selectMode ? () => onToggleSelect(item.id) : ouvrirEdition}
       title={reorderMode || lectureSeule ? '' : selectMode ? t('menuItem.clickSelect') : t('menuItem.clickEdit')}
       /* AU CLAVIER (audit du 19/10, CROSS-85) : toucher la carte était le seul moyen de modifier un plat. Elle entre dans la
          tabulation et s'ouvre par Entrée ou Espace quand elle a elle-même le focus (pas ses boutons de stock). Un groupe
@@ -320,7 +340,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onWithdraw, allOpt
         onKeyDown: (e) => {
           if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
           e.preventDefault();
-          if (selectMode) onToggleSelect(item.id); else setEditing(true);
+          if (selectMode) onToggleSelect(item.id); else ouvrirEdition();
         }
       })}
     >

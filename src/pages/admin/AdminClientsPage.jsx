@@ -22,6 +22,7 @@ import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadg
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import { numeroCommande } from '../../components/commerce/clientCommande';
+import useRechercheImposee from '../../hooks/useRechercheImposee';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const PAGE_SIZE = 100;
@@ -37,6 +38,7 @@ export default function AdminClientsPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useEtatPage('recherche', location.state?.presetSearch || searchParams.get('q') || '', { forcer: !!(location.state?.presetSearch || searchParams.get('q') || '') });
+  useRechercheImposee(setSearch);
   const q = useDebouncedValue(search, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
