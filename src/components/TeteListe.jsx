@@ -38,12 +38,14 @@ const VELO = (
   </svg>
 );
 
-/* LE VÉLO ROULE QUAND ON DÉFILE : sa place sur la route suit la page (8 % en haut, 88 % après ~1 400 px), et il pédale
- * tant que ça bouge. Une écriture de style par image (requestAnimationFrame), aucun rendu React.
+/* LE VÉLO ROULE QUAND ON DÉFILE : sa place sur la route suit la page (8 % en haut, 88 % après ~1 400 px).
+ * Une écriture de style par image (requestAnimationFrame), aucun rendu React.
  * Par `transform` depuis sa place de départ (left: 8 %, ecran-liste.css), en pixels de la route mesurée une fois puis à
  * chaque changement de taille (2026-10-20, test de l'app Android) : `left` refaisait la mise en page à chaque image.
  * `avance` (en points de pourcentage) s'ajoute au défilement : la Recherche le fait avancer de 9 par lettre tapée
- * (fondateur, 2026-10-24, version A de maquettes/commandes-recherche) ; il y glisse (transition .3s) en pédalant. */
+ * (fondateur, 2026-10-24, version A de maquettes/commandes-recherche) ; il y glisse (transition .3s).
+ * Il glisse À PLAT, sans sautiller (fondateur, 2026-10-25, version A de maquettes/velo-sans-cahot) : `roule` ne sert plus
+ * qu'à couper la transition pendant le défilement (ecran-liste.css). */
 export function useVeloQuiRoule(velo, actif = true, avance = 0) {
   const avanceRef = useRef(avance);
   const poserRef = useRef(null);
@@ -79,17 +81,12 @@ export function useVeloQuiRoule(velo, actif = true, avance = 0) {
     window.addEventListener('scroll', surDefilement, { passive: true });
     return () => { window.removeEventListener('scroll', surDefilement); clearTimeout(arret); mesure?.disconnect(); poserRef.current = null; };
   }, [actif, velo]);
-  // Une lettre tapée ou effacée : il glisse jusqu'à sa nouvelle place en pédalant (`pedale` garde la transition, `roule` non).
+  // Une lettre tapée ou effacée : il glisse jusqu'à sa nouvelle place (la transition de .3s, ecran-liste.css).
   useEffect(() => {
-    if (avanceRef.current === avance) return undefined;
+    if (avanceRef.current === avance) return;
     avanceRef.current = avance;
-    const v = velo.current;
-    if (!v || !poserRef.current) return undefined;
-    poserRef.current();
-    v.classList.add('pedale');
-    const fin = setTimeout(() => v.classList.remove('pedale'), 420);
-    return () => clearTimeout(fin);
-  }, [avance, velo]);
+    poserRef.current?.();
+  }, [avance]);
 }
 
 /* La route en pointillés et le vélo lime : le bandeau de la page Recherche (SearchPage.jsx) et celui de Mes commandes sans
