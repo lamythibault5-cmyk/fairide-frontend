@@ -89,7 +89,7 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
   };
 
   return (
-    <div className="ecl ecl-page ecl-dossier ecl-dossier-suivi">
+    <div className="ecl ecl-page ecl-page-large ecl-dossier ecl-dossier-suivi">
       <section className="ecl-bandeau">
         <div className="ecl-b-haut">
           <span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span>
@@ -102,39 +102,47 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
       </section>
 
       <div className="ecl-feuille">
-        {c.needsRenewal && <p className="ecl-note"><Icone nom="alerte" taille={18} />{t('courierOnboarding.renewalNeeded')}</p>}
-        {/* Le geste qui lève le renouvellement (audit du 19/10, courier-30) : confirmer l'école et l'année académique. */}
-        {roule && <ConfirmerEcole key={`ecole-${c.needsRenewal}`} d={d} t={t} token={token} busy={busy} action={action} />}
-        <Notifications t={t} token={token} enFeuille />
+        {/* Sur le site large (2026-10-25, dossier unique) : à gauche ce qui demande un geste et les compteurs, à droite les lignes
+            du dossier (site-livreur.css). Ailleurs, ces deux enveloppes n'ont pas de boîte (display: contents). */}
+        <div className="ecl-site-cols">
+          <div className="ecl-site-col">
+            {c.needsRenewal && <p className="ecl-note"><Icone nom="alerte" taille={18} />{t('courierOnboarding.renewalNeeded')}</p>}
+            {/* Le geste qui lève le renouvellement (audit du 19/10, courier-30) : confirmer l'école et l'année académique. */}
+            {roule && <ConfirmerEcole key={`ecole-${c.needsRenewal}`} d={d} t={t} token={token} busy={busy} action={action} />}
+            <Notifications t={t} token={token} enFeuille />
 
-        {valide && (
-          <Link to="/driver" className={`${aAgir ? 'btn-outline' : 'btn-gold'} ecl-bouton-dossier`}>{t('ecranLivreur.dosVoirCourses')}</Link>
-        )}
+            {valide && (
+              <Link to="/driver" className={`${aAgir ? 'btn-outline' : 'btn-gold'} ecl-bouton-dossier`}>{t('ecranLivreur.dosVoirCourses')}</Link>
+            )}
 
-        {/* Ce qui reste à faire après l'envoi : mêmes blocs que sur le site (dossierBlocs.jsx). */}
-        {etat === 'blocked_threshold' && (
-          <p className="ecl-note"><Icone nom="alerte" taille={18} /><span>{t('courierOnboarding.blockedExplain', { year: legal.year ?? new Date().getFullYear() })}</span></p>
-        )}
-        {textesARelire && (
-          <ul className="ecl-etapes ecl-a-faire">
-            <li>
-              <button type="button" className="ecl-etape" onClick={() => setFeuille('textes')}>
-                <span className="ecl-rond-etape" aria-hidden="true" />
-                <span className="ecl-grow"><b>{t('ecranLivreur.dosTextesTitre')}</b><small>{t('ecranLivreur.dosTextesSous')}</small></span>
-                <Icone nom="retour" taille={16} className="bv-chevron" />
-              </button>
-            </li>
-          </ul>
-        )}
-        <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />
-        {bceAttendu && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} manques={manques} />}
+            {/* Ce qui reste à faire après l'envoi : mêmes blocs que sur le site (dossierBlocs.jsx). */}
+            {etat === 'blocked_threshold' && (
+              <p className="ecl-note"><Icone nom="alerte" taille={18} /><span>{t('courierOnboarding.blockedExplain', { year: legal.year ?? new Date().getFullYear() })}</span></p>
+            )}
+            {textesARelire && (
+              <ul className="ecl-etapes ecl-a-faire">
+                <li>
+                  <button type="button" className="ecl-etape" onClick={() => setFeuille('textes')}>
+                    <span className="ecl-rond-etape" aria-hidden="true" />
+                    <span className="ecl-grow"><b>{t('ecranLivreur.dosTextesTitre')}</b><small>{t('ecranLivreur.dosTextesSous')}</small></span>
+                    <Icone nom="retour" taille={16} className="bv-chevron" />
+                  </button>
+                </li>
+              </ul>
+            )}
+            <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />
+            {bceAttendu && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} manques={manques} />}
 
-        {(roule || Number(th.deliveries || 0) > 0) && <Compteurs d={d} t={t} />}
+            {(roule || Number(th.deliveries || 0) > 0) && <Compteurs d={d} t={t} />}
+          </div>
 
-        <h2 className="ecl-titre-sec">{t('ecranLivreur.dosTonDossier')}</h2>
-        {c.submittedAt && !valide && <p className="ecl-texte ecl-envoye-le">{t('courierOnboarding.submittedOn', { date: jour(c.submittedAt) })}</p>}
-        <ul className="ecl-etapes">{lignes.map(ligne)}</ul>
-        <p className="ecl-pied-legal">{t('courierOnboarding.legalFooter', { year: legal.year ?? new Date().getFullYear() })}</p>
+          <div className="ecl-site-col">
+            <h2 className="ecl-titre-sec">{t('ecranLivreur.dosTonDossier')}</h2>
+            {c.submittedAt && !valide && <p className="ecl-texte ecl-envoye-le">{t('courierOnboarding.submittedOn', { date: jour(c.submittedAt) })}</p>}
+            <ul className="ecl-etapes">{lignes.map(ligne)}</ul>
+            <p className="ecl-pied-legal">{t('courierOnboarding.legalFooter', { year: legal.year ?? new Date().getFullYear() })}</p>
+          </div>
+        </div>
       </div>
 
       {feuille === 'avant' && (

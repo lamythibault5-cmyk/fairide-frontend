@@ -16,7 +16,7 @@ import PhoneInput from '../components/PhoneInput';
 import EmailDomainChips from '../components/EmailDomainChips';
 import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
-import { restaurantTypeLabel, COMMUNES, communeDepuisCodePostal } from '../menuCategories';
+import { restaurantTypeLabel, communeDepuisCodePostal } from '../menuCategories';
 import { specialite } from '../specialites';
 import ChoixSpecialites from '../components/commerce/ChoixSpecialites';
 import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
@@ -24,7 +24,7 @@ import OpeningHoursEditor from '../components/OpeningHoursEditor';
 import { attendrePage, espaceApresConnexion, prechargerPage } from '../routePrefetch';
 import usePageMeta from '../hooks/usePageMeta';
 import { suivre } from '../analytics';
-import { bceValide, raisonBce, codePostalValide, CHAMP_CODE_SECOURS, formaterAnneeAcademique } from '../validation';
+import { bceValide, raisonBce, codePostalValide, CHAMP_CODE_SECOURS } from '../validation';
 import { lireAdresseAccueil } from '../adresseAccueil';
 import useDecompte, { DELAI_RENVOI_S, DELAI_CODE_EMAIL_S } from '../hooks/useDecompte';
 import RedirectionRole from '../components/RedirectionRole';
@@ -68,10 +68,11 @@ function roles(t) {
    Chacun valide ce qu'il porte, donc « Continuer » bloque au plus pres de la faute. */
 const STEP_KEYS = {
   client: ['account', 'identity', 'address'],
-  // Livreur : plus de pièces d'identité ni de selfie à l'inscription (audit UX du 15/10/2026). Ils étaient gardés en mémoire
-  // jusqu'à la création du compte — perdus au moindre rechargement, et Android ferme souvent l'onglet en ouvrant l'appareil
-  // photo. L'identité se vérifie dans le dossier (Stripe Identity, pièce téléversée ou en personne), qui l'exige avant envoi.
-  driver: ['account', 'identity', 'address'],
+  // Livreur : l'inscription express de l'app, sur le site aussi depuis le 2026-10-25 (dossier unique) — le compte, le nom et le
+  // téléphone, rien d'autre. Statut, numéro d'entreprise, véhicule et adresse se donnent dans le dossier (DossierAppli.jsx,
+  // « Ton activité » et « Tes courses ») ; le serveur accepte un livreur sans eux (routes/auth.js, depuis le 2026-10-22).
+  // Plus de pièce d'identité ni de selfie ici non plus (audit UX du 15/10/2026) : le dossier les demande, chez Stripe.
+  driver: ['account', 'identity'],
   restaurant: ['account', 'identity', 'business', 'details', 'hours', 'services', 'address']
 };
 
@@ -122,27 +123,6 @@ export default function Auth() {
   const [referralCode, setReferralCode] = useState(() => searchParams.get('ref') || '');
   const [legalName, setLegalName] = useState('');
   const [companyNumber, setCompanyNumber] = useState('');
-  // Livreur : statut légal et véhicule choisis dès l'inscription (voir routes/auth.js validerLivreur).
-  const [courierStatus, setCourierStatus] = useState('');
-  // Selon le statut (fondateur, 2026-10-06) : école et année académique de l'étudiant-indépendant, déclaration sur l'honneur du
-  // particulier (économie collaborative). Le numéro d'entreprise sert aux deux statuts indépendants.
-  const [schoolName, setSchoolName] = useState('');
-  const [academicYear, setAcademicYear] = useState('');
-  const [vehicleType, setVehicleType] = useState('');
-  const [bagOption, setBagOption] = useState(''); // 'own' | 'fairide' — sac de livraison
-  // Livreur (fondateur, 2026-10-05) : travaille-t-il déjà pour d'autres plateformes (lesquelles, plusieurs possibles),
-  // et ses communes de préférence (plusieurs possibles, facultatif).
-  const [autrePlateforme, setAutrePlateforme] = useState(''); // '' | 'yes' | 'no'
-  const [plateformes, setPlateformes] = useState([]);
-  const [plateformeAutre, setPlateformeAutre] = useState('');
-  const [zonesPreferees, setZonesPreferees] = useState([]);
-  const [courierOptions, setCourierOptions] = useState(null);
-  useEffect(() => {
-    if (role !== 'driver' || courierOptions) return;
-    // Hors ligne : les deux statuts (plus d'économie collaborative depuis CODE-12 — régime fermé aux livreurs de plateformes).
-    api('/couriers/options').then(setCourierOptions).catch(() => setCourierOptions({ statuses: ['student_independent', 'independent'], vehicles: ['velo', 'velo_electrique', 'scooter', 'voiture'], bikeMaxKm: 4, legal: {} }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role]);
   const [vatNumber, setVatNumber] = useState('');
   // Pré-rempli avec prénom+nom dès qu'ils sont saisis (cas le plus fréquent) tant que le champ n'a
   // pas été touché à la main — modifiable si le responsable légal du commerce diffère de la personne
@@ -250,13 +230,6 @@ export default function Auth() {
     const chiffres = companyNumber.replace(/\D/g, '');
     if (role === 'restaurant' && chiffres.length === 10) return `BE${chiffres}`;
     return vatNumber.trim();
-  }
-
-  // Commune du livreur prise de son adresse, quand elle est l'une des 19 (sinon rien : il la choisit dans son dossier).
-  function communeDeLAdresse() {
-    const ville = addressCity.trim().toLowerCase();
-    const trouvee = COMMUNES.find((c) => c.toLowerCase() === ville);
-    return trouvee ? [trouvee] : [];
   }
 
   function construireCommerce() {
@@ -472,8 +445,6 @@ export default function Auth() {
     referralCode: [referralCode, setReferralCode], referralOpen: [referralOpen, setReferralOpen],
     legalName: [legalName, setLegalName], companyNumber: [companyNumber, setCompanyNumber], vatNumber: [vatNumber, setVatNumber],
     responsibleName: [responsibleName, setResponsibleName], responsibleTouched: [responsibleTouched, setResponsibleTouched],
-    courierStatus: [courierStatus, setCourierStatus], schoolName: [schoolName, setSchoolName], academicYear: [academicYear, setAcademicYear], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption],
-    autrePlateforme: [autrePlateforme, setAutrePlateforme], plateformes: [plateformes, setPlateformes], plateformeAutre: [plateformeAutre, setPlateformeAutre], zonesPreferees: [zonesPreferees, setZonesPreferees],
     commerceTrouve: [commerceTrouve, setCommerceTrouve], nomCommerce: [nomCommerce, setNomCommerce], services: [services, setServices],
     specialites: [specialites, setSpecialites], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
     phoneSecondary: [phoneSecondary, setPhoneSecondary], phoneSecondaryOuvert: [phoneSecondaryOuvert, setPhoneSecondaryOuvert],
@@ -631,9 +602,7 @@ export default function Auth() {
        Le titre le dit donc explicitement pour ce rôle, et le sous-titre dit à quoi elle sert. */
     address: {
       title: role === 'restaurant' ? t('auth.stepAddressTitleRestaurant') : t('auth.stepAddressTitle'),
-      sub: role === 'client' ? t('auth.stepAddressSubClient')
-        : role === 'driver' ? t('auth.stepAddressSubDriver')
-        : t('auth.stepAddressSubRestaurant')
+      sub: role === 'client' ? t('auth.stepAddressSubClient') : t('auth.stepAddressSubRestaurant')
     },
     details: { title: t('auth.stepDetailsTitle'), sub: t('auth.stepDetailsSub') },
     hours: { title: t('auth.stepHoursTitle'), sub: t('auth.stepHoursSub') },
@@ -675,18 +644,6 @@ export default function Auth() {
         if (!r.name.trim()) e[`resp${i}`] = t('auth.errManagerName');
         else if (r.phone.trim().replace(/\D/g, '').length < 8) e[`resp${i}`] = t('auth.errPhoneInvalid');
       });
-      if (role === 'driver') {
-        if (!courierStatus) e.courierStatus = t('auth.errCourierStatus');
-        if (!vehicleType) e.vehicleType = t('auth.errVehicle');
-        // Sac, autres plateformes, communes : plus demandés ici (12 oct. 2026), voir l'écran 2 plus bas.
-        // Facultatif à l'inscription (audit UX du 15/10/2026) : le dossier l'exige avant envoi. Vérifié seulement s'il est donné.
-        if (companyNumber.trim() && !bceValide(companyNumber)) { const why = raisonBce(companyNumber); e.companyNumber = why?.raison === 'longueur' ? t('auth.errCompanyNumberLength', { n: why.chiffres }) : why?.raison === 'prefixe' ? t('auth.errCompanyNumberPrefix') : t('auth.errCompanyNumberKey'); }
-        if (courierStatus === 'student_independent') {
-          if (schoolName.trim().length < 2) e.schoolName = required;
-          if (!academicYear.trim()) e.academicYear = required;
-          else if (!/^\d{4}(\s*[-/–]\s*\d{2,4})?$/.test(academicYear.trim())) e.academicYear = t('auth.errAcademicYear');
-        }
-      }
     }
     // « business » (fondateur, 2026-10-13) : le nom du commerce et son numéro sur place, saisis à la main — plus de recherche
     // par code postal, qui ne trouvait pas les commerces.
@@ -920,7 +877,6 @@ export default function Auth() {
         vatNumber: tvaInscription(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
         business: construireCommerce()
       } : {}),
-      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees.length ? zonesPreferees : communeDeLAdresse() } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
       ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {})
     });
@@ -1072,7 +1028,6 @@ export default function Auth() {
             vatNumber: tvaInscription(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
             business: construireCommerce()
           } : {}),
-          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, schoolName: schoolName.trim(), academicYear: academicYear.trim(), vehicleType, bagOption, worksOtherPlatforms: autrePlateforme === 'yes' ? true : autrePlateforme === 'no' ? false : undefined, otherPlatforms: autrePlateforme === 'yes' ? plateformes : [], otherPlatformNote: autrePlateforme === 'yes' && plateformes.includes('autre') ? plateformeAutre.trim() : '', preferredZones: zonesPreferees.length ? zonesPreferees : communeDeLAdresse() } : {}),
           ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
           ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {}),
           website: siteWeb
@@ -1547,78 +1502,6 @@ export default function Auth() {
                       <button type="button" className="btn-link-plus" onClick={() => setResponsables((l) => [...l, { name: '', phone: '' }])}>＋ {t('auth.addManager')}</button>
                     )}
                   </div>
-                )}
-                {role === 'driver' && (
-                  <>
-                    <div className="field">
-                      <span className="titre-groupe" id="auth-statut-titre">{t('auth.courierStatusTitle')}</span>
-                      <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.courierStatusHelp')}</p>
-                      <div className={`statut-choix${errors.courierStatus ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-statut-titre">
-                        {/* Deux statuts, avec numéro d'entreprise : indépendant (à titre principal ou complémentaire) et
-                            étudiant-indépendant. Plus d'économie collaborative (CODE-12, DEC-19 : régime fermé aux livreurs de
-                            plateformes depuis le 8 juin 2026). Libellés dédiés à l'inscription (auth.courierStatus_*). */}
-                        {['independent', 'student_independent'].map((st) => (
-                          <div key={st} role="radio" aria-checked={courierStatus === st} tabIndex={0}
-                            className={`statut-carte${courierStatus === st ? ' active' : ''}`}
-                            onClick={() => setCourierStatus(st)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setCourierStatus(st); }}>
-                            <b>{st === 'student_independent' ? <Icone nom="guide" taille={16} className="icone-texte" /> : <Icone nom="document" taille={16} className="icone-texte" />}{t(`auth.courierStatus_${st}`)}</b>
-                            <span className="small">{t(`auth.courierStatus_${st}_desc`)}</span>
-                            <span className="small" style={{ color: 'var(--iris)' }}>{t(`auth.courierStatus_${st}_asks`)}</span>
-                          </div>
-                        ))}
-                      </div>
-                      {fieldError('courierStatus')}
-                    </div>
-                    {courierStatus && (
-                      <p className="small" style={{ margin: '-4px 0 10px', color: 'var(--ink-soft)' }}>{t(`auth.courierStatus_${courierStatus}_next`)}</p>
-                    )}
-                    {['student_independent', 'independent'].includes(courierStatus) && (
-                      <div className="field">
-                        <label htmlFor="auth-f-19">{t('auth.companyNumberDriver')} <span className="small">· {t('authDocs.optional')}</span></label>
-                        <input id="auth-f-19" className={errors.companyNumber ? 'input-invalid' : undefined}
-                          value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" inputMode="numeric" />
-                        {fieldError('companyNumber')}
-                        <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.companyNumberDriverHelp')}</p>
-                      </div>
-                    )}
-                    {courierStatus === 'student_independent' && (
-                      <>
-                        <div className="field">
-                          <label htmlFor="auth-f-ecole">{t('auth.schoolName')}</label>
-                          <input id="auth-f-ecole" className={errors.schoolName ? 'input-invalid' : undefined} value={schoolName} onChange={(e) => setSchoolName(e.target.value)} placeholder={t('auth.schoolNamePlaceholder')} autoComplete="organization" />
-                          {fieldError('schoolName')}
-                        </div>
-                        <div className="field">
-                          <label htmlFor="auth-f-annee">{t('auth.academicYear')}</label>
-                          <input id="auth-f-annee" className={errors.academicYear ? 'input-invalid' : undefined} value={academicYear} onChange={(e) => setAcademicYear(formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" inputMode="numeric" />
-                          {fieldError('academicYear')}
-                          <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.studentCertificateNote')}</p>
-                        </div>
-                      </>
-                    )}
-                    <div className="field">
-                      <span className="titre-groupe" id="auth-vehicule-titre">{t('auth.vehicleTitle')}</span>
-                      <div className={`role-pick statements-chips${errors.vehicleType ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-vehicule-titre">
-                        {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
-                          <div key={v} role="radio" aria-checked={vehicleType === v} tabIndex={0} className={`chip${vehicleType === v ? ' active' : ''}`}
-                            onClick={() => setVehicleType(v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setVehicleType(v); }}>
-                            {/* Vélo (électrique ou non) : le vélo ; scooter : le scooter ; voiture : pas d'icône, il n'en existe pas (audit du 19/10, auth-38 : tout portait le scooter). */}
-                            {['velo', 'velo_electrique'].includes(v) ? <Icone nom="velo" taille={16} className="icone-texte" /> : v === 'scooter' ? <Icone nom="scooter" taille={16} className="icone-texte" /> : null}{t(`courierOnboarding.vehicle_${v}`)}
-                          </div>
-                        ))}
-                      </div>
-                      {fieldError('vehicleType')}
-                      {vehicleType && (
-                        <p className="small" style={{ margin: '6px 0 0' }}>
-                          {['velo', 'velo_electrique'].includes(vehicleType) ? t('auth.vehicleHelpBike', { km: courierOptions?.bikeMaxKm || 4 }) : t('auth.vehicleHelpMotor', { km: courierOptions?.bikeMaxKm || 4 })}
-                        </p>
-                      )}
-                      {vehicleType === 'voiture' && <p className="small" style={{ margin: '6px 0 0' }}>{t('courierOnboarding.carWeightHelp')}</p>}
-                    </div>
-                    {/* ÉCRAN 2 ALLÉGÉ (12 oct. 2026). Il portait aussi le sac, « une autre plateforme ? » et 19 communes à cocher :
-                        l'écran le plus lourd des deux inscriptions. Le sac et les autres plateformes se règlent dans le dossier
-                        (étape « Infos »), la commune vient de l'adresse (écran suivant) — modifiable ensuite. */}
-                  </>
                 )}
               </>
             )}

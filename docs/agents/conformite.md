@@ -66,8 +66,8 @@ components live in [src/components/conformite/](../../src/components/conformite/
   granted the exemption, CPS 175/1, `identite` for the ID photo + selfie). Admin › Livreurs shows them (« À regarder »
   column, filter and counter; a block at the top of each dossier with one button per point: open the public BCE,
   « Numéro confirmé », « Nationalité confirmée », « Voir les documents »); the team's last gesture validates the dossier at
-  once (`validated: true` in the answer). The profile photo is looked at after the fact (task, and the block says so). The app shows « Tu peux rouler » / « Presque prêt » (`FinExpress`). The website keeps its six steps with the
-  same rules. The random shift selfie is unchanged (compared by eye with the profile photo).
+  once (`validated: true` in the answer). The profile photo is looked at after the fact (task, and the block says so). The app shows « Tu peux rouler » / « Presque prêt » (`FinExpress`). Since 2026-10-25 the website shows
+  this same dossier and the same express sign-up (no six-step site dossier any more; appli.md). The random shift selfie is unchanged (compared by eye with the profile photo).
   **From 2026-10-15 to 2026-10-22 (UX audit)** courier signup was three screens (account, identity, address): the company number is
   optional there (missing item `bce`; since 2026-10-18 the dossier can be SENT without it and the team cannot APPROVE it
   without it: `MANQUES_APRES_ENVOI`), there is no ID / selfie step (the
@@ -77,7 +77,7 @@ components live in [src/components/conformite/](../../src/components/conformite/
   and rides still need the team's `self_employment_by_residence`, granted or withdrawn with a reason in Admin › Livreurs ›
   dossier › Documents (audit 2026-10-19, admin-08). The signup draft is kept 48 h in localStorage (declared
   in `cookies.technical`). **After approval the dossier is not frozen** (audit 2026-10-19, courier-4 to -7, -30): the
-  approved page (Onboarding.jsx on the site, DossierSuivi.jsx in the app, blocks in dossierBlocs.jsx) lets the courier change
+  approved page (DossierSuivi.jsx, site and app, blocks in dossierBlocs.jsx) lets the courier change
   zone, vehicle (+ licence and plate when motorised), « other platforms » (1 vs 3 jobs at a time), bag and minimum, upload a
   renewed residence permit / professional card (date first) and confirm school + year for the yearly student renewal —
   none of it re-opens the review; the team gets a task (vehicle changed, permit to check). A STATUS change sends the

@@ -9979,6 +9979,8 @@ export default {
       dosStripe: 'Een rekening op jouw naam, bij Stripe',
       dosLireTextes: 'De teksten lezen ({n})',
       dosCompleter: 'Mijn dossier aanvullen',
+      dosRenvoyer: 'Mijn dossier opnieuw versturen',
+      dosRenvoyerAide: 'Alles verbeterd? Verstuur je dossier opnieuw: het team bekijkt het nog eens en antwoordt je per e-mail.',
       // Overzicht van het koeriersdossier in de app (DossierAppli.jsx, SommaireDossier), 2026-10-19.
       dosLivreur: 'Koerier',
       dosTitre: 'Mijn dossier',
@@ -10002,6 +10004,7 @@ export default {
       dosAide_courses: 'Je voertuig, zone en minimum',
       exActiviteTitre: 'Je activiteit',
       exActiviteSous: 'Je ondernemingsnummer volstaat: de rest zoeken wij op.',
+      exLequel: 'Welk statuut kiezen?',
       exStatut_independent: 'Zelfstandige',
       exStatut_student_independent: 'Student-zelfstandige',
       exRegistreOk: '{name} · actief nummer',

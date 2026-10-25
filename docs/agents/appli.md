@@ -64,7 +64,7 @@ computers only), the login look (iris band + sheet, site-cadre.css; the logic st
 browser Google), the visitor header (logo + « Connexion » only; Aide, Contact and languages in the footer), and the iris band
 on every general and shop screen (the visitor site's white override is gone; Questions, Mode d'emploi and Aperçu got their
 band in the app too). Computers keep their own layout (side menu, columns). Still different on purpose: the visitor home
-(presentation page on the site, for search engines and the 10 % pitch) and the courier dossier (two flows; unify later).
+(presentation page on the site, for search engines and the 10 % pitch). The courier dossier is ONE flow since 2026-10-25 (below).
 **The app glass of 2026-10-23** (answers to `maquettes/verre-boutons/verre-boutons.html`) is in ONE file, [src/verre.css](../../src/verre.css): an iris glass band under the iPhone status bar once the page scrolls ([verreBarreEtat.js](../../src/verreBarreEtat.js), it waits for a restaurant photo to leave, and stays off while a solid iris band fills that zone — the list's « Livrer à » band: on top of it the glass looked brighter with a line, 2026-10-25), milky « clear » glass with an iris rim for the restaurant round buttons, puces, Livraison / À emporter and map controls, vivid iris WITHOUT GLARE for every « + », a dish's « − 1 + » and the Livraison / À emporter thumb (the cart's « − 1 + » is white with an iris rim since 2026-10-25, #245) (2026-10-25: solid iris, white 1 px rim, iridescent edges, soft shadow; the top white shine, top highlight line and dark inner bottom shadow were removed — « like it was trying to go 3D » — and see-through iris glass is not an option: it dulls the iris on white, 2026-10-23). They still grow on press, with no light under the finger. Toasts keep the 72 % iris glass.
 **TestFlight feedback of 2026-10-24**: (the three lenses already glide the same way since PR #220, 2026-10-23.) The map has no
 + / − in the app (`zoomControl: !experienceApp()`, RestaurantsMap.jsx: pinch and double tap zoom; at 84 px from the bottom they sat under the
@@ -131,13 +131,18 @@ stacks above it through one rule, `.bv-plein ~ .modal-overlay` in styles.css, ch
 ([EnvoiCarteAppli](../../src/components/commerce/EnvoiCarteAppli.jsx)), the courier's draft dossier
 ([DossierAppli](../../src/pages/driver/DossierAppli.jsx), one topic or one document per screen — since 2026-10-22 the express order
 « Ton activité », « Tes courses », non-EEA documents, ID (Stripe, no selfie), « Pièce vérifiée », payouts, photo, « Mes
-engagements », then [FinExpress](../../src/pages/driver/DossierAppli.jsx) when the backend sends / approves it, see conformite.md; rules shared with Onboarding.jsx in
-[dossierCommun.js](../../src/pages/driver/dossierCommun.js)); once sent, validated or suspended the app shows
-[DossierSuivi](../../src/pages/driver/DossierSuivi.jsx) instead of the website page (2026-10-19, second design audit: band « Dossier
+engagements », then [FinExpress](../../src/pages/driver/DossierAppli.jsx) when the backend sends / approves it, see conformite.md; shared rules in
+[dossierCommun.js](../../src/pages/driver/dossierCommun.js)); once sent, validated or suspended it shows
+[DossierSuivi](../../src/pages/driver/DossierSuivi.jsx) (2026-10-19, second design audit: band « Dossier
 envoyé » / « C'est bon, tu peux rouler », one lime « Voir les courses », counters as white tiles, rows opening sheets; the blocks
 both versions share live in [dossierBlocs.jsx](../../src/pages/driver/dossierBlocs.jsx)), and in checkout the codes, allergy request and the age / T&Cs boxes
 as sheets (the last one opened by the pay button). In the app, the T&Cs link opens a sheet ([CgvEnFeuille](../../src/components/CgvEnFeuille.jsx)),
-never a tab. The website keeps its pages unchanged.
+never a tab. The website keeps its pages unchanged, except the courier dossier: **since 2026-10-25 the website shows the same
+dossier** ([Onboarding.jsx](../../src/pages/driver/Onboarding.jsx) only loads it and handles the Stripe returns; the site's six-step
+dossier is gone). On a phone-width site it is the app's exactly (summary, then full-screen steps); from 1,100 px (`useSiteLarge`)
+the summary stays on the left and the open step renders in the page on the right (site-livreur.css, `.ecl-dossier-cols`), and
+DossierSuivi splits into two columns. The website courier sign-up is the express one too (Auth.jsx: account + name + phone).
+A rejected dossier has a « Renvoyer mon dossier » button (the backend only auto-sends drafts). Fix a dossier screen once.
 **App-wide rules (final phase, 2026-10-15)**: a folding [LigneCompte](../../src/components/LigneCompte.jsx) row opens its content
 in a sheet in the app (every Mon compte section at once); any `target="_blank"` link is caught by `garderLesLiensDansLApp`
 (natif.js) — a Fairide page opens in the app, another site in the in-app browser, maps/Waze/tel unchanged; `apiDownload` hands

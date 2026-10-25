@@ -9970,6 +9970,8 @@ export default {
       dosStripe: 'An account in your name, with Stripe',
       dosLireTextes: 'Read the texts ({n})',
       dosCompleter: 'Complete my file',
+      dosRenvoyer: 'Send my file again',
+      dosRenvoyerAide: 'All fixed? Send your file again: the team looks at it once more and replies by e-mail.',
       // Courier file overview in the app (DossierAppli.jsx, SommaireDossier), 2026-10-19.
       dosLivreur: 'Courier',
       dosTitre: 'My file',
@@ -9993,6 +9995,7 @@ export default {
       dosAide_courses: 'Your vehicle, area and minimum',
       exActiviteTitre: 'Your activity',
       exActiviteSous: 'Your company number is enough: we find the rest.',
+      exLequel: 'Which one should I pick?',
       exStatut_independent: 'Self-employed',
       exStatut_student_independent: 'Student self-employed',
       exRegistreOk: '{name} · active number',

@@ -5,8 +5,8 @@ import RouteVelo from './RouteVelo';
 import '../../ecran-livreur.css';
 import '../../site-livreur.css';
 
-/* L'EN-TÊTE DES PAGES SECONDAIRES DU LIVREUR (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : Carte, Factures
- * et le dossier (et la page Avis, retirée le 22/10/2026) prennent le bandeau iris du tableau de bord et des gains (titre, une phrase, le vélo arrêté sur sa route)
+/* L'EN-TÊTE DES PAGES SECONDAIRES DU LIVREUR (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : Carte et Factures
+ * (le dossier jusqu'au 2026-10-25, qui a désormais son propre bandeau, DossierAppli.jsx ; la page Avis, retirée le 22/10/2026) prennent le bandeau iris du tableau de bord et des gains (titre, une phrase, le vélo arrêté sur sa route)
  * et leur contenu passe dans la feuille blanche, à largeur de lecture sur un ordinateur (site-livreur.css).
  *
  * DANS L'APP, SUR DEMANDE (fondateur, 2026-10-19, section 4 de finitions-appli.html) : Carte et Factures passent aussi au
@@ -15,7 +15,7 @@ import '../../site-livreur.css';
  *   titre       : le titre de la page (h1 sur le bandeau, h2.section-title dans l'app sans bandeau) ;
  *   sous        : la phrase du bandeau ;
  *   introApp    : ce que la page affichait sous son titre dans l'app sans bandeau, rendu tel quel là-bas ;
- *   classe      : la classe du conteneur d'origine (courier-onboarding, carte-page…), gardée partout ;
+ *   classe      : la classe du conteneur d'origine (carte-page…), gardée partout ;
  *   retourCompte: « ← Mon compte » passe sur le bandeau ; celui que Layout pose au-dessus de la page s'efface
  *                 (ecran-livreur.css), et dans une page en feuille c'est le rond ‹ de la feuille qui sert. */
 export default function PageLivreur({ titre, sous, introApp = null, classe = '', large = false, bandeauApp = false, retourCompte = false, children }) {

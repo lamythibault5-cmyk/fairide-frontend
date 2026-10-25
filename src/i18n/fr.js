@@ -10031,6 +10031,8 @@ export default {
       dosStripe: 'Un compte à ton nom, chez Stripe',
       dosLireTextes: 'Lire les textes ({n})',
       dosCompleter: 'Compléter mon dossier',
+      dosRenvoyer: 'Renvoyer mon dossier',
+      dosRenvoyerAide: 'Tout est corrigé ? Renvoie ton dossier : l’équipe le regarde à nouveau et te répond par e-mail.',
       // Sommaire du dossier livreur dans l’app (DossierAppli.jsx, SommaireDossier), 2026-10-19.
       dosLivreur: 'Livreur',
       dosTitre: 'Mon dossier',
@@ -10054,6 +10056,7 @@ export default {
       dosAide_courses: 'Ton véhicule, ta zone, ton minimum',
       exActiviteTitre: 'Ton activité',
       exActiviteSous: 'Ton numéro d’entreprise suffit : on retrouve le reste.',
+      exLequel: 'Lequel choisir ?',
       exStatut_independent: 'Indépendant',
       exStatut_student_independent: 'Étudiant-indépendant',
       exRegistreOk: '{name} · numéro actif',

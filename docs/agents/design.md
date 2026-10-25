@@ -189,7 +189,7 @@ ink. Never give a field the grey `--surface-soft` again. All of it is CSS in sty
 - **Labels that stay above** (the field keeps the B look): a label holding a link/button/input (`.field-label-row`,
   « Mot de passe oublié ? », help bubbles), a label that isn't the first child, `.sr-only` labels, the whole admin console
   (`.admin-console`, `.record-drawer`: dense forms), and labels too long for one line — add `className="etiquette-dessus"`
-  (the `Champ` components of InscriptionAppli.jsx and driver/Onboarding.jsx do it themselves above 45 characters). Put
+  (the `Champ` component of InscriptionAppli.jsx does it itself above 45 characters). Put
   side-by-side fields either both inside or both above, or the row goes out of line.
 - Search bars (`.recherche-champ`), the code boxes (`.bv-saisie`) and pills on iris keep their own shapes; only their focus
   moved to the halo.

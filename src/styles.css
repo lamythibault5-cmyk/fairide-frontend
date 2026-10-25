@@ -4000,52 +4000,24 @@ button.recherche-pastille { font: inherit; font-size: 13px; font-weight: 500; cu
 .password-eye:active, .password-eye:hover:active { transform: none; filter: none; background: rgba(59,47,181,0.12); }
 .password-eye:hover, .password-eye:focus-visible { background: rgba(59,47,181,0.08); }
 
-/* Parcours livreur (Onboarding.jsx) et back-office coursiers. */
+/* Dossier livreur (DossierAppli.jsx : comparatif des statuts ; dossierBlocs.jsx : pièces après la validation) et back-office coursiers. */
 .courier-state { border-left: 4px solid var(--line); }
 .courier-state.ok { border-left-color: var(--teal-deep); }
 .courier-state.warn { border-left-color: var(--gold-deep); }
 .courier-state.danger { border-left-color: var(--red); }
-/* En-tête du dossier livreur (2026-10-13) : celui de l'accueil de l'app (.bv-haut) — retour rond, barre de progression en
-   segments (un par étape, chacun cliquable : cible de 28px, trait de 4px), puis « Étape n sur 6 · Nom ». */
-.courier-etape-tete { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; }
-.courier-etape-retour { width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); display: grid; place-items: center; flex: none; }
-.courier-etape-retour:disabled { opacity: .35; }
-.courier-steps { display: flex; gap: 4px; flex: 1; margin: 0; }
-.courier-etape-titre { margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
-.courier-etape-titre b { color: var(--ink); }
-/* La carte « Prochaine étape » du dossier livreur et le « Avant de commencer » replié (12 oct. 2026). */
-.prochaine-etape { display: flex; flex-direction: column; gap: 6px; border-color: var(--iris); }
-.prochaine-etape b { font-size: 17px; }
-.prochaine-etape .btn-gold { align-self: flex-start; margin-top: 4px; }
-.avant-de-commencer summary { cursor: pointer; font-weight: 700; }
-.courier-step { flex: 1; position: relative; height: 28px; min-height: 0; padding: 0; border: 0; background: none; cursor: pointer; }
-.courier-step::before { content: ""; position: absolute; left: 0; right: 0; top: 12px; height: 4px; border-radius: 2px; background: var(--line); transition: background .15s; }
-.courier-step.done::before, .courier-step.active::before { background: var(--iris); }
-.courier-step.active::before { top: 11px; height: 6px; }
 .courier-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
 .courier-compare-card { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 12px; display: flex; flex-direction: column; gap: 6px; background: #fff; }
 .courier-compare-card.active { border-color: var(--iris); box-shadow: var(--ring); }
-.courier-compare-card.soon { opacity: 0.75; }
 .courier-compare-head { display: flex; align-items: center; gap: 8px; }
 .courier-compare-list { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 13px; }
 .courier-compare-list dt { opacity: 0.65; }
 .courier-compare-list dd { margin: 0; }
-.courier-soon { color: var(--ink-soft); }
-.courier-providers { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-.courier-provider { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 12px; background: #fff; }
-.courier-ok { background: rgba(31,138,112,0.10); border-radius: var(--radius-chip); padding: 10px 12px; }
 .courier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 12px; }
 .courier-doc { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px dashed var(--line); flex-wrap: wrap; }
 .courier-doc-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 /* Date de validité d'une pièce : libellé visible au-dessus du champ (il n'avait qu'une infobulle, invisible au toucher). */
 .courier-doc-echeance { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
 .courier-doc-echeance input { font-weight: 400; }
-.courier-missing { margin: 0; padding-left: 18px; }
-.courier-missing li { margin: 2px 0; }
-.courier-bar { height: 10px; background: var(--cream-dim); border-radius: var(--radius-pill); overflow: hidden; }
-.courier-bar > div { height: 100%; background: var(--teal-deep); transition: width .3s; }
-.courier-bar.warn > div { background: var(--gold-deep); }
-.courier-bar.danger > div { background: var(--red); }
 @media (max-width: 480px) { .courier-doc { flex-direction: column; } }
 
 /* Liste de documents (components/MenuDrafts.jsx). Ces règles servaient aussi MenuImportStaging.jsx,
