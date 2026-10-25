@@ -192,19 +192,9 @@
   .eg-invit-bandeau { padding-left: 20px; padding-right: 20px; }
 }
 
-/* VISITEUR SUR LE SITE (mise en page des visiteurs, .wrap sous l'en-tête iris) : pas de second bandeau iris sous l'en-tête
-   (fondateur, 2026-10-16 : « double bannière, trop lourd »). Le haut de la carte passe au blanc, sans la route du vélo
-   (vélo lime sur blanc : illisible). Connecté et dans l'app, le bandeau iris reste. */
-html:not(.appli) .wrap .eg-invit-bandeau { background: #fff; color: var(--ink); border: 1px solid var(--line); border-bottom: 0; padding-bottom: 4px; }
-html:not(.appli) .wrap .eg-invit-ctx { color: var(--ink-soft); }
-html:not(.appli) .wrap .eg-invit-titre { color: var(--ink); }
-html:not(.appli) .wrap .eg-invit-sous { color: var(--ink-soft); }
-html:not(.appli) .wrap .eg-invit-bandeau .ec-route-bloc { display: none; }
-html:not(.appli) .wrap .eg-invit-feuille { margin-top: 0; border-radius: 0 0 26px 26px; }
-@media (max-width: 560px) {
-  html:not(.appli) .wrap .eg-invit-bandeau { border: 0; padding-top: 8px; }
-  html:not(.appli) .wrap .eg-invit-feuille { border-radius: 0; }
-}
+/* VISITEUR SUR LE SITE : LE BANDEAU IRIS AUSSI (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 9). Il
+   passait au blanc sous l'en-tête complet (2026-10-16 : « double bannière, trop lourd ») ; sur un téléphone, l'en-tête n'est
+   plus qu'une barre fine, et l'invitation garde son bandeau iris et la route du vélo, comme dans l'app et connecté. */
 
 /* ---------- Dans l'app seulement : le ressort ---------- */
 html.appli .eg-invit-feuille { animation: ec-monte .45s cubic-bezier(.34, 1.45, .64, 1) backwards; }

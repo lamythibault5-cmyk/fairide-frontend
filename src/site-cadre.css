@@ -235,14 +235,18 @@
 .auth-segment button:hover { filter: none; color: var(--ink); }
 .auth-segment button[aria-selected="true"] { color: #fff; }
 
+/* SUR UN TÉLÉPHONE, L'ÉCRAN DE CONNEXION DE L'APP (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 8) : le
+   titre en blanc sur un bandeau iris, la feuille blanche qui monte dessus avec sa lèvre arrondie, comme ConnexionAppli.jsx.
+   Seul l'aspect change : la page reste Auth.jsx (inscription des commerces et des livreurs, Google dans le navigateur, que
+   l'écran de l'app ne fait pas), avec son sélecteur Connexion / Inscription. Avant, tout était sur le blanc. */
 @media (max-width: 960px) {
-  .auth-site { grid-template-columns: minmax(0, 1fr); min-height: 0; margin-top: -24px; background: #fff; }
-  .auth-site-iris { padding: 26px 20px 0; color: var(--ink); }
+  .auth-site { grid-template-columns: minmax(0, 1fr); min-height: 0; margin-top: -24px; background: var(--iris); }
+  .auth-site-iris { padding: 26px 20px 44px; color: #fff; }
   .auth-site-titre { margin: 0; }
-  .auth-site-titre h1 { font-size: 28px; margin-bottom: 6px; color: var(--ink); }
-  .auth-site-titre p { font-size: 15px; color: var(--ink-soft); }
+  .auth-site-titre h1 { font-size: 30px; margin-bottom: 6px; color: #fff; }
+  .auth-site-titre p { font-size: 15px; color: rgba(255, 255, 255, .84); }
   .auth-site-scene { display: none; }
-  .auth-site-feuille { align-items: flex-start; border-radius: 0; margin-top: 0; padding: 20px 20px 40px; animation: none; }
+  .auth-site-feuille { align-items: flex-start; border-radius: 28px 28px 0 0; margin-top: -22px; padding: 24px 20px 40px; animation: none; }
   .auth-site .auth-box { max-width: 480px; }
 }
 

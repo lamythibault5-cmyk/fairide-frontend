@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom';
 import Icone from './Icone';
+import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
+import { euros } from '../prixPlat';
 
 // Un écran vide qui dit quoi faire, plutôt qu'une phrase dans un cadre en pointillés.
 //
@@ -44,14 +47,22 @@ function Scene({ genre }) {
   );
 }
 
-export default function EtatVide({ icone, titre, texte, actionVers, actionTexte, children, scene }) {
+/* `reprendre` : UN PANIER ATTEND (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 2). Mes commandes ou Mes
+ * favoris vides, avec des plats dans le panier : le geste évident n'est plus « Parcourir les commerces » mais « Reprendre mon
+ * panier · 38,10 € ». La bulle du panier s'efface alors (styles.css, .etat-vide-reprendre) : un seul geste à l'écran. */
+export default function EtatVide({ icone, titre, texte, actionVers, actionTexte, children, scene, reprendre = false }) {
+  const cart = useCart();
+  const { t } = useLanguage();
+  const reprend = reprendre && cart.count > 0;
+  const vers = reprend ? '/panier' : actionVers;
+  const libelle = reprend ? t('panier.resume', { amount: euros(cart.sousTotal) }) : actionTexte;
   return (
     <div className={`etat-vide${scene ? ' etat-vide--scene' : ''}`}>
       {scene ? <Scene genre={scene} /> : <span className="etat-vide-icone" aria-hidden="true"><Icone nom={icone} taille={34} /></span>}
       <b className="etat-vide-titre">{titre}</b>
       {texte && <p className="etat-vide-texte">{texte}</p>}
-      {actionVers && actionTexte && (
-        <Link to={actionVers} className={`${scene ? 'btn-gold' : 'btn-teal'} etat-vide-action`}>{actionTexte}</Link>
+      {vers && libelle && (
+        <Link to={vers} className={`${scene ? 'btn-gold' : 'btn-teal'} etat-vide-action${reprend ? ' etat-vide-reprendre' : ''}`}>{libelle}</Link>
       )}
       {children && <div className="etat-vide-actions">{children}</div>}
     </div>

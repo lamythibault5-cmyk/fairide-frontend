@@ -352,23 +352,28 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-livreur-texte > small { font-size: 12.5px; color: var(--ink-soft); }
 .ec-livreur-la { color: var(--ink); }
 
-/* Dans l'app : « Accepter #058 » et « Refuser » dans une barre de verre au-dessus des onglets, tant qu'une commande attend. */
+/* Sur un téléphone : « Accepter #058 » et « Refuser » dans une barre au-dessus des onglets, tant qu'une commande attend. En
+   verre dans l'app ; blanche à filet sur le site, qui montre les commandes comme l'app sur un téléphone depuis le 2026-10-25
+   (maquettes/une-action/panier-et-site, réponse 11 ; sur un ordinateur, le tableau à trois colonnes n'a pas de barre). */
 .ec-barre-accepter { display: none; }
 @media (max-width: 900px) {
-  html.appli .ec-barre-accepter {
+  .ec-barre-accepter {
     display: flex; gap: 8px; align-items: center; position: fixed; z-index: 46; left: 12px; right: 12px; max-width: 560px; margin: 0 auto;
     bottom: calc(var(--hauteur-onglets) + 10px + env(safe-area-inset-bottom)); padding: 7px; border-radius: 32px;
+    background: #fff; border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(20, 18, 31, .14);
+    animation: ec-arrive .4s var(--ec-ressort, ease) both;
+  }
+  .ec-barre-accepter .ec-bouton { margin: 0; min-height: 50px; }
+  .ec-barre-accepter .ec-bouton--lime { flex: 1 1 auto; }
+  .ec-barre-accepter .ec-bouton--contour { flex: none; width: auto; padding: 0 18px; background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  .ec-espace-barre { height: 76px; }
+  .ec-cmd-boutons-barre { display: none; }
+  html.appli .ec-barre-accepter {
     background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .6);
     -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 5px 0 8px -4px rgba(255, 70, 170, .22),
       inset -5px 0 8px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .18), 0 1px 3px rgba(20, 18, 31, .08);
-    animation: ec-arrive .4s var(--ec-ressort, ease) both;
   }
-  html.appli .ec-barre-accepter .ec-bouton { margin: 0; min-height: 50px; }
-  html.appli .ec-barre-accepter .ec-bouton--lime { flex: 1 1 auto; }
-  html.appli .ec-barre-accepter .ec-bouton--contour { flex: none; width: auto; padding: 0 18px; background: #fff; color: var(--ink); border: 1px solid var(--line); }
-  html.appli .ec-espace-barre { height: 76px; }
-  html.appli .ec-cmd-boutons-barre { display: none; }
 }
 @media (max-width: 900px) and (prefers-reduced-transparency: reduce) {
   html.appli .ec-barre-accepter { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); }

@@ -370,7 +370,10 @@ export default function Layout() {
             {!leanHeader && !user && (
               <div className="row header-auth">
                 <Link to="/login" className="header-auth-link">{t('nav.login')}</Link>
-                <Link to="/login?audience=client" className="btn-gold header-register-btn">{t('nav.register')}</Link>
+                {/* « Inscription » en contour PARTOUT (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 4) : en lime,
+                    elle faisait concurrence au geste de chaque page (« Se connecter », « C'est bon : valider ma carte »…). Sur un
+                    téléphone, elle disparaît de l'en-tête : « Connexion » y suffit, l'inscription est un onglet de /login. */}
+                <Link to="/login?audience=client" className="btn-outline header-register-btn header-register-btn--contour">{t('nav.register')}</Link>
               </div>
             )}
             <LanguageSwitcher />

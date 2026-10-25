@@ -139,10 +139,14 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
   const total = +((prixUnite - (remise !== null ? Math.max(0, item.price - remise) : 0)) * qty).toFixed(2);
   const manquants = groupesAffiches.filter((g) => g.required && selections[g.id].size === 0);
   const bloque = manquants.length > 0;
-  // « Choisis d'abord … » se touche : la fiche défile jusqu'au groupe, qui clignote une fois (audit design 2, 2026-10-19).
+  /* « AJOUTER » N'EST JAMAIS GRISÉ (fondateur, 2026-10-25, maquettes/une-action, réponse 3 ; comme « Add to order » d'Uber
+     Eats) : il manque un choix obligatoire, le toucher fait défiler la fiche jusqu'au groupe, qui s'encadre en iris avec
+     « Choisis d'abord … ». Avant, un bouton pâle et une phrase rouge au-dessus : deux choses à lire au lieu d'une à toucher. */
+  const [signale, setSignale] = useState(null);
   function allerAuGroupe(g) {
     const bloc = blocsGroupes.current[g.id];
     if (!bloc) return;
+    setSignale(g.id);
     vibrer('attention');
     bloc.scrollIntoView({ behavior: mouvementReduit() ? 'auto' : 'smooth', block: 'start' });
     bloc.classList.remove('plat-groupe--signale');
@@ -208,7 +212,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
                  « Obligatoire » comprise, devient le nom du groupe ; la limite de choix sa description. */
               <div
                 key={g.id}
-                className="plat-groupe"
+                className={`plat-groupe${signale === g.id && requisNonRempli ? ' plat-groupe--manque' : ''}`}
                 ref={(el) => { blocsGroupes.current[g.id] = el; }}
                 role={g.type === 'single' ? 'radiogroup' : 'group'}
                 aria-labelledby={`plat-groupe-${g.id}`}
@@ -223,6 +227,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
                     </span>
                   )}
                 </div>
+                {signale === g.id && requisNonRempli && <p className="plat-groupe-manque" role="alert">{t('platSheet.chooseRequired', { groupe: g.name })}</p>}
                 {g.type === 'multiple' && g.maxSelections && (
                   <p className="plat-groupe-aide" id={`plat-groupe-aide-${g.id}`}>{t('optionsPicker.maxChoices', { max: g.maxSelections, plural: g.maxSelections > 1 ? 's' : '' })}</p>
                 )}
@@ -274,14 +279,6 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
 
       {/* L'action reste collée en bas : c'est elle qui rend le défilement unique possible. */}
       <div className="plat-pied">
-        {/* Pourquoi on ne peut pas ajouter — DANS le pied, au-dessus du bouton. Placée après, elle
-            serait tombée sous la barre collante, donc hors de l'écran : un bouton grisé sans la
-            moindre explication, exactement ce qu'on cherchait à éviter. */}
-        {bloque && (
-          <button type="button" className="plat-bloque" onClick={() => allerAuGroupe(manquants[0])}>
-            {t('platSheet.chooseRequired', { groupe: manquants[0].name })}
-          </button>
-        )}
         <div className="plat-quantite" role="group" aria-label={t('platSheet.quantity')}>
           <button type="button" onClick={() => { vibrer('bascule'); setQty((q) => Math.max(1, q - 1)); }} disabled={qty <= 1} aria-label={t('platSheet.less')}>−</button>
           {/* Le chiffre visible est recréé à chaque changement (key, pour son animation) : une région vivante recréée n'est pas
@@ -294,8 +291,9 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
           type="button"
           className="btn-gold plat-ajouter"
           ref={boutonAjouter}
-          disabled={bloque || ferme}
+          disabled={ferme}
           onClick={() => {
+            if (bloque) { allerAuGroupe(manquants[0]); return; }
             // Le plat s'envole vers le panier : on voit où il est parti. L'ajout, lui, n'attend plus la fin de l'animation de
             // fermeture (230 ms sur le chemin de l'action — audit du 15/10/2026, « on n'attend jamais une animation pour agir ») :
             // le panier est à jour tout de suite, l'envol (élément à part, gestes.js) continue seul.

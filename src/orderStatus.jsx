@@ -300,8 +300,36 @@ export function ProchaineEtape({ order }) {
 }
 
 // Le prénom du livreur, tel que le client le lit ailleurs (Orders.jsx, codeGiveDriverName).
-function prenomLivreur(order) {
+export function prenomLivreur(order) {
   return String(order.driverName || '').split(' ')[0];
+}
+
+/* L'HEURE EN TITRE (fondateur, 2026-10-25, maquettes/une-action, réponse 6) : ce qu'on vient voir sur le suivi, c'est quand
+ * ça arrive. « Chez toi vers 12:56 » (« Prête vers » à emporter) en titre, l'heure en lime sur l'iris, et l'étape dessous
+ * avec les minutes qui restent (« C'est en cuisine · encore ~26 min »), comme « Arriving at 12:56 » chez Uber Eats.
+ * Seulement quand une heure estimée existe pour une commande en route vers le client ; sinon le titre de l'étape et
+ * DeliveryTiming, comme avant. */
+export function heureArrivee(order) {
+  const { estimatedDeliveryAt, status, scheduledFor, orderType } = order;
+  if (!estimatedDeliveryAt || scheduledFor) return null;
+  if (!['nouveau', 'preparation', 'pret', 'livraison'].includes(status)) return null;
+  if (status === 'nouveau' && order.paid === false) return null;
+  if (status === 'pret' && orderType === 'pickup') return null;
+  const quand = new Date(estimatedDeliveryAt).getTime();
+  if (!Number.isFinite(quand)) return null;
+  return { time: formatTime(quand), min: Math.max(0, Math.round((quand - Date.now()) / 60000)) };
+}
+export function TitreHeure({ order, className }) {
+  const { t } = useLanguage();
+  const heure = heureArrivee(order);
+  if (!heure) return null;
+  const [avant, apres] = t(order.orderType === 'pickup' ? 'orderStatus.grand.pretVers' : 'orderStatus.grand.arriveVers', { time: '\u0000' }).split('\u0000');
+  return (
+    <>
+      <h2 className={className}>{avant}<span className="suivi-heure">{heure.time}</span>{apres}</h2>
+      <div className="small suivi-heure-sous">{titreSuivi(order, t)}{heure.min > 0 ? ` · ${t('orderStatus.timing.encore', { min: heure.min })}` : ''}</div>
+    </>
+  );
 }
 
 export function ProgressBar({ status, orderType }) {

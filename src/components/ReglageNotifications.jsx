@@ -2,6 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import usePushNotifications from '../hooks/usePushNotifications';
+import Icone from './Icone';
 
 /* Réglage « recevoir les notifications sur cet appareil » — une ligne et un bouton, pour le client (Mes commandes) et le
  * livreur (Courses disponibles, via NotifCourses.jsx). Le commerce a le sien dans NewOrderAlertBar.
@@ -12,8 +13,12 @@ import usePushNotifications from '../hooks/usePushNotifications';
  * site, jeton APNs / FCM dans l'application — usePushNotifications fait les deux.
  *
  * Rien ne s'affiche si l'appareil ne sait pas en recevoir ou si le serveur n'en envoie pas : pas de bouton qui ne mène
- * à rien. `textes` : { aide, actif } — la ligne avant et après activation. */
-export default function ReglageNotifications({ textes }) {
+ * à rien. `textes` : { aide, actif } — la ligne avant et après activation.
+ *
+ * `enAvant` (2026-10-25, maquettes/une-action) : le libellé du bouton quand l'activer est LE geste de l'écran (« Me prévenir
+ * quand Yassine arrive », suivi d'une commande en cours) — lime pleine largeur tant que ce n'est pas activé. Activé, la ligne
+ * habituelle revient : il n'y a plus rien à faire, donc plus de lime. */
+export default function ReglageNotifications({ textes, enAvant = null }) {
   const { token } = useAuth();
   const { t } = useLanguage();
   const toast = useToast();
@@ -28,6 +33,14 @@ export default function ReglageNotifications({ textes }) {
     else toast(t('notifs.failed'), 'erreur');
   }
 
+  if (enAvant && !push.abonne) {
+    return (
+      <div className="reglage-notifs-avant">
+        <button type="button" className="btn-gold" disabled={push.occupe} onClick={basculer}><Icone nom="cloche" taille={18} /> {enAvant}</button>
+        <p className="small">{textes.aide}</p>
+      </div>
+    );
+  }
   return (
     <div className="row" style={{ gap: 10, alignItems: 'center', margin: '0 0 12px', flexWrap: 'wrap' }}>
       <span className="small" style={{ flex: 1, minWidth: 180 }}>{push.abonne ? textes.actif : textes.aide}</span>

@@ -74,18 +74,19 @@
 @keyframes ec-entre { from { transform: translateY(24px); opacity: 0; } }
 @keyframes ec-sort { to { opacity: 0; transform: translateX(-30px); } }
 
-/* Le compteur d'une ligne (3C) : pilule iris, « − » et « + » blancs, le nombre dans un rond BLANC qui monte ou descend. Lime
-   jusqu'au 2026-10-19 (audit design 2) : trois lignes faisaient trois marques lime de plus que le bouton de paiement. */
-.ec-pas { position: relative; flex: none; width: 110px; height: 40px; border-radius: 20px; background: var(--iris); color: #fff; overflow: hidden; }
+/* Le compteur d'une ligne (3C) : pilule blanche à filet, « − », le nombre et « + » en iris. Lime jusqu'au 2026-10-19 (trois
+   marques lime de plus que le bouton de paiement), puis iris plein jusqu'au 2026-10-25 (fondateur, maquettes/une-action,
+   réponse 5 : deux pilules iris pleines criaient plus fort que « Aller au paiement » ; Uber les met en gris discret). */
+.ec-pas { position: relative; flex: none; width: 110px; height: 40px; border-radius: 20px; background: #fff; color: var(--iris); box-shadow: inset 0 0 0 1.5px #D9D6EE; overflow: hidden; }
 /* min-height !important : la règle des 44 px tactiles (styles.css, button:not(...)) a une spécificité de (0,3,1). */
 .ec-pas button { position: absolute; top: 2px; width: 36px; height: 36px; min-height: 0 !important; padding: 0; border: 0; border-radius: 50%;
   background: transparent; color: inherit; display: grid; place-items: center; cursor: pointer; transition: transform .12s, background .15s; }
-@media (hover: hover) { .ec-pas button:hover { background: rgba(255, 255, 255, .12); } }
+@media (hover: hover) { .ec-pas button:hover { background: rgba(59, 47, 181, .08); } }
 .ec-pas button:active { transform: scale(.85); }
-.ec-pas button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
+.ec-pas button:focus-visible { outline: 2px solid var(--iris); outline-offset: -2px; }
 .ec-pas .ec-pas-moins { left: 2px; }
 .ec-pas .ec-pas-plus { right: 2px; }
-.ec-pas-chiffre { position: absolute; left: 50%; top: 6px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; background: #fff; color: var(--iris);
+.ec-pas-chiffre { position: absolute; left: 50%; top: 6px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; background: transparent; color: var(--iris);
   display: grid; place-items: center; font-weight: 800; font-size: 14px; overflow: hidden; }
 .ec-pas-chiffre > span { display: block; }
 .ec-ch-monte { animation: ec-ch-monte .3s var(--ec-ressort); }
@@ -118,12 +119,13 @@
 .ec-option-texte small { display: block; font-weight: 400; color: var(--ink-soft); margin-top: 2px; font-size: 12.5px; }
 .ec-option-tuile { flex: none; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); color: var(--iris); display: grid; place-items: center; }
 .ec-case { flex: none; margin-left: auto; width: 22px; height: 22px; border-radius: 8px; border: 1px solid var(--line); display: grid; place-items: center; }
-.ec-option.on { background: var(--iris); border-color: var(--iris); color: #fff; }
-.ec-option.on .ec-option-texte small { color: rgba(255, 255, 255, .8); }
-.ec-option.on .ec-option-tuile { color: #fff; border-color: rgba(255, 255, 255, .4); animation: ec-saute .3s var(--ec-ressort); }
-.ec-option.on .ec-case { background: #fff; border-color: #fff; color: var(--iris); animation: ec-saute .3s var(--ec-ressort); }
+/* Le choix retenu : contour iris et coche iris, fond blanc (fondateur, 2026-10-25, maquettes/une-action, réponse 5). En iris
+   plein, « Livraison » et « Dès que possible » étaient les deux plus grandes taches de couleur du paiement, plus visibles que
+   le bouton ; Uber met le choix fait en simple contour. Mêmes cartes au paiement et dans « Valider ma carte ». */
+.ec-option.on { background: #fff; border-color: var(--iris); color: var(--ink); box-shadow: inset 0 0 0 1px var(--iris); }
+.ec-option.on .ec-option-tuile { color: var(--iris); animation: ec-saute .3s var(--ec-ressort); }
+.ec-option.on .ec-case { background: var(--iris); border-color: var(--iris); color: #fff; animation: ec-saute .3s var(--ec-ressort); }
 .ec-option:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
-.ec-option.on:focus-visible { outline-color: var(--lime); }
 .ec-feuille .checkout-form .ec-options + .checkout-rangee { margin-top: 6px; }
 .ec-feuille .checkout-rangee { border-radius: 0; }
 .ec-feuille .checkout-rangee > svg { flex: none; color: var(--iris); }
@@ -158,7 +160,7 @@
 .co-vendeurs-detail { margin: 6px 0 0; padding: 0 0 0 16px; font-size: 12px; line-height: 1.45; color: var(--ink-soft); display: grid; gap: 3px; }
 
 /* ---------- La barre du bas : le montant roule (ChiffresRoulants), la barre gélifie quand il change ---------- */
-.ec-barre .co-barre-montant { display: inline-flex; font-variant-numeric: tabular-nums; }
+.ec-barre .co-barre-montant, .co-bouton-montant { display: inline-flex; font-variant-numeric: tabular-nums; }
 .ec-rebond-a { animation: ec-gelee-a .5s var(--ec-ressort); }
 .ec-rebond-b { animation: ec-gelee-b .5s var(--ec-ressort); }
 @keyframes ec-gelee-a { 30% { transform: scale(1.04, .9); } 60% { transform: scale(.99, 1.04); } }
@@ -177,14 +179,12 @@
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
       inset 5px 0 8px -4px rgba(255, 70, 170, .22), inset -5px 0 8px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .18), 0 1px 3px rgba(20, 18, 31, .08);
   }
-  html.appli .ec-page .ec-barre .co-barre-total { flex: none; height: 48px; padding: 0 14px; border-radius: 24px; background: var(--iris); color: #fff; text-shadow: none;
-    display: flex; flex-direction: column; align-items: flex-start; justify-content: center; line-height: 1.1; overflow: hidden; }
-  html.appli .ec-page .ec-barre .co-barre-montant { font-size: 17px; font-weight: 800; }
-  html.appli .ec-page .ec-barre .co-barre-detail { font-size: 10.5px; font-weight: 500; opacity: .8; white-space: nowrap; }
-  html.appli .ec-page .ec-barre .btn-gold { flex: 1 1 0; min-width: 0; min-height: 48px; padding: 0 16px; font-size: 15px; white-space: nowrap; text-shadow: none; border-radius: var(--radius-pill); }
+  /* Un seul geste (fondateur, 2026-10-25, maquettes/une-action) : plus de pastille iris du montant à côté du bouton, le
+     montant est dans le bouton (PanierPage, Checkout). */
+  html.appli .ec-page .ec-barre .co-barre-total { display: none; }
+  html.appli .ec-page .ec-barre .btn-gold { flex: 1 1 0; min-width: 0; min-height: 52px; padding: 0 16px; font-size: 16px; white-space: nowrap; text-shadow: none; border-radius: var(--radius-pill); }
   html.appli .ec-page .ec-barre .co-barre-attente { flex: 1 1 0; color: var(--ink); font-size: 12.5px; text-align: right; justify-content: flex-end; }
   html.appli .ec-page .ec-barre .co-refus { color: var(--ink); padding: 4px 10px 0; }
-  html.appli .ec-page .ec-pas { box-shadow: 0 2px 6px rgba(20, 18, 31, .14); }
   /* La barre flotte : la fin de la page doit pouvoir passer au-dessus. */
   html.appli .ec-page { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 }

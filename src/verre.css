@@ -55,12 +55,12 @@ html.appli body .fiche-appli .favorite-heart--rond:hover { background: var(--ver
 html.appli body .fiche-appli .favorite-heart--rond svg path { stroke: var(--iris); }
 html.appli body .fiche-appli .favorite-heart--rond.is-active svg path { fill: var(--iris); stroke: var(--iris); }
 
-/* ---------- 3. Les « + » (plats, aperçu de la carte, suggestions du panier), le « − 1 + » du panier : iris vif ---------- */
-/* Pas de bordure (elle décalerait les boutons posés à 2 px du bord) : le filet est une ombre intérieure. */
+/* ---------- 3. Les « + » (plats, aperçu de la carte, suggestions du panier) : iris vif ---------- */
+/* Pas de bordure (elle décalerait les boutons posés à 2 px du bord) : le filet est une ombre intérieure. Le « − 1 + » du panier
+   n'en est plus depuis le 2026-10-25 (maquettes/une-action) : blanc à filet iris, ecran-commande.css. */
 html.appli body .plat-pas,
 html.appli body .fiche-appli .fiche-apercu-plus,
-html.appli body .ec-feuille .upsell-item::after,
-html.appli body .ec-pas {
+html.appli body .ec-feuille .upsell-item::after {
   background: var(--iris-vif-fond); box-shadow: var(--iris-vif-ombre);
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
@@ -112,7 +112,7 @@ html.appli body .toast:not(.toast-erreur) {
 /* « Réduire la transparence » (réglages d'accessibilité de l'iPhone) : des aplats, sans flou. */
 @media (prefers-reduced-transparency: reduce) {
   html.natif-ios .verre-etat { background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  html.appli body .plat-pas, html.appli body .fiche-appli .fiche-apercu-plus, html.appli body .ec-feuille .upsell-item::after, html.appli body .ec-pas,
+  html.appli body .plat-pas, html.appli body .fiche-appli .fiche-apercu-plus, html.appli body .ec-feuille .upsell-item::after,
   html.appli body .fiche-appli .fiche-modes-pouce, html.appli body .toast:not(.toast-erreur) {
     background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none;
   }

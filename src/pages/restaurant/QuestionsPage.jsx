@@ -3,7 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import CadreSite, { SITE } from '../../components/commerce/CadreSite';
+import CadreSite from '../../components/commerce/CadreSite';
 import QuestionsCarte, { reponseAffichee } from '../../components/commerce/QuestionsCarte';
 import Icone from '../../components/Icone';
 
@@ -41,13 +41,12 @@ export default function QuestionsPage() {
   const ouvertes = etat?.open || [];
   const titre = ouvertes.length ? t('questionsCarte.title', { n: ouvertes.length }) : t('questionsCarte.thanksTitle');
   return (
-    <CadreSite titre={titre} sous={ouvertes.length ? t('questionsCarte.intro', { n: ouvertes.length }) : null} lecture>
-      {!SITE && <h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2>}
+    // Le bandeau iris dans l'app aussi (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 9).
+    <CadreSite titre={titre} sous={ouvertes.length ? t('questionsCarte.intro', { n: ouvertes.length }) : null} lecture appli>
       {erreur && <p className="gn-note" role="alert"><Icone nom="alerte" taille={18} />{erreur}</p>}
       {!etat && !erreur && <p className="small" role="status">{t('validerCarte.loading')}</p>}
       {etat && ouvertes.length > 0 && (
         <>
-          {!SITE && <p className="small" style={{ margin: '0 0 14px' }}>{t('questionsCarte.intro', { n: ouvertes.length })}</p>}
           {lectureSeule
             ? <p className="gn-note" role="note"><Icone nom="bulle" taille={18} />{t('questionsCarte.readOnly')}</p>
             : <QuestionsCarte questions={ouvertes} onEnvoyer={repondre} envoi={envoi} />}

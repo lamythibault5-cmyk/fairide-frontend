@@ -21,8 +21,11 @@ import ChiffresRoulants from './ChiffresRoulants';
  * l'on remplit son panier — la liste des commerces et la fiche d'un commerce. Partout ailleurs (Mon compte, Mes commandes,
  * la Carte, la Recherche, Favoris…), le panier se range en une bulle ronde sur le côté droit : le sac et son compteur, un
  * toucher mène au panier. Le total reste dit aux lecteurs d'écran (aria-label). */
+/* RECHERCHE ET FAVORIS AUSSI (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 1) : on y cherche encore quoi
+ * manger, la barre « Voir le panier » y est le prochain geste comme sur la liste. Mes favoris vide propose « Reprendre mon
+ * panier » à la place (EtatVide) et la barre s'y efface. */
 function pageDAchat(chemin) {
-  return chemin === '/restaurants' || chemin.startsWith('/restaurants/');
+  return chemin === '/restaurants' || chemin.startsWith('/restaurants/') || chemin === '/recherche' || chemin === '/favorites';
 }
 
 export default function FloatingCart() {

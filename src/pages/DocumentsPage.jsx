@@ -39,11 +39,17 @@ export default function DocumentsPage() {
       <button type="button" className="btn-outline btn-sm" onClick={() => telechargerPdf(`${API_BASE}${pdfPath}`, token, nom, t('mesDocuments.pdfFailed'))}><Icone nom="telecharger" taille={16} className="icone-texte" />{' '}{t('mesDocuments.save')}</button>
     </div>
   );
+  // Le premier document à faire : lui seul a le bouton lime (voir plus bas).
+  const aFaire = !d ? null : !d.terms.accepted ? 'cgu'
+    : d.restaurants.find((c) => !c.accepted)?.restaurantId ?? (d.courier && !d.courier.signed ? 'coursier' : null);
 
   return (
     <div className="container compte-sous-page" style={{ paddingBottom: 40 }}>
       <h1 className="compte-sous-titre" style={{ margin: '0 0 4px' }}>{t('mesDocuments.title')}</h1>
       <p className="small" style={{ margin: '0 0 16px', opacity: 0.8 }}>{t('mesDocuments.intro')}</p>
+      {/* UN SEUL BOUTON LIME (fondateur, 2026-10-25, maquettes/une-action) : le premier document à faire, dans l'ordre de la
+          page (conditions générales, contrats des commerces, contrat de coursier) ; les suivants en contour. Une fois signé, le
+          suivant devient lime. Avant, « J'ai lu et j'accepte » et « Lire et signer » étaient lime en même temps. */}
       {!d && erreur ? <ErreurChargement erreur={erreur} onReessayer={charger} /> : !d ? <SkeletonCards count={2} /> : (
         <>
           {/* Conditions générales */}
@@ -57,7 +63,7 @@ export default function DocumentsPage() {
             </p>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
               <Link to={d.terms.path} className="btn-outline btn-sm"><Icone nom="guide" taille={16} className="icone-texte" />{' '}{t('mesDocuments.read')}</Link>
-              {!d.terms.accepted && <button type="button" className="btn-gold btn-sm" disabled={busy} onClick={accepterCgu}>{t('mesDocuments.acceptTerms')}</button>}
+              {!d.terms.accepted && <button type="button" className={`${aFaire === 'cgu' ? 'btn-gold' : 'btn-outline'} btn-sm`} disabled={busy} onClick={accepterCgu}>{t('mesDocuments.acceptTerms')}</button>}
             </div>
           </div>
           {/* Confidentialité */}
@@ -83,7 +89,7 @@ export default function DocumentsPage() {
                 <>
                   <p className="small" style={{ margin: '4px 0 0' }}>{c.acceptedAt ? `${t('mesDocuments.restoOutdated', { version: c.acceptedVersion })}` : `${t('mesDocuments.restoNotAccepted')}`}</p>
                   <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-                    <Link to={c.acceptPath} className="btn-gold btn-sm"><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('mesDocuments.readAndSign')}</Link>
+                    <Link to={c.acceptPath} className={`${aFaire === c.restaurantId ? 'btn-gold' : 'btn-outline'} btn-sm`}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('mesDocuments.readAndSign')}</Link>
                     <button type="button" className="btn-outline btn-sm" onClick={() => ouvrirPdf(`${API_BASE}${c.pdfPath}`, token, t('mesDocuments.pdfFailed'))}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('mesDocuments.open')}</button>
                   </div>
                 </>
@@ -108,7 +114,7 @@ export default function DocumentsPage() {
               {!d.courier.signed && (
                 <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                   <p className="small" style={{ margin: 0, flex: '1 1 100%' }}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('mesDocuments.courierNotSigned')}</p>
-                  <Link to={d.courier.signPath} className="btn-gold btn-sm"><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('mesDocuments.readAndSign')}</Link>
+                  <Link to={d.courier.signPath} className={`${aFaire === 'coursier' ? 'btn-gold' : 'btn-outline'} btn-sm`}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('mesDocuments.readAndSign')}</Link>
                   <button type="button" className="btn-outline btn-sm" onClick={() => ouvrirPdf(`${API_BASE}${d.courier.previewPath}`, token, t('mesDocuments.pdfFailed'))}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('mesDocuments.open')}</button>
                 </div>
               )}

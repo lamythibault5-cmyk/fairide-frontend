@@ -102,7 +102,7 @@ export default function Favorites() {
         {!loading && !echec && n === 0 && (
           <EtatVide
             icone="favoris" scene="favoris" titre={t('favorites.emptyTitle')} texte={t('favorites.empty')}
-            actionVers="/restaurants" actionTexte={t('orders.emptyAction')}
+            actionVers="/restaurants" actionTexte={t('orders.emptyAction')} reprendre
           />
         )}
         {!loading && n > 0 && (
