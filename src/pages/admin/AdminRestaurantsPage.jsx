@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useId } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
@@ -9,6 +9,7 @@ import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { ErrorCard, LoadMore, ResultCount } from '../../components/admin/AdminListTools';
 import useServerList from '../../hooks/useServerList';
 import { useAuth } from '../../context/AuthContext';
+import useRechercheImposee from '../../hooks/useRechercheImposee';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import DecisionDialog from '../../components/admin/DecisionDialog';
@@ -217,6 +218,7 @@ export default function AdminRestaurantsPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useEtatPage('recherche', location.state?.presetSearch || searchParams.get('q') || '', { forcer: !!(location.state?.presetSearch || searchParams.get('q') || '') });
+  useRechercheImposee(setSearch);
   const q = useDebouncedValue(search, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
@@ -824,20 +826,31 @@ function RestaurantDetailModal({ selected, detail, orders, pret, onClose, onSusp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected.id]);
 
+  // Le formulaire tel qu'ouvert : à l'enregistrement, seuls les champs changés partent (voir saveEdit).
+  const formDepart = useRef(null);
   function startEdit() {
-    setForm({
+    formDepart.current = ({
       name: detail.name, commune: detail.commune, neighborhood: detail.neighborhood || '', responsibleName: detail.responsibleName,
       companyNumber: detail.companyNumber, vatNumber: detail.vatNumber, legalName: detail.legalName,
       phone: detail.restaurantPhone || '', addressStreet: detail.addressStreet || '', addressNumber: detail.addressNumber || '',
       addressPostalCode: detail.addressPostalCode || '', addressCity: detail.addressCity || ''
     });
+    setForm(formDepart.current);
     setEditing(true);
   }
 
   async function saveEdit() {
     setSaving(true);
     try {
-      await api(`/admin/restaurants/${selected.id}`, { method: 'PATCH', token, body: form });
+      /* SEULEMENT CE QUI A CHANGÉ (2026-10-25). Le formulaire, pris dans la fiche à l'ouverture, partait en entier : corriger
+       * le téléphone effaçait le nom légal, le n° d'entreprise ou de TVA que le commerce venait de remplir (EcranLegal). Les
+       * quatre parties de l'adresse partent ensemble (le serveur la reconstruit et la géolocalise). */
+      const depart = formDepart.current || {};
+      const adresse = ['addressStreet', 'addressNumber', 'addressPostalCode', 'addressCity'];
+      const corps = Object.fromEntries(Object.entries(form).filter(([k, v]) => !adresse.includes(k) && v !== depart[k]));
+      if (adresse.some((k) => form[k] !== depart[k])) adresse.forEach((k) => { corps[k] = form[k]; });
+      if (!Object.keys(corps).length) { setEditing(false); return; }
+      await api(`/admin/restaurants/${selected.id}`, { method: 'PATCH', token, body: corps });
       toast(tr('adminRestos.toastUpdated'));
       setEditing(false);
       onChanged();

@@ -247,6 +247,15 @@ export default function Orders() {
     else if (changees.some((o) => (avant.get(o.id) === 'nouveau' && o.status !== 'nouveau')
       || o.status === 'livre' || (o.status === 'pret' && o.orderType === 'pickup'))) vibrer('succes');
   }, [orders]);
+  /* RETOUR DU PAIEMENT D'UN POURBOIRE (2026-10-25). Stripe revient sur /orders?tip=paid (routes/payments.js) ; dans l'app,
+   * l'adresse est poussée dans la page déjà ouverte : le formulaire du pourboire et « Laisser un pourboire » restaient jusqu'à
+   * la relecture suivante (15 s). On le ferme et on relit aussitôt, sur le site comme dans l'app. */
+  useEffect(() => {
+    if (searchParams.get('tip') !== 'paid') return;
+    setPourboireId(null);
+    api('/orders/mine', { token }).then(setOrders).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   // Retour sur l'onglet après une absence : relecture immédiate des commandes.
   useRevalidation(() => api('/orders/mine', { token }).then(setOrders), { actif: !(previewMode && role === 'restaurant') });
 

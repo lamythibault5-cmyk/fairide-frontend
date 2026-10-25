@@ -26,6 +26,7 @@ import ouvrirDocument from '../../ouvrirDocument';
 import FicheLivreur from '../../components/admin/FicheLivreur';
 import { DossierDrawer } from './AdminCouriersPage';
 import Icone from '../../components/Icone';
+import useRechercheImposee from '../../hooks/useRechercheImposee';
 
 const activityLabels = (tr) => ({
   disponible: { label: tr('adminDrivers.available'), color: 'var(--teal-deep)' },
@@ -52,6 +53,7 @@ export default function AdminDriversPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useEtatPage('recherche', location.state?.presetSearch || searchParams.get('q') || '', { forcer: !!(location.state?.presetSearch || searchParams.get('q') || '') });
+  useRechercheImposee(setSearch);
   const q = useDebouncedValue(search, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);

@@ -250,7 +250,17 @@ export default function DriverDashboard() {
   }
   // Pas au premier affichage : l'effet de lancement, au-dessus, s'en charge déjà.
   const premierAffichage = useRef(true);
-  useEffect(() => { if (premierAffichage.current) { premierAffichage.current = false; return; } relireConnect(); }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (premierAffichage.current) { premierAffichage.current = false; return; }
+    // Le bouton « Retour à l'app » de Stripe (RetourAppli) pousse /driver?connect=return dans la page déjà ouverte (2026-10-25) :
+    // le message de l'ouverture ne passait pas, et ?connect restait dans l'adresse.
+    if (new URLSearchParams(location.search).get('connect')) {
+      toast(t('dashDriver.toastPaymentsValidating'));
+      window.history.replaceState({}, '', '/driver');
+      connectLance.current = true;
+    }
+    relireConnect();
+  }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function connectOnboard() {
     connectLance.current = true;
