@@ -25,8 +25,10 @@ import { fermeCourt, fermeCourtTexte, useCommercePanier, useMaintenant } from '.
 /* RECHERCHE ET FAVORIS AUSSI (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 1) : on y cherche encore quoi
  * manger, la barre « Voir le panier » y est le prochain geste comme sur la liste. Mes favoris vide propose « Reprendre mon
  * panier » à la place (EtatVide) et la barre s'y efface. */
+// La Carte aussi (fondateur, 2026-10-25) : on y choisit un commerce. Quand la fiche d'un commerce s'ouvre en bas de la carte, la
+// barre s'efface (styles.css, « LA BARRE DU PANIER S'EFFACE »).
 function pageDAchat(chemin) {
-  return chemin === '/restaurants' || chemin.startsWith('/restaurants/') || chemin === '/recherche' || chemin === '/favorites';
+  return chemin === '/restaurants' || chemin.startsWith('/restaurants/') || chemin === '/recherche' || chemin === '/favorites' || chemin === '/map';
 }
 
 export default function FloatingCart() {

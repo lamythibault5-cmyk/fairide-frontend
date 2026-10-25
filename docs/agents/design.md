@@ -123,6 +123,11 @@ source spec and `maquettes/landing-iris/landing-iris.html` for the reference pag
    (lime, always expanded, « Voir le panier » + total), the dish sheet, cart, checkout, tracking (« Chez toi vers 12:56 »
    and « Me prévenir quand … arrive »), order confirmed (« Suivre ma commande »), « Valider ma carte », courier documents,
    the site's /login header, the shop's menu and promotions screens.
+   **The cart never hides anything** (founder, same day): the full lime bar shows where you shop (list, shop page, Recherche,
+   Favoris, Carte); elsewhere a round bubble, lime too, iris when the page already has its own lime button. Both step aside
+   whenever something opens over the page (`[role="dialog"]`: a dish, a sheet, a confirmation, the cookie card; the shop card on
+   the map) and come back after; toasts and the site map's + / − sit above the bar. Checked by
+   `maquettes/une-action/verifier-panier.mjs` (every popup on every screen with the bar, app and site; 0 overlaps on 2026-10-25).
 
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.
