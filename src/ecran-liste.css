@@ -227,7 +227,7 @@ html.appli .sl-liste--calme .rest-card { animation: none; }
 .carte-fiche-nom { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 15px; font-weight: 700; }
 .carte-fiche-nom > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .carte-fiche-texte small { display: block; font-size: 12px; line-height: 1.35; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.carte-fiche-promo { margin-left: 6px; padding: 1px 7px; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); font-weight: 700; }
+.carte-fiche-promo { margin-left: 6px; padding: 1px 7px; border-radius: var(--radius-pill); background: var(--promo); color: #fff; font-weight: 700; }
 .carte-fiche a.carte-fiche-voir { flex: none; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 700; text-decoration: none; }
 /* La croix (« Retour à la carte ») : un rond de 28 px, mais 44 px à toucher, posé sur le coin de la fiche. */
 .carte-fiche button.carte-fiche-fermer.carte-fiche-fermer {

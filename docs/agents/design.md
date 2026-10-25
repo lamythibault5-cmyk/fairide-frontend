@@ -89,6 +89,7 @@ source spec and `maquettes/landing-iris/landing-iris.html` for the reference pag
 | `--chip` | `#1E1A17` | Dark badge background, white text |
 | `--cream` / `--cream-dim` | `#FFFFFF` / `#F4F2ED` | Page background / surface tint |
 | `--red` `--blue` `--orange` `--purple` `--green` | | Status colours only, never brand (`--green` since 2026-10-13: « validé », « signé ») |
+| `--promo` | `#E31B23` | Promotions only (below) |
 | `--radius` / `--radius-field` / `--radius-pill` | `16px` / `8px` / `999px` | Cards / small containers (`--radius-chip` is an alias of `--radius-field`) / everything clickable. Re-checked against styles.css on 2026-10-13 — this row said 20px / 6px, which the code no longer used |
 | `--radius-saisie` / `--iris-tint` / `--anneau-champ` | `16px` / `#EFEDFB` / iris 1.5 px + 4 px halo | Text fields (style B, 2026-10-19, below). `--anneau-champ-erreur` is the red twin |
 | `--shadow` | `none` | Kept as a token so old call sites resolve to nothing |
@@ -123,6 +124,17 @@ source spec and `maquettes/landing-iris/landing-iris.html` for the reference pag
    (lime, always expanded, « Voir le panier » + total), the dish sheet, cart, checkout, tracking (« Chez toi vers 12:56 »
    and « Me prévenir quand … arrive »), order confirmed (« Suivre ma commande »), « Valider ma carte », courier documents,
    the site's /login header, the shop's menu and promotions screens.
+
+**Promotions are red, like Uber Eats (founder, 2026-10-25, version B of `maquettes/promos-rouge/promos-rouge.html`,
+bright red, website same as the app).** A third colour, `--promo` `#E31B23`, for a shop's offers only (« 1 acheté = 1
+offert », « −20 % », « −4 € dès 25 € »), so a deal no longer looks like the lime next click. A filled red pill with the
+tag icon only on the shop's photo in the list (`.rc-offre.rc-promo`; « Bientôt » keeps lime `.rc-offre`), the map card
+(`.carte-fiche-promo`, `.promo-badge`); everywhere else red **text** with the tag icon, no pill: the dish's offer
+(`.plat-promo`), the discounted price (`.est-remise`, still « avant 11,90 € », never struck through), the cart's
+« −20 % inclus » (`.panier-remise`) and « Tu économises » (`.panier-economie`), the offer line of the checkout ticket
+(`.co-t-ligne--promo`). The shop page's offer card (`.fiche-offres`) is white with a hairline, red tag and red first line.
+Red text on white and white on red are both 4.7:1. Because red now means « deal », « Carte seule » (`.rc-vitrine`) went
+grey; alerts keep `--red`. The shop's own screens (`.ec-plat-promo`, menu editor) are unchanged.
 
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.

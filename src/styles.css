@@ -63,6 +63,10 @@
      4,15:1, sous les 4,5:1 qu'exige un texte de 13,5 px (WCAG 1.4.3) — « Fermé » sur la pastille d'état d'une fiche. 4,78:1
      ici. Les pastilles, boutons et bordures gardent --red. */
   --red-texte: #C8283A;
+  /* Le rouge des PROMOS (fondateur, 2026-10-25, version B de maquettes/promos-rouge, « comme Uber Eats », rouge vif) :
+     pastille pleine sur la photo du commerce dans la liste, ailleurs du texte rouge avec l'étiquette (plat, prix remisé,
+     panier, encart d'offres). Texte blanc dessus ou texte sur blanc : 4,7:1. Plus le lime, qui reste le bouton de l'action. */
+  --promo: #E31B23;
   --blue: #2B7FB8;
   --orange: #E07A1F;
   --purple: #B0459B;
@@ -463,7 +467,7 @@ label.row > span { min-width: 0; }
   background: transparent; color: var(--lime); border: none; padding: 0;
   font-size: 11.5px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
 }
-.promo-badge { position: absolute; top: 10px; left: 10px; right: 10px; background: var(--lime); color: var(--ink); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-pill); z-index: 1; width: fit-content; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.promo-badge { position: absolute; top: 10px; left: 10px; right: 10px; background: var(--promo); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-pill); z-index: 1; width: fit-content; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 
 /* CHAMPS DE SAISIE, STYLE B (fondateur, 2026-10-19, maquette « champs » : « B · étiquette flottante »). Un champ est un
@@ -1318,14 +1322,16 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .fiche-panneau-cle { font-size: var(--t-body-sm); color: var(--ink-soft); }
 
 /* L'encart d'offres, façon « Savings and more » : UN bloc, là où il y avait deux bandeaux de
-   deux couleurs différentes écrits en style inline (un rouge, un iris). */
+   deux couleurs différentes écrits en style inline (un rouge, un iris). Depuis le 2026-10-25 (promos en rouge, version B) :
+   blanc cerné d'un filet, étiquette et première ligne en rouge promo, les suivantes en encre. */
 .fiche-offres {
   display: flex; gap: 12px; align-items: flex-start;
   padding: 16px; margin-bottom: 12px;
-  background: var(--iris); color: #fff; border-radius: var(--radius);
+  background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius);
 }
-.fiche-offres-icone { flex-shrink: 0; display: inline-flex; color: var(--lime); }
+.fiche-offres-icone { flex-shrink: 0; display: inline-flex; color: var(--promo); }
 .fiche-offres-texte { display: flex; flex-direction: column; gap: 6px; font-size: var(--t-body-sm); font-weight: 500; }
+.fiche-offres-texte > span:first-child { color: var(--promo); font-weight: 700; }
 
 .fiche-recherche { margin-bottom: 14px; }
 

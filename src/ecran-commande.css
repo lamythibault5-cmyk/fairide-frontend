@@ -66,9 +66,11 @@
 .ec-feuille .panier-ligne-image { border-radius: 14px; }
 .ec-feuille .panier-ligne-texte { font-size: 14.5px; }
 .ec-feuille .panier-ligne-prix { font-size: 13px; }
-/* Le prix PAYÉ de la ligne, en encre, puis « · −5 % inclus » en gris (audit design 2, 2026-10-19). */
+/* Le prix PAYÉ de la ligne, en encre, puis « · −5 % inclus » (audit design 2, 2026-10-19), en rouge promo depuis le
+   2026-10-25, comme « Tu économises … » (maquettes/promos-rouge, version B). */
 .panier-ligne-paye { font-size: 14px; font-weight: 700; color: var(--ink); }
-.panier-economie { margin: 12px 0 0; font-size: 13px; color: var(--ink-soft); }
+.panier-remise { color: var(--promo); font-weight: 600; }
+.panier-economie { margin: 12px 0 0; font-size: 13px; font-weight: 700; color: var(--promo); }
 .ec-feuille .panier-vider { width: auto; padding: 8px 0; margin-top: 0; font-weight: 600; }
 .panier-ligne.ec-sort { animation: ec-sort .26s ease both; pointer-events: none; }
 @keyframes ec-entre { from { transform: translateY(24px); opacity: 0; } }
@@ -150,6 +152,8 @@
 .co-ticket { border: 1px dashed var(--iris); border-radius: 14px; padding: 12px 14px; display: grid; gap: 7px; font-size: 14px; color: var(--ink); }
 .co-t-ligne { display: flex; align-items: baseline; gap: 6px; }
 .co-t-ligne > span:first-child { min-width: 0; }
+/* L'offre du commerce sur le ticket (« Offre Hill's Burger −20 % »), en rouge promo comme dans le panier (2026-10-25). */
+.co-t-ligne--promo { color: var(--promo); font-weight: 600; }
 .co-t-points { flex: 1 1 12px; min-width: 12px; border-bottom: 2px dotted var(--line); transform: translateY(-4px); }
 .co-t-montant { flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .co-t-total { justify-content: space-between; font-weight: 800; font-size: 16px; border-top: 1px solid var(--line); padding-top: 9px; margin-top: 2px; }
