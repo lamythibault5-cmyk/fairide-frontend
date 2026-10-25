@@ -5,7 +5,13 @@
  *
  * Sur une fiche de commerce, la photo passe sous la barre d'état exprès : le verre attend que la photo soit sortie, puis
  * apparaît au-dessus de la feuille blanche. La barre d'état garde ses icônes blanches tant que le verre est là (barreEtat.js
- * lit la classe `verre-etat-on`). Regard : au plus une fois par image pendant un défilement. */
+ * lit la classe `verre-etat-on`). Regard : au plus une fois par image pendant un défilement.
+ *
+ * Sur un bandeau iris qui reste collé en haut (la liste : « Livrer à … »), le verre ne sert à rien et se voyait : posé sur
+ * l'iris plein, il l'éclaircissait (saturate) et son fondu du bas traçait une ligne sur le bandeau (fondateur, 2026-10-25).
+ * Il reste donc caché tant que l'iris plein descend jusqu'à son bord du bas : rien ne peut alors passer sous l'heure. */
+import { IRIS, fondSous } from './regardSousBarre';
+
 const HAUTEUR_FONDU = 18;
 
 export function installerVerreBarreEtat() {
@@ -23,6 +29,8 @@ export function installerVerreBarreEtat() {
       const photo = document.querySelector('.fiche-appli .fiche-media');
       if (photo && photo.getBoundingClientRect().bottom > bande.offsetHeight - HAUTEUR_FONDU) visible = false;
     }
+    // Le verre ne capte pas le doigt (pointer-events: none) : fondSous() regarde à travers lui.
+    if (visible && IRIS.has(fondSous(bande.offsetHeight - 1))) visible = false;
     html.classList.toggle('verre-etat-on', visible);
   };
   const demander = () => { if (!image) image = requestAnimationFrame(regarder); };
