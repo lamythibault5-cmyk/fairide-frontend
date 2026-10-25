@@ -108,6 +108,13 @@ profiles (slogan « Paie ton repas, pas la plateforme. », euro bars of a 12 €
 location and the account: 5 screens before the account instead of 8 + 3 swipe cards. Each profile sees its own gain first: the
 customer their money, the courier « Ce que tu gagnes » (90 % of the delivery, 100 % of tips, their minimum), the business « 10 %, pas 30. »
 with what the platform takes on a 20 € order. « Payer moins » is the customer's wish; the screens never answer it with « moins cher ».
+**« Tu as envie de quoi ? » is back since 2026-10-25** (version A of `maquettes/onboarding-gouts/onboarding-gouts.html`; it had been
+cut on 10-22): AFTER the loading screen, tiles of the shop families (specialites.js) that have a shop delivering to you, each with
+its count, several choices, the button counts live (« Voir mes 4 commerces » / « Un peu de tout », « Passer » on top). Skipped when
+nothing delivers. The result then says « N commerces pour toi », those first with « Pour toi ». The picks stay on the phone only
+(`fairide_bienvenue.familles`, src/envies.js; the old 6 broad `envies` are translated): the Restaurants page puts « Tes envies » at
+the very top and those families first in the cuisine bar with a lime dot. No way to change them later (founder: not needed).
+/classement (`conformite.ranking_rows`) describes the row: keep it in step. 6 screens before the account for the customer.
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](../../src/pages/app/InscriptionAppli.jsx)):
 « Continuer avec mon e-mail », and Apple / Google for an account that does not exist yet, no longer go to `/login` — one question

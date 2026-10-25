@@ -8,8 +8,10 @@ import { CHEMIN_LISTE } from '../../resumeCarte';
 import { experienceApp, demanderPosition, connexionFournisseur } from '../../natif';
 import { communeDepuisCodePostal, communeRingDistance, haversineDistanceKm } from '../../menuCategories';
 import { ecrireBienvenue, ecrireReprise, lireReprise, lireParcoursFait, ecrireParcoursFait } from '../../bienvenue';
+import { repondAuxEnvies } from '../../envies';
+import { FAMILLES, famillesCommerce } from '../../specialites';
 import {
-  Haut, EcranAccueil, EcranProfil, EcranQuestion, EcranPourquoi, EcranPermission, EcranCodePostal,
+  Haut, EcranAccueil, EcranProfil, EcranQuestion, EcranPourquoi, EcranEnvies, EcranPermission, EcranCodePostal,
   EcranRecherche, EcranCompte, EcranPromesses, BarresCommande
 } from './EcransBienvenue';
 import InscriptionAppli from './InscriptionAppli';
@@ -32,7 +34,12 @@ import InscriptionAppli from './InscriptionAppli';
  *     maquettes/onboarding-court/onboarding-court.html) : une seule question au lieu de « ce qui compte », « ce qui agace »,
  *     trois cartes à glisser et « une envie en particulier ? ». Le client passe 5 écrans avant le compte au lieu de 8 et
  *     3 cartes. Chacun voit d'abord ce qu'il y gagne : le client son argent, le livreur ce qu'il touche, le commerce ce que
- *     la plateforme lui prend. Les envies déjà données sur un téléphone restent (rangée « Vos envies », RestaurantList.jsx).
+ *     la plateforme lui prend.
+ *   - « TU AS ENVIE DE QUOI ? » REVIENT LE 2026-10-25 (fondateur, version A de maquettes/onboarding-gouts/onboarding-gouts.html :
+ *     « les gens qui sentent que c'est fait pour eux restent ») — mais APRÈS le chargement, avec les vraies familles
+ *     (specialites.js) qui ont un commerce qui livre chez toi et leur nombre, au lieu de 6 envies larges avant la position. Le
+ *     résultat compte alors « N commerces pour toi », ceux-là d'abord ; la page Restaurants met ces familles en tête de sa
+ *     bande et la rangée « Tes envies » tout en haut (RestaurantList.jsx, envies.js). Sauté quand rien ne livre. 6 écrans.
  *   - Le compte est demandé APRÈS avoir vu les commerces (règle 5.1.1 d'Apple), Apple à côté de Google (4.8).
  *   - L'inscription elle-même se fait ICI, dans les mêmes écrans (InscriptionAppli.jsx, 2026-10-15) : plus de passage
  *     par /login, la page du site avec son en-tête. Seul « J'ai déjà un compte » y mène encore.
@@ -46,7 +53,7 @@ import InscriptionAppli from './InscriptionAppli';
  * (décision du fondateur). */
 
 const PARCOURS = {
-  client: ['question', 'pourquoi', 'position', 'codePostal', 'recherche', 'compte'],
+  client: ['question', 'pourquoi', 'position', 'codePostal', 'recherche', 'envies', 'compte'],
   // Plus d'écran « position » pour le livreur (fondateur, 2026-10-21, décision 10) : elle est demandée juste avant son
   // premier « Disponible », avec la même explication (components/livreur/PositionRequise.jsx), jamais à l'inscription.
   driver: ['lvPromesses', 'compte'],
@@ -56,7 +63,10 @@ const PARCOURS = {
 const CHOIX = ['prix', 'total', 'ici'];
 // Un accueil laissé en route avant le 2026-10-22 reprend sur l'écran qui a remplacé le sien. `lvPosition` (position du
 // livreur, retirée le 2026-10-21) manquait : un livreur arrêté là rouvrait l'app sur un écran vide (revue du 24/10).
-const ECRANS_RETIRES = { buts: 'question', freins: 'question', cartes: 'question', envies: 'position', lvPosition: 'lvPromesses' };
+// `envies` n'y est plus depuis le 2026-10-25 : l'écran existe de nouveau (après le chargement), on y reprend.
+const ECRANS_RETIRES = { buts: 'question', freins: 'question', cartes: 'question', lvPosition: 'lvPromesses' };
+const CLES_FAMILLES = new Set(FAMILLES.map((f) => f.cle));
+const famillesValides = (l) => (Array.isArray(l) ? l.filter((f) => CLES_FAMILLES.has(f)) : []);
 // Les écrans que le `switch` plus bas sait dessiner, plus l'inscription. Un écran gardé qui n'en fait pas partie (retiré
 // un jour sans entrée dans ECRANS_RETIRES, stockage abîmé) reprend à l'accueil au lieu d'un écran vide.
 const ECRANS = new Set(['accueil', 'profil', 'inscription', ...Object.values(PARCOURS).flat()]);
@@ -67,15 +77,24 @@ const ecranValide = (e) => {
 // Le chargement que le fondateur aime : assez long pour se lire (1,8 s, puis 3,8 s le 2026-10-16 : « 2 secondes de plus »).
 const DUREE_RECHERCHE_MS = 3800;
 
-// Commerces qui livrent à cette position (ou, sans position, rangés par proximité de commune).
-function trierCommerces(liste, { position, commune }) {
+// Commerces qui livrent à cette position (ou, sans position, rangés par proximité de commune), tes envies d'abord.
+function trierCommerces(liste, { position, commune, envies }) {
   let items = liste.map((r) => ({
     r,
-    km: position && r.lat !== null && r.lng !== null ? haversineDistanceKm(position.lat, position.lng, r.lat, r.lng) : null
+    km: position && r.lat !== null && r.lng !== null ? haversineDistanceKm(position.lat, position.lng, r.lat, r.lng) : null,
+    envie: repondAuxEnvies(r, envies)
   }));
   if (position) items = items.filter((x) => x.km !== null && x.km <= (x.r.deliveryRadiusKm ?? 6));
   const proximite = (x) => (position ? x.km : communeRingDistance(commune, x.r.commune));
-  return items.sort((a, b) => proximite(a) - proximite(b));
+  return items.sort((a, b) => (Number(b.envie) - Number(a.envie)) || (proximite(a) - proximite(b)));
+}
+
+// Les familles proposées à « Tu as envie de quoi ? » : celles des commerces trouvés, avec leur nombre, les plus fournies
+// d'abord (à égalité, l'ordre de la bande des cuisines).
+function famillesTrouvees(items) {
+  const n = {};
+  items.forEach(({ r }) => famillesCommerce(r).forEach((f) => { n[f] = (n[f] || 0) + 1; }));
+  return FAMILLES.filter((f) => n[f.cle]).map((f) => [f.cle, n[f.cle]]).sort((a, b) => b[1] - a[1]);
 }
 
 // Points du cercle : à leur vraie place autour de la position (échelle = le plus grand rayon), sinon en spirale.
@@ -123,6 +142,8 @@ export default function Bienvenue() {
     : ['client', 'driver', 'restaurant'].includes(reprise?.role) ? reprise.role : null));
   // La réponse à la seule question (EcransBienvenue.jsx, QUESTION) : sa carte passe en tête de « Ce que tu y gagnes ».
   const [choix, setChoix] = useState(() => (CHOIX.includes(reprise?.choix) ? reprise.choix : null));
+  // Les familles cochées à « Tu as envie de quoi ? » (EcranEnvies), dans l'ordre où elles l'ont été.
+  const [envies, setEnvies] = useState(() => famillesValides(dejaFait?.familles || reprise?.familles));
   const [position, setPosition] = useState(() => dejaFait?.position || reprise?.position || null);
   const [cp, setCp] = useState(() => dejaFait?.cp || reprise?.cp || '');
   const [liste, setListe] = useState(null);
@@ -136,32 +157,33 @@ export default function Bienvenue() {
 
   const communeCp = cp.length === 4 ? communeDepuisCodePostal(cp) : '';
   const parcours = useMemo(() => ['accueil', 'profil', ...(role ? PARCOURS[role] : [])], [role]);
-  const resultats = useMemo(() => (liste ? trierCommerces(liste, { position, commune: communeCp }) : []), [liste, position, communeCp]);
+  const resultats = useMemo(() => (liste ? trierCommerces(liste, { position, commune: communeCp, envies }) : []), [liste, position, communeCp, envies]);
+  const familles = useMemo(() => famillesTrouvees(resultats), [resultats]);
   const points = useMemo(() => pointsDuCercle(resultats, position), [resultats, position]);
 
   // La liste des commerces part dès l'écran « Pourquoi » : au chargement, elle est souvent déjà là.
   useEffect(() => {
-    if (role !== 'client' || liste || !['pourquoi', 'position', 'codePostal', 'recherche', 'compte', 'inscription'].includes(ecran)) return;
+    if (role !== 'client' || liste || !['pourquoi', 'position', 'codePostal', 'recherche', 'envies', 'compte', 'inscription'].includes(ecran)) return;
     api(CHEMIN_LISTE).then((r) => setListe(Array.isArray(r) ? r : [])).catch(() => { setListeEchec(true); setListe([]); });
   }, [role, ecran, liste]);
 
   // On retient où en est l'accueil, à chaque écran, pour le reprendre si l'application est fermée avant le compte
-  // (bienvenue.js, lireReprise). Le chargement repart toujours sur l'écran du compte (il ne fait qu'y mener) ; l'inscription
-  // par Apple ou Google aussi, son jeton n'étant pas gardé : la personne retouche simplement le bouton.
+  // (bienvenue.js, lireReprise). Le chargement repart sur « Tu as envie de quoi ? » (il ne fait qu'y mener) ; l'inscription
+  // par Apple ou Google sur l'écran du compte, son jeton n'étant pas gardé : la personne retouche simplement le bouton.
   useEffect(() => {
     if (user) return;
-    const etape = ecran === 'recherche' || (ecran === 'inscription' && fed) ? 'compte' : ecran;
+    const etape = ecran === 'recherche' ? 'envies' : ecran === 'inscription' && fed ? 'compte' : ecran;
     const passe = historique.filter((e) => e !== 'recherche' && e !== 'inscription');
     ecrireReprise({
       ecran: etape, historique: passe[passe.length - 1] === etape ? passe.slice(0, -1) : passe,
-      role, choix, position, cp
+      role, choix, familles: envies, position, cp
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ecran, role, choix, position, cp, fed]);
+  }, [ecran, role, choix, envies, position, cp, fed]);
 
   // Arrivé à l'écran du compte (ou à l'inscription par Apple / Google) : l'accueil est fait, il ne sera pas rejoué.
   useEffect(() => {
-    if ((ecran === 'compte' || ecran === 'inscription') && role) ecrireParcoursFait({ role, position, cp });
+    if ((ecran === 'compte' || ecran === 'inscription') && role) ecrireParcoursFait({ role, familles: envies, position, cp });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ecran, role]);
 
@@ -172,11 +194,17 @@ export default function Bienvenue() {
     const depart = Date.now();
     const verifier = () => {
       if (fini) return;
-      if (liste && Date.now() - depart >= DUREE_RECHERCHE_MS) { fini = true; aller('compte', { sansHistorique: true }); return; }
+      if (liste && Date.now() - depart >= DUREE_RECHERCHE_MS) { fini = true; aller(apresRecherche(), { sansHistorique: true }); return; }
       minuteur = setTimeout(verifier, 150);
     };
     verifier();
     return () => { fini = true; clearTimeout(minuteur); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ecran, liste]);
+
+  // Repris sur « Tu as envie de quoi ? » (application rouverte) alors que rien ne livre, ou liste illisible : au compte.
+  useEffect(() => {
+    if (ecran === 'envies' && liste && apresRecherche() === 'compte') aller('compte', { sansHistorique: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ecran, liste]);
 
@@ -194,6 +222,9 @@ export default function Bienvenue() {
     window.scrollTo(0, 0);
   }
   const suivant = () => aller(parcours[parcours.indexOf(ecran) + 1]);
+  // Après le chargement : « Tu as envie de quoi ? », sauf s'il n'y a aucune famille à proposer (rien ne livre, liste illisible).
+  function apresRecherche() { return familles.length && !listeEchec ? 'envies' : 'compte'; }
+  const basculerEnvie = (cle) => setEnvies((l) => (l.includes(cle) ? l.filter((x) => x !== cle) : [...l, cle]));
   function retour() {
     const h = [...historique];
     let precedent = h.pop();
@@ -219,7 +250,8 @@ export default function Bienvenue() {
   function memoriser() {
     ecrireBienvenue({
       // codePostal : repris par l'inscription (Auth.jsx) pour ne pas redemander ce qui vient d'être tapé.
-      vu: true, role, commune: communeCp || null, codePostal: communeCp ? cp : null, position: position || null,
+      // familles : « Tu as envie de quoi ? », reprises par la page Restaurants (envies.js) ; [] efface d'anciennes envies.
+      vu: true, role, familles: envies, commune: communeCp || null, codePostal: communeCp ? cp : null, position: position || null,
       amorceNotifs: 'a-faire'
     });
   }
@@ -255,14 +287,15 @@ export default function Bienvenue() {
   }
   const viaEmail = () => { memoriser(); setFed(null); aller('inscription'); };
   // « J'ai déjà un compte » garde le commerce touché sans compte (`from`) : la connexion y ramène (audit du 19/10, auth-07).
-  const dejaInscrit = () => { ecrireBienvenue({ vu: true, amorceNotifs: 'a-faire' }); navigate('/login', depuis ? { state: { from: depuis } } : undefined); };
+  const dejaInscrit = () => { ecrireBienvenue({ vu: true, amorceNotifs: 'a-faire', ...(envies.length ? { familles: envies } : {}) }); navigate('/login', depuis ? { state: { from: depuis } } : undefined); };
 
   // L'accueil a rejoint le bandeau iris le 2026-10-16 (version B2 de maquettes/accueil-appli/accueil-appli.html) : slogan sur l'iris, le
   // reste dans la feuille blanche, comme les écrans suivants.
   const fondIris = ['recherche', 'lvPromesses', 'coPromesses'].includes(ecran);
   const sansHaut = ['accueil', 'recherche'].includes(ecran);
-  // « Passer » saute la question, jamais le message : on atterrit sur « Ce que tu y gagnes ».
-  const passerQuestions = ecran === 'question' ? () => aller('pourquoi') : null;
+  // « Passer » saute la question, jamais le message : on atterrit sur « Ce que tu y gagnes ». Sur les envies : rien de coché.
+  const passerQuestions = ecran === 'question' ? () => aller('pourquoi')
+    : ecran === 'envies' ? () => { setEnvies([]); aller('compte'); } : null;
 
   let contenu;
   switch (ecran) {
@@ -284,9 +317,14 @@ export default function Bienvenue() {
       contenu = <EcranCodePostal cp={cp} commune={communeCp} onCp={setCp} onSuite={() => { setPosition(null); aller('recherche'); }} />; break;
     case 'recherche':
       contenu = <EcranRecherche commune={position ? '' : communeCp} points={liste ? points : []} duree={DUREE_RECHERCHE_MS} />; break;
+    case 'envies':
+      contenu = (
+        <EcranEnvies familles={familles} choisies={envies} total={resultats.length} avecPosition={!!position}
+          nPourToi={resultats.filter((x) => x.envie).length} onBasculer={basculerEnvie} onSuite={suivant} />
+      ); break;
     case 'compte':
       contenu = (
-        <EcranCompte role={role} resultats={resultats} listeEchec={listeEchec} avecPosition={!!position} commune={communeCp} attente={attente}
+        <EcranCompte role={role} resultats={resultats} envies={envies} listeEchec={listeEchec} avecPosition={!!position} commune={communeCp} attente={attente}
           onFournisseur={viaFournisseur} onEmail={viaEmail} onConnexion={dejaInscrit} />
       ); break;
     case 'lvPromesses':

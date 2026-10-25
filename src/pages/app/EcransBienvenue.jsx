@@ -5,7 +5,8 @@ import MotMarque from '../../components/MotMarque';
 import Icone from '../../components/Icone';
 import BoutonsConnexionNative from '../../components/BoutonsConnexionNative';
 import { estNatif } from '../../natif';
-import { restaurantTypeLabel } from '../../menuCategories';
+import { restaurantTypeLabel, illustrationCuisine } from '../../menuCategories';
+import { famille, libelleFamille } from '../../specialites';
 import AvecMarque from '../../components/AvecMarque';
 import { euros } from '../../prixPlat';
 import { imgProps } from '../../images';
@@ -331,6 +332,52 @@ export function EcranRecherche({ commune, points, duree }) {
   );
 }
 
+/* « TU AS ENVIE DE QUOI ? » (fondateur, 2026-10-25, version A de maquettes/onboarding-gouts/onboarding-gouts.html). Après le
+ * chargement, juste avant le résultat : les familles qui ont un commerce qui livre chez toi (`familles` : [clé, nombre], les plus
+ * fournies d'abord, calculées dans Bienvenue.jsx), avec le dessin de la bande des cuisines et leur nombre. Plusieurs choix ; le
+ * bouton compte en direct. Rien de coché : « Un peu de tout ». Une famille sans commerce n'est jamais proposée : cocher pour
+ * trouver zéro serait le contraire du but (que l'appli ait l'air faite pour la personne). */
+export function EcranEnvies({ familles, choisies, total, nPourToi, avecPosition, onBasculer, onSuite }) {
+  const { t, locale } = useLanguage();
+  const noms = choisies.map((cle) => libelleFamille(cle, t, { court: true }));
+  return (
+    <>
+      <h1 className="bv-titre">{t('appli.envTitre')}</h1>
+      <p className="bv-sous">{t('appli.envSub')}</p>
+      <Feuille>
+        <div className="bv-envies">
+          {familles.map(([cle, n]) => {
+            const on = choisies.includes(cle);
+            return (
+              <button key={cle} type="button" className={`bv-envie${on ? ' on' : ''}`} aria-pressed={on} onClick={() => onBasculer(cle)}>
+                {on && <span className="bv-envie-coche"><Icone nom="valider" taille={12} /></span>}
+                <img src={illustrationCuisine(famille(cle)?.illustration)} alt="" width="52" height="52" decoding="async" draggable="false" />
+                <b>{libelleFamille(cle, t, { court: true })}</b>
+                <small>{avecPosition ? t('appli.envPres', { n }) : n === 1 ? t('appli.envUn') : t('appli.envN', { n })}</small>
+              </button>
+            );
+          })}
+        </div>
+        <div className="bv-grandit" />
+        <div className="bv-envies-bas">
+          <p className="bv-envies-compte" aria-live="polite">
+            {choisies.length ? <><b>{nPourToi}</b> {t(nPourToi === 1 ? 'appli.envCompteUn' : 'appli.envCompte', { liste: listeEt(noms, locale) })}</>
+              : avecPosition ? t(total === 1 ? 'appli.trouvesUn' : 'appli.trouves', { n: total }) : null}
+          </p>
+          <button type="button" className="bv-btn btn-gold" onClick={onSuite}>
+            {!choisies.length ? t('appli.envTout') : nPourToi === 1 ? t('appli.envVoirUn') : t('appli.envVoir', { n: nPourToi })}
+          </button>
+        </div>
+      </Feuille>
+    </>
+  );
+}
+
+// « Pizza, Burgers et Indien » dans la langue de l'écran (Intl.ListFormat ; une virgule seule là où il manque).
+function listeEt(noms, locale) {
+  try { return new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(noms); } catch { return noms.join(', '); }
+}
+
 const km = (d, locale) => `${d.toLocaleString(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} km`;
 
 /* Le compte, partagé par les trois profils. Pour un client, les commerces trouvés sont AU-DESSUS des boutons : il voit
@@ -339,7 +386,7 @@ const km = (d, locale) => `${d.toLocaleString(locale, { maximumFractionDigits: 1
  * UN SEUL ÉCRAN, SANS DÉFILER (fondateur, 2026-10-15). Il empilait le petit cercle, quatre cartes de commerce, la note
  * sur le rayon et jusqu'à trois boutons : au téléphone, « Continuer avec mon e-mail » était sous le pli. Le cercle a déjà
  * été montré au chargement juste avant ; ici, trois commerces en lignes serrées, dans une seule carte, et le compte. */
-export function EcranCompte({ role, resultats, listeEchec = false, avecPosition, commune, onFournisseur, onEmail, onConnexion, attente }) {
+export function EcranCompte({ role, resultats, envies = [], listeEchec = false, avecPosition, commune, onFournisseur, onEmail, onConnexion, attente }) {
   const { t, locale } = useLanguage();
   let haut;
   let liste = null; // les commerces trouvés : en tête de la feuille, sous le bandeau
@@ -349,26 +396,42 @@ export function EcranCompte({ role, resultats, listeEchec = false, avecPosition,
     haut = <><h1 className="bv-titre">{t('appli.listeEchec')}</h1><p className="bv-sous">{t('appli.listeEchecSub')}</p></>;
   } else if (role === 'client') {
     const n = resultats.length;
-    const titre = !avecPosition && commune ? t('appli.trouvesCommune', { c: commune }) : n === 1 ? t('appli.trouvesUn') : t('appli.trouves', { n });
+    // Tes envies (EcranEnvies) : les commerces qui y répondent sont déjà en tête (trierCommerces, Bienvenue.jsx) ; le titre les
+    // compte, eux seuls (fondateur, 2026-10-25, maquettes/onboarding-gouts). Sans envie, ou sans commerce qui y réponde : comme avant.
+    const nPourToi = envies.length ? resultats.filter((x) => x.envie).length : 0;
+    const noms = envies.map((cle) => libelleFamille(cle, t, { court: true }));
+    const titre = nPourToi ? (nPourToi === 1 ? t('appli.pourToiUn') : t('appli.pourToi', { n: nPourToi }))
+      : !avecPosition && commune ? t('appli.trouvesCommune', { c: commune }) : n === 1 ? t('appli.trouvesUn') : t('appli.trouves', { n });
+    const sousTitre = !nPourToi ? null : avecPosition ? t('appli.pourToiSub', { liste: listeEt(noms, locale) })
+      : commune ? t('appli.pourToiSubCommune', { liste: listeEt(noms, locale), c: commune }) : listeEt(noms, locale);
     // Liste qui n'a pas pu se charger (audit du 19/10, auth-22) : un titre neutre, jamais « pas encore de commerce ici ».
     haut = (
       <>
         <h1 className="bv-titre">{listeEchec ? t('appli.trouvesSansListe') : n || !avecPosition ? titre : t('appli.aucun')}</h1>
         {!n && avecPosition && !listeEchec && <p className="bv-sous">{t('appli.aucunSub')}</p>}
+        {sousTitre && !listeEchec && <p className="bv-sous">{sousTitre}</p>}
       </>
     );
+    // Sous les trois premiers : ce qui reste pour toi, puis les autres commerces (qui livrent aussi chez toi, quand on a la position).
+    const restePourToi = Math.max(0, nPourToi - 3);
+    const resteAutres = n - nPourToi - Math.max(0, 3 - nPourToi);
+    const reste = !nPourToi ? (n > 3 ? t('appli.etAutres', { n: n - 3 }) : null) : [
+      restePourToi > 0 && t('appli.plusPourToi', { n: restePourToi }),
+      resteAutres > 0 && (avecPosition ? t(resteAutres === 1 ? 'appli.autreAussi' : 'appli.autresAussi', { n: resteAutres }) : t('appli.etAutres', { n: resteAutres }))
+    ].filter(Boolean).join(' · ');
     liste = (
       <>
         {n > 0 && (
           <div className="bv-carte bv-trouves">
-            {resultats.slice(0, 3).map(({ r, km: d }) => (
+            {resultats.slice(0, 3).map(({ r, km: d, envie }) => (
               <div key={r.id} className="bv-commerce">
                 {/* La photo du commerce, plus son logo (fondateur, 2026-10-25, maquettes/sans-logo/sans-logo.html). */}
                 {r.coverImageUrl ? <img {...imgProps(r.coverImageUrl, 72)} alt="" loading="lazy" decoding="async" /> : <Tuile nom="restaurants" />}
                 <div><b>{r.name}</b><span>{restaurantTypeLabel(r.cuisine, t)}{d !== null ? ` · ${km(d, locale)}` : r.commune ? ` · ${r.commune}` : ''}</span></div>
+                {nPourToi > 0 && envie && <span className="bv-pour-toi">{t('appli.pourToiBadge')}</span>}
               </div>
             ))}
-            {n > 3 && <p className="bv-petit">{t('appli.etAutres', { n: n - 3 })}</p>}
+            {reste && <p className="bv-petit">{reste}</p>}
           </div>
         )}
         <p className="bv-sous" style={{ marginBottom: 0 }}>{t('appli.trouvesSub')}</p>

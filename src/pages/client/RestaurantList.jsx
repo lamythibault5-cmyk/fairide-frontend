@@ -21,8 +21,7 @@ import CertifiedBadge from '../../components/CertifiedBadge';
 import PrixComptoir from '../../components/PrixComptoir';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { epingler, titreRangee } from '../../misesEnAvant';
-import { lireBienvenue } from '../../bienvenue';
-import { repondAuxEnvies } from '../../envies';
+import { lireEnvies, repondAuxEnvies } from '../../envies';
 import { COMMUNES, ILLUSTRATION_TOUTES_CUISINES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel, communeDepuisCodePostal } from '../../menuCategories';
 import { FAMILLES, SPECIALITES, cuisinesCommerce, famillesCommerce, libelleFamille, specialite } from '../../specialites';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -517,10 +516,15 @@ export default function RestaurantList() {
   // CASES VIDES CACHÉES (réponse 6 du questionnaire, 2026-10-22) : seules les familles qui ont au moins un commerce dans la
   // liste, et celle déjà choisie. Avant, les 35 types s'affichaient même vides et menaient à « aucun commerce ».
   const famillesPresentes = new Set(restaurants.flatMap((r) => [...famillesCommerce(r)]));
+  // TES ENVIES D'ABORD (fondateur, 2026-10-25, maquettes/onboarding-gouts) : les familles cochées à l'accueil de l'app passent en
+  // tête de la bande, dans l'ordre où elles ont été cochées, avec un point lime ; les autres gardent leur ordre. Rien sur le site
+  // (l'accueil de l'app n'y passe pas, lireEnvies y rend []).
+  const envies = lireEnvies();
+  const famillesBande = FAMILLES.filter((f) => famillesPresentes.has(f.cle) || f.cle === famille);
   const cuisineOptions = [
     { value: '', emoji: 'restaurants', illustration: ILLUSTRATION_TOUTES_CUISINES, label: t('restaurantList.allCuisines') },
-    ...FAMILLES.filter((f) => famillesPresentes.has(f.cle) || f.cle === famille)
-      .map((f) => ({ value: f.cle, emoji: f.icone, illustration: f.illustration, label: libelleFamille(f.cle, t, { court: true }) })),
+    ...[...envies.map((cle) => famillesBande.find((f) => f.cle === cle)).filter(Boolean), ...famillesBande.filter((f) => !envies.includes(f.cle))]
+      .map((f) => ({ value: f.cle, emoji: f.icone, illustration: f.illustration, label: libelleFamille(f.cle, t, { court: true }), envie: envies.includes(f.cle) })),
     // Bio, Vegan, Halal, Sans gluten : masqués pour le moment (MENTIONS_ALIMENTAIRES, dietary.js).
     ...(MENTIONS_ALIMENTAIRES ? [
     { value: '__bio', emoji: 'feuille', label: t('restaurantList.chipBio'), regime: 'bio' },
@@ -628,18 +632,19 @@ export default function RestaurantList() {
     ? parDistance.slice(0, PROCHES_MAX)
     : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)).slice(0, PROCHES_MAX) : [],
   placements, 'nearby', parDistance.length ? parDistance : nonGroceryTous));
-  /* VOS ENVIES (2026-10-13). L'accueil de l'application demandait « Une envie en particulier ? » (retiré le 2026-10-22 :
-   * un téléphone qui n'a pas répondu n'a pas cette rangée ; ceux qui ont répondu la gardent) et rangeait ses résultats
-   * avec ; la liste les oubliait ensuite. Une rangée de plus, juste sous « Autour de vous », avec les commerces qui y
-   * répondent, dans le même ordre de proximité — les autres rangées ne bougent pas. Les envies vivent dans le téléphone
-   * (bienvenue.js, jamais envoyées) : sur le site, où l'accueil de l'app ne passe pas, la rangée n'existe pas.
-   * Jamais complétée : une rangée « Vos envies » remplie de commerces qui n'y répondent pas mentirait.
-   * /classement (RankingPage, conformite.ranking_rows) la décrit. */
-  const envies = Array.isArray(lireBienvenue().envies) ? lireBienvenue().envies : [];
-  const enviesList = envies.length
-    ? (parDistance.length ? parDistance : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous)
-      .filter((r) => repondAuxEnvies(r, envies)).slice(0, PROCHES_MAX)
-    : [];
+  /* TES ENVIES (2026-10-13). L'accueil de l'application demande « Tu as envie de quoi ? » (envies.js) et range ses résultats
+   * avec ; la liste les oubliait ensuite. Une rangée avec les commerces qui y répondent, dans le même ordre de proximité que
+   * « Autour de toi » — TOUT EN HAUT depuis le 2026-10-25 (fondateur, maquettes/onboarding-gouts ; avant : sous « Autour de
+   * toi »). Un téléphone qui n'a rien coché n'a pas cette rangée. Les envies vivent dans le téléphone (bienvenue.js, jamais
+   * envoyées) : sur le site, où l'accueil de l'app ne passe pas, la rangée n'existe pas.
+   * Jamais complétée : une rangée « Tes envies » remplie de commerces qui n'y répondent pas mentirait.
+   * /classement (RankingPage, conformite.ranking_rows) la décrit.
+   * Supermarchés et boulangeries compris (pas « Autour de toi ») : « Courses » ou « Boulangerie » se cochent à l'accueil. */
+  const enviesTous = restaurants.filter((r) => repondAuxEnvies(r, envies));
+  const enviesParDistance = enviesTous.map((r) => ({ ...r, distanceKm: distanceDe(r) })).filter((r) => r.distanceKm != null).sort((a, b) => a.distanceKm - b.distanceKm);
+  const enviesList = (enviesParDistance.length ? enviesParDistance
+    : homeCommune ? [...enviesTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : enviesTous)
+    .slice(0, PROCHES_MAX);
   // À la une : voir ALaUne. Même ordre que « Autour de toi », mais SANS épinglage payant, avec photo, ouverts d'abord.
   const aLaUne = (parDistance.length ? parDistance : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous)
     // SA PROPRE PHOTO (audit du 19/10, discovery-05) : le serveur remplit toujours coverImageUrl, avec une photo d'illustration
@@ -897,6 +902,7 @@ export default function RestaurantList() {
       )}
       {!loading && !hasActiveFilter && (
         <>
+          <Section title={t('restaurantList.sectionCravings')} icon="favoris" list={enviesList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} />
           {aLaUne.length > 0 && <ALaUne list={aLaUne} inscritLe={inscritLe} t={t} />}
           {inscrits.length > 0 && (
             <div className="liste-section">
@@ -914,7 +920,6 @@ export default function RestaurantList() {
             </div>
           )}
           <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="nearby" />
-          <Section title={t('restaurantList.sectionCravings')} icon="favoris" list={enviesList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} />
           <Section title={t('restaurantList.sectionFreeDelivery')} icon="velo" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="free_delivery" />
           <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="velo" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="cheap_delivery" />
           <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="offers" />
