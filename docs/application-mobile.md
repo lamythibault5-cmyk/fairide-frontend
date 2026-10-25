@@ -89,13 +89,17 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
      construite sans `VITE_GOOGLE_IOS_CLIENT_ID` laissait le greffon sans configuration, et le premier toucher sur « Continuer
      avec Google » fermait l'app (« No active configuration. Make sure GIDClientID is set in Info.plist »). GoogleSignIn lit
      ces clés tout seul ; la variable reste la source pour `natif.js`.
-9. **« Continuer avec Apple »** (iPhone) : *Sign in with Apple* est déclaré dans `App.entitlements`. Côté
-   serveur rien à configurer (le jeton est vérifié avec les clés publiques d'Apple ; `APPLE_CLIENT_IDS` ne sert que si
-   l'identifiant de l'app change). **Relais e-mail** : une personne peut masquer son adresse
-   (`…@privaterelay.appleid.com`) ; nos e-mails n'y arrivent que si le domaine d'envoi est déclaré dans le compte
+9. **« Continuer avec Apple »** (iPhone) : *Sign in with Apple* est déclaré dans `App.entitlements`. Le jeton
+   d'identité est vérifié avec les clés publiques d'Apple (`APPLE_CLIENT_IDS` ne sert que si l'identifiant de l'app
+   change). **Relais e-mail** : une personne peut masquer son adresse (`…@privaterelay.appleid.com`) ; nos e-mails n'y arrivent que si le domaine d'envoi est déclaré dans le compte
    Apple Developer → Services → *Sign in with Apple for Email Communication* (domaine `fairide.be` + l'adresse
-   d'expédition de Resend). **Reste à faire** : à la suppression d'un compte lié à Apple, Apple demande de révoquer
-   le jeton (`appleid.apple.com/auth/revoke`) — il faut pour cela une clé `.p8` *Sign in with Apple*, pas encore créée.
+   d'expédition de Resend). **Révocation à la suppression du compte** (règle 5.1.1(v), 2026-10-25) : à chaque connexion
+   Apple, l'app envoie le code d'autorisation (`natif.js` › `codeApple`, greffon en `useProperTokenExchange`) ; le
+   serveur l'échange contre un refresh_token gardé chiffré (`users.apple_refresh_token_enc`, migration 092) et le révoque
+   (`appleid.apple.com/auth/revoke`) quand le compte est supprimé (`accountDeletion.js`). Il lui faut trois variables
+   Railway : `APPLE_TEAM_ID` (44V9JV2JQN), `APPLE_KEY_ID` (VDXR82465F, la clé « Fairide » qui couvre aussi Sign in with
+   Apple) et `APPLE_PRIVATE_KEY` (le contenu du `.p8`). Sans elles rien ne casse, mais rien n'est gardé ni révoqué. Un
+   compte lié avant cela n'a pas de jeton gardé jusqu'à sa prochaine connexion Apple.
 10. **Textes des permissions iOS** : FAIT dans `ios/App/App/Info.plist` : `NSLocationWhenInUseUsageDescription`
     (« Pour te montrer les commerces qui livrent jusqu'à chez toi, et aux livreurs les courses proches. ») et
     `NSCameraUsageDescription` (photo de la commande prête, documents du dossier livreur : les champs `capture`),
@@ -156,9 +160,6 @@ l'App Store public : la soumission se fait à la main dans App Store Connect (on
 
 **Déboguer** : iPhone branché, Xcode › Run ; les journaux natifs s'affichent dans la console de Xcode (l'équivalent
 d'`adb logcat`), et Safari › Développement › [l'iPhone] inspecte la page de l'app (version Debug).
-
-**Pas encore fait** : à la suppression d'un compte lié à Apple, révoquer son jeton (point 9) ; il faut d'abord la clé
-`.p8` *Sign in with Apple*.
 
 ## Mettre à jour l'application
 
