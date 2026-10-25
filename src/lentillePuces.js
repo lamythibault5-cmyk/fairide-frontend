@@ -1,8 +1,8 @@
 // LA LENTILLE DES CUISINES (fondateur, 2026-10-16, proposition A de maquettes/tous-les-ecrans/tous-les-ecrans.html), dans l'app seulement.
 // Chargé avec import() par TeteListe.jsx : le site n'en télécharge rien, comme barreVerre.js pour la barre d'onglets.
 //
-// La bande des pastilles de cuisine est du même verre que la barre d'onglets, et la cuisine choisie est sous la même
-// lentille. Le CSS la fait glisser d'une pastille à l'autre ; ici, ce qu'il ne sait pas faire :
+// La cuisine choisie est sous la même lentille de verre que l'onglet de la barre d'onglets (la bande elle-même n'a plus de
+// cadre depuis le 2026-10-25, maquettes/barre-cuisines). Le CSS la fait glisser d'une pastille à l'autre ; ici, ce qu'il ne sait pas faire :
 //   - APPUYER sur la cuisine choisie fait grossir la lentille (classe lt-puces--appui) ;
 //   - GLISSER la promène sous le doigt, d'une cuisine à l'autre, et au lâcher on choisit la plus proche. On ne capture
 //     le pointeur qu'après 6 px : un simple toucher reste le clic du bouton. Au doigt (2026-10-24) : un glissé tout de suite
@@ -114,7 +114,7 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
   let debrancherTaille = null;
   if (refractionPossible()) {
     bande.classList.add('lt-puces--refraction');
-    debrancherTaille = suivreTaille([bande, lentille], () => { poserFiltre(bande, '--verre-bande', 18, false); poserFiltre(lentille, '--verre-lentille', 22, true); });
+    debrancherTaille = suivreTaille([lentille], () => poserFiltre(lentille, '--verre-lentille', 22, true));
   }
 
   return () => {

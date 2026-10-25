@@ -5,22 +5,24 @@ import { defilement } from '../gestes';
 import { illustrationCuisine } from '../menuCategories';
 
 /* LE HAUT DE LA LISTE DES COMMERCES (fondateur, 2026-10-16, proposition A de « Le haut de la liste des commerces »,
- * maquettes/tous-les-ecrans/tous-les-ecrans.html). Deux étages, collés en haut de l'écran :
+ * maquettes/tous-les-ecrans/tous-les-ecrans.html). Deux étages :
  *
- *   1. LE BANDEAU IRIS, avec l'adresse de livraison (le bouton « Livrer à » d'avant, mêmes libellés, même carnet
- *      d'adresses) et, dessous, la route en pointillés où roule le vélo de la marque pendant qu'on fait défiler la page.
- *      Le bas du bandeau est la lèvre de la feuille blanche, comme sur les écrans de bienvenue et le suivi de commande.
- *   2. LA BANDE DES CUISINES. La cuisine choisie est sous une LENTILLE qui glisse d'une pastille à l'autre. Dans l'app,
- *      la bande est du verre de la barre d'onglets, la lentille grossit à l'appui et suit le doigt (lentillePuces.js,
- *      chargé à part) ; sur le site, bande blanche à filet et pastille iris pleine, sans geste (règle 2 de l'identité).
+ *   1. LE BANDEAU IRIS, collé en haut de l'écran, avec l'adresse de livraison (le bouton « Livrer à » d'avant, mêmes
+ *      libellés, même carnet d'adresses) et, dessous, la route en pointillés où roule le vélo de la marque pendant qu'on
+ *      fait défiler la page. Le bas du bandeau est la lèvre de la feuille blanche, comme sur les écrans de bienvenue.
+ *   2. LA BANDE DES CUISINES, COMME UBER EATS (fondateur, 2026-10-25, version A de maquettes/barre-cuisines, « le site
+ *      aussi ») : plus de cadre autour, le dessin de chaque famille en 52 px avec son nom dessous, et elle PART AVEC LA
+ *      PAGE quand on descend — elle n'est plus dans le bloc collé, seul le bandeau reste. La cuisine choisie est sous une
+ *      LENTILLE qui glisse de l'une à l'autre : du verre dans l'app, qui grossit à l'appui et suit le doigt
+ *      (lentillePuces.js, chargé à part) ; une pastille iris pleine sur le site, sans geste (règle 2 de l'identité).
+ *      Dessins en 3D dans l'app, en aplat (cuisines-2d) sur le site.
  *
  * LE BANDEAU NE PART PLUS (fondateur, 2026-10-21, maquettes/bandeau-velo/bandeau-velo.html : « A, à la taille de C »). Il
  * faisait 118 px et s'effaçait dès qu'on descendait : on ne voyait jamais le vélo rouler. Il fait maintenant 88 px, la hauteur
  * de la version C dépliée, avec la version A — la maison, « Livrer à » au-dessus de l'adresse, la route dessous — et il ne se
  * replie jamais : il reste collé en haut, sur l'app comme sur le site. Pas de barre de recherche : elle a son onglet.
  *
- * Sans compte (pas d'adresse à montrer), pas de bandeau : la bande seule, collée sous la barre d'app dans l'app, et
- * dans le fil de la page sur le site public (son en-tête collant passerait par-dessus).
+ * Sans compte (pas d'adresse à montrer), pas de bandeau : la bande seule, dans le fil de la page.
  *
  * Bio, Vegan, Halal et Sans gluten restent au bout de la bande, après un trait : ce sont des bascules cumulables, pas
  * un choix de cuisine — la lentille ne s'y pose pas, elles s'allument en iris.
@@ -110,10 +112,7 @@ export function RouteVelo({ position = 12, className = '', roule = false, avance
 export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null, sous = null }) {
   const app = experienceApp();
   const bandeau = adresse != null;
-  // Collée en haut quand on est connecté (coquille à onglets) ou dans l'app ; dans le fil de la page sur le site public.
-  const collante = bandeau || app;
 
-  const tete = useRef(null);
   const bande = useRef(null);
   const defile = useRef(null);
   const piste = useRef(null);
@@ -122,12 +121,6 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
   const choisirRef = useRef(choisirCuisine);
   const placerRef = useRef(null);
   useEffect(() => { choisirRef.current = choisirCuisine; }, [choisirCuisine]);
-
-  // Sans compte dans l'app : la bande se colle SOUS la barre d'app (elle-même collée en haut), pas derrière.
-  useLayoutEffect(() => {
-    const barre = document.querySelector('.appli-barre');
-    if (tete.current) tete.current.style.setProperty('--lt-dessus', barre && !bandeau ? `${barre.offsetHeight}px` : '0px');
-  }, [bandeau]);
 
   // LA LENTILLE SUR LA CUISINE CHOISIE. Une mesure par changement (offsetLeft / offsetWidth), puis un `transform` que la
   // transition CSS fait glisser. Première pose sans transition : pas de glissement depuis le bord gauche à l'ouverture.
@@ -189,78 +182,78 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
 
   const premiereBascule = options.findIndex((o) => o.regime);
   return (
-    <div
-      ref={tete}
-      className={`liste-tete${collante ? ' liste-tete--collante' : ''}${bandeau ? ' liste-tete--bandeau' : ''}`}
-    >
+    <>
+      {/* Seul le bandeau est dans le bloc collé : la bande des cuisines, après lui, part avec la page. */}
       {bandeau && (
-        <div className={`lt-bandeau${mode ? ' lt-bandeau--mode' : ''}`}>
-          {/* aria-label : le mot « Modifier » a quitté l'écran au profit d'un chevron (capture du fondateur, 2026-09-17), et
-              un chevron seul ne dit rien à un lecteur d'écran — le libellé porte l'action, le chevron est aria-hidden. */}
-          <button type="button" className="lt-adresse" onClick={onAdresse} aria-label={libelleChanger}>
-            <span className="lt-adresse-icone"><Icone nom="maison" taille={20} /></span>
-            <span className="lt-adresse-texte">
-              <span className="lt-adresse-intitule">{intituleAdresse}</span>
-              <span className="lt-adresse-valeur">{adresse}</span>
-            </span>
-            <span className="lt-chevron" aria-hidden="true" />
-          </button>
-          {mode && (
-            <div className={`lt-mode${mode.emporter ? ' lt-mode--emporter' : ''}`} role="group" aria-label={mode.libelleGroupe}>
-              <span className="lt-mode-pouce" aria-hidden="true" />
-              <button type="button" className={mode.emporter ? '' : 'on'} aria-pressed={!mode.emporter} onClick={() => mode.choisir(false)}>
-                <Icone nom="velo" taille={18} />{mode.libelleLivraison}
-              </button>
-              <button type="button" className={mode.emporter ? 'on' : ''} aria-pressed={mode.emporter} onClick={() => mode.choisir(true)}>
-                <Icone nom="sac" taille={18} />{mode.libelleEmporter}
-              </button>
-            </div>
-          )}
-          <div className="lt-route" aria-hidden="true">
-            <span className="lt-velo" ref={velo}>{VELO}</span>
-          </div>
-        </div>
-      )}
-      {/* Dans l'app, l'illustration en couleur de chaque cuisine au-dessus de son nom (fondateur, 2026-10-21, version A2 de
-          maquettes/recherche-couleurs : 72 px de haut au lieu de 56, la version à 100 px était trop épaisse). Bio, Vegan,
-          Halal et Sans gluten n'ont pas d'illustration : leur tracé prend la même place. Sur le site, l'illustration 2D à côté
-          du nom, à la place de l'icône (version A de maquettes/site-illustrations, même hauteur de bande). */}
-      <div className={`lt-puces${app ? ' lt-puces--illustrees' : ''}`} ref={bande}>
-        {/* Les pastilles sont des <button> avec aria-pressed : joignables au clavier (voir l'historique de RestaurantList). */}
-        <div className="lt-defile" ref={defile} role="group" aria-label={libelleBande}>
-          <div className="lt-piste" ref={piste}>
-            <span className="lt-lentille" ref={lentille} aria-hidden="true" />
-            {options.map((opt, i) => {
-              const on = estActive(opt);
-              return [
-                i === premiereBascule && i > 0 ? <span key="trait" className="lt-trait" aria-hidden="true" /> : null,
-                <button
-                  key={opt.value}
-                  type="button"
-                  className={`lt-puce${on ? ' on' : ''}`}
-                  data-cuisine={opt.regime ? undefined : opt.value}
-                  data-regime={opt.regime || undefined}
-                  aria-pressed={on}
-                  onClick={() => surPuce(opt)}
-                >
-                  {!app ? (opt.illustration ? <img className="lt-illu-plat" src={illustrationCuisine(opt.illustration, { plat: true })} alt="" width="22" height="22" decoding="async" draggable="false" /> : <Icone nom={opt.emoji} taille={18} />)
-                    : opt.illustration ? <img className="lt-illu" src={illustrationCuisine(opt.illustration)} alt="" width="32" height="32" decoding="async" draggable="false" />
-                      : <span className="lt-illu lt-illu--trace"><Icone nom={opt.emoji} taille={20} /></span>}
-                  <span>{opt.label}</span>
+        <div className="liste-tete liste-tete--collante liste-tete--bandeau">
+          <div className={`lt-bandeau${mode ? ' lt-bandeau--mode' : ''}`}>
+            {/* aria-label : le mot « Modifier » a quitté l'écran au profit d'un chevron (capture du fondateur, 2026-09-17), et
+                un chevron seul ne dit rien à un lecteur d'écran — le libellé porte l'action, le chevron est aria-hidden. */}
+            <button type="button" className="lt-adresse" onClick={onAdresse} aria-label={libelleChanger}>
+              <span className="lt-adresse-icone"><Icone nom="maison" taille={20} /></span>
+              <span className="lt-adresse-texte">
+                <span className="lt-adresse-intitule">{intituleAdresse}</span>
+                <span className="lt-adresse-valeur">{adresse}</span>
+              </span>
+              <span className="lt-chevron" aria-hidden="true" />
+            </button>
+            {mode && (
+              <div className={`lt-mode${mode.emporter ? ' lt-mode--emporter' : ''}`} role="group" aria-label={mode.libelleGroupe}>
+                <span className="lt-mode-pouce" aria-hidden="true" />
+                <button type="button" className={mode.emporter ? '' : 'on'} aria-pressed={!mode.emporter} onClick={() => mode.choisir(false)}>
+                  <Icone nom="velo" taille={18} />{mode.libelleLivraison}
                 </button>
-              ];
-            })}
+                <button type="button" className={mode.emporter ? 'on' : ''} aria-pressed={mode.emporter} onClick={() => mode.choisir(true)}>
+                  <Icone nom="sac" taille={18} />{mode.libelleEmporter}
+                </button>
+              </div>
+            )}
+            <div className="lt-route" aria-hidden="true">
+              <span className="lt-velo" ref={velo}>{VELO}</span>
+            </div>
           </div>
         </div>
-      </div>
-      {sous && sous.options.length > 1 && (
-        <div className="lt-sous" role="group" aria-label={sous.libelle}>
-          {[{ value: '', label: sous.libelleTout }, ...sous.options].map((o) => (
-            <button key={o.value || '__tout'} type="button" className={`lt-sous-puce${sous.valeur === o.value ? ' on' : ''}`} aria-pressed={sous.valeur === o.value}
-              onClick={() => sous.choisir(o.value)}>{o.label}</button>
-          ))}
-        </div>
       )}
-    </div>
+      {/* Le dessin de chaque cuisine en 52 px au-dessus de son nom, comme Uber Eats (2026-10-25) : en couleur 3D dans l'app,
+          en aplat sur le site (maquettes/site-illustrations). Bio, Vegan, Halal et Sans gluten (masqués pour le moment,
+          MENTIONS_ALIMENTAIRES) n'ont pas de dessin : leur tracé dans un rond prend la même place. */}
+      <div className="lt-cuisines">
+        <div className="lt-puces" ref={bande}>
+          {/* Les pastilles sont des <button> avec aria-pressed : joignables au clavier (voir l'historique de RestaurantList). */}
+          <div className="lt-defile" ref={defile} role="group" aria-label={libelleBande}>
+            <div className="lt-piste" ref={piste}>
+              <span className="lt-lentille" ref={lentille} aria-hidden="true" />
+              {options.map((opt, i) => {
+                const on = estActive(opt);
+                return [
+                  i === premiereBascule && i > 0 ? <span key="trait" className="lt-trait" aria-hidden="true" /> : null,
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`lt-puce${on ? ' on' : ''}`}
+                    data-cuisine={opt.regime ? undefined : opt.value}
+                    data-regime={opt.regime || undefined}
+                    aria-pressed={on}
+                    onClick={() => surPuce(opt)}
+                  >
+                    {opt.illustration ? <img className="lt-illu" src={illustrationCuisine(opt.illustration, { plat: !app })} alt="" width="52" height="52" decoding="async" draggable="false" />
+                      : <span className="lt-illu lt-illu--trace"><Icone nom={opt.emoji} taille={24} /></span>}
+                    <span>{opt.label}</span>
+                  </button>
+                ];
+              })}
+            </div>
+          </div>
+        </div>
+        {sous && sous.options.length > 1 && (
+          <div className="lt-sous" role="group" aria-label={sous.libelle}>
+            {[{ value: '', label: sous.libelleTout }, ...sous.options].map((o) => (
+              <button key={o.value || '__tout'} type="button" className={`lt-sous-puce${sous.valeur === o.value ? ' on' : ''}`} aria-pressed={sous.valeur === o.value}
+                onClick={() => sous.choisir(o.value)}>{o.label}</button>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

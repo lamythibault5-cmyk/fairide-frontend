@@ -256,10 +256,14 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
         </div>
       </div>
 
-      {/* --plat-marge : 24px dans la fenêtre du site sur ordinateur (site-fiche.css), alignée sur le nom et le bouton. */}
-      <div className="field plat-note" style={{ padding: '0 var(--plat-marge, 16px)' }}>
-        <label htmlFor="plat-note" className="small" style={{ fontWeight: 700 }}>{t('platSheet.noteLabel')}</label>
-        <input id="plat-note" maxLength={140} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('platSheet.notePlaceholder')} />
+      {/* --plat-marge : 24px dans la fenêtre du site sur ordinateur (site-fiche.css), alignée sur le nom et le bouton. La marge
+          est sur un bloc AUTOUR du .field (fondateur, 2026-10-25 : « un peu trop à gauche ») : l'étiquette flottante se place à
+          17 px du bord du .field ; avec la marge sur le .field lui-même, elle tombait sur le cadre du champ, 16 px à gauche du texte. */}
+      <div className="plat-note" style={{ padding: '0 var(--plat-marge, 16px)' }}>
+        <div className="field">
+          <label htmlFor="plat-note" className="small" style={{ fontWeight: 700 }}>{t('platSheet.noteLabel')}</label>
+          <input id="plat-note" maxLength={140} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('platSheet.notePlaceholder')} />
+        </div>
       </div>
 
       {/* L'action reste collée en bas : c'est elle qui rend le défilement unique possible. */}

@@ -5,7 +5,7 @@
 // public/icons/icon.svg — pas de fichier dessiné à part, pour que l'icône du téléphone et le favicon restent
 // identiques. Ensuite : npx @capacitor/assets generate (voir docs/application-mobile.md ou `npm run app:assets`).
 import sharp from 'sharp';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 
 const IRIS = '#3B2FB5';
 const LIME = '#C8F03C';
@@ -44,7 +44,9 @@ function velo(cote, largeur, fond = null, trait = 5) {
 // l'icône, au lieu de 58 % (icône pleine) et 42 % (icône adaptative Android) — il ressortait trop peu à côté des autres
 // applis. Le site garde un vélo un peu moins grand (public/icons/icon.svg, scripts/icones-site.mjs) : son icône est
 // souvent découpée en cercle. Trait 4,65 : à cette taille, le trait de 5 paraissait lourd.
-const LARGEUR_VELO = 0.88;
+// RÉDUIT À 78 % (fondateur, 2026-10-25, capture de trois icônes sur l'iPhone) : à 88 %, le vélo couvrait 82 % de la tuile
+// affichée et touchait presque les bords ; la taille voulue en couvre 72 %, entre l'app d'avant et le site (60 %).
+const LARGEUR_VELO = 0.78;
 const TRAIT_VELO = 4.65;
 
 /* --icones-android : redessine les icônes de lanceur Android (res/mipmap-*), après @capacitor/assets qui les a réduites en
@@ -72,9 +74,15 @@ if (process.argv.includes('--icones-android')) {
 await net(velo(1024 * SURECH, 1024 * SURECH * LARGEUR_VELO, IRIS, TRAIT_VELO), 1024).toFile('assets/icon.png');
 // Icône adaptative Android : ic_launcher.xml insère l'avant-plan à 16,7 % de chaque bord, donc cette image couvre la zone
 // visible (72 dp sur 108). Le téléphone la découpe à sa forme (cercle sur Pixel, « squircle » chez Samsung, carré arrondi
-// ailleurs) ; seul le cercle de 66 dp au centre est garanti. Le vélo à 88 % y tient : le point le plus éloigné du centre
+// ailleurs) ; seul le cercle de 66 dp au centre est garanti. Le vélo à 88 % y tenait (à 78 % depuis le 2026-10-25, encore plus) : le point le plus éloigné du centre
 // (le bas de la roue avant) est à 83 % du rayon, la limite à 92 %. Vérifié sur les trois formes le 2026-10-18.
 await net(velo(1024 * SURECH, 1024 * SURECH * LARGEUR_VELO, null, TRAIT_VELO), 1024).toFile('assets/icon-foreground.png');
+/* LE CALQUE DU VÉLO POUR ICON COMPOSER (iPhone, iOS 26 ; fondateur, 2026-10-25 : « le lime de l'icône du site est plus vif »).
+ * iOS 26 pose tout seul du « Liquid Glass » sur une icône faite d'une seule image (AppIcon.appiconset) : reflets et
+ * transparence sur le vélo, qui passe de #C8F03C à environ #B4D44F, plus gris. L'icône du site ajoutée à l'écran d'accueil,
+ * elle, n'est pas touchée. Seul un fichier AppIcon.icon (Icon Composer, sur le Mac) dit à iOS de laisser le vélo mat : ce
+ * calque, posé sur un fond iris uni, avec le verre éteint. Marche à suivre : docs/agents/appli.md. */
+writeFileSync('assets/icon-velo.svg', velo(1024, 1024 * LARGEUR_VELO, null, TRAIT_VELO));
 await sharp({ create: { width: 1024, height: 1024, channels: 4, background: IRIS } }).png().toFile('assets/icon-background.png');
 // Écran de lancement : iris uni, vélo à 22 % de large (même rendu que le #splash de index.html, sans le mot).
 await sharp(velo(2732, 2732 * 0.22, IRIS)).png().toFile('assets/splash.png');
