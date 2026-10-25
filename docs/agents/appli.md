@@ -72,7 +72,7 @@ file: the WHOLE tab bar, cuisine and sections strips, cart bar, restaurant round
 chips, back buttons) grows the moment the finger lands (buttons 50 %, founder 2026-10-25 — 8 % in the mockup, then 12 % —; bars `BARRES` keep 3.5 %, a little more when short), a pressed button rises one z-index step so it covers its neighbour, leans 2–3 px toward it, a light
 (`<verre-lueur>`, injected once) follows the finger and the rim lights up; release = spring (damping .55, response .4 s). `scale` /
 `translate` inline, so a control's own `transform` is kept. Strips that scroll sideways wait 70 ms (a scroll that starts cancels).
-Cards and rows keep the .97 press-down (glass grows, content presses down). Back buttons are glass: ‹ rounds on iris bands
+Cards and rows keep the .97 press-down (glass grows, content presses down). Every `.flux-bouton`, every heart (`.favorite-heart`, no light on a bare heart) and the ‹ of sheet pages (`.page-feuille-fermer`: Mes favoris, Mes commandes…) are in `VERRE` too (2026-10-25); the ‹ of a Mon compte sub-screen (`.sous-ecran-tete .flux-bouton`) is clear glass. Back buttons are glass: ‹ rounds on iris bands
 (`.ec-rond`, `.gn-rond`, `.bv-rond`), « ← Retour » / « ← Mon compte » as 44 px clear-glass pills. The website is unchanged.
 **Screen transitions (2026-10-23, Owen's answers to `maquettes/transitions-appli/transitions-appli.html`, native app only, iPhone and Android)**, in [transitionPhoto.js](../../src/transitionPhoto.js) + [transitions-appli.css](../../src/transitions-appli.css):
 a forward navigation slides the new screen in from the right (350 ms, the old one moves −30 % and darkens), back is the reverse. It goes
