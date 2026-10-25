@@ -5507,21 +5507,15 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .recherche-valider:active { transform: scale(.92); }
 .fiche-recherche-resultat { margin: -4px 0 10px; font-size: 13px; font-weight: 500; color: var(--iris); }
 
-/* LA BARRE DU PANIER SE REPLIE UN PEU AVEC LES ONGLETS (fondateur, 2026-10-17, puis 2026-10-25 : « qu'elle imite la barre
-   d'onglets, qu'elle se replie un petit peu »). Sous 900 px seulement, là où la barre d'onglets se réduit (html.barre-compacte,
-   posée par DashboardSidebar, sur la fiche d'un commerce aussi) : la barre du panier descend des 14 px que perdent les
-   onglets, perd 8 px de haut et se resserre de 24 px de chaque côté, avec la même durée et le même ressort (.14 s,
-   --ressort-ui). Elle garde « Voir le panier » et le total : c'est le prochain geste (maquettes/une-action) ; jusqu'au
-   2026-10-25 elle se réduisait au sac et au total, sans mots. En remontant, tout revient. */
+/* LA BARRE DU PANIER DESCEND AVEC LES ONGLETS (fondateur, 2026-10-17). Sous 900 px seulement, là où la barre d'onglets se
+   réduit (html.barre-compacte, posée par DashboardSidebar) : la barre du panier descend des 14 px que perdent les onglets,
+   avec la même durée et le même ressort (.14 s, --ressort-ui). Elle ne se replie pas : même taille, « Voir le panier » et le
+   total, c'est le prochain geste (maquettes/une-action). Un repli léger a été essayé le 2026-10-25 (PR #247) et retiré le jour
+   même (fondateur : « c'est mieux quand elle reste comme avant »). */
 .panier-pilule-texte { display: inline-block; max-width: 360px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom;
   transition: opacity .12s, max-width .14s var(--ressort-ui); }
-.panier-pilule { transition: bottom .14s var(--ressort-ui), left .14s var(--ressort-ui), right .14s var(--ressort-ui), max-width .14s var(--ressort-ui), height .14s var(--ressort-ui), gap .14s var(--ressort-ui), padding .14s var(--ressort-ui), font-size .14s var(--ressort-ui); }
+.panier-pilule { transition: bottom .14s var(--ressort-ui), max-width .14s var(--ressort-ui), height .14s var(--ressort-ui), gap .14s var(--ressort-ui), padding .14s var(--ressort-ui); }
 @media (max-width: 900px) {
-  html.appli.barre-compacte .panier-pilule:not(.panier-pilule--bulle),
-  html.barre-compacte:not(.appli) .panier-pilule:not(.panier-pilule--bulle),
-  html.barre-compacte:not(.appli) body:has(.fiche-site) .panier-pilule:not(.panier-pilule--bulle) {
-    left: 40px; right: 40px; height: 50px; font-size: 15px;
-  }
   html.barre-compacte body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .panier-pilule {
     bottom: calc(var(--hauteur-onglets) - 2px + var(--bas-ecran));
   }
