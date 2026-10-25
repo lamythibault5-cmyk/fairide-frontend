@@ -56,7 +56,7 @@ import '../../site-fiche.css';
 
 /* DANS L'APP, LA FICHE MONTE EN FEUILLE SUR LA PHOTO (fondateur, 2026-10-16, « Proposition » de « Fiche d'un commerce »
  * dans maquettes/tous-les-ecrans/tous-les-ecrans.html). La photo de couverture prend le haut de l'écran, bord à bord ; la page monte dessus
- * en feuille blanche aux coins arrondis, le logo posé à cheval ; la croix, la recherche et le cœur flottent en RONDS IRIS
+ * en feuille blanche aux coins arrondis (sans logo depuis le 2026-10-25) ; la croix, la recherche et le cœur flottent en RONDS IRIS
  * par-dessus (blancs sur verre blanc dans la maquette, ils étaient illisibles sur une photo claire — retour du fondateur) ;
  * les sections passent dans une bande de verre où une lentille suit la section qu'on lit (CategoryQuickNav `verre`).
  * Même contenu, mêmes fonctions, même ordre que sur le site (styles dans ecran-fiche.css).
@@ -133,13 +133,13 @@ export default function RestaurantMenu({ id }) {
      diffère (cacheDonnees.js). Le jeton fait partie de la clé : une fiche lue connecté n'est pas resservie à un visiteur. */
   const [restaurant, setRestaurant] = useState(() => lireCache(`/restaurants/${id}`, token) || null);
   /* LE SITE SUR UN TÉLÉPHONE MONTRE LA FICHE DE L'APP (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 6) :
-     mêmes blocs dans le même ordre (le sceau, la catégorie, le ticket distance / frais, « À plusieurs », l'aperçu de la carte en
+     mêmes blocs dans le même ordre (la catégorie, le ticket distance / frais, « À plusieurs », l'aperçu de la carte en
      photos, la carte « bistrot »). Seul le verre reste à l'app (règle 2 de l'identité) : les styles du verre sont sous
      html.appli. Sur un ordinateur, la fiche du site garde ses deux colonnes. */
   const siteLarge = useSiteLarge(900);
   const vueAppli = APPLI || !siteLarge;
   /* ENTRÉE PAR LA PHOTO (transitionPhoto.js) : la photo de la carte vient de grandir jusqu'en haut de l'écran, c'est déjà
-     l'entrée de la fiche. La feuille qui remonte et le sceau qui saute (ecran-fiche.css) en faisaient une seconde, 0,45 s
+     l'entrée de la fiche. La feuille qui remonte (ecran-fiche.css) en faisait une seconde, 0,45 s
      plus tard : deux entrées de suite, la fiche paraissait lente. Ouverte ainsi, la fiche est posée sans animation. */
   const [parPhoto] = useState(() => entreeParPhoto(id));
   // Commande groupée quittée depuis le bandeau : le bouton « Commande groupée » revient tout de suite.
@@ -688,7 +688,6 @@ export default function RestaurantMenu({ id }) {
         : <img {...imgProps(restaurant.coverImageUrl, 1200, '100vw', LARGEURS_TELEPHONE)} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" onError={cacherImageCassee} />)}
     </>
   );
-  const logo = restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" onError={cacherImageCassee} />;
 
   // Les frais, selon le mode. Le panneau gris de l'app est inchangé ; sur le site, les mêmes faits en colonnes « valeur /
   // libellé » à droite de la bascule (maquettes/site-ordinateur/site-ordinateur.html). Rien de plus n'y est dit (voir le panneau ci-dessous).
@@ -1106,22 +1105,20 @@ export default function RestaurantMenu({ id }) {
 
   /* LA FICHE DANS L'APP, VERSION B « SCEAU ET TICKET » (fondateur, 2026-10-17, maquettes/commerces-marque/commerces-marque.html ; il avait
      d'abord retenu C, puis précisé « B, mais je garde les pointillés de la carte »). La photo de couverture bord à bord ; la
-     feuille blanche monte dessus avec, à cheval sur son bord, le SCEAU du commerce — son logo, ou son initiale sur un carré
-     lime. Sous le nom : le ticket (note, distance, livraison), la bascule et « À plusieurs », l'annonce d'ouverture sur la
-     route du vélo, puis l'aperçu des plats en photo. La carte garde ses pointillés (MenuCategorySections `bistrot`).
-     Mêmes contenus et mêmes fonctions qu'avant ; styles dans ecran-fiche.css. */
+     feuille blanche monte dessus. Le SCEAU (le logo du commerce à cheval sur son bord) est retiré depuis le 2026-10-25
+     (fondateur, maquettes/sans-logo/sans-logo.html : les logos n'apportaient rien, 6 commerces sur 7 n'avaient que le
+     monogramme dessiné par le serveur) : le nom vient directement sous la photo. Sous le nom : le ticket (distance,
+     livraison), la bascule et « À plusieurs », l'annonce d'ouverture sur la route du vélo, puis l'aperçu des plats en photo.
+     La carte garde ses pointillés (MenuCategorySections `bistrot`). Styles dans ecran-fiche.css. */
   if (vueAppli) {
-    const sceau = restaurant.logoImageUrl
-      ? <span className="fiche-sceau fiche-sceau--logo" aria-hidden="true"><img {...imgProps(restaurant.logoImageUrl, 160)} alt="" decoding="async" onError={cacherImageCassee} /></span>
-      : <span className="fiche-sceau" aria-hidden="true">{String(restaurant.name || '').trim().charAt(0).toUpperCase()}</span>;
     return (
       <div className={`fiche-page fiche-appli${parPhoto ? ' fiche-appli--sans-entree' : ''}`} ref={pageRef}>
         {entete}
         {estNatif() && <FermerFicheParGlissement pageRef={pageRef} />}
-        <header className="fiche-entete fiche-entete--sceau">
+        <header className="fiche-entete fiche-entete--ticket">
           <div className="fiche-media">{couverture}</div>
-          {/* La feuille blanche qui monte sur la photo, le sceau à cheval sur son bord. */}
-          <div className="fiche-feuille">{sceau}{identite}{ticket}{pratique}</div>
+          {/* La feuille blanche qui monte sur la photo. */}
+          <div className="fiche-feuille">{identite}{ticket}{pratique}</div>
         </header>
         {apercuCarte}
         {sectionsEtResultat}
@@ -1135,7 +1132,7 @@ export default function RestaurantMenu({ id }) {
   }
 
   /* SUR LE SITE (fondateur, 2026-10-16, « Proposition » de « Page d'un commerce » dans maquettes/site-ordinateur/site-ordinateur.html) : la
-     photo d'un bord à l'autre de la page, la feuille blanche qui monte dessus avec le logo à cheval, puis deux colonnes — à
+     photo d'un bord à l'autre de la page, la feuille blanche qui monte dessus (sans logo depuis le 2026-10-25), puis deux colonnes — à
      gauche l'en-tête, la bande des sections (blanche, collante) et la carte sur deux colonnes de plats ; à droite le panier,
      collant (PanierColonne). Sur un téléphone, une seule colonne et la barre du panier en bas (FloatingCart). Mise en page
      dans site-fiche.css ; la page reprend la largeur de sa zone (--fiche-bord-*, mesurées plus haut). Le panier en colonne
@@ -1149,8 +1146,7 @@ export default function RestaurantMenu({ id }) {
       <div className="fiche-site-feuille">
         <div className="fiche-site-grille">
           <div className="fiche-site-gauche">
-            <header className={`fiche-entete${restaurant.logoImageUrl ? ' fiche-entete--logo' : ''}`}>
-              {logo}
+            <header className="fiche-entete">
               {infos}
             </header>
             {sectionsEtResultat}

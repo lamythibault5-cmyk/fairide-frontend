@@ -155,7 +155,9 @@ export function restaurantJsonLd(restaurant, { url }) {
     name: restaurant.name,
     url,
     description: restaurant.desc || undefined,
-    image: [restaurant.coverImageUrl, restaurant.logoImageUrl].filter(Boolean),
+    // Le logo n'est plus montré aux clients (2026-10-25) mais un vrai logo reste utile à Google. Un monogramme choisi
+    // autrefois parmi les suggestions du serveur est un SVG en data: : pas une image qu'un moteur de recherche peut lire.
+    image: [restaurant.coverImageUrl, restaurant.logoImageUrl].filter((u) => u && !String(u).startsWith('data:')),
     servesCuisine: restaurant.cuisine || undefined,
     currenciesAccepted: 'EUR',
     address: postalAddress(restaurant),

@@ -330,12 +330,14 @@
 .paiement-non-termine { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--iris); border-radius: var(--radius); }
 .suivi-carte.est-passee { padding-top: 16px; padding-bottom: 16px; }
 .suivi-carte.est-passee .suivi-resto { font-size: 16px; }
-/* Commande passée (22/10/2026) : le logo du commerce devant son nom, le nom mène à sa fiche (Orders.jsx LogoCommerce). */
+/* Commande passée : la photo du commerce en vignette carrée devant son nom (2026-10-25, version A de
+   maquettes/sans-logo/sans-logo.html : 48 px dans le tableau du site, 56 px en carte sur un téléphone, site-commande.css),
+   le nom mène à sa fiche (Orders.jsx PhotoCommerce). */
 .suivi-carte.est-passee .suivi-tete { align-items: center; }
 .suivi-carte.est-passee .suivi-tete-texte { flex: 1; }
-.logo-commerce { flex: none; width: 40px; height: 40px; border-radius: 12px; overflow: hidden; background: rgba(59, 47, 181, .08);
-  color: var(--iris); display: grid; place-items: center; font-weight: 800; font-size: 17px; }
-.logo-commerce img { width: 100%; height: 100%; object-fit: cover; display: block; background: #fff; }
+.photo-commerce { flex: none; width: 48px; height: 48px; border-radius: 12px; overflow: hidden; background: rgba(59, 47, 181, .08);
+  color: var(--iris); display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+.photo-commerce img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .lien-commerce { color: inherit; text-decoration: none; }
 .lien-commerce:hover, .lien-commerce:focus-visible { text-decoration: underline; }
 /* COMMANDE EN COURS : LE BANDEAU IRIS (2026-10-16, version 1C ; Orders.jsx, RouteSuivi dans orderStatus.jsx). Le haut de la
@@ -419,7 +421,6 @@
 /* Bandeau de la fiche : le visuel tient la hauteur quand il n'y a pas de couverture. */
 .fiche-media { min-height: 220px; }
 .fiche-media > .fiche-couverture { position: relative; z-index: 1; }
-.fiche-media > .fiche-logo { z-index: 2; }
 .visuel-vide--bandeau { border-radius: var(--radius); }
 .visuel-vide--bandeau .visuel-vide-initiale { font-size: 130px; }
 .visuel-vide--bandeau .visuel-vide-emoji { font-size: 40px; right: 20px; bottom: 16px; }
@@ -429,7 +430,6 @@
   /* La marge réelle de la page (--gouttiere) et non 20px fixes : connecté, elle est de 16px, et la photo dépassait. */
   .fiche-media { min-height: 170px; margin-left: calc(-1 * var(--gouttiere, 20px)); margin-right: calc(-1 * var(--gouttiere, 20px)); }
   .fiche-media > .fiche-couverture { margin: 0; width: 100%; }
-  .fiche-media > .fiche-logo { left: var(--gouttiere, 20px); }
   .visuel-vide--bandeau { border-radius: 0; }
   .visuel-vide--bandeau .visuel-vide-initiale { font-size: 96px; }
 }
@@ -539,13 +539,11 @@
    FICHE D'UN COMMERCE — plus d'allure (fondateur, 2026-10-05 : « encore plus attractive »).
    Rien ne change dans ce qui est dit ni dans l'ordre : ce sont les mêmes éléments, mieux habillés.
    ============================================================================================ */
-/* Bandeau : plus haut, les coins du bas arrondis ; le logo cerclé de lime, la couleur de la marque. */
-.fiche-media > .fiche-logo { outline: 2.5px solid var(--lime); outline-offset: 0; }
+/* Bandeau : plus haut, les coins du bas arrondis. */
 @media (max-width: 640px) {
   .fiche-media { min-height: 204px; margin-bottom: 30px; }
   .fiche-media > .fiche-couverture { height: 204px; border-radius: 0 0 24px 24px; }
   .visuel-vide--bandeau { border-radius: 0 0 24px 24px; }
-  .fiche-media > .fiche-logo { width: 72px; height: 72px; bottom: -24px; }
 }
 .fiche-nom { letter-spacing: -0.02em; }
 /* La ligne de méta devient une rangée de pastilles : la commune en gris (dans l'app, la cuisine en tête, en iris),

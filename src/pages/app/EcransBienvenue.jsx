@@ -7,6 +7,7 @@ import { estNatif } from '../../natif';
 import { restaurantTypeLabel } from '../../menuCategories';
 import AvecMarque from '../../components/AvecMarque';
 import { euros } from '../../prixPlat';
+import { imgProps } from '../../images';
 
 /* Les écrans de l'accueil de l'application — l'enchaînement, la mémoire et la recherche des commerces vivent dans
  * Bienvenue.jsx. Ces composants ne font qu'afficher et remonter des gestes.
@@ -362,7 +363,8 @@ export function EcranCompte({ role, resultats, listeEchec = false, avecPosition,
           <div className="bv-carte bv-trouves">
             {resultats.slice(0, 3).map(({ r, km: d }) => (
               <div key={r.id} className="bv-commerce">
-                {r.logoImageUrl ? <img src={r.logoImageUrl} alt="" loading="lazy" /> : <Tuile nom="restaurants" />}
+                {/* La photo du commerce, plus son logo (fondateur, 2026-10-25, maquettes/sans-logo/sans-logo.html). */}
+                {r.coverImageUrl ? <img {...imgProps(r.coverImageUrl, 72)} alt="" loading="lazy" decoding="async" /> : <Tuile nom="restaurants" />}
                 <div><b>{r.name}</b><span>{restaurantTypeLabel(r.cuisine, t)}{d !== null ? ` · ${km(d, locale)}` : r.commune ? ` · ${r.commune}` : ''}</span></div>
               </div>
             ))}

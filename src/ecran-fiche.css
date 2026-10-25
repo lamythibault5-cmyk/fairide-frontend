@@ -82,13 +82,6 @@ html.fiche-glisse body, html.fiche-glisse .dashboard-main { background: var(--ir
 .fiche-appli .fiche-media > .visuel-vide--bandeau { border-radius: 0; }
 /* L'initiale du visuel de marque au milieu de la partie visible (la feuille couvre le bas, la barre d'état le haut). */
 .fiche-appli .fiche-media > .visuel-vide--bandeau .visuel-vide-initiale { top: calc(50% + var(--fiche-statut) / 2 - 13px); }
-/* Le logo, posé à cheval sur le bord de la feuille. */
-.fiche-appli .fiche-media > .fiche-logo {
-  z-index: 3; left: calc(var(--fiche-g) + 2px); bottom: -10px; width: 68px; height: 68px;
-  border-radius: 22px; border: 4px solid #fff; outline: none; box-shadow: none;
-  animation: fiche-logo-saute .45s var(--ressort-ui) .15s backwards;
-}
-@keyframes fiche-logo-saute { from { transform: scale(.3); } to { transform: none; } }
 
 /* ---------- La feuille ---------- */
 .fiche-appli .fiche-feuille {
@@ -97,12 +90,10 @@ html.fiche-glisse body, html.fiche-glisse .dashboard-main { background: var(--ir
   background: #fff; border-radius: 26px 26px 0 0;
   animation: fiche-feuille-monte .45s var(--ressort-ui) backwards;
 }
-.fiche-appli .fiche-entete--logo .fiche-feuille { padding-top: 48px; }
 @keyframes fiche-feuille-monte { from { transform: translateY(36px); } to { transform: none; } }
-/* Ouverte par la photo qui grandit depuis sa carte (transitionPhoto.js), la fiche est déjà entrée : ni la feuille ni le
-   sceau ne rejouent leur entrée 0,45 s plus tard (RestaurantMenu.jsx, `parPhoto` ; retour du test Android, 2026-10-20). */
-.fiche-appli.fiche-appli--sans-entree .fiche-feuille, .fiche-appli.fiche-appli--sans-entree .fiche-sceau,
-.fiche-appli.fiche-appli--sans-entree .fiche-media > .fiche-logo { animation: none; }
+/* Ouverte par la photo qui grandit depuis sa carte (transitionPhoto.js), la fiche est déjà entrée : la feuille ne rejoue
+   pas son entrée 0,45 s plus tard (RestaurantMenu.jsx, `parPhoto` ; retour du test Android, 2026-10-20). */
+.fiche-appli.fiche-appli--sans-entree .fiche-feuille { animation: none; }
 .fiche-appli .fiche-nom { font-size: 27px; line-height: 1.15; margin: 0 0 8px; }
 .fiche-appli .fiche-meta { margin: 0 0 10px; }
 .fiche-appli .fiche-statut { margin-bottom: 10px; }
@@ -210,7 +201,7 @@ html.appli body:has(.fiche-appli) .plat-fermer:active { transform: scale(.9); }
 body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
 
 @media (prefers-reduced-motion: reduce) {
-  .fiche-appli .fiche-feuille, .fiche-appli .fiche-media > .fiche-logo { animation: none; }
+  .fiche-appli .fiche-feuille { animation: none; }
   .fiche-appli .category-quicknav--verre .quicknav-lentille, .fiche-appli .fiche-modes-pouce { transition: none; }
 }
 
@@ -218,24 +209,15 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
    VERSION B, « SCEAU ET TICKET » (fondateur, 2026-10-17, maquettes/commerces-marque/commerces-marque.html), avec la carte en pointillés de la
    version C (« je garde les pointillés »). Dans l'app seulement.
    - La photo de couverture bord à bord (règles « La photo, bord à bord » plus haut) ; la feuille blanche monte dessus.
-   - LE SCEAU, à cheval sur le bord de la feuille : le logo du commerce, ou son initiale sur un carré lime (aplat lime,
-     texte encre : règle 1), filet blanc de 4 px. Pas de Bricolage : la police du mot « fairide » ne passe pas aux titres.
+   - Plus de sceau (fondateur, 2026-10-25, maquettes/sans-logo/sans-logo.html) : le logo à cheval sur le bord de la feuille
+     est retiré, sur le site aussi ; le nom vient directement sous la photo.
    - LE TICKET sous le nom : note, distance, prix de la livraison, en cases séparées par des pointillés, sur un aplat iris
      très clair. La bascule Livraison / À emporter et « À plusieurs » sur une rangée, sans filets.
    - L'annonce d'ouverture en bloc iris où roule le vélo ; l'aperçu des plats en photo, en rangée qui défile.
    La carte (titres à gauche avec un court trait en pointillés, plats « nom … prix » sans pointillés depuis le 2026-10-24) est plus bas.
    ===================================================================================================================== */
-.fiche-appli .fiche-entete--sceau .fiche-feuille { padding-top: 46px; }
-.fiche-appli .fiche-sceau {
-  position: absolute; z-index: 3; left: calc(var(--fiche-g) + 2px); top: -34px; width: 68px; height: 68px; overflow: hidden;
-  display: grid; place-items: center; border-radius: 20px; border: 4px solid #fff; background: var(--lime); color: var(--ink);
-  font-family: var(--font-titre); font-size: 32px; font-weight: 700; line-height: 1;
-  animation: fiche-logo-saute .45s var(--ressort-ui) .15s backwards;
-}
-.fiche-appli .fiche-sceau--logo { background: #fff; }
-.fiche-appli .fiche-sceau img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* Sur la photo, la ligne de méta n'a plus la note (elle est dans le ticket) : la cuisine, la commune, « Infos ». */
-.fiche-appli .fiche-entete--sceau .fiche-meta { margin: 0 0 10px; }
+.fiche-appli .fiche-entete--ticket .fiche-meta { margin: 0 0 10px; }
 
 .fiche-appli .fiche-ticket {
   display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); margin: 2px 0 6px;
@@ -249,7 +231,7 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .fiche-ticket-note { margin: 0 0 4px; font-size: 12.5px; color: var(--ink-soft); text-align: center; }
 
 /* La bascule et « À plusieurs » sur une rangée, sans les deux filets de la version d'avant. */
-.fiche-appli .fiche-entete--sceau .fiche-faits { border: 0; padding: 0; margin: 14px 0 12px; flex-wrap: wrap; }
+.fiche-appli .fiche-entete--ticket .fiche-faits { border: 0; padding: 0; margin: 14px 0 12px; flex-wrap: wrap; }
 .fiche-appli .fiche-groupe-lien {
   display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 4px; border: 0; background: none;
   color: var(--iris); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
@@ -353,5 +335,5 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .plat:not(.plat-bistrot):not(.plat-tuile) .plat-nom, .fiche-appli .plat:not(.plat-bistrot):not(.plat-tuile) .plat-prix, .fiche-appli .plat:not(.plat-bistrot):not(.plat-tuile) .plat-desc { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .fiche-appli .fiche-sceau, .fiche-appli .fiche-info-velo { animation: none; }
+  .fiche-appli .fiche-info-velo { animation: none; }
 }

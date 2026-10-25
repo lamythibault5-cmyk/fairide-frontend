@@ -104,24 +104,14 @@
   .fiche-site-feuille { padding: 0 48px 56px; }
 }
 
-/* ---------- L'en-tête : logo à cheval, nom, pastilles ---------- */
+/* ---------- L'en-tête : nom, pastilles (plus de logo à cheval depuis le 2026-10-25, maquettes/sans-logo) ---------- */
 .fiche-site .fiche-entete { position: relative; margin: 0; padding-top: 22px; }
-.fiche-site .fiche-entete--logo { padding-top: 46px; }
-.fiche-site .fiche-entete > .fiche-logo {
-  position: absolute; top: -34px; left: 0; bottom: auto; z-index: 3;
-  width: 68px; height: 68px; border-radius: 20px; border: 4px solid #fff; outline: none; box-shadow: none;
-  background: #fff; object-fit: cover;
-  animation: fiche-site-saute .45s var(--ressort-ui) .15s backwards;
-}
-@keyframes fiche-site-saute { from { transform: scale(.3); } to { transform: none; } }
 .fiche-site .fiche-nom { font-size: 27px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.01em; }
 .fiche-site .fiche-meta { margin: 0 0 10px; }
 .fiche-site .fiche-statut { margin: 0 0 10px; }
 .fiche-site .fiche-desc { margin: 2px 0 12px; font-size: 15px; }
 @container fiche (min-width: 700px) {
   .fiche-site .fiche-entete { padding-top: 26px; }
-  .fiche-site .fiche-entete--logo { padding-top: 54px; }
-  .fiche-site .fiche-entete > .fiche-logo { top: -40px; width: 80px; height: 80px; border-radius: 24px; }
   .fiche-site .fiche-nom { font-size: 40px; margin-bottom: 10px; }
   /* Les pastilles et l'état d'ouverture sur une même ligne quand elles y tiennent. */
   .fiche-site .fiche-meta, .fiche-site .fiche-statut { display: inline-flex; vertical-align: middle; margin: 0 8px 12px 0; }
@@ -329,7 +319,7 @@ html:not(.appli) .plat-fermer:focus-visible { outline: none; box-shadow: 0 0 0 2
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fiche-site-feuille, .fiche-site .fiche-entete > .fiche-logo, .fiche-panier-ligne, .fiche-panier-pas b,
+  .fiche-site-feuille, .fiche-panier-ligne, .fiche-panier-pas b,
   .fiche-voir-panier--rebond0, .fiche-voir-panier--rebond1 { animation: none; }
   .fiche-site .quicknav-lentille, .fiche-site .fiche-modes-pouce { transition: none; }
   html:not(.appli) body:has(.fiche-site) .panier-pilule { animation: none; }
