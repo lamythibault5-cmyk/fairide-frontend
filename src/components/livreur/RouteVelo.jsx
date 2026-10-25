@@ -1,8 +1,8 @@
 /* LE VÉLO SUR SA ROUTE, côté livreur (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, partie Livreur).
  *
  * Le vélo « 5a » de la marque (BrandMark.jsx, sans tuile), à la couleur du texte : lime sur le bandeau iris. Il est posé
- * sur une route en pointillés, à `position` % de sa longueur. `roule` : la route défile sous ses roues et il pédale (le
- * livreur est disponible, ou en route vers le client). `saut` : un petit bond à l'arrivée (course livrée), après le
+ * sur une route en pointillés, à `position` % de sa longueur. `roule` : la route défile sous ses roues, lui reste à plat
+ * (le livreur est disponible, ou en route vers le client ; fondateur, 2026-10-25, maquettes/velo-sans-cahot). `saut` : un petit bond à l'arrivée (course livrée), après le
  * trajet. Le déplacement est une transition CSS sur `left` : tant que l'élément reste monté (même `key`), changer
  * `position` le fait rouler de l'ancien point au nouveau ; `depart` : à l'arrivée sur l'écran, il part de là (en route
  * vers le client : il quitte le commerce). Styles : ecran-livreur.css. Décoratif : aria-hidden. */

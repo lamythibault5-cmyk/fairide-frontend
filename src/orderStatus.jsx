@@ -210,15 +210,9 @@ export function titreSuivi(order, t) {
 
 export function RouteSuivi({ status, orderType }) {
   const { t } = useLanguage();
-  const [roule, setRoule] = useState(false);
   const livraison = orderType === 'delivery';
   const steps = livraison ? STEPS : PICKUP_STEPS;
   const idx = steps.indexOf(status);
-  useEffect(() => {
-    setRoule(true);
-    const f = setTimeout(() => setRoule(false), 900);
-    return () => clearTimeout(f);
-  }, [idx]);
   if (idx < 0) return null;
   const dernier = livraison ? t('orderStatus.progress.delivered') : t('orderStatus.progress.pickedUp');
   const labels = livraison
@@ -235,7 +229,7 @@ export function RouteSuivi({ status, orderType }) {
             {k < idx && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>}
           </span>
         ))}
-        <span className={`rs-velo${roule ? ' roule' : ''}`} style={{ left: `${(idx + 0.5) * pas}%` }}>
+        <span className="rs-velo" style={{ left: `${(idx + 0.5) * pas}%` }}>
           <svg viewBox="-3 5 82 42" width="42" height="22">
             <g fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"><circle cx="15" cy="29" r="12.5" /><circle cx="61" cy="29" r="12.5" /></g>
             <g fill="currentColor"><rect x="16" y="8" width="44" height="5" rx="2.5" /><g transform="rotate(42 27 22.5)"><rect x="13" y="20" width="28" height="5" rx="2.5" /></g></g>

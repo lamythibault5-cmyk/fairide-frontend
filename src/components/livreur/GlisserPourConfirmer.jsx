@@ -18,7 +18,8 @@ import '../../ecran-livreur.css';
  * qu'une autre façon d'appuyer.
  *
  * L'HABIT (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, « Glisse le vélo ») : la piste est un bloc lime au texte
- * encre qui luit, et le pouce est le vélo de la marque, lime sur un rond iris, qui pédale sur place en attendant ; au
+ * encre qui luit, et le pouce est le vélo de la marque, lime sur un rond iris, immobile (il pédalait sur place : plus
+ * de cahot, fondateur, 2026-10-25, maquettes/velo-sans-cahot) ; au
  * bout, une coche qui saute. Le geste et les libellés ne changent pas (ecran-livreur.css, .glisser-velo). */
 export default function GlisserPourConfirmer({ libelle, onConfirmer, disabled = false, children }) {
   const natif = experienceApp();
