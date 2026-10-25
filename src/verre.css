@@ -12,15 +12,18 @@
  * Deux recettes, reprises de la barre d'onglets et de « Voir le panier » :
  *   - VERRE CLAIR : blanc laiteux (82 %, sinon gris sur une photo sombre), teinte et filet iris pour se voir sur du blanc ;
  *   - VERRE IRIS : iris à 72 %, flou derrière (messages) ;
- *   - IRIS VIF : les « + », le « − 1 + » et le pouce Livraison / À emporter — iris plein et lumineux, reflet en haut. */
+ *   - IRIS VIF SANS REFLET (2026-10-25) : les « + », le « − 1 + » et le pouce Livraison / À emporter — iris plein, filet blanc,
+ *     bords irisés, ombre douce ; plus de reflet ni de relief. */
 
 html.appli {
-  /* IRIS VIF : un dégradé iris un peu plus clair en haut, le reflet blanc qui s'efface à mi-hauteur, le filet et les bords
-     irisés en ombres intérieures — sans flou derrière (plein, il ne se verrait pas). */
-  --iris-vif-fond: linear-gradient(180deg, rgba(255, 255, 255, .32) 0%, rgba(255, 255, 255, .08) 44%, rgba(255, 255, 255, 0) 56%),
-    linear-gradient(180deg, #4D40D9 0%, #3B2FB5 72%);
-  --iris-vif-ombre: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 0 0 1px rgba(255, 255, 255, .3), inset 0 -2px 3px rgba(20, 10, 90, .35),
-    inset 4px 0 8px -3px rgba(255, 90, 190, .5), inset -4px 0 8px -3px rgba(60, 200, 255, .55), 0 4px 12px rgba(59, 47, 181, .38);
+  /* IRIS VIF SANS REFLET (fondateur, 2026-10-25 : « les + et Livraison / À emporter ont l'air faux, comme s'ils essayaient d'être
+     en 3D » ; puis « le verre ternit l'iris, c'est pour ça qu'on a fait l'iris vif, mais je n'aime pas le reflet »). L'iris reste
+     PLEIN (un verre translucide le délavait sur du blanc, 23/10), avec ce qui dit le verre : le filet blanc, les bords irisés et
+     l'ombre douce. Retiré, ce qui faisait le relief en 3D : le reflet blanc du haut, le trait blanc du bord haut et l'ombre
+     intérieure sombre du bas. Ils grossissent toujours à l'appui (verreAppui.js), sans lumière sous le doigt (plus bas). */
+  --iris-vif-fond: var(--iris);
+  --iris-vif-ombre: inset 0 0 0 1px rgba(255, 255, 255, .3), inset 4px 0 8px -3px rgba(255, 90, 190, .5), inset -4px 0 8px -3px rgba(60, 200, 255, .55),
+    0 4px 12px rgba(59, 47, 181, .38);
   --verre-clair-fond: linear-gradient(rgba(59, 47, 181, .10), rgba(59, 47, 181, .10)), rgba(255, 255, 255, .82);
   --verre-clair-flou: blur(8px) saturate(180%) brightness(1.3);
   --verre-clair-ombre: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .22),
@@ -55,7 +58,7 @@ html.appli body .fiche-appli .favorite-heart--rond:hover { background: var(--ver
 html.appli body .fiche-appli .favorite-heart--rond svg path { stroke: var(--iris); }
 html.appli body .fiche-appli .favorite-heart--rond.is-active svg path { fill: var(--iris); stroke: var(--iris); }
 
-/* ---------- 3. Les « + » (plats, aperçu de la carte, suggestions du panier) : iris vif ---------- */
+/* ---------- 3. Les « + » (plats, aperçu de la carte, suggestions du panier) : iris vif sans reflet ---------- */
 /* Pas de bordure (elle décalerait les boutons posés à 2 px du bord) : le filet est une ombre intérieure. Le « − 1 + » du panier
    n'en est plus depuis le 2026-10-25 (maquettes/une-action) : blanc à filet iris, ecran-commande.css. */
 html.appli body .plat-pas,
@@ -138,7 +141,9 @@ html.appli verre-lueur {
 }
 html.appli .verre-lumiere > verre-lueur { opacity: 1; transition-duration: .12s; }
 /* Sur l'iris (les « + », le « − 1 + », les retours des bandeaux), une lumière blanche plus douce. */
-html.appli :is(.plat-pas, .ec-pas, .fiche-apercu-plus, body:has(.fiche-appli) .plat-fermer, .page-feuille-fermer, .ec-rond, .gn-rond, .bv-bandeau .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond, .ec-b-retour, .ecl-b-retour) > verre-lueur {
+/* Les « + », le « − 1 + » : sans reflet, donc sans lumière sous le doigt non plus (elle les faisait briller). */
+html.appli :is(.plat-pas, .ec-pas, .fiche-apercu-plus) > verre-lueur { display: none; }
+html.appli :is(body:has(.fiche-appli) .plat-fermer, .page-feuille-fermer, .ec-rond, .gn-rond, .bv-bandeau .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond, .ec-b-retour, .ecl-b-retour) > verre-lueur {
   background: radial-gradient(circle var(--verre-r, 60px) at var(--verre-x, 50%) var(--verre-y, 50%), rgba(255, 255, 255, .5), rgba(255, 255, 255, .16) 45%, rgba(255, 255, 255, 0) 100%);
 }
 
