@@ -277,13 +277,27 @@ function ALaUne({ list, inscritLe, t }) {
   );
 }
 
+/* LES OUVERTS D'ABORD, PARTOUT (fondateur, 2026-10-25 : « les commerces fermés sont en noir et blanc et les seuls ouverts
+ * sont tout en bas »). Dans chaque rangée, dans « Déjà sur Fairide » et dans la liste filtrée : les commerces ouverts
+ * maintenant passent devant les fermés, chaque groupe gardant l'ordre propre à la rangée (distance, commune, rang de
+ * l'équipe…). Même état que la carte grisée : pause et « fermé pour aujourd'hui » compris. Seule exception : une carte
+ * « Sponsorisé » garde la position payée, ouverte ou non ; les autres se rangent autour. /classement le dit. */
+const estOuvert = (r) => statutOuverture(r, new Date()).isOpen;
+function ouvertsDabord(liste) {
+  const libres = liste.filter((r) => !r.sponsorise);
+  const ranges = [...libres.filter(estOuvert), ...libres.filter((r) => !estOuvert(r))];
+  return liste.map((r) => (r.sponsorise ? r : ranges.shift()));
+}
+
 // `cle` : la clé de la rangée (mises en avant / sponsors) — le logo partenaire de la rangée se glisse à côté du titre
 // (EmplacementSponsor : rien pour le public tant que l'admin n'a pas activé la rangée).
 // `grille` (site, à partir de 900 px) : une grille qui suit la largeur, au lieu d'une rangée qui défile de côté — à la
 // souris, une rangée qui défile se manie mal, et un écran large montre trois ou quatre commerces de front sans rien cacher
 // (maquettes/site-ordinateur/site-ordinateur.html, section « Liste »). Mêmes commerces, même ordre ; seule la disposition change.
-function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, autoplay = false, cle, grille = false }) {
-  if (list.length === 0) return null;
+// Chaque rangée passe ici : les ouverts d'abord (ouvertsDabord) s'appliquent à toutes.
+function Section({ title, icon, list: rangee, favoriteIds, onToggleFavorite, t, loop, autoplay = false, cle, grille = false }) {
+  if (rangee.length === 0) return null;
+  const list = ouvertsDabord(rangee);
   const titre = <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}{cle && <EmplacementSponsor cle={cle} />}</h2>;
   if (grille) {
     return (
@@ -579,7 +593,9 @@ export default function RestaurantList() {
     .sort((a, b) => {
       if (!homeCommune || commune || tri !== 'recommande') return 0;
       return communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune);
-    });
+    })
+    // Puis les ouverts d'abord, quel que soit le tri choisi (voir ouvertsDabord).
+    .sort((a, b) => estOuvert(b) - estOuvert(a));
 
   // Page d'accueil "par sections" (façon Uber Eats/Deliveroo) affichée uniquement sans filtre actif —
   // dès qu'on cherche/filtre, on retombe sur la liste plate ci-dessus, plus adaptée à une recherche.
@@ -625,13 +641,12 @@ export default function RestaurantList() {
       .filter((r) => repondAuxEnvies(r, envies)).slice(0, PROCHES_MAX)
     : [];
   // À la une : voir ALaUne. Même ordre que « Autour de toi », mais SANS épinglage payant, avec photo, ouverts d'abord.
-  const ouvert = (r) => statutOuverture(r, new Date()).isOpen;
   const aLaUne = (parDistance.length ? parDistance : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous)
     // SA PROPRE PHOTO (audit du 19/10, discovery-05) : le serveur remplit toujours coverImageUrl, avec une photo d'illustration
     // quand le commerce n'en a pas ; `ownCover` dit si c'est la sienne. Une liste lue avant ce champ (undefined) garde l'ancien
     // comportement. Pas de commerce « Carte seule » (vitrine) en tête : on ne peut pas y commander (discovery-34).
     .filter((r) => r.coverImageUrl && r.ownCover !== false && !r.vitrine)
-    .map((r, i) => ({ r, i, o: ouvert(r) ? 0 : 1 }))
+    .map((r, i) => ({ r, i, o: estOuvert(r) ? 0 : 1 }))
     .sort((a, b) => a.o - b.o || a.i - b.i)
     .slice(0, UNE_MAX)
     .map(({ r }) => r);
@@ -887,7 +902,8 @@ export default function RestaurantList() {
             <div className="liste-section">
               <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><span><AvecMarque>{t('restaurantList.sectionRegistered')}</AvecMarque></span></h2>
               <div className={grand ? 'rest-grid sl-grille' : 'rest-grid rest-grid-scroll'}>
-                {inscrits.map((x) => {
+                {/* Les ouverts d'abord (ouvertsDabord), puis l'ordre du serveur ; une carte « bientôt » ne prend pas de commande : avec les fermés. */}
+                {ouvertsDabord(inscrits.map((x) => restaurants.find((r) => r.id === x.id) || { ...x, open: false })).map((x) => {
                   // Publié : la carte complète de la liste (horaires, offres, favori) ; sinon, une carte « bientôt ».
                   const complet = restaurants.find((r) => r.id === x.id);
                   return complet
