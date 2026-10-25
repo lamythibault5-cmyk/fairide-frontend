@@ -31,9 +31,9 @@
   background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .4) 0 8px, transparent 8px 16px); }
 .ec-route-velo { position: absolute; bottom: 6px; width: 36px; margin-left: -18px; line-height: 0; color: var(--lime);
   animation: ec-velo-arrive 1s cubic-bezier(.3, .7, .4, 1) .15s backwards; }
-.ec-route-velo svg { display: block; transform-origin: 50% 100%; animation: ec-pedale .5s ease-in-out .15s 2; }
+/* Il arrive à plat, sans pédaler (fondateur, 2026-10-25, maquettes/velo-sans-cahot : « à plat partout »). */
+.ec-route-velo svg { display: block; }
 @keyframes ec-velo-arrive { from { left: var(--ec-depart, 0%); } }
-@keyframes ec-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
 .ec-route-libs { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 4px; font-size: 12px; color: rgba(255, 255, 255, .6); }
 .ec-route-libs span:nth-child(2) { text-align: center; }
 .ec-route-libs span:nth-child(3) { text-align: right; }

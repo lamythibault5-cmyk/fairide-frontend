@@ -5171,7 +5171,8 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-route > i { position: absolute; left: 0; top: 16px; height: 4px; border-radius: 2px; background: currentColor; transition: width .7s cubic-bezier(.3, .7, .4, 1); }
 .bv-velo { position: absolute; top: 0; width: 34px; margin-left: -17px; transition: left .7s cubic-bezier(.3, .7, .4, 1); }
 .bv-velo svg { display: block; }
-.bv-velo.roule svg { animation: bv-bonds .7s ease-in-out; }
+/* Le vélo de la progression glisse à plat (fondateur, 2026-10-25, maquettes/velo-sans-cahot : « à plat partout ») ; les bonds
+   restent aux dessins des scènes (.bv-scene-bob, .ev-bob). */
 @keyframes bv-bonds { 0%, 100% { transform: none; } 20%, 60% { transform: translateY(-2px) rotate(-3deg); } 40%, 80% { transform: translateY(0) rotate(1deg); } }
 
 /* LE BANDEAU IRIS (fondateur, 2026-10-16 : version D de maquettes/onboarding-chaleur/onboarding-chaleur.html). L'écran est iris ; l'en-tête,
@@ -5204,7 +5205,7 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv:not(.bv-bandeau) .bv-feuille { display: contents; }
 .bv-salut { align-self: flex-start; display: inline-flex; font-size: 13px; font-weight: 600; background: var(--lime); color: var(--ink); padding: 5px 11px; border-radius: var(--radius-pill); margin: 2px 0 6px; animation: bv-saute .35s var(--ressort-ui) .15s backwards; }
 @keyframes bv-saute { from { transform: scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .bv-feuille, .bv-salut, .bv-velo.roule svg { animation: none; } .bv-velo, .bv-route > i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .bv-feuille, .bv-salut { animation: none; } .bv-velo, .bv-route > i { transition: none; } }
 .bv-passer { background: none; border: 0; padding: 6px 4px; color: var(--ink-soft); font-size: 14px; }
 
 .bv-langues { display: flex; gap: 2px; border: 1px solid var(--line); border-radius: 999px; padding: 2px; }

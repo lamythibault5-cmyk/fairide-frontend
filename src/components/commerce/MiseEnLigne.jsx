@@ -74,11 +74,9 @@ export function RouteMiseEnLigne({ etapes, libelles = false }) {
   const n = etapes.length;
   const actuel = Math.max(0, etapes.findIndex((e) => !e.fait));
   const [parti, setParti] = useState(false);
-  const [roule, setRoule] = useState(false);
   useEffect(() => {
-    let a = requestAnimationFrame(() => { a = requestAnimationFrame(() => { setParti(true); setRoule(true); }); });
-    const f = setTimeout(() => setRoule(false), 1300);
-    return () => { cancelAnimationFrame(a); clearTimeout(f); };
+    let a = requestAnimationFrame(() => { a = requestAnimationFrame(() => setParti(true)); });
+    return () => cancelAnimationFrame(a);
   }, []);
   const cible = parti ? posArret(actuel, n) : posArret(0, n);
   return (
@@ -90,7 +88,7 @@ export function RouteMiseEnLigne({ etapes, libelles = false }) {
           {e.fait && <CocheTrait />}
         </span>
       ))}
-      <span className={`ec-route-velo${roule ? ' roule' : ''}`} style={{ left: `${cible}%` }}><VeloMarque /></span>
+      <span className="ec-route-velo" style={{ left: `${cible}%` }}><VeloMarque /></span>
       {libelles && (
         <span className="sp-route-libs">
           {etapes.map((e, k) => (

@@ -76,11 +76,9 @@ export function RouteEtapes({ actuelle }) {
   // Départ : l'arrêt d'avant (le bord de la route pour le panier), puis l'étape de l'écran deux images plus tard — les
   // transitions de .rs-velo et .rs-fait font rouler le vélo. Sans mouvement (prefers-reduced-motion), il est déjà arrivé.
   const [place, setPlace] = useState(actuelle === 0 ? -0.5 : actuelle - 1);
-  const [roule, setRoule] = useState(false);
   useEffect(() => {
-    let id = requestAnimationFrame(() => { id = requestAnimationFrame(() => { setPlace(actuelle); setRoule(true); }); });
-    const fin = setTimeout(() => setRoule(false), 1300);
-    return () => { cancelAnimationFrame(id); clearTimeout(fin); };
+    let id = requestAnimationFrame(() => { id = requestAnimationFrame(() => setPlace(actuelle)); });
+    return () => cancelAnimationFrame(id);
   }, [actuelle]);
   const pas = 100 / etapes.length;
   return (
@@ -93,7 +91,7 @@ export function RouteEtapes({ actuelle }) {
             {k < actuelle && <Icone nom="valider" taille={12} />}
           </span>
         ))}
-        <span className={`rs-velo${roule ? ' roule' : ''}`} style={{ left: `${(place + 0.5) * pas}%` }}><VeloMarque largeur={42} /></span>
+        <span className="rs-velo" style={{ left: `${(place + 0.5) * pas}%` }}><VeloMarque largeur={42} /></span>
       </div>
       <ol className="rs-libs" style={{ gridTemplateColumns: `repeat(${etapes.length}, 1fr)` }}>
         {etapes.map((e, k) => <li key={e} className={k < actuelle ? 'fait' : k === actuelle ? 'actuel' : ''}>{e}</li>)}

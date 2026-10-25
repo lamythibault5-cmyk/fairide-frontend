@@ -67,7 +67,7 @@ export function BandeauSoir({ restaurant: r, orders }) {
         <div className="ec-soir" aria-label={t('serviceCommerce.routeService', { debut: hhmm(s.service.debut), fin: hhmm(s.service.fin) })} role="img">
           <div className="ec-soir-route">
             <span className="ec-soir-fait" style={{ width: `${p * 100}%` }} />
-            <span className={`ec-soir-velo${ouvert && p > 0 && p < 1 ? ' roule' : ''}`} style={{ left: `${p * 100}%` }}><VeloMarque largeur={34} /></span>
+            <span className="ec-soir-velo" style={{ left: `${p * 100}%` }}><VeloMarque largeur={34} /></span>
           </div>
           <div className="ec-soir-heures" aria-hidden="true">
             <span>{hhmm(s.service.debut)}</span>

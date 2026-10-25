@@ -60,8 +60,8 @@
 @keyframes ecl-voie { to { background-position: -16px 0; } }
 .ecl-velo { position: absolute; bottom: 7px; width: 42px; margin-left: -21px; line-height: 0; transition: left 1.4s cubic-bezier(.3, .7, .4, 1); }
 .ecl-velo svg { display: block; transform-origin: 50% 100%; }
-.ecl-route.roule .ecl-velo svg { animation: ecl-pedale .5s ease-in-out infinite; }
-@keyframes ecl-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
+/* Il roule à plat (fondateur, 2026-10-25, maquettes/velo-sans-cahot : « à plat partout ») : seule la route défile sous lui.
+   Le petit bond de la course livrée (`saut`) reste : c'est une fête, pas un cahot. */
 .ecl-route.saut .ecl-velo svg { animation: ecl-saut .6s var(--ecl-ressort) 1.3s; }
 @keyframes ecl-saut { 0%, 100% { transform: none; } 40% { transform: translateY(-10px) rotate(-6deg); } }
 .ecl-route.pause { opacity: .45; }
@@ -178,7 +178,6 @@
 .glisser-velo .glisser-confirmer-pouce { background: var(--iris); color: var(--lime); }
 .glisser-velo .glisser-confirmer-pouce svg { transform: none; }
 .glisser-velo.est-fait .glisser-confirmer-pouce { color: #fff; animation: ecl-saute .4s cubic-bezier(.3, 1.8, .5, 1); }
-.glisser-velo:not(.est-fait):not(.est-inactif) .glisser-confirmer-pouce svg { animation: ecl-pedale .5s ease-in-out infinite; }
 .glisser-velo:not(.est-fait) .glisser-confirmer-texte {
   background: linear-gradient(90deg, var(--ink) 40%, rgba(20, 18, 31, .45) 50%, var(--ink) 60%) 0 0 / 300% 100% no-repeat;
   -webkit-background-clip: text; background-clip: text; color: transparent; animation: ecl-reflet 2.4s linear infinite;

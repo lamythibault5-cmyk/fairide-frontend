@@ -85,9 +85,8 @@ function Route({ progression }) {
   return (
     <div className="bv-route" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progression * 100)}>
       <i style={{ width: pct }} />
-      {/* Les petits bonds ne jouent que pendant un vrai trajet. */}
       {/* Le vélo reste SUR la route : à 100 % il touchait le sélecteur de langue (audit design, 2026-10-19). */}
-      <span className={`bv-velo${p !== depart ? ' roule' : ''}`} style={{ left: `calc(17px + (100% - 34px) * ${p})` }}><Velo /></span>
+      <span className="bv-velo" style={{ left: `calc(17px + (100% - 34px) * ${p})` }}><Velo /></span>
     </div>
   );
 }
