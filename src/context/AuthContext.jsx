@@ -5,6 +5,7 @@ import { useToast } from './ToastContext';
 import { useLanguage } from './LanguageContext';
 import { languePreferee, SUPPORTED_LANGUAGES } from '../i18n/routing';
 import { effacerReprise } from '../bienvenue';
+import { codeApple, oublierCodeApple } from '../natif';
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = 'fairide_session';
@@ -287,9 +288,12 @@ export function AuthProvider({ children }) {
   }
 
   // « Continuer avec Apple » (application iPhone seulement, voir natif.js) : même réponse que Google — session
-  // ouverte, ou INCOMPLETE_PROFILE pour enchaîner sur le formulaire d'inscription.
+  // ouverte, ou INCOMPLETE_PROFILE pour enchaîner sur le formulaire d'inscription. Le code d'autorisation de cette
+  // connexion part avec (révocation à la suppression du compte, natif.js › codeApple) ; le serveur ne l'échange qu'en cas
+  // de réussite, donc on ne l'oublie qu'après une réponse réussie : un INCOMPLETE_PROFILE le renverra avec le formulaire.
   async function loginWithApple(idToken, role, extra) {
-    const data = await api('/auth/apple', { method: 'POST', body: { idToken, role, ...extra } });
+    const data = await api('/auth/apple', { method: 'POST', body: { idToken, authorizationCode: codeApple(idToken), role, ...extra } });
+    oublierCodeApple(idToken);
     if (!data.needsVerification) setSession(data);
     return data;
   }

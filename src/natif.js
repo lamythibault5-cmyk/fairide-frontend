@@ -431,7 +431,16 @@ export async function etatPosition() {
  * fondateur, 2026-10-11) ; Android garde Google et l'e-mail. Jeton vérifié par POST /auth/apple (backend apple.js).
  *
  * Rend { fournisseur, jeton, prenom, nom } ; lève une Error lisible si la personne annule ou si le greffon manque.
- * Apple ne donne prénom et nom qu'à la toute première autorisation : vides ensuite, le formulaire les redemande. */
+ * Apple ne donne prénom et nom qu'à la toute première autorisation : vides ensuite, le formulaire les redemande.
+ *
+ * CODE D'AUTORISATION APPLE (2026-10-25, règle 5.1.1(v) de l'App Store). `useProperTokenExchange` fait rendre au greffon
+ * le code à usage unique de la connexion, à côté du jeton d'identité (sans échange côté téléphone : le greffon le laisse au
+ * serveur). POST /auth/apple l'échange contre le jeton qui permettra de révoquer l'accès Apple à la suppression du compte.
+ * Gardé ici, rattaché à son jeton d'identité (codeApple), pour que tous les appels de loginWithApple (accueil, connexion,
+ * inscription) l'envoient sans que chaque écran ait à le porter. */
+const codesApple = new Map();
+export function codeApple(jeton) { return codesApple.get(jeton); }
+export function oublierCodeApple(jeton) { codesApple.delete(jeton); }
 let connexionPrete = null;
 async function preparerConnexion() {
   if (!connexionPrete) {
@@ -440,7 +449,7 @@ async function preparerConnexion() {
       const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
       await SocialLogin.initialize({
         google: { webClientId, iOSClientId: import.meta.env.VITE_GOOGLE_IOS_CLIENT_ID || undefined, iOSServerClientId: webClientId, mode: 'online' },
-        ...(plateforme() === 'ios' ? { apple: {} } : {})
+        ...(plateforme() === 'ios' ? { apple: { useProperTokenExchange: true } } : {})
       });
       // DANS UNE BOÎTE, JAMAIS SEUL. Un greffon Capacitor répond à N'IMPORTE QUEL nom de méthode, `then` compris : rendu
       // tel quel par une fonction async, il passe pour une promesse, et JavaScript appelle SocialLogin.then(…) — une
@@ -476,6 +485,7 @@ export async function connexionFournisseur(fournisseur) {
   const { result } = await SocialLogin.login({ provider: fournisseur, options });
   const jeton = result?.idToken;
   if (!jeton) throw new Error('Connexion annulée.');
+  if (fournisseur === 'apple' && result.authorizationCode) codesApple.set(jeton, result.authorizationCode);
   const profil = result.profile || {};
   return { fournisseur, jeton, prenom: profil.givenName || '', nom: profil.familyName || '' };
 }
