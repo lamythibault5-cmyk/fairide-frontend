@@ -17,11 +17,12 @@ Store* › *Run workflow*, which uploads to Internal testing itself).
 **The app icon** comes from [scripts/app-assets.mjs](../../scripts/app-assets.mjs) (`npm run app:assets`, then `app:assets:ios`):
 the bike covers 72 % of the tile since 2026-10-25 (founder: 82 % touched the edges). On iOS 26 a one-image icon
 (`AppIcon.appiconset`) gets an automatic Liquid Glass coat that greys the lime (#C8F03C shows as ~#B4D44F); the website
-icon added to the home screen does not, which is why it looked brighter. The cure is an Icon Composer file, made once on
-the Mac: open Icon Composer, drop `assets/icon-velo.svg` in, set the background to solid iris `#3B2FB5`, select the bike's
-group and switch Liquid Glass off (or Specular, Blur, Translucency and Shadow all off), save it as
-`ios/App/App/AppIcon.icon`, drag it into the Xcode project (target App, « Copy items » unticked) and set *App Icons* to
-`AppIcon`. Keep `AppIcon.appiconset` for iOS 18 and older.
+icon added to the home screen does not, which is why it looked brighter. The cure is the Icon Composer file
+`ios/App/App/AppIcon.icon` (2026-10-25), written by hand from Windows, no Mac: `icon.json` = solid iris `#3B2FB5`
+background (sRGB), one layer `Assets/velo.svg` (copied there by the script) with `glass: false`, and the group's specular,
+blur, translucency and shadow all off. It is registered in `project.pbxproj` (type `folder.iconcomposer.icon`, in
+Resources); GitHub's Mac (Xcode 26) compiles it. Format reference: github.com/dfabulich/unofficial-apple-icon-composer-json-schema.
+Keep `AppIcon.appiconset` for iOS 18 and older. Users who pick « Clear » or « Tinted » icons still get iOS's recolouring.
 `@capacitor/geolocation` and `@capgo/capacitor-social-login` (Apple / Google sheet — the site's Google button is refused
 inside a WebView) are loaded with `import()` from `natif.js` only, so the website never downloads them.
 
