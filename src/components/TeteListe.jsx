@@ -227,7 +227,7 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
                   <button
                     key={opt.value}
                     type="button"
-                    className={`lt-puce${on ? ' on' : ''}`}
+                    className={`lt-puce${on ? ' on' : ''}${opt.envie ? ' lt-puce--envie' : ''}`}
                     data-cuisine={opt.regime ? undefined : opt.value}
                     data-regime={opt.regime || undefined}
                     aria-pressed={on}

@@ -5298,6 +5298,28 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-option.on .bv-tuile { animation: bv-saute .3s var(--ressort-ui); }
 .bv-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .bv-grille .bv-option { flex-direction: column; align-items: flex-start; margin: 0; padding: 14px; }
+/* « Tu as envie de quoi ? » (EcranEnvies, maquettes/onboarding-gouts, 2026-10-25) : trois colonnes de tuiles avec le dessin 3D de la
+   bande des cuisines ; cochée = filet iris, fond iris pâle, coche lime. Le compte et le bouton restent collés en bas quand la
+   liste dépasse l'écran (19 familles au plus) : .bv défile, la barre du bas le suit. */
+.bv-envies { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bv-envie { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; padding: 10px 4px 9px;
+  border: 1.5px solid var(--line); border-radius: 16px; background: #fff; color: var(--ink); transition: border-color .15s, background .15s, transform .12s; }
+.bv-envie:active { transform: scale(.95); }
+.bv-envie img { width: 52px; height: 52px; margin-bottom: 2px; transition: transform .25s var(--ressort-ui); -webkit-user-drag: none; user-select: none; }
+.bv-envie b { font-size: 13px; font-weight: 600; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bv-envie small { font-size: 11.5px; color: var(--ink-faint); line-height: 1.2; }
+.bv-envie.on { border-color: var(--iris); background: var(--iris-tint); }
+.bv-envie.on img { transform: scale(1.08) rotate(-4deg); }
+.bv-envie.on small { color: var(--iris); font-weight: 600; }
+.bv-envie-coche { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: var(--lime); color: var(--ink);
+  display: grid; place-items: center; animation: bv-saute .3s var(--ressort-ui); }
+.bv-envies-bas { position: sticky; bottom: 0; margin: 0 -22px calc(-20px - env(safe-area-inset-bottom)); padding: 10px 22px calc(20px + env(safe-area-inset-bottom));
+  background: linear-gradient(rgba(255,255,255,0), #fff 18px); }
+.bv-envies-compte { margin: 0; min-height: 20px; text-align: center; font-size: 13.5px; color: var(--ink-soft); }
+.bv-envies-compte b { color: var(--iris); }
+.bv-envies-bas .bv-btn { margin-top: 8px; }
+/* « Pour toi » sur les commerces du résultat qui répondent à tes envies (EcranCompte). */
+.bv-pour-toi { margin-left: auto; flex: none; font-size: 11px; font-weight: 700; color: var(--iris); background: var(--iris-tint); border-radius: 999px; padding: 3px 8px; }
 
 .bv-carte { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; background: #fff; color: var(--ink); }
 .bv-iris .bv-carte { border-color: rgba(255,255,255,.3); background: transparent; color: #fff; }
