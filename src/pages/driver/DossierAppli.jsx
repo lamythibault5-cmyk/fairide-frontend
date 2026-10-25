@@ -530,7 +530,7 @@ function EcranCourses({ d, c, f, val, t, motorise, select }) {
 }
 
 // L'identité : trois façons (Stripe Identity, une photo de la pièce, en personne) ; une fois lancée, ce qui en est.
-function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
+export function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
   const toast = useToast();
   const id = d.courier.identity ?? {}; const prov = d.identityProviders ?? {};
   const fichier = useRef(null);
@@ -777,7 +777,7 @@ function EcranEngagements({ t, token, busy, action, onSuivant, contrat }) {
 }
 
 // Les paiements : Stripe dans le navigateur intégré de l'app ; « Pas maintenant » ne bloque rien d'autre.
-function EcranPaiement({ t, token, busy, actif, onSuivant }) {
+export function EcranPaiement({ t, token, busy, actif, onSuivant }) {
   const [ouverture, setOuverture] = useState(false);
   const [erreur, setErreur] = useState('');
   async function connecter() {
@@ -836,8 +836,10 @@ function EcranManques({ d, t, manques: tousManques, statusType, onAller, renvoi 
 
 /* LA FIN DE L'INSCRIPTION EXPRESS (version A de maquettes/inscription-livreur/inscription-livreur.html) : Onboarding.jsx la montre au
  * moment où le serveur envoie le dossier (routes/couriers.js › avancerDossier). Tout vert : « Tu peux rouler », validé sans
- * attendre personne. Sinon : « Presque prêt », et seulement ce que l'équipe regarde (d.teamChecks) ou ce que Stripe vérifie
- * encore. Chaque ligne dit d'où vient son vert. */
+ * attendre personne. Sinon : « Presque prêt », et seulement ce que l'équipe regarde (d.teamChecks) ou ce qui manque encore.
+ * Chaque ligne dit d'où vient son vert. Le compte de versement pas encore actif est un geste du LIVREUR (2026-10-25) : le
+ * serveur envoie le dossier sans lui (« Pas maintenant »), mais ne le valide pas sans lui, et personne ne le relance. La puce
+ * disait « Stripe vérifie encore ton compte », même quand Stripe n'avait jamais été ouvert ; DossierSuivi montre le bouton. */
 export function FinExpress({ d, t, onCourses, onDossier }) {
   const c = d.courier; const id = c.identity ?? {};
   const valide = c.lifecycleStatus === 'approved';
@@ -853,7 +855,7 @@ export function FinExpress({ d, t, onCourses, onDossier }) {
     ['age', t('appli.exLigneAge'), 'fait', age != null ? t('appli.exAns', { age }) : null],
     ['droit', t('appli.exLigneDroit'), equipe.includes('titre_sejour') || equipe.includes('nationalite') ? 'equipe' : 'fait',
       equipe.includes('titre_sejour') ? t('appli.exLigneDroitSejour') : equipe.includes('nationalite') ? t('appli.exLigneDroitNat') : t('appli.exLigneDroitEee')],
-    ['versement', t('appli.exLigneVersement'), stripeActif ? 'fait' : 'attente', stripeActif ? t('appli.exLigneVersementOk') : t('appli.exLigneVersementAttente')],
+    ['versement', t('appli.exLigneVersement'), stripeActif ? 'fait' : 'attente', stripeActif ? t('appli.exLigneVersementOk') : t('appli.exLigneVersementAFaire')],
     ['engagements', t('appli.exLigneEngagements'), 'fait', t('appli.exLigneEngagementsOk')]
   ];
   return (
@@ -862,10 +864,10 @@ export function FinExpress({ d, t, onCourses, onDossier }) {
         <div className="ecl-b-haut"><span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span></div>
         <span className={`ecl-puce-fin${valide ? ' vert' : ''}`}>
           <Icone nom={valide ? 'valider' : 'horloge'} taille={14} />
-          {valide ? t('appli.exPuceAuto') : equipe.length ? t('appli.exPuceEquipe', { quoi: equipe.map((k) => t(`appli.exQuoi_${k}`)).join(', ') }) : t('appli.exPuceStripe')}
+          {valide ? t('appli.exPuceAuto') : equipe.length ? t('appli.exPuceEquipe', { quoi: equipe.map((k) => t(`appli.exQuoi_${k}`)).join(', ') }) : t('appli.exPuceVersement')}
         </span>
         <h1 className="ecl-b-titre">{valide ? t('appli.exFinVert') : t('appli.exFinPresque')}</h1>
-        <p className="ecl-b-sous">{valide ? t('appli.exFinVertS') : t('appli.exFinPresqueS')}</p>
+        <p className="ecl-b-sous">{valide ? t('appli.exFinVertS') : !equipe.length && !stripeActif ? t('appli.exFinVersementS') : t('appli.exFinPresqueS')}</p>
         <RouteVelo position={valide ? 94 : 80} depart={6} />
       </section>
       <div className="ecl-feuille">
