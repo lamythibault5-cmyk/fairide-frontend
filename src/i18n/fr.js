@@ -4895,6 +4895,24 @@ export default {
       deliveryDiscountPill: '-{amount}€ livraison',
       refreshFailed: "Pas pu actualiser : vérifie ta connexion.",
     },
+    // Commerce fermé, en petit (fermeCourt.js, fondateur 2026-10-25) : fiche du plat et barre du panier, plus de toast.
+    fermeCourt: {
+      closed: 'Fermé',
+      closedForNow: 'Fermé pour le moment',
+      forNow: 'pour le moment',
+      opensAt: 'ouvre à {time}',
+      opensTomorrow: 'ouvre demain à {time}',
+      opensDay: 'ouvre {day} à {time}',
+      cartWaits: "Ton panier t'attend."
+    },
+    // Couverts et serviettes à la demande (fondateur, 2026-10-25, maquettes/ferme-couverts) : paiement et écran Commandes.
+    couverts: {
+      title: 'Couverts et serviettes',
+      off: 'Seulement si tu en as besoin',
+      on: 'Le restaurant en ajoute',
+      yes: 'Couverts et serviettes',
+      no: 'Sans couverts'
+    },
     restoMenuUi: {
       toastClientHatNeeded: "Pour commander, passe sur ta casquette client : Mon compte › Mes casquettes.",
       toastFullToday: 'Ce commerce a reçu toutes les commandes qu\'il peut préparer aujourd\'hui. Reviens demain !',
@@ -4913,8 +4931,6 @@ export default {
       toastLogin: 'Connecte-toi ou crée un compte pour commander.',
       toastNoOnline: 'Ce restaurant ne propose pas encore la commande en ligne.',
       toastClosed: 'Ce commerce est actuellement fermé.',
-      toastClosedCartKept: "Ce commerce est fermé pour le moment : compose ton panier, il est gardé 24 heures. Tu pourras commander à la réouverture, ou programmer ta commande.",
-      toastClosedByShopCartKept: "Ce commerce ne prend pas de commandes pour le moment : compose ton panier, il est gardé 24 heures. Tu pourras commander quand il rouvrira.",
       reopenUnknown: 'Date de réouverture pas encore communiquée',
       reopenOn: 'Réouverture prévue le {date}',
       hideHours: 'Masquer les horaires',

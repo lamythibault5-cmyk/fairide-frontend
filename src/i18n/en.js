@@ -4883,6 +4883,22 @@ export default {
       deliveryDiscountPill: '-€{amount} delivery',
       refreshFailed: "Couldn't refresh: check your connection.",
     },
+    fermeCourt: {
+      closed: 'Closed',
+      closedForNow: 'Closed for now',
+      forNow: 'for now',
+      opensAt: 'opens at {time}',
+      opensTomorrow: 'opens tomorrow at {time}',
+      opensDay: 'opens {day} at {time}',
+      cartWaits: 'Your cart is waiting.'
+    },
+    couverts: {
+      title: 'Cutlery and napkins',
+      off: 'Only if you need them',
+      on: 'The restaurant adds them',
+      yes: 'Cutlery and napkins',
+      no: 'No cutlery'
+    },
     restoMenuUi: {
       toastClientHatNeeded: "To order, switch to your customer role: My account › My roles.",
       toastFullToday: 'This business has received all the orders it can prepare today. Come back tomorrow!',
@@ -4898,8 +4914,6 @@ export default {
       toastLogin: 'Log in or create an account to order.',
       toastNoOnline: 'This restaurant does not offer online ordering yet.',
       toastClosed: 'This business is currently closed.',
-      toastClosedCartKept: "This business is closed right now: build your cart, it is kept for 24 hours. You can order when it reopens, or schedule your order.",
-      toastClosedByShopCartKept: "This business isn't taking orders right now: build your cart, it is kept for 24 hours. You can order when it reopens.",
       reopenUnknown: 'Reopening date not yet announced',
       reopenOn: 'Reopening planned on {date}',
       hideHours: 'Hide hours',

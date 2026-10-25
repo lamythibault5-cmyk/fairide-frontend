@@ -30,7 +30,8 @@ import ChiffresRoulants from './ChiffresRoulants';
 // Le bouton est lime (.btn-gold) et non noir comme chez Uber : ajouter au panier est l'action
 // décisive de cet écran, et c'est la règle de CLAUDE.md (arbitrage du fondateur, 2026-09-17). On
 // garde la STRUCTURE d'Uber — collée en bas, prix dans le libellé — et la couleur de Fairide.
-export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
+// `fermeture` : le commerce est fermé (fermeCourt.js) — une ligne calme au-dessus de « Ajouter » au lieu de l'ancien toast.
+export default function FichePlat({ item, imageUrl, onConfirm, onCancel, fermeture = null }) {
   const { t } = useLanguage();
   const groups = item.optionGroups || [];
   const [selections, setSelections] = useState(() => {
@@ -279,6 +280,15 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
 
       {/* L'action reste collée en bas : c'est elle qui rend le défilement unique possible. */}
       <div className="plat-pied">
+        {/* Version C de maquettes/ferme-couverts (fondateur, 2026-10-25) : on le lit là où l'on décide, sans rien qui surgisse. */}
+        {fermeture && (
+          <p className="plat-ferme" role="status">
+            <span className="plat-ferme-point" aria-hidden="true" />
+            <b>{t('fermeCourt.closed')}</b>
+            {fermeture.detail ? ` · ${fermeture.detail}. ` : ` ${t('fermeCourt.forNow')}. `}
+            {t('fermeCourt.cartWaits')}
+          </p>
+        )}
         <div className="plat-quantite" role="group" aria-label={t('platSheet.quantity')}>
           <button type="button" onClick={() => { vibrer('bascule'); setQty((q) => Math.max(1, q - 1)); }} disabled={qty <= 1} aria-label={t('platSheet.less')}>−</button>
           {/* Le chiffre visible est recréé à chaque changement (key, pour son animation) : une région vivante recréée n'est pas
