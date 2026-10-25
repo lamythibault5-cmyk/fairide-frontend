@@ -38,5 +38,9 @@ export function installerVerreBarreEtat() {
   window.addEventListener('resize', demander);
   // Changement d'écran : la nouvelle page commence en haut, le verre repart.
   window.addEventListener('popstate', demander);
+  // Fin d'une transition d'écran (transitionPhoto.js) : pendant qu'elle joue, le navigateur suspend requestAnimationFrame et la
+  // page est recouverte par ses captures, le regard lancé au popstate n'a rien vu de juste (le verre de la fiche restait allumé
+  // sur la liste). On regarde tout de suite, avant que le verre, caché pendant la transition, ne réapparaisse.
+  window.addEventListener('fairide:transition-finie', regarder);
   regarder();
 }
