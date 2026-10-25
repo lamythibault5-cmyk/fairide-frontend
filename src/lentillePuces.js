@@ -7,6 +7,7 @@
 //   - GLISSER la promène sous le doigt, d'une cuisine à l'autre, et au lâcher on choisit la plus proche. On ne capture
 //     le pointeur qu'après 6 px : un simple toucher reste le clic du bouton. Au doigt (2026-10-24) : un glissé tout de suite
 //     fait défiler la bande (ecran-liste.css) ; un doigt TENU 250 ms attrape la lentille, depuis n'importe quelle cuisine ;
+//   - le CONTOUR IRIS du dessin sous le doigt et de la cuisine choisie (2026-10-25, poserContours plus bas) ;
 //   - la RÉFRACTION des bords sur Chromium, avec les filtres de barreVerre.js — plus sur Android depuis le 2026-10-20
 //     (trop coûteuse sur un téléphone moyen, voir refractionPossible), où la bande garde le flou simple.
 import { vibrer } from './gestes';
@@ -16,11 +17,55 @@ const SEUIL_GLISSE = 6;
 // Au doigt : tenir 250 ms attrape la lentille ; partir de plus de 8 px avant, c'est un défilement.
 const TENUE = 250;
 const SEUIL_DOIGT = 8;
+// Au doigt, le contour attend 80 ms : un coup de doigt qui fait défiler la bande ne l'allume pas (iOS fait pareil dans une liste).
+const DELAI_CONTOUR = 80;
+
+/* LE CONTOUR DU DESSIN (fondateur, 2026-10-25, A de maquettes/appui-iris/appui-iris.html). Le dessin de chaque cuisine a un
+   fond transparent : on épaissit sa silhouette de 2 px (feMorphology), on garde ce bord, on le peint en iris, et une lumière
+   blanche (feSpecularLighting) y fait un reflet. Sous le doigt, la lumière fait le tour en 1,6 s (#lt-contour) ; sur la
+   cuisine choisie, elle reste en haut à gauche (#lt-contour-repos) : un reflet qui tournerait sans fin distrairait et ferait
+   repeindre le dessin à chaque image. Avec « Réduire les animations », elle ne tourne jamais. Les coordonnées sont celles du
+   dessin, 52 px (ecran-liste.css, .lt-illu). Posés une fois dans la page ; ecran-liste.css ne les utilise qu'une fois la
+   classe lt-puces--contour posée (un filtre url() absent peut masquer l'élément). */
+const ID_CONTOUR = 'lt-contour';
+function poserContours() {
+  if (document.getElementById(ID_CONTOUR)) return;
+  const iris = getComputedStyle(document.documentElement).getPropertyValue('--iris').trim() || '#3B2FB5';
+  const calme = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const tour = calme ? '' : '<animate attributeName="x" values="0;52;52;0;0" dur="1.6s" repeatCount="indefinite"/>'
+    + '<animate attributeName="y" values="0;0;52;52;0" dur="1.6s" repeatCount="indefinite"/>';
+  const filtre = (id, lumiere) => `<filter id="${id}" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">`
+    + '<feMorphology in="SourceAlpha" operator="dilate" radius="2" result="gros"/>'
+    + '<feComposite in="gros" in2="SourceAlpha" operator="out" result="bordA"/>'
+    + `<feFlood flood-color="${iris}"/><feComposite in2="bordA" operator="in" result="bord"/>`
+    + '<feGaussianBlur in="gros" stdDeviation="1.4" result="relief"/>'
+    + `<feSpecularLighting in="relief" surfaceScale="4" specularConstant="1.1" specularExponent="14" lighting-color="#fff" result="reflet"><fePointLight x="0" y="0" z="18">${lumiere}</fePointLight></feSpecularLighting>`
+    + '<feComposite in="reflet" in2="bordA" operator="in" result="reflet2"/>'
+    + '<feMerge><feMergeNode in="bord"/><feMergeNode in="reflet2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '0'); svg.setAttribute('height', '0'); svg.setAttribute('aria-hidden', 'true');
+  svg.style.position = 'absolute';
+  svg.innerHTML = `<defs>${filtre(ID_CONTOUR, tour)}${filtre(`${ID_CONTOUR}-repos`, '')}</defs>`;
+  document.body.appendChild(svg);
+}
 
 /* `bande` : .lt-puces ; `piste` : .lt-piste (elle défile avec les pastilles) ; `lentille` : .lt-lentille.
    `choisir(valeur)` : la cuisine lâchée sous la lentille. Rend la fonction qui débranche. */
 export function brancherLentillePuces(bande, piste, lentille, choisir) {
   let geste = null;
+  poserContours();
+  bande.classList.add('lt-puces--contour');
+  // La cuisine touchée prend le contour qui tourne (lt-puce--touchee) ; pendant qu'on promène la lentille, c'est celle qu'elle couvre (lt-puce--survol).
+  let touchee = null;
+  let minuteurTouche = 0;
+  const toucher = (puce) => {
+    clearTimeout(minuteurTouche);
+    if (touchee === puce) return;
+    touchee?.classList.remove('lt-puce--touchee');
+    puce?.classList.add('lt-puce--touchee');
+    touchee = puce;
+  };
+  const relacher = () => toucher(null);
   const cuisines = () => [...piste.querySelectorAll('.lt-puce[data-cuisine]')];
   const plusProche = (x) => {
     let meilleure = null; let d = Infinity;
@@ -38,6 +83,7 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
     lentille.style.transform = `translate(${Math.max(6, Math.min(piste.scrollWidth - 6 - l, x - l / 2))}px, ${y}px)`;
     const puce = plusProche(x);
     if (puce !== geste.survol) {
+      toucher(null);
       geste.survol?.classList.remove('lt-puce--survol');
       puce?.classList.add('lt-puce--survol');
       geste.survol = puce;
@@ -49,6 +95,7 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
     if (e.button > 0) return;
     const puce = e.target.closest?.('.lt-puce[data-cuisine]');
     if (!puce) return;
+    if (e.pointerType === 'touch') { toucher(null); minuteurTouche = setTimeout(() => toucher(puce), DELAI_CONTOUR); } else toucher(puce);
     if (e.pointerType === 'touch') {
       /* AU DOIGT : TENIR, PUIS GLISSER (fondateur, 2026-10-24 : « je pose le doigt, puis je glisse, et la pastille ne suit
          pas »). Un coup de doigt tout de suite fait toujours défiler la bande. Un doigt qui reste posé TENUE ms sans bouger
@@ -74,7 +121,7 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
     geste.x = e.clientX;
     if (!geste.tenu) {
       // Le doigt part avant d'avoir tenu : c'est un défilement, on le laisse faire.
-      if (Math.hypot(e.clientX - geste.x0, e.clientY - geste.y0) > SEUIL_DOIGT) { clearTimeout(geste.minuteur); geste = null; }
+      if (Math.hypot(e.clientX - geste.x0, e.clientY - geste.y0) > SEUIL_DOIGT) { clearTimeout(geste.minuteur); geste = null; relacher(); }
       return;
     }
     if (!geste.glisse) {
@@ -108,6 +155,9 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
   piste.addEventListener('pointermove', bouge);
   piste.addEventListener('pointerup', lache);
   piste.addEventListener('pointercancel', annule);
+  // Le contour s'éteint au lâcher, même sans geste en cours (souris sur une autre cuisine que la choisie, défilement au doigt).
+  piste.addEventListener('pointerup', relacher);
+  piste.addEventListener('pointercancel', relacher);
   piste.addEventListener('lostpointercapture', perdu);
   piste.addEventListener('touchmove', bloque, { passive: false });
 
@@ -122,7 +172,11 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
     piste.removeEventListener('pointermove', bouge);
     piste.removeEventListener('pointerup', lache);
     piste.removeEventListener('pointercancel', annule);
+    piste.removeEventListener('pointerup', relacher);
+    piste.removeEventListener('pointercancel', relacher);
     piste.removeEventListener('lostpointercapture', perdu);
+    relacher();
+    bande.classList.remove('lt-puces--contour');
     piste.removeEventListener('touchmove', bloque);
     debrancherTaille?.();
   };

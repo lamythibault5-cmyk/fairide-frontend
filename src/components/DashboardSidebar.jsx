@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
-import Icone from './Icone';
+import Icone, { IconePleine } from './Icone';
 import useInbox from '../hooks/useInbox';
 import { useCurseurOnglets } from '../hooks/useCurseurOnglets';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
@@ -193,7 +193,8 @@ export default function DashboardSidebar() {
         {items.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}
             {...(NATIF ? ongletAppli(item.to, pathname) : {})}>
-            <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} /></span>
+            {/* Dans l'app, la version pleine par-dessus : elle se montre sur l'onglet où l'on est et sous le doigt (styles.css). */}
+            <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} />{NATIF && <IconePleine nom={item.icon} taille={22} className="dashboard-nav-plein" />}</span>
             {/* Deux libellés : le complet pour la colonne latérale, le court pour la barre du bas (styles.css choisit). */}
             <span className="dashboard-nav-label"><span className="libelle-long">{item.label}</span>{item.court && <span className="libelle-court">{item.court}</span>}</span>
             {item.to === '/account' && nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}

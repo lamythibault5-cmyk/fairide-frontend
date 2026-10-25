@@ -145,6 +145,28 @@
   html.appli .lt-puces--glisse .lt-lentille { transition: transform .05s linear, width .3s var(--ressort-ui), scale .3s var(--ressort-ui), box-shadow .2s; }
   html.appli .lt-puces--appui .lt-puce:active { transform: none; }
 }
+/* LE CONTOUR DU DESSIN, DANS L'APP (fondateur, 2026-10-25, A de maquettes/appui-iris/appui-iris.html). La cuisine choisie garde
+   un contour iris qui suit la forme de son dessin, reflet immobile ; sous le doigt (ou sous la lentille qu'on promène), le
+   dessin grossit de 6 % et le reflet fait le tour. Les filtres et la classe lt-puces--contour sont posés par lentillePuces.js. */
+html.appli .lt-puces--contour .lt-illu { transition: scale .2s var(--ressort-ui); }
+html.appli .lt-puces--contour .lt-puce[data-cuisine].on .lt-illu { filter: url(#lt-contour-repos); }
+html.appli .lt-puces--contour :is(.lt-puce--touchee, .lt-puce--survol)[data-cuisine] .lt-illu { filter: url(#lt-contour); scale: 1.06; }
+/* L'ANNEAU AU SURVOL, SUR LE SITE (même maquette, question 4) : à la souris, un anneau iris s'allume autour de la cuisine
+   survolée, un reflet iris pâle en fait le tour. Pas au doigt (rien ne « survole »), pas dans l'app (le contour, juste au-dessus). */
+@property --lt-anneau { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes lt-anneau { to { --lt-anneau: 360deg; } }
+@media (hover: hover) and (pointer: fine) {
+  html:not(.appli) .lt-puce[data-cuisine]::after {
+    content: ''; position: absolute; inset: -3px; border-radius: 23px; padding: 2.5px; pointer-events: none; opacity: 0; scale: .92;
+    background: conic-gradient(from var(--lt-anneau), var(--iris) 0deg 215deg, color-mix(in srgb, var(--iris) 75%, #fff) 245deg,
+      color-mix(in srgb, var(--iris) 25%, #fff) 268deg, color-mix(in srgb, var(--iris) 75%, #fff) 291deg, var(--iris) 320deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    transition: opacity .15s, scale .28s var(--ressort-ui);
+  }
+  html:not(.appli) .lt-puce[data-cuisine]:hover::after { opacity: 1; scale: 1; animation: lt-anneau 1.2s linear infinite; }
+}
+@media (prefers-reduced-motion: reduce) { html:not(.appli) .lt-puce[data-cuisine]:hover::after { animation: none; } }
 /* La rangée des spécialités d'une famille choisie (version X de maquettes/categories-commerce) : des pastilles pleines,
    blanches à filet, iris quand elles sont choisies. Elle part avec la bande, sans fond à elle. */
 .lt-sous { display: flex; gap: 6px; margin: 4px 0 0; padding: 0 16px 2px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; animation: lt-sous .25s ease-out; }

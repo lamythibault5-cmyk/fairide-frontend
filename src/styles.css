@@ -2612,6 +2612,8 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 /* La pastille qui glisse n'existe que dans la barre du bas (sous 900px) ; la colonne latérale garde son fond
    sur l'onglet actif. */
 .nav-curseur { display: none; }
+/* Les traits creusés dans une icône pleine (IconePleine, Icone.jsx) : la couleur du fond derrière l'icône, blanc par défaut. */
+.icone-creux { fill: none; stroke: var(--icone-creux, #fff); stroke-width: 1.4; }
 /* Libellé court (« Commandes » pour « Mes commandes ») : seulement dans la barre du bas, voir plus bas. */
 .libelle-court { display: none; }
 @keyframes onglet-arrive { 0% { transform: scale(.86); } 60% { transform: scale(1.08); } 100% { transform: none; } }
@@ -2933,8 +2935,19 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   @media (prefers-reduced-transparency: reduce) {
     html.appli .dashboard-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
     html.appli .nav-curseur { background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none; }
-    html.appli .dashboard-nav-link.active { color: #fff; }
+    html.appli .dashboard-nav-link.active, html.appli .dashboard-nav-link--survol { color: #fff; --icone-creux: var(--iris); }
   }
+  /* L'ICÔNE SE REMPLIT (fondateur, 2026-10-25, A de maquettes/appui-iris/appui-iris.html), dans l'app : la version pleine
+     (IconePleine, Icone.jsx), posée sur les traits, apparaît d'un fondu sur l'onglet où l'on est (plein = là où tu es, la règle
+     d'Instagram) et sur celui que la lentille couvre sous le doigt (barreVerre.js), qui grossit un peu. Pendant un appui
+     ailleurs, l'onglet de départ se vide : une seule icône pleine à la fois. Hors du bloc du verre : le repli sans transparence
+     (lentille iris pleine, icône blanche, creux iris, juste au-dessus) se remplit aussi. */
+  html.appli .dashboard-nav-icon { display: grid; place-items: center; transition: transform .1s ease-out, scale .25s var(--ressort-ui); }
+  html.appli .dashboard-nav-icon > svg { grid-area: 1 / 1; }
+  html.appli .dashboard-nav-plein { opacity: 0; transition: opacity .16s; }
+  html.appli .dashboard-nav-link.active .dashboard-nav-plein, html.appli .dashboard-nav-link--survol .dashboard-nav-plein { opacity: 1; }
+  html.appli .dashboard-nav:has(.dashboard-nav-link--survol) .dashboard-nav-link.active:not(.dashboard-nav-link--survol) .dashboard-nav-plein { opacity: 0; }
+  html.appli .dashboard-nav-link--survol .dashboard-nav-icon { scale: 1.08; }
   .dashboard-sidebar--compacte .dashboard-nav-label { opacity: 0; max-height: 0; transform: translateY(4px); }
   /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
      hauteur (66px), plus au contenu principal qui n'est plus le dernier. */

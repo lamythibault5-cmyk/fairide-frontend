@@ -156,6 +156,34 @@ export const TRACES = {
   poisson: <><path d="M3 12c2.8-3.6 6.4-5.5 10.5-5.5 3 0 5.6 2 7.5 5.5-1.9 3.5-4.5 5.5-7.5 5.5C9.4 17.5 5.8 15.6 3 12Z" /><path d="M3 12 1.5 8.5" /><path d="M3 12l-1.5 3.5" /><path d="M16 11h.01" /></>
 };
 
+// LES ICÔNES PLEINES DE LA BARRE D'ONGLETS (fondateur, 2026-10-25, maquettes/appui-iris/appui-iris.html, A). Dans l'app,
+// l'onglet où l'on est et celui sous le doigt ne changent plus seulement de couleur : l'icône se remplit, comme les icônes
+// pleines d'Instagram. Chaque dessin est la forme à remplir ; les traits « creux » (classe icone-creux, styles.css) sont
+// redessinés dans la couleur du fond pour que l'icône pleine reste lisible (les plis de la carte, la dent de la fourchette,
+// le symbole de l'euro). Une icône sans version pleine garde ses traits.
+const PLEINS = {
+  restaurants: <><path d="M4 3v7a2 2 0 0 0 4 0V3Z" /><path d="M17 3c-1.7 0-3 2.2-3 5s1.3 4 3 4 3 0 3 0V3Z" /><path className="icone-creux" d="M6 3v4.5" /></>,
+  carte: <><path d="M9 4 3 7v13l6-3 6 3 6-3V4l-6 3-6-3Z" /><path className="icone-creux" d="M9 5.5v10" /><path className="icone-creux" d="M15 8.5v10" /></>,
+  recherche: <><circle cx="11" cy="11" r="7" /><path className="icone-creux" d="M8 9.2a3.6 3.6 0 0 1 2.4-2" /></>,
+  commandes: <><path d="M3 8h18l-1.3 11a2 2 0 0 1-2 1.8H6.3a2 2 0 0 1-2-1.8L3 8Z" /><path className="icone-creux" d="M8.5 11.5a3.5 3.5 0 0 0 7 0" /></>,
+  compte: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0Z" /></>,
+  commerce: <><path d="M4 9h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9Z" /><path d="M3 9 5 4h14l2 5Z" /><path className="icone-creux" d="M5 9.6h14" /><path className="icone-creux" d="M10 20.5V16h4v4.5" /></>,
+  dossier: <><rect x="2" y="5" width="20" height="14" rx="2" /><circle className="icone-creux" cx="8.5" cy="11" r="1.8" /><path className="icone-creux" d="M5.6 15.6c.7-1.2 1.8-1.7 2.9-1.7s2.2.5 2.9 1.7" /><path className="icone-creux" d="M15 10h3.5" /><path className="icone-creux" d="M15 14h3.5" /></>,
+  euro: <><circle cx="12" cy="12" r="9" /><path className="icone-creux" d="M15.6 9.4A4 4 0 0 0 13 8.3c-2 0-3.7 1.6-3.7 3.7s1.7 3.7 3.7 3.7a4 4 0 0 0 2.6-1.1" /><path className="icone-creux" d="M8 11h4.5" /><path className="icone-creux" d="M8 13.3h4.5" /></>
+};
+
+/* La version pleine d'une icône (rien si elle n'en a pas). Posée sur l'icône en traits, même taille : le CSS la montre ou la cache. */
+export function IconePleine({ nom, taille = 20, className }) {
+  const plein = PLEINS[nom];
+  if (!plein) return null;
+  return (
+    <svg className={className} width={taille} height={taille} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.8"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      {plein}
+    </svg>
+  );
+}
+
 export default function Icone({ nom, taille = 20, className }) {
   const trace = TRACES[nom];
   // Un nom inconnu ne casse pas la page : il ne dessine rien. Une icône manquante est un défaut
