@@ -22,13 +22,16 @@
    maquettes/barre-cuisines : plus de cadre, comme Uber Eats) : seule sa lentille est du verre, et lentillePuces.js la fait grossir. */
 const VERRE = [
   '.dashboard-nav', '.category-quicknav--verre', '.panier-pilule',
-  '.fiche-appli .flux-entete--flottant .flux-bouton', '.fiche-appli .favorite-heart--rond', '.fiche-appli .fiche-modes',
+  // Tous les ronds d'en-tête (la croix d'une fiche, le ‹ d'une sous-page de Mon compte) et tous les cœurs (la fiche, les cartes
+  // de la liste, Mes favoris) — fondateur, 2026-10-25 : « ça ne marche pas pour le retour de Favoris, ni les cœurs ».
+  '.flux-bouton', '.favorite-heart', '.fiche-appli .fiche-modes',
   '.fiche-appli .fiche-infos-lien', '.fiche-appli .fiche-apercu-plus', '.plat-pas', '.ec-pas',
   '.carte-page .carte-reinit', '.carte-page .carte-pastilles .cuisine-chip', '.carte-fiche-fermer',
   // Les retours, en verre eux aussi (réponse 5) : le ‹ rond sur les bandeaux iris, « ← Retour » et « ← Mon compte ».
   '.ec-rond', '.gn-rond', '.bv-rond', '.dashboard-retour', '.retour-compte', '.cs-retour', '.ec-b-retour', '.ecl-b-retour',
-  // La croix de la fiche d'un plat (ronde, iris à filet blanc) : un retour, elle aussi.
-  '.plat-fermer'
+  // La croix de la fiche d'un plat et le ‹ des pages ouvertes en feuille depuis Mon compte (Mes favoris, Mes commandes, Mes
+  // factures… : PageFeuille.jsx) — ronds iris à filet blanc, des retours eux aussi.
+  '.plat-fermer', '.page-feuille-fermer'
 ].join(', ');
 // Les barres, qui ne grossissent qu'un peu (la barre d'onglets était « bien », fondateur 2026-10-24) ; tout le reste est un bouton.
 const BARRES = '.dashboard-nav, .category-quicknav--verre, .panier-pilule, .fiche-appli .fiche-modes';
