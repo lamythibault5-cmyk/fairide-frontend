@@ -120,10 +120,25 @@ export function brancherBarreVerre(nav, curseur) {
     return meilleur;
   };
 
+  const allumer = (lien) => {
+    geste.survol?.classList.remove('dashboard-nav-link--survol');
+    lien?.classList.add('dashboard-nav-link--survol');
+    geste.survol = lien;
+  };
+  // La lentille revient à la place que useCurseurOnglets lui a donnée (l'onglet de la page).
+  const remettre = () => { curseur.style.transform = `translate(${curseur.dataset.x || 0}px, ${curseur.dataset.y || 6}px)`; };
   const appui = (e) => {
     if (e.button > 0) return;
     geste = { x0: e.clientX, id: e.pointerId, glisse: false, survol: null };
     nav.classList.add('dashboard-nav--appui');
+    /* AU CONTACT, LA LENTILLE VIENT SOUS LE DOIGT (fondateur, 2026-10-25, maquettes/appui-iris/appui-iris.html) et l'icône
+       qu'elle couvre se remplit (styles.css, dashboard-nav-link--survol) : avant, elle grossissait là où elle était et ne
+       partait qu'au lâcher. Pas dans la barre de la console admin, qui défile. */
+    const lien = glissable && e.target.closest?.('.dashboard-nav-link');
+    if (lien && lien.parentElement === nav) {
+      curseur.style.transform = `translate(${lien.offsetLeft}px, ${curseur.dataset.y || 6}px)`;
+      allumer(lien);
+    }
   };
   const bouge = (e) => {
     if (!geste || e.pointerId !== geste.id || !glissable) return;
@@ -139,28 +154,47 @@ export function brancherBarreVerre(nav, curseur) {
     curseur.style.transform = `translate(${Math.max(min, Math.min(max, x - largeur / 2))}px, ${curseur.dataset.y || 6}px)`;
     const lien = plusProche(x);
     if (lien !== geste.survol) {
-      geste.survol?.classList.remove('dashboard-nav-link--survol');
-      lien?.classList.add('dashboard-nav-link--survol');
-      geste.survol = lien;
+      allumer(lien);
       vibrer('choix');
     }
+  };
+  /* L'onglet lâché reste allumé (plein, sous la lentille) jusqu'à ce que sa page le rende actif : React Router change de page
+     dans une transition, donc pas tout de suite — et pas avant que le code de la page soit chargé. Sans ça, l'icône se vidait
+     entre le lâcher et la nouvelle page, puis se remplissait de nouveau. Au bout de 2 s sans changement, on rend la main. */
+  const attendre = (lien) => {
+    const debut = performance.now();
+    const voir = () => {
+      if (geste?.survol === lien) return; // un nouvel appui l'a repris
+      if (lien.classList.contains('active') || geste || performance.now() - debut > 2000) {
+        lien.classList.remove('dashboard-nav-link--survol');
+        if (!geste && !lien.classList.contains('active')) remettre();
+        return;
+      }
+      requestAnimationFrame(voir);
+    };
+    requestAnimationFrame(voir);
   };
   const lache = (e) => {
     if (!geste || e.pointerId !== geste.id) return;
     const { glisse, survol } = geste;
-    survol?.classList.remove('dashboard-nav-link--survol');
     nav.classList.remove('dashboard-nav--appui', 'dashboard-nav--glisse');
     geste = null;
-    if (!glisse) return; // un simple toucher : le clic du lien fait le reste
-    if (survol && !survol.classList.contains('active')) { vibrer('seuil'); survol.click(); }
-    // Même onglet : la lentille revient à la place que useCurseurOnglets lui avait donnée.
-    else curseur.style.transform = `translate(${curseur.dataset.x || 0}px, ${curseur.dataset.y || 6}px)`;
+    // Même onglet (ou à côté des onglets) : la lentille revient à la place que useCurseurOnglets lui avait donnée.
+    if (!survol || survol.classList.contains('active')) { survol?.classList.remove('dashboard-nav-link--survol'); remettre(); return; }
+    // Un simple toucher : le clic du lien, qui suit ce pointerup, fait le reste. Après un glissé, c'est nous qui cliquons.
+    if (glisse) {
+      curseur.style.transform = `translate(${survol.offsetLeft}px, ${curseur.dataset.y || 6}px)`;
+      vibrer('seuil');
+      survol.click();
+    }
+    attendre(survol);
   };
   const annule = () => {
     if (!geste) return;
     geste.survol?.classList.remove('dashboard-nav-link--survol');
     nav.classList.remove('dashboard-nav--appui', 'dashboard-nav--glisse');
     geste = null;
+    remettre();
   };
   /* La capture perdue par un ENFANT n'est pas la fin du geste (fondateur, 2026-10-24 : « je touche Mon compte, je glisse vers
      Recherche, la pastille reste sur Compte »). Au doigt, le navigateur capture d'office le pointeur sur l'élément touché

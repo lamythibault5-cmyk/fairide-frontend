@@ -105,7 +105,7 @@ source spec and `maquettes/landing-iris/landing-iris.html` for the reference pag
    WhatsApp): near-transparent, short blur, highlights and a soft shadow; the active tab is a glass lens with iridescent edges
    that grows when pressed and follows the finger ([src/barreVerre.js](../../src/barreVerre.js), loaded with `import()` in the app only;
    on desktop Chromium it also refracts what passes under its edges; not on Android since 2026-10-20, too heavy on a mid-range
-   phone). On the website it stays solid white.
+   phone). On the website it stays solid white. Since 2026-10-25 (`maquettes/appui-iris`) the app's tab icons fill with iris on the current tab and under the finger (`IconePleine`, Icone.jsx), and the cuisine drawings get an iris contour (appli.md).
 3. **One lime accent per view.** If a screen already has a `btn-gold`, its active tab / badge /
    nav item uses white or iris instead. *Exception (founder, 2026-10-16):* the app's welcome/sign-up screens pair the lime
    button with the lime check of ticked options and the « Salut ! » chip.
