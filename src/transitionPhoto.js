@@ -146,6 +146,8 @@ function lancer(sens, faire) {
   });
   enCours = t;
   t.finished.finally(() => {
+    // Le verre sous l'heure se règle sur le nouvel écran pendant qu'il est encore caché (verreBarreEtat.js, transitions-appli.css).
+    window.dispatchEvent(new Event('fairide:transition-finie'));
     racine.classList.remove(genre);
     denommer(arrivee);
     document.querySelectorAll('.sq-photo-img, img.fiche-couverture').forEach(denommer);
