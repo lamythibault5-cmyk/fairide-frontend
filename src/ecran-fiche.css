@@ -136,7 +136,7 @@ html.fiche-glisse body, html.fiche-glisse .dashboard-main { background: var(--ir
 .fiche-appli .fiche-offres { border-radius: var(--radius); margin-bottom: 14px; }
 /* Le « + » des plats reste posé sur le coin de la photo même quand la description et les allergènes allongent la ligne
    (ancré en bas de LIGNE, il tombait sous la photo) : 14px de marge + 112px de photo − 40px de rond − 6px. */
-.fiche-appli .plat-ligne:not(.plat-ligne-sans-photo) > .plat-pas { bottom: auto; top: 80px; }
+.fiche-appli .plat-ligne:not(.plat-ligne-sans-photo):not(.plat-ligne-tuile) > .plat-pas { bottom: auto; top: 80px; }
 
 /* ---------- La bande des sections ----------
    Collée sous les ronds. Sans verre (navigateur sans backdrop-filter, transparence réduite) : blanche à filet, la section
@@ -330,7 +330,9 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .bistrot-l1 .plat-nom { flex: 0 1 auto; min-width: 0; }
 /* L'espace entre le nom et le prix reste (il pousse le prix à droite), sans ses pointillés. */
 .fiche-appli .bistrot-points { flex: 1 1 12px; min-width: 12px; height: 0; }
-.fiche-appli .plat-ligne-bistrot + .plat-ligne-bistrot { border-top: 1px solid #ECEAE5; }
+/* Un filet clair entre deux plats d'une liste, avec ou sans photo (une section mélangée alterne les deux lignes). */
+.fiche-appli .plats-liste:not(.plats-grille) > * + * { border-top: 1px solid #ECEAE5; }
+.fiche-appli .plats-liste .plat { border-bottom-color: transparent; }
 .fiche-appli .bistrot-l1 .plat-prix { flex: none; white-space: nowrap; font-size: 15px; }
 .fiche-appli .plat-bistrot .plat-desc, .fiche-appli .plat-bistrot .plat-allergenes, .fiche-appli .plat-bistrot .plat-prix-ligne { padding-right: 50px; }
 .fiche-appli .plat-bistrot .plat-prix-ligne { margin-top: 2px; }
@@ -339,6 +341,16 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { 
 .fiche-appli .plat-ligne.plat-ligne-bistrot > .plat-pas { top: 40px; bottom: auto; right: 0; translate: none; }
 .fiche-appli .plat-ligne-bistrot > .plat { padding-right: 0; }
 .fiche-appli .plat-cliquable.plat-bistrot:active { border-radius: 12px; }
+
+/* Un plat AVEC photo dans une section en liste (fondateur, 2026-10-25, version A de maquettes/menu-photos) : la ligne du site,
+   photo de 112 px à droite (même sous 400 px de large : réponse 2, et le « + » est posé pour 112), le prix juste sous le nom
+   comme sur Uber Eats, puis la description. Les sections toutes en photos sont en grille (client-ui.css). */
+.fiche-appli .plat:not(.plat-bistrot):not(.plat-tuile) .plat-visuel { width: 112px; height: 112px; }
+.fiche-appli .plat:not(.plat-bistrot):not(.plat-tuile) .plat-texte { gap: 3px; }
+.fiche-appli .plat:not(.plat-bistrot):not(.plat-tuile) .plat-nom { order: -2; }
+.fiche-appli .plat:not(.plat-bistrot):not(.plat-tuile) .plat-prix-ligne { order: -1; margin-top: 0; padding-top: 0; align-items: baseline; }
+/* Sans les marges de la fiche du plat (styles.css : 6 px sous le nom, 10 sous le prix, 18 sous la description). */
+.fiche-appli .plat:not(.plat-bistrot):not(.plat-tuile) .plat-nom, .fiche-appli .plat:not(.plat-bistrot):not(.plat-tuile) .plat-prix, .fiche-appli .plat:not(.plat-bistrot):not(.plat-tuile) .plat-desc { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .fiche-appli .fiche-sceau, .fiche-appli .fiche-info-velo { animation: none; }
