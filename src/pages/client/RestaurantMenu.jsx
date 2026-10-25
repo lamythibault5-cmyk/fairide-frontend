@@ -33,6 +33,7 @@ import PrixComptoir from '../../components/PrixComptoir';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { statutOuverture, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, dayLabel } from '../../openingHours';
+import { fermeCourt, poserCommercePanier, retirerCommercePanier } from '../../fermeCourt';
 import usePageMeta from '../../hooks/usePageMeta';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import useJsonLd from '../../seo/useJsonLd';
@@ -190,8 +191,6 @@ export default function RestaurantMenu({ id }) {
   // (addOne force=true), pas à l'ouverture de la fiche — fermer la fiche sans rien ajouter vidait quand même l'ancien
   // panier (audit du 15/10/2026).
   const [remplacerPanier, setRemplacerPanier] = useState(false);
-  // Un seul avis « commerce fermé, ton panier est gardé » par visite de la fiche.
-  const avertiFerme = useRef(false);
   // Le « + » qui a buté sur le panier d'un autre commerce : après « Vider et continuer », l'ajout se fait directement au lieu
   // d'ouvrir la fiche du plat (audit du 19/10, discovery-36).
   const ajoutDirectEnAttente = useRef(null);
@@ -229,6 +228,13 @@ export default function RestaurantMenu({ id }) {
     const clock = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(clock);
   }, []);
+  // La barre du panier dit « Fermé · ouvre à… » quand le panier est celui de ce commerce (fermeCourt.js, version B).
+  const panierIci = !!restaurant && cart.restaurantId != null && String(cart.restaurantId) === String(restaurant.id);
+  useEffect(() => {
+    if (!panierIci) return undefined;
+    poserCommercePanier(restaurant);
+    return () => retirerCommercePanier(restaurant);
+  }, [panierIci, restaurant]);
   // Le nom passe dans le bandeau quand le grand titre sort de l'écran. IntersectionObserver et non
   // un écouteur de défilement : on n'a besoin que d'un booléen qui change deux fois par visite, pas
   // d'une mesure à chaque image. Le seuil de 0 suffit — dès que le titre a entièrement quitté le
@@ -528,15 +534,10 @@ export default function RestaurantMenu({ id }) {
       toast(t('restoMenuUi.toastNoOnline'));
       return;
     }
-    // Commerce fermé en ce moment : on laisse composer le panier (une commande programmée reste possible, et la
-    // fiche promet « compose ton panier ») — avant, l'ajout était refusé sous un bandeau qui disait le contraire
-    // (plan de test). Le checkout et le serveur refusent toujours une commande immédiate à un commerce fermé.
-    // Fermé par son interrupteur (« Fermer jusqu'à ce que je rouvre ») : le serveur refuse aussi une commande programmée,
-    // le toast ne la propose donc pas (audit du 19/10, checkout-04).
-    if (!statutOuverture(restaurant, now).isOpen && !avertiFerme.current) {
-      avertiFerme.current = true;
-      toast(t(restaurant.open === false ? 'restoMenuUi.toastClosedByShopCartKept' : 'restoMenuUi.toastClosedCartKept'));
-    }
+    // Commerce fermé en ce moment : on laisse composer le panier (une commande programmée reste possible) — avant, l'ajout
+    // était refusé sous un bandeau qui disait le contraire (plan de test). Le checkout et le serveur refusent toujours une
+    // commande immédiate à un commerce fermé. Plus de toast ici (fondateur, 2026-10-25, « trop gros, trop dans la figure ») :
+    // il partait à l'ouverture du plat, sur sa photo. La fiche du plat et la barre du panier le disent (fermeCourt.js).
     if (complet) {
       toast(t('restoMenuUi.toastFullToday'));
       return;
@@ -994,6 +995,7 @@ export default function RestaurantMenu({ id }) {
         <FichePlat
           item={{ ...pickerItem, ...localizedItem(pickerItem, language) }}
           imageUrl={resolveItemImage(pickerItem, restaurant.sections)}
+          fermeture={fermeCourt(restaurant, now, t)}
           onCancel={() => { setPickerItem(null); setRemplacerPanier(false); }}
           onConfirm={(optionItemIds, snapshot, unitPrice, qty, note) => {
             // Le nom enregistré est le nom TRADUIT, comme lors d'un ajout direct : l'ancienne

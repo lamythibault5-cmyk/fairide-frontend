@@ -93,6 +93,21 @@ covered by `../fairide-backend/tests/correctifs-e2e.test.js`:
   and the client's « no courier after 20 min → cancel, refunded » ([SansLivreur](../../src/components/client/SansLivreur.jsx)).
 - Commitments signed in « Ma carte » show an EN/NL translation; **the French text stays the one that is hashed and signed**.
 
+## Closed shop and utensils (2026-10-25)
+
+Founder's answers to `maquettes/ferme-couverts/ferme-couverts.html` (B + C, A, off by default):
+
+- **No toast when a shop is closed.** The old one (« Ce commerce est fermé pour le moment : compose ton panier… », 150
+  characters, about 11 s) fired when a dish OPENED and sat on its photo: « too big, too much in the face ». Now the dish
+  sheet says « Fermé · ouvre à 11:30. Ton panier t'attend. » above « Ajouter », and the cart bar says « Fermé · ouvre à
+  11:30 » under « Voir le panier » while the cart's shop is closed ([fermeCourt.js](../../src/fermeCourt.js)). Same on the
+  website. Don't bring the toast back.
+- **Utensils are asked at checkout, off by default**, for delivery and takeaway (« Couverts et serviettes », a switch under
+  the allergy row; on the website just before it). Backend: `orders.utensils` (migration 089; `null` = older order,
+  nothing shown). The business sees « Couverts et serviettes » (iris) or « Sans couverts » (grey) on its orders
+  ([PastilleCouverts](../../src/components/commerce/PastilleCouverts.jsx)), on the browser receipt and on the terminal
+  ticket (`ticketTerminal.js`): « Sans couverts » is written on purpose, so the kitchen doesn't add them by habit.
+
 ## Resolved since earlier versions of this file
 
 Listed so nobody re-implements them: **Web Push exists** ([public/sw.js](../../public/sw.js) handles `push`

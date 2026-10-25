@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
 import { euros } from '../prixPlat';
 import ChiffresRoulants from './ChiffresRoulants';
+import { fermeCourt, fermeCourtTexte, useCommercePanier, useMaintenant } from '../fermeCourt';
 
 // La pilule du panier : « Voir le panier · 2 », posee au-dessus de la barre d'onglets.
 //
@@ -34,6 +35,12 @@ export default function FloatingCart() {
   const { pathname } = useLocation();
   const bulle = !pageDAchat(pathname);
   const visible = cart.count > 0;
+  /* COMMERCE FERMÉ (fondateur, 2026-10-25, version B de maquettes/ferme-couverts) : la barre complète le dit sous « Voir le
+   * panier » au lieu de l'ancien toast. Le commerce est déposé par la fiche ou la liste (fermeCourt.js) ; seulement le sien. */
+  const commerce = useCommercePanier();
+  const sienne = !bulle && visible && commerce && String(commerce.id) === String(cart.restaurantId);
+  const now = useMaintenant(!!sienne);
+  const fermeTexte = sienne ? fermeCourtTexte(fermeCourt(commerce, now, t), t) : '';
   // La pilule est fixe : sans place réservée en bas de page, elle recouvrait le dernier plat de la carte
   // (nom et prix illisibles sur une carte courte). La classe ajoute cette marge tant qu'elle est affichée.
   useEffect(() => {
@@ -64,14 +71,17 @@ export default function FloatingCart() {
 
   return (
     <Link ref={pilule} to="/panier" className={`panier-pilule${bulle ? ' panier-pilule--bulle' : ''}${rebond ? ' panier-pilule--rebond' : ''}`}
-      aria-label={`${t('panier.viewCart')} · ${euros(cart.sousTotal)}`}>
+      aria-label={`${t('panier.viewCart')} · ${euros(cart.sousTotal)}${fermeTexte ? ` · ${fermeTexte}` : ''}`}>
       <span className="panier-pilule-icone" aria-hidden="true">
         <Icone nom="sac" taille={20} />
         {/* Le compteur sur l'icone, comme sur une application de courses : on voit d'un coup d'oeil
             combien d'articles attendent, sans avoir a lire. */}
         <span className="panier-pilule-compte" key={cart.count}>{cart.count}</span>
       </span>
-      <span className="panier-pilule-texte">{t('panier.viewCart')}</span>
+      <span className="panier-pilule-texte">
+        {t('panier.viewCart')}
+        {fermeTexte && <small className="panier-pilule-ferme">{fermeTexte}</small>}
+      </span>
       {/* Le même sous-total que la colonne et la page Panier, offres comprises (audit du 19/10, discovery-16). */}
       <b className="panier-pilule-total"><ChiffresRoulants valeur={euros(cart.sousTotal)} /></b>
     </Link>

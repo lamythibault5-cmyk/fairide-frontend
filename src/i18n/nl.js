@@ -4892,6 +4892,22 @@ export default {
       deliveryDiscountPill: '-€{amount} levering',
       refreshFailed: "Vernieuwen lukte niet: controleer je verbinding.",
     },
+    fermeCourt: {
+      closed: 'Gesloten',
+      closedForNow: 'Momenteel gesloten',
+      forNow: 'momenteel',
+      opensAt: 'opent om {time}',
+      opensTomorrow: 'opent morgen om {time}',
+      opensDay: 'opent {day} om {time}',
+      cartWaits: 'Je mandje wacht op je.'
+    },
+    couverts: {
+      title: 'Bestek en servetten',
+      off: 'Alleen als je het nodig hebt',
+      on: 'Het restaurant voegt het toe',
+      yes: 'Bestek en servetten',
+      no: 'Geen bestek'
+    },
     restoMenuUi: {
       toastClientHatNeeded: "Om te bestellen, schakel over naar je klantrol: Mijn account › Mijn rollen.",
       toastFullToday: 'Deze zaak heeft alle bestellingen ontvangen die ze vandaag kan klaarmaken. Kom morgen terug!',
@@ -4907,8 +4923,6 @@ export default {
       toastLogin: 'Log in of maak een account om te bestellen.',
       toastNoOnline: 'Dit restaurant biedt nog geen online bestellen aan.',
       toastClosed: 'Deze zaak is momenteel gesloten.',
-      toastClosedCartKept: "Deze zaak is nu gesloten: stel je winkelmandje samen, het blijft 24 uur bewaard. Je kunt bestellen zodra ze weer opengaat, of je bestelling plannen.",
-      toastClosedByShopCartKept: "Deze zaak neemt momenteel geen bestellingen aan: stel je winkelmandje samen, het blijft 24 uur bewaard. Je kunt bestellen zodra ze weer opengaat.",
       reopenUnknown: 'Heropeningsdatum nog niet meegedeeld',
       reopenOn: 'Heropening voorzien op {date}',
       hideHours: 'Uren verbergen',

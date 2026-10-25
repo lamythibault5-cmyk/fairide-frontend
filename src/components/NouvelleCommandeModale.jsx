@@ -15,6 +15,7 @@ import Icone from './Icone';
 import { SegmentGlisse } from './commerce/BandeauCommerce';
 import AnneauDelai from './commerce/AnneauDelai';
 import ListePlats from './commerce/ListePlats';
+import PastilleCouverts from './commerce/PastilleCouverts';
 import { heurePrete, numeroCommande, ordinal, ouEstLeClient, prenom, rangClient } from './commerce/clientCommande';
 import '../ecran-commerce.css';
 
@@ -134,6 +135,7 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
           </div>
 
           <ListePlats items={o.items} />
+          <PastilleCouverts order={o} />
           {o.deliveryNote && <p className="nc-note"><Icone nom="document" taille={16} />{o.deliveryNote}</p>}
           <BandeauAllergie order={o} />
 

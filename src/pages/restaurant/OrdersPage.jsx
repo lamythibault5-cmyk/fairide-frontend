@@ -11,6 +11,7 @@ import { api, apiUpload } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import OrderReceipt from '../../components/OrderReceipt';
+import PastilleCouverts from '../../components/commerce/PastilleCouverts';
 import TicketPapier from '../../components/TicketPapier';
 import { imprimerTicketPapier } from '../../impressionPapier';
 import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPrinter';
@@ -527,6 +528,7 @@ export default function OrdersPage() {
       {o.print && <div style={{ margin: '4px 0' }}><EtatImpression p={o.print} t={t} /></div>}
       {!nouvelle && !close && <div className="ec-route-blanc"><RouteSuivi status={o.status} orderType={o.orderType} /></div>}
       <ListePlats items={o.items} />
+      <PastilleCouverts order={o} />
       {close && <DeliveryTiming order={o} />}
       <BandeauAllergie order={o} />
       <BadgeAlcool order={o} />
@@ -628,6 +630,7 @@ export default function OrdersPage() {
               {selectedOrder.orderType === 'pickup' && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.pickupInfo')}</p>}
               {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}><a href={`tel:${selectedOrder.clientPhone}`}><Icone nom="telephone" taille={16} className="icone-texte" />{' '}{telephoneLisible(selectedOrder.clientPhone)}</a></p>}
               <BandeauAllergie order={selectedOrder} />
+              <PastilleCouverts order={selectedOrder} />
               <BadgeAlcool order={selectedOrder} />
               {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}><Icone nom="cle" taille={16} className="icone-texte" />{' '}{deliveryInstructionLabel(selectedOrder.deliveryInstructions, t)}</p>}
               {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}><Icone nom="document" taille={16} className="icone-texte" />{' '}{selectedOrder.deliveryNote}</p>}
@@ -790,6 +793,7 @@ export default function OrdersPage() {
           </span>
         )}
         <ListePlats items={o.items} />
+        <PastilleCouverts order={o} />
         <div className="sp-cmd-paiement">
           {o.paymentMode === 'on_site' && rienAEncaisser(o) && !o.pickupNoShow ? null : o.paymentMode === 'on_site' ? (
             <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>

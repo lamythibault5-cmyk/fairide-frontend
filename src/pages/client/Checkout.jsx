@@ -88,6 +88,9 @@ export default function Checkout() {
   // Prix d'aujourd'hui sur chaque ligne, une fois la carte lue (CartContext.actualiserPrix, audit du 19/10, discovery-15).
   useEffect(() => { if (restaurant) cart.actualiserPrix(restaurant); }, [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
   const [deliveryNote, setDeliveryNote] = useState('');
+  // Couverts et serviettes (fondateur, 2026-10-25, version A de maquettes/ferme-couverts) : éteint par défaut, en livraison
+  // comme à l'emporter. Le commerce lit la réponse sur son écran Commandes et son ticket (« Sans couverts » écrit sinon).
+  const [couverts, setCouverts] = useState(false);
   const [useBalance, setUseBalance] = useState(true);
   // À emporter chez un commerce qui l'accepte : payer au retrait plutôt qu'en ligne.
   const [paiementSurPlace, setPaiementSurPlace] = useState(false);
@@ -395,6 +398,7 @@ export default function Checkout() {
       // passe « commandé » une fois payée (invités prévenus, plus de seconde importation des parts).
       groupCode: groupeACommander(restaurantId) || undefined,
       allergyRequest: conformite.allergyRequest.trim() || undefined, ageDeclaration: conformite.ageDeclaration || undefined,
+      utensils: couverts || undefined,
       ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {})
     };
   }
@@ -610,6 +614,19 @@ export default function Checkout() {
       setCancelling(false);
     }
   }
+
+  // Couverts et serviettes : une rangée à interrupteur sous l'allergie (app) ou sous la conformité (site) — voir `couverts`.
+  const rangeeCouverts = (
+    <button type="button" role="switch" aria-checked={couverts} className="checkout-rangee checkout-couverts"
+      onClick={() => { vibrer('bascule'); setCouverts((c) => !c); }}>
+      <Icone nom="restaurants" taille={20} />
+      <span className="checkout-rangee-texte">
+        <span className="checkout-rangee-titre">{t('couverts.title')}</span>
+        <span className="checkout-rangee-sous">{t(couverts ? 'couverts.on' : 'couverts.off')}</span>
+      </span>
+      <span className={`co-interrupteur${couverts ? ' on' : ''}`} aria-hidden="true" />
+    </button>
+  );
 
   // Le pourboire : en tête du récapitulatif dans l'app, dans la colonne des choix sur le site (voir plus bas).
   const blocPourboire = offrePourboire && (
@@ -873,6 +890,8 @@ export default function Checkout() {
                 </details>
                 <CodePromoCheckout token={token} toast={toast} subtotal={totals.subtotal} deliveryFee={fulfillmentType === 'delivery' ? Math.max(0, totals.deliveryFee - totals.deliveryDiscount) : 0}
                   payOnSite={surPlaceChoisi} applique={codePromo} onChange={setCodePromo} />
+                {/* Avec l'allergie, ce qu'on demande au commerce ; avant les CGU et les mentions légales. */}
+                {rangeeCouverts}
                 <CheckoutConformite restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
               </div>
             )}
@@ -999,6 +1018,7 @@ export default function Checkout() {
                   </span>
                   <span className="checkout-rangee-chevron" aria-hidden="true">›</span>
                 </button>
+                {rangeeCouverts}
                 {/* Seule instance qui lit la version des CGU : les feuilles ne font qu'afficher. */}
                 <CheckoutConformite partie="infos" restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
               </>
@@ -1216,6 +1236,7 @@ export default function Checkout() {
           {pendingOrder.allergyRequest && (
             <p className="small" style={{ margin: '0 0 8px' }}><b>{t('conformite.allergyRecapLabel')}</b> « {pendingOrder.allergyRequest} » — {t('conformite.allergyRecapPending')}</p>
           )}
+          {pendingOrder.utensils && <p className="small" style={{ margin: '0 0 8px' }}><b>{t('couverts.yes')}</b></p>}
           {pendingOrder.containsAlcohol && (
             <p className="small" style={{ margin: '0 0 8px' }}>{t('conformite.ageRecap', { age: pendingOrder.minAge || 18 })}</p>
           )}

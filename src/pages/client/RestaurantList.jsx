@@ -27,6 +27,8 @@ import { COMMUNES, ILLUSTRATION_TOUTES_CUISINES, communeRingDistance, haversineD
 import { FAMILLES, SPECIALITES, cuisinesCommerce, famillesCommerce, libelleFamille, specialite } from '../../specialites';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { statutOuverture } from '../../openingHours';
+import { useCart } from '../../context/CartContext';
+import { poserCommercePanier, retirerCommercePanier } from '../../fermeCourt';
 import { tarifLivraison, eurosCourts, horsZoneLivraison } from '../../livraison';
 import { kmLisible, libellePromo } from '../../prixPlat';
 import EmplacementSponsor from '../../components/EmplacementSponsor';
@@ -359,6 +361,14 @@ export default function RestaurantList() {
   // Mémorisé sur la liste : refait quand la liste change, pas à chaque rendu (useJsonLd.js).
   const ldListe = useMemo(() => restaurantListJsonLd(restaurants, { url: `${SITE_URL}/restaurants` }), [restaurants]);
   useJsonLd(ldListe, 'ld-list');
+  // La barre du panier dit « Fermé · ouvre à… » quand le commerce du panier est fermé (fermeCourt.js) : il est dans la liste.
+  const panierRestaurantId = useCart().restaurantId;
+  const commercePanier = panierRestaurantId == null ? null : restaurants.find((r) => String(r.id) === String(panierRestaurantId)) || null;
+  useEffect(() => {
+    if (!commercePanier) return undefined;
+    poserCommercePanier(commercePanier);
+    return () => retirerCommercePanier(commercePanier);
+  }, [commercePanier]);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(token ? lireCache('/restaurants/favorites/ids', token) || [] : []));
   const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(() => new Set(token ? (lireCache('/orders/mine', token) || []).map((o) => o.restaurantId) : []));
   const [loading, setLoading] = useState(() => !lireCache(CHEMIN_LISTE));

@@ -40,6 +40,8 @@ export default function OrderReceipt({ order, restaurant }) {
       </p>
       {order.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>{t('receipt.instruction', { label: deliveryInstructionLabel(order.deliveryInstructions, t) })}</p>}
       {order.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>{t('receipt.note', { note: order.deliveryNote })}</p>}
+      {/* Couverts (migration 089) : écrits en clair, comme sur le ticket du terminal ; rien pour une commande d'avant. */}
+      {(order.utensils === true || order.utensils === false) && <p className="small" style={{ margin: '4px 0' }}><b>{t(order.utensils ? 'couverts.yes' : 'couverts.no')}</b></p>}
       <div className="receipt-divider" />
       {order.items.map((i) => (
         <div key={i.itemId} className="receipt-line" style={{ alignItems: 'flex-start' }}>

@@ -4711,6 +4711,11 @@ html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(
 .plat-pied > .btn-gold.plat-ajouter::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 1px; background: rgba(20, 18, 31, .2); }
 .plat-pied:has(.plat-ajouter:disabled) .plat-quantite { background: var(--line); }
 .plat-ajouter-prix { display: inline-flex; overflow: hidden; vertical-align: bottom; }
+/* Commerce fermé (FichePlat, fondateur 2026-10-25) : une ligne sur toute la largeur du pied, au-dessus du bloc lime. Le point
+   rouge est celui de « Fermé » en haut de la fiche du commerce (.fiche-statut). */
+.plat-ferme { flex: 0 0 100%; margin: 0 0 10px; text-align: center; font-size: 13.5px; line-height: 1.35; color: var(--ink-soft); }
+.plat-ferme b { color: var(--ink); font-weight: 700; }
+.plat-ferme-point { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--red); vertical-align: 1px; }
 /* Le groupe obligatoire où « Ajouter » vient d'amener (FichePlat, 2026-10-25) : encadré iris, la phrase en iris, et l'en-tête
    qui s'éclaire une fois. Le cadre reste tant que le choix manque. */
 .plat-groupe--manque { margin: 0 -12px 14px; padding: 12px 12px 4px; border-top-color: transparent; border-radius: 14px; background: #F7F6FD; box-shadow: 0 0 0 2px var(--iris); }
@@ -4812,6 +4817,19 @@ html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(
 /* Ce qui manque se dit en rouge d'état, jamais en lime : le lime est l'accent, pas un signal. */
 .checkout-rangee-sous.est-requis { color: var(--red); font-weight: 600; }
 .checkout-rangee-chevron { flex: 0 0 auto; font-size: 22px; color: var(--ink-faint); line-height: 1; }
+/* Couverts et serviettes (Checkout.jsx, fondateur 2026-10-25) : la rangée bascule d'un toucher, l'interrupteur iris dit
+   l'état. Même dessin que .ec-interrupteur de l'espace commerce, qui n'est pas chargé ici. Sur le site, la rangée précède
+   l'allergie dans la colonne des choix, plus serrée, entre deux filets. */
+html:not(.appli) .checkout-couverts { min-height: 56px; margin-top: 8px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.checkout-couverts > svg { flex: none; color: var(--iris); }
+.co-interrupteur { position: relative; flex: none; width: 50px; height: 30px; border-radius: 15px; background: var(--line); transition: background .25s; }
+.co-interrupteur::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(20, 18, 31, .25); transition: transform .3s var(--ressort-ui, ease); }
+.co-interrupteur.on { background: var(--iris); }
+.co-interrupteur.on::after { transform: translateX(20px); }
+@media (prefers-reduced-motion: reduce) { .co-interrupteur, .co-interrupteur::after { transition: none; } }
+/* La réponse côté commerce (PastilleCouverts.jsx) : iris quand il faut en ajouter, gris discret sinon. */
+.pastille-couverts { display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 2px; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--cream-dim); color: var(--ink-soft); font-size: 12.5px; font-weight: 600; }
+.pastille-couverts.oui { background: var(--iris); color: #fff; }
 /* En-tête d'un sous-écran : le même geste de retour que partout ailleurs dans le parcours. */
 .sous-ecran-tete {
   display: flex; align-items: center; gap: 12px; flex: 0 0 auto;
@@ -5541,6 +5559,10 @@ html.appli .panier-pilule:not(.panier-pilule--bulle),
 html:not(.appli) body:has(.fiche-site) .panier-pilule:not(.panier-pilule--bulle) { padding: 0 22px; font-weight: 700; }
 .panier-pilule:not(.panier-pilule--bulle) svg { filter: none; }
 .panier-pilule:not(.panier-pilule--bulle) .panier-pilule-texte { flex: 1; text-align: left; }
+/* « Fermé · ouvre à 11:30 » sous « Voir le panier » quand le commerce du panier est fermé (FloatingCart, fondateur 2026-10-25,
+   version B de maquettes/ferme-couverts) : à la place de l'ancien toast, et tant que c'est vrai. */
+.panier-pilule-ferme { display: block; margin-top: 1px; font-size: 12px; font-weight: 600; line-height: 1.2; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panier-pilule:has(.panier-pilule-ferme) .panier-pilule-texte { line-height: 1.15; }
 html.appli .panier-pilule:not(.panier-pilule--bulle) .panier-pilule-total,
 html:not(.appli) body:has(.fiche-site) .panier-pilule:not(.panier-pilule--bulle) .panier-pilule-total {
   height: auto; padding: 0; border-radius: 0; background: none; color: var(--ink);
