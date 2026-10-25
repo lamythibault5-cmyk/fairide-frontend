@@ -24,6 +24,7 @@ import { estNatif, vibrerNatif } from './natif';
  * vibrations de l'app. On dit maintenant ce que le geste VEUT DIRE, et le téléphone joue sa propre sensation pour ce sens
  * (natif.js → greffon Haptique d'iOS et d'Android, ios/App/App/HaptiquePlugin.swift, android/…/HaptiquePlugin.java) :
  *   'choix'      le cran d'une molette : une lentille (onglets, puces, sections) qui passe sur un élément, un segment ;
+ *                et une option prise parmi quelques-unes (2026-10-25) : pastilles, cases du paiement, options d'un plat ;
  *   'bascule'    un petit contrôle : cœur, interrupteur, − / + ;
  *   'valider'    un toucher qui engage, AU MOMENT DU TOUCHER : Ajouter, Payer, Accepter, Prendre la course, Envoyer ;
  *   'seuil'      un seuil franchi pendant un geste, une lentille qui se pose ;
