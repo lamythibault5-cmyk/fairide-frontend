@@ -19,9 +19,15 @@ the bike covers 72 % of the tile since 2026-10-25 (founder: 82 % touched the edg
 (`AppIcon.appiconset`) gets an automatic Liquid Glass coat that greys the lime (#C8F03C shows as ~#B4D44F); the website
 icon added to the home screen does not, which is why it looked brighter. The cure is the Icon Composer file
 `ios/App/App/AppIcon.icon` (2026-10-25), written by hand from Windows, no Mac: `icon.json` = solid iris `#3B2FB5`
-background (sRGB), one layer `Assets/velo.svg` (copied there by the script) with `glass: false`, and the group's specular,
+background (sRGB), one layer `Assets/velo.svg` (copied there by the script) with `glass: false` and `scale` 1.045 (actool
+draws the layer a bit smaller: 1.045 gives back the 71 % of the tile seen on the iPhone before), and the group's specular,
 blur, translucency and shadow all off. It is registered in `project.pbxproj` (type `folder.iconcomposer.icon`, in
 Resources); GitHub's Mac (Xcode 26) compiles it. Format reference: github.com/dfabulich/unofficial-apple-icon-composer-json-schema.
+**Never add `"color-space-for-untagged-svg-colors": "srgb"`**: actool crashes on it (« attempt to insert nil object »,
+iOS build #58 on 2026-10-25, every iPhone build failed until removed). To test an `.icon` change without a full build, run
+`xcrun actool <file>.icon --compile out --platform iphoneos --minimum-deployment-target 15.0 --app-icon AppIcon
+--output-partial-info-plist out/p.plist --output-format human-readable-text` on a GitHub Mac: it prints the real error
+(the TestFlight workflow cuts the log to 40 lines) and writes the rendered PNGs.
 Keep `AppIcon.appiconset` for iOS 18 and older. Users who pick « Clear » or « Tinted » icons still get iOS's recolouring.
 `@capacitor/geolocation` and `@capgo/capacitor-social-login` (Apple / Google sheet — the site's Google button is refused
 inside a WebView) are loaded with `import()` from `natif.js` only, so the website never downloads them.
