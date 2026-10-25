@@ -64,7 +64,7 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
       const infos = coque ? infosAppareil() || {} : {};
       const r = await api('/admin/simulation/terminal', {
         method: 'POST', token,
-        body: { model: infos.model || (coque ? 'Terminal Fairide' : 'Goodcom (navigateur)'), serial: infos.serial, appVersion: infos.appVersion, androidVersion: infos.androidVersion, paperColumns: infos.paperColumns || 32, previousToken: deja?.token }
+        body: { model: infos.model || (coque ? 'Terminal Fairride' : 'Goodcom (navigateur)'), serial: infos.serial, appVersion: infos.appVersion, androidVersion: infos.androidVersion, paperColumns: infos.paperColumns || 32, previousToken: deja?.token }
       });
       if (coque) transmettreJeton(r.token, API_BASE);
       else associerTerminalNavigateur({ token: r.token, terminalId: r.terminalId, restaurantId: r.restaurantId, simulation: true, restaurantName: tr('terminal.webOtherSimulation') });

@@ -1,5 +1,6 @@
 import { useLanguage } from '../../context/LanguageContext';
 import AvecMarque from '../AvecMarque';
+import MotMarque from '../MotMarque';
 import Rich from '../Rich';
 import { euros } from '../../prixPlat';
 
@@ -45,7 +46,7 @@ export default function HeroPrix() {
   const { t } = useLanguage();
   // La barre des grandes plateformes fait toute la largeur ; celle de Fairide est à l'échelle (10 sur 30).
   const lignes = [
-    { nom: 'fairide', taux: TAUX_NOUS, nous: true },
+    { nom: 'fairride', taux: TAUX_NOUS, nous: true },
     { nom: t('landing.priceThem'), taux: TAUX_EUX }
   ];
   const plat = euros(PLAT).replace(/[,.]00(?=\D|$)/, '');
@@ -55,7 +56,7 @@ export default function HeroPrix() {
       <p className="sa-prix-accroche"><Rich text={t('landing.prixAccroche')} /></p>
       {lignes.map((l) => (
         <div key={l.nom} className={`sa-prix-ligne${l.nous ? ' sa-prix-nous' : ''}`}>
-          <span className={l.nous ? 'wordmark' : undefined}>{l.nom}</span>
+          {l.nous ? <MotMarque /> : <span>{l.nom}</span>}
           <i aria-hidden="true"><b style={{ width: `${Math.round((l.taux / TAUX_EUX) * 100)}%` }} /></i>
           <strong>{pct(l.taux)}</strong>
         </div>

@@ -37,14 +37,15 @@ function clean(node) {
 /* « FAIRRIDE », AVEC DEUX R (fondateur, 2026-10-20 : « les gens écrivent souvent fairride, on ne sort jamais »). Ce sont les
    orthographes qu'on entend en disant le nom ; schema.org les déclare comme autres noms de la même marque, et Google lit
    alternateName du bloc WebSite de l'accueil pour le nom de site affiché dans ses résultats. Ce n'est pas du bourrage de
-   mots-clés : rien n'est caché dans la page, c'est la fiche d'identité de la marque qui dit comment on l'écrit de travers. */
-const AUTRES_NOMS = ['Fairride', 'Fair ride', 'Fairide Bruxelles', 'fairide.be'];
+   mots-clés : rien n'est caché dans la page, c'est la fiche d'identité de la marque qui dit comment on l'écrit de travers.
+   Depuis le 2026-10-25, « Fairride » EST le nom (name) : l'ancienne orthographe à un r devient à son tour un autre nom. */
+const AUTRES_NOMS = ['Fairide', 'Fair ride', 'Fairride Bruxelles', 'fairride.be', 'fairide.be'];
 
 export function organizationJsonLd() {
   return clean({
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Fairide',
+    name: 'Fairride',
     alternateName: AUTRES_NOMS,
     url: SITE_URL,
     logo: LOGO_URL,
@@ -67,7 +68,7 @@ export function websiteJsonLd() {
   return clean({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Fairide',
+    name: 'Fairride',
     alternateName: AUTRES_NOMS,
     url: `${SITE_URL}/`,
     inLanguage: ['fr-BE', 'nl-BE', 'en']

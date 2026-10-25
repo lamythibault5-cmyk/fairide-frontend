@@ -7,6 +7,7 @@ import { usePreviewMode } from '../context/PreviewModeContext';
 import { useToast } from '../context/ToastContext';
 import useInbox from '../hooks/useInbox';
 import BrandMark from './BrandMark';
+import MotMarque from './MotMarque';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
 import Icone from './Icone';
@@ -263,7 +264,7 @@ export default function Layout() {
         <div className="appli-barre" ref={barreAppli}>
           {accueilListe ? (
             // La marque n'est pas un lien (fondateur, 2026-10-16) : « / » ramenait sur cette même liste.
-            <span className="appli-marque"><BrandMark size={30} /><span className="wordmark">fairide</span></span>
+            <span className="appli-marque"><BrandMark size={30} /><MotMarque /></span>
           ) : (
             <button type="button" className="bv-rond" data-retour-natif onClick={retourAppli} aria-label={t('appli.retour')}><Icone nom="retour" taille={18} /></button>
           )}
@@ -295,7 +296,7 @@ export default function Layout() {
           <div className="row header-row">
             {/* aria-label : sur la fiche d'un commerce (en-tête allégé), le lien ne porte que le vélo, sans le mot — il lui
                 fallait un nom pour les lecteurs d'écran (vérification automatique du 2026-10-17). */}
-            <Link className="brand" to="/" aria-label="Fairide">
+            <Link className="brand" to="/" aria-label="Fairride">
               {/* Sans tuile : le vélo lime flotte sur l'iris, net à toute densité (SVG). 78px de LARGE : le
                   vélo est en paysage (82 × 42), il ne pèse donc qu'environ 40px de haut — la hauteur
                   du mot. Le bol carré, entre le 2026-09-18 et le 2026-09-27, tenait à 44. */}
@@ -305,7 +306,7 @@ export default function Layout() {
                   {/* <span> et non <h1> : la marque est présente sur toutes les pages, elle y
                       confisquait donc le titre de niveau 1. Le h1 appartient au contenu de la
                       page. Rendu inchangé, voir .brand-name dans styles.css. */}
-                  <span className="brand-name wordmark">fairide</span>
+                  <MotMarque className="brand-name" />
                   <span className="brand-slogan">{t('common.slogan')}</span>
                 </div>
               )}

@@ -24,9 +24,9 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Fairide" />
+    <meta name="apple-mobile-web-app-title" content="Fairride" />
     <meta name="format-detection" content="telephone=no" />
-    <title>Livraison de repas à Bruxelles · L'alternative à Uber Eats | Fairide</title>
+    <title>Livraison de repas à Bruxelles · L'alternative à Uber Eats | Fairride</title>
     <!-- Mot pour mot seo.defaultTitle et seo.homeDescription (i18n/fr.js), que le pré-rendu repose de
          toute façon : ce gabarit ne sert tel quel qu'en développement.
          UBER EATS EST NOMMÉ ICI DEPUIS LE 2026-10-14 (fondateur). La décision précédente — ne pas le
@@ -40,22 +40,23 @@
     <link rel="canonical" href="https://fairide.be/" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Fairide" />
+    <meta property="og:site_name" content="Fairride" />
     <meta property="og:locale" content="fr_BE" />
     <meta property="og:url" content="https://fairide.be/" />
     <!-- Reprend mot pour mot le titre de la page (le pré-rendu fait de même). L'accroche « Paie ton
          repas, pas la plateforme » reste dans l'image partagée, en dur. -->
-    <meta property="og:title" content="Livraison de repas à Bruxelles · L'alternative à Uber Eats | Fairide" />
+    <meta property="og:title" content="Livraison de repas à Bruxelles · L'alternative à Uber Eats | Fairride" />
     <meta property="og:description" content="Tes restos de Bruxelles livrés, l'alternative à Uber Eats. 10 % de commission au plus pour les restos, là où les grandes plateformes annoncent 22 à 32 %." />
     <meta property="og:image" content="https://fairide.be/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <!-- og-image.png refait le 2026-09-27 : le vélo et l'accroche actuelle, en dur dans le visuel.
+    <!-- og-image.png refait le 2026-09-27 : le vélo et l'accroche actuelle, en dur dans le visuel. Mot « fairride »
+         (deux r, « ride » en lime) redessiné le 2026-10-25 au même endroit et à la même taille.
          Si l'accroche change (landing.title1/2), refaire l'image ET ce texte ensemble. -->
-    <meta property="og:image:alt" content="Fairide : paie ton repas, pas la plateforme." />
+    <meta property="og:image:alt" content="Fairride : paie ton repas, pas la plateforme." />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Livraison de repas à Bruxelles · L'alternative à Uber Eats | Fairide" />
+    <meta name="twitter:title" content="Livraison de repas à Bruxelles · L'alternative à Uber Eats | Fairride" />
     <meta name="twitter:description" content="Tes restos de Bruxelles livrés, l'alternative à Uber Eats. 10 % de commission au plus pour les restos, là où les grandes plateformes annoncent 22 à 32 %." />
     <meta name="twitter:image" content="https://fairide.be/og-image.png" />
 
@@ -178,6 +179,8 @@
            le temps que le fichier arrive, et le fondu de 0,66 s lui laisse justement le temps.
            Graisse 700 et lettres à -0,02em, comme le logo partout ailleurs (c'était 800 et -0,04em : le mot ne ressemblait pas
            à celui de l'en-tête, signalé le 2026-10-20). */
+        /* « fairride » : « ride » en lime sur l'iris, comme dans l'en-tête (MotMarque.jsx, 2026-10-25). */
+        #splash .wordmark-ride { color: #C8F03C; }
         #splash .splash-nom { font: 700 34px/1 "Bricolage Grotesque", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.02em; color: #fff; opacity: 0; animation: splash-nom .3s .66s ease forwards; }
         /* DANS L'APPLICATION, le vélo est déjà là : l'écran de lancement natif (le vélo seul, immobile) le montrait pendant que
            la WebView démarrait. main.jsx pose cette classe au moment où il retire l'écran natif : on ne redessine pas le vélo
@@ -234,7 +237,7 @@
         </svg>
         <svg class="splash-route" viewBox="0 0 300 6" xmlns="http://www.w3.org/2000/svg"><line x1="0" y1="3" x2="300" y2="3" stroke="rgba(255,255,255,.45)" stroke-width="4" /></svg>
       </div>
-      <span class="splash-nom wordmark">fairide</span>
+      <span class="splash-nom wordmark">fair<span class="wordmark-ride">ride</span></span>
       <!-- Invisible pendant 8 s, puis affiché sans que rien n'ait à s'exécuter. `?r=` casse le cache
            du navigateur ET celui des intermédiaires : un simple rechargement resservirait la page
            périmée qui a justement causé le blocage. -->

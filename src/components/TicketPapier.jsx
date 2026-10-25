@@ -12,7 +12,7 @@ export default function TicketPapier({ lines = [], columns = 32, className = '',
         if (x.t === 'rule') return <div key={i} className="tp-trait" aria-hidden="true">{x.char.repeat(columns)}</div>;
         if (x.t === 'feed') return <div key={i} className="tp-avance" style={{ height: `${x.lines * 1.2}em` }} aria-hidden="true" />;
         // Logo Fairide en tête du ticket (fondateur, 2026-10-06) : dessiné en noir, comme le reste du rouleau.
-        if (x.t === 'logo') return <div key={i} className="tp-logo" aria-label="Fairide"><BrandMark size={40} /></div>;
+        if (x.t === 'logo') return <div key={i} className="tp-logo" aria-label="Fairride"><BrandMark size={40} /></div>;
         if (x.t === 'qr') {
           const qr = qrSvgPath(x.data);
           return (

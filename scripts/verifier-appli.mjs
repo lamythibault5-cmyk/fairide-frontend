@@ -48,7 +48,7 @@ const UTILISATEURS = {
   driver: { id: 12, name: 'Lou Livreur', firstName: 'Lou', lastName: 'Livreur', email: 'livreur@exemple.be', role: 'driver', roles: ['driver'], phone: '+32 470 00 00 02' },
   restaurant: { id: 13, name: 'Rémi Resto', firstName: 'Rémi', lastName: 'Resto', email: 'resto@exemple.be', role: 'restaurant', roles: ['restaurant'], phone: '+32 470 00 00 03', restaurantId: 1 },
   // Compte de l'équipe : la console n'existe pas dans l'application (Owen, 2026-10-20), /admin… y montre AdminSurLeSite.
-  admin: { id: 14, name: 'Équipe Fairide', firstName: 'Équipe', lastName: 'Fairide', email: 'contact@fairide.be', role: 'client', roles: ['client'], isAdmin: true, phone: '+32 470 00 00 04' }
+  admin: { id: 14, name: 'Équipe Fairride', firstName: 'Équipe', lastName: 'Fairride', email: 'contact@fairide.be', role: 'client', roles: ['client'], isAdmin: true, phone: '+32 470 00 00 04' }
 };
 
 // Pages ouvertes pour chaque profil. Les pages du site (aide, légales, « C'est bon »…) y sont exprès : dans l'app, elles

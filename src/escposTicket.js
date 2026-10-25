@@ -149,12 +149,12 @@ export function buildTicketBytes(order, restaurant, { columns = COLUMNS_58MM } =
   // largeur-là, sinon il déborde et repart à la ligne au milieu du montant.
   t.line(pair('TOTAL', money(order.total), Math.floor(columns / 2)));
   t.size(false).bold(false);
-  t.align(1).line(order.paymentMode === 'on_site' ? 'A ENCAISSER SUR PLACE' : order.paid ? 'Paye via Fairide' : 'NON PAYE').align(0);
+  t.align(1).line(order.paymentMode === 'on_site' ? 'A ENCAISSER SUR PLACE' : order.paid ? 'Paye via Fairride' : 'NON PAYE').align(0);
 
   // --- Pied ------------------------------------------------------------------------------------------
   t.rule();
   // Le commerce est nommé, pas tutoyé ni vouvoyé : ce ticket peut finir dans le sac du client (audit du 19/10, CROSS-15).
-  t.lines("Recapitulatif de commande fourni par Fairide : il ne remplace pas le ticket de caisse du commerce, s'il est tenu d'en delivrer un.");
+  t.lines("Recapitulatif de commande fourni par Fairride : il ne remplace pas le ticket de caisse du commerce, s'il est tenu d'en delivrer un.");
   t.align(1).line().line('Merci et bonne degustation !');
 
   // Avance le papier pour dégager la zone de découpe, puis tente une coupe partielle. Les modèles sans

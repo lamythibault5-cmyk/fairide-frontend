@@ -105,7 +105,7 @@ export default function Account() {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: 'Fairide',
+          title: 'Fairride',
           text: t('accountUi.shareText'),
           url: lien
         });

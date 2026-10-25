@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import BrandMark from './BrandMark';
+import MotMarque from './MotMarque';
 import { resetConsent } from '../consent';
 import AvecMarque from './AvecMarque';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -13,7 +14,7 @@ export default function Footer() {
         <div className="footer-col footer-brand">
           <div className="row" style={{ gap: 8, marginBottom: 8 }}>
             <BrandMark size={28} />
-            <b className="wordmark" style={{ fontSize: 19, letterSpacing: '-0.03em' }}>fairide</b>
+            <MotMarque as="b" style={{ fontSize: 19, letterSpacing: '-0.03em' }} />
           </div>
           <p className="small">{t('footer.tagline')}</p>
           <p className="small">{t('footer.belgian')}</p>

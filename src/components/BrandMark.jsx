@@ -27,7 +27,7 @@ export default function BrandMark({ size = 34, tile = true, color, animer = true
 
   return (
     <span className={`mark${animer ? ' mark-anime' : ''}`} style={{ width: size, height: hauteur }}>
-      <svg viewBox={tile ? '0 0 132 132' : '-3 5 82 42'} xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fairide" shapeRendering="geometricPrecision">
+      <svg viewBox={tile ? '0 0 132 132' : '-3 5 82 42'} xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fairride" shapeRendering="geometricPrecision">
         {tile && <rect width="132" height="132" rx="32" fill="#3B2FB5" />}
         <g transform={tile ? 'translate(28 44)' : undefined}>
           <g fill="none" stroke={trait} strokeWidth="5" strokeLinecap="round">

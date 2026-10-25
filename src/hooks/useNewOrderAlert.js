@@ -369,7 +369,7 @@ export default function useNewOrderAlert(orders, ready) {
   if (baseTitleRef.current === null && typeof document !== 'undefined') baseTitleRef.current = document.title;
 
   useEffect(() => {
-    const base = baseTitleRef.current || 'Fairide';
+    const base = baseTitleRef.current || 'Fairride';
     // Dans la langue du commerce : le compteur était écrit en dur en français (audit du 19/10, shop-220).
     document.title = newCount > 0
       ? t(newCount > 1 ? 'alertBar.tabTitleMany' : 'alertBar.tabTitleOne', { n: newCount, base })

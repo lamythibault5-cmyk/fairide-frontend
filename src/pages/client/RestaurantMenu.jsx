@@ -219,7 +219,7 @@ export default function RestaurantMenu({ id }) {
   const ldFiche = useMemo(() => (restaurant ? restaurantJsonLd(restaurant, { url: `${SITE_URL}${cheminFiche(restaurant)}` }) : null), [restaurant]);
   useJsonLd(ldFiche, 'ld-restaurant');
   useJsonLd(restaurant ? breadcrumbJsonLd([
-    { name: 'Fairide', path: '/' },
+    { name: 'Fairride', path: '/' },
     { name: t('restoListUi.heading'), path: '/restaurants' },
     { name: restaurant.name, path: cheminFiche(restaurant) }
   ]) : null, 'ld-breadcrumb');

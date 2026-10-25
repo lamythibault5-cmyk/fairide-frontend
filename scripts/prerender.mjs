@@ -104,7 +104,7 @@ const PAGES = [
       {
         id: 'ld-breadcrumb',
         donnees: breadcrumbJsonLd([
-          { name: 'Fairide', path: cheminLocalise('/', langue) },
+          { name: 'Fairride', path: cheminLocalise('/', langue) },
           { name: cle('restoListUi.heading', langue), path: cheminLocalise('/restaurants', langue) }
         ])
       }
@@ -119,7 +119,7 @@ const PAGES = [
       {
         id: 'ld-breadcrumb',
         donnees: breadcrumbJsonLd([
-          { name: 'Fairide', path: cheminLocalise('/', langue) },
+          { name: 'Fairride', path: cheminLocalise('/', langue) },
           { name: cle('story.h1', langue), path: cheminLocalise('/notre-histoire', langue) }
         ])
       }
@@ -240,7 +240,7 @@ function redirectionVers(chemin, langue) {
 <html lang="${langue}">
   <head>
     <meta charset="UTF-8" />
-    <title>Fairide</title>
+    <title>Fairride</title>
     <link rel="canonical" href="${canonique}" />
     <meta http-equiv="refresh" content="0; url=${relatif}" />
   </head>
@@ -421,7 +421,7 @@ async function principal() {
           {
             id: 'ld-breadcrumb',
             donnees: breadcrumbJsonLd([
-              { name: 'Fairide', path: cheminLocalise('/', langue) },
+              { name: 'Fairride', path: cheminLocalise('/', langue) },
               { name: cle('restoListUi.heading', langue), path: cheminLocalise('/restaurants', langue) },
               { name: r.name, path: chemin }
             ])
