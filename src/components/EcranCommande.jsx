@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icone from './Icone';
+import { vibrer } from '../gestes';
 import { useLanguage } from '../context/LanguageContext';
 import '../ecran-commande.css';
 import '../site-commande.css';
@@ -122,10 +123,11 @@ export function BarreCommande({ montant, className = '', children }) {
 }
 
 /* La case d'un choix unique, en carte : icône dans sa tuile, libellé, et la coche qui saute sur le choix retenu (blanche sur
-   l'iris depuis le 2026-10-19 : le lime reste au bouton de l'écran). */
+   l'iris depuis le 2026-10-19 : le lime reste au bouton de l'écran). Prendre une autre case donne le « cran » de la lentille
+   ('choix', gestes.js ; fondateur, 2026-10-25) ; retoucher la case déjà prise ne vibre pas. */
 export function OptionCommande({ on, icone, titre, sous, onClick }) {
   return (
-    <button type="button" className={`ec-option${on ? ' on' : ''}`} aria-pressed={on} onClick={onClick}>
+    <button type="button" className={`ec-option${on ? ' on' : ''}`} aria-pressed={on} onClick={(e) => { if (!on) vibrer('choix'); onClick?.(e); }}>
       <span className="ec-option-tuile"><Icone nom={icone} taille={20} /></span>
       <span className="ec-option-texte">{titre}{sous && <small>{sous}</small>}</span>
       <span className="ec-case">{on && <Icone nom="valider" taille={14} />}</span>

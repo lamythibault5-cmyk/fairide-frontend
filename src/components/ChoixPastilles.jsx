@@ -12,6 +12,11 @@
 //
 // Au-delà de `seuilDefilement` options — des créneaux horaires, des dates — la rangée défile
 // horizontalement au lieu de s'empiler sur dix lignes.
+//
+// Changer de pastille donne le « cran » de la lentille ('choix', gestes.js ; fondateur, 2026-10-25) : on sent qu'on a pris
+// celle-ci. Retoucher la pastille déjà prise ne vibre pas, rien n'a changé.
+import { vibrer } from '../gestes';
+
 export default function ChoixPastilles({ options, valeur, onChange, libelle, seuilDefilement = 8 }) {
   const defile = options.length > seuilDefilement;
   return (
@@ -29,7 +34,7 @@ export default function ChoixPastilles({ options, valeur, onChange, libelle, seu
           // flèches que rien n'implémente ici. Un bouton pressé se comprend sans cela.
           aria-pressed={o.value === valeur}
           disabled={o.disabled}
-          onClick={() => onChange(o.value)}
+          onClick={() => { if (o.value !== valeur) vibrer('choix'); onChange(o.value); }}
         >
           {o.icone}
           <span>{o.label}</span>

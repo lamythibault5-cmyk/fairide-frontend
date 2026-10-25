@@ -72,10 +72,15 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
   // était notée ici — est reprise telle quelle dans le hook.
   useDialogue(racine, annuler);
 
+  // Cocher ou décocher une option (taille, sauce, suppléments) donne le « cran » de la lentille ('choix', gestes.js ;
+  // fondateur, 2026-10-25). Une option bloquée par le maximum du groupe ne change rien : pas de vibration.
   function choisirUnique(groupId, optionId) {
+    vibrer('choix');
     setSelections((prev) => ({ ...prev, [groupId]: new Set([optionId]) }));
   }
   function basculerMultiple(groupId, optionId, maxSelections) {
+    const pris = selections[groupId];
+    if (pris?.has(optionId) || !maxSelections || (pris?.size || 0) < maxSelections) vibrer('choix');
     setSelections((prev) => {
       const next = new Set(prev[groupId]);
       if (next.has(optionId)) next.delete(optionId);
@@ -96,6 +101,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
       && (!g.maxSelections || g.maxSelections >= g.items.length);
   }
   function basculerTout(g) {
+    vibrer('choix');
     setSelections((prev) => {
       const tout = g.items.every((i) => prev[g.id].has(i.id));
       return { ...prev, [g.id]: tout ? new Set() : new Set(g.items.map((i) => i.id)) };
@@ -242,7 +248,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
                           // Choix unique FACULTATIF (« Sauce ») : toucher l'option déjà choisie la retire. Un bouton radio coché ne
                           // se décoche pas tout seul (onChange ne part pas) : seule la fermeture de la fiche ramenait à « sans
                           // sauce » (audit du 19/10, discovery-28). Choix obligatoire : inchangé.
-                          onClick={g.type === 'single' && !g.required && choisis.has(i.id) ? () => setSelections((prev) => ({ ...prev, [g.id]: new Set() })) : undefined}
+                          onClick={g.type === 'single' && !g.required && choisis.has(i.id) ? () => { vibrer('choix'); setSelections((prev) => ({ ...prev, [g.id]: new Set() })); } : undefined}
                         />
                         <span>{i.name}</span>
                       </span>
