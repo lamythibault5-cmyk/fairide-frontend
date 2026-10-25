@@ -8,7 +8,7 @@
 //
 // Réglages de la version B :
 //   - un BOUTON (retours, cœur, recherche, croix, « + », pastilles…) grossit de 50 % (fondateur, 2026-10-25 : « pas les barres,
-//     mais plus que 12, peut-être 50 % » ; 8 % dans la maquette, puis 12 %). Une BARRE (onglets, bandes, panier, Livraison /
+//     mais plus que 12, peut-être 50 % » ; 8 % dans la maquette, puis 12 %). Une BARRE (onglets, bande des sections, panier, Livraison /
 //     À emporter) garde son petit grossissement : 3,5 % à partir de 300 px, un peu plus si elle est plus courte ;
 //   - se penche de 2 px (petit) à 3 px (barre) vers le doigt ;
 //   - ressort à la pose : amortissement .85, réponse .2 s ; au lâcher : .55, .4 s (un rebond franc d'environ 1 %, posé en .45 s).
@@ -18,9 +18,10 @@
 // (le panier centré par translateX(-50 %), la barre qui « pousse » à un changement d'onglet) au lieu de les remplacer.
 
 /* Les contrôles en verre de l'app. Un appui sur un élément à l'intérieur fait réagir tout le contrôle (toute la barre d'onglets,
-   toute la bande des cuisines : réponse 3 du questionnaire). */
+   toute la bande des sections d'une fiche : réponse 3 du questionnaire). La bande des cuisines n'en est plus (2026-10-25,
+   maquettes/barre-cuisines : plus de cadre, comme Uber Eats) : seule sa lentille est du verre, et lentillePuces.js la fait grossir. */
 const VERRE = [
-  '.dashboard-nav', '.lt-puces', '.category-quicknav--verre', '.panier-pilule',
+  '.dashboard-nav', '.category-quicknav--verre', '.panier-pilule',
   '.fiche-appli .flux-entete--flottant .flux-bouton', '.fiche-appli .favorite-heart--rond', '.fiche-appli .fiche-modes',
   '.fiche-appli .fiche-infos-lien', '.fiche-appli .fiche-apercu-plus', '.plat-pas', '.ec-pas',
   '.carte-page .carte-reinit', '.carte-page .carte-pastilles .cuisine-chip', '.carte-fiche-fermer',
@@ -30,11 +31,11 @@ const VERRE = [
   '.plat-fermer'
 ].join(', ');
 // Les barres, qui ne grossissent qu'un peu (la barre d'onglets était « bien », fondateur 2026-10-24) ; tout le reste est un bouton.
-const BARRES = '.dashboard-nav, .lt-puces, .category-quicknav--verre, .panier-pilule, .fiche-appli .fiche-modes';
+const BARRES = '.dashboard-nav, .category-quicknav--verre, .panier-pilule, .fiche-appli .fiche-modes';
 
 /* Ceux qui défilent de côté : le doigt qui part les faire défiler ne doit pas les faire gonfler. Ils attendent 70 ms (le
    « delaysContentTouches » des vues qui défilent sur iOS) ; un défilement qui démarre avant annule l'appui (pointercancel). */
-const DEFILENT = '.lt-puces, .category-quicknav--verre, .carte-pastilles .cuisine-chip, .dashboard-nav.admin';
+const DEFILENT = '.category-quicknav--verre, .carte-pastilles .cuisine-chip, .dashboard-nav.admin';
 const ATTENTE_DEFILE = 70;
 
 const BOUTON = 0.5;

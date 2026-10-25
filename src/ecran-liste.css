@@ -10,21 +10,21 @@
 /* ---------------------------------------------------------------------------------------------------------------------
    1 · LE HAUT DE LA LISTE (TeteListe.jsx)
    --------------------------------------------------------------------------------------------------------------------- */
-.liste-tete {
-  /* Ce que .dashboard-main met autour de la page : le bandeau l'annule pour aller bord à bord, jusque sous l'encoche. */
+.liste-tete, .lt-cuisines {
+  /* Ce que .dashboard-main met autour de la page : le bandeau et la bande l'annulent pour aller bord à bord, le bandeau
+     jusque sous l'encoche. */
   --lt-mh: 24px;
   --lt-mg: 28px;
   /* Hauteur du bandeau sans l'encoche : 88 px, la version C dépliée de maquettes/bandeau-velo (fondateur, 2026-10-21 :
      « A, qui ne se replie pas, à la hauteur de C déplié »). */
   --lt-hb: 88px;
-  margin-bottom: 14px;
 }
 @media (max-width: 900px) {
-  .liste-tete { --lt-mh: calc(16px + env(safe-area-inset-top)); --lt-mg: 16px; }
+  .liste-tete, .lt-cuisines { --lt-mh: calc(16px + env(safe-area-inset-top)); --lt-mg: 16px; }
 }
-.liste-tete--collante { position: sticky; top: var(--lt-dessus, 0px); z-index: 30; }
+.liste-tete--collante { position: sticky; top: 0; z-index: 30; }
 .liste-tete--bandeau {
-  margin: calc(-1 * var(--lt-mh)) calc(-1 * var(--lt-mg)) 14px;
+  margin: calc(-1 * var(--lt-mh)) calc(-1 * var(--lt-mg)) 0;
   pointer-events: none;
   transition: transform .45s cubic-bezier(.34, 1.25, .64, 1);
 }
@@ -83,51 +83,44 @@
 .lt-bandeau .lt-route { height: 22px; margin-top: 0; }
 @keyframes lt-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
 
-/* La bande des cuisines. Sur le site : blanche à filet, la lentille est une pastille iris pleine. */
-.lt-puces { position: relative; border-radius: 30px; background: #fff; border: 1px solid var(--line); }
-.liste-tete--bandeau .lt-puces { margin: -12px 10px 0; }
-.lt-defile { overflow-x: auto; overflow-y: hidden; border-radius: 30px; scrollbar-width: none; overscroll-behavior-x: contain; }
+/* LA BANDE DES CUISINES, COMME UBER EATS (fondateur, 2026-10-25, version A de maquettes/barre-cuisines, app et site) : plus
+   de cadre (la « bulle » blanche à filet d'avant), le dessin de chaque famille en 52 px avec son nom dessous, cinq à l'écran
+   d'un téléphone, et elle part avec la page quand on descend (elle n'est plus dans .liste-tete--collante, TeteListe.jsx).
+   Bord à bord comme le bandeau : on la fait défiler jusqu'aux bords de l'écran. La famille choisie est sous la lentille :
+   une pastille iris pleine ici (le site), du verre dans l'app (plus bas). */
+/* 6 px d'air autour de la rangée : la lentille grossit de 14 % sous le doigt, la bande qui défile ne la coupe pas. */
+.lt-cuisines { margin: -4px calc(-1 * var(--lt-mg)) 6px; }
+.lt-puces { position: relative; }
+.lt-defile { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
 .lt-defile::-webkit-scrollbar { display: none; }
-.lt-piste { position: relative; display: flex; align-items: center; gap: 2px; width: max-content; padding: 5px; }
+.lt-piste { position: relative; display: flex; align-items: flex-start; gap: 2px; width: max-content; padding: 6px 10px; }
 /* LA LENTILLE GLISSE COMME CELLE DE LA BARRE D'ONGLETS (fondateur, 2026-10-23 : « beaucoup plus calme ») : la même courbe
    (--ressort-ui, sans dépassement) et les mêmes durées que .nav-curseur (styles.css). Avant, une courbe qui dépassait puis
    revenait, et une « goutte » qui étirait la lentille à chaque changement de cuisine. */
 .lt-lentille {
-  position: absolute; top: 0; left: 0; z-index: 0; border-radius: 22px; pointer-events: none; opacity: 0;
+  position: absolute; top: 0; left: 0; z-index: 0; border-radius: 20px; pointer-events: none; opacity: 0;
   background: var(--iris);
   transition: transform .42s var(--ressort-ui), width .3s var(--ressort-ui), height .3s var(--ressort-ui), opacity .15s, scale .3s var(--ressort-ui), box-shadow .2s;
 }
+/* Une colonne de 74 px au moins (le dessin de 52 px et 11 px d'air de chaque côté, le pas d'Uber Eats), le nom en 12,5 px
+   dessous ; un nom plus long l'élargit. La lentille prend la taille de la colonne (TeteListe.jsx la mesure). */
 .lt-puce {
-  position: relative; z-index: 1; flex: none; display: inline-flex; align-items: center; gap: 7px;
-  min-height: 44px; padding: 9px 15px; border: 0; border-radius: 22px; background: transparent;
-  color: var(--ink); font-size: 13px; font-weight: 500; white-space: nowrap; touch-action: pan-x;
+  position: relative; z-index: 1; flex: none; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  min-width: 74px; min-height: 0; padding: 7px 5px; border: 0; border-radius: 20px; background: transparent;
+  color: var(--ink); font-size: 12.5px; font-weight: 500; line-height: 1.15; white-space: nowrap; touch-action: pan-x;
   -webkit-user-drag: none; transition: color .15s, background .15s;
 }
 .lt-puce:hover:not(:disabled) { filter: none; }
 .lt-puce svg { flex: none; }
 .lt-puce[data-cuisine].on { color: #fff; }
-/* Bio, Vegan, Halal, Sans gluten : des bascules, allumées en iris plein — la lentille, elle, dit la cuisine. */
+/* Bio, Vegan, Halal, Sans gluten (masqués pour le moment) : des bascules, allumées en iris plein — la lentille, elle, dit la
+   cuisine. Leur tracé dans un rond, à la place du dessin. */
 .lt-puce[data-regime].on { background: var(--iris); color: #fff; }
-.lt-trait { flex: none; width: 1px; height: 22px; margin: 0 6px; background: var(--line); }
-/* DANS L'APP, L'ILLUSTRATION AU-DESSUS DU NOM (TeteListe.jsx, version A2 du 2026-10-21) : une colonne de 64 px, l'illustration
-   de 32 px, le nom en 11 px. La bande fait 72 px. La lentille prend la taille de la pastille (TeteListe.jsx la mesure). */
-.lt-puces--illustrees .lt-puce { flex-direction: column; justify-content: center; gap: 3px; min-width: 64px; min-height: 0; padding: 6px 7px 5px; font-size: 11px; line-height: 1.15; }
-.lt-illu { display: block; flex: none; width: 32px; height: 32px; -webkit-user-drag: none; user-select: none; }
-.lt-illu--trace { display: grid; place-items: center; }
-/* Sur le site, l'illustration 2D à la place de l'icône, à côté du nom : la bande garde sa hauteur (fondateur, 2026-10-21,
-   version A de maquettes/site-illustrations). */
-.lt-illu-plat { display: block; flex: none; width: 22px; height: 22px; margin-left: -3px; -webkit-user-drag: none; user-select: none; }
-.lt-puces--illustrees .lt-trait { height: 40px; }
+.lt-illu { display: block; flex: none; width: 52px; height: 52px; -webkit-user-drag: none; user-select: none; }
+.lt-illu--trace { display: grid; place-items: center; border-radius: 50%; background: rgba(59, 47, 181, .07); color: var(--iris); }
+.lt-puce[data-regime].on .lt-illu--trace { background: rgba(255, 255, 255, .16); color: #fff; }
+.lt-trait { flex: none; align-self: center; width: 1px; height: 44px; margin: 0 6px; background: var(--line); }
 
-/* Dans l'app : la bande est BLANCHE PLEINE, à filet (fondateur, 2026-10-24 : « reste avec le blanc, mais enlève cette sorte de
-   blur »). Elle était du verre de la barre d'onglets (blanc à 22 %, flou, lueur blanche en haut, grande ombre douce en bas) :
-   la lueur et l'ombre brouillaient son contour, on ne voyait plus bien le rectangle, et le haut prenait la couleur de ce qui
-   passait derrière. La lentille de la cuisine choisie reste en verre (version 2 de maquettes/barre-onglets-verre). */
-html.appli .lt-puces {
-  background: #fff; border-color: var(--line);
-  -webkit-backdrop-filter: none; backdrop-filter: none;
-  box-shadow: 0 1px 2px rgba(20, 18, 31, .06);
-}
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   html.appli .lt-lentille {
     background: rgba(255, 255, 255, .42); border: 1px solid rgba(255, 255, 255, .75);
@@ -139,15 +132,10 @@ html.appli .lt-puces {
   html.appli .lt-puces--refraction .lt-lentille {
     -webkit-backdrop-filter: var(--verre-lentille) saturate(230%) brightness(1.08); backdrop-filter: var(--verre-lentille) saturate(230%) brightness(1.08);
   }
-  /* Sur le verre : encre et halo blanc léger, sinon les libellés disparaissent sur une photo qui passe dessous. */
-  html.appli .lt-puce { color: rgba(20, 18, 31, .86); text-shadow: 0 0 8px rgba(255, 255, 255, .75); }
-  html.appli .lt-puce svg { filter: drop-shadow(0 0 4px rgba(255, 255, 255, .6)); }
   /* Sans `touch-action: none` sur la cuisine choisie (2026-10-24, même cause que la bande des sections d'une fiche,
      ecran-fiche.css) : la bande défile de côté d'où que parte le doigt. */
   html.appli .lt-puce[data-cuisine].on, html.appli .lt-puce--survol { color: var(--iris); font-weight: 600; }
-  html.appli .lt-puce[data-regime].on { color: #fff; text-shadow: none; }
-  html.appli .lt-puce[data-regime].on svg { filter: none; }
-  html.appli .lt-trait { background: rgba(20, 18, 31, .14); }
+  html.appli .lt-puce[data-regime].on { color: #fff; }
   /* L'appui : la lentille grossit et ses bords s'irisent davantage ; en glissant, elle suit le doigt sans retard. */
   html.appli .lt-puces--appui .lt-lentille {
     scale: 1.08 1.14;
@@ -158,8 +146,8 @@ html.appli .lt-puces {
   html.appli .lt-puces--appui .lt-puce:active { transform: none; }
 }
 /* La rangée des spécialités d'une famille choisie (version X de maquettes/categories-commerce) : des pastilles pleines,
-   blanches à filet, iris quand elles sont choisies. Elle flotte sous la bande comme elle, sans fond à elle. */
-.lt-sous { display: flex; gap: 6px; margin: 8px 0 0; padding: 0 15px 2px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; animation: lt-sous .25s ease-out; }
+   blanches à filet, iris quand elles sont choisies. Elle part avec la bande, sans fond à elle. */
+.lt-sous { display: flex; gap: 6px; margin: 4px 0 0; padding: 0 16px 2px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; animation: lt-sous .25s ease-out; }
 .lt-sous::-webkit-scrollbar { display: none; }
 .lt-sous-puce { flex: none; padding: 7px 13px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 13px; font-weight: 500; white-space: nowrap;
   transition: background .15s, border-color .15s, color .15s; }
@@ -170,9 +158,8 @@ html.appli .lt-puces {
 html.appli .sl-liste--calme .rest-card { animation: none; }
 @media (prefers-reduced-motion: reduce) { .lt-sous { animation: none; } }
 @media (prefers-reduced-transparency: reduce) {
-  html.appli .lt-puces { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); }
   html.appli .lt-lentille { background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  html.appli .lt-puce[data-cuisine].on { color: #fff; text-shadow: none; }
+  html.appli .lt-puce[data-cuisine].on { color: #fff; }
 }
 @media (prefers-reduced-motion: reduce) {
   .liste-tete--bandeau, .lt-velo, .lt-lentille { transition: none !important; }

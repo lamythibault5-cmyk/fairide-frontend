@@ -17,22 +17,12 @@
    1 · LA LISTE DES COMMERCES (RestaurantList.jsx, TeteListe.jsx)
    --------------------------------------------------------------------------------------------------------------------- */
 
-/* SUR LE SITE, À TOUTES LES LARGEURS : comme dans l'app, le bandeau « Livrer à » reste collé en haut avec la
-   bande des cuisines dessous (fondateur, 2026-10-21, maquettes/bandeau-velo : « Site : pareil que l'app »). Il s'effaçait
-   en descendant depuis le 2026-10-16. La bande des cuisines est une barre blanche à filet d'un bord à l'autre (pas la pilule
-   flottante de l'app : sur le site, pas de verre). Hauteur : 88 px, comme l'app (ecran-liste.css). */
-html:not(.appli) .sl-liste .liste-tete--bandeau { top: 0; margin-bottom: 0; }
-html:not(.appli) .sl-liste .liste-tete--bandeau .lt-puces { margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: #fff; }
-html:not(.appli) .sl-liste .liste-tete--bandeau .lt-defile { border-radius: 0; }
-html:not(.appli) .sl-liste .liste-tete--bandeau .lt-piste { padding: 6px 12px; }
+/* SUR LE SITE, À TOUTES LES LARGEURS : comme dans l'app, le bandeau « Livrer à » reste collé en haut (fondateur,
+   2026-10-21, maquettes/bandeau-velo : « Site : pareil que l'app »), et la bande des cuisines dessous part avec la page,
+   comme Uber Eats (2026-10-25, maquettes/barre-cuisines : « le site aussi, sans verre, pastille iris ») : ses règles sont
+   celles de l'app (ecran-liste.css), avec les dessins en aplat et la pastille iris pleine. */
+html:not(.appli) .sl-liste .liste-tete--bandeau { top: 0; }
 html:not(.appli) .sl-liste .sl-corps { margin-top: 16px; }
-/* AU TÉLÉPHONE, LA BANDE DES CUISINES REMONTE SUR LA LÈVRE (fondateur, 2026-10-17, capture d'iPhone : un blanc entre « Livrer
-   à » et « Tous · Pizza · Burgers »). Elle mord de 12 px sur la lèvre blanche du bandeau (16 px), coins du haut arrondis
-   comme la lèvre pour ne rien recouvrir de l'iris. */
-@media (max-width: 899px) {
-  html:not(.appli) .sl-liste .liste-tete--bandeau .lt-puces { margin-top: -12px; border-radius: 24px 24px 0 0; }
-  html:not(.appli) .sl-liste .liste-tete--bandeau .lt-defile { border-radius: 24px 24px 0 0; }
-}
 /* « Manger local » sur le site : le texte et l'icône sur un filet, sans fond gris (fonds blancs ou iris seulement). */
 html:not(.appli) .sl-liste .local-bandeau { flex-wrap: nowrap; align-items: flex-start; padding: 10px 12px; background: #fff; border: 1px solid var(--line); line-height: 1.4; }
 html:not(.appli) .sl-liste .local-bandeau svg { flex: none; margin-top: 1px; color: var(--iris); }
@@ -72,20 +62,12 @@ html:not(.appli) .sl-liste--grand .lt-route { margin-top: 2px; }
 }
 .lt-mode--emporter .lt-mode-pouce { transform: translateX(100%); }
 
-/* La bande des cuisines : blanche, à filet, d'un bord à l'autre ; les pastilles cerclées, la choisie en iris plein. */
-html:not(.appli) .sl-liste--grand .lt-puces { margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: #fff; }
-html:not(.appli) .sl-liste--grand .lt-defile { border-radius: 0; }
-html:not(.appli) .sl-liste--grand .liste-tete--bandeau .lt-defile { width: calc(100% - 56px); max-width: 1120px; margin: 0 auto; }
-html:not(.appli) .sl-liste--grand .lt-piste,
-html:not(.appli) .sl-liste--grand .liste-tete--bandeau .lt-piste { gap: 8px; padding: 10px 0; }
-html:not(.appli) .sl-liste--grand .lt-puce {
-  min-height: 40px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px;
-  transition: color .15s, border-color .15s, background .15s;
+/* À partir de 900 px, la bande des cuisines dans la colonne de 1 120 px, comme le contenu ; le survol met le nom en iris. */
+html:not(.appli) .sl-liste--grand .lt-defile { width: calc(100% - 56px); max-width: 1120px; margin: 0 auto; }
+html:not(.appli) .sl-liste--grand .lt-piste { gap: 6px; padding: 12px 0 4px; }
+@media (hover: hover) {
+  html:not(.appli) .sl-liste--grand .lt-puce:not(.on):hover { color: var(--iris); }
 }
-html:not(.appli) .sl-liste--grand .lt-puce:hover { border-color: var(--iris); }
-html:not(.appli) .sl-liste--grand .lt-puce[data-cuisine].on { border-color: transparent; }
-html:not(.appli) .sl-liste--grand .lt-puce[data-regime].on { border-color: var(--iris); }
-html:not(.appli) .sl-liste--grand .lt-lentille { border-radius: 999px; }
 
 /* Le corps : la colonne de 1 120 px ; avec la colonne des filtres, 220 px à gauche et la grille à droite. */
 html:not(.appli) .sl-liste--grand .sl-corps { max-width: 1120px; margin: 26px auto 0; }
@@ -96,11 +78,11 @@ html:not(.appli) .sl-liste--grand .liste-section { margin-bottom: 36px; }
 /* !important : la taille du titre de rangée est écrite en ligne (Section, RestaurantList.jsx), pour l'app. */
 html:not(.appli) .sl-liste--grand .liste-section > .section-title { font-size: 20px !important; margin-bottom: 14px !important; }
 
-/* La colonne des filtres : collée sous la bande des cuisines quand on descend. */
-.sl-filtres { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; transition: top .45s cubic-bezier(.34, 1.25, .64, 1); }
+/* La colonne des filtres : collée en haut quand on descend (la bande des cuisines, elle, part avec la page). */
+.sl-filtres { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; transition: top .45s cubic-bezier(.34, 1.25, .64, 1); }
 /* Avec le bandeau (toujours là depuis le 2026-10-21), la colonne se pose sous lui : 96 px (--lt-hb de .sl-liste--grand,
-   écrit ici en clair : la variable vit sur .liste-tete, pas sur la colonne) + les 84 px de la bande. */
-.sl-liste:has(.liste-tete--bandeau) .sl-filtres { top: calc(96px + 84px); }
+   écrit ici en clair : la variable vit sur .liste-tete, pas sur la colonne) + 16 px d'air. */
+.sl-liste:has(.liste-tete--bandeau) .sl-filtres { top: calc(96px + 16px); }
 .sl-filtres-actifs { display: flex; flex-wrap: wrap; gap: 6px; }
 .sl-groupe { display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 0; border: 0; }
 .sl-groupe-titre { padding: 0; margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); }
