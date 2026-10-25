@@ -323,7 +323,7 @@ function InviterDrawer({ token, tr, toast, isOwner, onClose, onDone }) {
       <form onSubmit={envoyer}>
         <div className="field">
           <label htmlFor="team-invite-email">{tr('adminCommon.email')}</label>
-          <input id="team-invite-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="prenom@fairide.be" autoFocus required />
+          <input id="team-invite-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="prenom@fairride.be" autoFocus required />
         </div>
         <div className="field">
           <label htmlFor="team-invite-name">{tr('adminTeam.nameOptional')}</label>

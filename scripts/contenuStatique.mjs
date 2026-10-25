@@ -4,7 +4,7 @@
  * l'exécution du JavaScript : sans lui, chaque page du site disait la même chose, « fairide Le chargement prend plus de
  * temps que prévu. Recharger la page » (70 caractères, relevé le 2026-10-22). Google exécute le JavaScript et voit la vraie
  * page ; Bing le fait mal (il recommande de servir du HTML déjà rendu), Brave encore moins, et les assistants qui lisent les
- * pages pour répondre pas du tout. Résultat le même jour : Bing n'avait indexé aucune page de fairide.be, Brave non plus.
+ * pages pour répondre pas du tout. Résultat le même jour : Bing n'avait indexé aucune page de fairride.be, Brave non plus.
  *
  * CE QUE ÇA FAIT. Pour chaque page pré-rendue, une version simple de SON contenu (titres, textes, liste des commerces avec
  * leurs liens, adresse et carte de chaque commerce, histoire et FAQ) est écrite dans <div id="root">. Mêmes textes que la

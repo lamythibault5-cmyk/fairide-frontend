@@ -4,7 +4,7 @@ import { appleDisponible, prechaufferConnexion } from '../natif';
 
 /* « Continuer avec Apple » / « Continuer avec Google », DANS L'APPLICATION seulement (estNatif()).
  *
- * Sur fairide.be, c'est le bouton officiel de Google (googleSignIn.js) qui s'affiche ; dans l'application il ne
+ * Sur fairride.be, c'est le bouton officiel de Google (googleSignIn.js) qui s'affiche ; dans l'application il ne
  * fonctionne pas (Google refuse les WebView), d'où ces deux boutons qui ouvrent la feuille native du téléphone
  * (natif.js, connexionFournisseur). Utilisé par la page de connexion (Auth.jsx) et par l'accueil de
  * l'application (pages/app/Bienvenue.jsx).

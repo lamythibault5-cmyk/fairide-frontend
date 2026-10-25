@@ -5,8 +5,8 @@ import { ouvrirLienExterne } from '../../natif';
 
 // LA CONSOLE D'ADMINISTRATION N'EXISTE QUE SUR LE SITE (Owen, 2026-10-20 : « je ne veux pas d'admin dans l'application »).
 // Dans l'application (experienceApp), toute adresse /admin… affiche cet écran à la place de la console : un message et un
-// bouton qui ouvre fairide.be/admin dans le navigateur. Rien de la console n'est chargé (App.jsx ne monte pas AdminLayout).
-const URL_CONSOLE = 'https://fairide.be/admin';
+// bouton qui ouvre fairride.be/admin dans le navigateur. Rien de la console n'est chargé (App.jsx ne monte pas AdminLayout).
+const URL_CONSOLE = 'https://fairride.be/admin';
 
 export default function AdminSurLeSite() {
   const { t } = useLanguage();

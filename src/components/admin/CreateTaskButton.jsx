@@ -62,7 +62,7 @@ export default function CreateTaskButton({ targetType, targetId, label }) {
             </div>
             <div className="field">
               <label htmlFor={idsA11y + '-owneroptional'}>{tr('adminCommon.ownerOptional')}</label>
-              <input id={idsA11y + '-owneroptional'} value={assignedToEmail} onChange={(e) => setAssignedToEmail(e.target.value)} placeholder={user?.email || 'email@fairide.be'} />
+              <input id={idsA11y + '-owneroptional'} value={assignedToEmail} onChange={(e) => setAssignedToEmail(e.target.value)} placeholder={user?.email || 'email@fairride.be'} />
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8 }}>
               <button className="btn-teal" disabled={creating} onClick={create}>{creating ? '...' : tr('adminCommon.create')}</button>

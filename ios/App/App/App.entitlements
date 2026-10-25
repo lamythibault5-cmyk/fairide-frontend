@@ -10,6 +10,7 @@
 	</array>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
+		<string>applinks:fairride.be</string>
 		<string>applinks:fairide.be</string>
 	</array>
 </dict>

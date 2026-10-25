@@ -27,7 +27,7 @@ const POLL_INTERVAL_MS = 2000;
 const MAX_POLLS = 10; // ~20 s, au-delà on affiche « en cours de vérification » plutôt que de mentir
 
 /* RETOUR DE STRIPE SANS SESSION (audit du 19/10, checkout-07). Dans l'application, Stripe s'ouvre dans le navigateur
- * intégré ; à la fin du paiement il revient sur https://fairide.be/order-success. Quand le téléphone ne rend pas ce lien à
+ * intégré ; à la fin du paiement il revient sur https://fairride.be/order-success. Quand le téléphone ne rend pas ce lien à
  * l'application (iOS tant que le fichier d'association n'a pas l'identifiant d'équipe Apple ; Android quand la redirection
  * arrive sans geste de l'utilisateur), la page se chargeait DANS ce navigateur, où il n'y a pas de session : l'écran de
  * connexion s'affichait juste après avoir payé. Désormais ces deux adresses s'ouvrent sans compte : elles disent de
@@ -38,7 +38,7 @@ function RetourSansSession({ success }) {
   const { t } = useLanguage();
   const location = useLocation();
   const android = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent || '');
-  const lienAppli = `intent://fairide.be${location.pathname}${location.search}#Intent;scheme=https;package=be.fairide.app;end`;
+  const lienAppli = `intent://fairride.be${location.pathname}${location.search}#Intent;scheme=https;package=be.fairide.app;end`;
   return (
     <div className="center-page">
       <span className="etat-vide-icone" aria-hidden="true"><Icone nom={success ? 'bouclier' : 'interdit'} taille={34} /></span>

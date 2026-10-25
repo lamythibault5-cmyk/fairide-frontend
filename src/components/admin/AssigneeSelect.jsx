@@ -32,7 +32,7 @@ export default function AssigneeSelect({ value, onChange, allowEmpty = true, emp
   const options = liste ? [...liste] : [];
   if (liste && value && !liste.some((a) => a.email === value)) options.push({ email: value, name: value });
   if (!liste) {
-    return <input id={id} type="email" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={user?.email || 'email@fairide.be'} style={style} autoFocus={autoFocus} />;
+    return <input id={id} type="email" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={user?.email || 'email@fairride.be'} style={style} autoFocus={autoFocus} />;
   }
   return (
     <select id={id} value={value || ''} onChange={(e) => onChange(e.target.value)} style={style} autoFocus={autoFocus}>

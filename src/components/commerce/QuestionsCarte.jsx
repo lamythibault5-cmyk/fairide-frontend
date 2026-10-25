@@ -82,7 +82,7 @@ export default function QuestionsCarte({ questions, onEnvoyer, envoi = false }) 
         <button type="button" className="btn-gold gn-action" disabled={!toutes || envoi} onClick={envoyer}>
           {envoi ? '…' : t('questionsCarte.send')}
         </button>
-        <a className="qc-appel" href="mailto:contact@fairide.be">{t('questionsCarte.callMe')}</a>
+        <a className="qc-appel" href="mailto:contact@fairride.be">{t('questionsCarte.callMe')}</a>
       </div>
     </div>
   );
