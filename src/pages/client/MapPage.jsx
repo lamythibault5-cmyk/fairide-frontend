@@ -12,7 +12,7 @@ import Icone from '../../components/Icone';
 import { kmLisible } from '../../prixPlat';
 import VisuelVide from '../../components/VisuelVide';
 import CertifiedBadge from '../../components/CertifiedBadge';
-import { cacherImageCassee } from '../../images';
+import { cacherImageCassee, imgProps } from '../../images';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import '../../ecran-liste.css';
 import '../../site-liste.css';
@@ -275,8 +275,9 @@ export default function MapPage() {
           <div className="carte-resultats" role="list">
             {liste.map((r) => (
               <Link key={r.id} to={cheminFiche(r)} className="carte-resultat" role="listitem">
-                {r.coverImageUrl || r.logoImageUrl ? (
-                  <img src={r.logoImageUrl || r.coverImageUrl} alt="" loading="lazy" />
+                {/* La photo du commerce, plus son logo (fondateur, 2026-10-25, maquettes/sans-logo/sans-logo.html). */}
+                {r.coverImageUrl ? (
+                  <img {...imgProps(r.coverImageUrl, 64)} alt="" loading="lazy" decoding="async" />
                 ) : (
                   <span className="carte-resultat-vide" aria-hidden="true"><Icone nom="restaurants" taille={18} /></span>
                 )}

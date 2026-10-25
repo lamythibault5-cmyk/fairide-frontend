@@ -70,6 +70,14 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   backend — too few users yet, and a shop with few stars would look bad; they may come back later. The tip after delivery
   stays (« Laisser un pourboire », Orders.jsx). Don't « restore » a star, a rating sort or a reviews page in passing: what
   was removed and the rule if they return are in conformite.md.
+- **No shop logos** (founder, 2026-10-25, answers to `maquettes/sans-logo/sans-logo.html`): customers never see a shop's logo.
+  6 shops out of 7 only had the monogram the server drew (initials in a circle), which added nothing. The restaurant page
+  (app and website) has no logo on the sheet edge, the name sits right under the photo; past orders, the app's welcome
+  screen and the map's search pills show the shop's cover photo instead (past orders: a 56 px square on a phone, 48 px in
+  the website table, `PhotoCommerce` in Orders.jsx, `restaurantCoverUrl` from `GET /api/orders/mine`, the same photo as
+  the shop page). Mon commerce › Nom et photos has no Logo field; the server no longer draws or suggests logos
+  (`logo-suggestions` route removed). `logo_image_url` stays in the database and a real logo only goes into the page's
+  structured data for Google (seo/jsonLd.js, never a `data:` monogram). Don't add a logo back to a customer screen.
 
 ## End-to-end test plan fixes (2026-10-02)
 

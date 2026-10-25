@@ -74,10 +74,10 @@ export default function RestaurantPreview({ restaurant }) {
       </div>
 
       <div className="card">
-        {(restaurant.coverImageUrl || restaurant.logoImageUrl) && (
-          <div className={`restaurant-header-media${restaurant.coverImageUrl ? '' : ' no-cover'}`}>
-            {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
-            {restaurant.logoImageUrl && <img src={restaurant.logoImageUrl} alt="" className="restaurant-logo-badge" />}
+        {/* La photo seule, comme la fiche que voient les clients (plus de logo depuis le 2026-10-25, maquettes/sans-logo). */}
+        {restaurant.coverImageUrl && (
+          <div className="restaurant-header-media">
+            <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />
           </div>
         )}
         <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>

@@ -210,12 +210,13 @@ html:not(.appli) .sc-page .sc-codes { margin-top: 22px; padding-top: 6px; border
   .sc-passees tr.sc-passee.ouverte { border-radius: 16px 16px 0 0; border-bottom: 0; }
   .sc-passees .sc-c-nom { grid-area: nom; min-width: 0; }
   .sc-passees .sc-c-date { display: none; }
-  .sc-passees .sc-c-art { grid-area: art; font-size: 13px; color: var(--ink-soft); padding-left: 48px; }
+  /* Les articles alignés sur le nom, sous lui : la vignette fait 56 px, plus 12 px d'écart. */
+  .sc-passees .sc-c-art { grid-area: art; font-size: 13px; color: var(--ink-soft); padding-left: 68px; }
   .sc-passees .sc-c-statut { grid-area: statut; justify-self: end; }
   .sc-passees .sc-c-total { grid-area: total; justify-self: end; font-weight: 800; font-variant-numeric: tabular-nums; }
   .sc-passees .sc-c-actions { grid-area: act; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
   .sc-passees .sc-c-actions .btn-outline { min-height: 40px; padding: 8px 14px; font-size: 14px; }
   .sc-passees .sc-details { margin-left: auto; min-height: 40px; }
-  .sc-passees .logo-commerce { width: 36px; height: 36px; }
+  .sc-passees .photo-commerce { width: 56px; height: 56px; }
   .sc-passees tr.sc-passee-detail { padding: 0 14px 14px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 16px 16px; }
 }

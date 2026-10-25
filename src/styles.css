@@ -1255,14 +1255,6 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 
 .restaurant-header-media { position: relative; margin: -22px -22px 28px; width: calc(100% + 44px); }
 .restaurant-header-media .cover-banner-detail { margin: 0; width: 100%; }
-.restaurant-logo-badge {
-  position: absolute; left: 18px; bottom: -24px; width: 76px; height: 76px; border-radius: 50%;
-  object-fit: cover; background: #fff; border: 4px solid #fff; box-shadow: none;
-}
-/* Sans photo d'accueil, le logo n'a rien à chevaucher : redevient un élément normal du flux, en haut
-   à gauche de la carte, au lieu de rester en position absolue avec rien en dessous. */
-.restaurant-header-media.no-cover { position: static; margin: 0 0 12px; width: auto; }
-.restaurant-header-media.no-cover .restaurant-logo-badge { position: static; width: 60px; height: 60px; box-shadow: none; }
 
 /* ─────────────────────────────────────────────────────────────────────────────
    L'EN-TÊTE D'UNE FICHE DE COMMERCE (.fiche-*).
@@ -1283,14 +1275,7 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   display: block; width: 100%; height: 220px; object-fit: cover;
   border-radius: var(--radius); background: var(--surface-soft);
 }
-.fiche-logo {
-  position: absolute; left: 16px; bottom: -26px;
-  width: 76px; height: 76px; border-radius: 50%; object-fit: cover;
-  border: 3px solid #fff; background: #fff; box-shadow: var(--shadow-3);
-}
-/* Sans photo de couverture, le logo n'a rien à chevaucher : il reprend le fil normal. */
 .fiche-media.sans-photo { position: static; margin-bottom: 12px; }
-.fiche-media.sans-photo .fiche-logo { position: static; width: 60px; height: 60px; box-shadow: none; border: none; }
 
 .fiche-titre-ligne { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .fiche-nom { display: flex; align-items: center; gap: 8px; font-size: var(--t-display-lg); margin: 0 0 6px; }
@@ -1351,7 +1336,6 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 
 @media (max-width: 640px) {
   .fiche-couverture { height: 170px; border-radius: 0; margin: 0 -20px; width: calc(100% + 40px); }
-  .fiche-logo { left: 0; width: 64px; height: 64px; bottom: -22px; }
   .fiche-media { margin-bottom: 26px; }
 }
 .menu-item:last-child { border-bottom: none; }

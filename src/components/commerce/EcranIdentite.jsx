@@ -8,7 +8,9 @@ import GalleryPickerModal from '../GalleryPickerModal';
 import BoutonEnregistrer from './BoutonEnregistrer';
 import useEnregistrerCommerce from './useEnregistrerCommerce';
 
-// Mon commerce › Nom et photos : ce que le client voit en premier — nom, description, photo d'accueil, logo.
+// Mon commerce › Nom et photos : ce que le client voit en premier — nom, description, photo d'accueil. Plus de logo
+// (fondateur, 2026-10-25, maquettes/sans-logo/sans-logo.html : il n'est plus montré aux clients) ; un logo déjà envoyé
+// reste en base, ce formulaire ne l'envoie plus.
 //
 // Les champs sont initialisés UNE fois, au montage : le tableau de bord relit le commerce toutes les 15 s
 // et un nouvel objet `restaurant` effacerait la saisie en cours (voir l'ancien garde-fou d'EditPage).
@@ -26,34 +28,32 @@ export default function EcranIdentite({ restaurant, restoId, loadDashboard, onFe
   const [nom, setNom] = useState(restaurant.name || '');
   const [desc, setDesc] = useState(restaurant.desc || '');
   const [couverture, setCouverture] = useState(restaurant.coverImageUrl || '');
-  const [logo, setLogo] = useState(restaurant.logoImageUrl || '');
-  const [selecteur, setSelecteur] = useState(null); // null | { type: 'cover' | 'logo', suggestions }
+  const [selecteur, setSelecteur] = useState(null); // null | { suggestions }
   const { enregistrer, enCours } = useEnregistrerCommerce({ restoId, loadDashboard, onFermer });
 
-  async function ouvrirSelecteur(type) {
+  async function ouvrirSelecteur() {
     let suggestions = [];
     try {
-      const r = await api(`/restaurants/${restoId}/${type}-suggestions`, { token });
+      const r = await api(`/restaurants/${restoId}/cover-suggestions`, { token });
       suggestions = r.images || [];
     } catch { /* sans suggestions, la galerie reste utilisable */ }
-    setSelecteur({ type, suggestions });
+    setSelecteur({ suggestions });
   }
 
   function valider() {
     if (!nom.trim()) { toast(t('editResto.toastNameRequired'), 'erreur'); return; }
-    enregistrer({ name: nom.trim(), desc: desc.trim(), coverImageUrl: couverture.trim(), logoImageUrl: logo.trim() });
+    enregistrer({ name: nom.trim(), desc: desc.trim(), coverImageUrl: couverture.trim() });
   }
 
   if (selecteur) {
-    const estCouverture = selecteur.type === 'cover';
     return (
       <GalleryPickerModal
         restoId={restoId}
-        currentImageUrl={estCouverture ? couverture : logo}
+        currentImageUrl={couverture}
         suggestions={selecteur.suggestions}
-        title={estCouverture ? t('editResto.coverTitle') : t('editResto.logoTitle')}
-        suggestionsTitle={t('editResto.suggestionsFor', { cuisine: estCouverture ? restaurant.cuisine : restaurant.name })}
-        onSelect={(url) => { if (estCouverture) setCouverture(url); else setLogo(url); setSelecteur(null); }}
+        title={t('editResto.coverTitle')}
+        suggestionsTitle={t('editResto.suggestionsFor', { cuisine: restaurant.cuisine })}
+        onSelect={(url) => { setCouverture(url); setSelecteur(null); }}
         onCancel={() => setSelecteur(null)}
       />
     );
@@ -61,7 +61,7 @@ export default function EcranIdentite({ restaurant, restoId, loadDashboard, onFe
 
   return (
     <SousEcran titre={t('editResto.rowIdentity')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />}
-      modifie={nom !== (restaurant.name || '') || desc !== (restaurant.desc || '') || couverture !== (restaurant.coverImageUrl || '') || logo !== (restaurant.logoImageUrl || '')}>
+      modifie={nom !== (restaurant.name || '') || desc !== (restaurant.desc || '') || couverture !== (restaurant.coverImageUrl || '')}>
       {/* 120 caractères, comme à l'inscription et côté serveur (audit du 19/10, shop-327). */}
       <div className="field"><label htmlFor={ids + '-nom'}>{t('editResto.nameLabel')}</label><input id={ids + '-nom'} maxLength={120} value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('editResto.phName')} /></div>
       <div className="field"><label htmlFor={ids + '-desc'}>{t('editResto.description')}</label><textarea id={ids + '-desc'} rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
@@ -69,15 +69,7 @@ export default function EcranIdentite({ restaurant, restoId, loadDashboard, onFe
         <span className="titre-groupe" id={ids + '-couv'}>{t('editResto.coverTitle')}</span>
         <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           {couverture && <img src={couverture} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />}
-          <button type="button" className="btn-ghost" onClick={() => ouvrirSelecteur('cover')}>{t('editResto.choosePhoto')}</button>
-        </div>
-      </div>
-      <div className="field" role="group" aria-labelledby={ids + '-logo'}>
-        <span className="titre-groupe" id={ids + '-logo'}>{t('editResto.logoTitle')}</span>
-        <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {logo && <img src={logo} alt="" className="dish-thumb" style={{ flexShrink: 0, borderRadius: '50%' }} />}
-          <button type="button" className="btn-ghost" onClick={() => ouvrirSelecteur('logo')}>{t('editResto.chooseLogo')}</button>
-          {logo && <button type="button" className="btn-danger-ghost" onClick={() => setLogo('')}>{t('editResto.remove')}</button>}
+          <button type="button" className="btn-ghost" onClick={ouvrirSelecteur}>{t('editResto.choosePhoto')}</button>
         </div>
       </div>
     </SousEcran>

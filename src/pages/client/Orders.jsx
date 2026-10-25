@@ -51,15 +51,16 @@ function vignettePhoto(url, taille, carre = true) {
 }
 const heureCourte = (ms) => new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 
-// COMMANDES PASSÉES (fondateur, 22/10/2026) : le logo du commerce à la place de l'icône sac/vélo — l'initiale de son nom
-// s'il n'en a pas choisi ou si l'image ne charge pas — et son nom mène à sa fiche. Un commerce qui a quitté Fairide
-// (restaurantExists à false, GET /api/orders/mine) garde son nom sur la commande, sans lien. Styles : client-ui.css.
-function LogoCommerce({ order }) {
+// COMMANDES PASSÉES (fondateur, 22/10/2026) : son nom mène à la fiche du commerce. Un commerce qui a quitté Fairide
+// (restaurantExists à false, GET /api/orders/mine) garde son nom sur la commande, sans lien. Devant le nom, la PHOTO du
+// commerce en vignette carrée (fondateur, 2026-10-25, version A de maquettes/sans-logo/sans-logo.html : plus de logo), la
+// même que sur sa fiche ; l'initiale de son nom s'il n'en a plus ou si l'image ne charge pas. Styles : client-ui.css.
+function PhotoCommerce({ order }) {
   const [casse, setCasse] = useState(false);
   return (
-    <span className="logo-commerce" aria-hidden="true">
-      {order.restaurantLogoUrl && !casse
-        ? <img {...imgProps(order.restaurantLogoUrl, 40)} alt="" loading="lazy" decoding="async" onError={() => setCasse(true)} />
+    <span className="photo-commerce" aria-hidden="true">
+      {order.restaurantCoverUrl && !casse
+        ? <img {...imgProps(order.restaurantCoverUrl, 96)} alt="" loading="lazy" decoding="async" onError={() => setCasse(true)} />
         : (order.restaurantName || '').trim().charAt(0).toUpperCase()}
     </span>
   );
@@ -829,7 +830,7 @@ export default function Orders() {
                       <tr className={`sc-passee${ouvert ? ' ouverte' : ''}`}>
                         <td className="sc-c-nom">
                           <span className="sc-nom-c">
-                            <LogoCommerce order={o} />
+                            <PhotoCommerce order={o} />
                             <span className="sc-nom-texte"><b><NomCommerce order={o} /></b><small>{orderTypeLabel(o, t)}<span className="sc-tel-seul"> · {quand(o.createdAt)}</span></small></span>
                           </span>
                         </td>
