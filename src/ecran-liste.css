@@ -71,17 +71,15 @@
    à chaque image de défilement — une mise en page par image, pendant qu'on fait défiler la liste. `left` reste la place
    de départ (et la place fixe de RouteVelo, posée en ligne). */
 .lt-velo { position: absolute; bottom: 7px; left: 8%; width: 30px; margin-left: -15px; line-height: 0; color: var(--lime); transition: transform .3s ease-out; }
-.lt-velo svg { display: block; transform-origin: 50% 100%; }
-.lt-velo.roule svg { animation: lt-pedale .5s ease-in-out infinite; }
+/* IL GLISSE À PLAT (fondateur, 2026-10-25, version A de maquettes/velo-sans-cahot, « pareil partout », site compris) : plus
+   d'animation « pédale » qui le faisait monter de 1,5 px et pencher pendant qu'il roule. Il n'avance que de gauche à droite. */
+.lt-velo svg { display: block; }
 /* Pendant qu'il roule, sa place suit le doigt image par image (TeteListe.jsx) : la transition de .3s relançait une animation
    à chaque image de défilement, ~60 par seconde (2026-10-23, app iPhone lente : « AcceleratedAnimationDidStart »). Elle ne
    sert plus qu'au replacement d'un coup (taille de l'écran qui change). */
 .lt-velo.roule { transition: none; }
-/* Une lettre tapée dans la Recherche (useVeloQuiRoule, TeteListe.jsx) : il glisse jusqu'à sa place (la transition reste) en pédalant. */
-.lt-velo.pedale svg { animation: lt-pedale .5s ease-in-out infinite; }
 /* Dans le bandeau, la route à la hauteur de la maquette (la route de la Recherche, RouteVelo, garde la sienne). */
 .lt-bandeau .lt-route { height: 22px; margin-top: 0; }
-@keyframes lt-pedale { 50% { transform: translateY(-1.5px) rotate(-1.5deg); } }
 
 /* LA BANDE DES CUISINES, COMME UBER EATS (fondateur, 2026-10-25, version A de maquettes/barre-cuisines, app et site) : plus
    de cadre (la « bulle » blanche à filet d'avant), le dessin de chaque famille en 52 px avec son nom dessous, cinq à l'écran
@@ -190,7 +188,6 @@ html.appli .sl-liste--calme .rest-card { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .liste-tete--bandeau, .lt-velo, .lt-lentille { transition: none !important; }
-  .lt-velo.roule svg, .lt-velo.pedale svg { animation: none !important; }
 }
 
 /* ---------------------------------------------------------------------------------------------------------------------
