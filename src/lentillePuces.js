@@ -21,31 +21,22 @@ const SEUIL_DOIGT = 8;
 const DELAI_CONTOUR = 80;
 
 /* LE CONTOUR DU DESSIN (fondateur, 2026-10-25, A de maquettes/appui-iris/appui-iris.html). Le dessin de chaque cuisine a un
-   fond transparent : on épaissit sa silhouette de 2 px (feMorphology), on garde ce bord, on le peint en iris, et une lumière
-   blanche (feSpecularLighting) y fait un reflet. Sous le doigt, la lumière fait le tour en 1,6 s (#lt-contour) ; sur la
-   cuisine choisie, elle reste en haut à gauche (#lt-contour-repos) : un reflet qui tournerait sans fin distrairait et ferait
-   repeindre le dessin à chaque image. Avec « Réduire les animations », elle ne tourne jamais. Les coordonnées sont celles du
-   dessin, 52 px (ecran-liste.css, .lt-illu). Posés une fois dans la page ; ecran-liste.css ne les utilise qu'une fois la
-   classe lt-puces--contour posée (un filtre url() absent peut masquer l'élément). */
+   fond transparent : on épaissit sa silhouette de 2 px (feMorphology), on la peint en iris et on repose le dessin dessus. Iris
+   plein, sans reflet (fondateur, le même jour : « pas de reflet », essayé une heure). Le dessin est AU-DESSUS de la lentille de
+   verre : le flou et la saturation de celle-ci ne touchent pas le contour, qui reste l'iris de --iris (mesuré dans l'app). Posé
+   une fois dans la page ; ecran-liste.css ne s'en sert qu'une fois la classe lt-puces--contour posée (un filtre url() absent
+   peut masquer l'élément). */
 const ID_CONTOUR = 'lt-contour';
 function poserContours() {
   if (document.getElementById(ID_CONTOUR)) return;
   const iris = getComputedStyle(document.documentElement).getPropertyValue('--iris').trim() || '#3B2FB5';
-  const calme = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const tour = calme ? '' : '<animate attributeName="x" values="0;52;52;0;0" dur="1.6s" repeatCount="indefinite"/>'
-    + '<animate attributeName="y" values="0;0;52;52;0" dur="1.6s" repeatCount="indefinite"/>';
-  const filtre = (id, lumiere) => `<filter id="${id}" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">`
-    + '<feMorphology in="SourceAlpha" operator="dilate" radius="2" result="gros"/>'
-    + '<feComposite in="gros" in2="SourceAlpha" operator="out" result="bordA"/>'
-    + `<feFlood flood-color="${iris}"/><feComposite in2="bordA" operator="in" result="bord"/>`
-    + '<feGaussianBlur in="gros" stdDeviation="1.4" result="relief"/>'
-    + `<feSpecularLighting in="relief" surfaceScale="4" specularConstant="1.1" specularExponent="14" lighting-color="#fff" result="reflet"><fePointLight x="0" y="0" z="18">${lumiere}</fePointLight></feSpecularLighting>`
-    + '<feComposite in="reflet" in2="bordA" operator="in" result="reflet2"/>'
-    + '<feMerge><feMergeNode in="bord"/><feMergeNode in="reflet2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', '0'); svg.setAttribute('height', '0'); svg.setAttribute('aria-hidden', 'true');
   svg.style.position = 'absolute';
-  svg.innerHTML = `<defs>${filtre(ID_CONTOUR, tour)}${filtre(`${ID_CONTOUR}-repos`, '')}</defs>`;
+  svg.innerHTML = `<defs><filter id="${ID_CONTOUR}" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">`
+    + '<feMorphology in="SourceAlpha" operator="dilate" radius="2" result="gros"/>'
+    + `<feFlood flood-color="${iris}"/><feComposite in2="gros" operator="in" result="bord"/>`
+    + '<feMerge><feMergeNode in="bord"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
   document.body.appendChild(svg);
 }
 
@@ -55,7 +46,7 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
   let geste = null;
   poserContours();
   bande.classList.add('lt-puces--contour');
-  // La cuisine touchée prend le contour qui tourne (lt-puce--touchee) ; pendant qu'on promène la lentille, c'est celle qu'elle couvre (lt-puce--survol).
+  // La cuisine touchée prend le contour (lt-puce--touchee) ; pendant qu'on promène la lentille, c'est celle qu'elle couvre (lt-puce--survol).
   let touchee = null;
   let minuteurTouche = 0;
   const toucher = (puce) => {
