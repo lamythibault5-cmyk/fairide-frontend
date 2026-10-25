@@ -670,6 +670,22 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    Connexion et Inscription chacun sur leur propre ligne. */
 .header-auth { gap: 8px; flex-wrap: nowrap; }
 .header-register-btn { padding: 10px 20px; font-size: 14px; font-weight: 700; white-space: nowrap; border-radius: var(--radius-pill); }
+.header-auth .header-register-btn.header-register-btn--contour { background: transparent; color: #fff; border: 1.5px solid rgba(255, 255, 255, .7); }
+/* LE SITE SUR UN TÉLÉPHONE, POUR UN VISITEUR : LA BARRE DE L'APP (fondateur, 2026-10-25, maquettes/une-action/panier-et-site,
+   réponse 4). L'en-tête complet (logo, Connexion, Inscription, Restaurants · Aide · Contact, langues) prenait 110 px avant le
+   contenu : il ne garde que le logo et « Connexion », en pastille blanche comme dans l'app. Aide, Contact et les langues
+   sont dans le pied de page (Footer.jsx) ; « Restaurants » est le contenu même de la page. */
+@media (max-width: 899px) {
+  .hero .header-row > .header-nav, .hero .header-row > .lang-switcher, .hero .header-row .header-register-btn { display: none; }
+  .hero .header-row::before { display: none; }
+  .hero .header-row .header-auth-link { padding: 8px 16px; border-radius: var(--radius-pill); background: #fff; color: var(--iris); font-weight: 700; opacity: 1; }
+}
+.footer-langues { margin-top: 10px; }
+/* Sur le blanc du pied de page : le fond gris et l'encre des sélecteurs posés dans une feuille (.card .lang-switcher). */
+.footer-langues .lang-switcher { display: inline-flex; background: var(--cream-dim); }
+.footer-langues .lang-switcher button { color: var(--ink-soft); opacity: 1; }
+.footer-langues .lang-switcher button.active { background: var(--iris); color: #fff; }
+@media (min-width: 900px) { .footer-langues { display: none; } }
 /* Marge de sécurité pour les langues à libellés longs. « Registreren » et « Inscription »
    sont d'un tiers plus larges que « Sign up » : sans ce resserrement, la rangée tient en
    anglais et déborde en néerlandais, ce qui est exactement le défaut qu'on vient de traiter.
@@ -4640,7 +4656,7 @@ html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(
 .plat-nom { font-size: 24px; line-height: 1.25; letter-spacing: -0.02em; margin: 0 0 6px; }
 .plat-prix { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
 .plat-desc { color: var(--ink-soft); margin: 0 0 18px; }
-.plat-groupe { border-top: 1px solid var(--line); padding-top: 14px; margin-bottom: 14px; }
+.plat-groupe { border-top: 1px solid var(--line); padding-top: 14px; margin-bottom: 14px; scroll-margin-top: 16px; }
 .plat-groupe-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .plat-groupe-tete b { font-size: 16px; }
 .plat-requis {
@@ -4688,12 +4704,12 @@ html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(
 .plat-pied > .btn-gold.plat-ajouter::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 1px; background: rgba(20, 18, 31, .2); }
 .plat-pied:has(.plat-ajouter:disabled) .plat-quantite { background: var(--line); }
 .plat-ajouter-prix { display: inline-flex; overflow: hidden; vertical-align: bottom; }
-.plat-bloque { flex: 1 0 100%; order: -1; margin: 0 0 4px; font-size: 13px; color: var(--red); }
-/* Le rappel se touche et amène au groupe (FichePlat, audit design 2) : un bouton qui garde l'air d'une phrase, souligné. */
-button.plat-bloque { display: block; width: 100%; min-height: 0 !important; padding: 2px 0; border: 0; background: none; font: inherit; font-size: 13px;
-  font-weight: 600; text-align: left; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+/* Le groupe obligatoire où « Ajouter » vient d'amener (FichePlat, 2026-10-25) : encadré iris, la phrase en iris, et l'en-tête
+   qui s'éclaire une fois. Le cadre reste tant que le choix manque. */
+.plat-groupe--manque { margin: 0 -12px 14px; padding: 12px 12px 4px; border-top-color: transparent; border-radius: 14px; background: #F7F6FD; box-shadow: 0 0 0 2px var(--iris); }
+.plat-groupe-manque { margin: -4px 0 8px; color: var(--iris); font-size: 14px; font-weight: 600; }
 .plat-groupe--signale .plat-groupe-tete { animation: plat-signale 1.2s ease; border-radius: 8px; }
-@keyframes plat-signale { 0%, 60% { background: rgba(178, 58, 42, .1); box-shadow: 0 0 0 6px rgba(178, 58, 42, .1); } 100% { background: transparent; box-shadow: 0 0 0 6px transparent; } }
+@keyframes plat-signale { 0%, 60% { background: rgba(59, 47, 181, .1); box-shadow: 0 0 0 6px rgba(59, 47, 181, .1); } 100% { background: transparent; box-shadow: 0 0 0 6px transparent; } }
 @media (prefers-reduced-motion: reduce) { .plat-groupe--signale .plat-groupe-tete { animation: none; } }
 /* Au-delà du téléphone, la feuille reste plein écran mais son contenu se recentre : une photo
    étirée sur 1400px et une ligne d'option large comme l'écran seraient illisibles. */
@@ -5484,29 +5500,47 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .recherche-valider:active { transform: scale(.92); }
 .fiche-recherche-resultat { margin: -4px 0 10px; font-size: 13px; font-weight: 500; color: var(--iris); }
 
-/* LA BARRE DU PANIER SE RÉDUIT AVEC LES ONGLETS (fondateur, 2026-10-17 : « le panier gêne parfois ; qu'il se réduise en même
-   temps que la barre, et qu'en remontant on revoie le détail »). Sous 900 px seulement, là où la barre d'onglets se réduit :
-   quand elle passe en compacte (html.barre-compacte, posée par DashboardSidebar), « Voir le panier » s'efface comme ses
-   libellés, la barre du panier se resserre autour du sac et du total, et descend des 14 px que perdent les onglets. Mêmes
-   durées et même ressort que la barre (.14 s, --ressort-ui), au même instant. En remontant, tout revient. Dans le parcours
-   de commande (fiche d'un commerce), les onglets sont masqués mais l'état suit le défilement de la même façon. */
+/* LA BARRE DU PANIER DESCEND AVEC LES ONGLETS (fondateur, 2026-10-17). Sous 900 px seulement, là où la barre d'onglets se
+   réduit (html.barre-compacte, posée par DashboardSidebar) : la barre du panier descend des 14 px que perdent les onglets,
+   avec la même durée et le même ressort (.14 s, --ressort-ui). Elle ne se resserre plus et garde « Voir le panier »
+   (fondateur, 2026-10-25, maquettes/une-action : c'est le prochain geste, il reste lisible ; plus bas, « UN SEUL GESTE »). */
 .panier-pilule-texte { display: inline-block; max-width: 360px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom;
   transition: opacity .12s, max-width .14s var(--ressort-ui); }
 .panier-pilule { transition: bottom .14s var(--ressort-ui), max-width .14s var(--ressort-ui), height .14s var(--ressort-ui), gap .14s var(--ressort-ui), padding .14s var(--ressort-ui); }
 @media (max-width: 900px) {
-  html.barre-compacte .panier-pilule-texte { opacity: 0; max-width: 0; }
-  html.barre-compacte .panier-pilule { gap: 6px; padding-left: 16px; padding-right: 16px; }
   html.barre-compacte body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .panier-pilule {
     bottom: calc(var(--hauteur-onglets) - 2px + env(safe-area-inset-bottom));
   }
-  /* La barre pleine largeur (app, et fiche d'un commerce sur le site) : elle se resserre au centre, le sac à gauche, le total à droite. */
-  html.appli.barre-compacte .panier-pilule:not(.panier-pilule--bulle),
-  html.barre-compacte:not(.appli) body:has(.fiche-site) .panier-pilule:not(.panier-pilule--bulle) {
-    max-width: 176px; height: 52px; padding: 4px 4px 4px 18px; justify-content: space-between;
+}
+/* UN SEUL GESTE ÉVIDENT PAR ÉCRAN (fondateur, 2026-10-25, maquettes/une-action, réponses 1, 2 et 7 ; règle dans
+   docs/agents/design.md) : là où l'on remplit son panier (la liste et la fiche d'un commerce), la barre du panier EST le
+   prochain geste. Lime plein, encre, pleine largeur, « Voir le panier » à gauche et le total à droite, comme la barre noire
+   « View cart » d'Uber Eats ; l'app perd son verre ici, le site son iris. Elle était du verre (ou de l'iris), avec le total
+   dans une pastille iris qui se confondait avec les « + » des plats. La bulle des autres pages ne change pas. */
+.panier-pilule:not(.panier-pilule--bulle),
+html.appli .panier-pilule:not(.panier-pilule--bulle),
+html:not(.appli) body:has(.fiche-site) .panier-pilule:not(.panier-pilule--bulle) {
+  background: var(--lime); color: var(--ink); border: 0; text-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 8px 24px rgba(20, 18, 31, .18);
+}
+html.appli .panier-pilule:not(.panier-pilule--bulle),
+html:not(.appli) body:has(.fiche-site) .panier-pilule:not(.panier-pilule--bulle) { padding: 0 22px; font-weight: 700; }
+.panier-pilule:not(.panier-pilule--bulle) svg { filter: none; }
+.panier-pilule:not(.panier-pilule--bulle) .panier-pilule-texte { flex: 1; text-align: left; }
+html.appli .panier-pilule:not(.panier-pilule--bulle) .panier-pilule-total,
+html:not(.appli) body:has(.fiche-site) .panier-pilule:not(.panier-pilule--bulle) .panier-pilule-total {
+  height: auto; padding: 0; border-radius: 0; background: none; color: var(--ink);
+}
+.panier-pilule:not(.panier-pilule--bulle) .panier-pilule-compte { background: var(--iris); color: #fff; text-shadow: none; }
+/* Le site sur un téléphone, liste des commerces : la même barre pleine largeur que l'app (c'était une petite pilule centrée). */
+@media (max-width: 900px) {
+  html:not(.appli) .panier-pilule:not(.panier-pilule--bulle) {
+    left: 16px; right: 16px; transform: none; max-width: 520px; margin: 0 auto; height: 58px; padding: 0 22px; gap: 14px; font-weight: 700;
+    /* Les animations de l'app (montée, gelée) : celles de la pilule centrée gardaient son translateX(-50 %) (fill both) et
+       poussaient la barre à moitié hors de l'écran. */
+    animation: panier-arrive-app .35s cubic-bezier(.2, .9, .25, 1.15) both;
   }
-  html.appli.barre-compacte .panier-pilule-total,
-  html.barre-compacte:not(.appli) body:has(.fiche-site) .panier-pilule-total { height: 42px; }
-  .panier-pilule-total { transition: height .14s var(--ressort-ui); }
+  html:not(.appli) .panier-pilule.panier-pilule--rebond:not(.panier-pilule--bulle) { animation: panier-gelee .5s cubic-bezier(.34, 1.45, .64, 1) both; }
 }
 @media (prefers-reduced-motion: reduce) { .panier-pilule, .panier-pilule-texte { transition: none; } }
 
@@ -5521,6 +5555,15 @@ html.appli .panier-pilule.panier-pilule--bulle {
 }
 html .panier-pilule--bulle .panier-pilule-texte, html .panier-pilule--bulle .panier-pilule-total,
 html.appli .panier-pilule--bulle .panier-pilule-texte, html.appli .panier-pilule--bulle .panier-pilule-total { display: none; }
+/* La bulle en IRIS PLEIN dans l'app aussi (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 3) : en verre blanc
+   on la voyait à peine. Le sac blanc, le compteur lime. Et pas de bulle quand l'écran vide propose déjà « Reprendre mon
+   panier » (EtatVide) : un seul geste. */
+html.appli .panier-pilule.panier-pilule--bulle {
+  background: var(--iris); color: #fff; border: 0; text-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 6px 18px rgba(59, 47, 181, .35);
+}
+html.appli .panier-pilule.panier-pilule--bulle svg { filter: none; }
+body:has(.etat-vide-reprendre) .panier-pilule { display: none; }
 /* Sur la Carte, les boutons du zoom occupent le coin droit : la bulle passe à gauche, et s'efface quand la fiche d'un
    commerce est ouverte en bas de la carte. */
 body:has(.carte-page) .panier-pilule.panier-pilule--bulle, html.appli body:has(.carte-page) .panier-pilule.panier-pilule--bulle { right: auto; left: 16px; }

@@ -3,7 +3,7 @@ import { usePreviewMode } from '../../context/PreviewModeContext';
 import RestaurantPreview from '../../components/RestaurantPreview';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
-import CadreSite, { SITE } from '../../components/commerce/CadreSite';
+import CadreSite from '../../components/commerce/CadreSite';
 
 export default function PreviewPage() {
   const { t } = useLanguage();
@@ -17,9 +17,8 @@ export default function PreviewPage() {
   }
 
   return (
-    <CadreSite titre={t('previewPage.title')} sous={t('previewPage.intro')}>
-      {!SITE && <h2 className="section-title" style={{ marginTop: 0 }}>{t('previewPage.title')}</h2>}
-      {!SITE && <p className="small" style={{ margin: '0 0 14px' }}>{t('previewPage.intro')}</p>}
+    // Le bandeau iris dans l'app aussi (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 9).
+    <CadreSite titre={t('previewPage.title')} sous={t('previewPage.intro')} appli>
       {restaurant && !restaurant.publicListed && !restaurant.isDemo && (
         <div className="card preview-not-visible" role="status">
           <b><Icone nom="masque" taille={16} className="icone-texte" />{' '}{t('previewPage.notVisibleTitle')}</b>

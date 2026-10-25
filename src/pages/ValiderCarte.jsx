@@ -99,7 +99,11 @@ export default function ValiderCarte() {
     } catch (e) { setErreur(e.message); } finally { setEnvoiQuestions(false); }
   }
 
+  /* « C'EST BON » N'EST JAMAIS GRISÉ (fondateur, 2026-10-25, maquettes/une-action) : sans nom (3 lettres), le toucher amène au
+     champ « Ton nom » au lieu d'un bouton mort. */
+  const champNom = useRef(null);
   async function valider() {
+    if (nom.trim().length < 3) { champNom.current?.focus(); champNom.current?.scrollIntoView({ block: 'center' }); return; }
     setEnvoi(true);
     try {
       const r = await api(`/menu-validation/${encodeURIComponent(token)}`, { method: 'POST', body: { name: nom, sha256: carte.sha256, ...(choixOffert ? { addFairideRate: ajouter } : {}) } });
@@ -311,9 +315,9 @@ export default function ValiderCarte() {
           <p className="gn-texte gn-texte--encre">{t('validerCarte.commitment')}</p>
           <div className="field">
             <label htmlFor={`${id}-nom`}>{t('validerCarte.yourName')}</label>
-            <input id={`${id}-nom`} value={nom} onChange={(e) => setNom(e.target.value)} autoComplete="name" />
+            <input id={`${id}-nom`} ref={champNom} value={nom} onChange={(e) => setNom(e.target.value)} autoComplete="name" />
           </div>
-          <button type="button" className="btn-gold gn-action" disabled={envoi || nom.trim().length < 3} onClick={valider}>
+          <button type="button" className="btn-gold gn-action" disabled={envoi} onClick={valider}>
             {envoi ? '…' : t('validerCarte.cestBon')}
           </button>
           <p className="gn-texte" style={{ margin: '12px 0 0', fontSize: 13.5 }}>{t('validerCarte.notRight')}</p>

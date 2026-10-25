@@ -49,9 +49,8 @@ const SECTIONS = [
 export default function GuidePage() {
   const { t } = useLanguage();
   return (
-    <CadreSite titre={t('guide.title')} sous={t('guide.intro')} lecture>
-      {!SITE && <h2 className="section-title" style={{ marginTop: 0 }}>{t('guide.title')}</h2>}
-      {!SITE && <p className="small" style={{ margin: '0 0 16px' }}>{t('guide.intro')}</p>}
+    // Le bandeau iris dans l'app aussi (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 9 : « bandeau partout »).
+    <CadreSite titre={t('guide.title')} sous={t('guide.intro')} lecture appli>
 
       {SECTIONS.map((s, rang) => (
         <section key={s.n} className="card" style={s.accent ? { borderLeft: '3px solid var(--iris)' } : undefined}>

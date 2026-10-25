@@ -228,38 +228,37 @@
 .fiche-panier-ligne-texte b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fiche-panier-ligne-texte small { font-size: 12.5px; color: var(--ink-soft); line-height: 1.35; }
 .fiche-panier-ligne-prix { font-variant-numeric: tabular-nums; }
-/* Le compteur « − n + » de la version 3C, en petit : iris plein, le chiffre dans un rond lime (lime sur iris). */
-.fiche-panier-pas { display: inline-flex; align-items: center; flex: none; height: 32px; padding: 0 1px; border-radius: 16px; background: var(--iris); color: #fff; }
+/* Le compteur « − n + », en petit : blanc à filet iris, comme celui du panier (fondateur, 2026-10-25, maquettes/une-action :
+   un seul geste par écran ; il était iris plein avec le chiffre dans un rond lime, et faisait concurrence à « Voir le panier »). */
+.fiche-panier-pas { display: inline-flex; align-items: center; flex: none; height: 32px; padding: 0 1px; border-radius: 16px; background: #fff; color: var(--iris); box-shadow: inset 0 0 0 1.5px #D9D6EE; }
 /* min-height !important : la règle des 44 px tactiles (styles.css, spécificité 0,3,1) étirait ces ronds en ovales. */
 .fiche-panier-pas button {
   width: 30px; height: 30px; min-height: 0 !important; padding: 0; border: 0; border-radius: 50%;
-  display: grid; place-items: center; background: transparent; color: #fff; font-size: 18px; font-weight: 600; line-height: 1; cursor: pointer;
+  display: grid; place-items: center; background: transparent; color: var(--iris); font-size: 18px; font-weight: 600; line-height: 1; cursor: pointer;
   transition: background .15s ease, transform .12s ease;
 }
-.fiche-panier-pas button:hover:not(:disabled) { background: rgba(255, 255, 255, .16); }
+.fiche-panier-pas button:hover:not(:disabled) { background: rgba(59, 47, 181, .08); }
 .fiche-panier-pas button:active:not(:disabled) { transform: scale(.85); }
 .fiche-panier-pas button:disabled { opacity: .4; cursor: default; }
-.fiche-panier-pas button:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
+.fiche-panier-pas button:focus-visible { outline: 2px solid var(--iris); outline-offset: -2px; }
 .fiche-panier-pas b {
   width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--lime); color: var(--ink); font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums;
+  background: transparent; color: var(--iris); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums;
   animation: plat-pas-chiffre .3s cubic-bezier(.34, 1.45, .64, 1);
 }
 .fiche-panier-st { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 12px 0 2px; font-size: 15px; }
 .fiche-panier-st b { display: inline-flex; overflow: hidden; font-size: 16px; font-variant-numeric: tabular-nums; }
 .fiche-panier-note { margin: 0; }
 .fiche-voir-panier {
-  display: flex; align-items: center; gap: 12px; flex: none; height: 56px; margin-top: 16px; padding: 0 6px 0 22px;
-  border-radius: 28px; background: var(--iris); color: #fff; font-size: 16px; font-weight: 700; text-decoration: none;
-  transition: background .15s ease;
+  display: flex; align-items: center; gap: 12px; flex: none; height: 56px; margin-top: 16px; padding: 0 22px;
+  border-radius: 28px; background: var(--lime); color: var(--ink); font-size: 16px; font-weight: 700; text-decoration: none;
+  transition: filter .15s ease;
 }
-.fiche-voir-panier:hover { background: var(--iris-deep); }
+/* LE geste de la colonne (2026-10-25) : lime, le total dedans en simple texte, comme la barre du panier du téléphone. */
+.fiche-voir-panier:hover { filter: brightness(.96); }
 .fiche-voir-panier:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--iris); }
 .fiche-voir-panier > span:first-child { flex: 1; }
-.fiche-voir-panier-total {
-  height: 44px; display: flex; align-items: center; padding: 0 14px; border-radius: 22px;
-  background: #fff; color: var(--iris); font-variant-numeric: tabular-nums; overflow: hidden;
-}
+.fiche-voir-panier-total { display: flex; align-items: center; font-variant-numeric: tabular-nums; overflow: hidden; }
 /* Le bouton rebondit quand un plat y atterrit (deux classes en alternance : une animation ne repart pas si sa classe reste). */
 .fiche-voir-panier--rebond0 { animation: fiche-panier-rebond0 .45s cubic-bezier(.34, 1.45, .64, 1); }
 .fiche-voir-panier--rebond1 { animation: fiche-panier-rebond1 .45s cubic-bezier(.34, 1.45, .64, 1); }

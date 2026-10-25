@@ -72,14 +72,15 @@ a.btn-gold.gn-action { font-weight: 700; }
 .gn-taux-aide { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
 .gn-valider { margin-top: 26px; padding-top: 4px; }
 .gn-valider .gn-action { font-size: 19px; min-height: 58px; }
-/* Le raccourci vers « C'est bon » (ValiderCarte.jsx, 2026-10-20) : la pilule du panier, en iris, centrée en bas.
-   Collante plutôt que fixe — dans la coquille, .page-fade casse position: fixed — et posée sur un support de hauteur
-   nulle : elle flotte sans réserver de place dans la feuille. Au-dessus des onglets là où ils sont (900 px et moins). */
+/* Le raccourci vers « C'est bon » (ValiderCarte.jsx, 2026-10-20) : LE geste de la page, en barre lime pleine largeur
+   (fondateur, 2026-10-25, maquettes/une-action ; c'était une petite pilule iris, qu'on prenait pour une étiquette), qui
+   descend au nom et au bouton final. Collante plutôt que fixe — dans la coquille, .page-fade casse position: fixed — et posée
+   sur un support de hauteur nulle : elle flotte sans réserver de place dans la feuille. Au-dessus des onglets là où ils sont. */
 .gn-raccourci { position: sticky; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 40; height: 0;
   display: flex; justify-content: center; }
-.gn-raccourci-pilule { transform: translateY(-100%); display: inline-flex; align-items: center; gap: 8px; min-height: 48px;
-  padding: 0 22px; border: 0; border-radius: var(--radius-pill); background: var(--iris); color: #fff;
-  font: 600 15px/1 var(--font-ui); box-shadow: var(--shadow-2); cursor: pointer; white-space: nowrap; }
+.gn-raccourci-pilule { transform: translateY(-100%); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; max-width: 520px; min-height: 56px; padding: 0 22px; border: 0; border-radius: var(--radius-pill); background: var(--lime);
+  color: var(--ink); font: 700 16px/1 var(--font-ui); box-shadow: 0 8px 24px rgba(20, 18, 31, .18); cursor: pointer; white-space: nowrap; }
 @media (max-width: 900px) {
   body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .gn-raccourci {
     bottom: calc(var(--hauteur-onglets) + 12px + env(safe-area-inset-bottom)); }
@@ -127,17 +128,16 @@ a.btn-gold.gn-action { font-weight: 700; }
   html:not(.appli) .dashboard-main .gn-feuille { padding-left: max(28px, calc((100% - var(--site-lecture)) / 2)); padding-right: max(28px, calc((100% - var(--site-lecture)) / 2)); }
 }
 
-/* ---------- 3 · Le site pour un visiteur : sous l'en-tête iris, tout sur le blanc ---------- */
-/* Comme la connexion sur téléphone et l'invitation dans l'équipe (ecran-equipe-groupe.css) : le titre en encre, le vélo et
-   le retour retirés (vélo lime sur blanc : illisible), la feuille sans coins ni montée. */
-html:not(.appli) .wrap .gn-bandeau { margin: 0; padding: 28px 0 0; background: #fff; color: var(--ink); }
-html:not(.appli) .wrap .gn-bandeau .gn-titre { color: var(--ink); }
-html:not(.appli) .wrap .gn-bandeau .gn-sous, html:not(.appli) .wrap .gn-sous b { color: var(--ink-soft); }
+/* ---------- 3 · Le site pour un visiteur : le bandeau iris aussi ---------- */
+/* Tout était sur le blanc (fondateur, 2026-10-16 : « double bannière, trop lourd » sous l'en-tête complet). Depuis le
+   2026-10-25 (maquettes/une-action/panier-et-site, réponse 9 : « bandeau partout »), l'en-tête du visiteur n'est plus qu'une
+   barre fine sur un téléphone : le bandeau la prolonge, d'un bord à l'autre, et la feuille blanche monte dessus, comme dans
+   l'app. Le retour et la tuile du vélo restent retirés (le logo est juste au-dessus). */
+html:not(.appli) .wrap .gn-bandeau { margin: -24px calc(50% - 50vw) 0; padding: 18px max(20px, calc((100vw - 760px) / 2)) 44px; }
 html:not(.appli) .wrap .gn-bandeau .gn-haut { display: none; }
-html:not(.appli) .wrap .gn-feuille { margin: 0; padding: 22px 0 8px; border-radius: 0; animation: none; }
+html:not(.appli) .wrap .gn-feuille { margin: -24px calc(50% - 50vw) 0; padding: 24px max(20px, calc((100vw - 760px) / 2)) 24px; }
 @media (min-width: 901px) {
-  html:not(.appli) .wrap .gn-bandeau { padding-top: 40px; }
-  html:not(.appli) .wrap .gn-bandeau .gn-titre { font-size: 36px; }
+  html:not(.appli) .wrap .gn-bandeau { padding-top: 36px; }
 }
 
 /* Questions de Fairide sur la carte (components/commerce/QuestionsCarte.jsx, 2026-10-20) : une carte par question, des

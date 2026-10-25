@@ -168,7 +168,9 @@ export default function PanierPage() {
       </span>
       {pasEncore
         ? <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {t('checkout.onlinePaymentOpenSoon')}</span>
-        : <button type="button" className="btn-gold" onClick={() => (indisponibles.length ? toast(t('checkout.removeUnavailable'), 'erreur') : navigate('/checkout'))}>{t('panier.toCheckout')}</button>}
+        // Le montant DANS le bouton (fondateur, 2026-10-25, maquettes/une-action, réponse 4) : un seul geste à l'écran ; la pastille
+        // du sous-total à côté avait l'air d'un deuxième bouton. Elle ne reste que dans le récapitulatif du site sur ordinateur.
+        : <button type="button" className="btn-gold" onClick={() => (indisponibles.length ? toast(t('checkout.removeUnavailable'), 'erreur') : navigate('/checkout'))}>{t('panier.toCheckout')} · <span className="co-bouton-montant"><ChiffresRoulants valeur={euros(sousTotal)} /></span></button>}
     </BarreCommande>
   );
 

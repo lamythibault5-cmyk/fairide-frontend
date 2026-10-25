@@ -34,6 +34,14 @@ html:not(.appli) .sc-route .rs-arret.fait svg { stroke-width: 3; }
 .sc-commandes .sc-titre-suivi { animation: suivi-titre .35s ease both; }
 .sc-commandes .sc-notifs { display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 16px; }
 .sc-commandes .sc-notifs > :last-child { flex: 1 1 280px; }
+/* Un seul geste (fondateur, 2026-10-25, maquettes/une-action, réponse 6) : l'heure d'arrivée en titre, en lime sur l'iris
+   (TitreHeure, orderStatus.jsx), l'étape dessous ; et « Me prévenir quand … arrive » en lime pleine largeur tant que les
+   notifications ne sont pas activées (ReglageNotifications, enAvant). */
+.sc-commandes .suivi-heure { color: var(--lime); }
+.sc-commandes .suivi-heure-sous { margin-top: 2px; font-size: 15px; opacity: .9; }
+.sc-commandes .sc-notifs > .reglage-notifs-avant { flex: 1 1 100%; order: -1; margin: 0 0 14px; }
+.reglage-notifs-avant .btn-gold { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; font-size: 16px; }
+.reglage-notifs-avant .small { margin: 6px 0 0; color: var(--ink-soft); text-align: center; }
 .sc-commandes .sc-suivi .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 0 0 10px; color: var(--ink); font-size: 13.5px; }
 .sc-commandes .sc-suivi .suivi-code { margin: 0 0 12px; }
 .sc-commandes .sc-autre-en-cours { margin-top: 24px; }
@@ -70,11 +78,11 @@ html:not(.appli) .sc-page .sc-codes { margin-top: 22px; padding-top: 6px; border
   /* Le récapitulatif du panier se réduit à sa barre, collée en bas de l'écran (client-ui.css) : le reste est sur la page. */
   html:not(.appli) .sc-page .sc-recap { display: contents; }
   html:not(.appli) .sc-page .sc-recap-titre, html:not(.appli) .sc-page .sc-recap-sous, html:not(.appli) .sc-page .sc-recap-note { display: none; }
-  /* La barre du paiement sur une ligne, comme celle du panier : le total à gauche, « Commander et payer » à côté (le bouton
-     ne passe plus sous le montant, qui faisait une barre de 120 px de haut). Le refus du devis garde toute la largeur. */
-  html:not(.appli) .sc-page .checkout-recap .cart-bar.co-barre { flex-direction: row; flex-wrap: wrap; align-items: center; }
-  html:not(.appli) .sc-page .checkout-recap .cart-bar.co-barre .co-barre-total { flex: none; }
-  html:not(.appli) .sc-page .checkout-recap .cart-bar.co-barre .btn-gold { flex: 1 1 0; min-width: 0; padding: 0 14px; font-size: 15px; white-space: nowrap; }
+  /* La barre du panier et du paiement : le bouton seul, montant compris (fondateur, 2026-10-25, maquettes/une-action : un
+     seul geste ; le montant à gauche du bouton avait l'air d'un deuxième bouton). Le refus du devis garde toute la largeur. */
+  html:not(.appli) .sc-page .cart-bar.co-barre { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  html:not(.appli) .sc-page .cart-bar.co-barre .co-barre-total { display: none; }
+  html:not(.appli) .sc-page .cart-bar.co-barre .btn-gold { flex: 1 1 0; min-width: 0; min-height: 52px; padding: 0 14px; font-size: 16px; white-space: nowrap; }
 }
 
 /* ---------- Ordinateur (site) ---------- */

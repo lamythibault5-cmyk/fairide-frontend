@@ -9,6 +9,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { vibrer } from '../../gestes';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
+import { useSiteLarge } from '../../hooks/useSiteLarge';
 import ErreurChargement from '../../components/ErreurChargement';
 import InfosRetrait, { AideCommande } from '../../components/client/InfosRetrait';
 import BandeauOuverture from '../../components/BandeauOuverture';
@@ -28,7 +29,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { DeliveryTiming, ProchaineEtape, RouteSuivi, titreSuivi, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
+import { DeliveryTiming, ProchaineEtape, RouteSuivi, TitreHeure, heureArrivee, prenomLivreur, titreSuivi, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
 import DriverBadge from '../../components/DriverBadge';
@@ -137,6 +138,10 @@ function PourboireForm({ order, token, toast, onDone, t }) {
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
+  // Le site sur un téléphone suit la commande en cours comme l'app (fondateur, 2026-10-25, maquettes/une-action/panier-et-site,
+  // réponse 7) : le livreur, son code, « Détails » replié. Sur un ordinateur, le suivi garde ses deux colonnes (corpsSite).
+  const siteLarge = useSiteLarge(900);
+  const vueAppli = APPLI || !siteLarge;
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [echec, setEchec] = useState(false);
@@ -378,6 +383,7 @@ export default function Orders() {
           texte={t('orders.emptyHint')}
           actionVers="/restaurants"
           actionTexte={t('orders.emptyAction')}
+          reprendre
         />
         </div>
       </div>
@@ -670,7 +676,9 @@ export default function Orders() {
       <RappelEmail />
       <ClocheNotifications />
       {/* Le suivi sur le téléphone, même page fermée : acceptée, en route, à la porte… (ReglageNotifications.jsx). */}
-      <ReglageNotifications textes={{ aide: t('orders.notifHelp'), actif: t('orders.notifOn') }} />
+      {/* Une commande en cours : être prévenu est LE geste de l'écran, en lime tant que ce n'est pas activé (2026-10-25). */}
+      <ReglageNotifications textes={{ aide: t('orders.notifHelp'), actif: t('orders.notifOn') }}
+        enAvant={enCours[0] ? (enCours[0].driverName ? t('orders.notifyMeDriver', { name: prenomLivreur(enCours[0]) }) : t('orders.notifyMe')) : null} />
     </>
   );
   // L'en-tête iris d'une commande en cours (version 1C, RouteSuivi dans orderStatus.jsx).
@@ -746,7 +754,7 @@ export default function Orders() {
    * courtes pour les commandes passées ; sous le bandeau, la commande en cours garde l'ordre de l'app (carteEnCours : le livreur,
    * le code, « Détails » replié), qui suit le moment de la commande. Sans commande en cours, le vélo roule sur la route du
    * bandeau quand on fait défiler (bandeauTitre). */
-  const corpsEnCours = (o) => (APPLI ? <div className="sc-encours suivi-carte--bandeau">{carteEnCours(o)}</div> : corpsSite(o));
+  const corpsEnCours = (o) => (vueAppli ? <div className="sc-encours suivi-carte--bandeau">{carteEnCours(o)}</div> : corpsSite(o));
   const corpsSite = (o) => {
     const carte = blocCarte(o);
     // Deux colonnes sur ordinateur : la carte du trajet à gauche et tout le reste à droite pendant la livraison ; sinon le
@@ -781,8 +789,10 @@ export default function Orders() {
           <div className="ec-col">
             <h1 className="sc-surtitre">{titre}</h1>
             <div className="ec-haut"><span className="ec-haut-texte"><b>{vedette.restaurantName}</b> · {orderTypeLabel(vedette, t)} · {quand(vedette.createdAt)}</span></div>
-            <h2 className="ec-titre sc-titre-suivi" key={vedette.status}>{titreSuivi(vedette, t)}</h2>
-            <DeliveryTiming order={vedette} />
+            {heureArrivee(vedette) ? <TitreHeure order={vedette} className="ec-titre sc-titre-suivi" key={vedette.status} /> : <>
+              <h2 className="ec-titre sc-titre-suivi" key={vedette.status}>{titreSuivi(vedette, t)}</h2>
+              <DeliveryTiming order={vedette} />
+            </>}
             {!(vedette.status === 'nouveau' && !vedette.paid) && <RouteSuivi status={vedette.status} orderType={vedette.orderType} />}
           </div>
         </header>

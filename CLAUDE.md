@@ -87,7 +87,8 @@ read that doc before working near it.
 
 **Look and feel**
 - Two brand colours: iris `#3B2FB5` and lime `#C8F03C`. Lime only on iris, or as a filled block with ink text; backgrounds
-  are white or iris, no gradients, no shadows (glass exists in the app only, `html.appli`); one lime accent per view.
+  are white or iris, no gradients, no shadows (glass exists in the app only, `html.appli`); one lime accent per view, and
+  that lime is the screen's next click: one obvious action, saying what and how much, never greyed out.
   Change colours in the `:root` tokens, never at call sites. *(design.md)*
 - Fonts: Inter (interface) and Inter Tight (`h1`–`h3`), served by Fairide — never `fonts.googleapis.com`. Bricolage
   Grotesque is for the word `fairide` (`.wordmark`) only. The logo is the bicycle « 5a » and is never a link. *(design.md)*

@@ -109,6 +109,20 @@ source spec and `maquettes/landing-iris/landing-iris.html` for the reference pag
 3. **One lime accent per view.** If a screen already has a `btn-gold`, its active tab / badge /
    nav item uses white or iris instead. *Exception (founder, 2026-10-16):* the app's welcome/sign-up screens pair the lime
    button with the lime check of ticked options and the « Salut ! » chip.
+4. **The lime button is the next click: one obvious action per screen** (founder, 2026-10-25, answers to
+   `maquettes/une-action/une-action.html`, after Uber Eats' black « View cart » / « Add to order » / « Place order »). On every
+   screen with something to do, exactly one lime button, full width at the bottom where it can be, and nothing else filled
+   with colour competes with it: choices already made are an iris **outline** with an iris check on white (`.ec-option.on`,
+   checkout and « Valider ma carte »), the cart's quantities are a white pill with an iris hairline (`.ec-pas`), a label is
+   never lime (`pill teal`, not `pill gold`). The button **says what it does and how much** (« Aller au paiement · 38,10 € »,
+   « Commander et payer · 42,00 € » — that last wording stays: the final button must say the customer commits to pay; no
+   price pill next to it) and is **never greyed out**: if a choice is missing, tapping it goes there (`FichePlat` scrolls to
+   the required group and frames it; « C'est bon » focuses the name field). When several things wait (courier documents),
+   only the first is lime and the next becomes lime once it is done. A screen with nothing to do (browsing, account, a
+   tracking page with notifications already on) has no lime at all. What it changed on 2026-10-25: the shop's cart bar
+   (lime, always expanded, « Voir le panier » + total), the dish sheet, cart, checkout, tracking (« Chez toi vers 12:56 »
+   and « Me prévenir quand … arrive »), order confirmed (« Suivre ma commande »), « Valider ma carte », courier documents,
+   the site's /login header, the shop's menu and promotions screens.
 
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.

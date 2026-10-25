@@ -35,8 +35,9 @@ carries `.bv-bandeau`. Progress is a dashed road the brand bicycle rides along (
 options show a lime check. Outside a `.bv-bandeau` screen (notifications primer, courier dossier) `.bv-feuille` is `display: contents`.
 **Same family, client screens (2026-10-16, versions picked on `maquettes/autres-idees/autres-idees.html`)**: an order in
 progress opens on an iris header with a big friendly status (`titreSuivi`) and a road where the lime bike rolls stop to stop
-(`RouteSuivi`, orderStatus.jsx; past orders keep the compact card) — 1C; in the app the cart is a full-width glass bar with the
-total in an iris chip whose digits roll (FloatingCart, `ChiffresRoulants`) — 2C; a dish's « + » opens into « − n + » with the
+(`RouteSuivi`, orderStatus.jsx; past orders keep the compact card; since 2026-10-25 the arrival time is the title, `TitreHeure`)
+— 1C; the cart is a full-width bar whose total rolls (FloatingCart, `ChiffresRoulants`) — 2C, lime and always expanded since
+2026-10-25 (« one obvious action », design.md rule 4); a dish's « + » opens into « − n + » with the
 number in a lime circle and folds back to a circle that keeps the count (`PasPlat`, MenuCategorySections), and the dish sheet's
 quantity and « Ajouter » are one lime block — 3C; full-page empty screens (orders, favourites, cart) show the bike waiting on its
 road (`EtatVide scene=…`) — 4B. Buttons inside these need `min-height` overrides: the global 44 px touch rule has specificity (0,3,1).
@@ -55,6 +56,15 @@ business dashboard / orders / menu / stats (BandeauCommerce.jsx, CarteCommerce.j
 (RouteVelo.jsx). **Each family's CSS lives in its own file imported by its pages**: `src/ecran-liste.css`, `ecran-fiche.css`,
 `ecran-commande.css`, `ecran-compte.css`, `ecran-commerce.css`, `ecran-livreur.css` — look there before styles.css. Glass, blur and soft
 shadows are scoped to `html.appli`; the website keeps iris bands and white sheets without glass.
+**The website on a phone shows the app's screens (founder, 2026-10-25, answers to `maquettes/une-action/panier-et-site.html`)**:
+below 900 px (`useSiteLarge(900)` false) the site renders the app's layout, only without glass: the shop page
+(`vueAppli` in RestaurantMenu.jsx: seal, category, distance/fees ticket, « À plusieurs », menu preview, bistrot menu), order
+tracking (`vueAppli` in Orders.jsx), a shop's orders (OrdersPage: compact band + « Accepter » bar; the 3-column board is for
+computers only), the login look (iris band + sheet, site-cadre.css; the logic stays Auth.jsx for shop/courier sign-up and
+browser Google), the visitor header (logo + « Connexion » only; Aide, Contact and languages in the footer), and the iris band
+on every general and shop screen (the visitor site's white override is gone; Questions, Mode d'emploi and Aperçu got their
+band in the app too). Computers keep their own layout (side menu, columns). Still different on purpose: the visitor home
+(presentation page on the site, for search engines and the 10 % pitch) and the courier dossier (two flows; unify later).
 **The app glass of 2026-10-23** (answers to `maquettes/verre-boutons/verre-boutons.html`) is in ONE file, [src/verre.css](../../src/verre.css): an iris glass band under the iPhone status bar once the page scrolls ([verreBarreEtat.js](../../src/verreBarreEtat.js), it waits for a restaurant photo to leave), milky « clear » glass with an iris rim for the restaurant round buttons, puces, Livraison / À emporter and map controls, vivid iris (nearly solid, with the glass shine, white rim and iridescent edges, no blur: it would not show) for every « + », the cart « − 1 + » and the Livraison / À emporter thumb — 72 % iris glass looked washed out on white (founder, 2026-10-23). Toasts keep the 72 % iris glass.
 **TestFlight feedback of 2026-10-24**: (the three lenses already glide the same way since PR #220, 2026-10-23.) The map has no
 + / − in the app (`zoomControl: !experienceApp()`, RestaurantsMap.jsx: pinch and double tap zoom; at 84 px from the bottom they sat under the

@@ -562,7 +562,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.methodsTitle')}</h3>
         <p className="small" style={{ margin: '0 0 14px' }}>{t('menuPage.methodsIntro')}</p>
         <div className="methode" id="menu-concierge">
-          <div className="methode-tete"><h4>{t('menuPage.method1Title')}</h4><span className="pill gold">{t('menuPage.recommendedFree')}</span></div>
+          <div className="methode-tete"><h4>{t('menuPage.method1Title')}</h4><span className="pill teal">{t('menuPage.recommendedFree')}</span></div>
           <p className="small methode-sous">{t('menuPage.method1Sub')}</p>
           <MenuConciergeRequest restoId={restoId} urlSuggeree={importUrl} />
         </div>

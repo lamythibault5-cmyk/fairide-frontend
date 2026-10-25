@@ -909,9 +909,12 @@ export default function Checkout() {
               <span className="small co-barre-attente">{t('checkout.minOrderMissing', { min: euros(restaurant.minOrderAmount), missing: euros(manqueMinimum) })}</span>
             ) : serviceOuvert(fulfillmentType, user) && !paiementBloque ? (
               <button className="btn-gold" disabled={placing || paying} onClick={placeOrder}>
-                {placing || paying ? '...'
-                  : surPlaceChoisi ? t('checkout.confirmOnSite')
-                  : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}
+                {/* Le montant dans le bouton, comme au panier (2026-10-25). « Commander et payer » reste : le dernier bouton doit
+                    dire qu'on s'engage à payer. */}
+                {placing || paying ? '...' : <>
+                  {surPlaceChoisi ? t('checkout.confirmOnSite') : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}
+                  {' · '}<span className="co-bouton-montant"><ChiffresRoulants valeur={euros(montantDebite)} /></span>
+                </>}
               </button>
             ) : (
               <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {paiementBloque

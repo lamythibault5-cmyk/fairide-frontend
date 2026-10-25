@@ -244,7 +244,9 @@ function ResultatCommande({ success }) {
           <InfosRetrait order={commande} />
           </div>
           <div className="sc-merci-actions">
-          <Link to="/orders" className="btn-gold ec-merci-bouton">{t('orderResult.viewOrders')}</Link>
+          {/* Le bouton dit ce qu'on veut faire juste après avoir payé : suivre CETTE commande (elle s'ouvre en tête de Mes commandes,
+              en suivi). Fondateur, 2026-10-25, maquettes/une-action. */}
+          <Link to="/orders" className="btn-gold ec-merci-bouton">{t('orderResult.trackOrder')}</Link>
           <Link to="/restaurants" className="btn-ghost ec-merci-retour">{t('ecranCommande.retourCommerces')}</Link>
           </div>
           </div>

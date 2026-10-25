@@ -1,4 +1,5 @@
 import InterrupteurService from '../../components/commerce/InterrupteurService';
+import { useSiteLarge } from '../../hooks/useSiteLarge';
 import RupturesDuJour from '../../components/commerce/RupturesDuJour';
 import { fusionnerCommande } from '../../components/commerce/majLocale';
 import { useActionOptimiste } from '../../actionOptimiste';
@@ -85,6 +86,12 @@ function CodeRetrait({ order, t }) {
 
 export default function OrdersPage() {
   const { t } = useLanguage();
+  /* Le tableau à trois colonnes, sur un ORDINATEUR seulement. Sur un téléphone, le site montre les commandes comme l'app
+     (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 11) : le bandeau compact (le nom, l'interrupteur, la
+     ligne de l'alarme dont les réglages ouvrent le son, la sonnerie et les notifications, le terminal), puis « À traiter »
+     d'abord et « Accepter » en bas de l'écran. Le tableau, sur un téléphone, mettait trois colonnes l'une sous l'autre. */
+  const siteLarge = useSiteLarge(900);
+  const tableau = SITE && siteLarge;
   const { token } = useAuth();
   const toast = useToast();
   const { orders, restaurant, restoId, loadDashboard, communs, alerte, onConnect, connecting, lectureSeule, ordersLoaded, etatCommandes, statsService, modifierRestaurant, modifierCommandes } = useOutletContext();
@@ -858,7 +865,7 @@ export default function OrdersPage() {
       : null;
   const etatTerminal = terminaux ? (aTerminal ? (terminalEnLigne ? t('sitePro.terminalEnLigne') : t('sitePro.terminalHorsLigne')) : t('sitePro.terminalAucun')) : null;
 
-  if (SITE) return (
+  if (tableau) return (
     <div className="no-print sp-page">
       {/* LE BANDEAU (site) : le nom et le résumé, « Commandes », les réglages du service en pastilles claires (son, terminal,
           alarme, notifications), l'interrupteur ouvert / en pause, puis la prochaine étape avant la mise en ligne. */}

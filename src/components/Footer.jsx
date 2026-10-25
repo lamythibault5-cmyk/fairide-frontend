@@ -3,6 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 import BrandMark from './BrandMark';
 import { resetConsent } from '../consent';
 import AvecMarque from './AvecMarque';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -32,6 +33,10 @@ export default function Footer() {
               une recherche. */}
           <Link to="/notre-histoire" className="small">{t('accountUi.ourStory')}</Link>
           <Link to="/aide" className="small">{t('nav.help')}</Link>
+          {/* Contact et les langues aussi ici : sur un téléphone, l'en-tête du visiteur n'a plus que le logo et « Connexion »
+              (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 4 ; styles.css, « LA BARRE DE L'APP »). */}
+          <Link to="/aide?sujet=contact" className="small">{t('nav.contact')}</Link>
+          <div className="footer-langues"><LanguageSwitcher /></div>
         </div>
         <div className="footer-col">
           <h3><AvecMarque>{t('footer.legalHeading')}</AvecMarque></h3>

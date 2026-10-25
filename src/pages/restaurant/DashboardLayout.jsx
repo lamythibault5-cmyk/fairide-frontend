@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSiteLarge } from '../../hooks/useSiteLarge';
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { definirModeEquipe } from '../../modeEquipe';
 import { api } from '../../api';
@@ -32,12 +33,11 @@ import '../../site-pro.css';
 const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
 // Promotions et Factures les ont rejointes dans l'app aussi le 2026-10-19 (fondateur, finitions-appli.html, section 4 :
 // CadreSite `appli`).
+// Questions, Mode d'emploi et Aperçu client aussi depuis le 2026-10-25 (maquettes/une-action/panier-et-site, réponse 9 :
+// « bandeau partout ») : ils ne l'avaient que sur le site.
 const PAGES_BANDEAU = ['/dashboard', '/dashboard/edit', '/dashboard/orders', '/dashboard/menu', '/dashboard/stats',
-  '/dashboard/promotions', '/dashboard/invoices'];
-// Sur le SITE (pas dans l'app), les autres pages du commerce ont aussi leur bandeau (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html,
-// lot « pro ») : elles reçoivent les blocs communs dans leur feuille, comme les pages ci-dessus.
+  '/dashboard/promotions', '/dashboard/invoices', '/dashboard/questions', '/dashboard/guide', '/dashboard/preview'];
 const SITE = !experienceApp();
-const PAGES_BANDEAU_SITE = ['/dashboard/guide', '/dashboard/preview'];
 // Dernier commerce ouvert sur cet appareil, pour un compte qui en a plusieurs (shop-411). Un identifiant, rien de plus.
 const CLE_DERNIER_COMMERCE = 'fairide_dernier_commerce';
 
@@ -60,10 +60,12 @@ export default function DashboardLayout() {
   const surAccueil = ['/dashboard', '/dashboard/edit'].includes(chemin);
   // Pages au bandeau iris (2026-10-16, ecran-commerce.css) : elles portent elles-mêmes le nom du commerce et posent
   // les blocs communs (alertes, prochaine étape, alerte de commande) en tête de leur feuille blanche.
-  const avecBandeau = PAGES_BANDEAU.includes(chemin) || (SITE && PAGES_BANDEAU_SITE.includes(chemin));
-  // Commandes sur le site : le son, l'alarme et la prochaine étape montent dans le bandeau de la page (OrdersPage) ; la
-  // feuille ne garde que les deux alertes. Dans l'app, rien ne change.
-  const commandesSite = SITE && chemin === '/dashboard/orders';
+  const avecBandeau = PAGES_BANDEAU.includes(chemin);
+  // Commandes sur le site, sur un ordinateur : le son, l'alarme et la prochaine étape montent dans le bandeau de la page
+  // (OrdersPage) ; la feuille ne garde que les deux alertes. Sur un téléphone, le site montre les commandes comme l'app
+  // (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 11). Dans l'app, rien ne change.
+  const siteLarge = useSiteLarge(900);
+  const commandesSite = SITE && siteLarge && chemin === '/dashboard/orders';
   const [myRestos, setMyRestos] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);

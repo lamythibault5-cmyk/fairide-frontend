@@ -331,7 +331,7 @@ export default function PromotionsPage() {
       )}
 
       {!formOpen ? (
-        <button type="button" className="ec-bouton ec-bouton--iris" style={{ marginTop: 14 }} onClick={() => setFormOpen(true)}>{t('promosPage.addPromo')}</button>
+        <button type="button" className="ec-bouton ec-bouton--lime" style={{ marginTop: 14 }} onClick={() => setFormOpen(true)}>{t('promosPage.addPromo')}</button>
       ) : APPLI ? (
         // Application : le formulaire dans une feuille, « Créer » épinglé en bas (il était au bout d'une carte, sous la page).
         <SousEcran titre={t('promosPage.newPromo')} onFermer={() => setFormOpen(false)} pied={
@@ -343,7 +343,7 @@ export default function PromotionsPage() {
         <div className="ec-formulaire">
           <p className="ec-feuille-titre">{t('promosPage.newPromo')}</p>
           {champsPromo}
-          <button type="button" className="ec-bouton ec-bouton--iris" disabled={saving} onClick={createPromo}>{saving ? '...' : t('promosPage.createPromo')}</button>
+          <button type="button" className="ec-bouton ec-bouton--lime" disabled={saving} onClick={createPromo}>{saving ? '...' : t('promosPage.createPromo')}</button>
           <button type="button" className="ec-bouton ec-bouton--texte" onClick={() => setFormOpen(false)}>{t('promosPage.cancel')}</button>
         </div>
       )}
