@@ -116,6 +116,13 @@
      fixés au-dessus (toast, pilule du panier, fiche de la carte) et le pied de page s'y calent. Sous 900 px, 74 px depuis le
      2026-10-21 (la barre est collée au bas, voir .dashboard-sidebar dans la requête max-width: 900px). */
   --hauteur-onglets: 86px;
+  /* LES BARRES DU BAS DESCENDENT DE 12 PX DANS LA ZONE DU SYSTÈME (fondateur, 2026-10-25 : « il y a un peu d'espace mort, je
+     voudrais qu'elles descendent un tout petit peu »). Sur un iPhone, la zone de la barre d'accueil fait 34 px : la barre
+     d'onglets et les barres flottantes (panier, « Accepter », paiement) s'y posaient au-dessus, avec un vide dessous. Elles
+     mordent maintenant de 12 px dans cette zone, comme la barre d'onglets flottante d'iOS 26 ; jamais en dessous de 0. Un
+     téléphone sans zone du système (beaucoup d'Android à boutons) ne change pas. Tout ce qui se cale au-dessus des onglets
+     suit la même valeur. Les marges intérieures des pages gardent la zone entière (un peu plus d'air ne gêne pas). */
+  --bas-ecran: max(0px, calc(env(safe-area-inset-bottom) - 12px));
   --shadow-1: rgba(0, 0, 0, 0.12) 0 4px 16px 0;  /* carte détachée sur une bande claire */
   --shadow-2: rgba(0, 0, 0, 0.16) 0 4px 16px 0;  /* carte qui porte un formulaire */
   --shadow-3: rgba(0, 0, 0, 0.16) 0 2px 8px 0;   /* pilule flottant sur une photo */
@@ -1706,7 +1713,7 @@ body:has(.modal-overlay, .plat-feuille) .toast.show { transform: translateY(0); 
    Le tunnel de commande est exclu : il masque les onglets (.dashboard-shell--flux), donc le bas
    de l'écran y est libre et le message peut rester à sa place habituelle. */
 @media (max-width: 900px) {
-  body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .toast { bottom: calc(var(--hauteur-onglets) + 16px + env(safe-area-inset-bottom)); }
+  body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .toast { bottom: calc(var(--hauteur-onglets) + 16px + var(--bas-ecran)); }
   body:has(.panier-pilule) .toast { bottom: calc(140px + env(safe-area-inset-bottom)); }
 }
 
@@ -2583,7 +2590,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
    (RestaurantsMap.jsx) — mais une remontée de 80px dans un conteneur de 180 la ferait sortir par
    le haut le jour où il le serait. */
 @media (max-width: 900px) {
-  .carte-plein-ecran .map-detail-card { bottom: calc(var(--hauteur-onglets) + 12px + env(safe-area-inset-bottom)); }
+  .carte-plein-ecran .map-detail-card { bottom: calc(var(--hauteur-onglets) + 12px + var(--bas-ecran)); }
   /* Et plus petite : la fiche mange maintenant 80px de plus en bas, sur un écran qu'on est venu
      voir pour la carte. La photo perd un tiers de sa hauteur et le corps un peu de respiration —
      c'est tout ce qui se retire, le contenu reste entier. */
@@ -2808,7 +2815,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
        touche ; dans l'app, le clavier la masque, voir html.clavier-ouvert). Vérifié par scripts/verifier-barres-bas.mjs. */
     bottom: 0;
     flex-direction: row; align-items: center; justify-content: center; gap: 10px;
-    padding: 0 8px max(6px, env(safe-area-inset-bottom)); /* 8 et non 12 sur les côtés : quatre pixels de plus pour les libellés de la barre-pilule */
+    padding: 0 8px max(6px, var(--bas-ecran)); /* 8 et non 12 sur les côtés : quatre pixels de plus pour les libellés de la barre-pilule */
     background: transparent; border-right: none; border-top: none;
     box-shadow: none; z-index: 50; pointer-events: none;
     overflow: visible;
@@ -4440,7 +4447,7 @@ html.tracking-plein-actif .panier-pilule { display: none !important; }
    paiement par-dessus le menu. Ici : une pilule, un compteur sur l'icone, un total, et un lien. */
 .panier-pilule {
   position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(var(--hauteur-onglets) + 12px + env(safe-area-inset-bottom)); z-index: 45;
+  bottom: calc(var(--hauteur-onglets) + 12px + var(--bas-ecran)); z-index: 45;
   display: inline-flex; align-items: center; gap: 10px;
   max-width: calc(100vw - 32px);
   padding: 12px 20px; border-radius: var(--radius-pill);
@@ -4488,7 +4495,7 @@ html.appli .panier-pilule-texte { flex: 1; text-align: left; overflow: hidden; t
 html.appli .panier-pilule-total { height: 44px; padding: 0 16px; border-radius: 22px; background: var(--iris); color: #fff; text-shadow: none;
   display: flex; align-items: center; overflow: hidden; font-variant-numeric: tabular-nums; }
 html.appli .panier-pilule-compte { min-width: 20px; height: 20px; font-size: 12px; top: -7px; right: -9px; text-shadow: none; }
-html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(:has(.dashboard-sidebar)) .panier-pilule { bottom: calc(16px + env(safe-area-inset-bottom)); }
+html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(:has(.dashboard-sidebar)) .panier-pilule { bottom: calc(16px + var(--bas-ecran)); }
 @keyframes panier-arrive-app { from { transform: translateY(140%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes panier-gelee { 0% { transform: none; } 30% { transform: scale(1.04, .9); } 60% { transform: scale(.99, 1.04); } 100% { transform: none; } }
 @media (prefers-reduced-transparency: reduce) {
@@ -5500,16 +5507,23 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .recherche-valider:active { transform: scale(.92); }
 .fiche-recherche-resultat { margin: -4px 0 10px; font-size: 13px; font-weight: 500; color: var(--iris); }
 
-/* LA BARRE DU PANIER DESCEND AVEC LES ONGLETS (fondateur, 2026-10-17). Sous 900 px seulement, là où la barre d'onglets se
-   réduit (html.barre-compacte, posée par DashboardSidebar) : la barre du panier descend des 14 px que perdent les onglets,
-   avec la même durée et le même ressort (.14 s, --ressort-ui). Elle ne se resserre plus et garde « Voir le panier »
-   (fondateur, 2026-10-25, maquettes/une-action : c'est le prochain geste, il reste lisible ; plus bas, « UN SEUL GESTE »). */
+/* LA BARRE DU PANIER SE REPLIE UN PEU AVEC LES ONGLETS (fondateur, 2026-10-17, puis 2026-10-25 : « qu'elle imite la barre
+   d'onglets, qu'elle se replie un petit peu »). Sous 900 px seulement, là où la barre d'onglets se réduit (html.barre-compacte,
+   posée par DashboardSidebar, sur la fiche d'un commerce aussi) : la barre du panier descend des 14 px que perdent les
+   onglets, perd 8 px de haut et se resserre de 24 px de chaque côté, avec la même durée et le même ressort (.14 s,
+   --ressort-ui). Elle garde « Voir le panier » et le total : c'est le prochain geste (maquettes/une-action) ; jusqu'au
+   2026-10-25 elle se réduisait au sac et au total, sans mots. En remontant, tout revient. */
 .panier-pilule-texte { display: inline-block; max-width: 360px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom;
   transition: opacity .12s, max-width .14s var(--ressort-ui); }
-.panier-pilule { transition: bottom .14s var(--ressort-ui), max-width .14s var(--ressort-ui), height .14s var(--ressort-ui), gap .14s var(--ressort-ui), padding .14s var(--ressort-ui); }
+.panier-pilule { transition: bottom .14s var(--ressort-ui), left .14s var(--ressort-ui), right .14s var(--ressort-ui), max-width .14s var(--ressort-ui), height .14s var(--ressort-ui), gap .14s var(--ressort-ui), padding .14s var(--ressort-ui), font-size .14s var(--ressort-ui); }
 @media (max-width: 900px) {
+  html.appli.barre-compacte .panier-pilule:not(.panier-pilule--bulle),
+  html.barre-compacte:not(.appli) .panier-pilule:not(.panier-pilule--bulle),
+  html.barre-compacte:not(.appli) body:has(.fiche-site) .panier-pilule:not(.panier-pilule--bulle) {
+    left: 40px; right: 40px; height: 50px; font-size: 15px;
+  }
   html.barre-compacte body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .panier-pilule {
-    bottom: calc(var(--hauteur-onglets) - 2px + env(safe-area-inset-bottom));
+    bottom: calc(var(--hauteur-onglets) - 2px + var(--bas-ecran));
   }
 }
 /* UN SEUL GESTE ÉVIDENT PAR ÉCRAN (fondateur, 2026-10-25, maquettes/une-action, réponses 1, 2 et 7 ; règle dans
