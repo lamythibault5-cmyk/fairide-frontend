@@ -146,11 +146,16 @@
   html.appli .lt-puces--appui .lt-puce:active { transform: none; }
 }
 /* LE CONTOUR DU DESSIN, DANS L'APP (fondateur, 2026-10-25, A de maquettes/appui-iris/appui-iris.html). La cuisine choisie garde
-   un contour iris qui suit la forme de son dessin, reflet immobile ; sous le doigt (ou sous la lentille qu'on promène), le
-   dessin grossit de 6 % et le reflet fait le tour. Les filtres et la classe lt-puces--contour sont posés par lentillePuces.js. */
+   un contour iris plein qui suit la forme de son dessin, sans reflet (le reflet a été essayé et refusé le même jour) ; sous le
+   doigt (ou sous la lentille qu'on promène), le dessin le prend aussi et grossit de 6 %. Le filtre et la classe
+   lt-puces--contour sont posés par lentillePuces.js. */
 html.appli .lt-puces--contour .lt-illu { transition: scale .2s var(--ressort-ui); }
-html.appli .lt-puces--contour .lt-puce[data-cuisine].on .lt-illu { filter: url(#lt-contour-repos); }
-html.appli .lt-puces--contour :is(.lt-puce--touchee, .lt-puce--survol)[data-cuisine] .lt-illu { filter: url(#lt-contour); scale: 1.06; }
+html.appli .lt-puces--contour :is(.on, .lt-puce--touchee, .lt-puce--survol)[data-cuisine] .lt-illu { filter: url(#lt-contour); }
+html.appli .lt-puces--contour :is(.lt-puce--touchee, .lt-puce--survol)[data-cuisine] .lt-illu { scale: 1.06; }
+/* Ni enfoncement ni assombrissement au doigt (transitions-appli.css, boutons à 96 % et luminosité 0,92) : le contour et le dessin
+   qui grossit sont le retour de l'appui, une seule chose bouge (la règle des contrôles en verre). L'assombrissement passait le
+   contour de l'iris #3B2FB5 à #362BA7, et les 96 % mangeaient le grossissement du dessin. */
+html.appli .lt-puces--contour .lt-puce[data-cuisine]:active { scale: none; filter: none; }
 /* L'ANNEAU AU SURVOL, SUR LE SITE (même maquette, question 4) : à la souris, un anneau iris s'allume autour de la cuisine
    survolée, un reflet iris pâle en fait le tour. Pas au doigt (rien ne « survole »), pas dans l'app (le contour, juste au-dessus). */
 @property --lt-anneau { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
