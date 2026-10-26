@@ -5,7 +5,8 @@ import { useToast } from './ToastContext';
 import { useLanguage } from './LanguageContext';
 import { languePreferee, SUPPORTED_LANGUAGES } from '../i18n/routing';
 import { effacerReprise } from '../bienvenue';
-import { codeApple, oublierCodeApple } from '../natif';
+import { codeApple, estNatif, oublierCodeApple } from '../natif';
+import { desabonnerNatif, rattacherAppareilSiAutorise } from '../pushNatif';
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = 'fairide_session';
@@ -148,6 +149,18 @@ export function AuthProvider({ children }) {
 
   // Une session ouverte (inscription, connexion) : l'accueil de l'application n'a plus rien à reprendre (bienvenue.js).
   useEffect(() => { if (session?.user) effacerReprise(); }, [session?.user]);
+
+  /* LE TÉLÉPHONE SUIT LE COMPTE CONNECTÉ (fondateur, 2026-10-26). Dans l'application, à chaque compte qui ouvre une session,
+   * le jeton de notification est rattaché à ce compte si la permission est déjà accordée (pushNatif.js,
+   * rattacherAppareilSiAutorise) : sans cela, le compte suivant sur le même téléphone ne recevait aucune notification.
+   * Une fois par compte, pas à chaque renouvellement de session (le jeton de session change, le compte non). Jamais pour
+   * « Fairide agit comme… » ni la simulation, qui n'existent que sur le site. */
+  const userId = session?.user?.id;
+  useEffect(() => {
+    if (!userId || !session?.token || !estNatif() || session.actingAs) return;
+    rattacherAppareilSiAutorise(session.token).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- le compte, pas le jeton de session qui se renouvelle
+  }, [userId]);
 
   // La langue choisie suit le compte : le backend l'utilise pour les e-mails envoyés plus tard, hors de
   // toute requête de l'utilisateur (livreur en route, réservation confirmée par le restaurateur...).
@@ -369,6 +382,9 @@ export function AuthProvider({ children }) {
   function logout() {
     // En simulation, « Se déconnecter » ramène au profil visiteur sans perdre les sessions de test.
     if (simuRef.current) { changerProfilSimulation('visitor', '/'); return; }
+    // Le téléphone cesse de recevoir les notifications du compte qui s'en va : sans cela, il gardait celles du compte
+    // précédent jusqu'à la connexion suivante (2026-10-26). Pendant que la session est encore valide ; sans attendre.
+    if (estNatif() && session?.token) desabonnerNatif(session.token).catch(() => {});
     setDeconnexionVoulue(true);
     setSession(null);
     // La casquette active appartient à la session qui s'en va : sans cet oubli, le compte suivant

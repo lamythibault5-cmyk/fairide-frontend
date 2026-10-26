@@ -58,25 +58,62 @@ export async function abonnerNatif(token) {
     }).catch(() => {});
   }
 
+  return enregistrerAppareil(PushNotifications, token);
+}
+
+/* Le jeton de l'appareil, confié au serveur POUR LE COMPTE DE `token`.
+ *
+ * LES ÉCOUTEURS PARTENT AVEC LA DEMANDE (2026-10-26). Ils restaient posés : à la demande suivante (autre compte sur le
+ * même téléphone), l'événement « registration » réveillait aussi ceux d'avant, qui renvoyaient le jeton avec la session
+ * d'avant — rattachant le téléphone à l'ancien compte, ou, cette session étant fermée, recevant un 401 qui déconnectait
+ * le nouveau compte (api.js). Chaque demande retire maintenant les siens dès qu'elle a sa réponse. */
+function enregistrerAppareil(PushNotifications, token) {
   return new Promise((resolve) => {
     let fini = false;
-    const terminer = (issue) => { if (!fini) { fini = true; resolve(issue); } };
-    PushNotifications.addListener('registration', async ({ value }) => {
+    const poses = [];
+    const terminer = (issue) => {
+      if (fini) return;
+      fini = true;
+      for (const p of poses) Promise.resolve(p).then((h) => h?.remove?.()).catch(() => {});
+      resolve(issue);
+    };
+    poses.push(PushNotifications.addListener('registration', async ({ value }) => {
+      if (fini) return;
       try {
         await api('/push/native-token', { method: 'POST', token, body: { token: value, platform: plateforme() } });
         try { localStorage.setItem(CLE_JETON, value); } catch { /* rien */ }
         terminer('ok');
       } catch { terminer('erreur'); }
-    });
-    PushNotifications.addListener('registrationError', () => terminer('erreur'));
+    }));
+    poses.push(PushNotifications.addListener('registrationError', () => terminer('erreur')));
     PushNotifications.register().catch(() => terminer('erreur'));
     setTimeout(() => terminer('erreur'), 15000);
   });
 }
 
+/* CHANGEMENT DE COMPTE SUR LE MÊME TÉLÉPHONE (fondateur, 2026-10-26). La permission est demandée une fois par téléphone
+ * (AmorceNotifications.jsx, juste après la première inscription ou connexion) et le jeton s'enregistrait seulement à ce
+ * moment-là. Se déconnecter puis se connecter avec un autre compte laissait donc le téléphone rattaché au premier : le
+ * second ne recevait rien (constaté sur le compte de relecture d'Apple, aucun appareil enregistré). À chaque ouverture de
+ * session, si la permission est DÉJÀ accordée, le jeton est confié au serveur pour ce compte — sans jamais la demander :
+ * une demande de permission non sollicitée, au démarrage, est ce qu'Apple et les clients refusent. Le serveur rattache
+ * le jeton au dernier compte qui l'envoie (pushService.enregistrerJetonNatif, ON CONFLICT). */
+export async function rattacherAppareilSiAutorise(token) {
+  if (!token) return 'indisponible';
+  let PushNotifications;
+  try { ({ PushNotifications } = await import('@capacitor/push-notifications')); } catch { return 'indisponible'; }
+  const permission = await PushNotifications.checkPermissions().catch(() => null);
+  if (permission?.receive !== 'granted') return 'refuse';
+  const { enabled, native } = await api('/push/key').catch(() => ({ enabled: false }));
+  if (!enabled || !native) return 'indisponible';
+  return enregistrerAppareil(PushNotifications, token);
+}
+
 export async function desabonnerNatif(token) {
   const jeton = jetonNatifCourant();
-  if (jeton) await api('/push/native-token', { method: 'DELETE', token, body: { token: jeton } }).catch(() => {});
+  // Oublié AVANT l'appel : à la déconnexion, le compte suivant peut déjà réenregistrer ce téléphone (et réécrire la clé)
+  // pendant que la suppression voyage ; l'effacer après aurait perdu son jeton à lui.
   try { localStorage.removeItem(CLE_JETON); } catch { /* rien */ }
+  if (jeton) await api('/push/native-token', { method: 'DELETE', token, body: { token: jeton } }).catch(() => {});
   return true;
 }
