@@ -30,7 +30,7 @@ html.vt:is(.vt-avance, .vt-recule, .vt-photo, .vt-feuille) .panier-pilule { view
    verreBarreEtat.js). Il est maintenant caché pendant que l'écran glisse ; à la fin, verreBarreEtat.js regarde le nouvel écran
    (« fairide:transition-finie », transitionPhoto.js) et le verre revient en fondu s'il y sert. La feuille d'un plat (vt-feuille)
    reste sur le même écran : le verre y reste tel quel, dans la capture de la page. */
-html.natif-ios.vt:is(.vt-avance, .vt-recule, .vt-photo) .verre-etat { opacity: 0; visibility: hidden; transition: none; }
+html:is(.natif-ios, .natif-android).vt:is(.vt-avance, .vt-recule, .vt-photo) .verre-etat { opacity: 0; visibility: hidden; transition: none; }
 
 /* Plus de fondu à l'arrivée d'une page dans l'app : la transition ci-dessus le remplace, et un onglet (version A,
    « immédiat ») ou un iPhone sans View Transitions (iOS 15 à 17) change d'écran d'un coup, comme une app. */
