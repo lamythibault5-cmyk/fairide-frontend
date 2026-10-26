@@ -109,8 +109,7 @@
 .ec-feuille .upsell-card h3 { font-size: 12px !important; font-weight: 700; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; margin: 0 0 8px !important; }
 .ec-feuille .upsell-row { gap: 10px; margin: 0 -18px 8px; padding: 0 18px 4px; }
 .ec-feuille .upsell-item { position: relative; width: 116px; background: #fff; border-radius: 14px; align-items: flex-start; text-align: left; padding: 8px 8px 10px; }
-.ec-feuille .upsell-item img, .ec-feuille .upsell-item-emoji { width: 100%; height: 64px; border-radius: 10px; }
-.ec-feuille .upsell-item-emoji { background: var(--surface-soft); color: var(--ink-faint); }
+.ec-feuille .upsell-item img, .ec-feuille .upsell-item-vignette { width: 100%; height: 64px; border-radius: 10px; }
 .ec-feuille .upsell-item-name { font-size: 12.5px; min-height: 31px; }
 .ec-feuille .upsell-item-price { font-size: 13px; color: var(--ink); }
 .ec-feuille .upsell-item::after { content: '+'; position: absolute; right: 8px; bottom: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--iris); color: #fff;

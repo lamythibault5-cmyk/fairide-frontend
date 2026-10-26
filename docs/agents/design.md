@@ -302,3 +302,12 @@ The restaurateur's editor ([MenuItemRow.jsx](../../src/components/MenuItemRow.js
 purpose, as a prompt to add a photo, but a whole imported card of them (Le Laakam: 156 dishes, no photo)
 looked like a broken page. The prompt now lives only in the edit form, next to the photo field
 (`dish-thumb-empty`). Don't bring the frame back to the grid.
+
+**The basket is the exception** (Owen, 2026-10-26, `maquettes/suggestions-sans-photo`, version B): in « Un dessert ou une
+boisson avec ça ? » (UpsellPanier.jsx) and on each basket line (PanierPage.jsx), a photo-less dish keeps its image slot so the
+row stays aligned with the dishes that have a photo, and fills it with [VignetteSansPhoto.jsx](../../src/components/VignetteSansPhoto.jsx):
+a drawing of what it is (can, bottle, ice-cream tub, cone, cake slice… picked from the name; Icone.jsx) on the colour of a
+flavour **written in the name** (`--gout-*` tokens: cola, orange, lemon, vanilla, chocolate…), iris tint when no flavour is
+written. Never guess a flavour, and never draw a placeholder that looks like a photo that failed to load (the old grey box
+with 16 px cutlery did). Still to come: real photos for branded products (a Coca-Cola 33 cl can is the same everywhere),
+once Fairride has its own photos of them.

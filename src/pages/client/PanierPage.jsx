@@ -14,6 +14,8 @@ import ChiffresRoulants from '../../components/ChiffresRoulants';
 import { BandeauCommande, BarreCommande, FeuilleCommande, RouteCommande, RouteEtapes, ecranDavant, useReculerVers } from '../../components/EcranCommande';
 import { experienceApp } from '../../natif';
 import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/UpsellPanier';
+import VignetteSansPhoto from '../../components/VignetteSansPhoto';
+import { categoryKind } from '../../menuCategories';
 import { euros, remiseCourte } from '../../prixPlat';
 import { mouvementReduit, vibrer } from '../../gestes';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
@@ -207,7 +209,8 @@ export default function PanierPage() {
             <div key={cle} className={`panier-ligne${sortantes.has(cle) ? ' ec-sort' : ''}${indisponibles.includes(cle) ? ' panier-ligne--indispo' : ''}`}>
               {ligne.imageUrl
                 ? <img className="panier-ligne-image" src={ligne.imageUrl} alt="" loading="lazy" />
-                : <span className="panier-ligne-image panier-ligne-image-vide" aria-hidden="true"><Icone nom="restaurants" taille={20} /></span>}
+                : <VignetteSansPhoto nom={ligne.name} genre={categoryKind(restaurant?.menu?.find((m) => m.id === ligne.itemId)?.category) || 'plat'}
+                    taille={30} className="panier-ligne-image" />}
               <div className="panier-ligne-texte">
                 <b>{ligne.name}</b>
                 {ligne.optionsSnapshot?.length > 0 && (

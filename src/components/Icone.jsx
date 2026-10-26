@@ -127,6 +127,16 @@ export const TRACES = {
   frites: <><path d="M6 11h12l-1.6 10H7.6Z" /><path d="M8 11 7 4.5" /><path d="M11 11V3.5" /><path d="M14 11l.8-6.5" /><path d="M17 11l1.3-5" /></>,
   bol: <><path d="M3 11h18a9 9 0 0 1-18 0Z" /><path d="M9 21h6" /><path d="M8 7.5c1-1.4 3-1.4 4 0s3 1.4 4 0" /></>,
   tasse: <><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z" /><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17" /><path d="M8 3.5v3" /><path d="M12 3.5v3" /></>,
+  // Desserts et boissons sans photo dans « Un dessert ou une boisson avec ça ? » (VignetteSansPhoto.jsx, 2026-10-26,
+  // maquettes/suggestions-sans-photo) : choisis sur le nom du plat, avec `tasse`, `bol`, `pizza`, `burger` et `frites` ci-dessus.
+  canette: <><path d="M8 3.5h8l1 2.5v12l-1 2.5H8L7 18V6Z" /><path d="M7 7.5h10M7 16.5h10" /></>,
+  bouteille: <><path d="M10 2.5h4v3l2.2 2.6c.5.6.8 1.3.8 2.1V20a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 7 20v-9.8c0-.8.3-1.5.8-2.1L10 5.5Z" /><path d="M7 12.5h10M7 17h10" /></>,
+  verre: <><path d="M6 6h12l-1.7 13.3a2 2 0 0 1-2 1.7H9.7a2 2 0 0 1-2-1.7Z" /><path d="M6.8 11.5h10.4" /><path d="m13.5 6 2.5-4" /></>,
+  cornet: <><path d="M7 10.5a5 5 0 0 1 10 0" /><path d="M6.5 10.5h11L12 21.5Z" /><path d="m9.2 13.5 4.3 4.6M14.8 13.5l-4.3 4.6" /></>,
+  potGlace: <><path d="M5.5 10h13l-1.4 9.2a2 2 0 0 1-2 1.8H8.9a2 2 0 0 1-2-1.8Z" /><path d="M4.5 10h15" /><path d="M7.5 10a4.5 4.5 0 0 1 9 0" /><path d="M12 5.5c.4-1.2 1.2-2 2.5-2.2" /></>,
+  batonnet: <><path d="M8 6.5a4 4 0 0 1 8 0V16a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1Z" /><path d="M12 17v4.5" /><path d="M8 11.5c1.3.8 2.7.8 4 0s2.7-.8 4 0" /></>,
+  gateau: <><rect x="4" y="8" width="16" height="11" rx="1.5" /><path d="M4 12h16M4 15.5h16" /><path d="M8 5.5v.01M12 4.5v.01M16 5.5v.01" /></>,
+  verrine: <><path d="M6 4.5h12V16a4.5 4.5 0 0 1-4.5 4.5h-3A4.5 4.5 0 0 1 6 16Z" /><path d="M6 9.5c2 1.3 4 1.3 6 0s4-1.3 6 0" /></>,
   // Flèche de retour, et le oui / non des cartes à glisser (une coche nue : `coche` porte une case autour).
   retour: <path d="M15 5 8 12l7 7" />,
   valider: <path d="m5 12.5 4.5 4.5L19 7.5" />,
