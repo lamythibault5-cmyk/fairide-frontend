@@ -7,10 +7,14 @@ store listings, flyers and the shop pitch. Everyday screens (cart, order trackin
 guide is about the doors people come in through.
 If you change what this file describes, change this file in the same commit: a stale guide gets believed.
 
-Status on 2026-10-26: the top of the front page follows this guide (version E of the workspace mockup
-`maquettes/croissance/prix-gonfles.html`: title, subtitle, the card « Le même plat, trois prix » in
-`src/components/landing/HeroPrix.jsx`). The other texts (onboarding, e-mails, « Notre histoire », store listings) still
-follow the older, « what first » style and wait for the founder's picks in that mockup. New copy follows this guide now.
+Status on 2026-10-26 (founder's answers to the workspace mockup `maquettes/croissance/prix-gonfles.html`): these follow
+the guide: the front page (title, subtitle, the card « Le même plat, trois prix » in `src/components/landing/HeroPrix.jsx`,
+the « prix » tile, « Rejoindre », footer, Google description), « Notre histoire », the app onboarding for customers
+(title, the real measured dish, « Qu'est-ce qui t'énerve le plus ? », « Sur Fairride, c'est réglé. ») and couriers
+(« Personne ne te note »), and the customer and courier welcome e-mails (backend `emailTexts.js`). Left as they were on
+purpose: everything shops see (founder: « ne change rien pour la vue restaurants », shop welcome e-mail included).
+Not built yet: the monthly newsletter « Prix gonflés : le relevé du mois » (version C of the mockup) and the store
+listings (pasted in the consoles by hand). New copy follows this guide now.
 
 ## 1. Start with why, and the why is about the reader
 

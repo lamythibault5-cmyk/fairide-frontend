@@ -60,7 +60,8 @@ const PARCOURS = {
   restaurant: ['coPromesses', 'compte']
 };
 // Les réponses possibles à la seule question (QUESTION, EcransBienvenue.jsx) : une reprise n'en garde pas d'autre.
-const CHOIX = ['prix', 'total', 'ici'];
+// « promo » remplace « ici » (que mon argent reste ici) le 2026-10-26 : une reprise qui avait gardé « ici » repart sans choix.
+const CHOIX = ['prix', 'total', 'promo'];
 // Un accueil laissé en route avant le 2026-10-22 reprend sur l'écran qui a remplacé le sien. `lvPosition` (position du
 // livreur, retirée le 2026-10-21) manquait : un livreur arrêté là rouvrait l'app sur un écran vide (revue du 24/10).
 // `envies` n'y est plus depuis le 2026-10-25 : l'écran existe de nouveau (après le chargement), on y reprend.
@@ -330,7 +331,8 @@ export default function Bienvenue() {
     case 'lvPromesses':
       contenu = (
         <EcranPromesses chip={t('appli.lvChip')} chipIcone="velo" titre={t('appli.lvTitre')} bouton={t('appli.lvBtn')} onSuite={suivant} ligneBe
-          faits={[['euro', t('appli.lvGain'), t('appli.lvGainS')], ['cadeau', t('appli.lv3'), t('appli.lv3S')], ['horloge', t('appli.lv1'), t('appli.lv1S')]]} />
+          faits={[['euro', t('appli.lvGain'), t('appli.lvGainS')], ['cadeau', t('appli.lv3'), t('appli.lv3S')], ['horloge', t('appli.lv1'), t('appli.lv1S')],
+            ['bouclier', t('appli.lv4'), t('appli.lv4S')]]} />
       ); break;
     case 'coPromesses':
       contenu = (

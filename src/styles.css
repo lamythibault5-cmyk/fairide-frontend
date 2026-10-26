@@ -5368,6 +5368,14 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 /* « Pourquoi passer à Fairide ? » en euros (2026-10-19) : l'ajout des autres applis fait toute la largeur ; celui de Fairide
    reçoit sa largeur en ligne (EcranPourquoi). */
 .bv-barres .autres-euros { background: var(--ink-faint); }
+/* Le vrai plat relevé (2026-10-26) : le prix en ligne en rouge, comme un avertissement (le même que l'accueil du site). */
+.bv-barres .gonfle { background: var(--promo); }
+.bv-barres .gonfle-prix { color: var(--promo); font-weight: 600; }
+.bv-carte-barres .bv-petit { display: block; margin-top: 4px; }
+.bv-fait .bv-barres b { color: var(--iris); }
+/* L'écran livreur a quatre cartes depuis le 2026-10-26 (« Personne ne te note ») : sur un petit téléphone (375 × 667), la ligne
+   « Startup belge » s'efface pour que le bouton reste à l'écran, sans défilement. */
+@media (max-height: 700px) { .bv-iris .bv-ligne-be { display: none; } }
 
 .bv-saisie { width: 100%; font-size: 22px; font-weight: 500; letter-spacing: .1em; padding: 16px; border: 1px solid var(--line); border-radius: 16px; text-align: center; background: #fff; }
 .bv-saisie.input-invalid { border-color: var(--red); }
