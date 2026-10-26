@@ -5,7 +5,7 @@
 // « fish_and_chips » avant « fish », « korean » avant « bbq »), rien à défaut.
 const CORRESPONDANCES = [
   ['pizza', 'Pizza'], ['burger', 'Burgers'], ['sushi', 'Sushi'], ['ramen', 'Ramen'], ['japanese', 'Japonais'], ['poke', 'Poke Bowl'],
-  ['pasta', 'Pâtes'], ['italian', 'Italien'], ['friterie', 'Friterie'], ['fries', 'Friterie'], ['belgian', 'Belge'], ['french', 'Français'],
+  ['pasta', 'Pâtes'], ['italian', 'Italien'], ['friterie', 'Friterie'], ['friture', 'Friterie'], ['fries', 'Friterie'], ['belgian', 'Belge'], ['french', 'Français'],
   ['thai', 'Thaïlandais'], ['vietnamese', 'Vietnamien'], ['dim_sum', 'Dim sum'], ['chinese', 'Chinois'], ['korean', 'Coréen'], ['indonesian', 'Indonésien'],
   ['pakistani', 'Pakistanais'], ['nepalese', 'Népalais & Tibétain'], ['afghan', 'Afghan'], ['indian', 'Indien'], ['asian', 'Asiatique'],
   ['turkish', 'Turc'], ['greek', 'Grec'], ['shawarma', 'Shawarma'], ['falafel', 'Falafel'], ['kebab', 'Kebab & Grill'],

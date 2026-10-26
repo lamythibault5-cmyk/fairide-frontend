@@ -36,6 +36,9 @@ const Auth = lazyPage(() => import('./pages/Auth'));
 const SearchPage = lazyPage(() => import('./pages/client/SearchPage'));
 const Checkout = lazyPage(() => import('./pages/client/Checkout'));
 const Favorites = lazyPage(() => import('./pages/client/Favorites'));
+// « Demande ton restaurant » (2026-10-26) : Mes demandes (feuille depuis Mon compte) et la preuve montrée au restaurant.
+const MesDemandes = lazyPage(() => import('./pages/client/MesDemandes'));
+const PreuveDemande = lazyPage(() => import('./pages/client/PreuveDemande'));
 const Orders = lazyPage(() => import('./pages/client/Orders'));
 const OrderResult = lazyPage(() => import('./pages/client/OrderResult'));
 const ClientMapPage = lazyPage(() => import('./pages/client/MapPage'));
@@ -124,6 +127,7 @@ const AdminSalesPage = lazyPage(() => import('./pages/admin/AdminSalesPage'));
 const AdminSimulationPage = lazyPage(() => import('./pages/admin/AdminSimulationPage'));
 const AdminSponsorsPage = lazyPage(() => import('./pages/admin/AdminSponsorsPage'));
 const AdminPlacementsPage = lazyPage(() => import('./pages/admin/AdminPlacementsPage'));
+const AdminDemandesPage = lazyPage(() => import('./pages/admin/AdminDemandesPage'));
 const AdminTerminalsPage = lazyPage(() => import('./pages/admin/AdminTerminalsPage'));
 
 // Barre de simulation (Admin › Simulation) : chargée seulement dans un onglet de simulation, jamais pour un vrai visiteur.
@@ -148,6 +152,7 @@ export default function App() {
   const fond = location.state?.fond && estPageEnFeuille(location.pathname) ? location.state.fond : null;
   const pagesEnFeuille = [
     ['/favorites', t('nav.favorites'), <ProtectedRoute role="client"><Favorites /></ProtectedRoute>],
+    ['/demandes', t('demandes.mesTitre'), <ProtectedRoute role="client"><MesDemandes /></ProtectedRoute>],
     ['/orders', t('nav.orders'), <ProtectedRoute role="client"><Orders /></ProtectedRoute>],
     ['/invoices', t('accountUi.myInvoices'), <ProtectedRoute role="client"><ClientInvoicesPage /></ProtectedRoute>],
     ['/documents', t('mesDocuments.rowTitle'), <ProtectedRoute><DocumentsPage /></ProtectedRoute>],
@@ -188,6 +193,7 @@ export default function App() {
         <Route path="/recherche" element={<SearchPage />} />
         <Route path="/checkout" element={<ProtectedRoute role="client"><Checkout /></ProtectedRoute>} />
         <Route path="/favorites" element={<ProtectedRoute role="client"><Favorites /></ProtectedRoute>} />
+        <Route path="/demandes" element={<ProtectedRoute role="client"><MesDemandes /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="client"><Orders /></ProtectedRoute>} />
         <Route path="/map" element={<ProtectedRoute role="client"><ClientMapPage /></ProtectedRoute>} />
         {/* Le panier a sa page : il se depliait par-dessus le menu qu'on etait en train de lire. */}
@@ -277,6 +283,7 @@ export default function App() {
           <Route path="simulation" element={<AdminSimulationPage />} />
           <Route path="sponsors" element={<AdminSponsorsPage />} />
           <Route path="placements" element={<AdminPlacementsPage />} />
+          <Route path="demandes" element={<AdminDemandesPage />} />
           <Route path="terminals" element={<AdminTerminalsPage />} />
         </Route>
 
@@ -290,6 +297,8 @@ export default function App() {
         <Route path="/carte/valider/:token" element={<ValiderCarte />} />
         {/* Invitation dans l'équipe d'un commerce (backend equipeCommerce.js) : publique, la connexion vient après. */}
         <Route path="/equipe/:token" element={<EquipeInvitation />} />
+        {/* Écran montré au restaurant, par lien à jeton, sans compte (Admin › Demandes des clients › « Ouvrir la preuve »). */}
+        <Route path="/preuve/:jeton" element={<PreuveDemande />} />
         <Route path="/aide" element={<HelpPage />} />
         <Route path="/notre-histoire" element={<OurStory />} />
 

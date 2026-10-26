@@ -48,6 +48,8 @@ import AvecMarque from '../../components/AvecMarque';
 import { lienFiche } from '../../murCompte';
 import { vibrer } from '../../gestes';
 import { normaliserRecherche } from '../../normaliserRecherche';
+import RangeeDemandes from '../../components/demandes/RangeeDemandes';
+import { FinDeListeDemande } from '../../components/demandes/CartesDemander';
 
 // « TRIER » RETIRÉ POUR LE MOMENT (fondateur, 2026-10-20, après le test avec Maestro Pizza) : avec une poignée de commerces,
 // trier ne sert à rien et charge la bande. L'état et les règles restent (le tri « Recommandé » est celui que décrit
@@ -1091,6 +1093,8 @@ export default function RestaurantList() {
             </div>
           )}
           <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="nearby" />
+          {/* « Demandés près de toi » (fondateur, 2026-10-26, version B de maquettes/demande-restaurant) : sous « Autour de toi ». */}
+          <RangeeDemandes grand={grand} />
           <Section title={t('restaurantList.sectionFreeDelivery')} icon="velo" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="free_delivery" />
           <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="velo" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="cheap_delivery" />
           <RangeeApercu title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} grille={grand} cle="offers" />
@@ -1104,6 +1108,8 @@ export default function RestaurantList() {
           </>}
           <RangeeApercu title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} grille={grand} cle="grocery" />
           <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epinglerOuMelanger(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay grille={grand} cle="discover" />
+          {/* « Il manque ton restaurant ? » : là où la liste s'arrête et où l'on se dit qu'il manque le sien (2026-10-26). */}
+          {restaurants.length > 0 && <FinDeListeDemande />}
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
           )}

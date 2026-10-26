@@ -1,0 +1,153 @@
+/* « DEMANDE TON RESTAURANT » (fondateur, 2026-10-26 ; maquettes/demande-restaurant : version B, carte « ticket » 5 de
+ * card-look-en.html). App et site dans un seul fichier, comme ecran-equipe-groupe.css. Le verre du « Moi aussi » (app
+ * seulement) est dans verre.css, avec les autres verres de l'app ; ici, le site et ce que les deux partagent.
+ *
+ * Préfixe dm-. Couleurs par les jetons de styles.css (--iris, --lime, --ink, --line, --iris-tint) : lime seulement sur
+ * l'iris (le nombre, les traits de l'objectif, la coche) ou en bouton plein. */
+
+/* ---------- La rangée « Demandés près de toi » ---------- */
+.dm-rangee-sous { margin: 0 0 12px; }
+.rest-grid-scroll.dm-rangee { gap: 12px; }
+.rest-grid-scroll .dm-ticket { flex: 0 0 196px; scroll-snap-align: start; }
+@media (max-width: 640px) { .rest-grid-scroll .dm-ticket { flex-basis: 176px; } }
+
+/* ---------- La carte « ticket » : iris, sans photo ---------- */
+.dm-ticket {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 228px;
+  border-radius: var(--radius); background: var(--iris); color: #fff; padding: 14px 14px 12px;
+}
+/* Le grand rond pâle du coin, comme la tuile à initiale des commerces sans photo (VisuelVide). */
+.dm-ticket::before {
+  content: ""; position: absolute; width: 170px; height: 170px; border-radius: 50%;
+  background: rgba(255, 255, 255, .08); right: -60px; top: -70px; pointer-events: none;
+}
+.dm-ticket-haut { position: relative; display: flex; align-items: center; gap: 8px; font-size: 12px; opacity: .88; min-height: 30px; }
+.dm-ticket-haut img { width: 30px; height: 30px; object-fit: contain; flex: none; }
+.dm-ticket-haut span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-ticket-icone { width: 30px; height: 30px; border-radius: 50%; background: rgba(255, 255, 255, .14); display: grid; place-items: center; flex: none; }
+.dm-ticket-nom {
+  position: relative; margin: 8px 0 6px; font: 800 17px/1.2 "Inter Tight", Inter, sans-serif; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dm-ticket-nb { font: 800 34px/1 "Inter Tight", Inter, sans-serif; color: var(--lime); }
+.dm-ticket-nb small { display: block; margin-top: 3px; font: 500 12.5px Inter, sans-serif; color: #fff; opacity: .88; }
+.dm-ticket-points { display: flex; gap: 3px; margin: 10px 0 12px; }
+.dm-ticket-points i { flex: 1; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .22); }
+.dm-ticket-points i.on { background: var(--lime); }
+
+/* « Moi aussi » — sur le site : un bouton blanc plein, iris ; demandé, il se fond dans la carte (blanc à 16 %, filet blanc,
+   texte blanc, coche lime). Dans l'app, le verre (verre.css) remplace ces deux fonds. Jamais grisé pendant l'envoi. */
+.dm-moi-aussi {
+  margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 40px;
+  border: 0; border-radius: var(--radius-pill); background: #fff; color: var(--iris); font: 700 14px Inter, sans-serif; cursor: pointer;
+}
+.dm-moi-aussi:disabled { opacity: 1; cursor: progress; }
+.dm-moi-aussi.on { background: rgba(255, 255, 255, .16); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45); }
+.dm-moi-aussi.on svg { color: var(--lime); }
+.dm-moi-aussi:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+/* « Un autre ? » : la dernière carte, blanche à filet pointillé, qui ouvre « Lequel ? ». */
+.dm-ticket.dm-ticket--autre {
+  background: #fff; color: var(--ink); border: 1px dashed #cfcbe8; align-items: center; justify-content: center; text-align: center; gap: 8px;
+}
+.dm-ticket--autre::before { display: none; }
+.dm-ticket--autre b { font: 800 15px "Inter Tight", Inter, sans-serif; }
+.dm-ticket--autre small { font-size: 12.5px; color: var(--ink-soft); }
+.dm-autre-rond { width: 44px; height: 44px; border-radius: 12px; background: var(--iris-tint); color: var(--iris); display: grid; place-items: center; }
+.dm-ticket--autre .dm-moi-aussi { margin-top: 6px; box-shadow: inset 0 0 0 1px var(--line); }
+
+/* ---------- Les portes : recherche sans résultat, fin de la liste ---------- */
+.dm-carte { margin-top: 12px; border-radius: var(--radius); padding: 18px; background: #fff; }
+.dm-carte--recherche { border: 1.5px solid var(--iris); }
+.dm-carte--fin { border: 1px solid var(--line); text-align: center; margin: 22px 0 8px; }
+.dm-carte-tete { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.dm-carte-rond { width: 42px; height: 42px; border-radius: 12px; background: var(--iris-tint); color: var(--iris); display: grid; place-items: center; flex: none; }
+.dm-carte--fin .dm-carte-rond { margin: 0 auto 10px; }
+.dm-carte h3 { margin: 0 0 3px; font: 800 17px/1.25 "Inter Tight", Inter, sans-serif; }
+.dm-carte p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.45; }
+.dm-carte--fin p { margin-bottom: 14px; }
+.dm-carte-bouton { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+html:not(.appli) .dm-carte--fin .dm-carte-bouton { width: auto; padding-inline: 22px; }
+
+/* ---------- La fenêtre « Lequel ? » (cadre de ConfirmDialog : .confirm-feuille) ---------- */
+.dm-fenetre { max-width: 480px; width: 100%; max-height: 92vh; overflow-y: auto; }
+.dm-champ { margin: 0 0 10px; }
+.dm-resultats { min-height: 8px; }
+.dm-resultats > .small { margin: 6px 0 10px; }
+.dm-groupe { margin: 12px 0 8px; font: 700 13px Inter, sans-serif; color: var(--ink-soft); }
+.dm-choix {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 11px 13px; margin-bottom: 8px;
+  border-radius: 14px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; text-decoration: none; font: inherit;
+}
+.dm-choix.on { border: 1.5px solid var(--iris); padding: 10.5px 12.5px; }
+.dm-choix-tuile { width: 40px; height: 40px; border-radius: 10px; background: var(--iris); color: #fff; display: grid; place-items: center; flex: none; }
+.dm-choix-tuile img { width: 26px; height: 26px; object-fit: contain; }
+.dm-choix-texte { flex: 1; min-width: 0; line-height: 1.3; }
+.dm-choix-texte b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-choix-texte small { display: block; font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-coche { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #cfcfcf; display: grid; place-items: center; flex: none; }
+.dm-choix.on .dm-coche { background: var(--iris); border-color: var(--iris); color: #fff; }
+.dm-choix--fairride .dm-choix-tuile { background: var(--iris-tint); color: var(--iris); }
+.dm-choix-lien { font-size: 13px; font-weight: 700; color: var(--iris); white-space: nowrap; }
+.dm-lien { border: 0; background: none; padding: 4px 0; margin: 2px 0 4px; font: 600 14px Inter, sans-serif; color: var(--iris); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.dm-prevenir {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px 0; margin: 4px 0 6px;
+  border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; color: var(--ink); font: inherit; cursor: pointer;
+}
+.dm-prevenir-texte { flex: 1; line-height: 1.3; }
+.dm-prevenir-texte b { display: block; font-size: 14.5px; font-weight: 600; }
+.dm-prevenir-texte small { display: block; font-size: 12.5px; color: var(--ink-soft); }
+.dm-erreur { margin: 4px 0 0; font-size: 13.5px; color: var(--red); }
+.dm-fenetre .modal-pied .btn-gold { width: 100%; }
+
+/* Confirmation : le rond iris et sa coche lime, le compteur, Fermer. */
+.dm-ok { text-align: center; padding-top: 6px; }
+.dm-ok-rond { width: 80px; height: 80px; border-radius: 50%; background: var(--iris); color: var(--lime); display: grid; place-items: center; margin: 4px auto 16px; }
+.dm-ok p { margin: 0 auto 8px; max-width: 320px; color: var(--ink-soft); line-height: 1.5; }
+.dm-ok-compteur { display: inline-flex; align-items: center; gap: 8px; margin: 8px 0 12px; padding: 7px 14px; border-radius: var(--radius-pill); background: var(--iris-tint); color: var(--iris); font-weight: 700; font-size: 14px; }
+.dm-ok .modal-pied .btn-outline { width: 100%; }
+@media (prefers-reduced-motion: no-preference) { .dm-ok-rond { animation: dm-pop .45s cubic-bezier(.3, 1.6, .5, 1); } }
+@keyframes dm-pop { from { transform: scale(.4); opacity: 0; } }
+
+/* ---------- « Tu voudrais commander ici ? » (fiche « Carte seule ») ---------- */
+.dm-veux { border: 1.5px solid var(--iris); border-radius: 18px; padding: 16px; margin: 0 0 16px; }
+.dm-veux h3 { margin: 0 0 2px; font: 800 17px "Inter Tight", Inter, sans-serif; }
+.dm-veux p { margin: 0 0 12px; font-size: 14px; color: var(--ink-soft); }
+.dm-veux-bouton { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.dm-veux-bouton.on { border-color: var(--iris); }
+.dm-veux-bouton.on svg { color: var(--iris); }
+
+/* ---------- Mes demandes ---------- */
+.dm-mes-liste { list-style: none; margin: 0; padding: 0; }
+.dm-mes-ligne { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+/* Le statut prend sa place à droite ; la ligne sous le nom passe à la ligne plutôt que d'être coupée (« 14 demandes sur… »). */
+.dm-mes-corps .dm-choix-texte small { white-space: normal; }
+.dm-mes-corps { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 12px 0; color: var(--ink); text-decoration: none; }
+.dm-statut { flex: none; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: var(--radius-pill); background: var(--iris-tint); color: var(--iris); white-space: nowrap; }
+.dm-statut--arrive { background: #e3f6e8; color: var(--green, #17703a); }
+.dm-statut--clos { background: #f1f0ec; color: var(--ink-soft); }
+.dm-mes-retirer { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0; background: none; color: var(--ink-soft); display: grid; place-items: center; cursor: pointer; }
+.dm-mes-autre { margin-top: 18px; display: inline-flex; align-items: center; gap: 8px; }
+
+/* ---------- La preuve montrée au restaurant ---------- */
+.dm-preuve { background: var(--iris); color: #fff; min-height: 100vh; min-height: 100dvh; }
+.dm-preuve-corps { max-width: 520px; margin: 0 auto; padding: 28px 20px 40px; }
+/* Dans l'app, la barre d'onglets flotte en bas : le bouton « Inscrire mon commerce » ne doit pas passer dessous. */
+html.appli .dm-preuve-corps { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+.dm-preuve--vide { display: grid; place-items: center; text-align: center; padding: 40px 20px; }
+.dm-preuve-pour { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; opacity: .85; }
+.dm-preuve-pour svg { color: var(--lime); }
+.dm-preuve h1 { margin: 12px 0 8px; font: 800 34px/1.05 "Inter Tight", Inter, sans-serif; letter-spacing: -.02em; color: #fff; }
+.dm-preuve h1 em { font-style: normal; color: var(--lime); }
+.dm-preuve-sous { margin: 0 0 18px; font-size: 15px; opacity: .9; line-height: 1.45; }
+.dm-preuve-carte { background: #fff; color: var(--ink); border-radius: 18px; padding: 16px; margin-bottom: 10px; }
+.dm-preuve-carte h2 { margin: 0 0 10px; font: 800 15px "Inter Tight", Inter, sans-serif; }
+.dm-puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.dm-puces span { padding: 6px 12px; border-radius: var(--radius-pill); border: 1px solid var(--line); font-size: 13.5px; }
+.dm-puces b { color: var(--iris); margin-left: 5px; }
+.dm-barre { display: grid; grid-template-columns: minmax(90px, 140px) 1fr 28px; gap: 8px; align-items: center; font-size: 13.5px; margin-bottom: 7px; }
+.dm-barre i { display: block; height: 8px; border-radius: 4px; background: var(--iris); }
+.dm-barre b { text-align: right; }
+.dm-preuve-garantie { font-size: 13px; opacity: .88; margin: 14px 0 16px; line-height: 1.45; }
+.dm-preuve-bouton { display: flex; width: 100%; justify-content: center; }
+.dm-preuve-petit { text-align: center; font-size: 13px; opacity: .85; margin: 10px 0 0; }

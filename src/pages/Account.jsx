@@ -872,6 +872,8 @@ export default function Account() {
           <LigneCompte icone="carteBancaire" titre={t('accountUi.paymentMethods')} sous={t('savedCards.rowSub')} ouverte={ouvertes.has('cartes')} onClick={() => basculer('cartes')}>
             {ouvertes.has('cartes') && <CartesEnregistrees />}
           </LigneCompte>
+          {/* « Demande ton restaurant » (2026-10-26) : les restaurants demandés et où ils en sont (MesDemandes.jsx). */}
+          <LigneCompte to="/demandes" icone="megaphone" titre={t('demandes.mesTitre')} sous={t('demandes.rowSous')} />
           <LigneCompte to="/aide?sujet=titres-restaurant" icone="ticket" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />
           <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />
           {/* Commerciaux Fairide (routes/adminSales.js) : la rubrique Sales n'apparaît que si l'admin a donné l'accès à ce compte

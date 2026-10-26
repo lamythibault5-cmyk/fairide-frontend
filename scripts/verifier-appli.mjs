@@ -55,11 +55,11 @@ const UTILISATEURS = {
 // doivent s'afficher dans la coquille de l'app, pas dans celle du site.
 const COMMUNES = ['/aide', '/cgv', '/confidentialite', '/mentions-legales', '/cookies', '/classement', '/signaler', '/accessibilite', '/notre-histoire', '/une-page-qui-n-existe-pas'];
 const PAGES = {
-  visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', '/equipe/essai', ...COMMUNES],
-  client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', '/groupe/essai1234', '/equipe/essai', ...COMMUNES],
+  visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', '/equipe/essai', '/preuve/essai', ...COMMUNES],
+  client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', '/groupe/essai1234', '/equipe/essai', '/demandes', '/preuve/essai', ...COMMUNES],
   // ?dossier= : le même dossier simulé, envoyé ou validé (DossierSuivi.jsx) ; sans lui, le brouillon réel (DossierAppli.jsx).
   driver: ['/', '/driver', '/driver/onboarding', '/driver/onboarding?dossier=pending_review', '/driver/onboarding?dossier=approved', '/driver/map', '/driver/earnings', '/driver/invoices', '/documents', '/account', ...COMMUNES],
-  admin: ['/', '/admin', '/admin/cartes', '/admin/restaurants', '/account'],
+  admin: ['/', '/admin', '/admin/cartes', '/admin/restaurants', '/admin/demandes', '/account'],
   restaurant: ['/', '/dashboard', '/dashboard/menu', '/dashboard/questions', '/dashboard/orders', '/dashboard/preview', '/dashboard/promotions', '/dashboard/stats', '/dashboard/invoices', '/dashboard/guide', '/sales', '/account', '/carte/valider/essai', ...COMMUNES]
 };
 
@@ -91,6 +91,16 @@ function simuler(chemin, methode, profil, vue = null) {
   };
   if (/^\/auth\/me$/.test(chemin)) return methode === 'GET' ? u : { ...u, user: u };
   if (/^\/auth\/terms\/current$/.test(chemin)) return { version: '2026-10-12' };
+  // « Demande ton restaurant » (backend routes/demandes.js, 2026-10-26) : la forme exacte des réponses.
+  if (methode === 'GET' && (chemin.startsWith('/demandes/') || chemin === '/admin/demandes')) {
+    const d = (id, nom, cuisine, commune, total, extra = {}) => ({ id, nom, commune, osmCuisine: cuisine, osmCategorie: 'restaurant', total, moi: false, objectif: 25, restaurantId: null, ...extra });
+    if (chemin === '/demandes/pres') return { objectif: 25, demandes: [d(1, 'Chez Léon', 'belgian', 'Bruxelles', 23), d(2, 'Pho Saigon', 'vietnamese', 'Ixelles', 14, { moi: true }), d(3, 'Taqueria Luna', 'mexican', 'Ixelles', 6)] };
+    if (chemin === '/demandes/miennes') return { demandes: [d(2, 'Pho Saigon', 'vietnamese', 'Ixelles', 14, { moi: true, etat: 'en_cours' }), d(4, 'Snack bodrum', null, 'Woluwe-Saint-Lambert', 17, { moi: true, etat: 'bientot', restaurantId: COMMERCE.id })] };
+    if (chemin.startsWith('/demandes/commerce/')) return { id: 4, total: 17, moi: false, objectif: 25 };
+    if (chemin.startsWith('/demandes/preuve/')) return { nom: 'Chez Léon', commune: 'Bruxelles', total: 38, semaine: 6, depuis: '2026-11-01T10:00:00Z', plats: [{ plat: 'Moules-frites', n: 11 }, { plat: 'Carbonnade', n: 7 }], communes: [{ commune: 'Etterbeek', n: 12 }, { commune: 'Ixelles', n: 10 }] };
+    if (chemin.startsWith('/demandes/recherche')) return { deja: [], fiches: [], objectif: 25 };
+    if (chemin === '/admin/demandes') return { statuts: [], demandes: [{ id: 1, nom: 'Chez Léon', rue: 'Rue des Bouchers', numero: '18', codePostal: '1000', commune: 'Bruxelles', statut: 'a_voir', rendezVousLe: null, note: '', restaurantId: null, restaurantNom: null, restaurantSlug: null, origine: 'osm', total: 38, semaine: 6, aPrevenir: 30, communes: ['Etterbeek', 'Ixelles'], prevenusLe: null, jetonPreuve: null }] };
+  }
   if (methode === 'GET' && REELLES[chemin]) return REELLES[chemin];
   // Le tableau de bord du commerce (réponse réelle, identifiants UUID) : chaque page du commerce lit ensuite /restaurants/<id>/…
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/compliance$/.test(chemin)) return REELLES['/restaurants/:id/compliance'];

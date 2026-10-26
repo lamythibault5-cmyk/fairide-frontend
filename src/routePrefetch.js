@@ -7,6 +7,7 @@ const CHARGEURS = {
   '/recherche': () => import('./pages/client/SearchPage'),
   '/checkout': () => import('./pages/client/Checkout'),
   '/favorites': () => import('./pages/client/Favorites'),
+  '/demandes': () => import('./pages/client/MesDemandes'),
   '/orders': () => import('./pages/client/Orders'),
   '/map': () => import('./pages/client/MapPage'),
   '/invoices': () => import('./pages/client/InvoicesPage'),

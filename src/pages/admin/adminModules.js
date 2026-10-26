@@ -81,6 +81,8 @@ export const ADMIN_MODULES = [
   { key: 'sponsors', path: '/admin/sponsors', icon: 'mallette', hub: 'settings', badge: aucun },
   // Mises en avant payantes (2026-10-02) : prix des positions 1, 2, 3 par rangée, demandes des commerces.
   { key: 'placements', path: '/admin/placements', icon: 'megaphone', hub: 'partners', badge: aucun },
+  // « Demande ton restaurant » (2026-10-26) : les restaurants demandés par les clients, et la preuve à leur montrer.
+  { key: 'demandes', path: '/admin/demandes', icon: 'megaphone', hub: 'partners', badge: aucun },
   { key: 'simulation', path: '/admin/simulation', icon: 'boussole', hub: 'simulation', badge: aucun }
 ];
 
@@ -100,6 +102,7 @@ export const MODULE_ROLES = {
   simulation: ['owner', 'admin', 'ops', 'support'],
   sponsors: ['owner', 'admin'],
   placements: ['owner', 'admin', 'finance'],
+  demandes: ['owner', 'admin', 'ops'],
   terminals: ['owner', 'admin', 'ops', 'support']
 };
 export function moduleAllowed(mod, role) {
