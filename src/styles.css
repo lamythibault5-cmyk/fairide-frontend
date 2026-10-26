@@ -5373,9 +5373,10 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-barres .gonfle-prix { color: var(--promo); font-weight: 600; }
 .bv-carte-barres .bv-petit { display: block; margin-top: 4px; }
 .bv-fait .bv-barres b { color: var(--iris); }
-/* L'écran livreur a quatre cartes depuis le 2026-10-26 (« Personne ne te note ») : sur un petit téléphone (375 × 667), la ligne
+/* L'écran livreur a quatre cartes, et le premier écran une ligne de source sous ses barres, depuis le 2026-10-26 : sur un
+   petit téléphone (375 × 667), la ligne
    « Startup belge » s'efface pour que le bouton reste à l'écran, sans défilement. */
-@media (max-height: 700px) { .bv-iris .bv-ligne-be { display: none; } }
+@media (max-height: 700px) { .bv-iris .bv-ligne-be, .bv-be-accueil { display: none; } }
 
 .bv-saisie { width: 100%; font-size: 22px; font-weight: 500; letter-spacing: .1em; padding: 16px; border: 1px solid var(--line); border-radius: 16px; text-align: center; background: #fff; }
 .bv-saisie.input-invalid { border-color: var(--red); }
