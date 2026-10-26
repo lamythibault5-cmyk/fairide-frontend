@@ -23,6 +23,12 @@ applied by the team) **up to `hausseMaxPourcent` = 10 %** (founder, 2026-10-16, 
 it; it was r / (1 − r) = 11.1 % from 10-13 to 10-16); never more. One function applies it everywhere (`appliquerHausse` in
 `../fairide-backend/prixMagasin.js`): own price kept in `price_base`/`delta_base`, paid add-ons follow, rounded DOWN to €0.10 (`pricing.js`, `prixMagasin.js`; the team's « adjust all prices » tool rounds the same way, audit admin-31).
 The « C'est bon » page offers the max increase in one tap, only on cards with checked in-store prices.
+**Offers on a raised card (founder, 2026-10-26):** on a business with `price_markup_percent > 0` only, the price after a
+« −X % » or « −X € » offer (Avantage Fairride included) is rounded DOWN to €0.10 (€11.10 − 15 % = €9.435 → €9.40); the
+discount is the difference. Down, never up: the discount given is never less than the one shown (rounding up gave €9.50,
+only −14.4 % under a « −15 % » label: a misleading price-reduction announcement, Owen refused that risk). Businesses without an increase (« Prix du comptoir » badge included) keep the cent rounding;
+« 1 + 1 » and « X € dès Y € » are not affected. Server `prixMagasin.prixOffreArrondi` (order) and site `prixPlat.js`
+(`activePromo.roundTenths`, set by `routes/restaurants.js`). The Stripe split does not change: 10 % of the price paid.
 The customer additionally pays the **delivery fee only — nothing is added on top** (model of 2026-10-08 evening):
 €5 excl. VAT for the first km, then €0.80 excl. VAT per started km, 21% VAT added (€6.05 incl. VAT minimum). **10% of it
 is Fairide's system fee, included** (`fraisService`, stored as `service_fee` + `service_fee_vat`); the courier receives

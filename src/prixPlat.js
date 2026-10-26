@@ -1,10 +1,21 @@
 import { getLocale } from './context/LanguageContext';
 
+// Commerce qui a monté ses prix (`activePromo.roundTenths`, posé par le serveur) : le prix après une offre « −X % » / « −X € »
+// est arrondi au 0,10 € INFÉRIEUR (fondateur, 2026-10-26 ; 11,10 € − 15 % → 9,40 €), pour que la remise donnée ne soit jamais
+// inférieure à celle annoncée. Même règle que la commande (serveur, prixMagasin.prixOffreArrondi). Les autres commerces
+// gardent le calcul au centime.
+function prixOffreArrondi(prix, p) {
+  const v = Number(p.value) || 0;
+  const net = p.type === 'percent' ? prix * (1 - v / 100) : Math.max(0, prix - v);
+  return Math.max(0, Math.floor(net * 10 + 1e-6) / 10);
+}
+
 // Prix d'un plat après sa remise (même calcul que le panier, CartContext.totals) : « −X % » et « −X € » (Avantage
 // Fairide compris). « 1 acheté = 1 offert » ne change pas le prix unitaire : null.
 export function prixRemise(item) {
   const p = item?.activePromo;
   if (!p) return null;
+  if (p.roundTenths && (p.type === 'percent' || p.type === 'amount')) return prixOffreArrondi(Number(item.price) || 0, p);
   if (p.type === 'percent') return +(item.price * (1 - p.value / 100)).toFixed(2);
   if (p.type === 'amount') return +Math.max(0, item.price - p.value).toFixed(2);
   return null;
@@ -17,6 +28,7 @@ export function remiseLigne(item, qty) {
   const p = item?.activePromo;
   if (!p || !(qty > 0)) return 0;
   const prix = Number(item.price) || 0;
+  if (p.roundTenths && (p.type === 'percent' || p.type === 'amount')) return +((prix - prixOffreArrondi(prix, p)) * qty).toFixed(2);
   if (p.type === 'percent') return prix * qty * (Number(p.value) / 100);
   if (p.type === 'amount') return Math.min(Number(p.value) || 0, prix) * qty;
   if (p.type === 'bogo') return Math.floor(qty / ((Number(p.value) || 1) + 1)) * prix;
