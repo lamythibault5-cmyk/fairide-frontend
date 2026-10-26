@@ -38,8 +38,8 @@ import InscriptionAppli from './InscriptionAppli';
  *   - « TU AS ENVIE DE QUOI ? » REVIENT LE 2026-10-25 (fondateur, version A de maquettes/onboarding-gouts/onboarding-gouts.html :
  *     « les gens qui sentent que c'est fait pour eux restent ») — mais APRÈS le chargement, avec les vraies familles
  *     (specialites.js) qui ont un commerce qui livre chez toi et leur nombre, au lieu de 6 envies larges avant la position. Le
- *     résultat compte alors « N commerces pour toi », ceux-là d'abord ; la page Restaurants met ces familles en tête de sa
- *     bande et la rangée « Tes envies » tout en haut (RestaurantList.jsx, envies.js). Sauté quand rien ne livre. 6 écrans.
+ *     résultat compte alors « N commerces pour toi », ceux-là d'abord. Rien d'autre depuis le 2026-10-26 (fondateur : « juste pour
+ *     le plaisir ») : la page Restaurants ne les lit plus (envies.js). Sauté quand rien ne livre. 6 écrans.
  *   - Le compte est demandé APRÈS avoir vu les commerces (règle 5.1.1 d'Apple), Apple à côté de Google (4.8).
  *   - L'inscription elle-même se fait ICI, dans les mêmes écrans (InscriptionAppli.jsx, 2026-10-15) : plus de passage
  *     par /login, la page du site avec son en-tête. Seul « J'ai déjà un compte » y mène encore.
@@ -251,7 +251,7 @@ export default function Bienvenue() {
   function memoriser() {
     ecrireBienvenue({
       // codePostal : repris par l'inscription (Auth.jsx) pour ne pas redemander ce qui vient d'être tapé.
-      // familles : « Tu as envie de quoi ? », reprises par la page Restaurants (envies.js) ; [] efface d'anciennes envies.
+      // familles : « Tu as envie de quoi ? » (envies.js), gardées sans effet ailleurs depuis le 2026-10-26 ; [] efface d'anciennes envies.
       vu: true, role, familles: envies, commune: communeCp || null, codePostal: communeCp ? cp : null, position: position || null,
       amorceNotifs: 'a-faire'
     });

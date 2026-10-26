@@ -117,12 +117,6 @@
 .lt-illu { display: block; flex: none; width: 52px; height: 52px; -webkit-user-drag: none; user-select: none; }
 .lt-illu--trace { display: grid; place-items: center; border-radius: 50%; background: rgba(59, 47, 181, .07); color: var(--iris); }
 .lt-puce[data-regime].on .lt-illu--trace { background: rgba(255, 255, 255, .16); color: #fff; }
-/* Une famille cochée à l'accueil de l'app (« Tu as envie de quoi ? », envies.js) : un point lime en haut à droite du dessin,
-   comme maquettes/onboarding-gouts (2026-10-25). Elle est aussi en tête de la bande (RestaurantList.jsx). */
-.lt-puce--envie::after {
-  content: ""; position: absolute; top: 7px; right: calc(50% - 30px); width: 9px; height: 9px; border-radius: 50%;
-  background: var(--lime); border: 1.5px solid #fff; pointer-events: none;
-}
 .lt-trait { flex: none; align-self: center; width: 1px; height: 44px; margin: 0 6px; background: var(--line); }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
