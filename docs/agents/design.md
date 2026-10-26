@@ -140,6 +140,14 @@ tag icon only on the shop's photo in the list (`.rc-offre.rc-promo`; « Bientôt
 (`.co-t-ligne--promo`). The shop page's offer card (`.fiche-offres`) is white with a hairline, red tag and red first line.
 Red text on white and white on red are both 4.7:1. Because red now means « deal », « Carte seule » (`.rc-vitrine`) went
 grey; alerts keep `--red`. The shop's own screens (`.ec-plat-promo`, menu editor) are unchanged.
+The Avantage Fairride on a list photo is short, « −5 % sur tout » (`libellePromo(…, { court: true })`): the full label was cut.
+
+**« Offres » and « Courses » never look empty (founder, 2026-10-26, B + C of `maquettes/sections-pleines/sections-pleines.html`).**
+These rows still list only shops that fit them (/classement), but show what they sell, from `resumeCarte.apercu` (backend:
+4 dishes with photo and price, promo dishes first, one category after another; sent only for shops with an offer or of the
+Courses family). One shop: its card full width (`.rc-grande`, photo 9:4; website: photo left, dishes right) with 4 dishes
+underneath. Two or more: dish tiles (`.tuile-apercu`), 3 per shop, one shop after another, open first; a shop without a
+preview keeps its usual card. `RangeeApercu` in `RestaurantList.jsx`. The row « Supermarchés » is now « Courses ».
 
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.

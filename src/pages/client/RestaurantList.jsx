@@ -29,7 +29,7 @@ import { statutOuverture } from '../../openingHours';
 import { useCart } from '../../context/CartContext';
 import { poserCommercePanier, retirerCommercePanier } from '../../fermeCourt';
 import { tarifLivraison, eurosCourts, horsZoneLivraison } from '../../livraison';
-import { kmLisible, libellePromo } from '../../prixPlat';
+import { euros, kmLisible, libellePromo, prixRemise, remiseCourte } from '../../prixPlat';
 import EmplacementSponsor from '../../components/EmplacementSponsor';
 import VisuelVide from '../../components/VisuelVide';
 import usePageMeta from '../../hooks/usePageMeta';
@@ -86,7 +86,7 @@ function matchCommune(addressCity) {
 // plat du menu — juste pour donner un aperçu concret de l'offre directement sur la carte du commerce.
 function offerLabelFor(r, t) {
   if (r.activeCartPromo) return libellePromo(r.activeCartPromo, t);
-  return libellePromo(promoDUnPlat(r), t);
+  return libellePromo(promoDUnPlat(r), t, { court: true });
 }
 
 // Livraison réellement possible ici et maintenant : ouverte (GO), dans la zone, et un livreur libre dans le pool Fairide
@@ -123,7 +123,9 @@ function deliveryOfferLabelFor(r, t, user) {
 // Tout ce qui décide d'un clic tient sur la photo et deux lignes : l'offre et l'état (fermé, ouvre à…) posés SUR la
 // photo, puis le nom, « cuisine · commune », et une ligne d'infos (note ou « Nouveau », services, offre de
 // livraison). Avant : quatre pastilles empilées (commune, quartier, fermé…) et un grand blanc sous le texte.
-function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
+// `apercu` : la GRANDE CARTE des rangées « Offres » et « Courses » quand le commerce y est seul (voir RangeeApercu) — toute la
+// largeur, et quatre de ses plats ou produits sous le nom.
+function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
   const { user, token } = useAuth();
   const offerLabel = offerLabelFor(r, t);
   const deliveryOfferLabel = deliveryOfferLabelFor(r, t, user);
@@ -150,7 +152,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   return (
     <Link
       {...lienFiche(user, r, r.name)}
-      className={`rest-card rc${isClosed ? ' rc-est-ferme' : ''}`}
+      className={`rest-card rc${isClosed ? ' rc-est-ferme' : ''}${apercu ? ' rc-grande' : ''}`}
       // La fiche part dès que le doigt se pose (cacheDonnees.js) — seulement si le lien y mène (connecté, murCompte.js).
       onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}
     >
@@ -191,7 +193,48 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
             {r.vitrine && <span className="rc-vitrine">{t('restoListUi.showcaseOnly')}</span>}
           </p>
         )}
+        {apercu && (
+          <span className="rc-apercu">
+            {apercu.map((p) => {
+              const remise = prixRemise(p);
+              return (
+                <span key={p.id} className="rc-apercu-plat">
+                  <img loading="lazy" decoding="async" {...imgProps(p.imageUrl, 90)} alt="" onError={cacherImageCassee} />
+                  <span className="sr-only">{p.name}</span>
+                  <span className={`rc-apercu-prix${remise != null ? ' est-remise' : ''}`}>{euros(remise ?? p.price)}</span>
+                </span>
+              );
+            })}
+          </span>
+        )}
       </div>
+    </Link>
+  );
+}
+
+/* LES PLATS D'UN COMMERCE EN TUILES (rangées « Offres » et « Courses » à partir de deux commerces, voir RangeeApercu) : la
+ * photo du plat, l'offre en rouge sur la photo, le prix remisé en rouge avec « avant … » (jamais barré, design.md), et le
+ * commerce dessous. Un appui ouvre la fiche du commerce, comme sa carte. */
+function TuileApercu({ r, p, t }) {
+  const { user, token } = useAuth();
+  const remise = prixRemise(p);
+  const ferme = !estOuvert(r);
+  return (
+    <Link {...lienFiche(user, r, r.name)} className={`tuile-apercu${ferme ? ' tuile-apercu--fermee' : ''}`} onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}>
+      <span className="ta-media">
+        <img loading="lazy" decoding="async" {...imgProps(p.imageUrl, 160)} alt="" onError={cacherImageCassee} />
+        {p.activePromo && <span className="rc-offre rc-promo"><Icone nom="etiquette" taille={12} className="icone-texte" />{' '}{remiseCourte(p.activePromo, t)}</span>}
+      </span>
+      <span className="ta-nom">{p.name}</span>
+      <span className="ta-prix">
+        <span className={remise != null ? 'est-remise' : undefined}>{euros(remise ?? p.price)}</span>
+        {remise != null && <small>{t('menuCategories.priceBefore', { price: euros(p.price) })}</small>}
+      </span>
+      <span className="ta-chez">
+        {r.name}
+        {/* Position payée : toujours dite au client (CDE VI.99), comme sur la carte du commerce. */}
+        {r.sponsorise && <> · <span className="rc-sponsorise" title={t('restoListUi.sponsoredTitle')}>{t('restoListUi.sponsored')}</span></>}
+      </span>
     </Link>
   );
 }
@@ -335,6 +378,49 @@ function Section({ title, icon, list: rangee, favoriteIds, onToggleFavorite, t, 
         ))}
       </div>
     </div>
+  );
+}
+
+/* « OFFRES » ET « COURSES » NE SONT PLUS DES RANGÉES VIDES (fondateur, 2026-10-26, maquettes/sections-pleines : B, C et la
+ * réponse 5). Avec un seul commerce, une carte de 163 px laissait la moitié de l'écran blanche. La rangée ne se complète
+ * toujours pas avec des commerces qui n'y répondent pas (/classement) : elle montre ce que ses commerces vendent, d'après
+ * `resumeCarte.apercu` (backend : 4 plats avec photo et prix, ceux en promo d'abord, une catégorie après l'autre).
+ *   - un seul commerce : sa carte en grand (toute la largeur), quatre de ses plats ou produits dessous ;
+ *   - deux ou plus : jusqu'à APERCU_PAR_COMMERCE tuiles par commerce, un commerce après l'autre, les ouverts d'abord
+ *     (ouvertsDabord) ; un commerce sans aperçu y garde sa carte habituelle, à son tour.
+ * Sans aucun aperçu (vieille liste gardée par l'app, commerce sans photo de plat) : la rangée d'avant (Section). */
+const APERCU_PAR_COMMERCE = 3;
+const apercuDe = (r) => (Array.isArray(r.resumeCarte?.apercu) ? r.resumeCarte.apercu : []);
+function RangeeApercu({ title, icon, list: rangee, favoriteIds, onToggleFavorite, t, cle, grille = false }) {
+  if (rangee.length === 0) return null;
+  const list = ouvertsDabord(rangee);
+  if (!list.some((r) => apercuDe(r).length > 0)) {
+    return <Section title={title} icon={icon} list={rangee} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} t={t} loop grille={grille} cle={cle} />;
+  }
+  const titre = <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}{cle && <EmplacementSponsor cle={cle} />}</h2>;
+  if (list.length === 1) {
+    const r = list[0];
+    return (
+      <section className="liste-section">
+        {titre}
+        <RestaurantCard r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} apercu={apercuDe(r).slice(0, 4)} />
+      </section>
+    );
+  }
+  // Un tour par commerce : le 1er plat de chacun, puis le 2e…
+  const tuiles = [];
+  for (let tour = 0; tour < APERCU_PAR_COMMERCE; tour++) {
+    for (const r of list) {
+      const plats = apercuDe(r);
+      if (plats.length === 0) { if (tour === 0) tuiles.push(<RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />); continue; }
+      if (plats[tour]) tuiles.push(<TuileApercu key={`${r.id}-${plats[tour].id}`} r={r} p={plats[tour]} t={t} />);
+    }
+  }
+  return (
+    <section className="liste-section">
+      {titre}
+      <div className={grille ? 'rangee-apercu rangee-apercu--grille' : 'rangee-apercu'}>{tuiles}</div>
+    </section>
   );
 }
 
@@ -922,7 +1008,7 @@ export default function RestaurantList() {
           <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="nearby" />
           <Section title={t('restaurantList.sectionFreeDelivery')} icon="velo" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="free_delivery" />
           <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="velo" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="cheap_delivery" />
-          <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="offers" />
+          <RangeeApercu title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} grille={grand} cle="offers" />
           {rangeesCuisine.map((s) => (
             <Section key={s.key} title={titreRangee(t, s)} icon="restaurants" list={s.liste} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle={s.key} />
           ))}
@@ -931,7 +1017,7 @@ export default function RestaurantList() {
           <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="bio" />
           <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="vegan" />
           </>}
-          <Section title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="grocery" />
+          <RangeeApercu title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} grille={grand} cle="grocery" />
           <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epinglerOuMelanger(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay grille={grand} cle="discover" />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
