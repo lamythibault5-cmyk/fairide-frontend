@@ -4489,6 +4489,8 @@ export default {
       faqA7: "La carte affiche les prix du restaurant. Fairride ne prend que 10 % de commission, là où les grandes plateformes annoncent 22 à 32 % : le restaurant ne doit donc plus gonfler sa carte. Il peut monter ses prix de 10 % au plus pour couvrir la commission, jamais plus. Pour un plat à 12 € au comptoir : 12 € ÷ 0,70 ≈ 17,10 € pour couvrir 30 % de commission, 13,20 € au plus sur Fairride. C'est un calcul, pas un relevé des prix d'une autre plateforme. Les restaurants qui gardent leurs prix, vérifiés par notre équipe, portent le badge « Prix du comptoir ».",
       faqQ8: "Pourquoi s’appelle-t-on Fairride ?",
       faqA8: "Fairride vient de l’anglais « fair ride », une course équitable : pour le restaurant, pour le livreur et pour toi. Beaucoup l’écrivent « Fairride » ou « Fair ride » : c’est bien nous, à l’adresse fairride.be.",
+      faqQ9: "D'où vient le « +55 % » de la page d'accueil ?",
+      faqA9: "D'un relevé. Le même jour d'octobre 2026, on a noté les prix d'un restaurant bruxellois partenaire de Fairride à son comptoir et sur sa page publique d'une grande plateforme de livraison. Sur les plats présents des deux côtés, sans frais de livraison ni de service, la carte en ligne coûtait de 45 à 55 % de plus selon les plats. On ne nomme ni le plat ni le restaurant sur le site, mais on donne le détail à qui le demande : écris-nous à contact@fairride.be.",
       /* Le titre de la page et sa description visent les recherches réelles : « alternative Uber
          Eats », « alternative Deliveroo Bruxelles », « livraison commission réduite ». Un titre
          qui ne dit que « Notre histoire » ne peut se placer sur aucune d'elles — personne ne
@@ -7491,7 +7493,23 @@ export default {
       /* Bannière à barre d'adresse (2026-09-27, voir HeroAdresse.jsx et HeroPrix.jsx). `subAdresse` est plus
          court que `sub` : les chiffres de la commission sont passés dans le ticket de comparaison à côté.
          `sub` reste en place, lu par le référencement et par un éventuel retour en arrière. */
-      subAdresse: "L'alternative bruxelloise à Uber Eats et Deliveroo : Fairride ne prend que 10 %. Le restaurant ne doit plus gonfler ses prix, le livreur gagne plus, et ton argent reste à Bruxelles.",
+      /* VERSION E DE maquettes/croissance/prix-gonfles.html (fondateur, 2026-10-26) : « Arrête de payer des prix gonflés. »
+         en titre du site (titreAccueil1/2 ; title1/2 restent le slogan, lu par l'accueil de l'app), le pourquoi du client
+         en sous-titre, la carte « Le même plat, trois prix » (HeroPrix.jsx, qui dit pourquoi elle est légale), et
+         « l'alternative à Uber Eats » en titre de section plus bas, pour la recherche. Le relevé se refait chaque mois :
+         changer la date de prixReleve dans les trois langues. Les clés prixAccroche…prixNousSous ne sont plus lues. */
+      subAdresse: "Le même plat ne devrait pas coûter plus cher parce que tu le commandes en ligne. Ailleurs, c'est jusqu'à +55 %. Sur Fairride, +10 % au plus : le restaurant ne gonfle plus sa carte, et ton argent reste à Bruxelles.",
+      titreAccueil1: "Arrête de payer",
+      titreAccueil2: "des prix gonflés.",
+      altTitre: "Fairride, l'alternative bruxelloise à Uber Eats et Deliveroo",
+      prixTroisTitre: "Le même plat, trois prix",
+      prixTroisAria: "Le même plat au comptoir, sur une grande plateforme (+{ecart} %) et sur Fairride",
+      prixReleve: "Un plat d'un restaurant bruxellois, relevé en octobre 2026. Détails sur demande.",
+      prixComptoirLigne: "Au comptoir",
+      prixPlateformeLigne: "Sur une grande plateforme",
+      prixFairrideLigne: "Sur Fairride",
+      prixAuPlus: "+10 % au plus",
+      prixPied: "Les 30 %, c'est toi qui les paies.",
       addrLabel: 'Adresse de livraison',
       addrPlaceholder: 'Ton adresse de livraison',
       addrGo: 'Voir les commerces qui livrent ici',

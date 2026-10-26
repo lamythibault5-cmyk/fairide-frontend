@@ -92,7 +92,9 @@ export default function Landing() {
             <BelgianMark width={58} title={t('landing.proudlyBelgian')} />
             <span>{t('landing.beBadge')}</span>
           </span>
-          <h1 className="sa-titre">{t('landing.title1')}<br />{t('landing.title2')}</h1>
+          {/* « Arrête de payer des prix gonflés. » (fondateur, 2026-10-26, version E de maquettes/croissance/prix-gonfles.html).
+              Le slogan « Paie ton repas, pas la plateforme. » (landing.title1/2) reste sous le logo et à l'accueil de l'app. */}
+          <h1 className="sa-titre">{t('landing.titreAccueil1')}<br />{t('landing.titreAccueil2')}</h1>
           <p className="sa-sous">{t('landing.subAdresse')}</p>
           {/* Le seul appel à l'action de la page : « livrez-vous chez moi ? » se demande sans compte (HeroAdresse.jsx). */}
           <HeroAdresse />
@@ -108,6 +110,9 @@ export default function Landing() {
         {/* « Déjà sur Fairide » : trois vrais commerces, tirés au sort (HeroPreview.jsx). */}
         <HeroPreview restaurants={restaurants} rangee />
 
+        {/* « L'alternative à Uber Eats » a quitté le sous-titre le 2026-10-26 ; les gens la cherchent sur Google, donc elle
+            reste sur la page en titre de section (et dans le titre et la description du résultat, seo.*). */}
+        <Reveal as="h2" className="sa-section-titre sa-alternative">{t('landing.altTitre')}</Reveal>
         <div className="sa-arguments">
           {features(t).map((f, i) => (
             <Reveal className="sa-argument" key={f.title} delay={i * 90}>

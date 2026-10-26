@@ -7,9 +7,10 @@ store listings, flyers and the shop pitch. Everyday screens (cart, order trackin
 guide is about the doors people come in through.
 If you change what this file describes, change this file in the same commit: a stale guide gets believed.
 
-Status on 2026-10-26: the existing strings still follow the older, « what first » style. The rewrite is drawn in the
-workspace mockup `maquettes/croissance/prix-gonfles.html` (front page: the founder's mix E, below); the rest waits for his
-picks. New copy follows this guide now.
+Status on 2026-10-26: the top of the front page follows this guide (version E of the workspace mockup
+`maquettes/croissance/prix-gonfles.html`: title, subtitle, the card « Le même plat, trois prix » in
+`src/components/landing/HeroPrix.jsx`). The other texts (onboarding, e-mails, « Notre histoire », store listings) still
+follow the older, « what first » style and wait for the founder's picks in that mockup. New copy follows this guide now.
 
 ## 1. Start with why, and the why is about the reader
 
@@ -34,7 +35,11 @@ The front page opens with the call, then the customer's why (founder's mix, 2026
 
 > **Arrête de payer des prix gonflés.**
 > Le même plat ne devrait pas coûter plus cher parce que tu le commandes en ligne. Ailleurs, c'est jusqu'à +55 %. Sur
-> Fairride, +10 % au plus : on prend 10 % au restaurant, pas 30, alors il n'a plus besoin de gonfler sa carte.
+> Fairride, +10 % au plus : le restaurant ne gonfle plus sa carte, et ton argent reste à Bruxelles.
+
+« L'alternative à Uber Eats » left the subtitle but not the page: people search for it, so it is the heading of the
+section under « Déjà sur Fairride » (`landing.altTitre`), and it stays in the Google title and description (`seo.*`)
+and on « Notre histoire ».
 
 ## 2. The villain: the inflated price, never a company
 
@@ -50,11 +55,14 @@ Fairride picks a fight with a norm: paying the platform's ~30 % cut hidden in th
 
 ## 3. Claims: aggressive, and still true
 
-- A measured gap always carries one short line with its date and source next to it, e.g. « Relevé en octobre 2026 dans
-  un restaurant bruxellois » (the founder dropped the « Comment on a mesuré » link and section on 2026-10-26). The full
-  method (same day, the restaurant's public page on a platform against its counter menu, dishes present on both, no
-  delivery or service fee) is answered in the FAQ. « Jusqu'à +55 % » is a restaurant's average, not a typical figure:
-  never « tu paies 50 % de plus » as a general fact.
+- A measured gap always carries one short line next to it with its date and where to check it: « Un plat d'un
+  restaurant bruxellois, relevé en octobre 2026. Détails sur demande. » A price comparison must say where and how it can
+  be verified (CJEU, Lidl Belgium v Colruyt, C-356/04, 2006); « Détails sur demande » plus the FAQ question
+  `story.faqQ9` (how we measured, write to contact@) does that. The founder dropped the « Comment on a mesuré » link and
+  the proof section on 2026-10-26, and the dish is not named, so the partner can't be recognised. Before a measured
+  figure goes public, get the measured restaurant's written OK (a request for details reveals it), keep the dated
+  screenshots in the workspace, and redo the measurement monthly (date in `landing.prixReleve`, three languages).
+  « Jusqu'à +55 % » is the top of what we measured, not a typical figure: never « tu paies 50 % de plus » as a general fact.
 - « Ici, +10 % au plus » holds only while every published card has its counter prices checked
   (`in_store_prices_checked_at`) and the markup cap (`hausseMaxPourcent`, argent.md). Check before a campaign.
 - Never « moins cher », never a total including delivery (our delivery fee can be higher than a platform's promotional
