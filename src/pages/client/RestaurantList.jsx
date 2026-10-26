@@ -40,6 +40,7 @@ import { livraisonPossibleIci, emporterPossibleIci, ouvertPourCommander, livreCh
 import EtatVide from '../../components/EtatVide';
 import ErreurChargement from '../../components/ErreurChargement';
 import TeteListe from '../../components/TeteListe';
+import { ecrireEtatEcran } from '../../etatEcran';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import '../../ecran-liste.css';
 import '../../site-liste.css';
@@ -299,7 +300,9 @@ function ALaUne({ list, inscritLe, t }) {
             // Même règle que les cartes dessous : sans compte, le clic mène à la connexion, puis à la fiche.
             <Link key={r.id} {...lienFiche(user, r, r.name)} className={`une-carte${ferme ? ' une-carte--fermee' : ''}`} onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}>
               <VisuelVide nom={r.name} cuisine={r.cuisine} />
-              <img {...imgProps(r.coverImageUrl, 800, '(max-width: 640px) 92vw, 380px')} alt="" className="une-photo" decoding="async" onError={cacherImageCassee} />
+              {/* Sans photo, le visuel de marque seul, comme les autres cartes : la boutique de test (seul commerce sans photo
+                  admis ici) montrait l'icône d'image cassée en tête d'« À la une » (2026-10-26). */}
+              {r.coverImageUrl && <img {...imgProps(r.coverImageUrl, 800, '(max-width: 640px) 92vw, 380px')} alt="" className="une-photo" decoding="async" onError={cacherImageCassee} />}
               <span className="une-voile" aria-hidden="true" />
               {nouveau && <span className="une-surtitre"><Icone nom="eclair" taille={13} />{t('restaurantList.newOnFairide')}</span>}
               {ferme && <span className="une-etat">{t('restoListUi.closed')}</span>}
@@ -445,7 +448,10 @@ export default function RestaurantList() {
   ]), 'ld-breadcrumb');
   // La page Recherche envoie ici ses résultats « cuisine » et « commune » par l'état de navigation :
   // la liste s'ouvre déjà filtrée, sans que l'URL ne change de forme.
-  const filtresInitiaux = useLocation().state || {};
+  const filtresInitiaux = location.state || {};
+  /* LES FILTRES DE CETTE LISTE, RETROUVÉS AU RETOUR (2026-10-26, etatEcran.js). Ils sont écrits dans l'entrée d'historique
+     de la liste à chaque changement ; revenir d'une fiche les relit ici, avant ce qu'avait envoyé la Recherche. */
+  const sauves = filtresInitiaux.filtresListe || null;
   // La commune « de chez soi » : celle du compte, sinon celle de l'adresse tapée dans la barre de
   // l'accueil (`communeProche`, voir HeroAdresse.jsx). Elle ne FILTRE rien : elle range la liste,
   // sa commune d'abord puis les communes voisines, et nourrit la rangée « près de chez toi ».
@@ -484,14 +490,14 @@ export default function RestaurantList() {
     return chargerAvecCache(CHEMIN_LISTE, { forcer, token: jetonListe(user, token) }).then((l) => { setRestaurants(l); setEchecListe(false); return true; }).catch(() => { setEchecListe(true); return false; }).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.isTest, token]);
-  const [search, setSearch] = useState(filtresInitiaux.search || '');
-  const [commune, setCommune] = useState(filtresInitiaux.commune || '');
+  const [search, setSearch] = useState(sauves ? sauves.search : filtresInitiaux.search || '');
+  const [commune, setCommune] = useState(sauves ? sauves.commune : filtresInitiaux.commune || '');
   // LA FAMILLE ET LA SPÉCIALITÉ CHOISIES (fondateur, 2026-10-22, version X de maquettes/categories-commerce). La bande montre
   // les familles, la rangée dessous les spécialités de la famille choisie. La Recherche envoie une famille (« Par envie »)
   // ou une spécialité (« Congolais ») : la liste s'ouvre sur sa famille, la spécialité choisie dessous.
   const specialiteInitiale = specialite(filtresInitiaux.cuisine);
-  const [famille, setFamille] = useState(filtresInitiaux.famille || specialiteInitiale?.familles[0] || '');
-  const [specialiteFiltre, setSpecialiteFiltre] = useState(specialiteInitiale?.value || '');
+  const [famille, setFamille] = useState(sauves ? sauves.famille : filtresInitiaux.famille || specialiteInitiale?.familles[0] || '');
+  const [specialiteFiltre, setSpecialiteFiltre] = useState(sauves ? sauves.specialiteFiltre : specialiteInitiale?.value || '');
   const choisirFamille = useCallback((cle) => { setFamille(cle); setSpecialiteFiltre(''); }, []);
   /* CHANGER DE CUISINE NE FAIT PLUS « SAUTER » LA LISTE (fondateur, 2026-10-23 : « comme la barre d'onglets, beaucoup plus
      calme »). Les cartes jouent leur entrée (popIn, styles.css) à la première apparition de la liste ; un changement de
@@ -504,18 +510,42 @@ export default function RestaurantList() {
   }, [famille, specialiteFiltre]);
   // Masqués pour le moment (MENTIONS_ALIMENTAIRES) : jamais allumés à l'ouverture, sinon la liste serait filtrée sans
   // aucune pastille pour retirer le filtre.
-  const [bio, setBio] = useState(MENTIONS_ALIMENTAIRES && !!filtresInitiaux.bio);
-  const [vegan, setVegan] = useState(MENTIONS_ALIMENTAIRES && !!filtresInitiaux.vegan);
+  const [bio, setBio] = useState(MENTIONS_ALIMENTAIRES && !!(sauves || filtresInitiaux).bio);
+  const [vegan, setVegan] = useState(MENTIONS_ALIMENTAIRES && !!(sauves || filtresInitiaux).vegan);
   // Halal et sans gluten (backend migration 042) : déclarés par le commerce, voir dietary.js.
-  const [halal, setHalal] = useState(MENTIONS_ALIMENTAIRES && !!filtresInitiaux.halal);
-  const [sansGluten, setSansGluten] = useState(MENTIONS_ALIMENTAIRES && !!filtresInitiaux.sansGluten);
+  const [halal, setHalal] = useState(MENTIONS_ALIMENTAIRES && !!(sauves || filtresInitiaux).halal);
+  const [sansGluten, setSansGluten] = useState(MENTIONS_ALIMENTAIRES && !!(sauves || filtresInitiaux).sansGluten);
   // Les memes filtres que sur la carte, avec les memes noms : emporter, et un tri.
   // Les avoir des deux cotes evite d'avoir a changer de vue pour affiner une recherche.
-  const [emporter, setEmporter] = useState(false);
+  const [emporter, setEmporter] = useState(!!sauves?.emporter);
   const [ouvertsSeuls, setOuvertsSeuls] = useState(disponibilite.ouvert);
   const [livreSeuls, setLivreSeuls] = useState(disponibilite.livre);
   useEffect(() => { disponibilite.ouvert = ouvertsSeuls; disponibilite.livre = livreSeuls; }, [ouvertsSeuls, livreSeuls]);
-  const [tri, setTri] = useState('recommande');
+  const [tri, setTri] = useState(sauves?.tri || 'recommande');
+  useEffect(() => {
+    ecrireEtatEcran(location.key, 'filtresListe', { search, commune, famille, specialiteFiltre, bio, vegan, halal, sansGluten, emporter, tri });
+  }, [location.key, search, commune, famille, specialiteFiltre, bio, vegan, halal, sansGluten, emporter, tri]);
+  /* « ACCUEIL » TOUCHÉ SUR L'ACCUEIL, LA LISTE REPART DE ZÉRO (fondateur, 2026-10-26). Une catégorie choisie dans la
+     Recherche (« Poissons ») restait appliquée quand on touchait Accueil, puis revenait au retour de chaque fiche. Comme sur
+     iPhone, l'onglet où l'on est ramène à son écran de départ : plus aucun filtre (« Ouvert » compris), en haut (DashboardSidebar.jsx envoie
+     « fairide:onglet-retouche »). Sur le site, un lien vers la liste pendant qu'on y est (nouvelle entrée sans filtre) fait
+     de même. */
+  const reinitialiserFiltres = useCallback(() => {
+    setSearch(''); setCommune(''); setFamille(''); setSpecialiteFiltre(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false);
+    setEmporter(false); setOuvertsSeuls(false); setLivreSeuls(false); setTri('recommande');
+  }, []);
+  useEffect(() => {
+    const surOnglet = (e) => { if (e.detail === '/restaurants') reinitialiserFiltres(); };
+    window.addEventListener('fairide:onglet-retouche', surOnglet);
+    return () => window.removeEventListener('fairide:onglet-retouche', surOnglet);
+  }, [reinitialiserFiltres]);
+  const cleMontee = useRef(location.key);
+  useEffect(() => {
+    if (location.key === cleMontee.current) return;
+    cleMontee.current = location.key;
+    const st = location.state || {};
+    if (!st.filtresListe && !st.famille && !st.cuisine && !st.commune && !st.search) reinitialiserFiltres();
+  }, [location.key, location.state, reinitialiserFiltres]);
   const [panneau, setPanneau] = useState(null);
   // Les VRAIS commerces déjà inscrits (fondateur, 2026-09-30) : rangée en tête de liste, carte complète seulement ;
   // les démos restent dessous, pour montrer l'étendue de l'offre.
