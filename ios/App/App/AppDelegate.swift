@@ -1,4 +1,5 @@
 import UIKit
+import UserNotifications
 import Capacitor
 import FirebaseCore
 import FirebaseMessaging
@@ -16,6 +17,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             FirebaseApp.configure()
         }
         return true
+    }
+
+    // Every push sets the icon's red badge to 1 (fairide-backend/fcm.js, aps.badge) and iOS keeps it until the app
+    // resets it: nothing did, so the « 1 » stayed on the home screen after opening the app (Owen, 2026-10-26, on the
+    // App Review account). Opening the app means the person has seen it: back to 0. Delivered notifications stay listed.
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        if #available(iOS 16.0, *) {
+            UNUserNotificationCenter.current().setBadgeCount(0) { _ in }
+        } else {
+            application.applicationIconBadgeNumber = 0
+        }
     }
 
     // The server sends every push through Firebase (fairide-backend/fcm.js), which needs a Firebase token, not the
