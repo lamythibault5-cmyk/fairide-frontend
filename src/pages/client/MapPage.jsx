@@ -5,7 +5,8 @@ import { CHEMIN_LISTE, jetonListe } from '../../resumeCarte';
 import { cheminFiche } from '../../adresseFiche';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { getOpenStatus } from '../../openingHours';
+import { ouvertPourCommander } from '../../peutCommander';
+import { commandesOuvertes, useLancement } from '../../launch';
 import { restaurantTypeLabel, haversineDistanceKm, illustrationCuisine } from '../../menuCategories';
 import { experienceApp } from '../../natif';
 import { FAMILLES, famillesCommerce, libelleFamille } from '../../specialites';
@@ -45,6 +46,10 @@ const TRI = false;
 export default function MapPage() {
   const { t } = useLanguage();
   const { user, token } = useAuth();
+  // « Ouvert » dépend du GO et des livreurs libres (peutCommander.js) : la liste se recalcule quand ils changent. Avant le
+  // 1er novembre aucune commande n'est possible, la pastille attend (même règle que la liste des commerces).
+  const lancement = useLancement();
+  const pastilleOuvert = commandesOuvertes(user);
   const [restaurants, setRestaurants] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [promosSeules, setPromosSeules] = useState(false);
@@ -90,7 +95,9 @@ export default function MapPage() {
     const filtres = restaurants.filter((r) => {
       if (promosSeules && !r.hasPromo) return false;
       if (cuisine && !famillesCommerce(r).has(cuisine)) return false; // par n'importe laquelle de ses spécialités
-      if (ouvertsSeuls && r.hours && !getOpenStatus(r.hours, maintenant, r.closures).isOpen) return false;
+      // « Ouvert » = ouvert ET commandable, comme sur la liste (fondateur, 2026-10-26, maquettes/filtre-ouvert) : plus les
+      // « Carte seule », plus un commerce en pause ou fermé par son interrupteur (seules les heures comptaient).
+      if (ouvertsSeuls && pastilleOuvert && !ouvertPourCommander(r, user, maintenant)) return false;
       if (nom && !(r.name || '').toLowerCase().includes(nom)) return false;
       return true;
     });
@@ -103,7 +110,9 @@ export default function MapPage() {
     // n'existe pas.
     if (tri === 'distance') return [...avecDistance].sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
     return avecDistance;
-  }, [restaurants, promosSeules, ouvertsSeuls, cuisine, tri, position, recherche]);
+  // `lancement` n'est pas lu ici mais par ouvertPourCommander (launch.js) : sa présence relance le calcul après un GO.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurants, promosSeules, ouvertsSeuls, pastilleOuvert, cuisine, tri, position, recherche, user, lancement]);
 
   // Les types de cuisine réellement représentés : proposer « Sushi » quand aucun commerce n'en fait
   // donne un filtre qui ne renvoie jamais rien.
@@ -112,7 +121,7 @@ export default function MapPage() {
     return FAMILLES.filter((f) => vus.has(f.cle));
   }, [restaurants]);
 
-  const filtreActif = promosSeules || ouvertsSeuls || !!cuisine || tri !== 'recommande' || !!recherche.trim();
+  const filtreActif = promosSeules || (ouvertsSeuls && pastilleOuvert) || !!cuisine || tri !== 'recommande' || !!recherche.trim();
   function toutReinitialiser() {
     setPromosSeules(false); setOuvertsSeuls(false); setCuisine(''); setTri('recommande'); setPanneau(null); setRecherche('');
   }
@@ -163,9 +172,11 @@ export default function MapPage() {
             <button type="button" className={`cuisine-chip${promosSeules ? ' active' : ''}`} aria-pressed={promosSeules} onClick={() => setPromosSeules((v) => !v)}>
               <Icone nom="etiquette" taille={16} />{t('mapClient.filterOffers')}
             </button>
+            {pastilleOuvert && (
             <button type="button" className={`cuisine-chip${ouvertsSeuls ? ' active' : ''}`} aria-pressed={ouvertsSeuls} onClick={() => setOuvertsSeuls((v) => !v)}>
               <Icone nom="horloge" taille={16} />{t('mapClient.filterOpen')}
             </button>
+            )}
             {/* Un panneau de pastilles, plus un <select> natif : le menu du système s'ouvre au
                 milieu de l'écran dans le style du navigateur, une liste grise sans rapport avec la
                 page, posée par-dessus la carte. */}

@@ -116,6 +116,24 @@ Founder's answers to `maquettes/ferme-couverts/ferme-couverts.html` (B + C, A, o
   ([PastilleCouverts](../../src/components/commerce/PastilleCouverts.jsx)), on the browser receipt and on the terminal
   ticket (`ticketTerminal.js`): « Sans couverts » is written on purpose, so the kitchen doesn't add them by habit.
 
+## « Ouvert » and « Livre chez toi » on the list (2026-10-26)
+
+Founder's answers to `maquettes/filtre-ouvert/filtre-ouvert.html` (version A, all recommended options):
+
+- **Two chips above the list** (Restaurants, app and website alike): « Ouvert » (same chip, name and clock as on the Carte
+  tab) and « Livre chez toi ». Each turns on alone; with one on, the list becomes the plain grid with its count.
+- **« Ouvert » means open AND orderable**, on the list and on the Carte tab: open by its hours (pause, closed for the day
+  and the shop's own switch included), not « Carte seule », and delivery here or takeaway possible now
+  ([peutCommander.js](../../src/peutCommander.js)). On 2026-10-26, 23 of 30 shops were « open » at lunch, 2 orderable:
+  don't widen it back to opening hours. The chip waits for orders to open (1 November, `commandesOuvertes`).
+- **« Livre chez toi »**: open, not Carte seule, the account's address in the shop's zone and a free courier. Shown only
+  after GO and with a known address. **Hidden for now** (founder, 2026-10-26: no couriers yet, launch is takeaway only):
+  `FILTRE_LIVRE = false` in RestaurantList.jsx; set it to true in the app update that starts delivery.
+- **What the filter drops is hidden.** An empty list says why: no free courier, or the first shop to reopen, or nobody
+  delivers to this address; then « Voir tous les restaurants » (lime).
+- **Off at each launch**: kept in memory while the app or browser tab is open (a trip to a shop and back keeps them),
+  never written to the device.
+
 ## Resolved since earlier versions of this file
 
 Listed so nobody re-implements them: **Web Push exists** ([public/sw.js](../../public/sw.js) handles `push`

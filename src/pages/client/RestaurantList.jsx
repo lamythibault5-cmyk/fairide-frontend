@@ -35,7 +35,8 @@ import VisuelVide from '../../components/VisuelVide';
 import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
-import { livraisonOuverte, paiementEnLigneOuvert, useLancement, chargerLancement, livreurFairideLibre, commandesOuvertes } from '../../launch';
+import { livraisonOuverte, useLancement, chargerLancement, livreurFairideLibre, commandesOuvertes } from '../../launch';
+import { livraisonPossibleIci, emporterPossibleIci, ouvertPourCommander, livreChezToi, filtreLivraisonPossible, premierARouvrir } from '../../peutCommander';
 import EtatVide from '../../components/EtatVide';
 import ErreurChargement from '../../components/ErreurChargement';
 import TeteListe from '../../components/TeteListe';
@@ -59,6 +60,19 @@ const TRI = false;
 // La pastille au-dessus de la liste et Livraison / À emporter sur le bandeau (site, 900 px)
 // disparaissent ; l'état `emporter` reste à false. Repasser à true pour les remettre.
 const FILTRE_EMPORTER = false;
+
+/* « OUVERT » ET « LIVRE CHEZ TOI » (fondateur, 2026-10-26, version A de maquettes/filtre-ouvert/filtre-ouvert.html) : deux
+ * pastilles au-dessus de la liste, comme « Ouvert » sur l'onglet Carte, chacune s'allume seule ; ce qu'elles écartent est
+ * caché, et une liste vide dit pourquoi. Règles : peutCommander.js. ÉTEINTES À CHAQUE OUVERTURE (réponse 5) : gardées en
+ * mémoire tant que l'app (ou l'onglet du navigateur) reste ouverte, pour qu'aller voir un commerce et revenir ne les
+ * éteigne pas, mais rien n'est écrit sur le téléphone — rouverte le lendemain à 23:30, l'app ne montre pas une liste vide
+ * sans dire pourquoi. */
+const disponibilite = { ouvert: false, livre: false };
+
+// « LIVRE CHEZ TOI » MASQUÉ POUR LE MOMENT (fondateur, 2026-10-26 : pas encore de livreurs, on ouvre avec l'à emporter ;
+// la pastille sortira dans une mise à jour de l'app quand la livraison démarre). Tout est prêt (peutCommander.js, écran
+// vide « Rien ne livre chez toi maintenant ») : repasser à true ici. « Ouvert » reste.
+const FILTRE_LIVRE = false;
 
 // Types "courses alimentaires" plutôt que "repas à commander" — regroupés dans leur propre section
 // (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
@@ -89,25 +103,14 @@ function offerLabelFor(r, t) {
   return libellePromo(promoDUnPlat(r), t, { court: true });
 }
 
-// Livraison réellement possible ici et maintenant : ouverte (GO), dans la zone, et un livreur libre dans le pool Fairide
-// (audit du 19/10, discovery-02 ; un commerce qui livre lui-même garde sa vérification sur sa fiche).
-function livraisonPossibleIci(r, user) {
-  return !!r.offersDelivery && livraisonOuverte(user) && !horsZoneLivraison(r, user)
-    && (r.deliveryMode === 'own' || livreurFairideLibre(user));
-}
+// Livraison et à emporter réellement possibles ici et maintenant : livraisonPossibleIci et emporterPossibleIci
+// (peutCommander.js, partagés avec l'onglet Carte depuis le 2026-10-26).
 
 // Le restaurant peut prendre à sa charge tout ou partie des frais de livraison (voir "🏷️ Frais de
 // livraison" dans son dashboard) — affiché comme un pill à côté de la commune, pas confondu avec le
 // badge promo (🏷️ en haut de la photo) qui porte sur le contenu du panier, pas la livraison.
 // Le prix de la livraison sur la carte du commerce (livraison.js) : offerte, offerte dès X €, ou « dès X € » quand il
 // est plus bas que le forfait (le commerce en offre une part, ou livre lui-même à ses frais).
-// L'à emporter réellement commandable aujourd'hui : ouvert (1er novembre, payé sur place) et, s'il ne se paie qu'en ligne,
-// après le GO. Avant le 1er novembre, la carte disait « À emporter » et le filtre gardait le commerce, alors que le serveur
-// refuse (PICKUP_NOT_OPEN) — audit du 19/10, discovery-25.
-function emporterPossibleIci(r, user) {
-  return !!r.offersPickup && commandesOuvertes(user) && (r.pickupPaymentMode !== 'online' || paiementEnLigneOuvert(user));
-}
-
 function deliveryOfferLabelFor(r, t, user) {
   // Avant le GO, pas d'offre de livraison sur les cartes : seul l'à emporter est ouvert (audit du 18/10/2026). Hors zone ou
   // sans livreur libre non plus (audit du 19/10, discovery-02 et 03).
@@ -509,6 +512,9 @@ export default function RestaurantList() {
   // Les memes filtres que sur la carte, avec les memes noms : emporter, et un tri.
   // Les avoir des deux cotes evite d'avoir a changer de vue pour affiner une recherche.
   const [emporter, setEmporter] = useState(false);
+  const [ouvertsSeuls, setOuvertsSeuls] = useState(disponibilite.ouvert);
+  const [livreSeuls, setLivreSeuls] = useState(disponibilite.livre);
+  useEffect(() => { disponibilite.ouvert = ouvertsSeuls; disponibilite.livre = livreSeuls; }, [ouvertsSeuls, livreSeuls]);
   const [tri, setTri] = useState('recommande');
   const [panneau, setPanneau] = useState(null);
   // Les VRAIS commerces déjà inscrits (fondateur, 2026-09-30) : rangée en tête de liste, carte complète seulement ;
@@ -648,25 +654,37 @@ export default function RestaurantList() {
   const base = homeCommune ? [...restaurants].sort((a, b) => rang(a) - rang(b)) : restaurants;
   const communeEpingles = commune || homeCommune;
   const placements = communeEpingles ? placementsTous.filter((p) => !p.commune || p.commune === communeEpingles) : [];
-  const hasActiveFilter = !!(search || famille || specialiteFiltre || commune || bio || vegan || halal || sansGluten || emporter || tri !== 'recommande');
+  // « Livre chez toi » ne compte que tant que la pastille peut être montrée (GO pressé, adresse connue) : un GO relâché
+  // pendant la visite ne laisse pas un filtre invisible allumé.
+  // De même « Ouvert » attend que les commandes soient ouvertes (1er novembre, launch.js) : avant, il viderait toujours la liste.
+  const pastilleLivre = FILTRE_LIVRE && filtreLivraisonPossible(user);
+  const pastilleOuvert = commandesOuvertes(user);
+  const livreActif = livreSeuls && pastilleLivre;
+  const ouvertActif = ouvertsSeuls && pastilleOuvert;
+  const maintenant = new Date();
+  const hasActiveFilter = !!(search || famille || specialiteFiltre || commune || bio || vegan || halal || sansGluten || emporter || ouvertActif || livreActif || tri !== 'recommande');
 
   // Distance a vol d'oiseau depuis l'adresse du compte, quand elle est connue.
   const distanceDe = (r) => (user?.lat && user?.lng && r.lat && r.lng ? haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) : null);
 
+  // `toujoursOuvert` : la même règle sans l'heure, pour l'écran vide (qui rouvre en premier).
+  const garderDisponibilite = (r, options) => (!ouvertActif || ouvertPourCommander(r, user, maintenant, options))
+    && (!livreActif || livreChezToi(r, user, maintenant, options));
+  const garderAutres = (r) => {
+    if (commune && r.commune !== commune) return false;
+    // Type principal ou en plus : une seule de ses spécialités suffit.
+    if (famille && !famillesCommerce(r).has(famille)) return false;
+    if (specialiteFiltre && !cuisinesCommerce(r).some((c) => specialite(c)?.value === specialiteFiltre)) return false;
+    if (bio && !restoBio(r)) return false;
+    if (vegan && !restoVegan(r)) return false;
+    if (halal && !restoHalal(r)) return false;
+    if (sansGluten && !restoSansGluten(r)) return false;
+    if (search && !normaliserRecherche(`${r.name} ${r.desc} ${r.cuisine}`).includes(normaliserRecherche(search))) return false;
+    if (emporter && !emporterPossibleIci(r, user)) return false;
+    return true;
+  };
   const list = restaurants
-    .filter((r) => {
-      if (commune && r.commune !== commune) return false;
-      // Type principal ou en plus : une seule de ses spécialités suffit.
-      if (famille && !famillesCommerce(r).has(famille)) return false;
-      if (specialiteFiltre && !cuisinesCommerce(r).some((c) => specialite(c)?.value === specialiteFiltre)) return false;
-      if (bio && !restoBio(r)) return false;
-      if (vegan && !restoVegan(r)) return false;
-      if (halal && !restoHalal(r)) return false;
-      if (sansGluten && !restoSansGluten(r)) return false;
-      if (search && !normaliserRecherche(`${r.name} ${r.desc} ${r.cuisine}`).includes(normaliserRecherche(search))) return false;
-      if (emporter && !emporterPossibleIci(r, user)) return false;
-      return true;
-    })
+    .filter((r) => garderDisponibilite(r) && garderAutres(r))
     // Le tri choisi passe AVANT le rangement par anneaux de communes ci-dessous : demander « les
     // plus proches » et recevoir d'abord sa propre commune ne serait pas un tri. Plus de tri « Note » depuis le retrait
     // des avis clients (fondateur, 22/10/2026) ; le tri n'est gardé nulle part (état de la page), aucun ancien choix à
@@ -816,7 +834,24 @@ export default function RestaurantList() {
   const modeSurBandeau = FILTRE_EMPORTER && grand && !!user && livraisonOuverte(user);
   // La rangée de pastilles au-dessus de la liste : tout ce que la colonne et le bandeau ne portent pas déjà.
   // Seulement s'il y a quelque chose dedans : sans « À emporter » ni tri, la rangée vide laissait un blanc.
-  const pastillesFiltres = (!colonne || !modeSurBandeau) && (FILTRE_EMPORTER || (!colonne && (TRI || !!commune || !!search)));
+  const pastillesFiltres = (!colonne || !modeSurBandeau) && (FILTRE_EMPORTER || ((pastilleOuvert || pastilleLivre) && restaurants.length > 0) || (!colonne && (TRI || !!commune || !!search)));
+  const toutEffacer = () => { setSearch(''); choisirFamille(''); setCommune(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false); setEmporter(false); setOuvertsSeuls(false); setLivreSeuls(false); setTri('recommande'); };
+  /* LA LISTE VIDE PAR « OUVERT » OU « LIVRE CHEZ TOI » DIT POURQUOI (réponse 4 de maquettes/filtre-ouvert) : le 26/10, depuis
+   * Woluwe à midi, un seul restaurant livrait ; à 23:30, aucun. Plutôt que « aucun commerce ne correspond » : pas de livreur
+   * libre, ou qui rouvre en premier parmi ceux que les autres filtres gardent, ou personne ne livre à cette adresse. */
+  const videDisponibilite = (() => {
+    if (!ouvertActif && !livreActif) return null;
+    const titre = livreActif ? t('restaurantList.videLivre') : t('restaurantList.videOuvert');
+    if (livreActif && !livreurFairideLibre(user)) return { titre, texte: t('restaurantList.videSansLivreur') };
+    const premier = premierARouvrir(restaurants.filter((r) => garderAutres(r) && garderDisponibilite(r, { toujoursOuvert: true })), maintenant);
+    if (!premier) return { titre, texte: livreActif ? t('restaurantList.videHorsZone') : t('restaurantList.emptyFiltered') };
+    const heure = premier.quand.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
+    const jours = Math.round((new Date(premier.quand).setHours(0, 0, 0, 0) - new Date(maintenant).setHours(0, 0, 0, 0)) / 86400000);
+    const texte = jours <= 0 ? t('restaurantList.videRouvreA', { nom: premier.r.name, heure })
+      : jours === 1 ? t('restaurantList.videRouvreDemain', { nom: premier.r.name, heure })
+        : t('restaurantList.videRouvreJour', { nom: premier.r.name, heure, jour: premier.quand.toLocaleDateString(getLocale(), { weekday: 'long' }) });
+    return { titre, texte };
+  })();
   return (
     <div className={`sl-liste${grand ? ' sl-liste--grand' : ''}${colonne ? ' sl-liste--colonne' : ''}${listeCalme ? ' sl-liste--calme' : ''}`}>
       <TirerPourActualiser onActualiser={actualiser} />
@@ -942,6 +977,18 @@ export default function RestaurantList() {
             revenir à tout, et il vient d'être retiré. Sans cette pastille, on serait resté enfermé
             dans le filtre sans rien pour l'enlever — il n'existe aucun bouton « réinitialiser »
             ailleurs sur la page. Elle n'apparaît QUE si un tel filtre est actif. */}
+        {/* « Ouvert » et « Livre chez toi » d'abord (version A de maquettes/filtre-ouvert) : même pastille, même nom et même
+            horloge que « Ouvert » sur l'onglet Carte. */}
+        {pastilleOuvert && restaurants.length > 0 && (
+          <button type="button" className={`cuisine-chip${ouvertActif ? ' active' : ''}`} aria-pressed={ouvertActif} onClick={() => { vibrer('bascule'); setOuvertsSeuls((v) => !v); }}>
+            <Icone nom="horloge" taille={16} />{t('mapClient.filterOpen')}
+          </button>
+        )}
+        {pastilleLivre && restaurants.length > 0 && (
+          <button type="button" className={`cuisine-chip${livreActif ? ' active' : ''}`} aria-pressed={livreActif} onClick={() => { vibrer('bascule'); setLivreSeuls((v) => !v); }}>
+            <Icone nom="velo" taille={16} />{t('restaurantList.filtreLivre')}
+          </button>
+        )}
         {!colonne && commune && (
           <button type="button" className="cuisine-chip active" onClick={() => setCommune('')}>
             <Icone nom="position" taille={16} />{commune}<span aria-hidden="true"> ×</span>
@@ -979,7 +1026,7 @@ export default function RestaurantList() {
           propre onglet, en bas de l'écran : demander à quelqu'un qui parcourt une liste s'il ne
           préférerait pas une carte, alors qu'un onglet dédié l'y emmène, c'est poser deux fois la
           même question. Cette page est la liste ; la carte est la carte. */}
-      {!loading && hasActiveFilter && <div className="small" style={{ marginBottom: 14 }}>{t('restaurantList.count', { count: list.length })}</div>}
+      {!loading && hasActiveFilter && list.length > 0 && <div className="small" style={{ marginBottom: 14 }}>{t('restaurantList.count', { count: list.length })}</div>}
       {loading && <SkeletonCards count={4} />}
       {!loading && hasActiveFilter && (
         <div className={`rest-grid${grand ? ' sl-grille' : ''}`}>
@@ -1034,13 +1081,17 @@ export default function RestaurantList() {
       )}
       {/* Filtres trop serrés : « Aucun restaurant pour le moment » laissait croire qu'il n'y en avait aucun, sans moyen d'en
           sortir (audit du 15/10/2026). On dit que c'est le filtre, et on l'efface en un geste. */}
-      {!loading && hasActiveFilter && list.length === 0 && (
+      {!loading && hasActiveFilter && list.length === 0 && restaurants.length > 0 && (videDisponibilite ? (
+        <EtatVide icone={livreActif ? 'velo' : 'horloge'} titre={videDisponibilite.titre} texte={videDisponibilite.texte}>
+          <button type="button" className="btn-gold" onClick={toutEffacer}>{t('restaurantList.voirTous')}</button>
+        </EtatVide>
+      ) : (
         <EtatVide icone="recherche" titre={t('restaurantList.emptyFiltered')}>
-          <button type="button" className="btn-teal" onClick={() => { setSearch(''); choisirFamille(''); setCommune(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false); setEmporter(false); setTri('recommande'); }}>
+          <button type="button" className="btn-teal" onClick={toutEffacer}>
             {t('restaurantList.clearFilters')}
           </button>
         </EtatVide>
-      )}
+      ))}
       {!loading && echecListe && restaurants.length === 0 && <ErreurChargement onReessayer={() => chargerListe()} />}
       {!loading && !echecListe && restaurants.length === 0 && (
         <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
