@@ -22,6 +22,10 @@ Real, verified as absent on 2026-09-22 — not speculation.
    phone locks — there is no web fix. Not yet tried on a real phone; iOS needs the Info.plist / Background Modes steps in
    [docs/application-mobile.md](../../docs/application-mobile.md). The customer-facing map still shows a staleness warning after
    two minutes so a frozen map is at least legible ([DeliveryTrackingMap](../../src/components/DeliveryTrackingMap.jsx)).
+   **Android 1.0 ships WITHOUT the plugin** (2026-10-27, founder): it declares `FOREGROUND_SERVICE_LOCATION`, and Google then
+   wants a declaration with a video of a real delivery; there is no delivery at launch. `capacitor.config.json` ›
+   `android.includePlugins` leaves it out (iOS keeps it), so Android couriers get `watchPosition`. Put it back (remove it from
+   `HORS_ANDROID` in `scripts/verifier-greffons-android.mjs`, add it to the list, film a courier) in the update that opens delivery.
 2. **No SSR.** `npm run build` runs a prerender ([scripts/prerender.mjs](../../scripts/prerender.mjs)) that writes
    static HTML for the public pages (three languages) and the restaurant pages, and a `dist/sitemap.xml`
    (138 addresses on 2026-09-23). Pages added after the build list are not prerendered.

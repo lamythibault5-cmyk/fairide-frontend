@@ -60,6 +60,10 @@ jobs:
       - name: Site (dist/) relié à la production
         run: npm run build
 
+      # Avant la copie : un greffon oublié dans android.includePlugins manquerait au bundle sans erreur.
+      - name: Greffons de l'app Android
+        run: npm run check:greffons
+
       - name: Copie dans le projet Android
         run: npx cap sync android
 

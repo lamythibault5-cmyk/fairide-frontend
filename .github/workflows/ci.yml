@@ -45,6 +45,11 @@ jobs:
       - name: Cohérence des trois langues
         run: npm run check:i18n
 
+      # android.includePlugins (capacitor.config.json) est une liste blanche : un greffon Capacitor ajouté mais oublié dans
+      # cette liste manquerait à l'app Android sans erreur. Voir scripts/verifier-greffons-android.mjs.
+      - name: Greffons de l'app Android
+        run: npm run check:greffons
+
       # Le build inclut le pré-rendu (scripts/prerender.mjs), qui écrit une page statique par page
       # publique et par langue. Il échoue si une table de traduction manque.
       - name: Build de production
