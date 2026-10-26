@@ -137,7 +137,8 @@ export default function DashboardSidebar() {
   // Quasi instantané (retour du fondateur, 2026-10-14 : « elle met trop de temps à se réduire ») : 120px de défilement
   // avant la première réduction, c'était près d'un écran de pouce. Dans l'application, 24px et 3px de marge — dès que le
   // doigt descend ; sur le site, 60px et 6px, un peu plus de tolérance au tremblement d'un trackpad.
-  const compacte = useEnteteDefilement(NATIF ? { seuil: 24, marge: 3 } : { seuil: 60, marge: 6 });
+  // `cle` : un changement d'onglet ne réduit jamais la barre de lui-même (voir useEnteteDefilement).
+  const compacte = useEnteteDefilement({ ...(NATIF ? { seuil: 24, marge: 3 } : { seuil: 60, marge: 6 }), cle: pathname });
   /* LA BARRE DU PANIER SUIT (fondateur, 2026-10-17 : « que le panier se réduise en même temps que la barre, avec la même
    * animation »). L'état est publié sur <html> (`barre-compacte`) : la pilule du panier (FloatingCart, styles.css) se
    * réduit au même instant, avec les mêmes durées — un seul calcul de défilement pour les deux, donc jamais de décalage. */

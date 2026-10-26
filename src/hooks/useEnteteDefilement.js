@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 // En-tête escamotable : il s'efface quand on descend dans la page et revient dès qu'on remonte.
 //
@@ -15,8 +15,26 @@ import { useEffect, useState } from 'react';
 //     doigt sur l'écran suffit à le faire osciller ;
 //   - la lecture de scrollY est repoussée dans un requestAnimationFrame : l'évènement `scroll` part
 //     bien plus souvent qu'une image, et lire la position force un recalcul de mise en page.
-export function useEnteteDefilement({ seuil = 90, marge = 8 } = {}) {
+//
+// `cle` (l'adresse de la page, barre d'onglets de l'app) : RIEN NE SE RÉDUIT SANS LE DOIGT (fondateur, 2026-10-26 : un onglet,
+// puis Restaurants, et la barre du bas se retrouvait réduite sans qu'il ait fait défiler — environ une fois sur dix). Revenir
+// sur un onglet remet la page où on l'avait laissée (ScrollRestorer.jsx, plusieurs reprises pendant le chargement) : ce saut
+// vers le bas passait pour un défilement. Au changement de `cle`, la barre reprend sa taille, et les mouvements de la page
+// ne la changent plus tant que la personne n'a ni touché l'écran, ni fait défiler à la molette, ni tapé une touche.
+const GESTES = ['touchstart', 'wheel', 'keydown', 'pointerdown'];
+
+export function useEnteteDefilement({ seuil = 90, marge = 8, cle } = {}) {
   const [cache, setCache] = useState(false);
+  const libre = useRef(true);
+
+  useLayoutEffect(() => {
+    if (cle === undefined) return undefined;
+    libre.current = false;
+    setCache(false);
+    const lacher = () => { libre.current = true; };
+    GESTES.forEach((g) => window.addEventListener(g, lacher, { passive: true, capture: true }));
+    return () => GESTES.forEach((g) => window.removeEventListener(g, lacher, { capture: true }));
+  }, [cle]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -29,6 +47,7 @@ export function useEnteteDefilement({ seuil = 90, marge = 8 } = {}) {
       // Jamais caché tant que sa place dans la page est encore visible : sinon il laisse un trou à sa place.
       const plancher = Math.max(seuil, document.querySelector('.hero')?.offsetHeight || 0);
       if (y <= plancher) setCache(false);
+      else if (!libre.current) { dernier = y; enAttente = false; return; }
       else if (ecart > marge) setCache(true);
       else if (ecart < -marge) setCache(false);
       if (Math.abs(ecart) > marge || y <= plancher) dernier = y;
