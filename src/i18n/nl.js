@@ -7409,7 +7409,7 @@ export default {
     },
     footer: {
       tagline: "Betaal je maaltijd, niet het platform. De restaurants en zaken van Brussel, zonder opgeblazen prijzen.",
-      belgian: 'Ontworpen en beheerd vanuit België, door Belgen, voor Belgen.',
+      belgian: 'Gemaakt in Brussel, voor Brussel.',
       join: 'Word partner',
       orderNow: 'Nu bestellen',
       addBusiness: 'Mijn zaak toevoegen',

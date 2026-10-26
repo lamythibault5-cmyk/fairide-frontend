@@ -7442,7 +7442,7 @@ export default {
     },
     footer: {
       tagline: "Paie ton repas, pas la plateforme. Les restaurants et commerces de Bruxelles, sans prix gonflés.",
-      belgian: 'Conçu et opéré depuis la Belgique, par des Belges, pour des Belges.',
+      belgian: 'Fait à Bruxelles, pour Bruxelles.',
       join: 'Rejoindre',
       orderNow: 'Commander maintenant',
       addBusiness: 'Ajouter mon commerce',
