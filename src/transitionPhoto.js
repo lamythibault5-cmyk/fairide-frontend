@@ -5,7 +5,7 @@
  *   1. AVANCER : le nouvel écran arrive de la droite, l'ancien recule de 30 % et s'assombrit (350 ms) ; RECULER : l'inverse.
  *      Tout passe par l'historique du routeur (envelopperNavigations, i18n/historiqueLangue.js) : un lien, un navigate(), le
  *      bouton Retour d'Android. Seule une navigation qui suit un vrai toucher glisse (moins de 400 ms) : une redirection, un
- *      changement d'adresse sur le même écran, une page ouverte en feuille (state.fond) ou un onglet (DashboardSidebar,
+ *      changement d'adresse sur le même écran, une page en feuille (state.fond : ni à l'ouverture, ni à la fermeture) ou un onglet (DashboardSidebar,
  *      `replace`) passent sans transition. Le geste de retour d'iOS (bord gauche, FairideViewController.swift) fait sa propre
  *      animation : il ne passe pas par ici (le retour par glissement en JavaScript a été retiré, PR #217).
  *   2. LA PHOTO VOYAGE (version « partout ») : une carte qui mène à la fiche d'un commerce (liste, Recherche, Favoris, Carte)
@@ -251,7 +251,10 @@ export function installerTransitionsEcrans(historique) {
   envelopperNavigations((sens, faire, cible, { geste = false } = {}) => {
     const touche = geste || performance.now() - dernierToucher < TOUCHER_RECENT_MS;
     const memeEcran = cible && cible.pathname === historique.location.pathname;
-    const feuille = !!cible?.state?.fond;
+    // Une page en feuille (state.fond) ne glisse ni à l'ouverture ni à la fermeture. Fermer, c'est reculer (go(-1), sans
+    // cible) depuis l'écran qui porte `fond` : la feuille est déjà descendue (PageFeuille, 230 ms), et ‹ touché juste avant
+    // faisait en plus glisser Mon compte de côté, comme un retour d'iOS (fondateur, 2026-10-26, Mes factures).
+    const feuille = !!cible?.state?.fond || (sens === 'recule' && !!historique.location.state?.fond);
     if (!touche || memeEcran || feuille || enCours || mouvementReduit() || document.visibilityState !== 'visible') { faire(); return; }
     lancer(sens, faire);
   });
