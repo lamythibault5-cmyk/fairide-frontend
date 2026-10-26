@@ -126,7 +126,7 @@
 .ecl-offre-pied .btn-gold { flex: 1; padding: 12px 14px; font-size: 15px; font-weight: 700; border-radius: var(--radius-pill); }
 
 /* La course en main : le code du comptoir, les articles, l'itinéraire, le code du client. */
-.ecl-code { padding: 12px 14px; border: 2px dashed var(--lime); border-radius: 14px; text-align: center; }
+.ecl-code { padding: 16px 18px; border: 2px solid var(--iris); box-shadow: inset 0 0 0 3px var(--lime), inset 0 0 0 5px var(--iris); border-radius: 14px; text-align: center; }
 .ecl-code-lib { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 4px; }
 .ecl-code-valeur { font-size: 32px; font-weight: 800; letter-spacing: 8px; color: var(--iris); line-height: 1.1; }
 .ecl-articles { list-style: none; padding: 0; margin: 12px 0 6px; }

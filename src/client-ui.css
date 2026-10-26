@@ -255,8 +255,8 @@
 .suivi-carte .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 8px 0; color: var(--ink); font-size: 13px; }
 .suivi-lieu { color: var(--ink-soft); margin: 6px 0; }
 .suivi-resume { margin: 0 0 6px; font-size: 13px; color: var(--ink-soft); }
-/* Code de retrait / de livraison : un ticket, lisible de loin au comptoir. Contour lime (Owen, 2026-10-26). */
-.suivi-code { margin: 12px 0; padding: 12px 14px; border: 2px dashed var(--lime); border-radius: 14px; text-align: center; background: rgba(59, 47, 181, .04); }
+/* Code de retrait / de livraison : un ticket, lisible de loin au comptoir. Contour en trois filets iris / lime / iris (Owen, 2026-10-26 : la lime seule ne se voyait pas). */
+.suivi-code { margin: 12px 0; padding: 16px 18px; border: 2px solid var(--iris); box-shadow: inset 0 0 0 3px var(--lime), inset 0 0 0 5px var(--iris); border-radius: 14px; text-align: center; background: rgba(59, 47, 181, .04); }
 .suivi-code-lib { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 4px; }
 .suivi-code-valeur { font-size: 32px; font-weight: 800; letter-spacing: 8px; color: var(--iris); line-height: 1.1; }
 /* Le numéro du jour du commerce (#042), sous le code de retrait : ce que le comptoir appelle (InfosRetrait, 18/10/2026). */
@@ -295,7 +295,7 @@
   background: var(--iris); color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
 .suivi-appeler:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
 /* Le code de remise : le libellé à gauche, les chiffres à droite, sur une ligne (la maquette). */
-.suivi-carte--bandeau .suivi-code { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; text-align: left; padding: 10px 14px; }
+.suivi-carte--bandeau .suivi-code { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; text-align: left; padding: 14px 18px; }
 .suivi-carte--bandeau .suivi-code-lib { margin: 0; }
 .suivi-carte--bandeau .suivi-code-valeur { font-size: 28px; letter-spacing: 6px; }
 .suivi-carte--bandeau .suivi-code-numero { grid-column: 1 / -1; margin-top: 4px; }
