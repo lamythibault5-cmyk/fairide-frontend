@@ -94,6 +94,58 @@ html.appli body .liste-filtres .cuisine-chip.active {
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 
+/* ---------- LE VERRE PARTOUT (fondateur, 2026-10-26, réponses à maquettes/verre-partout/verre-partout.html) ----------
+   Un inventaire des boutons de 28 écrans de l'app a laissé cinq familles encore « page web » (blanches à filet, iris pleines).
+   Toutes passent dans les recettes ci-dessus ; restent sans verre, exprès : le bouton lime (le prochain geste), les grands choix du
+   paiement (rangées à contour iris, maquettes/une-action), les cartes, tuiles et rangées, la croix sur la photo d'un plat, les ronds
+   de choix d'un plat, les champs, les liens texte et tout le site. */
+/* 1. Les pastilles de choix (pourboire, Recherche, filtres des bons cadeaux) : verre clair, iris vif une fois choisies. */
+html.appli body :is(.ec-pourboire .cuisine-chip, .recherche-pastille, .resa-filtres button) {
+  border-color: transparent; color: var(--iris); background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
+  -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
+}
+html.appli body :is(.ec-pourboire .cuisine-chip.active, .resa-filtres button.actif) {
+  color: #fff; background: var(--iris-vif-fond); box-shadow: var(--iris-vif-ombre);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+/* 2. Les interrupteurs (couverts au paiement, promos et « en vente » du commerce) : piste en verre clair, iris vif allumée ; le rond
+   blanc garde son ombre. L'interrupteur lime « Ouvert / Fermé » du commerce reste lime : c'est son geste principal. Ils ne
+   grossissent pas (pas dans VERRE) : leur rond s'étire déjà à l'appui, comme sur l'iPhone. */
+html.appli body :is(.co-interrupteur, .ec-interrupteur:not(.ec-interrupteur--lime)) {
+  background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
+  -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
+}
+html.appli body :is(.co-interrupteur.on, .ec-interrupteur.on:not(.ec-interrupteur--lime)) {
+  background: var(--iris-vif-fond); box-shadow: var(--iris-vif-ombre); -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+html.appli body :is(.co-interrupteur, .ec-interrupteur:not(.ec-interrupteur--lime))::after {
+  box-shadow: inset 0 1px 0 #fff, 0 2px 6px rgba(20, 18, 31, .25), 0 0 0 .5px rgba(59, 47, 181, .12);
+}
+/* 3. Les boutons secondaires, ceux d'à côté du lime (« Ajouter des articles », « Notifications », la commande groupée, les documents
+   du livreur, « Signer », le son des commandes…) : verre clair, libellé iris. Le bouton d'urgence du livreur est un .btn-outline
+   sur le bandeau iris, en blanc : il prend le verre sur l'iris (plus bas), sinon blanc sur blanc. */
+html.appli body :is(.btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son, .eg-bouton-iris, .tracking-expand-btn, .ec-pilule-blanche) {
+  border-color: transparent; color: var(--iris); background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
+  -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
+}
+/* 4. Les boutons iris pleins : iris vif, comme les « + » (grisés, ils gardent leur gris). */
+html.appli body .btn-teal:not(:disabled) {
+  border-color: transparent; color: #fff; background: var(--iris-vif-fond); box-shadow: var(--iris-vif-ombre);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+/* La lumière sous le doigt (verre-lueur, plus bas) est posée en absolu dans le contrôle : il lui faut un repère. Sans spécificité
+   (:where), pour ne pas défaire un de ces boutons qui serait déjà placé autrement quelque part. */
+:where(html.appli) :where(.ec-pourboire .cuisine-chip, .recherche-pastille, .resa-filtres button, .btn-outline, .alerte-compacte-son, .eg-bouton-iris,
+  .tracking-expand-btn, .ec-pilule-blanche, .btn-teal, .compte-raccourci) { position: relative; }
+/* 5. Sur le bandeau iris : les raccourcis de Mon compte et FR / NL / EN de l'accueil. Le verre du ‹ rond (blanc 18 %, éclairci)
+   éclaircissait tout le bloc sur une grande tuile (maquette) : blanc 10 %, sans éclaircir. Le choix de langue garde son pouce blanc. */
+html.appli body :is(.compte-raccourci, .bv-iris .bv-langues, .bv-bandeau .bv-langues) {
+  border-color: transparent; color: #fff; background: rgba(255, 255, 255, .1);
+  -webkit-backdrop-filter: blur(8px) saturate(130%); backdrop-filter: blur(8px) saturate(130%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 4px 0 8px -4px rgba(255, 90, 190, .45),
+    inset -4px 0 8px -4px rgba(60, 200, 255, .5), 0 4px 12px rgba(20, 10, 90, .3);
+}
+
 
 /* ---------- Les puces de la fiche (cuisine, commune, Infos) ---------- */
 html.appli body .fiche-appli .fiche-meta > span:not([aria-hidden]),
@@ -157,8 +209,8 @@ html.appli verre-lueur {
 html.appli .verre-lumiere > verre-lueur { opacity: 1; transition-duration: .12s; }
 /* Sur l'iris (les « + », le « − 1 + », les retours des bandeaux), une lumière blanche plus douce. */
 /* Les « + », le « − 1 + » : sans reflet, donc sans lumière sous le doigt non plus (elle les faisait briller). */
-html.appli :is(.plat-pas, .ec-pas, .fiche-apercu-plus, .liste-filtres .cuisine-chip.active) > verre-lueur { display: none; }
-html.appli :is(body:has(.fiche-appli) .plat-fermer, .page-feuille-fermer, .ec-rond, .gn-rond, .bv-bandeau .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond, .ec-b-retour, .ecl-b-retour) > verre-lueur {
+html.appli :is(.plat-pas, .ec-pas, .fiche-apercu-plus, .liste-filtres .cuisine-chip.active, .ec-pourboire .cuisine-chip.active, .resa-filtres button.actif, .btn-teal) > verre-lueur { display: none; }
+html.appli :is(body:has(.fiche-appli) .plat-fermer, .page-feuille-fermer, .ec-rond, .gn-rond, .bv-bandeau .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond, .ec-b-retour, .ecl-b-retour, .compte-raccourci, .ecl-urgence > .btn-outline) > verre-lueur {
   background: radial-gradient(circle var(--verre-r, 60px) at var(--verre-x, 50%) var(--verre-y, 50%), rgba(255, 255, 255, .5), rgba(255, 255, 255, .16) 45%, rgba(255, 255, 255, 0) 100%);
 }
 
@@ -189,20 +241,21 @@ html.appli body :is(.dashboard-nav, .fiche-appli .category-quicknav--verre, .pan
 }
 /* … le verre clair : */
 html.appli body :is(.fiche-appli .flux-entete--flottant .flux-bouton, .fiche-appli .favorite-heart--rond, .fiche-appli .fiche-modes, .fiche-appli .fiche-infos-lien,
-  .carte-page .carte-reinit, .carte-page .carte-pastilles .cuisine-chip, .liste-filtres .cuisine-chip:not(.active), .dashboard-retour, .retour-compte, .cs-retour, .bv-rond, .sous-ecran-tete .flux-bouton).verre-lumiere {
+  .carte-page .carte-reinit, .carte-page .carte-pastilles .cuisine-chip, .liste-filtres .cuisine-chip:not(.active), .dashboard-retour, .retour-compte, .cs-retour, .bv-rond, .sous-ecran-tete .flux-bouton,
+  .ec-pourboire .cuisine-chip:not(.active), .recherche-pastille, .resa-filtres button:not(.actif), .btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son, .eg-bouton-iris, .tracking-expand-btn, .ec-pilule-blanche).verre-lumiere {
   box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1.5px rgba(59, 47, 181, .3), inset 5px 0 10px -4px rgba(255, 70, 170, .4), inset -5px 0 10px -4px rgba(40, 190, 255, .42), 0 8px 22px rgba(20, 18, 31, .22);
 }
 
 /* ---------- Les retours en verre (réponse 5) ---------- */
 /* Le ‹ rond sur un bandeau iris : blanc à 18 %, filet blanc, bords irisés, flou. */
 html.appli body :is(.ec-rond, .gn-rond, .bv-bandeau .bv-haut .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond),
-html.appli body :is(.ec-b-retour, .ecl-b-retour) {
+html.appli body :is(.ec-b-retour, .ecl-b-retour, .ecl-urgence > .btn-outline) {
   border: 0; color: #fff; background: rgba(255, 255, 255, .18);
   -webkit-backdrop-filter: blur(8px) saturate(160%) brightness(1.15); backdrop-filter: blur(8px) saturate(160%) brightness(1.15);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 4px 0 8px -4px rgba(255, 90, 190, .45),
     inset -4px 0 8px -4px rgba(60, 200, 255, .5), 0 4px 12px rgba(20, 10, 90, .3);
 }
-html.appli body :is(.ec-rond, .gn-rond, .bv-bandeau .bv-haut .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond, .ec-b-retour, .ecl-b-retour).verre-lumiere {
+html.appli body :is(.ec-rond, .gn-rond, .bv-bandeau .bv-haut .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond, .ec-b-retour, .ecl-b-retour, .compte-raccourci, .ecl-urgence > .btn-outline).verre-lumiere {
   box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(255, 255, 255, .6), inset 5px 0 9px -4px rgba(255, 90, 190, .6), inset -5px 0 9px -4px rgba(60, 200, 255, .65), 0 6px 16px rgba(20, 10, 90, .35);
 }
 /* Le ‹ rond sur du blanc (barre d'app déconnectée, écrans blancs de l'accueil) : le verre clair des ronds de la fiche. */
@@ -229,4 +282,9 @@ html.appli body :is(.dashboard-retour, .retour-compte, .cs-retour, .ec-b-retour,
     background: rgba(255, 255, 255, .2); -webkit-backdrop-filter: none; backdrop-filter: none;
   }
   html.appli body :is(.bv-rond, .dashboard-retour, .retour-compte, .cs-retour) { background: #EFEEFA; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  /* Le verre partout (2026-10-26) : aplats sans flou. */
+  html.appli body :is(.liste-filtres .cuisine-chip:not(.active), .ec-pourboire .cuisine-chip:not(.active), .recherche-pastille, .resa-filtres button:not(.actif),
+    .co-interrupteur:not(.on), .ec-interrupteur:not(.ec-interrupteur--lime):not(.on), .btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son,
+    .eg-bouton-iris, .tracking-expand-btn, .ec-pilule-blanche) { background: #EFEEFA; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html.appli body :is(.compte-raccourci, .bv-iris .bv-langues, .bv-bandeau .bv-langues, .ecl-urgence > .btn-outline) { background: rgba(255, 255, 255, .2); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }

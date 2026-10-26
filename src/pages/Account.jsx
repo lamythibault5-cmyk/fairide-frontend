@@ -630,7 +630,9 @@ export default function Account() {
                 <input id={idsA11y + '-city'} value={addressCity} onChange={(e) => setAddressCity(e.target.value)} autoComplete="address-level2" />
               </div>
             </div>
-            <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
+            {/* Lime : le prochain geste de la sous-page (« un seul lime par écran », maquettes/une-action ; fondateur, 2026-10-26,
+                réponse 6 de maquettes/verre-partout). */}
+            <button type="submit" className="btn-gold" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
           </form>
 
           {/* Supprimer le compte : au bout des infos personnelles, puisque c'est d'elles qu'il s'agit.
@@ -1147,7 +1149,7 @@ export default function Account() {
                   ? t('accountUi.allServicesInfo')
                   : t('accountUi.someServicesInfo', { list: [offersDelivery && t('accountUi.svcListDelivery'), offersPickup && t('accountUi.svcListPickup')].filter(Boolean).join(', ') })}
             </p>
-            <button className="btn-teal" disabled={savingServices} onClick={saveServices}>{savingServices ? '...' : t('common.save')}</button>
+            <button className="btn-gold" disabled={savingServices} onClick={saveServices}>{savingServices ? '...' : t('common.save')}</button>
           </LigneCompte>
 
           {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas. Ici elles gardent leur nom. */}

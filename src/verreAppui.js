@@ -29,6 +29,10 @@ const VERRE = [
   '.carte-page .carte-reinit', '.carte-page .carte-pastilles .cuisine-chip', '.carte-fiche-fermer',
   // Les pastilles au-dessus de la liste (« Ouvert », commune, mot cherché), en verre depuis le 2026-10-26 (maquettes/filtre-ouvert).
   '.liste-filtres .cuisine-chip',
+  // Le verre partout (2026-10-26, maquettes/verre-partout) : pastilles de choix, boutons secondaires, boutons iris, raccourcis de
+  // Mon compte. Les interrupteurs n'y sont pas : leur rond s'étire déjà à l'appui.
+  '.ec-pourboire .cuisine-chip', '.recherche-pastille', '.resa-filtres button', '.btn-outline', '.alerte-compacte-son', '.eg-bouton-iris',
+  '.tracking-expand-btn', '.ec-pilule-blanche', '.btn-teal', '.compte-raccourci',
   // Les retours, en verre eux aussi (réponse 5) : le ‹ rond sur les bandeaux iris, « ← Retour » et « ← Mon compte ».
   '.ec-rond', '.gn-rond', '.bv-rond', '.dashboard-retour', '.retour-compte', '.cs-retour', '.ec-b-retour', '.ecl-b-retour',
   // La croix de la fiche d'un plat et le ‹ des pages ouvertes en feuille depuis Mon compte (Mes favoris, Mes commandes, Mes
@@ -37,6 +41,11 @@ const VERRE = [
 ].join(', ');
 // Les barres, qui ne grossissent qu'un peu (la barre d'onglets était « bien », fondateur 2026-10-24) ; tout le reste est un bouton.
 const BARRES = '.dashboard-nav, .category-quicknav--verre, .panier-pilule, .fiche-appli .fiche-modes';
+/* Les boutons du 2026-10-26 peuvent être larges : à 150 %, « + Ajouter des articles » (354 px) sortirait de l'écran. Au-delà de
+   120 px, ils grossissent comme une barre, selon leur taille (8 % à 160 px, 3,5 % à partir de 300 px) ; en dessous (« Activer »,
+   « Lire »), comme un bouton. Les contrôles d'avant gardent leur réglage. */
+const LARGES = '.btn-outline, .btn-teal, .eg-bouton-iris, .alerte-compacte-son, .tracking-expand-btn, .compte-raccourci';
+const SEUIL_LARGE = 120;
 
 /* Ceux qui défilent de côté : le doigt qui part les faire défiler ne doit pas les faire gonfler. Ils attendent 70 ms (le
    « delaysContentTouches » des vues qui défilent sur iOS) ; un défilement qui démarre avant annule l'appui (pointercancel). */
@@ -121,7 +130,7 @@ export function installerVerreAppui() {
     if (mouvementReduit?.matches) return;
     const e = etats.get(c.el) || { s: ressort(1), tx: ressort(0), ty: ressort(0) };
     e.appuye = true;
-    const barre = c.el.matches(BARRES);
+    const barre = c.el.matches(BARRES) || (c.el.offsetWidth >= SEUIL_LARGE && c.el.matches(LARGES));
     regler(e.s, 1 + (barre ? selonTaille(c.taille, [PETIT, BARRE]) : BOUTON), APPUI);
     // À 150 %, un bouton déborde sur son voisin (la recherche sur le cœur) : il passe devant lui le temps de l'appui.
     if (!barre && e.zAvant === undefined) {
