@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -11,7 +11,7 @@ import { ligneIndisponible, lignesIndisponibles } from '../../panierDisponible';
 import Icone from '../../components/Icone';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import ChiffresRoulants from '../../components/ChiffresRoulants';
-import { BandeauCommande, BarreCommande, FeuilleCommande, RouteCommande, RouteEtapes } from '../../components/EcranCommande';
+import { BandeauCommande, BarreCommande, FeuilleCommande, RouteCommande, RouteEtapes, ecranDavant, useReculerVers } from '../../components/EcranCommande';
 import { experienceApp } from '../../natif';
 import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/UpsellPanier';
 import { euros, remiseCourte } from '../../prixPlat';
@@ -89,6 +89,11 @@ export default function PanierPage() {
   const [introuvable, setIntrouvable] = useState(false);
   // Lignes qui glissent hors de la feuille avant d'être retirées du panier (dernier « − »).
   const [sortantes, setSortantes] = useState(() => new Set());
+  const retour = ecranDavant();
+  // La carte du commerce : « + Ajouter des articles » et le nom du commerce y mènent (fondateur, 2026-10-25 : depuis que ‹ ramène
+  // à l'écran d'avant, il faut un bouton clair pour retourner à la carte — on y revient souvent). Elle recule quand on en vient.
+  const ficheCommerce = cart.restaurantId ? cheminFiche(restaurant?.id === cart.restaurantId ? restaurant : cart.restaurantId) : null;
+  const versFiche = useReculerVers(ficheCommerce);
 
   useEffect(() => {
     if (!cart.restaurantId) { setChargement(false); return; }
@@ -176,13 +181,16 @@ export default function PanierPage() {
 
   return (
     <div className="panier-page ec-page sc-page">
-      {/* Une flèche, et non une croix : d'ici on RECULE d'un pas, vers la carte du commerce — on ne
-          quitte pas le parcours. Le nom du commerce est en tête du bandeau, comme chez Uber. La fiche chargée donne l'adresse
-          lisible (cheminFiche, revue du 24/10) : plus de détour par l'identifiant, que la fiche devait ensuite remplacer. */}
+      {/* Une flèche, et non une croix : d'ici on RECULE d'un pas, vers l'écran d'où l'on vient (accueil, Recherche, Favoris,
+          fiche… : fondateur, 2026-10-25, ecranDavant) — et vers la carte du commerce quand on ne le sait pas (lien ouvert
+          tel quel, page rechargée, retour du paiement). Le nom du commerce est en tête du bandeau, comme chez Uber. La fiche
+          chargée donne l'adresse lisible (cheminFiche, revue du 24/10). */}
       <BandeauCommande
-        vers={cart.restaurantId ? cheminFiche(restaurant?.id === cart.restaurantId ? restaurant : cart.restaurantId) : null}
-        libelleRetour={t('panier.backToMenu')}
-        haut={<><b>{cart.restaurantName || restaurant?.name || ''}</b>{restaurant?.commune ? ` · ${restaurant.commune}` : ''}</>}
+        vers={retour || ficheCommerce}
+        libelleRetour={retour ? t('flux.back') : t('panier.backToMenu')}
+        haut={<>{ficheCommerce
+          ? <Link to={ficheCommerce} onClick={versFiche} className="ec-haut-commerce"><b>{cart.restaurantName || restaurant?.name || ''}</b></Link>
+          : <b>{cart.restaurantName || restaurant?.name || ''}</b>}{restaurant?.commune ? ` · ${restaurant.commune}` : ''}</>}
         titre={t('panier.title')}
         sous={t(cart.count > 1 ? 'ecranCommande.articlesPluriel' : 'ecranCommande.articles', { count: cart.count })}
       >
@@ -222,6 +230,11 @@ export default function PanierPage() {
               )}
             </div>
           ))}
+          {/* Retour à la carte, bien visible (fondateur, 2026-10-25), comme le « + Ajouter des articles » d'Uber Eats : un contour
+              iris, jamais lime — le seul bouton lime reste « Aller au paiement » (design.md, règle 4). */}
+          {ficheCommerce && (
+            <Link to={ficheCommerce} onClick={versFiche} className="btn-outline panier-ajouter">{TRAIT_PLUS} {t('panier.addItems')}</Link>
+          )}
           {/* Une phrase, et non plus une liste de remises sans titre sous les suggestions (audit design 2, 2026-10-19) : les
               lignes montrent déjà le prix payé, on dit seulement combien l'offre fait gagner et qui l'offre. */}
           {manqueMinimum > 0 && (

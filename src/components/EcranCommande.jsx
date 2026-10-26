@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Icone from './Icone';
 import { vibrer } from '../gestes';
+import { cheminPrecedent } from '../i18n/historiqueLangue';
 import { useLanguage } from '../context/LanguageContext';
 import '../ecran-commande.css';
 import '../site-commande.css';
@@ -41,16 +42,38 @@ export function RouteCommande({ position, depart = 0, etapes = null, actuelle = 
   );
 }
 
-/* L'en-tête iris. `vers` : le retour d'un pas (un lien, comme EnteteFlux — jamais navigate(-1)). `haut` : la ligne du
- * commerce, à droite du retour. */
+/* L'ÉCRAN D'OÙ L'ON VIENT (fondateur, 2026-10-25 : panier ouvert depuis l'accueil, ‹ menait à la fiche du commerce au lieu de
+ * ramener à l'accueil). Le chemin de l'écran d'avant dans l'historique (cheminPrecedent), sauf ceux où l'on ne revient pas :
+ * le parcours de commande lui-même (sinon panier ↔ paiement sans fin), la connexion et l'accueil de l'app, la fin d'un
+ * paiement. Inconnu après un rechargement : null, et l'écran garde son lien d'avant. */
+const SANS_RETOUR = /^\/(?:panier|checkout|login|bienvenue|order-success|order-cancelled)(?:\/|$)/;
+export function ecranDavant() {
+  const avant = cheminPrecedent();
+  return avant && !SANS_RETOUR.test(avant) ? avant : null;
+}
+
+/* Le clic d'un lien qui RECULE quand il mène à l'écran d'avant (le site comme l'app, où transitionPhoto.js l'a déjà fait pour
+ * ‹ avant nous) : la liste ou la carte revient à sa place, avec ses filtres, et l'historique ne s'allonge pas. */
+export function useReculerVers(vers) {
+  const navigate = useNavigate();
+  return (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || !vers || vers !== cheminPrecedent()) return;
+    e.preventDefault();
+    navigate(-1);
+  };
+}
+
+/* L'en-tête iris. `vers` : le retour d'un pas (un lien, comme EnteteFlux ; il recule quand c'est l'écran d'avant). `haut` : la
+ * ligne du commerce, à droite du retour. */
 export function BandeauCommande({ vers, libelleRetour, haut, titre, sous, children, className = '' }) {
+  const reculer = useReculerVers(vers);
   return (
     <div className={`ec-bandeau ${className}`}>
       {/* .ec-col : la colonne du site sur ordinateur (site-commande.css) ; partout ailleurs `display: contents`, comme absente. */}
       <div className="ec-col">
       {(vers || haut) && (
         <div className="ec-haut">
-          {vers && <Link to={vers} className="ec-rond" aria-label={libelleRetour} title={libelleRetour}><Icone nom="retour" taille={18} /></Link>}
+          {vers && <Link to={vers} onClick={reculer} className="ec-rond" aria-label={libelleRetour} title={libelleRetour}><Icone nom="retour" taille={18} /></Link>}
           {haut && <span className="ec-haut-texte">{haut}</span>}
         </div>
       )}

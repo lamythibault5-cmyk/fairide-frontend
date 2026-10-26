@@ -8131,6 +8131,7 @@ export default {
       resume: 'Back to my cart · {amount}',
       toCheckout: 'Go to checkout',
       backToMenu: 'Back to the menu',
+      addItems: 'Add items',
       emptyTitle: 'Your cart is empty',
       emptyText: 'Add dishes from a shop menu and they will show up here.',
       remiseIncluse: '{remise} included',

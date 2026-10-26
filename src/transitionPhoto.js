@@ -11,8 +11,8 @@
  *   2. LA PHOTO VOYAGE (version « partout ») : une carte qui mène à la fiche d'un commerce (liste, Recherche, Favoris, Carte)
  *      donne sa photo à la fiche, qui grandit jusqu'en haut au lieu de glisser ; un plat touché donne sa photo à sa feuille
  *      (ouvrirAvecPhoto, RestaurantMenu.jsx). Le reste de l'écran se fond.
- *   3. LA CROIX ET ‹ RECULENT : quand l'écran d'avant est celui où ils mènent (une fiche pour ‹ du panier, n'importe quel
- *      écran pour la croix d'une fiche), on revient dessus au lieu de l'ouvrir une seconde fois : la liste revient là où on
+ *   3. LA CROIX ET ‹ RECULENT : quand l'écran d'avant est celui où ils mènent (pour ‹ du panier, l'écran d'où l'on vient
+ *      depuis le 2026-10-25 : ecranDavant, EcranCommande.jsx ; n'importe quel écran pour la croix d'une fiche), on revient dessus au lieu de l'ouvrir une seconde fois : la liste revient là où on
  *      l'a laissée (ScrollRestorer, retour POP) et la photo rentre dans sa carte. Sans écran d'avant (lien partagé), la croix
  *      et ‹ font ce qu'ils faisaient.
  *   4. LE BOUT DE LA PAGE REBONDIT EN BAS SEULEMENT : `pres-du-bas` sur <html> dès qu'on a passé la moitié de la page

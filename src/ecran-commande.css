@@ -16,6 +16,9 @@
 .ec-haut { display: flex; align-items: center; gap: 12px; min-height: 38px; font-size: 13px; color: rgba(255, 255, 255, .78); }
 .ec-haut-texte { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ec-haut-texte b { color: #fff; font-weight: 600; }
+/* Le nom du commerce mène à sa carte (2026-10-25) : même texte, souligné seulement sous la souris. */
+.ec-haut-commerce { color: inherit; text-decoration: none; }
+@media (hover: hover) { .ec-haut-commerce:hover b { text-decoration: underline; } }
 .ec-rond { flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .35); color: #fff; display: grid; place-items: center;
   text-decoration: none; transition: background .15s, transform .12s; }
 @media (hover: hover) { .ec-rond:hover { background: rgba(255, 255, 255, .12); } }
@@ -71,6 +74,11 @@
 .panier-ligne-paye { font-size: 14px; font-weight: 700; color: var(--ink); }
 .panier-remise { color: var(--promo); font-weight: 600; }
 .panier-economie { margin: 12px 0 0; font-size: 13px; font-weight: 700; color: var(--promo); }
+/* « + Ajouter des articles » : retour à la carte bien visible sous les lignes (fondateur, 2026-10-25), contour iris, jamais lime. */
+.ec-feuille .panier-ajouter {
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 46px; margin: 14px 0 4px;
+  border: 1.5px solid var(--iris); border-radius: 999px; color: var(--iris); background: #fff; font-weight: 700; font-size: 15px; text-decoration: none;
+}
 .ec-feuille .panier-vider { width: auto; padding: 8px 0; margin-top: 0; font-weight: 600; }
 .panier-ligne.ec-sort { animation: ec-sort .26s ease both; pointer-events: none; }
 @keyframes ec-entre { from { transform: translateY(24px); opacity: 0; } }

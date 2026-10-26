@@ -8191,6 +8191,7 @@ export default {
       resume: 'Reprendre mon panier · {amount}',
       toCheckout: 'Aller au paiement',
       backToMenu: 'Retour à la carte',
+      addItems: 'Ajouter des articles',
       emptyTitle: 'Ton panier est vide',
       emptyText: "Ajoute des plats depuis la carte d'un commerce, ils apparaîtront ici.",
       remiseIncluse: '{remise} inclus',
