@@ -6,7 +6,8 @@ import { cheminFiche } from '../../adresseFiche';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
-import { restaurantTypeLabel, haversineDistanceKm } from '../../menuCategories';
+import { restaurantTypeLabel, haversineDistanceKm, illustrationCuisine } from '../../menuCategories';
+import { experienceApp } from '../../natif';
 import { FAMILLES, famillesCommerce, libelleFamille } from '../../specialites';
 import Icone from '../../components/Icone';
 import { kmLisible } from '../../prixPlat';
@@ -59,6 +60,7 @@ export default function MapPage() {
    * écran large, la colonne est À CÔTÉ : elle ne cache rien, et elle épargne de viser des épingles de huit pixels à la
    * souris. Mêmes filtres, mêmes commerces, même ordre que les épingles. Jamais dans l'app, ni sur un téléphone. */
   const colonne = useSiteLarge(1100);
+  const app = experienceApp();
 
   // Liste pas lue (réseau, serveur) : « Aucun commerce avec ces filtres » était faux (audit du 19/10, CROSS-34). On dit que
   // le chargement a échoué, avec « Réessayer ».
@@ -184,7 +186,10 @@ export default function MapPage() {
               {cuisinesPresentes.map((f) => (
                 <button key={f.cle} type="button" className={`cuisine-chip${cuisine === f.cle ? ' active' : ''}`}
                   onClick={() => { setCuisine(f.cle === cuisine ? '' : f.cle); setPanneau(null); }}>
-                  <span className="emoji"><Icone nom={f.icone} taille={18} /></span>{libelleFamille(f.cle, t)}
+                  {/* Le même dessin que la tuile de la Recherche (3D dans l'app, 2D sur le site), pas l'icône iris :
+                      Owen, 2026-10-26 — la même cuisine doit avoir la même image partout. */}
+                  <img className="carte-cuisine-illu" src={illustrationCuisine(f.illustration, { plat: !app })} alt="" width="24" height="24" decoding="async" draggable="false" />
+                  {libelleFamille(f.cle, t)}
                 </button>
               ))}
             </div>

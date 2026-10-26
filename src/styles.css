@@ -1664,6 +1664,8 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    de 11 à 13px — à 11px il fallait s'approcher de l'écran pour lire un filtre. */
 .cuisine-chip { flex: 0 0 auto; display: inline-flex; flex-direction: row; align-items: center; gap: 7px; padding: 9px 16px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
 .cuisine-chip .emoji { font-size: 17px; line-height: 1; }
+/* Le dessin de la cuisine (panneau Cuisine de la carte) : 24px, rogné de 4px en haut et en bas pour garder la hauteur de la pastille. */
+.carte-cuisine-illu { display: block; flex: none; width: 24px; height: 24px; margin: -4px 0; -webkit-user-drag: none; user-select: none; }
 .cuisine-chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
 .cuisine-chip:hover { border-color: var(--teal); }
 
