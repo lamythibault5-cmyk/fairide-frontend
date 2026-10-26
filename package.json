@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "check:i18n": "node scripts/check-i18n.mjs",
+    "check:greffons": "node scripts/verifier-greffons-android.mjs",
     "app:sync": "npm run build && npx cap sync",
     "app:android": "npm run app:sync && npx cap open android",
     "app:ios": "npm run app:sync && npx cap open ios",

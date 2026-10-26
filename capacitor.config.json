@@ -13,7 +13,20 @@
   },
   "android": {
     "allowMixedContent": false,
-    "backgroundColor": "#ffffff"
+    "backgroundColor": "#ffffff",
+    "includePlugins": [
+      "@capacitor/app",
+      "@capacitor/browser",
+      "@capacitor/filesystem",
+      "@capacitor/geolocation",
+      "@capacitor/haptics",
+      "@capacitor/keyboard",
+      "@capacitor/push-notifications",
+      "@capacitor/share",
+      "@capacitor/splash-screen",
+      "@capacitor/status-bar",
+      "@capgo/capacitor-social-login"
+    ]
   },
   "plugins": {
     "SplashScreen": {
