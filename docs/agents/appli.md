@@ -80,7 +80,7 @@ switches (`.co-interrupteur`, `.ec-interrupteur`; the lime shop open/closed swit
 stretches), secondary buttons (`.btn-outline`, `.alerte-compacte-son`, `.eg-bouton-iris`, `.tracking-expand-btn`, `.ec-pilule-blanche`:
 clear glass; the courier's urgency `.btn-outline` on the iris band gets glass-on-iris), every enabled `.btn-teal` (vivid iris), and on
 iris bands the Mon compte shortcuts and FR / NL / EN (white 10 %, not the 18 % of the round back button, which lit whole tiles).
-They are in `VERRE` (verreAppui.js); those wider than 120 px grow like a bar (`LARGES`), not by 50 %. Kept without glass on purpose: lime
+They are in `VERRE` (verreAppui.js); those wider than 120 px grow like a bar (`LARGES`), not by 30 %. Kept without glass on purpose: lime
 buttons, checkout option rows, cards / tiles / rows, the dish photo ×, option marks, fields, text links, the website. « Enregistrer »
 in Mon compte sub-pages is lime (the next click).
 **TestFlight feedback of 2026-10-24**: (the three lenses already glide the same way since PR #220, 2026-10-23.) The map has no
@@ -96,7 +96,7 @@ name (Hill's) to fill the screen; section pills cut at 220 px with « … » (`.
 **Glass that answers the finger (2026-10-24, version B of `maquettes/verre-appui/verre-appui.html`, « iOS 26 »)**, native app only, in
 [verreAppui.js](../../src/verreAppui.js) (loaded by `demarrerNatif`) + the end of verre.css: every glass control (its list is `VERRE` in that
 file: the WHOLE tab bar, cuisine and sections strips, cart bar, restaurant round buttons, Livraison / À emporter, « + », « − 1 + », map
-chips, back buttons) grows the moment the finger lands (buttons 50 %, founder 2026-10-25 — 8 % in the mockup, then 12 % —; bars `BARRES` keep 3.5 %, a little more when short), a pressed button rises one z-index step so it covers its neighbour, leans 2–3 px toward it, a light
+chips, back buttons) grows the moment the finger lands (buttons 30 %, founder 2026-10-26 — 8 % in the mockup, then 12 %, then 50 % on 2026-10-25 —; bars `BARRES` keep 3.5 %, a little more when short), a pressed button rises one z-index step so it covers its neighbour, leans 2–3 px toward it, a light
 (`<verre-lueur>`, injected once) follows the finger and the rim lights up; release = spring (damping .55, response .4 s). `scale` /
 `translate` inline, so a control's own `transform` is kept. Strips that scroll sideways wait 70 ms (a scroll that starts cancels).
 Cards and rows keep the .97 press-down (glass grows, content presses down). Every `.flux-bouton`, every heart (`.favorite-heart`, no light on a bare heart) and the ‹ of sheet pages (`.page-feuille-fermer`: Mes favoris, Mes commandes…) are in `VERRE` too (2026-10-25); the ‹ of a Mon compte sub-screen (`.sous-ecran-tete .flux-bouton`) is clear glass. Back buttons are glass: ‹ rounds on iris bands

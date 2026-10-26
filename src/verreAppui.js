@@ -7,8 +7,9 @@
 // transition : il repart de la taille affichée, et un nouvel appui le rattrape en plein vol (« Designing Fluid Interfaces »).
 //
 // Réglages de la version B :
-//   - un BOUTON (retours, cœur, recherche, croix, « + », pastilles…) grossit de 50 % (fondateur, 2026-10-25 : « pas les barres,
-//     mais plus que 12, peut-être 50 % » ; 8 % dans la maquette, puis 12 %). Une BARRE (onglets, bande des sections, panier, Livraison /
+//   - un BOUTON (retours, cœur, recherche, croix, « + », pastilles…) grossit de 30 % (fondateur, 2026-10-25 : « pas les barres,
+//     mais plus que 12, peut-être 50 % » ; 8 % dans la maquette, puis 12 %, puis 50 % ; 30 % depuis le 2026-10-26, fondateur :
+//     « tous les boutons qui grossissent de 50 % », 40 % puis « actually thirty percent »). Une BARRE (onglets, bande des sections, panier, Livraison /
 //     À emporter) garde son petit grossissement : 3,5 % à partir de 300 px, un peu plus si elle est plus courte ;
 //   - se penche de 2 px (petit) à 3 px (barre) vers le doigt ;
 //   - ressort à la pose : amortissement .85, réponse .2 s ; au lâcher : .55, .4 s (un rebond franc d'environ 1 %, posé en .45 s).
@@ -41,7 +42,7 @@ const VERRE = [
 ].join(', ');
 // Les barres, qui ne grossissent qu'un peu (la barre d'onglets était « bien », fondateur 2026-10-24) ; tout le reste est un bouton.
 const BARRES = '.dashboard-nav, .category-quicknav--verre, .panier-pilule, .fiche-appli .fiche-modes';
-/* Les boutons du 2026-10-26 peuvent être larges : à 150 %, « + Ajouter des articles » (354 px) sortirait de l'écran. Au-delà de
+/* Les boutons du 2026-10-26 peuvent être larges : à 130 %, « + Ajouter des articles » (354 px) sortirait de l'écran. Au-delà de
    120 px, ils grossissent comme une barre, selon leur taille (8 % à 160 px, 3,5 % à partir de 300 px) ; en dessous (« Activer »,
    « Lire »), comme un bouton. Les contrôles d'avant gardent leur réglage. */
 const LARGES = '.btn-outline, .btn-teal, .eg-bouton-iris, .alerte-compacte-son, .tracking-expand-btn, .compte-raccourci';
@@ -52,7 +53,7 @@ const SEUIL_LARGE = 120;
 const DEFILENT = '.category-quicknav--verre, .carte-pastilles .cuisine-chip, .dashboard-nav.admin';
 const ATTENTE_DEFILE = 70;
 
-const BOUTON = 0.5;
+const BOUTON = 0.3;
 const PETIT = 0.12; // une barre courte (le panier replié en bulle)
 const BARRE = 0.035;
 const PENCHE = [2, 3];
@@ -132,7 +133,7 @@ export function installerVerreAppui() {
     e.appuye = true;
     const barre = c.el.matches(BARRES) || (c.el.offsetWidth >= SEUIL_LARGE && c.el.matches(LARGES));
     regler(e.s, 1 + (barre ? selonTaille(c.taille, [PETIT, BARRE]) : BOUTON), APPUI);
-    // À 150 %, un bouton déborde sur son voisin (la recherche sur le cœur) : il passe devant lui le temps de l'appui.
+    // À 130 %, un bouton déborde sur son voisin (la recherche sur le cœur) : il passe devant lui le temps de l'appui.
     if (!barre && e.zAvant === undefined) {
       const st = getComputedStyle(c.el);
       if (st.position !== 'static') { e.zAvant = c.el.style.zIndex; c.el.style.zIndex = String((parseInt(st.zIndex, 10) || 0) + 1); }
