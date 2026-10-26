@@ -8141,6 +8141,8 @@ export default {
       payOnSiteNote: 'Le commerce encaisse lui-même ta commande quand tu viens la chercher : viens bien la récupérer à l\'heure prévue, il la prépare pour toi. Ton solde Fairride ne s\'utilise pas pour un paiement sur place.',
       toPayOnSite: 'À payer sur place',
       confirmOnSite: 'Confirmer la commande (paiement sur place)',
+      barreCommander: 'Commander',
+      barreSurPlace: 'sur place',
       toastOnSiteConfirmed: 'Commande envoyée au commerce. Tu la paies sur place en venant la chercher.',
       modifier: 'Modifier',
       ticketTitle: 'Ton ticket',

@@ -8075,6 +8075,8 @@ export default {
       payOnSiteNote: 'The business takes your payment itself when you come to collect: make sure you pick it up at the planned time, it is being prepared for you. Your Fairride balance cannot be used for an on-site payment.',
       toPayOnSite: 'To pay on site',
       confirmOnSite: 'Confirm the order (pay on site)',
+      barreCommander: 'Order',
+      barreSurPlace: 'at the shop',
       toastOnSiteConfirmed: 'Order sent to the business. You pay on site when you collect it.',
       modifier: 'Edit',
       ticketTitle: 'Your bill',
