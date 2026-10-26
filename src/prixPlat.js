@@ -58,13 +58,16 @@ export function eurosCourt(v) {
  * Le serveur enregistre un libellé en français à la création (routes/promotions.js : « -4€ dès 25€ de commande »,
  * « 1 acheté = 1 offert »), et c'est lui qui s'affichait tel quel sur le site en anglais et en néerlandais (test du
  * 5 oct. 2026). La promo porte pourtant tout ce qu'il faut pour le recomposer : type, valeur, seuil. Le libellé
- * enregistré ne sert plus que de repli pour un type que ce code ne connaîtrait pas. */
-export function libellePromo(p, t) {
+ * enregistré ne sert plus que de repli pour un type que ce code ne connaîtrait pas.
+ * `court` : sur la photo d'un commerce dans la liste, l'Avantage Fairride se dit « -5 % sur tout » (fondateur, 2026-10-26,
+ * maquettes/sections-pleines) ; « -5 % Avantage Fairride » y était coupé. Le texte entier reste sur la fiche du commerce. */
+export function libellePromo(p, t, { court = false } = {}) {
   if (!p) return null;
   const v = Number(p.value);
+  const fairride = (cle) => (court ? `restoListUi.promoFairide${cle}Court` : `restoListUi.promoFairide${cle}`);
   if (p.type === 'cart_threshold' && p.minCartTotal != null) return t('restoListUi.promoCartThreshold', { value: eurosCourt(v), min: eurosCourt(p.minCartTotal) });
-  if (p.type === 'percent' && Number.isFinite(v)) return t(p.fairide ? 'restoListUi.promoFairidePercent' : 'restoListUi.promoPercent', { value: v });
-  if (p.type === 'amount' && Number.isFinite(v)) return t(p.fairide ? 'restoListUi.promoFairideAmount' : 'restoListUi.promoAmount', { value: eurosCourt(v) });
+  if (p.type === 'percent' && Number.isFinite(v)) return t(p.fairide ? fairride('Percent') : 'restoListUi.promoPercent', { value: v });
+  if (p.type === 'amount' && Number.isFinite(v)) return t(p.fairide ? fairride('Amount') : 'restoListUi.promoAmount', { value: eurosCourt(v) });
   if (p.type === 'bogo') return v > 1 ? t('restoListUi.promoBogoN', { n: v }) : t('restoListUi.promoBogo1');
   return p.label || null;
 }
