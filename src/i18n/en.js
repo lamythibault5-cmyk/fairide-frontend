@@ -7400,7 +7400,7 @@ export default {
     },
     footer: {
       tagline: "Pay for your meal, not the platform. Brussels restaurants and shops, with no inflated prices.",
-      belgian: 'Designed and run from Belgium, by Belgians, for Belgians.',
+      belgian: 'Made in Brussels, for Brussels.',
       join: 'Join',
       orderNow: 'Order now',
       addBusiness: 'Add my business',
