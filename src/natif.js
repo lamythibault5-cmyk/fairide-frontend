@@ -230,8 +230,9 @@ export async function demarrerNatif(historique) {
   preparerHaptique();
   // La tape légère sous chaque bouton (gestes.js, 2026-10-25).
   import('./gestes').then(({ installerTouches }) => installerTouches()).catch(() => {});
-  // iPhone : le verre iris sous l'heure et la batterie quand la page défile (verreBarreEtat.js, verre.css).
-  if (plateforme() === 'ios') import('./verreBarreEtat').then(({ installerVerreBarreEtat }) => installerVerreBarreEtat()).catch(() => {});
+  // Le verre iris sous l'heure et la batterie quand la page défile (verreBarreEtat.js, verre.css) : iPhone, et Android 15+
+  // bord à bord depuis le 2026-10-26 (sur Android 14 et moins, la bande n'a aucune hauteur et ne s'allume pas).
+  import('./verreBarreEtat').then(({ installerVerreBarreEtat }) => installerVerreBarreEtat()).catch(() => {});
   // Les écrans glissent, la photo d'un commerce voyage, la croix et ‹ reculent, le bas de page rebondit (transitionPhoto.js,
   // maquettes/transitions-appli, 2026-10-23).
   import('./transitionPhoto').then(({ installerTransitionsEcrans }) => installerTransitionsEcrans(historique)).catch(() => {});

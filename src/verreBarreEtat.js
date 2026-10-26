@@ -9,7 +9,12 @@
  *
  * Sur un bandeau iris qui reste collé en haut (la liste : « Livrer à … »), le verre ne sert à rien et se voyait : posé sur
  * l'iris plein, il l'éclaircissait (saturate) et son fondu du bas traçait une ligne sur le bandeau (fondateur, 2026-10-25).
- * Il reste donc caché tant que l'iris plein descend jusqu'à son bord du bas : rien ne peut alors passer sous l'heure. */
+ * Il reste donc caché tant que l'iris plein descend jusqu'à son bord du bas : rien ne peut alors passer sous l'heure.
+ *
+ * ANDROID 15 ET PLUS (2026-10-26, maquettes/iphone-android) : l'app y est bord à bord (cible API 36), la page passe aussi sous
+ * l'heure, transparente, et le titre d'une fiche s'y mêlait aux chiffres. Même verre, lancé aussi sur Android. Sur Android 14
+ * et moins, la barre d'état est pleine, au-dessus de la page : env(safe-area-inset-top) vaut 0, la bande n'a aucune hauteur
+ * (verre.css) et ne s'allume jamais, sinon barreEtat.js garderait des icônes blanches sur une barre devenue blanche. */
 import { IRIS, fondSous } from './regardSousBarre';
 
 const HAUTEUR_FONDU = 18;
@@ -24,7 +29,7 @@ export function installerVerreBarreEtat() {
   let image = 0;
   const regarder = () => {
     image = 0;
-    let visible = window.scrollY > 4;
+    let visible = bande.offsetHeight > 0 && window.scrollY > 4;
     if (visible) {
       const photo = document.querySelector('.fiche-appli .fiche-media');
       if (photo && photo.getBoundingClientRect().bottom > bande.offsetHeight - HAUTEUR_FONDU) visible = false;
