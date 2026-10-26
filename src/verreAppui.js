@@ -27,6 +27,8 @@ const VERRE = [
   '.flux-bouton', '.favorite-heart', '.fiche-appli .fiche-modes',
   '.fiche-appli .fiche-infos-lien', '.fiche-appli .fiche-apercu-plus', '.plat-pas', '.ec-pas',
   '.carte-page .carte-reinit', '.carte-page .carte-pastilles .cuisine-chip', '.carte-fiche-fermer',
+  // Les pastilles au-dessus de la liste (« Ouvert », commune, mot cherché), en verre depuis le 2026-10-26 (maquettes/filtre-ouvert).
+  '.liste-filtres .cuisine-chip',
   // Les retours, en verre eux aussi (réponse 5) : le ‹ rond sur les bandeaux iris, « ← Retour » et « ← Mon compte ».
   '.ec-rond', '.gn-rond', '.bv-rond', '.dashboard-retour', '.retour-compte', '.cs-retour', '.ec-b-retour', '.ecl-b-retour',
   // La croix de la fiche d'un plat et le ‹ des pages ouvertes en feuille depuis Mon compte (Mes favoris, Mes commandes, Mes

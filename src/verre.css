@@ -81,6 +81,19 @@ html.appli body .fiche-appli .fiche-modes-pouce {
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 
+/* ---------- Les pastilles au-dessus de la liste (« Ouvert », commune, mot cherché) ---------- */
+/* Fondateur, 2026-10-26 (section « Ouvert en verre » de maquettes/filtre-ouvert) : comme Livraison / À emporter, verre clair éteinte,
+   iris vif sans reflet allumée ; elles grossissent au doigt (verreAppui.js), la lumière seulement sur le verre clair. Le site
+   garde sa pilule blanche à filet (styles.css, .cuisine-chip). */
+html.appli body .liste-filtres .cuisine-chip {
+  border-color: transparent; color: var(--iris); background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
+  -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
+}
+html.appli body .liste-filtres .cuisine-chip.active {
+  color: #fff; background: var(--iris-vif-fond); box-shadow: var(--iris-vif-ombre);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+
 
 /* ---------- Les puces de la fiche (cuisine, commune, Infos) ---------- */
 html.appli body .fiche-appli .fiche-meta > span:not([aria-hidden]),
@@ -144,7 +157,7 @@ html.appli verre-lueur {
 html.appli .verre-lumiere > verre-lueur { opacity: 1; transition-duration: .12s; }
 /* Sur l'iris (les « + », le « − 1 + », les retours des bandeaux), une lumière blanche plus douce. */
 /* Les « + », le « − 1 + » : sans reflet, donc sans lumière sous le doigt non plus (elle les faisait briller). */
-html.appli :is(.plat-pas, .ec-pas, .fiche-apercu-plus) > verre-lueur { display: none; }
+html.appli :is(.plat-pas, .ec-pas, .fiche-apercu-plus, .liste-filtres .cuisine-chip.active) > verre-lueur { display: none; }
 html.appli :is(body:has(.fiche-appli) .plat-fermer, .page-feuille-fermer, .ec-rond, .gn-rond, .bv-bandeau .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond, .ec-b-retour, .ecl-b-retour) > verre-lueur {
   background: radial-gradient(circle var(--verre-r, 60px) at var(--verre-x, 50%) var(--verre-y, 50%), rgba(255, 255, 255, .5), rgba(255, 255, 255, .16) 45%, rgba(255, 255, 255, 0) 100%);
 }
@@ -176,7 +189,7 @@ html.appli body :is(.dashboard-nav, .fiche-appli .category-quicknav--verre, .pan
 }
 /* … le verre clair : */
 html.appli body :is(.fiche-appli .flux-entete--flottant .flux-bouton, .fiche-appli .favorite-heart--rond, .fiche-appli .fiche-modes, .fiche-appli .fiche-infos-lien,
-  .carte-page .carte-reinit, .carte-page .carte-pastilles .cuisine-chip, .dashboard-retour, .retour-compte, .cs-retour, .bv-rond, .sous-ecran-tete .flux-bouton).verre-lumiere {
+  .carte-page .carte-reinit, .carte-page .carte-pastilles .cuisine-chip, .liste-filtres .cuisine-chip:not(.active), .dashboard-retour, .retour-compte, .cs-retour, .bv-rond, .sous-ecran-tete .flux-bouton).verre-lumiere {
   box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1.5px rgba(59, 47, 181, .3), inset 5px 0 10px -4px rgba(255, 70, 170, .4), inset -5px 0 10px -4px rgba(40, 190, 255, .42), 0 8px 22px rgba(20, 18, 31, .22);
 }
 
