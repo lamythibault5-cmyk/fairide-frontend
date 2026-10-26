@@ -134,6 +134,7 @@ read that doc before working near it.
 | Delivery or online payment opening, the GO button | [docs/agents/lancement.md](docs/agents/lancement.md) |
 | Something in orders, e-mails, couriers, alcohol or accounting that looks odd and you want to « fix » | [docs/agents/acquis.md](docs/agents/acquis.md) — decisions already made |
 | A claim that a feature exists, or a promise of one | [docs/agents/manques.md](docs/agents/manques.md) — known gaps |
+| A text people read first: front page, « Notre histoire », onboarding, sign-up, welcome e-mails, newsletter, store listing, flyers | [docs/agents/voix.md](docs/agents/voix.md) — why first, the reader's own gain, the inflated-price villain |
 | Going live | [AVANT-PRODUCTION.md](AVANT-PRODUCTION.md) (the one go-live list) and [docs/procedures-incidents.md](docs/procedures-incidents.md) |
 
 `docs/archives/` holds outdated documents (the Uber design analysis, the old bowl logo, a September legal audit): never
