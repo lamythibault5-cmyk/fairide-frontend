@@ -4489,6 +4489,8 @@ export default {
       faqA7: "La carte affiche les prix du restaurant. Fairride ne prend que 10 % de commission, là où les grandes plateformes annoncent 22 à 32 % : le restaurant ne doit donc plus gonfler sa carte. Il peut monter ses prix de 10 % au plus pour couvrir la commission, jamais plus. Pour un plat à 12 € au comptoir : 12 € ÷ 0,70 ≈ 17,10 € pour couvrir 30 % de commission, 13,20 € au plus sur Fairride. C'est un calcul, pas un relevé des prix d'une autre plateforme. Les restaurants qui gardent leurs prix, vérifiés par notre équipe, portent le badge « Prix du comptoir ».",
       faqQ8: "Pourquoi s’appelle-t-on Fairride ?",
       faqA8: "Fairride vient de l’anglais « fair ride », une course équitable : pour le restaurant, pour le livreur et pour toi. Beaucoup l’écrivent « Fairride » ou « Fair ride » : c’est bien nous, à l’adresse fairride.be.",
+      faqQ9: "D'où vient le « +55 % » de la page d'accueil ?",
+      faqA9: "D'un relevé. Le même jour d'octobre 2026, on a noté les prix d'un restaurant bruxellois partenaire de Fairride à son comptoir et sur sa page publique d'une grande plateforme de livraison. Sur les plats présents des deux côtés, sans frais de livraison ni de service, la carte en ligne coûtait de 45 à 55 % de plus selon les plats. On ne nomme ni le plat ni le restaurant sur le site, mais on donne le détail à qui le demande : écris-nous à contact@fairride.be.",
       /* Le titre de la page et sa description visent les recherches réelles : « alternative Uber
          Eats », « alternative Deliveroo Bruxelles », « livraison commission réduite ». Un titre
          qui ne dit que « Notre histoire » ne peut se placer sur aucune d'elles — personne ne
@@ -4500,13 +4502,19 @@ export default {
          Mon compte, recherche interne), où « Notre histoire » se comprend mieux. */
       h1: 'Fairride, l\'alternative belge à Uber Eats et Deliveroo',
       title: 'Notre histoire',
-      intro: 'Pourquoi Fairride existe, et ce vers quoi la plateforme avance.',
-      /* Nommer les plateformes concurrentes, plutôt que « les grandes plateformes ». La comparaison
-         publicitaire est licite en Belgique tant qu'elle est objective et vérifiable (directive
-         2006/114/CE), d'où les chiffres donnés comme des fourchettes publiquement annoncées et non
-         comme des taux que nous aurions relevés nous-mêmes. */
-      alternativeTitle: 'Fairride, l\'alternative belge',
-      alternative: 'Fairride est une alternative bruxelloise à Uber Eats, Deliveroo et Takeaway.com. La différence tient en une ligne : là où ces plateformes annoncent publiquement des commissions qui vont généralement de 22 à 32 % du montant de la commande selon la formule choisie, Fairride plafonne la sienne à 10 %, et laisse aux livreurs 90 % des frais de livraison et la totalité des pourboires. Le reste (la carte, la commande en ligne, le paiement sécurisé, le suivi de livraison) fonctionne comme le client en a l\'habitude.',
+      intro: "Pourquoi Fairride existe, ce qu'on fait autrement, et qui on est.",
+      /* LE TEXTE DE LA PAGE, RÉÉCRIT LE 2026-10-26 (maquettes/croissance/prix-gonfles.html, docs/agents/voix.md) : ce qu'on
+         croit, du point de vue du client ; ce qu'on fait autrement ; ce qu'on fait ; qui on est. Le pourquoi d'abord, jamais la
+         part du livreur (fondateur : réservée aux textes pour les livreurs). Les plateformes concurrentes restent nommées là
+         où les gens les cherchent : le titre de la page (pageTitle, h1) et la FAQ, avec les commissions qu'elles annoncent. */
+      croyanceTitle: "Pourquoi on existe",
+      croyance: "Le même plat ne devrait pas coûter plus cher parce que tu le commandes en ligne. C'est pourtant souvent le cas : les grandes plateformes prennent environ 30 % au restaurant, alors il gonfle sa carte, et c'est toi qui paies la différence. Tout le monde fait comme si c'était normal. Pas nous.",
+      autrementTitle: "Ce qu'on fait autrement",
+      autrement: "On prend 10 % au restaurant, pas 30. Il n'a plus besoin de gonfler sa carte : sur Fairride, c'est +10 % au plus, et le prix du comptoir chez ceux qui portent le badge « Prix du comptoir ». Rien n'est ajouté au paiement : les plats et la livraison, c'est tout.",
+      serviceTitle: "Ce qu'on fait",
+      service: "La livraison et l'à emporter des restaurants, snacks, boulangeries et épiceries de Bruxelles et des communes voisines, sur fairride.be et dans l'app.",
+      equipeTitle: "Qui on est",
+      equipe: "Une petite équipe bruxelloise. Fairride est conçue et gérée ici, et ton argent reste à Bruxelles.",
       faqTitle: 'Questions fréquentes',
       faqQ1: 'Quelle alternative à Uber Eats existe-t-il à Bruxelles ?',
       faqA1: 'Fairride est une plateforme de livraison belge active à Bruxelles et dans les communes voisines, dans le rayon de livraison de chaque commerce. Elle propose les mêmes services (commande en ligne, livraison, paiement sécurisé) avec une commission plafonnée à 10 % pour les commerces partenaires.',
@@ -4518,27 +4526,6 @@ export default {
       faqA4: 'L\'inscription est gratuite et se fait en ligne. Le commerce active ensuite l\'abonnement Fairride, qui ouvre l\'à emporter et la livraison : 20 € par mois, sans TVA (premier mois offert), sans engagement. Sur les commandes payées en ligne, Fairride garde 10 % du prix payé ; rien sur les commandes payées sur place. Les conditions détaillées sont présentées au moment de l\'inscription du commerce. Et un mois à 50 € de commandes ou moins n\'est pas dû : il est offert ou remboursé au commerce.',
       faqQ5: 'Qu\'est-ce que le terminal Fairride ?',
       faqA5: 'C\'est l\'appareil tout-en-un des commerces Fairride, le même système que les grandes plateformes de livraison : l\'app Fairride y est préinstallée, le commerçant y reçoit ses commandes en direct et imprime ses tickets directement. C\'est le seul outil nécessaire, configuré avec lui à l\'installation. Il est offert aux premiers restaurants inscrits ; pour les suivants, une caution est demandée, rendue quand le commerce quitte Fairride, si le terminal fonctionne toujours.',
-      constatTitle: 'Le constat',
-      constat: 'Sur les grandes plateformes de livraison, les commerces locaux perdent souvent entre 22 et 32% du montant de chaque commande en commission, une part qui pèse lourd sur leurs marges et qui finit parfois par se répercuter sur les prix payés par les clients. Les livreurs, de leur côté, ne touchent pas toujours l\'intégralité des frais de livraison réglés par le client. Fairride est né de ce constat simple : il devait être possible de connecter commerces, clients et livreurs sans qu\'une plateforme capte une part disproportionnée de la valeur créée par chacun.',
-      missionTitle: 'Notre mission',
-      mission: 'Donner aux commerces indépendants de Bruxelles (restaurants, supermarchés, commerces de quartier) un moyen de proposer la livraison et la vente en ligne sans commission excessive, et permettre aux livreurs d\'être rémunérés justement pour leur travail. Fairride veut démontrer qu\'un modèle de livraison plus équitable est possible, sans sacrifier la qualité de service pour les clients.',
-      demarcheTitle: 'Notre démarche',
-      demarche1: 'Une commission plafonnée à 10% du montant des produits pour les commerces partenaires, contre 22 à 32% sur les grandes plateformes.',
-      demarche2: 'Les livreurs touchent 90 % des frais de livraison réglés pour leur course (10 % de frais de système Fairride).',
-      demarche3: 'Des frais annoncés clairement aux commerces comme aux clients, sans commission cachée.',
-      demarche4: 'Le commerce n\'a rien à acheter : Fairride fournit le terminal, un appareil tout-en-un configuré avec le commerçant à l\'installation.',
-      identiteTitle: 'Notre identité',
-      identite: 'Fairride est conçue et opérée depuis la Belgique, par des Belges, pour des Belges. La plateforme est aujourd\'hui active à Bruxelles et dans les communes voisines et met un point d\'honneur à soutenir le commerce local et les indépendants qui font vivre le quartier, pour que la valeur créée profite d\'abord à Bruxelles.',
-      valeursTitle: 'Nos valeurs',
-      valeurs1: '**Équité** : envers les commerces, qui gardent une plus grande part de leurs revenus, et envers les livreurs, justement payés.',
-      valeurs2: '**Transparence** : des frais clairs et compréhensibles, communiqués sans surprise.',
-      valeurs3: '**Proximité** : un ancrage bruxellois, au service des commerces et des habitants du quartier.',
-      valeurs4: '**Simplicité** : une plateforme facile à utiliser et un terminal tout-en-un, fourni et configuré par Fairride.',
-      objectifsTitle: 'Nos objectifs',
-      objectifs1: 'Continuer à étendre la couverture de Fairride à davantage de communes bruxelloises.',
-      objectifs2: "Lancer ensuite l'application mobile, sur iPhone et Android.",
-      objectifs3: 'Faire grandir le réseau de commerces et de livreurs partenaires, tout en conservant un modèle de commission juste et durable, pas seulement une offre de lancement.',
-      objectifs4: 'Rester fidèle, sur le long terme, à l\'engagement d\'une livraison à commission réduite.'
     },
     guide: {
       s4p2App: "Autorise les notifications de Fairride : tu es prévenu d'une commande même app fermée ou téléphone verrouillé.",
@@ -7371,7 +7358,7 @@ export default {
          (22 à 32 %), vérifiables : c'est ce qui rend la comparaison licite (publicité comparative,
          CDE art. VI.17). Sous ~155 caractères. */
       defaultTitle: "Livraison de repas à Bruxelles · L'alternative à Uber Eats | Fairride",
-      homeDescription: "Le restaurant ne doit plus gonfler ses prix : Fairride, l'alternative bruxelloise à Uber Eats, prend 10 % de commission au plus, là où les grandes plateformes annoncent 22 à 32 %.",
+      homeDescription: "Le même plat ne devrait pas coûter plus cher en ligne : sur Fairride, l'alternative bruxelloise à Uber Eats, le restaurant ne gonfle plus sa carte, +10 % au plus.",
       listDescription: "Livraison de repas à Bruxelles : restaurants, boulangeries, supermarchés et night shops, livrés ou à emporter. L'alternative bruxelloise à Uber Eats, à 10 % de commission au plus.",
       restaurantTitle: "{name}, {cuisine} à {commune} · Fairride",
       restaurantDescription: "Commande chez {name} à {commune}, en livraison ou à emporter, sur Fairride.",
@@ -7449,7 +7436,7 @@ export default {
       codeSous: 'Un dernier code, et c’est parti.'
     },
     footer: {
-      tagline: 'La livraison de repas et de commerces locaux à commission réduite, à Bruxelles.',
+      tagline: "Paie ton repas, pas la plateforme. Les restaurants et commerces de Bruxelles, sans prix gonflés.",
       belgian: 'Conçu et opéré depuis la Belgique, par des Belges, pour des Belges.',
       join: 'Rejoindre',
       orderNow: 'Commander maintenant',
@@ -7491,7 +7478,23 @@ export default {
       /* Bannière à barre d'adresse (2026-09-27, voir HeroAdresse.jsx et HeroPrix.jsx). `subAdresse` est plus
          court que `sub` : les chiffres de la commission sont passés dans le ticket de comparaison à côté.
          `sub` reste en place, lu par le référencement et par un éventuel retour en arrière. */
-      subAdresse: "L'alternative bruxelloise à Uber Eats et Deliveroo : Fairride ne prend que 10 %. Le restaurant ne doit plus gonfler ses prix, le livreur gagne plus, et ton argent reste à Bruxelles.",
+      /* VERSION E DE maquettes/croissance/prix-gonfles.html (fondateur, 2026-10-26) : « Arrête de payer des prix gonflés. »
+         en titre du site (titreAccueil1/2 ; title1/2 restent le slogan, lu par l'accueil de l'app), le pourquoi du client
+         en sous-titre, la carte « Le même plat, trois prix » (HeroPrix.jsx, qui dit pourquoi elle est légale), et
+         « l'alternative à Uber Eats » en titre de section plus bas, pour la recherche. Le relevé se refait chaque mois :
+         changer la date de prixReleve dans les trois langues. Les clés prixAccroche…prixNousSous ne sont plus lues. */
+      subAdresse: "Le même plat ne devrait pas coûter plus cher parce que tu le commandes en ligne. Ailleurs, c'est jusqu'à +55 %. Sur Fairride, +10 % au plus : le restaurant ne gonfle plus sa carte, et ton argent reste à Bruxelles.",
+      titreAccueil1: "Arrête de payer",
+      titreAccueil2: "des prix gonflés.",
+      altTitre: "Fairride, l'alternative bruxelloise à Uber Eats et Deliveroo",
+      prixTroisTitre: "Le même plat, trois prix",
+      prixTroisAria: "Le même plat au comptoir, sur une grande plateforme (+{ecart} %) et sur Fairride",
+      prixReleve: "Un plat d'un restaurant bruxellois, relevé en octobre 2026. Détails sur demande.",
+      prixComptoirLigne: "Au comptoir",
+      prixPlateformeLigne: "Sur une grande plateforme",
+      prixFairrideLigne: "Sur Fairride",
+      prixAuPlus: "+10 % au plus",
+      prixPied: "Les 30 %, c'est toi qui les paies.",
       addrLabel: 'Adresse de livraison',
       addrPlaceholder: 'Ton adresse de livraison',
       addrGo: 'Voir les commerces qui livrent ici',
@@ -7512,7 +7515,7 @@ export default {
       prixEuxSous: "grandes plateformes",
       prixNous: "Avec Fairride",
       prixNousSous: "au plus, ou {prix} s'il garde son prix",
-      sub: "L'alternative belge à Uber Eats et Deliveroo. 10 % de commission au lieu de 22 à 32 % : le restaurant garde plus, le livreur touche 90 % des frais de livraison, et l'argent reste ici.",
+      sub: "Fairride prend 10 % de commission, là où les grandes plateformes annoncent 22 à 32 % : le restaurant ne doit plus gonfler sa carte.",
       /* Les clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on
          ne coupe pas une phrase au milieu d'un mot pour gagner de la place, on en écrit une plus
@@ -7525,8 +7528,8 @@ export default {
       becomePartner: 'Devenir partenaire',
       featureLocalTitle: '100% commerces locaux',
       featureLocalText: 'Restaurants, supermarchés, night shops, boulangeries… découvrir et soutenir les commerces du quartier, accessibles à tous.',
-      featureFairTitle: "Des prix qui ne sont pas gonflés",
-      featureFairText: "10 % de commission au lieu des 22 à 32 % des grandes plateformes : le restaurant ne doit plus gonfler sa carte, et le livreur touche plus.",
+      featureFairTitle: "Fini les prix gonflés",
+      featureFairText: "Les grandes plateformes prennent 22 à 32 % au restaurant : il gonfle sa carte, jusqu'à +55 %. Fairride prend 10 % : sa hausse est plafonnée à 10 %.",
       howItWorks: 'Comment ça marche',
       step1Title: 'Choisir un commerce',
       step1Text: 'Parcourir les restaurants et commerces locaux du quartier.',
@@ -7535,11 +7538,11 @@ export default {
       step3Title: 'Recevoir la livraison',
       step3Text: 'Suivi de la commande en temps réel, jusqu\'à la porte.',
       joinTitle: 'Rejoindre Fairride',
-      joinClientTitle: 'Commande chez les commerces de ton quartier',
+      joinClientTitle: "Commande sans prix gonflés, chez les commerces de ton quartier",
       joinClientLink: 'Commander maintenant',
       joinRestaurantTitle: "Vends à tes prix du comptoir, sans te faire dévorer par les commissions",
       joinRestaurantLink: 'Ajouter mon commerce',
-      joinDriverTitle: 'Roule et sois payé plus justement à chaque course',
+      joinDriverTitle: "90 % de la course pour toi. 100 % des pourboires.",
       joinDriverLink: 'Devenir livreur',
       communesTitle: 'Communes desservies à Bruxelles',
       trustTitle: 'Ils nous font confiance',
@@ -7608,7 +7611,7 @@ export default {
       discoverInfoCommunes: 'communes',
       discoverInfoCuisines: 'types de cuisine',
       discoverInfoCommission: 'de commission max.',
-      discoverInfoText: 'Restaurants, boulangeries, boucheries, épiceries, night shops… Chaque commande soutient un commerce du quartier : 90 % du prix lui revient, et le livreur garde 90 % de la livraison et tous ses pourboires.',
+      discoverInfoText: 'Restaurants, boulangeries, boucheries, épiceries, night shops… Chaque commande va à un commerce du quartier, sans prix gonflés.',
       discoverInfoCta: 'Voir tous les commerces',
       discoverInfoJoin: 'Inscrire mon commerce'
     },
@@ -9903,8 +9906,13 @@ export default {
       passer: 'Passer',
       beChip: 'Startup belge, née à Bruxelles',
       autresApplis: 'Autres applis',
-      accSub: 'Des prix pas gonflés, rien d’ajouté au paiement.',
-      accBarres: 'Ce qu’un restaurant ajoute au plus à un plat de {prix} pour payer la commission',
+      accSub: "Le même plat ne devrait pas coûter plus cher en ligne.",
+      accBarres: "Le même plat, {prix} au comptoir",
+      accSource: "Sur Fairride : au plus. Relevé en octobre 2026 dans un restaurant bruxellois. Détails sur demande.",
+      barAilleurs: "Ailleurs en ligne",
+      barAilleursCourt: "Ailleurs",
+      barJusqua: "jusqu'à +{pct} %",
+      barAuPlus: "+10 % au plus",
       profilTitre: 'Qu’est-ce qui t’amène sur Fairride ?',
       profilSub: 'On adapte la suite à ce que tu viens faire.',
       rClient: 'Je veux commander',
@@ -9913,21 +9921,21 @@ export default {
       rLivreurS: 'Indépendant, à vélo ou motorisé',
       rCommerce: 'J’ai un commerce',
       rCommerceS: 'Restaurant, snack, boulangerie, épicerie…',
-      qTitre: 'Qu’est-ce qui compte le plus pour toi ?',
-      qSub: 'Un seul choix : on te montre ça en premier.',
-      qPrix: 'Payer moins',
-      qPrixS: 'Le prix du plat, pas la commission',
-      qTotal: 'Un total sans surprise',
-      qTotalS: 'Ce que je vois, c’est ce que je paie',
-      qIci: 'Que mon argent reste ici',
-      qIciS: 'Une appli et des restaurants d’ici',
-      pqTitre: 'Ce que tu y gagnes',
-      pq1: 'Des prix pas gonflés',
-      pq1S: 'Plus la commission est grosse, plus le restaurant doit monter ses prix pour la payer. Les autres applis prennent 22 à 32 %, Fairride 10 % : ici, il ne doit plus gonfler sa carte.',
-      pq2: 'Rien d’ajouté au paiement',
-      pq2S: 'Les plats et la livraison, c’est tout.',
-      pq3: 'Ton argent reste à Bruxelles',
-      pq3S: 'Fairride est une startup née à Bruxelles.',
+      qTitre: "Qu'est-ce qui t'énerve le plus ?",
+      qSub: "Un seul choix : on te montre d'abord comment Fairride le règle.",
+      qPrix: "Les prix gonflés en ligne",
+      qPrixS: "Le même plat, jusqu'à 55 % plus cher",
+      qTotal: "Les frais qui tombent au paiement",
+      qTotalS: "Le total qui grimpe à la dernière étape",
+      qPromo: "Attendre une promo pour que ça vaille le coup",
+      qPromoS: "Le 1+1, sinon c'est trop cher",
+      pqTitre: "Sur Fairride, c'est réglé.",
+      pq1: "Fini les prix gonflés",
+      pq1S: "On prend 10 % au restaurant, pas 30 : il n'a plus besoin de gonfler sa carte.",
+      pq2: "Rien qui tombe au paiement",
+      pq2S: "Les plats et la livraison, c'est tout. Le total que tu vois est celui que tu paies.",
+      pq3: "Pas besoin d'attendre une promo",
+      pq3S: "Des prix pas gonflés tous les jours. Les offres des restaurants viennent en plus.",
       pqBtn: 'Trouver mes restaurants',
       posTitre: 'Trouve les commerces près de chez toi',
       posSub: 'On s’en sert seulement pour te montrer les commerces qui livrent jusqu’à chez toi.',
@@ -9995,6 +10003,8 @@ export default {
       lv1S: 'Par course et par km. Tu ne vois que les courses au-dessus.',
       lv3: '100 % des pourboires',
       lv3S: 'Fairride n’y touche pas.',
+      lv4: "Personne ne te note",
+      lv4S: "Pas d'étoiles, pas de classement.",
       lvBtn: 'Commencer à livrer',
       lvPosTitre: 'La position est indispensable pour livrer',
       lvPosSub: 'On s’en sert uniquement pour montrer au client où en est sa commande, pendant la livraison.',

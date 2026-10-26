@@ -1,79 +1,58 @@
 import { useLanguage } from '../../context/LanguageContext';
 import AvecMarque from '../AvecMarque';
-import MotMarque from '../MotMarque';
-import Rich from '../Rich';
+import Icone from '../Icone';
 import { euros } from '../../prixPlat';
 
-// « POURQUOI FAIRIDE ? » DANS LA BANNIÈRE. Depuis la version B de l'accueil (fondateur, 2026-10-16) : deux barres calmes,
-// comme dans l'app (« Pourquoi passer à Fairide ? »), à la place des deux grandes cases et de la flèche dessinée. Plus de
-// légende « le resto garde 90 % » : le fondateur préfère dire « seulement 10 % » que « ils gardent 90 % » (2026-10-16).
+// « LE MÊME PLAT, TROIS PRIX » DANS LA BANNIÈRE (fondateur, 2026-10-26, version E de maquettes/croissance/prix-gonfles.html).
+// Le titre de la bannière dit « Arrête de payer des prix gonflés. » ; cette carte en est la preuve : un vrai plat, relevé au
+// comptoir et sur une grande plateforme le même jour, et ce qu'il coûte au plus sur Fairride. Le prix de la plateforme est
+// en rouge, avec son écart, comme un avertissement (fondateur : « some red like warning »). Le rouge est --promo, le seul
+// rouge vif du site ; ici il n'annonce pas une promo, il signale un prix gonflé.
 //
-// LE PREMIER ARGUMENT : DES PRIX QUI NE SONT PAS GONFLÉS (fondateur, 2026-10-19, version B de maquettes/prix-pas-gonfles/prix-pas-gonfles.html).
-// « Le restaurant ne doit plus gonfler ses prix » parle au client mieux que « 10 % au lieu de 30 » : la phrase ouvre la
-// carte, les barres disent pourquoi, et deux étiquettes montrent ce que ça change sur un plat. Sans note de calcul sous les
-// étiquettes (fondateur) : le calcul complet est dans l'aide (help.prices2) et dans la FAQ de /notre-histoire.
-//
-// D'OÙ VIENNENT LES CHIFFRES — à relire avant d'en changer un.
-// - 30 % : haut de la fourchette 22-32 % citée partout sur le site, hors TVA.
-// - 10 % : le taux de Fairide, sans TVA depuis que Fairide est sous le régime de la franchise (lettre du SPF
-//   Finances du 12/10/2026, CLAUDE.md « Pricing model ») : les deux taux sont donc sur la même base.
-// - 17,10 € : 12 € ÷ 0,70, ce que la carte doit afficher pour couvrir 30 % de commission, arrondi aux 10 cents inférieurs.
-// - 13,20 € : 12 € + 10 %, la hausse la plus forte qu'un commerce peut poser sur Fairide (hausseMaxPourcent du backend,
-//   fondateur du 16/10/2026, arrondi aux 10 cents inférieurs comme prixMagasin.prixAvecHausse). « au plus » : par défaut, la
-//   carte affiche le prix du comptoir (12 €), d'où « ou 12 € s'il garde son prix ».
-// C'EST UN CALCUL, PAS UN RELEVÉ : on ne dit jamais ce qu'un plat coûte sur une autre plateforme (publicité comparative,
-// art. VI.17 CDE), on ne promet pas un prix plus bas (« tu paies moins » a quitté le sous-titre le même jour), et on écrit
-// « ne doit plus gonfler », jamais « les mêmes prix qu'au restaurant » : un commerce peut monter sa carte de 10 %.
-//
-// TEXTES DE LA MAQUETTE DU 2026-10-09 VOLONTAIREMENT ÉCARTÉS (à ne pas remettre) :
-// - « Commission prise au restaurant » : faux chez nous, la commission est dans le prix affiché, payée
-//   par le client (CLAUDE.md, « Pricing model ») ;
-// - « Le livreur garde 100 % des frais de livraison » : il touche 90 % de sa grille, les 10 % restants
-//   sont les frais de système de Fairide (modèle du 08/10) ;
-// - « Pas de frais de service » : ces frais de système existent, DANS la livraison ;
-// - « +10 % » côté client : faux depuis le 13/10/2026, la carte affiche les prix du commerce par défaut.
-const TAUX_EUX = 0.30;
-const TAUX_NOUS = 0.10;
-const PLAT = 12;
+// CE QUI REND LA CARTE LÉGALE — à relire avant de toucher un chiffre ou la ligne grise (docs/agents/voix.md, § 3).
+// - Comparaison de prix avec « une grande plateforme » : publicité comparative (CDE art. VI.17). Elle doit être exacte et
+//   VÉRIFIABLE : quand l'annonce ne donne pas les détails, elle dit où les obtenir (Cour de justice, Lidl Belgium contre
+//   Colruyt, C-356/04, 2006). D'où « Détails sur demande » dans la ligne grise, et la question 9 de la FAQ de
+//   /notre-histoire (story.faqQ9), qui dit comment on a mesuré et à qui écrire.
+// - Le plat et le restaurant ne sont PAS nommés (fondateur, 2026-10-26) : un partenaire ne doit jamais être reconnaissable
+//   à côté d'un prix gonflé. La date reste : sans elle, « +55 % » serait la seule phrase attaquable de la page.
+// - Les chiffres : 15,00 € au comptoir et 23,25 € sur la plateforme, relevés le 23/10/2026 (preuves datées dans
+//   l'espace de travail, jamais dans ce dépôt public). +55 % = 23,25 ÷ 15,00. « Au plus » sur Fairride = 15,00 + 10 %,
+//   arrondi aux 10 cents inférieurs (hausseMaxPourcent et prixAvecHausse du backend) = 16,50 €.
+// - À refaire chaque mois : un nouveau relevé, et la date de landing.prixReleve dans les trois langues.
+// - Jamais « moins cher », jamais un total livraison comprise : on compare un plat, pas une commande.
+const COMPTOIR = 15.0;
+const PLATEFORME = 23.25;
+const HAUSSE_MAX = 0.10;
 const dixCentimesInferieurs = (v) => Math.floor(v * 10 + 1e-6) / 10;
-const AFFICHE_EUX = dixCentimesInferieurs(PLAT / (1 - TAUX_EUX)); // 17,10 €
-const AFFICHE_NOUS = dixCentimesInferieurs(PLAT * (1 + TAUX_NOUS)); // 13,20 €
-
-// Espace fine insécable (typographie française) : « 90 » et « % » ne se séparent jamais.
-const pct = (x) => `${Math.round(x * 100)} %`;
+const AU_PLUS = dixCentimesInferieurs(COMPTOIR * (1 + HAUSSE_MAX)); // 16,50 €
+const ECART = Math.round((PLATEFORME / COMPTOIR - 1) * 100); // 55
 
 export default function HeroPrix() {
   const { t } = useLanguage();
-  // La barre des grandes plateformes fait toute la largeur ; celle de Fairide est à l'échelle (10 sur 30).
   const lignes = [
-    { nom: 'fairride', taux: TAUX_NOUS, nous: true },
-    { nom: t('landing.priceThem'), taux: TAUX_EUX }
+    { cle: 'comptoir', nom: t('landing.prixComptoirLigne'), prix: COMPTOIR },
+    { cle: 'plateforme', nom: t('landing.prixPlateformeLigne'), prix: PLATEFORME, alerte: `+${ECART} %` },
+    { cle: 'nous', nom: <AvecMarque>{t('landing.prixFairrideLigne')}</AvecMarque>, sous: t('landing.prixAuPlus'), prix: AU_PLUS }
   ];
-  const plat = euros(PLAT).replace(/[,.]00(?=\D|$)/, '');
   return (
-    <section className="sa-prix" aria-label={t('landing.priceWhyAria')}>
-      <h2 className="sa-prix-titre"><AvecMarque>{t('landing.priceWhy')}</AvecMarque></h2>
-      <p className="sa-prix-accroche"><Rich text={t('landing.prixAccroche')} /></p>
-      {lignes.map((l) => (
-        <div key={l.nom} className={`sa-prix-ligne${l.nous ? ' sa-prix-nous' : ''}`}>
-          {l.nous ? <MotMarque /> : <span>{l.nom}</span>}
-          <i aria-hidden="true"><b style={{ width: `${Math.round((l.taux / TAUX_EUX) * 100)}%` }} /></i>
-          <strong>{pct(l.taux)}</strong>
-        </div>
-      ))}
-      <p className="sa-prix-exemple">{t('landing.prixExemple', { prix: plat })}</p>
-      <div className="sa-prix-etiquettes">
-        <div className="sa-prix-etiquette">
-          <span>{t('landing.prixEux')}</span>
-          <strong>{euros(AFFICHE_EUX)}</strong>
-          <small>{t('landing.prixEuxSous')}</small>
-        </div>
-        <div className="sa-prix-etiquette sa-prix-etiquette-nous">
-          <span><AvecMarque>{t('landing.prixNous')}</AvecMarque></span>
-          <strong>{euros(AFFICHE_NOUS)}</strong>
-          <small>{t('landing.prixNousSous', { prix: plat })}</small>
-        </div>
+    <section className="sa-prix sa-prix-trois" aria-label={t('landing.prixTroisAria', { ecart: ECART })}>
+      <h2 className="sa-prix-titre">{t('landing.prixTroisTitre')}</h2>
+      <p className="sa-prix-releve">{t('landing.prixReleve')}</p>
+      <div className="sa-prix-rangs">
+        {lignes.map((l) => (
+          <div key={l.cle} className={`sa-prix-rang sa-prix-rang-${l.cle}`}>
+            <span className="sa-prix-nom">
+              <span>{l.nom}</span>
+              {l.alerte && <span className="sa-prix-alerte"><Icone nom="alerte" taille={13} /> {l.alerte}</span>}
+              {l.sous && <small>{l.sous}</small>}
+            </span>
+            <i aria-hidden="true"><b style={{ width: `${Math.round((l.prix / PLATEFORME) * 100)}%` }} /></i>
+            <strong>{euros(l.prix)}</strong>
+          </div>
+        ))}
       </div>
+      <p className="sa-prix-pied">{t('landing.prixPied')}</p>
     </section>
   );
 }

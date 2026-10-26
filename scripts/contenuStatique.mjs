@@ -71,8 +71,9 @@ function listeCommerces(commerces, { t, langue }) {
 
 export function corpsAccueil({ t, langue, commerces }) {
   const contenu = [
-    `        <h1>${texte(t('landing.title1'))} ${texte(t('landing.title2'))}</h1>`,
-    `        <p>${texte(t('landing.sub'))}</p>`,
+    `        <h1>${texte(t('landing.titreAccueil1'))} ${texte(t('landing.titreAccueil2'))}</h1>`,
+    `        <p>${texte(t('landing.subAdresse'))}</p>`,
+    `        <h2>${texte(t('landing.altTitre'))}</h2>\n        <p>${texte(t('landing.sub'))}</p>`,
     `        <h2>${texte(t('landing.featureLocalTitle'))}</h2>\n        <p>${texte(t('landing.featureLocalText'))}</p>`,
     `        <h2>${texte(t('landing.featureFairTitle'))}</h2>\n        <p>${texte(t('landing.featureFairText'))}</p>`,
     listeCommerces(commerces, { t, langue })

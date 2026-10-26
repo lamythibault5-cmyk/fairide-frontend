@@ -144,28 +144,34 @@ function SceneAccueil() {
   );
 }
 
-/* LES BARRES EN EUROS : ce qu'un restaurant ajoute AU PLUS à un plat de 12 € pour payer la commission. 30 % : 12 € ÷ 0,70
- * = 17,14 €, soit +5,10 € (arrondi aux 10 cents inférieurs) ; Fairide : la hausse est plafonnée à 10 % (hausseMaxPourcent du
- * backend), soit +1,20 €. Un calcul, pas un relevé des prix d'une autre application (voir HeroPrix.jsx). L'ajout des autres
- * applis fait toute la largeur, celui de Fairide est à l'échelle. Sur le premier écran et sur « Ce que tu y gagnes ». */
-const PLAT = 12;
-const AJOUT_EUX = Math.floor((PLAT / 0.7 - PLAT) * 10 + 1e-6) / 10; // 5,10 €
-const AJOUT_NOUS = Math.floor(PLAT * 0.1 * 10 + 1e-6) / 10; // 1,20 €
-const platAffiche = () => euros(PLAT).replace(/[,.]00(?=\D|$)/, '');
-function BarresPlat() {
+/* LES BARRES DU VRAI PLAT RELEVÉ (fondateur, 2026-10-26, maquettes/croissance/prix-gonfles.html) : le même plat que la carte
+ * « Le même plat, trois prix » de l'accueil du site (HeroPrix.jsx, qui dit pourquoi la comparaison est légale) : 15,00 € au
+ * comptoir, 23,25 € en ligne sur une grande plateforme (+55 %, en rouge comme sur le site), 16,50 € au plus sur Fairride
+ * (+10 %, arrondi aux 10 cents inférieurs). Premier écran : en euros, sous « Le même plat, 15 € au comptoir », avec la ligne
+ * « Relevé en octobre 2026… Détails sur demande ». « Ce que tu y gagnes » : en pourcentages (`pourcent`). Le relevé se refait
+ * chaque mois : changer les prix ici et dans HeroPrix.jsx, et la date d'appli.accSource et de landing.prixReleve. */
+const COMPTOIR = 15.0;
+const EN_LIGNE = 23.25;
+const AU_PLUS = Math.floor(COMPTOIR * 1.1 * 10 + 1e-6) / 10; // 16,50 €
+const ECART = Math.round((EN_LIGNE / COMPTOIR - 1) * 100); // 55
+const platAffiche = () => euros(COMPTOIR).replace(/[,.]00(?=\D|$)/, '');
+function BarresPlat({ pourcent = false }) {
   const { t } = useLanguage();
+  const eux = pourcent ? t('appli.barJusqua', { pct: ECART }) : euros(EN_LIGNE);
+  const nous = pourcent ? t('appli.barAuPlus') : euros(AU_PLUS);
+  const ailleurs = pourcent ? t('appli.barAilleursCourt') : t('appli.barAilleurs');
   return (
-    <div className="bv-barres" aria-label={`${t('appli.autresApplis')} +${euros(AJOUT_EUX)}, Fairride +${euros(AJOUT_NOUS)}`}>
-      <span>{t('appli.autresApplis')}</span><i className="autres-euros" /><span>+{euros(AJOUT_EUX)}</span>
-      <span>Fairride</span><i className="fairide" style={{ width: `${(AJOUT_NOUS / AJOUT_EUX) * 100}%` }} /><span><b>+{euros(AJOUT_NOUS)}</b></span>
+    <div className="bv-barres" aria-label={`${ailleurs} ${eux}, Fairride ${nous}`}>
+      <span>{ailleurs}</span><i className="gonfle" /><span className="gonfle-prix">{eux}</span>
+      <span>Fairride</span><i className="fairide" style={{ width: `${Math.round((pourcent ? 10 / ECART : AU_PLUS / EN_LIGNE) * 100)}%` }} /><span><b>{nous}</b></span>
     </div>
   );
 }
 
 /* PREMIER ÉCRAN, version B2 de maquettes/accueil-appli/accueil-appli.html (fondateur, 2026-10-16), le même pour les trois profils.
- * Le slogan du site dans le bandeau iris (landing.title1/title2, gardé par le fondateur le 2026-10-22), le vélo dessous, puis
- * la feuille blanche : la phrase, les barres en euros d'un plat de 12 € (version retenue de
- * maquettes/onboarding-court/onboarding-court.html, à la place des barres de commission en %), la ligne belge, le bouton lime. */
+ * Depuis le 2026-10-26 (maquettes/croissance/prix-gonfles.html), le même titre que le site : « Arrête de payer des prix
+ * gonflés. » (landing.titreAccueil1/2), le vélo dessous, puis la feuille blanche : ce qu'on croit (« Le même plat ne devrait
+ * pas coûter plus cher en ligne. »), les barres du vrai plat relevé et leur source, la ligne belge, le bouton lime. */
 export function EcranAccueil({ onCommencer, onConnexion }) {
   const { t } = useLanguage();
   return (
@@ -174,7 +180,7 @@ export function EcranAccueil({ onCommencer, onConnexion }) {
         <span className="bv-marque"><BrandMark size={34} tile={false} color="#C8F03C" /><MotMarque /></span>
         <Langues />
       </div>
-      <h1 className="bv-titre bv-titre-accueil">{t('landing.title1')}<br />{t('landing.title2')}</h1>
+      <h1 className="bv-titre bv-titre-accueil">{t('landing.titreAccueil1')}<br />{t('landing.titreAccueil2')}</h1>
       {/* Sur un grand écran, c'est le bandeau qui grandit (le vélo descend vers la feuille), pas la feuille. */}
       <div className="bv-grandit" />
       <SceneAccueil />
@@ -183,6 +189,7 @@ export function EcranAccueil({ onCommencer, onConnexion }) {
         <div className="bv-carte bv-carte-barres">
           <b>{t('appli.accBarres', { prix: platAffiche() })}</b>
           <BarresPlat />
+          <span className="bv-petit">{t('appli.accSource')}</span>
         </div>
         <p className="bv-petit bv-ligne-be bv-be-accueil"><Drapeau /> {t('appli.beChip')}</p>
         <button type="button" className="bv-btn btn-gold" onClick={onCommencer}>{t('appli.commencer')}</button>
@@ -209,11 +216,12 @@ export function EcranProfil({ role, onChoix, onSuite }) {
   );
 }
 
-/* UNE SEULE QUESTION (fondateur, 2026-10-22, version B de maquettes/onboarding-court/onboarding-court.html) : « Qu'est-ce qui
- * compte le plus pour toi ? », un seul choix, qui passe en tête de l'écran suivant. Elle remplace « ce qui compte », « ce qui
- * agace » et les trois cartes à glisser (« trop long », retours des testeurs). « Payer moins » est le souhait du client :
- * l'écran suivant n'y répond jamais par « moins cher », seulement par des prix pas gonflés (CLAUDE.md, l'argent). */
-const QUESTION = [['prix', 'euro', 'qPrix'], ['total', 'ticket', 'qTotal'], ['ici', 'be', 'qIci']];
+/* UNE SEULE QUESTION (fondateur, 2026-10-22, version B de maquettes/onboarding-court/onboarding-court.html), un seul choix, qui
+ * passe en tête de l'écran suivant. Depuis le 2026-10-26 (maquettes/croissance/prix-gonfles.html) : « Qu'est-ce qui t'énerve
+ * le plus ? », trois réponses qui parlent de SON argent (le client qui commande tous les jours veut le bon plan) : les prix
+ * gonflés, les frais au paiement, attendre une promo (« le 1+1 »). « Que mon argent reste ici » est retiré. L'écran suivant
+ * n'y répond jamais par « moins cher », seulement par des prix pas gonflés (CLAUDE.md, l'argent). */
+const QUESTION = [['prix', 'euro', 'qPrix'], ['total', 'ticket', 'qTotal'], ['promo', 'etiquette', 'qPromo']];
 export function EcranQuestion({ choix, onChoix, onSuite }) {
   const { t } = useLanguage();
   return (
@@ -229,14 +237,14 @@ export function EcranQuestion({ choix, onChoix, onSuite }) {
   );
 }
 
-/* « CE QUE TU Y GAGNES » (version retenue de maquettes/onboarding-court/onboarding-court.html, 2026-10-22) : l'argent du client
- * d'abord, plus le livreur ni le restaurant (« les gens tiennent à leur argent », fondateur). Des prix pas gonflés, avec la
- * raison (plus la commission est grosse, plus le restaurant monte ses prix), rien d'ajouté au paiement, ton argent reste à
- * Bruxelles. La carte choisie à la question passe en tête, sans phrase « Tu nous l'as dit » (retirée par le fondateur). */
-const CARTES_POURQUOI = { prix: ['euro', 'pq1'], total: ['ticket', 'pq2'], ici: ['be', 'pq3'] };
+/* « SUR FAIRRIDE, C'EST RÉGLÉ. » (2026-10-26, avant : « Ce que tu y gagnes ») : une carte par réponse à la question, celle choisie
+ * en tête, sans phrase « Tu nous l'as dit » (retirée par le fondateur). Fini les prix gonflés (avec les barres en %), rien qui
+ * tombe au paiement, pas besoin d'attendre une promo. Ni le livreur ni « l'argent reste ici » : ce n'est pas ce qui fait
+ * changer le client (fondateur). */
+const CARTES_POURQUOI = { prix: ['euro', 'pq1'], total: ['ticket', 'pq2'], promo: ['etiquette', 'pq3'] };
 export function EcranPourquoi({ onSuite, premier = null }) {
   const { t } = useLanguage();
-  const ordre = ['prix', 'total', 'ici'].sort((a, b) => Number(b === premier) - Number(a === premier));
+  const ordre = ['prix', 'total', 'promo'].sort((a, b) => Number(b === premier) - Number(a === premier));
   return (
     <>
       <h1 className="bv-titre">{t('appli.pqTitre')}</h1>
@@ -245,7 +253,7 @@ export function EcranPourquoi({ onSuite, premier = null }) {
           const [icone, k] = CARTES_POURQUOI[cle];
           return (
             <Fait key={cle} vedette={n === 0} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)}>
-              {cle === 'prix' && <BarresPlat />}
+              {cle === 'prix' && <BarresPlat pourcent />}
             </Fait>
           );
         })}

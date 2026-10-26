@@ -100,6 +100,27 @@ html:not(.appli) .sa-accueil .sa-prix-etiquette strong { display: block; font-fa
 html:not(.appli) .sa-accueil .sa-prix-etiquette small { display: block; font-size: 12.5px; line-height: 1.35; color: var(--ink-faint); margin-top: 2px; }
 html:not(.appli) .sa-accueil .sa-prix-etiquette-nous { border: 2px solid var(--iris); }
 html:not(.appli) .sa-accueil .sa-prix-etiquette-nous strong { color: var(--iris); }
+/* « Le même plat, trois prix » (HeroPrix.jsx, 2026-10-26) : comptoir, grande plateforme EN ROUGE (avertissement), Fairride
+   en iris sur fond iris pâle. Les barres sont à l'échelle du prix le plus haut. */
+html:not(.appli) .sa-accueil .sa-prix-trois .sa-prix-titre { margin-bottom: 6px; }
+html:not(.appli) .sa-accueil .sa-prix-releve { font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); margin: 0 0 24px; }
+html:not(.appli) .sa-accueil .sa-prix-rangs { display: grid; gap: 14px; }
+html:not(.appli) .sa-accueil .sa-prix-rang { display: grid; grid-template-columns: 180px minmax(0, 1fr) 112px; align-items: center; gap: 16px; font-size: 16px; }
+html:not(.appli) .sa-accueil .sa-prix-nom { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; line-height: 1.25; }
+html:not(.appli) .sa-accueil .sa-prix-nom small { font-size: 12.5px; color: var(--ink-faint); }
+html:not(.appli) .sa-accueil .sa-prix-rang i { display: block; height: 14px; border-radius: 7px; background: var(--surface-soft); overflow: hidden; }
+html:not(.appli) .sa-accueil .sa-prix-rang i b { display: block; height: 100%; border-radius: 7px; background: var(--ink-mute); animation: sa-pousse 1.1s cubic-bezier(.2, .8, .25, 1) .5s backwards; }
+html:not(.appli) .sa-accueil .sa-prix-rang strong { text-align: right; font-family: var(--font-titre); font-size: 26px; letter-spacing: -0.02em; white-space: nowrap; }
+html:not(.appli) .sa-accueil .sa-prix-rang-plateforme i b { background: var(--promo); }
+html:not(.appli) .sa-accueil .sa-prix-rang-plateforme strong { color: var(--promo); }
+html:not(.appli) .sa-accueil .sa-prix-alerte { display: inline-flex; align-items: center; gap: 4px; background: var(--promo); color: #fff; font-size: 12.5px; font-weight: 700; padding: 2px 9px 2px 7px; border-radius: var(--radius-pill); white-space: nowrap; }
+html:not(.appli) .sa-accueil .sa-prix-rang-nous { background: var(--iris-tint); border-radius: 16px; padding: 12px 14px; margin: 0 -14px; }
+html:not(.appli) .sa-accueil .sa-prix-rang-nous .sa-prix-nom > span { font-weight: 700; }
+html:not(.appli) .sa-accueil .sa-prix-rang-nous .wordmark { font-size: 21px; font-weight: 800; }
+html:not(.appli) .sa-accueil .sa-prix-rang-nous i { background: #fff; }
+html:not(.appli) .sa-accueil .sa-prix-rang-nous i b { background: var(--iris); }
+html:not(.appli) .sa-accueil .sa-prix-rang-nous strong { color: var(--iris); font-size: 32px; }
+html:not(.appli) .sa-accueil .sa-prix-pied { margin: 22px 0 0; padding-top: 18px; border-top: 1px solid var(--line); font-family: var(--font-titre); font-weight: 700; font-size: 18px; letter-spacing: -0.01em; }
 
 /* ---------------------------------------------------------------------------------------------------------------------
    2 · LA FEUILLE BLANCHE
@@ -130,6 +151,7 @@ html:not(.appli) .sa-accueil .sa-section-titre { font-size: 28px; letter-spacing
 
 /* Les deux arguments. */
 html:not(.appli) .sa-accueil .sa-arguments { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 56px; }
+html:not(.appli) .sa-accueil .sa-alternative + .sa-arguments { margin-top: 0; }
 html:not(.appli) .sa-accueil .sa-argument { display: flex; gap: 16px; align-items: flex-start; border: 1px solid var(--line); border-radius: 20px; padding: 22px 24px; background: #fff; }
 html:not(.appli) .sa-accueil .sa-tuile { width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--line); color: var(--iris); display: grid; place-items: center; flex: none; }
 html:not(.appli) .sa-accueil .sa-tuile-pleine { background: var(--iris); color: var(--lime); border: 0; }
@@ -210,6 +232,16 @@ html:not(.appli) .sa-accueil .sa-store small { font-size: 10.5px; font-weight: 5
   html:not(.appli) .sa-accueil .sa-prix-etiquettes { gap: 8px; }
   html:not(.appli) .sa-accueil .sa-prix-etiquette { padding: 12px; border-radius: 14px; }
   html:not(.appli) .sa-accueil .sa-prix-etiquette strong { font-size: 21px; }
+  /* Trois prix : le nom et le prix sur une ligne, la barre dessous, toute la largeur. */
+  html:not(.appli) .sa-accueil .sa-prix-releve { font-size: 12.5px; margin-bottom: 16px; }
+  html:not(.appli) .sa-accueil .sa-prix-rangs { gap: 12px; }
+  html:not(.appli) .sa-accueil .sa-prix-rang { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; font-size: 14px; }
+  html:not(.appli) .sa-accueil .sa-prix-rang i { grid-column: 1 / -1; grid-row: 2; height: 10px; }
+  html:not(.appli) .sa-accueil .sa-prix-rang strong { font-size: 20px; }
+  html:not(.appli) .sa-accueil .sa-prix-rang-nous { padding: 10px 12px; margin: 0 -12px; border-radius: 14px; }
+  html:not(.appli) .sa-accueil .sa-prix-rang-nous .wordmark { font-size: 18px; }
+  html:not(.appli) .sa-accueil .sa-prix-rang-nous strong { font-size: 24px; }
+  html:not(.appli) .sa-accueil .sa-prix-pied { font-size: 16px; margin-top: 16px; padding-top: 14px; }
   html:not(.appli) .sa-accueil .sa-feuille { margin-top: -26px; padding-top: 30px; }
   html:not(.appli) .sa-accueil .sa-feuille::before { border-radius: 26px 26px 0 0; }
   html:not(.appli) .sa-accueil .hero-preview-head { font-size: 23px; }
@@ -235,6 +267,6 @@ html:not(.appli) .sa-accueil .sa-store small { font-size: 10.5px; font-weight: 5
   html:not(.appli) .sa-accueil .sa-appli-stores { padding-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sa-accueil .sa-scene *, .sa-accueil .sa-belge, .sa-accueil .sa-feuille::before, .sa-accueil .sa-prix-ligne i b { animation: none !important; }
+  .sa-accueil .sa-scene *, .sa-accueil .sa-belge, .sa-accueil .sa-feuille::before, .sa-accueil .sa-prix-ligne i b, .sa-accueil .sa-prix-rang i b { animation: none !important; }
   .sa-accueil .sa-porte { transition: none; }
 }
