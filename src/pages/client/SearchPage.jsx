@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Icone from '../../components/Icone';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import { CHEMIN_LISTE, CHEMIN_PLATS_RECHERCHE } from '../../resumeCarte';
+import { CHEMIN_LISTE, CHEMIN_PLATS_RECHERCHE, jetonListe } from '../../resumeCarte';
 import { MENTIONS_ALIMENTAIRES, platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
 import { COMMUNES, COMMUNES_SUGGEREES, illustrationCuisine, restaurantTypeLabel } from '../../menuCategories';
@@ -103,7 +103,7 @@ export default function SearchPage() {
 
   const chargerCommerces = () => {
     setEchec(false); setChargement(true);
-    return api(CHEMIN_LISTE).then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
+    return api(CHEMIN_LISTE, { token: jetonListe(user, token) }).then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
   };
   useEffect(() => {
     chargerCommerces();

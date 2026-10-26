@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
-import { CHEMIN_LISTE } from '../../resumeCarte';
+import { CHEMIN_LISTE, jetonListe } from '../../resumeCarte';
 import { cheminFiche } from '../../adresseFiche';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -44,7 +44,7 @@ const TRI = false;
 
 export default function MapPage() {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [promosSeules, setPromosSeules] = useState(false);
@@ -68,10 +68,11 @@ export default function MapPage() {
   const charger = () => {
     setEchec(false);
     setChargement(true);
-    api(CHEMIN_LISTE).then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
+    api(CHEMIN_LISTE, { token: jetonListe(user, token) }).then(setRestaurants).catch(() => setEchec(true)).finally(() => setChargement(false));
   };
+  // Relue quand le compte change : un compte de test y voit en plus la boutique de test (jetonListe).
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { charger(); }, []);
+  useEffect(() => { charger(); }, [token]);
 
   // Plus aucun appel périodique ici. Cette page interrogeait /orders/mine toutes les trente
   // secondes, uniquement pour savoir s'il fallait afficher le bandeau « ta livraison est en
