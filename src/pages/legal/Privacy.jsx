@@ -22,12 +22,16 @@ const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'
 // pour l'import et la traduction des cartes, supprimés le 2026-09-21 — et il y est revenu le 2026-10-09 :
 // depuis le 2026-09-22, le module Sales lui envoie les photos de devanture pour lire l'enseigne
 // (backend salesPhoto.js, déjà au registre registreTraitements.js), sans que la politique le dise.
+// Firebase (notifications de l'application, fcm.js du backend) et Apple (« Continuer avec Apple », service de
+// notification de l'iPhone) n'y figuraient pas avant le 2026-10-26, alors que l'application les utilisait déjà.
 // Les noms sont des noms propres : ils ne se traduisent pas, seule la description est dans les
 // trois langues.
 const SOUS_TRAITANTS = [
   ['stripe', 'Stripe'],
   ['resend', 'Resend'],
   ['google', 'Google'],
+  ['firebase', 'Firebase (Google)'],
+  ['apple', 'Apple'],
   ['nominatim', 'Nominatim (OpenStreetMap)'],
   ['photon', 'Photon (Komoot)'],
   ['osrm', 'OSRM'],
