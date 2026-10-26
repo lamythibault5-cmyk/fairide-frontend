@@ -27,8 +27,10 @@ the better deal, « the 1+1 »; they don't choose an app for what the courier ea
 | Shop | « Tes clients devraient voir tes vrais prix, et ton travail te payer toi. » | 10 %, pas 30. Tes prix du comptoir, ou 10 % de plus au plus. Ta carte préparée pour toi. | « Inscrire mon commerce. » |
 | Courier | « Ta course devrait te payer toi. » | 90 % de chaque livraison, 100 % des pourboires, tu fixes ton minimum, personne ne te note. | « Commencer à livrer. » |
 
-The fairness story (the courier's 90 %, money that stays in Brussels, a Belgian startup) is true and stays, but as a plus:
-lower on the front page, in « Notre histoire », in the shop and courier texts. It never leads a customer text.
+What the courier earns (90 % of the delivery, all tips) is told **only to couriers** (courier onboarding, courier ads,
+the « Livreur » card of « Rejoindre Fairride »): founder, 2026-10-26, « le livreur garde 90 %, cette phrase peut partir ».
+No customer text mentions it, not even lower on the page. « Ton argent reste à Bruxelles » may close a customer sentence,
+never open it.
 
 The slogan that holds all of it: **« Paie ton repas, pas la plateforme. »** (under the logo, store listings, sign-offs).
 The front page opens with the call, then the customer's why (founder's mix, 2026-10-26):

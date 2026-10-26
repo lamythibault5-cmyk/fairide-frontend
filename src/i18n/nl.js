@@ -7478,7 +7478,7 @@ export default {
       prixEuxSous: "grote platformen",
       prixNous: "Met Fairride",
       prixNousSous: "hoogstens, of {prix} als het zijn prijs behoudt",
-      sub: 'Het Belgische alternatief voor Uber Eats en Deliveroo. 10% commissie in plaats van 22 tot 32%: de zaak houdt meer over, de koerier krijgt 90 % van de leveringskosten, en het geld blijft hier.',
+      sub: "Fairride neemt 10% commissie, waar de grote platformen 22 tot 32% aankondigen: het restaurant moet zijn kaart niet meer opblazen.",
       /* Korte versies, enkel op gsm — zie het fr-blok voor de reden. */
       ordersOpenCourt: 'Afhalen vanaf 1 november, levering binnenkort',
       partnerQuestion: 'Handelaar of koerier?',
@@ -7488,7 +7488,7 @@ export default {
       featureLocalTitle: '100% lokale handelszaken',
       featureLocalText: 'Restaurants, supermarkten, nachtwinkels, bakkerijen… ontdek en steun de handelaars van de buurt, toegankelijk voor iedereen.',
       featureFairTitle: "Prijzen die niet opgeblazen zijn",
-      featureFairText: "10% commissie in plaats van de 22 tot 32% van de grote platformen: het restaurant moet zijn kaart niet meer opblazen, en de koerier verdient meer.",
+      featureFairText: "10% commissie in plaats van de 22 tot 32% van de grote platformen: het restaurant moet zijn kaart niet meer opblazen.",
       howItWorks: 'Hoe het werkt',
       step1Title: 'Een zaak kiezen',
       step1Text: 'Blader door de restaurants en lokale handelaars van de buurt.',
@@ -7570,7 +7570,7 @@ export default {
       discoverInfoCommunes: 'gemeenten',
       discoverInfoCuisines: 'soorten keuken',
       discoverInfoCommission: 'commissie max.',
-      discoverInfoText: 'Restaurants, bakkers, slagers, kruideniers, nachtwinkels… Elke bestelling steunt een buurtzaak: 90% van de prijs gaat naar haar, en de koerier houdt 90% van de levering en alle fooien.',
+      discoverInfoText: 'Restaurants, bakkers, slagers, kruideniers, nachtwinkels… Elke bestelling gaat naar een buurtzaak, zonder opgeblazen prijzen.',
       discoverInfoCta: 'Alle zaken bekijken',
       discoverInfoJoin: 'Mijn zaak inschrijven'
     },

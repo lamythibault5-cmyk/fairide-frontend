@@ -7530,7 +7530,7 @@ export default {
       prixEuxSous: "grandes plateformes",
       prixNous: "Avec Fairride",
       prixNousSous: "au plus, ou {prix} s'il garde son prix",
-      sub: "L'alternative belge à Uber Eats et Deliveroo. 10 % de commission au lieu de 22 à 32 % : le restaurant garde plus, le livreur touche 90 % des frais de livraison, et l'argent reste ici.",
+      sub: "Fairride prend 10 % de commission, là où les grandes plateformes annoncent 22 à 32 % : le restaurant ne doit plus gonfler sa carte.",
       /* Les clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on
          ne coupe pas une phrase au milieu d'un mot pour gagner de la place, on en écrit une plus
@@ -7544,7 +7544,7 @@ export default {
       featureLocalTitle: '100% commerces locaux',
       featureLocalText: 'Restaurants, supermarchés, night shops, boulangeries… découvrir et soutenir les commerces du quartier, accessibles à tous.',
       featureFairTitle: "Des prix qui ne sont pas gonflés",
-      featureFairText: "10 % de commission au lieu des 22 à 32 % des grandes plateformes : le restaurant ne doit plus gonfler sa carte, et le livreur touche plus.",
+      featureFairText: "10 % de commission au lieu des 22 à 32 % des grandes plateformes : le restaurant ne doit plus gonfler sa carte.",
       howItWorks: 'Comment ça marche',
       step1Title: 'Choisir un commerce',
       step1Text: 'Parcourir les restaurants et commerces locaux du quartier.',
@@ -7626,7 +7626,7 @@ export default {
       discoverInfoCommunes: 'communes',
       discoverInfoCuisines: 'types de cuisine',
       discoverInfoCommission: 'de commission max.',
-      discoverInfoText: 'Restaurants, boulangeries, boucheries, épiceries, night shops… Chaque commande soutient un commerce du quartier : 90 % du prix lui revient, et le livreur garde 90 % de la livraison et tous ses pourboires.',
+      discoverInfoText: 'Restaurants, boulangeries, boucheries, épiceries, night shops… Chaque commande va à un commerce du quartier, sans prix gonflés.',
       discoverInfoCta: 'Voir tous les commerces',
       discoverInfoJoin: 'Inscrire mon commerce'
     },

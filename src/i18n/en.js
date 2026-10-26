@@ -7469,7 +7469,7 @@ export default {
       prixEuxSous: "big platforms",
       prixNous: "With Fairride",
       prixNousSous: "at most, or {prix} if it keeps its price",
-      sub: 'The Belgian alternative to Uber Eats and Deliveroo. 10% commission instead of 22 to 32%: the restaurant keeps more, the courier keeps 90% of the delivery fees, and the money stays here.',
+      sub: "Fairride takes a 10% commission, where the big platforms advertise 22 to 32%: restaurants no longer have to inflate their menu.",
       /* Short forms, phone only — see the fr block for the reasoning. */
       ordersOpenCourt: 'Takeaway from 1 November, delivery soon',
       partnerQuestion: 'A business or a courier?',
@@ -7479,7 +7479,7 @@ export default {
       featureLocalTitle: '100% local businesses',
       featureLocalText: 'Restaurants, supermarkets, night shops, bakeries… discover and support the neighbourhood\'s businesses, open to everyone.',
       featureFairTitle: "Prices that aren't inflated",
-      featureFairText: "10% commission instead of the 22 to 32% of big platforms: restaurants no longer have to inflate their menu, and couriers earn more.",
+      featureFairText: "10% commission instead of the 22 to 32% of big platforms: restaurants no longer have to inflate their menu.",
       howItWorks: 'How it works',
       step1Title: 'Choose a business',
       step1Text: 'Browse the neighbourhood\'s restaurants and local businesses.',
@@ -7561,7 +7561,7 @@ export default {
       discoverInfoCommunes: 'communes',
       discoverInfoCuisines: 'cuisine types',
       discoverInfoCommission: 'max. commission',
-      discoverInfoText: 'Restaurants, bakeries, butchers, groceries, night shops… Every order supports a local business: 90% of the price goes to it, and the courier keeps 90% of the delivery fee and all tips.',
+      discoverInfoText: 'Restaurants, bakeries, butchers, groceries, night shops… Every order goes to a local business, with no inflated prices.',
       discoverInfoCta: 'See all businesses',
       discoverInfoJoin: 'List my business'
     },
