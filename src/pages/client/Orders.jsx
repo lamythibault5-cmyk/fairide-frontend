@@ -19,7 +19,6 @@ import { preparerNouvelleCommande } from '../../recommander';
 import SignalerProbleme from '../../components/client/SignalerProbleme';
 import SansLivreur from '../../components/client/SansLivreur';
 import LivreurALaPorte from '../../components/client/LivreurALaPorte';
-import ClocheNotifications from '../../components/client/ClocheNotifications';
 import ReglageNotifications from '../../components/ReglageNotifications';
 import { RappelEmail } from '../../components/EmailConfirmation';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -684,7 +683,9 @@ export default function Orders() {
     <>
       {/* Adresse e-mail pas encore confirmée : le rappel, le plus tôt possible après l'inscription (EmailConfirmation.jsx). */}
       <RappelEmail />
-      <ClocheNotifications />
+      {/* Plus de cloche ni de pastille sur l'onglet (Owen, 2026-10-26) : il fallait toucher « Notifications » pour effacer le
+          chiffre, alors que les cartes ci-dessous disent déjà prête, refusée ou annulée. Le serveur écrit toujours les
+          événements (GET /me/notifications), plus rien ne les lit ici. */}
       {/* Le suivi sur le téléphone, même page fermée : acceptée, en route, à la porte… (ReglageNotifications.jsx). */}
       {/* Une commande en cours : être prévenu est LE geste de l'écran, en lime tant que ce n'est pas activé (2026-10-25). */}
       <ReglageNotifications textes={{ aide: t('orders.notifHelp'), actif: t('orders.notifOn') }}

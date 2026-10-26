@@ -94,8 +94,7 @@ covered by `../fairide-backend/tests/correctifs-e2e.test.js`:
 - **Simulation orders** never enter admin money figures (`sqlCommandeReelle` in every finance/KPI query).
 - **New features**: client data export and « log out everywhere » ([MesDonnees](../../src/components/MesDonnees.jsx)), order
   again ([src/recommander.js](../../src/recommander.js)), report a problem ([SignalerProbleme](../../src/components/client/SignalerProbleme.jsx)
-  → support ticket), notification bell ([ClocheNotifications](../../src/components/client/ClocheNotifications.jsx), fed by a DB
-  trigger), promo code at checkout; business pause 15/30/60 min ([InterrupteurService](../../src/components/commerce/InterrupteurService.jsx)),
+  → support ticket), promo code at checkout; business pause 15/30/60 min ([InterrupteurService](../../src/components/commerce/InterrupteurService.jsx)),
   extra prep time on accept, minimum order, per-dish client note (printed on the ticket); courier incidents
   ([IncidentsCourse](../../src/components/livreur/IncidentsCourse.jsx): hand back a job, waiting at the business, client absent)
   and the client's « no courier after 20 min → cancel, refunded » ([SansLivreur](../../src/components/client/SansLivreur.jsx)).

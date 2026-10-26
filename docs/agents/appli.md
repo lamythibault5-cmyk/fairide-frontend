@@ -48,6 +48,14 @@ progress opens on an iris header with a big friendly status (`titreSuivi`) and a
 number in a lime circle and folds back to a circle that keeps the count (`PasPlat`, MenuCategorySections), and the dish sheet's
 quantity and « Ajouter » are one lime block — 3C; full-page empty screens (orders, favourites, cart) show the bike waiting on its
 road (`EtatVide scene=…`) — 4B. Buttons inside these need `min-height` overrides: the global 44 px touch rule has specificity (0,3,1).
+**The order in progress on every screen (2026-10-26, A3 of `maquettes/commande-en-cours/`)**: the Commandes tab pill and the
+notification bell are gone (one had to tap « Notifications » to clear a number). Instead a 60 px bar sits where the cart bar sits
+(above it when both show, left of the cart bubble): the shop photo in a ring that fills step by step, « shop · type », the
+step (`titreSuivi`), a chevron to Mes commandes ([SuiviCommande](../../src/components/client/SuiviCommande.jsx), shared reader
+[useCommandeEnCours](../../src/hooks/useCommandeEnCours.js): /orders/mine every 15 s only while an order is in progress, else on
+screen change and app resume). Lime when ready to collect, red until Mes commandes is opened when refused or cancelled (seen ids
+in localStorage `fairide_suivi_vus`, 6 h max), « Bon appétit ! » for 6 s after delivery. Hidden on Mes commandes, in the cart
+and checkout, under any dialog, like the cart bar (client-ui.css). Same on the phone website.
 **Mes commandes and Recherche with the bike (2026-10-24, version A of both screens in `maquettes/commandes-recherche/`, « site
 pareil que l'app »)**: the app's Mes commandes is now the website's screen (Orders.jsx, one render path): the order in progress IS
 the iris band (`RouteSuivi`), under it the app keeps `carteEnCours` (courier, code, « Détails » folded); past orders are the

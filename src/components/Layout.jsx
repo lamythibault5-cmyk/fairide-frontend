@@ -14,6 +14,7 @@ import Icone from './Icone';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
+import SuiviCommande from './client/SuiviCommande';
 import { SkeletonCards, SqueletteEcran } from './Skeleton';
 import { experienceApp } from '../natif';
 import { lireBienvenue } from '../bienvenue';
@@ -245,6 +246,7 @@ export default function Layout() {
           </div>}
         </div>
         {!APPLI && <CookieBanner />}
+        {seesClientCart && <SuiviCommande />}
         {seesClientCart && <FloatingCart />}
         {experienceApp() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
       </>
@@ -392,6 +394,7 @@ export default function Layout() {
         <Footer />
       </div>
       <CookieBanner />
+      {seesClientCart && <SuiviCommande />}
       {seesClientCart && <FloatingCart />}
       {/* Pas de filigrane ici : cette branche affiche déjà la bannière .hero, avec le vélo ET le
           mot « fairide » à vingt pixels de l'endroit où le filigrane se serait posé. Il n'y
