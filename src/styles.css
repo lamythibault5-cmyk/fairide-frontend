@@ -146,6 +146,20 @@
   --iris-tint: #EFEDFB;
   --anneau-champ: inset 0 0 0 .5px var(--iris), 0 0 0 4px var(--iris-tint);
   --anneau-champ-erreur: inset 0 0 0 .5px var(--red), 0 0 0 4px #FBE9EA;
+  /* La couleur du goût d'un plat sans photo dans le Panier (VignetteSansPhoto.jsx, 26/10) : un fond doux et l'encre de son
+     dessin. Seulement pour un goût écrit dans le nom ; sinon --iris-tint et --iris. */
+  --gout-cola: #F8DEDA;    --gout-cola-encre: #A3241B;
+  --gout-orange: #FFE4CC;  --gout-orange-encre: #C25100;
+  --gout-citron: #EDF6CF;  --gout-citron-encre: #4F6B07;
+  --gout-peche: #FCE6D2;   --gout-peche-encre: #9C5513;
+  --gout-eau: #DCEDFA;     --gout-eau-encre: #1D64A3;
+  --gout-cacao: #EDE2D9;   --gout-cacao-encre: #5F3A22;
+  --gout-fraise: #FADDE5;  --gout-fraise-encre: #B21E4F;
+  --gout-caramel: #F5E3CE; --gout-caramel-encre: #8A4F19;
+  --gout-vanille: #FAF0D7; --gout-vanille-encre: #8C6A0E;
+  --gout-vert: #DDF1E2;    --gout-vert-encre: #276B3C;
+  --gout-mangue: #FFEBB8;  --gout-mangue-encre: #A86400;
+  --gout-lait: #F0EFEA;    --gout-lait-encre: #5C5A50;
 
   /* Échelle typographique (docs/archives/DESIGN-uber.md § Typography). Posée ici en jetons pour que les surfaces
      reprises une à une s'y accrochent au lieu de réinventer une taille à chaque fois. */
@@ -1118,7 +1132,9 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 }
 .upsell-item:hover { border-color: var(--iris); background: #fff; }
 .upsell-item img { width: 100%; height: 56px; border-radius: var(--radius-chip); object-fit: cover; margin-bottom: 4px; }
-.upsell-item-emoji { font-size: 28px; height: 56px; display: flex; align-items: center; justify-content: center; }
+/* Le rond clair derrière le dessin d'une tuile sans photo (maquettes/suggestions-sans-photo, B). */
+.upsell-item-vignette { width: 100%; height: 56px; border-radius: var(--radius-chip); margin-bottom: 4px; flex: none; }
+.upsell-item-vignette::before { content: ''; position: absolute; width: 50px; height: 50px; border-radius: 50%; background: rgba(255, 255, 255, .55); }
 .upsell-item-name { font-size: 11.5px; font-weight: 600; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .upsell-item-price { font-size: 11px; color: var(--gold-deep); font-weight: 700; }
 
@@ -4497,7 +4513,21 @@ html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(
 .panier-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .panier-ligne:last-of-type { border-bottom: none; }
 .panier-ligne-image { flex-shrink: 0; width: 56px; height: 56px; border-radius: var(--radius-chip); object-fit: cover; background: var(--surface-soft); }
-.panier-ligne-image-vide { display: flex; align-items: center; justify-content: center; color: var(--ink-faint); }
+/* Un plat sans photo (VignetteSansPhoto.jsx) : après .panier-ligne-image, dont il remplace le fond gris. */
+.vignette-sans-photo { display: grid; place-items: center; position: relative; background: var(--iris-tint); color: var(--iris); }
+.vignette-sans-photo > svg { position: relative; }
+.vignette-sans-photo[data-gout="cola"] { background: var(--gout-cola); color: var(--gout-cola-encre); }
+.vignette-sans-photo[data-gout="orange"] { background: var(--gout-orange); color: var(--gout-orange-encre); }
+.vignette-sans-photo[data-gout="citron"] { background: var(--gout-citron); color: var(--gout-citron-encre); }
+.vignette-sans-photo[data-gout="peche"] { background: var(--gout-peche); color: var(--gout-peche-encre); }
+.vignette-sans-photo[data-gout="eau"] { background: var(--gout-eau); color: var(--gout-eau-encre); }
+.vignette-sans-photo[data-gout="cacao"] { background: var(--gout-cacao); color: var(--gout-cacao-encre); }
+.vignette-sans-photo[data-gout="fraise"] { background: var(--gout-fraise); color: var(--gout-fraise-encre); }
+.vignette-sans-photo[data-gout="caramel"] { background: var(--gout-caramel); color: var(--gout-caramel-encre); }
+.vignette-sans-photo[data-gout="vanille"] { background: var(--gout-vanille); color: var(--gout-vanille-encre); }
+.vignette-sans-photo[data-gout="vert"] { background: var(--gout-vert); color: var(--gout-vert-encre); }
+.vignette-sans-photo[data-gout="mangue"] { background: var(--gout-mangue); color: var(--gout-mangue-encre); }
+.vignette-sans-photo[data-gout="lait"] { background: var(--gout-lait); color: var(--gout-lait-encre); }
 .panier-ligne-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .panier-ligne-prix { font-size: 14px; color: var(--ink-soft); }
 .panier-stepper { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; background: var(--surface-soft); border-radius: var(--radius-pill); padding: 2px; }

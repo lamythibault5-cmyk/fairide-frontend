@@ -2,7 +2,7 @@ import { useState } from 'react';
 import FichePlat from './FichePlat';
 import { categoryKind, resolveItemImage } from '../menuCategories';
 import { euros } from '../prixPlat';
-import Icone from './Icone';
+import VignetteSansPhoto from './VignetteSansPhoto';
 
 // « Un dessert ou une boisson avec ça ? » — les suggestions de fin de panier.
 //
@@ -37,13 +37,13 @@ export function LastChanceUpsell({ desserts, drinks, restaurant, cart, t }) {
   return (
     <div className="card upsell-card">
       <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{t('checkout.upsellTitle')}</h3>
-      {desserts.length > 0 && <UpsellRow items={desserts} cart={cart} restaurant={restaurant} />}
-      {drinks.length > 0 && <UpsellRow items={drinks} cart={cart} restaurant={restaurant} />}
+      {desserts.length > 0 && <UpsellRow items={desserts} genre="dessert" cart={cart} restaurant={restaurant} />}
+      {drinks.length > 0 && <UpsellRow items={drinks} genre="boisson" cart={cart} restaurant={restaurant} />}
     </div>
   );
 }
 
-function UpsellRow({ items, cart, restaurant }) {
+function UpsellRow({ items, genre, cart, restaurant }) {
   const [pickerItem, setPickerItem] = useState(null);
   // Tout plat passe par sa fiche, avec ou sans options — le meme ecran que depuis la carte du
   // commerce, pour qu'une suggestion ne s'ajoute pas selon d'autres regles que le reste.
@@ -54,7 +54,7 @@ function UpsellRow({ items, cart, restaurant }) {
         const image = resolveItemImage(item, restaurant.sections);
         return (
           <button type="button" key={item.id} className="upsell-item" onClick={() => handleAdd(item)}>
-            {image ? <img loading="lazy" src={image} alt="" /> : <span className="upsell-item-emoji"><Icone nom="restaurants" taille={16} className="icone-texte" /></span>}
+            {image ? <img loading="lazy" src={image} alt="" /> : <VignetteSansPhoto nom={item.name} genre={genre} className="upsell-item-vignette" />}
             <span className="upsell-item-name">{item.name}</span>
             <span className="upsell-item-price">+{euros(item.price)}</span>
           </button>

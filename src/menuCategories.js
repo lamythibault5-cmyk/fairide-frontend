@@ -33,15 +33,27 @@ export function categoryLabel(value, t) {
 // de mauvaise photo bien plus faible qu'au niveau d'un plat précis), contrairement à
 // defaultItemImageOrNull() plus bas qui n'autorise aucune approximation par mot-clé sur un plat donné.
 const CATEGORY_HINT_DESSERT = /dessert|sucr|glace|pâtisserie|patisserie|gâteau|gateau/iu;
-const CATEGORY_HINT_DRINK = /boisson|breuvage|soft|vin\b|vins\b|bière|biere|cocktail|café|the\b|thé|jus\b|eau\b|cave/iu;
+// « eau » et « thé » en mots entiers (26/10) : « Plats de poulet et d'agneau » (Punjab Tandoori) et « The classics » (Hill's
+// Burger) passaient pour des boissons, et leurs plats étaient proposés en boisson dans le Panier.
+const CATEGORY_HINT_DRINK = /boisson|breuvage|soft|\bvins?\b|bière|biere|cocktail|café|\bthé|jus\b|\beaux?\b|cave/iu;
+// Une formule n'est ni une boisson ni un dessert, même si son nom en cite une : « Menu smash … (servi avec un grand cornet de
+// frites, sauce et boisson) » (Hill's Burger, 26/10) mettait des menus burger à 17,10 € dans les boissons du Panier.
+const CATEGORY_HINT_FORMULE = /\bmenus?\b|\bformules?\b|servie?s? avec|\bcombos?\b/iu;
+// 'dessert', 'boisson' ou null pour un nom de section personnalisée : la règle commune des trois fonctions ci-dessous.
+function genreSection(v) {
+  if (CATEGORY_HINT_FORMULE.test(v)) return null;
+  if (CATEGORY_HINT_DESSERT.test(v)) return 'dessert';
+  if (CATEGORY_HINT_DRINK.test(v)) return 'boisson';
+  return null;
+}
 export const CATEGORY_HINT_ENTREE = /entrée|entree|apéritif|aperitif|salade|starter|mise en bouche/iu;
 
 export function categoryImage(value) {
   const known = CATEGORIES.find((c) => c.value === value)?.image;
   if (known) return known;
   const v = (value || '').toLowerCase();
-  if (CATEGORY_HINT_DESSERT.test(v)) return CATEGORIES.find((c) => c.value === 'dessert').image;
-  if (CATEGORY_HINT_DRINK.test(v)) return CATEGORIES.find((c) => c.value === 'boisson').image;
+  const genre = genreSection(v);
+  if (genre) return CATEGORIES.find((c) => c.value === genre).image;
   if (CATEGORY_HINT_ENTREE.test(v)) return CATEGORIES.find((c) => c.value === 'entree').image;
   return CATEGORIES.find((c) => c.value === 'plat').image;
 }
@@ -52,10 +64,7 @@ export function categoryImage(value) {
 // personnalisée dont le nom l'indique clairement ("Nos desserts", "Cave à vins"...).
 export function categoryKind(value) {
   if (value === 'dessert' || value === 'boisson') return value;
-  const v = (value || '').toLowerCase();
-  if (CATEGORY_HINT_DESSERT.test(v)) return 'dessert';
-  if (CATEGORY_HINT_DRINK.test(v)) return 'boisson';
-  return null;
+  return genreSection((value || '').toLowerCase());
 }
 
 // Emoji "dessin animé" affiché à la place d'une vraie photo quand un plat n'en a aucune (voir
@@ -69,8 +78,8 @@ export function categoryEmoji(value) {
   const known = CATEGORY_EMOJI[value];
   if (known) return known;
   const v = (value || '').toLowerCase();
-  if (CATEGORY_HINT_DESSERT.test(v)) return CATEGORY_EMOJI.dessert;
-  if (CATEGORY_HINT_DRINK.test(v)) return CATEGORY_EMOJI.boisson;
+  const genre = genreSection(v);
+  if (genre) return CATEGORY_EMOJI[genre];
   if (CATEGORY_HINT_ENTREE.test(v)) return CATEGORY_EMOJI.entree;
   return CATEGORY_EMOJI.plat;
 }
@@ -2015,7 +2024,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['fricadelle', 'mexicano', 'viandelle', 'boulette'], image: 'https://images.unsplash.com/photo-1529042410759-befb1204b468?w=600&q=80' },
   { keywords: ['croquette de fromage', 'croquette de crevettes', 'croquette'], image: 'https://images.unsplash.com/photo-1713517915303-ae3b3429f939?w=600&q=80' },
   { keywords: ['gaufre'], image: 'https://images.unsplash.com/photo-1568051243851-f9b136146e97?w=600&q=80' },
-  { keywords: ['mousse au chocolat'], image: 'https://images.unsplash.com/photo-1563801802091-1576649a2602?w=600&q=80' },
+  { keywords: ['mousse au chocolat'], image: 'https://images.unsplash.com/photo-1673551494277-92204546b504?w=600&q=80' },
   { keywords: ['tarte au sucre'], image: 'https://images.unsplash.com/photo-1535920527002-b35e96722eb9?w=600&q=80' },
   { keywords: ['sauce andalouse', 'andalouse', 'samouraï', 'samourai', 'ketchup', 'mayonnaise', 'tartare', 'brazil', 'barbecue', 'aigre-douce', 'cajun'], image: 'https://images.unsplash.com/photo-1518013431117-eb1465fa5752?w=600&q=80' },
   { keywords: ['moules'], image: 'https://images.unsplash.com/photo-1600265721436-734abbfe2137?w=600&q=80' },
@@ -3392,7 +3401,7 @@ const ITEM_IMAGE_OVERRIDES = {
   "spaghetti bolognaise": U('1622973536968-3ead9e780960'),
   "croque-madame": U('1528736235302-52922df5c122'),
   "gaufre de bruxelles chantilly": U('1773516035322-e413a151ad14'),
-  "mousse au chocolat": U('1563801802091-1576649a2602'),
+  "mousse au chocolat": U('1673551494277-92204546b504'),
   "tarte du jour": U('1620980776848-84ac10194945'),
   "nems poulet (4 pcs)": U('1679310290259-78d9eaa32700'),
   "gyoza (5 pcs)": U('1738681336104-608b4e7dc3b0'),
