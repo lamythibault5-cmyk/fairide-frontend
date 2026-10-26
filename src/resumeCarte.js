@@ -8,6 +8,11 @@
  * une fiche, la copie de la liste gardée par une version précédente de l'app, ou une réponse sans `?vue` ont `menu`, et on
  * y compte alors les plats comme avant. */
 export const CHEMIN_LISTE = '/restaurants?vue=liste';
+/* LA BOUTIQUE DE TEST DU RELECTEUR (2026-10-26). Le serveur n'ajoute « Fairride Test » qu'à la liste d'un compte marqué
+ * test par l'équipe (backend listeDesTesteurs), et il ne le sait que si la demande porte le jeton. La liste se lisait
+ * toujours sans : le relecteur d'Apple ne pouvait pas la trouver. Seul un compte de test l'envoie donc ; les autres gardent
+ * la liste publique, la même pour tous, gardée sur le téléphone (cacheDonnees.js, jamais avec un jeton). */
+export const jetonListe = (user, token) => (user?.isTest && token ? token : undefined);
 // Les plats tels que la page Recherche les cherche (nom, description, prix, photo, mentions), par commerce : [{ id, plats }].
 export const CHEMIN_PLATS_RECHERCHE = '/restaurants?vue=plats';
 

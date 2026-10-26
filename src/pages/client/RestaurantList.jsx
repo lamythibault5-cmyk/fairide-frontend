@@ -9,7 +9,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
 import { MENTIONS_ALIMENTAIRES, nbPlatsBio, nbPlatsVegan, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
-import { CHEMIN_LISTE, nbPlatsHealthy, promoDUnPlat } from '../../resumeCarte';
+import { CHEMIN_LISTE, jetonListe, nbPlatsHealthy, promoDUnPlat } from '../../resumeCarte';
 // Chargée à la demande : la carte tire Leaflet (~150 Ko) avec elle, et cette page fait partie des
 // rares gardées en import statique pour le référencement. Sans ce découpage, tout visiteur d'une fiche
 // de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
@@ -368,7 +368,7 @@ export default function RestaurantList() {
   /* AU RETOUR SUR LA LISTE, ELLE EST DÉJÀ LÀ (2026-10-20, test de l'app Android) : la dernière liste lue s'affiche dès la
      première image, sans squelette, et se relit en arrière-plan (cacheDonnees.js). C'est aussi ce qui permet à la photo
      d'une fiche fermée par sa croix de retrouver sa carte (transitionPhoto.js) au lieu de tomber sur des cartes grises. */
-  const [restaurants, setRestaurants] = useState(() => lireCache(CHEMIN_LISTE) || []);
+  const [restaurants, setRestaurants] = useState(() => lireCache(CHEMIN_LISTE, jetonListe(user, token)) || []);
   /* Apres la declaration de `restaurants`, jamais avant : lu plus haut, le tableau serait dans
      sa zone morte temporelle et la page planterait au montage. */
   // Mémorisé sur la liste : refait quand la liste change, pas à chaque rendu (useJsonLd.js).
@@ -384,7 +384,7 @@ export default function RestaurantList() {
   }, [commercePanier]);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(token ? lireCache('/restaurants/favorites/ids', token) || [] : []));
   const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(() => new Set(token ? (lireCache('/orders/mine', token) || []).map((o) => o.restaurantId) : []));
-  const [loading, setLoading] = useState(() => !lireCache(CHEMIN_LISTE));
+  const [loading, setLoading] = useState(() => !lireCache(CHEMIN_LISTE, jetonListe(user, token)));
   // La liste n'a pas pu être lue (réseau, serveur) : « Impossible de charger » et Réessayer, pas « Aucun commerce ».
   const [echecListe, setEchecListe] = useState(false);
   // `silencieux` : tirer pour actualiser ne remet pas les cartes grises ; « Réessayer », si. `forcer` : relire même une
@@ -392,8 +392,9 @@ export default function RestaurantList() {
   const chargerListe = useCallback(({ silencieux = false, forcer = false } = {}) => {
     setEchecListe(false); if (!silencieux) setLoading(true);
     // Rend true / false : tirer pour actualiser le dit quand la lecture échoue alors que des cartes sont déjà là (discovery-32).
-    return chargerAvecCache(CHEMIN_LISTE, { forcer }).then((l) => { setRestaurants(l); setEchecListe(false); return true; }).catch(() => { setEchecListe(true); return false; }).finally(() => setLoading(false));
-  }, []);
+    return chargerAvecCache(CHEMIN_LISTE, { forcer, token: jetonListe(user, token) }).then((l) => { setRestaurants(l); setEchecListe(false); return true; }).catch(() => { setEchecListe(true); return false; }).finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.isTest, token]);
   const [search, setSearch] = useState(filtresInitiaux.search || '');
   const [commune, setCommune] = useState(filtresInitiaux.commune || '');
   // LA FAMILLE ET LA SPÉCIALITÉ CHOISIES (fondateur, 2026-10-22, version X de maquettes/categories-commerce). La bande montre
@@ -468,10 +469,11 @@ export default function RestaurantList() {
     }
     return commerces;
   }
+  // Relue aussi quand le compte change (chargerListe suit le jeton d'un compte de test, voir jetonListe).
   useEffect(() => {
     charger();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [chargerListe]);
   // « Fermé » / « Ouvre à 18:00 » se recalculent chaque minute tant que la page reste ouverte, comme sur la fiche
   // (RestaurantMenu.jsx) : sinon une carte restait « Fermé » après l'heure d'ouverture (audit du 19/10, discovery-32).
   const [, setMinute] = useState(0);
@@ -599,7 +601,10 @@ export default function RestaurantList() {
       return communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune);
     })
     // Puis les ouverts d'abord, quel que soit le tri choisi (voir ouvertsDabord).
-    .sort((a, b) => estOuvert(b) - estOuvert(a));
+    .sort((a, b) => estOuvert(b) - estOuvert(a))
+    // La boutique de test d'un compte de test tout en haut (relecture des stores, voir jetonListe) : seul un compte de test
+    // reçoit `pourTesteurs`.
+    .sort((a, b) => !!b.pourTesteurs - !!a.pourTesteurs);
 
   // Page d'accueil "par sections" (façon Uber Eats/Deliveroo) affichée uniquement sans filtre actif —
   // dès qu'on cherche/filtre, on retombe sur la liste plate ci-dessus, plus adaptée à une recherche.
@@ -646,15 +651,18 @@ export default function RestaurantList() {
     : homeCommune ? [...enviesTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : enviesTous)
     .slice(0, PROCHES_MAX);
   // À la une : voir ALaUne. Même ordre que « Autour de toi », mais SANS épinglage payant, avec photo, ouverts d'abord.
-  const aLaUne = (parDistance.length ? parDistance : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous)
+  // La boutique de test d'un compte de test (relecture des stores, fondateur 2026-10-26 : « le premier, à la une ») ouvre la
+  // rangée, avec ou sans photo : le relecteur d'Apple ou de Google la trouve sans chercher. Les autres suivent la règle.
+  const pourTesteurs = restaurants.filter((r) => r.pourTesteurs);
+  const aLaUne = [...pourTesteurs, ...(parDistance.length ? parDistance : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous)
     // SA PROPRE PHOTO (audit du 19/10, discovery-05) : le serveur remplit toujours coverImageUrl, avec une photo d'illustration
     // quand le commerce n'en a pas ; `ownCover` dit si c'est la sienne. Une liste lue avant ce champ (undefined) garde l'ancien
     // comportement. Pas de commerce « Carte seule » (vitrine) en tête : on ne peut pas y commander (discovery-34).
-    .filter((r) => r.coverImageUrl && r.ownCover !== false && !r.vitrine)
+    .filter((r) => !r.pourTesteurs && r.coverImageUrl && r.ownCover !== false && !r.vitrine)
     .map((r, i) => ({ r, i, o: estOuvert(r) ? 0 : 1 }))
     .sort((a, b) => a.o - b.o || a.i - b.i)
-    .slice(0, UNE_MAX)
-    .map(({ r }) => r);
+    .map(({ r }) => r)]
+    .slice(0, UNE_MAX);
   // LIVRAISON DÈS 3 € et LIVRAISON OFFERTE (fondateur, 2026-10-01) : seulement les commerces concernés, jamais complétées.
   const SEUIL_PAS_CHER = 3;
   // Rangées « Livraison offerte » et « Livraison dès 3 € » : seulement après le GO (avant, seul l'à emporter est ouvert).
