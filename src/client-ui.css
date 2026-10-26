@@ -255,8 +255,8 @@
 .suivi-carte .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 8px 0; color: var(--ink); font-size: 13px; }
 .suivi-lieu { color: var(--ink-soft); margin: 6px 0; }
 .suivi-resume { margin: 0 0 6px; font-size: 13px; color: var(--ink-soft); }
-/* Code de retrait / de livraison : un ticket, lisible de loin au comptoir. */
-.suivi-code { margin: 12px 0; padding: 12px 14px; border: 2px dashed var(--iris); border-radius: 14px; text-align: center; background: rgba(59, 47, 181, .04); }
+/* Code de retrait / de livraison : un ticket, lisible de loin au comptoir. Contour lime (Owen, 2026-10-26). */
+.suivi-code { margin: 12px 0; padding: 12px 14px; border: 2px dashed var(--lime); border-radius: 14px; text-align: center; background: rgba(59, 47, 181, .04); }
 .suivi-code-lib { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 4px; }
 .suivi-code-valeur { font-size: 32px; font-weight: 800; letter-spacing: 8px; color: var(--iris); line-height: 1.1; }
 /* Le numéro du jour du commerce (#042), sous le code de retrait : ce que le comptoir appelle (InfosRetrait, 18/10/2026). */
