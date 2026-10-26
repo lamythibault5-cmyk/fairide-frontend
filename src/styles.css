@@ -2480,7 +2480,13 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 @keyframes sq-miroite { to { transform: translateX(420px); } }
 .skeleton-line { height: 14px; margin-bottom: 8px; }
 .skeleton-card { height: 96px; border-radius: var(--radius); margin-bottom: 14px; }
-.sq-lignes { display: grid; }
+/* LES LIGNES ARRIVENT APRÈS 0,3 S (fondateur, 2026-10-26). Depuis que l'écran de chargement ne couvre plus que le démarrage
+   (main.jsx), les squelettes sont ce qu'on voit pendant que les données arrivent. Une réponse rapide les faisait apparaître
+   puis disparaître dans la foulée : un clignotement. Elles attendent donc 0,3 s (invisibles, sans changer la mise en page),
+   puis entrent en fondu ; en dessous, la page passe directement du vide au contenu. Le bandeau de SqueletteEcran, lui, est là
+   tout de suite : c'est la forme de l'écran qui s'ouvre. */
+.sq-lignes { display: grid; animation: sq-lignes-entrent .2s .3s backwards; }
+@keyframes sq-lignes-entrent { from { opacity: 0; } }
 .sq-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .sq-ligne:last-child { border-bottom: 0; }
 .sq-vignette { width: 52px; height: 52px; border-radius: 14px; flex: none; }

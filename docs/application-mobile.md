@@ -17,7 +17,7 @@ passe par `src/natif.js` (et `src/pushNatif.js` pour les notifications) — null
 | Barre d'état | `demarrerNatif` | iris `#3B2FB5`, texte clair (Android : `overlaysWebView: false`) |
 | Encoche / barre d'accueil | `styles.css` (fin), `index.html` | `viewport-fit=cover` + `env(safe-area-inset-*)` sur `.hero`, les barres fixes, les onglets |
 | Clavier | `demarrerNatif` | classe `clavier-ouvert` sur `<html>` : les barres fixes du bas se rangent |
-| Écran de lancement | `retirerEcranLancementNatif` | retiré en même temps que le `#splash` HTML, quand la page est vraiment rendue |
+| Écran de lancement | `retirerEcranLancementNatif` | retiré dès que `main.jsx` tourne ; le `#splash` HTML (vélo qui roule) prend le relais jusqu'à ce que l'application soit montée, puis les squelettes couvrent l'attente des données (2026-10-26) |
 | Service worker | `main.jsx` | pas enregistré dans la coque |
 | Notifications | `pushNatif.js` ↔ `POST /api/push/native-token` | jeton APNs/FCM ; le serveur envoie par Firebase (`fcm.js`, variable `FCM_SERVICE_ACCOUNT_JSON`) |
 | CORS API | `server.js` | `capacitor://localhost`, `https://localhost` autorisés |

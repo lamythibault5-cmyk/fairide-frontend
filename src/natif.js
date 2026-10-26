@@ -494,8 +494,8 @@ export async function connexionFournisseur(fournisseur) {
   return { fournisseur, jeton, prenom: profil.givenName || '', nom: profil.familyName || '' };
 }
 
-// L'écran de lancement natif couvre le démarrage de la WebView ; main.jsx le retire au même moment que
-// le #splash HTML, quand la page est réellement rendue.
+// L'écran de lancement natif couvre le démarrage de la WebView ; main.jsx le retire dès qu'il tourne, le #splash HTML
+// prenant le relais jusqu'à ce que l'application soit montée (retirerEcranChargement).
 export async function retirerEcranLancementNatif() {
   if (!estNatif()) return;
   try {
