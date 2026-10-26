@@ -125,14 +125,19 @@ if (preferee && preferee !== 'fr' && PREFIXES[preferee]) {
 if (langue !== DEFAULT_LANGUAGE) chargerLangue(langue);
 
 // Écran de chargement (index.html, #splash) : il ne fait que COUVRIR le chargement, jamais le prolonger
-// (fondateur, 2026-09-17 : « le plus smooth possible, pas d'attente longue »). Il s'efface dès que la page
-// est réellement là — l'application montée ET la section demandée rendue (plus de squelette de chargement
-// à l'écran), pour ne pas découvrir un écran gris qui se remplit ensuite. Le vélo roule tant que ça charge (fondateur,
-// 2026-10-21 : l'écran doit durer « jusqu'à ce que l'app ou le site soit chargé ») ; le plafond, 2,5 s jusque-là, passe à
-// 7,5 s depuis l'ouverture de la page, juste avant le message de secours en CSS (8 s, index.html) : au-delà, on montre ce
-// qu'on a. Si la page arrive avant la fin du tracé, il s'efface en cours de route — le logo de l'en-tête, lui, rejoue la
-// séquence entière. Sondage par setTimeout et non requestAnimationFrame : dans un onglet ouvert en arrière-plan, rAF ne se
+// (fondateur, 2026-09-17 : « le plus smooth possible, pas d'attente longue »). Il s'efface dès que l'application
+// est montée, sans attendre les données.
+// LE VÉLO POUR LE DÉMARRAGE, LES SQUELETTES POUR LES DONNÉES (fondateur, 2026-10-26). Du 2026-10-21 au 2026-10-26, l'écran
+// attendait aussi qu'aucun squelette ne reste à l'écran (« jusqu'à ce que l'app ou le site soit chargé ») : il cachait donc
+// les squelettes, et une connexion lente donnait jusqu'à 7,5 s d'iris immobile, sans rien de la page. Un squelette montre
+// où les choses vont arriver, les onglets et la recherche sont déjà là : l'attente paraît plus courte. Les lignes du
+// squelette n'apparaissent qu'après 0,3 s (.sq-lignes, styles.css), pour qu'un chargement rapide ne clignote pas.
+// Le plafond reste à 7,5 s depuis l'ouverture de la page, juste avant le message de secours en CSS (8 s, index.html) : au-delà,
+// on montre ce qu'on a. Sondage par setTimeout et non requestAnimationFrame : dans un onglet ouvert en arrière-plan, rAF ne se
 // déclenche pas et l'écran resterait affiché.
+//
+// SUR LE SITE, l'écran n'est qu'un cache blanc pendant la première seconde (index.html) : s'il n'est pas encore devenu iris,
+// on le retire tout de suite, sans le fondu ni le vélo qui part.
 //
 // DANS L'APPLICATION, l'écran de lancement natif (le vélo seul, immobile) restait PAR-DESSUS jusqu'à la fin : le vélo qui
 // roule n'était jamais vu. On le retire dès que ce script tourne — notre écran est déjà peint dessous, le vélo déjà
@@ -149,11 +154,16 @@ function retirerEcranChargement() {
     if (!root || !root.children.length) return false;
     // Le texte pré-rendu pour les moteurs (scripts/contenuStatique.mjs) n'est pas la page : on attend que React l'ait remplacé,
     // sinon l'écran s'effacerait sur ce texte sans mise en forme.
-    if (root.querySelector('[data-prerendu]')) return false;
-    return !root.querySelector('.skeleton');
+    return !root.querySelector('[data-prerendu]');
   };
   const sonder = () => {
     if (prete() || performance.now() > 7500) {
+      const iris = splash.querySelector('.splash-iris');
+      if (iris && getComputedStyle(iris).opacity === '0') {
+        splash.remove();
+        retirerEcranLancementNatif();
+        return;
+      }
       // 220 ms : le vélo part (0,25 s) pendant que l'écran s'efface (0,18 s) ; la page est déjà là dessous. C'était 450 ms
       // (0,4 s puis 0,25 s après 0,12 s) : raccourci le 2026-10-21 (latence de l'app, « ok » du fondateur).
       splash.classList.add('splash-fin');

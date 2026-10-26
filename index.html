@@ -138,8 +138,15 @@
     <!-- Écran de chargement (fondateur, 2026-09-17) : plein écran iris avec le logo qui se dessine UNE fois
          (même séquence que BrandMark.jsx), visible dès l'analyse du HTML, avant tout JavaScript. Styles et
          animation en ligne parce que styles.css n'est pas encore chargé. main.jsx le retire dès que la
-         page est réellement rendue (application montée, plus de squelette), sans jamais retarder : il couvre
-         le chargement, il ne le prolonge pas. -->
+         page est réellement rendue (application montée), sans jamais retarder : il couvre le démarrage, il ne le
+         prolonge pas. L'attente des données, elle, revient aux squelettes de la page (fondateur, 2026-10-26).
+
+         SUR LE SITE, D'ABORD UN SIMPLE CACHE BLANC (2026-10-26). Le vélo plein écran avant chaque page du site retardait ce
+         que le visiteur venait voir. Il ne peut pas disparaître pour autant : dessous, il y a le texte pré-rendu pour les
+         moteurs (contenuStatique.mjs), sans mise en forme, que React remplace à son premier rendu. Le cache reste donc,
+         mais blanc comme la page : l'iris et le vélo (.splash-iris) n'apparaissent qu'au bout d'une seconde, quand le
+         chargement est vraiment lent, avec le message de secours à 8 s. Dans l'application, l'écran de lancement natif couvre
+         ce début de toute façon ; main.jsx pose `splash-natif`, et l'iris est là tout de suite. -->
     <div id="splash" aria-hidden="true">
       <style>
         /* LE MOT « fairide » EN BRICOLAGE, MÊME QUAND L'APPLICATION NE DÉMARRE PAS (2026-09-27).
@@ -156,7 +163,12 @@
         /* Les lettres du mot (et l'espace) viennent du petit fichier, déclaré après ; la plage du grand ci-dessus les exclut,
            au caractère près la même que dans public/fonts/polices.css (audit du 24/10, raisons là-bas). */
         @font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 700 800; font-display: swap; src: url("/fonts/bricolage-grotesque-fairide.woff2") format("woff2"); unicode-range: U+0020, U+0046, U+0061, U+0064-0066, U+0069, U+0072; }
-        #splash { position: fixed; inset: 0; z-index: 1000; background: #3B2FB5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity .2s ease; will-change: opacity; }
+        #splash { position: fixed; inset: 0; z-index: 1000; background: #fff; transition: opacity .2s ease; will-change: opacity; }
+        /* Le vélo se dessine pendant que l'iris est encore caché : passé une seconde, il arrive déjà formé et roule, comme
+           dans l'application. */
+        #splash .splash-iris { position: absolute; inset: 0; background: #3B2FB5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; opacity: 0; animation: splash-montre .2s 1s forwards; }
+        #splash.splash-natif .splash-iris { animation: none; opacity: 1; }
+        @keyframes splash-montre { to { opacity: 1; } }
         /* LE VÉLO PART LIVRER (fondateur, 2026-10-21, option B de maquettes/verre-et-chargement/ecran-chargement.html) :
            la page prête, le vélo file vers la droite pendant que l'écran s'efface (main.jsx retire l'élément après). */
         #splash.splash-fin { opacity: 0; pointer-events: none; transition: opacity .18s ease; }
@@ -218,8 +230,10 @@
           #splash .splash-route { animation: none; opacity: 1; }
           #splash .splash-encoche { display: none; }
           #splash.splash-fin { transition-delay: 0s; }
+          #splash .splash-iris { animation-duration: 0s; }
         }
       </style>
+      <div class="splash-iris">
       <div class="splash-velo-boite">
         <svg class="splash-velo" viewBox="-3 5 82 42" xmlns="http://www.w3.org/2000/svg">
           <g fill="none" stroke="#C8F03C" stroke-width="5" stroke-linecap="round">
@@ -244,6 +258,7 @@
       <div class="splash-secours">
         <p>Le chargement prend plus de temps que prévu.</p>
         <a href="/?r=1" rel="nofollow">Recharger la page</a>
+      </div>
       </div>
     </div>
     <div id="root"></div>

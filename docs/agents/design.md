@@ -255,6 +255,10 @@ threshold + CSS transition), dragging a restaurant photo down to close it
 - **Loading** — [Skeleton.jsx](../../src/components/Skeleton.jsx): `SkeletonCards` are row-shaped light-iris skeletons;
   `SqueletteEcran` is a whole loading screen in band + sheet (`titre` when the screen is known, shimmer bars otherwise,
   `photo` for the restaurant page). App only at call sites (`experienceApp()`); the bike rides while a skeleton shows.
+  Skeleton rows (`.sq-lignes`) appear only after 0.3 s, so a fast answer never flickers. The full-screen `#splash` of
+  [index.html](../../index.html) covers start-up only (app mounted), never the data wait: that is the skeletons' job
+  (founder, 2026-10-26). On the website it is a plain white cover for the first second (it hides the prerendered text) and
+  turns iris with the bike only on a slow load; in the app the native launch screen hands over to the iris bike directly.
 - **Maps** — markers and route styles live in [marqueursCarte.js](../../src/marqueursCarte.js) (courier iris + lime bike,
   home lime, shop ringed iris; ridden route solid iris with a white edge, the rest iris dots). Map buttons are
   `.tracking-map-rond` (solid iris, white ring). Never reintroduce the near-black courier or the lime trail. The courier's
