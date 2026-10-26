@@ -105,7 +105,7 @@ Cards and rows keep the .97 press-down (glass grows, content presses down). Ever
 a forward navigation slides the new screen in from the right (350 ms, the old one moves −30 % and darkens), back is the reverse. It goes
 through the router history (`envelopperNavigations` in i18n/historiqueLangue.js: `push` and `go(-1)` / `back()`); only a navigation
 that follows a real tap (< 400 ms) or a gesture (`back({ geste: true })`: Android Back, the cross) slides — redirects, same-screen
-changes, `state.fond` sheets and tabs (`replace`) don't. A card leading to a restaurant page (list, Recherche, Favoris, Carte) gives
+changes, `state.fond` sheets (opening AND closing: their ‹ used to slide Mon compte sideways after the sheet had gone down, founder 2026-10-26) and tabs (`replace`) don't. A card leading to a restaurant page (list, Recherche, Favoris, Carte) gives
 it its photo instead of sliding; a dish gives its photo to its sheet (`ouvrirAvecPhoto`). The cross of a restaurant page and the ‹ of
 the order screens go BACK when the previous history entry is that screen (`cheminPrecedent`), so the list comes back at its scroll
 position. **The cart's ‹ goes back to wherever the cart was opened from** (home, Recherche, Favoris, a shop page… founder
