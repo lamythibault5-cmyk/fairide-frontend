@@ -8084,6 +8084,8 @@ export default {
       payOnSiteNote: 'De zaak rekent je bestelling zelf af wanneer je ze komt ophalen: haal ze zeker op het voorziene uur op, ze wordt voor jou klaargemaakt. Je Fairride-saldo kan niet gebruikt worden voor een betaling ter plaatse.',
       toPayOnSite: 'Ter plaatse te betalen',
       confirmOnSite: 'Bestelling bevestigen (ter plaatse betalen)',
+      barreCommander: 'Bestellen',
+      barreSurPlace: 'ter plaatse',
       toastOnSiteConfirmed: 'Bestelling naar de zaak verstuurd. Je betaalt ter plaatse bij het ophalen.',
       modifier: 'Wijzigen',
       ticketTitle: 'Je kasticket',

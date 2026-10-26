@@ -930,8 +930,14 @@ export default function Checkout() {
               <button className="btn-gold" disabled={placing || paying} onClick={placeOrder}>
                 {/* Le montant dans le bouton, comme au panier (2026-10-25). « Commander et payer » reste : le dernier bouton doit
                     dire qu'on s'engage à payer. */}
-                {placing || paying ? '...' : <>
-                  {surPlaceChoisi ? t('checkout.confirmOnSite') : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}
+                {/* Payé sur place : « Commander · 4,00 € sur place » (2026-10-26). « Confirmer la commande (paiement sur place) ·
+                    4,00 € » ne tenait pas sur une ligne (le bouton ne passe pas à la ligne) et sortait du bouton des deux côtés. */}
+                {placing || paying ? '...' : surPlaceChoisi ? <>
+                  {t('checkout.barreCommander')}
+                  {' · '}<span className="co-bouton-montant"><ChiffresRoulants valeur={euros(montantDebite)} /></span>
+                  {' '}{t('checkout.barreSurPlace')}
+                </> : <>
+                  {user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}
                   {' · '}<span className="co-bouton-montant"><ChiffresRoulants valeur={euros(montantDebite)} /></span>
                 </>}
               </button>
