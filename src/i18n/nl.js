@@ -8140,6 +8140,7 @@ export default {
       resume: 'Verder met mijn mandje · {amount}',
       toCheckout: 'Naar de betaling',
       backToMenu: 'Terug naar de kaart',
+      addItems: 'Artikelen toevoegen',
       emptyTitle: 'Je mandje is leeg',
       emptyText: 'Voeg gerechten toe vanaf de kaart van een zaak, ze verschijnen hier.',
       remiseIncluse: '{remise} inbegrepen',
