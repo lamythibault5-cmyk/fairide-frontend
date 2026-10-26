@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Icone from '../../components/Icone';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { CHEMIN_LISTE, CHEMIN_PLATS_RECHERCHE, jetonListe } from '../../resumeCarte';
 import { MENTIONS_ALIMENTAIRES, platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
 import { COMMUNES, COMMUNES_SUGGEREES, illustrationCuisine, restaurantTypeLabel } from '../../menuCategories';
 import { FAMILLES, chercherSpecialites, cuisinesCommerce, famillesCommerce, iconeSpecialite, libelleFamille, specialite } from '../../specialites';
+import { ecrireEtatEcran } from '../../etatEcran';
 import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
@@ -76,12 +77,20 @@ export default function SearchPage() {
   const navigate = useNavigate();
   usePageMeta({ title: t('seo.searchTitle'), description: t('seo.searchDescription'), path: '/recherche', robots: 'noindex, follow' });
 
-  const [requete, setRequete] = useState('');
-  const [bio, setBio] = useState(false);
-  const [vegan, setVegan] = useState(false);
+  /* LA RECHERCHE RETROUVÉE AU RETOUR (2026-10-26, etatEcran.js) : ouvrir un résultat puis revenir effaçait le texte tapé.
+     Le texte et les filtres vivent dans l'entrée d'historique de la page ; l'onglet Recherche, lui, ouvre toujours une page
+     neuve (nouvelle entrée, DashboardSidebar.jsx). */
+  const location = useLocation();
+  const sauvee = location.state?.recherche || {};
+  const [requete, setRequete] = useState(sauvee.requete || '');
+  const [bio, setBio] = useState(!!sauvee.bio);
+  const [vegan, setVegan] = useState(!!sauvee.vegan);
   // Halal et sans gluten (backend migration 042) : déclarés par le commerce, voir dietary.js.
-  const [halal, setHalal] = useState(false);
-  const [sansGluten, setSansGluten] = useState(false);
+  const [halal, setHalal] = useState(!!sauvee.halal);
+  const [sansGluten, setSansGluten] = useState(!!sauvee.sansGluten);
+  useEffect(() => {
+    ecrireEtatEcran(location.key, 'recherche', { requete, bio, vegan, halal, sansGluten });
+  }, [location.key, requete, bio, vegan, halal, sansGluten]);
   const [restaurants, setRestaurants] = useState([]);
   // Les plats de chaque commerce (id du commerce → plats) : la liste n'a plus les cartes (resumeCarte.js, 2026-10-24). Lus à la
   // première recherche (champ touché, mot tapé ou filtre), pas à l'ouverture : toucher une famille n'en a pas besoin.

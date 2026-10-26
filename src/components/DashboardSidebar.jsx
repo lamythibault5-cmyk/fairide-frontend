@@ -89,7 +89,8 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
  *   - `replace` : changer d'onglet n'ajoute pas d'écran à l'historique (le glisser-retour ne ramène plus à l'onglet d'avant,
  *     et la navigation n'est pas animée, transitionPhoto.js n'emballe que les « avancer ») ;
  *   - `restaurerDefilement` : ScrollRestorer.jsx remet la position gardée pour cette adresse au lieu de remonter en haut ;
- *   - sur l'onglet affiché lui-même (adresse exacte, pas une fiche ouverte depuis lui) : remonter en douceur.
+ *   - sur l'onglet affiché lui-même (adresse exacte, pas une fiche ouverte depuis lui) : remonter en douceur, et l'écran
+ *     repart de son état de départ (« fairide:onglet-retouche » : la liste efface ses filtres, 2026-10-26).
  * Recherche et Mes commandes s'ouvrent EN HAUT quand on y revient d'un autre onglet (fondateur, 2026-10-24) : on y revient pour
  * une nouvelle recherche, ou pour la commande la plus récente, qui est en haut. Les autres onglets gardent leur place. */
 const ONGLETS_EN_HAUT = new Set(['/recherche', '/orders']);
@@ -100,6 +101,8 @@ function ongletAppli(vers, ici) {
     onClick: (e) => {
       if (ici !== vers) return;
       e.preventDefault();
+      // L'écran de l'onglet repart de son état de départ (la liste efface ses filtres, RestaurantList.jsx — 2026-10-26).
+      window.dispatchEvent(new CustomEvent('fairide:onglet-retouche', { detail: vers }));
       window.scrollTo({ top: 0, behavior: defilement() });
     }
   };
