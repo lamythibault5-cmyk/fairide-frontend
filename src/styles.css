@@ -1465,6 +1465,9 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 
 /* La liste des factures : des rangées séparées par un filet, dans une seule carte. */
 .facture-liste { padding: 6px 16px; }
+/* Regrouper plusieurs reçus en un fichier : sous la liste, sans carte (C4 de maquettes/audit-ecrans, 2026-10-27). */
+.fac-groupe { margin-top: 18px; }
+.fac-groupe-titre { display: block; font-size: 15px; margin-bottom: 10px; }
 .facture-ligne { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .facture-ligne:last-child { border-bottom: none; }
 .facture-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -5336,6 +5339,9 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-option .bv-tuile { width: 36px; height: 36px; border-radius: 10px; background: transparent; color: var(--iris); border: 1px solid var(--line); }
 .bv-option small { display: block; font-weight: 400; color: var(--ink-soft); margin-top: 2px; font-size: 13px; }
 .bv-option.on { background: var(--iris); border-color: var(--iris); color: #fff; }
+/* Le bouton lime touché sans réponse (C3 de maquettes/audit-ecrans, 2026-10-27) : les réponses s'encadrent d'iris, une ligne dit quoi faire. */
+.bv-option--manque { border-color: var(--iris); box-shadow: inset 0 0 0 1px var(--iris); }
+.bv-manque { margin: 4px 0 0; font-size: 14px; font-weight: 600; color: var(--iris); }
 .bv-option.on .bv-tuile { color: #fff; border-color: rgba(255,255,255,.4); }
 .bv-option.on small { color: rgba(255,255,255,.8); }
 .bv-case { margin-left: auto; width: 22px; height: 22px; border-radius: var(--radius-chip); border: 1px solid var(--line); flex: none; display: grid; place-items: center; }

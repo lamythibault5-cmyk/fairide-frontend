@@ -69,10 +69,6 @@ export default function RestaurantPreview({ restaurant }) {
 
   return (
     <div>
-      <div style={{ background: 'var(--ink)', color: 'var(--cream)', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontWeight: 600, fontSize: 13 }}>
-        {t('restoPreview.banner')}
-      </div>
-
       <div className="card">
         {/* La photo seule, comme la fiche que voient les clients (plus de logo depuis le 2026-10-25, maquettes/sans-logo). */}
         {restaurant.coverImageUrl && (

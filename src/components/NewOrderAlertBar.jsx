@@ -48,13 +48,9 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
         </div>
       );
     }
-    if (soundEnabled && audioBloque) {
-      return (
-        <button type="button" className="alerte-compacte-son" onClick={debloquerAudio}>
-          <Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.activerSon')}
-        </button>
-      );
-    }
+    // Plus de « Activer le son des commandes » en tête de chaque page (fondateur, 2026-10-27, S3 de maquettes/audit-ecrans) :
+    // il passait avant le contenu de Ma carte, Promotions, Statistiques, Factures… Le son reste à activer sur l'accueil et sur
+    // Commandes (sa ligne du bandeau), et il se débloque de toute façon au premier toucher.
     return null;
   }
   // Les réglages (sonnerie, répétitions, volume, test) sont repliés : dépliés, ils prenaient tout l'écran d'un téléphone

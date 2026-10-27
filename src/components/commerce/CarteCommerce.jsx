@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import MiseEnLigne from './MiseEnLigne';
+import ConfirmDialog from '../ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -13,7 +15,6 @@ import MenuConciergeRequest from '../MenuConciergeRequest';
 import ConformiteCarte from '../conformite/ConformiteCarte';
 import MentionsAlimentaires from './MentionsAlimentaires';
 import { MENTIONS_COMMERCE } from '../../dietary';
-import HaussePrix from '../HaussePrix';
 import DemandeModifCarte from '../DemandeModifCarte';
 import TvaCarte from './TvaCarte';
 import Icone from '../Icone';
@@ -28,15 +29,23 @@ import TexteReplie from '../TexteReplie';
  *     (POST /restaurants/:id/menu/:itemId/stock { outOfStock }) ; le plat revient tout seul demain ;
  *   - « Retirer de la carte » sous le nom (même route, { withdrawn }), sans retour automatique ;
  *   - la demande à Fairide (DemandeModifCarte) avec le bouton lime.
- * Les sections sont dans une bande collée en haut (verre dans l'app). Engagements, régimes, hausse de prix et TVA suivent,
- * comme avant. La console admin (modeAdmin) garde l'éditeur complet de MenuPage.jsx. */
-export default function CarteCommerce({ restaurant, restoId, loadDashboard, communs, urlSuggeree, onStock, onWithdraw }) {
+ * Les sections sont dans une bande collée en haut (verre dans l'app). Engagements, régimes et TVA suivent.
+ * La console admin (modeAdmin) garde l'éditeur complet de MenuPage.jsx.
+ *
+ * LE PREMIER JOUR (fondateur, 2026-10-27, S1 de maquettes/audit-ecrans/audit-ecrans.html) : l'accueil disait « Relis et valide ta
+ * carte », cet onglet ne le disait nulle part et son lime était « Envoyer à Fairride » (une demande de changement). Tant que le
+ * commerce n'est pas en ligne, la rangée « Prochaine étape » (MiseEnLigne) vient en tête avec LE bouton lime, et la demande à
+ * Fairide passe en iris. Plus de second bouton « Demander à Fairride une mise à jour » (le même formulaire, juste au-dessus).
+ * Les engagements allergènes et vendeur professionnel se signent sur « Tes engagements » seulement (ConformiteCarte reçoit
+ * `versEngagements`) ; la hausse de prix se choisit sur « C'est bon », puis dans une rangée de Commerce (Account.jsx). */
+export default function CarteCommerce({ restaurant, restoId, loadDashboard, communs, urlSuggeree, onStock, onWithdraw, onConnect, connecting, lectureSeule = false }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const menu = restaurant.menu || [];
   const carteVide = menu.length === 0;
-  const [methodesOuvertes, setMethodesOuvertes] = useState(false);
+  const avantEnLigne = !restaurant.publicListed;
+  const [aRetirer, setARetirer] = useState(null);
   const sections = (restaurant.sections || [])
     .map((s) => ({ ...s, items: menu.filter((i) => (i.category || 'plat') === s.name) }))
     .filter((s) => s.items.length > 0);
@@ -57,8 +66,9 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
       </BandeauCommerce>
       <FeuilleCommerce>
         {communs}
-        {/* Côté commerce, la remise de carte et les étapes restantes sont dans la liste « Avant d'être en ligne » (MiseEnLigne). */}
-        {(carteVide || methodesOuvertes) && (
+        {avantEnLigne && <MiseEnLigne restaurant={restaurant} restoId={restoId} token={token} onConnect={onConnect} connecting={connecting}
+          onChange={() => loadDashboard(restoId)} lectureSeule={lectureSeule} />}
+        {carteVide && (
           <div className="card" id="menu-methodes">
             <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.methodsTitle')}</h3>
             <p className="small" style={{ margin: '0 0 14px' }}>{t('menuPage.methodsIntro')}</p>
@@ -92,7 +102,7 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
                     <div key={g.key || '__none'}>
                       {g.label && <p className="ec-sous-section">{g.label}</p>}
                       {g.items.map((item) => (
-                        <LignePlat key={item.id} item={item} sections={restaurant.sections || []} t={t} onStock={onStock} onWithdraw={onWithdraw} />
+                        <LignePlat key={item.id} item={item} sections={restaurant.sections || []} t={t} onStock={onStock} onWithdraw={onWithdraw} onDemanderRetrait={setARetirer} />
                       ))}
                     </div>
                   ))}
@@ -100,35 +110,37 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
               ))}
             </div>
             {/* Le plus court chemin : écrire ce qu'on veut changer, l'équipe Fairide s'en charge (fondateur, 2026-10-01). */}
-            <div className="ec-demande"><DemandeModifCarte restoId={restoId} lime /></div>
-            <button type="button" className="btn-outline btn-sm" style={{ marginBottom: 6 }} onClick={() => setMethodesOuvertes((o) => !o)}>
-              {methodesOuvertes ? t('menuPage.hideMethods') : t('menuPage.askFairideAgain')}
-            </button>
+            <div className="ec-demande"><DemandeModifCarte restoId={restoId} lime={!avantEnLigne} /></div>
           </>
         )}
+        <ConfirmDialog open={!!aRetirer} title={aRetirer ? t('ecranCommerce.retirerTitre', { name: aRetirer.name }) : ''} message={t('ecranCommerce.retirerTexte')}
+          confirmLabel={t('menuItem.markUnavailable')} danger onCancel={() => setARetirer(null)}
+          onConfirm={() => { const p = aRetirer; setARetirer(null); onWithdraw(p.id, true).catch(() => { /* message déjà affiché */ }); }} />
 
         {/* Ce qui suit se signe ou se règle soi-même (engagements, mentions, hausse, TVA) : plus « Aller plus loin », qui le
             faisait passer pour du facultatif (audit du 19/10, shop-16). */}
         <p className="ec-feuille-titre">{t('ecranCommerce.reglagesTitre')}</p>
         {/* Carte signée, allergènes, vendeur professionnel (backlog de conformité A1, A2, A8). */}
-        <ConformiteCarte restoId={restoId} rafraichir={restaurant} onChange={() => loadDashboard(restoId)} />
+        <ConformiteCarte restoId={restoId} rafraichir={restaurant} onChange={() => loadDashboard(restoId)} versEngagements="/dashboard/engagements" />
         {/* Halal, végétarien, vegan, sans gluten, bio : déclarés par le commerce lui-même, malgré le verrou de la carte. De
             retour pour le commerce le 2026-10-27 (MENTIONS_COMMERCE, dietary.js) ; les clients ne les voient pas encore. */}
         {MENTIONS_COMMERCE && <MentionsAlimentaires restaurant={restaurant} restoId={restoId} token={token} onChange={() => loadDashboard(restoId)} />}
-        {/* Hausse de prix gardée par le commerce (fondateur, 2026-09-30). */}
-        {!carteVide && <HaussePrix restoId={restoId} nbPlats={menu.length} onChange={() => loadDashboard(restoId)} />}
         <TvaCarte restoId={restoId} token={token} menu={menu} toast={toast} onChange={() => loadDashboard(restoId)} />
       </FeuilleCommerce>
     </div>
   );
 }
 
-// Un plat : photo, nom, état du jour, « Retirer de la carte », et l'interrupteur « En vente aujourd'hui ».
+// Un plat : photo, nom, état du jour, et l'interrupteur « En vente » / « Rupture aujourd'hui ».
+/* DEUX GESTES QUI SE RESSEMBLAIENT (fondateur, 2026-10-27, S7 de maquettes/audit-ecrans) : sous chaque plat, l'interrupteur (rupture
+ * pour aujourd'hui) et le lien « Retirer de la carte » (jusqu'à nouvel ordre), côte à côte, faciles à confondre en plein service.
+ * L'interrupteur porte maintenant son mot ; retirer un plat se fait en le touchant, dans une fenêtre qui explique la différence
+ * (ConfirmDialog). Un plat retiré garde son « Remettre » sous le nom. */
 /* L'INTERRUPTEUR ET « RETIRER » NE SE VERROUILLENT PLUS (2026-10-23, app lente : la ligne basculait, puis restait bloquée
  * jusqu'à la fin du rechargement complet de la fiche). Le plat lui-même change dans la fiche gardée au toucher (MenuPage.jsx,
  * changerPlatEnStock) et revient si le serveur refuse ; un second toucher pendant l'envoi est permis, le dernier gagne
  * (actionOptimiste.js). Plus d'état « visé » à part : la ligne lit toujours le plat. */
-function LignePlat({ item, sections, t, onStock, onWithdraw }) {
+function LignePlat({ item, sections, t, onStock, onWithdraw, onDemanderRetrait }) {
   const enVente = !item.outOfStockToday;
   const image = resolveItemImage(item, sections);
   const interrupteur = !item.withdrawn && (item.available !== false || item.outOfStockToday);
@@ -147,26 +159,32 @@ function LignePlat({ item, sections, t, onStock, onWithdraw }) {
     : rupture ? t('menuItem.stockOutToday')
       : indisponible ? t('menuItem.unavailable')
         : `${euros(item.price)} · ${t('ecranCommerce.enVente')}`;
+  const retirable = !item.withdrawn && item.available !== false;
+  const ouvrir = retirable ? () => onDemanderRetrait(item) : undefined;
   return (
     <div className={`ec-plat${rupture ? ' ec-plat--rupture' : ''}${item.withdrawn || indisponible ? ' ec-plat--retire' : ''}`}>
       {image
-        ? <img loading="lazy" decoding="async" {...imgProps(image, 58, '58px')} alt="" className="ec-plat-photo" />
-        : <span className="ec-plat-photo" aria-hidden="true"><Icone nom={categoryEmoji(item.category)} taille={22} /></span>}
+        ? <img loading="lazy" decoding="async" {...imgProps(image, 58, '58px')} alt="" className="ec-plat-photo" onClick={ouvrir} />
+        : <span className="ec-plat-photo" aria-hidden="true" onClick={ouvrir}><Icone nom={categoryEmoji(item.category)} taille={22} /></span>}
       <span className="ec-plat-texte">
-        <b>{item.name}</b>
+        {retirable
+          ? <button type="button" className="ec-plat-nom" onClick={ouvrir} title={t('menuItem.withdrawHelp')}>{item.name}</button>
+          : <b>{item.name}</b>}
         {item.activePromo && <span className="ec-plat-promo"><Icone nom="etiquette" taille={12} className="icone-texte" />{' '}{item.activePromo.label}</span>}
         <small key={etat} className="ec-plat-etat fondu">{etat}</small>
-        {(item.withdrawn || item.available !== false) && (
-          <button type="button" className="ec-lien" onClick={retirer}
-            title={item.withdrawn ? t('menuItem.withdrawBackHelp') : t('menuItem.withdrawHelp')}>
-            {item.withdrawn ? `↩︎ ${t('menuItem.withdrawBack')}` : t('menuItem.markUnavailable')}
+        {item.withdrawn && (
+          <button type="button" className="ec-lien" onClick={retirer} title={t('menuItem.withdrawBackHelp')}>
+            {`↩︎ ${t('menuItem.withdrawBack')}`}
           </button>
         )}
       </span>
       {interrupteur && (
-        <button type="button" role="switch" aria-checked={enVente} className={`ec-interrupteur${enVente ? ' on' : ''}`}
-          aria-label={`${t('ecranCommerce.enVenteAujourdhui')} : ${item.name}`} title={enVente ? t('menuItem.stockOutHelp') : t('menuItem.stockBackHelp')}
-          onClick={basculer} />
+        <span className="ec-interrupteur-bloc">
+          <button type="button" role="switch" aria-checked={enVente} className={`ec-interrupteur${enVente ? ' on' : ''}`}
+            aria-label={`${t('ecranCommerce.enVenteAujourdhui')} : ${item.name}`} title={enVente ? t('menuItem.stockOutHelp') : t('menuItem.stockBackHelp')}
+            onClick={basculer} />
+          <small className="ec-interrupteur-mot" aria-hidden="true">{t(enVente ? 'ecranCommerce.interrupteurEnVente' : 'ecranCommerce.interrupteurRupture')}</small>
+        </span>
       )}
     </div>
   );

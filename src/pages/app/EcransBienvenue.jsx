@@ -10,6 +10,7 @@ import { famille, libelleFamille } from '../../specialites';
 import AvecMarque from '../../components/AvecMarque';
 import { euros } from '../../prixPlat';
 import { imgProps } from '../../images';
+import { vibrer } from '../../gestes';
 
 /* Les écrans de l'accueil de l'application — l'enchaînement, la mémoire et la recherche des commerces vivent dans
  * Bienvenue.jsx. Ces composants ne font qu'afficher et remonter des gestes.
@@ -110,9 +111,9 @@ export function Haut({ onRetour, progression, onPasser, onFermer }) {
 }
 
 // Sans icône (véhicules de l'inscription, InscriptionAppli.jsx) : le texte seul.
-export function Option({ on, icone, titre, sous, multi, onClick }) {
+export function Option({ on, icone, titre, sous, multi, onClick, manque = false }) {
   return (
-    <button type="button" className={`bv-option${on ? ' on' : ''}`} aria-pressed={on} onClick={onClick}>
+    <button type="button" className={`bv-option${on ? ' on' : ''}${manque && !on ? ' bv-option--manque' : ''}`} aria-pressed={on} onClick={onClick}>
       {icone && <Tuile nom={icone} />}
       <span>{titre}{sous && <small>{sous}</small>}</span>
       {multi && <span className="bv-case">{on && <Icone nom="valider" taille={14} />}</span>}
@@ -199,18 +200,35 @@ export function EcranAccueil({ onCommencer, onConnexion }) {
   );
 }
 
+/* LE BOUTON LIME N'EST JAMAIS GRISÉ (design.md règle 4 ; fondateur, 2026-10-27, C3 de maquettes/audit-ecrans/audit-ecrans.html) :
+ * sans réponse, le toucher vibre « attention » et encadre ce qui manque, comme la fiche d'un plat avec un choix obligatoire
+ * (FichePlat). `pret` : la réponse est donnée ; `montrer` : ce qu'il faut faire en plus (mettre le curseur dans le champ). */
+function useManque(pret) {
+  const [manque, setManque] = useState(false);
+  useEffect(() => { if (pret) setManque(false); }, [pret]);
+  const essayer = (suite, montrer) => () => {
+    if (pret) { suite(); return; }
+    vibrer('attention');
+    setManque(true);
+    montrer?.();
+  };
+  return [manque && !pret, essayer];
+}
+
 const PROFILS = [['client', 'sac', 'rClient'], ['driver', 'velo', 'rLivreur'], ['restaurant', 'commerce', 'rCommerce']];
 export function EcranProfil({ role, onChoix, onSuite }) {
   const { t } = useLanguage();
+  const [manque, essayer] = useManque(!!role);
   return (
     <>
       <span className="bv-salut">{t('appli.salut')}</span>
       <h1 className="bv-titre"><AvecMarque>{t('appli.profilTitre')}</AvecMarque></h1>
       <p className="bv-sous">{t('appli.profilSub')}</p>
       <Feuille>
-        {PROFILS.map(([v, icone, k]) => <Option key={v} on={role === v} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)} onClick={() => onChoix(v)} />)}
+        {PROFILS.map(([v, icone, k]) => <Option key={v} on={role === v} manque={manque} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)} onClick={() => onChoix(v)} />)}
+        {manque && <p className="bv-manque" role="alert">{t('appli.choisisReponse')}</p>}
         <div className="bv-grandit" />
-        <button type="button" className="bv-btn btn-gold" disabled={!role} onClick={onSuite}>{t('appli.continuer')}</button>
+        <button type="button" className="bv-btn btn-gold" onClick={essayer(onSuite)}>{t('appli.continuer')}</button>
       </Feuille>
     </>
   );
@@ -224,14 +242,16 @@ export function EcranProfil({ role, onChoix, onSuite }) {
 const QUESTION = [['prix', 'euro', 'qPrix'], ['total', 'ticket', 'qTotal'], ['promo', 'etiquette', 'qPromo']];
 export function EcranQuestion({ choix, onChoix, onSuite }) {
   const { t } = useLanguage();
+  const [manque, essayer] = useManque(!!choix);
   return (
     <>
       <h1 className="bv-titre">{t('appli.qTitre')}</h1>
       <p className="bv-sous">{t('appli.qSub')}</p>
       <Feuille>
-        {QUESTION.map(([v, icone, k]) => <Option key={v} on={choix === v} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)} onClick={() => onChoix(v)} />)}
+        {QUESTION.map(([v, icone, k]) => <Option key={v} on={choix === v} manque={manque} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)} onClick={() => onChoix(v)} />)}
+        {manque && <p className="bv-manque" role="alert">{t('appli.choisisReponse')}</p>}
         <div className="bv-grandit" />
-        <button type="button" className="bv-btn btn-gold" disabled={!choix} onClick={onSuite}>{t('appli.continuer')}</button>
+        <button type="button" className="bv-btn btn-gold" onClick={essayer(onSuite)}>{t('appli.continuer')}</button>
       </Feuille>
     </>
   );
@@ -288,6 +308,7 @@ export function EcranCodePostal({ cp, commune, onCp, onSuite }) {
   const { t } = useLanguage();
   const champ = useRef(null);
   useEffect(() => { champ.current?.focus(); }, []);
+  const [manque, essayer] = useManque(!!commune);
   return (
     <>
       <h1 className="bv-titre">{t('appli.cpTitre')}</h1>
@@ -296,9 +317,9 @@ export function EcranCodePostal({ cp, commune, onCp, onSuite }) {
         <label htmlFor="bv-cp" className="sr-only">{t('appli.cpTitre')}</label>
         <input id="bv-cp" ref={champ} className="bv-saisie" inputMode="numeric" maxLength={4} placeholder="1050" autoComplete="postal-code"
           value={cp} onChange={(e) => onCp(e.target.value.replace(/\D/g, '').slice(0, 4))} />
-        <p className="bv-sous bv-centre" style={{ marginTop: 12, minHeight: 22 }} aria-live="polite">{commune || (cp.length === 4 ? t('appli.cpHors') : '')}</p>
+        <p className={`bv-sous bv-centre${manque && cp.length < 4 ? ' bv-manque' : ''}`} style={{ marginTop: 12, minHeight: 22 }} aria-live="polite">{commune || (cp.length === 4 ? t('appli.cpHors') : manque ? t('appli.cpManque') : '')}</p>
         <div className="bv-grandit" />
-        <button type="button" className="bv-btn btn-gold" disabled={!commune} onClick={onSuite}>{t('appli.cpBtn')}</button>
+        <button type="button" className="bv-btn btn-gold" onClick={essayer(onSuite, () => champ.current?.focus())}>{t('appli.cpBtn')}</button>
       </Feuille>
     </>
   );

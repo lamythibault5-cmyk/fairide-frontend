@@ -11,8 +11,10 @@
 /* ---------- Le bandeau ---------- */
 .compte-bandeau { position: relative; background: var(--iris); color: #fff; padding: 20px 20px 58px; border-radius: var(--radius) var(--radius) 0 0; }
 .compte-tete { display: flex; align-items: center; gap: 14px; margin: 4px 0 18px; }
+/* Blanc sur l'iris, plus lime (fondateur, 2026-10-27, D1 de maquettes/audit-ecrans) : le lime est le prochain clic, et un rond
+   qu'on ne touche pas n'en est pas un ; chez le client il était en plus à côté du lime « Ajouter un code ». */
 .compte-avatar {
-  flex: none; width: 62px; height: 62px; border-radius: 50%; background: var(--lime); color: var(--ink);
+  flex: none; width: 62px; height: 62px; border-radius: 50%; background: #fff; color: var(--iris);
   display: grid; place-items: center; font-family: var(--font-ui); font-size: 21px; font-weight: 800; letter-spacing: .02em;
 }
 .compte-tete-texte { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -155,3 +157,10 @@ html.appli .compte-feuille .account-link-row:active { background: var(--cream-di
 .compte-ecran--integre .compte-feuille { margin: 0; padding: 0; border-radius: 0; background: none; }
 html.appli .compte-ecran--integre .compte-feuille { padding-bottom: 0; }
 .compte-ecran--integre .compte-feuille .ec-feuille-titre { margin: 20px 0 8px; }
+/* Un seul style de titre sur la page Commerce (fondateur, 2026-10-27, S2 de maquettes/audit-ecrans) : « Ta fiche », « Livraison »
+   en phrase (réponse 6 A de maquettes/ecrans-pro) puis « ARGENT, CONTRAT ET OUTILS » en capitales grises. Les groupes de Mon compte
+   montés ici prennent le titre du commerce (ecran-commerce.css, .ec-feuille-titre). */
+.compte-ecran--integre .compte-feuille .compte-feuille-titre {
+  margin: 26px 0 10px; font-family: var(--font-titre); font-size: 20px; font-weight: 700; line-height: 1.2; color: var(--ink);
+  letter-spacing: 0; text-transform: none;
+}

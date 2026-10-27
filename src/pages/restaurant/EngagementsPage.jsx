@@ -217,7 +217,8 @@ export default function EngagementsPage() {
               {/* « Agir pour » (console admin) : l'équipe voit l'écran, mais ne signe rien à la place du commerce. */}
               {!lectureSeule && (
                 <button type="button" className="ec-bouton ec-bouton--lime" onClick={signer} disabled={busy}>
-                  {busy ? '…' : t('engagementsCommerce.signerN', { n: aSigner.length })}
+                  {/* Ce qu'on signe, plus un chiffre entre parenthèses qui se lisait comme une quantité (S5 de maquettes/audit-ecrans). */}
+                  {busy ? '…' : aSigner.length === 1 ? t(`engagementsCommerce.signer_${aSigner[0]}`) : t('engagementsCommerce.signerLes', { n: aSigner.length })}
                 </button>
               )}
             </section>

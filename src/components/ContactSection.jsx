@@ -1,8 +1,10 @@
-import { useState, useId } from 'react';
+import { useState, useId, useEffect } from 'react';
 import { emailValide, telephonePlausible } from '../validation';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
+import { useAuth } from '../context/AuthContext';
+import useCommandeEnCours, { commandeSuivie } from '../hooks/useCommandeEnCours';
 
 // `messageInitial` sert au centre d'aide : quand on arrive par « Signaler un bug », le message est
 // déjà amorcé avec ce qu'il faut nous dire. Une trame vaut mieux qu'un champ vide — c'est elle qui
@@ -25,11 +27,23 @@ export default function ContactSection({ messageInitial = '' }) {
     { value: 'restaurant', label: t('contact.roleRestaurant') },
     { value: 'other', label: t('contact.roleOther') }
   ];
-  const [senderRole, setSenderRole] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  /* CONNECTÉ, ON NE REDEMANDE PAS QUI TU ES (fondateur, 2026-10-27, C2 de maquettes/audit-ecrans/audit-ecrans.html) : le profil,
+   * le nom, l'e-mail et le téléphone viennent du compte et restent repliés derrière « Pas toi ? » ; il ne reste que le message,
+   * amorcé avec la commande en cours s'il y en a une. Sans compte, le formulaire complet comme avant. */
+  const { user } = useAuth();
+  const roleCompte = user ? (['client', 'driver', 'restaurant'].includes(user.role) && !user.isAdmin ? user.role : 'other') : '';
+  const nomCompte = user ? (user.name || [user.firstName, user.lastName].filter(Boolean).join(' ')) : '';
+  const [deplie, setDeplie] = useState(!user);
+  const [senderRole, setSenderRole] = useState(roleCompte);
+  const [name, setName] = useState(nomCompte);
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [message, setMessage] = useState(messageInitial);
+  const enCours = useCommandeEnCours('/aide').find(commandeSuivie);
+  useEffect(() => {
+    if (!enCours || messageInitial) return;
+    setMessage((m) => m || t('contact.aboutOrder', { n: String(enCours.orderNumber ?? '').padStart(3, '0'), name: enCours.restaurantName }));
+  }, [enCours, messageInitial, t]);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
@@ -48,7 +62,8 @@ export default function ContactSection({ messageInitial = '' }) {
     try {
       await api('/contact', { method: 'POST', body: { role: senderRole, name: name.trim(), email: email.trim(), phone: phone.trim(), message: message.trim(), website: siteWeb } });
       setSent(true);
-      setSenderRole(''); setName(''); setEmail(''); setPhone(''); setMessage('');
+      if (!user) { setSenderRole(''); setName(''); setEmail(''); setPhone(''); }
+      setMessage('');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -66,6 +81,13 @@ export default function ContactSection({ messageInitial = '' }) {
           <div className="pill teal" style={{ display: 'inline-block' }}>{t('contact.sentMessage')}</div>
         ) : (
           <form onSubmit={submit}>
+            {!deplie && (
+              <p className="small contact-qui">
+                {t('contact.youAre', { name: nomCompte || user.email })}{' · '}
+                <button type="button" className="lien-bouton" onClick={() => setDeplie(true)}>{t('contact.notYou')}</button>
+              </p>
+            )}
+            {deplie && <>
             <div className="field">
               <span className="titre-groupe" id="contact-role-titre">{t('contact.roleLabel')}</span>
               <div className="role-pick" style={{ marginBottom: 0 }} role="group" aria-labelledby="contact-role-titre">
@@ -88,6 +110,7 @@ export default function ContactSection({ messageInitial = '' }) {
               <label htmlFor={idsA11y + '-phone'}>{t('contact.phone')}</label>
               <input id={idsA11y + '-phone'} type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('contact.phonePlaceholder')} maxLength={40} />
             </div>
+            </>}
             <div className="field">
               <label htmlFor={idsA11y + '-message'}>{t('contact.message')}</label>
               <textarea id={idsA11y + '-message'} rows={5} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('contact.messagePlaceholder')} required maxLength={4000} />

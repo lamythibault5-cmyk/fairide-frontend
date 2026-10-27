@@ -14,6 +14,7 @@ import DriverDocuments from '../components/DriverDocuments';
 import DriverContractTerms from '../components/DriverContractTerms';
 import RestaurantContract from '../components/RestaurantContract';
 import { ouvrirPdf, telechargerPdf } from '../pdf';
+import HaussePrix from '../components/HaussePrix';
 import { API_BASE } from '../api';
 import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
@@ -131,6 +132,7 @@ export default function Account({ integre = false, milieu = null }) {
   const DELETION_REASONS = deletionReasons(t);
   const GENDERS = genders(t);
   const [driverDeliveries, setDriverDeliveries] = useState(null);
+  const livraisonsFaites = (n) => (n === 1 ? t('accountUi.deliveriesDoneOne') : t('accountUi.deliveriesDone', { n }));
   // Échec du chargement de l'activité : « Chargement… » restait pour toujours ; un message et Réessayer (audit du 19/10, CROSS-33).
   const [erreurActivite, setErreurActivite] = useState(null);
   const [relanceActivite, setRelanceActivite] = useState(0);
@@ -528,10 +530,11 @@ export default function Account({ integre = false, milieu = null }) {
   const raccourcis = role === 'client'
     ? [{ to: '/favorites', icone: 'favoris', libelle: t('nav.favorites') },
        { to: '/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }]
+    // Le livreur non plus (fondateur, 2026-10-27, L1 de maquettes/audit-ecrans) : « Mes commandes » ouvrait l'onglet Courses sous un
+    // autre nom, « Gains » est un onglet. Restent ses papiers.
     : role === 'driver'
-      ? [{ to: '/driver', icone: 'commandes', libelle: t('nav.orders') },
-         { to: '/driver/earnings', icone: 'euro', libelle: t('nav.earnings') },
-         { to: '/driver/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }]
+      ? [{ to: '/driver/invoices', icone: 'document', libelle: t('accountUi.myInvoices') },
+         { to: '/documents', icone: 'contrat', libelle: t('mesDocuments.rowTitle') }]
       : membreEquipe
         ? [{ to: '/dashboard/orders', icone: 'commandes', libelle: t('nav.orders') }]
         : [{ to: '/dashboard/orders', icone: 'commandes', libelle: t('nav.orders') },
@@ -1085,17 +1088,26 @@ export default function Account({ integre = false, milieu = null }) {
           {/* Entraînement (2026-10-08) : commandes d'essai pendant 7 jours après la première connexion du terminal. */}
           <LigneCompte to="/dashboard/simulation" icone="etoile" titre={t('accountUi.simulationRow')} sous={t('accountUi.simulationSub')} />
           <div id="section-contrat" />
-          {/* Contrat accepté : la rangée ouvre directement le PDF complet (fondateur, 2026-10-08) ; à accepter : l'écran « Tes
-              engagements » (2026-10-27), où il se signe avec les deux autres textes, au lieu d'un panneau en bas d'une feuille. */}
-          <LigneCompte icone="contrat" titre={t('restoContract.rowTitle')} sous={restaurant.onboarding?.contractAccepted ? t('restoContract.rowSubPdf') : t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')}
+          {/* UNE RANGÉE « MON CONTRAT » (fondateur, 2026-10-27, S2 de maquettes/audit-ecrans) au lieu de trois (le PDF, l'enregistrer,
+              les détails) : accepté, elle ouvre le PDF, son enregistrement et les clauses résumées ; à accepter, l'écran « Tes
+              engagements », où il se signe avec les deux autres textes. */}
+          <LigneCompte icone="contrat" titre={t('restoContract.rowTitle')} sous={restaurant.onboarding?.contractAccepted ? t('restoContract.rowSubTout') : t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')}
             to={restaurant.onboarding?.contractAccepted ? undefined : '/dashboard/engagements'}
-            onClick={restaurant.onboarding?.contractAccepted ? () => ouvrirPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, t('restoContract.pdfFailed')) : undefined}>
-            {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}
+            onClick={restaurant.onboarding?.contractAccepted ? () => basculer('contrat') : undefined}>
+            {ouvertes.has('contrat') && (
+              <>
+                <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                  <button type="button" className="btn-teal btn-sm" onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, t('restoContract.pdfFailed'))}>{t('restoContract.ouvrirPdf')}</button>
+                  <button type="button" className="btn-outline btn-sm" onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))}>{t('restoContract.savePdf')}</button>
+                </div>
+                <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />
+              </>
+            )}
           </LigneCompte>
-          <LigneCompte icone="contrat" titre={t('restoContract.rowSaveTitle')} sous={t('restoContract.rowSaveSub')} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))} />
-          {restaurant.onboarding?.contractAccepted && (
-            <LigneCompte icone="contrat" titre={t('restoContract.rowDetailsTitle')} sous={t('restoContract.rowDetailsSub')} ouverte={ouvertes.has('contrat-details')} onClick={() => basculer('contrat-details')}>
-              {ouvertes.has('contrat-details') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}
+          {/* La hausse de prix (fondateur, 2026-09-30) : choisie sur « C'est bon », puis ici, plus en bas de Ma carte (S1). */}
+          {(restaurant.menu || []).length > 0 && (
+            <LigneCompte icone="tendance" titre={t('restoContract.prixRow')} sous={t('restoContract.prixRowSub')} ouverte={ouvertes.has('hausse')} onClick={() => basculer('hausse')}>
+              {ouvertes.has('hausse') && <HaussePrix restoId={restaurant.id} nbPlats={restaurant.menu.length} onChange={rechargerRestaurant} />}
             </LigneCompte>
           )}
           <div id="section-paiement">
@@ -1324,12 +1336,13 @@ export default function Account({ integre = false, milieu = null }) {
           </LigneCompte>
 
           {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas. Ici elles gardent leur nom. */}
-          <LigneCompte to="/dashboard/stats" icone="stats" titre={t('accountUi.stats')} sous={t('accountUi.statsSub')} />
+          {/* Statistiques et Promotions sont déjà des tuiles en tête de Commerce : plus en rangée quand Mon compte y est monté (S2). */}
+          {!integre && <LigneCompte to="/dashboard/stats" icone="stats" titre={t('accountUi.stats')} sous={t('accountUi.statsSub')} />}
           {/* L'équipe du commerce (backend equipeCommerce.js) : inviter, voir, retirer. */}
           <LigneCompte icone="personnes" titre={t('team.rowTitle')} sous={t('team.rowSub')} ouverte={ouvertes.has('equipe')} onClick={() => basculer('equipe')}>
             {ouvertes.has('equipe') && restoId && <EquipeCommerce restoId={restoId} />}
           </LigneCompte>
-          <LigneCompte to="/dashboard/promotions" icone="etiquette" titre={t('accountUi.promotions')} />
+          {!integre && <LigneCompte to="/dashboard/promotions" icone="etiquette" titre={t('accountUi.promotions')} />}
           <LigneCompte to="/dashboard/guide" icone="guide" titre={t('accountUi.guide')} />
         </div>
       )}
@@ -1339,7 +1352,7 @@ export default function Account({ integre = false, milieu = null }) {
       {role === 'driver' && <h2 className="compte-feuille-titre">{t('accountUi.myRides')}</h2>}
       {role === 'driver' && (
         <div className="card account-groupe" aria-label={t('accountUi.myRides')}>
-          <LigneCompte icone="stats" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
+          <LigneCompte icone="stats" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? livraisonsFaites(driverDeliveries.filter((o) => o.status === 'livre').length) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
             <DriverActivity deliveries={driverDeliveries} t={t} erreur={erreurActivite} onReessayer={() => setRelanceActivite((n) => n + 1)} />
           </LigneCompte>
           <LigneCompte icone="contrat" titre={t('driverTerms.rowTitle')} sous={t('driverTerms.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>

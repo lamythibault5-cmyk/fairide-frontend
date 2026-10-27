@@ -3,8 +3,9 @@ import { api, apiDownload, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { mouvementReduit } from '../../gestes';
+import { mouvementReduit, vibrer } from '../../gestes';
 import AllergenesPlat from './AllergenesPlat';
+import { Link } from 'react-router-dom';
 
 /* « Ma carte et mes engagements » — ce que le commerce signe lui-même (backlog de conformité du
  * 23/09/2026). L'équipe Fairide ne peut rien signer à sa place : en « agir pour », le serveur refuse
@@ -25,7 +26,11 @@ import AllergenesPlat from './AllergenesPlat';
  * qu'on a sous les yeux reste une signature de chacun d'eux. */
 // `rafraichir` : la fiche du commerce, rechargée après chaque modification de plat — un prix changé
 // remet la carte à signer, le panneau doit le montrer sans recharger la page.
-export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
+// `versEngagements` (côté commerce, Ma carte) : la procédure allergènes et la déclaration de vendeur professionnel ne se signent
+// plus ici mais sur « Tes engagements » (fondateur, 2026-10-27, S1 de maquettes/audit-ecrans) — deux écrans de signature qui ne
+// se ressemblaient pas, l'un en long texte à puces avec un « Tout signer (2) » grisé. Ici il ne reste qu'une rangée qui y mène ;
+// la carte elle-même (re)signée après un changement de prix reste ici. La console admin garde tout.
+export default function ConformiteCarte({ restoId, rafraichir, onChange, versEngagements = null }) {
   const { token } = useAuth();
   const toast = useToast();
   const { t, language } = useLanguage();
@@ -69,15 +74,20 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
 
   // Ce qui reste à signer, dans l'ordre où le serveur l'attend. La carte n'y entre que si elle est signable (des plats,
   // rien qui manque) : tant que Fairide la prépare, il n'y a rien à signer et on le dit.
-  const aSigner = [];
-  if (!m.signed && m.missing.length === 0 && m.itemCount > 0) aSigner.push('carte');
-  if (!d.allergens.attestation.attestedAt) aSigner.push('allergenes');
-  if (!proAJour) aSigner.push('pro');
+  const aSignerTout = [];
+  if (!m.signed && m.missing.length === 0 && m.itemCount > 0) aSignerTout.push('carte');
+  if (!d.allergens.attestation.attestedAt) aSignerTout.push('allergenes');
+  if (!proAJour) aSignerTout.push('pro');
+  const ailleurs = versEngagements ? aSignerTout.filter((x) => x !== 'carte') : [];
+  const aSigner = versEngagements ? aSignerTout.filter((x) => x === 'carte') : aSignerTout;
   const toutSigne = m.signed && d.allergens.attestation.attestedAt && proAJour;
 
   async function toutSigner(e) {
     e.preventDefault();
     const typedName = nom.trim();
+    // Le bouton n'est plus grisé (design.md règle 4) : ce qui manque est dit au toucher, dans l'ordre de l'écran.
+    const manque = aSigner.includes('allergenes') && !tel.trim() ? 'tel' : !coche ? 'case' : typedName.length < 3 ? 'nom' : null;
+    if (manque) { vibrer('attention'); toast(t(`engagementsCommerce.manque_${manque}`), 'erreur'); return; }
     setBusy(true);
     try {
       // L'un après l'autre : si l'un échoue (numéro d'allergènes invalide, dénomination manquante…), les précédents
@@ -104,7 +114,7 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
     <details className="card conformite-carte" id="conformite-carte" open={!toutSigne}>
       <summary>
         <b>{t('conformite.menuPanelTitle')}</b>{' '}
-        {toutSigne ? <span className="pill teal">✓ {t('conformite.menuPanelDone')}</span> : <span className="pill texte-erreur">{t('conformite.signAllCount', { n: aSigner.length || 1 })}</span>}
+        {toutSigne ? <span className="pill teal">✓ {t('conformite.menuPanelDone')}</span> : <span className="pill texte-erreur">{t('conformite.signAllCount', { n: aSignerTout.length || 1 })}</span>}
       </summary>
 
       {/* Déjà signé : une ligne chacun, rien d'autre. */}
@@ -113,6 +123,12 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
         {d.allergens.attestation.attestedAt && fait(t('conformite.allergenAttested', { date: date(d.allergens.attestation.attestedAt), name: d.allergens.attestation.attestedName }))}
         {proAJour && fait(t('conformite.proDeclared', { date: date(pro.declaredAt), name: pro.declaredName }))}
       </div>
+      {ailleurs.length > 0 && (
+        <Link to={versEngagements} className="conformite-vers">
+          <span><b>{t('engagementsCommerce.titre')}</b><small>{ailleurs.length === 1 ? t('ecranCommerce.engagementsLigneUn') : t('ecranCommerce.engagementsLigne', { n: ailleurs.length })}</small></span>
+          <span className="conformite-vers-chevron" aria-hidden="true">›</span>
+        </Link>
+      )}
 
       {/* Carte pas encore signable : on dit pourquoi, sans formulaire. */}
       {!m.signed && !aSigner.includes('carte') && (
@@ -188,8 +204,8 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
           <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <label htmlFor={`${id}-nom`} className="sr-only">{t('conformite.typedName')}</label>
             <input id={`${id}-nom`} placeholder={t('conformite.typedName')} value={nom} onChange={(e) => setNom(e.target.value)} autoComplete="name" style={{ maxWidth: 260 }} />
-            <button type="submit" className="btn-teal" disabled={busy || !coche || nom.trim().length < 3 || (aSigner.includes('allergenes') && !tel.trim())}>
-              {busy ? '…' : t('conformite.signAllButton', { n: aSigner.length })}
+            <button type="submit" className="btn-teal" disabled={busy}>
+              {busy ? '…' : aSigner.length === 1 && aSigner[0] === 'carte' ? t('conformite.signMenuButton') : t('conformite.signTextsButton', { n: aSigner.length })}
             </button>
           </div>
         </form>
