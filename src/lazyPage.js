@@ -1,4 +1,5 @@
 import { lazy } from 'react';
+import { chargerSuite } from './i18n/translations';
 
 // Chargement des pages à la demande, tolérant aux mises en ligne. Chaque déploiement renomme les fichiers de
 // code (empreinte dans le nom) : un onglet resté ouvert sur l'ancienne version demande, au changement de
@@ -35,8 +36,11 @@ export function rechargerSiNouveauCode(err) {
   return true;
 }
 
+/* LA PAGE ATTEND AUSSI LA SUITE DU FRANÇAIS (audit du 27/10/2026). Le premier chargement n'emporte que les textes des pages
+   publiques (src/i18n/translations.js) ; une page chargée à la demande peut lire n'importe quel espace, elle ne s'affiche
+   donc qu'avec la table complète. Les deux téléchargements partent ensemble, et la suite n'est téléchargée qu'une fois. */
 export function lazyPage(importer) {
-  return lazy(() => importer().catch((err) => {
+  return lazy(() => Promise.all([importer(), chargerSuite()]).then(([module]) => module).catch((err) => {
     // Rechargement en cours : on laisse le squelette affiché jusqu'au redémarrage plutôt que de propager.
     if (rechargerSiNouveauCode(err)) return new Promise(() => {});
     throw err;

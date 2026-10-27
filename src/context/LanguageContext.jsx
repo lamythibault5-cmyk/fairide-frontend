@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { translations, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE, chargerLangue, langueChargee } from '../i18n/translations';
+import { translations, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE, chargerLangue, langueChargee, chargerSuite, ecouterTables } from '../i18n/translations';
 import { changerLangue, ecouterLangue } from '../i18n/historiqueLangue';
 
 const LanguageContext = createContext(null);
@@ -59,6 +59,21 @@ export function LanguageProvider({ children, initial = DEFAULT_LANGUAGE }) {
     chargerLangue(language).then(() => { if (vivant) setTablesChargees((n) => n + 1); });
     return () => { vivant = false; };
   }, [language]);
+
+  /* LA SUITE DES TEXTES (src/i18n/translations.js) : demandée quand le navigateur n'a plus rien à faire après l'affichage,
+     pour que la première page chargée à la demande (panier, connexion, tableau de bord) n'ait plus à l'attendre. Un échec
+     ici reste muet : lazyPage la redemandera. À l'arrivée de chaque table, un rendu de plus — par qui qu'elle ait été
+     demandée — pour qu'un texte arrivé remplace sa clé ou son repli en français. */
+  useEffect(() => {
+    const arreter = ecouterTables(() => setTablesChargees((n) => n + 1));
+    const demander = () => { chargerSuite().catch(() => {}); };
+    const inactif = typeof window.requestIdleCallback === 'function';
+    const id = inactif ? window.requestIdleCallback(demander, { timeout: 4000 }) : window.setTimeout(demander, 1500);
+    return () => {
+      arreter();
+      if (inactif) window.cancelIdleCallback(id); else window.clearTimeout(id);
+    };
+  }, []);
 
   // index.html porte lang="fr" en dur : sans cette synchronisation, un visiteur passé en néerlandais ou
   // en anglais restait annoncé comme lisant du français. Les lecteurs d'écran appliquent alors la

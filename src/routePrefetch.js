@@ -2,6 +2,8 @@
 // les mêmes que dans App.jsx : Vite ne génère qu'un seul module par fichier, donc appeler l'un ou
 // l'autre remplit le même cache — un module déjà préchargé ici s'affiche instantanément là-bas.
 // Appelé par NavigationFeedback.jsx au survol / toucher / focus d'un lien interne.
+import { chargerSuite } from './i18n/translations';
+
 const CHARGEURS = {
   '/login': () => import('./pages/Auth'),
   '/recherche': () => import('./pages/client/SearchPage'),
@@ -64,7 +66,8 @@ export function prechargerPage(pathname) {
   if (!cle) return null;
   if (enCours.has(cle)) return enCours.get(cle);
   const charge = CHARGEURS[cle];
-  const promesse = Promise.resolve().then(charge).catch(() => { enCours.delete(cle); });
+  // La page s'affichera avec la suite du français (lazyPage.js) : elle part au même moment.
+  const promesse = Promise.all([Promise.resolve().then(charge), chargerSuite()]).catch(() => { enCours.delete(cle); });
   enCours.set(cle, promesse);
   return promesse;
 }

@@ -165,7 +165,8 @@ function liensDeLangue(cheminApplicatif) {
    (empreinte) : on le lit dans le manifeste de Vite (build.manifest, vite.config.js), jamais en devinant. Manifeste absent
    ou langue introuvable : pas de balise, la page fonctionne comme avant. Le français n'en a pas besoin : il est dans le
    morceau principal (voir l'en-tête de translations.js). */
-const MODULES_LANGUE = { nl: 'src/i18n/nl.js', en: 'src/i18n/en.js' };
+// Le premier morceau de chaque langue (sa suite arrive après l'affichage : scripts/vite-decoupe-traductions.mjs).
+const MODULES_LANGUE = { nl: 'src/i18n/nl-base.js', en: 'src/i18n/en-base.js' };
 let prechargementsLangue = {};
 async function lirePrechargementsLangue() {
   const chemin = path.join(DIST, '.vite', 'manifest.json');

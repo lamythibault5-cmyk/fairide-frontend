@@ -230,6 +230,10 @@ thrown to the caller as normal. Don't add per-call 401 checks.
 ### Internationalisation
 
 [src/i18n/translations.js](src/i18n/translations.js) holds `fr` / `en` / `nl` tables; default `fr`.
+**The build splits each table in two** ([scripts/vite-decoupe-traductions.mjs](scripts/vite-decoupe-traductions.mjs),
+2026-10-27): the sections read by the first-load pages ship first, the rest (consoles, legal texts) arrives after the page
+shows, and every `lazyPage` waits for it. Keep loading pages through `lazyPage()`; a plain `lazy()` reached from a
+first-load page has its sections kept in the first part automatically. `fr.js`, `nl.js`, `en.js` stay the sources.
 **312 of the 359 `.jsx` files** call `useLanguage()` (2026-10-22). Adding a key means adding it to all three locales;
 `npm run check:i18n` (also in CI) fails otherwise. **`fr.js` and `nl.js` are committed with CRLF line endings**: a
 `sed -i` from Git Bash rewrites them to LF and the diff shows ~8,500 changed lines — edit them with the Edit tool or Node,
