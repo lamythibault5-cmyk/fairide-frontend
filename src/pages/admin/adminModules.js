@@ -82,7 +82,7 @@ export const ADMIN_MODULES = [
   // Mises en avant payantes (2026-10-02) : prix des positions 1, 2, 3 par rangée, demandes des commerces.
   { key: 'placements', path: '/admin/placements', icon: 'megaphone', hub: 'partners', badge: aucun },
   // « Demande ton restaurant » (2026-10-26) : les restaurants demandés par les clients, et la preuve à leur montrer.
-  { key: 'demandes', path: '/admin/demandes', icon: 'megaphone', hub: 'partners', badge: aucun },
+  { key: 'demandes', path: '/admin/demandes', icon: 'demande', hub: 'partners', badge: aucun },
   { key: 'simulation', path: '/admin/simulation', icon: 'boussole', hub: 'simulation', badge: aucun }
 ];
 

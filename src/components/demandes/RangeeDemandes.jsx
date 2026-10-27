@@ -27,7 +27,7 @@ export default function RangeeDemandes({ grand = false }) {
   return (
     <section className="liste-section dm-section" aria-labelledby="dm-rangee-titre">
       <h2 className="section-title section-titre-icone dm-rangee-titre" id="dm-rangee-titre" style={{ fontSize: 17, margin: '0 0 2px' }}>
-        <Icone nom="megaphone" taille={18} />{t('demandes.rangeeTitre')}
+        <Icone nom="demande" taille={18} />{t('demandes.rangeeTitre')}
       </h2>
       <p className="small dm-rangee-sous">{t('demandes.rangeeSous')}</p>
       <div className={grand ? 'rest-grid sl-grille dm-grille' : 'rest-grid rest-grid-scroll dm-rangee'}>
@@ -35,7 +35,7 @@ export default function RangeeDemandes({ grand = false }) {
           <TicketDemande key={d.id} d={d} t={t} occupe={occupe(d.id)} onMoiAussi={(x) => basculer(x, null, maj)} />
         ))}
         <div className="dm-ticket dm-ticket--autre">
-          <span className="dm-autre-rond" aria-hidden="true"><Icone nom="megaphone" taille={22} /></span>
+          <span className="dm-autre-rond" aria-hidden="true"><Icone nom="demande" taille={22} /></span>
           <b>{t('demandes.autreTitre')}</b>
           <small>{t('demandes.autreSous')}</small>
           <button type="button" className="dm-moi-aussi dm-moi-aussi--clair" onClick={() => ouvrir('')}>{t('demandes.autreBouton')}</button>

@@ -37,7 +37,7 @@ export function FinDeListeDemande() {
       <h3>{t('demandes.finTitre')}</h3>
       <p>{t('demandes.finTexte')}</p>
       <button type="button" className="btn-outline dm-carte-bouton" onClick={() => ouvrir('')}>
-        <Icone nom="megaphone" taille={18} />{t('demandes.finBouton')}
+        <Icone nom="demande" taille={18} />{t('demandes.finBouton')}
       </button>
       {fenetre}
     </div>

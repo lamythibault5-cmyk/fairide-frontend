@@ -54,7 +54,7 @@ export default function MesDemandes() {
         {!liste && !echec && <p className="small">{t('demandes.recherche')}</p>}
         {echec && <ErreurChargement onReessayer={charger} />}
         {liste && n === 0 && (
-          <EtatVide icone="megaphone" titre={t('demandes.mesVide')} texte={t('demandes.mesVideTexte')}>
+          <EtatVide icone="demande" titre={t('demandes.mesVide')} texte={t('demandes.mesVideTexte')}>
             <button type="button" className="btn-outline" onClick={() => ouvrir('')}>{t('demandes.finBouton')}</button>
           </EtatVide>
         )}
@@ -84,7 +84,7 @@ export default function MesDemandes() {
                 );
               })}
             </ul>
-            <button type="button" className="btn-outline dm-mes-autre" onClick={() => ouvrir('')}><Icone nom="megaphone" taille={18} />{t('demandes.finBouton')}</button>
+            <button type="button" className="btn-outline dm-mes-autre" onClick={() => ouvrir('')}><Icone nom="demande" taille={18} />{t('demandes.finBouton')}</button>
           </>
         )}
       </div>

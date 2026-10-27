@@ -153,6 +153,9 @@ export const TRACES = {
   // Trois curseurs plutôt qu'un engrenage : un engrenage à 20px devient une tache dentelée.
   reglages: <><path d="M4 6h10" /><path d="M18 6h2" /><circle cx="16" cy="6" r="2" /><path d="M4 12h4" /><path d="M12 12h8" /><circle cx="10" cy="12" r="2" /><path d="M4 18h12" /><circle cx="18" cy="18" r="2" /></>,
   megaphone: <><path d="M3 10v4a1 1 0 0 0 1 1h3l8 5V4L7 9H4a1 1 0 0 0-1 1Z" /><path d="M19 9a4 4 0 0 1 0 6" /></>,
+  // « Demande ton restaurant » : la devanture avec un cœur à la place de la porte, le restaurant que tu aimes. Le
+  // mégaphone qu'il remplace se lisait comme un bouton « son » (fondateur, 2026-10-27).
+  demande: <><path d="M4 9h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9Z" /><path d="M3 9 5 4h14l2 5" /><path d="M12 18.3c-2.4-1.5-3.8-3-3.8-4.7a1.9 1.9 0 0 1 3.8-.6 1.9 1.9 0 0 1 3.8.6c0 1.7-1.4 3.2-3.8 4.7Z" /></>,
   alerte: <><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4.5" /><path d="M12 17.5h.01" /></>,
   tendance: <><path d="m3 17 6-6 4 4 8-8" /><path d="M15 7h6v6" /></>,
   mallette: <><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M3 13h18" /></>,

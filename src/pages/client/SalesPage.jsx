@@ -903,6 +903,8 @@ function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen, onRegi
               <button type="button" className="btn-teal btn-sm" onClick={() => onRegister?.({ web: r })}>{t('sales.webRegister')}</button>
             </div>
           ))}
+          {/* Les fiches Google viennent en dernier (geocode.js › searchBusinesses) : « Google Maps » dessous, règle de Google. */}
+          {web.some((r) => r.source === 'google') && <p className="attribution-google" translate="no">Google Maps</p>}
           <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => onRegister?.({ nom: q.trim() })}><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{t('sales.webManual')}</button>
         </div>
       )}
