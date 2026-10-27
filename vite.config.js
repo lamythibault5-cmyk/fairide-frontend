@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import decoupeTraductions from './scripts/vite-decoupe-traductions.mjs'
 
 // Identifiant de build affiché en bas de « Mon compte ». Le numéro de version du package vaut
 // 0.0.0 et ne bouge jamais : il n'apprendrait rien. La date de build, elle, répond à la seule
@@ -36,7 +37,7 @@ survolALaSouris.postcss = true;
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), decoupeTraductions()],
   css: { postcss: { plugins: [survolALaSouris()] } },
   /* LE MANIFESTE DE CONSTRUCTION (audit du 24/10) : dist/.vite/manifest.json dit quel fichier porte quel module. Le pré-rendu
      (scripts/prerender.mjs) y lit le nom du morceau nl / en pour l'annoncer dans les pages /nl et /en, puis le supprime : il
