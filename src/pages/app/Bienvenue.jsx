@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../api';
 import { CHEMIN_LISTE } from '../../resumeCarte';
-import { experienceApp, demanderPosition, connexionFournisseur } from '../../natif';
+import { experienceApp, demanderPosition, autoriserPosition, connexionFournisseur } from '../../natif';
 import { communeDepuisCodePostal, communeRingDistance, haversineDistanceKm } from '../../menuCategories';
 import { ecrireBienvenue, ecrireReprise, lireReprise, lireParcoursFait, ecrireParcoursFait } from '../../bienvenue';
 import { repondAuxEnvies } from '../../envies';
 import { FAMILLES, famillesCommerce } from '../../specialites';
 import {
-  Haut, EcranAccueil, EcranProfil, EcranQuestion, EcranPourquoi, EcranEnvies, EcranPermission, EcranCodePostal,
+  Haut, EcranAccueil, EcranProfil, EcranQuestion, EcranPourquoi, EcranEnvies, EcranCodePostal,
   EcranRecherche, EcranCompte, EcranPromesses, BarresCommande
 } from './EcransBienvenue';
 import InscriptionAppli from './InscriptionAppli';
@@ -53,7 +53,9 @@ import InscriptionAppli from './InscriptionAppli';
  * (décision du fondateur). */
 
 const PARCOURS = {
-  client: ['question', 'pourquoi', 'position', 'codePostal', 'recherche', 'envies', 'compte'],
+  // Plus d'écran « position » (fondateur, 2026-10-27, P1 de maquettes/badge-position/badge-position.html) : « Trouver mes
+  // restaurants » pose directement la question du système. Le code postal ne vient qu'après un refus (ou un GPS muet).
+  client: ['question', 'pourquoi', 'codePostal', 'recherche', 'envies', 'compte'],
   // Plus d'écran « position » pour le livreur (fondateur, 2026-10-21, décision 10) : elle est demandée juste avant son
   // premier « Disponible », avec la même explication (components/livreur/PositionRequise.jsx), jamais à l'inscription.
   driver: ['lvPromesses', 'compte'],
@@ -64,8 +66,9 @@ const PARCOURS = {
 const CHOIX = ['prix', 'total', 'promo'];
 // Un accueil laissé en route avant le 2026-10-22 reprend sur l'écran qui a remplacé le sien. `lvPosition` (position du
 // livreur, retirée le 2026-10-21) manquait : un livreur arrêté là rouvrait l'app sur un écran vide (revue du 24/10).
-// `envies` n'y est plus depuis le 2026-10-25 : l'écran existe de nouveau (après le chargement), on y reprend.
-const ECRANS_RETIRES = { buts: 'question', freins: 'question', cartes: 'question', lvPosition: 'lvPromesses' };
+// `envies` n'y est plus depuis le 2026-10-25 : l'écran existe de nouveau (après le chargement), on y reprend. `position` (écran
+// retiré le 2026-10-27) reprend sur « Sur Fairride, c'est réglé », dont le bouton pose maintenant la question.
+const ECRANS_RETIRES = { buts: 'question', freins: 'question', cartes: 'question', lvPosition: 'lvPromesses', position: 'pourquoi' };
 const CLES_FAMILLES = new Set(FAMILLES.map((f) => f.cle));
 const famillesValides = (l) => (Array.isArray(l) ? l.filter((f) => CLES_FAMILLES.has(f)) : []);
 // Les écrans que le `switch` plus bas sait dessiner, plus l'inscription. Un écran gardé qui n'en fait pas partie (retiré
@@ -75,8 +78,14 @@ const ecranValide = (e) => {
   const v = ECRANS_RETIRES[e] || e;
   return ECRANS.has(v) ? v : null;
 };
-// Le chargement que le fondateur aime : assez long pour se lire (1,8 s, puis 3,8 s le 2026-10-16 : « 2 secondes de plus »).
-const DUREE_RECHERCHE_MS = 3800;
+// Le chargement que le fondateur aime, assez long pour se lire (2026-10-16 : « 2 secondes de plus ») : depuis le 2026-10-27
+// (R1 de maquettes/badge-position/badge-position.html), trois VRAIES lignes, cochées chacune quand c'est fait (la position,
+// la liste, l'ordre), à une seconde au moins l'une de l'autre, puis un temps pour lire la dernière. Avant : deux lignes
+// cochées à heure fixe et 3,8 s d'attente quoi qu'il arrive, après jusqu'à 10 s de GPS sur un bouton « Chargement… ».
+const PAS_RECHERCHE_MS = 1000;
+const FIN_RECHERCHE_MS = 700;
+// Le GPS est attendu sur l'écran de chargement, 6 s au plus ; ensuite le code postal (demanderPosition, natif.js).
+const DELAI_POSITION_MS = 6000;
 
 // Commerces qui livrent à cette position (ou, sans position, rangés par proximité de commune), tes envies d'abord.
 function trierCommerces(liste, { position, commune, envies }) {
@@ -155,6 +164,11 @@ export default function Bienvenue() {
   const [attente, setAttente] = useState(false);
   // Jeton Apple / Google d'une personne qui n'a pas encore de compte : l'inscription s'en sert au lieu d'un mot de passe.
   const [fed, setFed] = useState(fedRecu);
+  // La position est autorisée et le GPS cherche encore : la première ligne du chargement attend.
+  const [lecturePosition, setLecturePosition] = useState(false);
+  // Lignes du chargement déjà cochées (0 à 3), et où en est le pas à pas (gardé d'un rendu à l'autre).
+  const [lignesFaites, setLignesFaites] = useState(0);
+  const pasRecherche = useRef({ coche: 0, depuis: 0 });
 
   const communeCp = cp.length === 4 ? communeDepuisCodePostal(cp) : '';
   const parcours = useMemo(() => ['accueil', 'profil', ...(role ? PARCOURS[role] : [])], [role]);
@@ -164,7 +178,7 @@ export default function Bienvenue() {
 
   // La liste des commerces part dès l'écran « Pourquoi » : au chargement, elle est souvent déjà là.
   useEffect(() => {
-    if (role !== 'client' || liste || !['pourquoi', 'position', 'codePostal', 'recherche', 'envies', 'compte', 'inscription'].includes(ecran)) return;
+    if (role !== 'client' || liste || !['pourquoi', 'codePostal', 'recherche', 'envies', 'compte', 'inscription'].includes(ecran)) return;
     api(CHEMIN_LISTE).then((r) => setListe(Array.isArray(r) ? r : [])).catch(() => { setListeEchec(true); setListe([]); });
   }, [role, ecran, liste]);
 
@@ -188,20 +202,32 @@ export default function Bienvenue() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ecran, role]);
 
-  // Chargement : au moins DUREE_RECHERCHE_MS, et jusqu'à ce que la liste soit arrivée.
+  // Chargement, ligne par ligne (PAS_RECHERCHE_MS) : 1. la position trouvée (ou la commune du code postal), 2. la liste arrivée,
+  // avec le nombre de commerces qui livrent, 3. « les plus proches d'abord » ; puis l'écran suivant. Le pas à pas repart de
+  // zéro à chaque entrée sur l'écran, et survit aux rendus qu'amènent la position et la liste. performance.now() et pas Date.now() :
+  // une horloge qui ne recule ni ne saute quand l'heure du téléphone change.
+  useEffect(() => {
+    if (ecran !== 'recherche') return;
+    pasRecherche.current = { coche: 0, depuis: performance.now() };
+    setLignesFaites(0);
+  }, [ecran]);
   useEffect(() => {
     if (ecran !== 'recherche') return undefined;
+    const pas = pasRecherche.current;
+    const prete = (n) => (n === 0 ? !lecturePosition : n === 1 ? !!liste : true);
     let fini = false; let minuteur;
-    const depart = Date.now();
     const verifier = () => {
       if (fini) return;
-      if (liste && Date.now() - depart >= DUREE_RECHERCHE_MS) { fini = true; aller(apresRecherche(), { sansHistorique: true }); return; }
-      minuteur = setTimeout(verifier, 150);
+      if (pas.coche < 3 && prete(pas.coche) && performance.now() - pas.depuis >= PAS_RECHERCHE_MS) {
+        pas.coche += 1; pas.depuis = performance.now(); setLignesFaites(pas.coche);
+      }
+      if (pas.coche === 3 && performance.now() - pas.depuis >= FIN_RECHERCHE_MS) { fini = true; aller(apresRecherche(), { sansHistorique: true }); return; }
+      minuteur = setTimeout(verifier, 120);
     };
     verifier();
     return () => { fini = true; clearTimeout(minuteur); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ecran, liste]);
+  }, [ecran, liste, lecturePosition]);
 
   // Repris sur « Tu as envie de quoi ? » (application rouverte) alors que rien ne livre, ou liste illisible : au compte.
   useEffect(() => {
@@ -240,11 +266,33 @@ export default function Bienvenue() {
   const progression = Math.max(0, mesure.indexOf(ecran)) / (mesure.length - 1);
 
   // Le client seulement depuis le 2026-10-21 : le livreur n'a plus d'écran de position dans l'accueil (voir PARCOURS).
+  // « Trouver mes restaurants » pose la question du système (2026-10-27) ; oui : le chargement s'ouvre tout de suite et y attend
+  // le GPS ; non : le code postal. Un GPS muet après DELAI_POSITION_MS mène aussi au code postal.
   async function utiliserPosition() {
     setAttente(true);
-    const p = await demanderPosition();
+    const autorisee = await autoriserPosition();
     setAttente(false);
-    if (p) { setPosition(p); aller('recherche'); } else { toast(t('appli.posEchec')); aller('codePostal'); }
+    if (!autorisee) { aller('codePostal'); return; }
+    setPosition(null);
+    setLecturePosition(true);
+    aller('recherche');
+    const p = await demanderPosition({ delai: DELAI_POSITION_MS });
+    setLecturePosition(false);
+    if (p) setPosition(p);
+    else { toast(t('appli.posEchec')); aller('codePostal', { sansHistorique: true }); }
+  }
+
+  // Les trois lignes du chargement : ce qu'on attend, puis ce qu'on a trouvé une fois la ligne cochée.
+  function lignesRecherche() {
+    const parGps = !!position || lecturePosition;
+    const n = resultats.length;
+    return [
+      parGps ? t(lignesFaites > 0 ? 'appli.calcPosition' : 'appli.calcPosAttente') : t('appli.calcCommune', { c: communeCp }),
+      // Sans position (code postal), la liste n'est pas filtrée par rayon : on dit combien on en a trouvé, pas qu'ils livrent.
+      lignesFaites > 1 ? (n === 0 ? t('appli.calcN0') : !parGps ? t(n === 1 ? 'appli.calcTrouve1' : 'appli.calcTrouves', { n })
+        : n === 1 ? t('appli.calcN1') : t('appli.calcN', { n })) : t('appli.calc1'),
+      t('appli.calc3')
+    ];
   }
 
   // On quitte l'accueil pour la page de connexion : on retient ce qui sert après (Home.jsx, AmorceNotifications.jsx).
@@ -307,17 +355,11 @@ export default function Bienvenue() {
     case 'question':
       contenu = <EcranQuestion choix={choix} onChoix={setChoix} onSuite={suivant} />; break;
     case 'pourquoi':
-      contenu = <EcranPourquoi onSuite={suivant} premier={choix} />; break;
-    case 'position':
-      contenu = (
-        <EcranPermission icone="position" titre={t('appli.posTitre')} sous={t('appli.posSub')} bouton={t('appli.posBtn')} attente={attente}
-          faits={[['maison', t('appli.pos1'), t('appli.pos1S')], ['cadenas', t('appli.pos2'), t('appli.pos2S')]]}
-          onOui={() => utiliserPosition()} onNon={() => aller('codePostal')} libelleNon={t('appli.posNon')} />
-      ); break;
+      contenu = <EcranPourquoi onSuite={utiliserPosition} attente={attente} premier={choix} />; break;
     case 'codePostal':
       contenu = <EcranCodePostal cp={cp} commune={communeCp} onCp={setCp} onSuite={() => { setPosition(null); aller('recherche'); }} />; break;
     case 'recherche':
-      contenu = <EcranRecherche commune={position ? '' : communeCp} points={liste ? points : []} duree={DUREE_RECHERCHE_MS} />; break;
+      contenu = <EcranRecherche commune={position ? '' : communeCp} points={lignesFaites > 1 ? points : []} lignes={lignesRecherche()} faites={lignesFaites} />; break;
     case 'envies':
       contenu = (
         <EcranEnvies familles={familles} choisies={envies} total={resultats.length} avecPosition={!!position}

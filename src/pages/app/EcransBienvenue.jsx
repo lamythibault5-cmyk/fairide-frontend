@@ -147,24 +147,51 @@ function SceneAccueil() {
 /* LES BARRES DU VRAI PLAT RELEVÉ (fondateur, 2026-10-26, maquettes/croissance/prix-gonfles.html) : le même plat que la carte
  * « Le même plat, trois prix » de l'accueil du site (HeroPrix.jsx, qui dit pourquoi la comparaison est légale) : 15,00 € au
  * comptoir, 23,25 € en ligne sur une grande plateforme (+55 %, en rouge comme sur le site), 16,50 € au plus sur Fairride
- * (+10 %, arrondi aux 10 cents inférieurs). Premier écran : en euros, sous « Le même plat, 15 € au comptoir », avec la ligne
- * « Relevé en octobre 2026… Détails sur demande ». « Ce que tu y gagnes » : en pourcentages (`pourcent`). Le relevé se refait
+ * (+10 %, arrondi aux 10 cents inférieurs), et depuis le 2026-10-27 le prix du comptoir des restaurants qui ont le badge.
+ * Premier écran : en euros, sous « Le même plat, 15 € au comptoir », la ligne « Relevé en octobre 2026… Détails sur
+ * demande » derrière un « i » (SourcePlat). « Sur Fairride, c'est réglé » : en pourcentages (`pourcent`). Le relevé se refait
  * chaque mois : changer les prix ici et dans HeroPrix.jsx, et la date d'appli.accSource et de landing.prixReleve. */
 const COMPTOIR = 15.0;
 const EN_LIGNE = 23.25;
 const AU_PLUS = Math.floor(COMPTOIR * 1.1 * 10 + 1e-6) / 10; // 16,50 €
 const ECART = Math.round((EN_LIGNE / COMPTOIR - 1) * 100); // 55
 const platAffiche = () => euros(COMPTOIR).replace(/[,.]00(?=\D|$)/, '');
+/* LA TROISIÈME BARRE, « PRIX DU COMPTOIR » (fondateur, 2026-10-27, version A de maquettes/badge-position/badge-position.html) :
+ * l'accueil ne montrait que « 16,50 € au plus », alors que la plupart des restaurants vendent au prix de leur comptoir. Le
+ * premier écran (en euros) ajoute donc le badge, dessiné comme dans la liste, avec sa barre au prix du comptoir, et une phrase
+ * qui dit ce qu'il veut dire. Sans compter les restaurants qui l'ont (fondateur : « ça va beaucoup bouger »). */
 function BarresPlat({ pourcent = false }) {
   const { t } = useLanguage();
   const eux = pourcent ? t('appli.barJusqua', { pct: ECART }) : euros(EN_LIGNE);
   const nous = pourcent ? t('appli.barAuPlus') : euros(AU_PLUS);
   const ailleurs = pourcent ? t('appli.barAilleursCourt') : t('appli.barAilleurs');
+  const fairride = pourcent ? 'Fairride' : t('appli.barFairrideAuPlus');
+  const comptoir = platAffiche();
   return (
-    <div className="bv-barres" aria-label={`${ailleurs} ${eux}, Fairride ${nous}`}>
+    <div className="bv-barres" aria-label={`${ailleurs} ${eux}, ${fairride} ${nous}${pourcent ? '' : `, ${t('common.prixComptoir')} ${comptoir}`}`}>
       <span>{ailleurs}</span><i className="gonfle" /><span className="gonfle-prix">{eux}</span>
-      <span>Fairride</span><i className="fairide" style={{ width: `${Math.round((pourcent ? 10 / ECART : AU_PLUS / EN_LIGNE) * 100)}%` }} /><span><b>{nous}</b></span>
+      <span>{fairride}</span><i className={`fairide${pourcent ? '' : ' au-plus'}`} style={{ width: `${Math.round((pourcent ? 10 / ECART : AU_PLUS / EN_LIGNE) * 100)}%` }} /><span>{pourcent ? <b>{nous}</b> : nous}</span>
+      {!pourcent && (
+        <>
+          <span className="prix-comptoir"><Icone nom="etiquette" taille={12} />{t('common.prixComptoir')}</span>
+          <i className="fairide" style={{ width: `${Math.round((COMPTOIR / EN_LIGNE) * 100)}%` }} /><span><b>{comptoir}</b></span>
+        </>
+      )}
     </div>
+  );
+}
+
+/* La source du plat relevé, derrière un « i » (fondateur, 2026-10-27 : « retire la ligne Détails sur demande, ça fait trop de
+ * texte »). Une comparaison de prix doit dire où et comment la vérifier (voix.md, § 3 ; CJUE Lidl Belgium c. Colruyt) : elle
+ * reste donc à une touche, sans prendre de place. */
+function SourcePlat() {
+  const { t } = useLanguage();
+  const [ouverte, setOuverte] = useState(false);
+  return (
+    <>
+      <button type="button" className="bv-info" aria-expanded={ouverte} aria-label={t('appli.accInfo')} onClick={() => setOuverte((o) => !o)}>i</button>
+      {ouverte && <span className="bv-petit bv-source">{t('appli.accSource')}</span>}
+    </>
   );
 }
 
@@ -187,9 +214,9 @@ export function EcranAccueil({ onCommencer, onConnexion }) {
       <Feuille>
         <p className="bv-sous bv-accroche">{t('appli.accSub')}</p>
         <div className="bv-carte bv-carte-barres">
-          <b>{t('appli.accBarres', { prix: platAffiche() })}</b>
+          <b>{t('appli.accBarres', { prix: platAffiche() })} <SourcePlat /></b>
           <BarresPlat />
-          <span className="bv-petit">{t('appli.accSource')}</span>
+          <span className="bv-petit">{t('appli.accBadge')}</span>
         </div>
         <p className="bv-petit bv-ligne-be bv-be-accueil"><Drapeau /> {t('appli.beChip')}</p>
         <button type="button" className="bv-btn btn-gold" onClick={onCommencer}>{t('appli.commencer')}</button>
@@ -242,7 +269,7 @@ export function EcranQuestion({ choix, onChoix, onSuite }) {
  * tombe au paiement, pas besoin d'attendre une promo. Ni le livreur ni « l'argent reste ici » : ce n'est pas ce qui fait
  * changer le client (fondateur). */
 const CARTES_POURQUOI = { prix: ['euro', 'pq1'], total: ['ticket', 'pq2'], promo: ['etiquette', 'pq3'] };
-export function EcranPourquoi({ onSuite, premier = null }) {
+export function EcranPourquoi({ onSuite, attente = false, premier = null }) {
   const { t } = useLanguage();
   const ordre = ['prix', 'total', 'promo'].sort((a, b) => Number(b === premier) - Number(a === premier));
   return (
@@ -258,7 +285,8 @@ export function EcranPourquoi({ onSuite, premier = null }) {
           );
         })}
         <div className="bv-grandit" />
-        <button type="button" className="bv-btn btn-gold" onClick={onSuite}>{t('appli.pqBtn')}</button>
+        {/* Pose la question de la position du système (Bienvenue.jsx, utiliserPosition), sans écran d'explication avant. */}
+        <button type="button" className="bv-btn btn-gold" disabled={attente} onClick={onSuite}>{t('appli.pqBtn')}</button>
       </Feuille>
     </>
   );
@@ -319,21 +347,20 @@ export function Cercle({ points, anime, petit }) {
   );
 }
 
-// Les deux étapes se cochent au tiers et aux deux tiers de `duree` : la dernière reste lisible avant le compte.
-export function EcranRecherche({ commune, points, duree }) {
+// Trois lignes (Bienvenue.jsx, lignesRecherche) : cochées quand c'est vraiment fait (`faites`), celle en cours tourne.
+export function EcranRecherche({ commune, points, lignes, faites }) {
   const { t } = useLanguage();
-  const [etape, setEtape] = useState(0);
-  useEffect(() => {
-    const minuteurs = [1, 2].map((n) => setTimeout(() => setEtape(n), (duree / 3) * n));
-    return () => minuteurs.forEach(clearTimeout);
-  }, [duree]);
   return (
     <>
       <div className="bv-grandit" />
       <Cercle points={points} anime />
       <h1 className="bv-titre bv-centre" style={{ fontSize: 26 }} aria-live="polite">{commune ? t('appli.calcTitre', { c: commune }) : t('appli.calcTitrePosition')}</h1>
-      <ul className="bv-etapes">
-        {[t('appli.calc1'), t('appli.calc3')].map((txt, k) => <li key={txt} className={etape > k ? 'fait' : ''}>{txt}</li>)}
+      <ul className="bv-etapes" aria-live="polite">
+        {lignes.map((txt, k) => (
+          <li key={k} className={k < faites ? 'fait' : k === faites ? 'en-cours' : ''}>
+            <span className="bv-coche" aria-hidden="true"><Icone nom="valider" taille={13} /></span>{txt}
+          </li>
+        ))}
       </ul>
       <div className="bv-grandit" />
     </>
@@ -457,8 +484,9 @@ export function EcranCompte({ role, resultats, envies = [], listeEchec = false, 
         <div className="bv-grandit" />
         {/* Feuille Apple/Google native : dans la vraie application seulement ; sur l'écran d'accueil, l'e-mail (et Google sur la page de connexion). */}
         {estNatif() && <BoutonsConnexionNative onChoix={onFournisseur} disabled={attente} />}
-        {/* Seul bouton hors de l'application (site ajouté à l'écran d'accueil, aperçu) : il prend l'aplat lime, pas le filet. */}
-        <button type="button" className={`bv-btn ${estNatif() ? 'btn-outline' : 'btn-gold'}`} disabled={attente} onClick={onEmail}><Icone nom="courrier" /> {t('appli.continueEmail')}</button>
+        {/* En lime, sous Apple et Google aussi (fondateur, 2026-10-27, maquettes/badge-position) : avant, un filet dans l'app.
+            Apple reste en premier et de la même taille (règle 4.8 de l'App Store). */}
+        <button type="button" className="bv-btn btn-gold" disabled={attente} onClick={onEmail}><Icone nom="courrier" /> {t('appli.continueEmail')}</button>
         <button type="button" className="bv-lien" onClick={onConnexion}>{t('appli.dejaCompte')}</button>
       </Feuille>
     </>
