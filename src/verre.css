@@ -352,3 +352,27 @@ html.appli body :is(.dashboard-retour, .retour-compte, .cs-retour, .ec-b-retour,
     .eg-bouton-iris, .tracking-expand-btn, .ec-pilule-blanche) { background: #EFEEFA; -webkit-backdrop-filter: none; backdrop-filter: none; }
   html.appli body :is(.compte-raccourci, .bv-iris .bv-langues, .bv-bandeau .bv-langues, .ecl-urgence > .btn-outline) { background: rgba(255, 255, 255, .2); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
+
+/* ---------- « Moi aussi » de la carte « ticket » (« Demande ton restaurant », 2026-10-26) ----------
+   Réponse 1b de maquettes/demande-restaurant/card-look-en.html : avant le toucher, du verre BLANC — le verre clair des ronds
+   de la fiche, mais sans sa teinte iris et presque opaque (fondateur : « moins bleu, plus blanc ») : sur la carte iris, le
+   verre clair ordinaire virait au lilas. Une fois demandé, le verre traversant des retours posés sur l'iris, texte blanc,
+   coche lime : le bouton se fond dans la carte, c'est fait. Il grossit sous le doigt comme les boutons larges (verreAppui.js). */
+html.appli body .dm-moi-aussi:not(.on) {
+  color: var(--iris); background: rgba(255, 255, 255, .94);
+  -webkit-backdrop-filter: blur(8px) saturate(110%) brightness(1.6); backdrop-filter: blur(8px) saturate(110%) brightness(1.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .22), inset 4px 0 9px -4px rgba(255, 70, 170, .25),
+    inset -4px 0 9px -4px rgba(40, 190, 255, .28), 0 6px 18px rgba(20, 18, 31, .18);
+}
+/* « Un autre ? » est sur du blanc : son « Demander » garde le verre clair des autres boutons de l'app. */
+html.appli body .dm-ticket--autre .dm-moi-aussi { background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre); }
+html.appli body .dm-moi-aussi.on {
+  color: #fff; background: rgba(255, 255, 255, .18);
+  -webkit-backdrop-filter: blur(8px) saturate(160%) brightness(1.15); backdrop-filter: blur(8px) saturate(160%) brightness(1.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 4px 0 8px -4px rgba(255, 90, 190, .45),
+    inset -4px 0 8px -4px rgba(60, 200, 255, .5), 0 4px 12px rgba(20, 10, 90, .3);
+}
+@media (prefers-reduced-transparency: reduce) {
+  html.appli body .dm-moi-aussi:not(.on) { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html.appli body .dm-moi-aussi.on { background: rgba(255, 255, 255, .2); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

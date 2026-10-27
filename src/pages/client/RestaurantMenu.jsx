@@ -52,6 +52,7 @@ import PanierColonne from '../../components/PanierColonne';
 import { repeterTantQueLibre } from '../../defilementAuto';
 import { lienFiche } from '../../murCompte';
 import { cheminFiche, retenirSlugs } from '../../adresseFiche';
+import BlocVeuxCommander from '../../components/demandes/BlocVeuxCommander';
 import '../../ecran-fiche.css';
 import '../../site-fiche.css';
 
@@ -974,6 +975,8 @@ export default function RestaurantMenu({ id }) {
           <span>{t('restoMenuUi.orderingNotOpenInfo')}{restaurant.prixMasques && <> {t('restoMenuUi.pricesSoonInfo')}</>}</span>
         </div>
       )}
+      {/* « Tu voudrais commander ici ? » (« Demande ton restaurant », 2026-10-26) : sur un vrai commerce « Carte seule » seulement. */}
+      {onlineOrderingDisabled && restaurant.vitrine && restaurant.certified && !previewMode && <BlocVeuxCommander restaurant={restaurant} />}
       <div className="fiche-carte-plats">
         {restaurant.menu.length === 0 && <div className="empty">{t('restaurantMenu.noMenuYet')}</div>}
         {restaurant.menu.length > 0 && menuFiltre.length === 0 && (

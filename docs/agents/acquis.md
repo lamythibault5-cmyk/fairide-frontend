@@ -134,6 +134,39 @@ Founder's answers to `maquettes/filtre-ouvert/filtre-ouvert.html` (version A, al
 - **Off at each launch**: kept in memory while the app or browser tab is open (a trip to a shop and back keeps them),
   never written to the device.
 
+## « Demande ton restaurant » (2026-10-26)
+
+Founder's answers to `maquettes/demande-restaurant/request-restaurant-en.html` (version B « Moi aussi », every recommended
+option) and `card-look-en.html` (look 5, the « ticket »; white glass button). A customer asks for a restaurant that is not
+orderable on Fairride; others say « Moi aussi ». The count is the proof the team shows the restaurant.
+
+- **Where**: Search with no result ([CartesDemander.jsx](../../src/components/demandes/CartesDemander.jsx), lime: the only
+  action there), the end of the restaurant list (« Il manque ton restaurant ? », outline), a « Demandés près de toi » row under
+  « Autour de toi » ([RangeeDemandes.jsx](../../src/components/demandes/RangeeDemandes.jsx), within 10 km of the account,
+  hidden when empty), the « Tu voudrais commander ici ? » block on every real « Carte seule » page
+  ([BlocVeuxCommander.jsx](../../src/components/demandes/BlocVeuxCommander.jsx)), and Compte › Mes demandes (`/demandes`, a
+  sheet page). Website same as the app.
+- **One request = one account with a verified phone, once per restaurant** (backend `demandesRestaurants.js`, migration 093;
+  error `REQUEST_PHONE_REQUIRED` sends to `/account?ouvrir=connexion`). Test accounts never count. The restaurant is chosen
+  from the OpenStreetMap list (« Lequel ? », [FenetreDemande.jsx](../../src/components/demandes/FenetreDemande.jsx)), with
+  « Il n'est pas dans la liste » for name + commune: never free text alone, or « chez leon » and « Chez Léon » split the count.
+- **No photo of a requested restaurant** (its photos are not ours, and would look like a partner): the iris « ticket »
+  ([TicketDemande.jsx](../../src/components/demandes/TicketDemande.jsx)) with the flat cuisine drawing from OSM's tag
+  ([osmCuisine.js](../../src/osmCuisine.js)), the count in lime, ten bars towards 25. Google Places photos and customer photos
+  were offered and declined for now.
+- **« Moi aussi » in the app is WHITE glass** (the clear glass without its iris tint, founder « less blue »), turning
+  see-through with a lime tick once requested ([verre.css](../../src/verre.css), `.dm-moi-aussi` in `VERRE` / `LARGES` of
+  verreAppui.js). Solid white on the website.
+- **What the restaurant sees** (`/preuve/<jeton>`, created from Admin › Commerces › Demandes des clients): number, since when,
+  this week, dishes and the customers' communes. **Never a name.** The page is noindex; « On prend 10 %, pas 30 » is allowed
+  there because it speaks to a shop.
+- **What the customer sees of the team's work is soft**: « Demandé », « On en parle avec lui », « Bientôt », « Arrivé »;
+  never « il a refusé ». A restaurant that asks is set « retiré »: it disappears and takes no new request.
+- **One message when it joins**: when a request is linked to a shop that becomes orderable, the backend job (every 15 min)
+  sends one push (e-mail if no device got it) to those who left « Me prévenir » on; nothing else, no promotion.
+- **Privacy**: new purpose, data and retention (2 years) in `privacy.*` (version CONF-2026-10-26-b) and in the backend's
+  processing register and retention purge.
+
 ## Resolved since earlier versions of this file
 
 Listed so nobody re-implements them: **Web Push exists** ([public/sw.js](../../public/sw.js) handles `push`

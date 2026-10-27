@@ -20,6 +20,7 @@ import ErreurChargement from '../../components/ErreurChargement';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import { imgProps, cacherImageCassee } from '../../images';
 import { normaliserRecherche } from '../../normaliserRecherche';
+import { CarteDemanderRecherche } from '../../components/demandes/CartesDemander';
 import '../../ecran-liste.css';
 import '../../site-liste.css';
 
@@ -60,6 +61,8 @@ const sujetsAide = (t) => [
 const rubriquesCompte = (t) => [
   { to: '/orders', titre: t('search.myOrders'), sous: t('search.myOrdersSub'), mots: 'commande commandes historique suivi order orders history tracking bestelling bestellingen geschiedenis', connecte: true },
   { to: '/favorites', titre: t('search.myFavourites'), sous: t('search.myFavouritesSub'), mots: 'favoris favori coeur enregistre', connecte: true },
+  // « Demande ton restaurant » (2026-10-26) : retrouver ses demandes, ou en faire une, depuis la recherche.
+  { to: '/demandes', titre: t('demandes.mesTitre'), sous: t('demandes.rowSous'), mots: 'demande demandes demander restaurant manque manquant ajouter proposer suggerer request aanvraag', connecte: true },
   { to: '/invoices', titre: t('search.myInvoices'), sous: t('search.myInvoicesSub'), mots: 'facture factures recu recus justificatif', connecte: true },
   { to: '/account', titre: t('search.myAccount'), sous: t('search.myAccountSub'), mots: 'compte profil mot de passe email telephone langue adresse parrainage code promo supprimer', connecte: true },
   { to: '/map', titre: t('search.businessMap'), sous: t('search.businessMapSub'), mots: 'carte plan autour de moi proche geolocalisation map near me nearby kaart in de buurt', connecte: true },
@@ -357,12 +360,17 @@ export default function SearchPage() {
 
       {actif && !chargement && echec && restaurants.length === 0 && <ErreurChargement onReessayer={chargerCommerces} />}
       {actif && !chargement && resultats.total === 0 && !(echec && restaurants.length === 0) && (
-        <div className="card">
-          <p style={{ margin: '0 0 6px', fontWeight: 600 }}>{t('search.nothingFor', { q: requete })}</p>
-          <p className="small" style={{ margin: 0 }}>
-            {t('search.tryOther')} <Link to="/aide">{t('search.theHelp')}</Link>.
-          </p>
-        </div>
+        <>
+          <div className="card">
+            <p style={{ margin: '0 0 6px', fontWeight: 600 }}>{t('search.nothingFor', { q: requete })}</p>
+            <p className="small" style={{ margin: 0 }}>
+              {t('search.tryOther')} <Link to="/aide">{t('search.theHelp')}</Link>.
+            </p>
+          </div>
+          {/* « Demande ton restaurant » (fondateur, 2026-10-26) : le client vient de taper le nom qu'il cherche ; il peut le
+              demander, le mot tapé déjà dans la fenêtre « Lequel ? ». Avant, il repartait et on n'apprenait rien. */}
+          <CarteDemanderRecherche requete={requete} />
+        </>
       )}
 
       {actif && !chargement && resultats.total > 0 && (

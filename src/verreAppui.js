@@ -38,14 +38,16 @@ const VERRE = [
   '.ec-rond', '.gn-rond', '.bv-rond', '.dashboard-retour', '.retour-compte', '.cs-retour', '.ec-b-retour', '.ecl-b-retour',
   // La croix de la fiche d'un plat et le ‹ des pages ouvertes en feuille depuis Mon compte (Mes favoris, Mes commandes, Mes
   // factures… : PageFeuille.jsx) — ronds iris à filet blanc, des retours eux aussi.
-  '.plat-fermer', '.page-feuille-fermer'
+  '.plat-fermer', '.page-feuille-fermer',
+  // « Moi aussi » des cartes « ticket » (« Demande ton restaurant », 2026-10-26) : verre blanc, puis traversant une fois demandé.
+  '.dm-moi-aussi'
 ].join(', ');
 // Les barres, qui ne grossissent qu'un peu (la barre d'onglets était « bien », fondateur 2026-10-24) ; tout le reste est un bouton.
 const BARRES = '.dashboard-nav, .category-quicknav--verre, .panier-pilule, .fiche-appli .fiche-modes';
 /* Les boutons du 2026-10-26 peuvent être larges : à 130 %, « + Ajouter des articles » (354 px) sortirait de l'écran. Au-delà de
    120 px, ils grossissent comme une barre, selon leur taille (8 % à 160 px, 3,5 % à partir de 300 px) ; en dessous (« Activer »,
    « Lire »), comme un bouton. Les contrôles d'avant gardent leur réglage. */
-const LARGES = '.btn-outline, .btn-teal, .eg-bouton-iris, .alerte-compacte-son, .tracking-expand-btn, .compte-raccourci';
+const LARGES = '.btn-outline, .btn-teal, .eg-bouton-iris, .alerte-compacte-son, .tracking-expand-btn, .compte-raccourci, .dm-moi-aussi';
 const SEUIL_LARGE = 120;
 
 /* Ceux qui défilent de côté : le doigt qui part les faire défiler ne doit pas les faire gonfler. Ils attendent 70 ms (le
