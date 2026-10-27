@@ -133,9 +133,15 @@ position. **The cart's ‹ goes back to wherever the cart was opened from** (hom
 2026-10-25; `ecranDavant` in EcranCommande.jsx, app and site): only when that screen is unknown (direct link, reload) or is
 checkout / login / payment result does it open the shop page. To get back to the menu, the cart has a clear iris-outline
 « + Ajouter des articles » under its lines (never lime: « Aller au paiement » stays the one lime button), and the shop name
-on the band is a link too; both go BACK when the shop page is the previous screen (`useReculerVers`). Tabs (DashboardSidebar `ongletAppli`): `replace`, and **every tab opens at the top** (founder, 2026-10-27, test of the shop:
-« en cliquant sur Restaurant j'arrive au milieu de l'écran », design.md rule 5; until then each tab kept its place except
-Recherche and Mes commandes); going back (‹, gesture) still restores the place left; re-tapping the current tab scrolls to the top.
+on the band is a link too; both go BACK when the shop page is the previous screen (`useReculerVers`). Tabs (DashboardSidebar `ongletAppli`, `ongletSite` on the website): `replace` in the app, and **each tab comes back to
+what was on screen** (founder, 2026-10-27 afternoon, after a morning where every tab opened at the top: « en cliquant sur
+Restaurant j'arrive au milieu de l'écran », design.md rule 5). ScrollRestorer.jsx keeps `{ y, at, repere }` per address: the
+bookmark (`noterRepere`, defilementAuto.js) is the lowest heading or Account row in the top third of the screen, by its text;
+coming back puts it at the same height (`rejoindre`, up to 10 s while the page loads, stopped by the first touch). The tab
+opens at the top instead when it was never scrolled, when the bookmark is gone, when it was left more than 15 min ago, or
+when the screen shows a next step (`data-prochaine-etape`, EtapesMiseEnLigne). Always at the top (`ONGLETS_EN_HAUT`):
+Recherche, Mes commandes, the shop's Commandes, the courier's Courses and dossier. Going back (‹, gesture) restores the same
+way; re-tapping the current tab scrolls to the top.
 **The shop's tabs are Commandes · Menu · Commerce since 2026-10-27** (version A of `maquettes/compte-commerce`, founder's pick:
 on a phone, app and site, Mon compte lives INSIDE Commerce — EditPage mounts `<Account integre milieu={…}>`: « Gérer mon
 compte » first, then the tiles and the shop's rows, then « Argent, contrat et outils » (Aperçu client, terminal, trial orders,

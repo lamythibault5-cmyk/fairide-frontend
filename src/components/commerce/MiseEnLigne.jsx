@@ -111,8 +111,10 @@ export function EtapesMiseEnLigne({ etat, boutonDansCarte = false }) {
   const boutonLime = p?.action && (p.action.to
     ? <Link to={p.action.to} className="ec-bouton ec-bouton--lime">{p.action.libelle}</Link>
     : <button type="button" className="ec-bouton ec-bouton--lime" onClick={p.action.onClick} disabled={p.action.disabled}>{p.action.libelle}</button>);
+  // data-prochaine-etape : un écran qui montre une étape à faire s'ouvre en haut, sur elle, même quand on y revient par son
+  // onglet — ScrollRestorer.jsx ne lui rend pas la place d'avant (design.md, règle 5).
   return (
-    <section aria-label={t('miseEnLigne.title')}>
+    <section aria-label={t('miseEnLigne.title')} data-prochaine-etape={p ? '' : undefined}>
       <div className={`ec-prochaine${boutonDansCarte ? ' sp-prochaine' : ''}`}>
         <span className="ec-tuile"><Icone nom={p ? p.icone : 'horloge'} taille={20} /></span>
         <span className="ec-prochaine-texte">
