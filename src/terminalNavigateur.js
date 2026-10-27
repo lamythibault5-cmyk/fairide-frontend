@@ -9,6 +9,8 @@ import { imprimerSurGoodcom, serviceGoodcomDisponible } from './goodcomWebPrinte
 //   - un ticket déjà imprimé et re-livré (coupure réseau) n'est pas réimprimé, seulement ré-accusé ;
 //   - un incident d'imprimante met TOUTE la file en pause jusqu'au tour suivant (pas de copie 2 avant la copie 1).
 // Limite assumée : rien ne s'imprime quand la page est fermée ou l'écran verrouillé — c'est le rôle de la coque Android.
+// L'appli Fairride installée sur le Goodcom passe par ce même chemin (2026-10-27) : sans `window.FairideTerminal`, elle
+// est un « navigateur » comme GC Web, avec la même limite (appli au premier plan).
 const CLE = 'fairide_terminal_web';
 const CLE_IMPRIMES = 'fairide_terminal_web_imprimes';
 const lireJson = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch { return d; } };
