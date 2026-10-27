@@ -60,7 +60,7 @@ jobs:
             done
             return 1
           }
-          if attendre; then echo "✅ En ligne sur fairide.be."; exit 0; else r=$?; fi
+          if attendre; then echo "✅ En ligne sur fairride.be."; exit 0; else r=$?; fi
           if [ "$r" = 2 ]; then
             echo "::error::Le déploiement de production de ${SHA:0:7} a ÉCHOUÉ sur Vercel. Ouvrir Vercel › fairide-frontend › Deployments pour lire l'erreur."
             exit 1
@@ -71,13 +71,14 @@ jobs:
             curl -fsS -X POST "$HOOK" > /dev/null
             # Un déploiement par Deploy Hook n'est pas toujours rapporté à GitHub sous ce commit : on regarde aussi la date
             # de la page d'accueil (Last-Modified = moment du déploiement, la page est prérendue).
+            # fairride.be depuis le changement de nom (2026-10-25) : fairide.be ne renvoie plus qu'une redirection 301, sans Last-Modified.
             for i in $(seq 1 30); do
               sleep 30
-              [ "$(etat)" = success ] && { echo "✅ En ligne sur fairide.be (relancé par le Deploy Hook)."; exit 0; }
-              lm=$(curl -sSI "https://fairide.be/?verif=$depart-$i" | tr -d '\r' | awk -F': ' 'tolower($1)=="last-modified"{print $2}')
-              [ -n "$lm" ] && [ "$(date -u -d "$lm" +%s)" -gt "$depart" ] && { echo "✅ fairide.be reconstruit à $lm (Deploy Hook)."; exit 0; }
-              echo "$(date -u +%H:%M:%S) en attente du Deploy Hook (fairide.be : $lm)"
+              [ "$(etat)" = success ] && { echo "✅ En ligne sur fairride.be (relancé par le Deploy Hook)."; exit 0; }
+              lm=$(curl -sSI "https://fairride.be/?verif=$depart-$i" | tr -d '\r' | awk -F': ' 'tolower($1)=="last-modified"{print $2}')
+              [ -n "$lm" ] && [ "$(date -u -d "$lm" +%s)" -gt "$depart" ] && { echo "✅ fairride.be reconstruit à $lm (Deploy Hook)."; exit 0; }
+              echo "$(date -u +%H:%M:%S) en attente du Deploy Hook (fairride.be : $lm)"
             done
           fi
-          echo "::error::Vercel n'a PAS mis ${SHA:0:7} en production : fairide.be sert encore l'ancienne version. Vercel › fairide-frontend › Deployments › dernier déploiement de main › Redeploy."
+          echo "::error::Vercel n'a PAS mis ${SHA:0:7} en production : fairride.be sert encore l'ancienne version. Vercel › fairide-frontend › Deployments › dernier déploiement de main › Redeploy."
           exit 1
