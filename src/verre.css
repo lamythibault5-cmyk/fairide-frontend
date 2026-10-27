@@ -240,7 +240,7 @@ html.appli body .toast:not(.toast-erreur) {
 
 /* La lumière : un dégradé radial à l'endroit du doigt, coupé à la forme du contrôle, DERRIÈRE son contenu (z-index −1 dans un
    contexte isolé : au-dessus du fond du verre, sous les icônes et les libellés). */
-html.appli :has(> verre-lueur) { isolation: isolate; }
+/* Le contrôle lui-même est isolé par verreAppui.js (lumiere) : `:has(> verre-lueur)` était essayé sur chaque élément. */
 html.appli verre-lueur {
   position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .45s ease;
   background: radial-gradient(circle var(--verre-r, 60px) at var(--verre-x, 50%) var(--verre-y, 50%),

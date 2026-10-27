@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee, photoVue, retenirPhotoVue } from '../../images';
 import { chargerAvecCache, lireCache, poserFavoriEnCache, prechargerFiche } from '../../cacheDonnees';
 import { useActionOptimiste } from '../../actionOptimiste';
@@ -690,26 +690,35 @@ export default function RestaurantList() {
   const pastilleOuvert = commandesOuvertes(user);
   const livreActif = livreSeuls && pastilleLivre;
   const ouvertActif = ouvertsSeuls && pastilleOuvert;
+  /* LE BOUTON D'ABORD, LA LISTE JUSTE APRÈS (fondateur, 2026-10-27 : « Ouvert » saccadait dans l'app). Allumer « Ouvert » ou
+     une cuisine remplace toute la page (rangées ↔ liste filtrée) : le bouton attendait que tout soit reconstruit. Les
+     boutons lisent la valeur touchée ; la liste en lit une copie différée (useDeferredValue), que React prépare juste après
+     avoir redessiné le bouton — et qu'il abandonne si le doigt touche encore entre-temps. */
+  const ouvertListe = useDeferredValue(ouvertActif);
+  const livreListe = useDeferredValue(livreActif);
+  const familleListe = useDeferredValue(famille);
+  const specialiteListe = useDeferredValue(specialiteFiltre);
+  const emporterListe = useDeferredValue(emporter);
   const maintenant = new Date();
-  const hasActiveFilter = !!(search || famille || specialiteFiltre || commune || bio || vegan || halal || sansGluten || emporter || ouvertActif || livreActif || tri !== 'recommande');
+  const hasActiveFilter = !!(search || familleListe || specialiteListe || commune || bio || vegan || halal || sansGluten || emporterListe || ouvertListe || livreListe || tri !== 'recommande');
 
   // Distance a vol d'oiseau depuis l'adresse du compte, quand elle est connue.
   const distanceDe = (r) => (user?.lat && user?.lng && r.lat && r.lng ? haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) : null);
 
   // `toujoursOuvert` : la même règle sans l'heure, pour l'écran vide (qui rouvre en premier).
-  const garderDisponibilite = (r, options) => (!ouvertActif || ouvertPourCommander(r, user, maintenant, options))
-    && (!livreActif || livreChezToi(r, user, maintenant, options));
+  const garderDisponibilite = (r, options) => (!ouvertListe || ouvertPourCommander(r, user, maintenant, options))
+    && (!livreListe || livreChezToi(r, user, maintenant, options));
   const garderAutres = (r) => {
     if (commune && r.commune !== commune) return false;
     // Type principal ou en plus : une seule de ses spécialités suffit.
-    if (famille && !famillesCommerce(r).has(famille)) return false;
-    if (specialiteFiltre && !cuisinesCommerce(r).some((c) => specialite(c)?.value === specialiteFiltre)) return false;
+    if (familleListe && !famillesCommerce(r).has(familleListe)) return false;
+    if (specialiteListe && !cuisinesCommerce(r).some((c) => specialite(c)?.value === specialiteListe)) return false;
     if (bio && !restoBio(r)) return false;
     if (vegan && !restoVegan(r)) return false;
     if (halal && !restoHalal(r)) return false;
     if (sansGluten && !restoSansGluten(r)) return false;
     if (search && !normaliserRecherche(`${r.name} ${r.desc} ${r.cuisine}`).includes(normaliserRecherche(search))) return false;
-    if (emporter && !emporterPossibleIci(r, user)) return false;
+    if (emporterListe && !emporterPossibleIci(r, user)) return false;
     return true;
   };
   const list = restaurants
@@ -856,11 +865,11 @@ export default function RestaurantList() {
    * Woluwe à midi, un seul restaurant livrait ; à 23:30, aucun. Plutôt que « aucun commerce ne correspond » : pas de livreur
    * libre, ou qui rouvre en premier parmi ceux que les autres filtres gardent, ou personne ne livre à cette adresse. */
   const videDisponibilite = (() => {
-    if (!ouvertActif && !livreActif) return null;
-    const titre = livreActif ? t('restaurantList.videLivre') : t('restaurantList.videOuvert');
-    if (livreActif && !livreurFairideLibre(user)) return { titre, texte: t('restaurantList.videSansLivreur') };
+    if (!ouvertListe && !livreListe) return null;
+    const titre = livreListe ? t('restaurantList.videLivre') : t('restaurantList.videOuvert');
+    if (livreListe && !livreurFairideLibre(user)) return { titre, texte: t('restaurantList.videSansLivreur') };
     const premier = premierARouvrir(restaurants.filter((r) => garderAutres(r) && garderDisponibilite(r, { toujoursOuvert: true })), maintenant);
-    if (!premier) return { titre, texte: livreActif ? t('restaurantList.videHorsZone') : t('restaurantList.emptyFiltered') };
+    if (!premier) return { titre, texte: livreListe ? t('restaurantList.videHorsZone') : t('restaurantList.emptyFiltered') };
     const heure = premier.quand.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
     const jours = Math.round((new Date(premier.quand).setHours(0, 0, 0, 0) - new Date(maintenant).setHours(0, 0, 0, 0)) / 86400000);
     const texte = jours <= 0 ? t('restaurantList.videRouvreA', { nom: premier.r.name, heure })
@@ -1101,7 +1110,7 @@ export default function RestaurantList() {
       {/* Filtres trop serrés : « Aucun restaurant pour le moment » laissait croire qu'il n'y en avait aucun, sans moyen d'en
           sortir (audit du 15/10/2026). On dit que c'est le filtre, et on l'efface en un geste. */}
       {!loading && hasActiveFilter && list.length === 0 && restaurants.length > 0 && (videDisponibilite ? (
-        <EtatVide icone={livreActif ? 'velo' : 'horloge'} titre={videDisponibilite.titre} texte={videDisponibilite.texte}>
+        <EtatVide icone={livreListe ? 'velo' : 'horloge'} titre={videDisponibilite.titre} texte={videDisponibilite.texte}>
           <button type="button" className="btn-gold" onClick={toutEffacer}>{t('restaurantList.voirTous')}</button>
         </EtatVide>
       ) : (

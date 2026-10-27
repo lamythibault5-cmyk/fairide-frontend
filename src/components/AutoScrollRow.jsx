@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 // Rangée à défilement continu ("À découvrir" dans RestaurantList.jsx et RestaurantMenu.jsx, et les chips
 // de types de commerce). Le mouvement est porté par `transform: translate3d` sur une piste interne, et
@@ -43,9 +43,14 @@ const DRAG_SLOP_PX = 8;
 // Après un geste, la rangée attend avant de repartir : 0,7 s la faisait redémarrer sous le doigt à peine levé.
 const RESUME_AFTER_GESTURE_MS = 1800;
 
-// Nombre minimal de cartes sur la piste : en dessous, la moitié de piste serait plus étroite que la
-// fenêtre et le repli laisserait voir un trou. Une rangée de 2 commerces est donc recopiée 4 fois.
-const MIN_CARDS_ON_TRACK = 8;
+/* UNE TRAÎNE, PAS DES COPIES ENTIÈRES (2026-10-27, appli lente). Pour boucler sans trou, la piste était la rangée recopiée
+ * deux fois ou plus (au moins 8 cartes) : sur l'accueil, 680 éléments et 23 photos sur 2 042 ne servaient qu'à ça. Or au
+ * moment du repli, l'écran ne montre que la fin de la rangée et le début de sa suite : il suffit de faire suivre la rangée de
+ * ses premières cartes, autant qu'il en faut pour couvrir la largeur de l'écran (la « traîne », mesurée : 2 sur un
+ * téléphone de 390 px, 6 sur un écran de 1 600). La période du repli est la largeur d'UNE rangée, mesurée jusqu'à la première
+ * carte de la traîne. La dernière traîne mesurée sert de départ à la rangée suivante : la largeur de l'écran ne change presque
+ * jamais, et une traîne juste du premier coup évite de recalculer la mise en page de toute la page pour une carte de plus. */
+let traineConnue = 4;
 
 // autoplay=false : la rangée ne bouge pas d'elle-même, mais reste une boucle infinie au doigt, à la
 // souris (glisser) et à la molette horizontale — c'est le mode des rangées thématiques ; seule
@@ -67,16 +72,43 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, m
   const movedRef = useRef(false);
 
   const canLoop = items.length > 1;
-  const copies = canLoop ? Math.max(2, Math.ceil(MIN_CARDS_ON_TRACK / items.length)) : 1;
-  const doubled = Array.from({ length: copies }, () => items).flat();
+  const n = items.length;
+  const [traine, setTraine] = useState(traineConnue);
+  const piste = canLoop ? [...items, ...Array.from({ length: traine }, (_, i) => items[i % n])] : items;
+
+  // La période (une rangée) et la traîne qu'il faut pour couvrir l'écran. Avant l'image (useLayoutEffect) : une traîne
+  // trop courte au premier rendu ne se voit jamais. Refaite quand le nombre de cartes change, au redimensionnement (l'observateur
+  // plus bas) et à l'arrivée des polices.
+  const mesurerRef = useRef(() => {});
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!viewport || !track) return;
+    mesurerRef.current = () => {
+      const cartes = track.children;
+      if (!canLoop || cartes.length <= n) { halfWidthRef.current = track.scrollWidth; return; }
+      const debut = cartes[0].offsetLeft;
+      const periode = cartes[n].offsetLeft - debut;
+      halfWidthRef.current = periode;
+      if (periode <= 0) return; // rangée cachée : rien à mesurer
+      // Largeur de la carte i, écart compris (la suivante commence là où elle s'arrête).
+      const largeur = (i) => (i + 1 < n ? cartes[i + 1].offsetLeft : debut + periode) - cartes[i].offsetLeft;
+      let couvert = 0; let k = 0;
+      while (couvert < viewport.clientWidth && k < 64) { couvert += largeur(k % n); k += 1; }
+      // Une carte de plus : la marge des fractions de pixel.
+      const voulue = k + 1;
+      traineConnue = voulue;
+      setTraine((t) => (t === voulue ? t : voulue));
+    };
+    mesurerRef.current();
+  }, [n, traine, canLoop]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
     const track = trackRef.current;
     if (!viewport || !track) return undefined;
 
-    const measure = () => { halfWidthRef.current = track.scrollWidth / copies; };
-    measure();
+    const measure = () => mesurerRef.current();
     // La largeur ne bouge qu'au redimensionnement (le seuil 640px change la largeur des cartes) et à
     // l'arrivée de la police (les chips n'ont pas de largeur fixe). Mesurer dans la boucle forcerait un
     // calcul de mise en page à chaque frame, exactement ce que ce changement cherche à supprimer.
@@ -105,7 +137,7 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, m
       vue.observe(viewport);
     }
 
-    // Ramène l'offset dans [0, halfWidth) : les deux copies du contenu étant identiques, ce repli est
+    // Ramène l'offset dans [0, halfWidth) — une rangée : la traîne reprenant ses premières cartes, ce repli est
     // invisible, et il fonctionne aussi bien vers l'arrière que vers l'avant.
     function wrap(v) {
       const half = halfWidthRef.current;
@@ -260,12 +292,12 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, m
       viewport.removeEventListener('wheel', onWheel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length, canLoop, copies, speed, mobileSpeed, autoplay]);
+  }, [items.length, canLoop, speed, mobileSpeed, autoplay]);
 
   return (
     <div ref={viewportRef} className={`auto-scroll-row ${className}${autoplay ? '' : ' auto-scroll-static'}`}>
       <div ref={trackRef} className="auto-scroll-track">
-        {doubled.map((item, i) => renderItem(item, i, keyFor ? `${keyFor(item)}-${i}` : i))}
+        {piste.map((item, i) => renderItem(item, i, keyFor ? `${keyFor(item)}-${i}` : i))}
       </div>
     </div>
   );
