@@ -429,3 +429,68 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 /* « Quitter sans enregistrer ? » (SousEcran, audit du 19/10, shop-321) : la confirmation passe AU-DESSUS du sous-écran ouvert
    (feuille à 300, fenêtres à 100 dans styles.css), sinon elle s'ouvrait cachée derrière. */
 body:has(> .sous-ecran-feuille) > .confirm-voile { z-index: 310; }
+
+/* LA COMMANDE À TRAITER AU-DESSUS DES ONGLETS (BandeATraiter.jsx ; fondateur, 2026-10-27, réponse 1 A de maquettes/ecrans-pro) :
+   la bande du client (.suivi-commande, client-ui.css : place, verre, lime, cachée sous une fenêtre) faite de deux boutons,
+   ouvrir la commande et couper l'alarme. Le centre de l'anneau dit les minutes qui restent ; rouge sous 5 minutes. */
+.bande-a-traiter { padding-right: 8px; }
+.bande-a-traiter-ouvrir { flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 11px; padding: 0; margin: 0;
+  border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.bande-a-traiter-centre { background: #fff; color: var(--ink); font: 700 12px/1 var(--font-titre); }
+.bande-a-traiter--presse .suivi-commande-anneau .avance { stroke: var(--red); }
+.bande-a-traiter-son { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center;
+  background: rgba(20, 18, 31, .08); color: var(--ink); cursor: pointer; }
+.bande-a-traiter .suivi-commande-chevron { margin-right: 8px; border-color: var(--ink); }
+html.avec-bande-a-traiter main { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+/* Ce qui manque encore pour ne rater aucune commande (NewOrderAlertBar sansCommande) : une carte, des contours, pas de lime. */
+.alerte-manque { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+/* COMMERCE AUSSI SOIGNÉ QUE LE CLIENT (fondateur, 2026-10-27, réponses à maquettes/ecrans-pro/ecrans-pro.html ; app et site sur
+   téléphone, l'ordinateur garde son look : le bloc @media (min-width: 901px) tout en bas remet ce qui change).
+   La route du vélo sous le titre (BandeauCommerce, RouteVelo de TeteListe.jsx). */
+.ec-bandeau .ec-b-route { margin-top: 12px; }
+.ec-bandeau .ec-b-route + .ec-alarme { margin-top: 12px; }
+/* Réponse 6 A : les titres de section en phrase, comme « Commandes passées » chez le client (Inter Tight, encre), plus en petites
+   capitales grises. Mon compte garde ses groupes en capitales (ecran-compte.css). Dans une carte ou une feuille, plus petit. */
+.ec-feuille-titre, .ec-feuille .ec-section.ec-section--service, .ec-sous-section,
+.ec-bloc > .card > h3:first-child, .ec-bloc > .card > .row:first-child > h3, .ec-bloc > .card > .row:first-child > div > h3, .ec-bloc--releves > div > .card > h3:first-child {
+  font-family: var(--font-titre); font-size: 20px !important; font-weight: 700 !important; line-height: 1.2; color: var(--ink); letter-spacing: 0; text-transform: none; }
+/* .ec-section--service : les titres À traiter / En préparation / Prêtes (OrdersPage). Le panier du client (ecran-commande.css) a aussi
+   un .ec-feuille .ec-section, en capitales et en !important, chargé avec lui : la classe en plus fait passer celle du commerce devant. */
+.ec-feuille-titre, .ec-feuille .ec-section.ec-section--service { margin: 26px 0 10px; }
+.ec-feuille .ec-section.ec-section--service { display: flex; }
+.ec-feuille .ec-section.ec-section--service:first-child, .ec-feuille > .ec-feuille-titre:first-child { margin-top: 4px; }
+.ec-sous-section { font-size: 16px !important; margin: 16px 0 0; }
+.ec-cmd-actions .ec-feuille-titre, .nc .ec-feuille-titre { font-family: var(--font-ui); font-size: 15px !important; font-weight: 600; }
+/* Réponse 3 A : des cartes plus calmes. Un filet autour de chaque carte (l'anneau rouge dit l'urgence, plus le cadre), l'étape en
+   texte avec sa pastille de couleur, le téléphone en iris sans souligné, « paiera sur place » en contour iris (plus de beige),
+   les gestes qui ne sont pas le prochain en contour iris (OrdersPage, `prochaine`). */
+.ec-commande.ec-commande--nouvelle { border: 1px solid var(--line); padding: 14px; }
+.ec-commande .etape-pastille { border: 0; background: none; padding-left: 0; }
+.ec-cmd-client a { text-decoration: none; color: var(--iris); font-weight: 600; }
+.ec-commande .paiement-sur-place { background: #fff; color: var(--iris); border: 1.5px solid var(--iris); }
+.ec-commande .paiement-sur-place.est-pas-venu { border-color: var(--red); }
+.ec-bouton--contour { background: #fff; color: var(--iris); border: 1.5px solid var(--iris); }
+/* Les puces (temps de préparation, onglets des Factures : réponses 3 et 10) : comme le pourboire du client, une puce par choix,
+   iris une fois choisie, au lieu du rail gris et de son pouce. Sur le bandeau iris (période des statistiques), réponse 8 : le
+   pouce devient blanc, le lime reste au prochain geste. */
+.ec-segment:not(.ec-segment--lime) { background: none; padding: 0; gap: 8px; flex-wrap: wrap; }
+.ec-segment:not(.ec-segment--lime) .ec-segment-pouce { display: none; }
+.ec-segment:not(.ec-segment--lime) button { border: 1px solid rgba(59, 47, 181, .22); border-radius: var(--radius-pill); background: #fff; color: var(--ink); padding: 0 12px; }
+.ec-segment:not(.ec-segment--lime) button.on { background: var(--iris); border-color: var(--iris); color: #fff; }
+.ec-segment--lime .ec-segment-pouce { background: #fff; }
+.ec-segment--lime button.on { color: var(--iris); }
+
+@media (min-width: 901px) {
+  html:not(.appli) :is(.ec-feuille-titre, .ec-feuille .ec-section.ec-section--service, .ec-sous-section,
+    .ec-bloc > .card > h3:first-child, .ec-bloc > .card > .row:first-child > h3, .ec-bloc > .card > .row:first-child > div > h3, .ec-bloc--releves > div > .card > h3:first-child) {
+    font-family: var(--font-ui); font-size: 12px !important; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; }
+  html:not(.appli) .ec-feuille-titre { margin: 20px 0 6px; }
+  html:not(.appli) .ec-sous-section { margin: 12px 0 0; }
+  html:not(.appli) .ec-segment:not(.ec-segment--lime) { background: var(--cream-dim); padding: 4px; gap: 0; flex-wrap: nowrap; }
+  html:not(.appli) .ec-segment:not(.ec-segment--lime) .ec-segment-pouce { display: block; }
+  html:not(.appli) .ec-segment:not(.ec-segment--lime) button { border: 0; background: none; padding: 0 6px; }
+  html:not(.appli) .ec-segment:not(.ec-segment--lime) button.on { background: none; color: #fff; }
+  html:not(.appli) .ec-segment--lime .ec-segment-pouce { background: var(--lime); }
+  html:not(.appli) .ec-segment--lime button.on { color: var(--ink); }
+}

@@ -398,3 +398,16 @@ html .ecl-factures table.ecl-recap-table, html.appli .dashboard-main .ecl-factur
 @media (prefers-reduced-motion: reduce) {
   .ecl, .ecl *, .glisser-velo, .glisser-velo * { animation: none !important; transition: none !important; }
 }
+
+/* LIVREUR AUSSI SOIGNÉ QUE LE CLIENT (fondateur, 2026-10-27, réponses à maquettes/ecrans-pro/ecrans-pro.html ; app et site sur
+   téléphone, l'ordinateur garde son look, bloc @media en bas). « Prête à récupérer » est une étiquette, pas un geste : en contour
+   iris, plus en lime (réponse 4 A ; le lime est à « Prendre la course » de la première course). */
+.ecl-badge.contour { background: #fff; color: var(--iris); box-shadow: inset 0 0 0 1.5px var(--iris); }
+/* Réponse 6 A : les titres de section en phrase, comme « Commandes passées » chez le client (« Par semaine », « Code du client »,
+   « Mes relevés des ventes »), plus en petites capitales grises. */
+.ecl-titre-sec, .ecl-factures .ecl-feuille .card > h3:first-child {
+  font-family: var(--font-titre); font-size: 20px !important; font-weight: 700; line-height: 1.2; color: var(--ink); letter-spacing: 0; text-transform: none; margin: 24px 0 10px !important; }
+@media (min-width: 901px) {
+  html:not(.appli) :is(.ecl-titre-sec, .ecl-factures .ecl-feuille .card > h3:first-child) {
+    font-family: var(--font-ui); font-size: 12px !important; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; margin: 18px 0 8px !important; }
+}

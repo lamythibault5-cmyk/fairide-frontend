@@ -6,6 +6,7 @@ import InvoiceArchive from '../../components/InvoiceArchive';
 import { euros } from '../../prixPlat';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import EtatVide from '../../components/EtatVide';
+import TexteReplie from '../../components/TexteReplie';
 import ErreurChargement from '../../components/ErreurChargement';
 import { experienceApp } from '../../natif';
 import PageLivreur from '../../components/livreur/PageLivreur';
@@ -82,7 +83,7 @@ export default function InvoicesPage() {
 
       <section className="no-print">
         <h2 className="ecl-titre-sec">{t('invoicesDriver.paymentsSummary')}</h2>
-        <p className="small ecl-factures-intro">{t('invoicesDriver.intro')}</p>
+        <TexteReplie className="small ecl-factures-intro" texte={t('invoicesDriver.intro')} titre={t('invoicesDriver.paymentsSummary')} />
         <div className="ecl-factures-mois">
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} aria-label={t('invoicesDriver.paymentsSummary')} />
           {/* Imprimer n'existe pas dans l'application (WebView) : le bouton n'y faisait rien. */}
@@ -97,7 +98,7 @@ export default function InvoicesPage() {
           {user?.email && <span className="small">{user.email}</span>}
         </div>
         <h3 className="ecl-recap-mois">{t('invoicesDriver.paymentsReceived', { month: new Date(`${month}-01`).toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' }) })}</h3>
-        {monthOrders.length === 0 && <EtatVide icone="document" titre={t('invoicesDriver.none')} />}
+        {monthOrders.length === 0 && <EtatVide scene="factures" titre={t('invoicesDriver.none')} />}
         {monthOrders.length > 0 && (
           <table className="ecl-recap-table">
             <thead>

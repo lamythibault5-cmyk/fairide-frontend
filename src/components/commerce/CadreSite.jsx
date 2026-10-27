@@ -1,7 +1,7 @@
-import { Link, useOutletContext } from 'react-router-dom';
-import { useLanguage } from '../../context/LanguageContext';
+import { useOutletContext } from 'react-router-dom';
 import { experienceApp } from '../../natif';
-import { BandeauCommerce, FeuilleCommerce } from './BandeauCommerce';
+import { BandeauCommerce, FeuilleCommerce, RetourCommerce } from './BandeauCommerce';
+import TexteReplie from '../TexteReplie';
 
 // Vrai sur le site, faux dans l'app (native ou écran d'accueil) : constant pour toute la session.
 export const SITE = !experienceApp();
@@ -17,18 +17,18 @@ export const SITE = !experienceApp();
  * blocs communs arrivent dans la feuille et non au-dessus de l'iris. `sous` peut être un nœud ;
  * `classe` vise une page dans ecran-commerce.css (l'impression des factures, par exemple). */
 export default function CadreSite({ titre, sous, lecture = false, appli = false, classe = '', children }) {
-  const { t } = useLanguage();
   const { restaurant, communs } = useOutletContext() || {};
   if (!SITE && !appli) return <div className={classe || undefined}>{children}</div>;
   return (
     <div className={`sp-page${lecture ? ' sp-page--lecture' : ''}${classe ? ` ${classe}` : ''}`}>
       <BandeauCommerce retour>
         <div className="ec-b-haut">
-          <Link to="/account" state={{ restaurerDefilement: true }} className="ec-b-retour">{t('nav.backToAccount')}</Link>
+          <RetourCommerce />
           {restaurant?.name && <span><b>{restaurant.name}</b></span>}
         </div>
         <h1 className="ec-b-titre">{titre}</h1>
-        {sous && <div className="ec-b-sous">{sous}</div>}
+        {/* Une phrase sur le bandeau, le reste en feuille (TexteReplie, 2026-10-27) : celui des Factures faisait quatre lignes. */}
+        {sous && <TexteReplie as="div" className="ec-b-sous" texte={sous} titre={titre} />}
       </BandeauCommerce>
       <FeuilleCommerce>
         {communs}

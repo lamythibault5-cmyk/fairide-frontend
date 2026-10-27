@@ -6200,6 +6200,24 @@ export default {
       photoTitle: 'Photo de la commande',
       photoText: 'Sur chaque commande (essai ou vraie), le bouton dans Mes commandes te permet de photographier la commande AVANT de la remettre : mets le ticket avec le numéro de commande et tous les produits dans le cadre. L\'heure, le numéro et la liste des produits sont enregistrés avec la photo : c\'est ta preuve si un client se plaint. Ton client la voit aussi dans le suivi de sa commande.'
     },
+    // Commerce et livreur aussi soignés que le client (fondateur, 2026-10-27, maquettes/ecrans-pro).
+    ecransPro: {
+      facturesSous: 'Commission, relevés et abonnement, mois par mois.',
+      aucuneFacture: "Aucune facture pour l'instant",
+      aucuneFactureTexte: 'Elles arriveront ici dès la première période facturée.',
+      nouvelle: 'Nouvelle commande',
+      aAccepter: 'à accepter',
+      nMin: '{n} min',
+      rienRater: 'Pour ne rater aucune commande',
+      enCours: '{n} en cours',
+      rienEnCours: 'Rien en cours',
+      aujourdhui: "{n} aujourd'hui",
+      enSavoirPlus: 'En savoir plus',
+      coursePres: '1 course près de toi',
+      coursesPres: '{n} courses près de toi',
+      plusProche: 'La plus proche : {km} km · {fee} €',
+      aucuneCourse: "Pas de course pour l'instant"
+    },
     ecranCommerce: {
       verrouAide: "L'interrupteur met un plat en rupture pour aujourd'hui, il revient tout seul demain. Un prix, un plat ou une photo à changer : demande-le à Fairride sous la liste des plats. La TVA et les mentions (halal, vegan…) se règlent plus bas.",
       reglagesTitre: "Tes engagements et réglages",

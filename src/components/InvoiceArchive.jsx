@@ -5,6 +5,8 @@ import { useToast } from '../context/ToastContext';
 import { SkeletonCards } from './Skeleton';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import PeppolSettings from './PeppolSettings';
+import TexteReplie from './TexteReplie';
+import EtatVide from './EtatVide';
 import { euros } from '../prixPlat';
 import Icone from './Icone';
 import ErrorCard from './ErrorCard';
@@ -98,12 +100,11 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
     {peppol && <PeppolSettings endpoint="/invoices/peppol/settings" />}
     <div className="card">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{titre}</h3>
-      <p className="small" style={{ margin: '0 0 14px' }}>{description}</p>
+      <TexteReplie className="small" style={{ margin: '0 0 14px' }} texte={description} titre={titre} />
 
       {invoices.length === 0 && (
-        <div className="empty">
-          {t('invoiceArchive.none')}
-        </div>
+        // Le vélo qui attend, comme les écrans vides du client (réponse 7 de maquettes/ecrans-pro, 2026-10-27).
+        <EtatVide scene="factures" titre={t('ecransPro.aucuneFacture')} texte={t('ecransPro.aucuneFactureTexte')} />
       )}
 
       {invoices.length > 0 && (

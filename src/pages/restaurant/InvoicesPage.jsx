@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useSiteLarge } from '../../hooks/useSiteLarge';
 import { api } from '../../api';
 import { achatsCommerceAutorises, allerAuPaiement, experienceApp } from '../../natif';
 import { useAuth } from '../../context/AuthContext';
@@ -62,6 +63,7 @@ function lastDayOfMonth(month) {
 // L'aperçu de la facture reste un document, imprimé seul : le bandeau ne s'imprime pas (même fichier CSS).
 export default function InvoicesPage() {
   const { t } = useLanguage();
+  const ordinateur = useSiteLarge(900);
   const { token } = useAuth();
   const toast = useToast();
   const { restaurant, restoId } = useOutletContext();
@@ -135,8 +137,10 @@ export default function InvoicesPage() {
   const periodLabel = new Date(`${month}-01`).toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' });
   const periodRange = `01/${month.split('-')[1]}/${month.split('-')[0]}, ${lastDayOfMonth(month)}/${month.split('-')[1]}/${month.split('-')[0]}`;
 
+  // Sur téléphone, une phrase sous le titre (fondateur, 2026-10-27, réponse 10 de maquettes/ecrans-pro) : la longue liste de ce
+  // que la page contient en faisait quatre, et les trois onglets juste dessous le disent déjà.
   return (
-    <CadreSite appli classe="ec-factures" titre={t('invoicesResto.title')} sous={t('invoicesResto.pageIntro')}>
+    <CadreSite appli classe="ec-factures" titre={t('invoicesResto.title')} sous={ordinateur ? t('invoicesResto.pageIntro') : t('ecransPro.facturesSous')}>
       <div className="no-print ec-factures-onglets">
         <SegmentGlisse libelle={t('invoicesResto.title')} valeur={onglet} onChange={choisirOnglet}
           options={[['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ...(achatsCommerceAutorises() ? [['abonnement', t('invoicesResto.tabSubscription')]] : [])].map(([value, label]) => ({ value, label }))} />

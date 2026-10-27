@@ -1,12 +1,49 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
+import { useSiteLarge } from '../../hooks/useSiteLarge';
+import { cheminPrecedent } from '../../i18n/historiqueLangue';
+import { RouteVelo } from '../TeteListe';
+import '../../ecran-liste.css';
 import '../../ecran-commerce.css';
 
 /* LE BANDEAU IRIS ET LA FEUILLE BLANCHE DES ÉCRANS DU COMMERCE (fondateur, 2026-10-16, « Proposition » de la partie
    Commerce de maquettes/tous-les-ecrans/tous-les-ecrans.html ; styles dans ecran-commerce.css). Mon commerce, Commandes, Ma carte et
    Statistiques commencent par <BandeauCommerce> (nom, titre, ce qui se règle d'un geste) puis mettent le reste dans
    <FeuilleCommerce>. DashboardLayout ne pose alors plus le nom du commerce au-dessus de la page (`avecBandeau`). */
-export function BandeauCommerce({ children, retour = false }) {
-  return <header className={`ec-bandeau${retour ? ' ec-bandeau--retour' : ''}`}>{children}</header>;
+/* LA ROUTE DU VÉLO SOUS LE TITRE (fondateur, 2026-10-27, maquettes/ecrans-pro : « commerce et livreur aussi soignés que le
+   client ») : comme sous les bandeaux du client (Mes commandes, Mes factures, Favoris : RouteVelo de TeteListe.jsx, styles dans
+   ecran-liste.css), le vélo roule quand la page défile. App et site sur téléphone ; l'ordinateur garde son bandeau. `route` à
+   false quand le bandeau a déjà la sienne (les étapes de la mise en ligne, EditPage). */
+export function BandeauCommerce({ children, retour = false, route = true }) {
+  const ordinateur = useSiteLarge(900);
+  return (
+    <header className={`ec-bandeau${retour ? ' ec-bandeau--retour' : ''}`}>
+      {children}
+      {route && !ordinateur && <RouteVelo roule className="ec-b-route" />}
+    </header>
+  );
+}
+
+/* LE RETOUR LÀ D'OÙ L'ON VIENT (fondateur, 2026-10-27, réponse 9 de maquettes/ecrans-pro). Statistiques, Promotions et
+   Factures s'ouvrent depuis les tuiles de l'accueil Commerce (CeSoir.jsx) comme depuis Mon compte, mais leur retour disait
+   toujours « ← Mon compte » et changeait d'onglet. Il dit maintenant l'onglet d'avant et y RECULE (la page revient à sa
+   place, l'historique ne s'allonge pas), comme le ‹ du panier client (useReculerVers, EcranCommande.jsx). Écran d'avant
+   inconnu (rechargement, lien direct) : Mon compte, comme avant. */
+// Le nom court de l'onglet, celui de la barre du bas (DashboardSidebar.jsx) : « ← Commerce », « ← Menu », « ← Commandes ».
+const ONGLETS_COMMERCE = { '/dashboard': 'nav.court.myBusiness', '/dashboard/menu': 'nav.court.myMenu', '/dashboard/orders': 'nav.court.orders' };
+export function RetourCommerce() {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+  const avant = (cheminPrecedent() || '').split('?')[0].replace(/\/$/, '');
+  const cle = ONGLETS_COMMERCE[avant];
+  if (!cle) return <Link to="/account" state={{ restaurerDefilement: true }} className="ec-b-retour">{t('nav.backToAccount')}</Link>;
+  const reculer = (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey) return;
+    e.preventDefault();
+    navigate(-1);
+  };
+  return <Link to={avant} onClick={reculer} className="ec-b-retour">{`← ${t(cle)}`}</Link>;
 }
 
 export function FeuilleCommerce({ children }) {

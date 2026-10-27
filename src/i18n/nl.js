@@ -6186,6 +6186,24 @@ export default {
       photoTitle: 'Foto van de bestelling',
       photoText: 'Bij elke bestelling (test of echt) laat de knop in Mijn bestellingen je de bestelling fotograferen VÓÓR je ze overhandigt: zet het ticket met het bestelnummer en alle producten in beeld. Tijd, nummer en productlijst worden met de foto bewaard: jouw bewijs als een klant klaagt. Je klant ziet ze ook bij het volgen van zijn bestelling.'
     },
+    // Commerce et livreur aussi soignés que le client (fondateur, 2026-10-27, maquettes/ecrans-pro).
+    ecransPro: {
+      facturesSous: 'Commissie, overzichten en abonnement, maand per maand.',
+      aucuneFacture: 'Nog geen factuur',
+      aucuneFactureTexte: 'Ze verschijnen hier na de eerste gefactureerde periode.',
+      nouvelle: 'Nieuwe bestelling',
+      aAccepter: 'te accepteren',
+      nMin: '{n} min',
+      rienRater: 'Zodat je geen bestelling mist',
+      enCours: '{n} bezig',
+      rienEnCours: 'Niets bezig',
+      aujourdhui: '{n} vandaag',
+      enSavoirPlus: 'Meer weten',
+      coursePres: '1 rit in je buurt',
+      coursesPres: '{n} ritten in je buurt',
+      plusProche: 'Dichtstbij: {km} km · € {fee}',
+      aucuneCourse: 'Momenteel geen rit'
+    },
     ecranCommerce: {
       verrouAide: "Met de schakelaar zet je een gerecht voor vandaag op uitverkocht; morgen komt het vanzelf terug. Een prijs, gerecht of foto aanpassen: vraag het aan Fairride onder de lijst met gerechten. Btw en vermeldingen (halal, vegan…) stel je verderop in.",
       reglagesTitre: "Je verbintenissen en instellingen",

@@ -13,6 +13,7 @@ import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import NouvelleCommandeModale from '../../components/NouvelleCommandeModale';
+import BandeATraiter from '../../components/commerce/BandeATraiter';
 import SonTerminal from '../../components/commerce/SonTerminal';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
@@ -470,7 +471,9 @@ export default function DashboardLayout() {
       {/* Barre complète sur l'accueil et les commandes ; ailleurs, la version compacte (NewOrderAlertBar.jsx). */}
       {/* Sur Commandes, l'alarme est une ligne du bandeau iris (LigneAlarme dans l'app, AlerteBandeau sur le site — audit
           design 2, 2026-10-19) : la carte ne se répète pas dans la feuille, la commande qui attend passe en premier. */}
-      {chemin !== '/dashboard/orders' && <NewOrderAlertBar {...orderAlert} push={push} compact={!surAccueil}
+      {/* Sur téléphone (app et site), la commande qui attend est la bande lime au-dessus des onglets (BandeATraiter, plus bas) :
+          cette carte n'y garde que le son et les notifications qui manquent (fondateur, 2026-10-27, maquettes/ecrans-pro). */}
+      {chemin !== '/dashboard/orders' && <NewOrderAlertBar {...orderAlert} push={push} compact={!surAccueil} sansCommande={!siteLarge}
         onOuvrir={premiereNouvelle ? () => setFeuilleCommande(premiereNouvelle.id) : null} />}
     </>
   );
@@ -513,6 +516,11 @@ export default function DashboardLayout() {
       {!bandeau && communs}
       {/* Terminal Goodcom au son bloqué par le navigateur : l'écran plein qui le débloque d'un toucher (SonTerminal.jsx). */}
       <SonTerminal alerte={orderAlert} />
+      {/* La commande qui attend, au-dessus des onglets sur téléphone ; pas sur Commandes, qui a sa barre « Accepter » (OrdersPage). */}
+      {restaurant && !siteLarge && premiereNouvelle && chemin !== '/dashboard/orders' && (
+        <BandeATraiter commande={premiereNouvelle} nombre={orderAlert.newCount} alarmeEnCours={orderAlert.alarmeEnCours}
+          couperAlarme={orderAlert.couperAlarme} onOuvrir={() => setFeuilleCommande(premiereNouvelle.id)} />
+      )}
       {/* La commande qui vient d'arriver, affichée d'elle-même (fondateur, 2026-10-01). */}
       {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} loadDashboard={loadDashboard} modifierCommandes={modifierCommandes}
         ouverte={feuilleCommande} setOuverte={setFeuilleCommande} />}

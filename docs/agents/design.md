@@ -293,6 +293,21 @@ shop). Shop home: « Ce soir chez … » band and three tool tiles ([CeSoir.jsx]
 2026-10-22 (Statistiques, Promotions, Factures): the Avis tile, the reviews page and the signed replies went with customer
 reviews (founder, conformite.md); never bring back stars or ratings meanwhile.
 
+**Shop and courier as polished as the customer (founder, 2026-10-27, answers to `maquettes/ecrans-pro/ecrans-pro.html`; app and
+phone-width site, computers keep their layout).** A waiting order is the customer's order bar, not a red card: [BandeATraiter](../../src/components/commerce/BandeATraiter.jsx)
+(`.suivi-commande--a-toi`, lime, above the tabs, ring = minutes left to accept, round button cuts the alarm, tap opens NouvelleCommandeModale) on every
+shop screen but Commandes; on the home, NewOrderAlertBar `sansCommande` keeps only the missing sound / notifications as outline buttons. Every shop
+band ends with the customer's bike road (BandeauCommerce `route`, RouteVelo of TeteListe.jsx; `route={false}` when the band has its own road).
+Commandes: the title says what waits (« 1 commande à traiter » / « 2 en cours » / « Rien en cours »), no terminal link on the band (Mon compte ›
+Mon terminal Fairride). Order cards: hairline (the red ring is the urgency), prep time and Factures tabs as chips (`.ec-segment` on white; the
+lime one on iris has a white thumb), « paiera sur place » in iris outline, ONE lime: « Accepter » while an order waits, else the first card's
+gesture (`prochaine` in OrdersPage), the others `.ec-bouton--contour`. Courier Courses: the title counts the rides (« 2 courses près de toi »), only
+the first « Prendre la course » is lime, « Prête à récupérer » is `.ecl-badge.contour`. Section titles in sentence case (Inter Tight 20 px) outside
+Mon compte (`.ec-section--service`: the checkout's `.ec-feuille .ec-section`, in capitals and `!important`, can be loaded too). Empty screens use
+`EtatVide scene` (new landmarks `promos`, `factures`). Back from Statistiques / Promotions / Factures returns to the tab it came from
+(`RetourCommerce`). Long texts on phones show their first sentence + « En savoir plus » in a sheet ([TexteReplie](../../src/components/TexteReplie.jsx)).
+The course in hand stays as it was (answer 5).
+
 Note the two heavily-commented rules near the top of the file — `overflow-x: clip` on
 `html`/`body` and `-webkit-tap-highlight-color: transparent`. Both encode a bug that was
 already fixed once (`clip` rather than `hidden`, because `hidden` silently breaks

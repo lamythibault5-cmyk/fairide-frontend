@@ -645,6 +645,23 @@ export default function DriverDashboard() {
     titreBandeau = t('selfieControle.headerTitle');
     sousBandeau = t('selfieControle.headerSub');
   }
+  /* UN TITRE QUI COMPTE LES COURSES (fondateur, 2026-10-27, réponse 4 A de maquettes/ecrans-pro) : sans course en main, le bandeau
+     de l'app ne disait que « Courses » ; il dit maintenant ce qui attend, comme le client lit « Chez toi vers 15:41 ». Le site a déjà
+     son titre (titreSite, plus bas). */
+  let titreAppli = titreBandeau;
+  let sousAppli = sousBandeau;
+  if (!titreBandeau && peutRouler) {
+    if (enPause) {
+      titreAppli = t('siteLivreur.enPause');
+      sousAppli = t('siteLivreur.pauseSous');
+    } else if (available.length) {
+      titreAppli = available.length === 1 ? t('ecransPro.coursePres') : t('ecransPro.coursesPres', { n: available.length });
+      const proche = available.filter((o) => o.distanceKm != null).sort((a, b) => a.distanceKm - b.distanceKm)[0];
+      sousAppli = proche ? t('ecransPro.plusProche', { km: dec(proche.distanceKm, 1), fee: fraisCourse(proche) }) : null;
+    } else {
+      titreAppli = t('ecransPro.aucuneCourse');
+    }
+  }
   const partageOk = user?.locationSharingEnabled !== false && sharingLocation;
 
   const interrupteur = (surBlanc) => (
@@ -747,8 +764,10 @@ export default function DriverDashboard() {
     return [km, o.travelMinutes && t('ecranLivreur.minutes', { min: o.travelMinutes })].filter(Boolean).join(' · ');
   };
 
-  // Une course proposée : son trajet en pointillés, son prix dans une pastille iris, « Prendre la course » en lime.
-  const carteOffre = (o) => {
+  /* Une course proposée : son trajet en pointillés, son prix dans une pastille iris, « Prendre la course » en lime pour la
+     PREMIÈRE seulement (fondateur, 2026-10-27, réponse 4 A de maquettes/ecrans-pro ; design.md règle 4 : un seul lime à l'écran,
+     les suivantes en contour). L'état du retrait est une étiquette en contour iris, jamais lime : ce n'est pas un geste. */
+  const carteOffre = (o, rang) => {
     const voie = voieOffre(o);
     return (
       <article className={`ecl-offre${prise === o.id ? ' prise' : ''}${partantes.includes(o.id) ? ' part' : ''}`} key={o.id}>
@@ -757,7 +776,7 @@ export default function DriverDashboard() {
           <span className="ecl-prix"><small>{t('ecranLivreur.prixPropose')}</small>{t('ecranLivreur.prixMontant', { fee: fraisCourse(o) })}</span>
         </div>
         <div className="ecl-badges">
-          <span className={`ecl-badge ${o.status === 'pret' ? 'lime' : 'doux'}`}>{etatRetrait(o)}</span>
+          <span className={`ecl-badge ${o.status === 'pret' ? 'contour' : 'doux'}`}>{etatRetrait(o)}</span>
           {o.commune && <span className="ecl-badge neutre">{o.commune}</span>}
         </div>
         <div className="ecl-trajet-carte">
@@ -775,7 +794,7 @@ export default function DriverDashboard() {
         <div className="ecl-offre-pied">
           {/* Refuser reste discret et neutre : aucune conséquence pour le livreur. */}
           <button type="button" className="btn-ghost" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
-          <button type="button" className="btn-gold" disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : t('dashDriver.takeRide')}</button>
+          <button type="button" className={rang === 0 ? 'btn-gold' : 'btn-outline'} disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : t('dashDriver.takeRide')}</button>
         </div>
       </article>
     );
@@ -849,8 +868,8 @@ export default function DriverDashboard() {
         {/* Urgence (accident, agression, malaise) : 112 d'abord, puis l'équipe Fairide avec la position (BoutonUrgence.jsx). */}
         <span className="ecl-b-droite">{!principale && course && <span className="ecl-chip">{t('ecranLivreur.livree')}</span>}{urgence}</span>
       </div>
-      {titreBandeau && <h1 className="ecl-b-titre" key={titreBandeau}>{titreBandeau}</h1>}
-      {sousBandeau && <p className="ecl-b-sous">{sousBandeau}</p>}
+      {titreAppli && <h1 className="ecl-b-titre" key={titreAppli}>{titreAppli}</h1>}
+      {sousAppli && <p className="ecl-b-sous">{sousAppli}</p>}
       {/* L'INTERRUPTEUR EN TÊTE (2026-09-23), sur le bandeau depuis le 2026-10-16 : la première chose que le livreur voit,
           c'est s'il reçoit des courses ou non, et le geste pour changer, sur toute la largeur. */}
       {!course && peutRouler && interrupteur(false)}
@@ -877,7 +896,7 @@ export default function DriverDashboard() {
       {autresRetraits.length > 0 && <h2 className="ecl-h2">{t('dashDriver.awaitingPickup')}</h2>}
       {autresRetraits.map((o) => (
         <div className="ecl-course-carte" key={o.id}>
-          <div className="ecl-course-tete"><b>{o.restaurantName}</b><span className={`ecl-badge ${o.status === 'pret' ? 'lime' : 'doux'}`}>{etatRetrait(o)}</span></div>
+          <div className="ecl-course-tete"><b>{o.restaurantName}</b><span className={`ecl-badge ${o.status === 'pret' ? 'contour' : 'doux'}`}>{etatRetrait(o)}</span></div>
           <div className="small" style={{ marginBottom: 10 }}>{t('dashDriver.rideFee', { fee: fraisCourse(o) })}</div>
           {detailRetrait(o, false)}
         </div>
