@@ -10253,6 +10253,8 @@ export default {
       dejaDemandes: "Déjà demandés",
       trouves: "Les restaurants qui portent ce nom",
       aucunResultat: "Rien trouvé pour « {q} ».",
+      ajouterNom: "Ajouter « {nom} »",
+      ajouterSous: "Écris-le toi-même, avec sa commune.",
       recherche: "Recherche…",
       rechercheEchec: "La recherche ne répond pas. Réessaie, ou écris-le toi-même.",
       tapeTrois: "Tape au moins trois lettres.",

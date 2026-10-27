@@ -10185,6 +10185,8 @@ export default {
       dejaDemandes: "Already requested",
       trouves: "Restaurants with this name",
       aucunResultat: "Nothing found for \"{q}\".",
+      ajouterNom: "Add \"{nom}\"",
+      ajouterSous: "Write it yourself, with its municipality.",
       recherche: "Searching…",
       rechercheEchec: "The search isn't answering. Try again, or type it yourself.",
       tapeTrois: "Type at least three letters.",

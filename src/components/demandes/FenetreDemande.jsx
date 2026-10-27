@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import useDialogue from '../../hooks/useDialogue';
 import useTirerPourFermer from '../../hooks/useTirerPourFermer';
-import { COMMUNES } from '../../menuCategories';
+import { COMMUNES, communeDepuisCodePostal } from '../../menuCategories';
 import { vibrer } from '../../gestes';
 import Icone from '../Icone';
 import {
@@ -33,7 +33,9 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
   const [choix, setChoix] = useState(null); // { cle, nom, lieu }
   const [manuel, setManuel] = useState(false);
   const [nom, setNom] = useState('');
-  const [commune, setCommune] = useState('');
+  // La commune du compte, déjà choisie : le restaurant qu'on aime est souvent près de chez soi.
+  const [commune, setCommune] = useState(() => communeDepuisCodePostal(user?.addressPostalCode)
+    || COMMUNES.find((c) => c.toLowerCase() === String(user?.addressCity || '').trim().toLowerCase()) || '');
   const [plat, setPlat] = useState('');
   const [prevenir, setPrevenir] = useState(true);
   const [envoi, setEnvoi] = useState(false);
@@ -134,7 +136,7 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
         <h3 className="modal-titre" id="dm-titre">{t('demandes.okTitre')}</h3>
         <p>{fait.rang <= 1 ? t('demandes.okPremier', { nom: fait.nom }) : t('demandes.okRang', { rang: rangEcrit(fait.rang, language), nom: fait.nom })}</p>
         <p>{fait.prevenir ? t('demandes.okTexte') : t('demandes.okTexteSansPrevenir')}</p>
-        <span className="dm-ok-compteur"><Icone nom="megaphone" taille={16} />{t('demandes.nDemandes', { n: fait.rang })}</span>
+        <span className="dm-ok-compteur"><Icone nom="demande" taille={16} />{t('demandes.nDemandes', { n: fait.rang })}</span>
         <div className="modal-pied"><button type="button" className="btn-outline" onClick={onFermer}>{t('common.close')}</button></div>
       </div>
     );
@@ -168,11 +170,21 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
               {terme.length > 0 && terme.length < 3 && <p className="small">{t('demandes.tapeTrois')}</p>}
               {chargement && <p className="small">{t('demandes.recherche')}</p>}
               {!chargement && echec && <p className="small">{t('demandes.rechercheEchec')}</p>}
-              {!chargement && rien && <p className="small">{t('demandes.aucunResultat', { q: terme })}</p>}
+              {/* Rien trouvé : beaucoup de petits restaurants ne sont pas sur OpenStreetMap (« Simple Asia » à Georges-Henri,
+                * fondateur 2026-10-27). On propose de l'écrire soi-même, nom déjà rempli, au lieu d'un cul-de-sac. */}
+              {!chargement && rien && (
+                <>
+                  <p className="small">{t('demandes.aucunResultat', { q: terme })}</p>
+                  <button type="button" className="dm-choix" onClick={() => { vibrer('bascule'); setManuel(true); setNom(terme); setChoix(null); }}>
+                    <span className="dm-choix-tuile" aria-hidden="true"><Icone nom="crayon" taille={18} /></span>
+                    <span className="dm-choix-texte"><b>{t('demandes.ajouterNom', { nom: terme })}</b><small>{t('demandes.ajouterSous')}</small></span>
+                  </button>
+                </>
+              )}
               {!chargement && res?.deja?.length > 0 && <><h4 className="dm-groupe">{t('demandes.dejaDemandes')}</h4>{res.deja.map(ligneDemande)}</>}
               {!chargement && res?.fiches?.length > 0 && <><h4 className="dm-groupe">{t('demandes.trouves')}</h4>{res.fiches.map(ligneFiche)}</>}
             </div>
-            <button type="button" className="dm-lien" onClick={() => { setManuel(true); setNom(q.trim()); setChoix(null); }}>{t('demandes.pasDansLaListe')}</button>
+            {!rien && <button type="button" className="dm-lien" onClick={() => { setManuel(true); setNom(q.trim()); setChoix(null); }}>{t('demandes.pasDansLaListe')}</button>}
           </>
         )}
         {manuel && (

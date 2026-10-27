@@ -10194,6 +10194,8 @@ export default {
       dejaDemandes: "Al gevraagd",
       trouves: "Restaurants met deze naam",
       aucunResultat: "Niets gevonden voor \"{q}\".",
+      ajouterNom: "\"{nom}\" toevoegen",
+      ajouterSous: "Schrijf het zelf, met de gemeente.",
       recherche: "Zoeken…",
       rechercheEchec: "De zoekfunctie antwoordt niet. Probeer opnieuw, of typ het zelf.",
       tapeTrois: "Typ minstens drie letters.",
