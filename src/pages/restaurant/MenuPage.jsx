@@ -7,16 +7,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
-  categoryEmoji, categoryLabel, getStarterTemplate,
-  CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, resolveItemImage,
+  categoryEmoji, categoryLabel, resolveItemImage,
   groupBySubsection
 } from '../../menuCategories';
 import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
-import TemplatePicker from '../../components/TemplatePicker';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
 import { galleryForSection } from '../../galleryImages';
-import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import ConformiteCarte from '../../components/conformite/ConformiteCarte';
 import MentionsAlimentaires from '../../components/commerce/MentionsAlimentaires';
 import { MENTIONS_COMMERCE } from '../../dietary';
@@ -24,7 +21,6 @@ import MenuReadiness from '../../components/MenuReadiness';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Modale from '../../components/Modale';
 import HaussePrix from '../../components/HaussePrix';
-import DemandeModifCarte from '../../components/DemandeModifCarte';
 import TvaCarte from '../../components/commerce/TvaCarte';
 import { defilement } from '../../gestes';
 import Icone from '../../components/Icone';
@@ -56,11 +52,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const [applySelectedIds, setApplySelectedIds] = useState(new Set());
   const [applyingImage, setApplyingImage] = useState(false);
 
-  const [templateOpen, setTemplateOpen] = useState(false);
-  const [addingTemplate, setAddingTemplate] = useState(false);
-  const [startChoiceMade, setStartChoiceMade] = useState(false);
-  const [addingClassicDrinks, setAddingClassicDrinks] = useState(false);
-  const [addingClassicDesserts, setAddingClassicDesserts] = useState(false);
   const [addItemGalleryOpen, setAddItemGalleryOpen] = useState(false);
 
   // Site de CE commerce (fiche serveur), proposé d'office comme page de référence dans la demande « Fairide s'en occupe ».
@@ -68,11 +59,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // inscrit Le Laakam proposait laakam.be à chaque commerce suivant, et des demandes « Uber Eats » arrivaient avec ce
   // lien (2026-10-20, voir lienPlateforme.js côté backend).
   const importUrl = restaurant.website || '';
-  // Une fois la carte créée, les méthodes de création se replient : la page commence par ce qui compte
-  // (la carte telle qu'elle est en ligne) et les outils de modification. Un clic les rouvre pour ajouter des plats.
-  const [methodesOuvertes, setMethodesOuvertes] = useState(false);
   const carteVide = restaurant.menu.length === 0;
-  const methodesVisibles = carteVide || methodesOuvertes;
   // Les cinq méthodes « je m'en occupe moi-même » sont repliées par défaut : seule la demande à
   // Fairide occupe le premier écran (voir le commentaire au-dessus du bloc). En console admin il n'y
   // a pas de demande à Fairide — l'équipe EST Fairide — donc rien à replier.
@@ -432,21 +419,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
-  async function addStarterTemplateItems(items) {
-    if (!items.length) { toast(t('menuPage.toastPickOne'), 'erreur'); return; }
-    setAddingTemplate(true);
-    try {
-      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items }, delai: 180000 });
-      setTemplateOpen(false);
-      loadDashboard(restoId);
-      toast(t('menuPage.toastDishesAdded', { n: items.length }), 'succes');
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setAddingTemplate(false);
-    }
-  }
-
   // « Tout réinitialiser » : le restaurateur repart d'une carte vide (changement de concept, carte de
   // test à jeter). Les brouillons ne sont pas touchés — ils servent justement à repartir d'une base.
   function demanderReset() {
@@ -463,8 +435,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     try {
       const r = await api(`/restaurants/${restoId}/menu`, { method: 'DELETE', token, body: { confirm: true } });
       await loadDashboard(restoId);
-      setStartChoiceMade(false);
-      setMethodesOuvertes(true);
       toast(t('menuPage.resetDone', { n: r.deleted }), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
@@ -504,21 +474,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     } catch (e) { toast(e.message, 'erreur'); } finally { setAjusting(false); }
   }
 
-  async function addClassics(list, category, setBusy) {
-    const items = missingClassicItems(restaurant.menu, list).map((it) => ({ ...it, category }));
-    if (!items.length) { toast(t('menuPage.toastAllPresent')); return; }
-    setBusy(true);
-    try {
-      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items }, delai: 180000 });
-      loadDashboard(restoId);
-      toast(t('menuPage.toastProductsAdded', { n: items.length }), 'succes');
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setBusy(false);
-    }
-  }
-
   // CÔTÉ COMMERCE : la carte au bandeau iris, en lecture seule avec l'interrupteur « En vente aujourd'hui » (2026-10-16,
   // components/commerce/CarteCommerce.jsx). Ce qui suit est la console admin (modeAdmin) : l'éditeur complet.
   if (!modeAdmin) {
@@ -533,8 +488,8 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           de bord (MiseEnLigne.jsx, audit du 15/10/2026) : les répéter ici donnait trois boutons pour une seule validation.
           La console admin garde sa note « carte remise, en attente du commerce ». */}
       {modeAdmin && <MenuReadiness restaurant={restaurant} restoId={restoId} token={token} modeAdmin onConfirmed={() => loadDashboard(restoId)} />}
-      {/* Carte signée, allergènes, vendeur professionnel (backlog de conformité A1, A2, A8). */}
-      <ConformiteCarte restoId={restoId} rafraichir={restaurant} onChange={() => loadDashboard(restoId)} />
+      {/* Carte signée, allergènes, vendeur professionnel (backlog de conformité A1, A2, A8) : l'état seul, l'équipe ne signe pas. */}
+      <ConformiteCarte restoId={restoId} rafraichir={restaurant} onChange={() => loadDashboard(restoId)} modeAdmin />
       {/* Halal, végétarien, vegan, sans gluten, bio : déclarés par le commerce lui-même, malgré le verrou de la carte. De
           retour pour le commerce le 2026-10-27 (MENTIONS_COMMERCE, dietary.js) ; les clients ne les voient pas encore. */}
       {MENTIONS_COMMERCE && <MentionsAlimentaires restaurant={restaurant} restoId={restoId} token={token} onChange={() => loadDashboard(restoId)} />}
@@ -544,31 +499,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           <h2 className="menu-etape-titre">{t('menuPage.stepCreate')}</h2>
           <p className="small" style={{ margin: 0 }}>{carteVide ? t('menuPage.stepCreateHelpEmpty') : t('menuPage.stepCreateHelpDone', { n: restaurant.menu.length })}</p>
         </div>
-        {/* Côté restaurateur seulement. En console admin, ce bouton (« Ajouter des plats en nombre »)
-            rouvrait les méthodes d'import sur une carte déjà remplie ; les cartes sont désormais montées
-            par scripts/importer-carte.js côté backend, et le bouton a été retiré à la demande de l'équipe
-            (2026-09-25). Sur une carte vide, les méthodes restent affichées d'office (methodesVisibles). */}
-        {!carteVide && !modeAdmin && (
-          <button type="button" className="btn-outline btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setMethodesOuvertes((o) => !o)}>
-            {methodesOuvertes ? t('menuPage.hideMethods') : t('menuPage.askFairideAgain')}
-          </button>
-        )}
       </div>
-      {/* CÔTÉ COMMERCE SEULEMENT (fondateur, 10 oct. 2026 : « nous on va le faire, eux doivent juste accepter »). En
-          console admin, cette carte répétait mot pour mot les trois boutons du cadre « Démarrez en 1 clic » juste en
-          dessous (plats de départ, 1 clic, carte à la main) : deux fois les mêmes choix l'un sous l'autre. L'équipe garde
-          le cadre du dessous ; le commerce ne voit qu'une demande à Fairide, puis la carte à valider (« C'est bon »). */}
-      {methodesVisibles && !modeAdmin && (
-      <div className="card" id="menu-methodes">
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.methodsTitle')}</h3>
-        <p className="small" style={{ margin: '0 0 14px' }}>{t('menuPage.methodsIntro')}</p>
-        <div className="methode" id="menu-concierge">
-          <div className="methode-tete"><h4>{t('menuPage.method1Title')}</h4><span className="pill teal">{t('menuPage.recommendedFree')}</span></div>
-          <p className="small methode-sous">{t('menuPage.method1Sub')}</p>
-          <MenuConciergeRequest restoId={restoId} urlSuggeree={importUrl} />
-        </div>
-      </div>
-      )}
+      {/* La demande « Fairide s'en occupe », le verrou de la carte, « Demander une modification » et l'étape 3 vivaient ici
+          derrière `!modeAdmin` : depuis que le commerce a sa propre carte (CarteCommerce.jsx, retour plus haut), ces branches
+          ne s'affichaient plus jamais. Retirées le 2026-10-27 (revue des doublons). */}
 
       {/* Le bloc « Démarrez en 1 clic » (plats de départ par type de commerce) est parti le 2026-10-13 : depuis que l'équipe
           prépare chaque carte à partir des prix en magasin et que le commerce la valide (« C'est bon »), ces suggestions
@@ -581,14 +515,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           <p className="small" style={{ margin: 0 }}>{t('menuPage.stepEditHelp')}</p>
         </div>
       </div>
-      {/* Le plus court chemin : écrire ce qu'on veut changer, l'équipe Fairide s'en charge (fondateur, 2026-10-01). */}
-      {!modeAdmin && restaurant.menu.length > 0 && (
-        <div className="card carte-verrou" role="note">
-          <b><Icone nom="cadenas" taille={16} className="icone-texte" />{' '}{t('menuPage.lockedTitle')}</b>
-          <p className="small" style={{ margin: '4px 0 0' }}>{t('menuPage.lockedText')}</p>
-        </div>
-      )}
-      {!modeAdmin && restaurant.menu.length > 0 && <DemandeModifCarte restoId={restoId} />}
       <TvaCarte restoId={restoId} token={token} menu={restaurant.menu} modeAdmin={modeAdmin} toast={toast} onChange={() => loadDashboard(restoId)} />
       <div className="card" id="menu-liste">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
@@ -602,9 +528,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           <summary className="small">{t('menuPage.iconsLegend')}</summary>
           <p className="small" style={{ margin: '6px 0 0' }}>{t('menuPage.menuHelp')}</p>
         </details>}
-        {restaurant.menu.length === 0 && (restaurant.sections || []).length === 0 && startChoiceMade && (
-          <div className="small" style={{ marginBottom: 10 }}>{t('menuPage.noSection')}</div>
-        )}
         {(restaurant.sections || []).map((section) => {
           const rawItems = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
           const order = localOrder[section.id];
@@ -813,49 +736,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         onDelete={deleteOptionGroup}
       />}
 
-      {/* Raccourcis de construction (boissons / desserts « classiques », plats types de la cuisine) :
-          seulement pendant qu'on monte une carte à la main (startChoiceMade). Ils s'affichaient sous
-          TOUTE carte non vide — y compris une carte importée complète, où un clic ajoutait un Coca ou un
-          tiramisu au prix deviné par Fairide, que le commerce ne vend peut-être pas (équipe, 2026-09-25). */}
-      {startChoiceMade && (
-        <>
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-            <button type="button" className="btn-ghost" disabled={addingClassicDrinks} onClick={() => addClassics(CLASSIC_DRINKS, 'boisson', setAddingClassicDrinks)}>
-              {addingClassicDrinks ? '...' : t('menuPage.addClassicDrinks')}
-            </button>
-            <button type="button" className="btn-ghost" disabled={addingClassicDesserts} onClick={() => addClassics(CLASSIC_DESSERTS, 'dessert', setAddingClassicDesserts)}>
-              {addingClassicDesserts ? '...' : t('menuPage.addClassicDesserts')}
-            </button>
-          </div>
-
-          {!templateOpen && (
-            <button type="button" className="btn-ghost" onClick={() => setTemplateOpen(true)}>{t('menuPage.pickMoreTemplate')}</button>
-          )}
-          {templateOpen && (
-            <div className="card">
-              <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.typicalDishes', { cuisine: restaurant.cuisine })}</h3>
-              <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.pickHelp')}</p>
-              <TemplatePicker
-                template={getStarterTemplate(restaurant.cuisine)}
-                submitting={addingTemplate}
-                submitLabel={t('menuPage.addSelection')}
-                onSubmit={addStarterTemplateItems}
-                onCancel={() => setTemplateOpen(false)}
-              />
-            </div>
-          )}
-        </>
-      )}
-
-      {restaurant.menu.length > 0 && !modeAdmin && (
-        <div className="menu-etape" id="menu-plus-loin">
-          <span className="menu-etape-num">3</span>
-          <div>
-            <h2 className="menu-etape-titre">{t('menuPage.stepMore')}</h2>
-            <p className="small" style={{ margin: 0 }}>{t('menuPage.stepMoreHelp')}</p>
-          </div>
-        </div>
-      )}
       {modeAdmin && restaurant.menu.length > 0 && (
         <div className="card" id="menu-reset">
           <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.resetTitle')}</h3>

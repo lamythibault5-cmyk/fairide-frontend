@@ -1,11 +1,12 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { api, apiDownload, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { mouvementReduit, vibrer } from '../../gestes';
+import { mouvementReduit } from '../../gestes';
 import AllergenesPlat from './AllergenesPlat';
-import { Link } from 'react-router-dom';
+import { ouvrirValidationCarte } from '../commerce/useMiseEnLigne';
 
 /* « Ma carte et mes engagements » — ce que le commerce signe lui-même (backlog de conformité du
  * 23/09/2026). L'équipe Fairide ne peut rien signer à sa place : en « agir pour », le serveur refuse
@@ -29,33 +30,19 @@ import { Link } from 'react-router-dom';
 // `versEngagements` (côté commerce, Ma carte) : la procédure allergènes et la déclaration de vendeur professionnel ne se signent
 // plus ici mais sur « Tes engagements » (fondateur, 2026-10-27, S1 de maquettes/audit-ecrans) — deux écrans de signature qui ne
 // se ressemblaient pas, l'un en long texte à puces avec un « Tout signer (2) » grisé. Ici il ne reste qu'une rangée qui y mène ;
-// la carte elle-même (re)signée après un changement de prix reste ici. La console admin garde tout.
-export default function ConformiteCarte({ restoId, rafraichir, onChange, versEngagements = null }) {
+// LA CARTE NON PLUS (revue des doublons, 2026-10-27 : « on ne peut pas avoir deux processus qui font la même chose »). Ce panneau
+// la signait encore (POST /menu/sign, un nom tapé) à côté de « C'est bon » (empreinte de la carte, choix de la hausse) : il mène
+// maintenant à « C'est bon » par « Relire ma carte », le même code que l'étape du tableau de bord (ouvrirValidationCarte). Il ne
+// signe plus rien. En console admin (`modeAdmin`) : l'état seul, l'équipe ne signe pas à la place du commerce.
+export default function ConformiteCarte({ restoId, rafraichir, onChange, versEngagements = null, modeAdmin = false }) {
   const { token } = useAuth();
   const toast = useToast();
-  const { t, language } = useLanguage();
-  // Engagements signés : le français fait foi (il est haché avec la signature) ; en anglais et en néerlandais on montre
-  // la traduction envoyée par le serveur, le texte français restant à un clic (plan de test DEV-7).
-  const traduit = (bloc) => (language !== 'fr' && bloc?.translations?.[language]) || null;
-  const noteFoi = (original) => (
-    <details className="small" style={{ margin: '0 0 6px' }}>
-      <summary>{t('conformite.frenchPrevails')}</summary>
-      {Array.isArray(original) ? <ul style={{ margin: '4px 0 0 18px' }}>{original.map((l) => <li key={l} lang="fr">{l}</li>)}</ul> : <p lang="fr" style={{ margin: '4px 0 0' }}>{original}</p>}
-    </details>
-  );
-  const id = useId();
+  const { t } = useLanguage();
+  const navigate = useNavigate();
   const [d, setD] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [nom, setNom] = useState('');
-  const [coche, setCoche] = useState(false);
-  const [tel, setTel] = useState('');
-  const [referent, setReferent] = useState('');
 
-  const charger = () => api(`/restaurants/${restoId}/compliance`, { token }).then((r) => {
-    setD(r);
-    setTel((x) => x || r.allergens.contactPhone || r.allergens.fallbackPhone || '');
-    setReferent((x) => x || r.allergens.referentName || '');
-  }).catch(() => {});
+  const charger = () => api(`/restaurants/${restoId}/compliance`, { token }).then(setD).catch(() => {});
   useEffect(() => { if (restoId) charger(); }, [restoId, rafraichir]); // eslint-disable-line react-hooks/exhaustive-deps
   // Arrivée par « Signer mes engagements » (liste Avant d'être en ligne, lien …/menu#conformite-carte) : le routeur ne
   // défile pas vers une ancre, et ce panneau n'existe qu'une fois ses données reçues. On y va nous-mêmes, une fois.
@@ -82,30 +69,11 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange, versEng
   const aSigner = versEngagements ? aSignerTout.filter((x) => x === 'carte') : aSignerTout;
   const toutSigne = m.signed && d.allergens.attestation.attestedAt && proAJour;
 
-  async function toutSigner(e) {
-    e.preventDefault();
-    const typedName = nom.trim();
-    // Le bouton n'est plus grisé (design.md règle 4) : ce qui manque est dit au toucher, dans l'ordre de l'écran.
-    const manque = aSigner.includes('allergenes') && !tel.trim() ? 'tel' : !coche ? 'case' : typedName.length < 3 ? 'nom' : null;
-    if (manque) { vibrer('attention'); toast(t(`engagementsCommerce.manque_${manque}`), 'erreur'); return; }
+  async function relireCarte() {
     setBusy(true);
-    try {
-      // L'un après l'autre : si l'un échoue (numéro d'allergènes invalide, dénomination manquante…), les précédents
-      // restent signés et le panneau rechargé montre exactement ce qui reste.
-      for (const quoi of aSigner) {
-        if (quoi === 'carte') await api(`/restaurants/${restoId}/menu/sign`, { method: 'POST', token, body: { typedName, confirmed: true } });
-        if (quoi === 'allergenes') await api(`/restaurants/${restoId}/allergens/attest`, { method: 'POST', token, body: { typedName, confirmed: true, contactPhone: tel.trim(), referentName: referent.trim() } });
-        if (quoi === 'pro') await api(`/restaurants/${restoId}/professional-declaration`, { method: 'POST', token, body: { typedName, confirmed: true } });
-      }
-      toast(t('conformite.signAllToast'));
-      setCoche(false);
-      onChange?.();
-    } catch (err) {
-      toast(err.message, 'erreur');
-    } finally {
-      await charger();
-      setBusy(false);
-    }
+    try { await ouvrirValidationCarte({ restaurant: rafraichir, restoId, token, navigate, onChange, toast, t }); }
+    catch (err) { toast(err.message, 'erreur'); }
+    finally { setBusy(false); }
   }
 
   const fait = (texte) => <p className="small" style={{ margin: '2px 0 0' }}>✓ {texte}</p>;
@@ -154,61 +122,15 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange, versEng
         </div>
       )}
 
-      {aSigner.length > 0 && (
-        <form onSubmit={toutSigner} style={{ marginTop: 12 }}>
-          <p className="small" style={{ margin: '0 0 10px' }}>{t('conformite.signAllIntro')}</p>
-
-          {aSigner.includes('carte') && (
-            <section className="conformite-bloc">
-              <h4 style={{ margin: '0 0 4px' }}>{t('conformite.menuSignTitle')}</h4>
-              <p className="small" style={{ margin: '0 0 4px' }}>{m.lastSigned ? t('conformite.menuChangedSinceSigned') : t('conformite.menuNeverSigned')}</p>
-              {/* Pas de liste « taux de TVA à indiquer » plat par plat : le serveur pose le taux proposé à la signature
-                  (carteSignee.signer). On annonce la règle ici, pour qu'il signe en sachant ce qu'il signe. */}
-              {m.vatAutoCount > 0 && <p className="small" style={{ margin: '0 0 4px', color: 'var(--ink-soft)' }}>{t('conformite.menuVatAuto')}</p>}
-              <p className="small" style={{ margin: 0 }}>{traduit(m) || m.text}</p>
-              {traduit(m) && noteFoi(m.text)}
-            </section>
-          )}
-
-          {aSigner.includes('allergenes') && (
-            <section className="conformite-bloc" style={{ marginTop: 12 }}>
-              <h4 style={{ margin: '0 0 4px' }}>{t('conformite.allergenAttestTitle')}</h4>
-              <ul className="small" style={{ margin: '0 0 6px 18px' }}>{(traduit(d.allergens.attestation) || d.allergens.attestation.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
-              {traduit(d.allergens.attestation) && noteFoi(d.allergens.attestation.text)}
-              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <div className="field" style={{ margin: 0 }}>
-                  <label htmlFor={`${id}-tel`} className="small etiquette-dessus">{t('conformite.allergenPhone')}</label>
-                  <input id={`${id}-tel`} value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" />
-                </div>
-                <div className="field" style={{ margin: 0 }}>
-                  <label htmlFor={`${id}-ref`} className="small">{t('conformite.allergenReferent')}</label>
-                  <input id={`${id}-ref`} value={referent} onChange={(e) => setReferent(e.target.value)} />
-                </div>
-              </div>
-            </section>
-          )}
-
-          {aSigner.includes('pro') && (
-            <section className="conformite-bloc" style={{ marginTop: 12 }}>
-              <h4 style={{ margin: '0 0 4px' }}>{t('conformite.proTitle')}</h4>
-              {pro.declaredAt && <p className="small" style={{ margin: '0 0 4px' }}>{t('conformite.proNewVersion')}</p>}
-              <ul className="small" style={{ margin: '0 0 6px 18px' }}>{(traduit(pro) || pro.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
-              {traduit(pro) && noteFoi(pro.text)}
-            </section>
-          )}
-
-          <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', marginTop: 12 }}>
-            <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={coche} onChange={(e) => setCoche(e.target.checked)} />
-            <span className="small" style={{ fontWeight: 600 }}>{t('conformite.signAllCheck')}</span>
-          </label>
-          <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-            <label htmlFor={`${id}-nom`} className="sr-only">{t('conformite.typedName')}</label>
-            <input id={`${id}-nom`} placeholder={t('conformite.typedName')} value={nom} onChange={(e) => setNom(e.target.value)} autoComplete="name" style={{ maxWidth: 260 }} />
-            <button type="submit" className="btn-teal" disabled={busy}>
-              {busy ? '…' : aSigner.length === 1 && aSigner[0] === 'carte' ? t('conformite.signMenuButton') : t('conformite.signTextsButton', { n: aSigner.length })}
-            </button>
-          </div>
-        </form>
+      {!modeAdmin && aSigner.includes('carte') && (
+        <section className="conformite-bloc" style={{ marginTop: 12 }}>
+          <h4 style={{ margin: '0 0 4px' }}>{t('conformite.menuSignTitle')}</h4>
+          <p className="small" style={{ margin: '0 0 8px' }}>{m.lastSigned ? t('conformite.menuChangedSinceSigned') : t('conformite.menuNeverSigned')}</p>
+          <button type="button" className="btn-gold btn-sm" disabled={busy} onClick={relireCarte}>{busy ? '…' : t('miseEnLigne.validateBtn')}</button>
+        </section>
+      )}
+      {!modeAdmin && !versEngagements && aSigner.some((x) => x !== 'carte') && (
+        <button type="button" className="btn-gold btn-sm" style={{ marginTop: 12 }} onClick={() => navigate('/dashboard/engagements')}>{t('miseEnLigne.commitmentsBtn')}</button>
       )}
 
       {m.lastSigned && <p className="small" style={{ margin: '10px 0 0' }}><a href={`${API_BASE}/restaurants/${restoId}/menu/versions?download=1`} onClick={async (e) => {

@@ -6,6 +6,21 @@ import { useToast } from '../../context/ToastContext';
 import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
 import { experienceApp } from '../../natif';
 
+/* RELIRE ET VALIDER LA CARTE, d'où qu'on parte (étape « Relis et valide ta carte », Ma carte) : la page « C'est bon », la même
+ * que celle envoyée par SMS. Une seule page de validation, quel que soit le chemin (fondateur, 2026-10-27 : « on ne peut pas
+ * avoir deux processus qui font la même chose » ; Ma carte signait encore la carte elle-même, par une autre route). */
+export async function ouvrirValidationCarte({ restaurant, restoId, token, navigate, onChange, toast, t }) {
+  if (restaurant?.menuSigned) {
+    // Carte signée avant le correctif du 15/10 mais jamais confirmée : la confirmation seule suffit.
+    await api(`/restaurants/${restoId}/menu/confirm`, { method: 'POST', token, body: {} });
+    await onChange?.();
+    toast(t('menuPage.handoverConfirmed'), 'succes');
+    return;
+  }
+  const l = await api(`/restaurants/${restoId}/menu-validation-link`, { method: 'POST', token });
+  navigate(`/carte/valider/${l.token}`);
+}
+
 /* LES ÉTAPES « AVANT D'ÊTRE EN LIGNE » (voir l'en-tête de MiseEnLigne.jsx pour l'ordre et les règles). Calcul seul, sans
  * rendu : la rangée « Prochaine étape » des pages du tableau de bord et la route de Mon commerce (EditPage) le partagent.
  * Chaque étape : { cle, icone, titre, sous?, fait?, attente?, action?: { libelle, to | onClick, disabled } }. */
@@ -43,16 +58,7 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
   async function validerCarte() {
     setOccupe(true);
     try {
-      if (restaurant.menuSigned) {
-        // Carte signée avant le correctif du 15/10 mais jamais confirmée : la confirmation seule suffit.
-        await api(`/restaurants/${restoId}/menu/confirm`, { method: 'POST', token, body: {} });
-        await onChange?.();
-        toast(t('menuPage.handoverConfirmed'), 'succes');
-      } else {
-        // La page « C'est bon », la même que celle envoyée par SMS : une seule page de validation, quel que soit le chemin.
-        const l = await api(`/restaurants/${restoId}/menu-validation-link`, { method: 'POST', token });
-        navigate(`/carte/valider/${l.token}`);
-      }
+      await ouvrirValidationCarte({ restaurant, restoId, token, navigate, onChange, toast, t });
     } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
 
