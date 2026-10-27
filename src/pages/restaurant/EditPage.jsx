@@ -25,6 +25,8 @@ import { imgProps, cacherImageCassee } from '../../images';
 import Icone from '../../components/Icone';
 import { BandeauSoir, TuilesCommerce } from '../../components/commerce/CeSoir';
 import { euros } from '../../prixPlat';
+import { useSiteLarge } from '../../hooks/useSiteLarge';
+import Account from '../Account';
 
 // « Mon commerce » : une rangée par sujet, qui dit l'état actuel, et un sous-écran pour le changer.
 //
@@ -66,6 +68,10 @@ export default function EditPage() {
   const { token } = useAuth();
   const [ouvert, setOuvert] = useState(null);
   const etapes = useMiseEnLigne({ restaurant, restoId, token, onConnect, connecting, onChange: () => loadDashboard(restoId), lectureSeule });
+  // Sur téléphone (app et site), Commerce et Compte ne font qu'un onglet (fondateur, 2026-10-27, version A de
+  // maquettes/compte-commerce) : Mon compte est monté ici, ses rangées autour de celles de la fiche. L'ordinateur garde ses deux
+  // colonnes et sa page Mon compte.
+  const unSeulOnglet = !useSiteLarge(900);
 
   if (!restaurant) return null;
   const r = restaurant;
@@ -189,7 +195,14 @@ export default function EditPage() {
         ) : <BandeauSoir restaurant={r} orders={orders} />}
       </BandeauCommerce>
       <FeuilleCommerce>
-      {SITE ? (
+      {unSeulOnglet ? (
+        <>
+          {etapes && <EtapesMiseEnLigne etat={etapes} />}
+          {/* « Gérer mon compte » d'abord, puis les tuiles et la fiche, puis l'argent, le contrat et les outils, le solde, l'aide
+              (Account.jsx, `integre`). Pas en « agir pour » : l'équipe n'a rien à faire dans le compte de la personne. */}
+          {lectureSeule ? <>{tuiles}{rangees}</> : <Account integre milieu={<>{tuiles}{rangees}</>} />}
+        </>
+      ) : SITE ? (
         <div className="sp-cadre"><div className="sp-ensemble">
           <div className="sp-ensemble-etapes">{etapes && <EtapesMiseEnLigne etat={etapes} boutonDansCarte />}{tuiles}</div>
           {apercu}

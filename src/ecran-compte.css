@@ -148,3 +148,10 @@ html.appli .compte-feuille .account-link-row:active { background: var(--cream-di
   .compte-raccourci, .compte-feuille .account-link-row { transition: none; }
   .compte-raccourci:active, html.appli .compte-feuille .account-link-row:active { transform: none; }
 }
+
+/* Mon compte monté dans l'onglet Commerce (Account `integre`, EditPage.jsx, 2026-10-27) : pas de second bandeau ni de seconde
+   feuille, les rangées suivent celles de la fiche dans la feuille du commerce. */
+.compte-ecran--integre { max-width: none; }
+.compte-ecran--integre .compte-feuille { margin: 0; padding: 0; border-radius: 0; background: none; }
+html.appli .compte-ecran--integre .compte-feuille { padding-bottom: 0; }
+.compte-ecran--integre .compte-feuille .ec-feuille-titre { margin: 20px 0 8px; }

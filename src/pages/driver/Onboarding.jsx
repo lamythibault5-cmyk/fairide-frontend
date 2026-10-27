@@ -134,7 +134,7 @@ export default function Onboarding() {
   const c = d.courier;
   // Le dossier vient de partir (le serveur l'envoie seul, et le valide si tout est vert) : la fin de l'inscription express.
   if (finExpress && ['pending_review', 'approved'].includes(c.lifecycleStatus)) {
-    return <FinExpress d={d} t={t} onCourses={() => { setFinExpress(false); navigate('/driver'); }} onDossier={() => setFinExpress(false)} />;
+    return <FinExpress d={d} t={t} onCourses={() => { setFinExpress(false); navigate('/driver', { replace: true }); }} onDossier={() => setFinExpress(false)} />;
   }
   if (c.lifecycleStatus === 'draft' || c.lifecycleStatus === 'rejected') {
     return <DossierAppli d={d} charger={charger} token={token} user={user} busy={busy} action={action} refreshUser={refreshUser} etapeDemandee={etape} />;

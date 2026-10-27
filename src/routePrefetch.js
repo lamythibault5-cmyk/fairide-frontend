@@ -14,10 +14,12 @@ const CHARGEURS = {
   '/account': () => import('./pages/Account'),
   '/dashboard': () => Promise.all([import('./pages/restaurant/DashboardLayout'), import('./pages/restaurant/EditPage')]),
   '/dashboard/menu': () => import('./pages/restaurant/MenuPage'),
-  '/dashboard/orders': () => import('./pages/restaurant/OrdersPage'),
+  // L'accueil du commerce (2026-10-27) : le cadre du tableau de bord vient avec, comme pour /dashboard.
+  '/dashboard/orders': () => Promise.all([import('./pages/restaurant/DashboardLayout'), import('./pages/restaurant/OrdersPage')]),
   '/dashboard/preview': () => import('./pages/restaurant/PreviewPage'),
   '/dashboard/promotions': () => import('./pages/restaurant/PromotionsPage'),
   '/dashboard/stats': () => import('./pages/restaurant/StatsPage'),
+  '/dashboard/engagements': () => import('./pages/restaurant/EngagementsPage'),
   '/dashboard/invoices': () => import('./pages/restaurant/InvoicesPage'),
   '/dashboard/guide': () => import('./pages/restaurant/GuidePage'),
   '/driver': () => import('./pages/driver/Dashboard'),
@@ -72,7 +74,7 @@ export function prechargerPage(pathname) {
 export function espaceApresConnexion(user) {
   if (!user) return '/';
   if (user.isAdmin) return '/admin';
-  if (user.role === 'restaurant') return '/dashboard';
+  if (user.role === 'restaurant') return '/dashboard/orders';
   if (user.role === 'driver') return '/driver';
   return '/restaurants';
 }

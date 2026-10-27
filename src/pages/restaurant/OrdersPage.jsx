@@ -34,7 +34,8 @@ import { RouteVelo } from '../../components/TeteListe';
 import { vibrer } from '../../gestes';
 import { experienceApp, estNatif } from '../../natif';
 import { raisonFermeture } from '../../components/commerce/raisonFermeture';
-import MiseEnLigne from '../../components/commerce/MiseEnLigne';
+import MiseEnLigne, { RouteMiseEnLigne, EtapesMiseEnLigne } from '../../components/commerce/MiseEnLigne';
+import useMiseEnLigne from '../../components/commerce/useMiseEnLigne';
 import AlerteBandeau from '../../components/commerce/AlerteBandeau';
 import { useModeEquipe } from '../../modeEquipe';
 import AnneauDelai from '../../components/commerce/AnneauDelai';
@@ -99,6 +100,12 @@ export default function OrdersPage() {
   const { orders, restaurant, restoId, loadDashboard, communs, alerte, onConnect, connecting, lectureSeule, ordersLoaded, etatCommandes, statsService, modifierRestaurant, modifierCommandes } = useOutletContext();
   // Membre de l'équipe (modeEquipe.js) : la mise en ligne du commerce et le terminal sont l'affaire du propriétaire.
   const membreEquipe = useModeEquipe();
+  /* AVANT LA MISE EN LIGNE, L'ACCUEIL EST LE GUIDE (fondateur, 2026-10-27 : « quand ils arrivent, un guide clair, ils n'ont
+     qu'à le suivre pour prendre des commandes en étant en règle »). Commandes est devenu l'accueil du commerce ; tant qu'il
+     n'est pas visible des clients, il n'y a aucune commande à montrer, et « Rien en cours · Activer le son » ne disait pas
+     quoi faire. Le téléphone (app et site) montre donc les étapes de Mon commerce (EditPage) : la route sur le bandeau, la
+     prochaine étape et SON bouton lime, le reste dessous. Une fois en ligne, l'écran du service revient. */
+  const etapes = useMiseEnLigne({ restaurant, restoId, token, onConnect, connecting, onChange: () => loadDashboard(restoId), lectureSeule });
 
   /* ÉCRAN ALLUMÉ PENDANT LE SERVICE (audit UX du 15/10/2026). Une tablette de comptoir qui se met en veille ne sonne plus
      et ne voit plus les commandes : après 15 minutes elles sont annulées (acceptation.js), et le commerce mis en pause.
@@ -932,6 +939,21 @@ export default function OrdersPage() {
      l'état du terminal. Dans la feuille : « À traiter » d'abord (la plus pressée en tête), puis les blocs communs (prochaine
      étape…), « En préparation », « Prêtes ». Tant qu'une commande attend, « Accepter #058 » et « Refuser » flottent dans une
      barre au-dessus des onglets (portail dans <body> : la feuille et .page-fade s'animent avec transform, qui casse fixed). */
+  if (etapes && restaurant && !restaurant.publicListed && !membreEquipe && enCours.length === 0) return (
+    <div className="no-print">
+      <BandeauCommerce route={false}>
+        <div className="ec-b-haut"><span><b>{restaurant.name}</b></span><span className="ec-chip">{t('ecranCommerce.pasEnLigne')}</span></div>
+        <h1 className="ec-b-titre">{t('miseEnLigne.title')}</h1>
+        <p className="ec-b-sous">{t('miseEnLigne.progress', { n: etapes.faites, total: etapes.etapes.length })}</p>
+        <RouteMiseEnLigne etapes={etapes.etapes} />
+      </BandeauCommerce>
+      <FeuilleCommerce>
+        {communs}
+        <EtapesMiseEnLigne etat={etapes} />
+      </FeuilleCommerce>
+      {fenetres}
+    </div>
+  );
   const sections = COLONNES.map((c) => ({ ...c, liste: c.cle === 'nouv' ? nouvellesTriees : enCours.filter((o) => c.etapes.includes(orderStageKey(o))) }));
   const titresSections = { nouv: 'serviceCommerce.aTraiter', prep: 'serviceCommerce.enPreparation', pret: 'serviceCommerce.pretes' };
   const enTete = (c) => <p className="ec-section ec-section--service" key={`t-${c.cle}`}>{t(titresSections[c.cle])} <span className="ec-section-n">{c.liste.length}</span></p>;

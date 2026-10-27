@@ -233,14 +233,15 @@ export function suspendreRetourIos() {
 
 // Les routes d'entrée : un Retour Android depuis l'une d'elles réduit l'application (comme l'accueil du
 // téléphone) au lieu de remonter un historique qui n'existe plus.
-// /dashboard/orders : la page de service d'un membre d'équipe, qui n'a qu'elle et son compte (DashboardSidebar.jsx ; audit du
-// 19/10, CROSS-06). /account n'en est pas une : on y arrive aussi depuis le paiement, où Retour doit y ramener.
-const RACINES = new Set(['/', '/bienvenue', '/restaurants', '/dashboard', '/driver', '/admin', '/orders', '/login', '/dashboard/orders']);
+// /dashboard/orders : l'accueil du commerce (2026-10-27) et la page de service d'un membre d'équipe, qui n'a qu'elle et son
+// compte (DashboardSidebar.jsx ; audit du 19/10, CROSS-06). /account n'en est pas une : on y arrive aussi depuis le paiement, où Retour doit y ramener.
+const RACINES = new Set(['/', '/bienvenue', '/restaurants', '/driver', '/admin', '/orders', '/login', '/dashboard/orders']);
 // Les autres onglets de la barre du bas : le Retour y ramène à l'onglet d'accueil du rôle, puis réduit l'application. Avant,
 // il remontait tous les onglets visités un par un (audit du 19/10, CROSS-20).
 const ONGLETS = {
   '/map': '/restaurants', '/recherche': '/restaurants',
-  '/dashboard/menu': '/dashboard',
+  // Commandes est l'accueil du commerce depuis le 2026-10-27 (DashboardSidebar.jsx) : Mon commerce et Ma carte y ramènent.
+  '/dashboard': '/dashboard/orders', '/dashboard/menu': '/dashboard/orders',
   '/driver/map': '/driver', '/driver/earnings': '/driver', '/driver/onboarding': '/driver'
 };
 function cheminSansLangue(pathname) {

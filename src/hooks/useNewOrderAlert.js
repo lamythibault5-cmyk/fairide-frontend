@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import { raisonFermeture } from '../components/commerce/raisonFermeture';
+import { estNatif } from '../natif';
 
 // Alerte du restaurateur à l'arrivée d'une commande.
 //
@@ -275,10 +276,23 @@ export default function useNewOrderAlert(orders, ready) {
     ctx.addEventListener?.('statechange', suivre);
     const events = ['pointerdown', 'keydown', 'touchstart'];
     events.forEach((e) => window.addEventListener(e, unlock, { passive: true }));
+    /* LE SON ALLUMÉ DÈS L'OUVERTURE, DANS L'APP (fondateur, 2026-10-27 : « le son des commandes devrait être mis sur on par
+     * défaut »). Il l'était déjà, mais le contexte audio restait « suspendu » jusqu'au premier toucher : l'écran affichait
+     * « son bloqué · Activer le son », et une commande arrivée avant ce toucher ne sonnait pas. Les deux coques de l'app
+     * permettent de jouer sans geste (Capacitor : mediaTypesRequiringUserActionForPlayback = [] sur iOS,
+     * setMediaPlaybackRequiresUserGesture(false) sur Android) : on reprend donc tout de suite, et à chaque retour au premier
+     * plan (iOS suspend le son d'une app en arrière-plan). Sur le site, le navigateur l'interdit : le premier toucher reste
+     * nécessaire, et la barre le dit. */
+    const reprendreNatif = () => { if (!document.hidden) unlock(); };
+    if (estNatif()) {
+      unlock();
+      document.addEventListener('visibilitychange', reprendreNatif);
+    }
 
     return () => {
       ctx.removeEventListener?.('statechange', suivre);
       events.forEach((e) => window.removeEventListener(e, unlock));
+      document.removeEventListener('visibilitychange', reprendreNatif);
       // Fermeture explicite : sans elle, chaque remontage du tableau de bord laissait un contexte
       // audio derrière lui, et Chrome refuse d'en ouvrir plus d'environ six par page.
       ctxRef.current = null;

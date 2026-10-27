@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { allerAuPaiement } from '../natif';
+import { ouvrirStripe } from '../ouvrirStripe';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { paiementsOuverts, dateOuverturePaiements } from '../launch';
 import { euros } from '../prixPlat';
@@ -34,7 +34,7 @@ export default function PaiementLivreur({ user, deliveries }) {
   const [ouverture, setOuverture] = useState(false);
   async function activer() {
     setOuverture(true);
-    try { const r = await api('/auth/me/connect/onboard', { method: 'POST', token }); await allerAuPaiement(r.url, { retour: '/account' }); }
+    try { await ouvrirStripe(() => api('/auth/me/connect/onboard', { method: 'POST', token }), { retour: '/account' }); }
     catch (e) { toast(e.message, 'erreur'); }
     finally { setOuverture(false); }
   }

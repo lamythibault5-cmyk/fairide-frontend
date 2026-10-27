@@ -20,7 +20,8 @@ export default function Home() {
   }
   // Pas de console dans l'application (Owen, 2026-10-20) : un compte admin y est traité selon son rôle, comme les autres.
   if (user.isAdmin && !experienceApp()) return <Navigate to="/admin" replace />;
-  if (role === 'restaurant') return <Navigate to="/dashboard" replace />;
+  // Commandes est l'accueil du commerce (fondateur, 2026-10-27 ; DashboardSidebar.jsx).
+  if (role === 'restaurant') return <Navigate to="/dashboard/orders" replace />;
   if (role === 'driver') return <Navigate to="/driver" replace />;
   // Un client atterrit directement sur la liste des restaurants. Il passait auparavant par /home,
   // qui n'affichait qu'un titre de bienvenue et un bouton « Parcourir les restaurants » — donc une

@@ -1,7 +1,8 @@
 import GarantieAbonnement from '../components/GarantieAbonnement';
 import { achatsCommerceAutorises, allerAuPaiement, experienceApp, lienPublic } from '../natif';
 import { useEffect, useRef, useState, useId } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useSiteLarge } from '../hooks/useSiteLarge';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -23,7 +24,7 @@ import MesDonnees from '../components/MesDonnees';
 import CartesEnregistrees from '../components/client/CartesEnregistrees';
 import EquipeCommerce from '../components/commerce/EquipeCommerce';
 import QuitterEquipe from '../components/commerce/QuitterEquipe';
-import { definirModeEquipe } from '../modeEquipe';
+import { definirModeEquipe, useModeEquipe } from '../modeEquipe';
 import '../ecran-equipe-groupe.css';
 import NouvellesFairide from '../components/NouvellesFairide';
 import LigneNotifications from '../components/client/LigneNotifications';
@@ -91,11 +92,17 @@ const ABONNEMENT_RESUME = {
 // Moyens de paiement au retrait, dans l'ordre du serveur (reseauxCommerce.js, PAIEMENTS_SUR_PLACE) et leur libellé.
 const MOYENS_SUR_PLACE = [['especes', 'payEspeces'], ['bancontact', 'payBancontact'], ['carte', 'payCarte'], ['payconiq', 'payPayconiq'], ['titres_repas', 'payTitresRepas']];
 
-export default function Account() {
+/* `integre` (2026-10-27, version A de maquettes/compte-commerce) : sur téléphone, un commerce n'a plus d'onglet Compte ; Mon
+   compte est monté DANS l'onglet Commerce (EditPage.jsx), sans son bandeau ni ses raccourcis, avec les rangées de la fiche
+   (`milieu`) glissées juste après « Gérer mon compte ». */
+export default function Account({ integre = false, milieu = null }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
   const { user, role, roles, token, updateProfile, refreshUser, requestContactChange, confirmContactChange, requestDeletionCode, deleteAccount, logout } = useAuth();
+  const location = useLocation();
+  const etroit = !useSiteLarge(900);
+  const membreEquipeConnu = useModeEquipe();
   const toast = useToast();
 
   // Partage natif là où il existe (téléphones, Safari), presse-papiers ailleurs. Le refus de la
@@ -955,13 +962,24 @@ export default function Account() {
     </>
   );
 
+  /* UN SEUL ONGLET « COMMERCE » (fondateur, 2026-10-27, version A de maquettes/compte-commerce) : sur téléphone (app et
+     site), le propriétaire d'un commerce trouve Mon compte dans l'onglet Commerce. /account et ses liens (?ouvrir=paiement,
+     ?ouvrir=gerer…) y mènent, paramètres compris : la même page, montée là-bas, déplie la rangée demandée. Un membre de
+     l'équipe garde son Compte (il n'a pas d'onglet Commerce) ; l'ordinateur garde sa page Mon compte et ses rubriques. */
+  if (!integre && etroit && role === 'restaurant' && !membreEquipe && !membreEquipeConnu) {
+    return <Navigate to={`/dashboard${location.search}`} replace />;
+  }
+  // Monté dans Commerce : ce qui est à toi (Gérer mon compte), puis la fiche du commerce, puis l'argent, le contrat et les
+  // outils, le solde, l'aide. Plus de raccourcis : Commandes est un onglet, Factures une tuile, et l'Aperçu client une rangée.
+  const enTete = integre ? null : <EnteteCompte nom={nomComplet} email={user.email} initiales={initiales} raccourcis={raccourcis} />;
+
   return (
-    <div className="compte-ecran">
+    <div className={`compte-ecran${integre ? ' compte-ecran--integre' : ''}`}>
       {/* LE BANDEAU IRIS (2026-10-16) : initiales, nom, e-mail et les trois raccourcis du rôle (EnteteCompte.jsx). « Mon
           compte » n'y figure pas : l'onglet allumé en bas le dit déjà ; le nom, lui, dit sous quel compte on est. Trois
           raccourcis vers ce qu'on vient chercher le plus souvent ; ils dépendent du rôle — un livreur n'a pas de
           favoris, un restaurateur n'a pas de commandes à lui. */}
-      <EnteteCompte nom={nomComplet} email={user.email} initiales={initiales} raccourcis={raccourcis} />
+      {enTete}
 
       {/* LA FEUILLE BLANCHE : toutes les rangées, dans le même ordre qu'avant, sous un titre de section par groupe. */}
       <div className="compte-feuille">
@@ -1003,6 +1021,8 @@ export default function Account() {
         </SousEcran>
       )}
       </RubriqueCompte>
+
+      {milieu}
 
       {client && blocSolde}
 
@@ -1048,9 +1068,11 @@ export default function Account() {
         </div>
       )}
       {role === 'restaurant' && !restaurant && erreurCommerce && <ErrorCard titre={t('accountUi.myBusiness')} message={erreurCommerce} onRetry={rechargerRestaurant} />}
-      {role === 'restaurant' && restaurant && !membreEquipe && <h2 className="compte-feuille-titre">{t('accountUi.myBusiness')}</h2>}
+      {role === 'restaurant' && restaurant && !membreEquipe && <h2 className="compte-feuille-titre">{integre ? t('accountUi.moneyAndTools') : t('accountUi.myBusiness')}</h2>}
       {role === 'restaurant' && restaurant && !membreEquipe && (
-        <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>
+        <div className="card account-groupe" aria-label={integre ? t('accountUi.moneyAndTools') : t('accountUi.myBusiness')}>
+          {/* L'Aperçu client était un raccourci du bandeau de Mon compte : dans Commerce, une rangée. */}
+          {integre && <LigneCompte to="/dashboard/preview" icone="apercu" titre={t('nav.customerPreview')} />}
           {/* Plus de rangée « Carte » (2026-09-23) : la page promettait de suivre les livreurs en direct,
               mais leur position n'est jamais envoyée au commerce (voir App.jsx, route dashboard/map). */}
           {/* Le terminal Fairide : statut tenu par l'équipe (admin), caution, dates. Version gratuite : rien à faire. */}
@@ -1063,9 +1085,11 @@ export default function Account() {
           {/* Entraînement (2026-10-08) : commandes d'essai pendant 7 jours après la première connexion du terminal. */}
           <LigneCompte to="/dashboard/simulation" icone="etoile" titre={t('accountUi.simulationRow')} sous={t('accountUi.simulationSub')} />
           <div id="section-contrat" />
-          {/* Contrat accepté : la rangée ouvre directement le PDF complet (fondateur, 2026-10-08) ; à accepter : le panneau d'acceptation. */}
+          {/* Contrat accepté : la rangée ouvre directement le PDF complet (fondateur, 2026-10-08) ; à accepter : l'écran « Tes
+              engagements » (2026-10-27), où il se signe avec les deux autres textes, au lieu d'un panneau en bas d'une feuille. */}
           <LigneCompte icone="contrat" titre={t('restoContract.rowTitle')} sous={restaurant.onboarding?.contractAccepted ? t('restoContract.rowSubPdf') : t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')}
-            onClick={() => (restaurant.onboarding?.contractAccepted ? ouvrirPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, t('restoContract.pdfFailed')) : basculer('contrat'))}>
+            to={restaurant.onboarding?.contractAccepted ? undefined : '/dashboard/engagements'}
+            onClick={restaurant.onboarding?.contractAccepted ? () => ouvrirPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, t('restoContract.pdfFailed')) : undefined}>
             {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}
           </LigneCompte>
           <LigneCompte icone="contrat" titre={t('restoContract.rowSaveTitle')} sous={t('restoContract.rowSaveSub')} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))} />
@@ -1139,7 +1163,7 @@ export default function Account() {
               <div className="paiement-encart" style={{ marginBottom: 12 }}>
                 <b>{t('accountUi.subContractTitle')}</b>
                 <p className="small" style={{ margin: '4px 0 8px' }}>{t('accountUi.subContractText')}</p>
-                <button type="button" className="btn-gold" onClick={() => { setOuvertes((prev) => new Set(prev).add('contrat')); setTimeout(() => document.getElementById('section-contrat')?.scrollIntoView({ behavior: defilement(), block: 'start' }), 120); }}>{t('accountUi.subContractBtn')}</button>
+                <Link to="/dashboard/engagements" className="btn-gold" style={{ display: 'inline-block' }}>{t('accountUi.subContractBtn')}</Link>
               </div>
             )}
             {/* Fiche pas encore validée : le bouton d'abonnement ci-dessous exige adminStatus === 'approved', et

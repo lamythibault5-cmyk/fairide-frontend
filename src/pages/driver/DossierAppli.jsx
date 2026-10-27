@@ -3,7 +3,7 @@ import { api, apiUpload, API_BASE } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
 import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
-import { allerAuPaiement } from '../../natif';
+import { ouvrirStripe } from '../../ouvrirStripe';
 import { libelleManque } from '../../conformite';
 import ouvrirDocument from '../../ouvrirDocument';
 import Icone from '../../components/Icone';
@@ -553,8 +553,9 @@ export function EcranIdentite({ d, t, token, busy, action, onSuivant }) {
   async function stripe() {
     await action(async () => {
       try {
-        const r = await api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'stripe_identity' } });
-        if (r.url) { await allerAuPaiement(r.url, { retour: '/driver/onboarding' }); return null; }
+        // Même écran d'attente que Connect (ouvrirStripe.js) : la session Identity prend elle aussi quelques secondes.
+        const r = await ouvrirStripe(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'stripe_identity' } }), { retour: '/driver/onboarding' });
+        if (r?.url) return null;
       } catch (e) {
         // Consentement retiré ou nouvelle version du texte entre-temps : la case réapparaît, avec le texte reçu.
         if (e.code === 'CONSENTEMENT_BIOMETRIQUE_REQUIS') { if (e.data?.consent) setConsentement(e.data.consent); setAccord(false); return null; }
@@ -783,7 +784,7 @@ export function EcranPaiement({ t, token, busy, actif, onSuivant }) {
   const [erreur, setErreur] = useState('');
   async function connecter() {
     setOuverture(true); setErreur('');
-    try { const r = await api('/auth/me/connect/onboard', { method: 'POST', token, body: { retour: 'onboarding' } }); await allerAuPaiement(r.url, { retour: '/driver/onboarding' }); }
+    try { await ouvrirStripe(() => api('/auth/me/connect/onboard', { method: 'POST', token, body: { retour: 'onboarding' } }), { retour: '/driver/onboarding' }); }
     catch (e) { setErreur(e.message); } finally { setOuverture(false); }
   }
   if (actif) return (<><Fait icone="valider" titre={t('courierOnboarding.paymentActive')} /><div className="bv-grandit" /><button type="button" className="bv-btn btn-teal" onClick={onSuivant}>{t('appli.continuer')}</button></>);

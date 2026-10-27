@@ -9,6 +9,7 @@ import Icone, { IconePleine } from './Icone';
 import useInbox from '../hooks/useInbox';
 import { useCurseurOnglets } from '../hooks/useCurseurOnglets';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
+import { useSiteLarge } from '../hooks/useSiteLarge';
 import { experienceApp } from '../natif';
 import { defilement } from '../gestes';
 import { useModeEquipe } from '../modeEquipe';
@@ -26,7 +27,7 @@ const AdminNav = lazyPage(() => import('./admin/AdminNavLaterale'));
 
 // Items de nav par rôle : mêmes cibles que l'ancien .role-nav de Layout.jsx, juste redisposées
 // verticalement avec une icône — pas de nouvelle page/route inventée ici.
-function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
+function navItemsForRole(role, t, user, membreEquipe = false, pathname = '', etroit = false) {
   // Membre de l'équipe d'un commerce (modeEquipe.js) : le service seulement, ses commandes et son compte.
   if (role === 'restaurant' && membreEquipe) {
     return [
@@ -52,14 +53,21 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
   if (role === 'restaurant') {
     return [
       // Mon commerce = les infos du restaurant lui-même (création, puis modification) ; Ma carte = ce qu'il vend.
-      { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness'), court: t('nav.court.myBusiness') },
-      { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu'), court: t('nav.court.myMenu') },
+      // COMMANDES D'ABORD, MON COMMERCE EN TROISIÈME (fondateur, 2026-10-27, test du commerce de test) : c'est l'écran du
+      // service, celui qu'on ouvre dix fois par jour, et l'accueil du commerce (espaceApresConnexion, routePrefetch.js). Avant
+      // la mise en ligne, il montre la liste des étapes (OrdersPage, EtapesMiseEnLigne).
       { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders'), court: t('nav.court.orders') },
+      { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu'), court: t('nav.court.myMenu') },
+      { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness'), court: t('nav.court.myBusiness') },
+      // UN SEUL ONGLET « COMMERCE » SUR TÉLÉPHONE (fondateur, 2026-10-27, version A de maquettes/compte-commerce) : Mon compte
+      // est monté dans Commerce (EditPage.jsx, Account `integre`) — Factures y était deux fois, « Mes commandes » répétait
+      // l'onglet, et paiements et contrat étaient dans Compte quand la fiche était dans Commerce. L'ordinateur garde Mon compte.
+      ...(etroit ? [] : [
       // Promotions, Factures et Mode d'emploi sont partis dans Mon compte : ce sont des rubriques
       // qu'on ouvre de temps en temps, pas au service. « Aperçu client » et « Carte » les y ont
       // rejoints, pour la même raison et une de plus : à sept onglets, la barre du bas d'un
       // téléphone donnait des cibles de 38px, sous le minimum de 44px. Cinq, pas plus.
-      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
+      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }])
     ];
   }
   if (role === 'driver') {
@@ -70,12 +78,14 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
     // (lignes de type `tip`), la page dédiée ne faisait qu'en extraire un sous-total. Et « Mon dossier
     // livreur » n'est un onglet que tant que le compte n'est pas validé : c'est l'inscription, qu'on
     // termine une fois ; ensuite il se rouvre depuis Mon compte.
+    // PLUS D'ONGLET « CARTE » (fondateur, 2026-10-27 : « pour les livreurs, la carte est-elle vraiment nécessaire ? je ne
+    // pense pas ») : une course s'ouvre dans Courses, et l'itinéraire part vers Maps ou Waze. La page /driver/map reste à son
+    // adresse (liens déjà envoyés), sans onglet.
     return [
       { to: '/driver', end: true, icon: 'commandes', label: t('nav.rides') },
       // Validé et dossier rouvert depuis Mon compte : l'onglet revient le temps d'y être, allumé (deuxième audit design,
       // 2026-10-19 : la page « C'est bon, tu peux rouler » n'avait aucun onglet actif).
       ...(user?.adminStatus === 'approved' && !pathname.startsWith('/driver/onboarding') ? [] : [{ to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile'), court: t('nav.court.courierFile') }]),
-      { to: '/driver/map', icon: 'carte', label: t('nav.map') },
       { to: '/driver/earnings', icon: 'euro', label: t('nav.earnings') },
       { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
     ];
@@ -84,19 +94,19 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
 }
 
 /* LES ONGLETS DE L'APP (fondateur, 2026-10-23, version A de maquettes/transitions-appli) : comme sur iPhone, un onglet
- * s'affiche tout de suite et retrouve l'endroit où on l'avait laissé ; toucher l'onglet où l'on est remonte en haut.
+ * s'affiche tout de suite ; toucher l'onglet où l'on est remonte en haut.
  *   - `replace` : changer d'onglet n'ajoute pas d'écran à l'historique (le glisser-retour ne ramène plus à l'onglet d'avant,
  *     et la navigation n'est pas animée, transitionPhoto.js n'emballe que les « avancer ») ;
- *   - `restaurerDefilement` : ScrollRestorer.jsx remet la position gardée pour cette adresse au lieu de remonter en haut ;
  *   - sur l'onglet affiché lui-même (adresse exacte, pas une fiche ouverte depuis lui) : remonter en douceur, et l'écran
  *     repart de son état de départ (« fairide:onglet-retouche » : la liste efface ses filtres, 2026-10-26).
- * Recherche et Mes commandes s'ouvrent EN HAUT quand on y revient d'un autre onglet (fondateur, 2026-10-24) : on y revient pour
- * une nouvelle recherche, ou pour la commande la plus récente, qui est en haut. Les autres onglets gardent leur place. */
-const ONGLETS_EN_HAUT = new Set(['/recherche', '/orders']);
+ * TOUT ONGLET S'OUVRE EN HAUT (fondateur, 2026-10-27, test du commerce : « en cliquant sur Restaurant j'arrive au milieu de
+ * l'écran ; quand je clique sur quelque chose, je dois arriver en haut ou sur quelque chose de clair, ça vaut pour tous les
+ * écrans »). Avant, seuls Recherche et Mes commandes (2026-10-24) repartaient du haut ; les autres retrouvaient leur place, et
+ * on arrivait au milieu d'un texte sans savoir où l'on était. Le retour arrière (‹, geste) garde, lui, la place quittée
+ * (ScrollRestorer.jsx, POP). */
 function ongletAppli(vers, ici) {
   return {
     replace: true,
-    state: ONGLETS_EN_HAUT.has(vers) ? undefined : { restaurerDefilement: true },
     onClick: (e) => {
       if (ici !== vers) return;
       e.preventDefault();
@@ -161,7 +171,8 @@ export default function DashboardSidebar() {
   // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
   // correspondantes, toujours réservées aux vrais clients côté API.
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
-  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe, pathname);
+  const etroit = !useSiteLarge(900);
+  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe, pathname, etroit);
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
 
   function leavePreview() {
@@ -198,7 +209,8 @@ export default function DashboardSidebar() {
             <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} />{NATIF && <IconePleine nom={item.icon} taille={22} className="dashboard-nav-plein" />}</span>
             {/* Deux libellés : le complet pour la colonne latérale, le court pour la barre du bas (styles.css choisit). */}
             <span className="dashboard-nav-label"><span className="libelle-long">{item.label}</span>{item.court && <span className="libelle-court">{item.court}</span>}</span>
-            {item.to === '/account' && nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
+            {/* Les messages de Fairride : sur Compte, ou sur Commerce quand Mon compte y est monté (téléphone, 2026-10-27). */}
+            {(item.to === '/account' || (item.to === '/dashboard' && etroit)) && nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
           </NavLink>
         ))}
       </nav>

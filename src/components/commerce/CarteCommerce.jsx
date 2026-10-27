@@ -1,11 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { categoryEmoji, categoryLabel, groupBySubsection, resolveItemImage } from '../../menuCategories';
 import { imgProps } from '../../images';
 import { euros } from '../../prixPlat';
-import { defilement, vibrer } from '../../gestes';
+import { vibrer } from '../../gestes';
+import { experienceApp } from '../../natif';
+import CategoryQuickNav from '../CategoryQuickNav';
+import '../../ecran-fiche.css';
 import MenuConciergeRequest from '../MenuConciergeRequest';
 import ConformiteCarte from '../conformite/ConformiteCarte';
 import MentionsAlimentaires from './MentionsAlimentaires';
@@ -39,30 +42,6 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
     .filter((s) => s.items.length > 0);
   const enLigne = menu.filter((i) => !i.withdrawn && i.available !== false && !i.outOfStockToday).length;
 
-  // La section à l'écran allume sa pastille ; toucher une pastille y descend.
-  const [active, setActive] = useState(0);
-  const titres = useRef([]);
-  const bande = useRef(null);
-  useEffect(() => {
-    const els = titres.current.filter(Boolean);
-    if (!els.length || !('IntersectionObserver' in window)) return undefined;
-    const io = new IntersectionObserver((entrees) => {
-      const visibles = entrees.filter((e) => e.isIntersecting).map((e) => Number(e.target.dataset.rang));
-      if (visibles.length) setActive(Math.min(...visibles));
-    }, { rootMargin: '-90px 0px -55% 0px' });
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, [sections.length]);
-  useEffect(() => {
-    // Seulement la bande, de côté : scrollIntoView ferait aussi défiler la page jusqu'à elle.
-    const b = bande.current;
-    const on = b?.querySelector('.ec-puce.on');
-    if (b && on) b.scrollTo({ left: on.offsetLeft - (b.clientWidth - on.offsetWidth) / 2, behavior: defilement() });
-  }, [active]);
-  const allerA = (k) => {
-    setActive(k);
-    titres.current[k]?.scrollIntoView({ behavior: defilement(), block: 'start' });
-  };
 
   const titreEnLigne = enLigne === 0 ? t('ecranCommerce.aucunEnLigne') : t(enLigne === 1 ? 'ecranCommerce.produitEnLigne' : 'ecranCommerce.produitsEnLigne', { n: enLigne });
   // Sur le site : largeur de lecture (site-pro.css), une liste de plats n'a rien à gagner à 1 120 px.
@@ -97,19 +76,16 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
               <Icone nom="cadenas" taille={16} />
               <span><b style={{ color: 'var(--ink)' }}>{t('menuPage.lockedTitle')}</b>{' · '}<TexteReplie as="span" texte={t('ecranCommerce.verrouAide')} titre={t('menuPage.lockedTitle')} /></span>
             </p>
-            {sections.length > 1 && (
-              <nav className="ec-sections" ref={bande} aria-label={t('ecranCommerce.sectionsCarte')}>
-                {sections.map((s, k) => (
-                  <button key={s.id} type="button" className={`ec-puce${k === active ? ' on' : ''}`} aria-pressed={k === active} onClick={() => allerA(k)}>
-                    {categoryLabel(s.name, t)}
-                  </button>
-                ))}
-              </nav>
-            )}
-            <div id="menu-liste">
-              {sections.map((s, k) => (
-                <section key={s.id} aria-labelledby={`ec-section-${s.id}`}>
-                  <h2 className="ec-section-titre" id={`ec-section-${s.id}`} data-rang={k} ref={(el) => { titres.current[k] = el; }}>
+            {/* LA BANDE DES SECTIONS DE LA VUE CLIENT (fondateur, 2026-10-27 : « la barre de menu sur la carte devrait être la même
+                que la vue client »). C'était une rangée de pastilles à part (.ec-sections, la section lue en iris plein) ; c'est
+                maintenant CategoryQuickNav, celle de la fiche du commerce : lentille de verre dans l'app, pastille iris qui glisse
+                sur le site, même suivi au défilement, même saut. Les classes .fiche-page .fiche-appli lui donnent ses styles
+                (ecran-fiche.css) ; .ec-carte-liste la colle en haut de l'écran du commerce, qui n'a pas les ronds de la fiche. */}
+            <div id="menu-liste" className="fiche-page fiche-appli ec-carte-liste">
+              <CategoryQuickNav categories={sections} verre={experienceApp()} pouce={!experienceApp()} />
+              {sections.map((s) => (
+                <section key={s.id} aria-labelledby={`menu-cat-${s.id}`}>
+                  <h2 className="ec-section-titre" id={`menu-cat-${s.id}`}>
                     {categoryLabel(s.name, t)} <span className="ec-section-compte">{s.items.length}</span>
                   </h2>
                   {groupBySubsection(s.items, s.name, t).map((g) => (

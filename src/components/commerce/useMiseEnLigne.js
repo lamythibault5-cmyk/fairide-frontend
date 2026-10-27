@@ -102,7 +102,9 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
     : { cle: 'engagements', icone: 'contrat',
         titre: renouveler ? t('miseEnLigne.contractRenew', { date: jourLong(renouveler.inForceAt) }) : t('miseEnLigne.commitments'),
         sous: renouveler ? t('miseEnLigne.contractRenewSub', { date: jourLong(renouveler.graceEndsAt) }) : t('miseEnLigne.commitmentsSub'),
-        action: { libelle: t('miseEnLigne.commitmentsBtn'), to: o.contractAccepted ? '/dashboard/menu#conformite-carte' : '/account?ouvrir=contrat&retour=/dashboard' } });
+        // Un seul écran pour les trois textes, en haut d'une page à lui (EngagementsPage.jsx, 2026-10-27) : avant, Mon compte ›
+        // contrat (feuille ouverte sur une page défilée) ou le milieu de Ma carte (#conformite-carte), dans un long texte.
+        action: { libelle: t('miseEnLigne.commitmentsBtn'), to: '/dashboard/engagements' } });
   // À emporter payé sur place seulement : rien ne transite par Fairide, pas d'étape paiements (formules.paiementsRequis).
   if (o.paymentsRequired !== false) {
     const actif = restaurant.stripeConnectStatus === 'active';
