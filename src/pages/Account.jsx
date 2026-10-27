@@ -18,6 +18,7 @@ import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher, { ListeLangues } from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
+import SousEcran from '../components/SousEcran';
 import MesDonnees from '../components/MesDonnees';
 import CartesEnregistrees from '../components/client/CartesEnregistrees';
 import EquipeCommerce from '../components/commerce/EquipeCommerce';
@@ -187,7 +188,16 @@ export default function Account() {
   const sectionDemandee = searchParams.get('ouvrir') || '';
   const { unread: nonLus } = useInbox();
   const retour = /^\/[a-z0-9/_-]*$/i.test(searchParams.get('retour') || '') ? searchParams.get('retour') : '';
-  const [ouvertes, setOuvertes] = useState(() => new Set(sectionDemandee ? [sectionDemandee] : []));
+  // Les réglages perso sont dans la feuille « Gérer mon compte » (2026-10-27). Un lien vers l'un d'eux
+  // (?ouvrir=connexion) ouvre d'abord la feuille, puis la rangée au rendu suivant : ouvertes ensemble, la sous-feuille de la
+  // rangée était posée dans la page AVANT celle de « Gérer mon compte », donc dessous (les portails s'ajoutent à la fin de
+  // <body> dans l'ordre où React les monte, l'enfant d'abord).
+  const reglageDemande = rubriqueDe(sectionDemandee) === 'profil' && sectionDemandee ? sectionDemandee : '';
+  const [ouvertes, setOuvertes] = useState(() => new Set(!sectionDemandee ? [] : reglageDemande ? ['gerer'] : [sectionDemandee]));
+  useEffect(() => {
+    if (reglageDemande) setOuvertes((prev) => new Set(prev).add(reglageDemande));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Sur ordinateur, la rubrique montrée à droite (RubriquesCompte.jsx) : celle de la rangée demandée par le lien, sinon
   // Mon profil. Sur un téléphone et dans l'app, toutes les rubriques sont visibles et cet état ne change rien.
   const [rubrique, setRubrique] = useState(() => rubriqueDe(sectionDemandee));
@@ -526,20 +536,36 @@ export default function Account() {
   // Mes casquettes (MesCasquettes.jsx) ne s'affiche pas quand elle n'a rien à dire : son titre de section non plus.
   const avecCasquettes = !(roles.length <= 1 && ['client', 'restaurant', 'driver'].every((r) => roles.includes(r)));
 
+  // L'ORDRE DE MON COMPTE (maquettes/compte/compte.html, réponses du fondateur, 2026-10-27 : version B, site pareil que
+  // l'app ; le même jour, « pour les restaurants et les livreurs aussi, sans les 5 € et ce qui est client »). Les réglages
+  // perso tiennent dans « Gérer mon compte ». Client : puis son portefeuille, l'assistance, Fairride. Commerce et livreur :
+  // puis leur commerce ou leurs courses, le solde, l'assistance. Pour tous, « Aussi sur Fairride » à la fin, et Messages en
+  // tête seulement s'il y a du nouveau ; sinon c'est une rangée d'Assistance.
+  const client = role === 'client';
+  const messagesEnTete = nonLus > 0;
+  // Sur le site large (1100 px et plus, site-compte.css), la rubrique « Gérer mon compte » montre les réglages directement ;
+  // ailleurs, une rangée les ouvre dans une feuille. Lu au rendu, comme LigneCompte le fait pour ses feuilles.
+  const siteLarge = !experienceApp() && typeof window !== 'undefined' && window.innerWidth >= 1100;
+  // Même règle que LigneCompte : une feuille dans l'app et au téléphone, un panneau déplié sur un ordinateur.
+  const enFeuille = experienceApp() || (typeof window !== 'undefined' && window.innerWidth <= 900);
+
   // Les rubriques de la colonne de gauche, sur ordinateur : les mêmes groupes que la feuille, aux mêmes conditions.
-  const rubriqueRole = role === 'client' ? { icone: 'commandes', titre: t('accountUi.ordersAndFairide') }
+  const rubriqueRole = client ? { icone: 'boussole', titre: t('accountUi.fairrideGroup') }
     : role === 'restaurant' && restaurant ? { icone: 'commerce', titre: membreEquipe ? t('team.rowTitle') : t('accountUi.myBusiness') }
       : role === 'driver' ? { icone: 'velo', titre: t('accountUi.myRides') } : null;
+  const rubriqueAssistance = { cle: 'assistance', icone: 'bouee', titre: t('accountUi.support') };
+  const rubriqueSolde = { cle: 'solde', icone: 'solde', titre: client ? t('accountUi.wallet') : t('accountUi.balanceBenefits') };
+  const rubriqueDuRole = rubriqueRole && { cle: 'role', ...rubriqueRole };
+  // Dans l'ordre de la feuille (voir plus bas : blocSolde et blocAssistance avant la rubrique du rôle pour le client, après sinon).
   const rubriques = [
-    { cle: 'messages', icone: 'courrier', titre: t('inbox.rowTitle'), compteur: nonLus },
-    { cle: 'profil', icone: 'compte', titre: t('accountUi.myProfile') },
-    { cle: 'solde', icone: 'solde', titre: t('accountUi.balanceBenefits') },
-    rubriqueRole && { cle: 'role', ...rubriqueRole },
-    avecCasquettes && { cle: 'casquettes', icone: 'personnes', titre: t('casquettes.titre') },
-    { cle: 'assistance', icone: 'bouee', titre: t('accountUi.support') }
+    messagesEnTete && { cle: 'messages', icone: 'courrier', titre: t('inbox.rowTitle'), compteur: nonLus },
+    { cle: 'profil', icone: 'reglages', titre: t('accountUi.manageAccount') },
+    ...(client ? [rubriqueSolde, rubriqueAssistance, rubriqueDuRole] : [rubriqueDuRole, rubriqueSolde, rubriqueAssistance]),
+    avecCasquettes && { cle: 'casquettes', icone: 'personnes', titre: t('accountUi.alsoOnFairride') }
   ].filter(Boolean);
   // La fiche du commerce arrive après la page : tant qu'elle manque, « Mon commerce » n'existe pas encore et on montre Mon profil.
-  const rubriqueActive = rubriques.some((r) => r.cle === rubrique) ? rubrique : 'profil';
+  // Messages demandé sans rubrique Messages (pas de non-lus) : sa rangée est dans Assistance.
+  const rubriqueActive = rubriques.some((r) => r.cle === rubrique) ? rubrique : rubrique === 'messages' ? 'assistance' : 'profil';
   function choisirRubrique(cle) {
     setRubrique(cle);
     // Messages n'a qu'une rangée : on l'ouvre tout de suite, plutôt que de montrer une rubrique d'une ligne à recliquer.
@@ -549,209 +575,201 @@ export default function Account() {
     if (haut < 0) window.scrollTo({ top: window.scrollY + haut - 16, behavior: defilement() });
   }
 
-  return (
-    <div className="compte-ecran">
-      {/* LE BANDEAU IRIS (2026-10-16) : initiales, nom, e-mail et les trois raccourcis du rôle (EnteteCompte.jsx). « Mon
-          compte » n'y figure pas : l'onglet allumé en bas le dit déjà ; le nom, lui, dit sous quel compte on est. Trois
-          raccourcis vers ce qu'on vient chercher le plus souvent ; ils dépendent du rôle — un livreur n'a pas de
-          favoris, un restaurateur n'a pas de commandes à lui. */}
-      <EnteteCompte nom={nomComplet} email={user.email} initiales={initiales} raccourcis={raccourcis} />
 
-      {/* LA FEUILLE BLANCHE : toutes les rangées, dans le même ordre qu'avant, sous un titre de section par groupe. */}
-      <div className="compte-feuille">
-      <div className="compte-reglages">
-      <NavCompte rubriques={rubriques} active={rubriqueActive} onChoisir={choisirRubrique} onDeconnexion={logout} />
-      <div className="compte-contenu" ref={contenuRef}>
-      <RubriqueCompte cle="messages" active={rubriqueActive}>
-      {/* Titre de la rubrique sur ordinateur seulement : dans la feuille du téléphone, la rangée Messages n'a pas de titre au-dessus. */}
-      <h2 className="compte-feuille-titre compte-titre-site">{t('inbox.rowTitle')}</h2>
-
-      {/* ——— Messages : en tête, juste sous l'identité — c'est par là que Fairide parle aux comptes
-          (annonces, réponses), avec le compteur de non-lus. /account?ouvrir=messages arrive dessus déplié. ——— */}
-      <div className={`card account-groupe compte-groupe-messages account-groupe-messages${nonLus > 0 ? ' a-non-lus' : ''}`} aria-label={t('inbox.rowTitle')}>
-        <div id="section-messages">
-          {/* Le sous-titre ne s'affiche QUE s'il y a des messages non lus : ça, c'est une
-              information. « Les réponses de l'équipe » sous un titre « Messages » n'en était pas
-              une, c'était le titre écrit deux fois. */}
-          <LigneCompte icone="courrier" titre={t('inbox.rowTitle')} sous={nonLus > 0 ? t('inbox.rowSubUnread', { n: nonLus }) : undefined} accent={nonLus > 0 ? 'warn' : undefined} ouverte={ouvertes.has('messages')} onClick={() => basculer('messages')}>
-            {ouvertes.has('messages') && <InboxSection />}
-          </LigneCompte>
+  // LES RÉGLAGES PERSO, RANGÉE PAR RANGÉE (maquettes/compte/compte.html, réponse B du fondateur, 2026-10-27). Le client les
+  // trouve dans la feuille « Gérer mon compte », en trois groupes, comme Uber derrière le nom ; les autres rôles gardent leur
+  // groupe « Mon profil », dans l'ordre d'avant. Écrites une fois ici, posées à l'un ou l'autre endroit plus bas.
+  const ligneInfos = (
+    <LigneCompte icone="compte" titre={t('accountUi.myInfo')} sous={adresseResume || t('accountUi.profileSub')} ouverte={ouvertes.has('infos')} onClick={() => basculer('infos')}>
+      <form onSubmit={saveInfo}>
+        <div className="row" style={{ gap: 8 }}>
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor={idsA11y + '-firstname'}>{t('auth.firstName')}</label>
+            <input id={idsA11y + '-firstname'} value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="given-name" />
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor={idsA11y + '-lastname'}>{t('auth.lastName')}</label>
+            <input id={idsA11y + '-lastname'} value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="family-name" />
+          </div>
         </div>
-      </div>
-      {/* Décisions qui me concernent et « Contester » (audit du 19/10, admin-39) : rien quand il n'y en a pas. */}
-      <MesDecisions />
-      </RubriqueCompte>
+        <div className="row" style={{ gap: 8 }}>
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor={idsA11y + '-gender'}>{t('auth.gender')}</label>
+            <select id={idsA11y + '-gender'} value={gender} onChange={(e) => setGender(e.target.value)}>
+              {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+            </select>
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor={idsA11y + '-birthdate'}>{t('account.birthDate')}</label>
+            <input id={idsA11y + '-birthdate'} type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+          </div>
+        </div>
+        <div className="row" style={{ gap: 8 }}>
+          <div className="field" style={{ flex: 2 }}>
+            <label htmlFor="champ-adresse">{t('auth.street')}</label>
+            <input id="champ-adresse" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} />
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor={idsA11y + '-number'}>{t('auth.number')}</label>
+            <input id={idsA11y + '-number'} value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} />
+          </div>
+        </div>
+        <div className="row" style={{ gap: 8 }}>
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor={idsA11y + '-postalcode'}>{t('auth.postalCode')}</label>
+            <input id={idsA11y + '-postalcode'} value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" maxLength={4} autoComplete="postal-code" />
+          </div>
+          <div className="field" style={{ flex: 2 }}>
+            <label htmlFor={idsA11y + '-city'}>{t('auth.city')}</label>
+            <input id={idsA11y + '-city'} value={addressCity} onChange={(e) => setAddressCity(e.target.value)} autoComplete="address-level2" />
+          </div>
+        </div>
+        {/* Lime : le prochain geste de la sous-page (« un seul lime par écran », maquettes/une-action ; fondateur, 2026-10-26,
+            réponse 6 de maquettes/verre-partout). */}
+        <button type="submit" className="btn-gold" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
+      </form>
 
-      {/* ——— Mon profil : tout ce qui décrit la personne et son accès. ——— */}
-      <RubriqueCompte cle="profil" active={rubriqueActive}>
-      <h2 className="compte-feuille-titre">{t('accountUi.myProfile')}</h2>
-      <div className="card account-groupe" aria-label={t('accountUi.myProfile')}>
-        <LigneCompte icone="compte" titre={t('accountUi.myInfo')} sous={adresseResume || t('accountUi.profileSub')} ouverte={ouvertes.has('infos')} onClick={() => basculer('infos')}>
-          <form onSubmit={saveInfo}>
-            <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor={idsA11y + '-firstname'}>{t('auth.firstName')}</label>
-                <input id={idsA11y + '-firstname'} value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="given-name" />
-              </div>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor={idsA11y + '-lastname'}>{t('auth.lastName')}</label>
-                <input id={idsA11y + '-lastname'} value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="family-name" />
-              </div>
-            </div>
-            <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor={idsA11y + '-gender'}>{t('auth.gender')}</label>
-                <select id={idsA11y + '-gender'} value={gender} onChange={(e) => setGender(e.target.value)}>
-                  {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
-                </select>
-              </div>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor={idsA11y + '-birthdate'}>{t('account.birthDate')}</label>
-                <input id={idsA11y + '-birthdate'} type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-              </div>
-            </div>
-            <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 2 }}>
-                <label htmlFor="champ-adresse">{t('auth.street')}</label>
-                <input id="champ-adresse" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} />
-              </div>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor={idsA11y + '-number'}>{t('auth.number')}</label>
-                <input id={idsA11y + '-number'} value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} />
-              </div>
-            </div>
-            <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor={idsA11y + '-postalcode'}>{t('auth.postalCode')}</label>
-                <input id={idsA11y + '-postalcode'} value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" maxLength={4} autoComplete="postal-code" />
-              </div>
-              <div className="field" style={{ flex: 2 }}>
-                <label htmlFor={idsA11y + '-city'}>{t('auth.city')}</label>
-                <input id={idsA11y + '-city'} value={addressCity} onChange={(e) => setAddressCity(e.target.value)} autoComplete="address-level2" />
-              </div>
-            </div>
-            {/* Lime : le prochain geste de la sous-page (« un seul lime par écran », maquettes/une-action ; fondateur, 2026-10-26,
-                réponse 6 de maquettes/verre-partout). */}
-            <button type="submit" className="btn-gold" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
-          </form>
-
-          {/* Supprimer le compte : au bout des infos personnelles, puisque c'est d'elles qu'il s'agit.
-              Séparé par un filet et discret tant qu'on ne l'a pas demandé — on ne met pas un bouton
-              rouge en pleine page pour un geste qu'on fait une fois. */}
-          <div className="account-zone-danger">
-            <b className="account-zone-danger-titre">{t('account.deleteTitle')}</b>
-            {!confirmDeleteOpen && (
-              <button type="button" className="btn-danger-ghost" onClick={() => setConfirmDeleteOpen(true)}>{t('account.deleteButton')}</button>
+      {/* Supprimer le compte : au bout des infos personnelles, puisque c'est d'elles qu'il s'agit.
+          Séparé par un filet et discret tant qu'on ne l'a pas demandé — on ne met pas un bouton
+          rouge en pleine page pour un geste qu'on fait une fois. */}
+      <div className="account-zone-danger">
+        <b className="account-zone-danger-titre">{t('account.deleteTitle')}</b>
+        {!confirmDeleteOpen && (
+          <button type="button" className="btn-danger-ghost" onClick={() => setConfirmDeleteOpen(true)}>{t('account.deleteButton')}</button>
+        )}
+        {confirmDeleteOpen && (
+          <div>
+            <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>{t('account.deleteWarning')}</p>
+            {/* Le solde Fairide est perdu à la suppression (accountDeletion.js) : on le dit avant (audit du 19/10, AO-27b). */}
+            {Number(user.balance) > 0 && <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>{t('account.deleteBalanceLost', { amount: solde })}</p>}
+            {!deleteCodeSent && (
+              <>
+                <div className="field">
+                  <label htmlFor={idsA11y + '-deletewhy'}>{t('account.deleteWhy')}</label>
+                  <select id={idsA11y + '-deletewhy'} value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
+                    {DELETION_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor={idsA11y + '-deletecomment'}>{t('account.deleteComment')}</label>
+                  <input id={idsA11y + '-deletecomment'} value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder={t('account.deleteCommentPlaceholder')} />
+                </div>
+                <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                  <button type="button" className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingCode} onClick={handleSendDeleteCode}>
+                    {sendingCode ? '...' : t('account.deleteRequestCode')}
+                  </button>
+                  <button type="button" className="btn-ghost" onClick={() => setConfirmDeleteOpen(false)}>{t('common.cancel')}</button>
+                </div>
+              </>
             )}
-            {confirmDeleteOpen && (
-              <div>
-                <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>{t('account.deleteWarning')}</p>
-                {/* Le solde Fairide est perdu à la suppression (accountDeletion.js) : on le dit avant (audit du 19/10, AO-27b). */}
-                {Number(user.balance) > 0 && <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>{t('account.deleteBalanceLost', { amount: solde })}</p>}
-                {!deleteCodeSent && (
-                  <>
-                    <div className="field">
-                      <label htmlFor={idsA11y + '-deletewhy'}>{t('account.deleteWhy')}</label>
-                      <select id={idsA11y + '-deletewhy'} value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
-                        {DELETION_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label htmlFor={idsA11y + '-deletecomment'}>{t('account.deleteComment')}</label>
-                      <input id={idsA11y + '-deletecomment'} value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder={t('account.deleteCommentPlaceholder')} />
-                    </div>
-                    <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                      <button type="button" className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingCode} onClick={handleSendDeleteCode}>
-                        {sendingCode ? '...' : t('account.deleteRequestCode')}
-                      </button>
-                      <button type="button" className="btn-ghost" onClick={() => setConfirmDeleteOpen(false)}>{t('common.cancel')}</button>
-                    </div>
-                  </>
-                )}
-                {deleteCodeSent && (
-                  <>
-                    <p className="small" style={{ marginBottom: 10 }}>
-                      {role === 'client' ? t('account.deleteCodeSentText') : t('account.deleteCodeSentTextAdmin')}
-                    </p>
-                    <div className="field">
-                      <label htmlFor={idsA11y + '-deletecodelabel'}>{t('account.deleteCodeLabel')}</label>
-                      <input id={idsA11y + '-deletecodelabel'} value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
-                    </div>
-                    <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                      <button type="button" className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={handleDeleteAccount}>
-                        {deleting ? '...' : t('account.deleteConfirmFinal')}
-                      </button>
-                      <button type="button" className="btn-ghost" disabled={sendingCode} onClick={handleSendDeleteCode}>{t('auth.resendCode')}</button>
-                      <button type="button" className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeleteCodeSent(false); setDeleteCode(''); }}>{t('common.cancel')}</button>
-                    </div>
-                  </>
-                )}
-              </div>
+            {deleteCodeSent && (
+              <>
+                <p className="small" style={{ marginBottom: 10 }}>
+                  {role === 'client' ? t('account.deleteCodeSentText') : t('account.deleteCodeSentTextAdmin')}
+                </p>
+                <div className="field">
+                  <label htmlFor={idsA11y + '-deletecodelabel'}>{t('account.deleteCodeLabel')}</label>
+                  <input id={idsA11y + '-deletecodelabel'} value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
+                </div>
+                <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                  <button type="button" className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={handleDeleteAccount}>
+                    {deleting ? '...' : t('account.deleteConfirmFinal')}
+                  </button>
+                  <button type="button" className="btn-ghost" disabled={sendingCode} onClick={handleSendDeleteCode}>{t('auth.resendCode')}</button>
+                  <button type="button" className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeleteCodeSent(false); setDeleteCode(''); }}>{t('common.cancel')}</button>
+                </div>
+              </>
             )}
           </div>
-        </LigneCompte>
-
-        {/* Le sous-titre tenait e-mail + téléphone + « téléphone à vérifier » sur une seule ligne :
-            tronqué à l'ellipse sur un téléphone, il finissait par cacher l'avertissement même qu'il
-            portait. L'e-mail suffit à identifier la rangée, et l'alerte de vérification passe seule
-            quand elle a lieu d'être — c'est la seule des trois informations qui appelle une action. */}
-        <LigneCompte icone="cadenas" titre={t('accountUi.loginDetails')} sous={user.phone && !user.phoneVerified ? t('accountUi.phoneNotVerifiedShort') : user.emailConfirmed === false ? t('accountUi.emailNotConfirmedShort') : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
-          <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>
-            {t('accountUi.contactCodeInfo')}
-          </p>
-          <ContactChangeField
-            field="email" label={t('accountUi.emailAddress')} currentValue={user.email} type="email" placeholder={t('accountUi.phNewEmail')}
-            requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
-          />
-          <EmailConfirmation />
-          <div className="divider" style={{ margin: '4px 0' }} />
-          <ContactChangeField
-            field="phone" label={t('accountUi.phoneNumber')} currentValue={user.phone} type="tel" placeholder={t('accountUi.phPhone')}
-            requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
-          />
-          <PhoneVerification />
-        </LigneCompte>
-
-        <LigneCompte icone="cle" titre={t('account.passwordTitle')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
-          {/* Compte Google / Apple : pas de mot de passe actuel à donner (audit du 19/10, auth-18). */}
-          <MotDePasseFedere />
-          <form onSubmit={savePassword}>
-            <div className="field">
-              <label htmlFor="mdp-actuel">{t('account.currentPassword')}</label>
-              <PasswordInput id="mdp-actuel" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
-            </div>
-            <div className="field">
-              <label htmlFor="mdp-nouveau">{t('account.newPassword')}</label>
-              <PasswordInput id="mdp-nouveau" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t('account.newPasswordPlaceholder')} />
-            </div>
-            <div className="field">
-              <label htmlFor="mdp-confirme">{t('auth.passwordConfirm')}</label>
-              <PasswordInput id="mdp-confirme" value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)} placeholder={t('auth.phPasswordConfirm')} />
-            </div>
-            <button type="submit" className="btn-outline" disabled={savingPassword}>{savingPassword ? '...' : t('account.changePassword')}</button>
-          </form>
-        </LigneCompte>
-
-        {/* Langue de l'interface. Elle vivait dans la barre latérale, où elle était visible en permanence
-            — mais une barre de navigation n'est pas l'endroit d'un réglage. Le choix est mémorisé dans
-            localStorage (voir LanguageContext) : on ne le règle qu'une fois. Sa place est donc ici. */}
-        <LigneCompte icone="globe" titre={t('account.language')} sous={LANGUE_LABEL[language] || language} ouverte={ouvertes.has('langue')} onClick={() => basculer('langue')}>
-          <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
-          {experienceApp() ? <ListeLangues /> : <LanguageSwitcher />}
-        </LigneCompte>
-        {role === 'client' && <LigneNotifications ouverte={ouvertes.has('notifs')} onClick={() => basculer('notifs')} />}
-        <NouvellesFairide ouverte={ouvertes.has('nouvelles')} onClick={() => basculer('nouvelles')} />
-        <LigneCompte icone="dossier" titre={t('accountUi.myData_rowTitle')} sous={t('accountUi.myData_rowSub')} ouverte={ouvertes.has('donnees')} onClick={() => basculer('donnees')}>
-          {ouvertes.has('donnees') && <MesDonnees />}
-        </LigneCompte>
-        {/* Mes documents (fondateur, 2026-10-09) : CGU, confidentialité, contrats acceptés et signés, à lire et à enregistrer. */}
-        <LigneCompte to="/documents" icone="contrat" titre={t('mesDocuments.rowTitle')} sous={t('mesDocuments.rowSub')} />
-
+        )}
+      </div>
+    </LigneCompte>
+  );
+  const ligneConnexion = (
+    <>
+      {/* Le sous-titre tenait e-mail + téléphone + « téléphone à vérifier » sur une seule ligne :
+          tronqué à l'ellipse sur un téléphone, il finissait par cacher l'avertissement même qu'il
+          portait. L'e-mail suffit à identifier la rangée, et l'alerte de vérification passe seule
+          quand elle a lieu d'être — c'est la seule des trois informations qui appelle une action. */}
+      <LigneCompte icone="cadenas" titre={t('accountUi.loginDetails')} sous={user.phone && !user.phoneVerified ? t('accountUi.phoneNotVerifiedShort') : user.emailConfirmed === false ? t('accountUi.emailNotConfirmedShort') : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
+        <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>
+          {t('accountUi.contactCodeInfo')}
+        </p>
+        <ContactChangeField
+          field="email" label={t('accountUi.emailAddress')} currentValue={user.email} type="email" placeholder={t('accountUi.phNewEmail')}
+          requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
+        />
+        <EmailConfirmation />
+        <div className="divider" style={{ margin: '4px 0' }} />
+        <ContactChangeField
+          field="phone" label={t('accountUi.phoneNumber')} currentValue={user.phone} type="tel" placeholder={t('accountUi.phPhone')}
+          requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
+        />
+        <PhoneVerification />
+      </LigneCompte>
+    </>
+  );
+  const ligneMdp = (
+    <LigneCompte icone="cle" titre={t('account.passwordTitle')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
+      {/* Compte Google / Apple : pas de mot de passe actuel à donner (audit du 19/10, auth-18). */}
+      <MotDePasseFedere />
+      <form onSubmit={savePassword}>
+        <div className="field">
+          <label htmlFor="mdp-actuel">{t('account.currentPassword')}</label>
+          <PasswordInput id="mdp-actuel" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
+        </div>
+        <div className="field">
+          <label htmlFor="mdp-nouveau">{t('account.newPassword')}</label>
+          <PasswordInput id="mdp-nouveau" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t('account.newPasswordPlaceholder')} />
+        </div>
+        <div className="field">
+          <label htmlFor="mdp-confirme">{t('auth.passwordConfirm')}</label>
+          <PasswordInput id="mdp-confirme" value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)} placeholder={t('auth.phPasswordConfirm')} />
+        </div>
+        <button type="submit" className="btn-outline" disabled={savingPassword}>{savingPassword ? '...' : t('account.changePassword')}</button>
+      </form>
+    </LigneCompte>
+  );
+  const ligneLangue = (
+    <>
+      {/* Langue de l'interface. Elle vivait dans la barre latérale, où elle était visible en permanence
+          — mais une barre de navigation n'est pas l'endroit d'un réglage. Le choix est mémorisé dans
+          localStorage (voir LanguageContext) : on ne le règle qu'une fois. Sa place est donc ici. */}
+      <LigneCompte icone="globe" titre={t('account.language')} sous={LANGUE_LABEL[language] || language} ouverte={ouvertes.has('langue')} onClick={() => basculer('langue')}>
+        <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
+        {experienceApp() ? <ListeLangues /> : <LanguageSwitcher />}
+      </LigneCompte>
+    </>
+  );
+  const ligneNouvelles = <NouvellesFairide ouverte={ouvertes.has('nouvelles')} onClick={() => basculer('nouvelles')} />;
+  const ligneDonnees = (
+    <LigneCompte icone="dossier" titre={t('accountUi.myData_rowTitle')} sous={t('accountUi.myData_rowSub')} ouverte={ouvertes.has('donnees')} onClick={() => basculer('donnees')}>
+      {ouvertes.has('donnees') && <MesDonnees />}
+    </LigneCompte>
+  );
+  const ligneDocuments = (
+    <>
+      {/* Mes documents (fondateur, 2026-10-09) : CGU, confidentialité, contrats acceptés et signés, à lire et à enregistrer. */}
+      <LigneCompte to="/documents" icone="contrat" titre={t('mesDocuments.rowTitle')} sous={t('mesDocuments.rowSub')} />
+    </>
+  );
+  // Les trois groupes de « Gérer mon compte ». Le livreur y ajoute ses pièces (Mon profil), le partage de sa position et le
+  // son des alertes de courses (Préférences) ; les notifications du suivi ne concernent que le client.
+  const reglages = (
+    <>
+      <h2 className="compte-feuille-titre compte-feuille-titre--groupe">{t('accountUi.myProfile')}</h2>
+      <div className="card account-groupe" aria-label={t('accountUi.myProfile')}>
+        {ligneInfos}{ligneConnexion}{ligneMdp}
         {role === 'driver' && (
           <LigneCompte icone="dossier" titre={t('driverDocs.title')} sous={t('driverDocs.sub')} ouverte={ouvertes.has('documents')} onClick={() => basculer('documents')}>
             {ouvertes.has('documents') && <DriverDocuments />}
           </LigneCompte>
         )}
+      </div>
+      <h2 className="compte-feuille-titre compte-feuille-titre--groupe">{t('accountUi.preferencesGroup')}</h2>
+      <div className="card account-groupe" aria-label={t('accountUi.preferencesGroup')}>
+        {client && <LigneNotifications ouverte={ouvertes.has('notifs')} onClick={() => basculer('notifs')} />}
+        {ligneNouvelles}{ligneLangue}
         {role === 'driver' && (
           <LigneCompte icone="antenne" titre={t('account.geoTitle')} sous={locationSharingEnabled ? t('accountUi.sharingOn') : t('accountUi.sharingOff')} ouverte={ouvertes.has('geo')} onClick={() => basculer('geo')}>
             <p className="small" style={{ margin: '0 0 10px' }}>{t('account.geoExplain')}</p>
@@ -764,29 +782,141 @@ export default function Account() {
         {/* Le son des alertes des courses : dans l'app, ici plutôt que sur l'écran des courses (SonAlertesLivreur.jsx). */}
         {role === 'driver' && experienceApp() && <SonAlertesLivreur />}
       </div>
-      </RubriqueCompte>
+      <h2 className="compte-feuille-titre compte-feuille-titre--groupe">{t('accountUi.privacyGroup')}</h2>
+      <div className="card account-groupe" aria-label={t('accountUi.privacyGroup')}>
+        {ligneDonnees}{ligneDocuments}
+        {experienceApp() && <RapportsPanne />}
+      </div>
+    </>
+  );
 
-      {/* ——— Solde et avantages. ——— */}
-      <RubriqueCompte cle="solde" active={rubriqueActive}>
-      <h2 className="compte-feuille-titre">{t('accountUi.balanceBenefits')}</h2>
-      <div className="card account-groupe" aria-label={t('accountUi.balanceBenefits')}>
-        {role === 'client' && (
-          <LigneCompte icone="solde" titre={t('accountUi.myBalance')} sous={t('accountUi.balanceSub', { balance: solde })} ouverte={ouvertes.has('solde')} onClick={() => basculer('solde')}>
-            <div className="stat-card highlight" style={{ marginBottom: 14 }}>
-              <div className="num">{solde}</div>
-              <div className="label">{t('account.balance')}</div>
+  // Messages : en tête quand il y a du nouveau, sinon une rangée d'Assistance (client, 2026-10-27).
+  const ligneMessages = (
+    <div id="section-messages">
+      {/* Le sous-titre ne s'affiche QUE s'il y a des messages non lus : ça, c'est une
+          information. « Les réponses de l'équipe » sous un titre « Messages » n'en était pas
+          une, c'était le titre écrit deux fois. */}
+      <LigneCompte icone="courrier" titre={t('inbox.rowTitle')} sous={nonLus > 0 ? t('inbox.rowSubUnread', { n: nonLus }) : undefined} accent={nonLus > 0 ? 'warn' : undefined} ouverte={ouvertes.has('messages')} onClick={() => basculer('messages')}>
+        {ouvertes.has('messages') && <InboxSection />}
+      </LigneCompte>
+    </div>
+  );
+
+  // Le solde et le code cadeau : une rangée pour les autres rôles, le haut du portefeuille pour le client.
+  const formulaireCode = (
+    <>
+      <div className="stat-card highlight" style={{ marginBottom: 14 }}>
+        <div className="num">{solde}</div>
+        <div className="label">{t('account.balance')}</div>
+      </div>
+      <form onSubmit={handleRedeemCode} className="row" style={{ gap: 8 }}>
+        <div className="field" style={{ flex: 1, margin: 0 }}>
+          {/* Champs nommés (audit du 19/10, CROSS-88) : le texte d'exemple seul disparaît dès qu'on tape, et n'est pas un nom. */}
+          <input value={redeemCode} onChange={(e) => setRedeemCode(e.target.value.toUpperCase())} placeholder={t('account.redeemPlaceholder')}
+            aria-label={t('accountUi.redeemCodeA11y')} autoComplete="off" autoCorrect="off" spellCheck={false} />
+        </div>
+        <button type="submit" className="btn-teal" disabled={redeeming}>{redeeming ? '...' : t('account.redeemButton')}</button>
+      </form>
+    </>
+  );
+  const contenuParrainage = (
+    <>
+      <p className="small" style={{ margin: '0 0 12px' }}>{t(`account.referral.how.${role}`)}</p>
+      {referralStats && (
+        <>
+          <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 12 }}>
+            <div className="field" style={{ flex: 1, margin: 0 }}>
+              <input readOnly value={referralStats.code} style={{ fontWeight: 700, letterSpacing: 1 }} aria-label={t('accountUi.referralCodeA11y')} />
             </div>
-            <form onSubmit={handleRedeemCode} className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1, margin: 0 }}>
-                {/* Champs nommés (audit du 19/10, CROSS-88) : le texte d'exemple seul disparaît dès qu'on tape, et n'est pas un nom. */}
-                <input value={redeemCode} onChange={(e) => setRedeemCode(e.target.value.toUpperCase())} placeholder={t('account.redeemPlaceholder')}
-                  aria-label={t('accountUi.redeemCodeA11y')} autoComplete="off" autoCorrect="off" spellCheck={false} />
-              </div>
-              <button type="submit" className="btn-teal" disabled={redeeming}>{redeeming ? '...' : t('account.redeemButton')}</button>
-            </form>
-          </LigneCompte>
-        )}
+            <button type="button" className="btn-teal" onClick={copyReferralCode}>{t('account.referral.copy')}</button>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <div className="stat-card" style={{ flex: 1 }}>
+              <div className="num">{referralStats.referredCount}</div>
+              <div className="label">{t('account.referral.statInvited')}</div>
+            </div>
+            <div className="stat-card highlight" style={{ flex: 1 }}>
+              <div className="num">{euros(referralStats.earnedTotal)}</div>
+              <div className="label">{t('account.referral.statEarned')}</div>
+            </div>
+          </div>
+          {referralStats.pendingCount > 0 && (
+            <p className="small" style={{ margin: '10px 0 0' }}>{t('account.referral.pending', { count: referralStats.pendingCount })}</p>
+          )}
+          <p className="small" style={{ margin: '10px 0 0', opacity: 0.75 }}>{t('account.referral.spendOnly')}</p>
+        </>
+      )}
+    </>
+  );
+  /* Le parrainage du client dit ce qu'il rapporte et montre le code (maquettes/compte, 2026-10-27) : 5 € de crédit quand
+     l'ami reçoit sa première commande de 20 € ou plus (backend referrals.js, REFERRAL_REWARD et REFERRAL_MIN_ORDER_TOTAL). */
+  const ligneParrainage = client ? (
+    <LigneCompte icone="cadeau" titre={t('accountUi.referralCardTitle')}
+      sous={<>{t('accountUi.referralCardSub')}{referralStats?.code && <span className="compte-parrain-code">{referralStats.code}</span>}</>}
+      ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
+      {contenuParrainage}
+    </LigneCompte>
+  ) : (
+    <>
+    {/* Sans code de parrainage (comptes créés avant que les codes existent, comptes de
+        démonstration), le résumé s'affichait « Ton code : · 0.00€ gagnés » — un deux-points
+        suivi d'un point médian, sans rien entre les deux. On retombe alors sur la phrase
+        d'invitation, qui reste vraie quoi qu'il arrive. */}
+      <LigneCompte icone="cadeau" titre={t('account.referral.title')} sous={referralStats && referralStats.code ? t('accountUi.referralSummary', { code: referralStats.code, earned: euros(referralStats.earnedTotal) }) : t('accountUi.referralSub')} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
+        {contenuParrainage}
+      </LigneCompte>
+    </>
+  );
 
+  // Assistance : juste après le solde (l'aide est en haut chez les autres applications). Pour le client, Partager et Notre
+  // histoire vont dans « Fairride ». Les rapports de panne sont dans Gérer mon compte › Confidentialité, pour tous.
+  const blocAssistance = (
+    <RubriqueCompte cle="assistance" active={rubriqueActive}>
+    <h2 className="compte-feuille-titre">{t('accountUi.support')}</h2>
+    <div className="card account-groupe" aria-label={t('accountUi.support')}>
+      <LigneCompte to="/aide" icone="bouee" titre={t('accountUi.needHelp')} sous={t('accountUi.needHelpSub')} />
+      {!messagesEnTete && ligneMessages}
+      <LigneCompte to="/aide?sujet=avis" icone="etoile" titre={t('accountUi.feedback')} sous={t('accountUi.feedbackSub')} />
+      {!client && <LigneCompte icone="lien" titre={t('accountUi.share')} sous={t('accountUi.shareSub')} onClick={partagerFairide} />}
+      <LigneCompte to="/aide?sujet=bug" icone="bogue" titre={t('accountUi.reportBug')} sous={t('accountUi.reportBugSub')} />
+      {!client && <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />}
+    </div>
+    {!messagesEnTete && <MesDecisions />}
+    </RubriqueCompte>
+  );
+
+  // Solde et avantages : avant la rubrique du rôle pour le client (son portefeuille), après pour un commerce ou un livreur
+  // (leur commerce et leurs courses passent d'abord).
+  const blocSolde = (
+    <>
+      {/* ——— Solde et avantages. Pour le client, le portefeuille (maquettes/compte, 2026-10-27) : le solde en grand avec
+          « Ajouter un code », ses cartes et les titres-restaurant ensemble, puis le parrainage, qui dit ce qu'il rapporte. ——— */}
+      <RubriqueCompte cle="solde" active={rubriqueActive}>
+      <h2 className="compte-feuille-titre">{client ? t('accountUi.wallet') : t('accountUi.balanceBenefits')}</h2>
+      {client && (
+        <div className="card account-groupe compte-portefeuille" aria-label={t('accountUi.wallet')}>
+          <div className="compte-solde" id="section-solde">
+            <span className="compte-solde-texte">
+              <span className="small">{t('accountUi.walletBalance')}</span>
+              <b className="compte-solde-montant">{solde}</b>
+            </span>
+            {/* Le seul bouton lime de la page (« un seul lime par écran », maquettes/une-action). */}
+            <button type="button" className="btn-gold btn-sm" onClick={() => basculer('solde')} aria-expanded={ouvertes.has('solde')}>{t('accountUi.addCode')}</button>
+          </div>
+          {ouvertes.has('solde') && !enFeuille && <div className="account-panneau">{formulaireCode}</div>}
+          {/* Cartes enregistrées chez Stripe par le client lui-même (15/10/2026, backend cartesEnregistrees.js). */}
+          <LigneCompte icone="carteBancaire" titre={t('accountUi.paymentMethods')} sous={t('savedCards.rowSub')} ouverte={ouvertes.has('cartes')} onClick={() => basculer('cartes')}>
+            {ouvertes.has('cartes') && <CartesEnregistrees />}
+          </LigneCompte>
+          <LigneCompte to="/aide?sujet=titres-restaurant" icone="ticket" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />
+        </div>
+      )}
+      {client && ouvertes.has('solde') && enFeuille && (
+        <SousEcran titre={t('accountUi.myBalance')} onFermer={() => basculer('solde')}>
+          <div className="card account-panneau account-panneau--feuille">{formulaireCode}</div>
+        </SousEcran>
+      )}
+      <div className={`card account-groupe${client ? ' compte-parrain' : ''}`} aria-label={client ? t('account.referral.title') : t('accountUi.balanceBenefits')}>
         {/* Icône différente de celle de « Mon solde » juste au-dessus : les deux rangées se suivent,
             et le même 💰 sur les deux les faisait lire comme une seule répétée. */}
         {(role === 'restaurant' || role === 'driver') && (
@@ -818,63 +948,78 @@ export default function Account() {
             )}
           </LigneCompte>
         )}
-
-        {/* Sans code de parrainage (comptes créés avant que les codes existent, comptes de
-            démonstration), le résumé s'affichait « Ton code : · 0.00€ gagnés » — un deux-points
-            suivi d'un point médian, sans rien entre les deux. On retombe alors sur la phrase
-            d'invitation, qui reste vraie quoi qu'il arrive. */}
-        <LigneCompte icone="cadeau" titre={t('account.referral.title')} sous={referralStats && referralStats.code ? t('accountUi.referralSummary', { code: referralStats.code, earned: euros(referralStats.earnedTotal) }) : t('accountUi.referralSub')} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
-          <p className="small" style={{ margin: '0 0 12px' }}>{t(`account.referral.how.${role}`)}</p>
-          {referralStats && (
-            <>
-              <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 12 }}>
-                <div className="field" style={{ flex: 1, margin: 0 }}>
-                  <input readOnly value={referralStats.code} style={{ fontWeight: 700, letterSpacing: 1 }} aria-label={t('accountUi.referralCodeA11y')} />
-                </div>
-                <button type="button" className="btn-teal" onClick={copyReferralCode}>{t('account.referral.copy')}</button>
-              </div>
-              <div className="row" style={{ gap: 8 }}>
-                <div className="stat-card" style={{ flex: 1 }}>
-                  <div className="num">{referralStats.referredCount}</div>
-                  <div className="label">{t('account.referral.statInvited')}</div>
-                </div>
-                <div className="stat-card highlight" style={{ flex: 1 }}>
-                  <div className="num">{euros(referralStats.earnedTotal)}</div>
-                  <div className="label">{t('account.referral.statEarned')}</div>
-                </div>
-              </div>
-              {referralStats.pendingCount > 0 && (
-                <p className="small" style={{ margin: '10px 0 0' }}>{t('account.referral.pending', { count: referralStats.pendingCount })}</p>
-              )}
-              <p className="small" style={{ margin: '10px 0 0', opacity: 0.75 }}>{t('account.referral.spendOnly')}</p>
-            </>
-          )}
-        </LigneCompte>
+  
+        {ligneParrainage}
       </div>
       </RubriqueCompte>
+    </>
+  );
+
+  return (
+    <div className="compte-ecran">
+      {/* LE BANDEAU IRIS (2026-10-16) : initiales, nom, e-mail et les trois raccourcis du rôle (EnteteCompte.jsx). « Mon
+          compte » n'y figure pas : l'onglet allumé en bas le dit déjà ; le nom, lui, dit sous quel compte on est. Trois
+          raccourcis vers ce qu'on vient chercher le plus souvent ; ils dépendent du rôle — un livreur n'a pas de
+          favoris, un restaurateur n'a pas de commandes à lui. */}
+      <EnteteCompte nom={nomComplet} email={user.email} initiales={initiales} raccourcis={raccourcis} />
+
+      {/* LA FEUILLE BLANCHE : toutes les rangées, dans le même ordre qu'avant, sous un titre de section par groupe. */}
+      <div className="compte-feuille">
+      <div className="compte-reglages">
+      <NavCompte rubriques={rubriques} active={rubriqueActive} onChoisir={choisirRubrique} onDeconnexion={logout} />
+      <div className="compte-contenu" ref={contenuRef}>
+      {messagesEnTete && (
+      <RubriqueCompte cle="messages" active={rubriqueActive}>
+      {/* Titre de la rubrique sur ordinateur seulement : dans la feuille du téléphone, la rangée Messages n'a pas de titre au-dessus. */}
+      <h2 className="compte-feuille-titre compte-titre-site">{t('inbox.rowTitle')}</h2>
+
+      {/* ——— Messages : en tête, juste sous l'identité — c'est par là que Fairide parle aux comptes
+          (annonces, réponses), avec le compteur de non-lus. /account?ouvrir=messages arrive dessus déplié. ——— */}
+      <div className={`card account-groupe compte-groupe-messages account-groupe-messages${nonLus > 0 ? ' a-non-lus' : ''}`} aria-label={t('inbox.rowTitle')}>
+        {ligneMessages}
+      </div>
+      {/* Décisions qui me concernent et « Contester » (audit du 19/10, admin-39) : rien quand il n'y en a pas. */}
+      <MesDecisions />
+      </RubriqueCompte>
+      )}
+
+      {/* ——— Gérer mon compte : tout ce qui décrit la personne et son accès, en une rangée qui ouvre ses réglages dans une
+          feuille ; sur le site large, la rubrique les montre directement. ——— */}
+      <RubriqueCompte cle="profil" active={rubriqueActive}>
+      {siteLarge ? (
+        <>
+          <h2 className="compte-feuille-titre">{t('accountUi.manageAccount')}</h2>
+          {reglages}
+        </>
+      ) : (
+        <div className="card account-groupe compte-gerer" aria-label={t('accountUi.manageAccount')}>
+          <LigneCompte icone="reglages" titre={t('accountUi.manageAccount')} sous={client ? t('accountUi.manageAccountSub') : t('accountUi.manageAccountSubPro')} onClick={() => basculer('gerer')} />
+        </div>
+      )}
+      {!siteLarge && ouvertes.has('gerer') && (
+        <SousEcran titre={t('accountUi.manageAccount')} onFermer={() => basculer('gerer')}>
+          {/* Le style des rangées de Mon compte est rangé sous .compte-feuille : la feuille le reprend, sans son cadre. */}
+          <div className="compte-feuille compte-feuille--gerer">{reglages}</div>
+        </SousEcran>
+      )}
+      </RubriqueCompte>
+
+      {client && blocSolde}
+
+      {client && blocAssistance}
 
       <RubriqueCompte cle="role" active={rubriqueActive}>
       {/* ——— Selon le rôle. Une rubrique ne figure qu'à UN endroit : ce qui est dans la barre du bas
           (restaurants, recherche, commandes, favoris, carte) n'est pas repris ici. ———
           Client : « Moyens de paiement » liste les cartes qu'il a enregistrées chez Stripe (et les retire) ; « Titres
           restaurant » mène à une réponse écrite — Fairide n'accepte pas encore les titres-restaurant. */}
-      {role === 'client' && <h2 className="compte-feuille-titre">{t('accountUi.ordersAndFairide')}</h2>}
-      {role === 'client' && (
-        <div className="card account-groupe" aria-label={t('accountUi.ordersAndFairide')}>
-          {/* Les favoris ont quitté la barre du bas, ramenée à cinq onglets pour que chaque cible
-              fasse 56px (voir DashboardSidebar.jsx). On les ouvre moins souvent que la liste, la
-              recherche ou ses commandes — c'est le sixième par l'usage, donc celui qui part. */}
-          {/* La rangée « Adresse de livraison » a disparu : elle affichait mot pour mot l'adresse déjà
-              écrite sous « Mes infos », deux blocs plus haut, et menait au même endroit — la même
-              donnée, présentée deux fois comme deux réglages différents. Fairide ne retient qu'UNE
-              adresse ; elle vit donc à un seul endroit, sous « Mes infos », où elle se modifie. */}
-          {/* Cartes enregistrées chez Stripe par le client lui-même (15/10/2026, backend cartesEnregistrees.js). */}
-          <LigneCompte icone="carteBancaire" titre={t('accountUi.paymentMethods')} sous={t('savedCards.rowSub')} ouverte={ouvertes.has('cartes')} onClick={() => basculer('cartes')}>
-            {ouvertes.has('cartes') && <CartesEnregistrees />}
-          </LigneCompte>
+      {client && <h2 className="compte-feuille-titre">{t('accountUi.fairrideGroup')}</h2>}
+      {client && (
+        <div className="card account-groupe" aria-label={t('accountUi.fairrideGroup')}>
+          {/* Moyens de paiement et Titres restaurant sont montés dans le portefeuille (2026-10-27). */}
           {/* « Demande ton restaurant » (2026-10-26) : les restaurants demandés et où ils en sont (MesDemandes.jsx). */}
           <LigneCompte to="/demandes" icone="demande" titre={t('demandes.mesTitre')} sous={t('demandes.rowSous')} />
-          <LigneCompte to="/aide?sujet=titres-restaurant" icone="ticket" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />
+          <LigneCompte icone="lien" titre={t('accountUi.share')} sous={t('accountUi.shareSub')} onClick={partagerFairide} />
           <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />
           {/* Commerciaux Fairide (routes/adminSales.js) : la rubrique Sales n'apparaît que si l'admin a donné l'accès à ce compte
               (Admin › Sales). Rien d'autre n'est affiché — un compte client ordinaire ne voit jamais cette page. */}
@@ -1186,27 +1331,17 @@ export default function Account() {
       )}
       </RubriqueCompte>
 
-      {/* Les casquettes du compte : commander, tenir un commerce, livrer. Placé juste avant
-          l'assistance, donc après tout ce qui concerne le rôle en cours — on ne propose pas de
-          changer de vue à quelqu'un qui n'a pas fini de lire la sienne. */}
-      <RubriqueCompte cle="casquettes" active={rubriqueActive}>
-      {avecCasquettes && <h2 className="compte-feuille-titre">{t('casquettes.titre')}</h2>}
-      <MesCasquettes />
-      </RubriqueCompte>
+      {/* Commerce et livreur : le solde puis l'assistance, après leur commerce ou leurs courses. Assistance est commune à
+          tous les rôles : un restaurateur ou un livreur a autant besoin de signaler un bug qu'un client. « Supprimer mon
+          compte » n'y figure pas : il est au bout de « Mes infos », avec le reste de ce qui concerne la personne. */}
+      {!client && blocSolde}
+      {!client && blocAssistance}
 
-      {/* Assistance — commune à tous les rôles : un restaurateur ou un livreur a autant besoin de
-          signaler un bug qu'un client. « Supprimer mon compte » n'y figure pas : il est au bout de
-          « Mes infos », avec le reste de ce qui concerne la personne. */}
-      <RubriqueCompte cle="assistance" active={rubriqueActive}>
-      <h2 className="compte-feuille-titre">{t('accountUi.support')}</h2>
-      <div className="card account-groupe" aria-label={t('accountUi.support')}>
-        <LigneCompte to="/aide" icone="bouee" titre={t('accountUi.needHelp')} sous={t('accountUi.needHelpSub')} />
-        <LigneCompte to="/aide?sujet=avis" icone="etoile" titre={t('accountUi.feedback')} sous={t('accountUi.feedbackSub')} />
-        <LigneCompte icone="lien" titre={t('accountUi.share')} sous={t('accountUi.shareSub')} onClick={partagerFairide} />
-        <LigneCompte to="/aide?sujet=bug" icone="bogue" titre={t('accountUi.reportBug')} sous={t('accountUi.reportBugSub')} />
-        {role !== 'client' && <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />}
-        {experienceApp() && <RapportsPanne />}
-      </div>
+      {/* « Aussi sur Fairride » (les casquettes du compte : commander, tenir un commerce, livrer), à la fin : on ne propose
+          pas de changer de vue à quelqu'un qui n'a pas fini de lire la sienne. De simples rangées depuis le 2026-10-27. */}
+      <RubriqueCompte cle="casquettes" active={rubriqueActive}>
+      {avecCasquettes && <h2 className="compte-feuille-titre">{t('accountUi.alsoOnFairride')}</h2>}
+      <MesCasquettes />
       </RubriqueCompte>
       </div>
       </div>

@@ -92,6 +92,27 @@
 .compte-feuille .account-link-action .pill { font-size: 12px; padding: 4px 10px; white-space: nowrap; }
 .compte-feuille .account-link-row:has(.account-link-action) .account-link-text .small { white-space: normal; }
 
+/* ---------- Mon compte du client (maquettes/compte/compte.html, 2026-10-27) ---------- */
+/* Le portefeuille : le solde en grand, « Ajouter un code » en lime à droite, puis les cartes et les titres-restaurant. */
+.compte-feuille .compte-solde { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px; border-bottom: 1px solid var(--line); }
+.compte-solde-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.compte-solde-texte .small { color: var(--ink-soft); font-size: 12.5px; }
+.compte-solde-montant { font-family: var(--font-titre); font-size: 28px; font-weight: 800; line-height: 1.05; color: var(--ink); }
+.compte-solde .btn-gold { flex: none; white-space: nowrap; }
+/* Le parrainage : une carte teintée sous le portefeuille, le code en pointillés sous la phrase. */
+.compte-feuille .card.account-groupe.compte-parrain { margin-top: 12px; background: var(--iris-tint); border-color: transparent; }
+.compte-feuille .compte-parrain .account-link-icon { background: #fff; }
+.compte-feuille .compte-parrain .account-link-text b { font-size: 15px; }
+.compte-feuille .compte-parrain .account-link-text .small { white-space: normal; }
+.compte-parrain-code {
+  display: table; margin-top: 6px; padding: 2px 8px; border: 1.5px dashed var(--iris); border-radius: 8px; background: #fff;
+  color: var(--iris); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; font-weight: 700; letter-spacing: .04em;
+}
+/* « Gérer mon compte » : la seule rangée du haut de la feuille ; ouverte, ses réglages prennent la feuille du sous-écran. */
+.compte-feuille .card.account-groupe.compte-gerer { margin-top: 2px; }
+html .compte-feuille.compte-feuille--gerer { margin: 0; padding: 0; border-radius: 0; background: none; animation: none; }
+.compte-feuille--gerer > .compte-feuille-titre:first-child { margin-top: 4px; }
+
 /* Le pied : « Se déconnecter » centré, puis les liens légaux et le numéro de build. */
 .compte-feuille > .btn-danger-ghost { display: block; margin: 22px auto 0; padding: 10px 16px; font-size: 15px; font-weight: 600; text-underline-offset: 3px; }
 
