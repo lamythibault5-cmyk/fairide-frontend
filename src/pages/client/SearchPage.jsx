@@ -260,14 +260,13 @@ export default function SearchPage() {
           pastilles dessous, puis les communes et l'aide comme avant. Le site garde ses pastilles. Depuis le 2026-10-21 (piste A
           de maquettes/recherche-couleurs), chaque tuile montre l'illustration en couleur de la cuisine sur son fond pastel, au
           lieu de l'icône iris dans un carré blanc sur lavande : la grille paraissait sans vie, et dix cuisines partageaient la
-          même icône. Depuis le 2026-10-27 (fondateur, D2 de maquettes/audit-ecrans) : les fonds pastel sont partis — deux couleurs de
-          fond seulement (design.md) ; les dessins gardent leurs couleurs, sur le voile iris de la tuile (ecran-liste.css). */}
+          même icône. */}
       {!actif && !site && (
         <>
           <h3 className="recherche-titre-app">{t('search.byCraving')}</h3>
           <div className="recherche-tuiles">
             {famillesTuiles.map((f) => (
-              <Link key={f.cle} to="/restaurants" state={{ famille: f.cle }} className="recherche-tuile">
+              <Link key={f.cle} to="/restaurants" state={{ famille: f.cle }} className="recherche-tuile" style={{ '--tuile-fond': f.fond }}>
                 <img className="recherche-tuile-illu" src={illustrationCuisine(f.illustration)} alt="" width="52" height="52" decoding="async" draggable="false" />
                 <span>{libelleCategorie(f.cle, t)}</span>
               </Link>
@@ -314,7 +313,7 @@ export default function SearchPage() {
                 mêmes que dans l'app, avec l'illustration 2D (sans relief) au lieu de la 3D. */}
             <div className="recherche-tuiles recherche-tuiles--site">
               {famillesTuiles.map((f) => (
-                <Link key={f.cle} to="/restaurants" state={{ famille: f.cle }} className="recherche-tuile">
+                <Link key={f.cle} to="/restaurants" state={{ famille: f.cle }} className="recherche-tuile" style={{ '--tuile-fond': f.fond }}>
                   <img className="recherche-tuile-illu" src={illustrationCuisine(f.illustration, { plat: true })} alt="" width="40" height="40" decoding="async" draggable="false" />
                   <span>{libelleCategorie(f.cle, t)}</span>
                 </Link>
