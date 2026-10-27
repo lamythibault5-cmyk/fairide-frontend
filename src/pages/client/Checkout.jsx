@@ -28,6 +28,7 @@ import { BandeauCommande, BarreCommande, FeuilleCommande, OptionCommande, RouteC
 import SousEcran from '../../components/SousEcran';
 import AddressSearch from '../../components/AddressSearch';
 import ChoixAdresse from '../../components/ChoixAdresse';
+import useLoinDeLAdresse from '../../hooks/useLoinDeLAdresse';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, dateOuvertureEmporter, paiementEnLigneOuvert, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
@@ -289,6 +290,9 @@ export default function Checkout() {
     if (deliveryInstructions === 'sonner' && derniere.deliveryInstructions && derniere.deliveryInstructions !== 'deposer') setDeliveryInstructions(derniere.deliveryInstructions);
     if (!deliveryNote && derniere.deliveryNote) setDeliveryNote(String(derniere.deliveryNote));
   }, [token, addressStreet, addressNumber, addressPostalCode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Le téléphone est-il loin de l'adresse choisie ? Seulement si sa position est déjà autorisée (voir useLoinDeLAdresse).
+  const loinDeLAdresse = useLoinDeLAdresse(devis?.order?.deliveryLat, devis?.order?.deliveryLng, fulfillmentType === 'delivery');
 
   // L'etape « dessert/boisson » a quitte le paiement : elle est maintenant sur la page Panier, avant
   // d'y entrer. On arrive donc directement sur la confirmation des informations de commande.
@@ -767,8 +771,8 @@ export default function Checkout() {
                 <Icone nom="maison" taille={20} />
                 <span className="checkout-rangee-texte">
                   <span className="checkout-rangee-titre">{adresseIncomplete ? t('checkout.addressMissing') : adresseResume}</span>
-                  <span className={`checkout-rangee-sous${adresseIncomplete ? ' est-requis' : ''}`}>
-                    {adresseIncomplete ? t('checkout.addressMissingSub') : t('checkout.addressEdit')}
+                  <span className={`checkout-rangee-sous${adresseIncomplete || loinDeLAdresse ? ' est-requis' : ''}`}>
+                    {adresseIncomplete ? t('checkout.addressMissingSub') : loinDeLAdresse ? t('checkout.addressFarFromYou') : t('checkout.addressEdit')}
                   </span>
                 </span>
                 <span className="checkout-rangee-chevron" aria-hidden="true">›</span>
