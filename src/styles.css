@@ -338,8 +338,12 @@ a { color: inherit; }
 
 /* « fairride » en deux couleurs (fondateur, 2026-10-25, version C de maquettes/fairride-deux-r) : « fair » garde la
    couleur du texte, « ride » prend l'accent — iris sur fond clair, lime sur l'iris. Le mot est toujours écrit par
-   MotMarque.jsx. Un fond iris qui porte le mot pose --marque-ride ; sans elle, « ride » serait iris sur iris. */
-.wordmark-ride { color: var(--marque-ride, var(--iris)); }
+   MotMarque.jsx. Un fond iris qui porte le mot pose --marque-ride ; sans elle, « ride » serait iris sur iris.
+   « ride » a TOUJOURS la police, la taille, la graisse et l'interlettrage de « fair » : seule la couleur change (fondateur,
+   2026-10-27 : « toujours comme sur la page d'accueil, même taille, deux couleurs »). Une règle sur les span d'un conteneur
+   (.dashboard-sidebar-brand span, plus bas) le passait à 19 px et à l'encre dans la barre latérale du site, à côté d'un
+   « fair » de 26 px. Deux classes : plus fort qu'une classe + un élément. */
+.wordmark .wordmark-ride { font: inherit; letter-spacing: inherit; color: var(--marque-ride, var(--iris)); }
 /* Le mot-logo reste en minuscules même dans un titre en capitales (« FAIRRIDE » dans le pied de page). */
 .wordmark { text-transform: none; }
 .hero, .appli-barre.sur-iris, .bv-bandeau { --marque-ride: var(--lime); }

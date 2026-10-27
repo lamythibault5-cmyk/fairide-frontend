@@ -176,7 +176,7 @@ The one exception is the word `fairride` itself, which is set in **Bricolage Gro
 optical sizing on) via the `.wordmark` class — lowercase, `-0.03em`, always written by
 [MotMarque.jsx](../../src/components/MotMarque.jsx): « fair » in the text colour, « ride » in the accent (iris on
 white, lime on iris through `--marque-ride`, set by the iris grounds in `styles.css`; the splash and `public/404.html`
-write it by hand). Never type `fairride` into a `.wordmark` by hand: it would lose its two colours. It is a *logotype* face, loaded
+write it by hand). Never type `fairride` into a `.wordmark` by hand: it would lose its two colours. « ride » always has the font, size, weight and spacing of « fair », only its colour changes (`.wordmark .wordmark-ride { font: inherit }`, founder 2026-10-27: the site sidebar showed a 19 px black « ride » next to a 26 px « fair »); `npm run check:marque` measures every wordmark on the site and in the app. It is a *logotype* face, loaded
 from a `<link>` in [index.html](../../index.html) rather than the `@import`, because the splash screen
 paints before `styles.css` exists. Seven call sites carry the class; `.wordmark` sets the family and
 nothing else. Inside a heading, the *word* « Fairride » alone is shown as the wordmark through
