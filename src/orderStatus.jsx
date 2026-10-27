@@ -29,7 +29,7 @@ export function formatOrderItem(i) {
 
 export const STEPS = ['nouveau', 'preparation', 'pret', 'livraison', 'livre'];
 // Une commande à emporter n'a pas de trajet "en route" — le client vient lui-même.
-const PICKUP_STEPS = ['nouveau', 'preparation', 'pret', 'livre'];
+export const PICKUP_STEPS = ['nouveau', 'preparation', 'pret', 'livre'];
 
 const STATUS_LABELS_FR = {
   nouveau: 'Nouvelle', preparation: 'En préparation', pret: 'Prête', livraison: 'En livraison',

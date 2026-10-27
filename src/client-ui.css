@@ -667,3 +667,83 @@ html.appli .confirm-feuille { padding-top: 10px; }
 html.appli .confirm-poignee { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 14px; }
 html.appli .confirm-feuille .modal-titre { font-size: 22px; line-height: 1.15; margin: 0 0 6px; }
 html.appli .confirm-feuille .modal-pied > .btn-ghost { width: 100%; color: var(--ink-soft); font-weight: 600; }
+
+/* LA COMMANDE EN COURS AU-DESSUS DES ONGLETS (SuiviCommande.jsx ; fondateur, 2026-10-26, version A3 de
+   maquettes/commande-en-cours). Une bande de 60 px, posée où se pose la barre du panier (et au-dessus d'elle quand elle est là) :
+   la photo du commerce dans un anneau qui se remplit à chaque étape, le commerce, l'étape, un chevron. Le verre de la barre du
+   panier dans l'app, blanc avec un filet sur le site. Lime quand c'est au client d'agir (prête à emporter), rouge quand la
+   commande est refusée ou annulée. Elle laisse la place à tout ce qui s'ouvre par-dessus, comme la barre du panier. */
+.suivi-commande {
+  position: fixed; z-index: 44; left: 12px; right: 12px; max-width: 520px; margin: 0 auto;
+  bottom: calc(var(--hauteur-onglets) + 12px + var(--bas-ecran));
+  height: 60px; display: flex; align-items: center; gap: 11px; padding: 0 16px 0 7px; border-radius: 30px;
+  color: var(--ink); text-decoration: none; text-align: left;
+  background: #fff; border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(20, 18, 31, .14);
+  animation: panier-arrive-app .35s cubic-bezier(.2, .9, .25, 1.15) both;
+  transition: bottom .14s var(--ressort-ui), background .3s, opacity .4s, transform .4s;
+}
+html.appli .suivi-commande {
+  background: rgba(255, 255, 255, .22); border-color: rgba(255, 255, 255, .6); text-shadow: 0 0 8px rgba(255, 255, 255, .75);
+  -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
+    inset 4px 0 10px -4px rgba(255, 70, 170, .22), inset -4px 0 10px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
+}
+.suivi-commande:active { transform: scale(.98); }
+.suivi-commande-rond { position: relative; flex: none; width: 46px; height: 46px; }
+.suivi-commande-anneau { position: absolute; inset: 0; width: 46px; height: 46px; transform: rotate(-90deg); }
+.suivi-commande-anneau circle { fill: none; stroke-width: 3.5; }
+.suivi-commande-anneau .fond { stroke: rgba(59, 47, 181, .14); }
+.suivi-commande-anneau .avance { stroke: var(--iris); stroke-linecap: round; transition: stroke-dasharray .6s ease-out; }
+.suivi-commande-photo { position: absolute; inset: 6px; border-radius: 50%; overflow: hidden; display: grid; place-items: center;
+  background: rgba(59, 47, 181, .08); color: var(--iris); font-weight: 700; font-size: 15px; text-shadow: none; }
+.suivi-commande-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.suivi-commande-croix { position: absolute; right: -2px; bottom: -2px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--red); color: #fff; display: grid; place-items: center; box-shadow: 0 0 0 2px #fff; }
+.suivi-commande-croix svg { stroke-width: 3; }
+.suivi-commande-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+.suivi-commande-texte small, .suivi-commande-texte b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.suivi-commande-texte small { font-size: 12px; color: var(--ink-soft); }
+.suivi-commande-texte b { font-size: 15.5px; font-weight: 700; }
+.suivi-commande-chevron { flex: none; width: 8px; height: 8px; margin-left: 2px; border-right: 2.2px solid var(--ink-soft); border-bottom: 2.2px solid var(--ink-soft); transform: rotate(-45deg); }
+/* Prête à venir chercher : c'est à lui d'agir, la bande passe au lime (encre, anneau à l'encre). */
+.suivi-commande.suivi-commande--a-toi, html.appli .suivi-commande.suivi-commande--a-toi {
+  background: var(--lime); border-color: var(--lime); text-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: 0 8px 24px rgba(20, 18, 31, .18);
+}
+.suivi-commande--a-toi .suivi-commande-texte small { color: rgba(20, 18, 31, .7); }
+.suivi-commande--a-toi .suivi-commande-anneau .fond { stroke: rgba(20, 18, 31, .15); }
+.suivi-commande--a-toi .suivi-commande-anneau .avance { stroke: var(--ink); }
+.suivi-commande--a-toi .suivi-commande-chevron { border-color: var(--ink); }
+/* Refusée ou annulée : l'anneau plein et rouge, une croix sur la photo, la phrase en rouge. */
+.suivi-commande--refus .suivi-commande-anneau .avance { stroke: var(--red); }
+.suivi-commande--refus .suivi-commande-texte b { color: var(--red); }
+/* « Bon appétit ! » s'en va. */
+.suivi-commande--part { opacity: 0; transform: translateY(20px); }
+/* Place réservée sous le contenu (comme html.avec-pilule-panier) ; les deux barres ensemble, le double. */
+html.avec-suivi-commande main { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+html.avec-suivi-commande.avec-pilule-panier main { padding-bottom: calc(144px + env(safe-area-inset-bottom)); }
+@media (max-width: 900px) {
+  /* Au-dessus de la barre du panier (60 px et 8 px d'air) ; à gauche de la bulle du panier (56 px sur le côté droit, à gauche
+     sur la Carte). La barre d'onglets réduite fait descendre les deux du même pas (règle html.barre-compacte de styles.css). */
+  body:has(.panier-pilule:not(.panier-pilule--bulle)) .suivi-commande { bottom: calc(var(--hauteur-onglets) + 80px + var(--bas-ecran)); }
+  body:has(.panier-pilule--bulle) .suivi-commande { right: 84px; margin-right: 0; }
+  body:has(.carte-page):has(.panier-pilule--bulle) .suivi-commande { right: 12px; left: 84px; margin-left: 0; }
+  html.barre-compacte body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .suivi-commande { bottom: calc(var(--hauteur-onglets) - 2px + var(--bas-ecran)); }
+  html.barre-compacte body:has(.panier-pilule:not(.panier-pilule--bulle)):has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .suivi-commande { bottom: calc(var(--hauteur-onglets) + 66px + var(--bas-ecran)); }
+  /* Les messages (toasts) passent au-dessus de la bande, et des deux barres quand le panier est là. */
+  body:has(.suivi-commande):has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .toast { bottom: calc(var(--hauteur-onglets) + 82px + var(--bas-ecran)); }
+  body:has(.suivi-commande):has(.panier-pilule:not(.panier-pilule--bulle)):has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .toast { bottom: calc(var(--hauteur-onglets) + 150px + var(--bas-ecran)); }
+}
+/* Sur ordinateur, la barre latérale remplace les onglets : en bas à droite, au-dessus de la pilule du panier. */
+@media (min-width: 901px) {
+  .suivi-commande { left: auto; right: 24px; bottom: 24px; width: 380px; margin: 0; }
+  body:has(.panier-pilule) .suivi-commande { bottom: 92px; }
+}
+/* Ni dans le panier et le paiement (pas d'onglets), ni sous une fenêtre, une feuille ou la fiche d'un commerce sur la Carte,
+   ni clavier ouvert : la même règle que la barre du panier (styles.css, « LA BARRE DU PANIER S'EFFACE »). */
+body:has(.dashboard-shell--flux) .suivi-commande, body:not(:has(.dashboard-sidebar)) .suivi-commande,
+body:has([role="dialog"], .carte-page .carte-fiche, .carte-page .map-detail-card) .suivi-commande, html.clavier-ouvert .suivi-commande { display: none; }
+@media (prefers-reduced-motion: reduce) { .suivi-commande, .suivi-commande-anneau .avance { animation: none; transition: none; } }
+@media (prefers-reduced-transparency: reduce) {
+  html.appli .suivi-commande:not(.suivi-commande--a-toi) { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); text-shadow: none; }
+}
