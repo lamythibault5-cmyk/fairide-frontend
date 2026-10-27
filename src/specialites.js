@@ -125,8 +125,9 @@ export const SPECIALITES = [
  *
  * DANS L'ORDRE DE CE QU'ON VEUT LE PLUS SOUVENT (fondateur, 2026-10-27 : « pourquoi commencer par le petit-déj ? pizza,
  * burger, indien, sushi, poulet frit, fast-food, thaï, petit-déj ») : ces huit en tête, puis le reste à peu près par demande
- * à Bruxelles, les courses en dernier. L'ordre compte aussi pour `deSpecialite` (la première catégorie qui cite une
- * spécialité) : Turc va dans Kebab, avant Libanais. */
+ * à Bruxelles. Depuis le même jour, la bande se range au nombre de commerces (categoriesClient, plus bas) : cet ordre ne
+ * fait plus que départager deux catégories à égalité, et compte pour `deSpecialite` (la première catégorie qui cite une
+ * spécialité) : Turc va dans Kebab, avant Libanais. Les tuiles par défaut de SearchPage, sans liste chargée, le suivent aussi. */
 const LISTE_CATEGORIES = [
   ['pizza', 'pizza', [], ['Pizza', 'Pizza à la part']],
   ['burgers', 'burger', ['burger'], []],
@@ -183,12 +184,19 @@ const categoriesDe = (r) => new Set([
   ...CATEGORIES_CLIENT.filter((c) => c.declarations.some((d) => r?.[d] === true)).map((c) => c.cle)
 ]);
 
-// Les catégories de cette liste de commerces : `liste` (celles qui en ont au moins un, dans l'ordre de la bande, plus `garder`,
-// celle déjà choisie), `de(r)` (celles d'un commerce) et `deSpecialite(valeur)` (la première où se trouve une spécialité).
+// Les catégories de cette liste de commerces : `liste` (celles qui en ont au moins un, plus `garder`, celle déjà choisie),
+// `de(r)` (celles d'un commerce) et `deSpecialite(valeur)` (la première où se trouve une spécialité).
+// LA BANDE SUIT CE QU'ON A (fondateur, 2026-10-27) : les courses d'abord, puis la catégorie qui a le plus de commerces
+// jusqu'à celle qui en a le moins ; à égalité, l'ordre de LISTE_CATEGORIES. Ce dernier ne sert donc plus qu'à départager
+// et à `deSpecialite`.
+const EN_TETE = ['courses'];
 export function categoriesClient(restaurants, { garder = '' } = {}) {
-  const presentes = new Set(restaurants.flatMap((r) => [...categoriesDe(r)]));
+  const compte = new Map();
+  restaurants.forEach((r) => categoriesDe(r).forEach((cle) => compte.set(cle, (compte.get(cle) || 0) + 1)));
+  const rang = (c) => (EN_TETE.includes(c.cle) ? -1 : 0);
   return {
-    liste: CATEGORIES_CLIENT.filter((c) => presentes.has(c.cle) || c.cle === garder),
+    liste: CATEGORIES_CLIENT.filter((c) => compte.has(c.cle) || c.cle === garder)
+      .sort((a, b) => rang(a) - rang(b) || (compte.get(b.cle) || 0) - (compte.get(a.cle) || 0)),
     de: categoriesDe,
     deSpecialite: (valeur) => { const s = specialite(valeur); return s ? categoriesDeSpecialite(s)[0] || '' : ''; }
   };
