@@ -218,6 +218,12 @@ files to the share sheet in the native app; « Imprimer » is hidden in the app;
 scroll sideways). Orders put the delivery code under the progress bar and open the tip and « Signaler » in sheets (no reviews since
 2026-10-22, conformite.md);
 new promotions open in a sheet. Local backend on a Neon dev database: see `../fairide-backend/.env` (port 5173 for CORS).
+**Goodcom terminal in the app (2026-10-27)**: the Android app installed on a Goodcom prints exactly like GC Web — the same
+« navigateur » path (terminalNavigateur.js → goodcomWebPrinter.js → Goodcom print service on `ws://localhost:62769`), paired
+from Mon commerce › Terminal (`/dashboard/terminal`, in check:app). Android 9+ blocks cleartext even in the WebView, so
+`res/xml/network_security_config.xml` opens cleartext to `localhost` / `127.0.0.1` ONLY; never widen it. It prints only while the
+app is in the foreground (no native shell, `window.FairideTerminal` absent): tickets wait in the queue and come out on reopening.
+Not yet tried on a real Goodcom: that the print service accepts another app than GC Web is the open question.
 **`npm run check:app` before every push** ([scripts/verifier-appli.mjs](../../scripts/verifier-appli.mjs)): opens every app page at
 375×667 in app mode for four profiles against a mocked backend (real captured responses in `scripts/verifier-appli-donnees.json`)
 and fails on any website chrome, a crashed page, or a full-screen screen that scrolls. Needs Chrome or Edge installed. A new

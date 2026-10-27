@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Impression sur un terminal Goodcom DEPUIS L'APPLI (2026-10-27) : la page parle au « service d'impression Goodcom »
+     de l'appareil par ws://localhost:62769 (src/goodcomWebPrinter.js), en clair. Une appli qui vise Android 9+ refuse
+     tout trafic en clair par défaut, WebView comprise : sans ce fichier, l'appli installée sur le Goodcom disait « service
+     d'impression non détecté » là où GC Web imprimait. On n'ouvre le clair QUE vers l'appareil lui-même ; tout le reste
+     (API, Stripe, cartes) reste en HTTPS obligatoire. Le serveur local de Capacitor (https://localhost) n'est pas concerné. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>

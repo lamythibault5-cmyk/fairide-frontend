@@ -11,7 +11,9 @@ import { qrMatrix } from './components/qr';
 // Le ticket est envoyé en IMAGE, dessinée à partir des mêmes lignes que partout ailleurs (backend ticketTerminal.js) :
 // accents, texte inversé, double taille et QR code sortent à l'identique, quelle que soit la police de l'imprimante.
 //
-// Nécessite, côté site, que la politique de sécurité autorise ws://localhost:62769 (connect-src de vercel.json).
+// Nécessite, côté site, que la politique de sécurité autorise ws://localhost:62769 (connect-src de vercel.json) ; dans
+// l'appli Android installée sur le Goodcom, que le trafic en clair vers localhost soit permis
+// (android/app/src/main/res/xml/network_security_config.xml : Android 9+ le refuse par défaut, WebView comprise).
 const URL_SERVICE = 'ws://localhost:62769';
 const LARGEUR_POINTS = 384; // rouleau de 58 mm à 203 ppp
 const DELAI_MS = 15000;
