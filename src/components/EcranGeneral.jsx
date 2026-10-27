@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icone from './Icone';
 import BrandMark from './BrandMark';
@@ -29,22 +30,36 @@ export function BandeauGeneral({ titre, sous, marque = false, icone = null, reto
   const navigate = useNavigate();
   const location = useLocation();
   const retourAppli = !retour && APPLI && !!user;
+  const haut = useRef(null);
+  const [horsEcran, setHorsEcran] = useState(false);
+  /* LE ‹ RESTE À PORTÉE (fondateur, 2026-10-27 : « s'il veut ressortir, il se sent perdu »). Le rond du bandeau part vers le
+   * haut avec la page : au milieu de l'Aide (Edenred, un souci, l'adresse de livraison…), plus aucune sortie à l'écran. Dans
+   * l'app, dès qu'il est sorti de l'écran, le même ‹ flotte en haut à gauche, en verre clair puisqu'il est alors sur le blanc
+   * de la feuille. Sur le site, la barre latérale ou l'en-tête restent là : rien ne change. */
+  useEffect(() => {
+    if (!APPLI || !(retour || retourAppli) || !haut.current || typeof IntersectionObserver === 'undefined') return undefined;
+    // -64 px : passé sous l'heure et la batterie, il est déjà hors de portée du pouce.
+    const obs = new IntersectionObserver(([e]) => setHorsEcran(!e.isIntersecting), { rootMargin: '-64px 0px 0px 0px' });
+    obs.observe(haut.current);
+    return () => obs.disconnect();
+  }, [retour, retourAppli]);
+  const rond = (classe) => (retour ? (
+    <Link to={retour.vers} state={retour.etat} className={classe} aria-label={retour.libelle} title={retour.libelle}>
+      <Icone nom="retour" taille={18} />
+    </Link>
+  ) : (
+    <button type="button" className={classe} aria-label={t('appli.retour')} title={t('appli.retour')}
+      onClick={() => (location.key !== 'default' ? navigate(-1) : navigate('/'))}>
+      <Icone nom="retour" taille={18} />
+    </button>
+  ));
   return (
     <header className="site-bande gn-bandeau">
+      {horsEcran && rond('gn-rond gn-rond--flottant')}
       <div className="site-col site-col--lecture">
         {(retour || retourAppli || marque || icone) && (
-          <div className="gn-haut">
-            {retour && (
-              <Link to={retour.vers} state={retour.etat} className="gn-rond" aria-label={retour.libelle} title={retour.libelle}>
-                <Icone nom="retour" taille={18} />
-              </Link>
-            )}
-            {retourAppli && (
-              <button type="button" className="gn-rond" aria-label={t('appli.retour')} title={t('appli.retour')}
-                onClick={() => (location.key !== 'default' ? navigate(-1) : navigate('/'))}>
-                <Icone nom="retour" taille={18} />
-              </button>
-            )}
+          <div className="gn-haut" ref={haut}>
+            {(retour || retourAppli) && rond('gn-rond')}
             {/* Avec un retour, la tuile s'efface : deux pastilles côte à côte se disputaient le coin. */}
             {marque && !retour && !retourAppli && <span className="gn-tuile gn-tuile--marque" aria-hidden="true"><BrandMark size={28} tile={false} color="#C8F03C" animer={false} /></span>}
             {icone && !retour && !retourAppli && <span className="gn-tuile" aria-hidden="true"><Icone nom={icone} taille={20} /></span>}
