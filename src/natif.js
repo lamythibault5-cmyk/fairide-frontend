@@ -203,6 +203,34 @@ function preparerHaptique() {
   }, { capture: true, passive: true });
 }
 
+/* LE BALAYAGE RETOUR D'IOS, COUPÉ PENDANT QU'UNE FENÊTRE EST OUVERTE (2026-10-27, fondateur : « dans Mon compte, les écrans
+ * n'ont pas le retour par balayage »). Le balayage depuis le bord gauche est celui de WebKit (FairideViewController.swift) :
+ * il remonte l'historique, et ignore une feuille dessinée par la page. Feuille ouverte, il reculait SOUS elle (ou ne
+ * faisait rien). useDialogue appelle donc ceci à l'ouverture de toute fenêtre modale et rend la main à la fermeture ; la
+ * feuille répond elle-même au même geste (useFeuilleGlissable). Un compteur : deux fenêtres empilées, une seule coupure.
+ * iPhone seulement (Android a son geste système, qui passe par backButton plus bas). Sans le greffon (version plus
+ * ancienne de l'app), l'appel échoue sans bruit. */
+let fenetresOuvertes = 0;
+let retourNatif = null; // enregistré une seule fois : Capacitor refuse un second registerPlugin du même nom
+function retourIos(actif) {
+  try {
+    retourNatif ||= registerPlugin('RetourNatif');
+    retourNatif.activer({ actif }).catch(() => {});
+  } catch { /* greffon absent */ }
+}
+export function suspendreRetourIos() {
+  if (!estNatif() || plateforme() !== 'ios') return () => {};
+  fenetresOuvertes += 1;
+  if (fenetresOuvertes === 1) retourIos(false);
+  let rendu = false;
+  return () => {
+    if (rendu) return;
+    rendu = true;
+    fenetresOuvertes -= 1;
+    if (fenetresOuvertes === 0) retourIos(true);
+  };
+}
+
 // Les routes d'entrée : un Retour Android depuis l'une d'elles réduit l'application (comme l'accueil du
 // téléphone) au lieu de remonter un historique qui n'existe plus.
 // /dashboard/orders : la page de service d'un membre d'équipe, qui n'a qu'elle et son compte (DashboardSidebar.jsx ; audit du
@@ -227,6 +255,8 @@ export async function demarrerNatif(historique) {
   html.classList.add('natif', `natif-${plateforme()}`);
   // Les vibrations sont prêtes avant le premier toucher (voir vibrerNatif).
   chargerHaptique().catch(() => {});
+  // Une page rechargée pendant qu'une feuille était ouverte laisserait le balayage retour coupé (suspendreRetourIos).
+  if (plateforme() === 'ios') retourIos(true);
   preparerHaptique();
   // La tape légère sous chaque bouton (gestes.js, 2026-10-25).
   import('./gestes').then(({ installerTouches }) => installerTouches()).catch(() => {});

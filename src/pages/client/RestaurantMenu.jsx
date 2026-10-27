@@ -42,8 +42,7 @@ import { localizedItem } from '../../menuTranslation';
 import { resolveItemImage, restaurantTypeLabel, haversineDistanceKm } from '../../menuCategories';
 import { VeloMarque } from '../../components/EcranCommande';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
-import { estNatif, experienceApp } from '../../natif';
-import FermerFicheParGlissement from '../../components/FermerFicheParGlissement';
+import { experienceApp } from '../../natif';
 import { photoEnVol, entreeParPhoto, ouvrirAvecPhoto } from '../../transitionPhoto';
 import { chargerAvecCache, lireCache, poserFavoriEnCache } from '../../cacheDonnees';
 import { CHEMIN_LISTE } from '../../resumeCarte';
@@ -1121,7 +1120,6 @@ export default function RestaurantMenu({ id }) {
     return (
       <div className={`fiche-page fiche-appli${parPhoto ? ' fiche-appli--sans-entree' : ''}`} ref={pageRef}>
         {entete}
-        {estNatif() && <FermerFicheParGlissement pageRef={pageRef} />}
         <header className="fiche-entete fiche-entete--ticket">
           <div className="fiche-media">{couverture}</div>
           {/* La feuille blanche qui monte sur la photo. */}

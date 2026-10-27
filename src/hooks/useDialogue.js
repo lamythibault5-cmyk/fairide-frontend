@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { suspendreRetourIos } from '../natif';
 
 // LE COMPORTEMENT COMMUN D'UNE FENÊTRE MODALE : verrou de défilement, focus à l'ouverture, Échap
 // pour fermer, piège à focus, et restitution du focus à la fermeture.
@@ -37,7 +38,10 @@ export default function useDialogue(racine, onFermer) {
     const ouvrant = document.activeElement;
     document.documentElement.style.overflow = 'hidden';
     racine.current?.focus();
+    // iPhone : le balayage retour de WebKit reculerait SOUS la fenêtre ; il se tait tant qu'elle est ouverte (natif.js).
+    const rendreRetour = suspendreRetourIos();
     return () => {
+      rendreRetour();
       document.documentElement.style.overflow = avant;
       // `isConnected` : le bouton d'ouverture peut avoir disparu pendant que la fenêtre était
       // ouverte (une ligne supprimée, une liste rechargée). Lui rendre le focus échouerait en

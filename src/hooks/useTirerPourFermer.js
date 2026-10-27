@@ -8,7 +8,8 @@ import { experienceApp } from '../natif';
  * Sur le site, ou au-delà de 640 px (fenêtre centrée), rien : aucun écouteur n'est posé. */
 export default function useTirerPourFermer(boite, onFermer) {
   const fermer = () => onFermer?.();
-  const glisser = useFeuilleGlissable({ panneau: boite, defile: boite, fermerAnime: fermer, fermerTout: fermer });
+  // Pas de retour par le bord gauche : une fenêtre du bas n'est pas un écran, comme une alerte d'iOS.
+  const glisser = useFeuilleGlissable({ panneau: boite, defile: boite, fermerAnime: fermer, fermerTout: fermer, bord: false });
   // Rien à fermer (une confirmation en cours d'envoi) : pas de geste, sinon la feuille partirait sans que rien ne la démonte.
   if (!experienceApp() || !onFermer) return {};
   const surTelephone = () => window.innerWidth <= 640;
