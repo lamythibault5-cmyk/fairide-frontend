@@ -35,7 +35,7 @@ const VERRE = [
   '.ec-pourboire .cuisine-chip', '.recherche-pastille', '.resa-filtres button', '.btn-outline', '.alerte-compacte-son', '.eg-bouton-iris',
   '.tracking-expand-btn', '.ec-pilule-blanche', '.btn-teal', '.compte-raccourci',
   // Les retours, en verre eux aussi (réponse 5) : le ‹ rond sur les bandeaux iris, « ← Retour » et « ← Mon compte ».
-  '.ec-rond', '.gn-rond', '.bv-rond', '.dashboard-retour', '.retour-compte', '.cs-retour', '.ec-b-retour', '.ecl-b-retour',
+  '.ec-rond', '.gn-rond', '.bv-rond', '.dashboard-retour', '.retour-compte', '.cs-retour', '.ec-b-retour', '.ecl-b-retour', '.eb-retour',
   // La croix de la fiche d'un plat et le ‹ des pages ouvertes en feuille depuis Mon compte (Mes favoris, Mes commandes, Mes
   // factures… : PageFeuille.jsx) — ronds iris à filet blanc, des retours eux aussi.
   '.plat-fermer', '.page-feuille-fermer',

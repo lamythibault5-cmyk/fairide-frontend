@@ -261,11 +261,12 @@ html .ecl .ecl-barres button.ecl-barre-v:hover, html .ecl .ecl-barres button.ecl
 .ecl-b-retour { font-size: 14px; font-weight: 600; color: #fff; text-decoration: none; padding: 4px 0; }
 .ecl-b-retour:hover { color: #fff; text-decoration: underline; }
 /* Ouverte en feuille depuis Mon compte (PageFeuille.jsx) : le bandeau monte jusqu'en haut, sous le rond ‹ de la feuille, qui
-   remplace « ← Mon compte ». */
+   remplace « ← Mon compte ». Gains (.ecl-gains) aussi depuis le 2026-10-27 : la règle ne visait que .ecl-page, et Gains gardait
+   une bande blanche sous la poignée, le rond ‹ posé dessus. */
 .page-feuille .ecl-bandeau--retour .ecl-b-haut { display: none; }
 @media (max-width: 900px) {
-  .page-feuille-corps > .ecl.ecl-page:first-child { padding-top: 0; }
-  .page-feuille-corps > .ecl.ecl-page > .ecl-bandeau { margin-top: 0; padding-top: calc(70px + env(safe-area-inset-top)); }
+  .page-feuille-corps > .ecl:first-child { padding-top: 0; }
+  .page-feuille-corps > .ecl > .ecl-bandeau:first-child { margin-top: 0; padding-top: calc(70px + env(safe-area-inset-top)); }
 }
 .ecl-feuille > :first-child .ecl-titre-sec:first-child, .ecl-feuille > .ecl-titre-sec:first-child { margin-top: 2px; }
 

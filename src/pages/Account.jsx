@@ -506,10 +506,10 @@ export default function Account() {
   const initiales = (nomComplet || user.email || '?').split(/[\s@]+/).slice(0, 2).map((m) => m[0]).join('').toUpperCase();
 
   // Les trois raccourcis de l'en-tête, par rôle. Ils ne créent aucune destination : ce sont des
-  // pages qui existent déjà et qu'on atteignait par une rangée plus bas ou par la barre du bas.
+  // pages qui existent déjà et qu'on atteignait par une rangée plus bas ou par la barre du bas. Le client n'a plus « Commandes »
+  // (fondateur, 2026-10-27) : c'est déjà un onglet de la barre du bas, une rubrique ne figure qu'à un endroit.
   const raccourcis = role === 'client'
     ? [{ to: '/favorites', icone: 'favoris', libelle: t('nav.favorites') },
-       { to: '/orders', icone: 'commandes', libelle: t('nav.orders') },
        { to: '/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }]
     : role === 'driver'
       ? [{ to: '/driver', icone: 'commandes', libelle: t('nav.orders') },

@@ -5698,6 +5698,13 @@ html.appli .page-feuille-fermer { box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 
    pendant que le rond ‹ descendait d'autant — sur un vrai téléphone, le rond se posait sur « Mes favoris » / « Mes
    commandes » (fondateur, 2026-10-20). À 0, le titre passe toujours 18 px sous le rond, quelle que soit la barre d'état. */
 .page-feuille-corps .ecran-bandeau { --eb-mh: 0px; }
+/* Le bandeau des écrans de commande (.ec-page : Mes commandes) touche lui aussi le haut de la feuille. Il recevait les 68 px des
+   pages sans bandeau, moins les 16 px qu'il remonte : une bande blanche de 52 px sous la poignée, le rond ‹ posé dessus
+   (fondateur, 2026-10-27). Même règle que le bandeau du livreur (ecran-livreur.css). */
+@media (max-width: 900px) {
+  .page-feuille-corps > .ec-page:first-child { padding-top: 0; }
+  .page-feuille-corps > .ec-page > .ec-bandeau { margin-top: 0; padding-top: calc(70px + env(safe-area-inset-top)); }
+}
 @media (min-width: 901px) { .page-feuille .plat-poignee { display: none; } }
 
 /* « Google Maps » sous les résultats de Google Places affichés sans carte Google (règles d'attribution de Google Maps

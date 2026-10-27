@@ -8,8 +8,10 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 import { SkeletonCards } from '../components/Skeleton';
 import ErreurChargement from '../components/ErreurChargement';
 import Icone from '../components/Icone';
+import { RouteVelo } from '../components/TeteListe';
 // Même famille que Mon compte sur le site (titre, largeur de lecture, cartes) ; sans effet dans l'app.
 import '../site-compte.css';
+import '../ecran-liste.css';
 
 // « Mes documents » (fondateur, 2026-10-09) : tout ce que la personne a accepté ou signé, facile à retrouver, à lire et à
 // enregistrer — conditions générales et politique de confidentialité (client, commerce, livreur), contrat de partenariat du
@@ -44,9 +46,15 @@ export default function DocumentsPage() {
     : d.restaurants.find((c) => !c.accepted)?.restaurantId ?? (d.courier && !d.courier.signed ? 'coursier' : null);
 
   return (
-    <div className="container compte-sous-page" style={{ paddingBottom: 40 }}>
-      <h1 className="compte-sous-titre" style={{ margin: '0 0 4px' }}>{t('mesDocuments.title')}</h1>
-      <p className="small" style={{ margin: '0 0 16px', opacity: 0.8 }}>{t('mesDocuments.intro')}</p>
+    // Le bandeau iris et la feuille blanche de Mes factures et Mes favoris (fondateur, 2026-10-27 : pareil partout).
+    <div className="ecran-bandeau doc-ecran">
+      <div className="eb-bandeau">
+        <div className="eb-haut"><Link to="/account" state={{ restaurerDefilement: true }} className="eb-retour">{t('nav.backToAccount')}</Link></div>
+        <h1 className="eb-titre">{t('mesDocuments.title')}</h1>
+        <p className="eb-sous">{t('mesDocuments.intro')}</p>
+        <RouteVelo roule />
+      </div>
+      <div className="eb-feuille"><div className="compte-sous-page" style={{ paddingBottom: 40 }}>
       {/* UN SEUL BOUTON LIME (fondateur, 2026-10-25, maquettes/une-action) : le premier document à faire, dans l'ordre de la
           page (conditions générales, contrats des commerces, contrat de coursier) ; les suivants en contour. Une fois signé, le
           suivant devient lime. Avant, « J'ai lu et j'accepte » et « Lire et signer » étaient lime en même temps. */}
@@ -129,6 +137,7 @@ export default function DocumentsPage() {
           )}
         </>
       )}
+      </div></div>
     </div>
   );
 }

@@ -19,8 +19,9 @@
 .compte-nom { margin: 0; color: #fff; font-family: var(--font-titre); font-size: 29px; line-height: 1.1; font-weight: 700; letter-spacing: 0; overflow-wrap: anywhere; }
 .compte-email { color: rgba(255, 255, 255, .82); font-size: 14.5px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Les raccourcis : trois tuiles égales, filet blanc sur l'iris. */
+/* Les raccourcis : trois tuiles égales, filet blanc sur l'iris (deux pour le client depuis le 2026-10-27 : la rangée reste pleine). */
 .compte-raccourcis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.compte-raccourcis:has(> .compte-raccourci:nth-child(2):last-child) { grid-template-columns: repeat(2, 1fr); }
 .compte-raccourci {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 84px;
   padding: 14px 6px; border: 1px solid rgba(255, 255, 255, .3); border-radius: var(--radius); background: transparent;
