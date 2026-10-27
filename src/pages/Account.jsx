@@ -1,7 +1,7 @@
 import GarantieAbonnement from '../components/GarantieAbonnement';
 import { achatsCommerceAutorises, allerAuPaiement, experienceApp, lienPublic } from '../natif';
 import { useEffect, useRef, useState, useId } from 'react';
-import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSiteLarge } from '../hooks/useSiteLarge';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -234,6 +234,12 @@ export default function Account({ integre = false, milieu = null }) {
     }, 150);
     return () => clearTimeout(id);
   }, [sectionDemandee, restaurant, role]);
+  // ?ouvrir=contrat d'un contrat pas encore accepté (liens déjà envoyés par e-mail et SMS) : il se signe dans « Tes engagements »
+  // avec les deux autres textes (un seul parcours, revue des doublons du 2026-10-27). Accepté, la rangée s'ouvre comme avant.
+  const allerVers = useNavigate();
+  useEffect(() => {
+    if (sectionDemandee === 'contrat' && role === 'restaurant' && restaurant && !restaurant.onboarding?.contractAccepted) allerVers('/dashboard/engagements', { replace: true });
+  }, [sectionDemandee, role, restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
   function basculer(cle) {
     setOuvertes((prev) => { const n = new Set(prev); if (n.has(cle)) n.delete(cle); else n.add(cle); return n; });
   }

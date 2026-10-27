@@ -26,8 +26,8 @@ import { SITE } from '../../components/commerce/CadreSite';
  * signé, retour à l'accueil (Commandes), dont la prochaine étape est la nouvelle carte du haut, avec son bouton lime.
  *
  * Rien ne change côté serveur : chaque texte garde sa route, sa version et son empreinte, envoyés l'un après l'autre comme
- * dans ConformiteCarte (qui reste sur Ma carte pour la signature de la carte et pour relire ce qui est signé). La carte
- * elle-même ne se signe pas ici : c'est « C'est bon » (étape « Relis et valide ta carte »). */
+ * avant dans ConformiteCarte. Ma carte ne signe plus rien depuis le 2026-10-27 (revue des doublons) : elle montre ce qui est
+ * signé et mène ici, ou à « C'est bon » pour la carte elle-même (étape « Relis et valide ta carte »). */
 export default function EngagementsPage() {
   const { t, language } = useLanguage();
   const { token } = useAuth();
