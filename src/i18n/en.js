@@ -6177,6 +6177,24 @@ export default {
       photoTitle: 'Order photo',
       photoText: 'On every order (test or real), the button in My orders lets you photograph the order BEFORE handing it over: put the ticket with the order number and all the products in the frame. Time, number and product list are stored with the photo: your proof if a customer complains. Your customer also sees it when tracking their order.'
     },
+    // Commerce et livreur aussi soignés que le client (fondateur, 2026-10-27, maquettes/ecrans-pro).
+    ecransPro: {
+      facturesSous: 'Commission, statements and subscription, month by month.',
+      aucuneFacture: 'No invoice yet',
+      aucuneFactureTexte: 'They will show up here after the first billed period.',
+      nouvelle: 'New order',
+      aAccepter: 'to accept',
+      nMin: '{n} min',
+      rienRater: 'So you never miss an order',
+      enCours: '{n} in progress',
+      rienEnCours: 'Nothing in progress',
+      aujourdhui: '{n} today',
+      enSavoirPlus: 'Learn more',
+      coursePres: '1 ride near you',
+      coursesPres: '{n} rides near you',
+      plusProche: 'Nearest: {km} km · €{fee}',
+      aucuneCourse: 'No ride right now'
+    },
     ecranCommerce: {
       verrouAide: "The switch marks a dish as sold out for today; it comes back on its own tomorrow. A price, dish or photo to change: ask Fairride below the dish list. VAT and labels (halal, vegan…) are set further down.",
       reglagesTitre: "Your commitments and settings",

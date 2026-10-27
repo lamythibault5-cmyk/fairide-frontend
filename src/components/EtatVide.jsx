@@ -21,11 +21,15 @@ import { euros } from '../prixPlat';
  * toute la page (Mes commandes, Mes favoris, le panier) : `scene` remplace le rond gris par le vélo de la marque qui
  * arrive sur sa route pointillée et attend, à côté d'un repère qui dit ce qui manque (la position pour une commande,
  * le cœur pour un favori, le sac pour le panier). C'est le logo en SVG : rien à charger. Le bouton passe en lime. */
-const REPERES = { commandes: 'position', favoris: 'favoris', panier: 'sac' };
+// Le commerce et le livreur aussi depuis le 2026-10-27 (réponse 7 de maquettes/ecrans-pro : « le vélo qui attend partout ») :
+// l'étiquette d'une promotion, le document d'une facture.
+const REPERES = { commandes: 'position', favoris: 'favoris', panier: 'sac', promos: 'etiquette', factures: 'document' };
 const CHEMINS_REPERE = {
   position: <><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" /><circle cx="12" cy="10" r="2.6" /></>,
   favoris: <path d="M12 20s-7-4.4-7-9.3A4 4 0 0 1 12 8a4 4 0 0 1 7 2.7C19 15.6 12 20 12 20Z" />,
   sac: <><path d="M5 8h14l-1 12a1 1 0 0 1-1 .9H7a1 1 0 0 1-1-.9L5 8Z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></>,
+  etiquette: <><path d="M20 12.6 12.6 20a1.6 1.6 0 0 1-2.3 0L4 13.7V4h9.7l6.3 6.3a1.6 1.6 0 0 1 0 2.3Z" /><circle cx="8.5" cy="8.5" r="1.6" /></>,
+  document: <><path d="M7 3h7l4 4v14H7Z" /><path d="M14 3v4h4" /><path d="M10 12h5M10 16h5" /></>,
 };
 function Scene({ genre }) {
   const repere = REPERES[genre] || 'position';

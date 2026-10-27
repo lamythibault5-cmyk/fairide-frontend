@@ -175,7 +175,7 @@ export default function EditPage() {
   );
   return (
     <div>
-      <BandeauCommerce>
+      <BandeauCommerce route={!etapes}>
         {etapes ? (
           <>
             <div className="ec-b-haut">

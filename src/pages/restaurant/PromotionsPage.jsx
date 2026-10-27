@@ -311,7 +311,7 @@ export default function PromotionsPage() {
       <p className="ec-feuille-titre">{t('promosPage.ownPromosTitle')}</p>
       {propres === null && erreurPromos && <ErrorCard message={erreurPromos} onRetry={loadPromos} />}
       {propres === null && !erreurPromos && <p className="ec-aide">{t('promosPage.loading')}</p>}
-      {propres !== null && propres.length === 0 && !formOpen && <EtatVide icone="etiquette" titre={t('promosPage.none')} />}
+      {propres !== null && propres.length === 0 && !formOpen && <EtatVide scene="promos" titre={t('promosPage.none')} />}
       {propres !== null && propres.length > 0 && (
         <div className="ec-lignes">
           {propres.map((p) => (

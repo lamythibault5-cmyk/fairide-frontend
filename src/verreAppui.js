@@ -34,6 +34,8 @@ const VERRE = [
   // Mon compte. Les interrupteurs n'y sont pas : leur rond s'étire déjà à l'appui.
   '.ec-pourboire .cuisine-chip', '.recherche-pastille', '.resa-filtres button', '.btn-outline', '.alerte-compacte-son', '.eg-bouton-iris',
   '.tracking-expand-btn', '.ec-pilule-blanche', '.btn-teal', '.compte-raccourci',
+  // Les puces et les gestes en contour du commerce (2026-10-27, maquettes/ecrans-pro).
+  '.ec-segment:not(.ec-segment--lime) button', '.ec-commande .ec-bouton--contour',
   // Les retours, en verre eux aussi (réponse 5) : le ‹ rond sur les bandeaux iris, « ← Retour » et « ← Mon compte ».
   '.ec-rond', '.gn-rond', '.bv-rond', '.dashboard-retour', '.retour-compte', '.cs-retour', '.ec-b-retour', '.ecl-b-retour', '.eb-retour',
   // La croix de la fiche d'un plat et le ‹ des pages ouvertes en feuille depuis Mon compte (Mes favoris, Mes commandes, Mes
@@ -47,7 +49,7 @@ const BARRES = '.dashboard-nav, .category-quicknav--verre, .panier-pilule, .fich
 /* Les boutons du 2026-10-26 peuvent être larges : à 130 %, « + Ajouter des articles » (354 px) sortirait de l'écran. Au-delà de
    120 px, ils grossissent comme une barre, selon leur taille (8 % à 160 px, 3,5 % à partir de 300 px) ; en dessous (« Activer »,
    « Lire »), comme un bouton. Les contrôles d'avant gardent leur réglage. */
-const LARGES = '.btn-outline, .btn-teal, .eg-bouton-iris, .alerte-compacte-son, .tracking-expand-btn, .compte-raccourci, .dm-moi-aussi';
+const LARGES = '.ec-commande .ec-bouton--contour, .btn-outline, .btn-teal, .eg-bouton-iris, .alerte-compacte-son, .tracking-expand-btn, .compte-raccourci, .dm-moi-aussi';
 const SEUIL_LARGE = 120;
 
 /* Ceux qui défilent de côté : le doigt qui part les faire défiler ne doit pas les faire gonfler. Ils attendent 70 ms (le

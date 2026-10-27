@@ -125,11 +125,12 @@ html.appli body .liste-filtres .cuisine-chip.active {
    paiement (rangées à contour iris, maquettes/une-action), les cartes, tuiles et rangées, la croix sur la photo d'un plat, les ronds
    de choix d'un plat, les champs, les liens texte et tout le site. */
 /* 1. Les pastilles de choix (pourboire, Recherche, filtres des bons cadeaux) : verre clair, iris vif une fois choisies. */
-html.appli body :is(.ec-pourboire .cuisine-chip, .recherche-pastille, .resa-filtres button) {
+/* Les puces du commerce (temps de préparation, onglets des Factures : réponses 3 et 10 de maquettes/ecrans-pro, 2026-10-27) aussi. */
+html.appli body :is(.ec-pourboire .cuisine-chip, .recherche-pastille, .resa-filtres button, .ec-segment:not(.ec-segment--lime) button) {
   border-color: transparent; color: var(--iris); background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
   -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
 }
-html.appli body :is(.ec-pourboire .cuisine-chip.active, .resa-filtres button.actif) {
+html.appli body :is(.ec-pourboire .cuisine-chip.active, .resa-filtres button.actif, .ec-segment:not(.ec-segment--lime) button.on) {
   color: #fff; background: var(--iris-vif-fond); box-shadow: var(--iris-vif-ombre);
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
@@ -149,7 +150,7 @@ html.appli body :is(.co-interrupteur, .ec-interrupteur:not(.ec-interrupteur--lim
 /* 3. Les boutons secondaires, ceux d'à côté du lime (« Ajouter des articles », « Notifications », la commande groupée, les documents
    du livreur, « Signer », le son des commandes…) : verre clair, libellé iris. Le bouton d'urgence du livreur est un .btn-outline
    sur le bandeau iris, en blanc : il prend le verre sur l'iris (plus bas), sinon blanc sur blanc. */
-html.appli body :is(.btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son, .eg-bouton-iris, .tracking-expand-btn, .ec-pilule-blanche) {
+html.appli body :is(.btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son, .eg-bouton-iris, .tracking-expand-btn, .ec-pilule-blanche, .ec-commande .ec-bouton--contour) {
   border-color: transparent; color: var(--iris); background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
   -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
 }

@@ -1,3 +1,4 @@
+import TexteReplie from './TexteReplie';
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -49,11 +50,8 @@ export default function PeppolSettings({ endpoint }) {
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
         <div>
           <h3 style={{ margin: '0 0 4px', fontSize: 15 }}><Icone nom="document" taille={16} className="icone-texte" />{' '}{t('peppol.title')}</h3>
-          <p className="small" style={{ margin: 0 }}>
-            {data.providerConfigured
-              ? (data.enabled ? t('peppol.stateOn') : t('peppol.stateOff'))
-              : t('peppol.stateSoon')}
-          </p>
+          <TexteReplie className="small" style={{ margin: 0 }} titre={t('peppol.title')}
+            texte={data.providerConfigured ? (data.enabled ? t('peppol.stateOn') : t('peppol.stateOff')) : t('peppol.stateSoon')} />
         </div>
         <button type="button" className="btn-ghost" onClick={() => setOuvert((v) => !v)}>{ouvert ? t('peppol.hide') : t('peppol.details')}</button>
       </div>

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 import GraphiqueBarres from '../../components/commerce/GraphiqueBarres';
 import ChiffresRoulants from '../../components/ChiffresRoulants';
-import { BandeauCommerce, FeuilleCommerce, SegmentGlisse } from '../../components/commerce/BandeauCommerce';
+import { BandeauCommerce, FeuilleCommerce, RetourCommerce, SegmentGlisse } from '../../components/commerce/BandeauCommerce';
 import { vibrer } from '../../gestes';
 import { SITE } from '../../components/commerce/CadreSite';
 
@@ -98,7 +98,7 @@ export default function StatsPage() {
       {/* LE BANDEAU (2026-10-16, « Le chiffre en grand ») : la période se choisit au pouce lime, le chiffre roule. */}
       <BandeauCommerce retour>
         <div className="ec-b-haut">
-          <Link to="/account" state={{ restaurerDefilement: true }} className="ec-b-retour">{t('nav.backToAccount')}</Link>
+          <RetourCommerce />
           {restaurant?.name && <span><b>{restaurant.name}</b></span>}
         </div>
         {/* Sur le site, la taille commune des titres de bandeau (site-pro.css). */}

@@ -30,6 +30,7 @@ import EtatVide from '../../components/EtatVide';
 import ErrorCard from '../../components/ErrorCard';
 import { SkeletonCards } from '../../components/Skeleton';
 import { BandeauCommerce, FeuilleCommerce, SegmentGlisse } from '../../components/commerce/BandeauCommerce';
+import { RouteVelo } from '../../components/TeteListe';
 import { vibrer } from '../../gestes';
 import { experienceApp, estNatif } from '../../natif';
 import { raisonFermeture } from '../../components/commerce/raisonFermeture';
@@ -410,6 +411,13 @@ export default function OrdersPage() {
      code à taper depuis le 2026-10-20), « Client pas venu » dessous. Toucher la carte ouvre le détail, comme avant. */
   const nouvellesTriees = enCours.filter((o) => orderStageKey(o) === 'nouveau').sort((a, b) => echeance(a) - echeance(b));
   const plusPressee = nouvellesTriees.find((o) => o.status === 'nouveau')?.id;
+  /* UN SEUL LIME À L'ÉCRAN (fondateur, 2026-10-27, réponse 3 A de maquettes/ecrans-pro ; design.md, règle 4). Tant qu'une commande
+     attend, le lime est à « Accepter » ; sinon au geste de la première carte, dans l'ordre de l'écran (« Marquer prêt » d'une
+     commande en préparation, puis « Remis au client » d'une commande à emporter prête). Les autres gestes sont en contour iris :
+     trois boutons pleins de couleur se disputaient l'écran (Accepter lime, Marquer prêt et Remis au client iris). */
+  const prochaine = plusPressee ? null
+    : (enCours.find((o) => o.status === 'preparation') || enCours.find((o) => o.status === 'pret' && o.orderType === 'pickup'))?.id;
+  const boutonGeste = (o) => `ec-bouton ${o.id === prochaine ? 'ec-bouton--lime' : 'ec-bouton--contour'}`;
   /* LA CARTE AU CLAVIER (audit du 19/10, CROSS-85) : toucher la carte ouvre le détail, mais une div n'est ni atteignable à la
      tabulation ni activable par Entrée. Elle entre dans l'ordre de tabulation et s'ouvre par Entrée ou Espace — seulement
      quand c'est la carte elle-même qui a le focus, pas l'un de ses boutons (Accepter, imprimer…). Un groupe nommé, pas role="button" :
@@ -482,7 +490,7 @@ export default function OrdersPage() {
     <div className="ec-remise-client" onClick={(e) => e.stopPropagation()}>
       <div className="ec-remise-ligne">
         {qui(o)}
-        <button type="button" className="ec-bouton ec-bouton--iris" disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
+        <button type="button" className={boutonGeste(o)} disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
           {confirmingPickup === o.id ? '…' : t('ordersResto.handedToCustomer')}
         </button>
       </div>
@@ -521,7 +529,7 @@ export default function OrdersPage() {
       <p className="ec-cmd-sous">{sousTitre(o)}</p>
       {/* Paiement sur place : encadré, c'est de l'argent à encaisser (fondateur, 2026-10-07). */}
       {o.paymentMode === 'on_site' && (!rienAEncaisser(o) || o.pickupNoShow) && (
-        <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
+        <span className={`small paiement-badge paiement-sur-place${o.pickupNoShow ? ' est-pas-venu' : ''}`} style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
           {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}
         </span>
       )}
@@ -543,7 +551,7 @@ export default function OrdersPage() {
               mais gardés pour une tablette plus large, où la barre ne s'affiche pas. */}
           {(
             <div className={dansLaBarre ? 'ec-cmd-boutons-barre' : undefined}>
-              <button type="button" className={`ec-bouton ${o.id === plusPressee ? 'ec-bouton--lime' : 'ec-bouton--iris'}`} disabled={actionsEnCours.has(o.id)} onClick={() => accepter(o)}>
+              <button type="button" className={`ec-bouton ${o.id === plusPressee ? 'ec-bouton--lime' : 'ec-bouton--contour'}`} disabled={actionsEnCours.has(o.id)} onClick={() => accepter(o)}>
                 {actionsEnCours.has(o.id) ? '…' : t('ordersResto.accept')}
               </button>
               <button type="button" className="ec-bouton ec-bouton--texte" disabled={actionsEnCours.has(o.id)} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
@@ -551,10 +559,10 @@ export default function OrdersPage() {
           )}
         </div>
       )}
-      {/* Iris et non lime : avec plusieurs commandes en préparation, l'écran alignait autant de boutons lime. */}
+      {/* Lime pour la première seulement, contour iris pour les autres (`prochaine`, plus haut). */}
       {o.status === 'preparation' && (
         <div onClick={(e) => e.stopPropagation()}>
-          <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionsEnCours.has(o.id)} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+          <button type="button" className={boutonGeste(o)} disabled={actionsEnCours.has(o.id)} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
         </div>
       )}
       {o.status === 'pret' && o.orderType === 'pickup' && remiseClient(o)}
@@ -796,7 +804,7 @@ export default function OrdersPage() {
         <PastilleCouverts order={o} />
         <div className="sp-cmd-paiement">
           {o.paymentMode === 'on_site' && rienAEncaisser(o) && !o.pickupNoShow ? null : o.paymentMode === 'on_site' ? (
-            <span className="small paiement-badge paiement-sur-place" style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
+            <span className={`small paiement-badge paiement-sur-place${o.pickupNoShow ? ' est-pas-venu' : ''}`} style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
               {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: euros(o.total) })}
             </span>
           ) : (
@@ -926,18 +934,29 @@ export default function OrdersPage() {
      barre au-dessus des onglets (portail dans <body> : la feuille et .page-fade s'animent avec transform, qui casse fixed). */
   const sections = COLONNES.map((c) => ({ ...c, liste: c.cle === 'nouv' ? nouvellesTriees : enCours.filter((o) => c.etapes.includes(orderStageKey(o))) }));
   const titresSections = { nouv: 'serviceCommerce.aTraiter', prep: 'serviceCommerce.enPreparation', pret: 'serviceCommerce.pretes' };
-  const enTete = (c) => <p className="ec-section" key={`t-${c.cle}`}>{t(titresSections[c.cle])} <span className="ec-section-n">{c.liste.length}</span></p>;
+  const enTete = (c) => <p className="ec-section ec-section--service" key={`t-${c.cle}`}>{t(titresSections[c.cle])} <span className="ec-section-n">{c.liste.length}</span></p>;
   const pressee = nouvellesTriees.find((o) => o.id === plusPressee);
   return (
     <div className="no-print">
       <TirerPourActualiser onActualiser={() => loadDashboard(restoId, { silencieux: true })} />
-      <BandeauCommerce>
+      {/* UN TITRE ET LA ROUTE DU VÉLO (fondateur, 2026-10-27, réponse 2 A de maquettes/ecrans-pro) : le bandeau dit d'abord ce qui
+          attend, comme « Chez toi vers 15:41 » chez le client ; le résumé passe dessous, la route du vélo avant l'alarme. Le lien
+          du terminal est parti : le terminal se règle dans Mon compte › Mon terminal Fairride (le site garde son état sur le
+          tableau, AlerteBandeau). */}
+      <BandeauCommerce route={false}>
         <div className="ec-b-haut">
-          <span><b>{restaurant?.name}</b>{' · '}{t('ordersResto.summary', { current: enCours.length, today: duJour })}</span>
+          <span><b>{restaurant?.name}</b></span>
           {restaurant && <InterrupteurService compact restaurant={restaurant} restoId={restoId} token={token} loadDashboard={loadDashboard} modifierRestaurant={modifierRestaurant} />}
         </div>
+        <h1 className="ec-b-titre">
+          {nouvellesTriees.length ? (nouvellesTriees.length === 1 ? t('alertBar.toHandleOne') : t('alertBar.toHandle', { n: nouvellesTriees.length }))
+            : enCours.length ? t('ecransPro.enCours', { n: enCours.length }) : t('ecransPro.rienEnCours')}
+        </h1>
+        <p className="ec-b-sous">
+          {nouvellesTriees.length ? t('ordersResto.summary', { current: enCours.length, today: duJour }) : t('ecransPro.aujourdhui', { n: duJour })}
+        </p>
+        <RouteVelo roule className="ec-b-route" />
         <LigneAlarme alerte={alerte} />
-        {terminaux && !membreEquipe && <span className="ec-terminal"><Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></span>}
       </BandeauCommerce>
       <FeuilleCommerce>
         {nouvellesTriees.length > 0 && <>{enTete(sections[0])}{nouvellesTriees.map((o) => carteCommande(o, { barre: true }))}</>}

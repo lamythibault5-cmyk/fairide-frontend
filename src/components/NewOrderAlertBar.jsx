@@ -24,7 +24,7 @@ import { SONNERIES, REPETITIONS } from '../hooks/useNewOrderAlert';
 // boutons pressants de la barre passent en iris. Dans l'app, ils restent lime, comme avant.
 const PRESSANT = experienceApp() ? 'btn-gold' : 'btn-teal';
 
-export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme, compact = false, onOuvrir = null }) {
+export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme, compact = false, onOuvrir = null, sansCommande = false }) {
   const { t } = useLanguage();
   const toast = useToast();
   const active = newCount > 0;
@@ -38,7 +38,8 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
      encore le son sans qu'on ait rien touché, un petit bouton pour l'activer. Le reste (réglages, notifications) vit sur
      l'accueil et la page Commandes. Rien à dire : rien d'affiché. */
   if (compact) {
-    if (active) {
+    // Sur téléphone, la commande qui attend a sa bande au-dessus des onglets (BandeATraiter.jsx) : ici, seulement le son.
+    if (active && !sansCommande) {
       return (
         <div className="alerte-compacte est-active" role="status">
           <strong>{newCount === 1 ? t('alertBar.toHandleOne') : t('alertBar.toHandle', { n: newCount })}</strong>
@@ -69,6 +70,37 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
     if (issue === 'ok') toast(t('alertBar.pushOnDone'), 'succes');
     else if (issue === 'refuse') toast(t('alertBar.pushRefused'), 'erreur');
     else toast(t('alertBar.pushFailed'), 'erreur');
+  }
+
+  /* SUR TÉLÉPHONE, L'ACCUEIL NE GARDE QUE CE QUI MANQUE (fondateur, 2026-10-27, réponse 1 A de maquettes/ecrans-pro/ecrans-pro.html).
+     La commande qui attend a sa bande lime au-dessus des onglets (BandeATraiter.jsx) ; le compteur, la phrase d'aide et les
+     réglages vivent sur la ligne d'alarme de Commandes (LigneAlarme). Restent ici, en une carte et seulement tant qu'ils
+     manquent, le son bloqué et les notifications, en contour : le lime de l'écran est à la bande. Rien ne manque : rien. */
+  if (sansCommande) {
+    const pushPossible = push?.supporte && push?.disponible;
+    const sonBloque = soundEnabled && audioBloque;
+    const pushAActiver = pushPossible && !push.abonne;
+    const notifAActiver = permission === 'default' && !pushPossible;
+    if (!sonBloque && !pushAActiver && !notifAActiver && permission !== 'denied') return null;
+    return (
+      <div className="card alerte-manque">
+        <b>{t('ecransPro.rienRater')}</b>
+        <div className="row alerte-actions" style={{ gap: 8 }}>
+          {sonBloque && (
+            <button type="button" className="btn-outline btn-sm" onClick={debloquerAudio}>
+              <Icone nom="sonCoupe" taille={16} className="icone-texte" />{' '}{t('alertBar.activerSon')}
+            </button>
+          )}
+          {pushAActiver && (
+            <button type="button" className="btn-outline btn-sm" disabled={push.occupe} onClick={basculerPush}>{t('alertBar.pushOff')}</button>
+          )}
+          {notifAActiver && (
+            <button type="button" className="btn-outline btn-sm" onClick={requestPermission}>{t('alertBar.enableNotifications')}</button>
+          )}
+          {permission === 'denied' && <span className="small texte-erreur">{t('alertBar.blocked')}</span>}
+        </div>
+      </div>
+    );
   }
 
   // Ce que la barre peut promettre, dans l'ordre décroissant de garantie.

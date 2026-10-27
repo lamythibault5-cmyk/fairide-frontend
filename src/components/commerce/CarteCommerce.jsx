@@ -16,6 +16,7 @@ import TvaCarte from './TvaCarte';
 import Icone from '../Icone';
 import { BandeauCommerce, FeuilleCommerce } from './BandeauCommerce';
 import { SITE } from './CadreSite';
+import TexteReplie from '../TexteReplie';
 
 /* « MA CARTE » CÔTÉ COMMERCE, AU BANDEAU IRIS (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html › Ma carte,
  * « Interrupteur de rupture »). Le commerce ne modifie pas ses plats lui-même (fondateur, 2026-10-01) : il met un plat en
@@ -94,7 +95,7 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
           <>
             <p className="ec-carte-verrou" role="note">
               <Icone nom="cadenas" taille={16} />
-              <span><b style={{ color: 'var(--ink)' }}>{t('menuPage.lockedTitle')}</b>{' · '}{t('ecranCommerce.verrouAide')}</span>
+              <span><b style={{ color: 'var(--ink)' }}>{t('menuPage.lockedTitle')}</b>{' · '}<TexteReplie as="span" texte={t('ecranCommerce.verrouAide')} titre={t('menuPage.lockedTitle')} /></span>
             </p>
             {sections.length > 1 && (
               <nav className="ec-sections" ref={bande} aria-label={t('ecranCommerce.sectionsCarte')}>

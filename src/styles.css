@@ -5718,3 +5718,8 @@ html.appli .page-feuille-fermer { box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 
  * Platform : le nom en texte, jamais traduit, Roboto 400 de 12 à 16 px, gris #5E5E5E, dans le même bloc que ces résultats).
  * « Demande ton restaurant » (FenetreDemande) et l'inscription d'un commerce (BusinessSearch), 2026-10-27. */
 .attribution-google { margin: 2px 2px 6px; text-align: right; font: 400 12px Roboto, Arial, sans-serif; letter-spacing: normal; color: #5E5E5E; white-space: nowrap; }
+
+/* « En savoir plus » après la première phrase d'un long texte (TexteReplie.jsx, 2026-10-27, maquettes/ecrans-pro) : un lien, pas un
+   bouton à remplir ; blanc souligné sur un bandeau iris. */
+.texte-plus { display: inline; min-height: 0 !important; padding: 2px 0; border: 0; background: none; font: inherit; font-weight: 600; color: var(--iris); cursor: pointer; }
+:is(.ec-bandeau, .ecl-bandeau) .texte-plus { color: #fff; text-decoration: underline; text-underline-offset: 2px; }

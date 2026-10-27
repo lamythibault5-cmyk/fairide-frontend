@@ -152,7 +152,7 @@ export default function CommissionStatements() {
             </div>
           </div>
 
-          {data.groups.length === 0 && <EtatVide icone="document" titre={t('statements.none')} />}
+          {data.groups.length === 0 && <EtatVide scene="factures" titre={t('statements.none')} />}
 
           {data.groups.map((g) => {
             const ouvert = ouverts.has(g.key);
