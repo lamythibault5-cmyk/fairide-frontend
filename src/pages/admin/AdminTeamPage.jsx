@@ -109,7 +109,6 @@ export default function AdminTeamPage() {
 // --- Onglet Membres ----------------------------------------------------------------------------------------
 
 function MembresTab({ membres, erreur, recharger, monRole, isOwner, moi, token, toast, tr, onInvite, refreshRole }) {
-  const { t } = useLanguage();
   const [recherche, setRecherche] = useState('');
   const q = useDebouncedValue(recherche, 200).trim().toLowerCase();
   const [filtre, setFiltre] = useEtatPage('filtre', 'all'); // all | active | inactive
@@ -439,7 +438,6 @@ function RolesTab({ token, tr }) {
 // --- Onglet Activité ----------------------------------------------------------------------------------------
 
 function ActiviteTab({ token, tr, membres }) {
-  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [action, setAction] = useState('');
   const [actions, setActions] = useState([]);

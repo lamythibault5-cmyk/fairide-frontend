@@ -5048,7 +5048,6 @@ export default {
       applyAllDays: 'Appliquer à tous les jours',
       addService: '+ Ajouter un service',
       removeService: 'Retirer ce service',
-      to: 'à',
       openTime: '{day}, ouverture du service {n}',
       closeTime: '{day}, fermeture du service {n}',
       closedDay: '{day} : fermé',
@@ -9725,6 +9724,7 @@ export default {
     },
     simulation: {
       plusDelivery: "+ livraison",
+      benchTakeoverTitle: 'Reprendre ce terminal ?',
       benchTakeoverConfirm: 'Cet appareil est le terminal de « {name} ». Le connecter à la simulation le déconnecte de ce commerce, qui devra le reconnecter. Continuer ?',
       tk_category_d: '{n} produit(s) de cette catégorie',
       tk_category: 'Carte : {name}',

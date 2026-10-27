@@ -5038,7 +5038,6 @@ export default {
       applyAllDays: 'Op alle dagen toepassen',
       addService: '+ Een service toevoegen',
       removeService: 'Deze service verwijderen',
-      to: 'tot',
       openTime: '{day}, service {n} opent',
       closeTime: '{day}, service {n} sluit',
       closedDay: '{day}: gesloten',
@@ -9666,6 +9665,7 @@ export default {
     },
     simulation: {
       plusDelivery: "+ levering",
+      benchTakeoverTitle: 'Deze terminal overnemen?',
       benchTakeoverConfirm: 'Dit toestel is de terminal van “{name}”. Koppelen aan de simulatie koppelt het los van die zaak, die het opnieuw moet koppelen. Doorgaan?',
       tk_category_d: '{n} product(en) in deze categorie',
       tk_category: 'Kaart: {name}',

@@ -12,7 +12,7 @@ import { euros } from '../prixPlat';
 // même en français (audit du 24/10).
 const euro = (n) => euros(Number(n || 0));
 
-function depuisCommande(order, t) {
+function depuisCommande(order) {
   if (!order) return { clientName: '', orderType: 'pickup', items: [{ name: '', qty: 1, price: '' }], note: '', deliveryFee: 0, address: '' };
   return {
     clientName: order.clientName || '', orderType: order.orderType || 'delivery',
@@ -35,7 +35,7 @@ export function ticketVersCommande(f) {
 
 export default function TicketEditor({ initial, btName, printing, onPrintBluetooth, onPrintBrowser, onClose }) {
   const { t } = useLanguage();
-  const [f, setF] = useState(() => depuisCommande(initial, t));
+  const [f, setF] = useState(() => depuisCommande(initial));
   const [copies, setCopies] = useState(1);
   const [imprimes, setImprimes] = useState(0);
   const apercu = useMemo(() => ticketVersCommande(f), [f]);

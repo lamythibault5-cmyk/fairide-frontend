@@ -139,7 +139,16 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       homeMarkerRef.current.setLatLng([homeLat, homeLng]);
     }
     mapRef.current.setView([homeLat, homeLng], 15);
+    // L'étiquette et la pastille suivent l'effet ci-dessous : les lister ici recentrerait la carte à chaque changement de langue.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeLat, homeLng, restaurantLat, restaurantLng, deliveryLat, deliveryLng]);
+
+  // La pastille posée garde l'étiquette et l'icône de sa création : sans cet effet, la bulle restait dans la langue d'avant
+  // un changement de langue fait carte ouverte (audit du 27/10).
+  useEffect(() => {
+    if (!homeMarkerRef.current) return;
+    homeMarkerRef.current.setIcon(pastilleSelonCouleur(homeEmoji, homeColor)).setPopupContent(escapeHtml(homeLabel));
+  }, [homeLabel, homeEmoji, homeColor]);
 
   useEffect(() => {
     if (!mapRef.current) return;

@@ -5029,7 +5029,6 @@ export default {
       applyAllDays: 'Apply to every day',
       addService: '+ Add a service',
       removeService: 'Remove this service',
-      to: 'to',
       openTime: '{day}, service {n} opens',
       closeTime: '{day}, service {n} closes',
       closedDay: '{day}: closed',
@@ -9657,6 +9656,7 @@ export default {
     },
     simulation: {
       plusDelivery: "+ delivery",
+      benchTakeoverTitle: 'Take over this terminal?',
       benchTakeoverConfirm: 'This device is the terminal of “{name}”. Connecting it to the simulation disconnects it from that shop, which will have to reconnect it. Continue?',
       tk_category_d: '{n} product(s) in this category',
       tk_category: 'Menu: {name}',

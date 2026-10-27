@@ -13,7 +13,6 @@ import { money, pct, downloadCsv } from '../adminUtils';
 // incidents sur ce partenaire. Pas de classement des livreurs : le contrat livreur l'exclut (présomption
 // de salariat) ; leurs incidents se suivent un par un dans la liste.
 function TablePartenaires({ titre, rows, type, onPick, tr, csvName }) {
-  const { t } = useLanguage();
   const toast = useToast();
   const { sort, toggle } = useTableSort('incidents', 'desc');
   const colonnes = [

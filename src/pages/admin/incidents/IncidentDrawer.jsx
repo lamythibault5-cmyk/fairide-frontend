@@ -145,7 +145,6 @@ function HandlingTab({ detail, tr, token, toast, onSaved }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
-  const { t } = useLanguage();
   const [form, setForm] = useState(() => ({
     status: detail.status, responsibility: detail.responsibility, priority: detail.priority,
     amount: detail.amount ?? '', assignedTo: detail.assignedTo || '', resolution: detail.resolution || '', description: detail.description || '',

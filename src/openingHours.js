@@ -203,5 +203,3 @@ export function formatDaySchedule(hours, dayKey, t) {
 export function formatFullSchedule(hours, t) {
   return DAY_ORDER.map((key) => `${dayLabel(key, t)} : ${formatDaySchedule(hours, key, t)}`);
 }
-
-import { useLanguage } from './context/LanguageContext';

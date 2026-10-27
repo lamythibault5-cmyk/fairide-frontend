@@ -472,9 +472,9 @@ function NewEntryDrawer({ token, toast, onClose, onCreated }) {
               <option value="">{tr('adminCommon.choose')}</option>
               {sorted.map((a) => <option key={a.code} value={a.code}>{a.code} · {a.name}</option>)}
             </select>
-            <input aria-label="0.00" type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.debit} onChange={(e) => update(i, { debit: e.target.value, credit: e.target.value ? '' : l.credit })} aria-label={tr('adminAccounting.debit')} />
-            <input aria-label="0.00" type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.credit} onChange={(e) => update(i, { credit: e.target.value, debit: e.target.value ? '' : l.debit })} aria-label={tr('adminAccounting.credit')} />
-            <input aria-label="0.00" type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.vatAmount} onChange={(e) => update(i, { vatAmount: e.target.value })} aria-label={tr('adminCommon.vat')} />
+            <input type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.debit} onChange={(e) => update(i, { debit: e.target.value, credit: e.target.value ? '' : l.credit })} aria-label={tr('adminAccounting.debit')} />
+            <input type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.credit} onChange={(e) => update(i, { credit: e.target.value, debit: e.target.value ? '' : l.debit })} aria-label={tr('adminAccounting.credit')} />
+            <input type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.vatAmount} onChange={(e) => update(i, { vatAmount: e.target.value })} aria-label={tr('adminCommon.vat')} />
             <button type="button" className="fin-line-remove" onClick={() => remove(i)} disabled={lines.length <= 2} aria-label={tr('adminAccounting.removeLine')} title={tr('adminAccounting.removeLine')}>✕</button>
           </div>
         ))}

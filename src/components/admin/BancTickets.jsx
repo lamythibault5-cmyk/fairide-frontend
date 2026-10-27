@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { dansTerminal, infosAppareil, transmettreJeton, oublierJeton } from '../../terminalBridge';
 import { abonnerTerminalNavigateur, associerTerminalNavigateur, configTerminalNavigateur, demarrerTerminalNavigateur, oublierTerminalNavigateur, traiterFile } from '../../terminalNavigateur';
 import { serviceGoodcomDisponible } from '../../goodcomWebPrinter';
+import ConfirmDialog from '../ConfirmDialog';
 
 // Admin › Simulation › BANC D'ESSAI DES TICKETS (fondateur, 2026-10-02). But : vérifier que TOUT type de ticket de
 // commande s'imprime, sur une vraie imprimante.
@@ -29,6 +30,8 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
   const [faits, setFaits] = useState(() => new Set());
   const [navigateur, setNavigateur] = useState(null); // état du terminal « navigateur » de CET appareil
   const [categories, setCategories] = useState([]);
+  // Nom du commerce dont cet appareil est le terminal, le temps que l'admin confirme la reprise (voir connecter()).
+  const [aReprendre, setAReprendre] = useState(null);
   useEffect(() => {
     if (!pret) return undefined;
     let annule = false;
@@ -51,13 +54,14 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
   // battement reçu par le serveur), sinon celui que le terminal a déclaré.
   const etatImprimanteVu = ici && !dansTerminal() && navigateur?.imprimante && navigateur.imprimante !== 'unknown' ? navigateur.imprimante : reel?.printerStatus;
 
-  async function connecter() {
+  async function connecter(confirme = false) {
     const coque = dansTerminal();
     // Cet appareil sert déjà de terminal à un vrai commerce : on ne lui retire pas son association.
     // Appareil déjà relié à un vrai commerce : on le reprend pour la simulation seulement après confirmation (ce
-    // commerce perd son terminal et devra le reconnecter).
+    // commerce perd son terminal et devra le reconnecter). ConfirmDialog et non window.confirm (règle du CLAUDE.md ;
+    // pourquoi : en-tête de ConfirmDialog.jsx — ce banc s'ouvre justement dans la WebView du terminal).
     const deja = configTerminalNavigateur();
-    if (deja && deja.simulation !== true && !window.confirm(tr('simulation.benchTakeoverConfirm', { name: deja.restaurantName || '—' }))) return;
+    if (deja && deja.simulation !== true && !confirme) { setAReprendre(deja.restaurantName || '—'); return; }
     setOccupe('terminal');
     try {
       if (!coque && !(await serviceGoodcomDisponible({ forcer: true }))) { toast(tr('simulation.benchNoPrinter'), 'erreur'); return; }
@@ -105,6 +109,13 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
   const heure = (d) => (d ? new Date(d).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—');
   return (
     <div className="banc-tickets">
+      <ConfirmDialog
+        open={aReprendre !== null} danger onCancel={() => setAReprendre(null)}
+        onConfirm={() => { setAReprendre(null); connecter(true); }}
+        title={tr('simulation.benchTakeoverTitle')}
+        message={tr('simulation.benchTakeoverConfirm', { name: aReprendre || '—' })}
+        confirmLabel={tr('simulation.benchConnect')}
+      />
       <h4 style={{ margin: '0 0 4px' }}>{tr('simulation.benchTitle')}</h4>
       <p className="small" style={{ margin: '0 0 10px', maxWidth: 760 }}>{tr('simulation.benchIntro')}</p>
 
@@ -126,7 +137,7 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
         </div>
         {reel
           ? <button type="button" className="btn-outline" disabled={!!occupe} onClick={deconnecter}>{tr('simulation.benchDisconnect')}</button>
-          : <button type="button" className="btn-teal" disabled={!!occupe || !pret} onClick={connecter}>{occupe === 'terminal' ? '…' : tr('simulation.benchConnect')}</button>}
+          : <button type="button" className="btn-teal" disabled={!!occupe || !pret} onClick={() => connecter()}>{occupe === 'terminal' ? '…' : tr('simulation.benchConnect')}</button>}
       </div>
 
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '0 0 8px' }}>

@@ -31,7 +31,6 @@ function roleLabel(tr, role) { return tr(`adminMessages.roleOne_${role}`); }
 // Onglet Conversations
 // ---------------------------------------------------------------------------------------------
 function ThreadsTab({ token, tr, toast, broadcastFilter, onClearBroadcast, refreshKey, onChanged }) {
-  const { t } = useLanguage();
   const [stats, setStats] = useState(null);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [role, setRole] = useState('');
@@ -94,7 +93,7 @@ function ThreadsTab({ token, tr, toast, broadcastFilter, onClearBroadcast, refre
           <option value="open">{tr('adminMessages.status_open')}</option>
           <option value="closed">{tr('adminMessages.status_closed')}</option>
         </select>
-        <input aria-label={tr('adminMessages.phSearch')} type="search" value={qInput} placeholder={tr('adminMessages.phSearch')} onChange={(e) => setQInput(e.target.value)} aria-label={tr('adminMessages.phSearch')} />
+        <input type="search" value={qInput} placeholder={tr('adminMessages.phSearch')} onChange={(e) => setQInput(e.target.value)} aria-label={tr('adminMessages.phSearch')} />
         {broadcastFilter && (
           <span className="msg-filter-broadcast">
             {tr('adminMessages.broadcastFilter', { subject: broadcastFilter.subject })}
@@ -256,7 +255,6 @@ function BroadcastsTab({ token, tr, refreshKey, onOpenThreads }) {
 // audience (types, communes, ou comptes précis), aperçu du nombre de destinataires, e-mail facultatif.
 // ---------------------------------------------------------------------------------------------
 function ComposeTab({ token, tr, toast, onSent }) {
-  const { t } = useLanguage();
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [roles, setRoles] = useState([]);
@@ -389,7 +387,7 @@ function ComposeTab({ token, tr, toast, onSent }) {
           <div className="msg-audience-group">
             <h4>{tr('adminMessages.audienceSpecific')}</h4>
             <div className="msg-user-search">
-              <input aria-label={tr('adminMessages.phUserSearch')} type="search" value={userQuery} placeholder={tr('adminMessages.phUserSearch')} onChange={(e) => setUserQuery(e.target.value)} aria-label={tr('adminMessages.phUserSearch')} />
+              <input type="search" value={userQuery} placeholder={tr('adminMessages.phUserSearch')} onChange={(e) => setUserQuery(e.target.value)} aria-label={tr('adminMessages.phUserSearch')} />
               {userResults && (
                 <ul className="msg-user-results">
                   {userResults.length === 0 && <li><span className="small" style={{ padding: '8px 10px', display: 'block' }}>{tr('adminMessages.noUserFound')}</span></li>}
