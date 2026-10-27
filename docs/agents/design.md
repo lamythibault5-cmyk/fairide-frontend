@@ -131,8 +131,9 @@ source spec and `maquettes/landing-iris/landing-iris.html` for the reference pag
    `maquettes/une-action/verifier-panier.mjs` (every popup on every screen with the bar, app and site; 0 overlaps on 2026-10-25).
 5. **A tap never lands in the middle of a text** (founder, 2026-10-27, test of the test shop: « Signer » opened a long contract
    already scrolled, « Commerce » reopened mid-page). Every tap opens its screen **at the top**, or on the exact thing to do
-   — never on an anchor halfway down a long page (`#conformite-carte` was removed for that). Tabs always open at the top
-   (DashboardSidebar `ongletAppli`); only going back (‹, gesture) restores the place left. A task gets its own short screen with
+   — never on an anchor halfway down a long page (`#conformite-carte` was removed for that). A tab, or going back,
+   returns to **what was on screen** (the heading or Account row, by its text — not a pixel height), and opens at the top when
+   that is gone, after 15 min, or when the screen shows a next step (founder, 2026-10-27 afternoon; details in appli.md). A task gets its own short screen with
    its band and title (« Tes engagements », EngagementsPage.jsx) rather than a section of a long page. When the action sits
    below the fold, the lime button floats at the bottom and **goes down to it** (« ↓ Cocher et signer »: it scrolls to the first
    missing field, frames it in red, then the lime button at the box signs); once that point is on screen the floating bar

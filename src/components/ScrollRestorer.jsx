@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
-import { repeterTantQueLibre, rejoindre, enHaut } from '../defilementAuto';
+import { repeterTantQueLibre, rejoindre, enHaut, noterRepere, positionDuRepere } from '../defilementAuto';
 
 // Rendu une seule fois, en dehors de <Routes> (voir App.jsx), pour ne se remonter qu'à un vrai
 // rechargement de page (F5) — pas à chaque navigation interne, qui remonte les pages elles-mêmes mais
@@ -29,6 +29,21 @@ const RESTAURATION_DELAIS = [0, 100, 300, 600, 1000, 1500];
 // suite (avant l'affichage), puis encore pendant ~0,8 s — sauf si la personne touche l'écran ou fait défiler
 // entre-temps : on ne lui reprend jamais la main.
 const REMONTEE_DELAIS = [0, 50, 150, 300, 500, 800];
+// Un écran quitté depuis plus d'un quart d'heure s'ouvre en haut : on ne se souvient plus de ce qu'on y lisait, et revenir
+// au milieu d'une page qu'on ne reconnaît pas, c'est le « milieu d'un texte » que la règle 5 de design.md écarte.
+const MEMOIRE_MAX_MS = 15 * 60 * 1000;
+
+// { y, at, repere } ; une position gardée par une version précédente (un simple nombre) se relit sans repère.
+function lireGarde(chemin) {
+  let brut = null;
+  try { brut = sessionStorage.getItem(`fairide_scroll:${chemin}`); } catch { /* stockage indisponible */ }
+  if (!brut) return { y: 0, at: 0, repere: null };
+  try {
+    const g = JSON.parse(brut);
+    if (typeof g === 'number') return { y: g, at: Date.now(), repere: null };
+    return { y: Number(g?.y) || 0, at: Number(g?.at) || 0, repere: g?.repere || null };
+  } catch { return { y: 0, at: 0, repere: null }; }
+}
 
 // UNE SEULE MAIN SUR LE DÉFILEMENT : la restauration native du navigateur est coupée pour tout le site, dès le démarrage.
 // Elle replaçait la page au retour arrière à SON moment — souvent quand la page n'était encore qu'un squelette, donc en
@@ -53,24 +68,38 @@ export default function ScrollRestorer() {
   // courte — arrivait encore chez l'ancienne, qui l'écrivait sous SON adresse en partant. Mon compte gardait alors 0, ou la
   // position de l'accueil. Et pendant une restauration, la page encore courte est rabotée : ce n'est pas la personne qui
   // a défilé, on ne l'écrit pas (sinon, repartie avant la fin, la position gardée était perdue).
+  //
+  // Ce qui est gardé : { y, at, repere } — le repère (defilementAuto.js) dit CE qu'on avait sous les yeux, `at` quand on l'a
+  // quitté. Il se lit dans la page affichée : jamais au nettoyage de l'effet, qui passe quand la page suivante a déjà pris
+  // sa place. Un défilement pas encore écrit l'est donc au premier toucher (l'onglet qu'on touche pour partir) ou au retour
+  // arrière, la page encore là ; au nettoyage, il n'est plus que perdu (150 ms de défilement au plus).
   useEffect(() => {
     const chemin = location.pathname;
     const cleDefilement = `fairide_scroll:${chemin}`;
-    let aEcrire = null;
+    let enAttente = false;
     let minuteur = 0;
     const ecrire = () => {
+      clearTimeout(minuteur);
       minuteur = 0;
-      if (aEcrire === null) return;
-      try { sessionStorage.setItem(cleDefilement, String(aEcrire)); } catch { /* stockage indisponible */ }
-      aEcrire = null;
+      if (!enAttente || cheminAffiche.current !== chemin) return;
+      enAttente = false;
+      const garde = { y: window.scrollY, at: Date.now(), repere: window.scrollY > 0 ? noterRepere() : null };
+      try { sessionStorage.setItem(cleDefilement, JSON.stringify(garde)); } catch { /* stockage indisponible */ }
     };
     function onScroll() {
       if (cheminAffiche.current !== chemin || restaurationEnCours.current) return;
-      aEcrire = window.scrollY;
+      enAttente = true;
       if (!minuteur) minuteur = setTimeout(ecrire, 150);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(minuteur); ecrire(); };
+    window.addEventListener('pointerdown', ecrire, { capture: true, passive: true });
+    window.addEventListener('popstate', ecrire);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pointerdown', ecrire, { capture: true });
+      window.removeEventListener('popstate', ecrire);
+      clearTimeout(minuteur);
+    };
   }, [location.pathname]);
 
   useLayoutEffect(() => {
@@ -91,15 +120,24 @@ export default function ScrollRestorer() {
       // En haut tout de suite (avant l'affichage), puis encore le temps que la page se construise — jusqu'au premier geste.
       return repeterTantQueLibre(enHaut, REMONTEE_DELAIS, { immediat: true });
     }
-    const saved = Number(sessionStorage.getItem(`fairide_scroll:${location.pathname}`) || 0);
-    // Rien de gardé (onglet jamais défilé) : en haut, comme une page neuve. Avant le 2026-10-27, rien n'était fait, et la page
-    // s'ouvrait à la hauteur où l'on avait laissé l'onglet PRÉCÉDENT (Mon compte ouvert depuis le bas de la liste, à mi-page).
-    if (saved <= 0) return premierChargement ? undefined : repeterTantQueLibre(enHaut, REMONTEE_DELAIS, { immediat: true });
-    // Retour arrière ou rechargement : la position quittée, réappliquée pendant le chargement — et plus rien dès que la
-    // personne fait défiler (avant le 2026-10-17, ces reprises-ci n'avaient aucun arrêt : le saut « en revenant du panier »).
-    // rejoindre() (defilementAuto.js) attend que la page soit assez haute pour l'atteindre, jusqu'à 10 s.
+    const garde = lireGarde(location.pathname);
+    // Rien de gardé (onglet jamais défilé), ou quitté il y a trop longtemps : en haut, comme une page neuve. Avant le
+    // 2026-10-27, rien n'était fait, et la page s'ouvrait à la hauteur où l'on avait laissé l'onglet PRÉCÉDENT — au milieu
+    // d'un texte (« en cliquant sur Restaurant j'arrive au milieu de l'écran », test du commerce, 2026-10-27).
+    const perime = !premierChargement && Date.now() - garde.at > MEMOIRE_MAX_MS;
+    if (garde.y <= 0 || perime) return premierChargement ? undefined : repeterTantQueLibre(enHaut, REMONTEE_DELAIS, { immediat: true });
+    // Retour arrière, onglet ou rechargement : ce qu'on avait sous les yeux, réappliqué pendant le chargement — et plus rien
+    // dès que la personne fait défiler (avant le 2026-10-17, ces reprises-ci n'avaient aucun arrêt : le saut « en revenant
+    // du panier »). rejoindre() (defilementAuto.js) attend que la page l'ait, jusqu'à 10 s, en haut en attendant.
+    // UNE PROCHAINE ÉTAPE PASSE AVANT (design.md, règle 5) : un écran qui en montre une (data-prochaine-etape, la liste
+    // « avant d'être en ligne » de Commerce et de Commandes) s'ouvre en haut, où elle est — la place d'avant était peut-être
+    // dans ce qui vient d'être fait.
+    const cible = () => {
+      if (document.querySelector('[data-prochaine-etape]')) return 0;
+      return garde.repere ? positionDuRepere(garde.repere) : garde.y;
+    };
     restaurationEnCours.current = true;
-    return rejoindre(saved, { delais: RESTAURATION_DELAIS, auBout: () => { restaurationEnCours.current = false; } });
+    return rejoindre(cible, { delais: RESTAURATION_DELAIS, auBout: () => { restaurationEnCours.current = false; } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 

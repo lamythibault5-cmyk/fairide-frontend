@@ -94,19 +94,35 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '', etr
 }
 
 /* LES ONGLETS DE L'APP (fondateur, 2026-10-23, version A de maquettes/transitions-appli) : comme sur iPhone, un onglet
- * s'affiche tout de suite ; toucher l'onglet où l'on est remonte en haut.
+ * s'affiche tout de suite et retrouve ce qu'on y regardait ; toucher l'onglet où l'on est remonte en haut.
  *   - `replace` : changer d'onglet n'ajoute pas d'écran à l'historique (le glisser-retour ne ramène plus à l'onglet d'avant,
  *     et la navigation n'est pas animée, transitionPhoto.js n'emballe que les « avancer ») ;
+ *   - `restaurerDefilement` : ScrollRestorer.jsx remet sous les yeux ce qu'on regardait en quittant l'onglet ;
  *   - sur l'onglet affiché lui-même (adresse exacte, pas une fiche ouverte depuis lui) : remonter en douceur, et l'écran
  *     repart de son état de départ (« fairide:onglet-retouche » : la liste efface ses filtres, 2026-10-26).
- * TOUT ONGLET S'OUVRE EN HAUT (fondateur, 2026-10-27, test du commerce : « en cliquant sur Restaurant j'arrive au milieu de
- * l'écran ; quand je clique sur quelque chose, je dois arriver en haut ou sur quelque chose de clair, ça vaut pour tous les
- * écrans »). Avant, seuls Recherche et Mes commandes (2026-10-24) repartaient du haut ; les autres retrouvaient leur place, et
- * on arrivait au milieu d'un texte sans savoir où l'on était. Le retour arrière (‹, geste) garde, lui, la place quittée
- * (ScrollRestorer.jsx, POP). */
+ * CHAQUE ONGLET RETROUVE SA PLACE, ET N'ARRIVE JAMAIS AU MILIEU D'UN TEXTE (fondateur, 2026-10-27, deux demandes du même
+ * jour). Le matin, le test du commerce : « en cliquant sur Restaurant j'arrive au milieu de l'écran ; je dois arriver en haut
+ * ou sur quelque chose de clair » — tout onglet s'est ouvert en haut. L'après-midi : « si je descends dans Mon compte, que je
+ * passe sur l'accueil et que je reviens, je veux être où j'étais ». Les deux tiennent ensemble, parce que l'arrivée au milieu
+ * venait surtout d'un défaut : un onglet sans place gardée s'ouvrait à la hauteur de l'onglet d'AVANT. ScrollRestorer.jsx ne
+ * rend plus que ce qu'on avait vraiment sous les yeux (le titre de la rubrique, defilementAuto.js) ; s'il a disparu, si
+ * l'onglet a été quitté il y a plus d'un quart d'heure, ou si l'écran montre une prochaine étape (la liste « avant d'être en
+ * ligne »), l'onglet s'ouvre en haut.
+ * S'ouvrent TOUJOURS EN HAUT les onglets qui sont une liste de choses à faire, la plus récente en haut : Recherche et Mes
+ * commandes (fondateur, 2026-10-24 : on y revient pour une nouvelle recherche, ou pour la dernière commande), les Commandes
+ * du commerce et les Courses du livreur (la commande à traiter, la course à prendre), et le dossier du livreur, une
+ * inscription dont la prochaine étape est en haut. Menu, Commerce, Gains et Mon compte gardent leur place. */
+const ONGLETS_EN_HAUT = new Set(['/recherche', '/orders', '/dashboard/orders', '/driver', '/driver/onboarding']);
+/* SUR LE SITE AUSSI (fondateur, 2026-10-27 : « pour tous les changements d'écran, client, commerce et livreur ») — la barre
+ * latérale devient la barre du bas sous 900px. Sans `replace` : sur le site, l'historique du navigateur reste celui qu'on
+ * attend, chaque onglet ouvert est une page. */
+function ongletSite(vers) {
+  return ONGLETS_EN_HAUT.has(vers) ? {} : { state: { restaurerDefilement: true } };
+}
 function ongletAppli(vers, ici) {
   return {
     replace: true,
+    state: ONGLETS_EN_HAUT.has(vers) ? undefined : { restaurerDefilement: true },
     onClick: (e) => {
       if (ici !== vers) return;
       e.preventDefault();
@@ -204,7 +220,7 @@ export default function DashboardSidebar() {
         <span className="nav-curseur" aria-hidden="true" />
         {items.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}
-            {...(NATIF ? ongletAppli(item.to, pathname) : {})}>
+            {...(NATIF ? ongletAppli(item.to, pathname) : ongletSite(item.to))}>
             {/* Dans l'app, la version pleine par-dessus : elle se montre sur l'onglet où l'on est et sous le doigt (styles.css). */}
             <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} />{NATIF && <IconePleine nom={item.icon} taille={22} className="dashboard-nav-plein" />}</span>
             {/* Deux libellés : le complet pour la colonne latérale, le court pour la barre du bas (styles.css choisit). */}
