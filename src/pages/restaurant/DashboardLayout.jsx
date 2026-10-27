@@ -3,7 +3,8 @@ import { useSiteLarge } from '../../hooks/useSiteLarge';
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { definirModeEquipe } from '../../modeEquipe';
 import { api } from '../../api';
-import { allerAuPaiement, experienceApp, achatsCommerceAutorises } from '../../natif';
+import { experienceApp, achatsCommerceAutorises } from '../../natif';
+import { ouvrirStripe } from '../../ouvrirStripe';
 import { useAuth } from '../../context/AuthContext';
 import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
@@ -35,9 +36,9 @@ const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
 // Promotions et Factures les ont rejointes dans l'app aussi le 2026-10-19 (fondateur, finitions-appli.html, section 4 :
 // CadreSite `appli`).
 // Questions, Mode d'emploi et Aperçu client aussi depuis le 2026-10-25 (maquettes/une-action/panier-et-site, réponse 9 :
-// « bandeau partout ») : ils ne l'avaient que sur le site.
+// « bandeau partout ») : ils ne l'avaient que sur le site. « Tes engagements » depuis le 2026-10-27 (EngagementsPage.jsx).
 const PAGES_BANDEAU = ['/dashboard', '/dashboard/edit', '/dashboard/orders', '/dashboard/menu', '/dashboard/stats',
-  '/dashboard/promotions', '/dashboard/invoices', '/dashboard/questions', '/dashboard/guide', '/dashboard/preview'];
+  '/dashboard/promotions', '/dashboard/invoices', '/dashboard/questions', '/dashboard/guide', '/dashboard/preview', '/dashboard/engagements'];
 const SITE = !experienceApp();
 // Dernier commerce ouvert sur cet appareil, pour un compte qui en a plusieurs (shop-411). Un identifiant, rien de plus.
 const CLE_DERNIER_COMMERCE = 'fairide_dernier_commerce';
@@ -377,11 +378,10 @@ export default function DashboardLayout() {
   async function connectOnboard() {
     setConnecting(true);
     try {
-      const r = await api(`/restaurants/${restoId}/connect/onboard`, { method: 'POST', token });
       // Dans l'app, Stripe s'ouvre dans le navigateur intégré et l'on revient ici en le fermant (allerAuPaiement, natif.js) ;
-      // sur le site, rien ne change : la page part vers Stripe.
+      // sur le site, rien ne change : la page part vers Stripe. L'écran d'attente couvre l'ouverture (ouvrirStripe.js).
       // Retour avec `?connect=return` aussi quand on ferme le navigateur intégré : le statut est alors relu (shop-7).
-      await allerAuPaiement(r.url, { retour: '/dashboard?connect=return' });
+      await ouvrirStripe(() => api(`/restaurants/${restoId}/connect/onboard`, { method: 'POST', token }), { retour: '/dashboard?connect=return' });
       setConnecting(false);
     } catch (e) {
       // Numéros d'entreprise / TVA manquants : on emmène vers la sous-section Paiement qui les demande.
@@ -462,7 +462,9 @@ export default function DashboardLayout() {
       {/* Depuis le 2026-10-17 (fondateur : deux boutons lime au-dessus du titre de chaque page), la rangée « Prochaine étape »
           ne vit plus que sur la page Commandes de l'app (le terminal) : l'accueil a la liste complète, et les autres pages
           (menu, factures, promotions…) n'ont pas à la répéter. */}
-      {chemin === '/dashboard/orders' && !commandesSite && !membreEquipe && (
+      {/* Avant la mise en ligne, Commandes EST le guide (OrdersPage, 2026-10-27) : la rangée n'y revient qu'une fois en ligne
+          (nouveau contrat à accepter, carte à revalider). */}
+      {chemin === '/dashboard/orders' && !commandesSite && !membreEquipe && restaurant.publicListed && (
         <MiseEnLigne restaurant={restaurant} restoId={restoId} token={token} onConnect={connectOnboard} connecting={connecting}
           onChange={() => loadDashboard(restoId)} lectureSeule={!!actingAs} />
       )}

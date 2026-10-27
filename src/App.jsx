@@ -7,6 +7,8 @@ import { estPageEnFeuille } from './feuilles';
 import { useLanguage } from './context/LanguageContext';
 import Layout from './components/Layout';
 import ScrollRestorer from './components/ScrollRestorer';
+import GardeRetourEspace from './components/GardeRetourEspace';
+import AttenteStripe from './components/AttenteStripe';
 import NavigationFeedback from './components/NavigationFeedback';
 import ProtectedRoute from './components/ProtectedRoute';
 import { SkeletonCards } from './components/Skeleton';
@@ -56,6 +58,7 @@ const RestaurantPreviewPage = lazyPage(() => import('./pages/restaurant/PreviewP
 const RestaurantEditPage = lazyPage(() => import('./pages/restaurant/EditPage'));
 const RestaurantPromotionsPage = lazyPage(() => import('./pages/restaurant/PromotionsPage'));
 const RestaurantStatsPage = lazyPage(() => import('./pages/restaurant/StatsPage'));
+const RestaurantEngagementsPage = lazyPage(() => import('./pages/restaurant/EngagementsPage'));
 const RestaurantInvoicesPage = lazyPage(() => import('./pages/restaurant/InvoicesPage'));
 const RestaurantGuidePage = lazyPage(() => import('./pages/restaurant/GuidePage'));
 const RestaurantTerminalPage = lazyPage(() => import('./pages/restaurant/TerminalPage'));
@@ -162,6 +165,8 @@ export default function App() {
   return (
     <>
       <ScrollRestorer />
+      <GardeRetourEspace />
+      <AttenteStripe />
       <NavigationFeedback />
       <BarreSimulation />
       {/* Un seul Suspense autour de toutes les routes : le repli réutilise les squelettes déjà employés
@@ -226,6 +231,8 @@ export default function App() {
               envoyés) mène à Mon commerce plutôt qu'à une page introuvable. Même chose pour /driver/reviews et /admin/reviews. */}
           <Route path="reviews" element={<Navigate to="/dashboard" replace />} />
           <Route path="stats" element={<RestaurantStatsPage />} />
+          {/* « Signe tes engagements » : contrat, allergènes et déclaration pro sur un seul écran (EngagementsPage, 2026-10-27). */}
+          <Route path="engagements" element={<RestaurantEngagementsPage />} />
           <Route path="invoices" element={<RestaurantInvoicesPage />} />
           <Route path="guide" element={<RestaurantGuidePage />} />
           <Route path="terminal" element={<RestaurantTerminalPage />} />

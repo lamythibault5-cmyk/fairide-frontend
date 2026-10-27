@@ -105,7 +105,7 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
               </Etape>
             )}
             <Etape fait={o.contractAccepted}>
-              {t('menuPage.readyStepContract')} {!o.contractAccepted && <Link to="/account?ouvrir=contrat">{t('menuPage.readyGoContract')}</Link>}
+              {t('menuPage.readyStepContract')} {!o.contractAccepted && <Link to="/dashboard/engagements">{t('menuPage.readyGoContract')}</Link>}
             </Etape>
           </ul>
           {!o.publicListed && <p className="small" style={{ margin: '10px 0 0', opacity: 0.8 }}>{t('menuPage.readyAdminStep')}</p>}

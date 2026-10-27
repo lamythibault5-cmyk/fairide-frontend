@@ -129,6 +129,14 @@ source spec and `maquettes/landing-iris/landing-iris.html` for the reference pag
    whenever something opens over the page (`[role="dialog"]`: a dish, a sheet, a confirmation, the cookie card; the shop card on
    the map) and come back after; toasts and the site map's + / − sit above the bar. Checked by
    `maquettes/une-action/verifier-panier.mjs` (every popup on every screen with the bar, app and site; 0 overlaps on 2026-10-25).
+5. **A tap never lands in the middle of a text** (founder, 2026-10-27, test of the test shop: « Signer » opened a long contract
+   already scrolled, « Commerce » reopened mid-page). Every tap opens its screen **at the top**, or on the exact thing to do
+   — never on an anchor halfway down a long page (`#conformite-carte` was removed for that). Tabs always open at the top
+   (DashboardSidebar `ongletAppli`); only going back (‹, gesture) restores the place left. A task gets its own short screen with
+   its band and title (« Tes engagements », EngagementsPage.jsx) rather than a section of a long page. When the action sits
+   below the fold, the lime button floats at the bottom and **goes down to it** (« ↓ Cocher et signer »: it scrolls to the first
+   missing field, frames it in red, then the lime button at the box signs); once that point is on screen the floating bar
+   steps aside so one lime shows at a time. Prefer a one-line summary with « Lire le texte » over the full text on the page.
 
 **Promotions are red, like Uber Eats (founder, 2026-10-25, version B of `maquettes/promos-rouge/promos-rouge.html`,
 bright red, website same as the app).** A third colour, `--promo` `#E31B23`, for a shop's offers only (« 1 acheté = 1

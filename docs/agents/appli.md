@@ -133,8 +133,26 @@ position. **The cart's ‹ goes back to wherever the cart was opened from** (hom
 2026-10-25; `ecranDavant` in EcranCommande.jsx, app and site): only when that screen is unknown (direct link, reload) or is
 checkout / login / payment result does it open the shop page. To get back to the menu, the cart has a clear iris-outline
 « + Ajouter des articles » under its lines (never lime: « Aller au paiement » stays the one lime button), and the shop name
-on the band is a link too; both go BACK when the shop page is the previous screen (`useReculerVers`). Tabs (DashboardSidebar `ongletAppli`): `replace` + `state.restaurerDefilement` (each tab keeps its place; Recherche and Mes commandes open at the top instead, founder 2026-10-24, `ONGLETS_EN_HAUT`), re-tapping the
-current tab scrolls to the top. `.page-fade` doesn't animate in the app. Modale / ConfirmDialog rise from the bottom and are pulled
+on the band is a link too; both go BACK when the shop page is the previous screen (`useReculerVers`). Tabs (DashboardSidebar `ongletAppli`): `replace`, and **every tab opens at the top** (founder, 2026-10-27, test of the shop:
+« en cliquant sur Restaurant j'arrive au milieu de l'écran », design.md rule 5; until then each tab kept its place except
+Recherche and Mes commandes); going back (‹, gesture) still restores the place left; re-tapping the current tab scrolls to the top.
+**The shop's tabs are Commandes · Menu · Commerce · Compte since 2026-10-27** (Commandes is the shop's home:
+`espaceApresConnexion`, Home.jsx, sign-up; Android Back from Menu or Commerce returns to it). Until the shop is online
+(`publicListed`), Commandes on a phone (app and site) shows the go-live guide of Commerce (route on the band, the next step
+with the lime button, the rest under it: OrdersPage + useMiseEnLigne); the computer keeps its board. « Signe tes engagements »
+opens **one screen** for the contract, the allergen procedure and the professional declaration (`/dashboard/engagements`,
+EngagementsPage.jsx: one-line summary each, « Lire le texte », one box, the name, the floating lime « ↓ Cocher et signer »);
+after signing it goes back to Commandes, whose next step is then on top. **The courier has no « Carte » tab since 2026-10-27**
+(founder: not needed; `/driver/map` still answers). **Going back never leaves the role's space** ([GardeRetourEspace](../../src/components/GardeRetourEspace.jsx),
+2026-10-27): history keeps the visitor list seen before signing in, and the iOS back swipe took a shop to the client front
+page; a back (POP) onto `/`, `/restaurants`, `/map`, `/recherche`, `/bienvenue` or `/login` for a shop or courier (not in
+preview mode) is replaced by their home. **The order sound starts with the app** (2026-10-27, useNewOrderAlert): both shells
+allow audio without a tap, so the context resumes at once and on return to the foreground; the website still needs a first
+tap. **Opening Stripe shows the app's waiting screen** (« On t'emmène chez Stripe… », [ouvrirStripe.js](../../src/ouvrirStripe.js),
+all five Connect buttons and Stripe Identity): the server takes several seconds to make the link, and the button only showed « … ».
+**The shop's Ma carte uses the customer's sections strip** (2026-10-27, « la barre de menu devrait être la même que la vue
+client »): CategoryQuickNav inside `.fiche-page.fiche-appli.ec-carte-liste` (CarteCommerce.jsx), glass lens in the app, iris pill on
+the site, stuck at the top of the shop screen; the old `.ec-sections` strip is gone. `.page-fade` doesn't animate in the app. Modale / ConfirmDialog rise from the bottom and are pulled
 down to close (useTirerPourFermer). The page bounces at the bottom only (`html.pres-du-bas` past half the page; native bounce turned
 back on in FairideViewController). Press feedback: buttons `scale: .96` + darker, cards `.97`, rows an iris tint. Without View
 Transitions (iOS 15–17, old Android WebViews) screens swap instantly. Every `:hover` rule is wrapped in `@media (hover: hover)` at

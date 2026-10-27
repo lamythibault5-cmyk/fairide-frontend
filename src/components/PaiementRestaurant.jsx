@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { api } from '../api';
 import { euros } from '../prixPlat';
-import { allerAuPaiement } from '../natif';
+import { ouvrirStripe } from '../ouvrirStripe';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { paiementsOuverts, dateOuverturePaiements } from '../launch';
@@ -115,7 +115,7 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
     // Dans l'app, Stripe s'ouvre dans le navigateur intégré et l'on revient ici en le fermant (allerAuPaiement, natif.js) ;
     // sur le site, rien ne change : la page part vers Stripe.
     // Retour : la page d'où l'on part (Mon compte › Paiement, ou ailleurs si ce panneau y est monté).
-    try { const r = await api(`/restaurants/${restaurant.id}/connect/onboard`, { method: 'POST', token }); await allerAuPaiement(r.url, { retour: `${window.location.pathname}${window.location.search}` }); setConnecting(false); }
+    try { await ouvrirStripe(() => api(`/restaurants/${restaurant.id}/connect/onboard`, { method: 'POST', token }), { retour: `${window.location.pathname}${window.location.search}` }); setConnecting(false); }
     catch (e) { toast(e.code === 'LEGAL_INFO_REQUIRED' || e.code === 'LEGAL_INFO_INVALID' ? t('paiementResto.legalFirst') : e.message, 'erreur'); setConnecting(false); }
   }
 

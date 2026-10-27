@@ -14,7 +14,8 @@ import PhotoDepot from '../../components/livreur/PhotoDepot';
 import BoutonUrgence from '../../components/livreur/BoutonUrgence';
 import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
 import RouteVelo from '../../components/livreur/RouteVelo';
-import { experienceApp, allerAuPaiement, suivrePositionCourse } from '../../natif';
+import { experienceApp, suivrePositionCourse } from '../../natif';
+import { ouvrirStripe } from '../../ouvrirStripe';
 import { mouvementReduit, vibrer } from '../../gestes';
 import Icone from '../../components/Icone';
 import { euros } from '../../prixPlat';
@@ -266,10 +267,9 @@ export default function DriverDashboard() {
     connectLance.current = true;
     setConnecting(true);
     try {
-      const r = await api('/auth/me/connect/onboard', { method: 'POST', token });
       // Dans l'app, Stripe s'ouvre dans le navigateur intégré et l'on revient ici en le fermant (allerAuPaiement, natif.js) ;
-      // sur le site, rien ne change : la page part vers Stripe.
-      await allerAuPaiement(r.url, { retour: '/driver' });
+      // sur le site, rien ne change : la page part vers Stripe. L'écran d'attente couvre l'ouverture (ouvrirStripe.js).
+      await ouvrirStripe(() => api('/auth/me/connect/onboard', { method: 'POST', token }), { retour: '/driver' });
       setConnecting(false);
     } catch (e) {
       toast(e.message, 'erreur');

@@ -373,7 +373,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     oublierBrouillon();
     toast(t('auth.welcome', { name: user.name }), 'succes');
     // Un client venu d'un commerce touché sans compte y retourne (comme sur le site, Auth.jsx).
-    const cible = user?.role === 'restaurant' ? '/dashboard' : user?.role === 'driver' ? '/driver/onboarding' : retourApres && retourApres !== '/' ? retourApres : '/restaurants';
+    const cible = user?.role === 'restaurant' ? '/dashboard/orders' : user?.role === 'driver' ? '/driver/onboarding' : retourApres && retourApres !== '/' ? retourApres : '/restaurants';
     await attendrePage(cible);
     navigate(cible, { replace: true });
   }

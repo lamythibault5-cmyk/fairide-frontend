@@ -52,9 +52,12 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
   if (role === 'restaurant') {
     return [
       // Mon commerce = les infos du restaurant lui-même (création, puis modification) ; Ma carte = ce qu'il vend.
-      { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness'), court: t('nav.court.myBusiness') },
-      { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu'), court: t('nav.court.myMenu') },
+      // COMMANDES D'ABORD, MON COMMERCE EN TROISIÈME (fondateur, 2026-10-27, test du commerce de test) : c'est l'écran du
+      // service, celui qu'on ouvre dix fois par jour, et l'accueil du commerce (espaceApresConnexion, routePrefetch.js). Avant
+      // la mise en ligne, il montre la liste des étapes (OrdersPage, EtapesMiseEnLigne).
       { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders'), court: t('nav.court.orders') },
+      { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu'), court: t('nav.court.myMenu') },
+      { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness'), court: t('nav.court.myBusiness') },
       // Promotions, Factures et Mode d'emploi sont partis dans Mon compte : ce sont des rubriques
       // qu'on ouvre de temps en temps, pas au service. « Aperçu client » et « Carte » les y ont
       // rejoints, pour la même raison et une de plus : à sept onglets, la barre du bas d'un
@@ -70,12 +73,14 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
     // (lignes de type `tip`), la page dédiée ne faisait qu'en extraire un sous-total. Et « Mon dossier
     // livreur » n'est un onglet que tant que le compte n'est pas validé : c'est l'inscription, qu'on
     // termine une fois ; ensuite il se rouvre depuis Mon compte.
+    // PLUS D'ONGLET « CARTE » (fondateur, 2026-10-27 : « pour les livreurs, la carte est-elle vraiment nécessaire ? je ne
+    // pense pas ») : une course s'ouvre dans Courses, et l'itinéraire part vers Maps ou Waze. La page /driver/map reste à son
+    // adresse (liens déjà envoyés), sans onglet.
     return [
       { to: '/driver', end: true, icon: 'commandes', label: t('nav.rides') },
       // Validé et dossier rouvert depuis Mon compte : l'onglet revient le temps d'y être, allumé (deuxième audit design,
       // 2026-10-19 : la page « C'est bon, tu peux rouler » n'avait aucun onglet actif).
       ...(user?.adminStatus === 'approved' && !pathname.startsWith('/driver/onboarding') ? [] : [{ to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile'), court: t('nav.court.courierFile') }]),
-      { to: '/driver/map', icon: 'carte', label: t('nav.map') },
       { to: '/driver/earnings', icon: 'euro', label: t('nav.earnings') },
       { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
     ];
@@ -84,19 +89,19 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
 }
 
 /* LES ONGLETS DE L'APP (fondateur, 2026-10-23, version A de maquettes/transitions-appli) : comme sur iPhone, un onglet
- * s'affiche tout de suite et retrouve l'endroit où on l'avait laissé ; toucher l'onglet où l'on est remonte en haut.
+ * s'affiche tout de suite ; toucher l'onglet où l'on est remonte en haut.
  *   - `replace` : changer d'onglet n'ajoute pas d'écran à l'historique (le glisser-retour ne ramène plus à l'onglet d'avant,
  *     et la navigation n'est pas animée, transitionPhoto.js n'emballe que les « avancer ») ;
- *   - `restaurerDefilement` : ScrollRestorer.jsx remet la position gardée pour cette adresse au lieu de remonter en haut ;
  *   - sur l'onglet affiché lui-même (adresse exacte, pas une fiche ouverte depuis lui) : remonter en douceur, et l'écran
  *     repart de son état de départ (« fairide:onglet-retouche » : la liste efface ses filtres, 2026-10-26).
- * Recherche et Mes commandes s'ouvrent EN HAUT quand on y revient d'un autre onglet (fondateur, 2026-10-24) : on y revient pour
- * une nouvelle recherche, ou pour la commande la plus récente, qui est en haut. Les autres onglets gardent leur place. */
-const ONGLETS_EN_HAUT = new Set(['/recherche', '/orders']);
+ * TOUT ONGLET S'OUVRE EN HAUT (fondateur, 2026-10-27, test du commerce : « en cliquant sur Restaurant j'arrive au milieu de
+ * l'écran ; quand je clique sur quelque chose, je dois arriver en haut ou sur quelque chose de clair, ça vaut pour tous les
+ * écrans »). Avant, seuls Recherche et Mes commandes (2026-10-24) repartaient du haut ; les autres retrouvaient leur place, et
+ * on arrivait au milieu d'un texte sans savoir où l'on était. Le retour arrière (‹, geste) garde, lui, la place quittée
+ * (ScrollRestorer.jsx, POP). */
 function ongletAppli(vers, ici) {
   return {
     replace: true,
-    state: ONGLETS_EN_HAUT.has(vers) ? undefined : { restaurerDefilement: true },
     onClick: (e) => {
       if (ici !== vers) return;
       e.preventDefault();

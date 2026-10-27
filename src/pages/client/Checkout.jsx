@@ -179,7 +179,8 @@ export default function Checkout() {
       if (cart.hasStashed()) { navigate('/orders', { replace: true }); return; }
       // Arrivé ici sans panier (lien direct, onglet rouvert) : on le dit, au lieu de changer de page sans un mot (PAN-6).
       toast(t('checkout.toastEmptyCart'));
-      navigate('/restaurants');
+      // `replace` : un retour ne doit pas ramener sur ce paiement vide, qui renverrait aussitôt ici (2026-10-27).
+      navigate('/restaurants', { replace: true });
       return;
     }
     // Avec la session : un commerce que le public ne voit pas encore (le sien, celui de la simulation) reste commandable.

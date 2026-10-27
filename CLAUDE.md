@@ -91,6 +91,8 @@ read that doc before working near it.
   are white or iris, no gradients, no shadows (glass exists in the app only, `html.appli`); one lime accent per view, and
   that lime is the screen's next click: one obvious action, saying what and how much, never greyed out.
   Change colours in the `:root` tokens, never at call sites. *(design.md)*
+- A tap never lands mid-text: every screen opens at the top (tabs too) or on the exact thing to do, never on an anchor
+  halfway down a long page; when the action is below the fold, a floating lime button goes down to it. *(design.md, rule 5)*
 - Fonts: Inter (interface) and Inter Tight (`h1`–`h3`), served by Fairide — never `fonts.googleapis.com`. Bricolage
   Grotesque is for the word `fairride` only, always through `MotMarque.jsx` (« ride » in the accent). The brand is
   « Fairride » (two r, 2026-10-25); the company stays « Fairide SRL ». The logo is the bicycle « 5a » and is never a link. *(design.md)*

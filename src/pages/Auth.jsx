@@ -553,7 +553,8 @@ export default function Auth() {
   async function allerApresConnexion(user) {
     try { localStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
     await attendrePage(from === '/' ? espaceApresConnexion(user) : from);
-    navigate(from);
+    // `replace`, comme l'app (ConnexionAppli.jsx) : sinon Retour ramenait au formulaire de connexion, connecté (2026-10-27).
+    navigate(from, { replace: true });
   }
   // Après une INSCRIPTION (compte créé, code vérifié), on arrive directement dans son espace — jamais sur la page de
   // connexion ni sur l'accueil (fondateur, 2026-09-18) : client → les commerces, commerce → tableau de bord, livreur →
@@ -565,7 +566,7 @@ export default function Auth() {
     // Exception : un CLIENT arrivé ici depuis une page précise (un commerce cliqué dans la liste, voir
     // RestaurantCard dans RestaurantList.jsx) y retourne — il s'est inscrit pour voir cette carte-là,
     // pas pour remplir son profil (fondateur, 2026-09-27).
-    const cible = user?.role === 'restaurant' ? '/dashboard'
+    const cible = user?.role === 'restaurant' ? '/dashboard/orders'
       : user?.role === 'driver' ? '/driver/onboarding'
       : from !== '/' ? from : '/restaurants';
     await attendrePage(cible);
@@ -573,7 +574,7 @@ export default function Auth() {
   }
   // Intention forte de se connecter (champ touché, formulaire effleuré) : on précharge dès maintenant les
   // espaces commerce et livreur, pour que l'arrivée soit instantanée après la réponse du serveur.
-  const prechargerEspaces = () => { prechargerPage('/dashboard'); prechargerPage('/driver'); };
+  const prechargerEspaces = () => { prechargerPage('/dashboard/orders'); prechargerPage('/driver'); };
 
   useEffect(() => {
     if (responsibleTouched) return;

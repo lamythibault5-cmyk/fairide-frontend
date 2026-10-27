@@ -163,24 +163,12 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-ruptures > .card { border-radius: 18px; }
 
 /* ---------- Ma carte ---------- */
-.ec-sections { position: sticky; top: 0; z-index: 4; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -8px 4px; padding: 8px; background: #fff; border-bottom: 1px solid var(--line); }
-.ec-sections::-webkit-scrollbar { display: none; }
+/* La bande des sections est celle de la vue client depuis le 2026-10-27 (.ec-carte-liste, en fin de fichier). */
 .ec-puce { flex: none; display: inline-flex; align-items: center; min-height: 40px !important; padding: 0 15px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #fff;
   font: inherit; font-size: 14px; font-weight: 500; color: var(--ink); white-space: nowrap; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
 .ec-puce.on { background: var(--iris); border-color: var(--iris); color: #fff; }
-/* Dans l'app : la bande des sections est du verre, comme la barre d'onglets (exception de la règle 2, app seulement). */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  html.appli .ec-sections {
-    top: calc(8px + env(safe-area-inset-top)); margin: 0 -6px 6px; padding: 5px; border-radius: var(--radius-pill);
-    background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .6);
-    -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 5px 0 8px -4px rgba(255, 70, 170, .22),
-      inset -5px 0 8px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
-  }
   html.appli .ec-puce:not(.on) { background: transparent; border-color: transparent; color: rgba(20, 18, 31, .88); text-shadow: 0 0 8px rgba(255, 255, 255, .75); }
-}
-@media (prefers-reduced-transparency: reduce) {
-  html.appli .ec-sections { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); }
 }
 .ec-section-titre { display: flex; align-items: center; gap: 8px; font-size: 18px; margin: 18px 0 2px; scroll-margin-top: calc(76px + env(safe-area-inset-top)); }
 .ec-section-compte { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--ink-soft); background: var(--cream-dim); border-radius: var(--radius-pill); padding: 2px 8px; }
@@ -494,3 +482,34 @@ html.avec-bande-a-traiter main { padding-bottom: calc(76px + env(safe-area-inset
   html:not(.appli) .ec-segment--lime .ec-segment-pouce { background: var(--lime); }
   html:not(.appli) .ec-segment--lime button.on { color: var(--ink); }
 }
+
+/* ---------- « Tes engagements » (EngagementsPage.jsx, 2026-10-27) ----------
+   Les textes à accepter, numérotés comme des étapes ; chacun dit en une ligne ce qu'il engage, le texte entier se déplie
+   dans une boîte qui défile toute seule (la page ne s'allonge pas d'un contrat entier). Puis la signature : la case, grande
+   sous le doigt, et le nom. Un point manquant s'entoure de rouge quand le bouton lime y descend. */
+.eg-liste { list-style: none; margin: 4px 0 0; padding: 0; }
+.eg-texte { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.eg-numero { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--iris); color: #fff; font-weight: 700; font-size: 14px; }
+.eg-corps { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.eg-titre { font-size: 16px; color: var(--ink); }
+.eg-resume { margin: 4px 0 0; color: var(--ink-soft); }
+.eg-note { margin: 4px 0 0; color: var(--iris); font-weight: 600; }
+.eg-lire { max-height: 260px; overflow-y: auto; margin-top: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 13px; }
+.eg-lire ol, .eg-lire ul { margin: 0 0 8px; padding-left: 18px; }
+.eg-champs { display: grid; gap: 8px; margin-top: 10px; }
+.eg-champs .field, .eg-signature .field { margin: 0; }
+.eg-signature { padding-top: 6px; }
+.eg-case { display: flex; gap: 12px; align-items: flex-start; padding: 14px; margin: 0 0 12px; border: 1.5px solid var(--iris); border-radius: 14px; cursor: pointer; font-weight: 600; font-size: 15px; color: var(--ink); }
+.eg-case input { flex: none; width: 22px !important; height: 22px; margin: 1px 0 0; accent-color: var(--iris); }
+.eg-manque.eg-case, .eg-manque input { border-color: var(--red) !important; }
+.eg-manque.eg-case { animation: eg-secoue .35s ease 1; }
+.eg-message { margin: 8px 0 0; color: var(--red); font-weight: 600; }
+.ec-barre-accepter .ec-bouton span[aria-hidden] { font-size: 18px; line-height: 1; }
+@keyframes eg-secoue { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@media (prefers-reduced-motion: reduce) { .eg-manque.eg-case { animation: none; } }
+
+/* La bande des sections de Ma carte : celle de la vue client (CategoryQuickNav dans .fiche-page.fiche-appli, CarteCommerce.jsx,
+   2026-10-27), collée en haut de l'écran du commerce — la fiche, elle, la pose sous ses ronds (ecran-fiche.css, + 64 px). */
+.ec-carte-liste.fiche-page.fiche-appli .category-quicknav { top: calc(8px + env(safe-area-inset-top, 0px)); margin: 4px -6px 8px; }
+.ec-carte-liste.fiche-page .category-quicknav--pouce { top: 0; background: #fff; margin: 0 -8px 4px; padding: 8px; }
+.ec-carte-liste.fiche-appli [id^="menu-cat-"] { scroll-margin-top: calc(76px + env(safe-area-inset-top, 0px)); }

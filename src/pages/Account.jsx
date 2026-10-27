@@ -1063,9 +1063,11 @@ export default function Account() {
           {/* Entraînement (2026-10-08) : commandes d'essai pendant 7 jours après la première connexion du terminal. */}
           <LigneCompte to="/dashboard/simulation" icone="etoile" titre={t('accountUi.simulationRow')} sous={t('accountUi.simulationSub')} />
           <div id="section-contrat" />
-          {/* Contrat accepté : la rangée ouvre directement le PDF complet (fondateur, 2026-10-08) ; à accepter : le panneau d'acceptation. */}
+          {/* Contrat accepté : la rangée ouvre directement le PDF complet (fondateur, 2026-10-08) ; à accepter : l'écran « Tes
+              engagements » (2026-10-27), où il se signe avec les deux autres textes, au lieu d'un panneau en bas d'une feuille. */}
           <LigneCompte icone="contrat" titre={t('restoContract.rowTitle')} sous={restaurant.onboarding?.contractAccepted ? t('restoContract.rowSubPdf') : t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')}
-            onClick={() => (restaurant.onboarding?.contractAccepted ? ouvrirPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, t('restoContract.pdfFailed')) : basculer('contrat'))}>
+            to={restaurant.onboarding?.contractAccepted ? undefined : '/dashboard/engagements'}
+            onClick={restaurant.onboarding?.contractAccepted ? () => ouvrirPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, t('restoContract.pdfFailed')) : undefined}>
             {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}
           </LigneCompte>
           <LigneCompte icone="contrat" titre={t('restoContract.rowSaveTitle')} sous={t('restoContract.rowSaveSub')} onClick={() => telechargerPdf(`${API_BASE}/restaurants/${restaurant.id}/contract/pdf`, token, 'contrat-fairide.pdf', t('restoContract.pdfFailed'))} />
@@ -1139,7 +1141,7 @@ export default function Account() {
               <div className="paiement-encart" style={{ marginBottom: 12 }}>
                 <b>{t('accountUi.subContractTitle')}</b>
                 <p className="small" style={{ margin: '4px 0 8px' }}>{t('accountUi.subContractText')}</p>
-                <button type="button" className="btn-gold" onClick={() => { setOuvertes((prev) => new Set(prev).add('contrat')); setTimeout(() => document.getElementById('section-contrat')?.scrollIntoView({ behavior: defilement(), block: 'start' }), 120); }}>{t('accountUi.subContractBtn')}</button>
+                <Link to="/dashboard/engagements" className="btn-gold" style={{ display: 'inline-block' }}>{t('accountUi.subContractBtn')}</Link>
               </div>
             )}
             {/* Fiche pas encore validée : le bouton d'abonnement ci-dessous exige adminStatus === 'approved', et
