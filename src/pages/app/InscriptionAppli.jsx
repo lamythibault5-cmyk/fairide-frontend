@@ -23,6 +23,7 @@ import { setConsent } from '../../consent';
 import { Haut, Option, Fait } from './EcransBienvenue';
 import VerifSociete from '../../components/commerce/VerifSociete';
 import { regimesDe } from '../../specialites';
+import EcranPlein from '../../components/EcranPlein';
 
 /* L'INSCRIPTION DANS L'ACCUEIL DE L'APPLICATION (fondateur, 2026-10-15).
  *
@@ -42,7 +43,13 @@ import { regimesDe } from '../../specialites';
  *   - pas de recherche automatique des horaires sur le web, donc pas de case « j'ai vérifié le préremplissage » ;
  *   - le brouillon gardé 48 h est arrivé ici aussi (audit du 19/10, CROSS-63, voir CLE_BROUILLON plus bas) : on ne
  *     pensait pas que l'application se fermerait pendant l'inscription, mais un commerce qui va chercher son numéro
- *     d'entreprise dans une autre application voit souvent la sienne fermée par le téléphone, et tout était perdu. */
+ *     d'entreprise dans une autre application voit souvent la sienne fermée par le téléphone, et tout était perdu.
+ *
+ * UN COMPTE QUI N'A PAS ENCORE SON COMMERCE (`compte`, fondateur, 2026-10-27 : « on ne peut pas avoir deux processus qui font
+ * la même chose »). Casquette « restaurant » prise depuis Mes casquettes, ou commerce pas créé à l'inscription : le tableau de
+ * bord ouvre ces mêmes écrans, sans ceux du compte (e-mail, nom, téléphone sont déjà connus), en écran plein par-dessus les
+ * onglets. Le dernier écran ne garde que les engagements, et c'est POST /auth/commerce qui crée le commerce, avec le même code
+ * serveur que l'inscription. Il remplace le formulaire « Identité, Adresse… » du tableau de bord (CreationCommerce.jsx). */
 
 /* LE BROUILLON DE L'INSCRIPTION DANS L'APPLICATION (audit du 19/10, CROSS-63). Mêmes règles que celui du site (Auth.jsx) :
  * localStorage, 48 h au plus, effacé quand le compte est créé ; jamais le mot de passe ni le jeton Apple / Google (une
@@ -70,6 +77,7 @@ const ETAPES = {
   restaurant: ['email', 'nom', 'tel', 'commerce', 'type', 'entreprise', 'horaires', 'services', 'adresse', 'fin']
 };
 // Erreur renvoyée par le serveur sur un champ → l'écran qui le porte.
+const ETAPES_DU_COMPTE = ['email', 'nom', 'tel'];
 const ETAPE_DU_CHAMP = {
   email: 'email', password: 'email', firstName: 'nom', lastName: 'nom', phone: 'tel', addressStreet: 'adresse', addressNumber: 'adresse', addressPostalCode: 'adresse', addressCity: 'adresse',
   legalName: 'entreprise', vatNumber: 'entreprise', responsibleName: 'entreprise', cuisine: 'type'
@@ -106,9 +114,11 @@ function Segments({ label, valeur, options, onChoix }) {
   );
 }
 
-export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQuitter, onConnexion }) {
+// `compte` : le compte existe déjà, seul le commerce manque (voir plus haut) ; `onCree` reçoit alors l'identifiant du commerce.
+export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQuitter, onConnexion, compte = false, onCree }) {
   const { t } = useLanguage();
-  const { register, login, verifyEmail, resendCode, changePendingPhone, loginWithGoogle, loginWithApple } = useAuth();
+  const { user, token, register, login, verifyEmail, resendCode, changePendingPhone, loginWithGoogle, loginWithApple } = useAuth();
+  const moi = compte ? user || {} : {};
   const toast = useToast();
   const navigate = useNavigate();
   const fond = useRef(null);
@@ -117,13 +127,13 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const profilFed = useMemo(() => (fed?.jeton ? decoderJwt(fed.jeton) : {}), [fed]);
   // Le jeton en cours : celui reçu, ou un neuf redemandé quand il a expiré en route (audit du 19/10, auth-08).
   const [jetonFed, setJetonFed] = useState(fed);
-  const [email, setEmail] = useState(profilFed.email || '');
+  const [email, setEmail] = useState(profilFed.email || moi.email || '');
   const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState(profilFed.given_name || fed?.prenom || '');
-  const [lastName, setLastName] = useState(profilFed.family_name || fed?.nom || '');
+  const [firstName, setFirstName] = useState(profilFed.given_name || fed?.prenom || moi.firstName || '');
+  const [lastName, setLastName] = useState(profilFed.family_name || fed?.nom || moi.lastName || '');
   // Fixé au premier rendu : l'écran du nom ne doit pas disparaître de la liste pendant qu'on le remplit.
   const [nomConnu] = useState(() => !!(fed && (profilFed.given_name || fed.prenom) && (profilFed.family_name || fed.nom)));
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(moi.phone || '');
   // Client : le code postal tapé dans l'accueil (« Ton code postal ») préremplit l'adresse, comme sur le site.
   const [bienvenue] = useState(lireBienvenue);
   const [addressStreet, setAddressStreet] = useState('');
@@ -172,7 +182,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   // a été fermée pendant qu'on allait lire l'e-mail (bienvenue.js, lireCodeEnAttente) : on rouvre sur le code, pas sur un
   // formulaire vide.
   const [repriseCode] = useState(() => {
-    const c = fed ? null : lireCodeEnAttente();
+    const c = fed || compte ? null : lireCodeEnAttente();
     return c && c.role === role ? c : null;
   });
   const [enAttente, setEnAttente] = useState(() => (repriseCode ? { email: repriseCode.email, canal: repriseCode.canal, telephone: repriseCode.telephone } : null));
@@ -204,12 +214,14 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     referralCode: [referralCode, setReferralCode], referralOuvert: [referralOuvert, setReferralOuvert]
   };
   const brouillonActif = useRef(false);
+  // Le brouillon d'un compte existant ne se mélange pas à celui d'une inscription commencée sur le même téléphone.
+  const roleBrouillon = compte ? `${role}-compte` : role;
   // Repris au-delà du premier écran : le mot de passe (jamais gardé) est redemandé au dernier écran.
   const [mdpARetaper, setMdpARetaper] = useState(false);
   useLayoutEffect(() => {
     if (fed) return; // Apple / Google : rien de gardé (le jeton ne se garde pas, voir plus haut)
     brouillonActif.current = true;
-    const b = repriseCode ? null : lireBrouillon(role);
+    const b = repriseCode ? null : lireBrouillon(roleBrouillon);
     if (!b) return;
     for (const [cle, valeur] of Object.entries(b.champs || {})) if (cle !== 'referralCode' || !codeParrain) champsBrouillon[cle]?.[1](valeur);
     if (Number(b.champs?.index) > 0) setMdpARetaper(true);
@@ -219,7 +231,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   useEffect(() => {
     if (!brouillonActif.current || enAttente) return undefined;
     const minuteur = setTimeout(() => {
-      try { localStorage.setItem(CLE_BROUILLON, JSON.stringify({ at: Date.now(), role, champs: Object.fromEntries(Object.entries(champsBrouillon).map(([cle, [valeur]]) => [cle, valeur])) })); } catch { /* stockage plein ou indisponible */ }
+      try { localStorage.setItem(CLE_BROUILLON, JSON.stringify({ at: Date.now(), role: roleBrouillon, champs: Object.fromEntries(Object.entries(champsBrouillon).map(([cle, [valeur]]) => [cle, valeur])) })); } catch { /* stockage plein ou indisponible */ }
     }, 250);
     return () => clearTimeout(minuteur);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -227,7 +239,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   // Compte créé (le code attendu prend le relais, bienvenue.js) : le brouillon n'a plus rien à reprendre.
   useEffect(() => { if (enAttente) oublierBrouillon(); }, [enAttente]);
 
-  const etapes = useMemo(() => ETAPES[role].filter((e) => !(e === 'email' && fed) && !(e === 'nom' && nomConnu)), [role, fed, nomConnu]);
+  const etapes = useMemo(() => ETAPES[role].filter((e) => !(e === 'email' && fed) && !(e === 'nom' && nomConnu) && !(compte && ETAPES_DU_COMPTE.includes(e))), [role, fed, nomConnu, compte]);
   const etape = enAttente ? (changerNumero ? 'numero' : 'code') : etapes[Math.min(index, etapes.length - 1)];
   const derniere = index >= etapes.length - 1;
   const progression = enAttente ? 1 : (index + 1) / (etapes.length + 1);
@@ -253,8 +265,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     }, 600);
     return () => { annule = true; clearTimeout(minuteur); };
   }, [companyNumber, role]);
-  // Chaque écran s'ouvre en haut (c'est le fond plein écran qui défile, pas la fenêtre).
-  useEffect(() => { fond.current?.scrollTo?.(0, 0); }, [etape]);
+  // Chaque écran s'ouvre en haut (c'est le fond plein écran qui défile, pas la fenêtre ; dans un EcranPlein, c'est lui).
+  useEffect(() => { fond.current?.closest('.bv')?.scrollTo?.(0, 0); }, [etape]);
 
   function messageBce() {
     const why = raisonBce(companyNumber);
@@ -403,6 +415,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     return chiffres.length === 10 ? `BE${chiffres}` : '';
   }
   async function creerCompte() {
+    if (compte) { creerCommerce(); return; }
     const extra = {
       phone: phone.trim(),
       referralCode: referralCode.trim() || undefined,
@@ -476,6 +489,25 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   async function rafraichirJetonFed() {
     toast(t('appli.fedExpire', { fournisseur: fed?.fournisseur === 'apple' ? 'Apple' : 'Google' }), 'erreur');
     try { setJetonFed(await connexionFournisseur(fed.fournisseur)); } catch { /* feuille fermée : le bouton la rouvre au prochain essai */ }
+  }
+
+  // Compte existant : le commerce seul, par la route qui reprend la création de l'inscription (routes/auth.js, POST /commerce).
+  async function creerCommerce() {
+    setAttente(true);
+    try {
+      const r = await api('/auth/commerce', {
+        method: 'POST', token,
+        body: { legalName: legalName.trim(), companyNumber: companyNumber.trim(), vatNumber: tva(), responsibleName: nomResponsable, cuisine: cuisineFinale, business: commerce() }
+      });
+      oublierBrouillon();
+      onCree?.(r.restaurantId);
+    } catch (err) {
+      const champ = err.field || err.data?.field;
+      if (champ === 'companyNumber') allerA('entreprise', { companyNumber: err.data?.detail || err.message });
+      else if (ETAPE_DU_CHAMP[champ] && !ETAPES_DU_COMPTE.includes(ETAPE_DU_CHAMP[champ])) allerA(ETAPE_DU_CHAMP[champ], { [champ]: err.data?.detail || err.message });
+      else toast(err.message, 'erreur');
+      setAttente(false);
+    }
   }
 
   // « Changer de numéro » sur l'écran du code (audit du 19/10, auth-03) : un code part au bon numéro, l'ancien ne vaut plus.
@@ -750,6 +782,18 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       );
       break;
     case 'fin':
+      if (compte) {
+        // Le compte a déjà ses réglages (rapports de panne, nouvelles, code promo) : il ne reste que les engagements.
+        bouton = t('dashResto.waitCta');
+        entete = titre(t('appli.insFinTitre'), t('appli.insFinCommerce'));
+        contenu = (
+          <>
+            <EngagementsInscription checked={accepteEngagements} onChange={setAccepteEngagements} />
+            {erreurs.engagements && <p className="field-error" role="alert">{erreurs.engagements}</p>}
+          </>
+        );
+        break;
+      }
       bouton = t('auth.createAccount');
       entete = titre(t('appli.insFinTitre'), t(role === 'restaurant' ? 'appli.insFinCommerce' : role === 'driver' ? 'appli.insFinLivreur' : 'appli.insFinClient'));
       contenu = (
@@ -851,10 +895,9 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     default:
   }
 
-  return (
-    <div className="bv bv-bandeau" ref={fond}>
-      <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={etape}>
-        <Haut onRetour={reculer} progression={progression} />
+  const ecran = (
+      <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={etape} ref={fond}>
+        <Haut onRetour={reculer} progression={progression} {...(compte ? { onFermer: onQuitter } : {})} />
         {entete}
         <form className="bv-form bv-feuille" onSubmit={avancer} noValidate>
           {contenu}
@@ -865,6 +908,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
           </button>
         </form>
       </main>
-    </div>
   );
+  // Compte existant : par-dessus les onglets du tableau de bord (EcranPlein, rendu dans <body>).
+  if (compte) return <EcranPlein etiquette={t('dashResto.waitCta')} classe="bv-bandeau">{ecran}</EcranPlein>;
+  return <div className="bv bv-bandeau">{ecran}</div>;
 }

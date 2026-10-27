@@ -48,7 +48,10 @@ const UTILISATEURS = {
   driver: { id: 12, name: 'Lou Livreur', firstName: 'Lou', lastName: 'Livreur', email: 'livreur@exemple.be', role: 'driver', roles: ['driver'], phone: '+32 470 00 00 02' },
   restaurant: { id: 13, name: 'Rémi Resto', firstName: 'Rémi', lastName: 'Resto', email: 'resto@exemple.be', role: 'restaurant', roles: ['restaurant'], phone: '+32 470 00 00 03', restaurantId: 1 },
   // Compte de l'équipe : la console n'existe pas dans l'application (Owen, 2026-10-20), /admin… y montre AdminSurLeSite.
-  admin: { id: 14, name: 'Équipe Fairride', firstName: 'Équipe', lastName: 'Fairride', email: 'contact@fairride.be', role: 'client', roles: ['client'], isAdmin: true, phone: '+32 470 00 00 04' }
+  admin: { id: 14, name: 'Équipe Fairride', firstName: 'Équipe', lastName: 'Fairride', email: 'contact@fairride.be', role: 'client', roles: ['client'], isAdmin: true, phone: '+32 470 00 00 04' },
+  // Client qui a pris la casquette « commerce » sans avoir encore de commerce (Mes casquettes) : vérifié à part, plus bas.
+  sansCommerce: { id: 15, name: 'Sam Test', firstName: 'Sam', lastName: 'Test', email: 'sam@exemple.be', role: 'restaurant', roles: ['client', 'restaurant'], phone: '+32 470 00 00 05' },
+  sansCommerceSeul: { id: 16, name: 'Alix Test', firstName: 'Alix', lastName: 'Test', email: 'alix@exemple.be', role: 'restaurant', roles: ['restaurant'], phone: '+32 470 00 00 06' }
 };
 
 // Pages ouvertes pour chaque profil. Les pages du site (aide, légales, « C'est bon »…) y sont exprès : dans l'app, elles
@@ -71,6 +74,7 @@ let etatDossier = null;
 let identiteStripe = null;
 function simuler(chemin, methode, profil, vue = null) {
   const u = UTILISATEURS[profil];
+  if (profil.startsWith('sansCommerce') && chemin === '/restaurants/mine/dashboard') return [];
   if (methode === 'GET' && chemin === '/couriers/me' && identiteStripe) {
     const d = structuredClone(REELLES['/couriers/me']);
     d.identityProviders = { ...d.identityProviders, stripe_identity: true };
@@ -194,7 +198,7 @@ async function ouvrir(navigateur, base, { profil, appli = true, consentement = '
     localStorage.setItem('fairide_bienvenue', JSON.stringify({ vu: true, role: role || 'client', commune: 'Ixelles' }));
     if (consentement) { localStorage.setItem('fairide_cookie_consent', consentement); localStorage.setItem('fairide_cookie_consent_at', String(Date.now())); }
     if (session) localStorage.setItem('fairide_session', JSON.stringify(session));
-  }, { appli, consentement, session: profil === 'visiteur' ? null : { token: `jeton-${profil}`, user: UTILISATEURS[profil] }, role: profil === 'visiteur' ? null : profil });
+  }, { appli, consentement, session: profil === 'visiteur' ? null : { token: `jeton-${profil}`, user: UTILISATEURS[profil] }, role: profil === 'visiteur' ? null : profil.startsWith('sansCommerce') ? 'restaurant' : profil });
   const page = await ctx.newPage();
   const origine = new URL(base).origin;
   await page.route('**/*', (route) => {
@@ -295,6 +299,43 @@ try {
       await ctx.close();
     }
     identiteStripe = null;
+  }
+  /* UN COMPTE COMMERCE SANS COMMERCE (fondateur, 2026-10-27 : bloqué en vue commerce, « je ne peux pas sortir »). Les écrans de
+   * l'inscription s'ouvrent d'eux-mêmes et tiennent dans l'écran ; la croix ramène à la vue client ; sur un autre onglet, la
+   * carte propose de créer le commerce ET de revenir à la vue client. */
+  {
+    const nom = '/dashboard (sans commerce)';
+    const { ctx, page } = await ouvrir(navigateur, base, { profil: 'sansCommerce' });
+    await page.goto(`${base}/dashboard`);
+    // Les écrans sont chargés à la demande : on mesure une fois le titre posé.
+    await page.locator('.bv-plein .bv-titre').waitFor({ timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(400);
+    const r = await examiner(page, { profil: 'sansCommerce', appli: true });
+    try {
+      await page.locator('.bv-plein .bv-titre').waitFor({ timeout: 5000 });
+      await page.locator('.bv-plein').getByRole('button', { name: 'Fermer' }).click({ timeout: 5000 });
+      await page.waitForTimeout(800);
+      const apres = await page.evaluate(() => ({ chemin: location.pathname, plein: !!document.querySelector('.bv-plein') }));
+      if (apres.plein || apres.chemin.startsWith('/dashboard')) r.problemes.push(`la croix ne ramène pas à la vue client (${apres.chemin})`);
+    } catch (e) { r.problemes.push(`écrans de l'inscription absents (${e.message.split('\n')[0]})`); }
+    resultats.push({ profil: 'sansCommerce', page: nom, ...r });
+    await ctx.close();
+    // Sans autre casquette : la croix ferme les écrans, la carte reste avec « Créer mon commerce » et « Se déconnecter ».
+    const deux = await ouvrir(navigateur, base, { profil: 'sansCommerceSeul' });
+    await deux.page.goto(`${base}/dashboard/menu`);
+    await deux.page.locator('.bv-plein .bv-titre').waitFor({ timeout: 8000 }).catch(() => {});
+    await deux.page.waitForTimeout(400);
+    const r2 = await examiner(deux.page, { profil: 'sansCommerceSeul', appli: true });
+    try {
+      await deux.page.locator('.bv-plein').getByRole('button', { name: 'Fermer' }).click({ timeout: 5000 });
+      await deux.page.getByRole('button', { name: 'Créer mon commerce' }).waitFor({ timeout: 5000 });
+      await deux.page.getByRole('button', { name: 'Se déconnecter' }).waitFor({ timeout: 5000 });
+      // Le bouton rouvre les écrans sur place.
+      await deux.page.getByRole('button', { name: 'Créer mon commerce' }).click();
+      await deux.page.locator('.bv-plein .bv-titre').waitFor({ timeout: 5000 });
+    } catch (e) { r2.problemes.push(`carte sans commerce incomplète (${e.message.split('\n')[0]})`); }
+    resultats.push({ profil: 'sansCommerceSeul', page: '/dashboard/menu (sans commerce)', ...r2 });
+    await deux.ctx.close();
   }
   // Premier lancement sans réponse sur les rapports de panne : ni la carte cookies du site, ni un écran plein qui bloque
   // (fondateur, 2026-10-16 : la question se pose par une case à l'inscription, au moment d'une panne et dans Mon compte).

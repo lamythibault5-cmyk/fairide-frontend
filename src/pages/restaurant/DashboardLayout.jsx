@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
-import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { definirModeEquipe } from '../../modeEquipe';
 import { api } from '../../api';
 import { experienceApp, achatsCommerceAutorises } from '../../natif';
@@ -8,8 +8,6 @@ import { ouvrirStripe } from '../../ouvrirStripe';
 import { useAuth } from '../../context/AuthContext';
 import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
-import { specialite } from '../../specialites';
-import CreationCommerce from '../../components/commerce/CreationCommerce';
 import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
@@ -22,17 +20,16 @@ import useRevalidation from '../../useRevalidation';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import BandeauOuverture from '../../components/BandeauOuverture';
 import MiseEnLigne from '../../components/commerce/MiseEnLigne';
-import { cuisineDepuisOsm } from '../../osmCuisine';
 import { demarrerTerminalNavigateur, EVENEMENT_COMMANDE } from '../../terminalNavigateur';
-import { remonterEnHaut } from '../../remonter';
 import Icone from '../../components/Icone';
 import '../../site-pro.css';
 
 // Charge une seule fois restaurant/orders/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
-// commun à toutes les sous-pages : création du commerce (components/commerce/CreationCommerce.jsx) et
-// bannières (validation/abonnement/Stripe).
-const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
+// commun à toutes les sous-pages : création du commerce quand le compte n'en a pas (les écrans de l'inscription,
+// pages/app/InscriptionAppli.jsx) et bannières (validation/abonnement/Stripe).
+// Les écrans de l'inscription ne servent qu'à un compte sans commerce : chargés à la demande.
+const InscriptionAppli = lazy(() => import('../app/InscriptionAppli'));
 // Promotions et Factures les ont rejointes dans l'app aussi le 2026-10-19 (fondateur, finitions-appli.html, section 4 :
 // CadreSite `appli`).
 // Questions, Mode d'emploi et Aperçu client aussi depuis le 2026-10-25 (maquettes/une-action/panier-et-site, réponse 9 :
@@ -47,13 +44,9 @@ const CLE_DERNIER_COMMERCE = 'fairide_dernier_commerce';
 
 export default function DashboardLayout() {
   const { t } = useLanguage();
-  const { token, user, actingAs, actingAdminEmail, quitterAction, refreshUser, changerRole } = useAuth();
+  const { token, user, roles, actingAs, actingAdminEmail, quitterAction, refreshUser, changerRole, logout } = useAuth();
   const navigate = useNavigate();
-  // Comptes fondateurs (admin, ou l'un des e-mails ci-dessous, la même liste que FAIRIDE_FOUNDER_EMAILS côté
-  // serveur) : leur restaurant de test se crée même incomplet, le serveur complète ce qui manque.
-  const fondateur = !!user?.isAdmin || FONDATEURS.includes(String(user?.email || '').toLowerCase());
   const toast = useToast();
-  // Sans restaurant, seule la racine (« Mon commerce ») propose la création ; les autres sections attendent.
   // /dashboard/edit est l'ancienne adresse des infos : même page (la redirection ne joue qu'avec un restaurant).
   const lieu = useLocation();
   const chemin = lieu.pathname.replace(/\/$/, '');
@@ -91,7 +84,8 @@ export default function DashboardLayout() {
   const [etatCommandes, setEtatCommandes] = useState({ echecs: 0, derniereMaj: null, erreur: null, accesPerdu: false });
   const [drivers, setDrivers] = useState([]);
 
-  const [newRestoOpen, setNewRestoOpen] = useState(false);
+  // Les écrans de l'inscription, ouverts d'eux-mêmes quand le compte n'a pas de commerce (voir chargerCommerces).
+  const [creationOuverte, setCreationOuverte] = useState(false);
   // Son + notification système + compteur dans le titre de l'onglet à chaque nouvelle commande.
   const [ordersLoaded, setOrdersLoaded] = useState(false);
   // Échec du premier chargement (réseau, serveur en redéploiement) : sans ceci la page restait vide, sans
@@ -145,15 +139,11 @@ export default function DashboardLayout() {
         const r = list.find((x) => x.id === voulu);
         if (r) pickResto(r.id, r);
       }
-      // Pas encore de restaurant (compte ouvert avant la création automatique, ou création échouée à
-      // l'inscription) : on le crée tout de suite depuis ce que l'inscription a retenu, sans rien demander ;
-      // le formulaire ne s'ouvre qu'en dernier recours, déjà prérempli.
-      else if (list.length === 0) {
-        creerDepuisIndice().then((r) => {
-          if (r) { setMyRestos([r]); pickResto(r.id); toast(t('dashResto.toastAutoCreated', { name: r.name }), 'succes'); }
-          else setNewRestoOpen(true);
-        });
-      }
+      /* PAS ENCORE DE COMMERCE (casquette « restaurant » prise depuis Mes casquettes, ou création échouée à l'inscription) :
+         les écrans de l'inscription, sans les questions du compte (fondateur, 2026-10-27 : « on ne peut pas avoir deux
+         processus qui font la même chose »). Avant, un formulaire à part (CreationCommerce.jsx) ou une création silencieuse
+         depuis ce que le navigateur avait gardé de l'inscription. */
+      else if (list.length === 0) setCreationOuverte(true);
       // Le commerce a été créé automatiquement à l'inscription : l'indice local ne sert plus qu'à ouvrir la
       // demande de carte. Le site web n'est plus gardé dans le navigateur : MenuPage.jsx lit celui de la fiche.
       if (list.length > 0) {
@@ -332,49 +322,24 @@ export default function DashboardLayout() {
     } catch { /* déjà ouverte, hors ligne, ou refusée : la demande reste faisable à la main */ }
   }
 
-  async function creerDepuisIndice() {
-    let h = null;
-    try { h = JSON.parse(localStorage.getItem('fairide_resto_hint') || 'null'); } catch { return null; }
-    if (!h || !h.name) return null;
-    const horairesValides = h.hours && Object.values(h.hours).some((c) => Array.isArray(c) && c.length);
-    const typeDevine = cuisineDepuisOsm(h.cuisine, h.type);
-    // Ce que l'inscription a retenu (sa 1re spécialité, une saisie libre comprise ; « Autre » + `customCuisine` : indice
-    // d'avant le 2026-10-22), sinon le type deviné depuis la fiche OpenStreetMap.
-    const cuisineChoisie = h.cuisineType === 'Autre' && h.customCuisine ? h.customCuisine
-      : h.cuisineType && h.cuisineType !== 'Autre' ? h.cuisineType
-        : specialite(typeDevine)?.value || 'Autre';
-    const sv = h.services || {};
-    try {
-      const r = await api('/restaurants', {
-        method: 'POST', token,
-        body: {
-          name: String(h.name).trim(), commune: h.commune || user?.addressCity || '', neighborhood: h.neighborhood || '', cuisine: cuisineChoisie, extraCuisines: Array.isArray(h.extraCuisines) ? h.extraCuisines : [], desc: '',
-          addressStreet: h.street || user?.addressStreet || '', addressNumber: h.number || user?.addressNumber || '', addressPostalCode: h.postalCode || user?.addressPostalCode || '', addressCity: h.commune || user?.addressCity || '',
-          hours: horairesValides ? h.hours : null, openingHours: h.openingHours || '', deliveryMode: sv.deliveryMode === 'own' ? 'own' : 'fairide',
-          fromSignup: true,
-          offersDelivery: sv.delivery !== false, offersPickup: sv.pickup !== false,
-          phone: h.phone || '', website: h.website || ''
-        }
-      });
-      try {
-        ouvrirDemandeCarte(r?.id, h);
-        localStorage.removeItem('fairide_resto_hint');
-      } catch { /* rien */ }
-      return r;
-    } catch { return null; }
-  }
-
-  // Création manuelle, étape par étape (components/commerce/CreationCommerce.jsx) : ce qui suit n'est
-  // que l'arrivée sur le tableau de bord du commerce qu'on vient de créer.
-  function commerceCree(r) {
-    setMyRestos((prev) => [...prev, r]);
-    setNewRestoOpen(false);
-    pickResto(r.id);
+  // Commerce créé par les écrans de l'inscription (POST /auth/commerce) : la liste se relit et l'ouvre, comme au premier
+  // chargement (la demande de carte gardée par l'inscription du site part de là aussi).
+  function commerceCree() {
+    setCreationOuverte(false);
     navigate('/dashboard', { replace: true });
-    // Pas de défilement « smooth » : il s'interrompait quand le formulaire de création disparaissait et que la page
-    // changeait de hauteur, et le restaurateur restait en bas (simulation du 10 oct. 2026). Voir src/remonter.js.
-    remonterEnHaut();
-    toast(r.wantsOwnDriver ? t('dashResto.toastCreatedOwnDriver') : t('dashResto.toastCreated'));
+    chargerCommerces();
+    toast(t('dashResto.toastCreated'), 'succes');
+  }
+  /* SORTIR SANS CRÉER (fondateur, 2026-10-27, bloqué en vue commerce sans commerce : « il faut un bouton retour, je ne peux
+     pas sortir »). Sans commerce, l'onglet Commerce n'a pas de Mon compte (EditPage attend un commerce), donc pas de Mes
+     casquettes : la sortie est ici. Le compte a une autre casquette → on y retourne ; sinon, la déconnexion. */
+  const autreRole = ['client', 'driver'].find((r) => (roles || []).includes(r)) || null;
+  function quitterVueCommerce() {
+    setCreationOuverte(false);
+    if (autreRole && changerRole(autreRole)) {
+      toast(t('casquettes.basculee', { role: t(`casquettes.nom_${autreRole}`) }));
+      navigate(autreRole === 'driver' ? '/driver' : '/', { replace: true });
+    }
   }
 
   async function connectOnboard() {
@@ -503,20 +468,28 @@ export default function DashboardLayout() {
               </select>
             </div>
           )}
-          {!newRestoOpen && myRestos.length === 0 && surAccueil && (
-            <button type="button" className="btn-ghost" onClick={() => setNewRestoOpen(true)}>{t('dashResto.createMine')}</button>
-          )}
-          {myRestos.length === 0 && !surAccueil && (
+          {myRestos.length === 0 && (
             <div className="empty" style={{ marginTop: 8 }}>
-              <div style={{ fontSize: 30, marginBottom: 6 }}><Icone nom="cadenas" taille={16} className="icone-texte" /></div>
+              <div style={{ marginBottom: 6 }}><Icone nom="commerce" taille={28} className="icone-texte" /></div>
               <b>{t('dashResto.waitTitle')}</b>
               <p className="small" style={{ margin: '6px auto 12px', maxWidth: 420 }}>{t('dashResto.waitText')}</p>
-              <Link to="/dashboard" className="btn-teal" style={{ display: 'inline-block', padding: '8px 16px', fontSize: 14 }}>{t('dashResto.waitCta')}</Link>
+              {/* Les écrans s'ouvrent ici même, sans changer de page : rien à attendre (fondateur, 2026-10-27). */}
+              <button type="button" className="btn-gold" onClick={() => setCreationOuverte(true)}>{t('dashResto.waitCta')}</button>
+              <div style={{ marginTop: 10 }}>
+                {autreRole
+                  ? <button type="button" className="btn-ghost" onClick={quitterVueCommerce}>{t('dashResto.waitQuitter', { role: t(`casquettes.nom_${autreRole}`) })}</button>
+                  : <button type="button" className="btn-ghost" onClick={logout}>{t('nav.logout')}</button>}
+              </div>
             </div>
           )}
         </div>
       )}
-      {newRestoOpen && surAccueil && <CreationCommerce fondateur={fondateur} onCree={commerceCree} ouvrirDemandeCarte={ouvrirDemandeCarte} />}
+      {creationOuverte && myRestos?.length === 0 && (
+        <Suspense fallback={null}>
+          {/* ‹ au premier écran ou la croix : retour à l'autre casquette s'il y en a une, sinon cette carte. */}
+          <InscriptionAppli role="restaurant" compte onCree={commerceCree} onQuitter={quitterVueCommerce} />
+        </Suspense>
+      )}
       {!bandeau && communs}
       {/* Terminal Goodcom au son bloqué par le navigateur : l'écran plein qui le débloque d'un toucher (SonTerminal.jsx). */}
       <SonTerminal alerte={orderAlert} />

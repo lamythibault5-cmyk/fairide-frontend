@@ -16,7 +16,8 @@
 //   - retour dans l'application après Stripe : lien universel https://fairride.be/… (appUrlOpen) quand il
 //     est configuré (docs/application-mobile.md), sinon fermeture du navigateur → on va à la page de retour ;
 //   - barre d'état iris, écran de lancement natif retiré quand la page est vraiment rendue ;
-//   - clavier : classe `clavier-ouvert` sur <html> pour escamoter les barres fixes du bas ;
+//   - clavier : classe `clavier-ouvert` sur <html> pour escamoter les barres fixes du bas, et sur iPhone le champ
+//     remonté au-dessus des touches (clavier.js) ;
 //   - vibrations par le moteur haptique natif (gestes.js) ;
 //   - notifications push natives (APNs / FCM) à la place du Web Push, voir pushNatif.js ;
 //   - position de l'appareil (demanderPosition) et connexion Apple / Google native (connexionFournisseur),
@@ -348,9 +349,9 @@ export async function demarrerNatif(historique) {
   } catch { /* greffon StatusBar absent */ }
 
   try {
-    const { Keyboard } = await import('@capacitor/keyboard');
-    Keyboard.addListener('keyboardWillShow', () => html.classList.add('clavier-ouvert'));
-    Keyboard.addListener('keyboardWillHide', () => html.classList.remove('clavier-ouvert'));
+    // Classe `clavier-ouvert`, et sur iPhone le champ remonté au-dessus des touches + la barre ‹ › OK (clavier.js, 2026-10-27).
+    const [{ Keyboard }, { installerClavier }] = await Promise.all([import('@capacitor/keyboard'), import('./clavier')]);
+    installerClavier({ Keyboard, ios: plateforme() === 'ios' });
   } catch { /* greffon Keyboard absent */ }
 }
 

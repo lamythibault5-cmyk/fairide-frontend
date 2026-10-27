@@ -5117,6 +5117,12 @@ html.natif button, html.natif a, html.natif .dashboard-sidebar, html.natif .pani
 /* Clavier ouvert (événement natif, voir natif.js) : les barres fixes du bas se rangent plutôt que de
    remonter au-dessus des touches et masquer le champ. */
 html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html.clavier-ouvert .cart-bar.co-barre, html.clavier-ouvert .cart-bar.panier-barre { display: none !important; }
+/* iPhone : une cale de la hauteur du clavier sous la page, pour qu'un champ tout en bas puisse encore passer au-dessus des
+   touches (clavier.js pose --clavier ; sans clavier ouvert, la cale n'existe pas). */
+html.clavier-ouvert body::after { content: ''; display: block; height: var(--clavier, 0px); }
+/* Les écrans pleins (accueil, inscription, dossier : .bv) défilent eux-mêmes : ils s'arrêtent au-dessus du clavier, et leur
+   bouton du bas reste à portée de pouce. */
+html.clavier-ouvert .bv { bottom: var(--clavier, 0px); }
 /* iOS seul (-webkit-touch-callout n'existe que là) : Safari zoome sur tout champ dont la police fait moins
    de 16px, et ne dézoome pas toujours en sortant. Les champs gardent leur taille là où elle est déjà ≥ 16px. */
 @supports (-webkit-touch-callout: none) {

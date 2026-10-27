@@ -1,7 +1,7 @@
 // REMONTER EN HAUT QUAND L'ÉTAPE CHANGE SANS CHANGER D'ADRESSE (simulation du 10 oct. 2026).
 //
-// ScrollRestorer.jsx remonte en haut à chaque changement de PAGE (de chemin). Mais l'inscription (Auth.jsx) et la
-// création d'un commerce (CreationCommerce.jsx) sont des formulaires en plusieurs étapes sur une seule adresse : le
+// ScrollRestorer.jsx remonte en haut à chaque changement de PAGE (de chemin). Mais l'inscription (Auth.jsx) est un
+// formulaire en plusieurs étapes sur une seule adresse (la création d'un commerce, CreationCommerce.jsx, l'était aussi) : le
 // restaurateur remplissait l'étape 1, touchait « Continuer » tout en bas, et l'étape 2 s'ouvrait… défilée tout en bas,
 // sous ses propres champs. Un commerce testeur s'y est perdu. Même chose pour l'arrivée sur /dashboard depuis /dashboard
 // après la création (même chemin : ScrollRestorer ne bouge pas, et le défilement « smooth » d'origine s'interrompait
