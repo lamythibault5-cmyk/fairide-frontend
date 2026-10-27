@@ -19,7 +19,7 @@ import { galleryForSection } from '../../galleryImages';
 import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import ConformiteCarte from '../../components/conformite/ConformiteCarte';
 import MentionsAlimentaires from '../../components/commerce/MentionsAlimentaires';
-import { MENTIONS_ALIMENTAIRES } from '../../dietary';
+import { MENTIONS_COMMERCE } from '../../dietary';
 import MenuReadiness from '../../components/MenuReadiness';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Modale from '../../components/Modale';
@@ -534,9 +534,9 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       {modeAdmin && <MenuReadiness restaurant={restaurant} restoId={restoId} token={token} modeAdmin onConfirmed={() => loadDashboard(restoId)} />}
       {/* Carte signée, allergènes, vendeur professionnel (backlog de conformité A1, A2, A8). */}
       <ConformiteCarte restoId={restoId} rafraichir={restaurant} onChange={() => loadDashboard(restoId)} />
-      {/* Halal, sans gluten, vegan, bio : déclarés par le commerce lui-même, malgré le verrou de la carte. Masqués pour le
-          moment (MENTIONS_ALIMENTAIRES, dietary.js) : trop lourd à remplir plat par plat. */}
-      {MENTIONS_ALIMENTAIRES && <MentionsAlimentaires restaurant={restaurant} restoId={restoId} token={token} onChange={() => loadDashboard(restoId)} />}
+      {/* Halal, végétarien, vegan, sans gluten, bio : déclarés par le commerce lui-même, malgré le verrou de la carte. De
+          retour pour le commerce le 2026-10-27 (MENTIONS_COMMERCE, dietary.js) ; les clients ne les voient pas encore. */}
+      {MENTIONS_COMMERCE && <MentionsAlimentaires restaurant={restaurant} restoId={restoId} token={token} onChange={() => loadDashboard(restoId)} />}
       <div className="menu-etape">
         <span className="menu-etape-num">1</span>
         <div>
