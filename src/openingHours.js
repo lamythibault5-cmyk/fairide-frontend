@@ -14,17 +14,39 @@ function libelle(t, cle, defaut) {
   return t ? t(`hours.${cle}`) : defaut;
 }
 
+/* UN SEUL FORMATEUR, ET LA MINUTE EN MÉMOIRE (2026-10-27, « Ouvert » qui saccade dans l'app). Créer un Intl.DateTimeFormat
+ * avec un fuseau coûte cher, et l'état d'ouverture est demandé des milliers de fois par rendu de la liste (chaque commerce,
+ * dans chaque comparaison de tri, chaque rangée, chaque carte) : mesuré, 774 ms sur les 1,3 s d'un appui sur « Ouvert »
+ * (téléphone simulé 4× plus lent). Les formateurs sont donc créés une fois, et le résultat d'une minute donnée est gardé :
+ * à la minute près, la réponse est la même. */
+const FORMAT_PARTIES = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Europe/Brussels', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false
+});
+const FORMAT_DATE = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' });
+const MEMOIRE_MAX = 64;
+const partiesParMinute = new Map();
+const dateParMinute = new Map();
+function retenir(memoire, cle, calcul) {
+  let v = memoire.get(cle);
+  if (v === undefined) {
+    if (memoire.size >= MEMOIRE_MAX) memoire.clear();
+    v = calcul();
+    memoire.set(cle, v);
+  }
+  return v;
+}
+
 function brusselsParts(date) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Brussels', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false
-  }).formatToParts(date);
-  const get = (type) => parts.find((p) => p.type === type)?.value;
-  const weekdayShort = (get('weekday') || '').toLowerCase().slice(0, 3);
-  const dayKey = DAY_KEYS.find((k) => k === weekdayShort) || DAY_KEYS[date.getUTCDay()];
-  let hour = Number(get('hour'));
-  if (hour === 24) hour = 0;
-  const minute = Number(get('minute'));
-  return { dayKey, minutes: hour * 60 + minute };
+  return retenir(partiesParMinute, Math.floor(date.getTime() / 60000), () => {
+    const parts = FORMAT_PARTIES.formatToParts(date);
+    const get = (type) => parts.find((p) => p.type === type)?.value;
+    const weekdayShort = (get('weekday') || '').toLowerCase().slice(0, 3);
+    const dayKey = DAY_KEYS.find((k) => k === weekdayShort) || DAY_KEYS[date.getUTCDay()];
+    let hour = Number(get('hour'));
+    if (hour === 24) hour = 0;
+    const minute = Number(get('minute'));
+    return { dayKey, minutes: hour * 60 + minute };
+  });
 }
 
 function shiftToMinutes(shift) {
@@ -44,7 +66,7 @@ function brusselsMinutesToDate(now, dayOffset, minutesFromMidnight) {
 }
 
 function brusselsDateStr(date) {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(date);
+  return retenir(dateParMinute, Math.floor(date.getTime() / 60000), () => FORMAT_DATE.format(date));
 }
 
 // Une fermeture couvre la date donnée si startDate <= date <= endDate (endDate null = pas de fin connue).
