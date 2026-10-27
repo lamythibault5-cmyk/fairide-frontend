@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
-import { repeterTantQueLibre, enHaut } from '../defilementAuto';
+import { repeterTantQueLibre, rejoindre, enHaut } from '../defilementAuto';
 
 // Rendu une seule fois, en dehors de <Routes> (voir App.jsx), pour ne se remonter qu'à un vrai
 // rechargement de page (F5) — pas à chaque navigation interne, qui remonte les pages elles-mêmes mais
@@ -17,7 +17,7 @@ import { repeterTantQueLibre, enHaut } from '../defilementAuto';
 // QUAND RESTAURE-T-ON, ET QUAND REMONTE-T-ON EN HAUT ? Trois cas :
 //   - rechargement de page : on restaure (c'est l'usage d'origine) ;
 //   - retour arrière du navigateur (POP) ou lien qui le demande (state.restaurerDefilement, posé par
-//     les liens « ← Mon compte ») : on restaure. Revenir sur une page, c'est revenir à l'endroit où
+//     les liens « ← Mon compte » et par les onglets, DashboardSidebar.jsx) : on restaure. Revenir sur une page, c'est revenir à l'endroit où
 //     on l'a quittée — quelqu'un qui a ouvert la dernière rubrique de Mon compte et clique « retour »
 //     veut retrouver cette rubrique sous le doigt, pas le haut de la page et tout à refaire défiler ;
 //   - toute autre navigation (clic sur un onglet, sur une carte) : on part du haut, c'est une
@@ -39,12 +39,23 @@ export default function ScrollRestorer() {
   const location = useLocation();
   const navigationType = useNavigationType();
   const isFirstRun = useRef(true);
+  // L'adresse affichée, posée au rendu (effet de mise en page) — avant tout événement de défilement de la page suivante.
+  const cheminAffiche = useRef(location.pathname);
+  const restaurationEnCours = useRef(false);
 
   // La position est notée au fil du défilement et écrite au plus toutes les 150 ms, puis une dernière fois en quittant la
   // page (2026-10-23, app iPhone lente) : elle était écrite dans sessionStorage à CHAQUE image, une écriture synchrone sur le
   // fil qui fait défiler.
+  //
+  // NE NOTER QUE LES DÉFILEMENTS DE CETTE PAGE (fondateur, 2026-10-27 : « je reviens à Mon compte et parfois je ne suis plus
+  // où j'étais »). L'écouteur d'une page ne part qu'avec les effets différés, APRÈS que la page suivante s'est placée (en
+  // haut, ou à sa position gardée) : l'événement de défilement de ce placement — ou du navigateur qui rabote une page plus
+  // courte — arrivait encore chez l'ancienne, qui l'écrivait sous SON adresse en partant. Mon compte gardait alors 0, ou la
+  // position de l'accueil. Et pendant une restauration, la page encore courte est rabotée : ce n'est pas la personne qui
+  // a défilé, on ne l'écrit pas (sinon, repartie avant la fin, la position gardée était perdue).
   useEffect(() => {
-    const cleDefilement = `fairide_scroll:${location.pathname}`;
+    const chemin = location.pathname;
+    const cleDefilement = `fairide_scroll:${chemin}`;
     let aEcrire = null;
     let minuteur = 0;
     const ecrire = () => {
@@ -54,6 +65,7 @@ export default function ScrollRestorer() {
       aEcrire = null;
     };
     function onScroll() {
+      if (cheminAffiche.current !== chemin || restaurationEnCours.current) return;
       aEcrire = window.scrollY;
       if (!minuteur) minuteur = setTimeout(ecrire, 150);
     }
@@ -64,6 +76,7 @@ export default function ScrollRestorer() {
   useLayoutEffect(() => {
     const premierChargement = isFirstRun.current;
     isFirstRun.current = false;
+    cheminAffiche.current = location.pathname;
     // Une page qui s'ouvre en feuille (feuilles.js) défile dans sa feuille : la page de fond ne bouge pas.
     if (location.state?.fond) return undefined;
     const retour = navigationType === 'POP' || location.state?.restaurerDefilement === true;
@@ -79,10 +92,14 @@ export default function ScrollRestorer() {
       return repeterTantQueLibre(enHaut, REMONTEE_DELAIS, { immediat: true });
     }
     const saved = Number(sessionStorage.getItem(`fairide_scroll:${location.pathname}`) || 0);
-    if (saved <= 0) return undefined;
+    // Rien de gardé (onglet jamais défilé) : en haut, comme une page neuve. Avant le 2026-10-27, rien n'était fait, et la page
+    // s'ouvrait à la hauteur où l'on avait laissé l'onglet PRÉCÉDENT (Mon compte ouvert depuis le bas de la liste, à mi-page).
+    if (saved <= 0) return premierChargement ? undefined : repeterTantQueLibre(enHaut, REMONTEE_DELAIS, { immediat: true });
     // Retour arrière ou rechargement : la position quittée, réappliquée pendant le chargement — et plus rien dès que la
     // personne fait défiler (avant le 2026-10-17, ces reprises-ci n'avaient aucun arrêt : le saut « en revenant du panier »).
-    return repeterTantQueLibre(() => window.scrollTo(0, saved), RESTAURATION_DELAIS);
+    // rejoindre() (defilementAuto.js) attend que la page soit assez haute pour l'atteindre, jusqu'à 10 s.
+    restaurationEnCours.current = true;
+    return rejoindre(saved, { delais: RESTAURATION_DELAIS, auBout: () => { restaurationEnCours.current = false; } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 

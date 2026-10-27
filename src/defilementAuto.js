@@ -40,6 +40,44 @@ export function repeterTantQueLibre(action, delais, { immediat = false } = {}) {
   };
 }
 
+// REJOINDRE UNE POSITION QUE LA PAGE N'A PAS ENCORE (fondateur, 2026-10-27 : « je descends dans Mon compte, je passe sur
+// l'accueil, je reviens à Mon compte… et parfois je ne suis plus où j'étais »). repeterTantQueLibre s'arrêtait à 1,5 s :
+// quand les données de la page arrivaient plus tard (téléphone, réseau lent), elle était encore trop courte, le navigateur
+// rabotait la position et on restait plus haut. Son écart de 40 px prenait aussi pour un geste le saut qu'un squelette
+// remplacé par le vrai contenu fait faire à la page. Ici, la cible est réappliquée à chaque changement de hauteur de la
+// page, jusqu'au bout de `patience` — et rien dès le premier geste. Pas d'arrêt dès qu'elle est atteinte : atteinte sur une
+// page à moitié chargée, la suite arrivait AU-DESSUS, le navigateur gardait sous les yeux ce qui l'était, et Mon compte
+// du commerce finissait 700 px plus bas que l'endroit quitté (essai réseau lent, 2026-10-27).
+// `auBout` est appelé une fois, quelle que soit la fin. Renvoie de quoi tout annuler (nettoyage d'un effet React).
+// 10 s : certains écrans attendent deux réponses l'une après l'autre (Mon compte du commerce : sa fiche, puis le commerce) ;
+// sur un réseau lent, 5 s ne suffisaient pas.
+export function rejoindre(cible, { delais = [0, 100, 300, 600, 1000, 1500], patience = 10000, auBout } = {}) {
+  if (typeof window === 'undefined') return () => {};
+  let fini = false;
+  let minuteurs = [];
+  let limite = 0;
+  let observateur = null;
+  const aller = () => { if (!fini) window.scrollTo(0, cible); };
+  const finir = () => {
+    if (fini) return;
+    fini = true;
+    minuteurs.forEach(clearTimeout);
+    clearTimeout(limite);
+    observateur?.disconnect();
+    GESTES.forEach((g) => window.removeEventListener(g, finir, { capture: true }));
+    auBout?.();
+  };
+  GESTES.forEach((g) => window.addEventListener(g, finir, { passive: true, capture: true }));
+  aller();
+  if (typeof ResizeObserver !== 'undefined') {
+    observateur = new ResizeObserver(aller);
+    observateur.observe(document.body);
+  }
+  minuteurs = delais.map((d) => setTimeout(aller, d));
+  limite = setTimeout(finir, patience);
+  return finir;
+}
+
 export function enHaut() {
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
