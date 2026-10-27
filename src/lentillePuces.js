@@ -96,6 +96,17 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
       g.minuteur = setTimeout(() => {
         if (geste !== g) return;
         g.tenu = true;
+        // Rien de choisi (plus de « Tous », 2026-10-27) : la lentille, effacée, naît sur la cuisine tenue au lieu de glisser
+        // depuis la dernière place (ou de n'avoir aucune taille, jamais posée).
+        if (!lentille.classList.contains('lt-lentille--vue')) {
+          lentille.style.transition = 'none';
+          lentille.style.width = `${puce.offsetWidth}px`;
+          lentille.style.height = `${puce.offsetHeight}px`;
+          lentille.style.transform = `translate(${puce.offsetLeft}px, ${puce.offsetTop}px)`;
+          lentille.dataset.y = String(puce.offsetTop);
+          void lentille.offsetWidth;
+          lentille.style.transition = '';
+        }
         bande.classList.add('lt-puces--appui');
         promener(g.x);
       }, TENUE);
@@ -130,8 +141,9 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
     survol?.classList.remove('lt-puce--survol');
     bande.classList.remove('lt-puces--appui', 'lt-puces--glisse');
     geste = null;
-    // La lentille revient à la place que TeteListe lui a donnée, ou part vers la cuisine lâchée (nouveau rendu).
-    if (tenu) lentille.style.transform = `translate(${lentille.dataset.x || 0}px, ${lentille.dataset.y || 6}px)`;
+    // La lentille revient à la place que TeteListe lui a donnée, ou part vers la cuisine lâchée (nouveau rendu). Sans cuisine
+    // choisie, elle s'efface là où elle est.
+    if (tenu && lentille.classList.contains('lt-lentille--vue')) lentille.style.transform = `translate(${lentille.dataset.x || 0}px, ${lentille.dataset.y || 6}px)`;
     if (!glisse) return; // un simple toucher, ou tenu sans bouger : le clic du bouton fait le reste
     if (!annule && survol && !survol.classList.contains('on')) { vibrer('seuil'); choisir(survol.dataset.cuisine); }
   };

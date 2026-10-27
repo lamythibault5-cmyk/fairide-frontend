@@ -120,6 +120,9 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
 
   // LA LENTILLE SUR LA CUISINE CHOISIE. Une mesure par changement (offsetLeft / offsetWidth), puis un `transform` que la
   // transition CSS fait glisser. Première pose sans transition : pas de glissement depuis le bord gauche à l'ouverture.
+  // RIEN DE CHOISI = TOUT (fondateur, 2026-10-27, plus de pastille « Tous ») : la lentille s'efface sur place en rapetissant
+  // (lt-lentille--vue retirée, ecran-liste.css) ; à la catégorie suivante, elle y saute sans glisser puis grossit, la même
+  // bulle qui glisse ensuite d'une catégorie à l'autre.
   useLayoutEffect(() => {
     const p = piste.current;
     const l = lentille.current;
@@ -127,17 +130,21 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
     let precedente = null;
     const placer = () => {
       const puce = p.querySelector('.lt-puce[data-cuisine].on');
-      if (!puce || !puce.offsetWidth) { l.style.opacity = '0'; return; }
+      // Ouverte sans rien de choisi : la première catégorie touchée a quand même son apparition (dataset.pose).
+      if (!puce || !puce.offsetWidth) { l.classList.remove('lt-lentille--vue'); l.dataset.pose = '1'; precedente = null; return; }
       const premiere = !l.dataset.pose;
+      const saute = premiere || !l.classList.contains('lt-lentille--vue');
       l.dataset.x = String(puce.offsetLeft);
       l.dataset.y = String(puce.offsetTop);
-      if (premiere) l.style.transition = 'none';
-      l.style.opacity = '1';
+      if (saute) l.style.transition = 'none';
+      if (premiere) l.classList.add('lt-lentille--vue');
       l.style.width = `${puce.offsetWidth}px`;
       l.style.height = `${puce.offsetHeight}px`;
       l.style.transform = `translate(${puce.offsetLeft}px, ${puce.offsetTop}px)`;
-      if (premiere) { void l.offsetWidth; l.style.transition = ''; l.dataset.pose = '1'; }
-      if (precedente && precedente !== puce) {
+      if (saute) { void l.offsetWidth; l.style.transition = ''; l.dataset.pose = '1'; }
+      // Après la mesure sans transition : seules l'opacité et la taille (scale) s'animent.
+      l.classList.add('lt-lentille--vue');
+      if (!premiere && precedente !== puce) {
         // La pastille vient à l'écran. Plus de « goutte » (la lentille qui s'étirait et rebondissait en partant) : elle glisse
         // comme celle de la barre d'onglets (fondateur, 2026-10-23 : « beaucoup plus calme », ecran-liste.css).
         const d = defile.current;
