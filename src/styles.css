@@ -5699,3 +5699,8 @@ html.appli .page-feuille-fermer { box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 
    commandes » (fondateur, 2026-10-20). À 0, le titre passe toujours 18 px sous le rond, quelle que soit la barre d'état. */
 .page-feuille-corps .ecran-bandeau { --eb-mh: 0px; }
 @media (min-width: 901px) { .page-feuille .plat-poignee { display: none; } }
+
+/* « Google Maps » sous les résultats de Google Places affichés sans carte Google (règles d'attribution de Google Maps
+ * Platform : le nom en texte, jamais traduit, Roboto 400 de 12 à 16 px, gris #5E5E5E, dans le même bloc que ces résultats).
+ * « Demande ton restaurant » (FenetreDemande) et l'inscription d'un commerce (BusinessSearch), 2026-10-27. */
+.attribution-google { margin: 2px 2px 6px; text-align: right; font: 400 12px Roboto, Arial, sans-serif; letter-spacing: normal; color: #5E5E5E; white-space: nowrap; }

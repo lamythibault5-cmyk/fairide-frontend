@@ -170,6 +170,8 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
               </li>
             ))}
           </ul>
+          {/* Google (inscription d'un commerce, geocode.js › rechercheGooglePlaces) : ses fiches viennent en dernier, « Google Maps » dessous. */}
+          {[...visibles, ...surInternet].some((r) => r.source === 'google') && <p className="attribution-google" translate="no">Google Maps</p>}
           {!repli && filtre.trim().length > 0 && filtre.trim().length < 3 && <p className="small" style={{ margin: '4px 0 0' }}>{t('businessSearch.webHint')}</p>}
           <button type="button" className="btn-ghost business-manual" onClick={saisirALaMain}>{libelleManuel || t('businessSearch.notInList')}</button>
         </>

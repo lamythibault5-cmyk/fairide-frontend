@@ -4442,7 +4442,7 @@ export default {
       subprocessorsOutsideEu: 'See "Transfers outside the European Union" for the applicable safeguards.',
       sub_stripe: 'Payment: amount, payment method and billing details; for businesses and couriers, the identity and bank details needed for payouts (Stripe Connect) and, for couriers, identity verification (Stripe Identity). Your card number never passes through Fairride.',
       sub_resend: 'Your e-mail address and the content of account-related messages: order confirmation, password reset, invoices.',
-      sub_google: 'Only if you use "Sign in with Google": your name and e-mail address are then sent to us by Google.',
+      sub_google: 'If you use "Sign in with Google": your name and e-mail address are then sent to us by Google. And when you look for a restaurant to request it ("Request this restaurant"): the name you type and a point rounded to the kilometre, sent by our server, with no data from your account (Google Places).',
       sub_firebase: "Sending the app's notifications (Firebase Cloud Messaging): your device's notification identifier and the text of the notification (for example, that your order is on its way).",
       sub_apple: "Only if you use “Continue with Apple”: your name and e-mail address, or a relay address Apple creates if you hide yours, are then sent to us by Apple. On iPhone, notifications also go through Apple's notification service (device identifier and text of the notification).",
       sub_nominatim: 'Your delivery address, to convert it into geographic coordinates so the courier can find you.',

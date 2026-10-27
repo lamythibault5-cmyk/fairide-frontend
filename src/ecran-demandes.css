@@ -75,6 +75,8 @@ html:not(.appli) .dm-carte--fin .dm-carte-bouton { width: auto; padding-inline: 
 .dm-resultats { min-height: 8px; }
 .dm-resultats > .small { margin: 6px 0 10px; }
 .dm-groupe { margin: 12px 0 8px; font: 700 13px Inter, sans-serif; color: var(--ink-soft); }
+/* Suggestions Google : un bloc à part, « Google Maps » dessous (.attribution-google, styles.css). */
+.dm-google { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
 .dm-choix {
   display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 11px 13px; margin-bottom: 8px;
   border-radius: 14px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; text-decoration: none; font: inherit;

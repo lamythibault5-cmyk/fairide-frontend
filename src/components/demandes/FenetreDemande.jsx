@@ -14,7 +14,7 @@ import {
 /* LA FENÊTRE « LEQUEL ? » (« Demande ton restaurant », fondateur, 2026-10-26 ; réponses 4, 5 et 8 du questionnaire de
  * maquettes/demande-restaurant). On choisit le restaurant dans une LISTE, pas en texte libre : « chez leon », « Chez Léon » et
  * « Léon » ne font ainsi qu'une demande. En tête, les restaurants déjà demandés qui portent ce nom (on rejoint leur demande),
- * puis les fiches OpenStreetMap autour du client. Un commerce déjà commandable sur Fairride renvoie à sa fiche ; « Il n'est
+ * puis les fiches OpenStreetMap autour du client, puis celles de Google (à part, « Google Maps » dessous). Un commerce déjà commandable sur Fairride renvoie à sa fiche ; « Il n'est
  * pas dans la liste » ouvre le nom et la commune à la main. Puis « Ce que tu y prends » (facultatif), « Me prévenir quand
  * il arrive » (allumé : c'est ce qu'il a demandé, un seul message), et le bouton lime « Demander <nom> ».
  *
@@ -62,8 +62,11 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
   }, [q, manuel, user, token]);
 
   const choisir = (c) => { vibrer('bascule'); setChoix((avant) => (avant?.cle === c.cle ? null : c)); setErreur(''); };
+  const aLaMain = (n) => { vibrer('bascule'); setManuel(true); setNom(n); setChoix(null); };
+  // Une suggestion Google devient une demande « nom + commune » : rien d'autre de Google n'est gardé (conditions de Google).
   const lieuFiche = (f) => (f.demandeId ? { demandeId: f.demandeId }
     : f.commerce ? { restaurantId: f.commerce.id }
+    : f.source === 'google' ? { nom: f.nom, commune: f.commune }
       : { osmType: f.osmType, osmId: f.osmId, nom: f.nom, rue: f.rue, numero: f.numero, codePostal: f.codePostal, commune: f.commune, lat: f.lat, lng: f.lng, osmCategorie: f.categorie });
 
   const nomChoisi = manuel ? nom.trim() : choix?.nom;
@@ -101,8 +104,9 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
     );
   };
   const ligneFiche = (f) => {
-    const cle = f.demandeId ? `d:${f.demandeId}` : f.commerce ? `r:${f.commerce.id}` : `o:${f.osmType}:${f.osmId}`;
-    const adresse = [[f.rue, f.numero].filter(Boolean).join(' '), [f.codePostal, f.commune].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    const cle = f.demandeId ? `d:${f.demandeId}` : f.commerce ? `r:${f.commerce.id}` : f.source === 'google' ? `g:${f.googleId}` : `o:${f.osmType}:${f.osmId}`;
+    const adresse = f.source === 'google' ? f.adresse
+      : [[f.rue, f.numero].filter(Boolean).join(' '), [f.codePostal, f.commune].filter(Boolean).join(' ')].filter(Boolean).join(', ');
     const dessin = dessinDemande({ osmCategorie: f.categorie });
     // Déjà commandable : rien à demander, on ouvre sa fiche.
     if (f.commerce?.commandable) {
@@ -115,9 +119,11 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
       );
     }
     const on = choix?.cle === cle;
+    // Google sans commune reconnue (hors Bruxelles, adresse incomplète) : on l'écrit à la main, nom déjà rempli.
+    const sansCommune = f.source === 'google' && !f.demandeId && !f.commune;
     return (
       <button key={cle} type="button" className={`dm-choix${on ? ' on' : ''}`} aria-pressed={on}
-        onClick={() => choisir({ cle, nom: f.nom, lieu: lieuFiche(f) })}>
+        onClick={() => (sansCommune ? aLaMain(f.nom) : choisir({ cle, nom: f.nom, lieu: lieuFiche(f) }))}>
         <span className="dm-choix-tuile" aria-hidden="true">{dessin ? <img src={dessin} alt="" width="26" height="26" /> : <Icone nom="restaurants" taille={18} />}</span>
         <span className="dm-choix-texte">
           <b>{f.nom}</b>
@@ -175,14 +181,22 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
               {!chargement && rien && (
                 <>
                   <p className="small">{t('demandes.aucunResultat', { q: terme })}</p>
-                  <button type="button" className="dm-choix" onClick={() => { vibrer('bascule'); setManuel(true); setNom(terme); setChoix(null); }}>
+                  <button type="button" className="dm-choix" onClick={() => aLaMain(terme)}>
                     <span className="dm-choix-tuile" aria-hidden="true"><Icone nom="crayon" taille={18} /></span>
                     <span className="dm-choix-texte"><b>{t('demandes.ajouterNom', { nom: terme })}</b><small>{t('demandes.ajouterSous')}</small></span>
                   </button>
                 </>
               )}
               {!chargement && res?.deja?.length > 0 && <><h4 className="dm-groupe">{t('demandes.dejaDemandes')}</h4>{res.deja.map(ligneDemande)}</>}
-              {!chargement && res?.fiches?.length > 0 && <><h4 className="dm-groupe">{t('demandes.trouves')}</h4>{res.fiches.map(ligneFiche)}</>}
+              {!chargement && res?.fiches?.length > 0 && <><h4 className="dm-groupe">{t('demandes.trouves')}</h4>{res.fiches.filter((f) => f.source !== 'google').map(ligneFiche)}</>}
+              {/* Les suggestions de Google à part, « Google Maps » dessous : ses règles d'attribution (sans carte Google,
+                * le nom en texte, jamais traduit, Roboto 400, gris #5E5E5E, dans le même bloc et séparé des autres). */}
+              {!chargement && res?.fiches?.some((f) => f.source === 'google') && (
+                <div className="dm-google">
+                  {res.fiches.filter((f) => f.source === 'google').map(ligneFiche)}
+                  <p className="attribution-google" translate="no">Google Maps</p>
+                </div>
+              )}
             </div>
             {!rien && <button type="button" className="dm-lien" onClick={() => { setManuel(true); setNom(q.trim()); setChoix(null); }}>{t('demandes.pasDansLaListe')}</button>}
           </>
