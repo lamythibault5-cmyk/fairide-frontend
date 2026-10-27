@@ -45,9 +45,19 @@ export function remiseCourte(p, t) {
   return libellePromo(p, t);
 }
 
+// UN FORMATEUR PAR LANGUE ET PAR FORME, CRÉÉ UNE FOIS (2026-10-27, appli lente) : un Intl.NumberFormat neuf à chaque prix
+// coûtait cher sur une fiche de plusieurs centaines de plats (voir aussi openingHours.js, brusselsParts).
+const formateurs = new Map();
+function formateur(forme, options) {
+  const cle = `${getLocale()}|${forme}`;
+  let f = formateurs.get(cle);
+  if (!f) { f = new Intl.NumberFormat(getLocale(), options); formateurs.set(cle, f); }
+  return f;
+}
+
 // Montant en euros dans la langue affichée : 15,11 € (fr-BE), €15.11 (en-GB), € 15,11 (nl-BE).
 export function euros(v) {
-  return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR' }).format(Number(v) || 0);
+  return formateur('euros', { style: 'currency', currency: 'EUR' }).format(Number(v) || 0);
 }
 
 // Une distance dans le format de la langue : « 0,3 km » en français et en néerlandais, « 0.3 km » en anglais (audit du 19/10,
@@ -55,14 +65,14 @@ export function euros(v) {
 export function kmLisible(v) {
   const n = Number(v) || 0;
   const dec = n < 10 ? 1 : 0;
-  return `${new Intl.NumberFormat(getLocale(), { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n)} km`;
+  return `${formateur(`km${dec}`, { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n)} km`;
 }
 
 // Même chose sans « ,00 » pour un montant rond : un badge « -4 € dès 25 € » se lit mieux que « -4,00 € dès 25,00 € ».
 // Exportée pour la page Promotions du commerce (audit du 19/10, shop-119 : elle avait son propre format, français partout).
 export function eurosCourt(v) {
   const n = Number(v) || 0;
-  return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
+  return formateur(Number.isInteger(n) ? 'rond' : 'centimes', { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
 }
 
 /* LIBELLÉ D'UNE PROMO DANS LA LANGUE AFFICHÉE.

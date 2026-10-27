@@ -104,9 +104,13 @@ function boucle(t) {
 }
 function lancer(el, e) { etats.set(el, e); if (!tourne) { tourne = true; requestAnimationFrame(boucle); } }
 
+// Le contrôle devient un contexte isolé (la lumière, en z-index −1, passe sous son contenu mais au-dessus de son fond). Posé
+// ici plutôt que par `html.appli :has(> verre-lueur)` dans verre.css : ce sélecteur était essayé sur chaque élément de la page
+// à chaque calcul des styles (2026-10-27, appli lente). En style direct, que React ne retire pas quand la classe change.
 function lumiere(el) {
   let l = el.querySelector(':scope > verre-lueur');
   if (!l) { l = document.createElement('verre-lueur'); l.setAttribute('aria-hidden', 'true'); el.appendChild(l); }
+  el.style.isolation = 'isolate';
   return l;
 }
 
