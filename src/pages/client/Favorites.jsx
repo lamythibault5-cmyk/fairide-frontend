@@ -13,6 +13,7 @@ import VisuelVide from '../../components/VisuelVide';
 import EtatVide from '../../components/EtatVide';
 import ErreurChargement from '../../components/ErreurChargement';
 import FavoriteHeart from '../../components/FavoriteHeart';
+import { RouteVelo } from '../../components/TeteListe';
 import { useLanguage } from '../../context/LanguageContext';
 import { restaurantTypeLabel } from '../../menuCategories';
 import { mouvementReduit, vibrer } from '../../gestes';
@@ -93,6 +94,7 @@ export default function Favorites() {
       <div className="eb-bandeau">
         <h1 className="eb-titre">{t('favorites.title')}</h1>
         {!loading && !echec && <p className="eb-sous" aria-live="polite">{n === 0 ? t('ecranListe.favorisAucun') : n === 1 ? t('ecranListe.favorisUn') : t('ecranListe.favorisN', { n })}</p>}
+        <RouteVelo roule />
       </div>
       <div className="eb-feuille">
         {loading && <SkeletonCards count={4} />}

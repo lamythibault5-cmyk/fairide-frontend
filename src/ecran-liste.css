@@ -382,6 +382,17 @@ html:not(.appli) .sl-liste--grand .une-points { display: none; }
    --------------------------------------------------------------------------------------------------------------------- */
 .recherche-app .eb-bandeau .recherche-champ { margin: 14px 0 0; border-color: #fff; border-radius: 999px; padding-left: 18px; }
 .recherche-app .eb-bandeau .lt-route { margin-top: 10px; }
+/* La route du vélo sous le titre des pages à bandeau (Mes favoris, Mes demandes, Mes factures, Mes documents ; fondateur,
+   2026-10-27 : le vélo et le bandeau iris arrondi de Mes commandes partout). */
+.eb-bandeau > .lt-route { margin-top: 10px; }
+/* « ← Mon compte » sur le bandeau (Mes factures, Mes documents, ouverts en page) : celui que Layout pose au-dessus de la page
+   s'effaçait sous le bandeau qui remonte. Comme les bandeaux du livreur et du commerce (ecran-livreur.css). Dans une feuille, le
+   rond ‹ le remplace. En verre sur l'iris dans l'app (verre.css). */
+.eb-haut { margin-bottom: 6px; }
+.eb-retour { display: inline-block; font-size: 14px; font-weight: 600; color: #fff; text-decoration: none; padding: 4px 0; }
+.eb-retour:hover { color: #fff; text-decoration: underline; }
+.page-feuille .eb-haut { display: none; }
+.dashboard-main:has(.eb-retour) > .dashboard-retour { display: none; }
 .recherche-app .eb-bandeau .recherche-loupe { color: var(--iris); }
 .recherche-titre-app { margin: 4px 0 10px; font-size: 17px; font-weight: 700; color: var(--ink); }
 .recherche-app .recherche-pastilles + .recherche-titre-app, .recherche-tuiles + .recherche-titre-app { margin-top: 24px; }

@@ -7,6 +7,7 @@ import EtatVide from '../../components/EtatVide';
 import ErreurChargement from '../../components/ErreurChargement';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Icone from '../../components/Icone';
+import { RouteVelo } from '../../components/TeteListe';
 import useFenetreDemande from '../../components/demandes/useFenetreDemande';
 import { miennes, retirer, dessinDemande } from '../../demandes';
 import '../../ecran-liste.css';
@@ -49,6 +50,7 @@ export default function MesDemandes() {
       <div className="eb-bandeau">
         <h1 className="eb-titre">{t('demandes.mesTitre')}</h1>
         {liste && n > 0 && <p className="eb-sous">{t('demandes.rowSous')}</p>}
+        <RouteVelo roule />
       </div>
       <div className="eb-feuille">
         {!liste && !echec && <p className="small">{t('demandes.recherche')}</p>}

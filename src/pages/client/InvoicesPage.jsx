@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api, apiDownload, API_BASE } from '../../api';
 import { ouvrirPdf, nomRecu } from '../../pdf';
 import { euros } from '../../prixPlat';
@@ -8,9 +9,11 @@ import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import ErreurChargement from '../../components/ErreurChargement';
+import { RouteVelo } from '../../components/TeteListe';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 // Même famille que Mon compte sur le site (titre, largeur de lecture, rangées) ; sans effet dans l'app.
 import '../../site-compte.css';
+import '../../ecran-liste.css';
 
 // Liste les commandes payées en ligne avec leur REÇU FAIRIDE (CODE-1, 8 oct. 2026 — recuClient.js côté serveur) : un bloc
 // par vendeur (commerce, livreur, Fairide), TVA par taux, « Payé », heure de Bruxelles. Il remplace la facture automatique
@@ -94,22 +97,35 @@ export default function InvoicesPage() {
     }
   }
 
-  if (!orders) return <SkeletonCards count={3} />;
-  if (echec) return <div className="compte-sous-page"><ErreurChargement onReessayer={charger} /></div>;
+  /* LE BANDEAU IRIS ET LA FEUILLE BLANCHE (fondateur, 2026-10-27 : « Mes factures n'a pas l'air de Fairride, comme les autres
+   * écrans ») : le titre et la route du vélo sur l'iris, comme Mes commandes et Mes favoris (ecran-liste.css), le reste dans la
+   * feuille qui remonte dessus. Le bandeau est là dès le chargement : le rond ‹ de la feuille (PageFeuille.jsx) est en verre sur
+   * l'iris ; ouverte en page, « ← Mon compte » est sur le bandeau (ecran-liste.css). La note sur les factures d'entreprise reste dans la feuille : quatre lignes, trop pour l'iris. */
+  const ecran = (corps) => (
+    <div className="ecran-bandeau fac-ecran">
+      <div className="eb-bandeau">
+        <div className="eb-haut"><Link to="/account" state={{ restaurerDefilement: true }} className="eb-retour">{t('nav.backToAccount')}</Link></div>
+        <h1 className="eb-titre">{t('invoicesClient.title')}</h1>
+        <RouteVelo roule />
+      </div>
+      <div className="eb-feuille"><div className="compte-sous-page">{corps}</div></div>
+    </div>
+  );
+  if (!orders) return ecran(<SkeletonCards count={3} />);
+  if (echec) return ecran(<ErreurChargement onReessayer={charger} />);
 
-  return (
-    <div className="compte-sous-page">
-      <h2 className="section-title compte-sous-titre" style={{ marginTop: 0 }}>{t('invoicesClient.title')}</h2>
-      <p className="small" style={{ margin: '-6px 0 12px', opacity: 0.85 }}>{t('invoicesClient.peppolNote')}</p>
+  return ecran(
+    <>
+      <p className="small" style={{ margin: '0 0 14px', opacity: 0.85 }}>{t('invoicesClient.peppolNote')}</p>
 
       {downloadable.length > 0 && (
         <div className="card" style={{ marginBottom: 14 }}>
           <p className="small" style={{ margin: '0 0 10px' }}>{t('invoicesClient.intro')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-            <button type="button" className="btn-ghost" onClick={() => selectPeriod('week')}>{t('invoicesClient.thisWeek')}</button>
-            <button type="button" className="btn-ghost" onClick={() => selectPeriod('month')}>{t('invoicesClient.thisMonth')}</button>
-            <button type="button" className="btn-ghost" onClick={() => selectPeriod('year')}>{t('invoicesClient.thisYear')}</button>
-            <button type="button" className="btn-ghost" onClick={() => setSelected(new Set())}>{t('invoicesClient.deselectAll')}</button>
+            <button type="button" className="btn-outline btn-sm" onClick={() => selectPeriod('week')}>{t('invoicesClient.thisWeek')}</button>
+            <button type="button" className="btn-outline btn-sm" onClick={() => selectPeriod('month')}>{t('invoicesClient.thisMonth')}</button>
+            <button type="button" className="btn-outline btn-sm" onClick={() => selectPeriod('year')}>{t('invoicesClient.thisYear')}</button>
+            <button type="button" className="btn-outline btn-sm" onClick={() => setSelected(new Set())}>{t('invoicesClient.deselectAll')}</button>
           </div>
           <button type="button" className="btn-teal" disabled={selected.size === 0 || downloading} onClick={downloadSelected}>
             {downloading ? '...' : t('invoicesClient.downloadSelection', { n: selected.size })}
@@ -140,7 +156,7 @@ export default function InvoicesPage() {
                 <span className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {euros(o.total)}{etatRemboursement(o) ? ` · ${etatRemboursement(o)}` : ''}</span>
               </div>
               {aUnRecu(o) ? (
-                <button type="button" className="btn-ghost" onClick={() => ouvrirPdf(`${API_BASE}/orders/${o.id}/receipt`, token, t('invoicesClient.downloadFailed'), nomRecu(o))}>{t('invoicesClient.viewInvoice')}</button>
+                <button type="button" className="btn-outline btn-sm" onClick={() => ouvrirPdf(`${API_BASE}/orders/${o.id}/receipt`, token, t('invoicesClient.downloadFailed'), nomRecu(o))}>{t('invoicesClient.viewInvoice')}</button>
               ) : (
                 <span className="small" style={{ opacity: 0.6 }}>{t('invoicesClient.unavailable')}</span>
               )}
@@ -148,6 +164,6 @@ export default function InvoicesPage() {
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }
