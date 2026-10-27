@@ -203,12 +203,14 @@ export default function ValiderCarte() {
         <FeuilleGenerale>
           <h2 className="qc-merci-titre">{t('questionsCarte.updatingTitle')}</h2>
           <p className="gn-texte" role="status">{t('questionsCarte.updatingText')}</p>
+          {/* Le bouton AVANT le rappel des réponses (fondateur, 2026-10-27, comme « Merci pour ta commande ! ») : avec plusieurs
+              réponses, il passait sous le bord de l'écran. */}
+          {commercant && <Link to="/dashboard" className="btn-gold gn-action" style={{ marginTop: 18 }}>{t('validerCarte.backToDashboard')}</Link>}
           {rappel && (
             <div className="qc-recap"><b>{t('questionsCarte.yourAnswers')}</b>
               <ol>{rappel.map((r) => <li key={r.id}>{r.reponse}</li>)}</ol>
             </div>
           )}
-          {commercant && <Link to="/dashboard" className="btn-gold gn-action" style={{ marginTop: 18 }}>{t('validerCarte.backToDashboard')}</Link>}
         </FeuilleGenerale>
       </div>
     );

@@ -719,9 +719,11 @@ html.appli .suivi-commande {
 .suivi-commande--refus .suivi-commande-texte b { color: var(--red); }
 /* « Bon appétit ! » s'en va. */
 .suivi-commande--part { opacity: 0; transform: translateY(20px); }
-/* Place réservée sous le contenu (comme html.avec-pilule-panier) ; les deux barres ensemble, le double. */
-html.avec-suivi-commande main { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
-html.avec-suivi-commande.avec-pilule-panier main { padding-bottom: calc(144px + env(safe-area-inset-bottom)); }
+/* Place réservée sous le contenu (comme html.avec-pilule-panier) ; les deux barres ensemble, le double. Seulement là où la bande
+   peut paraître : dans le parcours de commande (.dashboard-shell--flux) elle est cachée (plus bas), et sa place vide faisait
+   défiler « Merci pour ta commande ! » (2026-10-27). */
+html.avec-suivi-commande .dashboard-shell:not(.dashboard-shell--flux) main { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+html.avec-suivi-commande.avec-pilule-panier .dashboard-shell:not(.dashboard-shell--flux) main { padding-bottom: calc(144px + env(safe-area-inset-bottom)); }
 @media (max-width: 900px) {
   /* Au-dessus de la barre du panier (60 px et 8 px d'air) ; à gauche de la bulle du panier (56 px sur le côté droit, à gauche
      sur la Carte). La barre d'onglets réduite fait descendre les deux du même pas (règle html.barre-compacte de styles.css). */

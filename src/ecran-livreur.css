@@ -357,6 +357,14 @@ html .ecl-factures table.ecl-recap-table, html.appli .dashboard-main .ecl-factur
 .ecl-bouton-dossier { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; margin: 14px 0 6px; padding: 13px 16px;
   font-size: 16px; font-weight: 700; border-radius: var(--radius-pill); }
 .ecl-bouton-dossier + .ecl-titre-sec { margin-top: 24px; }
+/* La fin de l'inscription express (FinExpress, DossierAppli.jsx ; fondateur, 2026-10-27, comme « Merci pour ta commande ! ») : le ‹
+   à gauche du nom, et le bouton lime tenu au-dessus des onglets sur téléphone — la dernière ligne de la liste passe dessous. */
+.ecl-fin .ecl-b-haut { justify-content: flex-start; }
+@media (max-width: 900px) {
+  .ecl-fin .ecl-fin-actions { position: sticky; bottom: calc(var(--hauteur-onglets) + var(--bas-ecran)); z-index: 1; background: #fff;
+    margin: 0 -18px; padding: 10px 18px 12px; }
+  .ecl-fin .ecl-fin-actions .ecl-bouton-dossier { margin: 0; }
+}
 /* « Avant de commencer », sous le sommaire du brouillon (DossierAppli.jsx, 2026-10-25) : une ligne à part, sans rond. */
 .ecl-etapes-annexe { margin-top: 18px; border-top: 1px solid var(--line); }
 
