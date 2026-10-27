@@ -19,6 +19,7 @@ import { preparerNouvelleCommande } from '../../recommander';
 import SignalerProbleme from '../../components/client/SignalerProbleme';
 import SansLivreur from '../../components/client/SansLivreur';
 import LivreurALaPorte from '../../components/client/LivreurALaPorte';
+import ChangerAdresse from '../../components/client/ChangerAdresse';
 import ReglageNotifications from '../../components/ReglageNotifications';
 import { RappelEmail } from '../../components/EmailConfirmation';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -194,6 +195,8 @@ export default function Orders() {
   const [ouvertes, setOuvertes] = useState(() => new Set());
   // La photo de la commande par le commerce, ouverte en grand (audit design 2).
   const [photoOuverte, setPhotoOuverte] = useState(null);
+  // Changer l'adresse d'une commande payée (fondateur, 2026-10-27) : la commande dont la feuille est ouverte.
+  const [adresseDe, setAdresseDe] = useState(null);
   const basculerDetails = (id) => setOuvertes((avant) => { const n = new Set(avant); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   useEffect(() => {
@@ -253,6 +256,18 @@ export default function Orders() {
     if (searchParams.get('tip') !== 'paid') return;
     setPourboireId(null);
     api('/orders/mine', { token }).then(setOrders).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+  /* RETOUR DU PAIEMENT D'UN CHANGEMENT D'ADRESSE (/orders?adresse=payee) : l'adresse change à l'arrivée du paiement chez le
+   * serveur (webhook), quelques secondes après ; on relit tout de suite, puis encore une fois un peu plus tard. */
+  useEffect(() => {
+    if (searchParams.get('adresse') !== 'payee') return undefined;
+    setAdresseDe(null);
+    toast(t('orders.addrPaid'), 'succes');
+    const relire = () => api('/orders/mine', { token }).then(setOrders).catch(() => {});
+    relire();
+    const id = setTimeout(relire, 4000);
+    return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
   // Retour sur l'onglet après une absence : relecture immédiate des commandes.
@@ -433,13 +448,20 @@ export default function Orders() {
     </>
   );
   // Où, et les consignes à la porte : seulement tant que la commande est en cours (une commande passée ne les répète plus).
-  const blocLieu = (o) => (
+  // `sansChanger` : la carte de l'app montre déjà l'adresse et « Changer » hors de « Détails » (rangeeAdresse).
+  const blocLieu = (o, { sansChanger = false } = {}) => (
     <>
       {o.orderType === 'pickup' && !estPassee(o) && (
         <div className="small suivi-lieu">{t('orders.pickupAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '' })}</div>
       )}
       {o.orderType === 'delivery' && !estPassee(o) && (
-        <div className="small suivi-lieu"><Icone nom="position" taille={14} /> {o.address}</div>
+        <div className="small suivi-lieu">
+          <Icone nom="position" taille={14} /> {o.address}
+          {/* Tant que le livreur n'a pas la commande (le serveur le dit : addressChangeAllowed). */}
+          {o.addressChangeAllowed && !sansChanger && (
+            <button type="button" className="suivi-changer-adresse" onClick={() => setAdresseDe(o)} aria-label={t('orders.changeAddressAria')}>{t('orders.changeAddress')}</button>
+          )}
+        </div>
       )}
       {o.deliveryInstructions && !estPassee(o) && (
         <div className="small suivi-consignes">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
@@ -671,6 +693,13 @@ export default function Orders() {
         onCancel={() => setARecommander(null)}
         onConfirm={() => { const o = aRecommander; setARecommander(null); recommander(o, true); }}
       />
+      {adresseDe && (
+        <ChangerAdresse
+          order={adresseDe}
+          onFermer={() => setAdresseDe(null)}
+          onChangee={(maj) => setOrders((avant) => avant.map((x) => (x.id === maj.id ? { ...x, ...maj } : x)))}
+        />
+      )}
       {photoOuverte && (
         APPLI ? (
           <SousEcran titre={t('orders.photoTitle')} onFermer={() => setPhotoOuverte(null)}>
@@ -722,6 +751,15 @@ export default function Orders() {
     const lieu = o.orderType === 'delivery' ? String(o.address || '').split(',')[0] : '';
     return [n > 0 ? t(n > 1 ? 'ecranCommande.articlesPluriel' : 'ecranCommande.articles', { count: n }) : null, lieu || null, euros(debite(o))].filter(Boolean).join(' · ');
   };
+  /* L'ADRESSE À CHANGER, HORS DE « DÉTAILS » (fondateur, 2026-10-27). Repliée, elle passait inaperçue : c'est justement le
+   * client qui a oublié de la changer qui ne la regarde pas. Tant qu'elle peut encore changer, elle est sur la carte, avec
+   * « Changer » en lien iris (la prochaine action de la carte reste la sienne). */
+  const rangeeAdresse = (o) => (o.orderType === 'delivery' && o.addressChangeAllowed ? (
+    <div className="small suivi-lieu suivi-lieu-visible">
+      <Icone nom="position" taille={14} /> {t('orders.deliverTo', { address: String(o.address || '').split(',')[0] })}
+      <button type="button" className="suivi-changer-adresse" onClick={() => setAdresseDe(o)} aria-label={t('orders.changeAddressAria')}>{t('orders.changeAddress')}</button>
+    </div>
+  ) : null);
   const carteEnCours = (o) => {
     const livraison = o.orderType === 'delivery';
     const enRoute = o.status === 'livraison';
@@ -740,6 +778,7 @@ export default function Orders() {
         <SansLivreur order={o} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
         {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
         {codeDeRemise(o)}
+        {rangeeAdresse(o)}
         {enRoute && blocPhoto(o)}
         <InfosRetrait order={o} compact />
         <details className="suivi-details">
@@ -749,7 +788,7 @@ export default function Orders() {
           </summary>
           <div className="suivi-details-corps">
             {blocArticles(o)}
-            {blocLieu(o)}
+            {blocLieu(o, { sansChanger: true })}
             <VendeurLivraison order={o} />
             {blocTotal(o)}
             {noteVerrou(o)}

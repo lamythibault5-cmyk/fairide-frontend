@@ -75,6 +75,21 @@ Orders stop at the deadline. The front texts say « 14 jours » in full: change 
   accounts and group orders; 10-17: GatewayAPI as the SMS processor; they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
   restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).
 
+## Changing the address after ordering (founder, 2026-10-27)
+
+A customer who orders from somewhere else often forgets to change the address the checkout carried over from the last order.
+From the order tracking (« Changer » next to the address, [ChangerAdresse](../../src/components/client/ChangerAdresse.jsx)) they
+can change it **until the courier has picked the order up** (status `livraison`), at most 3 times, within the shop's delivery
+radius. Uber Eats' rule, picked by Owen: **same price or cheaper → the address changes at once and the price paid stays** (no
+small refund; when no courier has taken it yet, the gap stays with Fairride like the bike gap); **further → the customer pays
+the difference** on a separate Stripe page (like the tip) and the address changes when the payment arrives. The supplement is
+added to `delivery_fee` and `total` and kept in `orders.delivery_adjustment` (the first card charge is `total − delivery_adjustment`);
+the shop's delivery discount does not grow; 10 % goes to the system fee, the rest to the courier. An assigned courier keeps at least
+the price they accepted, and gets their own grid for the new trip if higher (bonus frozen at claim); a bike courier's order refuses a
+new address beyond `VELO_MAX_KM`. A cancelled order refunds each supplement separately. Backend: `changementAdresse.js`, migration
+096, `POST /orders/:id/address/quote` and `POST /orders/:id/address`. The checkout also warns « Tu n'es pas à cette adresse ? » when
+the phone, with location already allowed (never asked for this), is more than 1 km from the address (`useLoinDeLAdresse`).
+
 ## Three sellers per order (decided 2026-09-23)
 
 The customer buys the food from the business, the **delivery from the independent courier** who accepts

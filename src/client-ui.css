@@ -271,6 +271,15 @@
 
 .suivi-carte .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 8px 0; color: var(--ink); font-size: 13px; }
 .suivi-lieu { color: var(--ink-soft); margin: 6px 0; }
+/* « Changer » à côté de l'adresse de livraison (fondateur, 2026-10-27, components/client/ChangerAdresse.jsx) : un lien iris, pas un
+   second bouton lime, la prochaine action de la carte reste la sienne. Zone de toucher de 44 px. */
+.suivi-changer-adresse { background: none; border: 0; padding: 12px 4px; margin: -12px 0 -12px 6px; color: var(--iris); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.changer-adresse-nouvelle { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 6px; font-size: 17px; }
+.changer-adresse-nouvelle > span { display: flex; flex-direction: column; gap: 2px; }
+.changer-adresse-avant { color: var(--ink-faint); margin: 0 0 16px 30px; }
+.changer-adresse-prix { display: flex; flex-direction: column; gap: 2px; margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; background: var(--iris-tint); color: var(--ink); font-weight: 600; }
+.changer-adresse-prix .small { font-weight: 400; color: var(--ink-soft); }
+.changer-adresse-regle { color: var(--ink-faint); margin-top: 4px; }
 .suivi-resume { margin: 0 0 6px; font-size: 13px; color: var(--ink-soft); }
 /* Code de retrait / de livraison : un ticket, lisible de loin au comptoir. */
 .suivi-code { margin: 12px 0; padding: 12px 14px; border: 2px dashed var(--iris); border-radius: 14px; text-align: center; background: rgba(59, 47, 181, .04); }

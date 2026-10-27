@@ -724,6 +724,8 @@ export default function DriverDashboard() {
       <BoutonsItineraire adresse={o.restaurantAddress} lat={o.restaurantLat} lng={o.restaurantLng} t={t} />
       {!auBandeau && o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
       <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
+      {/* Le client peut changer l'adresse jusqu'à ce que tu aies la commande (fondateur, 2026-10-27) : tu reçois une notification. */}
+      {o.addressChangedAt && <div className="small ecl-adresse-changee"><Icone nom="position" taille={14} /> {t('dashDriver.addressChanged')}</div>}
       {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
       <DeliveryTiming order={o} />
       {/* Dans l'application : glisser pour confirmer (un appui dans la poche ne valide rien). Sur le site : le bouton. */}
@@ -775,6 +777,7 @@ export default function DriverDashboard() {
       {articles(o)}
       <BoutonsItineraire adresse={o.address} lat={o.deliveryLat} lng={o.deliveryLng} t={t} />
       {!auBandeau && <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>}
+      {o.addressChangedAt && <div className="small ecl-adresse-changee"><Icone nom="position" taille={14} /> {t('dashDriver.addressChanged')}</div>}
       {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
       {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
       <DeliveryTiming order={o} />

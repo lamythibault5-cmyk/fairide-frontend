@@ -820,6 +820,8 @@ export default function OrdersPage() {
           {o.print && <EtatImpression p={o.print} t={t} />}
         </div>
         {o.orderType === 'delivery' && o.address && <div className="small sp-cmd-info"><Icone nom="position" taille={14} className="icone-texte" />{' '}{o.address}</div>}
+        {/* Adresse changée par le client après la commande (fondateur, 2026-10-27) : utile au commerce qui livre lui-même. */}
+        {o.orderType === 'delivery' && o.addressChangedAt && <div className="small sp-cmd-info">{t('dashDriver.addressChanged')}</div>}
         {/* Une commande qui attend : ni heure estimée ni phrase d'échéance, l'anneau dit le temps qui reste (audit design 2). */}
         {!nouvelle && <DeliveryTiming order={o} />}
         <BandeauAllergie order={o} />

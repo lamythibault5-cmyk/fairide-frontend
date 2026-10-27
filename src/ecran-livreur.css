@@ -127,6 +127,8 @@
 .ecl-tj-libs > span { min-width: 0; overflow-wrap: anywhere; }
 .ecl-tj-libs > span:last-child { text-align: right; }
 .ecl-faint { color: var(--ink-faint); }
+/* Le client a changé l'adresse avant le retrait (fondateur, 2026-10-27) : dit en iris, sous l'adresse. */
+.ecl-adresse-changee { color: var(--iris); font-weight: 600; display: flex; align-items: center; gap: 4px; }
 .ecl-offre .small { margin-top: 6px; }
 .ecl-offre-pied { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
 .ecl-offre-pied .btn-ghost { flex: none; min-height: 44px; padding: 10px 8px; font-weight: 600; }
