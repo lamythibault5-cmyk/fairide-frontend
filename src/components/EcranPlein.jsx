@@ -19,11 +19,12 @@ import useDialogue from '../hooks/useDialogue';
  * body en overflow: hidden devenait sa propre boîte de défilement). Échap ne ferme rien : ces parcours ont leurs propres
  * boutons de retour, et un écran à moitié rempli ne doit pas disparaître sur une touche. */
 const RIEN = () => {};
-export default function EcranPlein({ children, etiquette }) {
+// `classe` : « bv-bandeau » pour le fond iris des écrans de l'inscription (InscriptionAppli.jsx, compte existant).
+export default function EcranPlein({ children, etiquette, classe = '' }) {
   const racine = useRef(null);
   useDialogue(racine, RIEN);
   return createPortal(
-    <div className="bv bv-plein" role="dialog" aria-modal="true" aria-label={etiquette} ref={racine} tabIndex={-1}>{children}</div>,
+    <div className={`bv bv-plein${classe ? ` ${classe}` : ''}`} role="dialog" aria-modal="true" aria-label={etiquette} ref={racine} tabIndex={-1}>{children}</div>,
     document.body
   );
 }

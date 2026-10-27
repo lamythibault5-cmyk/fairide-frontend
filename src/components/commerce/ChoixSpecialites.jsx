@@ -9,8 +9,8 @@ import '../../choix-specialites.css';
 
 /* CE QUE LE COMMERCE VEND (fondateur, 2026-10-22, version A de maquettes/categories-commerce/categories-commerce.html).
  *
- * Un seul écran partout : l'inscription dans l'app (InscriptionAppli.jsx) et sur le site (Auth.jsx), la création d'un
- * commerce depuis le tableau de bord (CreationCommerce.jsx) et Mon commerce › Type (EcranTypeCommerce.jsx) — le commerce
+ * Un seul écran partout : l'inscription dans l'app (InscriptionAppli.jsx, aussi pour un compte qui n'a pas encore son
+ * commerce) et sur le site (Auth.jsx), et Mon commerce › Type (EcranTypeCommerce.jsx) — le commerce
  * change ses choix quand il veut, de la même manière (fondateur, même jour).
  *
  *   - en haut, une recherche qui comprend les mots de tous les jours (« congo », « pho », « fritkot » : specialites.js) ;
