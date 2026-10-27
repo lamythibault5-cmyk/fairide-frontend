@@ -110,7 +110,7 @@ export const SPECIALITES = [
  * suffit », « toutes les catégories ont un dessin », « tacos, burritos, tex-mex, c'est la même chose », puis « on ne peut pas
  * juste copier Uber Eats ? » avec la bande d'Uber Eats à Bruxelles en captures). La bande de la liste, « Par envie » de la
  * Recherche et le filtre de la carte montrent ces catégories, à plat (plus de rangée de spécialités dessous), dès qu'un
- * commerce en est. Ce sont celles d'Uber Eats, dans son ordre, avec ce qui manque à Bruxelles chez lui (Kebab, Afrique,
+ * commerce en est. Ce sont celles d'Uber Eats, avec ce qui manque à Bruxelles chez lui (Kebab, Afrique,
  * Libanais, Maghreb, Europe), sans ce qui n'est pas un repas (Halloween, fleurs, animaux, pharmacie). Salades est dans
  * Healthy, Wings dans Poulet, Hawaïen dans Poke, Street food dans Kebab.
  *
@@ -121,48 +121,53 @@ export const SPECIALITES = [
  * Le commerce choisit toujours des spécialités rangées en familles (ChoixSpecialites, inchangé), et le serveur n'en sait rien :
  * rien n'est stocké. Une spécialité va dans les catégories qui la citent ; sinon dans celles qui prennent une de ses familles.
  * [clé, illustration, familles prises, spécialités citées, déclarations du commerce]. Chaque catégorie a SON dessin (public/cuisines et cuisines-2d,
- * Fluent Emoji), jamais celui d'une autre. Libellés `menuCategories.categorie.<clé>` / `categorieCourt`. */
+ * Fluent Emoji), jamais celui d'une autre. Libellés `menuCategories.categorie.<clé>` / `categorieCourt`.
+ *
+ * DANS L'ORDRE DE CE QU'ON VEUT LE PLUS SOUVENT (fondateur, 2026-10-27 : « pourquoi commencer par le petit-déj ? pizza,
+ * burger, indien, sushi, poulet frit, fast-food, thaï, petit-déj ») : ces huit en tête, puis le reste à peu près par demande
+ * à Bruxelles, les courses en dernier. L'ordre compte aussi pour `deSpecialite` (la première catégorie qui cite une
+ * spécialité) : Turc va dans Kebab, avant Libanais. */
 const LISTE_CATEGORIES = [
-  ['courses', 'supermarche', ['courses'], []],
-  ['petitdej', 'brunch', [], ['Petit-déjeuner & Brunch', 'Pancakes']],
-  ['indien', 'indien', ['inde'], []],
   ['pizza', 'pizza', [], ['Pizza', 'Pizza à la part']],
   ['burgers', 'burger', ['burger'], []],
+  ['indien', 'indien', ['inde'], []],
+  ['sushi', 'sushi', [], ['Sushi']],
+  ['poulet', 'poulet', [], ['Fried Chicken', 'Chicken wings', 'Poulet rôti']],
+  ['fastfood', 'friterie', ['snack'], []],
+  ['thai', 'thai', [], ['Thaïlandais']],
+  ['petitdej', 'brunch', [], ['Petit-déjeuner & Brunch', 'Pancakes']],
+  ['kebab', 'kebab', ['kebab'], ['Turc']],
   ['asiatique', 'asiatique', ['asie'], []],
-  ['boulangerie', 'boulangerie', ['boulangerie'], []],
-  ['halal', 'halal', [], [], ['halalAll']],
-  ['cafe', 'cafe', ['cafe'], []],
+  ['japonais', 'ramen', ['japon'], []],
   ['chinois', 'chinois', [], ['Chinois', 'Dim sum']],
-  ['glaces', 'desserts', [], ['Glacier', 'Desserts & Glaces', 'Milkshakes']],
-  ['grec', 'grec', [], ['Grec']],
+  ['italien', 'italien', ['pizza'], []],
+  ['mexicain', 'mexicain', [], ['Mexicain', 'Tex-Mex', 'Burritos', 'Tacos français']],
+  ['halal', 'halal', [], [], ['halalAll']],
   ['libanais', 'libanais', ['orient'], ['Turc']],
   ['maghreb', 'marocain', ['maghreb'], []],
-  ['sandwichs', 'sandwichs', ['sandwich'], []],
-  ['mexicain', 'mexicain', [], ['Mexicain', 'Tex-Mex', 'Burritos', 'Tacos français']],
-  ['poulet', 'poulet', [], ['Fried Chicken', 'Chicken wings', 'Poulet rôti']],
-  ['desserts', 'cookie', ['sucre'], ['Desserts & Glaces']],
+  ['poke', 'poke', [], ['Poke Bowl']],
   ['healthy', 'healthy', ['healthy'], []],
+  ['sandwichs', 'sandwichs', ['sandwich'], []],
+  ['glaces', 'desserts', [], ['Glacier', 'Desserts & Glaces', 'Milkshakes']],
+  ['desserts', 'cookie', ['sucre'], ['Desserts & Glaces']],
+  ['boulangerie', 'boulangerie', ['boulangerie'], []],
+  ['cafe', 'cafe', ['cafe'], []],
   ['bubbletea', 'bubbletea', [], ['Bubble Tea']],
+  ['coreen', 'coreen', [], ['Coréen']],
+  ['vietnamien', 'vietnamien', [], ['Vietnamien']],
+  ['grec', 'grec', [], ['Grec']],
+  ['americain', 'hotdog', [], ['Américain', 'Hot-dog', 'Steakhouse']],
+  ['bbq', 'bbq', [], ['Barbecue', 'Grillades', 'Argentin']],
+  ['poisson', 'poisson', ['poisson'], []],
+  ['europe', 'belge', ['europe'], []],
+  ['afrique', 'africain', ['afrique'], []],
+  ['latino', 'latino', ['ameriques'], ['Argentin']],
+  ['familiale', 'familiale', [], ['Cuisine Familiale']],
+  ['smoothies', 'smoothie', [], ['Jus & Smoothies']],
   ['vege', 'vegetarien', [], ['Végétarien', 'Vegan'], ['vegetarianAll', 'veganAll']],
   ['vegan', 'vegan', [], ['Vegan'], ['veganAll']],
   ['sansgluten', 'sansgluten', [], [], ['glutenFreeAll']],
-  ['italien', 'italien', ['pizza'], []],
-  ['europe', 'belge', ['europe'], []],
-  ['vietnamien', 'vietnamien', [], ['Vietnamien']],
-  ['smoothies', 'smoothie', [], ['Jus & Smoothies']],
-  ['coreen', 'coreen', [], ['Coréen']],
-  ['americain', 'hotdog', [], ['Américain', 'Hot-dog', 'Steakhouse']],
-  ['japonais', 'ramen', ['japon'], []],
-  ['bbq', 'bbq', [], ['Barbecue', 'Grillades', 'Argentin']],
-  ['familiale', 'familiale', [], ['Cuisine Familiale']],
-  ['fastfood', 'friterie', ['snack'], []],
-  ['sushi', 'sushi', [], ['Sushi']],
-  ['poke', 'poke', [], ['Poke Bowl']],
-  ['thai', 'thai', [], ['Thaïlandais']],
-  ['kebab', 'kebab', ['kebab'], ['Turc']],
-  ['poisson', 'poisson', ['poisson'], []],
-  ['latino', 'latino', ['ameriques'], ['Argentin']],
-  ['afrique', 'africain', ['afrique'], []]
+  ['courses', 'supermarche', ['courses'], []]
 ];
 export const CATEGORIES_CLIENT = LISTE_CATEGORIES.map(([cle, illustration, familles, specialites, declarations = []]) => {
   const sienne = FAMILLE[familles[0] || SPECIALITES.find((s) => s.value === specialites[0])?.familles[0] || 'healthy'];

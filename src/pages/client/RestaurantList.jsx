@@ -21,7 +21,7 @@ import CertifiedBadge from '../../components/CertifiedBadge';
 import PrixComptoir from '../../components/PrixComptoir';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { epingler, titreRangee } from '../../misesEnAvant';
-import { COMMUNES, ILLUSTRATION_TOUTES_CUISINES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel, communeDepuisCodePostal } from '../../menuCategories';
+import { COMMUNES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel, communeDepuisCodePostal } from '../../menuCategories';
 import { categoriesClient, libelleCategorie, specialite } from '../../specialites';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { statutOuverture } from '../../openingHours';
@@ -640,8 +640,10 @@ export default function RestaurantList() {
   // LA MÊME BANDE POUR TOUT LE MONDE (fondateur, 2026-10-26 : « je n'aime pas ces points verts ; l'écran Tu as envie de quoi ? est
   // juste pour le plaisir, il ne doit rien changer »). Les familles cochées à l'accueil de l'app passaient en tête de la bande avec
   // un point lime, et ouvraient une rangée « Tes envies » (2026-10-25) : retiré. L'accueil garde son écran et ses résultats.
+  // PLUS DE PASTILLE « TOUS », COMME UBER EATS (fondateur, 2026-10-27) : la liste s'ouvre sur tout, sans rien d'allumé ; on
+  // touche une catégorie pour filtrer, on la retouche pour revenir à tout (surChip). La lentille apparaît et s'efface sur place
+  // (TeteListe.jsx).
   const cuisineOptions = [
-    { value: '', emoji: 'restaurants', illustration: ILLUSTRATION_TOUTES_CUISINES, label: t('restaurantList.allCuisines') },
     ...categories.liste.map((f) => ({ value: f.cle, emoji: f.icone, illustration: f.illustration, label: libelleCategorie(f.cle, t, { court: true }) })),
     // Bio, Vegan, Halal, Sans gluten : masqués pour le moment (MENTIONS_ALIMENTAIRES, dietary.js).
     ...(MENTIONS_ALIMENTAIRES ? [
