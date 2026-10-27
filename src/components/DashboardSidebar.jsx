@@ -9,6 +9,7 @@ import Icone, { IconePleine } from './Icone';
 import useInbox from '../hooks/useInbox';
 import { useCurseurOnglets } from '../hooks/useCurseurOnglets';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
+import { useSiteLarge } from '../hooks/useSiteLarge';
 import { experienceApp } from '../natif';
 import { defilement } from '../gestes';
 import { useModeEquipe } from '../modeEquipe';
@@ -26,7 +27,7 @@ const AdminNav = lazyPage(() => import('./admin/AdminNavLaterale'));
 
 // Items de nav par rôle : mêmes cibles que l'ancien .role-nav de Layout.jsx, juste redisposées
 // verticalement avec une icône — pas de nouvelle page/route inventée ici.
-function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
+function navItemsForRole(role, t, user, membreEquipe = false, pathname = '', etroit = false) {
   // Membre de l'équipe d'un commerce (modeEquipe.js) : le service seulement, ses commandes et son compte.
   if (role === 'restaurant' && membreEquipe) {
     return [
@@ -58,11 +59,15 @@ function navItemsForRole(role, t, user, membreEquipe = false, pathname = '') {
       { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders'), court: t('nav.court.orders') },
       { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu'), court: t('nav.court.myMenu') },
       { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness'), court: t('nav.court.myBusiness') },
+      // UN SEUL ONGLET « COMMERCE » SUR TÉLÉPHONE (fondateur, 2026-10-27, version A de maquettes/compte-commerce) : Mon compte
+      // est monté dans Commerce (EditPage.jsx, Account `integre`) — Factures y était deux fois, « Mes commandes » répétait
+      // l'onglet, et paiements et contrat étaient dans Compte quand la fiche était dans Commerce. L'ordinateur garde Mon compte.
+      ...(etroit ? [] : [
       // Promotions, Factures et Mode d'emploi sont partis dans Mon compte : ce sont des rubriques
       // qu'on ouvre de temps en temps, pas au service. « Aperçu client » et « Carte » les y ont
       // rejoints, pour la même raison et une de plus : à sept onglets, la barre du bas d'un
       // téléphone donnait des cibles de 38px, sous le minimum de 44px. Cinq, pas plus.
-      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }
+      { to: '/account', icon: 'compte', label: t('nav.account'), court: t('nav.court.account') }])
     ];
   }
   if (role === 'driver') {
@@ -166,7 +171,8 @@ export default function DashboardSidebar() {
   // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
   // correspondantes, toujours réservées aux vrais clients côté API.
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
-  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe, pathname);
+  const etroit = !useSiteLarge(900);
+  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe, pathname, etroit);
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
 
   function leavePreview() {
@@ -203,7 +209,8 @@ export default function DashboardSidebar() {
             <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} />{NATIF && <IconePleine nom={item.icon} taille={22} className="dashboard-nav-plein" />}</span>
             {/* Deux libellés : le complet pour la colonne latérale, le court pour la barre du bas (styles.css choisit). */}
             <span className="dashboard-nav-label"><span className="libelle-long">{item.label}</span>{item.court && <span className="libelle-court">{item.court}</span>}</span>
-            {item.to === '/account' && nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
+            {/* Les messages de Fairride : sur Compte, ou sur Commerce quand Mon compte y est monté (téléphone, 2026-10-27). */}
+            {(item.to === '/account' || (item.to === '/dashboard' && etroit)) && nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
           </NavLink>
         ))}
       </nav>

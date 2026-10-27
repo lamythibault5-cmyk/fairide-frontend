@@ -7008,6 +7008,7 @@ export default {
       raccourcis: 'Snelkoppelingen'
     },
     accountUi: {
+      moneyAndTools: 'Geld, contract en tools',
       payOnSiteMethodsTitle: 'Wat je ter plaatse aanvaardt',
       payOnSiteMethodsHelp: 'Getoond aan klanten onder « Info » op je pagina.',
       simulationRow: 'Simulatie: testbestellingen',

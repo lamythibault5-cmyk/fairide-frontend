@@ -6999,6 +6999,7 @@ export default {
       raccourcis: 'Shortcuts'
     },
     accountUi: {
+      moneyAndTools: 'Money, contract and tools',
       payOnSiteMethodsTitle: 'What you accept on site',
       payOnSiteMethodsHelp: 'Shown to customers under « Info » on your page.',
       simulationRow: 'Simulation: test orders',

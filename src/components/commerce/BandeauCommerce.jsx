@@ -29,7 +29,7 @@ export function BandeauCommerce({ children, retour = false, route = true }) {
    Factures s'ouvrent depuis les tuiles de l'accueil Commerce (CeSoir.jsx) comme depuis Mon compte, mais leur retour disait
    toujours « ← Mon compte » et changeait d'onglet. Il dit maintenant l'onglet d'avant et y RECULE (la page revient à sa
    place, l'historique ne s'allonge pas), comme le ‹ du panier client (useReculerVers, EcranCommande.jsx). Écran d'avant
-   inconnu (rechargement, lien direct) : Mon compte, comme avant. */
+   inconnu (rechargement, lien direct) : Commerce. */
 // Le nom court de l'onglet, celui de la barre du bas (DashboardSidebar.jsx) : « ← Commerce », « ← Menu », « ← Commandes ».
 const ONGLETS_COMMERCE = { '/dashboard': 'nav.court.myBusiness', '/dashboard/menu': 'nav.court.myMenu', '/dashboard/orders': 'nav.court.orders' };
 export function RetourCommerce() {
@@ -37,7 +37,8 @@ export function RetourCommerce() {
   const navigate = useNavigate();
   const avant = (cheminPrecedent() || '').split('?')[0].replace(/\/$/, '');
   const cle = ONGLETS_COMMERCE[avant];
-  if (!cle) return <Link to="/account" state={{ restaurerDefilement: true }} className="ec-b-retour">{t('nav.backToAccount')}</Link>;
+  // Écran d'avant inconnu : Commerce, où vivent les tuiles et (sur téléphone) Mon compte depuis le 2026-10-27.
+  if (!cle) return <Link to="/dashboard" className="ec-b-retour">{`← ${t('nav.court.myBusiness')}`}</Link>;
   const reculer = (e) => {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey) return;
     e.preventDefault();

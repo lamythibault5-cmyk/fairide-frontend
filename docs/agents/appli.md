@@ -136,7 +136,12 @@ checkout / login / payment result does it open the shop page. To get back to the
 on the band is a link too; both go BACK when the shop page is the previous screen (`useReculerVers`). Tabs (DashboardSidebar `ongletAppli`): `replace`, and **every tab opens at the top** (founder, 2026-10-27, test of the shop:
 « en cliquant sur Restaurant j'arrive au milieu de l'écran », design.md rule 5; until then each tab kept its place except
 Recherche and Mes commandes); going back (‹, gesture) still restores the place left; re-tapping the current tab scrolls to the top.
-**The shop's tabs are Commandes · Menu · Commerce · Compte since 2026-10-27** (Commandes is the shop's home:
+**The shop's tabs are Commandes · Menu · Commerce since 2026-10-27** (version A of `maquettes/compte-commerce`, founder's pick:
+on a phone, app and site, Mon compte lives INSIDE Commerce — EditPage mounts `<Account integre milieu={…}>`: « Gérer mon
+compte » first, then the tiles and the shop's rows, then « Argent, contrat et outils » (Aperçu client, terminal, trial orders,
+contract, payments, subscription, services), Solde, Assistance; no header, no shortcuts. `/account` for a shop owner on a phone
+redirects to `/dashboard` with its query, so `?ouvrir=paiement` etc. still open their row; unread messages badge Commerce. A team
+member keeps Commandes · Compte; computers (≥ 900 px) keep four entries and the Mon compte page. Commandes is the shop's home:
 `espaceApresConnexion`, Home.jsx, sign-up; Android Back from Menu or Commerce returns to it). Until the shop is online
 (`publicListed`), Commandes on a phone (app and site) shows the go-live guide of Commerce (route on the band, the next step
 with the lime button, the rest under it: OrdersPage + useMiseEnLigne); the computer keeps its board. « Signe tes engagements »

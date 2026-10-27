@@ -7026,6 +7026,7 @@ export default {
       raccourcis: 'Raccourcis'
     },
     accountUi: {
+      moneyAndTools: 'Argent, contrat et outils',
       payOnSiteMethodsTitle: 'Ce que tu acceptes sur place',
       payOnSiteMethodsHelp: 'Affiché aux clients dans « Infos » sur ta fiche.',
       simulationRow: 'Simulation : commandes d\'essai',
