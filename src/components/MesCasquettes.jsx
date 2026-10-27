@@ -28,6 +28,8 @@ import ConfirmDialog from './ConfirmDialog';
 const ICONES = { client: 'sac', restaurant: 'commerce', driver: 'velo' };
 const ORDRE = ['client', 'restaurant', 'driver'];
 
+/* « AUSSI SUR FAIRRIDE » (Mon compte, maquettes/compte, 2026-10-27) : de simples rangées, sans l'ancienne intro ni de
+ * boutons ; ce qu'une casquette donne et ne donne pas est dit dans la confirmation qui s'ouvre au toucher. */
 export default function MesCasquettes() {
   const { roles, role, ajouterRole, changerRole, refreshUser } = useAuth();
   const { t } = useLanguage();
@@ -66,38 +68,12 @@ export default function MesCasquettes() {
   return (
     <>
       <div className="card account-groupe" aria-label={t('casquettes.titre')}>
-        <p className="small" style={{ margin: '0 0 4px', padding: '10px 14px 0' }}>{t('casquettes.intro')}</p>
-        {ORDRE.filter((r) => roles.includes(r)).map((r) => (
-          <LigneCompte
-            key={r}
-            icone={ICONES[r]}
-            titre={t(`casquettes.nom_${r}`)}
-            sous={r === role ? undefined : t('casquettes.basculerVers')}
-            accent={r === role ? 'ok' : undefined}
-            /* La casquette active porte une pastille, pas un chevron : sans `action`, LigneCompte
-               rend une rangée cliquable qui ne mène nulle part — elle se lit comme un lien mort. */
-            action={r === role ? (
-              <span className="pill teal">{t('casquettes.active')}</span>
-            ) : (
-              <button type="button" className="btn-outline btn-sm" onClick={() => basculer(r)}>
-                {t('casquettes.basculer')}
-              </button>
-            )}
-          />
+        {/* La casquette en cours n'a pas de rangée : l'onglet et l'en-tête disent déjà dans quelle vue on est. */}
+        {ORDRE.filter((r) => roles.includes(r) && r !== role).map((r) => (
+          <LigneCompte key={r} icone={ICONES[r]} titre={t(`casquettes.nom_${r}`)} sous={t('casquettes.basculerVers')} onClick={() => basculer(r)} />
         ))}
         {manquants.map((r) => (
-          <LigneCompte
-            key={r}
-            icone={ICONES[r]}
-            titre={t(`casquettes.prendre_${r}`)}
-            sous={t(`casquettes.prendreSous_${r}`)}
-            action={(
-              <button type="button" className="btn-teal btn-sm"
-                disabled={!!occupe} onClick={() => setConfirmation(r)}>
-                {occupe === r ? '…' : t('casquettes.activer')}
-              </button>
-            )}
-          />
+          <LigneCompte key={r} icone={ICONES[r]} titre={t(`casquettes.prendre_${r}`)} sous={t(`casquettes.court_${r}`)} onClick={() => setConfirmation(r)} />
         ))}
       </div>
       {confirmation && (

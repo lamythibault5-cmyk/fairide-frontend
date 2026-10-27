@@ -66,7 +66,12 @@ shared with the list's band). The `.sc-commandes` / `.sc-passees` rules of site-
 **Every main screen in that style (2026-10-16, « Proposition » phones of `maquettes/tous-les-ecrans/tous-les-ecrans.html`)**:
 restaurant list (address on an iris band with the riding bike, strip of cuisine families with a draggable glass lens and, under the chosen
 family, a row of its specialities: TeteListe.jsx, lentillePuces.js), map, favourites, restaurant page (sheet over the cover, glass sections strip, floating round buttons in solid iris
-with a white ring — white-on-glass was unreadable), cart / checkout / order confirmed (EcranCommande.jsx), Mon compte (EnteteCompte.jsx),
+with a white ring — white-on-glass was unreadable), cart / checkout / order confirmed (EcranCommande.jsx), Mon compte (EnteteCompte.jsx;
+order since 2026-10-27, `maquettes/compte/compte.html` version B, every role, site the same: one « Gérer mon compte » row that opens
+every personal setting in a sheet (Mon profil / Préférences / Confidentialité; a courier's papers, location and alert sound in it too).
+Customer: then Portefeuille (balance + lime « Ajouter un code », cards, meal vouchers), the referral card with its gain and code,
+Assistance, Fairride. Shop / courier: then Mon commerce / Mes courses, Solde et avantages (plain referral row), Assistance. All:
+« Aussi sur Fairride » (MesCasquettes) as plain rows at the end; Messages on top only when unread, else in Assistance),
 business dashboard / orders / menu / stats (BandeauCommerce.jsx, CarteCommerce.jsx), courier dashboard / job in progress / earnings
 (RouteVelo.jsx). **Each family's CSS lives in its own file imported by its pages**: `src/ecran-liste.css`, `ecran-fiche.css`,
 `ecran-commande.css`, `ecran-compte.css`, `ecran-commerce.css`, `ecran-livreur.css` — look there before styles.css. Glass, blur and soft
@@ -163,7 +168,8 @@ out, a slim app bar (brand or back, « Se connecter »). `/login` is [ConnexionA
 blocking screen** (founder, 2026-10-16, risk accepted: the research on Belgian art. 10/2 loi 30-07-2018 / APD 85/2022 found it
 unclear, question for the lawyer in AVANT-PRODUCTION.md). The rule lives in `rapportsPanneActifs` (consent.js): accepted, or no answer
 and `experienceApp()`. Off switches: a pre-ticked box in its own card at the end of the in-app sign-up (never next to the
-opposite-direction « no news » box) and an Activer / Couper row in Mon compte (`RapportsPanne`, Account.jsx). Someone who turned them
+opposite-direction « no news » box) and an Activer / Couper row in Mon compte (`RapportsPanne`, Account.jsx; for a customer it sits in
+Gérer mon compte › Confidentialité). Someone who turned them
 off is offered « Envoyer le rapport » on the crash screen ([AppErrorBoundary](../../src/components/AppErrorBoundary.jsx), one report only).
 Sentry is set to errors only, no sessions, no console breadcrumbs, URLs without parameters, no user identity (sentry.js). The
 privacy policy (CONF-2026-10-16) says so. On the website nothing changes: Sentry only after « Accepter » on the cookie banner. Stripe
