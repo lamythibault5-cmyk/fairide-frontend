@@ -22,6 +22,7 @@ import { suivre } from '../../analytics';
 import { setConsent } from '../../consent';
 import { Haut, Option, Fait } from './EcransBienvenue';
 import VerifSociete from '../../components/commerce/VerifSociete';
+import { regimesDe } from '../../specialites';
 
 /* L'INSCRIPTION DANS L'ACCUEIL DE L'APPLICATION (fondateur, 2026-10-15).
  *
@@ -136,6 +137,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [restoPhone, setRestoPhone] = useState('');
   // Ce que le commerce vend (ChoixSpecialites.jsx) : jusqu'à 7 spécialités, la première est son type principal.
   const [specialites, setSpecialites] = useState([]);
+  // Halal, végé, vegan, sans gluten pour toute la carte (RegimesCommerce.jsx), sous les spécialités.
+  const [regimes, setRegimes] = useState(() => regimesDe(null));
   const [legalName, setLegalName] = useState('');
   const [vatNumber, setVatNumber] = useState('');
   const [responsable, setResponsable] = useState(null); // null : la personne qui s'inscrit
@@ -196,7 +199,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     index: [index, setIndex], email: [email, setEmail], firstName: [firstName, setFirstName], lastName: [lastName, setLastName], phone: [phone, setPhone],
     addressStreet: [addressStreet, setAddressStreet], addressNumber: [addressNumber, setAddressNumber], addressPostalCode: [addressPostalCode, setAddressPostalCode], addressCity: [addressCity, setAddressCity],
     companyNumber: [companyNumber, setCompanyNumber],
-    nomCommerce: [nomCommerce, setNomCommerce], restoPhone: [restoPhone, setRestoPhone], specialites: [specialites, setSpecialites],
+    nomCommerce: [nomCommerce, setNomCommerce], restoPhone: [restoPhone, setRestoPhone], specialites: [specialites, setSpecialites], regimes: [regimes, setRegimes],
     legalName: [legalName, setLegalName], vatNumber: [vatNumber, setVatNumber], responsable: [responsable, setResponsable], jours: [jours, setJours], creneaux: [creneaux, setCreneaux], services: [services, setServices],
     referralCode: [referralCode, setReferralCode], referralOuvert: [referralOuvert, setReferralOuvert]
   };
@@ -390,7 +393,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       offersDelivery: !!services.delivery, offersPickup: !!services.pickup,
       pickupPaymentMode: services.pickup ? services.pickupPaymentMode : undefined,
       deliveryMode: services.deliveryMode === 'own' ? 'own' : 'fairide',
-      businessSource: 'manuel'
+      businessSource: 'manuel',
+      ...regimes
     };
   }
   function tva() {
@@ -633,7 +637,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
        choix défile (`boite`), pas l'écran : le bouton reste en bas, comme avec les pastilles d'avant (2026-10-16). */
     case 'type':
       entete = titre(t('appli.insTypeTitre'), t('auth.cuisineHelp'));
-      contenu = <ChoixSpecialites valeurs={specialites} onChange={setSpecialites} erreur={erreurs.cuisine} boite />;
+      contenu = <ChoixSpecialites valeurs={specialites} onChange={setSpecialites} erreur={erreurs.cuisine} boite regimes={regimes} onRegimes={setRegimes} />;
       break;
     case 'entreprise':
       entete = titre(t('appli.insEntrepriseTitre'));

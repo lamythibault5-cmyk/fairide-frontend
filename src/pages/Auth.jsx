@@ -17,7 +17,7 @@ import EmailDomainChips from '../components/EmailDomainChips';
 import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
 import { restaurantTypeLabel, communeDepuisCodePostal } from '../menuCategories';
-import { specialite } from '../specialites';
+import { regimesDe, specialite } from '../specialites';
 import ChoixSpecialites from '../components/commerce/ChoixSpecialites';
 import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
@@ -146,6 +146,8 @@ export default function Auth() {
   // Ce que le commerce vend (ChoixSpecialites.jsx, fondateur, 2026-10-22) : jusqu'à 7 spécialités, la première est son type
   // principal (`cuisine`), les autres ses types en plus. Une saisie libre (« Je ne trouve pas ») y est telle quelle.
   const [specialites, setSpecialites] = useState([]);
+  // Halal, végé, vegan, sans gluten pour toute la carte (RegimesCommerce.jsx), sous les spécialités.
+  const [regimes, setRegimes] = useState(() => regimesDe(null));
   const cuisine = specialites[0] || '';
   // Horaires structurés (une ligne par jour), prérempli depuis la fiche web quand elle en donne, adaptés ici.
   const [hours, setHours] = useState(null);
@@ -252,7 +254,8 @@ export default function Auth() {
       deliveryMode: services.deliveryMode === 'own' ? 'own' : 'fairide',
       // Commerce trouvé dans la recherche, ou saisi à la main parce qu'il n'y était pas : dans les deux
       // cas l'inscription aboutit à un vrai commerce, la provenance n'est qu'une mention pour l'admin.
-      businessSource: fiche.source === 'web' ? 'recherche' : fiche.source === 'manuel' ? 'manuel' : 'inconnu'
+      businessSource: fiche.source === 'web' ? 'recherche' : fiche.source === 'manuel' ? 'manuel' : 'inconnu',
+      ...regimes
     };
   }
 
@@ -446,7 +449,7 @@ export default function Auth() {
     legalName: [legalName, setLegalName], companyNumber: [companyNumber, setCompanyNumber], vatNumber: [vatNumber, setVatNumber],
     responsibleName: [responsibleName, setResponsibleName], responsibleTouched: [responsibleTouched, setResponsibleTouched],
     commerceTrouve: [commerceTrouve, setCommerceTrouve], nomCommerce: [nomCommerce, setNomCommerce], services: [services, setServices],
-    specialites: [specialites, setSpecialites], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
+    specialites: [specialites, setSpecialites], regimes: [regimes, setRegimes], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
     phoneSecondary: [phoneSecondary, setPhoneSecondary], phoneSecondaryOuvert: [phoneSecondaryOuvert, setPhoneSecondaryOuvert],
     restoPhone: [restoPhone, setRestoPhone], responsables: [responsables, setResponsables],
     emailSecondary: [emailSecondary, setEmailSecondary], emailSecondaryOuvert: [emailSecondaryOuvert, setEmailSecondaryOuvert],
@@ -1539,7 +1542,7 @@ export default function Auth() {
                 <div className="field" role="group" aria-labelledby="auth-specialites-titre">
                   <span className="titre-groupe" id="auth-specialites-titre">{t('auth.cuisineLabel')}</span>
                   <p className="small" style={{ margin: '0 0 8px', opacity: 0.8 }}>{typeDepuisSite && cuisine ? t('auth.cuisineFromSite') : t('auth.cuisineHelp')}</p>
-                  <ChoixSpecialites valeurs={specialites} onChange={(v) => { setSpecialites(v); setTypeDepuisSite(false); }} />
+                  <ChoixSpecialites valeurs={specialites} onChange={(v) => { setSpecialites(v); setTypeDepuisSite(false); }} regimes={regimes} onRegimes={setRegimes} />
                   {fieldError('cuisine')}
                 </div>
                 {/* Plus de question sur la carte ici : elle se crée après l'inscription, dans « Mon menu »

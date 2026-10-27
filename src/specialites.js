@@ -106,6 +106,97 @@ export const SPECIALITES = [
   ['Produits bio', 'courses healthy', 'bio']
 ].map(([value, familles, mots, illustration]) => ({ value, familles: familles.split(' '), mots, illustration: illustration || FAMILLE[familles.split(' ')[0]].illustration }));
 
+/* LES CATÉGORIES DU CLIENT, COMME UBER EATS (fondateur, 2026-10-27 : « plus de boutons sous la bande », « un seul restaurant
+ * suffit », « toutes les catégories ont un dessin », « tacos, burritos, tex-mex, c'est la même chose », puis « on ne peut pas
+ * juste copier Uber Eats ? » avec la bande d'Uber Eats à Bruxelles en captures). La bande de la liste, « Par envie » de la
+ * Recherche et le filtre de la carte montrent ces catégories, à plat (plus de rangée de spécialités dessous), dès qu'un
+ * commerce en est. Ce sont celles d'Uber Eats, dans son ordre, avec ce qui manque à Bruxelles chez lui (Kebab, Afrique,
+ * Libanais, Maghreb, Europe), sans ce qui n'est pas un repas (Halloween, fleurs, animaux, pharmacie). Salades est dans
+ * Healthy, Wings dans Poulet, Hawaïen dans Poke, Street food dans Kebab.
+ *
+ * HALAL, VÉGÉ, VEGAN, SANS GLUTEN (fondateur, 2026-10-27 : « un bouton clair à l'inscription ; s'il clique oui, il est dans la
+ * catégorie ») : ce que TOUT le commerce est, déclaré par lui (RegimesCommerce.jsx ; halalAll, vegetarianAll, veganAll,
+ * glutenFreeAll, backend migrations 042 et 094). Un commerce vegan est aussi dans Végé.
+ *
+ * Le commerce choisit toujours des spécialités rangées en familles (ChoixSpecialites, inchangé), et le serveur n'en sait rien :
+ * rien n'est stocké. Une spécialité va dans les catégories qui la citent ; sinon dans celles qui prennent une de ses familles.
+ * [clé, illustration, familles prises, spécialités citées, déclarations du commerce]. Chaque catégorie a SON dessin (public/cuisines et cuisines-2d,
+ * Fluent Emoji), jamais celui d'une autre. Libellés `menuCategories.categorie.<clé>` / `categorieCourt`. */
+const LISTE_CATEGORIES = [
+  ['courses', 'supermarche', ['courses'], []],
+  ['petitdej', 'brunch', [], ['Petit-déjeuner & Brunch', 'Pancakes']],
+  ['indien', 'indien', ['inde'], []],
+  ['pizza', 'pizza', [], ['Pizza', 'Pizza à la part']],
+  ['burgers', 'burger', ['burger'], []],
+  ['asiatique', 'asiatique', ['asie'], []],
+  ['boulangerie', 'boulangerie', ['boulangerie'], []],
+  ['halal', 'halal', [], [], ['halalAll']],
+  ['cafe', 'cafe', ['cafe'], []],
+  ['chinois', 'chinois', [], ['Chinois', 'Dim sum']],
+  ['glaces', 'desserts', [], ['Glacier', 'Desserts & Glaces', 'Milkshakes']],
+  ['grec', 'grec', [], ['Grec']],
+  ['libanais', 'libanais', ['orient'], ['Turc']],
+  ['maghreb', 'marocain', ['maghreb'], []],
+  ['sandwichs', 'sandwichs', ['sandwich'], []],
+  ['mexicain', 'mexicain', [], ['Mexicain', 'Tex-Mex', 'Burritos', 'Tacos français']],
+  ['poulet', 'poulet', [], ['Fried Chicken', 'Chicken wings', 'Poulet rôti']],
+  ['desserts', 'cookie', ['sucre'], ['Desserts & Glaces']],
+  ['healthy', 'healthy', ['healthy'], []],
+  ['bubbletea', 'bubbletea', [], ['Bubble Tea']],
+  ['vege', 'vegetarien', [], ['Végétarien', 'Vegan'], ['vegetarianAll', 'veganAll']],
+  ['vegan', 'vegan', [], ['Vegan'], ['veganAll']],
+  ['sansgluten', 'sansgluten', [], [], ['glutenFreeAll']],
+  ['italien', 'italien', ['pizza'], []],
+  ['europe', 'belge', ['europe'], []],
+  ['vietnamien', 'vietnamien', [], ['Vietnamien']],
+  ['smoothies', 'smoothie', [], ['Jus & Smoothies']],
+  ['coreen', 'coreen', [], ['Coréen']],
+  ['americain', 'hotdog', [], ['Américain', 'Hot-dog', 'Steakhouse']],
+  ['japonais', 'ramen', ['japon'], []],
+  ['bbq', 'bbq', [], ['Barbecue', 'Grillades', 'Argentin']],
+  ['familiale', 'familiale', [], ['Cuisine Familiale']],
+  ['fastfood', 'friterie', ['snack'], []],
+  ['sushi', 'sushi', [], ['Sushi']],
+  ['poke', 'poke', [], ['Poke Bowl']],
+  ['thai', 'thai', [], ['Thaïlandais']],
+  ['kebab', 'kebab', ['kebab'], ['Turc']],
+  ['poisson', 'poisson', ['poisson'], []],
+  ['latino', 'latino', ['ameriques'], ['Argentin']],
+  ['afrique', 'africain', ['afrique'], []]
+];
+export const CATEGORIES_CLIENT = LISTE_CATEGORIES.map(([cle, illustration, familles, specialites, declarations = []]) => {
+  const sienne = FAMILLE[familles[0] || SPECIALITES.find((s) => s.value === specialites[0])?.familles[0] || 'healthy'];
+  return { cle, illustration, familles, specialites, declarations, fond: sienne.fond, icone: sienne.icone };
+});
+const CITEES = new Map();
+CATEGORIES_CLIENT.forEach((c) => c.specialites.forEach((s) => CITEES.set(s, [...(CITEES.get(s) || []), c.cle])));
+const categoriesDeSpecialite = (s) => CITEES.get(s.value) || CATEGORIES_CLIENT.filter((c) => c.familles.some((f) => s.familles.includes(f))).map((c) => c.cle);
+
+// Les catégories d'un commerce, par toutes ses spécialités et ce qu'il a déclaré.
+const categoriesDe = (r) => new Set([
+  ...cuisinesCommerce(r).map(specialite).filter(Boolean).flatMap(categoriesDeSpecialite),
+  ...CATEGORIES_CLIENT.filter((c) => c.declarations.some((d) => r?.[d] === true)).map((c) => c.cle)
+]);
+
+// Les catégories de cette liste de commerces : `liste` (celles qui en ont au moins un, dans l'ordre de la bande, plus `garder`,
+// celle déjà choisie), `de(r)` (celles d'un commerce) et `deSpecialite(valeur)` (la première où se trouve une spécialité).
+export function categoriesClient(restaurants, { garder = '' } = {}) {
+  const presentes = new Set(restaurants.flatMap((r) => [...categoriesDe(r)]));
+  return {
+    liste: CATEGORIES_CLIENT.filter((c) => presentes.has(c.cle) || c.cle === garder),
+    de: categoriesDe,
+    deSpecialite: (valeur) => { const s = specialite(valeur); return s ? categoriesDeSpecialite(s)[0] || '' : ''; }
+  };
+}
+
+// Ce que tout le commerce est (RegimesCommerce.jsx), tel que l'API le lit et l'écrit : la fiche, l'inscription, PATCH /:id/diet.
+export const REGIMES_COMMERCE = ['halalAll', 'vegetarianAll', 'veganAll', 'glutenFreeAll'];
+export const regimesDe = (r) => Object.fromEntries(REGIMES_COMMERCE.map((cle) => [cle, r?.[cle] === true]));
+
+export function libelleCategorie(cle, t, { court = false } = {}) {
+  return t(`menuCategories.${court ? 'categorieCourt' : 'categorie'}.${cle}`);
+}
+
 // Ce que le commerce peut choisir en tout : le type principal et 6 autres (restaurants.extra_cuisines, 6 au plus).
 export const MAX_SPECIALITES = 7;
 

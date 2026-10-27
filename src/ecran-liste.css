@@ -170,18 +170,9 @@ html.appli .lt-puces--contour .lt-puce[data-cuisine]:active { scale: none; filte
   html:not(.appli) .lt-puce[data-cuisine]:hover::after { opacity: 1; scale: 1; animation: lt-anneau 1.2s linear infinite; }
 }
 @media (prefers-reduced-motion: reduce) { html:not(.appli) .lt-puce[data-cuisine]:hover::after { animation: none; } }
-/* La rangée des spécialités d'une famille choisie (version X de maquettes/categories-commerce) : des pastilles pleines,
-   blanches à filet, iris quand elles sont choisies. Elle part avec la bande, sans fond à elle. */
-.lt-sous { display: flex; gap: 6px; margin: 4px 0 0; padding: 0 16px 2px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; animation: lt-sous .25s ease-out; }
-.lt-sous::-webkit-scrollbar { display: none; }
-.lt-sous-puce { flex: none; padding: 7px 13px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 13px; font-weight: 500; white-space: nowrap;
-  transition: background .15s, border-color .15s, color .15s; }
-.lt-sous-puce.on { border-color: var(--iris); background: var(--iris); color: #fff; }
-@keyframes lt-sous { from { opacity: 0; transform: translateY(-4px); } }
-/* Après un changement de cuisine ou de spécialité, les cartes arrivent sans leur entrée (popIn) : le contenu change, comme un
+/* Après un changement de cuisine, les cartes arrivent sans leur entrée (popIn) : le contenu change, comme un
    onglet, au lieu que vingt cartes rebondissent ensemble (fondateur, 2026-10-23, RestaurantList.jsx › listeCalme). App seulement. */
 html.appli .sl-liste--calme .rest-card { animation: none; }
-@media (prefers-reduced-motion: reduce) { .lt-sous { animation: none; } }
 @media (prefers-reduced-transparency: reduce) {
   html.appli .lt-lentille { background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none; }
   html.appli .lt-puce[data-cuisine].on { color: #fff; }

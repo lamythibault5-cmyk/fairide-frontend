@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { COMMUNES_SUGGEREES, communeAcceptee } from '../../menuCategories';
-import { specialite } from '../../specialites';
+import { regimesDe, specialite } from '../../specialites';
 import ChoixSpecialites from './ChoixSpecialites';
 import { formatFullSchedule } from '../../openingHours';
 import { cuisineDepuisOsm } from '../../osmCuisine';
@@ -51,6 +51,8 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
   // Ce que le commerce vend (ChoixSpecialites.jsx, 2026-10-22) : la première spécialité est son type principal. Plus de
   // « Pizza » choisi d'office : la liste part vide, ou de ce que l'inscription, la fiche ou le site ont dit.
   const [specialites, setSpecialites] = useState([]);
+  // Halal, végé, vegan, sans gluten pour toute la carte (RegimesCommerce.jsx), sous les spécialités.
+  const [regimes, setRegimes] = useState(() => regimesDe(null));
   const proposer = (valeur) => { const v = specialite(valeur)?.value; if (v) setSpecialites((l) => (l.length ? l : [v])); };
   const [commune, setCommune] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
@@ -150,7 +152,8 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: specialites[0] || 'Autre', extraCuisines: specialites.slice(1), desc: desc.trim(),
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
           hours, deliveryMode: deliveryModePref,
-          openingHours: openingHoursTexte, offersDelivery, offersPickup, phone: telephoneCommerce.trim(), website: siteWeb.trim()
+          openingHours: openingHoursTexte, offersDelivery, offersPickup, phone: telephoneCommerce.trim(), website: siteWeb.trim(),
+          ...regimes
         }
       });
       try {
@@ -190,7 +193,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           <div className="field"><label htmlFor={ids + '-nom'}>{t('dashResto.businessName')}</label><input id={ids + '-nom'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
           <div className="field" role="group" aria-labelledby={ids + '-type'}>
             <span className="titre-groupe" id={ids + '-type'}>{t('dashResto.businessType')}</span>
-            <ChoixSpecialites valeurs={specialites} onChange={setSpecialites} />
+            <ChoixSpecialites valeurs={specialites} onChange={setSpecialites} regimes={regimes} onRegimes={setRegimes} />
           </div>
         </>
       )}
