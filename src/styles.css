@@ -5389,11 +5389,27 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-barres .gonfle { background: var(--promo); }
 .bv-barres .gonfle-prix { color: var(--promo); font-weight: 600; }
 .bv-carte-barres .bv-petit { display: block; margin-top: 4px; }
+/* La 3e barre, « Prix du comptoir » (2026-10-27, maquettes/badge-position) : le badge tel que dans la liste en étiquette, sa barre
+   iris pleine ; celle de « Fairride, au plus » pâlit, c'est le plafond, pas le cas courant. */
+.bv-barres .fairide.au-plus { background: rgba(59, 47, 181, .3); }
+.bv-carte-barres .bv-barres > span:nth-child(6) { color: var(--iris); }
+.bv-barres .prix-comptoir { justify-self: start; font-size: 11.5px; padding: 2px 7px; }
+.bv-info { display: inline-grid; place-items: center; box-sizing: border-box; width: 18px; height: 18px !important; min-width: 0; min-height: 0 !important; flex: none; /* la hauteur de toucher de 44 px des boutons de l'app passe par le ::before */ margin-left: 4px; vertical-align: 1px; border-radius: 50%; border: 1.5px solid var(--ink-faint); background: none; color: var(--ink-soft); font: 700 11px/1 Inter, sans-serif; padding: 0; cursor: pointer; }
+.bv-info { position: relative; }
+.bv-info::before { content: ""; position: absolute; inset: -12px; }
+.bv-info[aria-expanded="true"] { border-color: var(--iris); color: var(--iris); }
+.bv-carte-barres .bv-source { font-weight: 400; margin-top: 2px; }
 .bv-fait .bv-barres b { color: var(--iris); }
 /* L'écran livreur a quatre cartes, et le premier écran une ligne de source sous ses barres, depuis le 2026-10-26 : sur un
    petit téléphone (375 × 667), la ligne
    « Startup belge » s'efface pour que le bouton reste à l'écran, sans défilement. */
 @media (max-height: 700px) { .bv-iris .bv-ligne-be, .bv-be-accueil { display: none; } }
+/* Petit écran (375 × 667) : la 3e barre « Prix du comptoir » (2026-10-27) prend une ligne de plus ; le vélo et le titre s'en
+   rapprochent pour que le premier écran tienne sans défiler (npm run check:app). */
+@media (max-height: 700px) {
+  .bv-scene { margin: 4px 0 14px; }
+  .bv-bandeau .bv-ecran > .bv-titre-accueil { margin-top: 16px; }
+}
 
 .bv-saisie { width: 100%; font-size: 22px; font-weight: 500; letter-spacing: .1em; padding: 16px; border: 1px solid var(--line); border-radius: 16px; text-align: center; background: #fff; }
 .bv-saisie.input-invalid { border-color: var(--red); }
@@ -5415,9 +5431,18 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .bv-cercle.petit .bord { stroke: var(--iris); }
 .bv-cercle.petit .pt { fill: var(--iris); }
 .bv-cercle.petit .moi { fill: var(--ink); }
-.bv-etapes { list-style: none; padding: 0; margin: 0; font-size: 15px; text-align: center; }
-.bv-etapes li { padding: 8px 0; opacity: .35; transition: opacity .3s; }
-.bv-etapes li.fait { opacity: 1; }
+/* Le chargement (2026-10-27, R1 de maquettes/badge-position) : trois lignes alignées à gauche dans un bloc centré, un rond par
+   ligne qui tourne (en cours) puis se remplit de lime avec sa coche (fait). */
+.bv-etapes { list-style: none; padding: 0; margin: 4px auto 0; font-size: 15px; display: flex; flex-direction: column; align-items: flex-start; width: fit-content; max-width: 100%; }
+.bv-etapes li { display: flex; align-items: center; gap: 11px; padding: 7px 0; opacity: .45; transition: opacity .3s; text-align: left; }
+.bv-etapes li.en-cours, .bv-etapes li.fait { opacity: 1; }
+.bv-coche { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .5); display: grid; place-items: center; flex: none; color: var(--ink); transition: background .25s, border-color .25s; }
+.bv-coche svg { opacity: 0; transition: opacity .2s; }
+.bv-etapes li.en-cours .bv-coche { border-color: var(--lime); border-top-color: transparent; animation: bv-coche-tourne .8s linear infinite; }
+.bv-etapes li.fait .bv-coche { background: var(--lime); border-color: var(--lime); }
+.bv-etapes li.fait .bv-coche svg { opacity: 1; }
+@keyframes bv-coche-tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bv-etapes li.en-cours .bv-coche { animation: none; border-top-color: var(--lime); } }
 
 .bv-commerce { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 16px; padding: 10px; margin-bottom: 8px; background: #fff; }
 .bv-commerce img, .bv-commerce .bv-tuile { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; flex: none; }

@@ -14,7 +14,7 @@ import PhotoDepot from '../../components/livreur/PhotoDepot';
 import BoutonUrgence from '../../components/livreur/BoutonUrgence';
 import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
 import RouteVelo from '../../components/livreur/RouteVelo';
-import { experienceApp, suivrePositionCourse } from '../../natif';
+import { experienceApp, suivrePositionCourse, demanderPosition } from '../../natif';
 import { ouvrirStripe } from '../../ouvrirStripe';
 import { mouvementReduit, vibrer } from '../../gestes';
 import Icone from '../../components/Icone';
@@ -193,9 +193,14 @@ export default function DriverDashboard() {
    * PositionRequise le dit au-dessus de la liste. */
   const [etatPos, verifierPos] = useEtatPosition();
   const [demandePosition, setDemandePosition] = useState(false);
+  /* DEPUIS LE 2026-10-27 (fondateur, L1 de maquettes/badge-position/badge-position.html : « il y a beaucoup trop de texte »),
+   * plus d'explication avant : l'interrupteur pose directement la question du système (sa phrase est celle de l'Info.plist).
+   * Oui : il s'allume. Non, ou position déjà bloquée : la petite fenêtre dit seulement où la rallumer dans les réglages. */
   async function togglePause() {
     if (user?.driverPaused && user?.locationSharingEnabled !== false && (await verifierPos()) !== 'granted') {
-      setDemandePosition(true);
+      const position = await demanderPosition();
+      if (position || (await verifierPos()) === 'granted') basculerPause();
+      else setDemandePosition(true);
       return;
     }
     basculerPause();
@@ -1153,9 +1158,9 @@ export default function DriverDashboard() {
       <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
         onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); deliver(o, true); }}
         onRefuse={() => refuserRemiseAge(ageAVerifier)} />
-      {/* Juste avant « Disponible » : la position (voir togglePause). */}
+      {/* « Disponible » avec la position refusée : où la rallumer (voir togglePause). */}
       {demandePosition && (
-        <Modale titre={t('appli.lvPosTitre')} onFermer={() => setDemandePosition(false)}>
+        <Modale titre={t('dashDriver.posReqTitre')} onFermer={() => setDemandePosition(false)}>
           <ExplicationPosition etat={etatPos} verifier={verifierPos} onAutorisee={() => { setDemandePosition(false); basculerPause(); }}>
             <button type="button" className="btn-outline" onClick={() => setDemandePosition(false)}>{t('dashDriver.posReqPlusTard')}</button>
           </ExplicationPosition>

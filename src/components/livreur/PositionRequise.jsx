@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
-import Icone from '../Icone';
 import { demanderPosition, plateforme } from '../../natif';
 import useEtatPosition from '../../hooks/useEtatPosition';
 
@@ -22,7 +21,12 @@ import useEtatPosition from '../../hooks/useEtatPosition';
  * livrer » de l'inscription dans l'app est retiré (Bienvenue.jsx) —, mais juste avant que le livreur passe « Disponible » :
  * l'interrupteur du tableau de bord ouvre cette même explication avant de l'allumer (Dashboard.jsx, DemandePosition), et
  * la carte ci-dessous la montre à celui qui est déjà disponible (un compte livreur est disponible par défaut après sa
- * validation). C'est la même explication que l'ancien écran de l'inscription (textes appli.lvPos*), app et site.
+ * validation).
+ *
+ * PRESQUE PLUS DE TEXTE (fondateur, 2026-10-27, L1 de maquettes/badge-position/badge-position.html : « ils ne sont pas bêtes,
+ * c'est normal qu'une app de livraison demande la position ») : un titre et « Continuer », qui pose la question du système.
+ * Le détail (seulement pendant une course, prénom et initiale) reste dans la politique de géolocalisation remise au livreur.
+ * Une position refusée pour de bon garde la consigne exacte des réglages : sans elle, impossible de la rallumer.
  *
  * REDEMANDER. Tant que le système accepte de reposer la question, le bouton la repose. Quand il refuse pour de bon
  * (« denied »), seule la personne peut la rouvrir : on lui dit exactement où, et on revérifie à chaque retour dans
@@ -55,14 +59,11 @@ export function ExplicationPosition({ etat, verifier, onAutorisee, children }) {
   const consigne = p === 'ios' ? t('dashDriver.posReqIos') : p === 'android' ? t('dashDriver.posReqAndroid') : t('dashDriver.posReqWeb');
   return (
     <>
-      <p className="small" style={{ margin: '6px 0 10px' }}>{t('appli.lvPosSub')}</p>
-      <p className="small" style={{ margin: '0 0 8px' }}><Icone nom="horloge" taille={16} className="icone-texte" /> <b>{t('appli.lvPos1')}</b> · {t('appli.lvPos1S')}</p>
-      <p className="small" style={{ margin: '0 0 12px' }}><Icone nom="apercu" taille={16} className="icone-texte" /> <b>{t('appli.lvPos2')}</b> · {t('appli.lvPos2S')}</p>
-      {refuse && <p className="small" style={{ margin: '0 0 10px' }}>{t('dashDriver.posReqRefuse')}<br /><b>{consigne}</b></p>}
+      {refuse && <p className="small" style={{ margin: '6px 0 10px' }}>{t('dashDriver.posReqRefuse')}<br /><b>{consigne}</b></p>}
       {/* `children` : un second bouton à côté (« Pas maintenant » dans la feuille de l'interrupteur). */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: refuse ? 0 : 10 }}>
         <button type="button" className="btn-teal" disabled={attente} onClick={refuse ? reverifier : autoriser}>
-          {attente ? t('common.loading') : refuse ? t('dashDriver.posReqVerifier') : t('appli.lvPosBtn')}
+          {attente ? t('common.loading') : refuse ? t('dashDriver.posReqVerifier') : t('appli.continuer')}
         </button>
         {children}
       </div>
@@ -95,7 +96,7 @@ export default function PositionRequise({ children, repli }) {
 
   return (
     <div className="card position-requise" role="alert">
-      <b>{t('appli.lvPosTitre')}</b>
+      <b>{t('dashDriver.posReqTitre')}</b>
       <ExplicationPosition etat={etat} verifier={verifier} onAutorisee={() => setObtenue(true)} />
     </div>
   );

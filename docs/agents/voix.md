@@ -69,6 +69,8 @@ Fairride picks a fight with a norm: paying the platform's ~30 % cut hidden in th
   figure goes public, get the measured restaurant's written OK (a request for details reveals it), keep the dated
   screenshots in the workspace, and redo the measurement monthly (date in `landing.prixReleve`, three languages).
   « Jusqu'à +55 % » is the top of what we measured, not a typical figure: never « tu paies 50 % de plus » as a general fact.
+  In the app's welcome card the line sits behind an « i » next to « Le même plat, 15 € au comptoir » (founder, 2026-10-27:
+  « retire la ligne Détails sur demande, ça fait trop de texte »): still one tap away, never removed.
 - « Ici, +10 % au plus » holds only while every published card has its counter prices checked
   (`in_store_prices_checked_at`) and the markup cap (`hausseMaxPourcent`, argent.md). Check before a campaign.
 - Never « moins cher », never a total including delivery (our delivery fee can be higher than a platform's promotional

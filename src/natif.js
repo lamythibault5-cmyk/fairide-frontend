@@ -360,9 +360,14 @@ export async function demarrerNatif(historique) {
  *
  * Dans la coque, par le greffon Geolocation plutôt que navigator.geolocation : sur iPhone, la WebView poserait
  * SA question (« localhost souhaite utiliser votre position ») en plus de celle du système, deux fenêtres pour
- * une seule demande. L'écran d'amorçage explique AVANT d'appeler ceci : un refus est définitif sur iOS. */
-export async function demanderPosition() {
-  const options = { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 };
+ * une seule demande.
+ *
+ * PLUS D'ÉCRAN D'AMORÇAGE (fondateur, 2026-10-27, P1 et L1 de maquettes/badge-position/badge-position.html : « ils ne sont pas
+ * bêtes, une app de livraison demande la position ») : la question du système part du bouton qui en a besoin
+ * (« Trouver mes restaurants », l'interrupteur « Disponible ») ; sa phrase à nous est celle de l'Info.plist. `delai` : l'accueil
+ * attend 6 s, pas 10, avant de proposer le code postal (il attend sur l'écran de chargement, plus sur un bouton figé). */
+export async function demanderPosition({ delai = 10000 } = {}) {
+  const options = { enableHighAccuracy: false, timeout: delai, maximumAge: 5 * 60 * 1000 };
   if (estNatif()) {
     try {
       const { Geolocation } = await import('@capacitor/geolocation');
@@ -377,6 +382,23 @@ export async function demanderPosition() {
   return new Promise((resolve) => {
     navigator.geolocation.getCurrentPosition((p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }), () => resolve(null), options);
   });
+}
+
+/* La question du système SEULE, sans attendre le GPS : l'accueil passe à son écran de chargement dès la réponse et y lit la
+ * position (demanderPosition), au lieu de laisser « Chargement… » sur le bouton jusqu'à 10 s (fondateur, 2026-10-27 : « ça a
+ * duré plus longtemps que normalement »). Rend true si la position est autorisée. Sur le site, il n'y a pas de question à
+ * part : le navigateur la pose à la lecture ; on laisse donc passer, sauf refus déjà connu. */
+export async function autoriserPosition() {
+  if (estNatif()) {
+    try {
+      const { Geolocation } = await import('@capacitor/geolocation');
+      let droit = await Geolocation.checkPermissions();
+      if (droit.location === 'prompt' || droit.location === 'prompt-with-rationale') droit = await Geolocation.requestPermissions({ permissions: ['coarseLocation'] });
+      return droit.location === 'granted' || droit.coarseLocation === 'granted';
+    } catch { return false; }
+  }
+  if (!('geolocation' in navigator)) return false;
+  return (await etatPosition()) !== 'denied';
 }
 
 /* Position PRÉCISE ET FRAÎCHE, pour l'alerte d'urgence du livreur (components/livreur/BoutonUrgence.jsx) : haute

@@ -77,7 +77,7 @@
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Pendant une livraison, ta position reste partagée avec le client même écran verrouillé, jusqu’à la remise.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Pour te montrer les commerces qui livrent jusqu’à chez toi, et aux livreurs les courses proches.</string>
+	<string>Pour te montrer les restaurants qui livrent chez toi. Livreur : pour que le client suive sa course.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

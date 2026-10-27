@@ -185,6 +185,20 @@ nothing delivers. The result then says « N commerces pour toi », those first w
 (`fairide_bienvenue.familles`, src/envies.js). **They change nothing else since 2026-10-26** (founder: « je n'aime pas ces points
 verts », the screen is « juste pour le plaisir »): the Restaurants page no longer has a « Tes envies » row nor puts those families
 first with a lime dot; everyone sees the same page, and /classement no longer mentions them. 6 screens before the account for the customer.
+**Less to read since 2026-10-27** (founder's picks on `maquettes/badge-position/badge-position.html`: « ils ne sont pas bêtes, c'est
+normal qu'une app de livraison demande la position ») : the welcome card has a third bar, the « Prix du comptoir » badge as drawn in
+the list at the counter price (no count of shops: « ça va beaucoup bouger »), one line saying what the badge means, and the dated source
+behind an « i » (voix.md § 3). **No location screen**: « Trouver mes restaurants » asks the system directly
+(`autoriserPosition`, natif.js); yes → the loading screen opens at once and waits there for the GPS (6 s at most, then the postal code);
+no → the postal code. The system prompt's only text is ours in Info.plist. **The loading screen has three real lines** (position or
+commune, the number of shops that deliver — « trouvés » without GPS, since the list is then not filtered by radius —, nearest first),
+each ticked when it is really done and at least 1 s after the previous one. **The e-mail button is lime** under Apple and Google.
+**Permission primers are one line and one button** (« Continuer », never « Pas maintenant » nor « Autoriser » / « Activer »: Apple
+sometimes rejects a pre-permission screen that offers to delay the question, rule 5.1.1): the notifications primer
+(AmorceNotifications.jsx) is the bell, a title with the reader's gain and one sentence; the courier's « Disponible » switch asks the
+system directly and only a refusal shows a window, with the exact settings path (PositionRequise.jsx). **The « Prix du comptoir »
+badge can be tapped** (PrixComptoir.jsx, app and site): a small window explains it, and the first badge fully on screen gets a
+one-time iris bubble (`fairide_bulle_comptoir` on the device).
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](../../src/pages/app/InscriptionAppli.jsx)):
 « Continuer avec mon e-mail », and Apple / Google for an account that does not exist yet, no longer go to `/login` — one question
