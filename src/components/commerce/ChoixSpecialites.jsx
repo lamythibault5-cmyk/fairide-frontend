@@ -4,6 +4,7 @@ import { experienceApp } from '../../natif';
 import { illustrationCuisine, restaurantTypeLabel } from '../../menuCategories';
 import { FAMILLES, MAX_SPECIALITES, SPECIALITES, chercherSpecialites, libelleFamille, specialite } from '../../specialites';
 import Icone from '../Icone';
+import RegimesCommerce from './RegimesCommerce';
 import '../../choix-specialites.css';
 
 /* CE QUE LE COMMERCE VEND (fondateur, 2026-10-22, version A de maquettes/categories-commerce/categories-commerce.html).
@@ -21,8 +22,9 @@ import '../../choix-specialites.css';
  *     donc il n'apparaît dans aucun filtre : la recherche par nom le trouve quand même.
  *
  * `valeurs` : les valeurs françaises enregistrées (une saisie libre telle quelle). `boite` : dans un écran plein de l'app,
- * les choix tiennent sur une ligne qui défile de côté et seul le corps défile, pour que le bouton reste à l'écran. */
-export default function ChoixSpecialites({ valeurs, onChange, erreur = null, boite = false, max = MAX_SPECIALITES }) {
+ * les choix tiennent sur une ligne qui défile de côté et seul le corps défile, pour que le bouton reste à l'écran.
+ * `regimes` / `onRegimes` : « Toute ta carte est… ? » (RegimesCommerce.jsx), au-dessus des familles, partout où l'écran est. */
+export default function ChoixSpecialites({ valeurs, onChange, erreur = null, boite = false, max = MAX_SPECIALITES, regimes = null, onRegimes }) {
   const { t } = useLanguage();
   const app = experienceApp();
   const id = useId();
@@ -86,6 +88,9 @@ export default function ChoixSpecialites({ valeurs, onChange, erreur = null, boi
   } else {
     corps = (
       <>
+        {/* En tête de ce qui défile, pas au-dessus : dans l'écran plein de l'app, « Continuer » reste à l'écran (mesuré sur un
+            iPhone SE, 2026-10-27) ; masqué pendant une recherche ou dans une famille ouverte. */}
+        {regimes && <RegimesCommerce valeurs={regimes} onChange={onRegimes} />}
         <p className="cs-titre">{t('specialites.choisisFamille')}</p>
         <div className="cs-tuiles">
           {FAMILLES.map((f) => {

@@ -9,7 +9,7 @@ import { ouvertPourCommander } from '../../peutCommander';
 import { commandesOuvertes, useLancement } from '../../launch';
 import { restaurantTypeLabel, haversineDistanceKm, illustrationCuisine } from '../../menuCategories';
 import { experienceApp } from '../../natif';
-import { FAMILLES, famillesCommerce, libelleFamille } from '../../specialites';
+import { categoriesClient, libelleCategorie } from '../../specialites';
 import Icone from '../../components/Icone';
 import { kmLisible } from '../../prixPlat';
 import VisuelVide from '../../components/VisuelVide';
@@ -89,12 +89,16 @@ export default function MapPage() {
   const lng = user?.lng;
   const position = useMemo(() => (lat && lng ? { lat, lng } : null), [lat, lng]);
 
+  // Les catégories de la bande de la liste (categoriesClient, specialites.js) : seulement celles qui ont au moins un
+  // commerce — proposer « Sushi » quand aucun commerce n'en fait donne un filtre qui ne renvoie jamais rien.
+  const categories = useMemo(() => categoriesClient(restaurants, { garder: cuisine }), [restaurants, cuisine]);
+
   const liste = useMemo(() => {
     const maintenant = new Date();
     const nom = recherche.trim().toLowerCase();
     const filtres = restaurants.filter((r) => {
       if (promosSeules && !r.hasPromo) return false;
-      if (cuisine && !famillesCommerce(r).has(cuisine)) return false; // par n'importe laquelle de ses spécialités
+      if (cuisine && !categories.de(r).has(cuisine)) return false; // par n'importe laquelle de ses spécialités
       // « Ouvert » = ouvert ET commandable, comme sur la liste (fondateur, 2026-10-26, maquettes/filtre-ouvert) : plus les
       // « Carte seule », plus un commerce en pause ou fermé par son interrupteur (seules les heures comptaient).
       if (ouvertsSeuls && pastilleOuvert && !ouvertPourCommander(r, user, maintenant)) return false;
@@ -112,14 +116,8 @@ export default function MapPage() {
     return avecDistance;
   // `lancement` n'est pas lu ici mais par ouvertPourCommander (launch.js) : sa présence relance le calcul après un GO.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurants, promosSeules, ouvertsSeuls, pastilleOuvert, cuisine, tri, position, recherche, user, lancement]);
+  }, [restaurants, categories, promosSeules, ouvertsSeuls, pastilleOuvert, cuisine, tri, position, recherche, user, lancement]);
 
-  // Les types de cuisine réellement représentés : proposer « Sushi » quand aucun commerce n'en fait
-  // donne un filtre qui ne renvoie jamais rien.
-  const cuisinesPresentes = useMemo(() => {
-    const vus = new Set(restaurants.flatMap((r) => [...famillesCommerce(r)]));
-    return FAMILLES.filter((f) => vus.has(f.cle));
-  }, [restaurants]);
 
   const filtreActif = promosSeules || (ouvertsSeuls && pastilleOuvert) || !!cuisine || tri !== 'recommande' || !!recherche.trim();
   function toutReinitialiser() {
@@ -181,7 +179,7 @@ export default function MapPage() {
                 milieu de l'écran dans le style du navigateur, une liste grise sans rapport avec la
                 page, posée par-dessus la carte. */}
             <button type="button" className={`cuisine-chip${cuisine ? ' active' : ''}`} aria-expanded={panneau === 'cuisine'} onClick={() => basculer('cuisine')}>
-              <Icone nom="restaurants" taille={16} />{cuisine ? libelleFamille(cuisine, t) : t('mapClient.filterCuisine')}
+              <Icone nom="restaurants" taille={16} />{cuisine ? libelleCategorie(cuisine, t) : t('mapClient.filterCuisine')}
             </button>
             {TRI && (
             <button type="button" className={`cuisine-chip${tri !== 'recommande' ? ' active' : ''}`} aria-expanded={panneau === 'tri'} onClick={() => basculer('tri')}>
@@ -195,13 +193,13 @@ export default function MapPage() {
               <button type="button" className={`cuisine-chip${cuisine ? '' : ' active'}`} onClick={() => { setCuisine(''); setPanneau(null); }}>
                 {t('mapClient.filterAllCuisines')}
               </button>
-              {cuisinesPresentes.map((f) => (
+              {categories.liste.map((f) => (
                 <button key={f.cle} type="button" className={`cuisine-chip${cuisine === f.cle ? ' active' : ''}`}
                   onClick={() => { setCuisine(f.cle === cuisine ? '' : f.cle); setPanneau(null); }}>
                   {/* Le même dessin que la tuile de la Recherche (3D dans l'app, 2D sur le site), pas l'icône iris :
                       Owen, 2026-10-26 — la même cuisine doit avoir la même image partout. */}
                   <img className="carte-cuisine-illu" src={illustrationCuisine(f.illustration, { plat: !app })} alt="" width="24" height="24" decoding="async" draggable="false" />
-                  {libelleFamille(f.cle, t)}
+                  {libelleCategorie(f.cle, t)}
                 </button>
               ))}
             </div>

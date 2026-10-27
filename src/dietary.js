@@ -14,13 +14,19 @@
 // ça bien quand on aura une bonne base de données ») : cocher bio, vegan, halal et sans gluten plat par plat pèse sur le
 // commerce, et sans ces cases les filtres ne trouvent presque rien. Tant que c'est false : ni filtres (bande des cuisines,
 // colonne « Envies » du site, pastilles de la recherche), ni rangées « Bio » et « Vegan » de l'accueil, ni mentions sur la
-// carte des plats, ni cases côté commerce (MentionsAlimentaires, fiche d'un plat), et ces deux rangées ne se vendent plus
-// en mise en avant (MiseEnAvant). Les données en base et les règles ci-dessous restent : repasser à true remet tout.
+// carte des plats, et ces deux rangées ne se vendent plus en mise en avant (MiseEnAvant). Les cases côté commerce sont
+// revenues le 2026-10-27 (MENTIONS_COMMERCE, plus bas). Les données en base et les règles ci-dessous restent : repasser à true remet tout.
 // Les allergènes ne sont PAS concernés : ils restent partout (obligation d'information, règlement UE 1169/2011).
 
 import { compterPlats } from './resumeCarte';
 
 export const MENTIONS_ALIMENTAIRES = false;
+// CÔTÉ COMMERCE, DE RETOUR (fondateur, 2026-10-27 : « on remet le fait de cocher un plat halal, sans gluten, vegan, végé ; je
+// ne veux pas que les clients le voient encore, on n'a pas encore les données ») : le tableau des mentions par plat
+// (MentionsAlimentaires, Ma carte) et les cases de la fiche d'un plat. Les clients ne voient toujours rien de plat par plat
+// (MENTIONS_ALIMENTAIRES ci-dessus) ; ce que TOUT le commerce est se dit à l'inscription et fait les catégories Halal, Végé,
+// Vegan, Sans gluten (RegimesCommerce.jsx, specialites.js).
+export const MENTIONS_COMMERCE = true;
 export const RANGEES_MENTIONS = ['bio', 'vegan'];
 
 const texteDuPlat = (m) => `${m.name || ''} ${m.desc || m.description || ''}`.toLowerCase();

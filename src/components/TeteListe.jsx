@@ -27,10 +27,9 @@ import { illustrationCuisine } from '../menuCategories';
  * Bio, Vegan, Halal et Sans gluten restent au bout de la bande, après un trait : ce sont des bascules cumulables, pas
  * un choix de cuisine — la lentille ne s'y pose pas, elles s'allument en iris.
  *
- * LES FAMILLES, PUIS LEURS SPÉCIALITÉS (fondateur, 2026-10-22, version X de maquettes/categories-commerce) : la bande montre
- * les familles (specialites.js) ; une famille choisie ouvre dessous une rangée de pastilles, « Tout » puis ses spécialités
- * (`sous` : { options: [{ value, label }], valeur, choisir(v), libelleTout, libelle }). Seulement quand la famille en a au
- * moins deux chez les commerces de la liste : une seule n'apprendrait rien. */
+ * PLUS DE RANGÉE SOUS LA BANDE (fondateur, 2026-10-27) : une famille choisie ouvrait dessous ses spécialités (version X de
+ * maquettes/categories-commerce, 2026-10-22). La bande montre maintenant les catégories à plat (categoriesClient,
+ * specialites.js). */
 const VELO = (
   <svg viewBox="-3 5 82 42" width="30" height="15" aria-hidden="true">
     <g fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"><circle cx="15" cy="29" r="12.5" /><circle cx="61" cy="29" r="12.5" /></g>
@@ -106,7 +105,7 @@ export function RouteVelo({ position = 12, className = '', roule = false, avance
  * C'est le filtre « À emporter » qui existait déjà (RestaurantList.jsx, `emporter`) : « À emporter » ne garde que les
  * commerces qui proposent l'emporter, « Livraison » les montre tous, comme la pastille éteinte d'avant. Même état, même
  * logique : seule la place change. Forme : { emporter, choisir(bool), libelleLivraison, libelleEmporter, libelleGroupe }. */
-export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null, sous = null }) {
+export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null }) {
   const app = experienceApp();
   const bandeau = adresse != null;
 
@@ -242,14 +241,6 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
             </div>
           </div>
         </div>
-        {sous && sous.options.length > 1 && (
-          <div className="lt-sous" role="group" aria-label={sous.libelle}>
-            {[{ value: '', label: sous.libelleTout }, ...sous.options].map((o) => (
-              <button key={o.value || '__tout'} type="button" className={`lt-sous-puce${sous.valeur === o.value ? ' on' : ''}`} aria-pressed={sous.valeur === o.value}
-                onClick={() => sous.choisir(o.value)}>{o.label}</button>
-            ))}
-          </div>
-        )}
       </div>
     </>
   );

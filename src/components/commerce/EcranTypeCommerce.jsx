@@ -3,7 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { cuisinesCommerce } from '../../specialites';
+import { cuisinesCommerce, regimesDe } from '../../specialites';
 import SousEcran from '../SousEcran';
 import ChoixSpecialites from './ChoixSpecialites';
 
@@ -24,6 +24,9 @@ export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, 
   // Un commerce encore en « Autre » (texte libre vide d'avant) n'a rien de choisi : il part d'une liste vide.
   const [valeurs, setValeurs] = useState(() => cuisinesCommerce(restaurant).filter((c) => c !== 'Autre'));
   const [erreur, setErreur] = useState(null);
+  // Toute ta carte est… ? (RegimesCommerce.jsx) : enregistré avec les spécialités, seulement s'il a changé (PATCH /:id/diet).
+  const regimesDepart = regimesDe(restaurant);
+  const [regimes, setRegimes] = useState(regimesDepart);
   const [enCours, setEnCours] = useState(false);
 
   async function enregistrer() {
@@ -32,6 +35,7 @@ export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, 
     setEnCours(true);
     try {
       await api(`/restaurants/${restoId}/specialites`, { method: 'PATCH', token, body: { cuisines: valeurs } });
+      if (JSON.stringify(regimes) !== JSON.stringify(regimesDepart)) await api(`/restaurants/${restoId}/diet`, { method: 'PATCH', token, body: regimes });
       await loadDashboard?.(restoId);
       toast(t('specialites.enregistre'), 'succes');
       onFermer();
@@ -48,7 +52,7 @@ export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, 
   return (
     <SousEcran titre={t('specialites.groupe')} onFermer={onFermer} pied={pied}>
       <p className="small" style={{ margin: '0 0 12px', color: 'var(--ink-soft)' }}>{t('specialites.aideReglages')}</p>
-      <ChoixSpecialites valeurs={valeurs} onChange={(v) => { setValeurs(v); setErreur(null); }} erreur={erreur} />
+      <ChoixSpecialites valeurs={valeurs} onChange={(v) => { setValeurs(v); setErreur(null); }} erreur={erreur} regimes={regimes} onRegimes={setRegimes} />
     </SousEcran>
   );
 }

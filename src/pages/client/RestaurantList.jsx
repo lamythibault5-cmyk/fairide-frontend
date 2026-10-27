@@ -22,7 +22,7 @@ import PrixComptoir from '../../components/PrixComptoir';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { epingler, titreRangee } from '../../misesEnAvant';
 import { COMMUNES, ILLUSTRATION_TOUTES_CUISINES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel, communeDepuisCodePostal } from '../../menuCategories';
-import { FAMILLES, SPECIALITES, cuisinesCommerce, famillesCommerce, libelleFamille, specialite } from '../../specialites';
+import { categoriesClient, libelleCategorie, specialite } from '../../specialites';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { statutOuverture } from '../../openingHours';
 import { useCart } from '../../context/CartContext';
@@ -493,22 +493,18 @@ export default function RestaurantList() {
   }, [user?.isTest, token]);
   const [search, setSearch] = useState(sauves ? sauves.search : filtresInitiaux.search || '');
   const [commune, setCommune] = useState(sauves ? sauves.commune : filtresInitiaux.commune || '');
-  // LA FAMILLE ET LA SPÉCIALITÉ CHOISIES (fondateur, 2026-10-22, version X de maquettes/categories-commerce). La bande montre
-  // les familles, la rangée dessous les spécialités de la famille choisie. La Recherche envoie une famille (« Par envie »)
-  // ou une spécialité (« Congolais ») : la liste s'ouvre sur sa famille, la spécialité choisie dessous.
-  const specialiteInitiale = specialite(filtresInitiaux.cuisine);
-  const [famille, setFamille] = useState(sauves ? sauves.famille : filtresInitiaux.famille || specialiteInitiale?.familles[0] || '');
-  const [specialiteFiltre, setSpecialiteFiltre] = useState(sauves ? sauves.specialiteFiltre : specialiteInitiale?.value || '');
-  const choisirFamille = useCallback((cle) => { setFamille(cle); setSpecialiteFiltre(''); }, []);
+  // LA CATÉGORIE CHOISIE (fondateur, 2026-10-27, categoriesClient dans specialites.js) : une seule bande, plus de rangée de
+  // spécialités dessous. La Recherche envoie la catégorie (« Par envie », ou celle d'une spécialité tapée).
+  const [categorie, setCategorie] = useState(sauves ? sauves.categorie || '' : filtresInitiaux.categorie || '');
   /* CHANGER DE CUISINE NE FAIT PLUS « SAUTER » LA LISTE (fondateur, 2026-10-23 : « comme la barre d'onglets, beaucoup plus
      calme »). Les cartes jouent leur entrée (popIn, styles.css) à la première apparition de la liste ; un changement de
-     famille ou de spécialité les remplace sans la rejouer — comme un onglet, qui change d'écran sans animation
+     catégorie les remplace sans la rejouer — comme un onglet, qui change d'écran sans animation
      (sl-liste--calme, ecran-liste.css). */
   const [listeCalme, setListeCalme] = useState(false);
-  const filtresDeDepart = useRef(`${famille}|${specialiteFiltre}`);
+  const filtresDeDepart = useRef(categorie);
   useEffect(() => {
-    if (`${famille}|${specialiteFiltre}` !== filtresDeDepart.current) setListeCalme(true);
-  }, [famille, specialiteFiltre]);
+    if (categorie !== filtresDeDepart.current) setListeCalme(true);
+  }, [categorie]);
   // Masqués pour le moment (MENTIONS_ALIMENTAIRES) : jamais allumés à l'ouverture, sinon la liste serait filtrée sans
   // aucune pastille pour retirer le filtre.
   const [bio, setBio] = useState(MENTIONS_ALIMENTAIRES && !!(sauves || filtresInitiaux).bio);
@@ -524,15 +520,15 @@ export default function RestaurantList() {
   useEffect(() => { disponibilite.ouvert = ouvertsSeuls; disponibilite.livre = livreSeuls; }, [ouvertsSeuls, livreSeuls]);
   const [tri, setTri] = useState(sauves?.tri || 'recommande');
   useEffect(() => {
-    ecrireEtatEcran(location.key, 'filtresListe', { search, commune, famille, specialiteFiltre, bio, vegan, halal, sansGluten, emporter, tri });
-  }, [location.key, search, commune, famille, specialiteFiltre, bio, vegan, halal, sansGluten, emporter, tri]);
+    ecrireEtatEcran(location.key, 'filtresListe', { search, commune, categorie, bio, vegan, halal, sansGluten, emporter, tri });
+  }, [location.key, search, commune, categorie, bio, vegan, halal, sansGluten, emporter, tri]);
   /* « ACCUEIL » TOUCHÉ SUR L'ACCUEIL, LA LISTE REPART DE ZÉRO (fondateur, 2026-10-26). Une catégorie choisie dans la
      Recherche (« Poissons ») restait appliquée quand on touchait Accueil, puis revenait au retour de chaque fiche. Comme sur
      iPhone, l'onglet où l'on est ramène à son écran de départ : plus aucun filtre (« Ouvert » compris), en haut (DashboardSidebar.jsx envoie
      « fairide:onglet-retouche »). Sur le site, un lien vers la liste pendant qu'on y est (nouvelle entrée sans filtre) fait
      de même. */
   const reinitialiserFiltres = useCallback(() => {
-    setSearch(''); setCommune(''); setFamille(''); setSpecialiteFiltre(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false);
+    setSearch(''); setCommune(''); setCategorie(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false);
     setEmporter(false); setOuvertsSeuls(false); setLivreSeuls(false); setTri('recommande');
   }, []);
   useEffect(() => {
@@ -545,7 +541,7 @@ export default function RestaurantList() {
     if (location.key === cleMontee.current) return;
     cleMontee.current = location.key;
     const st = location.state || {};
-    if (!st.filtresListe && !st.famille && !st.cuisine && !st.commune && !st.search) reinitialiserFiltres();
+    if (!st.filtresListe && !st.categorie && !st.commune && !st.search) reinitialiserFiltres();
   }, [location.key, location.state, reinitialiserFiltres]);
   const [panneau, setPanneau] = useState(null);
   // Les VRAIS commerces déjà inscrits (fondateur, 2026-09-30) : rangée en tête de liste, carte complète seulement ;
@@ -636,18 +632,17 @@ export default function RestaurantList() {
     });
   }
 
-  // Bio et Vegan sont dans la même rangée que les familles, en fin de liste : des filtres comme les
-  // autres (cumulables entre eux et avec une famille), sans mise en avant.
-  // CASES VIDES CACHÉES (réponse 6 du questionnaire, 2026-10-22) : seules les familles qui ont au moins un commerce dans la
-  // liste, et celle déjà choisie. Avant, les 35 types s'affichaient même vides et menaient à « aucun commerce ».
-  const famillesPresentes = new Set(restaurants.flatMap((r) => [...famillesCommerce(r)]));
+  // Bio et Vegan sont dans la même rangée que les catégories, en fin de liste : des filtres comme les
+  // autres (cumulables entre eux et avec une catégorie), sans mise en avant.
+  // CASES VIDES CACHÉES (réponse 6 du questionnaire, 2026-10-22) : seules les catégories qui ont au moins un commerce dans la
+  // liste (categoriesClient), et celle déjà choisie. Avant, les 35 types s'affichaient même vides et menaient à « aucun commerce ».
+  const categories = useMemo(() => categoriesClient(restaurants, { garder: categorie }), [restaurants, categorie]);
   // LA MÊME BANDE POUR TOUT LE MONDE (fondateur, 2026-10-26 : « je n'aime pas ces points verts ; l'écran Tu as envie de quoi ? est
   // juste pour le plaisir, il ne doit rien changer »). Les familles cochées à l'accueil de l'app passaient en tête de la bande avec
   // un point lime, et ouvraient une rangée « Tes envies » (2026-10-25) : retiré. L'accueil garde son écran et ses résultats.
-  const famillesBande = FAMILLES.filter((f) => famillesPresentes.has(f.cle) || f.cle === famille);
   const cuisineOptions = [
     { value: '', emoji: 'restaurants', illustration: ILLUSTRATION_TOUTES_CUISINES, label: t('restaurantList.allCuisines') },
-    ...famillesBande.map((f) => ({ value: f.cle, emoji: f.icone, illustration: f.illustration, label: libelleFamille(f.cle, t, { court: true }) })),
+    ...categories.liste.map((f) => ({ value: f.cle, emoji: f.icone, illustration: f.illustration, label: libelleCategorie(f.cle, t, { court: true }) })),
     // Bio, Vegan, Halal, Sans gluten : masqués pour le moment (MENTIONS_ALIMENTAIRES, dietary.js).
     ...(MENTIONS_ALIMENTAIRES ? [
     { value: '__bio', emoji: 'feuille', label: t('restaurantList.chipBio'), regime: 'bio' },
@@ -657,10 +652,10 @@ export default function RestaurantList() {
     ] : [])
   ];
   const REGIMES = { bio: [bio, setBio], vegan: [vegan, setVegan], halal: [halal, setHalal], sansGluten: [sansGluten, setSansGluten] };
-  const chipActive = (opt) => (opt.regime ? REGIMES[opt.regime][0] : famille === opt.value);
+  const chipActive = (opt) => (opt.regime ? REGIMES[opt.regime][0] : categorie === opt.value);
   const surChip = (opt) => {
     if (opt.regime) REGIMES[opt.regime][1]((v) => !v);
-    else choisirFamille(famille === opt.value ? '' : opt.value);
+    else setCategorie(categorie === opt.value ? '' : opt.value);
   };
 
   // Mises en avant PAR COMMUNE (fondateur, 2026-10-06) : un commerce qui paie n'est épinglé que pour les clients de sa commune
@@ -696,11 +691,10 @@ export default function RestaurantList() {
      avoir redessiné le bouton — et qu'il abandonne si le doigt touche encore entre-temps. */
   const ouvertListe = useDeferredValue(ouvertActif);
   const livreListe = useDeferredValue(livreActif);
-  const familleListe = useDeferredValue(famille);
-  const specialiteListe = useDeferredValue(specialiteFiltre);
+  const categorieListe = useDeferredValue(categorie);
   const emporterListe = useDeferredValue(emporter);
   const maintenant = new Date();
-  const hasActiveFilter = !!(search || familleListe || specialiteListe || commune || bio || vegan || halal || sansGluten || emporterListe || ouvertListe || livreListe || tri !== 'recommande');
+  const hasActiveFilter = !!(search || categorieListe || commune || bio || vegan || halal || sansGluten || emporterListe || ouvertListe || livreListe || tri !== 'recommande');
 
   // Distance a vol d'oiseau depuis l'adresse du compte, quand elle est connue.
   const distanceDe = (r) => (user?.lat && user?.lng && r.lat && r.lng ? haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) : null);
@@ -711,8 +705,7 @@ export default function RestaurantList() {
   const garderAutres = (r) => {
     if (commune && r.commune !== commune) return false;
     // Type principal ou en plus : une seule de ses spécialités suffit.
-    if (familleListe && !famillesCommerce(r).has(familleListe)) return false;
-    if (specialiteListe && !cuisinesCommerce(r).some((c) => specialite(c)?.value === specialiteListe)) return false;
+    if (categorieListe && !categories.de(r).has(categorieListe)) return false;
     if (bio && !restoBio(r)) return false;
     if (vegan && !restoVegan(r)) return false;
     if (halal && !restoHalal(r)) return false;
@@ -860,7 +853,7 @@ export default function RestaurantList() {
   // La rangée de pastilles au-dessus de la liste : tout ce que la colonne et le bandeau ne portent pas déjà.
   // Seulement s'il y a quelque chose dedans : sans « À emporter » ni tri, la rangée vide laissait un blanc.
   const pastillesFiltres = (!colonne || !modeSurBandeau) && (FILTRE_EMPORTER || ((pastilleOuvert || pastilleLivre) && restaurants.length > 0) || (!colonne && (TRI || !!commune || !!search)));
-  const toutEffacer = () => { setSearch(''); choisirFamille(''); setCommune(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false); setEmporter(false); setOuvertsSeuls(false); setLivreSeuls(false); setTri('recommande'); };
+  const toutEffacer = () => { setSearch(''); setCategorie(''); setCommune(''); setBio(false); setVegan(false); setHalal(false); setSansGluten(false); setEmporter(false); setOuvertsSeuls(false); setLivreSeuls(false); setTri('recommande'); };
   /* LA LISTE VIDE PAR « OUVERT » OU « LIVRE CHEZ TOI » DIT POURQUOI (réponse 4 de maquettes/filtre-ouvert) : le 26/10, depuis
    * Woluwe à midi, un seul restaurant livrait ; à 23:30, aucun. Plutôt que « aucun commerce ne correspond » : pas de livreur
    * libre, ou qui rouvre en premier parmi ceux que les autres filtres gardent, ou personne ne livre à cette adresse. */
@@ -906,18 +899,9 @@ export default function RestaurantList() {
         options={colonne ? cuisineOptions.filter((o) => !o.regime) : cuisineOptions}
         estActive={chipActive}
         surPuce={surChip}
-        cuisine={famille}
-        choisirCuisine={choisirFamille}
+        cuisine={categorie}
+        choisirCuisine={setCategorie}
         libelleBande={t('ecranListe.cuisinesAria')}
-        sous={famille ? {
-          // Les spécialités de la famille que portent les commerces de la liste, dans l'ordre de specialites.js.
-          options: SPECIALITES.filter((s) => s.familles.includes(famille) && restaurants.some((r) => cuisinesCommerce(r).some((c) => specialite(c) === s)))
-            .map((s) => ({ value: s.value, label: restaurantTypeLabel(s.value, t) })),
-          valeur: specialiteFiltre,
-          choisir: setSpecialiteFiltre,
-          libelleTout: t('specialites.sousTout'),
-          libelle: t('specialites.sousAria', { famille: libelleFamille(famille, t) })
-        } : null}
         mode={modeSurBandeau ? {
           emporter,
           choisir: setEmporter,

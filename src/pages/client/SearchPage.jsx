@@ -6,7 +6,7 @@ import { CHEMIN_LISTE, CHEMIN_PLATS_RECHERCHE, jetonListe } from '../../resumeCa
 import { MENTIONS_ALIMENTAIRES, platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
 import { COMMUNES, COMMUNES_SUGGEREES, illustrationCuisine, restaurantTypeLabel } from '../../menuCategories';
-import { FAMILLES, chercherSpecialites, cuisinesCommerce, famillesCommerce, iconeSpecialite, libelleFamille, specialite } from '../../specialites';
+import { CATEGORIES_CLIENT, categoriesClient, chercherSpecialites, cuisinesCommerce, iconeSpecialite, libelleCategorie, specialite } from '../../specialites';
 import { ecrireEtatEcran } from '../../etatEcran';
 import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
@@ -132,10 +132,10 @@ export default function SearchPage() {
   };
 
   const q = normaliser(requete);
-  // « PAR ENVIE » : LES FAMILLES (fondateur, 2026-10-22, maquettes/categories-commerce) qui ont au moins un commerce — les
-  // 14 premiers types d'avant s'affichaient même vides. Toutes tant que la liste n'est pas lue, pour ne pas sauter.
-  const famillesLues = new Set(restaurants.flatMap((r) => [...famillesCommerce(r)]));
-  const famillesTuiles = restaurants.length ? FAMILLES.filter((f) => famillesLues.has(f.cle)) : FAMILLES;
+  // « PAR ENVIE » : LES CATÉGORIES DE LA BANDE (categoriesClient, specialites.js) qui ont au moins un commerce — les 14 premiers
+  // types d'avant s'affichaient même vides. Toutes tant que la liste n'est pas lue, pour ne pas sauter.
+  const categories = useMemo(() => categoriesClient(restaurants), [restaurants]);
+  const famillesTuiles = restaurants.length ? categories.liste : CATEGORIES_CLIENT;
   // LES COMMUNES, MÊME RÈGLE (fondateur, 2026-10-25) : seulement celles où il y a au moins un commerce — les 19
   // s'affichaient toutes et la plupart menaient à une liste vide. Une commune de la périphérie apparaît dès qu'un commerce
   // y est (la liste filtre sur `r.commune` exact). Les 19 tant que la liste n'est pas lue, pour ne pas sauter. Plus de pastilles
@@ -209,7 +209,7 @@ export default function SearchPage() {
     const versFiche = (commerce) => { const l = lienFiche(user, commerce); return navigate(l.to, { state: l.state }); };
     if (r.commerces[0]) return versFiche(r.commerces[0]);
     if (r.plats[0]) return versFiche(r.plats[0].restaurant);
-    if (r.cuisines[0]) return navigate('/restaurants', { state: { cuisine: r.cuisines[0].value } });
+    if (r.cuisines[0]) return navigate('/restaurants', { state: { categorie: categories.deSpecialite(r.cuisines[0].value) } });
     if (r.communes[0]) return navigate('/restaurants', { state: { commune: r.communes[0] } });
     if (r.aide[0]) return navigate(r.aide[0].to);
     if (r.rubriques[0]) return navigate(r.rubriques[0].to);
@@ -268,7 +268,7 @@ export default function SearchPage() {
             {famillesTuiles.map((f) => (
               <Link key={f.cle} to="/restaurants" state={{ famille: f.cle }} className="recherche-tuile" style={{ '--tuile-fond': f.fond }}>
                 <img className="recherche-tuile-illu" src={illustrationCuisine(f.illustration)} alt="" width="52" height="52" decoding="async" draggable="false" />
-                <span>{libelleFamille(f.cle, t)}</span>
+                <span>{libelleCategorie(f.cle, t)}</span>
               </Link>
             ))}
           </div>
@@ -315,7 +315,7 @@ export default function SearchPage() {
               {famillesTuiles.map((f) => (
                 <Link key={f.cle} to="/restaurants" state={{ famille: f.cle }} className="recherche-tuile" style={{ '--tuile-fond': f.fond }}>
                   <img className="recherche-tuile-illu" src={illustrationCuisine(f.illustration, { plat: true })} alt="" width="40" height="40" decoding="async" draggable="false" />
-                  <span>{libelleFamille(f.cle, t)}</span>
+                  <span>{libelleCategorie(f.cle, t)}</span>
                 </Link>
               ))}
             </div>
@@ -382,7 +382,9 @@ export default function SearchPage() {
           </Groupe>
           <Groupe titre={t('search.cuisineTypes')} quand={resultats.cuisines.length}>
             {resultats.cuisines.map((c) => (
-              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={<Icone nom={iconeSpecialite(c.value)} taille={20} />} titre={restaurantTypeLabel(c.value, t) || c.value} sous={t('search.seeTypeBusinesses')} />
+              // Plus de rangée de spécialités sous la bande (2026-10-27) : la ligne ouvre la catégorie où elle se trouve, et le dit.
+              <Ligne key={c.value} to="/restaurants" state={{ categorie: categories.deSpecialite(c.value) }} icone={<Icone nom={iconeSpecialite(c.value)} taille={20} />} titre={restaurantTypeLabel(c.value, t) || c.value}
+                sous={t('search.seeCategory', { categorie: libelleCategorie(categories.deSpecialite(c.value), t) })} />
             ))}
           </Groupe>
           <Groupe titre={t('search.municipalities')} quand={resultats.communes.length}>
