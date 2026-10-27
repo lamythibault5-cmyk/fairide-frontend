@@ -236,8 +236,7 @@ compares both): add a speciality in both, with its NL/EN label under `menuCatego
 rubber-banding ([src/ressort.js](../../src/ressort.js)) — runs only when `estNatif()`, loaded with `import()`, so the website
 downloads nothing extra (founder: the site must not get slower). What uses it: sheets pulled down to close
 ([useFeuilleGlissable](../../src/hooks/useFeuilleGlissable.js), FichePlat and SousEcran — on the site they keep the plain
-threshold + CSS transition), dragging a restaurant photo down to close it
-([FermerFicheParGlissement](../../src/components/FermerFicheParGlissement.jsx)), and swipe-to-confirm for the courier's « récupérée » / « livrée »
+threshold + CSS transition) and, on iPhone, swiped right from the left edge (2026-10-27, appli.md › Gestures), and swipe-to-confirm for the courier's « récupérée » / « livrée »
 ([GlisserPourConfirmer](../../src/components/livreur/GlisserPourConfirmer.jsx); the site keeps the buttons). An animation with
 `fill-mode: both` overrides inline transforms — the sheet's entry animation is `backwards` for that reason.
 

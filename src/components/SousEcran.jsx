@@ -53,7 +53,7 @@ export default function SousEcran({ titre, onFermer, children, pied = null, modi
   // Saisie en cours : on remet la feuille en place (elle a pu partir sous le doigt) et on demande, au lieu de fermer.
   function demander(fermeture) {
     if (!modifie) { fermeture(); return; }
-    if (panneau.current) { panneau.current.style.transition = ''; panneau.current.style.transform = ''; }
+    if (panneau.current) { panneau.current.style.transition = ''; panneau.current.style.transform = ''; panneau.current.style.boxShadow = ''; }
     setAConfirmer(true);
   }
   useDialogue(racine, () => { if (!aConfirmer) demander(fermerAnime); });

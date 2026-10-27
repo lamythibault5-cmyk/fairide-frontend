@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { experienceApp } from '../natif';
+import { useEffect, useRef } from 'react';
+import { experienceApp, plateforme } from '../natif';
 import { mouvementReduit } from '../gestes';
 
 /* FEUILLE QU'ON TIRE VERS LE BAS POUR LA FERMER — la fiche d'un plat (FichePlat) et les sous-écrans du paiement
@@ -15,18 +15,112 @@ import { mouvementReduit } from '../gestes';
  *
  * Le geste ne démarre que si le contenu est tout en haut : sinon le doigt fait simplement défiler les options.
  *
+ * LE RETOUR PAR LE BORD GAUCHE, SUR IPHONE (2026-10-27, fondateur : « dans Mon compte, les écrans n'ont pas le retour par
+ * balayage parce qu'on les tire vers le bas ; le faire pour tout le monde »). Le doigt posé tout au bord gauche (BORD) et
+ * tiré vers la droite : la feuille suit le doigt et découvre l'écran d'où elle a été ouverte, qui est vraiment derrière
+ * (Mon compte, la fiche du commerce, le paiement) ; au lâcher, l'élan décide, comme le retour d'iOS. Les deux gestes
+ * vivent ensemble : vers le bas d'où l'on veut, vers la droite depuis le bord. Le balayage de WebKit se tait pendant ce
+ * temps (useDialogue → suspendreRetourIos), sinon il reculerait sous la feuille. Écouteurs natifs posés sur le panneau
+ * (pas les props React) : le touchmove doit pouvoir empêcher le défilement, et une feuille ouverte par-dessus dans un
+ * portail ne les déclenche pas. Android n'en a pas besoin : son geste Retour est celui du système (natif.js, backButton),
+ * qui ferme la feuille du dessus. `bord: false` pour les petites fenêtres du bas (useTirerPourFermer) : comme une alerte
+ * d'iOS, elles ne reculent pas.
+ *
  * `fermerAnime` : fermeture du site (animation CSS de sortie). `fermerTout` : fermeture immédiate, utilisée quand le
  * ressort a déjà emmené la feuille hors de l'écran. */
-export default function useFeuilleGlissable({ panneau, defile, fermerAnime, fermerTout = fermerAnime }) {
+const BORD = 24;
+const SENS = 10;
+
+export default function useFeuilleGlissable({ panneau, defile, fermerAnime, fermerTout = fermerAnime, bord = true }) {
   const geste = useRef(null);
   const anim = useRef(null);
   const module = useRef(null);
+  // Le toucher en cours est parti du bord gauche : il appartient au retour, pas au tirage vers le bas.
+  const parLeBord = useRef(false);
+  const fermer = useRef(fermerTout);
+  fermer.current = fermerTout;
   const natif = experienceApp() && !mouvementReduit();
   if (natif && !module.current) import('../ressort').then((m) => { module.current = m; }).catch(() => {});
 
   const poser = (y) => { if (panneau.current) panneau.current.style.transform = y ? `translateY(${y}px)` : ''; };
 
+  useEffect(() => {
+    const el = panneau.current;
+    if (!bord || !el || plateforme() !== 'ios') return undefined;
+    let m = null;
+    import('../ressort').then((mod) => { m = mod; }).catch(() => {});
+    let g = null;
+    let vol = null;
+    // Une ombre à gauche de la feuille pendant qu'elle part : blanc sur blanc, on ne verrait pas où elle s'arrête.
+    const poserX = (x) => {
+      el.style.transform = x ? `translateX(${x}px)` : '';
+      el.style.boxShadow = x ? '-12px 0 32px rgba(20, 18, 31, .18)' : '';
+    };
+    function debut(e) {
+      parLeBord.current = false;
+      if (e.touches.length !== 1 || window.innerWidth > 900 || e.touches[0].clientX > BORD) return;
+      parLeBord.current = true;
+      // Rattrapée pendant qu'elle revient : on repart de la position affichée.
+      let depart = 0;
+      if (vol) {
+        vol.arreter(); vol = null;
+        const x = /translateX(([-d.]+)px)/.exec(el.style.transform);
+        depart = x ? Number(x[1]) : 0;
+      }
+      const t = e.touches[0];
+      g = { x0: t.clientX - depart, y0: t.clientY, x: depart, actif: depart > 0, suivi: m?.suiviVitesse() };
+      g.suivi?.ajouter(t.clientX);
+    }
+    function suite(e) {
+      if (!g) return;
+      const t = e.touches[0];
+      const dx = t.clientX - g.x0; const dy = t.clientY - g.y0;
+      if (!g.actif) {
+        // Vers le haut ou le bas d'abord : c'est un défilement, on le laisse.
+        if (Math.abs(dy) > SENS && Math.abs(dy) > Math.abs(dx)) { g = null; return; }
+        if (dx < SENS) return;
+        g.actif = true;
+        el.style.transition = 'none';
+      }
+      if (e.cancelable) e.preventDefault();
+      g.x = Math.max(0, dx);
+      g.suivi?.ajouter(t.clientX);
+      poserX(g.x);
+    }
+    function fin() {
+      if (!g) return;
+      const { x, actif, suivi } = g; g = null;
+      if (!actif) return;
+      const largeur = el.offsetWidth || window.innerWidth;
+      const v = suivi ? suivi.vitesse() : 0;
+      // Comme iOS : au-delà de la moitié de l'écran là où l'élan la porterait, ou lancée franchement vers la droite.
+      const part = m ? x + m.projeter(v) > largeur / 2 || v > 600 : x > largeur / 3;
+      // Pas de vibration : le retour d'iOS n'en fait pas (gestes.js).
+      if (!m || mouvementReduit()) {
+        if (part) fermer.current(); else { el.style.transition = ''; poserX(0); }
+        return;
+      }
+      vol = m.ressort({
+        de: x, vers: part ? largeur : 0, vitesse: v, amortissement: 1, reponse: part ? 0.3 : 0.35,
+        surImage: poserX,
+        fin: () => { vol = null; if (part) fermer.current(); else el.style.transition = ''; }
+      });
+    }
+    el.addEventListener('touchstart', debut, { passive: true });
+    el.addEventListener('touchmove', suite, { passive: false });
+    el.addEventListener('touchend', fin, { passive: true });
+    el.addEventListener('touchcancel', fin, { passive: true });
+    return () => {
+      vol?.arreter();
+      el.removeEventListener('touchstart', debut);
+      el.removeEventListener('touchmove', suite);
+      el.removeEventListener('touchend', fin);
+      el.removeEventListener('touchcancel', fin);
+    };
+  }, [bord, panneau]);
+
   function onTouchStart(e) {
+    if (parLeBord.current) return;
     if (window.innerWidth > 900 || (defile.current && defile.current.scrollTop > 0)) return;
     // Rattrapée en plein vol : on repart de la position AFFICHÉE, pas de zéro.
     let depart = 0;
