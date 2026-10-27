@@ -141,10 +141,11 @@ function BoutonsItineraire({ adresse, lat, lng, t }) {
 /* LE CODE DU CLIENT EN QUATRE CASES (fondateur, 2026-10-16, maquette « Course en cours »). Un seul vrai champ, transparent,
  * posé sur les cases : le clavier numérique, le collage et le lecteur d'écran marchent comme avant. Les codes de remise ont
  * quatre chiffres (serveur, routes/orders.js) ; la validation reste celle de deliver() et du serveur. */
-function CodeCases({ valeur, onChange, onValider, libelle }) {
+// `manque` : on a glissé « Confirmer la livraison » sans le code — les cases s'encadrent d'iris (L2 de maquettes/audit-ecrans).
+function CodeCases({ valeur, onChange, onValider, libelle, manque = false, id }) {
   return (
-    <label className="ecl-code-cases">
-      <input aria-label={libelle} inputMode="numeric" autoComplete="off" maxLength={4} value={valeur}
+    <label className={`ecl-code-cases${manque ? ' manque' : ''}`}>
+      <input id={id} aria-label={libelle} inputMode="numeric" autoComplete="off" maxLength={4} value={valeur}
         onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 4))}
         onKeyDown={(e) => { if (e.key === 'Enter') onValider(); }} />
       {[0, 1, 2, 3].map((k) => (
@@ -158,6 +159,7 @@ export default function DriverDashboard() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { token, user, refreshUser, modifierUtilisateur } = useAuth();
+  const [codeManquant, setCodeManquant] = useState(null);
   const toast = useToast();
   const agirOptimiste = useActionOptimiste();
   const [available, setAvailable] = useState([]);
@@ -528,7 +530,17 @@ export default function DriverDashboard() {
     const id = order.id;
     if (livraisonRef.current) return;
     const code = (codeInputs[id] || '').trim();
-    if (!code) { toast(t('dashDriver.toastAskCode')); return; }
+    // Le geste reste toujours possible (design.md règle 4) : sans code, il vibre, encadre les cases et y met le curseur
+    // (fondateur, 2026-10-27, L2 de maquettes/audit-ecrans), le clavier numérique s'ouvre.
+    if (!code) {
+      vibrer('attention');
+      setCodeManquant(id);
+      const champ = document.getElementById(`code-client-${id}`);
+      champ?.scrollIntoView({ behavior: mouvementReduit() ? 'auto' : 'smooth', block: 'center' });
+      champ?.focus({ preventScroll: true });
+      toast(t('dashDriver.toastAskCode'));
+      return;
+    }
     if (order.containsAlcohol && !ageVerifie) { setAgeAVerifier(order); return; }
     livraisonRef.current = id; setLivraisonEnCours(id);
     try {
@@ -667,6 +679,15 @@ export default function DriverDashboard() {
       titreAppli = t('ecransPro.aucuneCourse');
     }
   }
+  /* AVANT LA VALIDATION, LE BANDEAU DIT OÙ EN EST LE DOSSIER (fondateur, 2026-10-27, L5 de maquettes/audit-ecrans) : il ne disait que
+     « Courses » en petit, le message était dans une carte pointillée façon site. Le titre monte sur l'iris (app et site), la
+     feuille garde le texte et le bouton. */
+  const titreDossier = approuve ? null
+    : user?.adminStatus === 'blocked' ? t('dashDriver.blockedTitle')
+      : !dossier || dossier.erreur ? null
+        : dossier.statut === 'draft' ? t('dashDriver.fileToCompleteTitle')
+          : dossier.statut === 'rejected' ? t('dashDriver.fileToFixTitle') : t('dashDriver.waitingTitle');
+  if (!titreAppli && titreDossier) titreAppli = titreDossier;
   const partageOk = user?.locationSharingEnabled !== false && sharingLocation;
 
   const interrupteur = (surBlanc) => (
@@ -735,14 +756,20 @@ export default function DriverDashboard() {
       <BadgeAlcool order={o} />
       {(o.deliveryInstructions || o.clientPhone) && (
         <div className="ecl-ligne">
-          <Icone nom={DELIVERY_INSTRUCTION_OPTIONS.find((x) => x.value === o.deliveryInstructions)?.icon || (o.deliveryInstructions ? 'sonnette' : 'telephone')} taille={20} />
+          {/* Sans consigne, plus d'icône de téléphone seule à gauche : le bouton « Appeler … » la porte déjà. */}
+          {o.deliveryInstructions && <Icone nom={DELIVERY_INSTRUCTION_OPTIONS.find((x) => x.value === o.deliveryInstructions)?.icon || 'sonnette'} taille={20} />}
           <span className="ecl-grow">
             {/* Dans la langue du livreur (audit du 19/10, CROSS-12) : sans t, la consigne retombait sur le français. */}
             {o.deliveryInstructions ? deliveryInstructionLabel(o.deliveryInstructions, t) : null}
             {o.deliveryNote && <small>{o.deliveryNote}</small>}
-            {o.clientPhone && <small><a href={`tel:${o.clientPhone}`}>{telephoneLisible(o.clientPhone)}</a></small>}
           </span>
-          {o.clientPhone && <a className="ecl-rond" href={`tel:${o.clientPhone}`} aria-label={o.clientPhone}><Icone nom="telephone" taille={18} /></a>}
+          {/* Un seul geste pour appeler (fondateur, 2026-10-27, L6 de maquettes/audit-ecrans) : le numéro souligné ET le rond
+              faisaient la même chose. Le bouton dit qui on appelle ; le numéro reste lisible au survol et pour les lecteurs d'écran. */}
+          {o.clientPhone && (
+            <a className="btn-outline btn-sm ecl-appeler" href={`tel:${o.clientPhone}`} title={telephoneLisible(o.clientPhone)} aria-label={`${t('dashDriver.appelerPrenom', { name: (o.clientName || '').split(' ')[0] })} · ${telephoneLisible(o.clientPhone)}`}>
+              <Icone nom="telephone" taille={16} />{(o.clientName || '').split(' ')[0] ? t('dashDriver.appelerPrenom', { name: (o.clientName || '').split(' ')[0] }) : telephoneLisible(o.clientPhone)}
+            </a>
+          )}
         </div>
       )}
       {articles(o)}
@@ -752,7 +779,7 @@ export default function DriverDashboard() {
       {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
       <DeliveryTiming order={o} />
       <p className="ecl-titre-sec">{t('dashDriver.phCustomerCode')}</p>
-      <CodeCases libelle={t('dashDriver.phCustomerCode')} valeur={codeInputs[o.id] || ''} onValider={() => deliver(o)}
+      <CodeCases id={`code-client-${o.id}`} manque={codeManquant === o.id && !(codeInputs[o.id] || '').length} libelle={t('dashDriver.phCustomerCode')} valeur={codeInputs[o.id] || ''} onValider={() => deliver(o)}
         onChange={(v) => setCodeInputs((prev) => ({ ...prev, [o.id]: v }))} />
       {/* Taille normale (audit du 15/10/2026) : c'est le geste qui clôt la course, fait d'une main, souvent dehors. */}
       {!appli && <button type="button" className="btn-teal ecl-code-envoi" disabled={livraisonEnCours === o.id} onClick={() => deliver(o)}>{livraisonEnCours === o.id ? '…' : t('dashDriver.confirmDelivery')}</button>}
@@ -814,7 +841,7 @@ export default function DriverDashboard() {
   const gainsJour = livreesAujourdhui.reduce((s, o) => s + Number(o.driverFee ?? o.deliveryFee ?? 0) + Number(o.tipAmount || 0), 0);
   const vehiculeNom = vehicule?.type ? t(`courierOnboarding.vehicle_${vehicule.type}`) : null;
   const contexte = [user?.name, vehiculeNom].filter(Boolean).join(' · ');
-  const titreSite = titreBandeau || (peutRouler ? (enPause ? t('siteLivreur.enPause') : t('siteLivreur.disponible')) : t('nav.rides'));
+  const titreSite = titreBandeau || (peutRouler ? (enPause ? t('siteLivreur.enPause') : t('siteLivreur.disponible')) : titreDossier || t('nav.rides'));
   const sousSite = sousBandeau || (!peutRouler ? null : enPause ? t('siteLivreur.pauseSous')
     : available.length === 0 ? t('siteLivreur.aucuneProposee') : available.length === 1 ? t('siteLivreur.proposeeUne') : t('siteLivreur.proposees', { n: available.length }));
 
@@ -1065,7 +1092,8 @@ export default function DriverDashboard() {
             {carte(principale)}
             <div className="ecl-fc-corps">{lieux(principale, false)}</div>
           </article>
-          {peutRouler && interrupteur(true)}
+          {/* Pendant une course en main, pas d'interrupteur sous la course (L6 de maquettes/audit-ecrans) : il revient avec la liste. */}
+          {peutRouler && !principale && interrupteur(true)}
           {blocOffres}
         </>
       );
@@ -1126,15 +1154,16 @@ export default function DriverDashboard() {
           const titre = bloque ? t('dashDriver.blockedTitle') : aCompleter ? t('dashDriver.fileToCompleteTitle') : aCorriger ? t('dashDriver.fileToFixTitle') : t('dashDriver.waitingTitle');
           const texte = bloque ? t('dashDriver.blockedText') : aCompleter ? t('dashDriver.fileToCompleteText') : aCorriger ? t('dashDriver.fileToFixText') : t('dashDriver.waitingEmpty');
           return (
-            <div className="empty" style={{ padding: '40px 20px' }}>
+            <div className="ecl-attente-dossier">
               {/* Une icône, pas son nom : la ligne affichait littéralement « horloge » ou « interdit » en
                   34px — reliquat du remplacement des emojis par <Icone>, où la chaîne était restée seule. */}
               <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><Icone nom={bloque ? 'interdit' : (aCompleter || aCorriger) ? 'dossier' : 'horloge'} taille={34} /></div>
-              <b>{titre}</b>
+              {/* Le titre est sur le bandeau (titreDossier) ; ici seulement si le bandeau ne l'a pas. */}
+              {titre !== titreDossier && <b>{titre}</b>}
               <p className="small" style={{ margin: '6px auto 0', maxWidth: 420 }}>{texte}</p>
               {aCorriger && dossier.motif && <p className="small" style={{ margin: '6px auto 0', maxWidth: 420, color: 'var(--red)' }}>{t('courierOnboarding.rejectedReason', { reason: dossier.motif })}</p>}
               {(aCompleter || aCorriger) && (
-                <Link to="/driver/onboarding" className="btn-gold" style={{ display: 'inline-block', marginTop: 14 }}>{aCorriger ? t('dashDriver.fileToFixBtn') : t('dashDriver.fileToCompleteBtn')}</Link>
+                <Link to="/driver/onboarding" className="btn-gold ecl-attente-action">{aCorriger ? t('dashDriver.fileToFixBtn') : t('dashDriver.fileToCompleteBtn')}</Link>
               )}
               {!bloque && !aCompleter && !aCorriger && (
                 <Link to="/driver/onboarding" className="btn-outline btn-sm" style={{ display: 'inline-block', marginTop: 14 }}>{t('dashDriver.fileSeeBtn')}</Link>
@@ -1148,7 +1177,9 @@ export default function DriverDashboard() {
 
           {/* Une course en main : le bandeau montre son trajet, l'interrupteur descend ici. Se mettre en pause coupe les
               nouvelles offres, pas les courses déjà prises. */}
-          {course && peutRouler && interrupteur(true)}
+          {/* Course livrée, encore affichée : l'interrupteur revient. Pendant la course elle-même, plus rien sous la fiche : le livreur
+              ne se met pas en pause au milieu d'une livraison, et la carte lui volait l'écran (fondateur, 2026-10-27, L6). */}
+          {course && !principale && peutRouler && interrupteur(true)}
 
           {blocOffres}
 

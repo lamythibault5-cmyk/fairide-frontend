@@ -25,14 +25,11 @@ export default function PreviewPage() {
           <p className="small" style={{ margin: '4px 0 0' }}>{t('previewPage.notVisibleText')}</p>
         </div>
       )}
-      <div className="card" style={{ marginBottom: 14 }}>
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('previewPage.tryAppTitle')}</h3>
-        <p className="small" style={{ margin: '0 0 12px' }}>
-          {t('previewPage.tryAppHelp')}
-        </p>
-        <button type="button" className="btn-outline" onClick={tryAsClient}>{t('previewPage.tryAsCustomer')}</button>
-      </div>
-      <div className="card" style={{ border: '2px solid var(--ink)' }}>
+      {/* UNE PHRASE, UN BOUTON (fondateur, 2026-10-27, S8 de maquettes/audit-ecrans) : une carte expliquait l'aperçu, puis un
+          encadré noir le réexpliquait. La phrase est dans le bandeau, le bouton iris reste, l'encadré noir est parti
+          (RestaurantPreview). Le texte long (tryAppHelp) est en infobulle pour qui veut savoir. */}
+      <button type="button" className="btn-outline" style={{ marginBottom: 14 }} onClick={tryAsClient} title={t('previewPage.tryAppHelp')}>{t('previewPage.tryAsCustomer')}</button>
+      <div className="card">
         <RestaurantPreview restaurant={restaurant} />
       </div>
     </CadreSite>

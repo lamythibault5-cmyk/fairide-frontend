@@ -10,7 +10,7 @@ import '../../terminal.css';
 import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPrinter';
 import { abonnerTerminalNavigateur, associerTerminalNavigateur, deconnecterTerminalNavigateur } from '../../terminalNavigateur';
 import Icone from '../../components/Icone';
-import AvecMarque from '../../components/AvecMarque';
+import CadreSite from '../../components/commerce/CadreSite';
 import ErreurChargement from '../../components/ErreurChargement';
 
 // Ticket de test fabriqué ici, sans passer par le serveur : il vérifie seulement le canal page → service Goodcom →
@@ -142,9 +142,8 @@ export default function TerminalPage() {
   const quand = (d) => (d ? new Date(d).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
 
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}><AvecMarque>{t('terminal.title')}</AvecMarque></h2>
-      <p className="small" style={{ marginTop: 0, maxWidth: 680 }}>{t('terminal.intro')}</p>
+    // Le bandeau iris et « ← Commerce » comme Promotions ou Factures (fondateur, 2026-10-27, S9 de maquettes/audit-ecrans).
+    <CadreSite titre={t('terminal.title')} sous={t('terminal.intro')} appli>
 
       {ici.terminal && (
         <div className="card" style={{ borderLeft: '4px solid var(--iris)' }}>
@@ -257,6 +256,6 @@ export default function TerminalPage() {
         confirmLabel={t('terminal.webTakeover')} loading={busy} onCancel={() => setReprise(false)} onConfirm={associerNavigateur} />
       <ConfirmDialog open={!!aRetirer} danger title={t('terminal.removeTitle')} message={t('terminal.removeText', { name: aRetirer?.label || '' })}
         confirmLabel={t('terminal.remove')} onCancel={() => setARetirer(null)} onConfirm={retirer} />
-    </div>
+    </CadreSite>
   );
 }

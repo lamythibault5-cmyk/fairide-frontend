@@ -116,23 +116,6 @@ export default function InvoicesPage() {
 
   return ecran(
     <>
-      <p className="small" style={{ margin: '0 0 14px', opacity: 0.85 }}>{t('invoicesClient.peppolNote')}</p>
-
-      {downloadable.length > 0 && (
-        <div className="card" style={{ marginBottom: 14 }}>
-          <p className="small" style={{ margin: '0 0 10px' }}>{t('invoicesClient.intro')}</p>
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-            <button type="button" className="btn-outline btn-sm" onClick={() => selectPeriod('week')}>{t('invoicesClient.thisWeek')}</button>
-            <button type="button" className="btn-outline btn-sm" onClick={() => selectPeriod('month')}>{t('invoicesClient.thisMonth')}</button>
-            <button type="button" className="btn-outline btn-sm" onClick={() => selectPeriod('year')}>{t('invoicesClient.thisYear')}</button>
-            <button type="button" className="btn-outline btn-sm" onClick={() => setSelected(new Set())}>{t('invoicesClient.deselectAll')}</button>
-          </div>
-          <button type="button" className="btn-teal" disabled={selected.size === 0 || downloading} onClick={downloadSelected}>
-            {downloading ? '...' : t('invoicesClient.downloadSelection', { n: selected.size })}
-          </button>
-        </div>
-      )}
-
       {orders.length === 0 && (
         <EtatVide
           icone="document" titre={t('invoicesClient.emptyTitle')} texte={t('invoicesClient.none')}
@@ -164,6 +147,27 @@ export default function InvoicesPage() {
           ))}
         </div>
       )}
+
+      {/* LES REÇUS D'ABORD (fondateur, 2026-10-27, C4 de maquettes/audit-ecrans/audit-ecrans.html) : on vient chercher un reçu,
+          pas lire une consigne. Le regroupement en un fichier passe sous la liste ; son bouton n'apparaît qu'une fois quelque
+          chose coché et dit combien (il n'est plus jamais grisé), la note sur la TVA et les factures d'entreprise ferme la page. */}
+      {downloadable.length > 1 && (
+        <div className="fac-groupe">
+          <b className="fac-groupe-titre">{t('invoicesClient.groupTitle')}</b>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn-outline btn-sm" onClick={() => selectPeriod('week')}>{t('invoicesClient.thisWeek')}</button>
+            <button type="button" className="btn-outline btn-sm" onClick={() => selectPeriod('month')}>{t('invoicesClient.thisMonth')}</button>
+            <button type="button" className="btn-outline btn-sm" onClick={() => selectPeriod('year')}>{t('invoicesClient.thisYear')}</button>
+            {selected.size > 0 && <button type="button" className="btn-outline btn-sm" onClick={() => setSelected(new Set())}>{t('invoicesClient.deselectAll')}</button>}
+          </div>
+          {selected.size > 0 && (
+            <button type="button" className="btn-teal" style={{ marginTop: 12 }} disabled={downloading} onClick={downloadSelected}>
+              {downloading ? '...' : selected.size === 1 ? t('invoicesClient.downloadOne') : t('invoicesClient.downloadCount', { n: selected.size })}
+            </button>
+          )}
+        </div>
+      )}
+      {orders.length > 0 && <p className="small" style={{ margin: '16px 0 0', opacity: 0.85 }}>{t('invoicesClient.peppolNote')}</p>}
     </>
   );
 }

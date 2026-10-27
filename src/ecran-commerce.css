@@ -60,7 +60,9 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-interrupteur:disabled { opacity: .55; cursor: default; }
 .ec-interrupteur:focus-visible { outline: 2px solid var(--iris); outline-offset: 3px; }
 .ec-interrupteur--lime { background: rgba(255, 255, 255, .25); }
-.ec-interrupteur--lime.on { background: var(--lime); }
+/* Allumé : piste BLANCHE, bouton iris (fondateur, 2026-10-27, S10 de maquettes/audit-ecrans) — le lime ne sert plus qu'au
+   prochain clic (« Accepter #058 », « Marquer prêt ») ; un interrupteur lime à côté en faisait deux. */
+.ec-interrupteur--lime.on { background: #fff; }
 .ec-interrupteur--lime.on::after { background: var(--iris); }
 
 /* Le curseur à pouce qui glisse (temps de préparation : pouce iris ; période des statistiques : pouce lime sur iris). */
@@ -176,6 +178,16 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-plat { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .ec-plat-photo { width: 58px; height: 58px; border-radius: 14px; object-fit: cover; flex: none; background: var(--cream-dim); display: grid; place-items: center; color: var(--iris); transition: filter .3s, opacity .3s; }
 .ec-plat-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 15px; }
+/* S7 de maquettes/audit-ecrans (2026-10-27) : le nom du plat ouvre « Retirer de la carte ? » ; l'interrupteur porte son mot. */
+.ec-plat-nom { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--ink); text-align: left; cursor: pointer; min-height: 0 !important; }
+.ec-plat-photo { cursor: pointer; }
+.ec-interrupteur-bloc { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; min-width: 64px; }
+.ec-interrupteur-mot { font-size: 11px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; }
+/* Ma carte : les engagements à signer sont sur leur écran, une rangée y mène (S1). */
+.conformite-vers { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); text-decoration: none; }
+.conformite-vers > span:first-child { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.conformite-vers small { color: var(--red); font-size: 13px; }
+.conformite-vers-chevron { font-size: 22px; color: var(--ink-soft); }
 .ec-plat-texte > b { overflow-wrap: anywhere; transition: color .3s; }
 .ec-plat-etat { font-size: 12.5px; color: var(--ink-soft); }
 .ec-plat-etat.fondu { animation: ec-fondu .3s ease both; }
@@ -513,3 +525,11 @@ html.avec-bande-a-traiter main { padding-bottom: calc(76px + env(safe-area-inset
 .ec-carte-liste.fiche-page.fiche-appli .category-quicknav { top: calc(8px + env(safe-area-inset-top, 0px)); margin: 4px -6px 8px; }
 .ec-carte-liste.fiche-page .category-quicknav--pouce { top: 0; background: #fff; margin: 0 -8px 4px; padding: 8px; }
 .ec-carte-liste.fiche-appli [id^="menu-cat-"] { scroll-margin-top: calc(76px + env(safe-area-inset-top, 0px)); }
+
+/* PLUS DE TRIANGLE ▶ DU NAVIGATEUR (fondateur, 2026-10-27, D3 de maquettes/audit-ecrans) : « Taux de TVA de mes plats »,
+   « Halal, végétarien… », « Ma carte et mes engagements » étaient des <details> à l'ancienne au milieu d'écrans en rangées.
+   Ils prennent la forme d'une rangée de Mon compte : titre à gauche, chevron à droite qui tourne quand elle s'ouvre. */
+.ec-feuille details.card > summary { list-style: none; display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; font-weight: 700; }
+.ec-feuille details.card > summary::-webkit-details-marker { display: none; }
+.ec-feuille details.card > summary::after { content: ""; flex: none; margin-left: auto; width: 9px; height: 9px; border-right: 2px solid var(--ink-soft); border-bottom: 2px solid var(--ink-soft); transform: rotate(-45deg); transition: transform .2s; }
+.ec-feuille details.card[open] > summary::after { transform: rotate(45deg); }

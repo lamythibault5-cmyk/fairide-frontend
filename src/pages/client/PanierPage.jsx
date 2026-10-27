@@ -196,7 +196,10 @@ export default function PanierPage() {
         titre={t('panier.title')}
         sous={t(cart.count > 1 ? 'ecranCommande.articlesPluriel' : 'ecranCommande.articles', { count: cart.count })}
       >
-        {APPLI ? <RouteCommande position={22} depart={-12} /> : <RouteEtapes actuelle={0} />}
+        {/* Les trois étapes nommées dès le panier, « Panier » allumé (fondateur, 2026-10-27, D5 de maquettes/audit-ecrans) :
+            elles n'apparaissaient qu'au paiement. */}
+        {APPLI ? <RouteCommande position={22} depart={-12} actuelle={0}
+          etapes={[t('ecranCommande.etapePanier'), t('checkout.headerTitle'), t('ecranCommande.etapeSuivi')]} /> : <RouteEtapes actuelle={0} />}
       </BandeauCommande>
 
       <FeuilleCommande>

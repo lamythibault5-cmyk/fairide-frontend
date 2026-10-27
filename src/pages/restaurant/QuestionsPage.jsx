@@ -39,7 +39,10 @@ export default function QuestionsPage() {
   }
 
   const ouvertes = etat?.open || [];
-  const titre = ouvertes.length ? t('questionsCarte.title', { n: ouvertes.length }) : t('questionsCarte.thanksTitle');
+  // « Merci ! » et « Voir la prochaine étape » juste après avoir répondu ; sans rien à répondre, on le dit et on ramène au commerce
+  // (fondateur, 2026-10-27, S4 de maquettes/audit-ecrans : un commerce en ligne ouvrait « Merci ! » sur une page vide).
+  const vientDeRepondre = !!rappel;
+  const titre = ouvertes.length ? t('questionsCarte.title', { n: ouvertes.length }) : vientDeRepondre ? t('questionsCarte.thanksTitle') : t('questionsCarte.rienTitre');
   return (
     // Le bandeau iris dans l'app aussi (fondateur, 2026-10-25, maquettes/une-action/panier-et-site, réponse 9).
     <CadreSite titre={titre} sous={ouvertes.length ? t('questionsCarte.intro', { n: ouvertes.length }) : null} lecture appli>
@@ -58,7 +61,7 @@ export default function QuestionsPage() {
           <p className="small" style={{ margin: 0 }}>{etat.waiting ? t('questionsCarte.updatingText') : t('questionsCarte.noneText')}</p>
           {/* La sortie, en lime et AVANT le rappel des réponses (fondateur, 2026-10-27, comme « Merci pour ta commande ! ») : un petit
               bouton à contour après la liste, qui passait sous le bord de l'écran avec plusieurs réponses. */}
-          <Link to="/dashboard" className="btn-gold gn-action" style={{ marginTop: 14 }}>{t('validerCarte.backToDashboard')}</Link>
+          <Link to="/dashboard" className="btn-gold gn-action" style={{ marginTop: 14 }}>{vientDeRepondre || etat.waiting ? t('validerCarte.backToDashboard') : t('questionsCarte.retourCommerce')}</Link>
           {rappel && (
             <div className="qc-recap"><b>{t('questionsCarte.yourAnswers')}</b>
               <ol>{rappel.map((r) => <li key={r.id}>{r.reponse}</li>)}</ol>

@@ -129,6 +129,13 @@ source spec and `maquettes/landing-iris/landing-iris.html` for the reference pag
    whenever something opens over the page (`[role="dialog"]`: a dish, a sheet, a confirmation, the cookie card; the shop card on
    the map) and come back after; toasts and the site map's + / − sit above the bar. Checked by
    `maquettes/une-action/verifier-panier.mjs` (every popup on every screen with the bar, app and site; 0 overlaps on 2026-10-25).
+   **Screen audit of 2026-10-27** (`maquettes/audit-ecrans/audit-ecrans.html`, founder's answers): no lime on what can't be tapped
+   (Mon compte initials are white on iris), no greyed lime button left (welcome questions, postal code: the button frames the
+   answers; courier delivery swipe without the code: the code boxes are framed and focused), a refused or cancelled order is the
+   Mes commandes band for 3 h (reason, refund, lime « Voir d'autres restaurants », no « Commander à nouveau » on a refused one),
+   the shop's Ta carte shows « Prochaine étape » until the shop is live and signs allergens / professional declaration only on
+   « Tes engagements », Commerce opens on « À compléter » (iris while an order waits), the shop tab is « Carte »
+   (Recherche keeps its pastel tiles: the founder kept them). The audit script `maquettes/audit-ecrans/capturer.mjs` lists every lime element per screen.
 5. **A tap never lands in the middle of a text** (founder, 2026-10-27, test of the test shop: « Signer » opened a long contract
    already scrolled, « Commerce » reopened mid-page). Every tap opens its screen **at the top**, or on the exact thing to do
    — never on an anchor halfway down a long page (`#conformite-carte` was removed for that). A tab, or going back,

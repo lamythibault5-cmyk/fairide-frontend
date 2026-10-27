@@ -261,10 +261,13 @@ export default function Layout() {
   }
   if (APPLI) {
     const accueilListe = location.pathname === '/restaurants' || location.key === 'default';
+    // La fiche d'un commerce a déjà sa croix sur la photo : un ‹ juste au-dessus faisait deux sorties pour un seul geste
+    // (fondateur, 2026-10-27, C5 de maquettes/audit-ecrans/audit-ecrans.html). La marque à la place, comme sur la liste.
+    const ficheCommerce = /^\/restaurants\/[^/]+$/.test(location.pathname);
     return (
       <>
         <div className="appli-barre" ref={barreAppli}>
-          {accueilListe ? (
+          {accueilListe || ficheCommerce ? (
             // La marque n'est pas un lien (fondateur, 2026-10-16) : « / » ramenait sur cette même liste.
             <span className="appli-marque"><BrandMark size={30} /><MotMarque /></span>
           ) : (

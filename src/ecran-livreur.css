@@ -45,7 +45,14 @@
 .ecl-service-txt span { font-size: 13px; opacity: .8; }
 .ecl-inter { position: relative; width: 50px; height: 30px; border-radius: 15px; background: rgba(255, 255, 255, .25); flex: none; transition: background .25s; }
 .ecl-inter::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .35s var(--ecl-ressort); }
-.ecl-service.on .ecl-inter { background: var(--lime); }
+/* Dossier pas encore validé (L5 de maquettes/audit-ecrans, 2026-10-27) : le titre est sur le bandeau, ici le texte et LE bouton
+   lime, sans la carte pointillée du site (.empty). */
+.ecl-attente-dossier { text-align: center; padding: 28px 8px 8px; color: var(--ink-soft); font-size: 14px; }
+.ecl-attente-dossier b { color: var(--ink); }
+.ecl-appeler { display: inline-flex; align-items: center; gap: 6px; flex: none; white-space: nowrap; }
+.ecl-attente-action { display: block; width: 100%; margin-top: 18px; text-align: center; }
+/* Allumé : piste blanche, bouton iris (fondateur, 2026-10-27, L4 de maquettes/audit-ecrans) : le lime est pour « Prendre la course ». */
+.ecl-service.on .ecl-inter { background: #fff; }
 .ecl-service.on .ecl-inter::after { transform: translateX(20px); background: var(--iris); }
 /* Dans la feuille (une course est en main, le bandeau montre son trajet) : sur blanc, l'interrupteur est iris. */
 .ecl-service.sur-blanc { margin: 18px 0 0; border-color: var(--line); color: var(--ink); background: #fff; }
@@ -162,6 +169,7 @@
 .ecl-code-cases input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; opacity: 0; font-size: 16px; caret-color: transparent; }
 .ecl-code-cases > span { height: 56px; border-radius: 14px; border: 1.5px solid var(--line); background: #fff; display: grid; place-items: center; font-size: 26px; font-weight: 800; color: var(--iris); transition: border-color .15s; }
 .ecl-code-cases > span.plein { border-color: var(--iris); animation: ecl-saute .3s var(--ecl-ressort); }
+.ecl-code-cases.manque > span { border-color: var(--iris); box-shadow: 0 0 0 3px var(--iris-tint); }
 .ecl-code-cases:focus-within > span.actuel { border: 2px solid var(--iris); }
 .ecl-code-envoi { margin-top: 10px; }
 

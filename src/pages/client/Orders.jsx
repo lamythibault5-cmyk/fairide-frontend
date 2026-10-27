@@ -347,7 +347,13 @@ export default function Orders() {
   // trois semaines prenait autant de place que celle qu'on attend.
   const estPassee = (o) => ['livre', 'annule', 'refuse'].includes(o.status);
   const enCours = listeAffichee.filter((o) => !estPassee(o));
-  const passees = listeAffichee.filter(estPassee);
+  /* REFUSÉE OU ANNULÉE IL Y A PEU (fondateur, 2026-10-27, C1 de maquettes/audit-ecrans/audit-ecrans.html) : elle tombait tout de
+   * suite dans « Commandes passées », le motif du commerce et le remboursement repliés dans « Détails », et le seul bouton était
+   * « Commander à nouveau »… chez le commerce qui venait de dire non. Tant que rien d'autre n'est en cours et pendant 3 h après
+   * la commande (le serveur n'envoie pas l'heure du refus ; un refus tombe dans les minutes qui suivent), elle EST le bandeau :
+   * ce qui s'est passé, le motif, l'argent, puis un seul bouton lime vers d'autres restaurants. */
+  const arretee = enCours.length ? null : listeAffichee.find((o) => ['refuse', 'annule'].includes(o.status) && Date.now() - o.createdAt < 3 * 3600000) || null;
+  const passees = listeAffichee.filter((o) => estPassee(o) && o !== arretee);
   const quand = (ms) => new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   /* LE BANDEAU DE MES COMMANDES SANS COMMANDE EN COURS (fondateur, 2026-10-24, version A de maquettes/commandes-recherche) : le
@@ -629,7 +635,7 @@ export default function Orders() {
           <button type="button" className="suivi-lien" onClick={() => ouvrirPdf(`${API_BASE}/orders/${o.id}/receipt`, token, t('invoicesClient.downloadFailed'), nomRecu(o))}>{t('invoicesClient.viewInvoice')}</button>
         )}
         {/* Commander à nouveau (USR-9) : une commande close, refaite avec la carte d'aujourd'hui. */}
-        {avecRecommander && ['livre', 'annule', 'refuse'].includes(o.status) && (o.items || []).length > 0 && (
+        {avecRecommander && ['livre', 'annule'].includes(o.status) && (o.items || []).length > 0 && (
           <button type="button" className="btn-outline suivi-recommander" onClick={() => recommander(o)}>{t('orders.reorder')}</button>
         )}
       </div>
@@ -807,10 +813,24 @@ export default function Orders() {
             {!(vedette.status === 'nouveau' && !vedette.paid) && <RouteSuivi status={vedette.status} orderType={vedette.orderType} />}
           </div>
         </header>
+      ) : arretee ? (
+        <header className="ec-bandeau sc-bandeau-suivi">
+          <div className="ec-col">
+            <h1 className="sc-surtitre">{titre}</h1>
+            <div className="ec-haut"><span className="ec-haut-texte"><b>{arretee.restaurantName}</b> · {orderTypeLabel(arretee, t)} · {quand(arretee.createdAt)}</span></div>
+            <h2 className="ec-titre sc-titre-suivi">{t(arretee.status === 'refuse' ? 'orders.suiviRefuse' : 'orders.suiviAnnule', { name: arretee.restaurantName })}</h2>
+          </div>
+        </header>
       ) : bandeauTitre}
       <FeuilleCommande>
         <div className="sc-notifs">{notifications}</div>
         {vedette && corpsEnCours(vedette)}
+        {arretee && (
+          <div className="sc-arret">
+            {arretee.status === 'refuse' ? blocRefus(arretee) : <ProchaineEtape order={arretee} />}
+            <Link to="/restaurants" className="btn-gold sc-arret-action">{t('orders.voirAutres')}</Link>
+          </div>
+        )}
         {autresEnCours.map((o) => (
           <div key={o.id} className="card suivi-carte suivi-carte--bandeau sc-autre-en-cours">
             {enteteSuivi(o)}
@@ -849,7 +869,7 @@ export default function Orders() {
                         <td className="sc-c-statut"><span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span></td>
                         <td className="sc-c-total sc-num">{euros(debite(o))}</td>
                         <td className="sc-c-actions">
-                          {(o.items || []).length > 0 && <button type="button" className="btn-outline btn-sm" onClick={() => recommander(o)}>{t('orders.reorder')}</button>}
+                          {(o.items || []).length > 0 && o.status !== 'refuse' && <button type="button" className="btn-outline btn-sm" onClick={() => recommander(o)}>{t('orders.reorder')}</button>}
                           <button type="button" className="sc-details" aria-expanded={ouvert} aria-controls={ouvert ? `sc-detail-${o.id}` : undefined}
                             onClick={() => basculerDetails(o.id)}>{t('siteCommande.details')}<span className="sc-chevron" aria-hidden="true" /></button>
                         </td>

@@ -523,6 +523,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // components/commerce/CarteCommerce.jsx). Ce qui suit est la console admin (modeAdmin) : l'éditeur complet.
   if (!modeAdmin) {
     return <CarteCommerce restaurant={restaurant} restoId={restoId} loadDashboard={loadDashboard} communs={communs}
+      onConnect={contexteOutlet?.onConnect} connecting={contexteOutlet?.connecting} lectureSeule={!!contexteOutlet?.lectureSeule}
       urlSuggeree={importUrl} onStock={changerStock} onWithdraw={changerRetrait} />;
   }
 

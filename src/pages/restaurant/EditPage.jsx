@@ -88,6 +88,31 @@ export default function EditPage() {
     : Number(r.deliveryFeeDiscount) > 0 ? t('editResto.offerDiscount', { amount: r.deliveryFeeDiscount })
     : t('editResto.offerNone');
 
+  /* « À COMPLÉTER » EN TÊTE (fondateur, 2026-10-27, S2 de maquettes/audit-ecrans) : une fois la mise en ligne finie, ce qui manquait
+     encore (horaires, adresse, infos légales, téléphone) n'était plus qu'un mot orange au milieu d'une trentaine de rangées. Le
+     premier manque prend la carte et le bouton lime, comme la prochaine étape de la mise en ligne ; les autres sont nommés dessous. */
+  const aFaire = [
+    !r.hours && { cle: 'horaires', icone: 'horloge', titre: t('editResto.openingHours') },
+    !adresse && { cle: 'adresse', icone: 'position', titre: t('editResto.address') },
+    legalManquant && { cle: 'legal', icone: 'document', titre: t('editResto.rowLegal') },
+    !r.phone && { cle: 'contact', icone: 'telephone', titre: t('editResto.rowContact') }
+  ].filter(Boolean);
+  const commandeQuiAttend = (orders || []).some((o) => o.status === 'nouveau' && o.paid);
+  const blocACompleter = !etapes && !lectureSeule && aFaire.length > 0 && (
+    <section aria-label={aCompleter} data-prochaine-etape="">
+      <div className="ec-prochaine">
+        <span className="ec-tuile"><Icone nom={aFaire[0].icone} taille={20} /></span>
+        <span className="ec-prochaine-texte">
+          <small>{aCompleter}</small>
+          <b>{aFaire[0].titre}</b>
+          {aFaire.length > 1 && <span>{t('editResto.aCompleterReste', { list: aFaire.slice(1).map((x) => x.titre).join(', ') })}</span>}
+        </span>
+      </div>
+      {/* Une commande attend : sa bande lime au-dessus des onglets est LE prochain clic, le bouton passe en iris (un seul lime). */}
+      <button type="button" className={`ec-bouton ${commandeQuiAttend ? 'ec-bouton--iris' : 'ec-bouton--lime'}`} onClick={() => setOuvert(aFaire[0].cle)}>{t(`editResto.completer_${aFaire[0].cle}`)}</button>
+    </section>
+  );
+
   const Ecran = ouvert ? ECRANS[ouvert] : null;
   /* CE QUI EST VRAIMENT EN LIGNE (audit design 2, 2026-10-19 : la vraie fiche de Maestro disait « En ligne » à côté de
      « 3 étapes faites sur 6 », contrat et paiements encore ouverts). Visible dans la liste ne veut pas dire tout vendre :
@@ -198,19 +223,21 @@ export default function EditPage() {
       {unSeulOnglet ? (
         <>
           {etapes && <EtapesMiseEnLigne etat={etapes} />}
+          {blocACompleter}
           {/* « Gérer mon compte » d'abord, puis les tuiles et la fiche, puis l'argent, le contrat et les outils, le solde, l'aide
               (Account.jsx, `integre`). Pas en « agir pour » : l'équipe n'a rien à faire dans le compte de la personne. */}
           {lectureSeule ? <>{tuiles}{rangees}</> : <Account integre milieu={<>{tuiles}{rangees}</>} />}
         </>
       ) : SITE ? (
         <div className="sp-cadre"><div className="sp-ensemble">
-          <div className="sp-ensemble-etapes">{etapes && <EtapesMiseEnLigne etat={etapes} boutonDansCarte />}{tuiles}</div>
+          <div className="sp-ensemble-etapes">{etapes && <EtapesMiseEnLigne etat={etapes} boutonDansCarte />}{blocACompleter}{tuiles}</div>
           {apercu}
           <div className="sp-ensemble-reste">{rangees}</div>
         </div></div>
       ) : (
         <>
           {etapes && <EtapesMiseEnLigne etat={etapes} />}
+          {blocACompleter}
           {tuiles}
           {rangees}
         </>

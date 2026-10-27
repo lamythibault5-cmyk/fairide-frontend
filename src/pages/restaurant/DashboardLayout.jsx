@@ -38,7 +38,9 @@ const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
 // Questions, Mode d'emploi et Aperçu client aussi depuis le 2026-10-25 (maquettes/une-action/panier-et-site, réponse 9 :
 // « bandeau partout ») : ils ne l'avaient que sur le site. « Tes engagements » depuis le 2026-10-27 (EngagementsPage.jsx).
 const PAGES_BANDEAU = ['/dashboard', '/dashboard/edit', '/dashboard/orders', '/dashboard/menu', '/dashboard/stats',
-  '/dashboard/promotions', '/dashboard/invoices', '/dashboard/questions', '/dashboard/guide', '/dashboard/preview', '/dashboard/engagements'];
+  '/dashboard/promotions', '/dashboard/invoices', '/dashboard/questions', '/dashboard/guide', '/dashboard/preview', '/dashboard/engagements',
+  // Le terminal avait la seule page du commerce sans bandeau ni « ← Commerce » (S9 de maquettes/audit-ecrans, 2026-10-27).
+  '/dashboard/terminal'];
 const SITE = !experienceApp();
 // Dernier commerce ouvert sur cet appareil, pour un compte qui en a plusieurs (shop-411). Un identifiant, rien de plus.
 const CLE_DERNIER_COMMERCE = 'fairide_dernier_commerce';
