@@ -156,7 +156,8 @@ html:not(.appli) .sc-page .sc-codes { margin-top: 22px; padding-top: 6px; border
   /* ---------- Commande confirmée ---------- */
   html:not(.appli) .sc-page.ec-merci { max-width: none; margin: 0; }
   html:not(.appli) .sc-page .ec-merci-bandeau { padding-top: 30px; padding-bottom: 58px; }
-  html:not(.appli) .sc-page .ec-merci-bandeau .ec-col { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  html:not(.appli) .sc-page .ec-merci-bandeau .ec-col { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  html:not(.appli) .sc-page .ec-merci-rond { top: 0; left: 0; }
   html:not(.appli) .sc-page .ec-merci-bandeau .ec-titre { font-size: 34px; }
   html:not(.appli) .sc-page .sc-merci-grille { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; align-items: start; max-width: 880px; margin: 0 auto; }
   html:not(.appli) .sc-page .sc-merci-texte { display: block; min-width: 0; }

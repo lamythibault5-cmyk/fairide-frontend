@@ -20,6 +20,7 @@ import { euros } from '../../prixPlat';
 import GuideIndependant from '../../components/livreur/GuideIndependant';
 import { AvantDeCommencer } from './dossierBlocs';
 import '../../ecran-livreur.css';
+import '../../ecran-general.css'; // le rond du retour (.gn-rond) de la fin express
 import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 
 /* UN SEUL DOSSIER, SUR LE SITE COMME DANS L'APP (fondateur, 2026-10-25). Le site avait son propre dossier en six étapes
@@ -839,7 +840,9 @@ function EcranManques({ d, t, manques: tousManques, statusType, onAller, renvoi 
  * attendre personne. Sinon : « Presque prêt », et seulement ce que l'équipe regarde (d.teamChecks) ou ce qui manque encore.
  * Chaque ligne dit d'où vient son vert. Le compte de versement pas encore actif est un geste du LIVREUR (2026-10-25) : le
  * serveur envoie le dossier sans lui (« Pas maintenant »), mais ne le valide pas sans lui, et personne ne le relance. La puce
- * disait « Stripe vérifie encore ton compte », même quand Stripe n'avait jamais été ouvert ; DossierSuivi montre le bouton. */
+ * disait « Stripe vérifie encore ton compte », même quand Stripe n'avait jamais été ouvert ; DossierSuivi montre le bouton.
+ * COMME « MERCI POUR TA COMMANDE ! » (fondateur, 2026-10-27) : un ‹ en haut à gauche pour en sortir (vers le suivi du dossier,
+ * le Retour d'Android le touche), plus de vélo dans le bandeau, et le bouton lime tenu au-dessus des onglets (ecran-livreur.css). */
 export function FinExpress({ d, t, onCourses, onDossier }) {
   const c = d.courier; const id = c.identity ?? {};
   const valide = c.lifecycleStatus === 'approved';
@@ -859,16 +862,17 @@ export function FinExpress({ d, t, onCourses, onDossier }) {
     ['engagements', t('appli.exLigneEngagements'), 'fait', t('appli.exLigneEngagementsOk')]
   ];
   return (
-    <div className="ecl ecl-page ecl-dossier">
+    <div className="ecl ecl-page ecl-dossier ecl-fin">
       <section className="ecl-bandeau">
-        <div className="ecl-b-haut"><span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span></div>
+        <div className="ecl-b-haut">
+          <button type="button" className="gn-rond" data-retour-natif onClick={onDossier} aria-label={t('appli.retour')} title={t('appli.retour')}><Icone nom="retour" taille={18} /></button>
+          <span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span></div>
         <span className={`ecl-puce-fin${valide ? ' vert' : ''}`}>
           <Icone nom={valide ? 'valider' : 'horloge'} taille={14} />
           {valide ? t('appli.exPuceAuto') : equipe.length ? t('appli.exPuceEquipe', { quoi: equipe.map((k) => t(`appli.exQuoi_${k}`)).join(', ') }) : t('appli.exPuceVersement')}
         </span>
         <h1 className="ecl-b-titre">{valide ? t('appli.exFinVert') : t('appli.exFinPresque')}</h1>
         <p className="ecl-b-sous">{valide ? t('appli.exFinVertS') : !equipe.length && !stripeActif ? t('appli.exFinVersementS') : t('appli.exFinPresqueS')}</p>
-        <RouteVelo position={valide ? 94 : 80} depart={6} />
       </section>
       <div className="ecl-feuille">
         <ul className="ecl-etapes">
@@ -881,7 +885,9 @@ export function FinExpress({ d, t, onCourses, onDossier }) {
             </li>
           ))}
         </ul>
-        <button type="button" className="btn-gold ecl-bouton-dossier" onClick={valide ? onCourses : onDossier}>{valide ? t('appli.exVoirCourses') : t('appli.exVoirDossier')}</button>
+        <div className="ecl-fin-actions">
+          <button type="button" className="btn-gold ecl-bouton-dossier" onClick={valide ? onCourses : onDossier}>{valide ? t('appli.exVoirCourses') : t('appli.exVoirDossier')}</button>
+        </div>
       </div>
     </div>
   );

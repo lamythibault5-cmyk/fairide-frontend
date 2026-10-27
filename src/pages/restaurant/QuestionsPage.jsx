@@ -56,12 +56,14 @@ export default function QuestionsPage() {
         <div className="card">
           <h3 className="qc-merci-titre">{etat.waiting ? t('questionsCarte.updatingTitle') : t('questionsCarte.noneTitle')}</h3>
           <p className="small" style={{ margin: 0 }}>{etat.waiting ? t('questionsCarte.updatingText') : t('questionsCarte.noneText')}</p>
+          {/* La sortie, en lime et AVANT le rappel des réponses (fondateur, 2026-10-27, comme « Merci pour ta commande ! ») : un petit
+              bouton à contour après la liste, qui passait sous le bord de l'écran avec plusieurs réponses. */}
+          <Link to="/dashboard" className="btn-gold gn-action" style={{ marginTop: 14 }}>{t('validerCarte.backToDashboard')}</Link>
           {rappel && (
             <div className="qc-recap"><b>{t('questionsCarte.yourAnswers')}</b>
               <ol>{rappel.map((r) => <li key={r.id}>{r.reponse}</li>)}</ol>
             </div>
           )}
-          <Link to="/dashboard" className="btn-outline btn-sm" style={{ display: 'inline-block', marginTop: 14 }}>{t('validerCarte.backToDashboard')}</Link>
         </div>
       )}
     </CadreSite>

@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
-import { BandeauCommande, FeuilleCommande, VeloMarque } from '../../components/EcranCommande';
+import { BandeauCommande, FeuilleCommande } from '../../components/EcranCommande';
 import InfosRetrait from '../../components/client/InfosRetrait';
 import { formatOrderItem, orderTypeLabel } from '../../orderStatus';
 import { euros } from '../../prixPlat';
@@ -174,8 +174,8 @@ function ResultatCommande({ success }) {
   }[state];
 
   /* COMMANDE PAYÉE : LE MOMENT DE L'APPLICATION. Depuis le 2026-10-16 (« Proposition » de maquettes/tous-les-ecrans/tous-les-ecrans.html,
-     fondateur) : plein écran iris, le vélo de la marque roule jusqu'au commerce qui apparaît, la coche lime saute ; le
-     récapitulatif (commerce, plats, mode, total débité) monte dans la feuille blanche. Mêmes textes, mêmes deux actions ;
+     fondateur) : plein écran iris, la coche lime saute ; le récapitulatif (commerce, plats, mode, total débité) monte dans la feuille blanche. Le vélo qui roulait au-dessus de la coche est parti le
+     2026-10-27 (fondateur : « trop de choses dans l'en-tête »). Mêmes textes, mêmes deux actions ;
      « Voir mes commandes » reste la seule action lime. Les autres états (vérification, attente, échec) restent sobres.
      Sur le site, sur un ordinateur (site-commande.css) : le bandeau va d'un bord à l'autre, la feuille passe en deux colonnes
      — le récapitulatif à gauche, les deux actions dans un cadre à droite. */
@@ -189,20 +189,16 @@ function ResultatCommande({ success }) {
     return (
       <div className="ec-page ec-merci sc-page">
         <BandeauCommande className="ec-merci-bandeau">
-          <svg className="ec-merci-scene" viewBox="0 0 280 120" aria-hidden="true">
-            <line className="ec-merci-route" x1="10" y1="103" x2="270" y2="103" strokeWidth="3" strokeLinecap="round" strokeDasharray="8 8" />
-            <g transform="translate(222 52) scale(1.8)">
-              <g className="ec-merci-commerce" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 9h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9Z" /><path d="M3 9 5 4h14l2 5" /><path d="M9 21v-6h6v6" />
-              </g>
-            </g>
-            <g transform="translate(70 50) scale(1.2)">
-              <g className="ec-merci-velo"><g className="ec-merci-bob"><VeloMarque largeur={82} /></g></g>
-            </g>
-          </svg>
+          {/* LA SORTIE EN HAUT À GAUCHE (fondateur, 2026-10-27 : « trop dur de savoir comment sortir de la page »). Le ‹ des autres
+              écrans de la commande, posé sur le bandeau sans lui ajouter de hauteur. Il mène à la liste en REMPLAÇANT cette page
+              (l'écran d'avant est le paiement, où l'on ne revient pas) ; le Retour d'Android le touche (data-retour-natif). */}
+          <Link to="/restaurants" replace className="ec-rond ec-merci-rond" data-retour-natif aria-label={t('ecranCommande.retourCommerces')} title={t('ecranCommande.retourCommerces')}>
+            <Icone nom="retour" taille={18} />
+          </Link>
           <span className="ec-coche-merci" aria-hidden="true"><Icone nom="valider" taille={30} /></span>
           <h1 className="ec-titre">{view.title}</h1>
-          {orderId && <p className="ec-sous">{t('orderResult.orderNumber', { id: numero ? numero.slice(1) : String(orderId).slice(0, 8) })}</p>}
+          {/* À emporter avec un numéro : il est déjà en grand dans le cadre du comptoir, juste dessous. */}
+          {orderId && !(commande?.orderType === 'pickup' && numero) && <p className="ec-sous">{t('orderResult.orderNumber', { id: numero ? numero.slice(1) : String(orderId).slice(0, 8) })}</p>}
         </BandeauCommande>
         <FeuilleCommande>
           {/* Site sur ordinateur (site-commande.css) : le récapitulatif à gauche, les deux actions à droite. Ailleurs, ces deux
