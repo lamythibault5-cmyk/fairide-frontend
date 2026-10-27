@@ -27,22 +27,32 @@ function estAuDessus(el) {
   return !fenetres.length || fenetres[fenetres.length - 1] === el;
 }
 
+/* LE GEL DU FOND EST COMPTÉ, PAS MÉMORISÉ (fondateur, 2026-10-27 : « après avoir ajouté un plat, je ne peux plus
+ * scroller, même sur l'accueil »). Chaque fenêtre retenait la valeur d'`overflow` trouvée à son ouverture et la remettait
+ * à sa fermeture. Deux fenêtres qui se chevauchent (la fiche d'un plat qui se ferme pendant qu'une confirmation ou une
+ * autre feuille s'ouvre) et se referment dans le désordre : la seconde avait mémorisé « hidden », le remettait en dernier,
+ * et plus rien ne défilait nulle part — changer d'onglet n'y faisait rien, le style reste posé sur <html>. Un compteur
+ * ne dépend pas de l'ordre : le fond est gelé tant qu'au moins une fenêtre est ouverte, libéré quand la dernière part —
+ * le même principe que suspendreRetourIos (natif.js), qui comptait déjà. */
+let fenetresOuvertes = 0;
+
 export default function useDialogue(racine, onFermer) {
   // 1. Ouverture : on gèle le fond, on prend le focus, on retient d'où l'on vient. Dépendances
   //    vides — tout ceci n'arrive qu'une fois, à l'ouverture, et se défait à la fermeture.
   // Le gel du fond se pose sur <html>, pas sur <body> : html porte overflow-x: clip (styles.css), donc un body en
   // overflow: hidden devenait sa propre boîte de défilement, revenait en haut, et la barre latérale collante sautait.
   useEffect(() => {
-    const avant = document.documentElement.style.overflow;
     // Capturé AVANT de déplacer le focus, sinon on mémoriserait la fenêtre elle-même.
     const ouvrant = document.activeElement;
+    fenetresOuvertes += 1;
     document.documentElement.style.overflow = 'hidden';
     racine.current?.focus();
     // iPhone : le balayage retour de WebKit reculerait SOUS la fenêtre ; il se tait tant qu'elle est ouverte (natif.js).
     const rendreRetour = suspendreRetourIos();
     return () => {
       rendreRetour();
-      document.documentElement.style.overflow = avant;
+      fenetresOuvertes = Math.max(0, fenetresOuvertes - 1);
+      if (fenetresOuvertes === 0) document.documentElement.style.overflow = '';
       // `isConnected` : le bouton d'ouverture peut avoir disparu pendant que la fenêtre était
       // ouverte (une ligne supprimée, une liste rechargée). Lui rendre le focus échouerait en
       // silence et laisserait le focus nulle part, ce qui est pire que de ne rien faire.

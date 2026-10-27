@@ -162,6 +162,19 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel, fermetu
       <div className="plat-panneau" ref={panneau} {...glisser}>
       {/* Poignée : sur téléphone, elle dit qu'on peut tirer la fiche vers le bas pour la fermer. */}
       <span className="plat-poignee" aria-hidden="true" />
+      {/* La croix flotte par-dessus la photo quand il y en a une, comme chez Uber. Elle reprend la
+          géométrie du bouton du parcours (EnteteFlux) pour que ce soit le même geste.
+          HORS DE LA ZONE QUI DÉFILE (fondateur, 2026-10-27 : « je me sens perdu, je ne sais pas comment ressortir ») :
+          elle était dans .plat-defile et partait vers le haut avec la photo dès qu'on descendait vers les options,
+          si bien qu'au milieu d'une longue liste de suppléments il ne restait plus aucune sortie visible. */}
+      <button
+        type="button"
+        className={`plat-fermer${imageUrl ? ' plat-fermer--sur-photo' : ''}`}
+        onClick={annuler}
+        aria-label={t('common.close')}
+      >
+        <span aria-hidden="true">×</span>
+      </button>
       <div className="plat-defile" ref={defile}>
         {/* La photo d'abord, en grand : c'est ce qu'on vient voir. Sans photo, pas de cadre vide —
             l'écran commence simplement au nom. */}
@@ -170,16 +183,6 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel, fermetu
             <img {...imgProps(imageUrl, 800, '(max-width: 640px) 100vw, 800px')} alt={item.name} decoding="async" />
           </div>
         )}
-        {/* La croix flotte par-dessus la photo quand il y en a une, comme chez Uber. Elle reprend la
-            géométrie du bouton du parcours (EnteteFlux) pour que ce soit le même geste. */}
-        <button
-          type="button"
-          className={`plat-fermer${imageUrl ? ' plat-fermer--sur-photo' : ''}`}
-          onClick={annuler}
-          aria-label={t('common.close')}
-        >
-          <span aria-hidden="true">×</span>
-        </button>
 
         <div className="plat-corps">
           <h2 className="plat-nom">{item.name}</h2>

@@ -327,9 +327,17 @@ html.appli body :is(.ec-rond, .gn-rond, .bv-bandeau .bv-haut .bv-rond, .bv-iris 
 }
 /* Tant que la page de la feuille n'a pas encore de bandeau (son code se charge : rien que des squelettes), son ‹ est sur du
    blanc : le verre clair des ronds de la fiche, pour qu'il ne disparaisse pas. */
-html.appli body .page-feuille:not(:has(.ecran-bandeau, .ec-bandeau, .ecl-bandeau)) .page-feuille-fermer {
+/* Même verre clair une fois le bandeau défilé sous le ‹ (PageFeuille.jsx pose `page-feuille--sur-blanc`, fondateur, 2026-10-27 :
+   le verre blanc à 18 % disparaissait sur la feuille blanche, et la seule sortie avec lui). Et le ‹ qui flotte sur l'Aide et
+   les écrans généraux quand celui du bandeau est sorti de l'écran (EcranGeneral.jsx) : il est sur le blanc, lui aussi. */
+html.appli body .page-feuille:not(:has(.ecran-bandeau, .ec-bandeau, .ecl-bandeau)) .page-feuille-fermer,
+html.appli body .page-feuille.page-feuille--sur-blanc .page-feuille-fermer,
+html.appli body .site-bande.gn-bandeau > .gn-rond.gn-rond--flottant {
   color: var(--iris); background: var(--verre-brillant-fond); box-shadow: var(--verre-brillant-ombre);
   -webkit-backdrop-filter: var(--verre-brillant-flou); backdrop-filter: var(--verre-brillant-flou);
+}
+html.appli body .site-bande.gn-bandeau > .gn-rond.gn-rond--flottant {
+  position: fixed; z-index: 42; top: calc(10px + env(safe-area-inset-top, 0px)); left: 16px; width: 44px; height: 44px;
 }
 /* Le ‹ rond sur du blanc (barre d'app déconnectée, écrans blancs de l'accueil) : le verre clair des ronds de la fiche, celui
    d'avant le verre fondu (2026-10-27). */
@@ -356,6 +364,7 @@ html.appli body :is(.dashboard-retour, .retour-compte, .cs-retour, .ec-b-retour,
     background: rgba(255, 255, 255, .2); -webkit-backdrop-filter: none; backdrop-filter: none;
   }
   html.appli body :is(.bv-rond, .dashboard-retour, .retour-compte, .cs-retour) { background: #EFEEFA; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html.appli body :is(.page-feuille.page-feuille--sur-blanc .page-feuille-fermer, .site-bande.gn-bandeau > .gn-rond.gn-rond--flottant) { background: #EFEEFA; }
   /* Le verre partout (2026-10-26) : aplats sans flou. */
   html.appli body :is(.liste-filtres .cuisine-chip:not(.active), .ec-pourboire .cuisine-chip:not(.active), .recherche-pastille, .resa-filtres button:not(.actif),
     .co-interrupteur:not(.on), .ec-interrupteur:not(.ec-interrupteur--lime):not(.on), .btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son,

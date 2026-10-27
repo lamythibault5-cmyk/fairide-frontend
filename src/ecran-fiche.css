@@ -196,7 +196,7 @@ html.appli .fiche-appli .flux-entete--flottant .fiche-recherche { box-shadow: 0 
 html.appli body:has(.fiche-appli) .plat-fermer { background: var(--iris); color: #fff; border: 2px solid #fff; box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 0 1px 3px rgba(20, 18, 31, .18); }
 html.appli body:has(.fiche-appli) .plat-fermer:active { transform: scale(.9); }
 /* Sans photo, la croix flottait sur le nom du plat : le contenu commence sous elle. */
-body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
+body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-defile .plat-corps { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
 
 @media (prefers-reduced-motion: reduce) {
   .fiche-appli .fiche-feuille { animation: none; }

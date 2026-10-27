@@ -291,7 +291,7 @@ html.panier-en-colonne .panier-pilule { display: none; }
   html:not(.appli) .plat-photo { max-height: 240px; }
   html:not(.appli) .plat-corps { max-width: none; padding: 20px 24px 8px; }
   html:not(.appli) .plat-pied { border-top: 0; padding: 12px 24px 22px; }
-  html:not(.appli) body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { padding-top: 24px; padding-right: 80px; }
+  html:not(.appli) body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-defile .plat-corps { padding-top: 24px; padding-right: 80px; }
 }
 html:not(.appli) .plat-fermer {
   top: 14px; right: 14px; left: auto; z-index: 2; width: 46px; height: 46px; min-height: 0; padding: 0;
@@ -306,7 +306,7 @@ html:not(.appli) .plat-fermer:focus-visible { outline: none; box-shadow: 0 0 0 2
   html:not(.appli) .plat-poignee { top: 8px; }
   html:not(.appli) .plat-fermer { top: 12px; right: 12px; width: 44px; height: 44px; }
   /* Sans photo, la croix est à droite : le nom garde sa ligne, il lui laisse simplement la place. */
-  html:not(.appli) body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-corps { padding-top: 26px; padding-right: 72px; }
+  html:not(.appli) body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-defile .plat-corps { padding-top: 26px; padding-right: 72px; }
 }
 /* LES SOUS-ÉCRANS DE MON COMPTE ET LES PAGES EN FEUILLE, PLEINE PAGE SUR LE SITE AU TÉLÉPHONE (fondateur, 2026-10-17 : « Mes
    infos, Coordonnées de connexion, Favoris… s'ouvrent à mi-hauteur sur le site ; je veux une pleine page avec le bouton
