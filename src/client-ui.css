@@ -53,23 +53,6 @@
 /* Badge « Prix du comptoir » (PrixComptoir.jsx) : la même pastille iris pâle que « Nouveau », avec l'étiquette de prix. */
 .prix-comptoir { display: inline-flex; align-items: center; gap: 4px; background: rgba(59, 47, 181, .10); color: var(--iris); font-weight: 700; font-size: 12px; line-height: 1.3; padding: 2px 8px; border-radius: var(--radius-pill); white-space: nowrap; }
 .prix-comptoir svg { flex: none; }
-/* Le badge se touche (2026-10-27) : il ouvre son explication. */
-.prix-comptoir[role="button"] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.prix-comptoir[role="button"]:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
-/* La bulle de la première fois : iris (fond blanc ou iris seulement, sans ombre, design.md), « Compris » en lime sur l'iris.
-   En coordonnées de la page (portail dans <body>) : elle défile avec la liste. La flèche pointe le badge (--fleche). */
-.bulle-comptoir { position: absolute; z-index: 90; transform: translateY(-100%); background: var(--iris); color: #fff; border-radius: 16px; padding: 11px 14px 10px; font-size: 14px; line-height: 1.4; animation: bulle-comptoir-entre .25s ease-out both; }
-.bulle-comptoir.dessous { transform: none; }
-.bulle-comptoir::after { content: ""; position: absolute; left: calc(var(--fleche) - 7px); bottom: -6px; width: 14px; height: 14px; background: var(--iris); transform: rotate(45deg); border-radius: 2px; }
-.bulle-comptoir.dessous::after { bottom: auto; top: -6px; }
-.bulle-comptoir button { display: block; margin-top: 4px; padding: 4px 0; background: none; border: 0; color: var(--lime); font: inherit; font-weight: 700; cursor: pointer; }
-@keyframes bulle-comptoir-entre { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .bulle-comptoir { animation: none; } }
-/* Sa fenêtre d'explication (Modale). */
-.feuille-comptoir .prix-comptoir-grand { font-size: 14px; padding: 4px 11px; gap: 6px; }
-.feuille-comptoir-titre { font: 800 22px/1.2 "Inter Tight", Inter, sans-serif; letter-spacing: -.02em; margin: 14px 0 6px; color: var(--ink); }
-.feuille-comptoir-texte { margin: 0 0 18px; font-size: 15px; line-height: 1.45; color: var(--ink-soft); }
-.feuille-comptoir-btn { width: 100%; }
 /* Plus fort que les pastilles de .fiche-meta (plus bas dans ce fichier, 0-2-1 et 0-3-1). */
 .fiche-meta > span.prix-comptoir.prix-comptoir:not([aria-hidden]) { background: rgba(59, 47, 181, 0.09); color: var(--iris); gap: 5px; }
 /* Rangées défilantes et grilles : les anciens réglages compacts (padding 8px, photo 92px, pastilles 9,5px)
