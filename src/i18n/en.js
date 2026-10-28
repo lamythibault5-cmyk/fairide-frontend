@@ -10109,11 +10109,6 @@ export default {
       // « Tu as envie de quoi ? » (EcranEnvies) et le résultat qui en tient compte (EcranCompte), 2026-10-25.
       envTitre: 'What are you in the mood for?',
       envSub: 'Tick what you like: we show you those places first.',
-      envPres: '{n} near you',
-      envUn: '1 place',
-      envN: '{n} places',
-      envCompte: 'places for {liste}',
-      envCompteUn: 'place for {liste}',
       envTout: 'A bit of everything',
       envVoir: 'See my {n} places',
       envVoirUn: 'See my place',

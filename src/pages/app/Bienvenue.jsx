@@ -37,7 +37,7 @@ import InscriptionAppli from './InscriptionAppli';
  *     la plateforme lui prend.
  *   - « TU AS ENVIE DE QUOI ? » REVIENT LE 2026-10-25 (fondateur, version A de maquettes/onboarding-gouts/onboarding-gouts.html :
  *     « les gens qui sentent que c'est fait pour eux restent ») — mais APRÈS le chargement, avec les vraies familles
- *     (specialites.js) qui ont un commerce qui livre chez toi et leur nombre, au lieu de 6 envies larges avant la position. Le
+ *     (specialites.js) qui ont un commerce qui livre chez toi (sans leur nombre depuis le 2026-10-28), au lieu de 6 envies larges avant la position. Le
  *     résultat compte alors « N commerces pour toi », ceux-là d'abord. Rien d'autre depuis le 2026-10-26 (fondateur : « juste pour
  *     le plaisir ») : la page Restaurants ne les lit plus (envies.js). Sauté quand rien ne livre. 6 écrans.
  *   - Le compte est demandé APRÈS avoir vu les commerces (règle 5.1.1 d'Apple), Apple à côté de Google (4.8).
@@ -99,8 +99,8 @@ function trierCommerces(liste, { position, commune, envies }) {
   return items.sort((a, b) => (Number(b.envie) - Number(a.envie)) || (proximite(a) - proximite(b)));
 }
 
-// Les familles proposées à « Tu as envie de quoi ? » : celles des commerces trouvés, avec leur nombre, les plus fournies
-// d'abord (à égalité, l'ordre de la bande des cuisines).
+// Les familles proposées à « Tu as envie de quoi ? » : celles des commerces trouvés, les plus fournies d'abord (à égalité,
+// l'ordre de la bande des cuisines). Le nombre ne sert plus qu'à les ranger : l'écran ne l'affiche plus (2026-10-28).
 function famillesTrouvees(items) {
   const n = {};
   items.forEach(({ r }) => famillesCommerce(r).forEach((f) => { n[f] = (n[f] || 0) + 1; }));
@@ -362,8 +362,8 @@ export default function Bienvenue() {
       contenu = <EcranRecherche commune={position ? '' : communeCp} points={lignesFaites > 1 ? points : []} lignes={lignesRecherche()} faites={lignesFaites} />; break;
     case 'envies':
       contenu = (
-        <EcranEnvies familles={familles} choisies={envies} total={resultats.length} avecPosition={!!position}
-          nPourToi={resultats.filter((x) => x.envie).length} onBasculer={basculerEnvie} onSuite={suivant} />
+        <EcranEnvies familles={familles} choisies={envies} nPourToi={resultats.filter((x) => x.envie).length}
+          onBasculer={basculerEnvie} onSuite={suivant} />
       ); break;
     case 'compte':
       contenu = (
