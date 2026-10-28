@@ -4343,8 +4343,9 @@ export default {
       order1: 'De live opvolging, het detail en het bonnetje van elke bestelling staan in [Mijn bestellingen]({ordersLink}). Voor een probleem met een specifieke bestelling geef je het nummer op in het formulier: zo vinden we ze meteen terug.',
       seeAllAnswers: '← Alle antwoorden bekijken',
       sous: 'De vragen die we het vaakst krijgen, en een formulier om ons te schrijven.',
-      questionsTitle: 'Veelgestelde vragen'
-    },
+      questionsTitle: 'Veelgestelde vragen',
+      writeTitle: 'Schrijf ons',
+      writeSub: 'Een vraag die niet in de lijst staat: we antwoorden per e-mail.'    },
     terms: {
       pageTitle: 'Algemene voorwaarden (gebruik en verkoop) · fairride.be',
       draftWarning: "Versie van 25 oktober 2026. Deze voorwaarden vervangen elke eerdere versie.",

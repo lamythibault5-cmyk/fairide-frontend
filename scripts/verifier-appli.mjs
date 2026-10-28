@@ -56,7 +56,7 @@ const UTILISATEURS = {
 
 // Pages ouvertes pour chaque profil. Les pages du site (aide, légales, « C'est bon »…) y sont exprès : dans l'app, elles
 // doivent s'afficher dans la coquille de l'app, pas dans celle du site.
-const COMMUNES = ['/aide', '/cgv', '/confidentialite', '/mentions-legales', '/cookies', '/classement', '/signaler', '/accessibilite', '/notre-histoire', '/une-page-qui-n-existe-pas'];
+const COMMUNES = ['/aide', '/aide?sujet=titres-restaurant', '/aide?sujet=contact', '/cgv', '/confidentialite', '/mentions-legales', '/cookies', '/classement', '/signaler', '/accessibilite', '/notre-histoire', '/une-page-qui-n-existe-pas'];
 const PAGES = {
   visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', '/equipe/essai', '/preuve/essai', ...COMMUNES],
   client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', '/groupe/essai1234', '/equipe/essai', '/demandes', '/preuve/essai', ...COMMUNES],
@@ -236,7 +236,42 @@ async function examiner(page, { profil, appli }) {
       if (largeur > window.innerWidth + 1 || window.innerWidth > LARGEUR_ECRAN + 1) problemes.push(`page plus large que l'écran (${Math.max(largeur, window.innerWidth)} px pour ${LARGEUR_ECRAN})`);
     }
     return { arrivee: location.pathname + location.search, problemes };
-  }, { profil, appli, LARGEUR_ECRAN: LARGEUR });
+  }, { profil, appli, LARGEUR_ECRAN: LARGEUR }).then(async (r) => (appli ? { ...r, problemes: [...r.problemes, ...(await retoursEnDouble(page))] } : r));
+}
+
+/* JAMAIS DEUX RETOURS À L'ÉCRAN (fondateur, 2026-10-28, capture de l'Aide : le ‹ du bandeau encore à moitié visible sous
+ * l'heure, et celui qui flotte dessous). Le défaut n'apparaît qu'une fois la page un peu défilée : on regarde en haut, puis à
+ * 60, 150 et 400 px. Un retour compte s'il est vraiment vu : dans l'écran, ni caché ni transparent, et c'est lui que le
+ * doigt toucherait en son centre (un bouton recouvert par un autre ne compte pas). La croix des parcours par étapes (Haut,
+ * EcransBienvenue.jsx) n'est pas un retour : ‹ recule d'une étape, × quitte le parcours ; les .bv-rond « supprimer » non plus. */
+const RETOURS = '[data-retour-natif], .gn-rond, .ec-rond, .page-feuille-fermer, .dashboard-retour, .eb-retour, .ec-b-retour, .ecl-b-retour, .retour-compte, .cs-retour, [aria-label="Retour"]';
+async function retoursEnDouble(page) {
+  const problemes = [];
+  /* Avec l'encoche d'un iPhone (59 px en haut, 34 en bas), pas sans : sans elle, le ‹ qui flotte se posait pile sur celui du
+   * bandeau et le cachait, et la vérification ne voyait qu'un retour là où le téléphone en montrait deux. Le temps de cette
+   * seule mesure, pour ne rien changer aux autres. */
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: 59, bottom: 34 } }).catch(() => {});
+  for (const y of [0, 60, 150, 400]) {
+    await page.evaluate((y) => window.scrollTo(0, y), y);
+    await page.waitForTimeout(160);
+    const vus = await page.evaluate((sel) => {
+      const vus = [...new Set(document.querySelectorAll(sel))].filter((el) => {
+        const b = el.getBoundingClientRect();
+        if (!b.width || !b.height || b.bottom <= 0 || b.top >= innerHeight) return false;
+        const s = getComputedStyle(el);
+        if (s.visibility === 'hidden' || Number(s.opacity) < 0.1) return false;
+        const dessus = document.elementFromPoint(b.left + b.width / 2, Math.max(1, b.top + b.height / 2));
+        return !!dessus && (el === dessus || el.contains(dessus));
+      });
+      return vus.map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join('.')}`);
+    }, RETOURS);
+    if (vus.length > 1) { problemes.push(`deux retours à l'écran à ${y} px (${vus.join(', ')})`); break; }
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: {} }).catch(() => {});
+  await cdp.detach().catch(() => {});
+  return problemes;
 }
 
 const serveur = await createServer({ server: { port: 0, strictPort: false }, logLevel: 'silent' });
@@ -245,6 +280,13 @@ const base = serveur.resolvedUrls.local[0].replace(/\/$/, '');
 const navigateur = await lancerNavigateur();
 const resultats = [];
 try {
+  // Un premier chargement à blanc, sans limite courte : Vite regroupe les dépendances à la première page (40 s mesurées sur
+  // une machine chargée, 2026-10-28), et le goto de 30 s de la première page échouait avant d'avoir rien vérifié.
+  {
+    const { ctx, page } = await ouvrir(navigateur, base, { profil: 'visiteur' });
+    await page.goto(base + '/', { timeout: 180000 });
+    await ctx.close();
+  }
   for (const [profil, chemins] of Object.entries(PAGES)) {
     const { ctx, page } = await ouvrir(navigateur, base, { profil });
     for (const chemin of chemins) {

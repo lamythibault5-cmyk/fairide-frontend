@@ -4335,8 +4335,9 @@ export default {
       order1: 'Le suivi en direct, le détail et le reçu de chaque commande sont dans [Mes commandes]({ordersLink}). Pour un problème sur une commande précise, indique son numéro dans le formulaire : c\'est ce qui permet de la retrouver tout de suite.',
       seeAllAnswers: '← Voir toutes les réponses',
       sous: "Les questions qu'on nous pose le plus, et un formulaire pour nous écrire.",
-      questionsTitle: 'Questions fréquentes'
-    },
+      questionsTitle: 'Questions fréquentes',
+      writeTitle: 'Écris-nous',
+      writeSub: "Une question qui n'est pas dans la liste : on te répond par e-mail."    },
     terms: {
       pageTitle: 'Conditions générales (CGU/CGV) · fairride.be',
       draftWarning: "Version du 25 octobre 2026. Ces conditions remplacent toute version antérieure.",

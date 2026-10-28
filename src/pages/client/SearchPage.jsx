@@ -51,8 +51,8 @@ function contient(texte, requete) {
 const sujetsAide = (t) => [
   { to: '/aide?sujet=paiement', titre: t('search.paymentMethods'), sous: t('search.paymentMethodsSub'), mots: 'paiement payer carte bancaire visa mastercard bancontact stripe apple pay google pay solde argent rembourser remboursement' },
   { to: '/aide?sujet=titres-restaurant', titre: t('search.vouchers'), sous: t('search.vouchersSub'), mots: 'titres restaurant ticket cheque repas monizze edenred sodexo pluxee' },
-  { to: '/aide', titre: t('search.deliveryAddress'), sous: t('search.deliveryAddressSub'), mots: 'adresse livraison livrer domicile rue changer' },
-  { to: '/aide', titre: t('search.orderIssue'), sous: t('search.orderIssueSub'), mots: 'probleme souci commande retard erreur manquant froid remboursement suivi livreur' },
+  { to: '/aide?sujet=adresse', titre: t('search.deliveryAddress'), sous: t('search.deliveryAddressSub'), mots: 'adresse livraison livrer domicile rue changer' },
+  { to: '/aide?sujet=commande', titre: t('search.orderIssue'), sous: t('search.orderIssueSub'), mots: 'probleme souci commande retard erreur manquant froid remboursement suivi livreur' },
   { to: '/aide?sujet=bug', titre: t('search.reportBug'), sous: t('search.reportBugSub'), mots: 'bug bogue erreur plante marche pas probleme technique error crash fout probleem werkt niet' },
   { to: '/aide?sujet=avis', titre: t('search.feedback'), sous: t('search.feedbackSub'), mots: 'avis suggestion idee amelioration retour' },
   { to: '/aide', titre: t('search.helpContact'), sous: t('search.helpContactSub'), mots: 'aide contact question support telephone email joindre' }

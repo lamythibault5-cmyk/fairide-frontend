@@ -4334,8 +4334,9 @@ export default {
       order1: 'Live tracking, details and the receipt of each order are in [My orders]({ordersLink}). For a problem with a specific order, give its number in the form: that is what lets us find it right away.',
       seeAllAnswers: '← See all answers',
       sous: 'The questions we get asked most, and a form to write to us.',
-      questionsTitle: 'Frequently asked questions'
-    },
+      questionsTitle: 'Frequently asked questions',
+      writeTitle: 'Write to us',
+      writeSub: "A question that isn't in the list: we answer by e-mail."    },
     terms: {
       pageTitle: 'Terms of use and sale · fairride.be',
       draftWarning: "Version of 25 October 2026. These terms replace any earlier version.",

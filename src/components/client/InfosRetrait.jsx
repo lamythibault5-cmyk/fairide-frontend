@@ -91,7 +91,9 @@ export function AideCommande({ order }) {
     <div className="aide-commande">
       <span className="aide-commande-titre">{t('retrait.helpTitle')}</span>
       {order.restaurantPhone && <a href={`tel:${order.restaurantPhone.replace(/\s/g, '')}`} className="aide-commande-lien"><Icone nom="telephone" taille={16} />{t('retrait.callShop')}</a>}
-      <Link to="/aide" className="aide-commande-lien"><Icone nom="bouee" taille={16} />{t('retrait.helpFairide')}</Link>
+      {/* Depuis une commande, droit à « Un souci avec une commande ? » et au formulaire, amorcé avec la commande en cours
+          (ContactSection.jsx) — pas la liste de toutes les questions (2026-10-28). */}
+      <Link to="/aide?sujet=commande" className="aide-commande-lien"><Icone nom="bouee" taille={16} />{t('retrait.helpFairide')}</Link>
     </div>
   );
 }
