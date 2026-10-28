@@ -80,10 +80,12 @@ const ecranValide = (e) => {
 };
 // Le chargement que le fondateur aime, assez long pour se lire (2026-10-16 : « 2 secondes de plus ») : depuis le 2026-10-27
 // (R1 de maquettes/badge-position/badge-position.html), trois VRAIES lignes, cochées chacune quand c'est fait (la position,
-// la liste, l'ordre), à une seconde au moins l'une de l'autre, puis un temps pour lire la dernière. Avant : deux lignes
+// la liste, l'ordre), à un intervalle minimum l'une de l'autre, puis un temps pour lire la dernière. Avant : deux lignes
 // cochées à heure fixe et 3,8 s d'attente quoi qu'il arrive, après jusqu'à 10 s de GPS sur un bouton « Chargement… ».
-const PAS_RECHERCHE_MS = 1000;
-const FIN_RECHERCHE_MS = 700;
+// UNE SECONDE DE MOINS (fondateur, 2026-10-28) : 2,7 s au moins au lieu de 3,7 s (3 × 1 000 + 700 ms), soit 700 ms entre deux
+// lignes et 600 ms pour lire la dernière.
+const PAS_RECHERCHE_MS = 700;
+const FIN_RECHERCHE_MS = 600;
 // Le GPS est attendu sur l'écran de chargement, 6 s au plus ; ensuite le code postal (demanderPosition, natif.js).
 const DELAI_POSITION_MS = 6000;
 

@@ -192,7 +192,7 @@ behind an « i » (voix.md § 3). **No location screen**: « Trouver mes restaur
 (`autoriserPosition`, natif.js); yes → the loading screen opens at once and waits there for the GPS (6 s at most, then the postal code);
 no → the postal code. The system prompt's only text is ours in Info.plist. **The loading screen has three real lines** (position or
 commune, the number of shops that deliver — « trouvés » without GPS, since the list is then not filtered by radius —, nearest first),
-each ticked when it is really done and at least 1 s after the previous one. **The e-mail button is lime** under Apple and Google.
+each ticked when it is really done and at least 0.7 s after the previous one (2.7 s minimum, 2026-10-28). **The e-mail button is lime** under Apple and Google.
 **Permission primers are one line and one button** (« Continuer », never « Pas maintenant » nor « Autoriser » / « Activer »: Apple
 sometimes rejects a pre-permission screen that offers to delay the question, rule 5.1.1): the notifications primer
 (AmorceNotifications.jsx) is the bell, a title with the reader's gain and one sentence; the courier's « Disponible » switch asks the
