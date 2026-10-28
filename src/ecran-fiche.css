@@ -69,23 +69,6 @@
 /* Les deux ronds du champ (effacer, valider) gardent leurs 34px : la règle générale des 44px de haut en faisait des ovales. */
 .fiche-page.fiche-appli .flux-entete--flottant .fiche-recherche button { min-height: 0; height: 34px; width: 34px; }
 
-/* ---------- Tirée vers le bas, la fiche rentre dans sa carte (TirerFicheVersCarte.jsx, ecranFige.js) ----------
-   Derrière elle, la copie de l'écran d'où elle a été ouverte, dans un calque fixe SOUS toute la page (z-index -1 : il se
-   peint au-dessus du fond du document, sous tout le reste). Les enveloppes de la page deviennent transparentes pendant le
-   geste pour le laisser voir ; la fiche reçoit le fond du document en ligne. Le `transform` du calque en fait le repère
-   des éléments fixes de la copie (barre d'onglets, bandes) : ils restent où ils étaient à l'écran. À la fin, `devant` le
-   met par-dessus tout, le temps que la vraie liste revienne dessous. */
-.fiche-fond-fige { position: fixed; inset: 0; z-index: -1; overflow: hidden; visibility: hidden; pointer-events: none; contain: strict; transform: translateZ(0); }
-.fiche-fond-fige.vu, .fiche-fond-fige.devant { visibility: visible; }
-.fiche-fond-fige.devant { z-index: 2147483000; }
-.fiche-fond-fige.efface { opacity: 0; transition: opacity .18s ease-out; }
-.fiche-fond-copie { position: absolute; left: 0; right: 0; }
-.fiche-fond-copie *, .fiche-fond-copie *::before, .fiche-fond-copie *::after { animation: none !important; transition: none !important; }
-.fiche-fond-voile { position: absolute; inset: 0; background: var(--ink); opacity: 0; }
-html.fiche-tiree body > #root .dashboard-shell, html.fiche-tiree body > #root .dashboard-main, html.fiche-tiree body > #root .page-fade, html.fiche-tiree body > #root .wrap { background: transparent; }
-/* Le panier et la commande en cours appartiennent à la fiche, pas à sa carte : ils s'effacent à mesure qu'on tire. */
-html.fiche-tiree body > #root .panier-pilule, html.fiche-tiree body > #root .suivi-commande { opacity: calc(1 - var(--fiche-tiree-fondu, 0)); }
-
 
 /* ---------- La photo, bord à bord ---------- */
 .fiche-appli .fiche-entete { margin-bottom: 0; }
