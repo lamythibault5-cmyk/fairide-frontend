@@ -33,7 +33,6 @@ import { flushSync } from 'react-dom';
 import { mouvementReduit } from './gestes';
 import { envelopperNavigations, cheminPrecedent } from './i18n/historiqueLangue';
 import { cheminSansPrefixe } from './i18n/routing';
-import { figerEcran } from './ecranFige';
 
 const NOM = 'photo-commerce';
 const NOM_PLAT = 'photo-plat';
@@ -199,11 +198,6 @@ function installerBasDePage() {
   regarder();
 }
 
-/* LA PROCHAINE NAVIGATION PASSE SANS TRANSITION. La fiche tirée vers le bas est déjà rentrée dans sa carte, sur la copie de
- * la liste (TirerFicheVersCarte.jsx) : le recul qui suit ne doit rien rejouer par-dessus. */
-let sansTransition = false;
-export function prochaineSansTransition() { sansTransition = true; }
-
 export function installerTransitionsEcrans(historique) {
   const vt = disponible();
   installerBasDePage();
@@ -244,9 +238,6 @@ export function installerTransitionsEcrans(historique) {
 
     // 2. Une carte qui mène à la fiche d'un commerce, depuis un écran qui n'est pas une fiche : sa photo voyage.
     const versFiche = idFiche(url.pathname);
-    // L'écran tel qu'on le quitte, pour le revoir derrière la fiche qu'on tire vers le bas (ecranFige.js). Avec ou sans
-    // transitions de vue : le geste n'en a pas besoin.
-    if (versFiche && !idFiche(ici) && !mouvementReduit()) figerEcran(lien, cheminSansPrefixe(ici));
     if (vt && versFiche && !idFiche(ici)) {
       const img = lien.querySelector('img');
       photoAller = photoChargee(img) ? { img, id: versFiche } : null;
@@ -264,8 +255,7 @@ export function installerTransitionsEcrans(historique) {
     // cible) depuis l'écran qui porte `fond` : la feuille est déjà descendue (PageFeuille, 230 ms), et ‹ touché juste avant
     // faisait en plus glisser Mon compte de côté, comme un retour d'iOS (fondateur, 2026-10-26, Mes factures).
     const feuille = !!cible?.state?.fond || (sens === 'recule' && !!historique.location.state?.fond);
-    const silence = sansTransition; sansTransition = false;
-    if (silence || !touche || memeEcran || feuille || enCours || mouvementReduit() || document.visibilityState !== 'visible') { faire(); return; }
+    if (!touche || memeEcran || feuille || enCours || mouvementReduit() || document.visibilityState !== 'visible') { faire(); return; }
     lancer(sens, faire);
   });
 }
