@@ -200,7 +200,7 @@ system directly and only a refusal shows a window, with the exact settings path 
 badge is a plain pill again** (PrixComptoir.jsx, 2026-10-28): tapping it opens the restaurant like the rest of the card. The
 tap window and the one-time bubble of 2026-10-27 were removed (the bubble hid the card it explained); a fixed explanation screen
 before the list replaces them: « Repère ce badge. » ([EcranBadge.jsx](../../src/components/EcranBadge.jsx), version A of
-maquettes/badge-ecran), two drawn example cards, never a real shop; app only, every signed-in client, once per device
+maquettes/badge-simple), the badge drawn very large in lime glow on full iris, 17 words, no real shop; app only, every signed-in client, once per device
 (`fairide_badge_explique`), on the list or home, right after the notifications primer (which sits above it). The site keeps the
 hover title only.
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
