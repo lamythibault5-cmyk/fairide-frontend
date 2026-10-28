@@ -315,7 +315,8 @@ try {
       await page.locator('.bv-plein .bv-titre').waitFor({ timeout: 5000 });
       await page.locator('.bv-plein').getByRole('button', { name: 'Fermer' }).click({ timeout: 5000 });
       await page.waitForTimeout(800);
-      const apres = await page.evaluate(() => ({ chemin: location.pathname, plein: !!document.querySelector('.bv-plein') }));
+      const apres = await page.evaluate(() => ({ chemin: location.pathname, plein: !!document.querySelector('.bv-plein:not(.bv-badge-plein)') }));
+      // « Repère ce badge. » (EcranBadge.jsx) s'ouvre une fois sur la liste du client : c'est l'arrivée attendue, pas un écran bloqué.
       if (apres.plein || apres.chemin.startsWith('/dashboard')) r.problemes.push(`la croix ne ramène pas à la vue client (${apres.chemin})`);
     } catch (e) { r.problemes.push(`écrans de l'inscription absents (${e.message.split('\n')[0]})`); }
     resultats.push({ profil: 'sansCommerce', page: nom, ...r });

@@ -197,8 +197,12 @@ each ticked when it is really done and at least 1 s after the previous one. **Th
 sometimes rejects a pre-permission screen that offers to delay the question, rule 5.1.1): the notifications primer
 (AmorceNotifications.jsx) is the bell, a title with the reader's gain and one sentence; the courier's « Disponible » switch asks the
 system directly and only a refusal shows a window, with the exact settings path (PositionRequise.jsx). **The « Prix du comptoir »
-badge can be tapped** (PrixComptoir.jsx, app and site): a small window explains it, and the first badge fully on screen gets a
-one-time iris bubble (`fairide_bulle_comptoir` on the device).
+badge is a plain pill again** (PrixComptoir.jsx, 2026-10-28): tapping it opens the restaurant like the rest of the card. The
+tap window and the one-time bubble of 2026-10-27 were removed (the bubble hid the card it explained); a fixed explanation screen
+before the list replaces them: « Repère ce badge. » ([EcranBadge.jsx](../../src/components/EcranBadge.jsx), version A of
+maquettes/badge-ecran), two drawn example cards, never a real shop; app only, every signed-in client, once per device
+(`fairide_badge_explique`), on the list or home, right after the notifications primer (which sits above it). The site keeps the
+hover title only.
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](../../src/pages/app/InscriptionAppli.jsx)):
 « Continuer avec mon e-mail », and Apple / Google for an account that does not exist yet, no longer go to `/login` — one question

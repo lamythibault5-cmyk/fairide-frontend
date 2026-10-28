@@ -26,7 +26,9 @@ platforms. The customer pays the delivery fee on top, nothing else. **This repo 
   feature branch: stacked PRs got lost), give its link, and say in plain words what a CI / build / signing change does.
   When a change needs the backend too, say which PR to merge first (usually the backend).
 - **A big design change starts as an HTML mockup** in the workspace `maquettes/<topic>/`, with a questionnaire, and is
-  built only after Owen picks (workspace `CLAUDE.md`). Fixes don't need one.
+  built only after Owen picks. Fixes don't need one. **Copy the format of `maquettes/_modele/badge-position.html`** and read
+  `maquettes/LISEZMOI.md` first (Owen, 2026-10-28: mockups made any other way were rejected): numbered sections, real captures
+  of today's screen, 2-4 tappable phones per decision with a measured line each, questionnaire with text to copy.
 - **Never describe a feature as existing without verifying it in the code**, and never trust a number in a doc without
   re-checking it (several in this file were wrong until 2026-10-22).
 
