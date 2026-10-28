@@ -41,7 +41,6 @@ const point = (user) => (user?.lat && user?.lng ? `lat=${user.lat}&lng=${user.ln
 
 export const chargerPres = (user, token) => api(`/demandes/pres?${point(user)}`, { token });
 export const chercher = (q, user, token) => api(`/demandes/recherche?q=${encodeURIComponent(q)}&${point(user)}`, { token });
-export const pourCommerce = (restaurantId, token) => api(`/demandes/commerce/${restaurantId}`, { token });
 export const demander = (corps, token) => api('/demandes', { method: 'POST', token, body: corps });
 export const retirer = (id, token) => api(`/demandes/${id}`, { method: 'DELETE', token });
 export const miennes = (token) => api('/demandes/miennes', { token });

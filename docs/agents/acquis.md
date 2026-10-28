@@ -142,9 +142,9 @@ orderable on Fairride; others say « Moi aussi ». The count is the proof the te
 - **Where**: Search with no result ([CartesDemander.jsx](../../src/components/demandes/CartesDemander.jsx), lime: the only
   action there), the end of the restaurant list (« Il manque ton restaurant ? », outline), a « Demandés près de toi » row under
   « Autour de toi » ([RangeeDemandes.jsx](../../src/components/demandes/RangeeDemandes.jsx), within 10 km of the account,
-  hidden when empty), the « Tu voudrais commander ici ? » block on every real « Carte seule » page
-  ([BlocVeuxCommander.jsx](../../src/components/demandes/BlocVeuxCommander.jsx)), and Compte › Mes demandes (`/demandes`, a
-  sheet page). Website same as the app.
+  hidden when empty) and Compte › Mes demandes (`/demandes`, a sheet page). Website same as the app.
+  **Not on a « Carte seule » page** (founder, 2026-10-28): its « Tu voudrais commander ici ? » block read like « add this
+  restaurant » on a restaurant already on Fairride, and 27 of the 30 public pages showed it. Don't bring it back.
 - **One request = one account with a verified phone, once per restaurant** (backend `demandesRestaurants.js`, migration 093;
   error `REQUEST_PHONE_REQUIRED` sends to `/account?ouvrir=connexion`). Test accounts never count. The restaurant is chosen
   from the OpenStreetMap list (« Lequel ? », [FenetreDemande.jsx](../../src/components/demandes/FenetreDemande.jsx)), with
