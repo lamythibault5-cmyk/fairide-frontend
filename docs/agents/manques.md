@@ -33,8 +33,9 @@ Real, verified as absent on 2026-09-22 — not speculation.
    (`menuCategories.js`), which fills a photo-less dish with a stock image when its name matches the table exactly.
    Production sets it `off` (Vercel variable since 2026-10-20, and `app-android-store.yml` for the Play build). Showing a
    stock photo as a real merchant's dish is a misleading commercial practice: keep it `off` wherever real shops are shown.
-4. **Form labels are associated on most, not all, forms** — 64 of the 77 files containing a
-   `<label>` also use `htmlFor`. Follow the `htmlFor`/`id` pattern when you touch a form.
+4. **Form labels: no longer a gap.** Re-checked on 2026-10-28: all 536 `<label>` in `src/` are tied to their field, either
+   by `htmlFor`/`id` or by wrapping it (`<label>Text <input /></label>`, which is just as valid). The old count here (files
+   without `htmlFor`) mistook wrapping labels for missing ones. Keep one of the two patterns when you add a field.
 5. **Imported prices are platform prices.** Cards imported from Uber Eats or Deliveroo carry the
    marked-up prices merchants set there to absorb a 30% commission — measured at **+39% on average**
    against Snack Bodrum's counter prices. Fairide builds cards at the merchant's **in-store prices** (model of 2026-10-13), so an

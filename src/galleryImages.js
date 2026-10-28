@@ -1,4 +1,5 @@
-import { CATEGORY_HINT_ENTREE, CLASSIC_DESSERTS, CLASSIC_DRINKS, RESTAURANT_TYPES, categoryKind, defaultItemImageOrNull, fullTemplateItems } from './menuCategories';
+import { CATEGORY_HINT_ENTREE, RESTAURANT_TYPES, categoryKind, defaultItemImageOrNull } from './menuCategories';
+import { CLASSIC_DESSERTS, CLASSIC_DRINKS, fullTemplateItems } from './modelesCarte';
 
 /* HORS DU PREMIER CHARGEMENT (audit du 24/10). menuCategories.js importait ce fichier pour galleryForSection(), et comme la
    liste et la fiche des clients importent menuCategories.js, ces 576 adresses de photos (46 Ko, 11 Ko compressés) partaient
