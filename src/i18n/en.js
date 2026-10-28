@@ -10035,7 +10035,7 @@ export default {
       commencer: 'Get started',
       continuer: 'Continue',
       notifMaintenant: "now",
-      notifEcran: "Know when it arrives.",
+      notifEcran: "We’ll tell you when it’s ready.",
       notifExTitre: "Your courier is on the way",
       notifExCorps: "Your order from your pizzeria is coming.",
       lvNotifEcran: "Know when your delivery is ready.",
