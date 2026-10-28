@@ -275,7 +275,9 @@ of absent features precisely so nobody re-invents or over-claims them.
 **Watch file size.** [Auth.jsx](src/pages/Auth.jsx) (1,932 on 2026-10-25, down from 2,049: the courier sign-up fields moved to the dossier), [Account.jsx](src/pages/Account.jsx) (1,382, up from
 1,173 on 2026-10-22) and [MenuPage.jsx](src/pages/restaurant/MenuPage.jsx) (910) are the ones to stop growing (counted
 2026-10-24) — extract a component rather than adding to them. `AdminAccountingPage.jsx` (491) is no longer a
-concern. `menuCategories.js` (3,978) is a data table, not logic — that one is fine.
+concern. `menuCategories.js` (2,488) and `modelesCarte.js` (1,534, the starter menus) are data tables, not logic — those
+are fine. Every visitor preloads `menuCategories.js`: put nothing there that only a business page needs (the starter
+menus went to `modelesCarte.js` on 2026-10-28 for that reason, see its header).
 
 ## Git
 
