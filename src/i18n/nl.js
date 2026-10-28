@@ -10118,11 +10118,6 @@ export default {
       // « Tu as envie de quoi ? » (EcranEnvies) et le résultat qui en tient compte (EcranCompte), 2026-10-25.
       envTitre: 'Waar heb je zin in?',
       envSub: 'Vink aan wat je lekker vindt: die zaken tonen we je eerst.',
-      envPres: '{n} bij jou in de buurt',
-      envUn: '1 zaak',
-      envN: '{n} zaken',
-      envCompte: 'zaken voor {liste}',
-      envCompteUn: 'zaak voor {liste}',
       envTout: 'Een beetje van alles',
       envVoir: 'Mijn {n} zaken bekijken',
       envVoirUn: 'Mijn zaak bekijken',

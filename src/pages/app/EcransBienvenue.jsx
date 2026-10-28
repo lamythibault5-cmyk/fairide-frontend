@@ -355,31 +355,38 @@ export function EcranCodePostal({ cp, commune, onCp, onSuite }) {
 
 /* Le cercle de livraison : toi au centre, la limite autour, un point par commerce qui livre chez toi, à sa vraie
  * place (à l'échelle du plus grand rayon). Sans position (code postal seulement), les points sont posés en spirale :
- * le cercle dit alors « il y a des commerces autour », pas « ils sont exactement là ». */
-export function Cercle({ points, anime, petit }) {
+ * le cercle dit alors « il y a des commerces autour », pas « ils sont exactement là ».
+ * `progres` (0 à 1) : un anneau lime sur la limite, qui se remplit à chaque ligne cochée du chargement (fondateur, 2026-10-28,
+ * version A de maquettes/chargement-accueil/chargement-accueil.html). Les points arrivent tous en moins d'une seconde : à 0,18 s
+ * l'un, 9 sur 20 seulement avaient le temps de se montrer avant l'écran suivant. */
+const TOUR_CERCLE = 2 * Math.PI * 44;
+export function Cercle({ points, anime, petit, progres = null }) {
   return (
     <svg viewBox="0 0 100 100" className={`bv-cercle${anime ? ' anime' : ''}${petit ? ' petit' : ''}`} aria-hidden="true">
       <circle cx="50" cy="50" r="44" className="zone" />
       <circle cx="50" cy="50" r="44" className="bord" />
+      {progres !== null && <circle cx="50" cy="50" r="44" className="anneau" strokeDasharray={TOUR_CERCLE} style={{ strokeDashoffset: TOUR_CERCLE * (1 - progres) }} />}
       {anime && <circle cx="50" cy="50" r="44" className="onde" />}
-      {points.map((p, k) => <circle key={k} cx={p.x} cy={p.y} r="3.2" className="pt" style={{ animationDelay: `${0.25 + k * 0.18}s` }} />)}
+      {points.map((p, k) => <circle key={k} cx={p.x} cy={p.y} r="3.2" className="pt" style={{ animationDelay: `${k * 0.045}s` }} />)}
       <circle cx="50" cy="50" r="4.5" className="moi" />
     </svg>
   );
 }
 
 // Trois lignes (Bienvenue.jsx, lignesRecherche) : cochées quand c'est vraiment fait (`faites`), celle en cours tourne.
+// Le texte d'une ligne qui change (« Ta position » → « Position trouvée ») réapparaît en fondu à la même place (`key`) : la ligne
+// ne bouge pas, le bloc a une largeur fixe (styles.css, .bv-etapes).
 export function EcranRecherche({ commune, points, lignes, faites }) {
   const { t } = useLanguage();
   return (
     <>
       <div className="bv-grandit" />
-      <Cercle points={points} anime />
+      <Cercle points={points} anime progres={faites / lignes.length} />
       <h1 className="bv-titre bv-centre" style={{ fontSize: 26 }} aria-live="polite">{commune ? t('appli.calcTitre', { c: commune }) : t('appli.calcTitrePosition')}</h1>
       <ul className="bv-etapes" aria-live="polite">
         {lignes.map((txt, k) => (
           <li key={k} className={k < faites ? 'fait' : k === faites ? 'en-cours' : ''}>
-            <span className="bv-coche" aria-hidden="true"><Icone nom="valider" taille={13} /></span>{txt}
+            <span className="bv-coche" aria-hidden="true"><Icone nom="valider" taille={13} /></span><span key={txt} className="bv-etape-txt">{txt}</span>
           </li>
         ))}
       </ul>
@@ -390,37 +397,33 @@ export function EcranRecherche({ commune, points, lignes, faites }) {
 
 /* « TU AS ENVIE DE QUOI ? » (fondateur, 2026-10-25, version A de maquettes/onboarding-gouts/onboarding-gouts.html). Après le
  * chargement, juste avant le résultat : les familles qui ont un commerce qui livre chez toi (`familles` : [clé, nombre], les plus
- * fournies d'abord, calculées dans Bienvenue.jsx), avec le dessin de la bande des cuisines et leur nombre. Plusieurs choix ; le
- * bouton compte en direct. Rien de coché : « Un peu de tout ». Une famille sans commerce n'est jamais proposée : cocher pour
- * trouver zéro serait le contraire du but (que l'appli ait l'air faite pour la personne). */
-export function EcranEnvies({ familles, choisies, total, nPourToi, avecPosition, onBasculer, onSuite }) {
-  const { t, locale } = useLanguage();
-  const noms = choisies.map((cle) => libelleFamille(cle, t, { court: true }));
+ * fournies d'abord, calculées dans Bienvenue.jsx), avec le dessin de la bande des cuisines. Plusieurs choix ; le bouton compte
+ * en direct. Rien de coché : « Un peu de tout ». Une famille sans commerce n'est jamais proposée : cocher pour trouver zéro serait
+ * le contraire du but (que l'appli ait l'air faite pour la personne).
+ * Plus aucun nombre sous les tuiles ni au-dessus du bouton depuis le 2026-10-28 (fondateur, maquettes/chargement-accueil, E2) :
+ * le dessin et le nom seuls, seul le bouton compte. La ligne du bas passait en plus sur la dernière rangée de tuiles. */
+export function EcranEnvies({ familles, choisies, nPourToi, onBasculer, onSuite }) {
+  const { t } = useLanguage();
   return (
     <>
       <h1 className="bv-titre">{t('appli.envTitre')}</h1>
       <p className="bv-sous">{t('appli.envSub')}</p>
       <Feuille>
         <div className="bv-envies">
-          {familles.map(([cle, n]) => {
+          {familles.map(([cle]) => {
             const on = choisies.includes(cle);
             return (
               <button key={cle} type="button" className={`bv-envie${on ? ' on' : ''}`} aria-pressed={on} onClick={() => onBasculer(cle)}>
                 {on && <span className="bv-envie-coche"><Icone nom="valider" taille={12} /></span>}
                 <img src={illustrationCuisine(famille(cle)?.illustration)} alt="" width="52" height="52" decoding="async" draggable="false" />
                 <b>{libelleFamille(cle, t, { court: true })}</b>
-                <small>{avecPosition ? t('appli.envPres', { n }) : n === 1 ? t('appli.envUn') : t('appli.envN', { n })}</small>
               </button>
             );
           })}
         </div>
         <div className="bv-grandit" />
         <div className="bv-envies-bas">
-          <p className="bv-envies-compte" aria-live="polite">
-            {choisies.length ? <><b>{nPourToi}</b> {t(nPourToi === 1 ? 'appli.envCompteUn' : 'appli.envCompte', { liste: listeEt(noms, locale) })}</>
-              : avecPosition ? t(total === 1 ? 'appli.trouvesUn' : 'appli.trouves', { n: total }) : null}
-          </p>
-          <button type="button" className="bv-btn btn-gold" onClick={onSuite}>
+          <button type="button" className="bv-btn btn-gold" onClick={onSuite} aria-live="polite">
             {!choisies.length ? t('appli.envTout') : nPourToi === 1 ? t('appli.envVoirUn') : t('appli.envVoir', { n: nPourToi })}
           </button>
         </div>

@@ -10177,11 +10177,6 @@ export default {
       // « Tu as envie de quoi ? » (EcranEnvies) et le résultat qui en tient compte (EcranCompte), 2026-10-25.
       envTitre: 'Tu as envie de quoi ?',
       envSub: 'Coche ce que tu aimes : on te montre ces commerces en premier.',
-      envPres: '{n} près de toi',
-      envUn: '1 commerce',
-      envN: '{n} commerces',
-      envCompte: 'commerces pour {liste}',
-      envCompteUn: 'commerce pour {liste}',
       envTout: 'Un peu de tout',
       envVoir: 'Voir mes {n} commerces',
       envVoirUn: 'Voir mon commerce',
