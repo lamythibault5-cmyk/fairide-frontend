@@ -195,7 +195,7 @@ commune, the number of shops that deliver — « trouvés » without GPS, since 
 each ticked when it is really done and at least 0.7 s after the previous one (2.7 s minimum, 2026-10-28). **The e-mail button is lime** under Apple and Google.
 **Permission primers are one line and one button** (« Continuer », never « Pas maintenant » nor « Autoriser » / « Activer »: Apple
 sometimes rejects a pre-permission screen that offers to delay the question, rule 5.1.1): the notifications primer
-(AmorceNotifications.jsx) is the bell, a title with the reader's gain and one sentence; the courier's « Disponible » switch asks the
+(AmorceNotifications.jsx, version B of maquettes/notifs-badge, 2026-10-28) has the badge screen's shape: full iris, a lock-screen notification drawn in the middle with the real server text (pushFile.js) and the same lime halo, a title; the courier's « Disponible » switch asks the
 system directly and only a refusal shows a window, with the exact settings path (PositionRequise.jsx). **The « Prix du comptoir »
 badge is a plain pill again** (PrixComptoir.jsx, 2026-10-28): tapping it opens the restaurant like the rest of the card. The
 tap window and the one-time bubble of 2026-10-27 were removed (the bubble hid the card it explained); a fixed explanation screen
