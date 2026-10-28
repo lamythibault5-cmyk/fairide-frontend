@@ -10044,7 +10044,7 @@ export default {
       commencer: 'Beginnen',
       continuer: 'Verder',
       notifMaintenant: "nu",
-      notifEcran: "Weet wanneer hij aankomt.",
+      notifEcran: "We laten je weten wanneer het klaar is.",
       notifExTitre: "Je koerier is onderweg",
       notifExCorps: "Je bestelling van je pizzeria komt eraan.",
       lvNotifEcran: "Weet wanneer je rit klaarligt.",

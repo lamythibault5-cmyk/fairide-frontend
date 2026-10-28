@@ -10103,7 +10103,7 @@ export default {
       commencer: 'Commencer',
       continuer: 'Continuer',
       notifMaintenant: "maintenant",
-      notifEcran: "Sache quand il arrive.",
+      notifEcran: "On te prévient quand c’est prêt.",
       notifExTitre: "Ton livreur est en route",
       notifExCorps: "Ta commande de ta pizzeria arrive.",
       lvNotifEcran: "Sache quand ta course est prête.",
