@@ -8,6 +8,7 @@ import { CHEMIN_LISTE } from '../../resumeCarte';
 import { experienceApp, demanderPosition, autoriserPosition, connexionFournisseur } from '../../natif';
 import { communeDepuisCodePostal, communeRingDistance, haversineDistanceKm } from '../../menuCategories';
 import { ecrireBienvenue, ecrireReprise, lireReprise, lireParcoursFait, ecrireParcoursFait } from '../../bienvenue';
+import { memoriserLangue } from '../../i18n/routing';
 import { repondAuxEnvies } from '../../envies';
 import { FAMILLES, famillesCommerce } from '../../specialites';
 import {
@@ -120,7 +121,7 @@ function pointsDuCercle(items, position) {
 }
 
 export default function Bienvenue() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, loginWithGoogle, loginWithApple } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -201,6 +202,14 @@ export default function Bienvenue() {
   // Arrivé à l'écran du compte (ou à l'inscription par Apple / Google) : l'accueil est fait, il ne sera pas rejoué.
   useEffect(() => {
     if ((ecran === 'compte' || ecran === 'inscription') && role) ecrireParcoursFait({ role, familles: envies, position, cp });
+    /* LA LANGUE DE L'ACCUEIL EST UN CHOIX (fondateur, 2026-10-28 : « la langue passe en anglais sur l'écran des notifications »).
+     * L'app s'ouvre en français tant que rien n'est retenu sur le téléphone, et à la connexion AuthContext met la page dans la
+     * langue du COMPTE quand le téléphone n'en a pas retenu (audit AO-23, pensé pour fairride.be). Un compte existant resté en
+     * anglais, retrouvé par Apple, Google ou l'e-mail, faisait donc passer en anglais l'écran juste après, celui des
+     * notifications, alors que tout l'accueil venait d'être lu en français, avec le sélecteur de langue sous les yeux. Arrivé ici,
+     * la langue retenue est celle de l'accueil : c'est elle que garde la page, et le compte la prend (AuthContext). Celui qui
+     * touche « J'ai déjà un compte » dès le premier écran n'est pas concerné : il n'a rien lu, son compte décide encore. */
+    if (ecran === 'compte' || ecran === 'inscription') memoriserLangue(language);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ecran, role]);
 
