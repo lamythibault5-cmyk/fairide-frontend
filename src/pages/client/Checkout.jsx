@@ -796,10 +796,6 @@ export default function Checkout() {
             {fulfillmentType === 'pickup' && (
               <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.pickupSelf', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
             )}
-            {/* L'heure de retrait estimée par le serveur (temps de préparation du commerce, ou l'heure programmée), dès le devis. */}
-            {fulfillmentType === 'pickup' && devisValide?.estimatedDeliveryAt && (
-              <p className="small checkout-pret-vers"><Icone nom="horloge" taille={16} className="icone-texte" />{' '}{t('retrait.readyAt', { time: new Date(devisValide.estimatedDeliveryAt).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })}</p>
-            )}
             {/* LE COMMERCE CHOISIT LE MODE DE PAIEMENT A EMPORTER (modeEmporter, pose par main) :
                 en ligne seulement, sur place seulement, ou au choix du client. Quand il n'y a pas de
                 choix a faire, on l'annonce au lieu d'afficher une bascule a une seule option — c'est
@@ -840,7 +836,12 @@ export default function Checkout() {
               <div className="field">
                 <span className="titre-groupe ec-section" id="checkout-quand-label">{t(fulfillmentType === 'pickup' ? 'checkout.whenLabelPickup' : 'checkout.whenLabel')}</span>
                 <div className="ec-options" role="group" aria-labelledby="checkout-quand-label">
+                  {/* L'HEURE SOUS « DÈS QUE POSSIBLE » (fondateur, 2026-10-29, maquettes/delai-estime, version P1) : celle que le
+                      serveur calcule dès le devis (backend geocode.estimateDeliveryMinutes) — « Chez toi vers 12:52 » en
+                      livraison, « Prête vers 12:36 » à emporter (avant : une ligne à part, pour l'à emporter seulement). Une
+                      heure programmée a sa propre carte : ici seulement pour « dès que possible ». */}
                   <OptionCommande on={!scheduleEnabled} icone={fulfillmentType === 'pickup' ? 'sac' : 'velo'} titre={t('checkout.whenAsap')}
+                    sous={!scheduleEnabled && devisValide?.estimatedDeliveryAt ? t(fulfillmentType === 'pickup' ? 'retrait.readyAt' : 'checkout.arrivesAt', { time: new Date(devisValide.estimatedDeliveryAt).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) }) : undefined}
                     onClick={() => { setScheduleEnabled(false); setScheduleDate(''); setScheduleTime(''); }} />
                   {/* Commerce fermé par son interrupteur (« Fermer jusqu'à ce que je rouvre », invisible des clients) : le serveur
                       refuse toute commande, programmée comprise (routes/orders.js) ; « Programmer » n'est donc pas proposé
