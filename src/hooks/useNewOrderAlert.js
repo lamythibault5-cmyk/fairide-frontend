@@ -71,11 +71,12 @@ export function playChime(ctx, notes = [880, 1108.73, 1318.51], dest = ctx.desti
 //   - alarme   : deux tons alternés et répétés, pour un comptoir où l'on ne doit RIEN rater.
 //   - marimba  : arpège en bois, chaleureux, cinq notes qui montent puis redescendent ;
 //   - velo     : la sonnette d'un vélo, deux « dring » — c'est le son de Fairide ;
-//   - melodie  : une petite ritournelle de quatre notes, comme un jingle de bonne nouvelle.
-//   - urgent   : (2026-10-20, celle par défaut) deux tons aigus alternés, 2 s, en onde carrée presque à pleine échelle. Les
+//   - melodie  : une petite ritournelle de quatre notes, comme un jingle de bonne nouvelle. Celle par défaut depuis le
+//                2026-10-28, rendue aussi forte que « urgent » (voir ton()).
+//   - urgent   : (2026-10-20, celle par défaut jusqu'au 2026-10-28) deux tons aigus alternés, 2 s, en onde carrée presque à pleine échelle. Les
 //                petits haut-parleurs (terminal Goodcom, téléphone) rendent le mieux entre 1,5 et 3 kHz : c'est là que
 //                l'oreille entend le plus fort à puissance égale. Les autres sonneries plafonnaient vers -17 dB.
-export const SONNERIES = ['urgent', 'carillon', 'cloche', 'marimba', 'velo', 'melodie', 'alarme'];
+export const SONNERIES = ['melodie', 'urgent', 'carillon', 'cloche', 'marimba', 'velo', 'alarme'];
 // Un bip tenu (attaque et relâche de 10 ms contre les clics), là où note() décroît comme une cloche.
 function bip(ctx, { freq, start, duree, volume, dest }) {
   const osc = ctx.createOscillator();
@@ -85,6 +86,33 @@ function bip(ctx, { freq, start, duree, volume, dest }) {
   gain.gain.setValueAtTime(0, start);
   gain.gain.linearRampToValueAtTime(volume, start + 0.01);
   gain.gain.setValueAtTime(volume, start + duree - 0.01);
+  gain.gain.linearRampToValueAtTime(0, start + duree);
+  osc.connect(gain).connect(dest);
+  osc.start(start);
+  osc.stop(start + duree + 0.02);
+}
+// Une note de la « petite mélodie », rendue bien plus forte (fondateur, 2026-10-28 : « l'urgente est horrible, la petite
+// mélodie me plaît, mais aussi fort » ; puis ramenée un cran plus bas à l'écoute, voir `volume`). L'ancienne version plafonnait à 0,3 et s'éteignait aussitôt (note()), entre
+// 330 et 1 320 Hz, soit 27 dB sous « urgent » (pondération A). Ici chaque note est TENUE puis relâchée en 60 ms, sur une
+// sinusoïde « à sommet plat » : le fondamental plus un sixième de l'harmonique 3, en phase, aplatit la crête (0,866 au lieu
+// de 1). On peut donc monter plus haut avant la pleine échelle, presque autant d'énergie qu'une onde carrée, sans sa dureté.
+// Mesuré à 2-3 dB sous « urgent » (pondération A, avec ou sans la coupure des basses d'un petit haut-parleur) ; un timbre
+// d'orgue (harmoniques 1, 2, 3) restait 5-6 dB sous, la même mélodie une octave plus haut gagnait 1 dB mais sifflait.
+let ondePlate = null;
+function ton(ctx, { freq, start, duree, dest }) {
+  if (ondePlate?.ctx !== ctx) {
+    ondePlate = { ctx, onde: ctx.createPeriodicWave(new Float32Array(4), Float32Array.of(0, 1, 0, 1 / 6), { disableNormalization: true }) };
+  }
+  // Crête 0,46 et non 0,92 (fondateur, 2026-10-29, à l'écoute : « trop fort ») : 6 dB sous le maximum possible, soit
+  // environ 9 dB sous « urgent » — encore 18 dB au-dessus de l'ancienne mélodie.
+  const volume = 0.46 / 0.866;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.setPeriodicWave(ondePlate.onde);
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(volume, start + 0.01);
+  gain.gain.setValueAtTime(volume, start + duree - 0.06);
   gain.gain.linearRampToValueAtTime(0, start + duree);
   osc.connect(gain).connect(dest);
   osc.start(start);
@@ -120,10 +148,12 @@ export function jouerSonnerie(ctx, nom = 'carillon', dest = ctx.destination) {
     return;
   }
   if (nom === 'melodie') {
-    [[659.25, 0.16], [783.99, 0.16], [880, 0.16], [1318.5, 0.55]].forEach(([f, dur], i) => {
-      note(ctx, { freq: f, start: t0 + i * 0.17, duree: dur, type: 'sine', volume: 0.22, dest });
-      note(ctx, { freq: f / 2, start: t0 + i * 0.17, duree: dur, type: 'triangle', volume: 0.08, dest });
-    });
+    // Jouée deux fois : 2 s de son par sonnerie, comme « urgent », pour la même présence sur les 4 s d'un cycle.
+    for (const reprise of [0, 1]) {
+      [[659.25, 0.16], [783.99, 0.16], [880, 0.16], [1318.5, 0.5]].forEach(([f, dur], i) => {
+        ton(ctx, { freq: f, start: t0 + reprise + i * 0.17, duree: dur, dest });
+      });
+    }
     return;
   }
   if (nom === 'cloche') {
@@ -151,7 +181,7 @@ function loadRepetitions() {
   try { const v = Number(localStorage.getItem(REPETITIONS_KEY)); return localStorage.getItem(REPETITIONS_KEY) !== null && REPETITIONS.includes(v) ? v : 0; } catch { return 0; }
 }
 function loadSonnerie() {
-  try { const v = localStorage.getItem(SONNERIE_KEY); return SONNERIES.includes(v) ? v : 'urgent'; } catch { return 'urgent'; }
+  try { const v = localStorage.getItem(SONNERIE_KEY); return SONNERIES.includes(v) ? v : 'melodie'; } catch { return 'melodie'; }
 }
 
 // Notification système. Par le service worker d'abord : Chrome sur Android refuse `new Notification()` (« Illegal
