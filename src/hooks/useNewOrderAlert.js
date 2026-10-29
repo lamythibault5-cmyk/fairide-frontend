@@ -333,11 +333,24 @@ export default function useNewOrderAlert(orders, ready) {
   const [audioBloque, setAudioBloque] = useState(false);
   const debloquerAudio = useCallback(() => { ctxRef.current?.resume?.().catch(() => {}); }, []);
 
+  /* SON SUSPENDU EN COURS DE SERVICE (fondateur, 2026-10-28, essai sur le Goodcom : la 3e commande n'a pas sonné, puis
+   * changer de sonnerie l'a fait revenir). Le navigateur peut suspendre un contexte qui jouait (écran qui s'assombrit, autre
+   * fenêtre par-dessus, « interrupted » chez Safari) ; ring() se taisait alors jusqu'au prochain toucher. Une page déjà
+   * touchée une fois depuis son chargement a le droit de le relancer sans geste (activation persistante de Chrome), et
+   * l'app aussi (Capacitor n'exige aucun geste) : on le relance, puis on sonne. Jamais touchée : resume() échoue, rien ne
+   * change, l'écran « Touche l'écran » (SonTerminal.jsx) ou la pastille du bandeau restent le recours.
+   * Une seule demande à la fois : sans activation, Chrome laisse resume() en attente au lieu de le refuser, et chaque
+   * sonnerie manquée (toutes les 4 s) se serait jouée d'un coup au premier toucher. */
+  const repriseRef = useRef(false);
   const ring = useCallback(() => {
     if (!soundEnabled) return;
     const ctx = ctxRef.current;
-    if (!ctx || ctx.state !== 'running') return;
-    try { jouerSonnerie(ctx, sonnerie, gainRef.current || ctx.destination); } catch { /* contexte audio fermé par le navigateur */ }
+    if (!ctx || ctx.state === 'closed') return;
+    const jouer = () => { try { jouerSonnerie(ctx, sonnerie, gainRef.current || ctx.destination); } catch { /* contexte audio fermé par le navigateur */ } };
+    if (ctx.state === 'running') { jouer(); return; }
+    if (repriseRef.current) return;
+    repriseRef.current = true;
+    ctx.resume().then(() => { if (ctx.state === 'running') jouer(); }).catch(() => {}).finally(() => { repriseRef.current = false; });
   }, [soundEnabled, sonnerie]);
 
   // Sonne + notifie à chaque NOUVELLE commande, pas à chaque rafraîchissement. prevIdsRef démarre à
