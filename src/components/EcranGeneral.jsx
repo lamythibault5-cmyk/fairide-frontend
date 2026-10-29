@@ -59,7 +59,9 @@ export function BandeauGeneral({ titre, sous, marque = false, icone = null, reto
       <div className="site-col site-col--lecture">
         {(retour || retourAppli || marque || icone) && (
           <div className="gn-haut" ref={haut}>
-            {(retour || retourAppli) && rond('gn-rond')}
+            {/* Celui qui flotte le remplace, il ne s'y ajoute pas : à 60 px du haut, le ‹ du bandeau est encore à moitié
+                visible sous l'heure, et l'Aide en montrait deux l'un sur l'autre (fondateur, 2026-10-28). */}
+            {(retour || retourAppli) && rond(horsEcran ? 'gn-rond gn-rond--cache' : 'gn-rond')}
             {/* Avec un retour, la tuile s'efface : deux pastilles côte à côte se disputaient le coin. */}
             {marque && !retour && !retourAppli && <span className="gn-tuile gn-tuile--marque" aria-hidden="true"><BrandMark size={28} tile={false} color="#C8F03C" animer={false} /></span>}
             {icone && !retour && !retourAppli && <span className="gn-tuile" aria-hidden="true"><Icone nom={icone} taille={20} /></span>}

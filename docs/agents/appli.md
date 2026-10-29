@@ -257,6 +257,14 @@ Not yet tried on a real Goodcom: that the print service accepts another app than
 375×667 in app mode for four profiles against a mocked backend (real captured responses in `scripts/verifier-appli-donnees.json`)
 and fails on any website chrome, a crashed page, or a full-screen screen that scrolls. Needs Chrome or Edge installed. A new
 app page goes into its `PAGES`; a page crashing for lack of data gets a better mock, it is never removed from the list.
+**Never two back buttons on screen (founder, 2026-10-28)**: `check:app` scrolls each page to 0, 60, 150 and 400 px and fails
+when two back controls are visible and tappable at once (`retoursEnDouble`; the × of a step flow is not a back), with an iPhone
+notch emulated (59 / 34 px, CDP `setSafeAreaInsetsOverride`): without it the floating ‹ sat exactly on the band's and the bug
+hid. The Aide and Valider ma carte showed two: the band's ‹ half under the clock and the floating copy (EcranGeneral.jsx now
+hides the band's while the copy floats).
+**In the app, one help question = one screen** (same day): `/aide` is a list of rows, each opens `/aide?sujet=<answer>` (the
+question as the title, the answer, then the contact form); a link to an answer (Mon compte, Recherche, an order's « Aide
+Fairride ») lands on that screen, never mid-page on an unfolded `<details>`. The website keeps its one folding page.
 **The bottom tab bar is anchored to the bottom edge** (founder, 2026-10-21, decision 11: it floated above the bottom on an
 Android phone): under 900 px `.dashboard-sidebar` is `bottom: 0` with `padding-bottom: max(6px, var(--bas-ecran))`,
 on the website, the home-screen app and the native app alike, `--hauteur-onglets` 74 px. `--bas-ecran` is the system inset minus
