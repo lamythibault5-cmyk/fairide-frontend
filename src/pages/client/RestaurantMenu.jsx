@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useCart } from '../../context/CartContext';
 import { horsZoneLivraison, distanceLivraisonKm, tarifLivraison, eurosCourts } from '../../livraison';
+import { fourchette, minutesLivraison, pointDuClient, prepAnnoncee } from '../../delaiEstime';
 import { normaliserRecherche } from '../../normaliserRecherche';
 import Icone from '../../components/Icone';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
@@ -699,11 +700,18 @@ export default function RestaurantMenu({ id }) {
       : t('restaurantMenu.feeFrom', { amount: eurosCourts(tarifLivraison(restaurant).depart) });
   /* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
      forfaitaire côté client : le montant exact dépend de la distance et se calcule au
-     serveur, exactement comme l'annonce déjà le paiement. Aucun délai d'arrivée n'y figure : le
-     commerce règle son temps de préparation (backend migration 041), mais le trajet dépend de
-     l'adresse, inconnue ici — l'heure estimée n'existe qu'une fois la commande passée. La maquette du site
-     montrait une « Estimation » en minutes : pas reprise, pour la même raison (et le délai de préparation
-     n'est pas dans la fiche publique). */
+     serveur, exactement comme l'annonce déjà le paiement.
+     LE TEMPS D'ATTENTE (fondateur, 2026-10-29, maquettes/delai-estime, version F1) : il prend la case de la distance (ou
+     du rayon). En livraison, la fourchette jusqu'à chez toi (« 25–35 min · Livraison »), comptée depuis l'adresse du compte
+     ou le centre de sa commune (delaiEstime.js) — seulement si la livraison est vraiment possible ici (GO, livreur libre,
+     dans la zone). À emporter : le temps de préparation annoncé (« ~12 min · Prête en »). Sinon, la case d'avant. */
+  const livraisonIci = modeActif === 'delivery' && livraisonOuverte(user) && !sansLivreur && !horsZone && !onlineOrderingDisabled;
+  const minutesFiche = livraisonIci ? minutesLivraison(restaurant, pointDuClient(user)) : null;
+  const caseTemps = minutesFiche != null
+    ? { valeur: t('restaurantMenu.etaRange', fourchette(minutesFiche)), libelle: t('restaurantMenu.etaDeliveryLabel') }
+    : modeActif === 'pickup' && commandesOuvertes(user) && !onlineOrderingDisabled
+      ? { valeur: t('restaurantMenu.etaPickupValue', { min: prepAnnoncee(restaurant) }), libelle: t('restaurantMenu.etaPickupLabel') }
+      : null;
   /* LE BOUTON « COMMANDE GROUPÉE » (pages/client/CommandeGroupee.jsx) : compte client exigé, comme pour commander. Sur le site,
      une pastille à filet iris sous la description ; dans l'app (version B), un lien court sur la rangée de la bascule. */
   const boutonGroupe = user && !onlineOrderingDisabled && !(String(groupeEnCours()?.restaurantId) === String(restaurant.id) && !groupeQuitte) && (
@@ -726,11 +734,13 @@ export default function RestaurantMenu({ id }) {
      le même « dès » qu'avant (estimation, le montant exact se calcule au serveur). Le minimum de commande reste dit dessous. */
   const distanceKm = user?.lat && user?.lng && restaurant.lat && restaurant.lng ? haversineDistanceKm(user.lat, user.lng, restaurant.lat, restaurant.lng) : null;
   const kmTexte = (v) => (v < 10 ? Number(v).toFixed(1) : String(Math.round(v))).replace('.', ',');
-  const caseDistance = distanceKm != null || (restaurant.deliveryRadiusKm != null && modeActif !== 'pickup' && !onlineOrderingDisabled);
+  const caseDistance = !!caseTemps || distanceKm != null || (restaurant.deliveryRadiusKm != null && modeActif !== 'pickup' && !onlineOrderingDisabled);
   const ticket = vueAppli && (
     <>
       {(caseDistance || !onlineOrderingDisabled) && <div className="fiche-ticket">
-        {distanceKm != null ? (
+        {caseTemps ? (
+          <div><b>{caseTemps.valeur}</b><small>{caseTemps.libelle}</small></div>
+        ) : distanceKm != null ? (
           <div><b>{kmTexte(distanceKm)} km</b><small>{t('restaurantMenu.ticketFromYou')}</small></div>
         ) : restaurant.deliveryRadiusKm != null && modeActif !== 'pickup' && !onlineOrderingDisabled ? (
           <div><b>{t('siteFiche.radiusValue', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</b><small>{t('siteFiche.radiusLabel')}</small></div>
@@ -780,8 +790,9 @@ export default function RestaurantMenu({ id }) {
   // Dans l'app, les frais, la distance et le minimum sont dans le ticket (version B, ci-dessus).
   const panneauFrais = onlineOrderingDisabled ? null : vueAppli ? null : (
     <div className="fiche-frais">
+      {caseTemps && <span><b>{caseTemps.valeur}</b><small>{caseTemps.libelle}</small></span>}
       <span><b>{fraisLivraison}</b><small>{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</small></span>
-      {modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
+      {!caseTemps && modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
         <span><b>{t('siteFiche.radiusValue', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</b><small>{t('siteFiche.radiusLabel')}</small></span>
       )}
       {restaurant.minOrderAmount > 0 && (

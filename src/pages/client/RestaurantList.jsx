@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee, photoVue, retenirPhotoVue } from '../../images';
 import { chargerAvecCache, lireCache, poserFavoriEnCache, prechargerFiche } from '../../cacheDonnees';
 import { useActionOptimiste } from '../../actionOptimiste';
@@ -28,6 +28,7 @@ import { statutOuverture } from '../../openingHours';
 import { useCart } from '../../context/CartContext';
 import { poserCommercePanier, retirerCommercePanier } from '../../fermeCourt';
 import { tarifLivraison, eurosCourts, horsZoneLivraison } from '../../livraison';
+import { fourchette, minutesLivraison, pointDuClient, prepAnnoncee } from '../../delaiEstime';
 import { euros, kmLisible, libellePromo, prixRemise, remiseCourte } from '../../prixPlat';
 import EmplacementSponsor from '../../components/EmplacementSponsor';
 import VisuelVide from '../../components/VisuelVide';
@@ -130,8 +131,12 @@ function deliveryOfferLabelFor(r, t, user) {
 // livraison). Avant : quatre pastilles empilées (commune, quartier, fermé…) et un grand blanc sous le texte.
 // `apercu` : la GRANDE CARTE des rangées « Offres » et « Courses » quand le commerce y est seul (voir RangeeApercu) — toute la
 // largeur, et quatre de ses plats ou produits sous le nom.
+// La commune d'où la liste compte (homeCommune de RestaurantList) : le temps d'une carte part de son centre quand le
+// compte n'a pas d'adresse localisée (delaiEstime.js). Un contexte plutôt qu'une prop : sept endroits dessinent une carte.
+const CommuneListe = createContext(null);
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
   const { user, token } = useAuth();
+  const communeListe = useContext(CommuneListe);
   const offerLabel = offerLabelFor(r, t);
   const deliveryOfferLabel = deliveryOfferLabelFor(r, t, user);
   // Pause, « fermé pour aujourd'hui » et interrupteur du commerce comptent, comme sur sa fiche (audit du 19/10, discovery-04).
@@ -148,6 +153,14 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
   const livraisonPossible = livraisonPossibleIci(r, user);
   // Hors zone : dit sur la carte, avant de composer un panier (audit du 19/10, discovery-03) ; l'à emporter reste dit à côté.
   const horsZone = livraisonOuverteIci && horsZoneLivraison(r, user);
+  /* LE TEMPS D'ATTENTE SUR LA PHOTO (fondateur, 2026-10-29, maquettes/delai-estime, version L1) : « 20–30 min », comme les
+   * grandes applications, à la place de « Fermé · ouvre à… », qu'il ne remplace jamais (un commerce fermé dit quand il
+   * rouvre). Livraison possible ici : la fourchette jusqu'à chez toi. Sinon (avant le GO, aucun livreur libre, hors zone) :
+   * le temps de l'à emporter, s'il est commandable. Ni l'un ni l'autre : rien, plutôt qu'un temps qu'on ne tiendrait pas. */
+  const minutes = livraisonPossible ? minutesLivraison(r, pointDuClient(user, communeListe)) : null;
+  const delaiTexte = isClosed || r.vitrine ? null
+    : minutes != null ? t('restoListUi.etaRange', fourchette(minutes))
+      : emporterPossible ? t('restoListUi.etaPickup', { min: prepAnnoncee(r) }) : null;
   const services = [emporterPossible && t('restoListUi.servicePickup'), livraisonPossible && t('restoListUi.serviceDelivery'), horsZone && t('restoListUi.outOfZone'), !emporterPossible && !livraisonOuverteIci && (r.offersPickup || r.offersDelivery) && t('restoListUi.serviceSoon'), r.fairideDeliveryDisabled && emporterPossible && t('restoListUi.pickupOnlyZone')].filter(Boolean);
   // VISITEUR NON CONNECTÉ : la liste se parcourt librement (on y arrive depuis la barre d'adresse de
   // l'accueil), mais ouvrir un commerce demande un compte (fondateur, 2026-09-27). Le lien part vers
@@ -173,6 +186,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
         />
         {offerLabel && <span className="rc-offre rc-promo"><Icone nom="etiquette" taille={13} className="icone-texte" />{' '}{offerLabel}</span>}
         {etatTexte && <span className="rc-etat">{etatTexte}</span>}
+        {delaiTexte && <span className="rc-etat">{delaiTexte}</span>}
       </div>
       <div className="rc-corps">
         <h3 className="rest-card-name rc-nom">
@@ -723,9 +737,9 @@ export default function RestaurantList() {
     // des avis clients (fondateur, 22/10/2026) ; le tri n'est gardé nulle part (état de la page), aucun ancien choix à
     // reprendre — une valeur inconnue retombe sur l'ordre « Recommandé ».
     //
-    // PAS DE TRI « ARRIVE LE PLUS TOT ». Il faudrait un temps de preparation par commerce et une
-    // estimation de course ; ni l'un ni l'autre n'existe. La distance est la seule approximation
-    // honnete dont on dispose, et elle porte son vrai nom.
+    // PAS DE TRI « LE PLUS RAPIDE » (fondateur, 2026-10-29, maquettes/delai-estime, question 8 : « pas maintenant »). Le
+    // temps de chaque carte existe depuis (delaiEstime.js), mais tant que presque tous les commerces comptent les mêmes
+    // 12 minutes de préparation, il range exactement comme « Le plus proche ». À reprendre quand les temps mesurés diffèrent.
     .sort((a, b) => {
       if (tri === 'distance') return (distanceDe(a) ?? Infinity) - (distanceDe(b) ?? Infinity);
       return 0;
@@ -873,6 +887,7 @@ export default function RestaurantList() {
     return { titre, texte };
   })();
   return (
+    <CommuneListe.Provider value={homeCommune}>
     <div className={`sl-liste${grand ? ' sl-liste--grand' : ''}${colonne ? ' sl-liste--colonne' : ''}${listeCalme ? ' sl-liste--calme' : ''}`}>
       <TirerPourActualiser onActualiser={actualiser} />
       {/* Le titre est MASQUÉ À L'ŒIL, pas supprimé (fondateur, 2026-09-17 : « retire-le de la page »).
@@ -1113,5 +1128,6 @@ export default function RestaurantList() {
       </div>
       </div>
     </div>
+    </CommuneListe.Provider>
   );
 }

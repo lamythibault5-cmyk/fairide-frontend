@@ -291,7 +291,6 @@
 .panier-ligne--indispo b, .co-ligne--indispo .co-ligne-nom { color: var(--ink-soft); }
 .co-ligne--indispo { align-items: center; }
 /* Paiement, à emporter : l'heure estimée et la règle du non-retrait. */
-.checkout-pret-vers { margin: 0 0 10px; font-weight: 600; color: var(--ink); }
 .checkout-regle-retrait { margin: 6px 0 0; color: var(--ink-soft); }
 .suivi-total { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
 .suivi-total b { font-size: 17px; }
