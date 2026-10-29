@@ -366,8 +366,11 @@ export default function Orders() {
    * suite dans « Commandes passées », le motif du commerce et le remboursement repliés dans « Détails », et le seul bouton était
    * « Commander à nouveau »… chez le commerce qui venait de dire non. Tant que rien d'autre n'est en cours et pendant 3 h après
    * la commande (le serveur n'envoie pas l'heure du refus ; un refus tombe dans les minutes qui suivent), elle EST le bandeau :
-   * ce qui s'est passé, le motif, l'argent, puis un seul bouton lime vers d'autres restaurants. */
-  const arretee = enCours.length ? null : listeAffichee.find((o) => ['refuse', 'annule'].includes(o.status) && Date.now() - o.createdAt < 3 * 3600000) || null;
+   * ce qui s'est passé, le motif, l'argent, puis un seul bouton lime vers d'autres restaurants.
+   * Seulement si c'est la DERNIÈRE commande (2026-10-28) : un refus suivi d'une commande récupérée restait le bandeau pendant
+   * 3 h, la commande réussie rangée dessous dans « Commandes passées ». /orders/mine arrive de la plus récente à la plus ancienne. */
+  const derniere = listeAffichee[0];
+  const arretee = !enCours.length && derniere && ['refuse', 'annule'].includes(derniere.status) && Date.now() - derniere.createdAt < 3 * 3600000 ? derniere : null;
   const passees = listeAffichee.filter((o) => estPassee(o) && o !== arretee);
   const quand = (ms) => new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 

@@ -71,8 +71,9 @@ export default function SuiviCommande() {
   }, [fin?.commande?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Laquelle montrer : un refus pas encore vu, puis une commande prête à venir chercher, puis la plus récente en cours,
-  // puis « Bon appétit ! ».
-  const refus = commandes.find((o) => ARRET.includes(o.status) && !vus.has(o.id) && Date.now() - new Date(o.createdAt).getTime() < SIX_HEURES);
+  // puis « Bon appétit ! ». Le refus seulement s'il n'a pas été suivi d'une autre commande (2026-10-28, même règle que le
+  // bandeau de Mes commandes) : sinon il passait devant celle qu'on attend. /orders/mine arrive de la plus récente à la plus ancienne.
+  const refus = commandes.find((o, i) => i === 0 && ARRET.includes(o.status) && !vus.has(o.id) && Date.now() - new Date(o.createdAt).getTime() < SIX_HEURES);
   const enCours = commandes.filter(commandeSuivie);
   const commande = refus || enCours.find(aToi) || enCours[0] || fin?.commande || null;
   const visible = !!commande && pathname !== '/orders';
