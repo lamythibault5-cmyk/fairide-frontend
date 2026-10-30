@@ -16,7 +16,8 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
 - **Menus are proposed, then validated** by the business (« C'est bon », `/carte/valider/:token`, single-use hashed link);
   publishing refuses an unvalidated menu. Every price or VAT change is logged with who asked (`menu_item_history`).
 - **VAT per dish belongs to the business**: proposed from the dish's nature (`tvaPlats.js`, no hard-coded 6 %), editable by
-  the business despite `MENU_LOCKED`; a rate change for everyone gives 7 days to refuse (Admin › Commerces).
+  the business despite `MENU_LOCKED`; a rate change for everyone gives 7 days to refuse (Admin › Commerces). So are, since
+  2026-10-29, a new dish, a dish's price (both declared on honour at the counter price) and a dish photo (cartes.md).
 - **Alcohol is closed** until `ALCOHOL_ENABLED=true` on the server. Insurance, the AFSCA document and the alcohol licence are
   **alerts**, no longer blockers (business number, AFSCA number, contract, validated menu, allergens still block).
   Since 2026-10-10 the business no longer has to give its AFSCA number if it signs the professional declaration

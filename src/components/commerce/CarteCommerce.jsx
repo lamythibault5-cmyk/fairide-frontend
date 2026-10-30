@@ -21,6 +21,8 @@ import Icone from '../Icone';
 import { BandeauCommerce, FeuilleCommerce } from './BandeauCommerce';
 import { SITE } from './CadreSite';
 import TexteReplie from '../TexteReplie';
+import { BandePhotos, FeuillePlat, RafalePhotos } from './AjoutPlat';
+import { usePhotoPlat, useRegleCarte } from './ajoutPlatOutils';
 
 /* « MA CARTE » CÔTÉ COMMERCE, AU BANDEAU IRIS (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html › Ma carte,
  * « Interrupteur de rupture »). Le commerce ne modifie pas ses plats lui-même (fondateur, 2026-10-01) : il met un plat en
@@ -37,7 +39,12 @@ import TexteReplie from '../TexteReplie';
  * commerce n'est pas en ligne, la rangée « Prochaine étape » (MiseEnLigne) vient en tête avec LE bouton lime, et la demande à
  * Fairide passe en iris. Plus de second bouton « Demander à Fairride une mise à jour » (le même formulaire, juste au-dessus).
  * Les engagements allergènes et vendeur professionnel se signent sur « Tes engagements » seulement (ConformiteCarte reçoit
- * `versEngagements`) ; la hausse de prix se choisit sur « C'est bon », puis dans une rangée de Commerce (Account.jsx). */
+ * `versEngagements`) ; la hausse de prix se choisit sur « C'est bon », puis dans une rangée de Commerce (Account.jsx).
+ *
+ * LE VERROU S'OUVRE SUR TROIS GESTES (fondateur, 2026-10-29, AjoutPlat.jsx) : le carré « + photo » d'un plat sans photo et
+ * la bande « N plats sans photo » en rafale ; « Ajouter un plat » ; le prix d'un plat, touché, pour le changer. Prix toujours
+ * déclarés sur l'honneur. « Ajouter un plat » prend le lime une fois le commerce en ligne : la demande à Fairride (nom,
+ * description, retrait) passe en iris. Le titulaire seul : un membre de l'équipe du commerce ne voit pas ces gestes. */
 export default function CarteCommerce({ restaurant, restoId, loadDashboard, communs, urlSuggeree, onStock, onWithdraw, onConnect, connecting, lectureSeule = false }) {
   const { t } = useLanguage();
   const { token } = useAuth();
@@ -50,7 +57,14 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
     .map((s) => ({ ...s, items: menu.filter((i) => (i.category || 'plat') === s.name) }))
     .filter((s) => s.items.length > 0);
   const enLigne = menu.filter((i) => !i.withdrawn && i.available !== false && !i.outOfStockToday).length;
-
+  const recharger = () => loadDashboard(restoId);
+  const regle = useRegleCarte(restoId, token, restaurant);
+  const photo = usePhotoPlat(restoId, token, recharger);
+  // Plat ouvert dans la feuille : { nouveau: true } ou { plat } pour son prix.
+  const [feuille, setFeuille] = useState(null);
+  const [rafale, setRafale] = useState(false);
+  const titulaire = !lectureSeule;
+  const sansPhoto = menu.filter((i) => !i.imageUrl && !i.withdrawn);
 
   const titreEnLigne = enLigne === 0 ? t('ecranCommerce.aucunEnLigne') : t(enLigne === 1 ? 'ecranCommerce.produitEnLigne' : 'ecranCommerce.produitsEnLigne', { n: enLigne });
   // Sur le site : largeur de lecture (site-pro.css), une liste de plats n'a rien à gagner à 1 120 px.
@@ -86,6 +100,12 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
               <Icone nom="cadenas" taille={16} />
               <span><b style={{ color: 'var(--ink)' }}>{t('menuPage.lockedTitle')}</b>{' · '}<TexteReplie as="span" texte={t('ecranCommerce.verrouAide')} titre={t('menuPage.lockedTitle')} /></span>
             </p>
+            {titulaire && <BandePhotos n={sansPhoto.length} onOuvrir={() => setRafale(true)} />}
+            {titulaire && (
+              <button type="button" className={`ec-bouton ${avantEnLigne ? 'ec-bouton--iris' : 'ec-bouton--lime'} ec-ajout-bouton`} onClick={() => setFeuille({ nouveau: true })}>
+                <span aria-hidden="true" className="ec-ajout-plus">+</span>{t('carteAjout.ajouter')}
+              </button>
+            )}
             {/* LA BANDE DES SECTIONS DE LA VUE CLIENT (fondateur, 2026-10-27 : « la barre de menu sur la carte devrait être la même
                 que la vue client »). C'était une rangée de pastilles à part (.ec-sections, la section lue en iris plein) ; c'est
                 maintenant CategoryQuickNav, celle de la fiche du commerce : lentille de verre dans l'app, pastille iris qui glisse
@@ -102,7 +122,8 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
                     <div key={g.key || '__none'}>
                       {g.label && <p className="ec-sous-section">{g.label}</p>}
                       {g.items.map((item) => (
-                        <LignePlat key={item.id} item={item} sections={restaurant.sections || []} t={t} onStock={onStock} onWithdraw={onWithdraw} onDemanderRetrait={setARetirer} />
+                        <LignePlat key={item.id} item={item} sections={restaurant.sections || []} t={t} onStock={onStock} onWithdraw={onWithdraw} onDemanderRetrait={setARetirer}
+                          onPhoto={titulaire ? photo.choisir : null} photoEnvoi={photo.envoi === item.id} onPrix={titulaire ? (p) => setFeuille({ plat: p }) : null} />
                       ))}
                     </div>
                   ))}
@@ -110,9 +131,13 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
               ))}
             </div>
             {/* Le plus court chemin : écrire ce qu'on veut changer, l'équipe Fairide s'en charge (fondateur, 2026-10-01). */}
-            <div className="ec-demande"><DemandeModifCarte restoId={restoId} lime={!avantEnLigne} /></div>
+            <div className="ec-demande"><DemandeModifCarte restoId={restoId} lime={false} /></div>
           </>
         )}
+        {photo.input}
+        {feuille && <FeuillePlat restoId={restoId} token={token} restaurant={restaurant} regle={regle} plat={feuille.plat || null}
+          onFermer={() => setFeuille(null)} onFait={recharger} />}
+        {rafale && <RafalePhotos plats={sansPhoto} photo={photo} onFermer={() => setRafale(false)} />}
         <ConfirmDialog open={!!aRetirer} title={aRetirer ? t('ecranCommerce.retirerTitre', { name: aRetirer.name }) : ''} message={t('ecranCommerce.retirerTexte')}
           confirmLabel={t('menuItem.markUnavailable')} danger onCancel={() => setARetirer(null)}
           onConfirm={() => { const p = aRetirer; setARetirer(null); onWithdraw(p.id, true).catch(() => { /* message déjà affiché */ }); }} />
@@ -140,7 +165,10 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
  * jusqu'à la fin du rechargement complet de la fiche). Le plat lui-même change dans la fiche gardée au toucher (MenuPage.jsx,
  * changerPlatEnStock) et revient si le serveur refuse ; un second toucher pendant l'envoi est permis, le dernier gagne
  * (actionOptimiste.js). Plus d'état « visé » à part : la ligne lit toujours le plat. */
-function LignePlat({ item, sections, t, onStock, onWithdraw, onDemanderRetrait }) {
+/* LE CARRÉ « + PHOTO » ET LE PRIX TOUCHABLE (2026-10-29, AjoutPlat.jsx). Un plat sans photo à lui (imageUrl vide : l'image de
+ * section ne compte pas) montre un carré en pointillés à la place de l'icône ; le toucher ouvre l'appareil photo ou la
+ * photothèque. Le prix, sous le nom, ouvre la feuille « Nouveau prix ». `onPhoto` / `onPrix` absents : console en lecture. */
+function LignePlat({ item, sections, t, onStock, onWithdraw, onDemanderRetrait, onPhoto, photoEnvoi, onPrix }) {
   const enVente = !item.outOfStockToday;
   const image = resolveItemImage(item, sections);
   const interrupteur = !item.withdrawn && (item.available !== false || item.outOfStockToday);
@@ -163,7 +191,13 @@ function LignePlat({ item, sections, t, onStock, onWithdraw, onDemanderRetrait }
   const ouvrir = retirable ? () => onDemanderRetrait(item) : undefined;
   return (
     <div className={`ec-plat${rupture ? ' ec-plat--rupture' : ''}${item.withdrawn || indisponible ? ' ec-plat--retire' : ''}`}>
-      {image
+      {onPhoto && !item.imageUrl && !item.withdrawn
+        ? (
+          <button type="button" className="ec-plat-photo ec-plat-photo--vide" disabled={photoEnvoi} onClick={() => onPhoto(item)} aria-label={t('carteAjout.photoPour', { name: item.name })}>
+            {photoEnvoi ? '…' : t('carteAjout.photoCarre')}
+          </button>
+        )
+        : image
         ? <img loading="lazy" decoding="async" {...imgProps(image, 58, '58px')} alt="" className="ec-plat-photo" onClick={ouvrir} />
         : <span className="ec-plat-photo" aria-hidden="true" onClick={ouvrir}><Icone nom={categoryEmoji(item.category)} taille={22} /></span>}
       <span className="ec-plat-texte">
@@ -171,7 +205,16 @@ function LignePlat({ item, sections, t, onStock, onWithdraw, onDemanderRetrait }
           ? <button type="button" className="ec-plat-nom" onClick={ouvrir} title={t('menuItem.withdrawHelp')}>{item.name}</button>
           : <b>{item.name}</b>}
         {item.activePromo && <span className="ec-plat-promo"><Icone nom="etiquette" taille={12} className="icone-texte" />{' '}{item.activePromo.label}</span>}
-        <small key={etat} className="ec-plat-etat fondu">{etat}</small>
+        {onPrix && !item.withdrawn && !rupture && !indisponible
+          ? (
+            <small key={etat} className="ec-plat-etat fondu">
+              <button type="button" className="ec-plat-prix" onClick={() => onPrix(item)} aria-label={t('carteAjout.changerPrix', { name: item.name })}>
+                {euros(item.price)}<Icone nom="crayon" taille={12} />
+              </button>
+              {` · ${t('ecranCommerce.enVente')}`}
+            </small>
+          )
+          : <small key={etat} className="ec-plat-etat fondu">{etat}</small>}
         {item.withdrawn && (
           <button type="button" className="ec-lien" onClick={retirer} title={t('menuItem.withdrawBackHelp')}>
             {`↩︎ ${t('menuItem.withdrawBack')}`}

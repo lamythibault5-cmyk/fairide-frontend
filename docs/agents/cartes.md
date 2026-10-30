@@ -46,6 +46,19 @@ model has one level of options. The admin list's menu pill comes from the menu i
 request: 0 dishes → « Carte à importer » (filter of the same name, counted server-side), otherwise the price state.
 The importer closes an open request and its task, without e-mailing the business.
 
+**The business adds dishes, changes prices, adds photos itself (2026-10-29, Owen, answers to `maquettes/ajout-plat`).** The
+menu lock (`MENU_LOCKED`, 2026-10-01) opens on three gestures of the owner only, on « Ta carte »
+([CarteCommerce.jsx](../../src/components/commerce/CarteCommerce.jsx), [AjoutPlat.jsx](../../src/components/commerce/AjoutPlat.jsx)):
+a « + photo » square on each dish without a photo and a « N plats sans photo » burst (live at once, the team removes a bad
+one from the console); « Ajouter un plat » (one sheet); touching a dish's price. The business always types its **counter
+price**, never a percentage: the backend computes the shown price with the card's rule (`prixAvecHausse`, same price or the
+increase rounded down to €0.10) and keeps the counter price in `price_base`. Every new dish and every price change goes
+through the honour screen, whose lime button is the declaration (« Oui, 12,00 € au comptoir »); the backend keeps each one
+(`menu_price_declarations`, migration 097, `declarationPrix.js`: dish, prices, name, date, exact text) and re-signs the card
+if it was signed. If a price is false the « Prix du comptoir » badge goes, **nothing else**: the screen threatens nothing
+else (the contract has no parity clause) and never says « on vérifie » (nobody checks). Name, description, sections,
+options and withdrawal still go through the team (« Une modification ? »).
+
 **Carte seule (2026-10-25, Owen).** A shop can be shown before its contract and its « C'est bon »: Admin › Restaurants ›
 drawer › « Montrer en carte seule » (`PATCH /admin/restaurants/:id/vitrine`, backend `routes/validationCarte.js`), then the
 usual « Approuver » with its compliance checks; once approved it goes online by itself with **no** « tu es en ligne » e-mail.
