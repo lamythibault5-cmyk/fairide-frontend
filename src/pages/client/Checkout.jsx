@@ -35,6 +35,7 @@ import { serviceOuvert, dateOuvertureEmporter, paiementEnLigneOuvert, useLanceme
 import CodePromoCheckout from '../../components/client/CodePromoCheckout';
 import CheckoutConformite from '../../components/conformite/CheckoutConformite';
 import { manqueConformite } from '../../conformite';
+import { lireSaisiePaiement, garderSaisiePaiement, oublierSaisiePaiement } from '../../saisiePaiement';
 import { defilement, vibrer } from '../../gestes';
 import { groupeACommander } from '../../commandeGroupee';
 import { cheminFiche } from '../../adresseFiche';
@@ -81,17 +82,19 @@ export default function Checkout() {
   // vérifiées au lieu de regéocoder le texte (audit du 19/10, checkout-21). Le serveur ne s'en sert que si la rue, le
   // numéro et le code postal envoyés sont bien les siens : une adresse retouchée à la main est géocodée comme avant.
   const [addressId, setAddressId] = useState(null);
-  const [deliveryInstructions, setDeliveryInstructions] = useState('sonner');
+  // Allergie, instructions, note, couverts, pourboire gardés dans l'onglet (saisiePaiement.js).
+  const [gardee] = useState(() => lireSaisiePaiement(cart.restaurantId));
+  const [deliveryInstructions, setDeliveryInstructions] = useState(gardee.deliveryInstructions || 'sonner');
   // De l'alcool ne se dépose pas devant une porte : le livreur contrôle l'âge en main propre (plan de test LEG-9 /
   // PAN-8, le serveur refuse aussi : DEPOT_ALCOOL_INTERDIT). L'option disparaît, et un choix déjà fait repasse à « Sonner ».
   const panierAlcool = Object.values(cart.lines).some((l) => restaurant?.menu?.find((m) => m.id === l.itemId)?.isAlcohol);
   useEffect(() => { if (panierAlcool && deliveryInstructions === 'deposer') setDeliveryInstructions('sonner'); }, [panierAlcool, deliveryInstructions]);
   // Prix d'aujourd'hui sur chaque ligne, une fois la carte lue (CartContext.actualiserPrix, audit du 19/10, discovery-15).
   useEffect(() => { if (restaurant) cart.actualiserPrix(restaurant); }, [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [deliveryNote, setDeliveryNote] = useState('');
+  const [deliveryNote, setDeliveryNote] = useState(gardee.deliveryNote || '');
   // Couverts et serviettes (fondateur, 2026-10-25, version A de maquettes/ferme-couverts) : éteint par défaut, en livraison
   // comme à l'emporter. Le commerce lit la réponse sur son écran Commandes et son ticket (« Sans couverts » écrit sinon).
-  const [couverts, setCouverts] = useState(false);
+  const [couverts, setCouverts] = useState(gardee.couverts === true);
   const [useBalance, setUseBalance] = useState(true);
   // À emporter chez un commerce qui l'accepte : payer au retrait plutôt qu'en ligne.
   const [paiementSurPlace, setPaiementSurPlace] = useState(false);
@@ -103,8 +106,8 @@ export default function Checkout() {
   const [codePromo, setCodePromo] = useState(null);
   // Pourboire choisi au paiement (backend pourboireCommande.js) : '0', '1', '2', '3' ou 'autre' (montant libre). Aucun
   // par défaut : un pourboire présélectionné serait payé par des clients qui ne l'ont pas choisi.
-  const [pourboire, setPourboire] = useState('0');
-  const [pourboireAutre, setPourboireAutre] = useState('');
+  const [pourboire, setPourboire] = useState(gardee.pourboire || '0');
+  const [pourboireAutre, setPourboireAutre] = useState(gardee.pourboireAutre || '');
   /* LE CHAMP EN FAUTE (audit du 19/10, CROSS-83) : l'erreur n'était qu'un toast, le champ n'était ni marqué ni atteint, et un
    * lecteur d'écran restait sur le bouton « Payer ». On retient lequel est en faute ('adresse', 'horaire', 'pourboire') ; la
    * marque disparaît d'elle-même dès que la valeur devient correcte (voir les conditions à l'affichage). */
@@ -162,7 +165,7 @@ export default function Checkout() {
   // « détails » sous le ticket : le vendeur de chaque ligne, replié (audit design 2, 2026-10-19).
   const [vendeursOuverts, setVendeursOuverts] = useState(false);
   // Allergie, âge, CGU (backlog de conformité C1, C3, A1) — voir components/conformite/CheckoutConformite.jsx.
-  const [conformite, setConformite] = useState({ allergyRequest: '', ageDeclaration: false, acceptTerms: false, termsNeeded: false, termsVersion: '' });
+  const [conformite, setConformite] = useState({ allergyRequest: gardee.allergyRequest || '', ageDeclaration: false, acceptTerms: false, termsNeeded: false, termsVersion: '' });
   const pendingOrderRef = useRef(null);
   const fulfillmentInitRef = useRef(false);
   // Commande envoyée : vider le panier ne doit plus renvoyer vers la liste des commerces (effet ci-dessous), sinon le
@@ -170,6 +173,10 @@ export default function Checkout() {
   const commandeTermineeRef = useRef(false);
 
   const restaurantId = cart.restaurantId;
+  useEffect(() => {
+    if (commandeTermineeRef.current) return;
+    garderSaisiePaiement(restaurantId, { deliveryInstructions, deliveryNote, couverts, pourboire, pourboireAutre, allergyRequest: conformite.allergyRequest });
+  }, [restaurantId, deliveryInstructions, deliveryNote, couverts, pourboire, pourboireAutre, conformite.allergyRequest]);
 
   useEffect(() => {
     if (commandeTermineeRef.current || versPaiementRef.current) return;
@@ -451,6 +458,7 @@ export default function Checkout() {
   // code, heure, adresse, itinéraire, appel, moyens de paiement. Avant : un message de trois secondes, puis Mes commandes.
   function terminerSurPlace(order) {
     commandeTermineeRef.current = true;
+    oublierSaisiePaiement(restaurantId);
     cart.clear();
     vibrer('succes');
     navigate(`/order-success?order=${order.id}`, { replace: true });
@@ -537,7 +545,7 @@ export default function Checkout() {
       // CGU passées à une nouvelle version entre l'ouverture de la page et le clic : on affiche la case.
       if (e.code === 'CGU_A_ACCEPTER') setConformite((c) => ({ ...c, termsNeeded: true, acceptTerms: false, termsVersion: e.data?.termsVersion || c.termsVersion }));
       // Ce panier a déjà donné une commande (payée dans un autre onglet) : on ne la repasse pas, on la montre.
-      if (e.code === 'ORDER_ALREADY_PLACED') { commandeTermineeRef.current = true; cart.clear(); toast(e.message); navigate('/orders'); return; }
+      if (e.code === 'ORDER_ALREADY_PLACED') { commandeTermineeRef.current = true; oublierSaisiePaiement(restaurantId); cart.clear(); toast(e.message); navigate('/orders'); return; }
       // Pas de téléphone sur le compte : on y envoie le client, le panier l'attend.
       if (e.code === 'PHONE_REQUIRED') { toast(e.message, 'erreur'); navigate('/account?ouvrir=connexion&retour=/checkout'); return; }
       toast(e.message, 'erreur');
@@ -568,6 +576,7 @@ export default function Checkout() {
         // paiement par carte, avec le code de retrait — plus « paiement simulé », réservé aux comptes de simulation
         // (audit du 19/10, checkout-06).
         commandeTermineeRef.current = true;
+        oublierSaisiePaiement(restaurantId);
         cart.clear();
         vibrer('succes');
         if (user?.simulation) toast(t('checkout.toastOrderPaid'), 'succes');

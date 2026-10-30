@@ -38,7 +38,13 @@ route `/bienvenue`, outside `<Layout>`; designed with the founder on `maquettes/
 **Look since 2026-10-16** (version D of `maquettes/onboarding-chaleur/onboarding-chaleur.html`): every white screen of the
 welcome flow, the in-app sign-up and the in-app login has an **iris header** (back, progress, title) and the rest in a white
 **sheet** with rounded top corners — a screen puts what follows its title in `<Feuille>` (EcransBienvenue.jsx), the container
-carries `.bv-bandeau`. Progress is a dashed road the brand bicycle rides along (`Route`); main buttons are lime; ticked
+carries `.bv-bandeau`. Progress is a dashed road the brand bicycle rides along (`Route`). **The road moves fast first, then
+gently** (2026-10-30, version B of the workspace mockup `maquettes/progression/progression.html`): callers pass the share of
+screens done, `Route` shows `courbeRoute` (src/routeProgression.js, also the website sign-up bar); never on a road that states
+a fact (order tracking, « n étapes faites sur N »). **One road from « Tu es… » to the code**: Bienvenue passes
+`faitsAvant` to InscriptionAppli, the road never drops back at sign-up (it went 100 % → 17 %). Waiting screens do the
+opposite (slow then fast: the loading ring `ANNEAU_RECHERCHE`). « Compte créé » / « Inscription » count as a done step in
+the shop's « Avant d'être en ligne » and the courier summary. Main buttons are lime; ticked
 options show a lime check. Outside a `.bv-bandeau` screen (notifications primer, courier dossier) `.bv-feuille` is `display: contents`.
 **Same family, client screens (2026-10-16, versions picked on `maquettes/autres-idees/autres-idees.html`)**: an order in
 progress opens on an iris header with a big friendly status (`titreSuivi`) and a road where the lime bike rolls stop to stop

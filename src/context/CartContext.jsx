@@ -3,6 +3,7 @@ import { fraisService } from '../fraisService';
 import { FORFAIT_LIVRAISON, tarifLivraison } from '../livraison';
 import { remiseLigne } from '../prixPlat';
 import { prixActuelLigne } from '../panierDisponible';
+import { oublierSaisiePaiement } from '../saisiePaiement';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import { useLanguage } from './LanguageContext';
@@ -312,6 +313,8 @@ export function CartProvider({ children }) {
 
   // Paiement confirmé : la copie mise de côté n'a plus lieu d'être.
   function discardStashed() {
+    // Payée par carte : l'allergie, la note, le pourboire de cette commande ne reviennent pas sur la suivante (saisiePaiement.js).
+    try { oublierSaisiePaiement(JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null')?.restaurantId); } catch { /* illisible */ }
     try { sessionStorage.removeItem(PENDING_KEY); } catch { /* stockage indisponible */ }
   }
 
