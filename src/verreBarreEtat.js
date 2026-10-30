@@ -4,17 +4,22 @@
  * apparaît dès que la page a défilé, floute ce qui passe dessous et s'estompe par le bas.
  *
  * Sur une fiche de commerce, la photo passe sous la barre d'état exprès : le verre attend que la photo soit sortie, puis
- * apparaît au-dessus de la feuille blanche. La barre d'état garde ses icônes blanches tant que le verre est là (barreEtat.js
- * lit la classe `verre-etat-on`). Regard : au plus une fois par image pendant un défilement.
+ * apparaît au-dessus de la feuille blanche. Regard : au plus une fois par image pendant un défilement.
+ *
+ * BLANC, PLUS IRIS (fondateur, 2026-10-30 : « blanc dès qu'il y a du blanc dessous »). Le verre ne s'allume que quand ce qui
+ * passe sous l'heure n'est pas l'iris plein, c'est-à-dire sur une page blanche : il est donc blanc, et la barre d'état prend
+ * des icônes sombres tant qu'il est là (barreEtat.js lit la classe `verre-etat-on`).
  *
  * Sur un bandeau iris qui reste collé en haut (la liste : « Livrer à … »), le verre ne sert à rien et se voyait : posé sur
  * l'iris plein, il l'éclaircissait (saturate) et son fondu du bas traçait une ligne sur le bandeau (fondateur, 2026-10-25).
- * Il reste donc caché tant que l'iris plein descend jusqu'à son bord du bas : rien ne peut alors passer sous l'heure.
+ * Il reste donc caché tant que l'iris plein descend jusqu'à son bord du bas : rien ne peut alors passer sous l'heure. Caché
+ * aussi tant que l'iris est sous l'heure elle-même (2026-10-30) : un bandeau qui remonte (« Recherche ») a son champ blanc au
+ * bord du bas du verre et l'iris dessus, le verre blanc s'y posait sur l'iris.
  *
  * ANDROID 15 ET PLUS (2026-10-26, maquettes/iphone-android) : l'app y est bord à bord (cible API 36), la page passe aussi sous
  * l'heure, transparente, et le titre d'une fiche s'y mêlait aux chiffres. Même verre, lancé aussi sur Android. Sur Android 14
  * et moins, la barre d'état est pleine, au-dessus de la page : env(safe-area-inset-top) vaut 0, la bande n'a aucune hauteur
- * (verre.css) et ne s'allume jamais, sinon barreEtat.js garderait des icônes blanches sur une barre devenue blanche. */
+ * (verre.css) et ne s'allume jamais : la barre native y suit seule ce qui est dessous (barreEtat.js). */
 import { IRIS, fondSous } from './regardSousBarre';
 
 const HAUTEUR_FONDU = 18;
@@ -35,7 +40,7 @@ export function installerVerreBarreEtat() {
       if (photo && photo.getBoundingClientRect().bottom > bande.offsetHeight - HAUTEUR_FONDU) visible = false;
     }
     // Le verre ne capte pas le doigt (pointer-events: none) : fondSous() regarde à travers lui.
-    if (visible && IRIS.has(fondSous(bande.offsetHeight - 1))) visible = false;
+    if (visible && (IRIS.has(fondSous(bande.offsetHeight - 1)) || IRIS.has(fondSous(2)))) visible = false;
     html.classList.toggle('verre-etat-on', visible);
   };
   const demander = () => { if (!image) image = requestAnimationFrame(regarder); };

@@ -61,11 +61,12 @@ html.appli {
 /* ---------- 1. Sous la barre d'état ---------- */
 .verre-etat { display: none; }
 /* iPhone, et Android 15+ bord à bord (2026-10-26, verreBarreEtat.js). Sur Android 14 et moins la barre d'état est pleine,
-   au-dessus de la page : env() y vaut 0, et min(18px, 0 × 100) aussi : la bande n'a aucune hauteur. */
+   au-dessus de la page : env() y vaut 0, et min(18px, 0 × 100) aussi : la bande n'a aucune hauteur.
+   Blanc depuis le 2026-10-30 (il ne s'allume que sur une page blanche, verreBarreEtat.js) : il était iris à 70 %. */
 html:is(.natif-ios, .natif-android) .verre-etat {
   display: block; position: fixed; z-index: 41; top: 0; left: 0; right: 0; pointer-events: none;
   height: calc(env(safe-area-inset-top, 0px) + min(18px, env(safe-area-inset-top, 0px) * 100));
-  background: rgba(59, 47, 181, .7);
+  background: rgba(255, 255, 255, .82);
   -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
   -webkit-mask-image: linear-gradient(#000 0, #000 calc(100% - 18px), transparent 100%); mask-image: linear-gradient(#000 0, #000 calc(100% - 18px), transparent 100%);
   /* Caché : visibility et non seulement opacity, pour que le flou ne soit pas calculé quand il ne se voit pas. */
@@ -222,7 +223,7 @@ html.appli body .toast:not(.toast-erreur) {
 
 /* « Réduire la transparence » (réglages d'accessibilité de l'iPhone) : des aplats, sans flou. */
 @media (prefers-reduced-transparency: reduce) {
-  html:is(.natif-ios, .natif-android) .verre-etat { background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html:is(.natif-ios, .natif-android) .verre-etat { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
   html.appli body .plat-pas, html.appli body .fiche-appli .fiche-apercu-plus, html.appli body .ec-feuille .upsell-item::after,
   html.appli body .fiche-appli .fiche-modes-pouce, html.appli body .toast:not(.toast-erreur) {
     background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none;
