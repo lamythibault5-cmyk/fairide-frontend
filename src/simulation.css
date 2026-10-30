@@ -106,6 +106,18 @@
 @media (min-width: 721px) {
   .simu-barre, .simu-pastille { left: auto; right: 16px; }
 }
+/* UN PANIER EST AFFICHÉ : LA BARRE MONTE AU-DESSUS (fondateur, 2026-10-30, test sur iPad). Posée dans le même coin que la
+   barre du panier (en bas à droite sur ordinateur, en bas sur tablette), elle la cachait : on ajoutait un plat sans voir
+   le panier. FloatingCart pose html.avec-pilule-panier tant que la barre est là. */
+html.avec-pilule-panier .simu-barre, html.avec-pilule-panier .simu-pastille {
+  bottom: calc(var(--hauteur-onglets, 74px) + 84px + env(safe-area-inset-bottom, 0px));
+}
+html.avec-pilule-panier .simu-barre { max-height: calc(100dvh - var(--hauteur-onglets, 74px) - 120px); }
+/* … et la carte des cookies ouverte en plus : la barre du panier est alors posée sur la carte (styles.css). */
+html.avec-pilule-panier.carte-cookies-ouverte .simu-barre, html.avec-pilule-panier.carte-cookies-ouverte .simu-pastille {
+  bottom: calc(var(--haut-cookies, 0px) + 84px);
+}
+html.avec-pilule-panier.carte-cookies-ouverte .simu-barre { max-height: calc(100dvh - var(--haut-cookies, 0px) - 120px); }
 /* Imprimante virtuelle dans le panneau sombre : en-têtes des tickets lisibles. */
 .simu-panneau .ticket-entete { color: #D7D4E8; }
 .simu-panneau .ticket-entete .btn-ghost { color: #D7D4E8; }

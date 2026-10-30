@@ -5736,9 +5736,16 @@ body:has(.etat-vide-reprendre) .panier-pilule { display: none; }
 body:has(.carte-page) .panier-pilule.panier-pilule--bulle, html.appli body:has(.carte-page) .panier-pilule.panier-pilule--bulle { right: auto; left: 16px; }
 /* LA BARRE DU PANIER S'EFFACE QUAND QUELQUE CHOSE S'OUVRE PAR-DESSUS LA PAGE (fondateur, 2026-10-25 : « qu'elle ne cache jamais
    autre chose, sur aucun écran »). Une fenêtre ou une feuille (role="dialog" : la fiche d'un plat, Infos, « Livrer à »,
-   une confirmation, un écran plein, la carte des cookies…) ou la fiche d'un commerce en bas de la Carte : la barre (et la bulle)
-   laisse la place, et revient à la fermeture avec son entrée habituelle. Le clavier ouvert la masque aussi (html.clavier-ouvert). */
-body:has([role="dialog"], .carte-page .carte-fiche, .carte-page .map-detail-card) .panier-pilule { display: none; }
+   une confirmation, un écran plein…) ou la fiche d'un commerce en bas de la Carte : la barre (et la bulle)
+   laisse la place, et revient à la fermeture avec son entrée habituelle. Le clavier ouvert la masque aussi (html.clavier-ouvert).
+   SAUF LA CARTE DES COOKIES (fondateur, 2026-10-30, test sur iPad) : tant qu'on n'y répondait pas, le panier restait invisible
+   et on ajoutait des plats sans le voir. Sur ordinateur, la carte est à gauche et la pilule à droite ; sur téléphone et
+   tablette, la barre se pose juste au-dessus de la carte (--haut-cookies, mesurée par CookieBanner.jsx). */
+body:has([role="dialog"]:not(.carte-cookies), .carte-page .carte-fiche, .carte-page .map-detail-card) .panier-pilule { display: none; }
+/* Plus précis que les places habituelles de la barre (fiche d'un commerce : site-fiche.css ; parcours de commande, plus haut). */
+@media (max-width: 900px) {
+  html.carte-cookies-ouverte:not(.appli) body:has(.carte-cookies) .panier-pilule.panier-pilule { bottom: calc(var(--haut-cookies, 0px) + 10px); }
+}
 .panier-pilule.panier-pilule--bulle.panier-pilule--rebond, html.appli .panier-pilule.panier-pilule--bulle.panier-pilule--rebond { animation-name: bulle-rebond; }
 @media (min-width: 901px) { .panier-pilule.panier-pilule--bulle, html.appli .panier-pilule.panier-pilule--bulle { right: 24px; } }
 @keyframes bulle-arrive { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
