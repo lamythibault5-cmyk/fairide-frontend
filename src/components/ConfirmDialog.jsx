@@ -18,7 +18,7 @@ import Icone from './Icone';
 // poserait le verrou de défilement et volerait le focus alors que rien n'est affiché.
 //
 // LA FEUILLE DE CONFIRMATION DE L'APP (fondateur, 2026-10-17, « Confirmation sheets » de maquettes/commerces-marque/commerces-marque.html) :
-// dans l'app (html.appli), la fenêtre monte du bas en feuille — poignée, tuile d'icône (`icone`, nom d'Icone.jsx), titre,
+// dans l'app (html.appli), la fenêtre est une feuille posée en bas (elle apparaît en place, sans monter) — poignée, tuile d'icône (`icone`, nom d'Icone.jsx), titre,
 // message, ce qui va changer dans un encart (`detail`), le bouton d'action sur toute la largeur et l'annulation en texte
 // dessous. Le site garde sa fenêtre centrée. Styles dans client-ui.css (.confirm-feuille).
 function Corps({ title, message, detail, icone, confirmLabel = 'Confirmer', cancelLabel, danger, loading, onConfirm, onCancel }) {

@@ -44,16 +44,17 @@ html.appli .page-fade { animation: none; }
 html.vt-feuille .plat-panneau, html.vt-feuille .plat-feuille { animation: none; }
 html.vt-feuille::view-transition-old(root), html.vt-feuille::view-transition-new(root) { animation-duration: .25s; }
 
-/* ---------- 3. Les feuilles et les confirmations montent du bas et se tirent pour fermer (version A) ----------
-   La boîte d'une fenêtre (Modale.jsx, ConfirmDialog.jsx) monte de tout en bas de l'écran, le fond s'assombrit en même temps ;
-   elle suit le doigt vers le bas (useTirerPourFermer). `backwards` et non `both` : une animation gardée après sa fin
-   passerait devant le déplacement posé par le doigt (style en ligne), et la feuille ne suivrait plus. */
+/* ---------- 3. Les feuilles et les confirmations apparaissent en place et se tirent pour fermer ----------
+   La boîte d'une fenêtre (Modale.jsx, ConfirmDialog.jsx, FenetreDemande.jsx) est posée en bas de l'écran et apparaît en fondu
+   avec le fond, sans bouger (fondateur, 2026-10-30 : « Demander un restaurant », « Tenir un commerce »… montaient de tout en bas
+   en 0,42 s et saccadaient sur téléphone ; une simple fenêtre qui s'affiche). Elle suit toujours le doigt vers le bas pour
+   fermer (useTirerPourFermer). Le fondu est sur le fond, qui porte la boîte : rien d'autre n'est animé, et aucune animation
+   sur la boîte ne passe devant le déplacement posé par le doigt (style en ligne). */
 @media (max-width: 640px) {
-  html.appli .modal-overlay { animation: vt-voile .25s ease backwards; }
-  html.appli .modal-box { animation: vt-feuille-monte .42s cubic-bezier(.32, .72, 0, 1) backwards; touch-action: pan-y; }
+  html.appli .modal-overlay { animation: vt-voile .15s ease-out backwards; }
+  html.appli .modal-box { animation: none; touch-action: pan-y; }
 }
 @keyframes vt-voile { from { opacity: 0; } }
-@keyframes vt-feuille-monte { from { transform: translateY(100%); } }
 
 /* ---------- 4. Le bout de la page rebondit, en bas seulement (version B) ----------
    html.pres-du-bas est posé par transitionPhoto.js une fois passée la moitié de la page : le rebond (iPhone) ou l'étirement
