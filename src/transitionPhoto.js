@@ -33,6 +33,7 @@ import { flushSync } from 'react-dom';
 import { mouvementReduit } from './gestes';
 import { envelopperNavigations, cheminPrecedent } from './i18n/historiqueLangue';
 import { cheminSansPrefixe } from './i18n/routing';
+import { reculVersEcranVu } from './natif';
 
 const NOM = 'photo-commerce';
 const NOM_PLAT = 'photo-plat';
@@ -227,7 +228,8 @@ export function installerTransitionsEcrans(historique) {
       // depuis la liste, puis ‹ (l'écran d'avant n'est pas la fiche : on l'OUVRE), puis la croix de la fiche : reculer
       // ramenait au panier, dont ‹ rouvrait la fiche… sans fin. Si l'écran d'avant est le panier ou le paiement, la croix
       // suit son lien : la liste.
-      const croixRecule = croix && !PARCOURS.test(avant || '');
+      // Ni vers la Connexion, l'accueil ou « Merci » (natif.js, reculVersEcranVu) : la croix suit alors son lien.
+      const croixRecule = croix && !PARCOURS.test(avant || '') && reculVersEcranVu();
       if (avant && (croixRecule || memeEcran)) {
         e.preventDefault();
         if (idFiche(ici)) photoRetour = { id: idFiche(ici) };

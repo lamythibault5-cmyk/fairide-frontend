@@ -1,7 +1,10 @@
+import { useLayoutEffect, useRef } from 'react';
 import { Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import { espaceApresConnexion } from '../routePrefetch';
+import { oublierCheminsAvant } from '../i18n/historiqueLangue';
+import { retourIosSurEcran } from '../natif';
 
 /* LE RETOUR ARRIÈRE NE SORT PAS DE SON ESPACE (fondateur, 2026-10-27, test du commerce sur iPhone : « je viens de faire un
  * swipe back sur un écran restaurant et je suis maintenant sur la page d'accueil client »).
@@ -23,6 +26,17 @@ export default function GardeRetourEspace() {
   const { previewMode } = usePreviewMode();
   const { pathname } = useLocation();
   const type = useNavigationType();
+  /* Et dans l'app, le retour ne recule que vers un écran de l'app (natif.js, retourIosSurEcran, 2026-10-30). Un changement
+   * de compte efface « l'écran d'avant » : un commerce ou un livreur qui se connecte, une déconnexion, une autre casquette.
+   * Pas un visiteur qui devient client : il reprend sa commande là où il l'avait laissée. */
+  const compte = user ? `${user.id}:${role}` : '';
+  const compteAvant = useRef(compte);
+  useLayoutEffect(() => {
+    const avant = compteAvant.current;
+    compteAvant.current = compte;
+    if (avant !== compte && !(avant === '' && role === 'client')) oublierCheminsAvant();
+    retourIosSurEcran(pathname);
+  }, [compte, role, pathname]);
   if (type !== 'POP' || !user || previewMode || (role !== 'restaurant' && role !== 'driver')) return null;
   const chemin = pathname.replace(/^\/(nl|en)(?=\/|$)/, '').replace(/(.)\/$/, '$1') || '/';
   if (!PAGES_VISITEUR.has(chemin)) return null;

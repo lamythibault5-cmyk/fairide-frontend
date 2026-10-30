@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Icone from './Icone';
 import BrandMark from './BrandMark';
-import { experienceApp } from '../natif';
+import { experienceApp, reculVersEcranVu } from '../natif';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import '../ecran-general.css';
@@ -28,7 +28,6 @@ export function BandeauGeneral({ titre, sous, marque = false, icone = null, reto
   const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const location = useLocation();
   const retourAppli = !retour && APPLI && !!user;
   const haut = useRef(null);
   const [horsEcran, setHorsEcran] = useState(false);
@@ -49,7 +48,7 @@ export function BandeauGeneral({ titre, sous, marque = false, icone = null, reto
     </Link>
   ) : (
     <button type="button" className={classe} aria-label={t('appli.retour')} title={t('appli.retour')}
-      onClick={() => (location.key !== 'default' ? navigate(-1) : navigate('/'))}>
+      onClick={() => (reculVersEcranVu() ? navigate(-1) : navigate('/'))}>
       <Icone nom="retour" taille={18} />
     </button>
   ));
