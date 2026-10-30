@@ -24,6 +24,7 @@ import { Haut, Option, Fait } from './EcransBienvenue';
 import VerifSociete from '../../components/commerce/VerifSociete';
 import { regimesDe } from '../../specialites';
 import EcranPlein from '../../components/EcranPlein';
+import { ETAPES } from './etapesInscription';
 
 /* L'INSCRIPTION DANS L'ACCUEIL DE L'APPLICATION (fondateur, 2026-10-15).
  *
@@ -52,12 +53,16 @@ import EcranPlein from '../../components/EcranPlein';
  * serveur que l'inscription. Il remplace le formulaire « Identité, Adresse… » du tableau de bord (CreationCommerce.jsx). */
 
 /* LE BROUILLON DE L'INSCRIPTION DANS L'APPLICATION (audit du 19/10, CROSS-63). Mêmes règles que celui du site (Auth.jsx) :
- * localStorage, 48 h au plus, effacé quand le compte est créé ; jamais le mot de passe ni le jeton Apple / Google (une
- * inscription Apple / Google n'en garde donc pas). Repris seulement pour le même type de compte. Le mot de passe, qui ne
- * se garde pas, est redemandé au dernier écran plutôt que de renvoyer au premier (comme le site, LIVE-13). Déclaré dans
- * la politique des cookies (« ton inscription commencée », cookiesPolicy.technical). */
+ * localStorage, effacé quand le compte est créé ; jamais le mot de passe ni le jeton Apple / Google. Repris seulement pour
+ * le même type de compte. Le mot de passe, qui ne se garde pas, est redemandé au dernier écran plutôt que de renvoyer au
+ * premier (comme le site, LIVE-13). Déclaré dans la politique des cookies (« ton inscription commencée », cookiesPolicy.technical).
+ * 30 JOURS, COMME L'ACCUEIL (fondateur, 2026-10-30, maquettes/progression) : à 48 h, l'application rouverte après deux jours
+ * reprenait l'accueil (30 jours, bienvenue.js) sur une inscription vide. Apple / Google aussi : ce qui est tapé (téléphone,
+ * adresse, commerce…) est gardé, pas le jeton ; rouverte, l'app montre l'écran du compte, Apple / Google redonne un jeton et
+ * l'inscription reprend à son écran. L'écran est gardé par son NOM (`etape`) : Apple / Google saute l'e-mail, donc les numéros
+ * d'écran ne sont pas les mêmes qu'avec un e-mail. */
 const CLE_BROUILLON = 'fairide_inscription_appli';
-const BROUILLON_MAX_MS = 48 * 3600 * 1000;
+const BROUILLON_MAX_MS = 30 * 24 * 3600 * 1000;
 function lireBrouillon(role) {
   try {
     const b = JSON.parse(localStorage.getItem(CLE_BROUILLON) || 'null');
@@ -69,13 +74,6 @@ function oublierBrouillon() {
   try { localStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
 }
 
-const ETAPES = {
-  client: ['email', 'nom', 'tel', 'adresse', 'fin'],
-  // Inscription express (2026-10-22, version A de maquettes/inscription-livreur) : le compte seulement. Statut, numéro d'entreprise,
-  // véhicule et adresse se donnent dans le dossier (DossierAppli.jsx, « Ton activité », « Tes courses »), une fois, pas deux.
-  driver: ['email', 'nom', 'tel', 'fin'],
-  restaurant: ['email', 'nom', 'tel', 'commerce', 'type', 'entreprise', 'horaires', 'services', 'adresse', 'fin']
-};
 // Erreur renvoyée par le serveur sur un champ → l'écran qui le porte.
 const ETAPES_DU_COMPTE = ['email', 'nom', 'tel'];
 const ETAPE_DU_CHAMP = {
@@ -115,7 +113,9 @@ function Segments({ label, valeur, options, onChoix }) {
 }
 
 // `compte` : le compte existe déjà, seul le commerce manque (voir plus haut) ; `onCree` reçoit alors l'identifiant du commerce.
-export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQuitter, onConnexion, compte = false, onCree }) {
+// `faitsAvant` : les écrans de l'accueil déjà faits (Bienvenue.jsx). La route continue où l'accueil l'a laissée, au lieu de
+// repartir de zéro ; 0 hors de l'accueil (commerce sans fiche, DashboardLayout.jsx).
+export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQuitter, onConnexion, compte = false, onCree, faitsAvant = 0 }) {
   const { t } = useLanguage();
   const { user, token, register, login, verifyEmail, resendCode, changePendingPhone, loginWithGoogle, loginWithApple } = useAuth();
   const moi = compte ? user || {} : {};
@@ -219,19 +219,30 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   // Repris au-delà du premier écran : le mot de passe (jamais gardé) est redemandé au dernier écran.
   const [mdpARetaper, setMdpARetaper] = useState(false);
   useLayoutEffect(() => {
-    if (fed) return; // Apple / Google : rien de gardé (le jeton ne se garde pas, voir plus haut)
     brouillonActif.current = true;
     const b = repriseCode ? null : lireBrouillon(roleBrouillon);
     if (!b) return;
-    for (const [cle, valeur] of Object.entries(b.champs || {})) if (cle !== 'referralCode' || !codeParrain) champsBrouillon[cle]?.[1](valeur);
-    if (Number(b.champs?.index) > 0) setMdpARetaper(true);
+    // Apple / Google : l'e-mail (et le nom quand le fournisseur le donne) viennent du jeton, pas du brouillon.
+    const duJeton = (cle) => fed && (cle === 'email' || (nomConnu && (cle === 'firstName' || cle === 'lastName')));
+    for (const [cle, valeur] of Object.entries(b.champs || {})) {
+      if (cle === 'index' || duJeton(cle) || (cle === 'referralCode' && codeParrain)) continue;
+      champsBrouillon[cle]?.[1](valeur);
+    }
+    // L'écran par son nom (un brouillon d'avant le 2026-10-30 n'a que son numéro). Absent du parcours (l'e-mail repris par
+    // Apple / Google) : l'écran suivant. Commencé avec Apple / Google, repris avec un e-mail : l'e-mail n'a jamais été tapé, on
+    // repart de son écran (les réponses restent).
+    const ordre = ETAPES[role] || [];
+    const rang = b.fed && !fed ? 0 : b.etape ? ordre.indexOf(b.etape) : -1;
+    const repris = rang < 0 ? Number(b.champs?.index) || 0 : Math.max(0, etapes.findIndex((e) => ordre.indexOf(e) >= rang));
+    setIndex(repris);
+    if (repris > 0) setMdpARetaper(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const valeursBrouillon = Object.values(champsBrouillon).map((c) => c[0]);
   useEffect(() => {
     if (!brouillonActif.current || enAttente) return undefined;
     const minuteur = setTimeout(() => {
-      try { localStorage.setItem(CLE_BROUILLON, JSON.stringify({ at: Date.now(), role: roleBrouillon, champs: Object.fromEntries(Object.entries(champsBrouillon).map(([cle, [valeur]]) => [cle, valeur])) })); } catch { /* stockage plein ou indisponible */ }
+      try { localStorage.setItem(CLE_BROUILLON, JSON.stringify({ at: Date.now(), role: roleBrouillon, etape: etapes[index], fed: !!fed, champs: Object.fromEntries(Object.entries(champsBrouillon).map(([cle, [valeur]]) => [cle, valeur])) })); } catch { /* stockage plein ou indisponible */ }
     }, 250);
     return () => clearTimeout(minuteur);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -242,7 +253,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const etapes = useMemo(() => ETAPES[role].filter((e) => !(e === 'email' && fed) && !(e === 'nom' && nomConnu) && !(compte && ETAPES_DU_COMPTE.includes(e))), [role, fed, nomConnu, compte]);
   const etape = enAttente ? (changerNumero ? 'numero' : 'code') : etapes[Math.min(index, etapes.length - 1)];
   const derniere = index >= etapes.length - 1;
-  const progression = enAttente ? 1 : (index + 1) / (etapes.length + 1);
+  const progression = enAttente ? 1 : (faitsAvant + index + 1) / (faitsAvant + etapes.length + 1);
   const nomResponsable = responsable ?? `${firstName} ${lastName}`.trim();
   const cuisineFinale = specialites[0] || '';
 
@@ -795,7 +806,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
         break;
       }
       bouton = t('auth.createAccount');
-      entete = titre(t('appli.insFinTitre'), t(role === 'restaurant' ? 'appli.insFinCommerce' : role === 'driver' ? 'appli.insFinLivreur' : 'appli.insFinClient'));
+      // « Presque fini », pas « Dernière étape » : l'écran du code vient encore après (fondateur, 2026-10-30, maquettes/progression).
+      entete = titre(t('appli.insFinPresque'), t(role === 'restaurant' ? 'appli.insFinCommerce' : role === 'driver' ? 'appli.insFinLivreur' : 'appli.insFinClient'));
       contenu = (
         <>
           {/* Brouillon repris : le mot de passe, jamais gardé, se retape ici (CROSS-63). */}

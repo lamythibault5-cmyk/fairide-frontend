@@ -16,6 +16,7 @@ import {
   EcranRecherche, EcranCompte, EcranPromesses, BarresCommande
 } from './EcransBienvenue';
 import InscriptionAppli from './InscriptionAppli';
+import { ecransInscription } from './etapesInscription';
 
 /* ACCUEIL DE L'APPLICATION iOS / ANDROID — /bienvenue, premier lancement seulement.
  *
@@ -85,7 +86,10 @@ const ecranValide = (e) => {
 // cochées à heure fixe et 3,8 s d'attente quoi qu'il arrive, après jusqu'à 10 s de GPS sur un bouton « Chargement… ».
 // UNE SECONDE DE MOINS (fondateur, 2026-10-28) : 2,7 s au moins au lieu de 3,7 s (3 × 1 000 + 700 ms), soit 700 ms entre deux
 // lignes et 600 ms pour lire la dernière.
-const PAS_RECHERCHE_MS = 700;
+// LENT PUIS VITE (fondateur, 2026-10-30, maquettes/progression) : quand on ATTEND, une fin qui accélère paraît plus courte et une
+// fin qui traîne paraît la plus longue (Harrison et al., UIST 2007). Même 2,7 s au moins, mais 700, 900 puis 500 ms avant chaque
+// ligne : la deuxième prend son temps, la dernière tombe vite (l'anneau suit, ANNEAU_RECHERCHE dans EcransBienvenue.jsx).
+const PAS_RECHERCHE_MS = [700, 900, 500];
 const FIN_RECHERCHE_MS = 600;
 // Le GPS est attendu sur l'écran de chargement, 6 s au plus ; ensuite le code postal (demanderPosition, natif.js).
 const DELAI_POSITION_MS = 6000;
@@ -229,7 +233,7 @@ export default function Bienvenue() {
     let fini = false; let minuteur;
     const verifier = () => {
       if (fini) return;
-      if (pas.coche < 3 && prete(pas.coche) && performance.now() - pas.depuis >= PAS_RECHERCHE_MS) {
+      if (pas.coche < 3 && prete(pas.coche) && performance.now() - pas.depuis >= PAS_RECHERCHE_MS[pas.coche]) {
         pas.coche += 1; pas.depuis = performance.now(); setLignesFaites(pas.coche);
       }
       if (pas.coche === 3 && performance.now() - pas.depuis >= FIN_RECHERCHE_MS) { fini = true; aller(apresRecherche(), { sansHistorique: true }); return; }
@@ -273,8 +277,12 @@ export default function Bienvenue() {
   }
   // Tant qu'aucun profil n'est choisi, le parcours ne compte que deux écrans : « Tu es… » aurait affiché une barre
   // pleine (retour du fondateur, 2026-10-11). On mesure donc sur le parcours le plus long, celui du client.
+  // UNE SEULE ROUTE jusqu'au code (fondateur, 2026-10-30, maquettes/progression) : l'accueil et l'inscription se partagent la
+  // même route. Avant, elle était pleine sur l'écran du compte puis repartait à 17 % (9 % pour un commerce) au premier écran de
+  // l'inscription : on se croyait au bout, on recommençait.
   const mesure = role ? parcours : ['accueil', 'profil', ...PARCOURS.client];
-  const progression = Math.max(0, mesure.indexOf(ecran)) / (mesure.length - 1);
+  const faitsAvantInscription = mesure.length - 1;
+  const progression = Math.max(0, mesure.indexOf(ecran)) / (faitsAvantInscription + ecransInscription(role || 'client'));
 
   // Le client seulement depuis le 2026-10-21 : le livreur n'a plus d'écran de position dans l'accueil (voir PARCOURS).
   // « Trouver mes restaurants » pose la question du système (2026-10-27) ; oui : le chargement s'ouvre tout de suite et y attend
@@ -397,7 +405,7 @@ export default function Bienvenue() {
   }
 
   // L'inscription a ses propres écrans (en-tête, progression, animation) : elle rend tout le plein écran.
-  if (ecran === 'inscription') return <InscriptionAppli role={role} fed={fed} depuis={depuis} codeParrain={codeParrain} onQuitter={retour} onConnexion={dejaInscrit} />;
+  if (ecran === 'inscription') return <InscriptionAppli role={role} fed={fed} depuis={depuis} codeParrain={codeParrain} onQuitter={retour} onConnexion={dejaInscrit} faitsAvant={faitsAvantInscription} />;
 
   return (
     // Les écrans blancs ont un bandeau iris en haut et une feuille blanche dessous (EcransBienvenue.jsx, Feuille).

@@ -11,6 +11,7 @@ import AvecMarque from '../../components/AvecMarque';
 import { euros } from '../../prixPlat';
 import { imgProps } from '../../images';
 import { vibrer } from '../../gestes';
+import { courbeRoute } from '../../routeProgression';
 
 /* Les écrans de l'accueil de l'application — l'enchaînement, la mémoire et la recherche des commerces vivent dans
  * Bienvenue.jsx. Ces composants ne font qu'afficher et remonter des gestes.
@@ -74,19 +75,21 @@ function Velo() {
 }
 
 /* La progression est une route : le vélo part de là où il était à l'écran précédent et roule jusqu'au nouveau. L'en-tête
- * est remonté à chaque écran (key), d'où la dernière position gardée ici, hors du composant. */
+ * est remonté à chaque écran (key), d'où la dernière position gardée ici, hors du composant. `progression` est la part
+ * des écrans faits ; la route en montre la courbe « vite puis doux » (routeProgression.js, fondateur, 2026-10-30). */
 let derniereProgression = 0;
 function Route({ progression }) {
+  const montree = courbeRoute(progression);
   const [depart] = useState(derniereProgression);
   const [p, setP] = useState(depart);
   useEffect(() => {
-    const id = requestAnimationFrame(() => setP(progression));
-    derniereProgression = progression;
+    const id = requestAnimationFrame(() => setP(montree));
+    derniereProgression = montree;
     return () => cancelAnimationFrame(id);
-  }, [progression]);
+  }, [montree]);
   const pct = `${Math.round(p * 1000) / 10}%`;
   return (
-    <div className="bv-route" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progression * 100)}>
+    <div className="bv-route" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(montree * 100)}>
       <i style={{ width: pct }} />
       {/* Le vélo reste SUR la route : à 100 % il touchait le sélecteur de langue (audit design, 2026-10-19). */}
       <span className="bv-velo" style={{ left: `calc(17px + (100% - 34px) * ${p})` }}><Velo /></span>
@@ -360,9 +363,13 @@ export function EcranCodePostal({ cp, commune, onCp, onSuite }) {
  * version A de maquettes/chargement-accueil/chargement-accueil.html). Les points arrivent tous en moins d'une seconde : à 0,18 s
  * l'un, 9 sur 20 seulement avaient le temps de se montrer avant l'écran suivant. */
 const TOUR_CERCLE = 2 * Math.PI * 44;
-export function Cercle({ points, anime, petit, progres = null }) {
+// L'anneau du chargement, ligne cochée par ligne cochée : LENT PUIS VITE (fondateur, 2026-10-30, maquettes/progression). Quand on
+// attend, c'est l'inverse d'un formulaire : peu au début, la fin d'un trait (`accelere` : la transition accélère au lieu de
+// freiner en arrivant). Avant : 1/3, 2/3, plein, chaque pas ralentissant, la forme qui paraît la plus lente.
+const ANNEAU_RECHERCHE = [0, 0.2, 0.45, 1];
+export function Cercle({ points, anime, petit, progres = null, accelere = false }) {
   return (
-    <svg viewBox="0 0 100 100" className={`bv-cercle${anime ? ' anime' : ''}${petit ? ' petit' : ''}`} aria-hidden="true">
+    <svg viewBox="0 0 100 100" className={`bv-cercle${anime ? ' anime' : ''}${petit ? ' petit' : ''}${accelere ? ' accelere' : ''}`} aria-hidden="true">
       <circle cx="50" cy="50" r="44" className="zone" />
       <circle cx="50" cy="50" r="44" className="bord" />
       {progres !== null && <circle cx="50" cy="50" r="44" className="anneau" strokeDasharray={TOUR_CERCLE} style={{ strokeDashoffset: TOUR_CERCLE * (1 - progres) }} />}
@@ -381,7 +388,7 @@ export function EcranRecherche({ commune, points, lignes, faites }) {
   return (
     <>
       <div className="bv-grandit" />
-      <Cercle points={points} anime progres={faites / lignes.length} />
+      <Cercle points={points} anime progres={ANNEAU_RECHERCHE[faites] ?? 1} accelere />
       <h1 className="bv-titre bv-centre" style={{ fontSize: 26 }} aria-live="polite">{commune ? t('appli.calcTitre', { c: commune }) : t('appli.calcTitrePosition')}</h1>
       <ul className="bv-etapes" aria-live="polite">
         {lignes.map((txt, k) => (

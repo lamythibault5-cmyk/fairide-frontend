@@ -5479,6 +5479,8 @@ html.clavier-ouvert .bv { bottom: var(--clavier, 0px); }
 @keyframes bv-etape-fondu { from { opacity: 0; } }
 /* L'anneau du chargement (Cercle, `progres`) : part d'en haut et se remplit à chaque ligne cochée. */
 .bv-cercle .anneau { fill: none; stroke: var(--lime); stroke-width: 2.2; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50px 50px; transition: stroke-dashoffset .6s cubic-bezier(.3, .7, .4, 1); }
+/* Le chargement de l'accueil : l'anneau accélère en arrivant, il ne freine pas (lent puis vite, Cercle `accelere`, 2026-10-30). */
+.bv-cercle.accelere .anneau { transition-timing-function: cubic-bezier(.55, 0, .85, .35); }
 @media (prefers-reduced-motion: reduce) { .bv-etapes li.en-cours .bv-coche { animation: none; border-top-color: var(--lime); } .bv-etapes li.fait .bv-coche, .bv-etape-txt { animation: none; } }
 
 .bv-commerce { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 16px; padding: 10px; margin-bottom: 8px; background: #fff; }

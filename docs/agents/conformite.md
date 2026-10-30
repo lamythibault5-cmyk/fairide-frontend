@@ -75,8 +75,10 @@ components live in [src/components/conformite/](../../src/components/conformite/
   is not required once Stripe Identity or an in-person check verified the face (`couriers.documentsRequis`). A non-EEA
   courier can *claim* the professional-card exemption (`self_employment_claimed_at`): it unblocks submission only; approval
   and rides still need the team's `self_employment_by_residence`, granted or withdrawn with a reason in Admin › Livreurs ›
-  dossier › Documents (audit 2026-10-19, admin-08). The signup draft is kept 48 h in localStorage (declared
-  in `cookies.technical`). **After approval the dossier is not frozen** (audit 2026-10-19, courier-4 to -7, -30): the
+  dossier › Documents (audit 2026-10-19, admin-08). The signup draft is kept 30 days in localStorage (48 h until
+  2026-10-30), and so are the courier dossier fields typed but not yet sent (`fairide_dossier_livreur`, never the national
+  register number); shops' answers to menu questions 7 days, checkout choices for the tab only (all declared in
+  `cookies.technical` and `cookies.duration`). **After approval the dossier is not frozen** (audit 2026-10-19, courier-4 to -7, -30): the
   approved page (DossierSuivi.jsx, site and app, blocks in dossierBlocs.jsx) lets the courier change
   zone, vehicle (+ licence and plate when motorised), « other platforms » (1 vs 3 jobs at a time), bag and minimum, upload a
   renewed residence permit / professional card (date first) and confirm school + year for the yearly student renewal —

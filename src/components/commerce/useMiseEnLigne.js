@@ -68,7 +68,9 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
 
   // `action` : ce que le commerce peut faire maintenant ({ libelle, to } ou { libelle, onClick }) ; `attente` : étape de
   // Fairide, sans bouton. Une étape faite n'a ni l'un ni l'autre.
-  const etapes = [];
+  // « Compte créé » d'abord, toujours fait (fondateur, 2026-10-30, maquettes/progression) : c'est vrai, et une étape déjà cochée
+  // donne envie de finir (Nunes & Drèze, 2006). « 1 étape faite sur 7 » au lieu de « 0 sur 6 ».
+  const etapes = [{ cle: 'compte', fait: true, icone: 'commerce', titre: t('miseEnLigne.accountDone') }];
   // « Fairide prépare ta carte » seulement pour une demande encore ouverte : annulée, refusée ou close sans plat, le
   // commerce attendait pour rien (audit du 19/10, shop-8). Il retrouve « Envoie-nous ta carte ».
   const demandeOuverte = demandeCarte && ['en_attente', 'en_cours'].includes(demandeCarte.status);

@@ -55,6 +55,28 @@ import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AV
  * et feuille depuis le 2026-10-19). */
 const STATUTS = ['independent', 'student_independent'];
 const VEHICULES = ['velo', 'velo_electrique', 'scooter', 'voiture'];
+
+/* CE QUI EST TAPÉ RESTE (fondateur, 2026-10-30, coupure 5 de maquettes/progression). « Ton activité », « Tes courses » et
+ * « Registre » ne vont au serveur que sur « Continuer » : sorti avant (app fermée, appel, croix), le livreur retapait tout.
+ * Ici, dans le téléphone seulement, les champs qu'il a CHANGÉS et pas encore envoyés : jamais une valeur que le serveur a
+ * déjà (elle remplacerait une correction faite depuis par l'équipe), jamais le numéro de registre national. Une fois
+ * envoyés, ils sont égaux au dossier et la clé s'efface d'elle-même. 30 jours au plus, ce compte seulement. Déclaré dans la
+ * politique des cookies (cookiesPolicy.technical). */
+const CLE_SAISIE = 'fairide_dossier_livreur';
+const SAISIE_MAX_MS = 30 * 24 * 3600 * 1000;
+const JAMAIS_GARDE = ['nationalNumber'];
+function lireSaisie(compteId) {
+  try {
+    const s = JSON.parse(localStorage.getItem(CLE_SAISIE) || 'null');
+    return s && compteId && s.compte === compteId && Date.now() - (s.at || 0) < SAISIE_MAX_MS ? s.champs || {} : {};
+  } catch { return {}; }
+}
+function ecrireSaisie(compteId, champs) {
+  try {
+    if (!compteId || !Object.keys(champs).length) localStorage.removeItem(CLE_SAISIE);
+    else localStorage.setItem(CLE_SAISIE, JSON.stringify({ compte: compteId, at: Date.now(), champs }));
+  } catch { /* stockage indisponible : on retapera */ }
+}
 const NATIONALITES = ['BE', 'EEA_CH', 'THIRD'];
 const AVANT_COURSE = ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur'];
 // Ancienne étape du dossier du site (retour de Stripe : setEtape('envoi')) → écran d'ici.
@@ -80,8 +102,21 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
   const manques = (d.missing ?? []).filter((m) => !MANQUES_INFORMATIFS.includes(m));
   const stripeActif = (d.user?.stripeConnectStatus || user?.stripeConnectStatus) === 'active';
 
-  const [f, setF] = useState(() => infosDepuisDossier(c, d.zones));
+  const compteId = d.user?.id || user?.id || null;
+  const [f, setF] = useState(() => {
+    const garde = lireSaisie(compteId);
+    for (const k of JAMAIS_GARDE) delete garde[k];
+    return { ...infosDepuisDossier(c, d.zones), ...garde };
+  });
   const val = (k, v) => setF((x) => ({ ...x, [k]: v }));
+  // Garder ce qui diffère du dossier du serveur (voir CLE_SAISIE).
+  useEffect(() => {
+    const minuteur = setTimeout(() => {
+      const serveur = infosDepuisDossier(c, d.zones);
+      ecrireSaisie(compteId, Object.fromEntries(Object.entries(f).filter(([k, v]) => !JAMAIS_GARDE.includes(k) && v !== serveur[k])));
+    }, 300);
+    return () => clearTimeout(minuteur);
+  }, [f, c, d.zones, compteId]);
   const motorise = ['scooter', 'voiture'].includes(f.vehicleType);
   const horsEee = f.nationalityGroup === 'THIRD';
   const docs = documentsRequis(d, { statusType: c.statusType, motorise, horsEee });
@@ -226,7 +261,9 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
   return (
     <EcranPlein etiquette={t('courierOnboarding.title')}>
       <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={ouvert}>
-        <Haut onRetour={retour} progression={(rang + 1) / ecrans.length} onFermer={fermer} />
+        {/* L'inscription compte comme un écran déjà fait (« Inscription ✓ » du sommaire). « Ce qui manque » (pas dans `ecrans`)
+            est le dernier : la route y est pleine ; elle revenait au début (coupure 6 de maquettes/progression, 2026-10-30). */}
+        <Haut onRetour={retour} progression={ouvert === 'manques' ? 1 : (rang + 2) / (ecrans.length + 1)} onFermer={fermer} />
         <div className="bv-form">
           <h1 className="bv-titre bv-titre-form">{titre}</h1>
           {sous && <p className="bv-sous">{sous}</p>}
@@ -266,11 +303,13 @@ const ETAPES_SOMMAIRE = [
 function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActif, premierEcran, onOuvrir, ouvert = null, renvoi = null, busy = false, children = null }) {
   const c = d.courier;
   const [avant, setAvant] = useState(false);
-  const etapes = ETAPES_SOMMAIRE.map(([cle, liste]) => {
+  // « Inscription » d'abord, toujours faite (fondateur, 2026-10-30, maquettes/progression) : c'est vrai, et une étape déjà
+  // cochée donne envie de finir (Nunes & Drèze, 2006). « 1 sur 7 » au lieu de « 0 sur 6 ». Elle ne s'ouvre pas.
+  const etapes = [{ cle: 'inscription', siens: [], fait: true, manquants: [] }, ...ETAPES_SOMMAIRE.map(([cle, liste]) => {
     const siens = (liste ?? docs.map((x) => `doc:${x}`)).filter((e) => ecrans.includes(e));
     const fait = cle === 'paiement' ? stripeActif : !siens.some(aFaire);
     return { cle, siens, fait, manquants: manques.filter((m) => siens.includes(ecranDuManque(m, c.statusType))) };
-  }).filter((e) => e.siens.length);
+  }).filter((e) => e.siens.length)];
   const restantes = etapes.filter((e) => !e.fait);
   const faites = etapes.filter((e) => e.fait);
   const total = etapes.length;
@@ -291,11 +330,22 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
     if (e.cle === 'activite') return [c.statusType && t(`courierOnboarding.status_${c.statusType}`), c.independent?.companyNumber].filter(Boolean).join(' · ') || null;
     if (e.cle === 'courses') return [c.vehicleType && t(`courierOnboarding.vehicle_${c.vehicleType}`), c.zone].filter(Boolean).join(' · ') || null;
     if (e.cle === 'paiement') return t('courierOnboarding.paymentActive');
+    if (e.cle === 'inscription') return d.user?.email || user?.email || null;
     return null;
   };
   const ligne = (e) => {
     const sous = detail(e);
     const actif = !!ouvert && e.siens.includes(ouvert);
+    if (!e.siens.length) {
+      return (
+        <li key={e.cle}>
+          <div className="ecl-etape">
+            <span className="ecl-rond-etape fait" aria-hidden="true"><Icone nom="valider" taille={14} /></span>
+            <span className="ecl-grow"><b>{t(`appli.dosEtape_${e.cle}`)}</b>{sous && <small>{sous}</small>}</span>
+          </div>
+        </li>
+      );
+    }
     return (
       <li key={e.cle}>
         <button type="button" className={`ecl-etape${actif ? ' on' : ''}`} aria-current={actif ? 'step' : undefined} onClick={() => onOuvrir(e.siens.find(aFaire) || e.siens[0])}>

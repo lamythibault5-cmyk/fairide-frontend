@@ -33,6 +33,7 @@ import CadreConnexion from '../components/CadreConnexion';
 import AvecMarque from '../components/AvecMarque';
 import VerifSociete from '../components/commerce/VerifSociete';
 import { defilement } from '../gestes';
+import { courbeRoute } from '../routeProgression';
 
 function roles(t) {
   return [
@@ -87,8 +88,10 @@ const CLE_BROUILLON = 'fairide_inscription_brouillon';
 /* BROUILLON GARDÉ 48 H, MÊME ONGLET FERMÉ (audit UX du 15/10/2026). Il ne survivait qu'à un rechargement du même onglet
    (sessionStorage) : un restaurateur qui fermait la page pour aller chercher son numéro d'entreprise recommençait tout.
    localStorage, 48 h, effacé à l'inscription réussie ou par « Recommencer » ; jamais de mot de passe ni de code dedans.
-   Déclaré dans la politique des cookies (stockage technique, cookies.technical). */
-const BROUILLON_MAX_MS = 48 * 3600 * 1000; // au-delà, une inscription interrompue ne se reprend plus
+   Déclaré dans la politique des cookies (stockage technique, cookies.technical).
+   30 JOURS DEPUIS LE 2026-10-30 (fondateur, maquettes/progression), comme l'application : à 48 h, qui revenait après un
+   week-end retrouvait un formulaire vide. Toujours « Recommencer » au-dessus d'une inscription reprise. */
+const BROUILLON_MAX_MS = 30 * 24 * 3600 * 1000; // au-delà, une inscription interrompue ne se reprend plus
 
 // Le cadre en deux moitiés (iris + feuille blanche) : components/CadreConnexion.jsx, partagé avec le nouveau mot de passe.
 export default function Auth() {
@@ -369,8 +372,10 @@ export default function Auth() {
   }
   // `fed` : { fournisseur, prenom, nom } quand le jeton vient de la feuille native (Apple ne met pas le nom dans
   // son jeton : il arrive à côté, et seulement à la première autorisation).
+  const etapeAvantGoogle = useRef(null); // jeton expiré à la fin : l'étape où revenir avec le nouveau
   function retenirGoogle(credential, fed = {}) {
     const pr = decoderJwt(credential);
+    if (etapeAvantGoogle.current != null) { setStep(etapeAvantGoogle.current); etapeAvantGoogle.current = null; }
     setGoogleCredential(credential);
     setFournisseurFed(fed.fournisseur || 'google');
     const prenom = pr.given_name || fed.prenom || '';
@@ -531,8 +536,9 @@ export default function Auth() {
   // UN LIEN VERS CETTE PAGE QUAND ON Y EST DÉJÀ (fondateur, 2026-10-16) : « Connexion » ou « Inscription » de l'en-tête,
   // « Ajouter mon commerce » ou « Devenir livreur » du pied de page. Même chemin (/login) : la page n'est pas remontée,
   // et mode et rôle, lus dans l'adresse une seule fois à l'arrivée, ne suivaient pas — on cliquait « Connexion » et
-  // l'inscription restait affichée. Chaque nouvelle navigation (location.key) relit donc l'adresse, repart de la
-  // première étape et remonte en haut de la page.
+  // l'inscription restait affichée. Chaque nouvelle navigation (location.key) relit donc l'adresse et remonte en haut de la
+  // page. L'étape ne repart de la première que si le type de compte change (effet sur role plus bas) : « Inscription » touché
+  // en pleine inscription renvoyait à l'étape 1 (coupure 9 de maquettes/progression, 2026-10-30).
   const derniereNavigation = useRef(location.key);
   useEffect(() => {
     if (derniereNavigation.current === location.key) return;
@@ -542,7 +548,6 @@ export default function Auth() {
     setMode(a ? 'register' : 'login');
     setRole(ROLES.some((x) => x.value === r) ? r : a === 'partner' ? 'restaurant' : 'client');
     setForgotMode(searchParams.get('oubli') === '1');
-    setStep(0);
     remonterEnHaut();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key]);
@@ -614,11 +619,11 @@ export default function Auth() {
     account: { title: t('auth.stepAccountTitle'), sub: t('auth.stepAccountSubFirst') }
   }[stepKey];
 
-  /* Un commerce a une étape de plus qu'un client : changer de rôle en cours de route (ou passer
-     de "Créer un compte" à "Se connecter") doit ramener au début, sinon on peut se retrouver à
-     une étape 3 qui n'existe plus pour le nouveau rôle. */
-  // Retour à la première étape quand on CHANGE de type de compte ou d'onglet — pas au montage, ni pendant la
-  // reprise d'un brouillon (sinon un rechargement ramenait toujours à l'étape 1).
+  /* Un commerce a une étape de plus qu'un client : changer de rôle en cours de route doit ramener
+     au début, sinon on peut se retrouver à une étape 3 qui n'existe plus pour le nouveau rôle. */
+  // Retour à la première étape quand on CHANGE de type de compte — pas au montage, ni pendant la reprise d'un brouillon
+  // (sinon un rechargement ramenait toujours à l'étape 1). Plus quand on passe par l'onglet « Se connecter » et qu'on revient
+  // (2026-10-30, maquettes/progression) : les étapes sont les mêmes, on retrouve celle où l'on était.
   const roleModePrecedent = useRef(null);
   useEffect(() => {
     if (attenteBrouillon.current) {
@@ -629,7 +634,8 @@ export default function Auth() {
     const avant = roleModePrecedent.current;
     roleModePrecedent.current = { role, mode };
     if (!avant || (avant.role === role && avant.mode === mode)) return;
-    setStep(0); setErrors({});
+    if (avant.role !== role) setStep(0);
+    setErrors({});
   }, [role, mode]);
 
   /* Valide UNE étape et renvoie ses erreurs, par champ. Les règles reproduisent exactement celles
@@ -1014,8 +1020,10 @@ export default function Auth() {
           try {
             reussi = await inscrireViaGoogle();
           } catch (err) {
-            // Jeton Google expiré (il vit une heure) ou refusé : on repart de la première étape.
-            if (/google|token|jeton|expir/i.test(err.message || '') && err.message !== 'INCOMPLETE_PROFILE') { oublierGoogle(); setStep(0); toast(t('auth.googleExpired'), 'erreur'); }
+            // Jeton Google expiré (il vit une heure) ou refusé : le bouton Google est sur la première étape, on y va le temps de
+            // reprendre un jeton, puis on revient à l'étape où l'on était (retenirGoogle) ; le reste est gardé (coupure 9 de
+            // maquettes/progression, 2026-10-30 : avant, tout le parcours était à refaire).
+            if (/google|token|jeton|expir/i.test(err.message || '') && err.message !== 'INCOMPLETE_PROFILE') { etapeAvantGoogle.current = step; oublierGoogle(); setStep(0); toast(t('auth.googleExpired'), 'erreur'); }
             // Profil refusé par le serveur : on affiche sa raison (« numéro d'entreprise requis »…), pas le code interne.
             else if (err.message === 'INCOMPLETE_PROFILE') toast(err.data?.detail || t('auth.errGoogleIncomplete'), 'erreur');
             else throw err;
@@ -1442,7 +1450,8 @@ export default function Auth() {
               <h3>{stepCopy.title}</h3>
               <p className="small">{stepCopy.sub}</p>
               <div className="auth-step-bar">
-                <span style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
+                {/* Vite puis doux, comme la route de l'app (routeProgression.js, 2026-10-30). */}
+                <span style={{ width: `${courbeRoute((step + 1) / steps.length) * 100}%` }} />
               </div>
             </div>
 
