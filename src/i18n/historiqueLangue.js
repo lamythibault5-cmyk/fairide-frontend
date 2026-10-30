@@ -103,6 +103,12 @@ function noterChemin() {
 export function cheminPrecedent() {
   return cheminsVus.get(index - 1) || null;
 }
+/* Un changement de compte (connexion d'un commerce ou d'un livreur, déconnexion, autre casquette) : ce qu'on a vu avant
+ * n'est plus « l'écran d'avant ». Le retour (natif.js, reculVersEcranVu) et les ‹ ne reculent plus vers la fiche ou la
+ * Connexion d'avant la connexion (fondateur, 2026-10-30). Les entrées restent dans l'historique du navigateur, on les ignore. */
+export function oublierCheminsAvant() {
+  for (const i of cheminsVus.keys()) if (i < index) cheminsVus.delete(i);
+}
 noterChemin();
 
 function handlePop() {

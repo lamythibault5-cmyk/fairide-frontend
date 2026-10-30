@@ -25,6 +25,7 @@
 
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { traduire } from './context/LanguageContext';
+import { cheminPrecedent } from './i18n/historiqueLangue';
 
 export function estNatif() {
   try { return Capacitor.isNativePlatform(); } catch { return false; }
@@ -219,16 +220,26 @@ function retourIos(actif) {
     retourNatif.activer({ actif }).catch(() => {});
   } catch { /* greffon absent */ }
 }
+// Le balayage n'est allumé que sans fenêtre ouverte ET sur un écran qui a un écran de l'app derrière lui (retourIosSurEcran,
+// plus bas). Éteint tant que l'écran ne l'a pas dit : un geste ne recule jamais vers un écran inconnu.
+let ecranAvecRetour = false;
+let retourEnvoye = null;
+function appliquerRetourIos() {
+  const actif = fenetresOuvertes === 0 && ecranAvecRetour;
+  if (actif === retourEnvoye) return;
+  retourEnvoye = actif;
+  retourIos(actif);
+}
 export function suspendreRetourIos() {
   if (!estNatif() || plateforme() !== 'ios') return () => {};
   fenetresOuvertes += 1;
-  if (fenetresOuvertes === 1) retourIos(false);
+  appliquerRetourIos();
   let rendu = false;
   return () => {
     if (rendu) return;
     rendu = true;
     fenetresOuvertes -= 1;
-    if (fenetresOuvertes === 0) retourIos(true);
+    appliquerRetourIos();
   };
 }
 
@@ -249,6 +260,33 @@ function cheminSansLangue(pathname) {
   return pathname.replace(/^\/(nl|en)(?=\/|$)/, '') || '/';
 }
 
+/* LE RETOUR NE RECULE QUE VERS UN ÉCRAN DE L'APP (fondateur, 2026-10-30 : « dans les onglets Compte, en glissant, je reviens
+ * sur des écrans random comme Connexion ou le menu du commerce test ; dans Mes courses surtout, fais que ça n'arrive
+ * jamais »). Le balayage d'iOS (WebKit) et le Retour d'Android remontent l'historique du navigateur, qui garde tout : la
+ * fiche visitée avant de se connecter, la Connexion, les pages d'avant un rechargement. Derrière un onglet, il n'y a
+ * pourtant rien de l'app. Deux règles :
+ *  - sur un écran de départ (un onglet de la barre du bas, Mon compte compris, ou une page d'entrée), le balayage d'iOS est
+ *    éteint, comme sur un onglet d'une app iPhone (Android garde sa règle : réduire, ou l'onglet d'accueil du rôle) ;
+ *  - ailleurs, on ne recule que vers un écran vu dans cette session, après le dernier changement de compte
+ *    (historiqueLangue.js, cheminPrecedent / oublierCheminsAvant), et jamais vers la Connexion ou l'accueil. Sinon le
+ *    balayage d'iOS est éteint et le Retour d'Android réduit l'app : le ‹ de l'écran reste là pour sortir. */
+const ECRANS_DE_DEPART = new Set([...RACINES, ...Object.keys(ONGLETS), '/account']);
+const SANS_RETOUR = new Set(['/login', '/bienvenue', '/reset-password']);
+function normaliser(pathname) {
+  return cheminSansLangue(pathname.split('?')[0]).replace(/(.)\/$/, '$1');
+}
+function reculVersEcranVu() {
+  const avant = cheminPrecedent();
+  return !!avant && !SANS_RETOUR.has(normaliser(avant));
+}
+// Appelée à chaque changement d'écran (GardeRetourEspace.jsx).
+export function retourIosSurEcran(pathname) {
+  if (!estNatif() || plateforme() !== 'ios') return;
+  const chemin = normaliser(pathname);
+  ecranAvecRetour = !ECRANS_DE_DEPART.has(chemin) && reculVersEcranVu();
+  appliquerRetourIos();
+}
+
 // À appeler une fois au démarrage (main.jsx), avec l'historique du routeur.
 // Ne lève jamais : un greffon absent de la coque ne doit pas empêcher l'application de s'afficher.
 export async function demarrerNatif(historique) {
@@ -258,7 +296,8 @@ export async function demarrerNatif(historique) {
   // Les vibrations sont prêtes avant le premier toucher (voir vibrerNatif).
   chargerHaptique().catch(() => {});
   // Une page rechargée pendant qu'une feuille était ouverte laisserait le balayage retour coupé (suspendreRetourIos).
-  if (plateforme() === 'ios') retourIos(true);
+  // Il repart donc de « éteint », et l'écran affiché le rallume s'il a un écran de l'app derrière lui (retourIosSurEcran).
+  if (plateforme() === 'ios') { retourEnvoye = null; appliquerRetourIos(); }
   preparerHaptique();
   // La tape légère sous chaque bouton (gestes.js, 2026-10-25).
   import('./gestes').then(({ installerTouches }) => installerTouches()).catch(() => {});
@@ -301,6 +340,8 @@ export async function demarrerNatif(historique) {
       if (retourEtape) { retourEtape.click(); return; }
       if (RACINES.has(chemin) || window.history.length <= 1) { App.minimizeApp().catch(() => {}); return; }
       if (ONGLETS[chemin]) { historique.replace(ONGLETS[chemin]); return; }
+      // Rien de l'app derrière (page d'avant la connexion, Connexion, page d'avant un rechargement) : comme sur un premier écran.
+      if (!reculVersEcranVu()) { App.minimizeApp().catch(() => {}); return; }
       // Un geste de la personne : l'écran recule en glissant, comme sur iPhone (transitionPhoto.js).
       historique.back({ geste: true });
     });
