@@ -163,7 +163,7 @@ tap. **Opening Stripe shows the app's waiting screen** (« On t'emmène chez Str
 all five Connect buttons and Stripe Identity): the server takes several seconds to make the link, and the button only showed « … ».
 **The shop's Ma carte uses the customer's sections strip** (2026-10-27, « la barre de menu devrait être la même que la vue
 client »): CategoryQuickNav inside `.fiche-page.fiche-appli.ec-carte-liste` (CarteCommerce.jsx), glass lens in the app, iris pill on
-the site, stuck at the top of the shop screen; the old `.ec-sections` strip is gone. `.page-fade` doesn't animate in the app. Modale / ConfirmDialog rise from the bottom and are pulled
+the site, stuck at the top of the shop screen; the old `.ec-sections` strip is gone. `.page-fade` doesn't animate in the app. Modale / ConfirmDialog sit at the bottom, appear in place (0.15 s fade of the background; the 0.42 s slide up stuttered on phones, removed 2026-10-30) and are pulled
 down to close (useTirerPourFermer). The page bounces at the bottom only (`html.pres-du-bas` past half the page; native bounce turned
 back on in FairideViewController). Press feedback: buttons `scale: .96` + darker, cards `.97`, rows an iris tint. Without View
 Transitions (iOS 15–17, old Android WebViews) screens swap instantly. Every `:hover` rule is wrapped in `@media (hover: hover)` at
