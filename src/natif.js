@@ -270,12 +270,15 @@ function cheminSansLangue(pathname) {
  *  - ailleurs, on ne recule que vers un écran vu dans cette session, après le dernier changement de compte
  *    (historiqueLangue.js, cheminPrecedent / oublierCheminsAvant), et jamais vers la Connexion ou l'accueil. Sinon le
  *    balayage d'iOS est éteint et le Retour d'Android réduit l'app : le ‹ de l'écran reste là pour sortir. */
-const ECRANS_DE_DEPART = new Set([...RACINES, ...Object.keys(ONGLETS), '/account']);
-const SANS_RETOUR = new Set(['/login', '/bienvenue', '/reset-password']);
+// « Merci » (/order-success) aussi : derrière lui, il n'y a que le paiement déjà réglé ; son ‹ mène à la liste.
+const ECRANS_DE_DEPART = new Set([...RACINES, ...Object.keys(ONGLETS), '/account', '/order-success']);
+// Les mêmes écrans où l'on ne revient pas que le ‹ du parcours de commande (EcranCommande.jsx, ecranDavant).
+const SANS_RETOUR = new Set(['/login', '/bienvenue', '/reset-password', '/order-success', '/order-cancelled']);
 function normaliser(pathname) {
   return cheminSansLangue(pathname.split('?')[0]).replace(/(.)\/$/, '$1');
 }
-function reculVersEcranVu() {
+// Aussi pour les ‹ qui reculent d'un pas (Layout.jsx, EcranGeneral.jsx) et la croix d'une fiche (transitionPhoto.js).
+export function reculVersEcranVu() {
   const avant = cheminPrecedent();
   return !!avant && !SANS_RETOUR.has(normaliser(avant));
 }

@@ -16,7 +16,7 @@ import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
 import SuiviCommande from './client/SuiviCommande';
 import { SkeletonCards, SqueletteEcran } from './Skeleton';
-import { experienceApp } from '../natif';
+import { experienceApp, reculVersEcranVu } from '../natif';
 import { lireBienvenue } from '../bienvenue';
 import useBarreSurIris from '../hooks/useBarreSurIris';
 // Le cadre du site (barre latérale blanche, largeurs, bandeau et feuille, carte des cookies, connexion) : voir son en-tête.
@@ -109,8 +109,10 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
-  // Retour d'une page de l'app : la page précédente s'il y en a une dans cette session, sinon l'accueil.
-  const retourAppli = () => (location.key !== 'default' ? navigate(-1) : navigate('/'));
+  // Retour d'une page de l'app : l'écran d'avant s'il est de l'app (vu dans cette session, depuis la connexion, pas la
+  // Connexion elle-même), sinon l'accueil. `location.key` ne suffisait pas : elle survit à un rechargement et ne dit rien de
+  // ce qu'il y a derrière (fondateur, 2026-10-30, retours vers des écrans d'avant la connexion ; natif.js).
+  const retourAppli = () => (reculVersEcranVu() ? navigate(-1) : navigate('/'));
   // Messages de Fairide : pastille sur « Mon compte », toast quand un nouveau message arrive pendant
   // que l'app est ouverte (une fois par hausse du compteur, jamais au premier chargement), et préfixe
   // « (n) » dans le titre de l'onglet tant qu'il reste du non lu.
