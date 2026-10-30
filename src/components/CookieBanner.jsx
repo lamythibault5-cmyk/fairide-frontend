@@ -22,6 +22,30 @@ export default function CookieBanner() {
   // première tabulation mène à « Accepter », la suivante à « Refuser ». Le focus allait sur « Accepter » lui-même : posé au
   // chargement, il y dessinait l'anneau — le seul bouton cerné des deux, donc mis en avant. La carte, elle, n'a pas d'anneau.
   useEffect(() => { if (visible) boite.current?.focus({ preventScroll: true }); }, [visible]);
+  /* LA BARRE DU PANIER RESTE AU-DESSUS DE LA CARTE (fondateur, 2026-10-30, test sur iPad) : la carte comptait parmi les
+     fenêtres qui effacent la barre du panier (styles.css), et un client qui n'y répondait pas remplissait son panier sans
+     jamais le voir. La carte dit à la page où commence son bord haut (`--haut-cookies`, depuis le bas de l'écran) ; sur
+     téléphone et tablette, la barre se pose juste au-dessus (styles.css, « LA BARRE DU PANIER S'EFFACE »). */
+  useEffect(() => {
+    const el = boite.current;
+    if (!visible || !el) return undefined;
+    const html = document.documentElement;
+    const mesurer = () => html.style.setProperty('--haut-cookies', `${Math.max(0, Math.round(window.innerHeight - el.getBoundingClientRect().top))}px`);
+    mesurer();
+    html.classList.add('carte-cookies-ouverte');
+    const obs = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(mesurer) : null;
+    obs?.observe(el);
+    window.addEventListener('resize', mesurer);
+    // La carte arrive en glissant depuis le bas (site-monte) : mesurée pendant le glissement, son bord haut est trop bas.
+    el.addEventListener('animationend', mesurer);
+    return () => {
+      obs?.disconnect();
+      window.removeEventListener('resize', mesurer);
+      el.removeEventListener('animationend', mesurer);
+      html.classList.remove('carte-cookies-ouverte');
+      html.style.removeProperty('--haut-cookies');
+    };
+  }, [visible]);
 
   function choose(value) {
     setConsent(value);
