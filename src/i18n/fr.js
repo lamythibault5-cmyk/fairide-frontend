@@ -4615,7 +4615,7 @@ export default {
       s10p2: 'Pour toute autre question, le support Fairride est joignable par e-mail à [contact@fairride.be](mailto:contact@fairride.be) ou par téléphone au [+32 474 20 07 13](tel:+32474200713).',
       s11Title: "Pendant le service : pause, capacité, livreur, alcool",
       s11p1: "**Pause et fermeture.** Sur la page des commandes, l'interrupteur « Ouvert aux commandes » ferme ton commerce jusqu'à ce que tu rouvres. Débordé ? Une pause de 15, 30 ou 60 minutes bloque les nouvelles commandes, laisse finir celles en cours, puis rouvre toute seule.",
-      s11p2: "**Commandes et capacité** (dans « Mon commerce ») : un montant minimum de commande, un nombre maximum de commandes par jour, la distance de livraison (sans réglage, 6 km) et ton temps de préparation habituel (sans réglage, 12 minutes), qui sert à l'heure d'arrivée annoncée au client. Fairride t'y montre aussi le temps que tu mets réellement, mesuré sur tes 30 derniers jours.",
+      s11p2: "**Commandes et capacité** (dans « Mon commerce ») : un montant minimum de commande, un nombre maximum de commandes par jour, la distance de livraison (sans réglage, 6 km) et ton temps de préparation habituel (sans réglage, 15 minutes), qui sert à l'heure d'arrivée annoncée au client. Fairride t'y montre aussi le temps que tu mets réellement, mesuré sur tes 30 derniers jours.",
       s11p3: "**Le livreur attend.** Quand le livreur est arrivé, la commande affiche depuis combien de minutes il attend. Il ne peut pas repartir sans la commande : prépare-la en priorité.",
       s11p4: "**Alcool.** Une commande avec de l'alcool demande de vérifier la pièce d'identité à la remise. Touche « Âge vérifié : remettre », ou « Refuser la remise » si le client n'a pas l'âge ou pas de pièce : l'alcool est retiré de la commande, tu remets le reste, et Fairride te paie l'alcool quand même.",
       s11p5: "**Client pas venu** (à emporter) : une fois la commande prête, et 30 minutes après l'heure annoncée au client, « Client pas venu » clôt la commande. Payée sur place : Fairride n'intervient pas (ni remboursement, ni indemnisation), et ce client ne pourra plus payer sur place. Payée en ligne : elle reste due, tu gardes ton paiement."
@@ -6252,6 +6252,7 @@ export default {
       coursePres: '1 course près de toi',
       coursesPres: '{n} courses près de toi',
       plusProche: 'La plus proche : {km} km · {fee} €',
+      plusProcheToi: 'La plus proche : à {dist} de toi · {fee} €',
       aucuneCourse: "Pas de course pour l'instant"
     },
     // Le commerce ajoute un plat, change un prix, met une photo (2026-10-29, CarteCommerce.jsx, AjoutPlat.jsx).
@@ -6515,6 +6516,25 @@ export default {
     ecranLivreur: {
       // Écrans livreur au bandeau iris (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, Livreur) : Dashboard.jsx, EarningsPage.jsx.
       course: 'Course',
+      // La tournée (fondateur, 2026-10-30, maquettes/tournee-livreur) : l'heure prête, le retard, « Ton trajet », « Sur ton chemin ».
+      toi: 'Toi',
+      aDeToi: 'à {dist} de toi',
+      preteA: 'Prête à {time}',
+      dansMin: 'dans {min} min',
+      enRetard: 'En retard de {min} min',
+      versHeure: 'vers {time}',
+      clientVers: 'Chez le client vers {time}',
+      tournee: 'Tournée',
+      nCourses: '{n} courses',
+      tonTrajet: 'Ton trajet',
+      trajetConseil: "Ordre conseillé : tu peux passer dans l'ordre que tu veux.",
+      arretRetrait: 'Retrait chez {name}',
+      arretLivraison: 'Livraison',
+      arretNsurM: 'arrêt {n} sur {total}',
+      surTonChemin: 'Sur ton chemin',
+      ajoutTournee: '+{min} min sur ta tournée · aucun client en retard',
+      ajoutArret: 'Tu la retires à ton arrêt {n}',
+      ajouterTournee: 'Ajouter à ma tournée',
       directionCommerce: 'Direction {name}',
       enRouteVers: 'En route vers {name}',
       enRoute: 'En route',

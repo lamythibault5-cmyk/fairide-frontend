@@ -40,6 +40,15 @@ import EtatVide from '../../components/EtatVide';
 import '../../ecran-livreur.css';
 import '../../site-livreur.css';
 import { telephoneLisible } from '../../validation';
+import { haversineDistanceKm } from '../../menuCategories';
+
+/* LA TOURNÉE DU LIVREUR (fondateur, 2026-10-30, maquettes/tournee-livreur : toutes les recommandations). Les chiffres viennent
+   de sources publiées (backend docs/delais.md) : vol d'oiseau ×1,3 pour les rues, 16 km/h à vélo, 19 à vélo électrique,
+   3 minutes par arrêt. Ici ils ne servent qu'à la distance « à 300 m de toi » et au trajet jusqu'au commerce ; le reste des
+   heures (prête, « Ton trajet ») vient du serveur. */
+const FACTEUR_RUES = 1.3;
+const MINUTES_ARRET = 3;
+const vitesseKmh = (vehicule) => (vehicule === 'velo_electrique' ? 19 : 16);
 
 // La carte de la course choisie (site sur un ordinateur seulement) : Leaflet n'est téléchargé que là, jamais sur un
 // téléphone ni dans l'app (CarteCourse.jsx).
@@ -164,6 +173,13 @@ export default function DriverDashboard() {
   const agirOptimiste = useActionOptimiste();
   const [available, setAvailable] = useState([]);
   const [mine, setMine] = useState([]);
+  /* « Ton trajet » (GET /orders/mine/tournee) : l'ordre conseillé des arrêts, et pour chaque commande prête / heure prévue /
+     retard. null avec un serveur qui ne l'a pas encore : l'écran garde alors son ordre d'avant. */
+  const [plan, setPlan] = useState(null);
+  const [arretOuvert, setArretOuvert] = useState(null);
+  /* SA POSITION, POUR TRIER LES COURSES (2 A) : celle que le suivi tient déjà (watchPosition, plus bas). Elle reste dans le
+     téléphone : rien de plus n'est envoyé au serveur (la notice d'information le promet). */
+  const [maPosition, setMaPosition] = useState(null);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState(null);
   // Un ref et non un state : sa valeur est lue dans load(), qui n'est pas re-créée à chaque rendu.
@@ -311,14 +327,17 @@ export default function DriverDashboard() {
 
   async function load() {
     try {
-      const [availableData, mineData] = await Promise.all([
+      const [availableData, mineData, planData] = await Promise.all([
         api('/orders/available', { token }),
         // Courses en main et récentes seulement (audit du 19/10, courier-21 : tout l'historique, toutes les 15 s).
-        api('/orders/mine/deliveries?recent=1', { token })
+        api('/orders/mine/deliveries?recent=1', { token }),
+        // Le trajet ne fait jamais échouer la page : sans lui, les courses en main gardent leur ordre d'avant.
+        api('/orders/mine/tournee', { token }).catch(() => null)
       ]);
       // Sans les courses écartées à l'instant (refuserOffre) : un relevé parti avant l'enregistrement du refus les remettrait.
       setAvailable(refusees.current.size ? availableData.filter((o) => !refusees.current.has(o.id)) : availableData);
       setMine(mineData);
+      setPlan(planData);
       setErreur(null);
       chargeReussieRef.current = true;
       enEchecRef.current = false;
@@ -401,6 +420,7 @@ export default function DriverDashboard() {
     let deniedNotified = false;
     let lastSentAt = 0;
     let lastCoords = null;
+    let posTri = null;
     let arreter = null;
     let fini = false;
 
@@ -419,6 +439,8 @@ export default function DriverDashboard() {
       message: t('dashDriver.bgTrackingMessage'),
       onPosition: ({ latitude, longitude }) => {
         setSharingLocation(true);
+        // Pour trier les courses (2 A) : un nouveau rendu seulement après 30 m, pas à chaque mesure du GPS.
+        if (!posTri || haversineDistanceKm(posTri.lat, posTri.lng, latitude, longitude) > 0.03) { posTri = { lat: latitude, lng: longitude }; setMaPosition(posTri); }
         lastCoords = { latitude, longitude };
         // La position peut arriver plusieurs fois par seconde en déplacement : on limite les envois
         // au même rythme que l'ancien sondage, pour ne pas multiplier les requêtes par course.
@@ -638,21 +660,55 @@ export default function DriverDashboard() {
      s'arrête. Avec une course en main, il montre son trajet : le vélo attend au commerce, roule vers la maison une fois la
      commande récupérée, et saute à l'arrivée (état `terminee`, quelques secondes après la remise). Une seule course est au
      bandeau — celle qu'on livre d'abord, sinon celle à récupérer — ; les autres suivent en cartes dans la feuille. */
-  const principale = approuve ? (active[0] || awaitingPickup[0] || null) : null;
+  /* « TON TRAJET » (3 A) : deux courses en main ou plus, et le serveur a calculé l'ordre. Un arrêt de retrait d'une commande
+     déjà récupérée (relevé du plan juste avant le glisser) ne compte plus. Le premier arrêt devient la course du bandeau :
+     c'était la première « en livraison », sinon la première à retirer, même si elle était encore en cuisine et une autre prête. */
+  const nEnMain = awaitingPickup.length + active.length;
+  const arretsPlan = (plan?.arrets || []).filter((a) => {
+    const o = mine.find((x) => x.id === a.orderId);
+    return o && (a.type === 'pickup' ? ['preparation', 'pret'].includes(o.status) : ['preparation', 'pret', 'livraison'].includes(o.status));
+  });
+  const tourneeActive = approuve && nEnMain >= 2 && arretsPlan.length > 0;
+  const premierArret = tourneeActive ? mine.find((o) => o.id === arretsPlan[0].orderId) : null;
+  const principale = approuve ? (premierArret || active[0] || awaitingPickup[0] || null) : null;
   const autresActives = active.filter((o) => o !== principale);
   const autresRetraits = awaitingPickup.filter((o) => o !== principale);
   const course = principale || (approuve && terminee ? terminee : null);
   const enRetrait = !!principale && principale.status !== 'livraison';
   const fraisCourse = (o) => dec(o.driverFee ?? o.deliveryFee ?? o.fee);
-  const etatRetrait = (o) => (o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing'));
+  /* PRÊTE, PRÊTE À…, OU EN RETARD (1 B, 4 A) : le serveur dit l'heure prévue et le retard (tournee.etatPrete), pour une course
+     proposée comme pour une course en main. Un serveur plus ancien ne les envoie pas : on retombe sur « En préparation ». */
+  const etatPrete = (o) => {
+    const p = plan?.commandes?.[o.id];
+    if (o.status === 'pret' || p?.ready || o.ready) return { classe: 'contour', texte: t('dashDriver.readyToPickUp'), reste: 0 };
+    const retard = p ? p.lateMinutes : o.lateMinutes;
+    if (retard > 0) return { classe: 'rouge', texte: t('ecranLivreur.enRetard', { min: retard }), reste: 0 };
+    const prevue = p ? p.readyAt : o.readyAt;
+    if (!prevue) return { classe: 'doux', texte: t('dashDriver.preparing'), reste: 0 };
+    const reste = Math.max(0, Math.ceil((prevue - Date.now()) / 60000));
+    return { classe: 'doux', texte: t('ecranLivreur.preteA', { time: formatClock(new Date(prevue)) }), dans: reste > 0 ? t('ecranLivreur.dansMin', { min: reste }) : null, reste };
+  };
+  // La distance jusqu'au commerce par les rues (vol d'oiseau ×1,3), depuis la position que le téléphone tient. null sans elle.
+  const versToi = (o) => (maPosition && o.restaurantLat != null && o.restaurantLng != null
+    ? haversineDistanceKm(maPosition.lat, maPosition.lng, o.restaurantLat, o.restaurantLng) * FACTEUR_RUES : null);
+  const distanceLisible = (km) => (km < 1 ? `${Math.max(50, Math.round((km * 1000) / 50) * 50)} m` : `${dec(km, 1)} km`);
+  const minutesPour = (km) => Math.max(1, Math.round((km / vitesseKmh(vehicule?.type)) * 60));
+  // Chez le client vers… : il rejoint le commerce, attend qu'elle soit prête, s'y arrête, puis roule jusqu'au client.
+  const heureClient = (o) => {
+    const km = versToi(o);
+    const avant = Math.max(km != null ? minutesPour(km) : 0, etatPrete(o).reste);
+    return o.travelMinutes ? formatClock(new Date(Date.now() + (avant + MINUTES_ARRET + o.travelMinutes) * 60000)) : null;
+  };
+  /* LES PLUS PROCHES DE LUI D'ABORD (2 A), à vélo comme motorisé. Sans position, l'ordre du serveur (les plus anciennes). */
+  const offres = maPosition ? [...available].sort((a, b) => (versToi(a) ?? 1e9) - (versToi(b) ?? 1e9)) : available;
   let titreBandeau = null;
   let sousBandeau = null;
   if (principale && enRetrait) {
     titreBandeau = t('ecranLivreur.directionCommerce', { name: principale.restaurantName });
-    sousBandeau = [principale.restaurantAddress && t('dashDriver.pickupAt', { address: principale.restaurantAddress }), etatRetrait(principale)].filter(Boolean).join(' · ');
+    sousBandeau = [etatPrete(principale).texte, tourneeActive && t('ecranLivreur.arretNsurM', { n: 1, total: arretsPlan.length }), principale.restaurantAddress && t('dashDriver.pickupAt', { address: principale.restaurantAddress })].filter(Boolean).join(' · ');
   } else if (principale) {
     titreBandeau = principale.clientName ? t('ecranLivreur.enRouteVers', { name: principale.clientName }) : t('ecranLivreur.enRoute');
-    sousBandeau = [t('dashDriver.deliveryAt', { address: principale.address }), principale.travelMinutes && t('ecranLivreur.minutes', { min: principale.travelMinutes })].filter(Boolean).join(' · ');
+    sousBandeau = [tourneeActive && t('ecranLivreur.arretNsurM', { n: 1, total: arretsPlan.length }), t('dashDriver.deliveryAt', { address: principale.address }), principale.travelMinutes && t('ecranLivreur.minutes', { min: principale.travelMinutes })].filter(Boolean).join(' · ');
   } else if (course) {
     titreBandeau = t('ecranLivreur.terminee');
     sousBandeau = `${t('dashDriver.rideFee', { fee: fraisCourse(course) })} · ${t('ecranLivreur.termineeSous')}`;
@@ -673,8 +729,11 @@ export default function DriverDashboard() {
       sousAppli = t('siteLivreur.pauseSous');
     } else if (available.length) {
       titreAppli = available.length === 1 ? t('ecransPro.coursePres') : t('ecransPro.coursesPres', { n: available.length });
-      const proche = available.filter((o) => o.distanceKm != null).sort((a, b) => a.distanceKm - b.distanceKm)[0];
-      sousAppli = proche ? t('ecransPro.plusProche', { km: dec(proche.distanceKm, 1), fee: fraisCourse(proche) }) : null;
+      // « La plus proche : à 300 m de toi » (2 A) : la distance jusqu'à lui, plus le trajet commerce → client qu'elle disait avant.
+      const proche = versToi(offres[0]) != null ? offres[0] : null;
+      const procheTrajet = available.filter((o) => o.distanceKm != null).sort((a, b) => a.distanceKm - b.distanceKm)[0];
+      sousAppli = proche ? t('ecransPro.plusProcheToi', { dist: distanceLisible(versToi(proche)), fee: fraisCourse(proche) })
+        : procheTrajet ? t('ecransPro.plusProche', { km: dec(procheTrajet.distanceKm, 1), fee: fraisCourse(procheTrajet) }) : null;
     } else {
       titreAppli = t('ecransPro.aucuneCourse');
     }
@@ -719,7 +778,11 @@ export default function DriverDashboard() {
         <div className="ecl-code-lib">{t('dashDriver.codeForRestaurant')}</div>
         <div className="ecl-code-valeur">{o.pickupCode}</div>
       </div>
-      {o.status !== 'pret' && <p className="small" style={{ margin: '10px 0 0' }}>{t('dashDriver.stillPreparing')}</p>}
+      {/* « Elle sera bientôt prête » disait la même chose qu'elle soit en avance ou en retard (4 A) : l'heure prévue, ou le retard
+          en rouge. Sans heure (serveur plus ancien), la phrase d'avant. */}
+      {o.status !== 'pret' && (etatPrete(o).classe === 'doux' && !plan?.commandes?.[o.id]?.readyAt && !o.readyAt
+        ? <p className="small" style={{ margin: '10px 0 0' }}>{t('dashDriver.stillPreparing')}</p>
+        : <p style={{ margin: '10px 0 0' }}><span className={`ecl-badge ${etatPrete(o).classe}`}>{etatPrete(o).texte}{etatPrete(o).dans ? ` · ${etatPrete(o).dans}` : ''}</span></p>)}
       {articles(o)}
       <BoutonsItineraire adresse={o.restaurantAddress} lat={o.restaurantLat} lng={o.restaurantLng} t={t} />
       {!auBandeau && o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
@@ -802,34 +865,63 @@ export default function DriverDashboard() {
   /* Une course proposée : son trajet en pointillés, son prix dans une pastille iris, « Prendre la course » en lime pour la
      PREMIÈRE seulement (fondateur, 2026-10-27, réponse 4 A de maquettes/ecrans-pro ; design.md règle 4 : un seul lime à l'écran,
      les suivantes en contour). L'état du retrait est une étiquette en contour iris, jamais lime : ce n'est pas un geste. */
+  /* LA COURSE ENTIÈRE, DE LUI AU CLIENT (fondateur, 2026-10-30, maquettes/tournee-livreur, 1 B) : une route en trois points —
+     toi, le commerce (prête, prête à 20:08, ou en retard), le client (sa commune, « vers 20:16 ») —, distance et minutes de
+     chaque morceau. Sans position, la route part du commerce comme avant. « Commandée à… · Livraison estimée… » s'en va : ces
+     deux heures étaient celles du client, pas la sienne. */
+  const routeOffre = (o) => {
+    const km = versToi(o);
+    const etat = etatPrete(o);
+    const client = heureClient(o);
+    return (
+      <>
+        <div className={`ecl-voie3${km == null ? ' sans-toi' : ''}`} aria-hidden="true">
+          {km != null && <>
+            <span className="ecl-v3-pt toi"><Icone nom="velo" taille={18} /></span>
+            <span className="ecl-v3-seg"><b>{distanceLisible(km)}</b><small>~{minutesPour(km)} min</small></span>
+          </>}
+          <span className="ecl-v3-pt"><Icone nom="commerce" taille={17} /></span>
+          <span className="ecl-v3-seg">{o.distanceKm != null && <b>{dec(o.distanceKm, 1)} km</b>}{o.travelMinutes && <small>~{o.travelMinutes} min</small>}</span>
+          <span className="ecl-v3-pt maison"><Icone nom="maison" taille={17} /></span>
+        </div>
+        <div className={`ecl-v3-libs${km == null ? ' sans-toi' : ''}`}>
+          {km != null && <span><b>{t('ecranLivreur.toi')}</b>{t('ecranLivreur.aDeToi', { dist: distanceLisible(km) })}</span>}
+          <span className="milieu"><b>{o.restaurantName}</b><span className={`ecl-badge ${etat.classe}`}>{etat.texte}{etat.dans ? ` · ${etat.dans}` : ''}</span></span>
+          <span><b>{o.commune || ''}</b>{client && t('ecranLivreur.versHeure', { time: client })}</span>
+        </div>
+      </>
+    );
+  };
+
+  /* Une course proposée : sa route, son prix dans une pastille iris, « Prendre la course » en lime pour la PREMIÈRE seulement
+     (fondateur, 2026-10-27, réponse 4 A de maquettes/ecrans-pro ; design.md règle 4 : un seul lime à l'écran, les suivantes en
+     contour). AVEC DES COURSES EN MAIN (5 A) : « Sur ton chemin », ce qu'elle ajoute à sa tournée et l'arrêt où il la retire,
+     et un bouton en contour « Ajouter à ma tournée » : le lime est déjà le geste de son arrêt en cours. */
   const carteOffre = (o, rang) => {
-    const voie = voieOffre(o);
+    const ajout = nEnMain > 0 ? o.tourneeAjout : null;
     return (
       <article className={`ecl-offre${prise === o.id ? ' prise' : ''}${partantes.includes(o.id) ? ' part' : ''}`} key={o.id}>
         <div className="ecl-offre-tete">
           <span className="ecl-offre-nom"><b>{o.restaurantName}</b><small>{o.items.map(formatOrderItem).join(', ')}</small></span>
           <span className="ecl-prix"><small>{t('ecranLivreur.prixPropose')}</small>{t('ecranLivreur.prixMontant', { fee: fraisCourse(o) })}</span>
         </div>
-        <div className="ecl-badges">
-          <span className={`ecl-badge ${o.status === 'pret' ? 'contour' : 'doux'}`}>{etatRetrait(o)}</span>
-          {o.commune && <span className="ecl-badge neutre">{o.commune}</span>}
-        </div>
-        <div className="ecl-trajet-carte">
-          <span className="ecl-tj-pt" aria-hidden="true"><Icone nom="commerce" taille={16} /></span>
-          <span className="ecl-tj-voie">{voie && <b>{voie}</b>}</span>
-          <span className="ecl-tj-pt maison" aria-hidden="true"><Icone nom="maison" taille={16} /></span>
-        </div>
+        {routeOffre(o)}
         {/* Adresse sans numéro ni nom du client avant la prise (le serveur ne les envoie pas). */}
-        <div className="ecl-tj-libs">
+        <div className="ecl-tj-libs" style={{ marginTop: 10 }}>
           <span>{o.restaurantAddress ? t('dashDriver.pickupAt', { address: o.restaurantAddress }) : null}</span>
           <span>{t('dashDriver.deliveryAt', { address: o.address })}<br /><span className="ecl-faint">{t('conformite.offerApproxAddress')}</span></span>
         </div>
-        <DeliveryTiming order={o} />
+        {ajout && (
+          <>
+            <p className="ecl-impact"><Icone nom="valider" taille={18} /><span>{t('ecranLivreur.ajoutTournee', { min: ajout.minutes })}</span></p>
+            {ajout.arret > 0 && <p className="ecl-impact"><Icone nom="valider" taille={18} /><span>{t('ecranLivreur.ajoutArret', { n: ajout.arret })}</span></p>}
+          </>
+        )}
         {o.bonusCents > 0 && <p className="small" style={{ margin: '6px 0 0' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</p>}
         <div className="ecl-offre-pied">
           {/* Refuser reste discret et neutre : aucune conséquence pour le livreur. */}
           <button type="button" className="btn-ghost" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
-          <button type="button" className={rang === 0 ? 'btn-gold' : 'btn-outline'} disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : t('dashDriver.takeRide')}</button>
+          <button type="button" className={rang === 0 && nEnMain === 0 ? 'btn-gold' : 'btn-outline'} disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : nEnMain > 0 ? t('ecranLivreur.ajouterTournee') : t('dashDriver.takeRide')}</button>
         </div>
       </article>
     );
@@ -848,7 +940,17 @@ export default function DriverDashboard() {
   const sousSite = sousBandeau || (!peutRouler ? null : enPause ? t('siteLivreur.pauseSous')
     : available.length === 0 ? t('siteLivreur.aucuneProposee') : available.length === 1 ? t('siteLivreur.proposeeUne') : t('siteLivreur.proposees', { n: available.length }));
 
-  const trajetBandeau = course ? (
+  // « Tournée · 2 courses · 8,10 € » : ce qu'il tient et ce que ça lui rapporte.
+  const ctxTournee = <><b>{t('ecranLivreur.tournee')}</b> · {t('ecranLivreur.nCourses', { n: nEnMain })} · {t('ecranLivreur.prixMontant', { fee: dec([...active, ...awaitingPickup].reduce((x, o) => x + Number(o.driverFee ?? o.deliveryFee ?? 0), 0)) })}</>;
+  /* Le bandeau d'une tournée (3 A) : les arrêts numérotés sur la route, le vélo qui roule vers le premier. */
+  const trajetBandeau = tourneeActive ? (
+    <div className="ecl-trajet-arrets" aria-label={t('ecranLivreur.ariaTrajet')} role="img">
+      <RouteVelo key="tournee" position={4} depart={0} roule />
+      {arretsPlan.map((a, i) => (
+        <span key={`${a.orderId}:${a.type}`} className={`ecl-pt${a.type === 'dropoff' ? ' maison' : ''}`} style={{ left: `${14 + (i * 80) / Math.max(1, arretsPlan.length - 1)}%` }}>{i + 1}</span>
+      ))}
+    </div>
+  ) : course ? (
     <div className="ecl-trajet" aria-label={t('ecranLivreur.ariaTrajet')} role="img">
       <span className="ecl-pt"><Icone nom="commerce" taille={18} /></span>
       <RouteVelo key={`course-${course.id}`} position={enRetrait ? 12 : principale ? 50 : 88} depart={enRetrait ? undefined : 12} roule={!!principale && !enRetrait} saut={!principale} />
@@ -876,7 +978,7 @@ export default function DriverDashboard() {
   const bandeauSite = (
     <section className={`ecl-bandeau ecl-bandeau-site${course ? ' avec-course' : ''}`}>
       <p className="ecl-b-ctx">
-        <span>{course ? <><b>{t('ecranLivreur.course')}</b> · {t('ecranLivreur.prixMontant', { fee: fraisCourse(course) })}</> : (contexte || t('nav.rides'))}</span>
+        <span>{tourneeActive ? ctxTournee : course ? <><b>{t('ecranLivreur.course')}</b> · {t('ecranLivreur.prixMontant', { fee: fraisCourse(course) })}</> : (contexte || t('nav.rides'))}</span>
         {!principale && course && <span className="ecl-chip">{t('ecranLivreur.livree')}</span>}
       </p>
       {peutRouler && (
@@ -897,7 +999,7 @@ export default function DriverDashboard() {
   const bandeauAppli = (
     <section className="ecl-bandeau">
       <div className="ecl-b-haut">
-        {course
+        {tourneeActive ? <span>{ctxTournee}</span> : course
           ? <span><b>{t('ecranLivreur.course')}</b> · {t('ecranLivreur.prixMontant', { fee: fraisCourse(course) })}</span>
           : <span><b>{t('nav.rides')}</b></span>}
         {/* Urgence (accident, agression, malaise) : 112 d'abord, puis l'équipe Fairide avec la position (BoutonUrgence.jsx). */}
@@ -913,8 +1015,52 @@ export default function DriverDashboard() {
     </section>
   );
 
+  /* « TON TRAJET » (fondateur, 2026-10-30, maquettes/tournee-livreur, 3 A) : deux courses en main ou plus. Les arrêts numérotés
+     dans l'ordre conseillé par le serveur (chaque client livré le plus tôt possible), l'heure de chacun, l'état de chaque
+     retrait (prête, prête à…, en retard). Seul le premier arrêt est ouvert, avec le seul lime de l'écran ; un autre s'ouvre au
+     toucher : c'est un conseil, il passe dans l'ordre qu'il veut. Une course que le serveur n'a pas pu placer (adresse sans
+     coordonnées) suit en carte, comme avant. */
+  const blocTrajet = () => {
+    const horsPlan = [...active, ...awaitingPickup].filter((o) => !arretsPlan.some((a) => a.orderId === o.id));
+    return (
+      <>
+        <h2 className="ecl-h2">{t('ecranLivreur.tonTrajet')}</h2>
+        <p className="small ecl-trajet-conseil">{t('ecranLivreur.trajetConseil')}</p>
+        <ol className="ecl-arrets">
+          {arretsPlan.map((a, i) => {
+            const o = mine.find((x) => x.id === a.orderId);
+            const cle = `${a.orderId}:${a.type}`;
+            const ouvert = i === 0 || arretOuvert === cle;
+            const retrait = a.type === 'pickup';
+            const etat = retrait ? etatPrete(o) : null;
+            return (
+              <li className={`ecl-arret${ouvert ? ' ouvert' : ''}`} key={cle}>
+                <button type="button" className="ecl-arret-ligne" aria-expanded={ouvert} onClick={() => i > 0 && setArretOuvert(ouvert ? null : cle)}>
+                  <span className={`ecl-arret-n${retrait ? '' : ' maison'}`}>{i + 1}</span>
+                  <span>
+                    <b>{retrait ? t('ecranLivreur.arretRetrait', { name: o.restaurantName }) : t('ecranLivreur.arretLivraison')}</b>
+                    <small>{retrait ? o.restaurantAddress : o.address}</small>
+                    {etat && <span className={`ecl-badge ${etat.classe}`}>{etat.texte}{etat.dans ? ` · ${etat.dans}` : ''}</span>}
+                  </span>
+                  <span className="ecl-arret-heure">{i > 0 && plan?.calculeA ? t('ecranLivreur.versHeure', { time: formatClock(new Date(plan.calculeA + a.minutes * 60000)) }) : ''}</span>
+                </button>
+                {ouvert && <div className="ecl-arret-detail">{retrait ? detailRetrait(o, i === 0) : detailLivraison(o, i === 0)}</div>}
+              </li>
+            );
+          })}
+        </ol>
+        {horsPlan.map((o) => (
+          <div className="ecl-course-carte" key={o.id}>
+            <div className="ecl-course-tete"><b>{o.restaurantName}</b><span className={`ecl-badge ${etatPrete(o).classe}`}>{etatPrete(o).texte}</span></div>
+            {o.status === 'livraison' ? detailLivraison(o, false) : detailRetrait(o, false)}
+          </div>
+        ))}
+      </>
+    );
+  };
+
   // La course en main d'abord (je livre → je vais chercher), puis les autres courses en main. Une section vide ne s'affiche pas.
-  const blocEnMain = (enCarte) => (
+  const blocEnMain = (enCarte) => (tourneeActive ? blocTrajet() : (
     <>
       {principale && (enCarte
         ? <div className="ecl-course-carte ecl-en-main">{enRetrait ? detailRetrait(principale, true) : detailLivraison(principale, true)}</div>
@@ -931,13 +1077,13 @@ export default function DriverDashboard() {
       {autresRetraits.length > 0 && <h2 className="ecl-h2">{t('dashDriver.awaitingPickup')}</h2>}
       {autresRetraits.map((o) => (
         <div className="ecl-course-carte" key={o.id}>
-          <div className="ecl-course-tete"><b>{o.restaurantName}</b><span className={`ecl-badge ${o.status === 'pret' ? 'contour' : 'doux'}`}>{etatRetrait(o)}</span></div>
+          <div className="ecl-course-tete"><b>{o.restaurantName}</b><span className={`ecl-badge ${etatPrete(o).classe}`}>{etatPrete(o).texte}</span></div>
           <div className="small" style={{ marginBottom: 10 }}>{t('dashDriver.rideFee', { fee: fraisCourse(o) })}</div>
           {detailRetrait(o, false)}
         </div>
       ))}
     </>
-  );
+  ));
 
   // Paiements d'abord (validé mais Stripe pas actif) ou pause : ce qui remplace la liste des courses.
   /* Validé mais paiements pas encore actifs : le serveur refuse toute prise de course (routes/orders.js, 403). La
@@ -963,11 +1109,11 @@ export default function DriverDashboard() {
   );
   // Liste vide et minimum fixé (audit du 19/10, courier-37) : il ne voit que les courses à son minimum ou plus.
   const texteMinimum = dossier?.minFeeCents > 0 ? t('dashDriver.noneAvailableMin', { amount: euros(dossier.minFeeCents / 100) }) : undefined;
-  const titreOffres = <h2 className="ecl-h2">{t('dashDriver.availableOrders')}{available.length > 0 && <span className="ecl-badge doux">{available.length}</span>}</h2>;
+  // Pendant une tournée, elles ne sont proposées que si elles sont sur son chemin (5 A) : le titre le dit.
+  const titreOffres = <h2 className="ecl-h2">{nEnMain > 0 ? t('ecranLivreur.surTonChemin') : t('dashDriver.availableOrders')}{available.length > 0 && <span className="ecl-badge doux">{available.length}</span>}</h2>;
   /* LA TOURNÉE (fondateur, 2026-10-17) : jusqu'à trois courses à la fois. Dès qu'une course est en main, la liste ne montre
      que les courses sur son chemin : la règle est dite ici, avec ses chiffres, pour que le livreur sache pourquoi la liste
      est plus courte. Les mêmes pour tous (notice d'information, section 2). */
-  const nEnMain = awaitingPickup.length + active.length;
   const blocTournee = tournee && nEnMain > 0 && (
     <p className="ecl-tournee">
       <span className="ecl-tournee-points" aria-hidden="true">
@@ -999,7 +1145,7 @@ export default function DriverDashboard() {
       {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
       <PositionRequise>
         {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} texte={texteMinimum} />}
-        {available.map(carteOffre)}
+        {offres.map(carteOffre)}
       </PositionRequise>
       {/* Son, vibration, notifications : sous les offres depuis le 2026-10-16 (maquette), pour que la première course
           proposée tienne dans le premier écran. Site seulement (deuxième audit design, 2026-10-19) : la carte promettait
@@ -1027,13 +1173,13 @@ export default function DriverDashboard() {
      la course choisie est cerclée d'iris et son détail, avec sa carte, est à droite, avec « Prendre la course » et
      « Refuser ». Par défaut, la première de la liste. Refuser fait partir la carte comme dans l'app ; la suivante prend
      sa place. */
-  const offreChoisie = available.find((o) => o.id === choisie) || available.find((o) => !partantes.includes(o.id)) || null;
+  const offreChoisie = offres.find((o) => o.id === choisie) || offres.find((o) => !partantes.includes(o.id)) || null;
   const choixOffre = (o) => {
     const on = offreChoisie?.id === o.id;
     return (
       <button type="button" key={o.id} className={`ecl-choix${on ? ' on' : ''}${partantes.includes(o.id) ? ' part' : ''}`} aria-pressed={on} onClick={() => setChoisie(o.id)}>
         <span className="ecl-offre-tete">
-          <span className="ecl-offre-nom"><b>{o.restaurantName}</b><small>{[etatRetrait(o), o.commune].filter(Boolean).join(' · ')}</small></span>
+          <span className="ecl-offre-nom"><b>{o.restaurantName}</b><small>{[etatPrete(o).texte, versToi(o) != null && t('ecranLivreur.aDeToi', { dist: distanceLisible(versToi(o)) }), o.commune].filter(Boolean).join(' · ')}</small></span>
           <span className="ecl-prix"><small>{t('ecranLivreur.prixPropose')}</small>{t('ecranLivreur.prixMontant', { fee: fraisCourse(o) })}</span>
         </span>
         <span className="ecl-trajet-carte" aria-hidden="true">
@@ -1064,10 +1210,11 @@ export default function DriverDashboard() {
         <div className="ecl-fc-tete">
           <div>
             <h2 id="ecl-fc-titre">{o.restaurantName} → {String(o.address || '').split(',')[0]}</h2>
-            <p className="small">{[voieOffre(o), etatRetrait(o)].filter(Boolean).join(' · ')}</p>
+            <p className="small">{voieOffre(o)}</p>
           </div>
           <span className="ecl-prix"><small>{t('ecranLivreur.prixPropose')}</small>{t('ecranLivreur.prixMontant', { fee: fraisCourse(o) })}</span>
         </div>
+        {routeOffre(o)}
         {lieux(o, true)}
         {articles(o)}
         <DeliveryTiming order={o} />
@@ -1110,7 +1257,7 @@ export default function DriverDashboard() {
           {blocGrille}
           <PositionRequise>
             {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} texte={texteMinimum} />}
-            {available.length > 0 && <div className="ecl-choix-liste">{available.map(choixOffre)}</div>}
+            {available.length > 0 && <div className="ecl-choix-liste">{offres.map(choixOffre)}</div>}
           </PositionRequise>
           {available.length > 0 && <p className="small ecl-astuce">{t('siteLivreur.astuceTelephone')}</p>}
           <NotifCourses />

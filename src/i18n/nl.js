@@ -4611,7 +4611,7 @@ export default {
       s10p2: 'Voor elke andere vraag is de Fairride-ondersteuning bereikbaar per e-mail op [contact@fairride.be](mailto:contact@fairride.be) of telefonisch op [+32 474 20 07 13](tel:+32474200713).',
       s11Title: "Tijdens de dienst: pauze, capaciteit, koerier, alcohol",
       s11p1: "**Pauze en sluiten.** Op de pagina van de bestellingen sluit de schakelaar « Open voor bestellingen » je zaak tot je weer opent. Te druk? Een pauze van 15, 30 of 60 minuten houdt nieuwe bestellingen tegen, laat de lopende afwerken en opent daarna vanzelf weer.",
-      s11p2: "**Bestellingen en capaciteit** (in « Mijn zaak »): een minimaal bestelbedrag, een maximaal aantal bestellingen per dag, de leverafstand (zonder instelling 6 km) en je gebruikelijke bereidingstijd (zonder instelling 12 minuten), die het aankomstuur voor de klant bepaalt. Fairride toont je er ook hoeveel tijd je echt nodig hebt, gemeten over je laatste 30 dagen.",
+      s11p2: "**Bestellingen en capaciteit** (in « Mijn zaak »): een minimaal bestelbedrag, een maximaal aantal bestellingen per dag, de leverafstand (zonder instelling 6 km) en je gebruikelijke bereidingstijd (zonder instelling 15 minuten), die het aankomstuur voor de klant bepaalt. Fairride toont je er ook hoeveel tijd je echt nodig hebt, gemeten over je laatste 30 dagen.",
       s11p3: "**De koerier wacht.** Zodra de koerier er is, toont de bestelling hoeveel minuten hij al wacht. Hij kan niet vertrekken zonder de bestelling: maak ze eerst klaar.",
       s11p4: "**Alcohol.** Bij een bestelling met alcohol controleer je bij de overhandiging een identiteitsbewijs. Tik op « Leeftijd gecontroleerd: overhandigen », of op « Overhandiging weigeren » als de klant te jong is of geen bewijs heeft: de alcohol wordt uit de bestelling gehaald, je geeft de rest, en Fairride betaalt je de alcohol toch.",
       s11p5: "**Klant niet gekomen** (afhalen): zodra de bestelling klaar is, en 30 minuten na het tijdstip dat de klant kreeg, sluit « Klant niet gekomen » de bestelling af. Ter plaatse betaald: Fairride komt niet tussen (geen terugbetaling, geen vergoeding), en deze klant kan niet meer ter plaatse betalen. Online betaald: ze blijft verschuldigd, je houdt je betaling."
@@ -6236,6 +6236,7 @@ export default {
       coursePres: '1 rit in je buurt',
       coursesPres: '{n} ritten in je buurt',
       plusProche: 'Dichtstbij: {km} km · € {fee}',
+      plusProcheToi: 'Dichtstbij: op {dist} van jou · € {fee}',
       aucuneCourse: 'Momenteel geen rit'
     },
     // Le commerce ajoute un plat, change un prix, met une photo (2026-10-29, CarteCommerce.jsx, AjoutPlat.jsx).
@@ -6499,6 +6500,25 @@ export default {
     ecranLivreur: {
       // Koeriersschermen met de irisband (oprichter, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, Livreur): Dashboard.jsx, EarningsPage.jsx.
       course: 'Rit',
+      // De ronde (oprichter, 2026-10-30, maquettes/tournee-livreur): klaar-tijd, vertraging, « Jouw route », « Op je route ».
+      toi: 'Jij',
+      aDeToi: 'op {dist} van jou',
+      preteA: 'Klaar om {time}',
+      dansMin: 'over {min} min',
+      enRetard: '{min} min te laat',
+      versHeure: 'rond {time}',
+      clientVers: 'Bij de klant rond {time}',
+      tournee: 'Ronde',
+      nCourses: '{n} ritten',
+      tonTrajet: 'Jouw route',
+      trajetConseil: 'Voorgestelde volgorde: je kiest zelf in welke volgorde je rijdt.',
+      arretRetrait: 'Ophalen bij {name}',
+      arretLivraison: 'Levering',
+      arretNsurM: 'stop {n} van {total}',
+      surTonChemin: 'Op je route',
+      ajoutTournee: '+{min} min op je ronde · geen klant te laat',
+      ajoutArret: 'Je haalt hem op bij stop {n}',
+      ajouterTournee: 'Toevoegen aan mijn ronde',
       directionCommerce: 'Op weg naar {name}',
       enRouteVers: 'Onderweg naar {name}',
       enRoute: 'Onderweg',

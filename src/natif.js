@@ -387,9 +387,9 @@ export async function demarrerNatif(historique) {
     // Fond iris, texte clair — la couleur de `theme-color` et de l'écran de lancement.
     await StatusBar.setStyle({ style: Style.Dark });
     if (plateforme() === 'android') await StatusBar.setBackgroundColor({ color: '#3B2FB5' });
-    // Puis elle suit l'écran : iris sous un bandeau, blanche quand il s'est replié (barreEtat.js).
+    // Puis elle suit l'écran, sur iPhone comme sur Android : iris sous un bandeau, blanche quand il s'est replié (barreEtat.js).
     const { suivreBarreEtat } = await import('./barreEtat');
-    suivreBarreEtat({ StatusBar, Style, android: plateforme() === 'android' });
+    suivreBarreEtat({ StatusBar, Style });
   } catch { /* greffon StatusBar absent */ }
 
   try {

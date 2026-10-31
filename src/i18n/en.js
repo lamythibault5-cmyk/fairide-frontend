@@ -4602,7 +4602,7 @@ export default {
       s10p2: 'For any other question, Fairride support can be reached by e-mail at [contact@fairride.be](mailto:contact@fairride.be) or by phone on [+32 474 20 07 13](tel:+32474200713).',
       s11Title: "During service: pause, capacity, courier, alcohol",
       s11p1: "**Pause and closing.** On the orders page, the « Open for orders » switch closes your business until you reopen. Overwhelmed? A 15, 30 or 60-minute pause blocks new orders, lets current ones finish, then reopens by itself.",
-      s11p2: "**Orders and capacity** (in « My business »): a minimum order amount, a maximum number of orders per day, the delivery distance (6 km without a setting) and your usual preparation time (12 minutes without a setting), used for the arrival time shown to the customer. Fairride also shows you the time you actually take, measured over your last 30 days.",
+      s11p2: "**Orders and capacity** (in « My business »): a minimum order amount, a maximum number of orders per day, the delivery distance (6 km without a setting) and your usual preparation time (15 minutes without a setting), used for the arrival time shown to the customer. Fairride also shows you the time you actually take, measured over your last 30 days.",
       s11p3: "**The courier is waiting.** Once the courier has arrived, the order shows how many minutes they have been waiting. They cannot leave without the order: prepare it first.",
       s11p4: "**Alcohol.** An order with alcohol requires checking an ID at handover. Tap « Age checked: hand over », or « Refuse handover » if the customer is underage or has no ID: the alcohol is removed from the order, you hand over the rest, and Fairride still pays you for the alcohol.",
       s11p5: "**Customer didn’t show** (takeaway): once the order is ready, and 30 minutes after the time given to the customer, « Customer didn’t show » closes the order. Paid at the shop: Fairride does not step in (no refund, no compensation), and this customer can no longer pay at the shop. Paid online: it remains due, you keep your payment."
@@ -6227,6 +6227,7 @@ export default {
       coursePres: '1 ride near you',
       coursesPres: '{n} rides near you',
       plusProche: 'Nearest: {km} km · €{fee}',
+      plusProcheToi: 'Nearest: {dist} from you · €{fee}',
       aucuneCourse: 'No ride right now'
     },
     // Le commerce ajoute un plat, change un prix, met une photo (2026-10-29, CarteCommerce.jsx, AjoutPlat.jsx).
@@ -6490,6 +6491,25 @@ export default {
     ecranLivreur: {
       // Courier screens with the iris header (founder, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html, Livreur): Dashboard.jsx, EarningsPage.jsx.
       course: 'Ride',
+      // The round (founder, 2026-10-30, maquettes/tournee-livreur): ready time, lateness, « Your route », « On your way ».
+      toi: 'You',
+      aDeToi: '{dist} from you',
+      preteA: 'Ready at {time}',
+      dansMin: 'in {min} min',
+      enRetard: '{min} min late',
+      versHeure: 'around {time}',
+      clientVers: 'At the customer around {time}',
+      tournee: 'Round',
+      nCourses: '{n} rides',
+      tonTrajet: 'Your route',
+      trajetConseil: 'Suggested order: you can go in any order you like.',
+      arretRetrait: 'Pick up at {name}',
+      arretLivraison: 'Drop-off',
+      arretNsurM: 'stop {n} of {total}',
+      surTonChemin: 'On your way',
+      ajoutTournee: '+{min} min to your round · no customer late',
+      ajoutArret: 'You pick it up at stop {n}',
+      ajouterTournee: 'Add to my round',
       directionCommerce: 'Heading to {name}',
       enRouteVers: 'On the way to {name}',
       enRoute: 'On the way',
