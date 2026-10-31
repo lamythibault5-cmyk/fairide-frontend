@@ -86,6 +86,19 @@ function attr(texte) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+/* JSON posé DANS un <script type="application/ld+json"> (audit sécurité 2026-10-31, constat n° 11). JSON.stringify laisse
+   passer « < » et « > » : un nom ou une description de commerce contenant « </script><meta http-equiv="refresh" …> »
+   (saisis par le restaurateur, renvoyés tels quels par l'API) refermait le bloc, et la suite devenait du HTML dans le
+   <head> de chaque page prérendue du commerce et de la liste. La CSP bloque le script en ligne, pas une redirection par
+   <meta>. attr() ne convient pas ici : le contenu d'un <script> n'est pas décodé, « &lt; » y resterait littéral et
+   abîmerait le JSON-LD. On remplace donc par les échappements \uXXXX, que JSON relit à l'identique : < > & (fin de
+   balise, commentaire HTML <!--) et U+2028 / U+2029 (fin de ligne pour un analyseur JavaScript). */
+function jsonPourScript(donnees) {
+  return JSON.stringify(donnees)
+    .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+}
+
 // Les pages publiques statiques. Le titre et la description sont lus dans les mêmes clés que la
 // page elle-même passe à usePageMeta : toute modification de texte suit automatiquement.
 const PAGES = [
@@ -219,7 +232,7 @@ function documentPour(gabarit, { titre, description, url, image, type = 'website
   const utiles = blocs.filter((b) => b && b.donnees);
   if (utiles.length) {
     const scripts = utiles
-      .map((b) => `<script type="application/ld+json" id="${b.id}">${JSON.stringify(b.donnees)}</script>`)
+      .map((b) => `<script type="application/ld+json" id="${attr(b.id)}">${jsonPourScript(b.donnees)}</script>`)
       .join('\n    ');
     html = html.replace('</head>', `    ${scripts}\n  </head>`);
   }

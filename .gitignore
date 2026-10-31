@@ -13,3 +13,15 @@ public/_probe/
 .agents/
 brag-output/
 skills-lock.json
+
+# Materiel de signature et configurations Firebase, ou qu'ils soient poses (audit securite 2026-10-31) : le depot est
+# public. android/app/.gitignore et ios/.gitignore ne couvraient que leur propre dossier ; une cle d'envoi Play (.jks),
+# un certificat Apple (.p12), une cle App Store Connect ou APNs (.p8) ou un profil (.mobileprovision) copies a la racine
+# ou dans android/ seraient partis au premier git add -A. Ils vivent dans les secrets GitHub et hors du depot.
+*.jks
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist

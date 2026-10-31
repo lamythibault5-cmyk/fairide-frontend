@@ -119,6 +119,8 @@ const RankingPage = lazyPage(() => import('./pages/legal/RankingPage'));
 // Accessibilité (décision DEC-10, 6 oct. 2026).
 const AccessibilityPage = lazyPage(() => import('./pages/legal/AccessibilityPage'));
 const ReportPage = lazyPage(() => import('./pages/legal/ReportPage'));
+// Lien de l'accusé de réception d'une demande RGPD du formulaire public (audit sécurité 2026-10-31, décision d'Owen).
+const ConfirmerDemandeConfidentialite = lazyPage(() => import('./pages/legal/ConfirmerDemandeConfidentialite'));
 // « C'est bon » en un geste (CODE-3) : page publique à jeton, sans compte — le lien est envoyé au commerce.
 const ValiderCarte = lazyPage(() => import('./pages/ValiderCarte'));
 const EquipeInvitation = lazyPage(() => import('./pages/EquipeInvitation'));
@@ -297,6 +299,9 @@ export default function App() {
         <Route path="/mentions-legales" element={<LegalNotice />} />
         <Route path="/cgv" element={<Terms />} />
         <Route path="/confidentialite" element={<Privacy />} />
+        {/* Publique, sans compte : la personne prouve qu'elle lit bien l'adresse donnée au formulaire (audit sécurité
+            2026-10-31, décision d'Owen). Les variantes /nl et /en passent par le même chemin (i18n/routing.js). */}
+        <Route path="/confidentialite/confirmer/:token" element={<ConfirmerDemandeConfidentialite />} />
         <Route path="/cookies" element={<CookiesPolicy />} />
         <Route path="/classement" element={<RankingPage />} />
         <Route path="/accessibilite" element={<AccessibilityPage />} />

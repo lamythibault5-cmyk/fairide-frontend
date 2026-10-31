@@ -11,6 +11,7 @@ import useServerList from '../../hooks/useServerList';
 import { useAuth } from '../../context/AuthContext';
 import useRechercheImposee from '../../hooks/useRechercheImposee';
 import { useToast } from '../../context/ToastContext';
+import { preparerLancement } from '../../lancementOnglet';
 import { SkeletonCards } from '../../components/Skeleton';
 import DecisionDialog from '../../components/admin/DecisionDialog';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -84,7 +85,9 @@ export function BoutonGererCommerce({ id, token, api, toast, tr, className = 'bt
     try {
       const d = await api(`/admin/restaurants/${id}/act-as`, { method: 'POST', token });
       const frag = btoa(encodeURIComponent(JSON.stringify({ token: d.token, user: d.user })));
-      const w = window.open(`/dashboard#agir=${frag}`, '_blank');
+      // Clé à usage unique que l'onglet ouvert doit retrouver dans localStorage, sinon il ignore #agir= (audit sécurité
+      // 2026-10-31 : un lien fabriqué ailleurs ne doit jamais ouvrir une session, voir lancementOnglet.js).
+      const w = window.open(`/dashboard#agir=${frag}&lancement=${preparerLancement()}`, '_blank');
       if (!w) toast(tr('adminRestos.manageBlocked'));
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }

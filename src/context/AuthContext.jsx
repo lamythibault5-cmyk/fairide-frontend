@@ -7,6 +7,8 @@ import { languePreferee, SUPPORTED_LANGUAGES } from '../i18n/routing';
 import { effacerReprise } from '../bienvenue';
 import { codeApple, estNatif, oublierCodeApple } from '../natif';
 import { desabonnerNatif, rattacherAppareilSiAutorise } from '../pushNatif';
+import { reabonnerSiDejaAutorise } from '../push';
+import { cleDuFragment, lancementAttendu } from '../lancementOnglet';
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = 'fairide_session';
@@ -44,7 +46,11 @@ export const PROFILS_SIMULATION = ['visitor', 'client', 'restaurant', 'driver'];
 function simulationInitiale() {
   try {
     const m = window.location.hash.match(/[#&]simuler=([^&]+)/);
-    if (m) {
+    // Fragment sans la clé déposée par la console de CET appareil (lien reçu d'ailleurs, ou rejoué) : il est effacé de
+    // l'adresse et ignoré, l'onglet garde sa session normale (audit sécurité 2026-10-31, voir lancementOnglet.js).
+    if (m && !lancementAttendu(cleDuFragment(window.location.hash))) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    } else if (m) {
       const s = JSON.parse(decodeURIComponent(atob(m[1])));
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
       if (s && s.profiles) {
@@ -65,6 +71,11 @@ function sessionDepuisFragment() {
   try {
     const m = window.location.hash.match(/[#&]agir=([^&]+)/);
     if (!m) return null;
+    // Même garde que pour #simuler= : sans clé attendue, le fragment est effacé et la session de l'onglet reste la sienne.
+    if (!lancementAttendu(cleDuFragment(window.location.hash))) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      return null;
+    }
     const s = JSON.parse(decodeURIComponent(atob(m[1])));
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
     return s && s.token ? { ...s, actingAs: true } : null;
@@ -161,6 +172,20 @@ export function AuthProvider({ children }) {
     rattacherAppareilSiAutorise(session.token).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps -- le compte, pas le jeton de session qui se renouvelle
   }, [userId]);
+
+  /* LE NAVIGATEUR AUSSI (audit sécurité 2026-10-31, décision d'Owen). Le serveur efface les abonnements push web quand
+   * toutes les sessions du compte sont fermées (« déconnecter tous mes appareils », mot de passe réinitialisé) :
+   * à chaque connexion et à chaque reprise de session sur le site, l'abonnement DÉJÀ présent dans ce navigateur, avec une
+   * permission DÉJÀ accordée, lui est renvoyé (push.js, reabonnerSiDejaAutorise : jamais de demande, aucune interface).
+   * Suivi sur le jeton et non sur le compte, à l'inverse de l'app : changer son mot de passe ici ferme les autres sessions
+   * et rend un jeton neuf sans changer de compte (updateProfile) ; si le serveur efface alors l'abonnement de ce navigateur
+   * avec les autres, il revient avec ce jeton. Le
+   * renouvellement quotidien de la session le renvoie une fois de plus, sans effet (même endpoint = même ligne). Jamais pour
+   * « Fairide agit comme… » ni la simulation : le navigateur de l'équipe ne doit pas recevoir les notifications du compte. */
+  useEffect(() => {
+    if (!session?.token || !session.user || estNatif() || session.actingAs || simuRef.current) return;
+    reabonnerSiDejaAutorise(session.token);
+  }, [session?.token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // La langue choisie suit le compte : le backend l'utilise pour les e-mails envoyés plus tard, hors de
   // toute requête de l'utilisateur (livreur en route, réservation confirmée par le restaurateur...).

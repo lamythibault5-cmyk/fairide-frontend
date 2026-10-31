@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, API_BASE } from '../api';
 import { ouvrirPdf, telechargerPdf } from '../pdf';
+import { ouvrirLienFrais } from '../ouvrirDocument';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
@@ -34,6 +35,18 @@ export default function DocumentsPage() {
     try { await api('/auth/terms/accept', { method: 'POST', token, body: { accepted: true, version: d.terms.version, context: 'reaccept' } }); toast(t('mesDocuments.termsAccepted'), 'succes'); await charger(); }
     catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
+  /* Une version précédente du contrat de commerce : son PDF archivé n'a qu'une adresse signée de 5 minutes (audit sécurité
+     2026-10-31, décision d'Owen). La page peut rester ouverte bien plus longtemps : le clic relit /me/documents et ouvre
+     l'adresse fraîche de cette version (ouvrirLienFrais), et la page garde ces données neuves (signatures comprises). */
+  const ouvrirVersion = (restaurantId, versionId) => ouvrirLienFrais({
+    toast,
+    messageErreur: t('mesDocuments.pdfFailed'),
+    lire: async () => {
+      const r = await api('/me/documents', { token });
+      setD(r);
+      return r.restaurants?.find((c) => c.restaurantId === restaurantId)?.history?.find((h) => h.id === versionId)?.pdfUrl;
+    }
+  });
   const Signature = ({ url }) => (url ? <img src={url} alt={t('signature.aria')} style={{ display: 'block', maxWidth: 200, maxHeight: 80, marginTop: 6, background: '#fff', border: '1px solid var(--line, #e1d9c4)', borderRadius: 8 }} /> : null);
   const Boutons = ({ pdfPath, nom }) => (
     <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
@@ -107,7 +120,7 @@ export default function DocumentsPage() {
                   <b>{t('mesDocuments.previousVersions')}</b>
                   <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
                     {c.history.filter((h) => !(c.accepted && h.version === c.acceptedVersion)).map((h) => (
-                      <li key={h.id}>{h.version} · {t('mesDocuments.signedOn', { date: fmt(h.acceptedAt), name: h.typedName })}{h.pdfUrl ? <> · <a href={h.pdfUrl} target="_blank" rel="noreferrer">{t('mesDocuments.open')}</a></> : null}</li>
+                      <li key={h.id}>{h.version} · {t('mesDocuments.signedOn', { date: fmt(h.acceptedAt), name: h.typedName })}{h.pdfUrl ? <> · <button type="button" className="lien-bouton" onClick={() => ouvrirVersion(c.restaurantId, h.id)}>{t('mesDocuments.open')}</button></> : null}</li>
                     ))}
                   </ul>
                 </div>

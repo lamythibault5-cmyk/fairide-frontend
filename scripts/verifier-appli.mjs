@@ -58,8 +58,8 @@ const UTILISATEURS = {
 // doivent s'afficher dans la coquille de l'app, pas dans celle du site.
 const COMMUNES = ['/aide', '/aide?sujet=titres-restaurant', '/aide?sujet=contact', '/cgv', '/confidentialite', '/mentions-legales', '/cookies', '/classement', '/signaler', '/accessibilite', '/notre-histoire', '/une-page-qui-n-existe-pas'];
 const PAGES = {
-  visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', '/equipe/essai', '/preuve/essai', ...COMMUNES],
-  client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', '/groupe/essai1234', '/equipe/essai', '/demandes', '/preuve/essai', ...COMMUNES],
+  visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', '/equipe/essai', '/preuve/essai', '/confidentialite/confirmer/essai', ...COMMUNES],
+  client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', '/groupe/essai1234', '/equipe/essai', '/demandes', '/preuve/essai', '/confidentialite/confirmer/essai', ...COMMUNES],
   // ?dossier= : le même dossier simulé, envoyé ou validé (DossierSuivi.jsx) ; sans lui, le brouillon réel (DossierAppli.jsx).
   driver: ['/', '/driver', '/driver/onboarding', '/driver/onboarding?dossier=pending_review', '/driver/onboarding?dossier=approved', '/driver/map', '/driver/earnings', '/driver/invoices', '/documents', '/account', ...COMMUNES],
   admin: ['/', '/admin', '/admin/cartes', '/admin/restaurants', '/admin/demandes', '/account'],
@@ -135,6 +135,8 @@ function simuler(chemin, methode, profil, vue = null) {
     lines: [{ id: 'l1', guestName: 'Cléa', mine: true, itemId: 'p1', name: 'Margherita', qty: 1, optionItemIds: [], optionsSnapshot: [], unitPrice: 9, note: null },
       { id: 'l2', guestName: 'Igor', mine: false, itemId: 'p1', name: 'Margherita', qty: 2, optionItemIds: [], optionsSnapshot: [], unitPrice: 9, note: null }]
   };
+  // Lien de confirmation d'une demande RGPD du formulaire public (audit sécurité 2026-10-31) : la réponse d'un lien valable.
+  if (methode === 'POST' && chemin === '/privacy/confirm') return { ok: true, type: 'access' };
   // Invitation dans l'équipe d'un commerce (backend equipeCommerce.js).
   if (methode === 'GET' && /^\/restaurants\/team\/invitation\/[^/]+$/.test(chemin)) return { restaurantName: COMMERCE.name, emailHint: 'sa…@exemple.be', expired: false };
   // « C'est bon » (backend routes/validationCarte.js) : une petite carte aux prix magasin, avec le choix du taux offert.

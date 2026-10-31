@@ -27,6 +27,12 @@ on:
     # Option A (fondateur, 2026-10-15) : le staging suit main ; chaque fusion donne une nouvelle « Fairide Test ».
     branches: [main]
 
+# Lecture seule (audit sécurité 2026-10-31) : ce build ne pousse rien dans git et ne crée aucune release ; il lit le code
+# et dépose l'APK en artefact (jeton d'exécution d'Actions, pas GITHUB_TOKEN). Sans ce bloc, le jeton recevait les droits
+# par défaut du dépôt, peut-être en écriture, à portée de chaque étape, action tierce comprise.
+permissions:
+  contents: read
+
 concurrency:
   group: app-android-test-${{ github.ref }}
   cancel-in-progress: true
@@ -52,7 +58,10 @@ jobs:
           fi
           case "$VITE_API_BASE" in *fairide-backend-production*) echo "::error::STAGING_API_BASE pointe vers la production."; exit 1;; esac
 
+      # Le jeton ne reste pas dans .git/config après la copie du code : aucune étape suivante n'en a besoin.
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -116,7 +125,9 @@ jobs:
 
       - name: Envoi aux testeurs (Firebase App Distribution)
         if: steps.fb.outputs.ok == 'true'
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        # v1 (= v1.7.1), épinglée par son commit (audit sécurité 2026-10-31) : cette action reçoit le compte de service
+        # Firebase. L'étiquette v1 peut être déplacée par qui contrôle ce dépôt tiers ; un commit, non.
+        uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1
         with:
           appId: ${{ vars.FIREBASE_ANDROID_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

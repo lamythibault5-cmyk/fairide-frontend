@@ -40,6 +40,15 @@ function StatusPill({ status, tr }) {
   return <span className="compliance-status" style={{ color: STATUS_COLORS[status] || 'inherit' }}>{tr(`adminCompliance.status_${status}`)}</span>;
 }
 
+/* DEMANDE DU FORMULAIRE PUBLIC PAS ENCORE CONFIRMÉE (audit sécurité 2026-10-31, décision d'Owen). Le formulaire de
+ * /confidentialite ne prouve pas que l'adresse tapée est celle de la personne : l'accusé de réception porte un lien, et tant
+ * qu'il n'est pas ouvert le serveur refuse la suppression et l'export (409 PRIVACY_NOT_VERIFIED). `verified === false`
+ * et non `!verified` : un serveur d'avant ce changement ne renvoie pas le champ, et rien ne doit s'y bloquer. */
+const nonVerifiee = (r) => r.channel === 'form' && r.verified === false;
+function BadgeNonVerifiee({ r, tr }) {
+  return nonVerifiee(r) ? <span className="compliance-non-verifiee" title={tr('adminCompliance.unverifiedHint')}>{tr('adminCompliance.unverified')}</span> : null;
+}
+
 export default function AdminCompliancePage() {
   const { t: tr } = useLanguage();
   // ?onglet=dsa : la ligne « signalement(s) DSA » de l'accueil ouvre directement l'onglet (audit du 19/10, admin-41).
@@ -112,7 +121,7 @@ function RequestsTab({ refreshKey }) {
     { key: 'email', label: tr('adminCommon.email'), get: (r) => <><b>{r.userName || r.email}</b>{r.userName && <div className="small" style={{ opacity: 0.7 }}>{r.email}</div>}</>, sortValue: (r) => r.userName || r.email },
     { key: 'userRole', label: tr('adminCompliance.colAccount'), get: (r) => (r.userRole ? tr(`adminCompliance.role_${r.userRole}`) : tr('adminCompliance.noAccount')), sortValue: (r) => r.userRole || '' },
     { key: 'type', label: tr('adminCommon.type'), get: (r) => tr(`adminCompliance.type_${r.type}`), sortValue: (r) => r.type },
-    { key: 'status', label: tr('adminCommon.status'), get: (r) => <StatusPill status={r.status} tr={tr} />, sortValue: (r) => r.status },
+    { key: 'status', label: tr('adminCommon.status'), get: (r) => <><StatusPill status={r.status} tr={tr} /><BadgeNonVerifiee r={r} tr={tr} /></>, sortValue: (r) => r.status },
     { key: 'channel', label: tr('adminCompliance.colChannel'), get: (r) => tr(`adminCompliance.channel_${r.channel}`), sortValue: (r) => r.channel },
     { key: 'createdAt', label: tr('adminCompliance.colReceived'), get: (r) => fmtDate(r.createdAt), sortValue: (r) => r.createdAt },
     { key: 'dueAt', label: tr('adminCommon.dueDate'), get: (r) => <>{fmtDate(r.dueAt)}{r.overdue && <span className="compliance-overdue">{tr('adminCompliance.overdue')}</span>}</>, sortValue: (r) => r.dueAt },
@@ -215,14 +224,31 @@ function RequestDrawer({ initial, onClose, onChanged }) {
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
 
+  // « Renvoyer le lien » (audit sécurité 2026-10-31) : un nouvel e-mail de confirmation à l'adresse du formulaire, quand la
+  // personne dit ne pas l'avoir reçu. Les refus du serveur (PRIVACY_NOT_FORM, PRIVACY_ALREADY_VERIFIED) s'affichent tels quels ;
+  // déjà vérifiée entre-temps, la fiche le prend en compte (badge retiré, boutons rendus) et la liste est relue.
+  async function renvoyerLien() {
+    setBusy(true);
+    try {
+      await api(`/admin/compliance/requests/${r.id}/resend-verification`, { method: 'POST', token });
+      toast(tr('adminCompliance.toastVerificationResent'), 'succes');
+    } catch (e) {
+      toast(e.message, 'erreur');
+      if (e.code === 'PRIVACY_ALREADY_VERIFIED') appliquer({ ...r, verified: true });
+    } finally { setBusy(false); }
+  }
+
   const tabs = [{ key: 'overview', label: tr('adminCommon.tabOverview') }, { key: 'process', label: tr('adminCompliance.tabProcess') }];
   const ouverte = r.status === 'received' || r.status === 'in_progress';
+  // Suppression et export attendent le lien de l'accusé (le serveur répond 409 PRIVACY_NOT_VERIFIED sinon) : grisés, avec la
+  // raison en une ligne sous les actions, plutôt qu'une erreur après le clic.
+  const attendLien = nonVerifiee(r);
 
   return createPortal(
     <RecordDrawer
       title={r.userName || r.email}
       subtitle={`${tr(`adminCompliance.type_${r.type}`)} · ${tr('adminCompliance.receivedOn', { date: fmtDate(r.createdAt) })}`}
-      badge={<>{r.overdue && <span className="compliance-overdue">{tr('adminCompliance.overdue')}</span>}<StatusPill status={r.status} tr={tr} /></>}
+      badge={<>{r.overdue && <span className="compliance-overdue">{tr('adminCompliance.overdue')}</span>}<StatusPill status={r.status} tr={tr} /><BadgeNonVerifiee r={r} tr={tr} /></>}
       tabs={tabs} tab={tab} onTab={setTab} onClose={onClose} width={600}
     >
       {tab === 'overview' && (
@@ -231,6 +257,9 @@ function RequestDrawer({ initial, onClose, onChanged }) {
           <DrawerRow label={tr('adminCompliance.colAccount')} value={r.userId ? `${r.userName || ''} · ${tr(`adminCompliance.role_${r.userRole}`)}` : tr('adminCompliance.noAccount')} />
           <DrawerRow label={tr('adminCommon.type')} value={tr(`adminCompliance.type_${r.type}`)} />
           <DrawerRow label={tr('adminCompliance.colChannel')} value={tr(`adminCompliance.channel_${r.channel}`)} />
+          {r.channel === 'form' && typeof r.verified === 'boolean' && (
+            <DrawerRow label={tr('adminCompliance.verification')} value={r.verified ? tr('adminCompliance.verifiedOn', { date: r.verifiedAt ? fmtDateTime(r.verifiedAt) : '-' }) : tr('adminCompliance.unverified')} strong={!r.verified} />
+          )}
           <DrawerRow label={tr('adminCompliance.colReceived')} value={fmtDateTime(r.createdAt)} />
           <DrawerRow label={tr('adminCommon.dueDate')} value={<>{fmtDate(r.dueAt)}{r.overdue && <span className="compliance-overdue">{tr('adminCompliance.overdue')}</span>}</>} strong={r.overdue} />
           {r.doneAt && <DrawerRow label={tr('adminCompliance.closedOn')} value={fmtDateTime(r.doneAt)} />}
@@ -272,11 +301,13 @@ function RequestDrawer({ initial, onClose, onChanged }) {
           <h4 className="drawer-section-title">{tr('adminCommon.actions')}</h4>
           <div className="compliance-actions">
             <button className="btn-outline" disabled={busy} onClick={() => setConfirm({ title: tr('adminCompliance.ackTitle'), message: tr('adminCompliance.ackBody', { email: r.email }), confirmLabel: tr('adminCompliance.ackBtn'), run: accuser })}>{tr('adminCompliance.ackBtn')}</button>
-            <button className="btn-outline" disabled={busy || !r.userId} title={!r.userId ? tr('adminCompliance.noAccount') : undefined} onClick={exporter}>{tr('adminCompliance.exportBtn')}</button>
+            {attendLien && <button className="btn-outline" disabled={busy} onClick={renvoyerLien}>{tr('adminCompliance.resendVerificationBtn')}</button>}
+            <button className="btn-outline" disabled={busy || !r.userId || attendLien} title={!r.userId ? tr('adminCompliance.noAccount') : attendLien ? tr('adminCompliance.unverifiedBlocked') : undefined} onClick={exporter}>{tr('adminCompliance.exportBtn')}</button>
             {ouverte && <button className="btn-outline" disabled={busy} onClick={() => setConfirm({ title: tr('adminCompliance.doneTitle'), message: tr('adminCompliance.doneBody'), confirmLabel: tr('adminCompliance.doneBtn'), run: () => patch({ status: 'done' }, tr('adminCompliance.toastDone')) })}>{tr('adminCompliance.doneBtn')}</button>}
             {ouverte && <button className="btn-outline" disabled={busy} style={{ borderColor: 'var(--red)', color: 'var(--red)' }} onClick={() => setRejet(true)}>{tr('adminCompliance.rejectBtn')}</button>}
-            <button className="btn-danger-ghost" disabled={busy || !r.userId} title={!r.userId ? tr('adminCompliance.noAccount') : undefined} onClick={() => setConfirm({ title: tr('adminCompliance.deleteTitle'), message: tr('adminCompliance.deleteBody', { email: r.email }), confirmLabel: tr('adminCompliance.deleteBtn'), danger: true, run: supprimerCompte })}>{tr('adminCompliance.deleteBtn')}</button>
+            <button className="btn-danger-ghost" disabled={busy || !r.userId || attendLien} title={!r.userId ? tr('adminCompliance.noAccount') : attendLien ? tr('adminCompliance.unverifiedBlocked') : undefined} onClick={() => setConfirm({ title: tr('adminCompliance.deleteTitle'), message: tr('adminCompliance.deleteBody', { email: r.email }), confirmLabel: tr('adminCompliance.deleteBtn'), danger: true, run: supprimerCompte })}>{tr('adminCompliance.deleteBtn')}</button>
           </div>
+          {attendLien && <p className="small" role="note" style={{ color: 'var(--gold-deep)', marginTop: 10 }}>{tr('adminCompliance.unverifiedBlocked')}</p>}
           <p className="small" style={{ opacity: 0.7, marginTop: 10 }}>{tr('adminCompliance.exportHint')}</p>
         </div>
       )}

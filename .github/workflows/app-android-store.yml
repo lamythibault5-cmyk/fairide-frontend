@@ -31,6 +31,11 @@ on:
         required: true
         default: 'Corrections et améliorations.'
 
+# Lecture seule (audit sécurité 2026-10-31) : ce build ne pousse rien dans git et ne crée aucune release ; l'envoi au
+# Play Store passe par le compte de service Google, l'artefact par le jeton d'exécution d'Actions, pas par GITHUB_TOKEN.
+permissions:
+  contents: read
+
 concurrency:
   group: app-android-store
   cancel-in-progress: false
@@ -48,7 +53,10 @@ jobs:
       VITE_STOCK_DISH_PHOTOS: 'off'
       VERSION_CODE: ${{ github.run_number }}
     steps:
+      # Le jeton ne reste pas dans .git/config après la copie du code : aucune étape suivante n'en a besoin.
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
