@@ -125,7 +125,7 @@ Founder's answers to `maquettes/filtre-ouvert/filtre-ouvert.html` (version A, al
 - **« Ouvert » means open AND orderable**, on the list and on the Carte tab: open by its hours (pause, closed for the day
   and the shop's own switch included), not « Carte seule », and delivery here or takeaway possible now
   ([peutCommander.js](../../src/peutCommander.js)). On 2026-10-26, 23 of 30 shops were « open » at lunch, 2 orderable:
-  don't widen it back to opening hours. The chip waits for orders to open (1 November, `commandesOuvertes`).
+  don't widen it back to opening hours. The chip waits for orders to open (« Ouvrir l'à emporter », `commandesOuvertes`).
 - **« Livre chez toi »**: open, not Carte seule, the account's address in the shop's zone and a free courier. Shown only
   after GO and with a known address. **Hidden for now** (founder, 2026-10-26: no couriers yet, launch is takeaway only):
   `FILTRE_LIVRE = false` in RestaurantList.jsx; set it to true in the app update that starts delivery.
