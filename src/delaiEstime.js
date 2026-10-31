@@ -6,10 +6,15 @@
  * ne connaissent la distance qu'une fois chez le client : à garder alignés.
  *   préparation (prepEstimeeMinutes : réglée par le commerce, sinon sa médiane mesurée, sinon la médiane de tous nos
  *   commerces dès 100 commandes, sinon 15 — backend delaiEstime.js et docs/delais.md, sources du 2026-10-30)
- *   + vol d'oiseau ×1,3 (les rues) à 16 km/h
+ *   + vol d'oiseau ×1,3 (les rues) au pas d'un scooter, 19 km/h (fondateur, 2026-10-31 : la flotte sera à 99 % en scooter ;
+ *     16 km/h, à vélo, avant ; geocode.VITESSE_ANNONCE_KMH, backend docs/delais.md)
  *   + 5 minutes (le livreur rejoint le commerce).
- * La fourchette : arrondi aux 5 minutes inférieures, plus 10 (28 → « 25–35 min »). Le serveur reste la seule vérité de
- * l'heure (devis, commande, suivi) : ici ce n'est qu'une annonce.
+ * La fourchette : l'estimation AU MILIEU, arrondie aux 5 minutes, ± 5 (41 → « 35–45 min », 28 → « 25–35 min »). Avant le
+ * 2026-10-31, l'estimation était en bas (41 → « 40–50 ») : la fourchette paraissait plus longue que le trajet (fondateur :
+ * « 40 à 50 minutes, ça ne donne pas envie »). Le haut garde 2,5 à 7,5 minutes de marge, en plus des 5 d'approche : un retard
+ * déçoit bien plus qu'une avance ne réjouit, et une fourchette l'atténue mieux qu'une heure seule (sources dans
+ * docs/delais.md du backend). Le serveur reste la seule vérité de l'heure (devis, commande, suivi) : ici ce n'est qu'une
+ * annonce.
  *
  * D'OÙ : la position de l'adresse du compte, sinon le centre de sa commune (question 2 : « fourchette depuis le centre de la
  * commune »), sinon rien. Avant le GO ou sans livreur libre, il n'y a pas de livraison, donc pas de temps de livraison :
@@ -18,7 +23,7 @@ import { haversineDistanceKm, communeDepuisCodePostal, COMMUNES } from './menuCa
 import { lireBienvenue } from './bienvenue';
 
 export const FACTEUR_RUES = 1.3;
-export const VITESSE_KMH = 16;          // geocode.AVG_SPEED_KMH
+export const VITESSE_KMH = 19;          // geocode.VITESSE_ANNONCE_KMH : un scooter (le serveur la remplace par sa médiane mesurée dès 100 livraisons ; pas encore ici)
 export const APPROCHE_LIVREUR_MIN = 5;
 export const PREP_DEFAUT_MIN = 15;      // geocode.PREP_MINUTES (médiane de 15 701 vraies commandes, backend docs/delais.md)
 
@@ -55,6 +60,13 @@ export function minutesLivraison(r, point) {
 }
 
 export function fourchette(minutes) {
-  const de = Math.floor(minutes / 5) * 5;
-  return { de, a: de + 10 };
+  const milieu = Math.round(minutes / 5) * 5;
+  return { de: milieu - 5, a: milieu + 5 };
 }
+
+/* À DEUX PAS (fondateur, 2026-10-31) : à 1 km au plus de l'adresse EXACTE du compte (jamais le centre de la commune), la carte
+ * dit aussi quand la commande serait prête à emporter. 1 km à vol d'oiseau, c'est 1,3 km de rues, un quart d'heure à pied
+ * (5 km/h). Plus loin, l'à emporter n'est pas une vraie alternative à la livraison : on ne le propose pas. */
+export const A_PIED_MAX_KM = 1;
+export const aDeuxPas = (r, user) => !!(user?.lat && user?.lng && r?.lat && r?.lng)
+  && haversineDistanceKm(Number(user.lat), Number(user.lng), Number(r.lat), Number(r.lng)) <= A_PIED_MAX_KM;

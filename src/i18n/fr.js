@@ -4911,6 +4911,7 @@ export default {
       etaRange: '{de}–{a} min',
       etaPickup: 'À emporter · ~{min} min',
       servicePickup: 'À emporter',
+      servicePickupReady: 'À emporter, prête en ~{min} min',
       serviceSoon: "Commande en ligne bientôt",
       outOfZone: "Hors zone de livraison",
       serviceDelivery: 'Livraison',

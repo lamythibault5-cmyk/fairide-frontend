@@ -4906,6 +4906,7 @@ export default {
       etaRange: '{de}–{a} min',
       etaPickup: 'Afhalen · ~{min} min',
       servicePickup: 'Afhalen',
+      servicePickupReady: 'Afhalen, klaar in ~{min} min',
       serviceSoon: "Binnenkort online bestellen",
       outOfZone: "Buiten leveringszone",
       serviceDelivery: 'Levering',
