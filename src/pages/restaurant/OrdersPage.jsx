@@ -42,6 +42,7 @@ import AnneauDelai from '../../components/commerce/AnneauDelai';
 import LigneAlarme from '../../components/commerce/LigneAlarme';
 import ListePlats from '../../components/commerce/ListePlats';
 import LivreurCommande from '../../components/commerce/LivreurCommande';
+import PlusDeTemps from '../../components/commerce/PlusDeTemps';
 import { heurePrete, ouEstLeClient, prenom } from '../../components/commerce/clientCommande';
 import { telephoneLisible } from '../../validation';
 
@@ -570,6 +571,7 @@ export default function OrdersPage() {
       {o.status === 'preparation' && (
         <div onClick={(e) => e.stopPropagation()}>
           <button type="button" className={boutonGeste(o)} disabled={actionsEnCours.has(o.id)} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+          <PlusDeTemps occupe={actionsEnCours.has(o.id)} onAjouter={(m) => orderAction(o.id, 'extra-time', { minutes: m })} />
         </div>
       )}
       {o.status === 'pret' && o.orderType === 'pickup' && remiseClient(o)}
@@ -843,6 +845,7 @@ export default function OrdersPage() {
         {o.status === 'preparation' && (
           <div className="sp-cmd-boutons" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="ec-bouton ec-bouton--iris" disabled={actionsEnCours.has(o.id)} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+            <PlusDeTemps occupe={actionsEnCours.has(o.id)} onAjouter={(m) => orderAction(o.id, 'extra-time', { minutes: m })} />
           </div>
         )}
         {o.status === 'pret' && o.orderType === 'pickup' && remiseClient(o)}

@@ -918,6 +918,10 @@ export default function DriverDashboard() {
           </>
         )}
         {o.bonusCents > 0 && <p className="small" style={{ margin: '6px 0 0' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</p>}
+        {/* Pourboire déjà payé par le client avec sa commande (pourboireCommande.js) : 100 % au livreur, versé à la livraison
+            (revue des trois parcours, 2026-10-31 : le montant était dans la réponse, jamais montré avant la prise). Hors du
+            prix proposé, qui reste la course seule ; rendu au client si la course n'est pas livrée, d'où « à la livraison ». */}
+        {o.tipPaid && o.tipAmount > 0 && <p className="ecl-impact"><Icone nom="euro" taille={18} /><span>{t('ecranLivreur.pourboireOffre', { amount: dec(o.tipAmount) })}</span></p>}
         <div className="ecl-offre-pied">
           {/* Refuser reste discret et neutre : aucune conséquence pour le livreur. */}
           <button type="button" className="btn-ghost" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>

@@ -383,13 +383,14 @@ export function Cercle({ points, anime, petit, progres = null, accelere = false 
 // Trois lignes (Bienvenue.jsx, lignesRecherche) : cochées quand c'est vraiment fait (`faites`), celle en cours tourne.
 // Le texte d'une ligne qui change (« Ta position » → « Position trouvée ») réapparaît en fondu à la même place (`key`) : la ligne
 // ne bouge pas, le bloc a une largeur fixe (styles.css, .bv-etapes).
-export function EcranRecherche({ commune, points, lignes, faites }) {
+// `livraison` : bouton GO pressé (launch.js). Avant, on cherche les commerces près de chez toi, pas ceux qui livrent.
+export function EcranRecherche({ commune, livraison = true, points, lignes, faites }) {
   const { t } = useLanguage();
   return (
     <>
       <div className="bv-grandit" />
       <Cercle points={points} anime progres={ANNEAU_RECHERCHE[faites] ?? 1} accelere />
-      <h1 className="bv-titre bv-centre" style={{ fontSize: 26 }} aria-live="polite">{commune ? t('appli.calcTitre', { c: commune }) : t('appli.calcTitrePosition')}</h1>
+      <h1 className="bv-titre bv-centre" style={{ fontSize: 26 }} aria-live="polite">{commune ? t(livraison ? 'appli.calcTitre' : 'appli.calcTitrePres', { c: commune }) : t(livraison ? 'appli.calcTitrePosition' : 'appli.calcTitrePositionPres')}</h1>
       <ul className="bv-etapes" aria-live="polite">
         {lignes.map((txt, k) => (
           <li key={k} className={k < faites ? 'fait' : k === faites ? 'en-cours' : ''}>
@@ -452,7 +453,7 @@ const km = (d, locale) => `${d.toLocaleString(locale, { maximumFractionDigits: 1
  * UN SEUL ÉCRAN, SANS DÉFILER (fondateur, 2026-10-15). Il empilait le petit cercle, quatre cartes de commerce, la note
  * sur le rayon et jusqu'à trois boutons : au téléphone, « Continuer avec mon e-mail » était sous le pli. Le cercle a déjà
  * été montré au chargement juste avant ; ici, trois commerces en lignes serrées, dans une seule carte, et le compte. */
-export function EcranCompte({ role, resultats, envies = [], listeEchec = false, avecPosition, commune, onFournisseur, onEmail, onConnexion, attente }) {
+export function EcranCompte({ role, resultats, envies = [], listeEchec = false, avecPosition, livraison = true, commune, onFournisseur, onEmail, onConnexion, attente }) {
   const { t, locale } = useLanguage();
   let haut;
   let liste = null; // les commerces trouvés : en tête de la feuille, sous le bandeau
@@ -467,13 +468,15 @@ export function EcranCompte({ role, resultats, envies = [], listeEchec = false, 
     const nPourToi = envies.length ? resultats.filter((x) => x.envie).length : 0;
     const noms = envies.map((cle) => libelleFamille(cle, t, { court: true }));
     const titre = nPourToi ? (nPourToi === 1 ? t('appli.pourToiUn') : t('appli.pourToi', { n: nPourToi }))
-      : !avecPosition && commune ? t('appli.trouvesCommune', { c: commune }) : n === 1 ? t('appli.trouvesUn') : t('appli.trouves', { n });
-    const sousTitre = !nPourToi ? null : avecPosition ? t('appli.pourToiSub', { liste: listeEt(noms, locale) })
+      : !avecPosition && commune ? t('appli.trouvesCommune', { c: commune })
+        : !livraison ? t(n === 1 ? 'appli.trouvesUnPres' : 'appli.trouvesPres', { n }) : n === 1 ? t('appli.trouvesUn') : t('appli.trouves', { n });
+    // Avant GO (Bienvenue.jsx, PRES_KM) : « près de chez toi », jamais « livrent chez toi ».
+    const sousTitre = !nPourToi ? null : avecPosition ? t(livraison ? 'appli.pourToiSub' : 'appli.pourToiSubPres', { liste: listeEt(noms, locale) })
       : commune ? t('appli.pourToiSubCommune', { liste: listeEt(noms, locale), c: commune }) : listeEt(noms, locale);
     // Liste qui n'a pas pu se charger (audit du 19/10, auth-22) : un titre neutre, jamais « pas encore de commerce ici ».
     haut = (
       <>
-        <h1 className="bv-titre">{listeEchec ? t('appli.trouvesSansListe') : n || !avecPosition ? titre : t('appli.aucun')}</h1>
+        <h1 className="bv-titre">{listeEchec ? t('appli.trouvesSansListe') : n || !avecPosition ? titre : t(livraison ? 'appli.aucun' : 'appli.aucunPres')}</h1>
         {!n && avecPosition && !listeEchec && <p className="bv-sous">{t('appli.aucunSub')}</p>}
         {sousTitre && !listeEchec && <p className="bv-sous">{sousTitre}</p>}
       </>
@@ -483,7 +486,7 @@ export function EcranCompte({ role, resultats, envies = [], listeEchec = false, 
     const resteAutres = n - nPourToi - Math.max(0, 3 - nPourToi);
     const reste = !nPourToi ? (n > 3 ? t('appli.etAutres', { n: n - 3 }) : null) : [
       restePourToi > 0 && t('appli.plusPourToi', { n: restePourToi }),
-      resteAutres > 0 && (avecPosition ? t(resteAutres === 1 ? 'appli.autreAussi' : 'appli.autresAussi', { n: resteAutres }) : t('appli.etAutres', { n: resteAutres }))
+      resteAutres > 0 && (avecPosition && livraison ? t(resteAutres === 1 ? 'appli.autreAussi' : 'appli.autresAussi', { n: resteAutres }) : t('appli.etAutres', { n: resteAutres }))
     ].filter(Boolean).join(' · ');
     liste = (
       <>
