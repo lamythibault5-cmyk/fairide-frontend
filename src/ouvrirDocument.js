@@ -22,6 +22,27 @@ const indisponible = () => traduire('common.docUnavailable');
  *
  * `noopener` reste indispensable : sans lui, la page ouverte peut réécrire l'onglet d'origine
  * (window.opener) et y afficher une fausse page de connexion. */
+/* UN LIEN SIGNÉ RELU AU CLIC (audit sécurité 2026-10-31, décision d'Owen). Les contrats et signatures privés arrivent avec
+ * une adresse signée valable 5 minutes, dans la réponse d'une route qui en contient bien d'autres (GET /me/documents, le
+ * dossier d'un livreur côté admin). Une page restée ouverte plus longtemps garderait un lien mort : `lire` relit les données
+ * et rend l'adresse fraîche du document voulu. L'onglet est ouvert pendant le geste, comme plus haut, mais SANS `noopener`
+ * dans window.open : avec, le navigateur rend null et l'onglet ne pourrait plus recevoir l'adresse (même constat que
+ * pdf.js) ; le lien vers cette page est coupé à la main (opener = null) avant d'y charger le document. */
+export async function ouvrirLienFrais({ lire, toast, messageErreur }) {
+  const onglet = estNatif() ? null : window.open('', '_blank');
+  if (onglet) { try { onglet.opener = null; } catch { /* navigateur qui refuse : l'onglet reste vide jusqu'au lien */ } }
+  try {
+    const sure = urlSure(await lire());
+    if (!sure) throw new Error(messageErreur || indisponible());
+    if (onglet) onglet.location.href = sure;
+    else await ouvrirLienExterne(sure); // application native, ou onglet bloqué : dernier recours
+  } catch (e) {
+    // L'onglet vide resterait sinon ouvert sur une page blanche, sans explication.
+    if (onglet) onglet.close();
+    toast?.(e.message || messageErreur || indisponible(), 'erreur');
+  }
+}
+
 export default async function ouvrirDocument({ url, lien, token, toast, messageErreur }) {
   // Pièce d'avant la migration : encore publique, le serveur rend son adresse directement.
   if (url) {

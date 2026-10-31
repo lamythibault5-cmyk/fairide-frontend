@@ -77,6 +77,28 @@ export async function abonner(token) {
   }
 }
 
+/* L'ABONNEMENT DE CE NAVIGATEUR REVIENT À CHAQUE SESSION (audit sécurité 2026-10-31, décision d'Owen). Le serveur efface
+ * les abonnements push d'un compte quand toutes ses sessions sont fermées (« déconnecter tous mes appareils », mot de passe
+ * réinitialisé) : un navigateur volé ou partagé ne doit plus recevoir les notifications du compte. Mais le navigateur, lui,
+ * garde son abonnement et sa permission, et l'interface le montre « activé » : sans ce renvoi, la personne qui se reconnecte
+ * ne recevait plus rien, sans le savoir. Donc, à chaque connexion et à chaque reprise de session sur le SITE, si la
+ * permission est DÉJÀ accordée et qu'un abonnement existe DÉJÀ, il est renvoyé au serveur (même endpoint = même ligne).
+ * Jamais de demande de permission ici (hors geste, les navigateurs la refusent et c'est ce qu'on ne veut pas imposer), ni
+ * de nouvel abonnement : seulement celui qui existe. En silence : aucune erreur ne remonte, aucune interface.
+ * L'application native a son propre chemin (pushNatif.rattacherAppareilSiAutorise, AuthContext.jsx). */
+export async function reabonnerSiDejaAutorise(token) {
+  if (!token || estNatif() || !estSupporte()) return;
+  try {
+    if (Notification.permission !== 'granted') return;
+    // getRegistration et non `ready` : sans service worker enregistré, `ready` attendrait pour toujours.
+    const enregistrement = await navigator.serviceWorker.getRegistration();
+    const abonnement = await enregistrement?.pushManager.getSubscription();
+    if (!abonnement) return;
+    // logoutOn401: false : un renvoi en arrière-plan ne décide pas d'une déconnexion (la relecture de /auth/me s'en charge).
+    await api('/push/subscribe', { method: 'POST', token, body: { subscription: abonnement.toJSON() }, logoutOn401: false });
+  } catch { /* silencieux : la personne peut toujours réactiver depuis ses réglages */ }
+}
+
 export async function desabonner(token) {
   if (estNatif()) return desabonnerNatif(token);
   const abonnement = await abonnementCourant();

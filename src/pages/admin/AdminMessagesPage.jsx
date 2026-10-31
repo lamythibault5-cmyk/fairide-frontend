@@ -16,6 +16,8 @@ import { fmtDateTime, useDebouncedValue, estCompteSupprime } from './adminUtils'
 import { COMMUNES } from '../../menuCategories';
 import '../../admin-messages.css';
 import useEtatPage from '../../hooks/useEtatPage';
+import useAdminRole from '../../hooks/useAdminRole';
+import { moduleAllowed, moduleByKey } from './adminModules';
 
 // Application « Messages » : Fairide écrit à ses comptes (annonce par type / commune / comptes précis,
 // ou message direct), lit leurs réponses et réactions, répond — une conversation par personne.
@@ -299,6 +301,14 @@ function ComposeTab({ token, tr, toast, onSent }) {
     return () => { annule = true; };
   }, [userQ, token]);
 
+  /* L'E-MAIL D'UNE ANNONCE SUIT LES RÈGLES DU MARKETING (audit sécurité 2026-10-31, décision d'Owen). Une annonce à plusieurs
+     comptes avec « Prévenir aussi par e-mail » est un envoi de masse : réservée aux rôles qui ont le module Marketing
+     (owner, admin, ops, MODULE_ROLES), et le serveur n'écrit qu'aux adresses prouvées qui ne se sont pas désinscrites.
+     Le support garde les annonces dans l'app, et l'e-mail sur un message direct à UN compte (une conversation de suivi).
+     Même source de rôle que la barre latérale (useAdminRole) ; rôle inconnu = on montre, le serveur reste le garde-fou. */
+  const { role: roleEquipe } = useAdminRole();
+  const emailAnnoncePermis = moduleAllowed(moduleByKey('marketing'), roleEquipe);
+
   function toggleRole(r) { setRoles((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r])); }
   function toggleCommune(c) { setCommunes((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c])); }
   function ajouterUser(u) {
@@ -323,10 +333,16 @@ function ComposeTab({ token, tr, toast, onSent }) {
       if (specific && users.length === 1) {
         // Un seul compte : message direct (pas d'annonce), sans exclusion des comptes de test.
         r = await api('/admin/messages/threads', { method: 'POST', token, body: { userId: users[0].id, subject: subject.trim(), body: body.trim(), notifyByEmail } });
-        toast(tr('adminMessages.sentToast', { n: 1 }));
+        // `emailed` vaut 0 ou 1 (adresse non confirmée = pas d'e-mail, audit sécurité 2026-10-31) : dit quand il est donné.
+        toast(notifyByEmail && Number.isFinite(r?.emailed) ? tr('adminMessages.sentToastEmails', { n: 1, m: r.emailed }) : tr('adminMessages.sentToast', { n: 1 }));
       } else {
-        r = await api('/admin/messages/broadcast', { method: 'POST', token, body: { subject: subject.trim(), body: body.trim(), audience, notifyByEmail } });
-        toast(tr('adminMessages.sentToast', { n: r.recipients }));
+        r = await api('/admin/messages/broadcast', { method: 'POST', token, body: { subject: subject.trim(), body: body.trim(), audience, notifyByEmail: notifyByEmail && emailAnnoncePermis } });
+        /* Le nombre d'e-mails réellement partis (`emailed`, backend routes/adminMessages.js : adresses prouvées, sans les
+           désinscrits), quand le serveur le donne : il peut être bien plus petit que le nombre de comptes, et l'équipe doit
+           le savoir. Serveur d'avant, sans le champ : le message d'avant. */
+        toast(notifyByEmail && emailAnnoncePermis && Number.isFinite(r?.emailed)
+          ? tr('adminMessages.sentToastEmails', { n: r.recipients, m: r.emailed })
+          : tr('adminMessages.sentToast', { n: r.recipients }));
       }
       setSubject(''); setBody(''); setRoles([]); setCommunes([]); setUsers([]); setNotifyByEmail(false);
       onSent?.(r);
@@ -337,6 +353,8 @@ function ComposeTab({ token, tr, toast, onSent }) {
   // ne bloque pas dans ce cas.
   const compteDirect = specific && users.length === 1;
   const nombre = compteDirect ? 1 : (preview?.count ?? null);
+  // La case e-mail : toujours sur un message direct, sur une annonce seulement pour owner / admin / ops (voir plus haut).
+  const emailPossible = compteDirect || emailAnnoncePermis;
 
   return (
     <>
@@ -358,8 +376,8 @@ function ComposeTab({ token, tr, toast, onSent }) {
             </div>
           </div>
           <label className="msg-notify">
-            <input type="checkbox" checked={notifyByEmail} onChange={(e) => setNotifyByEmail(e.target.checked)} />
-            <span><b>{tr('adminMessages.notifyByEmail')}</b><br /><span className="small">{tr('adminMessages.notifyHint')}</span></span>
+            <input type="checkbox" checked={notifyByEmail && emailPossible} disabled={!emailPossible} onChange={(e) => setNotifyByEmail(e.target.checked)} />
+            <span><b>{tr('adminMessages.notifyByEmail')}</b><br /><span className="small">{tr(emailPossible ? 'adminMessages.notifyHint' : 'adminMessages.notifyRoleOnly')}</span></span>
           </label>
           <div className="msg-compose-actions">
             <button type="button" className="btn-teal" disabled={!(pret || (compteDirect && subject.trim() && body.trim())) || envoi} onClick={() => setConfirm(true)}>{tr('adminMessages.sendBroadcast')}</button>
@@ -425,7 +443,7 @@ function ComposeTab({ token, tr, toast, onSent }) {
       <ConfirmDialog
         open={confirm}
         title={tr('adminMessages.confirmTitle', { n: nombre ?? 0 })}
-        message={`${tr('adminMessages.confirmBody')}${notifyByEmail ? ` ${tr('adminMessages.confirmBodyEmail')}` : ''}`}
+        message={`${tr('adminMessages.confirmBody')}${notifyByEmail && emailPossible ? ` ${tr('adminMessages.confirmBodyEmail')}` : ''}`}
         confirmLabel={tr('adminMessages.send')}
         loading={envoi}
         onConfirm={envoyer}

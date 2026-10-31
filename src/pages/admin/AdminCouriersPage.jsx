@@ -18,8 +18,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { estCompteReel, estCompteSupprime, estCompteTest, TestBadge, DeletedBadge, NatureChips, natureOk, filterBySearch, downloadCsv } from './adminUtils';
 import useEtatPage from '../../hooks/useEtatPage';
 import useDialogue from '../../hooks/useDialogue';
-import urlSure from '../../urlSure';
-import ouvrirDocument from '../../ouvrirDocument';
+import ouvrirDocument, { ouvrirLienFrais } from '../../ouvrirDocument';
 import { euros } from '../../prixPlat';
 import { libelleManque } from '../../conformite';
 import Icone from '../../components/Icone';
@@ -257,6 +256,17 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   // `validated` : le geste de l'équipe était le dernier point à regarder, le serveur a validé le dossier (inscription express).
   async function agir(fn, ok) { setBusy(true); try { const r = await fn(); if (ok) toast(ok); if (r?.validated) toast(tr('adminCouriers.exValide'), 'succes'); await load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); } }
   const statut = (x) => (x && STATUTS.includes(x) ? tr(`courierOnboarding.status_${x}`) : x || '-');
+  /* Le PDF d'un contrat signé n'a qu'une adresse signée de 5 minutes (audit sécurité 2026-10-31, décision d'Owen) et le
+     tiroir reste souvent ouvert plus longtemps : le clic relit le dossier et ouvre l'adresse fraîche de ce contrat. */
+  const ouvrirContrat = (contratId) => ouvrirLienFrais({
+    toast,
+    messageErreur: tr('courierOnboarding.docUnavailable'),
+    lire: async () => {
+      const frais = await api(`/admin/couriers/${id}`, { token });
+      setD(frais);
+      return frais?.contracts?.find((k) => k.id === contratId)?.pdfUrl;
+    }
+  });
   // Validation du dossier. Le serveur refuse (409 DOSSIER_INCOMPLET) tant qu'une pièce requise ou l'identité n'est pas
   // vérifiée : on montre alors ce qui bloque et on propose de valider quand même, avec un motif obligatoire (tracé).
   const libelleBlocage = (b) => (b === 'identite_non_verifiee' ? tr('adminCouriers.blockIdentity')
@@ -365,7 +375,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           {['student_independent', 'independent'].includes(c.statusType) && !entreprise.companyVerified && <button className="btn-outline" style={{ marginTop: 6 }} disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markCompanyOk'), run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { companyVerified: true } }), tr('adminCouriers.toastCompanyOk')) })}>{tr('adminCouriers.markCompanyOk')}</button>}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secContracts', { n: contracts.length })}</h4>
-          {contracts.map((k) => <div key={k.id} className="small"><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{statut(k.contractType)} {k.version}, {new Date(k.signedAt).toLocaleString(getLocale())}, {k.typedName}, <code>{(k.documentHash || '').slice(0, 12)}…</code>{k.pdfUrl && <>-<a href={urlSure(k.pdfUrl)} target="_blank" rel="noreferrer">PDF</a></>}</div>)}
+          {contracts.map((k) => <div key={k.id} className="small"><Icone nom="crayon" taille={16} className="icone-texte" />{' '}{statut(k.contractType)} {k.version}, {new Date(k.signedAt).toLocaleString(getLocale())}, {k.typedName}, <code>{(k.documentHash || '').slice(0, 12)}…</code>{k.pdfUrl && <>-<button type="button" className="lien-bouton" onClick={() => ouvrirContrat(k.id)}>PDF</button></>}</div>)}
           {contracts.length === 0 && <p className="small">-</p>}
         </>
       )}

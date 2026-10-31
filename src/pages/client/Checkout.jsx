@@ -693,6 +693,16 @@ export default function Checkout() {
           {giftCheck.valid ? t('checkout.giftVoucherOk', { amount: euros(giftCheck.remaining) }) : t(`checkout.giftVoucherKo_${giftCheck.reason || 'introuvable'}`)}
         </p>
       )}
+      {/* LE BON NE PAIE PAS TOUT (audit sécurité 2026-10-31, décision d'Owen) : le bon, vendu et encaissé par le commerce, ne
+          couvre que sa part ; la livraison et le reste se paient par carte. Le serveur plafonne le bon dans le devis, et le
+          ticket n'en montre que le montant du devis (giftVoucherDiscount) : jamais « rien à payer » sur la foi du solde du bon.
+          Une ligne, sans commission ni pourcentage (argent.md : le client ne voit jamais la part de Fairride). Pas en paiement sur
+          place : rien n'y passe par carte. */}
+      {giftCheck?.valid && !surPlaceChoisi && (
+        <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>
+          {t(fulfillmentType === 'delivery' ? 'checkout.giftVoucherPasLivraison' : 'checkout.giftVoucherReste')}
+        </p>
+      )}
     </>
   );
 
