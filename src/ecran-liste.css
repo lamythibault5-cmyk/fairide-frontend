@@ -234,16 +234,6 @@ html.appli .sl-liste--calme .rest-card { animation: none; }
 .carte-fiche-fermer svg { position: relative; }
 /* Le zoom de Leaflet vit en bas à droite : il remonte au-dessus de la fiche quand elle est ouverte. */
 .carte-plein:has(.carte-fiche) .leaflet-top.leaflet-left { bottom: 210px; }
-/* LE HAUT DU TÉLÉPHONE EN BLANC SUR LA CARTE (fondateur, 2026-10-30 : « seulement pour cet onglet »). Partout ailleurs, l'heure et
-   la batterie sont sur l'iris ; ici une bande blanche pleine passe dessous, et barreEtat.js, qui ne voit plus d'iris, met les
-   icônes en sombre et la vue native de la barre en blanc. Le verre de verreBarreEtat.js, resté allumé par l'écran d'avant,
-   ne s'y pose pas. iPhone : la vue web commence sous cette vue native, env() ne vaut que le reste de l'encoche (quelques
-   points) : la bande prolonge la barre blanche jusqu'à la carte (2026-10-31, build 234 : la vue restait iris au-dessus).
-   Android 14 et moins : env() vaut 0, la bande n'a aucune hauteur. */
-html.appli .carte-plein-ecran::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; z-index: 1000; height: env(safe-area-inset-top, 0px); background: #fff;
-}
-html.appli body:has(.carte-plein-ecran) .verre-etat { display: none; }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   html.appli .carte-page .carte-recherche, html.appli .carte-page .carte-pastilles .cuisine-chip, html.appli .carte-page .carte-compte,

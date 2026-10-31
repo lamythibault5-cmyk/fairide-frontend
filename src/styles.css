@@ -2558,12 +2558,8 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 
 /* TIRER POUR ACTUALISER (components/TirerPourActualiser.jsx, app seulement). La zone iris fixe en haut grandit avec le doigt
    (--tirer-p) pendant que le <main> descend d'autant : le bandeau de la page a l'air de s'étirer. Le vélo avance jusqu'à
-   --tirer-velo, puis roule en boucle pendant l'actualisation. Sous la barre d'état (iPhone : la vue web passe dessous).
-   Au repos, elle n'a aucune hauteur (fondateur, 2026-10-30 : « blanc dès qu'il y a du blanc dessous ») : elle laissait une
-   bande iris fixe sous l'heure de Mes commandes, de la liste, des courses et des commandes du commerce, même défilées jusqu'au
-   blanc. min(p × 1000, encoche) vaut 0 sans tirage et toute l'encoche dès le premier pixel tiré. */
-.tirer-zone { position: fixed; top: 0; left: 0; right: 0; z-index: 70; overflow: hidden;
-  height: calc(min(var(--tirer-p, 0px) * 1000, env(safe-area-inset-top, 0px)) + var(--tirer-p, 0px));
+   --tirer-velo, puis roule en boucle pendant l'actualisation. Sous la barre d'état (iPhone : la vue web passe dessous). */
+.tirer-zone { position: fixed; top: 0; left: 0; right: 0; z-index: 70; height: calc(env(safe-area-inset-top) + var(--tirer-p, 0px)); overflow: hidden;
   background: var(--iris); pointer-events: none; }
 .tirer-route { position: absolute; left: 24px; right: 24px; bottom: 30px; height: 22px; opacity: var(--tirer-o, 0); }
 .tirer-route::before { content: ''; position: absolute; left: 0; right: 0; bottom: 3px; height: 3px; border-radius: 2px;
