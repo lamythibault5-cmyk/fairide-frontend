@@ -30,7 +30,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
   // Montant minimum de commande (plan de test PAN-3) : vide = aucun minimum.
   const [minimum, setMinimum] = useState('');
   // Temps de préparation habituel (backend migration 041) : sert à l'heure d'arrivée annoncée au client. Coché = les
-  // 12 minutes par défaut ; la mesure de Fairide (médiane des 30 derniers jours) aide à régler, sans rien imposer.
+  // 15 minutes par défaut (backend docs/delais.md) ; la mesure de Fairide (médiane des 30 derniers jours) aide à régler, sans rien imposer.
   const [prepaDefaut, setPrepaDefaut] = useState(true);
   const [prepa, setPrepa] = useState(15);
   const [enCours, setEnCours] = useState(false);
