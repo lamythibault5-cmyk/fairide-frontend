@@ -152,7 +152,7 @@ export default function EarningsPage() {
   const ligneCourse = (r) => {
     const quand = r.earnedAt ? new Date(r.earnedAt) : null;
     const lieu = r.restaurantName ? (r.commune ? `${r.restaurantName} → ${r.commune}` : r.restaurantName) : null;
-    const nature = ['delivery', 'tip', 'reversal', 'correction'].includes(r.kind) ? t(`driverPay.kind_${r.kind}`) : r.kind;
+    const nature = ['delivery', 'tip', 'reversal', 'correction', 'cancellation'].includes(r.kind) ? t(`driverPay.kind_${r.kind}`) : r.kind;
     const titre = r.kind === 'delivery' ? (lieu || `${nature} #${String(r.orderId || '').slice(0, 8)}`) : [nature, r.restaurantName].filter(Boolean).join(' · ');
     const retenue = Number(r.withholding || 0) !== 0 ? `${t('driverPay.gross')} ${euro(r.gross)} · ${t('driverPay.withholding')} ${euro(r.withholding)}${r.withholdingRate ? ` (${pctTexte(r.withholdingRate)})` : ''}` : null;
     const sous = [quand && quand.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }), r.distanceKm != null && r.kind === 'delivery' ? km(r.distanceKm) : null, retenue].filter(Boolean).join(' · ');

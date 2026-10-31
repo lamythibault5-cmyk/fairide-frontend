@@ -91,6 +91,25 @@ new address beyond `VELO_MAX_KM`. A cancelled order refunds each supplement sepa
 096, `POST /orders/:id/address/quote` and `POST /orders/:id/address`. The checkout also warns « Tu n'es pas à cette adresse ? » when
 the phone, with location already allowed (never asked for this), is more than 1 km from the address (`useLoinDeLAdresse`).
 
+## Shop cancels after a courier took the job; payouts list (founder, 2026-10-31)
+
+- A shop that cancels an accepted order (`PATCH /orders/:id/refuse` from `preparation`/`pret`) while a courier holds it:
+  the customer is refunded in full as before, and the courier gets the share of a 1 km trip (base fee × 90 % = 4,50 €)
+  for the trip (`annulationLivreur.js`, backend). Fairride pays it from its Stripe balance as a `virements_complements`
+  row of nature `annulation` (never twice, retried when the balance is empty), books it 613-ANNULATION → 441-LIVREUR,
+  and writes a `courier_earnings` line of kind `cancellation` (Gains: « Annulée par le commerce »). The courier's push
+  says « 4,50 € pour toi quand même ». Charging it back to the shop needs a clause in the next shop contract version
+  (30 days' notice): not done yet. The customer still can't cancel once the shop accepted (unchanged).
+- Courier contract 2026.9 (`courierContracts.js`): prices are final, VAT included (the « hors TVA » left from 8-14/10 is
+  gone), the courier's share in euros (4,50 € up to 1 km, 0,72 € per started km), straight-line distance, and the
+  cancellation pay above. Couriers sign again (a 2026.8 signature leaves « contrat » missing in their dossier).
+- Shops see their payouts: Factures › « Virements » and a « Prochain virement » tile on the home screen
+  (`GET /restaurants/:id/payouts`, `virementsCommerce.js`): the next Monday's amount (Stripe balance), and each Stripe
+  payout with its orders and deductions, read from the payout's balance transactions. Counter-paid orders are listed
+  apart: already in the till, never in a payout.
+- Courier offers show the shop → customer leg « ≈ x km » by the streets (× 1,3, like the first leg); the price still
+  uses the straight line.
+
 ## Three sellers per order (decided 2026-09-23)
 
 The customer buys the food from the business, the **delivery from the independent courier** who accepts

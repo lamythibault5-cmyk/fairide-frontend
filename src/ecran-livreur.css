@@ -442,6 +442,22 @@ html .ecl-factures table.ecl-recap-table, html.appli .dashboard-main .ecl-factur
 .ecl-v3-seg small { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); font-size: 11.5px; color: var(--ink-soft); white-space: nowrap; }
 .ecl-v3-libs { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 6px; margin-top: 10px; font-size: 12px; line-height: 1.35; }
 .ecl-v3-libs.sans-toi { grid-template-columns: 1fr 1fr; }
+/* Les heures chargées, sous la liste vide (HeuresChargees.jsx ; maquettes/revue-parcours, question 3 A) : une barre par heure,
+   les plus chargées en iris plein, l'heure actuelle entourée de lime. */
+.ecl-heures { border: 1px solid var(--line); border-radius: 20px; padding: 16px; margin: 14px 0 6px; background: #fff; }
+.ecl-heures-titre { display: block; font: 800 17px/1.25 var(--font-titre, inherit); color: var(--ink); }
+.ecl-heures-plage { margin: 2px 0 0; font-size: 13.5px; color: var(--ink-soft); }
+.ecl-heures-barres { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; align-items: end; height: 110px; margin: 12px 0 4px; }
+.ecl-heures-barres span { background: #DCD7F6; border-radius: 5px 5px 2px 2px; }
+.ecl-heures-barres span.fort { background: var(--iris); }
+.ecl-heures-barres span.maintenant { outline: 2.5px solid var(--lime); outline-offset: 1px; }
+.ecl-heures-axe { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; font-size: 11px; font-weight: 600; color: var(--ink-soft); text-align: center; }
+.ecl-heures-jours { display: flex; gap: 6px; margin-top: 12px; }
+.ecl-heures-jours button { flex: 1; min-height: 32px; border: 0; border-radius: var(--radius-pill, 999px); background: rgba(59, 47, 181, .08); color: var(--iris); font: 600 13px/1 inherit; cursor: pointer; padding: 0; }
+.ecl-heures-jours button.on { background: var(--iris); color: #fff; }
+.ecl-heures-source { margin: 8px 0 0; font-size: 12px; color: var(--ink-soft); }
+/* « Distances par les rues, estimées » (maquettes/revue-parcours, question 5 A). */
+.ecl-v3-note { margin: 8px 0 0; font-size: 12px; color: var(--muted, #6B655D); }
 .ecl-v3-libs > span { min-width: 0; overflow-wrap: anywhere; }
 .ecl-v3-libs b { display: block; font-size: 13px; }
 .ecl-v3-libs .milieu { text-align: center; }
