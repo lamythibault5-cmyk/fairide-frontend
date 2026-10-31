@@ -429,3 +429,47 @@ html .ecl-factures table.ecl-recap-table, html.appli .dashboard-main .ecl-factur
   html:not(.appli) :is(.ecl-titre-sec, .ecl-factures .ecl-feuille .card > h3:first-child) {
     font-family: var(--font-ui); font-size: 12px !important; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; margin: 18px 0 8px !important; }
 }
+
+/* LA TOURNÉE DU LIVREUR (fondateur, 2026-10-30, maquettes/tournee-livreur : toutes les recommandations). */
+/* 1 B — la course entière sur la carte proposée : toi → commerce (prête à…) → client (vers…). */
+.ecl-voie3 { display: grid; grid-template-columns: 34px 1fr 34px 1fr 34px; align-items: center; margin: 22px 0 2px; }
+.ecl-voie3.sans-toi { grid-template-columns: 34px 1fr 34px; }
+.ecl-v3-pt { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--iris); color: #fff; }
+.ecl-v3-pt.toi { background: #fff; color: var(--iris); box-shadow: inset 0 0 0 2px var(--iris); }
+.ecl-v3-pt.maison { background: var(--lime); color: var(--ink); }
+.ecl-v3-seg { position: relative; height: 0; border-top: 2.5px dashed rgba(59, 47, 181, .35); margin: 0 4px; }
+.ecl-v3-seg b { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); font-size: 12.5px; white-space: nowrap; }
+.ecl-v3-seg small { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); font-size: 11.5px; color: var(--ink-soft); white-space: nowrap; }
+.ecl-v3-libs { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 6px; margin-top: 10px; font-size: 12px; line-height: 1.35; }
+.ecl-v3-libs.sans-toi { grid-template-columns: 1fr 1fr; }
+.ecl-v3-libs > span { min-width: 0; overflow-wrap: anywhere; }
+.ecl-v3-libs b { display: block; font-size: 13px; }
+.ecl-v3-libs .milieu { text-align: center; }
+.ecl-v3-libs.sans-toi .milieu { text-align: left; }
+.ecl-v3-libs > span:last-child { text-align: right; color: var(--ink-soft); }
+.ecl-v3-libs .ecl-badge { margin-top: 4px; white-space: normal; justify-content: center; }
+/* 4 A — un retard se lit en rouge (couleur des alertes, design.md). */
+.ecl-badge.rouge { background: #fff; color: var(--red); box-shadow: inset 0 0 0 1.5px var(--red); }
+/* 5 A — « Sur ton chemin » : ce que la course ajoute à la tournée. */
+.ecl-impact { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0 0; font-size: 13px; line-height: 1.4; }
+.ecl-impact svg { color: var(--green); flex: none; margin-top: 1px; }
+/* 3 A — « Ton trajet » : les arrêts numérotés, l'arrêt en cours ouvert. */
+.ecl-trajet-conseil { margin: -2px 0 6px; color: var(--ink-faint); }
+.ecl-arrets { list-style: none; margin: 0 0 10px; padding: 0; position: relative; }
+.ecl-arrets::before { content: ''; position: absolute; left: 17px; top: 22px; bottom: 26px; border-left: 2px dashed rgba(59, 47, 181, .3); }
+.ecl-arret { position: relative; }
+.ecl-arret-ligne { width: 100%; display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: start; padding: 10px 0; background: none; border: 0; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.ecl-arret-ligne b { display: block; font-size: 15px; }
+.ecl-arret-ligne small { display: block; color: var(--ink-soft); font-size: 13px; }
+.ecl-arret-ligne .ecl-badge { margin-top: 5px; }
+.ecl-arret-n { position: relative; z-index: 1; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--iris); color: #fff; font-weight: 800; font-size: 15px; }
+.ecl-arret-n.maison { background: var(--lime); color: var(--ink); }
+.ecl-arret-heure { font-weight: 700; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; padding-top: 8px; }
+.ecl-arret-detail { margin: 0 0 8px 48px; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+/* Le bandeau d'une tournée : les arrêts numérotés sur la route, le vélo avant le premier. */
+.ecl-trajet-arrets { position: relative; margin-top: 16px; }
+.ecl-trajet-arrets .ecl-route { height: 44px; margin: 0; }
+.ecl-trajet-arrets .ecl-voie { bottom: 16.5px; }
+.ecl-trajet-arrets .ecl-velo { bottom: 19px; }
+.ecl-trajet-arrets .ecl-pt { position: absolute; bottom: 0; width: 34px; height: 34px; transform: translateX(-50%); background: var(--iris); font-weight: 800; font-size: 14px; }
+.ecl-trajet-arrets .ecl-pt.maison { background: var(--lime); }

@@ -4,7 +4,8 @@
  *
  * LE CALCUL est celui du serveur (geocode.estimateDeliveryMinutes, calcul C1), refait ici parce que la liste et la fiche
  * ne connaissent la distance qu'une fois chez le client : à garder alignés.
- *   préparation (prepEstimeeMinutes : réglée par le commerce, sinon sa médiane mesurée, sinon 12 — backend delaiEstime.js)
+ *   préparation (prepEstimeeMinutes : réglée par le commerce, sinon sa médiane mesurée, sinon la médiane de tous nos
+ *   commerces dès 100 commandes, sinon 15 — backend delaiEstime.js et docs/delais.md, sources du 2026-10-30)
  *   + vol d'oiseau ×1,3 (les rues) à 16 km/h
  *   + 5 minutes (le livreur rejoint le commerce).
  * La fourchette : arrondi aux 5 minutes inférieures, plus 10 (28 → « 25–35 min »). Le serveur reste la seule vérité de
@@ -19,7 +20,7 @@ import { lireBienvenue } from './bienvenue';
 export const FACTEUR_RUES = 1.3;
 export const VITESSE_KMH = 16;          // geocode.AVG_SPEED_KMH
 export const APPROCHE_LIVREUR_MIN = 5;
-export const PREP_DEFAUT_MIN = 12;      // geocode.PREP_MINUTES
+export const PREP_DEFAUT_MIN = 15;      // geocode.PREP_MINUTES (médiane de 15 701 vraies commandes, backend docs/delais.md)
 
 // Centre de chaque commune (sa maison communale, à quelques centaines de mètres près) : assez pour une fourchette de 10
 // minutes, jamais pour une distance affichée ni pour le rayon de livraison (le serveur tranche avec l'adresse exacte).

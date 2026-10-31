@@ -324,6 +324,15 @@ Mon compte (`.ec-section--service`: the checkout's `.ec-feuille .ec-section`, in
 (`RetourCommerce`). Long texts on phones show their first sentence + « En savoir plus » in a sheet ([TexteReplie](../../src/components/TexteReplie.jsx)).
 The course in hand stays as it was (answer 5).
 
+**The courier's round (founder, 2026-10-30, all recommendations of `maquettes/tournee-livreur`).** An offered ride shows the whole
+trip as one road: you → the shop (« Prête », « Prête à 20:08 · dans 6 min », or red « En retard de 4 min ») → the customer's commune
+(« vers 20:16 »), `.ecl-voie3`; offers are sorted nearest to the courier first, computed on the phone from the position the
+tracking already holds (never sent for it). With two rides or more in hand the sheet opens on « Ton trajet » (`.ecl-arrets`):
+numbered stops in the order the server advises (`GET /orders/mine/tournee`), only the current stop open with the screen's one
+lime; the band shows the numbered stops. Offers during a round are titled « Sur ton chemin », say what they add (« +3 min sur ta
+tournée ») and use an outline « Ajouter à ma tournée ». Late = red badge (`.ecl-badge.rouge`, alert colour). Times come from
+published sources, then our own medians (backend `docs/delais.md`).
+
 Note the two heavily-commented rules near the top of the file — `overflow-x: clip` on
 `html`/`body` and `-webkit-tap-highlight-color: transparent`. Both encode a bug that was
 already fixed once (`clip` rather than `hidden`, because `hidden` silently breaks
