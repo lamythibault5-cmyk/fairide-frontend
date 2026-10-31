@@ -47,6 +47,9 @@
 .ec-bouton--iris:hover:not(:disabled) { background: var(--iris-deep); }
 .ec-bouton--texte { background: none; color: var(--ink-soft); font-weight: 600; margin-top: 2px; min-height: 44px; }
 .ec-bouton--texte:hover { color: var(--ink); }
+/* Plus de temps après avoir accepté (PlusDeTemps.jsx) : trois boutons en contour, sur une ligne. */
+.ec-plus-temps { display: flex; gap: 8px; margin-top: 8px; }
+.ec-plus-temps .ec-bouton { flex: 1; min-height: 44px; }
 
 /* L'interrupteur qui rebondit (Ma carte : en vente aujourd'hui ; Commandes : ouvert aux commandes). */
 .ec-interrupteur { position: relative; display: inline-block; width: 50px; height: 30px; min-height: 0 !important; padding: 0; border: 0; border-radius: 15px; background: var(--line); flex: none; cursor: pointer; transition: background .25s; }

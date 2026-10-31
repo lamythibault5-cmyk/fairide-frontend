@@ -10,6 +10,7 @@ import { communeDepuisCodePostal, communeRingDistance, haversineDistanceKm } fro
 import { ecrireBienvenue, ecrireReprise, lireReprise, lireParcoursFait, ecrireParcoursFait } from '../../bienvenue';
 import { memoriserLangue } from '../../i18n/routing';
 import { repondAuxEnvies } from '../../envies';
+import { useLancement } from '../../launch';
 import { FAMILLES, famillesCommerce } from '../../specialites';
 import {
   Haut, EcranAccueil, EcranProfil, EcranQuestion, EcranPourquoi, EcranEnvies, EcranCodePostal,
@@ -95,13 +96,19 @@ const FIN_RECHERCHE_MS = 600;
 const DELAI_POSITION_MS = 6000;
 
 // Commerces qui livrent à cette position (ou, sans position, rangés par proximité de commune), tes envies d'abord.
-function trierCommerces(liste, { position, commune, envies }) {
+// AVANT GO (revue des trois parcours, 2026-10-31) : rien ne se livre encore, on commande à emporter. Le rayon de livraison
+// d'un commerce ne dit donc rien de qui peut y commander : on garde ceux de la région (PRES_KM, le rayon maximal de
+// livraison, rayonLivraison.js côté serveur) et on ne dit plus qu'ils « livrent chez toi » (CLAUDE.md : l'accueil ne promet
+// rien que le code ne tienne). Avant, une personne hors de tous les rayons lisait « Pas encore de commerce qui livre
+// jusqu'ici » alors qu'elle pouvait passer prendre.
+const PRES_KM = 15;
+function trierCommerces(liste, { position, commune, envies, livraison }) {
   let items = liste.map((r) => ({
     r,
     km: position && r.lat !== null && r.lng !== null ? haversineDistanceKm(position.lat, position.lng, r.lat, r.lng) : null,
     envie: repondAuxEnvies(r, envies)
   }));
-  if (position) items = items.filter((x) => x.km !== null && x.km <= (x.r.deliveryRadiusKm ?? 6));
+  if (position) items = items.filter((x) => x.km !== null && x.km <= (livraison ? (x.r.deliveryRadiusKm ?? 6) : PRES_KM));
   const proximite = (x) => (position ? x.km : communeRingDistance(commune, x.r.commune));
   return items.sort((a, b) => (Number(b.envie) - Number(a.envie)) || (proximite(a) - proximite(b)));
 }
@@ -179,7 +186,9 @@ export default function Bienvenue() {
 
   const communeCp = cp.length === 4 ? communeDepuisCodePostal(cp) : '';
   const parcours = useMemo(() => ['accueil', 'profil', ...(role ? PARCOURS[role] : [])], [role]);
-  const resultats = useMemo(() => (liste ? trierCommerces(liste, { position, commune: communeCp, envies }) : []), [liste, position, communeCp, envies]);
+  // Livraison ouverte (bouton GO, launch.js) : sinon on parle de commerces « près de chez toi », pas qui livrent.
+  const { go: livraison } = useLancement();
+  const resultats = useMemo(() => (liste ? trierCommerces(liste, { position, commune: communeCp, envies, livraison }) : []), [liste, position, communeCp, envies, livraison]);
   const familles = useMemo(() => famillesTrouvees(resultats), [resultats]);
   const points = useMemo(() => pointsDuCercle(resultats, position), [resultats, position]);
 
@@ -306,10 +315,10 @@ export default function Bienvenue() {
     const parGps = !!position || lecturePosition;
     const n = resultats.length;
     return [
-      parGps ? t(lignesFaites > 0 ? 'appli.calcPosition' : 'appli.calcPosAttente') : t('appli.calcCommune', { c: communeCp }),
-      // Sans position (code postal), la liste n'est pas filtrée par rayon : on dit combien on en a trouvé, pas qu'ils livrent.
-      lignesFaites > 1 ? (n === 0 ? t('appli.calcN0') : !parGps ? t(n === 1 ? 'appli.calcTrouve1' : 'appli.calcTrouves', { n })
-        : n === 1 ? t('appli.calcN1') : t('appli.calcN', { n })) : t('appli.calc1'),
+      parGps ? t(lignesFaites > 0 ? 'appli.calcPosition' : 'appli.calcPosAttente') : t(livraison ? 'appli.calcCommune' : 'appli.calcCommunePres', { c: communeCp }),
+      // Sans position (code postal) ou avant GO, la liste n'est pas filtrée par rayon : on dit combien on en a trouvé, pas qu'ils livrent.
+      lignesFaites > 1 ? (n === 0 ? t(livraison ? 'appli.calcN0' : 'appli.calcN0Pres') : !parGps || !livraison ? t(n === 1 ? 'appli.calcTrouve1' : 'appli.calcTrouves', { n })
+        : n === 1 ? t('appli.calcN1') : t('appli.calcN', { n })) : t(livraison ? 'appli.calc1' : 'appli.calc1Pres'),
       t('appli.calc3')
     ];
   }
@@ -378,7 +387,7 @@ export default function Bienvenue() {
     case 'codePostal':
       contenu = <EcranCodePostal cp={cp} commune={communeCp} onCp={setCp} onSuite={() => { setPosition(null); aller('recherche'); }} />; break;
     case 'recherche':
-      contenu = <EcranRecherche commune={position ? '' : communeCp} points={lignesFaites > 1 ? points : []} lignes={lignesRecherche()} faites={lignesFaites} />; break;
+      contenu = <EcranRecherche commune={position ? '' : communeCp} livraison={livraison} points={lignesFaites > 1 ? points : []} lignes={lignesRecherche()} faites={lignesFaites} />; break;
     case 'envies':
       contenu = (
         <EcranEnvies familles={familles} choisies={envies} nPourToi={resultats.filter((x) => x.envie).length}
@@ -386,7 +395,7 @@ export default function Bienvenue() {
       ); break;
     case 'compte':
       contenu = (
-        <EcranCompte role={role} resultats={resultats} envies={envies} listeEchec={listeEchec} avecPosition={!!position} commune={communeCp} attente={attente}
+        <EcranCompte role={role} resultats={resultats} envies={envies} listeEchec={listeEchec} avecPosition={!!position} livraison={livraison} commune={communeCp} attente={attente}
           onFournisseur={viaFournisseur} onEmail={viaEmail} onConnexion={dejaInscrit} />
       ); break;
     case 'lvPromesses':

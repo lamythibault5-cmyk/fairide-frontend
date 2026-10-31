@@ -5,6 +5,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
 import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
 import { experienceApp } from '../../natif';
+import usePushNotifications from '../../hooks/usePushNotifications';
 
 /* RELIRE ET VALIDER LA CARTE, d'où qu'on parte (étape « Relis et valide ta carte », Ma carte) : la page « C'est bon », la même
  * que celle envoyée par SMS. Une seule page de validation, quel que soit le chemin (fondateur, 2026-10-27 : « on ne peut pas
@@ -34,6 +35,8 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
   // Questions de Fairide sur la carte (questionsCarte.js) : { open, waiting }. Relues avec la fiche.
   const [questions, setQuestions] = useState(null);
   const [occupe, setOccupe] = useState(false);
+  // Les notifications de CET appareil : l'étape « Fais sonner tes commandes » les active d'ici quand il sait en recevoir.
+  const push = usePushNotifications(token);
   const o = restaurant?.onboarding;
   const nbPlats = (restaurant?.menu || []).length;
 
@@ -135,6 +138,30 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
         // Activation pas encore ouverte : ce n'est pas une action possible aujourd'hui, on dit quand.
         : { cle: 'paiements', attente: true, icone: 'carteBancaire', titre: t('miseEnLigne.payments'),
             sous: t('dashResto.viaStripeResto', { date: dateOuverturePaiements(getLocale()) }) });
+  }
+  /* CE QUI FAIT SONNER UNE COMMANDE (revue des trois parcours, 2026-10-31). Un commerce pouvait être en ligne sans rien qui
+   * sonne : sa première commande était annulée à 15 minutes et le commerce mis en pause, sans qu'il l'ait jamais vue. Deux
+   * étapes, lues sur /compliance (alertesCommandes, backend routes/restaurants.js) : un appareil de l'équipe du commerce avec
+   * les notifications, et le mobile vérifié du propriétaire (SMS de rappel à 5 minutes, orderTimeouts.js). Pas pour un
+   * commerce vitrine (il ne vend pas). Elles restent dans la liste après la mise en ligne : un commerce en ligne qui n'a rien
+   * qui sonne la revoit, avec ce geste en « Prochaine étape ». */
+  const alertes = conformite?.alertesCommandes;
+  if (alertes && !restaurant.vitrine) {
+    const activerIci = push.supporte && push.disponible && !push.abonne;
+    const activer = async () => {
+      const issue = await push.activer();
+      if (issue === 'ok') { toast(t('notifs.onDone'), 'succes'); await onChange?.(); } else toast(t(issue === 'refuse' ? 'notifs.refused' : 'notifs.failed'), 'erreur');
+    };
+    etapes.push(alertes.appareils
+      ? { cle: 'sonnerie', fait: true, icone: 'cloche', titre: t('miseEnLigne.alertsDeviceDone') }
+      : { cle: 'sonnerie', icone: 'cloche', titre: t('miseEnLigne.alertsDevice'), sous: t('miseEnLigne.alertsDeviceSub'),
+          // Cet appareil ne sait pas en recevoir (iPhone sans l'écran d'accueil, navigateur trop ancien) : le guide, section 4.
+          action: activerIci ? { libelle: push.occupe ? '…' : t('miseEnLigne.alertsDeviceBtn'), onClick: activer, disabled: push.occupe }
+            : { libelle: t('miseEnLigne.alertsDeviceHow'), to: '/dashboard/guide' } });
+    etapes.push(alertes.mobileVerifie
+      ? { cle: 'mobile', fait: true, icone: 'telephone', titre: t('miseEnLigne.alertsPhoneDone') }
+      : { cle: 'mobile', icone: 'telephone', titre: t('miseEnLigne.alertsPhone'), sous: t('miseEnLigne.alertsPhoneSub'),
+          action: { libelle: t('miseEnLigne.alertsPhoneBtn'), to: '/account?ouvrir=connexion&retour=/dashboard' } });
   }
   etapes.push(restaurant.adminStatus === 'approved'
     ? { cle: 'verification', fait: true, icone: 'bouclier', titre: t('miseEnLigne.checkDone') }

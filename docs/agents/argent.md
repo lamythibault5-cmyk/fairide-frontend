@@ -32,7 +32,8 @@ only −14.4 % under a « −15 % » label: a misleading price-reduction announc
 The customer additionally pays the **delivery fee only — nothing is added on top** (model of 2026-10-08 evening):
 €5 excl. VAT for the first km, then €0.80 excl. VAT per started km, 21% VAT added (€6.05 incl. VAT minimum). **10% of it
 is Fairide's system fee, included** (`fraisService`, stored as `service_fee` + `service_fee_vat`); the courier receives
-**90% of their own grid** (bike €0.60/km, motorised €0.80/km), and the bike difference stays with Fairide. A courier's
+**90% of the fee the customer paid**, whatever the vehicle (founder, 2026-10-14: `tauxKmLivreur` in `pricing.js` returns the
+customer's per-km rate; the old bike €0.60 / motorised €0.80 grid, with the bike difference kept by Fairide, is gone). A courier's
 minimum (CODE-13) applies to their share: the client fee is raised to minimum / 0.9 when no courier accepts the grid
 (`routes/orders.js`, `troisVendeurs.prixAvecMinimum`). Takeaway paid on site: no commission, no fee.
 **Tips go 100% to the courier** (`tipFairideRate` 0 — founder, 2026-10-13: « tips go 100 percent to driver »; this
@@ -98,8 +99,8 @@ the job, and the system fee (inside the delivery fee) from Fairide. The backend 
 
 - checkout recap labels each line with its seller (`conformite.seller*`);
 - [VendeurLivraison](../../src/components/conformite/VendeurLivraison.jsx) on the client's orders — the
-  courier's "Prénom N.", company number and VAT regime once known, and a free "decline this courier"
-  while the order hasn't left;
+  courier's "Prénom N.", company number and VAT regime once known (the free "decline this courier" was closed by the
+  founder on 2026-10-19: `PATCH /orders/:id/decline-courier` answers that it no longer exists);
 - driver offers show the price, any Fairide-paid increase and a **Refuse** button, and an approximate
   destination (the server strips the client's name, phone and house number before the job is taken);
 - [EspaceVendeurLivreur](../../src/components/conformite/EspaceVendeurLivreur.jsx) — minimum fee and the
