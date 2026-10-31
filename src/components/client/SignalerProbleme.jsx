@@ -3,13 +3,14 @@ import SousEcran from '../SousEcran';
 import { experienceApp } from '../../natif';
 import { api, apiUpload } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
+import ReclamationPlat, { EtatReclamation, peutReclamer } from './ReclamationPlat';
 
 // Signaler un problème sur une commande livrée ou récupérée (plan de test USR-10, 2 octobre 2026) : article manquant,
 // mauvais article, froid, jamais reçue… Avant, le client n'avait aucun moyen de le dire depuis le site. Le serveur crée
 // un ticket support lié à la commande (POST /orders/:id/problem) et envoie un accusé de réception par e-mail.
 const TYPES = ['missing_item', 'wrong_item', 'cold', 'never_received', 'other'];
 
-export default function SignalerProbleme({ order, token, toast, signalement, onSignale }) {
+export default function SignalerProbleme({ order, token, toast, signalement, onSignale, reclamation, onReclame }) {
   const { t } = useLanguage();
   const [ouvert, setOuvert] = useState(false);
   const [type, setType] = useState('');
@@ -17,6 +18,8 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
   const [photo, setPhoto] = useState(null);
   const [envoi, setEnvoi] = useState(false);
 
+  // Plat manquant déjà réclamé (ReclamationPlat) : où il en est, à la place du bouton.
+  if (reclamation) return <EtatReclamation reclamation={reclamation} orderId={order.id} token={token} toast={toast} onChange={onReclame} />;
   if (signalement) {
     // Une fois l'équipe passée (audit du 19/10, AO-20) : « réponse sous 24 heures » restait affiché pour toujours. Le serveur
     // dit si le ticket est clos (status) ou si l'équipe a répondu (answered, GET /me/problems).
@@ -47,6 +50,9 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
   }
 
   const idBase = `probleme-${order.id}`;
+  // Plat manquant ou mauvais plat, sur une commande livrée et payée en ligne depuis moins de 24 heures : le commerce décide
+  // (fondateur, 2026-10-31), au lieu d'un ticket pour l'équipe.
+  const parLeCommerce = ['missing_item', 'wrong_item'].includes(type) && peutReclamer(order) && !!onReclame;
   // Application : le formulaire s'ouvre dans une feuille au lieu de s'insérer au milieu de la carte de commande.
   if (experienceApp()) {
     return (
@@ -68,6 +74,10 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
           {TYPES.map((k) => <option key={k} value={k}>{t(`orders.problem_kind_${k}`)}</option>)}
         </select>
       </div>
+      {parLeCommerce ? (
+        <ReclamationPlat order={order} token={token} toast={toast} onAnnuler={() => setOuvert(false)}
+          onReclame={(r) => { setOuvert(false); onReclame(r); }} />
+      ) : (<>
       <div className="field">
         <label htmlFor={`${idBase}-message`}>{t('orders.problem_messageLabel')}</label>
         <textarea id={`${idBase}-message`} rows={3} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('orders.problem_messagePlaceholder')} aria-describedby={`${idBase}-message-aide`} />
@@ -85,6 +95,7 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
         <button type="submit" className="btn-teal" disabled={envoi}>{envoi ? '…' : t('orders.problem_submit')}</button>
         <button type="button" className="btn-ghost" onClick={() => setOuvert(false)}>{t('common.cancel')}</button>
       </div>
+      </>)}
     </form>
   );
   }

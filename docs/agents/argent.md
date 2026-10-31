@@ -110,6 +110,22 @@ the phone, with location already allowed (never asked for this), is more than 1 
 - Courier offers show the shop → customer leg « ≈ x km » by the streets (× 1,3, like the first leg); the price still
   uses the straight line.
 
+## Delivery grid, missing items, contracts to sign (founder, 2026-10-31, second round)
+
+- **Delivery grid** (migration 101, `pricing.js` DEFAULTS): 5,80 € up to 3 km, then 0,50 € per started km, final price.
+  Benchmarked on what Brussels customers pay elsewhere (Deliveroo 4,99 € + service fee, Takeaway ~4,49 € + 1,29 €). The
+  courier keeps 90 %: at least 5,22 €, 5 % above Uber Eats' reported flat 4,95 € per order. Fairride never tops it up.
+  The courier's cancellation pay (above) is the same 5,22 €.
+- **Missing or wrong item** (`reclamationsPlats.js`): the customer ticks the dishes within 24 h of delivery, adds a photo
+  of what arrived and confirms on honour. The shop gets a push and taps « Rembourser » or « Contester » (no photo asked of
+  the shop). No answer within 2 h = refunded at the shop's charge (`rembourserCommande`, responsibility `restaurant`).
+  Contested = no refund; the customer can « maintenir » (a ticket). Silence does NOT count as yes above 15 € or for a
+  customer with 2 contested claims in 90 days (still allowed to claim; the team gets a task, nothing is closed
+  automatically). A shop contesting 5+ claims from 3+ customers in 90 days gives a task.
+- **Contracts must be signed before working**: couriers need courier contract 2026.9 to see or take any job
+  (`courierContracts.contratAJour`); shops need RESTO-2026.21 from its date in force (2 December 2026, 30 days after the
+  2 November notice the founders send), with no grace period after it (`GRACE_COMMANDES_JOURS = 0`).
+
 ## Three sellers per order (decided 2026-09-23)
 
 The customer buys the food from the business, the **delivery from the independent courier** who accepts

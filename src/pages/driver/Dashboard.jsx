@@ -316,7 +316,8 @@ export default function DriverDashboard() {
     api('/couriers/me', { token }).then((d) => {
       setSac(d.courier?.bag || null);
       setVehicule({ type: d.courier?.vehicleType || '', bikeMaxKm: d.pricing?.bikeMaxKm || 4, rate: ['velo', 'velo_electrique'].includes(d.courier?.vehicleType || '') ? d.pricing?.driverPerKmBike : d.pricing?.driverPerKmMotor, base: d.pricing?.deliveryBaseFee, baseKm: d.pricing?.deliveryBaseKm });
-      setDossier({ statut: d.courier?.lifecycleStatus || null, motif: d.courier?.reviewReason || '', minFeeCents: d.courier?.minFeeCents ?? null });
+      // contratAJour : la version en vigueur signée (fondateur, 2026-10-31 : sans elle, aucune course ; routes/orders.js).
+      setDossier({ statut: d.courier?.lifecycleStatus || null, motif: d.courier?.reviewReason || '', minFeeCents: d.courier?.minFeeCents ?? null, contratAJour: !(d.missing || []).includes('contrat') });
       // Règles de la tournée (routes/couriers.js tarifsLivreur, tournee.js côté serveur), rappelées dès qu'une course est en main.
       setTournee({
         max: d.courier?.otherPlatforms?.works === true ? 1 : (d.pricing?.maxOrdersFairideOnly || 3),
@@ -1106,6 +1107,10 @@ export default function DriverDashboard() {
           {connecting ? '...' : user?.stripeConnectStatus === 'restricted' ? t('dashDriver.complete') : t('dashDriver.paymentsActivateBtn')}
         </button>
       ) : null}
+    </EtatVide>
+  ) : dossier?.contratAJour === false ? (
+    <EtatVide icone="contrat" titre={t('dashDriver.contratTitre')} texte={t('dashDriver.contratTexte')}>
+      <Link to="/driver/onboarding" className="btn-gold">{t('dashDriver.contratBouton')}</Link>
     </EtatVide>
   ) : enPause ? (
     <div className="empty" style={{ marginTop: 18 }}>{t('dashDriver.pausedText')}</div>

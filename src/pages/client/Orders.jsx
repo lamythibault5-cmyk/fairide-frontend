@@ -189,6 +189,8 @@ export default function Orders() {
   const navigate = useNavigate();
   // Signalements déjà envoyés, par commande (plan de test USR-10) — affichés à la place du bouton.
   const [signalements, setSignalements] = useState({});
+  // Plats manquants réclamés (ReclamationPlat), par commande.
+  const [reclamations, setReclamations] = useState({});
   // « Commander à nouveau » qui viderait le panier d'un autre commerce : demandé d'abord (plan de test USR-9).
   const [aRecommander, setARecommander] = useState(null);
   // Site : les commandes passées dont le détail est ouvert sous leur ligne du tableau.
@@ -205,6 +207,9 @@ export default function Orders() {
       const parCommande = {};
       for (const p of liste) if (!parCommande[p.orderId]) parCommande[p.orderId] = { ...p, responseWithinHours: 24 };
       setSignalements(parCommande);
+    }).catch(() => {});
+    api('/me/missing-items', { token }).then((liste) => {
+      setReclamations(Object.fromEntries((Array.isArray(liste) ? liste : []).map((r) => [r.orderId, r])));
     }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -652,7 +657,8 @@ export default function Orders() {
         {/* Signaler un problème (USR-10) : commande payée et terminée ; « jamais reçue » aussi pendant la livraison. */}
         {o.paid && ['livre', 'livraison'].includes(o.status) && (
           <SignalerProbleme order={o} token={token} toast={toast} signalement={signalements[o.id]}
-            onSignale={(s) => setSignalements((prev) => ({ ...prev, [o.id]: s }))} />
+            onSignale={(s) => setSignalements((prev) => ({ ...prev, [o.id]: s }))}
+            reclamation={reclamations[o.id]} onReclame={(r) => setReclamations((prev) => ({ ...prev, [o.id]: r }))} />
         )}
         {/* Le reçu, sur la commande même (audit du 19/10, AO-31) : il n'était que dans « Mes factures ». Commande payée en
             ligne et close, la même règle que Mes factures (InvoicesPage.jsx, aUnRecu). */}

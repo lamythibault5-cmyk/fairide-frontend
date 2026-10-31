@@ -25,7 +25,8 @@ import {
 } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
-import Icone from '../../components/Icone';
+
+import Icone from '../../components/Icone';
 import EtatVide from '../../components/EtatVide';
 import ErrorCard from '../../components/ErrorCard';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -43,6 +44,7 @@ import LigneAlarme from '../../components/commerce/LigneAlarme';
 import ListePlats from '../../components/commerce/ListePlats';
 import LivreurCommande from '../../components/commerce/LivreurCommande';
 import PlusDeTemps from '../../components/commerce/PlusDeTemps';
+import ReclamationsCommerce from '../../components/commerce/ReclamationsCommerce';
 import { heurePrete, ouEstLeClient, prenom } from '../../components/commerce/clientCommande';
 import { telephoneLisible } from '../../validation';
 
@@ -908,6 +910,7 @@ export default function OrdersPage() {
       </BandeauCommerce>
       <FeuilleCommerce>
         {communs}
+        {!lectureSeule && <ReclamationsCommerce restoId={restoId} token={token} toast={toast} />}
         <div className="sp-cadre">
         {etatListe}
         {ordersLoaded && enCours.length === 0 && <div className="sp-vide-etroit"><EtatVide icone="commandes" titre={orders.length === 0 && !nbHistorique ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} /></div>}
@@ -954,6 +957,7 @@ export default function OrdersPage() {
       </BandeauCommerce>
       <FeuilleCommerce>
         {communs}
+        {!lectureSeule && <ReclamationsCommerce restoId={restoId} token={token} toast={toast} />}
         <EtapesMiseEnLigne etat={etapes} />
       </FeuilleCommerce>
       {fenetres}
@@ -988,6 +992,7 @@ export default function OrdersPage() {
       <FeuilleCommerce>
         {nouvellesTriees.length > 0 && <>{enTete(sections[0])}{nouvellesTriees.map((o) => carteCommande(o, { barre: true }))}</>}
         {communs}
+        {!lectureSeule && <ReclamationsCommerce restoId={restoId} token={token} toast={toast} />}
         {etatListe}
         {ordersLoaded && enCours.length === 0 && <EtatVide icone="commandes" titre={orders.length === 0 && !nbHistorique ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} />}
         {sections.slice(1).filter((c) => c.liste.length > 0).map((c) => <div key={c.cle}>{enTete(c)}{c.liste.map((o) => carteCommande(o))}</div>)}

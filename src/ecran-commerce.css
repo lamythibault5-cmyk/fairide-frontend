@@ -632,3 +632,15 @@ html.avec-bande-a-traiter main { padding-bottom: calc(76px + env(safe-area-inset
 .ec-ajout-attente { font-size: 17px; line-height: 1.45; opacity: .85; margin: 0; }
 .ec-ajout--deux .ec-honneur--fait, .modal-box.ec-ajout:not(.ec-ajout--deux) .ec-honneur--fait { padding: 0; }
 .modal-box.ec-ajout:has(.ec-honneur--fait) { padding: 24px; }
+
+/* Plats manquants signalés (ReclamationsCommerce.jsx ; 31/10/2026) : une carte par réclamation qui attend, en tête de
+   Commandes. Contour rouge doux : il y a une réponse à donner, avant une heure dite. */
+.ec-reclamations { margin: 0 0 14px; }
+.ec-reclamation { border: 1.5px solid #F2B8B2; background: #FFF8F7; border-radius: 20px; padding: 14px 16px 6px; margin-bottom: 10px; }
+.ec-reclamation-tete { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.ec-reclamation-tete b { display: block; font-size: 16px; font-weight: 800; }
+.ec-reclamation-tete small { display: block; font-size: 13px; color: var(--ink-soft); }
+.ec-reclamation-montant { font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ec-reclamation-plats { margin: 8px 0; padding: 0; list-style: none; font-size: 14.5px; font-weight: 600; }
+.ec-reclamation-photo { display: inline-flex; align-items: center; gap: 10px; margin: 2px 0 8px; color: var(--iris); font-size: 13.5px; font-weight: 600; text-decoration: none; }
+.ec-reclamation-photo img { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; background: var(--cream-dim); }
