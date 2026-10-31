@@ -70,9 +70,26 @@ self.addEventListener('push', (event) => {
  * d'adresse : l'étiquette les rattrape. */
 function cibleDe(notification) {
   const url = notification.data && notification.data.url;
-  if (url) return url;
+  if (url) return cheminSur(url);
   if (String(notification.tag || '').startsWith('fairide-course')) return '/driver';
   return PAR_DEFAUT.url;
+}
+
+/* La notification n'ouvre qu'une page de NOTRE site (audit sécurité 2026-10-31, durcissement). L'adresse vient de la charge
+ * du push : relue contre l'origine du service worker, une adresse absolue vers un autre site, « //autre.site » ou
+ * « /\autre.site » (que le navigateur lit aussi comme un autre site) retombe sur la page par défaut. On ne garde que le
+ * chemin, la requête et l'ancre. */
+function cheminSur(url) {
+  try {
+    const u = new URL(String(url), self.location.origin);
+    if (u.origin === self.location.origin) return u.pathname + u.search + u.hash;
+  } catch { /* adresse illisible */ }
+  return PAR_DEFAUT.url;
+}
+
+// Comparaison exacte de l'origine : un test « contient » acceptait aussi https://fairride.be.autre.site/?https://fairride.be.
+function memeOrigine(adresse) {
+  try { return new URL(adresse).origin === self.location.origin; } catch { return false; }
 }
 
 self.addEventListener('notificationclick', (event) => {
@@ -84,7 +101,7 @@ self.addEventListener('notificationclick', (event) => {
       // en a un en permanence pendant le service, et c'est celui-là qu'il veut voir passer au premier
       // plan, avec sa liste de commandes déjà chargée.
       for (const fenetre of fenetres) {
-        if (fenetre.url.includes(self.location.origin) && 'focus' in fenetre) {
+        if (memeOrigine(fenetre.url) && 'focus' in fenetre) {
           if (fenetre.navigate) fenetre.navigate(cible);
           return fenetre.focus();
         }

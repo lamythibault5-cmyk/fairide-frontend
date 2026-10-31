@@ -24,7 +24,9 @@ export async function ecouterNotificationsNatives(historique) {
     const { PushNotifications } = await import('@capacitor/push-notifications');
     PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
       const url = notification?.data?.url;
-      if (url && typeof url === 'string' && url.startsWith('/')) historique.push(url);
+      // Un chemin interne seulement (audit sécurité 2026-10-31) : « //autre.site » et « /\autre.site » commencent aussi
+      // par « / » mais désignent un autre site pour le navigateur.
+      if (url && typeof url === 'string' && url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/\\')) historique.push(url);
     });
     // Reçue alors que l'application est au premier plan : les listes se rafraîchissent tout de suite
     // (useNewOrderAlert sonne et affiche la commande dès qu'elle apparaît).

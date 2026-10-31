@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
+import { preparerLancement } from '../../lancementOnglet';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Icone from '../../components/Icone';
@@ -70,7 +71,8 @@ export default function AdminSimulationPage() {
         expiresAt: Date.now() + (Number(d.expiresInHours) || 8) * 3600 * 1000 - 5 * 60 * 1000
       };
       const frag = btoa(encodeURIComponent(JSON.stringify(charge)));
-      const w = window.open(`${DEPART[profil](d.restaurantId)}#simuler=${frag}`, '_blank');
+      // Clé à usage unique exigée par l'onglet ouvert (audit sécurité 2026-10-31, voir lancementOnglet.js).
+      const w = window.open(`${DEPART[profil](d.restaurantId)}#simuler=${frag}&lancement=${preparerLancement()}`, '_blank');
       if (!w) toast(tr('simulation.popupBlocked'), 'erreur');
       charger();
     } catch (e) { toast(e.message, 'erreur'); } finally { setLancement(null); }

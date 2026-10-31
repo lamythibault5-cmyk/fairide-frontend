@@ -29,6 +29,11 @@ on:
     paths-ignore: ['**.md', 'docs/**', 'security/**']
   workflow_dispatch:
 
+# Lecture seule (audit sécurité 2026-10-31) : ce build ne pousse rien dans git et ne crée aucune release ; l'envoi à
+# App Store Connect passe par la clé API Apple, pas par GITHUB_TOKEN.
+permissions:
+  contents: read
+
 # Deux fusions rapprochées : seule la plus récente est construite (elle contient l'autre).
 concurrency:
   group: app-ios-testflight
@@ -52,7 +57,10 @@ jobs:
       PROFIL: Fairide App Store CI
       EQUIPE: 44V9JV2JQN
     steps:
+      # Le jeton ne reste pas dans .git/config après la copie du code : aucune étape suivante n'en a besoin.
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Réglages présents
         env:

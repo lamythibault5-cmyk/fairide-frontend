@@ -7,6 +7,7 @@ import { languePreferee, SUPPORTED_LANGUAGES } from '../i18n/routing';
 import { effacerReprise } from '../bienvenue';
 import { codeApple, estNatif, oublierCodeApple } from '../natif';
 import { desabonnerNatif, rattacherAppareilSiAutorise } from '../pushNatif';
+import { cleDuFragment, lancementAttendu } from '../lancementOnglet';
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = 'fairide_session';
@@ -44,7 +45,11 @@ export const PROFILS_SIMULATION = ['visitor', 'client', 'restaurant', 'driver'];
 function simulationInitiale() {
   try {
     const m = window.location.hash.match(/[#&]simuler=([^&]+)/);
-    if (m) {
+    // Fragment sans la clé déposée par la console de CET appareil (lien reçu d'ailleurs, ou rejoué) : il est effacé de
+    // l'adresse et ignoré, l'onglet garde sa session normale (audit sécurité 2026-10-31, voir lancementOnglet.js).
+    if (m && !lancementAttendu(cleDuFragment(window.location.hash))) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    } else if (m) {
       const s = JSON.parse(decodeURIComponent(atob(m[1])));
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
       if (s && s.profiles) {
@@ -65,6 +70,11 @@ function sessionDepuisFragment() {
   try {
     const m = window.location.hash.match(/[#&]agir=([^&]+)/);
     if (!m) return null;
+    // Même garde que pour #simuler= : sans clé attendue, le fragment est effacé et la session de l'onglet reste la sienne.
+    if (!lancementAttendu(cleDuFragment(window.location.hash))) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      return null;
+    }
     const s = JSON.parse(decodeURIComponent(atob(m[1])));
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
     return s && s.token ? { ...s, actingAs: true } : null;
