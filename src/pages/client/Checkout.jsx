@@ -31,7 +31,7 @@ import ChoixAdresse from '../../components/ChoixAdresse';
 import useLoinDeLAdresse from '../../hooks/useLoinDeLAdresse';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { serviceOuvert, dateOuvertureEmporter, paiementEnLigneOuvert, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
+import { serviceOuvert, paiementEnLigneOuvert, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
 import CodePromoCheckout from '../../components/client/CodePromoCheckout';
 import CheckoutConformite from '../../components/conformite/CheckoutConformite';
 import { manqueConformite } from '../../conformite';
@@ -971,7 +971,7 @@ export default function Checkout() {
                 ? t('checkout.onlinePaymentOpenSoon')
                 : fulfillmentType === 'delivery'
                   ? t('checkout.deliveryOpenSoon')
-                  : t('checkout.ordersOpenSoon', { date: dateOuvertureEmporter(getLocale()) })}</span>
+                  : t('checkout.ordersOpenSoon')}</span>
             )}
             {/* Site, sous le bouton du récapitulatif (ordinateur seulement, site-commande.css) : qui encaisse. Pas pour un
                 paiement sur place, que Stripe ne traite pas. */}

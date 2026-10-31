@@ -124,8 +124,9 @@ read that doc before working near it.
 - French UI says « tu » everywhere; the legal pages keep « vous ». Onboarding makes no claim the code does not back.
 
 **The launch** *(lancement.md)*
-- Delivery and online payment open when the team presses GO, never on a date; after GO, no free courier means no
-  delivery. Never reintroduce `*_DELIVERY_OPEN_AT` / `*_ONLINE_PAYMENT_OPEN_AT`.
+- Nothing opens on a date: takeaway paid at the shop opens when the team presses « Ouvrir l'à emporter » (2026-10-31),
+  delivery and online payment when it presses GO; after GO, no free courier means no delivery. Customer texts say
+  « bientôt », never a date. Never reintroduce `*_PICKUP_OPEN_AT` / `*_DELIVERY_OPEN_AT` / `*_ONLINE_PAYMENT_OPEN_AT`.
 
 ## Read before touching
 

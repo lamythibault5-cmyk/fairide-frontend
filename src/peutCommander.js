@@ -13,8 +13,8 @@ export function livraisonPossibleIci(r, user) {
     && (r.deliveryMode === 'own' || livreurFairideLibre(user));
 }
 
-// L'à emporter réellement commandable aujourd'hui : ouvert (1er novembre, payé sur place) et, s'il ne se paie qu'en ligne,
-// après le GO. Avant le 1er novembre, la carte disait « À emporter » et le filtre gardait le commerce, alors que le serveur
+// L'à emporter réellement commandable aujourd'hui : ouvert (bouton « Ouvrir l'à emporter », payé sur place) et, s'il ne se paie qu'en ligne,
+// après le GO. Avant l'ouverture, la carte disait « À emporter » et le filtre gardait le commerce, alors que le serveur
 // refuse (PICKUP_NOT_OPEN) — audit du 19/10, discovery-25.
 export function emporterPossibleIci(r, user) {
   return !!r.offersPickup && commandesOuvertes(user) && (r.pickupPaymentMode !== 'online' || paiementEnLigneOuvert(user));

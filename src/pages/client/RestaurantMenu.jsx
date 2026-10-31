@@ -14,7 +14,7 @@ import Icone from '../../components/Icone';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
 import { groupeEnCours } from '../../commandeGroupee';
 import VisuelVide from '../../components/VisuelVide';
-import { commandesOuvertes, livraisonOuverte, paiementEnLigneOuvert, dateOuvertureEmporter, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
+import { commandesOuvertes, livraisonOuverte, paiementEnLigneOuvert, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
@@ -928,8 +928,8 @@ export default function RestaurantMenu({ id }) {
           </p>
         </div>
       )}
-      {/* Avant le 1er novembre : à emporter et livraison à venir ; du 1er novembre au GO : seule la livraison (et l'à emporter payé
-          en ligne) attend. Rien n'est annoncé pour un commerce qui ne propose aucun service en ligne, et l'à emporter
+      {/* Avant « Ouvrir l'à emporter » : à emporter et livraison à venir, sans date ; de là au GO : seule la livraison (et
+          l'à emporter payé en ligne) attend. Rien n'est annoncé pour un commerce qui ne propose aucun service en ligne, et l'à emporter
           n'est promis que s'il se paie sur place (le paiement en ligne ouvre avec la livraison). */}
       {bandeauOuverture && (
         <div className={`ouverture-bandeau fiche-info${vueAppli ? ' fiche-info--route' : ''}`} role="status">
@@ -940,8 +940,8 @@ export default function RestaurantMenu({ id }) {
             : commandesOuvertes(user)
               ? t('restaurantMenu.ordersOpenBannerResaOpen')
               : restaurant.offersDelivery
-                ? t('restaurantMenu.ordersOpenBanner', { dateResa: dateOuvertureEmporter(getLocale()) })
-                : t('restaurantMenu.ordersOpenBannerPickupOnly', { date: dateOuvertureEmporter(getLocale()) })}
+                ? t('restaurantMenu.ordersOpenBanner')
+                : t('restaurantMenu.ordersOpenBannerPickupOnly')}
           </span>
           {/* App (version B) : l'annonce roule sur la route du vélo. */}
           {vueAppli && <span className="fiche-info-route" aria-hidden="true"><span className="fiche-info-velo"><VeloMarque largeur={26} /></span></span>}
