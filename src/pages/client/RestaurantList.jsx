@@ -696,7 +696,7 @@ export default function RestaurantList() {
   const placements = communeEpingles ? placementsTous.filter((p) => !p.commune || p.commune === communeEpingles) : [];
   // « Livre chez toi » ne compte que tant que la pastille peut être montrée (GO pressé, adresse connue) : un GO relâché
   // pendant la visite ne laisse pas un filtre invisible allumé.
-  // De même « Ouvert » attend que les commandes soient ouvertes (1er novembre, launch.js) : avant, il viderait toujours la liste.
+  // De même « Ouvert » attend que les commandes soient ouvertes (« Ouvrir l'à emporter », launch.js) : avant, il viderait toujours la liste.
   const pastilleLivre = FILTRE_LIVRE && filtreLivraisonPossible(user);
   const pastilleOuvert = commandesOuvertes(user);
   const livreActif = livreSeuls && pastilleLivre;

@@ -7,14 +7,15 @@ lecture seule (production Railway et Vercel, API publique, DNS).
 **Relue le 24 octobre 2026** (audit en lecture seule de la production) : ce qui est fait est coché avec *vérifié le
 24/10* ; le reste est toujours ouvert, ou marqué « non vérifiable » quand seul Owen ou Thibault peut le voir. Depuis le
 18/10, la livraison et le paiement en ligne n'ouvrent plus à une date mais au bouton **GO** (`docs/agents/lancement.md`) :
-le « 10 novembre » ci-dessous se lit « avant GO ».
+le « 10 novembre » ci-dessous se lit « avant GO ». **Depuis le 31/10, l'à emporter payé sur place n'ouvre plus le 1er novembre
+non plus** mais au bouton « Ouvrir l'à emporter » (même endroit) : le « 1er novembre » ci-dessous se lit « avant ce bouton ».
 
 **Les dates qui commandent l'ordre :**
 
 | Date | Ce qui s'ouvre | Ce qui doit être prêt |
 |---|---|---|
 | **16 octobre** | campagne réseaux sociaux ; envoi du contrat commerce 2026.17–19 | §1 |
-| **1er novembre** | à emporter **payé sur place** ; contrat 2026.19 en vigueur (2026.20 le 5/11) | §1 et §2 |
+| **Ouvrir l'à emporter** (bouton, pas de date ; était le 1er novembre) | à emporter **payé sur place** ; contrat 2026.19 en vigueur (2026.20 le 5/11) | §1 et §2 |
 | **GO** (bouton, pas de date) | **livraison** et **paiement en ligne** (argent réel) | §1, §2 et §3 |
 
 **Légende :** 🔴 bloquant · 🟠 juridique · 🟡 fiabilité · ⚪️ qualité. **Qui :** F = fondateurs (Thibault, Owen),

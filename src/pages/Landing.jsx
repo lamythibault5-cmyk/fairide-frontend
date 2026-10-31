@@ -12,6 +12,7 @@ import HeroAdresse from '../components/landing/HeroAdresse';
 import HeroPrix from '../components/landing/HeroPrix';
 import DiscoverSection from '../components/landing/DiscoverSection';
 import Icone from '../components/Icone';
+import { useLancement } from '../launch';
 import '../site-accueil.css';
 
 /* L'ACCUEIL DU SITE, VERSION « BANDEAU ET FEUILLE » (fondateur, 2026-10-16, version B de maquettes/accueil-site/accueil-site.html).
@@ -76,6 +77,7 @@ function SceneRoute() {
 
 export default function Landing() {
   const { t } = useLanguage();
+  const { go, emporter } = useLancement();
   usePageMeta({ description: t('seo.homeDescription'), path: '/' });
   useJsonLd(organizationJsonLd(), 'ld-organization');
   useJsonLd(websiteJsonLd(), 'ld-website');
@@ -98,9 +100,12 @@ export default function Landing() {
           <p className="sa-sous">{t('landing.subAdresse')}</p>
           {/* Le seul appel à l'action de la page : « livrez-vous chez moi ? » se demande sans compte (HeroAdresse.jsx). */}
           <HeroAdresse />
-          {/* Les trois dates ne tiennent pas en entier sur un téléphone : la version courte y prend le relais. */}
-          <p className="sa-ouverture sa-ouverture-long"><Icone nom="reservations" taille={16} /> {t('landing.ordersOpenNote')}</p>
-          <p className="sa-ouverture sa-ouverture-court"><Icone nom="reservations" taille={16} /> {t('landing.ordersOpenCourt')}</p>
+          {/* Où en est l'ouverture, sans aucune date (fondateur, 2026-10-31) : « bientôt » avant « Ouvrir l'à emporter », l'à
+              emporter ouvert ensuite, plus rien après le GO. La phrase longue ne tient pas sur un téléphone : la courte y prend le relais. */}
+          {!go && <>
+            <p className="sa-ouverture sa-ouverture-long"><Icone nom="reservations" taille={16} /> {t(emporter ? 'landing.ordersOpenNotePickup' : 'landing.ordersOpenNote')}</p>
+            <p className="sa-ouverture sa-ouverture-court"><Icone nom="reservations" taille={16} /> {t(emporter ? 'landing.ordersOpenCourtPickup' : 'landing.ordersOpenCourt')}</p>
+          </>}
           <SceneRoute />
         </div>
         <HeroPrix />

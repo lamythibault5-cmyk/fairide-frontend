@@ -1,19 +1,20 @@
 // Calendrier de lancement côté client (miroir des verrous serveur, voir routes/orders.js, routes/restaurants.js et
-// lancement.js côté backend). Première campagne sur les réseaux sociaux le 16 octobre 2026 (fondateur, 2026-09-30) ;
-// commandes à emporter PAYÉES SUR PLACE à partir du 1er novembre (une date) ; livraison et paiement en ligne quand
-// l'équipe appuie sur GO (fondateur, 2026-10-18 : plus de date, ouvrir seulement quand assez de livreurs roulent).
-// Tout le reste est visible et utilisable avant. Les administrateurs, comptes de test et simulations passent (essais).
+// lancement.js côté backend). Première campagne sur les réseaux sociaux le 16 octobre 2026 (fondateur, 2026-09-30).
+// Aucune ouverture à une date : les commandes à emporter PAYÉES SUR PLACE ouvrent quand l'équipe appuie sur « Ouvrir l'à
+// emporter » (fondateur, 2026-10-31 : le 1er novembre allait les ouvrir tout seul alors que l'équipe n'était pas prête) ;
+// livraison et paiement en ligne quand elle appuie sur GO (fondateur, 2026-10-18 : ouvrir seulement quand assez de
+// livreurs roulent). Tout le reste est visible et utilisable avant. Les administrateurs, comptes de test et simulations
+// passent (essais).
 import { useSyncExternalStore } from 'react';
 import { API_BASE } from './api';
 
 export const CAMPAGNE_RESEAUX = new Date('2026-10-16T00:00:00+02:00');
 export const APP_STORES = new Date('2026-10-06T00:00:00+02:00');
-// L'à emporter payé sur place se surcharge à la construction (VITE_PICKUP_OPEN_AT) : l'application de test ouvre tout de
-// suite. La livraison et le paiement en ligne n'ont plus de date : le serveur de staging les ouvre par FAIRIDE_GO=on, et
-// ce fichier le lit (VITE_DELIVERY_OPEN_AT et VITE_ONLINE_PAYMENT_OPEN_AT ne servent plus).
-export const OUVERTURE_EMPORTER = new Date(import.meta.env.VITE_PICKUP_OPEN_AT || '2026-11-01T00:00:00+01:00');
+// Plus aucune date dans la construction : VITE_PICKUP_OPEN_AT, VITE_DELIVERY_OPEN_AT et VITE_ONLINE_PAYMENT_OPEN_AT ne
+// servent plus. L'appli copie ce fichier dans son paquet : une date ici restait dans chaque appli installée. Le site et
+// l'appli suivent leur serveur (le staging ouvre tout par FAIRIDE_GO=on).
 
-/* L'ÉTAT DU BOUTON GO, LU SUR LE SERVEUR (GET /orders/launch).
+/* L'ÉTAT DES BOUTONS D'OUVERTURE, LU SUR LE SERVEUR (GET /orders/launch) : `emporter` (pickupOpen) et `go`.
  *
  * Le site ne décide rien : il affiche ce que le serveur appliquera. Au démarrage, la dernière réponse connue (gardée sur
  * l'appareil, pour ne pas montrer « bientôt » une seconde à quelqu'un qui revient après le GO), sinon « fermé » ; puis
@@ -23,11 +24,13 @@ export const OUVERTURE_EMPORTER = new Date(import.meta.env.VITE_PICKUP_OPEN_AT |
 const CLE = 'fairide_lancement';
 // livraisonMaintenant (audit du 19/10, discovery-02) : après GO, un livreur du pool Fairide est-il libre à l'instant ?
 // Oui/non seulement, jamais un nombre ; null tant qu'on ne sait pas (rien n'est alors retiré de la liste).
-let etat = { go: false, goAt: null, livraisonMaintenant: null };
-try { const c = JSON.parse(localStorage.getItem(CLE) || 'null'); if (c && typeof c.go === 'boolean') etat = { go: c.go, goAt: c.goAt || null, livraisonMaintenant: typeof c.livraisonMaintenant === 'boolean' ? c.livraisonMaintenant : null }; } catch { /* stockage indisponible */ }
+// emporter : l'à emporter payé sur place est-il ouvert ? Une réponse gardée d'avant ce bouton n'en dit rien : fermé.
+const lire = (c) => ({ go: c.go, goAt: c.goAt || null, emporter: c.emporter === true || c.go === true, livraisonMaintenant: typeof c.livraisonMaintenant === 'boolean' ? c.livraisonMaintenant : null });
+let etat = { go: false, goAt: null, emporter: false, livraisonMaintenant: null };
+try { const c = JSON.parse(localStorage.getItem(CLE) || 'null'); if (c && typeof c.go === 'boolean') etat = lire(c); } catch { /* stockage indisponible */ }
 const abonnes = new Set();
 function poser(suivant) {
-  if (suivant.go === etat.go && suivant.goAt === etat.goAt && suivant.livraisonMaintenant === etat.livraisonMaintenant) return;
+  if (suivant.go === etat.go && suivant.goAt === etat.goAt && suivant.emporter === etat.emporter && suivant.livraisonMaintenant === etat.livraisonMaintenant) return;
   etat = suivant;
   try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch { /* stockage indisponible */ }
   abonnes.forEach((f) => f());
@@ -37,7 +40,7 @@ export async function chargerLancement() {
     const r = await fetch(`${API_BASE}/orders/launch`, { cache: 'no-store' });
     if (!r.ok) return;
     const d = await r.json();
-    if (typeof d?.go === 'boolean') poser({ go: d.go, goAt: d.goAt || null, livraisonMaintenant: typeof d.livraisonMaintenant === 'boolean' ? d.livraisonMaintenant : null });
+    if (typeof d?.go === 'boolean') poser(lire({ ...d, emporter: d.pickupOpen === true }));
   } catch { /* hors ligne : on garde l'état connu */ }
 }
 let suivi = null;
@@ -51,11 +54,8 @@ function abonner(f) { abonnes.add(f); suivre(); return () => abonnes.delete(f); 
 export function useLancement() { return useSyncExternalStore(abonner, () => etat, () => etat); }
 export function lancementGo() { return etat.go; }
 
-function formater(date, locale) {
-  const texte = date.toLocaleDateString(locale, { day: 'numeric', month: 'long', timeZone: 'Europe/Brussels' });
-  // En français, le premier du mois s'écrit « 1er novembre », pas « 1 novembre ».
-  return String(locale).startsWith('fr') ? texte.replace(/^1 /, '1er ') : texte;
-}
+export function emporterOuvert() { return etat.emporter; }
+
 // Admin, compte de test posé par l'équipe (users.is_test) et simulation : mêmes exemptions que le serveur (compteExempte).
 const exempte = (user) => !!user?.isAdmin || !!user?.isTest || !!user?.simulation;
 export const exempteLancement = exempte;
@@ -67,10 +67,8 @@ export function paiementEnLigneOuvert(user) { return etat.go || exempte(user); }
 // type : 'pickup' | 'delivery'.
 export function serviceOuvert(type, user) {
   if (exempte(user)) return true;
-  return type === 'pickup' ? Date.now() >= OUVERTURE_EMPORTER.getTime() : etat.go;
+  return type === 'pickup' ? etat.emporter : etat.go;
 }
-// Seule date encore annoncée : celle de l'à emporter payé sur place.
-export function dateOuvertureEmporter(locale = 'fr-BE') { return formater(OUVERTURE_EMPORTER, locale); }
 export function commandesOuvertes(user) { return serviceOuvert('pickup', user); }
 export function livraisonOuverte(user) { return serviceOuvert('delivery', user); }
 // La liste des commerces (audit du 19/10, discovery-02) : après GO, aucun livreur du pool Fairide libre maintenant = la

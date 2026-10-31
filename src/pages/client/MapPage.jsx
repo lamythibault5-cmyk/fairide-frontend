@@ -46,8 +46,8 @@ const TRI = false;
 export default function MapPage() {
   const { t } = useLanguage();
   const { user, token } = useAuth();
-  // « Ouvert » dépend du GO et des livreurs libres (peutCommander.js) : la liste se recalcule quand ils changent. Avant le
-  // 1er novembre aucune commande n'est possible, la pastille attend (même règle que la liste des commerces).
+  // « Ouvert » dépend du GO et des livreurs libres (peutCommander.js) : la liste se recalcule quand ils changent. Avant
+  // « Ouvrir l'à emporter » aucune commande n'est possible, la pastille attend (même règle que la liste des commerces).
   const lancement = useLancement();
   const pastilleOuvert = commandesOuvertes(user);
   const [restaurants, setRestaurants] = useState([]);
