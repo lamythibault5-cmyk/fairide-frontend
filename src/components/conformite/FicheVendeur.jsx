@@ -7,7 +7,8 @@ import { useLanguage } from '../../context/LanguageContext';
  *   A8 — CDE VI.45 §1 et VI.45/1 : identité du professionnel avant la commande, et le fait que la vente
  *        est conclue avec le commerce, pas avec la plateforme. Les champs viennent de la charge utile
  *        publique (legalName, companyNumber, vatNumber…), qui les portait déjà.
- *   A1 — AR 17/07/2014 : mention visible du moyen d'obtenir l'information allergènes AVANT de commander.
+ *   A1 — AR 17/07/2014 art. 5 : mention visible du moyen d'obtenir l'information allergènes AVANT de commander, et
+ *        que la composition peut changer.
  *   C6 — DSA art. 16 : un moyen de signaler le commerce.
  *
  * Les commerces de démonstration n'ont pas de vendeur réel : le bloc ne s'affiche pas pour eux. */
@@ -33,7 +34,11 @@ export default function FicheVendeur({ restaurant }) {
       {tel && (
         <p className="small" style={{ margin: '6px 0 0' }}>
           <b>{t('conformite.allergensTitle')}</b> : {t('conformite.allergensAskBefore')}{' '}
-          <a href={`tel:${tel.replace(/[^+\d]/g, '')}`}>{tel}</a>
+          <a href={`tel:${tel.replace(/[^+\d]/g, '')}`}>{tel}</a>.{' '}
+          {/* AR 17/07/2014 art. 5 § 1 2° et § 2 : en vente à distance, la mention « la composition des produits peut changer
+              d'une fois à l'autre » figure sur le support de vente, à côté du moyen d'obtenir l'information (1°). Elle
+              manquait (vérifié sur ejustice le 2026-11-01). */}
+          {t('conformite.allergensComposition')}
         </p>
       )}
       <p className="small" style={{ margin: '6px 0 0' }}>
