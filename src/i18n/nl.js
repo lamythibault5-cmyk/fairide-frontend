@@ -6907,7 +6907,8 @@ export default {
     // L'écran d'attente pendant l'ouverture de Stripe (ouvrirStripe.js, 2026-10-27).
     // « Tes engagements » : contrat, allergènes et déclaration pro sur un écran (EngagementsPage.jsx, 2026-10-27).
     engagementsCommerce: {
-      tel: 'Nummer voor allergenen',
+      tel: 'Contactnummer allergenen',
+      telAide: 'Het nummer dat een klant belt met een vraag over allergenen, vóór het bestellen. Het staat op je fiche en bij het betalen.',
       titre: 'Jouw engagementen',
       sous: '{n} teksten om te aanvaarden, één vakje, je naam. Geen documenten te versturen.',
       sousUn: 'Eén tekst om te aanvaarden, één vakje, je naam. Geen documenten te versturen.',
@@ -9610,6 +9611,7 @@ export default {
       sellerContract: 'De verkoop wordt gesloten tussen jou en deze zaak; Fairride verzorgt het platform, de betaling en, indien van toepassing, de levering.',
       allergensTitle: 'Allergenen',
       allergensAskBefore: 'de zaak beantwoordt je vragen voor je bestelt, op',
+      allergensComposition: 'De samenstelling van de gerechten kan van keer tot keer verschillen.',
       reportRestaurant: 'Deze zaak melden',
       rankingLink: 'Hoe we zaken rangschikken',
       dsaContactTitle: 'Contactpunt (digitaledienstenverordening)',

@@ -144,7 +144,11 @@ export default function EngagementsPage() {
         <div className="eg-champs">
           <div className={`field${manque === 'tel' ? ' eg-manque' : ''}`}>
             <label htmlFor={`${id}-tel`}>{t('engagementsCommerce.tel')}</label>
-            <input id={`${id}-tel`} ref={champs.tel} value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" autoComplete="tel" />
+            <input id={`${id}-tel`} ref={champs.tel} value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" autoComplete="tel" aria-describedby={`${id}-tel-aide`} />
+            {/* « Numéro pour les allergènes » seul ne disait pas à quoi il sert : un restaurateur a demandé où trouver « les
+                14 allergènes » (Pizza Marhaba, 2026-11-01). L'étiquette tient dans le champ (une ligne, coupée au-delà) : la
+                phrase qui explique va dessous. Le numéro est bien affiché au client : FicheVendeur.jsx et CheckoutConformite.jsx. */}
+            <p id={`${id}-tel-aide`} className="champ-aide">{t('engagementsCommerce.telAide')}</p>
           </div>
           <div className="field">
             <label htmlFor={`${id}-ref`}>{t('conformite.allergenReferent')}</label>
